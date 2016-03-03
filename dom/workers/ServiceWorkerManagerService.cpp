@@ -63,12 +63,12 @@ public:
         // mContentParent needs to be released in the main thread.
         data.mContentParent = nullptr;
         // We only send the notification about the soft update to the
-        // tabs/apps with the same appId and inBrowser values.
+        // tabs/apps with the same appId and inIsolatedMozBrowser values.
         // Sending a notification to the wrong process will make the process
         // to be killed.
         for (uint32_t j = 0; j < contextArray.Length(); ++j) {
           if ((contextArray[j].OwnOrContainingAppId() == mOriginAttributes.mAppId) &&
-              (contextArray[j].IsBrowserElement() == mOriginAttributes.mInBrowser)) {
+              (contextArray[j].IsIsolatedMozBrowserElement() == mOriginAttributes.mInIsolatedMozBrowser)) {
             continue;
           }
           // Array entries with no mParent won't receive any notification.

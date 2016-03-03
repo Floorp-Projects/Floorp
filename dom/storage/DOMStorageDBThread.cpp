@@ -58,10 +58,10 @@ Scheme0Scope(DOMStorageCacheBridge* aCache)
     oa.PopulateFromSuffix(suffix);
   }
 
-  if (oa.mAppId != nsIScriptSecurityManager::NO_APP_ID || oa.mInBrowser) {
+  if (oa.mAppId != nsIScriptSecurityManager::NO_APP_ID || oa.mInIsolatedMozBrowser) {
     result.AppendInt(oa.mAppId);
     result.Append(':');
-    result.Append(oa.mInBrowser ? 't' : 'f');
+    result.Append(oa.mInIsolatedMozBrowser ? 't' : 'f');
     result.Append(':');
   }
 
@@ -72,7 +72,7 @@ Scheme0Scope(DOMStorageCacheBridge* aCache)
   // schema 1 and 0 always works in both ways.
   nsAutoCString remaining;
   oa.mAppId = 0;
-  oa.mInBrowser = false;
+  oa.mInIsolatedMozBrowser = false;
   oa.CreateSuffix(remaining);
   if (!remaining.IsEmpty()) {
     MOZ_ASSERT(!suffix.IsEmpty());

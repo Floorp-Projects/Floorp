@@ -29,7 +29,17 @@ public:
 
   bool operator==(const EncodingConstraints& constraints) const
   {
-    return !memcmp(this, &constraints, sizeof(EncodingConstraints));
+    return
+      maxWidth == constraints.maxWidth &&
+      maxHeight == constraints.maxHeight &&
+      maxFps == constraints.maxFps &&
+      maxFs == constraints.maxFs &&
+      maxBr == constraints.maxBr &&
+      maxPps == constraints.maxPps &&
+      maxMbps == constraints.maxMbps &&
+      maxCpb == constraints.maxCpb &&
+      maxDpb == constraints.maxDpb &&
+      scaleDownBy == constraints.scaleDownBy;
   }
 
   uint32_t maxWidth;

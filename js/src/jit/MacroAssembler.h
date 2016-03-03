@@ -921,16 +921,137 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void branchTestNeedsIncrementalBarrier(Condition cond, Label* label);
 
-    inline void branchTestInt32(Condition cond, Register tag, Label* label)
-        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
-    inline void branchTestInt32(Condition cond, const Address& address, Label* label)
-        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
-    inline void branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
-        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
-    inline void branchTestInt32(Condition cond, const ValueOperand& src, Label* label) PER_ARCH;
-
-    inline void branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label)
+    // Perform a type-test on a tag of a Value (32bits boxing), or the tagged
+    // value (64bits boxing).
+    inline void branchTestUndefined(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestInt32(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestDouble(Condition cond, Register tag, Label* label)
         DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+    inline void branchTestNumber(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestBoolean(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestString(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestSymbol(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestNull(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestObject(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestPrimitive(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestMagic(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+
+    // Perform a type-test on a Value, addressed by Address or BaseIndex, or
+    // loaded into ValueOperand.
+    // BaseIndex and ValueOperand variants clobber the ScratchReg on x64.
+    // All Variants clobber the ScratchReg on arm64.
+    inline void branchTestUndefined(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestUndefined(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestUndefined(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestInt32(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestInt32(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestDouble(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestDouble(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestDouble(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestNumber(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestBoolean(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestBoolean(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestBoolean(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestString(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestString(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestSymbol(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestSymbol(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestNull(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestNull(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestNull(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    // Clobbers the ScratchReg on x64.
+    inline void branchTestObject(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestObject(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestObject(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestGCThing(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestGCThing(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+
+    inline void branchTestPrimitive(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestMagic(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestMagic(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    template <class L>
+    inline void branchTestMagic(Condition cond, const ValueOperand& value, L label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
+                                     Label* label);
+
+    void branchTestValue(Condition cond, const ValueOperand& lhs,
+                         const Value& rhs, Label* label) PER_ARCH;
+
+    // Checks if given Value is evaluated to true or false in a condition.
+    // The type of the value should match the type of the method.
+    inline void branchTestInt32Truthy(bool truthy, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+    inline void branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label* label) PER_SHARED_ARCH;
+    inline void branchTestBooleanTruthy(bool truthy, const ValueOperand& value, Label* label) PER_ARCH;
+    inline void branchTestStringTruthy(bool truthy, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+  private:
+
+    // Implementation for branch* methods.
+    template <typename T, typename S>
+    inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
+        DEFINED_ON(x86_shared);
+
+    template <typename T>
+    inline void branchTestUndefinedImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestInt32Impl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestDoubleImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestNumberImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestBooleanImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestStringImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestSymbolImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestNullImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestObjectImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestGCThingImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestPrimitiveImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T, class L>
+    inline void branchTestMagicImpl(Condition cond, const T& t, L label)
+        DEFINED_ON(arm, arm64, x86_shared);
 
     //}}} check_macroassembler_style
   public:

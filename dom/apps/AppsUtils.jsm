@@ -149,16 +149,17 @@ this.AppsUtils = {
     return obj;
   },
 
-  // Creates a nsILoadContext object with a given appId and isBrowser flag.
-  createLoadContext: function createLoadContext(aAppId, aIsBrowser) {
+  // Creates a nsILoadContext object with a given appId and inIsolatedMozBrowser
+  // flag.
+  createLoadContext: function createLoadContext(aAppId, aInIsolatedMozBrowser) {
     return {
        associatedWindow: null,
        topWindow : null,
        appId: aAppId,
-       isInBrowserElement: aIsBrowser,
+       isInIsolatedMozBrowserElement: aInIsolatedMozBrowser,
        originAttributes: {
          appId: aAppId,
-         inBrowser: aIsBrowser
+         inIsolatedMozBrowser: aInIsolatedMozBrowser
        },
        usePrivateBrowsing: false,
        isContent: false,
@@ -342,6 +343,10 @@ this.AppsUtils = {
     }
 
     return "";
+  },
+
+  areAnyAppsInstalled: function(aApps) {
+    return Object.getOwnPropertyNames(aApps).length > 0;
   },
 
   getCoreAppsBasePath: function getCoreAppsBasePath() {

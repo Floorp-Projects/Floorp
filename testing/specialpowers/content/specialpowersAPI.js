@@ -830,7 +830,7 @@ SpecialPowersAPI.prototype = {
     if (this._permissionsUndoStack.length > 0) {
       // See pushPermissions comment regarding delay.
       let cb = callback ? this._delayCallbackTwice(callback) : null;
-      /* Each pop from the stack will yield an object {op/type/permission/value/url/appid/isInBrowserElement} or null */
+      /* Each pop from the stack will yield an object {op/type/permission/value/url/appid/isInIsolatedMozBrowserElement} or null */
       this._pendingPermissions.push([this._permissionsUndoStack.pop(), cb]);
       this._applyPermissions();
     } else {

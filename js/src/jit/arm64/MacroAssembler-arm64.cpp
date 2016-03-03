@@ -723,6 +723,19 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, R
               temp, ImmWord(nursery.nurserySize()), label);
 }
 
+void
+MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
+                                const Value& rhs, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch64 = temps.AcquireX();
+    MOZ_ASSERT(scratch64.asUnsized() != lhs.valueReg());
+    moveValue(rhs, ValueOperand(scratch64.asUnsized()));
+    Cmp(ARMRegister(lhs.valueReg(), 64), scratch64);
+    B(label, cond);
+}
+
 //}}} check_macroassembler_style
 
 } // namespace jit

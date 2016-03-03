@@ -39,6 +39,7 @@ dictionary RequestInit {
   ByteString method;
   HeadersInit headers;
   BodyInit? body;
+  USVString referrer;
   RequestMode mode;
   RequestCredentials credentials;
   RequestCache cache;

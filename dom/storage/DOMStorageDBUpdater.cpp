@@ -67,7 +67,7 @@ public:
   {
     using mozilla::OriginAttributes;
 
-    // Parse optional appId:isInBrowserElement: string, in case
+    // Parse optional appId:isInIsolatedMozBrowserElement: string, in case
     // we don't find it, the scope is our new origin key and suffix
     // is empty.
     suffix.Truncate();
@@ -84,15 +84,15 @@ public:
       return;
     }
 
-    // Bail out if it isn't 'browserFlag'.
-    nsDependentCSubstring browserFlag;
-    if (!ReadWord(browserFlag)) {
+    // Bail out if it isn't 'isolatedBrowserFlag'.
+    nsDependentCSubstring isolatedBrowserFlag;
+    if (!ReadWord(isolatedBrowserFlag)) {
       return;
     }
 
-    bool inBrowser = browserFlag == "t";
-    bool notInBrowser = browserFlag == "f";
-    if (!inBrowser && !notInBrowser) {
+    bool inIsolatedMozBrowser = isolatedBrowserFlag == "t";
+    bool notInIsolatedBrowser = isolatedBrowserFlag == "f";
+    if (!inIsolatedMozBrowser && !notInIsolatedBrowser) {
       return;
     }
 
@@ -101,12 +101,12 @@ public:
       return;
     }
 
-    // OK, we have found appId and inBrowser flag, create the suffix from it
-    // and take the rest as the origin key.
+    // OK, we have found appId and inIsolatedMozBrowser flag, create the suffix
+    // from it and take the rest as the origin key.
 
     // If the profile went through schema 1 -> schema 0 -> schema 1 switching
     // we may have stored the full attributes origin suffix when there were
-    // more than just appid and inbrowser set on storage principal's
+    // more than just appId and inIsolatedMozBrowser set on storage principal's
     // OriginAttributes.
     //
     // To preserve full uniqueness we store this suffix to the scope key.
@@ -121,7 +121,7 @@ public:
     //
     // If there is '^', the full origin attributes suffix follows.  We search
     // for ':' since it is the delimiter used in the scope string and is never
-    // contained in the origin attributes suffix.  Remaning string after
+    // contained in the origin attributes suffix.  Remaining string after
     // the comma is the reversed-domain+schema+port tuple.
     Record();
     if (CheckChar('^')) {
@@ -133,7 +133,7 @@ public:
         }
       }
     } else {
-      PrincipalOriginAttributes attrs(appId, inBrowser);
+      PrincipalOriginAttributes attrs(appId, inIsolatedMozBrowser);
       attrs.CreateSuffix(suffix);
     }
 

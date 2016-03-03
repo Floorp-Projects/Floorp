@@ -485,6 +485,7 @@ int TestNrSocket::write(const void *msg, size_t len, size_t *written) {
           port_mappings_.front()->external_socket_->my_addr().as_string,
           port_mappings_.front()->remote_address_.as_string);
 
+    port_mappings_.front()->last_used_ = PR_IntervalNow();
     return port_mappings_.front()->external_socket_->write(msg, len, written);
   }
 }
@@ -495,7 +496,12 @@ int TestNrSocket::read(void *buf, size_t maxlen, size_t *len) {
     return internal_socket_->read(buf, maxlen, len);
   } else {
     MOZ_ASSERT(port_mappings_.size() == 1);
-    return port_mappings_.front()->external_socket_->read(buf, maxlen, len);
+    int bytesRead =
+      port_mappings_.front()->external_socket_->read(buf, maxlen, len);
+    if (bytesRead > 0 && nat_->refresh_on_ingress_) {
+      port_mappings_.front()->last_used_ = PR_IntervalNow();
+    }
+    return bytesRead;
   }
 }
 

@@ -67,8 +67,9 @@ var internal = ns();
 // menu
 var lastContextProcessId = null;
 
+var uuidModule = require('./util/uuid');
 function uuid() {
-  return require('./util/uuid').uuid().toString();
+  return uuidModule.uuid().toString();
 }
 
 function getScheme(spec) {

@@ -2110,6 +2110,7 @@ JSObject*
 js::TenuringTracer::moveToTenured(JSObject* src)
 {
     MOZ_ASSERT(IsInsideNursery(src));
+    MOZ_ASSERT(!src->zone()->usedByExclusiveThread);
 
     AllocKind dstKind = src->allocKindForTenure(nursery());
     Zone* zone = src->zone();

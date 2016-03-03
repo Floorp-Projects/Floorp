@@ -90,7 +90,7 @@ private:
       break;
     case 'b':
       // Leaving to be able to read and understand oldformatted entries
-      originAttribs.mInBrowser = true;
+      originAttribs.mInIsolatedMozBrowser = true;
       break;
     case 'a':
       isAnonymous = true;

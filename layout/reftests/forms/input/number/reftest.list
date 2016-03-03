@@ -51,3 +51,4 @@ skip-if(B2G||Mulet) fuzzy-if(skiaContent,2,5) needs-focus == focus-handling.html
 # bevel which gets slightly different antialiasing after invalidation):
 fuzzy(128,4) == number-reframe-anon-text-field.html number-reframe-anon-text-field-ref.html
 
+== pseudo-classes.html about:blank

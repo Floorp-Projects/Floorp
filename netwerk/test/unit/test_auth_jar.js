@@ -15,7 +15,7 @@ function run_test() {
   const kURI1 = "http://example.com";
   var app1 = secMan.createCodebasePrincipal(createURI(kURI1), {appId: 1});
   var app10 = secMan.createCodebasePrincipal(createURI(kURI1),{appId: 10});
-  var app1browser = secMan.createCodebasePrincipal(createURI(kURI1), {appId: 1, inBrowser: true});
+  var app1browser = secMan.createCodebasePrincipal(createURI(kURI1), {appId: 1, inIsolatedMozBrowser: true});
 
   var am = Cc["@mozilla.org/network/http-auth-manager;1"].
            getService(Ci.nsIHttpAuthManager);
@@ -23,7 +23,7 @@ function run_test() {
   am.setAuthIdentity("http", "a.example.com", -1, "basic", "realm", "", "example.com", "user3", "pass3", false, app1browser);
   am.setAuthIdentity("http", "a.example.com", -1, "basic", "realm", "", "example.com", "user2", "pass2", false, app10);
 
-  let attrs_inBrowser = JSON.stringify({ appId:1, inBrowser:true });
+  let attrs_inBrowser = JSON.stringify({ appId:1, inIsolatedMozBrowser:true });
   Services.obs.notifyObservers(null, "clear-origin-data", attrs_inBrowser);
   
   var domain = {value: ""}, user = {value: ""}, pass = {value: ""};

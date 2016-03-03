@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests for TextTrack DOM Events</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
+  function() {
+    var video = document.createElement("video");
+    video.src = "vp9cake.webm";
+    video.preload = "auto";
+    video.controls = true;
+    var trackElement = document.createElement("track");
+    trackElement.src = "sequential.vtt";
+    trackElement.kind = "subtitles";
+    trackElement.default = true;
+    document.getElementById("content").appendChild(video);
+    video.appendChild(trackElement);
+
+    var trackElementCueChangeCount = 0;
+    var trackCueChangeCount = 0;
+
+    video.addEventListener("loadedmetadata", function run_tests() {
+      // Re-queue run_tests() at the end of the event loop until the track
+      // element has loaded its data.
+      if (trackElement.readyState == 1) {
+        return setTimeout(run_tests, 0);
+      }
+      is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+      ok('oncuechange' in trackElement.track, "Track::OnCueChange should exist.");
+
+      trackElement.track.oncuechange = function() {
+        ++trackElementCueChangeCount;
+      };
+
+      trackElement.addEventListener("cuechange", function() {
+        ++trackCueChangeCount;
+      });
+
+      video.play();
+    });
+
+    video.addEventListener('ended', function() {
+      // Should be fired 6 times, as there are 3 cues, with a change event
+      // for when it is activated/deactivated (6 events total)
+      is(trackElementCueChangeCount, 6, "TrackElement should fire cue change 6 times.");
+      is(trackCueChangeCount, 6, "TrackElement.track should fire cue change 6 times.");
+      SimpleTest.finish()
+    })
+  }
+);
+</script>
+</pre>
+</body>
+</html>

@@ -94,10 +94,10 @@ nsIContentParent::CanOpenBrowser(const IPCTabContext& aContext)
       return false;
     }
 
-    // Popup windows of isBrowser frames must be isBrowser if the parent
-    // isBrowser.  Allocating a !isBrowser frame with same app ID would allow
-    // the content to access data it's not supposed to.
-    if (!popupContext.isBrowserElement() && opener->IsBrowserElement()) {
+    // Popup windows of isMozBrowserElement frames must be isMozBrowserElement if
+    // the parent isMozBrowserElement.  Allocating a !isMozBrowserElement frame with
+    // same app ID would allow the content to access data it's not supposed to.
+    if (!popupContext.isMozBrowserElement() && opener->IsMozBrowserElement()) {
       ASSERT_UNLESS_FUZZING("Child trying to escalate privileges!  Aborting AllocPBrowserParent.");
       return false;
     }

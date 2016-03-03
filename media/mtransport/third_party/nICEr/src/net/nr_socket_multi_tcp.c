@@ -563,27 +563,35 @@ static void nr_tcp_multi_lsocket_readable_cb(NR_SOCKET s, int how, void *arg)
     nr_socket *newsock;
     nr_transport_addr remote_addr;
     nr_tcp_socket_ctx *tcp_sock_ctx;
-    int r;
+    int r, _status;
 
     // rearm
     NR_ASYNC_WAIT(s, NR_ASYNC_WAIT_READ, nr_tcp_multi_lsocket_readable_cb, arg);
 
     /* accept */
-    if (nr_socket_accept(sock->listen_socket, &remote_addr, &newsock))
-      return;
+    if ((r=nr_socket_accept(sock->listen_socket, &remote_addr, &newsock)))
+      ABORT(r);
 
     /* This takes ownership of newsock whether it fails or not. */
     if ((r=nr_tcp_socket_ctx_create(newsock, 1, sock->max_pending, &tcp_sock_ctx)))
-      return;
+      ABORT(r);
 
     nr_socket_buffered_set_connected_to(tcp_sock_ctx->inner, &remote_addr);
 
-    if (nr_tcp_socket_ctx_initialize(tcp_sock_ctx, &remote_addr, sock)) {
+    if ((r=nr_tcp_socket_ctx_initialize(tcp_sock_ctx, &remote_addr, sock))) {
       nr_tcp_socket_ctx_destroy(&tcp_sock_ctx);
-      return;
+      ABORT(r);
     }
 
     TAILQ_INSERT_HEAD(&sock->sockets, tcp_sock_ctx, entry);
+
+    _status=0;
+abort:
+    if (_status) {
+      r_log(LOG_ICE,LOG_WARNING,"%s:%d %s failed to accept new TCP connection: %d",__FILE__,__LINE__,__FUNCTION__,_status);
+    } else {
+      r_log(LOG_ICE,LOG_INFO,"%s:%d %s accepted new TCP connection from %s",__FILE__,__LINE__,__FUNCTION__,remote_addr.as_string);
+    }
   }
 
 static int nr_socket_multi_tcp_listen(void *obj, int backlog)
@@ -606,7 +614,7 @@ static int nr_socket_multi_tcp_listen(void *obj, int backlog)
     _status=0;
   abort:
     if (_status)
-      r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s failed with error %d",__FILE__,__LINE__,__FUNCTION__,_status);
+      r_log(LOG_ICE,LOG_WARNING,"%s:%d function %s failed with error %d",__FILE__,__LINE__,__FUNCTION__,_status);
 
     return(_status);
   }

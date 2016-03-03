@@ -75,12 +75,12 @@ TCPServerSocketParent::GetAppId()
 }
 
 bool
-TCPServerSocketParent::GetInBrowser()
+TCPServerSocketParent::GetInIsolatedMozBrowser()
 {
   const PContentParent *content = Manager()->Manager();
   if (PBrowserParent* browser = SingleManagedOrNull(content->ManagedPBrowserParent())) {
     TabParent *tab = TabParent::GetFrom(browser);
-    return tab->IsBrowserElement();
+    return tab->IsIsolatedMozBrowserElement();
   } else {
     return false;
   }
@@ -150,7 +150,7 @@ void
 TCPServerSocketParent::OnConnect(TCPServerSocketEvent* event)
 {
   RefPtr<TCPSocket> socket = event->Socket();
-  socket->SetAppIdAndBrowser(GetAppId(), GetInBrowser());
+  socket->SetAppIdAndBrowser(GetAppId(), GetInIsolatedMozBrowser());
 
   RefPtr<TCPSocketParent> socketParent = new TCPSocketParent();
   socketParent->SetSocket(socket);

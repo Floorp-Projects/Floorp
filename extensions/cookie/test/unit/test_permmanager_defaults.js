@@ -56,7 +56,7 @@ add_task(function* do_test() {
   let principal2 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN_2, {});
   let principal3 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN_3, {});
 
-  let attrs = {appId: 1000, inBrowser: true};
+  let attrs = {appId: 1000, inIsolatedMozBrowser: true};
   let principal4 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN, attrs);
   let principal5 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN_3, attrs);
 

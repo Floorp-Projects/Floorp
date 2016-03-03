@@ -510,6 +510,14 @@ MacroAssembler::branchTestNeedsIncrementalBarrier(Condition cond, Label* label)
     branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
 }
 
+void
+MacroAssembler::branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
+                                     Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    branchTestValue(cond, val, MagicValue(why), label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

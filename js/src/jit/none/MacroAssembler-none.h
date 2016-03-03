@@ -234,7 +234,6 @@ class MacroAssemblerNone : public Assembler
     CodeOffsetJump jumpWithPatch(RepatchLabel*, Condition, Label* doc = nullptr) { MOZ_CRASH(); }
     CodeOffsetJump backedgeJump(RepatchLabel* label, Label* doc = nullptr) { MOZ_CRASH(); }
 
-    template <typename T, typename S> void branchTestValue(Condition, T, S, Label*) { MOZ_CRASH(); }
     void testNullSet(Condition, ValueOperand, Register) { MOZ_CRASH(); }
     void testObjectSet(Condition, ValueOperand, Register) { MOZ_CRASH(); }
     void testUndefinedSet(Condition, ValueOperand, Register) { MOZ_CRASH(); }
@@ -345,18 +344,6 @@ class MacroAssemblerNone : public Assembler
 
     Register splitTagForTest(ValueOperand) { MOZ_CRASH(); }
 
-    template <typename T> void branchTestUndefined(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestBoolean(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestDouble(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestNull(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestString(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestSymbol(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestObject(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestNumber(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestGCThing(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestPrimitive(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T, typename L> void branchTestMagic(Condition, T, L) { MOZ_CRASH(); }
-    template <typename T> void branchTestMagicValue(Condition, T, JSWhyMagic, Label*) { MOZ_CRASH(); }
     void boxDouble(FloatRegister, ValueOperand) { MOZ_CRASH(); }
     void boxNonDouble(JSValueType, Register, ValueOperand) { MOZ_CRASH(); }
     template <typename T> void unboxInt32(T, Register) { MOZ_CRASH(); }
@@ -394,9 +381,6 @@ class MacroAssemblerNone : public Assembler
     void loadConstantFloat32(float, FloatRegister) { MOZ_CRASH(); }
     Condition testInt32Truthy(bool, ValueOperand) { MOZ_CRASH(); }
     Condition testStringTruthy(bool, ValueOperand) { MOZ_CRASH(); }
-    void branchTestBooleanTruthy(bool, ValueOperand, Label*) { MOZ_CRASH(); }
-    void branchTestStringTruthy(bool, ValueOperand, Label*) { MOZ_CRASH(); }
-    void branchTestDoubleTruthy(bool, FloatRegister, Label*) { MOZ_CRASH(); }
 
     template <typename T> void loadUnboxedValue(T, MIRType, AnyRegister) { MOZ_CRASH(); }
     template <typename T> void storeUnboxedValue(ConstantOrRegister, MIRType, T, MIRType) { MOZ_CRASH(); }

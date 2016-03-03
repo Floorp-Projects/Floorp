@@ -5,6 +5,7 @@
 from marionette_driver import By, Wait
 
 from firefox_puppeteer.ui_base_lib import UIBaseLib
+from firefox_puppeteer.ui.deck import Panel
 
 
 class Wizard(UIBaseLib):
@@ -247,15 +248,6 @@ class Wizard(UIBaseLib):
         :returns: :class:`Panel` instance.
         """
         return self._create_panel_for_id(self.element.get_attribute('currentpageid'))
-
-
-class Panel(UIBaseLib):
-
-    def __eq__(self, other):
-        return self.element.get_attribute('id') == other.element.get_attribute('id')
-
-    def __ne__(self, other):
-        return self.element.get_attribute('id') != other.element.get_attribute('id')
 
 
 class CheckingPanel(Panel):
