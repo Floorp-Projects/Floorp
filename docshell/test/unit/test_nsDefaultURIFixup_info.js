@@ -471,6 +471,13 @@ var testcases = [ {
     fixedURI: "http://mozilla/foo",
     alternateURI: "http://www.mozilla.com/foo",
     protocolChange: true,
+  }, {
+    input: "mozilla\\",
+    fixedURI: "http://mozilla/",
+    alternateURI: "http://www.mozilla.com/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByDNSForSingleHosts: true,
   }];
 
 if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
@@ -485,12 +492,6 @@ if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
     alternateURI: "http://www.mozilla.com/",
     protocolChange: true,
   });
-  testcases.push({
-    input: "mozilla\\",
-    fixedURI: "http://mozilla/",
-    alternateURI: "http://www.mozilla.com/",
-    protocolChange: true,
-  });
 } else {
   testcases.push({
     input: "/some/file.txt",
@@ -501,15 +502,6 @@ if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
     input: "//mozilla",
     fixedURI: "file:////mozilla",
     protocolChange: true,
-  });
-  // \ is an invalid character in the hostname until bug 652186 is implemented
-  testcases.push({
-    input: "mozilla\\",
-    // fixedURI: "http://mozilla\\/",
-    // alternateURI: "http://www.mozilla/",
-    keywordLookup: true,
-    protocolChange: true,
-    // affectedByDNSForSingleHosts: true,
   });
 }
 
