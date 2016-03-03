@@ -823,6 +823,11 @@ class TreeMetadataEmitter(LoggingMixin):
                     local_include.full_path), context)
             yield LocalInclude(context, local_include)
 
+        for obj in self._handle_linkables(context, passthru):
+            yield obj
+
+        generated_files.update(['%s%s' % (k, self.config.substs.get('BIN_SUFFIX', '')) for k in self._binaries.keys()])
+
         components = []
         for var, cls in (
             ('BRANDING_FILES', BrandingFiles),
@@ -900,9 +905,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 yield ChromeManifestEntry(context, 'chrome.manifest',
                                           Manifest('components',
                                                    mozpath.basename(c)))
-
-        for obj in self._handle_linkables(context, passthru):
-            yield obj
 
         for obj in self._process_test_manifests(context):
             yield obj
