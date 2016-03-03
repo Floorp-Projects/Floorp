@@ -400,7 +400,6 @@
       },
       {
         "name": "removeTree",
-        "unsupported": true,
         "type": "function",
         "description": "Recursively removes a bookmark folder.",
         "async": "callback",
