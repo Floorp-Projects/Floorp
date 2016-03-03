@@ -109,8 +109,6 @@ function* assertPseudoPanelOpened(view) {
   ok(!view.activeCheckbox.disabled, ":active checkbox is not disabled");
   ok(!view.focusCheckbox.disabled, ":focus checkbox is not disabled");
 
-  is(view.pseudoClassPanel.getAttribute("tabindex"), "-1",
-    "Pseudo Class Panel has a tabindex of -1");
   is(view.hoverCheckbox.getAttribute("tabindex"), "0",
     ":hover checkbox has a tabindex of 0");
   is(view.activeCheckbox.getAttribute("tabindex"), "0",
@@ -124,8 +122,6 @@ function* assertPseudoPanelClosed(view) {
 
   ok(view.pseudoClassPanel.hidden, "Pseudo Class Panel Hidden");
 
-  is(view.pseudoClassPanel.getAttribute("tabindex"), "-1",
-    "Pseudo Class Panel has a tabindex of -1");
   is(view.hoverCheckbox.getAttribute("tabindex"), "-1",
     ":hover checkbox has a tabindex of -1");
   is(view.activeCheckbox.getAttribute("tabindex"), "-1",
