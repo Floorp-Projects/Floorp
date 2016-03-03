@@ -40,7 +40,9 @@ static const unsigned MaxArgsPerFunc  =   4 * 1024;
 
 // Module header constants
 static const uint32_t MagicNumber     = 0x6d736100; // "\0asm"
-static const uint32_t EncodingVersion = -1;     // experimental
+static const uint32_t EncodingVersion = 0xa;        // will change while iterating toward release,
+                                                    // change to 1 at release, and hopefully never
+                                                    // change after that
 
 // Names:
 static const char SigLabel[]          = "sig";
