@@ -177,9 +177,11 @@ public class ThemedImageButton extends android.widget.ImageButton
 
     private void setTintedImageDrawable(final Drawable drawable) {
         final Drawable tintedDrawable;
-        if (drawableColors == null) {
-            // If we tint a drawable with a null ColorStateList, it will override
+        if (drawableColors == null || R.id.bookmark == getId()) {
+            // NB: If we tint a drawable with a null ColorStateList, it will override
             // any existing colorFilters and tint... so don't!
+
+            // NB: The bookmarked state uses a blue star, so this is a hack to keep it from being tinted.
             tintedDrawable = drawable;
         } else if (drawable == null) {
             tintedDrawable = null;
