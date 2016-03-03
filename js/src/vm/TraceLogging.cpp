@@ -16,6 +16,7 @@
 
 #include "jit/BaselineJIT.h"
 #include "jit/CompileWrappers.h"
+#include "threading/LockGuard.h"
 #include "vm/Runtime.h"
 #include "vm/Time.h"
 #include "vm/TraceLoggingGraph.h"
@@ -82,24 +83,6 @@ rdtsc(void)
 }
 
 #endif // defined(MOZ_HAVE_RDTSC)
-
-class AutoTraceLoggerThreadStateLock
-{
-  TraceLoggerThreadState* logging;
-
-  public:
-    explicit AutoTraceLoggerThreadStateLock(TraceLoggerThreadState* logging MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : logging(logging)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        PR_Lock(logging->lock);
-    }
-    ~AutoTraceLoggerThreadStateLock() {
-        PR_Unlock(logging->lock);
-    }
-  private:
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
 
 static bool
 EnsureTraceLoggerState()
@@ -620,11 +603,6 @@ TraceLoggerThreadState::~TraceLoggerThreadState()
         threadLoggers.finish();
     }
 
-    if (lock) {
-        PR_DestroyLock(lock);
-        lock = nullptr;
-    }
-
 #ifdef DEBUG
     initialized = false;
 #endif
@@ -646,10 +624,6 @@ ContainsFlag(const char* str, const char* flag)
 bool
 TraceLoggerThreadState::init()
 {
-    lock = PR_NewLock();
-    if (!lock)
-        return false;
-
     if (!threadLoggers.init())
         return false;
 
@@ -875,7 +849,7 @@ TraceLoggerThreadState::forMainThread(PerThreadData* mainThread)
 {
     MOZ_ASSERT(initialized);
     if (!mainThread->traceLogger) {
-        AutoTraceLoggerThreadStateLock lock(this);
+        LockGuard<Mutex> guard(lock);
 
         TraceLoggerThread* logger = create();
         if (!logger)
@@ -912,7 +886,7 @@ TraceLoggerThreadState::forThread(PRThread* thread)
 {
     MOZ_ASSERT(initialized);
 
-    AutoTraceLoggerThreadStateLock lock(this);
+    LockGuard<Mutex> guard(lock);
 
     ThreadLoggerHashMap::AddPtr p = threadLoggers.lookupForAdd(thread);
     if (p)
