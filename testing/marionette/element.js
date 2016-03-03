@@ -818,10 +818,8 @@ element.inViewport = function(el, x = undefined, y = undefined) {
 element.isVisible = function(el, x = undefined, y = undefined) {
   let win = el.ownerDocument.defaultView;
 
-  // Bug 1094246: Webdriver's isShown doesn't work with content xul
-  let ns = atom.getElementAttribute(el, "namespaceURI", win);
-  if (ns.indexOf("there.is.only.xul") < 0 &&
-      !atom.isElementDisplayed(el, win)) {
+  // Bug 1094246: webdriver's isShown doesn't work with content xul
+  if (!element.isXULElement(el) && !atom.isElementDisplayed(el, win)) {
     return false;
   }
 
