@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.feeds.FeedFetcher;
@@ -69,5 +71,7 @@ public class SubscribeAction implements BaseAction {
         final FeedSubscription subscription = FeedSubscription.create(feedUrl, response);
 
         urlAnnotations.insertFeedSubscription(context.getContentResolver(), subscription);
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.SERVICE, "content_update");
     }
 }
