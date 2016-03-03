@@ -2,6 +2,7 @@
 
 var { Ci, Cu } = require("chrome");
 var { DebuggerServer } = require("devtools/server/main");
+var Services = require("Services");
 const protocol = require("devtools/server/protocol");
 const { Arg, method, RetVal } = protocol;
 
@@ -303,6 +304,9 @@ WorkerActorList.prototype = {
 
 exports.WorkerActorList = WorkerActorList;
 
+// Lazily load the service-worker-child.js process script only once.
+let _serviceWorkerProcessScriptLoaded = false;
+
 let ServiceWorkerRegistrationActor = protocol.ActorClass({
   typeName: "serviceWorkerRegistration",
 
@@ -322,6 +326,21 @@ let ServiceWorkerRegistrationActor = protocol.ActorClass({
       url: this._registration.scriptSpec
     };
   },
+
+  start: method(function() {
+    if (!_serviceWorkerProcessScriptLoaded) {
+      Services.ppmm.loadProcessScript(
+        "resource://devtools/server/service-worker-child.js", true);
+      _serviceWorkerProcessScriptLoaded = true;
+    }
+    Services.ppmm.broadcastAsyncMessage("serviceWorkerRegistration:start", {
+      scope: this._registration.scope
+    });
+    return { type: "started" };
+  }, {
+    request: {},
+    response: RetVal("json")
+  }),
 
 });
 
