@@ -435,6 +435,7 @@ public:
     mLayerEventRegions = aItem;
   }
   bool IsBuildingLayerEventRegions();
+  static bool LayerEventRegionsEnabled();
   bool IsInsidePointerEventsNoneDoc()
   {
     return CurrentPresShellState()->mInsidePointerEventsNoneDoc;
