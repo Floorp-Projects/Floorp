@@ -79,6 +79,8 @@
     <dimen name="site_security_unknown_inset_top">1dp</dimen>
     <dimen name="site_security_unknown_inset_bottom">-1dp</dimen>
 
+    <dimen name="page_row_padding_right">15dp</dimen>
+
     <!-- Regular page row on about:home -->
     <dimen name="page_row_height">64dp</dimen>
 

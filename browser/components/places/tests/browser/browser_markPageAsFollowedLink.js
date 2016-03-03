@@ -1,7 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
-
 /**
  * Tests that visits across frames are correctly represented in the database.
  */
@@ -11,76 +7,61 @@ const PAGE_URL = BASE_URL + "/framedPage.html";
 const LEFT_URL = BASE_URL + "/frameLeft.html";
 const RIGHT_URL = BASE_URL + "/frameRight.html";
 
-var gTabLoaded = false;
-var gLeftFrameVisited = false;
+add_task(function* test() {
+  // We must wait for both frames to be loaded and the visits to be registered.
+  let deferredLeftFrameVisit = PromiseUtils.defer();
+  let deferredRightFrameVisit = PromiseUtils.defer();
 
-var observer = {
-  observe: function(aSubject, aTopic, aData)
-  {
-    let url = aSubject.QueryInterface(Ci.nsIURI).spec;
-    if (url == LEFT_URL ) {
-      is(getTransitionForUrl(url), null,
-         "Embed visits should not get a database entry.");
-      gLeftFrameVisited = true;
-      maybeClickLink();
-    }
-    else if (url == RIGHT_URL ) {
-      is(getTransitionForUrl(url), PlacesUtils.history.TRANSITION_FRAMED_LINK,
-         "User activated visits should get a FRAMED_LINK transition.");
-      finish();
-    }
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
-};
-Services.obs.addObserver(observer, "uri-visit-saved", false);
+  Services.obs.addObserver(function observe(subject) {
+    Task.spawn(function* () {
+      let url = subject.QueryInterface(Ci.nsIURI).spec;
+      if (url == LEFT_URL ) {
+        is((yield getTransitionForUrl(url)), null,
+           "Embed visits should not get a database entry.");
+        deferredLeftFrameVisit.resolve();
+      }
+      else if (url == RIGHT_URL ) {
+        is((yield getTransitionForUrl(url)),
+           PlacesUtils.history.TRANSITION_FRAMED_LINK,
+           "User activated visits should get a FRAMED_LINK transition.");
+        Services.obs.removeObserver(observe, "uri-visit-saved");
+        deferredRightFrameVisit.resolve();
+      }
+    });
+  }, "uri-visit-saved", false);
 
-function test()
-{
-  waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab(PAGE_URL);
-  let frameCount = 0;
-  gBrowser.selectedBrowser.addEventListener("DOMContentLoaded",
-    function (event)
-    {
-      // Wait for all the frames.
-      if (frameCount++ < 2)
-        return;
-      gBrowser.selectedBrowser.removeEventListener("DOMContentLoaded", arguments.callee, false)
-      gTabLoaded = true;
-      maybeClickLink();
-    }, false
-  );
-}
+  // Open a tab and wait for all the subframes to load.
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE_URL);
 
-function maybeClickLink() {
-  if (gTabLoaded && gLeftFrameVisited) {
-    // Click on the link in the left frame to cause a page load in the
-    // right frame.
-    EventUtils.sendMouseEvent({type: "click"}, "clickme", content.frames[0]);
+  // Wait for the left frame visit to be registered.
+  info("Waiting left frame visit");
+  yield deferredLeftFrameVisit.promise;
+
+  // Click on the link in the left frame to cause a page load in the
+  // right frame.
+  info("Clicking link");
+  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+    content.frames[0].document.getElementById("clickme").click();
+  });
+
+  // Wait for the right frame visit to be registered.
+  info("Waiting right frame visit");
+  yield deferredRightFrameVisit.promise;
+
+  yield BrowserTestUtils.removeTab(tab);
+});
+
+function* getTransitionForUrl(url) {
+  // Ensure all the transactions completed.
+  yield PlacesTestUtils.promiseAsyncUpdates();
+  let db = yield PlacesUtils.promiseDBConnection();
+  let rows = yield db.execute(`
+    SELECT visit_type
+    FROM moz_historyvisits
+    WHERE place_id = (SELECT id FROM moz_places WHERE url = :url)`,
+    { url });
+  if (rows.length) {
+    return rows[0].getResultByName("visit_type");
   }
+  return null;
 }
-
-function getTransitionForUrl(aUrl)
-{
-  let dbConn = PlacesUtils.history
-                          .QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
-  let stmt = dbConn.createStatement(
-    "SELECT visit_type FROM moz_historyvisits WHERE place_id = " +
-      "(SELECT id FROM moz_places WHERE url = :page_url)");
-  stmt.params.page_url = aUrl;
-  try {
-    if (!stmt.executeStep()) {
-      return null;
-    }
-    return stmt.row.visit_type;
-  }
-  finally {
-    stmt.finalize();
-  }
-}
-
-registerCleanupFunction(function ()
-{
-  gBrowser.removeTab(gBrowser.selectedTab);
-  Services.obs.removeObserver(observer, "uri-visit-saved");
-})

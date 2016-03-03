@@ -82,7 +82,10 @@ const EVENTS = {
   OPTIONS_POPUP_HIDDEN: "Debugger:OptionsPopupHidden",
 
   // When the widgets layout has been changed.
-  LAYOUT_CHANGED: "Debugger:LayoutChanged"
+  LAYOUT_CHANGED: "Debugger:LayoutChanged",
+
+  // When a worker has been selected.
+  WORKER_SELECTED: "Debugger::WorkerSelected"
 };
 
 // Descriptions for what a stack frame represents after the debugger pauses.
@@ -108,7 +111,7 @@ Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 var L10N = new ViewHelpers.L10N(DBG_STRINGS_URI);
 
 Cu.import("resource://devtools/client/shared/browser-loader.js");
-const require = BrowserLoader("resource://devtools/client/debugger/", this).require;
+const require = BrowserLoader("resource://devtools/client/debugger/", window).require;
 XPCOMUtils.defineConstant(this, "require", require);
 const { gDevTools } = require("devtools/client/framework/devtools");
 
@@ -491,8 +494,8 @@ Workers.prototype = {
 
       for (let workerActor in this._workerForms) {
         if (!(workerActor in workerForms)) {
+          DebuggerView.Workers.removeWorker(this._workerForms[workerActor]);
           delete this._workerForms[workerActor];
-          DebuggerView.Workers.removeWorker(workerActor);
         }
       }
 
@@ -500,7 +503,7 @@ Workers.prototype = {
         if (!(workerActor in this._workerForms)) {
           let workerForm = workerForms[workerActor];
           this._workerForms[workerActor] = workerForm;
-          DebuggerView.Workers.addWorker(workerActor, workerForm.url);
+          DebuggerView.Workers.addWorker(workerForm);
         }
       }
     });
@@ -510,10 +513,11 @@ Workers.prototype = {
     this._updateWorkerList();
   },
 
-  _onWorkerSelect: function (workerActor) {
-    DebuggerController.client.attachWorker(workerActor, (response, workerClient) => {
-      gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
-                            "jsdebugger", Toolbox.HostType.WINDOW);
+  _onWorkerSelect: function (workerForm) {
+    DebuggerController.client.attachWorker(workerForm.actor, (response, workerClient) => {
+      let toolbox = gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
+                                          "jsdebugger", Toolbox.HostType.WINDOW);
+      window.emit(EVENTS.WORKER_SELECTED, toolbox);
     });
   }
 };

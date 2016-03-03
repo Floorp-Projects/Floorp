@@ -14,29 +14,38 @@
                                           android:layout_margin="16dp"
                                           tools:background="@drawable/favicon_globe"/>
 
-    <LinearLayout android:layout_width="match_parent"
+    <LinearLayout android:layout_width="0dp"
                   android:layout_height="wrap_content"
+                  android:layout_weight="1"
                   android:layout_gravity="center_vertical"
-                  android:orientation="vertical"
-                  android:paddingRight="25dp">
+                  android:paddingRight="10dp"
+                  android:orientation="vertical">
 
         <org.mozilla.gecko.widget.FadedSingleColorTextView
                 android:id="@+id/title"
                 style="@style/Widget.TwoLinePageRow.Title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                gecko:fadeWidth="30dp"
+                gecko:fadeWidth="90dp"
                 tools:text="This is a long test title"/>
 
-        <TextView android:id="@+id/url"
+        <org.mozilla.gecko.widget.FadedSingleColorTextView android:id="@+id/url"
                   style="@style/Widget.TwoLinePageRow.Url"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:drawablePadding="5dp"
                   android:maxLength="1024"
+                  gecko:fadeWidth="90dp"
                   tools:text="http://test.com/test"
-                  tools:drawableLeft="@drawable/ic_url_bar_tab"
-                  tools:drawableRight="@drawable/ic_url_bar_star"/>
+                  tools:drawableLeft="@drawable/ic_url_bar_tab"/>
 
     </LinearLayout>
+
+    <ImageView android:id="@+id/status_icon_bookmark"
+               android:layout_width="20dp"
+               android:layout_height="20dp"
+               android:layout_gravity="center"
+               android:visibility="gone"
+               android:src="@drawable/bookmarked_star"/>
+
 </merge>

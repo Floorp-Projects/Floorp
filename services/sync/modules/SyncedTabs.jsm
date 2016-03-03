@@ -208,6 +208,9 @@ let SyncedTabsInternal = {
         Preferences.reset("services.sync.lastTabFetch");
         Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED, null);
         break;
+      case "nsPref:changed":
+        Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED, null);
+        break;
       default:
         break;
     }
@@ -232,6 +235,10 @@ let SyncedTabsInternal = {
 
 Services.obs.addObserver(SyncedTabsInternal, "weave:engine:sync:finish", false);
 Services.obs.addObserver(SyncedTabsInternal, "weave:service:start-over", false);
+// Observe the pref the indicates the state of the tabs engine has changed.
+// This will force consumers to re-evaluate the state of sync and update
+// accordingly.
+Services.prefs.addObserver("services.sync.engine.tabs", SyncedTabsInternal, false);
 
 // The public interface.
 this.SyncedTabs = {

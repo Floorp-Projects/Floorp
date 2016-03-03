@@ -592,6 +592,27 @@ this.BrowserTestUtils = {
   },
 
   /**
+   * Wait for a message to be fired from a particular message manager
+   *
+   * @param {nsIMessageManager} messageManager
+   *                            The message manager that should be used.
+   * @param {String}            message
+   *                            The message we're waiting for.
+   * @param {Function}          checkFn (optional)
+   *                            Optional function to invoke to check the message.
+   */
+  waitForMessage(messageManager, message, checkFn) {
+    return new Promise(resolve => {
+      messageManager.addMessageListener(message, function onMessage(msg) {
+        if (!checkFn || checkFn(msg)) {
+          messageManager.removeMessageListener(message, onMessage);
+          resolve();
+        }
+      });
+    });
+  },
+
+  /**
    *  Version of synthesizeMouse that uses the center of the target as the mouse
    *  location. Arguments and the return value are the same.
    */
