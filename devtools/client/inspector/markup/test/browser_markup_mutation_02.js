@@ -7,14 +7,15 @@
 // Test that markup-containers in the markup-view do flash when their
 // corresponding DOM nodes mutate
 
+const {clearTimeout} = require("sdk/timers");
 const TEST_URL = URL_ROOT + "doc_markup_flashing.html";
 
 // The test data contains a list of mutations to test.
 // Each item is an object:
 // - desc: a description of the test step, for better logging
 // - mutate: a function that should make changes to the content DOM
-// - attribute: if set, the test will expect the corresponding attribute to flash
-//   instead of the whole node
+// - attribute: if set, the test will expect the corresponding attribute to
+//   flash instead of the whole node
 // - flashedNode: [optional] the css selector of the node that is expected to
 //   flash in the markup-view as a result of the mutation.
 //   If missing, the rootNode (".list") will be expected to flash
@@ -44,7 +45,8 @@ const TEST_DATA = [{
     rootNode.setAttribute("test-name", "value-" + Date.now());
   }
 }, {
-  desc: "Adding an attribute with css reserved characters should flash the attribute",
+  desc: "Adding an attribute with css reserved characters should flash the " +
+        "attribute",
   attribute: "one:two",
   mutate: (doc, rootNode) => {
     rootNode.setAttribute("one:two", "value-" + Date.now());
@@ -115,8 +117,8 @@ function* assertNodeFlashing(nodeFront, inspector) {
   ok(container.tagState.classList.contains("theme-bg-contrast"),
     "Markup container for node is flashing");
 
-  // Clear the mutation flashing timeout now that we checked the node was flashing
-  let markup = inspector.markup;
+  // Clear the mutation flashing timeout now that we checked the node was
+  // flashing.
   clearTimeout(container._flashMutationTimer);
   container._flashMutationTimer = null;
   container.tagState.classList.remove("theme-bg-contrast");
@@ -125,7 +127,8 @@ function* assertNodeFlashing(nodeFront, inspector) {
 function* assertAttributeFlashing(nodeFront, attribute, inspector) {
   let container = getContainerForNodeFront(nodeFront, inspector);
   ok(container, "Markup container for node found");
-  ok(container.editor.attrElements.get(attribute), "Attribute exists on editor");
+  ok(container.editor.attrElements.get(attribute),
+     "Attribute exists on editor");
 
   let attributeElement = container.editor.getAttributeElement(attribute);
 

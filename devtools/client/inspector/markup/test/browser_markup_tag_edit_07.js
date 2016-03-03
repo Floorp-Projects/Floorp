@@ -1,7 +1,7 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
-
+/* import-globals-from helper_attributes_test_runner.js */
 "use strict";
 
 // One more test testing various add-attributes configurations
@@ -31,9 +31,9 @@ var TEST_DATA = [{
     style: "color:green"
   }
 }, {
-  desc: 'Try add an attribute containing a quote (") attribute by ' +
-        'clicking the empty space after a node - this should result ' +
-        'in it being set to an empty string',
+  desc: "Try add an attribute containing a quote (\") attribute by " +
+        "clicking the empty space after a node - this should result " +
+        "in it being set to an empty string",
   text: 'class="newclass" style="""',
   expectedAttributes: {
     class: "newclass",
@@ -41,41 +41,46 @@ var TEST_DATA = [{
   }
 }, {
   desc: "Try to add long data URL to make sure it is collapsed in attribute editor.",
-  text: "style='"+DATA_URL_INLINE_STYLE+"'",
+  text: `style='${DATA_URL_INLINE_STYLE}'`,
   expectedAttributes: {
-    'style': DATA_URL_INLINE_STYLE
+    "style": DATA_URL_INLINE_STYLE
   },
   validate: (element, container, inspector) => {
     let editor = container.editor;
-    let visibleAttrText = editor.attrElements.get("style").querySelector(".attr-value").textContent;
-    is (visibleAttrText, DATA_URL_INLINE_STYLE_COLLAPSED);
+    let visibleAttrText = editor.attrElements.get("style")
+                                             .querySelector(".attr-value")
+                                             .textContent;
+    is(visibleAttrText, DATA_URL_INLINE_STYLE_COLLAPSED);
   }
 }, {
   desc: "Try to add long attribute to make sure it is collapsed in attribute editor.",
-  text: 'data-long="'+LONG_ATTRIBUTE+'"',
+  text: `data-long="${LONG_ATTRIBUTE}"`,
   expectedAttributes: {
-    'data-long':LONG_ATTRIBUTE
+    "data-long": LONG_ATTRIBUTE
   },
   validate: (element, container, inspector) => {
     let editor = container.editor;
-    let visibleAttrText = editor.attrElements.get("data-long").querySelector(".attr-value").textContent;
-    is (visibleAttrText, LONG_ATTRIBUTE_COLLAPSED)
+    let visibleAttrText = editor.attrElements.get("data-long")
+                                             .querySelector(".attr-value")
+                                             .textContent;
+    is(visibleAttrText, LONG_ATTRIBUTE_COLLAPSED);
   }
 }, {
   desc: "Try to add long data URL to make sure it is collapsed in attribute editor.",
-  text: 'src="'+DATA_URL_ATTRIBUTE+'"',
+  text: `src="${DATA_URL_ATTRIBUTE}"`,
   expectedAttributes: {
     "src": DATA_URL_ATTRIBUTE
   },
   validate: (element, container, inspector) => {
     let editor = container.editor;
-    let visibleAttrText = editor.attrElements.get("src").querySelector(".attr-value").textContent;
-    is (visibleAttrText, DATA_URL_ATTRIBUTE_COLLAPSED);
+    let visibleAttrText = editor.attrElements.get("src")
+                                .querySelector(".attr-value").textContent;
+    is(visibleAttrText, DATA_URL_ATTRIBUTE_COLLAPSED);
   }
 }, {
   desc: "Try to add long attribute with collapseAttributes == false" +
   "to make sure it isn't collapsed in attribute editor.",
-  text: 'data-long="' + LONG_ATTRIBUTE + '"',
+  text: `data-long="${LONG_ATTRIBUTE}"`,
   expectedAttributes: {
     "data-long": LONG_ATTRIBUTE
   },
@@ -95,7 +100,7 @@ var TEST_DATA = [{
   }
 }, {
   desc: "Try to collapse attributes with collapseAttributeLength == 5",
-  text: 'data-long="' + LONG_ATTRIBUTE + '"',
+  text: `data-long="${LONG_ATTRIBUTE}"`,
   expectedAttributes: {
     "data-long": LONG_ATTRIBUTE
   },
