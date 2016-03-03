@@ -23,7 +23,7 @@ add_task(function*() {
   yield onUpdated;
 
   info("Checking that child LI elements have been created");
-  for (let i = 0; i < content.document.querySelectorAll("li").length; i ++) {
+  for (let i = 0; i < content.document.querySelectorAll("li").length; i++) {
     let liContainer = yield getContainerForSelector(
       "li:nth-child(" + (i + 1) + ")", inspector);
     ok(liContainer, "A container for the child LI element was created");
@@ -37,7 +37,7 @@ add_task(function*() {
     inspector.markup.doc.defaultView);
 
   info("Checking that child LI elements have been hidden");
-  for (let i = 0; i < content.document.querySelectorAll("li").length; i ++) {
+  for (let i = 0; i < content.document.querySelectorAll("li").length; i++) {
     let liContainer = yield getContainerForSelector(
       "li:nth-child(" + (i + 1) + ")", inspector);
     is(liContainer.elt.getClientRects().length, 0,

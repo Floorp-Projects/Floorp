@@ -42,19 +42,19 @@ function* testCollapsedLongAttribute(inspector, testActor) {
   attr.focus();
   EventUtils.sendKey("return", inspector.panelWin);
   let input = inplaceEditor(attr).input;
-  is (input.value, 'data-long="' + LONG_ATTRIBUTE + '"');
+  is(input.value, `data-long="${LONG_ATTRIBUTE}"`);
   EventUtils.sendKey("escape", inspector.panelWin);
 
   setEditableFieldValue(attr, input.value + ' data-short="ABC"', inspector);
   yield inspector.once("markupmutation");
 
   let visibleAttrText = editor.attrElements.get("data-long").querySelector(".attr-value").textContent;
-  is (visibleAttrText, LONG_ATTRIBUTE_COLLAPSED)
+  is(visibleAttrText, LONG_ATTRIBUTE_COLLAPSED)
 
   yield assertAttributes("#node24", {
     id: "node24",
     class: "",
-    'data-long': LONG_ATTRIBUTE,
+    "data-long": LONG_ATTRIBUTE,
     "data-short": "ABC"
   }, testActor);
 }
@@ -77,7 +77,7 @@ function* testModifyInlineStyleWithQuotes(inspector, testActor) {
   let input = inplaceEditor(attr).input;
   let value = input.value;
 
-  is (value,
+  is(value,
     "style='background-image: url(\"moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F\");'",
     "Value contains actual double quotes"
   );
@@ -113,7 +113,7 @@ function* testEditingAttributeWithMixedQuotes(inspector, testActor) {
   let input = inplaceEditor(attr).input;
   let value = input.value;
 
-  is (value, "class=\"Double &quot; and single '\"", "Value contains &quot;");
+  is(value, "class=\"Double &quot; and single '\"", "Value contains &quot;");
 
   value = value.replace(/Double/, "&quot;").replace(/single/, "'");
   input.value = value;

@@ -5,8 +5,8 @@
 "use strict";
 
 // Tests that the markup view loads only as many nodes as specified
-// by the devtools.markup.pagesize preference and that pressing the "show all nodes"
-// actually shows the nodes
+// by the devtools.markup.pagesize preference and that pressing the "show all
+// nodes" actually shows the nodes
 
 const TEST_URL = URL_ROOT + "doc_markup_pagesize_02.html";
 
@@ -40,6 +40,7 @@ function* showAllNodes(inspector) {
 
 function* assertAllNodesAreVisible(inspector) {
   let container = yield getContainerForSelector("ul", inspector);
-  ok(!container.elt.querySelector("button"), "All nodes button isn't here anymore");
+  ok(!container.elt.querySelector("button"),
+     "All nodes button isn't here anymore");
   is(container.children.childNodes.length, getNode("ul").children.length);
 }

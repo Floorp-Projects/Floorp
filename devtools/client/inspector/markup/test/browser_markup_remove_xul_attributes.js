@@ -15,7 +15,8 @@ add_task(function*() {
   let panel = yield getNode("#test", inspector);
   let panelFront = yield getNodeFront("#test", inspector);
 
-  ok(panelFront.hasAttribute("id"), "panelFront has id attribute in the beginning");
+  ok(panelFront.hasAttribute("id"),
+     "panelFront has id attribute in the beginning");
 
   info("Removing panel's id attribute");
   panel.removeAttribute("id");
@@ -23,5 +24,6 @@ add_task(function*() {
   info("Waiting for markupmutation");
   yield inspector.once("markupmutation");
 
-  is(panelFront.hasAttribute("id"), false, "panelFront doesn't have id attribute anymore");
+  is(panelFront.hasAttribute("id"), false,
+     "panelFront doesn't have id attribute anymore");
 });

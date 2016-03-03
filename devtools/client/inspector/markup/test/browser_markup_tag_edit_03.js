@@ -6,7 +6,8 @@
 
 // Tests that a node's tagname can be edited in the markup-view
 
-const TEST_URL = "data:text/html;charset=utf-8,<div id='retag-me'><div id='retag-me-2'></div></div>";
+const TEST_URL = `data:text/html;charset=utf-8,
+                  <div id='retag-me'><div id='retag-me-2'></div></div>`;
 
 add_task(function*() {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);

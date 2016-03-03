@@ -46,11 +46,13 @@ function* editContainer(inspector, {selector, newValue, oldValue, shortValue}) {
   let field = container.elt.querySelector("pre");
 
   if (shortValue) {
-    is (oldValue.indexOf(field.textContent.substring(0, field.textContent.length - 1)), 0,
-        "The shortened value starts with the full value " + field.textContent);
-    ok (oldValue.length > field.textContent.length, "The shortened value is short");
+    is(oldValue.indexOf(field.textContent.substring(0, field.textContent.length - 1)), 0,
+       "The shortened value starts with the full value " + field.textContent);
+    ok(oldValue.length > field.textContent.length,
+       "The shortened value is short");
   } else {
-    is (field.textContent, oldValue, "The text node has the correct original value");
+    is(field.textContent, oldValue,
+       "The text node has the correct original value");
   }
 
   inspector.markup.markNodeAsSelected(container.node);
@@ -60,7 +62,8 @@ function* editContainer(inspector, {selector, newValue, oldValue, shortValue}) {
     yield inspector.markup.once("text-expand");
   }
 
-  is (field.textContent, oldValue, "The text node has the correct original value after selecting");
+  is(field.textContent, oldValue,
+     "The text node has the correct original value after selecting");
   setEditableFieldValue(field, newValue, inspector);
 
   info("Listening to the markupmutation event");

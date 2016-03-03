@@ -9,7 +9,7 @@
 const TEST_URL = "data:text/html;charset=utf-8,<div></div>";
 
 add_task(function*() {
-  let {toolbox, inspector} = yield openInspectorForURL(TEST_URL);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
   yield inspector.markup.expandAll();
   yield selectNode("div", inspector);
 
@@ -20,7 +20,8 @@ add_task(function*() {
   setEditableFieldValue(tagEditor, "<<<", inspector);
   yield onCancelReselect;
   ok(true, "The markup-view emitted the canceledreselectonremoved event");
-  is(inspector.selection.nodeFront, container.node, "The test DIV is still selected");
+  is(inspector.selection.nodeFront, container.node,
+     "The test DIV is still selected");
 
   info("Updating the DIV tagname to a valid value this time");
   let onReselect = inspector.markup.once("reselectedonremoved");
@@ -29,5 +30,6 @@ add_task(function*() {
   ok(true, "The markup-view emitted the reselectedonremoved event");
 
   let spanFront = yield getNodeFront("span", inspector);
-  is(inspector.selection.nodeFront, spanFront, "The seelected node is now the SPAN");
+  is(inspector.selection.nodeFront, spanFront,
+     "The selected node is now the SPAN");
 });
