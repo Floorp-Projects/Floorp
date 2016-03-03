@@ -13,6 +13,7 @@ var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
 loader.loadSubScript("chrome://marionette/content/simpletest.js");
 loader.loadSubScript("chrome://marionette/content/common.js");
 
+Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/action.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/capture.js");
@@ -41,9 +42,7 @@ var isRemoteBrowser = () => curContainer.frame.contentWindow !== null;
 var previousContainer = null;
 var elementManager = new ElementManager();
 
-// Holds session capabilities.
 var capabilities = {};
-var interactions = new Interactions(() => capabilities);
 
 var actions = new action.Chain(checkForInterrupted);
 
@@ -858,9 +857,11 @@ function singleTap(id, corx, cory) {
   if (!visible) {
     throw new ElementNotVisibleError("Element is not currently visible and may not be manipulated");
   }
-  return interactions.accessibility.getAccessibleObject(el, true).then(acc => {
-    interactions.accessibility.checkVisible(acc, el, visible);
-    interactions.accessibility.checkActionable(acc, el);
+
+  let a11y = accessibility.get(capabilities.raisesAccessibilityExceptions);
+  return a11y.getAccessible(el, true).then(acc => {
+    a11y.checkVisible(acc, el, visible);
+    a11y.checkActionable(acc, el);
     if (!curContainer.frame.document.createTouch) {
       actions.mouseEventsOnly = true;
     }
@@ -1269,7 +1270,9 @@ function getActiveElement() {
  *     Reference to the web element to click.
  */
 function clickElement(id) {
-  return interactions.clickElement(curContainer, elementManager, id);
+  let el = elementManager.getKnownElement(id, curContainer);
+  return interaction.clickElement(
+      el, capabilities.raisesAccessibilityExceptions);
 }
 
 /**
@@ -1323,7 +1326,9 @@ function getElementTagName(id) {
  * capability.
  */
 function isElementDisplayed(id) {
-  return interactions.isElementDisplayed(curContainer, elementManager, id);
+  let el = elementManager.getKnownElement(id, curContainer);
+  return interaction.isElementDisplayed(
+      el, capabilities.raisesAccessibilityExceptions);
 }
 
 /**
@@ -1374,7 +1379,9 @@ function getElementRect(id) {
  *     True if enabled, false otherwise.
  */
 function isElementEnabled(id) {
-  return interactions.isElementEnabled(curContainer, elementManager, id);
+  let el = elementManager.getKnownElement(id, curContainer);
+  return interaction.isElementEnabled(
+      el, capabilities.raisesAccessibilityExceptions);
 }
 
 /**
@@ -1384,7 +1391,9 @@ function isElementEnabled(id) {
  * and Radio Button states, or option elements.
  */
 function isElementSelected(id) {
-  return interactions.isElementSelected(curContainer, elementManager, id);
+  let el = elementManager.getKnownElement(id, curContainer);
+  return interaction.isElementSelected(
+      el, capabilities.raisesAccessibilityExceptions);
 }
 
 /**
@@ -1405,9 +1414,10 @@ function sendKeysToElement(msg) {
         sendSyncMessage("Marionette:getFiles",
             {value: p, command_id: command_id});
   } else {
-    interactions.sendKeysToElement(curContainer, elementManager, id, val)
-        .then(() => sendOk(command_id))
-        .catch(e => sendError(e, command_id));
+    let promise = interaction.sendKeysToElement(
+        el, val, false, capabilities.raisesAccessibilityExceptions)
+      .then(() => sendOk(command_id))
+      .catch(e => sendError(e, command_id));
   }
 }
 
