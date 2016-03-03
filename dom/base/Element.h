@@ -36,6 +36,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/ElementBinding.h"
+#include "mozilla/dom/Nullable.h"
 #include "Units.h"
 
 class nsIFrame;
@@ -56,6 +57,7 @@ namespace mozilla {
 namespace dom {
   struct ScrollIntoViewOptions;
   struct ScrollToOptions;
+  class ElementOrCSSPseudoElement;
   class UnrestrictedDoubleOrKeyframeAnimationOptions;
 } // namespace dom
 } // namespace mozilla
@@ -826,11 +828,20 @@ public:
   {
   }
 
-  already_AddRefed<Animation> Animate(
-    JSContext* aContext,
-    JS::Handle<JSObject*> aFrames,
-    const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
-    ErrorResult& aError);
+  already_AddRefed<Animation>
+  Animate(JSContext* aContext,
+          JS::Handle<JSObject*> aFrames,
+          const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
+          ErrorResult& aError);
+
+  // A helper method that factors out the common functionality needed by
+  // Element::Animate and CSSPseudoElement::Animate
+  static already_AddRefed<Animation>
+  Animate(const Nullable<ElementOrCSSPseudoElement>& aTarget,
+          JSContext* aContext,
+          JS::Handle<JSObject*> aFrames,
+          const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
+          ErrorResult& aError);
 
   // Note: GetAnimations will flush style while GetAnimationsUnsorted won't.
   void GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations);
