@@ -18,6 +18,8 @@
 
 #include "asmjs/Wasm.h"
 
+#include "mozilla/CheckedInt.h"
+
 #include "jsprf.h"
 
 #include "asmjs/WasmGenerator.h"
@@ -30,6 +32,7 @@
 using namespace js;
 using namespace js::wasm;
 
+using mozilla::CheckedInt;
 using mozilla::IsNaN;
 
 typedef Handle<WasmModuleObject*> HandleWasmModule;
@@ -890,28 +893,29 @@ DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg,
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-
-    if (!d.readCStringIf(InitialLabel))
-        return Fail(cx, d, "expected memory section initial field");
-
-    uint32_t initialHeapSize;
-    if (!d.readVarU32(&initialHeapSize))
+    uint32_t initialSizePages;
+    if (!d.readVarU32(&initialSizePages))
         return Fail(cx, d, "expected initial memory size");
 
-    if (initialHeapSize < PageSize || initialHeapSize % PageSize != 0)
-        return Fail(cx, d, "initial memory size not a multiple of 0x10000");
-
-    if (initialHeapSize > INT32_MAX)
+    CheckedInt<int32_t> initialSize = initialSizePages;
+    initialSize *= PageSize;
+    if (!initialSize.isValid())
         return Fail(cx, d, "initial memory size too big");
 
-    if (!d.readCStringIf(EndLabel))
-        return Fail(cx, d, "expected end field of memory section");
+    uint32_t maxSizePages;
+    if (!d.readVarU32(&maxSizePages))
+        return Fail(cx, d, "expected initial memory size");
+
+    CheckedInt<int32_t> maxSize = maxSizePages;
+    maxSize *= PageSize;
+    if (!maxSize.isValid())
+        return Fail(cx, d, "initial memory size too big");
 
     if (!d.finishSection(sectionStart))
         return Fail(cx, d, "memory section byte size mismatch");
 
     bool signalsForOOB = CompileArgs(cx).useSignalHandlersForOOB;
-    heap.set(ArrayBufferObject::createForWasm(cx, initialHeapSize, signalsForOOB));
+    heap.set(ArrayBufferObject::createForWasm(cx, initialSize.value(), signalsForOOB));
     if (!heap)
         return false;
 
