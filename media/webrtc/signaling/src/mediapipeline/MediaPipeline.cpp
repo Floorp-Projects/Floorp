@@ -1403,6 +1403,35 @@ void GenericReceiveListener::AddSelf(MediaSegment* segment) {
                       queue_track_);
 }
 
+#ifndef USE_FAKE_MEDIA_STREAMS
+void GenericReceiveListener::SetPrincipalHandle_m(const PrincipalHandle& principal_handle)
+{
+  class Message : public ControlMessage
+  {
+  public:
+    Message(GenericReceiveListener* listener,
+            MediaStream* stream,
+            const PrincipalHandle& principal_handle)
+      : ControlMessage(stream), listener_(listener), principal_handle_(principal_handle)
+    {}
+
+    void Run() override {
+      listener_->SetPrincipalHandle_msg(principal_handle_);
+    }
+
+    RefPtr<GenericReceiveListener> listener_;
+    PrincipalHandle principal_handle_;
+  };
+
+  source_->GraphImpl()->AppendMessage(MakeUnique<Message>(this, source_, principal_handle));
+}
+
+void GenericReceiveListener::SetPrincipalHandle_msg(const PrincipalHandle& principal_handle)
+{
+  principal_handle_ = principal_handle;
+}
+#endif // USE_FAKE_MEDIA_STREAMS
+
 MediaPipelineReceiveAudio::PipelineListener::PipelineListener(
     SourceMediaStream * source, TrackID track_id,
     const RefPtr<MediaSessionConduit>& conduit, bool queue_track)
@@ -1481,7 +1510,7 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
     outputChannels.AppendElements(channels);
 
     segment.AppendFrames(samples.forget(), outputChannels, frames,
-                         PRINCIPAL_HANDLE_NONE /* Fixed in later patch */);
+                         principal_handle_);
 
     // Handle track not actually added yet or removed/finished
     if (source_->AppendToTrack(track_id_, &segment)) {
@@ -1611,7 +1640,7 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
   if (delta > 0) {
     VideoSegment segment;
     segment.AppendFrame(image.forget(), delta, IntSize(width_, height_),
-                        PRINCIPAL_HANDLE_NONE /* Fixed in later patch */);
+                        principal_handle_);
     // Handle track not actually added yet or removed/finished
     if (source_->AppendToTrack(track_id_, &segment)) {
       played_ticks_ = desired_time;

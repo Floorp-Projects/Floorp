@@ -287,11 +287,6 @@ MediaEngineRemoteVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   StreamTime delta = aDesiredTime - aSource->GetEndOfAppendedData(aID);
 
   if (delta > 0) {
-    size_t i = mSources.IndexOf(aSource);
-    if (i == mSources.NoIndex) {
-      NS_ERROR("aSource not in mSources");
-      return;
-    }
     // nullptr images are allowed
     AppendToTrack(aSource, mImage, aID, delta, aPrincipalHandle);
   }
