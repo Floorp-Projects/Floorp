@@ -75,6 +75,7 @@ public:
     , mPauseShouldStick(false)
     , mNeedsNewAnimationIndexWhenRun(false)
     , mPreviousPhaseOrIteration(PREVIOUS_PHASE_BEFORE)
+    , mInitialPlayState(NS_STYLE_ANIMATION_PLAY_STATE_PAUSED)
   {
     // We might need to drop this assertion once we add a script-accessible
     // constructor but for animations generated from CSS markup the
@@ -154,6 +155,13 @@ public:
   // True for animations that are generated from CSS markup and continue to
   // reflect changes to that markup.
   bool IsTiedToMarkup() const { return mOwningElement.IsSet(); }
+
+  void SetInitialPlayState(uint8_t aPlayState)
+  {
+    mInitialPlayState = aPlayState;
+  }
+  uint8_t InitialPlayState() const { return mInitialPlayState; }
+  void PlayOrPauseFromStyle();
 
 protected:
   virtual ~CSSAnimation()
@@ -266,6 +274,10 @@ protected:
   // One of the PREVIOUS_PHASE_* constants, or an integer for the iteration
   // whose start we last notified on.
   uint64_t mPreviousPhaseOrIteration;
+
+  // Represents initial play state specified by style.  This is used to avoid
+  // requesting a restyle for temporary animations.
+  uint8_t mInitialPlayState;
 };
 
 } /* namespace dom */
