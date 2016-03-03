@@ -580,7 +580,7 @@ TCPControlChannel.prototype = {
       let offer = this._pendingOffer;
       DEBUG && log("TCPControlChannel - notify pending offer: "
                    + JSON.stringify(offer));
-      this._listener._onOffer(new ChannelDescription(offer));
+      this._listener.onOffer(new ChannelDescription(offer));
       this._pendingOffer = null;
     }
 
@@ -588,7 +588,7 @@ TCPControlChannel.prototype = {
       let answer = this._pendingAnswer;
       DEBUG && log("TCPControlChannel - notify pending answer: "
                    + JSON.stringify(answer));
-      this._listener._onAnswer(new ChannelDescription(answer));
+      this._listener.onAnswer(new ChannelDescription(answer));
       this._pendingAnswer = null;
     }
 
