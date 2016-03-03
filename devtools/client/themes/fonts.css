@@ -14,6 +14,10 @@
   position: absolute;
 }
 
+#sidebar-panel-fontinspector > .devtools-toolbar {
+  display: flex;
+}
+
 #font-container {
   overflow: auto;
   flex: auto;
