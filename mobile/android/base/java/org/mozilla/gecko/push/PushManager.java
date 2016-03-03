@@ -71,7 +71,7 @@ public class PushManager {
     public Map<String, PushSubscription> allSubscriptionsForProfile(String profileName) {
         final PushRegistration registration = state.getRegistration(profileName);
         if (registration == null) {
-            return Collections.EMPTY_MAP;
+            return Collections.emptyMap();
         }
         return Collections.unmodifiableMap(registration.subscriptions);
     }
