@@ -15,7 +15,6 @@ chrome.jar:
   skin/aboutDevices.css                     (aboutDevices.css)
 #endif
   skin/aboutDownloads.css                   (aboutDownloads.css)
-  skin/aboutFeedback.css                    (aboutFeedback.css)
 #ifdef MOZ_SERVICES_HEALTHREPORT
   skin/aboutHealthReport.css                (aboutHealthReport.css)
 #endif
@@ -52,7 +51,6 @@ chrome.jar:
   skin/images/lock.png                      (images/lock.png)
   skin/images/textfield.png                 (images/textfield.png)
 
-  skin/images/5stars.png                    (images/5stars.png)
   skin/images/amo-logo.png                  (images/amo-logo.png)
   skin/images/arrowdown-16.png              (images/arrowdown-16.png)
   skin/images/arrowup-16.png                (images/arrowup-16.png)
@@ -96,14 +94,6 @@ chrome.jar:
   skin/images/reader-style-icon-xxhdpi.png       (images/reader-style-icon-xxhdpi.png)
   skin/images/privatebrowsing-mask.png           (images/privatebrowsing-mask.png)
   skin/images/privatebrowsing-mask-and-shield.svg (images/privatebrowsing-mask-and-shield.svg)
-  skin/images/icon_floaty_hdpi.png               (images/icon_floaty_hdpi.png)
-  skin/images/icon_floaty_mdpi.png               (images/icon_floaty_mdpi.png)
-  skin/images/icon_floaty_xhdpi.png              (images/icon_floaty_xhdpi.png)
-  skin/images/icon_floaty_xxhdpi.png             (images/icon_floaty_xxhdpi.png)
-  skin/images/icon_heart_hdpi.png                (images/icon_heart_hdpi.png)
-  skin/images/icon_heart_mdpi.png                (images/icon_heart_mdpi.png)
-  skin/images/icon_heart_xhdpi.png               (images/icon_heart_xhdpi.png)
-  skin/images/icon_heart_xxhdpi.png              (images/icon_heart_xxhdpi.png)
   skin/images/icon_key_emptypage.svg             (images/icon_key_emptypage.svg)
   skin/images/accessiblecaret-normal-hdpi.png       (images/accessiblecaret-normal-hdpi.png)
   skin/images/accessiblecaret-normal-xhdpi.png      (images/accessiblecaret-normal-xhdpi.png)
