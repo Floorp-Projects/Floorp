@@ -1,16 +1,16 @@
 load(libdir + "wasm.js");
 
-// MagicNumber = 0x4d534100
-const magic0 = 0;
-const magic1 = 97;  // 'a'
-const magic2 = 115; // 's'
-const magic3 = 109; // 'm'
+// MagicNumber = 0x6d736100;
+const magic0 = 0x00;  // '\0'
+const magic1 = 0x61;  // 'a'
+const magic2 = 0x73;  // 's'
+const magic3 = 0x6d;  // 'm'
 
-// EncodingVersion = -1 (to be changed to 1 at some point in the future)
-const ver0 = 0xff;
-const ver1 = 0xff;
-const ver2 = 0xff;
-const ver3 = 0xff;
+// EncodingVersion = 10 (to be changed to 1 at some point in the future)
+const ver0 = 0x0a;
+const ver1 = 0x00;
+const ver2 = 0x00;
+const ver3 = 0x00;
 
 // Section names
 const sigLabel = "sig";
