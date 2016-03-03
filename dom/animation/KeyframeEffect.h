@@ -43,6 +43,7 @@ class OwningElementOrCSSPseudoElement;
 class UnrestrictedDoubleOrKeyframeEffectOptions;
 enum class IterationCompositeOperation : uint32_t;
 enum class CompositeOperation : uint32_t;
+struct AnimationPropertyState;
 }
 
 /**
@@ -306,6 +307,8 @@ public:
   // Returns true if at least one property is being animated on compositor.
   bool IsRunningOnCompositor() const;
   void SetIsRunningOnCompositor(nsCSSProperty aProperty, bool aIsRunning);
+
+  void GetPropertyState(nsTArray<AnimationPropertyState>& aStates) const;
 
   // Returns true if this effect, applied to |aFrame|, contains
   // properties that mean we shouldn't run *any* compositor animations on this

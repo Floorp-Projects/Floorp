@@ -1,0 +1,127 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Bug 1196114 - Animation property which indicates
+       running on the compositor or not</title>
+<script type="application/javascript" src="../testharness.js"></script>
+<script type="application/javascript" src="../testharnessreport.js"></script>
+<script type="application/javascript" src="../testcommon.js"></script>
+<style>
+div {
+  /* Element needs geometry to be eligible for layerization */
+  width: 100px;
+  height: 100px;
+  background-color: white;
+}
+</style>
+</head>
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1196114"
+  target="_blank">Mozilla Bug 1196114</a>
+<div id="log"></div>
+<script>
+'use strict';
+
+function compare_property_state(a, b) {
+  if (a.property > b.property) {
+    return -1;
+  } else if (a.property < b.property) {
+    return 1;
+  }
+  if (a.runningOnCompositor != b.runningOnCompositor) {
+    return a.runningOnCompositor ? 1 : -1;
+  }
+  return a.warning > b.warning ? -1 : 1;
+}
+
+function assert_animation_property_state_equals(actual, expected) {
+  assert_equals(actual.length, expected.length);
+
+  var sortedActual = actual.sort(compare_property_state);
+  var sortedExpected = expected.sort(compare_property_state);
+
+  for (var i = 0; i < sortedActual.length; i++) {
+    assert_equals(sortedActual[i].property,
+                  sortedExpected[i].property,
+                  'CSS property name should match');
+    assert_equals(sortedActual[i].runningOnCompositor,
+                  sortedExpected[i].runningOnCompositor,
+                  'runningOnCompositor property should match');
+  }
+}
+
+var gAnimationsTests = [
+  {
+    desc: 'animations on compositor',
+    frames: {
+      opacity: [0, 1]
+    },
+    expected: [
+      {
+        property: 'opacity',
+        runningOnCompositor: true
+      }
+    ]
+  },
+  {
+    desc: 'animations on main thread',
+    frames: {
+      backgroundColor: ['white', 'red']
+    },
+    expected: [
+      {
+        property: 'background-color',
+        runningOnCompositor: false
+      }
+    ]
+  },
+  {
+    desc: 'animations on both threads',
+    frames: {
+      backgroundColor: ['white', 'red'],
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    expected: [
+      {
+        property: 'background-color',
+        runningOnCompositor: false
+      },
+      {
+        property: 'transform',
+        runningOnCompositor: true
+      }
+    ]
+  },
+  {
+    desc: 'two animation properties on compositor thread',
+    frames: {
+      opacity: [0, 1],
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    expected: [
+      {
+        property: 'opacity',
+        runningOnCompositor: true
+      },
+      {
+        property: 'transform',
+        runningOnCompositor: true
+      }
+    ]
+  }
+];
+
+gAnimationsTests.forEach(function(subtest) {
+  promise_test(function(t) {
+    var div = addDiv(t);
+    var animation = div.animate(subtest.frames, 100000);
+    return animation.ready.then(t.step_func(function() {
+      assert_animation_property_state_equals(
+        animation.effect.getPropertyState(),
+        subtest.expected);
+    }));
+  }, subtest.desc);
+});
+
+</script>
+</body>

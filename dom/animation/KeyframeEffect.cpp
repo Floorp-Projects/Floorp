@@ -1877,6 +1877,30 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
   }
 }
 
+
+void
+KeyframeEffectReadOnly::GetPropertyState(
+    nsTArray<AnimationPropertyState>& aStates) const
+{
+  for (const AnimationProperty& property : mProperties) {
+    // Bug 1252730: We should also expose this winsInCascade as well.
+    if (!property.mWinsInCascade) {
+      continue;
+    }
+
+    AnimationPropertyState state;
+    state.mProperty.Construct(
+      NS_ConvertASCIItoUTF16(nsCSSProps::GetStringValue(property.mProperty)));
+    state.mRunningOnCompositor.Construct(property.mIsRunningOnCompositor);
+
+    if (property.mPerformanceWarning.isSome()) {
+      state.mWarning.Construct(property.mPerformanceWarning.value());
+    }
+
+    aStates.AppendElement(state);
+  }
+}
+
 /* static */ const TimeDuration
 KeyframeEffectReadOnly::OverflowRegionRefreshInterval()
 {
