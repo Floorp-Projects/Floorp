@@ -57,7 +57,7 @@ function test_append() {
   is(select.firstChild.children.length, 2, "g2 has 2 children");
   is(select.firstChild.children[0], o1, "g1 has 2 children: o1");
   is(select.firstChild.children[1], g2, "g1 has 2 children: g1");
-  is(o1.index, 0, "o2.index should be 1");
+  is(o1.index, 0, "o2.index should be 0");
   is(o2.index, 0, "o2.index should be 0");
 }
 
@@ -74,13 +74,22 @@ function test_no_select() {
   is(g1.children.length, 2, "g2 has 2 children");
   is(g1.children[0], o1, "g1 has 2 children: o1");
   is(g1.children[1], g2, "g1 has 2 children: g1");
-  is(o1.index, 0, "o2.index should be 1");
+  is(o1.index, 0, "o2.index should be 0");
+  is(o2.index, 0, "o2.index should be 0");
+}
+
+function test_no_parent() {
+  var o1 = document.createElement("option");
+  var o2 = document.createElement("option");
+
+  is(o1.index, 0, "o2.index should be 0");
   is(o2.index, 0, "o2.index should be 0");
 }
 
 test_add();
 test_append();
 test_no_select();
+test_no_parent();
 
 </script>
 </pre>
