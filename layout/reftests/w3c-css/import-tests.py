@@ -29,10 +29,8 @@ import re
 # But for now, let's just import a few sets of tests.
 
 gSubtrees = [
-    os.path.join("approved", "css3-namespace", "src"),
-    #os.path.join("approved", "css3-multicol", "src"),
-    os.path.join("contributors", "opera", "submitted", "css3-conditional"),
-    #os.path.join("contributors", "opera", "submitted", "multicol")
+    os.path.join("css-namespaces-3"),
+    os.path.join("css-conditional-3"),
 ]
 
 gPrefixedProperties = [
@@ -111,6 +109,10 @@ def populate_test_files():
                dirnames.remove("support")
             if "reftest" in dirnames:
                dirnames.remove("reftest")
+            if "reference" in dirnames:
+               dirnames.remove("reference")
+            if "reports" in dirnames:
+               dirnames.remove("reports")
             for f in filenames:
                 if f == "README" or \
                    f.find("-ref.") != -1:
@@ -160,7 +162,7 @@ def map_file(fn, spec):
 
 def load_flags_for(fn, spec):
     global gTestFlags
-    document = get_document_for(fn, spec)
+    document = get_document_for(fn)
     destname = os.path.join(spec, os.path.basename(fn))
     gTestFlags[destname] = []
 
@@ -169,7 +171,7 @@ def load_flags_for(fn, spec):
         if name == "flags":
             gTestFlags[destname] = meta.getAttribute("content").split()
 
-def get_document_for(fn, spec):
+def get_document_for(fn):
     document = None # an xml.dom.minidom document
     if fn.endswith(".htm") or fn.endswith(".html"):
         # An HTML file
@@ -183,19 +185,11 @@ def get_document_for(fn, spec):
     return document
 
 def add_test_items(fn, spec):
-    document = get_document_for(fn, spec)
+    document = get_document_for(fn)
     refs = []
     notrefs = []
     for link in document.getElementsByTagName("link"):
         rel = link.getAttribute("rel")
-        if rel == "help" and spec == None:
-            specurl = link.getAttribute("href")
-            startidx = specurl.find("/TR/")
-            if startidx != -1:
-                startidx = startidx + 4
-                endidx = specurl.find("/", startidx)
-                if endidx != -1:
-                    spec = str(specurl[startidx:endidx])
         if rel == "match":
             arr = refs
         elif rel == "mismatch":
@@ -206,7 +200,12 @@ def add_test_items(fn, spec):
     if len(refs) > 1:
         raise StandardError("Need to add code to specify which reference we want to match.")
     if spec is None:
-        raise StandardError("Could not associate test with specification")
+        for subtree in gSubtrees:
+            if fn.startswith(subtree):
+                spec = os.path.basename(subtree)
+                break
+        else:
+            raise StandardError("Could not associate test " + fn + " with specification")
     for ref in refs:
         tests.append(["==", map_file(fn, spec), map_file(ref, spec)])
     for notref in notrefs:
