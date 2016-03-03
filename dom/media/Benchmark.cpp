@@ -11,6 +11,7 @@
 #include "BufferMediaResource.h"
 #include "WebMSample.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 
 namespace mozilla {
 
@@ -61,6 +62,7 @@ Benchmark::SaveResult(uint32_t aDecodeFps)
   MOZ_ASSERT(NS_IsMainThread());
 
   Preferences::SetUint(sBenchmarkFpsPref, aDecodeFps);
+  Telemetry::Accumulate(Telemetry::ID::VIDEO_VP9_BENCHMARK_FPS, aDecodeFps);
 }
 
 void
