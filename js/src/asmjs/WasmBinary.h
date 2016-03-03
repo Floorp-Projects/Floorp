@@ -459,9 +459,8 @@ class Encoder
     // require backpatching since the size of the section is only known at the
     // end while the size's uint32 must be stored at the beginning.
 
-    MOZ_WARN_UNUSED_RESULT bool startSection(const char* name, size_t* offset) {
-        return writePatchableVarU32(offset) &&
-               writeCString(name);
+    MOZ_WARN_UNUSED_RESULT bool startSection(size_t* offset) {
+        return writePatchableVarU32(offset);
     }
     void finishSection(size_t offset) {
         return patchVarU32(offset, bytecode_.length() - offset - varU32ByteLength(offset));
@@ -685,20 +684,10 @@ class Decoder
 
     // See "section" description in Encoder.
 
-    static const uint32_t NotStarted = UINT32_MAX;
-
-    MOZ_WARN_UNUSED_RESULT bool startSection(const char* name, uint32_t* startOffset) {
-        const uint8_t* before = cur_;
-        uint32_t numBytes;
-        if (!readVarU32(&numBytes) || bytesRemain() < numBytes)
-            return false;
-        if (!readCStringIf(name)) {
-            cur_ = before;
-            *startOffset = NotStarted;
-            return true;
-        }
-        *startOffset = before - beg_;
-        return  true;
+    MOZ_WARN_UNUSED_RESULT bool startSection(uint32_t* startOffset) {
+        *startOffset = currentOffset();
+        uint32_t unused;
+        return readVarU32(&unused);
     }
     MOZ_WARN_UNUSED_RESULT bool finishSection(uint32_t startOffset) {
         uint32_t currentOffset = cur_ - beg_;
