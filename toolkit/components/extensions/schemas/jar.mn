@@ -4,6 +4,7 @@
 
 toolkit.jar:
 % content extensions %content/extensions/
+    content/extensions/schemas/alarms.json
     content/extensions/schemas/cookies.json
     content/extensions/schemas/downloads.json
     content/extensions/schemas/extension.json
