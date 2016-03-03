@@ -45,6 +45,31 @@ Connection.prototype.close = function (error, lastId) {
   originalClose.apply(this, arguments);
 }
 
+var framer_module = node_http2_root + "/lib/protocol/framer";
+var http2_framer = require(framer_module);
+var Serializer = http2_framer.Serializer;
+var originalTransform = Serializer.prototype._transform;
+var newTransform = function (frame, encoding, done) {
+  if (frame.type == 'DATA') {
+    // Insert our empty DATA frame
+    emptyFrame = {};
+    emptyFrame.type = 'DATA';
+    emptyFrame.data = new Buffer(0);
+    emptyFrame.flags = [];
+    emptyFrame.stream = frame.stream;
+    var buffers = [];
+    Serializer['DATA'](emptyFrame, buffers);
+    Serializer.commonHeader(emptyFrame, buffers);
+    for (var i = 0; i < buffers.length; i++) {
+      this.push(buffers[i]);
+    }
+
+    // Reset to the original version for later uses
+    Serializer.prototype._transform = originalTransform;
+  }
+  originalTransform.apply(this, arguments);
+};
+
 function getHttpContent(path) {
   var content = '<!doctype html>' +
                 '<html>' +
@@ -661,6 +686,13 @@ function handleRequest(req, res) {
   else if (u.pathname === "/foldedheader") {
     res.setHeader('X-Folded-Header', 'this is\n folded');
     // Fall through to the default response behavior
+  }
+
+  else if (u.pathname === "/emptydata") {
+    // Overwrite the original transform with our version that will insert an
+    // empty DATA frame at the beginning of the stream response, then fall
+    // through to the default response behavior.
+    Serializer.prototype._transform = newTransform;
   }
 
   res.setHeader('Content-Type', 'text/html');

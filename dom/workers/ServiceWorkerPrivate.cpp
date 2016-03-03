@@ -276,10 +276,7 @@ public:
     if (!waitUntilPromise) {
       waitUntilPromise =
         Promise::Resolve(sgo, aCx, JS::UndefinedHandleValue, result);
-      if (NS_WARN_IF(result.Failed())) {
-        result.SuppressException();
-        return;
-      }
+      MOZ_RELEASE_ASSERT(!result.Failed());
     }
 
     MOZ_ASSERT(waitUntilPromise);

@@ -77,12 +77,12 @@ TCPSocketParent::GetAppId()
 };
 
 bool
-TCPSocketParent::GetInBrowser()
+TCPSocketParent::GetInIsolatedMozBrowser()
 {
   const PContentParent *content = Manager()->Manager();
   if (PBrowserParent* browser = SingleManagedOrNull(content->ManagedPBrowserParent())) {
     TabParent *tab = TabParent::GetFrom(browser);
-    return tab->IsBrowserElement();
+    return tab->IsIsolatedMozBrowserElement();
   } else {
     return false;
   }
@@ -155,7 +155,7 @@ TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bo
 
   // Obtain App ID
   uint32_t appId = GetAppId();
-  bool     inBrowser = GetInBrowser();
+  bool     inIsolatedMozBrowser = GetInIsolatedMozBrowser();
 
   if (NS_IsAppOffline(appId)) {
     NS_ERROR("Can't open socket because app is offline");
@@ -164,7 +164,7 @@ TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bo
   }
 
   mSocket = new TCPSocket(nullptr, aHost, aPort, aUseSSL, aUseArrayBuffers);
-  mSocket->SetAppIdAndBrowser(appId, inBrowser);
+  mSocket->SetAppIdAndBrowser(appId, inIsolatedMozBrowser);
   mSocket->SetSocketBridgeParent(this);
   NS_ENSURE_SUCCESS(mSocket->Init(), true);
   return true;
@@ -221,18 +221,18 @@ TCPSocketParent::RecvOpenBind(const nsCString& aRemoteHost,
 
   // Obtain App ID
   uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
-  bool     inBrowser = false;
+  bool     inIsolatedMozBrowser = false;
   const PContentParent *content = Manager()->Manager();
   if (PBrowserParent* browser = SingleManagedOrNull(content->ManagedPBrowserParent())) {
     // appId's are for B2G only currently, where managees.Count() == 1
     // This is not guaranteed currently in Desktop, so skip this there.
     TabParent *tab = TabParent::GetFrom(browser);
     appId = tab->OwnAppId();
-    inBrowser = tab->IsBrowserElement();
+    inIsolatedMozBrowser = tab->IsIsolatedMozBrowserElement();
   }
 
   mSocket = new TCPSocket(nullptr, NS_ConvertUTF8toUTF16(aRemoteHost), aRemotePort, aUseSSL, aUseArrayBuffers);
-  mSocket->SetAppIdAndBrowser(appId, inBrowser);
+  mSocket->SetAppIdAndBrowser(appId, inIsolatedMozBrowser);
   mSocket->SetSocketBridgeParent(this);
   rv = mSocket->InitWithUnconnectedTransport(socketTransport);
   NS_ENSURE_SUCCESS(rv, true);

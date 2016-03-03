@@ -1993,7 +1993,7 @@ CacheFile::InitIndexEntry()
   rv = CacheFileIOManager::InitIndexEntry(mHandle,
                                           mMetadata->OriginAttributes().mAppId,
                                           mMetadata->IsAnonymous(),
-                                          mMetadata->OriginAttributes().mInBrowser,
+                                          mMetadata->OriginAttributes().mInIsolatedMozBrowser,
                                           mPinned);
   NS_ENSURE_SUCCESS(rv, rv);
 

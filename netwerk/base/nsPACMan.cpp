@@ -237,12 +237,12 @@ private:
 //-----------------------------------------------------------------------------
 
 PendingPACQuery::PendingPACQuery(nsPACMan *pacMan, nsIURI *uri,
-                                 uint32_t appId, bool isInBrowser,
+                                 uint32_t appId, bool isInIsolatedMozBrowser,
                                  nsPACManCallback *callback,
                                  bool mainThreadResponse)
   : mPACMan(pacMan)
   , mAppId(appId)
-  , mIsInBrowser(isInBrowser)
+  , mIsInIsolatedMozBrowser(isInIsolatedMozBrowser)
   , mCallback(callback)
   , mOnMainThreadOnly(mainThreadResponse)
 {
@@ -351,7 +351,8 @@ nsPACMan::Shutdown()
 
 nsresult
 nsPACMan::AsyncGetProxyForURI(nsIURI *uri, uint32_t appId,
-                              bool isInBrowser, nsPACManCallback *callback,
+                              bool isInIsolatedMozBrowser,
+                              nsPACManCallback *callback,
                               bool mainThreadResponse)
 {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
@@ -364,7 +365,7 @@ nsPACMan::AsyncGetProxyForURI(nsIURI *uri, uint32_t appId,
     LoadPACFromURI(EmptyCString());
 
   RefPtr<PendingPACQuery> query =
-    new PendingPACQuery(this, uri, appId, isInBrowser, callback,
+    new PendingPACQuery(this, uri, appId, isInIsolatedMozBrowser, callback,
                         mainThreadResponse);
 
   if (IsPACURI(uri)) {
@@ -620,7 +621,7 @@ nsPACMan::ProcessPending()
   if (!completed) {
     nsresult status = mPAC.GetProxyForURI(query->mSpec, query->mHost,
                                           query->mAppId, query->mAppOrigin,
-                                          query->mIsInBrowser,
+                                          query->mIsInIsolatedMozBrowser,
                                           pacString);
     query->Complete(status, pacString);
   }
@@ -723,7 +724,7 @@ nsPACMan::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel,
                                  nsIAsyncVerifyRedirectCallback *callback)
 {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
-  
+
   nsresult rv = NS_OK;
   nsCOMPtr<nsIURI> pacURI;
   if (NS_FAILED((rv = newChannel->GetURI(getter_AddRefs(pacURI)))))
@@ -773,4 +774,3 @@ nsPACMan::Init(nsISystemProxySettings *systemProxySettings)
 
   return NS_OK;
 }
-

@@ -54,15 +54,15 @@ nsBrowserElement::IsNotWidgetOrThrow(ErrorResult& aRv)
 void
 nsBrowserElement::InitBrowserElementAPI()
 {
-  bool isBrowserOrApp;
+  bool isMozBrowserOrApp;
   nsCOMPtr<nsIFrameLoader> frameLoader = GetFrameLoader();
   NS_ENSURE_TRUE_VOID(frameLoader);
-  nsresult rv = frameLoader->GetOwnerIsBrowserOrAppFrame(&isBrowserOrApp);
+  nsresult rv = frameLoader->GetOwnerIsMozBrowserOrAppFrame(&isMozBrowserOrApp);
   NS_ENSURE_SUCCESS_VOID(rv);
   rv = frameLoader->GetOwnerIsWidget(&mOwnerIsWidget);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  if (!isBrowserOrApp) {
+  if (!isMozBrowserOrApp) {
     return;
   }
 
@@ -510,13 +510,13 @@ nsBrowserElement::GetAllowedAudioChannels(
       return;
     }
 
-    bool isBrowserOrApp;
-    aRv = frameLoader->GetOwnerIsBrowserOrAppFrame(&isBrowserOrApp);
+    bool isMozBrowserOrApp;
+    aRv = frameLoader->GetOwnerIsMozBrowserOrAppFrame(&isMozBrowserOrApp);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
 
-    if (!isBrowserOrApp) {
+    if (!isMozBrowserOrApp) {
       return;
     }
 

@@ -20,8 +20,6 @@
           src="../value.js"></script>
 
   <script type="application/javascript">
-
-
     /**
      * Do tests.
      */
@@ -132,6 +130,29 @@
       }
     }
 
+    function changeSelectValue(aID, aKey, aValue)
+    {
+      this.eventSeq = [new invokerChecker(EVENT_TEXT_VALUE_CHANGE, aID)];
+
+      this.invoke = function changeSelectValue_invoke()
+      {
+        getNode(aID).focus();
+        synthesizeKey(aKey, {}, window);
+      }
+
+      this.finalCheck = function changeSelectValue_finalCheck()
+      {
+        is(getAccessible(aID).value, aValue, "Wrong value for " + prettyName(aID));
+      }
+
+      this.getID = function changeSelectValue_getID()
+      {
+        return `${prettyName(aID)} closed select value change on '${aKey}'' key press`;
+      }
+    }
+
+    //enableLogging("DOMEvents");
+    //gA11yEventDumpToConsole = true;
     function doTests()
     {
       // Test initial values
@@ -154,6 +175,9 @@
 
       gQueue.push(new changeProgressValue("progress", "50"));
       gQueue.push(new changeRangeValue("range"));
+
+      gQueue.push(new changeSelectValue("select", "VK_DOWN", "2nd"));
+      gQueue.push(new changeSelectValue("select", "3", "3rd"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -221,5 +245,10 @@
   <!-- input@type="range" -->
   <input type="range" id="range" min="0" max="10" value="6">
 
+  <select id="select">
+    <option>1st</option>
+    <option>2nd</option>
+    <option>3rd</option>
+  </select>
 </body>
 </html>

@@ -15,7 +15,7 @@ function runTest() {
     context: {
       url: frameUrl,
       originAttributes: {
-        inBrowser: true
+        inIsolatedMozBrowser: true
       }
     }
   },{
@@ -24,7 +24,7 @@ function runTest() {
     context: {
       url: frameUrl,
       originAttributes: {
-        inBrowser: true
+        inIsolatedMozBrowser: true
       }
     }
   }], createFrame);

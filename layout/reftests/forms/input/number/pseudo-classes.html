@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Test pseudo-classes on number controls</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1250315">
+  <link rel="help" href="https://drafts.csswg.org/selectors-4/#rw-pseudos">
+  <link rel="match" href="about:blank">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:16px; padding:0; margin:0; }
+
+#t1:-moz-read-only { display:none; }
+#t1:-moz-read-write { display:block; }
+
+#t2:-moz-read-write { display:none; }
+#t2:-moz-read-only { display:block; }
+
+#t3:disabled { display:none; }
+#t3:enabled { display:block; }
+
+#t4:enabled { display:none; }
+#t4:disabled { display:block; }
+
+  </style>
+</head>
+<body>
+
+<input id=t1 type=number readonly>
+<input id=t2 type=number>
+<input id=t3 type=number disabled>
+<input id=t4 type=number>
+
+</body>
+</html>

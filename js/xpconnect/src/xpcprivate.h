@@ -592,11 +592,6 @@ public:
     void AddGCCallback(xpcGCCallback cb);
     void RemoveGCCallback(xpcGCCallback cb);
 
-    struct EnvironmentPreparer : public js::ScriptEnvironmentPreparer {
-        void invoke(JS::HandleObject scope, Closure& closure) override;
-    };
-    EnvironmentPreparer mEnvironmentPreparer;
-
     static void ActivityCallback(void* arg, bool active);
     static bool InterruptCallback(JSContext* cx);
 

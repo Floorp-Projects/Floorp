@@ -40,11 +40,11 @@ function runTest() {
       info("Got 2nd mozbrowserloadend");
 
       // Expected origin attributes for signed package.
-      var expectedSignedOA = {inBrowser: true,
+      var expectedSignedOA = {inIsolatedMozBrowser: true,
                               signedPkg: "09bc9714-7ab6-4320-9d20-fde4c237522c"};
 
       // Expected origin attributes for network request.
-      var expectedOA = {inBrowser: true};
+      var expectedOA = {inIsolatedMozBrowser: true};
 
       function checkOriginAttributes(attrs, expected) {
         for (var p in expected) {

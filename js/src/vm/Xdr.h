@@ -31,11 +31,11 @@ namespace js {
  *
  * (If you're wondering, 0xb973c0de is used because it looks like "bytecode".)
  */
-static const uint32_t XDR_BYTECODE_VERSION_SUBTRAHEND = 347;
+static const uint32_t XDR_BYTECODE_VERSION_SUBTRAHEND = 348;
 static const uint32_t XDR_BYTECODE_VERSION =
     uint32_t(0xb973c0de - XDR_BYTECODE_VERSION_SUBTRAHEND);
 
-static_assert(JSErr_Limit == 446,
+static_assert(JSErr_Limit == 445,
               "GREETINGS, POTENTIAL SUBTRAHEND INCREMENTER! If you added or "
               "removed MSG_DEFs from js.msg, you should increment "
               "XDR_BYTECODE_VERSION_SUBTRAHEND and update this assertion's "

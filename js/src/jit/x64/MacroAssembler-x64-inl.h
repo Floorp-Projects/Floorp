@@ -399,33 +399,10 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
 }
 
 void
-MacroAssembler::branchTestInt32(Condition cond, Register tag, Label* label)
+MacroAssembler::branchTestBooleanTruthy(bool truthy, const ValueOperand& value, Label* label)
 {
-    cond = testInt32(cond, tag);
-    j(cond, label);
-}
-
-void
-MacroAssembler::branchTestInt32(Condition cond, const Address& address, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    branchTestInt32Impl(cond, Operand(address), label);
-}
-
-void
-MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address, Label* label)
-{
-    ScratchRegisterScope scratch(*this);
-    splitTag(address, scratch);
-    branchTestInt32(cond, scratch, label);
-}
-
-void
-MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& src, Label* label)
-{
-    ScratchRegisterScope scratch(*this);
-    splitTag(src, scratch);
-    branchTestInt32(cond, scratch, label);
+    test32(value.valueReg(), value.valueReg());
+    j(truthy ? NonZero : Zero, label);
 }
 
 //}}} check_macroassembler_style
@@ -435,22 +412,6 @@ void
 MacroAssemblerX64::incrementInt32Value(const Address& addr)
 {
     asMasm().addPtr(Imm32(1), addr);
-}
-
-void
-MacroAssemblerX64::branchTestValue(Condition cond, const Address& valaddr, const
-                                   ValueOperand& value, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    asMasm().branchPtr(cond, valaddr, value.valueReg(), label);
-}
-
-template <typename T, typename S>
-void
-MacroAssemblerX64::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
-{
-    cmpPtr(Operand(lhs), rhs);
-    j(cond, label);
 }
 
 void
@@ -469,15 +430,16 @@ MacroAssemblerX64::unboxValue(const ValueOperand& src, AnyRegister dest)
     }
 }
 
+template <typename T>
 void
-MacroAssemblerX64::loadInt32OrDouble(const Operand& operand, FloatRegister dest)
+MacroAssemblerX64::loadInt32OrDouble(const T& src, FloatRegister dest)
 {
     Label notInt32, end;
-    branchTestInt32Impl(Assembler::NotEqual, operand, &notInt32);
-    convertInt32ToDouble(operand, dest);
+    asMasm().branchTestInt32(Assembler::NotEqual, src, &notInt32);
+    convertInt32ToDouble(src, dest);
     jump(&end);
     bind(&notInt32);
-    loadDouble(operand, dest);
+    loadDouble(src, dest);
     bind(&end);
 }
 
@@ -488,7 +450,7 @@ MacroAssemblerX64::ensureDouble(const ValueOperand& source, FloatRegister dest, 
 {
     Label isDouble, done;
     Register tag = splitTagForTest(source);
-    branchTestDouble(Assembler::Equal, tag, &isDouble);
+    asMasm().branchTestDouble(Assembler::Equal, tag, &isDouble);
     asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
 
     ScratchRegisterScope scratch(asMasm());

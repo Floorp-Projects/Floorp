@@ -252,6 +252,7 @@ config = {
             "options": ["--suite=reftest",
                         "--setpref=browser.tabs.remote=true",
                         "--setpref=browser.tabs.remote.autostart=true",
+                        "--setpref=extensions.e10sBlocksEnabling=false",
                         "--setpref=layers.async-pan-zoom.enabled=true"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest-sanity/reftest.list"]
         },
@@ -267,6 +268,7 @@ config = {
             "options": ["--suite=crashtest",
                         "--setpref=browser.tabs.remote=true",
                         "--setpref=browser.tabs.remote.autostart=true",
+                        "--setpref=extensions.e10sBlocksEnabling=false",
                         "--setpref=layers.async-pan-zoom.enabled=true"],
             "tests": ["tests/reftest/tests/testing/crashtest/crashtests.list"]
         },

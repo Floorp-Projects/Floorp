@@ -14,6 +14,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SegmentedVector.h"
 #include "jsapi.h"
+#include "jsfriendapi.h"
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
@@ -401,6 +402,11 @@ private:
     mPreservedNurseryObjects;
 
   nsTHashtable<nsPtrHashKey<JS::Zone>> mZonesWaitingForGC;
+
+  struct EnvironmentPreparer : public js::ScriptEnvironmentPreparer {
+    void invoke(JS::HandleObject scope, Closure& closure) override;
+  };
+  EnvironmentPreparer mEnvironmentPreparer;
 };
 
 void TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer);

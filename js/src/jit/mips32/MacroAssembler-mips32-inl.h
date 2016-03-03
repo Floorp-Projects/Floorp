@@ -289,18 +289,102 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
 }
 
 void
-MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
+MacroAssembler::branchTestUndefined(Condition cond, const ValueOperand& value, Label* label)
 {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(value.typeReg(), ImmType(JSVAL_TYPE_INT32), label, cond);
+    branchTestUndefined(cond, value.typeReg(), label);
 }
 
+void
+MacroAssembler::branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestInt32(cond, value.typeReg(), label);
+}
 
 void
 MacroAssembler::branchTestInt32Truthy(bool b, const ValueOperand& value, Label* label)
 {
-    as_and(ScratchRegister, value.payloadReg(), value.payloadReg());
-    ma_b(ScratchRegister, ScratchRegister, label, b ? NonZero : Zero);
+    ScratchRegisterScope scratch(*this);
+    as_and(scratch, value.payloadReg(), value.payloadReg());
+    ma_b(scratch, scratch, label, b ? NonZero : Zero);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, Register tag, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    Condition actual = (cond == Equal) ? Below : AboveOrEqual;
+    ma_b(tag, ImmTag(JSVAL_TAG_CLEAR), label, actual);
+}
+
+void
+MacroAssembler::branchTestDouble(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestDouble(cond, value.typeReg(), label);
+}
+
+void
+MacroAssembler::branchTestNumber(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestNumber(cond, value.typeReg(), label);
+}
+
+void
+MacroAssembler::branchTestBoolean(Condition cond, const ValueOperand& value, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ma_b(value.typeReg(), ImmType(JSVAL_TYPE_BOOLEAN), label, cond);
+}
+
+void
+MacroAssembler::branchTestBooleanTruthy(bool b, const ValueOperand& value, Label* label)
+{
+    ma_b(value.payloadReg(), value.payloadReg(), label, b ? NonZero : Zero);
+}
+
+void
+MacroAssembler::branchTestString(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestString(cond, value.typeReg(), label);
+}
+
+void
+MacroAssembler::branchTestStringTruthy(bool b, const ValueOperand& value, Label* label)
+{
+    Register string = value.payloadReg();
+    SecondScratchRegisterScope scratch2(*this);
+    ma_lw(scratch2, Address(string, JSString::offsetOfLength()));
+    ma_b(scratch2, Imm32(0), label, b ? NotEqual : Equal);
+}
+
+void
+MacroAssembler::branchTestSymbol(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestSymbol(cond, value.typeReg(), label);
+}
+
+void
+MacroAssembler::branchTestNull(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestNull(cond, value.typeReg(), label);
+}
+
+void
+MacroAssembler::branchTestObject(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestObject(cond, value.typeReg(), label);
+}
+
+void
+MacroAssembler::branchTestPrimitive(Condition cond, const ValueOperand& value, Label* label)
+{
+    branchTestPrimitive(cond, value.typeReg(), label);
+}
+
+template <class L>
+void
+MacroAssembler::branchTestMagic(Condition cond, const ValueOperand& value, L label)
+{
+    ma_b(value.typeReg(), ImmTag(JSVAL_TAG_MAGIC), label, cond);
 }
 
 //}}} check_macroassembler_style

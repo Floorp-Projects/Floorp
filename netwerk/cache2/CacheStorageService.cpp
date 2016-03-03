@@ -55,7 +55,7 @@ typedef nsClassHashtable<nsCStringHashKey, CacheEntryTable>
 /**
  * Keeps tables of entries.  There is one entries table for each distinct load
  * context type.  The distinction is based on following load context info states:
- * <isPrivate|isAnon|appId|inBrowser> which builds a mapping key.
+ * <isPrivate|isAnon|appId|inIsolatedMozBrowser> which builds a mapping key.
  *
  * Thread-safe to access, protected by the service mutex.
  */

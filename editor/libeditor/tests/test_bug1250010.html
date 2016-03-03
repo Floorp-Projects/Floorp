@@ -1,0 +1,53 @@
+<!DOCTYPE>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1250010
+-->
+<head>
+  <title>Test for Bug 1250010</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<div id="display">
+</div>
+
+<div id="content" contenteditable><p><b><font color="red">1234567890</font></b></p></div>
+
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+/** Test for Bug 1250010 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var div = document.getElementById("content");
+  div.focus();
+  synthesizeMouseAtCenter(div, {});
+
+  var sel = window.getSelection();
+  var selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "#text", "selection should be at the end of text node");
+  is(selRange.endOffset, 10, "offset should be 10");
+
+  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("b", {});
+  synthesizeKey("VK_UP", {});
+  synthesizeKey("a", {});
+
+  is(div.innerHTML, "<p><b><font color=\"red\">1234567890</font></b></p>" +
+                    "<p><b><font color=\"red\">a<br></font></b></p>" +
+                    "<p><b><font color=\"red\">b<br></font></b></p>",
+                    "unexpected HTML");
+
+  SimpleTest.finish();
+
+});
+
+</script>
+</body>
+
+</html>

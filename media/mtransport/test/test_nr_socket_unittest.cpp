@@ -204,7 +204,7 @@ class TestNrSocketTest : public MtransportTest {
 
     // write on |from|, recv on |accepted_sock|
     if (!WaitForWriteable(from)) {
-      std::cerr << __LINE__ << "WaitForWriteable failed" << std::endl;
+      std::cerr << __LINE__ << "WaitForWriteable (1) failed" << std::endl;
       return false;
     }
 
@@ -219,6 +219,11 @@ class TestNrSocketTest : public MtransportTest {
       return false;
     }
 
+    if (!WaitForReadable(accepted_sock)) {
+      std::cerr << __LINE__ << "WaitForReadable (1) failed" << std::endl;
+      return false;
+    }
+
     sts_->Dispatch(WrapRunnableRet(&r,
                                    this,
                                    &TestNrSocketTest::RecvDataTcp_s,
@@ -229,6 +234,11 @@ class TestNrSocketTest : public MtransportTest {
       return false;
     }
 
+    if (!WaitForWriteable(accepted_sock)) {
+      std::cerr << __LINE__ << "WaitForWriteable (2) failed" << std::endl;
+      return false;
+    }
+
     sts_->Dispatch(WrapRunnableRet(&r,
                                    this,
                                    &TestNrSocketTest::SendDataTcp_s,
@@ -236,6 +246,11 @@ class TestNrSocketTest : public MtransportTest {
                    NS_DISPATCH_SYNC);
     if (r) {
       std::cerr << "SendDataTcp_s (2) failed" << std::endl;
+      return false;
+    }
+
+    if (!WaitForReadable(from)) {
+      std::cerr << __LINE__ << "WaitForReadable (2) failed" << std::endl;
       return false;
     }
 
@@ -390,7 +405,7 @@ class TestNrSocketTest : public MtransportTest {
   }
 
 
-  bool WaitForSocketState(TestNrSocket *sock, int state) {
+  bool WaitForSocketState(NrSocketBase *sock, int state) {
     MOZ_ASSERT(sock);
     sts_->Dispatch(WrapRunnable(this,
                                 &TestNrSocketTest::WaitForSocketState_s,
@@ -413,19 +428,19 @@ class TestNrSocketTest : public MtransportTest {
     return res;
   }
 
-  void WaitForSocketState_s(TestNrSocket *sock, int state) {
+  void WaitForSocketState_s(NrSocketBase *sock, int state) {
      NR_ASYNC_WAIT(sock, state, &WaitDone, this);
   }
 
-  void CancelWait_s(TestNrSocket *sock, int state) {
+  void CancelWait_s(NrSocketBase *sock, int state) {
      sock->cancel(state);
   }
 
-  bool WaitForReadable(TestNrSocket *sock) {
+  bool WaitForReadable(NrSocketBase *sock) {
     return WaitForSocketState(sock, NR_ASYNC_WAIT_READ);
   }
 
-  bool WaitForWriteable(TestNrSocket *sock) {
+  bool WaitForWriteable(NrSocketBase *sock) {
     return WaitForSocketState(sock, NR_ASYNC_WAIT_WRITE);
   }
 

@@ -570,9 +570,12 @@ class TreeMetadataEmitter(LoggingMixin):
                     script = mozpath.join(
                         mozpath.dirname(mozpath.dirname(__file__)),
                         'action', 'generate_symbols_file.py')
+                    defines = ()
+                    if lib.defines:
+                        defines = lib.defines.get_defines()
                     yield GeneratedFile(context, script,
                         'generate_symbols_file', lib.symbols_file,
-                        [symbols_file.full_path], lib.defines.get_defines())
+                        [symbols_file.full_path], defines)
             if static_lib:
                 lib = StaticLibrary(context, libname, **static_args)
                 self._libs[libname].append(lib)
@@ -711,10 +714,6 @@ class TreeMetadataEmitter(LoggingMixin):
         # the recursive make backend.
         for o in self._emit_directory_traversal_from_context(context): yield o
 
-        for path in context['CONFIGURE_SUBST_FILES']:
-            yield self._create_substitution(ConfigFileSubstitution, context,
-                path)
-
         for obj in self._process_xpidl(context):
             yield obj
 
@@ -787,6 +786,12 @@ class TreeMetadataEmitter(LoggingMixin):
         for obj in self._process_generated_files(context):
             generated_files.add(obj.output)
             yield obj
+
+        for path in context['CONFIGURE_SUBST_FILES']:
+            sub = self._create_substitution(ConfigFileSubstitution, context,
+                path)
+            generated_files.add(str(sub.relpath))
+            yield sub
 
         for obj in self._process_test_harness_files(context):
             yield obj

@@ -183,7 +183,7 @@ WebappsRegistry.prototype = {
              topId: this._topId,
              requestID: requestID,
              appId: principal.appId,
-             isBrowser: principal.isInBrowserElement,
+             isBrowser: principal.isInIsolatedMozBrowserElement,
              isPackage: isPackage
            };
   },

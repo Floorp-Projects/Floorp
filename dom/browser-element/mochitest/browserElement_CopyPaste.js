@@ -329,7 +329,7 @@ var principal = SpecialPowers.wrap(document).nodePrincipal;
 var context = { url: SpecialPowers.wrap(principal.URI).spec,
                 originAttributes: {
                   appId: principal.appId,
-                  inBrowser: true }};
+                  inIsolatedMozBrowser: true }};
 
 addEventListener('testready', function() {
   SpecialPowers.pushPermissions([

@@ -337,16 +337,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         return SecondScratchReg;
     }
 
-    void branchTestGCThing(Condition cond, const Address& address, Label* label);
-    void branchTestGCThing(Condition cond, const BaseIndex& src, Label* label);
-
-    void branchTestPrimitive(Condition cond, const ValueOperand& value, Label* label);
-    void branchTestPrimitive(Condition cond, Register tag, Label* label);
-
-    void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label);
-    void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                         Label* label);
-
     // unboxing code
     void unboxNonDouble(const ValueOperand& operand, Register dest);
     void unboxNonDouble(const Address& src, Register dest);
@@ -416,63 +406,11 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void int32ValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
 
-    void branchTestBoolean(Condition cond, const ValueOperand& value, Label* label);
-    void branchTestBoolean(Condition cond, Register tag, Label* label);
-    void branchTestBoolean(Condition cond, const Address& address, Label* label);
-    void branchTestBoolean(Condition cond, const BaseIndex& src, Label* label);
-
-
-    void branchTestDouble(Condition cond, const ValueOperand& value, Label* label);
-    void branchTestDouble(Condition cond, Register tag, Label* label);
-    void branchTestDouble(Condition cond, const Address& address, Label* label);
-    void branchTestDouble(Condition cond, const BaseIndex& src, Label* label);
-
-    void branchTestNull(Condition cond, const ValueOperand& value, Label* label);
-    void branchTestNull(Condition cond, Register tag, Label* label);
-    void branchTestNull(Condition cond, const BaseIndex& src, Label* label);
-    void branchTestNull(Condition cond, const Address& address, Label* label);
     void testNullSet(Condition cond, const ValueOperand& value, Register dest);
 
-    void branchTestObject(Condition cond, const ValueOperand& value, Label* label);
-    void branchTestObject(Condition cond, Register tag, Label* label);
-    void branchTestObject(Condition cond, const BaseIndex& src, Label* label);
-    void branchTestObject(Condition cond, const Address& src, Label* label);
     void testObjectSet(Condition cond, const ValueOperand& value, Register dest);
 
-    void branchTestString(Condition cond, const ValueOperand& value, Label* label);
-    void branchTestString(Condition cond, Register tag, Label* label);
-    void branchTestString(Condition cond, const BaseIndex& src, Label* label);
-
-    void branchTestSymbol(Condition cond, const ValueOperand& value, Label* label);
-    void branchTestSymbol(Condition cond, const Register& tag, Label* label);
-    void branchTestSymbol(Condition cond, const BaseIndex& src, Label* label);
-
-    void branchTestUndefined(Condition cond, const ValueOperand& value, Label* label);
-    void branchTestUndefined(Condition cond, Register tag, Label* label);
-    void branchTestUndefined(Condition cond, const BaseIndex& src, Label* label);
-    void branchTestUndefined(Condition cond, const Address& address, Label* label);
     void testUndefinedSet(Condition cond, const ValueOperand& value, Register dest);
-
-    void branchTestNumber(Condition cond, const ValueOperand& value, Label* label);
-    void branchTestNumber(Condition cond, Register tag, Label* label);
-
-    void branchTestMagic(Condition cond, const ValueOperand& value, Label* label);
-    void branchTestMagic(Condition cond, const ValueOperand& value, wasm::JumpTarget target);
-    void branchTestMagic(Condition cond, Register tag, Label* label);
-    void branchTestMagic(Condition cond, const Address& address, Label* label);
-    void branchTestMagic(Condition cond, const BaseIndex& src, Label* label);
-
-    void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
-                              Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestValue(cond, val, MagicValue(why), label);
-    }
-
-    void branchTestStringTruthy(bool b, const ValueOperand& value, Label* label);
-
-    void branchTestDoubleTruthy(bool b, FloatRegister value, Label* label);
-
-    void branchTestBooleanTruthy(bool b, const ValueOperand& operand, Label* label);
 
     // higher level tag testing code
     Address ToPayload(Address value) {
