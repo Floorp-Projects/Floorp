@@ -560,14 +560,14 @@ var BrowserApp = {
       ExternalApps.init();
     }, NativeWindow, "contextmenus");
 
-    InitLater(() => {
-      let mm = window.getGroupMessageManager("browsers");
-      mm.loadFrameScript("chrome://browser/content/content.js", true);
-    });
-
     if (AppConstants.ACCESSIBILITY) {
       InitLater(() => AccessFu.attach(window), window, "AccessFu");
     }
+
+    // Don't delay loading content.js because when we restore reader mode tabs,
+    // we require the reader mode scripts in content.js right away.
+    let mm = window.getGroupMessageManager("browsers");
+    mm.loadFrameScript("chrome://browser/content/content.js", true);
 
     // We can't delay registering WebChannel listeners: if the first page is
     // about:accounts, which can happen when starting the Firefox Account flow
