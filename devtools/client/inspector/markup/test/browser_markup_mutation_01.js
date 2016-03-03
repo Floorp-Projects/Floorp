@@ -103,8 +103,8 @@ const TEST_DATA = [
       ok(container.singleTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with singleTextChild.");
       ok(!container.singleTextChild.canExpand, "Can't expand singleTextChild.");
-      is(container.editor.elt.querySelector(".text").textContent.trim(), "newtext",
-        "Single text child editor updated.");
+      is(container.editor.elt.querySelector(".text").textContent.trim(),
+         "newtext", "Single text child editor updated.");
     }
   },
   {
@@ -133,8 +133,8 @@ const TEST_DATA = [
       ok(container.singleTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with singleTextChild.");
       ok(!container.singleTextChild.canExpand, "Can't expand singleTextChild.");
-      ok(container.editor.elt.querySelector(".text").textContent.trim(), "newtext",
-        "Single text child editor updated.");
+      ok(container.editor.elt.querySelector(".text").textContent.trim(),
+         "newtext", "Single text child editor updated.");
     },
   },
   {
@@ -162,8 +162,8 @@ const TEST_DATA = [
       ok(container.singleTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with singleTextChild.");
       ok(!container.singleTextChild.canExpand, "Can't expand singleTextChild.");
-      ok(container.editor.elt.querySelector(".text").textContent.trim(), "newtext",
-        "Single text child editor updated.");
+      ok(container.editor.elt.querySelector(".text").textContent.trim(),
+         "newtext", "Single text child editor updated.");
     },
   },
 
@@ -207,7 +207,8 @@ const TEST_DATA = [
     },
     check: function*(inspector) {
       let {children} = yield getContainerForSelector("#node16", inspector);
-      is(children.innerHTML, "", "Node17 has been removed from its node16 parent");
+      is(children.innerHTML, "",
+         "Node17 has been removed from its node16 parent");
 
       let container = yield getContainerForSelector("#node2", inspector);
       let openTags = container.children.querySelectorAll(".open .tag");
@@ -252,18 +253,19 @@ const TEST_DATA = [
           "Node20 has 2 children (21 and 18)");
 
       let node21 = node20Children.childNodes[0];
-      is(node21.container.editor.elt.querySelector(".text").textContent.trim(), "line21",
-        "Node21 has a single text child");
+      is(node21.container.editor.elt.querySelector(".text").textContent.trim(),
+         "line21", "Node21 has a single text child");
 
       let node18 = node20Children.childNodes[1];
-      is(node18.querySelector(".open .attreditor .attr-value").textContent.trim(),
-        "node18", "Node20's second child is indeed node18");
+      is(node18.querySelector(".open .attreditor .attr-value")
+               .textContent.trim(),
+         "node18", "Node20's second child is indeed node18");
     }
   }
 ];
 
 add_task(function*() {
-  let {toolbox, inspector} = yield openInspectorForURL(TEST_URL);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Expanding all markup-view nodes");
   yield inspector.markup.expandAll();
@@ -289,7 +291,7 @@ add_task(function*() {
       });
 
       test();
-    })
+    });
 
     info("Expanding all markup-view nodes to make sure new nodes are imported");
     yield inspector.markup.expandAll();

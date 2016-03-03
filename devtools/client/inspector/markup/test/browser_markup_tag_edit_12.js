@@ -20,16 +20,20 @@ function* testAttributeEditing(inspector) {
   info("Testing focus position after attribute editing");
 
   info("Setting the first non-id attribute in edit mode");
-  yield activateFirstAttribute("#attr", inspector); // focuses id
-  collapseSelectionAndTab(inspector); // focuses the first attr after id
+  // focuses id
+  yield activateFirstAttribute("#attr", inspector);
+  // focuses the first attr after id
+  collapseSelectionAndTab(inspector);
 
   let attrs = yield getAttributesFromEditor("#attr", inspector);
 
-  info("Editing this attribute, keeping the same name, and tabbing to the next");
+  info("Editing this attribute, keeping the same name, " +
+       "and tabbing to the next");
   yield editAttributeAndTab(attrs[1] + '="99"', inspector);
   checkFocusedAttribute(attrs[2], true);
 
-  info("Editing the new focused attribute, keeping the name, and tabbing to the previous");
+  info("Editing the new focused attribute, keeping the name, " +
+       "and tabbing to the previous");
   yield editAttributeAndTab(attrs[2] + '="99"', inspector, true);
   checkFocusedAttribute(attrs[1], true);
 
@@ -45,8 +49,10 @@ function* testAttributeDeletion(inspector) {
   info("Testing focus position after attribute deletion");
 
   info("Setting the first non-id attribute in edit mode");
-  yield activateFirstAttribute("#delattr", inspector); // focuses id
-  collapseSelectionAndTab(inspector); // focuses the first attr after id
+  // focuses id
+  yield activateFirstAttribute("#delattr", inspector);
+  // focuses the first attr after id
+  collapseSelectionAndTab(inspector);
 
   let attrs = yield getAttributesFromEditor("#delattr", inspector);
 
@@ -59,12 +65,13 @@ function* testAttributeDeletion(inspector) {
 
   // Check we're on the newattr element
   let focusedAttr = Services.focus.focusedElement;
-  ok(focusedAttr.classList.contains("styleinspector-propertyeditor"), "in newattr");
+  ok(focusedAttr.classList.contains("styleinspector-propertyeditor"),
+     "in newattr");
   is(focusedAttr.tagName, "input", "newattr is active");
 }
 
 function* editAttributeAndTab(newValue, inspector, goPrevious) {
-  var onEditMutation = inspector.markup.once("refocusedonedit");
+  let onEditMutation = inspector.markup.once("refocusedonedit");
   inspector.markup.doc.activeElement.value = newValue;
   if (goPrevious) {
     EventUtils.synthesizeKey("VK_TAB", { shiftKey: true },

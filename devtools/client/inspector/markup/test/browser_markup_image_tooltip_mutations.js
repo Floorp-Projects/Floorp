@@ -29,7 +29,8 @@ add_task(function*() {
   let container = getContainerForNodeFront(img, inspector);
   ok(container, "Found markup container for the image.");
 
-  let target = container.editor.getAttributeElement("src").querySelector(".link");
+  let target = container.editor.getAttributeElement("src")
+                               .querySelector(".link");
   ok(target, "Found the src attribute in the markup view.");
 
   info("Showing tooltip on the src link.");

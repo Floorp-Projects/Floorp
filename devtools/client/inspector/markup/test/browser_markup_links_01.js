@@ -111,13 +111,16 @@ add_task(function*() {
 
     for (let {attributeName, links} of attributes) {
       info("Testing attribute " + attributeName);
-      let linkEls = editor.attrElements.get(attributeName).querySelectorAll(".link");
+      let linkEls = editor.attrElements.get(attributeName)
+                                       .querySelectorAll(".link");
 
       is(linkEls.length, links.length, "The right number of links were found");
 
-      for (let i = 0; i < links.length; i ++) {
-        is(linkEls[i].dataset.type, links[i].type, "Link " + i + " has the right type");
-        is(linkEls[i].textContent, links[i].value, "Link " + i + " has the right value");
+      for (let i = 0; i < links.length; i++) {
+        is(linkEls[i].dataset.type, links[i].type,
+           `Link ${i} has the right type`);
+        is(linkEls[i].textContent, links[i].value,
+           `Link ${i} has the right value`);
       }
     }
   }
