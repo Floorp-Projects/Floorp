@@ -309,6 +309,15 @@ MacroAssemblerCompat::atomicExchangeToTypedIntArray(Scalar::Type arrayType, cons
 
 //{{{ check_macroassembler_style
 // ===============================================================
+// MacroAssembler high-level usage.
+
+void
+MacroAssembler::flush()
+{
+    Assembler::flush();
+}
+
+// ===============================================================
 // Stack manipulation functions.
 
 void
@@ -734,12 +743,6 @@ MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
     moveValue(rhs, ValueOperand(scratch64.asUnsized()));
     Cmp(ARMRegister(lhs.valueReg(), 64), scratch64);
     B(label, cond);
-}
-
-void
-MacroAssembler::flush()
-{
-    Assembler::flush();
 }
 
 //}}} check_macroassembler_style
