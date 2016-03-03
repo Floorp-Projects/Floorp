@@ -14,9 +14,9 @@ var { DebuggerClient } = require("devtools/shared/client/main");
 var { DebuggerServer } = require("devtools/server/main");
 var { WebGLFront } = require("devtools/server/actors/webgl");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var TiltGL = require("devtools/client/tilt/tilt-gl");
-var {TargetFactory} = require("devtools/client/framework/target");
-var {Toolbox} = require("devtools/client/framework/toolbox");
+var { TargetFactory } = require("devtools/client/framework/target");
+var { Toolbox } = require("devtools/client/framework/toolbox");
+var { isWebGLSupported } = require("devtools/client/shared/webgl-utils");
 var mm = null;
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js"
@@ -124,16 +124,6 @@ function test() {
 
 function createCanvas() {
   return document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-}
-
-function isWebGLSupported() {
-  let supported =
-    !TiltGL.isWebGLForceEnabled() &&
-     TiltGL.isWebGLSupported() &&
-     TiltGL.create3DContext(createCanvas());
-
-  info("Apparently, WebGL is" + (supported ? "" : " not") + " supported.");
-  return supported;
 }
 
 function once(aTarget, aEventName, aUseCapture = false) {

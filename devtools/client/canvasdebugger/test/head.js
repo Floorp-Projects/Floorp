@@ -17,9 +17,9 @@ var { CallWatcherFront } = require("devtools/server/actors/call-watcher");
 var { CanvasFront } = require("devtools/server/actors/canvas");
 var { setTimeout } = require("sdk/timers");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var TiltGL = require("devtools/client/tilt/tilt-gl");
 var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
+var { isWebGLSupported } = require("devtools/client/shared/webgl-utils");
 var mm = null
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js";
@@ -140,10 +140,7 @@ function isTestingSupported() {
     return true;
   }
 
-  let supported =
-    !TiltGL.isWebGLForceEnabled() &&
-     TiltGL.isWebGLSupported() &&
-     TiltGL.create3DContext(createCanvas());
+  let supported = isWebGLSupported();
 
   info("This test requires WebGL support.");
   info("Apparently, WebGL is" + (supported ? "" : " not") + " supported.");
