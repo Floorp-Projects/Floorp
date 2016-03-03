@@ -145,6 +145,10 @@ struct AnimationProperty
   // objects for equality.
   bool mIsRunningOnCompositor = false;
 
+  // A warning string indicating why this property could not be animated
+  // on the compositor.
+  Maybe<nsString> mPerformanceWarning;
+
   InfallibleTArray<AnimationPropertySegment> mSegments;
 
   // NOTE: This operator does *not* compare the mWinsInCascade member *or* the
@@ -321,6 +325,12 @@ public:
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
+
+  // Associates a warning string with the animated property on the specified
+  // frame indicating why, for example, the property could not be animated
+  // on the compositor.
+  void SetPerformanceWarning(nsCSSProperty aProperty,
+                             const nsAString& aMessage);
 
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
