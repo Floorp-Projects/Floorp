@@ -7021,6 +7021,20 @@
     "description": "Number of times a custom developer tool has been opened.",
     "releaseChannelCollection": "opt-out"
   },
+  "DEVTOOLS_RELOAD_ADDON_INSTALLED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Number of times the reload addon has been installed.",
+    "bug_numbers": [1248435]
+  },
+  "DEVTOOLS_RELOAD_ADDON_RELOAD_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Number of times the tools have been reloaded by the reload addon.",
+    "bug_numbers": [1248435]
+  },
   "DEVTOOLS_TOOLBOX_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
@@ -7203,6 +7217,20 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Number of users that have opened a custom developer tool via the toolbox button."
+  },
+  "DEVTOOLS_RELOAD_ADDON_INSTALLED_PER_USER_FLAG": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "55",
+    "kind": "flag",
+    "description": "Records once per browser version if the reload add-on is installed.",
+    "bug_numbers": [1248435]
+  },
+  "DEVTOOLS_RELOAD_ADDON_RELOAD_PER_USER_FLAG": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "55",
+    "kind": "flag",
+    "description": "Records once per browser version if the tools have been reloaded via the reload add-on.",
+    "bug_numbers": [1248435]
   },
   "DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",
@@ -8451,6 +8479,15 @@
     "kind": "count",
     "releaseChannelCollection": "opt-out",
     "description": "Number of sessions where at least one chat message was exchanged"
+  },
+  "LOOP_INFOBAR_ACTION_BUTTONS": {
+    "alert_emails": ["firefox-dev@mozilla.org", "mbanner@mozilla.com"],
+    "expires_in_version": "51",
+    "kind": "enumerated",
+    "n_values": 4,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1245486],
+    "description": "Number times info bar buttons are clicked (0=PAUSED, 1=CREATED)"
   },
   "E10S_STATUS": {
     "alert_emails": ["firefox-dev@mozilla.org"],

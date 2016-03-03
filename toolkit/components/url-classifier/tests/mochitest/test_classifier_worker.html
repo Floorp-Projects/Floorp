@@ -13,9 +13,6 @@
 
 <script class="testbody" type="text/javascript">
 
-var Cc = SpecialPowers.Cc;
-var Ci = SpecialPowers.Ci;
-
 // Add some URLs to the malware database.
 var testData = "example.com/tests/toolkit/components/url-classifier/tests/mochitest/evilWorker.js";
 var testUpdate =
@@ -29,42 +26,9 @@ testUpdate +=
   "a:550:32:" + testData.length + "\n" +
   testData;
 
-var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
-                .getService(Ci.nsIUrlClassifierDBService);
-
-function doUpdate(update) {
-  var listener = {
-    QueryInterface: SpecialPowers.wrapCallback(function(iid)
-    {
-      if (iid.equals(Ci.nsISupports) ||
-          iid.equals(Ci.nsIUrlClassifierUpdateObserver))
-        return this;
-
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }),
-    updateUrlRequested: function(url) { },
-    streamFinished: function(status) { },
-    updateError: function(errorCode) {
-      ok(false, "Couldn't update classifier.");
-      // Abort test.
-      SimpleTest.finish();
-    },
-    updateSuccess: function(requestedTimeout) {
-      SpecialPowers.pushPrefEnv(
-        {"set" : [["browser.safebrowsing.malware.enabled", true]]},
-        function loadTestFrame() {
-          document.getElementById("testFrame").src =
-            "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/workerFrame.html";
-        }
-      );
-    }
-  };
-
-  dbService.beginUpdate(listener, "test-malware-simple,test-unwanted-simple", "");
-  dbService.beginStream("", "");
-  dbService.updateStream(update);
-  dbService.finishStream();
-  dbService.finishUpdate();
+function loadTestFrame() {
+  document.getElementById("testFrame").src =
+    "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/workerFrame.html";
 }
 
 function onmessage(event)
@@ -78,10 +42,26 @@ function onmessage(event)
   is(pieces[0], "success", pieces[1]);
 }
 
+const CLASSIFIER_COMMON_URL = SimpleTest.getTestFileURL("classifierCommon.js");
+let classifierCommonScript = SpecialPowers.loadChromeScript(CLASSIFIER_COMMON_URL);
+
+classifierCommonScript.addMessageListener("loadTestFrame", () => {
+  SpecialPowers.pushPrefEnv(
+    {"set" : [["browser.safebrowsing.malware.enabled", true]]},
+    loadTestFrame);
+});
+classifierCommonScript.addMessageListener("updateError", ({ errorCode }) => {
+  ok(false, "Couldn't update classifier. Error code: " + errorCode);
+  // Abort test.
+  SimpleTest.finish();
+});
+
 SpecialPowers.pushPrefEnv(
   {"set" : [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
             ["urlclassifier.phishTable", "test-phish-simple"]]},
-  function() { doUpdate(testUpdate); });
+  function() {
+    classifierCommonScript.sendAsyncMessage("doUpdate", { testUpdate });
+  });
 
 window.addEventListener("message", onmessage, false);
 

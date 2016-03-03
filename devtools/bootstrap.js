@@ -8,6 +8,13 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
+function actionOccurred(id) {
+  let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  let Telemetry = require("devtools/client/shared/telemetry");;
+  let telemetry = new Telemetry();
+  telemetry.actionOccurred(id);
+}
+
 // Helper to listen to a key on all windows
 function MultiWindowKeyListener({ keyCode, ctrlKey, altKey, callback }) {
   let keyListener = function (event) {
@@ -150,6 +157,8 @@ function reload(event) {
       gDevTools.showToolbox(target);
     }, 1000);
   }
+
+  actionOccurred("reloadAddonReload");
 }
 
 let listener;
@@ -165,5 +174,7 @@ function shutdown() {
   listener.stop();
   listener = null;
 }
-function install() {}
+function install() {
+  actionOccurred("reloadAddonInstalled");
+}
 function uninstall() {}
