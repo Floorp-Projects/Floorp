@@ -1,6 +1,10 @@
 // Check to make sure that a worker can be attached to a toolbox
 // directly, and that the toolbox has expected properties.
 
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejections should be fixed.
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("[object Object]");
+
 var TAB_URL = EXAMPLE_URL + "doc_WorkerActor.attachThread-tab.html";
 var WORKER_URL = "code_WorkerActor.attachThread-worker.js";
 
