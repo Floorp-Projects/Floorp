@@ -75,6 +75,7 @@ ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
 
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/alarms.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/cookies.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/downloads.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extension.json");
