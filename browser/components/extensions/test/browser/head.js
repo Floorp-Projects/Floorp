@@ -7,7 +7,7 @@
  *          clickBrowserAction clickPageAction
  *          getBrowserActionPopup getPageActionPopup
  *          closeBrowserAction closePageAction
- *          promisePopupShown promisePopupHidden
+ *          promisePopupShown
  */
 
 var {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm");
@@ -59,16 +59,6 @@ function promisePopupShown(popup) {
   });
 }
 
-function promisePopupHidden(popup) {
-  return new Promise(resolve => {
-    let onPopupHidden = event => {
-      popup.removeEventListener("popuphidden", onPopupHidden);
-      resolve();
-    };
-    popup.addEventListener("popuphidden", onPopupHidden);
-  });
-}
-
 function getBrowserActionWidget(extension) {
   return CustomizableUI.getWidget(makeWidgetId(extension.id) + "-browser-action");
 }
@@ -78,8 +68,6 @@ function getBrowserActionPopup(extension, win = window) {
 
   if (group.areaType == CustomizableUI.TYPE_TOOLBAR) {
     return win.document.getElementById("customizationui-widget-panel");
-  } else {
-    return win.PanelUI.panel;
   }
   return null;
 }

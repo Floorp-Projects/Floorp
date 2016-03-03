@@ -19,11 +19,6 @@ add_task(function* testPageActionPopup() {
       "popup-a.html": scriptPage("popup-a.js"),
       "popup-a.js": function() {
         browser.runtime.sendMessage("from-popup-a");
-        browser.runtime.onMessage.addListener(msg => {
-          if (msg == "close-popup") {
-            window.close();
-          }
-        });
       },
 
       "data/popup-b.html": scriptPage("popup-b.js"),
@@ -60,37 +55,26 @@ add_task(function* testPageActionPopup() {
           },
           () => {
             browser.pageAction.setPopup({tabId, popup: "/popup-a.html"});
-            sendClick({expectEvent: false, expectPopup: "a", runNextTest: true});
-          },
-          () => {
-            browser.test.sendMessage("next-test", {expectClosed: true});
-            browser.runtime.sendMessage("close-popup");
+            sendClick({expectEvent: false, expectPopup: "a"});
           },
         ];
 
         let expect = {};
-        sendClick = ({expectEvent, expectPopup, runNextTest}) => {
-          expect = {event: expectEvent, popup: expectPopup, runNextTest};
+        sendClick = ({expectEvent, expectPopup}) => {
+          expect = {event: expectEvent, popup: expectPopup};
           browser.test.sendMessage("send-click");
         };
 
         browser.runtime.onMessage.addListener(msg => {
-          if (msg == "close-popup") {
-            return;
-          } else if (expect.popup) {
+          if (expect.popup) {
             browser.test.assertEq(msg, `from-popup-${expect.popup}`,
                                   "expected popup opened");
           } else {
-            browser.test.fail(`unexpected popup: ${msg}`);
+            browser.test.fail("unexpected popup");
           }
 
           expect.popup = null;
-          if (expect.runNextTest) {
-            expect.runNextTest = false;
-            tests.shift()();
-          } else {
-            browser.test.sendMessage("next-test");
-          }
+          browser.test.sendMessage("next-test");
         });
 
         browser.pageAction.onClicked.addListener(() => {
@@ -134,19 +118,12 @@ add_task(function* testPageActionPopup() {
     clickPageAction(extension);
   });
 
-  extension.onMessage("next-test", Task.async(function* (expecting = {}) {
+  extension.onMessage("next-test", Task.async(function* () {
     let panel = document.getElementById(panelId);
-    if (expecting.expectClosed) {
-      ok(panel, "Expect panel to exist");
-      yield promisePopupShown(panel);
-      yield promisePopupHidden(panel);
-      ok(true, `Panel is closed`);
-    } else if (panel) {
+    if (panel) {
       yield promisePopupShown(panel);
       panel.hidePopup();
-    }
 
-    if (panel) {
       panel = document.getElementById(panelId);
       is(panel, null, "panel successfully removed from document after hiding");
     }
