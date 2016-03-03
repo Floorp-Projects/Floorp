@@ -8,7 +8,8 @@
 ASFLAGS += CONFIG['FFVPX_ASFLAGS']
 ASFLAGS += ['-I%s/media/ffvpx' % TOPSRCDIR]
 
-if CONFIG['FFVPX_AS']:
+if CONFIG['FFVPX_ASFLAGS']:
+    USE_YASM = True
     if CONFIG['OS_ARCH'] == 'WINNT':
        # Fix inline symbols and math defines for windows.
         DEFINES['_USE_MATH_DEFINES'] = True

@@ -4,8 +4,6 @@
 
 # Set up the libvpx assembler config.
 
-AS=$(VPX_AS)
-
 ifdef VPX_ARM_ASM
 
 ifdef VPX_AS_CONVERSION
