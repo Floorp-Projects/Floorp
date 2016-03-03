@@ -1,0 +1,5 @@
+#!/bin/bash -e
+ffmpeg -i bbb-31.webm -frames:v 8 -map 0:0 sWebMSample.webm -y
+mv sWebMSample.webm sWebMSample
+xxd -i sWebMSample |head --lines=-1 | sed 's/unsigned char/static uint8_t/' > ../WebMSample.h
+rm sWebMSample
