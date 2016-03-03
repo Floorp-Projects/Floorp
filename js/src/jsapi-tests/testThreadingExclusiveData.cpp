@@ -7,17 +7,18 @@
 #include "mozilla/IntegerRange.h"
 #include "js/Vector.h"
 #include "jsapi-tests/tests.h"
-#include "vm/Mutex.h"
+#include "threading/ExclusiveData.h"
 
 // One thread for each bit in our counter.
 const static uint8_t numThreads = 64;
+const static bool showDiagnostics = false;
 
 struct CounterAndBit
 {
     uint8_t bit;
-    const js::Mutex<uint64_t>& counter;
+    const js::ExclusiveData<uint64_t>& counter;
 
-    CounterAndBit(uint8_t bit, const js::Mutex<uint64_t>& counter)
+    CounterAndBit(uint8_t bit, const js::ExclusiveData<uint64_t>& counter)
       : bit(bit)
       , counter(counter)
     {
@@ -25,22 +26,19 @@ struct CounterAndBit
     }
 };
 
-const static bool shouldPrint = false;
-
 void
 printDiagnosticMessage(uint64_t seen)
 {
-    if (!shouldPrint)
-        return;
-
-    fprintf(stderr, "Thread %p saw ", PR_GetCurrentThread());
-    for (auto i : mozilla::MakeRange(numThreads)) {
-        if (seen & (uint64_t(1) << i))
-            fprintf(stderr, "1");
-        else
-            fprintf(stderr, "0");
+    if (showDiagnostics) {
+        fprintf(stderr, "Thread %p saw ", PR_GetCurrentThread());
+        for (auto i : mozilla::MakeRange(numThreads)) {
+            if (seen & (uint64_t(1) << i))
+                fprintf(stderr, "1");
+            else
+                fprintf(stderr, "0");
+        }
+        fprintf(stderr, "\n");
     }
-    fprintf(stderr, "\n");
 }
 
 void
@@ -69,12 +67,9 @@ setBitAndCheck(void* arg)
     }
 }
 
-BEGIN_TEST(testMutex)
+BEGIN_TEST(testExclusiveData)
 {
-    auto maybeCounter = js::Mutex<uint64_t>::Create(0);
-    CHECK(maybeCounter.isSome());
-
-    js::Mutex<uint64_t> counter(mozilla::Move(*maybeCounter));
+    js::ExclusiveData<uint64_t> counter(0);
 
     js::Vector<PRThread*> threads(cx);
     CHECK(threads.reserve(numThreads));
@@ -99,4 +94,4 @@ BEGIN_TEST(testMutex)
 
     return true;
 }
-END_TEST(testMutex)
+END_TEST(testExclusiveData)
