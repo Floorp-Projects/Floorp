@@ -652,6 +652,20 @@ if CONFIG['MOZ_CRASHREPORTER']:
     gbjar.sources += [ 'java/org/mozilla/gecko/CrashReporter.java' ]
     ANDROID_RES_DIRS += [ 'crashreporter/res' ]
 
+if CONFIG['MOZ_ANDROID_GCM']:
+    gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
+        'gcm/GcmInstanceIDListenerService.java',
+        'gcm/GcmMessageListenerService.java',
+        'gcm/GcmTokenClient.java',
+        'push/Fetched.java',
+        'push/PushClient.java',
+        'push/PushManager.java',
+        'push/PushRegistration.java',
+        'push/PushService.java',
+        'push/PushState.java',
+        'push/PushSubscription.java',
+    ]]
+
 if (CONFIG['MOZ_ANDROID_MAX_SDK_VERSION']):
     max_sdk_version = int(CONFIG['MOZ_ANDROID_MAX_SDK_VERSION'])
 else:

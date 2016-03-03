@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.google.android.gms.iid.InstanceIDListenerService;
 
+import org.mozilla.gecko.push.PushService;
 import org.mozilla.gecko.util.ThreadUtils;
 
 /**
@@ -27,7 +28,7 @@ public class GcmInstanceIDListenerService extends InstanceIDListenerService {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                // TODO: PushService.getInstance().onRefresh();
+                PushService.getInstance().onRefresh();
             }
         });
     }
