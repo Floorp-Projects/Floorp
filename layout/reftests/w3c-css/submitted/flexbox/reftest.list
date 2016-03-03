@@ -170,8 +170,8 @@ fails == flexbox-min-width-auto-002b.html flexbox-min-width-auto-002-ref.html # 
 == flexbox-sizing-vert-002.xhtml  flexbox-sizing-vert-002-ref.xhtml
 
 # Tests for table-fixup on flex items
-== flexbox-table-fixup-001a.xhtml flexbox-table-fixup-001-ref.xhtml
-== flexbox-table-fixup-001b.xhtml flexbox-table-fixup-001-ref.xhtml
+!= flexbox-table-fixup-001a.xhtml flexbox-table-fixup-001-ref.xhtml
+!= flexbox-table-fixup-001b.xhtml flexbox-table-fixup-001-ref.xhtml
 
 # Tests for handling of whitespace within anonymous flex items.
 == flexbox-whitespace-handling-001a.xhtml flexbox-whitespace-handling-001-ref.xhtml
@@ -181,7 +181,7 @@ fails == flexbox-min-width-auto-002b.html flexbox-min-width-auto-002-ref.html # 
 # Tests for flex containers with pseudo-elements
 == flexbox-with-pseudo-elements-001.html flexbox-with-pseudo-elements-001-ref.html
 == flexbox-with-pseudo-elements-002.html flexbox-with-pseudo-elements-002-ref.html
-== flexbox-with-pseudo-elements-003.html flexbox-with-pseudo-elements-003-ref.html
+!= flexbox-with-pseudo-elements-003.html flexbox-with-pseudo-elements-003-ref.html
 
 # Tests for combined influence of 'writing-mode' & 'direction' on flex axes
 test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-001.html flexbox-writing-mode-001-ref.html
