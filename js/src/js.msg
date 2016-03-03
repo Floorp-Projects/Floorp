@@ -366,6 +366,8 @@ MSG_DEF(JSMSG_WASM_FAIL,               1, JSEXN_TYPEERR, "wasm error: {0}")
 MSG_DEF(JSMSG_WASM_DECODE_FAIL,        2, JSEXN_TYPEERR, "wasm validation error at offset {0}: {1}")
 MSG_DEF(JSMSG_WASM_TEXT_FAIL,          1, JSEXN_SYNTAXERR, "wasm text error: {0}")
 MSG_DEF(JSMSG_WASM_BAD_IND_CALL,       0, JSEXN_ERR,     "wasm indirect call signature mismatch")
+MSG_DEF(JSMSG_WASM_BAD_BUF_ARG,        0, JSEXN_TYPEERR, "first argument must be an ArrayBuffer")
+MSG_DEF(JSMSG_WASM_BAD_IMPORT_ARG,     0, JSEXN_TYPEERR, "second argument, if present, must be an object")
 
 // Proxy
 MSG_DEF(JSMSG_BAD_TRAP_RETURN_VALUE,   2, JSEXN_TYPEERR,"trap {1} for {0} returned a primitive value")
