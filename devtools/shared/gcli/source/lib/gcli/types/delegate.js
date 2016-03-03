@@ -87,6 +87,7 @@ exports.items = [
     name: 'remote',
     paramName: undefined,
     blankIsValid: false,
+    hasPredictions: true,
 
     getSpec: function(commandName, paramName) {
       return {
