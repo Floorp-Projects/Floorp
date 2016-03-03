@@ -96,8 +96,8 @@ if (!hasI64) {
 // ----------------------------------------------------------------------------
 // imports
 
-assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', 1), Error, /Second argument, if present, must be an Object/);
-assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', null), Error, /Second argument, if present, must be an Object/);
+assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', 1), Error, /second argument, if present, must be an object/);
+assertErrorMessage(() => wasmEvalText('(module (import "a" "b"))', null), Error, /second argument, if present, must be an object/);
 
 const noImportObj = /no import object given/;
 const notObject = /import object field is not an Object/;

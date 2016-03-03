@@ -984,7 +984,8 @@ ProcessArgsForCompartment(JSContext* cx, char** argv, int argc)
             break;
         case 'I':
             RuntimeOptionsRef(cx).toggleIon()
-                                 .toggleAsmJS();
+                                 .toggleAsmJS()
+                                 .toggleWasm();
             break;
         }
     }
