@@ -173,9 +173,11 @@ BEGIN_TEST(testIncrementalRoots)
     MOZ_ASSERT(!leafHandle->asTenured().isMarked());
     MOZ_ASSERT(!leafOwnerHandle->asTenured().isMarked());
 
+#ifdef DEBUG
     // Remember the current GC number so we can assert that no GC occurs
     // between operations.
     auto currentGCNumber = rt->gc.gcNumber();
+#endif
 
     // Now do the incremental GC's worst nightmare: rip an unmarked object
     // 'leaf' out of the graph and stick it into an already-marked region (hang
