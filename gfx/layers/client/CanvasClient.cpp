@@ -87,7 +87,6 @@ CanvasClient2D::UpdateAsync(AsyncCanvasRenderer* aRenderer)
 void
 CanvasClient2D::UpdateRenderer(gfx::IntSize aSize, Renderer& aRenderer)
 {
-  AutoRemoveTexture autoRemove(this);
   ClientCanvasLayer* layer = nullptr;
   AsyncCanvasRenderer* asyncRenderer = nullptr;
   if (aRenderer.constructed<ClientCanvasLayer*>()) {
@@ -98,7 +97,7 @@ CanvasClient2D::UpdateRenderer(gfx::IntSize aSize, Renderer& aRenderer)
 
   if (mBuffer &&
       (mBuffer->IsImmutable() || mBuffer->GetSize() != aSize)) {
-    autoRemove.mTexture = mBuffer;
+    mPrevBuffer = mBuffer;
     mBuffer = nullptr;
   }
 
@@ -155,6 +154,13 @@ CanvasClient2D::UpdateRenderer(gfx::IntSize aSize, Renderer& aRenderer)
 void
 CanvasClient2D::Updated()
 {
+  AutoRemoveTexture autoRemove(this);
+
+  if (mPrevBuffer) {
+    autoRemove.mTexture = mPrevBuffer;
+    mPrevBuffer = nullptr;
+  }
+
   if (mBufferCreated && !AddTextureClient(mBuffer)) {
     mBuffer = nullptr;
     return;

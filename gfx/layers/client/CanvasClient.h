@@ -89,6 +89,7 @@ public:
   CanvasClient2D(CompositableForwarder* aLayerForwarder,
                  TextureFlags aFlags)
     : CanvasClient(aLayerForwarder, aFlags),
+      mPrevBuffer(nullptr),
       mBufferCreated(false),
       mUpdated(false)
   {
@@ -128,6 +129,7 @@ private:
                                  TextureFlags aFlags,
                                  ClientCanvasLayer* aLayer);
 
+  RefPtr<TextureClient> mPrevBuffer;
   RefPtr<TextureClient> mBuffer;
   bool mBufferCreated;
   bool mUpdated;
