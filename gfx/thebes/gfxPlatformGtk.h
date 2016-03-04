@@ -132,10 +132,6 @@ public:
       return true;
     }
 
-#ifdef GL_PROVIDER_GLX
-    already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
-#endif
-
 protected:
     static gfxFontconfigUtils *sFontconfigUtils;
 
