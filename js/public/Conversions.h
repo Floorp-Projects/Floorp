@@ -556,6 +556,12 @@ ToInt16(double d)
     return detail::ToIntWidth<int16_t>(d);
 }
 
+inline uint16_t
+ToUint16(double d)
+{
+    return detail::ToUintWidth<uint16_t>(d);
+}
+
 /* WEBIDL 4.2.10 */
 inline int64_t
 ToInt64(double d)
