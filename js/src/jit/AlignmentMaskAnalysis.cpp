@@ -82,9 +82,9 @@ AlignmentMaskAnalysis::analyze()
             // or MAsmJSAtomicBinopHeap, because the backend and the OOB
             // mechanism don't support non-zero offsets for them yet.
             if (i->isAsmJSLoadHeap())
-                AnalyzeAsmHeapAddress(i->toAsmJSLoadHeap()->ptr(), graph_);
+                AnalyzeAsmHeapAddress(i->toAsmJSLoadHeap()->base(), graph_);
             else if (i->isAsmJSStoreHeap())
-                AnalyzeAsmHeapAddress(i->toAsmJSStoreHeap()->ptr(), graph_);
+                AnalyzeAsmHeapAddress(i->toAsmJSStoreHeap()->base(), graph_);
         }
     }
     return true;

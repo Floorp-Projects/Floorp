@@ -3606,10 +3606,12 @@ IsLiteralOrConstInt(FunctionValidator& f, ParseNode* pn, uint32_t* u32)
 }
 
 static const int32_t NoMask = -1;
+static const bool YesSimd = true;
+static const bool NoSimd = false;
 
 static bool
 CheckArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr,
-                 Scalar::Type* viewType, int32_t* mask)
+                 bool isSimd, Scalar::Type* viewType, int32_t* mask)
 {
     if (!viewName->isKind(PNK_NAME))
         return f.fail(viewName, "base of array access must be a typed array view name");
@@ -3623,7 +3625,8 @@ CheckArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr
     uint32_t index;
     if (IsLiteralOrConstInt(f, indexExpr, &index)) {
         uint64_t byteOffset = uint64_t(index) << TypedArrayShift(*viewType);
-        if (!f.m().tryConstantAccess(byteOffset, TypedArrayElemSize(*viewType)))
+        uint64_t width = isSimd ? Simd128DataSize : TypedArrayElemSize(*viewType);
+        if (!f.m().tryConstantAccess(byteOffset, width))
             return f.fail(indexExpr, "constant index out of range");
 
         *mask = NoMask;
@@ -3655,12 +3658,12 @@ CheckArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr
         if (!pointerType.isIntish())
             return f.failf(pointerNode, "%s is not a subtype of int", pointerType.toChars());
     } else {
-        // For legacy compatibility, accept Int8/Uint8 accesses with no shift.
+        // For SIMD access, and legacy scalar access compatibility, accept
+        // Int8/Uint8 accesses with no shift.
         if (TypedArrayShift(*viewType) != 0)
             return f.fail(indexExpr, "index expression isn't shifted; must be an Int8/Uint8 access");
 
         MOZ_ASSERT(*mask == NoMask);
-        bool folded = false;
 
         ParseNode* pointerNode = indexExpr;
 
@@ -3668,7 +3671,7 @@ CheckArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr
         if (!CheckExpr(f, pointerNode, &pointerType))
             return false;
 
-        if (folded) {
+        if (isSimd) {
             if (!pointerType.isIntish())
                 return f.failf(pointerNode, "%s is not a subtype of intish", pointerType.toChars());
         } else {
@@ -3682,7 +3685,7 @@ CheckArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr
 
 static bool
 CheckAndPrepareArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr,
-                           Scalar::Type* viewType, int32_t* mask)
+                           bool isSimd, Scalar::Type* viewType)
 {
     // asm.js doesn't have constant offsets, so just encode a 0.
     if (!f.encoder().writeVarU32(0))
@@ -3696,7 +3699,8 @@ CheckAndPrepareArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode*
     if (!f.encoder().writePatchableExpr(&prepareAt))
         return false;
 
-    if (!CheckArrayAccess(f, viewName, indexExpr, viewType, mask))
+    int32_t mask;
+    if (!CheckArrayAccess(f, viewName, indexExpr, isSimd, viewType, &mask))
         return false;
 
     // asm.js only has naturally-aligned accesses.
@@ -3704,9 +3708,9 @@ CheckAndPrepareArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode*
 
     // Don't generate the mask op if there is no need for it which could happen for
     // a shift of zero or a SIMD access.
-    if (*mask != NoMask) {
+    if (mask != NoMask) {
         f.encoder().patchExpr(prepareAt, Expr::I32And);
-        return f.writeInt32Lit(*mask);
+        return f.writeInt32Lit(mask);
     }
 
     f.encoder().patchExpr(prepareAt, Expr::Id);
@@ -3717,13 +3721,12 @@ static bool
 CheckLoadArray(FunctionValidator& f, ParseNode* elem, Type* type)
 {
     Scalar::Type viewType;
-    int32_t mask;
 
     size_t opcodeAt;
     if (!f.encoder().writePatchableExpr(&opcodeAt))
         return false;
 
-    if (!CheckAndPrepareArrayAccess(f, ElemBase(elem), ElemIndex(elem), &viewType, &mask))
+    if (!CheckAndPrepareArrayAccess(f, ElemBase(elem), ElemIndex(elem), NoSimd, &viewType))
         return false;
 
     switch (viewType) {
@@ -3767,8 +3770,7 @@ CheckStoreArray(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
         return false;
 
     Scalar::Type viewType;
-    int32_t mask;
-    if (!CheckAndPrepareArrayAccess(f, ElemBase(lhs), ElemIndex(lhs), &viewType, &mask))
+    if (!CheckAndPrepareArrayAccess(f, ElemBase(lhs), ElemIndex(lhs), NoSimd, &viewType))
         return false;
 
     Type rhsType;
@@ -4063,9 +4065,9 @@ CheckMathMinMax(FunctionValidator& f, ParseNode* callNode, bool isMax, Type* typ
 
 static bool
 CheckSharedArrayAtomicAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr,
-                             Scalar::Type* viewType, int32_t* mask)
+                             Scalar::Type* viewType)
 {
-    if (!CheckAndPrepareArrayAccess(f, viewName, indexExpr, viewType, mask))
+    if (!CheckAndPrepareArrayAccess(f, viewName, indexExpr, NoSimd, viewType))
         return false;
 
     // The global will be sane, CheckArrayAccess checks it.
@@ -4121,8 +4123,7 @@ CheckAtomicsLoad(FunctionValidator& f, ParseNode* call, Type* type)
         return false;
 
     Scalar::Type viewType;
-    int32_t mask;
-    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType, &mask))
+    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType))
         return false;
 
     f.encoder().patchU8(viewTypeAt, uint8_t(viewType));
@@ -4146,8 +4147,7 @@ CheckAtomicsStore(FunctionValidator& f, ParseNode* call, Type* type)
         return false;
 
     Scalar::Type viewType;
-    int32_t mask;
-    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType, &mask))
+    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType))
         return false;
 
     Type rhsType;
@@ -4180,8 +4180,7 @@ CheckAtomicsBinop(FunctionValidator& f, ParseNode* call, Type* type, AtomicOp op
         return false;
 
     Scalar::Type viewType;
-    int32_t mask;
-    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType, &mask))
+    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType))
         return false;
 
     Type valueArgType;
@@ -4229,8 +4228,7 @@ CheckAtomicsCompareExchange(FunctionValidator& f, ParseNode* call, Type* type)
         return false;
 
     Scalar::Type viewType;
-    int32_t mask;
-    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType, &mask))
+    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType))
         return false;
 
     Type oldValueArgType;
@@ -4268,8 +4266,7 @@ CheckAtomicsExchange(FunctionValidator& f, ParseNode* call, Type* type)
         return false;
 
     Scalar::Type viewType;
-    int32_t mask;
-    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType, &mask))
+    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType))
         return false;
 
     Type valueArgType;
@@ -5117,28 +5114,14 @@ CheckSimdLoadStoreArgs(FunctionValidator& f, ParseNode* call)
     if (!view->isKind(PNK_NAME))
         return f.fail(view, "expected Uint8Array view as SIMD.*.load/store first argument");
 
-    const ModuleValidator::Global* global = f.lookupGlobal(view->name());
-    if (!global ||
-        global->which() != ModuleValidator::Global::ArrayView ||
-        global->viewType() != Scalar::Uint8)
-    {
-        return f.fail(view, "expected Uint8Array view as SIMD.*.load/store first argument");
-    }
-
     ParseNode* indexExpr = NextNode(view);
-    uint32_t indexLit;
-    if (IsLiteralOrConstInt(f, indexExpr, &indexLit)) {
-        if (!f.m().tryConstantAccess(indexLit, Simd128DataSize))
-            return f.fail(indexExpr, "constant index out of range");
-        return f.writeInt32Lit(indexLit);
-    }
 
-    Type indexType;
-    if (!CheckExpr(f, indexExpr, &indexType))
+    Scalar::Type viewType;
+    if (!CheckAndPrepareArrayAccess(f, view, indexExpr, YesSimd, &viewType))
         return false;
 
-    if (!indexType.isIntish())
-        return f.failf(indexExpr, "%s is not a subtype of intish", indexType.toChars());
+    if (viewType != Scalar::Uint8)
+        return f.fail(view, "expected Uint8Array view as SIMD.*.load/store first argument");
 
     return true;
 }
