@@ -1838,10 +1838,10 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition* maybeInput,
 
     Label done, isInt32, isBool, isDouble, isNull, isString;
 
-    branchEqualTypeIfNeeded(MIRType_Int32, maybeInput, tag, &isInt32);
+    maybeBranchTestType(MIRType_Int32, maybeInput, tag, &isInt32);
     if (conversion == IntConversion_Any || conversion == IntConversion_NumbersOrBoolsOnly)
-        branchEqualTypeIfNeeded(MIRType_Boolean, maybeInput, tag, &isBool);
-    branchEqualTypeIfNeeded(MIRType_Double, maybeInput, tag, &isDouble);
+        maybeBranchTestType(MIRType_Boolean, maybeInput, tag, &isBool);
+    maybeBranchTestType(MIRType_Double, maybeInput, tag, &isDouble);
 
     if (conversion == IntConversion_Any) {
         // If we are not truncating, we fail for anything that's not
@@ -1854,10 +1854,10 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition* maybeInput,
 
           case IntConversion_Truncate:
           case IntConversion_ClampToUint8:
-            branchEqualTypeIfNeeded(MIRType_Null, maybeInput, tag, &isNull);
+            maybeBranchTestType(MIRType_Null, maybeInput, tag, &isNull);
             if (handleStrings)
-                branchEqualTypeIfNeeded(MIRType_String, maybeInput, tag, &isString);
-            branchEqualTypeIfNeeded(MIRType_Object, maybeInput, tag, fail);
+                maybeBranchTestType(MIRType_String, maybeInput, tag, &isString);
+            maybeBranchTestType(MIRType_Object, maybeInput, tag, fail);
             branchTestUndefined(Assembler::NotEqual, tag, fail);
             break;
         }
@@ -2516,8 +2516,7 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
 }
 
 void
-MacroAssembler::branchEqualTypeIfNeeded(MIRType type, MDefinition* maybeDef, Register tag,
-                                        Label* label)
+MacroAssembler::maybeBranchTestType(MIRType type, MDefinition* maybeDef, Register tag, Label* label)
 {
     if (!maybeDef || maybeDef->mightBeType(type)) {
         switch (type) {
