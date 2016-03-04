@@ -7,7 +7,7 @@
 <script type="application/javascript" src="../testharnessreport.js"></script>
 <script type="application/javascript" src="../testcommon.js"></script>
 <style>
-div {
+.compositable {
   /* Element needs geometry to be eligible for layerization */
   width: 100px;
   height: 100px;
@@ -47,6 +47,35 @@ function assert_animation_property_state_equals(actual, expected) {
     assert_equals(sortedActual[i].runningOnCompositor,
                   sortedExpected[i].runningOnCompositor,
                   'runningOnCompositor property should match');
+    if (sortedExpected[i].warning instanceof RegExp) {
+      assert_regexp_match(sortedActual[i].warning,
+                          sortedExpected[i].warning,
+                          'warning message should match');
+    } else if (sortedExpected[i].warning) {
+      assert_equals(sortedActual[i].warning,
+                    sortedExpected[i].warning,
+                    'warning message should match');
+    }
+  }
+}
+
+// Check that the animation is running on compositor and
+// warning property is not set for the CSS property regardless
+// expected values.
+function assert_property_state_on_compositor(actual, expected) {
+  assert_equals(actual.length, expected.length);
+
+  var sortedActual = actual.sort(compare_property_state);
+  var sortedExpected = expected.sort(compare_property_state);
+
+  for (var i = 0; i < sortedActual.length; i++) {
+    assert_equals(sortedActual[i].property,
+                  sortedExpected[i].property,
+                  'CSS property name should match');
+    assert_true(sortedActual[i].runningOnCompositor,
+                'runningOnCompositor property should be true');
+    assert_not_exists(sortedActual[i], 'warning',
+                      'warning property should not be set');
   }
 }
 
@@ -108,12 +137,35 @@ var gAnimationsTests = [
         runningOnCompositor: true
       }
     ]
-  }
+  },
+  {
+    // FIXME: Once we have KeyframeEffect.setFrames, we should rewrite
+    // this test case to check that runningOnCompositor is restored to true
+    // after 'width' keyframe is removed from the keyframes.
+    desc: 'animation on compositor with animation of geometric properties',
+    frames: {
+      width: ['100px', '200px'],
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    expected: [
+      {
+        property: 'width',
+        runningOnCompositor: false
+      },
+      {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: "Performance warning: Async animation of " +
+                 "'transform' or 'opacity' not possible due to animation " +
+                 "of geometric properties on the same element"
+      }
+    ]
+  },
 ];
 
 gAnimationsTests.forEach(function(subtest) {
   promise_test(function(t) {
-    var div = addDiv(t);
+    var div = addDiv(t, { class: 'compositable' });
     var animation = div.animate(subtest.frames, 100000);
     return animation.ready.then(t.step_func(function() {
       assert_animation_property_state_equals(
@@ -123,5 +175,138 @@ gAnimationsTests.forEach(function(subtest) {
   }, subtest.desc);
 });
 
+var gPerformanceWarningTests = [
+  {
+    desc: 'preserve-3d transform',
+    frames: {
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    style: 'transform-style: preserve-3d',
+    expected: [
+      {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: "Gecko bug: Async animation of 'preserve-3d' " +
+                 "transforms is not supported.  See bug 779598"
+      }
+    ]
+  },
+  {
+    desc: 'transform with backface-visibility:hidden',
+    frames: {
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    style: 'backface-visibility: hidden;',
+    expected: [
+      {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: "Gecko bug: Async animation of " +
+                 "'backface-visibility: hidden' transforms is not " +
+                 "supported.  See bug 1186204"
+      }
+    ]
+  },
+];
+
+gPerformanceWarningTests.forEach(function(subtest) {
+  promise_test(function(t) {
+    var div = addDiv(t, { class: 'compositable' });
+    var animation = div.animate(subtest.frames, 100000);
+    return animation.ready.then(t.step_func(function() {
+      assert_property_state_on_compositor(
+        animation.effect.getPropertyState(),
+        subtest.expected);
+      div.style = subtest.style;
+      return waitForFrame();
+    })).then(t.step_func(function() {
+      assert_animation_property_state_equals(
+        animation.effect.getPropertyState(),
+        subtest.expected);
+      div.style = '';
+      return waitForFrame();
+    })).then(t.step_func(function() {
+      assert_property_state_on_compositor(
+        animation.effect.getPropertyState(),
+        subtest.expected);
+    }));
+  }, subtest.desc);
+});
+
+promise_test(function(t) {
+  var div = addDiv(t, { class: 'compositable' });
+  var animation = div.animate(
+    { transform: ['translate(0px)', 'translate(100px)'] }, 100000);
+  return animation.ready.then(t.step_func(function() {
+    assert_animation_property_state_equals(
+      animation.effect.getPropertyState(),
+      [ { property: 'transform', runningOnCompositor: true } ]);
+    div.style = 'width: 10000px; height: 10000px';
+    return waitForFrame();
+  })).then(t.step_func(function() {
+    // viewport depends on test environment.
+    var expectedWarning = new RegExp(
+      "Performance warning: Async animation disabled because frame size " +
+      "\\(10000, 10000\\) is bigger than the viewport \\(\\d+, \\d+\\) " +
+      "or the visual rectangle \\(10000, 10000\\) is larger than the max " +
+      "allowable value \\(\\d+\\)");
+    assert_animation_property_state_equals(
+      animation.effect.getPropertyState(),
+      [ {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: expectedWarning
+      } ]);
+    div.style = 'width: 100px; height: 100px';
+    return waitForFrame();
+  })).then(t.step_func(function() {
+    // FIXME: Bug 1253164: the animation should get back on compositor.
+    assert_animation_property_state_equals(
+      animation.effect.getPropertyState(),
+      [ { property: 'transform', runningOnCompositor: false } ]);
+  }));
+}, 'transform on too big element');
+
+promise_test(function(t) {
+  var svg  = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '100');
+  svg.setAttribute('height', '100');
+  var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('width', '100');
+  rect.setAttribute('height', '100');
+  rect.setAttribute('fill', 'red');
+  svg.appendChild(rect);
+  document.body.appendChild(svg);
+  t.add_cleanup(function() {
+    svg.remove();
+  });
+
+  var animation = svg.animate(
+    { transform: ['translate(0px)', 'translate(100px)'] }, 100000);
+  return animation.ready.then(t.step_func(function() {
+    assert_animation_property_state_equals(
+      animation.effect.getPropertyState(),
+      [ { property: 'transform', runningOnCompositor: true } ]);
+    svg.setAttribute('transform', 'translate(10, 20)');
+    return waitForFrame();
+  })).then(t.step_func(function() {
+    assert_animation_property_state_equals(
+      animation.effect.getPropertyState(),
+      [ {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: "Gecko bug: Async 'transform' animations of aFrames " +
+                 "with SVG transforms is not supported.  See bug 779599"
+      } ]);
+    svg.removeAttribute('transform');
+    return waitForFrame();
+  })).then(t.step_func(function() {
+    assert_animation_property_state_equals(
+      animation.effect.getPropertyState(),
+      [ { property: 'transform', runningOnCompositor: true } ]);
+  }));
+}, 'transform of nsIFrame with SVG transform');
+
 </script>
+
 </body>
