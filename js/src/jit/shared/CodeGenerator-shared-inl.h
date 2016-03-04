@@ -140,12 +140,12 @@ ToAnyRegister(const LDefinition* def)
     return ToAnyRegister(def->output());
 }
 
-static inline Int32Key
-ToInt32Key(const LAllocation* a)
+static inline RegisterOrInt32Constant
+ToRegisterOrInt32Constant(const LAllocation* a)
 {
     if (a->isConstant())
-        return Int32Key(ToInt32(a));
-    return Int32Key(ToRegister(a));
+        return RegisterOrInt32Constant(ToInt32(a));
+    return RegisterOrInt32Constant(ToRegister(a));
 }
 
 static inline ValueOperand

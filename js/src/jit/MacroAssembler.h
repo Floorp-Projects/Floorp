@@ -768,7 +768,10 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void divDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
+    inline void inc32(RegisterOrInt32Constant* key);
     inline void inc64(AbsoluteAddress dest) PER_ARCH;
+
+    inline void dec32(RegisterOrInt32Constant* key);
 
     inline void neg32(Register reg) PER_SHARED_ARCH;
 
@@ -796,8 +799,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branch32(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;
     template <class L>
     inline void branch32(Condition cond, Register lhs, Imm32 rhs, L label) PER_SHARED_ARCH;
+    inline void branch32(Condition cond, Register length, const RegisterOrInt32Constant& key,
+                         Label* label);
+
     inline void branch32(Condition cond, const Address& lhs, Register rhs, Label* label) PER_SHARED_ARCH;
     inline void branch32(Condition cond, const Address& lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
+    inline void branch32(Condition cond, const Address& length, const RegisterOrInt32Constant& key,
+                         Label* label);
 
     inline void branch32(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
@@ -922,9 +930,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     // might actually be that type.
     void maybeBranchTestType(MIRType type, MDefinition* maybeDef, Register tag, Label* label);
 
-    template <typename T>
-    inline void branchKey(Condition cond, const T& length, const Int32Key& key, Label* label);
-
     inline void branchTestNeedsIncrementalBarrier(Condition cond, Label* label);
 
     // Perform a type-test on a tag of a Value (32bits boxing), or the tagged
@@ -1018,6 +1023,10 @@ class MacroAssembler : public MacroAssemblerSpecific
   private:
 
     // Implementation for branch* methods.
+    template <typename T>
+    inline void branch32Impl(Condition cond, const T& length, const RegisterOrInt32Constant& key,
+                             Label* label);
+
     template <typename T, typename S>
     inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
         DEFINED_ON(x86_shared);
@@ -1206,10 +1215,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     Register extractString(const T& source, Register scratch) {
         return extractObject(source, scratch);
     }
-
-    inline void bumpKey(Int32Key* key, int diff);
-
-    void storeKey(const Int32Key& key, const Address& dest) {
+    using MacroAssemblerSpecific::store32;
+    void store32(const RegisterOrInt32Constant& key, const Address& dest) {
         if (key.isRegister())
             store32(key.reg(), dest);
         else
@@ -1300,8 +1307,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void storeUnboxedProperty(T address, JSValueType type,
                               ConstantOrRegister value, Label* failure);
 
-    void checkUnboxedArrayCapacity(Register obj, const Int32Key& index, Register temp,
-                                   Label* failure);
+    void checkUnboxedArrayCapacity(Register obj, const RegisterOrInt32Constant& index,
+                                   Register temp, Label* failure);
 
     Register extractString(const Address& address, Register scratch) {
         return extractObject(address, scratch);
