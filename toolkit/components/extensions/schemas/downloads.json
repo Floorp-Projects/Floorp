@@ -689,7 +689,6 @@
       {
         "name": "onChanged",
         "description": "When any of a <a href='#type-DownloadItem'>DownloadItem</a>'s properties except <code>bytesReceived</code> changes, this event fires with the <code>downloadId</code> and an object containing the properties that changed.",
-        "unsupported": true,
         "parameters": [
           {
             "name": "downloadDelta",
