@@ -249,6 +249,21 @@ const FORMATS = {
 
     throw new SyntaxError(`String ${JSON.stringify(string)} must be a relative URL`);
   },
+
+  date(string, context) {
+    // A valid ISO 8601 timestamp.
+    const PATTERN = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|([-+]\d{2}:?\d{2})))?$/;
+    if (!PATTERN.test(string)) {
+      throw new Error(`Invalid date string ${string}`);
+    }
+    // Our pattern just checks the format, we could still have invalid
+    // values (e.g., month=99 or month=02 and day=31).  Let the Date
+    // constructor do the dirty work of validating.
+    if (isNaN(new Date(string))) {
+      throw new Error(`Invalid date string ${string}`);
+    }
+    return string;
+  },
 };
 
 // Schema files contain namespaces, and each namespace contains types,
