@@ -109,17 +109,6 @@ public:
   static nsINode *GetDOMNodeFromDOMPoint(nsINode *aNode, uint32_t aOffset);
 
   /**
-   * Return the nsIContent* to check for ARIA attributes on -- this may not
-   * always be the DOM node for the accessible. Specifically, for doc
-   * accessibles, it is not the document node, but either the root element or
-   * <body> in HTML.
-   *
-   * @param aNode  [in] DOM node for the accessible that may be affected by ARIA
-   * @return        the nsIContent which may have ARIA markup
-   */
-  static mozilla::dom::Element* GetRoleContent(nsINode *aNode);
-
-  /**
    * Is the first passed in node an ancestor of the second?
    * Note: A node is not considered to be the ancestor of itself.
    *
