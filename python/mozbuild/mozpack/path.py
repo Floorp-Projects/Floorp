@@ -30,6 +30,10 @@ def relpath(path, start):
     return '' if rel == '.' else rel
 
 
+def realpath(path):
+    return normsep(os.path.realpath(path))
+
+
 def abspath(path):
     return normsep(os.path.abspath(path))
 
