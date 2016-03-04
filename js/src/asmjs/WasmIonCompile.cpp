@@ -2642,6 +2642,8 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def)
       case Expr::I32TruncSF64:
       case Expr::I32TruncUF64:
         return EmitUnary<MTruncateToInt32>(f, ExprType::F64, def);
+      case Expr::I32WrapI64:
+        return EmitUnary<MWrapInt64ToInt32>(f, ExprType::I64, def);
       case Expr::I32Clz:
         return EmitUnary<MClz>(f, ExprType::I32, def);
       case Expr::I32Ctz:
@@ -2887,7 +2889,6 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def)
       case Expr::F64CopySign:
       case Expr::F64Nearest:
       case Expr::F64Trunc:
-      case Expr::I32WrapI64:
       case Expr::I64ExtendSI32:
       case Expr::I64ExtendUI32:
       case Expr::I64TruncSF32:

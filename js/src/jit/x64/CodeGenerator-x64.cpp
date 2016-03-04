@@ -1091,3 +1091,12 @@ CodeGeneratorX64::visitTruncateFToInt32(LTruncateFToInt32* ins)
     // call a stub if it fails.
     emitTruncateFloat32(input, output, ins->mir());
 }
+
+void
+CodeGeneratorX64::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
+{
+    const LAllocation* input = lir->getOperand(0);
+    Register output = ToRegister(lir->output());
+
+    masm.movl(ToOperand(input), output);
+}
