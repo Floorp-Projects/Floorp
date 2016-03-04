@@ -3350,7 +3350,7 @@ class nsDisplayOpacity : public nsDisplayWrapList {
 public:
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                    nsDisplayList* aList,
-                   const DisplayItemScrollClip* aScrollClipForSameAGRChildren,
+                   const DisplayItemScrollClip* aScrollClip,
                    bool aForEventsOnly);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOpacity();
@@ -3384,11 +3384,7 @@ public:
 
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) override;
 
-  const DisplayItemScrollClip* ScrollClipForSameAGRChildren() const
-  { return mScrollClipForSameAGRChildren; }
-
 private:
-  const DisplayItemScrollClip* mScrollClipForSameAGRChildren;
   float mOpacity;
   bool mForEventsOnly;
 };
@@ -3396,7 +3392,8 @@ private:
 class nsDisplayMixBlendMode : public nsDisplayWrapList {
 public:
   nsDisplayMixBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                        nsDisplayList* aList);
+                        nsDisplayList* aList,
+                        const DisplayItemScrollClip* aScrollClip);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayMixBlendMode();
 #endif
@@ -3427,9 +3424,13 @@ public:
 
 class nsDisplayBlendContainer : public nsDisplayWrapList {
 public:
+    // Use this constructor for blend containers that can have active child layers.
     nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             nsDisplayList* aList,
-                            const BlendModeSet& aContainedBlendModes = BlendModeSet());
+                            const DisplayItemScrollClip* aScrollClip);
+    // Use this constructor for background-blend-mode blend containers.
+    nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                            nsDisplayList* aList);
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual ~nsDisplayBlendContainer();
 #endif
