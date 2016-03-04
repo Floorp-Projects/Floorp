@@ -6,6 +6,7 @@
 
 #include "ImageDocument.h"
 #include "mozilla/dom/ImageDocumentBinding.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "nsRect.h"
 #include "nsIImageLoadingContent.h"
 #include "nsGenericHTMLElement.h"
@@ -336,6 +337,23 @@ ImageDocument::ShrinkToFit()
   }
   if (GetZoomLevel() != mOriginalZoomLevel && mImageIsResized &&
       !nsContentUtils::IsChildOfSameType(this)) {
+    // If we're zoomed, so that we don't maintain the invariant that
+    // mImageIsResized if and only if its displayed width/height fit in
+    // mVisibleWidth/mVisibleHeight, then we may need to switch to/from the
+    // overflowingVertical class here, because our viewport size may have
+    // changed and we don't plan to adjust the image size to compensate.  Since
+    // mImageIsResized it has a "height" attribute set, and we can just get the
+    // displayed image height by getting .height on the HTMLImageElement.
+    HTMLImageElement* img = HTMLImageElement::FromContent(mImageContent);
+    uint32_t imageHeight = img->Height();
+    nsDOMTokenList* classList = img->ClassList();
+    ErrorResult ignored;
+    if (imageHeight > mVisibleHeight) {
+      classList->Add(NS_LITERAL_STRING("overflowingVertical"), ignored);
+    } else {
+      classList->Remove(NS_LITERAL_STRING("overflowingVertical"), ignored);
+    }
+    ignored.SuppressException();
     return;
   }
 
@@ -501,7 +519,7 @@ void
 ImageDocument::SetModeClass(eModeClasses mode)
 {
   nsDOMTokenList* classList = mImageContent->AsElement()->ClassList();
-  mozilla::ErrorResult rv;
+  ErrorResult rv;
 
   if (mode == eShrinkToFit) {
     classList->Add(NS_LITERAL_STRING("shrinkToFit"), rv);
@@ -520,6 +538,8 @@ ImageDocument::SetModeClass(eModeClasses mode)
   } else {
     classList->Remove(NS_LITERAL_STRING("overflowingHorizontalOnly"), rv);
   }
+
+  rv.SuppressException();
 }
 
 nsresult
