@@ -18,6 +18,7 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
+#include "PersistentBufferProvider.h"
 
 namespace mozilla {
 namespace layers {
@@ -232,6 +233,22 @@ AsyncCanvasRenderer::UpdateTarget()
   }
 
   return surface.forget();
+}
+
+void
+AsyncCanvasRenderer::UpdateTarget(TextureClient* aTexture)
+{
+  if (!mBufferProvider) {
+    return;
+  }
+
+  RefPtr<gfx::SourceSurface> surface = mBufferProvider->GetSnapshot();
+
+  if (surface) {
+    NS_ASSERTION(surface, "Must have surface to draw!");
+    aTexture->UpdateFromSurface(surface);
+    surface = nullptr;
+  }
 }
 
 already_AddRefed<gfx::DataSourceSurface>
