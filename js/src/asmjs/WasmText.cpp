@@ -192,6 +192,7 @@ enum class WasmAstExprKind
     BinaryOperator,
     Block,
     Branch,
+    BranchTable,
     Call,
     CallIndirect,
     ComparisonOperator,
@@ -204,7 +205,6 @@ enum class WasmAstExprKind
     Return,
     SetLocal,
     Store,
-    TableSwitch,
     UnaryOperator,
 };
 
@@ -453,15 +453,15 @@ class WasmAstStore : public WasmAstExpr
     WasmAstExpr& value() const { return *value_; }
 };
 
-class WasmAstTableSwitch : public WasmAstExpr
+class WasmAstBranchTable : public WasmAstExpr
 {
     WasmAstExpr& index_;
     WasmRef default_;
     WasmRefVector table_;
 
   public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::TableSwitch;
-    explicit WasmAstTableSwitch(WasmAstExpr& index, WasmRef def, WasmRefVector&& table)
+    static const WasmAstExprKind Kind = WasmAstExprKind::BranchTable;
+    explicit WasmAstBranchTable(WasmAstExpr& index, WasmRef def, WasmRefVector&& table)
       : WasmAstExpr(Kind),
         index_(index),
         default_(def),
@@ -759,6 +759,7 @@ class WasmToken
         Block,
         Br,
         BrIf,
+        BrTable,
         Call,
         CallImport,
         CallIndirect,
@@ -795,7 +796,6 @@ class WasmToken
         SetLocal,
         Store,
         Table,
-        TableSwitch,
         Text,
         Type,
         UnaryOpcode,
@@ -1375,6 +1375,8 @@ WasmTokenStream::next()
         if (consume(MOZ_UTF16("block")))
             return WasmToken(WasmToken::Block, begin, cur_);
         if (consume(MOZ_UTF16("br"))) {
+            if (consume(MOZ_UTF16("_table")))
+                return WasmToken(WasmToken::BrTable, begin, cur_);
             if (consume(MOZ_UTF16("_if")))
                 return WasmToken(WasmToken::BrIf, begin, cur_);
             return WasmToken(WasmToken::Br, begin, cur_);
@@ -1913,11 +1915,8 @@ WasmTokenStream::next()
         break;
 
       case 't':
-        if (consume(MOZ_UTF16("table"))) {
-            if (consume(MOZ_UTF16("switch")))
-                return WasmToken(WasmToken::TableSwitch, begin, cur_);
+        if (consume(MOZ_UTF16("table")))
             return WasmToken(WasmToken::Table, begin, cur_);
-        }
         if (consume(MOZ_UTF16("type")))
             return WasmToken(WasmToken::Type, begin, cur_);
         break;
@@ -2608,8 +2607,8 @@ ParseStore(WasmParseContext& c, Expr expr)
     return new(c.lifo) WasmAstStore(expr, WasmAstLoadStoreAddress(base, offset, align), value);
 }
 
-static WasmAstTableSwitch*
-ParseTableSwitch(WasmParseContext& c)
+static WasmAstBranchTable*
+ParseBranchTable(WasmParseContext& c)
 {
     WasmAstExpr* index = ParseExpr(c);
     if (!index)
@@ -2652,7 +2651,7 @@ ParseTableSwitch(WasmParseContext& c)
     if (!c.ts.match(WasmToken::CloseParen, c.error))
         return nullptr;
 
-    return new(c.lifo) WasmAstTableSwitch(*index, def, Move(table));
+    return new(c.lifo) WasmAstBranchTable(*index, def, Move(table));
 }
 
 static WasmAstExpr*
@@ -2671,6 +2670,8 @@ ParseExprInsideParens(WasmParseContext& c)
         return ParseBranch(c, Expr::Br);
       case WasmToken::BrIf:
         return ParseBranch(c, Expr::BrIf);
+      case WasmToken::BrTable:
+        return ParseBranchTable(c);
       case WasmToken::Call:
         return ParseCall(c, Expr::Call);
       case WasmToken::CallImport:
@@ -2699,8 +2700,6 @@ ParseExprInsideParens(WasmParseContext& c)
         return ParseSetLocal(c);
       case WasmToken::Store:
         return ParseStore(c, token.expr());
-      case WasmToken::TableSwitch:
-        return ParseTableSwitch(c);
       case WasmToken::UnaryOpcode:
         return ParseUnaryOperator(c, token.expr());
       default:
@@ -3330,17 +3329,17 @@ ResolveReturn(Resolver& r, WasmAstReturn& ret)
 }
 
 static bool
-ResolveTableSwitch(Resolver& r, WasmAstTableSwitch& ts)
+ResolveBranchTable(Resolver& r, WasmAstBranchTable& bt)
 {
-    if (!ts.def().name().empty() && !r.resolveTarget(ts.def()))
+    if (!bt.def().name().empty() && !r.resolveTarget(bt.def()))
         return r.fail("switch default not found");
 
-    for (WasmRef& elem : ts.table()) {
+    for (WasmRef& elem : bt.table()) {
         if (!elem.name().empty() && !r.resolveTarget(elem))
             return r.fail("switch element not found");
     }
 
-    return ResolveExpr(r, ts.index());
+    return ResolveExpr(r, bt.index());
 }
 
 static bool
@@ -3377,8 +3376,8 @@ ResolveExpr(Resolver& r, WasmAstExpr& expr)
         return ResolveSetLocal(r, expr.as<WasmAstSetLocal>());
       case WasmAstExprKind::Store:
         return ResolveStore(r, expr.as<WasmAstStore>());
-      case WasmAstExprKind::TableSwitch:
-        return ResolveTableSwitch(r, expr.as<WasmAstTableSwitch>());
+      case WasmAstExprKind::BranchTable:
+        return ResolveBranchTable(r, expr.as<WasmAstBranchTable>());
       case WasmAstExprKind::UnaryOperator:
         return ResolveUnaryOperator(r, expr.as<WasmAstUnaryOperator>());
     }
@@ -3648,23 +3647,23 @@ EncodeReturn(Encoder& e, WasmAstReturn& r)
 }
 
 static bool
-EncodeTableSwitch(Encoder& e, WasmAstTableSwitch& ts)
+EncodeBranchTable(Encoder& e, WasmAstBranchTable& bt)
 {
-    if (!e.writeExpr(Expr::TableSwitch))
+    if (!e.writeExpr(Expr::BrTable))
         return false;
 
-    if (!e.writeVarU32(ts.def().index()))
+    if (!e.writeVarU32(bt.def().index()))
         return false;
 
-    if (!e.writeVarU32(ts.table().length()))
+    if (!e.writeVarU32(bt.table().length()))
         return false;
 
-    for (const WasmRef& elem : ts.table()) {
+    for (const WasmRef& elem : bt.table()) {
         if (!e.writeVarU32(elem.index()))
             return false;
     }
 
-    return EncodeExpr(e, ts.index());
+    return EncodeExpr(e, bt.index());
 }
 
 static bool
@@ -3701,8 +3700,8 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
         return EncodeSetLocal(e, expr.as<WasmAstSetLocal>());
       case WasmAstExprKind::Store:
         return EncodeStore(e, expr.as<WasmAstStore>());
-      case WasmAstExprKind::TableSwitch:
-        return EncodeTableSwitch(e, expr.as<WasmAstTableSwitch>());
+      case WasmAstExprKind::BranchTable:
+        return EncodeBranchTable(e, expr.as<WasmAstBranchTable>());
       case WasmAstExprKind::UnaryOperator:
         return EncodeUnaryOperator(e, expr.as<WasmAstUnaryOperator>());
     }

@@ -2579,6 +2579,8 @@ SimdToExpr(SimdType type, SimdOperation op)
 #undef B32CASE
 #undef ENUMERATE
 
+typedef Vector<PropertyName*, 4, SystemAllocPolicy> NameVector;
+
 // Encapsulates the building of an asm bytecode function from an asm.js function
 // source code, packing the asm.js code into the asm bytecode form that can
 // be decoded and compiled with a FunctionCompiler.
@@ -2605,7 +2607,13 @@ class MOZ_STACK_CLASS FunctionValidator
     Maybe<Encoder>    encoder_;
 
     LocalMap          locals_;
-    LabelMap          labels_;
+
+    // Labels
+    LabelMap          breakLabels_;
+    LabelMap          continueLabels_;
+    Uint32Vector      breakableStack_;
+    Uint32Vector      continuableStack_;
+    uint32_t          blockDepth_;
 
     bool              hasAlreadyReturned_;
     ExprType          ret_;
@@ -2615,16 +2623,28 @@ class MOZ_STACK_CLASS FunctionValidator
       : m_(m),
         fn_(fn),
         locals_(m.cx()),
-        labels_(m.cx()),
+        breakLabels_(m.cx()),
+        continueLabels_(m.cx()),
+        blockDepth_(0),
         hasAlreadyReturned_(false)
     {}
+
+    ~FunctionValidator() {
+        if (m_.hasAlreadyFailed())
+            return;
+        MOZ_ASSERT(!blockDepth_);
+        MOZ_ASSERT(breakableStack_.empty());
+        MOZ_ASSERT(continuableStack_.empty());
+        MOZ_ASSERT(breakLabels_.empty());
+        MOZ_ASSERT(continueLabels_.empty());
+    }
 
     ModuleValidator& m() const        { return m_; }
     ExclusiveContext* cx() const      { return m_.cx(); }
     ParseNode* fn() const             { return fn_; }
 
     bool init(PropertyName* name, unsigned line) {
-        if (!locals_.init() || !labels_.init())
+        if (!locals_.init() || !breakLabels_.init() || !continueLabels_.init())
             return false;
 
         if (!m_.mg().startFuncDef(line, &fg_))
@@ -2680,22 +2700,103 @@ class MOZ_STACK_CLASS FunctionValidator
     }
 
     /**************************************************************** Labels */
-
-    uint32_t lookupLabel(PropertyName* label) const {
-        if (auto p = labels_.lookup(label))
-            return p->value();
-        return -1;
+  private:
+    bool writeBr(uint32_t absolute, Expr expr = Expr::Br) {
+        MOZ_ASSERT(expr == Expr::Br || expr == Expr::BrIf);
+        MOZ_ASSERT(absolute < blockDepth_);
+        return encoder().writeExpr(expr) &&
+               encoder().writeVarU32(blockDepth_ - 1 - absolute);
+    }
+    void removeLabel(PropertyName* label, LabelMap* map) {
+        LabelMap::Ptr p = map->lookup(label);
+        MOZ_ASSERT(p);
+        map->remove(p);
     }
 
-    bool addLabel(PropertyName* label, uint32_t* id) {
-        *id = labels_.count();
-        return labels_.putNew(label, *id);
+  public:
+    bool pushBreakableBlock(uint32_t numStmts) {
+        return encoder().writeExpr(Expr::Block) &&
+               encoder().writeVarU32(numStmts) &&
+               breakableStack_.append(blockDepth_++);
+    }
+    void popBreakableBlock() {
+        JS_ALWAYS_TRUE(breakableStack_.popCopy() == --blockDepth_);
     }
 
-    void removeLabel(PropertyName* label) {
-        auto p = labels_.lookup(label);
-        MOZ_ASSERT(!!p);
-        labels_.remove(p);
+    bool pushUnbreakableBlock(uint32_t numStmts, const NameVector* labels = nullptr) {
+        if (labels) {
+            for (PropertyName* label : *labels) {
+                if (!breakLabels_.putNew(label, blockDepth_))
+                    return false;
+            }
+        }
+        blockDepth_++;
+        return encoder().writeExpr(Expr::Block) &&
+               encoder().writeVarU32(numStmts);
+    }
+    void popUnbreakableBlock(const NameVector* labels = nullptr) {
+        if (labels) {
+            for (PropertyName* label : *labels)
+                removeLabel(label, &breakLabels_);
+        }
+        --blockDepth_;
+    }
+
+    bool pushContinuableBlock(uint32_t numStmts) {
+        return encoder().writeExpr(Expr::Block) &&
+               encoder().writeVarU32(numStmts) &&
+               continuableStack_.append(blockDepth_++);
+    }
+    void popContinuableBlock() {
+        JS_ALWAYS_TRUE(continuableStack_.popCopy() == --blockDepth_);
+    }
+
+    bool pushLoop(uint32_t numStmts) {
+        return encoder().writeExpr(Expr::Loop) &&
+               encoder().writeVarU32(numStmts) &&
+               breakableStack_.append(blockDepth_++) &&
+               continuableStack_.append(blockDepth_++);
+    }
+    void popLoop() {
+        JS_ALWAYS_TRUE(continuableStack_.popCopy() == --blockDepth_);
+        JS_ALWAYS_TRUE(breakableStack_.popCopy() == --blockDepth_);
+    }
+
+    bool writeBreakIf() {
+        return writeBr(breakableStack_.back(), Expr::BrIf);
+    }
+    bool writeContinueIf() {
+        return writeBr(continuableStack_.back(), Expr::BrIf);
+    }
+    bool writeUnlabeledBreakOrContinue(bool isBreak) {
+        return writeBr(isBreak? breakableStack_.back() : continuableStack_.back());
+    }
+    bool writeContinue() {
+        return writeBr(continuableStack_.back());
+    }
+
+    bool addLabels(const NameVector& labels, uint32_t relativeBreakDepth,
+                   uint32_t relativeContinueDepth)
+    {
+        for (PropertyName* label : labels) {
+            if (!breakLabels_.putNew(label, blockDepth_ + relativeBreakDepth))
+                return false;
+            if (!continueLabels_.putNew(label, blockDepth_ + relativeContinueDepth))
+                return false;
+        }
+        return true;
+    }
+    void removeLabels(const NameVector& labels) {
+        for (PropertyName* label : labels) {
+            removeLabel(label, &breakLabels_);
+            removeLabel(label, &continueLabels_);
+        }
+    }
+    bool writeLabeledBreakOrContinue(PropertyName* label, bool isBreak) {
+        LabelMap& map = isBreak ? breakLabels_ : continueLabels_;
+        if (LabelMap::Ptr p = map.lookup(label))
+            return writeBr(p->value());
+        MOZ_CRASH("nonexistent label");
     }
 
     /*************************************************** Read-only interface */
@@ -5555,6 +5656,8 @@ CheckComma(FunctionValidator& f, ParseNode* comma, Type* type)
     MOZ_ASSERT(comma->isKind(PNK_COMMA));
     ParseNode* operands = ListHead(comma);
 
+    // The block depth isn't taken into account here, because a comma list can't
+    // contain breaks and continues and nested control flow structures.
     if (!f.encoder().writeExpr(Expr::Block))
         return false;
     if (!f.encoder().writeVarU32(ListLength(comma)))
@@ -6005,19 +6108,25 @@ CheckExprStatement(FunctionValidator& f, ParseNode* exprStmt)
     return CheckAsExprStatement(f, expr);
 }
 
-enum class InterruptCheckPosition {
-    Head,
-    Loop
-};
-
 static bool
-CheckWhile(FunctionValidator& f, ParseNode* whileStmt)
+CheckLoopConditionOnEntry(FunctionValidator& f, ParseNode* cond)
 {
-    MOZ_ASSERT(whileStmt->isKind(PNK_WHILE));
-    ParseNode* cond = BinaryLeft(whileStmt);
-    ParseNode* body = BinaryRight(whileStmt);
+    uint32_t maybeLit;
 
-    if (!f.encoder().writeExpr(Expr::While))
+    // TODO: will not need to generate nop when blocks switch from
+    // number-of-statements immediate to end marker.
+    if (IsLiteralInt(f.m(), cond, &maybeLit) && maybeLit)
+        return f.encoder().writeExpr(Expr::Nop);
+
+    // brIf (i32.eq 0 $f) $out
+    if (!f.writeBreakIf())
+        return false;
+
+    // TODO change this to i32.eqz
+    // i32.eq 0 $f
+    if (!f.encoder().writeExpr(Expr::I32Eq))
+        return false;
+    if (!f.writeInt32Lit(0))
         return false;
 
     Type condType;
@@ -6026,11 +6135,43 @@ CheckWhile(FunctionValidator& f, ParseNode* whileStmt)
     if (!condType.isInt())
         return f.failf(cond, "%s is not a subtype of int", condType.toChars());
 
-    return CheckStatement(f, body);
+    return true;
 }
 
 static bool
-CheckFor(FunctionValidator& f, ParseNode* forStmt)
+CheckWhile(FunctionValidator& f, ParseNode* whileStmt, const NameVector* labels = nullptr)
+{
+    MOZ_ASSERT(whileStmt->isKind(PNK_WHILE));
+    ParseNode* cond = BinaryLeft(whileStmt);
+    ParseNode* body = BinaryRight(whileStmt);
+
+    // A while loop `while(#cond) #body` is equivalent to:
+    // (loop $after_loop $top
+    //    (brIf $after_loop (i32.eq 0 #cond))
+    //    #body
+    //    (br $top)
+    // )
+    if (labels && !f.addLabels(*labels, 0, 1))
+        return false;
+
+    if (!f.pushLoop(/* numStmts = */ 3))
+        return false;
+
+    if (!CheckLoopConditionOnEntry(f, cond))
+        return false;
+    if (!CheckStatement(f, body))
+        return false;
+    if (!f.writeContinue())
+        return false;
+
+    f.popLoop();
+    if (labels)
+        f.removeLabels(*labels);
+    return true;
+}
+
+static bool
+CheckFor(FunctionValidator& f, ParseNode* forStmt, const NameVector* labels = nullptr)
 {
     MOZ_ASSERT(forStmt->isKind(PNK_FOR));
     ParseNode* forHead = BinaryLeft(forStmt);
@@ -6043,44 +6184,89 @@ CheckFor(FunctionValidator& f, ParseNode* forStmt)
     ParseNode* maybeCond = TernaryKid2(forHead);
     ParseNode* maybeInc = TernaryKid3(forHead);
 
-    Expr stmt = maybeInit ? (maybeInc ? Expr::ForInitInc   : Expr::ForInitNoInc)
-                          : (maybeInc ? Expr::ForNoInitInc : Expr::ForNoInitNoInc);
-    if (!f.encoder().writeExpr(stmt))
+    // A for-loop `for (#init; #cond; #inc) #body` is equivalent to:
+    // (block                                               // depth X
+    //   (#init)
+    //   (loop $after_loop $loop_top                        // depth X+2 (loop)
+    //     (brIf $after (eq 0 #cond))
+    //     (block $after_body #body)                        // depth X+3
+    //     #inc
+    //     (br $loop_top)
+    //   )
+    // )
+    // A break in the body should break out to $after_loop, i.e. depth + 1.
+    // A continue in the body should break out to $after_body, i.e. depth + 3.
+    if (labels && !f.addLabels(*labels, 1, 3))
+        return false;
+
+    if (!f.pushUnbreakableBlock(/* numStmts = */ 1 + !!maybeInit))
         return false;
 
     if (maybeInit && !CheckAsExprStatement(f, maybeInit))
         return false;
 
-    if (maybeCond) {
-        Type condType;
-        if (!CheckExpr(f, maybeCond, &condType))
+    {
+        if (!f.pushLoop(/* numStmts = */ 2 + !!maybeCond + !!maybeInc))
             return false;
-        if (!condType.isInt())
-            return f.failf(maybeCond, "%s is not a subtype of int", condType.toChars());
-    } else if (!f.writeInt32Lit(1)) {
-        return false;
+
+        if (maybeCond && !CheckLoopConditionOnEntry(f, maybeCond))
+            return false;
+
+        {
+            // Continuing in the body should just break out to the increment.
+            if (!f.pushContinuableBlock(1))
+                return false;
+            if (!CheckStatement(f, body))
+                return false;
+            f.popContinuableBlock();
+        }
+
+        if (maybeInc && !CheckAsExprStatement(f, maybeInc))
+            return false;
+
+        if (!f.writeContinue())
+            return false;
+        f.popLoop();
     }
 
-    if (!CheckStatement(f, body))
-        return false;
+    f.popUnbreakableBlock();
 
-    if (maybeInc && !CheckAsExprStatement(f, maybeInc))
-        return false;
+    if (labels)
+        f.removeLabels(*labels);
 
     return true;
 }
 
 static bool
-CheckDoWhile(FunctionValidator& f, ParseNode* whileStmt)
+CheckDoWhile(FunctionValidator& f, ParseNode* whileStmt, const NameVector* labels = nullptr)
 {
     MOZ_ASSERT(whileStmt->isKind(PNK_DOWHILE));
     ParseNode* body = BinaryLeft(whileStmt);
     ParseNode* cond = BinaryRight(whileStmt);
 
-    if (!f.encoder().writeExpr(Expr::DoWhile))
+    // A do-while loop `do { #body } while (#cond)` is equivalent to:
+    // (loop $after_loop $top       // depth X
+    //   (block #body)              // depth X+2
+    //   (brIf #cond $top)
+    // )
+    // A break should break out of the entire loop, i.e. at depth 0.
+    // A continue should break out to the condition, i.e. at depth 2.
+    if (labels && !f.addLabels(*labels, 0, 2))
         return false;
 
-    if (!CheckStatement(f, body))
+    if (!f.pushLoop(2 /* numStmts = #body + br_if */))
+        return false;
+
+    {
+        // An unlabeled continue in the body should break out to the condition.
+        if (!f.pushContinuableBlock(1))
+            return false;
+        if (!CheckStatement(f, body))
+            return false;
+        f.popContinuableBlock();
+    }
+
+    if (!f.writeContinueIf())
         return false;
 
     Type condType;
@@ -6089,30 +6275,47 @@ CheckDoWhile(FunctionValidator& f, ParseNode* whileStmt)
     if (!condType.isInt())
         return f.failf(cond, "%s is not a subtype of int", condType.toChars());
 
+    f.popLoop();
+    if (labels)
+        f.removeLabels(*labels);
     return true;
 }
+
+static bool CheckStatementList(FunctionValidator& f, ParseNode*, const NameVector* = nullptr);
 
 static bool
 CheckLabel(FunctionValidator& f, ParseNode* labeledStmt)
 {
     MOZ_ASSERT(labeledStmt->isKind(PNK_LABEL));
-    PropertyName* label = LabeledStatementLabel(labeledStmt);
-    ParseNode* stmt = LabeledStatementStatement(labeledStmt);
 
-    if (!f.encoder().writeExpr(Expr::Label))
+    NameVector labels;
+    ParseNode* innermost = labeledStmt;
+    do {
+        if (!labels.append(LabeledStatementLabel(innermost)))
+            return false;
+        innermost = LabeledStatementStatement(innermost);
+    } while (innermost->getKind() == PNK_LABEL);
+
+    switch (innermost->getKind()) {
+      case PNK_FOR:
+        return CheckFor(f, innermost, &labels);
+      case PNK_DOWHILE:
+        return CheckDoWhile(f, innermost, &labels);
+      case PNK_WHILE:
+        return CheckWhile(f, innermost, &labels);
+      case PNK_STATEMENTLIST:
+        return CheckStatementList(f, innermost, &labels);
+      default:
+        break;
+    }
+
+    if (!f.pushUnbreakableBlock(1, &labels))
         return false;
 
-    uint32_t labelId;
-    if (!f.addLabel(label, &labelId))
+    if (!CheckStatement(f, innermost))
         return false;
 
-    if (!f.encoder().writeVarU32(labelId))
-        return false;
-
-    if (!CheckStatement(f, stmt))
-        return false;
-
-    f.removeLabel(label);
+    f.popUnbreakableBlock(&labels);
     return true;
 }
 
@@ -6195,7 +6398,7 @@ CheckDefaultAtEnd(FunctionValidator& f, ParseNode* stmt)
 
 static bool
 CheckSwitchRange(FunctionValidator& f, ParseNode* stmt, int32_t* low, int32_t* high,
-                 int32_t* tableLength)
+                 uint32_t* tableLength)
 {
     if (IsDefaultCase(stmt)) {
         *low = 0;
@@ -6221,49 +6424,40 @@ CheckSwitchRange(FunctionValidator& f, ParseNode* stmt, int32_t* low, int32_t* h
     }
 
     int64_t i64 = (int64_t(*high) - int64_t(*low)) + 1;
-    if (i64 > 4*1024*1024)
+    if (i64 > 4 * 1024 * 1024)
         return f.fail(initialStmt, "all switch statements generate tables; this table would be too big");
 
-    *tableLength = int32_t(i64);
+    *tableLength = uint32_t(i64);
     return true;
 }
 
-void
-PatchSwitch(FunctionValidator& f,
-            size_t hasDefaultAt, bool hasDefault,
-            size_t lowAt, int32_t low,
-            size_t highAt, int32_t high,
-            size_t numCasesAt, uint32_t numCases)
+static bool
+CheckSwitchExpr(FunctionValidator& f, ParseNode* switchExpr)
 {
-    f.encoder().patchU8(hasDefaultAt, uint8_t(hasDefault));
-    f.encoder().patchVarU32(lowAt, low);
-    f.encoder().patchVarU32(highAt, high);
-    f.encoder().patchVarU32(numCasesAt, numCases);
+    Type exprType;
+    if (!CheckExpr(f, switchExpr, &exprType))
+        return false;
+    if (!exprType.isSigned())
+        return f.failf(switchExpr, "%s is not a subtype of signed", exprType.toChars());
+    return true;
 }
 
+// A switch will be constructed as:
+// - the default block wrapping all the other blocks, to be able to break
+// out of the switch with an unlabeled break statement. It has two statements
+// (an inner block and the default expr). asm.js rules require default to be at
+// the end, so the default block always encloses all the cases blocks.
+// - one block per case between low and high; undefined cases just jump to the
+// default case. Each of these blocks contain two statements: the next case's
+// block and the possibly empty statement list comprising the case body. The
+// last block pushed is the first case so the (relative) branch target therefore
+// matches the sequential order of cases.
+// - one block for the br_table, so that the first break goes to the first
+// case's block.
 static bool
 CheckSwitch(FunctionValidator& f, ParseNode* switchStmt)
 {
     MOZ_ASSERT(switchStmt->isKind(PNK_SWITCH));
-
-    if (!f.encoder().writeExpr(Expr::TableSwitch))
-        return false;
-
-    // Has default
-    size_t hasDefaultAt;
-    if (!f.encoder().writePatchableU8(&hasDefaultAt))
-        return false;
-
-    // Low / High / Num cases
-    size_t lowAt;
-    if (!f.encoder().writePatchableVarU32(&lowAt))
-        return false;
-    size_t highAt;
-    if (!f.encoder().writePatchableVarU32(&highAt))
-        return false;
-    size_t numCasesAt;
-    if (!f.encoder().writePatchableVarU32(&numCasesAt))
-        return false;
 
     ParseNode* switchExpr = BinaryLeft(switchStmt);
     ParseNode* switchBody = BinaryRight(switchStmt);
@@ -6271,56 +6465,106 @@ CheckSwitch(FunctionValidator& f, ParseNode* switchStmt)
     if (!switchBody->isKind(PNK_STATEMENTLIST))
         return f.fail(switchBody, "switch body may not contain 'let' declarations");
 
-    Type exprType;
-    if (!CheckExpr(f, switchExpr, &exprType))
-        return false;
-
-    if (!exprType.isSigned())
-        return f.failf(switchExpr, "%s is not a subtype of signed", exprType.toChars());
-
     ParseNode* stmt = ListHead(switchBody);
+    if (!stmt)
+        return CheckSwitchExpr(f, switchExpr);
 
     if (!CheckDefaultAtEnd(f, stmt))
         return false;
 
-    if (!stmt) {
-        PatchSwitch(f, hasDefaultAt, false, lowAt, 0, highAt, 0, numCasesAt, 0);
-        return true;
-    }
-
-    int32_t low = 0, high = 0, tableLength = 0;
+    int32_t low = 0, high = 0;
+    uint32_t tableLength = 0;
     if (!CheckSwitchRange(f, stmt, &low, &high, &tableLength))
         return false;
 
-    Vector<bool, 8> cases(f.cx());
-    if (!cases.resize(tableLength))
+    static const uint32_t CASE_NOT_DEFINED = UINT32_MAX;
+
+    Uint32Vector caseDepths;
+    if (!caseDepths.appendN(CASE_NOT_DEFINED, tableLength))
         return false;
 
     uint32_t numCases = 0;
+    for (ParseNode* s = stmt; s && !IsDefaultCase(s); s = NextNode(s)) {
+        int32_t caseValue = ExtractNumericLiteral(f.m(), CaseExpr(s)).toInt32();
+
+        MOZ_ASSERT(caseValue >= low);
+        unsigned i = caseValue - low;
+        if (caseDepths[i] != CASE_NOT_DEFINED)
+            return f.fail(s, "no duplicate case labels");
+
+        MOZ_ASSERT(numCases != CASE_NOT_DEFINED);
+        caseDepths[i] = numCases++;
+    }
+
+    // Open the wrapping breakable default block.
+    if (!f.pushBreakableBlock(2))
+        return false;
+
+    // Open all the case blocks.
+    for (uint32_t i = 0; i < numCases; i++) {
+        if (!f.pushUnbreakableBlock(2))
+            return false;
+    }
+
+    // Open the br_table block.
+    if (!f.pushUnbreakableBlock(1))
+        return false;
+
+    // The default block is the last one.
+    uint32_t defaultDepth = numCases;
+
+    // Start the br_table block.
+    if (!f.encoder().writeExpr(Expr::BrTable))
+        return false;
+
+    // Write default depth and number of cases (tableLength - 1 + 1 (default)).
+    if (!f.encoder().writeVarU32(defaultDepth))
+        return false;
+    if (!f.encoder().writeVarU32(tableLength))
+        return false;
+
+    // Each case value describes the relative depth to the actual block. When
+    // a case is not explicitly defined, it goes to the default.
+    for (size_t i = 0; i < tableLength; i++) {
+        uint32_t target = caseDepths[i] == CASE_NOT_DEFINED ? defaultDepth : caseDepths[i];
+        if (!f.encoder().writeVarU32(target))
+            return false;
+    }
+
+    // Subtract lowest case value, so that all the cases start from 0.
+    if (low) {
+        if (!f.encoder().writeExpr(Expr::I32Sub))
+            return false;
+        if (!CheckSwitchExpr(f, switchExpr))
+            return false;
+        if (!f.writeInt32Lit(low))
+            return false;
+    } else {
+        if (!CheckSwitchExpr(f, switchExpr))
+            return false;
+    }
+
+    // Our br_table is done. Close its block, write the cases down in order.
+    f.popUnbreakableBlock();
+
     for (; stmt && !IsDefaultCase(stmt); stmt = NextNode(stmt)) {
-        int32_t caseValue = ExtractNumericLiteral(f.m(), CaseExpr(stmt)).toInt32();
-        unsigned caseIndex = caseValue - low;
-
-        if (cases[caseIndex])
-            return f.fail(stmt, "no duplicate case labels");
-
-        cases[caseIndex] = true;
-        numCases += 1;
-        if (!f.encoder().writeVarU32(caseValue))
-            return false;
-
         if (!CheckStatement(f, CaseBody(stmt)))
             return false;
+        f.popUnbreakableBlock();
     }
 
-    bool hasDefault = false;
+    // Write the default block.
     if (stmt && IsDefaultCase(stmt)) {
-        hasDefault = true;
         if (!CheckStatement(f, CaseBody(stmt)))
+            return false;
+    } else {
+        // TODO no need to write this nop once we go postorder.
+        if (!f.encoder().writeExpr(Expr::Nop))
             return false;
     }
 
-    PatchSwitch(f, hasDefaultAt, hasDefault, lowAt, low, highAt, high, numCasesAt, numCases);
+    // Close the wrapping block.
+    f.popBreakableBlock();
     return true;
 }
 
@@ -6362,13 +6606,12 @@ CheckReturn(FunctionValidator& f, ParseNode* returnStmt)
 }
 
 static bool
-CheckStatementList(FunctionValidator& f, ParseNode* stmtList)
+CheckStatementList(FunctionValidator& f, ParseNode* stmtList, const NameVector* labels /*= nullptr */)
 {
     MOZ_ASSERT(stmtList->isKind(PNK_STATEMENTLIST));
 
-    if (!f.encoder().writeExpr(Expr::Block))
-        return false;
-    if (!f.encoder().writeVarU32(ListLength(stmtList)))
+    uint32_t numStmts = ListLength(stmtList);
+    if (!f.pushUnbreakableBlock(numStmts, labels))
         return false;
 
     for (ParseNode* stmt = ListHead(stmtList); stmt; stmt = NextNode(stmt)) {
@@ -6376,23 +6619,16 @@ CheckStatementList(FunctionValidator& f, ParseNode* stmtList)
             return false;
     }
 
+    f.popUnbreakableBlock(labels);
     return true;
 }
 
 static bool
-CheckBreakOrContinue(FunctionValidator& f, PropertyName* maybeLabel,
-                     Expr withoutLabel, Expr withLabel)
+CheckBreakOrContinue(FunctionValidator& f, bool isBreak, ParseNode* stmt)
 {
-    if (!maybeLabel)
-        return f.encoder().writeExpr(withoutLabel);
-
-    if (!f.encoder().writeExpr(withLabel))
-        return false;
-
-    uint32_t labelId = f.lookupLabel(maybeLabel);
-    MOZ_ASSERT(labelId != uint32_t(-1));
-
-    return f.encoder().writeVarU32(labelId);
+    if (PropertyName* maybeLabel = LoopControlMaybeLabel(stmt))
+        return f.writeLabeledBreakOrContinue(maybeLabel, isBreak);
+    return f.writeUnlabeledBreakOrContinue(isBreak);
 }
 
 static bool
@@ -6410,10 +6646,8 @@ CheckStatement(FunctionValidator& f, ParseNode* stmt)
       case PNK_SWITCH:        return CheckSwitch(f, stmt);
       case PNK_RETURN:        return CheckReturn(f, stmt);
       case PNK_STATEMENTLIST: return CheckStatementList(f, stmt);
-      case PNK_BREAK:         return CheckBreakOrContinue(f, LoopControlMaybeLabel(stmt),
-                                                          Expr::Break, Expr::BreakLabel);
-      case PNK_CONTINUE:      return CheckBreakOrContinue(f, LoopControlMaybeLabel(stmt),
-                                                          Expr::Continue, Expr::ContinueLabel);
+      case PNK_BREAK:         return CheckBreakOrContinue(f, true, stmt);
+      case PNK_CONTINUE:      return CheckBreakOrContinue(f, false, stmt);
       default:;
     }
 
