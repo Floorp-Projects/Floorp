@@ -97,6 +97,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
+#include "mozilla/StaticMutex.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
@@ -162,6 +163,7 @@ const Float SIGMA_MAX = 100;
 
 /* Memory reporter stuff */
 static int64_t gCanvasAzureMemoryUsed = 0;
+static StaticMutex sMemoryReportMutex;
 
 // This is KIND_OTHER because it's not always clear where in memory the pixels
 // of a canvas are stored.  Furthermore, this memory will be tracked by the
@@ -170,7 +172,7 @@ class Canvas2dPixelsReporter final : public nsIMemoryReporter
 {
   ~Canvas2dPixelsReporter() {}
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override
@@ -1064,6 +1066,7 @@ CanvasRenderingContext2D::Reset()
   // only do this for non-docshell created contexts,
   // since those are the ones that we created a surface for
   if (mTarget && IsTargetValid() && !mDocShell) {
+    StaticMutexAutoLock lock(sMemoryReportMutex);
     gCanvasAzureMemoryUsed -= mWidth * mHeight * 4;
   }
 
@@ -1145,14 +1148,16 @@ CanvasRenderingContext2D::Redraw()
 
   mIsEntireFrameInvalid = true;
 
-  if (!mCanvasElement) {
-    NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
-    return NS_OK;
+  if (NS_IsMainThread()) {
+    if (!mCanvasElement) {
+      NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
+      return NS_OK;
+    }
+
+    nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
+
+    mCanvasElement->InvalidateCanvasContent(nullptr);
   }
-
-  nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
-
-  mCanvasElement->InvalidateCanvasContent(nullptr);
 
   return NS_OK;
 }
@@ -1174,14 +1179,16 @@ CanvasRenderingContext2D::Redraw(const gfx::Rect& aR)
     return;
   }
 
-  if (!mCanvasElement) {
-    NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
-    return;
+  if (NS_IsMainThread()) {
+    if (!mCanvasElement) {
+      NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
+      return;
+    }
+
+    nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
+
+    mCanvasElement->InvalidateCanvasContent(&aR);
   }
-
-  nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
-
-  mCanvasElement->InvalidateCanvasContent(&aR);
 }
 
 void
@@ -1424,7 +1431,8 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
         nsContentUtils::PersistentLayerManagerForDocument(ownerDoc);
     }
 
-    if (mode == RenderingMode::OpenGLBackendMode &&
+    if (NS_IsMainThread() &&
+        mode == RenderingMode::OpenGLBackendMode &&
         gfxPlatform::GetPlatform()->UseAcceleratedCanvas() &&
         CheckSizeForSkiaGL(size)) {
       DemoteOldestContextIfNecessary();
@@ -1437,9 +1445,7 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
         mTarget = Factory::CreateDrawTargetSkiaWithGrContext(glue->GetGrContext(), size, format);
         if (mTarget) {
           AddDemotableContext(this);
-          if (NS_IsMainThread()) {
-            mBufferProvider = new PersistentBufferProviderBasic(mTarget);
-          }
+          mBufferProvider = new PersistentBufferProviderBasic(mTarget);
           mIsSkiaGL = true;
         } else {
           gfxCriticalNote << "Failed to create a SkiaGL DrawTarget, falling back to software\n";
@@ -1473,7 +1479,12 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
     }
 
     gCanvasAzureMemoryUsed += mWidth * mHeight * 4;
-    JSContext* context = nsContentUtils::GetCurrentJSContext();
+    JSContext* context;
+    if (NS_IsMainThread()) {
+      context = nsContentUtils::GetCurrentJSContext();
+    } else {
+      context = nsContentUtils::GetDefaultJSContextForThread();
+    }
     if (context) {
       JS_updateMallocCounter(context, mWidth * mHeight * 4);
     }
