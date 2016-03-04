@@ -208,6 +208,19 @@
             "type": "boolean"
           }
         }
+      },
+      {
+        "id": "DownloadTime",
+        "description": "A time specified as a Date object, a number of string representing milliseconds since the epoch, or an ISO 8601 string",
+        "choices": [
+          {
+            "type": "string",
+            "pattern": "^[1-9]\\d*$"
+          },
+          {
+            "$ref": "extensionTypes.Date"
+          }
+        ]
       }
     ],
     "functions": [
@@ -311,26 +324,22 @@
               "startedBefore": {
                 "description": "Limits results to downloads that started before the given ms since the epoch.",
                 "optional": true,
-                "type": "string",
-                "pattern": "^[1-9]\\d*$"
+                "$ref": "DownloadTime"
               },
               "startedAfter": {
                 "description": "Limits results to downloads that started after the given ms since the epoch.",
                 "optional": true,
-                "type": "string",
-                "pattern": "^[1-9]\\d*$"
+                "$ref": "DownloadTime"
               },
               "endedBefore": {
                 "description": "Limits results to downloads that ended before the given ms since the epoch.",
                 "optional": true,
-                "type": "string",
-                "pattern": "^[1-9]\\d*$"
+                "$ref": "DownloadTime"
               },
               "endedAfter": {
                 "description": "Limits results to downloads that ended after the given ms since the epoch.",
                 "optional": true,
-                "type": "string",
-                "pattern": "^[1-9]\\d*$"
+                "$ref": "DownloadTime"
               },
               "totalBytesGreater": {
                 "description": "Limits results to downloads whose totalBytes is greater than the given integer.",

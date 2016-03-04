@@ -295,27 +295,42 @@ add_task(function* test_search() {
   // Check that positive and negative search terms together work.
   yield checkSearch({query: ["html", "-renamed"]}, ["html1"], "postive and negative terms");
 
-  // Check that startedBefore works with stringified milliseconds.
-  yield checkSearch({startedBefore: time1.valueOf().toString()}, [], "before time1");
-  yield checkSearch({startedBefore: time2.valueOf().toString()}, ["txt1", "txt2"], "before time2");
-  yield checkSearch({startedBefore: time3.valueOf().toString()}, ["txt1", "txt2", "html1", "html2"], "before time3");
+  function* checkSearchWithDate(query, expected, description) {
+    const fields = Object.keys(query);
+    if (fields.length != 1 || !(query[fields[0]] instanceof Date)) {
+      throw new Error("checkSearchWithDate expects exactly one Date field");
+    }
+    const field = fields[0];
+    const date = query[field];
 
-  // Check that startedBefore works with iso string.
-  // enable with fix for bug 1251766
-  // yield checkSearch({startedBefore: time1.toISOString()}, [], "before time1");
-  // yield checkSearch({startedBefore: time2.toISOString()}, ["txt1", "txt2"], "before time2");
-  // yield checkSearch({startedBefore: time3.toISOString()}, ["txt1", "txt2", "html1", "html2"], "before time3");
+    let newquery = {};
 
-  // Check that startedAfter works with stringified milliseconds.
-  yield checkSearch({startedAfter: time1.valueOf().toString()}, ["txt1", "txt2", "html1", "html2"], "after time1");
-  yield checkSearch({startedAfter: time2.valueOf().toString()}, ["html1", "html2"], "after time2");
-  yield checkSearch({startedAfter: time3.valueOf().toString()}, [], "after time3");
+    // Check as a Date
+    newquery[field] = date;
+    yield checkSearch(newquery, expected, `${description} as Date`);
 
-  // Check that startedAfter works with iso string.
-  // enable with fix for bug 1251766
-  // yield checkSearch({startedAfter: time1.toISOString()}, ["txt1", "txt2", "html1", "html2"], "after time1");
-  // yield checkSearch({startedAfter: time2.toISOString()}, ["html1", "html2"], "after time2");
-  // yield checkSearch({startedAfter: time3.toISOString()}, [], "after time3");
+    // Check as numeric milliseconds
+    newquery[field] = date.valueOf();
+    yield checkSearch(newquery, expected, `${description} as numeric ms`);
+
+    // Check as stringified milliseconds
+    newquery[field] = date.valueOf().toString();
+    yield checkSearch(newquery, expected, `${description} as string ms`);
+
+    // Check as ISO string
+    newquery[field] = date.toISOString();
+    yield checkSearch(newquery, expected, `${description} as iso string`);
+  }
+
+  // Check startedBefore
+  yield checkSearchWithDate({startedBefore: time1}, [], "before time1");
+  yield checkSearchWithDate({startedBefore: time2}, ["txt1", "txt2"], "before time2");
+  yield checkSearchWithDate({startedBefore: time3}, ["txt1", "txt2", "html1", "html2"], "before time3");
+
+  // Check startedAfter
+  yield checkSearchWithDate({startedAfter: time1}, ["txt1", "txt2", "html1", "html2"], "after time1");
+  yield checkSearchWithDate({startedAfter: time2}, ["html1", "html2"], "after time2");
+  yield checkSearchWithDate({startedAfter: time3}, [], "after time3");
 
   // Check simple search on totalBytes
   yield checkSearch({totalBytes: TXT_LEN}, ["txt1", "txt2"], "totalBytes");
@@ -396,10 +411,10 @@ add_task(function* test_search() {
   yield checkBadSearch("myquery", /Incorrect argument type/, "query is not an object");
   yield checkBadSearch({bogus: "boo"}, /Unexpected property/, "query contains an unknown field");
   yield checkBadSearch({query: "query string"}, /Expected array/, "query.query is a string");
-  yield checkBadSearch({startedBefore: "i am not a number"}, /Type error/, "query.startedBefore is not a valid time");
-  yield checkBadSearch({startedAfter: "i am not a number"}, /Type error/, "query.startedAfter is not a valid time");
-  yield checkBadSearch({endedBefore: "i am not a number"}, /Type error/, "query.endedBefore is not a valid time");
-  yield checkBadSearch({endedAfter: "i am not a number"}, /Type error/, "query.endedAfter is not a valid time");
+  yield checkBadSearch({startedBefore: "i am not a time"}, /Type error/, "query.startedBefore is not a valid time");
+  yield checkBadSearch({startedAfter: "i am not a time"}, /Type error/, "query.startedAfter is not a valid time");
+  yield checkBadSearch({endedBefore: "i am not a time"}, /Type error/, "query.endedBefore is not a valid time");
+  yield checkBadSearch({endedAfter: "i am not a time"}, /Type error/, "query.endedAfter is not a valid time");
   yield checkBadSearch({urlRegex: "["}, /Invalid urlRegex/, "query.urlRegexp is not a valid regular expression");
   yield checkBadSearch({filenameRegex: "["}, /Invalid filenameRegex/, "query.filenameRegexp is not a valid regular expression");
   yield checkBadSearch({orderBy: "startTime"}, /Expected array/, "query.orderBy is not an array");
