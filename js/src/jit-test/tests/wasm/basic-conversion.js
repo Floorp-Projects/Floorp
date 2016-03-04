@@ -4,7 +4,19 @@ if (!wasmIsSupported())
     quit();
 
 function testConversion(resultType, opcode, paramType, op, expect) {
-  assertEq(wasmEvalText('(module (func (param ' + paramType + ') (result ' + resultType + ') (' + resultType + '.' + opcode + '/' + paramType + ' (get_local 0))) (export "" 0))')(op), expect);
+  if (paramType === 'i64') {
+    // i64 cannot be imported, so we use a wrapper function.
+    assertEq(wasmEvalText(`(module
+                            (func (param i64) (result ${resultType}) (${resultType}.${opcode}/i64 (get_local 0)))
+                            (func (result ${resultType}) (call 0 (i64.const ${op})))
+                            (export "" 1))`)(), expect);
+    // The same, but now the input is a constant.
+    assertEq(wasmEvalText(`(module
+                            (func (result ${resultType}) (${resultType}.${opcode}/i64 (i64.const ${op})))
+                            (export "" 0))`)(), expect);
+  } else {
+    assertEq(wasmEvalText('(module (func (param ' + paramType + ') (result ' + resultType + ') (' + resultType + '.' + opcode + '/' + paramType + ' (get_local 0))) (export "" 0))')(op), expect);
+  }
 
   // TODO: i64 NYI
   for (var bad of ['i32', 'f32', 'f64']) {
@@ -21,7 +33,24 @@ function testConversion(resultType, opcode, paramType, op, expect) {
   }
 }
 
-//testConversion('i32', 'wrap', 'i64', 4294967336, 40); // TODO: NYI
+if (getBuildConfiguration().x64) {
+    testConversion('i32', 'wrap', 'i64', 4294967336, 40);
+    testConversion('i32', 'wrap', 'i64', -10, -10);
+    testConversion('i32', 'wrap', 'i64', "0xffffffff7fffffff", 0x7fffffff);
+    testConversion('i32', 'wrap', 'i64', "0xffffffff00000000", 0);
+    testConversion('i32', 'wrap', 'i64', "0xfffffffeffffffff", -1);
+    testConversion('i32', 'wrap', 'i64', "0x1234567801abcdef", 0x01abcdef);
+    testConversion('i32', 'wrap', 'i64', "0x8000000000000002", 2);
+} else {
+    // Sleeper test: once i64 works on more platforms, remove this if-else.
+    try {
+        testConversion('i32', 'wrap', 'i64', 4294967336, 40);
+        assertEq(0, 1);
+    } catch(e) {
+        assertEq(e.toString().indexOf("NYI on this platform") >= 0, true);
+    }
+}
+
 testConversion('i32', 'trunc_s', 'f32', 40.1, 40);
 testConversion('i32', 'trunc_u', 'f32', 40.1, 40);
 testConversion('i32', 'trunc_s', 'f64', 40.1, 40);

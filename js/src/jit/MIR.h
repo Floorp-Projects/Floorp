@@ -5247,6 +5247,32 @@ class MAsmJSUnsignedToFloat32
     bool canProduceFloat32() const override { return true; }
 };
 
+class MWrapInt64ToInt32
+  : public MUnaryInstruction,
+    public NoTypePolicy::Data
+{
+    explicit MWrapInt64ToInt32(MDefinition* def)
+      : MUnaryInstruction(def)
+    {
+        setResultType(MIRType_Int32);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(WrapInt64ToInt32)
+    static MWrapInt64ToInt32* NewAsmJS(TempAllocator& alloc, MDefinition* def) {
+        return new(alloc) MWrapInt64ToInt32(def);
+    }
+
+    MDefinition* foldsTo(TempAllocator& alloc) override;
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+};
+
 // Converts a primitive (either typed or untyped) to an int32. If the input is
 // not primitive at runtime, a bailout occurs. If the input cannot be converted
 // to an int32 without loss (i.e. "5.5" or undefined) then a bailout occurs.

@@ -3726,6 +3726,18 @@ MTruncateToInt32::foldsTo(TempAllocator& alloc)
 }
 
 MDefinition*
+MWrapInt64ToInt32::foldsTo(TempAllocator& alloc)
+{
+    MDefinition* input = this->input();
+    if (input->isConstant()) {
+        int64_t c = input->toConstant()->toInt64();
+        return MConstant::New(alloc, Int32Value(int32_t(c)));
+    }
+
+    return this;
+}
+
+MDefinition*
 MToDouble::foldsTo(TempAllocator& alloc)
 {
     MDefinition* input = getOperand(0);

@@ -189,6 +189,7 @@
     _(Float32ToInt32)               \
     _(TruncateDToInt32)             \
     _(TruncateFToInt32)             \
+    _(WrapInt64ToInt32)             \
     _(BooleanToString)              \
     _(IntToString)                  \
     _(DoubleToString)               \
