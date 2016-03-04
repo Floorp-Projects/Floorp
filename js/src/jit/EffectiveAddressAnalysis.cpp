@@ -131,19 +131,19 @@ template<typename MAsmJSHeapAccessType>
 void
 EffectiveAddressAnalysis::analyzeAsmHeapAccess(MAsmJSHeapAccessType* ins)
 {
-    MDefinition* ptr = ins->ptr();
+    MDefinition* base = ins->base();
 
-    if (ptr->isConstant()) {
+    if (base->isConstant()) {
         // Look for heap[i] where i is a constant offset, and fold the offset.
         // By doing the folding now, we simplify the task of codegen; the offset
         // is always the address mode immediate. This also allows it to avoid
         // a situation where the sum of a constant pointer value and a non-zero
         // offset doesn't actually fit into the address mode immediate.
-        int32_t imm = ptr->toConstant()->toInt32();
+        int32_t imm = base->toConstant()->toInt32();
         if (imm != 0 && tryAddDisplacement(ins, imm)) {
             MInstruction* zero = MConstant::New(graph_.alloc(), Int32Value(0));
             ins->block()->insertBefore(ins, zero);
-            ins->replacePtr(zero);
+            ins->replaceBase(zero);
         }
 
         // If the index is within the minimum heap length, we can optimize
@@ -153,18 +153,18 @@ EffectiveAddressAnalysis::analyzeAsmHeapAccess(MAsmJSHeapAccessType* ins)
             if (end >= imm && (uint32_t)end <= mir_->minAsmJSHeapLength())
                  ins->removeBoundsCheck();
         }
-    } else if (ptr->isAdd()) {
+    } else if (base->isAdd()) {
         // Look for heap[a+i] where i is a constant offset, and fold the offset.
         // Alignment masks have already been moved out of the way by the
         // Alignment Mask Analysis pass.
-        MDefinition* op0 = ptr->toAdd()->getOperand(0);
-        MDefinition* op1 = ptr->toAdd()->getOperand(1);
+        MDefinition* op0 = base->toAdd()->getOperand(0);
+        MDefinition* op1 = base->toAdd()->getOperand(1);
         if (op0->isConstant())
             mozilla::Swap(op0, op1);
         if (op1->isConstant()) {
             int32_t imm = op1->toConstant()->toInt32();
             if (tryAddDisplacement(ins, imm))
-                ins->replacePtr(op0);
+                ins->replaceBase(op0);
         }
     }
 }
