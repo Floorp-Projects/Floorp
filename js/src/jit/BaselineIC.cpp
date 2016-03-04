@@ -3227,7 +3227,7 @@ ICSetElemDenseOrUnboxedArrayAddCompiler::generateStubCode(MacroAssembler& masm)
         masm.branch32(Assembler::NotEqual, scratchReg, key, &failure);
 
         // Capacity check.
-        masm.checkUnboxedArrayCapacity(obj, Int32Key(key), scratchReg, &failure);
+        masm.checkUnboxedArrayCapacity(obj, RegisterOrInt32Constant(key), scratchReg, &failure);
 
         // Load obj->elements.
         masm.loadPtr(Address(obj, UnboxedArrayObject::offsetOfElements()), scratchReg);
