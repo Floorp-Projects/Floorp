@@ -120,28 +120,43 @@ struct NonPOD
 // destruct those elements.
 void TestConstructorsAndDestructors()
 {
+  size_t defaultCtorCalls = 0;
+  size_t explicitCtorCalls = 0;
+  size_t copyCtorCalls = 0;
+  size_t moveCtorCalls = 0;
+  size_t dtorCalls = 0;
+
   {
     // A SegmentedVector with a non-POD element type.
     NonPOD x(1);                          // explicit constructor called
+    explicitCtorCalls++;
     SegmentedVector<NonPOD, 64, InfallibleAllocPolicy> v;
                                           // default constructor called 0 times
     MOZ_RELEASE_ASSERT(v.IsEmpty());
     gDummy = v.Append(x);                 // copy constructor called
+    copyCtorCalls++;
     NonPOD y(1);                          // explicit constructor called
+    explicitCtorCalls++;
     gDummy = v.Append(mozilla::Move(y));  // move constructor called
+    moveCtorCalls++;
     NonPOD z(1);                          // explicit constructor called
+    explicitCtorCalls++;
     v.InfallibleAppend(mozilla::Move(z)); // move constructor called
+    moveCtorCalls++;
     v.PopLast();                          // destructor called 1 time
-    MOZ_RELEASE_ASSERT(gNumDtors == 1);
+    dtorCalls++;
+    MOZ_RELEASE_ASSERT(gNumDtors == dtorCalls);
     v.Clear();                            // destructor called 2 times
+    dtorCalls += 2;
 
-    MOZ_RELEASE_ASSERT(gNumDefaultCtors  == 0);
-    MOZ_RELEASE_ASSERT(gNumExplicitCtors == 3);
-    MOZ_RELEASE_ASSERT(gNumCopyCtors     == 1);
-    MOZ_RELEASE_ASSERT(gNumMoveCtors     == 2);
-    MOZ_RELEASE_ASSERT(gNumDtors         == 3);
+    MOZ_RELEASE_ASSERT(gNumDefaultCtors  == defaultCtorCalls);
+    MOZ_RELEASE_ASSERT(gNumExplicitCtors == explicitCtorCalls);
+    MOZ_RELEASE_ASSERT(gNumCopyCtors     == copyCtorCalls);
+    MOZ_RELEASE_ASSERT(gNumMoveCtors     == moveCtorCalls);
+    MOZ_RELEASE_ASSERT(gNumDtors         == dtorCalls);
   }                                       // destructor called for x, y, z
-  MOZ_RELEASE_ASSERT(gNumDtors == 6);
+  dtorCalls += 3;
+  MOZ_RELEASE_ASSERT(gNumDtors == dtorCalls);
 }
 
 struct A { int mX; int mY; };
