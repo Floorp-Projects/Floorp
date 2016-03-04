@@ -1186,10 +1186,6 @@ FragmentOrElement::DestroyContent()
                                                   nsBindingManager::eRunDtor);
   document->ClearBoxObjectFor(this);
 
-  // XXX We really should let cycle collection do this, but that currently still
-  //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
-  ReleaseWrapper(this);
-
   uint32_t i, count = mAttrsAndChildren.ChildCount();
   for (i = 0; i < count; ++i) {
     // The child can remove itself from the parent in BindToTree.
