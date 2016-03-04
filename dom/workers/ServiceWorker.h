@@ -27,7 +27,7 @@ ServiceWorkerVisible(JSContext* aCx, JSObject* aObj);
 
 class ServiceWorker final : public DOMEventTargetHelper
 {
-  friend class ServiceWorkerManager;
+  friend class ServiceWorkerInfo;
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -68,7 +68,7 @@ public:
               ErrorResult& aRv);
 
 private:
-  // This class can only be created from the ServiceWorkerManager.
+  // This class can only be created from ServiceWorkerInfo::GetOrCreateInstance().
   ServiceWorker(nsPIDOMWindowInner* aWindow, ServiceWorkerInfo* aInfo);
 
   // This class is reference-counted and will be destroyed from Release().
