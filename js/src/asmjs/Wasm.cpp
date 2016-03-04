@@ -1421,7 +1421,7 @@ wasm_toSource(JSContext* cx, unsigned argc, Value* vp)
 }
 #endif
 
-static JSFunctionSpec wasm_static_methods[] = {
+static const JSFunctionSpec wasm_static_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,     wasm_toSource,     0, 0),
 #endif
