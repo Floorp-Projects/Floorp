@@ -178,9 +178,8 @@ class TreeMetadataEmitter(LoggingMixin):
             else:
                 raise Exception('Unhandled output type: %s' % type(out))
 
-        # Don't emit Linkable objects when COMPILE_ENVIRONMENT is explicitely
-        # set to a value meaning false (usually '').
-        if self.config.substs.get('COMPILE_ENVIRONMENT', True):
+        # Don't emit Linkable objects when COMPILE_ENVIRONMENT is not set
+        if self.config.substs.get('COMPILE_ENVIRONMENT'):
             start = time.time()
             objs = list(self._emit_libs_derived(contexts))
             self._emitter_time += time.time() - start

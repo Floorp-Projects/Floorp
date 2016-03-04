@@ -70,6 +70,7 @@ class TestEmitterBasic(unittest.TestCase):
             ENABLE_TESTS='1' if enable_tests else '',
             BIN_SUFFIX='.prog',
             OS_TARGET='WINNT',
+            COMPILE_ENVIRONMENT='1',
         ))
 
         return BuildReader(config)
