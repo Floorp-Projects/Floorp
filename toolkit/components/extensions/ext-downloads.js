@@ -14,10 +14,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
+                                  "resource://devtools/shared/event-emitter.js");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 const {
   ignoreEvent,
+  runSafeSync,
+  SingletonEventManager,
 } = ExtensionUtils;
 
 const DOWNLOAD_ITEM_FIELDS = ["id", "url", "referrer", "filename", "incognito",
@@ -32,6 +36,7 @@ class DownloadItem {
     this.id = id;
     this.download = download;
     this.extension = extension;
+    this.prechange = {};
   }
 
   get url() { return this.download.source.url; }
@@ -103,6 +108,16 @@ class DownloadItem {
     }
     return obj;
   }
+
+  // When a change event fires, handlers can look at how an individual
+  // field changed by comparing item.fieldname with item.prechange.fieldname.
+  // After all handlers have been invoked, this gets called to store the
+  // current values of all fields ahead of the next event.
+  _change() {
+    for (let field of DOWNLOAD_ITEM_FIELDS) {
+      this.prechange[field] = this[field];
+    }
+  }
 }
 
 
@@ -121,6 +136,7 @@ const DownloadMap = {
 
   lazyInit() {
     if (this.loadPromise == null) {
+      EventEmitter.decorate(this);
       this.loadPromise = Downloads.getList(Downloads.ALL).then(list => {
         let self = this;
         return list.addView({
@@ -133,6 +149,16 @@ const DownloadMap = {
             if (item != null) {
               self.byDownload.delete(download);
               self.byId.delete(item.id);
+            }
+          },
+
+          onDownloadChanged(download) {
+            const item = self.byDownload.get(download);
+            if (item == null) {
+              Cu.reportError("Got onDownloadChanged for unknown download object");
+            } else {
+              self.emit("change", item);
+              item._change();
             }
           },
         }).then(() => list.getAll())
@@ -422,9 +448,31 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
       // }
       // likewise for setShelfEnabled() and the "download.shelf" permission
 
+      onChanged: new SingletonEventManager(context, "downloads.onChanged", fire => {
+        const handler = (what, item) => {
+          if (item.state != item.prechange.state) {
+            runSafeSync(context, fire, {
+              id: item.id,
+              state: {
+                previous: item.prechange.state || null,
+                current: item.state,
+              },
+            });
+          }
+        };
+
+        let registerPromise = DownloadMap.getDownloadList().then(() => {
+          DownloadMap.on("change", handler);
+        });
+        return () => {
+          registerPromise.then(() => {
+            DownloadMap.off("change", handler);
+          });
+        };
+      }).api(),
+
       onCreated: ignoreEvent(context, "downloads.onCreated"),
       onErased: ignoreEvent(context, "downloads.onErased"),
-      onChanged: ignoreEvent(context, "downloads.onChanged"),
       onDeterminingFilename: ignoreEvent(context, "downloads.onDeterminingFilename"),
     },
   };
