@@ -98,17 +98,17 @@ class ConfigureSandbox(dict):
 
     # Expose a limited set of functions from os.path
     OS = ReadOnlyNamespace(path=ReadOnlyNamespace(
-        abspath=os.path.abspath,
-        basename=os.path.basename,
-        dirname=os.path.dirname,
+        abspath=mozpath.abspath,
+        basename=mozpath.basename,
+        dirname=mozpath.dirname,
         exists=os.path.exists,
         isabs=os.path.isabs,
         isdir=os.path.isdir,
         isfile=os.path.isfile,
-        join=os.path.join,
-        normpath=os.path.normpath,
-        realpath=os.path.realpath,
-        relpath=os.path.relpath,
+        join=mozpath.join,
+        normpath=mozpath.normpath,
+        realpath=mozpath.realpath,
+        relpath=mozpath.relpath,
     ))
 
     def __init__(self, config, environ=os.environ, argv=sys.argv,
