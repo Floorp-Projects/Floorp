@@ -55,6 +55,7 @@ flags:
     mochitest-dt: /mochitest-devtools-chrome.*/
     mochitest-dt-e10s: /mochitest-devtools-chrome-e10s.*/
     mochitest-gl: /mochitest-webgl.*/
+    mochitest-jetpack: /mochitest-jetpack.*/
     mochitest-push: /mochitest-push.*/
     mochitest-vg: /mochitest-valgrind.*/
     reftest: /(plain-)?reftest.*/
