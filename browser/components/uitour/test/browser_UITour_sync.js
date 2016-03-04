@@ -34,6 +34,18 @@ add_UITour_task(function* test_firefoxAccountsValidParams() {
                                        "about:accounts?action=signup&entrypoint=uitour&utm_foo=foo&utm_bar=bar");
 });
 
+add_UITour_task(function* test_firefoxAccountsNonAlphaValue() {
+  // All characters in the value are allowed, but they must be automatically escaped.
+  // (we throw a unicode character in there too - it's not auto-utf8 encoded,
+  // but that's ok, so long as it is escaped correctly.)
+  let value = "foo& /=?:\\\xa9";
+  // encodeURIComponent encodes spaces to %20 but we want "+"
+  let expected = encodeURIComponent(value).replace(/%20/g, "+");
+  yield gContentAPI.showFirefoxAccounts({ utm_foo: value });
+  yield BrowserTestUtils.browserLoaded(gTestTab.linkedBrowser, false,
+                                       "about:accounts?action=signup&entrypoint=uitour&utm_foo=" + expected);
+});
+
 // A helper to check the request was ignored due to invalid params.
 function* checkAboutAccountsNotLoaded() {
   try {
@@ -61,11 +73,5 @@ add_UITour_task(function* test_firefoxAccountsNonUtmPrefix() {
 add_UITour_task(function* test_firefoxAccountsNonAlphaName() {
   // Any "utm_" name which includes non-alpha chars should be rejected.
   yield gContentAPI.showFirefoxAccounts({ utm_foo: "foo", "utm_bar=": "bar" });
-  yield checkAboutAccountsNotLoaded();
-});
-
-add_UITour_task(function* test_firefoxAccountsNonAlphaValue() {
-  // Any non-alpha value should be rejected.
-  yield gContentAPI.showFirefoxAccounts({ utm_foo: "foo&" });
   yield checkAboutAccountsNotLoaded();
 });

@@ -145,7 +145,11 @@ function Tester(aTests, structuredLogger, aCallback) {
   this._scriptLoader.loadSubScript("chrome://mochikit/content/chrome-harness.js", simpleTestScope);
   this.SimpleTest = simpleTestScope.SimpleTest;
 
-  var extensionUtilsScope = {};
+  var extensionUtilsScope = {
+    registerCleanupFunction: (fn) => {
+      this.currentTest.scope.registerCleanupFunction(fn);
+    },
+  };
   extensionUtilsScope.SimpleTest = this.SimpleTest;
   this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js", extensionUtilsScope);
   this.ExtensionTestUtils = extensionUtilsScope.ExtensionTestUtils;

@@ -169,14 +169,4 @@ public class WaitHelper {
   public boolean isIdle() {
     return queue.isEmpty();
   }
-
-  public static Executor newSynchronousExecutor() {
-    return new Executor() {
-
-      @Override
-      public void execute(Runnable runnable) {
-        runnable.run();
-      }
-    };
-  }
 }

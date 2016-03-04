@@ -13,6 +13,7 @@ import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoMessageReceiver;
 import org.mozilla.gecko.NSSBridge;
 import org.mozilla.gecko.db.BrowserContract.DeletedPasswords;
+import org.mozilla.gecko.db.BrowserContract.GeckoDisabledHosts;
 import org.mozilla.gecko.db.BrowserContract.Passwords;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.MatrixBlobCursor;
@@ -30,11 +31,13 @@ import android.util.Log;
 public class PasswordsProvider extends SQLiteBridgeContentProvider {
     static final String TABLE_PASSWORDS = "moz_logins";
     static final String TABLE_DELETED_PASSWORDS = "moz_deleted_logins";
+    static final String TABLE_DISABLED_HOSTS = "moz_disabledHosts";
 
     private static final String TELEMETRY_TAG = "SQLITEBRIDGE_PROVIDER_PASSWORDS";
 
     private static final int PASSWORDS = 100;
     private static final int DELETED_PASSWORDS = 101;
+    private static final int DISABLED_HOSTS = 102;
 
     static final String DEFAULT_PASSWORDS_SORT_ORDER = Passwords.HOSTNAME + " ASC";
     static final String DEFAULT_DELETED_PASSWORDS_SORT_ORDER = DeletedPasswords.TIME_DELETED + " ASC";
@@ -43,6 +46,7 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
 
     private static final HashMap<String, String> PASSWORDS_PROJECTION_MAP;
     private static final HashMap<String, String> DELETED_PASSWORDS_PROJECTION_MAP;
+    private static final HashMap<String, String> DISABLED_HOSTS_PROJECTION_MAP;
 
     // this should be kept in sync with the version in toolkit/components/passwordmgr/storage-mozStorage.js
     private static final int DB_VERSION = 5;
@@ -82,6 +86,11 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
         DELETED_PASSWORDS_PROJECTION_MAP.put(DeletedPasswords.ID, DeletedPasswords.ID);
         DELETED_PASSWORDS_PROJECTION_MAP.put(DeletedPasswords.GUID, DeletedPasswords.GUID);
         DELETED_PASSWORDS_PROJECTION_MAP.put(DeletedPasswords.TIME_DELETED, DeletedPasswords.TIME_DELETED);
+
+        URI_MATCHER.addURI(BrowserContract.PASSWORDS_AUTHORITY, "disabled-hosts", DISABLED_HOSTS);
+
+        DISABLED_HOSTS_PROJECTION_MAP = new HashMap<String, String>();
+        DISABLED_HOSTS_PROJECTION_MAP.put(GeckoDisabledHosts.HOSTNAME, GeckoDisabledHosts.HOSTNAME);
     }
 
     public PasswordsProvider() {
@@ -134,6 +143,9 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
             case DELETED_PASSWORDS:
                 return DeletedPasswords.CONTENT_TYPE;
 
+            case DISABLED_HOSTS:
+                return GeckoDisabledHosts.CONTENT_TYPE;
+
             default:
                 throw new UnsupportedOperationException("Unknown type " + uri);
         }
@@ -148,6 +160,9 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
 
             case PASSWORDS:
                 return TABLE_PASSWORDS;
+
+            case DISABLED_HOSTS:
+                return TABLE_DISABLED_HOSTS;
 
             default:
                 throw new UnsupportedOperationException("Unknown table " + uri);
@@ -167,6 +182,9 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
 
             case PASSWORDS:
                 return DEFAULT_PASSWORDS_SORT_ORDER;
+
+            case DISABLED_HOSTS:
+                return null;
 
             default:
                 throw new UnsupportedOperationException("Unknown URI " + uri);
@@ -208,6 +226,12 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
                 DBUtils.replaceKey(values, null, Passwords.TIME_LAST_USED, nowString);
                 DBUtils.replaceKey(values, null, Passwords.TIME_PASSWORD_CHANGED, nowString);
                 DBUtils.replaceKey(values, null, Passwords.TIMES_USED, "0");
+                break;
+
+            case DISABLED_HOSTS:
+                if (!values.containsKey(GeckoDisabledHosts.HOSTNAME)) {
+                    throw new IllegalArgumentException("Must provide a hostname for a disabled host");
+                }
                 break;
 
             default:

@@ -468,8 +468,8 @@
                 accesskey="&syncedTabs.context.bookmarkSingleTab.accesskey;"
                 id="syncedTabsBookmarkSelected"/>
       <menuseparator/>
-      <menuitem label="&syncedTabs.context.refreshList.label;"
-                accesskey="&syncedTabs.context.refreshList.accesskey;"
+      <menuitem label="&syncSyncNowItem.label;"
+                accesskey="&syncSyncNowItem.accesskey;"
                 id="syncedTabsRefresh"/>
     </menupopup>
   </popupset>

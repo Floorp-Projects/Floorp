@@ -105,7 +105,7 @@ var RANK_OPTIONS = { noSort: true, prefixZero: true };
 /**
  * We want to be able to turn predictions off in Firefox
  */
-exports.supportsPredictions = true;
+exports.supportsPredictions = false;
 
 /**
  * Get a function which creates predictions of files that match the given

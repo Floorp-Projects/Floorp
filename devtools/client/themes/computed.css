@@ -14,6 +14,10 @@
   position: absolute;
 }
 
+#sidebar-panel-computedview > .devtools-toolbar {
+  display: flex;
+}
+
 #browser-style-checkbox {
   /* Bug 1200073 - extra space before the browser styles checkbox so
      they aren't squished together in a small window. */
@@ -140,11 +144,6 @@
 
 .legendKey {
   margin: 0 5px;
-}
-
-#root .devtools-toolbar {
-  width: 100%;
-  display: flex;
 }
 
 .link {
