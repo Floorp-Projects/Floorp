@@ -243,10 +243,20 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl *parent)
       mIceRestartState(ICE_RESTART_NONE) {
 }
 
-nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_servers,
-                                   const std::vector<NrIceTurnServer>& turn_servers,
-                                   NrIceCtx::Policy policy)
+nsresult
+PeerConnectionMedia::InitProxy()
 {
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  // Allow mochitests to disable this, since mochitest configures a fake proxy
+  // that serves up content.
+  bool disable = Preferences::GetBool("media.peerconnection.disable_http_proxy",
+                                      false);
+  if (disable) {
+    mProxyResolveCompleted = true;
+    return NS_OK;
+  }
+#endif
+
   nsresult rv;
   nsCOMPtr<nsIProtocolProxyService> pps =
     do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
@@ -303,6 +313,16 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     CSFLogError(logTag, "%s: Failed to resolve protocol proxy: %d", __FUNCTION__, (int)rv);
     return NS_ERROR_FAILURE;
   }
+
+  return NS_OK;
+}
+
+nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_servers,
+                                   const std::vector<NrIceTurnServer>& turn_servers,
+                                   NrIceCtx::Policy policy)
+{
+  nsresult rv = InitProxy();
+  NS_ENSURE_SUCCESS(rv, rv);
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   bool ice_tcp = Preferences::GetBool("media.peerconnection.ice.tcp", false);

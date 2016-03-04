@@ -900,10 +900,10 @@ class MochitestBase(object):
 
         if self.websocketProcessBridge is not None:
             try:
-                self.log.info('Stopping websocketProcessBridge')
                 self.websocketProcessBridge.kill()
+                self.log.info('Stopping websocket/process bridge')
             except Exception:
-                self.log.critical('Exception stopping websocketProcessBridge')
+                self.log.critical('Exception stopping websocket/process bridge')
 
     def copyExtraFilesToProfile(self, options):
         "Copy extra files or dirs specified on the command line to the testing profile."
