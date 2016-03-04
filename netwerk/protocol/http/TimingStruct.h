@@ -27,6 +27,12 @@ struct ResourceTimingStruct : TimingStruct {
   uint64_t transferSize;
   uint64_t encodedBodySize;
   nsCString protocolVersion;
+
+  // Not actually part of resource timing, but not part of the transaction
+  // timings either. These need to be passed to HttpChannelChild along with
+  // the rest of the timings so the timing information in the child is complete.
+  TimeStamp cacheReadStart;
+  TimeStamp cacheReadEnd;
 };
 
 } // namespace net
