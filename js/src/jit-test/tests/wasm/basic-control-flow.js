@@ -147,13 +147,20 @@ assertThrowsInstanceOf(() => wasmEvalText('(module (func (return (i32.const 1)))
 // ----------------------------------------------------------------------------
 // br / br_if
 
+wasmTextToBinary('(module (func (br 0)))');
 wasmTextToBinary('(module (func (block (br 0))))');
 wasmTextToBinary('(module (func (block $l (br $l))))');
+wasmTextToBinary('(module (func (br_if 0 (i32.const 0))))');
 wasmTextToBinary('(module (func (result i32) (block (br_if 0 (i32.const 1)))))');
 wasmTextToBinary('(module (func (result i32) (block $l (br_if $l (i32.const 1)))))');
 
 wasmTextToBinary('(module (func (block $l (block $m (br $l)))))');
 wasmTextToBinary('(module (func (block $l (block $m (br $m)))))');
+
+assertErrorMessage(() => wasmEvalText('(module (func (br 1)))'), TypeError, /branch depth exceeds current nesting level/);
+assertErrorMessage(() => wasmEvalText('(module (func (br_if 1 (i32.const 0))))'), TypeError, /branch depth exceeds current nesting level/);
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (block (br 0))) (export "" 0))'), TypeError, mismatchError("void", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (block (br_if 0 (i32.const 0)))) (export "" 0))'), TypeError, mismatchError("void", "i32"));
 
 // ----------------------------------------------------------------------------
 // loop
