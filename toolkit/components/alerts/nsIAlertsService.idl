@@ -21,35 +21,35 @@ interface nsIAlertNotificationImageListener : nsISupports
   /**
    * Called when the image finishes loading.
    *
-   * @param userData An opaque parameter passed to |loadImage|.
-   * @param request  The image request.
+   * @param aUserData An opaque parameter passed to |loadImage|.
+   * @param aRequest  The image request.
    */
-  void onImageReady(in nsISupports userData, in imgIRequest request);
+  void onImageReady(in nsISupports aUserData, in imgIRequest aRequest);
 
   /**
    * Called if the alert doesn't have an image, or if the image request times
    * out or fails.
    *
-   * @param userData An opaque parameter passed to |loadImage|.
+   * @param aUserData An opaque parameter passed to |loadImage|.
    */
-  void onImageMissing(in nsISupports userData);
+  void onImageMissing(in nsISupports aUserData);
 };
 
 [scriptable, uuid(cf2e4cb6-4b8f-4eca-aea9-d51a8f9f7a50)]
 interface nsIAlertNotification : nsISupports
 {
   /** Initializes an alert notification. */
-  void init([optional] in AString name,
-            [optional] in AString imageURL,
-            [optional] in AString title,
-            [optional] in AString text,
-            [optional] in boolean textClickable,
-            [optional] in AString cookie,
-            [optional] in AString dir,
-            [optional] in AString lang,
-            [optional] in AString data,
-            [optional] in nsIPrincipal principal,
-            [optional] in boolean inPrivateBrowsing);
+  void init([optional] in AString aName,
+            [optional] in AString aImageURL,
+            [optional] in AString aTitle,
+            [optional] in AString aText,
+            [optional] in boolean aTextClickable,
+            [optional] in AString aCookie,
+            [optional] in AString aDir,
+            [optional] in AString aLang,
+            [optional] in AString aData,
+            [optional] in nsIPrincipal aPrincipal,
+            [optional] in boolean aInPrivateBrowsing);
 
   /**
    * The name of the notification. On Android, the name is hashed and used as
@@ -136,33 +136,33 @@ interface nsIAlertNotification : nsISupports
   /**
    * Loads the image associated with this alert.
    *
-   * @param timeout  The number of milliseconds to wait before cancelling the
-   *                 image request. If zero, there is no timeout.
-   * @param listener An |nsIAlertNotificationImageListener| implementation,
-   *                 notified when the image loads. The listener is kept alive
-   *                 until the request completes.
-   * @param userData An opaque parameter passed to the listener's methods.
-   *                 Not used by the libnotify backend, but the OS X backend
-   *                 passes the pending notification.
+   * @param aTimeout  The number of milliseconds to wait before cancelling the
+   *                  image request. If zero, there is no timeout.
+   * @param aListener An |nsIAlertNotificationImageListener| implementation,
+   *                  notified when the image loads. The listener is kept alive
+   *                  until the request completes.
+   * @param aUserData An opaque parameter passed to the listener's methods.
+   *                  Not used by the libnotify backend, but the OS X backend
+   *                  passes the pending notification.
    */
-  nsICancelable loadImage(in unsigned long timeout,
-                          in nsIAlertNotificationImageListener listener,
-                          [optional] in nsISupports userData);
+  nsICancelable loadImage(in unsigned long aTimeout,
+                          in nsIAlertNotificationImageListener aListener,
+                          [optional] in nsISupports aUserData);
 };
 
 [scriptable, uuid(f7a36392-d98b-4141-a7d7-4e46642684e3)]
 interface nsIAlertsService : nsISupports
 {
-  void showPersistentNotification(in AString persistentData,
-                                  in nsIAlertNotification alert,
-                                  [optional] in nsIObserver alertListener);
+  void showPersistentNotification(in AString aPersistentData,
+                                  in nsIAlertNotification aAlert,
+                                  [optional] in nsIObserver aAlertListener);
 
-  void showAlert(in nsIAlertNotification alert,
-                 [optional] in nsIObserver alertListener);
+  void showAlert(in nsIAlertNotification aAlert,
+                 [optional] in nsIObserver aAlertListener);
   /**
    * Initializes and shows an |nsIAlertNotification| with the given parameters.
    *
-   * @param alertListener  Used for callbacks. May be null if the caller
+   * @param aAlertListener Used for callbacks. May be null if the caller
    *                       doesn't care about callbacks.
    * @see nsIAlertNotification for descriptions of all other parameters.
    * @throws NS_ERROR_NOT_AVAILABLE If the notification cannot be displayed.
@@ -182,28 +182,28 @@ interface nsIAlertsService : nsISupports
    *       In that case, if an alert listener is passed in it will receive the
    *       "alertfinished" notification immediately.
    */
-  void showAlertNotification(in AString  imageUrl,
-                             in AString  title,
-                             in AString  text,
-                             [optional] in boolean textClickable,
-                             [optional] in AString cookie,
-                             [optional] in nsIObserver alertListener,
-                             [optional] in AString name,
-                             [optional] in AString dir,
-                             [optional] in AString lang,
-                             [optional] in AString data,
-                             [optional] in nsIPrincipal principal,
-                             [optional] in boolean inPrivateBrowsing);
+  void showAlertNotification(in AString aImageURL,
+                             in AString aTitle,
+                             in AString aText,
+                             [optional] in boolean aTextClickable,
+                             [optional] in AString aCookie,
+                             [optional] in nsIObserver aAlertListener,
+                             [optional] in AString aName,
+                             [optional] in AString aDir,
+                             [optional] in AString aLang,
+                             [optional] in AString aData,
+                             [optional] in nsIPrincipal aPrincipal,
+                             [optional] in boolean aInPrivateBrowsing);
 
   /**
    * Close alerts created by the service.
    *
-   * @param name           The name of the notification to close. If no name
+   * @param aName          The name of the notification to close. If no name
    *                       is provided then only a notification created with
    *                       no name (if any) will be closed.
    */
-  void closeAlert([optional] in AString name,
-                  [optional] in nsIPrincipal principal);
+  void closeAlert([optional] in AString aName,
+                  [optional] in nsIPrincipal aPrincipal);
 
 };
 
@@ -229,27 +229,27 @@ interface nsIAlertsProgressListener : nsISupports
    * Called to notify the alert service that progress has occurred for the
    * given notification previously displayed with showAlertNotification().
    *
-   * @param name         The name of the notification displaying the
+   * @param aName        The name of the notification displaying the
    *                     progress. On Android the name is hashed and used
    *                     as a notification ID.
-   * @param progress     Numeric value in the range 0 to progressMax
+   * @param aProgress    Numeric value in the range 0 to progressMax
    *                     indicating the current progress.
-   * @param progressMax  Numeric value indicating the maximum progress.
-   * @param text         The contents of the alert. If not provided,
+   * @param aProgressMax Numeric value indicating the maximum progress.
+   * @param aText        The contents of the alert. If not provided,
    *                     the percentage will be displayed.
    */
-  void onProgress(in AString name,
-                  in long long progress,
-                  in long long progressMax,
-                  [optional] in AString text);
+  void onProgress(in AString aName,
+                  in long long aProgress,
+                  in long long aProgressMax,
+                  [optional] in AString aText);
 
   /**
    * Called to cancel and hide the given notification previously displayed
    * with showAlertNotification().
    *
-   * @param name         The name of the notification.
+   * @param aName        The name of the notification.
    */
-  void onCancel(in AString name);
+  void onCancel(in AString aName);
 };
 
 [scriptable, uuid(fc6d7f0a-0cf6-4268-8c71-ab640842b9b1)]
@@ -258,13 +258,13 @@ interface nsIAlertsIconData : nsISupports
   /**
    * Shows an alert with an icon. Web notifications use the favicon of the
    * page that created the alert. If the favicon is not in the Places database,
-   * |iconSize| will be zero.
+   * |aIconSize| will be zero.
   */
-  void showAlertWithIconData(in nsIAlertNotification alert,
-                             [optional] in nsIObserver alertListener,
-                             [optional] in uint32_t iconSize,
-                             [const, array, size_is(iconSize)] in uint8_t
-                                                               iconData);
+  void showAlertWithIconData(in nsIAlertNotification aAlert,
+                             [optional] in nsIObserver aAlertListener,
+                             [optional] in uint32_t aIconSize,
+                             [const, array, size_is(aIconSize)] in uint8_t
+                                                                aIconData);
 };
 
 [scriptable, uuid(f3c82915-bf60-41ea-91ce-6c46b22e381a)]
@@ -273,9 +273,9 @@ interface nsIAlertsIconURI : nsISupports
   /**
    * Shows an alert with an icon URI. Web notifications use |moz-anno:|
    * URIs to reference favicons from Places. If the page doesn't have a
-   * favicon, |iconURI| will be |null|.
+   * favicon, |aIconURI| will be |null|.
    */
-  void showAlertWithIconURI(in nsIAlertNotification alert,
-                            [optional] in nsIObserver alertListener,
-                            [optional] in nsIURI iconURI);
+  void showAlertWithIconURI(in nsIAlertNotification aAlert,
+                            [optional] in nsIObserver aAlertListener,
+                            [optional] in nsIURI aIconURI);
 };
