@@ -29,6 +29,15 @@ namespace wasm {
 
 class FunctionGenerator;
 
+// Module generator limits
+
+static const unsigned MaxSigs            =   4 * 1024;
+static const unsigned MaxFuncs           = 512 * 1024;
+static const unsigned MaxImports         =   4 * 1024;
+static const unsigned MaxExports         =   4 * 1024;
+static const unsigned MaxTableElems      = 128 * 1024;
+static const unsigned MaxArgsPerFunc     =   4 * 1024;
+
 // A slow function describes a function that took longer than msThreshold to
 // validate and compile.
 
