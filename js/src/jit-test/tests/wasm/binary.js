@@ -23,7 +23,7 @@ const dataLabel = "data";
 
 const magicError = /failed to match magic number/;
 const versionError = /failed to match binary version/;
-const extraError = /failed to consume all bytes of module/;
+const unknownSectionError = /failed to skip unknown section at end/;
 const sectionError = /failed to start section/;
 
 const I32Code = 0;
@@ -64,12 +64,18 @@ assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2, magic3, 1])), T
 assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2, magic3, ver0])), TypeError, versionError);
 assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2, magic3, ver0, ver1, ver2])), TypeError, versionError);
 
-var o = wasmEval(toBuf(moduleHeaderThen(0)));
+var o = wasmEval(toBuf(moduleHeaderThen()));
 assertEq(Object.getOwnPropertyNames(o).length, 0);
 
+wasmEval(toBuf(moduleHeaderThen(1, 0)));        // unknown section containing 0-length string
+wasmEval(toBuf(moduleHeaderThen(2, 1, 0)));     // unknown section containing 1-length string ("\0")
+wasmEval(toBuf(moduleHeaderThen(1, 0,  1, 0)));
+wasmEval(toBuf(moduleHeaderThen(1, 0,  2, 1, 0)));
+wasmEval(toBuf(moduleHeaderThen(1, 0,  2, 1, 0)));
+
 assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(1))), TypeError, sectionError);
-assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(0, 0))), TypeError, extraError);
 assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(0, 1))), TypeError, sectionError);
+assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(0, 0))), TypeError, unknownSectionError);
 
 function cstring(name) {
     return (name + '\0').split('').map(c => c.charCodeAt(0));
@@ -88,7 +94,6 @@ function moduleWithSections(sectionArray) {
         bytes.push(...string(section.name));
         bytes.push(...section.body);
     }
-    bytes.push(0);
     return bytes;
 }
 
