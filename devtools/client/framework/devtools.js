@@ -42,6 +42,22 @@ this.DevTools = function DevTools() {
 };
 
 DevTools.prototype = {
+  registerDefaults() {
+    // Ensure registering items in the sorted order (getDefault* functions
+    // return sorted lists)
+    this.getDefaultTools().forEach(definition => this.registerTool(definition));
+    this.getDefaultThemes().forEach(definition => this.registerTheme(definition));
+  },
+
+  unregisterDefaults() {
+    for (let definition of this.getToolDefinitionArray()) {
+      this.unregisterTool(definition.id);
+    }
+    for (let definition of this.getThemeDefinitionArray()) {
+      this.unregisterTheme(definition.id);
+    }
+  },
+
   /**
    * Register a new developer tool.
    *
@@ -83,7 +99,7 @@ DevTools.prototype = {
     // Make sure that additional tools will always be able to be hidden.
     // When being called from main.js, defaultTools has not yet been exported.
     // But, we can assume that in this case, it is a default tool.
-    if (DefaultTools && DefaultTools.indexOf(toolDefinition) == -1) {
+    if (DefaultTools.indexOf(toolDefinition) == -1) {
       toolDefinition.visibilityswitch = "devtools." + toolId + ".enabled";
     }
 
@@ -140,6 +156,10 @@ DevTools.prototype = {
       }
     }
     return tools.sort(this.ordinalSort);
+  },
+
+  getDefaultThemes() {
+    return DefaultThemes.sort(this.ordinalSort);
   },
 
   /**

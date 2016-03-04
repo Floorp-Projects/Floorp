@@ -7,11 +7,10 @@
 const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 
-const { defaultTools, defaultThemes } = require("devtools/client/definitions");
-
-defaultTools.forEach(definition => gDevTools.registerTool(definition));
-defaultThemes.forEach(definition => gDevTools.registerTheme(definition));
-
+// This is important step in initialization codepath where we are going to
+// start registering all default tools and themes: create menuitems, keys, emit
+// related events.
+gDevTools.registerDefaults();
 
 Object.defineProperty(exports, "Toolbox", {
   get: () => require("devtools/client/framework/toolbox").Toolbox
@@ -24,12 +23,7 @@ const unloadObserver = {
   observe: function(subject) {
     if (subject.wrappedJSObject === require("@loader/unload")) {
       Services.obs.removeObserver(unloadObserver, "sdk:loader:destroy");
-      for (let definition of gDevTools.getToolDefinitionArray()) {
-        gDevTools.unregisterTool(definition.id);
-      }
-      for (let definition of gDevTools.getThemeDefinitionArray()) {
-        gDevTools.unregisterTheme(definition.id);
-      }
+      gDevTools.unregisterDefaults();
     }
   }
 };
