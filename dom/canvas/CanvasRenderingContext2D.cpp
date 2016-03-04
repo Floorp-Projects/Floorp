@@ -106,6 +106,7 @@
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/TextMetrics.h"
 #include "mozilla/dom/SVGMatrix.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/FloatingPoint.h"
 #include "nsGlobalWindow.h"
 #include "GLContext.h"
@@ -3454,6 +3455,43 @@ CanvasRenderingContext2D::GetHitRegionRect(Element* aElement, nsRect& aRect)
   }
 
   return false;
+}
+
+/* static */ bool
+CanvasRenderingContext2D::PrefCanvasPathEnabled(JSContext* aCx, JSObject* aObj)
+{
+  if (NS_IsMainThread()) {
+   return Preferences::GetBool("canvas.path.enabled");
+  } else {
+   workers::WorkerPrivate* workerPrivate = workers::GetWorkerPrivateFromContext(aCx);
+   MOZ_ASSERT(workerPrivate);
+   return (workerPrivate->CanvasPathEnabled() && workerPrivate->OffscreenCanvasEnabled());
+  }
+}
+
+void
+CanvasRenderingContext2D::GetCanvas(Nullable<dom::OwningHTMLCanvasElementOrOffscreenCanvas>& aRetval)
+{
+    if (mCanvasElement) {
+      MOZ_RELEASE_ASSERT(!mOffscreenCanvas);
+      if (mCanvasElement->IsInNativeAnonymousSubtree()) {
+        aRetval.SetNull();
+      } else {
+        aRetval.SetValue().SetAsHTMLCanvasElement() = mCanvasElement;
+      }
+    } else if (mOffscreenCanvas) {
+      aRetval.SetValue().SetAsOffscreenCanvas() = mOffscreenCanvas;
+    } else {
+      aRetval.SetNull();
+    }
+}
+
+void
+CanvasRenderingContext2D::Commit()
+{
+    if (mOffscreenCanvas) {
+      mOffscreenCanvas->CommitFrameToCompositor();
+    }
 }
 
 /**
