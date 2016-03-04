@@ -1100,3 +1100,15 @@ CodeGeneratorX64::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
 
     masm.movl(ToOperand(input), output);
 }
+
+void
+CodeGeneratorX64::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
+{
+    const LAllocation* input = lir->getOperand(0);
+    Register output = ToRegister(lir->output());
+
+    if (lir->mir()->isUnsigned())
+        masm.movl(ToOperand(input), output);
+    else
+        masm.movslq(ToOperand(input), output);
+}
