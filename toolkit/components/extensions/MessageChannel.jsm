@@ -11,9 +11,9 @@
  * are no matching listeners, or the message manager disconnects before
  * a reply is received, the caller is returned an error.
  *
- * Since each message must have only one recipient, the listener end may
- * specify filters for the messages it wishes to receive, and the sender
- * end likewise may specify recipient tags to match the filters.
+ * The listener end may specify filters for the messages it wishes to
+ * receive, and the sender end likewise may specify recipient tags to
+ * match the filters.
  *
  * The message handler on the listener side may return its response
  * value directly, or may return a promise, the resolution or rejection
@@ -34,9 +34,13 @@
  *        messageManager, "ContentScript:TouchContent",
  *        this);
  *
- *      this.messageFilter = {
+ *      this.messageFilterStrict = {
  *        innerWindowID: getInnerWindowID(window),
  *        extensionID: extensionID,
+ *      };
+ *
+ *      this.messageFilterPermissive = {
+ *        outerWindowID: getOuterWindowID(window),
  *      };
  *    },
  *
@@ -61,7 +65,7 @@
  *
  *  MessageChannel.sendMessage(
  *    tab.linkedBrowser.messageManager, "ContentScript:TouchContent",
- *    data, recipient, sender
+ *    data, {recipient, sender}
  *  ).then(result => {
  *    alert(result.touchResult);
  *  });
@@ -152,19 +156,8 @@ class FilteringMessageManager {
   receiveMessage({data, target}) {
     let handlers = Array.from(this.getHandlers(data.messageName, data.recipient));
 
-    let result = {};
-    if (handlers.length == 0) {
-      result.error = {result: MessageChannel.RESULT_NO_HANDLER,
-                      message: "No matching message handler"};
-    } else if (handlers.length > 1) {
-      result.error = {result: MessageChannel.RESULT_MULTIPLE_HANDLERS,
-                      message: `Multiple matching handlers for ${data.messageName}`};
-    } else {
-      result.handler = handlers[0];
-    }
-
     data.target = target;
-    this.callback(result, data);
+    this.callback(handlers, data);
   }
 
   /**
@@ -179,7 +172,8 @@ class FilteringMessageManager {
   * getHandlers(messageName, recipient) {
     let handlers = this.handlers.get(messageName) || new Set();
     for (let handler of handlers) {
-      if (MessageChannel.matchesFilter(handler.messageFilter, recipient)) {
+      if (MessageChannel.matchesFilter(handler.messageFilterStrict || {}, recipient) &&
+          MessageChannel.matchesFilter(handler.messageFilterPermissive || {}, recipient, false)) {
         yield handler;
       }
     }
@@ -191,9 +185,12 @@ class FilteringMessageManager {
    * @param {string} messageName
    *     The internal message name for which to register the handler.
    * @param {object} handler
-   *     An opaque handler object. The object must have a `messageFilter`
-   *     property on which to filter messages. Final dispatching is handled
-   *     by the message callback passed to the constructor.
+   *     An opaque handler object. The object may have a
+   *     `messageFilterStrict` and/or a `messageFilterPermissive`
+   *     property on which to filter messages.
+   *
+   *     Final dispatching is handled by the message callback passed to
+   *     the constructor.
    */
   addHandler(messageName, handler) {
     if (!this.handlers.has(messageName)) {
@@ -298,6 +295,7 @@ this.MessageChannel = {
   RESULT_NO_HANDLER: 2,
   RESULT_MULTIPLE_HANDLERS: 3,
   RESULT_ERROR: 4,
+  RESULT_NO_RESPONSE: 5,
 
   REASON_DISCONNECTED: {
     result: this.RESULT_DISCONNECTED,
@@ -305,27 +303,72 @@ this.MessageChannel = {
   },
 
   /**
-   * Returns true if the given `data` object matches the given `filter`
-   * object. The objects match if every property of `filter` is present
-   * in `data`, and the values in both objects are strictly equal.
+   * Specifies that only a single listener matching the specified
+   * recipient tag may be listening for the given message, at the other
+   * end of the target message manager.
+   *
+   * If no matching listeners exist, a RESULT_NO_HANDLER error will be
+   * returned. If multiple matching listeners exist, a
+   * RESULT_MULTIPLE_HANDLERS error will be returned.
+   */
+  RESPONSE_SINGLE: 0,
+
+  /**
+   * If multiple message managers matching the specified recipient tag
+   * are listening for a message, all listeners are notified, but only
+   * the first response or error is returned.
+   *
+   * Only handlers which return a value other than `undefined` are
+   * considered to have responded. Returning a Promise which evaluates
+   * to `undefined` is interpreted as an explicit response.
+   *
+   * If no matching listeners exist, a RESULT_NO_HANDLER error will be
+   * returned. If no listeners return a response, a RESULT_NO_RESPONSE
+   * error will be returned.
+   */
+  RESPONSE_FIRST: 1,
+
+  /**
+   * If multiple message managers matching the specified recipient tag
+   * are listening for a message, all listeners are notified, and all
+   * responses are returned as an array, once all listeners have
+   * replied.
+   */
+  RESPONSE_ALL: 2,
+
+  /**
+   * Returns true if the peroperties of the `data` object match those in
+   * the `filter` object. Matching is done on a strict equality basis,
+   * and the behavior varies depending on the value of the `strict`
+   * parameter.
    *
    * @param {object} filter
    *    The filter object to match against.
    * @param {object} data
    *    The data object being matched.
+   * @param {boolean} [strict=false]
+   *    If true, all properties in the `filter` object have a
+   *    corresponding property in `data` with the same value. If
+   *    false, properties present in both objects must have the same
+   *    balue.
    * @returns {bool} True if the objects match.
    */
-  matchesFilter(filter, data) {
+  matchesFilter(filter, data, strict = true) {
+    if (strict) {
+      return Object.keys(filter).every(key => {
+        return key in data && data[key] === filter[key];
+      });
+    }
     return Object.keys(filter).every(key => {
-      return key in data && data[key] === filter[key];
+      return !(key in data) || data[key] === filter[key];
     });
   },
 
   /**
    * Adds a message listener to the given message manager.
    *
-   * @param {nsIMessageSender} target
-   *    The message manager on which to listen.
+   * @param {nsIMessageSender|[nsIMessageSender]} targets
+   *    The message managers on which to listen.
    * @param {string|number} messageName
    *    The name of the message to listen for.
    * @param {MessageReceiver} handler
@@ -363,28 +406,41 @@ this.MessageChannel = {
    *        resolution or rejection value of which will likewise be
    *        returned to the message sender.
    *
-   *      messageFilter:
+   *      messageFilterStrict:
    *        An object containing arbitrary properties on which to filter
    *        received messages. Messages will only be dispatched to this
    *        object if the `recipient` object passed to `sendMessage`
-   *        matches this filter, as determined by `matchesFilter`.
+   *        matches this filter, as determined by `matchesFilter` with
+   *        `strict=true`.
+   *
+   *      messageFilterPermissive:
+   *        An object containing arbitrary properties on which to filter
+   *        received messages. Messages will only be dispatched to this
+   *        object if the `recipient` object passed to `sendMessage`
+   *        matches this filter, as determined by `matchesFilter` with
+   *        `strict=false`.
    */
-  addListener(target, messageName, handler) {
-    this.messageManagers.get(target).addHandler(messageName, handler);
+  addListener(targets, messageName, handler) {
+    for (let target of [].concat(targets)) {
+      this.messageManagers.get(target).addHandler(messageName, handler);
+    }
   },
 
   /**
    * Removes a message listener from the given message manager.
    *
    * @param {nsIMessageSender} target
-   *    The message manager on which to stop listening.
+   * @param {nsIMessageSender|[nsIMessageSender]} targets
+   *    The message managers on which to stop listening.
    * @param {string|number} messageName
    *    The name of the message to stop listening for.
    * @param {MessageReceiver} handler
    *    The handler to stop dispatching to.
    */
-  removeListener(target, messageName, handler) {
-    this.messageManagers.get(target).removeListener(messageName, handler);
+  removeListener(targets, messageName, handler) {
+    for (let target of [].concat(targets)) {
+      this.messageManagers.get(target).removeHandler(messageName, handler);
+    }
   },
 
   /**
@@ -401,23 +457,32 @@ this.MessageChannel = {
    * @param {object} data
    *    A structured-clone-compatible object to send to the message
    *    recipient.
-   * @param {object} [recipient]
+   * @param {object} [options]
+   *    An object containing any of the following properties:
+   * @param {object} [options.recipient]
    *    A structured-clone-compatible object to identify the message
-   *    recipient. The object must match the `messageFilter` defined by
-   *    recipients in order for the message to be received.
-   * @param {object} [sender]
+   *    recipient. The object must match the `messageFilterStrict` and
+   *    `messageFilterPermissive` filters defined by recipients in order
+   *    for the message to be received.
+   * @param {object} [options.sender]
    *    A structured-clone-compatible object to identify the message
    *    sender. This object may also be used as a filter to prematurely
    *    abort responses when the sender is being destroyed.
    *    @see `abortResponses`.
+   * @param {integer} [options.responseType=RESPONSE_SINGLE]
+   *    Specifies the type of response expected. See the `RESPONSE_*`
+   *    contents for details.
    * @returns Promise
    */
-  sendMessage(target, messageName, data, recipient = {}, sender = {}) {
+  sendMessage(target, messageName, data, options = {}) {
+    let sender = options.sender || {};
+    let recipient = options.recipient || {};
+    let responseType = options.responseType || this.RESPONSE_SINGLE;
+
     let channelId = gChannelId++;
-    let message = {messageName, channelId, sender, recipient, data};
+    let message = {messageName, channelId, sender, recipient, data, responseType};
 
     let deferred = PromiseUtils.defer();
-    deferred.messageFilter = {};
     deferred.sender = recipient;
     deferred.messageManager = target;
 
@@ -438,6 +503,54 @@ this.MessageChannel = {
     return deferred.promise;
   },
 
+  _callHandlers(handlers, data) {
+    let responseType = data.responseType;
+
+    // At least one handler is required for all response types but
+    // RESPONSE_ALL.
+    if (handlers.length == 0 && responseType != this.RESPONSE_ALL) {
+      return Promise.reject({result: MessageChannel.RESULT_NO_HANDLER,
+                             message: "No matching message handler"});
+    }
+
+    if (responseType == this.RESPONSE_SINGLE) {
+      if (handlers.length > 1) {
+        return Promise.reject({result: MessageChannel.RESULT_MULTIPLE_HANDLERS,
+                               message: `Multiple matching handlers for ${data.messageName}`});
+      }
+
+      // Note: We use `new Promise` rather than `Promise.resolve` here
+      // so that errors from the handler are trapped and converted into
+      // rejected promises.
+      return new Promise(resolve => {
+        resolve(handlers[0].receiveMessage(data));
+      });
+    }
+
+    let responses = handlers.map(handler => {
+      try {
+        return handler.receiveMessage(data);
+      } catch (e) {
+        return Promise.reject(e);
+      }
+    });
+    responses = responses.filter(response => response !== undefined);
+
+    switch (responseType) {
+      case this.RESPONSE_FIRST:
+        if (responses.length == 0) {
+          return Promise.reject({result: MessageChannel.RESULT_NO_RESPONSE,
+                                 message: "No handler returned a response"});
+        }
+
+        return Promise.race(responses);
+
+      case this.RESPONSE_ALL:
+        return Promise.all(responses);
+    }
+    return Promise.reject({message: "Invalid response type"});
+  },
+
   /**
    * Handles dispatching message callbacks from the message brokers to their
    * appropriate `MessageReceivers`, and routing the responses back to the
@@ -446,7 +559,7 @@ this.MessageChannel = {
    * Each handler object is a `MessageReceiver` object as passed to
    * `addListener`.
    */
-  _handleMessage({handler, error}, data) {
+  _handleMessage(handlers, data) {
     // The target passed to `receiveMessage` is sometimes a message manager
     // owner instead of a message manager, so make sure to convert it to a
     // message manager first if necessary.
@@ -462,12 +575,7 @@ this.MessageChannel = {
     deferred.promise = new Promise((resolve, reject) => {
       deferred.reject = reject;
 
-      if (handler) {
-        let result = handler.receiveMessage(data);
-        resolve(result);
-      } else {
-        reject(error);
-      }
+      this._callHandlers(handlers, data).then(resolve, reject);
     }).then(
       value => {
         let response = {
@@ -513,15 +621,17 @@ this.MessageChannel = {
    * Each handler object is a deferred object created by `sendMessage`, and
    * should be resolved or rejected based on the contents of the response.
    */
-  _handleResponse({handler, error}, data) {
-    if (error) {
-      // If we have an error at this point, we have handler to report it to,
-      // so just log it.
-      Cu.reportError(error.message);
+  _handleResponse(handlers, data) {
+    // If we have an error at this point, we have handler to report it to,
+    // so just log it.
+    if (handlers.length == 0) {
+      Cu.reportError(`No matching message response handler for ${data.messageName}`);
+    } else if (handlers.length > 1) {
+      Cu.reportError(`Multiple matching response handlers for ${data.messageName}`);
     } else if (data.result === this.RESULT_SUCCESS) {
-      handler.resolve(data.value);
+      handlers[0].resolve(data.value);
     } else {
-      handler.reject(data.error);
+      handlers[0].reject(data.error);
     }
   },
 
