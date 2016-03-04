@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=406375
+-->
+<head>
+  <title>Test for Bug 406375</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=406375">Mozilla Bug 406375</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 406375 **/
+
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  window.showModalDialog("file_bug406375.html");
+  ok(true, "This test should not hang");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
