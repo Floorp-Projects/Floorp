@@ -2099,19 +2099,16 @@ KeyframeEffectReadOnly::IsGeometricProperty(
 /* static */ bool
 KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
   const nsIFrame* aFrame,
-  const nsIContent* aContent)
+  nsAString& aPerformanceWarning)
 {
   // Disallow OMTA for preserve-3d transform. Note that we check the style property
   // rather than Extend3DContext() since that can recurse back into this function
   // via HasOpacity().
   if (aFrame->Combines3DTransformWithAncestors() ||
       aFrame->StyleDisplay()->mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D) {
-    if (aContent) {
-      nsCString message;
-      message.AppendLiteral("Gecko bug: Async animation of 'preserve-3d' "
-        "transforms is not supported.  See bug 779598");
-      AnimationUtils::LogAsyncAnimationFailure(message, aContent);
-    }
+    aPerformanceWarning.AssignLiteral(
+      "Gecko bug: Async animation of 'preserve-3d' "
+      "transforms is not supported.  See bug 779598");
     return false;
   }
   // Note that testing BackfaceIsHidden() is not a sufficient test for
@@ -2119,22 +2116,16 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
   // remove the above test for Extend3DContext(); that would require
   // looking at backface-visibility on descendants as well.
   if (aFrame->StyleDisplay()->BackfaceIsHidden()) {
-    if (aContent) {
-      nsCString message;
-      message.AppendLiteral("Gecko bug: Async animation of "
-        "'backface-visibility: hidden' transforms is not supported."
-        "  See bug 1186204.");
-      AnimationUtils::LogAsyncAnimationFailure(message, aContent);
-    }
+    aPerformanceWarning.AssignLiteral(
+      "Gecko bug: Async animation of "
+      "'backface-visibility: hidden' transforms is not supported."
+      "  See bug 1186204");
     return false;
   }
   if (aFrame->IsSVGTransformed()) {
-    if (aContent) {
-      nsCString message;
-      message.AppendLiteral("Gecko bug: Async 'transform' animations of "
-        "aFrames with SVG transforms is not supported.  See bug 779599");
-      AnimationUtils::LogAsyncAnimationFailure(message, aContent);
-    }
+    aPerformanceWarning.AssignLiteral(
+      "Gecko bug: Async 'transform' animations of "
+      "aFrames with SVG transforms is not supported.  See bug 779599");
     return false;
   }
 
@@ -2142,8 +2133,9 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
 }
 
 bool
-KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(const nsIFrame*
-                                                          aFrame) const
+KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(
+  const nsIFrame* aFrame,
+  nsAString& aPerformanceWarning) const
 {
   // We currently only expect this method to be called when this effect
   // is attached to a playing Animation. If that ever changes we'll need
@@ -2151,8 +2143,6 @@ KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(const nsIFrame*
   // filling, cancelled Animations etc. shouldn't stop other Animations from
   // running on the compositor.
   MOZ_ASSERT(mAnimation && mAnimation->IsPlaying());
-
-  bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
 
   for (const AnimationProperty& property : mProperties) {
     // If a property is overridden in the CSS cascade, it should not block other
@@ -2162,20 +2152,17 @@ KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(const nsIFrame*
     }
     // Check for geometric properties
     if (IsGeometricProperty(property.mProperty)) {
-      if (shouldLog) {
-        nsCString message;
-        message.AppendLiteral("Performance warning: Async animation of "
-          "'transform' or 'opacity' not possible due to animation of geometric"
-          "properties on the same element");
-        AnimationUtils::LogAsyncAnimationFailure(message, aFrame->GetContent());
-      }
+      aPerformanceWarning.AssignLiteral(
+        "Performance warning: Async animation of "
+        "'transform' or 'opacity' not possible due to animation of geometric "
+        "properties on the same element");
       return true;
     }
 
     // Check for unsupported transform animations
     if (property.mProperty == eCSSProperty_transform) {
       if (!CanAnimateTransformOnCompositor(aFrame,
-            shouldLog ? aFrame->GetContent() : nullptr)) {
+                                           aPerformanceWarning)) {
         return true;
       }
     }
@@ -2190,7 +2177,13 @@ KeyframeEffectReadOnly::SetPerformanceWarning(nsCSSProperty aProperty,
 {
   for (AnimationProperty& property : mProperties) {
     if (property.mProperty == aProperty) {
+      property.mPerformanceWarning.reset();
       property.mPerformanceWarning.emplace(aMessage);
+
+      if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
+        nsAutoCString logMessage = NS_ConvertUTF16toUTF8(aMessage);
+        AnimationUtils::LogAsyncAnimationFailure(logMessage, mTarget);
+      }
       return;
     }
   }

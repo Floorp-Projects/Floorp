@@ -5585,11 +5585,14 @@ nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
     return true;
   }
 
-  if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
-    nsCString message;
-    message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for opacity animation");
-    AnimationUtils::LogAsyncAnimationFailure(message, Frame()->GetContent());
-  }
+  nsString message;
+  message.AppendLiteral(
+    "Performance warning: Async animation disabled because frame was not "
+    "marked active for opacity animation");
+  EffectCompositor::SetPerformanceWarning(mFrame,
+                                          eCSSProperty_opacity,
+                                          message);
+
   return false;
 }
 
@@ -5620,15 +5623,14 @@ nsDisplayTransform::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
     // pre-render even if we're out of will change budget.
     return true;
   }
-  DebugOnly<bool> prerender = ShouldPrerenderTransformedContent(aBuilder, mFrame, true);
+  DebugOnly<bool> prerender = ShouldPrerenderTransformedContent(aBuilder, mFrame);
   NS_ASSERTION(!prerender, "Something changed under us!");
   return false;
 }
 
 /* static */ bool
 nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
-                                                      nsIFrame* aFrame,
-                                                      bool aLogAnimations)
+                                                      nsIFrame* aFrame)
 {
   // Elements whose transform has been modified recently, or which
   // have a compositor-animated transform, can be prerendered. An element
@@ -5637,11 +5639,13 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
   if (!ActiveLayerTracker::IsStyleMaybeAnimated(aFrame, eCSSProperty_transform) &&
       !EffectCompositor::HasAnimationsForCompositor(aFrame,
                                                     eCSSProperty_transform)) {
-    if (aLogAnimations) {
-      nsCString message;
-      message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for transform animation");
-      AnimationUtils::LogAsyncAnimationFailure(message, aFrame->GetContent());
-    }
+    nsString message;
+    message.AppendLiteral(
+      "Performance warning: Async animation disabled because frame was not "
+      "marked active for transform animation");
+    EffectCompositor::SetPerformanceWarning(aFrame,
+                                            eCSSProperty_transform,
+                                            message);
     return false;
   }
 
@@ -5660,27 +5664,28 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     }
   }
 
-  if (aLogAnimations) {
-    nsRect visual = aFrame->GetVisualOverflowRect();
+  nsRect visual = aFrame->GetVisualOverflowRect();
 
-    nsCString message;
-    message.AppendLiteral("Performance warning: Async animation disabled because frame size (");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.width));
-    message.AppendLiteral(", ");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.height));
-    message.AppendLiteral(") is bigger than the viewport (");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.width));
-    message.AppendLiteral(", ");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.height));
-    message.AppendLiteral(") or the visual rectangle (");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.width));
-    message.AppendLiteral(", ");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.height));
-    message.AppendLiteral(") is larger than the max allowable value (");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(maxInAppUnits));
-    message.Append(')');
-    AnimationUtils::LogAsyncAnimationFailure(message, aFrame->GetContent());
-  }
+  nsAutoString message;
+  message.AppendLiteral(
+    "Performance warning: Async animation disabled because frame size (");
+  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.width));
+  message.AppendLiteral(", ");
+  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.height));
+  message.AppendLiteral(") is bigger than the viewport (");
+  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.width));
+  message.AppendLiteral(", ");
+  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.height));
+  message.AppendLiteral(") or the visual rectangle (");
+  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.width));
+  message.AppendLiteral(", ");
+  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.height));
+  message.AppendLiteral(") is larger than the max allowable value (");
+  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(maxInAppUnits));
+  message.Append(')');
+  EffectCompositor::SetPerformanceWarning(aFrame,
+                                          eCSSProperty_transform,
+                                          message);
   return false;
 }
 

@@ -324,7 +324,11 @@ public:
   //
   // Bug 1218620 - It seems like we don't need to be this restrictive. Wouldn't
   // it be ok to do 'opacity' animations on the compositor in either case?
-  bool ShouldBlockCompositorAnimations(const nsIFrame* aFrame) const;
+  //
+  // When returning true, |aOutPerformanceWarning| stores the reason why
+  // we shouldn't run the compositor animations.
+  bool ShouldBlockCompositorAnimations(const nsIFrame* aFrame,
+                                       nsAString& aPerformanceWarning) const;
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
@@ -396,11 +400,10 @@ private:
   bool CanThrottleTransformChanges(nsIFrame& aFrame) const;
 
   // Returns true unless Gecko limitations prevent performing transform
-  // animations for |aFrame|. Any limitations that are encountered are
-  // logged using |aContent| to describe the affected content.
-  // If |aContent| is nullptr, no logging is performed
+  // animations for |aFrame|. When returning true, the reason for the
+  // limitation is stored in |aOutPerformanceWarning|.
   static bool CanAnimateTransformOnCompositor(const nsIFrame* aFrame,
-                                              const nsIContent* aContent);
+                                              nsAString& aPerformanceWarning);
   static bool IsGeometricProperty(const nsCSSProperty aProperty);
 
   static const TimeDuration OverflowRegionRefreshInterval();

@@ -109,10 +109,14 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
       continue;
     }
 
-    if (effect->ShouldBlockCompositorAnimations(aFrame)) {
+    nsAutoString performanceWarning;
+    if (effect->ShouldBlockCompositorAnimations(aFrame,
+                                                performanceWarning)) {
       if (aMatches) {
         aMatches->Clear();
       }
+      effect->SetPerformanceWarning(aProperty,
+                                    performanceWarning);
       return false;
     }
 
