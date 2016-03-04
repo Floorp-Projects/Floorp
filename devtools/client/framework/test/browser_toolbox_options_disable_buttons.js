@@ -81,12 +81,6 @@ function testToggleToolboxButtons() {
   let toolboxButtonNodes = [...doc.querySelectorAll(".command-button")];
   let toggleableTools = toolbox.toolboxButtons;
 
-  // Tilt is disabled in E10S mode so we skip the tilt button if E10S is
-  // enabled.
-  if (toolbox.target.isMultiProcess) {
-    toolboxButtonNodes = [...doc.querySelectorAll(".command-button:not(#command-button-tilt)")];
-  }
-
   // The noautohide button is only displayed in the browser toolbox
   toggleableTools = toggleableTools.filter(tool => tool.id != "command-button-noautohide");
   toolboxButtonNodes = toolboxButtonNodes.filter(btn => btn.id != "command-button-noautohide");

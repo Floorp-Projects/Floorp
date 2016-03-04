@@ -73,6 +73,10 @@ interface nsIPushClearResultCallback : nsISupports
 [scriptable, uuid(678ef584-bf25-47aa-ac84-03efc0865b68)]
 interface nsIPushService : nsISupports
 {
+  /** Observer topic names, exported for convenience. */
+  readonly attribute DOMString pushTopic;
+  readonly attribute DOMString subscriptionChangeTopic;
+
   /**
    * Creates a push subscription for the given |scope| URL and |principal|.
    * If a subscription already exists for this |(scope, principal)| pair,

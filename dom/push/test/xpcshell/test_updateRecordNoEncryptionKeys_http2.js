@@ -59,7 +59,7 @@ add_task(function* test1() {
 
   yield db.put(record);
 
-  let notifyPromise = promiseObserverNotification('push-subscription-change',
+  let notifyPromise = promiseObserverNotification(PushServiceComponent.subscriptionChangeTopic,
                                                   _ => true);
 
   PushService.init({

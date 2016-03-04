@@ -87,6 +87,10 @@
 
   <string name="url_bar_default_text">&url_bar_default_text2;</string>
 
+  <!-- https://input.mozilla.org/feedback/android/%VERSION%/%CHANNEL%/?utm_source=feedback-settings
+       This should be kept in sync with the "app.feedbackURL" pref defined in mobile.js -->
+  <string name="feedback_link">https://input.mozilla.org/feedback/android/&formatS1;/&formatS2;/?utm_source=feedback-settings</string>
+
   <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/faq -->
   <string name="faq_link">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/faq</string>
 

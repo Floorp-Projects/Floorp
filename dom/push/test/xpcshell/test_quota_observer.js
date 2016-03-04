@@ -66,7 +66,7 @@ add_task(function* test_expiration_history_observer() {
 
   let unregisterDone;
   let unregisterPromise = new Promise(resolve => unregisterDone = resolve);
-  let subChangePromise = promiseObserverNotification('push-subscription-change', (subject, data) =>
+  let subChangePromise = promiseObserverNotification(PushServiceComponent.subscriptionChangeTopic, (subject, data) =>
     data == 'https://example.com/stuff');
 
   PushService.init({
@@ -107,7 +107,7 @@ add_task(function* test_expiration_history_observer() {
   strictEqual(expiredRecord.quota, 0, 'Expired record not updated');
 
   let notifiedScopes = [];
-  subChangePromise = promiseObserverNotification('push-subscription-change', (subject, data) => {
+  subChangePromise = promiseObserverNotification(PushServiceComponent.subscriptionChangeTopic, (subject, data) => {
     notifiedScopes.push(data);
     return notifiedScopes.length == 2;
   });

@@ -32,7 +32,7 @@ add_task(function* test_register_flush() {
   };
   yield db.put(record);
 
-  let notifyPromise = promiseObserverNotification('push-message');
+  let notifyPromise = promiseObserverNotification(PushServiceComponent.pushTopic);
 
   let ackDone;
   let ackPromise = new Promise(resolve => ackDone = after(2, resolve));

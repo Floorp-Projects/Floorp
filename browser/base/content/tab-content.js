@@ -149,12 +149,6 @@ var AboutHomeListener = {
   },
 
   onPageLoad: function() {
-    let doc = content.document;
-    if (doc.documentElement.hasAttribute("hasBrowserHandlers")) {
-      return;
-    }
-
-    doc.documentElement.setAttribute("hasBrowserHandlers", "true");
     addMessageListener("AboutHome:Update", this);
     addEventListener("click", this, true);
     addEventListener("pagehide", this, true);
@@ -216,9 +210,6 @@ var AboutHomeListener = {
     removeMessageListener("AboutHome:Update", this);
     removeEventListener("click", this, true);
     removeEventListener("pagehide", this, true);
-    if (aEvent.target.documentElement) {
-      aEvent.target.documentElement.removeAttribute("hasBrowserHandlers");
-    }
   },
 };
 AboutHomeListener.init(this);
