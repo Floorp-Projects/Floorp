@@ -169,7 +169,7 @@ VP8TrackEncoder::GetMetadata()
   return meta.forget();
 }
 
-nsresult
+bool
 VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
 {
   vpx_codec_iter_t iter = nullptr;
@@ -197,21 +197,18 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
     }
   }
 
-  if (!frameData.IsEmpty() &&
-      (pkt->data.frame.pts == mEncodedTimestamp)) {
+  if (!frameData.IsEmpty()) {
     // Copy the encoded data to aData.
     EncodedFrame* videoData = new EncodedFrame();
     videoData->SetFrameType(frameType);
     // Convert the timestamp and duration to Usecs.
-    CheckedInt64 timestamp = FramesToUsecs(mEncodedTimestamp, mTrackRate);
+    CheckedInt64 timestamp = FramesToUsecs(pkt->data.frame.pts, mTrackRate);
     if (timestamp.isValid()) {
-      videoData->SetTimeStamp(
-        (uint64_t)FramesToUsecs(mEncodedTimestamp, mTrackRate).value());
+      videoData->SetTimeStamp((uint64_t)timestamp.value());
     }
     CheckedInt64 duration = FramesToUsecs(pkt->data.frame.duration, mTrackRate);
     if (duration.isValid()) {
-      videoData->SetDuration(
-        (uint64_t)FramesToUsecs(pkt->data.frame.duration, mTrackRate).value());
+      videoData->SetDuration((uint64_t)duration.value());
     }
     videoData->SwapInFrameData(frameData);
     VP8LOG("GetEncodedPartitions TimeStamp %lld Duration %lld\n",
@@ -220,7 +217,7 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
     aData.AppendEncodedFrame(videoData);
   }
 
-  return NS_OK;
+  return !!pkt;
 }
 
 static bool isYUV420(const PlanarYCbCrImage::Data *aData)
@@ -365,7 +362,7 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
       return NS_ERROR_FAILURE;
     }
 
-    VP8LOG("Converted an %s frame to I420\n");
+    VP8LOG("Converted an %s frame to I420\n", yuvFormat.c_str());
   } else {
     // Not YCbCr at all. Try to get access to the raw data and convert.
 
@@ -631,11 +628,15 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
   if (EOS) {
     VP8LOG("mEndOfStream is true\n");
     mEncodingComplete = true;
-    if (vpx_codec_encode(mVPXContext, nullptr, mEncodedTimestamp,
-                         mEncodedFrameDuration, 0, VPX_DL_REALTIME)) {
-      return NS_ERROR_FAILURE;
-    }
-    GetEncodedPartitions(aData);
+    // Bug 1243611, keep calling vpx_codec_encode and vpx_codec_get_cx_data
+    // until vpx_codec_get_cx_data return null.
+
+    do {
+      if (vpx_codec_encode(mVPXContext, nullptr, mEncodedTimestamp,
+                           mEncodedFrameDuration, 0, VPX_DL_REALTIME)) {
+        return NS_ERROR_FAILURE;
+      }
+    } while(GetEncodedPartitions(aData));
   }
 
   return NS_OK ;

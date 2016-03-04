@@ -8,7 +8,7 @@
 
 #include "jsapi-tests/tests.h"
 
-static bool WriteValidBytes(wasm::Encoder& encoder, bool* passed)
+static bool WriteValidBytes(js::wasm::Encoder& encoder, bool* passed)
 {
     *passed = false;
     if (!encoder.empty())
@@ -40,6 +40,7 @@ static bool WriteValidBytes(wasm::Encoder& encoder, bool* passed)
 
 BEGIN_TEST(testWasmLEB128_encoding)
 {
+    using namespace js;
     using namespace wasm;
 
     Bytecode bc;
@@ -69,6 +70,7 @@ END_TEST(testWasmLEB128_encoding)
 
 BEGIN_TEST(testWasmLEB128_valid_decoding)
 {
+    using namespace js;
     using namespace wasm;
 
     Bytecode bc;
@@ -119,6 +121,7 @@ END_TEST(testWasmLEB128_valid_decoding)
 
 BEGIN_TEST(testWasmLEB128_invalid_decoding)
 {
+    using namespace js;
     using namespace wasm;
 
     Bytecode bc;

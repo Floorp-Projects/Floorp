@@ -317,6 +317,14 @@ MacroAssemblerX86Shared::asmMergeWith(const MacroAssemblerX86Shared& other)
 
 //{{{ check_macroassembler_style
 // ===============================================================
+// MacroAssembler high-level usage.
+
+void
+MacroAssembler::flush()
+{
+}
+
+// ===============================================================
 // Stack manipulation functions.
 
 void

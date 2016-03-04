@@ -24,6 +24,7 @@ marionette.jar:
   content/capture.js (capture.js)
   content/cookies.js (cookies.js)
   content/atom.js (atom.js)
+  content/evaluate.js (evaluate.js)
 #ifdef ENABLE_TESTS
   content/test.xul  (harness/marionette/chrome/test.xul)
   content/test2.xul  (harness/marionette/chrome/test2.xul)

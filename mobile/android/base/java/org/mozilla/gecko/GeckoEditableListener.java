@@ -7,6 +7,8 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
+import android.view.KeyEvent;
+
 /**
  * Interface for the Editable to listen on the Gecko thread, as well as for the IC thread to listen
  * to the Editable.
@@ -35,4 +37,5 @@ interface GeckoEditableListener {
     void notifyIMEContext(int state, String typeHint, String modeHint, String actionHint);
     void onSelectionChange(int start, int end);
     void onTextChange(CharSequence text, int start, int oldEnd, int newEnd);
+    void onDefaultKeyEvent(KeyEvent event);
 }

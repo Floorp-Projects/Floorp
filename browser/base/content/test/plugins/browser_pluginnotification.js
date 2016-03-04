@@ -360,7 +360,7 @@ add_task(function* () {
     let overlayRect = mainBox.getBoundingClientRect();
     return overlayRect.width == 200 && overlayRect.height == 200;
   });
-  ok(result, "Test 20b, Waited too long for plugin to become visible");
+  ok(result, "Test 20c, plugin should have overlay dims of 200px");
 
   pluginInfo = yield promiseForPluginInfo("test");
   ok(!pluginInfo.activated, "Test 20b, plugin should not be activated");
@@ -386,13 +386,13 @@ add_task(function* () {
   pluginInfo = yield promiseForPluginInfo("test");
   ok(pluginInfo.activated, "Test 20c, plugin should be activated");
 
-  result = ContentTask.spawn(gTestBrowser, {}, function* () {
+  result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlayRect = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
     return overlayRect.width == 0 && overlayRect.height == 0;
   });
-  ok(result, "Test 20c, plugin should have overlay dims of 200px");
+  ok(result, "Test 20c, plugin should have overlay dims of 0px");
 
   clearAllPluginPermissions();
 });
@@ -466,7 +466,7 @@ add_task(function* () {
 
   ok(notification.options.pluginData.size == 2, "Test 21c, Should have one type of plugin in the notification");
 
-  let result = ContentTask.spawn(gTestBrowser, {}, function* () {
+  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlayRect = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();

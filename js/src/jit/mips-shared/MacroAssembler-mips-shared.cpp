@@ -1086,6 +1086,14 @@ MacroAssemblerMIPSShared::atomicExchange(int nbytes, bool signExtend, const Base
 
 //{{{ check_macroassembler_style
 // ===============================================================
+// MacroAssembler high-level usage.
+
+void
+MacroAssembler::flush()
+{
+}
+
+// ===============================================================
 // Stack manipulation functions.
 
 void

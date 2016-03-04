@@ -81,26 +81,12 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
                "Given time appears to be in the future");
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
 
+  RefreshResult ret;
+
+  // Determine what the next frame is, taking into account looping.
   uint32_t currentFrameIndex = mCurrentAnimationFrameIndex;
   uint32_t nextFrameIndex = currentFrameIndex + 1;
 
-  RefreshResult ret;
-  RawAccessFrameRef nextFrame = GetRawFrame(nextFrameIndex);
-
-  // If we're done decoding, we know we've got everything we're going to get.
-  // If we aren't, we only display fully-downloaded frames; everything else
-  // gets delayed.
-  bool canDisplay = mDoneDecoding ||
-                    (nextFrame && nextFrame->IsImageComplete());
-
-  if (!canDisplay) {
-    // Uh oh, the frame we want to show is currently being decoded (partial)
-    // Wait until the next refresh driver tick and try again
-    return ret;
-  }
-
-  // If we're done decoding the next frame, go ahead and display it now and
-  // reinit with the next frame's delay time.
   if (mImage->GetNumFrames() == nextFrameIndex) {
     // We can only accurately determine if we are at the end of the loop if we are
     // done decoding, otherwise we don't know how many frames there will be.
@@ -143,6 +129,26 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
     if (ret.animationFinished) {
       return ret;
     }
+  }
+
+  // There can be frames in the surface cache with index >= mImage->GetNumFrames()
+  // that GetRawFrame can access because the decoding thread has decoded them, but
+  // RasterImage hasn't acknowledged those frames yet. We don't want to go past
+  // what RasterImage knows about so that we stay in sync with RasterImage. The code
+  // above should obey this, the MOZ_ASSERT records this invariant.
+  MOZ_ASSERT(nextFrameIndex < mImage->GetNumFrames());
+  RawAccessFrameRef nextFrame = GetRawFrame(nextFrameIndex);
+
+  // If we're done decoding, we know we've got everything we're going to get.
+  // If we aren't, we only display fully-downloaded frames; everything else
+  // gets delayed.
+  bool canDisplay = mDoneDecoding ||
+                    (nextFrame && nextFrame->IsImageComplete());
+
+  if (!canDisplay) {
+    // Uh oh, the frame we want to show is currently being decoded (partial)
+    // Wait until the next refresh driver tick and try again
+    return ret;
   }
 
   // Bad data

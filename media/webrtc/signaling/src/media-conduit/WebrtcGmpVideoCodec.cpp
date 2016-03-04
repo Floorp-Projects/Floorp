@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "mozilla/Move.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/SyncRunnable.h"
 #include "VideoConduit.h"
 #include "AudioConduit.h"

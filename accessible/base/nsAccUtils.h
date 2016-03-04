@@ -85,8 +85,8 @@ public:
    * @param aTopContent    node to end at
    */
   static void SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
-                                         nsIContent *aStartContent,
-                                         nsIContent *aTopContent);
+                                         nsIContent* aStartContent,
+                                         mozilla::dom::Element* aTopEl);
 
   /**
    * Any ARIA property of type boolean or NMTOKEN is undefined if the ARIA

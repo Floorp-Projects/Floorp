@@ -562,14 +562,18 @@ typedef WasmAstVector<WasmAstSegment*> WasmAstSegmentVector;
 class WasmAstMemory : public WasmAstNode
 {
     uint32_t initialSize_;
+    Maybe<uint32_t> maxSize_;
     WasmAstSegmentVector segments_;
 
   public:
-    explicit WasmAstMemory(uint32_t initialSize, WasmAstSegmentVector&& segments)
+    explicit WasmAstMemory(uint32_t initialSize, Maybe<uint32_t> maxSize,
+                           WasmAstSegmentVector&& segments)
       : initialSize_(initialSize),
+        maxSize_(maxSize),
         segments_(Move(segments))
     {}
     uint32_t initialSize() const { return initialSize_; }
+    const Maybe<uint32_t>& maxSize() const { return maxSize_; }
     const WasmAstSegmentVector& segments() const { return segments_; }
 };
 
@@ -2897,6 +2901,11 @@ ParseMemory(WasmParseContext& c)
     if (!c.ts.match(WasmToken::Index, &initialSize, c.error))
         return nullptr;
 
+    Maybe<uint32_t> maxSize;
+    WasmToken token;
+    if (c.ts.getIf(WasmToken::Index, &token))
+        maxSize.emplace(token.index());
+
     WasmAstSegmentVector segments(c.lifo);
     while (c.ts.getIf(WasmToken::OpenParen)) {
         WasmAstSegment* segment = ParseSegment(c);
@@ -2906,7 +2915,7 @@ ParseMemory(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) WasmAstMemory(initialSize.index(), Move(segments));
+    return new(c.lifo) WasmAstMemory(initialSize.index(), maxSize, Move(segments));
 }
 
 static WasmAstImport*
@@ -3709,11 +3718,8 @@ EncodeSignatureSection(Encoder& e, WasmAstModule& module)
     if (module.sigs().empty())
         return true;
 
-    if (!e.writeCString(SigLabel))
-        return false;
-
     size_t offset;
-    if (!e.startSection(&offset))
+    if (!e.startSection(SigLabel, &offset))
         return false;
 
     if (!e.writeVarU32(module.sigs().length()))
@@ -3742,11 +3748,8 @@ EncodeDeclarationSection(Encoder& e, WasmAstModule& module)
     if (module.funcs().empty())
         return true;
 
-    if (!e.writeCString(DeclLabel))
-        return false;
-
     size_t offset;
-    if (!e.startSection(&offset))
+    if (!e.startSection(DeclLabel, &offset))
         return false;
 
     if (!e.writeVarU32(module.funcs().length()))
@@ -3790,11 +3793,8 @@ EncodeImportSection(Encoder& e, WasmAstModule& module)
     if (module.imports().empty())
         return true;
 
-    if (!e.writeCString(ImportLabel))
-        return false;
-
     size_t offset;
-    if (!e.startSection(&offset))
+    if (!e.startSection(ImportLabel, &offset))
         return false;
 
     for (WasmAstImport* imp : module.imports()) {
@@ -3817,22 +3817,17 @@ EncodeMemorySection(Encoder& e, WasmAstModule& module)
     if (!module.maybeMemory())
         return true;
 
-    if (!e.writeCString(MemoryLabel))
-        return false;
-
     size_t offset;
-    if (!e.startSection(&offset))
+    if (!e.startSection(MemoryLabel, &offset))
         return false;
 
     WasmAstMemory& memory = *module.maybeMemory();
 
-    if (!e.writeCString(InitialLabel))
-        return false;
-
     if (!e.writeVarU32(memory.initialSize()))
         return false;
 
-    if (!e.writeCString(EndLabel))
+    uint32_t maxSize = memory.maxSize() ? *memory.maxSize() : memory.initialSize();
+    if (!e.writeVarU32(maxSize))
         return false;
 
     e.finishSection(offset);
@@ -3866,11 +3861,8 @@ EncodeExportSection(Encoder& e, WasmAstModule& module)
     if (module.exports().empty())
         return true;
 
-    if (!e.writeCString(ExportLabel))
-        return false;
-
     size_t offset;
-    if (!e.startSection(&offset))
+    if (!e.startSection(ExportLabel, &offset))
         return false;
 
     for (WasmAstExport* exp : module.exports()) {
@@ -3903,11 +3895,8 @@ EncodeTableSection(Encoder& e, WasmAstModule& module)
     if (!module.maybeTable())
         return true;
 
-    if (!e.writeCString(TableLabel))
-        return false;
-
     size_t offset;
-    if (!e.startSection(&offset))
+    if (!e.startSection(TableLabel, &offset))
         return false;
 
     if (!e.writeVarU32(module.maybeTable()->elems().length()))
@@ -3923,15 +3912,8 @@ EncodeTableSection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeFunctionSection(Encoder& e, WasmAstFunc& func)
+EncodeFunctionBody(Encoder& e, WasmAstFunc& func)
 {
-    if (!e.writeCString(FuncLabel))
-        return false;
-
-    size_t offset;
-    if (!e.startSection(&offset))
-        return false;
-
     if (!e.writeVarU32(func.vars().length()))
         return false;
 
@@ -3948,8 +3930,25 @@ EncodeFunctionSection(Encoder& e, WasmAstFunc& func)
             return false;
     }
 
-    e.finishSection(offset);
+    return true;
+}
 
+static bool
+EncodeFunctionBodiesSection(Encoder& e, WasmAstModule& module)
+{
+    if (module.funcs().empty())
+        return true;
+
+    size_t offset;
+    if (!e.startSection(FuncLabel, &offset))
+        return false;
+
+    for (WasmAstFunc* func : module.funcs()) {
+        if (!EncodeFunctionBody(e, *func))
+            return false;
+    }
+
+    e.finishSection(offset);
     return true;
 }
 
@@ -3990,11 +3989,8 @@ EncodeDataSection(Encoder& e, WasmAstModule& module)
 
     const WasmAstSegmentVector& segments = module.maybeMemory()->segments();
 
-    if (!e.writeCString(DataLabel))
-        return false;
-
     size_t offset;
-    if (!e.startSection(&offset))
+    if (!e.startSection(DataLabel, &offset))
         return false;
 
     for (WasmAstSegment* segment : segments) {
@@ -4044,10 +4040,8 @@ EncodeModule(WasmAstModule& module)
     if (!EncodeExportSection(e, module))
         return nullptr;
 
-    for (WasmAstFunc* func : module.funcs()) {
-        if (!EncodeFunctionSection(e, *func))
-            return nullptr;
-    }
+    if (!EncodeFunctionBodiesSection(e, module))
+        return nullptr;
 
     if (!EncodeDataSection(e, module))
         return nullptr;
