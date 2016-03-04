@@ -452,12 +452,12 @@ Experiments.Experiments.prototype = {
     this._shutdown = true;
     if (this._mainTask) {
       if (this._networkRequest) {
-	try {
-	  this._log.trace("Aborting pending network request: " + this._networkRequest);
-	  this._networkRequest.abort();
-	} catch (e) {
-	  // pass
-	}
+        try {
+          this._log.trace("Aborting pending network request: " + this._networkRequest);
+          this._networkRequest.abort();
+        } catch (e) {
+          // pass
+        }
       }
       try {
         this._log.trace("uninit: waiting on _mainTask");
@@ -634,7 +634,7 @@ Experiments.Experiments.prototype = {
           active: experiment.enabled,
           endDate: experiment.endDate.getTime(),
           detailURL: experiment._homepageURL,
-	  branch: experiment.branch,
+          branch: experiment.branch,
         });
       }
 
@@ -709,7 +709,7 @@ Experiments.Experiments.prototype = {
     } else {
       e = this._getActiveExperiment();
       if (e === null) {
-	throw new Error("No active experiment");
+        throw new Error("No active experiment");
       }
     }
     return e.branch;
@@ -958,7 +958,7 @@ Experiments.Experiments.prototype = {
       if (xhr.status !== 200 && xhr.state !== 0) {
         log.error("httpGetRequest::onLoad() - Request to " + url + " returned status " + xhr.status);
         deferred.reject(new Error("Experiments - XHR status for " + url + " is " + xhr.status));
-	this._networkRequest = null;
+        this._networkRequest = null;
         return;
       }
 
