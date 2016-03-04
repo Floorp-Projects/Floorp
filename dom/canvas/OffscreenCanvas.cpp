@@ -113,7 +113,6 @@ OffscreenCanvas::GetContext(JSContext* aCx,
     return nullptr;
   }
 
-  // We only support WebGL in workers for now
   CanvasContextType contextType;
   if (!CanvasUtils::GetCanvasContextType(aContextId, &contextType)) {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
@@ -122,6 +121,7 @@ OffscreenCanvas::GetContext(JSContext* aCx,
 
   if (!(contextType == CanvasContextType::WebGL1 ||
         contextType == CanvasContextType::WebGL2 ||
+        contextType == CanvasContextType::Canvas2D ||
         contextType == CanvasContextType::ImageBitmap))
   {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
@@ -138,33 +138,39 @@ OffscreenCanvas::GetContext(JSContext* aCx,
     return nullptr;
   }
 
-  if (mCanvasRenderer) {
+  if (mCanvasRenderer && ImageBridgeChild::IsCreated()) {
+    mCanvasRenderer->mContext = mCurrentContext;
+    TextureFlags flags = TextureFlags::ORIGIN_BOTTOM_LEFT;
+
     if (contextType == CanvasContextType::WebGL1 ||
         contextType == CanvasContextType::WebGL2) {
       WebGLContext* webGL = static_cast<WebGLContext*>(mCurrentContext.get());
       gl::GLContext* gl = webGL->GL();
-      mCanvasRenderer->mContext = mCurrentContext;
       mCanvasRenderer->SetActiveThread();
       mCanvasRenderer->mGLContext = gl;
       mCanvasRenderer->SetIsAlphaPremultiplied(webGL->IsPremultAlpha() || !gl->Caps().alpha);
 
-      if (ImageBridgeChild::IsCreated()) {
-        TextureFlags flags = TextureFlags::ORIGIN_BOTTOM_LEFT;
-        mCanvasClient = ImageBridgeChild::GetSingleton()->
-          CreateCanvasClient(CanvasClient::CanvasClientTypeShSurf, flags).take();
-        mCanvasRenderer->SetCanvasClient(mCanvasClient);
+      mCanvasClient = ImageBridgeChild::GetSingleton()->
+        CreateCanvasClient(CanvasClient::CanvasClientTypeShSurf, flags).take();
 
-        gl::GLScreenBuffer* screen = gl->Screen();
-        gl::SurfaceCaps caps = screen->mCaps;
-        auto forwarder = mCanvasClient->GetForwarder();
+      gl::GLScreenBuffer* screen = gl->Screen();
+      gl::SurfaceCaps caps = screen->mCaps;
+      auto forwarder = mCanvasClient->GetForwarder();
 
-        UniquePtr<gl::SurfaceFactory> factory =
-          gl::GLScreenBuffer::CreateFactory(gl, caps, forwarder, flags);
+      UniquePtr<gl::SurfaceFactory> factory =
+        gl::GLScreenBuffer::CreateFactory(gl, caps, forwarder, flags);
 
-        if (factory)
-          screen->Morph(Move(factory));
-      }
+      if (factory)
+        screen->Morph(Move(factory));
+    } else if (contextType == CanvasContextType::Canvas2D) {
+      CanvasRenderingContext2D* context2D = static_cast<CanvasRenderingContext2D*>(mCurrentContext.get());
+      mCanvasRenderer->mGLContext = nullptr;
+      mCanvasRenderer->mBufferProvider = context2D->GetBufferProvider(nullptr);
+
+      mCanvasClient = ImageBridgeChild::GetSingleton()->
+        CreateCanvasClient(CanvasClient::CanvasClientSurface, flags).take();
     }
+    mCanvasRenderer->SetCanvasClient(mCanvasClient);
   }
 
   return result;
@@ -200,11 +206,11 @@ OffscreenCanvas::CommitFrameToCompositor()
     mAttrDirty = false;
   }
 
-  if (mCurrentContext) {
-    static_cast<WebGLContext*>(mCurrentContext.get())->PresentScreenBuffer();
-  }
+  if (mCurrentContext && mCanvasRenderer) {
+    if (mCanvasRenderer->mGLContext) {
+      static_cast<WebGLContext*>(mCurrentContext.get())->PresentScreenBuffer();
+    }
 
-  if (mCanvasRenderer && mCanvasRenderer->mGLContext) {
     mCanvasRenderer->NotifyElementAboutInvalidation();
     ImageBridgeChild::GetSingleton()->
       UpdateAsyncCanvasRenderer(mCanvasRenderer);

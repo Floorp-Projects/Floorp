@@ -975,7 +975,8 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
   sNumLivingContexts++;
 
   // The default is to use OpenGL mode
-  if (gfxPlatform::GetPlatform()->UseAcceleratedCanvas()) {
+  if (NS_IsMainThread() &&
+      gfxPlatform::GetPlatform()->UseAcceleratedCanvas()) {
     mDrawObserver = new CanvasDrawObserver(this);
   } else {
     mRenderingMode = RenderingMode::SoftwareBackendMode;
@@ -1418,32 +1419,36 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
         nsContentUtils::PersistentLayerManagerForDocument(ownerDoc);
     }
 
-    if (layerManager) {
-      if (mode == RenderingMode::OpenGLBackendMode &&
-          gfxPlatform::GetPlatform()->UseAcceleratedCanvas() &&
-          CheckSizeForSkiaGL(size)) {
-        DemoteOldestContextIfNecessary();
-        mBufferProvider = nullptr;
+    if (mode == RenderingMode::OpenGLBackendMode &&
+        gfxPlatform::GetPlatform()->UseAcceleratedCanvas() &&
+        CheckSizeForSkiaGL(size)) {
+      DemoteOldestContextIfNecessary();
+      mBufferProvider = nullptr;
 
 #if USE_SKIA_GPU
-        SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
+      SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
 
-        if (glue && glue->GetGrContext() && glue->GetGLContext()) {
-          mTarget = Factory::CreateDrawTargetSkiaWithGrContext(glue->GetGrContext(), size, format);
-          if (mTarget) {
-            AddDemotableContext(this);
+      if (glue && glue->GetGrContext() && glue->GetGLContext()) {
+        mTarget = Factory::CreateDrawTargetSkiaWithGrContext(glue->GetGrContext(), size, format);
+        if (mTarget) {
+          AddDemotableContext(this);
+          if (NS_IsMainThread()) {
             mBufferProvider = new PersistentBufferProviderBasic(mTarget);
-            mIsSkiaGL = true;
-          } else {
-            gfxCriticalNote << "Failed to create a SkiaGL DrawTarget, falling back to software\n";
-            mode = RenderingMode::SoftwareBackendMode;
           }
+          mIsSkiaGL = true;
+        } else {
+          gfxCriticalNote << "Failed to create a SkiaGL DrawTarget, falling back to software\n";
+          mode = RenderingMode::SoftwareBackendMode;
         }
-#endif
       }
+#endif
+    }
 
-      if (!mBufferProvider) {
+    if (!mBufferProvider) {
+      if (layerManager) {
         mBufferProvider = layerManager->CreatePersistentBufferProvider(size, format);
+      } else {
+        mBufferProvider = new PersistentBufferProviderBasic(size, format, gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
       }
     }
 
@@ -5646,17 +5651,15 @@ void CanvasRenderingContext2D::RemoveDrawObserver()
 PersistentBufferProvider*
 CanvasRenderingContext2D::GetBufferProvider(LayerManager* aManager)
 {
+  if (!mTarget) {
+    EnsureTarget();
+  }
+
   if (mBufferProvider) {
     return mBufferProvider;
-  }
-
-  if (!mTarget) {
+  } else {
     return nullptr;
   }
-
-  mBufferProvider = new PersistentBufferProviderBasic(mTarget);
-
-  return mBufferProvider;
 }
 
 already_AddRefed<Layer>
