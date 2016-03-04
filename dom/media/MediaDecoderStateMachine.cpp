@@ -231,7 +231,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDecodeThreadWaiting(false),
   mDropAudioUntilNextDiscontinuity(false),
   mDropVideoUntilNextDiscontinuity(false),
-  mDecodeToSeekTarget(false),
   mCurrentTimeBeforeSeek(0),
   mCorruptFrames(60),
   mDecodingFirstFrame(true),
@@ -1024,7 +1023,6 @@ MediaDecoderStateMachine::CheckIfSeekComplete()
   if (audioSeekComplete && videoSeekComplete) {
     NS_ASSERTION(AudioQueue().GetSize() <= 1, "Should decode at most one sample");
     NS_ASSERTION(VideoQueue().GetSize() <= 1, "Should decode at most one sample");
-    mDecodeToSeekTarget = false;
     SeekCompleted();
   }
 }
@@ -1646,7 +1644,6 @@ MediaDecoderStateMachine::InitiateSeek()
              self->mSeekRequest.Complete();
              // We must decode the first samples of active streams, so we can determine
              // the new stream time. So dispatch tasks to do that.
-             self->mDecodeToSeekTarget = true;
              self->EnsureAudioDecodeTaskQueued();
              self->EnsureVideoDecodeTaskQueued();
            }, [self] (nsresult aResult) -> void {
@@ -2405,7 +2402,6 @@ MediaDecoderStateMachine::Reset()
   mFirstVideoFrameAfterSeek = nullptr;
   mDropAudioUntilNextDiscontinuity = true;
   mDropVideoUntilNextDiscontinuity = true;
-  mDecodeToSeekTarget = false;
 
   mMetadataRequest.DisconnectIfExists();
   mAudioDataRequest.DisconnectIfExists();
