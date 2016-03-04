@@ -2,6 +2,8 @@
 (function(){
 
 var port = null;
+var INIT_CONST_CANVAS_SIZE = 64;
+var COUNT_FOR_SIZE_CHANGE = 3;
 
 function isInWorker() {
   try {
@@ -35,8 +37,8 @@ function drawCount(count) {
   postMessageGeneral({type: "draw", count: count});
 }
 
-function sendBlob(blob) {
-  postMessageGeneral({type: "blob", blob: blob});
+function sendBlob(canvasType, blob) {
+  postMessageGeneral({type: "blob", canvasType: canvasType, blob: blob});
 }
 
 function sendImageBitmap(img) {
@@ -45,6 +47,41 @@ function sendImageBitmap(img) {
   } else {
     postMessage({type: "imagebitmap", bitmap: img});
   }
+}
+
+function sendImageBitmapWithSize(img, size) {
+  postMessage({type: "imagebitmapwithsize", bitmap: img, size: size});
+}
+//--------------------------------------------------------------------
+// Canvas 2D Drawing Functions
+//--------------------------------------------------------------------
+function createDrawFunc2D(canvas) {
+  var context2d;
+
+  try {
+    context2d = canvas.getContext("2d");
+  } catch (e) {}
+
+  if (!context2d) {
+    ok(false, "Canvas 2D is unavailable");
+    return null;
+  }
+
+  return function(prefix, needCommitFrame) {
+    if (prefix) {
+      prefix = "[" + prefix + "] ";
+    } else {
+      prefix = "";
+    }
+
+    context2d.rect(0, 0, canvas.width, canvas.height);
+    context2d.fillStyle = "#00FF00";
+    context2d.fill();
+    if (needCommitFrame) {
+      context2d.commit();
+      ok(true, prefix + 'Frame is committed');
+    }
+  };
 }
 
 //--------------------------------------------------------------------
@@ -182,33 +219,43 @@ function createDrawFunc(canvas) {
 }
 
 /* entry point */
-function entryFunction(testStr, subtests, offscreenCanvas) {
-  var test = testStr;
+function entryFunction(canvasTypeStr, testTypeStr, subtests, offscreenCanvas) {
+  var canvasType = canvasTypeStr;
+  var testType = testTypeStr;
   var canvas = offscreenCanvas;
-  if (test == "webgl_imagebitmap") {
-    canvas = new OffscreenCanvas(64, 64);
+  if ((testType == "imagebitmap") || (testType == "changesize")) {
+    canvas = new OffscreenCanvas(INIT_CONST_CANVAS_SIZE, INIT_CONST_CANVAS_SIZE);
   }
 
-  if (test != "subworker") {
+  if (testType != "subworker") {
     ok(canvas, "Canvas successfully transfered to worker");
     ok(canvas.getContext, "Canvas has getContext");
 
-    ok(canvas.width == 64, "OffscreenCanvas width should be 64");
-    ok(canvas.height == 64, "OffscreenCanvas height should be 64");
+    ok(canvas.width == INIT_CONST_CANVAS_SIZE,
+       "OffscreenCanvas width should be " + INIT_CONST_CANVAS_SIZE);
+    ok(canvas.height == INIT_CONST_CANVAS_SIZE,
+       "OffscreenCanvas height should be " + INIT_CONST_CANVAS_SIZE);
   }
 
   var draw;
+  if (testType != "subworker") {
+    if (canvasType == "2d") {
+      draw = createDrawFunc2D(canvas);
+    } else if (canvasType == "webgl") {
+      draw = createDrawFunc(canvas);
+    } else {
+      ok(false, "Unexpected canvasType");
+    }
 
-  //------------------------------------------------------------------------
-  // Basic WebGL test
-  //------------------------------------------------------------------------
-  if (test == "webgl") {
-    draw = createDrawFunc(canvas);
     if (!draw) {
       finish();
       return;
     }
-
+  }
+  //------------------------------------------------------------------------
+  // Basic test
+  //------------------------------------------------------------------------
+  if (testType == "basic") {
     var count = 0;
     var iid = setInterval(function() {
       if (count++ > 20) {
@@ -223,12 +270,7 @@ function entryFunction(testStr, subtests, offscreenCanvas) {
   //------------------------------------------------------------------------
   // Test dynamic fallback
   //------------------------------------------------------------------------
-  else if (test == "webgl_fallback") {
-    draw = createDrawFunc(canvas);
-    if (!draw) {
-      return;
-    }
-
+  else if (testType == "fallback") {
     var count = 0;
     var iid = setInterval(function() {
       ++count;
@@ -239,67 +281,44 @@ function entryFunction(testStr, subtests, offscreenCanvas) {
   //------------------------------------------------------------------------
   // Test toBlob
   //------------------------------------------------------------------------
-  else if (test == "webgl_toblob") {
-    draw = createDrawFunc(canvas);
-    if (!draw) {
-      return;
-    }
-
+  else if (testType == "toblob") {
     draw("", false);
     canvas.toBlob().then(function(blob) {
-      sendBlob(blob);
+      sendBlob(canvasType, blob);
     });
   }
   //------------------------------------------------------------------------
   // Test toImageBitmap
   //------------------------------------------------------------------------
-  else if (test == "webgl_imagebitmap") {
-    draw = createDrawFunc(canvas);
-    if (!draw) {
-      return;
-    }
-
+  else if (testType == "imagebitmap") {
     draw("", false);
     var imgBitmap = canvas.transferToImageBitmap();
     sendImageBitmap(imgBitmap);
+    finish();
   }
   //------------------------------------------------------------------------
   // Canvas Size Change from Worker
   //------------------------------------------------------------------------
-  else if (test == "webgl_changesize") {
-    draw = createDrawFunc(canvas);
-    if (!draw) {
-      finish();
-      return;
-    }
+  else if (testType == "changesize") {
+    var count = 0;
+    var iid = setInterval(function() {
+      if (count++ > COUNT_FOR_SIZE_CHANGE) {
+        finish();
+        clearInterval(iid);
+        return;
+      }
 
-    draw("64x64", true);
-
-    setTimeout(function() {
-      canvas.width = 128;
-      canvas.height = 128;
-      draw("Increased to 128x128", true);
-
-      setTimeout(function() {
-        canvas.width = 32;
-        canvas.width = 32;
-        draw("Decreased to 32x32", true);
-
-        setTimeout(function() {
-          canvas.width = 64;
-          canvas.height = 64;
-          draw("Increased to 64x64", true);
-
-          ok(true, "Worker is done");
-          finish();
-        }, 0);
-      }, 0);
+      canvas.width = INIT_CONST_CANVAS_SIZE * count;
+      canvas.height = INIT_CONST_CANVAS_SIZE * count;
+      draw("loop " + count, true);
+      var imgBitmap = canvas.transferToImageBitmap();
+      sendImageBitmapWithSize(imgBitmap, INIT_CONST_CANVAS_SIZE * count);
     }, 0);
   }
   //------------------------------------------------------------------------
   // Using OffscreenCanvas from sub workers
   //------------------------------------------------------------------------
-  else if (test == "subworker") {
+  else if (testType == "subworker") {
     /* subworker tests take a list of tests to run on children */
     var stillRunning = 0;
     subtests.forEach(function (subtest) {
@@ -320,10 +339,10 @@ function entryFunction(testStr, subtests, offscreenCanvas) {
       };
 
       var findTransferables = function(t) {
-        if (t.test == "subworker") {
+        if (t.testType == "subworker") {
           var result = [];
-          t.subtests.forEach(function(test) {
-            result = result.concat(findTransferables(test));
+          t.subtests.forEach(function(testType) {
+            result = result.concat(findTransferables(testType));
           });
 
           return result;
@@ -339,14 +358,16 @@ function entryFunction(testStr, subtests, offscreenCanvas) {
 
 onmessage = function(evt) {
   port = evt.ports[0];
-  entryFunction(evt.data.test, evt.data.subtests, evt.data.canvas);
+  entryFunction(evt.data.canvasType, evt.data.testType, evt.data.subtests,
+                evt.data.canvas);
 };
 
 onconnect = function(evt) {
   port = evt.ports[0];
 
   port.addEventListener('message', function(evt) {
-    entryFunction(evt.data.test, evt.data.subtests, evt.data.canvas);
+    entryFunction(evt.data.canvasType,  evt.data.testType, evt.data.subtests,
+                  evt.data.canvas);
   });
 
   port.start();
