@@ -4552,10 +4552,10 @@ MAsmJSLoadHeap::mightAlias(const MDefinition* def) const
         const MAsmJSStoreHeap* store = def->toAsmJSStoreHeap();
         if (store->accessType() != accessType())
             return true;
-        if (!ptr()->isConstant() || !store->ptr()->isConstant())
+        if (!base()->isConstant() || !store->base()->isConstant())
             return true;
-        const MConstant* otherPtr = store->ptr()->toConstant();
-        return ptr()->toConstant()->equals(otherPtr);
+        const MConstant* otherBase = store->base()->toConstant();
+        return base()->toConstant()->equals(otherBase);
     }
     return true;
 }
