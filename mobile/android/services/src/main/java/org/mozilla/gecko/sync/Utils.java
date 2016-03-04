@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.Executor;
 
 import org.json.simple.JSONArray;
 import org.mozilla.apache.commons.codec.binary.Base32;
@@ -561,5 +562,14 @@ public class Utils {
         throw new IllegalArgumentException("object must not be null");
       }
     }
+  }
+
+  public static Executor newSynchronousExecutor() {
+    return new Executor() {
+      @Override
+      public void execute(Runnable runnable) {
+        runnable.run();
+      }
+    };
   }
 }

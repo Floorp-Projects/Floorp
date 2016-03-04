@@ -258,6 +258,9 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY devToolsCmd.keycode          "VK_F12">
 <!ENTITY devToolsCmd.keytext          "F12">
 
+<!ENTITY devtoolsServiceWorkers.label      "Service Workers">
+<!ENTITY devtoolsServiceWorkers.accesskey  "k">
+
 <!ENTITY devtoolsConnect.label        "Connect…">
 <!ENTITY devtoolsConnect.accesskey    "e">
 
@@ -806,8 +809,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY syncedTabs.context.openTab.accesskey               "O">
 <!ENTITY syncedTabs.context.bookmarkSingleTab.label         "Bookmark This Tab…">
 <!ENTITY syncedTabs.context.bookmarkSingleTab.accesskey     "B">
-<!ENTITY syncedTabs.context.refreshList.label               "Refresh List">
-<!ENTITY syncedTabs.context.refreshList.accesskey           "R">
 
 
 <!ENTITY syncBrand.shortName.label    "Sync">

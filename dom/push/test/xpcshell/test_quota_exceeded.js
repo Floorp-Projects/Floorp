@@ -79,7 +79,7 @@ add_task(function* test_expiration_origin_threshold() {
   // different scopes, so each can send 5 notifications before we remove
   // their subscription.
   let updates = 0;
-  let notifyPromise = promiseObserverNotification('push-message', (subject, data) => {
+  let notifyPromise = promiseObserverNotification(PushServiceComponent.pushTopic, (subject, data) => {
     updates++;
     return updates == 6;
   });
