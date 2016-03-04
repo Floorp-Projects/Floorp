@@ -57,7 +57,7 @@ namespace dom {
 
 JSErrorFormatString ErrorFormatString[] = {
 #define MSG_DEF(_name, _argc, _exn, _str) \
-  { _str, _argc, _exn },
+  { #_name, _str, _argc, _exn },
 #include "mozilla/dom/Errors.msg"
 #undef MSG_DEF
 };

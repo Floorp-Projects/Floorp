@@ -632,6 +632,9 @@ typedef enum JSExnType {
 } JSExnType;
 
 typedef struct JSErrorFormatString {
+     /** The error message name in ASCII. */
+    const char* name;
+
     /** The error format string in ASCII. */
     const char* format;
 

@@ -906,7 +906,7 @@ js::ReportValueErrorFlags(JSContext* cx, unsigned flags, const unsigned errorNum
 
 const JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
 #define MSG_DEF(name, count, exception, format) \
-    { format, count, exception } ,
+    { #name, format, count, exception } ,
 #include "js.msg"
 #undef MSG_DEF
 };
