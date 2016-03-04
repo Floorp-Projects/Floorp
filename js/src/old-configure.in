@@ -76,42 +76,6 @@ dnl ==============================================================
 _topsrcdir=`cd $srcdir; pwd -W 2>/dev/null || pwd -P`
 _objdir=`pwd -P`
 
-if test "$_topsrcdir" = "$_objdir"
-then
-  echo "  ***"
-  echo "  * Building directly in the main source directory is not allowed."
-  echo "  *"
-  echo "  * To build, you must run configure from a separate directory"
-  echo "  * (referred to as an object directory)."
-  echo "  ***"
-  exit 1
-fi
-
-# Check for a couple representative files in the source tree
-_conflict_files=
-for file in $_topsrcdir/Makefile $_topsrcdir/config/autoconf.mk; do
-  if test -f $file; then
-    _conflict_files="$_conflict_files $file"
-  fi
-done
-if test "$_conflict_files"; then
-  echo "***"
-  echo "*   Your source tree contains these files:"
-  for file in $_conflict_files; do
-    echo "*         $file"
-  done
-  cat 1>&2 <<-EOF
-	*   This indicates that you previously built in the source tree.
-	*   A source tree build can confuse the separate objdir build.
-	*
-	*   To clean up the source tree:
-	*     1. cd $_topsrcdir
-	*     2. gmake distclean
-	***
-	EOF
-  exit 1
-  break
-fi
 MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd -P`
 
 MOZ_BUILD_BACKEND(../..)
@@ -3434,8 +3398,6 @@ AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 AC_SUBST(MOZ_FIX_LINK_PATHS)
 
 AC_SUBST(USE_DEPENDENT_LIBS)
-
-AC_SUBST(MOZ_BUILD_ROOT)
 
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 

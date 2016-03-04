@@ -157,6 +157,10 @@ fi
 
 cat >> $CONFIG_STATUS <<EOF
 ]
+
+flags = [
+undivert(MOZ_DIVERSION_ARGS)dnl
+]
 EOF
 
 changequote([, ])
