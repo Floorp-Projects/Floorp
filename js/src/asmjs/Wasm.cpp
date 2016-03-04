@@ -704,10 +704,10 @@ typedef Vector<ImportName, 0, SystemAllocPolicy> ImportNameVector;
 typedef HashSet<const DeclaredSig*, SigHashPolicy> SigSet;
 
 static bool
-DecodeSignatureSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
+DecodeSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
     uint32_t sectionStart;
-    if (!d.startSection(SigLabel, &sectionStart))
+    if (!d.startSection(SignaturesId, &sectionStart))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -781,10 +781,10 @@ DecodeSignatureIndex(JSContext* cx, Decoder& d, const ModuleGeneratorData& init,
 }
 
 static bool
-DecodeDeclarationSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
+DecodeFunctionSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
     uint32_t sectionStart;
-    if (!d.startSection(DeclLabel, &sectionStart))
+    if (!d.startSection(FunctionSignaturesId, &sectionStart))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -811,10 +811,10 @@ DecodeDeclarationSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
-DecodeTableSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
+DecodeFunctionTable(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
     uint32_t sectionStart;
-    if (!d.startSection(TableLabel, &sectionStart))
+    if (!d.startSection(FunctionTableId, &sectionStart))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -911,21 +911,22 @@ DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVec
 }
 
 static bool
-DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
+DecodeImportTable(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
     uint32_t sectionStart;
-    if (!d.startSection(ImportLabel, &sectionStart))
+    if (!d.startSection(ImportTableId, &sectionStart))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-    for (uint32_t i = 0; !d.readCStringIf(EndLabel); i++) {
-        if (i >= MaxImports)
-            return Fail(cx, d, "too many imports");
+    uint32_t numImports;
+    if (!d.readVarU32(&numImports))
+        return Fail(cx, d, "failed to read number of imports");
 
-        if (!d.readCStringIf(FuncLabel))
-            return Fail(cx, d, "expected 'func' import subsection");
+    if (numImports > MaxImports)
+        return Fail(cx, d, "too many imports");
 
+    for (uint32_t i = 0; i < numImports; i++) {
         if (!DecodeImport(cx, d, init, importNames))
             return false;
     }
@@ -937,11 +938,10 @@ DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, Import
 }
 
 static bool
-DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg,
-                    MutableHandle<ArrayBufferObject*> heap)
+DecodeMemory(JSContext* cx, Decoder& d, ModuleGenerator& mg, MutableHandle<ArrayBufferObject*> heap)
 {
     uint32_t sectionStart;
-    if (!d.startSection(MemoryLabel, &sectionStart))
+    if (!d.startSection(MemoryId, &sectionStart))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -1030,10 +1030,10 @@ DecodeFunctionExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet*
 }
 
 static bool
-DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
+DecodeExportTable(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
     uint32_t sectionStart;
-    if (!d.startSection(ExportLabel, &sectionStart))
+    if (!d.startSection(ExportTableId, &sectionStart))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -1044,7 +1044,7 @@ DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 
     uint32_t numExports;
     if (!d.readVarU32(&numExports))
-        return false;
+        return Fail(cx, d, "failed to read number of exports");
 
     if (numExports > MaxExports)
         return Fail(cx, d, "too many exports");
@@ -1124,13 +1124,13 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
 }
 
 static bool
-DecodeFunctionBodiesSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
+DecodeFunctionBodies(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
     if (!mg.startFuncDefs())
         return false;
 
     uint32_t sectionStart;
-    if (!d.startSection(FuncLabel, &sectionStart))
+    if (!d.startSection(FunctionBodiesId, &sectionStart))
         return Fail(cx, d, "failed to start section");
 
     if (sectionStart == Decoder::NotStarted) {
@@ -1152,10 +1152,10 @@ DecodeFunctionBodiesSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
-DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
+DecodeDataSegments(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
 {
     uint32_t sectionStart;
-    if (!d.startSection(DataLabel, &sectionStart))
+    if (!d.startSection(DataSegmentsId, &sectionStart))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -1163,14 +1163,15 @@ DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
     if (!heap)
         return Fail(cx, d, "data section requires a memory section");
 
+    uint32_t numSegments;
+    if (!d.readVarU32(&numSegments))
+        return Fail(cx, d, "failed to read number of data segments");
+
     uint8_t* const heapBase = heap->dataPointer();
     uint32_t const heapLength = heap->byteLength();
     uint32_t prevEnd = 0;
 
-    for (uint32_t i = 0; !d.readCStringIf(EndLabel); i++) {
-        if (!d.readCStringIf(SegmentLabel))
-            return Fail(cx, d, "expected segment tag");
-
+    for (uint32_t i = 0; i < numSegments; i++) {
         uint32_t dstOffset;
         if (!d.readVarU32(&dstOffset))
             return Fail(cx, d, "expected segment destination offset");
@@ -1217,32 +1218,32 @@ DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t len
     if (!init)
         return false;
 
-    if (!DecodeSignatureSection(cx, d, init.get()))
+    if (!DecodeSignatures(cx, d, init.get()))
         return false;
 
-    if (!DecodeImportSection(cx, d, init.get(), importNames))
+    if (!DecodeImportTable(cx, d, init.get(), importNames))
         return false;
 
-    if (!DecodeDeclarationSection(cx, d, init.get()))
+    if (!DecodeFunctionSignatures(cx, d, init.get()))
         return false;
 
-    if (!DecodeTableSection(cx, d, init.get()))
+    if (!DecodeFunctionTable(cx, d, init.get()))
         return false;
 
     ModuleGenerator mg(cx);
     if (!mg.init(Move(init), Move(file)))
         return false;
 
-    if (!DecodeMemorySection(cx, d, mg, heap))
+    if (!DecodeMemory(cx, d, mg, heap))
         return false;
 
-    if (!DecodeExportsSection(cx, d, mg))
+    if (!DecodeExportTable(cx, d, mg))
         return false;
 
-    if (!DecodeFunctionBodiesSection(cx, d, mg))
+    if (!DecodeFunctionBodies(cx, d, mg))
         return false;
 
-    if (!DecodeDataSection(cx, d, heap))
+    if (!DecodeDataSegments(cx, d, heap))
         return false;
 
     CacheableCharsVector funcNames;

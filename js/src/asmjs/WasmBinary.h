@@ -30,31 +30,21 @@ class PropertyName;
 
 namespace wasm {
 
-// Module generator limits
-static const unsigned MaxSigs         =   4 * 1024;
-static const unsigned MaxFuncs        = 512 * 1024;
-static const unsigned MaxImports      =   4 * 1024;
-static const unsigned MaxExports      =   4 * 1024;
-static const unsigned MaxTableElems   = 128 * 1024;
-static const unsigned MaxArgsPerFunc  =   4 * 1024;
-
 // Module header constants
-static const uint32_t MagicNumber     = 0x6d736100; // "\0asm"
-static const uint32_t EncodingVersion = 0xa;        // will change while iterating toward release,
-                                                    // change to 1 at release, and hopefully never
-                                                    // change after that
+static const uint32_t MagicNumber        = 0x6d736100; // "\0asm"
+static const uint32_t EncodingVersion    = 0xa;        // will change while iterating toward release,
+                                                       // change to 1 at release, and hopefully never
+                                                       // change after that
 
-// Names:
-static const char SigLabel[]          = "sig";
-static const char ImportLabel[]       = "import";
-static const char DeclLabel[]         = "decl";
-static const char TableLabel[]        = "table";
-static const char MemoryLabel[]       = "memory";
-static const char ExportLabel[]       = "export";
-static const char FuncLabel[]         = "func";
-static const char DataLabel[]         = "data";
-static const char SegmentLabel[]      = "segment";
-static const char EndLabel[]          = "";
+// Section ids:
+static const char SignaturesId[]         = "signatures";
+static const char ImportTableId[]        = "import_table";
+static const char FunctionSignaturesId[] = "function_signatures";
+static const char FunctionTableId[]      = "function_table";
+static const char MemoryId[]             = "memory";
+static const char ExportTableId[]        = "export_table";
+static const char FunctionBodiesId[]     = "function_bodies";
+static const char DataSegmentsId[]       = "data_segments";
 
 enum class Expr : uint16_t
 {
@@ -652,17 +642,6 @@ class Decoder
             }
         }
         return nullptr;
-    }
-    MOZ_WARN_UNUSED_RESULT bool readCStringIf(const char* tag) {
-        for (const uint8_t* p = cur_; p != end_; p++, tag++) {
-            if (*p != *tag)
-                return false;
-            if (!*p) {
-                cur_ = p + 1;
-                return true;
-            }
-        }
-        return false;
     }
     MOZ_WARN_UNUSED_RESULT bool readRawData(uint32_t numBytes, const uint8_t** bytes = nullptr) {
         if (bytes)
