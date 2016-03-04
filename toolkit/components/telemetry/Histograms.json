@@ -8489,6 +8489,15 @@
     "bug_numbers": [1245486],
     "description": "Number times info bar buttons are clicked (0=PAUSED, 1=CREATED)"
   },
+  "LOOP_ACTIVITY_COUNTER": {
+    "alert_emails": ["firefox-dev@mozilla.org", "mbanner@mozilla.com"],
+    "expires_in_version": "51",
+    "kind": "enumerated",
+    "n_values": 5,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1208416],
+    "description": "Number of times an action is performed by an user (0=OPEN_PANEL, 1=OPEN_CONVERSATION, 2=ROOM_OPEN, 3=ROOM_SHARE, 4=ROOM_DELETE)"
+  },
   "E10S_STATUS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "never",
