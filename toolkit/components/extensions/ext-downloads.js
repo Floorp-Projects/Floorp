@@ -221,7 +221,14 @@ function downloadQuery(query) {
     if (arg == null) {
       return before ? Number.MAX_VALUE : 0;
     }
-    return parseInt(arg, 10);
+
+    // We accept several formats: a Date object, an ISO8601 string, or a
+    // number of milliseconds since the epoch as either a number or a string.
+    // The "number of milliseconds since the epoch as a string" is an outlier,
+    // everything else can just be passed directly to the Date constructor.
+    const date = new Date((typeof arg == "string" && /^\d+$/.test(arg))
+                          ? parseInt(arg, 10) : arg);
+    return date.valueOf();
   }
 
   const startedBefore = normalizeTime(query.startedBefore, true);
