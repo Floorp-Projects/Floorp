@@ -305,10 +305,6 @@ DevToolsLoader.prototype = {
 
     this._provider.load();
     this.require = Loader.Require(this._provider.loader, { id: "devtools" });
-
-    if (this._mainid) {
-      this.main(this._mainid);
-    }
   },
 
   /**
