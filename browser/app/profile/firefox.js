@@ -1593,8 +1593,10 @@ pref("browser.tabs.crashReporting.includeURL", false);
 pref("browser.tabs.crashReporting.emailMe", false);
 pref("browser.tabs.crashReporting.email", "");
 
+#ifndef RELEASE_BUILD
 #ifndef MOZ_MULET
 pref("layers.async-pan-zoom.enabled", true);
+#endif
 #endif
 
 // Enable e10s add-on interposition by default.
