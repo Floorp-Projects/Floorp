@@ -416,7 +416,7 @@ DecodeBr(FunctionDecoder& f, ExprType expected)
 {
     uint32_t relativeDepth;
     if (!f.d().readVarU32(&relativeDepth))
-        return false;
+        return f.fail("expected relative depth");
 
     if (!f.isLabelInBounds(relativeDepth))
         return f.fail("branch depth exceeds current nesting level");
@@ -429,13 +429,39 @@ DecodeBrIf(FunctionDecoder& f, ExprType expected)
 {
     uint32_t relativeDepth;
     if (!f.d().readVarU32(&relativeDepth))
-        return false;
+        return f.fail("expected relative depth");
 
     if (!f.isLabelInBounds(relativeDepth))
         return f.fail("branch depth exceeds current nesting level");
 
     return CheckType(f, ExprType::Void, expected) &&
            DecodeExpr(f, ExprType::I32);
+}
+
+static bool
+DecodeBrTable(FunctionDecoder& f)
+{
+    uint32_t tableLength;
+    if (!f.d().readVarU32(&tableLength))
+        return false;
+    if (tableLength > MaxBrTableElems)
+        return f.fail("too many br_table entries");
+
+    for (uint32_t i = 0; i < tableLength; i++) {
+        uint32_t depth;
+        if (!f.d().readVarU32(&depth))
+            return f.fail("missing br_table entry");
+        if (!f.isLabelInBounds(depth))
+            return f.fail("branch depth exceeds current nesting level");
+    }
+
+    uint32_t defaultDepth;
+    if (!f.d().readVarU32(&defaultDepth))
+        return f.fail("expected default relative depth");
+    if (!f.isLabelInBounds(defaultDepth))
+        return f.fail("branch depth exceeds current nesting level");
+
+    return DecodeExpr(f, ExprType::I32);
 }
 
 static bool
@@ -671,6 +697,8 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
         return DecodeBr(f, expected);
       case Expr::BrIf:
         return DecodeBrIf(f, expected);
+      case Expr::BrTable:
+        return DecodeBrTable(f);
       case Expr::Return:
         return DecodeReturn(f);
       default:

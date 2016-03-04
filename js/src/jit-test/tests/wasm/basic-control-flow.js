@@ -147,33 +147,266 @@ assertThrowsInstanceOf(() => wasmEvalText('(module (func (return (i32.const 1)))
 // ----------------------------------------------------------------------------
 // br / br_if
 
-wasmTextToBinary('(module (func (br 0)))');
-wasmTextToBinary('(module (func (block (br 0))))');
-wasmTextToBinary('(module (func (block $l (br $l))))');
-wasmTextToBinary('(module (func (br_if 0 (i32.const 0))))');
-wasmTextToBinary('(module (func (result i32) (block (br_if 0 (i32.const 1)))))');
-wasmTextToBinary('(module (func (result i32) (block $l (br_if $l (i32.const 1)))))');
-
-wasmTextToBinary('(module (func (block $l (block $m (br $l)))))');
-wasmTextToBinary('(module (func (block $l (block $m (br $m)))))');
-
-assertErrorMessage(() => wasmEvalText('(module (func (br 1)))'), TypeError, /branch depth exceeds current nesting level/);
-assertErrorMessage(() => wasmEvalText('(module (func (br_if 1 (i32.const 0))))'), TypeError, /branch depth exceeds current nesting level/);
 assertErrorMessage(() => wasmEvalText('(module (func (result i32) (block (br 0))) (export "" 0))'), TypeError, mismatchError("void", "i32"));
 assertErrorMessage(() => wasmEvalText('(module (func (result i32) (block (br_if 0 (i32.const 0)))) (export "" 0))'), TypeError, mismatchError("void", "i32"));
+
+const DEPTH_OUT_OF_BOUNDS = /branch depth exceeds current nesting level/;
+
+assertErrorMessage(() => wasmEvalText('(module (func (br 0)))'), TypeError, DEPTH_OUT_OF_BOUNDS);
+assertErrorMessage(() => wasmEvalText('(module (func (block (br 1))))'), TypeError, DEPTH_OUT_OF_BOUNDS);
+assertErrorMessage(() => wasmEvalText('(module (func (loop (br 2))))'), TypeError, DEPTH_OUT_OF_BOUNDS);
+
+assertErrorMessage(() => wasmEvalText('(module (func (br_if 0 (i32.const 0))))'), TypeError, DEPTH_OUT_OF_BOUNDS);
+assertErrorMessage(() => wasmEvalText('(module (func (block (br_if 1 (i32.const 0)))))'), TypeError, DEPTH_OUT_OF_BOUNDS);
+assertErrorMessage(() => wasmEvalText('(module (func (loop (br_if 2 (i32.const 0)))))'), TypeError, DEPTH_OUT_OF_BOUNDS);
+
+assertErrorMessage(() => wasmEvalText(`(module (func (result i32)
+  (block
+    (if_else
+      (br 0)
+      (i32.const 0)
+      (i32.const 2)
+    )
+  )
+) (export "" 0))`), TypeError, mismatchError("void", "i32"));
+
+assertErrorMessage(() => wasmEvalText(`(module (func (block $out (br_if $out (br 0)))) (export "" 0))`), TypeError, mismatchError("void", "i32"));
+
+assertEq(wasmEvalText('(module (func (block (br 0))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (block $l (br $l))) (export "" 0))')(), undefined);
+
+assertEq(wasmEvalText('(module (func (block (block (br 1)))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (block $l (block (br $l)))) (export "" 0))')(), undefined);
+
+assertEq(wasmEvalText('(module (func (block $l (block $m (br $l)))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (block $l (block $m (br $m)))) (export "" 0))')(), undefined);
+
+assertEq(wasmEvalText(`(module (func (result i32)
+  (block
+    (br 0)
+    (return (i32.const 0))
+  )
+  (return (i32.const 1))
+) (export "" 0))`)(), 1);
+
+assertEq(wasmEvalText(`(module (func (result i32)
+  (block
+    (block
+      (br 0)
+      (return (i32.const 0))
+    )
+    (return (i32.const 1))
+  )
+  (return (i32.const 2))
+) (export "" 0))`)(), 1);
+
+assertEq(wasmEvalText(`(module (func (result i32)
+  (block $outer
+    (block $inner
+      (br $inner)
+      (return (i32.const 0))
+    )
+    (return (i32.const 1))
+  )
+  (return (i32.const 2))
+) (export "" 0))`)(), 1);
+
+// TODO enable once bug 1253572 is fixed.
+/*
+var notcalled = false;
+var called = false;
+var imports = {
+    notcalled() {notcalled = true},
+    called() {called = true}
+};
+assertEq(wasmEvalText(`(module (import "inc" "") (func
+  (block
+    (return (br 0))
+    (call_import 0)
+  )
+  (call_import 1)
+) (export "" 0))`)(imports), undefined);
+assertEq(notcalled, false);
+assertEq(called, true);
+
+assertEq(wasmEvalText(`(module (func
+  (block
+    (i32.add
+      (i32.const 0)
+      (return (br 0))
+    )
+  )
+  (return)
+) (export "" 0))`)(), 1);
+*/
+
+assertEq(wasmEvalText(`(module (func (result i32)
+  (block
+    (if_else
+      (i32.const 1)
+      (br 0)
+      (return (i32.const 0))
+    )
+  )
+  (return (i32.const 1))
+) (export "" 0))`)(), 1);
+
+assertEq(wasmEvalText('(module (func (block (br_if 0 (i32.const 1)))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (block (br_if 0 (i32.const 0)))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (block $l (br_if $l (i32.const 1)))) (export "" 0))')(), undefined);
+
+var isNonZero = wasmEvalText(`(module (func (result i32) (param i32)
+  (block
+    (br_if 0 (get_local 0))
+    (return (i32.const 0))
+  )
+  (return (i32.const 1))
+) (export "" 0))`);
+
+assertEq(isNonZero(0), 0);
+assertEq(isNonZero(1), 1);
+assertEq(isNonZero(-1), 1);
 
 // ----------------------------------------------------------------------------
 // loop
 
-wasmTextToBinary('(module (func (loop (br 0))))');
-wasmTextToBinary('(module (func (loop (br 1))))');
-wasmTextToBinary('(module (func (loop $a (br $a))))');
-wasmTextToBinary('(module (func (loop $a $b (br $a))))');
-wasmTextToBinary('(module (func (loop $a $b (br $b))))');
-wasmTextToBinary('(module (func (loop $a $a (br $a))))');
+assertErrorMessage(() => wasmEvalText('(module (func (loop (br 2))))'), TypeError, DEPTH_OUT_OF_BOUNDS);
+
+assertEq(wasmEvalText('(module (func (loop)) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (result i32) (loop (i32.const 2)) (i32.const 1)) (export "" 0))')(), 1);
+
+assertEq(wasmEvalText('(module (func (loop (br 1))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (loop $a (br $a))) (export "" 0))')(), undefined);
+assertEq(wasmEvalText('(module (func (loop $a $b (br $a))) (export "" 0))')(), undefined);
+
+assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+  (loop
+    $break $continue
+    (if
+      (i32.gt_u (get_local 0) (i32.const 5))
+      (br $break)
+    )
+    (set_local 0 (i32.add (get_local 0) (i32.const 1)))
+    (br $continue)
+  )
+  (return (get_local 0))
+) (export "" 0))`)(), 6);
+
+assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+  (loop
+    $break $continue
+    (br_if
+      $break
+      (i32.gt_u (get_local 0) (i32.const 5))
+    )
+    (set_local 0 (i32.add (get_local 0) (i32.const 1)))
+    (br $continue)
+  )
+  (return (get_local 0))
+) (export "" 0))`)(), 6);
+
+assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+  (loop
+    $break $continue
+    (set_local 0 (i32.add (get_local 0) (i32.const 1)))
+    (br_if
+      $continue
+      (i32.le_u (get_local 0) (i32.const 5))
+    )
+  )
+  (return (get_local 0))
+) (export "" 0))`)(), 6);
+
+assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+  (loop
+    $break $continue
+    (br_if
+      $break
+      (i32.gt_u (get_local 0) (i32.const 5))
+    )
+    (set_local 0 (i32.add (get_local 0) (i32.const 1)))
+    (loop
+      (br $continue)
+    )
+    (return (i32.const 42))
+  )
+  (return (get_local 0))
+) (export "" 0))`)(), 6);
+
+assertEq(wasmEvalText(`(module (func (result i32) (local i32)
+  (loop
+    $break $continue
+    (set_local 0 (i32.add (get_local 0) (i32.const 1)))
+    (loop
+      (br_if
+        $continue
+        (i32.le_u (get_local 0) (i32.const 5))
+      )
+    )
+    (br $break)
+  )
+  (return (get_local 0))
+) (export "" 0))`)(), 6);
 
 // ----------------------------------------------------------------------------
-// tableswitch
+// br_table
 
-wasmTextToBinary('(module (func (param i32) (block $b1 (block $b2 (br_table (get_local 0) (table (br $b1) (br $b2)) (br $b2))))))');
-wasmTextToBinary('(module (func (param i32) (block $b1 (br_table (get_local 0) (table) (br $b1)))))');
+assertErrorMessage(() => wasmEvalText('(module (func (br_table (i32.const 0) (table) (br 0))))'), TypeError, DEPTH_OUT_OF_BOUNDS);
+
+assertErrorMessage(() => wasmEvalText('(module (func (block (br_table (i32.const 0) (table (br 2)) (br 0)))))'), TypeError, DEPTH_OUT_OF_BOUNDS);
+
+assertErrorMessage(() => wasmEvalText('(module (func (block (br_table (f32.const 0) (table) (br 0)))))'), TypeError, mismatchError("f32", "i32"));
+
+assertEq(wasmEvalText(`(module (func (result i32) (param i32)
+  (block $default
+   (br_table (get_local 0) (table) (br $default))
+   (return (i32.const 0))
+  )
+  (return (i32.const 1))
+) (export "" 0))`)(), 1);
+
+assertEq(wasmEvalText(`(module (func (result i32) (param i32)
+  (block $default
+   (br_table (return (i32.const 1)) (table) (br $default))
+   (return (i32.const 0))
+  )
+  (return (i32.const 2))
+) (export "" 0))`)(), 1);
+
+assertEq(wasmEvalText(`(module (func (result i32) (param i32)
+  (block $outer
+   (block $inner
+    (br_table (get_local 0) (table) (br $inner))
+    (return (i32.const 0))
+   )
+   (return (i32.const 1))
+  )
+  (return (i32.const 2))
+) (export "" 0))`)(), 1);
+
+var f = wasmEvalText(`(module (func (result i32) (param i32)
+  (block $0
+   (block $1
+    (block $2
+     (block $default
+      (br_table
+       (get_local 0)
+       (table (br $0) (br $1) (br $2))
+       (br $default)
+      )
+     )
+     (return (i32.const -1))
+    )
+    (return (i32.const 2))
+   )
+  )
+  (return (i32.const 0))
+) (export "" 0))`);
+
+assertEq(f(-2), -1);
+assertEq(f(-1), -1);
+assertEq(f(0), 0);
+assertEq(f(1), 0);
+assertEq(f(2), 2);
+assertEq(f(3), -1);
+

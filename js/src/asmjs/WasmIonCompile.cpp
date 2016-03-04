@@ -2524,15 +2524,7 @@ EmitIfElse(FunctionCompiler& f, bool hasElse, ExprType expected, MDefinition** d
 static bool
 EmitBrTable(FunctionCompiler& f)
 {
-    uint32_t defaultDepth = f.readVarU32();
     uint32_t numCases = f.readVarU32();
-
-    // Empty table
-    if (!numCases) {
-        MDefinition* _;
-        return EmitExpr(f, ExprType::I32, &_) &&
-               f.br(defaultDepth);
-    }
 
     BlockVector cases;
     if (!cases.resize(numCases))
@@ -2545,9 +2537,15 @@ EmitBrTable(FunctionCompiler& f)
     for (size_t i = 0; i < numCases; i++)
         depths[i] = f.readVarU32();
 
+    uint32_t defaultDepth = f.readVarU32();
+
     MDefinition* index;
     if (!EmitExpr(f, ExprType::I32, &index))
         return false;
+
+    // Empty table
+    if (!numCases)
+        return f.br(defaultDepth);
 
     MBasicBlock* switchBlock;
     if (!f.startSwitch(index, numCases, &switchBlock))

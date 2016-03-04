@@ -3154,10 +3154,9 @@ class Resolver
         return ref.name().empty() || resolveRef(varMap_, ref);
     }
     bool resolveTarget(WasmRef& ref) {
-        for (size_t i = targetStack_.length(); i > 0; i--) {
-            uint32_t targetIndex = i - 1;
-            if (targetStack_[targetIndex] == ref.name()) {
-                ref.setIndex(targetIndex);
+        for (size_t i = 0, e = targetStack_.length(); i < e; i++) {
+            if (targetStack_[e - i - 1] == ref.name()) {
+                ref.setIndex(i);
                 return true;
             }
         }
@@ -3659,9 +3658,6 @@ EncodeBranchTable(Encoder& e, WasmAstBranchTable& bt)
     if (!e.writeExpr(Expr::BrTable))
         return false;
 
-    if (!e.writeVarU32(bt.def().index()))
-        return false;
-
     if (!e.writeVarU32(bt.table().length()))
         return false;
 
@@ -3669,6 +3665,9 @@ EncodeBranchTable(Encoder& e, WasmAstBranchTable& bt)
         if (!e.writeVarU32(elem.index()))
             return false;
     }
+
+    if (!e.writeVarU32(bt.def().index()))
+        return false;
 
     return EncodeExpr(e, bt.index());
 }

@@ -64,7 +64,7 @@ enum class Expr : uint16_t
     // Calls
     Call           = 0x12,
     CallIndirect   = 0x13,
-    CallImport     = 0x09,
+    CallImport     = 0x1f,
 
     // Constants and calls
     I32Const       = 0x0a,
@@ -827,6 +827,7 @@ static const unsigned MaxImports         =   4 * 1024;
 static const unsigned MaxExports         =   4 * 1024;
 static const unsigned MaxTableElems      = 128 * 1024;
 static const unsigned MaxArgsPerFunc     =   4 * 1024;
+static const unsigned MaxBrTableElems    =   4 * 1024;
 
 } // namespace wasm
 } // namespace js
