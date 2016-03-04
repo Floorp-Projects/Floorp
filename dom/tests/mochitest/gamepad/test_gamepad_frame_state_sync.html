@@ -11,8 +11,10 @@
 <script type="text/javascript" src="mock_gamepad.js"></script>
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
- // Add a gamepad
-var index;
+var index = GamepadService.addGamepad("test gamepad", // id
+                                      SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
+                                      4, // buttons
+                                      2);// axes
 
 function setFrameVisible(f, visible) {
   var Ci = SpecialPowers.Ci;
@@ -21,24 +23,15 @@ function setFrameVisible(f, visible) {
 }
 
 var frames_loaded = 0;
-function startTest() {
+var f1, f2;
+function frame_loaded() {
   frames_loaded++;
   if (frames_loaded == 2) {
-    addGamepad("test gamepad", // id
-               SpecialPowers.Ci.nsIGamepadServiceTest.STANDARD_MAPPING,
-               4, // buttons
-               2).then(function(i) {
-                 index = i;
-                 gamepad_loaded();
-               });
-  }
-}
-var f1, f2;
-function gamepad_loaded() {
-  f1 = document.getElementById('f1');
-  f2 = document.getElementById('f2');
-  // Now press the button, but don't release it.
-  GamepadService.newButtonEvent(index, 0, true);
+    f1 = document.getElementById('f1');
+    f2 = document.getElementById('f2');
+    // Now press the button, but don't release it.
+    GamepadService.newButtonEvent(index, 0, true);
+ }
 }
 
 window.addEventListener("gamepadbuttondown", function() {
@@ -59,14 +52,10 @@ function check_button_pressed() {
 
   // Now release the button, then hide the second frame.
   GamepadService.newButtonEvent(index, 0, false);
+  setFrameVisible(f2, false);
   SpecialPowers.executeSoon(function() {
     // Now press the button, but don't release it.
-    ok(!f1.contentWindow.gamepad.buttons[0].pressed, "frame 1 no button pressed");
-    ok(!f2.contentWindow.gamepad.buttons[0].pressed, "frame 2 no button pressed");
-    setFrameVisible(f2, false);
-    SpecialPowers.executeSoon(function() {
-      GamepadService.newButtonEvent(index, 0, true);
-    });
+    GamepadService.newButtonEvent(index, 0, true);
   });
 }
 
@@ -91,7 +80,7 @@ function check_second_frame_no_button_press () {
 }
 
 </script>
-<iframe id="f1" src="gamepad_frame_state.html" onload="startTest()"></iframe>
-<iframe id="f2" src="gamepad_frame_state.html" onload="startTest()"></iframe>
+<iframe id="f1" src="gamepad_frame_state.html" onload="frame_loaded()"></iframe>
+<iframe id="f2" src="gamepad_frame_state.html" onload="frame_loaded()"></iframe>
 </body>
 </html>
