@@ -50,6 +50,7 @@ AddGamepad(const char* aID,
   gGamepadIndex++;
   GamepadAdded a(NS_ConvertUTF8toUTF16(nsDependentCString(aID)), index,
                  (uint32_t)aMapping, aNumButtons, aNumAxes);
+  gGamepadIndex++;
   NotifyGamepadChange<GamepadAdded>(a);
   return index;
 }
