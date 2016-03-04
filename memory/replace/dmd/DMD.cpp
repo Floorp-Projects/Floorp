@@ -1494,19 +1494,7 @@ Options::BadArg(const char* aArg)
 {
   StatusMsg("\n");
   StatusMsg("Bad entry in the $DMD environment variable: '%s'.\n", aArg);
-  StatusMsg("\n");
-  StatusMsg("$DMD must be a whitespace-separated list of |--option=val|\n");
-  StatusMsg("entries.\n");
-  StatusMsg("\n");
-  StatusMsg("The following options are allowed;  defaults are shown in [].\n");
-  StatusMsg("  --mode=<mode>                Profiling mode [dark-matter]\n");
-  StatusMsg("      where <mode> is one of: live, dark-matter, cumulative\n");
-  StatusMsg("  --sample-below=<1..%d> Sample blocks smaller than this [%d]\n",
-            int(mSampleBelowSize.mMax),
-            int(mSampleBelowSize.mDefault));
-  StatusMsg("                               (prime numbers are recommended)\n");
-  StatusMsg("  --show-dump-stats=<yes|no>   Show stats about dumps? [no]\n");
-  StatusMsg("\n");
+  StatusMsg("See the output of |mach help run| for the allowed options.\n");
   exit(1);
 }
 
