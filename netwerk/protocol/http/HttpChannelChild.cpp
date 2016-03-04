@@ -907,6 +907,9 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
   mEncodedBodySize = timing.encodedBodySize;
   mProtocolVersion = timing.protocolVersion;
 
+  mCacheReadStart = timing.cacheReadStart;
+  mCacheReadEnd = timing.cacheReadEnd;
+
   nsPerformance* documentPerformance = GetPerformance();
   if (documentPerformance) {
       documentPerformance->AddEntry(this, this);
