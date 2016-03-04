@@ -9116,8 +9116,6 @@ ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 # and $NSPR_LIBS.
 ac_configure_args="`echo $ac_configure_args | sed -e 's/--with-system-nspr\S* *//'`"
 
-ac_configure_args="$ac_configure_args --enable-threadsafe"
-
 if test "$_INTL_API" = no; then
     ac_configure_args="$ac_configure_args --without-intl-api"
 fi
