@@ -3921,19 +3921,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     }
 
     const DisplayItemScrollClip* itemScrollClip = item->ScrollClip();
-    if (itemType == nsDisplayItem::TYPE_OPACITY && layerState == LAYER_INACTIVE) {
-      // This is an unfortunate hack. For opacity items, we usually want to
-      // apply clips and scroll transforms to their descendants. However, if
-      // an opacity is inactive and gets painted into a PaintedLayer, we can't
-      // apply async scrolling offsets to the inactive layer manager contents;
-      // instead, we need to move the opacity item itself, by moving the
-      // PaintedLayer that it gets painted into.
-      itemScrollClip = InnermostScrollClipApplicableToAGR(
-        static_cast<nsDisplayOpacity*>(item)->ScrollClipForSameAGRChildren(),
-        animatedGeometryRootForClip);
-      item->SetScrollClip(itemScrollClip);
-      item->UpdateBounds(mBuilder);
-    }
     // Now we need to separate the item's scroll clip chain into those scroll
     // clips that can  be applied to the whole layer (i.e. to all items
     // sharing the item's animated geometry root), and those that need to be
@@ -4112,7 +4099,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       }
 
       mParameters.mBackgroundColor = uniformColor;
-      mParameters.mScrollClip = DisplayItemScrollClip::PickInnermost(agrScrollClip, mContainerScrollClip);
+      mParameters.mScrollClip = agrScrollClip;
 
       // Just use its layer.
       // Set layerContentsVisibleRect.width/height to -1 to indicate we

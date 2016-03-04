@@ -48,6 +48,8 @@ fuzzy(1,14400) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-ch
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-nested-976533.html mix-blend-mode-nested-976533-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-culling-1207041.html mix-blend-mode-culling-1207041-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-dest-alpha-1135271.html mix-blend-mode-dest-alpha-1135271-ref.html
+== clipped-mixblendmode-containing-unclipped-stuff.html clipped-mixblendmode-containing-unclipped-stuff-ref.html
+fuzzy(1,6800) == clipped-opacity-containing-unclipped-mixblendmode.html clipped-opacity-containing-unclipped-mixblendmode-ref.html
 
 # Test plan 5.3.1 Blending between the background layers and the background color for an element with background-blend-mode
 # Test 9
