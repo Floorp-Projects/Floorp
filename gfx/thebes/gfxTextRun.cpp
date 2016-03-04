@@ -2071,8 +2071,7 @@ gfxFontGroup::GetHyphenWidth(gfxTextRun::PropertyProvider *aProvider)
             nsAutoPtr<gfxTextRun>
                 hyphRun(MakeHyphenTextRun(dt,
                                           aProvider->GetAppUnitsPerDevUnit()));
-            mHyphenWidth = hyphRun.get() ?
-                hyphRun->GetAdvanceWidth(0, hyphRun->GetLength(), nullptr) : 0;
+            mHyphenWidth = hyphRun.get() ? hyphRun->GetAdvanceWidth() : 0;
         }
     }
     return mHyphenWidth;
