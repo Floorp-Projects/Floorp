@@ -113,17 +113,25 @@ extensions.registerSchemaAPI("windows", null, (extension, context) => {
           args.AppendElement(mkstr(aboutNewTabService.newTabURL));
         }
 
-        let extraFeatures = "";
+        let features = ["chrome"];
+
+        if (createData.type === null || createData.type == "normal") {
+          features.push("dialog=no", "all");
+        } else {
+          // All other types create "popup"-type windows by default.
+          features.push("dialog", "resizable", "minimizable", "centerscreen", "titlebar", "close");
+        }
+
         if (createData.incognito !== null) {
           if (createData.incognito) {
-            extraFeatures += ",private";
+            features.push("private");
           } else {
-            extraFeatures += ",non-private";
+            features.push("non-private");
           }
         }
 
         let window = Services.ww.openWindow(null, "chrome://browser/content/browser.xul", "_blank",
-                                            "chrome,dialog=no,all" + extraFeatures, args);
+                                            features.join(","), args);
 
         if (createData.left !== null || createData.top !== null) {
           let left = createData.left !== null ? createData.left : window.screenX;

@@ -625,6 +625,16 @@ global.WindowManager = {
 
   windowType(window) {
     // TODO: Make this work.
+
+    let {chromeFlags} = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIDocShell)
+                              .treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIXULWindow);
+
+    if (chromeFlags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG) {
+      return "popup";
+    }
+
     return "normal";
   },
 
@@ -708,8 +718,6 @@ global.WindowManager = {
       width: window.outerWidth,
       height: window.outerHeight,
       incognito: PrivateBrowsingUtils.isWindowPrivate(window),
-
-      // We fudge on these next two.
       type: this.windowType(window),
       state,
     };

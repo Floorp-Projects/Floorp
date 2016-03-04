@@ -335,7 +335,6 @@
                 "description": "Whether the new window should be an incognito window."
               },
               "type": {
-                "unsupported": true,
                 "$ref": "CreateType",
                 "optional": true,
                 "description": "Specifies what type of browser window to create. The 'panel' and 'detached_panel' types create a popup unless the '--enable-panels' flag is set."
