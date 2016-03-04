@@ -78,6 +78,9 @@ class WasmName
             return true;
         return EqualChars(begin(), rhs.begin(), length());
     }
+    bool operator!=(WasmName rhs) const {
+        return !(*this == rhs);
+    }
 };
 
 class WasmRef
@@ -2955,6 +2958,10 @@ ParseExport(WasmParseContext& c)
       case WasmToken::Name:
         return new(c.lifo) WasmAstExport(name.text(), WasmRef(exportee.name(), WasmNoIndex));
       case WasmToken::Memory:
+        if (name.text() != WasmName(MOZ_UTF16("memory"), 6)) {
+            c.ts.generateError(exportee, c.error);
+            return nullptr;
+        }
         return new(c.lifo) WasmAstExport(name.text());
       default:
         break;
@@ -3829,6 +3836,17 @@ EncodeMemorySection(Encoder& e, WasmAstModule& module)
     if (!e.writeVarU32(maxSize))
         return false;
 
+    uint8_t exported = 0;
+    for (WasmAstExport* exp : module.exports()) {
+        if (exp->kind() == WasmAstExportKind::Memory) {
+            exported = 1;
+            break;
+        }
+    }
+
+    if (!e.writeU8(exported))
+        return false;
+
     e.finishSection(offset);
     return true;
 }
@@ -3846,43 +3864,34 @@ EncodeFunctionExport(Encoder& e, WasmAstExport& exp)
 }
 
 static bool
-EncodeMemoryExport(Encoder& e, WasmAstExport& exp)
-{
-    if (!EncodeCString(e, exp.name()))
-        return false;
-
-    return true;
-}
-
-static bool
 EncodeExportSection(Encoder& e, WasmAstModule& module)
 {
-    if (module.exports().empty())
+    uint32_t numFuncExports = 0;
+    for (WasmAstExport* exp : module.exports()) {
+        if (exp->kind() == WasmAstExportKind::Func)
+            numFuncExports++;
+    }
+
+    if (!numFuncExports)
         return true;
 
     size_t offset;
     if (!e.startSection(ExportLabel, &offset))
         return false;
 
+    if (!e.writeVarU32(numFuncExports))
+        return false;
+
     for (WasmAstExport* exp : module.exports()) {
         switch (exp->kind()) {
           case WasmAstExportKind::Func:
-            if (!e.writeCString(FuncLabel))
-                return false;
             if (!EncodeFunctionExport(e, *exp))
                 return false;
             break;
           case WasmAstExportKind::Memory:
-            if (!e.writeCString(MemoryLabel))
-                return false;
-            if (!EncodeMemoryExport(e, *exp))
-                return false;
-            break;
+            continue;
         }
     }
-
-    if (!e.writeCString(EndLabel))
-        return false;
 
     e.finishSection(offset);
     return true;
