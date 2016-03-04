@@ -34,6 +34,3 @@ const unloadObserver = {
   }
 };
 Services.obs.addObserver(unloadObserver, "sdk:loader:destroy", false);
-
-const events = require("sdk/system/events");
-events.emit("devtools-loaded", {});
