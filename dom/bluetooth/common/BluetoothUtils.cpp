@@ -304,7 +304,7 @@ BytesToUuid(const nsTArray<uint8_t>& aArray,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  aUuid = BluetoothUuid::BASE;
+  aUuid = BluetoothUuid::BASE();
 
   if (aEndian == ENDIAN_BIG) {
     for (size_t i = 0; i < length; ++i) {
