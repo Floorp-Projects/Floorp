@@ -1396,8 +1396,7 @@ class MachDebug(MachCommandBase):
             # Replace ' with '"'"', so that shell quoting e.g.
             # a'b becomes 'a'"'"'b'.
             quote = lambda s: s.replace("'", """'"'"'""")
-            if self.mozconfig['configure_args'] and \
-                    'COMM_BUILD' not in os.environ:
+            if self.mozconfig['configure_args']:
                 print('echo Adding configure options from %s' %
                     mozpath.normsep(self.mozconfig['path']), file=out)
                 for arg in self.mozconfig['configure_args']:
