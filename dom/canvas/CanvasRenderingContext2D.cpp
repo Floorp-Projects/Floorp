@@ -5667,15 +5667,17 @@ void CanvasRenderingContext2D::RemoveDrawObserver()
 PersistentBufferProvider*
 CanvasRenderingContext2D::GetBufferProvider(LayerManager* aManager)
 {
-  if (!mTarget) {
-    EnsureTarget();
-  }
-
   if (mBufferProvider) {
     return mBufferProvider;
-  } else {
+  }
+
+  if (!mTarget) {
     return nullptr;
   }
+
+  mBufferProvider = new PersistentBufferProviderBasic(mTarget);
+
+  return mBufferProvider;
 }
 
 already_AddRefed<Layer>
