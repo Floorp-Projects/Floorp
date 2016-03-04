@@ -796,14 +796,6 @@ nsGenericDOMDataNode::SaveSubtreeState()
 {
 }
 
-void
-nsGenericDOMDataNode::DestroyContent()
-{
-  // XXX We really should let cycle collection do this, but that currently still
-  //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
-  ReleaseWrapper(this);
-}
-
 #ifdef DEBUG
 void
 nsGenericDOMDataNode::List(FILE* out, int32_t aIndent) const
