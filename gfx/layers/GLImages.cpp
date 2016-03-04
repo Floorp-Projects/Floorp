@@ -8,12 +8,11 @@
 #include "GLReadTexImageHelper.h"
 #include "GLLibraryEGL.h"
 
-using namespace mozilla;
-using namespace mozilla::gl;
-
 namespace mozilla {
 namespace layers {
 
+using namespace mozilla;
+using namespace mozilla::gl;
 static RefPtr<GLContext> sSnapshotContext;
 
 EGLImageImage::EGLImageImage(EGLImage aImage, EGLSync aSync,
