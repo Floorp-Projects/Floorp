@@ -773,9 +773,15 @@ nsPerformance::InsertUserEntry(PerformanceEntry* aEntry)
 
   nsAutoCString uri;
   uint64_t markCreationEpoch = 0;
+
   if (nsContentUtils::IsUserTimingLoggingEnabled() ||
       nsContentUtils::SendPerformanceTimingNotifications()) {
-    nsresult rv = GetOwner()->GetDocumentURI()->GetHost(uri);
+    nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
+    if (owner && owner->GetDocumentURI()) {
+      rv = owner->GetDocumentURI()->GetHost(uri);
+    }
+
     if(NS_FAILED(rv)) {
       // If we have no URI, just put in "none".
       uri.AssignLiteral("none");

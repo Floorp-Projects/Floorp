@@ -558,6 +558,10 @@ private:
 
   bool CheckPermission(const char* aType)
   {
+    if (!mRecorder || !mRecorder->GetOwner()) {
+      return false;
+    }
+
     nsCOMPtr<nsIDocument> doc = mRecorder->GetOwner()->GetExtantDoc();
     if (!doc) {
       return false;
@@ -1295,7 +1299,7 @@ MediaRecorder::GetSourcePrincipal()
     return mDOMStream->GetPrincipal();
   }
   MOZ_ASSERT(mAudioNode != nullptr);
-  nsIDocument* doc = mAudioNode->GetOwner()->GetExtantDoc();
+  nsIDocument* doc = mAudioNode->GetOwner() ? mAudioNode->GetOwner()->GetExtantDoc() : nullptr;
   return doc ? doc->NodePrincipal() : nullptr;
 }
 
