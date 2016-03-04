@@ -3035,6 +3035,10 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
     } else {
         if (mInterceptCache == INTERCEPTED) {
             cacheEntryOpenFlags |= nsICacheStorage::OPEN_INTERCEPTED;
+            // Clear OPEN_TRUNCATE for the fake cache entry, since otherwise
+            // cache storage will close the current entry which breaks the
+            // response synthesis.
+            cacheEntryOpenFlags &= ~nsICacheStorage::OPEN_TRUNCATE;
             DebugOnly<bool> exists;
             MOZ_ASSERT(NS_SUCCEEDED(cacheStorage->Exists(openURI, extension, &exists)) && exists,
                        "The entry must exist in the cache after we create it here");
