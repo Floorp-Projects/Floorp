@@ -41,10 +41,10 @@ add_task(function* () {
   let pluginInfo = yield promiseForPluginInfo("test");
   is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE, "plugin should be marked as VULNERABLE");
 
-  let found = yield ContentTask.spawn(gTestBrowser, {}, function* () {
-    return !!content.document.getElementById("test");
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
+    Assert.ok(!!content.document.getElementById("test"),
+      "test part 1: plugin should not be activated");
   });
-  ok(found, "test part 1: plugin should not be activated");
 
   yield promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html,<html></html>");
 });
@@ -52,10 +52,10 @@ add_task(function* () {
 add_task(function* () {
   let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(!popupNotification, "test part 2: Should not have a click-to-play notification");
-  let found = yield ContentTask.spawn(gTestBrowser, {}, function* () {
-    return !!content.document.getElementById("test");
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
+    Assert.ok(!content.document.getElementById("test"),
+      "test part 2: plugin should not be activated");
   });
-  ok(!found, "test part 2: plugin should not be activated");
 
   let obsPromise = TestUtils.topicObserved("PopupNotifications-updateNotShowing");
   let overlayPromise = promisePopupNotification("click-to-play-plugins");
@@ -73,8 +73,8 @@ add_task(function* () {
   let pluginInfo = yield promiseForPluginInfo("test");
   is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE, "plugin should be marked as VULNERABLE");
 
-  let found = yield ContentTask.spawn(gTestBrowser, {}, function* () {
-    return !!content.document.getElementById("test");
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
+    Assert.ok(!!content.document.getElementById("test"),
+      "test part 3: plugin should not be activated");
   });
-  ok(found, "test part 3: plugin should not be activated");
 });

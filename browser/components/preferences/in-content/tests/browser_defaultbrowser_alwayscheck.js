@@ -7,12 +7,12 @@ add_task(function* clicking_make_default_checks_alwaysCheck_checkbox() {
 
   yield test_with_mock_shellservice({isDefault: false}, function*() {
     let setDefaultPane = content.document.getElementById("setDefaultPane");
-    is(setDefaultPane.selectedIndex, "0",
-       "The 'make default' pane should be visible when not default");
+    Assert.equal(setDefaultPane.selectedIndex, "0",
+      "The 'make default' pane should be visible when not default");
     let alwaysCheck = content.document.getElementById("alwaysCheckDefault");
-    is(alwaysCheck.checked, false, "Always Check is unchecked by default");
-    is(Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"), false,
-       "alwaysCheck pref should be false by default in test runs");
+    Assert.ok(!alwaysCheck.checked, "Always Check is unchecked by default");
+    Assert.ok(!Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"),
+      "alwaysCheck pref should be false by default in test runs");
 
     let setDefaultButton = content.document.getElementById("setDefaultButton");
     setDefaultButton.click();
@@ -21,16 +21,16 @@ add_task(function* clicking_make_default_checks_alwaysCheck_checkbox() {
     yield ContentTaskUtils.waitForCondition(() => alwaysCheck.checked,
       "'Always Check' checkbox should get checked after clicking the 'Set Default' button");
 
-    is(alwaysCheck.checked, true,
-       "Clicking 'Make Default' checks the 'Always Check' checkbox");
-    is(Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"), true,
-       "Checking the checkbox should set the pref to true");
-    is(alwaysCheck.disabled, true,
-       "'Always Check' checkbox is locked with default browser and alwaysCheck=true");
-    is(setDefaultPane.selectedIndex, "1",
-       "The 'make default' pane should not be visible when default");
-    is(Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"), true,
-       "checkDefaultBrowser pref is now enabled");
+    Assert.ok(alwaysCheck.checked,
+      "Clicking 'Make Default' checks the 'Always Check' checkbox");
+    Assert.ok(Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"),
+      "Checking the checkbox should set the pref to true");
+    Assert.ok(alwaysCheck.disabled,
+      "'Always Check' checkbox is locked with default browser and alwaysCheck=true");
+    Assert.equal(setDefaultPane.selectedIndex, "1",
+      "The 'make default' pane should not be visible when default");
+    Assert.ok(Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"),
+      "checkDefaultBrowser pref is now enabled");
   });
 
   gBrowser.removeCurrentTab();
@@ -43,14 +43,14 @@ add_task(function* clicking_make_default_checks_alwaysCheck_checkbox() {
 
   yield test_with_mock_shellservice({isDefault: false}, function*() {
     let setDefaultPane = content.document.getElementById("setDefaultPane");
-    is(setDefaultPane.selectedIndex, "0",
-       "The 'make default' pane should be visible when not default");
+    Assert.equal(setDefaultPane.selectedIndex, "0",
+      "The 'make default' pane should be visible when not default");
     let alwaysCheck = content.document.getElementById("alwaysCheckDefault");
-    is(alwaysCheck.disabled, true, "Always Check is disabled when locked");
-    is(alwaysCheck.checked, true,
-       "Always Check is checked because defaultPref is true and pref is locked");
-    is(Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"), true,
-       "alwaysCheck pref should ship with 'true' by default");
+    Assert.ok(alwaysCheck.disabled, "Always Check is disabled when locked");
+    Assert.ok(alwaysCheck.checked,
+      "Always Check is checked because defaultPref is true and pref is locked");
+    Assert.ok(Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"),
+      "alwaysCheck pref should ship with 'true' by default");
 
     let setDefaultButton = content.document.getElementById("setDefaultButton");
     setDefaultButton.click();
@@ -59,12 +59,12 @@ add_task(function* clicking_make_default_checks_alwaysCheck_checkbox() {
     yield ContentTaskUtils.waitForCondition(() => setDefaultPane.selectedIndex == "1",
       "Browser is now default");
 
-    is(alwaysCheck.checked, true,
-       "'Always Check' is still checked because it's locked");
-    is(alwaysCheck.disabled, true,
-       "'Always Check is disabled because it's locked");
-    is(Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"), true,
-       "The pref is locked and so doesn't get changed");
+    Assert.ok(alwaysCheck.checked,
+      "'Always Check' is still checked because it's locked");
+    Assert.ok(alwaysCheck.disabled,
+      "'Always Check is disabled because it's locked");
+    Assert.ok(Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"),
+      "The pref is locked and so doesn't get changed");
   });
 
   Services.prefs.unlockPref("browser.shell.checkDefaultBrowser");

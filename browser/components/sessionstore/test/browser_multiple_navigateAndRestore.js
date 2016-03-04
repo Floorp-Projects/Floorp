@@ -28,7 +28,7 @@ add_task(function*() {
 
   yield ContentTask.spawn(browser, PAGE_2, function*(PAGE_2) {
     docShell.QueryInterface(Ci.nsIWebNavigation);
-    is(docShell.currentURI.spec, PAGE_2,
+    Assert.equal(docShell.currentURI.spec, PAGE_2,
        "Content should have PAGE_2 as the browser currentURI");
   });
 
