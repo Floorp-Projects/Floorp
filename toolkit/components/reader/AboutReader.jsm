@@ -219,7 +219,8 @@ AboutReader.prototype = {
         break;
       }
       case "Reader:AddButton": {
-        if (message.data.id && message.data.image) {
+        if (message.data.id && message.data.image &&
+            !this._doc.getElementById(message.data.id)) {
           let btn = this._doc.createElement("button");
           btn.setAttribute("class", "button");
           btn.setAttribute("style", "background-image: url('" + message.data.image + "')");
@@ -239,7 +240,8 @@ AboutReader.prototype = {
       case "Reader:RemoveButton": {
         if (message.data.id) {
           let btn = this._doc.getElementById(message.data.id);
-          btn.remove();
+          if (btn)
+            btn.remove();
         }
         break;
       }
