@@ -1365,7 +1365,6 @@ static bool
 EmitHeapAddress(FunctionCompiler& f, MDefinition** base, MAsmJSHeapAccess* access)
 {
     uint32_t offset = f.readVarU32();
-    MOZ_ASSERT(offset == 0, "Non-zero offsets not supported yet");
     access->setOffset(offset);
 
     uint32_t align = f.readVarU32();
@@ -1374,13 +1373,24 @@ EmitHeapAddress(FunctionCompiler& f, MDefinition** base, MAsmJSHeapAccess* acces
     if (!EmitExpr(f, ExprType::I32, base))
         return false;
 
-    // TODO Remove this (and the viewType param) after implementing unaligned
-    // loads/stores.
     if (f.mg().isAsmJS()) {
         MOZ_ASSERT(offset == 0 && "asm.js validation does not produce load/store offsets");
         return true;
     }
 
+    // TODO Remove this after implementing non-wraparound offset semantics.
+    uint32_t endOffset = access->endOffset();
+    if (endOffset < offset)
+        return false;
+    bool accessNeedsBoundsCheck = true;
+    if (endOffset > f.mirGen().foldableOffsetRange(accessNeedsBoundsCheck)) {
+        MDefinition* rhs = f.constant(Int32Value(offset), MIRType_Int32);
+        *base = f.binary<MAdd>(*base, rhs, MIRType_Int32);
+        offset = 0;
+        access->setOffset(offset);
+    }
+
+    // TODO Remove this after implementing unaligned loads/stores.
     int32_t maskVal = ~(Scalar::byteSize(access->accessType()) - 1);
     if (maskVal == -1)
         return true;
