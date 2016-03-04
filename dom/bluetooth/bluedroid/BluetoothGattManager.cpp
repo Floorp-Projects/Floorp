@@ -898,7 +898,7 @@ BluetoothGattManager::StartLeScan(const nsTArray<BluetoothUuid>& aServiceUuids,
 
   index = sClients->Length();
   sClients->AppendElement(new BluetoothGattClient(appUuid,
-                                                  BluetoothAddress::ANY));
+                                                  BluetoothAddress::ANY()));
   RefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
   client->mStartLeScanRunnable = aRunnable;
 
@@ -1036,7 +1036,7 @@ BluetoothGattManager::StartAdvertising(
 
   index = sClients->Length();
   sClients->AppendElement(new BluetoothGattClient(aAppUuid,
-                                                  BluetoothAddress::ANY));
+                                                  BluetoothAddress::ANY()));
   RefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
   client->mStartAdvertisingRunnable = aRunnable;
   client->mAdvertisingData = aData;

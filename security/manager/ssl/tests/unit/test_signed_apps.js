@@ -74,7 +74,7 @@ function tamper(inFilePath, outFilePath, modifications, newEntries) {
     // in the input file that wasn't there.
     for (let name in modifications) {
       if (modifications.hasOwnProperty(name)) {
-        throw "input file was missing expected entries: " + name;
+        throw new Error("input file was missing expected entries: " + name);
       }
     }
 
@@ -102,7 +102,8 @@ function removeEntry(entry, entryInput) { return [null, null]; }
 
 function truncateEntry(entry, entryInput) {
   if (entryInput.available() == 0) {
-    throw "Truncating already-zero length entry will result in identical entry.";
+    throw new Error("Truncating already-zero length entry will result in " +
+                    "identical entry.");
   }
 
   var content = Cc["@mozilla.org/io/string-input-stream;1"]

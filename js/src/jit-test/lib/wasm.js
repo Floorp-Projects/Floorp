@@ -4,7 +4,7 @@ if (!wasmIsSupported())
 load(libdir + "asserts.js");
 
 function wasmEvalText(str, imports) {
-    return wasmEval(wasmTextToBinary(str), imports);
+    return Wasm.instantiateModule(wasmTextToBinary(str), imports);
 }
 
 function mismatchError(actual, expect) {

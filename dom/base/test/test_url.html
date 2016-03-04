@@ -361,5 +361,31 @@
     URL.revokeObjectURL('blob:something');
     ok(true, "This should not throw.");
   </script>
+
+  <script>
+    var base = new URL("http:\\\\test.com\\path/to\\file?query\\backslash#hash\\");
+    is(base.href, "http://test.com/path/to/file?query\\backslash#hash\\");
+
+    var url = new URL("..\\", base);
+    is(url.href, "http://test.com/path/");
+
+    url = new URL("\\test", base);
+    is(url.href, "http://test.com/test");
+
+    url = new URL("\\test\\", base);
+    is(url.href, "http://test.com/test/");
+
+    url = new URL("http://example.org/test", base);
+    is(url.href, "http://example.org/test");
+
+    url = new URL("ftp://tmp/test", base);
+    is(url.href, "ftp://tmp/test");
+
+    url = new URL("ftp:\\\\tmp\\test", base);
+    is(url.href, "ftp://tmp/test");
+
+    url = new URL("scheme://tmp\\test", base);
+    is(url.href, "scheme://tmp\\test");
+  </script>
 </body>
 </html>

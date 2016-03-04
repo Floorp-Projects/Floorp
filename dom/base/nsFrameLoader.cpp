@@ -1848,26 +1848,6 @@ nsFrameLoader::MaybeCreateDocShell()
     mDocShell->SetName(frameName);
   }
 
-  //Grab the userContextId from owner if XUL
-  nsAutoString userContextIdStr;
-  if (namespaceID == kNameSpaceID_XUL) {
-    if (mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::usercontextid)) {
-      mOwnerContent->GetAttr(kNameSpaceID_None,
-                             nsGkAtoms::usercontextid,
-                             userContextIdStr);
-    }
-  }
-
-  if (!userContextIdStr.IsEmpty()) {
-    nsresult rv;
-    uint32_t userContextId =
-      static_cast<uint32_t>(userContextIdStr.ToInteger(&rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mDocShell->SetUserContextId(userContextId);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   // Inform our docShell that it has a new child.
   // Note: This logic duplicates a lot of logic in
   // nsSubDocumentFrame::AttributeChanged.  We should fix that.
@@ -1938,6 +1918,14 @@ nsFrameLoader::MaybeCreateDocShell()
     webNav->SetSessionHistory(sessionHistory);
   }
 
+  DocShellOriginAttributes attrs;
+
+  if (!mOwnerContent->IsXULElement(nsGkAtoms::browser)) {
+    nsCOMPtr<nsIPrincipal> parentPrin = doc->NodePrincipal();
+    PrincipalOriginAttributes poa = BasePrincipal::Cast(parentPrin)->OriginAttributesRef();
+    attrs.InheritFromDocToChildDocShell(poa);
+  }
+
   if (OwnerIsAppFrame()) {
     // You can't be both an app and a browser frame.
     MOZ_ASSERT(!OwnerIsMozBrowserFrame());
@@ -1949,7 +1937,8 @@ nsFrameLoader::MaybeCreateDocShell()
       NS_ENSURE_SUCCESS(ownApp->GetLocalId(&ownAppId), NS_ERROR_FAILURE);
     }
 
-    mDocShell->SetIsApp(ownAppId);
+    attrs.mAppId = ownAppId;
+    mDocShell->SetFrameType(nsIDocShell::FRAME_TYPE_APP);
   }
 
   if (OwnerIsMozBrowserFrame()) {
@@ -1962,9 +1951,24 @@ nsFrameLoader::MaybeCreateDocShell()
       NS_ENSURE_SUCCESS(containingApp->GetLocalId(&containingAppId),
                         NS_ERROR_FAILURE);
     }
-    mDocShell->SetIsBrowserInsideApp(containingAppId);
+
+    attrs.mAppId = containingAppId;
+    attrs.mInIsolatedMozBrowser = OwnerIsIsolatedMozBrowserFrame();
+    mDocShell->SetFrameType(nsIDocShell::FRAME_TYPE_BROWSER);
     mDocShell->SetIsInIsolatedMozBrowserElement(OwnerIsIsolatedMozBrowserFrame());
   }
+
+  // Grab the userContextId from owner if XUL
+  nsAutoString userContextIdStr;
+  if ((namespaceID == kNameSpaceID_XUL) &&
+      mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usercontextid, userContextIdStr) &&
+      !userContextIdStr.IsEmpty()) {
+    nsresult rv;
+    attrs.mUserContextId = userContextIdStr.ToInteger(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsDocShell::Cast(mDocShell)->SetOriginAttributes(attrs);
 
   if (OwnerIsMozBrowserOrAppFrame()) {
     // For inproc frames, set the docshell properties.

@@ -21,7 +21,7 @@ FakeSSLStatus.prototype = {
         aIID.equals(Ci.nsISupports)) {
       return this;
     }
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw new Error(Cr.NS_ERROR_NO_INTERFACE);
   },
 };
 

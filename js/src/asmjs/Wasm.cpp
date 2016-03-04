@@ -18,6 +18,8 @@
 
 #include "asmjs/Wasm.h"
 
+#include "mozilla/CheckedInt.h"
+
 #include "jsprf.h"
 
 #include "asmjs/WasmGenerator.h"
@@ -30,6 +32,7 @@
 using namespace js;
 using namespace js::wasm;
 
+using mozilla::CheckedInt;
 using mozilla::IsNaN;
 
 typedef Handle<WasmModuleObject*> HandleWasmModule;
@@ -624,40 +627,6 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
     return f.fail("bad expression code");
 }
 
-static bool
-DecodeFuncBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, FunctionGenerator& fg,
-               uint32_t funcIndex)
-{
-    const uint8_t* bodyBegin = d.currentPosition();
-
-    FunctionDecoder f(cx, d, mg, fg, funcIndex);
-
-    uint32_t numExprs;
-    if (!d.readVarU32(&numExprs))
-        return Fail(cx, d, "expected number of function body expressions");
-
-    if (numExprs) {
-        for (size_t i = 0; i < numExprs - 1; i++) {
-            if (!DecodeExpr(f, ExprType::Void))
-                return false;
-        }
-
-        if (!DecodeExpr(f, f.ret()))
-            return false;
-    } else {
-        if (!CheckType(f, ExprType::Void, f.ret()))
-            return false;
-    }
-
-    const uint8_t* bodyEnd = d.currentPosition();
-    uintptr_t bodyLength = bodyEnd - bodyBegin;
-    if (!fg.bytecode().resize(bodyLength))
-        return false;
-
-    memcpy(fg.bytecode().begin(), bodyBegin, bodyLength);
-    return true;
-}
-
 /*****************************************************************************/
 // dynamic link data
 
@@ -684,12 +653,11 @@ typedef HashSet<const DeclaredSig*, SigHashPolicy> SigSet;
 static bool
 DecodeSignatureSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
-    if (!d.readCStringIf(SigLabel))
-        return true;
-
     uint32_t sectionStart;
-    if (!d.startSection(&sectionStart))
-        return Fail(cx, d, "expected signature section byte size");
+    if (!d.startSection(SigLabel, &sectionStart))
+        return Fail(cx, d, "failed to start section");
+    if (sectionStart == Decoder::NotStarted)
+        return true;
 
     uint32_t numSigs;
     if (!d.readVarU32(&numSigs))
@@ -762,12 +730,11 @@ DecodeSignatureIndex(JSContext* cx, Decoder& d, const ModuleGeneratorData& init,
 static bool
 DecodeDeclarationSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
-    if (!d.readCStringIf(DeclLabel))
-        return true;
-
     uint32_t sectionStart;
-    if (!d.startSection(&sectionStart))
-        return Fail(cx, d, "expected decl section byte size");
+    if (!d.startSection(DeclLabel, &sectionStart))
+        return Fail(cx, d, "failed to start section");
+    if (sectionStart == Decoder::NotStarted)
+        return true;
 
     uint32_t numDecls;
     if (!d.readVarU32(&numDecls))
@@ -793,12 +760,11 @@ DecodeDeclarationSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 static bool
 DecodeTableSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
-    if (!d.readCStringIf(TableLabel))
-        return true;
-
     uint32_t sectionStart;
-    if (!d.startSection(&sectionStart))
-        return Fail(cx, d, "expected table section byte size");
+    if (!d.startSection(TableLabel, &sectionStart))
+        return Fail(cx, d, "failed to start section");
+    if (sectionStart == Decoder::NotStarted)
+        return true;
 
     if (!d.readVarU32(&init->numTableElems))
         return Fail(cx, d, "expected number of table elems");
@@ -894,12 +860,11 @@ DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVec
 static bool
 DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
-    if (!d.readCStringIf(ImportLabel))
-        return true;
-
     uint32_t sectionStart;
-    if (!d.startSection(&sectionStart))
-        return Fail(cx, d, "expected import section byte size");
+    if (!d.startSection(ImportLabel, &sectionStart))
+        return Fail(cx, d, "failed to start section");
+    if (sectionStart == Decoder::NotStarted)
+        return true;
 
     for (uint32_t i = 0; !d.readCStringIf(EndLabel); i++) {
         if (i >= MaxImports)
@@ -922,34 +887,35 @@ static bool
 DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg,
                     MutableHandle<ArrayBufferObject*> heap)
 {
-    if (!d.readCStringIf(MemoryLabel))
+    uint32_t sectionStart;
+    if (!d.startSection(MemoryLabel, &sectionStart))
+        return Fail(cx, d, "failed to start section");
+    if (sectionStart == Decoder::NotStarted)
         return true;
 
-    uint32_t sectionStart;
-    if (!d.startSection(&sectionStart))
-        return Fail(cx, d, "expected memory section byte size");
-
-    if (!d.readCStringIf(InitialLabel))
-        return Fail(cx, d, "expected memory section initial field");
-
-    uint32_t initialHeapSize;
-    if (!d.readVarU32(&initialHeapSize))
+    uint32_t initialSizePages;
+    if (!d.readVarU32(&initialSizePages))
         return Fail(cx, d, "expected initial memory size");
 
-    if (initialHeapSize < PageSize || initialHeapSize % PageSize != 0)
-        return Fail(cx, d, "initial memory size not a multiple of 0x10000");
-
-    if (initialHeapSize > INT32_MAX)
+    CheckedInt<int32_t> initialSize = initialSizePages;
+    initialSize *= PageSize;
+    if (!initialSize.isValid())
         return Fail(cx, d, "initial memory size too big");
 
-    if (!d.readCStringIf(EndLabel))
-        return Fail(cx, d, "expected end field of memory section");
+    uint32_t maxSizePages;
+    if (!d.readVarU32(&maxSizePages))
+        return Fail(cx, d, "expected initial memory size");
+
+    CheckedInt<int32_t> maxSize = maxSizePages;
+    maxSize *= PageSize;
+    if (!maxSize.isValid())
+        return Fail(cx, d, "initial memory size too big");
 
     if (!d.finishSection(sectionStart))
         return Fail(cx, d, "memory section byte size mismatch");
 
     bool signalsForOOB = CompileArgs(cx).useSignalHandlersForOOB;
-    heap.set(ArrayBufferObject::createForWasm(cx, initialHeapSize, signalsForOOB));
+    heap.set(ArrayBufferObject::createForWasm(cx, initialSize.value(), signalsForOOB));
     if (!heap)
         return false;
 
@@ -1016,12 +982,11 @@ DecodeMemoryExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet* d
 static bool
 DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
-    if (!d.readCStringIf(ExportLabel))
-        return true;
-
     uint32_t sectionStart;
-    if (!d.startSection(&sectionStart))
-        return Fail(cx, d, "expected export section byte size");
+    if (!d.startSection(ExportLabel, &sectionStart))
+        return Fail(cx, d, "failed to start section");
+    if (sectionStart == Decoder::NotStarted)
+        return true;
 
     CStringSet dupSet(cx);
     if (!dupSet.init())
@@ -1049,17 +1014,13 @@ DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
-DecodeFunctionSection(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
+DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 {
     int64_t before = PRMJ_Now();
 
     FunctionGenerator fg;
     if (!mg.startFuncDef(d.currentOffset(), &fg))
         return false;
-
-    uint32_t sectionStart;
-    if (!d.startSection(&sectionStart))
-        return Fail(cx, d, "expected func section byte size");
 
     const DeclaredSig& sig = mg.funcSig(funcIndex);
     for (ValType type : sig.args()) {
@@ -1079,11 +1040,33 @@ DecodeFunctionSection(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t f
             return false;
     }
 
-    if (!DecodeFuncBody(cx, d, mg, fg, funcIndex))
+    const uint8_t* bodyBegin = d.currentPosition();
+
+    FunctionDecoder f(cx, d, mg, fg, funcIndex);
+
+    uint32_t numExprs;
+    if (!d.readVarU32(&numExprs))
+        return Fail(cx, d, "expected number of function body expressions");
+
+    if (numExprs) {
+        for (size_t i = 0; i < numExprs - 1; i++) {
+            if (!DecodeExpr(f, ExprType::Void))
+                return false;
+        }
+
+        if (!DecodeExpr(f, f.ret()))
+            return false;
+    } else {
+        if (!CheckType(f, ExprType::Void, f.ret()))
+            return false;
+    }
+
+    const uint8_t* bodyEnd = d.currentPosition();
+    uintptr_t bodyLength = bodyEnd - bodyBegin;
+    if (!fg.bytecode().resize(bodyLength))
         return false;
 
-    if (!d.finishSection(sectionStart))
-        return Fail(cx, d, "func section byte size mismatch");
+    memcpy(fg.bytecode().begin(), bodyBegin, bodyLength);
 
     int64_t after = PRMJ_Now();
     unsigned generateTime = (after - before) / PRMJ_USEC_PER_MSEC;
@@ -1092,42 +1075,44 @@ DecodeFunctionSection(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t f
 }
 
 static bool
-DecodeFunctionSections(JSContext* cx, Decoder& d, ModuleGenerator& mg)
+DecodeFunctionBodiesSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
     if (!mg.startFuncDefs())
         return false;
 
-    uint32_t funcIndex = 0;
+    uint32_t sectionStart;
+    if (!d.startSection(FuncLabel, &sectionStart))
+        return Fail(cx, d, "failed to start section");
 
-    for (; d.readCStringIf(FuncLabel); funcIndex++) {
-        if (funcIndex >= mg.numFuncSigs())
-            return Fail(cx, d, "more function definitions than declarations");
+    if (sectionStart == Decoder::NotStarted) {
+        if (mg.numFuncSigs() != 0)
+            return Fail(cx, d, "expected function bodies");
 
-        if (!DecodeFunctionSection(cx, d, mg, funcIndex))
+        return mg.finishFuncDefs();
+    }
+
+    for (uint32_t funcIndex = 0; funcIndex < mg.numFuncSigs(); funcIndex++) {
+        if (!DecodeFunctionBody(cx, d, mg, funcIndex))
             return false;
     }
 
-    if (funcIndex < mg.numFuncSigs())
-        return Fail(cx, d, "fewer function definitions than declarations");
+    if (!d.finishSection(sectionStart))
+        return Fail(cx, d, "function section byte size mismatch");
 
-    if (!mg.finishFuncDefs())
-        return false;
-
-    return true;
+    return mg.finishFuncDefs();
 }
 
 static bool
 DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
 {
-    if (!d.readCStringIf(DataLabel))
+    uint32_t sectionStart;
+    if (!d.startSection(DataLabel, &sectionStart))
+        return Fail(cx, d, "failed to start section");
+    if (sectionStart == Decoder::NotStarted)
         return true;
 
     if (!heap)
         return Fail(cx, d, "data section requires a memory section");
-
-    uint32_t sectionStart;
-    if (!d.startSection(&sectionStart))
-        return Fail(cx, d, "expected data section byte size");
 
     uint8_t* const heapBase = heap->dataPointer();
     uint32_t const heapLength = heap->byteLength();
@@ -1161,31 +1146,6 @@ DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
 
     if (!d.finishSection(sectionStart))
         return Fail(cx, d, "data section byte size mismatch");
-
-    return true;
-}
-
-static bool
-DecodeUnknownSection(JSContext* cx, Decoder& d)
-{
-    UniqueChars sectionName = d.readCString();
-    if (!sectionName)
-        return Fail(cx, d, "failed to read section name");
-
-    if (!strcmp(sectionName.get(), SigLabel) ||
-        !strcmp(sectionName.get(), ImportLabel) ||
-        !strcmp(sectionName.get(), DeclLabel) ||
-        !strcmp(sectionName.get(), TableLabel) ||
-        !strcmp(sectionName.get(), MemoryLabel) ||
-        !strcmp(sectionName.get(), ExportLabel) ||
-        !strcmp(sectionName.get(), FuncLabel) ||
-        !strcmp(sectionName.get(), DataLabel))
-    {
-        return Fail(cx, d, "known section out of order");
-    }
-
-    if (!d.skipSection())
-        return Fail(cx, d, "unable to skip unknown section");
 
     return true;
 }
@@ -1230,7 +1190,7 @@ DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t len
     if (!DecodeExportsSection(cx, d, mg))
         return false;
 
-    if (!DecodeFunctionSections(cx, d, mg))
+    if (!DecodeFunctionBodiesSection(cx, d, mg))
         return false;
 
     if (!DecodeDataSection(cx, d, heap))
@@ -1239,8 +1199,8 @@ DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t len
     CacheableCharsVector funcNames;
 
     while (!d.readCStringIf(EndLabel)) {
-        if (!DecodeUnknownSection(cx, d))
-            return false;
+        if (!d.skipSection())
+            return Fail(cx, d, "unable to skip unknown section");
     }
 
     if (!d.done())
@@ -1373,3 +1333,80 @@ wasm::Eval(JSContext* cx, Handle<ArrayBufferObject*> code,
 
     return true;
 }
+
+static bool
+InstantiateModule(JSContext* cx, unsigned argc, Value* vp)
+{
+    MOZ_ASSERT(cx->runtime()->options().wasm());
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!args.get(0).isObject() || !args.get(0).toObject().is<ArrayBufferObject>()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
+        return false;
+    }
+
+    RootedObject importObj(cx);
+    if (!args.get(1).isUndefined()) {
+        if (!args.get(1).isObject()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_ARG);
+            return false;
+        }
+        importObj = &args[1].toObject();
+    }
+
+    Rooted<ArrayBufferObject*> code(cx, &args[0].toObject().as<ArrayBufferObject>());
+
+    RootedObject exportObj(cx);
+    if (!Eval(cx, code, importObj, &exportObj))
+        return false;
+
+    args.rval().setObject(*exportObj);
+    return true;
+}
+
+#if JS_HAS_TOSOURCE
+static bool
+wasm_toSource(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setString(cx->names().Wasm);
+    return true;
+}
+#endif
+
+static JSFunctionSpec wasm_static_methods[] = {
+#if JS_HAS_TOSOURCE
+    JS_FN(js_toSource_str,     wasm_toSource,     0, 0),
+#endif
+    JS_FN("instantiateModule", InstantiateModule, 1, 0),
+    JS_FS_END
+};
+
+const Class js::WasmClass = {
+    js_Wasm_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Wasm)
+};
+
+JSObject*
+js::InitWasmClass(JSContext* cx, HandleObject global)
+{
+    MOZ_ASSERT(cx->runtime()->options().wasm());
+
+    RootedObject proto(cx, global->as<GlobalObject>().getOrCreateObjectPrototype(cx));
+    if (!proto)
+        return nullptr;
+
+    RootedObject Wasm(cx, NewObjectWithGivenProto(cx, &WasmClass, proto, SingletonObject));
+    if (!Wasm)
+        return nullptr;
+
+    if (!JS_DefineProperty(cx, global, js_Wasm_str, Wasm, JSPROP_RESOLVING))
+        return nullptr;
+
+    if (!JS_DefineFunctions(cx, Wasm, wasm_static_methods))
+        return nullptr;
+
+    global->as<GlobalObject>().setConstructor(JSProto_Wasm, ObjectValue(*Wasm));
+    return Wasm;
+}
+

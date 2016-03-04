@@ -350,7 +350,7 @@ public:
                     int32_t aMetaState, int64_t aTime, int32_t aUnicodeChar,
                     int32_t aBaseUnicodeChar, int32_t aDomPrintableKeyValue,
                     int32_t aRepeatCount, int32_t aFlags,
-                    bool aIsSynthesizedImeKey);
+                    bool aIsSynthesizedImeKey, jni::Object::Param originalEvent);
 
     // Synchronize Gecko thread with the InputConnection thread.
     void OnImeSynchronize();
@@ -2445,7 +2445,7 @@ nsWindow::GeckoViewSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
         int32_t aScanCode, int32_t aMetaState, int64_t aTime,
         int32_t aUnicodeChar, int32_t aBaseUnicodeChar,
         int32_t aDomPrintableKeyValue, int32_t aRepeatCount, int32_t aFlags,
-        bool aIsSynthesizedImeKey)
+        bool aIsSynthesizedImeKey, jni::Object::Param originalEvent)
 {
     RefPtr<nsWindow> kungFuDeathGrip(&window);
     window.UserActivity();
@@ -2480,6 +2480,10 @@ nsWindow::GeckoViewSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
                 mozilla::UniquePtr<WidgetEvent>(event.Duplicate()));
     } else {
         window.DispatchEvent(&event, status);
+
+        if (status != nsEventStatus_eConsumeNoDefault) {
+            mEditable->OnDefaultKeyEvent(originalEvent);
+        }
     }
 
     if (window.Destroyed() ||

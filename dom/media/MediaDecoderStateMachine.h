@@ -1121,10 +1121,6 @@ private:
   bool mDropAudioUntilNextDiscontinuity;
   bool mDropVideoUntilNextDiscontinuity;
 
-  // True if we need to decode forwards to the seek target inside
-  // mCurrentSeekTarget.
-  bool mDecodeToSeekTarget;
-
   // Track the current seek promise made by the reader.
   MozPromiseRequestHolder<MediaDecoderReader::SeekPromise> mSeekRequest;
 

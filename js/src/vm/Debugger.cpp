@@ -311,18 +311,13 @@ class MOZ_RAII js::EnterDebuggeeNoExecute
     }
 
 #ifdef DEBUG
-    static bool isUniqueLockedInStack(JSContext* cx, Debugger& dbg) {
+    static bool isLockedInStack(JSContext* cx, Debugger& dbg) {
         JSRuntime* rt = cx->runtime();
-        EnterDebuggeeNoExecute* found = nullptr;
         for (EnterDebuggeeNoExecute* it = rt->noExecuteDebuggerTop; it; it = it->prev_) {
-            if (&it->debugger() == &dbg && !it->unlocked_) {
-                // This invariant does not hold when DebuggeeWouldRun is only a
-                // warning.
-                MOZ_ASSERT_IF(rt->options().throwOnDebuggeeWouldRun(), !found);
-                found = it;
-            }
+            if (&it->debugger() == &dbg)
+                return !it->unlocked_;
         }
-        return !!found;
+        return false;
     }
 #endif
 
@@ -1155,7 +1150,7 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
 
     // Uncaught exceptions arise from Debugger code, and so we must already be
     // in an NX section.
-    MOZ_ASSERT(EnterDebuggeeNoExecute::isUniqueLockedInStack(cx, *this));
+    MOZ_ASSERT(EnterDebuggeeNoExecute::isLockedInStack(cx, *this));
 
     if (cx->isExceptionPending()) {
         if (callHook && uncaughtExceptionHook) {

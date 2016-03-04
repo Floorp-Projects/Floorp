@@ -6,8 +6,8 @@
 struct MOZ_HEAP_CLASS Heap {
   int i;
   Heap() {}
-  MOZ_IMPLICIT Heap(int i) {}
-  Heap(int i, int j) {}
+  MOZ_IMPLICIT Heap(int a) {}
+  Heap(int a, int b) {}
   void *operator new(size_t x) throw() { return 0; }
   void *operator new(size_t blah, char *buffer) { return buffer; }
 };

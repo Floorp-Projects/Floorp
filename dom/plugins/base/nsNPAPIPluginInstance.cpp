@@ -98,67 +98,6 @@ static bool EnsureGLContext()
   return sPluginContext != nullptr;
 }
 
-class SharedPluginTexture final {
-public:
-  NS_INLINE_DECL_REFCOUNTING(SharedPluginTexture)
-
-  SharedPluginTexture() : mLock("SharedPluginTexture.mLock")
-  {
-  }
-
-  nsNPAPIPluginInstance::TextureInfo Lock()
-  {
-    if (!EnsureGLContext()) {
-      mTextureInfo.mTexture = 0;
-      return mTextureInfo;
-    }
-
-    if (!mTextureInfo.mTexture && sPluginContext->MakeCurrent()) {
-      sPluginContext->fGenTextures(1, &mTextureInfo.mTexture);
-    }
-
-    mLock.Lock();
-    return mTextureInfo;
-  }
-
-  void Release(nsNPAPIPluginInstance::TextureInfo& aTextureInfo)
-  {
-    mTextureInfo = aTextureInfo;
-    mLock.Unlock();
-  }
-
-  EGLImage CreateEGLImage()
-  {
-    MutexAutoLock lock(mLock);
-
-    if (!EnsureGLContext())
-      return 0;
-
-    if (mTextureInfo.mWidth == 0 || mTextureInfo.mHeight == 0)
-      return 0;
-
-    GLuint& tex = mTextureInfo.mTexture;
-    EGLImage image = gl::CreateEGLImage(sPluginContext, tex);
-
-    // We want forget about this now, so delete the texture. Assigning it to zero
-    // ensures that we create a new one in Lock()
-    sPluginContext->fDeleteTextures(1, &tex);
-    tex = 0;
-
-    return image;
-  }
-
-private:
-  // Private destructor, to discourage deletion outside of Release():
-  ~SharedPluginTexture()
-  {
-  }
-
-  nsNPAPIPluginInstance::TextureInfo mTextureInfo;
-
-  Mutex mLock;
-};
-
 static std::map<NPP, nsNPAPIPluginInstance*> sPluginNPPMap;
 
 #endif
@@ -259,7 +198,6 @@ nsNPAPIPluginInstance::Destroy()
   if (mContentSurface)
     mContentSurface->SetFrameAvailableCallback(nullptr);
 
-  mContentTexture = nullptr;
   mContentSurface = nullptr;
 
   std::map<void*, VideoInfo*>::iterator it;
@@ -930,30 +868,12 @@ void nsNPAPIPluginInstance::SetWakeLock(bool aLocked)
                       hal::WAKE_LOCK_NO_CHANGE);
 }
 
-void nsNPAPIPluginInstance::EnsureSharedTexture()
-{
-  if (!mContentTexture)
-    mContentTexture = new SharedPluginTexture();
-}
-
 GLContext* nsNPAPIPluginInstance::GLContext()
 {
   if (!EnsureGLContext())
     return nullptr;
 
   return sPluginContext;
-}
-
-nsNPAPIPluginInstance::TextureInfo nsNPAPIPluginInstance::LockContentTexture()
-{
-  EnsureSharedTexture();
-  return mContentTexture->Lock();
-}
-
-void nsNPAPIPluginInstance::ReleaseContentTexture(nsNPAPIPluginInstance::TextureInfo& aTextureInfo)
-{
-  EnsureSharedTexture();
-  mContentTexture->Release(aTextureInfo);
 }
 
 already_AddRefed<AndroidSurfaceTexture> nsNPAPIPluginInstance::CreateSurfaceTexture()
@@ -992,15 +912,6 @@ void* nsNPAPIPluginInstance::AcquireContentWindow()
   }
 
   return mContentSurface->NativeWindow()->Handle();
-}
-
-EGLImage
-nsNPAPIPluginInstance::AsEGLImage()
-{
-  if (!mContentTexture)
-    return 0;
-
-  return mContentTexture->CreateEGLImage();
 }
 
 AndroidSurfaceTexture*

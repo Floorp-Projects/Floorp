@@ -117,7 +117,7 @@ public:
    * @param aNode  [in] DOM node for the accessible that may be affected by ARIA
    * @return        the nsIContent which may have ARIA markup
    */
-  static nsIContent* GetRoleContent(nsINode *aNode);
+  static mozilla::dom::Element* GetRoleContent(nsINode *aNode);
 
   /**
    * Is the first passed in node an ancestor of the second?

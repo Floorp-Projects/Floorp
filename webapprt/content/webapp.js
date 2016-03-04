@@ -110,7 +110,8 @@ function onDOMContentLoaded() {
     // Set the principal to the correct app ID.  Since this is a subsequent
     // window, we know that WebappRT.configPromise has been resolved, so we
     // don't have to yield to it before accessing WebappRT.appID.
-    gAppBrowser.docShell.setIsApp(WebappRT.appID);
+    gAppBrowser.docShell.frameType = Ci.nsIDocShell.FRAME_TYPE_APP;
+    gAppBrowser.docShell.setOriginAttributes({appId: WebappRT.appID});
   }
 }
 window.addEventListener("DOMContentLoaded", onDOMContentLoaded, false);

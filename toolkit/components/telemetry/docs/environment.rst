@@ -43,6 +43,7 @@ Structure::
         },
         searchCohort: <string>, // optional, contains an identifier for any active search A/B experiments
         e10sEnabled: <bool>, // whether e10s is on, i.e. browser tabs open by default in a different process
+        e10sCohort: <string>, // which e10s cohort was assigned for this user
         telemetryEnabled: <bool>, // false on failure
         locale: <string>, // e.g. "it", null on failure
         update: {

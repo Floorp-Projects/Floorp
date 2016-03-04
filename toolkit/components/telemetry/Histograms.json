@@ -663,13 +663,14 @@
     "n_buckets": 50,
     "description": "Committed, unused heap memory (KB)"
   },
-  "MEMORY_HEAP_COMMITTED_UNUSED_RATIO": {
+  "MEMORY_HEAP_OVERHEAD_FRACTION": {
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1252375],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 100,
     "n_buckets": 25,
-    "description": "Ratio of committed, unused memory to allocated memory in the heap (percentage)."
+    "description": "Fraction of committed heap memory that is overhead (percentage)."
   },
   "GHOST_WINDOWS": {
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
