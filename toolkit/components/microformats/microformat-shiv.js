@@ -1,8 +1,8 @@
 /*
    Modern
-   microformat-shiv - v1.3.3
-   Built: 2015-12-31 01:12 - http://microformat-shiv.com
-   Copyright (c) 2015 Glenn Jones
+   microformat-shiv - v1.4.0
+   Built: 2016-03-02 10:03 - http://microformat-shiv.com
+   Copyright (c) 2016 Glenn Jones
    Licensed MIT
 */
 
@@ -22,7 +22,7 @@ var Microformats; // jshint ignore:line
     var modules = {};
 
 
-    modules.version = '1.3.3';
+    modules.version = '1.4.0';
     modules.livingStandard = '2015-09-25T12:26:04Z';
 
     /**
@@ -401,23 +401,27 @@ var Microformats; // jshint ignore:line
 
         // find microformats of a given type and return node structures
         findFilterNodes: function(rootNode, filters) {
+            if(modules.utils.isString(filters)){
+                filters = [filters];
+            }
             var newRootNode = modules.domUtils.createNode('div'),
                 items = this.findRootNodes(rootNode, true),
                 i = 0,
                 x = 0,
                 y = 0;
 
+            // add v1 names
+            y = filters.length;
+            while (y--) {
+                if(this.getMapping(filters[y])){
+                    var v1Name = this.getMapping(filters[y]).root;
+                    filters.push(v1Name);
+                }
+            }
+
             if(items){
                 i = items.length;
                 while(x < i) {
-                    // add v1 names
-                    y = filters.length;
-                    while (y--) {
-                        if(this.getMapping(filters[y])){
-                            var v1Name = this.getMapping(filters[y]).root;
-                            filters.push(v1Name);
-                        }
-                    }
                     // append matching nodes into newRootNode
                     y = filters.length;
                     while (y--) {
