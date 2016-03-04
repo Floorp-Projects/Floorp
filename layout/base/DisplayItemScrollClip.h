@@ -29,8 +29,7 @@ class DisplayItemClip;
  * in that case, mIsAsyncScrollable on the scroll clip will be false.
  * When async-scrollable scroll frames are nested, the inner display items
  * can walk the whole chain of scroll clips via the DisplayItemScrollClip's
- * mParent pointer, or its mCrossStackingContextParent pointer if they need
- * access to the complete chain.
+ * mParent pointer.
  * Storing scroll clips on display items allows easy access of all scroll
  * frames that affect a certain display item, and it allows some display list
  * operations to compute more accurate clips, for example when computing the
@@ -40,7 +39,6 @@ class DisplayItemClip;
 class DisplayItemScrollClip {
 public:
   DisplayItemScrollClip(const DisplayItemScrollClip* aParent,
-                        const DisplayItemScrollClip* aCrossStackingContextParent,
                         nsIScrollableFrame* aScrollableFrame,
                         const DisplayItemClip* aClip,
                         bool aIsAsyncScrollable)
@@ -48,9 +46,7 @@ public:
     , mScrollableFrame(aScrollableFrame)
     , mClip(aClip)
     , mIsAsyncScrollable(aIsAsyncScrollable)
-    , mCrossStackingContextParent(aCrossStackingContextParent)
-    , mCrossStackingContextDepth(aCrossStackingContextParent ?
-        aCrossStackingContextParent->mCrossStackingContextDepth + 1 : 1)
+    , mDepth(aParent ? aParent->mDepth + 1 : 1)
   {
     MOZ_ASSERT(mScrollableFrame);
   }
@@ -118,14 +114,9 @@ public:
 
 private:
   static uint32_t Depth(const DisplayItemScrollClip* aSC)
-  { return aSC ? aSC->mCrossStackingContextDepth : 0; }
+  { return aSC ? aSC->mDepth : 0; }
 
-  /**
-   * The previous (outer) scroll clip, across stacking contexts, or null.
-   */
-  const DisplayItemScrollClip* mCrossStackingContextParent;
-
-  const uint32_t mCrossStackingContextDepth;
+  const uint32_t mDepth;
 };
 
 } // namespace mozilla

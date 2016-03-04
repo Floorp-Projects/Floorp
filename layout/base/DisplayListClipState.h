@@ -29,7 +29,6 @@ public:
     , mCurrentCombinedClip(nullptr)
     , mScrollClipContentDescendants(nullptr)
     , mScrollClipContainingBlockDescendants(nullptr)
-    , mCrossStackingContextParentScrollClip(nullptr)
     , mStackingContextAncestorSC(nullptr)
   {}
 
@@ -95,7 +94,6 @@ private:
       mClipContentDescendants = nullptr;
       mClipContainingBlockDescendants = nullptr;
       mCurrentCombinedClip = nullptr;
-      mCrossStackingContextParentScrollClip = GetCurrentInnermostScrollClip();
       mScrollClipContentDescendants = nullptr;
       mScrollClipContainingBlockDescendants = nullptr;
       mStackingContextAncestorSC = nullptr;
@@ -184,7 +182,6 @@ private:
    */
   const DisplayItemScrollClip* mScrollClipContentDescendants;
   const DisplayItemScrollClip* mScrollClipContainingBlockDescendants;
-  const DisplayItemScrollClip* mCrossStackingContextParentScrollClip;
 
   /**
    * A scroll clip that is an ancestor of all the scroll clips that were
