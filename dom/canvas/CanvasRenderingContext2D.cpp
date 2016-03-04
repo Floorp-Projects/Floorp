@@ -3499,13 +3499,9 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
 
   virtual nscoord GetWidth()
   {
-    gfxTextRun::Metrics textRunMetrics = mTextRun->MeasureText(0,
-                                                               mTextRun->GetLength(),
-                                                               mDoMeasureBoundingBox ?
-                                                                 gfxFont::TIGHT_INK_EXTENTS :
-                                                                 gfxFont::LOOSE_INK_EXTENTS,
-                                                               mDrawTarget,
-                                                               nullptr);
+    gfxTextRun::Metrics textRunMetrics = mTextRun->MeasureText(
+        mDoMeasureBoundingBox ? gfxFont::TIGHT_INK_EXTENTS
+                              : gfxFont::LOOSE_INK_EXTENTS, mDrawTarget);
 
     // this only measures the height; the total width is gotten from the
     // the return value of ProcessText.
@@ -3535,13 +3531,10 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
       // glyph string on OS X and DWrite where textrun widths may
       // involve fractional pixels.
       gfxTextRun::Metrics textRunMetrics =
-        mTextRun->MeasureText(0,
-                              mTextRun->GetLength(),
-                              mDoMeasureBoundingBox ?
-                                  gfxFont::TIGHT_INK_EXTENTS :
-                                  gfxFont::LOOSE_INK_EXTENTS,
-                              mDrawTarget,
-                              nullptr);
+        mTextRun->MeasureText(mDoMeasureBoundingBox ?
+                                gfxFont::TIGHT_INK_EXTENTS :
+                                gfxFont::LOOSE_INK_EXTENTS,
+                              mDrawTarget);
       inlineCoord += textRunMetrics.mAdvanceWidth;
       // old code was:
       //   point.x += width * mAppUnitsPerDevPixel;
