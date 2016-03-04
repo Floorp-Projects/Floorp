@@ -68,11 +68,12 @@ class FunctionDecoder
     ModuleGenerator& mg_;
     FunctionGenerator& fg_;
     uint32_t funcIndex_;
+    uint32_t blockDepth_;
 
   public:
     FunctionDecoder(JSContext* cx, Decoder& d, ModuleGenerator& mg, FunctionGenerator& fg,
                     uint32_t funcIndex)
-      : cx_(cx), d_(d), mg_(mg), fg_(fg), funcIndex_(funcIndex)
+      : cx_(cx), d_(d), mg_(mg), fg_(fg), funcIndex_(funcIndex), blockDepth_(0)
     {}
     JSContext* cx() const { return cx_; }
     Decoder& d() const { return d_; }
@@ -83,6 +84,18 @@ class FunctionDecoder
 
     bool fail(const char* str) {
         return Fail(cx_, d_, str);
+    }
+
+    MOZ_WARN_UNUSED_RESULT bool pushLabel() {
+        ++blockDepth_;
+        return blockDepth_ != 0;
+    }
+    void popLabel() {
+        MOZ_ASSERT(blockDepth_ != 0);
+        --blockDepth_;
+    }
+    MOZ_WARN_UNUSED_RESULT bool isLabelInBounds(uint32_t depth) {
+        return depth < blockDepth_;
     }
 };
 
@@ -291,8 +304,16 @@ DecodeSetLocal(FunctionDecoder& f, ExprType expected)
 }
 
 static bool
-DecodeBlock(FunctionDecoder& f, ExprType expected)
+DecodeBlock(FunctionDecoder& f, bool isLoop, ExprType expected)
 {
+    if (!f.pushLabel())
+        return f.fail("nesting overflow");
+
+    if (isLoop) {
+        if (!f.pushLabel())
+            return f.fail("nesting overflow");
+    }
+
     uint32_t numExprs;
     if (!f.d().readVarU32(&numExprs))
         return f.fail("unable to read block's number of expressions");
@@ -308,6 +329,11 @@ DecodeBlock(FunctionDecoder& f, ExprType expected)
         if (!CheckType(f, ExprType::Void, expected))
             return false;
     }
+
+    if (isLoop)
+        f.popLabel();
+
+    f.popLabel();
 
     return true;
 }
@@ -389,6 +415,33 @@ DecodeStore(FunctionDecoder& f, ExprType expected, ExprType type)
 }
 
 static bool
+DecodeBr(FunctionDecoder& f, ExprType expected)
+{
+    uint32_t relativeDepth;
+    if (!f.d().readVarU32(&relativeDepth))
+        return false;
+
+    if (!f.isLabelInBounds(relativeDepth))
+        return f.fail("branch depth exceeds current nesting level");
+
+    return CheckType(f, ExprType::Void, expected);
+}
+
+static bool
+DecodeBrIf(FunctionDecoder& f, ExprType expected)
+{
+    uint32_t relativeDepth;
+    if (!f.d().readVarU32(&relativeDepth))
+        return false;
+
+    if (!f.isLabelInBounds(relativeDepth))
+        return f.fail("branch depth exceeds current nesting level");
+
+    return CheckType(f, ExprType::Void, expected) &&
+           DecodeExpr(f, ExprType::I32);
+}
+
+static bool
 DecodeReturn(FunctionDecoder& f)
 {
     return f.ret() == ExprType::Void ||
@@ -424,7 +477,9 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::SetLocal:
         return DecodeSetLocal(f, expected);
       case Expr::Block:
-        return DecodeBlock(f, expected);
+        return DecodeBlock(f, /* isLoop */ false, expected);
+      case Expr::Loop:
+        return DecodeBlock(f, /* isLoop */ true, expected);
       case Expr::If:
         return DecodeIfElse(f, /* hasElse */ false, expected);
       case Expr::IfElse:
@@ -618,6 +673,10 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
         return DecodeStore(f, expected, ExprType::F32);
       case Expr::F64StoreMem:
         return DecodeStore(f, expected, ExprType::F64);
+      case Expr::Br:
+        return DecodeBr(f, expected);
+      case Expr::BrIf:
+        return DecodeBrIf(f, expected);
       case Expr::Return:
         return DecodeReturn(f);
       default:
@@ -1060,6 +1119,8 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
         if (!CheckType(f, ExprType::Void, f.ret()))
             return false;
     }
+
+    MOZ_ASSERT(!f.isLabelInBounds(0));
 
     const uint8_t* bodyEnd = d.currentPosition();
     uintptr_t bodyLength = bodyEnd - bodyBegin;
