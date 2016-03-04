@@ -20,6 +20,7 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla += [
     'AnimationComparator.h',
+    'AnimationPerformanceWarning.h',
     'AnimationUtils.h',
     'AnimValuesStyleRule.h',
     'ComputedTimingFunction.h',
@@ -34,6 +35,7 @@ UNIFIED_SOURCES += [
     'AnimationEffectReadOnly.cpp',
     'AnimationEffectTiming.cpp',
     'AnimationEffectTimingReadOnly.cpp',
+    'AnimationPerformanceWarning.cpp',
     'AnimationTimeline.cpp',
     'AnimationUtils.cpp',
     'AnimValuesStyleRule.cpp',
