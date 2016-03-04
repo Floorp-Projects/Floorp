@@ -15,6 +15,9 @@ function shouldCloseNotCleanly(e) {
   ok(!e.wasClean, "the ws connection in test " + ws._testNumber + " shouldn't be closed cleanly");
 }
 
+function ignoreError(e) {
+}
+
 function CreateTestWS(ws_location, ws_protocol) {
   var ws;
 
@@ -26,21 +29,22 @@ function CreateTestWS(ws_location, ws_protocol) {
     }
 
     ws._testNumber = current_test;
-    ws._receivedCloseEvent = false;
     ok(true, "Created websocket for test " + ws._testNumber +"\n");
 
     ws.onerror = function(e) {
       ok(false, "onerror called on test " + e.target._testNumber + "!");
     }
 
-    ws.addEventListener("close", function(e) {
-      ws._receivedCloseEvent = true;
-    }, false);
   } catch (e) {
     throw e;
   }
 
   return ws;
+}
+
+function forcegc() {
+  SpecialPowers.forceGC();
+  SpecialPowers.gc();
 }
 
 function doTest() {
