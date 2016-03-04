@@ -2805,36 +2805,6 @@ AC_SUBST(MOZ_GLUE_IN_PROGRAM)
 AC_SUBST_LIST(MOZ_GLUE_WRAP_LDFLAGS)
 
 dnl ========================================================
-dnl = Use malloc wrapper lib
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(wrap-malloc,
-[  --enable-wrap-malloc    Wrap malloc calls (gnu linker only)],
-    _WRAP_MALLOC=1,
-    _WRAP_MALLOC= )
-
-if test -n "$_WRAP_MALLOC"; then
-    if test "$GNU_CC"; then
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=malloc,--wrap=calloc,--wrap=valloc,--wrap=free,--wrap=realloc,--wrap=memalign"
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=__builtin_new,--wrap=__builtin_vec_new,--wrap=__builtin_delete,--wrap=__builtin_vec_delete"
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=strdup,--wrap=strndup"
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=posix_memalign,--wrap=malloc_usable_size"
-        dnl Wrap operator new and operator delete on Android.
-        if test "$OS_TARGET" = "Android"; then
-            WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=_Znwj,--wrap=_Znaj,--wrap=_ZdlPv,--wrap=_ZdaPv"
-        fi
-    else
-        AC_MSG_ERROR([--enable-wrap-malloc is not supported for non-GNU toolchains])
-    fi
-fi
-
-dnl ========================================================
-dnl = Location of malloc wrapper lib
-dnl ========================================================
-MOZ_ARG_WITH_STRING(wrap-malloc,
-[  --with-wrap-malloc=DIR  Location of malloc wrapper library],
-    WRAP_LDFLAGS="${WRAP_LDFLAGS} $withval")
-
-dnl ========================================================
 dnl = Use a smaller chunk size for GC chunks
 dnl ========================================================
 dnl Use large (1MB) chunks by default.  For B2G this option is used to give
