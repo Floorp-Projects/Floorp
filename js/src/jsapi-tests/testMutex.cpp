@@ -25,9 +25,14 @@ struct CounterAndBit
     }
 };
 
+const static bool shouldPrint = false;
+
 void
 printDiagnosticMessage(uint64_t seen)
 {
+    if (!shouldPrint)
+        return;
+
     fprintf(stderr, "Thread %p saw ", PR_GetCurrentThread());
     for (auto i : mozilla::MakeRange(numThreads)) {
         if (seen & (uint64_t(1) << i))
