@@ -52,13 +52,11 @@ add_task(function* () {
   yield promiseTabLoad(pluginTab, gTestRoot + "plugin_test.html");
   yield promiseTabLoad(prefTab, "about:preferences");
 
-  let result = yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
     let doc = content.document;
     let plugin = doc.getElementById("testplugin");
-    return !!plugin;
+    Assert.ok(!!plugin, "plugin is loaded");
   });
-
-  is(result, true, "plugin is loaded");
 
   let ppromise = promiseWaitForEvent(window, "MozAfterPaint");
   gBrowser.selectedTab = prefTab;
@@ -80,24 +78,23 @@ add_task(function* () {
     EventUtils.synthesizeMouseAtCenter(tabStripContainer.childNodes[1], {}, window);
     yield ppromise;
 
-    result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+    yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
-      return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
+      Assert.ok(XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible(),
+        "plugin is visible");
     });
-
-    is(result, true, "plugin is visible");
 
     ppromise = promiseWaitForEvent(window, "MozAfterPaint");
     EventUtils.synthesizeMouseAtCenter(tabStripContainer.childNodes[2], {}, window);
     yield ppromise;
 
-    result = yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
+    yield ContentTask.spawn(pluginTab.linkedBrowser, null, function*() {
       let doc = content.document;
       let plugin = doc.getElementById("testplugin");
-      return XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible();
+      Assert.ok(!XPCNativeWrapper.unwrap(plugin).nativeWidgetIsVisible(),
+        "plugin is hidden");
     });
-    is(result, false, "plugin is hidden");
   }
 
   gBrowser.removeTab(prefTab);
