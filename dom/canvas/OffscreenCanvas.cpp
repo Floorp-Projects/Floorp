@@ -89,11 +89,13 @@ OffscreenCanvas::ClearResources()
     mCanvasClient = nullptr;
 
     if (mCanvasRenderer) {
-      nsCOMPtr<nsIThread> activeThread = mCanvasRenderer->GetActiveThread();
-      MOZ_RELEASE_ASSERT(activeThread);
-      bool current;
-      activeThread->IsOnCurrentThread(&current);
-      MOZ_RELEASE_ASSERT(current);
+      if (mCanvasRenderer->mGLContext) {
+        nsCOMPtr<nsIThread> activeThread = mCanvasRenderer->GetActiveThread();
+        MOZ_RELEASE_ASSERT(activeThread);
+        bool current;
+        activeThread->IsOnCurrentThread(&current);
+        MOZ_RELEASE_ASSERT(current);
+      }
       mCanvasRenderer->SetCanvasClient(nullptr);
       mCanvasRenderer->mContext = nullptr;
       mCanvasRenderer->mGLContext = nullptr;
