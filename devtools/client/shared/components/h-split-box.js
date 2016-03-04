@@ -69,11 +69,19 @@ module.exports = createClass({
   },
 
   _onMouseDown(event) {
+    if (event.button !== 0) {
+      return;
+    }
+
     this.setState({ mouseDown: true });
     event.preventDefault();
   },
 
   _onMouseUp(event) {
+    if (event.button !== 0 || !this.state.mouseDown) {
+      return;
+    }
+
     this.setState({ mouseDown: false });
     event.preventDefault();
   },

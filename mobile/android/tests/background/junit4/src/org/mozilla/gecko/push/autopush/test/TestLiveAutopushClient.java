@@ -35,14 +35,14 @@ import static org.mockito.Mockito.verify;
 @RunWith(TestRunner.class)
 @Ignore("Live test that requires network connection -- remove this line to run this test.")
 public class TestLiveAutopushClient {
-    final String serverURL = "https://updates-autopush-dev.stage.mozaws.net/v1/gcm/829133274407";
+    final String serverURL = "https://updates-autopush.stage.mozaws.net/v1/gcm/829133274407";
 
     protected AutopushClient client;
 
     @Before
     public void setUp() throws Exception {
         BaseResource.rewriteLocalhost = false;
-        client = new AutopushClient(serverURL, WaitHelper.newSynchronousExecutor());
+        client = new AutopushClient(serverURL, Utils.newSynchronousExecutor());
     }
 
     protected <T> T assertSuccess(RequestDelegate<T> delegate, Class<T> klass) {
@@ -93,7 +93,7 @@ public class TestLiveAutopushClient {
 
         final AutopushClientException failureException = assertFailure(reunregisterDelegate, Void.class);
         Assert.assertThat(failureException, instanceOf(AutopushClientException.AutopushClientRemoteException.class));
-        Assert.assertTrue(((AutopushClientException.AutopushClientRemoteException) failureException).isNotFound());
+        Assert.assertTrue(((AutopushClientException.AutopushClientRemoteException) failureException).isGone());
     }
 
     @Test
@@ -122,13 +122,13 @@ public class TestLiveAutopushClient {
 
         Assert.assertNull(assertSuccess(unsubscribeDelegate, Void.class));
 
-        // Trying to unsubscribe a second time should give a 404.
+        // Trying to unsubscribe a second time should give a 410.
         final RequestDelegate<Void> reunsubscribeDelegate = mock(RequestDelegate.class);
         client.unsubscribeChannel(registerResponse.uaid, registerResponse.secret, subscribeResponse.channelID, reunsubscribeDelegate);
 
         final AutopushClientException reunsubscribeFailureException = assertFailure(reunsubscribeDelegate, Void.class);
         Assert.assertThat(reunsubscribeFailureException, instanceOf(AutopushClientException.AutopushClientRemoteException.class));
-        Assert.assertTrue(((AutopushClientException.AutopushClientRemoteException) reunsubscribeFailureException).isNotFound());
+        Assert.assertTrue(((AutopushClientException.AutopushClientRemoteException) reunsubscribeFailureException).isGone());
 
         // Trying to unsubscribe from a non-existent channel should give a 404.  Right now it gives a 401!
         final RequestDelegate<Void> badUnsubscribeDelegate = mock(RequestDelegate.class);

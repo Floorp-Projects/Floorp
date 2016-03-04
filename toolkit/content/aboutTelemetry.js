@@ -325,6 +325,12 @@ var PingPicker = {
     this.viewCurrentPingData = viewCurrent;
     this.viewStructuredPingData = viewStructured;
 
+    // If we have no archived pings, disable the ping archive selection.
+    // This can happen on new profiles or if the ping archive is disabled.
+    let archivedPingList = yield TelemetryArchive.promiseArchivedPingList();
+    let sourceArchived = document.getElementById("ping-source-archive");
+    sourceArchived.disabled = (archivedPingList.length == 0);
+
     if (currentChanged) {
       if (this.viewCurrentPingData) {
         document.getElementById("current-ping-picker").classList.remove("hidden");
@@ -332,7 +338,7 @@ var PingPicker = {
         this._updateCurrentPingData();
       } else {
         document.getElementById("current-ping-picker").classList.add("hidden");
-        yield this._updateArchivedPingList();
+        yield this._updateArchivedPingList(archivedPingList);
         document.getElementById("archived-ping-picker").classList.remove("hidden");
       }
     }
@@ -361,8 +367,7 @@ var PingPicker = {
                            .then((ping) => displayPingData(ping, true));
   },
 
-  _updateArchivedPingList: Task.async(function*() {
-    let pingList = yield TelemetryArchive.promiseArchivedPingList();
+  _updateArchivedPingList: Task.async(function*(pingList) {
     // The archived ping list is sorted in ascending timestamp order,
     // but descending is more practical for the operations we do here.
     pingList.reverse();

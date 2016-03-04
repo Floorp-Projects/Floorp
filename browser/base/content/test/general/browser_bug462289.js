@@ -17,7 +17,7 @@ function test()
   tab2 = gBrowser.addTab("about:blank", {skipAnimation: true});
 
   EventUtils.synthesizeMouseAtCenter(tab1, {});
-  setTimeout(step2, 0);
+  executeSoon(step2);
 }
 
 function step2()
@@ -26,7 +26,7 @@ function step2()
   isnot(document.activeElement, tab1, "1st click on tab1 does not activate tab");
 
   EventUtils.synthesizeMouseAtCenter(tab1, {});
-  setTimeout(step3, 0);
+  executeSoon(step3);
 }
 
 function step3()
@@ -41,7 +41,7 @@ function step3()
   is(document.activeElement, tab1, "tab key to selected tab1 activates tab");
 
   EventUtils.synthesizeMouseAtCenter(tab1, {});
-  setTimeout(step4, 0);
+  executeSoon(step4);
 }
 
 function step4()
@@ -49,21 +49,24 @@ function step4()
   is(gBrowser.selectedTab, tab1, "3rd click on activated tab1 keeps tab selected");
   is(document.activeElement, tab1, "3rd click on activated tab1 keeps tab activated");
 
+  gBrowser.addEventListener("TabSwitchDone", step5);
   EventUtils.synthesizeMouseAtCenter(tab2, {});
-  setTimeout(step5, 0);
 }
 
 function step5()
 {
+  gBrowser.removeEventListener("TabSwitchDone", step5);
+
   // The tabbox selects a tab within a setTimeout in a bubbling mousedown event
   // listener, and focuses the current tab if another tab previously had focus.
   is(gBrowser.selectedTab, tab2, "click on tab2 while tab1 is activated selects tab");
   is(document.activeElement, tab2, "click on tab2 while tab1 is activated activates tab");
 
-  ok(true, "focusing content then sending middle-button mousedown to tab2.");
+  info("focusing content then sending middle-button mousedown to tab2.");
   gBrowser.selectedBrowser.focus();
+
   EventUtils.synthesizeMouseAtCenter(tab2, {button: 1, type: "mousedown"});
-  setTimeout(step6, 0);
+  executeSoon(step6);
 }
 
 function step6()

@@ -18,9 +18,6 @@ const { CallWatcherFront } = require("devtools/server/actors/call-watcher");
 const { CanvasFront } = require("devtools/server/actors/canvas");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-const Telemetry = require("devtools/client/shared/telemetry");
-const telemetry = new Telemetry();
-
 const CANVAS_ACTOR_RECORDING_ATTEMPT = DevToolsUtils.testing ? 500 : 5000;
 
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
@@ -132,7 +129,6 @@ var EventsHandler = {
    * Listen for events emitted by the current tab target.
    */
   initialize: function() {
-    telemetry.toolOpened("canvasdebugger");
     this._onTabNavigated = this._onTabNavigated.bind(this);
     gTarget.on("will-navigate", this._onTabNavigated);
     gTarget.on("navigate", this._onTabNavigated);
@@ -142,7 +138,6 @@ var EventsHandler = {
    * Remove events emitted by the current tab target.
    */
   destroy: function() {
-    telemetry.toolClosed("canvasdebugger");
     gTarget.off("will-navigate", this._onTabNavigated);
     gTarget.off("navigate", this._onTabNavigated);
   },

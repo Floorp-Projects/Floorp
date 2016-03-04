@@ -68,8 +68,8 @@ add_task(function*() {
   info("Normal click on result");
   let tabPromise = promiseTabLoadEvent(tab);
   EventUtils.synthesizeMouseAtCenter(result, {});
-  let loadEvent = yield tabPromise;
-  is(loadEvent.target.location.href, "http://example.com/?q=something", "Tab should have loaded from clicking on result");
+  yield tabPromise;
+  is(tab.linkedBrowser.currentURI.spec, "http://example.com/?q=something", "Tab should have loaded from clicking on result");
 
   // Middle-click on the result
   info("Middle-click on result");
@@ -85,6 +85,6 @@ add_task(function*() {
   let tabOpenEvent = yield tabPromise;
   let newTab = tabOpenEvent.target;
   tabs.push(newTab);
-  loadEvent = yield promiseTabLoadEvent(newTab);
-  is(loadEvent.target.location.href, "http://example.com/?q=somethingmore", "Tab should have loaded from middle-clicking on result");
+  yield promiseTabLoadEvent(newTab);
+  is(newTab.linkedBrowser.currentURI.spec, "http://example.com/?q=somethingmore", "Tab should have loaded from middle-clicking on result");
 });
