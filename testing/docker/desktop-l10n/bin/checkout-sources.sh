@@ -40,6 +40,13 @@ then
     fi
 fi
 
+# desktop_l10n.py expects /builds/tooltool.py to be present
+if ! [ -f /builds/tooltool.py ]
+then
+    git clone https://github.com/mozilla/build-tooltool
+    cp build-tooltool/tooltool.py /builds
+fi
+
 # TODO - include tools repository in EXTRA_CHECKOUT_REPOSITORIES list
 for extra_repo in $EXTRA_CHECKOUT_REPOSITORIES; do
     BASE_REPO="${extra_repo}_BASE_REPOSITORY"
@@ -51,5 +58,5 @@ for extra_repo in $EXTRA_CHECKOUT_REPOSITORIES; do
     tc-vcs checkout ${!DEST_DIR} ${!BASE_REPO} ${!HEAD_REPO} ${!HEAD_REV} ${!HEAD_REF}
 done
 
-export GECKO_DIR=$WORKSPACE/build/src
+export GECKO_DIR=$WORKSPACE/build/mozilla-central
 tc-vcs checkout $GECKO_DIR $GECKO_BASE_REPOSITORY $GECKO_HEAD_REPOSITORY $GECKO_HEAD_REV $GECKO_HEAD_REF
