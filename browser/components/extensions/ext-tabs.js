@@ -653,7 +653,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         };
 
         return context.sendMessage(browser.messageManager, "Extension:Capture",
-                                   message, recipient);
+                                   message, {recipient});
       },
 
       detectLanguage: function(tabId) {
@@ -666,7 +666,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         let recipient = {innerWindowID: browser.innerWindowID};
 
         return context.sendMessage(browser.messageManager, "Extension:DetectLanguage",
-                                   {}, recipient);
+                                   {}, {recipient});
       },
 
       _execute: function(tabId, details, kind, method) {
@@ -724,7 +724,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           options.run_at = "document_idle";
         }
 
-        return context.sendMessage(mm, "Extension:Execute", {options}, recipient);
+        return context.sendMessage(mm, "Extension:Execute", {options}, {recipient});
       },
 
       executeScript: function(tabId, details) {
