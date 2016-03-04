@@ -735,24 +735,38 @@ element.generateUUID = function() {
  *
  * @param {Node} node
  *     Target node.
- * @param {number=} x
- *     Horizontal offset relative to target.  Defaults to the centre of
- *     the target's bounding box.
- * @param {number=} y
- *     Vertical offset relative to target.  Defaults to the centre of
- *     the target's bounding box.
+ * @param {number=} xOffset
+ *     Horizontal offset relative to target's top-left corner.
+ *     Defaults to the centre of the target's bounding box.
+ * @param {number=} yOffset
+ *     Vertical offset relative to target's top-left corner.  Defaults to
+ *     the centre of the target's bounding box.
+ *
+ * @return {Object.<string, number>}
+ *     X- and Y coordinates.
+ *
+ * @throws TypeError
+ *     If |xOffset| or |yOffset| are not numbers.
  */
-element.coordinates = function(node, x = undefined, y = undefined) {
+element.coordinates = function(
+    node, xOffset = undefined, yOffset = undefined) {
+
   let box = node.getBoundingClientRect();
-  if (!x) {
-    x = box.width / 2.0;
+
+  if (typeof xOffset == "undefined" || xOffset === null) {
+    xOffset = box.width / 2.0;
   }
-  if (!y) {
-    y = box.height / 2.0;
+  if (typeof yOffset == "undefined" || yOffset === null) {
+    yOffset = box.height / 2.0;
   }
+
+  if (typeof yOffset != "number" || typeof xOffset != "number") {
+    throw new TypeError("Offset must be a number");
+  }
+
   return {
-    x: box.left + x,
-    y: box.top + y,
+    x: box.left + xOffset,
+    y: box.top + yOffset,
   };
 };
 
