@@ -382,7 +382,6 @@ class Options
 
   Mode mMode;
   NumOption<size_t> mSampleBelowSize;
-  NumOption<uint32_t> mMaxFrames;
   bool mShowDumpStats;
 
   void BadArg(const char* aArg);
@@ -404,7 +403,6 @@ public:
   const char* DMDEnvVar() const { return mDMDEnvVar; }
 
   size_t SampleBelowSize() const { return mSampleBelowSize.mActual; }
-  size_t MaxFrames()       const { return mMaxFrames.mActual; }
   size_t ShowDumpStats()   const { return mShowDumpStats; }
 };
 
@@ -695,9 +693,7 @@ public:
 
 private:
   uint32_t mLength;             // The number of PCs.
-  const void* mPcs[MaxFrames];  // The PCs themselves.  If --max-frames is less
-                                // than 24, this array is bigger than
-                                // necessary, but that case is unusual.
+  const void* mPcs[MaxFrames];  // The PCs themselves.
 
 public:
   StackTrace() : mLength(0) {}
@@ -779,7 +775,7 @@ StackTrace::Get(Thread* aT)
     AutoUnlockState unlock;
     uint32_t skipFrames = 2;
     if (MozStackWalk(StackWalkCallback, skipFrames,
-                      gOptions->MaxFrames(), &tmp, 0, nullptr)) {
+                     MaxFrames, &tmp, 0, nullptr)) {
       // Handle the common case first.  All is ok.  Nothing to do.
     } else {
       tmp.mLength = 0;
@@ -1430,7 +1426,6 @@ Options::Options(const char* aDMDEnvVar)
                           : nullptr)
   , mMode(DarkMatter)
   , mSampleBelowSize(4093, 100 * 100 * 1000)
-  , mMaxFrames(StackTrace::MaxFrames, StackTrace::MaxFrames)
   , mShowDumpStats(false)
 {
   // It's no longer necessary to set the DMD env var to "1" if you want default
@@ -1473,9 +1468,6 @@ Options::Options(const char* aDMDEnvVar)
                  &myLong)) {
         mSampleBelowSize.mActual = myLong;
 
-      } else if (GetLong(arg, "--max-frames", 1, mMaxFrames.mMax, &myLong)) {
-        mMaxFrames.mActual = myLong;
-
       } else if (GetBool(arg, "--show-dump-stats", &myBool)) {
         mShowDumpStats = myBool;
 
@@ -1513,9 +1505,6 @@ Options::BadArg(const char* aArg)
             int(mSampleBelowSize.mMax),
             int(mSampleBelowSize.mDefault));
   StatusMsg("                               (prime numbers are recommended)\n");
-  StatusMsg("  --max-frames=<1..%d>         Max. depth of stack traces [%d]\n",
-            int(mMaxFrames.mMax),
-            int(mMaxFrames.mDefault));
   StatusMsg("  --show-dump-stats=<yes|no>   Show stats about dumps? [no]\n");
   StatusMsg("\n");
   exit(1);
