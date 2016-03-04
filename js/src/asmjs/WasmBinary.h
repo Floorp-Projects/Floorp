@@ -714,7 +714,13 @@ class Decoder
         uint32_t size;
         if (!readVarU32(&size) || bytesRemain() < size)
             return false;
-        cur_ += size;
+        const uint8_t* begin = cur_;
+        uint32_t idSize;
+        if (!readVarU32(&idSize) || bytesRemain() < idSize)
+            return false;
+        if (uint32_t(cur_ - begin) > size)
+            return false;
+        cur_ = begin + size;
         return true;
     }
 

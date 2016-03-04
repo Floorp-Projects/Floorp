@@ -1247,13 +1247,10 @@ DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t len
 
     CacheableCharsVector funcNames;
 
-    while (!d.readCStringIf(EndLabel)) {
+    while (!d.done()) {
         if (!d.skipSection())
-            return Fail(cx, d, "unable to skip unknown section");
+            return Fail(cx, d, "failed to skip unknown section at end");
     }
-
-    if (!d.done())
-        return Fail(cx, d, "failed to consume all bytes of module");
 
     UniqueModuleData module;
     UniqueStaticLinkData staticLink;

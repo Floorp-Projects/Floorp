@@ -4054,9 +4054,6 @@ EncodeModule(WasmAstModule& module)
     if (!EncodeDataSection(e, module))
         return nullptr;
 
-    if (!e.writeCString(EndLabel))
-        return nullptr;
-
     return Move(bytecode);
 }
 
