@@ -140,12 +140,14 @@ var PositionHandler = {
       let primaryScreen = Cc["@mozilla.org/gfx/screenmanager;1"]
                             .getService(Ci.nsIScreenManager)
                             .primaryScreen;
-      let width = {};
-      primaryScreen.GetRectDisplayPix({}, {}, width, {});
-      let availTop = {};
-      primaryScreen.GetAvailRectDisplayPix({}, availTop, {}, {});
-      window.moveTo((width.value - document.documentElement.clientWidth) / 2,
-                    availTop.value);
+      let widthDevPix = {};
+      primaryScreen.GetRect({}, {}, widthDevPix, {});
+      let availTopDevPix = {};
+      primaryScreen.GetAvailRect({}, availTopDevPix, {}, {});
+      let scaleFactor = primaryScreen.defaultCSSScaleFactor;
+      let widthCss = widthDevPix.value / scaleFactor;
+      window.moveTo((widthCss - document.documentElement.clientWidth) / 2,
+                    availTopDevPix.value / scaleFactor);
     } else {
       // This will ensure we're at y=0.
       this.setXPosition(window.screenX);
