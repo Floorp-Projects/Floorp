@@ -7,10 +7,6 @@ const {utils: Cu} = Components;
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/message.js");
 
-function run_test() {
-  run_next_test();
-}
-
 add_test(function test_MessageOrigin() {
   equal(0, MessageOrigin.Client);
   equal(1, MessageOrigin.Server);
