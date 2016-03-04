@@ -41,6 +41,7 @@ SELECT(Select1): focus \n\
 SELECT(Select1): change \n\
  :  >>> OpenWindow\n\
 : blur top-doc\n\
+: focus popup-doc\n\
 INPUT(popupText1): focus \n\
  :  <<< OpenWindow\n\
 SELECT(Select1): blur \n\
@@ -49,10 +50,9 @@ INPUT(popupText1): blur \n\
 : focus top-doc\n\
 '
   setPrefAndDoTest(eventLogForNewTab,'Body',3);  // 3 = open new window as tab
-
 }
 
-todo(false, "Please write a test for bug 299673 that actually works");
+todo(false, "Please write a test for bug 299673 that actually works, see bug 553417");
 
 </script>
 </pre>
