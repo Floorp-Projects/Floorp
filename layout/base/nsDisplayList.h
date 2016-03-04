@@ -640,7 +640,6 @@ public:
    * automatically when the arena goes away.
    */
   DisplayItemScrollClip* AllocateDisplayItemScrollClip(const DisplayItemScrollClip* aParent,
-                                                 const DisplayItemScrollClip* aCrossStackingContextParent,
                                                  nsIScrollableFrame* aScrollableFrame,
                                                  const DisplayItemClip* aClip,
                                                  bool aIsAsyncScrollable);

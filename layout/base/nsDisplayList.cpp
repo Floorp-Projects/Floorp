@@ -1009,14 +1009,13 @@ nsDisplayListBuilder::AllocateDisplayItemClip(const DisplayItemClip& aOriginal)
 
 DisplayItemScrollClip*
 nsDisplayListBuilder::AllocateDisplayItemScrollClip(const DisplayItemScrollClip* aParent,
-                                                    const DisplayItemScrollClip* aCrossStackingContextParent,
                                                     nsIScrollableFrame* aScrollableFrame,
                                                     const DisplayItemClip* aClip,
                                                     bool aIsAsyncScrollable)
 {
   void* p = Allocate(sizeof(DisplayItemScrollClip));
   DisplayItemScrollClip* c =
-    new (p) DisplayItemScrollClip(aParent, aCrossStackingContextParent, aScrollableFrame, aClip, aIsAsyncScrollable);
+    new (p) DisplayItemScrollClip(aParent, aScrollableFrame, aClip, aIsAsyncScrollable);
   mScrollClipsToDestroy.AppendElement(c);
   return c;
 }
