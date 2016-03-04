@@ -6500,9 +6500,7 @@ CheckSwitch(FunctionValidator& f, ParseNode* switchStmt)
     if (!f.encoder().writeExpr(Expr::BrTable))
         return false;
 
-    // Write default depth and number of cases (tableLength - 1 + 1 (default)).
-    if (!f.encoder().writeVarU32(defaultDepth))
-        return false;
+    // Write the number of cases (tableLength - 1 + 1 (default)).
     if (!f.encoder().writeVarU32(tableLength))
         return false;
 
@@ -6513,6 +6511,10 @@ CheckSwitch(FunctionValidator& f, ParseNode* switchStmt)
         if (!f.encoder().writeVarU32(target))
             return false;
     }
+
+    // Write the default depth.
+    if (!f.encoder().writeVarU32(defaultDepth))
+        return false;
 
     // Subtract lowest case value, so that all the cases start from 0.
     if (low) {
