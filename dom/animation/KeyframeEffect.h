@@ -11,6 +11,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocument.h"
 #include "nsWrapperCache.h"
+#include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ComputedTimingFunction.h" // ComputedTimingFunction
 #include "mozilla/LayerAnimationInfo.h"     // LayerAnimations::kRecords
@@ -146,9 +147,7 @@ struct AnimationProperty
   // objects for equality.
   bool mIsRunningOnCompositor = false;
 
-  // A warning string indicating why this property could not be animated
-  // on the compositor.
-  Maybe<nsString> mPerformanceWarning;
+  Maybe<AnimationPerformanceWarning> mPerformanceWarning;
 
   InfallibleTArray<AnimationPropertySegment> mSegments;
 
@@ -327,17 +326,20 @@ public:
   //
   // When returning true, |aOutPerformanceWarning| stores the reason why
   // we shouldn't run the compositor animations.
-  bool ShouldBlockCompositorAnimations(const nsIFrame* aFrame,
-                                       nsAString& aPerformanceWarning) const;
+  bool ShouldBlockCompositorAnimations(
+    const nsIFrame* aFrame,
+    AnimationPerformanceWarning::Type& aPerformanceWarning) const;
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
 
-  // Associates a warning string with the animated property on the specified
-  // frame indicating why, for example, the property could not be animated
-  // on the compositor.
-  void SetPerformanceWarning(nsCSSProperty aProperty,
-                             const nsAString& aMessage);
+  // Associates a warning with the animated property on the specified frame
+  // indicating why, for example, the property could not be animated on the
+  // compositor. |aParams| and |aParamsLength| are optional parameters which
+  // will be used to generate a localized message for devtools.
+  void SetPerformanceWarning(
+    nsCSSProperty aProperty,
+    const AnimationPerformanceWarning& aWarning);
 
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
@@ -402,8 +404,9 @@ private:
   // Returns true unless Gecko limitations prevent performing transform
   // animations for |aFrame|. When returning true, the reason for the
   // limitation is stored in |aOutPerformanceWarning|.
-  static bool CanAnimateTransformOnCompositor(const nsIFrame* aFrame,
-                                              nsAString& aPerformanceWarning);
+  static bool CanAnimateTransformOnCompositor(
+    const nsIFrame* aFrame,
+    AnimationPerformanceWarning::Type& aPerformanceWarning);
   static bool IsGeometricProperty(const nsCSSProperty aProperty);
 
   static const TimeDuration OverflowRegionRefreshInterval();
