@@ -13,7 +13,7 @@ function task(consts) {
   let promise = new Promise(r => { resolve = r; });
 
   function unexpectedContentEvent(evt) {
-    ok(false, "Received a " + evt.type + " event on content");
+    Assert.ok(false, "Received a " + evt.type + " event on content");
   }
 
   var gDoc = null;
@@ -40,8 +40,8 @@ function task(consts) {
 
   function test_inputAddHandler(evt) {
     removeEventListener(evt.type, test_inputAddHandler, false);
-    is(evt.target.id, consts.INPUT_ID,
-       evt.type + " event targets correct input element (added password element)");
+    Assert.equal(evt.target.id, consts.INPUT_ID,
+      evt.type + " event targets correct input element (added password element)");
     gDoc.defaultView.setTimeout(test_inputAddOutsideForm, 0);
   }
 
@@ -57,8 +57,8 @@ function task(consts) {
 
   function test_inputAddOutsideFormHandler(evt) {
     removeEventListener(evt.type, test_inputAddOutsideFormHandler, false);
-    is(evt.target.id, consts.BODY_INPUT_ID,
-       evt.type + " event targets correct input element (added password element outside form)");
+    Assert.equal(evt.target.id, consts.BODY_INPUT_ID,
+      evt.type + " event targets correct input element (added password element outside form)");
     gDoc.defaultView.setTimeout(test_inputChangesType, 0);
   }
 
@@ -70,13 +70,13 @@ function task(consts) {
 
   function test_inputChangesTypeHandler(evt) {
     removeEventListener(evt.type, test_inputChangesTypeHandler, false);
-    is(evt.target.id, consts.CHANGE_INPUT_ID,
-       evt.type + " event targets correct input element (changed type)");
+    Assert.equal(evt.target.id, consts.CHANGE_INPUT_ID,
+      evt.type + " event targets correct input element (changed type)");
     gDoc.defaultView.setTimeout(completeTest, 0);
   }
 
   function completeTest() {
-    ok(true, "Test completed");
+    Assert.ok(true, "Test completed");
     gDoc.removeEventListener("DOMInputPasswordAdded", unexpectedContentEvent, false);
     resolve();
   }

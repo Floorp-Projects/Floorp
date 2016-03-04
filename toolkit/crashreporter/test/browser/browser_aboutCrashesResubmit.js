@@ -17,15 +17,15 @@ function cleanup_and_finish() {
 function check_crash_list(crashes) {
   let doc = content.document;
   let crashlinks = doc.getElementById("tbody").getElementsByTagName("a");
-  is(crashlinks.length, crashes.length,
+  Assert.equal(crashlinks.length, crashes.length,
     "about:crashes lists correct number of crash reports");
   // no point in checking this if the lists aren't the same length
   if (crashlinks.length == crashes.length) {
     for(let i=0; i<crashes.length; i++) {
-      is(crashlinks[i].id, crashes[i].id, i + ": crash ID is correct");
+      Assert.equal(crashlinks[i].id, crashes[i].id, i + ": crash ID is correct");
       if (crashes[i].pending) {
         // we set the breakpad.reportURL pref in test()
-        is(crashlinks[i].getAttribute("href"),
+        Assert.equal(crashlinks[i].getAttribute("href"),
           "http://example.com/browser/toolkit/crashreporter/about/throttling",
           "pending URL links to the correct static page");
       }
@@ -57,10 +57,10 @@ function check_submit_pending(tab, crashes) {
 
       // check the JSON content vs. what we submitted
       let result = JSON.parse(content.document.documentElement.textContent);
-      is(result.upload_file_minidump, "MDMP", "minidump file sent properly");
-      is(result.memory_report, "Let's pretend this is a memory report",
+      Assert.equal(result.upload_file_minidump, "MDMP", "minidump file sent properly");
+      Assert.equal(result.memory_report, "Let's pretend this is a memory report",
          "memory report sent properly");
-      is(+result.Throttleable, 0, "correctly sent as non-throttleable");
+      Assert.equal(+result.Throttleable, 0, "correctly sent as non-throttleable");
       // we checked these, they're set by the submission process,
       // so they won't be in the "extra" data.
       delete result.upload_file_minidump;
@@ -102,11 +102,11 @@ function check_submit_pending(tab, crashes) {
   BrowserTestUtils.browserLoaded(browser, false, (url) => url !== "about:crashes").then(csp_onload);
   function csp_pageshow() {
     ContentTask.spawn(browser, { CrashID, CrashURL }, function({ CrashID, CrashURL }) {
-                  is(content.location.href, "about:crashes", "navigated back successfully");
+                  Assert.equal(content.location.href, "about:crashes", "navigated back successfully");
                   let link = content.document.getElementById(CrashID);
-                  isnot(link, null, "crash report link changed correctly");
+                  Assert.notEqual(link, null, "crash report link changed correctly");
                   if (link)
-                    is(link.href, CrashURL, "crash report link points to correct href");
+                    Assert.equal(link.href, CrashURL, "crash report link points to correct href");
                 }).then(cleanup_and_finish);
   }
 
