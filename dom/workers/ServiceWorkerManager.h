@@ -305,6 +305,9 @@ public:
 
   void
   RemoveWorker(ServiceWorker* aWorker);
+
+  already_AddRefed<ServiceWorker>
+  GetOrCreateInstance(nsPIDOMWindowInner* aWindow);
 };
 
 #define NS_SERVICEWORKERMANAGER_IMPL_IID                 \
