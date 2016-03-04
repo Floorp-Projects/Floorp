@@ -168,5 +168,5 @@ wasmTextToBinary('(module (func (loop $a $a (br $a))))');
 // ----------------------------------------------------------------------------
 // tableswitch
 
-wasmTextToBinary('(module (func (param i32) (block $b1 (block $b2 (tableswitch (get_local 0) (table (br $b1) (br $b2)) (br $b2))))))');
-wasmTextToBinary('(module (func (param i32) (block $b1 (tableswitch (get_local 0) (table) (br $b1)))))');
+wasmTextToBinary('(module (func (param i32) (block $b1 (block $b2 (br_table (get_local 0) (table (br $b1) (br $b2)) (br $b2))))))');
+wasmTextToBinary('(module (func (param i32) (block $b1 (br_table (get_local 0) (table) (br $b1)))))');
