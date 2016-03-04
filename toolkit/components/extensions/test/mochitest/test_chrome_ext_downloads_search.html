@@ -32,6 +32,28 @@ const HTML_LEN = 117;
 const BIG_LEN = 1000;  // something bigger both TXT_LEN and HTML_LEN
 
 function backgroundScript() {
+  let complete = new Map();
+
+  function waitForComplete(id) {
+    if (complete.has(id)) {
+      return complete.get(id).promise;
+    }
+
+    let promise = new Promise(resolve => {
+      complete.set(id, {resolve});
+    });
+    complete.get(id).promise = promise;
+    return promise;
+  }
+
+  browser.downloads.onChanged.addListener(change => {
+    if (change.state && change.state.current == "complete") {
+      // Make sure we have a promise.
+      waitForComplete(change.id);
+      complete.get(change.id).resolve();
+    }
+  });
+
   browser.test.onMessage.addListener(function(msg) {
     // extension functions throw on bad arguments, we can remove the extra
     // promise when bug 1250223 is fixed.
@@ -51,6 +73,10 @@ function backgroundScript() {
                        .catch(error => {
                          browser.test.sendMessage("search.done", {status: "error", errmsg: error.message});
                        });
+    } else if (msg == "waitForComplete.request") {
+      waitForComplete(arguments[1]).then(() => {
+        browser.test.sendMessage("waitForComplete.done");
+      });
     }
   });
 
@@ -64,19 +90,6 @@ function clearDownloads(callback) {
                     .then(() => downloads);
     });
   });
-}
-
-// This function is a bit of a sledgehammer, it looks at every download
-// the browser knows about and waits for all active downloads to complete.
-// But we only start one at a time and only do a handful in total.
-// Replace this when we have onChanged (bug 1245600)
-function waitForDownloads() {
-  return Downloads.getList(Downloads.ALL)
-                  .then(list => list.getAll())
-                  .then(downloads => {
-                    let inprogress = downloads.filter(dl => !dl.stopped);
-                    return Promise.all(inprogress.map(dl => dl.whenSucceeded()));
-                  });
 }
 
 add_task(function* test_search() {
@@ -114,7 +127,17 @@ add_task(function* test_search() {
 
   function download(options) {
     extension.sendMessage("download.request", options);
-    return extension.awaitMessage("download.done");
+    return extension.awaitMessage("download.done").then(result => {
+      let promise;
+      if (result.status == "success") {
+        info(`wait for onChanged event to indicate ${result.id} is complete`);
+        extension.sendMessage("waitForComplete.request", result.id);
+        promise = extension.awaitMessage("waitForComplete.done");
+      } else {
+        promise = Promise.resolve();
+      }
+      return promise.then(() => result);
+    });
   }
 
   function search(query) {
@@ -151,8 +174,6 @@ add_task(function* test_search() {
   downloadIds.html2 = msg.id;
 
   const time3 = new Date();
-
-  yield waitForDownloads();
 
   // Search for each individual download and check
   // the corresponding DownloadItem.
