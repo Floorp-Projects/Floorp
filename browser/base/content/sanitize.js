@@ -278,16 +278,39 @@ Sanitizer.prototype = {
         }
 
         // Clear plugin data.
+        // As evidenced in bug 1253204, clearing plugin data can sometimes be
+        // very, very long, for mysterious reasons. Unfortunately, this is not
+        // something actionable by Mozilla, so crashing here serves no purpose.
+        //
+        // For this reason, instead of waiting for sanitization to always
+        // complete, we introduce a soft timeout. Once this timeout has
+        // elapsed, we proceed with the shutdown of Firefox.
+        let promiseClearPluginCookies;
         TelemetryStopwatch.start("FX_SANITIZE_PLUGINS", refObj);
         try {
-          yield this.promiseClearPluginCookies(range);
+          // We don't want to wait for this operation to complete...
+          promiseClearPluginCookies = this.promiseClearPluginCookies(range);
+
+          //... at least, not for more than 10 seconds.
+          yield Promise.race([
+            promiseClearPluginCookies,
+            new Promise(resolve => setTimeout(resolve, 10000 /* 10 seconds */))
+          ]);
         } catch (ex) {
           seenException = ex;
-        } finally {
-          TelemetryStopwatch.finish("FX_SANITIZE_PLUGINS", refObj);
         }
 
-        TelemetryStopwatch.finish("FX_SANITIZE_COOKIES", refObj);
+        // Detach waiting for plugin cookies to be cleared.
+        promiseClearPluginCookies.catch(() => {
+          // If this exception is raised before the soft timeout, it
+          // will appear in `seenException`. Otherwise, it's too late
+          // to do anything about it.
+        }).then(() => {
+          // Finally, update statistics.
+          TelemetryStopwatch.finish("FX_SANITIZE_PLUGINS", refObj);
+          TelemetryStopwatch.finish("FX_SANITIZE_COOKIES", refObj);
+        });
+
         if (seenException) {
           throw seenException;
         }
