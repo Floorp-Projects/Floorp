@@ -467,8 +467,6 @@ protected:
 
   nsIDocShell* GetDocShellForTarget();
 
-  void ProcessApzAwareEventListenerAdd();
-
   /**
    * Compile the "inline" event listener for aListener.  The
    * body of the listener can be provided in aBody; if this is null we
