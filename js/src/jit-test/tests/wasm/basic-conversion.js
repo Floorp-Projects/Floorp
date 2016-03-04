@@ -14,6 +14,16 @@ function testConversion(resultType, opcode, paramType, op, expect) {
     assertEq(wasmEvalText(`(module
                             (func (result ${resultType}) (${resultType}.${opcode}/i64 (i64.const ${op})))
                             (export "" 0))`)(), expect);
+  } else if (resultType === 'i64') {
+    assertEq(wasmEvalText(`(module
+                            (func (param ${paramType}) (result i64) (i64.${opcode}/${paramType} (get_local 0)))
+                            (func (result i32) (i64.eq (i64.const ${expect}) (call 0 (${paramType}.const ${op}))))
+                            (export "" 1))`)(), 1);
+    // The same, but now the input is a constant.
+    assertEq(wasmEvalText(`(module
+                            (func (result i64) (i64.${opcode}/${paramType} (${paramType}.const ${op})))
+                            (func (result i32) (i64.eq (i64.const ${expect}) (call 0)))
+                            (export "" 1))`)(), 1);
   } else {
     assertEq(wasmEvalText('(module (func (param ' + paramType + ') (result ' + resultType + ') (' + resultType + '.' + opcode + '/' + paramType + ' (get_local 0))) (export "" 0))')(op), expect);
   }
@@ -41,6 +51,19 @@ if (getBuildConfiguration().x64) {
     testConversion('i32', 'wrap', 'i64', "0xfffffffeffffffff", -1);
     testConversion('i32', 'wrap', 'i64', "0x1234567801abcdef", 0x01abcdef);
     testConversion('i32', 'wrap', 'i64', "0x8000000000000002", 2);
+
+    testConversion('i64', 'extend_s', 'i32', 0, 0);
+    testConversion('i64', 'extend_s', 'i32', 1234, 1234);
+    testConversion('i64', 'extend_s', 'i32', -567, -567);
+    testConversion('i64', 'extend_s', 'i32', 0x7fffffff, "0x000000007fffffff");
+    testConversion('i64', 'extend_s', 'i32', 0x80000000, "0xffffffff80000000");
+
+    testConversion('i64', 'extend_u', 'i32', 0, 0);
+    testConversion('i64', 'extend_u', 'i32', 1234, 1234);
+    testConversion('i64', 'extend_u', 'i32', -567, "0x00000000fffffdc9");
+    testConversion('i64', 'extend_u', 'i32', -1, "0x00000000ffffffff");
+    testConversion('i64', 'extend_u', 'i32', 0x7fffffff, "0x000000007fffffff");
+    testConversion('i64', 'extend_u', 'i32', 0x80000000, "0x0000000080000000");
 } else {
     // Sleeper test: once i64 works on more platforms, remove this if-else.
     try {
@@ -57,8 +80,6 @@ testConversion('i32', 'trunc_s', 'f64', 40.1, 40);
 testConversion('i32', 'trunc_u', 'f64', 40.1, 40);
 //testConversion('i32', 'reinterpret', 'f32', 40.1, 1109419622); // TODO: NYI
 
-//testConversion('i64', 'extend_s', 'i32', -2, -2); / TODO: NYI
-//testConversion('i64', 'extend_u', 'i32', -2, 0xfffffffffffffffc); / TODO: NYI
 //testConversion('i64', 'trunc_s', 'f32', 40.1, 40); // TODO: NYI
 //testConversion('i64', 'trunc_u', 'f32', 40.1, 40); // TODO: NYI
 //testConversion('i64', 'trunc_s', 'f64', 40.1, 40); // TODO: NYI
