@@ -39,7 +39,7 @@ var listenerId = null; // unique ID of this listener
 var curContainer = { frame: content, shadowRoot: null };
 var isRemoteBrowser = () => curContainer.frame.contentWindow !== null;
 var previousContainer = null;
-var elementManager = new ElementManager([]);
+var elementManager = new ElementManager();
 
 // Holds session capabilities.
 var capabilities = {};
