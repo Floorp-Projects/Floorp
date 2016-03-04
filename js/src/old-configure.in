@@ -527,8 +527,6 @@ else
     AC_MSG_RESULT([yes])
 fi
 
-MOZ_PYTHON
-
 if test -z "$COMPILE_ENVIRONMENT"; then
     NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
 fi

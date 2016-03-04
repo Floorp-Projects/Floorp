@@ -59,9 +59,11 @@ def autoconf(mozconfig, autoconf):
 
 option(env='OLD_CONFIGURE', nargs=1, help='Path to the old configure script')
 
-@depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell)
+@depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell,
+         virtualenv_python)
 @advanced
-def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell):
+def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
+                      python):
     import glob
     import itertools
     import subprocess
@@ -120,6 +122,8 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell):
             for t in ('env', 'vars'):
                 for key in mozconfig[t]['removed'].keys():
                     print("unset %s" % key, file=out)
+
+        print('PYTHON=%s' % quote(python), file=out)
 
     return cmd
 

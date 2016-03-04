@@ -88,6 +88,84 @@ def mozconfig(current_project, mozconfig,  build_env, help):
     return mozconfig
 
 
+option(env='PYTHON', nargs=1, help='Python interpreter')
+
+# Setup python virtualenv
+# ==============================================================
+@depends('PYTHON', check_build_environment, mozconfig)
+@advanced
+def virtualenv_python(env_python, build_env, mozconfig):
+    import os
+    import sys
+    import subprocess
+    from mozbuild.virtualenv import (
+	VirtualenvManager,
+        verify_python_version,
+    )
+
+    python = env_python[0] if env_python else None
+
+    # Ideally we'd rely on the mozconfig injection from mozconfig_options,
+    # but we'd rather avoid the verbosity when we need to reexecute with
+    # a different python.
+    if mozconfig['path']:
+        if 'PYTHON' in mozconfig['env']['added']:
+            python = mozconfig['env']['added']['PYTHON']
+        elif 'PYTHON' in mozconfig['env']['modified']:
+            python = mozconfig['env']['modified']['PYTHON'][1]
+        elif 'PYTHON' in mozconfig['vars']['added']:
+            python = mozconfig['vars']['added']['PYTHON']
+        elif 'PYTHON' in mozconfig['vars']['modified']:
+            python = mozconfig['vars']['modified']['PYTHON'][1]
+
+    verify_python_version(sys.stderr)
+    topsrcdir, topobjdir = build_env['TOPSRCDIR'], build_env['TOPOBJDIR']
+    if topobjdir.endswith('/js/src'):
+        topobjdir = topobjdir[:-7]
+
+    manager = VirtualenvManager(
+        topsrcdir, topobjdir,
+        os.path.join(topobjdir, '_virtualenv'), sys.stdout,
+        os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
+
+    if python:
+        # If we're not in the virtualenv, we need the which module for
+        # find_program.
+        if normsep(sys.executable) != normsep(manager.python_path):
+            sys.path.append(os.path.join(topsrcdir, 'python', 'which'))
+        found_python = find_program(python)
+        if not found_python:
+            error('The PYTHON environment variable does not contain '
+                  'a valid path. Cannot find %s' % python)
+        python = found_python
+    else:
+        python = sys.executable
+
+    if not manager.up_to_date(python):
+        warn('Creating Python environment')
+        manager.build(python)
+
+    python = normsep(manager.python_path)
+
+    if python != normsep(sys.executable):
+        warn('Reexecuting in the virtualenv')
+        if env_python:
+            del os.environ['PYTHON']
+        # One would prefer to use os.execl, but that's completely borked on
+        # Windows.
+        sys.exit(subprocess.call([python] + sys.argv))
+
+    # We are now in the virtualenv
+    import distutils.sysconfig
+    if not distutils.sysconfig.get_python_lib():
+        error('Could not determine python site packages directory')
+
+    set_config('PYTHON', python)
+    return python
+
+
+# Inject mozconfig options
+# ==============================================================
 @template
 @advanced
 def command_line_helper():
