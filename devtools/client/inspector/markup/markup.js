@@ -561,17 +561,19 @@ MarkupView.prototype = {
       return;
     }
 
-    switch(aEvent.keyCode) {
+    // Ignore keystrokes with modifiers to allow native shortcuts (such as save:
+    // accel + S) to bubble up.
+    if (aEvent.metaKey || aEvent.ctrlKey || aEvent.altKey || aEvent.shiftKey) {
+      return;
+    }
+
+    switch (aEvent.keyCode) {
       case Ci.nsIDOMKeyEvent.DOM_VK_H:
-        if (aEvent.metaKey || aEvent.shiftKey) {
-          handled = false;
+        let node = this._selectedContainer.node;
+        if (node.hidden) {
+          this.walker.unhideNode(node);
         } else {
-          let node = this._selectedContainer.node;
-          if (node.hidden) {
-            this.walker.unhideNode(node);
-          } else {
-            this.walker.hideNode(node);
-          }
+          this.walker.hideNode(node);
         }
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_DELETE:
