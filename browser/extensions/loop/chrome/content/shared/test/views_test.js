@@ -832,6 +832,16 @@ describe("VideoMuteButton", function() {
       expect(node.querySelector(".screen").classList.contains("focus-stream")).eql(true);
     });
 
+    it("should mark the screen share stream as paused when screen shared has been paused", function() {
+      view = mountTestComponent({
+        screenSharingPaused: true
+      });
+
+      var node = view.getDOMNode();
+
+      expect(node.querySelector(".screen").classList.contains("screen-sharing-paused")).eql(true);
+    });
+
     it("should not mark the wrapper as receiving screen share when not displaying a screen share", function() {
       view = mountTestComponent({
         displayScreenShare: false

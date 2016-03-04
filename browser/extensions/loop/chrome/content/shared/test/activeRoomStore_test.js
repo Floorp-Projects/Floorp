@@ -748,6 +748,17 @@ describe("loop.store.ActiveRoomStore", function() {
     });
   });
 
+  describe("#videoScreenStreamChanged", function() {
+    it("should set streamPaused if screen stream has no video", function() {
+      var actionData = {
+        hasVideo: false
+      };
+
+      store.videoScreenStreamChanged(new sharedActions.VideoScreenStreamChanged(actionData));
+      expect(store.getStoreState().streamPaused).eql(true);
+    });
+  });
+
   describe("#updateRoomInfo", function() {
     var fakeRoomInfo;
 
