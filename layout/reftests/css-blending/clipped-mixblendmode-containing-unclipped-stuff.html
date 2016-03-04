@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Blend mode items shouldn't clip unclipped children to their own clip</title>
+
+<style>
+
+body {
+  margin: 0;
+  background: white; /* this shouldn't be necessary, bug ??????? */
+}
+
+.content {
+  box-sizing: border-box;
+  border: 10px solid blue;
+  width: 100px;
+  height: 100px;
+}
+
+.clip {
+  box-sizing: border-box;
+  width: 300px;
+  height: 200px;
+  border: 10px solid black;
+  background-color: white;
+  overflow: hidden;
+}
+
+.mixBlendMode {
+  mix-blend-mode: exclusion;
+}
+
+.absolutelyPositioned {
+  position: absolute;
+  top: 20px;
+  left: 250px;
+}
+
+.inner {
+  margin-left: auto;
+  border-color: lime;
+}
+
+</style>
+
+<div class="clip">
+  <div class="mixBlendMode">
+    <div class="absolutelyPositioned content"></div>
+    <div class="inner content"></div>
+  </div>
+</div>
