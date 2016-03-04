@@ -725,9 +725,6 @@ class Artifacts(object):
         self._log = log
         self._hg = hg
         self._git = git
-        if self._git:
-            import which
-            self._cinnabar = which.which('git-cinnabar')
         self._cache_dir = cache_dir
         self._skip_cache = skip_cache
 
@@ -819,7 +816,7 @@ class Artifacts(object):
         ])
 
         hg_hash_list = subprocess.check_output([
-            self._cinnabar, 'git2hg'
+            self._git, 'cinnabar', 'git2hg'
         ] + rev_list.splitlines())
 
         zeroes = "0" * 40
@@ -989,7 +986,7 @@ class Artifacts(object):
                 raise ValueError('hg revision specification must resolve to exactly one commit')
         else:
             revision = subprocess.check_output([self._git, 'rev-parse', revset]).strip()
-            revision = subprocess.check_output([self._cinnabar, 'git2hg', revision]).strip()
+            revision = subprocess.check_output([self._git, 'cinnabar', 'git2hg', revision]).strip()
             if len(revision.split('\n')) != 1:
                 raise ValueError('hg revision specification must resolve to exactly one commit')
             if revision == "0" * 40:
