@@ -385,3 +385,13 @@ LIRGeneratorX64::lowerUMod64(MMod* mod)
                                                   tempFixed(rax));
     defineInt64Fixed(lir, mod, LInt64Allocation(LAllocation(AnyRegister(rdx))));
 }
+
+void
+LIRGeneratorX64::visitTruncateToInt64(MTruncateToInt64* ins)
+{
+    MDefinition* opd = ins->input();
+    MOZ_ASSERT(opd->type() == MIRType_Double || opd->type() == MIRType_Float32);
+
+    LDefinition maybeTemp = ins->isUnsigned() ? tempDouble() : LDefinition::BogusTemp();
+    defineInt64(new(alloc()) LTruncateToInt64(useRegister(opd), maybeTemp), ins);
+}

@@ -64,6 +64,92 @@ if (getBuildConfiguration().x64) {
     testConversion('i64', 'extend_u', 'i32', -1, "0x00000000ffffffff");
     testConversion('i64', 'extend_u', 'i32', 0x7fffffff, "0x000000007fffffff");
     testConversion('i64', 'extend_u', 'i32', 0x80000000, "0x0000000080000000");
+
+    testConversion('i64', 'trunc_s', 'f64', 0.0, 0);
+    testConversion('i64', 'trunc_s', 'f64', "-0.0", 0);
+    testConversion('i64', 'trunc_s', 'f64', 1.0, 1);
+    testConversion('i64', 'trunc_s', 'f64', 1.1, 1);
+    testConversion('i64', 'trunc_s', 'f64', 1.5, 1);
+    testConversion('i64', 'trunc_s', 'f64', 1.99, 1);
+    testConversion('i64', 'trunc_s', 'f64', 40.1, 40);
+    testConversion('i64', 'trunc_s', 'f64', -1.0, -1);
+    testConversion('i64', 'trunc_s', 'f64', -1.1, -1);
+    testConversion('i64', 'trunc_s', 'f64', -1.5, -1);
+    testConversion('i64', 'trunc_s', 'f64', -1.99, -1);
+    testConversion('i64', 'trunc_s', 'f64', -2.0, -2);
+    testConversion('i64', 'trunc_s', 'f64', 4294967296.1, "4294967296");
+    testConversion('i64', 'trunc_s', 'f64', -4294967296.8, "-4294967296");
+    testConversion('i64', 'trunc_s', 'f64', 9223372036854774784.8, "9223372036854774784");
+    testConversion('i64', 'trunc_s', 'f64', -9223372036854775808.3, "-9223372036854775808");
+
+    testConversion('i64', 'trunc_u', 'f64', 0.0, 0);
+    testConversion('i64', 'trunc_u', 'f64', "-0.0", 0);
+    testConversion('i64', 'trunc_u', 'f64', 1.0, 1);
+    testConversion('i64', 'trunc_u', 'f64', 1.1, 1);
+    testConversion('i64', 'trunc_u', 'f64', 1.5, 1);
+    testConversion('i64', 'trunc_u', 'f64', 1.99, 1);
+    testConversion('i64', 'trunc_u', 'f64', -0.9, 0);
+    testConversion('i64', 'trunc_u', 'f64', 40.1, 40);
+    testConversion('i64', 'trunc_u', 'f64', 4294967295, "0xffffffff");
+    testConversion('i64', 'trunc_u', 'f64', 4294967296.1, "4294967296");
+    testConversion('i64', 'trunc_u', 'f64', 1e8, "100000000");
+    testConversion('i64', 'trunc_u', 'f64', 1e16, "10000000000000000");
+    testConversion('i64', 'trunc_u', 'f64', 9223372036854775808, "-9223372036854775808");
+    testConversion('i64', 'trunc_u', 'f64', 18446744073709549568.1, -2048);
+
+    testConversion('i64', 'trunc_s', 'f32', 0.0, 0);
+    testConversion('i64', 'trunc_s', 'f32', "-0.0", 0);
+    testConversion('i64', 'trunc_s', 'f32', 1.0, 1);
+    testConversion('i64', 'trunc_s', 'f32', 1.1, 1);
+    testConversion('i64', 'trunc_s', 'f32', 1.5, 1);
+    testConversion('i64', 'trunc_s', 'f32', 1.99, 1);
+    testConversion('i64', 'trunc_s', 'f32', 40.1, 40);
+    testConversion('i64', 'trunc_s', 'f32', -1.0, -1);
+    testConversion('i64', 'trunc_s', 'f32', -1.1, -1);
+    testConversion('i64', 'trunc_s', 'f32', -1.5, -1);
+    testConversion('i64', 'trunc_s', 'f32', -1.99, -1);
+    testConversion('i64', 'trunc_s', 'f32', -2.0, -2);
+    testConversion('i64', 'trunc_s', 'f32', 4294967296.1, "4294967296");
+    testConversion('i64', 'trunc_s', 'f32', -4294967296.8, "-4294967296");
+    testConversion('i64', 'trunc_s', 'f32', 9223371487098961920.0, "9223371487098961920");
+    testConversion('i64', 'trunc_s', 'f32', -9223372036854775808.3, "-9223372036854775808");
+
+    testConversion('i64', 'trunc_u', 'f32', 0.0, 0);
+    testConversion('i64', 'trunc_u', 'f32', "-0.0", 0);
+    testConversion('i64', 'trunc_u', 'f32', 1.0, 1);
+    testConversion('i64', 'trunc_u', 'f32', 1.1, 1);
+    testConversion('i64', 'trunc_u', 'f32', 1.5, 1);
+    testConversion('i64', 'trunc_u', 'f32', 1.99, 1);
+    testConversion('i64', 'trunc_u', 'f32', -0.9, 0);
+    testConversion('i64', 'trunc_u', 'f32', 40.1, 40);
+    testConversion('i64', 'trunc_u', 'f32', 1e8, "100000000");
+    testConversion('i64', 'trunc_u', 'f32', 4294967296, "4294967296");
+    testConversion('i64', 'trunc_u', 'f32', 18446742974197923840.0, "-1099511627776");
+
+    // TODO: these should trap.
+    testConversion('i64', 'trunc_s', 'f64', 9223372036854775808.0, "0x8000000000000000");
+    testConversion('i64', 'trunc_s', 'f64', -9223372036854777856.0, "0x8000000000000000");
+    testConversion('i64', 'trunc_s', 'f64', "nan", "0x8000000000000000");
+    testConversion('i64', 'trunc_s', 'f64', "infinity", "0x8000000000000000");
+    testConversion('i64', 'trunc_s', 'f64', "-infinity", "0x8000000000000000");
+
+    testConversion('i64', 'trunc_u', 'f64', -1, "0x8000000000000000");
+    testConversion('i64', 'trunc_u', 'f64', 18446744073709551616.0, "0x8000000000000000");
+    testConversion('i64', 'trunc_u', 'f64', "nan", "0x8000000000000000");
+    testConversion('i64', 'trunc_u', 'f64', "infinity", "0x8000000000000000");
+    testConversion('i64', 'trunc_u', 'f64', "-infinity", "0x8000000000000000");
+
+    testConversion('i64', 'trunc_s', 'f32', 9223372036854775808.0, "0x8000000000000000");
+    testConversion('i64', 'trunc_s', 'f32', -9223372036854777856.0, "0x8000000000000000");
+    testConversion('i64', 'trunc_s', 'f32', "nan", "0x8000000000000000");
+    testConversion('i64', 'trunc_s', 'f32', "infinity", "0x8000000000000000");
+    testConversion('i64', 'trunc_s', 'f32', "-infinity", "0x8000000000000000");
+
+    testConversion('i64', 'trunc_u', 'f32', 18446744073709551616.0, "0x8000000000000000");
+    testConversion('i64', 'trunc_u', 'f32', -1, "0x8000000000000000");
+    testConversion('i64', 'trunc_u', 'f32', "nan", "0x8000000000000000");
+    testConversion('i64', 'trunc_u', 'f32', "infinity", "0x8000000000000000");
+    testConversion('i64', 'trunc_u', 'f32', "-infinity", "0x8000000000000000");
 } else {
     // Sleeper test: once i64 works on more platforms, remove this if-else.
     try {

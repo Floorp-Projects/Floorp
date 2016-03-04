@@ -610,13 +610,12 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
         return DecodeConversionOperator(f, expected, ExprType::I64, ExprType::I32);
       case Expr::I64TruncSF32:
       case Expr::I64TruncUF32:
-        return f.fail("NYI: i64") &&
-               DecodeConversionOperator(f, expected, ExprType::I64, ExprType::F32);
+        return DecodeConversionOperator(f, expected, ExprType::I64, ExprType::F32);
       case Expr::I64TruncSF64:
       case Expr::I64TruncUF64:
+        return DecodeConversionOperator(f, expected, ExprType::I64, ExprType::F64);
       case Expr::I64ReinterpretF64:
-        return f.fail("NYI: i64") &&
-               DecodeConversionOperator(f, expected, ExprType::I64, ExprType::F64);
+        return f.fail("NYI: i64");
       case Expr::F32ConvertSI32:
       case Expr::F32ConvertUI32:
         return DecodeConversionOperator(f, expected, ExprType::F32, ExprType::I32);

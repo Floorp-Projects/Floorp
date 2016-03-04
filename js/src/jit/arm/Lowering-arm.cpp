@@ -773,3 +773,9 @@ LIRGeneratorARM::visitRandom(MRandom* ins)
                                         temp());
     defineFixed(lir, ins, LFloatReg(ReturnDoubleReg));
 }
+
+void
+LIRGeneratorARM::visitTruncateToInt64(MTruncateToInt64* ins)
+{
+    MOZ_CRASH("NY");
+}
