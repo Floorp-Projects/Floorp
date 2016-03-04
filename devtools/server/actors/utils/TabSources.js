@@ -12,8 +12,8 @@ const { OriginalLocation, GeneratedLocation } = require("devtools/server/actors/
 const { resolve } = require("promise");
 const URL = require("URL");
 
-loader.lazyRequireGetter(this, "SourceActor", "devtools/server/actors/script", true);
-loader.lazyRequireGetter(this, "isEvalSource", "devtools/server/actors/script", true);
+loader.lazyRequireGetter(this, "SourceActor", "devtools/server/actors/source", true);
+loader.lazyRequireGetter(this, "isEvalSource", "devtools/server/actors/source", true);
 loader.lazyRequireGetter(this, "SourceMapConsumer", "source-map", true);
 loader.lazyRequireGetter(this, "SourceMapGenerator", "source-map", true);
 

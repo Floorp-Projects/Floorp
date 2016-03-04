@@ -45,7 +45,6 @@ const VARIABLES_VIEW_URL = "chrome://devtools/content/shared/widgets/VariablesVi
 
 const {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
-const Telemetry = require("devtools/client/shared/telemetry");
 const Editor    = require("devtools/client/sourceeditor/editor");
 const TargetFactory = require("devtools/client/framework/target").TargetFactory;
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -91,11 +90,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
 
 XPCOMUtils.defineLazyModuleGetter(this, "Reflect",
   "resource://gre/modules/reflect.jsm");
-
-// Because we have no constructor / destructor where we can log metrics we need
-// to do so here.
-var telemetry = new Telemetry();
-telemetry.toolOpened("scratchpad");
 
 var WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
 
@@ -1923,7 +1917,6 @@ var Scratchpad = {
       }
 
       if (shouldClose) {
-        telemetry.toolClosed("scratchpad");
         window.close();
       }
 

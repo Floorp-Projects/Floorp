@@ -21,6 +21,10 @@ public class AutopushClientException extends Exception {
         super(e);
     }
 
+    public boolean isTransientError() {
+        return false;
+    }
+
     public static class AutopushClientRemoteException extends AutopushClientException {
         private static final long serialVersionUID = 2209313149952001000L;
 
@@ -55,6 +59,15 @@ public class AutopushClientException extends Exception {
 
         public boolean isNotFound() {
             return httpStatusCode == HttpStatus.SC_NOT_FOUND;
+        }
+
+        public boolean isGone() {
+            return httpStatusCode == HttpStatus.SC_GONE;
+        }
+
+        @Override
+        public boolean isTransientError() {
+            return httpStatusCode >= 500;
         }
     }
 

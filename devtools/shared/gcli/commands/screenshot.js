@@ -4,14 +4,18 @@
 
 "use strict";
 
-const { Cc, Ci, Cu } = require("chrome");
+const { Cc, Ci, Cr } = require("chrome");
 const l10n = require("gcli/l10n");
 const Services = require("Services");
 const { getRect } = require("devtools/shared/layout/utils");
+const promise = require("promise");
 
 loader.lazyImporter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
 loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
+loader.lazyImporter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
+loader.lazyImporter(this, "PrivateBrowsingUtils",
+                          "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
                            .getService(Ci.nsIStringBundleService)
@@ -35,7 +39,11 @@ const FILENAME_DEFAULT_VALUE = " ";
  */
 const filenameParam = {
   name: "filename",
-  type: "string",
+  type: {
+    name: "file",
+    filetype: "file",
+    existing: "maybe",
+  },
   defaultValue: FILENAME_DEFAULT_VALUE,
   description: l10n.lookup("screenshotFilenameDesc"),
   manual: l10n.lookup("screenshotFilenameManual")
@@ -430,30 +438,143 @@ function uploadToImgur(reply) {
 }
 
 /**
- * Save the screenshot data to disk, returning a promise which
- * is resolved on completion
+ * Progress listener that forwards calls to a transfer object.
+ *
+ * This is used below in saveToFile to forward progress updates from the
+ * nsIWebBrowserPersist object that does the actual saving to the nsITransfer
+ * which just represents the operation for the Download Manager.  This keeps the
+ * Download Manager updated on saving progress and completion, so that it gives
+ * visual feedback from the downloads toolbar button when the save is done.
+ *
+ * It also allows the browser window to show auth prompts if needed (should not
+ * be needed for saving screenshots).
+ *
+ * This code is borrowed directly from contentAreaUtils.js.
  */
-function saveToFile(context, reply) {
-  return Task.spawn(function*() {
-    try {
-      let document = context.environment.chromeDocument;
-      let window = context.environment.chromeWindow;
+function DownloadListener(win, transfer) {
+  this.window = win;
+  this.transfer = transfer;
 
-      let filename = reply.filename;
-      // Check there is a .png extension to filename
-      if (!filename.match(/.png$/i)) {
-        filename += ".png";
-      }
-
-      window.saveURL(reply.data, filename, null,
-                     true /* aShouldBypassCache */, true /* aSkipPrompt */,
-                     document.documentURIObject, document);
-
-      reply.destinations.push(l10n.lookup("screenshotSavedToFile") + " \"" + filename + "\"");
+  // For most method calls, forward to the transfer object.
+  for (let name in transfer) {
+    if (name != "QueryInterface" &&
+        name != "onStateChange") {
+      this[name] = (...args) => transfer[name].apply(transfer, args);
     }
-    catch (ex) {
-      console.error(ex);
-      reply.destinations.push(l10n.lookup("screenshotErrorSavingToFile") + " " + filename);
-    }
-  });
+  }
+
+  // Allow saveToFile to await completion for error handling
+  this._completedDeferred = promise.defer();
+  this.completed = this._completedDeferred.promise;
 }
+
+DownloadListener.prototype = {
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsIInterfaceRequestor) ||
+        iid.equals(Ci.nsIWebProgressListener) ||
+        iid.equals(Ci.nsIWebProgressListener2) ||
+        iid.equals(Ci.nsISupports)) {
+      return this;
+    }
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  getInterface: function(iid) {
+    if (iid.equals(Ci.nsIAuthPrompt) ||
+        iid.equals(Ci.nsIAuthPrompt2)) {
+      let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
+                 .getService(Ci.nsIPromptFactory);
+      return ww.getPrompt(this.window, iid);
+    }
+
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  onStateChange: function(webProgress, request, state, status) {
+    // Check if the download has completed
+    if ((state & Ci.nsIWebProgressListener.STATE_STOP) &&
+        (state & Ci.nsIWebProgressListener.STATE_IS_NETWORK)) {
+      if (status == Cr.NS_OK) {
+        this._completedDeferred.resolve();
+      } else {
+        this._completedDeferred.reject();
+      }
+    }
+
+    this.transfer.onStateChange.apply(this.transfer, arguments);
+  }
+};
+
+/**
+ * Save the screenshot data to disk, returning a promise which is resolved on
+ * completion.
+ */
+var saveToFile = Task.async(function*(context, reply) {
+  let document = context.environment.chromeDocument;
+  let window = context.environment.chromeWindow;
+
+  // Check there is a .png extension to filename
+  if (!reply.filename.match(/.png$/i)) {
+    reply.filename += ".png";
+  }
+
+  let downloadsDir = yield Downloads.getPreferredDownloadsDirectory();
+  let downloadsDirExists = yield OS.File.exists(downloadsDir);
+  if (downloadsDirExists) {
+    // If filename is absolute, it will override the downloads directory and
+    // still be applied as expected.
+    reply.filename = OS.Path.join(downloadsDir, reply.filename);
+  }
+
+  let sourceURI = Services.io.newURI(reply.data, null, null);
+  let targetFile = new FileUtils.File(reply.filename);
+  let targetFileURI = Services.io.newFileURI(targetFile);
+
+  // Create download and track its progress.
+  // This is adapted from saveURL in contentAreaUtils.js, but simplified greatly
+  // and modified to allow saving to arbitrary paths on disk.  Using these
+  // objects as opposed to just writing with OS.File allows us to tie into the
+  // download manager to record a download entry and to get visual feedback from
+  // the downloads toolbar button when the save is done.
+  const nsIWBP = Ci.nsIWebBrowserPersist;
+  const flags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
+                nsIWBP.PERSIST_FLAGS_FORCE_ALLOW_COOKIES |
+                nsIWBP.PERSIST_FLAGS_BYPASS_CACHE |
+                nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+  let isPrivate =
+    PrivateBrowsingUtils.isContentWindowPrivate(document.defaultView);
+  let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
+                  .createInstance(Ci.nsIWebBrowserPersist);
+  persist.persistFlags = flags;
+  let tr = Cc["@mozilla.org/transfer;1"].createInstance(Ci.nsITransfer);
+  tr.init(sourceURI,
+          targetFileURI,
+          "",
+          null,
+          null,
+          null,
+          persist,
+          isPrivate);
+  let listener = new DownloadListener(window, tr);
+  persist.progressListener = listener;
+  persist.savePrivacyAwareURI(sourceURI,
+                              null,
+                              document.documentURIObject,
+                              Ci.nsIHttpChannel
+                                .REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
+                              null,
+                              null,
+                              targetFileURI,
+                              isPrivate);
+
+  try {
+    // Await successful completion of the save via the listener
+    yield listener.completed;
+    reply.destinations.push(l10n.lookup("screenshotSavedToFile") +
+                            ` "${reply.filename}"`);
+  } catch (ex) {
+    console.error(ex);
+    reply.destinations.push(l10n.lookup("screenshotErrorSavingToFile") + " " +
+                            reply.filename);
+  }
+});

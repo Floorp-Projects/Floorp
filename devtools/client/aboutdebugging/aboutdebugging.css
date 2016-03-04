@@ -14,6 +14,7 @@ h2, h3, h4 {
 button {
   padding-left: 20px;
   padding-right: 20px;
+  min-width: 100px;
 }
 
 /* Category tabs */

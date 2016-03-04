@@ -15,7 +15,6 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const App = createFactory(require("devtools/client/memory/app"));
 const Store = require("devtools/client/memory/store");
 const { assert } = require("devtools/shared/DevToolsUtils");
-const Telemetry = require("devtools/client/shared/telemetry");
 
 /**
  * The current target, toolbox, MemoryFront, and HeapAnalysesClient, set by this tool's host.
@@ -28,8 +27,6 @@ var gToolbox, gTarget, gFront, gHeapAnalysesClient;
 var gStore, gRoot, gApp, gProvider, unsubscribe, isHighlighted, telemetry;
 
 var initialize = Task.async(function*() {
-  telemetry = new Telemetry();
-  telemetry.toolOpened("memory");
   gRoot = document.querySelector("#app");
   gStore = Store();
   gApp = createElement(App, { toolbox: gToolbox, front: gFront, heapWorker: gHeapAnalysesClient });
@@ -42,10 +39,9 @@ var destroy = Task.async(function*() {
   const ok = ReactDOM.unmountComponentAtNode(gRoot);
   assert(ok, "Should successfully unmount the memory tool's top level React component");
 
-  telemetry.toolClosed("memory");
   unsubscribe();
 
-  gStore, gRoot, gApp, gProvider, unsubscribe, isHighlighted, telemetry = null;
+  gStore, gRoot, gApp, gProvider, unsubscribe, isHighlighted;
 });
 
 /**

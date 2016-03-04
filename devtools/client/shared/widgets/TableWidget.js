@@ -452,11 +452,11 @@ TableWidget.prototype = {
     if (this.filteredValue == value) {
       return;
     }
+    this.filteredValue = value;
     if (!value) {
       this.emit(EVENTS.TABLE_FILTERED, []);
       return;
     }
-    this.filteredValue = value;
     // Shouldn't be case-sensitive
     value = value.toLowerCase();
 
