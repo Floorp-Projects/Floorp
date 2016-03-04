@@ -396,7 +396,8 @@ if (inChrome) {
    *
    * @param {String}  url                   The url to format.
    * @param {String}  suppressConsoleError  For testing, call with a boolean which is true to squash the default console error.
-   * @return {Object}                       An object containing the hostname and full location.
+   * @return {Object}                       An object containing the hostname,
+   *                                        full location and protocol.
    */
   function formatURL(url, suppressConsoleError) {
     // We're using new URL to pass this through the browser's ACE/punycode
@@ -412,7 +413,8 @@ if (inChrome) {
       // Finally, ensure we look good.
       return {
         hostname: urlObject.hostname,
-        location: decodeURI(urlObject.href)
+        location: decodeURI(urlObject.href),
+        protocol: urlObject.protocol
       };
     } catch (ex) {
       if (suppressConsoleError ? !suppressConsoleError : true) {

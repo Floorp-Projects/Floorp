@@ -319,4 +319,13 @@
     /* XXX derived from width, so should be 50% - (620px / 2)? */
     -moz-margin-start: calc(50% - 310px);
   }
+
+  #loop-remote-cursor-container {
+    position: absolute;
+    pointer-events: none;
+    /* Hide overflow so that when the tail of the pointer gets to the edge
+     * of shared area, it doesn't widen the viewport by adding a scrollbar.
+     */
+    overflow: hidden;
+  }
 }
