@@ -169,12 +169,6 @@ GLXLibrary::EnsureInitialized()
         { nullptr, { nullptr } }
     };
 
-    GLLibraryLoader::SymLoadStruct symbols_videosync[] = {
-      { (PRFuncPtr*) &xGetVideoSyncInternal, { "glXGetVideoSyncSGI", nullptr } },
-      { (PRFuncPtr*) &xWaitVideoSyncInternal, { "glXWaitVideoSyncSGI", nullptr } },
-      { nullptr, { nullptr } }
-    };
-
     if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, &symbols[0])) {
         NS_WARNING("Couldn't find required entry point in OpenGL shared library");
         return false;
@@ -252,13 +246,6 @@ GLXLibrary::EnsureInitialized()
         mHasRobustness = true;
     }
 
-    if (HasExtension(extensionsStr, "GLX_SGI_video_sync") &&
-        GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_videosync,
-                                     (GLLibraryLoader::PlatformLookupFunction)&xGetProcAddress))
-    {
-        mHasVideoSync = true;
-    }
-
     mIsATI = serverVendor && DoesStringMatch(serverVendor, "ATI");
     mIsNVIDIA = serverVendor && DoesStringMatch(serverVendor, "NVIDIA Corporation");
     mClientIsMesa = clientVendor && DoesStringMatch(clientVendor, "Mesa");
@@ -280,16 +267,6 @@ GLXLibrary::SupportsTextureFromPixmap(gfxASurface* aSurface)
     }
 
     return true;
-}
-
-bool
-GLXLibrary::SupportsVideoSync()
-{
-    if (!EnsureInitialized()) {
-        return false;
-    }
-
-    return mHasVideoSync;
 }
 
 GLXPixmap
@@ -756,24 +733,6 @@ GLXLibrary::xCreateContextAttribs(Display* display,
                                                       share_list,
                                                       direct,
                                                       attrib_list);
-    AFTER_GLX_CALL;
-    return result;
-}
-
-int
-GLXLibrary::xGetVideoSync(unsigned int* count)
-{
-    BEFORE_GLX_CALL;
-    int result = xGetVideoSyncInternal(count);
-    AFTER_GLX_CALL;
-    return result;
-}
-
-int
-GLXLibrary::xWaitVideoSync(int divisor, int remainder, unsigned int* count)
-{
-    BEFORE_GLX_CALL;
-    int result = xWaitVideoSyncInternal(divisor, remainder, count);
     AFTER_GLX_CALL;
     return result;
 }
