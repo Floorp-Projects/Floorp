@@ -60,7 +60,7 @@ function testXFOFrameInContent(newBrowser) {
 
     // Test that the frame DID NOT load
     var test = this.contentDocument.getElementById("test");
-    is(test, null, "should be about:blank");
+    Assert.equal(test, null, "should be about:blank");
 
     deferred.resolve();
   }, true);
