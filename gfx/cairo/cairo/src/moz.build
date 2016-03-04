@@ -7,6 +7,7 @@
 CONFIGURE_SUBST_FILES += ['cairo-features.h']
 
 EXPORTS.cairo += [
+    '!cairo-features.h',
     'cairo-deprecated.h',
     'cairo-platform.h',
     'cairo-rename.h',

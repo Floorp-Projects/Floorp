@@ -38,6 +38,16 @@
 
 comma := ,
 
+ifdef MACH
+ifndef NO_BUILDSTATUS_MESSAGES
+define BUILDSTATUS
+@echo 'BUILDSTATUS $1'
+
+endef
+endif
+endif
+
+
 CWD := $(CURDIR)
 ifneq (1,$(words $(CWD)))
 $(error The mozilla directory cannot be located in a path with spaces.)
@@ -225,12 +235,23 @@ everything: clean build
 #  is usable in multi-pass builds, where you might not have a runnable
 #  application until all the build passes and postflight scripts have run.
 profiledbuild::
+	$(call BUILDSTATUS,TIERS pgo_profile_generate pgo_package pgo_profile pgo_clobber pgo_profile_use)
+	$(call BUILDSTATUS,TIER_START pgo_profile_generate)
 	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_GENERATE=1 MOZ_PGO_INSTRUMENTED=1 CREATE_MOZCONFIG_JSON=
+	$(call BUILDSTATUS,TIER_FINISH pgo_profile_generate)
+	$(call BUILDSTATUS,TIER_START pgo_package)
 	$(MAKE) -C $(OBJDIR) package MOZ_PGO_INSTRUMENTED=1 MOZ_INTERNAL_SIGNING_FORMAT= MOZ_EXTERNAL_SIGNING_FORMAT=
 	rm -f $(OBJDIR)/jarlog/en-US.log
+	$(call BUILDSTATUS,TIER_FINISH pgo_package)
+	$(call BUILDSTATUS,TIER_START pgo_profile)
 	MOZ_PGO_INSTRUMENTED=1 JARLOG_FILE=jarlog/en-US.log EXTRA_TEST_ARGS=10 $(MAKE) -C $(OBJDIR) pgo-profile-run
+	$(call BUILDSTATUS,TIER_FINISH pgo_profile)
+	$(call BUILDSTATUS,TIER_START pgo_clobber)
 	$(MAKE) -f $(TOPSRCDIR)/client.mk maybe_clobber_profiledbuild CREATE_MOZCONFIG_JSON=
+	$(call BUILDSTATUS,TIER_FINISH pgo_clobber)
+	$(call BUILDSTATUS,TIER_START pgo_profile_use)
 	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_USE=1 CREATE_MOZCONFIG_JSON=
+	$(call BUILDSTATUS,TIER_FINISH pgo_profile_use)
 
 #####################################################
 # Build date unification

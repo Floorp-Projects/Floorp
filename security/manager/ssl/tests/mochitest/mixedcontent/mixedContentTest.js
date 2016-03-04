@@ -180,7 +180,7 @@ function isSecurityState(expectedState, message, test)
       test(ui && !isInsecure && !isBroken && isEV, "for 'EV' expected flags [0,0,1], " + (message || ""));
       break;
     default:
-      throw "Invalid isSecurityState state";
+      throw new Error("Invalid isSecurityState state");
   }
 }
 

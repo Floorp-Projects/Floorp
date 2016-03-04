@@ -264,7 +264,9 @@ var SessionHistoryInternal = {
     let history = webNavigation.sessionHistory;
 
     if ("userContextId" in tabData) {
-      docShell.setUserContextId(tabData.userContextId);
+      let attrs = docShell.getOriginAttributes();
+      attrs.userContextId = tabData.userContextId;
+      docShell.setOriginAttributes(attrs);
     }
 
     if (history.count > 0) {

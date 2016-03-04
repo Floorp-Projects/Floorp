@@ -12,7 +12,6 @@
 #include "MediaCodec.h"
 #include "WebrtcMediaCodecVP8VideoCodec.h"
 #include "AndroidJNIWrapper.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Monitor.h"
@@ -623,7 +622,7 @@ WebrtcMediaCodecVP8VideoEncoder::VerifyAndAllocate(const uint32_t minimumSize)
 int32_t WebrtcMediaCodecVP8VideoEncoder::InitEncode(
     const webrtc::VideoCodec* codecSettings,
     int32_t numberOfCores,
-    uint32_t maxPayloadSize) {
+    size_t maxPayloadSize) {
   mMaxPayloadSize = maxPayloadSize;
   CSFLogDebug(logTag,  "%s, w = %d, h = %d", __FUNCTION__, codecSettings->width, codecSettings->height);
 

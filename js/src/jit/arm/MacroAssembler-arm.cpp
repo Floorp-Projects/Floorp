@@ -4579,6 +4579,15 @@ MacroAssemblerARMCompat::asMasm() const
 
 //{{{ check_macroassembler_style
 // ===============================================================
+// MacroAssembler high-level usage.
+
+void
+MacroAssembler::flush()
+{
+    Assembler::flush();
+}
+
+// ===============================================================
 // Stack manipulation functions.
 
 void

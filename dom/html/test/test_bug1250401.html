@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1250401
+-->
+<head>
+  <title>Test for Bug 1250401</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1250401">Bug 1250401</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1250401 **/
+function test_add() {
+  var select = document.createElement("select");
+
+  var g1 = document.createElement("optgroup");
+  var o1 = document.createElement("option");
+  g1.appendChild(o1);
+  select.appendChild(g1);
+
+  var g2 = document.createElement("optgroup");
+  var o2 = document.createElement("option");
+  g2.appendChild(o2);
+  select.add(g2, 0);
+
+  is(select.children.length, 1, "Select has 1 item");
+  is(select.firstChild, g1, "First item is g1");
+  is(select.firstChild.children.length, 2, "g2 has 2 children");
+  is(select.firstChild.children[0], g2, "g1 has 2 children: g2");
+  is(select.firstChild.children[1], o1, "g1 has 2 children: o1");
+  is(o1.index, 0, "o1.index should be 0");
+  is(o2.index, 0, "o2.index should be 0");
+}
+
+function test_append() {
+  var select = document.createElement("select");
+
+  var g1 = document.createElement("optgroup");
+  var o1 = document.createElement("option");
+  g1.appendChild(o1);
+  select.appendChild(g1);
+
+  var g2 = document.createElement("optgroup");
+  var o2 = document.createElement("option");
+  g2.appendChild(o2);
+  g1.appendChild(g2);
+
+  is(select.children.length, 1, "Select has 1 item");
+  is(select.firstChild, g1, "First item is g1");
+  is(select.firstChild.children.length, 2, "g2 has 2 children");
+  is(select.firstChild.children[0], o1, "g1 has 2 children: o1");
+  is(select.firstChild.children[1], g2, "g1 has 2 children: g1");
+  is(o1.index, 0, "o1.index should be 0");
+  is(o2.index, 0, "o2.index should be 0");
+}
+
+function test_no_select() {
+  var g1 = document.createElement("optgroup");
+  var o1 = document.createElement("option");
+  g1.appendChild(o1);
+
+  var g2 = document.createElement("optgroup");
+  var o2 = document.createElement("option");
+  g2.appendChild(o2);
+  g1.appendChild(g2);
+
+  is(g1.children.length, 2, "g2 has 2 children");
+  is(g1.children[0], o1, "g1 has 2 children: o1");
+  is(g1.children[1], g2, "g1 has 2 children: g1");
+  is(o1.index, 0, "o1.index should be 0");
+  is(o2.index, 0, "o2.index should be 0");
+}
+
+function test_no_parent() {
+  var o1 = document.createElement("option");
+  var o2 = document.createElement("option");
+
+  is(o1.index, 0, "o1.index should be 0");
+  is(o2.index, 0, "o2.index should be 0");
+}
+
+test_add();
+test_append();
+test_no_select();
+test_no_parent();
+
+</script>
+</pre>
+</body>
+</html>

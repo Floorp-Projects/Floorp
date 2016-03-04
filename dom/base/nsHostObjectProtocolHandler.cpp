@@ -10,6 +10,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MediaSource.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/ModuleUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsClassHashtable.h"
 #include "nsError.h"
@@ -743,3 +744,53 @@ NS_GetSourceForMediaSourceURI(nsIURI* aURI, mozilla::dom::MediaSource** aSource)
   source.forget(aSource);
   return NS_OK;
 }
+
+#define NS_BLOBPROTOCOLHANDLER_CID \
+{ 0xb43964aa, 0xa078, 0x44b2, \
+  { 0xb0, 0x6b, 0xfd, 0x4d, 0x1b, 0x17, 0x2e, 0x66 } }
+
+#define NS_MEDIASTREAMPROTOCOLHANDLER_CID \
+{ 0x27d1fa24, 0x2b73, 0x4db3, \
+  { 0xab, 0x48, 0xb9, 0x83, 0x83, 0x40, 0xe0, 0x81 } }
+
+#define NS_MEDIASOURCEPROTOCOLHANDLER_CID \
+{ 0x12ef31fc, 0xa8fb, 0x4661, \
+  { 0x9a, 0x63, 0xfb, 0x61, 0x04,0x5d, 0xb8, 0x61 } }
+
+#define NS_FONTTABLEPROTOCOLHANDLER_CID \
+{ 0x3fc8f04e, 0xd719, 0x43ca, \
+  { 0x9a, 0xd0, 0x18, 0xee, 0x32, 0x02, 0x11, 0xf2 } }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlobProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMediaStreamProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMediaSourceProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontTableProtocolHandler)
+
+NS_DEFINE_NAMED_CID(NS_BLOBPROTOCOLHANDLER_CID);
+NS_DEFINE_NAMED_CID(NS_MEDIASTREAMPROTOCOLHANDLER_CID);
+NS_DEFINE_NAMED_CID(NS_MEDIASOURCEPROTOCOLHANDLER_CID);
+NS_DEFINE_NAMED_CID(NS_FONTTABLEPROTOCOLHANDLER_CID);
+
+static const mozilla::Module::CIDEntry kHostObjectProtocolHandlerCIDs[] = {
+  { &kNS_BLOBPROTOCOLHANDLER_CID, false, nullptr, nsBlobProtocolHandlerConstructor },
+  { &kNS_MEDIASTREAMPROTOCOLHANDLER_CID, false, nullptr, nsMediaStreamProtocolHandlerConstructor },
+  { &kNS_MEDIASOURCEPROTOCOLHANDLER_CID, false, nullptr, nsMediaSourceProtocolHandlerConstructor },
+  { &kNS_FONTTABLEPROTOCOLHANDLER_CID, false, nullptr, nsFontTableProtocolHandlerConstructor },
+  { nullptr }
+};
+
+static const mozilla::Module::ContractIDEntry kHostObjectProtocolHandlerContracts[] = {
+  { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX BLOBURI_SCHEME, &kNS_BLOBPROTOCOLHANDLER_CID },
+  { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX MEDIASTREAMURI_SCHEME, &kNS_MEDIASTREAMPROTOCOLHANDLER_CID },
+  { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX MEDIASOURCEURI_SCHEME, &kNS_MEDIASOURCEPROTOCOLHANDLER_CID },
+  { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX FONTTABLEURI_SCHEME, &kNS_FONTTABLEPROTOCOLHANDLER_CID },
+  { nullptr }
+};
+
+static const mozilla::Module kHostObjectProtocolHandlerModule = {
+  mozilla::Module::kVersion,
+  kHostObjectProtocolHandlerCIDs,
+  kHostObjectProtocolHandlerContracts
+};
+
+NSMODULE_DEFN(HostObjectProtocolHandler) = &kHostObjectProtocolHandlerModule;

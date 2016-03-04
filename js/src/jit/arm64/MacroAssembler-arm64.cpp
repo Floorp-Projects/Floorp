@@ -309,6 +309,15 @@ MacroAssemblerCompat::atomicExchangeToTypedIntArray(Scalar::Type arrayType, cons
 
 //{{{ check_macroassembler_style
 // ===============================================================
+// MacroAssembler high-level usage.
+
+void
+MacroAssembler::flush()
+{
+    Assembler::flush();
+}
+
+// ===============================================================
 // Stack manipulation functions.
 
 void

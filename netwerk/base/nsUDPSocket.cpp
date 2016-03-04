@@ -460,9 +460,9 @@ nsUDPSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
 
   PRNetAddr prClientAddr;
   uint32_t count;
-  // Bug 1165423 - using 8k here because the packet could be larger
-  // than the MTU with fragmentation
-  char buff[8 * 1024];
+  // Bug 1252755 - use 9216 bytes to allign with nICEr and transportlayer to
+  // support the maximum size of jumbo frames
+  char buff[9216];
   count = PR_RecvFrom(mFD, buff, sizeof(buff), 0, &prClientAddr, PR_INTERVAL_NO_WAIT);
 
   if (count < 1) {

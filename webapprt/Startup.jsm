@@ -195,7 +195,8 @@ this.startup = function(window) {
     let appBrowser = window.document.getElementById("content");
 
     // Set the principal to the correct appID and launch the application.
-    appBrowser.docShell.setIsApp(WebappRT.appID);
+    appBrowser.docShell.frameType = Ci.nsIDocShell.FRAME_TYPE_APP;
+    appBrowser.docShell.setOriginAttributes({appId: WebappRT.appID});
     appBrowser.setAttribute("src", WebappRT.launchURI);
 
     if (appData.manifest.fullscreen) {

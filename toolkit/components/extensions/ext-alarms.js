@@ -90,55 +90,33 @@ extensions.on("shutdown", (type, extension) => {
 });
 /* eslint-enable mozilla/balanced-listeners */
 
-extensions.registerPrivilegedAPI("alarms", (extension, context) => {
+extensions.registerSchemaAPI("alarms", "alarms", (extension, context) => {
   return {
     alarms: {
-      create: function(...args) {
-        let name = "", alarmInfo;
-        if (args.length == 1) {
-          alarmInfo = args[0];
-        } else {
-          [name, alarmInfo] = args;
-        }
-
+      create: function(name, alarmInfo) {
+        name = name || "";
         let alarm = new Alarm(extension, name, alarmInfo);
         alarmsMap.get(extension).add(alarm);
       },
 
-      get: function(...args) {
-        let name = "", callback;
-        if (args.length == 1) {
-          callback = args[0];
-        } else {
-          [name, callback] = args;
-        }
-
-        let promise = new Promise((resolve, reject) => {
-          for (let alarm of alarmsMap.get(extension)) {
-            if (alarm.name == name) {
-              return resolve(alarm.data);
-            }
+      get: function(name) {
+        name = name || "";
+        for (let alarm of alarmsMap.get(extension)) {
+          if (alarm.name === name) {
+            return Promise.resolve(alarm.data);
           }
-          reject("No matching alarm");
-        });
-
-        return context.wrapPromise(promise, callback);
+        }
+        return Promise.reject({message: `Alarm ${name} not found.`});
       },
 
-      getAll: function(callback) {
+      getAll: function() {
         let alarms = alarmsMap.get(extension);
         let result = Array.from(alarms, alarm => alarm.data);
-        return context.wrapPromise(Promise.resolve(result), callback);
+        return Promise.resolve(result);
       },
 
-      clear: function(...args) {
-        let name = "", callback;
-        if (args.length == 1) {
-          callback = args[0];
-        } else {
-          [name, callback] = args;
-        }
-
+      clear: function(name) {
+        name = name || "";
         let alarms = alarmsMap.get(extension);
         let cleared = false;
         for (let alarm of alarms) {
@@ -149,17 +127,17 @@ extensions.registerPrivilegedAPI("alarms", (extension, context) => {
           }
         }
 
-        return context.wrapPromise(Promise.resolve(cleared), callback);
+        return Promise.resolve(cleared);
       },
 
-      clearAll: function(callback) {
+      clearAll: function() {
         let alarms = alarmsMap.get(extension);
         let cleared = false;
         for (let alarm of alarms) {
           alarm.clear();
           cleared = true;
         }
-        return context.wrapPromise(Promise.resolve(cleared), callback);
+        return Promise.resolve(cleared);
       },
 
       onAlarm: new EventManager(context, "alarms.onAlarm", fire => {

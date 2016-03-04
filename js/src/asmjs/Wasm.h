@@ -19,7 +19,10 @@
 #ifndef wasm_h
 #define wasm_h
 
+#include "NamespaceImports.h"
+
 #include "gc/Rooting.h"
+#include "js/Class.h"
 
 namespace js {
 
@@ -31,8 +34,8 @@ namespace wasm {
 bool
 HasCompilerSupport(ExclusiveContext* cx);
 
-// The WebAssembly spec hard-codes the virtual page size to be 64KiB and limits
-// forces the linear memory to always be a multiple of 64KiB.
+// The WebAssembly spec hard-codes the virtual page size to be 64KiB and
+// requires linear memory to always be a multiple of 64KiB.
 static const unsigned PageSize = 64 * 1024;
 
 // When signal handling is used for bounds checking, MappedSize bytes are
@@ -46,10 +49,18 @@ static const uint64_t MappedSize = 2 * Uint32Range + PageSize;
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 bool
-Eval(JSContext* cx, JS::Handle<ArrayBufferObject*> code,
-     JS::HandleObject importObj, JS::MutableHandleObject exportObj);
+Eval(JSContext* cx, Handle<ArrayBufferObject*> code, HandleObject importObj,
+     MutableHandleObject exportObj);
 
 }  // namespace wasm
+
+// Initialization of the Wasm global object and its properties.
+
+extern const Class WasmClass;
+
+JSObject*
+InitWasmClass(JSContext* cx, HandleObject global);
+
 }  // namespace js
 
 #endif // namespace wasm_h
