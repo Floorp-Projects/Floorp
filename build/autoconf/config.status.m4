@@ -105,8 +105,6 @@ dnl We're going to need [ ] for python syntax.
 changequote(<<<, >>>)dnl
 echo creating $CONFIG_STATUS
 
-extra_python_path=${COMM_BUILD:+"'mozilla', "}
-
 cat > $CONFIG_STATUS <<EOF
 def unique_list(l):
     result = []
