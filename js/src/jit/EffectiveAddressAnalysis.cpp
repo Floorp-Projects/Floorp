@@ -104,20 +104,17 @@ template<typename MAsmJSHeapAccessType>
 bool
 EffectiveAddressAnalysis::tryAddDisplacement(MAsmJSHeapAccessType* ins, int32_t o)
 {
-    // Compute the new offset. Check for overflow and negative. In theory it
-    // ought to be possible to support negative offsets, but it'd require
-    // more elaborate bounds checking mechanisms than we currently have.
-    MOZ_ASSERT(ins->offset() >= 0);
-    int32_t newOffset = uint32_t(ins->offset()) + o;
-    if (newOffset < 0)
+    // Compute the new offset. Check for overflow.
+    uint32_t oldOffset = ins->offset();
+    uint32_t newOffset = oldOffset + o;
+    if (o < 0 ? (newOffset >= oldOffset) : (newOffset < oldOffset))
         return false;
 
     // Compute the new offset to the end of the access. Check for overflow
-    // and negative here also.
-    int32_t newEnd = uint32_t(newOffset) + ins->byteSize();
-    if (newEnd < 0)
+    // here also.
+    uint32_t newEnd = newOffset + ins->byteSize();
+    if (newEnd < newOffset)
         return false;
-    MOZ_ASSERT(uint32_t(newEnd) >= uint32_t(newOffset));
 
     // Determine the range of valid offsets which can be folded into this
     // instruction and check whether our computed offset is within that range.
