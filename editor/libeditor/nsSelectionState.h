@@ -41,7 +41,8 @@ public:
   void StoreRange(nsRange* aRange);
   already_AddRefed<nsRange> GetRange();
 
-  NS_INLINE_DECL_REFCOUNTING(nsRangeStore)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsRangeStore)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsRangeStore)
 
   nsCOMPtr<nsINode> startNode;
   int32_t           startOffset;
@@ -56,20 +57,37 @@ class nsSelectionState
     nsSelectionState();
     ~nsSelectionState();
 
-    void DoTraverse(nsCycleCollectionTraversalCallback &cb);
-    void DoUnlink() { MakeEmpty(); }
-
     void     SaveSelection(mozilla::dom::Selection *aSel);
     nsresult RestoreSelection(mozilla::dom::Selection* aSel);
     bool     IsCollapsed();
     bool     IsEqual(nsSelectionState *aSelState);
     void     MakeEmpty();
     bool     IsEmpty();
-  protected:
+  private:
     nsTArray<RefPtr<nsRangeStore> > mArray;
 
     friend class nsRangeUpdater;
+    friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
+                                            nsSelectionState&,
+                                            const char*,
+                                            uint32_t);
+    friend void ImplCycleCollectionUnlink(nsSelectionState&);
 };
+
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            nsSelectionState& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  ImplCycleCollectionTraverse(aCallback, aField.mArray, aName, aFlags);
+}
+
+inline void
+ImplCycleCollectionUnlink(nsSelectionState& aField)
+{
+  ImplCycleCollectionUnlink(aField.mArray);
+}
 
 class nsRangeUpdater
 {
@@ -120,11 +138,31 @@ class nsRangeUpdater
     void WillMoveNode();
     void DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
                      nsINode* aNewParent, int32_t aNewOffset);
-  protected:
+  private:
+    friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
+                                            nsRangeUpdater&,
+                                            const char*,
+                                            uint32_t);
+    friend void ImplCycleCollectionUnlink(nsRangeUpdater& aField);
+
     nsTArray<RefPtr<nsRangeStore> > mArray;
     bool mLock;
 };
 
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            nsRangeUpdater& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  ImplCycleCollectionTraverse(aCallback, aField.mArray, aName, aFlags);
+}
+
+inline void
+ImplCycleCollectionUnlink(nsRangeUpdater& aField)
+{
+  ImplCycleCollectionUnlink(aField.mArray);
+}
 
 /***************************************************************************
  * helper class for using nsSelectionState.  stack based class for doing
