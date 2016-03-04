@@ -1,0 +1,102 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "mozilla/IntegerRange.h"
+#include "js/Vector.h"
+#include "jsapi-tests/tests.h"
+#include "vm/Mutex.h"
+
+// One thread for each bit in our counter.
+const static uint8_t numThreads = 64;
+
+struct CounterAndBit
+{
+    uint8_t bit;
+    const js::Mutex<uint64_t>& counter;
+
+    CounterAndBit(uint8_t bit, const js::Mutex<uint64_t>& counter)
+      : bit(bit)
+      , counter(counter)
+    {
+        MOZ_ASSERT(bit < numThreads);
+    }
+};
+
+const static bool shouldPrint = false;
+
+void
+printDiagnosticMessage(uint64_t seen)
+{
+    if (!shouldPrint)
+        return;
+
+    fprintf(stderr, "Thread %p saw ", PR_GetCurrentThread());
+    for (auto i : mozilla::MakeRange(numThreads)) {
+        if (seen & (uint64_t(1) << i))
+            fprintf(stderr, "1");
+        else
+            fprintf(stderr, "0");
+    }
+    fprintf(stderr, "\n");
+}
+
+void
+setBitAndCheck(void* arg)
+{
+    auto& counterAndBit = *static_cast<CounterAndBit*>(arg);
+
+    while (true) {
+        {
+            // Set our bit. Repeatedly setting it is idempotent.
+            auto guard = counterAndBit.counter.lock();
+            printDiagnosticMessage(guard);
+            guard |= (uint64_t(1) << counterAndBit.bit);
+        }
+
+        {
+            // Check to see if we have observed all the other threads setting
+            // their bit as well.
+            auto guard = counterAndBit.counter.lock();
+            printDiagnosticMessage(guard);
+            if (guard == UINT64_MAX) {
+                js_delete(&counterAndBit);
+                return;
+            }
+        }
+    }
+}
+
+BEGIN_TEST(testMutex)
+{
+    auto maybeCounter = js::Mutex<uint64_t>::Create(0);
+    CHECK(maybeCounter.isSome());
+
+    js::Mutex<uint64_t> counter(mozilla::Move(*maybeCounter));
+
+    js::Vector<PRThread*> threads(cx);
+    CHECK(threads.reserve(numThreads));
+
+    for (auto i : mozilla::MakeRange(numThreads)) {
+        auto counterAndBit = js_new<CounterAndBit>(i, counter);
+        CHECK(counterAndBit);
+        auto thread = PR_CreateThread(PR_USER_THREAD,
+                                      setBitAndCheck,
+                                      (void *) counterAndBit,
+                                      PR_PRIORITY_NORMAL,
+                                      PR_LOCAL_THREAD,
+                                      PR_JOINABLE_THREAD,
+                                      0);
+        CHECK(thread);
+        threads.infallibleAppend(thread);
+    }
+
+    for (auto thread : threads) {
+        CHECK(PR_JoinThread(thread) == PR_SUCCESS);
+    }
+
+    return true;
+}
+END_TEST(testMutex)

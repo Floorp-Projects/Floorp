@@ -87,6 +87,10 @@ this.RequestSyncService = {
   init: function() {
     debug("init");
 
+    if (!Services.prefs.getBoolPref("dom.requestSync.enabled")) {
+      return;
+    }
+
     this._messages.forEach((function(msgName) {
       ppmm.addMessageListener(msgName, this);
     }).bind(this));

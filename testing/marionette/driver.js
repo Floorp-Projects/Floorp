@@ -11,7 +11,6 @@ var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
@@ -25,11 +24,12 @@ XPCOMUtils.defineLazyServiceGetter(
 
 Cu.import("chrome://marionette/content/action.js");
 Cu.import("chrome://marionette/content/atom.js");
-Cu.import("chrome://marionette/content/interaction.js");
 Cu.import("chrome://marionette/content/element.js");
+Cu.import("chrome://marionette/content/error.js");
+Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/frame.js");
-Cu.import("chrome://marionette/content/error.js");
+Cu.import("chrome://marionette/content/interaction.js");
 Cu.import("chrome://marionette/content/modal.js");
 Cu.import("chrome://marionette/content/proxy.js");
 Cu.import("chrome://marionette/content/simpletest.js");
@@ -121,10 +121,7 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
   // chrome iframe that currently has focus
   this.curFrame = null;
   this.mainContentFrameId = null;
-  this.importedScripts = FileUtils.getFile("TmpD", ["marionetteChromeScripts"]);
-  this.importedScriptHashes = {};
-  this.importedScriptHashes[Context.CONTENT] = [];
-  this.importedScriptHashes[Context.CHROME] = [];
+  this.importedScripts = new evaluate.ScriptStorageService([Context.CHROME, Context.CONTENT]);
   this.currentFrameElement = null;
   this.testName = null;
   this.mozBrowserClose = null;
@@ -836,15 +833,7 @@ GeckoDriver.prototype.executeScriptInSandbox = function(
     throw new TimeoutError("Please set a timeout");
   }
 
-  if (this.importedScripts.exists()) {
-    let stream = Cc["@mozilla.org/network/file-input-stream;1"]
-        .createInstance(Ci.nsIFileInputStream);
-    stream.init(this.importedScripts, -1, 0, 0);
-    let data = NetUtil.readInputStreamToString(stream, stream.available());
-    stream.close();
-    script = data + script;
-  }
-
+  script = this.importedScripts.for(Context.CHROME).concat(script);
   let res = Cu.evalInSandbox(script, sandbox, "1.8", filename ? filename : "dummy file", 0);
 
   if (directInject && !async &&
@@ -2499,58 +2488,31 @@ GeckoDriver.prototype.getAppCacheStatus = function*(cmd, resp) {
   resp.body.value = yield this.listener.getAppCacheStatus();
 };
 
+/**
+ * Import script to the JS evaluation runtime.
+ *
+ * Imported scripts are exposed in the contexts of all subsequent
+ * calls to {@code executeScript}, {@code executeAsyncScript}, and
+ * {@code executeJSScript} by prepending them to the evaluated script.
+ *
+ * Scripts can be cleared with the {@code clearImportedScripts} command.
+ *
+ * @param {string} script
+ *     Script to include.  If the script is byte-by-byte equal to an
+ *     existing imported script, it is not imported.
+ */
 GeckoDriver.prototype.importScript = function*(cmd, resp) {
   let script = cmd.parameters.script;
-
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-      .createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
-  let result = {};
-  let data = converter.convertToByteArray(cmd.parameters.script, result);
-  let ch = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
-  ch.init(ch.MD5);
-  ch.update(data, data.length);
-  let hash = ch.finish(true);
-  // return if we've already imported this script
-  if (this.importedScriptHashes[this.context].indexOf(hash) > -1) {
-    return;
-  }
-  this.importedScriptHashes[this.context].push(hash);
-
-  switch (this.context) {
-    case Context.CHROME:
-      let file;
-      if (this.importedScripts.exists()) {
-        file = FileUtils.openFileOutputStream(this.importedScripts,
-            FileUtils.MODE_APPEND | FileUtils.MODE_WRONLY);
-      } else {
-        // the permission bits here don't actually get set (bug 804563)
-        this.importedScripts.createUnique(
-            Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0666", 8));
-        file = FileUtils.openFileOutputStream(this.importedScripts,
-            FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
-        this.importedScripts.permissions = parseInt("0666", 8);
-      }
-      file.write(script, script.length);
-      file.close();
-      break;
-
-    case Context.CONTENT:
-      yield this.listener.importScript({script: script});
-      break;
-  }
+  this.importedScripts.for(this.context).add(script);
 };
 
-GeckoDriver.prototype.clearImportedScripts = function(cmd, resp) {
-  switch (this.context) {
-    case Context.CHROME:
-      this.deleteFile("marionetteChromeScripts");
-      break;
-
-    case Context.CONTENT:
-      this.deleteFile("marionetteContentScripts");
-      break;
-  }
+/**
+ * Clear all scripts that are imported into the JS evaluation runtime.
+ *
+ * Scripts can be imported using the {@code importScript} command.
+ */
+GeckoDriver.prototype.clearImportedScripts = function*(cmd, resp) {
+  this.importedScripts.for(this.context).clear();
 };
 
 /**

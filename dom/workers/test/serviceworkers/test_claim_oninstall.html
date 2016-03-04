@@ -37,19 +37,19 @@
     }
 
     var p = new Promise(function(res, rej) {
-      registration.installing.onstatechange = function(e) {
-        ok(registration.waiting, "Worker should be in waitinging state");
-
-        // The worker will become active only if claim will reject inside the
-        // install handler.
-        registration.waiting.onstatechange = function(e) {
-          ok(registration.active, "Claim should reject if the worker is not active");
+      var worker = registration.installing;
+      worker.onstatechange = function(e) {
+        if (worker.state === 'installed') {
+          is(worker, registration.waiting, "Worker should be in waiting state");
+        } else if (worker.state === 'activated') {
+          // The worker will become active only if claim will reject inside the
+          // install handler.
+          is(worker, registration.active,
+             "Claim should reject if the worker is not active");
           ok(navigator.serviceWorker.controller === null, "Client is not controlled.");
           e.target.onstatechange = null;
           res();
         }
-
-        e.target.onstatechange = null;
       }
     });
 

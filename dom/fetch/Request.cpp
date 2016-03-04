@@ -353,6 +353,7 @@ Request::Constructor(const GlobalObject& aGlobal,
 
   if (aInit.IsAnyMemberPresent()) {
     request->SetReferrer(NS_LITERAL_STRING(kFETCH_CLIENT_REFERRER_STR));
+    request->SetReferrerPolicy(ReferrerPolicy::_empty);
   }
   if (aInit.mReferrer.WasPassed()) {
     const nsString& referrer = aInit.mReferrer.Value();
@@ -417,6 +418,10 @@ Request::Constructor(const GlobalObject& aGlobal,
       }
       request->SetReferrer(referrerURL);
     }
+  }
+
+  if (aInit.mReferrerPolicy.WasPassed()) {
+    request->SetReferrerPolicy(aInit.mReferrerPolicy.Value());
   }
 
   if (mode != RequestMode::EndGuard_) {

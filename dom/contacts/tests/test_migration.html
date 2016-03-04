@@ -54,22 +54,6 @@ function deleteDB() {
   backend.sendAsyncMessage("deleteDB");
 }
 
-function setSubstringMatching(value) {
-  info("Setting substring matching to " + value);
-
-  if (value) {
-    SpecialPowers.setIntPref("dom.phonenumber.substringmatching.BR", value);
-
-    // this is the Mcc for Brazil, so that we trigger the previous pref
-    SpecialPowers.setCharPref("ril.lastKnownSimMcc", "724");
-  } else {
-    SpecialPowers.clearUserPref("dom.phonenumber.substringmatching.BR");
-    SpecialPowers.clearUserPref("ril.lastKnownSimMcc");
-  }
-
-  next();
-}
-
 var steps = [
   function setupChromeScript() {
     loadChromeScript();
@@ -79,7 +63,6 @@ var steps = [
 
   deleteDB, // let's be sure the DB does not exist yet
   createDB.bind(null, 12),
-  setSubstringMatching.bind(null, 7),
 
   function testAccessMozContacts() {
     info("Checking we have the right number of contacts: " + contactsCount);
@@ -194,7 +177,6 @@ var steps = [
   },
 
   deleteDB,
-  setSubstringMatching.bind(null, null),
 
   function finish() {
     backend.destroy();
@@ -203,7 +185,9 @@ var steps = [
   }
 ];
 
-start_tests();
+// this is the Mcc for Brazil, so that we trigger the previous pref
+SpecialPowers.pushPrefEnv({"set": [["dom.phonenumber.substringmatching.BR", 7],
+                                   ["ril.lastKnownSimMcc", "724"]]}, start_tests);
 </script>
 </pre>
 </body>

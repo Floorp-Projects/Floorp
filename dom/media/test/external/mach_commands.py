@@ -66,5 +66,5 @@ class MachCommands(MachCommandBase):
              parser=setup_argument_parser,
              )
     def run_external_media_test(self, tests, **kwargs):
-        kwargs['binary'] = self.get_binary_path('app')
+        kwargs['binary'] = kwargs['binary'] or self.get_binary_path('app')
         return run_external_media_test(tests, topsrcdir=self.topsrcdir, **kwargs)

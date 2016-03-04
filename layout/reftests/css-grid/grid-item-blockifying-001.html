@@ -1,0 +1,409 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html class="reftest-wait"><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Grid item blockifying</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1185140">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#grid-items">
+  <link rel="match" href="grid-item-blockifying-001-ref.html">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: grid;
+  grid-auto-columns: 100px;
+  grid-auto-rows: 2px;
+  justify-content: start;
+  border: 1px solid blue;
+}
+
+x {
+  grid-column: span 2;
+  border:1px solid;
+}
+
+.itable  { display:inline-table; }
+.table   { display:table; }
+.caption { display:table-caption; }
+.cell    { display:table-cell; }
+.row     { display:table-row; }
+.rowg    { display:table-row-group; }
+.head    { display:table-header-group; }
+.foot    { display:table-footer-group; }
+.col     { display:table-column; }
+.colg    { display:table-column-group; }
+
+.flex  { display:flex; }
+.iflex { display:inline-flex; }
+
+.bgrid  { display:grid; }
+.igrid { display:inline-grid; }
+
+.list  { display:list-item; }
+
+.r   { display: ruby; }
+.rb  { display: ruby-base; }
+.rt  { display: ruby-text; }
+.rbc { display: ruby-base-container; }
+.rtc { display: ruby-text-container; }
+
+</style>
+</head>
+<body>
+
+<!-- These should produce two display:block grid items -->
+
+<div class="grid">
+<x class="cell"></x>
+<x class="cell"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="cell"></x>
+<x class="cell"></x>
+</div>
+</div>
+
+<div class="grid">
+<x class="cell"></x>
+<x class="row"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="row"></x>
+<x class="row"></x>
+</div>
+</div>
+
+<div class="grid">
+<x class="row"></x>
+<x class="row"></x>
+</div>
+
+<div class="grid">
+<x class="rowg"></x>
+<x class="rowg"></x>
+</div>
+
+<div class="grid">
+<x class="head"></x>
+<x class="rowg"></x>
+</div>
+
+<div class="grid">
+<x class="col"></x>
+<x class="col"></x>
+</div>
+
+<div class="grid">
+<x class="col"></x>
+<x class="colg"></x>
+</div>
+
+<div class="grid">
+<x class="colg"></x>
+<x class="colg"></x>
+</div>
+
+<div class="grid">
+<x class="cell"></x>
+<x class="col"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="caption"></x>
+<x class="caption"></x>
+</div>
+</div>
+
+<div class="grid">
+<x class="caption"></x>
+<x class="caption"></x>
+</div>
+
+<div class="grid">
+<x class="caption"></x>
+<x class="cell"></x>
+</div>
+
+<div class="grid">
+<x></x>
+<x></x>
+</div>
+
+<!-- These should produce two display:table grid items -->
+
+<div class="grid">
+<x class="table"></x>
+<x class="table"></x>
+</div>
+
+<div class="grid">
+<x class="itable"></x>
+<x class="itable"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="table"></x>
+<x class="itable"></x>
+</div>
+</div>
+
+<!-- These should produce one display:table grid item and one display:block grid item -->
+
+<div class="grid">
+<x class="table"></x>
+<x class="cell"></x>
+</div>
+
+<div class="grid">
+<x class="cell"></x>
+<x class="table"></x>
+</div>
+
+<div class="grid">
+<x class="itable"></x>
+<x class="cell"></x>
+</div>
+
+<div class="grid">
+<x class="table"></x>
+<x class="rowg"></x>
+</div>
+
+<div class="grid">
+<x class="itable"></x>
+<x class="rowg"></x>
+</div>
+
+<div class="grid">
+<x class="rowg"></x>
+<x class="itable"></x>
+</div>
+
+<!-- These should produce two display:flex grid items -->
+
+<div class="grid">
+<x class="flex"></x>
+<x class="iflex"></x>
+</div>
+
+<div class="grid">
+<x class="iflex"></x>
+<x class="iflex"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="flex"></x>
+<x class="flex"></x>
+</div>
+</div>
+
+<!-- This should produce one display:flex grid item and one display:block -->
+
+<div class="grid">
+<x class="iflex"></x>
+<x class="cell"></x>
+</div>
+
+<!-- These should produce two display:grid grid items -->
+
+<div class="grid">
+<x class="bgrid"></x>
+<x class="igrid"></x>
+</div>
+
+<div class="grid">
+<x class="igrid"></x>
+<x class="igrid"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="bgrid"></x>
+<x class="bgrid"></x>
+</div>
+</div>
+
+<!-- This should produce one display:grid grid item and one display:block -->
+
+<div class="grid">
+<x class="igrid"></x>
+<x class="cell"></x>
+</div>
+
+<!-- This should produce one display:list-item grid item and one display:block -->
+<div class="grid">
+<x class="list"></x>
+<x></x>
+</div>
+
+<!-- Various Ruby tests -->
+
+<div class="grid">
+<x class="r"></x>
+<x class="r"></x>
+</div>
+
+<div class="grid">
+<x class="rb"></x>
+<x class="rb"></x>
+</div>
+
+<div class="grid">
+<x class="rt"></x>
+<x class="rt"></x>
+</div>
+
+<div class="grid">
+<x class="rbc"></x>
+<x class="rbc"></x>
+</div>
+
+<div class="grid">
+<x class="rtc"></x>
+<x class="rtc"></x>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="r"></x>
+<x class="r"></x>
+</div>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="rb"></x>
+<x class="rb"></x>
+</div>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="rt"></x>
+<x class="rt"></x>
+</div>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="rbc"></x>
+<x class="rbc"></x>
+</div>
+</div>
+
+<div class="grid">
+<div style="display:contents">
+<x class="rtc"></x>
+<x class="rtc"></x>
+</div>
+</div>
+
+<script>
+var expected = [
+  "block block",
+  "contents",
+  "block block",
+  "contents",
+  "block block",
+  "block block",
+  "block block",
+  "block block",
+  "block block",
+  "block block",
+  "block block",
+  "contents",
+  "block block",
+  "block block",
+  "block block",
+  "table table",
+  "table table",
+  "contents",
+  "table block",
+  "block table",
+  "table block",
+  "table block",
+  "table block",
+  "block table",
+  "flex flex",
+  "flex flex",
+  "contents",
+  "flex block",
+  "grid grid",
+  "grid grid",
+  "contents",
+  "grid block",
+  "list-item block",
+  "block block",
+  "block block",
+  "block block",
+  "block block",
+  "block block",
+  "contents",
+  "contents",
+  "contents",
+  "contents",
+  "contents",
+];
+var expected2 = [ /* results for display:contents children */
+  "block block",
+  "block block",
+  "block block",
+  "table table",
+  "flex flex",
+  "grid grid",
+  "block block",
+  "block block",
+  "block block",
+  "block block",
+  "block block",
+];
+
+function is(elem, got, expected) {
+  if (got != expected) {
+    var err = elem.innerHTML + '\n' +
+              'got: ' + got + '\n' +
+              'expected: ' + expected;
+    document.body.appendChild(document.createTextNode(err));
+  }
+}
+function checkDisplayTypes() {
+  var grids = Array.prototype.slice.call(document.querySelectorAll('.grid'))
+  var i2 = 0;
+  for (var i = 0; i < grids.length; ++i) {
+    var items = Array.prototype.slice.call(grids[i].children)
+    var s = items.map((e) => getComputedStyle(e).display).join(' ');
+    is(grids[i], s, expected[i]);
+    items.map(function(e) {
+      if (getComputedStyle(e).display == "contents") {
+        items = Array.prototype.slice.call(e.children)
+        s = items.map((e) => getComputedStyle(e).display).join(' ');
+        is(grids[i], s, expected2[i2]);
+        i2++;
+      }
+    });
+  }
+}
+
+function runTests() {
+  checkDisplayTypes();
+  document.documentElement.removeAttribute("class");
+}
+
+runTests();
+
+</script>
+
+</body>
+</html>

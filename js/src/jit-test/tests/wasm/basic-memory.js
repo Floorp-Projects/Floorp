@@ -6,7 +6,7 @@ if (!wasmIsSupported())
 function testLoad(type, ext, base, offset, align, expect) {
   assertEq(wasmEvalText(
     '(module' +
-    '  (memory 0x10000' +
+    '  (memory 1' +
     '    (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")' +
     '    (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")' +
     '  )' +
@@ -23,7 +23,7 @@ function testLoad(type, ext, base, offset, align, expect) {
 function testStore(type, ext, base, offset, align, value) {
   assertEq(wasmEvalText(
     '(module' +
-    '  (memory 0x10000' +
+    '  (memory 1' +
     '    (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")' +
     '    (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")' +
     '  )' +
@@ -41,7 +41,7 @@ function testStore(type, ext, base, offset, align, value) {
 function testLoadError(type, ext, base, offset, align, errorMsg) {
   assertErrorMessage(() => wasmEvalText(
     '(module' +
-    '  (memory 0x10000' +
+    '  (memory 1' +
     '    (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")' +
     '    (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")' +
     '  )' +
@@ -58,7 +58,7 @@ function testLoadError(type, ext, base, offset, align, errorMsg) {
 function testStoreError(type, ext, base, offset, align, errorMsg) {
   assertErrorMessage(() => wasmEvalText(
     '(module' +
-    '  (memory 0x10000' +
+    '  (memory 1' +
     '    (segment 0 "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")' +
     '    (segment 16 "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")' +
     '  )' +
@@ -100,7 +100,7 @@ testLoad('i32', '16_u', 16, 0, 0, 0xf1f0);
 
 // When these tests fail, uncomment the load/store tests below.
 function testLoadNYI(ext) {
-    assertErrorMessage(() => wasmEvalText(`(module (memory 0x10000) (func (i64.load${ext} (i32.const 0))))`), TypeError, /NYI/);
+    assertErrorMessage(() => wasmEvalText(`(module (memory 1) (func (i64.load${ext} (i32.const 0))))`), TypeError, /NYI/);
 }
 testLoadNYI('');
 testLoadNYI('8_s');
@@ -122,7 +122,7 @@ testStore('i32', '', 0, 0, 0, -0x3f3e2c2c);
 //testStore('i32', '', 1, 1, 4, 0xc0c1d3d4); // TODO: offset NYI
 
 function testStoreNYI(ext) {
-    assertErrorMessage(() => wasmEvalText(`(module (memory 0x10000) (func (i64.store${ext} (i32.const 0) (i32.const 0))))`), TypeError, /NYI/);
+    assertErrorMessage(() => wasmEvalText(`(module (memory 1) (func (i64.store${ext} (i32.const 0) (i32.const 0))))`), TypeError, /NYI/);
 }
 testStoreNYI('');
 testStoreNYI('8');
@@ -151,11 +151,11 @@ testStore('i32', '16', 0, 0, 0, 0x2345);
 testLoadError('i32', '', 0, 0, 3, /memory access alignment must be a power of two/);
 testStoreError('i32', '', 0, 0, 3, /memory access alignment must be a power of two/);
 
-assertErrorMessage(() => wasmEvalText('(module (memory 0x10000) (func (f64.store offset=0 (i32.const 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f64"));
-assertErrorMessage(() => wasmEvalText('(module (memory 0x10000) (func (f64.store offset=0 (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "f64"));
+assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f64"));
+assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "f64"));
 
-assertErrorMessage(() => wasmEvalText('(module (memory 0x10000) (func (f32.store offset=0 (i32.const 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f32"));
-assertErrorMessage(() => wasmEvalText('(module (memory 0x10000) (func (f32.store offset=0 (i32.const 0) (f64.const 0))))'), TypeError, mismatchError("f64", "f32"));
+assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f32"));
+assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (f64.const 0))))'), TypeError, mismatchError("f64", "f32"));
 
-assertErrorMessage(() => wasmEvalText('(module (memory 0x10000) (func (i32.store offset=0 (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "i32"));
-assertErrorMessage(() => wasmEvalText('(module (memory 0x10000) (func (i32.store offset=0 (i32.const 0) (f64.const 0))))'), TypeError, mismatchError("f64", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f64.const 0))))'), TypeError, mismatchError("f64", "i32"));

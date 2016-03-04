@@ -79,6 +79,13 @@ def expectedFailure(func):
         raise _UnexpectedSuccess
     return wrapper
 
+def skip_if_chrome(target):
+    def wrapper(self, *args, **kwargs):
+        if self.marionette._send_message("getContext", key="value") == "chrome":
+            raise SkipTest("skipping test in chrome context")
+        return target(self, *args, **kwargs)
+    return wrapper
+
 def skip_if_desktop(target):
     def wrapper(self, *args, **kwargs):
         if self.marionette.session_capabilities.get('b2g') is None:

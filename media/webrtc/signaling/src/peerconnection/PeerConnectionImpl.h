@@ -157,12 +157,11 @@ public:
   bool addStunServer(const std::string& addr, uint16_t port,
                      const char* transport)
   {
-    NrIceStunServer* server(NrIceStunServer::Create(addr, port, transport));
+    UniquePtr<NrIceStunServer> server(NrIceStunServer::Create(addr, port, transport));
     if (!server) {
       return false;
     }
     addStunServer(*server);
-    delete server;
     return true;
   }
   bool addTurnServer(const std::string& addr, uint16_t port,
@@ -174,13 +173,12 @@ public:
     // username and password. Bug # ???
     std::vector<unsigned char> password(pwd.begin(), pwd.end());
 
-    NrIceTurnServer* server(NrIceTurnServer::Create(addr, port, username, password,
-                                                    transport));
+    UniquePtr<NrIceTurnServer> server(NrIceTurnServer::Create(addr, port, username, password,
+							      transport));
     if (!server) {
       return false;
     }
     addTurnServer(*server);
-    delete server;
     return true;
   }
   void addStunServer(const NrIceStunServer& server) { mStunServers.push_back (server); }

@@ -265,10 +265,36 @@ FetchDriver::HttpFetch()
     // Step 2. Set the referrer.
     nsAutoString referrer;
     mRequest->GetReferrer(referrer);
+    ReferrerPolicy referrerPolicy = mRequest->ReferrerPolicy_();
+    net::ReferrerPolicy net_referrerPolicy = net::RP_Unset;
+    switch (referrerPolicy) {
+    case ReferrerPolicy::_empty:
+      net_referrerPolicy = net::RP_Default;
+      break;
+    case ReferrerPolicy::No_referrer:
+      net_referrerPolicy = net::RP_No_Referrer;
+      break;
+    case ReferrerPolicy::No_referrer_when_downgrade:
+      net_referrerPolicy = net::RP_No_Referrer_When_Downgrade;
+      break;
+    case ReferrerPolicy::Origin_only:
+      net_referrerPolicy = net::RP_Origin;
+      break;
+    case ReferrerPolicy::Origin_when_cross_origin:
+      net_referrerPolicy = net::RP_Origin_When_Crossorigin;
+      break;
+    case ReferrerPolicy::Unsafe_url:
+      net_referrerPolicy = net::RP_Unsafe_URL;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid ReferrerPolicy enum value?");
+      break;
+    }
     if (referrer.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
       rv = nsContentUtils::SetFetchReferrerURIWithPolicy(mPrincipal,
                                                          mDocument,
-                                                         httpChan);
+                                                         httpChan,
+                                                         net_referrerPolicy);
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (referrer.IsEmpty()) {
       rv = httpChan->SetReferrerWithPolicy(nullptr, net::RP_No_Referrer);
@@ -277,19 +303,17 @@ FetchDriver::HttpFetch()
       // From "Determine request's Referrer" step 3
       // "If request's referrer is a URL, let referrerSource be request's
       // referrer."
-      //
-      // XXXnsm - We never actually hit this from a fetch() call since both
-      // fetch and Request() create a new internal request whose referrer is
-      // always set to about:client. Should we just crash here instead until
-      // someone tries to use FetchDriver for non-fetch() APIs?
       nsCOMPtr<nsIURI> referrerURI;
       rv = NS_NewURI(getter_AddRefs(referrerURI), referrer, nullptr, nullptr);
       NS_ENSURE_SUCCESS(rv, rv);
 
+      uint32_t documentReferrerPolicy = mDocument ? mDocument->GetReferrerPolicy() :
+                                                    net::RP_Default;
       rv =
         httpChan->SetReferrerWithPolicy(referrerURI,
-                                        mDocument ? mDocument->GetReferrerPolicy() :
-                                                    net::RP_Default);
+                                        referrerPolicy == ReferrerPolicy::_empty ?
+                                          documentReferrerPolicy :
+                                          net_referrerPolicy);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 

@@ -128,6 +128,10 @@
     // No spaces between function name and parentheses
     "no-spaced-func": 2,
 
+    // Disallow throwing literals (eg. |throw "error"| instead of
+    // |throw new Error("error")|)
+    "no-throw-literal": 2,
+
     // No trailing whitespace
     "no-trailing-spaces": 2,
 
@@ -174,6 +178,6 @@
     "use-isnan": 2,
 
     // Only check typeof against valid results
-    "valid-typeof": 2,
+    "valid-typeof": 2
   }
 }

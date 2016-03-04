@@ -373,7 +373,7 @@ AllocateWasmMappedMemory(uint32_t numBytes)
     if (!data)
         return nullptr;
 
-    if (!VirtualAlloc(data, numBytes, MEM_COMMIT, PAGE_READWRITE)) {
+    if (numBytes && !VirtualAlloc(data, numBytes, MEM_COMMIT, PAGE_READWRITE)) {
         VirtualFree(data, 0, MEM_RELEASE);
         return nullptr;
     }
@@ -398,7 +398,7 @@ AllocateWasmMappedMemory(uint32_t numBytes)
     if (data == MAP_FAILED)
         return nullptr;
 
-    if (mprotect(data, numBytes, PROT_READ | PROT_WRITE)) {
+    if (numBytes && mprotect(data, numBytes, PROT_READ | PROT_WRITE)) {
         munmap(data, wasm::MappedSize);
         return nullptr;
     }

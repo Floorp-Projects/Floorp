@@ -19,13 +19,8 @@ from talos import output, utils, filter
 class TalosResults(object):
     """Container class for Talos results"""
 
-    def __init__(self, title, date, browser_config):
+    def __init__(self):
         self.results = []
-
-        # info needed for graphserver
-        self.title = title
-        self.date = date
-        self.browser_config = browser_config
 
     def add(self, test_results):
         self.results.append(test_results)
