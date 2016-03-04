@@ -32,6 +32,10 @@ fuzzy-if(skiaContent||(browserIsRemote&&cocoaWidget),1,10000) skip-if(!asyncPan)
 fuzzy(1,60000) skip-if(!asyncPan) == group-opacity-surface-size-1.html group-opacity-surface-size-1-ref.html
 == position-sticky-transformed.html position-sticky-transformed-ref.html
 == offscreen-prerendered-active-opacity.html offscreen-prerendered-active-opacity-ref.html
+fuzzy-if(Android,6,4) == offscreen-clipped-blendmode-1.html offscreen-clipped-blendmode-ref.html
+fuzzy-if(Android,6,4) == offscreen-clipped-blendmode-2.html offscreen-clipped-blendmode-ref.html
+fuzzy-if(Android,6,4) skip == offscreen-clipped-blendmode-3.html offscreen-clipped-blendmode-ref.html # bug 1251588 - wrong AGR on mix-blend-mode item
+fuzzy-if(Android,6,4) == offscreen-clipped-blendmode-4.html offscreen-clipped-blendmode-ref.html
 
 # for the following tests, we want to disable the low-precision buffer
 # as it will expand the displayport beyond what the test specifies in
