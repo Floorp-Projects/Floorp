@@ -3014,7 +3014,11 @@ var BrowserObj = function(win, driver) {
   this.mainContentId = null;
   // used to set curFrameId upon new session
   this.newSession = true;
-  this.elementManager = new ElementManager([NAME, LINK_TEXT, PARTIAL_LINK_TEXT]);
+  this.elementManager = new ElementManager([
+    element.Strategy.Name,
+    element.Strategy.LinkText,
+    element.Strategy.PartialLinkText,
+  ]);
   this.setBrowser(win);
 
   // A reference to the tab corresponding to the current window handle, if any.
