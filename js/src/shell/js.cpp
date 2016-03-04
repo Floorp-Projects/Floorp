@@ -5702,7 +5702,7 @@ Help(JSContext* cx, unsigned argc, Value* vp)
 
 static const JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
 #define MSG_DEF(name, count, exception, format) \
-    { format, count, JSEXN_ERR } ,
+    { #name, format, count, JSEXN_ERR } ,
 #include "jsshell.msg"
 #undef MSG_DEF
 };
