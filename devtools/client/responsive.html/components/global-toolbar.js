@@ -4,29 +4,38 @@
 
 "use strict";
 
+const { getStr } = require("./utils/l10n");
 const { DOM: dom, createClass, PropTypes } =
   require("devtools/client/shared/vendor/react");
 
 module.exports = createClass({
 
-  displayName: "ViewportToolbar",
+  displayName: "GlobalToolbar",
 
   propTypes: {
-    onRotateViewport: PropTypes.func.isRequired,
+    onExit: PropTypes.func.isRequired,
   },
 
   render() {
     let {
-      onRotateViewport,
+      onExit,
     } = this.props;
 
-    return dom.div(
+    return dom.header(
       {
-        className: "viewport-toolbar",
+        id: "global-toolbar",
+        className: "toolbar",
       },
+      dom.span(
+        {
+          className: "title",
+        },
+        getStr("responsive.title")),
       dom.button({
-        className: "viewport-rotate-button toolbar-button",
-        onClick: onRotateViewport,
+        id: "global-exit-button",
+        className: "toolbar-button",
+        title: getStr("responsive.exit"),
+        onClick: onExit,
       })
     );
   },
