@@ -386,9 +386,6 @@ DecodeLoadStoreAddress(FunctionDecoder &f)
     if (!f.d().readVarU32(&offset))
         return f.fail("expected memory access offset");
 
-    if (offset != 0)
-        return f.fail("NYI: address offsets");
-
     uint32_t align;
     if (!f.d().readVarU32(&align))
         return f.fail("expected memory access alignment");
