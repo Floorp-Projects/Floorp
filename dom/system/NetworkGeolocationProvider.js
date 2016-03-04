@@ -383,8 +383,9 @@ WifiGeoPositionProvider.prototype = {
       let result = ap.ssid.indexOf(mask, ap.ssid.length - mask.length);
       if (result != -1) {
         LOG("Filtering out " + ap.ssid + " " + result);
+        return false;
       }
-      return result;
+      return true;
     };
 
     function sort(a, b) {

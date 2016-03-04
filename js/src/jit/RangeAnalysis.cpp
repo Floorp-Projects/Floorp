@@ -2870,9 +2870,7 @@ static MDefinition::TruncateKind
 ComputeRequestedTruncateKind(MDefinition* candidate, bool* shouldClone)
 {
     bool isCapturedResult = false;
-    bool isObservableResult = false;
     bool isRecoverableResult = true;
-    bool hasUseRemoved = candidate->isUseRemoved();
 
     MDefinition::TruncateKind kind = MDefinition::Truncate;
     for (MUseIterator use(candidate->usesBegin()); use != candidate->usesEnd(); use++) {
@@ -2882,8 +2880,6 @@ ComputeRequestedTruncateKind(MDefinition* candidate, bool* shouldClone)
             // destructive optimizations if we have no alternative. (see
             // UseRemoved flag)
             isCapturedResult = true;
-            isObservableResult = isObservableResult ||
-                use->consumer()->toResumePoint()->isObservableOperand(*use);
             isRecoverableResult = isRecoverableResult &&
                 use->consumer()->toResumePoint()->isRecoverableOperand(*use);
             continue;
@@ -2892,7 +2888,6 @@ ComputeRequestedTruncateKind(MDefinition* candidate, bool* shouldClone)
         MDefinition* consumer = use->consumer()->toDefinition();
         if (consumer->isRecoveredOnBailout()) {
             isCapturedResult = true;
-            hasUseRemoved = hasUseRemoved || consumer->isUseRemoved();
             continue;
         }
 
@@ -2917,24 +2912,16 @@ ComputeRequestedTruncateKind(MDefinition* candidate, bool* shouldClone)
     // truncation.
     if (isCapturedResult && needsConversion) {
 
-        // These optimizations are pointless if there are no removed uses or any
-        // resume point observing the result.  Not having any means that we know
-        // everything about where this results flows into.
-        if ((hasUseRemoved || (isObservableResult && isRecoverableResult)) &&
-            candidate->canRecoverOnBailout())
-        {
-            // The cloned instruction is expected to be used as a recover
-            // instruction.
+        // If the result can be recovered from all the resume points (not needed
+        // for iterating over the inlined frames), and this instruction can be
+        // recovered on bailout, then we can clone it and use the cloned
+        // instruction to encode the recover instruction.  Otherwise, we should
+        // keep the original result and bailout if the value is not in the int32
+        // range.
+        if (isRecoverableResult && candidate->canRecoverOnBailout())
             *shouldClone = true;
-
-        } else if (hasUseRemoved || isObservableResult) {
-            // 1. If uses are removed and we cannot recover the result, then we
-            // need to keep the expected result for dead branches.
-            //
-            // 2. If the result is observable and not recoverable, then the
-            // result might be read while the frame is on the stack.
+        else
             kind = Min(kind, MDefinition::TruncateAfterBailouts);
-        }
     }
 
     return kind;

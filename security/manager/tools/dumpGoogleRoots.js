@@ -25,11 +25,12 @@ function downloadRoots() {
     req.send();
   }
   catch (e) {
-    throw "ERROR: problem downloading Google Root PEMs: " + e;
+    throw new Error("ERROR: problem downloading Google Root PEMs: " + e);
   }
 
   if (req.status != 200) {
-    throw "ERROR: problem downloading Google Root PEMs. Status: " + req.status;
+    throw new Error("ERROR: problem downloading Google Root PEMs. Status: " +
+                    req.status);
   }
 
   let pem = req.responseText;

@@ -1223,6 +1223,8 @@ or run without that action (ie: --no-{action})"
     def _count_ctors(self):
         """count num of ctors and set testresults."""
         dirs = self.query_abs_dirs()
+        python_path = os.path.join(dirs['abs_work_dir'], 'venv', 'bin',
+                                   'python')
         abs_count_ctors_path = os.path.join(dirs['abs_src_dir'],
                                             'build',
                                             'util',
@@ -1232,8 +1234,9 @@ or run without that action (ie: --no-{action})"
                                        'bin',
                                        'libxul.so')
 
-        cmd = ['python', abs_count_ctors_path, abs_libxul_path]
-        self.get_output_from_command(cmd, cwd=dirs['abs_src_dir'])
+        cmd = [python_path, abs_count_ctors_path, abs_libxul_path]
+        self.get_output_from_command(cmd, cwd=dirs['abs_src_dir'],
+                                     throw_exception=True)
 
     def _generate_properties_file(self, path):
         # TODO it would be better to grab all the properties that were

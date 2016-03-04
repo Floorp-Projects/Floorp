@@ -6,6 +6,7 @@
  "C:\\$logfile": {"ignore": true},
  "{firefox}\\omni.ja": {"mincount": 0, "maxcount": 46, "minbytes": 0, "maxbytes": 3014656},
  "{firefox}\\browser\\omni.ja": {"mincount": 0, "maxcount": 28, "minbytes": 0, "maxbytes": 1835008},
+ "{firefox}\\browser\\features\\e10srollout@mozilla.org.xpi": {"mincount": 0, "maxcount": 100, "minbytes": 0, "maxbytes": 10000000},
  "{firefox}\\browser\\features\\loop@mozilla.org.xpi": {"mincount": 0, "maxcount": 100, "minbytes": 0, "maxbytes": 10000000},
  "{firefox}\\browser\\features\\firefox@getpocket.com.xpi": {"mincount": 0, "maxcount": 100, "minbytes": 0, "maxbytes": 10000000},
  "{talos}\\tests\\tp5n\\tp5n.manifest": {"mincount": 0, "maxcount": 8, "minbytes": 0, "maxbytes": 32786},

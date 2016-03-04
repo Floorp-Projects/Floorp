@@ -342,12 +342,12 @@ add_task(function* () {
   is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_BLOCKLISTED,
      "Test 26, plugin fallback type should be PLUGIN_BLOCKLISTED");
 
-  let result = ContentTask.spawn(gTestBrowser, {}, function* () {
+  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
     let plugin = content.document.getElementById("test");
     let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     return objLoadingContent.activated;
   });
-  ok(result, "Plugin should be activated.");
+  ok(!result, "Plugin should not be activated.");
 
   const testUrl = "http://test.url.com/";
 

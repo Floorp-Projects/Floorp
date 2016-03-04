@@ -1463,10 +1463,10 @@ DocAccessible::DoInitialUpdate()
   // The content element may be changed before the initial update and then we
   // miss the notification (since content tree change notifications are ignored
   // prior to initial update). Make sure the content element is valid.
-  nsIContent* contentElm = nsCoreUtils::GetRoleContent(mDocumentNode);
-  if (contentElm) {
-    mContent = contentElm;
-    SetRoleMapEntry(aria::GetRoleMap(mContent));
+  dom::Element* rootEl = nsCoreUtils::GetRoleContent(mDocumentNode);
+  if (rootEl) {
+    mContent = rootEl;
+    SetRoleMapEntry(aria::GetRoleMap(rootEl));
   }
 
   // Build initial tree.  Since its the initial tree there's no group info to
@@ -1700,10 +1700,10 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
 
     if (container == this) {
       // If new root content has been inserted then update it.
-      nsIContent* rootContent = nsCoreUtils::GetRoleContent(mDocumentNode);
-      if (rootContent != mContent) {
-        mContent = rootContent;
-        SetRoleMapEntry(aria::GetRoleMap(mContent));
+      dom::Element* rootEl = nsCoreUtils::GetRoleContent(mDocumentNode);
+      if (rootEl != mContent) {
+        mContent = rootEl;
+        SetRoleMapEntry(aria::GetRoleMap(rootEl));
       }
 
       // Continue to update the tree even if we don't have root content.

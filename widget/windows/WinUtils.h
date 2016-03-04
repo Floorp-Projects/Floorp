@@ -445,6 +445,18 @@ public:
 
   static bool ShouldHideScrollbars();
 
+  /**
+   * This function normalizes the input path, converts short filenames to long
+   * filenames, and substitutes environment variables for system paths.
+   * The resulting output string length is guaranteed to be <= MAX_PATH.
+   */
+  static bool SanitizePath(const wchar_t* aInputPath, nsAString& aOutput);
+
+  /**
+   * Retrieve a semicolon-delimited list of DLL files derived from AppInit_DLLs
+   */
+  static bool GetAppInitDLLs(nsAString& aOutput);
+
 private:
   typedef HRESULT (WINAPI * SHCreateItemFromParsingNamePtr)(PCWSTR pszPath,
                                                             IBindCtx *pbc,
@@ -456,6 +468,9 @@ private:
                                                      HANDLE hToken,
                                                      PWSTR *ppszPath);
   static SHGetKnownFolderPathPtr sGetKnownFolderPath;
+
+  static void GetWhitelistedPaths(
+      nsTArray<mozilla::Pair<nsString,nsDependentString>>& aOutput);
 };
 
 #ifdef MOZ_PLACES
