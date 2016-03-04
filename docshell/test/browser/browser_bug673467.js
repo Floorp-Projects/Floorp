@@ -39,7 +39,7 @@ function test() {
                           .getInterface(Ci.nsIWebNavigation)
                           .sessionHistory;
 
-          is(shistory.count, 1, 'shistory count should be 1.');
+          Assert.equal(shistory.count, 1, "shistory count should be 1.");
           resolve();
         }, true);
       });

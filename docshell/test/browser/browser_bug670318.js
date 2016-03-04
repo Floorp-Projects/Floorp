@@ -26,7 +26,7 @@ add_task(function* test() {
             addEventListener("load", function onLoad() {
               removeEventListener("load", onLoad, true);
 
-              ok(history.index < history.count, "history.index is valid");
+              Assert.ok(history.index < history.count, "history.index is valid");
               testDone.resolve();
             }, true);
 
