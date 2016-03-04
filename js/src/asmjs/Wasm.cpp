@@ -964,6 +964,16 @@ DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg,
     if (!maxSize.isValid())
         return Fail(cx, d, "initial memory size too big");
 
+    uint8_t exported;
+    if (!d.readFixedU8(&exported))
+        return Fail(cx, d, "expected exported byte");
+
+    if (exported) {
+        UniqueChars fieldName = DuplicateString("memory");
+        if (!fieldName || !mg.addMemoryExport(Move(fieldName)))
+            return false;
+    }
+
     if (!d.finishSection(sectionStart))
         return Fail(cx, d, "memory section byte size mismatch");
 
@@ -1020,19 +1030,6 @@ DecodeFunctionExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet*
 }
 
 static bool
-DecodeMemoryExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet* dupSet)
-{
-    if (!mg.usesHeap())
-        return Fail(cx, d, "cannot export memory with no memory section");
-
-    UniqueChars fieldName = DecodeFieldName(cx, d, dupSet);
-    if (!fieldName)
-        return false;
-
-    return mg.addMemoryExport(Move(fieldName));
-}
-
-static bool
 DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
     uint32_t sectionStart;
@@ -1045,19 +1042,16 @@ DecodeExportsSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
     if (!dupSet.init())
         return false;
 
-    for (uint32_t i = 0; !d.readCStringIf(EndLabel); i++) {
-        if (i >= MaxExports)
-            return Fail(cx, d, "too many exports");
+    uint32_t numExports;
+    if (!d.readVarU32(&numExports))
+        return false;
 
-        if (d.readCStringIf(FuncLabel)) {
-            if (!DecodeFunctionExport(cx, d, mg, &dupSet))
-                return false;
-        } else if (d.readCStringIf(MemoryLabel)) {
-            if (!DecodeMemoryExport(cx, d, mg, &dupSet))
-                return false;
-        } else {
-            return Fail(cx, d, "unexpected export subsection");
-        }
+    if (numExports > MaxExports)
+        return Fail(cx, d, "too many exports");
+
+    for (uint32_t i = 0; i < numExports; i++) {
+        if (!DecodeFunctionExport(cx, d, mg, &dupSet))
+            return false;
     }
 
     if (!d.finishSection(sectionStart))
