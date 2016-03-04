@@ -2103,29 +2103,39 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
 {
   // Disallow OMTA for preserve-3d transform. Note that we check the style property
   // rather than Extend3DContext() since that can recurse back into this function
-  // via HasOpacity().
+  // via HasOpacity(). See bug 779598.
   if (aFrame->Combines3DTransformWithAncestors() ||
       aFrame->StyleDisplay()->mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D) {
-    aPerformanceWarning.AssignLiteral(
-      "Gecko bug: Async animation of 'preserve-3d' "
-      "transforms is not supported.  See bug 779598");
+    nsXPIDLString localizedMessage;
+    nsContentUtils::GetLocalizedString(
+      nsContentUtils::eLAYOUT_PROPERTIES,
+      "AnimationWarningTransformPreserve3D",
+      localizedMessage);
+    aPerformanceWarning = localizedMessage;
     return false;
   }
   // Note that testing BackfaceIsHidden() is not a sufficient test for
   // what we need for animating backface-visibility correctly if we
   // remove the above test for Extend3DContext(); that would require
-  // looking at backface-visibility on descendants as well.
+  // looking at backface-visibility on descendants as well. See bug 1186204.
   if (aFrame->StyleDisplay()->BackfaceIsHidden()) {
-    aPerformanceWarning.AssignLiteral(
-      "Gecko bug: Async animation of "
-      "'backface-visibility: hidden' transforms is not supported."
-      "  See bug 1186204");
+    nsXPIDLString localizedMessage;
+    nsContentUtils::GetLocalizedString(
+      nsContentUtils::eLAYOUT_PROPERTIES,
+      "AnimationWarningTransformBackfaceVisibilityHidden",
+      localizedMessage);
+    aPerformanceWarning = localizedMessage;
     return false;
   }
+  // Async 'transform' animations of aFrames with SVG transforms is not
+  // supported.  See bug 779599.
   if (aFrame->IsSVGTransformed()) {
-    aPerformanceWarning.AssignLiteral(
-      "Gecko bug: Async 'transform' animations of "
-      "aFrames with SVG transforms is not supported.  See bug 779599");
+    nsXPIDLString localizedMessage;
+    nsContentUtils::GetLocalizedString(
+      nsContentUtils::eLAYOUT_PROPERTIES,
+      "AnimationWarningTransformSVG",
+      localizedMessage);
+    aPerformanceWarning = localizedMessage;
     return false;
   }
 
@@ -2152,10 +2162,12 @@ KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(
     }
     // Check for geometric properties
     if (IsGeometricProperty(property.mProperty)) {
-      aPerformanceWarning.AssignLiteral(
-        "Performance warning: Async animation of "
-        "'transform' or 'opacity' not possible due to animation of geometric "
-        "properties on the same element");
+      nsXPIDLString localizedMessage;
+      nsContentUtils::GetLocalizedString(
+        nsContentUtils::eLAYOUT_PROPERTIES,
+        "AnimationWarningWithGeometricProperties",
+        localizedMessage);
+      aPerformanceWarning = localizedMessage;
       return true;
     }
 

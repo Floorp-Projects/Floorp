@@ -5585,13 +5585,14 @@ nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
     return true;
   }
 
-  nsString message;
-  message.AppendLiteral(
-    "Performance warning: Async animation disabled because frame was not "
-    "marked active for opacity animation");
+  nsXPIDLString localizedMessage;
+  nsContentUtils::GetLocalizedString(
+    nsContentUtils::eLAYOUT_PROPERTIES,
+    "AnimationWarningOpacityFrameInactive",
+    localizedMessage);
   EffectCompositor::SetPerformanceWarning(mFrame,
                                           eCSSProperty_opacity,
-                                          message);
+                                          localizedMessage);
 
   return false;
 }
@@ -5639,13 +5640,14 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
   if (!ActiveLayerTracker::IsStyleMaybeAnimated(aFrame, eCSSProperty_transform) &&
       !EffectCompositor::HasAnimationsForCompositor(aFrame,
                                                     eCSSProperty_transform)) {
-    nsString message;
-    message.AppendLiteral(
-      "Performance warning: Async animation disabled because frame was not "
-      "marked active for transform animation");
+    nsXPIDLString localizedMessage;
+    nsContentUtils::GetLocalizedString(
+      nsContentUtils::eLAYOUT_PROPERTIES,
+      "AnimationWarningTransformFrameInactive",
+      localizedMessage);
     EffectCompositor::SetPerformanceWarning(aFrame,
                                             eCSSProperty_transform,
-                                            message);
+                                            localizedMessage);
     return false;
   }
 
@@ -5666,23 +5668,33 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
 
   nsRect visual = aFrame->GetVisualOverflowRect();
 
-  nsAutoString message;
-  message.AppendLiteral(
-    "Performance warning: Async animation disabled because frame size (");
-  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.width));
-  message.AppendLiteral(", ");
-  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.height));
-  message.AppendLiteral(") is bigger than the viewport (");
-  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.width));
-  message.AppendLiteral(", ");
-  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.height));
-  message.AppendLiteral(") or the visual rectangle (");
-  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.width));
-  message.AppendLiteral(", ");
-  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.height));
-  message.AppendLiteral(") is larger than the max allowable value (");
-  message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(maxInAppUnits));
-  message.Append(')');
+  nsAutoString frameWidth, frameHeight,
+               refWidth, refHeight,
+               visualWidth, visualHeight,
+               maxInAppUnitsString;
+  frameWidth.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.width));
+  frameHeight.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.height));
+  refWidth.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.width));
+  refHeight.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.height));
+  visualWidth.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.width));
+  visualHeight.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.height));
+  maxInAppUnitsString.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(maxInAppUnits));
+
+  const char16_t* params[7]  = {
+    frameWidth.get(),
+    frameHeight.get(),
+    refWidth.get(),
+    refHeight.get(),
+    visualWidth.get(),
+    visualHeight.get(),
+    maxInAppUnitsString.get()
+  };
+
+  nsXPIDLString message;
+  nsContentUtils::FormatLocalizedString(nsContentUtils::eLAYOUT_PROPERTIES,
+                                        "AnimationWarningContentTooLarge",
+                                        params,
+                                        message);
   EffectCompositor::SetPerformanceWarning(aFrame,
                                           eCSSProperty_transform,
                                           message);
