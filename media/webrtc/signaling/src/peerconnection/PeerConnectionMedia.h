@@ -484,6 +484,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
       SignalEndOfLocalCandidates;
 
  private:
+  nsresult InitProxy();
   class ProtocolProxyQueryHandler : public nsIProtocolProxyCallback {
    public:
     explicit ProtocolProxyQueryHandler(PeerConnectionMedia *pcm) :

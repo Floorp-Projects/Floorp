@@ -337,9 +337,12 @@ function run_test(is_initiator,timeout) {
 function runTestWhenReady(testFunc) {
   setupEnvironment();
   return testConfigured.then(options => testFunc(options))
-    .catch(e => ok(false, 'Error executing test: ' + e +
+    .catch(e => {
+      ok(false, 'Error executing test: ' + e +
         ((typeof e.stack === 'string') ?
-        (' ' + e.stack.split('\n').join(' ... ')) : '')));
+        (' ' + e.stack.split('\n').join(' ... ')) : ''));
+      SimpleTest.finish();
+    });
 }
 
 
