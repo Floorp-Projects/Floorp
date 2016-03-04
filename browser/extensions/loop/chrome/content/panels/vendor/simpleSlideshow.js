@@ -99,10 +99,8 @@ loop.SimpleSlideshow = function () {
       var slidesNodes = this.props.data.map(function (slideNode, index) {
         var isActive = state.currentSlide === index;
         return React.createElement(Slide, { active: isActive,
-          imageAlt: slideNode.imageAlt,
           imageClass: slideNode.imageClass,
           indexClass: slideNode.id,
-          key: slideNode.id,
           text: slideNode.text,
           title: slideNode.title });
       });
