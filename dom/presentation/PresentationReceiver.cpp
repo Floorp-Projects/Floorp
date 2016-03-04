@@ -162,6 +162,10 @@ NS_IMETHODIMP
 PresentationReceiver::NotifySessionConnect(uint64_t aWindowId,
                                            const nsAString& aSessionId)
 {
+  if (NS_WARN_IF(!GetOwner())) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (NS_WARN_IF(aWindowId != GetOwner()->WindowID())) {
     return NS_ERROR_INVALID_ARG;
   }
