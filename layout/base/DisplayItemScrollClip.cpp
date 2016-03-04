@@ -18,7 +18,7 @@ DisplayItemScrollClip::IsAncestor(const DisplayItemScrollClip* aAncestor,
     return true;
   }
 
-  for (const DisplayItemScrollClip* sc = aDescendant; sc; sc = sc->mCrossStackingContextParent) {
+  for (const DisplayItemScrollClip* sc = aDescendant; sc; sc = sc->mParent) {
     if (sc == aAncestor) {
       return true;
     }

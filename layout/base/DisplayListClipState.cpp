@@ -120,12 +120,8 @@ DisplayListClipState::TurnClipIntoScrollClipForContentDescendants(
     nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrollableFrame)
 {
   const DisplayItemScrollClip* parent = GetCurrentInnermostScrollClip();
-  const DisplayItemScrollClip* crossStackingContextParent = parent;
-  if (!crossStackingContextParent) {
-    crossStackingContextParent = mCrossStackingContextParentScrollClip;
-  }
   mScrollClipContentDescendants =
-    aBuilder->AllocateDisplayItemScrollClip(parent, crossStackingContextParent,
+    aBuilder->AllocateDisplayItemScrollClip(parent,
                                       aScrollableFrame,
                                       GetCurrentCombinedClip(aBuilder), true);
   Clear();
@@ -136,12 +132,8 @@ DisplayListClipState::TurnClipIntoScrollClipForContainingBlockDescendants(
     nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrollableFrame)
 {
   const DisplayItemScrollClip* parent = GetCurrentInnermostScrollClip();
-  const DisplayItemScrollClip* crossStackingContextParent = parent;
-  if (!crossStackingContextParent) {
-    crossStackingContextParent = mCrossStackingContextParentScrollClip;
-  }
   mScrollClipContainingBlockDescendants =
-    aBuilder->AllocateDisplayItemScrollClip(parent, crossStackingContextParent,
+    aBuilder->AllocateDisplayItemScrollClip(parent,
                                       aScrollableFrame,
                                       GetCurrentCombinedClip(aBuilder), true);
   Clear();
@@ -170,12 +162,8 @@ DisplayListClipState::CreateInactiveScrollClip(
     WithoutRoundedCorners(aBuilder, GetCurrentCombinedClip(aBuilder));
 
   const DisplayItemScrollClip* parent = GetCurrentInnermostScrollClip();
-  const DisplayItemScrollClip* crossStackingContextParent = parent;
-  if (!crossStackingContextParent) {
-    crossStackingContextParent = mCrossStackingContextParentScrollClip;
-  }
   DisplayItemScrollClip* scrollClip =
-    aBuilder->AllocateDisplayItemScrollClip(parent, crossStackingContextParent,
+    aBuilder->AllocateDisplayItemScrollClip(parent,
                                             aScrollableFrame,
                                             rectClip, false);
   return scrollClip;
