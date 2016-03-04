@@ -22,7 +22,7 @@ add_task(function* testWindowCreate() {
         });
       }
 
-      function createWindow(params, expected) {
+      function createWindow(params, expected, keep = false) {
         return browser.windows.create(params).then(window => {
           for (let key of Object.keys(params)) {
             if (key == "state" && os == "mac" && params.state == "normal") {
@@ -36,6 +36,9 @@ add_task(function* testWindowCreate() {
           }
 
           return checkWindow(expected).then(() => {
+            if (keep) {
+              return window;
+            }
             if (params.state == "fullscreen" && os == "win") {
               // FIXME: Closing a fullscreen window causes a window leak in
               // Windows tests.
@@ -51,9 +54,21 @@ add_task(function* testWindowCreate() {
       browser.runtime.getPlatformInfo().then(info => { os = info.os; })
       .then(() => createWindow({state: "maximized"}, {state: "STATE_MAXIMIZED"}))
       .then(() => createWindow({state: "minimized"}, {state: "STATE_MINIMIZED"}))
-      .then(() => createWindow({state: "normal"}, {state: "STATE_NORMAL"}))
+      .then(() => createWindow({state: "normal"}, {state: "STATE_NORMAL", hiddenChrome: []}))
       .then(() => createWindow({state: "fullscreen"}, {state: "STATE_FULLSCREEN"}))
       .then(() => {
+        return createWindow({type: "popup"},
+                            {hiddenChrome: ["menubar", "toolbar", "location", "directories", "status", "extrachrome"],
+                             chromeFlags: ["CHROME_OPENAS_DIALOG"]},
+                            true);
+      }).then(window => {
+        return browser.tabs.query({windowType: "popup", active: true}).then(tabs => {
+          browser.test.assertEq(1, tabs.length, "Expected only one popup");
+          browser.test.assertEq(window.id, tabs[0].windowId, "Expected new window to be returned in query");
+
+          return browser.windows.remove(window.id);
+        });
+      }).then(() => {
         browser.test.notifyPass("window-create");
       }).catch(e => {
         browser.test.fail(`${e} :: ${e.stack}`);
@@ -83,6 +98,22 @@ add_task(function* testWindowCreate() {
       } else {
         is(windowState, window[expected.state],
            `Expected window state to be ${expected.state}`);
+      }
+    }
+    if (expected.hiddenChrome) {
+      let chromeHidden = latestWindow.document.documentElement.getAttribute("chromehidden");
+      is(chromeHidden.trim().split(/\s+/).sort().join(" "),
+         expected.hiddenChrome.sort().join(" "),
+         "Got expected hidden chrome");
+    }
+    if (expected.chromeFlags) {
+      let {chromeFlags} = latestWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                      .getInterface(Ci.nsIDocShell)
+                                      .treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
+                                      .getInterface(Ci.nsIXULWindow);
+      for (let flag of expected.chromeFlags) {
+        ok(chromeFlags & Ci.nsIWebBrowserChrome[flag],
+           `Expected window to have the ${flag} flag`);
       }
     }
 
