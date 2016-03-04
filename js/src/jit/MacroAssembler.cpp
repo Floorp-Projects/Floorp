@@ -684,8 +684,8 @@ MacroAssembler::storeUnboxedProperty(BaseIndex address, JSValueType type,
                                      ConstantOrRegister value, Label* failure);
 
 void
-MacroAssembler::checkUnboxedArrayCapacity(Register obj, const Int32Key& index, Register temp,
-                                          Label* failure)
+MacroAssembler::checkUnboxedArrayCapacity(Register obj, const RegisterOrInt32Constant& index,
+                                          Register temp, Label* failure)
 {
     Address initLengthAddr(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength());
     Address lengthAddr(obj, UnboxedArrayObject::offsetOfLength());
@@ -693,7 +693,7 @@ MacroAssembler::checkUnboxedArrayCapacity(Register obj, const Int32Key& index, R
     Label capacityIsIndex, done;
     load32(initLengthAddr, temp);
     branchTest32(Assembler::NonZero, temp, Imm32(UnboxedArrayObject::CapacityMask), &capacityIsIndex);
-    branchKey(Assembler::BelowOrEqual, lengthAddr, index, failure);
+    branch32(Assembler::BelowOrEqual, lengthAddr, index, failure);
     jump(&done);
     bind(&capacityIsIndex);
 
@@ -704,7 +704,7 @@ MacroAssembler::checkUnboxedArrayCapacity(Register obj, const Int32Key& index, R
     and32(Imm32(~0x3), temp);
 
     addPtr(ImmPtr(&UnboxedArrayObject::CapacityArray), temp);
-    branchKey(Assembler::BelowOrEqual, Address(temp, 0), index, failure);
+    branch32(Assembler::BelowOrEqual, Address(temp, 0), index, failure);
     bind(&done);
 }
 
