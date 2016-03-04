@@ -451,19 +451,14 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
 
   this.curBrowser.elementManager.seenItems[reg.id] =
       Cu.getWeakReference(listenerWindow);
-  let flags = {
-    B2G: (this.appName == "B2G"),
-    raisesAccessibilityExceptions:
-      this.sessionCapabilities.raisesAccessibilityExceptions
-  };
   if (nullPrevious && (this.curBrowser.curFrameId !== null)) {
-    this.sendAsync("newSession", flags, this.newSessionCommandId);
+    this.sendAsync("newSession", this.sessionCapabilities, this.newSessionCommandId);
     if (this.curBrowser.isNewSession) {
       this.newSessionCommandId = null;
     }
   }
 
-  return [reg, mainContent, flags];
+  return [reg, mainContent, this.sessionCapabilities];
 };
 
 GeckoDriver.prototype.registerPromise = function() {
@@ -2898,12 +2893,7 @@ GeckoDriver.prototype.receiveMessage = function(message) {
         // If remoteness gets updated we need to call newSession. In the case
         // of desktop this just sets up a small amount of state that doesn't
         // change over the course of a session.
-        let newSessionValues = {
-          B2G: (this.appName == "B2G"),
-          raisesAccessibilityExceptions:
-              this.sessionCapabilities.raisesAccessibilityExceptions
-        };
-        this.sendAsync("newSession", newSessionValues);
+        this.sendAsync("newSession", this.sessionCapabilities);
         this.curBrowser.flushPendingCommands();
       }
       break;
