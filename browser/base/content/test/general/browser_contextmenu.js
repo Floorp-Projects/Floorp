@@ -425,7 +425,7 @@ add_task(function* test_copylinkcommand() {
       yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
         let doc = content.document;
         let input = doc.getElementById("test-input");
-        is(input.value, "http://mozilla.com/", "paste for command cmd_paste");
+        Assert.equal(input.value, "http://mozilla.com/", "paste for command cmd_paste");
       });
     }
   });
@@ -473,7 +473,7 @@ add_task(function* test_pagemenu() {
       item.doCommand();
       yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
         let pagemenu = content.document.getElementById("test-pagemenu");
-        ok(!pagemenu.hasAttribute("hopeless"), "attribute got removed");
+        Assert.ok(!pagemenu.hasAttribute("hopeless"), "attribute got removed");
       });
     }
   });
@@ -900,7 +900,7 @@ function* selectText(selector) {
     win.getSelection().removeAllRanges();
     let div = doc.createRange();
     let element = doc.querySelector(selector);
-    ok(element, "Found element to select text from");
+    Assert.ok(element, "Found element to select text from");
     div.setStartBefore(element);
     div.setEndAfter(element);
     win.getSelection().addRange(div);

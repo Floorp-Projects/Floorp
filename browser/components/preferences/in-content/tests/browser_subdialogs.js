@@ -39,12 +39,12 @@ function* open_subdialog_and_test_generic_start_state(browser, domcontentloadedF
       }
     }
 
-    ok(!!subdialog._frame.contentWindow, "The dialog should be non-null");
-    isnot(subdialog._frame.contentWindow.location.toString(), "about:blank",
+    Assert.ok(!!subdialog._frame.contentWindow, "The dialog should be non-null");
+    Assert.notEqual(subdialog._frame.contentWindow.location.toString(), "about:blank",
       "Subdialog URL should not be about:blank");
-    is(win.getComputedStyle(subdialog._overlay, "").visibility, "visible",
+    Assert.equal(win.getComputedStyle(subdialog._overlay, "").visibility, "visible",
       "Overlay should be visible");
-    is(expectedStyleSheetURLs.length, 0,
+    Assert.equal(expectedStyleSheetURLs.length, 0,
       "No stylesheets that were expected are missing");
     return result;
   });
@@ -64,14 +64,14 @@ function* close_subdialog_and_test_generic_end_state(browser, closingFn, closing
     info("waiting for about:blank load");
     yield ContentTaskUtils.waitForEvent(frame, "load");
 
-    isnot(win.getComputedStyle(subdialog._overlay, "").visibility, "visible",
+    Assert.notEqual(win.getComputedStyle(subdialog._overlay, "").visibility, "visible",
       "overlay is not visible");
-    is(frame.getAttribute("style"), "", "inline styles should be cleared");
-    is(frame.contentWindow.location.href.toString(), "about:blank",
+    Assert.equal(frame.getAttribute("style"), "", "inline styles should be cleared");
+    Assert.equal(frame.contentWindow.location.href.toString(), "about:blank",
       "sub-dialog should be unloaded");
-    is(closingEvent.detail.button, expectations.closingButton,
+    Assert.equal(closingEvent.detail.button, expectations.closingButton,
       "closing event should indicate button was '" + expectations.closingButton + "'");
-    is(actualAcceptCount, expectations.acceptCount,
+    Assert.equal(actualAcceptCount, expectations.acceptCount,
       "should be 1 if accepted, 0 if canceled, undefined if closed w/out button");
   });
 
@@ -97,9 +97,9 @@ add_task(function* check_titlebar_focus_returnval_titlechanges_accepting() {
   yield ContentTask.spawn(tab.linkedBrowser, null, function*() {
     let dialog = content.window.gSubDialog._frame.contentWindow;
     let dialogTitleElement = content.document.getElementById("dialogTitle");
-    is(dialogTitleElement.textContent, "Sample sub-dialog",
+    Assert.equal(dialogTitleElement.textContent, "Sample sub-dialog",
        "Title should be correct initially");
-    is(dialog.document.activeElement.value, "Default text",
+    Assert.equal(dialog.document.activeElement.value, "Default text",
        "Textbox with correct text is focused");
     dialog.document.title = "Updated title";
   });
@@ -109,7 +109,8 @@ add_task(function* check_titlebar_focus_returnval_titlechanges_accepting() {
 
   ContentTask.spawn(tab.linkedBrowser, null, function*() {
     let dialogTitleElement = content.document.getElementById("dialogTitle");
-    is(dialogTitleElement.textContent, "Updated title", "subdialog should have updated title");
+    Assert.equal(dialogTitleElement.textContent, "Updated title",
+      "subdialog should have updated title");
   });
 
   // Accept the dialog
@@ -182,8 +183,10 @@ add_task(function* correct_width_and_height_should_be_used_for_dialog() {
 
   yield ContentTask.spawn(tab.linkedBrowser, null, function*() {
     let frameStyle = content.window.gSubDialog._frame.style;
-    is(frameStyle.width, "32em", "Width should be set on the frame from the dialog");
-    is(frameStyle.height, "5em", "Height should be set on the frame from the dialog");
+    Assert.equal(frameStyle.width, "32em",
+      "Width should be set on the frame from the dialog");
+    Assert.equal(frameStyle.height, "5em",
+      "Height should be set on the frame from the dialog");
   });
 
   yield close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
@@ -215,11 +218,11 @@ add_task(function* wrapped_text_in_dialog_should_have_expected_scrollHeight() {
   yield ContentTask.spawn(tab.linkedBrowser, oldHeight, function*(oldHeight) {
     let frame = content.window.gSubDialog._frame;
     let docEl = frame.contentDocument.documentElement;
-    is(frame.style.width, "32em",
+    Assert.equal(frame.style.width, "32em",
       "Width should be set on the frame from the dialog");
-    ok(docEl.scrollHeight > oldHeight,
+    Assert.ok(docEl.scrollHeight > oldHeight,
       "Content height increased (from " + oldHeight + " to " + docEl.scrollHeight + ").");
-    is(frame.style.height, docEl.scrollHeight + "px",
+    Assert.equal(frame.style.height, docEl.scrollHeight + "px",
       "Height on the frame should be higher now");
   });
 
@@ -236,8 +239,8 @@ add_task(function* dialog_too_tall_should_get_reduced_in_height() {
 
   yield ContentTask.spawn(tab.linkedBrowser, null, function*() {
     let frame = content.window.gSubDialog._frame;
-    is(frame.style.width, "32em", "Width should be set on the frame from the dialog");
-    ok(parseInt(frame.style.height) < content.window.innerHeight,
+    Assert.equal(frame.style.width, "32em", "Width should be set on the frame from the dialog");
+    Assert.ok(parseInt(frame.style.height, 10) < content.window.innerHeight,
        "Height on the frame should be smaller than window's innerHeight");
   });
 
@@ -255,9 +258,9 @@ add_task(function* scrollWidth_and_scrollHeight_from_subdialog_should_size_the_b
 
   yield ContentTask.spawn(tab.linkedBrowser, null, function*() {
     let frame = content.window.gSubDialog._frame;
-    ok(frame.style.width.endsWith("px"),
+    Assert.ok(frame.style.width.endsWith("px"),
        "Width (" + frame.style.width + ") should be set to a px value of the scrollWidth from the dialog");
-    ok(frame.style.height.endsWith("px"),
+    Assert.ok(frame.style.height.endsWith("px"),
        "Height (" + frame.style.height + ") should be set to a px value of the scrollHeight from the dialog");
   });
 

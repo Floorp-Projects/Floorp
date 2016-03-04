@@ -22,26 +22,32 @@ add_task(function* () {
     let sponsoredButton = site.querySelector(".newtab-sponsored");
     EventUtils.synthesizeMouseAtCenter(sponsoredButton, {}, content);
     let explain = site.querySelector(".sponsored-explain");
-    isnot(explain, null, "Sponsored explanation shown");
-    ok(explain.querySelector("input").classList.contains("newtab-control-block"), "sponsored tiles show blocked image");
-    ok(sponsoredButton.hasAttribute("active"), "Sponsored button has active attribute");
+    Assert.notEqual(explain, null, "Sponsored explanation shown");
+    Assert.ok(explain.querySelector("input").classList.contains("newtab-control-block"),
+      "sponsored tiles show blocked image");
+    Assert.ok(sponsoredButton.hasAttribute("active"), "Sponsored button has active attribute");
 
     // test dismissing sponsored explain
     EventUtils.synthesizeMouseAtCenter(sponsoredButton, {}, content);
-    is(site.querySelector(".sponsored-explain"), null, "Sponsored explanation no longer shown");
-    ok(!sponsoredButton.hasAttribute("active"), "Sponsored button does not have active attribute");
+    Assert.equal(site.querySelector(".sponsored-explain"), null,
+      "Sponsored explanation no longer shown");
+    Assert.ok(!sponsoredButton.hasAttribute("active"),
+      "Sponsored button does not have active attribute");
 
     // test with enhanced tile
     site.setAttribute("type", "enhanced");
     EventUtils.synthesizeMouseAtCenter(sponsoredButton, {}, content);
     explain = site.querySelector(".sponsored-explain");
-    isnot(explain, null, "Sponsored explanation shown");
-    ok(explain.querySelector("input").classList.contains("newtab-customize"), "enhanced tiles show customize image");
-    ok(sponsoredButton.hasAttribute("active"), "Sponsored button has active attribute");
+    Assert.notEqual(explain, null, "Sponsored explanation shown");
+    Assert.ok(explain.querySelector("input").classList.contains("newtab-customize"),
+      "enhanced tiles show customize image");
+    Assert.ok(sponsoredButton.hasAttribute("active"), "Sponsored button has active attribute");
 
     // test dismissing enhanced explain
     EventUtils.synthesizeMouseAtCenter(sponsoredButton, {}, content);
-    is(site.querySelector(".sponsored-explain"), null, "Sponsored explanation no longer shown");
-    ok(!sponsoredButton.hasAttribute("active"), "Sponsored button does not have active attribute");
+    Assert.equal(site.querySelector(".sponsored-explain"), null,
+      "Sponsored explanation no longer shown");
+    Assert.ok(!sponsoredButton.hasAttribute("active"),
+      "Sponsored button does not have active attribute");
   });
 });

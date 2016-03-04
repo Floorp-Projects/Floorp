@@ -34,9 +34,12 @@ add_task(function* open_newtab() {
   yield BrowserTestUtils.browserLoaded(browser);
 
   yield ContentTask.spawn(browser, {url: TEST_URL}, function*(args) {
-    is(content.document.location.href, args.url, "document.location should match the external resource");
-    is(content.document.documentURI, args.url, "document.documentURI should match the external resource");
-    is(content.document.nodePrincipal.URI.spec, args.url, "nodePrincipal should match the external resource");
+    Assert.equal(content.document.location.href, args.url,
+      "document.location should match the external resource");
+    Assert.equal(content.document.documentURI, args.url,
+      "document.documentURI should match the external resource");
+    Assert.equal(content.document.nodePrincipal.URI.spec, args.url,
+      "nodePrincipal should match the external resource");
   });
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

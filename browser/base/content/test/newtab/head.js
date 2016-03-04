@@ -333,30 +333,29 @@ function* addNewTabPageTab() {
  *         The second cell contains 'http://example2.com/'. The third cell is empty.
  *         The fourth cell contains the pinned site 'http://example4.com/'.
  */
-function* checkGrid(aSitesPattern) {
-  let length = aSitesPattern.split(",").length;
+function* checkGrid(pattern) {
+  let length = pattern.split(",").length;
 
-  let foundPattern = 
-    yield ContentTask.spawn(gWindow.gBrowser.selectedBrowser,
-                            { length: length }, function* (args) {
-      let grid = content.wrappedJSObject.gGrid;
+  yield ContentTask.spawn(gWindow.gBrowser.selectedBrowser,
+                          { length, pattern }, function* (args) {
+    let grid = content.wrappedJSObject.gGrid;
 
-      let sites = grid.sites.slice(0, args.length);
-      return sites.map(function (aSite) {
-        if (!aSite)
-          return "";
+    let sites = grid.sites.slice(0, args.length);
+    let foundPattern = sites.map(function (aSite) {
+      if (!aSite)
+        return "";
 
-        let pinned = aSite.isPinned();
-        let hasPinnedAttr = aSite.node.hasAttribute("pinned");
+      let pinned = aSite.isPinned();
+      let hasPinnedAttr = aSite.node.hasAttribute("pinned");
 
-        if (pinned != hasPinnedAttr)
-          ok(false, "invalid state (site.isPinned() != site[pinned])");
+      if (pinned != hasPinnedAttr)
+        ok(false, "invalid state (site.isPinned() != site[pinned])");
 
-        return aSite.url.replace(/^http:\/\/example(\d+)\.com\/$/, "$1") + (pinned ? "p" : "");
-      });
+      return aSite.url.replace(/^http:\/\/example(\d+)\.com\/$/, "$1") + (pinned ? "p" : "");
+    });
+
+    Assert.equal(foundPattern, args.pattern, "grid status = " + args.pattern);
   });
-
-  is(foundPattern, aSitesPattern, "grid status = " + aSitesPattern);
 }
 
 /**

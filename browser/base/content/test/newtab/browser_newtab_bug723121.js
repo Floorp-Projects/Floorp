@@ -14,7 +14,7 @@ add_task(function* () {
     let link = site.querySelector(".newtab-link");
 
     function checkGridLocked(aLocked, aMessage) {
-      is(grid.node.hasAttribute("locked"), aLocked, aMessage);
+      Assert.equal(grid.node.hasAttribute("locked"), aLocked, aMessage);
     }
 
     function sendDragEvent(aEventType, aTarget) {

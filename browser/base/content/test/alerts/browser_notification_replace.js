@@ -16,19 +16,19 @@ add_task(function* test_notificationReplace() {
       let promiseCloseEvent = ContentTaskUtils.waitForEvent(notification, "close");
 
       let showEvent = yield ContentTaskUtils.waitForEvent(notification, "show");
-      is(showEvent.target.body, "Test body 1", "Showed tagged notification");
+      Assert.equal(showEvent.target.body, "Test body 1", "Showed tagged notification");
 
       let newNotification = win.showNotification2();
       let newShowEvent = yield ContentTaskUtils.waitForEvent(newNotification, "show");
-      is(newShowEvent.target.body, "Test body 2", "Showed new notification with same tag");
+      Assert.equal(newShowEvent.target.body, "Test body 2", "Showed new notification with same tag");
 
       let closeEvent = yield promiseCloseEvent;
-      is(closeEvent.target.body, "Test body 1", "Closed previous tagged notification");
+      Assert.equal(closeEvent.target.body, "Test body 1", "Closed previous tagged notification");
 
       let promiseNewCloseEvent = ContentTaskUtils.waitForEvent(newNotification, "close");
       newNotification.close();
       let newCloseEvent = yield promiseNewCloseEvent;
-      is(newCloseEvent.target.body, "Test body 2", "Closed new notification");
+      Assert.equal(newCloseEvent.target.body, "Test body 2", "Closed new notification");
     });
   });
 });
