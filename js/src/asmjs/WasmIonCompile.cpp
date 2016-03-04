@@ -452,6 +452,15 @@ class FunctionCompiler
         return ins;
     }
 
+    MDefinition* extendI32(MDefinition* op, bool isUnsigned)
+    {
+        if (inDeadCode())
+            return nullptr;
+        MExtendInt32ToInt64* ins = MExtendInt32ToInt64::NewAsmJS(alloc(), op, isUnsigned);
+        curBlock_->add(ins);
+        return ins;
+    }
+
     MDefinition* compare(MDefinition* lhs, MDefinition* rhs, JSOp op, MCompare::CompareType type)
     {
         if (inDeadCode())
@@ -2286,6 +2295,16 @@ EmitBitwiseNot(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
+EmitExtendI32(FunctionCompiler& f, bool isUnsigned, MDefinition** def)
+{
+    MDefinition* in;
+    if (!EmitExpr(f, ExprType::I32, &in))
+        return false;
+    *def = f.extendI32(in, isUnsigned);
+    return true;
+}
+
+static bool
 EmitSimdOp(FunctionCompiler& f, ExprType type, SimdOperation op, SimdSign sign, MDefinition** def)
 {
     switch (op) {
@@ -2730,6 +2749,9 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def)
       // I64
       case Expr::I64Const:
         return EmitLiteral(f, ExprType::I64, def);
+      case Expr::I64ExtendSI32:
+      case Expr::I64ExtendUI32:
+        return EmitExtendI32(f, IsUnsigned(op == Expr::I64ExtendUI32), def);
       case Expr::I64Or:
         return EmitBitwise<MBitOr>(f, ExprType::I64, def);
       case Expr::I64And:
@@ -2889,8 +2911,6 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def)
       case Expr::F64CopySign:
       case Expr::F64Nearest:
       case Expr::F64Trunc:
-      case Expr::I64ExtendSI32:
-      case Expr::I64ExtendUI32:
       case Expr::I64TruncSF32:
       case Expr::I64TruncSF64:
       case Expr::I64TruncUF32:

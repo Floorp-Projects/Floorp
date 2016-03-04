@@ -3738,6 +3738,19 @@ MWrapInt64ToInt32::foldsTo(TempAllocator& alloc)
 }
 
 MDefinition*
+MExtendInt32ToInt64::foldsTo(TempAllocator& alloc)
+{
+    MDefinition* input = this->input();
+    if (input->isConstant()) {
+        int32_t c = input->toConstant()->toInt32();
+        int64_t res = isUnsigned() ? int64_t(uint32_t(c)) : int64_t(c);
+        return MConstant::NewInt64(alloc, res);
+    }
+
+    return this;
+}
+
+MDefinition*
 MToDouble::foldsTo(TempAllocator& alloc)
 {
     MDefinition* input = getOperand(0);

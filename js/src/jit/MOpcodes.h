@@ -119,6 +119,7 @@ namespace jit {
     _(ToInt32)                                                              \
     _(TruncateToInt32)                                                      \
     _(WrapInt64ToInt32)                                                     \
+    _(ExtendInt32ToInt64)                                                   \
     _(ToString)                                                             \
     _(ToObjectOrNull)                                                       \
     _(NewArray)                                                             \
