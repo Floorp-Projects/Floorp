@@ -1043,6 +1043,14 @@ Experiments.Experiments.prototype = {
       if (!entry.initFromCacheData(item)) {
         continue;
       }
+
+      // Discard old experiments if they ended more than 180 days ago.
+      if (entry.shouldDiscard()) {
+        // We discarded an experiment, the cache needs to be updated.
+        this._dirty = true;
+        continue;
+      }
+
       experiments.set(entry.id, entry);
     }
 
@@ -1543,7 +1551,9 @@ Experiments.ExperimentEntry.prototype = {
       }
     });
 
-    this._lastChangedDate = this._policy.now();
+    // In order for the experiment's data expiration mechanism to work, use the experiment's
+    // |_endData| as the |_lastChangedDate| (if available).
+    this._lastChangedDate = !!this._endDate ? this._endDate : this._policy.now();
 
     return true;
   },
