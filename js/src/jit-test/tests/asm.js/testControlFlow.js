@@ -22,6 +22,9 @@ assertEq(asmLink(asmCompile(USE_ASM + "function f() { while (0) ; return 0} retu
 assertEq(asmLink(asmCompile(USE_ASM + "function f() { for (;0;) ; return 0} return f"))(), 0);
 assertEq(asmLink(asmCompile(USE_ASM + "function f() { do ; while(0); return 0} return f"))(), 0);
 
+assertEq(asmLink(asmCompile(USE_ASM + "function f() { do {} while (0); while (0); return 0} return f"))(), 0);
+assertEq(asmLink(asmCompile(USE_ASM + "function f() { var i = 0; do {} while (0); return i|0} return f"))(), 0);
+
 assertAsmTypeFail(USE_ASM + "function f(d) {d=+d; while (d) {}; return 0} return f");
 assertAsmTypeFail(USE_ASM + "function f(d) {d=+d; for (;d;) {}; return 0} return f");
 assertAsmTypeFail(USE_ASM + "function f(d) {d=+d; do {} while (d); return 0} return f");
