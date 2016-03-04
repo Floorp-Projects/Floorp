@@ -52,6 +52,7 @@
 #include "ImageContainer.h"
 #include "nsCanvasFrame.h"
 #include "StickyScrollContainer.h"
+#include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EventStates.h"
@@ -5585,14 +5586,10 @@ nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
     return true;
   }
 
-  nsXPIDLString localizedMessage;
-  nsContentUtils::GetLocalizedString(
-    nsContentUtils::eLAYOUT_PROPERTIES,
-    "AnimationWarningOpacityFrameInactive",
-    localizedMessage);
-  EffectCompositor::SetPerformanceWarning(mFrame,
-                                          eCSSProperty_opacity,
-                                          localizedMessage);
+  EffectCompositor::SetPerformanceWarning(
+    mFrame, eCSSProperty_transform,
+    AnimationPerformanceWarning(
+      AnimationPerformanceWarning::Type::OpacityFrameInactive));
 
   return false;
 }
@@ -5640,14 +5637,11 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
   if (!ActiveLayerTracker::IsStyleMaybeAnimated(aFrame, eCSSProperty_transform) &&
       !EffectCompositor::HasAnimationsForCompositor(aFrame,
                                                     eCSSProperty_transform)) {
-    nsXPIDLString localizedMessage;
-    nsContentUtils::GetLocalizedString(
-      nsContentUtils::eLAYOUT_PROPERTIES,
-      "AnimationWarningTransformFrameInactive",
-      localizedMessage);
-    EffectCompositor::SetPerformanceWarning(aFrame,
-                                            eCSSProperty_transform,
-                                            localizedMessage);
+    EffectCompositor::SetPerformanceWarning(
+      aFrame, eCSSProperty_transform,
+      AnimationPerformanceWarning(
+        AnimationPerformanceWarning::Type::TransformFrameInactive));
+
     return false;
   }
 
@@ -5668,36 +5662,20 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
 
   nsRect visual = aFrame->GetVisualOverflowRect();
 
-  nsAutoString frameWidth, frameHeight,
-               refWidth, refHeight,
-               visualWidth, visualHeight,
-               maxInAppUnitsString;
-  frameWidth.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.width));
-  frameHeight.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.height));
-  refWidth.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.width));
-  refHeight.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.height));
-  visualWidth.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.width));
-  visualHeight.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.height));
-  maxInAppUnitsString.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(maxInAppUnits));
 
-  const char16_t* params[7]  = {
-    frameWidth.get(),
-    frameHeight.get(),
-    refWidth.get(),
-    refHeight.get(),
-    visualWidth.get(),
-    visualHeight.get(),
-    maxInAppUnitsString.get()
-  };
-
-  nsXPIDLString message;
-  nsContentUtils::FormatLocalizedString(nsContentUtils::eLAYOUT_PROPERTIES,
-                                        "AnimationWarningContentTooLarge",
-                                        params,
-                                        message);
-  EffectCompositor::SetPerformanceWarning(aFrame,
-                                          eCSSProperty_transform,
-                                          message);
+  EffectCompositor::SetPerformanceWarning(
+    aFrame, eCSSProperty_transform,
+    AnimationPerformanceWarning(
+      AnimationPerformanceWarning::Type::ContentTooLarge,
+      {
+        nsPresContext::AppUnitsToIntCSSPixels(frameSize.width),
+        nsPresContext::AppUnitsToIntCSSPixels(frameSize.height),
+        nsPresContext::AppUnitsToIntCSSPixels(refSize.width),
+        nsPresContext::AppUnitsToIntCSSPixels(refSize.height),
+        nsPresContext::AppUnitsToIntCSSPixels(visual.width),
+        nsPresContext::AppUnitsToIntCSSPixels(visual.height),
+        nsPresContext::AppUnitsToIntCSSPixels(maxInAppUnits)
+      }));
   return false;
 }
 

@@ -10,6 +10,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeEffect.h" // For KeyframeEffectReadOnly
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/InitializerList.h"
 #include "mozilla/LayerAnimationInfo.h"
@@ -109,14 +110,14 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
       continue;
     }
 
-    nsAutoString performanceWarning;
+    AnimationPerformanceWarning::Type warningType;
     if (effect->ShouldBlockCompositorAnimations(aFrame,
-                                                performanceWarning)) {
+                                                warningType)) {
       if (aMatches) {
         aMatches->Clear();
       }
-      effect->SetPerformanceWarning(aProperty,
-                                    performanceWarning);
+      effect->SetPerformanceWarning(
+        aProperty, AnimationPerformanceWarning(warningType));
       return false;
     }
 
@@ -721,9 +722,10 @@ EffectCompositor::GetPresContext(Element* aElement)
 }
 
 /* static */ void
-EffectCompositor::SetPerformanceWarning(const nsIFrame *aFrame,
-                                        nsCSSProperty aProperty,
-                                        const nsAString& aMessage)
+EffectCompositor::SetPerformanceWarning(
+  const nsIFrame *aFrame,
+  nsCSSProperty aProperty,
+  const AnimationPerformanceWarning& aWarning)
 {
   EffectSet* effects = EffectSet::GetEffectSet(aFrame);
   if (!effects) {
@@ -731,7 +733,7 @@ EffectCompositor::SetPerformanceWarning(const nsIFrame *aFrame,
   }
 
   for (KeyframeEffectReadOnly* effect : *effects) {
-    effect->SetPerformanceWarning(aProperty, aMessage);
+    effect->SetPerformanceWarning(aProperty, aWarning);
   }
 }
 

@@ -30,6 +30,7 @@ namespace mozilla {
 class EffectSet;
 class RestyleTracker;
 enum class CSSPseudoElementType : uint8_t;
+struct AnimationPerformanceWarning;
 
 namespace dom {
 class Animation;
@@ -187,11 +188,12 @@ public:
   static Maybe<Pair<dom::Element*, CSSPseudoElementType>>
   GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame);
 
-  // Associates a warning message with effects on |aFrame| if the effect
-  // has |aProperty|.
-  static void SetPerformanceWarning(const nsIFrame* aFrame,
-                                    nsCSSProperty aProperty,
-                                    const nsAString& aMessage);
+  // Associates a performance warning with effects on |aFrame| that animates
+  // |aProperty|.
+  static void SetPerformanceWarning(
+    const nsIFrame* aFrame,
+    nsCSSProperty aProperty,
+    const AnimationPerformanceWarning& aWarning);
 
 private:
   ~EffectCompositor() = default;
