@@ -372,18 +372,13 @@ var Bookmarks = Object.freeze({
    * @param guidOrInfo
    *        The globally unique identifier of the item to remove, or an
    *        object representing it, as defined above.
-   * @param {Object} [options={}]
-   *        Additional options that can be passed to the function.
-   *        Currently supports preventRemovalOfNonEmptyFolders which
-   *        will cause an exception to be thrown if attempting to remove
-   *        a folder that is not empty.
    *
    * @return {Promise} resolved when the removal is complete.
    * @resolves to an object representing the removed bookmark.
    * @rejects if the provided guid doesn't match any existing bookmark.
    * @throws if the arguments are invalid.
    */
-  remove(guidOrInfo, options={}) {
+  remove(guidOrInfo) {
     let info = guidOrInfo;
     if (!info)
       throw new Error("Input should be a valid object");
@@ -405,7 +400,7 @@ var Bookmarks = Object.freeze({
       if (!item)
         throw new Error("No bookmarks found for the provided GUID.");
 
-      item = yield removeBookmark(item, options);
+      item = yield removeBookmark(item);
 
       // Notify onItemRemoved to listeners.
       let observers = PlacesUtils.bookmarks.getObservers();
@@ -1073,7 +1068,7 @@ function fetchBookmarksByParent(info) {
 ////////////////////////////////////////////////////////////////////////////////
 // Remove implementation.
 
-function removeBookmark(item, options) {
+function removeBookmark(item) {
   return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: updateBookmark",
     Task.async(function*(db) {
 
@@ -1081,12 +1076,8 @@ function removeBookmark(item, options) {
 
     yield db.executeTransaction(function* transaction() {
       // If it's a folder, remove its contents first.
-      if (item.type == Bookmarks.TYPE_FOLDER) {
-        if (options.preventRemovalOfNonEmptyFolders && item._childCount > 0) {
-          throw new Error("Cannot remove a non-empty folder.");
-        }
+      if (item.type == Bookmarks.TYPE_FOLDER)
         yield removeFoldersContents(db, [item.guid]);
-      }
 
       // Remove annotations first.  If it's a tag, we can avoid paying that cost.
       if (!isUntagging) {
