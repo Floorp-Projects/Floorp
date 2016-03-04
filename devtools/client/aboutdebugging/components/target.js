@@ -51,7 +51,10 @@ module.exports = createClass({
           onClick: this.debug,
           disabled: debugDisabled,
         }, Strings.GetStringFromName("debug")) :
-        null
+        dom.button({
+          className: "start-button",
+          onClick: this.start
+        }, Strings.GetStringFromName("start"))
       )
     );
   },
@@ -85,6 +88,16 @@ module.exports = createClass({
       client.request({
         to: target.workerActor,
         type: "push"
+      });
+    }
+  },
+
+  start() {
+    let { client, target } = this.props;
+    if (target.type === "serviceworker" && !target.workerActor) {
+      client.request({
+        to: target.registrationActor,
+        type: "start"
       });
     }
   },

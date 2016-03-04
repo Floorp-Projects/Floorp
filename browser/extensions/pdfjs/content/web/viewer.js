@@ -15,9 +15,9 @@
 /* globals PDFJS, PDFBug, FirefoxCom, Stats, ProgressBar, DownloadManager,
            getPDFFileNameFromURL, PDFHistory, Preferences, SidebarView,
            ViewHistory, Stats, PDFThumbnailViewer, URL, noContextMenuHandler,
-           SecondaryToolbar, PasswordPrompt, PDFPresentationMode,
+           SecondaryToolbar, PasswordPrompt, PDFPresentationMode, PDFSidebar,
            PDFDocumentProperties, HandTool, Promise, PDFLinkService,
-           PDFOutlineView, PDFAttachmentView, OverlayManager,
+           PDFOutlineViewer, PDFAttachmentViewer, OverlayManager,
            PDFFindController, PDFFindBar, PDFViewer, PDFRenderingQueue,
            PresentationModeState, parseQueryString, RenderingStates,
            UNKNOWN_SCALE, DEFAULT_SCALE_VALUE,
@@ -449,13 +449,6 @@ var DEFAULT_PREFERENCES = {
 };
 
 
-var SidebarView = {
-  NONE: 0,
-  THUMBS: 1,
-  OUTLINE: 2,
-  ATTACHMENTS: 3
-};
-
 /**
  * Preferences - Utility for storing persistent settings.
  *   Used for settings that should be applied to all opened documents,
@@ -873,6 +866,10 @@ var PDFFindBar = (function PDFFindBarClosure() {
   }
 
   PDFFindBar.prototype = {
+    reset: function PDFFindBar_reset() {
+      this.updateUIState();
+    },
+
     dispatchEvent: function PDFFindBar_dispatchEvent(type, findPrev) {
       var event = document.createEvent('CustomEvent');
       event.initCustomEvent('find' + type, true, true, {
@@ -986,51 +983,34 @@ var FindStates = {
 var FIND_SCROLL_OFFSET_TOP = -50;
 var FIND_SCROLL_OFFSET_LEFT = -400;
 
+var CHARACTERS_TO_NORMALIZE = {
+  '\u2018': '\'', // Left single quotation mark
+  '\u2019': '\'', // Right single quotation mark
+  '\u201A': '\'', // Single low-9 quotation mark
+  '\u201B': '\'', // Single high-reversed-9 quotation mark
+  '\u201C': '"', // Left double quotation mark
+  '\u201D': '"', // Right double quotation mark
+  '\u201E': '"', // Double low-9 quotation mark
+  '\u201F': '"', // Double high-reversed-9 quotation mark
+  '\u00BC': '1/4', // Vulgar fraction one quarter
+  '\u00BD': '1/2', // Vulgar fraction one half
+  '\u00BE': '3/4', // Vulgar fraction three quarters
+};
+
 /**
  * Provides "search" or "find" functionality for the PDF.
  * This object actually performs the search for a given string.
  */
 var PDFFindController = (function PDFFindControllerClosure() {
   function PDFFindController(options) {
-    this.startedTextExtraction = false;
-    this.extractTextPromises = [];
-    this.pendingFindMatches = Object.create(null);
-    this.active = false; // If active, find results will be highlighted.
-    this.pageContents = []; // Stores the text for each page.
-    this.pageMatches = [];
-    this.matchCount = 0;
-    this.selected = { // Currently selected match.
-      pageIdx: -1,
-      matchIdx: -1
-    };
-    this.offset = { // Where the find algorithm currently is in the document.
-      pageIdx: null,
-      matchIdx: null
-    };
-    this.pagesToSearch = null;
-    this.resumePageIdx = null;
-    this.state = null;
-    this.dirtyMatch = false;
-    this.findTimeout = null;
     this.pdfViewer = options.pdfViewer || null;
     this.integratedFind = options.integratedFind || false;
-    this.charactersToNormalize = {
-      '\u2018': '\'', // Left single quotation mark
-      '\u2019': '\'', // Right single quotation mark
-      '\u201A': '\'', // Single low-9 quotation mark
-      '\u201B': '\'', // Single high-reversed-9 quotation mark
-      '\u201C': '"', // Left double quotation mark
-      '\u201D': '"', // Right double quotation mark
-      '\u201E': '"', // Double low-9 quotation mark
-      '\u201F': '"', // Double high-reversed-9 quotation mark
-      '\u00BC': '1/4', // Vulgar fraction one quarter
-      '\u00BD': '1/2', // Vulgar fraction one half
-      '\u00BE': '3/4', // Vulgar fraction three quarters
-    };
     this.findBar = options.findBar || null;
 
-    // Compile the regular expression for text normalization once
-    var replace = Object.keys(this.charactersToNormalize).join('');
+    this.reset();
+
+    // Compile the regular expression for text normalization once.
+    var replace = Object.keys(CHARACTERS_TO_NORMALIZE).join('');
     this.normalizationRegex = new RegExp('[' + replace + ']', 'g');
 
     var events = [
@@ -1039,10 +1019,6 @@ var PDFFindController = (function PDFFindControllerClosure() {
       'findhighlightallchange',
       'findcasesensitivitychange'
     ];
-
-    this.firstPagePromise = new Promise(function (resolve) {
-      this.resolveFirstPage = resolve;
-    }.bind(this));
     this.handleEvent = this.handleEvent.bind(this);
 
     for (var i = 0, len = events.length; i < len; i++) {
@@ -1058,13 +1034,33 @@ var PDFFindController = (function PDFFindControllerClosure() {
     reset: function PDFFindController_reset() {
       this.startedTextExtraction = false;
       this.extractTextPromises = [];
-      this.active = false;
+      this.pendingFindMatches = Object.create(null);
+      this.active = false; // If active, find results will be highlighted.
+      this.pageContents = []; // Stores the text for each page.
+      this.pageMatches = [];
+      this.matchCount = 0;
+      this.selected = { // Currently selected match.
+        pageIdx: -1,
+        matchIdx: -1
+      };
+      this.offset = { // Where the find algorithm currently is in the document.
+        pageIdx: null,
+        matchIdx: null
+      };
+      this.pagesToSearch = null;
+      this.resumePageIdx = null;
+      this.state = null;
+      this.dirtyMatch = false;
+      this.findTimeout = null;
+
+      this.firstPagePromise = new Promise(function (resolve) {
+        this.resolveFirstPage = resolve;
+      }.bind(this));
     },
 
     normalize: function PDFFindController_normalize(text) {
-      var self = this;
       return text.replace(this.normalizationRegex, function (ch) {
-        return self.charactersToNormalize[ch];
+        return CHARACTERS_TO_NORMALIZE[ch];
       });
     },
 
@@ -2210,8 +2206,6 @@ var CONTROLS_SELECTOR = 'pdfPresentationModeControls';
  * @property {HTMLDivElement} container - The container for the viewer element.
  * @property {HTMLDivElement} viewer - (optional) The viewer element.
  * @property {PDFViewer} pdfViewer - The document viewer.
- * @property {PDFThumbnailViewer} pdfThumbnailViewer - (optional) The thumbnail
- *   viewer.
  * @property {Array} contextMenuItems - (optional) The menuitems that are added
  *   to the context menu in Presentation Mode.
  */
@@ -2228,7 +2222,6 @@ var PDFPresentationMode = (function PDFPresentationModeClosure() {
     this.container = options.container;
     this.viewer = options.viewer || options.container.firstElementChild;
     this.pdfViewer = options.pdfViewer;
-    this.pdfThumbnailViewer = options.pdfThumbnailViewer || null;
     var contextMenuItems = options.contextMenuItems || null;
 
     this.active = false;
@@ -2430,10 +2423,6 @@ var PDFPresentationMode = (function PDFPresentationModeClosure() {
       this._resetMouseScrollState();
       this.container.removeAttribute('contextmenu');
       this.contextMenuOpen = false;
-
-      if (this.pdfThumbnailViewer) {
-        this.pdfThumbnailViewer.ensureThumbnailVisible(page);
-      }
     },
 
     /**
@@ -5675,13 +5664,6 @@ var PDFThumbnailViewer = (function PDFThumbnailViewerClosure() {
       return promise;
     },
 
-    ensureThumbnailVisible:
-        function PDFThumbnailViewer_ensureThumbnailVisible(page) {
-      // Ensure that the thumbnail of the current page is visible
-      // when switching from another view.
-      scrollIntoView(document.getElementById('thumbnailContainer' + page));
-    },
-
     forceRendering: function () {
       var visibleThumbs = this._getVisibleThumbs();
       var thumbView = this.renderingQueue.getHighestPriority(visibleThumbs,
@@ -5701,41 +5683,365 @@ var PDFThumbnailViewer = (function PDFThumbnailViewerClosure() {
 })();
 
 
+var SidebarView = {
+  NONE: 0,
+  THUMBS: 1,
+  OUTLINE: 2,
+  ATTACHMENTS: 3
+};
+
 /**
- * @typedef {Object} PDFOutlineViewOptions
- * @property {HTMLDivElement} container - The viewer element.
- * @property {Array} outline - An array of outline objects.
- * @property {IPDFLinkService} linkService - The navigation/linking service.
+ * @typedef {Object} PDFSidebarOptions
+ * @property {PDFViewer} - The document viewer.
+ * @property {PDFThumbnailViewer} - The thumbnail viewer.
+ * @property {PDFOutlineViewer} - The outline viewer.
+ * @property {HTMLDivElement} mainContainer - The main container
+ *   (in which the viewer element is placed).
+ * @property {HTMLDivElement} outerContainer - The outer container
+ *   (encasing both the viewer and sidebar elements).
+ * @property {HTMLButtonElement} toggleButton - The button used for
+ *   opening/closing the sidebar.
+ * @property {HTMLButtonElement} thumbnailButton - The button used to show
+ *   the thumbnail view.
+ * @property {HTMLButtonElement} outlineButton - The button used to show
+ *   the outline view.
+ * @property {HTMLButtonElement} attachmentsButton - The button used to show
+ *   the attachments view.
+ * @property {HTMLDivElement} thumbnailView - The container in which
+ *   the thumbnails are placed.
+ * @property {HTMLDivElement} outlineView - The container in which
+ *   the outline is placed.
+ * @property {HTMLDivElement} attachmentsView - The container in which
+ *   the attachments are placed.
  */
 
 /**
  * @class
  */
-var PDFOutlineView = (function PDFOutlineViewClosure() {
+var PDFSidebar = (function PDFSidebarClosure() {
   /**
-   * @constructs PDFOutlineView
-   * @param {PDFOutlineViewOptions} options
+   * @constructs PDFSidebar
+   * @param {PDFSidebarOptions} options
    */
-  function PDFOutlineView(options) {
-    this.container = options.container;
-    this.outline = options.outline;
-    this.linkService = options.linkService;
-    this.lastToggleIsShow = true;
+  function PDFSidebar(options) {
+    this.isOpen = false;
+    this.active = SidebarView.THUMBS;
+    this.isInitialViewSet = false;
+
+    /**
+     * Callback used when the sidebar has been opened/closed, to ensure that
+     * the viewers (PDFViewer/PDFThumbnailViewer) are updated correctly.
+     */
+    this.onToggled = null;
+
+    this.pdfViewer = options.pdfViewer;
+    this.pdfThumbnailViewer = options.pdfThumbnailViewer;
+    this.pdfOutlineViewer = options.pdfOutlineViewer;
+
+    this.mainContainer = options.mainContainer;
+    this.outerContainer = options.outerContainer;
+    this.toggleButton = options.toggleButton;
+
+    this.thumbnailButton = options.thumbnailButton;
+    this.outlineButton = options.outlineButton;
+    this.attachmentsButton = options.attachmentsButton;
+
+    this.thumbnailView = options.thumbnailView;
+    this.outlineView = options.outlineView;
+    this.attachmentsView = options.attachmentsView;
+
+    this._addEventListeners();
   }
 
-  PDFOutlineView.prototype = {
-    reset: function PDFOutlineView_reset() {
-      var container = this.container;
-      while (container.firstChild) {
-        container.removeChild(container.firstChild);
+  PDFSidebar.prototype = {
+    reset: function PDFSidebar_reset() {
+      this.isInitialViewSet = false;
+
+      this.close();
+      this.switchView(SidebarView.THUMBS);
+
+      this.outlineButton.disabled = false;
+      this.attachmentsButton.disabled = false;
+    },
+
+    /**
+     * @returns {number} One of the values in {SidebarView}.
+     */
+    get visibleView() {
+      return (this.isOpen ? this.active : SidebarView.NONE);
+    },
+
+    get isThumbnailViewVisible() {
+      return (this.isOpen && this.active === SidebarView.THUMBS);
+    },
+
+    get isOutlineViewVisible() {
+      return (this.isOpen && this.active === SidebarView.OUTLINE);
+    },
+
+    get isAttachmentsViewVisible() {
+      return (this.isOpen && this.active === SidebarView.ATTACHMENTS);
+    },
+
+    /**
+     * @param {number} view - The sidebar view that should become visible,
+     *                        must be one of the values in {SidebarView}.
+     */
+    setInitialView: function PDFSidebar_setInitialView(view) {
+      if (this.isInitialViewSet) {
+        return;
       }
-      this.lastToggleIsShow = true;
+      this.isInitialViewSet = true;
+
+      if (this.isOpen && view === SidebarView.NONE) {
+        // If the user has already manually opened the sidebar,
+        // immediately closing it would be bad UX.
+        return;
+      }
+      this.switchView(view, true);
+    },
+
+    /**
+     * @param {number} view - The sidebar view that should be switched to,
+     *                        must be one of the values in {SidebarView}.
+     * @param {boolean} forceOpen - Ensure that the sidebar is opened.
+     *                              The default value is false.
+     */
+    switchView: function PDFSidebar_switchView(view, forceOpen) {
+      if (view === SidebarView.NONE) {
+        this.close();
+        return;
+      }
+      if (forceOpen) {
+        this.open();
+      }
+      var shouldForceRendering = false;
+
+      switch (view) {
+        case SidebarView.THUMBS:
+          this.thumbnailButton.classList.add('toggled');
+          this.outlineButton.classList.remove('toggled');
+          this.attachmentsButton.classList.remove('toggled');
+
+          this.thumbnailView.classList.remove('hidden');
+          this.outlineView.classList.add('hidden');
+          this.attachmentsView.classList.add('hidden');
+
+          if (this.isOpen && view !== this.active) {
+            this._updateThumbnailViewer();
+            shouldForceRendering = true;
+          }
+          break;
+        case SidebarView.OUTLINE:
+          if (this.outlineButton.disabled) {
+            return;
+          }
+          this.thumbnailButton.classList.remove('toggled');
+          this.outlineButton.classList.add('toggled');
+          this.attachmentsButton.classList.remove('toggled');
+
+          this.thumbnailView.classList.add('hidden');
+          this.outlineView.classList.remove('hidden');
+          this.attachmentsView.classList.add('hidden');
+          break;
+        case SidebarView.ATTACHMENTS:
+          if (this.attachmentsButton.disabled) {
+            return;
+          }
+          this.thumbnailButton.classList.remove('toggled');
+          this.outlineButton.classList.remove('toggled');
+          this.attachmentsButton.classList.add('toggled');
+
+          this.thumbnailView.classList.add('hidden');
+          this.outlineView.classList.add('hidden');
+          this.attachmentsView.classList.remove('hidden');
+          break;
+        default:
+          console.error('PDFSidebar_switchView: "' + view +
+                        '" is an unsupported value.');
+          return;
+      }
+      // Update the active view *after* it has been validated above,
+      // in order to prevent setting it to an invalid state.
+      this.active = view | 0;
+
+      if (shouldForceRendering) {
+        this._forceRendering();
+      }
+    },
+
+    open: function PDFSidebar_open() {
+      if (this.isOpen) {
+        return;
+      }
+      this.isOpen = true;
+      this.toggleButton.classList.add('toggled');
+
+      this.outerContainer.classList.add('sidebarMoving');
+      this.outerContainer.classList.add('sidebarOpen');
+
+      if (this.active === SidebarView.THUMBS) {
+        this._updateThumbnailViewer();
+      }
+      this._forceRendering();
+    },
+
+    close: function PDFSidebar_close() {
+      if (!this.isOpen) {
+        return;
+      }
+      this.isOpen = false;
+      this.toggleButton.classList.remove('toggled');
+
+      this.outerContainer.classList.add('sidebarMoving');
+      this.outerContainer.classList.remove('sidebarOpen');
+
+      this._forceRendering();
+    },
+
+    toggle: function PDFSidebar_toggle() {
+      if (this.isOpen) {
+        this.close();
+      } else {
+        this.open();
+      }
     },
 
     /**
      * @private
      */
-    _dispatchEvent: function PDFOutlineView_dispatchEvent(outlineCount) {
+    _forceRendering: function PDFSidebar_forceRendering() {
+      if (this.onToggled) {
+        this.onToggled();
+      } else { // Fallback
+        this.pdfViewer.forceRendering();
+        this.pdfThumbnailViewer.forceRendering();
+      }
+    },
+
+    /**
+     * @private
+     */
+    _updateThumbnailViewer: function PDFSidebar_updateThumbnailViewer() {
+      var pdfViewer = this.pdfViewer;
+      var thumbnailViewer = this.pdfThumbnailViewer;
+
+      // Use the rendered pages to set the corresponding thumbnail images.
+      var pagesCount = pdfViewer.pagesCount;
+      for (var pageIndex = 0; pageIndex < pagesCount; pageIndex++) {
+        var pageView = pdfViewer.getPageView(pageIndex);
+        if (pageView && pageView.renderingState === RenderingStates.FINISHED) {
+          var thumbnailView = thumbnailViewer.getThumbnail(pageIndex);
+          thumbnailView.setImage(pageView);
+        }
+      }
+      thumbnailViewer.scrollThumbnailIntoView(pdfViewer.currentPageNumber);
+    },
+
+    /**
+     * @private
+     */
+    _addEventListeners: function PDFSidebar_addEventListeners() {
+      var self = this;
+
+      self.mainContainer.addEventListener('transitionend', function(evt) {
+        if (evt.target === /* mainContainer */ this) {
+          self.outerContainer.classList.remove('sidebarMoving');
+        }
+      });
+
+      // Buttons for switching views.
+      self.thumbnailButton.addEventListener('click', function() {
+        self.switchView(SidebarView.THUMBS);
+      });
+
+      self.outlineButton.addEventListener('click', function() {
+        self.switchView(SidebarView.OUTLINE);
+      });
+      self.outlineButton.addEventListener('dblclick', function() {
+        self.pdfOutlineViewer.toggleOutlineTree();
+      });
+
+      self.attachmentsButton.addEventListener('click', function() {
+        self.switchView(SidebarView.ATTACHMENTS);
+      });
+
+      // Disable/enable views.
+      self.outlineView.addEventListener('outlineloaded', function(evt) {
+        var outlineCount = evt.detail.outlineCount;
+
+        self.outlineButton.disabled = !outlineCount;
+        if (!outlineCount && self.active === SidebarView.OUTLINE) {
+          self.switchView(SidebarView.THUMBS);
+        }
+      });
+
+      self.attachmentsView.addEventListener('attachmentsloaded', function(evt) {
+        var attachmentsCount = evt.detail.attachmentsCount;
+
+        self.attachmentsButton.disabled = !attachmentsCount;
+        if (!attachmentsCount && self.active === SidebarView.ATTACHMENTS) {
+          self.switchView(SidebarView.THUMBS);
+        }
+      });
+
+      // Update the thumbnailViewer, if visible, when exiting presentation mode.
+      window.addEventListener('presentationmodechanged', function(evt) {
+        if (!evt.detail.active && !evt.detail.switchInProgress &&
+            self.isThumbnailViewVisible) {
+          self._updateThumbnailViewer();
+        }
+      });
+    },
+  };
+
+  return PDFSidebar;
+})();
+
+
+var DEFAULT_TITLE = '\u2013';
+
+/**
+ * @typedef {Object} PDFOutlineViewerOptions
+ * @property {HTMLDivElement} container - The viewer element.
+ * @property {IPDFLinkService} linkService - The navigation/linking service.
+ */
+
+/**
+ * @typedef {Object} PDFOutlineViewerRenderParameters
+ * @property {Array|null} outline - An array of outline objects.
+ */
+
+/**
+ * @class
+ */
+var PDFOutlineViewer = (function PDFOutlineViewerClosure() {
+  /**
+   * @constructs PDFOutlineViewer
+   * @param {PDFOutlineViewerOptions} options
+   */
+  function PDFOutlineViewer(options) {
+    this.outline = null;
+    this.lastToggleIsShow = true;
+    this.container = options.container;
+    this.linkService = options.linkService;
+  }
+
+  PDFOutlineViewer.prototype = {
+    reset: function PDFOutlineViewer_reset() {
+      this.outline = null;
+      this.lastToggleIsShow = true;
+
+      var container = this.container;
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+    },
+
+    /**
+     * @private
+     */
+    _dispatchEvent: function PDFOutlineViewer_dispatchEvent(outlineCount) {
       var event = document.createEvent('CustomEvent');
       event.initCustomEvent('outlineloaded', true, true, {
         outlineCount: outlineCount
@@ -5746,7 +6052,7 @@ var PDFOutlineView = (function PDFOutlineViewClosure() {
     /**
      * @private
      */
-    _bindLink: function PDFOutlineView_bindLink(element, item) {
+    _bindLink: function PDFOutlineViewer_bindLink(element, item) {
       if (item.url) {
         PDFJS.addLinkAttributes(element, { url: item.url });
         return;
@@ -5760,12 +6066,29 @@ var PDFOutlineView = (function PDFOutlineViewClosure() {
     },
 
     /**
+     * @private
+     */
+    _setStyles: function PDFOutlineViewer_setStyles(element, item) {
+      var styleStr = '';
+      if (item.bold) {
+        styleStr += 'font-weight: bold;';
+      }
+      if (item.italic) {
+        styleStr += 'font-style: italic;';
+      }
+
+      if (styleStr) {
+        element.setAttribute('style', styleStr);
+      }
+    },
+
+    /**
      * Prepend a button before an outline item which allows the user to toggle
      * the visibility of all outline items at that level.
      *
      * @private
      */
-    _addToggleButton: function PDFOutlineView_addToggleButton(div) {
+    _addToggleButton: function PDFOutlineViewer_addToggleButton(div) {
       var toggler = document.createElement('div');
       toggler.className = 'outlineItemToggler';
       toggler.onclick = function(event) {
@@ -5789,7 +6112,8 @@ var PDFOutlineView = (function PDFOutlineViewClosure() {
      *
      * @private
      */
-    _toggleOutlineItem: function PDFOutlineView_toggleOutlineItem(root, show) {
+    _toggleOutlineItem:
+        function PDFOutlineViewer_toggleOutlineItem(root, show) {
       this.lastToggleIsShow = show;
       var togglers = root.querySelectorAll('.outlineItemToggler');
       for (var i = 0, ii = togglers.length; i < ii; ++i) {
@@ -5800,15 +6124,24 @@ var PDFOutlineView = (function PDFOutlineViewClosure() {
     /**
      * Collapse or expand all subtrees of the outline.
      */
-    toggleOutlineTree: function PDFOutlineView_toggleOutlineTree() {
+    toggleOutlineTree: function PDFOutlineViewer_toggleOutlineTree() {
+      if (!this.outline) {
+        return;
+      }
       this._toggleOutlineItem(this.container, !this.lastToggleIsShow);
     },
 
-    render: function PDFOutlineView_render() {
-      var outline = this.outline;
+    /**
+     * @param {PDFOutlineViewerRenderParameters} params
+     */
+    render: function PDFOutlineViewer_render(params) {
+      var outline = (params && params.outline) || null;
       var outlineCount = 0;
 
-      this.reset();
+      if (this.outline) {
+        this.reset();
+      }
+      this.outline = outline;
 
       if (!outline) {
         this._dispatchEvent(outlineCount);
@@ -5822,11 +6155,16 @@ var PDFOutlineView = (function PDFOutlineViewClosure() {
         var levelData = queue.shift();
         for (var i = 0, len = levelData.items.length; i < len; i++) {
           var item = levelData.items[i];
+
           var div = document.createElement('div');
           div.className = 'outlineItem';
+
           var element = document.createElement('a');
           this._bindLink(element, item);
-          element.textContent = PDFJS.removeNullCharacters(item.title);
+          this._setStyles(element, item);
+          element.textContent =
+            PDFJS.removeNullCharacters(item.title) || DEFAULT_TITLE;
+
           div.appendChild(element);
 
           if (item.items.length > 0) {
@@ -5853,33 +6191,39 @@ var PDFOutlineView = (function PDFOutlineViewClosure() {
     }
   };
 
-  return PDFOutlineView;
+  return PDFOutlineViewer;
 })();
 
 
 /**
- * @typedef {Object} PDFAttachmentViewOptions
+ * @typedef {Object} PDFAttachmentViewerOptions
  * @property {HTMLDivElement} container - The viewer element.
- * @property {Array} attachments - An array of attachment objects.
  * @property {DownloadManager} downloadManager - The download manager.
+ */
+
+/**
+ * @typedef {Object} PDFAttachmentViewerRenderParameters
+ * @property {Array|null} attachments - An array of attachment objects.
  */
 
 /**
  * @class
  */
-var PDFAttachmentView = (function PDFAttachmentViewClosure() {
+var PDFAttachmentViewer = (function PDFAttachmentViewerClosure() {
   /**
-   * @constructs PDFAttachmentView
-   * @param {PDFAttachmentViewOptions} options
+   * @constructs PDFAttachmentViewer
+   * @param {PDFAttachmentViewerOptions} options
    */
-  function PDFAttachmentView(options) {
+  function PDFAttachmentViewer(options) {
+    this.attachments = null;
     this.container = options.container;
-    this.attachments = options.attachments;
     this.downloadManager = options.downloadManager;
   }
 
-  PDFAttachmentView.prototype = {
-    reset: function PDFAttachmentView_reset() {
+  PDFAttachmentViewer.prototype = {
+    reset: function PDFAttachmentViewer_reset() {
+      this.attachments = null;
+
       var container = this.container;
       while (container.firstChild) {
         container.removeChild(container.firstChild);
@@ -5889,7 +6233,8 @@ var PDFAttachmentView = (function PDFAttachmentViewClosure() {
     /**
      * @private
      */
-    _dispatchEvent: function PDFAttachmentView_dispatchEvent(attachmentsCount) {
+    _dispatchEvent:
+        function PDFAttachmentViewer_dispatchEvent(attachmentsCount) {
       var event = document.createEvent('CustomEvent');
       event.initCustomEvent('attachmentsloaded', true, true, {
         attachmentsCount: attachmentsCount
@@ -5900,18 +6245,25 @@ var PDFAttachmentView = (function PDFAttachmentViewClosure() {
     /**
      * @private
      */
-    _bindLink: function PDFAttachmentView_bindLink(button, content, filename) {
+    _bindLink:
+        function PDFAttachmentViewer_bindLink(button, content, filename) {
       button.onclick = function downloadFile(e) {
         this.downloadManager.downloadData(content, filename, '');
         return false;
       }.bind(this);
     },
 
-    render: function PDFAttachmentView_render() {
-      var attachments = this.attachments;
+    /**
+     * @param {PDFAttachmentViewerRenderParameters} params
+     */
+    render: function PDFAttachmentViewer_render(params) {
+      var attachments = (params && params.attachments) || null;
       var attachmentsCount = 0;
 
-      this.reset();
+      if (this.attachments) {
+        this.reset();
+      }
+      this.attachments = attachments;
 
       if (!attachments) {
         this._dispatchEvent(attachmentsCount);
@@ -5939,7 +6291,7 @@ var PDFAttachmentView = (function PDFAttachmentViewClosure() {
     }
   };
 
-  return PDFAttachmentView;
+  return PDFAttachmentViewer;
 })();
 
 
@@ -5950,7 +6302,6 @@ var PDFViewerApplication = {
   fellback: false,
   pdfDocument: null,
   pdfLoadingTask: null,
-  sidebarOpen: false,
   printing: false,
   /** @type {PDFViewer} */
   pdfViewer: null,
@@ -5966,6 +6317,12 @@ var PDFViewerApplication = {
   pdfLinkService: null,
   /** @type {PDFHistory} */
   pdfHistory: null,
+  /** @type {PDFSidebar} */
+  pdfSidebar: null,
+  /** @type {PDFOutlineViewer} */
+  pdfOutlineViewer: null,
+  /** @type {PDFAttachmentViewer} */
+  pdfAttachmentViewer: null,
   pageRotation: 0,
   isInitialViewSet: false,
   animationStartedPromise: null,
@@ -6080,7 +6437,6 @@ var PDFViewerApplication = {
         container: container,
         viewer: viewer,
         pdfViewer: this.pdfViewer,
-        pdfThumbnailViewer: this.pdfThumbnailViewer,
         contextMenuItems: [
           { element: document.getElementById('contextFirstPage'),
             handler: toolbar.firstPageClick.bind(toolbar) },
@@ -6101,6 +6457,35 @@ var PDFViewerApplication = {
       passwordSubmit: document.getElementById('passwordSubmit'),
       passwordCancel: document.getElementById('passwordCancel')
     });
+
+    this.pdfOutlineViewer = new PDFOutlineViewer({
+      container: document.getElementById('outlineView'),
+      linkService: pdfLinkService,
+    });
+
+    this.pdfAttachmentViewer = new PDFAttachmentViewer({
+      container: document.getElementById('attachmentsView'),
+      downloadManager: new DownloadManager(),
+    });
+
+    this.pdfSidebar = new PDFSidebar({
+      pdfViewer: this.pdfViewer,
+      pdfThumbnailViewer: this.pdfThumbnailViewer,
+      pdfOutlineViewer: this.pdfOutlineViewer,
+      // Divs (and sidebar button)
+      mainContainer: document.getElementById('mainContainer'),
+      outerContainer: document.getElementById('outerContainer'),
+      toggleButton: document.getElementById('sidebarToggle'),
+      // Buttons
+      thumbnailButton: document.getElementById('viewThumbnail'),
+      outlineButton: document.getElementById('viewOutline'),
+      attachmentsButton: document.getElementById('viewAttachments'),
+      // Views
+      thumbnailView: document.getElementById('thumbnailView'),
+      outlineView: document.getElementById('outlineView'),
+      attachmentsView: document.getElementById('attachmentsView'),
+    });
+    this.pdfSidebar.onToggled = this.forceRendering.bind(this);
 
     var self = this;
     var initializedPromise = Promise.all([
@@ -6373,6 +6758,13 @@ var PDFViewerApplication = {
       this.pdfLinkService.setDocument(null, null);
     }
 
+    this.pdfSidebar.reset();
+    this.pdfOutlineViewer.reset();
+    this.pdfAttachmentViewer.reset();
+
+    this.findController.reset();
+    this.findBar.reset();
+
     if (typeof PDFBug !== 'undefined') {
       PDFBug.cleanup();
     }
@@ -6610,8 +7002,6 @@ var PDFViewerApplication = {
     var self = this;
     scale = scale || UNKNOWN_SCALE;
 
-    this.findController.reset();
-
     this.pdfDocument = pdfDocument;
 
     this.pdfDocumentProperties.setDocumentAndUrl(pdfDocument, this.url);
@@ -6747,48 +7137,12 @@ var PDFViewerApplication = {
     var promises = [pagesPromise, this.animationStartedPromise];
     Promise.all(promises).then(function() {
       pdfDocument.getOutline().then(function(outline) {
-        var container = document.getElementById('outlineView');
-        self.outline = new PDFOutlineView({
-          container: container,
-          outline: outline,
-          linkService: self.pdfLinkService
-        });
-        self.outline.render();
-        document.getElementById('viewOutline').disabled = !outline;
-
-        if (!outline && !container.classList.contains('hidden')) {
-          self.switchSidebarView('thumbs');
-        }
-        if (outline &&
-            self.preferenceSidebarViewOnLoad === SidebarView.OUTLINE) {
-          self.switchSidebarView('outline', true);
-        }
+        self.pdfOutlineViewer.render({ outline: outline });
       });
       pdfDocument.getAttachments().then(function(attachments) {
-        var container = document.getElementById('attachmentsView');
-        self.attachments = new PDFAttachmentView({
-          container: container,
-          attachments: attachments,
-          downloadManager: new DownloadManager()
-        });
-        self.attachments.render();
-        document.getElementById('viewAttachments').disabled = !attachments;
-
-        if (!attachments && !container.classList.contains('hidden')) {
-          self.switchSidebarView('thumbs');
-        }
-        if (attachments &&
-            self.preferenceSidebarViewOnLoad === SidebarView.ATTACHMENTS) {
-          self.switchSidebarView('attachments', true);
-        }
+        self.pdfAttachmentViewer.render({ attachments: attachments });
       });
     });
-
-    if (self.preferenceSidebarViewOnLoad === SidebarView.THUMBS) {
-      Promise.all([firstPagePromise, onePageRendered]).then(function () {
-        self.switchSidebarView('thumbs', true);
-      });
-    }
 
     pdfDocument.getMetadata().then(function(data) {
       var info = data.info, metadata = data.metadata;
@@ -6861,6 +7215,8 @@ var PDFViewerApplication = {
     document.getElementById('pageNumber').value =
       this.pdfViewer.currentPageNumber;
 
+    this.pdfSidebar.setInitialView(this.preferenceSidebarViewOnLoad);
+
     if (this.initialDestination) {
       this.pdfLinkService.navigateTo(this.initialDestination);
       this.initialDestination = null;
@@ -6893,81 +7249,9 @@ var PDFViewerApplication = {
 
   forceRendering: function pdfViewForceRendering() {
     this.pdfRenderingQueue.printing = this.printing;
-    this.pdfRenderingQueue.isThumbnailViewEnabled = this.sidebarOpen;
+    this.pdfRenderingQueue.isThumbnailViewEnabled =
+      this.pdfSidebar.isThumbnailViewVisible;
     this.pdfRenderingQueue.renderHighestPriority();
-  },
-
-  refreshThumbnailViewer: function pdfViewRefreshThumbnailViewer() {
-    var pdfViewer = this.pdfViewer;
-    var thumbnailViewer = this.pdfThumbnailViewer;
-
-    // set thumbnail images of rendered pages
-    var pagesCount = pdfViewer.pagesCount;
-    for (var pageIndex = 0; pageIndex < pagesCount; pageIndex++) {
-      var pageView = pdfViewer.getPageView(pageIndex);
-      if (pageView && pageView.renderingState === RenderingStates.FINISHED) {
-        var thumbnailView = thumbnailViewer.getThumbnail(pageIndex);
-        thumbnailView.setImage(pageView);
-      }
-    }
-
-    thumbnailViewer.scrollThumbnailIntoView(this.page);
-  },
-
-  switchSidebarView: function pdfViewSwitchSidebarView(view, openSidebar) {
-    if (openSidebar && !this.sidebarOpen) {
-      document.getElementById('sidebarToggle').click();
-    }
-    var thumbsView = document.getElementById('thumbnailView');
-    var outlineView = document.getElementById('outlineView');
-    var attachmentsView = document.getElementById('attachmentsView');
-
-    var thumbsButton = document.getElementById('viewThumbnail');
-    var outlineButton = document.getElementById('viewOutline');
-    var attachmentsButton = document.getElementById('viewAttachments');
-
-    switch (view) {
-      case 'thumbs':
-        var wasAnotherViewVisible = thumbsView.classList.contains('hidden');
-
-        thumbsButton.classList.add('toggled');
-        outlineButton.classList.remove('toggled');
-        attachmentsButton.classList.remove('toggled');
-        thumbsView.classList.remove('hidden');
-        outlineView.classList.add('hidden');
-        attachmentsView.classList.add('hidden');
-
-        this.forceRendering();
-
-        if (wasAnotherViewVisible) {
-          this.pdfThumbnailViewer.ensureThumbnailVisible(this.page);
-        }
-        break;
-
-      case 'outline':
-        if (outlineButton.disabled) {
-          return;
-        }
-        thumbsButton.classList.remove('toggled');
-        outlineButton.classList.add('toggled');
-        attachmentsButton.classList.remove('toggled');
-        thumbsView.classList.add('hidden');
-        outlineView.classList.remove('hidden');
-        attachmentsView.classList.add('hidden');
-        break;
-
-      case 'attachments':
-        if (attachmentsButton.disabled) {
-          return;
-        }
-        thumbsButton.classList.remove('toggled');
-        outlineButton.classList.remove('toggled');
-        attachmentsButton.classList.add('toggled');
-        thumbsView.classList.add('hidden');
-        outlineView.classList.add('hidden');
-        attachmentsView.classList.remove('hidden');
-        break;
-    }
   },
 
   beforePrint: function pdfViewSetupBeforePrint() {
@@ -7193,48 +7477,18 @@ function webViewerInitialized() {
   // Suppress context menus for some controls
   document.getElementById('scaleSelect').oncontextmenu = noContextMenuHandler;
 
-  var mainContainer = document.getElementById('mainContainer');
-  var outerContainer = document.getElementById('outerContainer');
-  mainContainer.addEventListener('transitionend', function(e) {
-    if (e.target === mainContainer) {
-      var event = document.createEvent('UIEvents');
-      event.initUIEvent('resize', false, false, window, 0);
-      window.dispatchEvent(event);
-      outerContainer.classList.remove('sidebarMoving');
-    }
-  }, true);
+  document.getElementById('mainContainer').addEventListener('transitionend',
+    function(e) {
+      if (e.target === /* mainContainer */ this) {
+        var event = document.createEvent('UIEvents');
+        event.initUIEvent('resize', false, false, window, 0);
+        window.dispatchEvent(event);
+      }
+    }, true);
 
   document.getElementById('sidebarToggle').addEventListener('click',
     function() {
-      this.classList.toggle('toggled');
-      outerContainer.classList.add('sidebarMoving');
-      outerContainer.classList.toggle('sidebarOpen');
-      PDFViewerApplication.sidebarOpen =
-        outerContainer.classList.contains('sidebarOpen');
-      if (PDFViewerApplication.sidebarOpen) {
-        PDFViewerApplication.refreshThumbnailViewer();
-      }
-      PDFViewerApplication.forceRendering();
-    });
-
-  document.getElementById('viewThumbnail').addEventListener('click',
-    function() {
-      PDFViewerApplication.switchSidebarView('thumbs');
-    });
-
-  document.getElementById('viewOutline').addEventListener('click',
-    function() {
-      PDFViewerApplication.switchSidebarView('outline');
-    });
-
-  document.getElementById('viewOutline').addEventListener('dblclick',
-    function() {
-      PDFViewerApplication.outline.toggleOutlineTree();
-    });
-
-  document.getElementById('viewAttachments').addEventListener('click',
-    function() {
-      PDFViewerApplication.switchSidebarView('attachments');
+      PDFViewerApplication.pdfSidebar.toggle();
     });
 
   document.getElementById('previous').addEventListener('click',
@@ -7302,7 +7556,8 @@ document.addEventListener('pagerendered', function (e) {
   var pageIndex = pageNumber - 1;
   var pageView = PDFViewerApplication.pdfViewer.getPageView(pageIndex);
 
-  if (PDFViewerApplication.sidebarOpen) {
+  // Use the rendered page to set the corresponding thumbnail image.
+  if (PDFViewerApplication.pdfSidebar.isThumbnailViewVisible) {
     var thumbnailView = PDFViewerApplication.pdfThumbnailViewer.
                         getThumbnail(pageIndex);
     thumbnailView.setImage(pageView);
@@ -7356,23 +7611,26 @@ document.addEventListener('pagemode', function (evt) {
     return;
   }
   // Handle the 'pagemode' hash parameter, see also `PDFLinkService_setHash`.
-  var mode = evt.detail.mode;
+  var mode = evt.detail.mode, view;
   switch (mode) {
-    case 'bookmarks':
-      // Note: Our code calls this property 'outline', even though the
-      //       Open Parameter specification calls it 'bookmarks'.
-      mode = 'outline';
-      /* falls through */
     case 'thumbs':
+      view = SidebarView.THUMBS;
+      break;
+    case 'bookmarks':
+    case 'outline':
+      view = SidebarView.OUTLINE;
+      break;
     case 'attachments':
-      PDFViewerApplication.switchSidebarView(mode, true);
+      view = SidebarView.ATTACHMENTS;
       break;
     case 'none':
-      if (PDFViewerApplication.sidebarOpen) {
-        document.getElementById('sidebarToggle').click();
-      }
+      view = SidebarView.NONE;
       break;
+    default:
+      console.error('Invalid "pagemode" hash parameter: ' + mode);
+      return;
   }
+  PDFViewerApplication.pdfSidebar.switchView(view, /* forceOpen = */ true);
 }, true);
 
 document.addEventListener('namedaction', function (e) {
@@ -7542,7 +7800,8 @@ window.addEventListener('pagechange', function pagechange(evt) {
   var page = evt.pageNumber;
   if (evt.previousPageNumber !== page) {
     document.getElementById('pageNumber').value = page;
-    if (PDFViewerApplication.sidebarOpen) {
+
+    if (PDFViewerApplication.pdfSidebar.isThumbnailViewVisible) {
       PDFViewerApplication.pdfThumbnailViewer.scrollThumbnailIntoView(page);
     }
   }

@@ -43,4 +43,5 @@ DevToolsModules(
     'theme.js',
     'undo.js',
     'view-source.js',
+    'webgl-utils.js',
 )

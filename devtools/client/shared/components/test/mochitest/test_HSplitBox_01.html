@@ -80,7 +80,7 @@ window.onload = Task.async(function* () {
     const splitter = document.querySelector(".h-split-box-splitter");
     ok(splitter, "Should get our splitter");
 
-    synthesizeMouseAtCenter(splitter, { button: 1, type: "mousedown" }, window);
+    synthesizeMouseAtCenter(splitter, { button: 0, type: "mousedown" }, window);
 
     function mouseMove(clientX) {
       const event = new MouseEvent("mousemove", { clientX });
@@ -103,7 +103,7 @@ window.onload = Task.async(function* () {
     is(newSizes.length, 4, "Should get 4 resizes");
     ok(aboutEq(newSizes[3], .75), "New size should be ~.75");
 
-    synthesizeMouseAtCenter(splitter, { button: 1, type: "mouseup" }, window);
+    synthesizeMouseAtCenter(splitter, { button: 0, type: "mouseup" }, window);
 
     // Now that we have let go of the splitter, mouse moves should not result in resizes.
 

@@ -40,7 +40,7 @@ add_task(function* test_notification_duplicate() {
     yield db.put(record);
   }
 
-  let notifyPromise = promiseObserverNotification('push-message');
+  let notifyPromise = promiseObserverNotification(PushServiceComponent.pushTopic);
 
   let acks = 0;
   let ackDone;
