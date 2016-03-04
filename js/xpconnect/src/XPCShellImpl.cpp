@@ -809,7 +809,7 @@ typedef enum JSShellErrNum {
 
 static const JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
 #define MSG_DEF(name, number, count, exception, format) \
-    { format, count } ,
+    { #name, format, count } ,
 #include "jsshell.msg"
 #undef MSG_DEF
 };
