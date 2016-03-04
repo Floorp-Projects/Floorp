@@ -345,8 +345,8 @@ interface nsIMemoryReporterManager : nsISupports
    *
    * |heapAllocated| (UNITS_BYTES)  Memory mapped by the heap allocator.
    *
-   * |heapOverheadRatio| (UNITS_PERCENTAGE)  In the heap allocator, this is the
-   * ratio of committed, unused bytes to allocated bytes.  Like all
+   * |heapOverheadFraction| (UNITS_PERCENTAGE)  In the heap allocator, this is
+   * the fraction of committed heap bytes that are overhead. Like all
    * UNITS_PERCENTAGE measurements, its amount is multiplied by 100x so it can
    * be represented by an int64_t.
    *
@@ -381,7 +381,7 @@ interface nsIMemoryReporterManager : nsISupports
   readonly attribute int64_t residentUnique;
 
   readonly attribute int64_t heapAllocated;
-  readonly attribute int64_t heapOverheadRatio;
+  readonly attribute int64_t heapOverheadFraction;
 
   readonly attribute int64_t JSMainRuntimeGCHeap;
   readonly attribute int64_t JSMainRuntimeTemporaryPeak;

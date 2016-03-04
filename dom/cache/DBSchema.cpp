@@ -37,7 +37,7 @@ const int32_t kFirstShippedSchemaVersion = 15;
 namespace {
 
 // Update this whenever the DB schema is changed.
-const int32_t kLatestSchemaVersion = 19;
+const int32_t kLatestSchemaVersion = 20;
 
 // ---------
 // The following constants define the SQL schema.  These are defined in the
@@ -104,9 +104,10 @@ const char* const kTableEntries =
     "response_principal_info TEXT NOT NULL, "
     "cache_id INTEGER NOT NULL REFERENCES caches(id) ON DELETE CASCADE, "
 
+    "request_redirect INTEGER NOT NULL, "
+    "request_referrer_policy INTEGER NOT NULL"
     // New columns must be added at the end of table to migrate and
     // validate properly.
-    "request_redirect INTEGER NOT NULL"
   ")";
 
 // Create an index to support the QueryCache() matching algorithm.  This
@@ -189,6 +190,14 @@ static_assert(int(HeadersGuardEnum::None) == 0 &&
               int(HeadersGuardEnum::Immutable) == 4 &&
               int(HeadersGuardEnum::EndGuard_) == 5,
               "HeadersGuardEnum values are as expected");
+static_assert(int(ReferrerPolicy::_empty) == 0 &&
+              int(ReferrerPolicy::No_referrer) == 1 &&
+              int(ReferrerPolicy::No_referrer_when_downgrade) == 2 &&
+              int(ReferrerPolicy::Origin_only) == 3 &&
+              int(ReferrerPolicy::Origin_when_cross_origin) == 4 &&
+              int(ReferrerPolicy::Unsafe_url) == 5 &&
+              int(ReferrerPolicy::EndGuard_) == 6,
+              "ReferrerPolicy values are as expected");
 static_assert(int(RequestMode::Same_origin) == 0 &&
               int(RequestMode::No_cors) == 1 &&
               int(RequestMode::Cors) == 2 &&
@@ -1635,6 +1644,7 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       "request_url_query, "
       "request_url_query_hash, "
       "request_referrer, "
+      "request_referrer_policy, "
       "request_headers_guard, "
       "request_mode, "
       "request_credentials, "
@@ -1658,6 +1668,7 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       ":request_url_query, "
       ":request_url_query_hash, "
       ":request_referrer, "
+      ":request_referrer_policy, "
       ":request_headers_guard, "
       ":request_mode, "
       ":request_credentials, "
@@ -1708,6 +1719,10 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
 
   rv = state->BindStringByName(NS_LITERAL_CSTRING("request_referrer"),
                                aRequest.referrer());
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("request_referrer_policy"),
+                              static_cast<int32_t>(aRequest.referrerPolicy()));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->BindInt32ByName(NS_LITERAL_CSTRING("request_headers_guard"),
@@ -1988,6 +2003,7 @@ ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
       "request_url_no_query, "
       "request_url_query, "
       "request_referrer, "
+      "request_referrer_policy, "
       "request_headers_guard, "
       "request_mode, "
       "request_credentials, "
@@ -2019,48 +2035,54 @@ ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
   rv = state->GetString(3, aSavedRequestOut->mValue.referrer());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
+  int32_t referrerPolicy;
+  rv = state->GetInt32(4, &referrerPolicy);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  aSavedRequestOut->mValue.referrerPolicy() =
+    static_cast<ReferrerPolicy>(referrerPolicy);
+
   int32_t guard;
-  rv = state->GetInt32(4, &guard);
+  rv = state->GetInt32(5, &guard);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mValue.headersGuard() =
     static_cast<HeadersGuardEnum>(guard);
 
   int32_t mode;
-  rv = state->GetInt32(5, &mode);
+  rv = state->GetInt32(6, &mode);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mValue.mode() = static_cast<RequestMode>(mode);
 
   int32_t credentials;
-  rv = state->GetInt32(6, &credentials);
+  rv = state->GetInt32(7, &credentials);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mValue.credentials() =
     static_cast<RequestCredentials>(credentials);
 
   int32_t requestContentPolicyType;
-  rv = state->GetInt32(7, &requestContentPolicyType);
+  rv = state->GetInt32(8, &requestContentPolicyType);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mValue.contentPolicyType() =
     static_cast<nsContentPolicyType>(requestContentPolicyType);
 
   int32_t requestCache;
-  rv = state->GetInt32(8, &requestCache);
+  rv = state->GetInt32(9, &requestCache);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mValue.requestCache() =
     static_cast<RequestCache>(requestCache);
 
   int32_t requestRedirect;
-  rv = state->GetInt32(9, &requestRedirect);
+  rv = state->GetInt32(10, &requestRedirect);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mValue.requestRedirect() =
     static_cast<RequestRedirect>(requestRedirect);
 
   bool nullBody = false;
-  rv = state->GetIsNull(10, &nullBody);
+  rv = state->GetIsNull(11, &nullBody);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   aSavedRequestOut->mHasBodyId = !nullBody;
 
   if (aSavedRequestOut->mHasBodyId) {
-    rv = ExtractId(state, 10, &aSavedRequestOut->mBodyId);
+    rv = ExtractId(state, 11, &aSavedRequestOut->mBodyId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   }
 
@@ -2396,7 +2418,7 @@ Validate(mozIStorageConnection* aConn)
 // Schema migration code
 // -----
 
-typedef nsresult (*MigrationFunc)(mozIStorageConnection*);
+typedef nsresult (*MigrationFunc)(mozIStorageConnection*, bool&);
 struct Migration
 {
   MOZ_CONSTEXPR Migration(int32_t aFromVersion, MigrationFunc aFunc)
@@ -2409,10 +2431,11 @@ struct Migration
 
 // Declare migration functions here.  Each function should upgrade
 // the version by a single increment.  Don't skip versions.
-nsresult MigrateFrom15To16(mozIStorageConnection* aConn);
-nsresult MigrateFrom16To17(mozIStorageConnection* aConn);
-nsresult MigrateFrom17To18(mozIStorageConnection* aConn);
-nsresult MigrateFrom18To19(mozIStorageConnection* aConn);
+nsresult MigrateFrom15To16(mozIStorageConnection* aConn, bool& aRewriteSchema);
+nsresult MigrateFrom16To17(mozIStorageConnection* aConn, bool& aRewriteSchema);
+nsresult MigrateFrom17To18(mozIStorageConnection* aConn, bool& aRewriteSchema);
+nsresult MigrateFrom18To19(mozIStorageConnection* aConn, bool& aRewriteSchema);
+nsresult MigrateFrom19To20(mozIStorageConnection* aConn, bool& aRewriteSchema);
 
 // Configure migration functions to run for the given starting version.
 Migration sMigrationList[] = {
@@ -2420,44 +2443,10 @@ Migration sMigrationList[] = {
   Migration(16, MigrateFrom16To17),
   Migration(17, MigrateFrom17To18),
   Migration(18, MigrateFrom18To19),
+  Migration(19, MigrateFrom19To20),
 };
 
 uint32_t sMigrationListLength = sizeof(sMigrationList) / sizeof(Migration);
-
-nsresult
-Migrate(mozIStorageConnection* aConn)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aConn);
-
-  int32_t currentVersion = 0;
-  nsresult rv = aConn->GetSchemaVersion(&currentVersion);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-  while (currentVersion < kLatestSchemaVersion) {
-    // Wiping old databases is handled in DBAction because it requires
-    // making a whole new mozIStorageConnection.  Make sure we don't
-    // accidentally get here for one of those old databases.
-    MOZ_ASSERT(currentVersion >= kFirstShippedSchemaVersion);
-
-    for (uint32_t i = 0; i < sMigrationListLength; ++i) {
-      if (sMigrationList[i].mFromVersion == currentVersion) {
-        rv = sMigrationList[i].mFunc(aConn);
-        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-        break;
-      }
-    }
-
-    DebugOnly<int32_t> lastVersion = currentVersion;
-    rv = aConn->GetSchemaVersion(&currentVersion);
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-    MOZ_ASSERT(currentVersion > lastVersion);
-  }
-
-  MOZ_ASSERT(currentVersion == kLatestSchemaVersion);
-
-  return rv;
-}
 
 nsresult
 RewriteEntriesSchema(mozIStorageConnection* aConn)
@@ -2488,7 +2477,55 @@ RewriteEntriesSchema(mozIStorageConnection* aConn)
   return rv;
 }
 
-nsresult MigrateFrom15To16(mozIStorageConnection* aConn)
+nsresult
+Migrate(mozIStorageConnection* aConn)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aConn);
+
+  int32_t currentVersion = 0;
+  nsresult rv = aConn->GetSchemaVersion(&currentVersion);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  bool rewriteSchema = false;
+
+  while (currentVersion < kLatestSchemaVersion) {
+    // Wiping old databases is handled in DBAction because it requires
+    // making a whole new mozIStorageConnection.  Make sure we don't
+    // accidentally get here for one of those old databases.
+    MOZ_ASSERT(currentVersion >= kFirstShippedSchemaVersion);
+
+    for (uint32_t i = 0; i < sMigrationListLength; ++i) {
+      if (sMigrationList[i].mFromVersion == currentVersion) {
+        bool shouldRewrite = false;
+        rv = sMigrationList[i].mFunc(aConn, shouldRewrite);
+        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+        if (shouldRewrite) {
+          rewriteSchema = true;
+        }
+        break;
+      }
+    }
+
+    DebugOnly<int32_t> lastVersion = currentVersion;
+    rv = aConn->GetSchemaVersion(&currentVersion);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    MOZ_ASSERT(currentVersion > lastVersion);
+  }
+
+  MOZ_ASSERT(currentVersion == kLatestSchemaVersion);
+
+  if (rewriteSchema) {
+    // Now overwrite the master SQL for the entries table to remove the column
+    // default value.  This is also necessary for our Validate() method to
+    // pass on this database.
+    rv = RewriteEntriesSchema(aConn);
+  }
+
+  return rv;
+}
+
+nsresult MigrateFrom15To16(mozIStorageConnection* aConn, bool& aRewriteSchema)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -2507,20 +2544,16 @@ nsresult MigrateFrom15To16(mozIStorageConnection* aConn)
   ));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  // Now overwrite the master SQL for the entries table to remove the column
-  // default value.  This is also necessary for our Validate() method to
-  // pass on this database.
-  rv = RewriteEntriesSchema(aConn);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
   rv = aConn->SetSchemaVersion(16);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  aRewriteSchema = true;
 
   return rv;
 }
 
 nsresult
-MigrateFrom16To17(mozIStorageConnection* aConn)
+MigrateFrom16To17(mozIStorageConnection* aConn, bool& aRewriteSchema)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -2645,12 +2678,6 @@ MigrateFrom16To17(mozIStorageConnection* aConn)
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   if (NS_WARN_IF(hasMoreData)) { return NS_ERROR_FAILURE; }
 
-  // Finally, rewrite the schema for the entries database, otherwise the
-  // returned SQL string from sqlite will wrap the name of the table in quotes,
-  // breaking the checks in Validate().
-  rv = RewriteEntriesSchema(aConn);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
   rv = aConn->SetSchemaVersion(17);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
@@ -2658,7 +2685,7 @@ MigrateFrom16To17(mozIStorageConnection* aConn)
 }
 
 nsresult
-MigrateFrom17To18(mozIStorageConnection* aConn)
+MigrateFrom17To18(mozIStorageConnection* aConn, bool& aRewriteSchema)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -2688,7 +2715,7 @@ MigrateFrom17To18(mozIStorageConnection* aConn)
 }
 
 nsresult
-MigrateFrom18To19(mozIStorageConnection* aConn)
+MigrateFrom18To19(mozIStorageConnection* aConn, bool& aRewriteSchema)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -2715,6 +2742,33 @@ MigrateFrom18To19(mozIStorageConnection* aConn)
 
   rv = aConn->SetSchemaVersion(19);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  return rv;
+}
+
+nsresult MigrateFrom19To20(mozIStorageConnection* aConn, bool& aRewriteSchema)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aConn);
+
+  mozStorageTransaction trans(aConn, true,
+                              mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+  // Add the request_referrer_policy column with a default value of
+  // "no-referrer-when-downgrade".  Note, we only use a default value here
+  // because its required by ALTER TABLE and we need to apply the default
+  // "no-referrer-when-downgrade" to existing records in the table. We don't
+  // actually want to keep the default in the schema for future INSERTs.
+  nsresult rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE entries "
+    "ADD COLUMN request_referrer_policy INTEGER NOT NULL DEFAULT 2"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = aConn->SetSchemaVersion(20);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  aRewriteSchema = true;
 
   return rv;
 }

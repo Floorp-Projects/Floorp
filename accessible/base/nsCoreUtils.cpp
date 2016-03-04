@@ -223,7 +223,7 @@ nsCoreUtils::GetDOMNodeFromDOMPoint(nsINode *aNode, uint32_t aOffset)
   return aNode;
 }
 
-nsIContent*
+dom::Element*
 nsCoreUtils::GetRoleContent(nsINode *aNode)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
@@ -242,7 +242,7 @@ nsCoreUtils::GetRoleContent(nsINode *aNode)
     }
   }
 
-  return content;
+  return (content && content->IsElement()) ? content->AsElement() : nullptr;
 }
 
 bool

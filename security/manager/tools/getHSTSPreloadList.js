@@ -60,11 +60,12 @@ function download() {
     req.send();
   }
   catch (e) {
-    throw "ERROR: problem downloading '" + SOURCE + "': " + e;
+    throw new Error(`ERROR: problem downloading '${SOURCE}': ${e}`);
   }
 
   if (req.status != 200) {
-    throw "ERROR: problem downloading '" + SOURCE + "': status " + req.status;
+    throw new Error("ERROR: problem downloading '" + SOURCE + "': status " +
+                    req.status);
   }
 
   var resultDecoded;
@@ -72,7 +73,8 @@ function download() {
     resultDecoded = atob(req.responseText);
   }
   catch (e) {
-    throw "ERROR: could not decode data as base64 from '" + SOURCE + "': " + e;
+    throw new Error("ERROR: could not decode data as base64 from '" + SOURCE +
+                    "': " + e);
   }
 
   // we have to filter out '//' comments, while not mangling the json
@@ -82,7 +84,7 @@ function download() {
     data = JSON.parse(result);
   }
   catch (e) {
-    throw "ERROR: could not parse data from '" + SOURCE + "': " + e;
+    throw new Error(`ERROR: could not parse data from '${SOURCE}': ${e}`);
   }
   return data;
 }
@@ -91,7 +93,8 @@ function getHosts(rawdata) {
   var hosts = [];
 
   if (!rawdata || !rawdata.entries) {
-    throw "ERROR: source data not formatted correctly: 'entries' not found";
+    throw new Error("ERROR: source data not formatted correctly: 'entries' " +
+                    "not found");
   }
 
   for (entry of rawdata.entries) {
@@ -101,7 +104,7 @@ function getHosts(rawdata) {
         entry.originalIncludeSubdomains = entry.include_subdomains;
         hosts.push(entry);
       } else {
-        throw "ERROR: entry not formatted correctly: no name found";
+        throw new Error("ERROR: entry not formatted correctly: no name found");
       }
     }
   }
@@ -157,7 +160,7 @@ function RedirectAndAuthStopper() {}
 RedirectAndAuthStopper.prototype = {
   // nsIChannelEventSink
   asyncOnChannelRedirect: function(oldChannel, newChannel, flags, callback) {
-    throw Cr.NS_ERROR_ENTITY_CHANGED;
+    throw new Error(Cr.NS_ERROR_ENTITY_CHANGED);
   },
 
   // nsIAuthPrompt2
@@ -166,7 +169,7 @@ RedirectAndAuthStopper.prototype = {
   },
 
   asyncPromptAuth: function(channel, callback, context, level, authInfo) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw new Error(Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
   getInterface: function(iid) {
@@ -371,8 +374,9 @@ function combineLists(newHosts, currentHosts) {
 
 // ****************************************************************************
 // This is where the action happens:
-if (arguments.length < 1) {
-  throw "Usage: getHSTSPreloadList.js <absolute path to current nsSTSPreloadList.inc>";
+if (arguments.length != 1) {
+  throw new Error("Usage: getHSTSPreloadList.js " +
+                  "<absolute path to current nsSTSPreloadList.inc>");
 }
 // get the current preload list
 var currentHosts = readCurrentList(arguments[0]);

@@ -625,8 +625,6 @@ class BaseMarionetteTestRunner(object):
 
         self.logger.info('Using workspace for temporary data: '
                          '"{}"'.format(self.workspace_path))
-        if not self.workspace:
-            self.logger.info('Profile destination is TMP')
 
         if self.emulator and not self.logdir:
             self.logdir = os.path.join(self.workspace_path or '', 'logcat')
@@ -817,6 +815,8 @@ setReq.onerror = function() {
             # an external ip
             if self._capabilities['device'] == "desktop":
                 need_external_ip = False
+        self.logger.info('Initial Profile Destination is '
+                         '"{}"'.format(self.marionette.profile_path))
 
         # Gaia sets server_root and that means we shouldn't spin up our own httpd
         if not self.httpd:

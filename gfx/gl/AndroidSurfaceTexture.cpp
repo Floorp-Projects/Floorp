@@ -129,13 +129,15 @@ AndroidSurfaceTexture::Attach(GLContext* aContext, PRIntervalTime aTimeout)
 
   MOZ_ASSERT(aContext->IsOwningThreadCurrent(), "Trying to attach GLContext from different thread");
 
-  mAttachedContext = aContext;
-  mAttachedContext->MakeCurrent();
   aContext->fGenTextures(1, &mTexture);
 
-  UpdateCanDetach();
+  if (NS_FAILED(mSurfaceTexture->AttachToGLContext(mTexture))) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  mAttachedContext = aContext;
+  mAttachedContext->MakeCurrent();
 
-  return mSurfaceTexture->AttachToGLContext(mTexture);
+  return NS_OK;
 }
 
 nsresult
@@ -160,24 +162,21 @@ AndroidSurfaceTexture::Detach()
   return NS_OK;
 }
 
-void
-AndroidSurfaceTexture::UpdateCanDetach()
+bool
+AndroidSurfaceTexture::CanDetach() const
 {
   // The API for attach/detach only exists on 16+, and PowerVR has some sort of
-  // fencing issue. Additionally, attach/detach seems to be busted on at least some
-  // Mali adapters (400MP2 for sure, bug 1131793)
-  bool canDetach = gfxPrefs::SurfaceTextureDetachEnabled();
-
-  mCanDetach = AndroidBridge::Bridge()->GetAPIVersion() >= 16 &&
+  // fencing issue. Additionally, attach/detach seems to be busted on at least
+  // some Mali adapters (400MP2 for sure, bug 1131793)
+  return AndroidBridge::Bridge()->GetAPIVersion() >= 16 &&
     (!mAttachedContext || mAttachedContext->Vendor() != GLVendor::Imagination) &&
     (!mAttachedContext || mAttachedContext->Vendor() != GLVendor::ARM /* Mali */) &&
-    canDetach;
+    gfxPrefs::SurfaceTextureDetachEnabled();
 }
 
 bool
 AndroidSurfaceTexture::Init(GLContext* aContext, GLuint aTexture)
 {
-  UpdateCanDetach();
 
   if (!aTexture && !CanDetach()) {
     // We have no texture and cannot initialize detached, bail out
@@ -214,7 +213,6 @@ AndroidSurfaceTexture::AndroidSurfaceTexture()
   , mSurfaceTexture()
   , mSurface()
   , mAttachedContext(nullptr)
-  , mCanDetach(false)
   , mMonitor("AndroidSurfaceTexture::mContextMonitor")
 {
 }

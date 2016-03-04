@@ -11,6 +11,17 @@ function handleReferrer(event) {
     ['Referrer: ' + event.request.referrer])));
 }
 
+function handleReferrerPolicy(event) {
+  event.respondWith(new Response(new Blob(
+    ['ReferrerPolicy: ' + event.request.referrerPolicy])));
+}
+
+function handleReferrerFull(event) {
+  event.respondWith(new Response(new Blob(
+    ['Referrer: ' + event.request.referrer + '\n' +
+     'ReferrerPolicy: ' + event.request.referrerPolicy])));
+}
+
 function handleClientId(event) {
   var body;
   if (event.clientId !== null) {
@@ -85,6 +96,8 @@ self.addEventListener('fetch', function(event) {
     var handlers = [
       { pattern: '?string', fn: handleString },
       { pattern: '?blob', fn: handleBlob },
+      { pattern: '?referrerFull', fn: handleReferrerFull },
+      { pattern: '?referrerPolicy', fn: handleReferrerPolicy },
       { pattern: '?referrer', fn: handleReferrer },
       { pattern: '?clientId', fn: handleClientId },
       { pattern: '?ignore', fn: function() {} },

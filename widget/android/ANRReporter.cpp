@@ -82,7 +82,7 @@ ANRReporter::ReleaseNativeStack()
         // Maybe profiler support is disabled?
         return;
     }
-    mozilla_sampler_stop();
+    profiler_stop();
 }
 
 } // namespace

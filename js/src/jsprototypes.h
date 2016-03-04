@@ -106,9 +106,10 @@ IF_BDATA(real,imaginary)(TypedObject,           40,     InitTypedObjectModuleObj
     real(Reflect,               41,     InitReflect,            nullptr) \
 IF_SIMD(real,imaginary)(SIMD,                   42,     InitSimdClass, OCLASP(Simd)) \
     real(WeakSet,               43,     InitWeakSetClass,       OCLASP(WeakSet)) \
-    real(TypedArray,            44,      InitViaClassSpec,      &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
-IF_SAB(real,imaginary)(Atomics,                 45,     InitAtomicsClass, OCLASP(Atomics)) \
-    real(SavedFrame,            46,      InitViaClassSpec,      &js::SavedFrame::class_) \
+    real(TypedArray,            44,     InitViaClassSpec,       &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
+IF_SAB(real,imaginary)(Atomics, 45,     InitAtomicsClass, OCLASP(Atomics)) \
+    real(SavedFrame,            46,     InitViaClassSpec,       &js::SavedFrame::class_) \
+    real(Wasm,                  47,     InitWasmClass,          CLASP(Wasm)) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 

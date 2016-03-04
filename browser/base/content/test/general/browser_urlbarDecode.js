@@ -84,7 +84,7 @@ function* checkInput(inputStr) {
   let expectedURL = "moz-action:" + type + "," + JSON.stringify(params);
   Assert.equal(item.getAttribute("url"), expectedURL, "url");
 
-  Assert.equal(item.getAttribute("title"), inputStr, "title");
+  Assert.equal(item.getAttribute("title"), inputStr.replace("\\","/"), "title");
   Assert.equal(item.getAttribute("text"), inputStr, "text");
 
   let itemTypeStr = item.getAttribute("type");
@@ -93,5 +93,5 @@ function* checkInput(inputStr) {
                ["action", "heuristic", "visiturl"].toString(),
                "type");
 
-  Assert.equal(item._title.textContent, "Visit " + inputStr, "Visible title");
+  Assert.equal(item._title.textContent, "Visit " + inputStr.replace("\\","/"), "Visible title");
 }

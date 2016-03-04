@@ -1,16 +1,16 @@
 load(libdir + "wasm.js");
 
-// MagicNumber = 0x4d534100
-const magic0 = 0;
-const magic1 = 97;  // 'a'
-const magic2 = 115; // 's'
-const magic3 = 109; // 'm'
+// MagicNumber = 0x6d736100;
+const magic0 = 0x00;  // '\0'
+const magic1 = 0x61;  // 'a'
+const magic2 = 0x73;  // 's'
+const magic3 = 0x6d;  // 'm'
 
-// EncodingVersion = -1 (to be changed to 1 at some point in the future)
-const ver0 = 0xff;
-const ver1 = 0xff;
-const ver2 = 0xff;
-const ver3 = 0xff;
+// EncodingVersion = 10 (to be changed to 1 at some point in the future)
+const ver0 = 0x0a;
+const ver1 = 0x00;
+const ver2 = 0x00;
+const ver3 = 0x00;
 
 // Section names
 const sigLabel = "sig";
@@ -24,7 +24,7 @@ const dataLabel = "data";
 const magicError = /failed to match magic number/;
 const versionError = /failed to match binary version/;
 const extraError = /failed to consume all bytes of module/;
-const sectionError = /failed to read section name/;
+const sectionError = /failed to start section/;
 
 const I32Code = 0;
 const I64Code = 1;
@@ -53,6 +53,8 @@ function moduleHeaderThen(...rest) {
     return [magic0, magic1, magic2, magic3, ver0, ver1, ver2, ver3, ...rest];
 }
 
+const wasmEval = Wasm.instantiateModule;
+
 assertErrorMessage(() => wasmEval(toBuf([])), TypeError, magicError);
 assertErrorMessage(() => wasmEval(toBuf([42])), TypeError, magicError);
 assertErrorMessage(() => wasmEval(toBuf([magic0, magic1, magic2])), TypeError, magicError);
@@ -66,17 +68,24 @@ var o = wasmEval(toBuf(moduleHeaderThen(0)));
 assertEq(Object.getOwnPropertyNames(o).length, 0);
 
 assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(1))), TypeError, sectionError);
-assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(0, 1))), TypeError, extraError);
+assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(0, 0))), TypeError, extraError);
+assertErrorMessage(() => wasmEval(toBuf(moduleHeaderThen(0, 1))), TypeError, sectionError);
 
 function cstring(name) {
     return (name + '\0').split('').map(c => c.charCodeAt(0));
 }
 
+function string(name) {
+    return name.split('').map(c => c.charCodeAt(0));
+}
+
 function moduleWithSections(sectionArray) {
     var bytes = moduleHeaderThen();
     for (let section of sectionArray) {
-        bytes.push(...cstring(section.name));
-        bytes.push(...varU32(section.body.length));
+        var nameLength = varU32(section.name.length);
+        bytes.push(...varU32(nameLength.length + section.name.length + section.body.length));
+        bytes.push(...nameLength);
+        bytes.push(...string(section.name));
         bytes.push(...section.body);
     }
     bytes.push(0);
@@ -103,12 +112,16 @@ function declSection(decls) {
     return { name: declLabel, body };
 }
 
-function funcSection(func) {
-    var body = [];
-    var locals = varU32(func.locals.length);
+function funcBody(func) {
+    var body = varU32(func.locals.length);
     for (let local of func.locals)
-        locals.push(...varU32(local));
-    body = body.concat(locals, func.body);
+        body.push(...varU32(local));
+    body.push(...varU32(func.body.length));
+    return body.concat(...func.body);
+}
+
+function bodySection(bodies) {
+    var body = [].concat(...bodies);
     return { name: funcLabel, body };
 }
 
@@ -134,7 +147,7 @@ function tableSection(elems) {
 
 const v2vSig = {args:[], ret:VoidCode};
 const i2vSig = {args:[I32Code], ret:VoidCode};
-const v2vFunc = funcSection({locals:[], body:[0]});
+const v2vBody = funcBody({locals:[], body:[]});
 
 assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: sigLabel, body: U32MAX_LEB, } ]))), TypeError, /too many signatures/);
 assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: sigLabel, body: [1, ...U32MAX_LEB], } ]))), TypeError, /too many arguments in signature/);
@@ -153,8 +166,8 @@ assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([{args:[1
 
 assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([]), declSection([0])]))), TypeError, /signature index out of range/);
 assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([1])]))), TypeError, /signature index out of range/);
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0])]))), TypeError, /fewer function definitions than declarations/);
-wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0]), v2vFunc])));
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0])]))), TypeError, /expected function bodies/);
+wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([v2vBody])])));
 
 assertThrowsInstanceOf(() => wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), {name: importLabel, body:[]}]))), TypeError);
 assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([importSection([{sigIndex:0, module:"a", func:"b"}])]))), TypeError, /signature index out of range/);
@@ -166,14 +179,14 @@ wasmEval(toBuf(moduleWithSections([
     sigSection([v2vSig]),
     importSection([{sigIndex:0, module:"a", func:""}]),
     declSection([0]),
-    v2vFunc])), {a:()=>{}});
+    bodySection([v2vBody])])), {a:()=>{}});
 
 assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([ {name: dataLabel, body: [], } ]))), TypeError, /data section requires a memory section/);
 
 wasmEval(toBuf(moduleWithSections([tableSection([])])));
 assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([tableSection([0])]))), TypeError, /table element out of range/);
-wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0]), tableSection([0]), v2vFunc])));
-wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0]), tableSection([0,0]), v2vFunc])));
-assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0]), tableSection([0,1]), v2vFunc]))), TypeError, /table element out of range/);
-wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0,0,0]), tableSection([0,1,0,2]), v2vFunc, v2vFunc, v2vFunc])));
-wasmEval(toBuf(moduleWithSections([sigSection([v2vSig,i2vSig]), declSection([0,0,1]), tableSection([0,1,2]), v2vFunc, v2vFunc, v2vFunc])));
+wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0]), tableSection([0]), bodySection([v2vBody])])));
+wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0]), tableSection([0,0]), bodySection([v2vBody])])));
+assertErrorMessage(() => wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0]), tableSection([0,1]), bodySection([v2vBody])]))), TypeError, /table element out of range/);
+wasmEval(toBuf(moduleWithSections([sigSection([v2vSig]), declSection([0,0,0]), tableSection([0,1,0,2]), bodySection([v2vBody, v2vBody, v2vBody])])));
+wasmEval(toBuf(moduleWithSections([sigSection([v2vSig,i2vSig]), declSection([0,0,1]), tableSection([0,1,2]), bodySection([v2vBody, v2vBody, v2vBody])])));

@@ -271,6 +271,7 @@ FINAL_LIBRARY = 'xul'
 GENERATED_FILES = [
     'DeprecatedPremultiplyTables.h',
 ]
+GENERATED_FILES['DeprecatedPremultiplyTables.h'].script = 'genTables.py:generate'
 
 LOCAL_INCLUDES += [
     '/dom/workers',

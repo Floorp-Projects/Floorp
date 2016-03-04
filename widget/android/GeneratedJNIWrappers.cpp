@@ -768,6 +768,14 @@ auto GeckoEditable::NotifyIMEContext(int32_t a0, mozilla::jni::String::Param a1,
     return mozilla::jni::Method<NotifyIMEContext_t>::Call(GeckoEditable::mCtx, nullptr, a0, a1, a2, a3);
 }
 
+constexpr char GeckoEditable::OnDefaultKeyEvent_t::name[];
+constexpr char GeckoEditable::OnDefaultKeyEvent_t::signature[];
+
+auto GeckoEditable::OnDefaultKeyEvent(mozilla::jni::Object::Param a0) const -> void
+{
+    return mozilla::jni::Method<OnDefaultKeyEvent_t>::Call(GeckoEditable::mCtx, nullptr, a0);
+}
+
 constexpr char GeckoEditable::OnImeAcknowledgeFocus_t::name[];
 constexpr char GeckoEditable::OnImeAcknowledgeFocus_t::signature[];
 

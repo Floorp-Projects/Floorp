@@ -408,20 +408,19 @@ struct BluetoothActivityEnergyInfo {
 
 /**
  * |BluetoothAddress| stores the 6-byte MAC address of a Bluetooth
- * device. The constants ANY, ALL and LOCAL represent addresses with
- * special meaning.
+ * device. The constants returned from ANY(), ALL() and LOCAL()
+ * represent addresses with special meaning.
  */
 struct BluetoothAddress {
-
-  static const BluetoothAddress ANY;
-  static const BluetoothAddress ALL;
-  static const BluetoothAddress LOCAL;
+  static const BluetoothAddress& ANY();
+  static const BluetoothAddress& ALL();
+  static const BluetoothAddress& LOCAL();
 
   uint8_t mAddr[6];
 
   BluetoothAddress()
   {
-    Clear(); // assign ANY
+    Clear(); // assign ANY()
   }
 
   MOZ_IMPLICIT BluetoothAddress(const BluetoothAddress&) = default;
@@ -451,20 +450,20 @@ struct BluetoothAddress {
   }
 
   /**
-   * |Clear| assigns an invalid value (i.e., ANY) to the address.
+   * |Clear| assigns an invalid value (i.e., ANY()) to the address.
    */
   void Clear()
   {
-    operator=(ANY);
+    operator=(ANY());
   }
 
   /**
-   * |IsCleared| returns true if the address doesn not contain a
-   * specific value (i.e., it contains ANY).
+   * |IsCleared| returns true if the address does not contain a
+   * specific value (i.e., it contains ANY()).
    */
   bool IsCleared() const
   {
-    return operator==(ANY);
+    return operator==(ANY());
   }
 
   /*
@@ -550,13 +549,13 @@ enum BluetoothServiceClass {
 };
 
 struct BluetoothUuid {
-  static const BluetoothUuid ZERO;
-  static const BluetoothUuid BASE;
+  static const BluetoothUuid& ZERO();
+  static const BluetoothUuid& BASE();
 
   uint8_t mUuid[16];  // store 128-bit UUID value in big-endian order
 
   BluetoothUuid()
-    : BluetoothUuid(ZERO)
+    : BluetoothUuid(ZERO())
   { }
 
   MOZ_IMPLICIT BluetoothUuid(const BluetoothUuid&) = default;
@@ -610,7 +609,7 @@ struct BluetoothUuid {
    */
   void Clear()
   {
-    operator=(ZERO);
+    operator=(ZERO());
   }
 
   /**
@@ -619,7 +618,7 @@ struct BluetoothUuid {
    */
   bool IsCleared() const
   {
-    return operator==(ZERO);
+    return operator==(ZERO());
   }
 
   bool operator==(const BluetoothUuid& aRhs) const
@@ -650,7 +649,7 @@ struct BluetoothUuid {
 
   void SetUuid32(uint32_t aUuid32)
   {
-    operator=(BASE);
+    operator=(BASE());
     BigEndian::writeUint32(&mUuid[0], aUuid32);
   }
 
@@ -661,7 +660,7 @@ struct BluetoothUuid {
 
   void SetUuid16(uint16_t aUuid16)
   {
-    operator=(BASE);
+    operator=(BASE());
     BigEndian::writeUint16(&mUuid[2], aUuid16);
   }
 

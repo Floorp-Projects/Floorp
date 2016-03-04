@@ -272,21 +272,21 @@ int SzipCompress::run(const char *name, Buffer &origBuf,
     scanFilters = false;
   }
 
-  mozilla::ScopedDeletePtr<Buffer> filteredBuf;
+  mozilla::UniquePtr<Buffer> filteredBuf;
   Buffer *origData;
   for (SeekableZStream::FilterId f = firstFilter; f < lastFilter; ++f) {
-    FilteredBuffer *filteredTmp = nullptr;
+    mozilla::UniquePtr<FilteredBuffer> filteredTmp;
     Buffer tmpBuf;
     if (f != SeekableZStream::NONE) {
       DEBUG_LOG("Applying filter \"%s\"", filterName[f]);
-      filteredTmp = new FilteredBuffer();
+      filteredTmp = mozilla::MakeUnique<FilteredBuffer>();
       filteredTmp->Filter(origBuf, f, chunkSize);
-      origData = filteredTmp;
+      origData = filteredTmp.get();
     } else {
       origData = &origBuf;
     }
     if (dictSize  && !scanFilters) {
-      filteredBuf = filteredTmp;
+      filteredBuf = mozilla::Move(filteredTmp);
       break;
     }
     DEBUG_LOG("Compressing with no dictionary");
@@ -295,14 +295,13 @@ int SzipCompress::run(const char *name, Buffer &origBuf,
         outBuf.Fill(tmpBuf);
         compressed = true;
         filter = f;
-        filteredBuf = filteredTmp;
+        filteredBuf = mozilla::Move(filteredTmp);
         continue;
       }
     }
-    delete filteredTmp;
   }
 
-  origData = filteredBuf ? filteredBuf : &origBuf;
+  origData = filteredBuf ? filteredBuf.get() : &origBuf;
 
   if (dictSize) {
     Dictionary<uint64_t> dict(*origData, dictSize ? SzipCompress::winSize : 0);

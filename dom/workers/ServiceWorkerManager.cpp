@@ -3566,7 +3566,7 @@ ServiceWorkerManager::GetServiceWorkerForScope(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  RefPtr<ServiceWorker> serviceWorker = new ServiceWorker(aWindow, info);
+  RefPtr<ServiceWorker> serviceWorker = info->GetOrCreateInstance(aWindow);
 
   serviceWorker->SetState(info->State());
   serviceWorker.forget(aServiceWorker);
@@ -3793,7 +3793,7 @@ ServiceWorkerManager::GetDocumentController(nsPIDOMWindowInner* aWindow,
 
   MOZ_ASSERT(registration->mActiveWorker);
   RefPtr<ServiceWorker> serviceWorker =
-    new ServiceWorker(aWindow, registration->mActiveWorker);
+    registration->mActiveWorker->GetOrCreateInstance(aWindow);
 
   serviceWorker.forget(aServiceWorker);
   return NS_OK;
@@ -5248,6 +5248,29 @@ uint64_t
 ServiceWorkerInfo::GetNextID() const
 {
   return ++gServiceWorkerInfoCurrentID;
+}
+
+already_AddRefed<ServiceWorker>
+ServiceWorkerInfo::GetOrCreateInstance(nsPIDOMWindowInner* aWindow)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aWindow);
+
+  RefPtr<ServiceWorker> ref;
+
+  for (uint32_t i = 0; i < mInstances.Length(); ++i) {
+    MOZ_ASSERT(mInstances[i]);
+    if (mInstances[i]->GetOwner() == aWindow) {
+      ref = mInstances[i];
+      break;
+    }
+  }
+
+  if (!ref) {
+    ref = new ServiceWorker(aWindow, this);
+  }
+
+  return ref.forget();
 }
 
 END_WORKERS_NAMESPACE
