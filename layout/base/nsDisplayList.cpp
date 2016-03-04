@@ -4114,10 +4114,9 @@ nsresult nsDisplayWrapper::WrapListsInPlace(nsDisplayListBuilder* aBuilder,
 
 nsDisplayOpacity::nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
                                    nsIFrame* aFrame, nsDisplayList* aList,
-                                   const DisplayItemScrollClip* aScrollClipForSameAGRChildren,
+                                   const DisplayItemScrollClip* aScrollClip,
                                    bool aForEventsOnly)
-    : nsDisplayWrapList(aBuilder, aFrame, aList)
-    , mScrollClipForSameAGRChildren(aScrollClipForSameAGRChildren)
+    : nsDisplayWrapList(aBuilder, aFrame, aList, aScrollClip)
     , mOpacity(aFrame->StyleDisplay()->mOpacity)
     , mForEventsOnly(aForEventsOnly)
 {
@@ -4315,8 +4314,10 @@ nsDisplayOpacity::WriteDebugInfo(std::stringstream& aStream)
 }
 
 nsDisplayMixBlendMode::nsDisplayMixBlendMode(nsDisplayListBuilder* aBuilder,
-                                             nsIFrame* aFrame, nsDisplayList* aList)
-: nsDisplayWrapList(aBuilder, aFrame, aList) {
+                                             nsIFrame* aFrame, nsDisplayList* aList,
+                                             const DisplayItemScrollClip* aScrollClip)
+  : nsDisplayWrapList(aBuilder, aFrame, aList, aScrollClip)
+{
   MOZ_COUNT_CTOR(nsDisplayMixBlendMode);
 }
 
@@ -4392,10 +4393,19 @@ bool nsDisplayMixBlendMode::TryMerge(nsDisplayItem* aItem) {
 
 nsDisplayBlendContainer::nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder,
                                                  nsIFrame* aFrame, nsDisplayList* aList,
-                                                 const BlendModeSet& aContainedBlendModes)
+                                                 const DisplayItemScrollClip* aScrollClip)
+    : nsDisplayWrapList(aBuilder, aFrame, aList, aScrollClip)
+    , mIndex(0)
+    , mCanBeActive(true)
+{
+  MOZ_COUNT_CTOR(nsDisplayBlendContainer);
+}
+
+nsDisplayBlendContainer::nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder,
+                                                 nsIFrame* aFrame, nsDisplayList* aList)
     : nsDisplayWrapList(aBuilder, aFrame, aList)
-    , mIndex(aContainedBlendModes.isEmpty() ? 1 : 0)
-    , mCanBeActive(!aContainedBlendModes.isEmpty())
+    , mIndex(1)
+    , mCanBeActive(false)
 {
   MOZ_COUNT_CTOR(nsDisplayBlendContainer);
 }
