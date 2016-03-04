@@ -1272,7 +1272,9 @@ function getActiveElement() {
 function clickElement(id) {
   let el = elementManager.getKnownElement(id, curContainer);
   return interaction.clickElement(
-      el, capabilities.raisesAccessibilityExceptions);
+      el,
+      !!capabilities.raisesAccessibilityExceptions,
+      capabilities.specificationLevel >= 1);
 }
 
 /**
