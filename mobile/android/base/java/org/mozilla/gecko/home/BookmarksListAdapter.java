@@ -291,7 +291,7 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
             final BookmarkFolderView row = (BookmarkFolderView) view;
             if (cursor == null) {
                 final Resources res = context.getResources();
-                row.setText(res.getString(R.string.home_move_up_to_filter, mParentStack.get(1).title));
+                row.setText(res.getString(R.string.home_move_back_to_filter, mParentStack.get(1).title));
                 row.open();
             } else {
                 row.setText(getFolderTitle(context, cursor));

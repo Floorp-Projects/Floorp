@@ -42,7 +42,7 @@ class PanelBackItemView extends LinearLayout {
 
     public void updateFromFilter(FilterDetail filter) {
         final String backText = getResources()
-            .getString(R.string.home_move_up_to_filter, filter.title);
+            .getString(R.string.home_move_back_to_filter, filter.title);
         title.setText(backText);
     }
 }
