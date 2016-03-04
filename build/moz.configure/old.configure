@@ -60,10 +60,10 @@ def autoconf(mozconfig, autoconf):
 option(env='OLD_CONFIGURE', nargs=1, help='Path to the old configure script')
 
 @depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell,
-         virtualenv_python)
+         virtualenv_python, compile_environment)
 @advanced
 def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
-                      python):
+                      python, compile_env):
     import glob
     import itertools
     import subprocess
@@ -124,6 +124,8 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
                     print("unset %s" % key, file=out)
 
         print('PYTHON=%s' % quote(python), file=out)
+        if compile_env:
+            print('COMPILE_ENVIRONMENT=1', file=out)
 
     return cmd
 
@@ -150,16 +152,13 @@ def old_configure_options(*options):
     '--enable-android-resource-constrained',
     '--enable-application',
     '--enable-approximate-location',
-    '--enable-artifact-builds',
     '--enable-b2g-bt',
     '--enable-b2g-camera',
     '--enable-b2g-ril',
-    '--enable-build-backend',
     '--enable-bundled-fonts',
     '--enable-callgrind',
     '--enable-chrome-format',
     '--enable-clang-plugin',
-    '--enable-compile-environment',
     '--enable-content-sandbox',
     '--enable-cookies',
     '--enable-cpp-rtti',

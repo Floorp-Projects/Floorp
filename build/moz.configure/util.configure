@@ -67,3 +67,12 @@ def set_define(name, value):
         defines[name] = value
 
 del _defines
+
+
+@template
+def unique_list(l):
+    result = []
+    for i in l:
+        if l not in result:
+            result.append(i)
+    return result
