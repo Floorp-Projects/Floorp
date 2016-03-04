@@ -117,10 +117,10 @@ add_task(function* ()
                                 true, "basic focus again content page with button focused");
 
   // Check to ensure that the root element is focused
-  let match = yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
-    return content.document.activeElement == content.document.documentElement;
+  yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
+    Assert.ok(content.document.activeElement == content.document.documentElement,
+      "basic focus again content page with button focused child root is focused");
   });
-  ok(match, "basic focus again content page with button focused child root is focused");
 });
 
 // Open a second tab. Document focus should skip the background tab.

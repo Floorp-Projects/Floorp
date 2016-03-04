@@ -18,19 +18,15 @@ add_task(function* purgeHistoryTest() {
     ok(backButton.hasAttribute("disabled"), "Back button is disabled");
     ok(forwardButton.hasAttribute("disabled"), "Forward button is disabled");
 
-    let pushState = ContentTask.spawn(browser, null, function*() {
+    yield ContentTask.spawn(browser, null, function*() {
       let startHistory = content.history.length;
       content.history.pushState({}, "");
       content.history.pushState({}, "");
       content.history.back();
       let newHistory = content.history.length;
-      return [startHistory, newHistory];
+      Assert.equal(startHistory, 1, "Initial SHistory size");
+      Assert.equal(newHistory, 3, "New SHistory size");
     });
-
-    let [startHistory, newHistory] = yield pushState;
-
-    is(startHistory, 1, "Initial SHistory size");
-    is(newHistory, 3, "New SHistory size");
 
     ok(browser.webNavigation.canGoBack, true,
        "New value for webNavigation.canGoBack");
@@ -50,11 +46,9 @@ add_task(function* purgeHistoryTest() {
 
     yield sanitizer.sanitize(["history"]);
 
-    let historyAfterPurge = yield ContentTask.spawn(browser, null, function*() {
-      return content.history.length;
+    yield ContentTask.spawn(browser, null, function*() {
+      Assert.equal(content.history.length, 1, "SHistory correctly cleared");
     });
-
-    is(historyAfterPurge, 1, "SHistory correctly cleared");
 
     ok(!browser.webNavigation.canGoBack,
        "webNavigation.canGoBack correctly cleared");

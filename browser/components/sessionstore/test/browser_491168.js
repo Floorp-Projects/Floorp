@@ -4,6 +4,12 @@ const REFERRER1 = "http://example.org/?" + Date.now();
 const REFERRER2 = "http://example.org/?" + Math.random();
 
 add_task(function* () {
+  function* checkDocumentReferrer(referrer, msg) {
+    yield ContentTask.spawn(gBrowser.selectedBrowser, { referrer, msg }, function* (args) {
+      Assert.equal(content.document.referrer, args.referrer, args.msg);
+    });
+  }
+
   // Add a new tab.
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
@@ -22,21 +28,15 @@ add_task(function* () {
   tabState.entries[0].referrer = REFERRER2;
   yield promiseTabState(tab, tabState);
 
-  is((yield promiseDocumentReferrer()), REFERRER2,
-     "document.referrer matches referrer set via setTabState.");
+  yield checkDocumentReferrer(REFERRER2,
+    "document.referrer matches referrer set via setTabState.");
   gBrowser.removeCurrentTab();
 
   // Restore the closed tab.
   tab = ss.undoCloseTab(window, 0);
   yield promiseTabRestored(tab);
 
-  is((yield promiseDocumentReferrer()), REFERRER2,
-     "document.referrer is still correct after closing and reopening the tab.");
+  yield checkDocumentReferrer(REFERRER2,
+    "document.referrer is still correct after closing and reopening the tab.");
   gBrowser.removeCurrentTab();
 });
-
-function promiseDocumentReferrer() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
-    return content.document.referrer;
-  });
-}

@@ -84,7 +84,7 @@ add_task(function* () {
   ok(!pluginInfo.activated, "Plugin should not be activated");
 
   // Simulate clicking the overlay
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let bounds = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
@@ -158,13 +158,13 @@ add_task(function* () {
 
   yield promisePopupNotification("click-to-play-plugins");
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let test = content.document.getElementById("test");
     let secondtestA = content.document.getElementById("secondtestA");
     let secondtestB = content.document.getElementById("secondtestB");
-    return test.activated && !secondtestA.activated && !secondtestB.activated;
+    Assert.ok(test.activated && !secondtestA.activated && !secondtestB.activated,
+      "Content plugins are set up");
   });
-  ok(result, "Content plugins are set up");
 
   clearAllPluginPermissions();
 });
@@ -190,13 +190,12 @@ add_task(function* () {
 
   yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_alternate_content.html");
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let mainBox = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return !!mainBox;
+    Assert.ok(!!mainBox, "Test 15, Plugin overlay should exist");
   });
-  ok(result, "Test 15, Plugin overlay should exist");
 });
 
 // Tests that mContentType is used for click-to-play plugins, and not the
@@ -226,7 +225,7 @@ add_task(function* () {
   ok(PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed,
      "Test 19a, Doorhanger should start out dismissed");
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let icon = doc.getAnonymousElementByAttribute(plugin, "class", "icon");
@@ -256,7 +255,7 @@ add_task(function* () {
   ok(PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed,
      "Test 19c, Doorhanger should start out dismissed");
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let text = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgClickToPlay");
@@ -287,7 +286,7 @@ add_task(function* () {
   ok(PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed,
      "Test 19e, Doorhanger should start out dismissed");
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -320,54 +319,53 @@ add_task(function* () {
   let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(notification, "Test 20a, Should have a click-to-play notification");
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return !!overlay;
+    Assert.ok(!!overlay, "Test 20a, Plugin overlay should exist");
   });
-  ok(result, "Test 20a, Plugin overlay should exist");
 
-  result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let mainBox = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
     let overlayRect = mainBox.getBoundingClientRect();
-    return overlayRect.width == 0 && overlayRect.height == 0;
+    Assert.ok(overlayRect.width == 0 && overlayRect.height == 0,
+      "Test 20a, plugin should have an overlay with 0px width and height");
   });
-  ok(result, "Test 20a, plugin should have an overlay with 0px width and height");
 
   let pluginInfo = yield promiseForPluginInfo("test");
   ok(!pluginInfo.activated, "Test 20b, plugin should not be activated");
 
-  result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let div = doc.getElementById("container");
-    return div.style.display == "none";
+    Assert.equal(div.style.display, "none",
+      "Test 20b, container div should be display: none");
   });
-  ok(result, "Test 20b, container div should be display: none");
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let div = doc.getElementById("container");
     div.style.display = "block";
   });
 
-  result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let mainBox = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
     let overlayRect = mainBox.getBoundingClientRect();
-    return overlayRect.width == 200 && overlayRect.height == 200;
+    Assert.ok(overlayRect.width == 200 && overlayRect.height == 200,
+      "Test 20c, plugin should have overlay dims of 200px");
   });
-  ok(result, "Test 20c, plugin should have overlay dims of 200px");
 
   pluginInfo = yield promiseForPluginInfo("test");
   ok(!pluginInfo.activated, "Test 20b, plugin should not be activated");
 
   ok(notification.dismissed, "Test 20c, Doorhanger should start out dismissed");
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let bounds = plugin.getBoundingClientRect();
@@ -386,13 +384,13 @@ add_task(function* () {
   pluginInfo = yield promiseForPluginInfo("test");
   ok(pluginInfo.activated, "Test 20c, plugin should be activated");
 
-  result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlayRect = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
-    return overlayRect.width == 0 && overlayRect.height == 0;
+    Assert.ok(overlayRect.width == 0 && overlayRect.height == 0,
+      "Test 20c, plugin should have overlay dims of 0px");
   });
-  ok(result, "Test 20c, plugin should have overlay dims of 0px");
 
   clearAllPluginPermissions();
 });
@@ -411,13 +409,13 @@ add_task(function* () {
   // confirm all three are blocked by ctp at this point
   let ids = ["test", "secondtestA", "secondtestB"];
   for (let id of ids) {
-    let result = yield ContentTask.spawn(gTestBrowser, {aId: id}, function* () {
+    yield ContentTask.spawn(gTestBrowser, { id }, function* (args) {
       let doc = content.document;
-      let plugin = doc.getElementById(arguments[0].aId);
+      let plugin = doc.getElementById(args.id);
       let overlayRect = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
-      return overlayRect.width == 200 && overlayRect.height == 200;
+      Assert.ok(overlayRect.width == 200 && overlayRect.height == 200,
+        "Test 21a, plugin " + args.id + " should have click-to-play overlay with dims");
     });
-    ok(result, "Test 21a, plugin " + id + " should have click-to-play overlay with dims");
 
     let pluginInfo = yield promiseForPluginInfo(id);
     ok(!pluginInfo.activated, "Test 21a, Plugin with id=" + id + " should not be activated");
@@ -466,23 +464,24 @@ add_task(function* () {
 
   ok(notification.options.pluginData.size == 2, "Test 21c, Should have one type of plugin in the notification");
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlayRect = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
-    return overlayRect.width == 0 && overlayRect.height == 0;
+    Assert.ok(overlayRect.width == 0 && overlayRect.height == 0,
+      "Test 21c, plugin should have overlay dims of 0px");
   });
-  ok(result, "Test 21c, plugin should have overlay dims of 0px");
 
   ids = ["secondtestA", "secondtestB"];
   for (let id of ids) {
-    let result = yield ContentTask.spawn(gTestBrowser, {aId: id}, function* () {
+    yield ContentTask.spawn(gTestBrowser, { id }, function* (args) {
       let doc = content.document;
-      let plugin = doc.getElementById(arguments[0].aId);
+      let plugin = doc.getElementById(args.id);
       let overlayRect = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
-      return overlayRect.width == 200 && overlayRect.height == 200;
+      Assert.ok(overlayRect.width == 200 && overlayRect.height == 200,
+        "Test 21c, plugin " + args.id + " should have click-to-play overlay with zero dims");
     });
-    ok(result, "Test 21c, plugin " + id + " should have click-to-play overlay with zero dims");
+    
 
     let pluginInfo = yield promiseForPluginInfo(id);
     ok(!pluginInfo.activated, "Test 21c, Plugin with id=" + id + " should not be activated");
@@ -521,13 +520,13 @@ add_task(function* () {
 
   ids = ["test", "secondtestA", "secondtestB"];
   for (let id of ids) {
-    let result = yield ContentTask.spawn(gTestBrowser, {aId: id}, function* () {
+    yield ContentTask.spawn(gTestBrowser, { id }, function* (args) {
       let doc = content.document;
-      let plugin = doc.getElementById(arguments[0].aId);
+      let plugin = doc.getElementById(args.id);
       let overlayRect = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
-      return overlayRect.width == 0 && overlayRect.height == 0;
+      Assert.ok(overlayRect.width == 0 && overlayRect.height == 0,
+        "Test 21d, plugin " + args.id + " should have click-to-play overlay with zero dims");
     });
-    ok(result, "Test 21d, plugin " + id + " should have click-to-play overlay with zero dims");
 
     let pluginInfo = yield promiseForPluginInfo(id);
     ok(pluginInfo.activated, "Test 21d, Plugin with id=" + id + " should not be activated");
@@ -553,7 +552,7 @@ add_task(function* () {
   is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
      "Test 23, plugin fallback type should be PLUGIN_CLICK_TO_PLAY");
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     plugin.type = null;
@@ -565,7 +564,7 @@ add_task(function* () {
   pluginInfo = yield promiseForPluginInfo("test");
   is(pluginInfo.displayedType, Ci.nsIObjectLoadingContent.TYPE_NULL, "Test 23, plugin should be TYPE_NULL");
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     plugin.type = "application/x-test";
