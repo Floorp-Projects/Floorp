@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=437361
+-->
+<head>
+  <title>Test for Bug 437361</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  
+  <script class="testbody" type="text/javascript">
+
+  /** Test for Bug 437361 **/
+
+  function testModalDialogBlockedCleanly() {
+    is(true, SpecialPowers.getBoolPref("dom.disable_open_during_load"), "mozprefs sanity check");
+    var rv = window.showModalDialog( // should be blocked without exception
+      "data:text/html,<html><body onload='close(); returnValue = 1;' /></html>");
+    is(rv, null, "Modal dialog opened unexpectedly.");
+  }
+  
+  function testModalDialogAllowed() {
+    is(false, SpecialPowers.getBoolPref("dom.disable_open_during_load"), "mozprefs sanity check");
+    var rv = window.showModalDialog( // should not be blocked this time
+      "data:text/html,<html><body onload='close(); returnValue = 1;' /></html>");
+    is(rv, 1, "Problem with modal dialog returnValue.");
+  }
+
+  function testOtherExceptionsNotTrapped() {
+    is(false, SpecialPowers.getBoolPref("dom.disable_open_during_load"), "mozprefs sanity check");
+    window.showModalDialog('about:config'); // forbidden by SecurityCheckURL
+  }
+
+  function test(disableOpen, exceptionExpected, testFn, errorMsg) {
+    var oldPrefVal = SpecialPowers.getBoolPref("dom.disable_open_during_load");
+    try {
+      SpecialPowers.setBoolPref("dom.disable_open_during_load", disableOpen);
+      testFn();
+      ok(!exceptionExpected, errorMsg);
+    } catch (_) {
+      ok(exceptionExpected, errorMsg);
+    }
+    finally {
+      SpecialPowers.setBoolPref("dom.disable_open_during_load", oldPrefVal);
+    }
+  }
+
+  test(true, false, testModalDialogBlockedCleanly,
+       "Blocked showModalDialog caused an exception.");
+       
+  test(false, false, testModalDialogAllowed,
+       "showModalDialog was blocked even though dom.disable_open_during_load was false.");
+
+  test(false, true, testOtherExceptionsNotTrapped,
+       "Incorrectly suppressed insecure showModalDialog exception.");
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=437361">Mozilla Bug 437361</a>
+<p id="display"></p>
+<div id="content" style="display: none"> 
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
+
