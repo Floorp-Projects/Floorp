@@ -6,33 +6,47 @@
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 <body>
-<canvas id="c" width="64" height="64"></canvas>
 <script>
 
 SimpleTest.waitForExplicitFinish();
 
-function runTest() {
-
-  var htmlCanvas = document.getElementById("c");
-  var worker = new SharedWorker("offscreencanvas.js");
-
+function createCanvas() {
+  var htmlCanvas = document.createElement('canvas');
   ok(htmlCanvas, "Should have HTML canvas element");
-  ok(worker, "Web worker successfully created");
+  ok(htmlCanvas.transferControlToOffscreen,
+     "HTMLCanvasElement has transferControlToOffscreen function");
+  htmlCanvas.width = 64;
+  htmlCanvas.height = 64;
+  document.body.appendChild(htmlCanvas);
+  return htmlCanvas;
+}
 
-  ok(htmlCanvas.transferControlToOffscreen, "HTMLCanvasElement has transferControlToOffscreen function");
+function transferCtrlToOffscreen(canvas) {
+  var offscreencanvas = canvas.transferControlToOffscreen();
+  ok(offscreencanvas, "Expected transferControlToOffscreen to succeed");
+  return offscreencanvas;
+}
 
-  var offscreenCanvas = htmlCanvas.transferControlToOffscreen();
-  ok(offscreenCanvas, "Expected transferControlToOffscreen to succeed");
-
-  worker.port.start();
+function testShareWorker(worker, canvasType) {
+  var offscreenCanvas = transferCtrlToOffscreen(createCanvas());
 
   // We don't support transferring OffscreenCanvas via shared worker.
   SimpleTest.doesThrow(
     function() {
-      worker.port.postMessage({test: 'webgl', canvas: offscreenCanvas}, [offscreenCanvas]);
+      worker.port.postMessage({canvasType: canvasType, testType: 'basic',
+                               canvas: offscreenCanvas}, [offscreenCanvas]);
     },
     "OffscreenCanvas cannot transfer to shared worker"
   );
+}
+
+function runTest() {
+  var worker = new SharedWorker("offscreencanvas.js");
+  ok(worker, "Web worker successfully created");
+  worker.port.start();
+
+  testShareWorker(worker, '2d');
+  testShareWorker(worker, 'webgl');
 
   SimpleTest.finish();
 }
