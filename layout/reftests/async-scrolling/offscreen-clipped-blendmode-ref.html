@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Scrolled blend mode</title>
+
+<style>
+
+body {
+  margin: 0;
+  padding: 100px;
+  height: 4000px;
+  background: white;
+}
+
+#inner-contents {
+  border: 1px solid black;
+  box-sizing: border-box;
+  width: 50px;
+  height: 50px;
+  margin-top: 1400px;
+}
+
+</style>
+
+<div id="inner-contents"></div>
+
+<script>
+
+document.documentElement.scrollTop = 1200;
+
+</script>
