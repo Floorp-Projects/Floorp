@@ -78,16 +78,7 @@ _objdir=`pwd -P`
 
 MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd -P`
 
-MOZ_BUILD_BACKEND(../..)
-
 MOZ_DEFAULT_COMPILER
-
-COMPILE_ENVIRONMENT=1
-MOZ_ARG_DISABLE_BOOL(compile-environment,
-[  --disable-compile-environment
-                          Disable compiler/library checks.],
-    COMPILE_ENVIRONMENT= )
-AC_SUBST(COMPILE_ENVIRONMENT)
 
 dnl Check for Perl first -- needed for win32 SDK checks
 MOZ_PATH_PROGS(PERL, $PERL perl5 perl )

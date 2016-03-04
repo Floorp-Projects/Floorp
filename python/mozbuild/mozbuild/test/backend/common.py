@@ -49,6 +49,7 @@ CONFIGS = defaultdict(lambda: {
         'substs': {
             'LIB_PREFIX': 'lib',
             'LIB_SUFFIX': 'a',
+            'COMPILE_ENVIRONMENT': '1',
         },
     },
     'sources': {
