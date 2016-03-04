@@ -596,8 +596,7 @@ DecodeExpr(FunctionDecoder& f, ExprType expected)
       case Expr::F64Ge:
         return DecodeComparisonOperator(f, expected, ExprType::F64);
       case Expr::I32WrapI64:
-        return f.fail("NYI: i64") &&
-               DecodeConversionOperator(f, expected, ExprType::I32, ExprType::I64);
+        return DecodeConversionOperator(f, expected, ExprType::I32, ExprType::I64);
       case Expr::I32TruncSF32:
       case Expr::I32TruncUF32:
         return DecodeConversionOperator(f, expected, ExprType::I32, ExprType::F32);
