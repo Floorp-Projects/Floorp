@@ -7,10 +7,9 @@
      flex container, specifically when they've got display:table-row or
      table-cell.
 
-     Note that we *don't* treat the table row or cell frames themselves as flex
-     items, because they get wrapped in an anonymous table box, and *that* is
-     the flex item.  So, "align-self" and "order" have no effect on the
-     row/cell. -->
+     The table-row / table-cell 'display' values should be blockified, and the
+     pseudo-elements should be treated as flex items. (They should not get
+     wrapped in an anonymous table box.) -->
 <html>
 <head>
   <title>CSS Test: Testing that generated content nodes with table-part display types are wrapped with an anonymous table, which forms a flex item</title>
@@ -32,15 +31,19 @@
       display: table-row;
       content: 'b';
       background: yellow;
-      align-self: center; /* should have no effect */
-      order: 1;           /* should have no effect */
+      /* If these "align-self" & "order" properties impact the rendering (as
+         they should), that verifies we're being treated as a flex item. */
+      align-self: center;
+      order: 1;
     }
     div.withAfter::after {
       display: table-cell;
       content: 'a';
       background: lightblue;
-      align-self: center; /* should have no effect */
-      order: -1;          /* should have no effect */
+      /* If these "align-self" & "order" properties impact the rendering (as
+         they should), that verifies we're being treated as a flex item. */
+      align-self: center;
+      order: -1;
     }
   </style>
 </head>
