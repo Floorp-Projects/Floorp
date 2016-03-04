@@ -95,8 +95,8 @@ var gMainPane = {
     let preffedOn = e10sPref.value || e10sTempPref.value || e10sForceEnable.value;
 
     if (preffedOn) {
-      // The checkbox is checked if e10s is preffed on.
-      e10sCheckbox.checked = true;
+      // The checkbox is checked if e10s is preffed on and enabled.
+      e10sCheckbox.checked = Services.appinfo.browserTabsRemoteAutostart;
 
       // but if it's force disabled, then the checkbox is disabled.
       e10sCheckbox.disabled = !Services.appinfo.browserTabsRemoteAutostart;
