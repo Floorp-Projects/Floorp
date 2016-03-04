@@ -2122,7 +2122,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
     }
   } else {
     if (!mValue) {
-      mValue = new nsCString;
+      mValue.emplace();
     }
     nsString value;
     if (!value.Assign(newValue, fallible)) {
