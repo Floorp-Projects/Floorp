@@ -660,6 +660,11 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
   // Ownership is transferred in to us
   nsAutoPtr<CacheResultArray> resultsPtr(results);
 
+  if (mLastResults == *resultsPtr) {
+    LOG(("Skipping completions that have just been cached already."));
+    return NS_OK;
+  }
+
   nsAutoPtr<ProtocolParser> pParse(new ProtocolParser());
   nsTArray<TableUpdate*> updates;
 
@@ -702,6 +707,7 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
    }
 
   mClassifier->ApplyUpdates(&updates);
+  mLastResults = *resultsPtr;
   return NS_OK;
 }
 
@@ -757,6 +763,15 @@ nsUrlClassifierDBServiceWorker::SetLastUpdateTime(const nsACString &table,
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsUrlClassifierDBServiceWorker::ClearLastResults()
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "Must be on the background thread");
+  mLastResults.Clear();
+  return NS_OK;
+}
+
 
 // -------------------------------------------------------------------------
 // nsUrlClassifierLookupCallback
@@ -1458,7 +1473,7 @@ nsUrlClassifierDBService::SetHashCompleter(const nsACString &tableName,
   } else {
     mCompleters.Remove(tableName);
   }
-
+  ClearLastResults();
   return NS_OK;
 }
 
@@ -1469,6 +1484,14 @@ nsUrlClassifierDBService::SetLastUpdateTime(const nsACString &tableName,
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   return mWorkerProxy->SetLastUpdateTime(tableName, lastUpdateTime);
+}
+
+NS_IMETHODIMP
+nsUrlClassifierDBService::ClearLastResults()
+{
+  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+
+  return mWorkerProxy->ClearLastResults();
 }
 
 NS_IMETHODIMP

@@ -181,6 +181,13 @@ struct AddComplete {
     }
     return addChunk - other.addChunk;
   }
+
+  bool operator!=(const AddComplete& aOther) const {
+    if (addChunk != aOther.addChunk) {
+      return true;
+    }
+    return complete != aOther.complete;
+  }
 };
 
 struct SubPrefix {
