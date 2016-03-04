@@ -90,8 +90,13 @@ public class testBrowserDatabaseHelperUpgrades extends UITest {
 
             final BrowserDatabaseHelper dbHelperToUpgrade = new BrowserDatabaseHelper(getActivity(), tempDbPath);
             // Ideally, we'd test upgrading version i to version i + 1 but this method does not permit that. Alas!
-            fAssertEquals("DB helper should upgrade to latest version",
-                    BrowserDatabaseHelper.DATABASE_VERSION, dbHelperToUpgrade.getWritableDatabase().getVersion());
+            final SQLiteDatabase upgradedDb = dbHelperToUpgrade.getWritableDatabase();
+            try {
+                fAssertEquals("DB helper should upgrade to latest version",
+                              BrowserDatabaseHelper.DATABASE_VERSION, upgradedDb.getVersion());
+            } finally {
+                upgradedDb.close();
+            }
         }
     }
 
