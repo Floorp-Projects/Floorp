@@ -31,11 +31,11 @@ class PanelBackItemView extends LinearLayout {
         final ImageView image = (ImageView) findViewById(R.id.image);
 
         if (TextUtils.isEmpty(backImageUrl)) {
-            image.setImageResource(R.drawable.folder_up);
+            image.setImageResource(R.drawable.arrow_up);
         } else {
             ImageLoader.with(getContext())
                        .load(backImageUrl)
-                       .placeholder(R.drawable.folder_up)
+                       .placeholder(R.drawable.arrow_up)
                        .into(image);
         }
     }
