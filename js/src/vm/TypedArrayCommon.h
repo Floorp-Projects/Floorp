@@ -58,6 +58,118 @@ ValueIsLength(const Value& v, uint32_t* len)
     return false;
 }
 
+template<typename To, typename From>
+inline To
+ConvertNumber(From src);
+
+template<>
+inline int8_t
+ConvertNumber<int8_t, float>(float src)
+{
+    return JS::ToInt8(src);
+}
+
+template<>
+inline uint8_t
+ConvertNumber<uint8_t, float>(float src)
+{
+    return JS::ToUint8(src);
+}
+
+template<>
+inline uint8_clamped
+ConvertNumber<uint8_clamped, float>(float src)
+{
+    return uint8_clamped(src);
+}
+
+template<>
+inline int16_t
+ConvertNumber<int16_t, float>(float src)
+{
+    return JS::ToInt16(src);
+}
+
+template<>
+inline uint16_t
+ConvertNumber<uint16_t, float>(float src)
+{
+    return JS::ToUint16(src);
+}
+
+template<>
+inline int32_t
+ConvertNumber<int32_t, float>(float src)
+{
+    return JS::ToInt32(src);
+}
+
+template<>
+inline uint32_t
+ConvertNumber<uint32_t, float>(float src)
+{
+    return JS::ToUint32(src);
+}
+
+template<> inline int8_t
+ConvertNumber<int8_t, double>(double src)
+{
+    return JS::ToInt8(src);
+}
+
+template<>
+inline uint8_t
+ConvertNumber<uint8_t, double>(double src)
+{
+    return JS::ToUint8(src);
+}
+
+template<>
+inline uint8_clamped
+ConvertNumber<uint8_clamped, double>(double src)
+{
+    return uint8_clamped(src);
+}
+
+template<>
+inline int16_t
+ConvertNumber<int16_t, double>(double src)
+{
+    return JS::ToInt16(src);
+}
+
+template<>
+inline uint16_t
+ConvertNumber<uint16_t, double>(double src)
+{
+    return JS::ToUint16(src);
+}
+
+template<>
+inline int32_t
+ConvertNumber<int32_t, double>(double src)
+{
+    return JS::ToInt32(src);
+}
+
+template<>
+inline uint32_t
+ConvertNumber<uint32_t, double>(double src)
+{
+    return JS::ToUint32(src);
+}
+
+template<typename To, typename From>
+inline To
+ConvertNumber(From src)
+{
+    static_assert(!mozilla::IsFloatingPoint<From>::value ||
+                  (mozilla::IsFloatingPoint<From>::value && mozilla::IsFloatingPoint<To>::value),
+                  "conversion from floating point to int should have been handled by "
+                  "specializations above");
+    return To(src);
+}
+
 template<typename NativeType> struct TypeIDOfType;
 template<> struct TypeIDOfType<int8_t> { static const Scalar::Type id = Scalar::Int8; };
 template<> struct TypeIDOfType<uint8_t> { static const Scalar::Type id = Scalar::Uint8; };
@@ -196,50 +308,50 @@ class ElementSpecific
           case Scalar::Int8: {
             SharedMem<JS_VOLATILE_ARM int8_t*> src = data.cast<JS_VOLATILE_ARM int8_t*>();
             for (uint32_t i = 0; i < count; ++i)
-                Ops::store(dest++, T(Ops::load(src++)));
+                Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             break;
           }
           case Scalar::Uint8:
           case Scalar::Uint8Clamped: {
             SharedMem<JS_VOLATILE_ARM uint8_t*> src = data.cast<JS_VOLATILE_ARM uint8_t*>();
             for (uint32_t i = 0; i < count; ++i)
-                Ops::store(dest++, T(Ops::load(src++)));
+                Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             break;
           }
           case Scalar::Int16: {
             SharedMem<JS_VOLATILE_ARM int16_t*> src = data.cast<JS_VOLATILE_ARM int16_t*>();
             for (uint32_t i = 0; i < count; ++i)
-                Ops::store(dest++, T(Ops::load(src++)));
+                Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             break;
           }
           case Scalar::Uint16: {
             SharedMem<JS_VOLATILE_ARM uint16_t*> src = data.cast<JS_VOLATILE_ARM uint16_t*>();
             for (uint32_t i = 0; i < count; ++i)
-                Ops::store(dest++, T(Ops::load(src++)));
+                Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             break;
           }
           case Scalar::Int32: {
             SharedMem<JS_VOLATILE_ARM int32_t*> src = data.cast<JS_VOLATILE_ARM int32_t*>();
             for (uint32_t i = 0; i < count; ++i)
-                Ops::store(dest++, T(Ops::load(src++)));
+                Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             break;
           }
           case Scalar::Uint32: {
             SharedMem<JS_VOLATILE_ARM uint32_t*> src = data.cast<JS_VOLATILE_ARM uint32_t*>();
             for (uint32_t i = 0; i < count; ++i)
-                Ops::store(dest++, T(Ops::load(src++)));
+                Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             break;
           }
           case Scalar::Float32: {
             SharedMem<JS_VOLATILE_ARM float*> src = data.cast<JS_VOLATILE_ARM float*>();
             for (uint32_t i = 0; i < count; ++i)
-                Ops::store(dest++, T(Ops::load(src++)));
+                Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             break;
           }
           case Scalar::Float64: {
             SharedMem<JS_VOLATILE_ARM double*> src = data.cast<JS_VOLATILE_ARM double*>();
             for (uint32_t i = 0; i < count; ++i)
-                Ops::store(dest++, T(Ops::load(src++)));
+                Ops::store(dest++, ConvertNumber<T>(Ops::load(src++)));
             break;
           }
           default:
@@ -351,50 +463,50 @@ class ElementSpecific
           case Scalar::Int8: {
             int8_t* src = static_cast<int8_t*>(data);
             for (uint32_t i = 0; i < len; ++i)
-                Ops::store(dest++, T(*src++));
+                Ops::store(dest++, ConvertNumber<T>(*src++));
             break;
           }
           case Scalar::Uint8:
           case Scalar::Uint8Clamped: {
             uint8_t* src = static_cast<uint8_t*>(data);
             for (uint32_t i = 0; i < len; ++i)
-                Ops::store(dest++, T(*src++));
+                Ops::store(dest++, ConvertNumber<T>(*src++));
             break;
           }
           case Scalar::Int16: {
             int16_t* src = static_cast<int16_t*>(data);
             for (uint32_t i = 0; i < len; ++i)
-                Ops::store(dest++, T(*src++));
+                Ops::store(dest++, ConvertNumber<T>(*src++));
             break;
           }
           case Scalar::Uint16: {
             uint16_t* src = static_cast<uint16_t*>(data);
             for (uint32_t i = 0; i < len; ++i)
-                Ops::store(dest++, T(*src++));
+                Ops::store(dest++, ConvertNumber<T>(*src++));
             break;
           }
           case Scalar::Int32: {
             int32_t* src = static_cast<int32_t*>(data);
             for (uint32_t i = 0; i < len; ++i)
-                Ops::store(dest++, T(*src++));
+                Ops::store(dest++, ConvertNumber<T>(*src++));
             break;
           }
           case Scalar::Uint32: {
             uint32_t* src = static_cast<uint32_t*>(data);
             for (uint32_t i = 0; i < len; ++i)
-                Ops::store(dest++, T(*src++));
+                Ops::store(dest++, ConvertNumber<T>(*src++));
             break;
           }
           case Scalar::Float32: {
             float* src = static_cast<float*>(data);
             for (uint32_t i = 0; i < len; ++i)
-                Ops::store(dest++, T(*src++));
+                Ops::store(dest++, ConvertNumber<T>(*src++));
             break;
           }
           case Scalar::Float64: {
             double* src = static_cast<double*>(data);
             for (uint32_t i = 0; i < len; ++i)
-                Ops::store(dest++, T(*src++));
+                Ops::store(dest++, ConvertNumber<T>(*src++));
             break;
           }
           default:
