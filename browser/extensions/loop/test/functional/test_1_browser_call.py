@@ -122,10 +122,11 @@ class Test1BrowserCall(MarionetteTestCase):
         self.switch_to_standalone()
         self.marionette.navigate(url)
 
-        # Join the room
-        join_button = self.wait_for_element_displayed(By.CLASS_NAME,
-                                                      "btn-join")
-        join_button.click()
+        # Join the room - the first time around, the tour will be displayed
+        # so we look for its close button.
+        tour_close_button = self.wait_for_element_displayed(By.CLASS_NAME,
+                                                            "button-close")
+        tour_close_button.click()
 
     # Assumes the standalone or the conversation window is selected first.
     def check_video(self, selector):

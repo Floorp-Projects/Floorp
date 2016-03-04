@@ -11,7 +11,6 @@ var loop = loop || {};
   var kMessageName = "Loop:Message";
   var kPushMessageName = "Loop:Message:Push";
   var kBatchMessage = "Batch";
-  var kReplyTimeoutMs = 5000;
   var gListeningForMessages = false;
   var gListenersMap = {};
   var gListeningForPushMessages = false;
@@ -75,20 +74,10 @@ var loop = loop || {};
       gListenersMap[seq] = resolve;
 
       gRootObj.sendAsyncMessage(kMessageName, payload);
-
-      gRootObj.setTimeout(function() {
-        // Check if the promise was already resolved before by the message handler.
-        if (!gListenersMap[seq]) {
-          return;
-        }
-        resolve();
-        delete gListenersMap[seq];
-      }, kReplyTimeoutMs);
     });
   };
 
   // These functions should only be used in unit tests.
-  loop.request.getReplyTimeoutMs = function() { return kReplyTimeoutMs; };
   loop.request.inspect = function() { return _.extend({}, gListenersMap); };
   loop.request.reset = function() {
     gListeningForMessages = false;
