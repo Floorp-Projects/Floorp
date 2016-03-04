@@ -14,18 +14,27 @@
 <script type="text/javascript" src="mock_gamepad.js"></script>
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-var index = GamepadService.addGamepad("test gamepad", // id
-                                      SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
-                                      4, // buttons
-                                      2);// axes
+
+var gamepad_index;
 
 function pressButton() {
-  GamepadService.newButtonEvent(index, 0, true);
-  GamepadService.newButtonEvent(index, 0, false);
+  GamepadService.newButtonEvent(gamepad_index, 0, true);
+  GamepadService.newButtonEvent(gamepad_index, 0, false);
+}
+
+ // Add a gamepad
+function startTests() {
+   addGamepad("test gamepad", // id
+              SpecialPowers.Ci.nsIGamepadServiceTest.STANDARD_MAPPING,
+              4, // buttons
+              2).then(function(i) {
+                gamepad_index = i;
+                gamepad_connected()
+              });
 }
 
 var f1, f2;
-function frame_loaded() {
+function gamepad_connected() {
   f1 = document.getElementById('f1');
   pressButton();
 }
@@ -57,11 +66,11 @@ function test1() {
 function test2() {
   is(f1.contentWindow.connectedEvents, 1, "right number of connection events in frame 1");
   is(f2.contentWindow.connectedEvents, 1, "right number of connection events in frame 2");
-  GamepadService.removeGamepad(index);
+  GamepadService.removeGamepad(gamepad_index);
   SimpleTest.finish();
 }
 
 </script>
-<iframe id="f1" src="gamepad_frame.html" onload="frame_loaded()"></iframe>
+<iframe id="f1" src="gamepad_frame.html" onload="startTests()"></iframe>
 </body>
 </html>
