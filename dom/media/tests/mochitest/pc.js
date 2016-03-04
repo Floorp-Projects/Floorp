@@ -64,7 +64,13 @@ function PeerConnectionTest(options) {
   options.rtcpmux = "rtcpmux" in options ? options.rtcpmux : true;
   options.opus = "opus" in options ? options.opus : true;
 
-  if (typeof turnServers !== "undefined") {
+  if (iceServersArray.length) {
+    options.config_remote = options.config_remote || {}
+    options.config_local = options.config_local || {}
+    options.config_remote.iceServers = iceServersArray;
+    options.config_local.iceServers = iceServersArray;
+  }
+  else if (typeof turnServers !== "undefined") {
     if ((!options.turn_disabled_local) && (turnServers.local)) {
       if (!options.hasOwnProperty("config_local")) {
         options.config_local = {};
@@ -1679,7 +1685,7 @@ PeerConnectionWrapper.prototype = {
    * @param {object} stats
    *        The stats to be verified for relayed vs. direct connection.
    */
-  checkStatsIceConnectionType : function(stats) {
+  checkStatsIceConnectionType : function(stats, expectedLocalCandidateType) {
     let lId;
     let rId;
     for (let stat of stats.values()) {
@@ -1698,21 +1704,25 @@ PeerConnectionWrapper.prototype = {
          "failed to find candidatepair IDs or stats for local: "+ lId +" remote: "+ rId);
       return;
     }
+
     info("checkStatsIceConnectionType verifying: local=" +
          JSON.stringify(lCand) + " remote=" + JSON.stringify(rCand));
-    if ((this.configuration) && (typeof this.configuration.iceServers !== 'undefined')) {
-      info("Ice Server configured");
-      // Note: the IP comparising is a workaround for bug 1097333
-      //       And this will fail if a TURN server address is a DNS name!
-      var serverIp = this.configuration.iceServers[0].url.split(':')[1];
-      ok(lCand.candidateType == "relayed" || rCand.candidateType == "relayed" ||
-         lCand.ipAddress === serverIp || rCand.ipAddress === serverIp,
-         "One peer uses a relay");
-    } else {
-      info("P2P configured");
-      ok(lCand.candidateType != "relayed" && rCand.candidateType != "relayed",
-         "Pure peer to peer call without a relay");
+    expectedLocalCandidateType = expectedLocalCandidateType || "host";
+    var candidateType = lCand.candidateType;
+    if ((lCand.mozLocalTransport === "tcp") && (candidateType === "relayed")) {
+      candidateType = "relayed-tcp";
     }
+
+    if ((expectedLocalCandidateType === "serverreflexive") &&
+        (candidateType === "peerreflexive")) {
+      // Be forgiving of prflx when expecting srflx, since that can happen due
+      // to timing.
+      candidateType = "serverreflexive";
+    }
+
+    is(candidateType,
+       expectedLocalCandidateType,
+       "Local candidate type is what we expected for selected pair");
   },
 
   /**
@@ -1845,10 +1855,59 @@ function createHTML(options) {
   return scriptsReady.then(() => realCreateHTML(options));
 }
 
-function runNetworkTest(testFunction) {
+var iceServerWebsocket;
+var iceServersArray = [];
+
+var setupIceServerConfig = useIceServer => {
+  // We disable ICE support for HTTP proxy when using a TURN server, because
+  // mochitest uses a fake HTTP proxy to serve content, which will eat our STUN
+  // packets for TURN TCP.
+  var enableHttpProxy = enable => new Promise(resolve => {
+    SpecialPowers.pushPrefEnv(
+        {'set': [['media.peerconnection.disable_http_proxy', !enable]]},
+        resolve);
+  });
+
+  var spawnIceServer = () => new Promise( (resolve, reject) => {
+    iceServerWebsocket = new WebSocket("ws://localhost:8191/");
+    iceServerWebsocket.onopen = (event) => {
+      info("websocket/process bridge open, starting ICE Server...");
+      iceServerWebsocket.send("iceserver");
+    }
+
+    iceServerWebsocket.onmessage = event => {
+      // The first message will contain the iceServers configuration, subsequent
+      // messages are just logging.
+      info("ICE Server: " + event.data);
+      resolve(event.data);
+    }
+
+    iceServerWebsocket.onerror = () => {
+      reject("ICE Server error: Is the ICE server websocket up?");
+    }
+
+    iceServerWebsocket.onclose = () => {
+      info("ICE Server websocket closed");
+      reject("ICE Server gone before getting configuration");
+    }
+  });
+
+  if (!useIceServer) {
+    info("Skipping ICE Server for this test");
+    return enableHttpProxy(true);
+  }
+
+  return enableHttpProxy(false)
+    .then(spawnIceServer)
+    .then(iceServersStr => { iceServersArray = JSON.parse(iceServersStr); });
+};
+
+function runNetworkTest(testFunction, fixtureOptions) {
+  fixtureOptions = fixtureOptions || {}
   return scriptsReady.then(() =>
     runTestWhenReady(options =>
       startNetworkAndTest()
+        .then(() => setupIceServerConfig(fixtureOptions.useIceServer))
         .then(() => testFunction(options))
     )
   );
