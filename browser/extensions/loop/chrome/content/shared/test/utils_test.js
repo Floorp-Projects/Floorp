@@ -303,7 +303,8 @@ describe("loop.shared.utils", function() {
       expect(sharedUtils.formatURL("http://invalid.com/?a=Foo%20Bar"))
         .eql({
           location: "http://invalid.com/?a=Foo Bar",
-          hostname: "invalid.com"
+          hostname: "invalid.com",
+          protocol: "http:"
         });
     });
 
@@ -314,7 +315,8 @@ describe("loop.shared.utils", function() {
       expect(sharedUtils.formatURL("http://\u0261oogle.com/"))
         .eql({
           location: "http://xn--oogle-qmc.com/",
-          hostname: "xn--oogle-qmc.com"
+          hostname: "xn--oogle-qmc.com",
+          protocol: "http:"
         });
     });
 
