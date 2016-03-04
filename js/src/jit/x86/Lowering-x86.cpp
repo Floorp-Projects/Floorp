@@ -458,3 +458,9 @@ LIRGeneratorX86::visitRandom(MRandom* ins)
                                         temp());
     defineFixed(lir, ins, LFloatReg(ReturnDoubleReg));
 }
+
+void
+LIRGeneratorX86::visitTruncateToInt64(MTruncateToInt64* ins)
+{
+    MOZ_CRASH("NY");
+}

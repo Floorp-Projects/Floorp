@@ -461,6 +461,16 @@ class FunctionCompiler
         return ins;
     }
 
+    template <class T>
+    MDefinition* truncate(MDefinition* op, bool isUnsigned)
+    {
+        if (inDeadCode())
+            return nullptr;
+        T* ins = T::NewAsmJS(alloc(), op, isUnsigned);
+        curBlock_->add(ins);
+        return ins;
+    }
+
     MDefinition* compare(MDefinition* lhs, MDefinition* rhs, JSOp op, MCompare::CompareType type)
     {
         if (inDeadCode())
@@ -2304,6 +2314,17 @@ EmitExtendI32(FunctionCompiler& f, bool isUnsigned, MDefinition** def)
     return true;
 }
 
+template<class T>
+static bool
+EmitTruncate(FunctionCompiler& f, ExprType type, bool isUnsigned, MDefinition** def)
+{
+    MDefinition* in;
+    if (!EmitExpr(f, type, &in))
+        return false;
+    *def = f.truncate<T>(in, isUnsigned);
+    return true;
+}
+
 static bool
 EmitSimdOp(FunctionCompiler& f, ExprType type, SimdOperation op, SimdSign sign, MDefinition** def)
 {
@@ -2752,6 +2773,14 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def)
       case Expr::I64ExtendSI32:
       case Expr::I64ExtendUI32:
         return EmitExtendI32(f, IsUnsigned(op == Expr::I64ExtendUI32), def);
+      case Expr::I64TruncSF32:
+      case Expr::I64TruncUF32:
+        return EmitTruncate<MTruncateToInt64>(f, ExprType::F32,
+                                              IsUnsigned(op == Expr::I64TruncUF32), def);
+      case Expr::I64TruncSF64:
+      case Expr::I64TruncUF64:
+        return EmitTruncate<MTruncateToInt64>(f, ExprType::F64,
+                                              IsUnsigned(op == Expr::I64TruncUF64), def);
       case Expr::I64Or:
         return EmitBitwise<MBitOr>(f, ExprType::I64, def);
       case Expr::I64And:
@@ -2911,10 +2940,6 @@ EmitExpr(FunctionCompiler& f, ExprType type, MDefinition** def)
       case Expr::F64CopySign:
       case Expr::F64Nearest:
       case Expr::F64Trunc:
-      case Expr::I64TruncSF32:
-      case Expr::I64TruncSF64:
-      case Expr::I64TruncUF32:
-      case Expr::I64TruncUF64:
       case Expr::F32ConvertSI64:
       case Expr::F32ConvertUI64:
       case Expr::F64ConvertSI64:
