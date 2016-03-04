@@ -34,6 +34,7 @@ class TestCapabilities(MarionetteTestCase):
         self.assertEqual(self.caps["browserVersion"], self.appinfo["version"])
         self.assertEqual(self.caps["platformName"], self.os_name)
         self.assertEqual(self.caps["platformVersion"], self.os_version)
+        self.assertEqual(self.caps["specificationLevel"], 0)
 
     def test_supported_features(self):
         self.assertIn("rotatable", self.caps)
@@ -66,6 +67,12 @@ class TestCapabilities(MarionetteTestCase):
         self.marionette.start_session(capabilities)
         caps = self.marionette.session_capabilities
         self.assertIn("somethingAwesome", caps)
+
+    def test_set_specification_level(self):
+        self.marionette.delete_session()
+        self.marionette.start_session({"specificationLevel": 1})
+        caps = self.marionette.session_capabilities
+        self.assertEqual(1, caps["specificationLevel"])
 
     def test_we_dont_overwrite_server_capabilities(self):
         self.marionette.delete_session()
