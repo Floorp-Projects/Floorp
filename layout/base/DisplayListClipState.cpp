@@ -111,7 +111,7 @@ DisplayListClipState::ClipContainingBlockDescendantsToContentBox(nsDisplayListBu
 const DisplayItemScrollClip*
 DisplayListClipState::GetCurrentInnermostScrollClip()
 {
-  return DisplayItemScrollClip::PickInnermost(
+  return DisplayItemScrollClip::PickDescendant(
     mScrollClipContentDescendants, mScrollClipContainingBlockDescendants);
 }
 
@@ -206,6 +206,7 @@ DisplayListClipState::AutoSaveRestore::AutoSaveRestore(nsDisplayListBuilder* aBu
   , mSavedState(aBuilder->ClipState())
   , mClipUsed(false)
   , mRestored(false)
+  , mClearedForStackingContextContents(false)
 {}
 
 } // namespace mozilla
