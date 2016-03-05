@@ -533,13 +533,13 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    Rooted<ArrayBufferObject*> buffer(cx, ArrayBufferObject::create(cx, bytes->length()));
-    if (!buffer)
+    RootedObject obj(cx, JS_NewUint8Array(cx, bytes->length()));
+    if (!obj)
         return false;
 
-    memcpy(buffer->dataPointer(), bytes->begin(), bytes->length());
+    memcpy(obj->as<TypedArrayObject>().viewDataUnshared(), bytes->begin(), bytes->length());
 
-    args.rval().setObject(*buffer);
+    args.rval().setObject(*obj);
     return true;
 }
 
