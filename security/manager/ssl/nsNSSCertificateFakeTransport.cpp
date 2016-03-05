@@ -349,6 +349,13 @@ nsNSSCertificateFakeTransport::GetIsSelfSigned(bool*)
 }
 
 NS_IMETHODIMP
+nsNSSCertificateFakeTransport::GetIsBuiltInRoot(bool* aIsBuiltInRoot)
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsNSSCertificateFakeTransport::RequestUsagesArrayAsync(
   nsICertVerificationListener*)
 {
