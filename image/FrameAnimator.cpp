@@ -192,7 +192,7 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
     if (delay.ToMilliseconds() > loopTime) {
       // Explicitly use integer division to get the floor of the number of
       // loops.
-      uint32_t loops = static_cast<uint32_t>(delay.ToMilliseconds()) / loopTime;
+      uint64_t loops = static_cast<uint64_t>(delay.ToMilliseconds()) / loopTime;
       mCurrentAnimationFrameTime +=
         TimeDuration::FromMilliseconds(loops * loopTime);
     }
