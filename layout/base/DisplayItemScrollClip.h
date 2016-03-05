@@ -56,20 +56,30 @@ public:
   }
 
   /**
-   * "Pick innermost" is analogous to the intersection operation on regular
+   * "Pick descendant" is analogous to the intersection operation on regular
    * clips: In some cases, there are multiple candidate clips that can apply to
    * an item, one of them being the ancestor of the other. This method picks
    * the descendant.
    * Both aClip1 and aClip2 are allowed to be null.
    */
   static const DisplayItemScrollClip*
-  PickInnermost(const DisplayItemScrollClip* aClip1,
+  PickDescendant(const DisplayItemScrollClip* aClip1,
                 const DisplayItemScrollClip* aClip2)
   {
     MOZ_ASSERT(IsAncestor(aClip1, aClip2) || IsAncestor(aClip2, aClip1),
                "one of the scroll clips must be an ancestor of the other");
     return Depth(aClip1) > Depth(aClip2) ? aClip1 : aClip2;
   }
+
+  static const DisplayItemScrollClip*
+  PickAncestor(const DisplayItemScrollClip* aClip1,
+                const DisplayItemScrollClip* aClip2)
+  {
+    MOZ_ASSERT(IsAncestor(aClip1, aClip2) || IsAncestor(aClip2, aClip1),
+               "one of the scroll clips must be an ancestor of the other");
+    return Depth(aClip1) < Depth(aClip2) ? aClip1 : aClip2;
+  }
+
 
   /**
    * Returns whether aAncestor is an ancestor scroll clip of aDescendant.
