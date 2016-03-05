@@ -1921,20 +1921,6 @@ CreateOpacityItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                                       aScrollClip, aItemForEventsOnly));
 }
 
-static const DisplayItemScrollClip*
-FindCommonAncestorScrollClip(nsDisplayList& aList, const DisplayItemScrollClip* aInitial)
-{
-  const DisplayItemScrollClip* ancestorScrollClip = aInitial;
-  for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
-    const DisplayItemScrollClip* itemScrollClip = i->ScrollClip();
-    if (!DisplayItemScrollClip::IsAncestor(ancestorScrollClip, itemScrollClip)) {
-      MOZ_ASSERT(DisplayItemScrollClip::IsAncestor(itemScrollClip, ancestorScrollClip));
-      ancestorScrollClip = itemScrollClip;
-    }
-  }
-  return ancestorScrollClip;
-}
-
 void
 nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                              const nsRect&         aDirtyRect,
@@ -2052,29 +2038,17 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
-  // The scroll clip to use for the container items that we create here.
-  // We can create multiple different container items in this function, and not
-  // all of them will use the same scroll clip depending on whether we reset
-  // the clip, so the value of containerItemScrollClip will be updated whenever
-  // we clear or restore the clip.
-  const DisplayItemScrollClip* containerItemScrollClip =
-    aBuilder->ClipState().GetCurrentInnermostScrollClip();
-  bool didResetClip = false;
-
+  bool clearClip = false;
   if (isTransformed || usingSVGEffects || useFixedPosition || useStickyPosition) {
     // We don't need to pass ancestor clipping down to our children;
     // everything goes inside a display item's child list, and the display
     // item itself will be clipped.
     // For transforms we also need to clear ancestor clipping because it's
     // relative to the wrong display item reference frame anyway.
-    // We clear both regular and scroll clips here. Our content needs to be
-    // able to walk up the complete cross stacking context scroll clip chain,
-    // so we call a special method on the clip state that keeps the ancestor
-    // scroll clip around.
-    clipState.ClearForStackingContextContents();
-    didResetClip = true;
-    containerItemScrollClip = nullptr;
+    clearClip = true;
   }
+
+  clipState.EnterStackingContextContents(clearClip);
 
   nsDisplayListCollection set;
   {
@@ -2167,18 +2141,12 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // 8, 9: non-negative z-index children
   resultList.AppendToTop(set.PositionedDescendants());
 
-  if (!didResetClip) {
-    // The current scroll clip for this frame was containerItemScrollClip, but
-    // some of our children might have received a scroll clip from outside this
-    // frame, and containerItemScrollClip would not be an ancestor of that
-    // scroll clip. So we need to find a scroll clip that is an ancestor of all
-    // containened scroll clips.
-    // We don't need to do this if we reset the clip - in that case, the
-    // pre-clear scroll clip and and the scroll clips of our contents are in
-    // different scroll clip trees. (This is very confusing and I apologize.)
-    containerItemScrollClip = FindCommonAncestorScrollClip(resultList,
-      containerItemScrollClip);
-  }
+  // Get the scroll clip to use for the container items that we create here.
+  // If we cleared the clip, and we create multiple container items, then the
+  // items we create before we restore the clip will have a different scroll
+  // clip from the items we create after we restore the clip.
+  const DisplayItemScrollClip* containerItemScrollClip =
+    aBuilder->ClipState().CurrentAncestorScrollClipForStackingContextContents();
 
   /* If adding both a nsDisplayBlendContainer and a nsDisplayMixBlendMode to the
    * same list, the nsDisplayBlendContainer should be added first. This only
@@ -2199,10 +2167,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   if (!isTransformed && !useFixedPosition && !useStickyPosition) {
     // Restore saved clip state now so that any display items we create below
     // are clipped properly.
-    clipState.Restore();
-    if (didResetClip) {
-      containerItemScrollClip = aBuilder->ClipState().GetCurrentInnermostScrollClip();
-    }
+    clipState.ExitStackingContextContents(&containerItemScrollClip);
   }
 
   bool is3DContextRoot = Extend3DContext() && !Combines3DTransformWithAncestors();
@@ -2279,10 +2244,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
     // Restore clip state now so nsDisplayTransform is clipped properly.
     if (!HasPerspective() && !useFixedPosition && !useStickyPosition) {
-      clipState.Restore();
-      if (didResetClip) {
-        containerItemScrollClip = aBuilder->ClipState().GetCurrentInnermostScrollClip();
-      }
+      clipState.ExitStackingContextContents(&containerItemScrollClip);
     }
     // Revert to the dirtyrect coming in from the parent, without our transform
     // taken into account.
@@ -2304,10 +2266,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
     if (HasPerspective()) {
       if (!useFixedPosition && !useStickyPosition) {
-        clipState.Restore();
-        if (didResetClip) {
-          containerItemScrollClip = aBuilder->ClipState().GetCurrentInnermostScrollClip();
-        }
+        clipState.ExitStackingContextContents(&containerItemScrollClip);
       }
       resultList.AppendNewToTop(
         new (aBuilder) nsDisplayPerspective(
@@ -2325,10 +2284,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   }
 
   if (useFixedPosition || useStickyPosition) {
-    clipState.Restore();
-    if (didResetClip) {
-      containerItemScrollClip = aBuilder->ClipState().GetCurrentInnermostScrollClip();
-    }
+    clipState.ExitStackingContextContents(&containerItemScrollClip);
   }
 
   /* If we have sticky positioning, wrap it in a sticky position item.
