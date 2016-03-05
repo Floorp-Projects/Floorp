@@ -384,8 +384,8 @@ class Encoder
         MOZ_ASSERT(empty());
     }
 
-    size_t bytecodeOffset() const { return bytecode_.length(); }
-    bool empty() const { return bytecodeOffset() == 0; }
+    size_t currentOffset() const { return bytecode_.length(); }
+    bool empty() const { return currentOffset() == 0; }
 
     // Fixed-size encoding operations simply copy the literal bytes (without
     // attempting to align).
@@ -424,6 +424,32 @@ class Encoder
         return writeEnum(type);
     }
 
+    // Variable-length encodings that allow back-patching.
+
+    MOZ_WARN_UNUSED_RESULT bool writePatchableVarU32(size_t* offset) {
+        *offset = bytecode_.length();
+        return writeVarU32(UINT32_MAX);
+    }
+    void patchVarU32(size_t offset, uint32_t patchBits) {
+        return patchVarU32(offset, patchBits, UINT32_MAX);
+    }
+
+    MOZ_WARN_UNUSED_RESULT bool writePatchableVarU8(size_t* offset) {
+        *offset = bytecode_.length();
+        return writeU8(UINT8_MAX);
+    }
+    void patchVarU8(size_t offset, uint8_t patchBits) {
+        MOZ_ASSERT(patchBits < 0x80);
+        return patchU8(offset, patchBits);
+    }
+
+    MOZ_WARN_UNUSED_RESULT bool writePatchableExpr(size_t* offset) {
+        return writePatchableEnum<Expr>(offset);
+    }
+    void patchExpr(size_t offset, Expr expr) {
+        patchEnum(offset, expr);
+    }
+
     // C-strings are written in UTF8 and null-terminated while raw data can
     // contain nulls and instead has an explicit byte length.
 
@@ -452,34 +478,6 @@ class Encoder
         return patchVarU32(offset, bytecode_.length() - offset - varU32ByteLength(offset));
     }
 
-    // Patching is necessary due to the combination of a preorder encoding and a
-    // single-pass algorithm that only knows the precise opcode after visiting
-    // children. Switching to a postorder encoding will remove these methods:
-
-    MOZ_WARN_UNUSED_RESULT bool writePatchableVarU32(size_t* offset) {
-        *offset = bytecode_.length();
-        return writeVarU32(UINT32_MAX);
-    }
-    void patchVarU32(size_t offset, uint32_t patchBits) {
-        return patchVarU32(offset, patchBits, UINT32_MAX);
-    }
-
-    MOZ_WARN_UNUSED_RESULT bool writePatchableVarU8(size_t* offset) {
-        *offset = bytecode_.length();
-        return writeU8(UINT8_MAX);
-    }
-    void patchVarU8(size_t offset, uint8_t patchBits) {
-        MOZ_ASSERT(patchBits < 0x80);
-        return patchU8(offset, patchBits);
-    }
-
-    MOZ_WARN_UNUSED_RESULT bool writePatchableExpr(size_t* offset) {
-        return writePatchableEnum<Expr>(offset);
-    }
-    void patchExpr(size_t offset, Expr expr) {
-        patchEnum(offset, expr);
-    }
-
     // Temporary encoding forms which should be removed as part of the
     // conversion to wasm:
 
@@ -501,11 +499,6 @@ class Decoder
     const uint8_t* const beg_;
     const uint8_t* const end_;
     const uint8_t* cur_;
-
-    uintptr_t bytesRemain() const {
-        MOZ_ASSERT(end_ >= cur_);
-        return uintptr_t(end_ - cur_);
-    }
 
     template <class T>
     MOZ_WARN_UNUSED_RESULT bool read(T* out) {
@@ -588,6 +581,10 @@ class Decoder
         return cur_ == end_;
     }
 
+    uintptr_t bytesRemain() const {
+        MOZ_ASSERT(end_ >= cur_);
+        return uintptr_t(end_ - cur_);
+    }
     const uint8_t* currentPosition() const {
         return cur_;
     }
