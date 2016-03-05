@@ -295,7 +295,6 @@ class MOZ_STACK_CLASS FunctionGenerator
     // FuncBytecode in ModuleGenerator::finishFunc().
     UniqueBytecode     bytecode_;
     Uint32Vector       callSiteLineNums_;
-    ValTypeVector      locals_;
 
     uint32_t lineOrBytecode_;
 
@@ -309,12 +308,6 @@ class MOZ_STACK_CLASS FunctionGenerator
     }
     bool addCallSiteLineNum(uint32_t lineno) {
         return callSiteLineNums_.append(lineno);
-    }
-    bool addLocal(ValType v) {
-        return locals_.append(v);
-    }
-    const ValTypeVector& locals() const {
-        return locals_;
     }
 };
 

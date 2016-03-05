@@ -39,8 +39,9 @@ class FunctionCompiler
     typedef Vector<BlockVector, 0, SystemAllocPolicy> BlocksVector;
 
     ModuleGeneratorThreadView& mg_;
+    Decoder&                   decoder_;
     const FuncBytecode&        func_;
-    Decoder                    decoder_;
+    const ValTypeVector&       locals_;
     size_t                     lastReadCallSite_;
 
     TempAllocator&             alloc_;
@@ -57,11 +58,16 @@ class FunctionCompiler
     FuncCompileResults&        compileResults_;
 
   public:
-    FunctionCompiler(ModuleGeneratorThreadView& mg, const FuncBytecode& func, MIRGenerator& mirGen,
+    FunctionCompiler(ModuleGeneratorThreadView& mg,
+                     Decoder& decoder,
+                     const FuncBytecode& func,
+                     const ValTypeVector& locals,
+                     MIRGenerator& mirGen,
                      FuncCompileResults& compileResults)
       : mg_(mg),
+        decoder_(decoder),
         func_(func),
-        decoder_(func.bytecode()),
+        locals_(locals),
         lastReadCallSite_(0),
         alloc_(mirGen.alloc()),
         graph_(mirGen.graph()),
@@ -97,9 +103,9 @@ class FunctionCompiler
                 return false;
         }
 
-        for (size_t i = args.length(); i < func_.numLocals(); i++) {
+        for (size_t i = args.length(); i < locals_.length(); i++) {
             MInstruction* ins = nullptr;
-            switch (func_.localType(i)) {
+            switch (locals_[i]) {
               case ValType::I32:
                 ins = MConstant::NewAsmJS(alloc(), Int32Value(0), MIRType_Int32);
                 break;
@@ -164,7 +170,7 @@ class FunctionCompiler
         return curBlock_->getSlot(info().localSlot(slot));
     }
 
-    ValType localType(unsigned slot) const { return func_.localType(slot); }
+    ValType localType(unsigned slot) const { return locals_[slot]; }
 
     /***************************** Code generation (after local scope setup) */
 
@@ -3045,11 +3051,26 @@ wasm::IonCompileFunction(IonCompileTask* task)
     const FuncBytecode& func = task->func();
     FuncCompileResults& results = task->results();
 
-    JitContext jitContext(CompileRuntime::get(task->runtime()), &results.alloc());
+    // Read in the variable types to build the local types vector.
 
+    Decoder d(func.bytecode());
+
+    ValTypeVector locals;
+    if (!locals.appendAll(func.sig().args()))
+        return false;
+
+    uint32_t numVars = d.uncheckedReadVarU32();
+    for (uint32_t i = 0; i < numVars; i++) {
+        if (!locals.append(d.uncheckedReadValType()))
+            return false;
+    }
+
+    // Set up for Ion compilation.
+
+    JitContext jitContext(CompileRuntime::get(task->runtime()), &results.alloc());
     const JitCompileOptions options;
     MIRGraph graph(&results.alloc());
-    CompileInfo compileInfo(func.numLocals());
+    CompileInfo compileInfo(locals.length());
     MIRGenerator mir(nullptr, options, &results.alloc(), &graph, &compileInfo,
                      IonOptimizations.get(OptimizationLevel::AsmJS));
     mir.initUsesSignalHandlersForAsmJSOOB(task->mg().args().useSignalHandlersForOOB);
@@ -3057,7 +3078,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
 
     // Build MIR graph
     {
-        FunctionCompiler f(task->mg(), func, mir, results);
+        FunctionCompiler f(task->mg(), d, func, locals, mir, results);
         if (!f.init())
             return false;
 

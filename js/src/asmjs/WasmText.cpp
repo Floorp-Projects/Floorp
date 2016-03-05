@@ -3919,6 +3919,12 @@ EncodeFunctionTable(Encoder& e, WasmAstModule& module)
 static bool
 EncodeFunctionBody(Encoder& e, WasmAstFunc& func)
 {
+    size_t bodySizeAt;
+    if (!e.writePatchableVarU32(&bodySizeAt))
+        return false;
+
+    size_t beforeBody = e.currentOffset();
+
     if (!e.writeVarU32(func.vars().length()))
         return false;
 
@@ -3926,12 +3932,6 @@ EncodeFunctionBody(Encoder& e, WasmAstFunc& func)
         if (!e.writeValType(type))
             return false;
     }
-
-    size_t bodySizeAt;
-    if (!e.writePatchableVarU32(&bodySizeAt))
-        return false;
-
-    size_t beforeBody = e.currentOffset();
 
     for (WasmAstExpr* expr : func.body()) {
         if (!EncodeExpr(e, *expr))
