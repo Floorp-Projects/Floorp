@@ -24,68 +24,60 @@ function createCanvas() {
 }
 
 function runTest() {
-  var subworkerRunning = 0;
 
-  var startWorker = function(canvasType) {
-    subworkerRunning++;
-    var worker = new Worker("offscreencanvas.js");
+  var worker = new Worker("offscreencanvas.js");
 
-    worker.onmessage = function(evt) {
-      var msg = evt.data || {};
-      if (msg.type == "test") {
-        ok(msg.result, "[" + canvasType + "]" + msg.name);
-      }
-      if (msg.type == "finish") {
-        worker.terminate();
-        if (--subworkerRunning == 0) {
-          SimpleTest.finish();
-        }
-      }
+  worker.onmessage = function(evt) {
+    var msg = evt.data || {};
+    if (msg.type == "test") {
+      ok(msg.result, msg.name);
     }
-
-    var findTransferables = function(t) {
-      if (t.testType == "subworker") {
-        var result = [];
-        t.subtests.forEach(function(testType) {
-          result = result.concat(findTransferables(testType));
-        });
-
-        return result;
-      } else {
-        return [t.canvas];
-      }
-    };
-
-    var testData =
-      {canvasType: canvasType, testType: 'subworker', subtests: [
-        {canvasType: canvasType, testType: 'basic', canvas: createCanvas()},
-        {canvasType: canvasType, testType: 'subworker', subtests: [
-          {canvasType: canvasType, testType: 'basic', canvas: createCanvas()},
-          {canvasType: canvasType, testType: 'changesize', canvas: createCanvas()},
-          {canvasType: canvasType, testType: 'basic', canvas: createCanvas()}
-        ]},
-        {canvasType: canvasType, testType: 'subworker', subtests: [
-          {canvasType: canvasType, testType: 'basic', canvas: createCanvas()},
-          {canvasType: canvasType, testType: 'changesize', canvas: createCanvas()},
-          {canvasType: canvasType, testType: 'subworker', subtests: [
-            {canvasType: canvasType, testType: 'changesize', canvas: createCanvas()},
-            {canvasType: canvasType, testType: 'basic', canvas: createCanvas()}
-          ]},
-          {canvasType: canvasType, testType: 'subworker', subtests: [
-            {canvasType: canvasType, testType: 'changesize', canvas: createCanvas()},
-            {canvasType: canvasType, testType: 'subworker', subtests: [
-              {canvasType: canvasType, testType: 'subworker', subtests: [
-                {canvasType: canvasType, testType: 'changesize', canvas: createCanvas()}
-              ]}
-            ]}
-          ]},
-        ]}
-      ]};
-    worker.postMessage(testData, findTransferables(testData));
+    if (msg.type == "finish") {
+      worker.terminate();
+      SimpleTest.finish();
+    }
   }
 
-  startWorker('2d');
-  startWorker('webgl');
+  var findTransferables = function(t) {
+    if (t.test == "subworker") {
+      var result = [];
+      t.subtests.forEach(function(test) {
+        result = result.concat(findTransferables(test));
+      });
+
+      return result;
+    } else {
+      return [t.canvas];
+    }
+  };
+
+  var testData =
+    {test: 'subworker', subtests: [
+      {test: 'webgl', canvas: createCanvas()},
+      {test: 'subworker', subtests: [
+        {test: 'webgl', canvas: createCanvas()},
+        {test: 'webgl_changesize', canvas: createCanvas()},
+        {test: 'webgl', canvas: createCanvas()}
+      ]},
+      {test: 'subworker', subtests: [
+        {test: 'webgl', canvas: createCanvas()},
+        {test: 'webgl_changesize', canvas: createCanvas()},
+        {test: 'subworker', subtests: [
+          {test: 'webgl_changesize', canvas: createCanvas()},
+          {test: 'webgl', canvas: createCanvas()}
+        ]},
+        {test: 'subworker', subtests: [
+          {test: 'webgl_changesize', canvas: createCanvas()},
+          {test: 'subworker', subtests: [
+            {test: 'subworker', subtests: [
+              {test: 'webgl_changesize', canvas: createCanvas()}
+            ]}
+          ]}
+        ]},
+      ]}
+    ]};
+
+  worker.postMessage(testData, findTransferables(testData));
 }
 
 SpecialPowers.pushPrefEnv({'set': [

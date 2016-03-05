@@ -1534,14 +1534,12 @@ CSSParserImpl::CSSParserImpl()
     mWebkitBoxUnprefixState(eNotParsingDecls),
     mNextFree(nullptr)
 {
-  MOZ_COUNT_CTOR(CSSParserImpl);
 }
 
 CSSParserImpl::~CSSParserImpl()
 {
   mData.AssertInitialState();
   mTempData.AssertInitialState();
-  MOZ_COUNT_DTOR(CSSParserImpl);
 }
 
 nsresult
@@ -17173,29 +17171,23 @@ nsCSSParser::Startup()
 nsCSSParser::nsCSSParser(mozilla::css::Loader* aLoader,
                          CSSStyleSheet* aSheet)
 {
-  CSSParserImpl *impl;
-  if (NS_IsMainThread()) {
-    impl = gFreeList;
-    if (impl) {
-      gFreeList = impl->mNextFree;
-      impl->mNextFree = nullptr;
-    } else {
-      impl = new CSSParserImpl();
-    }
-
-    if (aLoader) {
-      impl->SetChildLoader(aLoader);
-      impl->SetQuirkMode(aLoader->GetCompatibilityMode() ==
-                         eCompatibility_NavQuirks);
-    }
-    if (aSheet) {
-      impl->SetStyleSheet(aSheet);
-    }
+  CSSParserImpl *impl = gFreeList;
+  if (impl) {
+    gFreeList = impl->mNextFree;
+    impl->mNextFree = nullptr;
   } else {
-    MOZ_ASSERT(!aLoader);
-    MOZ_ASSERT(!aSheet);
     impl = new CSSParserImpl();
   }
+
+  if (aLoader) {
+    impl->SetChildLoader(aLoader);
+    impl->SetQuirkMode(aLoader->GetCompatibilityMode() ==
+                       eCompatibility_NavQuirks);
+  }
+  if (aSheet) {
+    impl->SetStyleSheet(aSheet);
+  }
+
   mImpl = static_cast<void*>(impl);
 }
 
@@ -17203,26 +17195,21 @@ nsCSSParser::~nsCSSParser()
 {
   CSSParserImpl *impl = static_cast<CSSParserImpl*>(mImpl);
   impl->Reset();
-  if (NS_IsMainThread()) {
-    impl->mNextFree = gFreeList;
-    gFreeList = impl;
-  } else {
-    delete impl;
-  }
+  impl->mNextFree = gFreeList;
+  gFreeList = impl;
 }
 
 /* static */ void
 nsCSSParser::Shutdown()
 {
-  MOZ_ASSERT(NS_IsMainThread());
   CSSParserImpl *tofree = gFreeList;
   CSSParserImpl *next;
   while (tofree)
-  {
-    next = tofree->mNextFree;
-    delete tofree;
-    tofree = next;
-  }
+    {
+      next = tofree->mNextFree;
+      delete tofree;
+      tofree = next;
+    }
 }
 
 // Wrapper methods

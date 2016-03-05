@@ -785,7 +785,6 @@ HTMLCanvasElement::TransferControlToOffscreen(ErrorResult& aRv)
     RefPtr<AsyncCanvasRenderer> renderer = GetAsyncCanvasRenderer();
     renderer->SetWidth(sz.width);
     renderer->SetHeight(sz.height);
-    renderer->SetOpaque(GetIsOpaque());
 
     nsCOMPtr<nsIGlobalObject> global =
       do_QueryInterface(OwnerDoc()->GetInnerWindow());

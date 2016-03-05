@@ -34,38 +34,32 @@ function runTest() {
     function() { htmlCanvas.height = 128; },
     "Can't change html canvas' height after transferControlToOffscreen");
 
-  ok(!htmlCanvas.getContext("2d"), "Can't get 2d Context after transferControlToOffscreen");
-  ok(!htmlCanvas.getContext("webgl"), "Can't get webgl Context after transferControlToOffscreen");
-  ok(!htmlCanvas.getContext("webgl2"), "Can't get webgl2 Context after transferControlToOffscreen");
-  ok(!htmlCanvas.getContext("bitmaprenderer"),
-                            "Can't get bitmaprenderer Context after transferControlToOffscreen");
+  ok(!htmlCanvas.getContext("2d"), "Can't getContext after transferControlToOffscreen");
+  ok(!htmlCanvas.getContext("webgl"), "Can't getContext after transferControlToOffscreen");
+  ok(!htmlCanvas.getContext("webgl2"), "Can't getContext after transferControlToOffscreen");
 
   worker.postMessage(offscreenCanvas, [offscreenCanvas]);
 
   /* check parent offscreencanvas is neutered after being transfered */
-  SimpleTest.doesThrow(function() {
-    offscreenCanvas.width = 128;
-  }, "Can't change transfered worker canvas width");
+  SimpleTest.doesThrow(
+    function() { offscreenCanvas.width = 128; },
+    "Can't change transfered worker canvas width");
 
-  SimpleTest.doesThrow(function() {
-    offscreenCanvas.height = 128;
-  }, "Can't change transfered worker canvas height");
+  SimpleTest.doesThrow(
+    function() { offscreenCanvas.height = 128; },
+    "Can't change transfered worker canvas height");
 
-  SimpleTest.doesThrow(function() {
-    offscreenCanvas.getContext("2d");
-  }, "Can't get 2d Context on transfered worker canvas");
+  SimpleTest.doesThrow(
+    function() { offscreenCanvas.getContext("2d") },
+    "Can't getContext on transfered worker canvas");
 
-  SimpleTest.doesThrow(function() {
-    offscreenCanvas.getContext("webgl");
-  }, "Can't get webgl Context on transfered worker canvas");
+  SimpleTest.doesThrow(
+    function() { offscreenCanvas.getContext("webgl") },
+    "Can't getContext on transfered worker canvas");
 
-  SimpleTest.doesThrow(function() {
-    offscreenCanvas.getContext("webgl2");
-  }, "Can't get webgl2 Context on transfered worker canvas");
-
-  SimpleTest.doesThrow(function() {
-    offscreenCanvas.getContext("bitmaprenderer");
-  }, "Can't get bitmaprenderer Context on transfered worker canvas");
+  SimpleTest.doesThrow(
+    function() { offscreenCanvas.getContext("webgl2") },
+    "Can't getContext on transfered worker canvas");
 
   // Transfer a neutered offscreencanvas should be ok.
   worker.postMessage(offscreenCanvas, [offscreenCanvas]);

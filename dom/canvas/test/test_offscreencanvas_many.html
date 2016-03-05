@@ -11,8 +11,6 @@
   So we choose 8 workers, 4 of them run basic webgl drawing test and
   others run size changing test.
 -->
-<canvas id="c1" width="64" height="64"></canvas>
-<canvas id="c-ref" width="64" height="64"></canvas>
 <script>
 
 SimpleTest.waitForExplicitFinish();
@@ -28,60 +26,34 @@ function createCanvas() {
 function runTest() {
   var stillRunning = 0;
 
-  var startWorker = function(canvas, canvasType, testType) {
+  var startWorker = function(canvas, test) {
     stillRunning++;
     var worker = new Worker("offscreencanvas.js");
 
     worker.onmessage = function(evt) {
       var msg = evt.data || {};
       if (msg.type == "test") {
-        ok(msg.result, "[" + canvasType + "]" + msg.name);
-      }
-      if (msg.type == "imagebitmapwithsize") {
-        // Fill c-ref with green color.
-        var c = document.getElementById("c-ref");
-        var ctx = c.getContext("2d");
-        c.width = msg.size;
-        c.height = msg.size;
-        ctx.rect(0, 0, c.width, c.height);
-        ctx.fillStyle = "#00FF00";
-        ctx.fill();
-
-        // The ownership of msg.bitmap should be transferred to canvas when we
-        // called transferImageBitmap. So we test if the ownership is actually
-        // transferred here.
-        var htmlCanvas = document.getElementById("c1");
-        htmlCanvas.width = msg.size;
-        htmlCanvas.height = msg.size;
-        var bitmapRenderer = htmlCanvas.getContext("bitmaprenderer");
-        bitmapRenderer.transferImageBitmap(msg.bitmap);
-        ok(c.toDataURL() == htmlCanvas.toDataURL(), "[" + canvasType + "]" +
-           "toDataURL should return a " + msg.size + "x" + msg.size +
-           " green square");
+        ok(msg.result, msg.name);
       }
       if (msg.type == "finish") {
         worker.terminate();
-        if (--stillRunning == 0) {
+        if (--stillRunning == 0)
           SimpleTest.finish();
-        }
       }
     }
 
     var offscreenCanvas = canvas.transferControlToOffscreen();
-    worker.postMessage({canvasType: canvasType, testType: testType,
-                        canvas: offscreenCanvas}, [offscreenCanvas]);
+    worker.postMessage({test: test, canvas: offscreenCanvas}, [offscreenCanvas]);
   }
 
   /* create 4 workers that do the regular drawing test and 4 workers
      that do the size change test */
   for (var i = 0; i < 4; i++) {
-    startWorker(createCanvas(), '2d', 'basic');
-    startWorker(createCanvas(), 'webgl', 'basic');
+    startWorker(createCanvas(), 'webgl');
   }
 
   for (var i = 0; i < 4; i++) {
-    startWorker(createCanvas(), '2d', 'changesize');
-    startWorker(createCanvas(), 'webgl', 'changesize');
+    startWorker(createCanvas(), 'webgl_changesize');
   }
 }
 

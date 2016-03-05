@@ -34,64 +34,46 @@ function getRefSnapshot(initWithMask) {
   return result;
 }
 
-function runTest() {
-  var startWorker = function(canvas, canvasType, testType, initWithMask) {
-    var canvas = createCanvas(initWithMask);
-    var worker = new Worker("offscreencanvas.js");
+function runTest(initWithMask) {
+  var htmlCanvas = createCanvas(initWithMask);
+  var worker = new Worker("offscreencanvas.js");
 
-    ok(canvas.transferControlToOffscreen, "[" + canvasType + "]" +
-       "HTMLCanvasElement has transferControlToOffscreen function");
-
-    var offscreenCanvas = canvas.transferControlToOffscreen();
-    ok(offscreenCanvas, "[" + canvasType + "]" +
-       "Expected transferControlToOffscreen to succeed");
-
-    worker.postMessage({canvasType: canvasType, testType: testType,
-                        canvas: offscreenCanvas}, [offscreenCanvas]);
-
-    return new Promise(function(resolved) {
-      worker.onmessage = function(evt) {
-        var msg = evt.data || {};
-        if (msg.type == "test") {
-          ok(msg.result, "[" + canvasType + "]" + msg.name);
+  worker.onmessage = function(evt) {
+    var msg = evt.data || {};
+    if (msg.type == "draw") {
+      if (msg.count === 10) {
+        // Change the fallback state dynamically when drawing count reaches 10.
+        if (initWithMask) {
+          htmlCanvas.style.mask = "";
+        } else {
+          htmlCanvas.style.mask = "url('offscreencanvas_mask.svg#fade_mask_both')";
         }
-        if (msg.type == "draw") {
-          if (msg.count === 10) {
-            // Change the fallback state dynamically when drawing count reaches 10.
-            if (initWithMask) {
-              canvas.style.mask = "";
-            } else {
-              canvas.style.mask = "url('offscreencanvas_mask.svg#fade_mask_both')";
-            }
-          } else if (msg.count === 20) {
-            var snapshotFallback = snapshotWindow(window);
-            worker.terminate();
-            document.body.removeChild(canvas);
+      } else if (msg.count === 20) {
+        var snapshotFallback = snapshotWindow(window);
+        worker.terminate();
+        document.body.removeChild(htmlCanvas);
 
-            var results = compareSnapshots(snapshotFallback,
-                          getRefSnapshot(initWithMask), true);
-            ok(results[0], "[" + canvasType + "]" +
-               "after dynamic fallback, screenshots should be the same");
+        var results = compareSnapshots(snapshotFallback, getRefSnapshot(initWithMask), true);
+        ok(results[0], "after dynamic fallback, screenshots should be the same");
 
-            resolved();
-          }
+        if (initWithMask) {
+          SimpleTest.finish();
+        } else {
+          runTest(true);
         }
       }
-    });
+    }
   }
 
-  startWorker(createCanvas(false), '2d', 'fallback', false).then(function () {
-    startWorker(createCanvas(true), '2d', 'fallback', true).then(function () {
-      startWorker(createCanvas(false), 'webgl', 'fallback', false).then(function () {
-        startWorker(createCanvas(true), 'webgl', 'fallback', true).then(function () {
-          SimpleTest.finish();
-  })})})});
+  var offscreenCanvas = htmlCanvas.transferControlToOffscreen();
+
+  worker.postMessage({test: 'webgl_fallback', canvas: offscreenCanvas}, [offscreenCanvas]);
 }
 
 SpecialPowers.pushPrefEnv({'set': [
   ['gfx.offscreencanvas.enabled', true],
   ['webgl.force-enabled', true],
-]}, runTest);
+]}, runTest.bind(false));
 
 </script>
 </body>

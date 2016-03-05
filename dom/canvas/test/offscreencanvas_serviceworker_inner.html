@@ -4,58 +4,28 @@
 <title>WebGL in OffscreenCanvas</title>
 </head>
 <body>
+<canvas id="c" width="64" height="64"></canvas>
 <script>
 function ok(expect, msg) {
   parent.postMessage({type: "test", result: !!expect, name: msg}, "*");
 }
-function countTest(count) {
-  parent.postMessage({type: "countTest", count: count}, "*");
+
+var htmlCanvas = document.getElementById("c");
+
+ok(htmlCanvas, "Should have HTML canvas element");
+
+var messageChannel = new MessageChannel();
+messageChannel.port1.onmessage = function(evt) {
+  parent.postMessage(evt.data, "*");
 }
 
-function createCanvas() {
-  countTest(1);
-  var htmlCanvas = document.createElement('canvas');
-  ok(htmlCanvas, "Should have HTML canvas element");
-  ok(htmlCanvas.transferControlToOffscreen,
-     "HTMLCanvasElement has transferControlToOffscreen function");
-  htmlCanvas.width = 64;
-  htmlCanvas.height = 64;
-  document.body.appendChild(htmlCanvas);
-  return htmlCanvas;
-}
+ok(htmlCanvas.transferControlToOffscreen, "HTMLCanvasElement has transferControlToOffscreen function");
 
-function transferCtrlToOffscreen(canvas) {
-  var offscreencanvas = canvas.transferControlToOffscreen();
-  ok(offscreencanvas, "Expected transferControlToOffscreen to succeed");
-  return offscreencanvas;
-}
-
-function CreateMessagChannel () {
-  var msgChannel = new MessageChannel();
-  msgChannel.port1.onmessage = function(evt) {
-    parent.postMessage(evt.data, "*");
-  }
-  return msgChannel;
-}
-
-var offscreen2dCanvas = transferCtrlToOffscreen(createCanvas());
-var msgChannel2d = CreateMessagChannel();
-var offscreenWebGLCanvas = transferCtrlToOffscreen(createCanvas());
-var msgChannelwebgl = CreateMessagChannel();
+var offscreenCanvas = htmlCanvas.transferControlToOffscreen();
+ok(offscreenCanvas, "Expected transferControlToOffscreen to succeed");
 
 navigator.serviceWorker.ready.then(function() {
-  navigator.serviceWorker.controller.postMessage({canvasType: '2d',
-                                                  testType: 'basic',
-                                                  canvas: offscreen2dCanvas},
-                                                  [offscreen2dCanvas,
-                                                   msgChannel2d.port2]);
-});
-navigator.serviceWorker.ready.then(function() {
-  navigator.serviceWorker.controller.postMessage({canvasType: 'webgl',
-                                                  testType: 'basic',
-                                                  canvas: offscreenWebGLCanvas},
-                                                  [offscreenWebGLCanvas,
-                                                   msgChannelwebgl.port2]);
+  navigator.serviceWorker.controller.postMessage({test: 'webgl', canvas: offscreenCanvas}, [offscreenCanvas, messageChannel.port2]);
 });
 </script>
 </body>
