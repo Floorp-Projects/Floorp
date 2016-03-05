@@ -751,6 +751,9 @@ class Decoder
         cur_ = before;
         return ret;
     }
+    ValType uncheckedReadValType() {
+        return uncheckedReadEnum<ValType>();
+    }
 
     // Temporary encoding forms which should be removed as part of the
     // conversion to wasm:
@@ -773,7 +776,6 @@ class FuncBytecode
 {
     // Function metadata
     const DeclaredSig& sig_;
-    ValTypeVector locals_;
     uint32_t lineOrBytecode_;
     Uint32Vector callSiteLineNums_;
 
@@ -787,12 +789,10 @@ class FuncBytecode
     FuncBytecode(uint32_t index,
                  const DeclaredSig& sig,
                  UniqueBytecode bytecode,
-                 ValTypeVector&& locals,
                  uint32_t lineOrBytecode,
                  Uint32Vector&& callSiteLineNums,
                  unsigned generateTime)
       : sig_(sig),
-        locals_(Move(locals)),
         lineOrBytecode_(lineOrBytecode),
         callSiteLineNums_(Move(callSiteLineNums)),
         index_(index),
@@ -807,10 +807,6 @@ class FuncBytecode
     uint32_t index() const { return index_; }
     const DeclaredSig& sig() const { return sig_; }
     const Bytecode& bytecode() const { return *bytecode_; }
-
-    size_t numLocals() const { return locals_.length(); }
-    ValType localType(size_t i) const { return locals_[i]; }
-
     unsigned generateTime() const { return generateTime_; }
 };
 

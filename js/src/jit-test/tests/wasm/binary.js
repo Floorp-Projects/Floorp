@@ -121,8 +121,9 @@ function funcBody(func) {
     var body = varU32(func.locals.length);
     for (let local of func.locals)
         body.push(...varU32(local));
-    body.push(...varU32(func.body.length));
-    return body.concat(...func.body);
+    body = body.concat(...func.body);
+    body.splice(0, 0, ...varU32(body.length));
+    return body;
 }
 
 function bodySection(bodies) {

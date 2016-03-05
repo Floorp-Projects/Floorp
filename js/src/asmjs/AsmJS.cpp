@@ -2680,8 +2680,7 @@ class MOZ_STACK_CLASS FunctionValidator
         LocalMap::AddPtr p = locals_.lookupForAdd(name);
         if (p)
             return failName(pn, "duplicate local name '%s' not allowed", name);
-        return locals_.add(p, name, Local(type, locals_.count())) &&
-               fg_.addLocal(type.canonicalToValType());
+        return locals_.add(p, name, Local(type, locals_.count()));
     }
 
     /****************************** For consistency of returns in a function */
@@ -2823,7 +2822,7 @@ class MOZ_STACK_CLASS FunctionValidator
         return encoder().writeExpr(Expr::I32Const) &&
                encoder().writeVarU32(i32);
     }
-    MOZ_WARN_UNUSED_RESULT bool writeLit(NumLit lit) {
+    MOZ_WARN_UNUSED_RESULT bool writeConstExpr(NumLit lit) {
         switch (lit.which()) {
           case NumLit::Fixnum:
           case NumLit::NegativeInt:
@@ -3486,15 +3485,7 @@ CheckFinalReturn(FunctionValidator& f, ParseNode* lastNonEmptyStmt)
 }
 
 static bool
-SetLocal(FunctionValidator& f, NumLit lit)
-{
-    return f.encoder().writeExpr(Expr::SetLocal) &&
-           f.encoder().writeVarU32(f.numLocals()) &&
-           f.writeLit(lit);
-}
-
-static bool
-CheckVariable(FunctionValidator& f, ParseNode* var)
+CheckVariable(FunctionValidator& f, ParseNode* var, ValTypeVector* types, Vector<NumLit>* inits)
 {
     if (!IsDefinition(var))
         return f.fail(var, "local variable names must not restate argument names");
@@ -3515,12 +3506,11 @@ CheckVariable(FunctionValidator& f, ParseNode* var)
     if (!lit.valid())
         return f.failName(var, "var '%s' initializer out of range", name);
 
-    if (!lit.isZeroBits()) {
-        if (!SetLocal(f, lit))
-            return false;
-    }
+    Type type = Type::canonicalize(Type::lit(lit));
 
-    return f.addLocal(var, name, Type::canonicalize(Type::lit(lit)));
+    return f.addLocal(var, name, type) &&
+           types->append(type.canonicalToValType()) &&
+           inits->append(lit);
 }
 
 static bool
@@ -3528,11 +3518,38 @@ CheckVariables(FunctionValidator& f, ParseNode** stmtIter)
 {
     ParseNode* stmt = *stmtIter;
 
+    uint32_t firstVar = f.numLocals();
+
+    ValTypeVector types;
+    Vector<NumLit> inits(f.cx());
+
     for (; stmt && stmt->isKind(PNK_VAR); stmt = NextNonEmptyStatement(stmt)) {
         for (ParseNode* var = VarListHead(stmt); var; var = NextNode(var)) {
-            if (!CheckVariable(f, var))
+            if (!CheckVariable(f, var, &types, &inits))
                 return false;
         }
+    }
+
+    MOZ_ASSERT(f.encoder().empty());
+
+    if (!f.encoder().writeVarU32(types.length()))
+        return false;
+
+    for (ValType v : types) {
+        if (!f.encoder().writeValType(v))
+            return false;
+    }
+
+    for (uint32_t i = 0; i < inits.length(); i++) {
+        NumLit lit = inits[i];
+        if (lit.isZeroBits())
+            continue;
+        if (!f.encoder().writeExpr(Expr::SetLocal))
+            return false;
+        if (!f.encoder().writeVarU32(firstVar + i))
+            return false;
+        if (!f.writeConstExpr(lit))
+            return false;
     }
 
     *stmtIter = stmt;
@@ -3549,7 +3566,7 @@ CheckNumericLiteral(FunctionValidator& f, ParseNode* num, Type* type)
     if (!lit.valid())
         return f.fail(num, "numeric literal out of representable integer range");
     *type = Type::lit(lit);
-    return f.writeLit(lit);
+    return f.writeConstExpr(lit);
 }
 
 static bool
@@ -3570,7 +3587,7 @@ CheckVarRef(FunctionValidator& f, ParseNode* varRef, Type* type)
         switch (global->which()) {
           case ModuleValidator::Global::ConstantLiteral:
             *type = global->varOrConstType();
-            return f.writeLit(global->constLiteralValue());
+            return f.writeConstExpr(global->constLiteralValue());
           case ModuleValidator::Global::ConstantImport:
           case ModuleValidator::Global::Variable: {
             *type = global->varOrConstType();
@@ -5461,7 +5478,7 @@ CheckCoercedCall(FunctionValidator& f, ParseNode* call, Type ret, Type* type)
         if (!f.encoder().writePatchableExpr(&coerceOp))
             return false;
         NumLit lit = ExtractNumericLiteral(f.m(), call);
-        if (!f.writeLit(lit))
+        if (!f.writeConstExpr(lit))
             return false;
         return CoerceResult(f, call, ret, Type::lit(lit), coerceOp, type);
     }
