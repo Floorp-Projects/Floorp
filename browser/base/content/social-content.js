@@ -126,7 +126,7 @@ SocialErrorListener = {
            .getInterface(Ci.nsIDOMWindowUtils);
         dwu.allowScriptsToClose();
 
-        addEventListener("DOMWindowClose", function _mozSocialDOMWindowClose(evt) {
+        content.addEventListener("DOMWindowClose", function _mozSocialDOMWindowClose(evt) {
           // preventDefault stops the default window.close() function being called,
           // which doesn't actually close anything but causes things to get into
           // a bad state (an internal 'closed' flag is set and debug builds start
@@ -141,7 +141,7 @@ SocialErrorListener = {
         break;
       case "Social:ListenForEvents":
         for (let eventName of message.data.eventNames) {
-          addEventListener(eventName, this);
+          content.addEventListener(eventName, this);
         }
         break;
       case "Social:SetDocumentTitle":
