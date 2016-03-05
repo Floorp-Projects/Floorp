@@ -205,7 +205,6 @@ public:
   nsIContent* GetPreviousChild();
   nsIContent* Parent() const { return mOriginalContent; }
 
-private:
   enum IteratorPhase
   {
     eAtBegin,
@@ -215,7 +214,9 @@ private:
     eAtAfterKid,
     eAtEnd
   };
+  IteratorPhase Phase() const { return mPhase; }
 
+private:
   nsIContent* mOriginalContent;
 
   // mAnonKids is an array of native anonymous children, mAnonKidsIdx is index
