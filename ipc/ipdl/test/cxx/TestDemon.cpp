@@ -207,31 +207,17 @@ TestDemonParent::RunLimitedSequence(int flags)
   gStackHeight--;
 }
 
-static bool
-AllowAsync(int outgoing, int incoming)
-{
-  return incoming >= outgoing - 5;
-}
-
 bool
 TestDemonParent::DoAction(int flags)
 {
   if (flags & ASYNC_ONLY) {
-    if (AllowAsync(mOutgoing[0], mIncoming[0])) {
-      DEMON_LOG("SendAsyncMessage [%d]", mOutgoing[0]);
-      return SendAsyncMessage(mOutgoing[0]++);
-    } else {
-      return true;
-    }
+    DEMON_LOG("SendAsyncMessage [%d]", mOutgoing[0]);
+    return SendAsyncMessage(mOutgoing[0]++);
   } else {
 	switch (Choose(3)) {
      case 0:
-      if (AllowAsync(mOutgoing[0], mIncoming[0])) {
-        DEMON_LOG("SendAsyncMessage [%d]", mOutgoing[0]);
-        return SendAsyncMessage(mOutgoing[0]++);
-      } else {
-        return true;
-      }
+      DEMON_LOG("SendAsyncMessage [%d]", mOutgoing[0]);
+      return SendAsyncMessage(mOutgoing[0]++);
 
      case 1: {
        DEMON_LOG("Start SendHiPrioSyncMessage");
@@ -353,12 +339,8 @@ TestDemonChild::DoAction()
 {
   switch (Choose(6)) {
    case 0:
-    if (AllowAsync(mOutgoing[0], mIncoming[0])) {
-      DEMON_LOG("SendAsyncMessage [%d]", mOutgoing[0]);
-      return SendAsyncMessage(mOutgoing[0]++);
-    } else {
-      return true;
-    }
+	DEMON_LOG("SendAsyncMessage [%d]", mOutgoing[0]);
+	return SendAsyncMessage(mOutgoing[0]++);
 
    case 1: {
      DEMON_LOG("Start SendHiPrioSyncMessage");

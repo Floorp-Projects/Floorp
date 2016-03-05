@@ -57,8 +57,6 @@ enum class SyncSendError {
     ReplyError,
 };
 
-class AutoEnterTransaction;
-
 class MessageChannel : HasResultCodes
 {
     friend class ProcessLink;
@@ -158,7 +156,7 @@ class MessageChannel : HasResultCodes
         return !mCxxStackFrames.empty();
     }
 
-    bool IsInTransaction() const;
+    bool IsInTransaction() const { return mCurrentTransaction != 0; }
     void CancelCurrentTransaction();
 
     /**
@@ -265,7 +263,7 @@ class MessageChannel : HasResultCodes
     bool InterruptEventOccurred();
     bool HasPendingEvents();
 
-    void ProcessPendingRequests(AutoEnterTransaction& aTransaction);
+    void ProcessPendingRequests(int seqno, int transaction);
     bool ProcessPendingRequest(const Message &aUrgent);
 
     void MaybeUndeferIncall();
@@ -368,6 +366,15 @@ class MessageChannel : HasResultCodes
         return mInterruptStack.size();
     }
 
+    // Returns true if we're blocking waiting for a reply.
+    bool AwaitingSyncReply() const {
+        mMonitor->AssertCurrentThreadOwns();
+        return mAwaitingSyncReply;
+    }
+    int AwaitingSyncReplyPriority() const {
+        mMonitor->AssertCurrentThreadOwns();
+        return mAwaitingSyncReplyPriority;
+    }
     bool AwaitingInterruptReply() const {
         mMonitor->AssertCurrentThreadOwns();
         return !mInterruptStack.empty();
@@ -397,7 +404,17 @@ class MessageChannel : HasResultCodes
     };
     friend class AutoEnterWaitForIncoming;
 
-    // Returns true if we're dispatching an async message's callback.
+    // Returns true if we're dispatching a sync message's callback.
+    bool DispatchingSyncMessage() const {
+        AssertWorkerThread();
+        return mDispatchingSyncMessage;
+    }
+
+    int DispatchingSyncMessagePriority() const {
+        AssertWorkerThread();
+        return mDispatchingSyncMessagePriority;
+    }
+
     bool DispatchingAsyncMessage() const {
         AssertWorkerThread();
         return mDispatchingAsyncMessage;
@@ -543,6 +560,15 @@ class MessageChannel : HasResultCodes
         T mNew;
     };
 
+    // Worker thread only.
+    bool mAwaitingSyncReply;
+    int mAwaitingSyncReplyPriority;
+
+    // Set while we are dispatching a synchronous message. Only for use on the
+    // worker thread.
+    bool mDispatchingSyncMessage;
+    int mDispatchingSyncMessagePriority;
+
     bool mDispatchingAsyncMessage;
     int mDispatchingAsyncMessagePriority;
 
@@ -564,16 +590,56 @@ class MessageChannel : HasResultCodes
     // To ensure IDs are unique, we use sequence numbers for transaction IDs,
     // which grow in opposite directions from child to parent.
 
-    friend class AutoEnterTransaction;
-    AutoEnterTransaction *mTransactionStack;
+    // The current transaction ID.
+    int32_t mCurrentTransaction;
 
-    int32_t CurrentHighPriorityTransaction() const;
+    // This field describes the priorities of the sync Send calls that are
+    // currently on stack. If a Send call for a message with priority P is on
+    // the C stack, then mPendingSendPriorities & (1 << P) will be
+    // non-zero. Note that cancelled Send calls are not removed from this
+    // bitfield (until they return).
+    int mPendingSendPriorities;
 
-    bool AwaitingSyncReply() const;
-    int AwaitingSyncReplyPriority() const;
+    class AutoEnterTransaction
+    {
+     public:
+       explicit AutoEnterTransaction(MessageChannel *aChan, int32_t aMsgSeqno)
+        : mChan(aChan),
+          mNewTransaction(INT32_MAX),
+          mOldTransaction(mChan->mCurrentTransaction)
+       {
+           mChan->mMonitor->AssertCurrentThreadOwns();
+           if (mChan->mCurrentTransaction == 0) {
+               mNewTransaction = aMsgSeqno;
+               mChan->mCurrentTransaction = aMsgSeqno;
+           }
+       }
+       explicit AutoEnterTransaction(MessageChannel *aChan, const Message &aMessage)
+        : mChan(aChan),
+          mNewTransaction(aMessage.transaction_id()),
+          mOldTransaction(mChan->mCurrentTransaction)
+       {
+           mChan->mMonitor->AssertCurrentThreadOwns();
 
-    bool DispatchingSyncMessage() const;
-    int DispatchingSyncMessagePriority() const;
+           if (!aMessage.is_sync())
+               return;
+
+           MOZ_DIAGNOSTIC_ASSERT(
+               !(mChan->mSide == ParentSide && mOldTransaction != aMessage.transaction_id()) ||
+               !mOldTransaction || aMessage.priority() > mChan->AwaitingSyncReplyPriority());
+           mChan->mCurrentTransaction = aMessage.transaction_id();
+       }
+       ~AutoEnterTransaction() {
+           mChan->mMonitor->AssertCurrentThreadOwns();
+           if (mChan->mCurrentTransaction == mNewTransaction) {
+               mChan->mCurrentTransaction = mOldTransaction;
+           }
+       }
+
+      private:
+       MessageChannel *mChan;
+       int32_t mNewTransaction, mOldTransaction;
+    };
 
     // If a sync message times out, we store its sequence number here. Any
     // future sync messages will fail immediately. Once the reply for original
@@ -590,6 +656,14 @@ class MessageChannel : HasResultCodes
     // care about.
     int32_t mTimedOutMessageSeqno;
     int mTimedOutMessagePriority;
+
+    // If waiting for the reply to a sync out-message, it will be saved here
+    // on the I/O thread and then read and cleared by the worker thread.
+    nsAutoPtr<Message> mRecvd;
+
+    // If a sync message reply that is an error arrives, we increment this
+    // counter rather than storing it in mRecvd.
+    size_t mRecvdErrors;
 
     // Queue of all incoming messages, except for replies to sync and urgent
     // messages, which are delivered directly to mRecvd, and any pending urgent
