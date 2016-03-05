@@ -26,7 +26,7 @@
 
 namespace js {
 
-class ArrayBufferObject;
+class TypedArrayObject;
 
 namespace wasm {
 
@@ -49,7 +49,7 @@ static const uint64_t MappedSize = 2 * Uint32Range + PageSize;
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 bool
-Eval(JSContext* cx, Handle<ArrayBufferObject*> code, HandleObject importObj,
+Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
      MutableHandleObject exportObj);
 
 }  // namespace wasm

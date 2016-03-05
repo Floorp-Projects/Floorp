@@ -5069,12 +5069,8 @@ WasmLoop(JSContext* cx, unsigned argc, Value* vp)
             return false;
 
         Rooted<TypedArrayObject*> typedArray(cx, &ret->as<TypedArrayObject>());
-        if (!TypedArrayObject::ensureHasBuffer(cx, typedArray))
-            return false;
-
-        Rooted<ArrayBufferObject*> arrayBuffer(cx, typedArray->bufferUnshared());
         RootedObject exportObj(cx);
-        if (!wasm::Eval(cx, arrayBuffer, importObj, &exportObj)) {
+        if (!wasm::Eval(cx, typedArray, importObj, &exportObj)) {
             // Clear any pending exceptions, we don't care about them
             cx->clearPendingException();
         }

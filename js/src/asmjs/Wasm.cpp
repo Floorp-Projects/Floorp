@@ -1516,17 +1516,23 @@ ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& i
 }
 
 bool
-wasm::Eval(JSContext* cx, Handle<ArrayBufferObject*> code,
-           HandleObject importObj, MutableHandleObject exportObj)
+wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
+           MutableHandleObject exportObj)
 {
+    MOZ_ASSERT(!code->isSharedMemory());
+
     if (!CheckCompilerSupport(cx))
         return false;
 
-    const uint8_t* bytes = code->dataPointer();
+    if (!TypedArrayObject::ensureHasBuffer(cx, code))
+        return false;
+
+    const uint8_t* bufferStart = code->bufferUnshared()->dataPointer();
+    const uint8_t* bytes = bufferStart + code->byteOffset();
     uint32_t length = code->byteLength();
 
     Vector<uint8_t> copy(cx);
-    if (code->hasInlineData()) {
+    if (code->bufferUnshared()->hasInlineData()) {
         if (!copy.append(bytes, length))
             return false;
         bytes = copy.begin();
@@ -1550,10 +1556,7 @@ wasm::Eval(JSContext* cx, Handle<ArrayBufferObject*> code,
     if (!ImportFunctions(cx, importObj, importNames, &imports))
         return false;
 
-    if (!moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, exportObj))
-        return false;
-
-    return true;
+    return moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, exportObj);
 }
 
 static bool
@@ -1562,7 +1565,13 @@ InstantiateModule(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(cx->runtime()->options().wasm());
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!args.get(0).isObject() || !args.get(0).toObject().is<ArrayBufferObject>()) {
+    if (!args.get(0).isObject() || !args.get(0).toObject().is<TypedArrayObject>()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
+        return false;
+    }
+
+    Rooted<TypedArrayObject*> code(cx, &args[0].toObject().as<TypedArrayObject>());
+    if (code->isSharedMemory()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
         return false;
     }
@@ -1575,8 +1584,6 @@ InstantiateModule(JSContext* cx, unsigned argc, Value* vp)
         }
         importObj = &args[1].toObject();
     }
-
-    Rooted<ArrayBufferObject*> code(cx, &args[0].toObject().as<ArrayBufferObject>());
 
     RootedObject exportObj(cx);
     if (!Eval(cx, code, importObj, &exportObj))
