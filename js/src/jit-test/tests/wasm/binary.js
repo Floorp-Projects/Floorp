@@ -26,14 +26,11 @@ const versionError = /failed to match binary version/;
 const unknownSectionError = /failed to skip unknown section at end/;
 const sectionError = /failed to start section/;
 
-const I32Code = 0;
-const I64Code = 1;
-const F32Code = 2;
-const F64Code = 3;
-const I32x4Code = 4;
-const F32x4Code = 5;
-const B32x4Code = 6;
-const VoidCode = 7;
+const VoidCode = 0;
+const I32Code = 1;
+const I64Code = 2;
+const F32Code = 3;
+const F64Code = 4;
 
 function toU8(array) {
     for (let b of array)
