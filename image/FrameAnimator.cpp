@@ -33,7 +33,7 @@ FrameAnimator::GetSingleLoopTime() const
     return -1;
   }
 
-  uint32_t looptime = 0;
+  int32_t looptime = 0;
   for (uint32_t i = 0; i < mImage->GetNumFrames(); ++i) {
     int32_t timeout = GetTimeoutForFrame(i);
     if (timeout >= 0) {
@@ -180,9 +180,14 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
   mCurrentAnimationFrameTime = GetCurrentImgFrameEndTime();
 
   // If we can get closer to the current time by a multiple of the image's loop
-  // time, we should.
-  uint32_t loopTime = GetSingleLoopTime();
+  // time, we should. We need to be done decoding in order to know the full loop
+  // time though!
+  int32_t loopTime = GetSingleLoopTime();
   if (loopTime > 0) {
+    // We shouldn't be advancing by a whole loop unless we are decoded and know
+    // what a full loop actually is. GetSingleLoopTime should return -1 so this
+    // never happens.
+    MOZ_ASSERT(mDoneDecoding);
     TimeDuration delay = aTime - mCurrentAnimationFrameTime;
     if (delay.ToMilliseconds() > loopTime) {
       // Explicitly use integer division to get the floor of the number of
