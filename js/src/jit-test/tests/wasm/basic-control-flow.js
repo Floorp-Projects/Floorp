@@ -11,8 +11,8 @@ wasmEvalText('(module (func (local i32) (if (get_local 0) (nop))) (export "" 0))
 wasmEvalText('(module (func (local i32) (if_else (get_local 0) (nop) (nop))) (export "" 0))');
 
 // Expression values types are consistent
-assertErrorMessage(() => wasmEvalText('(module (func (result i32) (local f32) (if_else (i32.const 42) (get_local 0) (i32.const 0))))'), TypeError, mismatchError("f32", "i32"));
-assertErrorMessage(() => wasmEvalText('(module (func (result i32) (local f64) (if_else (i32.const 42) (i32.const 0) (get_local 0))))'), TypeError, mismatchError("f64", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (local f32) (if_else (i32.const 42) (get_local 0) (i32.const 0))))'), TypeError, mismatchError("void", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (local f64) (if_else (i32.const 42) (i32.const 0) (get_local 0))))'), TypeError, mismatchError("void", "i32"));
 assertEq(wasmEvalText('(module (func (result i32) (if_else (i32.const 42) (i32.const 1) (i32.const 2))) (export "" 0))')(), 1);
 assertEq(wasmEvalText('(module (func (result i32) (if_else (i32.const 0) (i32.const 1) (i32.const 2))) (export "" 0))')(), 2);
 
@@ -170,7 +170,7 @@ assertErrorMessage(() => wasmEvalText(`(module (func (result i32)
   )
 ) (export "" 0))`), TypeError, mismatchError("void", "i32"));
 
-assertErrorMessage(() => wasmEvalText(`(module (func (block $out (br_if $out (br 0)))) (export "" 0))`), TypeError, mismatchError("void", "i32"));
+assertEq(wasmEvalText(`(module (func (block $out (br_if $out (br 0)))) (export "" 0))`)(), undefined);
 
 assertEq(wasmEvalText('(module (func (block (br 0))) (export "" 0))')(), undefined);
 assertEq(wasmEvalText('(module (func (block $l (br $l))) (export "" 0))')(), undefined);
