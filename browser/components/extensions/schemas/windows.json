@@ -341,7 +341,6 @@
                 "description": "Specifies what type of browser window to create. The 'panel' and 'detached_panel' types create a popup unless the '--enable-panels' flag is set."
               },
               "state": {
-                "unsupported": true,
                 "$ref": "WindowState",
                 "optional": true,
                 "description": "The initial state of the window. The 'minimized', 'maximized' and 'fullscreen' states cannot be combined with 'left', 'top', 'width' or 'height'."
@@ -417,7 +416,6 @@
                 "description": "If true, causes the window to be displayed in a manner that draws the user's attention to the window, without changing the focused window. The effect lasts until the user changes focus to the window. This option has no effect if the window already has focus. Set to false to cancel a previous draw attention request."
               },
               "state": {
-                "unsupported": true,
                 "$ref": "WindowState",
                 "optional": true,
                 "description": "The new state of the window. The 'minimized', 'maximized' and 'fullscreen' states cannot be combined with 'left', 'top', 'width' or 'height'."
