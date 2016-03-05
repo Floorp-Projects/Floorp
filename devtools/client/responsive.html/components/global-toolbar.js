@@ -5,12 +5,14 @@
 "use strict";
 
 const { getStr } = require("./utils/l10n");
-const { DOM: dom, createClass, PropTypes } =
+const { DOM: dom, createClass, PropTypes, addons } =
   require("devtools/client/shared/vendor/react");
 
 module.exports = createClass({
 
   displayName: "GlobalToolbar",
+
+  mixins: [ addons.PureRenderMixin ],
 
   propTypes: {
     onExit: PropTypes.func.isRequired,
