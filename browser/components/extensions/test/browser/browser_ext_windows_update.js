@@ -19,10 +19,6 @@ add_task(function* () {
   yield promiseWaitForFocus(window2);
 
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      "permissions": ["windows"],
-    },
-
     background: function() {
       browser.windows.getAll(undefined, function(wins) {
         browser.test.assertEq(wins.length, 2, "should have two windows");
@@ -50,4 +46,82 @@ add_task(function* () {
   yield extension.unload();
 
   yield BrowserTestUtils.closeWindow(window2);
+});
+
+
+add_task(function* testWindowUpdate() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      let _checkWindowPromise;
+      browser.test.onMessage.addListener(msg => {
+        if (msg == "checked-window") {
+          _checkWindowPromise.resolve();
+          _checkWindowPromise = null;
+        }
+      });
+
+      let os;
+      function checkWindow(expected) {
+        return new Promise(resolve => {
+          _checkWindowPromise = {resolve};
+          browser.test.sendMessage("check-window", expected);
+        });
+      }
+
+      function updateWindow(windowId, params, expected) {
+        return browser.windows.update(windowId, params).then(window => {
+          for (let key of Object.keys(params)) {
+            if (key == "state" && os == "mac" && params.state == "normal") {
+              // OS-X doesn't have a hard distinction between "normal" and
+              // "maximized" states.
+              browser.test.assertTrue(window.state == "normal" || window.state == "maximized",
+                                      `Expected window.state (currently ${window.state}) to be "normal" but will accept "maximized"`);
+            } else {
+              browser.test.assertEq(params[key], window[key], `Got expected value for window.${key}`);
+            }
+          }
+
+          return checkWindow(expected);
+        });
+      }
+
+      let windowId = browser.windows.WINDOW_ID_CURRENT;
+
+      browser.runtime.getPlatformInfo().then(info => { os = info.os; })
+      .then(() => updateWindow(windowId, {state: "maximized"}, {state: "STATE_MAXIMIZED"}))
+      .then(() => updateWindow(windowId, {state: "minimized"}, {state: "STATE_MINIMIZED"}))
+      .then(() => updateWindow(windowId, {state: "normal"}, {state: "STATE_NORMAL"}))
+      .then(() => updateWindow(windowId, {state: "fullscreen"}, {state: "STATE_FULLSCREEN"}))
+      .then(() => updateWindow(windowId, {state: "normal"}, {state: "STATE_NORMAL"}))
+      .then(() => {
+        browser.test.notifyPass("window-update");
+      }).catch(e => {
+        browser.test.fail(`${e} :: ${e.stack}`);
+        browser.test.notifyFail("window-update");
+      });
+    },
+  });
+
+  extension.onMessage("check-window", expected => {
+    if (expected.state != null) {
+      let {windowState} = window;
+      if (window.fullScreen) {
+        windowState = window.STATE_FULLSCREEN;
+      }
+
+      if (expected.state == "STATE_NORMAL" && AppConstants.platform == "macosx") {
+        ok(windowState == window.STATE_NORMAL || windowState == window.STATE_MAXIMIZED,
+           `Expected windowState (currently ${windowState}) to be STATE_NORMAL but will accept STATE_MAXIMIZED`);
+      } else {
+        is(windowState, window[expected.state],
+           `Expected window state to be ${expected.state}`);
+      }
+    }
+
+    extension.sendMessage("checked-window");
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish("window-update");
+  yield extension.unload();
 });
