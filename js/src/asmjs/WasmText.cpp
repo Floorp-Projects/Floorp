@@ -3927,14 +3927,18 @@ EncodeFunctionBody(Encoder& e, WasmAstFunc& func)
             return false;
     }
 
-    if (!e.writeVarU32(func.body().length()))
+    size_t bodySizeAt;
+    if (!e.writePatchableVarU32(&bodySizeAt))
         return false;
+
+    size_t beforeBody = e.currentOffset();
 
     for (WasmAstExpr* expr : func.body()) {
         if (!EncodeExpr(e, *expr))
             return false;
     }
 
+    e.patchVarU32(bodySizeAt, e.currentOffset() - beforeBody);
     return true;
 }
 

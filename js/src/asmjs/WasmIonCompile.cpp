@@ -3061,19 +3061,11 @@ wasm::IonCompileFunction(IonCompileTask* task)
         if (!f.init())
             return false;
 
-        MDefinition* last = nullptr;
-        if (uint32_t numExprs = f.readVarU32()) {
-            for (uint32_t i = 0; i < numExprs - 1; i++) {
-                if (!EmitExpr(f, &last))
-                    return false;
-            }
-
+        MDefinition* last;
+        while (!f.done()) {
             if (!EmitExpr(f, &last))
                 return false;
         }
-
-        MOZ_ASSERT(f.done());
-        MOZ_ASSERT(IsVoid(f.sig().ret()) || f.inDeadCode() || last);
 
         if (IsVoid(f.sig().ret()))
             f.returnVoid();

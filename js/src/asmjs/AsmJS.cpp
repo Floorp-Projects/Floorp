@@ -3494,7 +3494,7 @@ SetLocal(FunctionValidator& f, NumLit lit)
 }
 
 static bool
-CheckVariable(FunctionValidator& f, ParseNode* var, uint32_t* numStmts)
+CheckVariable(FunctionValidator& f, ParseNode* var)
 {
     if (!IsDefinition(var))
         return f.fail(var, "local variable names must not restate argument names");
@@ -3516,7 +3516,6 @@ CheckVariable(FunctionValidator& f, ParseNode* var, uint32_t* numStmts)
         return f.failName(var, "var '%s' initializer out of range", name);
 
     if (!lit.isZeroBits()) {
-        ++*numStmts;
         if (!SetLocal(f, lit))
             return false;
     }
@@ -3525,13 +3524,13 @@ CheckVariable(FunctionValidator& f, ParseNode* var, uint32_t* numStmts)
 }
 
 static bool
-CheckVariables(FunctionValidator& f, ParseNode** stmtIter, uint32_t* numStmts)
+CheckVariables(FunctionValidator& f, ParseNode** stmtIter)
 {
     ParseNode* stmt = *stmtIter;
 
     for (; stmt && stmt->isKind(PNK_VAR); stmt = NextNonEmptyStatement(stmt)) {
         for (ParseNode* var = VarListHead(stmt); var; var = NextNode(var)) {
-            if (!CheckVariable(f, var, numStmts))
+            if (!CheckVariable(f, var))
                 return false;
         }
     }
@@ -6732,18 +6731,11 @@ CheckFunction(ModuleValidator& m)
     if (!CheckArguments(f, &stmtIter, &args))
         return false;
 
-    uint32_t numStmts = 0;
-
-    size_t numStmtsAt;
-    if (!f.encoder().writePatchableVarU32(&numStmtsAt))
-        return false;
-
-    if (!CheckVariables(f, &stmtIter, &numStmts))
+    if (!CheckVariables(f, &stmtIter))
         return false;
 
     ParseNode* lastNonEmptyStmt = nullptr;
     for (; stmtIter; stmtIter = NextNonEmptyStatement(stmtIter)) {
-        numStmts++;
         lastNonEmptyStmt = stmtIter;
         if (!CheckStatement(f, stmtIter))
             return false;
@@ -6751,8 +6743,6 @@ CheckFunction(ModuleValidator& m)
 
     if (!CheckFinalReturn(f, lastNonEmptyStmt))
         return false;
-
-    f.encoder().patchVarU32(numStmtsAt, numStmts);
 
     ModuleValidator::Func* func = nullptr;
     if (!CheckFunctionSignature(m, fn, Sig(Move(args), f.returnedType()), FunctionName(fn), &func))

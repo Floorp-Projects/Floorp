@@ -32,7 +32,7 @@ static bool WriteValidBytes(js::wasm::Encoder& encoder, bool* passed)
 
     if (encoder.empty())
         return true;
-    if (encoder.bytecodeOffset() != 7)
+    if (encoder.currentOffset() != 7)
         return true;
     *passed = true;
     return true;
