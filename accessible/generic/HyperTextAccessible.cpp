@@ -408,15 +408,23 @@ HyperTextAccessible::OffsetToDOMPoint(int32_t aOffset)
   Accessible* child = GetChildAt(childIdx);
   int32_t innerOffset = aOffset - GetChildOffset(childIdx);
 
-  // A text leaf case. The point is inside the text node.
+  // A text leaf case.
   if (child->IsTextLeaf()) {
-    nsIContent* content = child->GetContent();
-    int32_t idx = 0;
-    if (NS_FAILED(RenderedToContentOffset(content->GetPrimaryFrame(),
-                                          innerOffset, &idx)))
-      return DOMPoint();
+    // The point is inside the text node. This is always true for any text leaf
+    // except a last child one. See assertion below.
+    if (aOffset < GetChildOffset(childIdx + 1)) {
+      nsIContent* content = child->GetContent();
+      int32_t idx = 0;
+      if (NS_FAILED(RenderedToContentOffset(content->GetPrimaryFrame(),
+                                            innerOffset, &idx)))
+        return DOMPoint();
 
-    return DOMPoint(content, idx);
+      return DOMPoint(content, idx);
+    }
+
+    // Set the DOM point right after the text node.
+    MOZ_ASSERT(static_cast<uint32_t>(aOffset) == CharacterCount());
+    innerOffset = 1;
   }
 
   // Case of embedded object. The point is either before or after the element.
