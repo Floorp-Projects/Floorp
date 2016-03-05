@@ -46,7 +46,6 @@ class OwningStringOrCanvasGradientOrCanvasPattern;
 class TextMetrics;
 class CanvasFilterChainObserver;
 class CanvasPath;
-class OwningHTMLCanvasElementOrOffscreenCanvas;
 
 extern const mozilla::gfx::Float SIGMA_MAX;
 
@@ -79,10 +78,6 @@ public:
     // corresponds to changes to the old bindings made in bug 745025
     return mCanvasElement->GetOriginalCanvas();
   }
-
-  void GetCanvas(Nullable<dom::OwningHTMLCanvasElementOrOffscreenCanvas>& aRetval);
-
-  void Commit();
 
   void Save();
   void Restore();
@@ -548,7 +543,6 @@ public:
   // return true and fills in the bound rect if element has a hit region.
   bool GetHitRegionRect(Element* aElement, nsRect& aRect) override;
 
-  static bool PrefCanvasPathEnabled(JSContext* aCx, JSObject* aObj);
 protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
                              uint32_t aWidth, uint32_t aHeight,

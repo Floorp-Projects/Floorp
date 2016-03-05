@@ -88,10 +88,7 @@ class CanvasClient2D : public CanvasClient
 public:
   CanvasClient2D(CompositableForwarder* aLayerForwarder,
                  TextureFlags aFlags)
-    : CanvasClient(aLayerForwarder, aFlags),
-      mPrevBuffer(nullptr),
-      mBufferCreated(false),
-      mUpdated(false)
+    : CanvasClient(aLayerForwarder, aFlags)
   {
   }
 
@@ -106,16 +103,12 @@ public:
   }
 
   virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) override;
-  virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) override;
-  void UpdateRenderer(gfx::IntSize aSize, Renderer& aRenderer);
 
   virtual bool AddTextureClient(TextureClient* aTexture) override
   {
     MOZ_ASSERT((mTextureFlags & aTexture->GetFlags()) == mTextureFlags);
     return CanvasClient::AddTextureClient(aTexture);
   }
-
-  virtual void Updated() override;
 
   virtual void OnDetach() override
   {
@@ -129,10 +122,7 @@ private:
                                  TextureFlags aFlags,
                                  ClientCanvasLayer* aLayer);
 
-  RefPtr<TextureClient> mPrevBuffer;
   RefPtr<TextureClient> mBuffer;
-  bool mBufferCreated;
-  bool mUpdated;
 };
 
 // Used for GL canvases where we don't need to do any readback, i.e., with a

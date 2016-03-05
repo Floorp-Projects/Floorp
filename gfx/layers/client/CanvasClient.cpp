@@ -26,7 +26,6 @@
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
 #include "TextureClientSharedSurface.h"
 #include "VRManagerChild.h"
-#include "gfxUtils.h"
 
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
@@ -71,67 +70,37 @@ CanvasClientBridge::UpdateAsync(AsyncCanvasRenderer* aRenderer)
 void
 CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
-  Renderer renderer;
-  renderer.construct<ClientCanvasLayer*>(aLayer);
-  UpdateRenderer(aSize, renderer);
-}
-
-void
-CanvasClient2D::UpdateAsync(AsyncCanvasRenderer* aRenderer)
-{
-  Renderer renderer;
-  renderer.construct<AsyncCanvasRenderer*>(aRenderer);
-  UpdateRenderer(aRenderer->GetSize(), renderer);
-}
-
-void
-CanvasClient2D::UpdateRenderer(gfx::IntSize aSize, Renderer& aRenderer)
-{
-  ClientCanvasLayer* layer = nullptr;
-  AsyncCanvasRenderer* asyncRenderer = nullptr;
-  if (aRenderer.constructed<ClientCanvasLayer*>()) {
-    layer = aRenderer.ref<ClientCanvasLayer*>();
-  } else {
-    asyncRenderer = aRenderer.ref<AsyncCanvasRenderer*>();
-  }
-
+  AutoRemoveTexture autoRemove(this);
   if (mBuffer &&
       (mBuffer->IsImmutable() || mBuffer->GetSize() != aSize)) {
-    mPrevBuffer = mBuffer;
+    autoRemove.mTexture = mBuffer;
     mBuffer = nullptr;
   }
 
-  mBufferCreated = false;
+  bool bufferCreated = false;
   if (!mBuffer) {
-    bool isOpaque;
-    gfxContentType contentType;
-    if (layer) {
-      isOpaque = (layer->GetContentFlags() & Layer::CONTENT_OPAQUE);
-    } else {
-      isOpaque = (asyncRenderer->GetOpaque() & Layer::CONTENT_OPAQUE);
-    }
-    contentType = isOpaque
-                    ? gfxContentType::COLOR
-                    : gfxContentType::COLOR_ALPHA;
-    gfx::SurfaceFormat surfaceFormat =
-      gfxPlatform::GetPlatform()->Optimal2DFormatForContent(contentType);
+    bool isOpaque = (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE);
+    gfxContentType contentType = isOpaque
+                                                ? gfxContentType::COLOR
+                                                : gfxContentType::COLOR_ALPHA;
+    gfx::SurfaceFormat surfaceFormat
+      = gfxPlatform::GetPlatform()->Optimal2DFormatForContent(contentType);
     TextureFlags flags = TextureFlags::DEFAULT;
     if (mTextureFlags & TextureFlags::ORIGIN_BOTTOM_LEFT) {
       flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
     }
 
-    flags = TextureFlags::NO_FLAGS;
-    mBuffer = CreateTextureClientForCanvas(surfaceFormat, aSize, flags, layer);
+    mBuffer = CreateTextureClientForCanvas(surfaceFormat, aSize, flags, aLayer);
     if (!mBuffer) {
       NS_WARNING("Failed to allocate the TextureClient");
       return;
     }
     MOZ_ASSERT(mBuffer->CanExposeDrawTarget());
 
-    mBufferCreated = true;
+    bufferCreated = true;
   }
 
-  mUpdated = false;
+  bool updated = false;
   {
     TextureClientAutoLock autoLock(mBuffer, OpenMode::OPEN_WRITE_ONLY);
     if (!autoLock.Succeeded()) {
@@ -139,34 +108,19 @@ CanvasClient2D::UpdateRenderer(gfx::IntSize aSize, Renderer& aRenderer)
       return;
     }
 
-    if (layer) {
-      RefPtr<DrawTarget> target = mBuffer->BorrowDrawTarget();
-      if (target) {
-        layer->UpdateTarget(target);
-      }
-    } else {
-      asyncRenderer->UpdateTarget(mBuffer);
+    RefPtr<DrawTarget> target = mBuffer->BorrowDrawTarget();
+    if (target) {
+      aLayer->UpdateTarget(target);
+      updated = true;
     }
-    mUpdated = true;
-  }
-}
-
-void
-CanvasClient2D::Updated()
-{
-  AutoRemoveTexture autoRemove(this);
-
-  if (mPrevBuffer) {
-    autoRemove.mTexture = mPrevBuffer;
-    mPrevBuffer = nullptr;
   }
 
-  if (mBufferCreated && !AddTextureClient(mBuffer)) {
+  if (bufferCreated && !AddTextureClient(mBuffer)) {
     mBuffer = nullptr;
     return;
   }
 
-  if (mUpdated) {
+  if (updated) {
     AutoTArray<CompositableForwarder::TimedTextureClient,1> textures;
     CompositableForwarder::TimedTextureClient* t = textures.AppendElement();
     t->mTextureClient = mBuffer;
@@ -184,7 +138,7 @@ CanvasClient2D::CreateTextureClientForCanvas(gfx::SurfaceFormat aFormat,
                                              TextureFlags aFlags,
                                              ClientCanvasLayer* aLayer)
 {
-  if (aLayer && aLayer->IsGLLayer()) {
+  if (aLayer->IsGLLayer()) {
     // We want a cairo backend here as we don't want to be copying into
     // an accelerated backend and we like LockBits to work. This is currently
     // the most effective way to make this work.

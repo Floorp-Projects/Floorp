@@ -112,12 +112,6 @@ InitGlobals()
 static inline bool
 ShouldReportErrors()
 {
-  // we only need to do CSS parsing off the main thread for canvas-on-workers currently,
-  // where we don't need to report any CSS parser errors
-  if (!NS_IsMainThread()) {
-    return false;
-  }
-
   if (!sConsoleService) {
     if (!InitGlobals()) {
       return false;
@@ -153,8 +147,7 @@ ErrorReporter::~ErrorReporter()
   // Schedule deferred cleanup for cached data. We want to strike a
   // balance between performance and memory usage, so we only allow
   // short-term caching.
-  if (NS_IsMainThread() && sSpecCache && sSpecCache->IsInUse() &&
-      !sSpecCache->IsPending()) {
+  if (sSpecCache && sSpecCache->IsInUse() && !sSpecCache->IsPending()) {
     if (NS_FAILED(NS_DispatchToCurrentThread(sSpecCache))) {
       // Peform the "deferred" cleanup immediately if the dispatch fails.
       sSpecCache->Run();

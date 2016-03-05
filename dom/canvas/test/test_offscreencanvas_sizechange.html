@@ -6,70 +6,29 @@
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 <body>
-<canvas id="c1" width="64" height="64"></canvas>
-<canvas id="c-ref" width="64" height="64"></canvas>
+<canvas id="c" width="64" height="64"></canvas>
 <script>
 
 SimpleTest.waitForExplicitFinish();
 
-function createCanvas() {
-  var htmlCanvas = document.createElement('canvas');
-  htmlCanvas.width = 64;
-  htmlCanvas.height = 64;
-  document.body.appendChild(htmlCanvas);
-  return htmlCanvas;
-}
-
 function runTest() {
-  var stillRunning = 0;
 
-  var startWorker = function(canvasType) {
-    stillRunning++;
-    var worker = new Worker("offscreencanvas.js");
-    ok(worker, "[" + canvasType + "]" + "Web worker successfully created");
+  var htmlCanvas = document.getElementById("c");
+  var worker = new Worker("offscreencanvas.js");
 
-    worker.onmessage = function(evt) {
-      var msg = evt.data || {};
-      if (msg.type == "test") {
-        ok(msg.result, "[" + canvasType + "]" + msg.name);
-      }
-      if (msg.type == "imagebitmapwithsize") {
-        // Fill c-ref with green color.
-        var c = document.getElementById("c-ref");
-        var ctx = c.getContext("2d");
-        c.width = msg.size;
-        c.height = msg.size;
-        ctx.rect(0, 0, c.width, c.height);
-        ctx.fillStyle = "#00FF00";
-        ctx.fill();
-
-        // The ownership of msg.bitmap should be transferred to canvas when we
-        // called transferImageBitmap. So we test if the ownership is actually
-        // transferred here.
-        var htmlCanvas = document.getElementById("c1");
-        htmlCanvas.width = msg.size;
-        htmlCanvas.height = msg.size;
-        var bitmapRenderer = htmlCanvas.getContext("bitmaprenderer");
-        bitmapRenderer.transferImageBitmap(msg.bitmap);
-        console.log("rawm = " + c.toDataURL());
-        console.log("raww = " + htmlCanvas.toDataURL());
-        ok(c.toDataURL() == htmlCanvas.toDataURL(), "[" + canvasType + "]" +
-           "toDataURL should return a " + msg.size + "x" + msg.size +
-           " green square");
-      }
-      if (msg.type == "finish") {
-        worker.terminate();
-        if (--stillRunning == 0) {
-          SimpleTest.finish();
-        }
-      }
+  worker.onmessage = function(evt) {
+    var msg = evt.data || {};
+    if (msg.type == "test") {
+      ok(msg.result, msg.name);
     }
-
-    worker.postMessage({canvasType: canvasType, testType: 'changesize'});
+    if (msg.type == "finish") {
+      worker.terminate();
+      SimpleTest.finish();
+    }
   }
 
-  startWorker('2d');
-  startWorker('webgl');
+  var offscreenCanvas = htmlCanvas.transferControlToOffscreen();
+  worker.postMessage({test: 'webgl_changesize', canvas: offscreenCanvas}, [offscreenCanvas]);
 }
 
 SpecialPowers.pushPrefEnv({'set': [
