@@ -1262,25 +1262,31 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
             return false;
     }
 
-    const uint8_t* bodyBegin = d.currentPosition();
-
     FunctionDecoder f(cx, d, mg, fg, funcIndex);
 
-    uint32_t numExprs;
-    if (!d.readVarU32(&numExprs))
-        return Fail(cx, d, "expected number of function body expressions");
+    uint32_t numBytes;
+    if (!d.readVarU32(&numBytes))
+        return Fail(cx, d, "expected number of function body bytes");
+
+    if (d.bytesRemain() < numBytes)
+        return Fail(cx, d, "function body length too big");
+
+    const uint8_t* bodyBegin = d.currentPosition();
+    const uint8_t* bodyEnd = bodyBegin + numBytes;
 
     ExprType type = ExprType::Void;
 
-    for (size_t i = 0; i < numExprs; i++) {
+    while (d.currentPosition() < bodyEnd) {
         if (!DecodeExpr(f, &type))
             return false;
     }
 
+    if (d.currentPosition() != bodyEnd)
+        return Fail(cx, d, "function body length mismatch");
+
     if (!CheckType(f, type, f.ret()))
         return false;
 
-    const uint8_t* bodyEnd = d.currentPosition();
     uintptr_t bodyLength = bodyEnd - bodyBegin;
     if (!fg.bytecode().resize(bodyLength))
         return false;
