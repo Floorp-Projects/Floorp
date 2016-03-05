@@ -263,6 +263,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineGetNextMapEntryForIterator(callInfo);
 
       // ArrayBuffer intrinsics.
+      case InlinableNative::IntrinsicArrayBufferByteLength:
+        return inlineArrayBufferByteLength(callInfo);
       case InlinableNative::IntrinsicPossiblyWrappedArrayBufferByteLength:
         return inlinePossiblyWrappedArrayBufferByteLength(callInfo);
 
@@ -2246,6 +2248,25 @@ IsArrayBufferObject(CompilerConstraintList* constraints, MDefinition* def)
         return false;
 
     return types->getKnownClass(constraints) == &ArrayBufferObject::class_;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineArrayBufferByteLength(CallInfo& callInfo)
+{
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
+
+    MDefinition* objArg = callInfo.getArg(0);
+    if (objArg->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+    if (getInlineReturnType() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    MInstruction* ins = addArrayBufferByteLength(objArg);
+    current->push(ins);
+
+    callInfo.setImplicitlyUsedUnchecked();
+    return InliningStatus_Inlined;
 }
 
 IonBuilder::InliningStatus

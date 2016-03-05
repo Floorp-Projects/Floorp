@@ -2168,7 +2168,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IsSharedArrayBuffer",
           intrinsic_IsInstanceOfBuiltin<SharedArrayBufferObject>,       1,0),
 
-    JS_FN("ArrayBufferByteLength",   intrinsic_ArrayBufferByteLength,   1,0),
+    JS_INLINABLE_FN("ArrayBufferByteLength",   intrinsic_ArrayBufferByteLength, 1,0,
+                    IntrinsicArrayBufferByteLength),
     JS_INLINABLE_FN("PossiblyWrappedArrayBufferByteLength", intrinsic_PossiblyWrappedArrayBufferByteLength, 1,0,
                     IntrinsicPossiblyWrappedArrayBufferByteLength),
     JS_FN("ArrayBufferCopyData",     intrinsic_ArrayBufferCopyData,     4,0),
