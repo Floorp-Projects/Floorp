@@ -1571,15 +1571,20 @@ SpecialPowersAPI.prototype = {
       getService(Components.interfaces.nsICategoryManager).
       deleteCategoryEntry(category, entry, persists);
   },
-
   openDialog: function(win, args) {
     return win.openDialog.apply(win, args);
+  },
+  // This is a blocking call which creates and spins a native event loop
+  spinEventLoop: function(win) {
+    // simply do a sync XHR back to our windows location.
+    var syncXHR = new win.XMLHttpRequest();
+    syncXHR.open('GET', win.location, false);
+    syncXHR.send();
   },
 
   // :jdm gets credit for this.  ex: getPrivilegedProps(window, 'location.href');
   getPrivilegedProps: function(obj, props) {
     var parts = props.split('.');
-
     for (var i = 0; i < parts.length; i++) {
       var p = parts[i];
       if (obj[p]) {
