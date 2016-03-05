@@ -4319,8 +4319,10 @@ nsDisplayOpacity::WriteDebugInfo(std::stringstream& aStream)
 
 nsDisplayMixBlendMode::nsDisplayMixBlendMode(nsDisplayListBuilder* aBuilder,
                                              nsIFrame* aFrame, nsDisplayList* aList,
+                                             uint8_t aBlendMode,
                                              const DisplayItemScrollClip* aScrollClip)
   : nsDisplayWrapList(aBuilder, aFrame, aList, aScrollClip)
+  , mBlendMode(aBlendMode)
 {
   MOZ_COUNT_CTOR(nsDisplayMixBlendMode);
 }
@@ -4361,7 +4363,7 @@ nsDisplayMixBlendMode::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  container->SetMixBlendMode(nsCSSRendering::GetGFXBlendMode(mFrame->StyleDisplay()->mMixBlendMode));
+  container->SetMixBlendMode(nsCSSRendering::GetGFXBlendMode(mBlendMode));
 
   return container.forget();
 }
