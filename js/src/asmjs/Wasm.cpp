@@ -86,19 +86,21 @@ class FunctionDecoder
     ModuleGenerator& mg_;
     FunctionGenerator& fg_;
     uint32_t funcIndex_;
+    const ValTypeVector& locals_;
     Vector<ExprType> blocks_;
 
   public:
     FunctionDecoder(JSContext* cx, Decoder& d, ModuleGenerator& mg, FunctionGenerator& fg,
-                    uint32_t funcIndex)
-      : cx_(cx), d_(d), mg_(mg), fg_(fg), funcIndex_(funcIndex), blocks_(cx)
+                    uint32_t funcIndex, const ValTypeVector& locals)
+      : cx_(cx), d_(d), mg_(mg), fg_(fg), funcIndex_(funcIndex), locals_(locals), blocks_(cx)
     {}
     JSContext* cx() const { return cx_; }
     Decoder& d() const { return d_; }
     ModuleGenerator& mg() const { return mg_; }
     FunctionGenerator& fg() const { return fg_; }
     uint32_t funcIndex() const { return funcIndex_; }
-    ExprType ret() const { return mg_.funcSig(funcIndex_).ret(); }
+    const ValTypeVector& locals() const { return locals_; }
+    const DeclaredSig& sig() const { return mg_.funcSig(funcIndex_); }
 
     bool fail(const char* str) {
         return Fail(cx_, d_, str);
@@ -329,10 +331,10 @@ DecodeGetLocal(FunctionDecoder& f, ExprType* type)
     if (!f.d().readVarU32(&localIndex))
         return f.fail("unable to read get_local index");
 
-    if (localIndex >= f.fg().locals().length())
+    if (localIndex >= f.locals().length())
         return f.fail("get_local index out of range");
 
-    *type = ToExprType(f.fg().locals()[localIndex]);
+    *type = ToExprType(f.locals()[localIndex]);
     return true;
 }
 
@@ -343,10 +345,10 @@ DecodeSetLocal(FunctionDecoder& f, ExprType* type)
     if (!f.d().readVarU32(&localIndex))
         return f.fail("unable to read set_local index");
 
-    if (localIndex >= f.fg().locals().length())
+    if (localIndex >= f.locals().length())
         return f.fail("set_local index out of range");
 
-    *type = ToExprType(f.fg().locals()[localIndex]);
+    *type = ToExprType(f.locals()[localIndex]);
 
     ExprType rhsType;
     if (!DecodeExpr(f, &rhsType))
@@ -605,12 +607,12 @@ DecodeBrTable(FunctionDecoder& f, ExprType* type)
 static bool
 DecodeReturn(FunctionDecoder& f, ExprType* type)
 {
-    if (f.ret() != ExprType::Void) {
+    if (f.sig().ret() != ExprType::Void) {
         ExprType actual;
         if (!DecodeExpr(f, &actual))
             return false;
 
-        if (!CheckType(f, actual, f.ret()))
+        if (!CheckType(f, actual, f.sig().ret()))
             return false;
     }
 
@@ -1240,15 +1242,23 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
 {
     int64_t before = PRMJ_Now();
 
+    uint32_t bodySize;
+    if (!d.readVarU32(&bodySize))
+        return Fail(cx, d, "expected number of function body bytes");
+
+    if (d.bytesRemain() < bodySize)
+        return Fail(cx, d, "function body length too big");
+
+    const uint8_t* bodyBegin = d.currentPosition();
+    const uint8_t* bodyEnd = bodyBegin + bodySize;
+
     FunctionGenerator fg;
     if (!mg.startFuncDef(d.currentOffset(), &fg))
         return false;
 
-    const DeclaredSig& sig = mg.funcSig(funcIndex);
-    for (ValType type : sig.args()) {
-        if (!fg.addLocal(type))
-            return false;
-    }
+    ValTypeVector locals;
+    if (!locals.appendAll(mg.funcSig(funcIndex).args()))
+        return false;
 
     uint32_t numVars;
     if (!d.readVarU32(&numVars))
@@ -1258,21 +1268,11 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
         ValType type;
         if (!DecodeValType(cx, d, &type))
             return false;
-        if (!fg.addLocal(type))
+        if (!locals.append(type))
             return false;
     }
 
-    FunctionDecoder f(cx, d, mg, fg, funcIndex);
-
-    uint32_t numBytes;
-    if (!d.readVarU32(&numBytes))
-        return Fail(cx, d, "expected number of function body bytes");
-
-    if (d.bytesRemain() < numBytes)
-        return Fail(cx, d, "function body length too big");
-
-    const uint8_t* bodyBegin = d.currentPosition();
-    const uint8_t* bodyEnd = bodyBegin + numBytes;
+    FunctionDecoder f(cx, d, mg, fg, funcIndex, locals);
 
     ExprType type = ExprType::Void;
 
@@ -1281,17 +1281,16 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
             return false;
     }
 
+    if (!CheckType(f, type, f.sig().ret()))
+        return false;
+
     if (d.currentPosition() != bodyEnd)
         return Fail(cx, d, "function body length mismatch");
 
-    if (!CheckType(f, type, f.ret()))
+    if (!fg.bytecode().resize(bodySize))
         return false;
 
-    uintptr_t bodyLength = bodyEnd - bodyBegin;
-    if (!fg.bytecode().resize(bodyLength))
-        return false;
-
-    memcpy(fg.bytecode().begin(), bodyBegin, bodyLength);
+    memcpy(fg.bytecode().begin(), bodyBegin, bodySize);
 
     int64_t after = PRMJ_Now();
     unsigned generateTime = (after - before) / PRMJ_USEC_PER_MSEC;
