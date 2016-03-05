@@ -2148,7 +2148,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   const DisplayItemScrollClip* containerItemScrollClip =
     aBuilder->ClipState().CurrentAncestorScrollClipForStackingContextContents();
 
-  /* If adding both a nsDisplayBlendContainer and a nsDisplayMixBlendMode to the
+  /* If adding both a nsDisplayBlendContainer and a nsDisplayBlendMode to the
    * same list, the nsDisplayBlendContainer should be added first. This only
    * happens when the element creating this stacking context has mix-blend-mode
    * and also contains a child which has mix-blend-mode.
@@ -2313,9 +2313,9 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     DisplayListClipState::AutoSaveRestore mixBlendClipState(aBuilder);
     mixBlendClipState.Clear();
     resultList.AppendNewToTop(
-        new (aBuilder) nsDisplayMixBlendMode(aBuilder, this, &resultList,
-                                             disp->mMixBlendMode,
-                                             containerItemScrollClip));
+        new (aBuilder) nsDisplayBlendMode(aBuilder, this, &resultList,
+                                          disp->mMixBlendMode,
+                                          containerItemScrollClip));
   }
 
   CreateOwnLayerIfNeeded(aBuilder, &resultList);
