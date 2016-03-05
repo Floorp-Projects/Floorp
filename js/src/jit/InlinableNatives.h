@@ -110,6 +110,8 @@
                                     \
     _(IntrinsicGetNextMapEntryForIterator) \
                                     \
+    _(IntrinsicPossiblyWrappedArrayBufferByteLength) \
+                                    \
     _(IntrinsicIsTypedArray)        \
     _(IntrinsicIsPossiblyWrappedTypedArray) \
     _(IntrinsicTypedArrayLength)    \
