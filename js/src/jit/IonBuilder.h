@@ -623,6 +623,8 @@ class IonBuilder
 
     enum BoundsChecking { DoBoundsCheck, SkipBoundsCheck };
 
+    MInstruction* addArrayBufferByteLength(MDefinition* obj);
+
     // Add instructions to compute a typed array's length and data.  Also
     // optionally convert |*index| into a bounds-checked definition, if
     // requested.
@@ -842,6 +844,9 @@ class IonBuilder
 
     // Map intrinsics.
     InliningStatus inlineGetNextMapEntryForIterator(CallInfo& callInfo);
+
+    // ArrayBuffer intrinsics.
+    InliningStatus inlinePossiblyWrappedArrayBufferByteLength(CallInfo& callInfo);
 
     // TypedArray intrinsics.
     enum WrappingBehavior { AllowWrappedTypedArrays, RejectWrappedTypedArrays };
