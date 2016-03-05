@@ -182,14 +182,14 @@ class AllChildrenIterator : private FlattenedChildIterator
 public:
   AllChildrenIterator(nsIContent* aNode, uint32_t aFlags, bool aStartAtBeginning = true) :
     FlattenedChildIterator(aNode, aFlags, aStartAtBeginning),
-    mOriginalContent(aNode), mFlags(aFlags),
-    mPhase(eNeedBeforeKid) {}
+    mOriginalContent(aNode), mAnonKidsIdx(aStartAtBeginning ? UINT32_MAX : 0),
+    mFlags(aFlags), mPhase(aStartAtBeginning ? eAtBegin : eAtEnd) { }
 
   AllChildrenIterator(AllChildrenIterator&& aOther)
     : FlattenedChildIterator(Move(aOther)),
       mOriginalContent(aOther.mOriginalContent),
-      mAnonKids(Move(aOther.mAnonKids)), mFlags(aOther.mFlags),
-      mPhase(aOther.mPhase)
+      mAnonKids(Move(aOther.mAnonKids)), mAnonKidsIdx(aOther.mAnonKidsIdx),
+      mFlags(aOther.mFlags), mPhase(aOther.mPhase)
 #ifdef DEBUG
       , mMutationGuard(aOther.mMutationGuard)
 #endif
@@ -202,20 +202,31 @@ public:
   bool Seek(nsIContent* aChildToFind);
 
   nsIContent* GetNextChild();
+  nsIContent* GetPreviousChild();
   nsIContent* Parent() const { return mOriginalContent; }
 
 private:
   enum IteratorPhase
   {
-    eNeedBeforeKid,
-    eNeedExplicitKids,
-    eNeedAnonKids,
-    eNeedAfterKid,
-    eDone
+    eAtBegin,
+    eAtBeforeKid,
+    eAtExplicitKids,
+    eAtAnonKids,
+    eAtAfterKid,
+    eAtEnd
   };
 
   nsIContent* mOriginalContent;
+
+  // mAnonKids is an array of native anonymous children, mAnonKidsIdx is index
+  // in the array. If mAnonKidsIdx < mAnonKids.Length() and mPhase is
+  // eAtAnonKids then the iterator points at a child at mAnonKidsIdx index. If
+  // mAnonKidsIdx == mAnonKids.Length() then the iterator is somewhere after
+  // the last native anon child. If mAnonKidsIdx == UINT32_MAX then the iterator
+  // is somewhere before the first native anon child.
   nsTArray<nsIContent*> mAnonKids;
+  uint32_t mAnonKidsIdx;
+
   uint32_t mFlags;
   IteratorPhase mPhase;
 #ifdef DEBUG
