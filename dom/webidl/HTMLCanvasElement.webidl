@@ -63,8 +63,6 @@ interface MozCanvasPrintState
   void done();
 };
 
-typedef (HTMLCanvasElement or OffscreenCanvas) CanvasObj;
-
 callback PrintCallback = void(MozCanvasPrintState ctx);
 
 callback FileCallback = void(Blob file);

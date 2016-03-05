@@ -97,7 +97,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
-#include "mozilla/StaticMutex.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
@@ -107,7 +106,6 @@
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/TextMetrics.h"
 #include "mozilla/dom/SVGMatrix.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/FloatingPoint.h"
 #include "nsGlobalWindow.h"
 #include "GLContext.h"
@@ -163,7 +161,6 @@ const Float SIGMA_MAX = 100;
 
 /* Memory reporter stuff */
 static int64_t gCanvasAzureMemoryUsed = 0;
-static StaticMutex sMemoryReportMutex;
 
 // This is KIND_OTHER because it's not always clear where in memory the pixels
 // of a canvas are stored.  Furthermore, this memory will be tracked by the
@@ -172,7 +169,7 @@ class Canvas2dPixelsReporter final : public nsIMemoryReporter
 {
   ~Canvas2dPixelsReporter() {}
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override
@@ -686,9 +683,7 @@ CanvasGradient::AddColorStop(float aOffset, const nsAString& aColorstr, ErrorRes
   }
 
   nscolor color;
-  nsCOMPtr<nsIPresShell> presShell = NS_IsMainThread() && mContext
-                                     ? mContext->GetPresShell()
-                                     : nullptr;
+  nsCOMPtr<nsIPresShell> presShell = mContext ? mContext->GetPresShell() : nullptr;
   if (!nsRuleNode::ComputeColor(value, presShell ? presShell->GetPresContext() : nullptr,
                                 nullptr, color)) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
@@ -886,7 +881,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CanvasRenderingContext2D)
   // since we're logically destructed at this point.
   CanvasRenderingContext2D::RemoveDemotableContext(tmp);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCanvasElement)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOffscreenCanvas)
   for (uint32_t i = 0; i < tmp->mStyleStack.Length(); i++) {
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].patternStyles[Style::STROKE]);
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].patternStyles[Style::FILL]);
@@ -904,7 +898,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CanvasRenderingContext2D)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCanvasElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOffscreenCanvas)
   for (uint32_t i = 0; i < tmp->mStyleStack.Length(); i++) {
     ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].patternStyles[Style::STROKE], "Stroke CanvasPattern");
     ImplCycleCollectionTraverse(cb, tmp->mStyleStack[i].patternStyles[Style::FILL], "Fill CanvasPattern");
@@ -981,8 +974,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
   sNumLivingContexts++;
 
   // The default is to use OpenGL mode
-  if (NS_IsMainThread() &&
-      gfxPlatform::GetPlatform()->UseAcceleratedCanvas()) {
+  if (gfxPlatform::GetPlatform()->UseAcceleratedCanvas()) {
     mDrawObserver = new CanvasDrawObserver(this);
   } else {
     mRenderingMode = RenderingMode::SoftwareBackendMode;
@@ -1023,7 +1015,7 @@ bool
 CanvasRenderingContext2D::ParseColor(const nsAString& aString,
                                      nscolor* aColor)
 {
-  nsIDocument* document = NS_IsMainThread() && mCanvasElement
+  nsIDocument* document = mCanvasElement
                           ? mCanvasElement->OwnerDoc()
                           : nullptr;
 
@@ -1040,11 +1032,8 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
     *aColor = value.GetColorValue();
   } else {
     // otherwise resolve it
-    nsCOMPtr<nsIPresShell> presShell = NS_IsMainThread()
-                                      ? GetPresShell()
-                                      : nullptr;
-
-    RefPtr<nsStyleContext> parentContext = nullptr;
+    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+    RefPtr<nsStyleContext> parentContext;
     if (mCanvasElement && mCanvasElement->IsInDoc()) {
       // Inherit from the canvas element.
       parentContext = nsComputedDOMStyle::GetStyleContextForElement(
@@ -1068,7 +1057,6 @@ CanvasRenderingContext2D::Reset()
   // only do this for non-docshell created contexts,
   // since those are the ones that we created a surface for
   if (mTarget && IsTargetValid() && !mDocShell) {
-    StaticMutexAutoLock lock(sMemoryReportMutex);
     gCanvasAzureMemoryUsed -= mWidth * mHeight * 4;
   }
 
@@ -1150,16 +1138,14 @@ CanvasRenderingContext2D::Redraw()
 
   mIsEntireFrameInvalid = true;
 
-  if (NS_IsMainThread()) {
-    if (!mCanvasElement) {
-      NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
-      return NS_OK;
-    }
-
-    nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
-
-    mCanvasElement->InvalidateCanvasContent(nullptr);
+  if (!mCanvasElement) {
+    NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
+    return NS_OK;
   }
+
+  nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
+
+  mCanvasElement->InvalidateCanvasContent(nullptr);
 
   return NS_OK;
 }
@@ -1181,16 +1167,14 @@ CanvasRenderingContext2D::Redraw(const gfx::Rect& aR)
     return;
   }
 
-  if (NS_IsMainThread()) {
-    if (!mCanvasElement) {
-      NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
-      return;
-    }
-
-    nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
-
-    mCanvasElement->InvalidateCanvasContent(&aR);
+  if (!mCanvasElement) {
+    NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
+    return;
   }
+
+  nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
+
+  mCanvasElement->InvalidateCanvasContent(&aR);
 }
 
 void
@@ -1433,35 +1417,32 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
         nsContentUtils::PersistentLayerManagerForDocument(ownerDoc);
     }
 
-    if (NS_IsMainThread() &&
-        mode == RenderingMode::OpenGLBackendMode &&
-        gfxPlatform::GetPlatform()->UseAcceleratedCanvas() &&
-        CheckSizeForSkiaGL(size)) {
-      DemoteOldestContextIfNecessary();
-      mBufferProvider = nullptr;
+    if (layerManager) {
+      if (mode == RenderingMode::OpenGLBackendMode &&
+          gfxPlatform::GetPlatform()->UseAcceleratedCanvas() &&
+          CheckSizeForSkiaGL(size)) {
+        DemoteOldestContextIfNecessary();
+        mBufferProvider = nullptr;
 
 #if USE_SKIA_GPU
-      SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
+        SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
 
-      if (glue && glue->GetGrContext() && glue->GetGLContext()) {
-        mTarget = Factory::CreateDrawTargetSkiaWithGrContext(glue->GetGrContext(), size, format);
-        if (mTarget) {
-          AddDemotableContext(this);
-          mBufferProvider = new PersistentBufferProviderBasic(mTarget);
-          mIsSkiaGL = true;
-        } else {
-          gfxCriticalNote << "Failed to create a SkiaGL DrawTarget, falling back to software\n";
-          mode = RenderingMode::SoftwareBackendMode;
+        if (glue && glue->GetGrContext() && glue->GetGLContext()) {
+          mTarget = Factory::CreateDrawTargetSkiaWithGrContext(glue->GetGrContext(), size, format);
+          if (mTarget) {
+            AddDemotableContext(this);
+            mBufferProvider = new PersistentBufferProviderBasic(mTarget);
+            mIsSkiaGL = true;
+          } else {
+            gfxCriticalNote << "Failed to create a SkiaGL DrawTarget, falling back to software\n";
+            mode = RenderingMode::SoftwareBackendMode;
+          }
         }
-      }
 #endif
-    }
+      }
 
-    if (!mBufferProvider) {
-      if (layerManager) {
+      if (!mBufferProvider) {
         mBufferProvider = layerManager->CreatePersistentBufferProvider(size, format);
-      } else {
-        mBufferProvider = new PersistentBufferProviderBasic(size, format, gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
       }
     }
 
@@ -1481,12 +1462,7 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
     }
 
     gCanvasAzureMemoryUsed += mWidth * mHeight * 4;
-    JSContext* context;
-    if (NS_IsMainThread()) {
-      context = nsContentUtils::GetCurrentJSContext();
-    } else {
-      context = nsContentUtils::GetDefaultJSContextForThread();
-    }
+    JSContext* context = nsContentUtils::GetCurrentJSContext();
     if (context) {
       JS_updateMallocCounter(context, mWidth * mHeight * 4);
     }
@@ -3478,43 +3454,6 @@ CanvasRenderingContext2D::GetHitRegionRect(Element* aElement, nsRect& aRect)
   }
 
   return false;
-}
-
-/* static */ bool
-CanvasRenderingContext2D::PrefCanvasPathEnabled(JSContext* aCx, JSObject* aObj)
-{
-  if (NS_IsMainThread()) {
-   return Preferences::GetBool("canvas.path.enabled");
-  } else {
-   workers::WorkerPrivate* workerPrivate = workers::GetWorkerPrivateFromContext(aCx);
-   MOZ_ASSERT(workerPrivate);
-   return (workerPrivate->CanvasPathEnabled() && workerPrivate->OffscreenCanvasEnabled());
-  }
-}
-
-void
-CanvasRenderingContext2D::GetCanvas(Nullable<dom::OwningHTMLCanvasElementOrOffscreenCanvas>& aRetval)
-{
-    if (mCanvasElement) {
-      MOZ_RELEASE_ASSERT(!mOffscreenCanvas);
-      if (mCanvasElement->IsInNativeAnonymousSubtree()) {
-        aRetval.SetNull();
-      } else {
-        aRetval.SetValue().SetAsHTMLCanvasElement() = mCanvasElement;
-      }
-    } else if (mOffscreenCanvas) {
-      aRetval.SetValue().SetAsOffscreenCanvas() = mOffscreenCanvas;
-    } else {
-      aRetval.SetNull();
-    }
-}
-
-void
-CanvasRenderingContext2D::Commit()
-{
-    if (mOffscreenCanvas) {
-      mOffscreenCanvas->CommitFrameToCompositor();
-    }
 }
 
 /**

@@ -11,7 +11,6 @@
 #include "GLReadTexImageHelper.h"
 #include "GLScreenBuffer.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/CanvasClient.h"
 #include "mozilla/layers/TextureClient.h"
@@ -19,14 +18,8 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
-#include "PersistentBufferProvider.h"
 
 namespace mozilla {
-
-namespace dom {
-class CanvasRenderingContext2D;
-}
-
 namespace layers {
 
 AsyncCanvasRenderer::AsyncCanvasRenderer()
@@ -241,85 +234,32 @@ AsyncCanvasRenderer::UpdateTarget()
   return surface.forget();
 }
 
-void
-AsyncCanvasRenderer::UpdateTarget(TextureClient* aTexture)
-{
-  if (!mContext) {
-    return;
-  }
-
-  mBufferProvider = nullptr;
-
-  dom::CanvasRenderingContext2D* context2D = static_cast<dom::CanvasRenderingContext2D*>(mContext);
-  if (!context2D) {
-    return;
-  }
-
-  mBufferProvider = context2D->GetBufferProvider(nullptr);
-  if (!mBufferProvider) {
-    return;
-  }
-
-  RefPtr<gfx::SourceSurface> surface = mBufferProvider->GetSnapshot();
-
-  if (surface) {
-    NS_ASSERTION(surface, "Must have surface to draw!");
-    aTexture->UpdateFromSurface(surface);
-    surface = nullptr;
-  }
-}
-
 already_AddRefed<gfx::DataSourceSurface>
 AsyncCanvasRenderer::GetSurface()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mMutex);
+  if (mSurfaceForBasic) {
+    // Since SourceSurface isn't thread-safe, we need copy to a new SourceSurface.
+    RefPtr<gfx::DataSourceSurface> result =
+      gfx::Factory::CreateDataSourceSurfaceWithStride(mSurfaceForBasic->GetSize(),
+                                                      mSurfaceForBasic->GetFormat(),
+                                                      mSurfaceForBasic->Stride());
 
-  if (!mContext) {
-    return nullptr;
-  }
+    gfx::DataSourceSurface::ScopedMap srcMap(mSurfaceForBasic, gfx::DataSourceSurface::READ);
+    gfx::DataSourceSurface::ScopedMap dstMap(result, gfx::DataSourceSurface::WRITE);
 
-  if (mGLContext) {
-    if (mSurfaceForBasic) {
-      // Since SourceSurface isn't thread-safe, we need copy to a new SourceSurface.
-      RefPtr<gfx::DataSourceSurface> result =
-        gfx::Factory::CreateDataSourceSurfaceWithStride(mSurfaceForBasic->GetSize(),
-                                                        mSurfaceForBasic->GetFormat(),
-                                                        mSurfaceForBasic->Stride());
-
-      gfx::DataSourceSurface::ScopedMap srcMap(mSurfaceForBasic, gfx::DataSourceSurface::READ);
-      gfx::DataSourceSurface::ScopedMap dstMap(result, gfx::DataSourceSurface::WRITE);
-
-      if (NS_WARN_IF(!srcMap.IsMapped()) ||
-          NS_WARN_IF(!dstMap.IsMapped())) {
-        return nullptr;
-      }
-
-      memcpy(dstMap.GetData(),
-             srcMap.GetData(),
-             srcMap.GetStride() * mSurfaceForBasic->GetSize().height);
-      return result.forget();
-    } else {
-      return UpdateTarget();
+    if (NS_WARN_IF(!srcMap.IsMapped()) ||
+        NS_WARN_IF(!dstMap.IsMapped())) {
+      return nullptr;
     }
+
+    memcpy(dstMap.GetData(),
+           srcMap.GetData(),
+           srcMap.GetStride() * mSurfaceForBasic->GetSize().height);
+    return result.forget();
   } else {
-    dom::CanvasRenderingContext2D* context2D = static_cast<dom::CanvasRenderingContext2D*>(mContext);
-    if (!context2D) {
-      return nullptr;
-    }
-
-    mBufferProvider = context2D->GetBufferProvider(nullptr);
-
-    if (!mBufferProvider) {
-      return nullptr;
-    }
-
-    RefPtr<gfx::SourceSurface> sourceSurface = mBufferProvider->GetSnapshot();
-
-    if (!sourceSurface) {
-      return nullptr;
-    }
-    return sourceSurface->GetDataSurface();
+    return UpdateTarget();
   }
 }
 
@@ -334,10 +274,8 @@ AsyncCanvasRenderer::GetInputStream(const char *aMimeType,
     return NS_ERROR_FAILURE;
   }
 
-  // Only handle y flip in webgl.
-  RefPtr<gfx::DataSourceSurface> dataSurf = mGLContext
-                                            ? gl::YInvertImageSurface(surface)
-                                            : surface;
+  // Handle y flip.
+  RefPtr<gfx::DataSourceSurface> dataSurf = gl::YInvertImageSurface(surface);
 
   return gfxUtils::GetInputStream(dataSurf, false, aMimeType, aEncoderOptions, aStream);
 }

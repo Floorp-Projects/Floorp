@@ -9,9 +9,6 @@
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsString.h"                   // for nsAutoCString
 
-namespace mozilla {
-namespace layers {
-
 using namespace mozilla::layers;
 
 void
@@ -79,6 +76,3 @@ EffectVRDistortion::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   aStream << nsPrintfCString("EffectVRDistortion (0x%p) [hmd=%p] [render-target=%p] [texture=%p]",
                              this, mHMD.get(), mRenderTarget.get(), mTexture).get();
 }
-
-} // namespace layers
-} // namespace mozilla

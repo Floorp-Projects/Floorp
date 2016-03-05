@@ -31,15 +31,11 @@ typedef (HTMLImageElement or
          HTMLVideoElement or
          ImageBitmap) CanvasImageSource;
 
-[Exposed=(Window,Worker),
- Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface CanvasRenderingContext2D {
 
   // back-reference to the canvas.  Might be null if we're not
   // associated with a canvas.
-  readonly attribute CanvasObj? canvas;
-
-  void commit();
+  readonly attribute HTMLCanvasElement? canvas;
 
   // state
   void save(); // push state on state stack
@@ -65,9 +61,6 @@ interface CanvasRenderingContext2D {
            [Throws]
            attribute DOMString globalCompositeOperation; // (default source-over)
 
-  // drawing images
-// NOT IMPLEMENTED           attribute boolean imageSmoothingEnabled; // (default true)
-
   // colors and styles (see also the CanvasDrawingStyles interface)
            attribute (DOMString or CanvasGradient or CanvasPattern) strokeStyle; // (default black)
            attribute (DOMString or CanvasGradient or CanvasPattern) fillStyle; // (default black)
@@ -87,6 +80,9 @@ interface CanvasRenderingContext2D {
            attribute double shadowBlur; // (default 0)
            attribute DOMString shadowColor; // (default transparent black)
 
+  [Pref="canvas.filters.enabled", SetterThrows]
+  attribute DOMString filter; // (default empty string = no filter)
+
   // rects
   [LenientFloat]
   void clearRect(double x, double y, double w, double h);
@@ -101,7 +97,10 @@ interface CanvasRenderingContext2D {
   void fill(Path2D path, optional CanvasWindingRule winding = "nonzero");
   void stroke();
   void stroke(Path2D path);
-  [Exposed=Window, Pref="canvas.focusring.enabled", Throws] void drawFocusIfNeeded(Element element);
+  [Pref="canvas.focusring.enabled", Throws] void drawFocusIfNeeded(Element element);
+// NOT IMPLEMENTED  void drawSystemFocusRing(Path path, HTMLElement element);
+  [Pref="canvas.customfocusring.enabled"] boolean drawCustomFocusRing(Element element);
+// NOT IMPLEMENTED  boolean drawCustomFocusRing(Path path, HTMLElement element);
 // NOT IMPLEMENTED  void scrollPathIntoView();
 // NOT IMPLEMENTED  void scrollPathIntoView(Path path);
   void clip(optional CanvasWindingRule winding = "nonzero");
@@ -113,12 +112,15 @@ interface CanvasRenderingContext2D {
   boolean isPointInStroke(Path2D path, unrestricted double x, unrestricted double y);
 
   // text (see also the CanvasDrawingStyles interface)
-  [Exposed=Window, Throws, LenientFloat]
+  [Throws, LenientFloat]
   void fillText(DOMString text, double x, double y, optional double maxWidth);
-  [Exposed=Window, Throws, LenientFloat]
+  [Throws, LenientFloat]
   void strokeText(DOMString text, double x, double y, optional double maxWidth);
-  [Exposed=Window, NewObject, Throws]
+  [NewObject, Throws]
   TextMetrics measureText(DOMString text);
+
+  // drawing images
+// NOT IMPLEMENTED           attribute boolean imageSmoothingEnabled; // (default true)
 
   [Throws, LenientFloat]
   void drawImage(CanvasImageSource image, double dx, double dy);
@@ -128,9 +130,9 @@ interface CanvasRenderingContext2D {
   void drawImage(CanvasImageSource image, double sx, double sy, double sw, double sh, double dx, double dy, double dw, double dh);
 
   // hit regions
-  [Exposed=Window, Pref="canvas.hitregions.enabled", Throws] void addHitRegion(optional HitRegionOptions options);
-  [Exposed=Window, Pref="canvas.hitregions.enabled"] void removeHitRegion(DOMString id);
-  [Exposed=Window, Pref="canvas.hitregions.enabled"] void clearHitRegions();
+  [Pref="canvas.hitregions.enabled", Throws] void addHitRegion(optional HitRegionOptions options);
+  [Pref="canvas.hitregions.enabled"] void removeHitRegion(DOMString id);
+  [Pref="canvas.hitregions.enabled"] void clearHitRegions();
 
   // pixel manipulation
   [NewObject, Throws]
@@ -143,27 +145,6 @@ interface CanvasRenderingContext2D {
   void putImageData(ImageData imagedata, double dx, double dy);
   [Throws]
   void putImageData(ImageData imagedata, double dx, double dy, double dirtyX, double dirtyY, double dirtyWidth, double dirtyHeight);
-};
-CanvasRenderingContext2D implements CanvasDrawingStyles;
-CanvasRenderingContext2D implements CanvasPathMethods;
-
-[Exposed=(Window,Worker)]
-partial interface CanvasRenderingContext2D {
-  [Throws]
-  attribute any mozDash; /* default |null| */
-
-  [LenientFloat]
-  attribute double mozDashOffset; /* default 0.0 */
-};
-
-[Exposed=Window]
-partial interface CanvasRenderingContext2D {
-  [Pref="canvas.filters.enabled", SetterThrows]
-  attribute DOMString filter; // (default empty string = no filter)
-
-// NOT IMPLEMENTED  void drawSystemFocusRing(Path path, HTMLElement element);
-  [Pref="canvas.customfocusring.enabled"] boolean drawCustomFocusRing(Element element);
-// NOT IMPLEMENTED  boolean drawCustomFocusRing(Path path, HTMLElement element);
 
   // Mozilla-specific stuff
   // FIXME Bug 768048 mozCurrentTransform/mozCurrentTransformInverse should return a WebIDL array.
@@ -173,6 +154,12 @@ partial interface CanvasRenderingContext2D {
   attribute object mozCurrentTransformInverse;
 
   attribute DOMString mozFillRule; /* "evenodd", "nonzero" (default) */
+
+  [Throws]
+  attribute any mozDash; /* default |null| */
+
+  [LenientFloat]
+  attribute double mozDashOffset; /* default 0.0 */
 
   [SetterThrows]
   attribute DOMString mozTextStyle;
@@ -262,8 +249,10 @@ partial interface CanvasRenderingContext2D {
   [ChromeOnly]
   void demote();
 };
+CanvasRenderingContext2D implements CanvasDrawingStyles;
+CanvasRenderingContext2D implements CanvasPathMethods;
 
-[NoInterfaceObject, Exposed=(Window,Worker)]
+[NoInterfaceObject]
 interface CanvasDrawingStyles {
   // line caps/joins
            [LenientFloat]
@@ -280,15 +269,13 @@ interface CanvasDrawingStyles {
     [LenientFloat] attribute double lineDashOffset;
 
   // text
-           [Exposed=Window, SetterThrows]
+           [SetterThrows]
            attribute DOMString font; // (default 10px sans-serif)
-           [Exposed=Window]
            attribute DOMString textAlign; // "start", "end", "left", "right", "center" (default: "start")
-           [Exposed=Window]
            attribute DOMString textBaseline; // "top", "hanging", "middle", "alphabetic", "ideographic", "bottom" (default: "alphabetic")
 };
 
-[NoInterfaceObject, Exposed=(Window,Worker)]
+[NoInterfaceObject]
 interface CanvasPathMethods {
   // shared path API methods
   void closePath();
@@ -314,8 +301,6 @@ interface CanvasPathMethods {
 // NOT IMPLEMENTED  [LenientFloat] void ellipse(double x, double y, double radiusX, double radiusY, double rotation, double startAngle, double endAngle, boolean anticlockwise);
 };
 
-[Exposed=(Window,Worker),
- Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface CanvasGradient {
   // opaque object
   [Throws]
@@ -323,8 +308,6 @@ interface CanvasGradient {
   void addColorStop(float offset, DOMString color);
 };
 
-[Exposed=(Window,Worker),
- Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface CanvasPattern {
   // opaque object
   // [Throws, LenientFloat] - could not do this overload because of bug 1020975
@@ -359,8 +342,7 @@ interface TextMetrics {
 
 };
 
-[Exposed=(Window,Worker),
- Func="CanvasRenderingContext2D::PrefCanvasPathEnabled",
+[Pref="canvas.path.enabled",
  Constructor,
  Constructor(Path2D other),
  Constructor(DOMString pathString)]

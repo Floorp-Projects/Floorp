@@ -21,7 +21,6 @@ namespace mozilla {
 
 namespace gfx {
 class DataSourceSurface;
-class DrawTarget;
 }
 
 namespace gl {
@@ -30,13 +29,11 @@ class GLContext;
 
 namespace dom {
 class HTMLCanvasElement;
-class CanvasRenderingContext2D;
 }
 
 namespace layers {
 
 class CanvasClient;
-class PersistentBufferProvider;
 class TextureClient;
 
 /**
@@ -77,22 +74,10 @@ public:
     mHeight = aHeight;
   }
 
-  bool GetOpaque()
-  {
-    return mOpaque;
-  }
-
-  void SetOpaque(bool aOpaque)
-  {
-    mOpaque = aOpaque;
-  }
-
   void SetIsAlphaPremultiplied(bool aIsAlphaPremultiplied)
   {
     mIsAlphaPremultiplied = aIsAlphaPremultiplied;
   }
-
-  void UpdateTarget(TextureClient* aTexture);
 
   // Active thread means the thread which spawns GLContext.
   void SetActiveThread();
@@ -145,7 +130,6 @@ public:
   // canvas' surface texture destructor will deref and destroy it too early
   // Only accessed in active thread.
   RefPtr<gl::GLContext> mGLContext;
-  PersistentBufferProvider* mBufferProvider;
 private:
 
   virtual ~AsyncCanvasRenderer();
@@ -154,7 +138,6 @@ private:
   already_AddRefed<gfx::DataSourceSurface> UpdateTarget();
 
   bool mIsAlphaPremultiplied;
-  bool mOpaque;
 
   uint32_t mWidth;
   uint32_t mHeight;

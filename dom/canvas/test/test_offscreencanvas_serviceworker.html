@@ -11,7 +11,6 @@
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  var stillRunning = 0;
   var registration;
 
   window.onmessage = function(evt) {
@@ -19,14 +18,9 @@ function runTest() {
     if (msg.type == "test") {
       ok(msg.result, msg.name);
     }
-    if (msg.type == "countTest") {
-      stillRunning++;
-    }
     if (msg.type == "finish") {
       registration.unregister().then(function() {
-        if (--stillRunning == 0) {
-          SimpleTest.finish();
-        }
+        SimpleTest.finish();
       });
     }
   }
