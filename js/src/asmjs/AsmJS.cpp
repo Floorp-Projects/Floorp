@@ -3746,14 +3746,14 @@ CheckLoadArray(FunctionValidator& f, ParseNode* elem, Type* type)
         return false;
 
     switch (viewType) {
-      case Scalar::Int8:    f.encoder().patchExpr(opcodeAt, Expr::I32LoadMem8S);  break;
-      case Scalar::Uint8:   f.encoder().patchExpr(opcodeAt, Expr::I32LoadMem8U);  break;
-      case Scalar::Int16:   f.encoder().patchExpr(opcodeAt, Expr::I32LoadMem16S); break;
-      case Scalar::Uint16:  f.encoder().patchExpr(opcodeAt, Expr::I32LoadMem16U); break;
+      case Scalar::Int8:    f.encoder().patchExpr(opcodeAt, Expr::I32Load8S);  break;
+      case Scalar::Uint8:   f.encoder().patchExpr(opcodeAt, Expr::I32Load8U);  break;
+      case Scalar::Int16:   f.encoder().patchExpr(opcodeAt, Expr::I32Load16S); break;
+      case Scalar::Uint16:  f.encoder().patchExpr(opcodeAt, Expr::I32Load16U); break;
       case Scalar::Uint32:
-      case Scalar::Int32:   f.encoder().patchExpr(opcodeAt, Expr::I32LoadMem);    break;
-      case Scalar::Float32: f.encoder().patchExpr(opcodeAt, Expr::F32LoadMem);    break;
-      case Scalar::Float64: f.encoder().patchExpr(opcodeAt, Expr::F64LoadMem);    break;
+      case Scalar::Int32:   f.encoder().patchExpr(opcodeAt, Expr::I32Load);    break;
+      case Scalar::Float32: f.encoder().patchExpr(opcodeAt, Expr::F32Load);    break;
+      case Scalar::Float64: f.encoder().patchExpr(opcodeAt, Expr::F64Load);    break;
       default: MOZ_CRASH("unexpected scalar type");
     }
 
@@ -3818,27 +3818,27 @@ CheckStoreArray(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
     switch (viewType) {
       case Scalar::Int8:
       case Scalar::Uint8:
-        f.encoder().patchExpr(opcodeAt, Expr::I32StoreMem8);
+        f.encoder().patchExpr(opcodeAt, Expr::I32Store8);
         break;
       case Scalar::Int16:
       case Scalar::Uint16:
-        f.encoder().patchExpr(opcodeAt, Expr::I32StoreMem16);
+        f.encoder().patchExpr(opcodeAt, Expr::I32Store16);
         break;
       case Scalar::Int32:
       case Scalar::Uint32:
-        f.encoder().patchExpr(opcodeAt, Expr::I32StoreMem);
+        f.encoder().patchExpr(opcodeAt, Expr::I32Store);
         break;
       case Scalar::Float32:
         if (rhsType.isFloatish())
-            f.encoder().patchExpr(opcodeAt, Expr::F32StoreMem);
+            f.encoder().patchExpr(opcodeAt, Expr::F32Store);
         else
-            f.encoder().patchExpr(opcodeAt, Expr::F64StoreMemF32);
+            f.encoder().patchExpr(opcodeAt, Expr::F64StoreF32);
         break;
       case Scalar::Float64:
         if (rhsType.isFloatish())
-            f.encoder().patchExpr(opcodeAt, Expr::F32StoreMemF64);
+            f.encoder().patchExpr(opcodeAt, Expr::F32StoreF64);
         else
-            f.encoder().patchExpr(opcodeAt, Expr::F64StoreMem);
+            f.encoder().patchExpr(opcodeAt, Expr::F64Store);
         break;
       default: MOZ_CRASH("unexpected scalar type");
     }

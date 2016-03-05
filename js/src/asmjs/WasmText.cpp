@@ -1457,7 +1457,7 @@ WasmTokenStream::next()
                 if (consume(MOZ_UTF16("lt")))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Lt, begin, cur_);
                 if (consume(MOZ_UTF16("load")))
-                    return WasmToken(WasmToken::Load, Expr::F32LoadMem, begin, cur_);
+                    return WasmToken(WasmToken::Load, Expr::F32Load, begin, cur_);
                 break;
               case 'm':
                 if (consume(MOZ_UTF16("max")))
@@ -1486,7 +1486,7 @@ WasmTokenStream::next()
                 if (consume(MOZ_UTF16("sub")))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F32Sub, begin, cur_);
                 if (consume(MOZ_UTF16("store")))
-                    return WasmToken(WasmToken::Store, Expr::F32StoreMem, begin, cur_);
+                    return WasmToken(WasmToken::Store, Expr::F32Store, begin, cur_);
                 break;
               case 't':
                 if (consume(MOZ_UTF16("trunc")))
@@ -1544,7 +1544,7 @@ WasmTokenStream::next()
                 if (consume(MOZ_UTF16("lt")))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Lt, begin, cur_);
                 if (consume(MOZ_UTF16("load")))
-                    return WasmToken(WasmToken::Load, Expr::F64LoadMem, begin, cur_);
+                    return WasmToken(WasmToken::Load, Expr::F64Load, begin, cur_);
                 break;
               case 'm':
                 if (consume(MOZ_UTF16("max")))
@@ -1573,7 +1573,7 @@ WasmTokenStream::next()
                 if (consume(MOZ_UTF16("sub")))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F64Sub, begin, cur_);
                 if (consume(MOZ_UTF16("store")))
-                    return WasmToken(WasmToken::Store, Expr::F64StoreMem, begin, cur_);
+                    return WasmToken(WasmToken::Store, Expr::F64Store, begin, cur_);
                 break;
               case 't':
                 if (consume(MOZ_UTF16("trunc")))
@@ -1640,15 +1640,15 @@ WasmTokenStream::next()
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I32LtU, begin, cur_);
                 if (consume(MOZ_UTF16("load"))) {
                     if (IsWasmSpace(*cur_))
-                        return WasmToken(WasmToken::Load, Expr::I32LoadMem, begin, cur_);
+                        return WasmToken(WasmToken::Load, Expr::I32Load, begin, cur_);
                     if (consume(MOZ_UTF16("8_s")))
-                        return WasmToken(WasmToken::Load, Expr::I32LoadMem8S, begin, cur_);
+                        return WasmToken(WasmToken::Load, Expr::I32Load8S, begin, cur_);
                     if (consume(MOZ_UTF16("8_u")))
-                        return WasmToken(WasmToken::Load, Expr::I32LoadMem8U, begin, cur_);
+                        return WasmToken(WasmToken::Load, Expr::I32Load8U, begin, cur_);
                     if (consume(MOZ_UTF16("16_s")))
-                        return WasmToken(WasmToken::Load, Expr::I32LoadMem16S, begin, cur_);
+                        return WasmToken(WasmToken::Load, Expr::I32Load16S, begin, cur_);
                     if (consume(MOZ_UTF16("16_u")))
-                        return WasmToken(WasmToken::Load, Expr::I32LoadMem16U, begin, cur_);
+                        return WasmToken(WasmToken::Load, Expr::I32Load16U, begin, cur_);
                     break;
                 }
                 break;
@@ -1688,11 +1688,11 @@ WasmTokenStream::next()
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32ShrU, begin, cur_);
                 if (consume(MOZ_UTF16("store"))) {
                     if (IsWasmSpace(*cur_))
-                        return WasmToken(WasmToken::Store, Expr::I32StoreMem, begin, cur_);
+                        return WasmToken(WasmToken::Store, Expr::I32Store, begin, cur_);
                     if (consume(MOZ_UTF16("8")))
-                        return WasmToken(WasmToken::Store, Expr::I32StoreMem8, begin, cur_);
+                        return WasmToken(WasmToken::Store, Expr::I32Store8, begin, cur_);
                     if (consume(MOZ_UTF16("16")))
-                        return WasmToken(WasmToken::Store, Expr::I32StoreMem16, begin, cur_);
+                        return WasmToken(WasmToken::Store, Expr::I32Store16, begin, cur_);
                     break;
                 }
                 break;
@@ -1778,19 +1778,19 @@ WasmTokenStream::next()
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I64LtU, begin, cur_);
                 if (consume(MOZ_UTF16("load"))) {
                     if (IsWasmSpace(*cur_))
-                        return WasmToken(WasmToken::Load, Expr::I64LoadMem, begin, cur_);
+                        return WasmToken(WasmToken::Load, Expr::I64Load, begin, cur_);
                     if (consume(MOZ_UTF16("8_s")))
-                        return WasmToken(WasmToken::Load, Expr::I64LoadMem8S, begin, cur_);
+                        return WasmToken(WasmToken::Load, Expr::I64Load8S, begin, cur_);
                     if (consume(MOZ_UTF16("8_u")))
-                        return WasmToken(WasmToken::Load, Expr::I64LoadMem8U, begin, cur_);
+                        return WasmToken(WasmToken::Load, Expr::I64Load8U, begin, cur_);
                     if (consume(MOZ_UTF16("16_s")))
-                        return WasmToken(WasmToken::Load, Expr::I64LoadMem16S, begin, cur_);
+                        return WasmToken(WasmToken::Load, Expr::I64Load16S, begin, cur_);
                     if (consume(MOZ_UTF16("16_u")))
-                        return WasmToken(WasmToken::Load, Expr::I64LoadMem16U, begin, cur_);
+                        return WasmToken(WasmToken::Load, Expr::I64Load16U, begin, cur_);
                     if (consume(MOZ_UTF16("32_s")))
-                        return WasmToken(WasmToken::Load, Expr::I64LoadMem32S, begin, cur_);
+                        return WasmToken(WasmToken::Load, Expr::I64Load32S, begin, cur_);
                     if (consume(MOZ_UTF16("32_u")))
-                        return WasmToken(WasmToken::Load, Expr::I64LoadMem32U, begin, cur_);
+                        return WasmToken(WasmToken::Load, Expr::I64Load32U, begin, cur_);
                     break;
                 }
                 break;
@@ -1830,13 +1830,13 @@ WasmTokenStream::next()
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64ShrU, begin, cur_);
                 if (consume(MOZ_UTF16("store"))) {
                     if (IsWasmSpace(*cur_))
-                        return WasmToken(WasmToken::Store, Expr::I64StoreMem, begin, cur_);
+                        return WasmToken(WasmToken::Store, Expr::I64Store, begin, cur_);
                     if (consume(MOZ_UTF16("8")))
-                        return WasmToken(WasmToken::Store, Expr::I64StoreMem8, begin, cur_);
+                        return WasmToken(WasmToken::Store, Expr::I64Store8, begin, cur_);
                     if (consume(MOZ_UTF16("16")))
-                        return WasmToken(WasmToken::Store, Expr::I64StoreMem16, begin, cur_);
+                        return WasmToken(WasmToken::Store, Expr::I64Store16, begin, cur_);
                     if (consume(MOZ_UTF16("32")))
-                        return WasmToken(WasmToken::Store, Expr::I64StoreMem32, begin, cur_);
+                        return WasmToken(WasmToken::Store, Expr::I64Store32, begin, cur_);
                     break;
                 }
                 break;
@@ -2540,26 +2540,26 @@ ParseLoad(WasmParseContext& c, Expr expr)
 
     if (align == 0) {
         switch (expr) {
-          case Expr::I32LoadMem8S:
-          case Expr::I32LoadMem8U:
-          case Expr::I64LoadMem8S:
-          case Expr::I64LoadMem8U:
+          case Expr::I32Load8S:
+          case Expr::I32Load8U:
+          case Expr::I64Load8S:
+          case Expr::I64Load8U:
             align = 1;
             break;
-          case Expr::I32LoadMem16S:
-          case Expr::I32LoadMem16U:
-          case Expr::I64LoadMem16S:
-          case Expr::I64LoadMem16U:
+          case Expr::I32Load16S:
+          case Expr::I32Load16U:
+          case Expr::I64Load16S:
+          case Expr::I64Load16U:
             align = 2;
             break;
-          case Expr::I32LoadMem:
-          case Expr::F32LoadMem:
-          case Expr::I64LoadMem32S:
-          case Expr::I64LoadMem32U:
+          case Expr::I32Load:
+          case Expr::F32Load:
+          case Expr::I64Load32S:
+          case Expr::I64Load32U:
             align = 4;
             break;
-          case Expr::I64LoadMem:
-          case Expr::F64LoadMem:
+          case Expr::I64Load:
+          case Expr::F64Load:
             align = 8;
             break;
           default:
@@ -2581,21 +2581,21 @@ ParseStore(WasmParseContext& c, Expr expr)
 
     if (align == 0) {
         switch (expr) {
-          case Expr::I32StoreMem8:
-          case Expr::I64StoreMem8:
+          case Expr::I32Store8:
+          case Expr::I64Store8:
             align = 1;
             break;
-          case Expr::I32StoreMem16:
-          case Expr::I64StoreMem16:
+          case Expr::I32Store16:
+          case Expr::I64Store16:
             align = 2;
             break;
-          case Expr::I32StoreMem:
-          case Expr::F32StoreMem:
-          case Expr::I64StoreMem32:
+          case Expr::I32Store:
+          case Expr::F32Store:
+          case Expr::I64Store32:
             align = 4;
             break;
-          case Expr::I64StoreMem:
-          case Expr::F64StoreMem:
+          case Expr::I64Store:
+          case Expr::F64Store:
             align = 8;
             break;
           default:

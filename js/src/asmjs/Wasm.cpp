@@ -156,21 +156,19 @@ DecodeValType(JSContext* cx, Decoder& d, ValType *type)
       case ValType::I32:
       case ValType::F32:
       case ValType::F64:
-        break;
+        return true;
       case ValType::I64:
 #ifndef JS_CPU_X64
         return Fail(cx, d, "i64 NYI on this platform");
 #endif
+        return true;
+      default:
+        // Note: it's important not to remove this default since readValType()
+        // can return ValType values for which there is no enumerator.
         break;
-      case ValType::I32x4:
-      case ValType::F32x4:
-      case ValType::B32x4:
-        return Fail(cx, d, "value type NYI");
-      case ValType::Limit:
-        MOZ_CRASH("Limit");
     }
 
-    return true;
+    return Fail(cx, "bad value type");
 }
 
 static bool
@@ -184,21 +182,19 @@ DecodeExprType(JSContext* cx, Decoder& d, ExprType *type)
       case ExprType::F32:
       case ExprType::F64:
       case ExprType::Void:
-        break;
+        return true;
       case ExprType::I64:
 #ifndef JS_CPU_X64
         return Fail(cx, d, "i64 NYI on this platform");
 #endif
+        return true;
+      default:
+        // Note: it's important not to remove this default since readExprType()
+        // can return ExprType values for which there is no enumerator.
         break;
-      case ExprType::I32x4:
-      case ExprType::F32x4:
-      case ExprType::B32x4:
-        return Fail(cx, d, "expression type NYI");
-      case ExprType::Limit:
-        MOZ_CRASH("Limit");
     }
 
-    return true;
+    return Fail(cx, "bad expression type");
 }
 
 static bool
@@ -809,38 +805,38 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
                DecodeConversionOperator(f, ValType::F64, ValType::I64, type);
       case Expr::F64PromoteF32:
         return DecodeConversionOperator(f, ValType::F64, ValType::F32, type);
-      case Expr::I32LoadMem:
-      case Expr::I32LoadMem8S:
-      case Expr::I32LoadMem8U:
-      case Expr::I32LoadMem16S:
-      case Expr::I32LoadMem16U:
+      case Expr::I32Load:
+      case Expr::I32Load8S:
+      case Expr::I32Load8U:
+      case Expr::I32Load16S:
+      case Expr::I32Load16U:
         return DecodeLoad(f, ValType::I32, type);
-      case Expr::I64LoadMem:
-      case Expr::I64LoadMem8S:
-      case Expr::I64LoadMem8U:
-      case Expr::I64LoadMem16S:
-      case Expr::I64LoadMem16U:
-      case Expr::I64LoadMem32S:
-      case Expr::I64LoadMem32U:
+      case Expr::I64Load:
+      case Expr::I64Load8S:
+      case Expr::I64Load8U:
+      case Expr::I64Load16S:
+      case Expr::I64Load16U:
+      case Expr::I64Load32S:
+      case Expr::I64Load32U:
         return f.fail("NYI: i64") &&
                DecodeLoad(f, ValType::I64, type);
-      case Expr::F32LoadMem:
+      case Expr::F32Load:
         return DecodeLoad(f, ValType::F32, type);
-      case Expr::F64LoadMem:
+      case Expr::F64Load:
         return DecodeLoad(f, ValType::F64, type);
-      case Expr::I32StoreMem:
-      case Expr::I32StoreMem8:
-      case Expr::I32StoreMem16:
+      case Expr::I32Store:
+      case Expr::I32Store8:
+      case Expr::I32Store16:
         return DecodeStore(f, ValType::I32, type);
-      case Expr::I64StoreMem:
-      case Expr::I64StoreMem8:
-      case Expr::I64StoreMem16:
-      case Expr::I64StoreMem32:
+      case Expr::I64Store:
+      case Expr::I64Store8:
+      case Expr::I64Store16:
+      case Expr::I64Store32:
         return f.fail("NYI: i64") &&
                DecodeStore(f, ValType::I64, type);
-      case Expr::F32StoreMem:
+      case Expr::F32Store:
         return DecodeStore(f, ValType::F32, type);
-      case Expr::F64StoreMem:
+      case Expr::F64Store:
         return DecodeStore(f, ValType::F64, type);
       case Expr::Br:
         return DecodeBr(f, type);
@@ -851,6 +847,8 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::Return:
         return DecodeReturn(f, type);
       default:
+        // Note: it's important not to remove this default since readExpr()
+        // can return Expr values for which there is no enumerator.
         break;
     }
 

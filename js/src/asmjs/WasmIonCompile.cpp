@@ -1262,12 +1262,12 @@ class FunctionCompiler
     Expr           peakExpr()     { return decoder_.uncheckedPeekExpr(); }
 
     SimdConstant readI32X4() {
-        Val::I32x4 i32x4;
+        I32x4 i32x4;
         JS_ALWAYS_TRUE(decoder_.readFixedI32x4(&i32x4));
         return SimdConstant::CreateX4(i32x4);
     }
     SimdConstant readF32X4() {
-        Val::F32x4 f32x4;
+        F32x4 f32x4;
         JS_ALWAYS_TRUE(decoder_.readFixedF32x4(&f32x4));
         return SimdConstant::CreateX4(f32x4);
     }
@@ -2769,21 +2769,21 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
         return EmitBitwise<MUrsh>(f, ValType::I32, def);
       case Expr::I32BitNot:
         return EmitBitwiseNot(f, def);
-      case Expr::I32LoadMem8S:
+      case Expr::I32Load8S:
         return EmitLoad(f, Scalar::Int8, def);
-      case Expr::I32LoadMem8U:
+      case Expr::I32Load8U:
         return EmitLoad(f, Scalar::Uint8, def);
-      case Expr::I32LoadMem16S:
+      case Expr::I32Load16S:
         return EmitLoad(f, Scalar::Int16, def);
-      case Expr::I32LoadMem16U:
+      case Expr::I32Load16U:
         return EmitLoad(f, Scalar::Uint16, def);
-      case Expr::I32LoadMem:
+      case Expr::I32Load:
         return EmitLoad(f, Scalar::Int32, def);
-      case Expr::I32StoreMem8:
+      case Expr::I32Store8:
         return EmitStore(f, Scalar::Int8, def);
-      case Expr::I32StoreMem16:
+      case Expr::I32Store16:
         return EmitStore(f, Scalar::Int16, def);
-      case Expr::I32StoreMem:
+      case Expr::I32Store:
         return EmitStore(f, Scalar::Int32, def);
       case Expr::I32Eq:
       case Expr::I32Ne:
@@ -2886,11 +2886,11 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
         return EmitUnary<MToFloat32>(f, def);
       case Expr::F32ConvertUI32:
         return EmitUnary<MAsmJSUnsignedToFloat32>(f, def);
-      case Expr::F32LoadMem:
+      case Expr::F32Load:
         return EmitLoad(f, Scalar::Float32, def);
-      case Expr::F32StoreMem:
+      case Expr::F32Store:
         return EmitStore(f, Scalar::Float32, def);
-      case Expr::F32StoreMemF64:
+      case Expr::F32StoreF64:
         return EmitStoreWithCoercion(f, Scalar::Float32, Scalar::Float64, def);
 
       // F64
@@ -2935,11 +2935,11 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
         return EmitUnary<MToDouble>(f, def);
       case Expr::F64ConvertUI32:
         return EmitUnary<MAsmJSUnsignedToDouble>(f, def);
-      case Expr::F64LoadMem:
+      case Expr::F64Load:
         return EmitLoad(f, Scalar::Float64, def);
-      case Expr::F64StoreMem:
+      case Expr::F64Store:
         return EmitStore(f, Scalar::Float64, def);
-      case Expr::F64StoreMemF32:
+      case Expr::F64StoreF32:
         return EmitStoreWithCoercion(f, Scalar::Float64, Scalar::Float32, def);
 
       // SIMD
@@ -3018,17 +3018,17 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
       case Expr::F64ReinterpretI64:
       case Expr::I32ReinterpretF32:
       case Expr::F32ReinterpretI32:
-      case Expr::I64LoadMem8S:
-      case Expr::I64LoadMem16S:
-      case Expr::I64LoadMem32S:
-      case Expr::I64LoadMem8U:
-      case Expr::I64LoadMem16U:
-      case Expr::I64LoadMem32U:
-      case Expr::I64LoadMem:
-      case Expr::I64StoreMem8:
-      case Expr::I64StoreMem16:
-      case Expr::I64StoreMem32:
-      case Expr::I64StoreMem:
+      case Expr::I64Load8S:
+      case Expr::I64Load16S:
+      case Expr::I64Load32S:
+      case Expr::I64Load8U:
+      case Expr::I64Load16U:
+      case Expr::I64Load32U:
+      case Expr::I64Load:
+      case Expr::I64Store8:
+      case Expr::I64Store16:
+      case Expr::I64Store32:
+      case Expr::I64Store:
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
