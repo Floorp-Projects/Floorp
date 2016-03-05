@@ -25,7 +25,6 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.graphics.Typeface;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 import android.text.style.StyleSpan;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -167,15 +166,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
      */
     private List<Integer> findAllOccurrencesOf(String pattern, String string) {
         List<Integer> occurrences = new ArrayList<>();
-
-        // Don't try to search for an empty string - String.indexOf will return 0, which would result
-        // in us iterating with lastIndexOfMatch = 0, which eventually results in an OOM.
-        if (TextUtils.isEmpty(pattern)) {
-            return;
-        }
-
         final int patternLength = pattern.length();
-
         int indexOfMatch = 0;
         int lastIndexOfMatch = 0;
         while(indexOfMatch != -1) {
@@ -216,7 +207,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
             int nextStartSpanIndex = 0;
             // Done to make sure that the stretch of text after the last occurrence, till the end of the suggestion, is made bold
             occurrences.add(suggestion.length());
-            for (int occurrence : occurrences) {
+            for(int occurrence : occurrences) {
                 // Even though they're the same style, SpannableStringBuilder will interpret there as being only one Span present if we re-use a StyleSpan
                 StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
                 sb.setSpan(boldSpan, nextStartSpanIndex, occurrence, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
