@@ -19,13 +19,13 @@
 #ifndef wasm_types_h
 #define wasm_types_h
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Move.h"
 
 #include "NamespaceImports.h"
 
+#include "asmjs/WasmBinary.h"
 #include "ds/LifoAlloc.h"
 #include "jit/IonTypes.h"
 #include "js/UniquePtr.h"
@@ -40,35 +40,48 @@ namespace wasm {
 
 using mozilla::EnumeratedArray;
 using mozilla::Move;
-using mozilla::DebugOnly;
 using mozilla::MallocSizeOf;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
-
-// The ValType enum represents the WebAssembly "value type", which are used to
-// specify the type of locals and parameters.
-
-// FIXME: uint16_t would make more sense for the underlying storage class, but
-// causes miscompilations in GCC (fixed in 4.8.5 and 4.9.3).
-enum class ValType
-{
-    I32,
-    I64,
-    F32,
-    F64,
-    I32x4,
-    F32x4,
-    B32x4,
-
-    Limit
-};
-
 typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
+
+// ValType/ExprType utilities
+
+static inline bool
+IsVoid(ExprType et)
+{
+    return et == ExprType::Void;
+}
+
+static inline ValType
+NonVoidToValType(ExprType et)
+{
+    MOZ_ASSERT(!IsVoid(et));
+    return ValType(et);
+}
+
+static inline ExprType
+ToExprType(ValType vt)
+{
+    return ExprType(vt);
+}
 
 static inline bool
 IsSimdType(ValType vt)
 {
     return vt == ValType::I32x4 || vt == ValType::F32x4 || vt == ValType::B32x4;
+}
+
+static inline bool
+IsSimdType(ExprType et)
+{
+    return IsVoid(et) ? false : IsSimdType(ValType(et));
+}
+
+static inline bool
+IsSimdBoolType(ValType vt)
+{
+    return vt == ValType::B32x4;
 }
 
 static inline jit::MIRType
@@ -87,6 +100,35 @@ ToMIRType(ValType vt)
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
 }
 
+static inline jit::MIRType
+ToMIRType(ExprType et)
+{
+    return IsVoid(et) ? jit::MIRType_None : ToMIRType(ValType(et));
+}
+
+static inline const char*
+ToCString(ExprType type)
+{
+    switch (type) {
+      case ExprType::Void:  return "void";
+      case ExprType::I32:   return "i32";
+      case ExprType::I64:   return "i64";
+      case ExprType::F32:   return "f32";
+      case ExprType::F64:   return "f64";
+      case ExprType::I32x4: return "i32x4";
+      case ExprType::F32x4: return "f32x4";
+      case ExprType::B32x4: return "b32x4";
+      case ExprType::Limit:;
+    }
+    MOZ_CRASH("bad expression type");
+}
+
+static inline const char*
+ToCString(ValType type)
+{
+    return ToCString(ToExprType(type));
+}
+
 // The Val class represents a single WebAssembly value of a given value type,
 // mostly for the purpose of numeric literals and initializers. A Val does not
 // directly map to a JS value since there is not (currently) a precise
@@ -96,11 +138,6 @@ ToMIRType(ValType vt)
 
 class Val
 {
-  public:
-    typedef int32_t I32x4[4];
-    typedef float F32x4[4];
-
-  private:
     ValType type_;
     union {
         uint32_t i32_;
@@ -138,86 +175,6 @@ class Val
     }
     const F32x4& f32x4() const { MOZ_ASSERT(type_ == ValType::F32x4); return u.f32x4_; }
 };
-
-// The ExprType enum represents the type of a WebAssembly expression or return
-// value and may either be a value type or void. A future WebAssembly extension
-// may generalize expression types to instead be a list of value types (with
-// void represented by the empty list). For now it's easier to have a flat enum
-// and be explicit about conversions to/from value types.
-
-enum class ExprType : uint16_t
-{
-    I32 = uint8_t(ValType::I32),
-    I64 = uint8_t(ValType::I64),
-    F32 = uint8_t(ValType::F32),
-    F64 = uint8_t(ValType::F64),
-    I32x4 = uint8_t(ValType::I32x4),
-    F32x4 = uint8_t(ValType::F32x4),
-    B32x4 = uint8_t(ValType::B32x4),
-    Void,
-
-    Limit
-};
-
-static inline bool
-IsVoid(ExprType et)
-{
-    return et == ExprType::Void;
-}
-
-static inline ValType
-NonVoidToValType(ExprType et)
-{
-    MOZ_ASSERT(!IsVoid(et));
-    return ValType(et);
-}
-
-static inline ExprType
-ToExprType(ValType vt)
-{
-    return ExprType(vt);
-}
-
-static inline bool
-IsSimdType(ExprType et)
-{
-    return IsVoid(et) ? false : IsSimdType(ValType(et));
-}
-
-static inline bool
-IsSimdBoolType(ValType vt)
-{
-    return vt == ValType::B32x4;
-}
-
-static inline jit::MIRType
-ToMIRType(ExprType et)
-{
-    return IsVoid(et) ? jit::MIRType_None : ToMIRType(ValType(et));
-}
-
-static inline const char*
-ToCString(ExprType type)
-{
-    switch (type) {
-      case ExprType::Void:  return "void";
-      case ExprType::I32:   return "i32";
-      case ExprType::I64:   return "i64";
-      case ExprType::F32:   return "f32";
-      case ExprType::F64:   return "f64";
-      case ExprType::I32x4: return "i32x4";
-      case ExprType::F32x4: return "f32x4";
-      case ExprType::B32x4: return "b32x4";
-      case ExprType::Limit:;
-    }
-    MOZ_CRASH("bad expression type");
-}
-
-static inline const char*
-ToCString(ValType type)
-{
-    return ToCString(ToExprType(type));
-}
 
 // The Sig class represents a WebAssembly function signature which takes a list
 // of value types and returns an expression type. The engine uses two in-memory
@@ -632,10 +589,18 @@ enum ModuleKind
 // Constants:
 
 static const unsigned ActivationGlobalDataOffset = 0;
-static const unsigned HeapGlobalDataOffset = ActivationGlobalDataOffset + sizeof(void*);
-static const unsigned NaN64GlobalDataOffset = HeapGlobalDataOffset + sizeof(void*);
-static const unsigned NaN32GlobalDataOffset = NaN64GlobalDataOffset + sizeof(double);
-static const unsigned InitialGlobalDataBytes = NaN32GlobalDataOffset + sizeof(float);
+static const unsigned HeapGlobalDataOffset       = ActivationGlobalDataOffset + sizeof(void*);
+static const unsigned NaN64GlobalDataOffset      = HeapGlobalDataOffset + sizeof(void*);
+static const unsigned NaN32GlobalDataOffset      = NaN64GlobalDataOffset + sizeof(double);
+static const unsigned InitialGlobalDataBytes     = NaN32GlobalDataOffset + sizeof(float);
+
+static const unsigned MaxSigs                    =   4 * 1024;
+static const unsigned MaxFuncs                   = 512 * 1024;
+static const unsigned MaxImports                 =   4 * 1024;
+static const unsigned MaxExports                 =   4 * 1024;
+static const unsigned MaxTableElems              = 128 * 1024;
+static const unsigned MaxArgsPerFunc             =   4 * 1024;
+static const unsigned MaxBrTableElems            =   4 * 1024;
 
 } // namespace wasm
 } // namespace js

@@ -31,6 +31,50 @@ typedef Vector<jit::MIRType, 8, SystemAllocPolicy> MIRTypeVector;
 typedef jit::ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
 typedef jit::ABIArgIter<ValTypeVector> ABIArgValTypeIter;
 
+// The FuncBytecode class contains the intermediate representation of a
+// parsed/decoded and validated asm.js/WebAssembly function. The FuncBytecode
+// lives only until it is fully compiled.
+
+class FuncBytecode
+{
+    // Function metadata
+    const DeclaredSig& sig_;
+    uint32_t lineOrBytecode_;
+    Uint32Vector callSiteLineNums_;
+
+    // Compilation bookkeeping
+    uint32_t index_;
+    unsigned generateTime_;
+
+    UniqueBytecode bytecode_;
+
+  public:
+    FuncBytecode(uint32_t index,
+                 const DeclaredSig& sig,
+                 UniqueBytecode bytecode,
+                 uint32_t lineOrBytecode,
+                 Uint32Vector&& callSiteLineNums,
+                 unsigned generateTime)
+      : sig_(sig),
+        lineOrBytecode_(lineOrBytecode),
+        callSiteLineNums_(Move(callSiteLineNums)),
+        index_(index),
+        generateTime_(generateTime),
+        bytecode_(Move(bytecode))
+    {}
+
+    UniqueBytecode recycleBytecode() { return Move(bytecode_); }
+
+    uint32_t lineOrBytecode() const { return lineOrBytecode_; }
+    const Uint32Vector& callSiteLineNums() const { return callSiteLineNums_; }
+    uint32_t index() const { return index_; }
+    const DeclaredSig& sig() const { return sig_; }
+    const Bytecode& bytecode() const { return *bytecode_; }
+    unsigned generateTime() const { return generateTime_; }
+};
+
+typedef UniquePtr<FuncBytecode> UniqueFuncBytecode;
+
 // The FuncCompileResults contains the results of compiling a single function
 // body, ready to be merged into the whole-module MacroAssembler.
 class FuncCompileResults
