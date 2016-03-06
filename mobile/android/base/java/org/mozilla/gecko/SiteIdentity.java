@@ -20,6 +20,7 @@ public class SiteIdentity {
     private String mHost;
     private String mOwner;
     private String mSupplemental;
+    private String mCountry;
     private String mVerifier;
     private String mOrigin;
 
@@ -133,6 +134,7 @@ public class SiteIdentity {
         mHost = null;
         mOwner = null;
         mSupplemental = null;
+        mCountry = null;
         mVerifier = null;
         mSecure = false;
         mLoginInsecure = false;
@@ -184,6 +186,7 @@ public class SiteIdentity {
                 mHost = identityData.optString("host", null);
                 mOwner = identityData.optString("owner", null);
                 mSupplemental = identityData.optString("supplemental", null);
+                mCountry = identityData.optString("country", null);
                 mVerifier = identityData.optString("verifier", null);
                 mSecure = identityData.optBoolean("secure", false);
             } catch (Exception e) {
@@ -210,8 +213,20 @@ public class SiteIdentity {
         return mOwner;
     }
 
+    public boolean hasOwner() {
+        return !TextUtils.isEmpty(mOwner);
+    }
+
     public String getSupplemental() {
         return mSupplemental;
+    }
+
+    public String getCountry() {
+        return mCountry;
+    }
+
+    public boolean hasCountry() {
+        return !TextUtils.isEmpty(mCountry);
     }
 
     public String getVerifier() {

@@ -43,10 +43,9 @@ function checkState(tab) {
       // not currently Xrayable (see bug 1014991), trying to pull |obj3| (a RegExp)
       // off of an Xrayed Object won't work. So we need to waive.
       ContentTask.spawn(tab.linkedBrowser, aEvent.state, function(state) {
-        return Cu.waiveXrays(state).obj3.toString();
-      }).then(function(stateStr) {
-        is(stateStr, '/^a$/', "second popstate object.");
-
+        Assert.equal(Cu.waiveXrays(state).obj3.toString(),
+          "/^a$/", "second popstate object.");
+      }).then(function() {
         // Make sure that the new-elem node is present in the document.  If it's
         // not, then this history entry has a different doc identifier than the
         // previous entry, which is bad.

@@ -45,23 +45,17 @@ function testURL(url, loadFunc, endFunc) {
 
   yield promiseWaitForEvent(browser, "pageshow");
 
-  let focused = yield ContentTask.spawn(browser, { isRemote: gMultiProcessBrowser },
+  yield ContentTask.spawn(browser, { isRemote: gMultiProcessBrowser },
     function* (arg) {
       const fm = Components.classes["@mozilla.org/focus-manager;1"].
                             getService(Components.interfaces.nsIFocusManager);
-      if (fm.focusedElement != null) {
-        return "FAIL - focusedElement not null";
-      }
+      Assert.equal(fm.focusedElement, null, "focusedElement not null");
 
       if (arg.isRemote) {
-        return fm.activeWindow == content ? "PASS" :
-                                            "FAIL - activeWindow not correct";
+        Assert.equal(fm.activeWindow, content, "activeWindow not correct");
       }
-
-      return "PASS";
   });
 
-  is(focused, "PASS", "should be no focused element");
   is(document.activeElement, browser, "content window should be focused");
 
   ok(!gBrowser.contentPrincipal.equals(pagePrincipal),

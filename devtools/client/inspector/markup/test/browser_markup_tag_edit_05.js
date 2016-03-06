@@ -1,7 +1,7 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
-
+/* import-globals-from helper_attributes_test_runner.js */
 "use strict";
 
 // Tests that adding various types of attributes to nodes in the markup-view
@@ -61,17 +61,17 @@ var TEST_DATA = [{
     disabled: "",
     autofocus: "",
     name: "name",
-    'data-test': "test"
+    "data-test": "test"
   }
 }, {
   desc: "Add attribute with xmlns",
   text: "xmlns:edi='http://ecommerce.example.org/schema'",
   expectedAttributes: {
-    'xmlns:edi': "http://ecommerce.example.org/schema"
+    "xmlns:edi": "http://ecommerce.example.org/schema"
   }
 }];
 
 add_task(function*() {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
-  yield runAddAttributesTests(TEST_DATA, "div", inspector, testActor)
+  yield runAddAttributesTests(TEST_DATA, "div", inspector, testActor);
 });

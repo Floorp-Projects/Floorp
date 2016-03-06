@@ -114,7 +114,7 @@ var ContentMessageListener = {
       }
     } else if (aMessage.name == "content-task:test-result") {
       let data = aMessage.data;
-      ContentTask._testScope.ok(data.condition, data.name, data.diag, data.stack);
+      ContentTask._testScope.ok(data.condition, data.name, null, data.stack);
     } else if (aMessage.name == "content-task:test-info") {
       ContentTask._testScope.info(aMessage.data.name);
     }

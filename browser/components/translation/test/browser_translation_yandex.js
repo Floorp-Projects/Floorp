@@ -47,7 +47,7 @@ add_task(function* test_yandex_translation() {
       new TranslationDocument(content.document), "fr", "en");
     let result = yield client.translate();
 
-    ok(result, "There should be a result.");
+    Assert.ok(result, "There should be a result.");
   });
 
   gBrowser.removeTab(tab);

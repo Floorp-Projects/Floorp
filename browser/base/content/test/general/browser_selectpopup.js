@@ -109,10 +109,10 @@ function doSelectTests(contentType, dtd)
   is((yield getChangeEvents()), 0, "Before closed - number of change events");
 
   EventUtils.synthesizeKey("a", { accelKey: true });
-  let selection = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
-    return String(content.getSelection());
+  yield ContentTask.spawn(gBrowser.selectedBrowser, { isWindows }, function(args) {
+    Assert.equal(String(content.getSelection()), args.isWindows ? "Text" : "",
+      "Select all while popup is open");
   });
-  is(selection, isWindows ? "Text" : "", "Select all while popup is open");
 
   yield hideSelectPopup(selectPopup);
 

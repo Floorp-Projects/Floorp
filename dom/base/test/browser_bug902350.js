@@ -59,10 +59,8 @@ function MixedTest1B() {
 
 function MixedTest1C() {
   ContentTask.spawn(gTestBrowser, null, function() {
-    return content.location.href;
-  }).then(url => {
-    is(url, "http://example.com/", "Navigating to insecure domain through target='_top' failed.")
-    MixedTestsCompleted();
-  });
+    Assert.equal(content.location.href, "http://example.com/",
+      "Navigating to insecure domain through target='_top' failed.")
+  }).then(MixedTestsCompleted);
 }
 

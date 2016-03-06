@@ -625,6 +625,16 @@ global.WindowManager = {
 
   windowType(window) {
     // TODO: Make this work.
+
+    let {chromeFlags} = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIDocShell)
+                              .treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIXULWindow);
+
+    if (chromeFlags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG) {
+      return "popup";
+    }
+
     return "normal";
   },
 
@@ -637,7 +647,11 @@ global.WindowManager = {
     return id;
   },
 
-  getWindow(id) {
+  getWindow(id, context) {
+    if (id == this.WINDOW_ID_CURRENT) {
+      return currentWindow(context);
+    }
+
     for (let window of WindowListManager.browserWindows(true)) {
       if (this.getId(window) == id) {
         return window;
@@ -646,7 +660,56 @@ global.WindowManager = {
     return null;
   },
 
+  setState(window, state) {
+    if (state != "fullscreen" && window.fullScreen) {
+      window.fullScreen = false;
+    }
+
+    switch (state) {
+      case "maximized":
+        window.maximize();
+        break;
+
+      case "minimized":
+      case "docked":
+        window.minimize();
+        break;
+
+      case "normal":
+        // Restore sometimes returns the window to its previous state, rather
+        // than to the "normal" state, so it may need to be called anywhere from
+        // zero to two times.
+        window.restore();
+        if (window.windowState != window.STATE_NORMAL) {
+          window.restore();
+        }
+        if (window.windowState != window.STATE_NORMAL) {
+          // And on OS-X, where normal vs. maximized is basically a heuristic,
+          // we need to cheat.
+          window.sizeToContent();
+        }
+        break;
+
+      case "fullscreen":
+        window.fullScreen = true;
+        break;
+
+      default:
+        throw new Error(`Unexpected window state: ${state}`);
+    }
+  },
+
   convert(extension, window, getInfo) {
+    const STATES = {
+      [window.STATE_MAXIMIZED]: "maximized",
+      [window.STATE_MINIMIZED]: "minimized",
+      [window.STATE_NORMAL]: "normal",
+    };
+    let state = STATES[window.windowState];
+    if (window.fullScreen) {
+      state = "fullscreen";
+    }
+
     let result = {
       id: this.getId(window),
       focused: window.document.hasFocus(),
@@ -655,10 +718,8 @@ global.WindowManager = {
       width: window.outerWidth,
       height: window.outerHeight,
       incognito: PrivateBrowsingUtils.isWindowPrivate(window),
-
-      // We fudge on these next two.
       type: this.windowType(window),
-      state: window.fullScreen ? "fullscreen" : "normal",
+      state,
     };
 
     if (getInfo && getInfo.populate) {

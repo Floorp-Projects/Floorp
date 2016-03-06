@@ -25,12 +25,10 @@ var checkViewSource = Task.async(function* (aWindow) {
 
   for (let i = 1; i <= 3; i++) {
     aWindow.viewSourceChrome.goToLine(i);
-    let result = yield ContentTask.spawn(aWindow.gBrowser, i, function*(i) {
+    yield ContentTask.spawn(aWindow.gBrowser, i, function*(i) {
       let selection = content.getSelection();
-      return (selection.toString() == "line " + i);
+      Assert.equal(selection.toString(), "line " + i, "Correct text selected");
     });
-
-    ok(result, "Correct text selected");
 
     yield ContentTaskUtils.waitForCondition(() => {
       return (statusPanel.getAttribute("label") == "Line " + i + ", Col 1");

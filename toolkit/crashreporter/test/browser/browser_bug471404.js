@@ -9,8 +9,8 @@ function check_clear_visible(browser, aVisible) {
           style.visibility == "visible")
         visible = true;
     }
-    is(visible, aVisible,
-       "clear reports button is " + (aVisible ? "visible" : "hidden"));
+    Assert.equal(visible, aVisible,
+      "clear reports button is " + (aVisible ? "visible" : "hidden"));
   });
 }
 

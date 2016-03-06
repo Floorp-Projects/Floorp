@@ -244,6 +244,9 @@ DevToolsLoader.prototype = {
     Object.getOwnPropertyNames(this._main).forEach(key => {
       XPCOMUtils.defineLazyGetter(this, key, () => this._main[key]);
     });
+
+    var events = this.require("sdk/system/events");
+    events.emit("devtools-loaded", {});
   },
 
   /**
@@ -302,10 +305,6 @@ DevToolsLoader.prototype = {
 
     this._provider.load();
     this.require = Loader.Require(this._provider.loader, { id: "devtools" });
-
-    if (this._mainid) {
-      this.main(this._mainid);
-    }
   },
 
   /**
@@ -325,9 +324,10 @@ DevToolsLoader.prototype = {
 
     this._provider.unload("reload");
     delete this._provider;
+    let mainid = this._mainid;
     delete this._mainid;
     this._loadProvider();
-    this.main("devtools/client/main");
+    this.main(mainid);
   },
 
   /**

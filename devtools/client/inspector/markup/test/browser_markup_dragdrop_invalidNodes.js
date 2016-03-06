@@ -7,9 +7,10 @@
 // Check that pseudo-elements and anonymous nodes are not draggable.
 
 const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
+const PREF = "devtools.inspector.showAllAnonymousContent";
 
 add_task(function*() {
-  Services.prefs.setBoolPref("devtools.inspector.showAllAnonymousContent", true);
+  Services.prefs.setBoolPref(PREF, true);
 
   let {inspector} = yield openInspectorForURL(TEST_URL);
 

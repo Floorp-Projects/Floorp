@@ -1,6 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* import-globals-from head.js */
+"use strict";
 
 /**
  * Run a series of edit-outer-html tests.
@@ -19,7 +22,7 @@
 function runEditOuterHTMLTests(tests, inspector, testActor) {
   info("Running " + tests.length + " edit-outer-html tests");
   return Task.spawn(function* () {
-    for (let step of TEST_DATA) {
+    for (let step of tests) {
       yield runEditOuterHTMLTest(step, inspector, testActor);
     }
   });
@@ -42,7 +45,6 @@ function runEditOuterHTMLTests(tests, inspector, testActor) {
 function* runEditOuterHTMLTest(test, inspector, testActor) {
   info("Running an edit outerHTML test on '" + test.selector + "'");
   yield selectNode(test.selector, inspector);
-  let oldNodeFront = inspector.selection.nodeFront;
 
   let onUpdated = inspector.once("inspector-updated");
 
@@ -55,14 +57,16 @@ function* runEditOuterHTMLTest(test, inspector, testActor) {
   // Typically selectedNode will === pageNode, but if a new element has been
   // injected in front of it, this will not be the case. If this happens.
   let selectedNodeFront = inspector.selection.nodeFront;
-  let pageNodeFront = yield inspector.walker.querySelector(inspector.walker.rootNode, test.selector);
-  let pageNode = getNode(test.selector);
+  let pageNodeFront = yield inspector.walker.querySelector(
+    inspector.walker.rootNode, test.selector);
 
   if (test.validate) {
-    yield test.validate(pageNode, pageNodeFront, selectedNodeFront, inspector);
+    yield test.validate({pageNodeFront, selectedNodeFront,
+                         inspector, testActor});
   } else {
-    is(pageNodeFront, selectedNodeFront, "Original node (grabbed by selector) is selected");
-    let {outerHTML} = yield getNodeInfo(test.selector, testActor);
+    is(pageNodeFront, selectedNodeFront,
+       "Original node (grabbed by selector) is selected");
+    let {outerHTML} = yield testActor.getNodeInfo(test.selector);
     is(outerHTML, test.newHTML, "Outer HTML has been updated");
   }
 
@@ -72,6 +76,7 @@ function* runEditOuterHTMLTest(test, inspector, testActor) {
 
   let closeTagLine = inspector.markup.getContainer(pageNodeFront).closeTagLine;
   if (closeTagLine) {
-    is(closeTagLine.querySelectorAll(".theme-fg-contrast").length, 0, "No contrast class");
+    is(closeTagLine.querySelectorAll(".theme-fg-contrast").length, 0,
+       "No contrast class");
   }
 }
