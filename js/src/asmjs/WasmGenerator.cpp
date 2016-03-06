@@ -301,7 +301,7 @@ ModuleGenerator::convertOutOfRangeBranchesToThunks()
 bool
 ModuleGenerator::finishTask(IonCompileTask* task)
 {
-    const FuncBytecode& func = task->func();
+    const FuncBytes& func = task->func();
     FuncCompileResults& results = task->results();
 
     // Before merging in the new function's code, if jumps/calls in a previous
@@ -782,15 +782,8 @@ ModuleGenerator::startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg)
 
     IonCompileTask* task = freeTasks_.popCopy();
 
-    task->reset(&fg->bytecode_);
-    if (fg->bytecode_) {
-        fg->bytecode_->clear();
-    } else {
-        fg->bytecode_ = MakeUnique<Bytecode>();
-        if (!fg->bytecode_)
-            return false;
-    }
-
+    task->reset(&fg->bytes_);
+    fg->bytes_.clear();
     fg->lineOrBytecode_ = lineOrBytecode;
     fg->m_ = this;
     fg->task_ = task;
@@ -803,13 +796,12 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, unsigned generateTime, Functi
 {
     MOZ_ASSERT(activeFunc_ == fg);
 
-    UniqueFuncBytecode func =
-        js::MakeUnique<FuncBytecode>(funcIndex,
-                                     funcSig(funcIndex),
-                                     Move(fg->bytecode_),
-                                     fg->lineOrBytecode_,
-                                     Move(fg->callSiteLineNums_),
-                                     generateTime);
+    auto func = js::MakeUnique<FuncBytes>(Move(fg->bytes_),
+                                          funcIndex,
+                                          funcSig(funcIndex),
+                                          fg->lineOrBytecode_,
+                                          Move(fg->callSiteLineNums_),
+                                          generateTime);
     if (!func)
         return false;
 

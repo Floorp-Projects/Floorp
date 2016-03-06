@@ -4024,60 +4024,56 @@ EncodeDataSegments(Encoder& e, WasmAstModule& module)
     return true;
 }
 
-static UniqueBytecode
-EncodeModule(WasmAstModule& module)
+static bool
+EncodeModule(WasmAstModule& module, Bytes* bytes)
 {
-    UniqueBytecode bytecode = MakeUnique<Bytecode>();
-    if (!bytecode)
-        return nullptr;
-
-    Encoder e(*bytecode);
+    Encoder e(*bytes);
 
     if (!e.writeFixedU32(MagicNumber))
-        return nullptr;
+        return false;
 
     if (!e.writeFixedU32(EncodingVersion))
-        return nullptr;
+        return false;
 
     if (!EncodeSignatures(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeImportTable(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeFunctionSignatures(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeFunctionTable(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeMemory(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeExportTable(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeFunctionBodies(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeDataSegments(e, module))
-        return nullptr;
+        return false;
 
-    return Move(bytecode);
+    return true;
 }
 
 /*****************************************************************************/
 
-UniqueBytecode
-wasm::TextToBinary(const char16_t* text, UniqueChars* error)
+bool
+wasm::TextToBinary(const char16_t* text, Bytes* bytes, UniqueChars* error)
 {
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
     WasmAstModule* module = ParseModule(text, lifo, error);
     if (!module)
-        return nullptr;
+        return false;
 
     if (!ResolveModule(lifo, module, error))
-        return nullptr;
+        return false;
 
-    return EncodeModule(*module);
+    return EncodeModule(*module, bytes);
 }

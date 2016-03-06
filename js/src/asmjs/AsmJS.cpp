@@ -2650,7 +2650,7 @@ class MOZ_STACK_CLASS FunctionValidator
         if (!m_.mg().startFuncDef(line, &fg_))
             return false;
 
-        encoder_.emplace(fg_.bytecode());
+        encoder_.emplace(fg_.bytes());
         return true;
     }
 

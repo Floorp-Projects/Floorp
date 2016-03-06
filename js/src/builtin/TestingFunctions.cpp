@@ -525,19 +525,19 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
     if (!twoByteChars.initTwoByte(cx, args[0].toString()))
         return false;
 
+    wasm::Bytes bytes;
     UniqueChars error;
-    wasm::UniqueBytecode bytes = wasm::TextToBinary(twoByteChars.twoByteChars(), &error);
-    if (!bytes) {
+    if (!wasm::TextToBinary(twoByteChars.twoByteChars(), &bytes, &error)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
                              error.get() ? error.get() : "out of memory");
         return false;
     }
 
-    RootedObject obj(cx, JS_NewUint8Array(cx, bytes->length()));
+    RootedObject obj(cx, JS_NewUint8Array(cx, bytes.length()));
     if (!obj)
         return false;
 
-    memcpy(obj->as<TypedArrayObject>().viewDataUnshared(), bytes->begin(), bytes->length());
+    memcpy(obj->as<TypedArrayObject>().viewDataUnshared(), bytes.begin(), bytes.length());
 
     args.rval().setObject(*obj);
     return true;
