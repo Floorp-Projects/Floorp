@@ -14,13 +14,7 @@ loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/de
 const {defaultTools: DefaultTools, defaultThemes: DefaultThemes} =
   require("devtools/client/definitions");
 const EventEmitter = require("devtools/shared/event-emitter");
-const Telemetry = require("devtools/client/shared/telemetry");
 const {JsonView} = require("devtools/client/jsonview/main");
-
-const TABS_OPEN_PEAK_HISTOGRAM = "DEVTOOLS_TABS_OPEN_PEAK_LINEAR";
-const TABS_OPEN_AVG_HISTOGRAM = "DEVTOOLS_TABS_OPEN_AVERAGE_LINEAR";
-const TABS_PINNED_PEAK_HISTOGRAM = "DEVTOOLS_TABS_PINNED_PEAK_LINEAR";
-const TABS_PINNED_AVG_HISTOGRAM = "DEVTOOLS_TABS_PINNED_AVERAGE_LINEAR";
 
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
@@ -33,7 +27,6 @@ this.DevTools = function DevTools() {
   this._tools = new Map();     // Map<toolId, tool>
   this._themes = new Map();    // Map<themeId, theme>
   this._toolboxes = new Map(); // Map<target, toolbox>
-  this._telemetry = new Telemetry();
 
   // destroy() is an observer's handler so we need to preserve context.
   this.destroy = this.destroy.bind(this);
@@ -49,6 +42,22 @@ this.DevTools = function DevTools() {
 };
 
 DevTools.prototype = {
+  registerDefaults() {
+    // Ensure registering items in the sorted order (getDefault* functions
+    // return sorted lists)
+    this.getDefaultTools().forEach(definition => this.registerTool(definition));
+    this.getDefaultThemes().forEach(definition => this.registerTheme(definition));
+  },
+
+  unregisterDefaults() {
+    for (let definition of this.getToolDefinitionArray()) {
+      this.unregisterTool(definition.id);
+    }
+    for (let definition of this.getThemeDefinitionArray()) {
+      this.unregisterTheme(definition.id);
+    }
+  },
+
   /**
    * Register a new developer tool.
    *
@@ -90,7 +99,7 @@ DevTools.prototype = {
     // Make sure that additional tools will always be able to be hidden.
     // When being called from main.js, defaultTools has not yet been exported.
     // But, we can assume that in this case, it is a default tool.
-    if (DefaultTools && DefaultTools.indexOf(toolDefinition) == -1) {
+    if (DefaultTools.indexOf(toolDefinition) == -1) {
       toolDefinition.visibilityswitch = "devtools." + toolId + ".enabled";
     }
 
@@ -147,6 +156,10 @@ DevTools.prototype = {
       }
     }
     return tools.sort(this.ordinalSort);
+  },
+
+  getDefaultThemes() {
+    return DefaultThemes.sort(this.ordinalSort);
   },
 
   /**
@@ -450,23 +463,6 @@ DevTools.prototype = {
     return toolbox.destroy().then(() => true);
   },
 
-  _pingTelemetry: function() {
-    let mean = function(arr) {
-      if (arr.length === 0) {
-        return 0;
-      }
-
-      let total = arr.reduce((a, b) => a + b);
-      return Math.ceil(total / arr.length);
-    };
-
-    let tabStats = gDevToolsBrowser._tabStats;
-    this._telemetry.log(TABS_OPEN_PEAK_HISTOGRAM, tabStats.peakOpen);
-    this._telemetry.log(TABS_OPEN_AVG_HISTOGRAM, mean(tabStats.histOpen));
-    this._telemetry.log(TABS_PINNED_PEAK_HISTOGRAM, tabStats.peakPinned);
-    this._telemetry.log(TABS_PINNED_AVG_HISTOGRAM, mean(tabStats.histPinned));
-  },
-
   /**
    * Called to tear down a tools provider.
    */
@@ -488,9 +484,6 @@ DevTools.prototype = {
     }
 
     JsonView.destroy();
-
-    this._pingTelemetry();
-    this._telemetry = null;
 
     // Cleaning down the toolboxes: i.e.
     //   for (let [target, toolbox] of this._toolboxes) toolbox.destroy();

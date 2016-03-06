@@ -21,13 +21,13 @@ add_task(function* () {
 
   yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     let {_cellMargin, _cellHeight, _cellWidth, node} = content.gGrid;
-    isnot(_cellMargin, null, "grid has a computed cell margin");
-    isnot(_cellHeight, null, "grid has a computed cell height");
-    isnot(_cellWidth, null, "grid has a computed cell width");
+    Assert.notEqual(_cellMargin, null, "grid has a computed cell margin");
+    Assert.notEqual(_cellHeight, null, "grid has a computed cell height");
+    Assert.notEqual(_cellWidth, null, "grid has a computed cell width");
     let {height, maxHeight, maxWidth} = node.style;
-    isnot(height, "", "grid has a computed grid height");
-    isnot(maxHeight, "", "grid has a computed grid max-height");
-    isnot(maxWidth, "", "grid has a computed grid max-width");
+    Assert.notEqual(height, "", "grid has a computed grid height");
+    Assert.notEqual(maxHeight, "", "grid has a computed grid max-height");
+    Assert.notEqual(maxWidth, "", "grid has a computed grid max-width");
   });
 
   // restore original state

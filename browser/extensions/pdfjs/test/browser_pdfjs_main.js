@@ -25,8 +25,8 @@ add_task(function* test() {
         //
         // Overall sanity tests
         //
-        ok(content.document.querySelector('div#viewer'), "document content has viewer UI");
-        ok('PDFJS' in content.wrappedJSObject, "window content has PDFJS object");
+        Assert.ok(content.document.querySelector('div#viewer'), "document content has viewer UI");
+        Assert.ok('PDFJS' in content.wrappedJSObject, "window content has PDFJS object");
 
         //
         // Sidebar: open
@@ -35,13 +35,13 @@ add_task(function* test() {
             outerContainer = content.document.querySelector('div#outerContainer');
 
         sidebar.click();
-        ok(outerContainer.classList.contains('sidebarOpen'), "sidebar opens on click");
+        Assert.ok(outerContainer.classList.contains('sidebarOpen'), "sidebar opens on click");
 
         //
         // Sidebar: close
         //
         sidebar.click();
-        ok(!outerContainer.classList.contains('sidebarOpen'), "sidebar closes on click");
+        Assert.ok(!outerContainer.classList.contains('sidebarOpen'), "sidebar closes on click");
 
         //
         // Page change from prev/next buttons
@@ -50,7 +50,7 @@ add_task(function* test() {
             nextPage = content.document.querySelector('button#next');
 
         var pgNumber = content.document.querySelector('input#pageNumber').value;
-        is(parseInt(pgNumber, 10), 1, 'initial page is 1');
+        Assert.equal(parseInt(pgNumber, 10), 1, "initial page is 1");
 
         //
         // Bookmark button
@@ -58,7 +58,7 @@ add_task(function* test() {
         var viewBookmark = content.document.querySelector('a#viewBookmark');
         viewBookmark.click();
 
-        ok(viewBookmark.href.length > 0, "viewBookmark button has href");
+        Assert.ok(viewBookmark.href.length > 0, "viewBookmark button has href");
 
         var viewer = content.wrappedJSObject.PDFViewerApplication;
         yield viewer.close();

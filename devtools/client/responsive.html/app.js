@@ -4,13 +4,14 @@
 
 "use strict";
 
-const { createClass, createFactory, PropTypes } =
+const { createClass, createFactory, PropTypes, DOM: dom } =
   require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const { resizeViewport, rotateViewport } = require("./actions/viewports");
 const Types = require("./types");
 const Viewports = createFactory(require("./components/viewports"));
+const GlobalToolbar = createFactory(require("./components/global-toolbar"));
 
 let App = createClass({
 
@@ -19,6 +20,7 @@ let App = createClass({
   propTypes: {
     location: Types.location.isRequired,
     viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
+    onExit: PropTypes.func.isRequired,
   },
 
   render() {
@@ -26,17 +28,24 @@ let App = createClass({
       dispatch,
       location,
       viewports,
+      onExit,
     } = this.props;
 
-    // For the moment, the app is just the viewports.  This seems likely to
-    // change assuming we add a global toolbar or something similar.
-    return Viewports({
-      location,
-      viewports,
-      onRotateViewport: id => dispatch(rotateViewport(id)),
-      onResizeViewport: (id, width, height) =>
-        dispatch(resizeViewport(id, width, height)),
-    });
+    return dom.div(
+      {
+        id: "app",
+      },
+      GlobalToolbar({
+        onExit,
+      }),
+      Viewports({
+        location,
+        viewports,
+        onRotateViewport: id => dispatch(rotateViewport(id)),
+        onResizeViewport: (id, width, height) =>
+          dispatch(resizeViewport(id, width, height)),
+      })
+    );
   },
 
 });

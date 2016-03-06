@@ -150,7 +150,7 @@ add_task(function* () {
     let observer = new content.MutationObserver(() => {
       if (input.getAttribute("aria-expanded") == "true") {
         observer.disconnect();
-        ok(!table.hidden, "Search suggestion table unhidden");
+        Assert.ok(!table.hidden, "Search suggestion table unhidden");
         sendAsyncMessage("test:newtab-suggestions-open", {});
       }
     });
@@ -173,10 +173,10 @@ add_task(function* () {
   EventUtils.synthesizeKey("a", { accelKey: true });
   EventUtils.synthesizeKey("VK_DELETE", {});
 
-  let tableHidden = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
-    return content.document.getElementById("searchSuggestionTable").hidden;
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    Assert.ok(content.document.getElementById("searchSuggestionTable").hidden,
+      "Search suggestion table hidden");
   });
-  ok(tableHidden, "Search suggestion table hidden");
 
   // Remove the search bar from toolbar
   CustomizableUI.removeWidgetFromArea("search-container");
@@ -185,7 +185,7 @@ add_task(function* () {
 
   yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
     let input = content.document.getElementById("newtab-search-text");
-    isnot(input, content.document.activeElement, "Search input should not be focused");
+    Assert.notEqual(input, content.document.activeElement, "Search input should not be focused");
   });
 
   // Test that Ctrl/Cmd + K will focus the input field from the page.
@@ -195,7 +195,7 @@ add_task(function* () {
 
   yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
     let input = content.document.getElementById("newtab-search-text");
-    is(input, content.document.activeElement, "Search input should be focused");
+    Assert.equal(input, content.document.activeElement, "Search input should be focused");
   });
 
   // Reset changes made to toolbar
@@ -226,9 +226,11 @@ add_task(function* () {
   yield aboutHomeLoaded;
 
   yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
-    is(content.document.documentURI.toLowerCase(), "about:home", "New tab's uri should be about:home");
+    Assert.equal(content.document.documentURI.toLowerCase(), "about:home",
+      "New tab's uri should be about:home");
     let searchInput = content.document.getElementById("searchText");
-    is(searchInput, content.document.activeElement, "Search input must be the selected element");
+    Assert.equal(searchInput, content.document.activeElement,
+      "Search input must be the selected element");
   });
 
   NewTabUtils.allPages.enabled = true;
@@ -297,8 +299,8 @@ function* checkCurrentEngine(engineInfo)
      "Sanity check: current engine: engine.name=" + engine.name +
      " basename=" + engineInfo.name);
 
-  let engineName = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
-    return content.gSearch._contentSearchController.defaultEngine.name;
+  yield ContentTask.spawn(gBrowser.selectedBrowser, { name: engine.name }, function* (args) {
+    Assert.equal(content.gSearch._contentSearchController.defaultEngine.name,
+      args.name, "currentEngineName: " + args.name);
   });
-  is(engineName, engine.name, "currentEngineName: " + engine.name);
 }

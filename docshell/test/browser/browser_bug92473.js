@@ -4,12 +4,12 @@
 
 function testContent(text) {
   return ContentTask.spawn(gBrowser.selectedBrowser, text, text => {
-    is(content.document.getElementById("testpar").innerHTML, text,
-       "<p> contains expected text");
-    is(content.document.getElementById("testtextarea").innerHTML, text,
-       "<textarea> contains expected text");
-    is(content.document.getElementById("testinput").value, text,
-       "<input> contains expected text");
+    Assert.equal(content.document.getElementById("testpar").innerHTML, text,
+      "<p> contains expected text");
+    Assert.equal(content.document.getElementById("testtextarea").innerHTML, text,
+      "<textarea> contains expected text");
+    Assert.equal(content.document.getElementById("testinput").value, text,
+      "<input> contains expected text");
   });
 }
 

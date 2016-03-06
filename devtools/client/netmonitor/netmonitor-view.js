@@ -51,6 +51,7 @@ const CONTENT_MIME_TYPE_MAPPINGS = {
   "/xml": Editor.modes.html,
   "/atom": Editor.modes.html,
   "/soap": Editor.modes.html,
+  "/vnd.mpeg.dash.mpd": Editor.modes.html,
   "/rdf": Editor.modes.css,
   "/rss": Editor.modes.css,
   "/css": Editor.modes.css

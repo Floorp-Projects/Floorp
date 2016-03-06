@@ -10,13 +10,13 @@ const URL_1 = SCHEMA + "<div id='one' style='color:red;'>ONE</div>";
 const URL_2 = SCHEMA + "<div id='two' style='color:green;'>TWO</div>";
 
 add_task(function* () {
-  let { inspector, toolbox } = yield openInspectorForURL(URL_1);
+  let {inspector, testActor} = yield openInspectorForURL(URL_1);
 
   assertMarkupViewIsLoaded();
   yield selectNode("#one", inspector);
 
-  let willNavigate = toolbox.target.once("will-navigate");
-  content.location = URL_2;
+  let willNavigate = inspector.toolbox.target.once("will-navigate");
+  yield testActor.eval(`content.location = "${URL_2}"`);
 
   info("Waiting for will-navigate");
   yield willNavigate;

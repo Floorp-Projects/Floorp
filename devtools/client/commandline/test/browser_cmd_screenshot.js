@@ -131,14 +131,10 @@ function* addTabWithToolbarRunTests(win) {
       },
       post: Task.async(function*() {
         let imgSize = yield getImageSizeFromClipboard();
-        let winSize = yield ContentTask.spawn(browser, {}, function*() {
-          return {
-            width: content.innerWidth,
-            height: content.innerHeight,
-          };
+        yield ContentTask.spawn(browser, imgSize, function*(imgSize) {
+          Assert.equal(imgSize.width, content.innerWidth, "Image width matches window size");
+          Assert.equal(imgSize.height, content.innerHeight, "Image height matches window size");
         });
-        is(imgSize.width, winSize.width, "Image width matches window size");
-        is(imgSize.height, winSize.height, "Image height matches window size");
       })
     },
     {
@@ -155,16 +151,14 @@ function* addTabWithToolbarRunTests(win) {
       },
       post: Task.async(function*() {
         let imgSize = yield getImageSizeFromClipboard();
-        let pageSize = yield ContentTask.spawn(browser, {}, function*() {
-          return {
-            width: content.innerWidth +
-                   content.scrollMaxX - content.scrollMinX,
-            height: content.innerHeight +
-                    content.scrollMaxY - content.scrollMinY,
-          };
+        yield ContentTask.spawn(browser, imgSize, function*(imgSize) {
+          Assert.equal(imgSize.width,
+            content.innerWidth + content.scrollMaxX - content.scrollMinX,
+            "Image width matches page size");
+          Assert.equal(imgSize.height,
+            content.innerHeight + content.scrollMaxY - content.scrollMinY,
+            "Image height matches page size");
         });
-        is(imgSize.width, pageSize.width, "Image width matches page size");
-        is(imgSize.height, pageSize.height, "Image height matches page size");
       })
     },
     {
@@ -180,17 +174,13 @@ function* addTabWithToolbarRunTests(win) {
       },
       post: Task.async(function*() {
         let imgSize = yield getImageSizeFromClipboard();
-        let elemSize = yield ContentTask.spawn(browser, {}, function*() {
+        yield ContentTask.spawn(browser, imgSize, function*(imgSize) {
           let img = content.document.querySelector("img#testImage");
-          return {
-            width: img.clientWidth,
-            height: img.clientHeight,
-          };
+          Assert.equal(imgSize.width, img.clientWidth,
+             "Image width matches element size");
+          Assert.equal(imgSize.height, img.clientHeight,
+             "Image height matches element size");
         });
-        is(imgSize.width, elemSize.width,
-           "Image width matches element size");
-        is(imgSize.height, elemSize.height,
-           "Image height matches element size");
       })
     },
   ]);
@@ -233,16 +223,14 @@ function* addTabWithToolbarRunTests(win) {
       },
       post: Task.async(function*() {
         let imgSize = yield getImageSizeFromClipboard();
-        let winSize = yield ContentTask.spawn(browser, {}, function*() {
-          return {
-            width: content.innerWidth,
-            height: content.innerHeight,
-          };
+        imgSize.scrollbarWidth = scrollbarSize.width;
+        imgSize.scrollbarHeight = scrollbarSize.height;
+        yield ContentTask.spawn(browser, imgSize, function*(imgSize) {
+          Assert.equal(imgSize.width, content.innerWidth - imgSize.scrollbarWidth,
+             "Image width matches window size minus scrollbar size");
+          Assert.equal(imgSize.height, content.innerHeight - imgSize.scrollbarHeight,
+             "Image height matches window size minus scrollbar size");
         });
-        is(imgSize.width, winSize.width - scrollbarSize.width,
-           "Image width matches window size minus scrollbar size");
-        is(imgSize.height, winSize.height - scrollbarSize.height,
-           "Image height matches window size minus scrollbar size");
       })
     },
     {
@@ -259,18 +247,16 @@ function* addTabWithToolbarRunTests(win) {
       },
       post: Task.async(function*() {
         let imgSize = yield getImageSizeFromClipboard();
-        let pageSize = yield ContentTask.spawn(browser, {}, function*() {
-          return {
-            width: content.innerWidth +
-                   content.scrollMaxX - content.scrollMinX,
-            height: content.innerHeight +
-                    content.scrollMaxY - content.scrollMinY,
-          };
+        imgSize.scrollbarWidth = scrollbarSize.width;
+        imgSize.scrollbarHeight = scrollbarSize.height;
+        yield ContentTask.spawn(browser, imgSize, function*(imgSize) {
+          Assert.equal(imgSize.width,
+            (content.innerWidth + content.scrollMaxX - content.scrollMinX) - imgSize.scrollbarWidth,
+            "Image width matches page size minus scrollbar size");
+          Assert.equal(imgSize.height,
+            (content.innerHeight + content.scrollMaxY - content.scrollMinY) - imgSize.scrollbarHeight,
+            "Image height matches page size minus scrollbar size");
         });
-        is(imgSize.width, pageSize.width - scrollbarSize.width,
-           "Image width matches page size minus scrollbar size");
-        is(imgSize.height, pageSize.height - scrollbarSize.height,
-           "Image height matches page size minus scrollbar size");
       })
     },
     {
@@ -286,17 +272,13 @@ function* addTabWithToolbarRunTests(win) {
       },
       post: Task.async(function*() {
         let imgSize = yield getImageSizeFromClipboard();
-        let elemSize = yield ContentTask.spawn(browser, {}, function*() {
+        yield ContentTask.spawn(browser, imgSize, function*(imgSize) {
           let img = content.document.querySelector("img#testImage");
-          return {
-            width: img.clientWidth,
-            height: img.clientHeight,
-          };
+          Assert.equal(imgSize.width, img.clientWidth,
+             "Image width matches element size");
+          Assert.equal(imgSize.height, img.clientHeight,
+             "Image height matches element size");
         });
-        is(imgSize.width, elemSize.width,
-           "Image width matches element size");
-        is(imgSize.height, elemSize.height,
-           "Image height matches element size");
       })
     },
   ]);

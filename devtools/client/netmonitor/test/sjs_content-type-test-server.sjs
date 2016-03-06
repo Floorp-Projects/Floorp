@@ -224,6 +224,23 @@ function handleRequest(request, response) {
         doubleGzipCompressString(data, observer);
         break;
       }
+      case "hls-m3u8": {
+        response.setStatusLine(request.httpVersion, status, "OK");
+        response.setHeader("Content-Type", "application/x-mpegurl", false);
+        setCacheHeaders();
+        response.write("#EXTM3U\n");
+        response.finish();
+        break;
+      }
+      case "mpeg-dash": {
+        response.setStatusLine(request.httpVersion, status, "OK");
+        response.setHeader("Content-Type", "video/vnd.mpeg.dash.mpd", false);
+        setCacheHeaders();
+        response.write('<?xml version="1.0" encoding="UTF-8"?>\n');
+        response.write('<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"></MPD>\n');
+        response.finish();
+        break;
+      }
       default: {
         response.setStatusLine(request.httpVersion, 404, "Not Found");
         response.setHeader("Content-Type", "text/html; charset=utf-8", false);

@@ -54,6 +54,6 @@
         android:layout_marginLeft="15dip"
         android:layout_marginRight="15dip"
         android:scaleType="center"
-        tools:src="@drawable/home_group_expanded"/>
+        tools:src="@drawable/arrow_down"/>
 
 </LinearLayout>

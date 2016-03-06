@@ -28,7 +28,7 @@ add_task(function* () {
 
       let pinned = aSite.isPinned();
       if (pinned != aSite.node.hasAttribute("pinned")) {
-        ok(false, "invalid state (site.isPinned() != site[pinned])");
+        Assert.ok(false, "invalid state (site.isPinned() != site[pinned])");
       }
 
       return aSite.url.replace(/^http:\/\/example(\d+)\.com\/$/, "$1") + (pinned ? "p" : "");

@@ -29,12 +29,12 @@ add_task(function* test_without_dump() {
 
     yield ContentTask.spawn(browser, null, function*() {
       let doc = content.document;
-      ok(!doc.documentElement.classList.contains("crashDumpAvailable"),
+      Assert.ok(!doc.documentElement.classList.contains("crashDumpAvailable"),
          "doesn't have crash dump");
 
       let container = doc.getElementById("crash-reporter-container");
-      ok(container, "has crash-reporter-container");
-      ok(container.hidden, "crash-reporter-container is hidden");
+      Assert.ok(container, "has crash-reporter-container");
+      Assert.ok(container.hidden, "crash-reporter-container is hidden");
 
       doc.getElementById("closeTab").click();
     });
