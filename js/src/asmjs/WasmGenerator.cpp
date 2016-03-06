@@ -725,7 +725,7 @@ bool
 ModuleGenerator::addMemoryExport(UniqueChars fieldName)
 {
     return exportMap_->fieldNames.append(Move(fieldName)) &&
-           exportMap_->fieldsToExports.append(ExportMap::MemoryExport);
+           exportMap_->fieldsToExports.append(MemoryExport);
 }
 
 bool

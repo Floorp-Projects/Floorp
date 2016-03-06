@@ -3051,19 +3051,15 @@ wasm::IonCompileFunction(IonCompileTask* task)
     const FuncBytecode& func = task->func();
     FuncCompileResults& results = task->results();
 
-    // Read in the variable types to build the local types vector.
-
     Decoder d(func.bytecode());
+
+    // Build the local types vector.
 
     ValTypeVector locals;
     if (!locals.appendAll(func.sig().args()))
         return false;
-
-    uint32_t numVars = d.uncheckedReadVarU32();
-    for (uint32_t i = 0; i < numVars; i++) {
-        if (!locals.append(d.uncheckedReadValType()))
-            return false;
-    }
+    if (!DecodeLocalEntries(d, &locals))
+        return false;
 
     // Set up for Ion compilation.
 
