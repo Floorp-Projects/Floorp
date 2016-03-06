@@ -492,6 +492,10 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
         aState.mPaintLogger.LogTestData(aMetrics.GetScrollId(),
             "parentScrollId", apzc->GetParent()->GetGuid().mScrollId);
       }
+      if (aMetrics.IsRootContent()) {
+        aState.mPaintLogger.LogTestData(aMetrics.GetScrollId(),
+            "isRootContent", true);
+      }
     }
 
     if (newApzc) {
