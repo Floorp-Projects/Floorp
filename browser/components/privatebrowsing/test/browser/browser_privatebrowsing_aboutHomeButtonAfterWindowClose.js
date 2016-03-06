@@ -14,13 +14,11 @@ add_task(function* test_no_sessionrestore_button() {
 
   yield BrowserTestUtils.browserLoaded(browser);
 
-  let display = yield ContentTask.spawn(browser, {}, function* (){
+  yield ContentTask.spawn(browser, null, function* () {
     let button = content.document.getElementById("restorePreviousSession");
-    return content.getComputedStyle(button).display;
+    Assert.equal(content.getComputedStyle(button).display, "none",
+      "The Session Restore about:home button should be disabled");
   });
-
-  is(display, "none",
-    "The Session Restore about:home button should be disabled");
 
   win.close();
 });

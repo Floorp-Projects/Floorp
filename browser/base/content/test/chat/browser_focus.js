@@ -252,7 +252,7 @@ add_chat_task(function* testFocusedElement() {
   yield promise;
 
   yield ContentTask.spawn(chat.content, null, function* () {
-    is(content.document.activeElement.getAttribute("id"), "input2",
+    Assert.equal(content.document.activeElement.getAttribute("id"), "input2",
       "correct input field still has focus");
   });
 });

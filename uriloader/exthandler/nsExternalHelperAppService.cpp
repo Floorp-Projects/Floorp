@@ -376,16 +376,20 @@ static nsresult GetDownloadDirectory(nsIFile **_directory,
   }
   dir = dsf->mFile;
 #elif defined(ANDROID)
-  // On mobile devices, we are avoiding exposing users to the file
-  // system, and don't save downloads to temp directories
+  // We ask Java for the temporary download directory. The directory will be
+  // different depending on whether we have the permission to write to the
+  // public download directory or not.
+  // In the case where we do not have the permission we will start the
+  // download to the app cache directory and later move it to the final
+  // destination after prompting for the permission.
+  auto downloadDir = widget::DownloadsIntegration::GetTemporaryDownloadDirectory();
 
-  // On Android we only return something if we have and SD-card
-  char* downloadDir = getenv("DOWNLOADS_DIRECTORY");
   nsresult rv;
   if (downloadDir) {
     nsCOMPtr<nsIFile> ldir;
-    rv = NS_NewNativeLocalFile(nsDependentCString(downloadDir),
+    rv = NS_NewNativeLocalFile(downloadDir->ToCString(),
                                true, getter_AddRefs(ldir));
+
     NS_ENSURE_SUCCESS(rv, rv);
     dir = do_QueryInterface(ldir);
 

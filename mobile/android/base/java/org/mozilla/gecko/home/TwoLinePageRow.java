@@ -92,7 +92,7 @@ public class TwoLinePageRow extends LinearLayout
 
         LayoutInflater.from(context).inflate(R.layout.two_line_page_row, this);
         // Merge layouts lose their padding, so set it dynamically.
-        setPadding(0, 0, (int) getResources().getDimension(R.dimen.page_row_padding_right), 0);
+        setPadding(0, 0, (int) getResources().getDimension(R.dimen.page_row_edge_padding), 0);
 
         mTitle = (TextView) findViewById(R.id.title);
         mUrl = (TextView) findViewById(R.id.url);

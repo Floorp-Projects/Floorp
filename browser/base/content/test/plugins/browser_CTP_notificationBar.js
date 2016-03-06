@@ -66,25 +66,24 @@ add_task(function* () {
   // Work around for delayed PluginBindingAttached
   yield promiseUpdatePluginBindings(gTestBrowser);
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    return plugin.pluginFallbackType;
+    Assert.equal(plugin.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
+      "Test 3b, plugin fallback type should be PLUGIN_CLICK_TO_PLAY");
   });
-  is(result, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
-     "Test 3b, plugin fallback type should be PLUGIN_CLICK_TO_PLAY");
 
   let pluginInfo = yield promiseForPluginInfo("test");
   ok(!pluginInfo.activated, "Test 1a, plugin should not be activated");
 
-  result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return overlay && overlay.classList.contains("visible");
+    Assert.ok(!(overlay && overlay.classList.contains("visible")),
+      "Test 3b, overlay should be hidden.");
   });
-  ok(!result, "Test 3b, overlay should be hidden.");
 });
 
 add_task(function* () {
@@ -97,22 +96,21 @@ add_task(function* () {
   yield promisePopupNotification("click-to-play-plugins");
   yield promiseForNotificationBar("plugin-hidden", gTestBrowser);
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    return plugin.pluginFallbackType;
+    Assert.equal(plugin.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
+      "Test 4b, plugin fallback type should be PLUGIN_CLICK_TO_PLAY");
   });
-  is(result, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
-     "Test 4b, plugin fallback type should be PLUGIN_CLICK_TO_PLAY");
 
-  result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return overlay && overlay.classList.contains("visible");
+    Assert.ok(!(overlay && overlay.classList.contains("visible")),
+      "Test 4b, overlay should be hidden.");
   });
-  ok(!result, "Test 4b, overlay should be hidden.");
 });
 
 // Test that the notification bar is getting dismissed when directly activating plugins
@@ -127,14 +125,13 @@ add_task(function* () {
   // Expecting a plugin notification bar when plugins are overlaid offscreen.
   yield promisePopupNotification("click-to-play-plugins");
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    return plugin.pluginFallbackType;
+    Assert.equal(plugin.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
+      "Test 6, Plugin should be click-to-play");
   });
-  is(result, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
-     "Test 6, Plugin should be click-to-play");
 
   yield promisePopupNotification("click-to-play-plugins");
 

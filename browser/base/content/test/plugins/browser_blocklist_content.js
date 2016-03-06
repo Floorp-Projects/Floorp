@@ -41,11 +41,10 @@ add_task(function* () {
   // Work around for delayed PluginBindingAttached
   yield promiseUpdatePluginBindings(gTestBrowser);
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, {}, function* () {
     let test = content.document.getElementById("test");
-    return test.activated;
+    Assert.ok(test.activated, "task 1a: test plugin should be activated!");
   });
-  ok(result, "task 1a: test plugin should be activated!");
 });
 
 // Load a fresh page, load a new plugin blocklist, then load the same page again.
@@ -57,11 +56,10 @@ add_task(function* () {
   // Work around for delayed PluginBindingAttached
   yield promiseUpdatePluginBindings(gTestBrowser);
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, {}, function* () {
     let test = content.document.getElementById("test");
-    return test.activated;
+    ok(!test.activated, "task 2a: test plugin shouldn't activate!");
   });
-  ok(!result, "task 2a: test plugin shouldn't activate!");
 });
 
 // Unload the block list and lets do this again, only this time lets
@@ -82,11 +80,10 @@ add_task(function* () {
   // Work around for delayed PluginBindingAttached
   yield promiseUpdatePluginBindings(gTestBrowser);
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, {}, function* () {
     let test = content.document.getElementById("test");
-    return test.activated;
+    Assert.ok(test.activated, "task 3a: test plugin should be activated!");
   });
-  ok(result, "task 3a: test plugin should be activated!");
 });
 
 // Load a fresh page, load a new plugin blocklist, then load the same page again.
@@ -98,11 +95,10 @@ add_task(function* () {
   // Work around for delayed PluginBindingAttached
   yield promiseUpdatePluginBindings(gTestBrowser);
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, {}, function* () {
     let test = content.document.getElementById("test");
-    return test.activated;
+    Assert.ok(!test.activated, "task 4a: test plugin shouldn't activate!");
   });
-  ok(!result, "task 4a: test plugin shouldn't activate!");
 
   yield asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins.xml", gTestBrowser);
 });

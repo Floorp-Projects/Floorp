@@ -10,7 +10,7 @@
 const {Cc, Ci, Cu} = require("chrome");
 const promise = require("promise");
 const Services = require("Services");
-const {Tools} = require("devtools/client/main");
+const {Tools} = require("devtools/client/definitions");
 const {setTimeout, clearTimeout} =
       Cu.import("resource://gre/modules/Timer.jsm", {});
 const {CssLogic} = require("devtools/shared/inspector/css-logic");

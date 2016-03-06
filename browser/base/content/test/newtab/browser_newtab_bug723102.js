@@ -15,10 +15,9 @@ add_task(function* () {
   ok(NewTabUtils.allPages.enabled, "page is enabled");
   NewTabUtils.allPages.enabled = false;
 
-  let disabled = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
-    return content.gGrid.node.hasAttribute("page-disabled");
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+    Assert.ok(content.gGrid.node.hasAttribute("page-disabled"), "page is disabled");
   });
-  ok(disabled, "page is disabled");
 
   NewTabUtils.allPages.enabled = true;
 });

@@ -297,7 +297,7 @@ public class StringHelper {
         READING_LIST_LABEL = res.getString(R.string.reading_list_title);
         TODAY_LABEL = res.getString(R.string.history_today_section);
 
-        BOOKMARKS_UP_TO = res.getString(R.string.home_move_up_to_filter);
+        BOOKMARKS_UP_TO = res.getString(R.string.home_move_back_to_filter);
         BOOKMARKS_ROOT_LABEL = res.getString(R.string.bookmarks_title);
         DESKTOP_FOLDER_LABEL = res.getString(R.string.bookmarks_folder_desktop);
         TOOLBAR_FOLDER_LABEL = res.getString(R.string.bookmarks_folder_toolbar);

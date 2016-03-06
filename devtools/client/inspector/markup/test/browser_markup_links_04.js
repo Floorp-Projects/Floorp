@@ -28,16 +28,20 @@ const TEST_DATA = [{
   popupNodeSelector: ".link",
   isLinkFollowItemVisible: true,
   isLinkCopyItemVisible: true,
-  linkFollowItemLabel: TOOLBOX_STRINGS.GetStringFromName("toolbox.viewCssSourceInStyleEditor.label"),
-  linkCopyItemLabel: STRINGS.GetStringFromName("inspector.menu.copyUrlToClipboard.label")
+  linkFollowItemLabel: TOOLBOX_STRINGS.GetStringFromName(
+    "toolbox.viewCssSourceInStyleEditor.label"),
+  linkCopyItemLabel: STRINGS.GetStringFromName(
+    "inspector.menu.copyUrlToClipboard.label")
 }, {
   selector: "link[rel=icon]",
   attributeName: "href",
   popupNodeSelector: ".link",
   isLinkFollowItemVisible: true,
   isLinkCopyItemVisible: true,
-  linkFollowItemLabel: STRINGS.GetStringFromName("inspector.menu.openUrlInNewTab.label"),
-  linkCopyItemLabel: STRINGS.GetStringFromName("inspector.menu.copyUrlToClipboard.label")
+  linkFollowItemLabel: STRINGS.GetStringFromName(
+    "inspector.menu.openUrlInNewTab.label"),
+  linkCopyItemLabel: STRINGS.GetStringFromName(
+    "inspector.menu.copyUrlToClipboard.label")
 }, {
   selector: "link",
   attributeName: "rel",
@@ -58,8 +62,10 @@ const TEST_DATA = [{
   popupNodeSelector: ".link",
   isLinkFollowItemVisible: true,
   isLinkCopyItemVisible: true,
-  linkFollowItemLabel: TOOLBOX_STRINGS.GetStringFromName("toolbox.viewJsSourceInDebugger.label"),
-  linkCopyItemLabel: STRINGS.GetStringFromName("inspector.menu.copyUrlToClipboard.label")
+  linkFollowItemLabel: TOOLBOX_STRINGS.GetStringFromName(
+    "toolbox.viewJsSourceInDebugger.label"),
+  linkCopyItemLabel: STRINGS.GetStringFromName(
+    "inspector.menu.copyUrlToClipboard.label")
 }, {
   selector: "p[for]",
   attributeName: "for",

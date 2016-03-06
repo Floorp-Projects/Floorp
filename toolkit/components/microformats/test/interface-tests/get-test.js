@@ -363,6 +363,7 @@ describe('Microformat.get', function() {
         node.innerHTML = altHTML;
         doc.body.appendChild(node);
 
+        // filter as an array
         options ={
             'node': node,
             'filters': ['h-card'],
@@ -372,6 +373,15 @@ describe('Microformat.get', function() {
         result = Microformats.get(options);
         assert.deepEqual( result, altExpected );
 
+        // filter as an string
+        options ={
+            'node': node,
+            'filters': 'h-card',
+            'dateFormat': 'html5'
+        };
+
+        result = Microformats.get(options);
+        assert.deepEqual( result, altExpected );
    });
 
 

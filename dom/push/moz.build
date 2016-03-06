@@ -14,9 +14,19 @@ EXTRA_JS_MODULES += [
     'PushDB.jsm',
     'PushRecord.jsm',
     'PushService.jsm',
-    'PushServiceHttp2.jsm',
-    'PushServiceWebSocket.jsm',
 ]
+
+if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
+    # Everything but Fennec.
+    EXTRA_JS_MODULES += [
+        'PushServiceHttp2.jsm',
+        'PushServiceWebSocket.jsm',
+    ]
+else:
+    # Fennec only.
+    EXTRA_JS_MODULES += [
+        'PushServiceAndroidGCM.jsm',
+    ]
 
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',

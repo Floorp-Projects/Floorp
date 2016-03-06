@@ -112,6 +112,7 @@ loop.store.ActiveRoomStore = (function(mozL10n) {
       "remoteSrcMediaElement",
       "remoteVideoDimensions",
       "remoteVideoEnabled",
+      "streamPaused",
       "screenSharingState",
       "screenShareMediaElement",
       "videoMuted"
@@ -151,6 +152,8 @@ loop.store.ActiveRoomStore = (function(mozL10n) {
         roomInfoFailure: null,
         // The name of the room.
         roomName: null,
+        // True when sharing screen has been paused.
+        streamPaused: false,
         // Social API state.
         socialShareProviders: null,
         // True if media has been connected both-ways.
@@ -268,7 +271,8 @@ loop.store.ActiveRoomStore = (function(mozL10n) {
         "toggleBrowserSharing",
         "updateSocialShareInfo",
         "connectionStatus",
-        "mediaConnected"
+        "mediaConnected",
+        "videoScreenStreamChanged"
       ];
       // Register actions that are only used on Desktop.
       if (this._isDesktop) {
@@ -1205,6 +1209,18 @@ loop.store.ActiveRoomStore = (function(mozL10n) {
       nextState[storeProp] = this.getStoreState()[storeProp];
       nextState[storeProp][actionData.videoType] = actionData.dimensions;
       this.setStoreState(nextState);
+    },
+
+    /**
+     * Listen to screen stream changes in order to check if sharing screen
+     * has been paused.
+     *
+     * @param {sharedActions.VideoScreenStreamChanged} actionData
+     */
+    videoScreenStreamChanged: function(actionData) {
+      this.setStoreState({
+        streamPaused: !actionData.hasVideo
+      });
     },
 
     /**

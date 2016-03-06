@@ -18,7 +18,7 @@ const TOOL_URL = "chrome://devtools/content/responsive.html/index.xhtml";
  * from devtools/client/responsivedesign/responsivedesign.jsm delegates to this
  * object when the pref "devtools.responsive.html.enabled" is true.
  */
-exports.ResponsiveUIManager = {
+const ResponsiveUIManager = exports.ResponsiveUIManager = {
   activeTabs: new Map(),
 
   /**
@@ -138,8 +138,7 @@ exports.ResponsiveUIManager = {
 
 // GCLI commands in ../responsivedesign/resize-commands.js listen for events
 // from this object to know when the UI for a tab has opened or closed.
-EventEmitter.decorate(exports.ResponsiveUIManager);
-
+EventEmitter.decorate(ResponsiveUIManager);
 /**
  * ResponsiveUI manages the responsive design tool for a specific tab.  The
  * actual tool itself lives in a separate chrome:// document that is loaded into
@@ -198,6 +197,7 @@ ResponsiveUI.prototype = {
     yield tabLoaded(this.tab);
     let toolWindow = this.toolWindow = tabBrowser.contentWindow;
     toolWindow.addInitialViewport(contentURI);
+    toolWindow.addEventListener("message", this);
   }),
 
   destroy() {
@@ -209,6 +209,21 @@ ResponsiveUI.prototype = {
     this.toolWindow = null;
   },
 
+  handleEvent(event) {
+    let { tab, window } = this;
+    let toolWindow = tab.linkedBrowser.contentWindow;
+
+    if (event.origin !== "chrome://devtools") {
+      return;
+    }
+
+    switch (event.data.type) {
+      case "exit":
+        toolWindow.removeEventListener(event.type, this);
+        ResponsiveUIManager.closeIfNeeded(window, tab);
+        break;
+    }
+  },
 };
 
 function tabLoaded(tab) {
