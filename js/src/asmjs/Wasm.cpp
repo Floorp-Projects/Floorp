@@ -1265,10 +1265,10 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
     if (d.currentPosition() != bodyEnd)
         return Fail(cx, d, "function body length mismatch");
 
-    if (!fg.bytecode().resize(bodySize))
+    if (!fg.bytes().resize(bodySize))
         return false;
 
-    memcpy(fg.bytecode().begin(), bodyBegin, bodySize);
+    memcpy(fg.bytes().begin(), bodyBegin, bodySize);
 
     int64_t after = PRMJ_Now();
     unsigned generateTime = (after - before) / PRMJ_USEC_PER_MSEC;

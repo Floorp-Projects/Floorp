@@ -21,6 +21,7 @@
 
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 
 #include "NamespaceImports.h"
@@ -39,6 +40,7 @@ class PropertyName;
 namespace wasm {
 
 using mozilla::EnumeratedArray;
+using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::MallocSizeOf;
 
