@@ -3937,13 +3937,11 @@ EncodeFunctionBody(Encoder& e, WasmAstFunc& func)
 
     size_t beforeBody = e.currentOffset();
 
-    if (!e.writeVarU32(func.vars().length()))
+    ValTypeVector varTypes;
+    if (!varTypes.appendAll(func.vars()))
         return false;
-
-    for (ValType type : func.vars()) {
-        if (!e.writeValType(type))
-            return false;
-    }
+    if (!EncodeLocalEntries(e, varTypes))
+        return false;
 
     for (WasmAstExpr* expr : func.body()) {
         if (!EncodeExpr(e, *expr))

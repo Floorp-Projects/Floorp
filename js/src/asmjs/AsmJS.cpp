@@ -3532,13 +3532,8 @@ CheckVariables(FunctionValidator& f, ParseNode** stmtIter)
 
     MOZ_ASSERT(f.encoder().empty());
 
-    if (!f.encoder().writeVarU32(types.length()))
+    if (!EncodeLocalEntries(f.encoder(), types))
         return false;
-
-    for (ValType v : types) {
-        if (!f.encoder().writeValType(v))
-            return false;
-    }
 
     for (uint32_t i = 0; i < inits.length(); i++) {
         NumLit lit = inits[i];
