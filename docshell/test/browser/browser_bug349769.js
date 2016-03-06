@@ -5,12 +5,12 @@ add_task(function* test() {
   function checkContentProcess(uri) {
     yield ContentTask.spawn(newBrowser, uri, function* (uri) {
       var prin = content.document.nodePrincipal;
-      isnot(prin, null, "Loaded principal must not be null when adding " + uri);
-      isnot(prin, undefined, "Loaded principal must not be undefined when loading " + uri);
+      Assert.notEqual(prin, null, "Loaded principal must not be null when adding " + uri);
+      Assert.notEqual(prin, undefined, "Loaded principal must not be undefined when loading " + uri);
 
       const secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
                        .getService(Ci.nsIScriptSecurityManager);
-      is(secMan.isSystemPrincipal(prin), false,
+      Assert.equal(secMan.isSystemPrincipal(prin), false,
          "Loaded principal must not be system when loading " + uri);
     });
   }

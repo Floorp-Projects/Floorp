@@ -30,7 +30,9 @@ import android.content.Context;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
@@ -267,7 +269,23 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         // will read the content description to obtain the full URL for performing assertions.
         setContentDescription(strippedURL);
 
-        if (!TextUtils.isEmpty(baseDomain)) {
+        final SiteIdentity siteIdentity = tab.getSiteIdentity();
+        if (siteIdentity.hasOwner()) {
+            final String title;
+
+            if (siteIdentity.hasCountry()) {
+                title = String.format("%s (%s)", siteIdentity.getOwner(), siteIdentity.getCountry());
+            } else {
+                title = siteIdentity.getOwner();
+            }
+
+            final int color = ContextCompat.getColor(getContext(), R.color.affirmative_green);
+
+            final SpannableString spannable = new SpannableString(title);
+            spannable.setSpan(new ForegroundColorSpan(color), 0, title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            setTitle(spannable);
+        } else if (!TextUtils.isEmpty(baseDomain)) {
             setTitle(baseDomain);
         } else {
             setTitle(strippedURL);

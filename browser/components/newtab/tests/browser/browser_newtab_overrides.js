@@ -58,11 +58,11 @@ add_task(function* redirector_ignores_override() {
      */
     yield BrowserTestUtils.withNewTab(tabOptions, function*(browser) {
       yield ContentTask.spawn(browser, {}, function*() {
-        is(content.location.href, "about:newtab", "Got right URL");
-        is(content.document.location.href, "about:newtab", "Got right URL");
-        is(content.document.nodePrincipal,
-           Services.scriptSecurityManager.getSystemPrincipal(),
-           "nodePrincipal should match systemPrincipal");
+        Assert.equal(content.location.href, "about:newtab", "Got right URL");
+        Assert.equal(content.document.location.href, "about:newtab", "Got right URL");
+        Assert.equal(content.document.nodePrincipal,
+          Services.scriptSecurityManager.getSystemPrincipal(),
+          "nodePrincipal should match systemPrincipal");
       });
     });  // jshint ignore:line
   }
@@ -92,8 +92,8 @@ add_task(function* override_loads_in_browser() {
     yield BrowserTestUtils.browserLoaded(browser);
 
     yield ContentTask.spawn(browser, {url: overrideURL}, function*(args) {
-      is(content.location.href, args.url.trim(), "Got right URL");
-      is(content.document.location.href, args.url.trim(), "Got right URL");
+      Assert.equal(content.location.href, args.url.trim(), "Got right URL");
+      Assert.equal(content.document.location.href, args.url.trim(), "Got right URL");
     });  // jshint ignore:line
     yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
@@ -124,8 +124,8 @@ add_task(function* override_blank_loads_in_browser() {
     yield BrowserTestUtils.browserLoaded(browser);
 
     yield ContentTask.spawn(browser, {}, function*() {
-      is(content.location.href, "about:blank", "Got right URL");
-      is(content.document.location.href, "about:blank", "Got right URL");
+      Assert.equal(content.location.href, "about:blank", "Got right URL");
+      Assert.equal(content.document.location.href, "about:blank", "Got right URL");
     });  // jshint ignore:line
     yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }

@@ -17,18 +17,18 @@ add_task(function*() {
   let shadow = yield getNodeFront("#shadow", inspector.markup);
   let children = yield inspector.walker.children(shadow);
 
-  is (shadow.numChildren, 3, "Children of the shadow root are counted");
-  is (children.nodes.length, 3, "Children returned from walker");
+  is(shadow.numChildren, 3, "Children of the shadow root are counted");
+  is(children.nodes.length, 3, "Children returned from walker");
 
-  info ("Checking the ::before pseudo element");
+  info("Checking the ::before pseudo element");
   let before = children.nodes[0];
   yield isEditingMenuDisabled(before, inspector);
 
-  info ("Checking the <h3> shadow element");
+  info("Checking the <h3> shadow element");
   let shadowChild1 = children.nodes[1];
   yield isEditingMenuDisabled(shadowChild1, inspector);
 
-  info ("Checking the <select> shadow element");
+  info("Checking the <select> shadow element");
   let shadowChild2 = children.nodes[2];
   yield isEditingMenuDisabled(shadowChild2, inspector);
 });

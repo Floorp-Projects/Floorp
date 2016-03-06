@@ -31,18 +31,18 @@ class PanelBackItemView extends LinearLayout {
         final ImageView image = (ImageView) findViewById(R.id.image);
 
         if (TextUtils.isEmpty(backImageUrl)) {
-            image.setImageResource(R.drawable.folder_up);
+            image.setImageResource(R.drawable.arrow_up);
         } else {
             ImageLoader.with(getContext())
                        .load(backImageUrl)
-                       .placeholder(R.drawable.folder_up)
+                       .placeholder(R.drawable.arrow_up)
                        .into(image);
         }
     }
 
     public void updateFromFilter(FilterDetail filter) {
         final String backText = getResources()
-            .getString(R.string.home_move_up_to_filter, filter.title);
+            .getString(R.string.home_move_back_to_filter, filter.title);
         title.setText(backText);
     }
 }

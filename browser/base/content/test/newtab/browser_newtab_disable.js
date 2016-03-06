@@ -34,10 +34,10 @@ add_task(function* () {
   ok(isDisabled, "page is disabled");
 
   // check that no sites have been rendered
-  let sitesLength = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
-    return content.document.querySelectorAll(".site").length;
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+    Assert.equal(content.document.querySelectorAll(".site").length, 0,
+      "no sites have been rendered");
   });
-  is(0, sitesLength, "no sites have been rendered");
 
   NewTabUtils.allPages.enabled = true;
 

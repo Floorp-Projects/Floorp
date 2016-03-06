@@ -483,10 +483,9 @@ SpecialPowersObserverAPI.prototype = {
         let id = aMessage.json.id;
         let name = aMessage.json.name;
         let message = aMessage.json.message;
-        this._chromeScriptListeners
-            .filter(o => (o.name == name && o.id == id))
-            .forEach(o => o.listener(message));
-        return undefined;	// See comment at the beginning of this function.
+        return this._chromeScriptListeners
+                   .filter(o => (o.name == name && o.id == id))
+                   .map(o => o.listener(message));
       }
 
       case "SPImportInMainProcess": {

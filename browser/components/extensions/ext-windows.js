@@ -5,6 +5,8 @@
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -42,7 +44,7 @@ extensions.registerSchemaAPI("windows", null, (extension, context) => {
       }).api(),
 
       get: function(windowId, getInfo) {
-        let window = WindowManager.getWindow(windowId);
+        let window = WindowManager.getWindow(windowId, context);
         return Promise.resolve(WindowManager.convert(extension, window, getInfo));
       },
 
@@ -63,6 +65,13 @@ extensions.registerSchemaAPI("windows", null, (extension, context) => {
       },
 
       create: function(createData) {
+        if (createData.state !== null && createData.state != "normal") {
+          if (createData.left !== null || createData.top !== null ||
+              createData.width !== null || createData.height !== null) {
+            return Promise.reject({message: `"state": "${createData.state}" may not be combined with "left", "top", "width", or "height"`});
+          }
+        }
+
         function mkstr(s) {
           let result = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
           result.data = s;
@@ -104,17 +113,25 @@ extensions.registerSchemaAPI("windows", null, (extension, context) => {
           args.AppendElement(mkstr(aboutNewTabService.newTabURL));
         }
 
-        let extraFeatures = "";
+        let features = ["chrome"];
+
+        if (createData.type === null || createData.type == "normal") {
+          features.push("dialog=no", "all");
+        } else {
+          // All other types create "popup"-type windows by default.
+          features.push("dialog", "resizable", "minimizable", "centerscreen", "titlebar", "close");
+        }
+
         if (createData.incognito !== null) {
           if (createData.incognito) {
-            extraFeatures += ",private";
+            features.push("private");
           } else {
-            extraFeatures += ",non-private";
+            features.push("non-private");
           }
         }
 
         let window = Services.ww.openWindow(null, "chrome://browser/content/browser.xul", "_blank",
-                                            "chrome,dialog=no,all" + extraFeatures, args);
+                                            features.join(","), args);
 
         if (createData.left !== null || createData.top !== null) {
           let left = createData.left !== null ? createData.left : window.screenX;
@@ -127,28 +144,62 @@ extensions.registerSchemaAPI("windows", null, (extension, context) => {
           window.resizeTo(width, height);
         }
 
-        // TODO: focused, type, state
+        // TODO: focused, type
 
         return new Promise(resolve => {
           window.addEventListener("load", function listener() {
             window.removeEventListener("load", listener);
-            resolve(WindowManager.convert(extension, window));
+
+            if (createData.state == "maximized" || createData.state == "normal" ||
+                (createData.state == "fullscreen" && AppConstants.platform != "macosx")) {
+              window.document.documentElement.setAttribute("sizemode", createData.state);
+            } else if (createData.state !== null) {
+              // window.minimize() has no useful effect until the window has
+              // been shown.
+
+              let obs = doc => {
+                if (doc === window.document) {
+                  Services.obs.removeObserver(obs, "document-shown");
+                  WindowManager.setState(window, createData.state);
+                  resolve();
+                }
+              };
+              Services.obs.addObserver(obs, "document-shown", false);
+              return;
+            }
+
+            resolve();
           });
+        }).then(() => {
+          return WindowManager.convert(extension, window);
         });
       },
 
       update: function(windowId, updateInfo) {
-        let window = WindowManager.getWindow(windowId);
+        // TODO: When we support size/position updates:
+        // if (updateInfo.state !== null && updateInfo.state != "normal") {
+        //   if (updateInfo.left !== null || updateInfo.top !== null ||
+        //       updateInfo.width !== null || updateInfo.height !== null) {
+        //     return Promise.reject({message: `"state": "${updateInfo.state}" may not be combined with "left", "top", "width", or "height"`});
+        //   }
+        // }
+
+        let window = WindowManager.getWindow(windowId, context);
         if (updateInfo.focused) {
           Services.focus.activeWindow = window;
         }
-        // TODO: All the other properties...
+
+        if (updateInfo.state !== null) {
+          WindowManager.setState(window, updateInfo.state);
+        }
+
+        // TODO: All the other properties, focused=false...
 
         return Promise.resolve(WindowManager.convert(extension, window));
       },
 
       remove: function(windowId) {
-        let window = WindowManager.getWindow(windowId);
+        let window = WindowManager.getWindow(windowId, context);
         window.close();
 
         return new Promise(resolve => {

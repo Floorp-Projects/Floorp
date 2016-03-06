@@ -1,3 +1,6 @@
+/* vim: set ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 // Test that tooltips don't appear when dragging over tooltip targets.
@@ -20,10 +23,10 @@ add_task(function*() {
   yield simulateNodeDrag(inspector, "div");
 
   info("Now check that the src attribute of the image isn't a valid target");
-  try{
+  try {
     yield markup.tooltip.isValidHoverTarget(target);
     isValid = true;
-  } catch(e) {
+  } catch (e) {
     isValid = false;
   }
   ok(!isValid, "The element is not a valid tooltip target");

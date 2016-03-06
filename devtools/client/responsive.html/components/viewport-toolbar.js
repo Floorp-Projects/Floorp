@@ -25,7 +25,7 @@ module.exports = createClass({
         className: "viewport-toolbar",
       },
       dom.button({
-        className: "viewport-rotate-button viewport-toolbar-button",
+        className: "viewport-rotate-button toolbar-button",
         onClick: onRotateViewport,
       })
     );
