@@ -96,6 +96,20 @@ function backgroundScript() {
     return url.startsWith(BASE) || /^data:.*\bwebRequestTest\b/.test(url);
   }
 
+  let statuses = [
+    {url: /_script_good\b/, code: 200, line: /^HTTP\/1.1 200 OK\b/i},
+    {url: /\bredirection\b/, code: 302, line: /^HTTP\/1.1 302\b/},
+    {url: /\bnonexistent_script_/, code: 404, line: /^HTTP\/1.1 404 Not Found\b/i},
+  ];
+  function checkStatus(details) {
+    for (let {url, code, line} of statuses) {
+      if (url.test(details.url)) {
+        browser.test.assertTrue(code === details.statusCode, `HTTP status code ${code} for ${details.url} (found ${details.statusCode})`);
+        browser.test.assertTrue(line.test(details.statusLine), `HTTP status line ${line} for ${details.url} (found ${details.statusLine})`);
+      }
+    }
+  }
+
   function checkType(details) {
     let expected_type = "???";
     if (details.url.indexOf("style") != -1) {
@@ -302,6 +316,7 @@ function backgroundScript() {
 
       browser.test.assertEq(details.tabId, savedTabId, "correct tab ID");
       checkType(details);
+      checkStatus(details);
 
       let id = frameIDs.get(details.url);
       browser.test.assertEq(id, details.frameId, "frame ID same in onBeforeRedirect as onBeforeRequest");
@@ -344,6 +359,7 @@ function backgroundScript() {
       }
       completedUrls[kind].add(details.url);
     }
+    checkStatus(details);
   }
 
   function onHeadersReceived(details) {
