@@ -113,7 +113,6 @@ CompositingRenderTargetD3D9::CompositingRenderTargetD3D9(IDirect3DTexture9* aTex
                                                          const gfx::IntRect& aRect)
   : CompositingRenderTarget(aRect.TopLeft())
   , mInitMode(aInit)
-  , mInitialized(false)
 {
   MOZ_COUNT_CTOR(CompositingRenderTargetD3D9);
   MOZ_ASSERT(aTexture);
@@ -122,6 +121,10 @@ CompositingRenderTargetD3D9::CompositingRenderTargetD3D9(IDirect3DTexture9* aTex
   mTexture->GetSurfaceLevel(0, getter_AddRefs(mSurface));
   NS_ASSERTION(mSurface, "Couldn't create surface for texture");
   TextureSourceD3D9::SetSize(aRect.Size());
+
+  if (aInit == INIT_MODE_CLEAR) {
+    ClearOnBind();
+  }
 }
 
 CompositingRenderTargetD3D9::CompositingRenderTargetD3D9(IDirect3DSurface9* aSurface,
@@ -130,11 +133,14 @@ CompositingRenderTargetD3D9::CompositingRenderTargetD3D9(IDirect3DSurface9* aSur
   : CompositingRenderTarget(aRect.TopLeft())
   , mSurface(aSurface)
   , mInitMode(aInit)
-  , mInitialized(false)
 {
   MOZ_COUNT_CTOR(CompositingRenderTargetD3D9);
   MOZ_ASSERT(mSurface);
   TextureSourceD3D9::SetSize(aRect.Size());
+
+  if (aInit == INIT_MODE_CLEAR) {
+    ClearOnBind();
+  }
 }
 
 CompositingRenderTargetD3D9::~CompositingRenderTargetD3D9()
@@ -146,10 +152,9 @@ void
 CompositingRenderTargetD3D9::BindRenderTarget(IDirect3DDevice9* aDevice)
 {
   aDevice->SetRenderTarget(0, mSurface);
-  if (!mInitialized &&
-      mInitMode == INIT_MODE_CLEAR) {
-    mInitialized = true;
+  if (mClearOnBind) {
     aDevice->Clear(0, 0, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 0, 0);
+    mClearOnBind = false;
   }
 }
 
