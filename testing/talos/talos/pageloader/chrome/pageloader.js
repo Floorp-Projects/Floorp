@@ -466,7 +466,7 @@ var plNextPage = Task.async(function*() {
     doNextPage = true;
   } else {
     if (profilingInfo) {
-      Profiler.finishTest();
+      yield Profiler.finishTestAsync();
     }
 
     if (pageIndex < pages.length-1) {
