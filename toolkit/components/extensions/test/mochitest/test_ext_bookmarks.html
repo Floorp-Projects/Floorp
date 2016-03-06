@@ -307,7 +307,34 @@ function backgroundScript() {
   }).then(results => {
     browser.test.assertEq(0, results.length, "Expected number of results returned for non-matching search");
 
-    browser.test.notifyPass("bookmarks");
+    return Promise.resolve().then(() => {
+      return browser.bookmarks.getRecent("");
+    }).then(expectedError, error => {
+      browser.test.assertTrue(
+        error.message.includes("Incorrect argument types for bookmarks.getRecent"),
+        "Expected error thrown when calling getRecent with an empty string"
+      );
+    });
+  }).then(() => {
+    return Promise.resolve().then(() => {
+      return browser.bookmarks.getRecent(1.234);
+    }).then(expectedError, error => {
+      browser.test.assertTrue(
+        error.message.includes("Incorrect argument types for bookmarks.getRecent"),
+        "Expected error thrown when calling getRecent with a decimal number"
+      );
+    });
+  }).then(() => {
+    return browser.bookmarks.getRecent(5);
+  }).then(results => {
+    browser.test.assertEq(5, results.length, "Expected number of results returned by getRecent");
+    browser.test.assertEq("Firefox", results[0].title, "Bookmark has the expected title");
+    browser.test.assertEq("Mozilla Corporation", results[1].title, "Bookmark has the expected title");
+    browser.test.assertEq("Mozilla", results[2].title, "Bookmark has the expected title");
+    browser.test.assertEq("Toolbar Item", results[3].title, "Bookmark has the expected title");
+    browser.test.assertEq("Menu Item", results[4].title, "Bookmark has the expected title");
+
+    return browser.test.notifyPass("bookmarks");
   }).catch(error => {
     browser.test.fail(`Error: ${String(error)} :: ${error.stack}`);
   });

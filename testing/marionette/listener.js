@@ -874,7 +874,7 @@ function coordinates(target, x, y) {
 function singleTap(id, corx, cory) {
   let el = elementManager.getKnownElement(id, curContainer);
   // after this block, the element will be scrolled into view
-  let visible = element.checkVisible(el, curContainer.frame, corx, cory);
+  let visible = element.isVisible(el, corx, cory);
   if (!visible) {
     throw new ElementNotVisibleError("Element is not currently visible and may not be manipulated");
   }

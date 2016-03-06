@@ -206,35 +206,35 @@ LIRGeneratorX86::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins)
 void
 LIRGeneratorX86::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 {
-    MDefinition* ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType_Int32);
 
     // For simplicity, require a register if we're going to emit a bounds-check
     // branch, so that we don't have special cases for constants.
-    LAllocation ptrAlloc = gen->needsAsmJSBoundsCheckBranch(ins)
-                           ? useRegisterAtStart(ptr)
-                           : useRegisterOrZeroAtStart(ptr);
+    LAllocation baseAlloc = gen->needsAsmJSBoundsCheckBranch(ins)
+                            ? useRegisterAtStart(base)
+                            : useRegisterOrZeroAtStart(base);
 
-    define(new(alloc()) LAsmJSLoadHeap(ptrAlloc), ins);
+    define(new(alloc()) LAsmJSLoadHeap(baseAlloc), ins);
 }
 
 void
 LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 {
-    MDefinition* ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType_Int32);
 
     // For simplicity, require a register if we're going to emit a bounds-check
     // branch, so that we don't have special cases for constants.
-    LAllocation ptrAlloc = gen->needsAsmJSBoundsCheckBranch(ins)
-                           ? useRegisterAtStart(ptr)
-                           : useRegisterOrZeroAtStart(ptr);
+    LAllocation baseAlloc = gen->needsAsmJSBoundsCheckBranch(ins)
+                            ? useRegisterAtStart(base)
+                            : useRegisterOrZeroAtStart(base);
 
     LAsmJSStoreHeap* lir = nullptr;
     switch (ins->accessType()) {
       case Scalar::Int8: case Scalar::Uint8:
         // See comment for LIRGeneratorX86::useByteOpRegister.
-        lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useFixed(ins->value(), eax));
+        lir = new(alloc()) LAsmJSStoreHeap(baseAlloc, useFixed(ins->value(), eax));
         break;
       case Scalar::Int16: case Scalar::Uint16:
       case Scalar::Int32: case Scalar::Uint32:
@@ -242,7 +242,7 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
       case Scalar::Float32x4: case Scalar::Int32x4:
         // For now, don't allow constant values. The immediate operand
         // affects instruction layout which affects patching.
-        lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value()));
+        lir = new(alloc()) LAsmJSStoreHeap(baseAlloc, useRegisterAtStart(ins->value()));
         break;
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
@@ -280,8 +280,8 @@ LIRGeneratorX86::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 {
     MOZ_ASSERT(ins->accessType() < Scalar::Float32);
 
-    MDefinition* ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType_Int32);
 
     bool byteArray = byteSize(ins->accessType()) == 1;
 
@@ -302,7 +302,7 @@ LIRGeneratorX86::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
     const LAllocation newval = byteArray ? useFixed(ins->newValue(), ebx) : useRegister(ins->newValue());
 
     LAsmJSCompareExchangeHeap* lir =
-        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(ptr), oldval, newval);
+        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(base), oldval, newval);
 
     lir->setAddrTemp(temp());
     defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
@@ -311,13 +311,13 @@ LIRGeneratorX86::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 void
 LIRGeneratorX86::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
 {
-    MOZ_ASSERT(ins->ptr()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->base()->type() == MIRType_Int32);
 
-    const LAllocation ptr = useRegister(ins->ptr());
+    const LAllocation base = useRegister(ins->base());
     const LAllocation value = useRegister(ins->value());
 
     LAsmJSAtomicExchangeHeap* lir =
-        new(alloc()) LAsmJSAtomicExchangeHeap(ptr, value);
+        new(alloc()) LAsmJSAtomicExchangeHeap(base, value);
 
     lir->setAddrTemp(temp());
     if (byteSize(ins->accessType()) == 1)
@@ -331,8 +331,8 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 {
     MOZ_ASSERT(ins->accessType() < Scalar::Float32);
 
-    MDefinition* ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType_Int32);
 
     bool byteArray = byteSize(ins->accessType()) == 1;
 
@@ -348,7 +348,7 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
         else
             value = useRegisterOrConstant(ins->value());
         LAsmJSAtomicBinopHeapForEffect* lir =
-            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(ptr), value);
+            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(base), value);
         lir->setAddrTemp(temp());
         add(lir, ins);
         return;
@@ -403,7 +403,7 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
     }
 
     LAsmJSAtomicBinopHeap* lir =
-        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(ptr), value, tempDef);
+        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(base), value, tempDef);
 
     lir->setAddrTemp(temp());
     if (byteArray || bitOp)
@@ -457,4 +457,10 @@ LIRGeneratorX86::visitRandom(MRandom* ins)
                                         temp(),
                                         temp());
     defineFixed(lir, ins, LFloatReg(ReturnDoubleReg));
+}
+
+void
+LIRGeneratorX86::visitTruncateToInt64(MTruncateToInt64* ins)
+{
+    MOZ_CRASH("NY");
 }

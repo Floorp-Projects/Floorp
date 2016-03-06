@@ -447,6 +447,9 @@ class Assembler : public AssemblerX86Shared
     }
     void movslq(const Operand& src, Register dest) {
         switch (src.kind()) {
+          case Operand::REG:
+            masm.movslq_rr(src.reg(), dest.encoding());
+            break;
           case Operand::MEM_REG_DISP:
             masm.movslq_mr(src.disp(), src.base(), dest.encoding());
             break;

@@ -3726,6 +3726,31 @@ MTruncateToInt32::foldsTo(TempAllocator& alloc)
 }
 
 MDefinition*
+MWrapInt64ToInt32::foldsTo(TempAllocator& alloc)
+{
+    MDefinition* input = this->input();
+    if (input->isConstant()) {
+        int64_t c = input->toConstant()->toInt64();
+        return MConstant::New(alloc, Int32Value(int32_t(c)));
+    }
+
+    return this;
+}
+
+MDefinition*
+MExtendInt32ToInt64::foldsTo(TempAllocator& alloc)
+{
+    MDefinition* input = this->input();
+    if (input->isConstant()) {
+        int32_t c = input->toConstant()->toInt32();
+        int64_t res = isUnsigned() ? int64_t(uint32_t(c)) : int64_t(c);
+        return MConstant::NewInt64(alloc, res);
+    }
+
+    return this;
+}
+
+MDefinition*
 MToDouble::foldsTo(TempAllocator& alloc)
 {
     MDefinition* input = getOperand(0);
@@ -4527,10 +4552,10 @@ MAsmJSLoadHeap::mightAlias(const MDefinition* def) const
         const MAsmJSStoreHeap* store = def->toAsmJSStoreHeap();
         if (store->accessType() != accessType())
             return true;
-        if (!ptr()->isConstant() || !store->ptr()->isConstant())
+        if (!base()->isConstant() || !store->base()->isConstant())
             return true;
-        const MConstant* otherPtr = store->ptr()->toConstant();
-        return ptr()->toConstant()->equals(otherPtr);
+        const MConstant* otherBase = store->base()->toConstant();
+        return base()->toConstant()->equals(otherBase);
     }
     return true;
 }

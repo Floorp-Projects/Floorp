@@ -299,7 +299,7 @@ DeveloperToolbar.prototype.createToolbar = function() {
 
   let close = this._doc.createElement("toolbarbutton");
   close.setAttribute("id", "developer-toolbar-closebutton");
-  close.setAttribute("class", "devtools-closebutton");
+  close.setAttribute("class", "close-icon");
   close.setAttribute("oncommand", "DeveloperToolbar.hide();");
   close.setAttribute("tooltiptext", "developerToolbarCloseButton.tooltiptext");
 
@@ -333,10 +333,15 @@ DeveloperToolbar.prototype.createToolbar = function() {
     toolbar.appendChild(close);
   }
 
-  let bottomBox = this._doc.getElementById("browser-bottombox");
   this._element = toolbar;
-  bottomBox.appendChild(this._element);
-
+  let bottomBox = this._doc.getElementById("browser-bottombox");
+  if (bottomBox) {
+    bottomBox.appendChild(this._element);
+  } else { // SeaMonkey does not have a "browser-bottombox".
+    let statusBar = this._doc.getElementById("status-bar");
+    if (statusBar)
+      statusBar.parentNode.insertBefore(this._element, statusBar);
+  }
   this._errorCounterButton = toolboxBtn
   this._errorCounterButton._defaultTooltipText =
       this._errorCounterButton.getAttribute("tooltiptext");

@@ -5647,12 +5647,12 @@ void
 CodeGenerator::visitSetArrayLength(LSetArrayLength* lir)
 {
     Address length(ToRegister(lir->elements()), ObjectElements::offsetOfLength());
-    Int32Key newLength = ToInt32Key(lir->index());
+    RegisterOrInt32Constant newLength = ToRegisterOrInt32Constant(lir->index());
 
-    masm.bumpKey(&newLength, 1);
-    masm.storeKey(newLength, length);
+    masm.inc32(&newLength);
+    masm.store32(newLength, length);
     // Restore register value if it is used/captured after.
-    masm.bumpKey(&newLength, -1);
+    masm.dec32(&newLength);
 }
 
 void
@@ -6987,12 +6987,12 @@ void
 CodeGenerator::visitSetInitializedLength(LSetInitializedLength* lir)
 {
     Address initLength(ToRegister(lir->elements()), ObjectElements::offsetOfInitializedLength());
-    Int32Key index = ToInt32Key(lir->index());
+    RegisterOrInt32Constant index = ToRegisterOrInt32Constant(lir->index());
 
-    masm.bumpKey(&index, 1);
-    masm.storeKey(index, initLength);
+    masm.inc32(&index);
+    masm.store32(index, initLength);
     // Restore register value if it is used/captured after.
-    masm.bumpKey(&index, -1);
+    masm.dec32(&index);
 }
 
 void
@@ -7023,7 +7023,7 @@ void
 CodeGenerator::visitSetUnboxedArrayInitializedLength(LSetUnboxedArrayInitializedLength* lir)
 {
     Register obj = ToRegister(lir->object());
-    Int32Key key = ToInt32Key(lir->length());
+    RegisterOrInt32Constant key = ToRegisterOrInt32Constant(lir->length());
     Register temp = ToRegister(lir->temp());
 
     Address initLengthAddr(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength());
@@ -7316,11 +7316,12 @@ CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT* lir)
     Register obj = ToRegister(lir->object());
     Register elements = ToRegister(lir->elements());
     const LAllocation* index = lir->index();
+    RegisterOrInt32Constant key = ToRegisterOrInt32Constant(index);
 
     JSValueType unboxedType = lir->mir()->unboxedType();
     if (unboxedType == JSVAL_TYPE_MAGIC) {
         Address initLength(elements, ObjectElements::offsetOfInitializedLength());
-        masm.branchKey(Assembler::BelowOrEqual, initLength, ToInt32Key(index), ool->entry());
+        masm.branch32(Assembler::BelowOrEqual, initLength, key, ool->entry());
 
         if (lir->mir()->needsBarrier())
             emitPreBarrier(elements, index, 0);
@@ -7333,7 +7334,7 @@ CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT* lir)
         Address initLength(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength());
         masm.load32(initLength, temp);
         masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), temp);
-        masm.branchKey(Assembler::BelowOrEqual, temp, ToInt32Key(index), ool->entry());
+        masm.branch32(Assembler::BelowOrEqual, temp, key, ool->entry());
 
         ConstantOrRegister v = ToConstantOrRegister(lir->value(), lir->mir()->value()->type());
 
@@ -7366,11 +7367,12 @@ CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir)
     Register elements = ToRegister(lir->elements());
     const LAllocation* index = lir->index();
     const ValueOperand value = ToValue(lir, LStoreElementHoleV::Value);
+    RegisterOrInt32Constant key = ToRegisterOrInt32Constant(index);
 
     JSValueType unboxedType = lir->mir()->unboxedType();
     if (unboxedType == JSVAL_TYPE_MAGIC) {
         Address initLength(elements, ObjectElements::offsetOfInitializedLength());
-        masm.branchKey(Assembler::BelowOrEqual, initLength, ToInt32Key(index), ool->entry());
+        masm.branch32(Assembler::BelowOrEqual, initLength, key, ool->entry());
 
         if (lir->mir()->needsBarrier())
             emitPreBarrier(elements, index, 0);
@@ -7385,7 +7387,7 @@ CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir)
         Address initLength(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength());
         masm.load32(initLength, temp);
         masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), temp);
-        masm.branchKey(Assembler::BelowOrEqual, temp, ToInt32Key(index), ool->entry());
+        masm.branch32(Assembler::BelowOrEqual, temp, key, ool->entry());
 
         if (index->isConstant()) {
             Address address(elements, ToInt32(index) * UnboxedTypeSize(unboxedType));
@@ -7445,6 +7447,8 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
         temp = store->getTemp(0);
     }
 
+    RegisterOrInt32Constant key = ToRegisterOrInt32Constant(index);
+
     // If index == initializedLength, try to bump the initialized length inline.
     // If index > initializedLength, call a stub. Note that this relies on the
     // condition flags sticking from the incoming branch.
@@ -7453,37 +7457,35 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
     // Had to reimplement for MIPS because there are no flags.
     if (unboxedType == JSVAL_TYPE_MAGIC) {
         Address initLength(elements, ObjectElements::offsetOfInitializedLength());
-        masm.branchKey(Assembler::NotEqual, initLength, ToInt32Key(index), &callStub);
+        masm.branch32(Assembler::NotEqual, initLength, key, &callStub);
     } else {
         Address initLength(object, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength());
         masm.load32(initLength, ToRegister(temp));
         masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), ToRegister(temp));
-        masm.branchKey(Assembler::NotEqual, ToRegister(temp), ToInt32Key(index), &callStub);
+        masm.branch32(Assembler::NotEqual, ToRegister(temp), key, &callStub);
     }
 #else
     masm.j(Assembler::NotEqual, &callStub);
 #endif
 
-    Int32Key key = ToInt32Key(index);
-
     if (unboxedType == JSVAL_TYPE_MAGIC) {
         // Check array capacity.
-        masm.branchKey(Assembler::BelowOrEqual, Address(elements, ObjectElements::offsetOfCapacity()),
-                       key, &callStub);
+        masm.branch32(Assembler::BelowOrEqual, Address(elements, ObjectElements::offsetOfCapacity()),
+                      key, &callStub);
 
         // Update initialized length. The capacity guard above ensures this won't overflow,
         // due to MAX_DENSE_ELEMENTS_COUNT.
-        masm.bumpKey(&key, 1);
-        masm.storeKey(key, Address(elements, ObjectElements::offsetOfInitializedLength()));
+        masm.inc32(&key);
+        masm.store32(key, Address(elements, ObjectElements::offsetOfInitializedLength()));
 
         // Update length if length < initializedLength.
         Label dontUpdate;
-        masm.branchKey(Assembler::AboveOrEqual, Address(elements, ObjectElements::offsetOfLength()),
-                       key, &dontUpdate);
-        masm.storeKey(key, Address(elements, ObjectElements::offsetOfLength()));
+        masm.branch32(Assembler::AboveOrEqual, Address(elements, ObjectElements::offsetOfLength()),
+                      key, &dontUpdate);
+        masm.store32(key, Address(elements, ObjectElements::offsetOfLength()));
         masm.bind(&dontUpdate);
 
-        masm.bumpKey(&key, -1);
+        masm.dec32(&key);
     } else {
         // Check array capacity.
         masm.checkUnboxedArrayCapacity(object, key, ToRegister(temp), &callStub);
@@ -7494,7 +7496,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
         // Update length if length < initializedLength.
         Address lengthAddr(object, UnboxedArrayObject::offsetOfLength());
         Label dontUpdate;
-        masm.branchKey(Assembler::Above, lengthAddr, key, &dontUpdate);
+        masm.branch32(Assembler::Above, lengthAddr, key, &dontUpdate);
         masm.add32(Imm32(1), lengthAddr);
         masm.bind(&dontUpdate);
     }
@@ -7620,20 +7622,20 @@ CodeGenerator::emitArrayPopShift(LInstruction* lir, const MArrayPopShift* mir, R
     masm.branchTestNeedsIncrementalBarrier(Assembler::NonZero, ool->entry());
 
     // Load elements and length, and VM call if length != initializedLength.
-    Int32Key key = Int32Key(lengthTemp);
+    RegisterOrInt32Constant key = RegisterOrInt32Constant(lengthTemp);
     if (mir->unboxedType() == JSVAL_TYPE_MAGIC) {
         masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), elementsTemp);
         masm.load32(Address(elementsTemp, ObjectElements::offsetOfLength()), lengthTemp);
 
         Address initLength(elementsTemp, ObjectElements::offsetOfInitializedLength());
-        masm.branchKey(Assembler::NotEqual, initLength, key, ool->entry());
+        masm.branch32(Assembler::NotEqual, initLength, key, ool->entry());
     } else {
         masm.loadPtr(Address(obj, UnboxedArrayObject::offsetOfElements()), elementsTemp);
         masm.load32(Address(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength()), lengthTemp);
         masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), lengthTemp);
 
         Address lengthAddr(obj, UnboxedArrayObject::offsetOfLength());
-        masm.branchKey(Assembler::NotEqual, lengthAddr, key, ool->entry());
+        masm.branch32(Assembler::NotEqual, lengthAddr, key, ool->entry());
     }
 
     // Test for length != 0. On zero length either take a VM call or generate
@@ -7650,7 +7652,7 @@ CodeGenerator::emitArrayPopShift(LInstruction* lir, const MArrayPopShift* mir, R
         masm.branchTest32(Assembler::Zero, lengthTemp, lengthTemp, ool->entry());
     }
 
-    masm.bumpKey(&key, -1);
+    masm.dec32(&key);
 
     if (mir->mode() == MArrayPopShift::Pop) {
         if (mir->unboxedType() == JSVAL_TYPE_MAGIC) {
@@ -7736,7 +7738,7 @@ CodeGenerator::emitArrayPush(LInstruction* lir, const MArrayPush* mir, Register 
 {
     OutOfLineCode* ool = oolCallVM(ArrayPushDenseInfo, lir, ArgList(obj, value), StoreRegisterTo(length));
 
-    Int32Key key = Int32Key(length);
+    RegisterOrInt32Constant key = RegisterOrInt32Constant(length);
     if (mir->unboxedType() == JSVAL_TYPE_MAGIC) {
         // Load elements and length.
         masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), elementsTemp);
@@ -7744,11 +7746,11 @@ CodeGenerator::emitArrayPush(LInstruction* lir, const MArrayPush* mir, Register 
 
         // Guard length == initializedLength.
         Address initLength(elementsTemp, ObjectElements::offsetOfInitializedLength());
-        masm.branchKey(Assembler::NotEqual, initLength, key, ool->entry());
+        masm.branch32(Assembler::NotEqual, initLength, key, ool->entry());
 
         // Guard length < capacity.
         Address capacity(elementsTemp, ObjectElements::offsetOfCapacity());
-        masm.branchKey(Assembler::BelowOrEqual, capacity, key, ool->entry());
+        masm.branch32(Assembler::BelowOrEqual, capacity, key, ool->entry());
 
         // Do the store.
         masm.storeConstantOrRegister(value, BaseIndex(elementsTemp, length, TimesEight));
@@ -7759,7 +7761,7 @@ CodeGenerator::emitArrayPush(LInstruction* lir, const MArrayPush* mir, Register 
 
         // Guard length == initializedLength.
         Address lengthAddr(obj, UnboxedArrayObject::offsetOfLength());
-        masm.branchKey(Assembler::NotEqual, lengthAddr, key, ool->entry());
+        masm.branch32(Assembler::NotEqual, lengthAddr, key, ool->entry());
 
         // Guard length < capacity.
         masm.checkUnboxedArrayCapacity(obj, key, elementsTemp, ool->entry());
@@ -7771,7 +7773,7 @@ CodeGenerator::emitArrayPush(LInstruction* lir, const MArrayPush* mir, Register 
         masm.storeUnboxedProperty(addr, mir->unboxedType(), value, nullptr);
     }
 
-    masm.bumpKey(&key, 1);
+    masm.inc32(&key);
 
     // Update length and initialized length.
     if (mir->unboxedType() == JSVAL_TYPE_MAGIC) {
@@ -9710,12 +9712,12 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole* lir)
 
     // Load the length.
     Register scratch = out.scratchReg();
-    Int32Key key = ToInt32Key(lir->index());
+    RegisterOrInt32Constant key = ToRegisterOrInt32Constant(lir->index());
     masm.unboxInt32(Address(object, TypedArrayObject::lengthOffset()), scratch);
 
     // Load undefined unless length > key.
     Label inbounds, done;
-    masm.branchKey(Assembler::Above, scratch, key, &inbounds);
+    masm.branch32(Assembler::Above, scratch, key, &inbounds);
     masm.moveValue(UndefinedValue(), out);
     masm.jump(&done);
 

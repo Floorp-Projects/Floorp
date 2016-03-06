@@ -41,7 +41,7 @@ protocol PUDPSocket
   manager PNecko or PBackground;
 
 parent:
-  async Bind(UDPAddressInfo addressInfo, bool addressReuse, bool loopback);
+  async Bind(UDPAddressInfo addressInfo, bool addressReuse, bool loopback, uint32_t recvBufferSize);
   async Connect(UDPAddressInfo addressInfo);
 
   async OutgoingData(UDPData data, UDPSocketAddr addr);

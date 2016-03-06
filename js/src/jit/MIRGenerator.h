@@ -229,6 +229,7 @@ class MIRGenerator
 
     bool needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const;
     size_t foldableOffsetRange(const MAsmJSHeapAccess* access) const;
+    size_t foldableOffsetRange(bool accessNeedsBoundsCheck) const;
 
   private:
     GraphSpewer gs_;

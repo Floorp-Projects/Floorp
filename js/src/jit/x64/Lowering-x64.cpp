@@ -158,29 +158,29 @@ LIRGeneratorX64::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins)
 void
 LIRGeneratorX64::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 {
-    MDefinition* ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType_Int32);
 
     // For simplicity, require a register if we're going to emit a bounds-check
     // branch, so that we don't have special cases for constants.
-    LAllocation ptrAlloc = gen->needsAsmJSBoundsCheckBranch(ins)
-                           ? useRegisterAtStart(ptr)
-                           : useRegisterOrZeroAtStart(ptr);
+    LAllocation baseAlloc = gen->needsAsmJSBoundsCheckBranch(ins)
+                            ? useRegisterAtStart(base)
+                            : useRegisterOrZeroAtStart(base);
 
-    define(new(alloc()) LAsmJSLoadHeap(ptrAlloc), ins);
+    define(new(alloc()) LAsmJSLoadHeap(baseAlloc), ins);
 }
 
 void
 LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 {
-    MDefinition* ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType_Int32);
 
     // For simplicity, require a register if we're going to emit a bounds-check
     // branch, so that we don't have special cases for constants.
-    LAllocation ptrAlloc = gen->needsAsmJSBoundsCheckBranch(ins)
-                           ? useRegisterAtStart(ptr)
-                           : useRegisterOrZeroAtStart(ptr);
+    LAllocation baseAlloc = gen->needsAsmJSBoundsCheckBranch(ins)
+                            ? useRegisterAtStart(base)
+                            : useRegisterOrZeroAtStart(base);
 
     LAsmJSStoreHeap* lir = nullptr;  // initialize to silence GCC warning
     switch (ins->accessType()) {
@@ -190,13 +190,13 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
       case Scalar::Uint16:
       case Scalar::Int32:
       case Scalar::Uint32:
-        lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterOrConstantAtStart(ins->value()));
+        lir = new(alloc()) LAsmJSStoreHeap(baseAlloc, useRegisterOrConstantAtStart(ins->value()));
         break;
       case Scalar::Float32:
       case Scalar::Float64:
       case Scalar::Float32x4:
       case Scalar::Int32x4:
-        lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value()));
+        lir = new(alloc()) LAsmJSStoreHeap(baseAlloc, useRegisterAtStart(ins->value()));
         break;
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
@@ -208,8 +208,8 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 void
 LIRGeneratorX64::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 {
-    MDefinition* ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType_Int32);
 
     // The output may not be used but will be clobbered regardless, so
     // pin the output to eax.
@@ -220,7 +220,7 @@ LIRGeneratorX64::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
     const LAllocation newval = useRegister(ins->newValue());
 
     LAsmJSCompareExchangeHeap* lir =
-        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(ptr), oldval, newval);
+        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(base), oldval, newval);
 
     defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
 }
@@ -228,9 +228,9 @@ LIRGeneratorX64::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 void
 LIRGeneratorX64::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
 {
-    MOZ_ASSERT(ins->ptr()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->base()->type() == MIRType_Int32);
 
-    const LAllocation ptr = useRegister(ins->ptr());
+    const LAllocation base = useRegister(ins->base());
     const LAllocation value = useRegister(ins->value());
 
     // The output may not be used but will be clobbered regardless,
@@ -238,15 +238,15 @@ LIRGeneratorX64::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
     // use the output register as a temp.
 
     LAsmJSAtomicExchangeHeap* lir =
-        new(alloc()) LAsmJSAtomicExchangeHeap(ptr, value);
+        new(alloc()) LAsmJSAtomicExchangeHeap(base, value);
     define(lir, ins);
 }
 
 void
 LIRGeneratorX64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 {
-    MDefinition* ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType_Int32);
 
     // Case 1: the result of the operation is not used.
     //
@@ -255,7 +255,7 @@ LIRGeneratorX64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 
     if (!ins->hasUses()) {
         LAsmJSAtomicBinopHeapForEffect* lir =
-            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(ptr),
+            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(base),
                                                         useRegisterOrConstant(ins->value()));
         add(lir, ins);
         return;
@@ -296,7 +296,7 @@ LIRGeneratorX64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
     }
 
     LAsmJSAtomicBinopHeap* lir =
-        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(ptr),
+        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(base),
                                            value,
                                            bitOp ? temp() : LDefinition::BogusTemp());
 
@@ -384,4 +384,14 @@ LIRGeneratorX64::lowerUMod64(MMod* mod)
                                                   useRegister(mod->rhs()),
                                                   tempFixed(rax));
     defineInt64Fixed(lir, mod, LInt64Allocation(LAllocation(AnyRegister(rdx))));
+}
+
+void
+LIRGeneratorX64::visitTruncateToInt64(MTruncateToInt64* ins)
+{
+    MDefinition* opd = ins->input();
+    MOZ_ASSERT(opd->type() == MIRType_Double || opd->type() == MIRType_Float32);
+
+    LDefinition maybeTemp = ins->isUnsigned() ? tempDouble() : LDefinition::BogusTemp();
+    defineInt64(new(alloc()) LTruncateToInt64(useRegister(opd), maybeTemp), ins);
 }

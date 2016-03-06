@@ -3963,6 +3963,32 @@ class LTruncateFToInt32 : public LInstructionHelper<1, 1, 1>
     }
 };
 
+class LWrapInt64ToInt32 : public LInstructionHelper<1, INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(WrapInt64ToInt32)
+
+    static const size_t Input = 0;
+
+    explicit LWrapInt64ToInt32(const LInt64Allocation& input) {
+        setInt64Operand(Input, input);
+    }
+};
+
+class LExtendInt32ToInt64 : public LInstructionHelper<INT64_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(ExtendInt32ToInt64)
+
+    explicit LExtendInt32ToInt64(const LAllocation& input) {
+        setOperand(0, input);
+    }
+
+    const MExtendInt32ToInt64* mir() {
+        return mir_->toExtendInt32ToInt64();
+    }
+};
+
 // Convert a boolean value to a string.
 class LBooleanToString : public LInstructionHelper<1, 1, 0>
 {

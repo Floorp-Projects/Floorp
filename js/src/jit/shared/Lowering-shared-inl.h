@@ -753,6 +753,12 @@ LIRGeneratorShared::useInt64(MDefinition* mir, bool useAtStart)
 }
 
 LInt64Allocation
+LIRGeneratorShared::useInt64AtStart(MDefinition* mir)
+{
+    return useInt64(mir, /* useAtStart = */ true);
+}
+
+LInt64Allocation
 LIRGeneratorShared::useInt64Register(MDefinition* mir, bool useAtStart)
 {
     return useInt64(mir, LUse::REGISTER, useAtStart);

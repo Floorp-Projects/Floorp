@@ -95,15 +95,11 @@ function doTest1(expectedEventLog,focusAfterCloseId) {
 }
 
 function setPrefAndDoTest(expectedEventLog,focusAfterCloseId,prefValue) {
-  var origPrefValue = SpecialPowers.getIntPref("browser.link.open_newwindow");
   var select1 = document.getElementById('Select1');
   select1.blur();
   result = "";
   log({},"Test with browser.link.open_newwindow = "+prefValue);
-  try {
-    SpecialPowers.setIntPref("browser.link.open_newwindow", prefValue);
-    doTest1(expectedEventLog,focusAfterCloseId);
-  } finally {
-    SpecialPowers.setIntPref("browser.link.open_newwindow", origPrefValue);
-  }
+   SpecialPowers.pushPrefEnv({"set": [['browser.link.open_newwindow', prefValue]]}, function() {
+     doTest1(expectedEventLog,focusAfterCloseId);
+   });
 }

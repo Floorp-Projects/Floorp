@@ -15,6 +15,9 @@
 #include "Units.h"            // for ScreenPoint
 
 namespace mozilla {
+
+class InputData;
+
 namespace layers {
 
 class AsyncPanZoomController;

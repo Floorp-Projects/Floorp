@@ -38,7 +38,6 @@ function test() {
 
 // Need to capture 2 loads, one for the main page and one for the iframe
 function MixedTest1A() {
-  dump("XYZ\n");
   BrowserTestUtils.browserLoaded(gTestBrowser, true /*includeSubFrames*/).then(MixedTest1B);
 }
 
@@ -62,9 +61,8 @@ function MixedTest1C() {
   ContentTask.spawn(gTestBrowser, null, function() {
     return content.location.href;
   }).then(url => {
-    ok(gTestBrowser.contentWindow.location == "http://example.com/", "Navigating to insecure domain through target='_top' failed.")
+    is(url, "http://example.com/", "Navigating to insecure domain through target='_top' failed.")
     MixedTestsCompleted();
   });
 }
-
 

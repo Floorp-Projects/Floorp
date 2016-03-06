@@ -1,0 +1,293 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"></meta>
+  <title>WebSocket test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="websocket_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="testWebSocket()">
+<script class="testbody" type="text/javascript">
+
+function test41() {
+  return new Promise(function(resolve, reject) {
+    var ws = CreateTestWS("ws://example.com/tests/dom/base/test/file_websocket", "test-41a", 1);
+
+    ws.onopen = function(e) {
+      ok(true, "test 41a open");
+      is(ws.url, "ws://example.com/tests/dom/base/test/file_websocket",
+         "test 41a initial ws should not be redirected");
+      ws.close();
+    }
+
+    ws.onclose = function(e) {
+      ok(true, "test 41a close");
+
+      // establish a hsts policy for example.com
+      var wsb = CreateTestWS("wss://example.com/tests/dom/base/test/file_websocket", "test-41b", 1);
+
+      wsb.onopen = function(e) {
+        ok(true, "test 41b open");
+        wsb.close();
+      }
+
+      wsb.onclose = function(e) {
+        ok(true, "test 41b close");
+
+        // try ws:// again, it should be done over wss:// now due to hsts
+        var wsc = CreateTestWS("ws://example.com/tests/dom/base/test/file_websocket", "test-41c");
+
+        wsc.onopen = function(e) {
+          ok(true, "test 41c open");
+          is(wsc.url, "wss://example.com/tests/dom/base/test/file_websocket",
+             "test 41c ws should be redirected by hsts to wss");
+          wsc.close();
+        }
+
+        wsc.onclose = function(e) {
+          ok(true, "test 41c close");
+
+          // clean up the STS state
+          const Ci = SpecialPowers.Ci;
+          var loadContext = SpecialPowers.wrap(window)
+                            .QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIWebNavigation)
+                            .QueryInterface(Ci.nsILoadContext);
+          var flags = 0;
+          if (loadContext.usePrivateBrowsing)
+            flags |= Ci.nsISocketProvider.NO_PERMANENT_STORAGE;
+          SpecialPowers.cleanUpSTSData("http://example.com", flags);
+          resolve();
+         }
+       }
+    }
+  });
+}
+
+function test42() {
+  return new Promise(function(resolve, reject) {
+    // test some utf-8 non-characters. They should be allowed in the
+    // websockets context. Test via round trip echo.
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-42");
+    var data = ["U+FFFE \ufffe",
+		"U+FFFF \uffff",
+		"U+10FFFF \udbff\udfff"];
+    var index = 0;
+
+    ws.onopen = function() {
+      ws.send(data[0]);
+      ws.send(data[1]);
+      ws.send(data[2]);
+    }
+
+    ws.onmessage = function(e) {
+      is(e.data, data[index], "bad received message in test-42! index="+index);
+      index++;
+      if (index == 3) {
+        ws.close();
+      }
+    }
+
+    ws.onclose = function(e) {
+      resolve();
+    }
+  });
+}
+
+function test43() {
+  return new Promise(function(resolve, reject) {
+    var prots=["test-43"];
+
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
+
+    ws.onopen = function(e) {
+      ok(true, "test 43 open");
+      // Test binaryType setting
+      ws.binaryType = "arraybuffer";
+      ws.binaryType = "blob";
+      ws.binaryType = "";  // illegal
+      is(ws.binaryType, "blob");
+      ws.binaryType = "ArrayBuffer";  // illegal
+      is(ws.binaryType, "blob");
+      ws.binaryType = "Blob";  // illegal
+      is(ws.binaryType, "blob");
+      ws.binaryType = "mcfoofluu";  // illegal
+      is(ws.binaryType, "blob");
+      ws.close();
+    }
+
+    ws.onclose = function(e) {
+      ok(true, "test 43 close");
+      resolve();
+    }
+  });
+}
+
+
+function test44() {
+  return new Promise(function(resolve, reject) {
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-44");
+    is(ws.readyState, 0, "bad readyState in test-44!");
+    ws.binaryType = "arraybuffer";
+
+    ws.onopen = function() {
+      is(ws.readyState, 1, "open bad readyState in test-44!");
+      var buf = new ArrayBuffer(3);
+      // create byte view
+      var view = new Uint8Array(buf);
+      view[0] = 5;
+      view[1] = 0; // null byte
+      view[2] = 7;
+      ws.send(buf);
+    }
+
+    ws.onmessage = function(e) {
+      ok(e.data instanceof ArrayBuffer, "Should receive an arraybuffer!");
+      var view = new Uint8Array(e.data);
+      ok(view.length == 2 && view[0] == 0 && view[1] ==4, "testing Reply arraybuffer" );
+      ws.close();
+    }
+
+    ws.onclose = function(e) {
+      is(ws.readyState, 3, "onclose bad readyState in test-44!");
+      shouldCloseCleanly(e);
+      resolve();
+    }
+  });
+}
+
+function test45()
+{
+  return new Promise(function(resolve, reject) {
+    function test45Real(blobFile) {
+      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-45");
+      is(ws.readyState, 0, "bad readyState in test-45!");
+      // ws.binaryType = "blob";  // Don't need to specify: blob is the default
+
+      ws.onopen = function() {
+        is(ws.readyState, 1, "open bad readyState in test-45!");
+        ws.send(blobFile);
+      }
+
+      var test45blob;
+
+      ws.onmessage = function(e) {
+        test45blob = e.data;
+        ok(test45blob instanceof Blob, "We should be receiving a Blob");
+
+        ws.close();
+      }
+
+      ws.onclose = function(e) {
+        is(ws.readyState, 3, "onclose bad readyState in test-45!");
+        shouldCloseCleanly(e);
+
+        // check blob contents
+        var reader = new FileReader();
+        reader.onload = function(event) {
+          is(reader.result, "flob", "response should be 'flob': got '"
+             + reader.result + "'");
+        }
+
+        reader.onerror = function(event) {
+          testFailed("Failed to read blob: error code = " + reader.error.code);
+        }
+
+        reader.onloadend = function(event) {
+          resolve();
+        }
+
+        reader.readAsBinaryString(test45blob);
+      }
+    }
+
+    SpecialPowers.createFiles([{name: "testBlobFile", data: "flob"}],
+    function(files) {
+      test45Real(files[0]);
+    },
+    function(msg) {
+      testFailed("Failed to create file for test45: " + msg);
+      resolve();
+    });
+  });
+}
+
+function test46() {
+  return new Promise(function(resolve, reject) {
+    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-46");
+    is(ws.readyState, 0, "create bad readyState in test-46!");
+
+    ws.onopen = function() {
+      is(ws.readyState, 1, "open bad readyState in test-46!");
+      ws.close()
+      is(ws.readyState, 2, "close must set readyState to 2 in test-46!");
+    }
+
+    ws.onmessage = function(e) {
+      ok(false, "received message after calling close in test-46!");
+    }
+
+    ws.onclose = function(e) {
+      is(ws.readyState, 3, "onclose bad readyState in test-46!");
+      shouldCloseCleanly(e);
+      resolve();
+    }
+  });
+}
+
+function test47() {
+  return new Promise(function(resolve, reject) {
+    var hasError = false;
+    var ws = CreateTestWS("ws://another.websocket.server.that.probably.does.not.exist");
+
+    ws.onopen = shouldNotOpen;
+
+    ws.onerror = function (e) {
+      is(ws.readyState, 3, "test-47: readyState should be CLOSED(3) in onerror: got "
+         + ws.readyState);
+      ok(!ws._withinClose, "onerror() called during close()!");
+      hasError = true;
+    }
+
+    ws.onclose = function(e) {
+      shouldCloseNotCleanly(e);
+      ok(hasError, "test-47: should have called onerror before onclose");
+      is(ws.readyState, 3, "test-47: readyState should be CLOSED(3) in onclose: got "
+         + ws.readyState);
+      ok(!ws._withinClose, "onclose() called during close()!");
+      is(e.code, 1006, "test-47 close code should be 1006 but is:" + e.code);
+      resolve();
+    }
+
+    // Call close before we're connected: throws error
+    // Make sure we call onerror/onclose asynchronously
+    ws._withinClose = 1;
+    ws.close(3333, "Closed before we were open: error");
+    ws._withinClose = 0;
+    is(ws.readyState, 2, "test-47: readyState should be CLOSING(2) after close(): got "
+       + ws.readyState);
+  });
+}
+
+var tests = [
+  test41, // HSTS
+  test42, // non-char utf-8 sequences
+  test43, // Test setting binaryType attribute
+  test44, // Test sending/receving binary ArrayBuffer
+  test45, // Test sending/receving binary Blob
+  test46, // Test that we don't dispatch incoming msgs once in CLOSING state
+  test47, // Make sure onerror/onclose aren't called during close()
+];
+
+function testWebSocket() {
+  doTest();
+}
+
+</script>
+
+<div id="feedback">
+</div>
+
+</body>
+</html>

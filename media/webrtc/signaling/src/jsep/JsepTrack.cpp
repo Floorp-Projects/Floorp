@@ -317,7 +317,6 @@ void
 JsepTrack::NegotiateCodecs(
     const SdpMediaSection& remote,
     std::vector<JsepCodecDescription*>* codecs,
-    const SdpMediaSection* answer,
     std::map<std::string, std::string>* formatChanges) const
 {
   PtrVector<JsepCodecDescription> unnegotiatedCodecs;
@@ -335,15 +334,6 @@ JsepTrack::NegotiateCodecs(
       if(codec->Negotiate(fmt, remote)) {
         codecs->push_back(codec);
         unnegotiatedCodecs.values[i] = nullptr;
-        if (answer) {
-          // Answer's formats are authoritative, and they might be different
-          for (const std::string& answerFmt : answer->GetFormats()) {
-            if (codec->Matches(answerFmt, *answer)) {
-              codec->mDefaultPt = answerFmt;
-              break; // We found the corresponding format in |answer|, bail
-            }
-          }
-        }
         if (formatChanges) {
           (*formatChanges)[originalFormat] = codec->mDefaultPt;
         }
@@ -377,7 +367,6 @@ JsepTrack::Negotiate(const SdpMediaSection& answer,
   std::map<std::string, std::string> formatChanges;
   NegotiateCodecs(remote,
                   &negotiatedCodecs.values,
-                  &answer,
                   &formatChanges);
 
   // Use |formatChanges| to update mPrototypeCodecs

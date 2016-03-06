@@ -32,6 +32,28 @@ const HTML_LEN = 117;
 const BIG_LEN = 1000;  // something bigger both TXT_LEN and HTML_LEN
 
 function backgroundScript() {
+  let complete = new Map();
+
+  function waitForComplete(id) {
+    if (complete.has(id)) {
+      return complete.get(id).promise;
+    }
+
+    let promise = new Promise(resolve => {
+      complete.set(id, {resolve});
+    });
+    complete.get(id).promise = promise;
+    return promise;
+  }
+
+  browser.downloads.onChanged.addListener(change => {
+    if (change.state && change.state.current == "complete") {
+      // Make sure we have a promise.
+      waitForComplete(change.id);
+      complete.get(change.id).resolve();
+    }
+  });
+
   browser.test.onMessage.addListener(function(msg) {
     // extension functions throw on bad arguments, we can remove the extra
     // promise when bug 1250223 is fixed.
@@ -51,6 +73,10 @@ function backgroundScript() {
                        .catch(error => {
                          browser.test.sendMessage("search.done", {status: "error", errmsg: error.message});
                        });
+    } else if (msg == "waitForComplete.request") {
+      waitForComplete(arguments[1]).then(() => {
+        browser.test.sendMessage("waitForComplete.done");
+      });
     }
   });
 
@@ -64,19 +90,6 @@ function clearDownloads(callback) {
                     .then(() => downloads);
     });
   });
-}
-
-// This function is a bit of a sledgehammer, it looks at every download
-// the browser knows about and waits for all active downloads to complete.
-// But we only start one at a time and only do a handful in total.
-// Replace this when we have onChanged (bug 1245600)
-function waitForDownloads() {
-  return Downloads.getList(Downloads.ALL)
-                  .then(list => list.getAll())
-                  .then(downloads => {
-                    let inprogress = downloads.filter(dl => !dl.stopped);
-                    return Promise.all(inprogress.map(dl => dl.whenSucceeded()));
-                  });
 }
 
 add_task(function* test_search() {
@@ -114,7 +127,17 @@ add_task(function* test_search() {
 
   function download(options) {
     extension.sendMessage("download.request", options);
-    return extension.awaitMessage("download.done");
+    return extension.awaitMessage("download.done").then(result => {
+      let promise;
+      if (result.status == "success") {
+        info(`wait for onChanged event to indicate ${result.id} is complete`);
+        extension.sendMessage("waitForComplete.request", result.id);
+        promise = extension.awaitMessage("waitForComplete.done");
+      } else {
+        promise = Promise.resolve();
+      }
+      return promise.then(() => result);
+    });
   }
 
   function search(query) {
@@ -151,8 +174,6 @@ add_task(function* test_search() {
   downloadIds.html2 = msg.id;
 
   const time3 = new Date();
-
-  yield waitForDownloads();
 
   // Search for each individual download and check
   // the corresponding DownloadItem.
@@ -274,27 +295,42 @@ add_task(function* test_search() {
   // Check that positive and negative search terms together work.
   yield checkSearch({query: ["html", "-renamed"]}, ["html1"], "postive and negative terms");
 
-  // Check that startedBefore works with stringified milliseconds.
-  yield checkSearch({startedBefore: time1.valueOf().toString()}, [], "before time1");
-  yield checkSearch({startedBefore: time2.valueOf().toString()}, ["txt1", "txt2"], "before time2");
-  yield checkSearch({startedBefore: time3.valueOf().toString()}, ["txt1", "txt2", "html1", "html2"], "before time3");
+  function* checkSearchWithDate(query, expected, description) {
+    const fields = Object.keys(query);
+    if (fields.length != 1 || !(query[fields[0]] instanceof Date)) {
+      throw new Error("checkSearchWithDate expects exactly one Date field");
+    }
+    const field = fields[0];
+    const date = query[field];
 
-  // Check that startedBefore works with iso string.
-  // enable with fix for bug 1251766
-  // yield checkSearch({startedBefore: time1.toISOString()}, [], "before time1");
-  // yield checkSearch({startedBefore: time2.toISOString()}, ["txt1", "txt2"], "before time2");
-  // yield checkSearch({startedBefore: time3.toISOString()}, ["txt1", "txt2", "html1", "html2"], "before time3");
+    let newquery = {};
 
-  // Check that startedAfter works with stringified milliseconds.
-  yield checkSearch({startedAfter: time1.valueOf().toString()}, ["txt1", "txt2", "html1", "html2"], "after time1");
-  yield checkSearch({startedAfter: time2.valueOf().toString()}, ["html1", "html2"], "after time2");
-  yield checkSearch({startedAfter: time3.valueOf().toString()}, [], "after time3");
+    // Check as a Date
+    newquery[field] = date;
+    yield checkSearch(newquery, expected, `${description} as Date`);
 
-  // Check that startedAfter works with iso string.
-  // enable with fix for bug 1251766
-  // yield checkSearch({startedAfter: time1.toISOString()}, ["txt1", "txt2", "html1", "html2"], "after time1");
-  // yield checkSearch({startedAfter: time2.toISOString()}, ["html1", "html2"], "after time2");
-  // yield checkSearch({startedAfter: time3.toISOString()}, [], "after time3");
+    // Check as numeric milliseconds
+    newquery[field] = date.valueOf();
+    yield checkSearch(newquery, expected, `${description} as numeric ms`);
+
+    // Check as stringified milliseconds
+    newquery[field] = date.valueOf().toString();
+    yield checkSearch(newquery, expected, `${description} as string ms`);
+
+    // Check as ISO string
+    newquery[field] = date.toISOString();
+    yield checkSearch(newquery, expected, `${description} as iso string`);
+  }
+
+  // Check startedBefore
+  yield checkSearchWithDate({startedBefore: time1}, [], "before time1");
+  yield checkSearchWithDate({startedBefore: time2}, ["txt1", "txt2"], "before time2");
+  yield checkSearchWithDate({startedBefore: time3}, ["txt1", "txt2", "html1", "html2"], "before time3");
+
+  // Check startedAfter
+  yield checkSearchWithDate({startedAfter: time1}, ["txt1", "txt2", "html1", "html2"], "after time1");
+  yield checkSearchWithDate({startedAfter: time2}, ["html1", "html2"], "after time2");
+  yield checkSearchWithDate({startedAfter: time3}, [], "after time3");
 
   // Check simple search on totalBytes
   yield checkSearch({totalBytes: TXT_LEN}, ["txt1", "txt2"], "totalBytes");
@@ -375,10 +411,10 @@ add_task(function* test_search() {
   yield checkBadSearch("myquery", /Incorrect argument type/, "query is not an object");
   yield checkBadSearch({bogus: "boo"}, /Unexpected property/, "query contains an unknown field");
   yield checkBadSearch({query: "query string"}, /Expected array/, "query.query is a string");
-  yield checkBadSearch({startedBefore: "i am not a number"}, /Type error/, "query.startedBefore is not a valid time");
-  yield checkBadSearch({startedAfter: "i am not a number"}, /Type error/, "query.startedAfter is not a valid time");
-  yield checkBadSearch({endedBefore: "i am not a number"}, /Type error/, "query.endedBefore is not a valid time");
-  yield checkBadSearch({endedAfter: "i am not a number"}, /Type error/, "query.endedAfter is not a valid time");
+  yield checkBadSearch({startedBefore: "i am not a time"}, /Type error/, "query.startedBefore is not a valid time");
+  yield checkBadSearch({startedAfter: "i am not a time"}, /Type error/, "query.startedAfter is not a valid time");
+  yield checkBadSearch({endedBefore: "i am not a time"}, /Type error/, "query.endedBefore is not a valid time");
+  yield checkBadSearch({endedAfter: "i am not a time"}, /Type error/, "query.endedAfter is not a valid time");
   yield checkBadSearch({urlRegex: "["}, /Invalid urlRegex/, "query.urlRegexp is not a valid regular expression");
   yield checkBadSearch({filenameRegex: "["}, /Invalid filenameRegex/, "query.filenameRegexp is not a valid regular expression");
   yield checkBadSearch({orderBy: "startTime"}, /Expected array/, "query.orderBy is not an array");

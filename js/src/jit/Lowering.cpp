@@ -2095,6 +2095,18 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32* truncate)
 }
 
 void
+LIRGenerator::visitWrapInt64ToInt32(MWrapInt64ToInt32* ins)
+{
+    define(new(alloc()) LWrapInt64ToInt32(useInt64AtStart(ins->input())), ins);
+}
+
+void
+LIRGenerator::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
+{
+    defineInt64(new(alloc()) LExtendInt32ToInt64(useAtStart(ins->input())), ins);
+}
+
+void
 LIRGenerator::visitToString(MToString* ins)
 {
     MDefinition* opd = ins->input();

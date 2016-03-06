@@ -802,6 +802,10 @@
         "url": "/html/semantics/grouping-content/the-li-element/grouping-li-novalue-manual.html"
       },
       {
+        "path": "html/semantics/selectors/pseudo-classes/checked-001-manual.html",
+        "url": "/html/semantics/selectors/pseudo-classes/checked-001-manual.html"
+      },
+      {
         "path": "html/webappapis/scripting/event-loops/task_microtask_ordering-manual.html",
         "url": "/html/webappapis/scripting/event-loops/task_microtask_ordering-manual.html"
       },
@@ -4980,6 +4984,16 @@
           ]
         ],
         "url": "/html/rendering/non-replaced-elements/the-page/body_text_00ffff.xhtml"
+      },
+      {
+        "path": "html/rendering/replaced-elements/attributes-for-embedded-content-and-images/img-dim.html",
+        "references": [
+          [
+            "/html/rendering/replaced-elements/attributes-for-embedded-content-and-images/img-dim-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/replaced-elements/attributes-for-embedded-content-and-images/img-dim.html"
       },
       {
         "path": "html/rendering/replaced-elements/attributes-for-embedded-content-and-images/img_border_percent.xhtml",
@@ -11060,12 +11074,24 @@
         "url": "/FileAPI/blob/Blob-constructor.html"
       },
       {
+        "path": "FileAPI/blob/Blob-in-worker.worker.js",
+        "url": "/FileAPI/blob/Blob-in-worker.worker"
+      },
+      {
+        "path": "FileAPI/blob/Blob-slice-overflow.html",
+        "url": "/FileAPI/blob/Blob-slice-overflow.html"
+      },
+      {
         "path": "FileAPI/blob/Blob-slice.html",
         "url": "/FileAPI/blob/Blob-slice.html"
       },
       {
         "path": "FileAPI/file/File-constructor.html",
         "url": "/FileAPI/file/File-constructor.html"
+      },
+      {
+        "path": "FileAPI/file/Worker-read-file-constructor.worker.js",
+        "url": "/FileAPI/file/Worker-read-file-constructor.worker"
       },
       {
         "path": "FileAPI/fileReader.html",
@@ -11728,6 +11754,10 @@
         "url": "/IndexedDB/idbindex_openKeyCursor4.htm"
       },
       {
+        "path": "IndexedDB/idbkeyrange-includes.htm",
+        "url": "/IndexedDB/idbkeyrange-includes.htm"
+      },
+      {
         "path": "IndexedDB/idbkeyrange.htm",
         "url": "/IndexedDB/idbkeyrange.htm"
       },
@@ -12164,6 +12194,10 @@
         "url": "/WebIDL/ecmascript-binding/has-instance.html"
       },
       {
+        "path": "WebIDL/ecmascript-binding/interface-object.html",
+        "url": "/WebIDL/ecmascript-binding/interface-object.html"
+      },
+      {
         "path": "XMLHttpRequest/FormData-append.html",
         "url": "/XMLHttpRequest/FormData-append.html"
       },
@@ -12198,6 +12232,10 @@
       {
         "path": "XMLHttpRequest/abort-during-open.htm",
         "url": "/XMLHttpRequest/abort-during-open.htm"
+      },
+      {
+        "path": "XMLHttpRequest/abort-during-open.worker.js",
+        "url": "/XMLHttpRequest/abort-during-open.worker"
       },
       {
         "path": "XMLHttpRequest/abort-during-unsent.htm",
@@ -12596,6 +12634,10 @@
         "url": "/XMLHttpRequest/send-authentication-basic-repeat-no-args.htm"
       },
       {
+        "path": "XMLHttpRequest/send-authentication-basic-setrequestheader-and-arguments.htm",
+        "url": "/XMLHttpRequest/send-authentication-basic-setrequestheader-and-arguments.htm"
+      },
+      {
         "path": "XMLHttpRequest/send-authentication-basic-setrequestheader-existing-session.htm",
         "url": "/XMLHttpRequest/send-authentication-basic-setrequestheader-existing-session.htm"
       },
@@ -12614,6 +12656,10 @@
       {
         "path": "XMLHttpRequest/send-authentication-cors-basic-setrequestheader.htm",
         "url": "/XMLHttpRequest/send-authentication-cors-basic-setrequestheader.htm"
+      },
+      {
+        "path": "XMLHttpRequest/send-authentication-cors-setrequestheader-no-cred.htm",
+        "url": "/XMLHttpRequest/send-authentication-cors-setrequestheader-no-cred.htm"
       },
       {
         "path": "XMLHttpRequest/send-conditional.htm",
@@ -12750,6 +12796,10 @@
       {
         "path": "XMLHttpRequest/send-send.htm",
         "url": "/XMLHttpRequest/send-send.htm"
+      },
+      {
+        "path": "XMLHttpRequest/send-send.worker.js",
+        "url": "/XMLHttpRequest/send-send.worker"
       },
       {
         "path": "XMLHttpRequest/send-sync-blocks-async.htm",
@@ -13542,6 +13592,30 @@
       {
         "path": "content-security-policy/svg/svg-policy-with-resource.html",
         "url": "/content-security-policy/svg/svg-policy-with-resource.html"
+      },
+      {
+        "path": "cookies/secure/set-from-dom.https.sub.html",
+        "url": "/cookies/secure/set-from-dom.https.sub.html"
+      },
+      {
+        "path": "cookies/secure/set-from-dom.sub.html",
+        "url": "/cookies/secure/set-from-dom.sub.html"
+      },
+      {
+        "path": "cookies/secure/set-from-http.https.sub.html",
+        "url": "/cookies/secure/set-from-http.https.sub.html"
+      },
+      {
+        "path": "cookies/secure/set-from-http.sub.html",
+        "url": "/cookies/secure/set-from-http.sub.html"
+      },
+      {
+        "path": "cookies/secure/set-from-ws.https.sub.html",
+        "url": "/cookies/secure/set-from-ws.https.sub.html"
+      },
+      {
+        "path": "cookies/secure/set-from-wss.https.sub.html",
+        "url": "/cookies/secure/set-from-wss.https.sub.html"
       },
       {
         "path": "cors/allow-headers.htm",
@@ -15472,6 +15546,10 @@
         "url": "/fetch/api/request/request-error.html"
       },
       {
+        "path": "fetch/api/request/request-headers.html",
+        "url": "/fetch/api/request/request-headers.html"
+      },
+      {
         "path": "fetch/api/request/request-idl.html",
         "url": "/fetch/api/request/request-idl.html"
       },
@@ -16218,6 +16296,14 @@
       {
         "path": "html/browsers/origin/relaxing-the-same-origin-restriction/document_domain.html",
         "url": "/html/browsers/origin/relaxing-the-same-origin-restriction/document_domain.html"
+      },
+      {
+        "path": "html/browsers/the-window-object/Document-defaultView.html",
+        "url": "/html/browsers/the-window-object/Document-defaultView.html"
+      },
+      {
+        "path": "html/browsers/the-window-object/Window-document.html",
+        "url": "/html/browsers/the-window-object/Window-document.html"
       },
       {
         "path": "html/browsers/the-window-object/accessing-other-browsing-contexts/indexed-browsing-contexts-01.html",
@@ -19248,6 +19334,10 @@
         "url": "/html/semantics/selectors/pseudo-classes/focus.html"
       },
       {
+        "path": "html/semantics/selectors/pseudo-classes/indeterminate-radio.html",
+        "url": "/html/semantics/selectors/pseudo-classes/indeterminate-radio.html"
+      },
+      {
         "path": "html/semantics/selectors/pseudo-classes/indeterminate.html",
         "url": "/html/semantics/selectors/pseudo-classes/indeterminate.html"
       },
@@ -21286,6 +21376,150 @@
       {
         "path": "notifications/permission.html",
         "url": "/notifications/permission.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/Not_Use/input_autocomplete.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/Not_Use/input_autocomplete.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/Not_Use/input_list.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/Not_Use/input_list.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/Not_Use/input_valueasdate.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/Not_Use/input_valueasdate.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/Not_Use/input_valueasnumber.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/Not_Use/input_valueasnumber.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/Not_Use/select_length.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/Not_Use/select_length.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/Not_Use/select_selectedindex.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/Not_Use/select_selectedindex.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/button_checkvalidity.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/button_checkvalidity.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/button_labels.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/button_labels.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/button_setcustomvalidity.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/button_setcustomvalidity.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/button_validationmessage.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/button_validationmessage.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/button_validity.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/button_validity.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/button_willvalidate.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/button_willvalidate.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/fieldset_checkvalidity.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/fieldset_checkvalidity.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/fieldset_setcustomvalidity.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/fieldset_setcustomvalidity.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/fieldset_validationmessage.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/fieldset_validationmessage.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/fieldset_validity.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/fieldset_validity.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/fieldset_willvalidate.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/fieldset_willvalidate.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/form_action.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/form_action.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/form_checkvalidity.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/form_checkvalidity.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/form_length.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/form_length.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/form_submit.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/form_submit.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/input_checkvalidity.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/input_checkvalidity.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/input_height.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/input_height.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/input_labels.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/input_labels.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/input_setcustomvalidity.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/input_setcustomvalidity.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/input_stepdown.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/input_stepdown.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/input_stepup.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/input_stepup.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/input_validationmessage.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/input_validationmessage.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/input_validity.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/input_validity.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/input_value_invalidstateerr.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/input_value_invalidstateerr.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/input_valueasdate_invalidstateerr.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/input_valueasdate_invalidstateerr.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/input_valueasnumber_invalidstateerr.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/input_valueasnumber_invalidstateerr.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/input_width.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/input_width.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/input_willvalidate.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/input_willvalidate.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/keygen_checkvalidity.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/keygen_checkvalidity.html"
+      },
+      {
+        "path": "old-tests/submission/Infraware/Forms/contents/Forms/keygen_labels.html",
+        "url": "/old-tests/submission/Infraware/Forms/contents/Forms/keygen_labels.html"
       },
       {
         "path": "old-tests/submission/Microsoft/dragdrop/dragdrop_004.htm",
@@ -27936,6 +28170,14 @@
         "url": "/touch-events/create-touch-touchlist.html"
       },
       {
+        "path": "touch-events/touch-globaleventhandler-interface.html",
+        "url": "/touch-events/touch-globaleventhandler-interface.html"
+      },
+      {
+        "path": "touch-events/touch-touchevent-constructor.html",
+        "url": "/touch-events/touch-touchevent-constructor.html"
+      },
+      {
         "path": "typedarrays/ArrayBuffer_constructor.html",
         "url": "/typedarrays/ArrayBuffer_constructor.html"
       },
@@ -28152,16 +28394,16 @@
         "url": "/web-animations/keyframe-effect/effect-easing.html"
       },
       {
-        "path": "web-animations/keyframe-effect/getComputedTiming.html",
-        "url": "/web-animations/keyframe-effect/getComputedTiming.html"
-      },
-      {
         "path": "web-animations/keyframe-effect/getComputedTiming-currentIteration.html",
         "url": "/web-animations/keyframe-effect/getComputedTiming-currentIteration.html"
       },
       {
         "path": "web-animations/keyframe-effect/getComputedTiming-progress.html",
         "url": "/web-animations/keyframe-effect/getComputedTiming-progress.html"
+      },
+      {
+        "path": "web-animations/keyframe-effect/getComputedTiming.html",
+        "url": "/web-animations/keyframe-effect/getComputedTiming.html"
       },
       {
         "path": "webaudio/the-audio-api/the-audiobuffer-interface/idl-test.html",
@@ -34482,34 +34724,7 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {
-      "testharness": {
-        "XMLHttpRequest/send-send.worker.js": [
-          {
-            "path": "XMLHttpRequest/send-send.worker.js",
-            "url": "/XMLHttpRequest/send-send.worker"
-          }
-        ],
-        "XMLHttpRequest/abort-during-open.worker.js": [
-          {
-            "path": "XMLHttpRequest/abort-during-open.worker.js",
-            "url": "/XMLHttpRequest/abort-during-open.worker"
-          }
-        ],
-        "html/semantics/embedded-content/the-img-element/update-media.html": [
-          {
-            "path": "html/semantics/embedded-content/the-img-element/update-media.html",
-            "url": "/html/semantics/embedded-content/the-img-element/update-media.html"
-          }
-        ],
-        "IndexedDB/idbkeyrange-includes.htm": [
-          {
-            "path": "IndexedDB/idbkeyrange-includes.htm",
-            "url": "/IndexedDB/idbkeyrange-includes.htm"
-          }
-        ]
-      }
-    },
+    "items": {},
     "reftest_nodes": {}
   },
   "reftest_nodes": {
@@ -37091,6 +37306,18 @@
           ]
         ],
         "url": "/html/rendering/non-replaced-elements/the-page/body_text_00ffff.xhtml"
+      }
+    ],
+    "html/rendering/replaced-elements/attributes-for-embedded-content-and-images/img-dim.html": [
+      {
+        "path": "html/rendering/replaced-elements/attributes-for-embedded-content-and-images/img-dim.html",
+        "references": [
+          [
+            "/html/rendering/replaced-elements/attributes-for-embedded-content-and-images/img-dim-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/replaced-elements/attributes-for-embedded-content-and-images/img-dim.html"
       }
     ],
     "html/rendering/replaced-elements/attributes-for-embedded-content-and-images/img_border_percent.xhtml": [
@@ -40622,7 +40849,7 @@
       }
     ]
   },
-  "rev": "827c4f521be3452fc00630ec7874a4cac0a270c0",
+  "rev": "833a6d13372424758a6e3a770ecc6e8d1ffaae67",
   "url_base": "/",
   "version": 2
 }

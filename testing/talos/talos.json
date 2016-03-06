@@ -22,24 +22,24 @@
             "talos_options": ["--e10s"]
         },
         "other": {
-            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"]
+            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore", "tabpaint"]
         },
         "other-e10s": {
-            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"],
+            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore", "tabpaint"],
             "talos_options": ["--e10s"]
         },
         "other_nol64": {
-            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"]
+            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore", "tabpaint"]
         },
         "other-e10s_nol64": {
-            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"],
+            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore", "tabpaint"],
             "talos_options": ["--e10s"]
         },
         "other_l64": {
-            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"]
+            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore", "tabpaint"]
         },
         "other-e10s_l64": {
-            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"],
+            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore", "tabpaint"],
             "talos_options": ["--e10s"]
         },
         "g1": {

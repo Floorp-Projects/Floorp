@@ -126,6 +126,12 @@ MIRGenerator::needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const
 size_t
 MIRGenerator::foldableOffsetRange(const MAsmJSHeapAccess* access) const
 {
+    return foldableOffsetRange(access->needsBoundsCheck());
+}
+
+size_t
+MIRGenerator::foldableOffsetRange(bool accessNeedsBoundsCheck) const
+{
     // This determines whether it's ok to fold up to WasmImmediateSize
     // offsets, instead of just WasmCheckedImmediateSize.
 
@@ -148,7 +154,7 @@ MIRGenerator::foldableOffsetRange(const MAsmJSHeapAccess* access) const
     // On 32-bit platforms, if we've proven the access is in bounds after
     // 32-bit wrapping, we can fold full offsets because they're added with
     // 32-bit arithmetic.
-    if (sizeof(intptr_t) == sizeof(int32_t) && !access->needsBoundsCheck())
+    if (sizeof(intptr_t) == sizeof(int32_t) && !accessNeedsBoundsCheck)
         return WasmImmediateRange;
 
     // Otherwise, only allow the checked size. This is always less than the

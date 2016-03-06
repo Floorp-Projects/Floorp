@@ -501,6 +501,32 @@ var Bookmarks = Object.freeze({
   },
 
   /**
+   * Returns a list of recently bookmarked items.
+   *
+   * @param {integer} numberOfItems
+   *        The maximum number of bookmark items to return.
+   *
+   * @return {Promise} resolved when the listing is complete.
+   * @resolves to an array of recent bookmark-items.
+   * @rejects if an error happens while querying.
+   */
+  getRecent(numberOfItems) {
+    if (numberOfItems === undefined) {
+      throw new Error("numberOfItems argument is required");
+    }
+    if (!typeof numberOfItems === 'number' || (numberOfItems % 1) !== 0) {
+      throw new Error("numberOfItems argument must be an integer");
+    }
+    if (numberOfItems <= 0) {
+      throw new Error("numberOfItems argument must be greater than zero");
+    }
+
+    return Task.spawn(function* () {
+      return yield fetchRecentBookmarks(numberOfItems);
+    });
+  },
+
+  /**
    * Fetches information about a bookmark-item.
    *
    * REMARK: any successful call to this method resolves to a single
@@ -995,6 +1021,26 @@ function fetchBookmarksByURL(info) {
            tags_folder: PlacesUtils.tagsFolderId });
 
     return rows.length ? rowsToItemsArray(rows) : null;
+  }));
+}
+
+function fetchRecentBookmarks(numberOfItems) {
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchRecentBookmarks",
+    Task.async(function*(db) {
+
+    let rows = yield db.executeCached(
+      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+              NULL AS _id, NULL AS _parentId, NULL AS _childCount, NULL AS _grandParentId
+       FROM moz_bookmarks b
+       LEFT JOIN moz_bookmarks p ON p.id = b.parent
+       LEFT JOIN moz_places h ON h.id = b.fk
+       WHERE p.parent <> :tags_folder
+       ORDER BY b.dateAdded DESC, b.ROWID DESC
+       LIMIT :numberOfItems
+      `, { tags_folder: PlacesUtils.tagsFolderId, numberOfItems });
+
+    return rows.length ? rowsToItemsArray(rows) : [];
   }));
 }
 

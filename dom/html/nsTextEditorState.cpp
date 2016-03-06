@@ -1918,7 +1918,7 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
     if (!mTextCtrlElement->ValueChanged() || !mValue) {
       mTextCtrlElement->GetDefaultValueFromContent(aValue);
     } else {
-      aValue = NS_ConvertUTF8toUTF16(*mValue);
+      aValue = *mValue;
     }
   }
 }
@@ -2139,7 +2139,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
     }
   } else {
     if (!mValue) {
-      mValue = new nsCString;
+      mValue.emplace();
     }
     nsString value;
     if (!value.Assign(newValue, fallible)) {
@@ -2148,7 +2148,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
     if (!nsContentUtils::PlatformToDOMLineBreaks(value, fallible)) {
       return false;
     }
-    if (!CopyUTF16toUTF8(value, *mValue, fallible)) {
+    if (!mValue->Assign(value, fallible)) {
       return false;
     }
 

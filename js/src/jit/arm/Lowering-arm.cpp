@@ -486,37 +486,41 @@ LIRGeneratorARM::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins)
 void
 LIRGeneratorARM::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 {
-    MDefinition* ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
-    LAllocation ptrAlloc;
+    MOZ_ASSERT(ins->offset() == 0);
 
-    // For the ARM it is best to keep the 'ptr' in a register if a bounds check is needed.
-    if (ptr->isConstant() && !ins->needsBoundsCheck()) {
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType_Int32);
+    LAllocation baseAlloc;
+
+    // For the ARM it is best to keep the 'base' in a register if a bounds check is needed.
+    if (base->isConstant() && !ins->needsBoundsCheck()) {
         // A bounds check is only skipped for a positive index.
-        MOZ_ASSERT(ptr->toConstant()->toInt32() >= 0);
-        ptrAlloc = LAllocation(ptr->toConstant());
+        MOZ_ASSERT(base->toConstant()->toInt32() >= 0);
+        baseAlloc = LAllocation(base->toConstant());
     } else {
-        ptrAlloc = useRegisterAtStart(ptr);
+        baseAlloc = useRegisterAtStart(base);
     }
 
-    define(new(alloc()) LAsmJSLoadHeap(ptrAlloc), ins);
+    define(new(alloc()) LAsmJSLoadHeap(baseAlloc), ins);
 }
 
 void
 LIRGeneratorARM::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 {
-    MDefinition* ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
-    LAllocation ptrAlloc;
+    MOZ_ASSERT(ins->offset() == 0);
 
-    if (ptr->isConstant() && !ins->needsBoundsCheck()) {
-        MOZ_ASSERT(ptr->toConstant()->toInt32() >= 0);
-        ptrAlloc = LAllocation(ptr->toConstant());
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType_Int32);
+    LAllocation baseAlloc;
+
+    if (base->isConstant() && !ins->needsBoundsCheck()) {
+        MOZ_ASSERT(base->toConstant()->toInt32() >= 0);
+        baseAlloc = LAllocation(base->toConstant());
     } else {
-        ptrAlloc = useRegisterAtStart(ptr);
+        baseAlloc = useRegisterAtStart(base);
     }
 
-    add(new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value())), ins);
+    add(new(alloc()) LAsmJSStoreHeap(baseAlloc, useRegisterAtStart(ins->value())), ins);
 }
 
 void
@@ -678,13 +682,14 @@ void
 LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 {
     MOZ_ASSERT(ins->accessType() < Scalar::Float32);
+    MOZ_ASSERT(ins->offset() == 0);
 
-    MDefinition* ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType_Int32);
 
     if (byteSize(ins->accessType()) != 4 && !HasLDSTREXBHD()) {
         LAsmJSCompareExchangeCallout* lir =
-            new(alloc()) LAsmJSCompareExchangeCallout(useRegisterAtStart(ptr),
+            new(alloc()) LAsmJSCompareExchangeCallout(useRegisterAtStart(base),
                                                       useRegisterAtStart(ins->oldValue()),
                                                       useRegisterAtStart(ins->newValue()));
         defineReturn(lir, ins);
@@ -692,7 +697,7 @@ LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
     }
 
     LAsmJSCompareExchangeHeap* lir =
-        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(ptr),
+        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(base),
                                                useRegister(ins->oldValue()),
                                                useRegister(ins->newValue()));
 
@@ -702,32 +707,34 @@ LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 void
 LIRGeneratorARM::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
 {
-    MOZ_ASSERT(ins->ptr()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->base()->type() == MIRType_Int32);
     MOZ_ASSERT(ins->accessType() < Scalar::Float32);
+    MOZ_ASSERT(ins->offset() == 0);
 
-    const LAllocation ptr = useRegisterAtStart(ins->ptr());
+    const LAllocation base = useRegisterAtStart(ins->base());
     const LAllocation value = useRegisterAtStart(ins->value());
 
     if (byteSize(ins->accessType()) < 4 && !HasLDSTREXBHD()) {
         // Call out on ARMv6.
-        defineReturn(new(alloc()) LAsmJSAtomicExchangeCallout(ptr, value), ins);
+        defineReturn(new(alloc()) LAsmJSAtomicExchangeCallout(base, value), ins);
         return;
     }
 
-    define(new(alloc()) LAsmJSAtomicExchangeHeap(ptr, value), ins);
+    define(new(alloc()) LAsmJSAtomicExchangeHeap(base, value), ins);
 }
 
 void
 LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 {
     MOZ_ASSERT(ins->accessType() < Scalar::Float32);
+    MOZ_ASSERT(ins->offset() == 0);
 
-    MDefinition* ptr = ins->ptr();
-    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType_Int32);
 
     if (byteSize(ins->accessType()) != 4 && !HasLDSTREXBHD()) {
         LAsmJSAtomicBinopCallout* lir =
-            new(alloc()) LAsmJSAtomicBinopCallout(useRegisterAtStart(ptr),
+            new(alloc()) LAsmJSAtomicBinopCallout(useRegisterAtStart(base),
                                                   useRegisterAtStart(ins->value()));
         defineReturn(lir, ins);
         return;
@@ -735,7 +742,7 @@ LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 
     if (!ins->hasUses()) {
         LAsmJSAtomicBinopHeapForEffect* lir =
-            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(ptr),
+            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(base),
                                                         useRegister(ins->value()),
                                                         /* flagTemp= */ temp());
         add(lir, ins);
@@ -743,7 +750,7 @@ LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
     }
 
     LAsmJSAtomicBinopHeap* lir =
-        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(ptr),
+        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(base),
                                            useRegister(ins->value()),
                                            /* temp = */ LDefinition::BogusTemp(),
                                            /* flagTemp= */ temp());
@@ -772,4 +779,10 @@ LIRGeneratorARM::visitRandom(MRandom* ins)
                                         temp(),
                                         temp());
     defineFixed(lir, ins, LFloatReg(ReturnDoubleReg));
+}
+
+void
+LIRGeneratorARM::visitTruncateToInt64(MTruncateToInt64* ins)
+{
+    MOZ_CRASH("NY");
 }
