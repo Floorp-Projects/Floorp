@@ -784,6 +784,7 @@ class WasmToken
         UnsignedInteger,
         SignedInteger,
         Memory,
+        NegativeZero,
         Load,
         Local,
         Loop,
@@ -1271,6 +1272,8 @@ WasmTokenStream::literal(const char16_t* begin)
 
         if (*begin == '-') {
             uint64_t value = u.value();
+            if (value == 0)
+                return WasmToken(WasmToken::NegativeZero, begin, cur_);
             if (value > uint64_t(INT64_MIN))
                 return LexHexFloatLiteral(begin, end_, &cur_);
 
@@ -1295,6 +1298,8 @@ WasmTokenStream::literal(const char16_t* begin)
 
         if (*begin == '-') {
             uint64_t value = u.value();
+            if (value == 0)
+                return WasmToken(WasmToken::NegativeZero, begin, cur_);
             if (value > uint64_t(INT64_MIN))
                 return LexDecFloatLiteral(begin, end_, &cur_);
 
@@ -2270,6 +2275,9 @@ ParseFloatLiteral(WasmParseContext& c, WasmToken token, Float* result)
       case WasmToken::SignedInteger:
         *result = token.sint();
         return true;
+      case WasmToken::NegativeZero:
+        *result = -0.0;
+        return true;
       case WasmToken::Float:
         break;
       default:
@@ -2345,6 +2353,8 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
                 break;
             return new(c.lifo) WasmAstConst(Val(uint32_t(sint.value())));
           }
+          case WasmToken::NegativeZero:
+            return new(c.lifo) WasmAstConst(Val(uint32_t(0)));
           default:
             break;
         }
@@ -2358,6 +2368,8 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
             return new(c.lifo) WasmAstConst(Val(val.uint()));
           case WasmToken::SignedInteger:
             return new(c.lifo) WasmAstConst(Val(uint64_t(val.sint())));
+          case WasmToken::NegativeZero:
+            return new(c.lifo) WasmAstConst(Val(uint32_t(0)));
           default:
             break;
         }
