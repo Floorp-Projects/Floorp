@@ -45,13 +45,11 @@ function errorListener() {
 
   // This is an error page.
   ContentTask.spawn(ourTab.linkedBrowser, kUniqueURI.spec, function(uri) {
-    is(content.document.documentURI.substring(0, 27),
-       "about:neterror?e=netOffline",
-       "Document URI is the error page.");
+    Assert.equal(content.document.documentURI.substring(0, 27),
+      "about:neterror?e=netOffline", "Document URI is the error page.");
 
     // But location bar should show the original request.
-    is(content.location.href, uri,
-       "Docshell URI is the original URI.");
+    Assert.equal(content.location.href, uri, "Docshell URI is the original URI.");
   }).then(() => {
     // Global history does not record URI of a failed request.
     return PlacesTestUtils.promiseAsyncUpdates().then(() => {
@@ -73,8 +71,8 @@ function errorAsyncListener(aURI, aIsVisited) {
                   .then(reloadListener);
 
   ContentTask.spawn(ourTab.linkedBrowser, null, function() {
-    ok(content.document.getElementById("errorTryAgain"),
-       "The error page has got a #errorTryAgain element");
+    Assert.ok(content.document.getElementById("errorTryAgain"),
+      "The error page has got a #errorTryAgain element");
     content.document.getElementById("errorTryAgain").click();
   });
 }
@@ -89,8 +87,8 @@ function reloadListener() {
 
   ContentTask.spawn(ourTab.linkedBrowser, kUniqueURI.spec, function(uri) {
     // This is not an error page.
-    is(content.document.documentURI, uri,
-       "Document URI is not the offline-error page, but the original URI.");
+    Assert.equal(content.document.documentURI, uri,
+      "Document URI is not the offline-error page, but the original URI.");
   }).then(() => {
     // Check if global history remembers the successfully-requested URI.
     PlacesTestUtils.promiseAsyncUpdates().then(() => {

@@ -15,6 +15,7 @@
 const {Cc, Ci, Cu} = require("chrome");
 const Services = require("Services");
 const promise = require("promise");
+const Telemetry = require("devtools/client/shared/telemetry");
 const {gDevTools} = require("./devtools");
 
 // Load target and toolbox lazily as they need gDevTools to be fully initialized
@@ -23,12 +24,14 @@ loader.lazyRequireGetter(this, "Toolbox", "devtools/client/framework/toolbox", t
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/main", true);
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
-                                  "resource:///modules/CustomizableUI.jsm");
+loader.lazyImporter(this, "CustomizableUI", "resource:///modules/CustomizableUI.jsm");
 
 const bundle = Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
+
+const TABS_OPEN_PEAK_HISTOGRAM = "DEVTOOLS_TABS_OPEN_PEAK_LINEAR";
+const TABS_OPEN_AVG_HISTOGRAM = "DEVTOOLS_TABS_OPEN_AVERAGE_LINEAR";
+const TABS_PINNED_PEAK_HISTOGRAM = "DEVTOOLS_TABS_PINNED_PEAK_LINEAR";
+const TABS_PINNED_AVG_HISTOGRAM = "DEVTOOLS_TABS_PINNED_AVERAGE_LINEAR";
 
 /**
  * gDevToolsBrowser exposes functions to connect the gDevTools instance with a
@@ -40,6 +43,8 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * as the window is closed
    */
   _trackedBrowserWindows: new Set(),
+
+  _telemetry: new Telemetry(),
 
   _tabStats: {
     peakOpen: 0,
@@ -825,6 +830,23 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     }
   },
 
+  _pingTelemetry: function() {
+    let mean = function(arr) {
+      if (arr.length === 0) {
+        return 0;
+      }
+
+      let total = arr.reduce((a, b) => a + b);
+      return Math.ceil(total / arr.length);
+    };
+
+    let tabStats = gDevToolsBrowser._tabStats;
+    this._telemetry.log(TABS_OPEN_PEAK_HISTOGRAM, tabStats.peakOpen);
+    this._telemetry.log(TABS_OPEN_AVG_HISTOGRAM, mean(tabStats.histOpen));
+    this._telemetry.log(TABS_PINNED_PEAK_HISTOGRAM, tabStats.peakPinned);
+    this._telemetry.log(TABS_PINNED_AVG_HISTOGRAM, mean(tabStats.histPinned));
+  },
+
   /**
    * All browser windows have been closed, tidy up remaining objects.
    */
@@ -832,6 +854,9 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     Services.prefs.removeObserver("devtools.", gDevToolsBrowser);
     Services.obs.removeObserver(gDevToolsBrowser, "browser-delayed-startup-finished");
     Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
+
+    gDevToolsBrowser._pingTelemetry();
+    gDevToolsBrowser._telemetry = null;
 
     for (let win of gDevToolsBrowser._trackedBrowserWindows) {
       gDevToolsBrowser._forgetBrowserWindow(win);

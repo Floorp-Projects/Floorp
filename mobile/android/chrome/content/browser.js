@@ -6412,14 +6412,18 @@ var IdentityHandler = {
 
       // Build an appropriate supplemental block out of whatever location data we have
       let supplemental = "";
-      if (iData.city)
+      if (iData.city) {
         supplemental += iData.city + "\n";
-      if (iData.state && iData.country)
+      }
+      if (iData.state && iData.country) {
         supplemental += Strings.browser.formatStringFromName("identity.identified.state_and_country", [iData.state, iData.country], 2);
-      else if (iData.state) // State only
+        result.country = iData.country;
+      } else if (iData.state) { // State only
         supplemental += iData.state;
-      else if (iData.country) // Country only
+      } else if (iData.country) { // Country only
         supplemental += iData.country;
+        result.country = iData.country;
+      }
       result.supplemental = supplemental;
 
       return result;

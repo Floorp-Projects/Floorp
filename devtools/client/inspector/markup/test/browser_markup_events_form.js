@@ -12,7 +12,6 @@
 const TEST_PAGE_URL = URL_ROOT + "doc_markup_events_form.html";
 const TEST_ACTOR_URL = CHROME_URL_ROOT + "actor_events_form.js";
 
-var {ActorRegistryFront} = require("devtools/server/actors/actor-registry");
 var {EventsFormFront} = require(TEST_ACTOR_URL);
 
 add_task(function*() {

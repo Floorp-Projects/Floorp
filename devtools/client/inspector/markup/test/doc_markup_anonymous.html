@@ -23,10 +23,11 @@
   <div id="native"><video controls></video></div>
 
   <script>
-  var host = document.querySelector('#shadow');
+  "use strict";
+  var host = document.querySelector("#shadow");
   if (host.createShadowRoot) {
     var root = host.createShadowRoot();
-    root.innerHTML = '<h3>Shadow DOM</h3><select multiple></select>';
+    root.innerHTML = "<h3>Shadow DOM</h3><select multiple></select>";
   }
   </script>
 </body>

@@ -22,8 +22,8 @@ function* attemptFakeRefresh(browser, expectRefresh) {
     let refresher = docShell.QueryInterface(Ci.nsIRefreshURI);
     refresher.refreshURI(URI, 0, false, true);
 
-    is(refresher.refreshPending, expectRefresh,
-       "Got the right refreshPending state");
+    Assert.equal(refresher.refreshPending, expectRefresh,
+      "Got the right refreshPending state");
 
     if (refresher.refreshPending) {
       // Cancel the pending refresh

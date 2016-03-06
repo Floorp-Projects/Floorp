@@ -11,7 +11,6 @@ const Events = require("sdk/event/core");
 const {ActorClass, Actor, FrontClass, Front, method} =
   require("devtools/server/protocol");
 
-const {Cu} = require("chrome");
 const {NodeActor} = require("devtools/server/actors/inspector");
 
 var EventsFormActor = ActorClass({

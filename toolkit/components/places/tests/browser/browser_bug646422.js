@@ -34,20 +34,17 @@ add_task(function* () {
     PlacesUtils.history.addObserver(observer, false);
   });
 
-  let title = yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+  yield ContentTask.spawn(tab.linkedBrowser, null, function* () {
     let title =  content.document.title;
     content.history.pushState('', '', 'new_page');
-    return title;
+    Assert.ok(title, "Content window should initially have a title.");
   });
-
-  ok(title, 'Content window should initially have a title.');
 
   let newtitle = yield newTitlePromise;
 
-  title = yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
-    return content.document.title;
+  yield ContentTask.spawn(tab.linkedBrowser, { newtitle }, function* (args) {
+    Assert.equal(args.newtitle, content.document.title, "Title after pushstate.");
   });
-  is(newtitle, title, 'Title after pushstate.');
 
   yield PlacesTestUtils.clearHistory();
   gBrowser.removeTab(tab);

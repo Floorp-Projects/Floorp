@@ -17,7 +17,7 @@ add_task(function* () {
       let cell = content.gGrid.cells[aIndex];
 
       let link = cell.node.querySelector(".newtab-link");
-      is(link.getAttribute("title"), aExpected, aMessage);
+      Assert.equal(link.getAttribute("title"), aExpected, aMessage);
     }
 
     checkTooltip(0, "http://example7.com/", "1st tooltip is correct");

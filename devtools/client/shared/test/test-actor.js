@@ -493,6 +493,32 @@ var TestActor = exports.TestActor = protocol.ActorClass({
   }),
 
   /**
+   * Remove an attribute from a DOM Node.
+   * @param {String} selector The node selector
+   * @param {String} attribute The attribute name
+   */
+  removeAttribute: protocol.method(function (selector, attribute) {
+    let node = this._querySelector(selector);
+    node.removeAttribute(attribute);
+  }, {
+    request: {
+      selector: Arg(0, "string"),
+      property: Arg(1, "string")
+    },
+    response: {}
+  }),
+
+  /**
+   * Reload the content window.
+   */
+  reload: protocol.method(function () {
+    this.content.location.reload();
+  }, {
+    request: {},
+    response: {}
+  }),
+
+  /**
    * Reload an iframe and wait for its load event.
    * @param {String} selector The node selector
    */

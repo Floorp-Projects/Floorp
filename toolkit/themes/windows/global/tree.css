@@ -519,6 +519,10 @@ treechildren::-moz-tree-cell-text(selected, editing) {
       border-radius: 0;
     }
 
+    treechildren::-moz-tree-cell-text(primary, dropOn) {
+      color: -moz-FieldText;
+    }
+
     treechildren:not(.autocomplete-treebody)::-moz-tree-cell-text {
       padding-bottom: initial;
       border-color: transparent;

@@ -550,9 +550,9 @@ size. -->
      is no data to show in an about:home panel that was created by an add-on. -->
 <!ENTITY home_default_empty "No content could be found for this panel.">
 
-<!-- Localization note (home_move_up_to_filter): The variable is replaced by the name of the
+<!-- Localization note (home_back_up_to_filter): The variable is replaced by the name of the
      previous location in the navigation, such as the previous folder -->
-<!ENTITY home_move_up_to_filter "Up to &formatS;">
+<!ENTITY home_move_back_to_filter "Back to &formatS;">
 
 <!ENTITY home_remote_tabs_title "Synced Tabs">
 <!ENTITY home_remote_tabs_empty "Your tabs from other devices show up here.">
