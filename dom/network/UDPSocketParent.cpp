@@ -161,11 +161,12 @@ UDPSocketParent::Init(const IPC::Principal& aPrincipal,
 
 bool
 UDPSocketParent::RecvBind(const UDPAddressInfo& aAddressInfo,
-                          const bool& aAddressReuse, const bool& aLoopback)
+                          const bool& aAddressReuse, const bool& aLoopback,
+                          const uint32_t& recvBufferSize)
 {
   UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, aAddressInfo.addr().get(), aAddressInfo.port()));
 
-  if (NS_FAILED(BindInternal(aAddressInfo.addr(), aAddressInfo.port(), aAddressReuse, aLoopback))) {
+  if (NS_FAILED(BindInternal(aAddressInfo.addr(), aAddressInfo.port(), aAddressReuse, aLoopback, recvBufferSize))) {
     FireInternalError(__LINE__);
     return true;
   }
@@ -193,11 +194,12 @@ UDPSocketParent::RecvBind(const UDPAddressInfo& aAddressInfo,
 
 nsresult
 UDPSocketParent::BindInternal(const nsCString& aHost, const uint16_t& aPort,
-                              const bool& aAddressReuse, const bool& aLoopback)
+                              const bool& aAddressReuse, const bool& aLoopback,
+                              const uint32_t& recvBufferSize)
 {
   nsresult rv;
 
-  UDPSOCKET_LOG(("%s: [this=%p] %s:%u addressReuse: %d loopback: %d", __FUNCTION__, this, nsCString(aHost).get(), aPort, aAddressReuse, aLoopback));
+  UDPSOCKET_LOG(("%s: [this=%p] %s:%u addressReuse: %d loopback: %d recvBufferSize: %lu", __FUNCTION__, this, nsCString(aHost).get(), aPort, aAddressReuse, aLoopback, recvBufferSize));
 
   nsCOMPtr<nsIUDPSocket> sock =
       do_CreateInstance("@mozilla.org/network/udp-socket;1", &rv);
@@ -241,6 +243,12 @@ UDPSocketParent::BindInternal(const nsCString& aHost, const uint16_t& aPort,
     rv = sock->SetMulticastLoopback(aLoopback);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+  }
+  if (recvBufferSize != 0) {
+    rv = sock->SetRecvBufferSize(recvBufferSize);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      UDPSOCKET_LOG(("%s: [this=%p] %s:%u failed to set recv buffer size to: %lu", __FUNCTION__, this, nsCString(aHost).get(), aPort, recvBufferSize));
     }
   }
 

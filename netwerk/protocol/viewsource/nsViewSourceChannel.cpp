@@ -98,11 +98,7 @@ nsresult
 nsViewSourceChannel::InitSrcdoc(nsIURI* aURI,
                                 nsIURI* aBaseURI,
                                 const nsAString &aSrcdoc,
-                                nsINode *aLoadingNode,
-                                nsIPrincipal *aLoadingPrincipal,
-                                nsIPrincipal *aTriggeringPrincipal,
-                                nsSecurityFlags aSecurityFlags,
-                                nsContentPolicyType aContentPolicyType)
+                                nsILoadInfo* aLoadInfo)
 {
     nsresult rv;
 
@@ -118,11 +114,7 @@ nsViewSourceChannel::InitSrcdoc(nsIURI* aURI,
                                           inStreamURI,
                                           aSrcdoc,
                                           NS_LITERAL_CSTRING("text/html"),
-                                          aLoadingNode,
-                                          aLoadingPrincipal,
-                                          aTriggeringPrincipal,
-                                          aSecurityFlags,
-                                          aContentPolicyType,
+                                          aLoadInfo,
                                           true);
 
     NS_ENSURE_SUCCESS(rv, rv);

@@ -99,6 +99,25 @@ void TestBasics()
   v.Clear();
   MOZ_RELEASE_ASSERT(v.IsEmpty());
   MOZ_RELEASE_ASSERT(v.Length() == 0);
+
+  // Fill the vector up to verify PopLastN works.
+  for (i = 0; i < 1000; ++i) {
+    v.InfallibleAppend(mozilla::Move(i));
+  }
+  MOZ_RELEASE_ASSERT(!v.IsEmpty());
+  MOZ_RELEASE_ASSERT(v.Length() == 1000);
+
+  // Verify we pop the right amount of elements.
+  v.PopLastN(300);
+  MOZ_RELEASE_ASSERT(v.Length() == 700);
+
+  // Verify the contents are what we expect.
+  n = 0;
+  for (auto iter = v.Iter(); !iter.Done(); iter.Next()) {
+    MOZ_RELEASE_ASSERT(iter.Get() == n);
+    n++;
+  }
+  MOZ_RELEASE_ASSERT(n == 700);
 }
 
 static size_t gNumDefaultCtors;
@@ -120,28 +139,109 @@ struct NonPOD
 // destruct those elements.
 void TestConstructorsAndDestructors()
 {
+  size_t defaultCtorCalls = 0;
+  size_t explicitCtorCalls = 0;
+  size_t copyCtorCalls = 0;
+  size_t moveCtorCalls = 0;
+  size_t dtorCalls = 0;
+
   {
+    static const size_t segmentSize = 64;
+
     // A SegmentedVector with a non-POD element type.
     NonPOD x(1);                          // explicit constructor called
-    SegmentedVector<NonPOD, 64, InfallibleAllocPolicy> v;
+    explicitCtorCalls++;
+    SegmentedVector<NonPOD, segmentSize, InfallibleAllocPolicy> v;
                                           // default constructor called 0 times
     MOZ_RELEASE_ASSERT(v.IsEmpty());
     gDummy = v.Append(x);                 // copy constructor called
+    copyCtorCalls++;
     NonPOD y(1);                          // explicit constructor called
+    explicitCtorCalls++;
     gDummy = v.Append(mozilla::Move(y));  // move constructor called
+    moveCtorCalls++;
     NonPOD z(1);                          // explicit constructor called
+    explicitCtorCalls++;
     v.InfallibleAppend(mozilla::Move(z)); // move constructor called
+    moveCtorCalls++;
     v.PopLast();                          // destructor called 1 time
-    MOZ_RELEASE_ASSERT(gNumDtors == 1);
+    dtorCalls++;
+    MOZ_RELEASE_ASSERT(gNumDtors == dtorCalls);
     v.Clear();                            // destructor called 2 times
+    dtorCalls += 2;
 
-    MOZ_RELEASE_ASSERT(gNumDefaultCtors  == 0);
-    MOZ_RELEASE_ASSERT(gNumExplicitCtors == 3);
-    MOZ_RELEASE_ASSERT(gNumCopyCtors     == 1);
-    MOZ_RELEASE_ASSERT(gNumMoveCtors     == 2);
-    MOZ_RELEASE_ASSERT(gNumDtors         == 3);
+    // Test that PopLastN() correctly calls the destructors of all the
+    // elements in the segments it destroys.
+    //
+    // We depend on the size of NonPOD when determining how many things
+    // to push onto the vector.  It would be nicer to get this information
+    // from SegmentedVector itself...
+    static_assert(sizeof(NonPOD) == 1, "Fix length calculations!");
+
+    size_t nonFullLastSegmentSize = segmentSize - 1;
+    for (size_t i = 0; i < nonFullLastSegmentSize; ++i) {
+      gDummy = v.Append(x);     // copy constructor called
+      copyCtorCalls++;
+    }
+    MOZ_RELEASE_ASSERT(gNumCopyCtors == copyCtorCalls);
+
+    // Pop some of the elements.
+    {
+      size_t partialPopAmount = 5;
+      MOZ_RELEASE_ASSERT(nonFullLastSegmentSize > partialPopAmount);
+      v.PopLastN(partialPopAmount); // destructor called partialPopAmount times
+      dtorCalls += partialPopAmount;
+      MOZ_RELEASE_ASSERT(v.Length() == nonFullLastSegmentSize - partialPopAmount);
+      MOZ_RELEASE_ASSERT(!v.IsEmpty());
+      MOZ_RELEASE_ASSERT(gNumDtors == dtorCalls);
+    }
+
+    // Pop a full segment.
+    {
+      size_t length = v.Length();
+      v.PopLastN(length);
+      dtorCalls += length;
+      // These two tests *are* semantically different given the underlying
+      // implementation; Length sums up the sizes of the internal segments,
+      // while IsEmpty looks at the sequence of internal segments.
+      MOZ_RELEASE_ASSERT(v.Length() == 0);
+      MOZ_RELEASE_ASSERT(v.IsEmpty());
+      MOZ_RELEASE_ASSERT(gNumDtors == dtorCalls);
+    }
+
+    size_t multipleSegmentsSize = (segmentSize * 3) / 2;
+    for (size_t i = 0; i < multipleSegmentsSize; ++i) {
+      gDummy = v.Append(x);     // copy constructor called
+      copyCtorCalls++;
+    }
+    MOZ_RELEASE_ASSERT(gNumCopyCtors == copyCtorCalls);
+
+    // Pop across segment boundaries.
+    {
+      v.PopLastN(segmentSize);
+      dtorCalls += segmentSize;
+      MOZ_RELEASE_ASSERT(v.Length() == (multipleSegmentsSize - segmentSize));
+      MOZ_RELEASE_ASSERT(!v.IsEmpty());
+      MOZ_RELEASE_ASSERT(gNumDtors == dtorCalls);
+    }
+
+    // Clear everything here to make calculations easier.
+    {
+      size_t length = v.Length();
+      v.Clear();
+      dtorCalls += length;
+      MOZ_RELEASE_ASSERT(v.IsEmpty());
+      MOZ_RELEASE_ASSERT(gNumDtors == dtorCalls);
+    }
+
+    MOZ_RELEASE_ASSERT(gNumDefaultCtors  == defaultCtorCalls);
+    MOZ_RELEASE_ASSERT(gNumExplicitCtors == explicitCtorCalls);
+    MOZ_RELEASE_ASSERT(gNumCopyCtors     == copyCtorCalls);
+    MOZ_RELEASE_ASSERT(gNumMoveCtors     == moveCtorCalls);
+    MOZ_RELEASE_ASSERT(gNumDtors         == dtorCalls);
   }                                       // destructor called for x, y, z
-  MOZ_RELEASE_ASSERT(gNumDtors == 6);
+  dtorCalls += 3;
+  MOZ_RELEASE_ASSERT(gNumDtors == dtorCalls);
 }
 
 struct A { int mX; int mY; };

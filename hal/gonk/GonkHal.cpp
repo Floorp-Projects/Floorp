@@ -58,6 +58,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsAlgorithm.h"
 #include "nsPrintfCString.h"
 #include "nsIObserver.h"
@@ -1242,7 +1243,7 @@ protected:
 
 private:
   double mLastLineChecked;
-  ScopedFreePtr<regex_t> mRegexes;
+  UniqueFreePtr<regex_t> mRegexes;
 };
 NS_IMPL_ISUPPORTS(OomVictimLogger, nsIObserver);
 
@@ -1276,9 +1277,13 @@ OomVictimLogger::Observe(
 
   // Compile our regex just in time
   if (!mRegexes) {
-    mRegexes = static_cast<regex_t*>(malloc(sizeof(regex_t) * regex_count));
+    UniqueFreePtr<regex_t> regexes(
+      static_cast<regex_t*>(malloc(sizeof(regex_t) * regex_count))
+    );
+    mRegexes.swap(regexes);
     for (size_t i = 0; i < regex_count; i++) {
-      int compilation_err = regcomp(&(mRegexes[i]), regexes_raw[i], REG_NOSUB);
+      int compilation_err =
+        regcomp(&(mRegexes.get()[i]), regexes_raw[i], REG_NOSUB);
       if (compilation_err) {
         OOM_LOG(ANDROID_LOG_ERROR, "Cannot compile regex \"%s\"\n", regexes_raw[i]);
         return NS_OK;
@@ -1298,16 +1303,16 @@ OomVictimLogger::Observe(
 #endif
   // Retreive kernel log
   int msg_buf_size = klogctl(KLOG_SIZE_BUFFER, NULL, 0);
-  ScopedFreePtr<char> msg_buf(static_cast<char *>(malloc(msg_buf_size + 1)));
-  int read_size = klogctl(KLOG_READ_ALL, msg_buf.rwget(), msg_buf_size);
+  UniqueFreePtr<char> msg_buf(static_cast<char *>(malloc(msg_buf_size + 1)));
+  int read_size = klogctl(KLOG_READ_ALL, msg_buf.get(), msg_buf_size);
 
   // Turn buffer into cstring
   read_size = read_size > msg_buf_size ? msg_buf_size : read_size;
-  msg_buf.rwget()[read_size] = '\0';
+  msg_buf.get()[read_size] = '\0';
 
   // Foreach line
   char* line_end;
-  char* line_begin = msg_buf.rwget();
+  char* line_begin = msg_buf.get();
   for (; (line_end = strchr(line_begin, '\n')); line_begin = line_end + 1) {
     // make line into cstring
     *line_end = '\0';
@@ -1340,7 +1345,7 @@ OomVictimLogger::Observe(
 
     // Log interesting lines
     for (size_t i = 0; i < regex_count; i++) {
-      int matching = !regexec(&(mRegexes[i]), line_begin, 0, NULL, 0);
+      int matching = !regexec(&(mRegexes.get()[i]), line_begin, 0, NULL, 0);
       if (matching) {
         // Log content of kernel message. We try to skip the ], but if for
         // some reason (most likely due to buffer overflow/wraparound), we

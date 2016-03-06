@@ -615,7 +615,7 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
                         bool aAuth, bool aEncrypt)
 {
   nsAutoPtr<BluetoothUnixSocketConnector> connector(
-    new BluetoothUnixSocketConnector(BluetoothAddress::ANY, aType,
+    new BluetoothUnixSocketConnector(BluetoothAddress::ANY(), aType,
                                      aChannel, aAuth, aEncrypt));
 
   nsresult rv = Listen(connector);

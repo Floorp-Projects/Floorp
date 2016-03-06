@@ -216,6 +216,20 @@ let json = [
      },
 
      {
+       name: "formatDate",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           type: "object",
+           properties: {
+             date: {type: "string", format: "date", optional: true},
+           },
+         },
+       ],
+     },
+
+     {
        name: "deep",
        type: "function",
        parameters: [
@@ -568,6 +582,43 @@ add_task(function* () {
                   /must be a relative URL/,
                   "should throw for non-relative URL");
   }
+
+  const dates = [
+    "2016-03-04",
+    "2016-03-04T08:00:00Z",
+    "2016-03-04T08:00:00.000Z",
+    "2016-03-04T08:00:00-08:00",
+    "2016-03-04T08:00:00.000-08:00",
+    "2016-03-04T08:00:00+08:00",
+    "2016-03-04T08:00:00.000+08:00",
+    "2016-03-04T08:00:00+0800",
+    "2016-03-04T08:00:00-0800",
+  ];
+  dates.forEach(str => {
+    root.testing.formatDate({date: str});
+    verify("call", "testing", "formatDate", [{date: str}]);
+  });
+
+  // Make sure that a trivial change to a valid date invalidates it.
+  dates.forEach(str => {
+    Assert.throws(() => root.testing.formatDate({date: "0" + str}),
+                  /Invalid date string/,
+                  "should throw for invalid iso date string");
+    Assert.throws(() => root.testing.formatDate({date: str + "0"}),
+                  /Invalid date string/,
+                  "should throw for invalid iso date string");
+  });
+
+  const badDates = [
+    "I do not look anything like a date string",
+    "2016-99-99",
+    "2016-03-04T25:00:00Z",
+  ];
+  badDates.forEach(str => {
+    Assert.throws(() => root.testing.formatDate({date: str}),
+                  /Invalid date string/,
+                  "should throw for invalid iso date string");
+  });
 
   root.testing.deep({foo: {bar: [{baz: {required: 12, optional: "42"}}]}});
   verify("call", "testing", "deep", [{foo: {bar: [{baz: {required: 12, optional: "42"}}]}}]);

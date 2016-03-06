@@ -1091,3 +1091,99 @@ CodeGeneratorX64::visitTruncateFToInt32(LTruncateFToInt32* ins)
     // call a stub if it fails.
     emitTruncateFloat32(input, output, ins->mir());
 }
+
+void
+CodeGeneratorX64::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
+{
+    const LAllocation* input = lir->getOperand(0);
+    Register output = ToRegister(lir->output());
+
+    masm.movl(ToOperand(input), output);
+}
+
+void
+CodeGeneratorX64::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
+{
+    const LAllocation* input = lir->getOperand(0);
+    Register output = ToRegister(lir->output());
+
+    if (lir->mir()->isUnsigned())
+        masm.movl(ToOperand(input), output);
+    else
+        masm.movslq(ToOperand(input), output);
+}
+
+void
+CodeGeneratorX64::visitTruncateToInt64(LTruncateToInt64* lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register output = ToRegister(lir->output());
+
+    MIRType inputType = lir->mir()->input()->type();
+    bool isUnsigned = lir->mir()->isUnsigned();
+
+    // We should trap on invalid inputs, but for now we just return
+    // 0x8000000000000000. Note that we can remove some unnecessary jumps
+    // once we get rid of this trap Label.
+    Label trap;
+
+    Label done;
+    if (isUnsigned) {
+        FloatRegister tempDouble = ToFloatRegister(lir->temp());
+
+        // If the input < INT64_MAX, vcvttsd2sq will do the right thing, so
+        // we use it directly. Else, we subtract INT64_MAX, convert to int64,
+        // and then add INT64_MAX to the result.
+        if (inputType == MIRType_Double) {
+            Label isLarge;
+            masm.loadConstantDouble(double(0x8000000000000000), ScratchDoubleReg);
+            masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg, &isLarge);
+            masm.vcvttsd2sq(input, output);
+            masm.branchTestPtr(Assembler::Signed, output, output, &trap);
+            masm.jump(&done);
+
+            masm.bind(&isLarge);
+            masm.moveDouble(input, tempDouble);
+            masm.subDouble(ScratchDoubleReg, tempDouble);
+            masm.vcvttsd2sq(tempDouble, output);
+            masm.branchTestPtr(Assembler::Signed, output, output, &trap);
+            masm.or64(Imm64(0x8000000000000000), Register64(output));
+            masm.jump(&done);
+        } else {
+            MOZ_ASSERT(inputType == MIRType_Float32);
+
+            Label isLarge;
+            masm.loadConstantFloat32(float(0x8000000000000000), ScratchDoubleReg);
+            masm.branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg, &isLarge);
+            masm.vcvttss2sq(input, output);
+            masm.branchTestPtr(Assembler::Signed, output, output, &trap);
+            masm.jump(&done);
+
+            masm.bind(&isLarge);
+            masm.moveFloat32(input, tempDouble);
+            masm.vsubss(ScratchDoubleReg, tempDouble, tempDouble);
+            masm.vcvttss2sq(tempDouble, output);
+            masm.branchTestPtr(Assembler::Signed, output, output, &trap);
+            masm.or64(Imm64(0x8000000000000000), Register64(output));
+            masm.jump(&done);
+        }
+    } else {
+        if (inputType == MIRType_Double) {
+            masm.vcvttsd2sq(input, output);
+            masm.cmpq(Imm32(1), output);
+            masm.j(Assembler::Overflow, &trap);
+            masm.jump(&done);
+        } else {
+            MOZ_ASSERT(inputType == MIRType_Float32);
+            masm.vcvttss2sq(input, output);
+            masm.cmpq(Imm32(1), output);
+            masm.j(Assembler::Overflow, &trap);
+            masm.jump(&done);
+        }
+    }
+
+    masm.bind(&trap);
+    masm.movePtr(ImmWord(0x8000000000000000), output);
+
+    masm.bind(&done);
+}

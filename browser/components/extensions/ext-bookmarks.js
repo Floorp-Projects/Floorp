@@ -115,6 +115,10 @@ extensions.registerSchemaAPI("bookmarks", "bookmarks", (extension, context) => {
         return Bookmarks.search(query).then(result => result.map(convert));
       },
 
+      getRecent: function(numberOfItems) {
+        return Bookmarks.getRecent(numberOfItems).then(result => result.map(convert));
+      },
+
       create: function(bookmark) {
         let info = {
           title: bookmark.title || "",

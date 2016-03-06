@@ -434,6 +434,7 @@ public:
    * You won't get meaningful painted/dropped counts when using this method.
    */
   void SetCurrentImageInTransaction(Image* aImage);
+  void SetCurrentImagesInTransaction(const nsTArray<NonOwningImage>& aImages);
 
   /**
    * Returns true if this ImageContainer uses the ImageBridge IPDL protocol.

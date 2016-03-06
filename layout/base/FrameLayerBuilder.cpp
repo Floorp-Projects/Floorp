@@ -3739,7 +3739,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     }
   }
 
-  int32_t maxLayers = nsDisplayItem::MaxActiveLayers();
+  int32_t maxLayers = gfxPrefs::MaxActiveLayers();
   int layerCount = 0;
 
   nsDisplayList savedItems;

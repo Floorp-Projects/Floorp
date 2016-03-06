@@ -112,6 +112,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins);
     void visitSubstr(MSubstr* ins);
     void visitRandom(MRandom* ins);
+    void visitTruncateToInt64(MTruncateToInt64* ins);
 };
 
 typedef LIRGeneratorARM LIRGeneratorSpecific;

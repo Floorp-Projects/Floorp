@@ -125,25 +125,16 @@ CoreLocationLocationProvider::MLSUpdate::Update(nsIDOMGeoPosition *position)
   if (!coords) {
     return NS_ERROR_FAILURE;
   }
-
   mParentLocationProvider.Update(position);
   Telemetry::Accumulate(Telemetry::GEOLOCATION_OSX_SOURCE_IS_MLS, true);
   return NS_OK;
 }
-
-NS_IMETHODIMP
-CoreLocationLocationProvider::MLSUpdate::LocationUpdatePending()
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 CoreLocationLocationProvider::MLSUpdate::NotifyError(uint16_t error)
 {
   mParentLocationProvider.NotifyError(error);
   return NS_OK;
 }
-
 class CoreLocationObjects {
 public:
   NS_METHOD Init(CoreLocationLocationProvider* aProvider) {

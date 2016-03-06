@@ -182,6 +182,7 @@ class LIRGeneratorShared : public MDefinitionVisitor
     // Returns an int64 allocation for an Int64-typed instruction.
     inline LInt64Allocation useInt64(MDefinition* mir, LUse::Policy policy, bool useAtStart);
     inline LInt64Allocation useInt64(MDefinition* mir, bool useAtStart = false);
+    inline LInt64Allocation useInt64AtStart(MDefinition* mir);
     inline LInt64Allocation useInt64OrConstant(MDefinition* mir, bool useAtStart = false);
     inline LInt64Allocation useInt64Register(MDefinition* mir, bool useAtStart = false);
 

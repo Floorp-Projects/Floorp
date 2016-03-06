@@ -54,6 +54,12 @@ public:
            nsSecurityFlags aSecurityFlags,
            nsContentPolicyType aContentPolicyType);
 
+  // Constructor used for TYPE_DOCUMENT loads with no reasonable loadingNode.
+  LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
+           nsIPrincipal* aLoadingPrincipal,
+           nsIPrincipal* aTriggeringPrincipal,
+           nsSecurityFlags aSecurityFlags);
+
   // create an exact copy of the loadinfo
   already_AddRefed<nsILoadInfo> Clone() const;
   // creates a copy of the loadinfo which is appropriate to use for a

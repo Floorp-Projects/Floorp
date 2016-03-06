@@ -73,7 +73,7 @@
 #include "nsIDOMWindow.h"
 
 #include "nsNetCID.h"
-#include "prprf.h"
+#include "mozilla/Snprintf.h"
 #include "nsThreadUtils.h"
 #include "nsIInputStreamTee.h"
 #include "nsQueryObject.h"
@@ -3785,8 +3785,8 @@ nsPluginHost::ParsePostBufferToFixHeaders(const char *inPostData, uint32_t inPos
     newBufferLen = dataLen + l;
     if (!(*outPostData = p = (char*)moz_xmalloc(newBufferLen)))
       return NS_ERROR_OUT_OF_MEMORY;
-    headersLen = PR_snprintf(p, l,"%s: %ld%s", ContentLenHeader, dataLen, CRLFCRLF);
-    if (headersLen == l) { // if PR_snprintf has ate all extra space consider this as an error
+    headersLen = snprintf(p, l,"%s: %u%s", ContentLenHeader, dataLen, CRLFCRLF);
+    if (headersLen == l) { // if snprintf has ate all extra space consider this as an error
       free(p);
       *outPostData = 0;
       return NS_ERROR_FAILURE;

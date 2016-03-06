@@ -6,10 +6,6 @@ const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/error.js");
 
-function run_test() {
-  run_next_test();
-}
-
 function notok(condition) {
   ok(!(condition));
 }

@@ -662,7 +662,7 @@ CodeGeneratorX86::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
 
 void
 CodeGeneratorX86::asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg, bool boundsCheck,
-                                            int32_t offset, int32_t endOffset)
+                                            uint32_t offset, uint32_t endOffset)
 {
     uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
 

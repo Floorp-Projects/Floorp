@@ -14,6 +14,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/WeakPtr.h"
 
 class nsTextInputListener;
@@ -293,7 +294,7 @@ private:
   nsCOMPtr<mozilla::dom::Element> mPlaceholderDiv;
   nsTextControlFrame* mBoundFrame;
   RefPtr<nsTextInputListener> mTextListener;
-  nsAutoPtr<nsCString> mValue;
+  mozilla::Maybe<nsString> mValue;
   RefPtr<nsAnonDivObserver> mMutationObserver;
   mutable nsString mCachedValue; // Caches non-hard-wrapped value on a multiline control.
   // mValueBeingSet is available only while SetValue() is requesting to commit

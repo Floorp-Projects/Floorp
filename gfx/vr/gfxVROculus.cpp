@@ -526,6 +526,12 @@ HMDInfoOculus::SubmitFrame(RenderTargetSet *aRTSet, int32_t aInputFrameID)
   RenderTargetSetOculus *rts = static_cast<RenderTargetSetOculus*>(aRTSet);
   MOZ_ASSERT(rts->hmd != nullptr);
   MOZ_ASSERT(rts->textureSet != nullptr);
+  MOZ_ASSERT(aInputFrameID >= 0);
+  if (aInputFrameID < 0) {
+    // Sanity check to prevent invalid memory access on builds with assertions
+    // disabled.
+    aInputFrameID = 0;
+  }
 
   VRHMDSensorState sensorState = mLastSensorState[aInputFrameID % kMaxLatencyFrames];
   // It is possible to get a cache miss on mLastSensorState if latency is
@@ -535,6 +541,7 @@ HMDInfoOculus::SubmitFrame(RenderTargetSet *aRTSet, int32_t aInputFrameID)
   // un-viewable and a more accurate pose prediction is not likely to
   // compensate.
   ovrLayerEyeFov layer;
+  memset(&layer, 0, sizeof(layer));
   layer.Header.Type = ovrLayerType_EyeFov;
   layer.Header.Flags = 0;
   layer.ColorTexture[0] = rts->textureSet;
@@ -607,6 +614,7 @@ VRHMDManagerOculus::Init()
     mOculusThread = already_AddRefed<nsIThread>(thread);
 
     ovrInitParams params;
+    memset(&params, 0, sizeof(params));
     params.Flags = ovrInit_RequestVersion;
     params.RequestedMinorVersion = OVR_MINOR_VERSION;
     params.LogCallback = nullptr;

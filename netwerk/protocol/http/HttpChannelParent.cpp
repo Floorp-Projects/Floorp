@@ -1126,6 +1126,9 @@ HttpChannelParent::OnStopRequest(nsIRequest *aRequest,
   // to be passed down.
   mChannel->GetProtocolVersion(timing.protocolVersion);
 
+  mChannel->GetCacheReadStart(&timing.cacheReadStart);
+  mChannel->GetCacheReadEnd(&timing.cacheReadEnd);
+
   if (mIPCClosed || !SendOnStopRequest(aStatusCode, timing))
     return NS_ERROR_UNEXPECTED;
   return NS_OK;

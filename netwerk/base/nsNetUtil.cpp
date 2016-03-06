@@ -371,11 +371,7 @@ NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
                                  nsIURI             *aUri,
                                  const nsAString    &aData,
                                  const nsACString   &aContentType,
-                                 nsINode            *aLoadingNode,
-                                 nsIPrincipal       *aLoadingPrincipal,
-                                 nsIPrincipal       *aTriggeringPrincipal,
-                                 nsSecurityFlags     aSecurityFlags,
-                                 nsContentPolicyType aContentPolicyType,
+                                 nsILoadInfo        *aLoadInfo,
                                  bool                aIsSrcdocChannel /* = false */)
 {
   nsresult rv;
@@ -398,11 +394,7 @@ NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
                                         stream,
                                         aContentType,
                                         NS_LITERAL_CSTRING("UTF-8"),
-                                        aLoadingNode,
-                                        aLoadingPrincipal,
-                                        aTriggeringPrincipal,
-                                        aSecurityFlags,
-                                        aContentPolicyType);
+                                        aLoadInfo);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -413,6 +405,25 @@ NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
   }
   channel.forget(outChannel);
   return NS_OK;
+}
+
+nsresult
+NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
+                                 nsIURI             *aUri,
+                                 const nsAString    &aData,
+                                 const nsACString   &aContentType,
+                                 nsINode            *aLoadingNode,
+                                 nsIPrincipal       *aLoadingPrincipal,
+                                 nsIPrincipal       *aTriggeringPrincipal,
+                                 nsSecurityFlags     aSecurityFlags,
+                                 nsContentPolicyType aContentPolicyType,
+                                 bool                aIsSrcdocChannel /* = false */)
+{
+  nsCOMPtr<nsILoadInfo> loadInfo =
+      new mozilla::LoadInfo(aLoadingPrincipal, aTriggeringPrincipal,
+                            aLoadingNode, aSecurityFlags, aContentPolicyType);
+  return NS_NewInputStreamChannelInternal(outChannel, aUri, aData, aContentType,
+                                          loadInfo, aIsSrcdocChannel);
 }
 
 nsresult

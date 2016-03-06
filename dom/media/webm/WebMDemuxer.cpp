@@ -18,7 +18,8 @@
 #include "nsAutoRef.h"
 #include "NesteggPacketHolder.h"
 #include "XiphExtradata.h"
-#include "prprf.h"
+#include "prprf.h"           // leaving it for PR_vsnprintf()
+#include "mozilla/Snprintf.h"
 
 #include <algorithm>
 #include <stdint.h>
@@ -117,7 +118,7 @@ static void webmdemux_log(nestegg* aContext,
 
   va_start(args, aFormat);
 
-  PR_snprintf(msg, sizeof(msg), "%p [Nestegg-%s] ", aContext, sevStr);
+  snprintf_literal(msg, "%p [Nestegg-%s] ", aContext, sevStr);
   PR_vsnprintf(msg+strlen(msg), sizeof(msg)-strlen(msg), aFormat, args);
   MOZ_LOG(gNesteggLog, LogLevel::Debug, (msg));
 

@@ -9,32 +9,39 @@
 
 #jit-optimizations-view {
   width: 350px;
-  overflow-x: auto;
   min-width: 200px;
   white-space: nowrap;
   --jit-tree-row-height: 14;
   --jit-tree-header-height: 16;
 }
 
-#jit-optimizations-view > div {
-  flex: 1;
-}
-
+/* Override layout styles applied by minimal-xul.css */
 #jit-optimizations-view div {
   display: block;
 }
-
-.tree {
-  /**
-   * Flexing to fill out remaining vertical space.
-   */
-  flex: 1;
-  overflow-y: auto;
-  height: 100%;
-  background-color: var(--theme-body-background);
+#jit-optimizations-view span {
+  display: inline-block;
 }
 
-.optimization-header {
+#jit-optimizations-view > div {
+  /* For elements that need to flex to fill the available space and/or
+   * scroll on overflow, we need to use the old flexbox model, since the
+   * parent nodes are in the XUL namespace. The new flexbox model can't
+   * properly compute dimensions and will ignore `flex: ${number}` properties,
+   * since no other parent node has a flex display. */
+  display: -moz-box;
+  -moz-box-flex: 1;
+  -moz-box-orient: vertical;
+}
+
+#jit-optimizations-view .optimization-header,
+#jit-optimizations-view .tree * {
+  /* We can, however, display child nodes as flex to take advantage of
+   * horizontal/vertical inlining. */
+  display: flex;
+}
+
+#jit-optimizations-view .optimization-header {
   height: var(--jit-tree-header-height);
   padding: 2px 5px;
   background-color: var(--theme-tab-toolbar-background);
@@ -42,30 +49,23 @@
 
 #jit-optimizations-view .header-title {
   font-weight: bold;
-  padding-right: 7px;
+  padding-inline-end: 7px;
 }
 
-.tree-node {
+#jit-optimizations-view .tree {
+  display: -moz-box;
+  -moz-box-flex: 1;
+  -moz-box-orient: vertical;
+  overflow: auto;
+  background-color: var(--theme-body-background);
+}
+
+#jit-optimizations-view .tree-node {
   height: var(--jit-tree-row-height);
-  clear: both;
 }
 
-.tree-node button {
+#jit-optimizations-view .tree-node button {
   display: none;
-}
-
-#jit-optimizations-view .optimization-tree-item {
-  display: flex;
-}
-
-#jit-optimizations-view .arrow,
-#jit-optimizations-view .optimization-site,
-#jit-optimizations-view .optimization-attempts,
-#jit-optimizations-view .optimization-attempt,
-#jit-optimizations-view .optimization-types,
-#jit-optimizations-view .optimization-ion-type,
-#jit-optimizations-view .optimization-observed-type {
-  float: left;
 }
 
 #jit-optimizations-view .optimization-outcome.success {
@@ -75,31 +75,29 @@
   color: var(--theme-highlight-red);
 }
 
-.opt-icon::before {
-  content: "";
+.theme-dark .opt-icon::before {
   background-image: url(chrome://devtools/skin/images/webconsole.svg);
+}
+.theme-light .opt-icon::before {
+  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
+}
+
+.opt-icon::before {
+  display: inline-block;
+  content: "";
   background-repeat: no-repeat;
   background-size: 72px 60px;
   /* show grey "i" bubble by default */
   background-position: -36px -36px;
   width: 10px;
   height: 10px;
-  display: inline-block;
-
   max-height: 12px;
 }
 
-#jit-optimizations-view .opt-icon {
-  float: left;
-}
-
-#jit-optimizations-view .opt-icon::before {
+.opt-icon::before {
   margin: 1px 6px 0 0;
 }
 
-.theme-light .opt-icon::before {
-  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
-}
 .opt-icon.warning::before {
   background-position: -24px -24px;
 }
@@ -114,7 +112,7 @@
 }
 
 .frame-link {
-  margin-left: 7px;
+  margin-inline-start: 7px;
 }
 
 .frame-link-filename {
