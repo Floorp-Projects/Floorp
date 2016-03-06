@@ -42,7 +42,7 @@ function createDiv(test, doc) {
   var div = doc.createElement('div');
   doc.body.appendChild(div);
   test.add_cleanup(function() {
-    removeElement(div);
+    div.remove();
   });
   return div;
 }
@@ -89,11 +89,6 @@ function createPseudo(test, type) {
   assert_equals(anim.effect.target.type, '::' + type);
   anim.cancel();
   return anim.effect.target;
-}
-
-// Removes element
-function removeElement(element) {
-  element.parentNode.removeChild(element);
 }
 
 // Returns the type name of given object
