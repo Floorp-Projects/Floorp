@@ -594,13 +594,13 @@ static const unsigned NaN64GlobalDataOffset      = HeapGlobalDataOffset + sizeof
 static const unsigned NaN32GlobalDataOffset      = NaN64GlobalDataOffset + sizeof(double);
 static const unsigned InitialGlobalDataBytes     = NaN32GlobalDataOffset + sizeof(float);
 
-static const unsigned MaxSigs                    =   4 * 1024;
-static const unsigned MaxFuncs                   = 512 * 1024;
-static const unsigned MaxImports                 =   4 * 1024;
-static const unsigned MaxExports                 =   4 * 1024;
-static const unsigned MaxTableElems              = 128 * 1024;
-static const unsigned MaxArgsPerFunc             =   4 * 1024;
-static const unsigned MaxBrTableElems            =   4 * 1024;
+static const unsigned MaxSigs                    =        4 * 1024;
+static const unsigned MaxFuncs                   =      512 * 1024;
+static const unsigned MaxImports                 =       64 * 1024;
+static const unsigned MaxExports                 =       64 * 1024;
+static const unsigned MaxTableElems              =      128 * 1024;
+static const unsigned MaxArgsPerFunc             =        4 * 1024;
+static const unsigned MaxBrTableElems            = 4 * 1024 * 1024;
 
 } // namespace wasm
 } // namespace js
