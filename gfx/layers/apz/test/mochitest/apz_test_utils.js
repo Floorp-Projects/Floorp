@@ -39,46 +39,6 @@ function convertTestData(testData) {
   return result;
 }
 
-// ----------------------------------------------------------------
-// Utilities for reconstructing the structure of the APZC tree from
-// 'parentScrollId' entries in the APZ test data.
-// ----------------------------------------------------------------
-
-// Create a node with scroll id 'id' in the APZC tree.
-function makeNode(id) {
-  return {scrollId: id, children: []};
-}
-
-// Find a node with scroll id 'id' in the APZC tree rooted at 'root'.
-function findNode(root, id) {
-  if (root.scrollId == id) {
-    return root;
-  }
-  for (var i = 0; i < root.children.length; ++i) {
-    var subtreeResult = findNode(root.children[i], id);
-    if (subtreeResult != null) {
-      return subtreeResult;
-    }
-  }
-  return null;
-}
-
-// Add a child -> parent link to the APZC tree rooted at 'root'.
-function addLink(root, child, parent) {
-  var parentNode = findNode(root, parent);
-  if (parentNode == null) {
-    parentNode = makeNode(parent);
-    root.children.push(parentNode);
-  }
-  parentNode.children.push(makeNode(child));
-}
-
-// Add a root node to the APZC tree. It will become a direct
-// child of 'root'.
-function addRoot(root, id) {
-  root.children.push(makeNode(id));
-}
-
 // Given APZ test data for a single paint on the compositor side,
 // reconstruct the APZC tree structure from the 'parentScrollId'
 // entries that were logged. More specifically, the subset of the
@@ -89,15 +49,36 @@ function buildApzcTree(paint) {
   // The APZC tree can potentially have multiple root nodes,
   // so we invent a node that is the parent of all roots.
   // This 'root' does not correspond to an APZC.
-  var root = makeNode(-1);
+  var root = {scrollId: -1, children: []};
   for (var scrollId in paint) {
+    paint[scrollId].children = [];
+    paint[scrollId].scrollId = scrollId;
+  }
+  for (var scrollId in paint) {
+    var parentNode = null;
     if ("hasNoParentWithSameLayersId" in paint[scrollId]) {
-      addRoot(root, scrollId);
+      parentNode = root;
     } else if ("parentScrollId" in paint[scrollId]) {
-      addLink(root, scrollId, paint[scrollId]["parentScrollId"]);
+      parentNode = paint[paint[scrollId].parentScrollId];
     }
+    parentNode.children.push(paint[scrollId]);
   }
   return root;
+}
+
+// Given an APZC tree produced by buildApzcTree, return the RCD node in
+// the tree, or null if there was none.
+function findRcdNode(apzcTree) {
+  if (!!apzcTree.isRootContent) { // isRootContent will be undefined or "1"
+    return apzcTree;
+  }
+  for (var i = 0; i < apzcTree.children.length; i++) {
+    var rcd = findRcdNode(apzcTree.children[i]);
+    if (rcd != null) {
+      return rcd;
+    }
+  }
+  return null;
 }
 
 function flushApzRepaints(aCallback, aWindow = window) {
