@@ -132,10 +132,106 @@ function backgroundScript() {
                   sendHeaders: [],
                   responseStarted: [],
                   completed: []};
+  let testHeaders = {
+    request: {
+      added: {
+        "X-WebRequest-request": "text",
+        "X-WebRequest-request-binary": "binary",
+      },
+      modified: {
+        "User-Agent": "WebRequest",
+      },
+      deleted: [
+        "Referer",
+      ],
+    },
+    response: {
+      added: {
+        "X-WebRequest-response": "text",
+        "X-WebRequest-response-binary": "binary",
+      },
+      modified: {
+        "Server": "WebRequest",
+      },
+      deleted: [
+        "Connection",
+      ],
+    },
+  };
 
   function checkResourceType(type) {
     let key = type.toUpperCase();
     browser.test.assertTrue(key in browser.webRequest.ResourceType, `valid resource type ${key}`);
+  }
+
+  function processHeaders(phase, details) {
+    let headers = details[`${phase}Headers`];
+    browser.test.assertTrue(Array.isArray(headers), `${phase}Headers array present`);
+
+    let processedMark = "WebRequest-processed";
+    if (headers.find(h => h.name === processedMark)) {
+      // This may happen because of redirections or cache
+      browser.test.log(`${phase}Headers in ${details.requestId} already processed`);
+      return null;
+    }
+    headers.push({name: processedMark, value: "1"});
+
+    let {added, modified, deleted} = testHeaders[phase];
+
+    for (let name in added) {
+      browser.test.assertTrue(!headers.find(h => h.name === name), `header ${name} to be added not present yet in ${phase}Headers`);
+      let header = {name: name};
+      if (name.endsWith("-binary")) {
+        header.binaryValue = Array.from(added[name], c => c.charCodeAt(0));
+      } else {
+        header.value = added[name];
+      }
+      headers.push(header);
+    }
+
+    let modifiedAny = false;
+    for (let header of headers.filter(h => h.name in modified)) {
+      header.value = modified[header.name];
+      modifiedAny = true;
+    }
+    browser.test.assertTrue(modifiedAny, `at least one ${phase}Headers element to modify`);
+
+    let deletedAny = false;
+    for (let j = headers.length; j-- > 0;) {
+      if (deleted.includes(headers[j].name)) {
+        headers.splice(j, 1);
+        deletedAny = true;
+      }
+    }
+    browser.test.assertTrue(deletedAny, `at least one ${phase}Headers element to delete`);
+
+    return headers;
+  }
+
+  function checkHeaders(phase, details) {
+    if (!/^https?:/.test(details.url)) {
+      return;
+    }
+
+    let headers = details[`${phase}Headers`];
+    browser.test.assertTrue(Array.isArray(headers), `valid ${phase}Headers array`);
+
+    let {added, modified, deleted} = testHeaders[phase];
+    for (let name in added) {
+      browser.test.assertTrue(headers.some(h => h.name === name && h.value === added[name]), `header ${name} correctly injected in ${phase}Headers`);
+    }
+
+    let modifiedAny = false;
+    for (let header of headers.filter(h => h.name in modified)) {
+      let {name, value} = header;
+      browser.test.assertTrue(value === modified[name], `header "${name}: ${value}" matches modified value ("${modified[name]}")`);
+      modifiedAny = true;
+    }
+    browser.test.assertTrue(modifiedAny, `at least one modified ${phase}Headers element`);
+
+    for (let name of deleted) {
+      browser.test.assertFalse(headers.some(h => h.name === name), `deleted header ${name} still found in ${phase}Headers`);
+    }
   }
 
   function onBeforeRequest(details) {
@@ -181,6 +277,7 @@ function backgroundScript() {
     browser.test.log(`onBeforeSendHeaders ${details.url}`);
     checkRequestId(details);
     checkResourceType(details.type);
+    processHeaders("request", details);
     if (shouldRecord(details.url)) {
       recorded.beforeSendHeaders.push(details.url);
 
@@ -193,7 +290,7 @@ function backgroundScript() {
     if (details.url.indexOf("_redirect.") != -1) {
       return {redirectUrl: details.url.replace("_redirect.", "_good.")};
     }
-    return {};
+    return {requestHeaders: details.requestHeaders};
   }
 
   function onBeforeRedirect(details) {
@@ -218,24 +315,28 @@ function backgroundScript() {
   }
 
   function onRecord(kind, details) {
-    browser.test.log(`${kind} ${details.url}`);
+    browser.test.log(`${kind} ${details.requestId} ${details.url}`);
     checkResourceType(details.type);
     checkRequestId(details, kind);
-    if (shouldRecord(details.url)) {
+    if (kind in recorded && shouldRecord(details.url)) {
       recorded[kind].push(details.url);
     }
   }
 
-  let completedUrls = {
-    responseStarted: new Set(),
-    completed: new Set(),
-  };
+  function onSendHeaders(details) {
+    onRecord("sendHeaders", details);
+    checkHeaders("request", details);
+  }
+
+  let completedUrls = {};
 
   function checkIpAndRecord(kind, details) {
     onRecord(kind, details);
-
     // When resources are cached, the ip property is not present,
     // so only check for the ip property the first time around.
+    if (!(kind in completedUrls)) {
+      completedUrls[kind] = new Set();
+    }
     if (checkCompleted && !completedUrls[kind].has(details.url)) {
       // We can only tell IPs for HTTP requests.
       if (/^https?:/.test(details.url)) {
@@ -245,12 +346,25 @@ function backgroundScript() {
     }
   }
 
+  function onHeadersReceived(details) {
+    checkIpAndRecord("headersReceived", details);
+    processHeaders("response", details);
+    browser.test.log(`After processing response headers: ${details.responseHeaders.toSource()}`);
+    return {responseHeaders: details.responseHeaders};
+  }
+
+  function onCompleted(details) {
+    checkIpAndRecord("completed", details);
+    checkHeaders("response", details);
+  }
+
   browser.webRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: ["<all_urls>"]}, ["blocking"]);
-  browser.webRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, {urls: ["<all_urls>"]}, ["blocking"]);
-  browser.webRequest.onSendHeaders.addListener(onRecord.bind(null, "sendHeaders"), {urls: ["<all_urls>"]});
+  browser.webRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, {urls: ["<all_urls>"]}, ["blocking", "requestHeaders"]);
+  browser.webRequest.onSendHeaders.addListener(onSendHeaders, {urls: ["<all_urls>"]}, ["requestHeaders"]);
   browser.webRequest.onBeforeRedirect.addListener(onBeforeRedirect, {urls: ["<all_urls>"]});
+  browser.webRequest.onHeadersReceived.addListener(onHeadersReceived, {urls: ["<all_urls>"]}, ["blocking", "responseHeaders"]);
   browser.webRequest.onResponseStarted.addListener(checkIpAndRecord.bind(null, "responseStarted"), {urls: ["<all_urls>"]});
-  browser.webRequest.onCompleted.addListener(checkIpAndRecord.bind(null, "completed"), {urls: ["<all_urls>"]});
+  browser.webRequest.onCompleted.addListener(onCompleted, {urls: ["<all_urls>"]}, ["responseHeaders"]);
 
   function onTestMessage(msg) {
     if (msg == "skipCompleted") {
