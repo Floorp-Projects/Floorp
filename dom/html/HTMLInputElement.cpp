@@ -4357,8 +4357,8 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType)
   // previous type does, we should clear out mFocusedValue.
   if (MayFireChangeOnBlur(mType) && !MayFireChangeOnBlur(oldType)) {
     GetValue(mFocusedValue);
-  } else if (!IsSingleLineTextControl(mType, false) &&
-             IsSingleLineTextControl(oldType, false)) {
+  } else if (!IsSingleLineTextControl(false, mType) &&
+             IsSingleLineTextControl(false, oldType)) {
     mFocusedValue.Truncate();
   }
 
