@@ -43,7 +43,6 @@ using mozilla::Move;
 using mozilla::MallocSizeOf;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
-typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
 
 // ValType/ExprType utilities
 
@@ -596,6 +595,7 @@ static const unsigned InitialGlobalDataBytes     = NaN32GlobalDataOffset + sizeo
 
 static const unsigned MaxSigs                    =        4 * 1024;
 static const unsigned MaxFuncs                   =      512 * 1024;
+static const unsigned MaxLocals                  =       64 * 1024;
 static const unsigned MaxImports                 =       64 * 1024;
 static const unsigned MaxExports                 =       64 * 1024;
 static const unsigned MaxTableElems              =      128 * 1024;

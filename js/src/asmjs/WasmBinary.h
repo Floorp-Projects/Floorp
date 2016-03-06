@@ -798,6 +798,17 @@ class Decoder
     }
 };
 
+// Reusable macro encoding/decoding functions reused by both the two
+// encoders (AsmJS/WasmText) and decoders (Wasm/WasmIonCompile).
+
+typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
+
+bool
+EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
+
+bool
+DecodeLocalEntries(Decoder& d, ValTypeVector* locals);
+
 } // namespace wasm
 } // namespace js
 

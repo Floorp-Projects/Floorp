@@ -144,15 +144,9 @@ CheckType(FunctionDecoder& f, ExprType actual, ExprType expected)
 }
 
 static bool
-DecodeExpr(FunctionDecoder& f, ExprType* type);
-
-static bool
-DecodeValType(JSContext* cx, Decoder& d, ValType *type)
+CheckValType(JSContext* cx, Decoder& d, ValType type)
 {
-    if (!d.readValType(type))
-        return Fail(cx, d, "bad value type");
-
-    switch (*type) {
+    switch (type) {
       case ValType::I32:
       case ValType::F32:
       case ValType::F64:
@@ -168,34 +162,18 @@ DecodeValType(JSContext* cx, Decoder& d, ValType *type)
         break;
     }
 
-    return Fail(cx, "bad value type");
+    return Fail(cx, d, "bad value type");
 }
 
 static bool
-DecodeExprType(JSContext* cx, Decoder& d, ExprType *type)
+CheckExprType(JSContext* cx, Decoder& d, ExprType type)
 {
-    if (!d.readExprType(type))
-        return Fail(cx, d, "bad expression type");
-
-    switch (*type) {
-      case ExprType::I32:
-      case ExprType::F32:
-      case ExprType::F64:
-      case ExprType::Void:
-        return true;
-      case ExprType::I64:
-#ifndef JS_CPU_X64
-        return Fail(cx, d, "i64 NYI on this platform");
-#endif
-        return true;
-      default:
-        // Note: it's important not to remove this default since readExprType()
-        // can return ExprType values for which there is no enumerator.
-        break;
-    }
-
-    return Fail(cx, "bad expression type");
+    return type == ExprType::Void ||
+           CheckValType(cx, d, NonVoidToValType(type));
 }
+
+static bool
+DecodeExpr(FunctionDecoder& f, ExprType* type);
 
 static bool
 DecodeNop(FunctionDecoder& f, ExprType* type)
@@ -912,7 +890,10 @@ DecodeSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
             return Fail(cx, d, "too many arguments in signature");
 
         ExprType result;
-        if (!DecodeExprType(cx, d, &result))
+        if (!d.readExprType(&result))
+            return Fail(cx, d, "bad expression type");
+
+        if (!CheckExprType(cx, d, result))
             return false;
 
         ValTypeVector args;
@@ -920,7 +901,10 @@ DecodeSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
             return false;
 
         for (uint32_t i = 0; i < numArgs; i++) {
-            if (!DecodeValType(cx, d, &args[i]))
+            if (!d.readValType(&args[i]))
+                return Fail(cx, d, "bad value type");
+
+            if (!CheckValType(cx, d, args[i]))
                 return false;
         }
 
@@ -1258,15 +1242,11 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
     if (!locals.appendAll(mg.funcSig(funcIndex).args()))
         return false;
 
-    uint32_t numVars;
-    if (!d.readVarU32(&numVars))
-        return Fail(cx, d, "expected number of local vars");
+    if (!DecodeLocalEntries(d, &locals))
+        return Fail(cx, d, "failed decoding local entries");
 
-    for (uint32_t i = 0; i < numVars; i++) {
-        ValType type;
-        if (!DecodeValType(cx, d, &type))
-            return false;
-        if (!locals.append(type))
+    for (ValType type : locals) {
+        if (!CheckValType(cx, d, type))
             return false;
     }
 
