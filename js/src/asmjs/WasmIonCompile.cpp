@@ -40,7 +40,7 @@ class FunctionCompiler
 
     ModuleGeneratorThreadView& mg_;
     Decoder&                   decoder_;
-    const FuncBytecode&        func_;
+    const FuncBytes&           func_;
     const ValTypeVector&       locals_;
     size_t                     lastReadCallSite_;
 
@@ -60,7 +60,7 @@ class FunctionCompiler
   public:
     FunctionCompiler(ModuleGeneratorThreadView& mg,
                      Decoder& decoder,
-                     const FuncBytecode& func,
+                     const FuncBytes& func,
                      const ValTypeVector& locals,
                      MIRGenerator& mirGen,
                      FuncCompileResults& compileResults)
@@ -153,7 +153,7 @@ class FunctionCompiler
         }
 #endif
         MOZ_ASSERT(inDeadCode());
-        MOZ_ASSERT(decoder_.done(), "all bytecode must be consumed");
+        MOZ_ASSERT(decoder_.done(), "all bytes must be consumed");
         MOZ_ASSERT(func_.callSiteLineNums().length() == lastReadCallSite_);
     }
 
@@ -3048,10 +3048,10 @@ wasm::IonCompileFunction(IonCompileTask* task)
 {
     int64_t before = PRMJ_Now();
 
-    const FuncBytecode& func = task->func();
+    const FuncBytes& func = task->func();
     FuncCompileResults& results = task->results();
 
-    Decoder d(func.bytecode());
+    Decoder d(func.bytes());
 
     // Build the local types vector.
 
