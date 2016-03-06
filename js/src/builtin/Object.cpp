@@ -678,12 +678,132 @@ js::obj_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, Value* vp)
            FromPropertyDescriptor(cx, desc, args.rval());
 }
 
-// ES6 draft rev27 (2014/08/24) 19.1.2.14 Object.keys(O)
+enum EnumerableOwnPropertiesKind {
+    Keys,
+    Values,
+    KeysAndValues
+};
+
+// ES7 proposal 2015-12-14
+// http://tc39.github.io/proposal-object-values-entries/#EnumerableOwnProperties
+static bool
+EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args, EnumerableOwnPropertiesKind kind)
+{
+    // Step 1. (Step 1 of Object.{keys,values,entries}, really.)
+    RootedObject obj(cx, ToObject(cx, args.get(0)));
+    if (!obj)
+        return false;
+
+    // Step 2.
+    AutoIdVector ids(cx);
+    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &ids))
+        return false;
+
+    // Step 3.
+    AutoValueVector properties(cx);
+    size_t len = ids.length();
+    if (!properties.resize(len))
+        return false;
+
+    RootedId id(cx);
+    RootedValue key(cx);
+    RootedValue value(cx);
+    RootedNativeObject nobj(cx);
+    if (obj->is<NativeObject>())
+        nobj = &obj->as<NativeObject>();
+    RootedShape shape(cx);
+    Rooted<PropertyDescriptor> desc(cx);
+
+    // Step 4.
+    size_t out = 0;
+    for (size_t i = 0; i < len; i++) {
+        id = ids[i];
+
+        // Step 4.a. (Symbols were filtered out in step 2.)
+        MOZ_ASSERT(!JSID_IS_SYMBOL(id));
+
+        if (kind != Values) {
+            if (!IdToStringOrSymbol(cx, id, &key))
+                return false;
+        }
+
+        // Step 4.a.i.
+        if (nobj) {
+            if (JSID_IS_INT(id) && nobj->containsDenseElement(JSID_TO_INT(id))) {
+                value = nobj->getDenseOrTypedArrayElement(JSID_TO_INT(id));
+            } else {
+                shape = nobj->lookup(cx, id);
+                if (!shape || !(GetShapeAttributes(nobj, shape) & JSPROP_ENUMERATE))
+                    continue;
+                if (!shape->isAccessorShape()) {
+                    if (!NativeGetExistingProperty(cx, nobj, nobj, shape, &value))
+                        return false;
+                } else if (!GetProperty(cx, obj, obj, id, &value)) {
+                    return false;
+                }
+            }
+        } else {
+            if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
+                return false;
+
+            // Step 4.a.ii. (inverted.)
+            if (!desc.object() || !desc.enumerable())
+                continue;
+
+            // Step 4.a.ii.1.
+            // (Omitted because Object.keys doesn't use this implementation.)
+
+            // Step 4.a.ii.2.a.
+            if (obj->isNative() && desc.hasValue())
+                value = desc.value();
+            else if (!GetProperty(cx, obj, obj, id, &value))
+                return false;
+        }
+
+        // Steps 4.a.ii.2.b-c.
+        if (kind == Values)
+            properties[out++].set(value);
+        else if (!NewValuePair(cx, key, value, properties[out++]))
+            return false;
+    }
+
+    // Step 5.
+    // (Implemented in step 2.)
+
+    // Step 3 of Object.{keys,values,entries}
+    JSObject* aobj = NewDenseCopiedArray(cx, out, properties.begin());
+    if (!aobj)
+        return false;
+
+    args.rval().setObject(*aobj);
+    return true;
+}
+
+// ES7 proposal 2015-12-14
+// http://tc39.github.io/proposal-object-values-entries/#Object.keys
 static bool
 obj_keys(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return GetOwnPropertyKeys(cx, args, JSITER_OWNONLY);
+}
+
+// ES7 proposal 2015-12-14
+// http://tc39.github.io/proposal-object-values-entries/#Object.values
+static bool
+obj_values(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return EnumerableOwnProperties(cx, args, Values);
+}
+
+// ES7 proposal 2015-12-14
+// http://tc39.github.io/proposal-object-values-entries/#Object.entries
+static bool
+obj_entries(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return EnumerableOwnProperties(cx, args, KeysAndValues);
 }
 
 /* ES6 draft 15.2.3.16 */
@@ -1007,10 +1127,8 @@ static const JSFunctionSpec object_static_methods[] = {
     JS_FN("setPrototypeOf",            obj_setPrototypeOf,          2, 0),
     JS_FN("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2, 0),
     JS_FN("keys",                      obj_keys,                    1, 0),
-#ifndef RELEASE_BUILD
-    JS_SELF_HOSTED_FN("values",        "ObjectValues",              1, JSPROP_DEFINE_LATE),
-    JS_SELF_HOSTED_FN("entries",       "ObjectEntries",             1, JSPROP_DEFINE_LATE),
-#endif
+    JS_FN("values",                    obj_values,                  1, 0),
+    JS_FN("entries",                   obj_entries,                 1, 0),
     JS_FN("is",                        obj_is,                      2, 0),
     JS_FN("defineProperty",            obj_defineProperty,          3, 0),
     JS_FN("defineProperties",          obj_defineProperties,        2, 0),
