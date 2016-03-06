@@ -79,16 +79,20 @@ function cstring(name) {
 }
 
 function string(name) {
-    return name.split('').map(c => c.charCodeAt(0));
+    var nameBytes = name.split('').map(c => {
+        var code = c.charCodeAt(0);
+        assertEq(code < 128, true); // TODO
+        return code
+    });
+    return varU32(nameBytes.length).concat(nameBytes);
 }
 
 function moduleWithSections(sectionArray) {
     var bytes = moduleHeaderThen();
     for (let section of sectionArray) {
-        var nameLength = varU32(section.name.length);
-        bytes.push(...varU32(nameLength.length + section.name.length + section.body.length));
-        bytes.push(...nameLength);
-        bytes.push(...string(section.name));
+        var sectionName = string(section.name);
+        bytes.push(...varU32(sectionName.length + section.body.length));
+        bytes.push(...sectionName);
         bytes.push(...section.body);
     }
     return toU8(bytes);
@@ -133,8 +137,8 @@ function importSection(imports) {
     body.push(...varU32(imports.length));
     for (let imp of imports) {
         body.push(...varU32(imp.sigIndex));
-        body.push(...cstring(imp.module));
-        body.push(...cstring(imp.func));
+        body.push(...string(imp.module));
+        body.push(...string(imp.func));
     }
     return { name: importId, body };
 }
