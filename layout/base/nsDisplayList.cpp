@@ -52,6 +52,7 @@
 #include "ImageContainer.h"
 #include "nsCanvasFrame.h"
 #include "StickyScrollContainer.h"
+#include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EventStates.h"
@@ -2186,20 +2187,6 @@ nsDisplayItem::ForceActiveLayers()
   }
 
   return sForce;
-}
-
-/* static */ int32_t
-nsDisplayItem::MaxActiveLayers()
-{
-  static int32_t sMaxLayers = false;
-  static bool sMaxLayersCached = false;
-
-  if (!sMaxLayersCached) {
-    Preferences::AddIntVarCache(&sMaxLayers, "layers.max-active", -1);
-    sMaxLayersCached = true;
-  }
-
-  return sMaxLayers;
 }
 
 static int32_t ZIndexForFrame(nsIFrame* aFrame)
@@ -5599,11 +5586,11 @@ nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
     return true;
   }
 
-  if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
-    nsCString message;
-    message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for opacity animation");
-    AnimationUtils::LogAsyncAnimationFailure(message, Frame()->GetContent());
-  }
+  EffectCompositor::SetPerformanceWarning(
+    mFrame, eCSSProperty_transform,
+    AnimationPerformanceWarning(
+      AnimationPerformanceWarning::Type::OpacityFrameInactive));
+
   return false;
 }
 
@@ -5634,15 +5621,14 @@ nsDisplayTransform::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
     // pre-render even if we're out of will change budget.
     return true;
   }
-  DebugOnly<bool> prerender = ShouldPrerenderTransformedContent(aBuilder, mFrame, true);
+  DebugOnly<bool> prerender = ShouldPrerenderTransformedContent(aBuilder, mFrame);
   NS_ASSERTION(!prerender, "Something changed under us!");
   return false;
 }
 
 /* static */ bool
 nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
-                                                      nsIFrame* aFrame,
-                                                      bool aLogAnimations)
+                                                      nsIFrame* aFrame)
 {
   // Elements whose transform has been modified recently, or which
   // have a compositor-animated transform, can be prerendered. An element
@@ -5651,11 +5637,11 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
   if (!ActiveLayerTracker::IsStyleMaybeAnimated(aFrame, eCSSProperty_transform) &&
       !EffectCompositor::HasAnimationsForCompositor(aFrame,
                                                     eCSSProperty_transform)) {
-    if (aLogAnimations) {
-      nsCString message;
-      message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for transform animation");
-      AnimationUtils::LogAsyncAnimationFailure(message, aFrame->GetContent());
-    }
+    EffectCompositor::SetPerformanceWarning(
+      aFrame, eCSSProperty_transform,
+      AnimationPerformanceWarning(
+        AnimationPerformanceWarning::Type::TransformFrameInactive));
+
     return false;
   }
 
@@ -5674,27 +5660,22 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     }
   }
 
-  if (aLogAnimations) {
-    nsRect visual = aFrame->GetVisualOverflowRect();
+  nsRect visual = aFrame->GetVisualOverflowRect();
 
-    nsCString message;
-    message.AppendLiteral("Performance warning: Async animation disabled because frame size (");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.width));
-    message.AppendLiteral(", ");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.height));
-    message.AppendLiteral(") is bigger than the viewport (");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.width));
-    message.AppendLiteral(", ");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.height));
-    message.AppendLiteral(") or the visual rectangle (");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.width));
-    message.AppendLiteral(", ");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.height));
-    message.AppendLiteral(") is larger than the max allowable value (");
-    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(maxInAppUnits));
-    message.Append(')');
-    AnimationUtils::LogAsyncAnimationFailure(message, aFrame->GetContent());
-  }
+
+  EffectCompositor::SetPerformanceWarning(
+    aFrame, eCSSProperty_transform,
+    AnimationPerformanceWarning(
+      AnimationPerformanceWarning::Type::ContentTooLarge,
+      {
+        nsPresContext::AppUnitsToIntCSSPixels(frameSize.width),
+        nsPresContext::AppUnitsToIntCSSPixels(frameSize.height),
+        nsPresContext::AppUnitsToIntCSSPixels(refSize.width),
+        nsPresContext::AppUnitsToIntCSSPixels(refSize.height),
+        nsPresContext::AppUnitsToIntCSSPixels(visual.width),
+        nsPresContext::AppUnitsToIntCSSPixels(visual.height),
+        nsPresContext::AppUnitsToIntCSSPixels(maxInAppUnits)
+      }));
   return false;
 }
 

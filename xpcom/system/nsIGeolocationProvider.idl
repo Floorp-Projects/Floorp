@@ -26,14 +26,6 @@ interface nsIGeolocationUpdate : nsISupports {
    * This must be called on the main thread
    */
   void update(in nsIDOMGeoPosition position);
-
-  /**
-   * Notify the geolocation service that the location has
-   * potentially changed, and thus a new position is in the
-   * process of being acquired.
-   */
-  void locationUpdatePending();
-
   /**
    * Notify the geolocation service of an error.
    * This must be called on the main thread.
@@ -83,7 +75,7 @@ interface nsIGeolocationProvider : nsISupports {
 };
 
 %{C++
-/*  
+/*
     This must be implemented by geolocation providers.  It
     must support nsIGeolocationProvider.
 */

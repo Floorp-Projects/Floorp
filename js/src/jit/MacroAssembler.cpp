@@ -684,8 +684,8 @@ MacroAssembler::storeUnboxedProperty(BaseIndex address, JSValueType type,
                                      ConstantOrRegister value, Label* failure);
 
 void
-MacroAssembler::checkUnboxedArrayCapacity(Register obj, const Int32Key& index, Register temp,
-                                          Label* failure)
+MacroAssembler::checkUnboxedArrayCapacity(Register obj, const RegisterOrInt32Constant& index,
+                                          Register temp, Label* failure)
 {
     Address initLengthAddr(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength());
     Address lengthAddr(obj, UnboxedArrayObject::offsetOfLength());
@@ -693,7 +693,7 @@ MacroAssembler::checkUnboxedArrayCapacity(Register obj, const Int32Key& index, R
     Label capacityIsIndex, done;
     load32(initLengthAddr, temp);
     branchTest32(Assembler::NonZero, temp, Imm32(UnboxedArrayObject::CapacityMask), &capacityIsIndex);
-    branchKey(Assembler::BelowOrEqual, lengthAddr, index, failure);
+    branch32(Assembler::BelowOrEqual, lengthAddr, index, failure);
     jump(&done);
     bind(&capacityIsIndex);
 
@@ -704,7 +704,7 @@ MacroAssembler::checkUnboxedArrayCapacity(Register obj, const Int32Key& index, R
     and32(Imm32(~0x3), temp);
 
     addPtr(ImmPtr(&UnboxedArrayObject::CapacityArray), temp);
-    branchKey(Assembler::BelowOrEqual, Address(temp, 0), index, failure);
+    branch32(Assembler::BelowOrEqual, Address(temp, 0), index, failure);
     bind(&done);
 }
 
@@ -1838,10 +1838,10 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition* maybeInput,
 
     Label done, isInt32, isBool, isDouble, isNull, isString;
 
-    branchEqualTypeIfNeeded(MIRType_Int32, maybeInput, tag, &isInt32);
+    maybeBranchTestType(MIRType_Int32, maybeInput, tag, &isInt32);
     if (conversion == IntConversion_Any || conversion == IntConversion_NumbersOrBoolsOnly)
-        branchEqualTypeIfNeeded(MIRType_Boolean, maybeInput, tag, &isBool);
-    branchEqualTypeIfNeeded(MIRType_Double, maybeInput, tag, &isDouble);
+        maybeBranchTestType(MIRType_Boolean, maybeInput, tag, &isBool);
+    maybeBranchTestType(MIRType_Double, maybeInput, tag, &isDouble);
 
     if (conversion == IntConversion_Any) {
         // If we are not truncating, we fail for anything that's not
@@ -1854,10 +1854,10 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition* maybeInput,
 
           case IntConversion_Truncate:
           case IntConversion_ClampToUint8:
-            branchEqualTypeIfNeeded(MIRType_Null, maybeInput, tag, &isNull);
+            maybeBranchTestType(MIRType_Null, maybeInput, tag, &isNull);
             if (handleStrings)
-                branchEqualTypeIfNeeded(MIRType_String, maybeInput, tag, &isString);
-            branchEqualTypeIfNeeded(MIRType_Object, maybeInput, tag, fail);
+                maybeBranchTestType(MIRType_String, maybeInput, tag, &isString);
+            maybeBranchTestType(MIRType_Object, maybeInput, tag, fail);
             branchTestUndefined(Assembler::NotEqual, tag, fail);
             break;
         }
@@ -2516,8 +2516,7 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
 }
 
 void
-MacroAssembler::branchEqualTypeIfNeeded(MIRType type, MDefinition* maybeDef, Register tag,
-                                        Label* label)
+MacroAssembler::maybeBranchTestType(MIRType type, MDefinition* maybeDef, Register tag, Label* label)
 {
     if (!maybeDef || maybeDef->mightBeType(type)) {
         switch (type) {

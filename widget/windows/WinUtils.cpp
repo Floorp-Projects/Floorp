@@ -626,7 +626,8 @@ WinUtils::LogToPhysFactor(HMONITOR aMonitor)
 {
   if (IsPerMonitorDPIAware()) {
     UINT dpiX, dpiY = 96;
-    sGetDpiForMonitor(aMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+    sGetDpiForMonitor(aMonitor ? aMonitor : GetPrimaryMonitor(),
+                      MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
     return dpiY / 96.0;
   }
 
@@ -1919,11 +1920,12 @@ WinUtils::SanitizePath(const wchar_t* aInputPath, nsAString& aOutput)
     return false;
   }
   aOutput.SetLength(MAX_PATH + 1);
-  if (!PathUnExpandEnvStringsW(longBuffer, aOutput.BeginWriting(), MAX_PATH)) {
+  wchar_t* output = reinterpret_cast<wchar_t*>(aOutput.BeginWriting());
+  if (!PathUnExpandEnvStringsW(longBuffer, output, MAX_PATH)) {
     return false;
   }
   // Truncate to correct length
-  aOutput.Truncate(wcslen(aOutput.BeginReading()));
+  aOutput.Truncate(wcslen(char16ptr_t(aOutput.BeginReading())));
   MOZ_ASSERT(aOutput.Length() <= MAX_PATH);
   return true;
 }

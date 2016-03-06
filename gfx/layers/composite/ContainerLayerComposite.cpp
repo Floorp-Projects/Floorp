@@ -139,8 +139,7 @@ template<class ContainerT> void
 ContainerRenderVR(ContainerT* aContainer,
                   LayerManagerComposite* aManager,
                   const gfx::IntRect& aClipRect,
-                  RefPtr<gfx::VRHMDInfo> aHMD,
-                  int32_t aInputFrameID)
+                  RefPtr<gfx::VRHMDInfo> aHMD)
 {
   int32_t inputFrameID = -1;
 
@@ -271,11 +270,29 @@ ContainerRenderVR(ContainerT* aContainer,
                                                  surfaceRect.width, surfaceRect.height));
       layerToRender->RenderLayer(surfaceRect);
 
-      CompositableHost *ch = layerToRender->GetCompositableHost();
-      if (ch) {
-        int32_t compositableInputFrameID = ch->GetLastInputFrameID();
-        if (compositableInputFrameID != -1) {
-          inputFrameID = compositableInputFrameID;
+      // Search all children recursively until we find the canvas with
+      // an inputFrameID
+      std::stack<LayerComposite*> searchLayers;
+      searchLayers.push(layerToRender);
+      while (!searchLayers.empty() && inputFrameID == -1) {
+        LayerComposite* searchLayer = searchLayers.top();
+        searchLayers.pop();
+        if (searchLayer) {
+          searchLayers.push(searchLayer->GetFirstChildComposite());
+          Layer* sibling = searchLayer->GetLayer();
+          if (sibling) {
+            sibling = sibling->GetNextSibling();
+          }
+          if (sibling) {
+            searchLayers.push(sibling->AsLayerComposite());
+          }
+          CompositableHost *ch = searchLayer->GetCompositableHost();
+          if (ch) {
+            int32_t compositableInputFrameID = ch->GetLastInputFrameID();
+            if (compositableInputFrameID != -1) {
+              inputFrameID = compositableInputFrameID;
+            }
+          }
         }
       }
 
@@ -714,7 +731,7 @@ ContainerRender(ContainerT* aContainer,
 
   RefPtr<gfx::VRHMDInfo> hmdInfo = gfx::VRManager::Get()->GetDevice(aContainer->GetVRDeviceID());
   if (hmdInfo && hmdInfo->GetConfiguration().IsValid()) {
-    ContainerRenderVR(aContainer, aManager, aClipRect, hmdInfo, aContainer->GetInputFrameID());
+    ContainerRenderVR(aContainer, aManager, aClipRect, hmdInfo);
     aContainer->mPrepared = nullptr;
     return;
   }

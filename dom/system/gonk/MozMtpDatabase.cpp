@@ -814,9 +814,7 @@ MozMtpDatabase::getObjectList(MtpStorageID aStorageID,
 
   //TODO: Optimize
 
-  ScopedDeletePtr<MtpObjectHandleList> list;
-
-  list = new MtpObjectHandleList();
+  UniquePtr<MtpObjectHandleList> list(new MtpObjectHandleList());
 
   MutexAutoLock lock(mMutex);
 
@@ -832,7 +830,7 @@ MozMtpDatabase::getObjectList(MtpStorageID aStorageID,
     }
   }
   MTP_LOG("  returning %d items", list->size());
-  return list.forget();
+  return list.release();
 }
 
 //virtual

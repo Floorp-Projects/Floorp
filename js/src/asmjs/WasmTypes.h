@@ -185,9 +185,9 @@ IsSimdType(ExprType et)
 }
 
 static inline bool
-IsSimdBoolType(ExprType vt)
+IsSimdBoolType(ValType vt)
 {
-    return vt == ExprType::B32x4;
+    return vt == ValType::B32x4;
 }
 
 static inline jit::MIRType

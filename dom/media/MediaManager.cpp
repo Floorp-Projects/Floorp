@@ -54,8 +54,8 @@
 #include "nsNullPrincipal.h"
 #include "nsVariant.h"
 
-// For PR_snprintf
-#include "prprf.h"
+// For snprintf
+#include "mozilla/Snprintf.h"
 
 #include "nsJSUtils.h"
 #include "nsGlobalWindow.h"
@@ -2540,7 +2540,7 @@ MediaManager::RemoveWindowID(uint64_t aWindowId)
 
   // Notify the UI that this window no longer has gUM active
   char windowBuffer[32];
-  PR_snprintf(windowBuffer, sizeof(windowBuffer), "%llu", outerID);
+  snprintf_literal(windowBuffer, "%" PRIu64, outerID);
   nsString data = NS_ConvertUTF8toUTF16(windowBuffer);
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();

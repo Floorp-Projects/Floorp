@@ -127,30 +127,18 @@ nsresult
 nsViewSourceHandler::NewSrcdocChannel(nsIURI *aURI,
                                       nsIURI *aBaseURI,
                                       const nsAString &aSrcdoc,
-                                      nsINode *aLoadingNode,
-                                      nsIPrincipal *aLoadingPrincipal,
-                                      nsIPrincipal *aTriggeringPrincipal,
-                                      nsSecurityFlags aSecurityFlags,
-                                      nsContentPolicyType aContentPolicyType,
+                                      nsILoadInfo* aLoadInfo,
                                       nsIChannel** outChannel)
 {
     NS_ENSURE_ARG_POINTER(aURI);
-    nsViewSourceChannel *channel = new nsViewSourceChannel();
-    if (!channel) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(channel);
+    RefPtr<nsViewSourceChannel> channel = new nsViewSourceChannel();
 
-    nsresult rv = channel->InitSrcdoc(aURI, aBaseURI, aSrcdoc,
-                                      aLoadingNode, aLoadingPrincipal,
-                                      aTriggeringPrincipal, aSecurityFlags,
-                                      aContentPolicyType);
+    nsresult rv = channel->InitSrcdoc(aURI, aBaseURI, aSrcdoc, aLoadInfo);
     if (NS_FAILED(rv)) {
-        NS_RELEASE(channel);
         return rv;
     }
 
-    *outChannel = static_cast<nsIViewSourceChannel*>(channel);
+    *outChannel = static_cast<nsIViewSourceChannel*>(channel.forget().take());
     return NS_OK;
 }
 

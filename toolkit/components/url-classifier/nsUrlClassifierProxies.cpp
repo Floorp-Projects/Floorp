@@ -232,6 +232,19 @@ UrlClassifierDBServiceWorkerProxy::SetLastUpdateTimeRunnable::Run()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+UrlClassifierDBServiceWorkerProxy::ClearLastResults()
+{
+  nsCOMPtr<nsIRunnable> r = new ClearLastResultsRunnable(mTarget);
+  return DispatchToWorkerThread(r);
+}
+
+NS_IMETHODIMP
+UrlClassifierDBServiceWorkerProxy::ClearLastResultsRunnable::Run()
+{
+  return mTarget->ClearLastResults();
+}
+
 NS_IMPL_ISUPPORTS(UrlClassifierLookupCallbackProxy,
                   nsIUrlClassifierLookupCallback)
 

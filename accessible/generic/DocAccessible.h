@@ -377,6 +377,11 @@ protected:
   virtual void DoInitialUpdate();
 
   /**
+   * Updates root element and picks up ARIA role on it if any.
+   */
+  void UpdateRootElIfNeeded();
+
+  /**
    * Process document load notification, fire document load and state busy
    * events if applicable.
    */

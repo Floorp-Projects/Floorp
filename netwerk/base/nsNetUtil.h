@@ -317,6 +317,14 @@ nsresult NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
                                           nsContentPolicyType aContentPolicyType,
                                           bool                aIsSrcdocChannel = false);
 
+nsresult
+NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
+                                 nsIURI             *aUri,
+                                 const nsAString    &aData,
+                                 const nsACString   &aContentType,
+                                 nsILoadInfo        *aLoadInfo,
+                                 bool                aIsSrcdocChannel = false);
+
 nsresult NS_NewInputStreamChannel(nsIChannel        **outChannel,
                                   nsIURI             *aUri,
                                   const nsAString    &aData,

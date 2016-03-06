@@ -165,7 +165,6 @@
       },
       {
         "name": "getRecent",
-        "unsupported": true,
         "type": "function",
         "description": "Retrieves the recently added bookmarks.",
         "async": "callback",

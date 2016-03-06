@@ -107,6 +107,11 @@ interface nsIUrlClassifierDBService : nsISupports
   void setLastUpdateTime(in ACString tableName,
                          in unsigned long long lastUpdateTime);
 
+  /**
+   * Forget the results that were used in the last DB update.
+   */
+  void clearLastResults();
+
   ////////////////////////////////////////////////////////////////////////////
   // Incremental update methods.
   //

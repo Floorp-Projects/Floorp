@@ -96,7 +96,7 @@ Interactions.prototype = {
    */
   clickElement(container, elementManager, id) {
     let el = elementManager.getKnownElement(id, container);
-    let visible = element.checkVisible(el, container.frame);
+    let visible = element.isVisible(el);
     if (!visible) {
       throw new ElementNotVisibleError('Element is not visible');
     }

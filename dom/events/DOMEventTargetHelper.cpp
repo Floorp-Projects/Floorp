@@ -6,7 +6,7 @@
 
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
-#include "prprf.h"
+#include "mozilla/Snprintf.h"
 #include "nsGlobalWindow.h"
 #include "ScriptSettings.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -31,8 +31,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(DOMEventTargetHelper)
     if (tmp->mOwnerWindow && tmp->mOwnerWindow->GetExtantDoc()) {
       tmp->mOwnerWindow->GetExtantDoc()->GetDocumentURI(uri);
     }
-    PR_snprintf(name, sizeof(name), "DOMEventTargetHelper %s",
-                NS_ConvertUTF16toUTF8(uri).get());
+    snprintf_literal(name, "DOMEventTargetHelper %s",
+                     NS_ConvertUTF16toUTF8(uri).get());
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   } else {
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(DOMEventTargetHelper, tmp->mRefCnt.get())

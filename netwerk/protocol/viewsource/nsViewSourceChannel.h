@@ -53,11 +53,7 @@ public:
     nsresult InitSrcdoc(nsIURI* aURI,
                         nsIURI* aBaseURI,
                         const nsAString &aSrcdoc,
-                        nsINode *aLoadingNode,
-                        nsIPrincipal *aLoadingPrincipal,
-                        nsIPrincipal *aTriggeringPrincipal,
-                        nsSecurityFlags aSecurityFlags,
-                        nsContentPolicyType aContentPolicyType);
+                        nsILoadInfo* aLoadInfo);
 
 protected:
     ~nsViewSourceChannel() {}

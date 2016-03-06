@@ -1460,14 +1460,8 @@ DocAccessible::DoInitialUpdate()
 
   mLoadState |= eTreeConstructed;
 
-  // The content element may be changed before the initial update and then we
-  // miss the notification (since content tree change notifications are ignored
-  // prior to initial update). Make sure the content element is valid.
-  dom::Element* rootEl = nsCoreUtils::GetRoleContent(mDocumentNode);
-  if (rootEl) {
-    mContent = rootEl;
-    SetRoleMapEntry(aria::GetRoleMap(rootEl));
-  }
+  // Set up a root element and ARIA role mapping.
+  UpdateRootElIfNeeded();
 
   // Build initial tree.  Since its the initial tree there's no group info to
   // invalidate.
@@ -1700,11 +1694,7 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
 
     if (container == this) {
       // If new root content has been inserted then update it.
-      dom::Element* rootEl = nsCoreUtils::GetRoleContent(mDocumentNode);
-      if (rootEl != mContent) {
-        mContent = rootEl;
-        SetRoleMapEntry(aria::GetRoleMap(rootEl));
-      }
+      UpdateRootElIfNeeded();
 
       // Continue to update the tree even if we don't have root content.
       // For example, elements may be inserted under the document element while

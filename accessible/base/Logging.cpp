@@ -169,8 +169,12 @@ LogDocState(nsIDocument* aDocumentNode)
   printf(", %svisible considering ancestors", aDocumentNode->IsVisibleConsideringAncestors() ? "" : "not ");
   printf(", %sactive", aDocumentNode->IsActive() ? "" : "not ");
   printf(", %sresource", aDocumentNode->IsResourceDoc() ? "" : "not ");
-  printf(", has %srole content",
-         nsCoreUtils::GetRoleContent(aDocumentNode) ? "" : "no ");
+
+  dom::Element* rootEl = aDocumentNode->GetBodyElement();
+  if (!rootEl) {
+    rootEl = aDocumentNode->GetRootElement();
+  }
+  printf(", has %srole content", rootEl ? "" : "no ");
 }
 
 static void

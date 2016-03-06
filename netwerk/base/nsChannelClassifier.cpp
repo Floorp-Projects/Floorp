@@ -385,6 +385,17 @@ nsChannelClassifier::MarkEntryClassified(nsresult status)
         return;
     }
 
+    if (LOG_ENABLED()) {
+      nsAutoCString errorName;
+      mozilla::GetErrorName(status, errorName);
+      nsCOMPtr<nsIURI> uri;
+      mChannel->GetURI(getter_AddRefs(uri));
+      nsAutoCString spec;
+      uri->GetAsciiSpec(spec);
+      LOG(("nsChannelClassifier::MarkEntryClassified[%s] %s",
+           errorName.get(), spec.get()));
+    }
+
     nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(mChannel);
     if (!cachingChannel) {
         return;
