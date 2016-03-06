@@ -3782,11 +3782,11 @@ EncodeFunctionSignatures(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeCString(Encoder& e, WasmName wasmName)
+EncodeBytes(Encoder& e, WasmName wasmName)
 {
     TwoByteChars range(wasmName.begin(), wasmName.length());
     UniqueChars utf8(JS::CharsToNewUTF8CharsZ(nullptr, range).c_str());
-    return utf8 && e.writeCString(utf8.get());
+    return utf8 && e.writeBytes(utf8.get(), strlen(utf8.get()));
 }
 
 static bool
@@ -3795,10 +3795,10 @@ EncodeImport(Encoder& e, WasmAstImport& imp)
     if (!e.writeVarU32(imp.sigIndex()))
         return false;
 
-    if (!EncodeCString(e, imp.module()))
+    if (!EncodeBytes(e, imp.module()))
         return false;
 
-    if (!EncodeCString(e, imp.func()))
+    if (!EncodeBytes(e, imp.func()))
         return false;
 
     return true;
@@ -3866,7 +3866,7 @@ EncodeFunctionExport(Encoder& e, WasmAstExport& exp)
     if (!e.writeVarU32(exp.func().index()))
         return false;
 
-    if (!EncodeCString(e, exp.name()))
+    if (!EncodeBytes(e, exp.name()))
         return false;
 
     return true;
@@ -3991,10 +3991,7 @@ EncodeDataSegment(Encoder& e, WasmAstSegment& segment)
         bytes.infallibleAppend(byte);
     }
 
-    if (!e.writeVarU32(bytes.length()))
-        return false;
-
-    if (!e.writeRawData(bytes.begin(), bytes.length()))
+    if (!e.writeBytes(bytes.begin(), bytes.length()))
         return false;
 
     return true;
