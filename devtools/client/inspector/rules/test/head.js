@@ -856,7 +856,7 @@ var setSearchFilter = Task.async(function*(view, searchValue) {
  */
 function* reloadPage(inspector, testActor) {
   let onNewRoot = inspector.once("new-root");
-  yield testActor.eval("content.location.reload();");
+  yield testActor.reload();
   yield onNewRoot;
   yield inspector.markup._waitForChildren();
 }

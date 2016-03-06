@@ -92,14 +92,14 @@ function step3() {
   // Tab 2's window _and_ its iframes should be inactive
   ok(!ctx.tab2Browser.docShellIsActive, "Tab 2 should be inactive");
   ContentTask.spawn(ctx.tab2Browser, null, function* () {
-    is(content.frames.length, 2, "Tab 2 should have 2 iframes");
+    Assert.equal(content.frames.length, 2, "Tab 2 should have 2 iframes");
     for (var i = 0; i < content.frames.length; i++) {
       info("step 3, frame " + i + " info: " + content.frames[i].location);
       let docshell = content.frames[i].QueryInterface(Ci.nsIInterfaceRequestor)
                                       .getInterface(Ci.nsIWebNavigation)
                                       .QueryInterface(Ci.nsIDocShell);
 
-      ok(!docShell.isActive, `Tab2 iframe ${i} should be inactive`);
+      Assert.ok(!docShell.isActive, `Tab2 iframe ${i} should be inactive`);
     }
   }).then(() => {
     // Navigate tab 2 to a different page
@@ -122,14 +122,14 @@ function step4() {
       }
 
       let active = expected ? "active" : "inactive";
-      is(content.frames.length, 2, "Tab 2 should have 2 iframes");
+      Assert.equal(content.frames.length, 2, "Tab 2 should have 2 iframes");
       for (var i = 0; i < content.frames.length; i++)
         info("step 4, frame " + i + " info: " + content.frames[i].location);
-      is(content.frames[0].frames.length, 1, "Tab 2 iframe 0 should have 1 iframes");
-      is(isActive(content.frames[0]), expected, `Tab2 iframe 0 should be ${active}`);
-      is(isActive(content.frames[0].frames[0]), expected,
+      Assert.equal(content.frames[0].frames.length, 1, "Tab 2 iframe 0 should have 1 iframes");
+      Assert.equal(isActive(content.frames[0]), expected, `Tab2 iframe 0 should be ${active}`);
+      Assert.equal(isActive(content.frames[0].frames[0]), expected,
          `Tab2 iframe 0 subiframe 0 should be ${active}`);
-      is(isActive(content.frames[1]), expected, `Tab2 iframe 1 should be ${active}`);
+      Assert.equal(isActive(content.frames[1]), expected, `Tab2 iframe 1 should be ${active}`);
     });
   }
 
@@ -169,7 +169,7 @@ function step5() {
                                       .getInterface(Ci.nsIWebNavigation)
                                       .QueryInterface(Ci.nsIDocShell);
 
-      ok(docShell.isActive, `Tab2 iframe ${i} should be active`);
+      Assert.ok(docShell.isActive, `Tab2 iframe ${i} should be active`);
     }
   }).then(() => {
     // Switch to tab 1
@@ -197,9 +197,9 @@ function step6() {
       return docshell.isActive;
     }
 
-    ok(isActive(content.frames[0]), "Tab1 iframe 0 should be active");
-    ok(isActive(content.frames[0].frames[0]), "Tab1 iframe 0 subiframe 0 should be active");
-    ok(isActive(content.frames[1]), "Tab1 iframe 1 should be active");
+    Assert.ok(isActive(content.frames[0]), "Tab1 iframe 0 should be active");
+    Assert.ok(isActive(content.frames[0].frames[0]), "Tab1 iframe 0 subiframe 0 should be active");
+    Assert.ok(isActive(content.frames[1]), "Tab1 iframe 1 should be active");
   }).then(() => {
     ok(!ctx.tab2Browser.docShellIsActive, "Tab 2 should be inactive");
     return ContentTask.spawn(ctx.tab2Browser, null, function* () {
@@ -208,7 +208,7 @@ function step6() {
                                         .getInterface(Ci.nsIWebNavigation)
                                         .QueryInterface(Ci.nsIDocShell);
 
-        ok(!docShell.isActive, `Tab2 iframe ${i} should be inactive`);
+        Assert.ok(!docShell.isActive, `Tab2 iframe ${i} should be inactive`);
       }
     });
   }).then(() => {
@@ -230,11 +230,11 @@ function step7() {
              }
 
              let activestr = active ? "active" : "inactive";
-             is(isActive(content.frames[0]), active,
+             Assert.equal(isActive(content.frames[0]), active,
                 `Tab${tabNum} iframe 0 should be ${activestr}`);
-             is(isActive(content.frames[0].frames[0]), active,
+             Assert.equal(isActive(content.frames[0].frames[0]), active,
                 `Tab${tabNum} iframe 0 subiframe 0 should be ${activestr}`);
-             is(isActive(content.frames[1]), active,
+             Assert.equal(isActive(content.frames[1]), active,
                 `Tab${tabNum} iframe 1 should be ${activestr}`);
            });
   }

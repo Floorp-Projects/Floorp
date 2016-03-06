@@ -20,9 +20,9 @@ function test () {
     function testLink(link, name, next) {
       addWindowListener("chrome://mozapps/content/downloads/unknownContentType.xul", function (win) {
         ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
-          return content.document.getElementById("unload-flag").textContent;
-        }).then(unloadFlag => {
-          is(unloadFlag, "Okay", "beforeunload shouldn't have fired");
+          Assert.equal(content.document.getElementById("unload-flag").textContent,
+            "Okay", "beforeunload shouldn't have fired");
+        }).then(() => {
           is(win.document.getElementById("location").value, name, "file name should match");
           win.close();
           next();

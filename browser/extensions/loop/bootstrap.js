@@ -601,18 +601,25 @@ var WindowListener = {
 
         let cursor = document.getElementById("loop-remote-cursor");
         if (!cursor) {
-          cursor = document.createElement("image");
+          // Create a container to keep the pointer inside.
+          // This allows us to hide the overflow when out of bounds.
+          let cursorContainer = document.createElement("div");
+          cursorContainer.setAttribute("id", "loop-remote-cursor-container");
+
+          cursor = document.createElement("img");
           cursor.setAttribute("id", "loop-remote-cursor");
+
+          cursorContainer.appendChild(cursor);
+          // Note that browser.parent is a xul:stack so container will use
+          // 100% of space if no other constrains added.
+          browser.parentNode.appendChild(cursorContainer);
         }
 
-        // Update the cursor's position.
-        cursor.setAttribute("left",
-                            cursorData.ratioX * browser.boxObject.width);
-        cursor.setAttribute("top",
-                            cursorData.ratioY * browser.boxObject.height);
-
-        // browser's parent is a xul:stack, so positioning with left/top works.
-        browser.parentNode.appendChild(cursor);
+        // Update the cursor's position with CSS.
+        cursor.style.left =
+          Math.abs(cursorData.ratioX * browser.boxObject.width) + "px";
+        cursor.style.top =
+          Math.abs(cursorData.ratioY * browser.boxObject.height) + "px";
       },
 
       /**

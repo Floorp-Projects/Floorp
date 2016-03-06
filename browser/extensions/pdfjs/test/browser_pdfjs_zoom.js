@@ -93,8 +93,8 @@ add_task(function* test() {
         }
 
         // check that PDF is opened with internal viewer
-        ok(content.document.querySelector('div#viewer'), "document content has viewer UI");
-        ok('PDFJS' in content.wrappedJSObject, "window content has PDFJS object");
+        Assert.ok(content.document.querySelector("div#viewer"), "document content has viewer UI");
+        Assert.ok("PDFJS" in content.wrappedJSObject, "window content has PDFJS object");
 
         let initialWidth, previousWidth;
         initialWidth = previousWidth =
@@ -106,7 +106,7 @@ add_task(function* test() {
           if (test.action.selector) {
             // Get the element and trigger the action for changing the zoom
             var el = document.querySelector(test.action.selector);
-            ok(el, "Element '" + test.action.selector + "' has been found");
+            Assert.ok(el, "Element '" + test.action.selector + "' has been found");
 
             if (test.action.index){
               el.selectedIndex = test.action.index;
@@ -138,11 +138,11 @@ add_task(function* test() {
 
           // the actual zoom of the PDF document
           let computedZoomValue = parseInt(((actualWidth/initialWidth).toFixed(2))*100) + "%";
-          is(computedZoomValue, zoomValue, "Content has correct zoom");
+          Assert.equal(computedZoomValue, zoomValue, "Content has correct zoom");
 
           // Check that document zooms in the expected way (in/out)
           let zoom = (actualWidth - previousWidth) * test.expectedZoom;
-          ok(zoom > 0, test.message);
+          Assert.ok(zoom > 0, test.message);
 
           previousWidth = actualWidth;
         }

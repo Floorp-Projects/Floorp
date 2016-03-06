@@ -175,6 +175,7 @@ public class GeckoApplication extends Application
                     // network access, so is naturally asynchronous.  This, of course, races against Gecko page load of
                     // content requiring GCM-backed services, like Web Push.  There's nothing to be done here.
                     PushService.createInstance(context);
+                    PushService.registerGeckoEventListener();
 
                     try {
                         PushService.getInstance().onStartup();

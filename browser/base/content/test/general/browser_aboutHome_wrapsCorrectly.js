@@ -8,7 +8,7 @@ add_task(function* () {
   yield BrowserTestUtils.openNewForegroundTab(newWindow.gBrowser, "about:home");
 
   yield ContentTask.spawn(newWindow.gBrowser.selectedBrowser, {}, function* () {
-    is(content.document.body.getAttribute("narrow"), "true", "narrow mode");
+    Assert.equal(content.document.body.getAttribute("narrow"), "true", "narrow mode");
   });
 
   resizedPromise = BrowserTestUtils.waitForContentEvent(newWindow.gBrowser.selectedBrowser, "resize");
@@ -21,7 +21,7 @@ add_task(function* () {
   yield resizedPromise;
 
   yield ContentTask.spawn(newWindow.gBrowser.selectedBrowser, {}, function* () {
-    is(content.document.body.hasAttribute("narrow"), false, "non-narrow mode");
+    Assert.equal(content.document.body.hasAttribute("narrow"), false, "non-narrow mode");
   });
 
   yield BrowserTestUtils.closeWindow(newWindow);

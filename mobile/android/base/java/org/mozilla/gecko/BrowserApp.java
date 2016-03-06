@@ -3154,6 +3154,7 @@ public class BrowserApp extends GeckoApp
         }
 
         Tab tab = Tabs.getInstance().getSelectedTab();
+        // Unlike other menu items, the bookmark star is not tinted. See {@link ThemedImageButton#setTintedDrawable}.
         final MenuItem bookmark = aMenu.findItem(R.id.bookmark);
         final MenuItem reader = aMenu.findItem(R.id.reading_list);
         final MenuItem back = aMenu.findItem(R.id.back);
@@ -3387,7 +3388,7 @@ public class BrowserApp extends GeckoApp
 
     private int resolveBookmarkIconID(final boolean isBookmark) {
         if (isBookmark) {
-            return R.drawable.ic_menu_bookmark_remove;
+            return R.drawable.star_blue;
         } else {
             return R.drawable.ic_menu_bookmark_add;
         }

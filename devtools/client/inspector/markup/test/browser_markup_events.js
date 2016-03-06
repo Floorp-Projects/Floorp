@@ -1,6 +1,7 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
+/* import-globals-from helper_events_test_runner.js */
 
 "use strict";
 
@@ -11,7 +12,7 @@ const TEST_URL = URL_ROOT + "doc_markup_events.html";
 
 loadHelperScript("helper_events_test_runner.js");
 
-const TEST_DATA = [
+const TEST_DATA = [ // eslint-disable-line
   {
     selector: "html",
     expected: [
@@ -36,12 +37,12 @@ const TEST_DATA = [
           "Capturing",
           "DOM2"
         ],
-        handler: 'function mouseoverHandler(event) {\n' +
-                 '  if (event.target.id !== "container") {\n' +
-                 '    let output = document.getElementById("output");\n' +
-                 '    output.textContent = event.target.textContent;\n' +
-                 '  }\n' +
-                 '}'
+        handler: "function mouseoverHandler(event) {\n" +
+                 "  if (event.target.id !== \"container\") {\n" +
+                 "    let output = document.getElementById(\"output\");\n" +
+                 "    output.textContent = event.target.textContent;\n" +
+                 "  }\n" +
+                 "}"
       }
     ]
   },
@@ -55,10 +56,10 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: 'function clickHandler(event) {\n' +
-                 '  let output = document.getElementById("output");\n' +
-                 '  output.textContent = "click";\n' +
-                 '}'
+        handler: "function clickHandler(event) {\n" +
+                 "  let output = document.getElementById(\"output\");\n" +
+                 "  output.textContent = \"click\";\n" +
+                 "}"
       },
       {
         type: "mouseup",
@@ -67,10 +68,10 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: 'function mouseupHandler(event) {\n' +
-                 '  let output = document.getElementById("output");\n' +
-                 '  output.textContent = "mouseup";\n' +
-                 '}'
+        handler: "function mouseupHandler(event) {\n" +
+                 "  let output = document.getElementById(\"output\");\n" +
+                 "  output.textContent = \"mouseup\";\n" +
+                 "}"
       }
     ]
   },
@@ -98,9 +99,9 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: 'handleEvent: function(blah) {\n' +
-                 '  alert("handleEvent clicked");\n' +
-                 '}'
+        handler: "handleEvent: function(blah) {\n" +
+                 "  alert(\"handleEvent clicked\");\n" +
+                 "}"
       }
     ]
   },
@@ -114,9 +115,9 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: 'event => {\n' +
-                 '  alert("Yay for the fat arrow!");\n' +
-                 '}'
+        handler: "event => {\n" +
+                 "  alert(\"Yay for the fat arrow!\");\n" +
+                 "}"
       }
     ]
   },
@@ -130,9 +131,9 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: 'handleEvent: function() {\n' +
-                 '  alert("boundHandleEvent clicked");\n' +
-                 '}'
+        handler: "handleEvent: function() {\n" +
+                 "  alert(\"boundHandleEvent clicked\");\n" +
+                 "}"
       }
     ]
   },
@@ -146,9 +147,9 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: 'function boundClickHandler(event) {\n' +
-                 '  alert("Bound event clicked");\n' +
-                 '}'
+        handler: "function boundClickHandler(event) {\n" +
+                 "  alert(\"Bound event clicked\");\n" +
+                 "}"
       }
     ]
   },
@@ -173,9 +174,9 @@ const TEST_DATA = [
           "Bubbling",
           "DOM2"
         ],
-        handler: 'function noeventsClickHandler(event) {\n' +
-                 '  alert("noevents has an event listener");\n' +
-                 '}'
+        handler: "function noeventsClickHandler(event) {\n" +
+                 "  alert(\"noevents has an event listener\");\n" +
+                 "}"
       }
     ]
   },
@@ -183,11 +184,14 @@ const TEST_DATA = [
     selector: "#noevents",
     beforeTest: function* (inspector, testActor) {
       let nodeMutated = inspector.once("markupmutation");
-      yield testActor.eval("window.wrappedJSObject.removeNoeventsClickHandler();");
+      yield testActor.eval(
+        "window.wrappedJSObject.removeNoeventsClickHandler();");
       yield nodeMutated;
     },
     expected: []
   },
 ];
 
-add_task(runEventPopupTests);
+add_task(function*() {
+  yield runEventPopupTests(TEST_URL, TEST_DATA);
+});

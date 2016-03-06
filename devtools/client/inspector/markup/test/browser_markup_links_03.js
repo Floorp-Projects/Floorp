@@ -13,19 +13,20 @@ add_task(function*() {
 
   info("Adding a contextmenu attribute to the body node via the content");
   let onMutated = inspector.once("markupmutation");
-  yield setNodeAttribute("body", "contextmenu", "menu1", testActor);
+  yield testActor.setAttribute("body", "contextmenu", "menu1");
   yield onMutated;
 
   info("Checking for links in the new attribute");
   let {editor} = yield getContainerForSelector("body", inspector);
-  let linkEls = editor.attrElements.get("contextmenu").querySelectorAll(".link");
+  let linkEls = editor.attrElements.get("contextmenu")
+                                   .querySelectorAll(".link");
   is(linkEls.length, 1, "There is one link in the contextmenu attribute");
   is(linkEls[0].dataset.type, "idref", "The link has the right type");
   is(linkEls[0].textContent, "menu1", "The link has the right value");
 
   info("Editing the contextmenu attribute on the body node");
   onMutated = inspector.once("markupmutation");
-  yield setNodeAttribute("body", "contextmenu", "menu2", testActor);
+  yield testActor.setAttribute("body", "contextmenu", "menu2");
   yield onMutated;
 
   info("Checking for links in the updated attribute");

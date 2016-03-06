@@ -27,8 +27,8 @@ add_task(function* test_fetch() {
     let securityChange = waitForSecurityChange();
     yield ContentTask.spawn(newTabBrowser, null, function* () {
       yield content.wrappedJSObject.test_fetch()
-                   .then((response) => { ok(false, "should have denied the request"); })
-                   .catch((e) => { ok(true, `Caught exception: ${e}`); });
+                   .then(response => Assert.ok(false, "should have denied the request"))
+                   .catch(e => Assert.ok(true, `Caught exception: ${e}`));
     });
     yield securityChange;
 

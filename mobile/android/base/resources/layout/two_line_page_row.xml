@@ -46,6 +46,6 @@
                android:layout_height="20dp"
                android:layout_gravity="center"
                android:visibility="gone"
-               android:src="@drawable/bookmarked_star"/>
+               android:src="@drawable/star_blue"/>
 
 </merge>

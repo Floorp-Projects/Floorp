@@ -8,10 +8,11 @@
 // the first focusable element in the corresponding MarkupContainer so that the
 // keyboard can be used immediately.
 
-const TEST_URL = "data:text/html;charset=utf8,<div class='test-class'></div>Text node";
+const TEST_URL = `data:text/html;charset=utf8,
+                  <div class='test-class'></div>Text node`;
 
 add_task(function*() {
-  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
   let {walker} = inspector;
 
   info("Select the test node to have the 2 test containers visible");
@@ -34,7 +35,8 @@ add_task(function*() {
 
   info("Click on the test-class attribute, to make sure it gets focused");
   let editor = getContainerForNodeFront(divFront, inspector).editor;
-  let attributeEditor = editor.attrElements.get("class").querySelector(".editable");
+  let attributeEditor = editor.attrElements.get("class")
+                                           .querySelector(".editable");
 
   let onFocus = once(attributeEditor, "focus");
   EventUtils.synthesizeMouseAtCenter(attributeEditor, {type: "mousedown"},

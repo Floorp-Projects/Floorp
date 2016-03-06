@@ -83,21 +83,17 @@ add_task(function* () {
      "Test 18a, plugin fallback type should be PLUGIN_VULNERABLE_UPDATABLE");
   ok(!pluginInfo.activated, "Test 18a, Plugin should not be activated");
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
-    let plugin = content.document.getElementById("test");
-    let doc = content.document;
-    let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return overlay && overlay.classList.contains("visible");
-  });
-  ok(result, "Test 18a, Plugin overlay should exist, not be hidden");
-
-  result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
+    let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+    Assert.ok(overlay && overlay.classList.contains("visible"),
+      "Test 18a, Plugin overlay should exist, not be hidden");
+
     let updateLink = doc.getAnonymousElementByAttribute(plugin, "anonid", "checkForUpdatesLink");
-    return updateLink.style.visibility != "hidden";
+    Assert.ok(updateLink.style.visibility != "hidden",
+      "Test 18a, Plugin should have an update link");
   });
-  ok(result, "Test 18a, Plugin should have an update link");
 
   let promise = waitForEvent(gBrowser.tabContainer, "TabOpen", null, true);
   let pluginUpdateURL = Services.urlFormatter.formatURLPref("plugins.update.url");
@@ -129,13 +125,13 @@ add_task(function* () {
      "Test 18a, plugin fallback type should be PLUGIN_VULNERABLE_UPDATABLE");
   ok(!pluginInfo.activated, "Test 18b, Plugin should not be activated");
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return overlay && overlay.classList.contains("visible");
+    Assert.ok(overlay && overlay.classList.contains("visible"),
+      "Test 18b, Plugin overlay should exist, not be hidden");
   });
-  ok(result, "Test 18b, Plugin overlay should exist, not be hidden");
 });
 
 // Tests a vulnerable plugin with no update
@@ -157,21 +153,17 @@ add_task(function* () {
      "Test 18c, plugin fallback type should be PLUGIN_VULNERABLE_NO_UPDATE");
   ok(!pluginInfo.activated, "Test 18c, Plugin should not be activated");
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return overlay && overlay.classList.contains("visible");
-  });
-  ok(result, "Test 18c, Plugin overlay should exist, not be hidden");
+    Assert.ok(overlay && overlay.classList.contains("visible"),
+      "Test 18c, Plugin overlay should exist, not be hidden");
 
-  result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
-    let doc = content.document;
-    let plugin = doc.getElementById("test");
     let updateLink = doc.getAnonymousElementByAttribute(plugin, "anonid", "checkForUpdatesLink");
-    return updateLink && updateLink.style.display != "block";
+    Assert.ok(updateLink && updateLink.style.display != "block",
+      "Test 18c, Plugin should not have an update link");
   });
-  ok(result, "Test 18c, Plugin should not have an update link");
 
   // check that click "Always allow" works with blocked plugins
   yield promiseForNotificationShown(notification);
@@ -342,12 +334,11 @@ add_task(function* () {
   is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_BLOCKLISTED,
      "Test 26, plugin fallback type should be PLUGIN_BLOCKLISTED");
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let plugin = content.document.getElementById("test");
     let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    return objLoadingContent.activated;
+    Assert.ok(!objLoadingContent.activated, "Plugin should not be activated.");
   });
-  ok(!result, "Plugin should not be activated.");
 
   const testUrl = "http://test.url.com/";
 

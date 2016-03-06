@@ -41,7 +41,7 @@ add_task(function* () {
 
   // This test opens a new tab to about:addons
   let promise = waitForEvent(gBrowser.tabContainer, "TabOpen", null, true);
-  let success = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let pluginNode = content.document.getElementById("test");
     let manageLink = content.document.getAnonymousElementByAttribute(pluginNode, "anonid", "managePluginsLink");
     let bounds = manageLink.getBoundingClientRect();
@@ -51,9 +51,9 @@ add_task(function* () {
                        .getInterface(Components.interfaces.nsIDOMWindowUtils);
     utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
-    return true;
+    Assert.ok(true, "click on manage link");
   });
-  ok(success, "click on manage link");
+
   yield promise;
 
   promise = waitForEvent(gBrowser.tabContainer, "TabClose", null, true);

@@ -14,9 +14,11 @@ add_task(function* test() {
     return ContentTask.spawn(browser, crashes, function (crashes) {
       let doc = content.document;
       let crashlinks = doc.getElementById("tbody").getElementsByTagName("a");
-      is(crashlinks.length, crashes.length, "about:crashes lists correct number of crash reports");
-      for(let i = 0; i < crashes.length; i++) {
-        is(crashlinks[i].firstChild.textContent, crashes[i].id, i + ": crash ID is correct");
+      Assert.equal(crashlinks.length, crashes.length,
+        "about:crashes lists correct number of crash reports");
+      for (let i = 0; i < crashes.length; i++) {
+        Assert.equal(crashlinks[i].firstChild.textContent, crashes[i].id,
+          i + ": crash ID is correct");
       }
     });
   });

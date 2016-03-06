@@ -1,7 +1,7 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
-
+/* import-globals-from helper_attributes_test_runner.js */
 "use strict";
 
 // Test editing various markup-containers' attribute fields
@@ -23,8 +23,8 @@ var TEST_DATA = [{
     class: "changednode1"
   }
 }, {
-  desc: 'Try changing an attribute to a quote (") - this should result ' +
-        'in it being set to an empty string',
+  desc: "Try changing an attribute to a quote (\") - this should result " +
+        "in it being set to an empty string",
   node: "#node22",
   originalAttributes: {
     id: "node22",

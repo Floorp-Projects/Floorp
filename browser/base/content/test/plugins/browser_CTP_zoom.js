@@ -49,13 +49,13 @@ add_task(function* () {
     // Reload the page
     yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_zoom.html");
     yield promiseUpdatePluginBindings(gTestBrowser);
-    let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    yield ContentTask.spawn(gTestBrowser, { count }, function* (args) {
       let doc = content.document;
       let plugin = doc.getElementById("test");
       let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-      return overlay && overlay.classList.contains("visible");
+      Assert.ok(overlay && overlay.classList.contains("visible"),
+        "Overlay should be visible for zoom change count " + args.count);
     });
-    ok(result, "Overlay should be visible for zoom change count " + count);
   }
 });
 

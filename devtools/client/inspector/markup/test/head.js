@@ -1,6 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* import-globals-from ../../test/head.js */
 "use strict";
 
 // Import the inspector's head.js first (which itself imports shared-head.js).
@@ -10,7 +12,7 @@ Services.scriptloader.loadSubScript(
 
 var {getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
 var clipboard = require("sdk/clipboard");
-var {setTimeout, clearTimeout} = require("sdk/timers");
+var {ActorRegistryFront} = require("devtools/server/actors/actor-registry");
 
 // If a test times out we want to see the complete log and not just the last few
 // lines.
@@ -32,8 +34,8 @@ registerCleanupFunction(() => {
 /**
  * Some tests may need to import one or more of the test helper scripts.
  * A test helper script is simply a js file that contains common test code that
- * is either not common-enough to be in head.js, or that is located in a separate
- * directory.
+ * is either not common-enough to be in head.js, or that is located in a
+ * separate directory.
  * The script will be loaded synchronously and in the test's scope.
  * @param {String} filePath The file path, relative to the current directory.
  *                 Examples:
@@ -50,73 +52,11 @@ function loadHelperScript(filePath) {
  * @return a promise that resolves when the inspector has emitted the event
  * new-root
  */
-function reloadPage(inspector) {
+function reloadPage(inspector, testActor) {
   info("Reloading the page");
   let newRoot = inspector.once("new-root");
-  content.location.reload();
+  testActor.reload();
   return newRoot;
-}
-
-/**
- * Reload the current tab location.
- * @param {TestActorFront} testActor An instance of the current TestActorFront
- * instantiated when the test started.
- */
-function reloadTab(testActor) {
-  return testActor.eval("location.reload()");
-}
-
-/**
- * Simple DOM node accesor function that takes either a node or a string css
- * selector as argument and returns the corresponding node
- * @param {String|DOMNode} nodeOrSelector
- * @return {DOMNode|CPOW} Note that in e10s mode a CPOW object is returned which
- * doesn't implement *all* of the DOMNode's properties
- */
-function getNode(nodeOrSelector) {
-  info("Getting the node for '" + nodeOrSelector + "'");
-  return typeof nodeOrSelector === "string" ?
-    content.document.querySelector(nodeOrSelector) :
-    nodeOrSelector;
-}
-
-/**
- * Get information about a DOM element, identified by its selector.
- * @param {String} selector.
- * @return {Promise} a promise that resolves to the element's information.
- */
-function getNodeInfo(selector, testActor) {
-  return testActor.getNodeInfo(selector);
-}
-
-/**
- * Set the value of an attribute of a DOM element, identified by its selector.
- * @param {String} selector.
- * @param {String} attributeName.
- * @param {String} attributeValue.
- * @param {TestActorFront} testActor The current TestActorFront instance.
- * @return {Promise} resolves when done.
- */
-function setNodeAttribute(selector, attributeName, attributeValue, testActor) {
-  return testActor.setAttribute(selector, attributeName, attributeValue);
-}
-
-/**
- * Highlight a node and set the inspector's current selection to the node or
- * the first match of the given css selector.
- * @param {String|DOMNode} nodeOrSelector
- * @param {InspectorPanel} inspector
- *        The instance of InspectorPanel currently loaded in the toolbox
- * @return a promise that resolves when the inspector is updated with the new
- * node
- */
-function selectAndHighlightNode(nodeOrSelector, inspector) {
-  info("Highlighting and selecting the node " + nodeOrSelector);
-
-  let node = getNode(nodeOrSelector);
-  let updated = inspector.toolbox.once("highlighter-ready");
-  inspector.selection.setNode(node, "test-highlight");
-  return updated;
 }
 
 /**
@@ -178,23 +118,15 @@ var clickContainer = Task.async(function*(selector, inspector) {
   let nodeFront = yield getNodeFront(selector, inspector);
   let container = getContainerForNodeFront(nodeFront, inspector);
 
-  let updated = container.selected ? promise.resolve() : inspector.once("inspector-updated");
+  let updated = container.selected
+                ? promise.resolve()
+                : inspector.once("inspector-updated");
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousedown"},
     inspector.markup.doc.defaultView);
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mouseup"},
     inspector.markup.doc.defaultView);
   return updated;
 });
-
-/**
- * Checks if the highlighter is visible currently
- * @return {Boolean}
- */
-function isHighlighterVisible() {
-  let highlighter = gBrowser.selectedBrowser.parentNode
-                            .querySelector(".highlighter-container .box-model-root");
-  return highlighter && !highlighter.hasAttribute("hidden");
-}
 
 /**
  * Focus a given editable element, enter edit mode, set value, and commit
@@ -224,7 +156,7 @@ function setEditableFieldValue(field, value, inspector) {
  * @return a promise that resolves when the node has mutated
  */
 var addNewAttributes = Task.async(function*(selector, text, inspector) {
-  info("Entering text '" + text + "' in node '" + selector + "''s new attribute field");
+  info(`Entering text "${text}" in new attribute field for node ${selector}`);
 
   let container = yield getContainerForSelector(selector, inspector);
   ok(container, "The container for '" + selector + "' was found");
@@ -247,12 +179,12 @@ var addNewAttributes = Task.async(function*(selector, text, inspector) {
  * parser. The parser only provides unescaped entities so &amp; will return &.
  */
 var assertAttributes = Task.async(function*(selector, expected, testActor) {
-  let {attributes: actual} = yield getNodeInfo(selector, testActor);
+  let {attributes: actual} = yield testActor.getNodeInfo(selector);
 
   is(actual.length, Object.keys(expected).length,
     "The node " + selector + " has the expected number of attributes.");
   for (let attr in expected) {
-    let foundAttr = actual.find(({name, value}) => name === attr);
+    let foundAttr = actual.find(({name}) => name === attr);
     let foundValue = foundAttr ? foundAttr.value : undefined;
     ok(foundAttr, "The node " + selector + " has the attribute " + attr);
     is(foundValue, expected[attr],
@@ -331,7 +263,7 @@ function searchUsingSelectorSearch(selector, inspector) {
  */
 function wait(ms) {
   let def = promise.defer();
-  content.setTimeout(def.resolve, ms);
+  setTimeout(def.resolve, ms);
   return def.promise;
 }
 
@@ -344,10 +276,12 @@ function wait(ms) {
  * @return A promise that resolves with a boolean indicating whether
  *         the menu items are disabled once the menu has been checked.
  */
-var isEditingMenuDisabled = Task.async(function*(nodeFront, inspector, assert=true) {
-  let deleteMenuItem = inspector.panelDoc.getElementById("node-menu-delete");
-  let editHTMLMenuItem = inspector.panelDoc.getElementById("node-menu-edithtml");
-  let pasteHTMLMenuItem = inspector.panelDoc.getElementById("node-menu-pasteouterhtml");
+var isEditingMenuDisabled = Task.async(
+function*(nodeFront, inspector, assert = true) {
+  let doc = inspector.panelDoc;
+  let deleteMenuItem = doc.getElementById("node-menu-delete");
+  let editHTMLMenuItem = doc.getElementById("node-menu-edithtml");
+  let pasteHTMLMenuItem = doc.getElementById("node-menu-pasteouterhtml");
 
   // To ensure clipboard contains something to paste.
   clipboard.set("<p>test</p>", "html");
@@ -366,7 +300,9 @@ var isEditingMenuDisabled = Task.async(function*(nodeFront, inspector, assert=tr
     ok(isPasteHTMLMenuDisabled, "Paste HTML menu item is disabled");
   }
 
-  return isDeleteMenuDisabled && isEditHTMLMenuDisabled && isPasteHTMLMenuDisabled;
+  return isDeleteMenuDisabled &&
+         isEditHTMLMenuDisabled &&
+         isPasteHTMLMenuDisabled;
 });
 
 /**
@@ -378,10 +314,12 @@ var isEditingMenuDisabled = Task.async(function*(nodeFront, inspector, assert=tr
  * @return A promise that resolves with a boolean indicating whether
  *         the menu items are enabled once the menu has been checked.
  */
-var isEditingMenuEnabled = Task.async(function*(nodeFront, inspector, assert=true) {
-  let deleteMenuItem = inspector.panelDoc.getElementById("node-menu-delete");
-  let editHTMLMenuItem = inspector.panelDoc.getElementById("node-menu-edithtml");
-  let pasteHTMLMenuItem = inspector.panelDoc.getElementById("node-menu-pasteouterhtml");
+var isEditingMenuEnabled = Task.async(
+function*(nodeFront, inspector, assert = true) {
+  let doc = inspector.panelDoc;
+  let deleteMenuItem = doc.getElementById("node-menu-delete");
+  let editHTMLMenuItem = doc.getElementById("node-menu-edithtml");
+  let pasteHTMLMenuItem = doc.getElementById("node-menu-pasteouterhtml");
 
   // To ensure clipboard contains something to paste.
   clipboard.set("<p>test</p>", "html");
@@ -400,7 +338,9 @@ var isEditingMenuEnabled = Task.async(function*(nodeFront, inspector, assert=tru
     ok(!isPasteHTMLMenuDisabled, "Paste HTML menu item is enabled");
   }
 
-  return !isDeleteMenuDisabled && !isEditHTMLMenuDisabled && !isPasteHTMLMenuDisabled;
+  return !isDeleteMenuDisabled &&
+         !isEditHTMLMenuDisabled &&
+         !isPasteHTMLMenuDisabled;
 });
 
 /**
@@ -437,8 +377,10 @@ function promiseNextTick() {
  * field.
  */
 function collapseSelectionAndTab(inspector) {
-  EventUtils.sendKey("tab", inspector.panelWin); // collapse selection and move caret to end
-  EventUtils.sendKey("tab", inspector.panelWin); // next element
+  // collapse selection and move caret to end
+  EventUtils.sendKey("tab", inspector.panelWin);
+  // next element
+  EventUtils.sendKey("tab", inspector.panelWin);
 }
 
 /**
@@ -446,10 +388,12 @@ function collapseSelectionAndTab(inspector) {
  * previous field.
  */
 function collapseSelectionAndShiftTab(inspector) {
+  // collapse selection and move caret to end
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true },
-    inspector.panelWin); // collapse selection and move caret to end
+    inspector.panelWin);
+  // previous element
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true },
-    inspector.panelWin); // previous element
+    inspector.panelWin);
 }
 
 /**
@@ -461,10 +405,12 @@ function collapseSelectionAndShiftTab(inspector) {
 function checkFocusedAttribute(attrName, editMode) {
   let focusedAttr = Services.focus.focusedElement;
   is(focusedAttr ? focusedAttr.parentNode.dataset.attr : undefined,
-    attrName, attrName + " attribute editor is currently focused.");
+     attrName, attrName + " attribute editor is currently focused.");
   is(focusedAttr ? focusedAttr.tagName : undefined,
-    editMode ? "input": "span",
-    editMode ? attrName + " is in edit mode" : attrName + " is not in edit mode");
+     editMode ? "input" : "span",
+     editMode
+     ? attrName + " is in edit mode"
+     : attrName + " is not in edit mode");
 }
 
 /**
@@ -484,8 +430,8 @@ var getAttributesFromEditor = Task.async(function*(selector, inspector) {
 });
 
 // The expand all operation of the markup-view calls itself recursively and
-// there's not one event we can wait for to know when it's done
-// so use this helper function to wait until all recursive children updates are done.
+// there's not one event we can wait for to know when it's done so use this
+// helper function to wait until all recursive children updates are done.
 function* waitForMultipleChildrenUpdates(inspector) {
   // As long as child updates are queued up while we wait for an update already
   // wait again
@@ -531,12 +477,12 @@ function createTestHTTPServer() {
  * A helper that simulates a contextmenu event on the given chrome DOM element.
  */
 function contextMenuClick(element) {
-  let evt = element.ownerDocument.createEvent('MouseEvents');
-  let button = 2;  // right click
+  let evt = element.ownerDocument.createEvent("MouseEvents");
+  let buttonRight = 2;
 
-  evt.initMouseEvent('contextmenu', true, true,
-       element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false,
-       false, false, false, button, null);
+  evt.initMouseEvent("contextmenu", true, true,
+    element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false, false, false,
+    false, buttonRight, null);
 
   element.dispatchEvent(evt);
 }
@@ -573,12 +519,10 @@ function registerTabActor(client, options) {
     // Register the custom actor on the backend.
     let registry = ActorRegistryFront(client, response);
     return registry.registerActor(moduleUrl, config).then(registrar => {
-      return client.getTab().then(response => {
-        return {
-          registrar: registrar,
-          form: response.tab
-        };
-      });
+      return client.getTab().then(tabResponse => ({
+        registrar: registrar,
+        form: tabResponse.tab
+      }));
     });
   });
 }
