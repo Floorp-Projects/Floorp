@@ -340,6 +340,36 @@ HttpObserverManager = {
     return headers;
   },
 
+  replaceHeaders(headers, originalNames, setHeader) {
+    let failures = new Set();
+    // Start by clearing everything.
+    for (let name of originalNames) {
+      try {
+        setHeader(name, "");
+      } catch (e) {
+        // Let's collect physiological failures in order
+        // to know what is worth reporting.
+        failures.add(name);
+      }
+    }
+    try {
+      for (let {name, value, binaryValue} of headers) {
+        try {
+          if (Array.isArray(binaryValue)) {
+            value = String.fromCharCode.apply(String, binaryValue);
+          }
+          setHeader(name, value);
+        } catch (e) {
+          if (!failures.has(name)) {
+            Cu.reportError(e);
+          }
+        }
+      }
+    } catch (e) {
+      Cu.reportError(e);
+    }
+  },
+
   observe(subject, topic, data) {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     switch (topic) {
@@ -370,8 +400,8 @@ HttpObserverManager = {
                      loadInfo.externalContentPolicyType :
                      Ci.nsIContentPolicy.TYPE_OTHER;
 
-    let requestHeaders;
-    let responseHeaders;
+    let requestHeaderNames;
+    let responseHeaderNames;
 
     let includeStatus = kind === "headersReceived" ||
                         kind === "onBeforeRedirect" ||
@@ -405,16 +435,12 @@ HttpObserverManager = {
         Object.assign(data, extraData);
       }
       if (opts.requestHeaders) {
-        if (!requestHeaders) {
-          requestHeaders = this.getHeaders(channel, "visitRequestHeaders");
-        }
-        data.requestHeaders = requestHeaders;
+        data.requestHeaders = this.getHeaders(channel, "visitRequestHeaders");
+        requestHeaderNames = data.requestHeaders.map(h => h.name);
       }
       if (opts.responseHeaders) {
-        if (!responseHeaders) {
-          responseHeaders = this.getHeaders(channel, "visitResponseHeaders");
-        }
-        data.responseHeaders = responseHeaders;
+        data.responseHeaders = this.getHeaders(channel, "visitResponseHeaders");
+        responseHeaderNames = data.responseHeaders.map(h => h.name);
       }
       if (includeStatus) {
         data.statusCode = channel.responseStatus;
@@ -439,24 +465,16 @@ HttpObserverManager = {
         return false;
       }
       if (opts.requestHeaders && result.requestHeaders) {
-        // Start by clearing everything.
-        for (let {name} of requestHeaders) {
-          channel.setRequestHeader(name, "", false);
-        }
-
-        for (let {name, value} of result.requestHeaders) {
-          channel.setRequestHeader(name, value, false);
-        }
+        this.replaceHeaders(
+          result.requestHeaders, requestHeaderNames,
+          (name, value) => channel.setRequestHeader(name, value, false)
+        );
       }
       if (opts.responseHeaders && result.responseHeaders) {
-        // Start by clearing everything.
-        for (let {name} of responseHeaders) {
-          channel.setResponseHeader(name, "", false);
-        }
-
-        for (let {name, value} of result.responseHeaders) {
-          channel.setResponseHeader(name, value, false);
-        }
+        this.replaceHeaders(
+          result.responseHeaders, responseHeaderNames,
+          (name, value) => channel.setResponseHeader(name, value, false)
+        );
       }
     }
 
