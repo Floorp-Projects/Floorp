@@ -1,8 +1,5 @@
 load(libdir + "wasm.js");
 
-if (!wasmIsSupported())
-    quit();
-
 function testLoad(type, ext, base, offset, align, expect) {
   assertEq(wasmEvalText(
     '(module' +
