@@ -94,6 +94,7 @@ config = {
         },
     },
     'mozilla-beta': {
+        'enable_release_promotion': 1,
         'repo_path': 'releases/mozilla-beta',
         # TODO I think we can remove update_channel since we don't run
         # nightlies for mozilla-beta
@@ -102,6 +103,21 @@ config = {
         'use_branch_in_symbols_extra_buildid': False,
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
         'platform_overrides': {
+            'linux': {
+                'src_mozconfig': 'browser/config/mozconfigs/linux32/beta',
+            },
+            'linux64': {
+                'src_mozconfig': 'browser/config/mozconfigs/linux64/beta',
+            },
+            'macosx64': {
+                'src_mozconfig': 'browser/config/mozconfigs/macosx-universal/beta',
+            },
+            'win32': {
+                'src_mozconfig': 'browser/config/mozconfigs/win32/beta',
+            },
+            'win64': {
+                'src_mozconfig': 'browser/config/mozconfigs/win64/beta',
+            },
             'linux-debug': {
                 'update_channel': 'default',
             },
