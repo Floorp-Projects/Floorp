@@ -2684,7 +2684,10 @@ void AsyncPanZoomController::AdjustScrollForSurfaceShift(const ScreenPoint& aShi
     / mFrameMetrics.GetZoom();
   APZC_LOG("%p adjusting scroll position by %s for surface shift\n",
     this, Stringify(adjustment).c_str());
-  mFrameMetrics.ScrollBy(adjustment);
+  CSSPoint scrollOffset = mFrameMetrics.GetScrollOffset();
+  scrollOffset.y = mY.ClampOriginToScrollableRect(scrollOffset.y + adjustment.y);
+  scrollOffset.x = mX.ClampOriginToScrollableRect(scrollOffset.x + adjustment.x);
+  mFrameMetrics.SetScrollOffset(scrollOffset);
   ScheduleCompositeAndMaybeRepaint();
   UpdateSharedCompositorFrameMetrics();
 }
