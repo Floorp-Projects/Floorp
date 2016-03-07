@@ -42,24 +42,27 @@ class Windows(BaseLib):
     def focused_chrome_window_handle(self):
         """Returns the currently focused chrome window handle.
 
-        In case of `None` being returned no window is currently active. This can happen
-        when a new window is opened and the currently focused one gets lowered.
-
         :returns: The `window handle` of the focused chrome window.
         """
-        with self.marionette.using_context('chrome'):
-            return self.marionette.execute_script("""
-              Components.utils.import("resource://gre/modules/Services.jsm");
+        def get_active_handle(mn):
+            with self.marionette.using_context('chrome'):
+                return self.marionette.execute_script("""
+                  Components.utils.import("resource://gre/modules/Services.jsm");
 
-              let win = Services.focus.activeWindow;
-              if (win) {
-                return win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                          .getInterface(Components.interfaces.nsIDOMWindowUtils)
-                          .outerWindowID.toString();
-              }
+                  let win = Services.focus.activeWindow;
+                  if (win) {
+                    return win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                              .getInterface(Components.interfaces.nsIDOMWindowUtils)
+                              .outerWindowID.toString();
+                  }
 
-              return null;
-            """)
+                  return null;
+                """)
+
+        # In case of `None` being returned no window is currently active. This can happen
+        # when a focus change action is currently happening. So lets wait until it is done.
+        return Wait(self.marionette).until(get_active_handle,
+                                           message='No focused window has been found.')
 
     def close(self, handle):
         """Closes the chrome window with the given handle.
