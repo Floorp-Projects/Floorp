@@ -31,9 +31,6 @@ a11y.ini
 xpcshell.ini
    For *xpcshell* tests.
 
-webapprt.ini
-   For the *chrome* flavor of webapp runtime mochitests.
-
 .. _manifestparser_manifests:
 
 ManifestParser Manifests
