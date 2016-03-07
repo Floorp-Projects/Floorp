@@ -806,7 +806,6 @@ nsDocShell::nsDocShell()
   , mDefaultLoadFlags(nsIRequest::LOAD_NORMAL)
   , mBlankTiming(false)
   , mFrameType(FRAME_TYPE_REGULAR)
-  , mIsInIsolatedMozBrowser(false)
   , mParentCharsetSource(0)
   , mJSRunToCompletionDepth(0)
 {
@@ -4012,7 +4011,6 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild)
   }
 
   aChild->SetTreeOwner(mTreeOwner);
-  childDocShell->SetIsInIsolatedMozBrowserElement(mIsInIsolatedMozBrowser);
 
   nsCOMPtr<nsIDocShell> childAsDocShell(do_QueryInterface(aChild));
   if (!childAsDocShell) {
@@ -13916,7 +13914,8 @@ nsDocShell::GetInheritedFrameType()
 /* [infallible] */ NS_IMETHODIMP
 nsDocShell::GetIsIsolatedMozBrowserElement(bool* aIsIsolatedMozBrowserElement)
 {
-  bool result = mFrameType == FRAME_TYPE_BROWSER && mIsInIsolatedMozBrowser;
+  bool result = mFrameType == FRAME_TYPE_BROWSER &&
+                mOriginAttributes.mInIsolatedMozBrowser;
   *aIsIsolatedMozBrowserElement = result;
   return NS_OK;
 }
@@ -13924,19 +13923,12 @@ nsDocShell::GetIsIsolatedMozBrowserElement(bool* aIsIsolatedMozBrowserElement)
 /* [infallible] */ NS_IMETHODIMP
 nsDocShell::GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserElement)
 {
-  MOZ_ASSERT(!mIsInIsolatedMozBrowser ||
+  MOZ_ASSERT(!mOriginAttributes.mInIsolatedMozBrowser ||
              (GetInheritedFrameType() == FRAME_TYPE_BROWSER),
              "Isolated mozbrowser should only be true inside browser frames");
   bool result = (GetInheritedFrameType() == FRAME_TYPE_BROWSER) &&
-                mIsInIsolatedMozBrowser;
+                mOriginAttributes.mInIsolatedMozBrowser;
   *aIsInIsolatedMozBrowserElement = result;
-  return NS_OK;
-}
-
-/* [infallible] */ NS_IMETHODIMP
-nsDocShell::SetIsInIsolatedMozBrowserElement(bool aIsInIsolatedMozBrowserElement)
-{
-  mIsInIsolatedMozBrowser = aIsInIsolatedMozBrowserElement;
   return NS_OK;
 }
 
