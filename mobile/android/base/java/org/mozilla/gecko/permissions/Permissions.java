@@ -92,6 +92,13 @@ public class Permissions {
         }
     }
 
+    /**
+     * Determine whether you have been granted particular permissions.
+     */
+    public static boolean has(Context context, String... permissions) {
+        return permissionHelper.hasPermissions(context, permissions);
+    }
+
     /* package-private */ static void setPermissionHelper(PermissionsHelper permissionHelper) {
         Permissions.permissionHelper = permissionHelper;
     }
