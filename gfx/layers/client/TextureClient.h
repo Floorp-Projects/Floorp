@@ -464,6 +464,12 @@ public:
   void WaitForCompositorRecycle();
 
   /**
+   * Should only be called when dying. We no longer care whether the compositor
+   * has finished with the texture.
+   */
+  void CancelWaitForCompositorRecycle();
+
+  /**
    * After being shared with the compositor side, an immutable texture is never
    * modified, it can only be read. It is safe to not Lock/Unlock immutable
    * textures.
