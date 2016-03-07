@@ -50,13 +50,14 @@ public:
   ~TreeWalker();
 
   /**
-   * Return the next accessible.
+   * Return the next/prev accessible.
    *
    * @note Returned accessible is bound to the document, if the accessible is
    *       rejected during tree creation then the caller should be unbind it
    *       from the document.
    */
   Accessible* Next();
+  Accessible* Prev();
 
 private:
   TreeWalker();
@@ -69,10 +70,11 @@ private:
    * @note State stack is used to navigate up/down the DOM subtree during
    *        accessible children search.
    */
-  dom::AllChildrenIterator* PushState(nsIContent* aContent)
+  dom::AllChildrenIterator* PushState(nsIContent* aContent,
+                                      bool aStartAtBeginning)
   {
     return mStateStack.AppendElement(
-      dom::AllChildrenIterator(aContent, mChildFilter));
+      dom::AllChildrenIterator(aContent, mChildFilter, aStartAtBeginning));
   }
 
   /**
@@ -89,6 +91,14 @@ private:
 
   int32_t mChildFilter;
   uint32_t mFlags;
+
+  enum Phase {
+    eAtStart,
+    eAtDOM,
+    eAtARIAOwns,
+    eAtEnd
+  };
+  Phase mPhase;
 };
 
 } // namespace a11y
