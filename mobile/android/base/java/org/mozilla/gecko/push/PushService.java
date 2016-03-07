@@ -17,6 +17,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.gcm.GcmTokenClient;
 import org.mozilla.gecko.push.autopush.AutopushClientException;
 import org.mozilla.gecko.util.BundleEventListener;
@@ -34,6 +35,7 @@ import java.util.Map;
  * <p/>
  * It's worth noting that we allow the DOM push API in restricted profiles.
  */
+@ReflectionTarget
 public class PushService implements BundleEventListener {
     private static final String LOG_TAG = "GeckoPushService";
 
@@ -58,12 +60,15 @@ public class PushService implements BundleEventListener {
         return sInstance;
     }
 
-    public static synchronized PushService createInstance(Context context) {
+    @ReflectionTarget
+    public static synchronized void onCreate(Context context) {
         if (sInstance != null) {
             throw new IllegalStateException("PushService already created!");
         }
         sInstance = new PushService(context);
-        return sInstance;
+
+        sInstance.registerGeckoEventListener();
+        sInstance.onStartup();
     }
 
     protected final PushManager pushManager;
@@ -180,14 +185,14 @@ public class PushService implements BundleEventListener {
         }
     }
 
-    public static void registerGeckoEventListener() {
+    protected void registerGeckoEventListener() {
         Log.d(LOG_TAG, "Registered Gecko event listener.");
-        EventDispatcher.getInstance().registerBackgroundThreadListener(getInstance(), GECKO_EVENTS);
+        EventDispatcher.getInstance().registerBackgroundThreadListener(this, GECKO_EVENTS);
     }
 
-    public static void unregisterGeckoEventListener() {
+    protected void unregisterGeckoEventListener() {
         Log.d(LOG_TAG, "Unregistered Gecko event listener.");
-        EventDispatcher.getInstance().unregisterBackgroundThreadListener(getInstance(), GECKO_EVENTS);
+        EventDispatcher.getInstance().unregisterBackgroundThreadListener(this, GECKO_EVENTS);
     }
 
     @Override
