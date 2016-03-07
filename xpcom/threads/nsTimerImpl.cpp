@@ -571,7 +571,7 @@ nsTimerImpl::Fire()
   }
 }
 
-#if defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(ANDROID))
+#if defined(HAVE_DLADDR) && defined(HAVE___CXA_DEMANGLE)
 #define USE_DLADDR 1
 #endif
 
