@@ -979,9 +979,8 @@ public:
 
     virtual void SetBreaks(uint32_t aOffset, uint32_t aLength,
                            uint8_t* aBreakBefore) override {
-      gfxTextRun::Range range(aOffset + mOffsetIntoTextRun,
-                              aOffset + mOffsetIntoTextRun + aLength);
-      if (mTextRun->SetPotentialLineBreaks(range, aBreakBefore)) {
+      if (mTextRun->SetPotentialLineBreaks(aOffset + mOffsetIntoTextRun, aLength,
+                                           aBreakBefore)) {
         // Be conservative and assume that some breaks have been set
         mTextRun->ClearFlagBits(nsTextFrameUtils::TEXT_NO_BREAKS);
       }
@@ -2928,20 +2927,18 @@ static bool IsChineseOrJapanese(nsTextFrame* aFrame)
 
 #ifdef DEBUG
 static bool IsInBounds(const gfxSkipCharsIterator& aStart, int32_t aContentLength,
-                       gfxTextRun::Range aRange) {
-  if (aStart.GetSkippedOffset() > aRange.start)
+                         uint32_t aOffset, uint32_t aLength) {
+  if (aStart.GetSkippedOffset() > aOffset)
     return false;
   if (aContentLength == INT32_MAX)
     return true;
   gfxSkipCharsIterator iter(aStart);
   iter.AdvanceOriginal(aContentLength);
-  return iter.GetSkippedOffset() >= aRange.end;
+  return iter.GetSkippedOffset() >= aOffset + aLength;
 }
 #endif
 
 class MOZ_STACK_CLASS PropertyProvider : public gfxTextRun::PropertyProvider {
-  typedef gfxTextRun::Range Range;
-
 public:
   /**
    * Use this constructor for reflow, when we don't know what text is
@@ -3005,9 +3002,10 @@ public:
 
   void InitializeForMeasure();
 
-  virtual void GetSpacing(Range aRange, Spacing* aSpacing);
+  virtual void GetSpacing(uint32_t aStart, uint32_t aLength, Spacing* aSpacing);
   virtual gfxFloat GetHyphenWidth();
-  virtual void GetHyphenationBreaks(Range aRange, bool* aBreakBefore);
+  virtual void GetHyphenationBreaks(uint32_t aStart, uint32_t aLength,
+                                    bool* aBreakBefore);
   virtual int8_t GetHyphensOption() {
     return mTextStyle->mHyphens;
   }
@@ -3020,13 +3018,14 @@ public:
     return mTextRun->GetAppUnitsPerDevUnit();
   }
 
-  void GetSpacingInternal(Range aRange, Spacing* aSpacing, bool aIgnoreTabs);
+  void GetSpacingInternal(uint32_t aStart, uint32_t aLength, Spacing* aSpacing,
+                          bool aIgnoreTabs);
 
   /**
    * Compute the justification information in given DOM range, and fill data
    * necessary for computation of spacing.
    */
-  void ComputeJustification(Range aRange);
+  void ComputeJustification(int32_t aOffset, int32_t aLength);
 
   const nsStyleText* StyleText() { return mTextStyle; }
   nsTextFrame* GetFrame() { return mFrame; }
@@ -3053,7 +3052,7 @@ public:
     return mFontMetrics;
   }
 
-  void CalcTabWidths(Range aTransformedRange);
+  void CalcTabWidths(uint32_t aTransformedStart, uint32_t aTransformedLength);
 
   const gfxSkipCharsIterator& GetEndHint() { return mTempIterator; }
 
@@ -3148,16 +3147,16 @@ static void FindClusterEnd(gfxTextRun* aTextRun, int32_t aOriginalEnd,
 }
 
 void
-PropertyProvider::ComputeJustification(Range aRange)
+PropertyProvider::ComputeJustification(int32_t aOffset, int32_t aLength)
 {
   bool isCJ = IsChineseOrJapanese(mFrame);
-  nsSkipCharsRunIterator run(
-    mStart, nsSkipCharsRunIterator::LENGTH_INCLUDES_SKIPPED, aRange.Length());
-  run.SetOriginalOffset(aRange.start);
+  nsSkipCharsRunIterator
+    run(mStart, nsSkipCharsRunIterator::LENGTH_INCLUDES_SKIPPED, aLength);
+  run.SetOriginalOffset(aOffset);
   mJustificationArrayStart = run.GetSkippedOffset();
 
   MOZ_ASSERT(mJustificationAssignments.IsEmpty());
-  mJustificationAssignments.SetCapacity(aRange.Length());
+  mJustificationAssignments.SetCapacity(aLength);
   while (run.NextRun()) {
     uint32_t originalOffset = run.GetOriginalOffset();
     uint32_t skippedOffset = run.GetSkippedOffset();
@@ -3216,9 +3215,10 @@ PropertyProvider::ComputeJustification(Range aRange)
 
 // aStart, aLength in transformed string offsets
 void
-PropertyProvider::GetSpacing(Range aRange, Spacing* aSpacing)
+PropertyProvider::GetSpacing(uint32_t aStart, uint32_t aLength,
+                             Spacing* aSpacing)
 {
-  GetSpacingInternal(aRange, aSpacing,
+  GetSpacingInternal(aStart, aLength, aSpacing,
                      (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TAB) == 0);
 }
 
@@ -3232,28 +3232,28 @@ CanAddSpacingAfter(gfxTextRun* aTextRun, uint32_t aOffset)
 }
 
 void
-PropertyProvider::GetSpacingInternal(Range aRange, Spacing* aSpacing,
-                                     bool aIgnoreTabs)
+PropertyProvider::GetSpacingInternal(uint32_t aStart, uint32_t aLength,
+                                     Spacing* aSpacing, bool aIgnoreTabs)
 {
-  NS_PRECONDITION(IsInBounds(mStart, mLength, aRange), "Range out of bounds");
+  NS_PRECONDITION(IsInBounds(mStart, mLength, aStart, aLength), "Range out of bounds");
 
   uint32_t index;
-  for (index = 0; index < aRange.Length(); ++index) {
+  for (index = 0; index < aLength; ++index) {
     aSpacing[index].mBefore = 0.0;
     aSpacing[index].mAfter = 0.0;
   }
 
   // Find our offset into the original+transformed string
   gfxSkipCharsIterator start(mStart);
-  start.SetSkippedOffset(aRange.start);
+  start.SetSkippedOffset(aStart);
 
   // First, compute the word and letter spacing
   if (mWordSpacing || mLetterSpacing) {
     // Iterate over non-skipped characters
-    nsSkipCharsRunIterator run(
-        start, nsSkipCharsRunIterator::LENGTH_UNSKIPPED_ONLY, aRange.Length());
+    nsSkipCharsRunIterator
+      run(start, nsSkipCharsRunIterator::LENGTH_UNSKIPPED_ONLY, aLength);
     while (run.NextRun()) {
-      uint32_t runOffsetInSubstring = run.GetSkippedOffset() - aRange.start;
+      uint32_t runOffsetInSubstring = run.GetSkippedOffset() - aStart;
       gfxSkipCharsIterator iter = run.GetPos();
       for (int32_t i = 0; i < run.GetRunLength(); ++i) {
         if (CanAddSpacingAfter(mTextRun, run.GetSkippedOffset() + i)) {
@@ -3267,8 +3267,7 @@ PropertyProvider::GetSpacingInternal(Range aRange, Spacing* aSpacing,
           iter.SetSkippedOffset(run.GetSkippedOffset() + i);
           FindClusterEnd(mTextRun, run.GetOriginalOffset() + run.GetRunLength(),
                          &iter);
-          uint32_t runOffset = iter.GetSkippedOffset() - aRange.start;
-          aSpacing[runOffset].mAfter += mWordSpacing;
+          aSpacing[iter.GetSkippedOffset() - aStart].mAfter += mWordSpacing;
         }
       }
     }
@@ -3280,11 +3279,10 @@ PropertyProvider::GetSpacingInternal(Range aRange, Spacing* aSpacing,
 
   // Now add tab spacing, if there is any
   if (!aIgnoreTabs) {
-    CalcTabWidths(aRange);
+    CalcTabWidths(aStart, aLength);
     if (mTabWidths) {
       mTabWidths->ApplySpacing(aSpacing,
-                               aRange.start - mStart.GetSkippedOffset(),
-                               aRange.Length());
+                               aStart - mStart.GetSkippedOffset(), aLength);
     }
   }
 
@@ -3295,16 +3293,15 @@ PropertyProvider::GetSpacingInternal(Range aRange, Spacing* aSpacing,
     // ignore those spaces.
     auto arrayEnd = mJustificationArrayStart +
       static_cast<uint32_t>(mJustificationAssignments.Length());
-    auto end = std::min(aRange.end, arrayEnd);
-    MOZ_ASSERT(aRange.start >= mJustificationArrayStart);
+    auto end = std::min(aStart + aLength, arrayEnd);
+    MOZ_ASSERT(aStart >= mJustificationArrayStart);
     JustificationApplicationState state(
         mTotalJustificationGaps, NSToCoordRound(mJustificationSpacing));
-    for (auto i = aRange.start; i < end; i++) {
+    for (auto i = aStart; i < end; i++) {
       const auto& assign =
         mJustificationAssignments[i - mJustificationArrayStart];
-      uint32_t offset = i - aRange.start;
-      aSpacing[offset].mBefore += state.Consume(assign.mGapsAtStart);
-      aSpacing[offset].mAfter += state.Consume(assign.mGapsAtEnd);
+      aSpacing[i - aStart].mBefore += state.Consume(assign.mGapsAtStart);
+      aSpacing[i - aStart].mAfter += state.Consume(assign.mGapsAtEnd);
     }
   }
 }
@@ -3334,7 +3331,7 @@ AdvanceToNextTab(gfxFloat aX, nsIFrame* aFrame,
 }
 
 void
-PropertyProvider::CalcTabWidths(Range aRange)
+PropertyProvider::CalcTabWidths(uint32_t aStart, uint32_t aLength)
 {
   if (!mTabWidths) {
     if (mReflowing && !mLineContainer) {
@@ -3349,7 +3346,7 @@ PropertyProvider::CalcTabWidths(Range aRange)
       // If we're not reflowing, we should have already computed the
       // tab widths; check that they're available as far as the last
       // tab character present (if any)
-      for (uint32_t i = aRange.end; i > aRange.start; --i) {
+      for (uint32_t i = aStart + aLength; i > aStart; --i) {
         if (mTextRun->CharIsTab(i - 1)) {
           uint32_t startOffset = mStart.GetSkippedOffset();
           NS_ASSERTION(mTabWidths && mTabWidths->mLimit + startOffset >= i,
@@ -3363,18 +3360,18 @@ PropertyProvider::CalcTabWidths(Range aRange)
   }
 
   uint32_t startOffset = mStart.GetSkippedOffset();
-  MOZ_ASSERT(aRange.start >= startOffset, "wrong start offset");
-  MOZ_ASSERT(aRange.end <= startOffset + mLength, "beyond the end");
+  MOZ_ASSERT(aStart >= startOffset, "wrong start offset");
+  MOZ_ASSERT(aStart + aLength <= startOffset + mLength, "beyond the end");
   uint32_t tabsEnd =
     (mTabWidths ? mTabWidths->mLimit : mTabWidthsAnalyzedLimit) + startOffset;
-  if (tabsEnd < aRange.end) {
+  if (tabsEnd < aStart + aLength) {
     NS_ASSERTION(mReflowing,
                  "We need precomputed tab widths, but don't have enough.");
 
     gfxFloat tabWidth = -1;
-    for (uint32_t i = tabsEnd; i < aRange.end; ++i) {
+    for (uint32_t i = tabsEnd; i < aStart + aLength; ++i) {
       Spacing spacing;
-      GetSpacingInternal(Range(i, i + 1), &spacing, true);
+      GetSpacingInternal(i, 1, &spacing, true);
       mOffsetFromBlockOriginForTabs += spacing.mBefore;
 
       if (!mTextRun->CharIsTab(i)) {
@@ -3385,7 +3382,7 @@ PropertyProvider::CalcTabWidths(Range aRange)
             ++clusterEnd;
           }
           mOffsetFromBlockOriginForTabs +=
-            mTextRun->GetAdvanceWidth(Range(i, clusterEnd), nullptr);
+            mTextRun->GetAdvanceWidth(i, clusterEnd - i, nullptr);
         }
       } else {
         if (!mTabWidths) {
@@ -3403,7 +3400,7 @@ PropertyProvider::CalcTabWidths(Range aRange)
     }
 
     if (mTabWidths) {
-      mTabWidths->mLimit = aRange.end - startOffset;
+      mTabWidths->mLimit = aStart + aLength - startOffset;
     }
   }
 
@@ -3411,7 +3408,7 @@ PropertyProvider::CalcTabWidths(Range aRange)
     // Delete any stale property that may be left on the frame
     mFrame->Properties().Delete(TabWidthProperty());
     mTabWidthsAnalyzedLimit = std::max(mTabWidthsAnalyzedLimit,
-                                       aRange.end - startOffset);
+                                       aStart + aLength - startOffset);
   }
 }
 
@@ -3425,22 +3422,23 @@ PropertyProvider::GetHyphenWidth()
 }
 
 void
-PropertyProvider::GetHyphenationBreaks(Range aRange, bool* aBreakBefore)
+PropertyProvider::GetHyphenationBreaks(uint32_t aStart, uint32_t aLength,
+                                       bool* aBreakBefore)
 {
-  NS_PRECONDITION(IsInBounds(mStart, mLength, aRange), "Range out of bounds");
+  NS_PRECONDITION(IsInBounds(mStart, mLength, aStart, aLength), "Range out of bounds");
   NS_PRECONDITION(mLength != INT32_MAX, "Can't call this with undefined length");
 
   if (!mTextStyle->WhiteSpaceCanWrap(mFrame) ||
       mTextStyle->mHyphens == NS_STYLE_HYPHENS_NONE)
   {
-    memset(aBreakBefore, false, aRange.Length() * sizeof(bool));
+    memset(aBreakBefore, false, aLength*sizeof(bool));
     return;
   }
 
   // Iterate through the original-string character runs
-  nsSkipCharsRunIterator run(
-      mStart, nsSkipCharsRunIterator::LENGTH_UNSKIPPED_ONLY, aRange.Length());
-  run.SetSkippedOffset(aRange.start);
+  nsSkipCharsRunIterator
+    run(mStart, nsSkipCharsRunIterator::LENGTH_UNSKIPPED_ONLY, aLength);
+  run.SetSkippedOffset(aStart);
   // We need to visit skipped characters so that we can detect SHY
   run.SetVisitSkipped();
 
@@ -3459,7 +3457,7 @@ PropertyProvider::GetHyphenationBreaks(Range aRange, bool* aBreakBefore)
       allowHyphenBreakBeforeNextChar =
         mFrag->CharAt(run.GetOriginalOffset() + run.GetRunLength() - 1) == CH_SHY;
     } else {
-      int32_t runOffsetInSubstring = run.GetSkippedOffset() - aRange.start;
+      int32_t runOffsetInSubstring = run.GetSkippedOffset() - aStart;
       memset(aBreakBefore + runOffsetInSubstring, false, run.GetRunLength()*sizeof(bool));
       // Don't allow hyphen breaks at the start of the line
       aBreakBefore[runOffsetInSubstring] = allowHyphenBreakBeforeNextChar &&
@@ -3470,8 +3468,8 @@ PropertyProvider::GetHyphenationBreaks(Range aRange, bool* aBreakBefore)
   }
 
   if (mTextStyle->mHyphens == NS_STYLE_HYPHENS_AUTO) {
-    for (uint32_t i = 0; i < aRange.Length(); ++i) {
-      if (mTextRun->CanHyphenateBefore(aRange.start + i)) {
+    for (uint32_t i = 0; i < aLength; ++i) {
+      if (mTextRun->CanHyphenateBefore(aStart + i)) {
         aBreakBefore[i] = true;
       }
     }
@@ -3499,6 +3497,12 @@ PropertyProvider::InitializeForMeasure()
 }
 
 
+static uint32_t GetSkippedDistance(const gfxSkipCharsIterator& aStart,
+                                   const gfxSkipCharsIterator& aEnd)
+{
+  return aEnd.GetSkippedOffset() - aStart.GetSkippedOffset();
+}
+
 void
 PropertyProvider::SetupJustificationSpacing(bool aPostReflow)
 {
@@ -3515,8 +3519,8 @@ PropertyProvider::SetupJustificationSpacing(bool aPostReflow)
     mFrame->GetTrimmedOffsets(mFrag, true, aPostReflow);
   end.AdvanceOriginal(trimmed.mLength);
   gfxSkipCharsIterator realEnd(end);
-  ComputeJustification(Range(uint32_t(start.GetOriginalOffset()),
-                             uint32_t(end.GetOriginalOffset())));
+  ComputeJustification(start.GetOriginalOffset(),
+                       end.GetOriginalOffset() - start.GetOriginalOffset());
 
   auto assign = mFrame->GetJustificationAssignment();
   mTotalJustificationGaps =
@@ -3531,8 +3535,8 @@ PropertyProvider::SetupJustificationSpacing(bool aPostReflow)
   // so its advance "width" is actually a height in vertical writing modes,
   // corresponding to the inline-direction of the frame.
   gfxFloat naturalWidth =
-    mTextRun->GetAdvanceWidth(Range(mStart.GetSkippedOffset(),
-                                    realEnd.GetSkippedOffset()), this);
+    mTextRun->GetAdvanceWidth(mStart.GetSkippedOffset(),
+                              GetSkippedDistance(mStart, realEnd), this);
   if (mFrame->GetStateBits() & TEXT_HYPHEN_BREAK) {
     naturalWidth += GetHyphenWidth();
   }
@@ -5736,24 +5740,26 @@ public:
    * for RTL)
    */
   SelectionIterator(SelectionDetails** aSelectionDetails,
-                    gfxTextRun::Range aRange, PropertyProvider& aProvider,
-                    gfxTextRun* aTextRun, gfxFloat aXOffset);
+                    int32_t aStart, int32_t aLength,
+                    PropertyProvider& aProvider, gfxTextRun* aTextRun,
+                    gfxFloat aXOffset);
 
   /**
    * Returns the next segment of uniformly selected (or not) text.
    * @param aXOffset the offset from the origin of the frame to the start
    * of the text (the left baseline origin for LTR, the right baseline origin
    * for RTL)
-   * @param aRange the transformed string range of the text for this segment
+   * @param aOffset the transformed string offset of the text for this segment
+   * @param aLength the transformed string length of the text for this segment
    * @param aHyphenWidth if a hyphen is to be rendered after the text, the
    * width of the hyphen, otherwise zero
    * @param aType the selection type for this segment
    * @param aStyle the selection style for this segment
    * @return false if there are no more segments
    */
-  bool GetNextSegment(gfxFloat* aXOffset, gfxTextRun::Range* aRange,
-                      gfxFloat* aHyphenWidth, SelectionType* aType,
-                      TextRangeStyle* aStyle);
+  bool GetNextSegment(gfxFloat* aXOffset, uint32_t* aOffset, uint32_t* aLength,
+                        gfxFloat* aHyphenWidth, SelectionType* aType,
+                        TextRangeStyle* aStyle);
   void UpdateWithAdvance(gfxFloat aAdvance) {
     mXOffset += aAdvance*mTextRun->GetDirection();
   }
@@ -5763,34 +5769,33 @@ private:
   PropertyProvider&       mProvider;
   gfxTextRun*             mTextRun;
   gfxSkipCharsIterator    mIterator;
-  gfxTextRun::Range       mOriginalRange;
+  int32_t                 mOriginalStart;
+  int32_t                 mOriginalEnd;
   gfxFloat                mXOffset;
 };
 
 SelectionIterator::SelectionIterator(SelectionDetails** aSelectionDetails,
-                                     gfxTextRun::Range aRange,
-                                     PropertyProvider& aProvider,
-                                     gfxTextRun* aTextRun, gfxFloat aXOffset)
+    int32_t aStart, int32_t aLength, PropertyProvider& aProvider,
+    gfxTextRun* aTextRun, gfxFloat aXOffset)
   : mSelectionDetails(aSelectionDetails), mProvider(aProvider),
     mTextRun(aTextRun), mIterator(aProvider.GetStart()),
-    mOriginalRange(aRange), mXOffset(aXOffset)
+    mOriginalStart(aStart), mOriginalEnd(aStart + aLength),
+    mXOffset(aXOffset)
 {
-  mIterator.SetOriginalOffset(aRange.start);
+  mIterator.SetOriginalOffset(aStart);
 }
 
 bool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
-                                       gfxTextRun::Range* aRange,
-                                       gfxFloat* aHyphenWidth,
-                                       SelectionType* aType,
-                                       TextRangeStyle* aStyle)
+    uint32_t* aOffset, uint32_t* aLength, gfxFloat* aHyphenWidth,
+    SelectionType* aType, TextRangeStyle* aStyle)
 {
-  if (mIterator.GetOriginalOffset() >= int32_t(mOriginalRange.end))
+  if (mIterator.GetOriginalOffset() >= mOriginalEnd)
     return false;
   
   // save offset into transformed string now
   uint32_t runOffset = mIterator.GetSkippedOffset();
   
-  uint32_t index = mIterator.GetOriginalOffset() - mOriginalRange.start;
+  int32_t index = mIterator.GetOriginalOffset() - mOriginalStart;
   SelectionDetails* sdptr = mSelectionDetails[index];
   SelectionType type =
     sdptr ? sdptr->mType : nsISelectionController::SELECTION_NONE;
@@ -5798,14 +5803,14 @@ bool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
   if (sdptr) {
     style = sdptr->mTextRangeStyle;
   }
-  for (++index; index < mOriginalRange.Length(); ++index) {
+  for (++index; mOriginalStart + index < mOriginalEnd; ++index) {
     if (sdptr != mSelectionDetails[index])
       break;
   }
-  mIterator.SetOriginalOffset(index + mOriginalRange.start);
+  mIterator.SetOriginalOffset(index + mOriginalStart);
 
   // Advance to the next cluster boundary
-  while (mIterator.GetOriginalOffset() < int32_t(mOriginalRange.end) &&
+  while (mIterator.GetOriginalOffset() < mOriginalEnd &&
          !mIterator.IsOriginalCharSkipped() &&
          !mTextRun->IsClusterStart(mIterator.GetSkippedOffset())) {
     mIterator.AdvanceOriginal(1);
@@ -5813,12 +5818,11 @@ bool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
 
   bool haveHyphenBreak =
     (mProvider.GetFrame()->GetStateBits() & TEXT_HYPHEN_BREAK) != 0;
-  aRange->start = runOffset;
-  aRange->end = mIterator.GetSkippedOffset();
+  *aOffset = runOffset;
+  *aLength = mIterator.GetSkippedOffset() - runOffset;
   *aXOffset = mXOffset;
   *aHyphenWidth = 0;
-  if (mIterator.GetOriginalOffset() == int32_t(mOriginalRange.end) &&
-      haveHyphenBreak) {
+  if (mIterator.GetOriginalOffset() == mOriginalEnd && haveHyphenBreak) {
     *aHyphenWidth = mProvider.GetHyphenWidth();
   }
   *aType = type;
@@ -5847,7 +5851,7 @@ AddHyphenToMetrics(nsTextFrame* aTextFrame, gfxTextRun* aBaseTextRun,
 }
 
 void
-nsTextFrame::PaintOneShadow(Range aRange,
+nsTextFrame::PaintOneShadow(uint32_t aOffset, uint32_t aLength,
                             nsCSSShadowItem* aShadowDetails,
                             PropertyProvider* aProvider, const nsRect& aDirtyRect,
                             const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
@@ -5918,7 +5922,7 @@ nsTextFrame::PaintOneShadow(Range aRange,
   gfxRect dirtyRect(aDirtyRect.x, aDirtyRect.y,
                     aDirtyRect.width, aDirtyRect.height);
   DrawText(shadowContext, dirtyRect, aFramePt + shadowOffset,
-           aTextBaselinePt + shadowOffset, aRange, *aProvider,
+           aTextBaselinePt + shadowOffset, aOffset, aLength, *aProvider,
            nsTextPaintStyle(this),
            aCtx == shadowContext ? shadowColor : NS_RGB(0, 0, 0), aClipEdges,
            advanceWidth, (GetStateBits() & TEXT_HYPHEN_BREAK) != 0,
@@ -5935,7 +5939,7 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
     const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
     const gfxRect& aDirtyRect,
     PropertyProvider& aProvider,
-    Range aContentRange,
+    uint32_t aContentOffset, uint32_t aContentLength,
     nsTextPaintStyle& aTextPaintStyle, SelectionDetails* aDetails,
     SelectionType* aAllTypes,
     const nsCharClipDisplayItem::ClipEdges& aClipEdges,
@@ -5944,22 +5948,22 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
   // Figure out which selections control the colors to use for each character.
   AutoTArray<SelectionDetails*,BIG_TEXT_NODE_SIZE> prevailingSelectionsBuffer;
   SelectionDetails** prevailingSelections =
-    prevailingSelectionsBuffer.AppendElements(aContentRange.Length(), fallible);
+    prevailingSelectionsBuffer.AppendElements(aContentLength, fallible);
   if (!prevailingSelections) {
     return false;
   }
 
   SelectionType allTypes = 0;
-  for (uint32_t i = 0; i < aContentRange.Length(); ++i) {
+  for (uint32_t i = 0; i < aContentLength; ++i) {
     prevailingSelections[i] = nullptr;
   }
 
   SelectionDetails *sdptr = aDetails;
   bool anyBackgrounds = false;
   while (sdptr) {
-    int32_t start = std::max(0, sdptr->mStart - int32_t(aContentRange.start));
-    int32_t end = std::min(int32_t(aContentRange.Length()),
-                           sdptr->mEnd - int32_t(aContentRange.start));
+    int32_t start = std::max(0, sdptr->mStart - int32_t(aContentOffset));
+    int32_t end = std::min(int32_t(aContentLength),
+                         sdptr->mEnd - int32_t(aContentOffset));
     SelectionType type = sdptr->mType;
     if (start < end) {
       allTypes |= type;
@@ -5992,23 +5996,23 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
   const gfxFloat startIOffset = vertical ?
     aTextBaselinePt.y - aFramePt.y : aTextBaselinePt.x - aFramePt.x;
   gfxFloat iOffset, hyphenWidth;
-  Range range; // in transformed string
+  uint32_t offset, length; // in transformed string
   SelectionType type;
   TextRangeStyle rangeStyle;
   // Draw background colors
   if (anyBackgrounds) {
     int32_t appUnitsPerDevPixel = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
     LayoutDeviceRect dirtyRect = AppUnitGfxRectToDevRect(aDirtyRect, appUnitsPerDevPixel);
-    SelectionIterator iterator(prevailingSelections, aContentRange,
+    SelectionIterator iterator(prevailingSelections, aContentOffset, aContentLength,
                                aProvider, mTextRun, startIOffset);
-    while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
+    while (iterator.GetNextSegment(&iOffset, &offset, &length, &hyphenWidth,
                                    &type, &rangeStyle)) {
       nscolor foreground, background;
       GetSelectionTextColors(type, aTextPaintStyle, rangeStyle,
                              &foreground, &background);
       // Draw background color
       gfxFloat advance = hyphenWidth +
-        mTextRun->GetAdvanceWidth(range, &aProvider);
+        mTextRun->GetAdvanceWidth(offset, length, &aProvider);
       if (NS_GET_A(background) > 0) {
         gfxRect bgRect;
         gfxFloat offs = iOffset - (mTextRun->IsInlineReversed() ? advance : 0);
@@ -6031,9 +6035,9 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
   const nsStyleText* textStyle = StyleText();
   nsRect dirtyRect(aDirtyRect.x, aDirtyRect.y,
                    aDirtyRect.width, aDirtyRect.height);
-  SelectionIterator iterator(prevailingSelections, aContentRange,
+  SelectionIterator iterator(prevailingSelections, aContentOffset, aContentLength,
                              aProvider, mTextRun, startIOffset);
-  while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
+  while (iterator.GetNextSegment(&iOffset, &offset, &length, &hyphenWidth,
                                  &type, &rangeStyle)) {
     nscolor foreground, background;
     GetSelectionTextColors(type, aTextPaintStyle, rangeStyle,
@@ -6049,17 +6053,17 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
     if (shadow) {
       nscoord startEdge = iOffset;
       if (mTextRun->IsInlineReversed()) {
-        startEdge -= hyphenWidth +
-          mTextRun->GetAdvanceWidth(range, &aProvider);
+        startEdge -= mTextRun->GetAdvanceWidth(offset, length, &aProvider) +
+            hyphenWidth;
       }
-      PaintShadows(shadow, range, dirtyRect, aFramePt, textBaselinePt,
+      PaintShadows(shadow, offset, length, dirtyRect, aFramePt, textBaselinePt,
           startEdge, aProvider, foreground, aClipEdges, aCtx);
     }
 
     // Draw text segment
     gfxFloat advance;
     DrawText(aCtx, aDirtyRect, aFramePt, textBaselinePt,
-             range, aProvider, aTextPaintStyle, foreground, aClipEdges,
+             offset, length, aProvider, aTextPaintStyle, foreground, aClipEdges,
              advance, hyphenWidth > 0, nullptr, nullptr, aCallbacks);
     advance += hyphenWidth;
     iterator.UpdateWithAdvance(advance);
@@ -6071,7 +6075,8 @@ void
 nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     const gfxPoint& aFramePt,
     const gfxPoint& aTextBaselinePt, const gfxRect& aDirtyRect,
-    PropertyProvider& aProvider, Range aContentRange,
+    PropertyProvider& aProvider,
+    uint32_t aContentOffset, uint32_t aContentLength,
     nsTextPaintStyle& aTextPaintStyle, SelectionDetails* aDetails,
     SelectionType aSelectionType,
     nsTextFrame::DrawPathCallbacks* aCallbacks)
@@ -6083,20 +6088,20 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
   // Figure out which characters will be decorated for this selection.
   AutoTArray<SelectionDetails*, BIG_TEXT_NODE_SIZE> selectedCharsBuffer;
   SelectionDetails** selectedChars =
-    selectedCharsBuffer.AppendElements(aContentRange.Length(), fallible);
+    selectedCharsBuffer.AppendElements(aContentLength, fallible);
   if (!selectedChars) {
     return;
   }
-  for (uint32_t i = 0; i < aContentRange.Length(); ++i) {
+  for (uint32_t i = 0; i < aContentLength; ++i) {
     selectedChars[i] = nullptr;
   }
 
   SelectionDetails *sdptr = aDetails;
   while (sdptr) {
     if (sdptr->mType == aSelectionType) {
-      int32_t start = std::max(0, sdptr->mStart - int32_t(aContentRange.start));
-      int32_t end = std::min(int32_t(aContentRange.Length()),
-                             sdptr->mEnd - int32_t(aContentRange.start));
+      int32_t start = std::max(0, sdptr->mStart - int32_t(aContentOffset));
+      int32_t end = std::min(int32_t(aContentLength),
+                           sdptr->mEnd - int32_t(aContentOffset));
       for (int32_t i = start; i < end; ++i) {
         selectedChars[i] = sdptr;
       }
@@ -6123,10 +6128,10 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
 
   gfxFloat startIOffset =
     verticalRun ? aTextBaselinePt.y - aFramePt.y : aTextBaselinePt.x - aFramePt.x;
-  SelectionIterator iterator(selectedChars, aContentRange,
+  SelectionIterator iterator(selectedChars, aContentOffset, aContentLength,
                              aProvider, mTextRun, startIOffset);
   gfxFloat iOffset, hyphenWidth;
-  Range range;
+  uint32_t offset, length;
   int32_t app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
   // XXX aTextBaselinePt is in AppUnits, shouldn't it be nsFloatPoint?
   Point pt;
@@ -6140,10 +6145,10 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
   gfxFloat decorationOffsetDir = mTextRun->IsSidewaysLeft() ? -1.0 : 1.0;
   SelectionType type;
   TextRangeStyle selectedStyle;
-  while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
+  while (iterator.GetNextSegment(&iOffset, &offset, &length, &hyphenWidth,
                                  &type, &selectedStyle)) {
     gfxFloat advance = hyphenWidth +
-      mTextRun->GetAdvanceWidth(range, &aProvider);
+      mTextRun->GetAdvanceWidth(offset, length, &aProvider);
     if (type == aSelectionType) {
       if (verticalRun) {
         pt.y = (aFramePt.y + iOffset -
@@ -6169,7 +6174,7 @@ nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
     const gfxPoint& aFramePt,
     const gfxPoint& aTextBaselinePt, const gfxRect& aDirtyRect,
     PropertyProvider& aProvider,
-    Range aContentRange,
+    uint32_t aContentOffset, uint32_t aContentLength,
     nsTextPaintStyle& aTextPaintStyle,
     const nsCharClipDisplayItem::ClipEdges& aClipEdges,
     gfxTextContextPaint* aContextPaint,
@@ -6184,7 +6189,7 @@ nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
 
   SelectionType allTypes;
   if (!PaintTextWithSelectionColors(aCtx, aFramePt, aTextBaselinePt, aDirtyRect,
-                                    aProvider, aContentRange,
+                                    aProvider, aContentOffset, aContentLength,
                                     aTextPaintStyle, details, &allTypes,
                                     aClipEdges, aCallbacks)) {
     DestroySelectionDetails(details);
@@ -6203,8 +6208,9 @@ nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
       // (there might not be any for this type but that's OK,
       // PaintTextSelectionDecorations will exit early).
       PaintTextSelectionDecorations(aCtx, aFramePt, aTextBaselinePt, aDirtyRect,
-                                    aProvider, aContentRange, aTextPaintStyle,
-                                    details, type, aCallbacks);
+                                    aProvider, aContentOffset, aContentLength,
+                                    aTextPaintStyle, details, type,
+                                    aCallbacks);
     }
   }
 
@@ -6215,7 +6221,7 @@ nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
 void
 nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
                                const gfxPoint& aTextBaselinePt,
-                               Range aRange,
+                               uint32_t aOffset, uint32_t aLength,
                                const nscolor* aDecorationOverrideColor,
                                PropertyProvider& aProvider)
 {
@@ -6238,7 +6244,7 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
     }
   }
   mTextRun->DrawEmphasisMarks(aContext, info->textRun, info->advance,
-                              pt, aRange, &aProvider);
+                              pt, aOffset, aLength, &aProvider);
 }
 
 nscolor
@@ -6298,13 +6304,13 @@ nsTextFrame::GetCaretColorAt(int32_t aOffset)
   return result;
 }
 
-static gfxTextRun::Range
-ComputeTransformedRange(PropertyProvider& aProvider)
+static uint32_t
+ComputeTransformedLength(PropertyProvider& aProvider)
 {
   gfxSkipCharsIterator iter(aProvider.GetStart());
   uint32_t start = iter.GetSkippedOffset();
   iter.AdvanceOriginal(aProvider.GetOriginalLength());
-  return gfxTextRun::Range(start, iter.GetSkippedOffset());
+  return iter.GetSkippedOffset() - start;
 }
 
 bool
@@ -6324,9 +6330,8 @@ nsTextFrame::MeasureCharClippedText(nscoord aVisIStartEdge,
   // Trim trailing whitespace
   provider.InitializeForDisplay(true);
 
-  Range range = ComputeTransformedRange(provider);
-  uint32_t startOffset = range.start;
-  uint32_t maxLength = range.Length();
+  uint32_t startOffset = provider.GetStart().GetSkippedOffset();
+  uint32_t maxLength = ComputeTransformedLength(provider);
   return MeasureCharClippedText(provider, aVisIStartEdge, aVisIEndEdge,
                                 &startOffset, &maxLength,
                                 aSnappedStartEdge, aSnappedEndEdge);
@@ -6376,8 +6381,8 @@ nsTextFrame::MeasureCharClippedText(PropertyProvider& aProvider,
     while (maxLength > 0) {
       uint32_t clusterLength =
         GetClusterLength(mTextRun, offset, maxLength, rtl);
-      advanceWidth += mTextRun->
-        GetAdvanceWidth(Range(offset, offset + clusterLength), &aProvider);
+      advanceWidth +=
+        mTextRun->GetAdvanceWidth(offset, clusterLength, &aProvider);
       maxLength -= clusterLength;
       offset += clusterLength;
       if (advanceWidth >= maxAdvance) {
@@ -6395,8 +6400,8 @@ nsTextFrame::MeasureCharClippedText(PropertyProvider& aProvider,
     while (maxLength > 0) {
       uint32_t clusterLength =
         GetClusterLength(mTextRun, offset, maxLength, rtl);
-      gfxFloat nextAdvance = advanceWidth + mTextRun->GetAdvanceWidth(
-          Range(offset, offset + clusterLength), &aProvider);
+      gfxFloat nextAdvance = advanceWidth +
+        mTextRun->GetAdvanceWidth(offset, clusterLength, &aProvider);
       if (nextAdvance > maxAdvance) {
         break;
       }
@@ -6415,7 +6420,7 @@ nsTextFrame::MeasureCharClippedText(PropertyProvider& aProvider,
 
 void
 nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
-                          Range aRange,
+                          uint32_t aOffset, uint32_t aLength,
                           const nsRect& aDirtyRect,
                           const gfxPoint& aFramePt,
                           const gfxPoint& aTextBaselinePt,
@@ -6430,7 +6435,7 @@ nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
   }
 
   gfxTextRun::Metrics shadowMetrics =
-    mTextRun->MeasureText(aRange, gfxFont::LOOSE_INK_EXTENTS,
+    mTextRun->MeasureText(aOffset, aLength, gfxFont::LOOSE_INK_EXTENTS,
                           nullptr, &aProvider);
   if (GetWritingMode().IsLineInverted()) {
     Swap(shadowMetrics.mAscent, shadowMetrics.mDescent);
@@ -6465,7 +6470,8 @@ nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
   }
 
   for (uint32_t i = aShadow->Length(); i > 0; --i) {
-    PaintOneShadow(aRange, aShadow->ShadowAt(i - 1), &aProvider,
+    PaintOneShadow(aOffset, aLength,
+                   aShadow->ShadowAt(i - 1), &aProvider,
                    aDirtyRect, aFramePt, aTextBaselinePt, aCtx,
                    aForegroundColor, aClipEdges,
                    aLeftEdgeOffset,
@@ -6519,9 +6525,8 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
       gfxPoint(reversed ? gfxFloat(aPt.x + frameWidth) : framePt.x,
                nsLayoutUtils::GetSnappedBaselineY(this, ctx, aPt.y, mAscent));
   }
-  Range range = ComputeTransformedRange(provider);
-  uint32_t startOffset = range.start;
-  uint32_t maxLength = range.Length();
+  uint32_t startOffset = provider.GetStart().GetSkippedOffset();
+  uint32_t maxLength = ComputeTransformedLength(provider);
   nscoord snappedStartEdge, snappedEndEdge;
   if (!MeasureCharClippedText(provider, aItem.mVisIStartEdge, aItem.mVisIEndEdge,
          &startOffset, &maxLength, &snappedStartEdge, &snappedEndEdge)) {
@@ -6543,12 +6548,13 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   if (aItem.mIsFrameSelected.value()) {
     MOZ_ASSERT(aOpacity == 1.0f, "We don't support opacity with selections!");
     gfxSkipCharsIterator tmp(provider.GetStart());
-    Range contentRange(
-      uint32_t(tmp.ConvertSkippedToOriginal(startOffset)),
-      uint32_t(tmp.ConvertSkippedToOriginal(startOffset + maxLength)));
+    int32_t contentOffset = tmp.ConvertSkippedToOriginal(startOffset);
+    int32_t contentLength =
+      tmp.ConvertSkippedToOriginal(startOffset + maxLength) - contentOffset;
     if (PaintTextWithSelection(ctx, framePt, textBaselinePt, dirtyRect,
-                               provider, contentRange, textPaintStyle,
-                               clipEdges, aContextPaint, aCallbacks)) {
+                               provider, contentOffset, contentLength,
+                               textPaintStyle, clipEdges, aContextPaint,
+                               aCallbacks)) {
       return;
     }
   }
@@ -6560,16 +6566,15 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
     foregroundColor = gfxColor.ToABGR();
   }
 
-  range = Range(startOffset, startOffset + maxLength);
   if (!aCallbacks) {
     const nsStyleText* textStyle = StyleText();
-    PaintShadows(
-        textStyle->mTextShadow, range, aDirtyRect, framePt, textBaselinePt,
-        snappedStartEdge, provider, foregroundColor, clipEdges, ctx);
+    PaintShadows(textStyle->mTextShadow, startOffset, maxLength,
+        aDirtyRect, framePt, textBaselinePt, snappedStartEdge, provider,
+        foregroundColor, clipEdges, ctx);
   }
 
   gfxFloat advanceWidth;
-  DrawText(ctx, dirtyRect, framePt, textBaselinePt, range, provider,
+  DrawText(ctx, dirtyRect, framePt, textBaselinePt, startOffset, maxLength, provider,
            textPaintStyle, foregroundColor, clipEdges, advanceWidth,
            (GetStateBits() & TEXT_HYPHEN_BREAK) != 0,
            nullptr, aContextPaint, aCallbacks);
@@ -6579,7 +6584,7 @@ static void
 DrawTextRun(gfxTextRun* aTextRun,
             gfxContext* const aCtx,
             const gfxPoint& aTextBaselinePt,
-            gfxTextRun::Range aRange,
+            uint32_t aOffset, uint32_t aLength,
             PropertyProvider* aProvider,
             nscolor aTextColor,
             gfxFloat* aAdvanceWidth,
@@ -6590,12 +6595,12 @@ DrawTextRun(gfxTextRun* aTextRun,
                                    DrawMode::GLYPH_FILL;
   if (aCallbacks) {
     aCallbacks->NotifyBeforeText(aTextColor);
-    aTextRun->Draw(aCtx, aTextBaselinePt, drawMode, aRange,
+    aTextRun->Draw(aCtx, aTextBaselinePt, drawMode, aOffset, aLength,
                    aProvider, aAdvanceWidth, aContextPaint, aCallbacks);
     aCallbacks->NotifyAfterText();
   } else {
     aCtx->SetColor(Color::FromABGR(aTextColor));
-    aTextRun->Draw(aCtx, aTextBaselinePt, drawMode, aRange,
+    aTextRun->Draw(aCtx, aTextBaselinePt, drawMode, aOffset, aLength,
                    aProvider, aAdvanceWidth, aContextPaint);
   }
 }
@@ -6603,7 +6608,7 @@ DrawTextRun(gfxTextRun* aTextRun,
 void
 nsTextFrame::DrawTextRun(gfxContext* const aCtx,
                          const gfxPoint& aTextBaselinePt,
-                         Range aRange,
+                         uint32_t aOffset, uint32_t aLength,
                          PropertyProvider& aProvider,
                          nscolor aTextColor,
                          gfxFloat& aAdvanceWidth,
@@ -6611,7 +6616,7 @@ nsTextFrame::DrawTextRun(gfxContext* const aCtx,
                          gfxTextContextPaint* aContextPaint,
                          nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
-  ::DrawTextRun(mTextRun, aCtx, aTextBaselinePt, aRange, &aProvider,
+  ::DrawTextRun(mTextRun, aCtx, aTextBaselinePt, aOffset, aLength, &aProvider,
                 aTextColor, &aAdvanceWidth, aContextPaint, aCallbacks);
 
   if (aDrawSoftHyphen) {
@@ -6621,11 +6626,11 @@ nsTextFrame::DrawTextRun(gfxContext* const aCtx,
     if (hyphenTextRun.get()) {
       // For right-to-left text runs, the soft-hyphen is positioned at the left
       // of the text, minus its own width
-      gfxFloat hyphenBaselineX =
+      gfxFloat hyphenBaselineX = aTextBaselinePt.x + mTextRun->GetDirection() * aAdvanceWidth -
         (mTextRun->IsRightToLeft() ? hyphenTextRun->GetAdvanceWidth() : 0);
       ::DrawTextRun(hyphenTextRun.get(), aCtx,
                     gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
-                    Range(hyphenTextRun.get()),
+                    0, hyphenTextRun->GetLength(),
                     nullptr, aTextColor, nullptr, aContextPaint, aCallbacks);
     }
   }
@@ -6635,7 +6640,7 @@ void
 nsTextFrame::DrawTextRunAndDecorations(
     gfxContext* const aCtx, const gfxRect& aDirtyRect,
     const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
-    Range aRange,
+    uint32_t aOffset, uint32_t aLength,
     PropertyProvider& aProvider,
     const nsTextPaintStyle& aTextStyle,
     nscolor aTextColor,
@@ -6744,11 +6749,11 @@ nsTextFrame::DrawTextRunAndDecorations(
 
     // CSS 2.1 mandates that text be painted after over/underlines, and *then*
     // line-throughs
-    DrawTextRun(aCtx, aTextBaselinePt, aRange, aProvider, aTextColor,
+    DrawTextRun(aCtx, aTextBaselinePt, aOffset, aLength, aProvider, aTextColor,
                 aAdvanceWidth, aDrawSoftHyphen, aContextPaint, aCallbacks);
 
     // Emphasis marks
-    DrawEmphasisMarks(aCtx, wm, aTextBaselinePt, aRange,
+    DrawEmphasisMarks(aCtx, wm, aTextBaselinePt, aOffset, aLength,
                       aDecorationOverrideColor, aProvider);
 
     // Line-throughs
@@ -6779,7 +6784,7 @@ void
 nsTextFrame::DrawText(
     gfxContext* const aCtx, const gfxRect& aDirtyRect,
     const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
-    Range aRange,
+    uint32_t aOffset, uint32_t aLength,
     PropertyProvider& aProvider,
     const nsTextPaintStyle& aTextStyle,
     nscolor aTextColor,
@@ -6800,12 +6805,12 @@ nsTextFrame::DrawText(
                                (decorations.HasDecorationLines() ||
                                 StyleText()->HasTextEmphasis());
   if (drawDecorations) {
-    DrawTextRunAndDecorations(aCtx, aDirtyRect, aFramePt, aTextBaselinePt, aRange,
+    DrawTextRunAndDecorations(aCtx, aDirtyRect, aFramePt, aTextBaselinePt, aOffset, aLength,
                               aProvider, aTextStyle, aTextColor, aClipEdges, aAdvanceWidth,
                               aDrawSoftHyphen, decorations,
                               aDecorationOverrideColor, aContextPaint, aCallbacks);
   } else {
-    DrawTextRun(aCtx, aTextBaselinePt, aRange, aProvider,
+    DrawTextRun(aCtx, aTextBaselinePt, aOffset, aLength, aProvider,
                 aTextColor, aAdvanceWidth, aDrawSoftHyphen, aContextPaint, aCallbacks);
   }
 }
@@ -6859,16 +6864,16 @@ nsTextFrame::IsVisibleInSelection(nsISelection* aSelection)
  * the length of the prefix. Also returns the width of the prefix in aFitWidth.
  */
 static uint32_t
-CountCharsFit(gfxTextRun* aTextRun, gfxTextRun::Range aRange,
+CountCharsFit(gfxTextRun* aTextRun, uint32_t aStart, uint32_t aLength,
               gfxFloat aWidth, PropertyProvider* aProvider,
               gfxFloat* aFitWidth)
 {
   uint32_t last = 0;
   gfxFloat width = 0;
-  for (uint32_t i = 1; i <= aRange.Length(); ++i) {
-    if (i == aRange.Length() || aTextRun->IsClusterStart(aRange.start + i)) {
-      gfxTextRun::Range range(aRange.start + last, aRange.start + i);
-      gfxFloat nextWidth = width + aTextRun->GetAdvanceWidth(range, aProvider);
+  for (uint32_t i = 1; i <= aLength; ++i) {
+    if (i == aLength || aTextRun->IsClusterStart(aStart + i)) {
+      gfxFloat nextWidth = width +
+          aTextRun->GetAdvanceWidth(aStart + last, i - last, aProvider);
       if (nextWidth > aWidth)
         break;
       last = i;
@@ -6908,13 +6913,13 @@ nsTextFrame::GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
     ? (mTextRun->IsInlineReversed() ? mRect.height - aPoint.y : aPoint.y)
     : (mTextRun->IsInlineReversed() ? mRect.width - aPoint.x : aPoint.x);
   gfxFloat fitWidth;
-  Range skippedRange = ComputeTransformedRange(provider);
+  uint32_t skippedLength = ComputeTransformedLength(provider);
 
-  uint32_t charsFit = CountCharsFit(mTextRun, skippedRange,
-                                    width, &provider, &fitWidth);
+  uint32_t charsFit = CountCharsFit(mTextRun,
+      provider.GetStart().GetSkippedOffset(), skippedLength, width, &provider, &fitWidth);
 
   int32_t selectedOffset;
-  if (charsFit < skippedRange.Length()) {
+  if (charsFit < skippedLength) {
     // charsFit characters fitted, but no more could fit. See if we're
     // more than halfway through the cluster.. If we are, choose the next
     // cluster.
@@ -6938,9 +6943,8 @@ nsTextFrame::GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
         // CountCharsFit() left us in the middle of the flag; back up over the
         // first character of the ligature, and adjust fitWidth accordingly.
         extraCluster.AdvanceSkipped(-2); // it's a surrogate pair: 2 code units
-        fitWidth -= mTextRun->GetAdvanceWidth(
-          Range(extraCluster.GetSkippedOffset(),
-                extraCluster.GetSkippedOffset() + 2), &provider);
+        fitWidth -= mTextRun->GetAdvanceWidth(extraCluster.GetSkippedOffset(),
+                                              2, &provider);
       }
     }
 
@@ -6949,10 +6953,10 @@ nsTextFrame::GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
                    provider.GetStart().GetOriginalOffset() + provider.GetOriginalLength(),
                    &extraClusterLastChar, allowSplitLigature);
     PropertyProvider::Spacing spacing;
-    Range extraClusterRange(extraCluster.GetSkippedOffset(),
-                            extraClusterLastChar.GetSkippedOffset() + 1);
     gfxFloat charWidth =
-        mTextRun->GetAdvanceWidth(extraClusterRange, &provider, &spacing);
+        mTextRun->GetAdvanceWidth(extraCluster.GetSkippedOffset(),
+                                  GetSkippedDistance(extraCluster, extraClusterLastChar) + 1,
+                                  &provider, &spacing);
     charWidth -= spacing.mBefore + spacing.mAfter;
     selectedOffset = !aForInsertionPoint ||
       width <= fitWidth + spacing.mBefore + charWidth/2
@@ -7150,9 +7154,10 @@ nsTextFrame::GetPointFromOffset(int32_t inOffset,
     FindClusterStart(mTextRun, trimmedOffset, &iter);
   }
 
-  Range range(properties.GetStart().GetSkippedOffset(),
-              iter.GetSkippedOffset());
-  gfxFloat advance = mTextRun->GetAdvanceWidth(range, &properties);
+  gfxFloat advance =
+    mTextRun->GetAdvanceWidth(properties.GetStart().GetSkippedOffset(),
+                              GetSkippedDistance(properties.GetStart(), iter),
+                              &properties);
   nscoord iSize = NSToCoordCeilClamped(advance);
 
   if (mTextRun->IsVertical()) {
@@ -7854,7 +7859,7 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
     hyphBreakBefore = hyphBuffer.AppendElements(flowEndInTextRun - start,
                                                 fallible);
     if (hyphBreakBefore) {
-      provider.GetHyphenationBreaks(Range(start, flowEndInTextRun),
+      provider.GetHyphenationBreaks(start, flowEndInTextRun - start,
                                     hyphBreakBefore);
     }
   }
@@ -7879,8 +7884,9 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
     }
 
     if (i > wordStart) {
-      nscoord width = NSToCoordCeilClamped(
-        textRun->GetAdvanceWidth(Range(wordStart, i), &provider));
+      nscoord width =
+        NSToCoordCeilClamped(textRun->GetAdvanceWidth(wordStart, i - wordStart,
+                                                      &provider));
       width = std::max(0, width);
       aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, width);
       aData->atStartOfLine = false;
@@ -7893,8 +7899,10 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
           aData->trailingWhitespace += width;
         } else {
           // Some non-whitespace so the old trailingWhitespace is no longer trailing
-          nscoord wsWidth = NSToCoordCeilClamped(
-            textRun->GetAdvanceWidth(Range(trimStart, i), &provider));
+          nscoord wsWidth =
+            NSToCoordCeilClamped(textRun->GetAdvanceWidth(trimStart,
+                                                          i - trimStart,
+                                                          &provider));
           aData->trailingWhitespace = std::max(0, wsWidth);
         }
       } else {
@@ -7904,7 +7912,7 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
 
     if (preformattedTab) {
       PropertyProvider::Spacing spacing;
-      provider.GetSpacing(Range(i, i + 1), &spacing);
+      provider.GetSpacing(i, 1, &spacing);
       aData->currentLine += nscoord(spacing.mBefore);
       gfxFloat afterTab =
         AdvanceToNextTab(aData->currentLine, this,
@@ -8032,8 +8040,9 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
     }
 
     if (i > lineStart) {
-      nscoord width = NSToCoordCeilClamped(
-        textRun->GetAdvanceWidth(Range(lineStart, i), &provider));
+      nscoord width =
+        NSToCoordCeilClamped(textRun->GetAdvanceWidth(lineStart, i - lineStart,
+                                                      &provider));
       width = std::max(0, width);
       aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, width);
 
@@ -8045,8 +8054,10 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
           aData->trailingWhitespace += width;
         } else {
           // Some non-whitespace so the old trailingWhitespace is no longer trailing
-          nscoord wsWidth = NSToCoordCeilClamped(
-            textRun->GetAdvanceWidth(Range(trimStart, i), &provider));
+          nscoord wsWidth =
+            NSToCoordCeilClamped(textRun->GetAdvanceWidth(trimStart,
+                                                          i - trimStart,
+                                                          &provider));
           aData->trailingWhitespace = std::max(0, wsWidth);
         }
       } else {
@@ -8056,7 +8067,7 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
 
     if (preformattedTab) {
       PropertyProvider::Spacing spacing;
-      provider.GetSpacing(Range(i, i + 1), &spacing);
+      provider.GetSpacing(i, 1, &spacing);
       aData->currentLine += nscoord(spacing.mBefore);
       gfxFloat afterTab =
         AdvanceToNextTab(aData->currentLine, this,
@@ -8164,7 +8175,8 @@ nsTextFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const
   provider.InitializeForDisplay(true);
 
   gfxTextRun::Metrics metrics =
-        mTextRun->MeasureText(ComputeTransformedRange(provider),
+        mTextRun->MeasureText(provider.GetStart().GetSkippedOffset(),
+                              ComputeTransformedLength(provider),
                               gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS,
                               aDrawTarget, &provider);
   if (GetWritingMode().IsLineInverted()) {
@@ -8197,7 +8209,8 @@ nsTextFrame::GetPrefWidthTightBounds(nsRenderingContext* aContext,
   provider.InitializeForMeasure();
 
   gfxTextRun::Metrics metrics =
-        mTextRun->MeasureText(ComputeTransformedRange(provider),
+        mTextRun->MeasureText(provider.GetStart().GetSkippedOffset(),
+                              ComputeTransformedLength(provider),
                               gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS,
                               aContext->GetDrawTarget(), &provider);
   // Round it like nsTextFrame::ComputeTightBounds() to ensure consistency.
@@ -9018,8 +9031,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
        shouldSuppressLineBreak) &&
       !lineContainer->IsSVGText()) {
     AddStateBits(TEXT_JUSTIFICATION_ENABLED);
-    provider.ComputeJustification(Range(uint32_t(offset),
-                                        uint32_t(offset + charsFit)));
+    provider.ComputeJustification(offset, charsFit);
     aLineLayout.SetJustificationInfo(provider.GetJustificationInfo());
   }
 
@@ -9077,14 +9089,13 @@ nsTextFrame::TrimTrailingWhiteSpace(DrawTarget* aDrawTarget)
       // OK to pass null for the line container.
       PropertyProvider provider(mTextRun, textStyle, frag, this, start, contentLength,
                                 nullptr, 0, nsTextFrame::eInflated);
-      delta = mTextRun->
-        GetAdvanceWidth(Range(trimmedEnd, endOffset), &provider);
+      delta = mTextRun->GetAdvanceWidth(trimmedEnd, endOffset - trimmedEnd, &provider);
       result.mChanged = true;
     }
   }
 
   gfxFloat advanceDelta;
-  mTextRun->SetLineBreaks(Range(trimmedStart, trimmedEnd),
+  mTextRun->SetLineBreaks(trimmedStart, trimmedEnd - trimmedStart,
                           (GetStateBits() & TEXT_START_OF_LINE) != 0, true,
                           &advanceDelta);
   if (advanceDelta != 0) {
@@ -9134,7 +9145,8 @@ nsTextFrame::RecomputeOverflow(nsIFrame* aBlockFrame)
   provider.InitializeForDisplay(false);
 
   gfxTextRun::Metrics textMetrics =
-    mTextRun->MeasureText(ComputeTransformedRange(provider),
+    mTextRun->MeasureText(provider.GetStart().GetSkippedOffset(),
+                          ComputeTransformedLength(provider),
                           gfxFont::LOOSE_INK_EXTENTS, nullptr,
                           &provider);
   if (GetWritingMode().IsLineInverted()) {

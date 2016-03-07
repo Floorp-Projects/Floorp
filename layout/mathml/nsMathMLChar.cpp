@@ -2147,7 +2147,7 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
       // XXXfredw verify if mGlyphs[0] is non-null to workaround bug 973322.
       if (mGlyphs[0]) {
         mGlyphs[0]->Draw(thebesContext, gfxPoint(0.0, mUnscaledAscent),
-                         DrawMode::GLYPH_FILL, Range(mGlyphs[0]),
+                         DrawMode::GLYPH_FILL, 0, mGlyphs[0]->GetLength(),
                          nullptr, nullptr, nullptr);
       }
       break;
@@ -2304,7 +2304,7 @@ nsMathMLChar::PaintVertically(nsPresContext* aPresContext,
       if (!clipRect.IsEmpty()) {
         AutoPushClipRect clip(aThebesContext, oneDevPixel, clipRect);
         mGlyphs[i]->Draw(aThebesContext, gfxPoint(dx, dy),
-                         DrawMode::GLYPH_FILL, Range(mGlyphs[i]),
+                         DrawMode::GLYPH_FILL, 0, mGlyphs[i]->GetLength(),
                          nullptr, nullptr, nullptr);
       }
     }
@@ -2372,7 +2372,7 @@ nsMathMLChar::PaintVertically(nsPresContext* aPresContext,
         AutoPushClipRect clip(aThebesContext, oneDevPixel, clipRect);
         dy += bm.ascent;
         mGlyphs[3]->Draw(aThebesContext, gfxPoint(dx, dy),
-                            DrawMode::GLYPH_FILL, Range(mGlyphs[3]),
+                            DrawMode::GLYPH_FILL, 0, mGlyphs[3]->GetLength(),
                             nullptr, nullptr, nullptr);
         dy += bm.descent;
       }
@@ -2476,7 +2476,7 @@ nsMathMLChar::PaintHorizontally(nsPresContext* aPresContext,
       if (!clipRect.IsEmpty()) {
         AutoPushClipRect clip(aThebesContext, oneDevPixel, clipRect);
         mGlyphs[i]->Draw(aThebesContext, gfxPoint(dx, dy),
-                         DrawMode::GLYPH_FILL, Range(mGlyphs[i]),
+                         DrawMode::GLYPH_FILL, 0, mGlyphs[i]->GetLength(),
                          nullptr, nullptr, nullptr);
       }
     }
@@ -2542,7 +2542,7 @@ nsMathMLChar::PaintHorizontally(nsPresContext* aPresContext,
         AutoPushClipRect clip(aThebesContext, oneDevPixel, clipRect);
         dx -= bm.leftBearing;
         mGlyphs[3]->Draw(aThebesContext, gfxPoint(dx, dy),
-                            DrawMode::GLYPH_FILL, Range(mGlyphs[3]),
+                            DrawMode::GLYPH_FILL, 0, mGlyphs[3]->GetLength(),
                             nullptr, nullptr, nullptr);
         dx += bm.rightBearing;
       }

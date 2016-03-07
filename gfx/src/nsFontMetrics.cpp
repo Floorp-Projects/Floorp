@@ -81,7 +81,7 @@ private:
 
 class StubPropertyProvider : public gfxTextRun::PropertyProvider {
 public:
-    virtual void GetHyphenationBreaks(gfxTextRun::Range aRange,
+    virtual void GetHyphenationBreaks(uint32_t aStart, uint32_t aLength,
                                       bool* aBreakBefore) {
         NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
     }
@@ -101,7 +101,8 @@ public:
         NS_ERROR("This shouldn't be called because we never enable hyphens");
         return 60;
     }
-    virtual void GetSpacing(gfxTextRun::Range aRange, Spacing* aSpacing) {
+    virtual void GetSpacing(uint32_t aStart, uint32_t aLength,
+                            Spacing* aSpacing) {
         NS_ERROR("This shouldn't be called because we never enable spacing");
     }
 };
@@ -324,11 +325,8 @@ nsFontMetrics::GetWidth(const char* aString, uint32_t aLength,
 
     StubPropertyProvider provider;
     AutoTextRun textRun(this, aDrawTarget, aString, aLength);
-    if (textRun.get()) {
-      return NSToCoordRound(
-          textRun->GetAdvanceWidth(Range(0, aLength), &provider));
-    }
-    return 0;
+    return textRun.get() ?
+        NSToCoordRound(textRun->GetAdvanceWidth(0, aLength, &provider)) : 0;
 }
 
 nscoord
@@ -343,11 +341,8 @@ nsFontMetrics::GetWidth(const char16_t* aString, uint32_t aLength,
 
     StubPropertyProvider provider;
     AutoTextRun textRun(this, aDrawTarget, aString, aLength);
-    if (textRun.get()) {
-      return NSToCoordRound(
-          textRun->GetAdvanceWidth(Range(0, aLength), &provider));
-    }
-    return 0;
+    return textRun.get() ?
+        NSToCoordRound(textRun->GetAdvanceWidth(0, aLength, &provider)) : 0;
 }
 
 // Draw a string using this font handle on the surface passed in.
@@ -365,16 +360,15 @@ nsFontMetrics::DrawString(const char *aString, uint32_t aLength,
         return;
     }
     gfxPoint pt(aX, aY);
-    Range range(0, aLength);
     if (mTextRunRTL) {
         if (mVertical) {
-            pt.y += textRun->GetAdvanceWidth(range, &provider);
+            pt.y += textRun->GetAdvanceWidth(0, aLength, &provider);
         } else {
-            pt.x += textRun->GetAdvanceWidth(range, &provider);
+            pt.x += textRun->GetAdvanceWidth(0, aLength, &provider);
         }
     }
-    textRun->Draw(aContext->ThebesContext(), pt, DrawMode::GLYPH_FILL,
-                  range, &provider, nullptr, nullptr);
+    textRun->Draw(aContext->ThebesContext(), pt, DrawMode::GLYPH_FILL, 0, aLength,
+                  &provider, nullptr, nullptr);
 }
 
 void
@@ -392,16 +386,15 @@ nsFontMetrics::DrawString(const char16_t* aString, uint32_t aLength,
         return;
     }
     gfxPoint pt(aX, aY);
-    Range range(0, aLength);
     if (mTextRunRTL) {
         if (mVertical) {
-            pt.y += textRun->GetAdvanceWidth(range, &provider);
+            pt.y += textRun->GetAdvanceWidth(0, aLength, &provider);
         } else {
-            pt.x += textRun->GetAdvanceWidth(range, &provider);
+            pt.x += textRun->GetAdvanceWidth(0, aLength, &provider);
         }
     }
-    textRun->Draw(aContext->ThebesContext(), pt, DrawMode::GLYPH_FILL,
-                  range, &provider, nullptr, nullptr);
+    textRun->Draw(aContext->ThebesContext(), pt, DrawMode::GLYPH_FILL, 0, aLength,
+                  &provider, nullptr, nullptr);
 }
 
 static nsBoundingMetrics
@@ -416,8 +409,8 @@ GetTextBoundingMetrics(nsFontMetrics* aMetrics, const char16_t* aString,
     AutoTextRun textRun(aMetrics, aDrawTarget, aString, aLength);
     nsBoundingMetrics m;
     if (textRun.get()) {
-        gfxTextRun::Metrics theMetrics = textRun->MeasureText(
-            gfxTextRun::Range(0, aLength), aType, aDrawTarget, &provider);
+        gfxTextRun::Metrics theMetrics =
+            textRun->MeasureText(0, aLength, aType, aDrawTarget, &provider);
 
         m.leftBearing  = NSToCoordFloor( theMetrics.mBoundingBox.X());
         m.rightBearing = NSToCoordCeil(  theMetrics.mBoundingBox.XMost());
