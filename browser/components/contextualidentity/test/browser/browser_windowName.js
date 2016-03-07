@@ -46,7 +46,8 @@ add_task(function* test() {
   // Let's try to open a window from tab1 with a name 'tab-2'.
   info("Opening a window from the first tab...");
   yield ContentTask.spawn(browser1, { url: BASE_URI + '?new' }, function(opts) {
-    yield new content.window.wrappedJSObject.Promise(resolve => {
+    Cu.import("resource://gre/modules/PromiseUtils.jsm");
+    yield new Promise(resolve => {
       let w = content.window.wrappedJSObject.open(opts.url, 'tab-2');
       w.onload = function() { resolve(); }
     });
