@@ -270,13 +270,6 @@ public:
                         DrawTarget* aDrawTargetForTightBoundingBox,
                         PropertyProvider* aProvider);
 
-    Metrics MeasureText(gfxFont::BoundingBoxType aBoundingBoxType,
-                        DrawTarget* aDrawTargetForTightBoundingBox,
-                        PropertyProvider* aProvider = nullptr) {
-        return MeasureText(0, GetLength(), aBoundingBoxType,
-                           aDrawTargetForTightBoundingBox, aProvider);
-    }
-
     /**
      * Computes just the advance width for a substring.
      * Uses GetSpacing from aBreakProvider.
@@ -287,10 +280,6 @@ public:
     gfxFloat GetAdvanceWidth(uint32_t aStart, uint32_t aLength,
                              PropertyProvider *aProvider,
                              PropertyProvider::Spacing* aSpacing = nullptr);
-
-    gfxFloat GetAdvanceWidth() {
-        return GetAdvanceWidth(0, GetLength(), nullptr);
-    }
 
     /**
      * Clear all stored line breaks for the given range (both before and after),
