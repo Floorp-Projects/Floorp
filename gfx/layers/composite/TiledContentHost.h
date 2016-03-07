@@ -146,10 +146,6 @@ public:
 
   void SetCompositor(Compositor* aCompositor);
 
-  // Recycle callback for TextureHost.
-  // Used when TiledContentClient is present in client side.
-  static void RecycleCallback(TextureHost* textureHost, void* aClosure);
-
 protected:
 
   CSSToParentLayerScale2D mFrameResolution;

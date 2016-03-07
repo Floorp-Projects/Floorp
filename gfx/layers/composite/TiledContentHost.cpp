@@ -37,12 +37,6 @@ TiledLayerBufferComposite::~TiledLayerBufferComposite()
   Clear();
 }
 
-/* static */ void
-TiledLayerBufferComposite::RecycleCallback(TextureHost* textureHost, void* aClosure)
-{
-  textureHost->CompositorRecycle();
-}
-
 void
 TiledLayerBufferComposite::SetCompositor(Compositor* aCompositor)
 {
