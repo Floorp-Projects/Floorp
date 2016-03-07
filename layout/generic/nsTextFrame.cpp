@@ -5915,19 +5915,14 @@ nsTextFrame::PaintOneShadow(Range aRange,
   // Remember that the box blur context has a device offset on it, so we don't need to
   // translate any coordinates to fit on the surface.
   gfxFloat advanceWidth;
-  nsTextPaintStyle textPaintStyle(this);
-  DrawTextParams params(shadowContext);
-  params.advanceWidth = &advanceWidth;
-  params.dirtyRect = gfxRect(aDirtyRect.x, aDirtyRect.y,
-                             aDirtyRect.width, aDirtyRect.height);
-  params.framePt = aFramePt + shadowOffset;
-  params.provider = aProvider;
-  params.textStyle = &textPaintStyle;
-  params.textColor = aCtx == shadowContext ? shadowColor : NS_RGB(0, 0, 0);
-  params.clipEdges = &aClipEdges;
-  params.drawSoftHyphen = (GetStateBits() & TEXT_HYPHEN_BREAK) != 0;
-  params.decorationOverrideColor = decorationOverrideColor;
-  DrawText(aRange, aTextBaselinePt + shadowOffset, params);
+  gfxRect dirtyRect(aDirtyRect.x, aDirtyRect.y,
+                    aDirtyRect.width, aDirtyRect.height);
+  DrawText(shadowContext, dirtyRect, aFramePt + shadowOffset,
+           aTextBaselinePt + shadowOffset, aRange, *aProvider,
+           nsTextPaintStyle(this),
+           aCtx == shadowContext ? shadowColor : NS_RGB(0, 0, 0), aClipEdges,
+           advanceWidth, (GetStateBits() & TEXT_HYPHEN_BREAK) != 0,
+           decorationOverrideColor);
 
   contextBoxBlur.DoPaint();
   aCtx->Restore();
@@ -6031,16 +6026,6 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
       iterator.UpdateWithAdvance(advance);
     }
   }
-
-  gfxFloat advance;
-  DrawTextParams params(aCtx);
-  params.dirtyRect = aDirtyRect;
-  params.framePt = aFramePt;
-  params.provider = &aProvider;
-  params.textStyle = &aTextPaintStyle;
-  params.clipEdges = &aClipEdges;
-  params.advanceWidth = &advance;
-  params.callbacks = aCallbacks;
   
   // Draw text
   const nsStyleText* textStyle = StyleText();
@@ -6072,9 +6057,10 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
     }
 
     // Draw text segment
-    params.textColor = foreground;
-    params.drawSoftHyphen = hyphenWidth > 0;
-    DrawText(range, textBaselinePt, params);
+    gfxFloat advance;
+    DrawText(aCtx, aDirtyRect, aFramePt, textBaselinePt,
+             range, aProvider, aTextPaintStyle, foreground, aClipEdges,
+             advance, hyphenWidth > 0, nullptr, nullptr, aCallbacks);
     advance += hyphenWidth;
     iterator.UpdateWithAdvance(advance);
   }
@@ -6231,7 +6217,7 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
                                const gfxPoint& aTextBaselinePt,
                                Range aRange,
                                const nscolor* aDecorationOverrideColor,
-                               PropertyProvider* aProvider)
+                               PropertyProvider& aProvider)
 {
   const auto info = Properties().Get(EmphasisMarkProperty());
   if (!info) {
@@ -6252,7 +6238,7 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
     }
   }
   mTextRun->DrawEmphasisMarks(aContext, info->textRun, info->advance,
-                              pt, aRange, aProvider);
+                              pt, aRange, &aProvider);
 }
 
 nscolor
@@ -6583,51 +6569,55 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   }
 
   gfxFloat advanceWidth;
-  DrawTextParams params(ctx);
-  params.dirtyRect = dirtyRect;
-  params.framePt = framePt;
-  params.provider = &provider;
-  params.advanceWidth = &advanceWidth;
-  params.textStyle = &textPaintStyle;
-  params.textColor = foregroundColor;
-  params.clipEdges = &clipEdges;
-  params.drawSoftHyphen = (GetStateBits() & TEXT_HYPHEN_BREAK) != 0;
-  params.contextPaint = aContextPaint;
-  params.callbacks = aCallbacks;
-  DrawText(range, textBaselinePt, params);
+  DrawText(ctx, dirtyRect, framePt, textBaselinePt, range, provider,
+           textPaintStyle, foregroundColor, clipEdges, advanceWidth,
+           (GetStateBits() & TEXT_HYPHEN_BREAK) != 0,
+           nullptr, aContextPaint, aCallbacks);
 }
 
 static void
 DrawTextRun(gfxTextRun* aTextRun,
+            gfxContext* const aCtx,
             const gfxPoint& aTextBaselinePt,
             gfxTextRun::Range aRange,
-            const nsTextFrame::DrawTextRunParams& aParams)
+            PropertyProvider* aProvider,
+            nscolor aTextColor,
+            gfxFloat* aAdvanceWidth,
+            gfxTextContextPaint* aContextPaint,
+            nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
-  gfxTextRun::DrawParams params(aParams.context);
-  params.drawMode = aParams.callbacks ? DrawMode::GLYPH_PATH
-                                      : DrawMode::GLYPH_FILL;
-  params.provider = aParams.provider;
-  params.advanceWidth = aParams.advanceWidth;
-  params.contextPaint = aParams.contextPaint;
-  params.callbacks = aParams.callbacks;
-  if (aParams.callbacks) {
-    aParams.callbacks->NotifyBeforeText(aParams.textColor);
+  gfxTextRun::DrawParams params(aCtx);
+  params.drawMode = aCallbacks ? DrawMode::GLYPH_PATH
+                               : DrawMode::GLYPH_FILL;
+  params.provider = aProvider;
+  params.advanceWidth = aAdvanceWidth;
+  params.contextPaint = aContextPaint;
+  params.callbacks = aCallbacks;
+  if (aCallbacks) {
+    aCallbacks->NotifyBeforeText(aTextColor);
     aTextRun->Draw(aRange, aTextBaselinePt, params);
-    aParams.callbacks->NotifyAfterText();
+    aCallbacks->NotifyAfterText();
   } else {
-    aParams.context->SetColor(Color::FromABGR(aParams.textColor));
+    aCtx->SetColor(Color::FromABGR(aTextColor));
     aTextRun->Draw(aRange, aTextBaselinePt, params);
   }
 }
 
 void
-nsTextFrame::DrawTextRun(Range aRange, const gfxPoint& aTextBaselinePt,
-                         const DrawTextRunParams& aParams)
+nsTextFrame::DrawTextRun(gfxContext* const aCtx,
+                         const gfxPoint& aTextBaselinePt,
+                         Range aRange,
+                         PropertyProvider& aProvider,
+                         nscolor aTextColor,
+                         gfxFloat& aAdvanceWidth,
+                         bool aDrawSoftHyphen,
+                         gfxTextContextPaint* aContextPaint,
+                         nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
-  MOZ_ASSERT(aParams.advanceWidth, "Must provide advanceWidth");
-  ::DrawTextRun(mTextRun, aTextBaselinePt, aRange, aParams);
+  ::DrawTextRun(mTextRun, aCtx, aTextBaselinePt, aRange, &aProvider,
+                aTextColor, &aAdvanceWidth, aContextPaint, aCallbacks);
 
-  if (aParams.drawSoftHyphen) {
+  if (aDrawSoftHyphen) {
     // Don't use ctx as the context, because we need a reference context here,
     // ctx may be transformed.
     nsAutoPtr<gfxTextRun> hyphenTextRun(GetHyphenTextRun(mTextRun, nullptr, this));
@@ -6636,30 +6626,37 @@ nsTextFrame::DrawTextRun(Range aRange, const gfxPoint& aTextBaselinePt,
       // of the text, minus its own width
       gfxFloat hyphenBaselineX =
         (mTextRun->IsRightToLeft() ? hyphenTextRun->GetAdvanceWidth() : 0);
-      DrawTextRunParams params = aParams;
-      params.provider = nullptr;
-      params.advanceWidth = nullptr;
-      ::DrawTextRun(hyphenTextRun.get(),
+      ::DrawTextRun(hyphenTextRun.get(), aCtx,
                     gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
-                    Range(hyphenTextRun.get()), params);
+                    Range(hyphenTextRun.get()),
+                    nullptr, aTextColor, nullptr, aContextPaint, aCallbacks);
     }
   }
 }
 
 void
-nsTextFrame::DrawTextRunAndDecorations(Range aRange,
-                                       const gfxPoint& aTextBaselinePt,
-                                       const DrawTextParams& aParams,
-                                       const TextDecorations& aDecorations)
+nsTextFrame::DrawTextRunAndDecorations(
+    gfxContext* const aCtx, const gfxRect& aDirtyRect,
+    const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
+    Range aRange,
+    PropertyProvider& aProvider,
+    const nsTextPaintStyle& aTextStyle,
+    nscolor aTextColor,
+    const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+    gfxFloat& aAdvanceWidth,
+    bool aDrawSoftHyphen,
+    const TextDecorations& aDecorations,
+    const nscolor* const aDecorationOverrideColor,
+    gfxTextContextPaint* aContextPaint,
+    nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
-    const gfxFloat app =
-      aParams.textStyle->PresContext()->AppUnitsPerDevPixel();
+    const gfxFloat app = aTextStyle.PresContext()->AppUnitsPerDevPixel();
     bool verticalRun = mTextRun->IsVertical();
     bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
 
     // XXX aFramePt is in AppUnits, shouldn't it be nsFloatPoint?
-    nscoord x = NSToCoordRound(aParams.framePt.x);
-    nscoord y = NSToCoordRound(aParams.framePt.y);
+    nscoord x = NSToCoordRound(aFramePt.x);
+    nscoord y = NSToCoordRound(aFramePt.y);
 
     // 'measure' here is textrun-relative, so for a horizontal run it's the
     // width, while for a vertical run it's the height of the decoration
@@ -6667,9 +6664,9 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
     nscoord measure = verticalRun ? frameSize.height : frameSize.width;
 
     if (verticalRun) {
-      aParams.clipEdges->Intersect(&y, &measure);
+      aClipEdges.Intersect(&y, &measure);
     } else {
-      aParams.clipEdges->Intersect(&x, &measure);
+      aClipEdges.Intersect(&x, &measure);
     }
 
     // decPt is the physical point where the decoration is to be drawn,
@@ -6683,7 +6680,7 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
     gfxFloat ascent = gfxFloat(mAscent) / app;
 
     // The starting edge of the frame in block direction
-    gfxFloat frameBStart = verticalRun ? aParams.framePt.x : aParams.framePt.y;
+    gfxFloat frameBStart = verticalRun ? aFramePt.x : aFramePt.y;
 
     // In vertical-rl mode, block coordinates are measured from the right,
     // so we need to adjust here.
@@ -6693,10 +6690,8 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
       ascent = -ascent;
     }
 
-    gfxRect dirtyRect(aParams.dirtyRect.x / app,
-                      aParams.dirtyRect.y / app,
-                      aParams.dirtyRect.Width() / app,
-                      aParams.dirtyRect.Height() / app);
+    gfxRect dirtyRect(aDirtyRect.x / app, aDirtyRect.y / app,
+                      aDirtyRect.Width() / app, aDirtyRect.Height() / app);
 
     nscoord inflationMinFontSize =
       nsLayoutUtils::InflationMinFontSizeFor(this);
@@ -6721,11 +6716,11 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
       decSize.height = metrics.underlineSize;
       bCoord = (frameBStart - dec.mBaselineOffset) / app;
 
-      PaintDecorationLine(aParams.context, dirtyRect, dec.mColor,
-        aParams.decorationOverrideColor, decPt, 0.0, decSize, ascent,
+      PaintDecorationLine(aCtx, dirtyRect, dec.mColor,
+        aDecorationOverrideColor, decPt, 0.0, decSize, ascent,
         decorationOffsetDir * metrics.underlineOffset,
         NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
-        dec.mStyle, eNormalDecoration, aParams.callbacks, verticalRun);
+        dec.mStyle, eNormalDecoration, aCallbacks, verticalRun);
     }
     // Overlines
     for (uint32_t i = aDecorations.mOverlines.Length(); i-- > 0; ) {
@@ -6743,20 +6738,21 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
       decSize.height = metrics.underlineSize;
       bCoord = (frameBStart - dec.mBaselineOffset) / app;
 
-      PaintDecorationLine(aParams.context, dirtyRect, dec.mColor,
-        aParams.decorationOverrideColor, decPt, 0.0, decSize, ascent,
+      PaintDecorationLine(aCtx, dirtyRect, dec.mColor,
+        aDecorationOverrideColor, decPt, 0.0, decSize, ascent,
         decorationOffsetDir * metrics.maxAscent,
         NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, dec.mStyle,
-        eNormalDecoration, aParams.callbacks, verticalRun);
+        eNormalDecoration, aCallbacks, verticalRun);
     }
 
     // CSS 2.1 mandates that text be painted after over/underlines, and *then*
     // line-throughs
-    DrawTextRun(aRange, aTextBaselinePt, aParams);
+    DrawTextRun(aCtx, aTextBaselinePt, aRange, aProvider, aTextColor,
+                aAdvanceWidth, aDrawSoftHyphen, aContextPaint, aCallbacks);
 
     // Emphasis marks
-    DrawEmphasisMarks(aParams.context, wm, aTextBaselinePt, aRange,
-                      aParams.decorationOverrideColor, aParams.provider);
+    DrawEmphasisMarks(aCtx, wm, aTextBaselinePt, aRange,
+                      aDecorationOverrideColor, aProvider);
 
     // Line-throughs
     for (uint32_t i = aDecorations.mStrikes.Length(); i-- > 0; ) {
@@ -6774,31 +6770,46 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
       decSize.height = metrics.strikeoutSize;
       bCoord = (frameBStart - dec.mBaselineOffset) / app;
 
-      PaintDecorationLine(aParams.context, dirtyRect, dec.mColor,
-        aParams.decorationOverrideColor, decPt, 0.0, decSize, ascent,
+      PaintDecorationLine(aCtx, dirtyRect, dec.mColor,
+        aDecorationOverrideColor, decPt, 0.0, decSize, ascent,
         decorationOffsetDir * metrics.strikeoutOffset,
         NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
-        dec.mStyle, eNormalDecoration, aParams.callbacks, verticalRun);
+        dec.mStyle, eNormalDecoration, aCallbacks, verticalRun);
     }
 }
 
 void
-nsTextFrame::DrawText(Range aRange, const gfxPoint& aTextBaselinePt,
-                      const DrawTextParams& aParams)
+nsTextFrame::DrawText(
+    gfxContext* const aCtx, const gfxRect& aDirtyRect,
+    const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
+    Range aRange,
+    PropertyProvider& aProvider,
+    const nsTextPaintStyle& aTextStyle,
+    nscolor aTextColor,
+    const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+    gfxFloat& aAdvanceWidth,
+    bool aDrawSoftHyphen,
+    const nscolor* const aDecorationOverrideColor,
+    gfxTextContextPaint* aContextPaint,
+    nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
   TextDecorations decorations;
-  GetTextDecorations(aParams.textStyle->PresContext(),
-                     aParams.callbacks ? eUnresolvedColors : eResolvedColors,
+  GetTextDecorations(aTextStyle.PresContext(),
+                     aCallbacks ? eUnresolvedColors : eResolvedColors,
                      decorations);
 
   // Hide text decorations if we're currently hiding @font-face fallback text
-  const bool drawDecorations =
-    !aParams.provider->GetFontGroup()->ShouldSkipDrawing() &&
-    (decorations.HasDecorationLines() || StyleText()->HasTextEmphasis());
+  const bool drawDecorations = !aProvider.GetFontGroup()->ShouldSkipDrawing() &&
+                               (decorations.HasDecorationLines() ||
+                                StyleText()->HasTextEmphasis());
   if (drawDecorations) {
-    DrawTextRunAndDecorations(aRange, aTextBaselinePt, aParams, decorations);
+    DrawTextRunAndDecorations(aCtx, aDirtyRect, aFramePt, aTextBaselinePt, aRange,
+                              aProvider, aTextStyle, aTextColor, aClipEdges, aAdvanceWidth,
+                              aDrawSoftHyphen, decorations,
+                              aDecorationOverrideColor, aContextPaint, aCallbacks);
   } else {
-    DrawTextRun(aRange, aTextBaselinePt, aParams);
+    DrawTextRun(aCtx, aTextBaselinePt, aRange, aProvider,
+                aTextColor, aAdvanceWidth, aDrawSoftHyphen, aContextPaint, aCallbacks);
   }
 }
 
