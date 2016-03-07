@@ -1,7 +1,6 @@
 use rustc_serialize::{Encodable, Encoder};
 use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
-use std::error::Error;
 
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
 
