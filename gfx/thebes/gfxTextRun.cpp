@@ -210,14 +210,15 @@ gfxTextRun::ReleaseFontGroup()
 }
 
 bool
-gfxTextRun::SetPotentialLineBreaks(Range aRange, uint8_t *aBreakBefore)
+gfxTextRun::SetPotentialLineBreaks(uint32_t aStart, uint32_t aLength,
+                                   uint8_t *aBreakBefore)
 {
-    NS_ASSERTION(aRange.end <= GetLength(), "Overflow");
+    NS_ASSERTION(aStart + aLength <= GetLength(), "Overflow");
 
     uint32_t changed = 0;
     uint32_t i;
-    CompressedGlyph *charGlyphs = mCharacterGlyphs + aRange.start;
-    for (i = 0; i < aRange.Length(); ++i) {
+    CompressedGlyph *charGlyphs = mCharacterGlyphs + aStart;
+    for (i = 0; i < aLength; ++i) {
         uint8_t canBreak = aBreakBefore[i];
         if (canBreak && !charGlyphs[i].IsClusterStart()) {
             // This can happen ... there is no guarantee that our linebreaking rules
@@ -230,39 +231,39 @@ gfxTextRun::SetPotentialLineBreaks(Range aRange, uint8_t *aBreakBefore)
 }
 
 gfxTextRun::LigatureData
-gfxTextRun::ComputeLigatureData(Range aPartRange, PropertyProvider *aProvider)
+gfxTextRun::ComputeLigatureData(uint32_t aPartStart, uint32_t aPartEnd,
+                                PropertyProvider *aProvider)
 {
-    NS_ASSERTION(aPartRange.start < aPartRange.end,
-                 "Computing ligature data for empty range");
-    NS_ASSERTION(aPartRange.end <= GetLength(), "Character length overflow");
+    NS_ASSERTION(aPartStart < aPartEnd, "Computing ligature data for empty range");
+    NS_ASSERTION(aPartEnd <= GetLength(), "Character length overflow");
   
     LigatureData result;
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
 
     uint32_t i;
-    for (i = aPartRange.start; !charGlyphs[i].IsLigatureGroupStart(); --i) {
+    for (i = aPartStart; !charGlyphs[i].IsLigatureGroupStart(); --i) {
         NS_ASSERTION(i > 0, "Ligature at the start of the run??");
     }
-    result.mRange.start = i;
-    for (i = aPartRange.start + 1;
-         i < GetLength() && !charGlyphs[i].IsLigatureGroupStart(); ++i) {
+    result.mLigatureStart = i;
+    for (i = aPartStart + 1; i < GetLength() && !charGlyphs[i].IsLigatureGroupStart(); ++i) {
     }
-    result.mRange.end = i;
+    result.mLigatureEnd = i;
 
-    int32_t ligatureWidth = GetAdvanceForGlyphs(result.mRange);
+    int32_t ligatureWidth =
+        GetAdvanceForGlyphs(result.mLigatureStart, result.mLigatureEnd);
     // Count the number of started clusters we have seen
     uint32_t totalClusterCount = 0;
     uint32_t partClusterIndex = 0;
     uint32_t partClusterCount = 0;
-    for (i = result.mRange.start; i < result.mRange.end; ++i) {
+    for (i = result.mLigatureStart; i < result.mLigatureEnd; ++i) {
         // Treat the first character of the ligature as the start of a
         // cluster for our purposes of allocating ligature width to its
         // characters.
-        if (i == result.mRange.start || charGlyphs[i].IsClusterStart()) {
+        if (i == result.mLigatureStart || charGlyphs[i].IsClusterStart()) {
             ++totalClusterCount;
-            if (i < aPartRange.start) {
+            if (i < aPartStart) {
                 ++partClusterIndex;
-            } else if (i < aPartRange.end) {
+            } else if (i < aPartEnd) {
                 ++partClusterCount;
             }
         }
@@ -274,7 +275,7 @@ gfxTextRun::ComputeLigatureData(Range aPartRange, PropertyProvider *aProvider)
     // Any rounding errors are apportioned to the final part of the ligature,
     // so that measuring all parts of a ligature and summing them is equal to
     // the ligature width.
-    if (aPartRange.end == result.mRange.end) {
+    if (aPartEnd == result.mLigatureEnd) {
         gfxFloat allParts = totalClusterCount * (ligatureWidth / totalClusterCount);
         result.mPartWidth += ligatureWidth - allParts;
     }
@@ -295,14 +296,12 @@ gfxTextRun::ComputeLigatureData(Range aPartRange, PropertyProvider *aProvider)
 
     if (aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING)) {
         gfxFont::Spacing spacing;
-        if (aPartRange.start == result.mRange.start) {
-            aProvider->GetSpacing(
-                Range(aPartRange.start, aPartRange.start + 1), &spacing);
+        if (aPartStart == result.mLigatureStart) {
+            aProvider->GetSpacing(aPartStart, 1, &spacing);
             result.mPartWidth += spacing.mBefore;
         }
-        if (aPartRange.end == result.mRange.end) {
-            aProvider->GetSpacing(
-                Range(aPartRange.end - 1, aPartRange.end), &spacing);
+        if (aPartEnd == result.mLigatureEnd) {
+            aProvider->GetSpacing(aPartEnd - 1, 1, &spacing);
             result.mPartWidth += spacing.mAfter;
         }
     }
@@ -311,34 +310,34 @@ gfxTextRun::ComputeLigatureData(Range aPartRange, PropertyProvider *aProvider)
 }
 
 gfxFloat
-gfxTextRun::ComputePartialLigatureWidth(Range aPartRange,
+gfxTextRun::ComputePartialLigatureWidth(uint32_t aPartStart, uint32_t aPartEnd,
                                         PropertyProvider *aProvider)
 {
-    if (aPartRange.start >= aPartRange.end)
+    if (aPartStart >= aPartEnd)
         return 0;
-    LigatureData data = ComputeLigatureData(aPartRange, aProvider);
+    LigatureData data = ComputeLigatureData(aPartStart, aPartEnd, aProvider);
     return data.mPartWidth;
 }
 
 int32_t
-gfxTextRun::GetAdvanceForGlyphs(Range aRange)
+gfxTextRun::GetAdvanceForGlyphs(uint32_t aStart, uint32_t aEnd)
 {
     int32_t advance = 0;
-    for (auto i = aRange.start; i < aRange.end; ++i) {
+    for (auto i = aStart; i < aEnd; ++i) {
         advance += GetAdvanceForGlyph(i);
     }
     return advance;
 }
 
 static void
-GetAdjustedSpacing(gfxTextRun *aTextRun, gfxTextRun::Range aRange,
+GetAdjustedSpacing(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                    gfxTextRun::PropertyProvider *aProvider,
                    gfxTextRun::PropertyProvider::Spacing *aSpacing)
 {
-    if (aRange.start >= aRange.end)
+    if (aStart >= aEnd)
         return;
 
-    aProvider->GetSpacing(aRange, aSpacing);
+    aProvider->GetSpacing(aStart, aEnd - aStart, aSpacing);
 
 #ifdef DEBUG
     // Check to see if we have spacing inside ligatures
@@ -346,13 +345,11 @@ GetAdjustedSpacing(gfxTextRun *aTextRun, gfxTextRun::Range aRange,
     const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
     uint32_t i;
 
-    for (i = aRange.start; i < aRange.end; ++i) {
+    for (i = aStart; i < aEnd; ++i) {
         if (!charGlyphs[i].IsLigatureGroupStart()) {
-            NS_ASSERTION(i == aRange.start ||
-                         aSpacing[i - aRange.start].mBefore == 0,
+            NS_ASSERTION(i == aStart || aSpacing[i - aStart].mBefore == 0,
                          "Before-spacing inside a ligature!");
-            NS_ASSERTION(i - 1 <= aRange.start ||
-                         aSpacing[i - 1 - aRange.start].mAfter == 0,
+            NS_ASSERTION(i - 1 <= aStart || aSpacing[i - 1 - aStart].mAfter == 0,
                          "After-spacing inside a ligature!");
         }
     }
@@ -360,53 +357,51 @@ GetAdjustedSpacing(gfxTextRun *aTextRun, gfxTextRun::Range aRange,
 }
 
 bool
-gfxTextRun::GetAdjustedSpacingArray(Range aRange, PropertyProvider *aProvider,
-                                    Range aSpacingRange,
+gfxTextRun::GetAdjustedSpacingArray(uint32_t aStart, uint32_t aEnd,
+                                    PropertyProvider *aProvider,
+                                    uint32_t aSpacingStart, uint32_t aSpacingEnd,
                                     nsTArray<PropertyProvider::Spacing> *aSpacing)
 {
     if (!aProvider || !(mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING))
         return false;
-    if (!aSpacing->AppendElements(aRange.Length()))
+    if (!aSpacing->AppendElements(aEnd - aStart))
         return false;
-    auto spacingOffset = aSpacingRange.start - aRange.start;
-    memset(aSpacing->Elements(), 0, sizeof(gfxFont::Spacing) * spacingOffset);
-    GetAdjustedSpacing(this, aSpacingRange, aProvider,
-                       aSpacing->Elements() + spacingOffset);
-    memset(aSpacing->Elements() + aSpacingRange.end - aRange.start, 0,
-           sizeof(gfxFont::Spacing) * (aRange.end - aSpacingRange.end));
+    memset(aSpacing->Elements(), 0, sizeof(gfxFont::Spacing)*(aSpacingStart - aStart));
+    GetAdjustedSpacing(this, aSpacingStart, aSpacingEnd, aProvider,
+                       aSpacing->Elements() + aSpacingStart - aStart);
+    memset(aSpacing->Elements() + aSpacingEnd - aStart, 0, sizeof(gfxFont::Spacing)*(aEnd - aSpacingEnd));
     return true;
 }
 
 void
-gfxTextRun::ShrinkToLigatureBoundaries(Range* aRange)
+gfxTextRun::ShrinkToLigatureBoundaries(uint32_t *aStart, uint32_t *aEnd)
 {
-    if (aRange->start >= aRange->end)
+    if (*aStart >= *aEnd)
         return;
   
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
 
-    while (aRange->start < aRange->end &&
-           !charGlyphs[aRange->start].IsLigatureGroupStart()) {
-        ++aRange->start;
+    while (*aStart < *aEnd && !charGlyphs[*aStart].IsLigatureGroupStart()) {
+        ++(*aStart);
     }
-    if (aRange->end < GetLength()) {
-        while (aRange->end > aRange->start &&
-               !charGlyphs[aRange->end].IsLigatureGroupStart()) {
-            --aRange->end;
+    if (*aEnd < GetLength()) {
+        while (*aEnd > *aStart && !charGlyphs[*aEnd].IsLigatureGroupStart()) {
+            --(*aEnd);
         }
     }
 }
 
 void
-gfxTextRun::DrawGlyphs(gfxFont *aFont, Range aRange, gfxPoint *aPt,
-                       PropertyProvider *aProvider, Range aSpacingRange,
+gfxTextRun::DrawGlyphs(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
+                       gfxPoint *aPt, PropertyProvider *aProvider,
+                       uint32_t aSpacingStart, uint32_t aSpacingEnd,
                        TextRunDrawParams& aParams, uint16_t aOrientation)
 {
     AutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
-    bool haveSpacing = GetAdjustedSpacingArray(aRange, aProvider,
-                                               aSpacingRange, &spacingBuffer);
+    bool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider,
+        aSpacingStart, aSpacingEnd, &spacingBuffer);
     aParams.spacing = haveSpacing ? spacingBuffer.Elements() : nullptr;
-    aFont->Draw(this, aRange.start, aRange.end, aPt, aParams, aOrientation);
+    aFont->Draw(this, aStart, aEnd, aPt, aParams, aOrientation);
 }
 
 static void
@@ -434,16 +429,16 @@ ClipPartialLigature(const gfxTextRun* aTextRun,
 }
 
 void
-gfxTextRun::DrawPartialLigature(gfxFont *aFont, Range aRange,
+gfxTextRun::DrawPartialLigature(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
                                 gfxPoint *aPt, PropertyProvider *aProvider,
                                 TextRunDrawParams& aParams, uint16_t aOrientation)
 {
-    if (aRange.start >= aRange.end) {
+    if (aStart >= aEnd) {
         return;
     }
 
     // Draw partial ligature. We hack this by clipping the ligature.
-    LigatureData data = ComputeLigatureData(aRange, aProvider);
+    LigatureData data = ComputeLigatureData(aStart, aEnd, aProvider);
     gfxRect clipExtents = aParams.context->GetClipExtents();
     gfxFloat start, end;
     if (aParams.isVerticalRun) {
@@ -478,8 +473,8 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, Range aRange,
         pt = gfxPoint(aPt->x - aParams.direction * data.mPartAdvance, aPt->y);
     }
 
-    DrawGlyphs(aFont, data.mRange, &pt,
-               aProvider, aRange, aParams, aOrientation);
+    DrawGlyphs(aFont, data.mLigatureStart, data.mLigatureEnd, &pt,
+               aProvider, aStart, aEnd, aParams, aOrientation);
     aParams.context->Restore();
 
     if (aParams.isVerticalRun) {
@@ -494,9 +489,9 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, Range aRange,
 // check whether the text run needs to be explicitly composited in order to
 // support opacity.
 static bool
-HasSyntheticBoldOrColor(gfxTextRun *aRun, gfxTextRun::Range aRange)
+HasSyntheticBoldOrColor(gfxTextRun *aRun, uint32_t aStart, uint32_t aLength)
 {
-    gfxTextRun::GlyphRunIterator iter(aRun, aRange);
+    gfxTextRun::GlyphRunIterator iter(aRun, aStart, aLength);
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
         if (font) {
@@ -565,12 +560,12 @@ struct BufferAlphaColor {
 
 void
 gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
-                 Range aRange,
+                 uint32_t aStart, uint32_t aLength,
                  PropertyProvider *aProvider, gfxFloat *aAdvanceWidth,
                  gfxTextContextPaint *aContextPaint,
                  gfxTextRunDrawCallbacks *aCallbacks)
 {
-    NS_ASSERTION(aRange.end <= GetLength(), "Substring out of range");
+    NS_ASSERTION(aStart + aLength <= GetLength(), "Substring out of range");
     NS_ASSERTION(aDrawMode == DrawMode::GLYPH_PATH ||
                  !(int(aDrawMode) & int(DrawMode::GLYPH_PATH)),
                  "GLYPH_PATH cannot be used with GLYPH_FILL, GLYPH_STROKE or GLYPH_STROKE_UNDERNEATH");
@@ -591,7 +586,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
         // We don't need to draw anything;
         // but if the caller wants advance width, we need to compute it here
         if (aAdvanceWidth) {
-            gfxTextRun::Metrics metrics = MeasureText(aRange,
+            gfxTextRun::Metrics metrics = MeasureText(aStart, aLength,
                                                       gfxFont::LOOSE_INK_EXTENTS,
                                                       aContext->GetDrawTarget(),
                                                       aProvider);
@@ -610,10 +605,10 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
 
     if (aDrawMode == DrawMode::GLYPH_FILL &&
         HasNonOpaqueNonTransparentColor(aContext, currentColor) &&
-        HasSyntheticBoldOrColor(this, aRange)) {
+        HasSyntheticBoldOrColor(this, aStart, aLength)) {
         needToRestore = true;
         // measure text, use the bounding box
-        gfxTextRun::Metrics metrics = MeasureText(aRange,
+        gfxTextRun::Metrics metrics = MeasureText(aStart, aLength,
                                                   gfxFont::LOOSE_INK_EXTENTS,
                                                   aContext->GetDrawTarget(),
                                                   aProvider);
@@ -637,33 +632,34 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     params.dt = aContext->GetDrawTarget();
     params.fontSmoothingBGColor = aContext->GetFontSmoothingBackgroundColor();
 
-    GlyphRunIterator iter(this, aRange);
+    GlyphRunIterator iter(this, aStart, aLength);
     gfxFloat advance = 0.0;
 
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
         uint32_t start = iter.GetStringStart();
         uint32_t end = iter.GetStringEnd();
-        Range ligatureRange(start, end);
-        ShrinkToLigatureBoundaries(&ligatureRange);
+        uint32_t ligatureRunStart = start;
+        uint32_t ligatureRunEnd = end;
+        ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
 
         bool drawPartial = aDrawMode == DrawMode::GLYPH_FILL ||
                            (aDrawMode == DrawMode::GLYPH_PATH && aCallbacks);
         gfxPoint origPt = aPt;
 
         if (drawPartial) {
-            DrawPartialLigature(font, Range(start, ligatureRange.start),
-                                &aPt, aProvider, params,
+            DrawPartialLigature(font, start, ligatureRunStart, &aPt,
+                                aProvider, params,
                                 iter.GetGlyphRun()->mOrientation);
         }
 
-        DrawGlyphs(font, ligatureRange, &aPt,
-                   aProvider, ligatureRange, params,
+        DrawGlyphs(font, ligatureRunStart, ligatureRunEnd, &aPt,
+                   aProvider, ligatureRunStart, ligatureRunEnd, params,
                    iter.GetGlyphRun()->mOrientation);
 
         if (drawPartial) {
-            DrawPartialLigature(font, Range(ligatureRange.end, end),
-                                &aPt, aProvider, params,
+            DrawPartialLigature(font, ligatureRunEnd, end, &aPt,
+                                aProvider, params,
                                 iter.GetGlyphRun()->mOrientation);
         }
 
@@ -688,9 +684,10 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
 void
 gfxTextRun::DrawEmphasisMarks(gfxContext *aContext, gfxTextRun* aMark,
                               gfxFloat aMarkAdvance, gfxPoint aPt,
-                              Range aRange, PropertyProvider* aProvider)
+                              uint32_t aStart, uint32_t aLength,
+                              PropertyProvider* aProvider)
 {
-    MOZ_ASSERT(aRange.end <= GetLength());
+    MOZ_ASSERT(aStart + aLength <= GetLength());
 
     EmphasisMarkDrawParams params;
     params.context = aContext;
@@ -702,65 +699,69 @@ gfxTextRun::DrawEmphasisMarks(gfxContext *aContext, gfxTextRun* aMark,
     gfxFloat& inlineCoord = params.isVertical ? aPt.y : aPt.x;
     gfxFloat direction = params.direction;
 
-    GlyphRunIterator iter(this, aRange);
+    GlyphRunIterator iter(this, aStart, aLength);
     while (iter.NextRun()) {
         gfxFont* font = iter.GetGlyphRun()->mFont;
         uint32_t start = iter.GetStringStart();
         uint32_t end = iter.GetStringEnd();
-        Range ligatureRange(start, end);
-        ShrinkToLigatureBoundaries(&ligatureRange);
+        uint32_t ligatureRunStart = start;
+        uint32_t ligatureRunEnd = end;
+        ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
 
-        inlineCoord += direction * ComputePartialLigatureWidth(
-            Range(start, ligatureRange.start), aProvider);
+        inlineCoord += direction *
+            ComputePartialLigatureWidth(start, ligatureRunStart, aProvider);
 
         AutoTArray<PropertyProvider::Spacing, 200> spacingBuffer;
         bool haveSpacing = GetAdjustedSpacingArray(
-            ligatureRange, aProvider, ligatureRange, &spacingBuffer);
+            ligatureRunStart, ligatureRunEnd, aProvider,
+            ligatureRunStart, ligatureRunEnd, &spacingBuffer);
         params.spacing = haveSpacing ? spacingBuffer.Elements() : nullptr;
-        font->DrawEmphasisMarks(this, &aPt, ligatureRange.start,
-                                ligatureRange.Length(), params);
+        font->DrawEmphasisMarks(this, &aPt, ligatureRunStart,
+                                ligatureRunEnd - ligatureRunStart, params);
 
-        inlineCoord += direction * ComputePartialLigatureWidth(
-            Range(ligatureRange.end, end), aProvider);
+        inlineCoord += direction *
+            ComputePartialLigatureWidth(ligatureRunEnd, end, aProvider);
     }
 }
 
 void
-gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont, Range aRange,
+gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont,
+                                    uint32_t aStart, uint32_t aEnd,
                                     gfxFont::BoundingBoxType aBoundingBoxType,
                                     DrawTarget* aRefDrawTarget,
                                     PropertyProvider *aProvider,
-                                    Range aSpacingRange,
+                                    uint32_t aSpacingStart, uint32_t aSpacingEnd,
                                     uint16_t aOrientation,
                                     Metrics *aMetrics)
 {
     AutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
-    bool haveSpacing = GetAdjustedSpacingArray(aRange, aProvider,
-                                               aSpacingRange, &spacingBuffer);
-    Metrics metrics = aFont->Measure(this, aRange.start, aRange.end,
-                                     aBoundingBoxType, aRefDrawTarget,
+    bool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider,
+        aSpacingStart, aSpacingEnd, &spacingBuffer);
+    Metrics metrics = aFont->Measure(this, aStart, aEnd, aBoundingBoxType,
+                                     aRefDrawTarget,
                                      haveSpacing ? spacingBuffer.Elements() : nullptr,
                                      aOrientation);
     aMetrics->CombineWith(metrics, IsRightToLeft());
 }
 
 void
-gfxTextRun::AccumulatePartialLigatureMetrics(gfxFont *aFont, Range aRange,
+gfxTextRun::AccumulatePartialLigatureMetrics(gfxFont *aFont,
+    uint32_t aStart, uint32_t aEnd,
     gfxFont::BoundingBoxType aBoundingBoxType, DrawTarget* aRefDrawTarget,
     PropertyProvider *aProvider, uint16_t aOrientation, Metrics *aMetrics)
 {
-    if (aRange.start >= aRange.end)
+    if (aStart >= aEnd)
         return;
 
     // Measure partial ligature. We hack this by clipping the metrics in the
     // same way we clip the drawing.
-    LigatureData data = ComputeLigatureData(aRange, aProvider);
+    LigatureData data = ComputeLigatureData(aStart, aEnd, aProvider);
 
     // First measure the complete ligature
     Metrics metrics;
-    AccumulateMetricsForRun(aFont, data.mRange,
+    AccumulateMetricsForRun(aFont, data.mLigatureStart, data.mLigatureEnd,
                             aBoundingBoxType, aRefDrawTarget,
-                            aProvider, aRange, aOrientation, &metrics);
+                            aProvider, aStart, aEnd, aOrientation, &metrics);
 
     // Clip the bounding box to the ligature part
     gfxFloat bboxLeft = metrics.mBoundingBox.X();
@@ -782,24 +783,24 @@ gfxTextRun::AccumulatePartialLigatureMetrics(gfxFont *aFont, Range aRange,
 }
 
 gfxTextRun::Metrics
-gfxTextRun::MeasureText(Range aRange,
+gfxTextRun::MeasureText(uint32_t aStart, uint32_t aLength,
                         gfxFont::BoundingBoxType aBoundingBoxType,
                         DrawTarget* aRefDrawTarget,
                         PropertyProvider *aProvider)
 {
-    NS_ASSERTION(aRange.end <= GetLength(), "Substring out of range");
+    NS_ASSERTION(aStart + aLength <= GetLength(), "Substring out of range");
 
     Metrics accumulatedMetrics;
-    GlyphRunIterator iter(this, aRange);
+    GlyphRunIterator iter(this, aStart, aLength);
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
         uint32_t start = iter.GetStringStart();
         uint32_t end = iter.GetStringEnd();
-        Range ligatureRange(start, end);
-        ShrinkToLigatureBoundaries(&ligatureRange);
+        uint32_t ligatureRunStart = start;
+        uint32_t ligatureRunEnd = end;
+        ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
 
-        AccumulatePartialLigatureMetrics(
-            font, Range(start, ligatureRange.start),
+        AccumulatePartialLigatureMetrics(font, start, ligatureRunStart,
             aBoundingBoxType, aRefDrawTarget, aProvider,
             iter.GetGlyphRun()->mOrientation, &accumulatedMetrics);
 
@@ -809,12 +810,11 @@ gfxTextRun::MeasureText(Range aRange,
         // by getting some ascent/descent from the font and using our stored
         // advance widths.
         AccumulateMetricsForRun(font,
-            ligatureRange, aBoundingBoxType,
-            aRefDrawTarget, aProvider, ligatureRange,
+            ligatureRunStart, ligatureRunEnd, aBoundingBoxType,
+            aRefDrawTarget, aProvider, ligatureRunStart, ligatureRunEnd,
             iter.GetGlyphRun()->mOrientation, &accumulatedMetrics);
 
-        AccumulatePartialLigatureMetrics(
-            font, Range(ligatureRange.end, end),
+        AccumulatePartialLigatureMetrics(font, ligatureRunEnd, end,
             aBoundingBoxType, aRefDrawTarget, aProvider,
             iter.GetGlyphRun()->mOrientation, &accumulatedMetrics);
     }
@@ -842,12 +842,13 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
 
     NS_ASSERTION(aStart + aMaxLength <= GetLength(), "Substring out of range");
 
-    Range bufferRange(aStart, aStart +
-        std::min<uint32_t>(aMaxLength, MEASUREMENT_BUFFER_SIZE));
+    uint32_t bufferStart = aStart;
+    uint32_t bufferLength = std::min<uint32_t>(aMaxLength, MEASUREMENT_BUFFER_SIZE);
     PropertyProvider::Spacing spacingBuffer[MEASUREMENT_BUFFER_SIZE];
     bool haveSpacing = aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING) != 0;
     if (haveSpacing) {
-        GetAdjustedSpacing(this, bufferRange, aProvider, spacingBuffer);
+        GetAdjustedSpacing(this, bufferStart, bufferStart + bufferLength, aProvider,
+                           spacingBuffer);
     }
     bool hyphenBuffer[MEASUREMENT_BUFFER_SIZE];
     bool haveHyphenation = aProvider &&
@@ -855,7 +856,8 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
          (aProvider->GetHyphensOption() == NS_STYLE_HYPHENS_MANUAL &&
           (mFlags & gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS) != 0));
     if (haveHyphenation) {
-        aProvider->GetHyphenationBreaks(bufferRange, hyphenBuffer);
+        aProvider->GetHyphenationBreaks(bufferStart, bufferLength,
+                                        hyphenBuffer);
     }
 
     gfxFloat width = 0;
@@ -871,21 +873,23 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
     uint32_t end = aStart + aMaxLength;
     bool lastBreakUsedHyphenation = false;
 
-    Range ligatureRange(aStart, end);
-    ShrinkToLigatureBoundaries(&ligatureRange);
+    uint32_t ligatureRunStart = aStart;
+    uint32_t ligatureRunEnd = end;
+    ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
 
     uint32_t i;
     for (i = aStart; i < end; ++i) {
-        if (i >= bufferRange.end) {
+        if (i >= bufferStart + bufferLength) {
             // Fetch more spacing and hyphenation data
-            bufferRange.start = i;
-            bufferRange.end = std::min(aStart + aMaxLength,
-                                       i + MEASUREMENT_BUFFER_SIZE);
+            bufferStart = i;
+            bufferLength = std::min(aStart + aMaxLength, i + MEASUREMENT_BUFFER_SIZE) - i;
             if (haveSpacing) {
-                GetAdjustedSpacing(this, bufferRange, aProvider, spacingBuffer);
+                GetAdjustedSpacing(this, bufferStart, bufferStart + bufferLength, aProvider,
+                                   spacingBuffer);
             }
             if (haveHyphenation) {
-                aProvider->GetHyphenationBreaks(bufferRange, hyphenBuffer);
+                aProvider->GetHyphenationBreaks(bufferStart, bufferLength,
+                                                hyphenBuffer);
             }
         }
 
@@ -896,8 +900,8 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
         if (aSuppressBreak != eSuppressAllBreaks &&
             (aSuppressBreak != eSuppressInitialBreak || i > aStart)) {
             bool atNaturalBreak = mCharacterGlyphs[i].CanBreakBefore() == 1;
-            bool atHyphenationBreak = !atNaturalBreak &&
-                haveHyphenation && hyphenBuffer[i - bufferRange.start];
+            bool atHyphenationBreak =
+                !atNaturalBreak && haveHyphenation && hyphenBuffer[i - bufferStart];
             bool atBreak = atNaturalBreak || atHyphenationBreak;
             bool wordWrapping =
                 aCanWordWrap && mCharacterGlyphs[i].IsClusterStart() &&
@@ -930,16 +934,14 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
         }
         
         gfxFloat charAdvance;
-        if (i >= ligatureRange.start && i < ligatureRange.end) {
-            charAdvance = GetAdvanceForGlyphs(Range(i, i + 1));
+        if (i >= ligatureRunStart && i < ligatureRunEnd) {
+            charAdvance = GetAdvanceForGlyphs(i, i + 1);
             if (haveSpacing) {
-                PropertyProvider::Spacing *space =
-                    &spacingBuffer[i - bufferRange.start];
+                PropertyProvider::Spacing *space = &spacingBuffer[i - bufferStart];
                 charAdvance += space->mBefore + space->mAfter;
             }
         } else {
-            charAdvance =
-                ComputePartialLigatureWidth(Range(i, i + 1), aProvider);
+            charAdvance = ComputePartialLigatureWidth(i, i + 1, aProvider);
         }
         
         advance += charAdvance;
@@ -976,13 +978,13 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
     }
 
     if (aMetrics) {
-        auto end = aStart + charsFit;
-        *aMetrics = MeasureText(Range(aStart, end), aBoundingBoxType,
+        *aMetrics = MeasureText(aStart, charsFit, aBoundingBoxType,
                                 aRefDrawTarget, aProvider);
         if (trimmableChars) {
             Metrics trimMetrics =
-                MeasureText(Range(end - trimmableChars, end),
-                            aBoundingBoxType, aRefDrawTarget, aProvider);
+                MeasureText(aStart + charsFit - trimmableChars,
+                            trimmableChars, aBoundingBoxType,
+                            aRefDrawTarget, aProvider);
             aMetrics->mAdvanceWidth -= trimMetrics.mAdvanceWidth;
         }
     }
@@ -1004,19 +1006,18 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
 }
 
 gfxFloat
-gfxTextRun::GetAdvanceWidth(Range aRange, PropertyProvider *aProvider,
+gfxTextRun::GetAdvanceWidth(uint32_t aStart, uint32_t aLength,
+                            PropertyProvider *aProvider,
                             PropertyProvider::Spacing* aSpacing)
 {
-    NS_ASSERTION(aRange.end <= GetLength(), "Substring out of range");
+    NS_ASSERTION(aStart + aLength <= GetLength(), "Substring out of range");
 
-    Range ligatureRange = aRange;
-    ShrinkToLigatureBoundaries(&ligatureRange);
+    uint32_t ligatureRunStart = aStart;
+    uint32_t ligatureRunEnd = aStart + aLength;
+    ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
 
-    gfxFloat result =
-        ComputePartialLigatureWidth(Range(aRange.start, ligatureRange.start),
-                                    aProvider) +
-        ComputePartialLigatureWidth(Range(ligatureRange.end, aRange.end),
-                                    aProvider);
+    gfxFloat result = ComputePartialLigatureWidth(aStart, ligatureRunStart, aProvider) +
+                      ComputePartialLigatureWidth(ligatureRunEnd, aStart + aLength, aProvider);
 
     if (aSpacing) {
         aSpacing->mBefore = aSpacing->mAfter = 0;
@@ -1027,10 +1028,10 @@ gfxTextRun::GetAdvanceWidth(Range aRange, PropertyProvider *aProvider,
     if (aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING)) {
         uint32_t i;
         AutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
-        if (spacingBuffer.AppendElements(aRange.Length())) {
-            GetAdjustedSpacing(this, ligatureRange, aProvider,
+        if (spacingBuffer.AppendElements(aLength)) {
+            GetAdjustedSpacing(this, ligatureRunStart, ligatureRunEnd, aProvider,
                                spacingBuffer.Elements());
-            for (i = 0; i < ligatureRange.Length(); ++i) {
+            for (i = 0; i < ligatureRunEnd - ligatureRunStart; ++i) {
                 PropertyProvider::Spacing *space = &spacingBuffer[i];
                 result += space->mBefore + space->mAfter;
             }
@@ -1041,11 +1042,11 @@ gfxTextRun::GetAdvanceWidth(Range aRange, PropertyProvider *aProvider,
         }
     }
 
-    return result + GetAdvanceForGlyphs(ligatureRange);
+    return result + GetAdvanceForGlyphs(ligatureRunStart, ligatureRunEnd);
 }
 
 bool
-gfxTextRun::SetLineBreaks(Range aRange,
+gfxTextRun::SetLineBreaks(uint32_t aStart, uint32_t aLength,
                           bool aLineBreakBefore, bool aLineBreakAfter,
                           gfxFloat *aAdvanceWidthDelta)
 {
@@ -1243,11 +1244,12 @@ gfxTextRun::CopyGlyphDataFrom(gfxShapedWord *aShapedWord, uint32_t aOffset)
 }
 
 void
-gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, Range aRange, uint32_t aDest)
+gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, uint32_t aStart,
+                              uint32_t aLength, uint32_t aDest)
 {
-    NS_ASSERTION(aRange.end <= aSource->GetLength(),
+    NS_ASSERTION(aStart + aLength <= aSource->GetLength(),
                  "Source substring out of range");
-    NS_ASSERTION(aDest + aRange.Length() <= GetLength(),
+    NS_ASSERTION(aDest + aLength <= GetLength(),
                  "Destination substring out of range");
 
     if (aSource->mSkipDrawing) {
@@ -1255,9 +1257,9 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, Range aRange, uint32_t aDest)
     }
 
     // Copy base glyph data, and DetailedGlyph data where present
-    const CompressedGlyph *srcGlyphs = aSource->mCharacterGlyphs + aRange.start;
+    const CompressedGlyph *srcGlyphs = aSource->mCharacterGlyphs + aStart;
     CompressedGlyph *dstGlyphs = mCharacterGlyphs + aDest;
-    for (uint32_t i = 0; i < aRange.Length(); ++i) {
+    for (uint32_t i = 0; i < aLength; ++i) {
         CompressedGlyph g = srcGlyphs[i];
         g.SetCanBreakBefore(!g.IsClusterStart() ?
             CompressedGlyph::FLAG_BREAK_TYPE_NONE :
@@ -1267,8 +1269,7 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, Range aRange, uint32_t aDest)
             if (count > 0) {
                 DetailedGlyph *dst = AllocateDetailedGlyphs(i + aDest, count);
                 if (dst) {
-                    DetailedGlyph *src =
-                        aSource->GetDetailedGlyphs(i + aRange.start);
+                    DetailedGlyph *src = aSource->GetDetailedGlyphs(i + aStart);
                     if (src) {
                         ::memcpy(dst, src, count * sizeof(DetailedGlyph));
                     } else {
@@ -1283,7 +1284,7 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, Range aRange, uint32_t aDest)
     }
 
     // Copy glyph runs
-    GlyphRunIterator iter(aSource, aRange);
+    GlyphRunIterator iter(aSource, aStart, aLength);
 #ifdef DEBUG
     GlyphRun *prevRun = nullptr;
 #endif
@@ -1314,7 +1315,7 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, Range aRange, uint32_t aDest)
                          "Ended font run in the middle of a cluster");
 
         nsresult rv = AddGlyphRun(font, iter.GetGlyphRun()->mMatchType,
-                                  start - aRange.start + aDest, false,
+                                  start - aStart + aDest, false,
                                   iter.GetGlyphRun()->mOrientation);
         if (NS_FAILED(rv))
             return;
@@ -1494,11 +1495,11 @@ gfxTextRun::ClusterIterator::NextCluster()
     return false;
 }
 
-gfxTextRun::Range
-gfxTextRun::ClusterIterator::ClusterRange() const
+uint32_t
+gfxTextRun::ClusterIterator::ClusterLength() const
 {
     if (mCurrentChar == uint32_t(-1)) {
-        return Range(0, 0);
+        return 0;
     }
 
     uint32_t i = mCurrentChar,
@@ -1509,7 +1510,7 @@ gfxTextRun::ClusterIterator::ClusterRange() const
         }
     }
 
-    return Range(mCurrentChar, i);
+    return i - mCurrentChar;
 }
 
 gfxFloat
@@ -1519,7 +1520,7 @@ gfxTextRun::ClusterIterator::ClusterAdvance(PropertyProvider *aProvider) const
         return 0;
     }
 
-    return mTextRun->GetAdvanceWidth(ClusterRange(), aProvider);
+    return mTextRun->GetAdvanceWidth(mCurrentChar, ClusterLength(), aProvider);
 }
 
 size_t

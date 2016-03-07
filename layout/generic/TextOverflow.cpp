@@ -253,7 +253,7 @@ nsDisplayTextOverflowMarker::PaintTextToContext(nsRenderingContext* aCtx,
                    "Ellipsis textruns should always be LTR!");
       gfxPoint gfxPt(pt.x, pt.y);
       textRun->Draw(aCtx->ThebesContext(), gfxPt, DrawMode::GLYPH_FILL,
-                    gfxTextRun::Range(textRun), nullptr, nullptr, nullptr);
+                    0, textRun->GetLength(), nullptr, nullptr, nullptr);
     }
   } else {
     RefPtr<nsFontMetrics> fm;

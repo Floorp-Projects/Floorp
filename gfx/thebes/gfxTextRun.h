@@ -134,23 +134,10 @@ public:
         return mCharacterGlyphs[aPos].CharMayHaveEmphasisMark();
     }
 
-    // All offsets are in terms of the string passed into MakeTextRun.
-
-    // Describe range [start, end) of a text run. The range is
-    // restricted to grapheme cluster boundaries.
-    struct Range
-    {
-        uint32_t start;
-        uint32_t end;
-        uint32_t Length() const { return end - start; }
-
-        Range() : start(0), end(0) {}
-        Range(uint32_t aStart, uint32_t aEnd)
-            : start(aStart), end(aEnd) {}
-        explicit Range(gfxTextRun* aTextRun)
-            : start(0), end(aTextRun->GetLength()) {}
-    };
-
+    // All uint32_t aStart, uint32_t aLength ranges below are restricted to
+    // grapheme cluster boundaries! All offsets are in terms of the string
+    // passed into MakeTextRun.
+    
     // All coordinates are in layout/app units
 
     /**
@@ -165,7 +152,8 @@ public:
      * @return true if this changed the linebreaks, false if the new line
      * breaks are the same as the old
      */
-    virtual bool SetPotentialLineBreaks(Range aRange, uint8_t *aBreakBefore);
+    virtual bool SetPotentialLineBreaks(uint32_t aStart, uint32_t aLength,
+                                        uint8_t *aBreakBefore);
 
     /**
      * Layout provides PropertyProvider objects. These allow detection of
@@ -181,7 +169,8 @@ public:
     public:
         // Detect hyphenation break opportunities in the given range; breaks
         // not at cluster boundaries will be ignored.
-        virtual void GetHyphenationBreaks(Range aRange, bool *aBreakBefore) = 0;
+        virtual void GetHyphenationBreaks(uint32_t aStart, uint32_t aLength,
+                                          bool *aBreakBefore) = 0;
 
         // Returns the provider's hyphenation setting, so callers can decide
         // whether it is necessary to call GetHyphenationBreaks.
@@ -200,7 +189,8 @@ public:
          * CLUSTER_START, then character i-1 must have zero after-spacing and
          * character i must have zero before-spacing.
          */
-        virtual void GetSpacing(Range aRange, Spacing *aSpacing) = 0;
+        virtual void GetSpacing(uint32_t aStart, uint32_t aLength,
+                                Spacing *aSpacing) = 0;
 
         // Returns a gfxContext that can be used to measure the hyphen glyph.
         // Only called if the hyphen width is requested.
@@ -223,7 +213,7 @@ public:
             return mCurrentChar;
         }
 
-        Range ClusterRange() const;
+        uint32_t ClusterLength() const;
 
         gfxFloat ClusterAdvance(PropertyProvider *aProvider) const;
 
@@ -240,21 +230,22 @@ public:
      * is returned here.
      * 
      * Drawing should respect advance widths in the sense that for LTR runs,
-     * Draw(ctx, pt, Range(start, middle), dirty, &provider, &advance) followed by
-     * Draw(ctx, gfxPoint(pt.x + advance, pt.y), Range(middle, end),
+     * Draw(ctx, pt, offset1, length1, dirty, &provider, &advance) followed by
+     * Draw(ctx, gfxPoint(pt.x + advance, pt.y), offset1 + length1, length2,
      *      dirty, &provider, nullptr) should have the same effect as
-     * Draw(ctx, pt, Range(start, end), dirty, &provider, nullptr).
+     * Draw(ctx, pt, offset1, length1+length2, dirty, &provider, nullptr).
      * For RTL runs the rule is:
-     * Draw(ctx, pt, Range(middle, end), dirty, &provider, &advance) followed by
-     * Draw(ctx, gfxPoint(pt.x + advance, pt.y), Range(start, middle),
+     * Draw(ctx, pt, offset1 + length1, length2, dirty, &provider, &advance) followed by
+     * Draw(ctx, gfxPoint(pt.x + advance, pt.y), offset1, length1,
      *      dirty, &provider, nullptr) should have the same effect as
-     * Draw(ctx, pt, Range(start, end), dirty, &provider, nullptr).
+     * Draw(ctx, pt, offset1, length1+length2, dirty, &provider, nullptr).
      * 
      * Glyphs should be drawn in logical content order, which can be significant
      * if they overlap (perhaps due to negative spacing).
      */
     void Draw(gfxContext *aContext, gfxPoint aPt,
-              DrawMode aDrawMode, Range aRange,
+              DrawMode aDrawMode,
+              uint32_t aStart, uint32_t aLength,
               PropertyProvider *aProvider,
               gfxFloat *aAdvanceWidth, gfxTextContextPaint *aContextPaint,
               gfxTextRunDrawCallbacks *aCallbacks = nullptr);
@@ -266,14 +257,15 @@ public:
      */
     void DrawEmphasisMarks(gfxContext* aContext, gfxTextRun* aMark,
                            gfxFloat aMarkAdvance, gfxPoint aPt,
-                           Range aRange, PropertyProvider* aProvider);
+                           uint32_t aStart, uint32_t aLength,
+                           PropertyProvider* aProvider);
 
     /**
      * Computes the ReflowMetrics for a substring.
      * Uses GetSpacing from aBreakProvider.
      * @param aBoundingBoxType which kind of bounding box (loose/tight)
      */
-    Metrics MeasureText(Range aRange,
+    Metrics MeasureText(uint32_t aStart, uint32_t aLength,
                         gfxFont::BoundingBoxType aBoundingBoxType,
                         DrawTarget* aDrawTargetForTightBoundingBox,
                         PropertyProvider* aProvider);
@@ -281,7 +273,7 @@ public:
     Metrics MeasureText(gfxFont::BoundingBoxType aBoundingBoxType,
                         DrawTarget* aDrawTargetForTightBoundingBox,
                         PropertyProvider* aProvider = nullptr) {
-        return MeasureText(Range(this), aBoundingBoxType,
+        return MeasureText(0, GetLength(), aBoundingBoxType,
                            aDrawTargetForTightBoundingBox, aProvider);
     }
 
@@ -292,16 +284,17 @@ public:
      * the substring would be returned in it. NOTE: the spacing is
      * included in the advance width.
      */
-    gfxFloat GetAdvanceWidth(Range aRange, PropertyProvider *aProvider,
+    gfxFloat GetAdvanceWidth(uint32_t aStart, uint32_t aLength,
+                             PropertyProvider *aProvider,
                              PropertyProvider::Spacing* aSpacing = nullptr);
 
     gfxFloat GetAdvanceWidth() {
-        return GetAdvanceWidth(Range(this), nullptr);
+        return GetAdvanceWidth(0, GetLength(), nullptr);
     }
 
     /**
      * Clear all stored line breaks for the given range (both before and after),
-     * and then set the line-break state before aRange.start to aBreakBefore and
+     * and then set the line-break state before aStart to aBreakBefore and
      * after the last cluster to aBreakAfter.
      * 
      * We require that before and after line breaks be consistent. For clusters
@@ -326,9 +319,9 @@ public:
      * @param aAdvanceWidthDelta if non-null, returns the change in advance
      * width of the given range.
      */
-    virtual bool SetLineBreaks(Range aRange,
-                               bool aLineBreakBefore, bool aLineBreakAfter,
-                               gfxFloat* aAdvanceWidthDelta);
+    virtual bool SetLineBreaks(uint32_t aStart, uint32_t aLength,
+                                 bool aLineBreakBefore, bool aLineBreakAfter,
+                                 gfxFloat* aAdvanceWidthDelta);
 
     enum SuppressBreak {
       eNoSuppressBreak,
@@ -441,11 +434,9 @@ public:
 
     class GlyphRunIterator {
     public:
-        GlyphRunIterator(gfxTextRun *aTextRun, Range aRange)
-          : mTextRun(aTextRun)
-          , mStartOffset(aRange.start)
-          , mEndOffset(aRange.end) {
-            mNextIndex = mTextRun->FindFirstGlyphRunContaining(aRange.start);
+        GlyphRunIterator(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aLength)
+          : mTextRun(aTextRun), mStartOffset(aStart), mEndOffset(aStart + aLength) {
+            mNextIndex = mTextRun->FindFirstGlyphRunContaining(aStart);
         }
         bool NextRun();
         GlyphRun *GetGlyphRun() { return mGlyphRun; }
@@ -566,7 +557,8 @@ public:
 
     // Copy glyph data for a range of characters from aSource to this
     // textrun.
-    void CopyGlyphDataFrom(gfxTextRun *aSource, Range aRange, uint32_t aDest);
+    void CopyGlyphDataFrom(gfxTextRun *aSource, uint32_t aStart,
+                           uint32_t aLength, uint32_t aDest);
 
     nsExpirationState *GetExpirationState() { return &mExpirationState; }
 
@@ -579,8 +571,9 @@ public:
     void ReleaseFontGroup();
 
     struct LigatureData {
-        // textrun range of the containing ligature
-        Range mRange;
+        // textrun offsets of the start and end of the containing ligature
+        uint32_t mLigatureStart;
+        uint32_t mLigatureEnd;
         // appunits advance to the start of the ligature part within the ligature;
         // never includes any spacing
         gfxFloat mPartAdvance;
@@ -676,15 +669,16 @@ private:
     // **** general helpers **** 
 
     // Get the total advance for a range of glyphs.
-    int32_t GetAdvanceForGlyphs(Range aRange);
+    int32_t GetAdvanceForGlyphs(uint32_t aStart, uint32_t aEnd);
 
     // Spacing for characters outside the range aSpacingStart/aSpacingEnd
     // is assumed to be zero; such characters are not passed to aProvider.
     // This is useful to protect aProvider from being passed character indices
     // it is not currently able to handle.
-    bool GetAdjustedSpacingArray(Range aRange, PropertyProvider *aProvider,
-                                 Range aSpacingRange,
-                                 nsTArray<PropertyProvider::Spacing> *aSpacing);
+    bool GetAdjustedSpacingArray(uint32_t aStart, uint32_t aEnd,
+                                   PropertyProvider *aProvider,
+                                   uint32_t aSpacingStart, uint32_t aSpacingEnd,
+                                   nsTArray<PropertyProvider::Spacing> *aSpacing);
 
     CompressedGlyph& EnsureComplexGlyph(uint32_t aIndex)
     {
@@ -697,20 +691,20 @@ private:
     // to handle requests that begin or end inside a ligature)
 
     // if aProvider is null then mBeforeSpacing and mAfterSpacing are set to zero
-    LigatureData ComputeLigatureData(Range aPartRange,
+    LigatureData ComputeLigatureData(uint32_t aPartStart, uint32_t aPartEnd,
                                      PropertyProvider *aProvider);
-    gfxFloat ComputePartialLigatureWidth(Range aPartRange,
+    gfxFloat ComputePartialLigatureWidth(uint32_t aPartStart, uint32_t aPartEnd,
                                          PropertyProvider *aProvider);
-    void DrawPartialLigature(gfxFont *aFont, Range aRange,
+    void DrawPartialLigature(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
                              gfxPoint *aPt, PropertyProvider *aProvider,
                              TextRunDrawParams& aParams, uint16_t aOrientation);
-    // Advance aRange.start to the start of the nearest ligature, back
-    // up aRange.end to the nearest ligature end; may result in
-    // aRange->start == aRange->end.
-    void ShrinkToLigatureBoundaries(Range* aRange);
+    // Advance aStart to the start of the nearest ligature; back up aEnd
+    // to the nearest ligature end; may result in *aStart == *aEnd
+    void ShrinkToLigatureBoundaries(uint32_t *aStart, uint32_t *aEnd);
     // result in appunits
-    gfxFloat GetPartialLigatureWidth(Range aRange, PropertyProvider *aProvider);
-    void AccumulatePartialLigatureMetrics(gfxFont *aFont, Range aRange,
+    gfxFloat GetPartialLigatureWidth(uint32_t aStart, uint32_t aEnd, PropertyProvider *aProvider);
+    void AccumulatePartialLigatureMetrics(gfxFont *aFont,
+                                          uint32_t aStart, uint32_t aEnd,
                                           gfxFont::BoundingBoxType aBoundingBoxType,
                                           DrawTarget* aRefDrawTarget,
                                           PropertyProvider *aProvider,
@@ -718,17 +712,18 @@ private:
                                           Metrics *aMetrics);
 
     // **** measurement helper ****
-    void AccumulateMetricsForRun(gfxFont *aFont, Range aRange,
+    void AccumulateMetricsForRun(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
                                  gfxFont::BoundingBoxType aBoundingBoxType,
                                  DrawTarget* aRefDrawTarget,
                                  PropertyProvider *aProvider,
-                                 Range aSpacingRange,
+                                 uint32_t aSpacingStart, uint32_t aSpacingEnd,
                                  uint16_t aOrientation,
                                  Metrics *aMetrics);
 
     // **** drawing helper ****
-    void DrawGlyphs(gfxFont *aFont, Range aRange, gfxPoint *aPt,
-                    PropertyProvider *aProvider, Range aSpacingRange,
+    void DrawGlyphs(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
+                    gfxPoint *aPt, PropertyProvider *aProvider,
+                    uint32_t aSpacingStart, uint32_t aSpacingEnd,
                     TextRunDrawParams& aParams, uint16_t aOrientation);
 
     // XXX this should be changed to a GlyphRun plus a maybe-null GlyphRun*,
