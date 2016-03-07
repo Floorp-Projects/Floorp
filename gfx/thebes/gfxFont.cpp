@@ -1944,7 +1944,6 @@ gfxFont::DrawEmphasisMarks(gfxTextRun* aShapedText, gfxPoint* aPt,
 {
     gfxFloat& inlineCoord = aParams.isVertical ? aPt->y : aPt->x;
     gfxTextRun::Range markRange(aParams.mark);
-    gfxTextRun::DrawParams params(aParams.context);
 
     gfxFloat clusterStart = -std::numeric_limits<gfxFloat>::infinity();
     bool shouldDrawEmphasisMark = false;
@@ -1966,7 +1965,8 @@ gfxFont::DrawEmphasisMarks(gfxTextRun* aShapedText, gfxPoint* aPt,
             // Move the coord backward to get the needed start point.
             gfxFloat delta = (clusterAdvance + aParams.advance) / 2;
             inlineCoord -= delta;
-            aParams.mark->Draw(markRange, *aPt, params);
+            aParams.mark->Draw(aParams.context, *aPt, DrawMode::GLYPH_FILL,
+                               markRange, nullptr, nullptr, nullptr);
             inlineCoord += delta;
             shouldDrawEmphasisMark = false;
         }
