@@ -304,7 +304,9 @@ SurfaceFactory::SurfaceFactory(SharedSurfaceType type, GLContext* gl,
 SurfaceFactory::~SurfaceFactory()
 {
     while (!mRecycleTotalPool.empty()) {
-        StopRecycling(*mRecycleTotalPool.begin());
+        RefPtr<layers::SharedSurfaceTextureClient> tex = *mRecycleTotalPool.begin();
+        StopRecycling(tex);
+        tex->CancelWaitForCompositorRecycle();
     }
 
     MOZ_RELEASE_ASSERT(mRecycleTotalPool.empty());
