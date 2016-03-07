@@ -2623,47 +2623,25 @@ ParseStore(WasmParseContext& c, Expr expr)
 }
 
 static WasmAstBranchTable*
-ParseBranchTable(WasmParseContext& c)
+ParseBranchTable(WasmParseContext& c, WasmToken brTable)
 {
-    WasmAstExpr* index = ParseExpr(c);
-    if (!index)
-        return nullptr;
-
-    if (!c.ts.match(WasmToken::OpenParen, c.error))
-        return nullptr;
-    if (!c.ts.match(WasmToken::Table, c.error))
-        return nullptr;
-
     WasmRefVector table(c.lifo);
 
-    while (c.ts.getIf(WasmToken::OpenParen)) {
-        if (!c.ts.match(WasmToken::Br, c.error))
-            return nullptr;
-
-        WasmRef target;
-        if (!c.ts.matchRef(&target, c.error))
-            return nullptr;
-
+    WasmRef target;
+    while (c.ts.getIfRef(&target)) {
         if (!table.append(target))
-            return nullptr;
-
-        if (!c.ts.match(WasmToken::CloseParen, c.error))
             return nullptr;
     }
 
-    if (!c.ts.match(WasmToken::CloseParen, c.error))
+    if (table.empty()) {
+        c.ts.generateError(brTable, c.error);
         return nullptr;
+    }
 
-    if (!c.ts.match(WasmToken::OpenParen, c.error))
-        return nullptr;
-    if (!c.ts.match(WasmToken::Br, c.error))
-        return nullptr;
+    WasmRef def = table.popCopy();
 
-    WasmRef def;
-    if (!c.ts.matchRef(&def, c.error))
-        return nullptr;
-
-    if (!c.ts.match(WasmToken::CloseParen, c.error))
+    WasmAstExpr* index = ParseExpr(c);
+    if (!index)
         return nullptr;
 
     return new(c.lifo) WasmAstBranchTable(*index, def, Move(table));
@@ -2686,7 +2664,7 @@ ParseExprInsideParens(WasmParseContext& c)
       case WasmToken::BrIf:
         return ParseBranch(c, Expr::BrIf);
       case WasmToken::BrTable:
-        return ParseBranchTable(c);
+        return ParseBranchTable(c, token);
       case WasmToken::Call:
         return ParseCall(c, Expr::Call);
       case WasmToken::CallImport:
