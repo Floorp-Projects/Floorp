@@ -75,8 +75,16 @@ this.BrowserTestUtils = {
       }
     }
     let tab = yield BrowserTestUtils.openNewForegroundTab(options.gBrowser, options.url);
+    let originalWindow = tab.ownerDocument.defaultView;
     let result = yield taskFn(tab.linkedBrowser);
-    options.gBrowser.removeTab(tab);
+    let finalWindow = tab.ownerDocument.defaultView;
+    if (originalWindow == finalWindow && !tab.closing && tab.linkedBrowser) {
+      yield BrowserTestUtils.removeTab(tab);
+    } else {
+      Services.console.logStringMessage(
+        "BrowserTestUtils.withNewTab: Tab was already closed before " +
+        "removeTab would have been called");
+    }
     return Promise.resolve(result);
   }),
 
