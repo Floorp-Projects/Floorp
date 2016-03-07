@@ -2562,7 +2562,7 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
 
   ScrollVisual();
 
-  if (LastScrollOrigin() == nsGkAtoms::apz) {
+  if (LastScrollOrigin() == nsGkAtoms::apz && gfxPrefs::APZPaintSkipping()) {
     // If this was an apz scroll and the displayport (relative to the
     // scrolled frame) hasn't changed, then this won't trigger
     // any painting, so no need to schedule one.
