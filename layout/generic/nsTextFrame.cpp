@@ -6586,20 +6586,17 @@ DrawTextRun(gfxTextRun* aTextRun,
             gfxTextContextPaint* aContextPaint,
             nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
-  gfxTextRun::DrawParams params(aCtx);
-  params.drawMode = aCallbacks ? DrawMode::GLYPH_PATH
-                               : DrawMode::GLYPH_FILL;
-  params.provider = aProvider;
-  params.advanceWidth = aAdvanceWidth;
-  params.contextPaint = aContextPaint;
-  params.callbacks = aCallbacks;
+  DrawMode drawMode = aCallbacks ? DrawMode::GLYPH_PATH :
+                                   DrawMode::GLYPH_FILL;
   if (aCallbacks) {
     aCallbacks->NotifyBeforeText(aTextColor);
-    aTextRun->Draw(aRange, aTextBaselinePt, params);
+    aTextRun->Draw(aCtx, aTextBaselinePt, drawMode, aRange,
+                   aProvider, aAdvanceWidth, aContextPaint, aCallbacks);
     aCallbacks->NotifyAfterText();
   } else {
     aCtx->SetColor(Color::FromABGR(aTextColor));
-    aTextRun->Draw(aRange, aTextBaselinePt, params);
+    aTextRun->Draw(aCtx, aTextBaselinePt, drawMode, aRange,
+                   aProvider, aAdvanceWidth, aContextPaint);
   }
 }
 

@@ -232,39 +232,32 @@ public:
         uint32_t    mCurrentChar;
     };
 
-    struct DrawParams
-    {
-        gfxContext* context;
-        DrawMode drawMode = DrawMode::GLYPH_FILL;
-        PropertyProvider* provider = nullptr;
-        // If non-null, the advance width of the substring is set.
-        gfxFloat* advanceWidth = nullptr;
-        gfxTextContextPaint* contextPaint = nullptr;
-        gfxTextRunDrawCallbacks* callbacks = nullptr;
-        explicit DrawParams(gfxContext* aContext) : context(aContext) {}
-    };
-
     /**
      * Draws a substring. Uses only GetSpacing from aBreakProvider.
      * The provided point is the baseline origin on the left of the string
      * for LTR, on the right of the string for RTL.
+     * @param aAdvanceWidth if non-null, the advance width of the substring
+     * is returned here.
      * 
      * Drawing should respect advance widths in the sense that for LTR runs,
-     *   Draw(Range(start, middle), pt, ...) followed by
-     *   Draw(Range(middle, end), gfxPoint(pt.x + advance, pt.y), ...)
-     * should have the same effect as
-     *   Draw(Range(start, end), pt, ...)
-     *
+     * Draw(ctx, pt, Range(start, middle), dirty, &provider, &advance) followed by
+     * Draw(ctx, gfxPoint(pt.x + advance, pt.y), Range(middle, end),
+     *      dirty, &provider, nullptr) should have the same effect as
+     * Draw(ctx, pt, Range(start, end), dirty, &provider, nullptr).
      * For RTL runs the rule is:
-     *   Draw(Range(middle, end), pt, ...) followed by
-     *   Draw(Range(start, middle), gfxPoint(pt.x + advance, pt.y), ...)
-     * should have the same effect as
-     *   Draw(Range(start, end), pt, ...)
+     * Draw(ctx, pt, Range(middle, end), dirty, &provider, &advance) followed by
+     * Draw(ctx, gfxPoint(pt.x + advance, pt.y), Range(start, middle),
+     *      dirty, &provider, nullptr) should have the same effect as
+     * Draw(ctx, pt, Range(start, end), dirty, &provider, nullptr).
      * 
      * Glyphs should be drawn in logical content order, which can be significant
      * if they overlap (perhaps due to negative spacing).
      */
-    void Draw(Range aRange, gfxPoint aPt, const DrawParams& aParams);
+    void Draw(gfxContext *aContext, gfxPoint aPt,
+              DrawMode aDrawMode, Range aRange,
+              PropertyProvider *aProvider,
+              gfxFloat *aAdvanceWidth, gfxTextContextPaint *aContextPaint,
+              gfxTextRunDrawCallbacks *aCallbacks = nullptr);
 
     /**
      * Draws the emphasis marks for this text run. Uses only GetSpacing
