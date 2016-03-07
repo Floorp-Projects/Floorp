@@ -1,22 +1,12 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
-function runTestOnPrivacyPrefPane(testFunc) {
-  
-  gBrowser.tabContainer.addEventListener("TabOpen", function(aEvent) {
-    gBrowser.tabContainer.removeEventListener("TabOpen", arguments.callee, true);
-    let browser = aEvent.originalTarget.linkedBrowser;
-    browser.addEventListener("Initialized", function(aEvent) {
-      browser.removeEventListener("Initialized", arguments.callee, true);
-      is(browser.contentWindow.location.href, "about:preferences", "Checking if the preferences tab was opened");
-      browser.contentWindow.gotoPref("panePrivacy");
-      testFunc(browser.contentWindow);
-      gBrowser.removeCurrentTab();
-      testRunner.runNext();
-    }, true);
-  }, true);
-  
-  gBrowser.selectedTab = gBrowser.addTab("about:preferences");
+function* runTestOnPrivacyPrefPane(testFunc) {
+  info("runTestOnPrivacyPrefPane entered");
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences", true, true);
+  let browser = tab.linkedBrowser;
+  info("loaded about:preferences");
+  browser.contentWindow.gotoPref("panePrivacy");
+  info("viewing privacy pane, executing testFunc");
+  testFunc(browser.contentWindow);
+  yield BrowserTestUtils.removeTab(tab);
 }
 
 function controlChanged(element) {
@@ -254,7 +244,7 @@ function test_dependent_prefs(win) {
 }
 
 function test_historymode_retention(mode, expect) {
-  return function(win) {
+  return function test_historymode_retention_fn(win) {
     let historymode = win.document.getElementById("historyMode");
     ok(historymode, "history mode menulist should exist");
 
@@ -275,7 +265,7 @@ function test_historymode_retention(mode, expect) {
 }
 
 function test_custom_retention(controlToChange, expect, valueIncrement) {
-  return function(win) {
+  return function test_custom_retention_fn(win) {
     let historymode = win.document.getElementById("historyMode");
     ok(historymode, "history mode menulist should exist");
 
@@ -329,31 +319,12 @@ function reset_preferences(win) {
     pref.value = gPrefCache.get(pref.name);
 }
 
-var testRunner;
 function run_test_subset(subset) {
-  Services.prefs.setBoolPref("browser.preferences.instantApply", true);
-  dump("subset: " + Array.from(subset, x => x.name).join(",") + "\n");
+  info("subset: " + Array.from(subset, x => x.name).join(",") + "\n");
+  SpecialPowers.pushPrefEnv({"set": [["browser.preferences.instantApply", true]]});
 
-  waitForExplicitFinish();
-  registerCleanupFunction(function() {
-    // Reset pref to its default
-    Services.prefs.clearUserPref("browser.preferences.instantApply");
-  });
-
-  testRunner = {
-    tests: [cache_preferences, ...subset, reset_preferences],
-    counter: 0,
-    runNext: function() {
-      if (this.counter == this.tests.length) {
-        finish();
-      } else {
-        let self = this;
-        setTimeout(function() {
-          runTestOnPrivacyPrefPane(self.tests[self.counter++]);
-        }, 0);
-      }
-    }
-  };
-
-  testRunner.runNext();
+  let tests = [cache_preferences, ...subset, reset_preferences];
+  for (let test of tests) {
+    add_task(runTestOnPrivacyPrefPane.bind(undefined, test));
+  }
 }
