@@ -240,9 +240,9 @@ if (typeof Mozilla == 'undefined') {
    * @param {Object} extraURLCampaignParams - An object containing additional
    * paramaters for the URL opened by the browser for reasons of promotional
    * campaign tracking. Each attribute of the object must have a name that
-   * begins with "utm_" and a value that is a string that contains only only
-   * alphanumeric characters, dashes or underscores. The values may be any
-   * string and will automatically be encoded.
+   * is a string, begins with "utm_" and contains only only alphanumeric
+   * characters, dashes or underscores. The values may be any string and will
+   * automatically be encoded.
    */
   Mozilla.UITour.showFirefoxAccounts = function(extraURLCampaignParams) {
     _sendEvent('showFirefoxAccounts', {
