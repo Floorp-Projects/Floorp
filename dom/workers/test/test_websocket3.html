@@ -14,7 +14,7 @@
 <pre id="feedback"></pre>
 <script class="testbody" type="text/javascript">
 
-  var worker = new Worker("websocket_worker.js");
+  var worker = new Worker("websocket_worker3.js");
 
   worker.onmessage = function(event) {
     is(event.target, worker, "event.target should be a worker!");
