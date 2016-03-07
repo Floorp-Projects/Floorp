@@ -238,7 +238,7 @@ class MOZ_STACK_CLASS ComponentLoaderInfo {
         return NS_NewChannel(getter_AddRefs(mScriptChannel),
                              mURI,
                              nsContentUtils::GetSystemPrincipal(),
-                             nsILoadInfo::SEC_NORMAL,
+                             nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                              nsIContentPolicy::TYPE_SCRIPT,
                              nullptr, // aLoadGroup
                              nullptr, // aCallbacks
