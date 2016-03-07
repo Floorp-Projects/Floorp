@@ -3498,6 +3498,11 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
     return false;
   }
 
+  if (static_cast<nsDocShell*>(targetDS.get())->GetOriginAttributes().mUserContextId !=
+      static_cast<nsDocShell*>(accessingDS.get())->GetOriginAttributes().mUserContextId) {
+    return false;
+  }
+
   // A private document can't access a non-private one, and vice versa.
   if (static_cast<nsDocShell*>(targetDS.get())->UsePrivateBrowsing() !=
       static_cast<nsDocShell*>(accessingDS.get())->UsePrivateBrowsing()) {
