@@ -84,7 +84,6 @@ TinderBoxPrintRe = {
         'fail_group': "Failed",
         'known_fail_group': "Skipped",
     },
-    "webapprt_summary": _mochitest_summary,
 
     "harness_error": {
         'full_regex': re.compile(r"(?:TEST-UNEXPECTED-FAIL|PROCESS-CRASH) \| .* \| (application crashed|missing output line for total leaks!|negative leaks caught!|\d+ bytes leaked)"),

@@ -113,16 +113,6 @@ class MozharnessRunner(MozbuildObject):
                 "config": desktop_unittest_config + [
                     "--cppunittest-suite", "cppunittest"]
             },
-            "webapprt-chrome": {
-                "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--webapprt-suite", "chrome"]
-            },
-            "webapprt-content": {
-                "script": "desktop_unittest.py",
-                "config": desktop_unittest_config + [
-                    "--webapprt-suite", "content"]
-            },
             "xpcshell": {
                 "script": "desktop_unittest.py",
                 "config": desktop_unittest_config + [
