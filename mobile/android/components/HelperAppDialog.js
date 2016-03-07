@@ -19,6 +19,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions", "resource://gre/modules/RuntimePermissions.jsm");
+
 // -----------------------------------------------------------------------
 // HelperApp Launcher Dialog
 // -----------------------------------------------------------------------
@@ -241,9 +243,15 @@ HelperAppLauncherDialog.prototype = {
     Task.spawn(function* () {
       let file = null;
       try {
-        let preferredDir = yield Downloads.getPreferredDownloadsDirectory();
-        file = this.validateLeafName(new FileUtils.File(preferredDir),
-                                     aDefaultFile, aSuggestedFileExt);
+        let hasPermission = yield RuntimePermissions.waitForPermissions(RuntimePermissions.WRITE_EXTERNAL_STORAGE);
+        if (hasPermission) {
+          // If we do have the STORAGE permission then pick the public downloads directory as destination
+          // for this file. Without the permission saveDestinationAvailable(null) will be called which
+          // will effectively cancel the download.
+          let preferredDir = yield Downloads.getPreferredDownloadsDirectory();
+          file = this.validateLeafName(new FileUtils.File(preferredDir),
+                                       aDefaultFile, aSuggestedFileExt);
+        }
       } finally {
         // The file argument will be null in case any exception occurred.
         aLauncher.saveDestinationAvailable(file);
