@@ -10,7 +10,15 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+
 function startTest() {
+  // also do general checks on mimetype support for audio-only
+  ok(MediaRecorder.isTypeSupported("audio/ogg"), 'Should support audio/ogg');
+  ok(MediaRecorder.isTypeSupported('audio/ogg; codecs="opus"'), 'Should support audio/ogg+opus');
+  ok(!MediaRecorder.isTypeSupported('audio/ogg; codecs="foobar"'), 'Should not support audio/ogg + unknown_codec');
+  ok(!MediaRecorder.isTypeSupported("video/webm"), 'Should not support video/webm');
+  ok(!MediaRecorder.isTypeSupported("video/mp4"), 'Should not support video/mp4');
+
   navigator.mozGetUserMedia({audio: false, video: true, fake: true},
     function(stream) {
 

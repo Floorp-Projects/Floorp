@@ -35,14 +35,6 @@ nsMemoryImpl::HeapMinimize(bool aImmediate)
 }
 
 NS_IMETHODIMP
-nsMemoryImpl::IsLowMemory(bool* aResult)
-{
-  NS_ERROR("IsLowMemory is deprecated.  See bug 592308.");
-  *aResult = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsMemoryImpl::IsLowMemoryPlatform(bool* aResult)
 {
 #ifdef ANDROID
