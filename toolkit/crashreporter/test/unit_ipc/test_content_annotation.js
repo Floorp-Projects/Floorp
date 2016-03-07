@@ -7,12 +7,12 @@ function run_test()
     return;
   }
 
-  // Try crashing with a pure virtual call
+  // Try crashing with a runtime abort
   do_content_crash(function() {
                      crashType = CrashTestUtils.CRASH_RUNTIMEABORT;
                      crashReporter.annotateCrashReport("TestKey", "TestValue");
                      crashReporter.appendAppNotesToCrashReport("!!!foo!!!");
-		   },
+                   },
                    function(mdump, extra) {
                      do_check_eq(extra.TestKey, "TestValue");
                      do_check_true('StartupTime' in extra);
