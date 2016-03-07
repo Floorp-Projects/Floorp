@@ -151,7 +151,11 @@ APZChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
 bool
 APZChild::RecvNotifyFlushComplete()
 {
-  APZCCallbackHelper::NotifyFlushComplete();
+  nsCOMPtr<nsIPresShell> shell;
+  if (nsCOMPtr<nsIDocument> doc = mBrowser->GetDocument()) {
+    shell = doc->GetShell();
+  }
+  APZCCallbackHelper::NotifyFlushComplete(shell.get());
   return true;
 }
 
