@@ -9,6 +9,7 @@
 #include "nsXPCOM.h"
 #include "nsIXULRuntime.h"
 #include "ServiceWorkerManager.h"
+#include "nsICategoryManager.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
@@ -183,29 +184,43 @@ nsresult
 PushNotifier::NotifyPushObservers(const nsACString& aScope,
                                   Maybe<nsTArray<uint8_t>> aData)
 {
-  nsCOMPtr<nsIObserverService> obsService =
-    mozilla::services::GetObserverService();
-  if (!obsService) {
-    return NS_ERROR_FAILURE;
-  }
   nsCOMPtr<nsIPushMessage> message = nullptr;
   if (aData) {
     message = new PushMessage(aData.ref());
   }
-  return obsService->NotifyObservers(message, OBSERVER_TOPIC_PUSH,
-                                     NS_ConvertUTF8toUTF16(aScope).get());
+  return DoNotifyObservers(message, OBSERVER_TOPIC_PUSH, aScope);
 }
 
 nsresult
 PushNotifier::NotifySubscriptionChangeObservers(const nsACString& aScope)
+{
+  return DoNotifyObservers(nullptr, OBSERVER_TOPIC_SUBSCRIPTION_CHANGE, aScope);
+}
+
+nsresult
+PushNotifier::DoNotifyObservers(nsISupports *aSubject, const char *aTopic,
+                                const nsACString& aScope)
 {
   nsCOMPtr<nsIObserverService> obsService =
     mozilla::services::GetObserverService();
   if (!obsService) {
     return NS_ERROR_FAILURE;
   }
-  return obsService->NotifyObservers(nullptr,
-                                     OBSERVER_TOPIC_SUBSCRIPTION_CHANGE,
+  // If there's a service for this push category, make sure it is alive.
+  nsCOMPtr<nsICategoryManager> catMan =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+  if (catMan) {
+    nsXPIDLCString contractId;
+    nsresult rv = catMan->GetCategoryEntry("push",
+                                           PromiseFlatCString(aScope).get(),
+                                           getter_Copies(contractId));
+    if (NS_SUCCEEDED(rv)) {
+      // Ensure the service is created - we don't need to do anything with
+      // it though - we assume the service constructor attaches a listener.
+      nsCOMPtr<nsISupports> service = do_GetService(contractId);
+    }
+  }
+  return obsService->NotifyObservers(aSubject, aTopic,
                                      NS_ConvertUTF8toUTF16(aScope).get());
 }
 
