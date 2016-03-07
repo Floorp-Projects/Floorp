@@ -54,8 +54,6 @@ using mozilla::PodZero;
 using mozilla::Swap;
 using JS::GenericNaN;
 
-const uint32_t ExportMap::MemoryExport;
-
 UniqueCodePtr
 wasm::AllocateCode(ExclusiveContext* cx, size_t bytes)
 {
@@ -1130,7 +1128,7 @@ CreateExportObject(JSContext* cx,
         if (!*fieldName) {
             MOZ_ASSERT(!exportObj);
             uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
-            if (exportIndex == ExportMap::MemoryExport) {
+            if (exportIndex == MemoryExport) {
                 MOZ_ASSERT(heap);
                 exportObj.set(heap);
             } else {
@@ -1167,7 +1165,7 @@ CreateExportObject(JSContext* cx,
         RootedId id(cx, AtomToId(atom));
         RootedValue val(cx);
         uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
-        if (exportIndex == ExportMap::MemoryExport)
+        if (exportIndex == MemoryExport)
             val = ObjectValue(*heap);
         else
             val = vals[exportIndex];

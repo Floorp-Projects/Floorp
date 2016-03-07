@@ -144,15 +144,9 @@ CheckType(FunctionDecoder& f, ExprType actual, ExprType expected)
 }
 
 static bool
-DecodeExpr(FunctionDecoder& f, ExprType* type);
-
-static bool
-DecodeValType(JSContext* cx, Decoder& d, ValType *type)
+CheckValType(JSContext* cx, Decoder& d, ValType type)
 {
-    if (!d.readValType(type))
-        return Fail(cx, d, "bad value type");
-
-    switch (*type) {
+    switch (type) {
       case ValType::I32:
       case ValType::F32:
       case ValType::F64:
@@ -168,34 +162,18 @@ DecodeValType(JSContext* cx, Decoder& d, ValType *type)
         break;
     }
 
-    return Fail(cx, "bad value type");
+    return Fail(cx, d, "bad value type");
 }
 
 static bool
-DecodeExprType(JSContext* cx, Decoder& d, ExprType *type)
+CheckExprType(JSContext* cx, Decoder& d, ExprType type)
 {
-    if (!d.readExprType(type))
-        return Fail(cx, d, "bad expression type");
-
-    switch (*type) {
-      case ExprType::I32:
-      case ExprType::F32:
-      case ExprType::F64:
-      case ExprType::Void:
-        return true;
-      case ExprType::I64:
-#ifndef JS_CPU_X64
-        return Fail(cx, d, "i64 NYI on this platform");
-#endif
-        return true;
-      default:
-        // Note: it's important not to remove this default since readExprType()
-        // can return ExprType values for which there is no enumerator.
-        break;
-    }
-
-    return Fail(cx, "bad expression type");
+    return type == ExprType::Void ||
+           CheckValType(cx, d, NonVoidToValType(type));
 }
+
+static bool
+DecodeExpr(FunctionDecoder& f, ExprType* type);
 
 static bool
 DecodeNop(FunctionDecoder& f, ExprType* type)
@@ -269,7 +247,8 @@ DecodeCallIndirect(FunctionDecoder& f, ExprType* type)
 static bool
 DecodeConstI32(FunctionDecoder& f, ExprType* type)
 {
-    if (!f.d().readVarU32())
+    uint32_t _;
+    if (!f.d().readVarU32(&_))
         return f.fail("unable to read i32.const immediate");
 
     *type = ExprType::I32;
@@ -279,7 +258,8 @@ DecodeConstI32(FunctionDecoder& f, ExprType* type)
 static bool
 DecodeConstI64(FunctionDecoder& f, ExprType* type)
 {
-    if (!f.d().readVarU64())
+    uint64_t _;
+    if (!f.d().readVarU64(&_))
         return f.fail("unable to read i64.const immediate");
 
     *type = ExprType::I64;
@@ -856,24 +836,6 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
 }
 
 /*****************************************************************************/
-// dynamic link data
-
-struct ImportName
-{
-    UniqueChars module;
-    UniqueChars func;
-
-    ImportName(UniqueChars module, UniqueChars func)
-      : module(Move(module)), func(Move(func))
-    {}
-    ImportName(ImportName&& rhs)
-      : module(Move(rhs.module)), func(Move(rhs.func))
-    {}
-};
-
-typedef Vector<ImportName, 0, SystemAllocPolicy> ImportNameVector;
-
-/*****************************************************************************/
 // wasm decoding and generation
 
 typedef HashSet<const DeclaredSig*, SigHashPolicy> SigSet;
@@ -912,7 +874,10 @@ DecodeSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
             return Fail(cx, d, "too many arguments in signature");
 
         ExprType result;
-        if (!DecodeExprType(cx, d, &result))
+        if (!d.readExprType(&result))
+            return Fail(cx, d, "bad expression type");
+
+        if (!CheckExprType(cx, d, result))
             return false;
 
         ValTypeVector args;
@@ -920,7 +885,10 @@ DecodeSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
             return false;
 
         for (uint32_t i = 0; i < numArgs; i++) {
-            if (!DecodeValType(cx, d, &args[i]))
+            if (!d.readValType(&args[i]))
+                return Fail(cx, d, "bad value type");
+
+            if (!CheckValType(cx, d, args[i]))
                 return false;
         }
 
@@ -1058,6 +1026,21 @@ CheckTypeForJS(JSContext* cx, Decoder& d, const Sig& sig)
     return true;
 }
 
+struct ImportName
+{
+    Bytes module;
+    Bytes func;
+
+    ImportName(Bytes&& module, Bytes&& func)
+      : module(Move(module)), func(Move(func))
+    {}
+    ImportName(ImportName&& rhs)
+      : module(Move(rhs.module)), func(Move(rhs.func))
+    {}
+};
+
+typedef Vector<ImportName, 0, SystemAllocPolicy> ImportNameVector;
+
 static bool
 DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
@@ -1071,15 +1054,15 @@ DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVec
     if (!CheckTypeForJS(cx, d, *sig))
         return false;
 
-    UniqueChars moduleName = d.readCString();
-    if (!moduleName)
+    Bytes moduleName;
+    if (!d.readBytes(&moduleName))
         return Fail(cx, d, "expected import module name");
 
-    if (!*moduleName.get())
+    if (moduleName.empty())
         return Fail(cx, d, "module name cannot be empty");
 
-    UniqueChars funcName = d.readCString();
-    if (!funcName)
+    Bytes funcName;
+    if (!d.readBytes(&funcName))
         return Fail(cx, d, "expected import func name");
 
     return importNames->emplaceBack(Move(moduleName), Move(funcName));
@@ -1164,13 +1147,25 @@ DecodeMemory(JSContext* cx, Decoder& d, ModuleGenerator& mg, MutableHandle<Array
 typedef HashSet<const char*, CStringHasher> CStringSet;
 
 static UniqueChars
-DecodeFieldName(JSContext* cx, Decoder& d, CStringSet* dupSet)
+DecodeExportName(JSContext* cx, Decoder& d, CStringSet* dupSet)
 {
-    UniqueChars fieldName = d.readCString();
-    if (!fieldName) {
-        Fail(cx, d, "expected export external name string");
+    Bytes fieldBytes;
+    if (!d.readBytes(&fieldBytes)) {
+        Fail(cx, d, "expected export name");
         return nullptr;
     }
+
+    if (memchr(fieldBytes.begin(), 0, fieldBytes.length())) {
+        Fail(cx, d, "null in export names not yet supported");
+        return nullptr;
+    }
+
+    if (!fieldBytes.append(0))
+        return nullptr;
+
+    UniqueChars fieldName((char*)fieldBytes.extractRawBuffer());
+    if (!fieldName)
+        return nullptr;
 
     CStringSet::AddPtr p = dupSet->lookupForAdd(fieldName.get());
     if (p) {
@@ -1197,7 +1192,7 @@ DecodeFunctionExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet*
     if (!CheckTypeForJS(cx, d, mg.funcSig(funcIndex)))
         return false;
 
-    UniqueChars fieldName = DecodeFieldName(cx, d, dupSet);
+    UniqueChars fieldName = DecodeExportName(cx, d, dupSet);
     if (!fieldName)
         return false;
 
@@ -1258,15 +1253,11 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
     if (!locals.appendAll(mg.funcSig(funcIndex).args()))
         return false;
 
-    uint32_t numVars;
-    if (!d.readVarU32(&numVars))
-        return Fail(cx, d, "expected number of local vars");
+    if (!DecodeLocalEntries(d, &locals))
+        return Fail(cx, d, "failed decoding local entries");
 
-    for (uint32_t i = 0; i < numVars; i++) {
-        ValType type;
-        if (!DecodeValType(cx, d, &type))
-            return false;
-        if (!locals.append(type))
+    for (ValType type : locals) {
+        if (!CheckValType(cx, d, type))
             return false;
     }
 
@@ -1285,10 +1276,10 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
     if (d.currentPosition() != bodyEnd)
         return Fail(cx, d, "function body length mismatch");
 
-    if (!fg.bytecode().resize(bodySize))
+    if (!fg.bytes().resize(bodySize))
         return false;
 
-    memcpy(fg.bytecode().begin(), bodyBegin, bodySize);
+    memcpy(fg.bytes().begin(), bodyBegin, bodySize);
 
     int64_t after = PRMJ_Now();
     unsigned generateTime = (after - before) / PRMJ_USEC_PER_MSEC;
@@ -1360,7 +1351,7 @@ DecodeDataSegments(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
             return Fail(cx, d, "data segment does not fit in memory");
 
         const uint8_t* src;
-        if (!d.readRawData(numBytes, &src))
+        if (!d.readBytesRaw(numBytes, &src))
             return Fail(cx, d, "data segment shorter than declared");
 
         memcpy(heapBase + dstOffset, src, numBytes);
@@ -1472,9 +1463,9 @@ CheckCompilerSupport(JSContext* cx)
 }
 
 static bool
-GetProperty(JSContext* cx, HandleObject obj, const char* utf8Chars, MutableHandleValue v)
+GetProperty(JSContext* cx, HandleObject obj, const Bytes& bytes, MutableHandleValue v)
 {
-    JSAtom* atom = AtomizeUTF8Chars(cx, utf8Chars, strlen(utf8Chars));
+    JSAtom* atom = AtomizeUTF8Chars(cx, (char*)bytes.begin(), bytes.length());
     if (!atom)
         return false;
 
@@ -1491,15 +1482,15 @@ ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& i
 
     for (const ImportName& name : importNames) {
         RootedValue v(cx);
-        if (!GetProperty(cx, importObj, name.module.get(), &v))
+        if (!GetProperty(cx, importObj, name.module, &v))
             return false;
 
-        if (*name.func.get()) {
+        if (!name.func.empty()) {
             if (!v.isObject())
                 return Fail(cx, "import object field is not an Object");
 
             RootedObject obj(cx, &v.toObject());
-            if (!GetProperty(cx, obj, name.func.get(), &v))
+            if (!GetProperty(cx, obj, name.func, &v))
                 return false;
         }
 
@@ -1544,6 +1535,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     UniqueExportMap exportMap;
     Rooted<ArrayBufferObject*> heap(cx);
     Rooted<WasmModuleObject*> moduleObj(cx);
+
     if (!DecodeModule(cx, Move(file), bytes, length, &importNames, &exportMap, &heap, &moduleObj)) {
         if (!cx->isExceptionPending())
             ReportOutOfMemory(cx);

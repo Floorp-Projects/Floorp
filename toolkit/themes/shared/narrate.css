@@ -1,0 +1,11 @@
+body.light .narrating {
+  background-color: #ffc;
+}
+
+body.sepia .narrating {
+  background-color: #e0d7c5;
+}
+
+body.dark .narrating {
+  background-color: #242424;
+}
