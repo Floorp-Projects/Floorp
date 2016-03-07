@@ -620,7 +620,7 @@ class Decoder
         } while (shift < numBitsInSevens);
         if (!remainderBits || !readFixedU8(&byte) || (byte & 0x80))
             return false;
-        uint8_t mask = 0x7f & (-1 << remainderBits);
+        uint8_t mask = 0x7f & (uint8_t(-1) << remainderBits);
         if ((byte & mask) != ((byte & (1 << (remainderBits - 1))) ? mask : 0))
             return false;
         *out = s | SInt(byte) << shift;
