@@ -434,7 +434,8 @@ class TestBuildReader(unittest.TestCase):
         ])
 
         expected = {
-            'default/module.js': set(['default/tests/xpcshell/**']),
+            'default/module.js': set(['default/tests/xpcshell/**',
+                                      'default/tests/reftests/**']),
         }
 
         for path, pattern_set in expected.items():
