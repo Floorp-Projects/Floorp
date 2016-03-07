@@ -68,15 +68,6 @@ interface nsIMemory : nsISupports
     void heapMinimize(in boolean immediate);
 
     /**
-     * This predicate can be used to determine if we're in a low-memory
-     * situation (what constitutes low-memory is platform dependent). This
-     * can be used to trigger the memory pressure observers.
-     *
-     * DEPRECATED - Always returns false.  See bug 592308.
-     */
-    boolean isLowMemory();
-
-    /**
      * This predicate can be used to determine if the platform is a "low-memory"
      * platform. Callers may use this to dynamically tune their behaviour
      * to favour reduced memory usage at the expense of performance. The value

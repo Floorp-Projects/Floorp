@@ -1118,13 +1118,10 @@ class RunProgram(MachCommandBase):
          help='Profiling mode. The default is \'dark-matter\'.')
     @CommandArgument('--sample-below', default=None, type=str, group='DMD',
         help='Sample blocks smaller than this. Use 1 for no sampling. The default is 4093.')
-    @CommandArgument('--max-frames', default=None, type=str, group='DMD',
-        help='The maximum depth of stack traces. The default and maximum is 24.')
     @CommandArgument('--show-dump-stats', action='store_true', group='DMD',
         help='Show stats when doing dumps.')
     def run(self, params, remote, background, noprofile, debug, debugger,
-        debugparams, slowscript, dmd, mode, sample_below, max_frames,
-        show_dump_stats):
+        debugparams, slowscript, dmd, mode, sample_below, show_dump_stats):
 
         if conditions.is_android(self):
             # Running Firefox for Android is completely different
@@ -1207,8 +1204,6 @@ class RunProgram(MachCommandBase):
                 dmd_params.append('--mode=' + mode)
             if sample_below:
                 dmd_params.append('--sample-below=' + sample_below)
-            if max_frames:
-                dmd_params.append('--max-frames=' + max_frames)
             if show_dump_stats:
                 dmd_params.append('--show-dump-stats=yes')
 

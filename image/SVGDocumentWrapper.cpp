@@ -115,6 +115,12 @@ SVGDocumentWrapper::FlushImageTransformInvalidation()
 bool
 SVGDocumentWrapper::IsAnimated()
 {
+  // Can be called for animated images during shutdown, after we've
+  // already Observe()'d XPCOM shutdown and cleared out our mViewer pointer.
+  if (!mViewer) {
+    return false;
+  }
+
   nsIDocument* doc = mViewer->GetDocument();
   if (!doc) {
     return false;
