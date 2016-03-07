@@ -974,12 +974,12 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
     }
 
     if (aMetrics) {
-        auto end = aStart + charsFit;
-        *aMetrics = MeasureText(Range(aStart, end), aBoundingBoxType,
+        auto fitEnd = aStart + charsFit;
+        *aMetrics = MeasureText(Range(aStart, fitEnd), aBoundingBoxType,
                                 aRefDrawTarget, aProvider);
         if (trimmableChars) {
             Metrics trimMetrics =
-                MeasureText(Range(end - trimmableChars, end),
+                MeasureText(Range(fitEnd - trimmableChars, fitEnd),
                             aBoundingBoxType, aRefDrawTarget, aProvider);
             aMetrics->mAdvanceWidth -= trimMetrics.mAdvanceWidth;
         }
