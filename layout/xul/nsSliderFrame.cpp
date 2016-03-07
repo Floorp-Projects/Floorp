@@ -11,6 +11,8 @@
 //
 
 #include "nsSliderFrame.h"
+
+#include "gfxPrefs.h"
 #include "nsStyleContext.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
@@ -755,9 +757,12 @@ nsSliderFrame::CurrentPositionChanged()
   // set the rect
   thumbFrame->SetRect(newThumbRect);
 
-  // Request a repaint of the scrollbar
+  // Request a repaint of the scrollbar unless we have paint-skipping enabled
+  // and this is an APZ scroll.
   nsIScrollableFrame* scrollableFrame = do_QueryFrame(GetScrollbar()->GetParent());
-  if (!scrollableFrame || scrollableFrame->LastScrollOrigin() != nsGkAtoms::apz) {
+  if (!gfxPrefs::APZPaintSkipping() ||
+      !scrollableFrame ||
+      scrollableFrame->LastScrollOrigin() != nsGkAtoms::apz) {
     SchedulePaint();
   }
 

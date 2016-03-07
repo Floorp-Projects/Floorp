@@ -274,6 +274,11 @@ using mozilla::gfx::PointTyped;
  * Units: screen pixels (for distance)
  *        screen pixels per millisecond (for velocity)
  *
+ * \li\b apz.paint_skipping.enabled
+ * When APZ is scrolling and sending repaint requests to the main thread, often
+ * the main thread doesn't actually need to do a repaint. This pref allows the
+ * main thread to skip doing those repaints in cases where it doesn't need to.
+ *
  * \li\b apz.pan_repaint_interval
  * Maximum amount of time while panning before sending a viewport change. This
  * will asynchronously repaint the page. It is also forced when panning stops.
