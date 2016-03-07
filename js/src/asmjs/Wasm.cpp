@@ -1511,9 +1511,30 @@ ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& i
     return true;
 }
 
+static const char ExportField[] = "exports";
+
+static bool
+CreateInstance(JSContext* cx, HandleObject exportObj, MutableHandleObject instance)
+{
+    instance.set(JS_NewPlainObject(cx));
+    if (!instance)
+        return false;
+
+    JSAtom* atom = Atomize(cx, ExportField, strlen(ExportField));
+    if (!atom)
+        return false;
+
+    RootedId id(cx, AtomToId(atom));
+    RootedValue val(cx, ObjectValue(*exportObj));
+    if (!JS_DefinePropertyById(cx, instance, id, val, JSPROP_ENUMERATE))
+        return false;
+
+    return true;
+}
+
 bool
 wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
-           MutableHandleObject exportObj)
+           MutableHandleObject instance)
 {
     MOZ_ASSERT(!code->isSharedMemory());
 
@@ -1553,7 +1574,11 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     if (!ImportFunctions(cx, importObj, importNames, &imports))
         return false;
 
-    return moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, exportObj);
+    RootedObject exportObj(cx);
+    if (!moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, &exportObj))
+        return false;
+
+    return CreateInstance(cx, exportObj, instance);
 }
 
 static bool

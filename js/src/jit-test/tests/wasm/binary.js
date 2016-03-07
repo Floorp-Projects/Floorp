@@ -46,7 +46,7 @@ function varU32(u32) {
 
 const U32MAX_LEB = [255, 255, 255, 255, 15];
 
-const wasmEval = Wasm.instantiateModule;
+const wasmEval = (code, imports) => Wasm.instantiateModule(code, imports).exports;
 
 assertErrorMessage(() => wasmEval(toU8([])), TypeError, magicError);
 assertErrorMessage(() => wasmEval(toU8([42])), TypeError, magicError);
