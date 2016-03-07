@@ -310,7 +310,11 @@ TabListView.prototype = {
 
   onFilter(event) {
     let query = event.target.value;
-    this.props.onFilter(query);
+    if (query) {
+      this.props.onFilter(query);
+    } else {
+      this.props.onClearFilter();
+    }
   },
 
   onClearFilter() {
