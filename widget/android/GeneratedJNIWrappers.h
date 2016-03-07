@@ -124,6 +124,23 @@ protected:
     DownloadsIntegration(jobject instance) : Class(instance) {}
 
 public:
+    struct GetTemporaryDownloadDirectory_t {
+        typedef DownloadsIntegration Owner;
+        typedef mozilla::jni::String::LocalRef ReturnType;
+        typedef mozilla::jni::String::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getTemporaryDownloadDirectory";
+        static constexpr char signature[] =
+                "()Ljava/lang/String;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto GetTemporaryDownloadDirectory() -> mozilla::jni::String::LocalRef;
+
+public:
     struct ScanMedia_t {
         typedef DownloadsIntegration Owner;
         typedef void ReturnType;
