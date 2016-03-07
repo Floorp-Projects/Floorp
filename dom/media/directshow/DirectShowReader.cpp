@@ -28,7 +28,7 @@ GetDirectShowLog() {
 DirectShowReader::DirectShowReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder),
     mMP3FrameParser(aDecoder->GetResource()->GetLength()),
-#ifdef DEBUG
+#ifdef DIRECTSHOW_REGISTER_GRAPH
     mRotRegister(0),
 #endif
     mNumChannels(0),
@@ -44,7 +44,7 @@ DirectShowReader::~DirectShowReader()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   MOZ_COUNT_DTOR(DirectShowReader);
-#ifdef DEBUG
+#ifdef DIRECTSHOW_REGISTER_GRAPH
   if (mRotRegister) {
     RemoveGraphFromRunningObjectTable(mRotRegister);
   }
@@ -104,11 +104,7 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
   rv = ParseMP3Headers(&mMP3FrameParser, mDecoder->GetResource());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  #ifdef DEBUG
-  // Add the graph to the Running Object Table so that we can connect
-  // to this graph with GraphEdit/GraphStudio. Note: on Vista and up you must
-  // also regsvr32 proppage.dll from the Windows SDK.
-  // See: http://msdn.microsoft.com/en-us/library/ms787252(VS.85).aspx
+  #ifdef DIRECTSHOW_REGISTER_GRAPH
   hr = AddGraphToRunningObjectTable(mGraph, &mRotRegister);
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
   #endif
