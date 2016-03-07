@@ -2641,28 +2641,25 @@ EmitBlock(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
-EmitBr(FunctionCompiler& f, MDefinition** def)
+EmitBranch(FunctionCompiler& f, Expr op, MDefinition** def)
 {
+    MOZ_ASSERT(op == Expr::Br || op == Expr::BrIf);
+
     uint32_t relativeDepth = f.readVarU32();
 
-    if (!f.br(relativeDepth))
-        return false;
+    MOZ_ALWAYS_TRUE(f.readExpr() == Expr::Nop);
 
-    *def = nullptr;
-    return true;
-}
+    if (op == Expr::Br) {
+        if (!f.br(relativeDepth))
+            return false;
+    } else {
+        MDefinition* condition;
+        if (!EmitExpr(f, &condition))
+            return false;
 
-static bool
-EmitBrIf(FunctionCompiler& f, MDefinition** def)
-{
-    uint32_t relativeDepth = f.readVarU32();
-
-    MDefinition* condition;
-    if (!EmitExpr(f, &condition))
-        return false;
-
-    if (!f.brIf(relativeDepth, condition))
-        return false;
+        if (!f.brIf(relativeDepth, condition))
+            return false;
+    }
 
     *def = nullptr;
     return true;
@@ -2691,9 +2688,8 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
       case Expr::Loop:
         return EmitLoop(f, def);
       case Expr::Br:
-        return EmitBr(f, def);
       case Expr::BrIf:
-        return EmitBrIf(f, def);
+        return EmitBranch(f, op, def);
       case Expr::BrTable:
         return EmitBrTable(f, def);
       case Expr::Return:
