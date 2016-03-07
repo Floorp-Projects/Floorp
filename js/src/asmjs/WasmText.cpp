@@ -3582,10 +3582,10 @@ EncodeConst(Encoder& e, WasmAstConst& c)
     switch (c.val().type()) {
       case ValType::I32:
         return e.writeExpr(Expr::I32Const) &&
-               e.writeVarU32(c.val().i32());
+               e.writeVarS32(c.val().i32());
       case ValType::I64:
         return e.writeExpr(Expr::I64Const) &&
-               e.writeVarU64(c.val().i64());
+               e.writeVarS64(c.val().i64());
       case ValType::F32:
         return e.writeExpr(Expr::F32Const) &&
                e.writeFixedF32(c.val().f32());
