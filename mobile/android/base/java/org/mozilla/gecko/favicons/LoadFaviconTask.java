@@ -16,6 +16,7 @@ import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.IOUtils;
+import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.io.IOException;
@@ -137,7 +138,7 @@ public class LoadFaviconTask {
             return null;
         }
 
-        HttpURLConnection connection = (HttpURLConnection) faviconURI.toURL().openConnection();
+        HttpURLConnection connection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(faviconURI);
         connection.setRequestProperty("User-Agent", GeckoAppShell.getGeckoInterface().getDefaultUAString());
 
         connection.connect();
