@@ -1119,7 +1119,7 @@ class BuildReader(object):
             config.topobjdir = topobjdir
             config.external_source_dir = None
 
-        context = Context(VARIABLES, config)
+        context = Context(VARIABLES, config, self._finder)
         sandbox = MozbuildSandbox(context, metadata=metadata,
                                   finder=self._finder)
         sandbox.exec_file(path)
