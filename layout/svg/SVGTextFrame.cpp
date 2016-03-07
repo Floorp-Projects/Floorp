@@ -3696,8 +3696,8 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
   // SVG frames' PaintSVG methods paint in CSS px, but normally frames paint in
   // dev pixels. Here we multiply a CSS-px-to-dev-pixel factor onto aTransform
   // so our non-SVG nsTextFrame children paint correctly.
-  auto auPerDevPx = presContext->AppUnitsPerDevPixel();
-  float cssPxPerDevPx = presContext->AppUnitsToFloatCSSPixels(auPerDevPx);
+  float cssPxPerDevPx = presContext->
+    AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
   gfxMatrix canvasTMForChildren = aTransform;
   canvasTMForChildren.Scale(cssPxPerDevPx, cssPxPerDevPx);
   initialMatrix.Scale(1 / cssPxPerDevPx, 1 / cssPxPerDevPx);
@@ -3749,8 +3749,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     aContext.SetMatrix(runTransform);
 
     if (drawMode != DrawMode(0)) {
-      LayoutDeviceRect frameRect = LayoutDevicePixel::
-        FromAppUnits(frame->GetVisualOverflowRect(), auPerDevPx);
+      nsRect frameRect = frame->GetVisualOverflowRect();
       bool paintSVGGlyphs;
       if (ShouldRenderAsPath(frame, paintSVGGlyphs)) {
         SVGTextDrawPathCallbacks callbacks(&rendCtx, frame,
