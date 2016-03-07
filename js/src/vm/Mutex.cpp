@@ -4,34 +4,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "threading/ExclusiveData.h"
+#include "vm/Mutex.h"
 
 namespace js {
 
-/* static */ mozilla::Maybe<detail::ExclusiveDataBase>
-detail::ExclusiveDataBase::Create()
+/* static */ mozilla::Maybe<detail::MutexBase>
+detail::MutexBase::Create()
 {
     auto lock = PR_NewLock();
     if (!lock)
         return mozilla::Nothing();
 
-    return mozilla::Some(detail::ExclusiveDataBase(lock));
+    return mozilla::Some(detail::MutexBase(lock));
 }
 
-detail::ExclusiveDataBase::~ExclusiveDataBase()
+detail::MutexBase::~MutexBase()
 {
     if (lock_)
         PR_DestroyLock(lock_);
 }
 
 void
-detail::ExclusiveDataBase::acquire() const
+detail::MutexBase::acquire() const
 {
     PR_Lock(lock_);
 }
 
 void
-detail::ExclusiveDataBase::release() const
+detail::MutexBase::release() const
 {
     MOZ_RELEASE_ASSERT(PR_Unlock(lock_) == PR_SUCCESS);
 }
