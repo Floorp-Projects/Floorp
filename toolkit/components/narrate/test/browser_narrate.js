@@ -43,7 +43,7 @@ add_task(function* testNarrate() {
     $(NarrateTestUtils.START).click();
     let speechinfo = (yield promiseEvent).detail;
     is(speechinfo.voice, TEST_VOICE, "correct voice is being used");
-    is(speechinfo.paragraph, 0, "first paragraph is being spoken");
+    let paragraph = speechinfo.paragraph;
 
     NarrateTestUtils.isStartedState(content, ok);
 
@@ -51,7 +51,7 @@ add_task(function* testNarrate() {
     $(NarrateTestUtils.FORWARD).click();
     speechinfo = (yield promiseEvent).detail;
     is(speechinfo.voice, TEST_VOICE, "same voice is used");
-    is(speechinfo.paragraph, 1, "second paragraph is being spoken");
+    isnot(speechinfo.paragraph, paragraph, "next paragraph is being spoken");
 
     NarrateTestUtils.isStartedState(content, ok);
 
