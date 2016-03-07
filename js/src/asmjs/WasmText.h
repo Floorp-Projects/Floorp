@@ -26,11 +26,11 @@ namespace js {
 namespace wasm {
 
 // Translate the textual representation of a wasm module (given by a
-// null-terminated char16_t array) into a Bytecode object. If there is an error
+// null-terminated char16_t array) into serialized bytes. If there is an error
 // other than out-of-memory an error message string will be stored in 'error'.
 
-extern UniqueBytecode
-TextToBinary(const char16_t* text, UniqueChars* error);
+extern bool
+TextToBinary(const char16_t* text, Bytes* bytes, UniqueChars* error);
 
 } // namespace wasm
 } // namespace js

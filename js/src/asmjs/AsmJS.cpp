@@ -2650,7 +2650,7 @@ class MOZ_STACK_CLASS FunctionValidator
         if (!m_.mg().startFuncDef(line, &fg_))
             return false;
 
-        encoder_.emplace(fg_.bytecode());
+        encoder_.emplace(fg_.bytes());
         return true;
     }
 
@@ -3532,13 +3532,8 @@ CheckVariables(FunctionValidator& f, ParseNode** stmtIter)
 
     MOZ_ASSERT(f.encoder().empty());
 
-    if (!f.encoder().writeVarU32(types.length()))
+    if (!EncodeLocalEntries(f.encoder(), types))
         return false;
-
-    for (ValType v : types) {
-        if (!f.encoder().writeValType(v))
-            return false;
-    }
 
     for (uint32_t i = 0; i < inits.length(); i++) {
         NumLit lit = inits[i];
@@ -6423,7 +6418,7 @@ CheckSwitchRange(FunctionValidator& f, ParseNode* stmt, int32_t* low, int32_t* h
     }
 
     int64_t i64 = (int64_t(*high) - int64_t(*low)) + 1;
-    if (i64 > 4 * 1024 * 1024)
+    if (i64 > MaxBrTableElems)
         return f.fail(initialStmt, "all switch statements generate tables; this table would be too big");
 
     *tableLength = uint32_t(i64);

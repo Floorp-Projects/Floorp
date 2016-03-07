@@ -120,7 +120,7 @@
   padding: 0;
 }
 
-/*======= Font style popup =======*/
+/*======= Popup =======*/
 
 .dropdown-popup {
   min-width: 300px;
@@ -134,6 +134,10 @@
   border: 1px solid #b5b5b5;
   border-bottom-width: 0;
   box-shadow: 0 1px 12px #666;
+}
+
+.keep-open .dropdown-popup {
+  z-index: initial;
 }
 
 .dropdown-popup > hr {
@@ -153,6 +157,8 @@
   background-image: url("chrome://global/skin/reader/RM-Type-Controls-Arrow.svg");
   display: block;
 }
+
+/*======= Font style popup =======*/
 
 #font-type-buttons,
 #font-size-buttons,
