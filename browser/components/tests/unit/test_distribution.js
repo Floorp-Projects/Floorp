@@ -82,7 +82,7 @@ function run_test() {
   Assert.ok(testDistributionFile.exists());
 
   installDistributionEngine();
-  
+
   run_next_test();
 }
 
