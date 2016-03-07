@@ -3749,20 +3749,18 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     aContext.SetMatrix(runTransform);
 
     if (drawMode != DrawMode(0)) {
-      bool paintSVGGlyphs;
-      nsTextFrame::PaintTextParams params(rendCtx.ThebesContext());
-      params.framePt = gfxPoint();
-      params.dirtyRect = LayoutDevicePixel::
+      LayoutDeviceRect frameRect = LayoutDevicePixel::
         FromAppUnits(frame->GetVisualOverflowRect(), auPerDevPx);
-      params.contextPaint = &contextPaint;
+      bool paintSVGGlyphs;
       if (ShouldRenderAsPath(frame, paintSVGGlyphs)) {
         SVGTextDrawPathCallbacks callbacks(&rendCtx, frame,
                                            matrixForPaintServers,
                                            paintSVGGlyphs);
-        params.callbacks = &callbacks;
-        frame->PaintText(params, item);
+        frame->PaintText(&rendCtx, nsPoint(), frameRect, item,
+                         &contextPaint, &callbacks);
       } else {
-        frame->PaintText(params, item);
+        frame->PaintText(&rendCtx, nsPoint(), frameRect, item,
+                         &contextPaint, nullptr);
       }
     }
 
