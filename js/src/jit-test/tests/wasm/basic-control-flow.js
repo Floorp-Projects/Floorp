@@ -353,15 +353,13 @@ assertEq(wasmEvalText(`(module (func (result i32) (local i32)
 // ----------------------------------------------------------------------------
 // br_table
 
-assertErrorMessage(() => wasmEvalText('(module (func (br_table (i32.const 0) (table) (br 0))))'), TypeError, DEPTH_OUT_OF_BOUNDS);
-
-assertErrorMessage(() => wasmEvalText('(module (func (block (br_table (i32.const 0) (table (br 2)) (br 0)))))'), TypeError, DEPTH_OUT_OF_BOUNDS);
-
-assertErrorMessage(() => wasmEvalText('(module (func (block (br_table (f32.const 0) (table) (br 0)))))'), TypeError, mismatchError("f32", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (br_table 0 (i32.const 0))))'), TypeError, DEPTH_OUT_OF_BOUNDS);
+assertErrorMessage(() => wasmEvalText('(module (func (block (br_table 2 0 (i32.const 0)))))'), TypeError, DEPTH_OUT_OF_BOUNDS);
+assertErrorMessage(() => wasmEvalText('(module (func (block (br_table 0 (f32.const 0)))))'), TypeError, mismatchError("f32", "i32"));
 
 assertEq(wasmEvalText(`(module (func (result i32) (param i32)
   (block $default
-   (br_table (get_local 0) (table) (br $default))
+   (br_table $default (get_local 0))
    (return (i32.const 0))
   )
   (return (i32.const 1))
@@ -369,7 +367,7 @@ assertEq(wasmEvalText(`(module (func (result i32) (param i32)
 
 assertEq(wasmEvalText(`(module (func (result i32) (param i32)
   (block $default
-   (br_table (return (i32.const 1)) (table) (br $default))
+   (br_table $default (return (i32.const 1)))
    (return (i32.const 0))
   )
   (return (i32.const 2))
@@ -378,7 +376,7 @@ assertEq(wasmEvalText(`(module (func (result i32) (param i32)
 assertEq(wasmEvalText(`(module (func (result i32) (param i32)
   (block $outer
    (block $inner
-    (br_table (get_local 0) (table) (br $inner))
+    (br_table $inner (get_local 0))
     (return (i32.const 0))
    )
    (return (i32.const 1))
@@ -391,11 +389,7 @@ var f = wasmEvalText(`(module (func (result i32) (param i32)
    (block $1
     (block $2
      (block $default
-      (br_table
-       (get_local 0)
-       (table (br $0) (br $1) (br $2))
-       (br $default)
-      )
+      (br_table $0 $1 $2 $default (get_local 0))
      )
      (return (i32.const -1))
     )
