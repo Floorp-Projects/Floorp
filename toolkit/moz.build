@@ -19,7 +19,6 @@ DIRS += [
     'pluginproblem',
     'profile',
     'themes',
-    'webapps',
 ]
 
 if CONFIG['MOZ_UPDATER'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':

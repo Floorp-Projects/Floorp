@@ -32,7 +32,7 @@ from mozharness.mozilla.testing.codecoverage import (
 )
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 
-SUITE_CATEGORIES = ['gtest', 'cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell', 'mozbase', 'mozmill', 'webapprt']
+SUITE_CATEGORIES = ['gtest', 'cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell', 'mozbase', 'mozmill']
 
 # DesktopUnittest {{{1
 class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMixin, CodeCoverageMixin):
@@ -44,14 +44,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "help": "Specify which mochi suite to run. "
                     "Suites are defined in the config file.\n"
                     "Examples: 'all', 'plain1', 'plain5', 'chrome', or 'a11y'"}
-         ],
-        [['--webapprt-suite', ], {
-            "action": "extend",
-            "dest": "specified_webapprt_suites",
-            "type": "string",
-            "help": "Specify which webapprt suite to run. "
-                    "Suites are defined in the config file.\n"
-                    "Examples: 'content', 'chrome'"}
          ],
         [['--reftest-suite', ], {
             "action": "extend",
@@ -209,7 +201,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         dirs['abs_test_bin_components_dir'] = os.path.join(dirs['abs_test_bin_dir'],
                                                            'components')
         dirs['abs_mochitest_dir'] = os.path.join(dirs['abs_test_install_dir'], "mochitest")
-        dirs['abs_webapprt_dir'] = os.path.join(dirs['abs_test_install_dir'], "mochitest")
         dirs['abs_reftest_dir'] = os.path.join(dirs['abs_test_install_dir'], "reftest")
         dirs['abs_xpcshell_dir'] = os.path.join(dirs['abs_test_install_dir'], "xpcshell")
         dirs['abs_cppunittest_dir'] = os.path.join(dirs['abs_test_install_dir'], "cppunittest")
@@ -297,32 +288,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         self.symbols_url = symbols_url
         return self.symbols_url
 
-    def get_webapprt_path(self, res_dir, mochitest_dir):
-        """Get the path to the webapp runtime binary.
-        On Mac, we copy the stub from the resources dir to the test app bundle,
-        since we have to run it from the executable directory of a bundle
-        in order for its windows to appear.  Ideally, the build system would do
-        this for us at build time, and we should find a way for it to do that.
-        """
-        exe_suffix = self.config.get('exe_suffix', '')
-        app_name = 'webapprt-stub' + exe_suffix
-        app_path = os.path.join(res_dir, app_name)
-        if self._is_darwin():
-            mac_dir_name = os.path.join(
-                mochitest_dir,
-                'webapprtChrome',
-                'webapprt',
-                'test',
-                'chrome',
-                'TestApp.app',
-                'Contents',
-                'MacOS')
-            mac_app_name = 'webapprt' + exe_suffix
-            mac_app_path = os.path.join(mac_dir_name, mac_app_name)
-            self.copyfile(app_path, mac_app_path, copystat=True)
-            return mac_app_path
-        return app_path
-
     def _query_abs_base_cmd(self, suite_category, suite):
         if self.binary_path:
             c = self.config
@@ -353,9 +318,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             # self.symbols_path when downloading/extracting.
             if self.symbols_path:
                 str_format_values['symbols_path'] = self.symbols_path
-
-            if suite_category == 'webapprt':
-                str_format_values['app_path'] = self.get_webapprt_path(abs_res_dir, dirs['abs_mochitest_dir'])
 
             if c['e10s']:
                 base_cmd.append('--e10s')
@@ -497,7 +459,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
     def run_tests(self):
         self._run_category_suites('mochitest')
         self._run_category_suites('reftest')
-        self._run_category_suites('webapprt')
         self._run_category_suites('xpcshell',
                                   preflight_run_method=self.preflight_xpcshell)
         self._run_category_suites('cppunittest',

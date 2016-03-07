@@ -214,7 +214,6 @@ class LinuxArtifactJob(ArtifactJob):
         'firefox/platform.ini',
         'firefox/plugin-container',
         'firefox/updater',
-        'firefox/webapprt-stub',
         'firefox/**/*.so',
     }
 
@@ -307,7 +306,6 @@ class MacArtifactJob(ArtifactJob):
                 'gmp-clearkey/0.1/libclearkey.dylib',
                 # 'gmp-fake/1.0/libfake.dylib',
                 # 'gmp-fakeopenh264/1.0/libfakeopenh264.dylib',
-                'webapprt-stub',
             ])
 
             with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:

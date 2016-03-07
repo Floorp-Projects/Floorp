@@ -1,5 +1,0 @@
-{
-  "name": "Window Title Test App",
-  "description": "an app for testing window titles",
-  "launch_path": "/webapprtChrome/webapprt/test/chrome/window-title.html"
-}

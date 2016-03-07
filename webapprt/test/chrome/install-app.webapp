@@ -1,5 +1,0 @@
-{
-  "name": "Install Test App",
-  "description": "an app for testing installing apps",
-  "launch_path": "/webapprtChrome/webapprt/test/chrome/install-app.html"
-}
