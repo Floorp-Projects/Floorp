@@ -1021,7 +1021,9 @@ static nsBoundingMetrics
 MeasureTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun)
 {
   gfxTextRun::Metrics metrics =
-    aTextRun->MeasureText(gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS, aDrawTarget);
+    aTextRun->MeasureText(0, aTextRun->GetLength(),
+                          gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS,
+                          aDrawTarget, nullptr);
 
   nsBoundingMetrics bm;
   bm.leftBearing = NSToCoordFloor(metrics.mBoundingBox.X());

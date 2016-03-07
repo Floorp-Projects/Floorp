@@ -342,7 +342,8 @@ GetBaselinePosition(nsTextFrame* aFrame,
 {
   WritingMode writingMode = aFrame->GetWritingMode();
   gfxTextRun::Metrics metrics =
-    aTextRun->MeasureText(gfxFont::LOOSE_INK_EXTENTS, nullptr);
+    aTextRun->MeasureText(0, aTextRun->GetLength(), gfxFont::LOOSE_INK_EXTENTS,
+                          nullptr, nullptr);
 
   switch (aDominantBaseline) {
     case NS_STYLE_DOMINANT_BASELINE_HANGING:
