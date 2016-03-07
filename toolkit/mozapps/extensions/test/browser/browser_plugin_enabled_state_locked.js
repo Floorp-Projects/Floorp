@@ -30,9 +30,9 @@ registerCleanupFunction(() => {
 });
 
 function getPlugins() {
-  let deferred = Promise.defer();
-  AddonManager.getAddonsByTypes(["plugin"], plugins => deferred.resolve(plugins));
-  return deferred.promise;
+  return new Promise(resolve => {
+    AddonManager.getAddonsByTypes(["plugin"], plugins => resolve(plugins));
+  });
 }
 
 function getTestPlugin(aPlugins) {
@@ -76,15 +76,15 @@ function checkStateMenuDetail(locked) {
   is_element_visible(details, "Details link should be visible.");
   EventUtils.synthesizeMouseAtCenter(details, {}, gManagerWindow);
 
-  let deferred = Promise.defer();
-  wait_for_view_load(gManagerWindow, function() {
-    let menuList = gManagerWindow.document.getElementById("detail-state-menulist");
-    is_element_visible(menuList, "Details state menu should be visible.");
-    Assert.equal(menuList.disabled, locked,
-      "Details state menu enabled state should be correct.");
-    deferred.resolve();
+  return new Promise(resolve => {
+    wait_for_view_load(gManagerWindow, function() {
+      let menuList = gManagerWindow.document.getElementById("detail-state-menulist");
+      is_element_visible(menuList, "Details state menu should be visible.");
+      Assert.equal(menuList.disabled, locked,
+        "Details state menu enabled state should be correct.");
+      resolve();
+    });
   });
-  return deferred.promise;
 }
 
 add_task(function* initializeState() {
