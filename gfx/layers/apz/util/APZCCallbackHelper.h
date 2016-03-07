@@ -161,7 +161,7 @@ public:
     static void NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId, const nsString& aEvent);
 
     /* Notify content that the repaint flush is complete. */
-    static void NotifyFlushComplete();
+    static void NotifyFlushComplete(nsIPresShell* aShell);
 
     /* Temporarily ignore the Displayport for better paint performance. If at
      * all possible, pass in a presShell if you have one at the call site, we
