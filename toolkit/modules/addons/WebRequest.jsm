@@ -87,6 +87,20 @@ function parseExtra(extra, allowed) {
   return result;
 }
 
+function mergeStatus(data, channel) {
+  try {
+    data.statusCode = channel.responseStatus;
+    let statusText = channel.responseStatusText;
+    let maj = {};
+    let min = {};
+    channel.QueryInterface(Ci.nsIHttpChannelInternal).getResponseVersion(maj, min);
+    data.statusLine = `HTTP/${maj.value}.${min.value} ${data.statusCode} ${statusText}`;
+  } catch (e) {
+    // NS_ERROR_NOT_AVAILABLE might be thrown.
+    Cu.reportError(e);
+  }
+}
+
 var HttpObserverManager;
 
 var ContentPolicyManager = {
@@ -404,7 +418,7 @@ HttpObserverManager = {
     let responseHeaderNames;
 
     let includeStatus = kind === "headersReceived" ||
-                        kind === "onBeforeRedirect" ||
+                        kind === "onRedirect" ||
                         kind === "onStart" ||
                         kind === "onStop";
 
@@ -443,7 +457,7 @@ HttpObserverManager = {
         responseHeaderNames = data.responseHeaders.map(h => h.name);
       }
       if (includeStatus) {
-        data.statusCode = channel.responseStatus;
+        mergeStatus(data, channel);
       }
 
       let result = null;

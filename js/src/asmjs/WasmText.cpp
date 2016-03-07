@@ -784,6 +784,7 @@ class WasmToken
         UnsignedInteger,
         SignedInteger,
         Memory,
+        NegativeZero,
         Load,
         Local,
         Loop,
@@ -1271,6 +1272,8 @@ WasmTokenStream::literal(const char16_t* begin)
 
         if (*begin == '-') {
             uint64_t value = u.value();
+            if (value == 0)
+                return WasmToken(WasmToken::NegativeZero, begin, cur_);
             if (value > uint64_t(INT64_MIN))
                 return LexHexFloatLiteral(begin, end_, &cur_);
 
@@ -1295,6 +1298,8 @@ WasmTokenStream::literal(const char16_t* begin)
 
         if (*begin == '-') {
             uint64_t value = u.value();
+            if (value == 0)
+                return WasmToken(WasmToken::NegativeZero, begin, cur_);
             if (value > uint64_t(INT64_MIN))
                 return LexDecFloatLiteral(begin, end_, &cur_);
 
@@ -2270,6 +2275,9 @@ ParseFloatLiteral(WasmParseContext& c, WasmToken token, Float* result)
       case WasmToken::SignedInteger:
         *result = token.sint();
         return true;
+      case WasmToken::NegativeZero:
+        *result = -0.0;
+        return true;
       case WasmToken::Float:
         break;
       default:
@@ -2345,6 +2353,8 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
                 break;
             return new(c.lifo) WasmAstConst(Val(uint32_t(sint.value())));
           }
+          case WasmToken::NegativeZero:
+            return new(c.lifo) WasmAstConst(Val(uint32_t(0)));
           default:
             break;
         }
@@ -2358,6 +2368,8 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
             return new(c.lifo) WasmAstConst(Val(val.uint()));
           case WasmToken::SignedInteger:
             return new(c.lifo) WasmAstConst(Val(uint64_t(val.sint())));
+          case WasmToken::NegativeZero:
+            return new(c.lifo) WasmAstConst(Val(uint32_t(0)));
           default:
             break;
         }
@@ -3770,11 +3782,11 @@ EncodeFunctionSignatures(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeCString(Encoder& e, WasmName wasmName)
+EncodeBytes(Encoder& e, WasmName wasmName)
 {
     TwoByteChars range(wasmName.begin(), wasmName.length());
     UniqueChars utf8(JS::CharsToNewUTF8CharsZ(nullptr, range).c_str());
-    return utf8 && e.writeCString(utf8.get());
+    return utf8 && e.writeBytes(utf8.get(), strlen(utf8.get()));
 }
 
 static bool
@@ -3783,10 +3795,10 @@ EncodeImport(Encoder& e, WasmAstImport& imp)
     if (!e.writeVarU32(imp.sigIndex()))
         return false;
 
-    if (!EncodeCString(e, imp.module()))
+    if (!EncodeBytes(e, imp.module()))
         return false;
 
-    if (!EncodeCString(e, imp.func()))
+    if (!EncodeBytes(e, imp.func()))
         return false;
 
     return true;
@@ -3854,7 +3866,7 @@ EncodeFunctionExport(Encoder& e, WasmAstExport& exp)
     if (!e.writeVarU32(exp.func().index()))
         return false;
 
-    if (!EncodeCString(e, exp.name()))
+    if (!EncodeBytes(e, exp.name()))
         return false;
 
     return true;
@@ -3925,13 +3937,11 @@ EncodeFunctionBody(Encoder& e, WasmAstFunc& func)
 
     size_t beforeBody = e.currentOffset();
 
-    if (!e.writeVarU32(func.vars().length()))
+    ValTypeVector varTypes;
+    if (!varTypes.appendAll(func.vars()))
         return false;
-
-    for (ValType type : func.vars()) {
-        if (!e.writeValType(type))
-            return false;
-    }
+    if (!EncodeLocalEntries(e, varTypes))
+        return false;
 
     for (WasmAstExpr* expr : func.body()) {
         if (!EncodeExpr(e, *expr))
@@ -3981,10 +3991,7 @@ EncodeDataSegment(Encoder& e, WasmAstSegment& segment)
         bytes.infallibleAppend(byte);
     }
 
-    if (!e.writeVarU32(bytes.length()))
-        return false;
-
-    if (!e.writeRawData(bytes.begin(), bytes.length()))
+    if (!e.writeBytes(bytes.begin(), bytes.length()))
         return false;
 
     return true;
@@ -4014,60 +4021,56 @@ EncodeDataSegments(Encoder& e, WasmAstModule& module)
     return true;
 }
 
-static UniqueBytecode
-EncodeModule(WasmAstModule& module)
+static bool
+EncodeModule(WasmAstModule& module, Bytes* bytes)
 {
-    UniqueBytecode bytecode = MakeUnique<Bytecode>();
-    if (!bytecode)
-        return nullptr;
-
-    Encoder e(*bytecode);
+    Encoder e(*bytes);
 
     if (!e.writeFixedU32(MagicNumber))
-        return nullptr;
+        return false;
 
     if (!e.writeFixedU32(EncodingVersion))
-        return nullptr;
+        return false;
 
     if (!EncodeSignatures(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeImportTable(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeFunctionSignatures(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeFunctionTable(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeMemory(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeExportTable(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeFunctionBodies(e, module))
-        return nullptr;
+        return false;
 
     if (!EncodeDataSegments(e, module))
-        return nullptr;
+        return false;
 
-    return Move(bytecode);
+    return true;
 }
 
 /*****************************************************************************/
 
-UniqueBytecode
-wasm::TextToBinary(const char16_t* text, UniqueChars* error)
+bool
+wasm::TextToBinary(const char16_t* text, Bytes* bytes, UniqueChars* error)
 {
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
     WasmAstModule* module = ParseModule(text, lifo, error);
     if (!module)
-        return nullptr;
+        return false;
 
     if (!ResolveModule(lifo, module, error))
-        return nullptr;
+        return false;
 
-    return EncodeModule(*module);
+    return EncodeModule(*module, bytes);
 }

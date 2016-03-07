@@ -47,6 +47,8 @@ interface MediaRecorder : EventTarget {
 
   [Throws]
   void requestData();
+
+  static boolean isTypeSupported(DOMString type);
 };
 
 dictionary MediaRecorderOptions {
