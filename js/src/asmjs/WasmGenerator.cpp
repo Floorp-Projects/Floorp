@@ -333,7 +333,7 @@ ModuleGenerator::finishTask(IonCompileTask* task)
     funcIndexToCodeRange_[func.index()] = funcCodeRangeIndex;
 
     // Merge the compiled results into the whole-module masm.
-    DebugOnly<size_t> sizeBefore = masm_.size();
+    mozilla::DebugOnly<size_t> sizeBefore = masm_.size();
     if (!masm_.asmMergeWith(results.masm()))
         return false;
     MOZ_ASSERT(masm_.size() == offsetInWhole + results.masm().size());
