@@ -74,6 +74,11 @@ for (var i = 0; i < 2000; i++) {
     fsrc[i + 6000] = 0xffffff7f - i;
 }
 
+// Truncation towards 0.
+fsrc[1990] = -0.9
+fsrc[1991] = 0.9
+fsrc[1992] = 1.9
+
 for (var n = 0; n < 10; n++) {
     cvt_ftou_scalar(fsrc, fdst1);
     cvt_ftou_simd(fsrc, fdst2);

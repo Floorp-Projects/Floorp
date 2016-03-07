@@ -1091,10 +1091,11 @@ struct ThrowIfNotInRange
     static_assert(mozilla::IsIntegral<IntegerType>::value, "bad destination type");
 
     static bool value(From v) {
-        double d(v);
-        return mozilla::IsNaN(d) ||
-               d < double(mozilla::MinValue<IntegerType>::value) ||
-               d > double(mozilla::MaxValue<IntegerType>::value);
+        // Truncate to integer value before the range check.
+        double d = trunc(double(v));
+        // Arrange relations so NaN returns true (i.e., it throws a RangeError).
+        return !(d >= double(mozilla::MinValue<IntegerType>::value) &&
+                 d <= double(mozilla::MaxValue<IntegerType>::value));
     }
 };
 

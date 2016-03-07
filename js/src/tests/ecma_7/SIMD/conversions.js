@@ -374,8 +374,8 @@ function testInt32x4FromFloat32x4() {
 }
 
 function testUint32x4FromFloat32x4() {
-  var d = Float32x4(1.1, 2.2, 3.3, 4.6);
-  assertEqX4(Uint32x4.fromFloat32x4(d), [1, 2, 3, 4]);
+  var d = Float32x4(1.1, 2.2, -0.9, 4.6);
+  assertEqX4(Uint32x4.fromFloat32x4(d), [1, 2, 0, 4]);
 
   var d = Float32x4(NaN, 0, 0, 0);
   assertThrowsInstanceOf(() => SIMD.Uint32x4.fromFloat32x4(d), RangeError);
