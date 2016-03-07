@@ -247,8 +247,8 @@ DecodeCallIndirect(FunctionDecoder& f, ExprType* type)
 static bool
 DecodeConstI32(FunctionDecoder& f, ExprType* type)
 {
-    uint32_t _;
-    if (!f.d().readVarU32(&_))
+    int32_t _;
+    if (!f.d().readVarS32(&_))
         return f.fail("unable to read i32.const immediate");
 
     *type = ExprType::I32;
@@ -258,8 +258,8 @@ DecodeConstI32(FunctionDecoder& f, ExprType* type)
 static bool
 DecodeConstI64(FunctionDecoder& f, ExprType* type)
 {
-    uint64_t _;
-    if (!f.d().readVarU64(&_))
+    int64_t _;
+    if (!f.d().readVarS64(&_))
         return f.fail("unable to read i64.const immediate");
 
     *type = ExprType::I64;

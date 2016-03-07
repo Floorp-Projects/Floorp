@@ -2820,7 +2820,7 @@ class MOZ_STACK_CLASS FunctionValidator
 
     MOZ_WARN_UNUSED_RESULT bool writeInt32Lit(int32_t i32) {
         return encoder().writeExpr(Expr::I32Const) &&
-               encoder().writeVarU32(i32);
+               encoder().writeVarS32(i32);
     }
     MOZ_WARN_UNUSED_RESULT bool writeConstExpr(NumLit lit) {
         switch (lit.which()) {
