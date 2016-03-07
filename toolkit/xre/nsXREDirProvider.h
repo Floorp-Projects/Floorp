@@ -121,6 +121,11 @@ protected:
   // delimiters.
   static inline nsresult AppendProfileString(nsIFile* aFile, const char* aPath);
 
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
+  // Load the temp directory for sandboxed content processes
+  nsresult LoadContentProcessTempDir();
+#endif
+
   // Calculate and register extension and theme bundle directories.
   void LoadExtensionBundleDirectories();
 
@@ -141,6 +146,9 @@ protected:
   nsCOMPtr<nsIFile>      mProfileDir;
   nsCOMPtr<nsIFile>      mProfileLocalDir;
   bool                   mProfileNotified;
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
+  nsCOMPtr<nsIFile>      mContentTempDir;
+#endif
   nsCOMArray<nsIFile>    mAppBundleDirectories;
   nsCOMArray<nsIFile>    mExtensionDirectories;
   nsCOMArray<nsIFile>    mThemeDirectories;
