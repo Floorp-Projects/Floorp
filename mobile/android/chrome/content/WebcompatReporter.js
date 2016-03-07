@@ -50,7 +50,7 @@ var WebcompatReporter = {
       let tab = BrowserApp.getTabForId(args.tabId);
       let currentURI = tab.browser.currentURI.spec;
       if (args.desktopMode && this.isReportableUrl(currentURI)) {
-        this.reportDesktopModePrompt();
+        this.reportDesktopModePrompt(tab);
       }
     }
   },
@@ -86,12 +86,12 @@ var WebcompatReporter = {
         ctx.scale(dpr, dpr);
         ctx.drawWindow(win, x, y, w, h, '#ffffff');
         let screenshot = canvas.toDataURL();
-        resolve({url: tab.browser.currentURI.spec, data: screenshot});
+        resolve({tab: tab, data: screenshot});
       } catch (e) {
-        // drawWindow can fail depending on memory or surface size. Rather than reject here, 
+        // drawWindow can fail depending on memory or surface size. Rather than reject here,
         // we resolve the URL so the user can continue to file an issue without a screenshot.
         Cu.reportError("WebCompatReporter: getting a screenshot failed: " + e);
-        resolve({url: tab.browser.currentURI.spec});
+        resolve({tab: tab});
       }
     });
   },
@@ -103,12 +103,12 @@ var WebcompatReporter = {
                     url.startsWith("resource"));
   },
 
-  reportDesktopModePrompt: function() {
+  reportDesktopModePrompt: function(tab) {
     let message = this.strings.GetStringFromName("webcompat.reportDesktopMode.message");
     let options = {
       action: {
         label: this.strings.GetStringFromName("webcompat.reportDesktopModeYes.label"),
-        callback: () => this.reportIssue({url: BrowserApp.selectedTab.browser.currentURI.spec})
+        callback: () => this.reportIssue({tab: tab})
       }
     };
     Snackbars.show(message, Snackbars.LENGTH_LONG, options);
@@ -117,8 +117,8 @@ var WebcompatReporter = {
   reportIssue: (tabData) => {
     return new Promise((resolve) => {
       const WEBCOMPAT_ORIGIN = "https://webcompat.com";
-      let selectedTab = BrowserApp.selectedTab;
-      let webcompatURL = `${WEBCOMPAT_ORIGIN}/?open=1&url=${tabData.url}`;
+      let url = tabData.tab.browser.currentURI.spec
+      let webcompatURL = `${WEBCOMPAT_ORIGIN}/?open=1&url=${url}`;
 
       if (tabData.data && typeof tabData.data === "string") {
         BrowserApp.deck.addEventListener("DOMContentLoaded", function sendDataToTab(event) {
@@ -132,8 +132,8 @@ var WebcompatReporter = {
         }, false);
       }
 
-      let isPrivateTab = PrivateBrowsingUtils.isBrowserPrivate(selectedTab.browser);
-      BrowserApp.addTab(webcompatURL, {parentId: selectedTab.id, isPrivate: isPrivateTab});
+      let isPrivateTab = PrivateBrowsingUtils.isBrowserPrivate(tabData.tab.browser);
+      BrowserApp.addTab(webcompatURL, {parentId: tabData.tab.id, isPrivate: isPrivateTab});
       resolve();
     });
   }
