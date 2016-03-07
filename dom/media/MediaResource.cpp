@@ -1287,15 +1287,6 @@ nsresult FileMediaResource::Open(nsIStreamListener** aStreamListener)
       rv = NS_GetStreamForBlobURI(mURI, getter_AddRefs(mInput));
     }
   } else {
-
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-      MOZ_ASSERT((loadInfo->GetSecurityMode() &
-                 nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) == 0,
-                 "can not enforce CORS when calling Open2()");
-    }
-#endif
     rv = mChannel->Open2(getter_AddRefs(mInput));
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1360,10 +1351,6 @@ already_AddRefed<MediaResource> FileMediaResource::CloneData(MediaResourceCallba
   nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
   NS_ENSURE_TRUE(loadGroup, nullptr);
 
-  nsSecurityFlags securityFlags = element->ShouldCheckAllowOrigin()
-                                  ? nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS
-                                  : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
-
   MOZ_ASSERT(element->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video));
   nsContentPolicyType contentPolicyType = element->IsHTMLElement(nsGkAtoms::audio) ?
     nsIContentPolicy::TYPE_INTERNAL_AUDIO : nsIContentPolicy::TYPE_INTERNAL_VIDEO;
@@ -1375,7 +1362,7 @@ already_AddRefed<MediaResource> FileMediaResource::CloneData(MediaResourceCallba
     NS_NewChannel(getter_AddRefs(channel),
                   mURI,
                   element,
-                  securityFlags,
+                  nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
                   contentPolicyType,
                   loadGroup,
                   nullptr,  // aCallbacks
