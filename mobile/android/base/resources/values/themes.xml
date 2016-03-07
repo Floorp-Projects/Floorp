@@ -81,7 +81,6 @@
         <item name="android:dropDownItemStyle">@style/Widget.DropDownItem</item>
         <item name="android:editTextStyle">@style/Widget.EditText</item>
         <item name="android:textViewStyle">@style/Widget.TextView</item>
-        <item name="android:panelBackground">@drawable/menu_panel_bg</item>
         <item name="menuItemDefaultStyle">@style/Widget.MenuItemDefault</item>
     </style>
 
