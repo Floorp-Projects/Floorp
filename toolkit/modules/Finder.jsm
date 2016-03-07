@@ -528,6 +528,10 @@ Finder.prototype = {
       }
     }
 
+    if (!selection.rangeCount || selection.isCollapsed) {
+      return null;
+    }
+
     let utils = topWin.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIDOMWindowUtils);
 
