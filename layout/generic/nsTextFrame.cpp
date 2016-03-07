@@ -143,6 +143,21 @@ struct TabwidthAdaptor
   }
 };
 
+/**
+ * Helper that is useful to help port the code is this file to typed rects.
+ * The code here is particularly horrible because it uses gfxRect to
+ * store app unit values (because we want fractional app unit values), but
+ * virtually everywhere else gfxRect is in device pixels. :-/
+ */
+LayoutDeviceRect AppUnitGfxRectToDevRect(gfxRect aRect,
+                                         int32_t aAppUnitsPerDevPixel)
+{
+  return LayoutDeviceRect(aRect.x / aAppUnitsPerDevPixel,
+                          aRect.y / aAppUnitsPerDevPixel,
+                          aRect.width / aAppUnitsPerDevPixel,
+                          aRect.height / aAppUnitsPerDevPixel);
+}
+
 } // namespace
 
 void
@@ -4784,9 +4799,9 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
   // Add 1 pixel of dirty area around mVisibleRect to allow us to paint
   // antialiased pixels beyond the measured text extents.
   // This is temporary until we do this in the actual calculation of text extents.
-  LayoutDeviceRect extraVisible = LayoutDeviceRect::FromAppUnits(
-    mVisibleRect, mFrame->PresContext()->AppUnitsPerDevPixel());
-  extraVisible.Inflate(1);
+  nsRect extraVisible = mVisibleRect;
+  nscoord appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  extraVisible.Inflate(appUnitsPerDevPixel, appUnitsPerDevPixel);
   nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
 
   DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
@@ -4794,8 +4809,8 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
   gfxContext* ctx = aCtx->ThebesContext();
   gfxContextAutoSaveRestore save(ctx);
 
-  gfxRect pixelVisible(extraVisible.x, extraVisible.y,
-                       extraVisible.width, extraVisible.height);
+  gfxRect pixelVisible =
+    nsLayoutUtils::RectToGfxRect(extraVisible, appUnitsPerDevPixel);
   pixelVisible.Inflate(2);
   pixelVisible.RoundOut();
 
@@ -5465,7 +5480,7 @@ nsTextFrame::ComputeSelectionUnderlineHeight(
 
 void
 nsTextFrame::PaintDecorationLine(gfxContext* const aCtx,
-                                 const LayoutDeviceRect& aDirtyRect,
+                                 const gfxRect& aDirtyRect,
                                  nscolor aColor,
                                  const nscolor* aOverrideColor,
                                  const Point& aPt,
@@ -5482,17 +5497,17 @@ nsTextFrame::PaintDecorationLine(gfxContext* const aCtx,
 {
   nscolor lineColor = aOverrideColor ? *aOverrideColor : aColor;
   if (aCallbacks) {
-    Rect path = nsCSSRendering::DecorationLineToPath(
-      aDirtyRect.ToUnknownRect(), aPt, aLineSize, aAscent,
-      aOffset, aDecoration, aStyle, aVertical, aDescentLimit);
+    Rect path = nsCSSRendering::DecorationLineToPath(ToRect(aDirtyRect),
+      aPt, aLineSize, aAscent, aOffset, aDecoration, aStyle,
+      aVertical, aDescentLimit);
     if (aDecorationType == eNormalDecoration) {
       aCallbacks->PaintDecorationLine(path, lineColor);
     } else {
       aCallbacks->PaintSelectionDecorationLine(path, lineColor);
     }
   } else {
-    nsCSSRendering::PaintDecorationLine(
-      this, *aCtx->GetDrawTarget(), aDirtyRect.ToUnknownRect(), lineColor,
+    nsCSSRendering::PaintDecorationLine(this, *aCtx->GetDrawTarget(),
+                                        ToRect(aDirtyRect), lineColor,
       aPt, Float(aICoordInFrame), aLineSize, aAscent, aOffset, aDecoration, aStyle,
       aVertical, aDescentLimit);
   }
@@ -5504,7 +5519,7 @@ nsTextFrame::PaintDecorationLine(gfxContext* const aCtx,
  */
 void
 nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
-                                      const LayoutDeviceRect& aDirtyRect,
+                                      const gfxRect& aDirtyRect,
                                       SelectionType aType,
                                       nsTextPaintStyle& aTextPaintStyle,
                                       const TextRangeStyle &aRangeStyle,
@@ -5834,8 +5849,7 @@ AddHyphenToMetrics(nsTextFrame* aTextFrame, gfxTextRun* aBaseTextRun,
 void
 nsTextFrame::PaintOneShadow(Range aRange,
                             nsCSSShadowItem* aShadowDetails,
-                            PropertyProvider* aProvider,
-                            const LayoutDeviceRect& aDirtyRect,
+                            PropertyProvider* aProvider, const nsRect& aDirtyRect,
                             const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
                             gfxContext* aCtx, const nscolor& aForegroundColor,
                             const nsCharClipDisplayItem::ClipEdges& aClipEdges,
@@ -5876,10 +5890,10 @@ nsTextFrame::PaintOneShadow(Range aRange,
                     NSToCoordRound(shadowGfxRect.Height()));
 
   nsContextBoxBlur contextBoxBlur;
-  const auto A2D = PresContext()->AppUnitsPerDevPixel();
-  gfxContext* shadowContext = contextBoxBlur.Init(
-    shadowRect, 0, blurRadius, A2D, aCtx,
-    LayoutDevicePixel::ToAppUnits(aDirtyRect, A2D), nullptr, aBlurFlags);
+  gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, 0, blurRadius,
+                                                  PresContext()->AppUnitsPerDevPixel(),
+                                                  aCtx, aDirtyRect, nullptr,
+                                                  aBlurFlags);
   if (!shadowContext)
     return;
 
@@ -5904,7 +5918,8 @@ nsTextFrame::PaintOneShadow(Range aRange,
   nsTextPaintStyle textPaintStyle(this);
   DrawTextParams params(shadowContext);
   params.advanceWidth = &advanceWidth;
-  params.dirtyRect = aDirtyRect;
+  params.dirtyRect = gfxRect(aDirtyRect.x, aDirtyRect.y,
+                             aDirtyRect.width, aDirtyRect.height);
   params.framePt = aFramePt + shadowOffset;
   params.provider = aProvider;
   params.textStyle = &textPaintStyle;
@@ -5923,7 +5938,7 @@ nsTextFrame::PaintOneShadow(Range aRange,
 bool
 nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
     const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
-    const LayoutDeviceRect& aDirtyRect,
+    const gfxRect& aDirtyRect,
     PropertyProvider& aProvider,
     Range aContentRange,
     nsTextPaintStyle& aTextPaintStyle, SelectionDetails* aDetails,
@@ -5988,6 +6003,7 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
   // Draw background colors
   if (anyBackgrounds) {
     int32_t appUnitsPerDevPixel = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
+    LayoutDeviceRect dirtyRect = AppUnitGfxRectToDevRect(aDirtyRect, appUnitsPerDevPixel);
     SelectionIterator iterator(prevailingSelections, aContentRange,
                                aProvider, mTextRun, startIOffset);
     while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
@@ -5999,19 +6015,18 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
       gfxFloat advance = hyphenWidth +
         mTextRun->GetAdvanceWidth(range, &aProvider);
       if (NS_GET_A(background) > 0) {
-        nsRect bgRect;
+        gfxRect bgRect;
         gfxFloat offs = iOffset - (mTextRun->IsInlineReversed() ? advance : 0);
         if (vertical) {
-          bgRect = nsRect(aFramePt.x, aFramePt.y + offs,
-                          GetSize().width, advance);
+          bgRect = gfxRect(aFramePt.x, aFramePt.y + offs,
+                           GetSize().width, advance);
         } else {
-          bgRect = nsRect(aFramePt.x + offs, aFramePt.y,
-                          advance, GetSize().height);
+          bgRect = gfxRect(aFramePt.x + offs, aFramePt.y,
+                           advance, GetSize().height);
         }
-        PaintSelectionBackground(
-          *aCtx->GetDrawTarget(), background, aDirtyRect,
-          LayoutDeviceRect::FromAppUnits(bgRect, appUnitsPerDevPixel),
-          aCallbacks);
+        PaintSelectionBackground(*aCtx->GetDrawTarget(), background, dirtyRect,
+                                 AppUnitGfxRectToDevRect(bgRect, appUnitsPerDevPixel),
+                                 aCallbacks);
       }
       iterator.UpdateWithAdvance(advance);
     }
@@ -6029,6 +6044,8 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
   
   // Draw text
   const nsStyleText* textStyle = StyleText();
+  nsRect dirtyRect(aDirtyRect.x, aDirtyRect.y,
+                   aDirtyRect.width, aDirtyRect.height);
   SelectionIterator iterator(prevailingSelections, aContentRange,
                              aProvider, mTextRun, startIOffset);
   while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
@@ -6050,7 +6067,7 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
         startEdge -= hyphenWidth +
           mTextRun->GetAdvanceWidth(range, &aProvider);
       }
-      PaintShadows(shadow, range, aDirtyRect, aFramePt, textBaselinePt,
+      PaintShadows(shadow, range, dirtyRect, aFramePt, textBaselinePt,
           startEdge, aProvider, foreground, aClipEdges, aCtx);
     }
 
@@ -6067,7 +6084,7 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
 void
 nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     const gfxPoint& aFramePt,
-    const gfxPoint& aTextBaselinePt, const LayoutDeviceRect& aDirtyRect,
+    const gfxPoint& aTextBaselinePt, const gfxRect& aDirtyRect,
     PropertyProvider& aProvider, Range aContentRange,
     nsTextPaintStyle& aTextPaintStyle, SelectionDetails* aDetails,
     SelectionType aSelectionType,
@@ -6132,6 +6149,8 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
   } else {
     pt.y = (aTextBaselinePt.y - mAscent) / app;
   }
+  gfxRect dirtyRect(aDirtyRect.x / app, aDirtyRect.y / app,
+                    aDirtyRect.width / app, aDirtyRect.height / app);
   gfxFloat decorationOffsetDir = mTextRun->IsSidewaysLeft() ? -1.0 : 1.0;
   SelectionType type;
   TextRangeStyle selectedStyle;
@@ -6149,7 +6168,7 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
       }
       gfxFloat width = Abs(advance) / app;
       gfxFloat xInFrame = pt.x - (aFramePt.x / app);
-      DrawSelectionDecorations(aCtx, aDirtyRect, aSelectionType,
+      DrawSelectionDecorations(aCtx, dirtyRect, aSelectionType,
                                aTextPaintStyle, selectedStyle, pt, xInFrame,
                                width, mAscent / app, decorationMetrics,
                                aCallbacks, verticalRun, decorationOffsetDir,
@@ -6162,7 +6181,7 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
 bool
 nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
     const gfxPoint& aFramePt,
-    const gfxPoint& aTextBaselinePt, const LayoutDeviceRect& aDirtyRect,
+    const gfxPoint& aTextBaselinePt, const gfxRect& aDirtyRect,
     PropertyProvider& aProvider,
     Range aContentRange,
     nsTextPaintStyle& aTextPaintStyle,
@@ -6411,7 +6430,7 @@ nsTextFrame::MeasureCharClippedText(PropertyProvider& aProvider,
 void
 nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
                           Range aRange,
-                          const LayoutDeviceRect& aDirtyRect,
+                          const nsRect& aDirtyRect,
                           const gfxPoint& aFramePt,
                           const gfxPoint& aTextBaselinePt,
                           nscoord aLeftEdgeOffset,
@@ -6471,7 +6490,7 @@ nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
 
 void
 nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
-                       const LayoutDeviceRect& aDirtyRect,
+                       const nsRect& aDirtyRect,
                        const nsCharClipDisplayItem& aItem,
                        gfxTextContextPaint* aContextPaint,
                        nsTextFrame::DrawPathCallbacks* aCallbacks,
@@ -6532,6 +6551,8 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   nsTextPaintStyle textPaintStyle(this);
   textPaintStyle.SetResolveColors(!aCallbacks);
 
+  gfxRect dirtyRect(aDirtyRect.x, aDirtyRect.y,
+                    aDirtyRect.width, aDirtyRect.height);
   // Fork off to the (slower) paint-with-selection path if necessary.
   if (aItem.mIsFrameSelected.value()) {
     MOZ_ASSERT(aOpacity == 1.0f, "We don't support opacity with selections!");
@@ -6539,7 +6560,7 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
     Range contentRange(
       uint32_t(tmp.ConvertSkippedToOriginal(startOffset)),
       uint32_t(tmp.ConvertSkippedToOriginal(startOffset + maxLength)));
-    if (PaintTextWithSelection(ctx, framePt, textBaselinePt, aDirtyRect,
+    if (PaintTextWithSelection(ctx, framePt, textBaselinePt, dirtyRect,
                                provider, contentRange, textPaintStyle,
                                clipEdges, aContextPaint, aCallbacks)) {
       return;
@@ -6563,7 +6584,7 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
 
   gfxFloat advanceWidth;
   DrawTextParams params(ctx);
-  params.dirtyRect = aDirtyRect;
+  params.dirtyRect = dirtyRect;
   params.framePt = framePt;
   params.provider = &provider;
   params.advanceWidth = &advanceWidth;
@@ -6631,7 +6652,7 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
                                        const DrawTextParams& aParams,
                                        const TextDecorations& aDecorations)
 {
-    const auto app =
+    const gfxFloat app =
       aParams.textStyle->PresContext()->AppUnitsPerDevPixel();
     bool verticalRun = mTextRun->IsVertical();
     bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
@@ -6672,6 +6693,11 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
       ascent = -ascent;
     }
 
+    gfxRect dirtyRect(aParams.dirtyRect.x / app,
+                      aParams.dirtyRect.y / app,
+                      aParams.dirtyRect.Width() / app,
+                      aParams.dirtyRect.Height() / app);
+
     nscoord inflationMinFontSize =
       nsLayoutUtils::InflationMinFontSizeFor(this);
 
@@ -6695,7 +6721,7 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
       decSize.height = metrics.underlineSize;
       bCoord = (frameBStart - dec.mBaselineOffset) / app;
 
-      PaintDecorationLine(aParams.context, aParams.dirtyRect, dec.mColor,
+      PaintDecorationLine(aParams.context, dirtyRect, dec.mColor,
         aParams.decorationOverrideColor, decPt, 0.0, decSize, ascent,
         decorationOffsetDir * metrics.underlineOffset,
         NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
@@ -6717,7 +6743,7 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
       decSize.height = metrics.underlineSize;
       bCoord = (frameBStart - dec.mBaselineOffset) / app;
 
-      PaintDecorationLine(aParams.context, aParams.dirtyRect, dec.mColor,
+      PaintDecorationLine(aParams.context, dirtyRect, dec.mColor,
         aParams.decorationOverrideColor, decPt, 0.0, decSize, ascent,
         decorationOffsetDir * metrics.maxAscent,
         NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, dec.mStyle,
@@ -6748,7 +6774,7 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
       decSize.height = metrics.strikeoutSize;
       bCoord = (frameBStart - dec.mBaselineOffset) / app;
 
-      PaintDecorationLine(aParams.context, aParams.dirtyRect, dec.mColor,
+      PaintDecorationLine(aParams.context, dirtyRect, dec.mColor,
         aParams.decorationOverrideColor, decPt, 0.0, decSize, ascent,
         decorationOffsetDir * metrics.strikeoutOffset,
         NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
