@@ -27,6 +27,8 @@
 #include "nsProxyRelease.h"
 #include "nsTArray.h"
 #include "GeckoProfiler.h"
+#include "nsContentTypeParser.h"
+#include "nsCharSeparatedTokenizer.h"
 
 #ifdef LOG
 #undef LOG
@@ -971,6 +973,11 @@ MediaRecorder::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
+  if (!IsTypeSupported(aInitDict.mMimeType)) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
   RefPtr<MediaRecorder> object = new MediaRecorder(aStream, ownerWindow);
   object->SetOptions(aInitDict);
   return object.forget();
@@ -1005,6 +1012,11 @@ MediaRecorder::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
+  if (!IsTypeSupported(aInitDict.mMimeType)) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
   RefPtr<MediaRecorder> object = new MediaRecorder(aSrcAudioNode,
                                                      aSrcOutput,
                                                      ownerWindow);
@@ -1033,6 +1045,107 @@ MediaRecorder::SetOptions(const MediaRecorderOptions& aInitDict)
   if (aInitDict.mBitsPerSecond.WasPassed() && !aInitDict.mVideoBitsPerSecond.WasPassed()) {
     mVideoBitsPerSecond = mBitsPerSecond;
   }
+}
+
+static char const *const gWebMAudioEncoderCodecs[3] = {
+  "vorbis",
+  "opus",
+  // no VP9 yet
+  nullptr,
+};
+static char const *const gWebMVideoEncoderCodecs[5] = {
+  "vorbis",
+  "opus",
+  "vp8",
+  "vp8.0",
+  // no VP9 yet
+  nullptr,
+};
+static char const *const gOggAudioEncoderCodecs[2] = {
+  "opus",
+  // we could support vorbis here too, but don't
+  nullptr,
+};
+
+template <class String>
+static bool
+CodecListContains(char const *const * aCodecs, const String& aCodec)
+{
+  for (int32_t i = 0; aCodecs[i]; ++i) {
+    if (aCodec.EqualsASCII(aCodecs[i]))
+      return true;
+  }
+  return false;
+}
+
+/* static */
+bool
+MediaRecorder::IsTypeSupported(GlobalObject& aGlobal, const nsAString& aMIMEType)
+{
+  return IsTypeSupported(aMIMEType);
+}
+
+/* static */
+bool
+MediaRecorder::IsTypeSupported(const nsAString& aMIMEType)
+{
+  char const* const* codeclist = nullptr;
+
+  if (aMIMEType.IsEmpty()) {
+    return true;
+  }
+
+  nsContentTypeParser parser(aMIMEType);
+  nsAutoString mimeType;
+  nsresult rv = parser.GetType(mimeType);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  // effectively a 'switch (mimeType) {'
+  if (mimeType.EqualsLiteral(AUDIO_OGG)) {
+    if (MediaDecoder::IsOggEnabled() && MediaDecoder::IsOpusEnabled()) {
+      codeclist = gOggAudioEncoderCodecs;
+    }
+  }
+#ifdef MOZ_WEBM_ENCODER
+  else if (mimeType.EqualsLiteral(VIDEO_WEBM) &&
+           MediaEncoder::IsWebMEncoderEnabled()) {
+    codeclist = gWebMVideoEncoderCodecs;
+  }
+#endif
+#ifdef MOZ_OMX_ENCODER
+    // We're working on MP4 encoder support for desktop
+  else if (mimeType.EqualsLiteral(VIDEO_MP4) ||
+           mimeType.EqualsLiteral(AUDIO_3GPP) ||
+           mimeType.EqualsLiteral(AUDIO_3GPP2)) {
+    if (MediaEncoder::IsOMXEncoderEnabled()) {
+      // XXX check codecs for MP4/3GPP
+      return true;
+    }
+  }
+#endif
+
+  // codecs don't matter if we don't support the container
+  if (!codeclist) {
+    return false;
+  }
+  // now filter on codecs, and if needed rescind support
+  nsAutoString codecstring;
+  rv = parser.GetParameter("codecs", codecstring);
+
+  nsTArray<nsString> codecs;
+  if (!ParseCodecsString(codecstring, codecs)) {
+    return false;
+  }
+  for (const nsString& codec : codecs) {
+    if (!CodecListContains(codeclist, codec)) {
+      // Totally unsupported codec
+      return false;
+    }
+  }
+
+  return true;
 }
 
 nsresult
