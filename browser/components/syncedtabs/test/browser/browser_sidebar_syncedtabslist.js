@@ -38,6 +38,15 @@ const FIXTURE = [
         "icon": "moz-anno:favicon:https://www.mozilla.org/media/img/firefox/favicon-nightly.560395bbb2e1.png",
         "client": "2xU5h-4bkWqA",
         "lastUsed": 1451519420
+      },
+      {
+        // Should appear first for this client.
+        "type": "tab",
+        "title": "Mozilla Developer Network",
+        "url": "https://developer.mozilla.org/en-US/",
+        "icon": "moz-anno:favicon:https://developer.cdn.mozilla.net/static/img/favicon32.e02854fdcf73.png",
+        "client": "2xU5h-4bkWqA",
+        "lastUsed": 1451519725
       }
     ]
   },
@@ -87,7 +96,7 @@ add_task(function* testSyncedTabsSidebarList() {
   };
 
   sinon.stub(syncedTabsDeckComponent, "_accountStatus", ()=> Promise.resolve(true));
-  sinon.stub(SyncedTabs._internal, "getTabClients", ()=> Promise.resolve(FIXTURE));
+  sinon.stub(SyncedTabs._internal, "getTabClients", ()=> Promise.resolve(Cu.cloneInto(FIXTURE, {})));
 
   yield syncedTabsDeckComponent.updatePanel();
   // This is a hacky way of waiting for the view to render. The view renders
@@ -103,17 +112,20 @@ add_task(function* testSyncedTabsSidebarList() {
   Assert.ok(selectedPanel.classList.contains("tabs-container"),
     "tabs panel is selected");
 
-  Assert.equal(selectedPanel.querySelectorAll(".tab").length, 3,
-    "three tabs listed");
+  Assert.equal(selectedPanel.querySelectorAll(".tab").length, 4,
+    "four tabs listed");
   Assert.equal(selectedPanel.querySelectorAll(".client").length, 3,
     "three clients listed");
   Assert.equal(selectedPanel.querySelectorAll(".client")[2].querySelectorAll(".empty").length, 1,
     "third client is empty");
 
+  // Verify that the tabs are sorted by last used time.
+  var expectedTabIndices = [[0], [2, 0, 1]];
   Array.prototype.forEach.call(selectedPanel.querySelectorAll(".client"), (clientNode, i) => {
     checkItem(clientNode, FIXTURE[i]);
     Array.prototype.forEach.call(clientNode.querySelectorAll(".tab"), (tabNode, j) => {
-      checkItem(tabNode, FIXTURE[i].tabs[j]);
+      let tabIndex = expectedTabIndices[i][j];
+      checkItem(tabNode, FIXTURE[i].tabs[tabIndex]);
     });
   });
 
@@ -137,7 +149,7 @@ add_task(function* testSyncedTabsSidebarFilteredList() {
   };
 
   sinon.stub(syncedTabsDeckComponent, "_accountStatus", ()=> Promise.resolve(true));
-  sinon.stub(SyncedTabs._internal, "getTabClients", ()=> Promise.resolve(FIXTURE));
+  sinon.stub(SyncedTabs._internal, "getTabClients", ()=> Promise.resolve(Cu.cloneInto(FIXTURE, {})));
 
   yield syncedTabsDeckComponent.updatePanel();
   // This is a hacky way of waiting for the view to render. The view renders
@@ -155,20 +167,27 @@ add_task(function* testSyncedTabsSidebarFilteredList() {
   Assert.ok(selectedPanel.classList.contains("tabs-container"),
     "tabs panel is selected");
 
-  Assert.equal(selectedPanel.querySelectorAll(".tab").length, 3,
-    "three tabs listed");
+  Assert.equal(selectedPanel.querySelectorAll(".tab").length, 4,
+    "four tabs listed");
   Assert.equal(selectedPanel.querySelectorAll(".client").length, 0,
     "no clients are listed");
 
   Assert.equal(filterInput.value, "filter text",
     "filter text box has correct value");
 
+  // Tabs should not be sorted when filter is active.
   let FIXTURE_TABS = FIXTURE.reduce((prev, client) => prev.concat(client.tabs), []);
 
   Array.prototype.forEach.call(selectedPanel.querySelectorAll(".tab"), (tabNode, i) => {
     checkItem(tabNode, FIXTURE_TABS[i]);
   });
 
+  // Removing the filter should resort tabs.
+  FIXTURE_TABS.sort((a, b) => b.lastUsed - a.lastUsed);
+  yield syncedTabsDeckComponent.tabListComponent._store.getData();
+  Array.prototype.forEach.call(selectedPanel.querySelectorAll(".tab"), (tabNode, i) => {
+    checkItem(tabNode, FIXTURE_TABS[i]);
+  });
 });
 
 add_task(testClean);
