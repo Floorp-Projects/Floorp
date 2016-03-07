@@ -167,8 +167,8 @@
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">none</item>
         <item name="android:background">@color/about_page_header_grey</item>
-        <item name="android:paddingLeft">@dimen/page_row_edge_padding</item>
-        <item name="android:drawablePadding">@dimen/page_row_edge_padding</item>
+        <item name="android:paddingLeft">20dp</item>
+        <item name="android:drawablePadding">20dp</item>
         <item name="android:drawableLeft">@drawable/bookmark_folder</item>
     </style>
 
