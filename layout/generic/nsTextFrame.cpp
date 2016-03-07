@@ -5836,9 +5836,15 @@ AddHyphenToMetrics(nsTextFrame* aTextFrame, gfxTextRun* aBaseTextRun,
 }
 
 void
-nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
+nsTextFrame::PaintOneShadow(Range aRange,
                             nsCSSShadowItem* aShadowDetails,
-                            gfxRect& aBoundingBox, uint32_t aBlurFlags)
+                            PropertyProvider* aProvider,
+                            const LayoutDeviceRect& aDirtyRect,
+                            const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
+                            gfxContext* aCtx, const nscolor& aForegroundColor,
+                            const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+                            nscoord aLeftSideOffset, gfxRect& aBoundingBox,
+                            uint32_t aBlurFlags)
 {
   PROFILER_LABEL("nsTextFrame", "PaintOneShadow",
     js::ProfileEntry::Category::GRAPHICS);
@@ -5859,12 +5865,12 @@ nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
       // for vertical-RL, reverse direction of x-coords of bounding box
       shadowGfxRect.x = -shadowGfxRect.XMost();
     }
-    shadowGfxRect += gfxPoint(aParams.textBaselinePt.x,
-                              aParams.framePt.y + aParams.leftSideOffset);
+    shadowGfxRect +=
+      gfxPoint(aTextBaselinePt.x, aFramePt.y + aLeftSideOffset);
   } else {
     shadowGfxRect =
-      aBoundingBox + gfxPoint(aParams.framePt.x + aParams.leftSideOffset,
-                              aParams.textBaselinePt.y);
+      aBoundingBox + gfxPoint(aFramePt.x + aLeftSideOffset,
+                              aTextBaselinePt.y);
   }
   shadowGfxRect += shadowOffset;
 
@@ -5876,8 +5882,8 @@ nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   nsContextBoxBlur contextBoxBlur;
   const auto A2D = PresContext()->AppUnitsPerDevPixel();
   gfxContext* shadowContext = contextBoxBlur.Init(
-    shadowRect, 0, blurRadius, A2D, aParams.context,
-    LayoutDevicePixel::ToAppUnits(aParams.dirtyRect, A2D), nullptr, aBlurFlags);
+    shadowRect, 0, blurRadius, A2D, aCtx,
+    LayoutDevicePixel::ToAppUnits(aDirtyRect, A2D), nullptr, aBlurFlags);
   if (!shadowContext)
     return;
 
@@ -5887,13 +5893,13 @@ nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
     shadowColor = aShadowDetails->mColor;
     decorationOverrideColor = &shadowColor;
   } else {
-    shadowColor = aParams.foregroundColor;
+    shadowColor = aForegroundColor;
     decorationOverrideColor = nullptr;
   }
 
-  aParams.context->Save();
-  aParams.context->NewPath();
-  aParams.context->SetColor(Color::FromABGR(shadowColor));
+  aCtx->Save();
+  aCtx->NewPath();
+  aCtx->SetColor(Color::FromABGR(shadowColor));
 
   // Draw the text onto our alpha-only surface to capture the alpha values.
   // Remember that the box blur context has a device offset on it, so we don't need to
@@ -5902,19 +5908,18 @@ nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   nsTextPaintStyle textPaintStyle(this);
   DrawTextParams params(shadowContext);
   params.advanceWidth = &advanceWidth;
-  params.dirtyRect = aParams.dirtyRect;
-  params.framePt = aParams.framePt + shadowOffset;
-  params.provider = aParams.provider;
+  params.dirtyRect = aDirtyRect;
+  params.framePt = aFramePt + shadowOffset;
+  params.provider = aProvider;
   params.textStyle = &textPaintStyle;
-  params.textColor =
-    aParams.context == shadowContext ? shadowColor : NS_RGB(0, 0, 0);
-  params.clipEdges = aParams.clipEdges;
+  params.textColor = aCtx == shadowContext ? shadowColor : NS_RGB(0, 0, 0);
+  params.clipEdges = &aClipEdges;
   params.drawSoftHyphen = (GetStateBits() & TEXT_HYPHEN_BREAK) != 0;
   params.decorationOverrideColor = decorationOverrideColor;
-  DrawText(aParams.range, aParams.textBaselinePt + shadowOffset, params);
+  DrawText(aRange, aTextBaselinePt + shadowOffset, params);
 
   contextBoxBlur.DoPaint();
-  aParams.context->Restore();
+  aCtx->Restore();
 }
 
 // Paints selection backgrounds and text in the correct colors. Also computes
@@ -6026,10 +6031,6 @@ nsTextFrame::PaintTextWithSelectionColors(
   params.advanceWidth = &advance;
   params.callbacks = aParams.callbacks;
 
-  PaintShadowParams shadowParams(aParams);
-  shadowParams.provider = aParams.provider;
-  shadowParams.clipEdges = &aClipEdges;
-
   // Draw text
   const nsStyleText* textStyle = StyleText();
   SelectionIterator iterator(prevailingSelections, contentRange,
@@ -6053,11 +6054,9 @@ nsTextFrame::PaintTextWithSelectionColors(
         startEdge -= hyphenWidth +
           mTextRun->GetAdvanceWidth(range, aParams.provider);
       }
-      shadowParams.range = range;
-      shadowParams.textBaselinePt = textBaselinePt;
-      shadowParams.foregroundColor = foreground;
-      shadowParams.leftSideOffset = startEdge;
-      PaintShadows(shadow, shadowParams);
+      PaintShadows(
+        shadow, range, aParams.dirtyRect, aParams.framePt, textBaselinePt,
+        startEdge, *aParams.provider, foreground, aClipEdges, aParams.context);
     }
 
     // Draw text segment
@@ -6403,23 +6402,30 @@ nsTextFrame::MeasureCharClippedText(PropertyProvider& aProvider,
 
 void
 nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
-                          const PaintShadowParams& aParams)
+                          Range aRange,
+                          const LayoutDeviceRect& aDirtyRect,
+                          const gfxPoint& aFramePt,
+                          const gfxPoint& aTextBaselinePt,
+                          nscoord aLeftEdgeOffset,
+                          PropertyProvider& aProvider,
+                          nscolor aForegroundColor,
+                          const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+                          gfxContext* aCtx)
 {
   if (!aShadow) {
     return;
   }
 
   gfxTextRun::Metrics shadowMetrics =
-    mTextRun->MeasureText(aParams.range, gfxFont::LOOSE_INK_EXTENTS,
-                          nullptr, aParams.provider);
+    mTextRun->MeasureText(aRange, gfxFont::LOOSE_INK_EXTENTS,
+                          nullptr, &aProvider);
   if (GetWritingMode().IsLineInverted()) {
     Swap(shadowMetrics.mAscent, shadowMetrics.mDescent);
     shadowMetrics.mBoundingBox.y = -shadowMetrics.mBoundingBox.YMost();
   }
   if (GetStateBits() & TEXT_HYPHEN_BREAK) {
     AddHyphenToMetrics(this, mTextRun, &shadowMetrics,
-                       gfxFont::LOOSE_INK_EXTENTS,
-                       aParams.context->GetDrawTarget());
+                       gfxFont::LOOSE_INK_EXTENTS, aCtx->GetDrawTarget());
   }
   // Add bounds of text decorations
   gfxRect decorationRect(0, -shadowMetrics.mAscent,
@@ -6446,8 +6452,12 @@ nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
   }
 
   for (uint32_t i = aShadow->Length(); i > 0; --i) {
-    PaintOneShadow(aParams, aShadow->ShadowAt(i - 1),
-                   shadowMetrics.mBoundingBox, blurFlags);
+    PaintOneShadow(aRange, aShadow->ShadowAt(i - 1), &aProvider,
+                   aDirtyRect, aFramePt, aTextBaselinePt, aCtx,
+                   aForegroundColor, aClipEdges,
+                   aLeftEdgeOffset,
+                   shadowMetrics.mBoundingBox,
+                   blurFlags);
   }
 }
 
@@ -6540,14 +6550,9 @@ nsTextFrame::PaintText(const PaintTextParams& aParams,
   range = Range(startOffset, startOffset + maxLength);
   if (!aParams.callbacks) {
     const nsStyleText* textStyle = StyleText();
-    PaintShadowParams shadowParams(aParams);
-    shadowParams.range = range;
-    shadowParams.textBaselinePt = textBaselinePt;
-    shadowParams.leftSideOffset = snappedStartEdge;
-    shadowParams.provider = &provider;
-    shadowParams.foregroundColor = foregroundColor;
-    shadowParams.clipEdges = &clipEdges;
-    PaintShadows(textStyle->mTextShadow, shadowParams);
+    PaintShadows(textStyle->mTextShadow, range, aParams.dirtyRect,
+                 aParams.framePt, textBaselinePt, snappedStartEdge,
+                 provider, foregroundColor, clipEdges, aParams.context);
   }
 
   gfxFloat advanceWidth;
