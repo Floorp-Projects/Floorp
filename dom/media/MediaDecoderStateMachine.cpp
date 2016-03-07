@@ -1757,7 +1757,10 @@ MediaDecoderStateMachine::RequestVideoData()
 
   bool skipToNextKeyFrame = mSentFirstFrameLoadedEvent &&
     NeedToSkipToNextKeyframe();
-  int64_t currentTime = mState == DECODER_STATE_SEEKING ? 0 : GetMediaTime();
+
+  int64_t currentTime =
+    mState == DECODER_STATE_SEEKING || !mSentFirstFrameLoadedEvent
+      ? 0 : GetMediaTime() + StartTime();
 
   SAMPLE_LOG("Queueing video task - queued=%i, decoder-queued=%o, skip=%i, time=%lld",
              VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames(), skipToNextKeyFrame,
