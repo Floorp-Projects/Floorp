@@ -866,9 +866,6 @@ TabChild::NotifyTabContextUpdated()
     return;
   }
 
-  if (IsMozBrowserElement()) {
-    docShell->SetIsInIsolatedMozBrowserElement(IsIsolatedMozBrowserElement());
-  }
   docShell->SetFrameType(IsMozBrowserElement() ?
                            nsIDocShell::FRAME_TYPE_BROWSER :
                            HasOwnApp() ?
