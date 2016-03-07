@@ -809,7 +809,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * until the hierarchy ends).  Return true iff the docshell we stopped on has
    * isIsolatedMozBrowserElement == true.
    */
-  [infallible] attribute boolean isInIsolatedMozBrowserElement;
+  [infallible] readonly attribute boolean isInIsolatedMozBrowserElement;
 
   /**
    * Returns true if this docshell corresponds to an <iframe mozbrowser> or
