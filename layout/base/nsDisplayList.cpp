@@ -1420,7 +1420,7 @@ nsDisplayListBuilder::GetDirtyRectForScrolledContents(const nsIFrame* aScrollabl
 bool
 nsDisplayListBuilder::IsBuildingLayerEventRegions()
 {
-  if (mMode == PAINTING) {
+  if (IsPaintingToWindow()) {
     // Note: this function and LayerEventRegionsEnabled are the only places
     // that get to query LayoutEventRegionsEnabled 'directly' - other code
     // should call this function.
