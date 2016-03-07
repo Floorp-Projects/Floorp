@@ -51,7 +51,7 @@ typedef Vector<SlowFunction> SlowFunctionVector;
 // is encapsulated by ModuleGenerator/ModuleGeneratorThreadView classes which
 // present a race-free interface to the code in each thread assuming any given
 // element is initialized by the ModuleGenerator thread before an index to that
-// element is written to Bytecode sent to a ModuleGeneratorThreadView thread.
+// element is written to Bytes sent to a ModuleGeneratorThreadView thread.
 // Once created, the Vectors are never resized.
 
 struct TableModuleGeneratorData
@@ -202,8 +202,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     Vector<IonCompileTask*>         freeTasks_;
 
     // Assertions
-    DebugOnly<FunctionGenerator*>   activeFunc_;
-    DebugOnly<bool>                 finishedFuncs_;
+    FunctionGenerator*              activeFunc_;
+    bool                            finishedFuncs_;
 
     bool finishOutstandingTask();
     bool funcIsDefined(uint32_t funcIndex) const;
@@ -288,13 +288,13 @@ class MOZ_STACK_CLASS FunctionGenerator
 {
     friend class ModuleGenerator;
 
-    ModuleGenerator*   m_;
-    IonCompileTask*    task_;
+    ModuleGenerator* m_;
+    IonCompileTask*  task_;
 
     // Data created during function generation, then handed over to the
-    // FuncBytecode in ModuleGenerator::finishFunc().
-    UniqueBytecode     bytecode_;
-    Uint32Vector       callSiteLineNums_;
+    // FuncBytes in ModuleGenerator::finishFunc().
+    Bytes            bytes_;
+    Uint32Vector     callSiteLineNums_;
 
     uint32_t lineOrBytecode_;
 
@@ -303,8 +303,8 @@ class MOZ_STACK_CLASS FunctionGenerator
       : m_(nullptr), task_(nullptr), lineOrBytecode_(0)
     {}
 
-    Bytecode& bytecode() const {
-        return *bytecode_;
+    Bytes& bytes() {
+        return bytes_;
     }
     bool addCallSiteLineNum(uint32_t lineno) {
         return callSiteLineNums_.append(lineno);

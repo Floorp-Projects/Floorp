@@ -4555,7 +4555,8 @@ MAsmJSLoadHeap::mightAlias(const MDefinition* def) const
         if (!base()->isConstant() || !store->base()->isConstant())
             return true;
         const MConstant* otherBase = store->base()->toConstant();
-        return base()->toConstant()->equals(otherBase);
+        return base()->toConstant()->equals(otherBase) &&
+               offset() == store->offset();
     }
     return true;
 }
@@ -4566,7 +4567,9 @@ MAsmJSLoadHeap::congruentTo(const MDefinition* ins) const
     if (!ins->isAsmJSLoadHeap())
         return false;
     const MAsmJSLoadHeap* load = ins->toAsmJSLoadHeap();
-    return load->accessType() == accessType() && congruentIfOperandsEqual(load);
+    return load->accessType() == accessType() &&
+           load->offset() == offset() &&
+           congruentIfOperandsEqual(load);
 }
 
 bool

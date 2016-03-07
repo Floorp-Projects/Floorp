@@ -41,9 +41,11 @@ testConst('i32', '0xffffffff', -1);
 //testConst('i64', '0xffffffffffffffff', -1); // TODO: NYI
 
 testConst('f32', '0.0', 0.0);
+testConst('f32', '-0', -0.0);
 testConst('f32', '-0.0', -0.0);
 testConst('f32', '0x0.0', 0.0);
 testConst('f32', '-0x0.0', -0.0);
+testConst('f32', '-0x0', -0.0);
 testConst('f32', '0x0.0p0', 0.0);
 testConst('f32', '-0x0.0p0', -0.0);
 testConst('f32', 'infinity', Infinity);
@@ -126,8 +128,10 @@ testConst('f32', '0', 0);
 
 testConst('f64', '0.0', 0.0);
 testConst('f64', '-0.0', -0.0);
+testConst('f64', '-0', -0.0);
 testConst('f64', '0x0.0', 0.0);
 testConst('f64', '-0x0.0', -0.0);
+testConst('f64', '-0x0', -0.0);
 testConst('f64', '0x0.0p0', 0.0);
 testConst('f64', '-0x0.0p0', -0.0);
 testConst('f64', 'infinity', Infinity);

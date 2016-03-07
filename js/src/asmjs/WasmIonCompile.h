@@ -31,52 +31,48 @@ typedef Vector<jit::MIRType, 8, SystemAllocPolicy> MIRTypeVector;
 typedef jit::ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
 typedef jit::ABIArgIter<ValTypeVector> ABIArgValTypeIter;
 
-// The FuncBytecode class contains the intermediate representation of a
-// parsed/decoded and validated asm.js/WebAssembly function. The FuncBytecode
-// lives only until it is fully compiled.
+// The FuncBytes class represents a single, concurrently-compilable function.
+// A FuncBytes object is composed of the wasm function body bytes along with the
+// ambient metadata describing the function necessary to compile it.
 
-class FuncBytecode
+class FuncBytes
 {
-    // Function metadata
+    Bytes              bytes_;
+    uint32_t           index_;
     const DeclaredSig& sig_;
-    uint32_t lineOrBytecode_;
-    Uint32Vector callSiteLineNums_;
-
-    // Compilation bookkeeping
-    uint32_t index_;
-    unsigned generateTime_;
-
-    UniqueBytecode bytecode_;
+    uint32_t           lineOrBytecode_;
+    Uint32Vector       callSiteLineNums_;
+    unsigned           generateTime_;
 
   public:
-    FuncBytecode(uint32_t index,
-                 const DeclaredSig& sig,
-                 UniqueBytecode bytecode,
-                 uint32_t lineOrBytecode,
-                 Uint32Vector&& callSiteLineNums,
-                 unsigned generateTime)
-      : sig_(sig),
+    FuncBytes(Bytes&& bytes,
+              uint32_t index,
+              const DeclaredSig& sig,
+              uint32_t lineOrBytecode,
+              Uint32Vector&& callSiteLineNums,
+              unsigned generateTime)
+      : bytes_(Move(bytes)),
+        index_(index),
+        sig_(sig),
         lineOrBytecode_(lineOrBytecode),
         callSiteLineNums_(Move(callSiteLineNums)),
-        index_(index),
-        generateTime_(generateTime),
-        bytecode_(Move(bytecode))
+        generateTime_(generateTime)
     {}
 
-    UniqueBytecode recycleBytecode() { return Move(bytecode_); }
-
-    uint32_t lineOrBytecode() const { return lineOrBytecode_; }
-    const Uint32Vector& callSiteLineNums() const { return callSiteLineNums_; }
+    Bytes& bytes() { return bytes_; }
+    const Bytes& bytes() const { return bytes_; }
     uint32_t index() const { return index_; }
     const DeclaredSig& sig() const { return sig_; }
-    const Bytecode& bytecode() const { return *bytecode_; }
+    uint32_t lineOrBytecode() const { return lineOrBytecode_; }
+    const Uint32Vector& callSiteLineNums() const { return callSiteLineNums_; }
     unsigned generateTime() const { return generateTime_; }
 };
 
-typedef UniquePtr<FuncBytecode> UniqueFuncBytecode;
+typedef UniquePtr<FuncBytes> UniqueFuncBytes;
 
-// The FuncCompileResults contains the results of compiling a single function
-// body, ready to be merged into the whole-module MacroAssembler.
+// The FuncCompileResults class contains the results of compiling a single
+// function body, ready to be merged into the whole-module MacroAssembler.
+
 class FuncCompileResults
 {
     jit::TempAllocator alloc_;
@@ -108,13 +104,14 @@ class FuncCompileResults
 // the FuncCompileResults, and finally sent back to the validation thread. To
 // save time allocating and freeing memory, IonCompileTasks are reset() and
 // reused.
+
 class IonCompileTask
 {
-    JSRuntime* const runtime_;
+    JSRuntime* const           runtime_;
     ModuleGeneratorThreadView& mg_;
-    LifoAlloc lifo_;
-    UniqueFuncBytecode func_;
-    mozilla::Maybe<FuncCompileResults> results_;
+    LifoAlloc                  lifo_;
+    UniqueFuncBytes            func_;
+    Maybe<FuncCompileResults>  results_;
 
     IonCompileTask(const IonCompileTask&) = delete;
     IonCompileTask& operator=(const IonCompileTask&) = delete;
@@ -132,21 +129,21 @@ class IonCompileTask
     ModuleGeneratorThreadView& mg() const {
         return mg_;
     }
-    void init(UniqueFuncBytecode func) {
+    void init(UniqueFuncBytes func) {
         MOZ_ASSERT(!func_);
-        func_ = mozilla::Move(func);
+        func_ = Move(func);
         results_.emplace(lifo_);
     }
-    const FuncBytecode& func() const {
+    const FuncBytes& func() const {
         MOZ_ASSERT(func_);
         return *func_;
     }
     FuncCompileResults& results() {
         return *results_;
     }
-    void reset(UniqueBytecode* recycled) {
+    void reset(Bytes* recycled) {
         if (func_)
-            *recycled = func_->recycleBytecode();
+            *recycled = Move(func_->bytes());
         func_.reset(nullptr);
         results_.reset();
         lifo_.releaseAll();

@@ -40,7 +40,7 @@ class FunctionCompiler
 
     ModuleGeneratorThreadView& mg_;
     Decoder&                   decoder_;
-    const FuncBytecode&        func_;
+    const FuncBytes&           func_;
     const ValTypeVector&       locals_;
     size_t                     lastReadCallSite_;
 
@@ -60,7 +60,7 @@ class FunctionCompiler
   public:
     FunctionCompiler(ModuleGeneratorThreadView& mg,
                      Decoder& decoder,
-                     const FuncBytecode& func,
+                     const FuncBytes& func,
                      const ValTypeVector& locals,
                      MIRGenerator& mirGen,
                      FuncCompileResults& compileResults)
@@ -153,7 +153,7 @@ class FunctionCompiler
         }
 #endif
         MOZ_ASSERT(inDeadCode());
-        MOZ_ASSERT(decoder_.done(), "all bytecode must be consumed");
+        MOZ_ASSERT(decoder_.done(), "all bytes must be consumed");
         MOZ_ASSERT(func_.callSiteLineNums().length() == lastReadCallSite_);
     }
 
@@ -3048,22 +3048,18 @@ wasm::IonCompileFunction(IonCompileTask* task)
 {
     int64_t before = PRMJ_Now();
 
-    const FuncBytecode& func = task->func();
+    const FuncBytes& func = task->func();
     FuncCompileResults& results = task->results();
 
-    // Read in the variable types to build the local types vector.
+    Decoder d(func.bytes());
 
-    Decoder d(func.bytecode());
+    // Build the local types vector.
 
     ValTypeVector locals;
     if (!locals.appendAll(func.sig().args()))
         return false;
-
-    uint32_t numVars = d.uncheckedReadVarU32();
-    for (uint32_t i = 0; i < numVars; i++) {
-        if (!locals.append(d.uncheckedReadValType()))
-            return false;
-    }
+    if (!DecodeLocalEntries(d, &locals))
+        return false;
 
     // Set up for Ion compilation.
 

@@ -834,10 +834,7 @@ class MOZ_STACK_CLASS SourceBufferHolder final
                                            object that delegates to a prototype
                                            containing this property */
 #define JSPROP_INTERNAL_USE_BIT 0x80    /* internal JS engine use only */
-#define JSPROP_DEFINE_LATE     0x100    /* Don't define property when initially creating
-                                           the constructor. Some objects like Function/Object
-                                           have self-hosted functions that can only be defined
-                                           after the initialization is already finished. */
+//                             0x100    /* Unused */
 #define JSFUN_STUB_GSOPS       0x200    /* use JS_PropertyStub getter/setter
                                            instead of defaulting to class gsops
                                            for property holding function */
@@ -3593,20 +3590,8 @@ JS_IsNativeFunction(JSObject* funobj, JSNative call);
 extern JS_PUBLIC_API(bool)
 JS_IsConstructor(JSFunction* fun);
 
-/**
- * This enum is used to select if properties with JSPROP_DEFINE_LATE flag
- * should be defined on the object.
- * Normal JSAPI consumers probably always want DefineAllProperties here.
- */
-enum PropertyDefinitionBehavior {
-    DefineAllProperties,
-    OnlyDefineLateProperties,
-    DontDefineLateProperties
-};
-
 extern JS_PUBLIC_API(bool)
-JS_DefineFunctions(JSContext* cx, JS::Handle<JSObject*> obj, const JSFunctionSpec* fs,
-                   PropertyDefinitionBehavior behavior = DefineAllProperties);
+JS_DefineFunctions(JSContext* cx, JS::Handle<JSObject*> obj, const JSFunctionSpec* fs);
 
 extern JS_PUBLIC_API(JSFunction*)
 JS_DefineFunction(JSContext* cx, JS::Handle<JSObject*> obj, const char* name, JSNative call,
