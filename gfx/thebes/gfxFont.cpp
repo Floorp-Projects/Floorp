@@ -1943,7 +1943,7 @@ gfxFont::DrawEmphasisMarks(gfxTextRun* aShapedText, gfxPoint* aPt,
                            const EmphasisMarkDrawParams& aParams)
 {
     gfxFloat& inlineCoord = aParams.isVertical ? aPt->y : aPt->x;
-    gfxTextRun::Range markRange(aParams.mark);
+    uint32_t markLength = aParams.mark->GetLength();
 
     gfxFloat clusterStart = -std::numeric_limits<gfxFloat>::infinity();
     bool shouldDrawEmphasisMark = false;
@@ -1966,7 +1966,7 @@ gfxFont::DrawEmphasisMarks(gfxTextRun* aShapedText, gfxPoint* aPt,
             gfxFloat delta = (clusterAdvance + aParams.advance) / 2;
             inlineCoord -= delta;
             aParams.mark->Draw(aParams.context, *aPt, DrawMode::GLYPH_FILL,
-                               markRange, nullptr, nullptr, nullptr);
+                               0, markLength, nullptr, nullptr, nullptr);
             inlineCoord += delta;
             shouldDrawEmphasisMark = false;
         }
@@ -3187,8 +3187,7 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                         MergeCharactersInTextRun(mergedRun, tempRun,
                                                  charsToMergeArray.Elements(),
                                                  deletedCharsArray.Elements());
-                        gfxTextRun::Range runRange(0, runLength);
-                        aTextRun->CopyGlyphDataFrom(mergedRun, runRange,
+                        aTextRun->CopyGlyphDataFrom(mergedRun, 0, runLength,
                                                     aOffset + runStart);
                     }
                 } else {

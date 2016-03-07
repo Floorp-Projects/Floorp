@@ -60,8 +60,7 @@ nsresult
 nsFontFaceList::AddFontsFromTextRun(gfxTextRun* aTextRun,
                                     uint32_t aOffset, uint32_t aLength)
 {
-  gfxTextRun::Range range(aOffset, aOffset + aLength);
-  gfxTextRun::GlyphRunIterator iter(aTextRun, range);
+  gfxTextRun::GlyphRunIterator iter(aTextRun, aOffset, aLength);
   while (iter.NextRun()) {
     gfxFontEntry *fe = iter.GetGlyphRun()->mFont->GetFontEntry();
     // if we have already listed this face, just make sure the match type is
