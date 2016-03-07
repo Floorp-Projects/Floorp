@@ -1003,6 +1003,11 @@ class MOZ_STACK_CLASS TokenStream
             getChar();
     }
 
+    void skipCharsIgnoreEOL(int n) {
+        while (--n >= 0)
+            getCharIgnoreEOL();
+    }
+
     void updateLineInfoForEOL();
     void updateFlagsForEOL();
 
