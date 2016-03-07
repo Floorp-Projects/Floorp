@@ -191,21 +191,19 @@ function runAsyncTests(aScratchpad, aTests)
  * @return Promise
  *         The promise that will be resolved when all tests are finished.
  */
-function runAsyncCallbackTests(aScratchpad, aTests)
-{
-  let deferred = promise.defer();
+var runAsyncCallbackTests = Task.async(function*(aScratchpad, aTests) {
+  for (let {prepare, method, then} of aTests) {
+    yield prepare();
+    let res = yield aScratchpad[method]();
+    yield then(res);
+  }
+});
 
-  (function runTest() {
-    if (aTests.length) {
-      let test = aTests.shift();
-      test.prepare();
-      aScratchpad[test.method]().then(test.then.bind(test)).then(runTest);
-    } else {
-      deferred.resolve();
-    }
-  })();
-
-  return deferred.promise;
+/**
+ * A simple wrapper for ContentTask.spawn for more compact code.
+ */
+function inContent(generator) {
+  return ContentTask.spawn(gBrowser.selectedBrowser, {}, generator);
 }
 
 function cleanup()
