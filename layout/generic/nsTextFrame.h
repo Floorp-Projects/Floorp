@@ -390,30 +390,6 @@ public:
     virtual void NotifySelectionDecorationLinePathEmitted() { }
   };
 
-  struct DrawTextRunParams
-  {
-    gfxContext* context;
-    PropertyProvider* provider = nullptr;
-    gfxFloat* advanceWidth = nullptr;
-    gfxTextContextPaint* contextPaint = nullptr;
-    DrawPathCallbacks* callbacks = nullptr;
-    nscolor textColor = NS_RGBA(0, 0, 0, 0);
-    bool drawSoftHyphen = false;
-    explicit DrawTextRunParams(gfxContext* aContext)
-      : context(aContext) {}
-  };
-
-  struct DrawTextParams : DrawTextRunParams
-  {
-    gfxPoint framePt;
-    gfxRect dirtyRect;
-    const nsTextPaintStyle* textStyle = nullptr;
-    const nsCharClipDisplayItem::ClipEdges* clipEdges = nullptr;
-    const nscolor* decorationOverrideColor = nullptr;
-    explicit DrawTextParams(gfxContext* aContext)
-      : DrawTextRunParams(aContext) {}
-  };
-
   // Primary frame paint method called from nsDisplayText.  Can also be used
   // to generate paths rather than paint the frame's text by passing a callback
   // object.  The private DrawText() is what applies the text to a graphics
@@ -469,7 +445,7 @@ public:
                          const gfxPoint& aTextBaselinePt,
                          Range aRange,
                          const nscolor* aDecorationOverrideColor,
-                         PropertyProvider* aProvider);
+                         PropertyProvider& aProvider);
 
   virtual nscolor GetCaretColorAt(int32_t aOffset) override;
 
@@ -718,15 +694,46 @@ protected:
                           TextDecorationColorResolution aColorResolution,
                           TextDecorations& aDecorations);
 
-  void DrawTextRun(Range aRange, const gfxPoint& aTextBaselinePt,
-                   const DrawTextRunParams& aParams);
+  void DrawTextRun(gfxContext* const aCtx,
+                   const gfxPoint& aTextBaselinePt,
+                   Range aRange,
+                   PropertyProvider& aProvider,
+                   nscolor aTextColor,
+                   gfxFloat& aAdvanceWidth,
+                   bool aDrawSoftHyphen,
+                   gfxTextContextPaint* aContextPaint,
+                   DrawPathCallbacks* aCallbacks);
 
-  void DrawTextRunAndDecorations(Range aRange, const gfxPoint& aTextBaselinePt,
-                                 const DrawTextParams& aParams,
-                                 const TextDecorations& aDecorations);
+  void DrawTextRunAndDecorations(gfxContext* const aCtx,
+                                 const gfxRect& aDirtyRect,
+                                 const gfxPoint& aFramePt,
+                                 const gfxPoint& aTextBaselinePt,
+                                 Range aRange,
+                                 PropertyProvider& aProvider,
+                                 const nsTextPaintStyle& aTextStyle,
+                                 nscolor aTextColor,
+                             const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+                                 gfxFloat& aAdvanceWidth,
+                                 bool aDrawSoftHyphen,
+                                 const TextDecorations& aDecorations,
+                                 const nscolor* const aDecorationOverrideColor,
+                                 gfxTextContextPaint* aContextPaint,
+                                 DrawPathCallbacks* aCallbacks);
 
-  void DrawText(Range aRange, const gfxPoint& aTextBaselinePt,
-                const DrawTextParams& aParams);
+  void DrawText(gfxContext* const aCtx,
+                const gfxRect& aDirtyRect,
+                const gfxPoint& aFramePt,
+                const gfxPoint& aTextBaselinePt,
+                Range aRange,
+                PropertyProvider& aProvider,
+                const nsTextPaintStyle& aTextStyle,
+                nscolor aTextColor,
+                const nsCharClipDisplayItem::ClipEdges& aClipEdges,
+                gfxFloat& aAdvanceWidth,
+                bool aDrawSoftHyphen,
+                const nscolor* const aDecorationOverrideColor = nullptr,
+                gfxTextContextPaint* aContextPaint = nullptr,
+                DrawPathCallbacks* aCallbacks = nullptr);
 
   // Set non empty rect to aRect, it should be overflow rect or frame rect.
   // If the result rect is larger than the given rect, this returns true.
