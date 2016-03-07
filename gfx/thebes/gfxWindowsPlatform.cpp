@@ -525,17 +525,16 @@ gfxWindowsPlatform::UpdateBackendPrefs()
   uint32_t canvasMask = BackendTypeBit(SOFTWARE_BACKEND);
   uint32_t contentMask = BackendTypeBit(SOFTWARE_BACKEND);
   BackendType defaultBackend = SOFTWARE_BACKEND;
-  if (GetD2DStatus() == FeatureStatus::Available) {
+  if (GetD2D1Status() == FeatureStatus::Available) {
+    contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
+    canvasMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
+    defaultBackend = BackendType::DIRECT2D1_1;
     mRenderMode = RENDER_DIRECT2D;
+  } else if (GetD2DStatus() == FeatureStatus::Available && gfxPrefs::Direct2DAllow1_0()) {
     canvasMask |= BackendTypeBit(BackendType::DIRECT2D);
     contentMask |= BackendTypeBit(BackendType::DIRECT2D);
-    if (GetD2D1Status() == FeatureStatus::Available) {
-      contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
-      canvasMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
-      defaultBackend = BackendType::DIRECT2D1_1;
-    } else {
-      defaultBackend = BackendType::DIRECT2D;
-    }
+    defaultBackend = BackendType::DIRECT2D;
+    mRenderMode = RENDER_DIRECT2D;
   } else {
     mRenderMode = RENDER_GDI;
     canvasMask |= BackendTypeBit(BackendType::SKIA);
