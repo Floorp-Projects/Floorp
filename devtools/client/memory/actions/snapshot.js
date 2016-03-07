@@ -14,6 +14,7 @@ const { actions, snapshotState: states, viewState, dominatorTreeState } = requir
 const telemetry = require("../telemetry");
 const view = require("./view");
 const refresh = require("./refresh");
+const diffing = require("./diffing");
 
 /**
  * A series of actions are fired from this task to save, read and generate the
@@ -426,6 +427,10 @@ const clearSnapshots = exports.clearSnapshots = function (heapWorker) {
     let ids = snapshots.map(s => s.id);
 
     dispatch({ type: actions.DELETE_SNAPSHOTS_START, ids });
+
+    if (getState().diffing) {
+      dispatch(diffing.toggleDiffing());
+    }
 
     yield Promise.all(snapshots.map(snapshot => {
       return heapWorker.deleteHeapSnapshot(snapshot.path).catch(error => {
