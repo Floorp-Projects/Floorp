@@ -3518,10 +3518,15 @@ EncodeBlock(Encoder& e, WasmAstBlock& b)
 static bool
 EncodeBranch(Encoder& e, WasmAstBranch& br)
 {
+    MOZ_ASSERT(br.expr() == Expr::Br || br.expr() == Expr::BrIf);
+
     if (!e.writeExpr(br.expr()))
         return false;
 
     if (!e.writeVarU32(br.target().index()))
+        return false;
+
+    if (!e.writeExpr(Expr::Nop))
         return false;
 
     if (br.expr() == Expr::BrIf) {

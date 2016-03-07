@@ -509,8 +509,10 @@ DecodeStore(FunctionDecoder& f, ValType storeType, ExprType* type)
 }
 
 static bool
-DecodeBr(FunctionDecoder& f, ExprType* type)
+DecodeBranch(FunctionDecoder& f, Expr expr, ExprType* type)
 {
+    MOZ_ASSERT(expr == Expr::Br || expr == Expr::BrIf);
+
     uint32_t relativeDepth;
     if (!f.d().readVarU32(&relativeDepth))
         return f.fail("expected relative depth");
@@ -518,28 +520,26 @@ DecodeBr(FunctionDecoder& f, ExprType* type)
     if (!f.branchWithType(relativeDepth, ExprType::Void))
         return f.fail("branch depth exceeds current nesting level");
 
-    *type = AnyType;
-    return true;
-}
+    Expr value;
+    if (!f.d().readExpr(&value))
+        return f.fail("expected branch value");
 
-static bool
-DecodeBrIf(FunctionDecoder& f, ExprType* type)
-{
-    uint32_t relativeDepth;
-    if (!f.d().readVarU32(&relativeDepth))
-        return f.fail("expected relative depth");
+    if (value != Expr::Nop)
+        return f.fail("NYI: branch values");
 
-    if (!f.branchWithType(relativeDepth, ExprType::Void))
-        return f.fail("branch depth exceeds current nesting level");
+    if (expr == Expr::BrIf) {
+        ExprType actual;
+        if (!DecodeExpr(f, &actual))
+            return false;
 
-    ExprType actual;
-    if (!DecodeExpr(f, &actual))
-        return false;
+        if (!CheckType(f, actual, ValType::I32))
+            return false;
 
-    if (!CheckType(f, actual, ValType::I32))
-        return false;
+        *type = ExprType::Void;
+    } else {
+        *type = AnyType;
+    }
 
-    *type = ExprType::Void;
     return true;
 }
 
@@ -819,9 +819,9 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::F64Store:
         return DecodeStore(f, ValType::F64, type);
       case Expr::Br:
-        return DecodeBr(f, type);
+        return DecodeBranch(f, expr, type);
       case Expr::BrIf:
-        return DecodeBrIf(f, type);
+        return DecodeBranch(f, expr, type);
       case Expr::BrTable:
         return DecodeBrTable(f, type);
       case Expr::Return:
