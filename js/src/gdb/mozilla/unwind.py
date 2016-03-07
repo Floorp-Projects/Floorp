@@ -1,6 +1,7 @@
 # mozilla/unwind.py --- unwinder and frame filter for SpiderMonkey
 
 import gdb
+import gdb.types
 from gdb.FrameDecorator import FrameDecorator
 import re
 import platform
@@ -83,14 +84,32 @@ class UnwinderTypeCache(object):
         self.d['void_starstar'] = gdb.lookup_type('void').pointer().pointer()
         self.d['mod_ExecutableAllocator'] = jsjitExecutableAllocatorCache()
 
+        jitframe = gdb.lookup_type("js::jit::JitFrameLayout")
+        self.d['jitFrameLayoutPointer'] = jitframe.pointer()
+
+        self.d['CalleeToken_Function'] = self.value("CalleeToken_Function")
+        self.d['CalleeToken_FunctionConstructing'] = self.value("CalleeToken_FunctionConstructing")
+        self.d['CalleeToken_Script'] = self.value("CalleeToken_Script")
+        self.d['JSFunction'] = gdb.lookup_type("JSFunction").pointer()
+        self.d['JSScript'] = gdb.lookup_type("JSScript").pointer()
+        self.d['Value'] = gdb.lookup_type("JS::Value")
+
+        self.d['SOURCE_SLOT'] = long(gdb.parse_and_eval('js::ScriptSourceObject::SOURCE_SLOT'))
+        self.d['NativeObject'] = gdb.lookup_type("js::NativeObject").pointer()
+        self.d['HeapSlot'] = gdb.lookup_type("js::HeapSlot").pointer()
+        self.d['ScriptSource'] = gdb.lookup_type("js::ScriptSource").pointer()
+
     # Compute maps related to jit frames.
     def compute_frame_info(self):
         t = gdb.lookup_type('enum js::jit::FrameType')
         for field in t.fields():
             # Strip off "js::jit::".
             name = field.name[9:]
-            self.d[name] = long(field.enumval)
-            self.frame_enum_names[long(field.enumval)] = name
+            enumval = long(field.enumval)
+            self.d[name] = enumval
+            self.frame_enum_names[enumval] = name
+            class_type = gdb.lookup_type('js::jit::' + SizeOfFramePrefix[name])
+            self.frame_class_types[enumval] = class_type.pointer()
 
 # gdb doesn't have a direct way to tell us if a given address is
 # claimed by some shared library or the executable.  See
@@ -118,18 +137,108 @@ def parse_proc_maps():
             mappings.append((long(start, 16), long(end, 16)))
     return mappings
 
+# A symbol/value pair as expected from gdb frame decorators.
+class FrameSymbol(object):
+    def __init__(self, sym, val):
+        self.sym = sym
+        self.val = val
+
+    def symbol(self):
+        return self.sym
+
+    def value(self):
+        return self.val
+
 # This represents a single JIT frame for the purposes of display.
 # That is, the frame filter creates instances of this when it sees a
 # JIT frame in the stack.
 class JitFrameDecorator(FrameDecorator):
-    def __init__(self, base, info):
+    def __init__(self, base, info, cache):
         super(JitFrameDecorator, self).__init__(base)
         self.info = info
+        self.cache = cache
+
+    def _decode_jitframe(self, this_frame):
+        calleetoken = long(this_frame['calleeToken_'])
+        tag = calleetoken & 3
+        calleetoken = calleetoken ^ tag
+        function = None
+        script = None
+        if tag == self.cache.CalleeToken_Function or tag == self.cache.CalleeToken_FunctionConstructing:
+            fptr = gdb.Value(calleetoken).cast(self.cache.JSFunction)
+            try:
+                atom = fptr['atom_']
+                if atom:
+                    function = str(atom)
+            except gdb.MemoryError:
+                function = "(could not read function name)"
+            script = fptr['u']['i']['s']['script_']
+        elif tag == self.cache.CalleeToken_Script:
+            script = gdb.Value(calleetoken).cast(self.cache.JSScript)
+        return {"function": function, "script": script}
 
     def function(self):
-        if "name" in self.info:
-            return "<<" + self.info["name"] + ">>"
-        return FrameDecorator.function(self)
+        if self.info["name"] is None:
+            return FrameDecorator.function(self)
+        name = self.info["name"]
+        result = "<<" + name
+        # If we have a frame, we can extract the callee information
+        # from it for display here.
+        this_frame = self.info["this_frame"]
+        if this_frame is not None:
+            if gdb.types.has_field(this_frame.type.target(), "calleeToken_"):
+                function = self._decode_jitframe(this_frame)["function"]
+                if function is not None:
+                    result = result + " " + function
+        return result + ">>"
+
+    def filename(self):
+        this_frame = self.info["this_frame"]
+        if this_frame is not None:
+            if gdb.types.has_field(this_frame.type.target(), "calleeToken_"):
+                script = self._decode_jitframe(this_frame)["script"]
+                if script is not None:
+                    obj = script['sourceObject_']['value']
+                    # Verify that this is a ScriptSource object.
+                    # FIXME should also deal with wrappers here.
+                    nativeobj = obj.cast(self.cache.NativeObject)
+                    # See bug 987069 and despair.  At least this
+                    # approach won't give exceptions.
+                    class_name = nativeobj['group_']['value']['clasp_']['name'].string("ISO-8859-1")
+                    if class_name != "ScriptSource":
+                        return FrameDecorator.filename(self)
+                    scriptsourceobj = (nativeobj + 1).cast(self.cache.HeapSlot)[self.cache.SOURCE_SLOT]
+                    scriptsource = scriptsourceobj['value']['data']['asBits'] << 1
+                    scriptsource = scriptsource.cast(self.cache.ScriptSource)
+                    return scriptsource['filename_']['mTuple']['mFirstA'].string()
+        return FrameDecorator.filename(self)
+
+    def frame_args(self):
+        this_frame = self.info["this_frame"]
+        if this_frame is None:
+            return FrameDecorator.frame_args(self)
+        if not gdb.types.has_field(this_frame.type.target(), "numActualArgs_"):
+            return FrameDecorator.frame_args(self)
+        # See if this is a function call.
+        if self._decode_jitframe(this_frame)["function"] is None:
+            return FrameDecorator.frame_args(self)
+        # Construct and return an iterable of all the arguments.
+        result = []
+        num_args = long(this_frame["numActualArgs_"])
+        # Sometimes we see very large values here, so truncate it to
+        # bypass the damage.
+        if num_args > 10:
+            num_args = 10
+        args_ptr = (this_frame + 1).cast(self.cache.Value.pointer())
+        for i in range(num_args + 1):
+            # Synthesize names, since there doesn't seem to be
+            # anything better to do.
+            if i == 0:
+                name = 'this'
+            else:
+                name = 'arg%d' % i
+            result.append(FrameSymbol(name, args_ptr[i]))
+        return result
 
 # A frame filter for SpiderMonkey.
 class SpiderMonkeyFrameFilter(object):
@@ -137,11 +246,12 @@ class SpiderMonkeyFrameFilter(object):
     # SpiderMonkeyUnwinder.  If the latter, then this class will
     # reference the |unwinder_state| attribute to find the current
     # unwinder state.
-    def __init__(self, state_holder):
+    def __init__(self, cache, state_holder):
         self.name = "SpiderMonkey"
         self.enabled = True
         self.priority = 100
         self.state_holder = state_holder
+        self.cache = cache
 
     def maybe_wrap_frame(self, frame):
         if self.state_holder is None or self.state_holder.unwinder_state is None:
@@ -150,7 +260,7 @@ class SpiderMonkeyFrameFilter(object):
         info = self.state_holder.unwinder_state.get_frame(base)
         if info is None:
             return frame
-        return JitFrameDecorator(frame, info)
+        return JitFrameDecorator(frame, info, self.cache)
 
     def filter(self, frame_iter):
         return imap(self.maybe_wrap_frame, frame_iter)
@@ -204,8 +314,8 @@ class UnwinderState(object):
     # Add information about a frame to the frame map.  This map is
     # queried by |self.get_frame|.  |sp| is the frame's stack pointer,
     # and |name| the frame's type as a string, e.g. "JitFrame_Exit".
-    def add_frame(self, sp, name):
-        self.frame_map[long(sp)] = { "name": name }
+    def add_frame(self, sp, name = None, this_frame = None):
+        self.frame_map[long(sp)] = { "name": name, "this_frame": this_frame }
 
     # See whether |pc| is claimed by some text mapping.  See
     # |parse_proc_maps| for details on how the decision is made.
@@ -215,7 +325,7 @@ class UnwinderState(object):
                 return True
         return False
 
-    # See wether |pc| is claimed by the Jit.
+    # See whether |pc| is claimed by the Jit.
     def is_jit_address(self, pc):
         if self.proc_mappings != None:
             return not self.text_address_claimed(pc)
@@ -281,13 +391,6 @@ class UnwinderState(object):
         # frame pointer for this frame.
         frame_id = SpiderMonkeyFrameId(frame, pc)
 
-        # Register this frame so the frame filter can find it.  This
-        # is registered using SP because we don't have any other good
-        # approach -- you can't get the frame id from a gdb.Frame.
-        # https://sourceware.org/bugzilla/show_bug.cgi?id=19800
-        frame_name = self.typecache.frame_enum_names[frame_type]
-        self.add_frame(sp, name = frame_name)
-
         # Read the frame layout object to find the next such object.
         # This lets us unwind the necessary registers for the next
         # frame, and also update our internal state to match.
@@ -295,6 +398,17 @@ class UnwinderState(object):
         next_pc = common['returnAddress_']
         (local_size, header_size, next_type) = self.unpack_descriptor(common)
         next_sp = frame + header_size + local_size
+
+        # Compute the type of the next oldest frame's descriptor.
+        this_class_type = self.typecache.frame_class_types[frame_type]
+        this_frame = frame.cast(this_class_type)
+
+        # Register this frame so the frame filter can find it.  This
+        # is registered using SP because we don't have any other good
+        # approach -- you can't get the frame id from a gdb.Frame.
+        # https://sourceware.org/bugzilla/show_bug.cgi?id=19800
+        frame_name = self.typecache.frame_enum_names[frame_type]
+        self.add_frame(sp, name = frame_name, this_frame = this_frame)
 
         # Update internal state for the next unwind.
         self.next_sp = next_sp
@@ -457,14 +571,15 @@ class SpiderMonkeyUnwinder(Unwinder):
 # Register the unwinder and frame filter with |objfile|.  If |objfile|
 # is None, register them globally.
 def register_unwinder(objfile):
+    type_cache = UnwinderTypeCache()
     unwinder = None
     # This currently only works on Linux, due to parse_proc_maps.
     if _have_unwinder and platform.system() == "Linux":
-        unwinder = SpiderMonkeyUnwinder(UnwinderTypeCache())
+        unwinder = SpiderMonkeyUnwinder(type_cache)
         gdb.unwinder.register_unwinder(objfile, unwinder, replace=True)
     # We unconditionally register the frame filter, because at some
     # point we'll add interpreter frame filtering.
-    filt = SpiderMonkeyFrameFilter(unwinder)
+    filt = SpiderMonkeyFrameFilter(type_cache, unwinder)
     if objfile is None:
         objfile = gdb
     objfile.frame_filters[filt.name] = filt
