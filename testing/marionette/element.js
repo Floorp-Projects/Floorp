@@ -812,6 +812,9 @@ element.inViewport = function(el, x = undefined, y = undefined) {
  * @param {number=} y
  *     Vertical offset relative to target.  Defaults to the centre of
  *     the target's bounding box.
+ *
+ * @return {boolean}
+ *     True if visible, false otherwise.
  */
 element.isVisible = function(el, x = undefined, y = undefined) {
   let win = el.ownerDocument.defaultView;
