@@ -210,7 +210,7 @@ var WebProgressListener = {
   },
 
   sendLoadCallResult() {
-    this._send("Content:LoadURIResult");
+    sendAsyncMessage("Content:LoadURIResult");
   },
 
   QueryInterface: function QueryInterface(aIID) {
