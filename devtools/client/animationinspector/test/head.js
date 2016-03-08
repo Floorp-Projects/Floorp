@@ -5,21 +5,14 @@
 
 "use strict";
 
-var Cu = Components.utils;
-const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const {gDevTools} = require("devtools/client/framework/devtools");
-const promise = require("promise");
-const {TargetFactory} = require("devtools/client/framework/target");
-const {console} = Cu.import("resource://gre/modules/Console.jsm", {});
+/* import-globals-from ../../inspector/test/head.js */
+// Import the inspector's head.js first (which itself imports shared-head.js).
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
+  this);
+
 const {ViewHelpers} = Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm", {});
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-
-// All tests are asynchronous
-waitForExplicitFinish();
-
-const TEST_URL_ROOT = "http://example.com/browser/devtools/client/animationinspector/test/";
-const ROOT_TEST_DIR = getRootDirectory(gTestPath);
-const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
+const FRAME_SCRIPT_URL = CHROME_URL_ROOT + "doc_frame_script.js";
 const COMMON_FRAME_SCRIPT_URL = "chrome://devtools/content/shared/frame-script-utils.js";
 const TAB_NAME = "animationinspector";
 
@@ -32,20 +25,9 @@ registerCleanupFunction(function*() {
   }
 });
 
-// Uncomment this pref to dump all devtools emitted events to the console.
-// Services.prefs.setBoolPref("devtools.dump.emit", true);
-
-// Uncomment this pref to dump all devtools protocol traffic
-// Services.prefs.setBoolPref("devtools.debugger.log", true);
-
-// Set the testing flag on DevToolsUtils and reset it when the test ends
-DevToolsUtils.testing = true;
-registerCleanupFunction(() => DevToolsUtils.testing = false);
-
 // Clean-up all prefs that might have been changed during a test run
 // (safer here because if the test fails, then the pref is never reverted)
 registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("devtools.dump.emit");
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
@@ -54,30 +36,17 @@ registerCleanupFunction(() => {
  * @param {String} url The url to be loaded in the new tab
  * @return a promise that resolves to the tab object when the url is loaded
  */
-function addTab(url) {
-  info("Adding a new tab with URL: '" + url + "'");
-  let def = promise.defer();
-
-  window.focus();
-
-  let tab = window.gBrowser.selectedTab = window.gBrowser.addTab(url);
-  let browser = tab.linkedBrowser;
-
-  info("Loading the helper frame script " + FRAME_SCRIPT_URL);
-  browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
-
-  info("Loading the helper frame script " + COMMON_FRAME_SCRIPT_URL);
-  browser.messageManager.loadFrameScript(COMMON_FRAME_SCRIPT_URL, false);
-
-  browser.addEventListener("load", function onload() {
-    browser.removeEventListener("load", onload, true);
-    info("URL '" + url + "' loading complete");
-
-    def.resolve(tab);
-  }, true);
-
-  return def.promise;
-}
+var _addTab = addTab;
+addTab = function(url) {
+  return _addTab(url).then(tab => {
+    let browser = tab.linkedBrowser;
+    info("Loading the helper frame script " + FRAME_SCRIPT_URL);
+    browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
+    info("Loading the helper frame script " + COMMON_FRAME_SCRIPT_URL);
+    browser.messageManager.loadFrameScript(COMMON_FRAME_SCRIPT_URL, false);
+    return tab;
+  });
+};
 
 /**
  * Reload the current tab location.
@@ -91,20 +60,9 @@ function* reloadTab(inspector) {
   yield inspector.once("inspector-updated");
 }
 
-/**
- * Get the NodeFront for a given css selector, via the protocol
- * @param {String} selector
- * @param {InspectorPanel} inspector The instance of InspectorPanel currently
- * loaded in the toolbox
- * @return {Promise} Resolves to the NodeFront instance
- */
-function getNodeFront(selector, {walker}) {
-  return walker.querySelector(walker.rootNode, selector);
-}
-
 /*
  * Set the inspector's current selection to a node or to the first match of the
- * given css selector.
+ * given css selector and wait for the animations to be displayed
  * @param {String|NodeFront}
  *        data The node to select
  * @param {InspectorPanel} inspector
@@ -114,24 +72,18 @@ function getNodeFront(selector, {walker}) {
  *        Defaults to "test" which instructs the inspector not
  *        to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
+           and animations of its subtree are properly displayed.
  */
-var selectNode = Task.async(function*(data, inspector, reason = "test") {
-  info("Selecting the node for '" + data + "'");
-  let nodeFront = data;
-  if (!data._form) {
-    nodeFront = yield getNodeFront(data, inspector);
-  }
-  let updated = inspector.once("inspector-updated");
-  inspector.selection.setNodeFront(nodeFront, reason);
-  yield updated;
+var selectNodeAndWaitForAnimations = Task.async(
+  function*(data, inspector, reason = "test") {
+    yield selectNode(data, inspector, reason);
 
-  // 99% of the times, selectNode is called to select an animated node, and we
-  // want to make sure the rest of the test waits for the animations to be
-  // properly displayed (wait for all target DOM nodes to be previewed).
-  // Even if there are no animations, this is safe to do.
-  let {AnimationsPanel} = inspector.sidebar.getWindowForTab(TAB_NAME);
-  yield waitForAllAnimationTargets(AnimationsPanel);
-});
+    // We want to make sure the rest of the test waits for the animations to
+    // be properly displayed (wait for all target DOM nodes to be previewed).
+    let {AnimationsPanel} = inspector.sidebar.getWindowForTab(TAB_NAME);
+    yield waitForAllAnimationTargets(AnimationsPanel);
+  }
+);
 
 /**
  * Check if there are the expected number of animations being displayed in the
@@ -176,23 +128,10 @@ var waitForAnimationInspectorReady = Task.async(function*(inspector) {
  * @return a promise that resolves when the inspector is ready.
  */
 var openAnimationInspector = Task.async(function*() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-
-  info("Opening the toolbox with the inspector selected");
-  let toolbox = yield gDevTools.showToolbox(target, "inspector");
-
-  info("Switching to the animationinspector");
-  let inspector = toolbox.getPanel("inspector");
-
-  let panelReady = waitForAnimationInspectorReady(inspector);
-
-  info("Waiting for toolbox focus");
-  yield waitForToolboxFrameFocus(toolbox);
-
-  inspector.sidebar.select(TAB_NAME);
+  let {inspector, toolbox} = yield openInspectorSidebarTab(TAB_NAME);
 
   info("Waiting for the inspector and sidebar to be ready");
-  yield panelReady;
+  yield waitForAnimationInspectorReady(inspector);
 
   let win = inspector.sidebar.getWindowForTab(TAB_NAME);
   let {AnimationsController, AnimationsPanel} = win;
@@ -226,60 +165,6 @@ var closeAnimationInspector = Task.async(function*() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   yield gDevTools.closeToolbox(target);
 });
-
-/**
- * Wait for the toolbox frame to receive focus after it loads
- * @param {Toolbox} toolbox
- * @return a promise that resolves when focus has been received
- */
-function waitForToolboxFrameFocus(toolbox) {
-  info("Making sure that the toolbox's frame is focused");
-  let def = promise.defer();
-  let win = toolbox.frame.contentWindow;
-  waitForFocus(def.resolve, win);
-  return def.promise;
-}
-
-/**
- * Checks whether the inspector's sidebar corresponding to the given id already
- * exists
- * @param {InspectorPanel}
- * @param {String}
- * @return {Boolean}
- */
-function hasSideBarTab(inspector, id) {
-  return !!inspector.sidebar.getWindowForTab(id);
-}
-
-/**
- * Wait for eventName on target.
- * @param {Object} target An observable object that either supports on/off or
- * addEventListener/removeEventListener
- * @param {String} eventName
- * @param {Boolean} useCapture Optional, for add/removeEventListener
- * @return A promise that resolves when the event has been handled
- */
-function once(target, eventName, useCapture = false) {
-  info("Waiting for event: '" + eventName + "' on " + target + ".");
-
-  let deferred = promise.defer();
-
-  for (let [add, remove] of [
-    ["addEventListener", "removeEventListener"],
-    ["addListener", "removeListener"],
-    ["on", "off"]
-  ]) {
-    if ((add in target) && (remove in target)) {
-      target[add](eventName, function onEvent(...aArgs) {
-        target[remove](eventName, onEvent, useCapture);
-        deferred.resolve.apply(deferred, aArgs);
-      }, useCapture);
-      break;
-    }
-  }
-
-  return deferred.promise;
-}
 
 /**
  * Wait for a content -> chrome message on the message manager (the window

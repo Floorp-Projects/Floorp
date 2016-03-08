@@ -10,7 +10,7 @@ requestLongerTimeout(2);
 // be used to highlight elements in the DOM and select them in the inspector.
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {panel} = yield openAnimationInspector();
 
   let targets = panel.animationsTimelineComponent.targetNodes;
