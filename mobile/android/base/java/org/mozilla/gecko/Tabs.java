@@ -74,7 +74,6 @@ public class Tabs implements GeckoEventListener {
 
     private Context mAppContext;
     private ContentObserver mBookmarksContentObserver;
-    private ContentObserver mReadingListContentObserver;
     private PersistTabsRunnable mPersistTabsRunnable;
 
     private static class PersistTabsRunnable implements Runnable {
@@ -151,14 +150,6 @@ public class Tabs implements GeckoEventListener {
             final GeckoProfile profile = GeckoProfile.get(context);
             profile.getDB().registerBookmarkObserver(getContentResolver(), mBookmarksContentObserver);
         }
-
-        if (mReadingListContentObserver != null) {
-            // It's safe to use the db here since we aren't doing any I/O.
-            final GeckoProfile profile = GeckoProfile.get(context);
-            profile.getDB().getReadingListAccessor().registerContentObserver(
-                    mAppContext, mReadingListContentObserver);
-        }
-
     }
 
     /**
@@ -211,31 +202,11 @@ public class Tabs implements GeckoEventListener {
         }
     }
 
-    // Must be synchronized to avoid racing on mReadingListContentObserver.
-    private void lazyRegisterReadingListObserver() {
-        if (mReadingListContentObserver == null) {
-            mReadingListContentObserver = new ContentObserver(null) {
-                @Override
-                public void onChange(final boolean selfChange) {
-                    for (final Tab tab : mOrder) {
-                        tab.updateReadingList();
-                    }
-                }
-            };
-
-            // It's safe to use the db here since we aren't doing any I/O.
-            final GeckoProfile profile = GeckoProfile.get(mAppContext);
-            profile.getDB().getReadingListAccessor().registerContentObserver(
-                    mAppContext, mReadingListContentObserver);
-        }
-    }
-
     private Tab addTab(int id, String url, boolean external, int parentId, String title, boolean isPrivate, int tabIndex) {
         final Tab tab = isPrivate ? new PrivateTab(mAppContext, id, url, external, parentId, title) :
                                     new Tab(mAppContext, id, url, external, parentId, title);
         synchronized (this) {
             lazyRegisterBookmarkObserver();
-            lazyRegisterReadingListObserver();
             mTabs.put(id, tab);
 
             if (tabIndex > -1) {
@@ -646,8 +617,6 @@ public class Tabs implements GeckoEventListener {
         RECORDING_CHANGE,
         BOOKMARK_ADDED,
         BOOKMARK_REMOVED,
-        READING_LIST_ADDED,
-        READING_LIST_REMOVED,
         AUDIO_PLAYING_CHANGE,
     }
 
