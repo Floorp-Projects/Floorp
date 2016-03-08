@@ -5,6 +5,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -35,12 +36,18 @@ function test() {
   });
 }
 
+function startTest() {
+  waitForAllPaints(function() {
+    flushApzRepaints(test);
+  });
+}
+
 window.onload = function() {
   SpecialPowers.pushPrefEnv({
     'set': [['general.smoothScroll', false],
             ['mousewheel.transaction.timeout', 1000000]],
   }, function () {
-    SimpleTest.waitForFocus(test);
+    SimpleTest.waitForFocus(startTest);
   });
 }
 
