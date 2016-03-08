@@ -14,15 +14,12 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.ThreadUtils;
 
-import android.annotation.TargetApi;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.os.Build;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
@@ -64,7 +61,7 @@ public class TabQueueHelper {
      * @return true if the specified context can draw on top of other apps, false otherwise.
      */
     public static boolean canDrawOverlays(Context context) {
-        if (AppConstants.Versions.preM) {
+        if (AppConstants.Versions.preMarshmallow) {
             return true; // We got the permission at install time.
         }
 
