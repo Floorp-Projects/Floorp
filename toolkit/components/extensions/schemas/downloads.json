@@ -673,7 +673,6 @@
       {
         "description": "This event fires with the <a href='#type-DownloadItem'>DownloadItem</a> object when a download begins.",
         "name": "onCreated",
-        "unsupported": true,
         "parameters": [
           {
             "$ref": "DownloadItem",

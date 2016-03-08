@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const {
+  interfaces: Ci,
+  utils: Cu,
+} = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Downloads.jsm");
+
+const BASE = "http://mochi.test:8888/chrome/toolkit/components/extensions/test/mochitest";
+const TXT_FILE = "file_download.txt";
+const TXT_URL = BASE + "/" + TXT_FILE;
+
+function backgroundScript() {
+  let events = [];
+  let eventWaiter = null;
+
+  browser.downloads.onCreated.addListener(data => {
+    events.push({type: "onCreated", data});
+    if (eventWaiter) {
+      eventWaiter();
+    }
+  });
+
+  browser.downloads.onChanged.addListener(data => {
+    events.push({type: "onChanged", data});
+    if (eventWaiter) {
+      eventWaiter();
+    }
+  });
+
+  function waitForEvents(expected) {
+    function compare(received, expected) {
+      if (typeof expected == "object" && expected != null) {
+        return Object.keys(expected).every(fld => compare(received[fld], expected[fld]));
+      }
+      return (received == expected);
+    }
+    return new Promise((resolve, reject) => {
+      function check() {
+        if (events.length < expected.length) {
+          return;
+        }
+        if (expected.length > events.length) {
+          reject(new Error(`Got ${events.length} events but only expected ${expected.length}`));
+        }
+
+        for (let i = 0; i < expected.length; i++) {
+          if (!compare(events[i], expected[i])) {
+            reject(new Error(`Mismatch in event ${i}, expecting ${JSON.stringify(expected[i])} but got ${JSON.stringify(events[i])}`));
+          }
+        }
+
+        events = [];
+        eventWaiter = null;
+        resolve();
+      }
+      eventWaiter = check;
+      check();
+    });
+  }
+
+  browser.test.onMessage.addListener(function(msg) {
+    // extension functions throw on bad arguments, we can remove the extra
+    // promise when bug 1250223 is fixed.
+    if (msg == "download.request") {
+      Promise.resolve().then(() => browser.downloads.download(arguments[1]))
+                       .then(id => {
+                         browser.test.sendMessage("download.done", {status: "success", id});
+                       })
+                       .catch(error => {
+                         browser.test.sendMessage("download.done", {status: "error", errmsg: error.message});
+                       });
+    } else if (msg == "waitForEvents.request") {
+      waitForEvents(arguments[1]).then(() => {
+        browser.test.sendMessage("waitForEvents.done", {status: "success"});
+      });
+    }
+  });
+
+  browser.test.sendMessage("ready");
+}
+
+let downloadDir;
+let extension;
+
+function clearDownloads(callback) {
+  return Downloads.getList(Downloads.ALL).then(list => {
+    return list.getAll().then(downloads => {
+      return Promise.all(downloads.map(download => list.remove(download)))
+                    .then(() => downloads);
+    });
+  });
+}
+
+function* setup(backgroundScript) {
+  const nsIFile = Ci.nsIFile;
+  downloadDir = FileUtils.getDir("TmpD", ["downloads"]);
+  downloadDir.createUnique(nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  info(`downloadDir ${downloadDir.path}`);
+
+  Services.prefs.setIntPref("browser.download.folderList", 2);
+  Services.prefs.setComplexValue("browser.download.dir", nsIFile, downloadDir);
+
+  SimpleTest.registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.download.folderList");
+    Services.prefs.clearUserPref("browser.download.dir");
+    downloadDir.remove(true);
+    return clearDownloads();
+  });
+
+  yield clearDownloads().then(downloads => {
+    info(`removed ${downloads.length} pre-existing downloads from history`);
+  });
+
+  extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript})()`,
+    manifest: {
+      permissions: ["downloads"],
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+  info("extension started");
+}
+
+function runInExtension(what, args) {
+  extension.sendMessage(`${what}.request`, args);
+  return extension.awaitMessage(`${what}.done`);
+}
+
+
+add_task(function* test_misc() {
+  yield setup(backgroundScript);
+
+  let msg = yield runInExtension("download", {url: TXT_URL});
+  is(msg.status, "success", "downoad succeeded");
+  const id = msg.id;
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onCreated", data: {id, url: TXT_URL}},
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: null,
+          current: "in_progress",
+        },
+      },
+    },
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "in_progress",
+          current: "complete",
+        },
+      },
+    },
+  ]);
+  is(msg.status, "success", "got onCreated and onChanged events");
+
+  yield extension.unload();
+});
+
+</script>
+
+</body>
+</html>
