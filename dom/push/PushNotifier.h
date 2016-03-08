@@ -57,6 +57,8 @@ private:
   nsresult NotifyPushObservers(const nsACString& aScope,
                                Maybe<nsTArray<uint8_t>> aData);
   nsresult NotifySubscriptionChangeObservers(const nsACString& aScope);
+  nsresult DoNotifyObservers(nsISupports *aSubject, const char *aTopic,
+                             const nsACString& aScope);
   bool ShouldNotifyObservers(nsIPrincipal* aPrincipal);
   bool ShouldNotifyWorkers(nsIPrincipal* aPrincipal);
 };

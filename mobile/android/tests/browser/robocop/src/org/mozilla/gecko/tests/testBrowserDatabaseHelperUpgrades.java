@@ -6,6 +6,7 @@ package org.mozilla.gecko.tests;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import org.mozilla.gecko.db.BrowserDatabaseHelper;
@@ -78,10 +79,24 @@ public class testBrowserDatabaseHelperUpgrades extends UITest {
         for (int i = TEST_FROM_VERSION; i < BrowserDatabaseHelper.DATABASE_VERSION; ++i) {
             Log.d(LOGTAG, "Testing upgrade from version: " + i);
             final String tempDbPath = copyDatabase(i);
+
+            final SQLiteDatabase db = SQLiteDatabase.openDatabase(tempDbPath, null, 0);
+            try {
+                fAssertEquals("Input DB isn't the expected version",
+                              i, db.getVersion());
+            } finally {
+                db.close();
+            }
+
             final BrowserDatabaseHelper dbHelperToUpgrade = new BrowserDatabaseHelper(getActivity(), tempDbPath);
             // Ideally, we'd test upgrading version i to version i + 1 but this method does not permit that. Alas!
-            fAssertEquals("DB helper should upgrade to latest version",
-                    BrowserDatabaseHelper.DATABASE_VERSION, dbHelperToUpgrade.getWritableDatabase().getVersion());
+            final SQLiteDatabase upgradedDb = dbHelperToUpgrade.getWritableDatabase();
+            try {
+                fAssertEquals("DB helper should upgrade to latest version",
+                              BrowserDatabaseHelper.DATABASE_VERSION, upgradedDb.getVersion());
+            } finally {
+                upgradedDb.close();
+            }
         }
     }
 
