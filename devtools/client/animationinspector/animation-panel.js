@@ -183,6 +183,9 @@ var AnimationsPanel = {
     } else {
       document.body.setAttribute("empty", "true");
       document.body.removeAttribute("timeline");
+      $("#error-type").textContent = gInspector.selection.isPseudoElementNode()
+        ? L10N.getStr("panel.pseudoElementSelected")
+        : L10N.getStr("panel.invalidElementSelected");
     }
   },
 

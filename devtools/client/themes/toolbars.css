@@ -674,9 +674,7 @@
 .devtools-separator {
   margin: 0 2px;
   width: 2px;
-  background-image: linear-gradient(transparent, hsla(204,45%,98%,.1), transparent),
-                    linear-gradient(transparent, hsla(206,37%,4%,.6), transparent),
-                    linear-gradient(transparent, hsla(204,45%,98%,.1), transparent);
+  background-image: linear-gradient(transparent 15%, var(--theme-splitter-color) 15%, var(--theme-splitter-color) 85%, transparent 85%);
   background-size: 1px 100%;
   background-repeat: no-repeat;
   background-position: 0, 1px, 2px;

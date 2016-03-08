@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { DOM: dom, createClass, PropTypes } =
+const { DOM: dom, createClass, PropTypes, addons } =
   require("devtools/client/shared/vendor/react");
 
 const Types = require("../types");
@@ -12,6 +12,8 @@ const Types = require("../types");
 module.exports = createClass({
 
   displayName: "Browser",
+
+  mixins: [ addons.PureRenderMixin ],
 
   propTypes: {
     location: Types.location.isRequired,
