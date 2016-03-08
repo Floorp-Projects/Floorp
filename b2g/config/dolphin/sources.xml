@@ -44,7 +44,9 @@
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="ebdad82e61c16772f6cd47e9f11936bf6ebe9aa0"/>
   <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.7" path="prebuilts/gcc/linux-x86/arm/arm-eabi-4.7" revision="8b880805d454664b3eed11d0f053cdeafa1ff06e"/>
   <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.7" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.7" revision="a1e239a0bb5cd1d69680bf1075883aa9a7bf2429"/>
+  <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9" remote="caf" revision="c09e1b3a55153d1ba142d5bf548c90487ea71f9e"/>
   <project groups="linux,x86" name="platform/prebuilts/gcc/linux-x86/x86/i686-linux-android-4.7" path="prebuilts/gcc/linux-x86/x86/i686-linux-android-4.7" revision="c7931763d41be602407ed9d71e2c0292c6597e00"/>
+  <project groups="linux,x86" name="platform/prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.9" path="prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.9" remote="caf" revision="c33513f9de95fcdf4ec832db5e3ebd612382f541"/>
   <project groups="linux,x86" name="platform/prebuilts/python/linux-x86/2.7.5" path="prebuilts/python/linux-x86/2.7.5" revision="83760d213fb3bec7b4117d266fcfbf6fe2ba14ab"/>
   <project name="device/common" path="device/common" revision="6a2995683de147791e516aae2ccb31fdfbe2ad30"/>
   <project name="device/sample" path="device/sample" revision="1a3d8efa0ad32ec8f145367a3cf0f54b97385c3c"/>
