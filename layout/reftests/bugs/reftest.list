@@ -1238,7 +1238,7 @@ fuzzy-if(skiaContent,1,12000) == 461512-1.html 461512-1-ref.html
 skip-if((B2G&&browserIsRemote)||Mulet) == 463217-1.xul 463217-1-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == 463952-1.html 463952-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 464811-1.html 464811-1-ref.html
-fails == 465574-1.html 465574-1-ref.html # bug 421436
+== 465574-1.html 465574-1-ref.html
 == 466258-1.html 466258-1-ref.html
 == 466395-1.html 466395-1-ref.html
 == 466395-2.html 466395-2-ref.html
@@ -1945,3 +1945,4 @@ fuzzy(1,74) fuzzy-if(gtkWidget,6,79) == 1174332-1.html 1174332-1-ref.html
 pref(layout.css.overflow-clip-box.enabled,true) == 1226278.html 1226278-ref.html
 == 1230466.html about:blank
 fuzzy(100,2000) == 1239564.html 1239564-ref.html
+== 1242781.html 1242781-ref.html
