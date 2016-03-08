@@ -50,6 +50,12 @@ public:
   ~TreeWalker();
 
   /**
+   * Clears the tree walker state and resets it to the given child within
+   * the anchor.
+   */
+  bool Seek(nsIContent* aChildNode);
+
+  /**
    * Return the next/prev accessible.
    *
    * @note Returned accessible is bound to the document, if the accessible is
@@ -59,13 +65,17 @@ public:
   Accessible* Next();
   Accessible* Prev();
 
+  Accessible* Context() const { return mContext; }
+  DocAccessible* Document() const { return mDoc; }
+
 private:
   TreeWalker();
   TreeWalker(const TreeWalker&);
   TreeWalker& operator =(const TreeWalker&);
 
   /**
-   * Create new state for the given node and push it on top of stack.
+   * Create new state for the given node and push it on top of stack / at bottom
+   * of stack.
    *
    * @note State stack is used to navigate up/down the DOM subtree during
    *        accessible children search.
@@ -74,6 +84,12 @@ private:
                                       bool aStartAtBeginning)
   {
     return mStateStack.AppendElement(
+      dom::AllChildrenIterator(aContent, mChildFilter, aStartAtBeginning));
+  }
+  dom::AllChildrenIterator* PrependState(nsIContent* aContent,
+                                         bool aStartAtBeginning)
+  {
+    return mStateStack.InsertElementAt(0,
       dom::AllChildrenIterator(aContent, mChildFilter, aStartAtBeginning));
   }
 
