@@ -215,7 +215,7 @@ ExplicitChildIterator::Seek(nsIContent* aChildToFind)
 }
 
 nsIContent*
-ExplicitChildIterator::Get()
+ExplicitChildIterator::Get() const
 {
   MOZ_ASSERT(!mIsFirst);
 
@@ -310,6 +310,38 @@ ExplicitChildIterator::GetPreviousChild()
 
   return mChild;
 }
+
+nsIContent*
+AllChildrenIterator::Get() const
+{
+  switch (mPhase) {
+    case eAtBeforeKid: {
+      nsIFrame* frame = mOriginalContent->GetPrimaryFrame();
+      MOZ_ASSERT(frame, "No frame at eAtBeforeKid phase");
+      nsIFrame* beforeFrame = nsLayoutUtils::GetBeforeFrame(frame);
+      MOZ_ASSERT(beforeFrame, "No content before frame at eAtBeforeKid phase");
+      return beforeFrame->GetContent();
+    }
+
+    case eAtExplicitKids:
+      return ExplicitChildIterator::Get();
+
+    case eAtAnonKids:
+      return mAnonKids[mAnonKidsIdx];
+
+    case eAtAfterKid: {
+      nsIFrame* frame = mOriginalContent->GetPrimaryFrame();
+      MOZ_ASSERT(frame, "No frame at eAtAfterKid phase");
+      nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(frame);
+      MOZ_ASSERT(afterFrame, "No content before frame at eAtBeforeKid phase");
+      return afterFrame->GetContent();
+    }
+
+    default:
+      return nullptr;
+  }
+}
+
 
 bool
 AllChildrenIterator::Seek(nsIContent* aChildToFind)
