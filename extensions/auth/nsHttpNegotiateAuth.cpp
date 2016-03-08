@@ -38,6 +38,8 @@
 #include "prnetdb.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Snprintf.h"
+#include "nsIChannel.h"
+#include "nsNetUtil.h"
 
 //-----------------------------------------------------------------------------
 
@@ -51,6 +53,15 @@ static const char kNegotiateAuthSSPI[] = "network.auth.use-sspi";
 #define kNegotiateLen  (sizeof(kNegotiate)-1)
 
 //-----------------------------------------------------------------------------
+
+// Return false when the channel comes from a Private browsing window.
+static bool
+TestNotInPBMode(nsIHttpAuthenticableChannel *authChannel)
+{
+    nsCOMPtr<nsIChannel> bareChannel = do_QueryInterface(authChannel);
+    MOZ_ASSERT(bareChannel);
+    return !NS_UsePrivateBrowsing(bareChannel);
+}
 
 NS_IMETHODIMP
 nsHttpNegotiateAuth::GetAuthFlags(uint32_t *flags)
@@ -113,8 +124,9 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
         proxyInfo->GetHost(service);
     }
     else {
-        bool allowed = TestNonFqdn(uri) ||
-                       TestPref(uri, kNegotiateAuthTrustedURIs);
+        bool allowed = TestNotInPBMode(authChannel) &&
+                       (TestNonFqdn(uri) ||
+                       TestPref(uri, kNegotiateAuthTrustedURIs));
         if (!allowed) {
             LOG(("nsHttpNegotiateAuth::ChallengeReceived URI blocked\n"));
             return NS_ERROR_ABORT;
