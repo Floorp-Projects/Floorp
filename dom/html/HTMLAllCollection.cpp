@@ -114,14 +114,9 @@ HTMLAllCollection::GetDocumentAllList(const nsAString& aID)
     return docAllList;
   }
 
-  Element* root = mDocument->GetRootElement();
-  if (!root) {
-    return nullptr;
-  }
-
   nsCOMPtr<nsIAtom> id = do_GetAtom(aID);
   RefPtr<nsContentList> docAllList =
-    new nsContentList(root, DocAllResultMatch, nullptr, nullptr, true, id);
+    new nsContentList(mDocument, DocAllResultMatch, nullptr, nullptr, true, id);
   mNamedMap.Put(aID, docAllList);
   return docAllList;
 }
