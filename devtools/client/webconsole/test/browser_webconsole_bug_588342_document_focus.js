@@ -7,28 +7,30 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 588342";
 
-var fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-
 add_task(function* () {
   let { browser } = yield loadTab(TEST_URI);
-
   let hud = yield openConsole();
-  yield consoleOpened(hud);
 
-  is(fm.focusedWindow, browser.contentWindow,
-     "content document has focus");
+  yield checkConsoleFocus(hud);
 
-  fm = null;
+  let isFocused = yield ContentTask.spawn(browser, { }, function* () {
+    var fm = Components.classes["@mozilla.org/focus-manager;1"].
+                         getService(Components.interfaces.nsIFocusManager);
+    return fm.focusedWindow == content;
+  });
+
+  ok(isFocused, "content document has focus");
 });
 
-function consoleOpened(hud) {
-  let deferred = promise.defer();
-  waitForFocus(function() {
-    is(hud.jsterm.inputNode.getAttribute("focused"), "true",
-       "jsterm input is focused on web console open");
-    isnot(fm.focusedWindow, content, "content document has no focus");
-    closeConsole(null).then(deferred.resolve);
-  }, hud.iframeWindow);
+function* checkConsoleFocus(hud) {
+  let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
 
-  return deferred.promise;
+  yield new Promise(resolve => {
+    waitForFocus(resolve);
+  });
+
+  is(hud.jsterm.inputNode.getAttribute("focused"), "true",
+     "jsterm input is focused on web console open");
+  is(fm.focusedWindow, hud.iframeWindow, "hud window is focused");
+  yield closeConsole(null);
 }
