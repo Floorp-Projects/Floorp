@@ -47,6 +47,16 @@ task:
         path: '/artifacts/'
         expires: '{{#from_now}}1 year{{/from_now}}'
 
+    env:
+      # Common environment variables for checking out gecko
+      GECKO_BASE_REPOSITORY: '{{base_repository}}'
+      GECKO_HEAD_REPOSITORY: '{{head_repository}}'
+      GECKO_HEAD_REV: '{{head_rev}}'
+      GECKO_HEAD_REF: '{{head_ref}}'
+      TOOLTOOL_REPO: 'https://git.mozilla.org/build/tooltool.git'
+      TOOLTOOL_REV: 'master'
+      MOZ_BUILD_DATE: '{{pushdate}}'
+
   extra:
     build_product: '{{build_product}}'
     build_name: '{{build_name}}'
