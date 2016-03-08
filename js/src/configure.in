@@ -21,4 +21,6 @@ SRCDIR=$(dirname $0)
 TOPSRCDIR="$SRCDIR"/../..
 export OLD_CONFIGURE="$SRCDIR"/old-configure
 
+set -- "$@" --enable-project=js
+
 which python2.7 > /dev/null && exec python2.7 "$TOPSRCDIR/configure.py" "$@" || exec python "$TOPSRCDIR/configure.py" "$@"
