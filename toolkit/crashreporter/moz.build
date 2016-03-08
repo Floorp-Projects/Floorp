@@ -8,9 +8,12 @@ SPHINX_TREES['crashreporter'] = 'docs'
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += [
-    'google-breakpad/src/common',
-    'breakpad-windows-libxul'
+        'google-breakpad/src/common',
+        'breakpad-windows-libxul',
     ]
+
+    if CONFIG['MSVC_HAS_DIA_SDK']:
+        DIRS += ['google-breakpad/src/tools/windows/dump_syms']
 
     if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
         DIRS += ['breakpad-windows-standalone']
