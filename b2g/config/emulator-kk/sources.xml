@@ -21,7 +21,7 @@
   <!--
     B2G repositories for all targets
     -->
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="1571a2ec546f7c773c8fa938b8f6cf2aacb9b4e1"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="7dcf0213800cfb9cc5716c94f0d5e261fb8a0a34"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="6b2254b3e272133e9286d5986960e66bdecac0eb"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="99c333dab00ed79baff9e1cf76b320aee8e1c123"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
@@ -29,7 +29,7 @@
   <project name="platform_system_libpdu" path="system/libpdu" remote="b2g" revision="ac4e539dbd73522c466ebffba53edea61702082f"/>
   <project name="platform_system_sensorsd" path="system/sensorsd" remote="b2g" revision="3618678c472320de386f5ddc27897992d0e148a8"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="d3c9acb642baee501cff89e4efdb16b0c7480760">
+  <project name="platform_build" path="build" remote="b2g" revision="964d9fa4eabe9eb473ef9101ca2a690880f28547">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
