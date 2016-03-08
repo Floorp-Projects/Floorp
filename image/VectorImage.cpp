@@ -763,7 +763,6 @@ struct SVGDrawingParameters
                        uint32_t aFlags)
     : context(aContext)
     , size(aSize.width, aSize.height)
-    , imageRect(0, 0, aSize.width, aSize.height)
     , region(aRegion)
     , filter(aFilter)
     , svgContext(aSVGContext)
@@ -780,7 +779,6 @@ struct SVGDrawingParameters
 
   gfxContext*                   context;
   IntSize                       size;
-  IntRect                       imageRect;
   ImageRegion                   region;
   Filter                        filter;
   const Maybe<SVGImageContext>& svgContext;
