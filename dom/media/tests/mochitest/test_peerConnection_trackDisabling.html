@@ -17,7 +17,7 @@ runNetworkTest(() => {
   var test = new PeerConnectionTest();
 
   // Always use fake tracks since we depend on video to be somewhat green and
-  // audio to have a large 1000Hz component.
+  // audio to have a large 1000Hz component (or 440Hz if using fake devices).
   test.setMediaConstraints([{audio: true, video: true, fake: true}], []);
   test.chain.append([
     function CHECK_ASSUMPTIONS() {
