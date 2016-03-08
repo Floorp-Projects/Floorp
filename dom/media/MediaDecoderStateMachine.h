@@ -392,7 +392,6 @@ protected:
   // aSample must not be null.
 
   void Push(MediaData* aSample, MediaData::Type aSampleType);
-  void PushFront(MediaData* aSample, MediaData::Type aSampleType);
 
   void OnAudioPopped(const RefPtr<MediaData>& aSample);
   void OnVideoPopped(const RefPtr<MediaData>& aSample);
