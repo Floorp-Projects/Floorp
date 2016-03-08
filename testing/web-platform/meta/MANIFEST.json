@@ -28334,6 +28334,10 @@
         "url": "/web-animations/animation-effect-timing/duration.html"
       },
       {
+        "path": "web-animations/animation-effect-timing/endDelay.html",
+        "url": "/web-animations/animation-effect-timing/endDelay.html"
+      },
+      {
         "path": "web-animations/animation-effect-timing/getAnimations.html",
         "url": "/web-animations/animation-effect-timing/getAnimations.html"
       },
