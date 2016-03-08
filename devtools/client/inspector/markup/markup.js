@@ -1951,7 +1951,7 @@ MarkupContainer.prototype = {
    * Check if element is draggable.
    */
   isDraggable: function() {
-    let tagName = this.node.tagName.toLowerCase();
+    let tagName = this.node.tagName && this.node.tagName.toLowerCase();
 
     return !this.node.isPseudoElement &&
            !this.node.isAnonymous &&
