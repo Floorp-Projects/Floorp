@@ -362,12 +362,14 @@ MediaStreamGraphImpl::UpdateStreamOrder()
     }
   }
   // Note that this looks for any audio streams, input or output, and switches to a
-  // SystemClockDriver if there are none
+  // SystemClockDriver if there are none.  However, if another is already pending, let that
+  // switch happen.
 
   if (!audioTrackPresent && mRealtime &&
       CurrentDriver()->AsAudioCallbackDriver()) {
     MonitorAutoLock mon(mMonitor);
-    if (CurrentDriver()->AsAudioCallbackDriver()->IsStarted()) {
+    if (CurrentDriver()->AsAudioCallbackDriver()->IsStarted() &&
+        !(CurrentDriver()->Switching())) {
       if (mLifecycleState == LIFECYCLE_RUNNING) {
         SystemClockDriver* driver = new SystemClockDriver(this);
         CurrentDriver()->SwitchAtNextIteration(driver);
