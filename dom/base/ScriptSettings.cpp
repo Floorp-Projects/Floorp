@@ -545,7 +545,7 @@ AutoJSAPI::ReportException()
       xpcReport->Init(jsReport.report(), jsReport.message(),
                       nsContentUtils::IsCallerChrome(),
                       inner ? inner->WindowID() : 0);
-      if (inner) {
+      if (inner && jsReport.report()->errorNumber != JSMSG_OUT_OF_MEMORY) {
         DispatchScriptErrorEvent(inner, JS_GetRuntime(cx()), xpcReport, exn);
       } else {
         JS::Rooted<JSObject*> stack(cx(), xpc::FindExceptionStack(cx(), exn));
