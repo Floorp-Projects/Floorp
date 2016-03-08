@@ -670,6 +670,7 @@ protected:
   float mDPI;
   CSSToLayoutDeviceScale mDefaultScale;
   bool mUpdatedDimensions;
+  LayoutDeviceIntPoint mClientOffset;
   LayoutDeviceIntPoint mChromeOffset;
 
 private:

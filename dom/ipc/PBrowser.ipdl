@@ -572,6 +572,7 @@ child:
 
     UpdateDimensions(CSSRect rect, CSSSize size, nsSizeMode sizeMode,
                      ScreenOrientationInternal orientation,
+                     LayoutDeviceIntPoint clientOffset,
                      LayoutDeviceIntPoint chromeDisp) compressall;
 
     UpdateFrame(FrameMetrics frame);
