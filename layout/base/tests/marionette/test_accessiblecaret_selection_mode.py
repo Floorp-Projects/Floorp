@@ -96,9 +96,9 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
 
         # Move the blinking cursor to the word.
         el.tap()
-        sel.move_caret_to_front()
-        sel.move_caret_by_offset(offset)
-        x, y = sel.caret_location()
+        sel.move_cursor_to_front()
+        sel.move_cursor_by_offset(offset)
+        x, y = sel.cursor_location()
 
         return x, y
 
@@ -188,16 +188,16 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         # Goal: Select all text after the first word.
         target_content = original_content[len(words[0]):]
 
-        # Get the location of the selection carets at the end of the content for
-        # later use.
+        # Get the location of the carets at the end of the content for later
+        # use.
         el.tap()
         sel.select_all()
-        (_, _), (end_caret_x, end_caret_y) = sel.selection_carets_location()
+        end_caret_x, end_caret_y = sel.second_caret_location()
 
         self.long_press_on_word(el, 0)
 
         # Drag the second caret to the end of the content.
-        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
         self.actions.flick(el, caret2_x, caret2_y, end_caret_x, end_caret_y).perform()
 
         # Drag the first caret to the previous position of the second caret.
@@ -229,10 +229,10 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         words = original_content.split()
         self.assertTrue(len(words) >= 1, 'Expect at least one word in the content.')
 
-        # Get the location of the selection carets at the end of the content for
-        # later use.
+        # Get the location of the carets at the end of the content for later
+        # use.
         sel.select_all()
-        (_, _), (end_caret_x, end_caret_y) = sel.selection_carets_location()
+        end_caret_x, end_caret_y = sel.second_caret_location()
         el.tap()
 
         # Goal: Select the first character.
@@ -247,11 +247,11 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         self.long_press_on_location(el, x, y)
 
         # Drag the second caret to the end of the content.
-        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
         self.actions.flick(el, caret2_x, caret2_y, end_caret_x, end_caret_y).perform()
 
         # Drag the second caret to the position of the first caret.
-        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
         self.actions.flick(el, caret2_x, caret2_y, caret1_x, caret1_y).perform()
 
         self.assertEqual(target_content, sel.selected_content)
@@ -343,14 +343,14 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
 
         # Drag the first caret to the position of the second caret to trigger
         # carets overlapping.
-        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
         self.actions.flick(el, caret1_x, caret1_y, caret2_x, caret2_y).perform()
 
         # We make two hit tests targeting the left edge of the left tilted caret
         # and the right edge of the right tilted caret. If either of the hits is
         # missed, selection would be collapsed and both carets should not be
         # draggable.
-        (caret3_x, caret3_y), (caret4_x, caret4_y) = sel.selection_carets_location()
+        (caret3_x, caret3_y), (caret4_x, caret4_y) = sel.carets_location()
 
         # The following values are from ua.css and all.js
         caret_width = float(self.marionette.get_pref('layout.accessiblecaret.width'))
@@ -371,9 +371,12 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         self.assertEqual(target_content, sel.selected_content)
 
     def test_drag_caret_over_non_selectable_field(self):
-        '''Testing drag caret over non selectable field.
-        So that the selected content should exclude non selectable field and
-        end selection caret should appear in last range's position.'''
+        '''Test dragging the caret over a non-selectable field.
+
+        The selected content should exclude non-selectable elements and the
+        second caret should appear in last range's position.
+
+        '''
         self.open_test_html_multirange()
         body = self.marionette.find_element(By.ID, 'bd')
         sel3 = self.marionette.find_element(By.ID, 'sel3')
@@ -383,27 +386,27 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         # Select target element and get target caret location
         self.long_press_on_word(sel4, 3)
         sel = SelectionManager(body)
-        (_, _), (end_caret_x, end_caret_y) = sel.selection_carets_location()
+        end_caret_x, end_caret_y = sel.second_caret_location()
 
         self.long_press_on_word(sel6, 0)
-        (_, _), (end_caret2_x, end_caret2_y) = sel.selection_carets_location()
+        end_caret2_x, end_caret2_y = sel.second_caret_location()
 
         # Select start element
         self.long_press_on_word(sel3, 3)
 
         # Drag end caret to target location
-        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
         self.actions.flick(body, caret2_x, caret2_y, end_caret_x, end_caret_y, 1).perform()
         self.assertEqual(self.to_unix_line_ending(sel.selected_content.strip()),
                          'this 3\nuser can select this')
 
-        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
         self.actions.flick(body, caret2_x, caret2_y, end_caret2_x, end_caret2_y, 1).perform()
         self.assertEqual(self.to_unix_line_ending(sel.selected_content.strip()),
                          'this 3\nuser can select this 4\nuser can select this 5\nuser')
 
         # Drag first caret to target location
-        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
         self.actions.flick(body, caret1_x, caret1_y, end_caret_x, end_caret_y, 1).perform()
         self.assertEqual(self.to_unix_line_ending(sel.selected_content.strip()),
                          '4\nuser can select this 5\nuser')
@@ -420,13 +423,13 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         # Select the first word in the second line
         self.long_press_on_word(sel2, 0)
         sel = SelectionManager(body)
-        (start_caret_x, start_caret_y), (end_caret_x, end_caret_y) = sel.selection_carets_location()
+        (start_caret_x, start_caret_y), (end_caret_x, end_caret_y) = sel.carets_location()
 
         # Select target word in the first line
         self.long_press_on_word(sel1, 2)
 
         # Drag end caret to the beginning of the second line
-        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
         self.actions.flick(body, caret2_x, caret2_y, start_caret_x, start_caret_y).perform()
 
         # Drag end caret back to the target word
@@ -449,9 +452,9 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         self.marionette.set_orientation('portrait')
         self.long_press_on_word(longtext, 12)
         sel = SelectionManager(body)
-        (p_start_caret_x, p_start_caret_y), (p_end_caret_x, p_end_caret_y) = sel.selection_carets_location()
+        (p_start_caret_x, p_start_caret_y), (p_end_caret_x, p_end_caret_y) = sel.carets_location()
         self.marionette.set_orientation('landscape')
-        (l_start_caret_x, l_start_caret_y), (l_end_caret_x, l_end_caret_y) = sel.selection_carets_location()
+        (l_start_caret_x, l_start_caret_y), (l_end_caret_x, l_end_caret_y) = sel.carets_location()
 
         # Drag end caret to the start caret to change the selected content
         self.actions.flick(body, l_end_caret_x, l_end_caret_y,
@@ -539,7 +542,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         # If the second carets is visible, it can be dragged to the position of
         # the first caret. After that, selection will contain only the first
         # character.
-        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
         self.actions.flick(el, caret2_x, caret2_y, caret1_x, caret1_y).perform()
         self.assertEqual(words[0][0], sel.selected_content)
 
@@ -556,7 +559,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         target_content = words[1]
 
         self.long_press_on_word(el, 1)
-        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.carets_location()
 
         # Drag the first caret up by 50px.
         self.actions.flick(el, caret1_x, caret1_y, caret1_x, caret1_y - 50).perform()
