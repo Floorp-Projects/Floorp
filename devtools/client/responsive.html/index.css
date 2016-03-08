@@ -7,14 +7,20 @@
 
 .theme-light {
   --box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
-  --viewport-dimension-color: var(--theme-splitter-color);
-  --viewport-dimension-editing-color: var(--theme-body-color);
+  --viewport-color: var(--theme-splitter-color);
+  --viewport-active-color: var(--theme-body-color);
+  --viewport-selection-arrow: url("./images/select-arrow.svg#light");
+  --viewport-selection-arrow-selected:
+    url("./images/select-arrow.svg#light-selected");
 }
 
 .theme-dark {
   --box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
-  --viewport-dimension-color: var(--theme-body-color);
-  --viewport-dimension-editing-color: var(--theme-selection-color);
+  --viewport-color: var(--theme-body-color);
+  --viewport-active-color: var(--theme-selection-color);
+  --viewport-selection-arrow: url("./images/select-arrow.svg#dark");
+  --viewport-selection-arrow-selected:
+    url("./images/select-arrow.svg#dark-selected");
 }
 
 * {
@@ -134,12 +140,50 @@ body {
   color: var(--theme-body-color);
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
+  justify-content: center;
   height: 18px;
+}
+
+.viewport-device-selector {
+  -moz-appearance: none;
+  background-color: var(--theme-toolbar-background);
+  background-image: var(--viewport-selection-arrow);
+  background-position: 136px;
+  background-repeat: no-repeat;
+  background-size: 7px;
+  border: none;
+  color: var(--viewport-color);
+  height: 100%;
+  padding: 0 16px;
+  text-overflow: ellipsis;
+  width: 150px;
+}
+
+.viewport-device-selector.selected {
+  background-image: var(--viewport-selection-arrow-selected);
+  color: var(--viewport-active-color);
+}
+
+.viewport-device-selector:focus {
+  background-image: var(--viewport-selection-arrow-selected);
+  /* Remove the outline from the select box */
+  color: transparent;
+  text-shadow: 0 0 0 var(--viewport-active-color);
+}
+
+.viewport-device-selector > option {
+  background-color: var(--theme-toolbar-background);
+  color: var(--viewport-active-color);
+  padding-block-start: 5px;
+  padding-block-end: 5px;
+  -moz-padding-start: 10px;
+  -moz-padding-end: 5px;
 }
 
 .viewport-rotate-button {
   mask: url("./images/rotate-viewport.svg");
+  position: absolute;
+  right: 0;
 }
 
 /**
@@ -208,13 +252,13 @@ body {
 
 .viewport-dimension-editable,
 .viewport-dimension-input {
-  color: var(--viewport-dimension-color);
+  color: var(--viewport-color);
   transition: all 0.25s ease;
 }
 
 .viewport-dimension-editable.editing,
 .viewport-dimension-input.editing {
-  color: var(--viewport-dimension-editing-color);
+  color: var(--viewport-active-color);
 }
 
 .viewport-dimension-editable.editing {
