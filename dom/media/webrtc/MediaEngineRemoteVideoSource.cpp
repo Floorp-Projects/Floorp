@@ -360,22 +360,9 @@ MediaEngineRemoteVideoSource::DeliverFrame(unsigned char* buffer,
   // implicitly releases last image
   mImage = image.forget();
 
-  // Push the frame into the MSG with a minimal duration.  This will likely
-  // mean we'll still get NotifyPull calls which will then return the same
-  // frame again with a longer duration.  However, this means we won't
-  // fail to get the frame in and drop frames.
-
-  // XXX The timestamp for the frame should be based on the Capture time,
-  // not the MSG time, and MSG should never, ever block on a (realtime)
-  // video frame (or even really for streaming - audio yes, video probably no).
-  // Note that MediaPipeline currently ignores the timestamps from MSG
-  uint32_t len = mSources.Length();
-  for (uint32_t i = 0; i < len; i++) {
-    if (mSources[i]) {
-      // shortest possible duration
-      AppendToTrack(mSources[i], mImage, mTrackID, 1, mPrincipalHandles[i]);
-    }
-  }
+  // We'll push the frame into the MSG on the next NotifyPull. This will avoid
+  // swamping the MSG with frames should it be taking longer than normal to run
+  // an iteration.
 
   return 0;
 }
