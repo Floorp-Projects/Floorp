@@ -1,6 +1,7 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
+/* import-globals-from helper_style_attr_test_runner.js */
 
 "use strict";
 
@@ -12,7 +13,10 @@
 // The correctness and cycling of the suggestions is covered in the ruleview
 // tests.
 
+loadHelperScript("helper_style_attr_test_runner.js");
+
 const TEST_URL = URL_ROOT + "doc_markup_edit.html";
+
 // test data format :
 //  [
 //    what key to press,
@@ -71,92 +75,5 @@ add_task(function*() {
   info("Opening the inspector on the test URL");
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
-  yield inspector.markup.expandAll();
-
-  let nodeFront = yield getNodeFront("#node14", inspector);
-  let container = getContainerForNodeFront(nodeFront, inspector);
-  let attr = container.editor.newAttr;
-  attr.focus();
-  EventUtils.sendKey("return", inspector.panelWin);
-  let editor = inplaceEditor(attr);
-
-  for (let i = 0; i < TEST_DATA.length; i++) {
-    // Expect a markupmutation event at the last iteration since that's when the
-    // attribute is actually created.
-    let onMutation = i === TEST_DATA.length - 1
-                     ? inspector.once("markupmutation") : null;
-    yield enterData(i, editor, inspector);
-    yield checkData(i, editor, inspector);
-    yield onMutation;
-  }
-
-  // Undoing the action will remove the new attribute, so make sure to wait for
-  // the markupmutation event here again.
-  let onMutation = inspector.once("markupmutation");
-  while (inspector.markup.undo.canUndo()) {
-    yield undoChange(inspector);
-  }
-  yield onMutation;
+  yield runStyleAttributeAutocompleteTests(inspector, TEST_DATA);
 });
-
-function enterData(index, editor, inspector) {
-  let [key] = TEST_DATA[index];
-  let expected = TEST_DATA[index].slice(1);
-  info(`Entering test data ${index}: ${key}, expecting: [${expected}]`);
-
-  let def = promise.defer();
-
-  if (/click_[0-9]/.test(key)) {
-    let nb = +key.split("_")[1];
-    info("Clicking on item " + nb + " in the list");
-    editor.once("after-suggest", () => {
-      executeSoon(def.resolve);
-    });
-    editor.popup._list.childNodes[nb].click();
-    editor.input.blur();
-    return def.promise;
-  }
-
-  if (/(down|left|right|back_space|return)/ig.test(key)) {
-    info("Adding event listener for down|left|right|back_space|return keys");
-    editor.input.addEventListener("keypress", function onKeypress() {
-      if (editor.input) {
-        editor.input.removeEventListener("keypress", onKeypress);
-      }
-      executeSoon(def.resolve);
-    });
-  } else {
-    editor.once("after-suggest", () => {
-      executeSoon(def.resolve);
-    });
-  }
-  EventUtils.synthesizeKey(key, {}, inspector.panelWin);
-
-  return def.promise;
-}
-
-function* checkData(index, editor, inspector) {
-  let [, completion, selStart, selEnd, popupOpen] = TEST_DATA[index];
-  info("Test data " + index + " entered. Checking state.");
-
-  if (selEnd != -1) {
-    is(editor.input.value, completion, "Completed value is correct");
-    is(editor.input.selectionStart, selStart,
-       "Selection start position is correct");
-    is(editor.input.selectionEnd, selEnd, "Selection end position is correct");
-    if (popupOpen) {
-      ok(editor.popup.isOpen, "Popup is open");
-    } else {
-      ok(editor.popup._panel.state != "open" &&
-         editor.popup._panel.state != "showing",
-        "Popup is closed");
-    }
-  } else {
-    let nodeFront = yield getNodeFront("#node14", inspector);
-    let container = getContainerForNodeFront(nodeFront, inspector);
-    let attr = container.editor.attrElements.get("style")
-                                            .querySelector(".editable");
-    is(attr.textContent, completion,
-       "Correct value is persisted after pressing Enter");
-  }
-}
