@@ -219,12 +219,6 @@ class JitTest:
                         test.test_also.append([name[len('test-also='):]])
                     elif name.startswith('test-join='):
                         test.test_join.append([name[len('test-join='):]])
-                    elif name == 'ion-eager':
-                        test.jitflags.append('--ion-eager')
-                    elif name == 'baseline-eager':
-                        test.jitflags.append('--baseline-eager')
-                    elif name == 'dump-bytecode':
-                        test.jitflags.append('--dump-bytecode')
                     elif name == 'module':
                         test.is_module = True
                     elif name.startswith('--'):
