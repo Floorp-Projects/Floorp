@@ -19,8 +19,6 @@ final class UnusedResourcesUtil {
 
     public static final int[] USED_IN_JS = {
             R.drawable.ab_search,
-            R.drawable.alert_app,
-            R.drawable.alert_app_animation,
             R.drawable.alert_camera,
             R.drawable.alert_download,
             R.drawable.alert_download_animation,
