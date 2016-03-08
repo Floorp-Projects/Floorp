@@ -433,7 +433,7 @@ ElementManager.prototype = {
 
     if (element.isElementCollection(res)) {
       return res;
-    } else if (res !== null) {
+    } else if (res) {
       return [res];
     }
     return [];

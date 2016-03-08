@@ -9,6 +9,10 @@ from marionette_driver.errors import NoSuchElementException, InvalidSelectorExce
 
 
 class TestElements(MarionetteTestCase):
+    def setUp(self):
+        MarionetteTestCase.setUp(self)
+        self.marionette.set_search_timeout(0)
+
     def test_id(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
@@ -119,12 +123,26 @@ class TestElements(MarionetteTestCase):
         self.assertEqual(el, found_el)
 
     def test_not_found(self):
-        test_html = self.marionette.absolute_url("test.html")
-        self.marionette.navigate(test_html)
-        self.marionette.set_search_timeout(1000)
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "I'm not on the page")
         self.marionette.set_search_timeout(0)
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "I'm not on the page")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.CLASS_NAME, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.CSS_SELECTOR, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.LINK_TEXT, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.NAME, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.PARTIAL_LINK_TEXT, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.TAG_NAME, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.XPATH, "cheese")
+
+    def test_not_found_implicit_wait(self):
+        self.marionette.set_search_timeout(50)
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.CLASS_NAME, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.CSS_SELECTOR, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.LINK_TEXT, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.NAME, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.PARTIAL_LINK_TEXT, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.TAG_NAME, "cheese")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.XPATH, "cheese")
 
     def test_timeout_element(self):
         test_html = self.marionette.absolute_url("test.html")
