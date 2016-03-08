@@ -140,7 +140,6 @@ BRFrame::Reflow(nsPresContext* aPresContext,
       // XXX This also fixes bug 10036!
       // Warning: nsTextControlFrame::CalculateSizeStandard depends on
       // the following line, see bug 228752.
-      // The code below in AddInlinePrefISize also adds 1 appunit to width
       finalSize.ISize(wm) = 1;
     }
 
@@ -180,8 +179,6 @@ BRFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                             nsIFrame::InlinePrefISizeData *aData)
 {
   if (!GetParent()->StyleContext()->ShouldSuppressLineBreak()) {
-    // Match the 1 appunit width assigned in the Reflow method above
-    aData->currentLine += 1;
     aData->ForceBreak();
   }
 }
