@@ -124,7 +124,7 @@ function testMakingUntrustedEvent()
 
 // delta_multiplier prefs should cause changing delta values of trusted events only.
 // And also legacy events' detail value should be changed too.
-function testDeltaMultiplierPrefs()
+function* testDeltaMultiplierPrefs()
 {
   const kModifierAlt     = 0x01;
   const kModifierControl = 0x02;
@@ -191,6 +191,7 @@ function testDeltaMultiplierPrefs()
   ];
 
   var currentTest, currentModifiers, currentEvent, currentPref, currentMultiplier, testingExpected;
+  var expectedHandlerCalls;
   var description;
   var calledHandlers = { wheel: false,
                          DOMMouseScroll: { horizontal: false, vertical: false },
@@ -219,6 +220,10 @@ function testDeltaMultiplierPrefs()
     is(aEvent.deltaX, expectedDeltaX, description + "deltaX (" + currentEvent.deltaX + ") was invalid");
     is(aEvent.deltaY, expectedDeltaY, description + "deltaY (" + currentEvent.deltaY + ") was invalid");
     is(aEvent.deltaZ, expectedDeltaZ, description + "deltaZ (" + currentEvent.deltaZ + ") was invalid");
+
+    if (--expectedHandlerCalls == 0) {
+      setTimeout(continueTest, 0);
+    }
   }
 
   function legacyEventHandler(aEvent) {
@@ -277,13 +282,17 @@ function testDeltaMultiplierPrefs()
     is(aEvent.detail, expectedDetail, description + eventName + "detail was invalid");
 
     aEvent.preventDefault();
+
+    if (--expectedHandlerCalls == 0) {
+      setTimeout(continueTest, 0);
+    }
   }
 
   window.addEventListener("wheel", wheelEventHandler, true);
   window.addEventListener("DOMMouseScroll", legacyEventHandler, true);
   window.addEventListener("MozMousePixelScroll", legacyEventHandler, true);
 
-  function dispatchEvent(aIsExpected) {
+  function* dispatchEvent(aIsExpected) {
     for (var i = 0; i < kEvents.length; i++) {
       currentEvent = kEvents[i];
       currentEvent.shiftKey = (currentModifiers & kModifierShift) != 0;
@@ -313,16 +322,12 @@ function testDeltaMultiplierPrefs()
         for (var k = 0; k < kDeltaMultiplierPrefs.length; k++) {
           currentPref = "mousewheel." + currentTest.name + "." + kDeltaMultiplierPrefs[k];
 
-          SpecialPowers.setIntPref(currentPref, kPrefValues[j]);
+          yield SpecialPowers.pushPrefEnv({"set": [[currentPref, kPrefValues[j]]]}, continueTest);
 
           gScrollableElement.scrollTop = gScrollableElement.scrollBottom = 1000;
 
           // trusted event's delta valuses should be reverted by the pref.
           testingExpected = aIsExpected;
-
-          description = "testDeltaMultiplierPrefs, pref: " + currentPref + "=" + kPrefValues[j] +
-            ", deltaMode: " + currentEvent.deltaMode + ", modifiers: \"" + modifierList + "\", (trusted event): ";
-          synthesizeWheel(gScrollableElement, 10, 10, currentEvent);
 
           var expectedProps = {
             deltaX: currentEvent.deltaX * currentMultiplier,
@@ -332,20 +337,37 @@ function testDeltaMultiplierPrefs()
             lineOrPageDeltaY: currentEvent.lineOrPageDeltaY * currentMultiplier,
           };
 
+          var expectedWheel = expectedProps.deltaX != 0 || expectedProps.deltaY != 0 || expectedProps.deltaZ != 0;
+          var expectedDOMMouseX = expectedProps.lineOrPageDeltaX >= 1 || expectedProps.lineOrPageDeltaX <= -1;
+          var expectedDOMMouseY = expectedProps.lineOrPageDeltaY >= 1 || expectedProps.lineOrPageDeltaY <= -1;
+          var expectedMozMouseX = expectedProps.deltaX >= 1 || expectedProps.deltaX <= -1;
+          var expectedMozMouseY = expectedProps.deltaY >= 1 || expectedProps.deltaY <= -1;
+
+          expectedHandlerCalls = 0;
+          if (expectedWheel) ++expectedHandlerCalls;
+          if (expectedDOMMouseX) ++expectedHandlerCalls;
+          if (expectedDOMMouseY) ++expectedHandlerCalls;
+          if (expectedMozMouseX) ++expectedHandlerCalls;
+          if (expectedMozMouseY) ++expectedHandlerCalls;
+
+          description = "testDeltaMultiplierPrefs, pref: " + currentPref + "=" + kPrefValues[j] +
+            ", deltaMode: " + currentEvent.deltaMode + ", modifiers: \"" + modifierList + "\", (trusted event): ";
+          yield synthesizeWheel(gScrollableElement, 10, 10, currentEvent);
+
           is(calledHandlers.wheel,
-             expectedProps.deltaX != 0 || expectedProps.deltaY != 0 || expectedProps.deltaZ != 0,
+             expectedWheel,
              description + "wheel event was (not) fired");
           is(calledHandlers.DOMMouseScroll.horizontal,
-             expectedProps.lineOrPageDeltaX >= 1 || expectedProps.lineOrPageDeltaX <= -1,
+             expectedDOMMouseX,
              description + "Horizontal DOMMouseScroll event was (not) fired");
           is(calledHandlers.DOMMouseScroll.vertical,
-             expectedProps.lineOrPageDeltaY >= 1 || expectedProps.lineOrPageDeltaY <= -1,
+             expectedDOMMouseY,
              description + "Vertical DOMMouseScroll event was (not) fired");
           is(calledHandlers.MozMousePixelScroll.horizontal,
-             expectedProps.deltaY >= 1 || expectedProps.deltaY <= -1,
+             expectedMozMouseX,
              description + "Horizontal MozMousePixelScroll event was (not) fired");
           is(calledHandlers.MozMousePixelScroll.vertical,
-             expectedProps.deltaY >= 1 || expectedProps.deltaY <= -1,
+             expectedMozMouseY,
              description + "Vertical MozMousePixelScroll event was (not) fired");
 
           calledHandlers = { wheel: false,
@@ -382,7 +404,7 @@ function testDeltaMultiplierPrefs()
           ok(!calledHandlers.MozMousePixelScroll.vertical,
              description + "Vertical MozMousePixelScroll event was fired for untrusted event");
 
-          SpecialPowers.setIntPref(currentPref, 100);
+          yield SpecialPowers.pushPrefEnv({"set": [[currentPref, 100]]}, continueTest);
 
           calledHandlers = { wheel: false,
                              DOMMouseScroll: { horizontal: false, vertical: false },
@@ -402,11 +424,11 @@ function testDeltaMultiplierPrefs()
     currentTest = kTests[i];
     for (var j = 0; j < currentTest.expected.length; j++) {
       currentModifiers = currentTest.expected[j];
-      dispatchEvent(true);
+      yield* dispatchEvent(true);
     }
     for (var k = 0; k < currentTest.unexpected.length; k++) {
       currentModifiers = currentTest.unexpected[k];
-      dispatchEvent(false);
+      yield* dispatchEvent(false);
     }
   }
 
@@ -712,7 +734,7 @@ function* testBody()
 {
   yield* prepareScrollUnits();
   testMakingUntrustedEvent();
-  testDeltaMultiplierPrefs();
+  yield* testDeltaMultiplierPrefs();
   testDispatchingUntrustEvent();
   testEventOrder();
   testOnWheelAttr();
