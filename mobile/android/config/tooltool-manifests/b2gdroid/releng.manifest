@@ -1,5 +1,6 @@
 [
 {
+"version": "Android NDK r10e",
 "size": 932378577,
 "visibility": "internal",
 "digest": "b42eac625027afca51ff6113c614cae5ba9d2042c8dd63dc0b48e35016e9e8ba47995d639ae4d192f2efee7de83ee410cc96bb6e9d5dab48b123c6ed7c56cec9",
@@ -8,6 +9,13 @@
 "unpack": true
 },
 {
+"versions": [
+  "Android SDK 6.0 / API 23",
+  "Android tools r24.4",
+  "Android build tools 23.0.1",
+  "Android Support Repository (Support Library 23.0.1)",
+  "Google Support Repository (Google Play Services 8.1.0)"
+],
 "size": 535625068,
 "visibility": "internal", 
 "digest": "0627515046a23c1d109e2782865b1b3b546c1d552955e4156317f76cbb195eb630aa25feea3f4edd1c685f129da0c2a5169d4d6349c1c31d8a95158a4569a478",
@@ -32,6 +40,7 @@
 "filename": "jsshell.tar.xz"
 },
 {
+"version": "gcc 4.7.3",
 "size": 80458572,
 "visibility": "public",
 "unpack": true,

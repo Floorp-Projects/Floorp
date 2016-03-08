@@ -1,8 +1,5 @@
 [
 {
-"clang_version": "r259916"
-},
-{
 "size": 266240,
 "digest": "bb345b0e700ffab4d09436981f14b5de84da55a3f18a7f09ebc4364a4488acdeab8d46f447b12ac70f2da1444a68b8ce8b8675f0dae2ccf845e966d1df0f0869",
 "algorithm": "sha512",
@@ -16,6 +13,7 @@
 "unpack": true
 },
 {
+"version": "clang 3.9.0/r259916",
 "size": 168551971,
 "digest": "af127aba2ed881bad6e83fd162125038f2450f7b6de64efe84d1281052225ec92db6d96d6ade6ac2642f1b00761b3be5725f79c41953dc885a81185097cc81a5",
 "algorithm": "sha512",

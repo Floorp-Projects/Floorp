@@ -1,8 +1,6 @@
 [
 {
-"clang_version": "r241773"
-}, 
-{
+"version": "clang 3.6.2/r241773",
 "size": 89690541, 
 "digest": "470d258d9785a120fcba65eee90daa632a42affa0f97f57d70fc8285bd76bcc27d4d0d70b6c37577ab271a04c843b6269425391a8d6df1967718dba26dd3a73d", 
 "algorithm": "sha512", 
