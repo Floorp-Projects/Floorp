@@ -373,8 +373,9 @@ nsFontMetrics::DrawString(const char *aString, uint32_t aLength,
             pt.x += textRun->GetAdvanceWidth(range, &provider);
         }
     }
-    textRun->Draw(aContext->ThebesContext(), pt, DrawMode::GLYPH_FILL,
-                  range, &provider, nullptr, nullptr);
+    gfxTextRun::DrawParams params(aContext->ThebesContext());
+    params.provider = &provider;
+    textRun->Draw(range, pt, params);
 }
 
 void
@@ -400,8 +401,9 @@ nsFontMetrics::DrawString(const char16_t* aString, uint32_t aLength,
             pt.x += textRun->GetAdvanceWidth(range, &provider);
         }
     }
-    textRun->Draw(aContext->ThebesContext(), pt, DrawMode::GLYPH_FILL,
-                  range, &provider, nullptr, nullptr);
+    gfxTextRun::DrawParams params(aContext->ThebesContext());
+    params.provider = &provider;
+    textRun->Draw(range, pt, params);
 }
 
 static nsBoundingMetrics
