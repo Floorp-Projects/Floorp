@@ -54,3 +54,32 @@ add_task(function* prefMessages_request() {
   });
   cleanup();
 });
+
+/*
+ * Sanity tests for preview messages
+ */
+add_task(function* previewMessages_request() {
+  setup();
+  var oldEnabledPref = Services.prefs.getBoolPref("browser.pagethumbnails.capturing_disabled");
+  Services.prefs.setBoolPref("browser.pagethumbnails.capturing_disabled", false);
+
+  let testURL = "https://example.com/browser/browser/components/newtab/tests/browser/newtabmessages_preview.html";
+
+  let tabOptions = {
+    gBrowser,
+    url: testURL
+  };
+
+  let previewResponseAck = new Promise(resolve => {
+    NewTabWebChannel.once("responseAck", () => {
+      ok(true, "a request response has been received");
+      resolve();
+    });
+  });
+
+  yield BrowserTestUtils.withNewTab(tabOptions, function*() {
+    yield previewResponseAck;
+  });
+  cleanup();
+  Services.prefs.setBoolPref("browser.pagethumbnails.capturing_disabled", oldEnabledPref);
+});
