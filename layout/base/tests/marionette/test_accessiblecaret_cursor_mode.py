@@ -37,7 +37,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.actions = Actions(self.marionette)
 
     def open_test_html(self):
-        test_html = self.marionette.absolute_url('test_touchcaret.html')
+        test_html = self.marionette.absolute_url('test_carets_cursor.html')
         self.marionette.navigate(test_html)
 
     @parameterized(_input_id, el_id=_input_id)

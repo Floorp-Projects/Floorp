@@ -46,15 +46,15 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         self.actions = Actions(self.marionette)
 
     def open_test_html(self):
-        test_html = self.marionette.absolute_url('test_selectioncarets.html')
+        test_html = self.marionette.absolute_url('test_carets_selection.html')
         self.marionette.navigate(test_html)
 
     def open_test_html2(self):
-        test_html2 = self.marionette.absolute_url('test_selectioncarets_multipleline.html')
+        test_html2 = self.marionette.absolute_url('test_carets_multipleline.html')
         self.marionette.navigate(test_html2)
 
     def open_test_html_multirange(self):
-        test_html = self.marionette.absolute_url('test_selectioncarets_multiplerange.html')
+        test_html = self.marionette.absolute_url('test_carets_multiplerange.html')
         self.marionette.navigate(test_html)
 
     def word_offset(self, text, ordinal):
@@ -439,7 +439,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         '''Bug 1094072
         If positions of carets are updated correctly, they should be draggable.
         '''
-        test_html = self.marionette.absolute_url('test_selectioncarets_longtext.html')
+        test_html = self.marionette.absolute_url('test_carets_longtext.html')
         self.marionette.navigate(test_html)
 
         body = self.marionette.find_element(By.ID, 'bd')
@@ -470,7 +470,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         huge offset. If we use the right coordinate system, selection should
         work. Otherwise, it would be hard to trigger select word.
         '''
-        test_html = self.marionette.absolute_url('test_selectioncarets_iframe.html')
+        test_html = self.marionette.absolute_url('test_carets_iframe.html')
         self.marionette.navigate(test_html)
         iframe = self.marionette.find_element(By.ID, 'frame')
 
