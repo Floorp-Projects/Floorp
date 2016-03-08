@@ -121,7 +121,8 @@ SubtleCrypto::GenerateKey(JSContext* cx, const ObjectOrString& algorithm,
                           bool extractable, const Sequence<nsString>& keyUsages,
                           ErrorResult& aRv)
 {
-  SUBTLECRYPTO_METHOD_BODY(GenerateKey, aRv, cx, algorithm, extractable, keyUsages)
+  SUBTLECRYPTO_METHOD_BODY(GenerateKey, aRv, mParent, cx, algorithm,
+                           extractable, keyUsages)
 }
 
 already_AddRefed<Promise>
