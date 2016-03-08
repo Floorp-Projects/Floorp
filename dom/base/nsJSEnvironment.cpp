@@ -231,9 +231,17 @@ namespace xpc {
 //
 // Note that the returned object is _not_ wrapped into the compartment of cx.
 JSObject*
-FindExceptionStack(JSContext* cx, JS::HandleValue exceptionValue)
+FindExceptionStackForConsoleReport(JSContext* cx,
+                                   nsPIDOMWindowInner* win,
+                                   JS::HandleValue exceptionValue)
 {
   if (!exceptionValue.isObject()) {
+    return nullptr;
+  }
+
+  if (win && win->InnerObjectsFreed()) {
+    // Pretend like we have no stack, so we don't end up keeping the global
+    // alive via the stack.
     return nullptr;
   }
 
@@ -472,7 +480,8 @@ public:
         }
         JSContext* cx = jsapi.cx();
         JS::Rooted<JS::Value> exn(cx, mError);
-        JS::RootedObject stack(cx, xpc::FindExceptionStack(cx, exn));
+        JS::RootedObject stack(cx,
+          xpc::FindExceptionStackForConsoleReport(cx, win, exn));
         mReport->LogToConsoleWithStack(stack);
       } else {
         mReport->LogToConsole();
@@ -555,7 +564,8 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     if (!win || JSREPORT_IS_WARNING(xpcReport->mFlags) ||
         report->errorNumber == JSMSG_OUT_OF_MEMORY)
     {
-      JS::Rooted<JSObject*> stack(cx, xpc::FindExceptionStack(cx, exception));
+      JS::Rooted<JSObject*> stack(cx,
+        xpc::FindExceptionStackForConsoleReport(cx, win, exception));
       xpcReport->LogToConsoleWithStack(stack);
       return;
     }
