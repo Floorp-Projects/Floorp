@@ -232,5 +232,5 @@ void
 ChromeProcessController::NotifyFlushComplete()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  APZCCallbackHelper::NotifyFlushComplete(GetPresShell());
+  APZCCallbackHelper::NotifyFlushComplete();
 }
