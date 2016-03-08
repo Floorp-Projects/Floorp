@@ -1,4 +1,4 @@
-// |jit-test| baseline-eager; error: TypeError
+// |jit-test| --baseline-eager; error: TypeError
 try {
     __defineGetter__("x", Iterator)()
 } catch (e) {}

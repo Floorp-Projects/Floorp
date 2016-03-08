@@ -1,4 +1,4 @@
-// |jit-test| ion-eager
+// |jit-test| --ion-eager
 function y() { return "foo,bar"; }
 function x() {
   var z = y().split(',');
