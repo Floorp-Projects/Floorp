@@ -231,6 +231,7 @@ public:
   bool isPublic() const;
   void addInsecureFallbackSite(const nsCString& hostname, bool temporary);
   void removeInsecureFallbackSite(const nsACString& hostname, uint16_t port);
+  bool isInsecureFallbackSite(const nsACString& hostname);
 
   bool mFalseStartRequireNPN;
   bool mUnrestrictedRC4Fallback;
