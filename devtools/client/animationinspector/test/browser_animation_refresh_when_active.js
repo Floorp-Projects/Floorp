@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 // Test that the panel only refreshes when it is visible in the sidebar.
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
 
   let {inspector, panel} = yield openAnimationInspector();
   yield testRefresh(inspector, panel);
@@ -17,13 +17,13 @@ add_task(function*() {
 
 function* testRefresh(inspector, panel) {
   info("Select a non animated node");
-  yield selectNode(".still", inspector);
+  yield selectNodeAndWaitForAnimations(".still", inspector);
 
   info("Switch to the rule-view panel");
   inspector.sidebar.select("ruleview");
 
   info("Select the animated node now");
-  yield selectNode(".animated", inspector);
+  yield selectNodeAndWaitForAnimations(".animated", inspector);
 
   assertAnimationsDisplayed(panel, 0,
     "The panel doesn't show the animation data while inactive");
@@ -39,7 +39,7 @@ function* testRefresh(inspector, panel) {
   inspector.sidebar.select("ruleview");
 
   info("Select the non animated node again");
-  yield selectNode(".still", inspector);
+  yield selectNodeAndWaitForAnimations(".still", inspector);
 
   assertAnimationsDisplayed(panel, 1,
     "The panel still shows the previous animation data since it is inactive");

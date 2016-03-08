@@ -13,7 +13,7 @@ requestLongerTimeout(2);
 // have mixed rates.
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
 
   let {panel, controller, inspector, toolbox} = yield openAnimationInspector();
 
@@ -34,13 +34,13 @@ add_task(function*() {
   checkAllAnimationsRatesChanged(controller, select, .5);
 
   info("Select just one animated node and change its rate only");
-  yield selectNode(".animated", inspector);
+  yield selectNodeAndWaitForAnimations(".animated", inspector);
 
   yield changeTimelinePlaybackRate(panel, 2);
   checkAllAnimationsRatesChanged(controller, select, 2);
 
   info("Select the <body> again, it should now have mixed-rates animations");
-  yield selectNode("body", inspector);
+  yield selectNodeAndWaitForAnimations("body", inspector);
 
   is(select.value, "", "The selected rate is empty");
 
