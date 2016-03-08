@@ -36,8 +36,7 @@ AsyncTransactionWaiter::WaitComplete()
   }
 }
 
-uint64_t AsyncTransactionTracker::sSerialCounter(0);
-Mutex* AsyncTransactionTracker::sLock = nullptr;
+Atomic<uint64_t> AsyncTransactionTracker::sSerialCounter(0);
 
 AsyncTransactionTracker::AsyncTransactionTracker(AsyncTransactionWaiter* aWaiter)
     : mSerial(GetNextSerial())
@@ -81,7 +80,7 @@ AsyncTransactionTracker::NotifyCancel()
   }
 }
 
-uint64_t AsyncTransactionTrackersHolder::sSerialCounter(0);
+Atomic<uint64_t> AsyncTransactionTrackersHolder::sSerialCounter(0);
 Mutex* AsyncTransactionTrackersHolder::sHolderLock = nullptr;
 
 std::map<uint64_t, AsyncTransactionTrackersHolder*> AsyncTransactionTrackersHolder::sTrackersHolders;
