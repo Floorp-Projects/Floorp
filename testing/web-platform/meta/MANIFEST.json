@@ -34724,7 +34724,16 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {},
+    "items": {
+      "testharness": {
+        "dom/collections/HTMLCollection-supported-property-indices.html": [
+          {
+            "path": "dom/collections/HTMLCollection-supported-property-indices.html",
+            "url": "/dom/collections/HTMLCollection-supported-property-indices.html"
+          }
+        ]
+      }
+    },
     "reftest_nodes": {}
   },
   "reftest_nodes": {
