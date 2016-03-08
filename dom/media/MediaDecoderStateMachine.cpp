@@ -696,22 +696,6 @@ MediaDecoderStateMachine::Push(MediaData* aSample, MediaData::Type aSampleType)
 }
 
 void
-MediaDecoderStateMachine::PushFront(MediaData* aSample, MediaData::Type aSampleType)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(aSample);
-  if (aSample->mType == MediaData::AUDIO_DATA) {
-    AudioQueue().PushFront(aSample);
-  } else if (aSample->mType == MediaData::VIDEO_DATA) {
-    aSample->As<VideoData>()->mFrameID = ++mCurrentFrameID;
-    VideoQueue().PushFront(aSample);
-  } else {
-    // TODO: Handle MediaRawData, determine which queue should be pushed.
-  }
-  UpdateNextFrameStatus();
-}
-
-void
 MediaDecoderStateMachine::CheckIsAudible(const MediaData* aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
