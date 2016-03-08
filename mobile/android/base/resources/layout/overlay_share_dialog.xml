@@ -52,17 +52,6 @@
             android:orientation="vertical"
             android:divider="@null"/>
 
-        <!-- "Add to reading list" -->
-        <org.mozilla.gecko.overlays.ui.OverlayDialogButton
-            style="@style/ShareOverlayRow"
-            android:id="@+id/overlay_share_reading_list_btn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:enabled="false"
-            gecko:drawable="@drawable/overlay_share_reading_list_button"
-            gecko:enabledText="@string/overlay_share_reading_list_btn_label"
-            gecko:disabledText="@string/overlay_share_reading_list_btn_label_already"/>
-
         <!-- "Add bookmark" -->
         <org.mozilla.gecko.overlays.ui.OverlayDialogButton
             style="@style/ShareOverlayRow"
