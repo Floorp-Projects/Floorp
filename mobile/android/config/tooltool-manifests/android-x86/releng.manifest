@@ -1,5 +1,6 @@
 [
 {
+"version": "Android NDK r10e",
 "size": 357533004,
 "visibility": "internal",
 "digest": "9b24b6db45ca4f6418d18119e3d2dd48e2a352e977ebf4fd0b2a8c4103fd0735eacb0f7360ff3a2eda6777fdd1029325ca23b8a4c34542b3b1fa487ff633647c",
@@ -8,6 +9,13 @@
 "unpack": true
 },
 {
+"versions": [
+  "Android SDK 6.0 / API 23",
+  "Android tools r24.4",
+  "Android build tools 23.0.1",
+  "Android Support Repository (Support Library 23.0.1)",
+  "Google Support Repository (Google Play Services 8.1.0)"
+],
 "size": 535625068,
 "visibility": "internal", 
 "digest": "0627515046a23c1d109e2782865b1b3b546c1d552955e4156317f76cbb195eb630aa25feea3f4edd1c685f129da0c2a5169d4d6349c1c31d8a95158a4569a478",
@@ -30,6 +38,7 @@
 "unpack": true
 },
 {
+"version": "gcc 4.7.3",
 "size": 80458572,
 "digest": "e5101f9dee1e462f6cbd3897ea57eede41d23981825c7b20d91d23ab461875d54d3dfc24999aa58a31e8b01f49fb3140e05ffe5af2957ef1d1afb89fd0dfe1ad",
 "algorithm": "sha512",
