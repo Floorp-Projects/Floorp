@@ -701,9 +701,13 @@ var gOnWheelAttrHandled = new Array;
 
 function testOnWheelAttr()
 {
-  document.documentElement.setAttribute("onwheel", "gOnWheelAttrHandled['html'] = true;");
-  document.body.setAttribute("onwheel", "gOnWheelAttrHandled['body'] = true;");
-  gScrollableElement.setAttribute("onwheel", "gOnWheelAttrHandled['div'] = true;");
+  function onWheelHandledString(attr) {
+    return `gOnWheelAttrHandled['${attr}'] = true`;
+  }
+
+  document.documentElement.setAttribute("onwheel", onWheelHandledString("html"));
+  document.body.setAttribute("onwheel", onWheelHandledString("body"));
+  gScrollableElement.setAttribute("onwheel", onWheelHandledString("div"));
   var target = document.getElementById("onwheel");
   synthesizeWheel(gScrollableElement, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_LINE,
