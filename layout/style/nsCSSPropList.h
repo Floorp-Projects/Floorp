@@ -2011,7 +2011,8 @@ CSS_PROP_POSITION(
     grid-auto-flow,
     grid_auto_flow,
     GridAutoFlow,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.grid.enabled",
     0,
     kGridAutoFlowKTable,
@@ -2022,7 +2023,8 @@ CSS_PROP_POSITION(
     grid_auto_columns,
     GridAutoColumns,
     CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_STORES_CALC,
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.grid.enabled",
     0,
     kGridTrackBreadthKTable,
@@ -2033,7 +2035,8 @@ CSS_PROP_POSITION(
     grid_auto_rows,
     GridAutoRows,
     CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_STORES_CALC,
+        CSS_PROPERTY_STORES_CALC |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.grid.enabled",
     0,
     kGridTrackBreadthKTable,
@@ -2043,7 +2046,8 @@ CSS_PROP_POSITION(
     grid-template-areas,
     grid_template_areas,
     GridTemplateAreas,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.grid.enabled",
     0,
     nullptr,
@@ -2055,7 +2059,8 @@ CSS_PROP_POSITION(
     GridTemplateColumns,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_STORES_CALC |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.grid.enabled",
     0,
     kGridTrackBreadthKTable,
@@ -2067,7 +2072,8 @@ CSS_PROP_POSITION(
     GridTemplateRows,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_STORES_CALC |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.grid.enabled",
     0,
     kGridTrackBreadthKTable,
@@ -2142,7 +2148,8 @@ CSS_PROP_POSITION(
     grid_column_gap,
     GridColumnGap,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE,
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.grid.enabled",
     VARIANT_HL | VARIANT_CALC,
     nullptr,
@@ -2153,7 +2160,8 @@ CSS_PROP_POSITION(
     grid_row_gap,
     GridRowGap,
     CSS_PROPERTY_PARSE_VALUE |
-      CSS_PROPERTY_VALUE_NONNEGATIVE,
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.grid.enabled",
     VARIANT_HL | VARIANT_CALC,
     nullptr,
