@@ -320,6 +320,11 @@
   background-size: 1em;
 }
 
+.ruleview-angleswatch {
+  background: url("chrome://devtools/skin/images/angle-swatch.svg");
+  background-size: 1em;
+}
+
 @media (min-resolution: 1.1dppx) {
   .ruleview-bezierswatch {
     background: url("chrome://devtools/skin/images/cubic-bezier-swatch@2x.png");
