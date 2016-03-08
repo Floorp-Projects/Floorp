@@ -91,13 +91,6 @@ public class testReadingListProvider extends ContentProviderTest {
         for (TestCase test: TESTS_TO_RUN) {
             mTests.add(test);
         }
-
-        // Disable background fetches of content, because it causes the test harness
-        // to kill us for network fetches.
-        Activity a = getActivity();
-        if (a instanceof BrowserApp) {
-            ((BrowserApp) a).getReadingListHelper().disableBackgroundFetches();
-        }
     }
 
     public void testReadingListProviderTests() throws Exception {
