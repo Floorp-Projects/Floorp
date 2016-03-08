@@ -5280,6 +5280,14 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
   if (mType == eStyleImageType_Image || mType == eStyleImageType_Element) {
     nsCOMPtr<imgIContainer> subImage;
 
+    // To draw one portion of an image into a border component, we stretch that
+    // portion to match the size of that border component and then draw onto.
+    // However, preserveAspectRatio attribute of a SVG image may break this rule.
+    // To get correct rendering result, we add
+    // FLAG_FORCE_PRESERVEASPECTRATIO_NONE flag here, to tell mImage to ignore
+    // preserveAspectRatio attribute, and always do non-uniform stretch.
+    uint32_t drawFlags = ConvertImageRendererToDrawFlags(mFlags) |
+                           imgIContainer::FLAG_FORCE_PRESERVEASPECTRATIO_NONE;
     // Retrieve or create the subimage we'll draw.
     nsIntRect srcRect(aSrc.x, aSrc.y, aSrc.width, aSrc.height);
     if (mType == eStyleImageType_Image) {
@@ -5319,7 +5327,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                             filter,
                                             aFill, aDirtyRect,
                                             nullptr,
-                                            ConvertImageRendererToDrawFlags(mFlags));
+                                            drawFlags);
     }
 
     nsRect tile = ComputeTile(aFill, aHFill, aVFill, aUnitSize);
@@ -5328,7 +5336,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                     subImage,
                                     filter,
                                     tile, aFill, tile.TopLeft(), aDirtyRect,
-                                    ConvertImageRendererToDrawFlags(mFlags));
+                                    drawFlags);
   }
 
   nsRect destTile = RequiresScaling(aFill, aHFill, aVFill, aUnitSize)
