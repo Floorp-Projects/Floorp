@@ -50,6 +50,54 @@ nsTArray<nsCString>* AudioInputCubeb::mDeviceNames;
 cubeb_device_collection* AudioInputCubeb::mDevices = nullptr;
 bool AudioInputCubeb::mAnyInUse = false;
 
+// AudioDeviceID is an annoying opaque value that's really a string
+// pointer, and is freed when the cubeb_device_collection is destroyed
+
+void AudioInputCubeb::UpdateDeviceList()
+{
+  cubeb_device_collection *devices = nullptr;
+
+  if (CUBEB_OK != cubeb_enumerate_devices(CubebUtils::GetCubebContext(),
+                                          CUBEB_DEVICE_TYPE_INPUT,
+                                          &devices)) {
+    return;
+  }
+
+  for (auto& device_index : (*mDeviceIndexes)) {
+    device_index = -1; // unmapped
+  }
+  // We keep all the device names, but wipe the mappings and rebuild them
+
+  // Calculate translation from existing mDevices to new devices. Note we
+  // never end up with less devices than before, since people have
+  // stashed indexes.
+  // For some reason the "fake" device for automation is marked as DISABLED,
+  // so white-list it.
+  for (uint32_t i = 0; i < devices->count; i++) {
+    if (devices->device[i]->type == CUBEB_DEVICE_TYPE_INPUT && // paranoia
+        (devices->device[i]->state == CUBEB_DEVICE_STATE_ENABLED ||
+         devices->device[i]->state == CUBEB_DEVICE_STATE_UNPLUGGED ||
+         (devices->device[i]->state == CUBEB_DEVICE_STATE_DISABLED &&
+          strcmp(devices->device[i]->friendly_name, "Sine source at 440 Hz") == 0)))
+    {
+      auto j = mDeviceNames->IndexOf(devices->device[i]->device_id);
+      if (j != nsTArray<nsCString>::NoIndex) {
+        // match! update the mapping
+        (*mDeviceIndexes)[j] = i;
+      } else {
+        // new device, add to the array
+        mDeviceIndexes->AppendElement(i);
+        mDeviceNames->AppendElement(devices->device[i]->device_id);
+      }
+    }
+  }
+  // swap state
+  if (mDevices) {
+    cubeb_device_collection_destroy(mDevices);
+  }
+  mDevices = devices;
+}
+
 MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
   : mMutex("mozilla::MediaEngineWebRTC"),
     mVoiceEngine(nullptr),
