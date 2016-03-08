@@ -233,7 +233,7 @@ public class TabQueueService extends Service {
 
     @TargetApi(Build.VERSION_CODES.M)
     private void showSettingsNotification() {
-        if (AppConstants.Versions.preM) {
+        if (AppConstants.Versions.preMarshmallow) {
             return;
         }
 

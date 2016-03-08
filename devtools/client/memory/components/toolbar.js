@@ -13,7 +13,6 @@ module.exports = createClass({
   displayName: "Toolbar",
   propTypes: {
     censusDisplays: PropTypes.arrayOf(PropTypes.shape({
-      name: PropTypes.string.isRequired,
       displayName: PropTypes.string.isRequired,
     })).isRequired,
     onTakeSnapshotClick: PropTypes.func.isRequired,
@@ -29,7 +28,6 @@ module.exports = createClass({
     view: PropTypes.string.isRequired,
     onViewChange: PropTypes.func.isRequired,
     dominatorTreeDisplays: PropTypes.arrayOf(PropTypes.shape({
-      name: PropTypes.string.isRequired,
       displayName: PropTypes.string.isRequired,
     })).isRequired,
     onDominatorTreeDisplayChange: PropTypes.func.isRequired,

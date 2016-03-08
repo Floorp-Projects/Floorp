@@ -22,15 +22,14 @@ import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.toolbar.BrowserToolbarTabletBase.ForwardButtonAnimation;
 import org.mozilla.gecko.util.ColorUtils;
+import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
 
 import android.content.Context;
 import android.os.SystemClock;
-import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -125,7 +124,11 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     // Icon used for about:home
     private static final int LEVEL_SEARCH_ICON = 999;
 
-    private final ForegroundColorSpan mBlockedColor;
+    private final ForegroundColorSpan mUrlColorSpan;
+    private final ForegroundColorSpan mBlockedColorSpan;
+    private final ForegroundColorSpan mDomainColorSpan;
+    private final ForegroundColorSpan mPrivateDomainColorSpan;
+    private final ForegroundColorSpan mCertificateOwnerColorSpan;
 
     public ToolbarDisplayLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -138,7 +141,11 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mTitle = (ThemedTextView) findViewById(R.id.url_bar_title);
         mTitlePadding = mTitle.getPaddingRight();
 
-        mBlockedColor = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_blockedtext));
+        mUrlColorSpan = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_urltext));
+        mBlockedColorSpan = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_blockedtext));
+        mDomainColorSpan = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_domaintext));
+        mPrivateDomainColorSpan = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_domaintext_private));
+        mCertificateOwnerColorSpan = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.affirmative_green));
 
         mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
 
@@ -249,7 +256,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
             final String title = tab.getDisplayTitle();
 
             final SpannableStringBuilder builder = new SpannableStringBuilder(title);
-            builder.setSpan(mBlockedColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+            builder.setSpan(mBlockedColorSpan, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
 
             setTitle(builder);
             setContentDescription(null);
@@ -271,25 +278,46 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
 
         final SiteIdentity siteIdentity = tab.getSiteIdentity();
         if (siteIdentity.hasOwner()) {
-            final String title;
-
-            if (siteIdentity.hasCountry()) {
-                title = String.format("%s (%s)", siteIdentity.getOwner(), siteIdentity.getCountry());
-            } else {
-                title = siteIdentity.getOwner();
-            }
-
-            final int color = ContextCompat.getColor(getContext(), R.color.affirmative_green);
-
-            final SpannableString spannable = new SpannableString(title);
-            spannable.setSpan(new ForegroundColorSpan(color), 0, title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-            setTitle(spannable);
-        } else if (!TextUtils.isEmpty(baseDomain)) {
+            // Show Owner of EV certificate as title
+            updateTitleFromSiteIdentity(siteIdentity);
+        } else if (!HardwareUtils.isTablet() && !TextUtils.isEmpty(baseDomain)) {
+            // Show just the base domain as title
             setTitle(baseDomain);
         } else {
-            setTitle(strippedURL);
+            // Display full URL as title
+            updateAndColorTitleFromFullURL(strippedURL, baseDomain, tab.isPrivate());
         }
+    }
+
+    private void updateTitleFromSiteIdentity(SiteIdentity siteIdentity) {
+        final String title;
+
+        if (siteIdentity.hasCountry()) {
+            title = String.format("%s (%s)", siteIdentity.getOwner(), siteIdentity.getCountry());
+        } else {
+            title = siteIdentity.getOwner();
+        }
+
+        final SpannableString spannable = new SpannableString(title);
+        spannable.setSpan(mCertificateOwnerColorSpan, 0, title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        setTitle(spannable);
+    }
+
+    private void updateAndColorTitleFromFullURL(String url, String baseDomain, boolean isPrivate) {
+        int index = url.indexOf(baseDomain);
+        if (index == -1) {
+            setTitle(url);
+            return;
+        }
+
+        final SpannableStringBuilder builder = new SpannableStringBuilder(url);
+
+        builder.setSpan(mUrlColorSpan, 0, url.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+        builder.setSpan(isPrivate ? mPrivateDomainColorSpan : mDomainColorSpan,
+                index, index + baseDomain.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+
+        setTitle(builder);
     }
 
     private String stripAboutReaderURL(final String url) {
