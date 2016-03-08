@@ -4419,16 +4419,6 @@ nsDisplayBlendContainer::nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder,
                                                  const DisplayItemScrollClip* aScrollClip)
     : nsDisplayWrapList(aBuilder, aFrame, aList, aScrollClip)
     , mIndex(0)
-    , mCanBeActive(true)
-{
-  MOZ_COUNT_CTOR(nsDisplayBlendContainer);
-}
-
-nsDisplayBlendContainer::nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder,
-                                                 nsIFrame* aFrame, nsDisplayList* aList)
-    : nsDisplayWrapList(aBuilder, aFrame, aList)
-    , mIndex(1)
-    , mCanBeActive(false)
 {
   MOZ_COUNT_CTOR(nsDisplayBlendContainer);
 }
@@ -4465,7 +4455,7 @@ nsDisplayBlendContainer::GetLayerState(nsDisplayListBuilder* aBuilder,
                                        LayerManager* aManager,
                                        const ContainerLayerParameters& aParameters)
 {
-  return mCanBeActive ? mozilla::LAYER_ACTIVE : mozilla::LAYER_INACTIVE;
+  return mozilla::LAYER_ACTIVE;
 }
 
 bool nsDisplayBlendContainer::TryMerge(nsDisplayItem* aItem) {
