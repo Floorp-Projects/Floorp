@@ -163,6 +163,8 @@ nsShmImage::CreateImage(const IntSize& aSize)
     return false;
   }
 
+  BackendType backend = gfxPlatform::GetPlatform()->GetDefaultContentBackend();
+
   mFormat = SurfaceFormat::UNKNOWN;
   switch (mDepth) {
   case 32:
@@ -175,10 +177,12 @@ nsShmImage::CreateImage(const IntSize& aSize)
   case 24:
     // Only support the BGRX layout, and report it as BGRA to the compositor.
     // The alpha channel will be discarded when we put the image.
+    // Cairo/pixman lacks some fast paths for compositing BGRX onto BGRA, so
+    // just report it as BGRX directly in that case.
     if (mVisual->red_mask == 0xff0000 &&
         mVisual->green_mask == 0xff00 &&
         mVisual->blue_mask == 0xff) {
-      mFormat = SurfaceFormat::B8G8R8A8;
+      mFormat = backend == BackendType::CAIRO ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8;
     }
     break;
   case 16:
