@@ -359,6 +359,12 @@ def old_configure_options(*options):
     '--with-xulrunner-stub-name',
     '--x-includes',
     '--x-libraries',
+
+    # Below are the configure flags used by comm-central.
+    '--enable-ldap',
+    '--enable-mapi',
+    '--enable-calendar',
+    '--enable-incomplete-external-linkage',
 )
 @advanced
 def old_configure(prepare_configure, all_options, *options):
