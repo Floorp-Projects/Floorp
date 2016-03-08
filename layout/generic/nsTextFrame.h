@@ -617,29 +617,30 @@ protected:
   nsRect UpdateTextEmphasis(mozilla::WritingMode aWM,
                             PropertyProvider& aProvider);
 
-  void PaintOneShadow(Range aRange,
+  struct PaintShadowParams
+  {
+    gfxTextRun::Range range;
+    LayoutDeviceRect dirtyRect;
+    gfxPoint framePt;
+    gfxPoint textBaselinePt;
+    gfxContext* context;
+    nscolor foregroundColor = NS_RGBA(0, 0, 0, 0);
+    const nsCharClipDisplayItem::ClipEdges* clipEdges = nullptr;
+    PropertyProvider* provider = nullptr;
+    nscoord leftSideOffset = 0;
+    explicit PaintShadowParams(const PaintTextParams& aParams)
+      : dirtyRect(aParams.dirtyRect)
+      , framePt(aParams.framePt)
+      , context(aParams.context) {}
+  };
+
+  void PaintOneShadow(const PaintShadowParams& aParams,
                       nsCSSShadowItem* aShadowDetails,
-                      PropertyProvider* aProvider,
-                      const LayoutDeviceRect& aDirtyRect,
-                      const gfxPoint& aFramePt,
-                      const gfxPoint& aTextBaselinePt,
-                      gfxContext* aCtx,
-                      const nscolor& aForegroundColor,
-                      const nsCharClipDisplayItem::ClipEdges& aClipEdges,
-                      nscoord aLeftSideOffset,
                       gfxRect& aBoundingBox,
                       uint32_t aBlurFlags);
 
   void PaintShadows(nsCSSShadowArray* aShadow,
-                    Range aRange,
-                    const LayoutDeviceRect& aDirtyRect,
-                    const gfxPoint& aFramePt,
-                    const gfxPoint& aTextBaselinePt,
-                    nscoord aLeftEdgeOffset,
-                    PropertyProvider& aProvider,
-                    nscolor aForegroundColor,
-                    const nsCharClipDisplayItem::ClipEdges& aClipEdges,
-                    gfxContext* aCtx);
+                    const PaintShadowParams& aParams);
 
   struct LineDecoration {
     nsIFrame* mFrame;
