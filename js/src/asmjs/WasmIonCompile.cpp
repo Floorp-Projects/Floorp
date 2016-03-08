@@ -1424,7 +1424,9 @@ EmitHeapAddress(FunctionCompiler& f, MDefinition** base, MAsmJSHeapAccess* acces
     if (endOffset < offset)
         return false;
     bool accessNeedsBoundsCheck = true;
-    if (endOffset > f.mirGen().foldableOffsetRange(accessNeedsBoundsCheck)) {
+    // Assume worst case.
+    bool atomicAccess = true;
+    if (endOffset > f.mirGen().foldableOffsetRange(accessNeedsBoundsCheck, atomicAccess)) {
         MDefinition* rhs = f.constant(Int32Value(offset), MIRType_Int32);
         *base = f.binary<MAdd>(*base, rhs, MIRType_Int32);
         offset = 0;

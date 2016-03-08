@@ -414,7 +414,7 @@ CodeGeneratorX86Shared::maybeEmitAsmJSLoadBoundsCheck(const MAsmJSLoadHeap* mir,
         return wasm::HeapAccess::NoLengthCheck;
 
     if (mir->isAtomicAccess())
-        return maybeEmitThrowingAsmJSBoundsCheck(mir, mir, ins->ptr());
+        return emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ins->ptr()), nullptr);
 
     *ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(ins->output()),
                                                            mir->accessType());
@@ -434,7 +434,7 @@ CodeGeneratorX86Shared::maybeEmitAsmJSStoreBoundsCheck(const MAsmJSStoreHeap* mi
         return wasm::HeapAccess::NoLengthCheck;
 
     if (mir->isAtomicAccess())
-        return maybeEmitThrowingAsmJSBoundsCheck(mir, mir, ins->ptr());
+        return emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ins->ptr()), nullptr);
 
     *rejoin = alloc().lifoAlloc()->newInfallible<Label>();
     return emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ins->ptr()), *rejoin);

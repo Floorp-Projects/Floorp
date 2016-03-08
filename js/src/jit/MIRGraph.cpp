@@ -126,11 +126,11 @@ MIRGenerator::needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const
 size_t
 MIRGenerator::foldableOffsetRange(const MAsmJSHeapAccess* access) const
 {
-    return foldableOffsetRange(access->needsBoundsCheck());
+    return foldableOffsetRange(access->needsBoundsCheck(), access->isAtomicAccess());
 }
 
 size_t
-MIRGenerator::foldableOffsetRange(bool accessNeedsBoundsCheck) const
+MIRGenerator::foldableOffsetRange(bool accessNeedsBoundsCheck, bool atomic) const
 {
     // This determines whether it's ok to fold up to WasmImmediateSize
     // offsets, instead of just WasmCheckedImmediateSize.
@@ -147,7 +147,8 @@ MIRGenerator::foldableOffsetRange(bool accessNeedsBoundsCheck) const
                   "spill over, so ensure a space at the end.");
 
     // Signal-handling can be dynamically disabled by OS bugs or flags.
-    if (usesSignalHandlersForAsmJSOOB_)
+    // Bug 1254935: Atomic accesses can't be handled with signal handlers yet.
+    if (usesSignalHandlersForAsmJSOOB_ && !atomic)
         return WasmImmediateRange;
 #endif
 
