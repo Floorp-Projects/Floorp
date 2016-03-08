@@ -128,7 +128,7 @@ function funcBody(func) {
 }
 
 function bodySection(bodies) {
-    var body = [].concat(...bodies);
+    var body = varU32(bodies.length).concat(...bodies);
     return { name: functionBodiesId, body };
 }
 
