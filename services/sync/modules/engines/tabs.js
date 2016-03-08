@@ -319,6 +319,10 @@ TabTracker.prototype = {
       window.addEventListener(topic, this.onTab, false);
     }
     window.addEventListener("unload", this._unregisterListeners, false);
+    // If it's got a tab browser we can listen for things like navigation.
+    if (window.gBrowser) {
+      window.gBrowser.addProgressListener(this);
+    }
   },
 
   _unregisterListeners: function (event) {
@@ -330,6 +334,9 @@ TabTracker.prototype = {
     window.removeEventListener("unload", this._unregisterListeners, false);
     for (let topic of this._topics) {
       window.removeEventListener(topic, this.onTab, false);
+    }
+    if (window.gBrowser) {
+      window.gBrowser.removeProgressListener(this);
     }
   },
 
@@ -384,6 +391,16 @@ TabTracker.prototype = {
     // events, always bump the score.
     if (event.type != "pageshow" || Math.random() < .1) {
       this.score += SCORE_INCREMENT_SMALL;
+    }
+  },
+
+  // web progress listeners.
+  onLocationChange: function (webProgress, request, location, flags) {
+    // We only care about top-level location changes which are not in the same
+    // document.
+    if (webProgress.isTopLevel &&
+        ((flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) == 0)) {
+      this.modified = true;
     }
   },
 };
