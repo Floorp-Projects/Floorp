@@ -2972,11 +2972,13 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   CheckForBorderItem(this, flags);
 
+  const nsStyleImageLayers::Layer &layer = mBackgroundStyle->mImage.mLayers[mLayer];
   image::DrawResult result =
     nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
                                     aBounds,
                                     nsRect(offset, mFrame->GetSize()),
-                                    flags, aClipRect, mLayer);
+                                    flags, aClipRect, mLayer,
+                                    nsCSSRendering::GetGFXBlendMode(layer.mBlendMode));
 
   nsDisplayBackgroundGeometry::UpdateDrawResult(this, result);
 }
