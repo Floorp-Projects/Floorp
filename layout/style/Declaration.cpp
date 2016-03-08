@@ -1146,16 +1146,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         // Not serializable, bail.
         return;
       }
-      // Fall through to eCSSProperty_grid_template
-      MOZ_FALLTHROUGH;
-    }
-    case eCSSProperty_grid_template: {
-      const nsCSSValue& areasValue =
-        *data->ValueFor(eCSSProperty_grid_template_areas);
-      const nsCSSValue& columnsValue =
-        *data->ValueFor(eCSSProperty_grid_template_columns);
-      const nsCSSValue& rowsValue =
-        *data->ValueFor(eCSSProperty_grid_template_rows);
+
+      // The <'grid-template'> part:
       if (areasValue.GetUnit() == eCSSUnit_None) {
         AppendValueToString(eCSSProperty_grid_template_rows,
                             aValue, aSerialization);
