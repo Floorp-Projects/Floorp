@@ -225,12 +225,19 @@ ProcessNameForCollectorLog()
     "default" : "content";
 }
 
+namespace xpc {
+
 // This handles JS Exceptions (via ExceptionStackOrNull), as well as DOM and XPC Exceptions.
 //
 // Note that the returned object is _not_ wrapped into the compartment of cx.
-static JSObject*
-FindExceptionStack(JSContext* cx, JS::HandleObject exceptionObject)
+JSObject*
+FindExceptionStack(JSContext* cx, JS::HandleValue exceptionValue)
 {
+  if (!exceptionValue.isObject()) {
+    return nullptr;
+  }
+
+  JS::RootedObject exceptionObject(cx, &exceptionValue.toObject());
   JSAutoCompartment ac(cx, exceptionObject);
   JS::RootedObject stackObject(cx, ExceptionStackOrNull(cx, exceptionObject));
   if (stackObject) {
@@ -259,6 +266,8 @@ FindExceptionStack(JSContext* cx, JS::HandleObject exceptionObject)
   }
   return stackObject;
 }
+
+} /* namespace xpc */
 
 static PRTime
 GetCollectionTimeDelta()
@@ -462,8 +471,8 @@ public:
           return NS_OK;
         }
         JSContext* cx = jsapi.cx();
-        JS::Rooted<JSObject*> exObj(cx, mError.toObjectOrNull());
-        JS::RootedObject stack(cx, FindExceptionStack(cx, exObj));
+        JS::Rooted<JS::Value> exn(cx, mError);
+        JS::RootedObject stack(cx, xpc::FindExceptionStack(cx, exn));
         mReport->LogToConsoleWithStack(stack);
       } else {
         mReport->LogToConsole();
@@ -546,14 +555,8 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     if (!win || JSREPORT_IS_WARNING(xpcReport->mFlags) ||
         report->errorNumber == JSMSG_OUT_OF_MEMORY)
     {
-      if (exception.isObject()) {
-        JS::RootedObject exObj(cx, exception.toObjectOrNull());
-        JSAutoCompartment ac(cx, exObj);
-        JS::RootedObject stackVal(cx, FindExceptionStack(cx, exObj));
-        xpcReport->LogToConsoleWithStack(stackVal);
-      } else {
-        xpcReport->LogToConsole();
-      }
+      JS::Rooted<JSObject*> stack(cx, xpc::FindExceptionStack(cx, exception));
+      xpcReport->LogToConsoleWithStack(stack);
       return;
     }
 

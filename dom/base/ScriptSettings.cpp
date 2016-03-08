@@ -548,7 +548,8 @@ AutoJSAPI::ReportException()
       if (inner) {
         DispatchScriptErrorEvent(inner, JS_GetRuntime(cx()), xpcReport, exn);
       } else {
-        xpcReport->LogToConsole();
+        JS::Rooted<JSObject*> stack(cx(), xpc::FindExceptionStack(cx(), exn));
+        xpcReport->LogToConsoleWithStack(stack);
       }
     } else {
       // On a worker, we just use the worker error reporting mechanism and don't
