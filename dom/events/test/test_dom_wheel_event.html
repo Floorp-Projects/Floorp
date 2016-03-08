@@ -638,21 +638,20 @@ function testEventOrder()
       event |= kDefaultPrevented;
     }
     currentTest.resultEvents.push(event);
-    return event;
+
+    if (event == currentTest.doPreventDefaultAt) {
+      aEvent.preventDefault();
+    }
   }
 
   function handler(aEvent)
   {
-    if (pushEvent(aEvent, false) == currentTest.doPreventDefaultAt) {
-      aEvent.preventDefault();
-    }
+    pushEvent(aEvent, false);
   }
 
   function systemHandler(aEvent)
   {
-    if (pushEvent(aEvent, true) == currentTest.doPreventDefaultAt) {
-      aEvent.preventDefault();
-    }
+    pushEvent(aEvent, true);
   }
 
   window.addEventListener("wheel", handler, true);
