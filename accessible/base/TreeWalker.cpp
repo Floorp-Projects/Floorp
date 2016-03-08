@@ -58,8 +58,57 @@ TreeWalker::~TreeWalker()
   MOZ_COUNT_DTOR(TreeWalker);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// TreeWalker: private
+bool
+TreeWalker::Seek(nsIContent* aChildNode)
+{
+  MOZ_ASSERT(aChildNode, "Child cannot be null");
+
+  mPhase = eAtStart;
+  mStateStack.Clear();
+  mARIAOwnsIdx = 0;
+
+  nsIContent* childNode = nullptr;
+  nsINode* parentNode = aChildNode;
+  do {
+    childNode = parentNode->AsContent();
+    parentNode = childNode->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) &&
+      (mChildFilter & nsIContent::eAllButXBL) ?
+      childNode->GetParentNode() : childNode->GetFlattenedTreeParent();
+
+    if (!parentNode || !parentNode->IsElement()) {
+      return false;
+    }
+
+    // If ARIA owned child.
+    Accessible* child = mDoc->GetAccessible(childNode);
+    if (child && child->IsRelocated()) {
+      if (child->Parent() != mContext) {
+        return false;
+      }
+
+      Accessible* ownedChild = nullptr;
+      while ((ownedChild = mDoc->ARIAOwnedAt(mContext, mARIAOwnsIdx++)) &&
+             ownedChild != child);
+
+      MOZ_ASSERT(ownedChild, "A child has to be in ARIA owned elements");
+      mPhase = eAtARIAOwns;
+      return true;
+    }
+
+    // Look in DOM.
+    dom::AllChildrenIterator* iter = PrependState(parentNode->AsElement(), true);
+    if (!iter->Seek(childNode)) {
+      return false;
+    }
+
+    if (parentNode == mAnchorNode) {
+      mPhase = eAtDOM;
+      return true;
+    }
+  } while (true);
+
+  return false;
+}
 
 Accessible*
 TreeWalker::Next()
