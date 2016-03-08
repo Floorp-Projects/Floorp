@@ -156,7 +156,7 @@ Narrator.prototype = {
 
     this._startTime = Date.now();
 
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       utterance.addEventListener("start", () => {
         paragraph.classList.add("narrating");
         let bb = paragraph.getBoundingClientRect();
@@ -189,8 +189,12 @@ Narrator.prototype = {
           // User pressed stopped.
           resolve();
         } else {
-          this._speakInner().then(resolve);
+          this._speakInner().then(resolve, reject);
         }
+      });
+
+      utterance.addEventListener("error", () => {
+        reject("speech synthesis failed")
       });
 
       this._win.speechSynthesis.speak(utterance);
