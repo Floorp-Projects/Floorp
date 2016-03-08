@@ -327,6 +327,72 @@ promise_test(function(t) {
 }, 'animation is added to compositor' +
    ' when timing.duration is made longer than the current time');
 
+promise_test(function(t) {
+  var div = addDiv(t);
+  var animation = div.animate({ opacity: [ 0, 1 ] }, 10000);
+
+  return animation.ready.then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+      'Animation reports that it is running on the compositor');
+
+    animation.effect.timing.endDelay = 10000;
+
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+      'Animation reports that it is running on the compositor'
+      + ' when endDelay is changed');
+
+    animation.currentTime = 11000;
+    return waitForFrame();
+  })).then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+      'Animation reports that it is NOT running on the compositor'
+      + ' when currentTime is during endDelay');
+  }));
+}, 'animation is removed from compositor' +
+   ' when current time is made longer than the duration even during endDelay');
+
+promise_test(function(t) {
+  var div = addDiv(t);
+  var animation = div.animate({ opacity: [ 0, 1 ] }, 10000);
+
+  return animation.ready.then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+      'Animation reports that it is running on the compositor');
+
+    animation.effect.timing.endDelay = -20000;
+    return waitForFrame();
+  })).then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+      'Animation reports that it is NOT running on the compositor'
+      + ' when endTime is negative value');
+  }));
+}, 'animation is removed from compositor' +
+   ' when endTime is negative value');
+
+promise_test(function(t) {
+  var div = addDiv(t);
+  var animation = div.animate({ opacity: [ 0, 1 ] }, 10000);
+
+  return animation.ready.then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+      'Animation reports that it is running on the compositor');
+
+    animation.effect.timing.endDelay = -5000;
+    return waitForFrame();
+  })).then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+      'Animation reports that it is running on the compositor'
+      + ' when endTime is positive and endDelay is negative');
+    animation.currentTime = 6000;
+    return waitForFrame();
+  })).then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+      'Animation reports that it is NOT running on the compositor'
+      + ' when currentTime is after endTime');
+  }));
+}, 'animation is NOT running on compositor' +
+   'when endTime is positive and endDelay is negative');
+
 </script>
 </script>
 </body>
