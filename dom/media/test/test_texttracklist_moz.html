@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=881976
+-->
+<head>
+  <meta charset='utf-8'>
+  <title>Test for Bug 881976 - TextTrackCue Computed Position</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var video = document.createElement("video");
+var trackList = video.textTracks;
+ok(trackList instanceof TextTrackList,
+   "Video's textTracks should be a TextTrackList");
+var trackParent = SpecialPowers.unwrap(
+    SpecialPowers.wrap(trackList).mediaElement
+);
+is(trackParent, video,
+   "Video's TextTrackList's MediaElement reference should be set to the video.");
+SimpleTest.finish();
+</script>
+</pre>
+</body>
+</html>
