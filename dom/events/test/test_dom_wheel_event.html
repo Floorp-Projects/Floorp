@@ -723,10 +723,17 @@ function* testOnWheelAttr()
 }
 
 var gOnWheelPropHandled = new Array;
+var gOnWheelPropCount = 0;
 
-function testOnWheelProperty()
+function* testOnWheelProperty()
 {
-  const handleOnWheelProp = prop => e => gOnWheelPropHandled[prop] = true;
+  const handleOnWheelProp = prop => e => {
+    gOnWheelPropHandled[prop] = true;
+    ++gOnWheelPropCount;
+    if (gOnWheelPropCount == 5) {
+      setTimeout(continueTest, 0);
+    }
+  }
 
   window.onwheel = handleOnWheelProp('window');
   document.onwheel = handleOnWheelProp('document');
@@ -735,9 +742,10 @@ function testOnWheelProperty()
   gScrollableElement.onwheel = handleOnWheelProp('div');
 
   var target = document.getElementById("onwheel");
-  synthesizeWheel(gScrollableElement, 10, 10,
-                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
-                    deltaX: 1.0, deltaY: 2.0 });
+  yield synthesizeWheel(gScrollableElement, 10, 10,
+                        { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                          deltaX: 1.0, deltaY: 2.0 });
+
   ok(gOnWheelPropHandled['window'], "window's onwheel property isn't performed");
   ok(gOnWheelPropHandled['document'], "document's onwheel property isn't performed");
   ok(gOnWheelPropHandled['html'], "html element's onwheel property isn't performed");
@@ -753,7 +761,7 @@ function* testBody()
   testDispatchingUntrustEvent();
   yield* testEventOrder();
   yield* testOnWheelAttr();
-  testOnWheelProperty();
+  yield* testOnWheelProperty();
 }
 
 var gTestContinuation = null;
