@@ -131,7 +131,8 @@ public:
                           const Sequence<nsString>& aKeyUsages);
   static WebCryptoTask* CreateExportKeyTask(const nsAString& aFormat,
                           CryptoKey& aKey);
-  static WebCryptoTask* CreateGenerateKeyTask(JSContext* aCx,
+  static WebCryptoTask* CreateGenerateKeyTask(nsIGlobalObject* aGlobal,
+                          JSContext* aCx,
                           const ObjectOrString& aAlgorithm,
                           bool aExtractable,
                           const Sequence<nsString>& aKeyUsages);

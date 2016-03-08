@@ -2188,18 +2188,12 @@ private:
 class GenerateSymmetricKeyTask : public WebCryptoTask
 {
 public:
-  GenerateSymmetricKeyTask(JSContext* aCx,
+  GenerateSymmetricKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
       const ObjectOrString& aAlgorithm, bool aExtractable,
       const Sequence<nsString>& aKeyUsages)
   {
-    nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
-    if (!global) {
-      mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR;
-      return;
-    }
-
     // Create an empty key and set easy attributes
-    mKey = new CryptoKey(global);
+    mKey = new CryptoKey(aGlobal);
     mKey->SetExtractable(aExtractable);
     mKey->SetType(CryptoKey::SECRET);
 
@@ -3386,7 +3380,8 @@ WebCryptoTask::CreateExportKeyTask(const nsAString& aFormat,
 }
 
 WebCryptoTask*
-WebCryptoTask::CreateGenerateKeyTask(JSContext* aCx,
+WebCryptoTask::CreateGenerateKeyTask(nsIGlobalObject* aGlobal,
+                                     JSContext* aCx,
                                      const ObjectOrString& aAlgorithm,
                                      bool aExtractable,
                                      const Sequence<nsString>& aKeyUsages)
@@ -3412,7 +3407,8 @@ WebCryptoTask::CreateGenerateKeyTask(JSContext* aCx,
       algName.EqualsASCII(WEBCRYPTO_ALG_AES_GCM) ||
       algName.EqualsASCII(WEBCRYPTO_ALG_AES_KW) ||
       algName.EqualsASCII(WEBCRYPTO_ALG_HMAC)) {
-    return new GenerateSymmetricKeyTask(aCx, aAlgorithm, aExtractable, aKeyUsages);
+    return new GenerateSymmetricKeyTask(aGlobal, aCx, aAlgorithm, aExtractable,
+                                        aKeyUsages);
   } else if (algName.EqualsASCII(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
              algName.EqualsASCII(WEBCRYPTO_ALG_RSA_OAEP) ||
              algName.EqualsASCII(WEBCRYPTO_ALG_RSA_PSS) ||
