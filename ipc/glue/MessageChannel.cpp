@@ -978,10 +978,8 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
 void
 MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
 {
-    int32_t seqno = aTransaction.SequenceNumber();
-    int32_t transaction = aTransaction.TransactionID();
-
-    IPC_LOG("ProcessPendingRequests for seqno=%d, xid=%d", seqno, transaction);
+    IPC_LOG("ProcessPendingRequests for seqno=%d, xid=%d",
+            aTransaction.SequenceNumber(), aTransaction.TransactionID());
 
     // Loop until there aren't any more priority messages to process.
     for (;;) {
