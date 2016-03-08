@@ -222,19 +222,6 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
             self._test_touch_caret_timeout_by_dragging_it_to_top_left_corner_after_timout(self._input, self.assertNotEqual)
 
     ########################################################################
-    # <input> test cases with touch caret disabled
-    ########################################################################
-    def test_input_move_caret_to_the_right_by_one_character_disabled(self):
-        with self.marionette.using_prefs({self.caret_tested_pref: False}):
-            self.open_test_html()
-            self._test_move_caret_to_the_right_by_one_character(self._input, self.assertNotEqual)
-
-    def test_input_move_caret_to_front_by_dragging_touch_caret_to_top_left_corner_disabled(self):
-        with self.marionette.using_prefs({self.caret_tested_pref: False}):
-            self.open_test_html()
-            self._test_move_caret_to_front_by_dragging_touch_caret_to_front_of_content(self._input, self.assertNotEqual)
-
-    ########################################################################
     # <textarea> test cases with touch caret enabled
     ########################################################################
     def test_textarea_move_caret_to_the_right_by_one_character(self):
@@ -255,19 +242,6 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
             self._test_touch_caret_timeout_by_dragging_it_to_top_left_corner_after_timout(self._textarea, self.assertNotEqual)
 
     ########################################################################
-    # <textarea> test cases with touch caret disabled
-    ########################################################################
-    def test_textarea_move_caret_to_the_right_by_one_character_disabled(self):
-        with self.marionette.using_prefs({self.caret_tested_pref: False}):
-            self.open_test_html()
-            self._test_move_caret_to_the_right_by_one_character(self._textarea, self.assertNotEqual)
-
-    def test_textarea_move_caret_to_front_by_dragging_touch_caret_to_top_left_corner_disabled(self):
-        with self.marionette.using_prefs({self.caret_tested_pref: False}):
-            self.open_test_html()
-            self._test_move_caret_to_front_by_dragging_touch_caret_to_front_of_content(self._textarea, self.assertNotEqual)
-
-    ########################################################################
     # <div> contenteditable test cases with touch caret enabled
     ########################################################################
     def test_contenteditable_move_caret_to_the_right_by_one_character(self):
@@ -286,19 +260,6 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         with self.marionette.using_prefs({self.caret_timeout_ms_pref: 1000}):
             self.open_test_html()
             self._test_touch_caret_timeout_by_dragging_it_to_top_left_corner_after_timout(self._contenteditable, self.assertNotEqual)
-
-    ########################################################################
-    # <div> contenteditable test cases with touch caret disabled
-    ########################################################################
-    def test_contenteditable_move_caret_to_the_right_by_one_character_disabled(self):
-        with self.marionette.using_prefs({self.caret_tested_pref: False}):
-            self.open_test_html()
-            self._test_move_caret_to_the_right_by_one_character(self._contenteditable, self.assertNotEqual)
-
-    def test_contenteditable_move_caret_to_front_by_dragging_touch_caret_to_top_left_corner_disabled(self):
-        with self.marionette.using_prefs({self.caret_tested_pref: False}):
-            self.open_test_html()
-            self._test_move_caret_to_front_by_dragging_touch_caret_to_front_of_content(self._contenteditable, self.assertNotEqual)
 
     def test_caret_does_not_jump_when_dragging_to_editable_content_boundary(self):
         self.open_test_html()
