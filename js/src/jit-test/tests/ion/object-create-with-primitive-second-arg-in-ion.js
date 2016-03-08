@@ -1,4 +1,4 @@
-// |jit-test| ion-eager
+// |jit-test| --ion-eager
 load(libdir + "asserts.js");
 
 [1, "", true, Symbol(), undefined].forEach(props => {
