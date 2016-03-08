@@ -10,21 +10,9 @@ If you have questions, ask in [#jetpack on IRC][jetpack irc channel] or on the [
 
 ## How to Make Code Contributions
 
-To write code for the Jetpack project, follow these steps:
+Follow the [standard mozilla contribution guidelines](https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Introduction). All contributions and patches should be through Bugzilla.
 
-1. Look for your issue in the list of [bugs already filed][open bugs]. If you don't already know what you want to do, we keep a list of [good first bugs].
-2. If no bug exists, [make one][make bug].
-3. Get the code: get a [GitHub][GitHub] account, fork the [Add-on SDK repo][Add-on SDK repo], and clone it to your machine.
-4. Make your changes. Changes should follow the [design guidelines] as well as the [coding style guide].
-5. Write tests: [unit testing introduction][test intro], [unit testing API][test API].
-6. Submit a pull request with the changes and a title in the form of `Bug XXX - description`.
-7. Make sure that [Travis CI](https://travis-ci.org/mozilla/addon-sdk/branches) tests are passing for your branch.
-8. Copy the pull request link from GitHub and paste it in as an attachment to the bug.
-9. Each pull request should ideally contain only one commit, so squash the commits if necessary.
-10. Flag the attachment for code review from one of the Jetpack reviewers listed below. This step is optional, but could speed things up.
-11. Address any issues mentioned in the review.
-
-Finally, once the review is positive, a team member will do the merging
+Pull requests on github are not accepted and new pull requests on github will be rejected.
 
 ## Good First Bugs
 
@@ -32,7 +20,9 @@ There is a list of [good first bugs here][good first bugs].
 
 ## Reviewers
 
-All changes need a review by someone on the Jetpack review crew:
+Changes should be reviewed by someone on the [add-on sdk review team](https://bugzilla.mozilla.org/page.cgi?id=review_suggestions.html#Add-on%20SDK) within Bugzilla.
+
+Others who might be able to help include:
 
 - [@mossop]
 - [@gozala]
