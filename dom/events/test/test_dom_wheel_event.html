@@ -726,11 +726,14 @@ var gOnWheelPropHandled = new Array;
 
 function testOnWheelProperty()
 {
-  window.onwheel = function (e) { gOnWheelPropHandled["window"] = true; }
-  document.onwheel = function (e) { gOnWheelPropHandled["document"] = true; }
-  document.documentElement.onwheel = function (e) { gOnWheelPropHandled["html"] = true; };
-  document.body.onwheel = function (e) { gOnWheelPropHandled["body"] = true; };
-  gScrollableElement.onwheel = function (e) { gOnWheelPropHandled["div"] = true; };
+  const handleOnWheelProp = prop => e => gOnWheelPropHandled[prop] = true;
+
+  window.onwheel = handleOnWheelProp('window');
+  document.onwheel = handleOnWheelProp('document');
+  document.documentElement.onwheel = handleOnWheelProp('html');
+  document.body.onwheel = handleOnWheelProp('body');
+  gScrollableElement.onwheel = handleOnWheelProp('div');
+
   var target = document.getElementById("onwheel");
   synthesizeWheel(gScrollableElement, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_LINE,
