@@ -4,13 +4,13 @@
 
 "use strict";
 
-var {utils: Cu} = Components;
+const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
 this.EXPORTED_SYMBOLS = ["modal"];
 
-var isFirefox = () => Services.appinfo.name == "Firefox";
+const isFirefox = () => Services.appinfo.name == "Firefox";
 
 this.modal = {};
 modal = {
