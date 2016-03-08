@@ -1,0 +1,7 @@
+@namespace url(http://www.w3.org/1999/xhtml);
+
+/* Reset default UA styles for dropdown options */
+*|*::-moz-dropdown-list {
+  border: 0 !important;
+  -moz-border-start-width: 0 !important;
+}
