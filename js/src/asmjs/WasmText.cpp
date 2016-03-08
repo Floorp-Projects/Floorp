@@ -3955,6 +3955,9 @@ EncodeFunctionBodies(Encoder& e, WasmAstModule& module)
     if (!e.startSection(FunctionBodiesId, &offset))
         return false;
 
+    if (!e.writeVarU32(module.funcs().length()))
+        return false;
+
     for (WasmAstFunc* func : module.funcs()) {
         if (!EncodeFunctionBody(e, *func))
             return false;

@@ -1304,7 +1304,14 @@ DecodeFunctionBodies(JSContext* cx, Decoder& d, ModuleGenerator& mg)
         return mg.finishFuncDefs();
     }
 
-    for (uint32_t funcIndex = 0; funcIndex < mg.numFuncSigs(); funcIndex++) {
+    uint32_t numFuncBodies;
+    if (!d.readVarU32(&numFuncBodies))
+        return Fail(cx, d, "expected function body count");
+
+    if (numFuncBodies != mg.numFuncSigs())
+        return Fail(cx, d, "function body count does not match function signature count");
+
+    for (uint32_t funcIndex = 0; funcIndex < numFuncBodies; funcIndex++) {
         if (!DecodeFunctionBody(cx, d, mg, funcIndex))
             return false;
     }
