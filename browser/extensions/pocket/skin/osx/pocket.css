@@ -51,3 +51,7 @@
     -moz-image-region: rect(36px, 36px, 72px, 0);
   }
 }
+
+#PanelUI-pocketView[mainview=true] > .panel-subview-body > #pocket-panel-iframe {
+  border-radius: var(--panel-arrowcontent-border-radius);
+}

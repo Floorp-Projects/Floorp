@@ -224,17 +224,18 @@ var AnimationsController = {
       return;
     }
 
+    this.nodeFront = gInspector.selection.nodeFront;
     let done = gInspector.updating("animationscontroller");
 
     if (!gInspector.selection.isConnected() ||
-        !gInspector.selection.isElementNode()) {
+        !gInspector.selection.isElementNode() ||
+        gInspector.selection.isPseudoElementNode()) {
       this.destroyAnimationPlayers();
       this.emit(this.PLAYERS_UPDATED_EVENT);
       done();
       return;
     }
 
-    this.nodeFront = gInspector.selection.nodeFront;
     yield this.refreshAnimationPlayers(this.nodeFront);
     this.emit(this.PLAYERS_UPDATED_EVENT, this.animationPlayers);
 

@@ -82,6 +82,21 @@
       animation: no-compositor 10s cubic-bezier(.57,-0.02,1,.31) forwards;
     }
 
+    .pseudo {
+      top: 800px;
+      left: 10px;
+    }
+
+    .pseudo::before {
+      content: "";
+      width: 50%;
+      height: 50%;
+      border-radius: 50%;
+      background: black;
+      position: absolute;
+      animation: simple-animation 1s infinite alternate;
+    }
+
     @keyframes simple-animation {
       100% {
         transform: translateX(300px);
@@ -112,5 +127,6 @@
   <div class="ball long"></div>
   <div class="ball negative-delay"></div>
   <div class="ball no-compositor"></div>
+  <div class="ball pseudo"></div>
 </body>
 </html>
