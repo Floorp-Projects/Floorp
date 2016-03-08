@@ -46,6 +46,7 @@ struct nsBoundingMetrics;
 class nsFontMetrics final
 {
 public:
+    typedef gfxTextRun::Range Range;
     typedef mozilla::gfx::DrawTarget DrawTarget;
 
     nsFontMetrics();
