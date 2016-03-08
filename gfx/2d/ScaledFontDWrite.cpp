@@ -115,12 +115,42 @@ ScaledFontDWrite::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget 
 
 
 #ifdef USE_SKIA
+// This can happen if we have mixed backends which create DWrite
+// fonts in a mixed environment. e.g. a cairo content backend
+// but Skia canvas backend.
+void
+ScaledFontDWrite::GetFontDataFromSystemFonts(IDWriteFactory* aFactory)
+{
+  MOZ_ASSERT(mFontFace);
+  RefPtr<IDWriteFontCollection> systemFonts;
+  HRESULT hr = aFactory->GetSystemFontCollection(getter_AddRefs(systemFonts));
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to get system font collection from file data. Code: " << hexa(hr);
+    return;
+  }
+
+  hr = systemFonts->GetFontFromFontFace(mFontFace, getter_AddRefs(mFont));
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to get system font from font face. Code: " << hexa(hr);
+    return;
+  }
+
+  hr = mFont->GetFontFamily(getter_AddRefs(mFontFamily));
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to get font family from font face. Code: " << hexa(hr);
+    return;
+  }
+}
+
 SkTypeface*
 ScaledFontDWrite::GetSkTypeface()
 {
-  MOZ_ASSERT(mFont);
   if (!mTypeface) {
     IDWriteFactory *factory = DrawTargetD2D1::GetDWriteFactory();
+    if (!mFont || !mFontFamily) {
+      GetFontDataFromSystemFonts(factory);
+    }
+
     mTypeface = SkCreateTypefaceFromDWriteFont(factory, mFontFace, mFont, mFontFamily);
   }
   return mTypeface;
