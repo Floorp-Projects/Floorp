@@ -2534,7 +2534,8 @@ MediaDecoderStateMachine::DropVideoUpToSeekTarget(MediaData* aSample)
     DECODER_LOG("DropVideoUpToSeekTarget() found video frame [%lld, %lld] containing target=%lld",
                 video->mTime, video->GetEndTime(), target);
 
-    PushFront(video, MediaData::VIDEO_DATA);
+    MOZ_ASSERT(VideoQueue().GetSize() == 0, "Should be the 1st sample after seeking");
+    Push(video, MediaData::VIDEO_DATA);
   }
 
   return NS_OK;
@@ -2610,7 +2611,8 @@ MediaDecoderStateMachine::DropAudioUpToSeekTarget(MediaData* aSample)
                                        Move(audioData),
                                        channels,
                                        audio->mRate));
-  PushFront(data, MediaData::AUDIO_DATA);
+  MOZ_ASSERT(AudioQueue().GetSize() == 0, "Should be the 1st sample after seeking");
+  Push(data, MediaData::AUDIO_DATA);
 
   return NS_OK;
 }
