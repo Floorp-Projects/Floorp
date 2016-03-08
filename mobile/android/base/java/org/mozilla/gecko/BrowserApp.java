@@ -697,7 +697,7 @@ public class BrowserApp extends GeckoApp
         JavaAddonManager.getInstance().init(appContext);
         mSharedPreferencesHelper = new SharedPreferencesHelper(appContext);
         mOrderedBroadcastHelper = new OrderedBroadcastHelper(appContext);
-        mReadingListHelper = new ReadingListHelper(appContext, getProfile(), null);
+        mReadingListHelper = new ReadingListHelper(appContext, getProfile());
         mAccountsHelper = new AccountsHelper(appContext, getProfile());
 
         final AdjustHelperInterface adjustHelper = AdjustConstants.getAdjustHelper();
