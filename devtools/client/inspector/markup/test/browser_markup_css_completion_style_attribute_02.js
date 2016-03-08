@@ -98,7 +98,6 @@ const TEST_DATA_INNER = [
 ];
 
 add_task(function* () {
-  info("Opening the inspector on the test URL");
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
   yield runStyleAttributeAutocompleteTests(inspector, TEST_DATA_DOUBLE);
