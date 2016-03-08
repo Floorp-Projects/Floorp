@@ -65,7 +65,6 @@ public class Tab {
     private final int mParentId;
     private final boolean mExternal;
     private boolean mBookmark;
-    private boolean mIsInReadingList;
     private int mFaviconLoadId;
     private String mContentType;
     private boolean mHasTouchListeners;
@@ -138,7 +137,6 @@ public class Tab {
         mBackgroundColor = DEFAULT_BACKGROUND_COLOR;
 
         updateBookmark();
-        updateReadingList();
     }
 
     private ContentResolver getContentResolver() {
@@ -292,10 +290,6 @@ public class Tab {
 
     public boolean isBookmark() {
         return mBookmark;
-    }
-
-    public boolean isInReadingList() {
-        return mIsInReadingList;
     }
 
     public boolean isExternal() {
@@ -537,25 +531,6 @@ public class Tab {
         });
     }
 
-    void updateReadingList() {
-        if (getURL() == null) {
-            return;
-        }
-
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                final String url = getURL();
-                if (url == null) {
-                    return;
-                }
-
-                mIsInReadingList = mDB.getReadingListAccessor().isReadingListItem(getContentResolver(), url);
-                Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.MENU_UPDATED);
-            }
-        });
-    }
-
     public void addBookmark() {
         final String url = getURL();
         if (url == null) {
@@ -596,38 +571,6 @@ public class Tab {
         // We need to ensure we remove readercached items here - we could have switched out of readermode
         // before unbookmarking, so we don't necessarily have an about:reader URL here.
         ReadingListHelper.removeCachedReaderItem(pageUrl, mAppContext);
-    }
-
-    public void addToReadingList() {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                String url = getURL();
-                if (url == null) {
-                    return;
-                }
-
-                mDB.getReadingListAccessor().addBasicReadingListItem(getContentResolver(), url, mTitle);
-                Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.READING_LIST_ADDED);
-            }
-        });
-    }
-
-    public void removeFromReadingList() {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                String url = getURL();
-                if (url == null) {
-                    return;
-                }
-                if (AboutPages.isAboutReader(url)) {
-                    url = ReaderModeUtils.getUrlFromAboutReader(url);
-                }
-                mDB.getReadingListAccessor().removeReadingListItemWithURL(getContentResolver(), url);
-                Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.READING_LIST_REMOVED);
-            }
-        });
     }
 
     public boolean isEnteringReaderMode() {
@@ -681,7 +624,6 @@ public class Tab {
         if (!TextUtils.equals(oldUrl, uri)) {
             updateURL(uri);
             updateBookmark();
-            updateReadingList();
             if (!sameDocument) {
                 // We can unconditionally clear the favicon and title here: we
                 // already filtered both cases in which this was a (pseudo-)
