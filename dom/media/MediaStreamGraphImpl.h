@@ -185,10 +185,6 @@ public:
    * This is called during application shutdown.
    */
   void ForceShutDown(ShutdownTicket* aShutdownTicket);
-  /**
-   * Shutdown() this MediaStreamGraph's threads and return when they've shut down.
-   */
-  void ShutdownThreads();
 
   /**
    * Called before the thread runs.
