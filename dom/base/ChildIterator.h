@@ -89,7 +89,7 @@ public:
   // Returns the current target of this iterator (which might be an explicit
   // child of the node, fallback content of an insertion point or
   // a node distributed to an insertion point.
-  nsIContent* Get();
+  nsIContent* Get() const;
 
   // The inverse of GetNextChild. Properly steps in and out of insertion
   // points.
@@ -170,12 +170,13 @@ protected:
 };
 
 /**
- * AllChildrenIterator returns the children of a element including before /
- * after content and optionally XBL children.  It assumes that no mutation of
- * the DOM or frame tree takes place during iteration, and will break horribly
- * if that is not true.  The iterator can be initialized to start at the end by
- * providing false for aStartAtBeginning in order to start iterating in reverse
- * from the last child.
+ * AllChildrenIterator traverses the children of an element including before /
+ * after content and optionally XBL children.  The iterator can be initialized
+ * to start at the end by providing false for aStartAtBeginning in order to
+ * start iterating in reverse from the last child.
+ *
+ * Note: it assumes that no mutation of the DOM or frame tree takes place during
+ * iteration, and will break horribly if that is not true.
  */
 class AllChildrenIterator : private FlattenedChildIterator
 {
@@ -199,6 +200,13 @@ public:
   ~AllChildrenIterator() { MOZ_ASSERT(!mMutationGuard.Mutated(0)); }
 #endif
 
+  // Returns the current target the iterator is at, or null if the iterator
+  // doesn't point to any child node (either eAtBegin or eAtEnd phase).
+  nsIContent* Get() const;
+
+  // Seeks the given node in children of a parent element, starting from
+  // the current iterator's position, and sets the iterator at the given child
+  // node if it was found.
   bool Seek(nsIContent* aChildToFind);
 
   nsIContent* GetNextChild();
