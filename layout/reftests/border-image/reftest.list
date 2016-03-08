@@ -82,3 +82,8 @@ fuzzy(1,1054) fails-if(OSX) fuzzy-if(skiaContent,2,500) == border-image-repeatin
 
 # border-image-source (-moz-)element
 fuzzy(125,5808) fuzzy-if(B2G,151,5809) == border-image-element.html border-image-element-ref.html
+
+# svg-as-border-image
+== svg-as-border-image-1a.html svg-as-border-image-1-ref.html
+== svg-as-border-image-1b.html svg-as-border-image-1-ref.html
+== svg-as-border-image-1c.html svg-as-border-image-1-ref.html
