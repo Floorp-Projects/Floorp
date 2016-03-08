@@ -510,7 +510,12 @@ class ErrorReport {
 
     void Init(JSErrorReport* aReport, const char* aFallbackMessage,
               bool aIsChrome, uint64_t aWindowID);
+    // Log the error report to the console.  Which console will depend on the
+    // window id it was initialized with.
     void LogToConsole();
+    // Log to console, using the given stack object (which should be a stack of
+    // the sort that JS::CaptureCurrentStack produces).  aStack is allowed to be
+    // null.
     void LogToConsoleWithStack(JS::HandleObject aStack);
 
     // Produce an error event message string from the given JSErrorReport.  Note
@@ -538,6 +543,15 @@ class ErrorReport {
 void
 DispatchScriptErrorEvent(nsPIDOMWindowInner* win, JSRuntime* rt, xpc::ErrorReport* xpcReport,
                          JS::Handle<JS::Value> exception);
+
+// Get a stack of the sort that can be passed to
+// xpc::ErrorReport::LogToConsoleWithStack from the given exception value.  Can
+// return null if the exception value doesn't have an associated stack.  The
+// passed-in value does NOT necessarily have to be in the same compartment as
+// the passed-in JSContext.  The returned stack, if any, may also not be in the
+// same compartment as either cx or exceptionValue.
+JSObject*
+FindExceptionStack(JSContext* cx, JS::HandleValue exceptionValue);
 
 // Return a name for the compartment.
 // This function makes reasonable efforts to make this name both mostly human-readable
