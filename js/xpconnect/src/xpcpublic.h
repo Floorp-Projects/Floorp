@@ -550,8 +550,16 @@ DispatchScriptErrorEvent(nsPIDOMWindowInner* win, JSRuntime* rt, xpc::ErrorRepor
 // passed-in value does NOT necessarily have to be in the same compartment as
 // the passed-in JSContext.  The returned stack, if any, may also not be in the
 // same compartment as either cx or exceptionValue.
+//
+// The "win" argument passed in here should be the same as the window whose
+// WindowID() is used to initialize the xpc::ErrorReport.  This may be null, of
+// course.  If it's not null, this function may return a null stack object if
+// the window is far enough gone, because in those cases we don't want to have
+// the stack in the console message keeping the window alive.
 JSObject*
-FindExceptionStack(JSContext* cx, JS::HandleValue exceptionValue);
+FindExceptionStackForConsoleReport(JSContext* cx,
+                                   nsPIDOMWindowInner* win,
+                                   JS::HandleValue exceptionValue);
 
 // Return a name for the compartment.
 // This function makes reasonable efforts to make this name both mostly human-readable

@@ -548,7 +548,8 @@ AutoJSAPI::ReportException()
       if (inner && jsReport.report()->errorNumber != JSMSG_OUT_OF_MEMORY) {
         DispatchScriptErrorEvent(inner, JS_GetRuntime(cx()), xpcReport, exn);
       } else {
-        JS::Rooted<JSObject*> stack(cx(), xpc::FindExceptionStack(cx(), exn));
+        JS::Rooted<JSObject*> stack(cx(),
+          xpc::FindExceptionStackForConsoleReport(cx(), inner, exn));
         xpcReport->LogToConsoleWithStack(stack);
       }
     } else {
