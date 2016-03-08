@@ -64,7 +64,7 @@ this.BrowserTestUtils = {
   withNewTab: Task.async(function* (options, taskFn) {
     let tab = yield BrowserTestUtils.openNewForegroundTab(options.gBrowser, options.url);
     let result = yield taskFn(tab.linkedBrowser);
-    yield BrowserTestUtils.removeTab(tab);
+    options.gBrowser.removeTab(tab);
     return Promise.resolve(result);
   }),
 
