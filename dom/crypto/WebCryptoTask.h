@@ -122,7 +122,8 @@ public:
                           const ObjectOrString& aAlgorithm,
                           const CryptoOperationData& aData);
 
-  static WebCryptoTask* CreateImportKeyTask(JSContext* aCx,
+  static WebCryptoTask* CreateImportKeyTask(nsIGlobalObject* aGlobal,
+                          JSContext* aCx,
                           const nsAString& aFormat,
                           JS::Handle<JSObject*> aKeyData,
                           const ObjectOrString& aAlgorithm,
@@ -135,7 +136,8 @@ public:
                           bool aExtractable,
                           const Sequence<nsString>& aKeyUsages);
 
-  static WebCryptoTask* CreateDeriveKeyTask(JSContext* aCx,
+  static WebCryptoTask* CreateDeriveKeyTask(nsIGlobalObject* aGlobal,
+                          JSContext* aCx,
                           const ObjectOrString& aAlgorithm,
                           CryptoKey& aBaseKey,
                           const ObjectOrString& aDerivedKeyType,
@@ -151,7 +153,8 @@ public:
                           CryptoKey& aKey,
                           CryptoKey& aWrappingKey,
                           const ObjectOrString& aWrapAlgorithm);
-  static WebCryptoTask* CreateUnwrapKeyTask(JSContext* aCx,
+  static WebCryptoTask* CreateUnwrapKeyTask(nsIGlobalObject* aGlobal,
+                          JSContext* aCx,
                           const nsAString& aFormat,
                           const ArrayBufferViewOrArrayBuffer& aWrappedKey,
                           CryptoKey& aUnwrappingKey,
