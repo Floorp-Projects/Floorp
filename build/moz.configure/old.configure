@@ -60,10 +60,10 @@ def autoconf(mozconfig, autoconf):
 option(env='OLD_CONFIGURE', nargs=1, help='Path to the old configure script')
 
 @depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell,
-         virtualenv_python, compile_environment)
+         virtualenv_python, compile_environment, build_app)
 @advanced
 def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
-                      python, compile_env):
+                      python, compile_env, build_app):
     import glob
     import itertools
     import subprocess
@@ -126,6 +126,7 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
         print('PYTHON=%s' % quote(python), file=out)
         if compile_env:
             print('COMPILE_ENVIRONMENT=1', file=out)
+        print('MOZ_BUILD_APP=%s' % build_app, file=out)
 
     return cmd
 
@@ -150,7 +151,6 @@ def old_configure_options(*options):
     '--enable-android-apz',
     '--enable-android-omx',
     '--enable-android-resource-constrained',
-    '--enable-application',
     '--enable-approximate-location',
     '--enable-b2g-bt',
     '--enable-b2g-camera',

@@ -198,3 +198,38 @@ del command_line_helper
 
 option(env='MOZILLABUILD', nargs=1,
        help='Path to Mozilla Build (Windows-only)')
+
+
+option('--enable-application', nargs=1, env='MOZ_BUILD_APP',
+       help='Application to build. Same as --enable-project.')
+
+@depends('--enable-application', '--help')
+def application(app, help):
+    if app:
+        imply_option(app.format('--enable-project'))
+
+
+@depends(check_build_environment, '--help')
+def default_project(build_env, help):
+    if build_env['TOPOBJDIR'].endswith('/js/src'):
+        return 'js'
+    return 'browser'
+
+option('--enable-project', nargs=1, default=default_project,
+       help='Project to build')
+
+@depends('--enable-project', check_build_environment, '--help')
+def include_project_configure(project, build_env, help):
+    if not project:
+        error('--enable-project is required.')
+
+    path = os.path.join(build_env['TOPSRCDIR'], project[0], 'moz.configure')
+    if not os.path.exists(path):
+        error('Cannot find project %s' % project[0])
+    return path
+
+include(include_project_configure)
+
+@depends('--enable-project')
+def build_app(project):
+    return project[0]

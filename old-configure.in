@@ -3689,14 +3689,6 @@ MOZ_ARG_WITH_STRING(external-source-dir,
 [ EXTERNAL_SOURCE_DIR=$withval])
 AC_SUBST(EXTERNAL_SOURCE_DIR)
 
-MOZ_ARG_ENABLE_STRING(application,
-[  --enable-application=APP
-                          Options include:
-                            browser (Firefox)
-                            xulrunner
-                            tools/update-packaging (AUS-related packaging tools)],
-[ MOZ_BUILD_APP=$enableval ] )
-
 MOZ_ARG_WITH_STRING(xulrunner-stub-name,
 [  --with-xulrunner-stub-name=appname   Create the xulrunner stub with the given name],
   XULRUNNER_STUB_NAME=$withval)
