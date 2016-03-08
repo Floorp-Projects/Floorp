@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <style type="text/css">
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+  <script>
+    var ok = opener.ok.bind(opener);
+    var is = opener.is.bind(opener);
+    var todo = opener.todo.bind(opener);
+    function finish() {
+      var o = opener;
+      self.close();
+      o.SimpleTest.finish();
+    }
+  </script>
+</head>
+<body>
+<div id="display"></div>
+<script type="application/javascript">
+"use strict";
+
+runOMTATest(function() {
+  runAllAsyncAnimTests().then(function() {
+    finish();
+  });
+}, finish, opener.SpecialPowers);
+
+addAsyncAnimTest(function *() {
+  var [ div ] = new_div("");
+  var animation = div.animate(
+    [ { transform: 'translate(0px)' }, { transform: 'translate(100px)' } ],
+    { duration: 1000, fill: 'none' });
+  yield waitForPaints();
+
+  advance_clock(100);
+  omta_is(div, "transform", { tx: 10 }, RunningOn.Compositor,
+          "Animation is running on compositor");
+  animation.effect.timing.endDelay = 1000;
+
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 10 }, RunningOn.Compositor,
+          "Animation remains on compositor when endDelay is changed");
+
+  advance_clock(1000);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 0 }, RunningOn.MainThread,
+          "Animation is updated on main thread");
+
+  done_div();
+});
+
+addAsyncAnimTest(function *() {
+  var [ div ] = new_div("");
+  var animation = div.animate(
+    [ { transform: 'translate(0px)' }, { transform: 'translate(100px)' } ],
+    { duration: 1000, endDelay: -500, fill: 'none' });
+  yield waitForPaints();
+
+  advance_clock(400);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 40 }, RunningOn.Compositor,
+          "Animation is updated on compositor" +
+          "duration 1000, endDelay -500, fill none, current time 400");
+
+  advance_clock(100);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 0 }, RunningOn.MainThread,
+          "Animation is updated on main thread" +
+          "duration 1000, endDelay -500, fill none, current time 500");
+
+  advance_clock(400);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 0 }, RunningOn.MainThread,
+          "Animation is updated on main thread" +
+          "duration 1000, endDelay -500, fill forwards, current time 900");
+
+  advance_clock(100);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 0 }, RunningOn.MainThread,
+          "Animation is updated on main thread" +
+          "duration 1000, endDelay -500, fill forwards, current time 1000");
+
+  done_div();
+});
+
+addAsyncAnimTest(function *() {
+  var [ div ] = new_div("");
+  var animation = div.animate(
+    [ { transform: 'translate(0px)' }, { transform: 'translate(100px)' } ],
+    { duration: 1000, endDelay: 1000, fill: 'forwards' });
+  yield waitForPaints();
+
+  advance_clock(1500);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 100 }, RunningOn.MainThread,
+          "The end delay is performed on the main thread");
+
+  done_div();
+});
+
+addAsyncAnimTest(function *() {
+  var [ div ] = new_div("");
+  var animation = div.animate(
+    [ { transform: 'translate(0px)' }, { transform: 'translate(100px)' } ],
+    { duration: 1000, endDelay: -500, fill: 'forwards' });
+  yield waitForPaints();
+
+  advance_clock(400);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 40 }, RunningOn.Compositor,
+          "Animation is updated on compositor" +
+          "duration 1000, endDelay -500, fill forwards, current time 400");
+
+  advance_clock(100);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 100 }, RunningOn.MainThread,
+          "Animation is updated on main thread" +
+          "duration 1000, endDelay -500, fill forwards, current time 500");
+
+  advance_clock(400);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 100 }, RunningOn.MainThread,
+          "Animation is updated on main thread" +
+          "duration 1000, endDelay -500, fill forwards, current time 900");
+
+  advance_clock(100);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 100 }, RunningOn.MainThread,
+          "Animation is updated on main thread" +
+          "duration 1000, endDelay -500, fill forwards, current time 1000");
+
+  done_div();
+});
+
+</script>
+</body>
+</html>
