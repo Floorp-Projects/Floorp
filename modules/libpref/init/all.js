@@ -5267,3 +5267,6 @@ pref("plugins.rewrite_youtube_embeds", true);
 
 // Disable browser frames by default
 pref("dom.mozBrowserFramesEnabled", false);
+
+// Is support for 'color-adjust' CSS property enabled?
+pref("layout.css.color-adjust.enabled", true);

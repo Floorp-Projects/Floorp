@@ -3172,6 +3172,7 @@ nsStyleVisibility::nsStyleVisibility(nsPresContext* aPresContext)
   mPointerEvents = NS_STYLE_POINTER_EVENTS_AUTO;
   mWritingMode = NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
   mTextOrientation = NS_STYLE_TEXT_ORIENTATION_MIXED;
+  mColorAdjust = NS_STYLE_COLOR_ADJUST_ECONOMY;
 }
 
 nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
@@ -3183,6 +3184,7 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
   mPointerEvents = aSource.mPointerEvents;
   mWritingMode = aSource.mWritingMode;
   mTextOrientation = aSource.mTextOrientation;
+  mColorAdjust = aSource.mColorAdjust;
 } 
 
 nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const
@@ -3216,6 +3218,10 @@ nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) 
       // GetHitTestFlags. (Only a reflow, no visual change.)
       NS_UpdateHint(hint, nsChangeHint_NeedReflow);
       NS_UpdateHint(hint, nsChangeHint_NeedDirtyReflow); // XXX remove me: bug 876085
+    }
+    if (mColorAdjust != aOther.mColorAdjust) {
+      // color-adjust only affects media where dynamic changes can't happen.
+      NS_UpdateHint(hint, nsChangeHint_NeutralChange);
     }
   }
   return hint;
