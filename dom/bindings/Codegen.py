@@ -10908,7 +10908,7 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
             }
             getIndexed = fill(
                 """
-                int32_t index = GetArrayIndexFromId(cx, id);
+                uint32_t index = GetArrayIndexFromId(cx, id);
                 if (IsArrayIndex(index)) {
                   $*{callGetter}
                 }
@@ -11019,7 +11019,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 raise TypeError("Can't handle creator that's different from the setter")
             set += fill(
                 """
-                int32_t index = GetArrayIndexFromId(cx, id);
+                uint32_t index = GetArrayIndexFromId(cx, id);
                 if (IsArrayIndex(index)) {
                   *defined = true;
                   $*{callSetter}
@@ -11167,7 +11167,7 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
         if indexedBody is not None:
             delete += fill(
                 """
-                int32_t index = GetArrayIndexFromId(cx, id);
+                uint32_t index = GetArrayIndexFromId(cx, id);
                 if (IsArrayIndex(index)) {
                   bool deleteSucceeded;
                   $*{indexedBody}
@@ -11288,7 +11288,7 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
         if self.descriptor.supportsIndexedProperties():
             indexed = fill(
                 """
-                int32_t index = GetArrayIndexFromId(cx, id);
+                uint32_t index = GetArrayIndexFromId(cx, id);
                 if (IsArrayIndex(index)) {
                   bool found = false;
                   $*{presenceChecker}
@@ -11391,7 +11391,7 @@ class CGDOMJSProxyHandler_get(ClassMethod):
         if self.descriptor.supportsIndexedProperties():
             getIndexedOrExpando = fill(
                 """
-                int32_t index = GetArrayIndexFromId(cx, id);
+                uint32_t index = GetArrayIndexFromId(cx, id);
                 if (IsArrayIndex(index)) {
                   $*{callGetter}
                   // Even if we don't have this index, we don't forward the
@@ -11490,7 +11490,7 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
                                  "also an indexed creator")
             setIndexed = fill(
                 """
-                int32_t index = GetArrayIndexFromId(cx, id);
+                uint32_t index = GetArrayIndexFromId(cx, id);
                 if (IsArrayIndex(index)) {
                   $*{callSetter}
                   *done = true;
