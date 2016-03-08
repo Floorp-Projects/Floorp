@@ -395,9 +395,9 @@ public:
    * at the current buffer end point. The StreamBuffer's tracks must be
    * explicitly set to finished by the caller.
    */
-  void OpenAudioInputImpl(CubebUtils::AudioDeviceID aID,
+  void OpenAudioInputImpl(int aID,
                           AudioDataListener *aListener);
-  virtual nsresult OpenAudioInput(CubebUtils::AudioDeviceID aID,
+  virtual nsresult OpenAudioInput(int aID,
                                   AudioDataListener *aListener) override;
   void CloseAudioInputImpl(AudioDataListener *aListener);
   virtual void CloseAudioInput(AudioDataListener *aListener) override;
@@ -634,9 +634,9 @@ public:
    * and boolean to control if we want input/output
    */
   bool mInputWanted;
-  CubebUtils::AudioDeviceID mInputDeviceID;
+  int mInputDeviceID;
   bool mOutputWanted;
-  CubebUtils::AudioDeviceID mOutputDeviceID;
+  int mOutputDeviceID;
   // Maps AudioDataListeners to a usecount of streams using the listener
   // so we can know when it's no longer in use.
   nsDataHashtable<nsPtrHashKey<AudioDataListener>, uint32_t> mInputDeviceUsers;
