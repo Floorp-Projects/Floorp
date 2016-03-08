@@ -51,20 +51,20 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         target_content = sel.content
         target_content = target_content[:1] + content_to_add + target_content[1:]
 
-        # Get touch caret (x, y) at position 1 and 2.
+        # Get first caret (x, y) at position 1 and 2.
         el.tap()
-        sel.move_caret_to_front()
-        caret0_x, caret0_y = sel.caret_location()
-        touch_caret0_x, touch_caret0_y = sel.touch_caret_location()
-        sel.move_caret_by_offset(1)
-        touch_caret1_x, touch_caret1_y = sel.touch_caret_location()
+        sel.move_cursor_to_front()
+        cursor0_x, cursor0_y = sel.cursor_location()
+        first_caret0_x, first_caret0_y = sel.first_caret_location()
+        sel.move_cursor_by_offset(1)
+        first_caret1_x, first_caret1_y = sel.first_caret_location()
 
-        # Tap the front of the input to make touch caret appear.
-        el.tap(caret0_x, caret0_y)
+        # Tap the front of the input to make first caret appear.
+        el.tap(cursor0_x, cursor0_y)
 
-        # Move touch caret
-        self.actions.flick(el, touch_caret0_x, touch_caret0_y,
-                           touch_caret1_x, touch_caret1_y).perform()
+        # Move first caret.
+        self.actions.flick(el, first_caret0_x, first_caret0_y,
+                           first_caret1_x, first_caret1_y).perform()
 
         self.actions.key_down(content_to_add).key_up(content_to_add).perform()
         self.assertEqual(target_content, sel.content)
@@ -79,13 +79,13 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         content_to_add = '!'
         target_content = sel.content + content_to_add
 
-        # Tap the front of the input to make touch caret appear.
+        # Tap the front of the input to make first caret appear.
         el.tap()
-        sel.move_caret_to_front()
-        el.tap(*sel.caret_location())
+        sel.move_cursor_to_front()
+        el.tap(*sel.cursor_location())
 
-        # Move touch caret to the bottom-right corner of the element.
-        src_x, src_y = sel.touch_caret_location()
+        # Move first caret to the bottom-right corner of the element.
+        src_x, src_y = sel.first_caret_location()
         dest_x, dest_y = el.size['width'], el.size['height']
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
 
@@ -102,21 +102,21 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         content_to_add = '!'
         target_content = content_to_add + sel.content
 
-        # Get touch caret location at the front.
+        # Get first caret location at the front.
         el.tap()
-        sel.move_caret_to_front()
-        dest_x, dest_y = sel.touch_caret_location()
+        sel.move_cursor_to_front()
+        dest_x, dest_y = sel.first_caret_location()
 
-        # Tap to make touch caret appear. Note: it's strange that when the caret
+        # Tap to make first caret appear. Note: it's strange that when the caret
         # is at the end, the rect of the caret in <textarea> cannot be obtained.
         # A bug perhaps.
         el.tap()
-        sel.move_caret_to_end()
-        sel.move_caret_by_offset(1, backward=True)
-        el.tap(*sel.caret_location())
-        src_x, src_y = sel.touch_caret_location()
+        sel.move_cursor_to_end()
+        sel.move_cursor_by_offset(1, backward=True)
+        el.tap(*sel.cursor_location())
+        src_x, src_y = sel.first_caret_location()
 
-        # Move touch caret to the front of the input box.
+        # Move first caret to the front of the input box.
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
 
         self.actions.key_down(content_to_add).key_up(content_to_add).perform()
@@ -139,17 +139,17 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         # Set a 3x timeout margin to prevent intermittent test failures.
         timeout *= 3
 
-        # Tap to make touch caret appear. Note: it's strange that when the caret
+        # Tap to make first caret appear. Note: it's strange that when the caret
         # is at the end, the rect of the caret in <textarea> cannot be obtained.
         # A bug perhaps.
         el.tap()
-        sel.move_caret_to_end()
-        sel.move_caret_by_offset(1, backward=True)
-        el.tap(*sel.caret_location())
+        sel.move_cursor_to_end()
+        sel.move_cursor_by_offset(1, backward=True)
+        el.tap(*sel.cursor_location())
 
-        # Wait until touch caret disappears, then pretend to move it to the
+        # Wait until first caret disappears, then pretend to move it to the
         # top-left corner of the input box.
-        src_x, src_y = sel.touch_caret_location()
+        src_x, src_y = sel.first_caret_location()
         dest_x, dest_y = 0, 0
         self.actions.wait(timeout).flick(el, src_x, src_y, dest_x, dest_y).perform()
 
@@ -164,7 +164,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         target_content = sel.content + string.ascii_letters + content_to_add
 
         el.tap()
-        sel.move_caret_to_end()
+        sel.move_cursor_to_end()
 
         # Insert a long string to the end of the <input>, which triggers
         # ScrollPositionChanged event.
@@ -173,7 +173,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         # The caret should not be visible. If it does appear wrongly due to the
         # ScrollPositionChanged event, we can drag it to the front of the
         # <input> to change the cursor position.
-        src_x, src_y = sel.touch_caret_location()
+        src_x, src_y = sel.first_caret_location()
         dest_x, dest_y = 0, 0
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
 
@@ -192,9 +192,9 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         # Goal: the cursor position does not being changed after dragging the
         # caret down on the Y-axis.
         el.tap()
-        sel.move_caret_to_front()
-        el.tap(*sel.caret_location())
-        x, y = sel.touch_caret_location()
+        sel.move_cursor_to_front()
+        el.tap(*sel.cursor_location())
+        x, y = sel.first_caret_location()
 
         # Drag the caret down by 50px, and insert '!'.
         self.actions.flick(el, x, y, x, y + 50).perform()
