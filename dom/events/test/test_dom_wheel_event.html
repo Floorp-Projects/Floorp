@@ -698,20 +698,25 @@ function* testEventOrder()
 }
 
 var gOnWheelAttrHandled = new Array;
+var gOnWheelAttrCount = 0;
 
-function testOnWheelAttr()
+function* testOnWheelAttr()
 {
   function onWheelHandledString(attr) {
-    return `gOnWheelAttrHandled['${attr}'] = true`;
+    return `gOnWheelAttrHandled['${attr}'] = true;
+            ++gOnWheelAttrCount;
+            if (gOnWheelAttrCount == 3) {
+              setTimeout(continueTest, 0);
+            };`;
   }
 
   document.documentElement.setAttribute("onwheel", onWheelHandledString("html"));
   document.body.setAttribute("onwheel", onWheelHandledString("body"));
   gScrollableElement.setAttribute("onwheel", onWheelHandledString("div"));
   var target = document.getElementById("onwheel");
-  synthesizeWheel(gScrollableElement, 10, 10,
-                  { deltaMode: WheelEvent.DOM_DELTA_LINE,
-                    deltaX: 1.0, deltaY: 2.0 });
+  yield synthesizeWheel(gScrollableElement, 10, 10,
+                        { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                        deltaX: 1.0, deltaY: 2.0 });
   ok(gOnWheelAttrHandled['html'], "html element's onwheel attribute isn't performed");
   ok(gOnWheelAttrHandled['body'], "body element's onwheel attribute isn't performed");
   ok(gOnWheelAttrHandled['div'], "div element's onwheel attribute isn't performed");
@@ -744,7 +749,7 @@ function* testBody()
   yield* testDeltaMultiplierPrefs();
   testDispatchingUntrustEvent();
   yield* testEventOrder();
-  testOnWheelAttr();
+  yield* testOnWheelAttr();
   testOnWheelProperty();
 }
 
