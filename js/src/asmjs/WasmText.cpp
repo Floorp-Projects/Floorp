@@ -202,7 +202,7 @@ enum class WasmAstExprKind
     Const,
     ConversionOperator,
     GetLocal,
-    IfElse,
+    If,
     Load,
     Nop,
     Return,
@@ -374,29 +374,25 @@ class WasmAstReturn : public WasmAstExpr
     WasmAstExpr* maybeExpr() const { return maybeExpr_; }
 };
 
-class WasmAstIfElse : public WasmAstExpr
+class WasmAstIf : public WasmAstExpr
 {
-    Expr expr_;
     WasmAstExpr* cond_;
-    WasmAstExpr* ifBody_;
-    WasmAstExpr* elseBody_;
+    WasmAstExpr* thenBranch_;
+    WasmAstExpr* elseBranch_;
 
   public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::IfElse;
-    WasmAstIfElse(Expr expr, WasmAstExpr* cond, WasmAstExpr* ifBody,
-                  WasmAstExpr* elseBody = nullptr)
+    static const WasmAstExprKind Kind = WasmAstExprKind::If;
+    WasmAstIf(WasmAstExpr* cond, WasmAstExpr* thenBranch, WasmAstExpr* elseBranch)
       : WasmAstExpr(Kind),
-        expr_(expr),
         cond_(cond),
-        ifBody_(ifBody),
-        elseBody_(elseBody)
+        thenBranch_(thenBranch),
+        elseBranch_(elseBranch)
     {}
 
-    bool hasElse() const { return expr_ == Expr::IfElse; }
-    Expr expr() const { return expr_; }
     WasmAstExpr& cond() const { return *cond_; }
-    WasmAstExpr& ifBody() const { return *ifBody_; }
-    WasmAstExpr& elseBody() const { return *elseBody_; }
+    WasmAstExpr& thenBranch() const { return *thenBranch_; }
+    bool hasElse() const { return !!elseBranch_; }
+    WasmAstExpr& elseBranch() const { MOZ_ASSERT(hasElse()); return *elseBranch_; }
 };
 
 class WasmAstLoadStoreAddress
@@ -778,7 +774,6 @@ class WasmToken
         Func,
         GetLocal,
         If,
-        IfElse,
         Import,
         Index,
         UnsignedInteger,
@@ -1870,11 +1865,8 @@ WasmTokenStream::next()
             return WasmToken(WasmToken::Import, begin, cur_);
         if (consume(MOZ_UTF16("infinity")))
             return WasmToken(WasmToken::Infinity, begin, cur_);
-        if (consume(MOZ_UTF16("if"))) {
-            if (consume(MOZ_UTF16("_else")))
-                return WasmToken(WasmToken::IfElse, begin, cur_);
+        if (consume(MOZ_UTF16("if")))
             return WasmToken(WasmToken::If, begin, cur_);
-        }
         break;
 
       case 'l':
@@ -2480,25 +2472,27 @@ ParseConversionOperator(WasmParseContext& c, Expr expr)
     return new(c.lifo) WasmAstConversionOperator(expr, op);
 }
 
-static WasmAstIfElse*
-ParseIfElse(WasmParseContext& c, Expr expr)
+static WasmAstIf*
+ParseIf(WasmParseContext& c)
 {
     WasmAstExpr* cond = ParseExpr(c);
     if (!cond)
         return nullptr;
 
-    WasmAstExpr* ifBody = ParseExpr(c);
-    if (!ifBody)
+    WasmAstExpr* thenBranch = ParseExpr(c);
+    if (!thenBranch)
         return nullptr;
 
-    WasmAstExpr* elseBody = nullptr;
-    if (expr == Expr::IfElse) {
-        elseBody = ParseExpr(c);
-        if (!elseBody)
+    WasmAstExpr* elseBranch = nullptr;
+    if (c.ts.getIf(WasmToken::OpenParen)) {
+        elseBranch = ParseExprInsideParens(c);
+        if (!elseBranch)
+            return nullptr;
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
             return nullptr;
     }
 
-    return new(c.lifo) WasmAstIfElse(expr, cond, ifBody, elseBody);
+    return new(c.lifo) WasmAstIf(cond, thenBranch, elseBranch);
 }
 
 static bool
@@ -2678,9 +2672,7 @@ ParseExprInsideParens(WasmParseContext& c)
       case WasmToken::ConversionOpcode:
         return ParseConversionOperator(c, token.expr());
       case WasmToken::If:
-        return ParseIfElse(c, Expr::If);
-      case WasmToken::IfElse:
-        return ParseIfElse(c, Expr::IfElse);
+        return ParseIf(c);
       case WasmToken::GetLocal:
         return ParseGetLocal(c);
       case WasmToken::Load:
@@ -3310,11 +3302,11 @@ ResolveConversionOperator(Resolver& r, WasmAstConversionOperator& b)
 }
 
 static bool
-ResolveIfElse(Resolver& r, WasmAstIfElse& ie)
+ResolveIfElse(Resolver& r, WasmAstIf& i)
 {
-    return ResolveExpr(r, ie.cond()) &&
-           ResolveExpr(r, ie.ifBody()) &&
-           (!ie.hasElse() || ResolveExpr(r, ie.elseBody()));
+    return ResolveExpr(r, i.cond()) &&
+           ResolveExpr(r, i.thenBranch()) &&
+           (!i.hasElse() || ResolveExpr(r, i.elseBranch()));
 }
 
 static bool
@@ -3380,8 +3372,8 @@ ResolveExpr(Resolver& r, WasmAstExpr& expr)
         return ResolveConversionOperator(r, expr.as<WasmAstConversionOperator>());
       case WasmAstExprKind::GetLocal:
         return ResolveGetLocal(r, expr.as<WasmAstGetLocal>());
-      case WasmAstExprKind::IfElse:
-        return ResolveIfElse(r, expr.as<WasmAstIfElse>());
+      case WasmAstExprKind::If:
+        return ResolveIfElse(r, expr.as<WasmAstIf>());
       case WasmAstExprKind::Load:
         return ResolveLoad(r, expr.as<WasmAstLoad>());
       case WasmAstExprKind::Return:
@@ -3627,12 +3619,12 @@ EncodeConversionOperator(Encoder& e, WasmAstConversionOperator& b)
 }
 
 static bool
-EncodeIfElse(Encoder& e, WasmAstIfElse& ie)
+EmitIf(Encoder& e, WasmAstIf& i)
 {
-    return e.writeExpr(ie.expr()) &&
-           EncodeExpr(e, ie.cond()) &&
-           EncodeExpr(e, ie.ifBody()) &&
-           (!ie.hasElse() || EncodeExpr(e, ie.elseBody()));
+    return e.writeExpr(i.hasElse() ? Expr::IfElse : Expr::If) &&
+           EncodeExpr(e, i.cond()) &&
+           EncodeExpr(e, i.thenBranch()) &&
+           (!i.hasElse() || EncodeExpr(e, i.elseBranch()));
 }
 
 static bool
@@ -3709,8 +3701,8 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
         return EncodeConversionOperator(e, expr.as<WasmAstConversionOperator>());
       case WasmAstExprKind::GetLocal:
         return EncodeGetLocal(e, expr.as<WasmAstGetLocal>());
-      case WasmAstExprKind::IfElse:
-        return EncodeIfElse(e, expr.as<WasmAstIfElse>());
+      case WasmAstExprKind::If:
+        return EmitIf(e, expr.as<WasmAstIf>());
       case WasmAstExprKind::Load:
         return EncodeLoad(e, expr.as<WasmAstLoad>());
       case WasmAstExprKind::Return:
