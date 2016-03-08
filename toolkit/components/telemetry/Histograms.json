@@ -8151,6 +8151,14 @@
     "high": 5000,
     "n_buckets": 10
   },
+  "CERT_EV_STATUS": {
+    "expires_in_version": "never",
+    "alert_emails": ["seceng@mozilla.org"],
+    "bug_numbers": [1254653],
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "EV status of a certificate, recorded on each TLS connection. 0=invalid, 1=DV, 2=EV"
+  },
   "CERT_VALIDATION_SUCCESS_BY_CA": {
     "expires_in_version": "never",
     "kind": "enumerated",
