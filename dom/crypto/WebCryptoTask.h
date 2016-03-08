@@ -232,7 +232,7 @@ private:
 class GenerateAsymmetricKeyTask : public WebCryptoTask
 {
 public:
-  GenerateAsymmetricKeyTask(JSContext* aCx,
+  GenerateAsymmetricKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
                             const ObjectOrString& aAlgorithm, bool aExtractable,
                             const Sequence<nsString>& aKeyUsages);
 protected:
