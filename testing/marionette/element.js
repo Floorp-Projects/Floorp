@@ -773,7 +773,7 @@ element.coordinates = function(
 /**
  * This function returns true if the node is in the viewport.
  *
- * @param {Element} element
+ * @param {Element} el
  *     Target element.
  * @param {number=} x
  *     Horizontal offset relative to target.  Defaults to the centre of
@@ -781,6 +781,9 @@ element.coordinates = function(
  * @param {number=} y
  *     Vertical offset relative to target.  Defaults to the centre of
  *     the target's bounding box.
+ *
+ * @return {boolean}
+ *     True if if |el| is in viewport, false otherwise.
  */
 element.inViewport = function(el, x = undefined, y = undefined) {
   let win = el.ownerDocument.defaultView;
