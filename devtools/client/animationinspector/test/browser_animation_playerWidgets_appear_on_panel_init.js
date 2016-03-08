@@ -16,7 +16,7 @@ add_task(function*() {
     ]}, resolve);
   });
 
-  yield addTab(TEST_URL_ROOT + "doc_multiple_animation_types.html");
+  yield addTab(URL_ROOT + "doc_multiple_animation_types.html");
 
   let {panel} = yield openAnimationInspector();
   is(panel.animationsTimelineComponent.animations.length, 3,

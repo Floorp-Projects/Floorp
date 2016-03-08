@@ -8,7 +8,7 @@
 // sets the current time in the timeline.
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_keyframes.html");
+  yield addTab(URL_ROOT + "doc_keyframes.html");
   let {panel} = yield openAnimationInspector();
   let timeline = panel.animationsTimelineComponent;
   let {scrubberEl} = timeline;

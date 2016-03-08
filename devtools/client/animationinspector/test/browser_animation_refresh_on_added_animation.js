@@ -9,11 +9,11 @@ requestLongerTimeout(2);
 // Test that the panel content refreshes when new animations are added.
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel} = yield openAnimationInspector();
 
   info("Select a non animated node");
-  yield selectNode(".still", inspector);
+  yield selectNodeAndWaitForAnimations(".still", inspector);
 
   assertAnimationsDisplayed(panel, 0);
 

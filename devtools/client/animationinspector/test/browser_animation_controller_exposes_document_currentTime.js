@@ -8,7 +8,7 @@
 // the last known version since new animations were added).
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {panel, controller} = yield openAnimationInspector();
 
   ok(controller.documentCurrentTime, "The documentCurrentTime getter exists");

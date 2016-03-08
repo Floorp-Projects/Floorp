@@ -9,11 +9,11 @@ requestLongerTimeout(2);
 // Test that player widgets display information about target nodes
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel} = yield openAnimationInspector();
 
   info("Select the simple animated node");
-  yield selectNode(".animated", inspector);
+  yield selectNodeAndWaitForAnimations(".animated", inspector);
 
   let targetNodeComponent = panel.animationsTimelineComponent.targetNodes[0];
   let {previewer} = targetNodeComponent;
