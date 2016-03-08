@@ -18,6 +18,7 @@ TimingParams::TimingParams(const dom::AnimationEffectTimingProperties& aRhs,
                            const dom::Element* aTarget)
   : mDuration(aRhs.mDuration)
   , mDelay(TimeDuration::FromMilliseconds(aRhs.mDelay))
+  , mEndDelay(TimeDuration::FromMilliseconds(aRhs.mEndDelay))
   , mIterations(aRhs.mIterations)
   , mIterationStart(aRhs.mIterationStart)
   , mDirection(aRhs.mDirection)
