@@ -491,7 +491,7 @@ function testDispatchingUntrustEvent()
   window.removeEventListener("MozMousePixelScroll", legacyEventHandler, true);
 }
 
-function testEventOrder()
+function* testEventOrder()
 {
   const kWheelEvent                         = 0x0001;
   const kDOMMouseScrollEvent                = 0x0002;
@@ -642,6 +642,10 @@ function testEventOrder()
     if (event == currentTest.doPreventDefaultAt) {
       aEvent.preventDefault();
     }
+
+    if (currentTest.resultEvents.length == currentTest.expectedEvents.length) {
+      setTimeout(continueTest, 0);
+    }
   }
 
   function handler(aEvent)
@@ -664,8 +668,8 @@ function testEventOrder()
 
   for (var i = 0; i < kTests.length; i++) {
     currentTest = kTests[i];
-    synthesizeWheel(gScrollableElement, 10, 10,
-                    { deltaMode: WheelEvent.DOM_DELTA_LINE, deltaX: 1.0, deltaY: 1.0 });
+    yield synthesizeWheel(gScrollableElement, 10, 10,
+                          { deltaMode: WheelEvent.DOM_DELTA_LINE, deltaX: 1.0, deltaY: 1.0 });
 
     for (var j = 0; j < currentTest.expectedEvents.length; j++) {
       if (currentTest.resultEvents.length == j) {
@@ -735,7 +739,7 @@ function* testBody()
   testMakingUntrustedEvent();
   yield* testDeltaMultiplierPrefs();
   testDispatchingUntrustEvent();
-  testEventOrder();
+  yield* testEventOrder();
   testOnWheelAttr();
   testOnWheelProperty();
 }
