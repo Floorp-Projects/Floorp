@@ -565,6 +565,10 @@ public:
 
   virtual void WaitAcquireFenceHandleSyncComplete() {};
 
+  virtual bool NeedsFenceHandle() { return false; }
+
+  virtual FenceHandle GetCompositorReleaseFence() { return FenceHandle(); }
+
 protected:
   FenceHandle mReleaseFenceHandle;
 
