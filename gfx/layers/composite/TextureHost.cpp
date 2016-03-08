@@ -557,6 +557,7 @@ BufferTextureHost::PrepareTextureSource(CompositableTextureSourceRef& aTexture)
   if (!shouldCreateTexture) {
     mFirstSource = texture;
     mFirstSource->SetOwner(this);
+    mNeedsFullUpdate = true;
   }
 }
 
