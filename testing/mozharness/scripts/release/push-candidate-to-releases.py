@@ -77,7 +77,7 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
             self.fatal("aws creds found in env and self.config. please declare in one place only.")
 
         # set aws credentials
-        if aws_creds:
+        if all(aws_creds):
             self.aws_key_id, self.aws_secret_key = aws_creds
         else:  # use
             self.aws_key_id, self.aws_secret_key = None, None
