@@ -803,7 +803,7 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
   if (mStyle->mType == NS_STYLE_TEXT_OVERFLOW_ELLIPSIS) {
     gfxTextRun* textRun = GetEllipsisTextRun(aFrame);
     if (textRun) {
-      mISize = textRun->GetAdvanceWidth(0, textRun->GetLength(), nullptr);
+      mISize = textRun->GetAdvanceWidth();
     } else {
       mISize = 0;
     }
