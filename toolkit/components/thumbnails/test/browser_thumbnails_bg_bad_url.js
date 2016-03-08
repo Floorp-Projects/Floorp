@@ -14,5 +14,10 @@ function* runTests() {
       next();
     },
   });
-  yield true;
+  yield new Promise(resolve => {
+    bgAddPageThumbObserver(url).catch(function(err) {
+      ok(true, "page-thumbnail error produced");
+      resolve();
+    });
+  });
 }
