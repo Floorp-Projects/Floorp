@@ -130,8 +130,7 @@ public:
   
   void SetCapitalization(uint32_t aStart, uint32_t aLength,
                          bool* aCapitalization);
-  virtual bool SetPotentialLineBreaks(uint32_t aStart, uint32_t aLength,
-                                      uint8_t* aBreakBefore);
+  virtual bool SetPotentialLineBreaks(Range aRange, uint8_t* aBreakBefore);
   /**
    * Called after SetCapitalization and SetPotentialLineBreaks
    * are done and before we request any data from the textrun. Also always
