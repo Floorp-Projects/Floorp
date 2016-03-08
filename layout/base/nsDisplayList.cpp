@@ -2470,6 +2470,9 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
     aList->AppendToTop(&bgItemList);
     return false;
   }
+
+  const DisplayItemScrollClip* scrollClip =
+    aBuilder->ClipState().GetCurrentInnermostScrollClip();
  
   bool needBlendContainer = false;
 
@@ -2491,20 +2494,29 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                               layer, willPaintBorder);
     }
 
+    nsDisplayList thisItemList;
     nsDisplayBackgroundImage* bgItem =
       new (aBuilder) nsDisplayBackgroundImage(aBuilder, aFrame, i, bg);
 
     if (bgItem->ShouldFixToViewport(aBuilder)) {
-      bgItemList.AppendNewToTop(
+      thisItemList.AppendNewToTop(
         nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, aFrame, bgItem, i));
     } else {
-      bgItemList.AppendNewToTop(bgItem);
+      thisItemList.AppendNewToTop(bgItem);
     }
+
+    if (bg->mImage.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
+      thisItemList.AppendNewToTop(
+        new (aBuilder) nsDisplayBlendMode(aBuilder, aFrame, &thisItemList,
+                                          bg->mImage.mLayers[i].mBlendMode,
+                                          scrollClip, i + 1));
+    }
+    bgItemList.AppendToTop(&thisItemList);
   }
 
   if (needBlendContainer) {
     bgItemList.AppendNewToTop(
-      new (aBuilder) nsDisplayBlendContainer(aBuilder, aFrame, &bgItemList));
+      new (aBuilder) nsDisplayBlendContainer(aBuilder, aFrame, &bgItemList, scrollClip));
   }
 
   aList->AppendToTop(&bgItemList);
@@ -2972,13 +2984,12 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   CheckForBorderItem(this, flags);
 
-  const nsStyleImageLayers::Layer &layer = mBackgroundStyle->mImage.mLayers[mLayer];
   image::DrawResult result =
     nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
                                     aBounds,
                                     nsRect(offset, mFrame->GetSize()),
                                     flags, aClipRect, mLayer,
-                                    nsCSSRendering::GetGFXBlendMode(layer.mBlendMode));
+                                    CompositionOp::OP_OVER);
 
   nsDisplayBackgroundGeometry::UpdateDrawResult(this, result);
 }
@@ -4322,9 +4333,11 @@ nsDisplayOpacity::WriteDebugInfo(std::stringstream& aStream)
 nsDisplayBlendMode::nsDisplayBlendMode(nsDisplayListBuilder* aBuilder,
                                              nsIFrame* aFrame, nsDisplayList* aList,
                                              uint8_t aBlendMode,
-                                             const DisplayItemScrollClip* aScrollClip)
+                                             const DisplayItemScrollClip* aScrollClip,
+                                             uint32_t aIndex)
   : nsDisplayWrapList(aBuilder, aFrame, aList, aScrollClip)
   , mBlendMode(aBlendMode)
+  , mIndex(aIndex)
 {
   MOZ_COUNT_CTOR(nsDisplayBlendMode);
 }
@@ -4386,16 +4399,18 @@ bool nsDisplayBlendMode::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 bool nsDisplayBlendMode::TryMerge(nsDisplayItem* aItem) {
   if (aItem->GetType() != TYPE_BLEND_MODE)
     return false;
+  nsDisplayBlendMode* item = static_cast<nsDisplayBlendMode*>(aItem);
   // items for the same content element should be merged into a single
   // compositing group
-  // aItem->GetUnderlyingFrame() returns non-null because it's nsDisplayOpacity
-  if (aItem->Frame()->GetContent() != mFrame->GetContent())
+  if (item->Frame()->GetContent() != mFrame->GetContent())
     return false;
-  if (aItem->GetClip() != GetClip())
+  if (item->mIndex != 0 || mIndex != 0)
+    return false; // don't merge background-blend-mode items
+  if (item->GetClip() != GetClip())
     return false;
-  if (aItem->ScrollClip() != ScrollClip())
+  if (item->ScrollClip() != ScrollClip())
     return false;
-  MergeFromTrackingMergedFrames(static_cast<nsDisplayBlendMode*>(aItem));
+  MergeFromTrackingMergedFrames(item);
   return true;
 }
 
