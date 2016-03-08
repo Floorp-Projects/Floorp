@@ -22,5 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1246756 - Update Skia to m49 branch.
+Bug 1238079 seems to have needed a clobber for Mac
 
