@@ -20,9 +20,13 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
     caret for short.
 
     '''
+    # Element IDs.
     _input_id = 'input'
     _textarea_id = 'textarea'
     _contenteditable_id = 'contenteditable'
+
+    # Test html files.
+    _cursor_html = 'test_carets_cursor.html'
 
     def setUp(self):
         # Code to execute before every test is running.
@@ -36,15 +40,14 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.marionette.set_prefs(self.prefs)
         self.actions = Actions(self.marionette)
 
-    def open_test_html(self):
-        test_html = self.marionette.absolute_url('test_carets_cursor.html')
-        self.marionette.navigate(test_html)
+    def open_test_html(self, test_html):
+        self.marionette.navigate(self.marionette.absolute_url(test_html))
 
     @parameterized(_input_id, el_id=_input_id)
     @parameterized(_textarea_id, el_id=_textarea_id)
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     def test_move_cursor_to_the_right_by_one_character(self, el_id):
-        self.open_test_html()
+        self.open_test_html(self._cursor_html)
         el = self.marionette.find_element(By.ID, el_id)
         sel = SelectionManager(el)
         content_to_add = '!'
@@ -73,7 +76,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
     @parameterized(_textarea_id, el_id=_textarea_id)
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     def test_move_cursor_to_end_by_dragging_caret_to_bottom_right_corner(self, el_id):
-        self.open_test_html()
+        self.open_test_html(self._cursor_html)
         el = self.marionette.find_element(By.ID, el_id)
         sel = SelectionManager(el)
         content_to_add = '!'
@@ -96,7 +99,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
     @parameterized(_textarea_id, el_id=_textarea_id)
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     def test_move_cursor_to_front_by_dragging_caret_to_front(self, el_id):
-        self.open_test_html()
+        self.open_test_html(self._cursor_html)
         el = self.marionette.find_element(By.ID, el_id)
         sel = SelectionManager(el)
         content_to_add = '!'
@@ -126,7 +129,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
     @parameterized(_textarea_id, el_id=_textarea_id)
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     def test_dragging_caret_to_top_left_corner_after_timeout(self, el_id):
-        self.open_test_html()
+        self.open_test_html(self._cursor_html)
         el = self.marionette.find_element(By.ID, el_id)
         sel = SelectionManager(el)
         content_to_add = '!'
@@ -157,7 +160,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.assertNotEqual(non_target_content, sel.content)
 
     def test_caret_not_appear_when_typing_in_scrollable_content(self):
-        self.open_test_html()
+        self.open_test_html(self._cursor_html)
         el = self.marionette.find_element(By.ID, self._input_id)
         sel = SelectionManager(el)
         content_to_add = '!'
@@ -183,7 +186,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.assertEqual(target_content, sel.content)
 
     def test_caret_not_jump_when_dragging_to_editable_content_boundary(self):
-        self.open_test_html()
+        self.open_test_html(self._cursor_html)
         el = self.marionette.find_element(By.ID, self._input_id)
         sel = SelectionManager(el)
         content_to_add = '!'

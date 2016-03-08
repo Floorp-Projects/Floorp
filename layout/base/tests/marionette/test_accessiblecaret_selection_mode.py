@@ -23,6 +23,7 @@ def skip_if_not_rotatable(target):
 
 class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     '''Test cases for AccessibleCaret under selection mode.'''
+    # Element IDs.
     _input_id = 'input'
     _textarea_id = 'textarea'
     _textarea2_id = 'textarea2'
@@ -32,6 +33,14 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     _content_id = 'content'
     _content2_id = 'content2'
     _non_selectable_id = 'non-selectable'
+
+    # Test html files.
+    _selection_html = 'test_carets_selection.html'
+    _multipleline_html = 'test_carets_multipleline.html'
+    _multiplerange_html = 'test_carets_multiplerange.html'
+    _longtext_html = 'test_carets_longtext.html'
+    _iframe_html = 'test_carets_iframe.html'
+    _display_none_html = 'test_carets_display_none.html'
 
     def setUp(self):
         # Code to execute before every test is running.
@@ -45,17 +54,8 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         self.marionette.set_prefs(self.prefs)
         self.actions = Actions(self.marionette)
 
-    def open_test_html(self):
-        test_html = self.marionette.absolute_url('test_carets_selection.html')
-        self.marionette.navigate(test_html)
-
-    def open_test_html2(self):
-        test_html2 = self.marionette.absolute_url('test_carets_multipleline.html')
-        self.marionette.navigate(test_html2)
-
-    def open_test_html_multirange(self):
-        test_html = self.marionette.absolute_url('test_carets_multiplerange.html')
-        self.marionette.navigate(test_html)
+    def open_test_html(self, test_html):
+        self.marionette.navigate(self.marionette.absolute_url(test_html))
 
     def word_offset(self, text, ordinal):
         'Get the character offset of the ordinal-th word in text.'
@@ -155,7 +155,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     @parameterized(_content_id, el_id=_content_id)
     def test_long_press_to_select_a_word(self, el_id):
-        self.open_test_html()
+        self.open_test_html(self._selection_html)
         el = self.marionette.find_element(By.ID, el_id)
         self._test_long_press_to_select_a_word(el)
 
@@ -178,7 +178,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     @parameterized(_content_id, el_id=_content_id)
     def test_drag_carets(self, el_id):
-        self.open_test_html()
+        self.open_test_html(self._selection_html)
         el = self.marionette.find_element(By.ID, el_id)
         sel = SelectionManager(el)
         original_content = sel.content
@@ -211,7 +211,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     @parameterized(_content_id, el_id=_content_id)
     def test_minimum_select_one_character(self, el_id):
-        self.open_test_html()
+        self.open_test_html(self._selection_html)
         el = self.marionette.find_element(By.ID, el_id)
         self._test_minimum_select_one_character(el)
 
@@ -219,7 +219,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     @parameterized(_contenteditable2_id, el_id=_contenteditable2_id)
     @parameterized(_content2_id, el_id=_content2_id)
     def test_minimum_select_one_character2(self, el_id):
-        self.open_test_html2()
+        self.open_test_html(self._multipleline_html)
         el = self.marionette.find_element(By.ID, el_id)
         self._test_minimum_select_one_character(el)
 
@@ -293,7 +293,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         # We want to collect the location of the first word in el2 here
         # since self.word_location() has the side effect which would
         # change the focus.
-        self.open_test_html()
+        self.open_test_html(self._selection_html)
         el1 = self.marionette.find_element(By.ID, el1_id)
         el2 = self.marionette.find_element(By.ID, el2_id)
         x, y = self.word_location(el2, 0)
@@ -305,7 +305,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     @parameterized(_textarea_rtl_id, el_id=_textarea_rtl_id)
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     def test_focus_not_changed_by_long_press_on_non_selectable(self, el_id):
-        self.open_test_html()
+        self.open_test_html(self._selection_html)
         el = self.marionette.find_element(By.ID, el_id)
         non_selectable = self.marionette.find_element(By.ID, self._non_selectable_id)
 
@@ -330,7 +330,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         to be collapsed and the carets should be draggable.
 
         '''
-        self.open_test_html()
+        self.open_test_html(self._selection_html)
         el = self.marionette.find_element(By.ID, el_id)
         sel = SelectionManager(el)
         original_content = sel.content
@@ -377,7 +377,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         second caret should appear in last range's position.
 
         '''
-        self.open_test_html_multirange()
+        self.open_test_html(self._multiplerange_html)
         body = self.marionette.find_element(By.ID, 'bd')
         sel3 = self.marionette.find_element(By.ID, 'sel3')
         sel4 = self.marionette.find_element(By.ID, 'sel4')
@@ -415,7 +415,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         '''Bug 1094056
         Test caret visibility when caret is dragged to beginning of a line
         '''
-        self.open_test_html_multirange()
+        self.open_test_html(self._multiplerange_html)
         body = self.marionette.find_element(By.ID, 'bd')
         sel1 = self.marionette.find_element(By.ID, 'sel1')
         sel2 = self.marionette.find_element(By.ID, 'sel2')
@@ -442,9 +442,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         '''Bug 1094072
         If positions of carets are updated correctly, they should be draggable.
         '''
-        test_html = self.marionette.absolute_url('test_carets_longtext.html')
-        self.marionette.navigate(test_html)
-
+        self.open_test_html(self._longtext_html)
         body = self.marionette.find_element(By.ID, 'bd')
         longtext = self.marionette.find_element(By.ID, 'longtext')
 
@@ -473,8 +471,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         huge offset. If we use the right coordinate system, selection should
         work. Otherwise, it would be hard to trigger select word.
         '''
-        test_html = self.marionette.absolute_url('test_carets_iframe.html')
-        self.marionette.navigate(test_html)
+        self.open_test_html(self._iframe_html)
         iframe = self.marionette.find_element(By.ID, 'frame')
 
         # switch to inner iframe and scroll to the bottom
@@ -495,8 +492,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         display: none.
 
         '''
-        test_html = self.marionette.absolute_url('test_carets_display_none.html')
-        self.marionette.navigate(test_html)
+        self.open_test_html(self._display_none_html)
         html = self.marionette.find_element(By.ID, 'html')
         content = self.marionette.find_element(By.ID, 'content')
 
@@ -511,7 +507,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         self._test_long_press_to_select_a_word(content)
 
     def test_long_press_to_select_when_partial_visible_word_is_selected(self):
-        self.open_test_html()
+        self.open_test_html(self._selection_html)
         el = self.marionette.find_element(By.ID, self._input_id)
         sel = SelectionManager(el)
 
@@ -547,7 +543,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         self.assertEqual(words[0][0], sel.selected_content)
 
     def test_carets_do_not_jump_when_dragging_to_editable_content_boundary(self):
-        self.open_test_html()
+        self.open_test_html(self._selection_html)
         el = self.marionette.find_element(By.ID, self._input_id)
         sel = SelectionManager(el)
         original_content = sel.content
