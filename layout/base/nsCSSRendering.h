@@ -320,7 +320,6 @@ struct nsBackgroundLayerState {
   nsBackgroundLayerState(nsIFrame* aForFrame, const nsStyleImage* aImage,
                          uint32_t aFlags)
     : mImageRenderer(aForFrame, aImage, aFlags)
-    , mCompositionOp(CompositionOp::OP_OVER)
   {}
 
   /**
@@ -345,10 +344,6 @@ struct nsBackgroundLayerState {
    * PrepareImageLayer.
    */
   nsPoint mAnchor;
-  /**
-   * The composition operation that the image should use.
-   */
-  CompositionOp mCompositionOp;
 };
 
 struct nsCSSRendering {
@@ -550,7 +545,7 @@ struct nsCSSRendering {
                     const nsRect& aBorderArea,
                     const nsRect& aBGClipRect,
                     const nsStyleImageLayers::Layer& aLayer,
-                    bool aMask = false);
+                    CompositionOp aCompositionOp = CompositionOp::OP_OVER);
 
   struct ImageLayerClipState {
     nsRect mBGClipArea;  // Affected by mClippedRadii
@@ -607,7 +602,8 @@ struct nsCSSRendering {
                                     const nsRect& aBorderArea,
                                     uint32_t aFlags,
                                     nsRect* aBGClipRect = nullptr,
-                                    int32_t aLayer = -1);
+                                    int32_t aLayer = -1,
+                                    CompositionOp aCompositionOp = CompositionOp::OP_OVER);
 
 
   /**
@@ -618,6 +614,9 @@ struct nsCSSRendering {
    * The default value for aLayer, -1, means that all layers will be painted.
    * The background color will only be painted if the back-most layer is also
    * being painted.
+   * aCompositionOp is only respected if a single layer is specified (aLayer != -1).
+   * If all layers are painted, the image layer's blend mode (or the mask
+   * layer's composition mode) will be used.
    */
   static DrawResult PaintBackgroundWithSC(nsPresContext* aPresContext,
                                           nsRenderingContext& aRenderingContext,
@@ -628,7 +627,8 @@ struct nsCSSRendering {
                                           const nsStyleBorder& aBorder,
                                           uint32_t aFlags,
                                           nsRect* aBGClipRect = nullptr,
-                                          int32_t aLayer = -1);
+                                          int32_t aLayer = -1,
+                                          CompositionOp aCompositionOp = CompositionOp::OP_OVER);
 
   /**
    * Returns the rectangle covered by the given background layer image, taking
