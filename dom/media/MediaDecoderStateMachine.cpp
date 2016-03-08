@@ -48,6 +48,7 @@
 #include "TimeUnits.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
+#include "gfxPrefs.h"
 
 namespace mozilla {
 
@@ -2420,7 +2421,7 @@ MediaDecoderStateMachine::CheckFrameValidity(VideoData* aData)
   MOZ_ASSERT(OnTaskQueue());
 
   // Update corrupt-frames statistics
-  if (aData->mImage && !aData->mImage->IsValid()) {
+  if (aData->mImage && !aData->mImage->IsValid() && !gfxPrefs::HardwareVideoDecodingForceEnabled()) {
     FrameStatistics& frameStats = *mFrameStats;
     frameStats.NotifyCorruptFrame();
     // If more than 10% of the last 30 frames have been corrupted, then try disabling
