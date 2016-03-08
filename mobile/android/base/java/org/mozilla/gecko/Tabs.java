@@ -679,6 +679,9 @@ public class Tabs implements GeckoEventListener {
 
     private void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         switch (msg) {
+            // We want the tab record to have an accurate favicon, so queue
+            // the persisting of tabs when it changes.
+            case FAVICON:
             case LOCATION_CHANGE:
                 queuePersistAllTabs();
                 break;
