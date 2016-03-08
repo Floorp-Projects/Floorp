@@ -336,19 +336,19 @@ namespace {
   const uint32_t IN_MUTED_CYCLE = 1;
 } // namespace
 
-void
-MediaStreamGraphImpl::UpdateStreamOrder()
+bool
+MediaStreamGraphImpl::AudioTrackPresent(bool& aNeedsAEC)
 {
 #ifdef MOZ_WEBRTC
   bool shouldAEC = false;
 #endif
   bool audioTrackPresent = false;
-  for (uint32_t i = 0; i < mStreams.Length(); ++i) {
+  for (uint32_t i = 0; i < mStreams.Length() && audioTrackPresent == false; ++i) {
     MediaStream* stream = mStreams[i];
+    SourceMediaStream* source = stream->AsSourceStream();
 #ifdef MOZ_WEBRTC
-    if (stream->AsSourceStream() &&
-        stream->AsSourceStream()->NeedsMixing()) {
-      shouldAEC = true;
+    if (source && source->NeedsMixing()) {
+      aNeedsAEC = true;
     }
 #endif
     // If this is a AudioNodeStream, force a AudioCallbackDriver.
@@ -360,7 +360,28 @@ MediaStreamGraphImpl::UpdateStreamOrder()
         audioTrackPresent = true;
       }
     }
+    if (source) {
+      for (auto& data : source->mPendingTracks) {
+        if (data.mData->GetType() == MediaSegment::AUDIO) {
+          audioTrackPresent = true;
+          break;
+        }
+      }
+    }
   }
+
+#ifdef MOZ_WEBRTC
+  aNeedsAEC = shouldAEC;
+#endif
+  return audioTrackPresent;
+}
+
+void
+MediaStreamGraphImpl::UpdateStreamOrder()
+{
+  bool shouldAEC = false;
+  bool audioTrackPresent = AudioTrackPresent(shouldAEC);
+
   // Note that this looks for any audio streams, input or output, and switches to a
   // SystemClockDriver if there are none.  However, if another is already pending, let that
   // switch happen.
@@ -1026,20 +1047,8 @@ MediaStreamGraphImpl::CloseAudioInputImpl(AudioDataListener *aListener)
   mAudioInputs.RemoveElement(aListener);
 
   // Switch Drivers since we're adding or removing an input (to nothing/system or output only)
-  bool audioTrackPresent = false;
-  for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-    MediaStream* stream = mStreams[i];
-    // If this is a AudioNodeStream, force a AudioCallbackDriver.
-    if (stream->AsAudioNodeStream()) {
-      audioTrackPresent = true;
-    } else if (CurrentDriver()->AsAudioCallbackDriver()) {
-      // only if there's a real switch!
-      for (StreamBuffer::TrackIter tracks(stream->GetStreamBuffer(), MediaSegment::AUDIO);
-           !tracks.IsEnded(); tracks.Next()) {
-        audioTrackPresent = true;
-      }
-    }
-  }
+  bool shouldAEC = false;
+  bool audioTrackPresent = AudioTrackPresent(shouldAEC);
 
   MonitorAutoLock mon(mMonitor);
   if (mLifecycleState == LIFECYCLE_RUNNING) {
@@ -3273,17 +3282,9 @@ MediaStreamGraphImpl::ApplyAudioContextOperationImpl(
   // This is the same logic as in UpdateStreamOrder, but it's simpler to have it
   // here as well so we don't have to store the Promise(s) on the Graph.
   if (aOperation != AudioContextOperation::Resume) {
-    bool audioTrackPresent = false;
-    for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-      MediaStream* stream = mStreams[i];
-      if (stream->AsAudioNodeStream()) {
-        audioTrackPresent = true;
-      }
-      for (StreamBuffer::TrackIter tracks(stream->GetStreamBuffer(), MediaSegment::AUDIO);
-          !tracks.IsEnded(); tracks.Next()) {
-        audioTrackPresent = true;
-      }
-    }
+    bool shouldAEC = false;
+    bool audioTrackPresent = AudioTrackPresent(shouldAEC);
+
     if (!audioTrackPresent && CurrentDriver()->AsAudioCallbackDriver()) {
       CurrentDriver()->AsAudioCallbackDriver()->
         EnqueueStreamAndPromiseForOperation(aDestinationStream, aPromise,
