@@ -10,9 +10,10 @@ from firefox_ui_harness.arguments import UpdateArguments
 from firefox_ui_harness.runners import UpdateTestRunner
 
 
-def cli():
+def cli(args=None):
     mn_cli(runner_class=UpdateTestRunner,
            parser_class=UpdateArguments,
+           args=args,
            )
 
 
