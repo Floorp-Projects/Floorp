@@ -918,30 +918,8 @@ InplaceEditor.prototype = {
   _onKeyPress: function(event) {
     let prevent = false;
 
-    const largeIncrement = 100;
-    const mediumIncrement = 10;
-    const smallIncrement = 0.1;
-
-    let increment = 0;
-
-    if (event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_UP ||
-        event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_UP) {
-      increment = 1;
-    } else if (event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_DOWN ||
-               event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_DOWN) {
-      increment = -1;
-    }
-
-    if (event.shiftKey && !event.altKey) {
-      if (event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_UP ||
-          event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_DOWN) {
-        increment *= largeIncrement;
-      } else {
-        increment *= mediumIncrement;
-      }
-    } else if (event.altKey && !event.shiftKey) {
-      increment *= smallIncrement;
-    }
+    let isPlainText = this.contentType == CONTENT_TYPES.PLAIN_TEXT;
+    let increment = isPlainText ? 0 : this._getIncrement(event);
 
     // Use default cursor movement rather than providing auto-suggestions.
     if (event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_HOME ||
@@ -1070,6 +1048,38 @@ InplaceEditor.prototype = {
     if (prevent) {
       event.preventDefault();
     }
+  },
+
+  /**
+   * Get the increment/decrement step to use for the provided key event.
+   */
+  _getIncrement: function(event) {
+    const largeIncrement = 100;
+    const mediumIncrement = 10;
+    const smallIncrement = 0.1;
+
+    let increment = 0;
+
+    if (event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_UP ||
+        event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_UP) {
+      increment = 1;
+    } else if (event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_DOWN ||
+               event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_DOWN) {
+      increment = -1;
+    }
+
+    if (event.shiftKey && !event.altKey) {
+      if (event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_UP ||
+          event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_DOWN) {
+        increment *= largeIncrement;
+      } else {
+        increment *= mediumIncrement;
+      }
+    } else if (event.altKey && !event.shiftKey) {
+      increment *= smallIncrement;
+    }
+
+    return increment;
   },
 
   /**
