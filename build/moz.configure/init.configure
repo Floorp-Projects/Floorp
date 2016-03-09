@@ -99,7 +99,7 @@ def virtualenv_python(env_python, build_env, mozconfig):
     import sys
     import subprocess
     from mozbuild.virtualenv import (
-	VirtualenvManager,
+        VirtualenvManager,
         verify_python_version,
     )
 
