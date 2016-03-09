@@ -19,7 +19,6 @@ DevToolsModules(
     'reducers.js',
     'store.js',
     'types.js',
-    'ua.css',
 )
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
