@@ -947,7 +947,6 @@ class GCRuntime
     IncrementalProgress sweepPhase(SliceBudget& sliceBudget);
     void endSweepPhase(bool lastGC);
     void sweepZones(FreeOp* fop, bool lastGC);
-    void endFinalizePhase(bool destroyingRuntime);
     void decommitAllWithoutUnlocking(const AutoLockGC& lock);
     void decommitArenas(AutoLockGC& lock);
     void expireChunksAndArenas(bool shouldShrink, AutoLockGC& lock);
