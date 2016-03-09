@@ -37,5 +37,6 @@ if CONFIG['MOZ_XUL']:
 FINAL_LIBRARY = 'xul'
 # For nsJSUtils
 LOCAL_INCLUDES += [
+    '/docshell/base',
     '/dom/base',
 ]

@@ -920,8 +920,10 @@ struct JSRuntime : public JS::shadow::Runtime,
      * main thread with an ExclusiveContext which could access such data.
      */
     PRLock* exclusiveAccessLock;
-    mozilla::DebugOnly<PRThread*> exclusiveAccessOwner;
-    mozilla::DebugOnly<bool> mainThreadHasExclusiveAccess;
+#ifdef DEBUG
+    PRThread* exclusiveAccessOwner;
+    bool mainThreadHasExclusiveAccess;
+#endif
 
     /* Number of non-main threads with an ExclusiveContext. */
     size_t numExclusiveThreads;
@@ -1172,8 +1174,10 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Had an out-of-memory error which did not populate an exception. */
     bool                hadOutOfMemory;
 
+#ifdef DEBUG
     /* We are currently deleting an object due to an initialization failure. */
-    mozilla::DebugOnly<bool> handlingInitFailure;
+    bool handlingInitFailure;
+#endif
 
     /* A context has been created on this runtime. */
     bool                haveCreatedContext;
@@ -1666,7 +1670,10 @@ class MOZ_RAII AutoLockGC
   public:
     explicit AutoLockGC(JSRuntime* rt
                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : runtime_(rt), wasUnlocked_(false)
+      : runtime_(rt)
+#ifdef DEBUG
+      , wasUnlocked_(false)
+#endif
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         lock();
@@ -1682,7 +1689,9 @@ class MOZ_RAII AutoLockGC
 
     void unlock() {
         runtime_->unlockGC();
+#ifdef DEBUG
         wasUnlocked_ = true;
+#endif
     }
 
 #ifdef DEBUG
@@ -1693,7 +1702,9 @@ class MOZ_RAII AutoLockGC
 
   private:
     JSRuntime* runtime_;
-    mozilla::DebugOnly<bool> wasUnlocked_;
+#ifdef DEBUG
+    bool wasUnlocked_;
+#endif
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     AutoLockGC(const AutoLockGC&) = delete;

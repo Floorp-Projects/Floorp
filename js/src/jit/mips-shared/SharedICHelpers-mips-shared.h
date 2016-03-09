@@ -199,7 +199,7 @@ EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch)
     masm.movePtr(BaselineStackReg, BaselineFrameReg);
 
     // Stack should remain aligned.
-    masm.checkStackAlignment();
+    masm.assertStackAlignment(sizeof(Value), 0);
 }
 
 inline void

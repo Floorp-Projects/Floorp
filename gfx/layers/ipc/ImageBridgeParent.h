@@ -56,8 +56,7 @@ public:
   Create(Transport* aTransport, ProcessId aChildProcessId);
 
   // CompositableParentManager
-  virtual void SendFenceHandleIfPresent(PTextureParent* aTexture,
-                                        CompositableHost* aCompositableHost) override;
+  virtual void SendFenceHandleIfPresent(PTextureParent* aTexture) override;
 
   virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
 
@@ -121,14 +120,12 @@ public:
 
   void AppendDeliverFenceMessage(uint64_t aDestHolderId,
                                  uint64_t aTransactionId,
-                                 PTextureParent* aTexture,
-                                 CompositableHost* aCompositableHost);
+                                 PTextureParent* aTexture);
 
   static void AppendDeliverFenceMessage(base::ProcessId aChildProcessId,
                                         uint64_t aDestHolderId,
                                         uint64_t aTransactionId,
-                                        PTextureParent* aTexture,
-                                        CompositableHost* aCompositableHost);
+                                        PTextureParent* aTexture);
 
   using CompositableParentManager::SendPendingAsyncMessages;
   static void SendPendingAsyncMessages(base::ProcessId aChildProcessId);

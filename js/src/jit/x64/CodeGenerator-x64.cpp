@@ -378,7 +378,7 @@ CodeGeneratorX64::visitMulI64(LMulI64* lir)
             if (constant > 0) {
                 // Use shift if constant is power of 2.
                 int32_t shift = mozilla::FloorLog2(constant);
-                if (int64_t(1 << shift) == constant) {
+                if (int64_t(1) << shift == constant) {
                     masm.shlq(Imm32(shift), lhs);
                     return;
                 }

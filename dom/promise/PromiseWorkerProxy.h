@@ -227,8 +227,10 @@ private:
   // Ensure the worker and the main thread won't race to access |mCleanedUp|.
   Mutex mCleanUpLock;
 
+#ifdef DEBUG
   // Maybe get rid of this entirely and rely on mCleanedUp
-  DebugOnly<bool> mFeatureAdded;
+  bool mFeatureAdded;
+#endif
 };
 } // namespace dom
 } // namespace mozilla

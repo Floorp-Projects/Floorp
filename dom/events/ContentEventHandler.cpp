@@ -658,10 +658,9 @@ ContentEventHandler::AppendFontRanges(FontRangeArray& aFontRanges,
       }
     }
 
-    uint32_t skipStart = iter.ConvertOriginalToSkipped(frameXPStart);
-    uint32_t skipEnd = iter.ConvertOriginalToSkipped(frameXPEnd);
-    gfxTextRun::GlyphRunIterator runIter(
-      textRun, skipStart, skipEnd - skipStart);
+    gfxTextRun::Range skipRange(iter.ConvertOriginalToSkipped(frameXPStart),
+                                iter.ConvertOriginalToSkipped(frameXPEnd));
+    gfxTextRun::GlyphRunIterator runIter(textRun, skipRange);
     int32_t lastXPEndOffset = frameXPStart;
     while (runIter.NextRun()) {
       gfxFont* font = runIter.GetGlyphRun()->mFont.get();

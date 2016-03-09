@@ -1,0 +1,52 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include('build/moz.configure/init.configure')
+
+
+option('--enable-artifact-builds', env='MOZ_ARTIFACT_BUILDS',
+       help='Download and use prebuilt binary artifacts.')
+
+@depends('--enable-artifact-builds')
+def artifact_builds(value):
+    if value:
+        imply_option('--disable-compile-environment')
+        set_config('MOZ_ARTIFACT_BUILDS', '1')
+    return bool(value)
+
+
+option('--disable-compile-environment',
+       help='Disable compiler/library checks')
+
+@depends('--disable-compile-environment')
+def compile_environment(value):
+    if value:
+        set_config('COMPILE_ENVIRONMENT', '1')
+    return bool(value)
+
+
+@depends('--help')
+@advanced
+def build_backends_choices(help):
+    from mozbuild.backend import backends
+    return tuple(backends)
+
+
+option('--enable-build-backend', nargs='+', choices=build_backends_choices,
+       help='Enable additional build backends')
+
+@depends('--enable-build-backend', '--enable-artifact-builds')
+def build_backend(backends, artifact_builds):
+    if artifact_builds:
+        all_backends = ['FasterMake+RecursiveMake']
+    else:
+        all_backends = ['RecursiveMake', 'FasterMake']
+    all_backends.extend(backends)
+    set_config('BUILD_BACKENDS', unique_list(all_backends))
+
+
+# Fallthrough to autoconf-based configure
+include('build/moz.configure/old.configure')

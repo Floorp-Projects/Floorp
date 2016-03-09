@@ -76,54 +76,9 @@ dnl ==============================================================
 _topsrcdir=`cd $srcdir; pwd -W 2>/dev/null || pwd -P`
 _objdir=`pwd -P`
 
-if test "$_topsrcdir" = "$_objdir"
-then
-  echo "  ***"
-  echo "  * Building directly in the main source directory is not allowed."
-  echo "  *"
-  echo "  * To build, you must run configure from a separate directory"
-  echo "  * (referred to as an object directory)."
-  echo "  ***"
-  exit 1
-fi
-
-# Check for a couple representative files in the source tree
-_conflict_files=
-for file in $_topsrcdir/Makefile $_topsrcdir/config/autoconf.mk; do
-  if test -f $file; then
-    _conflict_files="$_conflict_files $file"
-  fi
-done
-if test "$_conflict_files"; then
-  echo "***"
-  echo "*   Your source tree contains these files:"
-  for file in $_conflict_files; do
-    echo "*         $file"
-  done
-  cat 1>&2 <<-EOF
-	*   This indicates that you previously built in the source tree.
-	*   A source tree build can confuse the separate objdir build.
-	*
-	*   To clean up the source tree:
-	*     1. cd $_topsrcdir
-	*     2. gmake distclean
-	***
-	EOF
-  exit 1
-  break
-fi
 MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd -P`
 
-MOZ_BUILD_BACKEND(../..)
-
 MOZ_DEFAULT_COMPILER
-
-COMPILE_ENVIRONMENT=1
-MOZ_ARG_DISABLE_BOOL(compile-environment,
-[  --disable-compile-environment
-                          Disable compiler/library checks.],
-    COMPILE_ENVIRONMENT= )
-AC_SUBST(COMPILE_ENVIRONMENT)
 
 dnl Check for Perl first -- needed for win32 SDK checks
 MOZ_PATH_PROGS(PERL, $PERL perl5 perl )
@@ -168,6 +123,7 @@ else
 fi
 AC_SUBST(JS_STANDALONE)
 BUILDING_JS=1
+AC_SUBST(BUILDING_JS)
 AC_SUBST(autoconfmk)
 
 MOZ_ARG_WITH_STRING(gonk,
@@ -561,8 +517,6 @@ if test "$_perl_res" != 0; then
 else
     AC_MSG_RESULT([yes])
 fi
-
-MOZ_PYTHON
 
 if test -z "$COMPILE_ENVIRONMENT"; then
     NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
@@ -2804,36 +2758,6 @@ AC_SUBST(MOZ_GLUE_IN_PROGRAM)
 AC_SUBST_LIST(MOZ_GLUE_WRAP_LDFLAGS)
 
 dnl ========================================================
-dnl = Use malloc wrapper lib
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(wrap-malloc,
-[  --enable-wrap-malloc    Wrap malloc calls (gnu linker only)],
-    _WRAP_MALLOC=1,
-    _WRAP_MALLOC= )
-
-if test -n "$_WRAP_MALLOC"; then
-    if test "$GNU_CC"; then
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=malloc,--wrap=calloc,--wrap=valloc,--wrap=free,--wrap=realloc,--wrap=memalign"
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=__builtin_new,--wrap=__builtin_vec_new,--wrap=__builtin_delete,--wrap=__builtin_vec_delete"
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=strdup,--wrap=strndup"
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=posix_memalign,--wrap=malloc_usable_size"
-        dnl Wrap operator new and operator delete on Android.
-        if test "$OS_TARGET" = "Android"; then
-            WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=_Znwj,--wrap=_Znaj,--wrap=_ZdlPv,--wrap=_ZdaPv"
-        fi
-    else
-        AC_MSG_ERROR([--enable-wrap-malloc is not supported for non-GNU toolchains])
-    fi
-fi
-
-dnl ========================================================
-dnl = Location of malloc wrapper lib
-dnl ========================================================
-MOZ_ARG_WITH_STRING(wrap-malloc,
-[  --with-wrap-malloc=DIR  Location of malloc wrapper library],
-    WRAP_LDFLAGS="${WRAP_LDFLAGS} $withval")
-
-dnl ========================================================
 dnl = Use a smaller chunk size for GC chunks
 dnl ========================================================
 dnl Use large (1MB) chunks by default.  For B2G this option is used to give
@@ -3464,8 +3388,6 @@ AC_SUBST(MOZ_FIX_LINK_PATHS)
 
 AC_SUBST(USE_DEPENDENT_LIBS)
 
-AC_SUBST(MOZ_BUILD_ROOT)
-
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 
 AC_SUBST(MOZ_APP_NAME)
@@ -3667,5 +3589,7 @@ dnl ========================================================
 MOZ_CREATE_CONFIG_STATUS()
 
 if test "$JS_STANDALONE"; then
-  MOZ_RUN_CONFIG_STATUS()
+  MOZ_RUN_ALL_SUBCONFIGURES()
 fi
+
+rm -fr confdefs* $ac_clean_files

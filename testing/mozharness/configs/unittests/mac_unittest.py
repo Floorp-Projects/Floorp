@@ -25,7 +25,6 @@ config = {
     "exe_suffix": EXE_SUFFIX,
     "run_file_names": {
         "mochitest": "runtests.py",
-        "webapprt": "runtests.py",
         "reftest": "runreftest.py",
         "xpcshell": "runxpcshelltests.py",
         "cppunittest": "runcppunittests.py",
@@ -45,7 +44,6 @@ config = {
     ],
     "specific_tests_zip_dirs": {
         "mochitest": ["mochitest/*"],
-        "webapprt": ["mochitest/*"],
         "reftest": ["reftest/*", "jsreftest/*"],
         "xpcshell": ["xpcshell/*"],
         "cppunittest": ["cppunittest/*"],
@@ -117,21 +115,6 @@ config = {
             "run_filename": "runreftest.py",
             "testsdir": "reftest"
         },
-        "webapprt": {
-            "options": [
-                "--app=%(app_path)s",
-                "--xre-path=%(abs_res_dir)s",
-                "--utility-path=tests/bin",
-                "--extra-profile-file=tests/bin/plugins",
-                "--symbols-path=%(symbols_path)s",
-                "--certificate-path=tests/certs",
-                "--console-level=INFO",
-                "--testing-modules-dir=tests/modules",
-                "--quiet"
-            ],
-            "run_filename": "runtests.py",
-            "testsdir": "mochitest"
-        },
         "xpcshell": {
             "options": [
                 "--symbols-path=%(symbols_path)s",
@@ -171,11 +154,6 @@ config = {
         "jetpack-package": ["--jetpack-package"],
         "jetpack-addon": ["--jetpack-addon"],
         "a11y": ["--a11y"],
-    },
-    # local webapprt suites
-    "all_webapprt_suites": {
-        "chrome": ["--webapprt-chrome", "--browser-arg=-test-mode"],
-        "content": ["--webapprt-content"]
     },
     # local reftest suites
     "all_reftest_suites": {

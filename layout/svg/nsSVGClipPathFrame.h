@@ -184,7 +184,9 @@ private:
 
   private:
     nsSVGClipPathFrame* mFrame;
-    DebugOnly<bool> mMarkAsInUseCalled;
+#ifdef DEBUG
+    bool mMarkAsInUseCalled;
+#endif
   };
 
   // Set, during a GetClipMask() call, to the transform that still needs to be

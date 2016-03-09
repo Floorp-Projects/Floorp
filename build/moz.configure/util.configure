@@ -1,0 +1,78 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+@template
+@advanced
+def warn(*args):
+    import sys
+    print(*args, file=sys.stderr)
+    sys.stderr.flush()
+
+
+@template
+@advanced
+def error(*args):
+    import sys
+    print(*args, file=sys.stderr)
+    sys.stderr.flush()
+    sys.exit(1)
+
+
+@template
+@advanced
+def is_absolute_or_relative(path):
+    import os
+    if os.altsep and os.altsep in path:
+        return True
+    return os.sep in path
+
+
+@template
+@advanced
+def normsep(path):
+    import mozpack.path as mozpath
+    return mozpath.normsep(path)
+
+
+@template
+@advanced
+def find_program(file):
+    if is_absolute_or_relative(file):
+        return os.path.abspath(file) if os.path.isfile(file) else None
+    from which import which, WhichError
+    try:
+        return normsep(which(file))
+    except WhichError:
+        return None
+
+
+@depends('--help')
+def _defines(help):
+    ret = {}
+    set_config('DEFINES', ret)
+    return ret
+
+
+@template
+def set_define(name, value):
+    @depends(_defines)
+    @advanced
+    def _add_define(defines):
+        from mozbuild.configure import ConfigureError
+        if name in defines:
+            raise ConfigureError("'%s' is already defined" % name)
+        defines[name] = value
+
+del _defines
+
+
+@template
+def unique_list(l):
+    result = []
+    for i in l:
+        if l not in result:
+            result.append(i)
+    return result
