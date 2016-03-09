@@ -656,7 +656,7 @@ nsTransitionManager::ConsiderStartingTransition(
   }
 
   TimingParams timing;
-  timing.mDuration.SetAsUnrestrictedDouble() = duration;
+  timing.mDuration.emplace(StickyTimeDuration::FromMilliseconds(duration));
   timing.mDelay = TimeDuration::FromMilliseconds(delay);
   timing.mIterations = 1.0;
   timing.mDirection = dom::PlaybackDirection::Normal;

@@ -41,24 +41,17 @@ AnimationEffectTiming::SetEndDelay(double aEndDelay)
 void
 AnimationEffectTiming::SetDuration(const UnrestrictedDoubleOrString& aDuration)
 {
-  if (mTiming.mDuration.IsUnrestrictedDouble() &&
-      aDuration.IsUnrestrictedDouble() &&
-      mTiming.mDuration.GetAsUnrestrictedDouble() ==
-        aDuration.GetAsUnrestrictedDouble()) {
-    return;
-  }
-
-  if (mTiming.mDuration.IsString() && aDuration.IsString() &&
-      mTiming.mDuration.GetAsString() == aDuration.GetAsString()) {
-    return;
-  }
-
+  Maybe<StickyTimeDuration> newDuration;
   if (aDuration.IsUnrestrictedDouble()) {
-    mTiming.mDuration.SetAsUnrestrictedDouble() =
-      aDuration.GetAsUnrestrictedDouble();
-  } else {
-    mTiming.mDuration.SetAsString() = aDuration.GetAsString();
+    newDuration.emplace(StickyTimeDuration::FromMilliseconds(
+                          aDuration.GetAsUnrestrictedDouble()));
   }
+
+  if (mTiming.mDuration == newDuration) {
+    return;
+  }
+
+  mTiming.mDuration = newDuration;
 
   NotifyTimingUpdate();
 }

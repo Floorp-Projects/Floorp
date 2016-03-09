@@ -44,9 +44,8 @@ struct TimingParams
     const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
     const Nullable<dom::ElementOrCSSPseudoElement>& aTarget);
 
-  // The unitialized state of mDuration represents "auto".
-  // Bug 1237173: We will replace this with Maybe<TimeDuration>.
-  dom::OwningUnrestrictedDoubleOrString mDuration;
+  // mDuration.isNothing() represents the "auto" value
+  Maybe<StickyTimeDuration> mDuration;
   TimeDuration mDelay;      // Initializes to zero
   TimeDuration mEndDelay;
   double mIterations = 1.0; // Can be NaN, negative, +/-Infinity

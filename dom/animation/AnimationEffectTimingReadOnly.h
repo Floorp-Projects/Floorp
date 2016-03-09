@@ -41,10 +41,7 @@ public:
   FillMode Fill() const { return mTiming.mFill; }
   double IterationStart() const { return mTiming.mIterationStart; }
   double Iterations() const { return mTiming.mIterations; }
-  void GetDuration(OwningUnrestrictedDoubleOrString& aRetVal) const
-  {
-    aRetVal = mTiming.mDuration;
-  }
+  void GetDuration(OwningUnrestrictedDoubleOrString& aRetVal) const;
   PlaybackDirection Direction() const { return mTiming.mDirection; }
   void GetEasing(nsString& aRetVal) const;
 
