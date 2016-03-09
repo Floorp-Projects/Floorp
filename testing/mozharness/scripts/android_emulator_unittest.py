@@ -32,13 +32,6 @@ from mozharness.mozilla.testing.unittest import EmulatorMixin
 
 class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin, BaseScript, MozbaseMixin):
     config_options = [[
-        ["--robocop-url"],
-        {"action": "store",
-         "dest": "robocop_url",
-         "default": None,
-         "help": "URL to the robocop apk",
-         }
-    ], [
         ["--host-utils-url"],
         {"action": "store",
          "dest": "xre_url",
@@ -110,7 +103,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         self.installer_path = c.get('installer_path')
         self.test_url = c.get('test_url')
         self.test_manifest = c.get('test_manifest')
-        self.robocop_url = c.get('robocop_url')
         self.robocop_path = os.path.join(abs_dirs['abs_work_dir'], "robocop.apk")
         self.host_utils_url = c.get('host_utils_url')
         self.minidump_stackwalk_path = c.get("minidump_stackwalk_path")
@@ -346,8 +338,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
     def _verify_emulator_and_restart_on_fail(self):
         emulator_ok = self._verify_emulator()
-        self._dump_host_state()
         if not emulator_ok:
+            self._dump_host_state()
             self._screenshot("emulator-startup-screenshot-")
             self._kill_processes(self.config["emulator_process_name"])
             self._dump_emulator_log()
@@ -642,13 +634,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         """
         assert self.installer_path is not None, \
             "Either add installer_path to the config or use --installer-path."
-
-        config = {
-            'device-id': self.emulator["device_id"],
-            'enable_automation': True,
-            'device_package_name': self._query_package_name()
-        }
-        config = dict(config.items() + self.config.items())
 
         self.sdk_level = self._run_with_timeout(30, [self.adb_path, '-s', self.emulator['device_id'],
             'shell', 'getprop', 'ro.build.version.sdk'])
