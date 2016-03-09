@@ -108,8 +108,9 @@ PocketAboutPage.prototype = {
            Ci.nsIAboutModule.MAKE_UNLINKABLE;
   },
 
-  newChannel: function(aURI) {
-    let channel = Services.io.newChannel(this.chromeURL, null, null);
+  newChannel: function(aURI, aLoadInfo) {
+    let channel = Services.io.newChannelFromURIWithLoadInfo(this.chromeURL,
+                                                            aLoadInfo);
     channel.originalURI = aURI;
     return channel;
   },
