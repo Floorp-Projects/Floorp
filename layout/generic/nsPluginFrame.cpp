@@ -1218,9 +1218,8 @@ nsPluginFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 #endif
 
   if (aBuilder->IsForPainting() && mInstanceOwner) {
-    // Update plugin frame for both content scaling and full zoom changes.
-    mInstanceOwner->ResolutionMayHaveChanged();
 #ifdef XP_MACOSX
+    mInstanceOwner->ResolutionMayHaveChanged();
     mInstanceOwner->WindowFocusMayHaveChanged();
 #endif
     if (mInstanceOwner->UseAsyncRendering()) {
