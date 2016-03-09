@@ -238,7 +238,9 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   // Always return the same object to benefit from return-value optimization.
   ComputedTiming result;
 
-  if (aTiming.mDuration && aTiming.mDuration.ref() > zeroDuration) {
+  if (aTiming.mDuration) {
+    MOZ_ASSERT(aTiming.mDuration.ref() >= zeroDuration,
+               "Iteration duration should be positive");
     result.mDuration = aTiming.mDuration.ref();
   }
 
