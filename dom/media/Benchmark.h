@@ -43,8 +43,7 @@ private:
   RefPtr<FlushableTaskQueue> mDecoderTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
 
-  RefPtr<TaskQueue> mTaskQueue;
-  // Object only accessed on mTaskQueue
+  // Object only accessed on Thread()
   RefPtr<MediaDataDemuxer> mDemuxer;
   RefPtr<MediaTrackDemuxer> mTrackDemuxer;
   nsTArray<RefPtr<MediaRawData>> mSamples;
