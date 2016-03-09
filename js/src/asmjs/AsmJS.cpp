@@ -6520,12 +6520,12 @@ CheckSwitch(FunctionValidator& f, ParseNode* switchStmt)
     // a case is not explicitly defined, it goes to the default.
     for (size_t i = 0; i < tableLength; i++) {
         uint32_t target = caseDepths[i] == CASE_NOT_DEFINED ? defaultDepth : caseDepths[i];
-        if (!f.encoder().writeVarU32(target))
+        if (!f.encoder().writeFixedU32(target))
             return false;
     }
 
     // Write the default depth.
-    if (!f.encoder().writeVarU32(defaultDepth))
+    if (!f.encoder().writeFixedU32(defaultDepth))
         return false;
 
     // Subtract lowest case value, so that all the cases start from 0.

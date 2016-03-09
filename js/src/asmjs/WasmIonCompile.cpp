@@ -1254,6 +1254,7 @@ class FunctionCompiler
     /************************************************************ DECODING ***/
 
     uint8_t        readU8()       { return decoder_.uncheckedReadFixedU8(); }
+    uint32_t       readU32()      { return decoder_.uncheckedReadFixedU32(); }
     uint32_t       readVarS32()   { return decoder_.uncheckedReadVarS32(); }
     uint32_t       readVarU32()   { return decoder_.uncheckedReadVarU32(); }
     uint64_t       readVarU64()   { return decoder_.uncheckedReadVarU64(); }
@@ -2557,9 +2558,9 @@ EmitBrTable(FunctionCompiler& f, MDefinition** def)
         return false;
 
     for (size_t i = 0; i < numCases; i++)
-        depths[i] = f.readVarU32();
+        depths[i] = f.readU32();
 
-    uint32_t defaultDepth = f.readVarU32();
+    uint32_t defaultDepth = f.readU32();
 
     MDefinition* index;
     if (!EmitExpr(f, &index))
