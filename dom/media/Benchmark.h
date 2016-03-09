@@ -7,56 +7,51 @@
 #ifndef MOZILLA_BENCHMARK_H
 #define MOZILLA_BENCHMARK_H
 
-#include "mozilla/RefPtr.h"
-#include "mozilla/TimeStamp.h"
+#include "MediaDataDemuxer.h"
 #include "QueueObject.h"
+#include "PlatformDecoderModule.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/TaskQueue.h"
+#include "mozilla/TimeStamp.h"
+#include "nsCOMPtr.h"
 
 namespace mozilla {
 
 class FlushableTaskQueue;
 class Benchmark;
-class BenchmarkPlayback;
 
-class BenchmarkDecoder : public QueueObject, private MediaDataDecoderCallback
+class BenchmarkPlayback : public QueueObject, private MediaDataDecoderCallback
 {
 public:
-  BenchmarkDecoder(Benchmark* aMainThreadState,
-                   RefPtr<FlushableTaskQueue> aTaskQueue);
-  void Init(TrackInfo&& aInfo, nsTArray<RefPtr<MediaRawData>>& aSamples);
-
+  explicit BenchmarkPlayback(Benchmark* aMainThreadState, MediaDataDemuxer* aDemuxer);
+  void DemuxSamples();
+  void DemuxNextSample();
   void MainThreadShutdown();
-  MediaRawData* PopNextSample();
+  void InitDecoder(TrackInfo&& aInfo);
 
+  // MediaDataDecoderCallback
+  // Those methods are called on the MediaDataDecoder's task queue.
   void Output(MediaData* aData) override;
   void Error() override;
   void InputExhausted() override;
   void DrainComplete() override;
   bool OnReaderTaskQueue() override;
 
-  RefPtr<FlushableTaskQueue> mTaskQueue;
-  Benchmark* mMainThreadState;
+private:
+  Atomic<Benchmark*> mMainThreadState;
+
+  RefPtr<FlushableTaskQueue> mDecoderTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
+
+  RefPtr<TaskQueue> mTaskQueue;
+  // Object only accessed on mTaskQueue
+  RefPtr<MediaDataDemuxer> mDemuxer;
+  RefPtr<MediaTrackDemuxer> mTrackDemuxer;
   nsTArray<RefPtr<MediaRawData>> mSamples;
   size_t mSampleIndex;
   TimeStamp mDecodeStartTime;
   uint32_t mFrameCount;
-  const uint32_t mFramesToMeasure;
-  const TimeDuration mTimeout;
-  static const uint32_t sStartupFrames;
   bool mFinished;
-};
-
-class BenchmarkPlayback : public QueueObject
-{
-public:
-  explicit BenchmarkPlayback(Benchmark* aMainThreadState);
-  void DemuxSamples();
-  void Drain(RefPtr<MediaDataDecoder> aDecoder);
-  void Shutdown();
-
-private:
-  Benchmark* mMainThreadState;
-  BenchmarkDecoder mDecoderState;
 };
 
 class Benchmark : public QueueObject
@@ -64,18 +59,48 @@ class Benchmark : public QueueObject
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Benchmark)
 
-  static bool IsVP9DecodeFast();
+  struct Parameters
+  {
+    Parameters()
+      : mFramesToMeasure(-1)
+      , mStartupFrame(1)
+      , mTimeout(TimeDuration::Forever()) {}
 
-  void SaveResult(uint32_t aDecodeFps);
-  void Drain(RefPtr<MediaDataDecoder> aDecoder);
+    Parameters(int32_t aFramesToMeasure,
+               uint32_t aStartupFrame,
+               int32_t aStopAtFrame,
+               const TimeDuration& aTimeout)
+      : mFramesToMeasure(aFramesToMeasure)
+      , mStartupFrame(aStartupFrame)
+      , mStopAtFrame(Some(aStopAtFrame))
+      , mTimeout(aTimeout) {}
+
+    const int32_t mFramesToMeasure;
+    const uint32_t mStartupFrame;
+    const Maybe<int32_t> mStopAtFrame;
+    const TimeDuration mTimeout;
+  };
+
+  typedef MozPromise<uint32_t, bool, /* IsExclusive = */ true> BenchmarkPromise;
+
+  Benchmark(MediaDataDemuxer* aDemuxer, const Parameters& aParameters = Parameters());
+  RefPtr<BenchmarkPromise> Run();
+  void ReturnResult(uint32_t aDecodeFps);
   void Dispose();
-  bool IsOnPlaybackThread();
+
+  const Parameters mParameters;
 
 private:
-  Benchmark();
-  virtual ~Benchmark() {}
+  virtual ~Benchmark();
   RefPtr<Benchmark> mKeepAliveUntilComplete;
   BenchmarkPlayback mPlaybackState;
+  MozPromiseHolder<BenchmarkPromise> mPromise;
+};
+
+class VP9Benchmark
+{
+public:
+  static bool IsVP9DecodeFast();
   static const char* sBenchmarkFpsPref;
   static bool sHasRunTest;
 };
