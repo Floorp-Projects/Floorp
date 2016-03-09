@@ -9084,9 +9084,8 @@ nsIFrame::CaretPosition::~CaretPosition()
 bool
 nsFrame::HasCSSAnimations()
 {
-  // XXX Don't worry, we will make this a lot nicer in the next patch
-  AnimationCollection<mozilla::dom::CSSAnimation>* collection =
-    PresContext()->AnimationManager()->GetAnimationCollection(this);
+  auto collection =
+    AnimationCollection<CSSAnimation>::GetAnimationCollection(this);
   return collection && collection->mAnimations.Length() > 0;
 }
 
