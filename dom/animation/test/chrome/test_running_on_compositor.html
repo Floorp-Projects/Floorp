@@ -287,14 +287,14 @@ promise_test(function(t) {
 
 promise_test(function(t) {
   var div = addDiv(t);
-  var animation = div.animate({ opacity: [ 0, 1 ] }, 100000);
+  var animation = div.animate({ opacity: [ 0, 1 ] }, 100000); // 100s
 
   return animation.ready.then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor');
 
-    animation.currentTime = 50000;
-    animation.effect.timing.duration = 10000;
+    animation.currentTime = 50000; // 50s
+    animation.effect.timing.duration = 10000; // 10s
 
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
@@ -305,19 +305,19 @@ promise_test(function(t) {
 
 promise_test(function(t) {
   var div = addDiv(t);
-  var animation = div.animate({ opacity: [ 0, 1 ] }, 10000);
+  var animation = div.animate({ opacity: [ 0, 1 ] }, 100000); // 100s
 
   return animation.ready.then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor');
 
-    animation.currentTime = 50000;
+    animation.currentTime = 500000; // 500s
 
     assert_equals(animation.isRunningOnCompositor, false,
       'Animation reports that it is NOT running on the compositor'
       + ' when finished');
 
-    animation.effect.timing.duration = 100000;
+    animation.effect.timing.duration = 1000000; // 1000s
     return waitForFrame();
   })).then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
@@ -329,19 +329,19 @@ promise_test(function(t) {
 
 promise_test(function(t) {
   var div = addDiv(t);
-  var animation = div.animate({ opacity: [ 0, 1 ] }, 10000);
+  var animation = div.animate({ opacity: [ 0, 1 ] }, 100000); // 100s
 
   return animation.ready.then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor');
 
-    animation.effect.timing.endDelay = 10000;
+    animation.effect.timing.endDelay = 100000; // 100s
 
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor'
       + ' when endDelay is changed');
 
-    animation.currentTime = 11000;
+    animation.currentTime = 110000; // 110s
     return waitForFrame();
   })).then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, false,
@@ -353,13 +353,13 @@ promise_test(function(t) {
 
 promise_test(function(t) {
   var div = addDiv(t);
-  var animation = div.animate({ opacity: [ 0, 1 ] }, 10000);
+  var animation = div.animate({ opacity: [ 0, 1 ] }, 100000); // 100s
 
   return animation.ready.then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor');
 
-    animation.effect.timing.endDelay = -20000;
+    animation.effect.timing.endDelay = -200000; // -200s
     return waitForFrame();
   })).then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, false,
@@ -371,19 +371,19 @@ promise_test(function(t) {
 
 promise_test(function(t) {
   var div = addDiv(t);
-  var animation = div.animate({ opacity: [ 0, 1 ] }, 10000);
+  var animation = div.animate({ opacity: [ 0, 1 ] }, 100000); // 100s
 
   return animation.ready.then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor');
 
-    animation.effect.timing.endDelay = -5000;
+    animation.effect.timing.endDelay = -50000; // 50s
     return waitForFrame();
   })).then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, omtaEnabled,
       'Animation reports that it is running on the compositor'
       + ' when endTime is positive and endDelay is negative');
-    animation.currentTime = 6000;
+    animation.currentTime = 60000; // 60s
     return waitForFrame();
   })).then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, false,
@@ -391,7 +391,7 @@ promise_test(function(t) {
       + ' when currentTime is after endTime');
   }));
 }, 'animation is NOT running on compositor' +
-   'when endTime is positive and endDelay is negative');
+   ' when endTime is positive and endDelay is negative');
 
 </script>
 </script>
