@@ -499,7 +499,7 @@ private:
 #endif
 
 #ifdef MOZ_ANDROID_OMX
-  static bool IsAndroidMediaEnabled();
+  static bool IsAndroidMediaPluginEnabled();
 #endif
 
 #ifdef MOZ_WMF
