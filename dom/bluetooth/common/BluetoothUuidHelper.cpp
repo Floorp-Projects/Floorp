@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BluetoothUuid.h"
+#include "BluetoothUuidHelper.h"
 
 #include "BluetoothA2dpManager.h"
 #include "BluetoothAvrcpManager.h"
