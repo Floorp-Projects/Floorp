@@ -8,6 +8,8 @@
 #define MOZILLA_QUEUE_OBJECT_H
 
 #include "mozilla/RefPtr.h"
+#include "nsIRunnable.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 
