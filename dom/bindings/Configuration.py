@@ -810,6 +810,14 @@ class Descriptor(DescriptorProvider):
         return (self.interface.getExtendedAttribute("Global") or
                 self.interface.getExtendedAttribute("PrimaryGlobal"))
 
+    @property
+    def registersGlobalNamesOnWindow(self):
+        return (not self.interface.isExternal() and
+                self.interface.hasInterfaceObject() and
+                not self.workers and
+                self.interface.isExposedInWindow() and
+                self.register)
+
 
 # Some utility methods
 def getTypesFromDescriptor(descriptor):

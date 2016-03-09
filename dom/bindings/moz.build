@@ -39,6 +39,7 @@ EXPORTS.mozilla.dom += [
     'ToJSValue.h',
     'TypedArray.h',
     'UnionMember.h',
+    'WebIDLGlobalNameHash.h',
 ]
 
 # Generated bindings reference *Binding.h, not mozilla/dom/*Binding.h. And,
@@ -89,6 +90,7 @@ UNIFIED_SOURCES += [
     'IterableIterator.cpp',
     'SimpleGlobalObject.cpp',
     'ToJSValue.cpp',
+    'WebIDLGlobalNameHash.cpp',
 ]
 
 SOURCES += [
