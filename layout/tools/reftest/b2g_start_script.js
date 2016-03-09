@@ -2,14 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function setDefaultPrefs() {
-    // This code sets the preferences for extension-based reftest.
-    var prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefService);
-    var branch = prefs.getDefaultBranch("");
-
-#include reftest-preferences.js
-}
+const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
 
 function setPermissions() {
   if (__marionetteParams.length < 2) {
@@ -27,7 +20,7 @@ function setPermissions() {
 }
 
 var cm = Cc["@mozilla.org/categorymanager;1"]
-           .getService(Components.interfaces.nsICategoryManager);
+           .getService(Ci.nsICategoryManager);
 
 // Disable update timers that cause b2g failures.
 if (cm) {
@@ -40,8 +33,6 @@ var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
             .getService(Ci.nsIWindowMediator);
 var win = wm.getMostRecentWindow('');
 
-// Set preferences and permissions
-setDefaultPrefs();
 setPermissions();
 
 // Loading this into the global namespace causes intermittent failures.

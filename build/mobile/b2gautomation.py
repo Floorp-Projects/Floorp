@@ -38,13 +38,12 @@ class B2GRemoteAutomation(Automation):
     _devicemanager = None
 
     def __init__(self, deviceManager, appName='', remoteLog=None,
-                 marionette=None, context_chrome=True):
+                 marionette=None):
         self._devicemanager = deviceManager
         self._appName = appName
         self._remoteProfile = None
         self._remoteLog = remoteLog
         self.marionette = marionette
-        self.context_chrome = context_chrome
         self._is_emulator = False
         self.test_script = None
         self.test_script_args = None
@@ -356,36 +355,33 @@ class B2GRemoteAutomation(Automation):
         if 'b2g' not in session:
             raise Exception("bad session value %s returned by start_session" % session)
 
-        self.marionette.set_context(self.marionette.CONTEXT_CHROME)
-        self.marionette.execute_script("""
-            let SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
-            Components.utils.import("resource://gre/modules/Services.jsm");
-            Services.prefs.setBoolPref(SECURITY_PREF, true);
+        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
+            self.marionette.execute_script("""
+                let SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
+                Components.utils.import("resource://gre/modules/Services.jsm");
+                Services.prefs.setBoolPref(SECURITY_PREF, true);
 
-            if (!testUtils.hasOwnProperty("specialPowersObserver")) {
-              let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-                .getService(Components.interfaces.mozIJSSubScriptLoader);
-              loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.jsm",
-                testUtils);
-              testUtils.specialPowersObserver = new testUtils.SpecialPowersObserver();
-              testUtils.specialPowersObserver.init();
-            }
-            """)
+                if (!testUtils.hasOwnProperty("specialPowersObserver")) {
+                  let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+                    .getService(Components.interfaces.mozIJSSubScriptLoader);
+                  loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.jsm",
+                    testUtils);
+                  testUtils.specialPowersObserver = new testUtils.SpecialPowersObserver();
+                  testUtils.specialPowersObserver.init();
+                }
+                """)
 
-        if not self.context_chrome:
-            self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
-
-        # run the script that starts the tests
-        if self.test_script:
-            if os.path.isfile(self.test_script):
-                script = open(self.test_script, 'r')
-                self.marionette.execute_script(script.read(), script_args=self.test_script_args)
-                script.close()
-            elif isinstance(self.test_script, basestring):
-                self.marionette.execute_script(self.test_script, script_args=self.test_script_args)
-        else:
-            # assumes the tests are started on startup automatically
-            pass
+            # run the script that starts the tests
+            if self.test_script:
+                if os.path.isfile(self.test_script):
+                    script = open(self.test_script, 'r')
+                    self.marionette.execute_script(script.read(), script_args=self.test_script_args)
+                    script.close()
+                elif isinstance(self.test_script, basestring):
+                    self.marionette.execute_script(self.test_script, script_args=self.test_script_args)
+            else:
+                # assumes the tests are started on startup automatically
+                pass
 
         return instance
 
