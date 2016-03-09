@@ -26,6 +26,10 @@ var script = SpecialPowers.loadChromeScript(function loadChromeScriptTest() {
     assert.equal(1, 1, "another valid assertion");
     sendAsyncMessage("valid-assert-done");
   });
+
+  addMessageListener("sync-message", () => {
+    return "Received a synchronous message.";
+  });
 });
 
 var MESSAGE = { bar: true };
