@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.lang.IllegalAccessException;
 import java.lang.NoSuchFieldException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +23,7 @@ import java.util.regex.Pattern;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
@@ -54,6 +55,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.support.annotation.CheckResult;
 import android.text.TextUtils;
 import android.util.Log;
 import org.mozilla.gecko.util.IOUtils;
@@ -787,6 +789,7 @@ public class LocalBrowserDB implements BrowserDB {
     @RobocopTarget
     public Cursor getBookmarksInFolder(ContentResolver cr, long folderId) {
         final boolean addDesktopFolder;
+        final boolean addScreenshotsFolder;
 
         // We always want to show mobile bookmarks in the root view.
         if (folderId == Bookmarks.FIXED_ROOT_ID) {
@@ -795,8 +798,10 @@ public class LocalBrowserDB implements BrowserDB {
             // We'll add a fake "Desktop Bookmarks" folder to the root view if desktop
             // bookmarks exist, so that the user can still access non-mobile bookmarks.
             addDesktopFolder = desktopBookmarksExist(cr);
+            addScreenshotsFolder = AppConstants.SCREENSHOTS_IN_BOOKMARKS_ENABLED;
         } else {
             addDesktopFolder = false;
+            addScreenshotsFolder = false;
         }
 
         final Cursor c;
@@ -812,6 +817,8 @@ public class LocalBrowserDB implements BrowserDB {
                                         Bookmarks.MENU_FOLDER_GUID,
                                         Bookmarks.UNFILED_FOLDER_GUID },
                          null);
+        } else if (folderId == Bookmarks.FIXED_SCREENSHOT_FOLDER_ID) {
+            c = getUrlAnnotations().getScreenshots(cr);
         } else {
             // Right now, we only support showing folder and bookmark type of
             // entries. We should add support for other types though (bug 737024)
@@ -826,23 +833,48 @@ public class LocalBrowserDB implements BrowserDB {
                          null);
         }
 
-        if (addDesktopFolder) {
-            MatrixCursor desktopFolderCursor = new MatrixCursor(DEFAULT_BOOKMARK_COLUMNS);
+        final List<Cursor> cursorsToMerge = getSpecialFoldersCursorList(addDesktopFolder, addScreenshotsFolder);
+        if (cursorsToMerge.size() >= 1) {
+            cursorsToMerge.add(c);
+            final Cursor[] arr = (Cursor[]) Array.newInstance(Cursor.class, cursorsToMerge.size());
+            return new MergeCursor(cursorsToMerge.toArray(arr));
+        } else {
+            return c;
+        }
+    }
 
+    @CheckResult
+    private ArrayList<Cursor> getSpecialFoldersCursorList(final boolean addDesktopFolder, final boolean addScreenshotsFolder) {
+        if (addDesktopFolder || addScreenshotsFolder) {
+            // Avoid calling this twice.
             assertDefaultBookmarkColumnOrdering();
-
-            desktopFolderCursor.addRow(
-                    new Object[] { Bookmarks.FAKE_DESKTOP_FOLDER_ID,
-                                   Bookmarks.FAKE_DESKTOP_FOLDER_GUID,
-                                   "",
-                                   "", // Title localisation is done later, in the UI layer (BookmarksListAdapter)
-                                   Bookmarks.TYPE_FOLDER,
-                                   Bookmarks.FIXED_ROOT_ID
-                    });
-            return new MergeCursor(new Cursor[] { desktopFolderCursor, c });
         }
 
-        return c;
+        // Capacity is number of cursors added below plus one for non-special data.
+        final ArrayList<Cursor> out = new ArrayList<>(3);
+        if (addDesktopFolder) {
+            out.add(getSpecialFolderCursor(Bookmarks.FAKE_DESKTOP_FOLDER_ID, Bookmarks.FAKE_DESKTOP_FOLDER_GUID));
+        }
+
+        if (addScreenshotsFolder) {
+            out.add(getSpecialFolderCursor(Bookmarks.FIXED_SCREENSHOT_FOLDER_ID, Bookmarks.SCREENSHOT_FOLDER_GUID));
+        }
+
+        return out;
+    }
+
+    @CheckResult
+    private MatrixCursor getSpecialFolderCursor(final int folderId, final String folderGuid) {
+        final MatrixCursor out = new MatrixCursor(DEFAULT_BOOKMARK_COLUMNS);
+        out.addRow(new Object[] {
+                folderId,
+                folderGuid,
+                "",
+                "", // Title localisation is done later, in the UI layer (BookmarksListAdapter)
+                Bookmarks.TYPE_FOLDER,
+                Bookmarks.FIXED_ROOT_ID
+        });
+        return out;
     }
 
     // Returns true if any desktop bookmarks exist, which will be true if the user

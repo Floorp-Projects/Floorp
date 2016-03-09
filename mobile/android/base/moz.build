@@ -359,6 +359,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'health/SessionInformation.java',
     'health/StubbedHealthRecorder.java',
     'home/BookmarkFolderView.java',
+    'home/BookmarkScreenshotRow.java',
     'home/BookmarksListAdapter.java',
     'home/BookmarksListView.java',
     'home/BookmarksPanel.java',

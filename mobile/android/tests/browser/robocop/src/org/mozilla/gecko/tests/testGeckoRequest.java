@@ -10,9 +10,6 @@ import com.jayway.android.robotium.solo.Condition;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.tests.helpers.AssertionHelper;
-import org.mozilla.gecko.tests.helpers.GeckoHelper;
-import org.mozilla.gecko.tests.helpers.JavascriptBridge;
-import org.mozilla.gecko.tests.helpers.NavigationHelper;
 import org.mozilla.gecko.tests.helpers.WaitHelper;
 import org.mozilla.gecko.util.GeckoRequest;
 import org.mozilla.gecko.util.NativeJSObject;
@@ -20,51 +17,36 @@ import org.mozilla.gecko.util.NativeJSObject;
 /**
  * Tests sending and receiving Gecko requests using the GeckoRequest API.
  */
-public class testGeckoRequest extends UITest {
+public class testGeckoRequest extends JavascriptBridgeTest {
     private static final String TEST_JS = "testGeckoRequest.js";
     private static final String REQUEST_EVENT = "Robocop:GeckoRequest";
     private static final String REQUEST_EXCEPTION_EVENT = "Robocop:GeckoRequestException";
     private static final int MAX_WAIT_MS = 5000;
 
-    private JavascriptBridge js;
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        js = new JavascriptBridge(this);
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        js.disconnect();
-        super.tearDown();
-    }
-
     public void testGeckoRequest() {
-        GeckoHelper.blockForReady();
-        NavigationHelper.enterAndLoadUrl(mStringHelper.getHarnessUrlForJavascript(TEST_JS));
+        blockForReadyAndLoadJS(TEST_JS);
 
         // Register a listener for this request.
-        js.syncCall("add_request_listener", REQUEST_EVENT);
+        getJS().syncCall("add_request_listener", REQUEST_EVENT);
 
         // Make sure we receive the expected response.
         checkFooRequest();
 
         // Try registering a second listener for this request, which should fail.
-        js.syncCall("add_second_request_listener", REQUEST_EVENT);
+        getJS().syncCall("add_second_request_listener", REQUEST_EVENT);
 
         // Unregister the listener for this request.
-        js.syncCall("remove_request_listener", REQUEST_EVENT);
+        getJS().syncCall("remove_request_listener", REQUEST_EVENT);
 
         // Make sure we don't receive a response after removing the listener.
         checkUnregisteredRequest();
 
         // Check that we still receive a response for listeners that throw.
-        js.syncCall("add_exception_listener", REQUEST_EXCEPTION_EVENT);
+        getJS().syncCall("add_exception_listener", REQUEST_EXCEPTION_EVENT);
         checkExceptionRequest();
-        js.syncCall("remove_request_listener", REQUEST_EXCEPTION_EVENT);
+        getJS().syncCall("remove_request_listener", REQUEST_EXCEPTION_EVENT);
 
-        js.syncCall("finish_test");
+        getJS().syncCall("finish_test");
     }
 
     private void checkFooRequest() {
