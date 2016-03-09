@@ -31,74 +31,64 @@ setClipboardText(cb_text);
 
 is(getClipboardText(), cb_text, "set/get clipboard text failed");
 
-// Some test functions need to be run with delays.
-var delayedTests = [];
-
 var cachedCutData, cachedCopyData, cachedPasteData;
 
-// Ensure window focus before running tests, otherwise key events can
-// misfire.  We set the onfocus event handler here to actually begin
-// running tests, and call window.focus() afterwards.
-window.onfocus = function()
+// A list of test functions to run.  Before each test function is run, the
+// clipboard is initialized to clipboardInitialValue, and the contents of
+// div#content are set as the window's selection.
+var testFunctions = [
+  test_dom_oncopy,
+  test_dom_oncut,
+  test_dom_onpaste,
+  test_dom_oncopy_abort,
+  test_input_oncopy,
+  test_input_oncut,
+  test_input_onpaste,
+  test_input_oncopy_abort,
+  test_input_oncut_abort,
+  test_input_onpaste_abort,
+  test_input_cut_dataTransfer,
+  test_input_cut_abort_dataTransfer,
+  test_input_copy_dataTransfer,
+  test_input_paste_dataTransfer,
+  test_input_paste_abort_dataTransfer,
+  test_input_copypaste_dataTransfer_multiple,
+  test_input_copy_button_dataTransfer,
+  test_eventspref_disabled
+  ];
+
+function doTests()
 {
-  window.onfocus = null;
+  // Init clipboard
+  setClipboardText(clipboardInitialValue);
 
-  // A list of test functions to run.  Before each test function is run, the
-  // clipboard is initialized to clipboardInitialValue, and the contents of
-  // div#content are set as the window's selection.
-  var testFunctions = [
-    test_dom_oncopy,
-    test_dom_oncut,
-    test_dom_onpaste,
-    test_dom_oncopy_abort,
-    test_input_oncopy,
-    test_input_oncut,
-    test_input_onpaste,
-    test_input_oncopy_abort,
-    test_input_oncut_abort,
-    test_input_onpaste_abort,
-    test_input_cut_dataTransfer,
-    test_input_cut_abort_dataTransfer,
-    test_input_copy_dataTransfer,
-    test_input_paste_dataTransfer,
-    test_input_paste_abort_dataTransfer,
-    test_input_copypaste_dataTransfer_multiple,
-    test_input_copy_button_dataTransfer,
-    test_eventspref_disabled
-    ];
+  // Reset value of contentInput.
+  contentInput.value = "INPUT TEXT";
 
-  // Run the main tests.  This will also populate the delayedTests array
-  for (let i = 0; i < testFunctions.length; i++) {
-    // Init clipboard
-    setClipboardText(clipboardInitialValue);
-
-    // Reset value of contentInput.
-    contentInput.value = "INPUT TEXT";
-
-    var func = testFunctions[i];
-    func();
+  if (testFunctions.length) {
+    let func = testFunctions.shift();
+    let result = func();
+    if (result instanceof Promise) {
+      result.then(doTests);
+    }
+    else {
+      doTests();
+    }
   }
+  else {
+    // Check if the cached clipboard data can be accessed or modified
+    // and whether it modifies the real clipboard
+    checkCachedDataTransfer(cachedCutData, "cut");
+    checkCachedDataTransfer(cachedCopyData, "copy");
+    checkCachedDataTransfer(cachedPasteData, "paste");
 
-  // Check if the cached clipboard data can be accessed or modified
-  // and whether it modifies the real clipboard
-  checkCachedDataTransfer(cachedCutData, "cut");
-  checkCachedDataTransfer(cachedCopyData, "copy");
-  checkCachedDataTransfer(cachedPasteData, "paste");
+    checkSyntheticEvents();
 
-  checkSyntheticEvents();
-
-  SimpleTest.finish();
+    SimpleTest.finish();
+  }
 }
 
-// Calling .focus begins the test run.
 SimpleTest.waitForExplicitFinish();
-window.focus();
-
-function getLoadContext() {
-  return SpecialPowers.wrap(window).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-               .getInterface(SpecialPowers.Ci.nsIWebNavigation)
-               .QueryInterface(SpecialPowers.Ci.nsILoadContext);
-}
 
 function getClipboardText() {
   return SpecialPowers.getClipboardData("text/unicode");
@@ -535,38 +525,42 @@ function test_input_copy_button_dataTransfer() {
 
 function test_eventspref_disabled() {
   // Disable clipboard events
-  SpecialPowers.setBoolPref("dom.event.clipboardevents.enabled", false);
+  return new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [['dom.event.clipboardevents.enabled', false]]}, doPrefDisabledTest);
 
-  var event_fired = false;
-  contentInput.oncut = function() { event_fired = true; };
-  contentInput.oncopy = function() { event_fired = true; };
-  contentInput.onpaste = function() { event_fired = true; };
-  try {
-    selectContentInput();
-    contentInput.setSelectionRange(1, 4);
-    synthesizeKey("x", {accelKey: 1});
-    is(contentInput.value, "IT TEXT", "cut changed text when preference is disabled");
-    is(getClipboardText(), "NPU", "cut changed clipboard when preference is disabled");
-    ok(!event_fired, "cut event did not fire when preference is disabled")
+    function doPrefDisabledTest() {
+      var event_fired = false;
+      contentInput.oncut = function() { event_fired = true; };
+      contentInput.oncopy = function() { event_fired = true; };
+      contentInput.onpaste = function() { event_fired = true; };
+      try {
+        selectContentInput();
+        contentInput.setSelectionRange(1, 4);
+        synthesizeKey("x", {accelKey: 1});
+        is(contentInput.value, "IT TEXT", "cut changed text when preference is disabled");
+        is(getClipboardText(), "NPU", "cut changed clipboard when preference is disabled");
+        ok(!event_fired, "cut event did not fire when preference is disabled")
 
-    event_fired = false;
-    contentInput.setSelectionRange(3, 6);
-    synthesizeKey("c", {accelKey: 1});
-    is(getClipboardText(), "TEX", "copy changed clipboard when preference is disabled");
-    ok(!event_fired, "copy event did not fire when preference is disabled")
+        event_fired = false;
+        contentInput.setSelectionRange(3, 6);
+        synthesizeKey("c", {accelKey: 1});
+        is(getClipboardText(), "TEX", "copy changed clipboard when preference is disabled");
+        ok(!event_fired, "copy event did not fire when preference is disabled")
 
-    event_fired = false;
-    contentInput.setSelectionRange(0, 2);
-    synthesizeKey("v", {accelKey: 1});
-    is(contentInput.value, "TEX TEXT", "paste changed text when preference is disabled");
-    ok(!event_fired, "paste event did not fire when preference is disabled")
-  } finally {
-    contentInput.oncut = null;
-    contentInput.oncopy = null;
-    contentInput.onpaste = null;
-  }
+        event_fired = false;
+        contentInput.setSelectionRange(0, 2);
+        synthesizeKey("v", {accelKey: 1});
+        is(contentInput.value, "TEX TEXT", "paste changed text when preference is disabled");
+        ok(!event_fired, "paste event did not fire when preference is disabled")
+      } finally {
+        contentInput.oncut = null;
+        contentInput.oncopy = null;
+        contentInput.onpaste = null;
+      }
 
-  SpecialPowers.clearUserPref("dom.event.clipboardevents.enabled");
+      SpecialPowers.popPrefEnv(resolve);
+    }
+  });
 }
 
 let expectedData = [];
@@ -674,6 +668,8 @@ function checkCachedDataTransfer(cd, eventtype)
 
   is(getClipboardText(), "Some Clipboard Text", "clipboard not changed using " + testprefix);
 }
+
+SimpleTest.waitForFocus(doTests);
 
 </script>
 </pre>
