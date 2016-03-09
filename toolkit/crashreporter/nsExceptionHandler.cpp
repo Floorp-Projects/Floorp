@@ -1201,7 +1201,8 @@ static bool
 BuildTempPath(PathStringT& aResult)
 {
   aResult.SetLength(XP_PATH_MAX);
-  size_t actualLen = BuildTempPath(aResult.BeginWriting(), XP_PATH_MAX);
+  wchar_t* result = reinterpret_cast<wchar_t*>(aResult.BeginWriting());
+  size_t actualLen = BuildTempPath(result, XP_PATH_MAX);
   if (!actualLen) {
     return false;
   }
