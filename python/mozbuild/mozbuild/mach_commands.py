@@ -1391,31 +1391,6 @@ class MachDebug(MachCommandBase):
             print('FOUND_MOZCONFIG=%s' % mozpath.normsep(self.mozconfig['path']),
                 file=out)
 
-    def _environment_configure(self, out, verbose):
-        if self.mozconfig['path']:
-            # Replace ' with '"'"', so that shell quoting e.g.
-            # a'b becomes 'a'"'"'b'.
-            quote = lambda s: s.replace("'", """'"'"'""")
-            if self.mozconfig['configure_args'] and \
-                    'COMM_BUILD' not in os.environ:
-                print('echo Adding configure options from %s' %
-                    mozpath.normsep(self.mozconfig['path']), file=out)
-                for arg in self.mozconfig['configure_args']:
-                    quoted_arg = quote(arg)
-                    print("echo '  %s'" % quoted_arg, file=out)
-                    print("""set -- "$@" '%s'""" % quoted_arg, file=out)
-            for key, value in self.mozconfig['env']['added'].items():
-                print("export %s='%s'" % (key, quote(value)), file=out)
-            for key, (old, value) in self.mozconfig['env']['modified'].items():
-                print("export %s='%s'" % (key, quote(value)), file=out)
-            for key, value in self.mozconfig['vars']['added'].items():
-                print("%s='%s'" % (key, quote(value)), file=out)
-            for key, (old, value) in self.mozconfig['vars']['modified'].items():
-                print("%s='%s'" % (key, quote(value)), file=out)
-            for key in self.mozconfig['env']['removed'].keys() + \
-                    self.mozconfig['vars']['removed'].keys():
-                print("unset %s" % key, file=out)
-
     def _environment_json(self, out, verbose):
         import json
         class EnvironmentEncoder(json.JSONEncoder):
@@ -1484,7 +1459,12 @@ class PackageFrontend(MachCommandBase):
         self.log_manager.terminal_handler.setLevel(logging.INFO if not verbose else logging.DEBUG)
 
     def _make_artifacts(self, tree=None, job=None, skip_cache=False):
+        # Undo PATH munging that will be done by activating the virtualenv,
+        # so that invoked subprocesses expecting to find system python
+        # (git cinnabar, in particular), will not find virtualenv python.
+        original_path = os.environ.get('PATH', '')
         self._activate_virtualenv()
+        os.environ['PATH'] = original_path
         self.virtualenv_manager.install_pip_package('pylru==1.0.9')
         self.virtualenv_manager.install_pip_package('taskcluster==0.0.32')
         self.virtualenv_manager.install_pip_package('mozregression==1.0.2')

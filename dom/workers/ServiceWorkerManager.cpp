@@ -221,13 +221,13 @@ class ServiceWorkerJobQueue final
     bool mPopping;
   };
 
-  const nsCString mOriginAttributesSuffix;
+  const nsCString mScopeKey;
   QueueData mRegistrationJobQueue;
   QueueData mInstallationJobQueue;
 
 public:
   explicit ServiceWorkerJobQueue(const nsACString& aScopeKey)
-    : mOriginAttributesSuffix(aScopeKey)
+    : mScopeKey(aScopeKey)
   {}
 
   ~ServiceWorkerJobQueue()
@@ -293,7 +293,7 @@ private:
     } else if (IsEmpty()) {
       RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
       MOZ_ASSERT(swm);
-      swm->MaybeRemoveRegistrationInfo(mOriginAttributesSuffix);
+      swm->MaybeRemoveRegistrationInfo(mScopeKey);
     }
   }
 
@@ -1788,15 +1788,15 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
     return result.StealNSResult();
   }
 
-  nsAutoCString originSuffix;
-  rv = PrincipalToScopeKey(documentPrincipal, originSuffix);
+  nsAutoCString scopeKey;
+  rv = PrincipalToScopeKey(documentPrincipal, scopeKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   AddRegisteringDocument(cleanedScope, doc);
 
-  ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(originSuffix, cleanedScope);
+  ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(scopeKey, cleanedScope);
   MOZ_ASSERT(queue);
 
   RefPtr<ServiceWorkerResolveWindowPromiseOnUpdateCallback> cb =
@@ -2411,8 +2411,10 @@ ServiceWorkerManager::GetActiveWorkerInfoForScope(const PrincipalOriginAttribute
   if (NS_FAILED(rv)) {
     return nullptr;
   }
+  nsCOMPtr<nsIPrincipal> principal =
+    BasePrincipal::CreateCodebasePrincipal(scopeURI, aOriginAttributes);
   RefPtr<ServiceWorkerRegistrationInfo> registration =
-    GetServiceWorkerRegistrationInfo(aOriginAttributes, scopeURI);
+    GetServiceWorkerRegistrationInfo(principal, scopeURI);
   if (!registration) {
     return nullptr;
   }
@@ -2576,14 +2578,14 @@ ServiceWorkerManager::Unregister(nsIPrincipal* aPrincipal,
   }
 #endif
 
-  nsAutoCString originSuffix;
-  rv = PrincipalToScopeKey(aPrincipal, originSuffix);
+  nsAutoCString scopeKey;
+  rv = PrincipalToScopeKey(aPrincipal, scopeKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   NS_ConvertUTF16toUTF8 scope(aScope);
-  ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(originSuffix, scope);
+  ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(scopeKey, scope);
   MOZ_ASSERT(queue);
 
   RefPtr<ServiceWorkerUnregisterJob> job =
@@ -2617,14 +2619,14 @@ ServiceWorkerManager::NotifyUnregister(nsIPrincipal* aPrincipal,
   }
 #endif
 
-  nsAutoCString originSuffix;
-  rv = PrincipalToScopeKey(aPrincipal, originSuffix);
+  nsAutoCString scopeKey;
+  rv = PrincipalToScopeKey(aPrincipal, scopeKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   NS_ConvertUTF16toUTF8 scope(aScope);
-  ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(originSuffix, scope);
+  ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(scopeKey, scope);
   MOZ_ASSERT(queue);
 
   RefPtr<ServiceWorkerUnregisterJob> job =
@@ -2643,6 +2645,7 @@ ServiceWorkerJobQueue*
 ServiceWorkerManager::GetOrCreateJobQueue(const nsACString& aKey,
                                           const nsACString& aScope)
 {
+  MOZ_ASSERT(!aKey.IsEmpty());
   ServiceWorkerManager::RegistrationDataPerPrincipal* data;
   if (!mRegistrationInfos.Get(aKey, &data)) {
     data = new RegistrationDataPerPrincipal();
@@ -3106,24 +3109,13 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsIPrincipal* aPrincipal,
     return nullptr;
   }
 
-  nsAutoCString originAttributesSuffix;
-  nsresult rv = PrincipalToScopeKey(aPrincipal, originAttributesSuffix);
+  nsAutoCString scopeKey;
+  nsresult rv = PrincipalToScopeKey(aPrincipal, scopeKey);
   if (NS_FAILED(rv)) {
     return nullptr;
   }
 
-  return GetServiceWorkerRegistrationInfo(originAttributesSuffix, aURI);
-}
-
-already_AddRefed<ServiceWorkerRegistrationInfo>
-ServiceWorkerManager::GetServiceWorkerRegistrationInfo(const PrincipalOriginAttributes& aOriginAttributes,
-                                                       nsIURI* aURI)
-{
-  MOZ_ASSERT(aURI);
-
-  nsAutoCString originAttributesSuffix;
-  aOriginAttributes.CreateSuffix(originAttributesSuffix);
-  return GetServiceWorkerRegistrationInfo(originAttributesSuffix, aURI);
+  return GetServiceWorkerRegistrationInfo(scopeKey, aURI);
 }
 
 already_AddRefed<ServiceWorkerRegistrationInfo>
@@ -3152,10 +3144,10 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(const nsACString& aScopeK
   MOZ_ASSERT(registration);
 
 #ifdef DEBUG
-  nsAutoCString originSuffix;
-  rv = registration->mPrincipal->GetOriginSuffix(originSuffix);
+  nsAutoCString origin;
+  rv = registration->mPrincipal->GetOrigin(origin);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  MOZ_ASSERT(originSuffix.Equals(aScopeKey));
+  MOZ_ASSERT(origin.Equals(aScopeKey));
 #endif
 
   if (registration->mPendingUninstall) {
@@ -3174,7 +3166,7 @@ ServiceWorkerManager::PrincipalToScopeKey(nsIPrincipal* aPrincipal,
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = aPrincipal->GetOriginSuffix(aKey);
+  nsresult rv = aPrincipal->GetOrigin(aKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3197,6 +3189,8 @@ ServiceWorkerManager::AddScopeAndRegistration(const nsACString& aScope,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
+
+  MOZ_ASSERT(!scopeKey.IsEmpty());
 
   RegistrationDataPerPrincipal* data;
   if (!swm->mRegistrationInfos.Get(scopeKey, &data)) {
@@ -3683,8 +3677,12 @@ ServiceWorkerManager::DispatchFetchEvent(const PrincipalOriginAttributes& aOrigi
       return;
     }
 
+    // non-subresource request means the URI contains the principal
+    nsCOMPtr<nsIPrincipal> principal =
+      BasePrincipal::CreateCodebasePrincipal(uri, aOriginAttributes);
+
     RefPtr<ServiceWorkerRegistrationInfo> registration =
-      GetServiceWorkerRegistrationInfo(aOriginAttributes, uri);
+      GetServiceWorkerRegistrationInfo(principal, uri);
     if (!registration) {
       NS_WARNING("No registration found when dispatching the fetch event");
       aRv.Throw(NS_ERROR_FAILURE);
@@ -3726,13 +3724,14 @@ ServiceWorkerManager::DispatchFetchEvent(const PrincipalOriginAttributes& aOrigi
 }
 
 bool
-ServiceWorkerManager::IsAvailable(const PrincipalOriginAttributes& aOriginAttributes,
+ServiceWorkerManager::IsAvailable(nsIPrincipal* aPrincipal,
                                   nsIURI* aURI)
 {
+  MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aURI);
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
-    GetServiceWorkerRegistrationInfo(aOriginAttributes, aURI);
+    GetServiceWorkerRegistrationInfo(aPrincipal, aURI);
   return registration && registration->mActiveWorker;
 }
 
@@ -3891,7 +3890,10 @@ ServiceWorkerManager::SoftUpdate(const PrincipalOriginAttributes& aOriginAttribu
   }
 
   nsAutoCString scopeKey;
-  aOriginAttributes.CreateSuffix(scopeKey);
+  rv = PrincipalToScopeKey(principal, scopeKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetRegistration(scopeKey, aScope);

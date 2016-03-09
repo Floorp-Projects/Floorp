@@ -231,6 +231,10 @@ public:
    * aIndex identifies the component: 0 1 2
    *                                  3 4 5
    *                                  6 7 8
+   * aSVGViewportSize The image size evaluated by default sizing algorithm.
+   * Pass Nothing() if we can read a valid viewport size or aspect-ratio from
+   * the drawing image directly, otherwise, pass Some() with viewport size
+   * evaluated from default sizing algorithm.
    */
   DrawResult
   DrawBorderImageComponent(nsPresContext*       aPresContext,
@@ -241,7 +245,8 @@ public:
                            uint8_t              aHFill,
                            uint8_t              aVFill,
                            const nsSize&        aUnitSize,
-                           uint8_t              aIndex);
+                           uint8_t              aIndex,
+                           const mozilla::Maybe<nsSize>& aSVGViewportSize);
 
   bool IsRasterImage();
   bool IsAnimatedImage();

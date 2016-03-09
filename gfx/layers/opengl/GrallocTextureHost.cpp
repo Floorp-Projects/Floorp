@@ -466,5 +466,15 @@ GrallocTextureHostOGL::BindTextureSource(CompositableTextureSourceRef& aTextureS
   return true;
 }
 
+FenceHandle
+GrallocTextureHostOGL::GetCompositorReleaseFence()
+{
+  if (!mCompositor) {
+    return FenceHandle();
+  }
+  return mCompositor->GetReleaseFence();
+}
+
+
 } // namepsace layers
 } // namepsace mozilla

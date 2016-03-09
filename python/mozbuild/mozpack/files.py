@@ -584,13 +584,13 @@ class ManifestFile(BaseFile):
     the add() and remove() member functions), and adjusts them to be relative
     to the base path for the manifest, given at creation.
     Example:
-        There is a manifest entry "content webapprt webapprt/content/" relative
-        to "webapprt/chrome". When packaging, the entry will be stored in
-        jar:webapprt/omni.ja!/chrome/chrome.manifest, which means the entry
-        will have to be relative to "chrome" instead of "webapprt/chrome". This
+        There is a manifest entry "content foobar foobar/content/" relative
+        to "foobar/chrome". When packaging, the entry will be stored in
+        jar:foobar/omni.ja!/chrome/chrome.manifest, which means the entry
+        will have to be relative to "chrome" instead of "foobar/chrome". This
         doesn't really matter when serializing the entry, since this base path
         is not written out, but it matters when moving the entry at the same
-        time, e.g. to jar:webapprt/omni.ja!/chrome.manifest, which we don't do
+        time, e.g. to jar:foobar/omni.ja!/chrome.manifest, which we don't do
         currently but could in the future.
     '''
     def __init__(self, base, entries=None):

@@ -62,6 +62,21 @@ function onAttach(aState, aResponse)
     });
   });
 
+  let symbolTestValues = [
+    ["Symbol.iterator", "Symbol(Symbol.iterator)"],
+    ["Symbol('foo')", "Symbol(foo)"],
+    ["Symbol()", "Symbol()"],
+  ];
+  symbolTestValues.forEach(function([expr, message]) {
+    tests.push(function() {
+      aState.client.evaluateJS("throw " + expr + ";", function(aResponse) {
+        is(aResponse.exceptionMessage, message,
+           "response.exception for throw " + expr);
+        nextTest();
+      });
+    });
+  });
+
   runTests(tests, endTest.bind(null, aState));
 }
 

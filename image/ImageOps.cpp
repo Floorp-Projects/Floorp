@@ -40,17 +40,19 @@ ImageOps::Freeze(imgIContainer* aImage)
 }
 
 /* static */ already_AddRefed<Image>
-ImageOps::Clip(Image* aImage, nsIntRect aClip)
+ImageOps::Clip(Image* aImage, nsIntRect aClip,
+               const Maybe<nsSize>& aSVGViewportSize)
 {
-  RefPtr<Image> clippedImage = new ClippedImage(aImage, aClip);
+  RefPtr<Image> clippedImage = new ClippedImage(aImage, aClip, aSVGViewportSize);
   return clippedImage.forget();
 }
 
 /* static */ already_AddRefed<imgIContainer>
-ImageOps::Clip(imgIContainer* aImage, nsIntRect aClip)
+ImageOps::Clip(imgIContainer* aImage, nsIntRect aClip,
+               const Maybe<nsSize>& aSVGViewportSize)
 {
   nsCOMPtr<imgIContainer> clippedImage =
-    new ClippedImage(static_cast<Image*>(aImage), aClip);
+    new ClippedImage(static_cast<Image*>(aImage), aClip, aSVGViewportSize);
   return clippedImage.forget();
 }
 

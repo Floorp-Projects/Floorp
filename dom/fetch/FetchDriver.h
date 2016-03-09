@@ -83,8 +83,10 @@ private:
   RefPtr<FetchDriverObserver> mObserver;
   nsCOMPtr<nsIDocument> mDocument;
 
-  DebugOnly<bool> mResponseAvailableCalled;
-  DebugOnly<bool> mFetchCalled;
+#ifdef DEBUG
+  bool mResponseAvailableCalled;
+  bool mFetchCalled;
+#endif
 
   FetchDriver() = delete;
   FetchDriver(const FetchDriver&) = delete;

@@ -10,9 +10,6 @@ if CONFIG['MOZ_EXTENSIONS']:
 
 DIRS += ['/%s' % CONFIG['MOZ_BRANDING_DIRECTORY']]
 
-if CONFIG['MOZ_WEBAPP_RUNTIME']:
-    DIRS += ['/webapprt']
-
 DIRS += [
     '/b2g/chrome',
     '/b2g/components',

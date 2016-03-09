@@ -2912,12 +2912,15 @@ ObjectGroup::detachNewScript(bool writeBarrier, ObjectGroup* replacement)
 
     if (newScript->analyzed()) {
         ObjectGroupCompartment& objectGroups = newScript->function()->compartment()->objectGroups;
+        TaggedProto proto = this->proto();
+        if (proto.isObject() && IsForwarded(proto.toObject()))
+            proto = TaggedProto(Forwarded(proto.toObject()));
+        JSObject* associated = MaybeForwarded(newScript->function());
         if (replacement) {
             MOZ_ASSERT(replacement->newScript()->function() == newScript->function());
-            objectGroups.replaceDefaultNewGroup(nullptr, proto(), newScript->function(),
-                                                replacement);
+            objectGroups.replaceDefaultNewGroup(nullptr, proto, associated, replacement);
         } else {
-            objectGroups.removeDefaultNewGroup(nullptr, proto(), newScript->function());
+            objectGroups.removeDefaultNewGroup(nullptr, proto, associated);
         }
     } else {
         MOZ_ASSERT(!replacement);

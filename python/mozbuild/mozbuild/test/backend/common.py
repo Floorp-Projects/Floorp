@@ -29,74 +29,75 @@ test_data_path = mozpath.join(test_data_path, 'data')
 
 
 CONFIGS = defaultdict(lambda: {
-    'defines': [],
+    'defines': {},
     'non_global_defines': [],
-    'substs': [('OS_TARGET', 'WINNT')],
+    'substs': {'OS_TARGET': 'WINNT'},
 }, {
     'android_eclipse': {
-        'defines': [
-            ('MOZ_ANDROID_MIN_SDK_VERSION', '15'),
-        ],
+        'defines': {
+            'MOZ_ANDROID_MIN_SDK_VERSION': '15',
+        },
         'non_global_defines': [],
-        'substs': [
-            ('ANDROID_TARGET_SDK', '16'),
-            ('MOZ_WIDGET_TOOLKIT', 'android'),
-        ],
+        'substs': {
+            'ANDROID_TARGET_SDK': '16',
+            'MOZ_WIDGET_TOOLKIT': 'android',
+        },
     },
     'binary-components': {
-        'defines': [],
+        'defines': {},
         'non_global_defines': [],
-        'substs': [
-            ('LIB_PREFIX', 'lib'),
-            ('LIB_SUFFIX', 'a'),
-        ],
+        'substs': {
+            'LIB_PREFIX': 'lib',
+            'LIB_SUFFIX': 'a',
+            'COMPILE_ENVIRONMENT': '1',
+        },
     },
     'sources': {
-        'defines': [],
+        'defines': {},
         'non_global_defines': [],
-        'substs': [
-            ('LIB_PREFIX', 'lib'),
-            ('LIB_SUFFIX', 'a'),
-        ],
+        'substs': {
+            'LIB_PREFIX': 'lib',
+            'LIB_SUFFIX': 'a',
+        },
     },
     'stub0': {
-        'defines': [
-            ('MOZ_TRUE_1', '1'),
-            ('MOZ_TRUE_2', '1'),
-        ],
+        'defines': {
+            'MOZ_TRUE_1': '1',
+            'MOZ_TRUE_2': '1',
+        },
         'non_global_defines': [
-            ('MOZ_NONGLOBAL_1', '1'),
-            ('MOZ_NONGLOBAL_2', '1'),
+            'MOZ_NONGLOBAL_1',
+            'MOZ_NONGLOBAL_2',
         ],
-        'substs': [
-            ('MOZ_FOO', 'foo'),
-            ('MOZ_BAR', 'bar'),
-        ],
+        'substs': {
+            'MOZ_FOO': 'foo',
+            'MOZ_BAR': 'bar',
+        },
     },
     'substitute_config_files': {
-        'defines': [],
+        'defines': {},
         'non_global_defines': [],
-        'substs': [
-            ('MOZ_FOO', 'foo'),
-            ('MOZ_BAR', 'bar'),
-        ],
+        'substs': {
+            'MOZ_FOO': 'foo',
+            'MOZ_BAR': 'bar',
+        },
     },
     'test_config': {
-        'defines': [
-            ('foo', 'baz qux'),
-            ('baz', 1)
-        ],
+        'defines': {
+            'foo': 'baz qux',
+            'baz': 1,
+        },
         'non_global_defines': [],
-        'substs': [
-            ('foo', 'bar baz'),
-        ],
+        'substs': {
+            'foo': 'bar baz',
+        },
     },
     'visual-studio': {
-        'defines': [],
+        'defines': {},
         'non_global_defines': [],
-        'substs': [
-            ('MOZ_APP_NAME', 'my_app'),
-        ],
+        'substs': {
+            'MOZ_APP_NAME': 'my_app',
+        },
     },
 })
 
@@ -122,7 +123,7 @@ class BackendTester(unittest.TestCase):
         self.addCleanup(rmtree, objdir)
 
         srcdir = mozpath.join(test_data_path, name)
-        config['substs'].append(('top_srcdir', srcdir))
+        config['substs']['top_srcdir'] = srcdir
         return ConfigEnvironment(srcdir, objdir, **config)
 
     def _emit(self, name, env=None):

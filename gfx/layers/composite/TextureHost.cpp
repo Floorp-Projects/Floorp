@@ -543,9 +543,11 @@ BufferTextureHost::PrepareTextureSource(CompositableTextureSourceRef& aTexture)
   bool compatibleFormats = texture
                          && (mFormat == texture->GetFormat()
                              || (mFormat == gfx::SurfaceFormat::YUV
+                                 && mCompositor
                                  && mCompositor->SupportsEffect(EffectTypes::YCBCR)
                                  && texture->GetNextSibling())
                              || (mFormat == gfx::SurfaceFormat::YUV
+                                 && mCompositor
                                  && !mCompositor->SupportsEffect(EffectTypes::YCBCR)
                                  && texture->GetFormat() == gfx::SurfaceFormat::B8G8R8X8));
 
@@ -557,6 +559,7 @@ BufferTextureHost::PrepareTextureSource(CompositableTextureSourceRef& aTexture)
   if (!shouldCreateTexture) {
     mFirstSource = texture;
     mFirstSource->SetOwner(this);
+    mNeedsFullUpdate = true;
   }
 }
 

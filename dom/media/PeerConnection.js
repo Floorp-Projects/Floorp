@@ -366,6 +366,8 @@ RTCPeerConnection.prototype = {
         Services.prefs.getBoolPref("media.peerconnection.ice.relay_only")) {
       rtcConfig.iceTransportPolicy = "relay";
     }
+    this._config = Object.assign({}, rtcConfig);
+
     if (!rtcConfig.iceServers ||
         !Services.prefs.getBoolPref("media.peerconnection.use_document_iceservers")) {
       try {
@@ -450,6 +452,10 @@ RTCPeerConnection.prototype = {
           "InvalidStateError");
     }
     return this._pc;
+  },
+
+  getConfiguration: function() {
+    return this._config;
   },
 
   _initCertificate: function(certificates) {

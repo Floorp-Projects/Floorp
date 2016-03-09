@@ -13,7 +13,6 @@
 #define jit_MIR_h
 
 #include "mozilla/Array.h"
-#include "mozilla/DebugOnly.h"
 
 #include "builtin/SIMD.h"
 #include "jit/AtomicOp.h"

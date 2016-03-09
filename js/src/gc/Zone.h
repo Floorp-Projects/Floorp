@@ -8,7 +8,6 @@
 #define gc_Zone_h
 
 #include "mozilla/Atomics.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "jscntxt.h"
@@ -357,7 +356,9 @@ struct Zone : public JS::shadow::Zone,
     // True when there are active frames.
     bool active;
 
-    mozilla::DebugOnly<unsigned> gcLastZoneGroupIndex;
+#ifdef DEBUG
+    unsigned gcLastZoneGroupIndex;
+#endif
 
     // Creates a HashNumber based on getUniqueId. Returns false on OOM.
     MOZ_WARN_UNUSED_RESULT bool getHashCode(js::gc::Cell* cell, js::HashNumber* hashp) {
