@@ -7,6 +7,7 @@
 #include "ImageLogging.h" // Must appear first
 #include "gfxColor.h"
 #include "gfxPlatform.h"
+#include "imgFrame.h"
 #include "nsColor.h"
 #include "nsIInputStream.h"
 #include "nsMemory.h"
@@ -210,7 +211,7 @@ nsPNGDecoder::EndImageFrame()
 
   Opacity opacity = Opacity::SOME_TRANSPARENCY;
   if (format == gfx::SurfaceFormat::B8G8R8X8) {
-    opacity = Opacity::OPAQUE;
+    opacity = Opacity::FULLY_OPAQUE;
   }
 
   PostFrameStop(opacity, mAnimInfo.mDispose, mAnimInfo.mTimeout,
