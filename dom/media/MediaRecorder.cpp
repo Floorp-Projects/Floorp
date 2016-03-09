@@ -9,6 +9,7 @@
 #include "AudioNodeStream.h"
 #include "DOMMediaStream.h"
 #include "EncodedBufferCache.h"
+#include "MediaDecoder.h"
 #include "MediaEncoder.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/DOMEventTargetHelper.h"
