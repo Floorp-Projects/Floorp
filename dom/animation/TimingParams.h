@@ -33,16 +33,36 @@ class ElementOrCSSPseudoElement;
 struct TimingParams
 {
   TimingParams() = default;
-  TimingParams(const dom::AnimationEffectTimingProperties& aTimingProperties,
-               const dom::Element* aTarget);
-  explicit TimingParams(double aDuration);
 
   static TimingParams FromOptionsUnion(
     const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
-    const Nullable<dom::ElementOrCSSPseudoElement>& aTarget);
+    const Nullable<dom::ElementOrCSSPseudoElement>& aTarget,
+    ErrorResult& aRv);
   static TimingParams FromOptionsUnion(
     const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
-    const Nullable<dom::ElementOrCSSPseudoElement>& aTarget);
+    const Nullable<dom::ElementOrCSSPseudoElement>& aTarget,
+    ErrorResult& aRv);
+
+  // Range-checks and validates an UnrestrictedDoubleOrString or
+  // OwningUnrestrictedDoubleOrString object and converts to a
+  // StickyTimeDuration value or Nothing() if aDuration is "auto".
+  // Caller must check aRv.Failed().
+  template <class DoubleOrString>
+  static Maybe<StickyTimeDuration> ParseDuration(DoubleOrString& aDuration,
+                                                 ErrorResult& aRv) {
+    Maybe<StickyTimeDuration> result;
+    if (aDuration.IsUnrestrictedDouble()) {
+      double durationInMs = aDuration.GetAsUnrestrictedDouble();
+      if (durationInMs >= 0) {
+        result.emplace(StickyTimeDuration::FromMilliseconds(durationInMs));
+        return result;
+      }
+    } else if (aDuration.GetAsString().EqualsLiteral("auto")) {
+      return result;
+    }
+    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+    return result;
+  }
 
   // mDuration.isNothing() represents the "auto" value
   Maybe<StickyTimeDuration> mDuration;
