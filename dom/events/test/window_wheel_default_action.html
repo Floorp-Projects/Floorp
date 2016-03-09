@@ -920,7 +920,7 @@ function doTestScroll(aSettings, aCallback)
         winUtils.advanceTimeAndRefresh(100);
         doNextTest();
       }
-    }, 10);
+    });
   }
   doNextTest();
 }
@@ -1161,7 +1161,7 @@ function doTestZoom(aSettings, aCallback)
       onZoomReset(function () {
         hitEventLoop(doNextTest, 20);
       });
-    }, 20);
+    });
   }
   doNextTest();
 }
@@ -1252,9 +1252,9 @@ function doTestZoomedScroll(aCallback)
 
             synthesizeKey("0", { accelKey: true });
             onZoomReset(prepareTestZoomedLineScroll);
-          }, 20);
+          });
         }, 20);
-      }, 20);
+      });
     }, 20);
   }
 
@@ -1337,9 +1337,9 @@ function doTestZoomedScroll(aCallback)
 
             synthesizeKey("0", { accelKey: true });
             onZoomReset(aCallback);
-          }, 20);
+          });
         }, 20);
-      }, 20);
+      });
     }, 20);
   }
 
@@ -1600,7 +1600,7 @@ function doTestWholeScroll2(aCallback)
       } else {
         doIt();
       }
-    }, 20);
+    });
   }
   doIt();
 }
@@ -1765,7 +1765,7 @@ function doTestActionOverride(aCallback)
       } else {
         doIt();
       }
-    }, 20);
+    });
   }
   doIt();
 }
