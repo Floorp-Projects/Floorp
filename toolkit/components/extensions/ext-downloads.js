@@ -141,8 +141,7 @@ const DownloadMap = {
         let self = this;
         return list.addView({
           onDownloadAdded(download) {
-            const item = self.newFromDownload(download, null);
-            self.emit("create", item);
+            self.newFromDownload(download, null);
           },
 
           onDownloadRemoved(download) {
@@ -479,20 +478,7 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
         };
       }).api(),
 
-      onCreated: new SingletonEventManager(context, "downloads.onCreated", fire => {
-        const handler = (what, item) => {
-          runSafeSync(context, fire, item.serialize());
-        };
-        let registerPromise = DownloadMap.getDownloadList().then(() => {
-          DownloadMap.on("create", handler);
-        });
-        return () => {
-          registerPromise.then(() => {
-            DownloadMap.off("create", handler);
-          });
-        };
-      }).api(),
-
+      onCreated: ignoreEvent(context, "downloads.onCreated"),
       onErased: ignoreEvent(context, "downloads.onErased"),
       onDeterminingFilename: ignoreEvent(context, "downloads.onDeterminingFilename"),
     },
