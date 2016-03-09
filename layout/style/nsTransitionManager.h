@@ -236,7 +236,8 @@ struct TransitionEventInfo {
     mEvent.propertyName =
       NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
     mEvent.elapsedTime = aDuration.ToSeconds();
-    mEvent.pseudoElement = AnimationCollection::PseudoTypeAsString(aPseudoType);
+    mEvent.pseudoElement =
+      AnimationCollection<dom::CSSTransition>::PseudoTypeAsString(aPseudoType);
   }
 
   // InternalTransitionEvent doesn't support copy-construction, so we need
@@ -254,11 +255,11 @@ struct TransitionEventInfo {
 } // namespace mozilla
 
 class nsTransitionManager final
-  : public mozilla::CommonAnimationManager
+  : public mozilla::CommonAnimationManager<mozilla::dom::CSSTransition>
 {
 public:
   explicit nsTransitionManager(nsPresContext *aPresContext)
-    : mozilla::CommonAnimationManager(aPresContext)
+    : mozilla::CommonAnimationManager<mozilla::dom::CSSTransition>(aPresContext)
     , mInAnimationOnlyStyleUpdate(false)
   {
   }
@@ -266,7 +267,8 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsTransitionManager)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTransitionManager)
 
-  typedef mozilla::AnimationCollection AnimationCollection;
+  typedef mozilla::AnimationCollection<mozilla::dom::CSSTransition>
+    CSSTransitionCollection;
 
   /**
    * StyleContextChanged
@@ -323,6 +325,9 @@ public:
 protected:
   virtual ~nsTransitionManager() {}
 
+  typedef nsTArray<RefPtr<mozilla::dom::CSSTransition>>
+    OwningCSSTransitionPtrArray;
+
   virtual nsIAtom* GetAnimationsAtom() override {
     return nsGkAtoms::transitionsProperty;
   }
@@ -338,7 +343,7 @@ private:
   ConsiderStartingTransition(nsCSSProperty aProperty,
                              const mozilla::StyleTransition& aTransition,
                              mozilla::dom::Element* aElement,
-                             AnimationCollection*& aElementTransitions,
+                             CSSTransitionCollection*& aElementTransitions,
                              nsStyleContext* aOldStyleContext,
                              nsStyleContext* aNewStyleContext,
                              bool* aStartedAny,
