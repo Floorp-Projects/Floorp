@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_BluetoothUuid_h
-#define mozilla_dom_bluetooth_BluetoothUuid_h
+#ifndef mozilla_dom_bluetooth_BluetoothUuidHelper_h
+#define mozilla_dom_bluetooth_BluetoothUuidHelper_h
 
 #include "BluetoothCommon.h"
 
@@ -51,4 +51,4 @@ enum BluetoothReservedChannels {
 
 END_BLUETOOTH_NAMESPACE
 
-#endif // mozilla_dom_bluetooth_BluetoothUuid_h
+#endif // mozilla_dom_bluetooth_BluetoothUuidHelper_h
