@@ -462,8 +462,9 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
         public:
           explicit PossibleError(Parser<ParseHandler>& parser);
 
-          // Set a pending error.
-          void setPending(ParseReportKind kind, unsigned errorNumber, bool strict);
+          // Set a pending error. Only a single error may be set per instance.
+          // Returns true on success or false on failure.
+          bool setPending(ParseReportKind kind, unsigned errorNumber, bool strict);
 
           // Resolve any pending error.
           void setResolved();
