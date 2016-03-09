@@ -183,8 +183,13 @@ public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
 
     private void setTintedImageDrawable(final Drawable drawable) {
         final Drawable tintedDrawable;
+//#ifdef BOOKMARK_NO_TINT
+        if (drawableColors == null || R.id.bookmark == getId()) {
+            // NB: The bookmarked state uses a blue star, so this is a hack to keep it untinted.
+//#else
         if (drawableColors == null) {
-            // If we tint a drawable with a null ColorStateList, it will override
+//#endif
+            // NB: If we tint a drawable with a null ColorStateList, it will override
             // any existing colorFilters and tint... so don't!
             tintedDrawable = drawable;
         } else if (drawable == null) {
