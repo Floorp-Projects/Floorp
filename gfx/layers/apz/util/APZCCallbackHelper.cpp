@@ -903,12 +903,16 @@ APZCCallbackHelper::NotifyFlushComplete()
 static int32_t sActiveSuppressDisplayport = 0;
 
 void
-APZCCallbackHelper::SuppressDisplayport(const bool& aEnabled)
+APZCCallbackHelper::SuppressDisplayport(const bool& aEnabled,
+                                        const nsCOMPtr<nsIPresShell>& aShell)
 {
   if (aEnabled) {
     sActiveSuppressDisplayport++;
   } else {
     sActiveSuppressDisplayport--;
+    if (sActiveSuppressDisplayport == 0 && aShell && aShell->GetRootFrame()) {
+      aShell->GetRootFrame()->SchedulePaint();
+    }
   }
 
   MOZ_ASSERT(sActiveSuppressDisplayport >= 0);
