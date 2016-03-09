@@ -13,7 +13,9 @@ GonkCameraImage::GonkCameraImage()
   : GrallocImage()
   , mMonitor("GonkCameraImage.Monitor")
   , mMediaBuffer(nullptr)
+#ifdef DEBUG
   , mThread(nullptr)
+#endif
 {
   mFormat = ImageFormat::GONK_CAMERA_IMAGE;
 }
@@ -57,8 +59,9 @@ GonkCameraImage::SetMediaBuffer(android::MediaBuffer* aBuffer)
 
   mMediaBuffer = aBuffer;
   mMediaBuffer->add_ref();
+#ifdef DEBUG
   mThread = NS_GetCurrentThread();
-
+#endif
   return NS_OK;
 }
 
@@ -71,7 +74,9 @@ GonkCameraImage::ClearMediaBuffer()
     MOZ_ASSERT(NS_GetCurrentThread() == mThread);
     mMediaBuffer->release();
     mMediaBuffer = nullptr;
+#ifdef DEBUG
     mThread = nullptr;
+#endif
   }
   return NS_OK;
 }
