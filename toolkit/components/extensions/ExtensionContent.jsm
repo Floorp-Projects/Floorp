@@ -43,7 +43,6 @@ var {
   runSafeSyncWithoutClone,
   BaseContext,
   LocaleData,
-  MessageBroker,
   Messenger,
   injectAPI,
   flushJarCache,
@@ -325,13 +324,12 @@ class ExtensionContext extends BaseContext {
     };
 
     let url = contentWindow.location.href;
-    let broker = ExtensionContent.getBroker(mm);
     // The |sender| parameter is passed directly to the extension.
     let sender = {id: this.extension.uuid, frameId, url};
     // Properties in |filter| must match those in the |recipient|
     // parameter of sendMessage.
     let filter = {extensionId, frameId};
-    this.messenger = new Messenger(this, broker, sender, filter, delegate);
+    this.messenger = new Messenger(this, [mm], sender, filter, delegate);
 
     this.chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
 
@@ -739,8 +737,6 @@ class ExtensionGlobal {
     MessageChannel.addListener(global, "WebNavigation:GetFrame", this);
     MessageChannel.addListener(global, "WebNavigation:GetAllFrames", this);
 
-    this.broker = new MessageBroker([global]);
-
     this.windowId = global.content
                           .QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIDOMWindowUtils)
@@ -753,7 +749,7 @@ class ExtensionGlobal {
     this.global.sendAsyncMessage("Extension:RemoveTopWindowID", {windowId: this.windowId});
   }
 
-  get messageFilter() {
+  get messageFilterStrict() {
     return {
       innerWindowID: windowId(this.global.content),
     };
@@ -857,10 +853,6 @@ this.ExtensionContent = {
   uninit(global) {
     this.globals.get(global).uninit();
     this.globals.delete(global);
-  },
-
-  getBroker(messageManager) {
-    return this.globals.get(messageManager).broker;
   },
 };
 

@@ -177,7 +177,7 @@ public class TabQueueService extends Service {
         } else {
             try {
                 windowManager.addView(toastLayout, toastLayoutParams);
-            } catch (final SecurityException e) {
+            } catch (final SecurityException | WindowManager.BadTokenException e) {
                 Toast.makeText(this, getText(R.string.tab_queue_toast_message), Toast.LENGTH_SHORT).show();
                 showSettingsNotification();
             }
@@ -233,7 +233,7 @@ public class TabQueueService extends Service {
 
     @TargetApi(Build.VERSION_CODES.M)
     private void showSettingsNotification() {
-        if (AppConstants.Versions.preM) {
+        if (AppConstants.Versions.preMarshmallow) {
             return;
         }
 

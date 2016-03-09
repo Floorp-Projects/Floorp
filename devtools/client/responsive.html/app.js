@@ -23,13 +23,25 @@ let App = createClass({
     onExit: PropTypes.func.isRequired,
   },
 
+  onRotateViewport(id) {
+    this.props.dispatch(rotateViewport(id));
+  },
+
+  onResizeViewport(id, width, height) {
+    this.props.dispatch(resizeViewport(id, width, height));
+  },
+
   render() {
     let {
-      dispatch,
       location,
       viewports,
       onExit,
     } = this.props;
+
+    let {
+      onRotateViewport,
+      onResizeViewport,
+    } = this;
 
     return dom.div(
       {
@@ -41,9 +53,8 @@ let App = createClass({
       Viewports({
         location,
         viewports,
-        onRotateViewport: id => dispatch(rotateViewport(id)),
-        onResizeViewport: (id, width, height) =>
-          dispatch(resizeViewport(id, width, height)),
+        onRotateViewport,
+        onResizeViewport,
       })
     );
   },

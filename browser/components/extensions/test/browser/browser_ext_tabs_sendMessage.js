@@ -15,34 +15,45 @@ add_task(function* tabsSendMessageReply() {
     },
 
     background: function() {
+      let firstTab;
       let promiseResponse = new Promise(resolve => {
         browser.runtime.onMessage.addListener((msg, sender, respond) => {
           if (msg == "content-script-ready") {
             let tabId = sender.tab.id;
 
             browser.tabs.sendMessage(tabId, "respond-never", response => {
-              browser.test.fail("Got unexpected response callback");
+              browser.test.fail(`Got unexpected response callback: ${response}`);
               browser.test.notifyFail("sendMessage");
             });
 
             Promise.all([
               promiseResponse,
+
               browser.tabs.sendMessage(tabId, "respond-now"),
+              browser.tabs.sendMessage(tabId, "respond-now-2"),
               new Promise(resolve => browser.tabs.sendMessage(tabId, "respond-soon", resolve)),
               browser.tabs.sendMessage(tabId, "respond-promise"),
               browser.tabs.sendMessage(tabId, "respond-never"),
+
               browser.tabs.sendMessage(tabId, "respond-error").catch(error => Promise.resolve({error})),
               browser.tabs.sendMessage(tabId, "throw-error").catch(error => Promise.resolve({error})),
-            ]).then(([response, respondNow, respondSoon, respondPromise, respondNever, respondError, throwError]) => {
+
+              browser.tabs.sendMessage(firstTab, "no-listener").catch(error => Promise.resolve({error})),
+            ]).then(([response, respondNow, respondNow2, respondSoon, respondPromise, respondNever, respondError, throwError, noListener]) => {
               browser.test.assertEq("expected-response", response, "Content script got the expected response");
 
               browser.test.assertEq("respond-now", respondNow, "Got the expected immediate response");
+              browser.test.assertEq("respond-now-2", respondNow2, "Got the expected immediate response from the second listener");
               browser.test.assertEq("respond-soon", respondSoon, "Got the expected delayed response");
               browser.test.assertEq("respond-promise", respondPromise, "Got the expected promise response");
               browser.test.assertEq(undefined, respondNever, "Got the expected no-response resolution");
 
               browser.test.assertEq("respond-error", respondError.error.message, "Got the expected error response");
               browser.test.assertEq("throw-error", throwError.error.message, "Got the expected thrown error response");
+
+              browser.test.assertEq("Could not establish connection. Receiving end does not exist.",
+                                    noListener.error.message,
+                                    "Got the expected no listener response");
 
               return browser.tabs.remove(tabId);
             }).then(() => {
@@ -56,7 +67,10 @@ add_task(function* tabsSendMessageReply() {
         });
       });
 
-      browser.tabs.create({url: "http://example.com/"});
+      browser.tabs.query({currentWindow: true, active: true}).then(tabs => {
+        firstTab = tabs[0].id;
+        browser.tabs.create({url: "http://example.com/"});
+      });
     },
 
     files: {
@@ -75,6 +89,13 @@ add_task(function* tabsSendMessageReply() {
             return Promise.reject(new Error(msg));
           } else if (msg == "throw-error") {
             throw new Error(msg);
+          }
+        });
+        browser.runtime.onMessage.addListener((msg, sender, respond) => {
+          if (msg == "respond-now") {
+            respond("hello");
+          } else if (msg == "respond-now-2") {
+            respond(msg);
           }
         });
         browser.runtime.sendMessage("content-script-ready").then(response => {
@@ -107,7 +128,7 @@ add_task(function* tabsSendMessageNoExceptionOnNonExistentTab() {
           exception = e;
         }
 
-        browser.test.assertEq(undefined, exception, "no exception should be raised on tabs.sendMessage to unexistent tabs");
+        browser.test.assertEq(undefined, exception, "no exception should be raised on tabs.sendMessage to nonexistent tabs");
         browser.tabs.remove(tab.id, function() {
           browser.test.notifyPass("tabs.sendMessage");
         });

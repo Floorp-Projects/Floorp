@@ -14,11 +14,10 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <script type="application/javascript"
-          src="utils.js"/>
 
   <script type="application/javascript">
   <![CDATA[
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xul";
 
@@ -68,13 +67,6 @@ let windowObserver = {
 };
 
 function init() {
-  var dmui = getDMUI();
-  if (!dmui) {
-    todo(false, "skip test for toolkit download manager UI");
-    SimpleTest.finish();
-    return;
-  }
-
   ww.registerNotification(windowObserver);
   loadNextTest();
 }

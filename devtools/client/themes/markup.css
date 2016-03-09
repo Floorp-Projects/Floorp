@@ -232,6 +232,7 @@ ul.children + .tag-line::before {
   margin-top: .3em;
   left: 1px;
   position: absolute;
+  z-index: 1;
 }
 
 /* Selected nodes in the tree should have light selected text.

@@ -12,6 +12,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.apache.commons.codec.binary.Hex;
 
 import org.mozilla.gecko.permissions.Permissions;
+import org.mozilla.gecko.util.ProxySelector;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -47,8 +48,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.Proxy;
-import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
@@ -373,21 +372,6 @@ public class UpdateService extends IntentService {
         }
     }
 
-    private URLConnection openConnectionWithProxy(URI uri) throws java.net.MalformedURLException, java.io.IOException {
-        Log.i(LOGTAG, "opening connection with URI: " + uri);
-
-        ProxySelector ps = ProxySelector.getDefault();
-        Proxy proxy = Proxy.NO_PROXY;
-        if (ps != null) {
-            List<Proxy> proxies = ps.select(uri);
-            if (proxies != null && !proxies.isEmpty()) {
-                proxy = proxies.get(0);
-            }
-        }
-
-        return uri.toURL().openConnection(proxy);
-    }
-
     private UpdateInfo findUpdate(boolean force) {
         try {
             URI uri = getUpdateURI(force);
@@ -398,7 +382,7 @@ public class UpdateService extends IntentService {
             }
 
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document dom = builder.parse(openConnectionWithProxy(uri).getInputStream());
+            Document dom = builder.parse(ProxySelector.openConnectionWithProxy(uri).getInputStream());
 
             NodeList nodes = dom.getElementsByTagName("update");
             if (nodes == null || nodes.getLength() == 0)
@@ -579,7 +563,7 @@ public class UpdateService extends IntentService {
                 mWifiLock.acquire();
             }
 
-            URLConnection conn = openConnectionWithProxy(info.uri);
+            URLConnection conn = ProxySelector.openConnectionWithProxy(info.uri);
             int length = conn.getContentLength();
 
             output = new BufferedOutputStream(new FileOutputStream(downloadFile));
