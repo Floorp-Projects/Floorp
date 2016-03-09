@@ -43,7 +43,7 @@ import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.widget.ButtonToast;
+
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -190,7 +190,7 @@ public abstract class GeckoApp
 
     protected DoorHangerPopup mDoorHangerPopup;
     protected FormAssistPopup mFormAssistPopup;
-    protected ButtonToast mToast;
+
 
     protected LayerView mLayerView;
     private AbsoluteLayout mPluginContainer;
@@ -827,42 +827,7 @@ public abstract class GeckoApp
         });
     }
 
-    public ButtonToast getButtonToast() {
-        if (mToast != null) {
-            return mToast;
-        }
 
-        ViewStub toastStub = (ViewStub) findViewById(R.id.toast_stub);
-        mToast = new ButtonToast(toastStub.inflate());
-
-        return mToast;
-    }
-
-    void showButtonToast(final String message, final String duration,
-                         final String buttonText, final String buttonIcon,
-                         final String buttonId) {
-        BitmapUtils.getDrawable(GeckoApp.this, buttonIcon, new BitmapUtils.BitmapLoader() {
-            @Override
-            public void onBitmapFound(final Drawable d) {
-                final int toastDuration = duration.equals("long") ? ButtonToast.LENGTH_LONG : ButtonToast.LENGTH_SHORT;
-                getButtonToast().show(false, message, toastDuration ,buttonText, d, new ButtonToast.ToastListener() {
-                    @Override
-                    public void onButtonClicked() {
-                        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Toast:Click", buttonId));
-                    }
-
-                    @Override
-                    public void onToastHidden(ButtonToast.ReasonHidden reason) {
-                        if (reason == ButtonToast.ReasonHidden.TIMEOUT ||
-                            reason == ButtonToast.ReasonHidden.TOUCH_OUTSIDE ||
-                            reason == ButtonToast.ReasonHidden.REPLACED) {
-                            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Toast:Hidden", buttonId));
-                        }
-                    }
-                });
-            }
-        });
-    }
 
     private void addFullScreenPluginView(View view) {
         if (mFullScreenPluginView != null) {
