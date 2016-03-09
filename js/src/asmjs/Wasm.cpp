@@ -555,7 +555,7 @@ DecodeBrTable(FunctionDecoder& f, ExprType* type)
 
     for (uint32_t i = 0; i < tableLength; i++) {
         uint32_t depth;
-        if (!f.d().readVarU32(&depth))
+        if (!f.d().readFixedU32(&depth))
             return f.fail("missing br_table entry");
 
         if (!f.branchWithType(depth, ExprType::Void))
@@ -563,7 +563,7 @@ DecodeBrTable(FunctionDecoder& f, ExprType* type)
     }
 
     uint32_t defaultDepth;
-    if (!f.d().readVarU32(&defaultDepth))
+    if (!f.d().readFixedU32(&defaultDepth))
         return f.fail("expected default relative depth");
 
     if (!f.branchWithType(defaultDepth, ExprType::Void))

@@ -3667,11 +3667,11 @@ EncodeBranchTable(Encoder& e, WasmAstBranchTable& bt)
         return false;
 
     for (const WasmRef& elem : bt.table()) {
-        if (!e.writeVarU32(elem.index()))
+        if (!e.writeFixedU32(elem.index()))
             return false;
     }
 
-    if (!e.writeVarU32(bt.def().index()))
+    if (!e.writeFixedU32(bt.def().index()))
         return false;
 
     return EncodeExpr(e, bt.index());
