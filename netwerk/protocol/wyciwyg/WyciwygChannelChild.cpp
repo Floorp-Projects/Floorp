@@ -108,7 +108,7 @@ WyciwygChannelChild::Init(nsIURI* uri)
                                            &requestingPrincipalInfo);
     mozilla::ipc::PrincipalToPrincipalInfo(nsContentUtils::GetSystemPrincipal(),
                                            &triggeringPrincipalInfo);
-    securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+    securityFlags = nsILoadInfo::SEC_NORMAL;
     policyType = nsIContentPolicy::TYPE_OTHER;
   }
 
