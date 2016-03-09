@@ -1130,6 +1130,18 @@ class Operand
     }
 };
 
+inline Imm32
+Imm64::firstHalf() const
+{
+    return low();
+}
+
+inline Imm32
+Imm64::secondHalf() const
+{
+    return hi();
+}
+
 void
 PatchJump(CodeLocationJump& jump_, CodeLocationLabel label,
           ReprotectCode reprotect = DontReprotect);
