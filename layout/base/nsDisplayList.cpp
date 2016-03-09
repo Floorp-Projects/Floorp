@@ -3050,13 +3050,6 @@ nsDisplayBackgroundImage::GetPerFrameKey()
     nsDisplayItem::GetPerFrameKey();
 }
 
-void
-nsDisplayBackgroundImage::MarkBoundsAsVisible(nsDisplayListBuilder* aBuilder)
-{
-  bool snap;
-  mVisibleRect = GetBounds(aBuilder, &snap);
-}
-
 nsDisplayThemedBackground::nsDisplayThemedBackground(nsDisplayListBuilder* aBuilder,
                                                      nsIFrame* aFrame)
   : nsDisplayItem(aBuilder, aFrame)
@@ -4735,7 +4728,6 @@ nsDisplayFixedPosition::CreateForFixedBackground(nsDisplayListBuilder* aBuilder,
   // fixed position item as well.
   aImage->SetClip(aBuilder, DisplayItemClip());
   aImage->SetScrollClip(nullptr);
-  aImage->MarkBoundsAsVisible(aBuilder);
 
   nsDisplayList temp;
   temp.AppendToTop(aImage);
