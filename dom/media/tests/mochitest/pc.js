@@ -1396,13 +1396,12 @@ PeerConnectionWrapper.prototype = {
    */
   waitForRtpFlow(track) {
     var hasFlow = stats => {
-      var rtpStatsKey = Object.keys(stats)
-        .find(key => !stats[key].isRemote && stats[key].type.endsWith("boundrtp"));
-      ok(rtpStatsKey, "Should have RTP stats for track " + track.id);
-      if (!rtpStatsKey) {
+      var rtp = stats.get([...stats.keys()].find(key =>
+        !stats.get(key).isRemote && stats.get(key).type.endsWith("boundrtp")));
+      ok(rtp, "Should have RTP stats for track " + track.id);
+      if (!rtp) {
         return false;
       }
-      var rtp = stats[rtpStatsKey];
       var nrPackets = rtp[rtp.type == "outboundrtp" ? "packetsSent"
                                                     : "packetsReceived"];
       info("Track " + track.id + " has " + nrPackets + " " +
@@ -1502,113 +1501,113 @@ PeerConnectionWrapper.prototype = {
    *        The stats to check from this PeerConnectionWrapper
    */
   checkStats : function(stats, twoMachines) {
-    var toNum = obj => obj? obj : 0;
-
     const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
 
     // Use spec way of enumerating stats
     var counters = {};
-    for (var key in stats) {
-      if (stats.hasOwnProperty(key)) {
-        var res = stats[key];
-        // validate stats
-        ok(res.id == key, "Coherent stats id");
-        var nowish = Date.now() + 1000;        // TODO: clock drift observed
-        var minimum = this.whenCreated - 1000; // on Windows XP (Bug 979649)
-        if (isWinXP) {
-          todo(false, "Can't reliably test rtcp timestamps on WinXP (Bug 979649)");
-        } else if (!twoMachines) {
-          // Bug 1225729: On android, sometimes the first RTCP of the first
-          // test run gets this value, likely because no RTP has been sent yet.
-          if (res.timestamp != 2085978496000) {
-            ok(res.timestamp >= minimum,
-               "Valid " + (res.isRemote? "rtcp" : "rtp") + " timestamp " +
-                   res.timestamp + " >= " + minimum + " (" +
-                   (res.timestamp - minimum) + " ms)");
-            ok(res.timestamp <= nowish,
-               "Valid " + (res.isRemote? "rtcp" : "rtp") + " timestamp " +
-                   res.timestamp + " <= " + nowish + " (" +
-                   (res.timestamp - nowish) + " ms)");
+    for (let [key, res] of stats) {
+      // validate stats
+      ok(res.id == key, "Coherent stats id");
+      var nowish = Date.now() + 1000;        // TODO: clock drift observed
+      var minimum = this.whenCreated - 1000; // on Windows XP (Bug 979649)
+      if (isWinXP) {
+        todo(false, "Can't reliably test rtcp timestamps on WinXP (Bug 979649)");
+      } else if (!twoMachines) {
+        // Bug 1225729: On android, sometimes the first RTCP of the first
+        // test run gets this value, likely because no RTP has been sent yet.
+        if (res.timestamp != 2085978496000) {
+          ok(res.timestamp >= minimum,
+             "Valid " + (res.isRemote? "rtcp" : "rtp") + " timestamp " +
+                 res.timestamp + " >= " + minimum + " (" +
+                 (res.timestamp - minimum) + " ms)");
+          ok(res.timestamp <= nowish,
+             "Valid " + (res.isRemote? "rtcp" : "rtp") + " timestamp " +
+                 res.timestamp + " <= " + nowish + " (" +
+                 (res.timestamp - nowish) + " ms)");
+        } else {
+          info("Bug 1225729: Uninitialized timestamp (" + res.timestamp +
+                "), should be >=" + minimum + " and <= " + nowish);
+        }
+      }
+      if (res.isRemote) {
+        continue;
+      }
+      counters[res.type] = (counters[res.type] || 0) + 1;
+
+      switch (res.type) {
+        case "inboundrtp":
+        case "outboundrtp": {
+          // ssrc is a 32 bit number returned as a string by spec
+          ok(res.ssrc.length > 0, "Ssrc has length");
+          ok(res.ssrc.length < 11, "Ssrc not lengthy");
+          ok(!/[^0-9]/.test(res.ssrc), "Ssrc numeric");
+          ok(parseInt(res.ssrc) < Math.pow(2,32), "Ssrc within limits");
+
+          if (res.type == "outboundrtp") {
+            ok(res.packetsSent !== undefined, "Rtp packetsSent");
+            // We assume minimum payload to be 1 byte (guess from RFC 3550)
+            ok(res.bytesSent >= res.packetsSent, "Rtp bytesSent");
           } else {
-            info("Bug 1225729: Uninitialized timestamp (" + res.timestamp +
-                 "), should be >=" + minimum + " and <= " + nowish);
+            ok(res.packetsReceived !== undefined, "Rtp packetsReceived");
+            ok(res.bytesReceived >= res.packetsReceived, "Rtp bytesReceived");
           }
-        }
-        if (!res.isRemote) {
-          counters[res.type] = toNum(counters[res.type]) + 1;
-
-          switch (res.type) {
-            case "inboundrtp":
-            case "outboundrtp": {
-              // ssrc is a 32 bit number returned as a string by spec
-              ok(res.ssrc.length > 0, "Ssrc has length");
-              ok(res.ssrc.length < 11, "Ssrc not lengthy");
-              ok(!/[^0-9]/.test(res.ssrc), "Ssrc numeric");
-              ok(parseInt(res.ssrc) < Math.pow(2,32), "Ssrc within limits");
-
-              if (res.type == "outboundrtp") {
-                ok(res.packetsSent !== undefined, "Rtp packetsSent");
-                // We assume minimum payload to be 1 byte (guess from RFC 3550)
-                ok(res.bytesSent >= res.packetsSent, "Rtp bytesSent");
-              } else {
-                ok(res.packetsReceived !== undefined, "Rtp packetsReceived");
-                ok(res.bytesReceived >= res.packetsReceived, "Rtp bytesReceived");
+          if (res.remoteId) {
+            var rem = stats[res.remoteId];
+            ok(rem.isRemote, "Remote is rtcp");
+            ok(rem.remoteId == res.id, "Remote backlink match");
+            if(res.type == "outboundrtp") {
+              ok(rem.type == "inboundrtp", "Rtcp is inbound");
+              ok(rem.packetsReceived !== undefined, "Rtcp packetsReceived");
+              ok(rem.packetsLost !== undefined, "Rtcp packetsLost");
+              ok(rem.bytesReceived >= rem.packetsReceived, "Rtcp bytesReceived");
+              if (!this.disableRtpCountChecking) {
+                ok(rem.packetsReceived <= res.packetsSent, "No more than sent packets");
+                ok(rem.bytesReceived <= res.bytesSent, "No more than sent bytes");
               }
-              if (res.remoteId) {
-                var rem = stats[res.remoteId];
-                ok(rem.isRemote, "Remote is rtcp");
-                ok(rem.remoteId == res.id, "Remote backlink match");
-                if(res.type == "outboundrtp") {
-                  ok(rem.type == "inboundrtp", "Rtcp is inbound");
-                  ok(rem.packetsReceived !== undefined, "Rtcp packetsReceived");
-                  ok(rem.packetsLost !== undefined, "Rtcp packetsLost");
-                  ok(rem.bytesReceived >= rem.packetsReceived, "Rtcp bytesReceived");
-                  if (!this.disableRtpCountChecking) {
-                    ok(rem.packetsReceived <= res.packetsSent, "No more than sent packets");
-                    ok(rem.bytesReceived <= res.bytesSent, "No more than sent bytes");
-                  }
-                  ok(rem.jitter !== undefined, "Rtcp jitter");
-                  ok(rem.mozRtt !== undefined, "Rtcp rtt");
-                  ok(rem.mozRtt >= 0, "Rtcp rtt " + rem.mozRtt + " >= 0");
-                  ok(rem.mozRtt < 60000, "Rtcp rtt " + rem.mozRtt + " < 1 min");
-                } else {
-                  ok(rem.type == "outboundrtp", "Rtcp is outbound");
-                  ok(rem.packetsSent !== undefined, "Rtcp packetsSent");
-                  // We may have received more than outdated Rtcp packetsSent
-                  ok(rem.bytesSent >= rem.packetsSent, "Rtcp bytesSent");
-                }
-                ok(rem.ssrc == res.ssrc, "Remote ssrc match");
-              } else {
-                info("No rtcp info received yet");
-              }
+              ok(rem.jitter !== undefined, "Rtcp jitter");
+              ok(rem.mozRtt !== undefined, "Rtcp rtt");
+              ok(rem.mozRtt >= 0, "Rtcp rtt " + rem.mozRtt + " >= 0");
+              ok(rem.mozRtt < 60000, "Rtcp rtt " + rem.mozRtt + " < 1 min");
+            } else {
+              ok(rem.type == "outboundrtp", "Rtcp is outbound");
+              ok(rem.packetsSent !== undefined, "Rtcp packetsSent");
+              // We may have received more than outdated Rtcp packetsSent
+              ok(rem.bytesSent >= rem.packetsSent, "Rtcp bytesSent");
             }
-            break;
+            ok(rem.ssrc == res.ssrc, "Remote ssrc match");
+          } else {
+            info("No rtcp info received yet");
           }
         }
+        break;
       }
     }
 
-    // Use MapClass way of enumerating stats
+    // Use legacy way of enumerating stats
     var counters2 = {};
-    stats.forEach(res => {
-        if (!res.isRemote) {
-          counters2[res.type] = toNum(counters2[res.type]) + 1;
-        }
-      });
+    for (let key in stats) {
+      if (!stats.hasOwnProperty(key)) {
+        continue;
+      }
+      var res = stats[key];
+      if (!res.isRemote) {
+        counters2[res.type] = (counters2[res.type] || 0) + 1;
+      }
+    }
     is(JSON.stringify(counters), JSON.stringify(counters2),
-       "Spec and MapClass variant of RTCStatsReport enumeration agree");
+       "Spec and legacy variant of RTCStatsReport enumeration agree");
     var nin = Object.keys(this.expectedRemoteTrackInfoById).length;
     var nout = Object.keys(this.expectedLocalTrackInfoById).length;
     var ndata = this.dataChannels.length;
 
     // TODO(Bug 957145): Restore stronger inboundrtp test once Bug 948249 is fixed
-    //is(toNum(counters["inboundrtp"]), nin, "Have " + nin + " inboundrtp stat(s)");
-    ok(toNum(counters.inboundrtp) >= nin, "Have at least " + nin + " inboundrtp stat(s) *");
+    //is((counters["inboundrtp"] || 0), nin, "Have " + nin + " inboundrtp stat(s)");
+    ok((counters.inboundrtp || 0) >= nin, "Have at least " + nin + " inboundrtp stat(s) *");
 
-    is(toNum(counters.outboundrtp), nout, "Have " + nout + " outboundrtp stat(s)");
+    is(counters.outboundrtp || 0, nout, "Have " + nout + " outboundrtp stat(s)");
 
-    var numLocalCandidates  = toNum(counters.localcandidate);
-    var numRemoteCandidates = toNum(counters.remotecandidate);
+    var numLocalCandidates  = counters.localcandidate || 0;
+    var numRemoteCandidates = counters.remotecandidate || 0;
     // If there are no tracks, there will be no stats either.
     if (nin + nout + ndata > 0) {
       ok(numLocalCandidates, "Have localcandidate stat(s)");
@@ -1627,41 +1626,38 @@ PeerConnectionWrapper.prototype = {
    *        The stats to be verified for relayed vs. direct connection.
    */
   checkStatsIceConnectionType : function(stats) {
-    var lId;
-    var rId;
-    Object.keys(stats).forEach(name => {
-      if ((stats[name].type === "candidatepair") &&
-          (stats[name].selected)) {
-        lId = stats[name].localCandidateId;
-        rId = stats[name].remoteCandidateId;
+    let lId;
+    let rId;
+    for (let stat of stats.values()) {
+      if (stat.type == "candidatepair" && stat.selected) {
+        lId = stat.localCandidateId;
+        rId = stat.remoteCandidateId;
+        break;
       }
-    });
-    ok(typeof lId !== 'undefined', "Got local candidate ID " +
-       JSON.stringify(lId) + " for selected pair");
-    ok(typeof rId !== 'undefined', "Got remote candidate ID " +
-       JSON.stringify(rId) + " for selected pair");
-    if ((typeof stats[lId] === 'undefined') ||
-        (typeof stats[rId] === 'undefined')) {
-      ok(false, "failed to find candidatepair IDs or stats for local: " +
-         JSON.stringify(lId) + " remote: " + JSON.stringify(rId));
+    }
+    isnot(lId, undefined, "Got local candidate ID " + lId + " for selected pair");
+    isnot(rId, undefined, "Got remote candidate ID " + rId + " for selected pair");
+    let lCand = stats.get(lId);
+    let rCand = stats.get(rId);
+    if (!lCand || !rCand) {
+      ok(false,
+         "failed to find candidatepair IDs or stats for local: "+ lId +" remote: "+ rId);
       return;
     }
     info("checkStatsIceConnectionType verifying: local=" +
-         JSON.stringify(stats[lId]) + " remote=" + JSON.stringify(stats[rId]));
-    var lType = stats[lId].candidateType;
-    var rType = stats[rId].candidateType;
-    var lIp = stats[lId].ipAddress;
-    var rIp = stats[rId].ipAddress;
+         JSON.stringify(lCand) + " remote=" + JSON.stringify(rCand));
     if ((this.configuration) && (typeof this.configuration.iceServers !== 'undefined')) {
       info("Ice Server configured");
       // Note: the IP comparising is a workaround for bug 1097333
       //       And this will fail if a TURN server address is a DNS name!
       var serverIp = this.configuration.iceServers[0].url.split(':')[1];
-      ok((lType === "relayed" || rType === "relayed") ||
-         (lIp === serverIp || rIp === serverIp), "One peer uses a relay");
+      ok(lCand.candidateType == "relayed" || rCand.candidateType == "relayed" ||
+         lCand.ipAddress === serverIp || rCand.ipAddress === serverIp,
+         "One peer uses a relay");
     } else {
       info("P2P configured");
-      ok(((lType !== "relayed") && (rType !== "relayed")), "Pure peer to peer call without a relay");
+      ok(lCand.candidateType != "relayed" && rCand.candidateType != "relayed",
+         "Pure peer to peer call without a relay");
     }
   },
 
@@ -1736,19 +1732,16 @@ PeerConnectionWrapper.prototype = {
    * @returns {boolean} Whether an entry containing all match-props was found.
    */
   hasStat : function(stats, props) {
-    for (var key in stats) {
-      if (stats.hasOwnProperty(key)) {
-        var res = stats[key];
-        var match = true;
-        for (var prop in props) {
-          if (res[prop] !== props[prop]) {
-            match = false;
-            break;
-          }
+    for (let res of stats.values()) {
+      var match = true;
+      for (let prop in props) {
+        if (res[prop] !== props[prop]) {
+          match = false;
+          break;
         }
-        if (match) {
-          return true;
-        }
+      }
+      if (match) {
+        return true;
       }
     }
     return false;
