@@ -922,6 +922,14 @@ class TreeMetadataEmitter(LoggingMixin):
         for name, data in context.get('ANDROID_ECLIPSE_PROJECT_TARGETS', {}).items():
             yield ContextWrapped(context, data)
 
+        if context.get('USE_YASM') is True:
+            yasm = context.config.substs.get('YASM')
+            if not yasm:
+                raise SandboxValidationError('yasm is not available', context)
+            passthru.variables['AS'] = yasm
+            passthru.variables['ASFLAGS'] = context.config.substs.get('YASM_ASFLAGS')
+            passthru.variables['AS_DASH_C_FLAG'] = ''
+
         for (symbol, cls) in [
                 ('ANDROID_RES_DIRS', AndroidResDirs),
                 ('ANDROID_EXTRA_RES_DIRS', AndroidExtraResDirs),
