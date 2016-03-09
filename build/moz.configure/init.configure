@@ -228,8 +228,27 @@ def include_project_configure(project, build_env, help):
         error('Cannot find project %s' % project[0])
     return path
 
-include(include_project_configure)
-
-@depends('--enable-project')
-def build_app(project):
+@depends('--enable-project', '--help')
+def build_project(project, help):
     return project[0]
+
+
+# This is temporary until js/src/configure and configure are merged.
+@depends(build_project)
+def extra_old_configure_args(build_project):
+    if build_project != 'js':
+        return []
+    return False
+
+# Use instead of option() in js/moz.configure
+@template
+def js_option(*args, **kwargs):
+    opt = option(*args, **kwargs)
+
+    @depends(opt.option, extra_old_configure_args)
+    def js_option(value, extra_old_configure_args):
+        if extra_old_configure_args is not False:
+            extra_old_configure_args.append(value.format(opt.option))
+
+
+include(include_project_configure)

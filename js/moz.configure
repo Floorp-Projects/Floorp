@@ -4,7 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-option('--disable-js-shell', help='Do not build the JS shell')
+# /!\ Use js_option() instead of option() in this file. /!\
+# =========================================================
+
+@depends(build_project, '--help')
+def js_shell_default(build_project, help):
+    return build_project == 'js'
+
+js_option('--disable-js-shell', default=js_shell_default,
+       help='Do not build the JS shell')
 
 @depends('--disable-js-shell')
 def js_shell(value):
