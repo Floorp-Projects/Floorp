@@ -83,7 +83,7 @@ public:
 
   typedef MozPromise<uint32_t, bool, /* IsExclusive = */ true> BenchmarkPromise;
 
-  Benchmark(MediaDataDemuxer* aDemuxer, const Parameters& aParameters = Parameters());
+  explicit Benchmark(MediaDataDemuxer* aDemuxer, const Parameters& aParameters = Parameters());
   RefPtr<BenchmarkPromise> Run();
   void ReturnResult(uint32_t aDecodeFps);
   void Dispose();
