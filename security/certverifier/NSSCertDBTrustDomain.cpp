@@ -780,9 +780,9 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
   }
 
   bool isBuiltInRoot = false;
-  Result rv = IsCertBuiltInRoot(root, isBuiltInRoot);
-  if (rv != Success) {
-    return rv;
+  srv = IsCertBuiltInRoot(root, isBuiltInRoot);
+  if (srv != SECSuccess) {
+    return MapPRErrorCodeToResult(PR_GetError());
   }
   bool skipPinningChecksBecauseOfMITMMode =
     (!isBuiltInRoot && mPinningMode == CertVerifier::pinningAllowUserCAMITM);
