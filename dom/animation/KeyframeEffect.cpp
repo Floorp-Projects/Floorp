@@ -238,12 +238,10 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   // Always return the same object to benefit from return-value optimization.
   ComputedTiming result;
 
-  if (aTiming.mDuration.IsUnrestrictedDouble()) {
-    double durationMs = aTiming.mDuration.GetAsUnrestrictedDouble();
-    if (!IsNaN(durationMs) && durationMs >= 0.0f) {
-      result.mDuration = StickyTimeDuration::FromMilliseconds(durationMs);
-    }
+  if (aTiming.mDuration && aTiming.mDuration.ref() > zeroDuration) {
+    result.mDuration = aTiming.mDuration.ref();
   }
+
   result.mIterations = IsNaN(aTiming.mIterations) || aTiming.mIterations < 0.0f ?
                        1.0f :
                        aTiming.mIterations;
