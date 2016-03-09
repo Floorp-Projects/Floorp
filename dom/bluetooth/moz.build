@@ -23,7 +23,7 @@ if CONFIG['MOZ_B2G_BT']:
         'common/BluetoothReplyRunnable.cpp',
         'common/BluetoothService.cpp',
         'common/BluetoothUtils.cpp',
-        'common/BluetoothUuid.cpp',
+        'common/BluetoothUuidHelper.cpp',
         'common/ObexBase.cpp',
         'common/webapi/BluetoothAdapter.cpp',
         'common/webapi/BluetoothClassOfDevice.cpp',
