@@ -3537,12 +3537,6 @@ dnl system libffi Support
 dnl ========================================================
 MOZ_CONFIG_FFI()
 
-MOZ_ARG_ENABLE_BOOL(shared-js,
-[  --enable-shared-js
-                          Create a shared JavaScript library.],
-    JS_SHARED_LIBRARY=1,
-    JS_SHARED_LIBRARY=)
-
 dnl ========================================================
 dnl Java SDK support
 dnl ========================================================
@@ -8924,11 +8918,6 @@ if test "$MOZ_ENABLE_MASK_AS_SHORTHAND"; then
 fi
 AC_SUBST(MOZ_ENABLE_MASK_AS_SHORTHAND)
 
-if test -z "$JS_SHARED_LIBRARY"; then
-  AC_DEFINE(MOZ_STATIC_JS)
-fi
-AC_SUBST(JS_SHARED_LIBRARY)
-
 # Avoid using obsolete NSPR features
 AC_DEFINE(NO_NSPR_10_SUPPORT)
 
@@ -9037,12 +9026,6 @@ fi
 if test "$BUILD_CTYPES"; then
     # Build js-ctypes on the platforms we can.
     ac_configure_args="$ac_configure_args --enable-ctypes"
-fi
-if test -z "$JS_SHARED_LIBRARY" ; then
-    ac_configure_args="$ac_configure_args --disable-shared-js"
-    if test -n "$MOZ_DISABLE_EXPORT_JS"; then
-        ac_configure_args="$ac_configure_args --disable-export-js"
-    fi
 fi
 if test -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
     ac_configure_args="$ac_configure_args --with-nspr-cflags='$NSPR_CFLAGS'"

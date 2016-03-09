@@ -61,11 +61,13 @@ option(env='OLD_CONFIGURE', nargs=1, help='Path to the old configure script')
 
 @depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell,
          virtualenv_python, compile_environment, build_project,
-         extra_old_configure_args, '--with-external-source-dir')
+         extra_old_configure_args, '--with-external-source-dir',
+         '--enable-shared-js')
 @advanced
 def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
                       python, compile_env, build_project,
-                      extra_old_configure_args, external_source_dir):
+                      extra_old_configure_args, external_source_dir,
+                      shared_js):
     import glob
     import itertools
     import subprocess
@@ -131,6 +133,8 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
         print('MOZ_BUILD_APP=%s' % build_project, file=out)
         if external_source_dir:
             print(external_source_dir.format('EXTERNAL_SOURCE_DIR'), file=out)
+        if shared_js:
+            print('JS_SHARED_LIBRARY=1', file=out)
 
     if extra_old_configure_args:
         cmd += extra_old_configure_args
@@ -183,7 +187,6 @@ def old_configure_options(*options):
     '--enable-dump-painting',
     '--enable-elf-hack',
     '--enable-eme',
-    '--enable-export-js',
     '--enable-extensions',
     '--enable-faststripe',
     '--enable-feeds',
@@ -247,7 +250,6 @@ def old_configure_options(*options):
     '--enable-rust',
     '--enable-safe-browsing',
     '--enable-sandbox',
-    '--enable-shared-js',
     '--enable-signmar',
     '--enable-simulator',
     '--enable-skia',
