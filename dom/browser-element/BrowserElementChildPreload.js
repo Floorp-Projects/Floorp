@@ -1050,7 +1050,7 @@ BrowserElementChild.prototype = {
 
     try {
       let sandboxRv = Cu.evalInSandbox(data.json.args.script, sandbox, "1.8");
-      if (sandboxRv instanceof Promise) {
+      if (sandboxRv instanceof sandbox.Promise) {
         sandboxRv.then(rv => {
           if (isJSON(rv)) {
             sendSuccess(rv);
