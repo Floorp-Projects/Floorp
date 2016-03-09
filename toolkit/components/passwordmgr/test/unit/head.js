@@ -165,7 +165,7 @@ const MockDocument = {
 
 //// Initialization functions common to all tests
 
-add_task(function test_common_initialize()
+add_task(function* test_common_initialize()
 {
   // Before initializing the service for the first time, we should copy the key
   // file required to decrypt the logins contained in the SQLite databases used

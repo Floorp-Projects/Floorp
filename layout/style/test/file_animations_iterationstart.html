@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <style type="text/css">
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+  <script>
+    var ok = opener.ok.bind(opener);
+    var is = opener.is.bind(opener);
+    var todo = opener.todo.bind(opener);
+    function finish() {
+      var o = opener;
+      self.close();
+      o.SimpleTest.finish();
+    }
+  </script>
+</head>
+<body>
+<div id="display"></div>
+<script type="application/javascript">
+"use strict";
+
+runOMTATest(function() {
+  runAllAsyncAnimTests().then(function() {
+    finish();
+  });
+}, finish, opener.SpecialPowers);
+
+
+addAsyncAnimTest(function *() {
+  var [ div ] = new_div("test");
+  var animation = div.animate(
+    { transform: ["translate(0px)", "translate(100px)"] },
+    { iterationStart: 0.5, duration: 10000, fill: "both"}
+  );
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor, "Start of Animation");
+
+  advance_clock(4000);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 90 }, RunningOn.Compositor, "40% of Animation");
+
+  advance_clock(6000);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 50 }, RunningOn.MainThread, "End of Animation");
+
+  done_div();
+});
+
+</script>
+</body>
+</html>

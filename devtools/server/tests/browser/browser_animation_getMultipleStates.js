@@ -21,7 +21,7 @@ function* playerHasAnInitialState(walker, animations) {
   let state = yield getAnimationStateForNode(walker, animations,
     ".delayed-multiple-animations", 0);
 
-  ok(state.duration, 500,
+  ok(state.duration, 50000,
      "The duration of the first animation is correct");
   ok(state.iterationCount, 10,
      "The iterationCount of the first animation is correct");
@@ -31,7 +31,7 @@ function* playerHasAnInitialState(walker, animations) {
   state = yield getAnimationStateForNode(walker, animations,
     ".delayed-multiple-animations", 1);
 
-  ok(state.duration, 1000,
+  ok(state.duration, 100000,
      "The duration of the secon animation is correct");
   ok(state.iterationCount, 30,
      "The iterationCount of the secon animation is correct");

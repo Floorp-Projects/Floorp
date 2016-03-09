@@ -12,6 +12,7 @@
 #include "BorrowedContext.h"
 #include "FilterNodeSoftware.h"
 #include "mozilla/Scoped.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 
 #include "cairo.h"
@@ -613,7 +614,8 @@ DrawTargetCairo::~DrawTargetCairo()
 bool
 DrawTargetCairo::IsValid() const
 {
-  return mSurface && !cairo_surface_status(mSurface) && !cairo_surface_status(cairo_get_group_target(mContext));
+  return mSurface && !cairo_surface_status(mSurface) &&
+         mContext && !cairo_surface_status(cairo_get_group_target(mContext));
 }
 
 DrawTargetType
@@ -1287,6 +1289,11 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
     return;
   }
 
+  if (!aFont) {
+    gfxDevCrash(LogReason::InvalidFont) << "Invalid scaled font";
+    return;
+  }
+
   AutoPrepareForDrawing prep(this, mContext);
   AutoClearDeviceOffset clear(aPattern);
 
@@ -1697,8 +1704,7 @@ DrawTargetCairo::OptimizeSourceSurface(SourceSurface *aSurface) const
     return surface.forget();
   }
 
-  ScopedDeletePtr<DestroyPixmapClosure> closure(
-    new DestroyPixmapClosure(pixmap, screen));
+  auto closure = MakeUnique<DestroyPixmapClosure>(pixmap, screen);
 
   ScopedCairoSurface csurf(
     cairo_xlib_surface_create_with_xrender_format(dpy, pixmap,
@@ -1709,7 +1715,7 @@ DrawTargetCairo::OptimizeSourceSurface(SourceSurface *aSurface) const
   }
 
   cairo_surface_set_user_data(csurf, &gDestroyPixmapKey,
-                              closure.forget(), DestroyPixmap);
+                              closure.release(), DestroyPixmap);
 
   RefPtr<DrawTargetCairo> dt = new DrawTargetCairo();
   if (!dt->Init(csurf, size, &format)) {

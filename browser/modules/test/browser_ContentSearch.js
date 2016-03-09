@@ -97,13 +97,15 @@ add_task(function* search() {
     healthReportKey: "ContentSearchTest",
     searchPurpose: "ContentSearchTest",
   };
+  let submissionURL =
+    engine.getSubmission(data.searchString, "", data.whence).uri.spec;
   gMsgMan.sendAsyncMessage(TEST_MSG, {
     type: "Search",
     data: data,
+    expectedURL: submissionURL,
   });
-  let submissionURL =
-    engine.getSubmission(data.searchString, "", data.whence).uri.spec;
-  yield waitForLoadAndStopIt(gBrowser.selectedBrowser, submissionURL);
+  let msg = yield waitForTestMsg("loadStopped");
+  Assert.equal(msg.data.url, submissionURL, "Correct search page loaded");
 });
 
 add_task(function* searchInBackgroundTab() {
@@ -120,18 +122,20 @@ add_task(function* searchInBackgroundTab() {
     healthReportKey: "ContentSearchTest",
     searchPurpose: "ContentSearchTest",
   };
+  let submissionURL =
+    engine.getSubmission(data.searchString, "", data.whence).uri.spec;
   gMsgMan.sendAsyncMessage(TEST_MSG, {
     type: "Search",
     data: data,
+    expectedURL: submissionURL,
   });
 
   let newTab = gBrowser.addTab();
   gBrowser.selectedTab = newTab;
   registerCleanupFunction(() => gBrowser.removeTab(newTab));
 
-  let submissionURL =
-    engine.getSubmission(data.searchString, "", data.whence).uri.spec;
-  yield waitForLoadAndStopIt(searchBrowser, submissionURL);
+  let msg = yield waitForTestMsg("loadStopped");
+  Assert.equal(msg.data.url, submissionURL, "Correct search page loaded");
 });
 
 add_task(function* badImage() {
@@ -329,33 +333,6 @@ function waitForNewEngine(basename, numImages) {
   });
 
   return Promise.all([addDeferred.promise].concat(eventPromises));
-}
-
-function waitForLoadAndStopIt(browser, expectedURL) {
-  let deferred = Promise.defer();
-  let listener = {
-    onStateChange: function (webProg, req, flags, status) {
-      if (req instanceof Ci.nsIChannel) {
-        let url = req.originalURI.spec;
-        info("onStateChange " + url);
-        let docStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
-                       Ci.nsIWebProgressListener.STATE_START;
-        if ((flags & docStart) && webProg.isTopLevel && url == expectedURL) {
-          browser.removeProgressListener(listener);
-          ok(true, "Expected URL loaded");
-          req.cancel(Components.results.NS_ERROR_FAILURE);
-          deferred.resolve();
-        }
-      }
-    },
-    QueryInterface: XPCOMUtils.generateQI([
-      Ci.nsIWebProgressListener,
-      Ci.nsISupportsWeakReference,
-    ]),
-  };
-  browser.addProgressListener(listener);
-  info("Waiting for URL to load: " + expectedURL);
-  return deferred.promise;
 }
 
 function addTab() {

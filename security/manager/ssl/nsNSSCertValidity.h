@@ -5,6 +5,7 @@
 #ifndef _NSX509CERTVALIDITY_H_
 #define _NSX509CERTVALIDITY_H_
 
+#include "nsIDateTimeFormat.h"
 #include "nsIX509CertValidity.h"
 
 #include "certt.h"
@@ -23,6 +24,11 @@ protected:
   /* additional members */
 
 private:
+  nsresult FormatTime(const PRTime& aTime,
+                      PRTimeParamFn aParamFn,
+                      const nsTimeFormatSelector aTimeFormatSelector,
+                      nsAString& aFormattedTimeDate);
+
   PRTime mNotBefore, mNotAfter;
   bool mTimesInitialized;
 };

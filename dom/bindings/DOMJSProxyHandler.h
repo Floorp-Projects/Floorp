@@ -154,44 +154,45 @@ GetDOMProxyHandler(JSObject* obj)
 
 extern jsid s_length_id;
 
-int32_t IdToInt32(JSContext* cx, JS::Handle<jsid> id);
-
-// XXXbz this should really return uint32_t, with the maximum value
-// meaning "not an index"...
-inline int32_t
+// A return value of UINT32_MAX indicates "not an array index".  Note, in
+// particular, that UINT32_MAX itself is not a valid array index in general.
+inline uint32_t
 GetArrayIndexFromId(JSContext* cx, JS::Handle<jsid> id)
 {
+  // Much like js::IdIsIndex, except with a fast path for "length" and another
+  // fast path for starting with a lowercase ascii char.  Is that second one
+  // really needed?  I guess it is because StringIsArrayIndex is out of line...
   if (MOZ_LIKELY(JSID_IS_INT(id))) {
     return JSID_TO_INT(id);
   }
   if (MOZ_LIKELY(id == s_length_id)) {
-    return -1;
+    return UINT32_MAX;
   }
-  if (MOZ_LIKELY(JSID_IS_ATOM(id))) {
-    JSAtom* atom = JSID_TO_ATOM(id);
-    char16_t s;
-    {
-      JS::AutoCheckCannotGC nogc;
-      if (js::AtomHasLatin1Chars(atom)) {
-        s = *js::GetLatin1AtomChars(nogc, atom);
-      } else {
-        s = *js::GetTwoByteAtomChars(nogc, atom);
-      }
-    }
-    if (MOZ_LIKELY((unsigned)s >= 'a' && (unsigned)s <= 'z'))
-      return -1;
+  if (MOZ_UNLIKELY(!JSID_IS_ATOM(id))) {
+    return UINT32_MAX;
+  }
 
-    uint32_t i;
-    JSLinearString* str = js::AtomToLinearString(JSID_TO_ATOM(id));
-    return js::StringIsArrayIndex(str, &i) ? i : -1;
+  JSLinearString* str = js::AtomToLinearString(JSID_TO_ATOM(id));
+  char16_t s;
+  {
+    JS::AutoCheckCannotGC nogc;
+    if (js::LinearStringHasLatin1Chars(str)) {
+      s = *js::GetLatin1LinearStringChars(nogc, str);
+    } else {
+      s = *js::GetTwoByteLinearStringChars(nogc, str);
+    }
   }
-  return IdToInt32(cx, id);
+  if (MOZ_LIKELY((unsigned)s >= 'a' && (unsigned)s <= 'z'))
+    return UINT32_MAX;
+
+  uint32_t i;
+  return js::StringIsArrayIndex(str, &i) ? i : UINT32_MAX;
 }
 
 inline bool
-IsArrayIndex(int32_t index)
+IsArrayIndex(uint32_t index)
 {
-  return index >= 0;
+  return index < UINT32_MAX;
 }
 
 inline void

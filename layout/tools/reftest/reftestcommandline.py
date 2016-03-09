@@ -182,6 +182,12 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           dest="e10s",
                           help="enables content processes")
 
+        self.add_argument("--disable-e10s",
+                          action="store_false",
+                          default=False,
+                          dest="e10s",
+                          help="disables content processes")
+
         self.add_argument("--setpref",
                           action="append",
                           type=str,

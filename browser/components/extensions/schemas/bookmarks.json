@@ -165,7 +165,6 @@
       },
       {
         "name": "getRecent",
-        "unsupported": true,
         "type": "function",
         "description": "Retrieves the recently added bookmarks.",
         "async": "callback",
@@ -401,7 +400,6 @@
       },
       {
         "name": "removeTree",
-        "unsupported": true,
         "type": "function",
         "description": "Recursively removes a bookmark folder.",
         "async": "callback",

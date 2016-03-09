@@ -25,7 +25,6 @@ const TOP_YIELD            = error("yield").message;
 const GENERIC              = error("(for)").message;
 const BAD_GENERATOR_SYNTAX = error("(for (x of []) x, 1)").message;
 const MISSING_SEMI         = error("yield 1").message;
-const MISSING_PAREN        = error("(yield 1)").message;
 const PAREN_PAREN          = error("(foo").message;
 const FOR_OF_PAREN         = error("(for (x of y, z) w)").message;
 
@@ -55,13 +54,13 @@ const cases = [
   // yield expressions
   { expr: "yield 1",      top: [MISSING_SEMI, 2], fun: [MISSING_SEMI, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg" },
   { expr: "1, yield 2",   top: [MISSING_SEMI, 2], fun: [MISSING_SEMI, 2], gen: null, genexp: [FOR_OF_PAREN, 1], desc: "yield w/ arg at end of list" },
-  { expr: "yield 1, 2",   top: [MISSING_SEMI, 2], fun: [MISSING_SEMI, 2], gen: [YIELD_PAREN, 3], genexp: [FOR_OF_PAREN, 3], desc: "yield w/ arg in list" },
-  { expr: "(yield 1)",    top: [MISSING_PAREN, 2], fun: [MISSING_PAREN, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg, parenthesized" },
-  { expr: "(1, yield 2)", top: [MISSING_PAREN, 2], fun: [MISSING_PAREN, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg at end of list, parenthesized" },
-  { expr: "(yield 1, 2)", top: [MISSING_PAREN, 2], fun: [MISSING_PAREN, 2], gen: [YIELD_PAREN, 3], genexp: [YIELD_PAREN, 2], desc: "yield w/ arg in list, parenthesized" },
+  { expr: "yield 1, 2",   top: [MISSING_SEMI, 2], fun: [MISSING_SEMI, 2], gen: null, genexp: [FOR_OF_PAREN, 3], desc: "yield w/ arg in list" },
+  { expr: "(yield 1)",    top: [PAREN_PAREN, 2], fun:  [PAREN_PAREN, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg, parenthesized" },
+  { expr: "(1, yield 2)", top: [PAREN_PAREN, 2], fun:  [PAREN_PAREN, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "yield w/ arg at end of list, parenthesized" },
+  { expr: "(yield 1, 2)", top: [PAREN_PAREN, 2], fun:  [PAREN_PAREN, 2], gen: null, genexp: [YIELD_PAREN, 2], desc: "yield w/ arg in list, parenthesized" },
 
   // deeply nested yield expressions
-  { expr: "((((yield 1))))", top: [MISSING_PAREN, 2], fun: [MISSING_PAREN, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "deeply nested yield w/ arg" },
+  { expr: "((((yield 1))))", top: [PAREN_PAREN, 2], fun: [PAREN_PAREN, 2], gen: null, genexp: [GENEXP_YIELD, 2], desc: "deeply nested yield w/ arg" },
 
   // arguments
   { expr: "arguments",    top: null, fun: null, gen: null, genexp: null, desc: "arguments in list" },

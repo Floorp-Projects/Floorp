@@ -30,7 +30,7 @@ public:
  
   virtual bool SupportsMoz2D() const override { return true; }
 
-  virtual bool HasInternalBuffer() const override { return false; }
+  virtual bool HasIntermediateBuffer() const override { return false; }
 
   virtual bool HasSynchronization() const override { return mHasSynchronization; }
 
@@ -142,7 +142,7 @@ public:
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
   // TODO - DXGIYCbCrTextureClient returned true but that looks like a mistake
-  virtual bool HasInternalBuffer() const override{ return false; }
+  virtual bool HasIntermediateBuffer() const override{ return false; }
 
   virtual gfx::IntSize GetSize() const override { return mSize; }
 
@@ -214,6 +214,7 @@ public:
 
   virtual ~DataTextureSourceD3D11();
 
+  virtual const char* Name() const override { return "DataTextureSourceD3D11"; }
 
   // DataTextureSource
 
@@ -368,6 +369,8 @@ public:
   CompositingRenderTargetD3D11(ID3D11Texture2D* aTexture,
                                const gfx::IntPoint& aOrigin,
                                DXGI_FORMAT aFormatOverride = DXGI_FORMAT_UNKNOWN);
+
+  virtual const char* Name() const override { return "CompositingRenderTargetD3D11"; }
 
   virtual TextureSourceD3D11* AsSourceD3D11() override { return this; }
 

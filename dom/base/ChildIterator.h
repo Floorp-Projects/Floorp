@@ -89,7 +89,7 @@ public:
   // Returns the current target of this iterator (which might be an explicit
   // child of the node, fallback content of an insertion point or
   // a node distributed to an insertion point.
-  nsIContent* Get();
+  nsIContent* Get() const;
 
   // The inverse of GetNextChild. Properly steps in and out of insertion
   // points.
@@ -170,26 +170,27 @@ protected:
 };
 
 /**
- * AllChildrenIterator returns the children of a element including before /
- * after content and optionally XBL children.  It assumes that no mutation of
- * the DOM or frame tree takes place during iteration, and will break horribly
- * if that is not true.  The iterator can be initialized to start at the end by
- * providing false for aStartAtBeginning in order to start iterating in reverse
- * from the last child.
+ * AllChildrenIterator traverses the children of an element including before /
+ * after content and optionally XBL children.  The iterator can be initialized
+ * to start at the end by providing false for aStartAtBeginning in order to
+ * start iterating in reverse from the last child.
+ *
+ * Note: it assumes that no mutation of the DOM or frame tree takes place during
+ * iteration, and will break horribly if that is not true.
  */
 class AllChildrenIterator : private FlattenedChildIterator
 {
 public:
   AllChildrenIterator(nsIContent* aNode, uint32_t aFlags, bool aStartAtBeginning = true) :
     FlattenedChildIterator(aNode, aFlags, aStartAtBeginning),
-    mOriginalContent(aNode), mFlags(aFlags),
-    mPhase(eNeedBeforeKid) {}
+    mOriginalContent(aNode), mAnonKidsIdx(aStartAtBeginning ? UINT32_MAX : 0),
+    mFlags(aFlags), mPhase(aStartAtBeginning ? eAtBegin : eAtEnd) { }
 
   AllChildrenIterator(AllChildrenIterator&& aOther)
     : FlattenedChildIterator(Move(aOther)),
       mOriginalContent(aOther.mOriginalContent),
-      mAnonKids(Move(aOther.mAnonKids)), mFlags(aOther.mFlags),
-      mPhase(aOther.mPhase)
+      mAnonKids(Move(aOther.mAnonKids)), mAnonKidsIdx(aOther.mAnonKidsIdx),
+      mFlags(aOther.mFlags), mPhase(aOther.mPhase)
 #ifdef DEBUG
       , mMutationGuard(aOther.mMutationGuard)
 #endif
@@ -199,23 +200,42 @@ public:
   ~AllChildrenIterator() { MOZ_ASSERT(!mMutationGuard.Mutated(0)); }
 #endif
 
+  // Returns the current target the iterator is at, or null if the iterator
+  // doesn't point to any child node (either eAtBegin or eAtEnd phase).
+  nsIContent* Get() const;
+
+  // Seeks the given node in children of a parent element, starting from
+  // the current iterator's position, and sets the iterator at the given child
+  // node if it was found.
   bool Seek(nsIContent* aChildToFind);
 
   nsIContent* GetNextChild();
+  nsIContent* GetPreviousChild();
   nsIContent* Parent() const { return mOriginalContent; }
 
-private:
   enum IteratorPhase
   {
-    eNeedBeforeKid,
-    eNeedExplicitKids,
-    eNeedAnonKids,
-    eNeedAfterKid,
-    eDone
+    eAtBegin,
+    eAtBeforeKid,
+    eAtExplicitKids,
+    eAtAnonKids,
+    eAtAfterKid,
+    eAtEnd
   };
+  IteratorPhase Phase() const { return mPhase; }
 
+private:
   nsIContent* mOriginalContent;
+
+  // mAnonKids is an array of native anonymous children, mAnonKidsIdx is index
+  // in the array. If mAnonKidsIdx < mAnonKids.Length() and mPhase is
+  // eAtAnonKids then the iterator points at a child at mAnonKidsIdx index. If
+  // mAnonKidsIdx == mAnonKids.Length() then the iterator is somewhere after
+  // the last native anon child. If mAnonKidsIdx == UINT32_MAX then the iterator
+  // is somewhere before the first native anon child.
   nsTArray<nsIContent*> mAnonKids;
+  uint32_t mAnonKidsIdx;
+
   uint32_t mFlags;
   IteratorPhase mPhase;
 #ifdef DEBUG

@@ -127,13 +127,7 @@ MediaOmxCommonDecoder::PauseStateMachine()
   MOZ_ASSERT(NS_IsMainThread());
   DECODER_LOG(LogLevel::Debug, ("%s", __PRETTY_FUNCTION__));
 
-  if (mShuttingDown) {
-    return;
-  }
-
-  if (!GetStateMachine()) {
-    return;
-  }
+  MOZ_ASSERT(GetStateMachine());
   // enter dormant state
   GetStateMachine()->DispatchSetDormant(true);
 }

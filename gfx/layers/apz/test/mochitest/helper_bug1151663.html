@@ -55,15 +55,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
       // Convert the test data into a representation that's easier to navigate.
       contentTestData = convertTestData(contentTestData);
       compositorTestData = convertTestData(compositorTestData);
+      var paint = compositorTestData.paints[lastCompositorPaintSeqNo];
 
       // Reconstruct the APZC tree structure in the last paint.
-      var apzcTree = buildApzcTree(compositorTestData.paints[lastCompositorPaintSeqNo]);
+      var apzcTree = buildApzcTree(paint);
 
       // The apzc tree for this page should consist of a single root APZC,
-      // and no child APZCs.
-      SimpleTest.is(apzcTree.children.length, 1, "expected a single root APZC");
-      var rootApzc = apzcTree.children[0];
-      SimpleTest.is(rootApzc.children.length, 0, "expected no child APZCs");
+      // which either is the RCD with no child APZCs (e10s/B2G case) or has a
+      // single child APZC which is for the RCD (fennec case).
+      var rcd = findRcdNode(apzcTree);
+      SimpleTest.ok(rcd != null, "found the RCD node");
+      SimpleTest.is(rcd.children.length, 0, "expected no children on the RCD");
 
       window.opener.finishTest();
     }

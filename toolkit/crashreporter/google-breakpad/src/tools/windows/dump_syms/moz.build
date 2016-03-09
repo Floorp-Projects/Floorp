@@ -1,0 +1,31 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+HostProgram('dump_syms')
+
+HOST_SOURCES += [
+    '../../../common/windows/dia_util.cc',
+    '../../../common/windows/guid_string.cc',
+    '../../../common/windows/omap.cc',
+    '../../../common/windows/pdb_source_line_writer.cc',
+    '../../../common/windows/string_utils.cc',
+    'dump_syms.cc',
+]
+
+HOST_CXXFLAGS += [
+    '-O2',
+    '-EHsc',
+    '-MD'
+]
+
+HOST_OS_LIBS += [
+    'diaguids',
+    'imagehlp'
+]
+
+LOCAL_INCLUDES += [
+    '../../..'
+]

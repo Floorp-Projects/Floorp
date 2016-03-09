@@ -8,7 +8,6 @@
 #define gc_Zone_h
 
 #include "mozilla/Atomics.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "jscntxt.h"
@@ -128,7 +127,7 @@ struct Zone : public JS::shadow::Zone,
 {
     explicit Zone(JSRuntime* rt);
     ~Zone();
-    bool init(bool isSystem);
+    MOZ_WARN_UNUSED_RESULT bool init(bool isSystem);
 
     void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone>& finder);
 
@@ -152,7 +151,8 @@ struct Zone : public JS::shadow::Zone,
     bool isTooMuchMalloc() const { return gcMallocBytes <= 0; }
     void onTooMuchMalloc();
 
-    void* onOutOfMemory(js::AllocFunction allocFunc, size_t nbytes, void* reallocPtr = nullptr) {
+    MOZ_WARN_UNUSED_RESULT void* onOutOfMemory(js::AllocFunction allocFunc, size_t nbytes,
+                                               void* reallocPtr = nullptr) {
         if (!js::CurrentThreadCanAccessRuntime(runtime_))
             return nullptr;
         return runtimeFromMainThread()->onOutOfMemory(allocFunc, nbytes, reallocPtr);
@@ -259,9 +259,6 @@ struct Zone : public JS::shadow::Zone,
   private:
     DebuggerVector* debuggers;
 
-    using LogTenurePromotionQueue = js::Vector<JSObject*, 0, js::SystemAllocPolicy>;
-    LogTenurePromotionQueue awaitingTenureLogging;
-
     void sweepBreakpoints(js::FreeOp* fop);
     void sweepUniqueIds(js::FreeOp* fop);
     void sweepWeakMaps();
@@ -281,14 +278,16 @@ struct Zone : public JS::shadow::Zone,
     DebuggerVector* getDebuggers() const { return debuggers; }
     DebuggerVector* getOrCreateDebuggers(JSContext* cx);
 
-    void enqueueForPromotionToTenuredLogging(JSObject& obj) {
-        MOZ_ASSERT(hasDebuggers());
-        MOZ_ASSERT(!IsInsideNursery(&obj));
-        js::AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!awaitingTenureLogging.append(&obj))
-            oomUnsafe.crash("Zone::enqueueForPromotionToTenuredLogging");
-    }
-    void logPromotionsToTenured();
+    /*
+     * When true, skip calling the metadata callback. We use this:
+     * - to avoid invoking the callback recursively;
+     * - to avoid observing lazy prototype setup (which confuses callbacks that
+     *   want to use the types being set up!);
+     * - to avoid attaching allocation stacks to allocation stack nodes, which
+     *   is silly
+     * And so on.
+     */
+    bool suppressObjectMetadataCallback;
 
     js::gc::ArenaLists arenas;
 
@@ -357,10 +356,12 @@ struct Zone : public JS::shadow::Zone,
     // True when there are active frames.
     bool active;
 
-    mozilla::DebugOnly<unsigned> gcLastZoneGroupIndex;
+#ifdef DEBUG
+    unsigned gcLastZoneGroupIndex;
+#endif
 
     // Creates a HashNumber based on getUniqueId. Returns false on OOM.
-    bool getHashCode(js::gc::Cell* cell, js::HashNumber* hashp) {
+    MOZ_WARN_UNUSED_RESULT bool getHashCode(js::gc::Cell* cell, js::HashNumber* hashp) {
         uint64_t uid;
         if (!getUniqueId(cell, &uid))
             return false;
@@ -370,7 +371,7 @@ struct Zone : public JS::shadow::Zone,
 
     // Puts an existing UID in |uidp|, or creates a new UID for this Cell and
     // puts that into |uidp|. Returns false on OOM.
-    bool getUniqueId(js::gc::Cell* cell, uint64_t* uidp) {
+    MOZ_WARN_UNUSED_RESULT bool getUniqueId(js::gc::Cell* cell, uint64_t* uidp) {
         MOZ_ASSERT(uidp);
         MOZ_ASSERT(js::CurrentThreadCanAccessZone(this));
 
@@ -396,7 +397,7 @@ struct Zone : public JS::shadow::Zone,
     }
 
     // Return true if this cell has a UID associated with it.
-    bool hasUniqueId(js::gc::Cell* cell) {
+    MOZ_WARN_UNUSED_RESULT bool hasUniqueId(js::gc::Cell* cell) {
         MOZ_ASSERT(js::CurrentThreadCanAccessZone(this));
         return uniqueIds_.has(cell);
     }

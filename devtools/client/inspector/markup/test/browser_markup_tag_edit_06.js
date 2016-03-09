@@ -1,7 +1,7 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
-
+/* import-globals-from helper_attributes_test_runner.js */
 "use strict";
 
 // Tests that adding various types of attributes to nodes in the markup-view
@@ -71,7 +71,8 @@ var TEST_DATA = [{
   }
 }, {
   desc: "Add event handlers",
-  text: "onclick=\"javascript: throw new Error('wont fire');\" onload=\"alert('here');\"",
+  text: "onclick=\"javascript: throw new Error('wont fire');\" " +
+        "onload=\"alert('here');\"",
   expectedAttributes: {
     onclick: "javascript: throw new Error('wont fire');",
     onload: "alert('here');"
@@ -80,5 +81,5 @@ var TEST_DATA = [{
 
 add_task(function*() {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
-  yield runAddAttributesTests(TEST_DATA, "div", inspector, testActor)
+  yield runAddAttributesTests(TEST_DATA, "div", inspector, testActor);
 });

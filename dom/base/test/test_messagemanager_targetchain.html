@@ -110,7 +110,7 @@
         { type: "browser", allow: 1, context: { url: principal.URI.spec,
                                                 originAttributes: {
                                                   appId: principal.appId,
-                                                  inBrowser: true }}}
+                                                  inIsolatedMozBrowser: true }}}
       ], () => {
         SpecialPowers.pushPrefEnv({
           set: [

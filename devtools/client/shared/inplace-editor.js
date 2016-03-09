@@ -24,6 +24,7 @@
 "use strict";
 
 const {Ci, Cu, Cc} = require("chrome");
+const Services = require("Services");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTENT_TYPES = {
@@ -37,7 +38,6 @@ const MAX_POPUP_ENTRIES = 10;
 const FOCUS_FORWARD = Ci.nsIFocusManager.MOVEFOCUS_FORWARD;
 const FOCUS_BACKWARD = Ci.nsIFocusManager.MOVEFOCUS_BACKWARD;
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://devtools/shared/event-emitter.js");
 
@@ -1180,6 +1180,15 @@ InplaceEditor.prototype = {
         }
       } else if (this.contentType == CONTENT_TYPES.CSS_MIXED &&
                  /^\s*style\s*=/.test(query)) {
+        // Check if the style attribute is closed before the selection.
+        let styleValue = query.replace(/^\s*style\s*=\s*/, "");
+        // Look for a quote matching the opening quote (single or double).
+        if (/^("[^"]*"|'[^']*')/.test(styleValue)) {
+          // This emit is mainly to make the test flow simpler.
+          this.emit("after-suggest", "nothing to autocomplete");
+          return;
+        }
+
         // Detecting if cursor is at property or value;
         let match = query.match(/([:;"'=]?)\s*([^"';:=]+)?$/);
         if (match && match.length >= 2) {

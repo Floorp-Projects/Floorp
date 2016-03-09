@@ -44,7 +44,7 @@ this.TestRunner = {
   _libDir: null,
 
   init(extensionPath) {
-    log.info("init");
+    log.debug("init");
     this._extensionPath = extensionPath;
   },
 

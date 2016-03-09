@@ -24,7 +24,7 @@ html,body {
   padding-right: 3px;
 }
 .r1 { grid-template-columns: [a] repeat(auto-fill, [b] 20px [c]) [d]; }
-.r2 { grid-template-columns: [a] repeat(auto-fill, [b] 20px [c]) [d] 30px [e]; }
+.r2 { grid-template-columns: [a] repeat(auto-fill, [b] minmax(20px,20px) [c]) [d] 30px [e]; }
 .r3 { grid-template-columns: [a] repeat(auto-fill, [b] 20px [c]) [d] 30px [e] 30px [f]; }
 fit .r1 { grid-template-columns: [a] repeat(auto-fit, [b] 20px [c]) [d]; }
 fit .r2 { grid-template-columns: [a] repeat(auto-fit, [b] 20px [c]) [d] 30px [e]; }

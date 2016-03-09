@@ -56,6 +56,7 @@
 #include "gfxFontFamilyList.h"
 
 using namespace mozilla;
+using namespace mozilla::css;
 
 typedef nsCSSProps::KTableEntry KTableEntry;
 
@@ -118,9 +119,9 @@ struct CSSParserInputState {
   bool mHavePushBack;
 };
 
-static_assert(eAuthorSheetFeatures == 0 &&
-              eUserSheetFeatures == 1 &&
-              eAgentSheetFeatures == 2,
+static_assert(css::eAuthorSheetFeatures == 0 &&
+              css::eUserSheetFeatures == 1 &&
+              css::eAgentSheetFeatures == 2,
               "sheet parsing mode constants won't fit "
               "in CSSParserImpl::mParsingMode");
 
@@ -148,8 +149,8 @@ public:
                       nsIURI*          aBaseURI,
                       nsIPrincipal*    aSheetPrincipal,
                       uint32_t         aLineNumber,
-                      SheetParsingMode aParsingMode,
-                      LoaderReusableStyleSheets* aReusableSheets);
+                      css::SheetParsingMode aParsingMode,
+                      css::LoaderReusableStyleSheets* aReusableSheets);
 
   already_AddRefed<css::Declaration>
            ParseStyleAttribute(const nsAString&  aAttributeValue,
@@ -344,11 +345,11 @@ public:
                                            uint32_t aLineOffset);
 
   bool AgentRulesEnabled() const {
-    return mParsingMode == eAgentSheetFeatures;
+    return mParsingMode == css::eAgentSheetFeatures;
   }
   bool UserRulesEnabled() const {
-    return mParsingMode == eAgentSheetFeatures ||
-           mParsingMode == eUserSheetFeatures;
+    return mParsingMode == css::eAgentSheetFeatures ||
+           mParsingMode == css::eUserSheetFeatures;
   }
 
   nsCSSProps::EnabledState PropertyEnabledState() const {
@@ -753,7 +754,7 @@ protected:
                                               bool           aIsNegated,
                                               nsIAtom**      aPseudoElement,
                                               nsAtomList**   aPseudoElementArgs,
-                                              nsCSSPseudoElements::Type* aPseudoElementType);
+                                              CSSPseudoElementType* aPseudoElementType);
 
   nsSelectorParsingStatus ParseAttributeSelector(int32_t&       aDataMask,
                                                  nsCSSSelector& aSelector);
@@ -945,9 +946,7 @@ protected:
   bool ParseGridLineNameListRepeat(nsCSSValueList** aTailPtr);
   bool ParseOptionalLineNameListAfterSubgrid(nsCSSValue& aValue);
 
-  // eFixedTrackSize in aFlags makes it parse a <fixed-breadth>.
-  CSSParseResult ParseGridTrackBreadth(nsCSSValue& aValue,
-    GridTrackSizeFlags aFlags = GridTrackSizeFlags::eDefaultTrackSize);
+  CSSParseResult ParseGridTrackBreadth(nsCSSValue& aValue);
   // eFixedTrackSize in aFlags makes it parse a <fixed-size>.
   CSSParseResult ParseGridTrackSize(nsCSSValue& aValue,
     GridTrackSizeFlags aFlags = GridTrackSizeFlags::eDefaultTrackSize);
@@ -961,7 +960,7 @@ protected:
   // Assuming a [ <line-names>? ] has already been parsed,
   // parse the rest of a <track-list>.
   //
-  // This exists because [ <line-names>? ] is ambiguous in the 'grid-template'
+  // This exists because [ <line-names>? ] is ambiguous in the 'grid'
   // shorthand: it can be either the start of a <track-list> (in
   // a <'grid-template-rows'>) or of the intertwined syntax that sets both
   // grid-template-rows and grid-template-areas.
@@ -1356,10 +1355,10 @@ protected:
   RefPtr<CSSStyleSheet> mSheet;
 
   // Used for @import rules
-  mozilla::css::Loader* mChildLoader; // not ref counted, it owns us
+  css::Loader* mChildLoader; // not ref counted, it owns us
 
   // Any sheets we may reuse when parsing an @import.
-  LoaderReusableStyleSheets* mReusableSheets;
+  css::LoaderReusableStyleSheets* mReusableSheets;
 
   // Sheet section we're in.  This is used to enforce correct ordering of the
   // various rule types (eg the fact that a @charset rule must come before
@@ -1393,7 +1392,7 @@ protected:
   // useful in user sheets.  The only values stored in this field are
   // 0, 1, and 2; three bits are allocated to avoid issues should the
   // enum type be signed.
-  SheetParsingMode mParsingMode : 3;
+  css::SheetParsingMode mParsingMode : 3;
 
   // True if we are in parsing rules for the chrome.
   bool mIsChrome : 1;
@@ -1523,7 +1522,7 @@ CSSParserImpl::CSSParserImpl()
     mNavQuirkMode(false),
     mHashlessColorQuirk(false),
     mUnitlessLengthQuirk(false),
-    mParsingMode(eAuthorSheetFeatures),
+    mParsingMode(css::eAuthorSheetFeatures),
     mIsChrome(false),
     mViewportUnitsEnabled(true),
     mHTMLMediaMode(false),
@@ -1630,8 +1629,8 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
                           nsIURI*          aBaseURI,
                           nsIPrincipal*    aSheetPrincipal,
                           uint32_t         aLineNumber,
-                          SheetParsingMode aParsingMode,
-                          LoaderReusableStyleSheets* aReusableSheets)
+                          css::SheetParsingMode aParsingMode,
+                          css::LoaderReusableStyleSheets* aReusableSheets)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
   NS_PRECONDITION(aBaseURI, "need base URI");
@@ -1701,7 +1700,7 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
   }
   ReleaseScanner();
 
-  mParsingMode = eAuthorSheetFeatures;
+  mParsingMode = css::eAuthorSheetFeatures;
   mIsChrome = false;
   mReusableSheets = nullptr;
 
@@ -1853,7 +1852,7 @@ CSSParserImpl::ParseLonghandProperty(const nsCSSProperty aPropID,
   MOZ_ASSERT(aPropID < eCSSProperty_COUNT_no_shorthands,
              "ParseLonghandProperty must only take a longhand property");
 
-  RefPtr<Declaration> declaration = new Declaration;
+  RefPtr<css::Declaration> declaration = new css::Declaration;
   declaration->InitializeEmpty();
 
   bool changed;
@@ -1874,7 +1873,7 @@ CSSParserImpl::ParseTransformProperty(const nsAString& aPropValue,
                                       bool aDisallowRelativeValues,
                                       nsCSSValue& aValue)
 {
-  RefPtr<Declaration> declaration = new Declaration();
+  RefPtr<css::Declaration> declaration = new css::Declaration();
   declaration->InitializeEmpty();
 
   mData.AssertInitialState();
@@ -2468,7 +2467,7 @@ SeparatorRequiredBetweenTokens(nsCSSTokenSerializationType aToken1,
                  aToken1 == eCSSTokenSerialization_Symbol_Equals ||
                  aToken1 == eCSSTokenSerialization_Symbol_Bar ||
                  aToken1 == eCSSTokenSerialization_Symbol_Slash ||
-                 aToken1 == eCSSTokenSerialization_Other ||
+                 aToken1 == eCSSTokenSerialization_Other,
                  "unexpected nsCSSTokenSerializationType value");
       return false;
   }
@@ -5827,7 +5826,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
                                    bool           aIsNegated,
                                    nsIAtom**      aPseudoElement,
                                    nsAtomList**   aPseudoElementArgs,
-                                   nsCSSPseudoElements::Type* aPseudoElementType)
+                                   CSSPseudoElementType* aPseudoElementType)
 {
   NS_ASSERTION(aIsNegated || (aPseudoElement && aPseudoElementArgs),
                "expected location to store pseudo element");
@@ -5867,7 +5866,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
 
   // stash away some info about this pseudo so we only have to get it once.
   bool isTreePseudo = false;
-  nsCSSPseudoElements::Type pseudoElementType =
+  CSSPseudoElementType pseudoElementType =
     nsCSSPseudoElements::GetPseudoType(pseudo);
   nsCSSPseudoClasses::Type pseudoClassType =
     nsCSSPseudoClasses::GetPseudoType(pseudo);
@@ -5875,7 +5874,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
     nsCSSPseudoClasses::IsUserActionPseudoClass(pseudoClassType);
 
   if (!AgentRulesEnabled() &&
-      ((pseudoElementType < nsCSSPseudoElements::ePseudo_PseudoElementCount &&
+      ((pseudoElementType < CSSPseudoElementType::Count &&
         nsCSSPseudoElements::PseudoElementIsUASheetOnly(pseudoElementType)) ||
        (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass &&
         nsCSSPseudoClasses::PseudoClassIsUASheetOnly(pseudoClassType)))) {
@@ -5887,17 +5886,17 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
 
   // We currently allow :-moz-placeholder and ::-moz-placeholder. We have to
   // be a bit stricter regarding the pseudo-element parsing rules.
-  if (pseudoElementType == nsCSSPseudoElements::ePseudo_mozPlaceholder &&
+  if (pseudoElementType == CSSPseudoElementType::mozPlaceholder &&
       pseudoClassType == nsCSSPseudoClasses::ePseudoClass_mozPlaceholder) {
     if (parsingPseudoElement) {
       pseudoClassType = nsCSSPseudoClasses::ePseudoClass_NotPseudoClass;
     } else {
-      pseudoElementType = nsCSSPseudoElements::ePseudo_NotPseudoElement;
+      pseudoElementType = CSSPseudoElementType::NotPseudo;
     }
   }
 
 #ifdef MOZ_XUL
-  isTreePseudo = (pseudoElementType == nsCSSPseudoElements::ePseudo_XULTree);
+  isTreePseudo = (pseudoElementType == CSSPseudoElementType::XULTree);
   // If a tree pseudo-element is using the function syntax, it will
   // get isTree set here and will pass the check below that only
   // allows functions if they are in our list of things allowed to be
@@ -5907,18 +5906,17 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
   // desired.
   bool isTree = (eCSSToken_Function == mToken.mType) && isTreePseudo;
 #endif
-  bool isPseudoElement =
-    (pseudoElementType < nsCSSPseudoElements::ePseudo_PseudoElementCount);
+  bool isPseudoElement = (pseudoElementType < CSSPseudoElementType::Count);
   // anonymous boxes are only allowed if they're the tree boxes or we have
   // enabled agent rules
   bool isAnonBox = isTreePseudo ||
-    (pseudoElementType == nsCSSPseudoElements::ePseudo_AnonBox &&
+    (pseudoElementType == CSSPseudoElementType::AnonBox &&
      AgentRulesEnabled());
   bool isPseudoClass =
     (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass);
 
   NS_ASSERTION(!isPseudoClass ||
-               pseudoElementType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
+               pseudoElementType == CSSPseudoElementType::NotPseudo,
                "Why is this atom both a pseudo-class and a pseudo-element?");
   NS_ASSERTION(isPseudoClass + isPseudoElement + isAnonBox <= 1,
                "Shouldn't be more than one of these");
@@ -5972,7 +5970,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
   }
   else if (!parsingPseudoElement && isPseudoClass) {
     if (aSelector.IsPseudoElement()) {
-      nsCSSPseudoElements::Type type = aSelector.PseudoType();
+      CSSPseudoElementType type = aSelector.PseudoType();
       if (!nsCSSPseudoElements::PseudoElementSupportsUserActionState(type)) {
         // We only allow user action pseudo-classes on certain pseudo-elements.
         REPORT_UNEXPECTED_TOKEN(PEPseudoSelNoUserActionPC);
@@ -6413,8 +6411,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
   nsCSSSelector* selector = aList->AddSelector(aPrevCombinator);
   nsCOMPtr<nsIAtom> pseudoElement;
   nsAutoPtr<nsAtomList> pseudoElementArgs;
-  nsCSSPseudoElements::Type pseudoElementType =
-    nsCSSPseudoElements::ePseudo_NotPseudoElement;
+  CSSPseudoElementType pseudoElementType = CSSPseudoElementType::NotPseudo;
 
   int32_t dataMask = 0;
   nsSelectorParsingStatus parsingStatus =
@@ -6433,7 +6430,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
                                           getter_Transfers(pseudoElementArgs),
                                           &pseudoElementType);
       if (pseudoElement &&
-          pseudoElementType != nsCSSPseudoElements::ePseudo_AnonBox) {
+          pseudoElementType != CSSPseudoElementType::AnonBox) {
         // Pseudo-elements other than anonymous boxes are represented with
         // a special ':' combinator.
 
@@ -6481,7 +6478,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
     return false;
   }
 
-  if (pseudoElementType == nsCSSPseudoElements::ePseudo_AnonBox) {
+  if (pseudoElementType == CSSPseudoElementType::AnonBox) {
     // We got an anonymous box pseudo-element; it must be the only
     // thing in this selector group.
     if (selector->mNext || !IsUniversalSelector(*selector)) {
@@ -8435,7 +8432,7 @@ CSSParserImpl::ParseGridLineNames(nsCSSValue& aValue)
   nsCSSValueList* item;
   if (aValue.GetUnit() == eCSSUnit_List) {
     // Find the end of an existing list.
-    // The grid-template shorthand uses this, at most once for a given list.
+    // The 'grid' shorthand uses this, at most once for a given list.
 
     // NOTE: we could avoid this traversal by somehow keeping around
     // a pointer to the last item from the previous call.
@@ -8576,20 +8573,15 @@ CSSParserImpl::ParseOptionalLineNameListAfterSubgrid(nsCSSValue& aValue)
   }
 }
 
-// Parse a <track-breadth>, or <fixed-breadth> when aFlags has eFixedTrackSize.
 CSSParseResult
-CSSParserImpl::ParseGridTrackBreadth(nsCSSValue& aValue,
-                                     GridTrackSizeFlags aFlags)
+CSSParserImpl::ParseGridTrackBreadth(nsCSSValue& aValue)
 {
-  CSSParseResult result = (aFlags & GridTrackSizeFlags::eFixedTrackSize) ?
-      ParseNonNegativeVariant(aValue, VARIANT_LPCALC, nullptr) :
-      ParseNonNegativeVariant(aValue,
-                              VARIANT_AUTO | VARIANT_LPCALC | VARIANT_KEYWORD,
-                              nsCSSProps::kGridTrackBreadthKTable);
+  CSSParseResult result = ParseNonNegativeVariant(aValue,
+                            VARIANT_AUTO | VARIANT_LPCALC | VARIANT_KEYWORD,
+                            nsCSSProps::kGridTrackBreadthKTable);
 
   if (result == CSSParseResult::Ok ||
-      result == CSSParseResult::Error ||
-      (aFlags & GridTrackSizeFlags::eFixedTrackSize)) {
+      result == CSSParseResult::Error) {
     return result;
   }
 
@@ -8612,8 +8604,14 @@ CSSParseResult
 CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue,
                                   GridTrackSizeFlags aFlags)
 {
+  const bool requireFixedSize =
+    !!(aFlags & GridTrackSizeFlags::eFixedTrackSize);
   // Attempt to parse a single <track-breadth>.
-  CSSParseResult result = ParseGridTrackBreadth(aValue, aFlags);
+  CSSParseResult result = ParseGridTrackBreadth(aValue);
+  if (requireFixedSize && result == CSSParseResult::Ok &&
+      !aValue.IsLengthPercentCalcUnit()) {
+    result = CSSParseResult::Error;
+  }
   if (result == CSSParseResult::Ok ||
       result == CSSParseResult::Error) {
     return result;
@@ -8629,10 +8627,15 @@ CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue,
     return CSSParseResult::NotFound;
   }
   nsCSSValue::Array* func = aValue.InitFunction(eCSSKeyword_minmax, 2);
-  if (ParseGridTrackBreadth(func->Item(1), aFlags) == CSSParseResult::Ok &&
+  if (ParseGridTrackBreadth(func->Item(1)) == CSSParseResult::Ok &&
       ExpectSymbol(',', true) &&
-      ParseGridTrackBreadth(func->Item(2), aFlags) == CSSParseResult::Ok &&
+      ParseGridTrackBreadth(func->Item(2)) == CSSParseResult::Ok &&
       ExpectSymbol(')', true)) {
+    if (requireFixedSize &&
+        !func->Item(1).IsLengthPercentCalcUnit() &&
+        !func->Item(2).IsLengthPercentCalcUnit()) {
+      return CSSParseResult::Error;
+    }
     return CSSParseResult::Ok;
   }
   SkipUntil(')');
@@ -9246,7 +9249,7 @@ CSSParserImpl::ParseGridTemplate()
   return ParseGridTemplateColumnsRows(eCSSProperty_grid_template_columns);
 }
 
-// Helper for parsing the 'grid-template' shorthand:
+// Helper for parsing <'grid-template'> part of the 'grid' shorthand:
 // Parse [ <line-names>? <string> <track-size>? <line-names>? ]+
 // with a <line-names>? already consumed, stored in |aFirstLineNames|,
 // and the current token a <string>
@@ -11364,8 +11367,6 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
   case eCSSProperty_grid_template_columns:
   case eCSSProperty_grid_template_rows:
     return ParseGridTemplateColumnsRows(aPropID);
-  case eCSSProperty_grid_template:
-    return ParseGridTemplate();
   case eCSSProperty_grid:
     return ParseGrid();
   case eCSSProperty_grid_column_start:
@@ -11444,6 +11445,7 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseClipPath();
   case eCSSProperty_scroll_snap_type:
     return ParseScrollSnapType();
+#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
   case eCSSProperty_mask:
     return ParseImageLayers(nsStyleImageLayers::kMaskLayerTable);
   case eCSSProperty_mask_repeat:
@@ -11452,6 +11454,7 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseImageLayerPosition(eCSSProperty_mask_position);
   case eCSSProperty_mask_size:
     return ParseImageLayerSize(eCSSProperty_mask_size);
+#endif
   case eCSSProperty_all:
     return ParseAll();
   default:
@@ -11862,7 +11865,7 @@ CSSParserImpl::ParseImageLayersItem(
   aState.mSize->mYValue.SetAutoValue();
   aState.mComposite->mValue.SetIntValue(NS_STYLE_MASK_COMPOSITE_ADD,
                                         eCSSUnit_Enumerated);
-  aState.mMode->mValue.SetIntValue(NS_STYLE_MASK_MODE_AUTO,
+  aState.mMode->mValue.SetIntValue(NS_STYLE_MASK_MODE_MATCH_SOURCE,
                                    eCSSUnit_Enumerated);
   bool haveColor = false,
        haveImage = false,
@@ -14889,7 +14892,7 @@ CSSParserImpl::ParseTextAlign(nsCSSValue& aValue, const KTableEntry aTable[])
     return false;
   }
 
-  if (!nsLayoutUtils::IsTextAlignTrueValueEnabled()) {
+  if (!nsLayoutUtils::IsTextAlignUnsafeValueEnabled()) {
     aValue = left;
     return true;
   }
@@ -14897,14 +14900,14 @@ CSSParserImpl::ParseTextAlign(nsCSSValue& aValue, const KTableEntry aTable[])
   nsCSSValue right;
   if (ParseSingleTokenVariant(right, VARIANT_KEYWORD, aTable)) {
     // 'true' must be combined with some other value than 'true'.
-    if (left.GetIntValue() == NS_STYLE_TEXT_ALIGN_TRUE &&
-        right.GetIntValue() == NS_STYLE_TEXT_ALIGN_TRUE) {
+    if (left.GetIntValue() == NS_STYLE_TEXT_ALIGN_UNSAFE &&
+        right.GetIntValue() == NS_STYLE_TEXT_ALIGN_UNSAFE) {
       return false;
     }
     aValue.SetPairValue(left, right);
   } else {
     // Single value 'true' is not allowed.
-    if (left.GetIntValue() == NS_STYLE_TEXT_ALIGN_TRUE) {
+    if (left.GetIntValue() == NS_STYLE_TEXT_ALIGN_UNSAFE) {
       return false;
     }
     aValue = left;
@@ -17215,8 +17218,8 @@ nsCSSParser::ParseSheet(const nsAString& aInput,
                         nsIURI*          aBaseURI,
                         nsIPrincipal*    aSheetPrincipal,
                         uint32_t         aLineNumber,
-                        SheetParsingMode aParsingMode,
-                        LoaderReusableStyleSheets* aReusableSheets)
+                        css::SheetParsingMode aParsingMode,
+                        css::LoaderReusableStyleSheets* aReusableSheets)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     ParseSheet(aInput, aSheetURI, aBaseURI, aSheetPrincipal, aLineNumber,

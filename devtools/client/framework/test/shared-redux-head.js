@@ -6,8 +6,8 @@
 "use strict";
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* import-globals-from ./shared-head.js */
 // Currently this file expects "promise" to be imported into scope.
-/* globals promise */
 
 // Common utility functions for working with Redux stores.  The file is meant
 // to be safe to load in both mochitest and xpcshell environments.

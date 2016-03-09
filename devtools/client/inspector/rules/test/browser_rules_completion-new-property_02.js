@@ -13,30 +13,30 @@
 //    modifers,
 //    expected input box value after keypress,
 //    selectedIndex of the popup,
-//    total items in the popup
+//    total items in the popup,
+//    expect ruleview-changed
 //  ]
 var testData = [
-  ["a", {accelKey: true, ctrlKey: true}, "", -1, 0],
-  ["d", {}, "direction", 0, 3],
-  ["VK_DOWN", {}, "display", 1, 3],
-  ["VK_TAB", {}, "", -1, 10],
-  ["VK_DOWN", {}, "-moz-box", 0, 10],
-  ["n", {}, "none", -1, 0],
-  ["VK_TAB", {shiftKey: true}, "display", -1, 0],
-  ["VK_BACK_SPACE", {}, "", -1, 0],
-  ["c", {}, "caption-side", 0, 10],
-  ["o", {}, "color", 0, 7],
-  ["VK_TAB", {}, "none", -1, 0],
-  ["r", {}, "rebeccapurple", 0, 6],
-  ["VK_DOWN", {}, "red", 1, 6],
-  ["VK_DOWN", {}, "rgb", 2, 6],
-  ["VK_DOWN", {}, "rgba", 3, 6],
-  ["VK_DOWN", {}, "rosybrown", 4, 6],
-  ["VK_DOWN", {}, "royalblue", 5, 6],
-  ["VK_RIGHT", {}, "royalblue", -1, 0],
-  [" ", {}, "royalblue !important", 0, 10],
-  ["!", {}, "royalblue !important", 0, 0],
-  ["VK_ESCAPE", {}, null, -1, 0]
+  ["d", {}, "direction", 0, 3, false],
+  ["VK_DOWN", {}, "display", 1, 3, false],
+  ["VK_TAB", {}, "", -1, 10, true],
+  ["VK_DOWN", {}, "-moz-box", 0, 10, true],
+  ["n", {}, "none", -1, 0, true],
+  ["VK_TAB", {shiftKey: true}, "display", -1, 0, true],
+  ["VK_BACK_SPACE", {}, "", -1, 0, false],
+  ["c", {}, "caption-side", 0, 10, false],
+  ["o", {}, "color", 0, 7, false],
+  ["VK_TAB", {}, "none", -1, 0, true],
+  ["r", {}, "rebeccapurple", 0, 6, true],
+  ["VK_DOWN", {}, "red", 1, 6, true],
+  ["VK_DOWN", {}, "rgb", 2, 6, true],
+  ["VK_DOWN", {}, "rgba", 3, 6, true],
+  ["VK_DOWN", {}, "rosybrown", 4, 6, true],
+  ["VK_DOWN", {}, "royalblue", 5, 6, true],
+  ["VK_RIGHT", {}, "royalblue", -1, 0, false],
+  [" ", {}, "royalblue !important", 0, 10, true],
+  ["!", {}, "royalblue !important", 0, 0, true],
+  ["VK_ESCAPE", {}, null, -1, 0, true]
 ];
 
 const TEST_URI = `
@@ -50,13 +50,13 @@ const TEST_URI = `
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = yield openRuleView();
+  let {toolbox, inspector, view, testActor} = yield openRuleView();
 
   info("Test autocompletion after 1st page load");
   yield runAutocompletionTest(toolbox, inspector, view);
 
   info("Test autocompletion after page navigation");
-  yield reloadPage(inspector);
+  yield reloadPage(inspector, testActor);
   yield runAutocompletionTest(toolbox, inspector, view);
 });
 
@@ -77,31 +77,28 @@ function* runAutocompletionTest(toolbox, inspector, view) {
   }
 }
 
-function* testCompletion([key, modifiers, completion, index, total], editor,
-    view) {
+function* testCompletion([key, modifiers, completion, index, total, willChange],
+                         editor, view) {
   info("Pressing key " + key);
   info("Expecting " + completion + ", " + index + ", " + total);
 
-  let onKeyPress;
-
-  if (/tab/ig.test(key)) {
-    info("Waiting for the new property or value editor to get focused");
-    let brace = view.styleDocument.querySelectorAll(".ruleview-ruleclose")[1];
-    onKeyPress = once(brace.parentNode, "focus", true);
-  } else if (/(right|back_space|escape|return)/ig.test(key) ||
-             (modifiers.accelKey || modifiers.ctrlKey)) {
-    info("Adding event listener for right|escape|back_space|return keys");
-    onKeyPress = once(editor.input, "keypress");
+  let onDone;
+  if (willChange) {
+    // If the key triggers a ruleview-changed, wait for that event, it will
+    // always be the last to be triggered and tells us when the preview has
+    // been done.
+    onDone = view.once("ruleview-changed");
   } else {
-    info("Waiting for after-suggest event on the editor");
-    onKeyPress = editor.once("after-suggest");
+    // Otherwise, expect an after-suggest event (except if the popup gets
+    // closed).
+    onDone = key !== "VK_RIGHT" && key !== "VK_BACK_SPACE"
+             ? editor.once("after-suggest")
+             : null;
   }
 
   info("Synthesizing key " + key + ", modifiers: " + Object.keys(modifiers));
   EventUtils.synthesizeKey(key, modifiers, view.styleWindow);
-
-  yield onKeyPress;
-  yield wait(1); // Equivalent of executeSoon
+  yield onDone;
 
   info("Checking the state");
   if (completion != null) {

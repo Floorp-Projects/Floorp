@@ -45,6 +45,7 @@ ABIArgGenerator::next(MIRType type)
     }
     switch (type) {
       case MIRType_Int32:
+      case MIRType_Int64:
       case MIRType_Pointer:
         current_ = ABIArg(IntArgRegs[regIndex_++]);
         break;
@@ -69,6 +70,7 @@ ABIArgGenerator::next(MIRType type)
 #else
     switch (type) {
       case MIRType_Int32:
+      case MIRType_Int64:
       case MIRType_Pointer:
         if (intRegIndex_ == NumIntArgRegs) {
             current_ = ABIArg(stackOffset_);

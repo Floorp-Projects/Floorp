@@ -31,8 +31,48 @@ typedef Vector<jit::MIRType, 8, SystemAllocPolicy> MIRTypeVector;
 typedef jit::ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
 typedef jit::ABIArgIter<ValTypeVector> ABIArgValTypeIter;
 
-// The FuncCompileResults contains the results of compiling a single function
-// body, ready to be merged into the whole-module MacroAssembler.
+// The FuncBytes class represents a single, concurrently-compilable function.
+// A FuncBytes object is composed of the wasm function body bytes along with the
+// ambient metadata describing the function necessary to compile it.
+
+class FuncBytes
+{
+    Bytes              bytes_;
+    uint32_t           index_;
+    const DeclaredSig& sig_;
+    uint32_t           lineOrBytecode_;
+    Uint32Vector       callSiteLineNums_;
+    unsigned           generateTime_;
+
+  public:
+    FuncBytes(Bytes&& bytes,
+              uint32_t index,
+              const DeclaredSig& sig,
+              uint32_t lineOrBytecode,
+              Uint32Vector&& callSiteLineNums,
+              unsigned generateTime)
+      : bytes_(Move(bytes)),
+        index_(index),
+        sig_(sig),
+        lineOrBytecode_(lineOrBytecode),
+        callSiteLineNums_(Move(callSiteLineNums)),
+        generateTime_(generateTime)
+    {}
+
+    Bytes& bytes() { return bytes_; }
+    const Bytes& bytes() const { return bytes_; }
+    uint32_t index() const { return index_; }
+    const DeclaredSig& sig() const { return sig_; }
+    uint32_t lineOrBytecode() const { return lineOrBytecode_; }
+    const Uint32Vector& callSiteLineNums() const { return callSiteLineNums_; }
+    unsigned generateTime() const { return generateTime_; }
+};
+
+typedef UniquePtr<FuncBytes> UniqueFuncBytes;
+
+// The FuncCompileResults class contains the results of compiling a single
+// function body, ready to be merged into the whole-module MacroAssembler.
+
 class FuncCompileResults
 {
     jit::TempAllocator alloc_;
@@ -64,26 +104,21 @@ class FuncCompileResults
 // the FuncCompileResults, and finally sent back to the validation thread. To
 // save time allocating and freeing memory, IonCompileTasks are reset() and
 // reused.
+
 class IonCompileTask
 {
-    JSRuntime* const runtime_;
-    const CompileArgs args_;
+    JSRuntime* const           runtime_;
     ModuleGeneratorThreadView& mg_;
-    LifoAlloc lifo_;
-    UniqueFuncBytecode func_;
-    mozilla::Maybe<FuncCompileResults> results_;
+    LifoAlloc                  lifo_;
+    UniqueFuncBytes            func_;
+    Maybe<FuncCompileResults>  results_;
 
     IonCompileTask(const IonCompileTask&) = delete;
     IonCompileTask& operator=(const IonCompileTask&) = delete;
 
   public:
-    IonCompileTask(JSRuntime* rt, CompileArgs args, ModuleGeneratorThreadView& mg,
-                   size_t defaultChunkSize)
-      : runtime_(rt),
-        args_(args),
-        mg_(mg),
-        lifo_(defaultChunkSize),
-        func_(nullptr)
+    IonCompileTask(JSRuntime* rt, ModuleGeneratorThreadView& mg, size_t defaultChunkSize)
+      : runtime_(rt), mg_(mg), lifo_(defaultChunkSize), func_(nullptr)
     {}
     JSRuntime* runtime() const {
         return runtime_;
@@ -91,27 +126,24 @@ class IonCompileTask
     LifoAlloc& lifo() {
         return lifo_;
     }
-    CompileArgs args() const {
-        return args_;
-    }
     ModuleGeneratorThreadView& mg() const {
         return mg_;
     }
-    void init(UniqueFuncBytecode func) {
+    void init(UniqueFuncBytes func) {
         MOZ_ASSERT(!func_);
-        func_ = mozilla::Move(func);
+        func_ = Move(func);
         results_.emplace(lifo_);
     }
-    const FuncBytecode& func() const {
+    const FuncBytes& func() const {
         MOZ_ASSERT(func_);
         return *func_;
     }
     FuncCompileResults& results() {
         return *results_;
     }
-    void reset(UniqueBytecode* recycled) {
+    void reset(Bytes* recycled) {
         if (func_)
-            *recycled = func_->recycleBytecode();
+            *recycled = Move(func_->bytes());
         func_.reset(nullptr);
         results_.reset();
         lifo_.releaseAll();

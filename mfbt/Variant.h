@@ -61,6 +61,54 @@ struct IsVariant<Needle, Needle, Haystack...>
 template<typename Needle, typename T, typename... Haystack>
 struct IsVariant<Needle, T, Haystack...> : public IsVariant<Needle, Haystack...> { };
 
+/// SelectVariantTypeHelper is used in the implementation of SelectVariantType.
+template<typename T, typename... Variants>
+struct SelectVariantTypeHelper;
+
+template<typename T>
+struct SelectVariantTypeHelper<T>
+{ };
+
+template<typename T, typename... Variants>
+struct SelectVariantTypeHelper<T, T, Variants...>
+{
+  typedef T Type;
+};
+
+template<typename T, typename... Variants>
+struct SelectVariantTypeHelper<T, const T, Variants...>
+{
+  typedef const T Type;
+};
+
+template<typename T, typename... Variants>
+struct SelectVariantTypeHelper<T, const T&, Variants...>
+{
+  typedef const T& Type;
+};
+
+template<typename T, typename... Variants>
+struct SelectVariantTypeHelper<T, T&&, Variants...>
+{
+  typedef T&& Type;
+};
+
+template<typename T, typename Head, typename... Variants>
+struct SelectVariantTypeHelper<T, Head, Variants...>
+  : public SelectVariantTypeHelper<T, Variants...>
+{ };
+
+/**
+ * SelectVariantType takes a type T and a list of variant types Variants and
+ * yields a type Type, selected from Variants, that can store a value of type T
+ * or a reference to type T. If no such type was found, Type is not defined.
+ */
+template <typename T, typename... Variants>
+struct SelectVariantType
+  : public SelectVariantTypeHelper<typename RemoveConst<typename RemoveReference<T>::Type>::Type,
+                                   Variants...>
+{ };
+
 // TagHelper gets the given sentinel tag value for the given type T. This has to
 // be split out from VariantImplementation because you can't nest a partial template
 // specialization within a template class.
@@ -199,6 +247,39 @@ struct VariantImplementation<N, T, Ts...>
   }
 };
 
+/**
+ * AsVariantTemporary stores a value of type T to allow construction of a
+ * Variant value via type inference. Because T is copied and there's no
+ * guarantee that the copy can be elided, AsVariantTemporary is best used with
+ * primitive or very small types.
+ */
+template <typename T>
+struct AsVariantTemporary
+{
+  explicit AsVariantTemporary(const T& aValue)
+    : mValue(aValue)
+  {}
+
+  template<typename U>
+  explicit AsVariantTemporary(U&& aValue)
+    : mValue(Forward<U>(aValue))
+  {}
+
+  AsVariantTemporary(const AsVariantTemporary& aOther)
+    : mValue(aOther.mValue)
+  {}
+
+  AsVariantTemporary(AsVariantTemporary&& aOther)
+    : mValue(Move(aOther.mValue))
+  {}
+
+  AsVariantTemporary() = delete;
+  void operator=(const AsVariantTemporary&) = delete;
+  void operator=(AsVariantTemporary&&) = delete;
+
+  typename RemoveConst<typename RemoveReference<T>::Type>::Type mValue;
+};
+
 } // namespace detail
 
 /**
@@ -221,6 +302,18 @@ struct VariantImplementation<N, T, Ts...>
  *
  *     Variant<char, uint32_t> v1('a');
  *     Variant<UniquePtr<A>, B, C> v2(MakeUnique<A>());
+ *
+ * Because specifying the full type of a Variant value is often verbose,
+ * AsVariant() can be used to construct a Variant value using type inference in
+ * contexts such as expressions or when returning values from functions. Because
+ * AsVariant() must copy or move the value into a temporary and this cannot
+ * necessarily be elided by the compiler, it's mostly appropriate only for use
+ * with primitive or very small types.
+ *
+ *
+ *     Variant<char, uint32_t> Foo() { return AsVariant('x'); }
+ *     // ...
+ *     Variant<char, uint32_t> v1 = Foo();  // v1 holds char('x').
  *
  * All access to the contained value goes through type-safe accessors.
  *
@@ -336,12 +429,24 @@ public:
            // perfect forwarding), so we have to remove those qualifiers here
            // when ensuring that T is a variant of this type, and getting T's
            // tag, etc.
-           typename T = typename RemoveReference<typename RemoveConst<RefT>::Type>::Type,
-           typename = typename EnableIf<detail::IsVariant<T, Ts...>::value, void>::Type>
+           typename T = typename detail::SelectVariantType<RefT, Ts...>::Type>
   explicit Variant(RefT&& aT)
     : tag(Impl::template tag<T>())
   {
-    new (ptr()) T(Forward<T>(aT));
+    new (ptr()) T(Forward<RefT>(aT));
+  }
+
+  /**
+   * Constructs this Variant from an AsVariantTemporary<T> such that T can be
+   * stored in one of the types allowable in this Variant. This is used in the
+   * implementation of AsVariant().
+   */
+  template<typename RefT,
+           typename T = typename detail::SelectVariantType<RefT, Ts...>::Type>
+  MOZ_IMPLICIT Variant(detail::AsVariantTemporary<RefT>&& aValue)
+    : tag(Impl::template tag<T>())
+  {
+    new (ptr()) T(Move(aValue.mValue));
   }
 
   /** Copy construction. */
@@ -371,6 +476,15 @@ public:
     MOZ_ASSERT(&aRhs != this, "self-assign disallowed");
     this->~Variant();
     new (this) Variant(Move(aRhs));
+    return *this;
+  }
+
+  /** Move assignment from AsVariant(). */
+  template <typename T>
+  Variant& operator=(detail::AsVariantTemporary<T>&& aValue)
+  {
+    this->~Variant();
+    new (this) Variant(Move(aValue));
     return *this;
   }
 
@@ -454,6 +568,26 @@ public:
     return Impl::match(aMatcher, *this);
   }
 };
+
+/*
+ * AsVariant() is used to construct a Variant<T,...> value containing the
+ * provided T value using type inference. It can be used to construct Variant
+ * values in expressions or return them from functions without specifying the
+ * entire Variant type.
+ *
+ * Because AsVariant() must copy or move the value into a temporary and this
+ * cannot necessarily be elided by the compiler, it's mostly appropriate only
+ * for use with primitive or very small types.
+ *
+ * AsVariant() returns a AsVariantTemporary value which is implicitly
+ * convertible to any Variant that can hold a value of type T.
+ */
+template<typename T>
+detail::AsVariantTemporary<T>
+AsVariant(T&& aValue)
+{
+  return detail::AsVariantTemporary<T>(Forward<T>(aValue));
+}
 
 } // namespace mozilla
 

@@ -986,6 +986,35 @@ Camellia_Decrypt(CamelliaContext *cx, unsigned char *output,
 		 unsigned int *outputLen, unsigned int maxOutputLen,
 		 const unsigned char *input, unsigned int inputLen);
 
+/******************************************/
+/*
+** ChaCha20+Poly1305 AEAD
+*/
+
+extern SECStatus ChaCha20Poly1305_InitContext(ChaCha20Poly1305Context *ctx,
+                                              const unsigned char *key,
+                                              unsigned int keyLen,
+                                              unsigned int tagLen);
+
+extern ChaCha20Poly1305Context *ChaCha20Poly1305_CreateContext(
+    const unsigned char *key, unsigned int keyLen, unsigned int tagLen);
+
+extern void ChaCha20Poly1305_DestroyContext(ChaCha20Poly1305Context *ctx,
+                                            PRBool freeit);
+
+extern SECStatus ChaCha20Poly1305_Seal(
+    const ChaCha20Poly1305Context *ctx, unsigned char *output,
+    unsigned int *outputLen, unsigned int maxOutputLen,
+    const unsigned char *input, unsigned int inputLen,
+    const unsigned char *nonce, unsigned int nonceLen,
+    const unsigned char *ad, unsigned int adLen);
+
+extern SECStatus ChaCha20Poly1305_Open(
+    const ChaCha20Poly1305Context *ctx, unsigned char *output,
+    unsigned int *outputLen, unsigned int maxOutputLen,
+    const unsigned char *input, unsigned int inputLen,
+    const unsigned char *nonce, unsigned int nonceLen,
+    const unsigned char *ad, unsigned int adLen);
 
 /******************************************/
 /*

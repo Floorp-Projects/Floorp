@@ -176,3 +176,8 @@
   list-style-image: url(chrome://browser/skin/identity-mixed-active-blocked.svg);
   visibility: visible;
 }
+
+#urlbar[pageproxystate="valid"] > #identity-box.certUserOverridden > #connection-icon {
+  list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
+  visibility: visible;
+}

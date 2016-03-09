@@ -9,12 +9,14 @@ var Ci = SpecialPowers.Ci;
 
 // Specifies whether we are using fake streams to run this automation
 var FAKE_ENABLED = true;
+var TEST_AUDIO_FREQ = 1000;
 try {
   var audioDevice = SpecialPowers.getCharPref('media.audio_loopback_dev');
   var videoDevice = SpecialPowers.getCharPref('media.video_loopback_dev');
   dump('TEST DEVICES: Using media devices:\n');
   dump('audio: ' + audioDevice + '\nvideo: ' + videoDevice + '\n');
   FAKE_ENABLED = false;
+  TEST_AUDIO_FREQ = 440;
 } catch (e) {
   dump('TEST DEVICES: No test devices found (in media.{audio,video}_loopback_dev, using fake streams.\n');
   FAKE_ENABLED = true;

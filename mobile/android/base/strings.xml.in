@@ -27,8 +27,7 @@
   <string name="content_authority_db_passwords">@ANDROID_PACKAGE_NAME@.db.passwords</string>
   <string name="content_authority_db_tabs">@ANDROID_PACKAGE_NAME@.db.tabs</string>
   <string name="content_authority_db_readinglist">@ANDROID_PACKAGE_NAME@.db.readinglist</string>
-  <string name="moz_android_shared_account_type">@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@</string>
-  <string name="moz_android_shared_fxaccount_type">@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@</string>
+  <string name="moz_android_shared_fxaccount_type">@ANDROID_PACKAGE_NAME@_fxaccount</string>
   <string name="android_package_name_for_ui">@ANDROID_PACKAGE_NAME@</string>
 
 #include ../search/strings/search_strings.xml.in
@@ -48,7 +47,7 @@
   <string name="firstrun_bookmarks_subtext">&firstrun_bookmarks_subtext;</string>
   <string name="firstrun_data_title">&firstrun_data_title;</string>
   <string name="firstrun_data_message">&firstrun_data_message;</string>
-  <string name="firstrun_data_subtext">&firstrun_data_subtext;</string>
+  <string name="firstrun_data_subtext">&firstrun_data_subtext2;</string>
   <string name="firstrun_sync_title">&firstrun_sync_title;</string>
   <string name="firstrun_sync_message">&firstrun_sync_message;</string>
   <string name="firstrun_sync_subtext">&firstrun_sync_subtext;</string>
@@ -88,6 +87,10 @@
 
   <string name="url_bar_default_text">&url_bar_default_text2;</string>
 
+  <!-- https://input.mozilla.org/feedback/android/%VERSION%/%CHANNEL%/?utm_source=feedback-settings
+       This should be kept in sync with the "app.feedbackURL" pref defined in mobile.js -->
+  <string name="feedback_link">https://input.mozilla.org/feedback/android/&formatS1;/&formatS2;/?utm_source=feedback-settings</string>
+
   <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/faq -->
   <string name="faq_link">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/faq</string>
 
@@ -103,6 +106,8 @@
   <string name="bookmark_removed">&bookmark_removed;</string>
   <string name="bookmark_updated">&bookmark_updated;</string>
   <string name="bookmark_options">&bookmark_options;</string>
+  <string name="screenshot_added_to_bookmarks">&screenshot_added_to_bookmarks;</string>
+  <string name="screenshot_folder_label_in_bookmarks">&screenshot_folder_label_in_bookmarks;</string>
 
   <string name="history_today_section">&history_today_section;</string>
   <string name="history_yesterday_section">&history_yesterday_section;</string>
@@ -214,6 +219,8 @@
   <string name="pref_tap_to_load_images_enabled">&pref_tap_to_load_images_enabled;</string>
   <string name="pref_tap_to_load_images_data">&pref_tap_to_load_images_data;</string>
   <string name="pref_tap_to_load_images_disabled2">&pref_tap_to_load_images_disabled2;</string>
+
+  <string name="pref_show_web_fonts">&pref_show_web_fonts;</string>
 
   <string name="pref_tracking_protection_title">&pref_tracking_protection_title;</string>
   <string name="pref_tracking_protection_summary">&pref_tracking_protection_summary3;</string>
@@ -446,7 +453,7 @@
   <string name="home_most_recent_emptyhint">&home_most_recent_emptyhint2;</string>
   <string name="home_reading_list_empty">&home_reading_list_empty;</string>
   <string name="home_default_empty">&home_default_empty;</string>
-  <string name="home_move_up_to_filter">&home_move_up_to_filter;</string>
+  <string name="home_move_back_to_filter">&home_move_back_to_filter;</string>
   <string name="home_remote_tabs_title">&home_remote_tabs_title;</string>
   <string name="home_remote_tabs_empty">&home_remote_tabs_empty;</string>
   <string name="home_remote_tabs_unable_to_connect">&home_remote_tabs_unable_to_connect;</string>
@@ -521,8 +528,6 @@
   <string name="bookmarkhistory_import_bookmarks">&bookmarkhistory_import_bookmarks;</string>
   <string name="bookmarkhistory_import_history">&bookmarkhistory_import_history;</string>
   <string name="bookmarkhistory_import_wait">&bookmarkhistory_import_wait;</string>
-
-  <string name="webapp_generic_name">&webapp_generic_name;</string>
 
   <string name="searchable_description">&searchable_description;</string>
 
@@ -606,8 +611,13 @@
   <string name="devtools_auth_scan_header">&devtools_auth_scan_header;</string>
 
   <string name="unsupported_sdk_version">&unsupported_sdk_version;</string>
-  <string name="eol_notification_title">&eol_notification_title;</string>
+  <string name="eol_notification_title">&eol_notification_title2;</string>
   <string name="eol_notification_summary">&eol_notification_summary;</string>
   <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/honeycomb -->
-  <string name="eol_notification_url">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/honeycomb</string>
+  <string name="eol_notification_url">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/unsupported-version</string>
+
+  <string name="whatsnew_notification_title">&whatsnew_notification_title;</string>
+  <string name="whatsnew_notification_summary">&whatsnew_notification_summary;</string>
+  <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/new-android -->
+  <string name="whatsnew_notification_url">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/new-android</string>
 </resources>

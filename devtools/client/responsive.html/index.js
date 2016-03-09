@@ -9,8 +9,10 @@
 const { utils: Cu } = Components;
 const { BrowserLoader } =
   Cu.import("resource://devtools/client/shared/browser-loader.js", {});
-const { require } =
-  BrowserLoader("resource://devtools/client/responsive.html/", this);
+const { require } = BrowserLoader({
+  baseURI: "resource://devtools/client/responsive.html/",
+  window: this
+});
 const Telemetry = require("devtools/client/shared/telemetry");
 
 const { createFactory, createElement } =
@@ -30,13 +32,13 @@ let bootstrap = {
   store: null,
 
   init() {
-    // TODO: Should we track this as a separate tool from the old version?
-    // See bug 1242057.
     this.telemetry.toolOpened("responsive");
     let store = this.store = Store();
-    let app = createElement(App);
+    let app = App({
+      onExit: () => window.postMessage({type: "exit"}, "*"),
+    });
     let provider = createElement(Provider, { store }, app);
-    ReactDOM.render(provider, document.querySelector("#app"));
+    ReactDOM.render(provider, document.querySelector("#root"));
   },
 
   destroy() {

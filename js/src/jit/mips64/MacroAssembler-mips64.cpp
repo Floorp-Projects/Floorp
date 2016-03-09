@@ -1223,198 +1223,11 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 }
 
 void
-MacroAssemblerMIPS64Compat::branchTestGCThing(Condition cond, const Address& address, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(address, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET), label,
-         (cond == Equal) ? AboveOrEqual : Below);
-}
-void
-MacroAssemblerMIPS64Compat::branchTestGCThing(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(src, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET), label,
-         (cond == Equal) ? AboveOrEqual : Below);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestPrimitive(Condition cond, const ValueOperand& value,
-                                                Label* label)
-{
-    splitTag(value, SecondScratchReg);
-    branchTestPrimitive(cond, SecondScratchReg, label);
-}
-void
-MacroAssemblerMIPS64Compat::branchTestPrimitive(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET), label,
-         (cond == Equal) ? Below : AboveOrEqual);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    splitTag(value, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_INT32), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestInt32(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_TAG_INT32), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestInt32(Condition cond, const Address& address, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(address, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_INT32), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestInt32(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(src, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_INT32), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat:: branchTestBoolean(Condition cond, const ValueOperand& value,
-                                               Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    splitTag(value, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_BOOLEAN), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat:: branchTestBoolean(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    ma_b(tag, ImmTag(JSVAL_TAG_BOOLEAN), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestBoolean(Condition cond, const Address& address, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(address, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_BOOLEAN), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestBoolean(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(src, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_BOOLEAN), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestDouble(Condition cond, const ValueOperand& value, Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == NotEqual);
-    splitTag(value, SecondScratchReg);
-    branchTestDouble(cond, SecondScratchReg, label);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestDouble(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == NotEqual);
-    Condition actual = (cond == Equal) ? BelowOrEqual : Above;
-    ma_b(tag, ImmTag(JSVAL_TAG_MAX_DOUBLE), label, actual);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestDouble(Condition cond, const Address& address, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(address, SecondScratchReg);
-    branchTestDouble(cond, SecondScratchReg, label);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestDouble(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(src, SecondScratchReg);
-    branchTestDouble(cond, SecondScratchReg, label);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestNull(Condition cond, const ValueOperand& value, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    splitTag(value, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_NULL), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestNull(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_TAG_NULL), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestNull(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(src, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_NULL), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestNull(Condition cond, const Address& address, Label* label) {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(address, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_NULL), label, cond);
-}
-
-void
 MacroAssemblerMIPS64Compat::testNullSet(Condition cond, const ValueOperand& value, Register dest)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     splitTag(value, SecondScratchReg);
     ma_cmp_set(dest, SecondScratchReg, ImmTag(JSVAL_TAG_NULL), cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestObject(Condition cond, const ValueOperand& value, Label* label)
-{
-    splitTag(value, SecondScratchReg);
-    branchTestObject(cond, SecondScratchReg, label);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestObject(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_TAG_OBJECT), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestObject(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(src, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_OBJECT), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestObject(Condition cond, const Address& address, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(address, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_OBJECT), label, cond);
 }
 
 void
@@ -1426,150 +1239,11 @@ MacroAssemblerMIPS64Compat::testObjectSet(Condition cond, const ValueOperand& va
 }
 
 void
-MacroAssemblerMIPS64Compat::branchTestString(Condition cond, const ValueOperand& value, Label* label)
-{
-    splitTag(value, SecondScratchReg);
-    branchTestString(cond, SecondScratchReg, label);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestString(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_TAG_STRING), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestString(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(src, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_STRING), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestSymbol(Condition cond, const ValueOperand& value, Label* label)
-{
-    splitTag(value, SecondScratchReg);
-    branchTestSymbol(cond, SecondScratchReg, label);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestSymbol(Condition cond, const Register& tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_TAG_SYMBOL), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestSymbol(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(src, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_SYMBOL), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestUndefined(Condition cond, const ValueOperand& value,
-                                                Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    splitTag(value, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_UNDEFINED), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestUndefined(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_TAG_UNDEFINED), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestUndefined(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(src, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_UNDEFINED), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestUndefined(Condition cond, const Address& address, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(address, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_UNDEFINED), label, cond);
-}
-
-void
 MacroAssemblerMIPS64Compat::testUndefinedSet(Condition cond, const ValueOperand& value, Register dest)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     splitTag(value, SecondScratchReg);
     ma_cmp_set(dest, SecondScratchReg, ImmTag(JSVAL_TAG_UNDEFINED), cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestNumber(Condition cond, const ValueOperand& value, Label* label)
-{
-    splitTag(value, SecondScratchReg);
-    branchTestNumber(cond, SecondScratchReg, label);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestNumber(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET), label,
-         cond == Equal ? BelowOrEqual : Above);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestMagic(Condition cond, const ValueOperand& value, Label* label)
-{
-    splitTag(value, SecondScratchReg);
-    branchTestMagic(cond, SecondScratchReg, label);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestMagic(Condition cond, Register tag, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ma_b(tag, ImmTag(JSVAL_TAG_MAGIC), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestMagic(Condition cond, const Address& address, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(address, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_MAGIC), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestMagic(Condition cond, const BaseIndex& src, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    extractTag(src, SecondScratchReg);
-    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_MAGIC), label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestValue(Condition cond, const ValueOperand& value,
-                                            const Value& v, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    moveValue(v, ScratchRegister);
-    ma_b(value.valueReg(), ScratchRegister, label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestValue(Condition cond, const Address& valaddr,
-                                            const ValueOperand& value, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    loadPtr(Address(valaddr.base, valaddr.offset), ScratchRegister);
-    ma_b(value.valueReg(), ScratchRegister, label, cond);
 }
 
 // unboxing code
@@ -1766,7 +1440,7 @@ MacroAssemblerMIPS64Compat::unboxValue(const ValueOperand& src, AnyRegister dest
 {
     if (dest.isFloat()) {
         Label notInt32, end;
-        branchTestInt32(Assembler::NotEqual, src, &notInt32);
+        asMasm().branchTestInt32(Assembler::NotEqual, src, &notInt32);
         convertInt32ToDouble(src.valueReg(), dest.fpu());
         ma_b(&end, ShortJump);
         bind(&notInt32);
@@ -1840,7 +1514,7 @@ MacroAssemblerMIPS64Compat::loadInt32OrDouble(const Address& src, FloatRegister 
     // If it's an int, convert it to double.
     loadPtr(Address(src.base, src.offset), ScratchRegister);
     ma_dsrl(SecondScratchReg, ScratchRegister, Imm32(JSVAL_TAG_SHIFT));
-    branchTestInt32(Assembler::NotEqual, SecondScratchReg, &notInt32);
+    asMasm().branchTestInt32(Assembler::NotEqual, SecondScratchReg, &notInt32);
     loadPtr(Address(src.base, src.offset), SecondScratchReg);
     convertInt32ToDouble(SecondScratchReg, dest);
     ma_b(&end, ShortJump);
@@ -1861,7 +1535,7 @@ MacroAssemblerMIPS64Compat::loadInt32OrDouble(const BaseIndex& addr, FloatRegist
     // Since we only have one scratch, we need to stomp over it with the tag.
     loadPtr(Address(SecondScratchReg, 0), ScratchRegister);
     ma_dsrl(SecondScratchReg, ScratchRegister, Imm32(JSVAL_TAG_SHIFT));
-    branchTestInt32(Assembler::NotEqual, SecondScratchReg, &notInt32);
+    asMasm().branchTestInt32(Assembler::NotEqual, SecondScratchReg, &notInt32);
 
     computeScaledAddress(addr, SecondScratchReg);
     loadPtr(Address(SecondScratchReg, 0), SecondScratchReg);
@@ -1881,37 +1555,6 @@ void
 MacroAssemblerMIPS64Compat::loadConstantDouble(double dp, FloatRegister dest)
 {
     ma_lid(dest, dp);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestInt32Truthy(bool b, const ValueOperand& value, Label* label)
-{
-    ma_dext(ScratchRegister, value.valueReg(), Imm32(0), Imm32(32));
-    ma_b(ScratchRegister, ScratchRegister, label, b ? NonZero : Zero);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestStringTruthy(bool b, const ValueOperand& value, Label* label)
-{
-    unboxString(value, SecondScratchReg);
-    load32(Address(SecondScratchReg, JSString::offsetOfLength()), SecondScratchReg);
-    ma_b(SecondScratchReg, Imm32(0), label, b ? NotEqual : Equal);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestDoubleTruthy(bool b, FloatRegister value, Label* label)
-{
-    ma_lid(ScratchDoubleReg, 0.0);
-    DoubleCondition cond = b ? DoubleNotEqual : DoubleEqualOrUnordered;
-    ma_bc1d(value, ScratchDoubleReg, label, cond);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchTestBooleanTruthy(bool b, const ValueOperand& operand,
-                                                    Label* label)
-{
-    unboxBoolean(operand, SecondScratchReg);
-    ma_b(SecondScratchReg, SecondScratchReg, label, b ? NonZero : Zero);
 }
 
 Register
@@ -2203,8 +1846,8 @@ MacroAssemblerMIPS64Compat::ensureDouble(const ValueOperand& source, FloatRegist
 {
     Label isDouble, done;
     Register tag = splitTagForTest(source);
-    branchTestDouble(Assembler::Equal, tag, &isDouble);
-    branchTestInt32(Assembler::NotEqual, tag, failure);
+    asMasm().branchTestDouble(Assembler::Equal, tag, &isDouble);
+    asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
 
     unboxInt32(source, ScratchRegister);
     convertInt32ToDouble(ScratchRegister, dest);
@@ -2491,37 +2134,6 @@ MacroAssemblerMIPS64Compat::toggledCall(JitCode* target, bool enabled)
 }
 
 void
-MacroAssemblerMIPS64Compat::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
-                                                    Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    MOZ_ASSERT(ptr != temp);
-    MOZ_ASSERT(ptr != SecondScratchReg);
-
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-    movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
-    asMasm().addPtr(ptr, SecondScratchReg);
-    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-                       SecondScratchReg, Imm32(nursery.nurserySize()), label);
-}
-
-void
-MacroAssemblerMIPS64Compat::branchValueIsNurseryObject(Condition cond, ValueOperand value,
-                                                       Register temp, Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-
-    // 'Value' representing the start of the nursery tagged as a JSObject
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-    Value start = ObjectValue(*reinterpret_cast<JSObject *>(nursery.start()));
-
-    movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), SecondScratchReg);
-    asMasm().addPtr(value.valueReg(), SecondScratchReg);
-    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-                       SecondScratchReg, Imm32(nursery.nurserySize()), label);
-}
-
-void
 MacroAssemblerMIPS64Compat::profilerEnterFrame(Register framePtr, Register scratch)
 {
     AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());
@@ -2687,6 +2299,35 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
     callWithABIPre(&stackAdjust);
     call(t9);
     callWithABIPost(stackAdjust, result);
+}
+
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
+                                           Register temp, Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+    // 'Value' representing the start of the nursery tagged as a JSObject
+    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
+    Value start = ObjectValue(*reinterpret_cast<JSObject *>(nursery.start()));
+
+    movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), SecondScratchReg);
+    addPtr(value.valueReg(), SecondScratchReg);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              SecondScratchReg, Imm32(nursery.nurserySize()), label);
+}
+
+void
+MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
+                                const Value& rhs, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ScratchRegisterScope scratch(*this);
+    moveValue(rhs, scratch);
+    ma_b(lhs.valueReg(), scratch, label, cond);
 }
 
 //}}} check_macroassembler_style

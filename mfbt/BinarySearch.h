@@ -31,7 +31,7 @@ namespace mozilla {
  *     printf("found 13 at %lu\n", match);
  *   }
  *
- * The BinarySearchIf() version behaves similar, but takes |aComparator|, a
+ * The BinarySearchIf() version behaves similarly, but takes |aComparator|, a
  * functor to compare the values with, instead of a value to find.
  * That functor should take one argument - the value to compare - and return an
  * |int| with the comparison result:
@@ -45,13 +45,13 @@ namespace mozilla {
  * Example:
  *
  *   struct Comparator {
- *     int operator()(int val) const {
- *       if (mTarget < val) return -1;
- *       if (mTarget > val) return 1;
+ *     int operator()(int aVal) const {
+ *       if (mTarget < aVal) { return -1; }
+ *       if (mTarget > aVal) { return 1; }
  *       return 0;
  *     }
- *     Comparator(int target) : mTarget(target) {}
-       const int mTarget;
+ *     explicit Comparator(int aTarget) : mTarget(aTarget) {}
+ *     const int mTarget;
  *   };
  *
  *   Vector<int> sortedInts = ...
@@ -106,12 +106,12 @@ public:
   {}
 
   template <class U>
-  int operator()(const U& val) const {
-    if (mTarget == val) {
+  int operator()(const U& aVal) const {
+    if (mTarget == aVal) {
       return 0;
     }
 
-    if (mTarget < val) {
+    if (mTarget < aVal) {
       return -1;
     }
 

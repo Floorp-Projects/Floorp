@@ -6,7 +6,6 @@
 package org.mozilla.gecko.db;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,9 +15,11 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
 import org.mozilla.gecko.db.BrowserContract.History;
+import org.mozilla.gecko.db.BrowserContract.Numbers;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
+import org.mozilla.gecko.db.BrowserContract.UrlAnnotations;
 import org.mozilla.gecko.util.FileUtils;
 
 import static org.mozilla.gecko.db.DBUtils.qualifyColumn;
@@ -31,17 +32,19 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 
 
-final class BrowserDatabaseHelper extends SQLiteOpenHelper {
+// public for robocop testing
+public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     private static final String LOGTAG = "GeckoBrowserDBHelper";
 
     // Replace the Bug number below with your Bug that is conducting a DB upgrade, as to force a merge conflict with any
     // other patches that require a DB upgrade.
-    public static final int DATABASE_VERSION = 27; // Bug 826400
+    public static final int DATABASE_VERSION = 30; // Bug 946857
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
@@ -53,6 +56,9 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     static final String TABLE_READING_LIST = ReadingListItems.TABLE_NAME;
     static final String TABLE_TABS = TabsProvider.TABLE_TABS;
     static final String TABLE_CLIENTS = TabsProvider.TABLE_CLIENTS;
+    static final String TABLE_LOGINS = BrowserContract.Logins.TABLE_LOGINS;
+    static final String TABLE_DELETED_LOGINS = BrowserContract.DeletedLogins.TABLE_DELETED_LOGINS;
+    static final String TABLE_DISABLED_HOSTS = BrowserContract.LoginsDisabledHosts.TABLE_DISABLED_HOSTS;
 
     static final String VIEW_COMBINED = Combined.VIEW_NAME;
     static final String VIEW_BOOKMARKS_WITH_FAVICONS = Bookmarks.VIEW_WITH_FAVICONS;
@@ -190,7 +196,6 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 ");");
     }
 
-    private boolean didCreateTabsTable = false;
     private void createTabsTable(SQLiteDatabase db, final String tableName) {
         debug("Creating tabs.db: " + db.getPath());
         debug("Creating " + tableName + " table");
@@ -327,6 +332,62 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
     }
 
+    private void createLoginsTable(SQLiteDatabase db, final String tableName) {
+        debug("Creating logins.db: " + db.getPath());
+        debug("Creating " + tableName + " table");
+
+        // Table for each login.
+        db.execSQL("CREATE TABLE " + tableName + "(" +
+                BrowserContract.Logins._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                BrowserContract.Logins.HOSTNAME + " TEXT NOT NULL," +
+                BrowserContract.Logins.HTTP_REALM + " TEXT," +
+                BrowserContract.Logins.FORM_SUBMIT_URL + " TEXT," +
+                BrowserContract.Logins.USERNAME_FIELD + " TEXT NOT NULL," +
+                BrowserContract.Logins.PASSWORD_FIELD + " TEXT NOT NULL," +
+                BrowserContract.Logins.ENCRYPTED_USERNAME + " TEXT NOT NULL," +
+                BrowserContract.Logins.ENCRYPTED_PASSWORD + " TEXT NOT NULL," +
+                BrowserContract.Logins.GUID + " TEXT UNIQUE NOT NULL," +
+                BrowserContract.Logins.ENC_TYPE + " INTEGER NOT NULL, " +
+                BrowserContract.Logins.TIME_CREATED + " INTEGER," +
+                BrowserContract.Logins.TIME_LAST_USED + " INTEGER," +
+                BrowserContract.Logins.TIME_PASSWORD_CHANGED + " INTEGER," +
+                BrowserContract.Logins.TIMES_USED + " INTEGER" +
+                ");");
+    }
+
+    private void createLoginsTableIndices(SQLiteDatabase db, final String tableName) {
+        // No need to create an index on GUID, it is an unique column.
+        db.execSQL("CREATE INDEX " + LoginsProvider.INDEX_LOGINS_HOSTNAME +
+                " ON " + tableName + "(" + BrowserContract.Logins.HOSTNAME + ")");
+        db.execSQL("CREATE INDEX " + LoginsProvider.INDEX_LOGINS_HOSTNAME_FORM_SUBMIT_URL +
+                " ON " + tableName + "(" + BrowserContract.Logins.HOSTNAME + "," + BrowserContract.Logins.FORM_SUBMIT_URL + ")");
+        db.execSQL("CREATE INDEX " + LoginsProvider.INDEX_LOGINS_HOSTNAME_HTTP_REALM +
+                " ON " + tableName + "(" + BrowserContract.Logins.HOSTNAME + "," + BrowserContract.Logins.HTTP_REALM + ")");
+    }
+
+    private void createDeletedLoginsTable(SQLiteDatabase db, final String tableName) {
+        debug("Creating deleted_logins.db: " + db.getPath());
+        debug("Creating " + tableName + " table");
+
+        // Table for each deleted login.
+        db.execSQL("CREATE TABLE " + tableName + "(" +
+                BrowserContract.DeletedLogins._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                BrowserContract.DeletedLogins.GUID + " TEXT UNIQUE NOT NULL," +
+                BrowserContract.DeletedLogins.TIME_DELETED + " INTEGER NOT NULL" +
+                ");");
+    }
+
+    private void createDisabledHostsTable(SQLiteDatabase db, final String tableName) {
+        debug("Creating disabled_hosts.db: " + db.getPath());
+        debug("Creating " + tableName + " table");
+
+        // Table for each disabled host.
+        db.execSQL("CREATE TABLE " + tableName + "(" +
+                BrowserContract.LoginsDisabledHosts._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                BrowserContract.LoginsDisabledHosts.HOSTNAME + " TEXT UNIQUE NOT NULL ON CONFLICT REPLACE" +
+                ");");
+    }
+
     @Override
     public void onCreate(SQLiteDatabase db) {
         debug("Creating browser.db: " + db.getPath());
@@ -342,7 +403,6 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createClientsTable(db);
         createLocalClient(db);
         createTabsTable(db, TABLE_TABS);
-        didCreateTabsTable = true;
         createTabsTableIndices(db, TABLE_TABS);
 
 
@@ -356,8 +416,14 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createOrUpdateAllSpecialFolders(db);
         createSearchHistoryTable(db);
         createReadingListTable(db, TABLE_READING_LIST);
-        didCreateCurrentReadingListTable = true;      // Mostly correct, in the absence of transactions.
         createReadingListIndices(db, TABLE_READING_LIST);
+        createUrlAnnotationsTable(db);
+        createNumbersTable(db);
+
+        createDeletedLoginsTable(db, TABLE_DELETED_LOGINS);
+        createDisabledHostsTable(db, TABLE_DISABLED_HOSTS);
+        createLoginsTable(db, TABLE_LOGINS);
+        createLoginsTableIndices(db, TABLE_LOGINS);
     }
 
     /**
@@ -369,7 +435,6 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     public void copyTabsDB(File tabsDBFile, SQLiteDatabase destinationDB) {
         createClientsTable(destinationDB);
         createTabsTable(destinationDB, TABLE_TABS);
-        didCreateTabsTable = true;
         createTabsTableIndices(destinationDB, TABLE_TABS);
 
         SQLiteDatabase oldTabsDB = null;
@@ -405,7 +470,6 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 SearchHistory.TABLE_NAME + "(" + SearchHistory.DATE_LAST_VISITED + ")");
     }
 
-    private boolean didCreateCurrentReadingListTable = false;
     private void createReadingListTable(final SQLiteDatabase db, final String tableName) {
         debug("Creating " + TABLE_READING_LIST + " table");
 
@@ -455,6 +519,23 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                            + ReadingListItems.CONTENT_STATUS + ")");
     }
 
+    private void createUrlAnnotationsTable(final SQLiteDatabase db) {
+        debug("Creating " + UrlAnnotations.TABLE_NAME + " table");
+
+        db.execSQL("CREATE TABLE " + UrlAnnotations.TABLE_NAME + "(" +
+                UrlAnnotations._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                UrlAnnotations.URL + " TEXT NOT NULL, " +
+                UrlAnnotations.KEY + " TEXT NOT NULL, " +
+                UrlAnnotations.VALUE + " TEXT, " +
+                UrlAnnotations.DATE_CREATED + " INTEGER NOT NULL, " +
+                UrlAnnotations.DATE_MODIFIED + " INTEGER NOT NULL, " +
+                UrlAnnotations.SYNC_STATUS + " TINYINT NOT NULL DEFAULT " + UrlAnnotations.SyncStatus.NEW.getDBValue() +
+                " );");
+
+        db.execSQL("CREATE INDEX idx_url_annotations_url_key ON " +
+                UrlAnnotations.TABLE_NAME + "(" + UrlAnnotations.URL + ", " + UrlAnnotations.KEY + ")");
+    }
+
     private void createOrUpdateAllSpecialFolders(SQLiteDatabase db) {
         createOrUpdateSpecialFolder(db, Bookmarks.MOBILE_FOLDER_GUID,
             R.string.bookmarks_folder_mobile, 0);
@@ -502,6 +583,30 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
             debug("Inserted special folder: " + guid);
         } else {
             debug("Updated special folder: " + guid);
+        }
+    }
+
+    private void createNumbersTable(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE " + Numbers.TABLE_NAME + " (" + Numbers.POSITION + " INTEGER PRIMARY KEY AUTOINCREMENT)");
+
+        if (db.getVersion() >= 3007011) { // SQLite 3.7.11
+            // This is only available in SQLite >= 3.7.11, see release notes:
+            // "Enhance the INSERT syntax to allow multiple rows to be inserted via the VALUES clause"
+            final String numbers = "(0),(1),(2),(3),(4),(5),(6),(7),(8),(9)," +
+                    "(10),(11),(12),(13),(14),(15),(16),(17),(18),(19)," +
+                    "(20),(21),(22),(23),(24),(25),(26),(27),(28),(29)," +
+                    "(30),(31),(32),(33),(34),(35),(36),(37),(38),(39)," +
+                    "(40),(41),(42),(43),(44),(45),(46),(47),(48),(49)," +
+                    "(50)";
+
+            db.execSQL("INSERT INTO " + Numbers.TABLE_NAME + " (" + Numbers.POSITION + ") VALUES " + numbers);
+        } else {
+            final SQLiteStatement statement = db.compileStatement("INSERT INTO " + Numbers.TABLE_NAME + " (" + Numbers.POSITION + ") VALUES (?)");
+
+            for (int i = 0; i <= Numbers.MAX_VALUE; i++) {
+                statement.bindLong(1, i);
+                statement.executeInsert();
+            }
         }
     }
 
@@ -868,7 +973,6 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
             // Done.
             db.setTransactionSuccessful();
-            didCreateCurrentReadingListTable = true;
 
         } catch (SQLException e) {
             Log.e(LOGTAG, "Error migrating reading list items", e);
@@ -895,11 +999,6 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void upgradeDatabaseFrom21to22(SQLiteDatabase db) {
-        if (didCreateCurrentReadingListTable) {
-            debug("No need to add CONTENT_STATUS to reading list; we just created with the current schema.");
-            return;
-        }
-
         debug("Adding CONTENT_STATUS column to reading list table.");
 
         try {
@@ -917,11 +1016,6 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void upgradeDatabaseFrom22to23(SQLiteDatabase db) {
-        if (didCreateCurrentReadingListTable) {
-            debug("No need to rev reading list schema; we just created with the current schema.");
-            return;
-        }
-
         debug("Rewriting reading list table.");
         createReadingListTable(db, "tmp_rl");
 
@@ -991,11 +1085,6 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void upgradeDatabaseFrom24to25(SQLiteDatabase db) {
-        if (didCreateTabsTable) {
-            debug("No need to rev tabs schema; foreign key constraint exists.");
-            return;
-        }
-
         debug("Rewriting tabs table.");
         createTabsTable(db, "tmp_tabs");
 
@@ -1022,7 +1111,6 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE " + TABLE_TABS);
         db.execSQL("ALTER TABLE tmp_tabs RENAME TO " + TABLE_TABS);
         createTabsTableIndices(db, TABLE_TABS);
-        didCreateTabsTable =true;
     }
 
     private void upgradeDatabaseFrom25to26(SQLiteDatabase db) {
@@ -1030,6 +1118,24 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP INDEX IF EXISTS clients_guid_index");
         db.execSQL("DROP INDEX IF EXISTS thumbnails_url_index");
         db.execSQL("DROP INDEX IF EXISTS favicons_url_index");
+    }
+
+    private void upgradeDatabaseFrom27to28(final SQLiteDatabase db) {
+        debug("Adding url annotations table");
+        createUrlAnnotationsTable(db);
+    }
+
+    private void upgradeDatabaseFrom28to29(SQLiteDatabase db) {
+        debug("Adding numbers table");
+        createNumbersTable(db);
+    }
+
+    private void upgradeDatabaseFrom29to30(final SQLiteDatabase db) {
+        debug("creating logins table");
+        createDeletedLoginsTable(db, TABLE_DELETED_LOGINS);
+        createDisabledHostsTable(db, TABLE_DISABLED_HOSTS);
+        createLoginsTable(db, TABLE_LOGINS);
+        createLoginsTableIndices(db, TABLE_LOGINS);
     }
 
     private void createV19CombinedView(SQLiteDatabase db) {
@@ -1114,6 +1220,20 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
                 case 26:
                     upgradeDatabaseFrom25to26(db);
+                    break;
+
+                // case 27 occurs in UrlMetadataTable.onUpgrade
+
+                case 28:
+                    upgradeDatabaseFrom27to28(db);
+                    break;
+
+                case 29:
+                    upgradeDatabaseFrom28to29(db);
+                    break;
+
+                case 30:
+                    upgradeDatabaseFrom29to30(db);
                     break;
             }
         }

@@ -93,6 +93,8 @@
 #include "mozilla/dom/URL.h"
 #include "nsIContentPolicy.h"
 #include "mozAutoDocUpdate.h"
+#include "mozilla/StyleSheetHandle.h"
+#include "mozilla/StyleSheetHandleInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3098,7 +3100,7 @@ XULDocument::DoneWalking()
 }
 
 NS_IMETHODIMP
-XULDocument::StyleSheetLoaded(CSSStyleSheet* aSheet,
+XULDocument::StyleSheetLoaded(StyleSheetHandle aSheet,
                               bool aWasAlternate,
                               nsresult aStatus)
 {
@@ -3727,11 +3729,11 @@ XULDocument::AddPrototypeSheets()
     for (int32_t i = 0; i < sheets.Count(); i++) {
         nsCOMPtr<nsIURI> uri = sheets[i];
 
-        RefPtr<CSSStyleSheet> incompleteSheet;
+        StyleSheetHandle::RefPtr incompleteSheet;
         rv = CSSLoader()->LoadSheet(uri,
                                     mCurrentPrototype->DocumentPrincipal(),
                                     EmptyCString(), this,
-                                    getter_AddRefs(incompleteSheet));
+                                    &incompleteSheet);
 
         // XXXldb We need to prevent bogus sheets from being held in the
         // prototype's list, but until then, don't propagate the failure

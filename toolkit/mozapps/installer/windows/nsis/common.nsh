@@ -5228,6 +5228,13 @@
               StrCpy $AddStartMenuSC "1"
             ${EndIf}
 
+            ReadINIStr $R8 $R7 "Install" "TaskbarShortcut"
+            ${If} $R8 == "false"
+              StrCpy $AddTaskbarSC "0"
+            ${Else}
+              StrCpy $AddTaskbarSC "1"
+            ${EndIf}
+
             ReadINIStr $R8 $R7 "Install" "MaintenanceService"
             ${If} $R8 == "false"
               StrCpy $InstallMaintenanceService "0"

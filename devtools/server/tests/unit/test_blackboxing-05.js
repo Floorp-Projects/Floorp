@@ -73,8 +73,8 @@ function test_black_box_exception() {
       gThreadClient.pauseOnExceptions(true);
 
       gClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-        do_check_neq(aPacket.frame.where.url, BLACK_BOXED_URL,
-                     "We shouldn't pause while in the black boxed source.");
+        do_check_eq(aPacket.frame.where.source.url, SOURCE_URL,
+                    "We shouldn't pause while in the black boxed source.");
         finishClient(gClient);
       });
 

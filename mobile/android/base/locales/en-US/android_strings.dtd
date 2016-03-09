@@ -17,7 +17,7 @@
 <!ENTITY firstrun_bookmarks_subtext "Get results from your bookmarks and history when you search.">
 <!ENTITY firstrun_data_title "Data">
 <!ENTITY firstrun_data_message "Less data, more savings">
-<!ENTITY firstrun_data_subtext "Block images to spend less data on every site you visit.">
+<!ENTITY firstrun_data_subtext2 "Turn off images to spend less data on every site you visit.">
 <!ENTITY firstrun_sync_title "Sync">
 <!ENTITY firstrun_sync_message "&brandShortName;, always by your side">
 <!ENTITY firstrun_sync_subtext "Sync your tabs, passwords, and more everywhere you use it.">
@@ -68,6 +68,11 @@
 <!ENTITY bookmark_removed "Bookmark removed">
 <!ENTITY bookmark_updated "Bookmark updated">
 <!ENTITY bookmark_options "Options">
+<!ENTITY screenshot_added_to_bookmarks "Screenshot added to bookmarks">
+<!-- Localization note (screenshot_folder_label_in_bookmarks): We save links to screenshots
+     the user takes. The folder we store these links in is located in the bookmarks list
+     and is labeled by this String. -->
+<!ENTITY screenshot_folder_label_in_bookmarks "Screenshots">
 
 <!ENTITY history_today_section "Today">
 <!ENTITY history_yesterday_section "Yesterday">
@@ -229,6 +234,8 @@
 <!ENTITY pref_tap_to_load_images_enabled "Always">
 <!ENTITY pref_tap_to_load_images_data "Only over Wi-Fi">
 <!ENTITY pref_tap_to_load_images_disabled2 "Blocked">
+
+<!ENTITY pref_show_web_fonts "Show web fonts">
 
 <!ENTITY pref_tracking_protection_title "Tracking protection">
 <!ENTITY pref_tracking_protection_summary3 "Enabled in Private Browsing">
@@ -548,9 +555,9 @@ size. -->
      is no data to show in an about:home panel that was created by an add-on. -->
 <!ENTITY home_default_empty "No content could be found for this panel.">
 
-<!-- Localization note (home_move_up_to_filter): The variable is replaced by the name of the
+<!-- Localization note (home_back_up_to_filter): The variable is replaced by the name of the
      previous location in the navigation, such as the previous folder -->
-<!ENTITY home_move_up_to_filter "Up to &formatS;">
+<!ENTITY home_move_back_to_filter "Back to &formatS;">
 
 <!ENTITY home_remote_tabs_title "Synced Tabs">
 <!ENTITY home_remote_tabs_empty "Your tabs from other devices show up here.">
@@ -647,8 +654,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
      replaced with the name of the search engine. The placeholder &formatS2; will be
      replaced with the search query. -->
 <!ENTITY suggestion_for_engine "Search &formatS1; for &formatS2;">
-
-<!ENTITY webapp_generic_name "App">
 
 <!ENTITY searchable_description "Bookmarks and history">
 
@@ -774,5 +779,10 @@ just addresses the organization to follow, e.g. "This site is run by " -->
      replaced by the Android OS version (e.g., 14)-->
 <!ENTITY unsupported_sdk_version "Sorry! This &brandShortName; won\'t work on this device (&formatS1;, &formatS2;). Please download the correct version.">
 
-<!ENTITY eol_notification_title "&brandShortName; no longer supports Android 3">
+<!ENTITY eol_notification_title2 "&brandShortName; will no longer update">
 <!ENTITY eol_notification_summary "Tap to learn more">
+
+<!-- LOCALIZATION NOTE (whatsnew_notification_title, whatsnew_notification_summary): These strings
+     are used for a system notification that's shown to users after the app updates. -->
+<!ENTITY whatsnew_notification_title "&brandShortName; is up to date">
+<!ENTITY whatsnew_notification_summary "Find out what\'s new in this version">

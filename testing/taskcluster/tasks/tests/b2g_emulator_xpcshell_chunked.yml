@@ -8,25 +8,21 @@ task:
 
   workerType: b2gtest-emulator
   payload:
+    env:
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/b2g_emulator_unittest.py'
+      MOZHARNESS_CONFIG: 'mozharness/configs/b2g/taskcluster_emulator_automation.py'
     maxRunTime: 6000
     command:
-      - entrypoint
-      - >
-        python ./mozharness/scripts/b2g_emulator_unittest.py
-        --config-file ./mozharness/configs/b2g/taskcluster_emulator_automation.py
-        --test-suite xpcshell
-        --installer-url {{build_url}}
-        --test-packages-url {{test_packages_url}}
-        --xre-url https://api.pub.build.mozilla.org/tooltool/sha512/cefa8c00db04969d3a50e2a5509bd4ea1dc17d256a651a9518cb28dad72e87a1dbbcd3c88ef770be0edf0ab73d2d73925140df93618ffb7fab81b789d312f547
-        --busybox-url {{busybox_url}}
-        --symbols-url {{symbols_url}}
-        --this-chunk {{chunk}}
-        --total-chunk {{total_chunks}}
-    artifacts:
-      'public/build':
-        type: directory
-        path: '/home/worker/artifacts/'
-        expires: '{{#from_now}}1 year{{/from_now}}'
+      - bash
+      - /home/worker/bin/test.sh
+      - --test-suite=xpcshell
+      - --installer-url={{build_url}}
+      - --test-packages-url={{test_packages_url}}
+      - --xre-url=https://api.pub.build.mozilla.org/tooltool/sha512/cefa8c00db04969d3a50e2a5509bd4ea1dc17d256a651a9518cb28dad72e87a1dbbcd3c88ef770be0edf0ab73d2d73925140df93618ffb7fab81b789d312f547
+      - --busybox-url={{busybox_url}}
+      - --symbols-url={{symbols_url}}
+      - --this-chunk={{chunk}}
+      - --total-chunk={{total_chunks}}
 
   extra:
     chunks:

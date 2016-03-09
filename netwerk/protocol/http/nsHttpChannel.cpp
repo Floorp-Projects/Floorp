@@ -2076,7 +2076,8 @@ nsHttpChannel::OpenRedirectChannel(nsresult rv)
 {
     AutoRedirectVetoNotifier notifier(this);
 
-    // Make sure to do this _after_ calling OnChannelRedirect
+    // Make sure to do this after we received redirect veto answer,
+    // i.e. after all sinks had been notified
     mRedirectChannel->SetOriginalURI(mOriginalURI);
 
     // And now, notify observers the deprecated way
@@ -2156,7 +2157,8 @@ nsHttpChannel::ContinueDoReplaceWithProxy(nsresult rv)
 
     NS_PRECONDITION(mRedirectChannel, "No redirect channel?");
 
-    // Make sure to do this _after_ calling OnChannelRedirect
+    // Make sure to do this after we received redirect veto answer,
+    // i.e. after all sinks had been notified
     mRedirectChannel->SetOriginalURI(mOriginalURI);
 
     // open new channel
@@ -2417,12 +2419,13 @@ nsHttpChannel::IsResumable(int64_t partialLen, int64_t contentLength,
                            bool ignoreMissingPartialLen) const
 {
     bool hasContentEncoding =
-        mCachedResponseHead->PeekHeader(nsHttp::Content_Encoding)
-        != nullptr;
+        (mCachedResponseHead->PeekHeader(nsHttp::Content_Encoding) != nullptr);
+    const char *etag = mCachedResponseHead->PeekHeader(nsHttp::ETag);
+    bool hasWeakEtag = etag && !strncmp(etag, "W/", 2);
 
     return (partialLen < contentLength) &&
            (partialLen > 0 || ignoreMissingPartialLen) &&
-           !hasContentEncoding &&
+           !hasContentEncoding && !hasWeakEtag &&
            mCachedResponseHead->IsResumable() &&
            !mCustomConditionalRequest &&
            !mCachedResponseHead->NoStore();
@@ -2823,7 +2826,8 @@ nsHttpChannel::ContinueProcessFallback(nsresult rv)
 
     NS_PRECONDITION(mRedirectChannel, "No redirect channel?");
 
-    // Make sure to do this _after_ calling OnChannelRedirect
+    // Make sure to do this after we received redirect veto answer,
+    // i.e. after all sinks had been notified
     mRedirectChannel->SetOriginalURI(mOriginalURI);
 
     if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
@@ -4765,7 +4769,8 @@ nsHttpChannel::ContinueProcessRedirection(nsresult rv)
 
     NS_PRECONDITION(mRedirectChannel, "No redirect channel?");
 
-    // Make sure to do this _after_ calling OnChannelRedirect
+    // Make sure to do this after we received redirect veto answer,
+    // i.e. after all sinks had been notified
     mRedirectChannel->SetOriginalURI(mOriginalURI);
 
     // And now, the deprecated way
@@ -5019,6 +5024,12 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     nsresult rv;
 
     MOZ_ASSERT(NS_IsMainThread());
+
+    if (!gHttpHandler->Active()) {
+        LOG(("  after HTTP shutdown..."));
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
     if (gHttpHandler->PackagedAppsEnabled()) {
         nsAutoCString path;
         nsCOMPtr<nsIURL> url(do_QueryInterface(mURI));
@@ -5216,6 +5227,11 @@ nsHttpChannel::BeginConnect()
 
     // notify "http-on-modify-request" observers
     CallOnModifyRequestObservers();
+
+    // If mLoadGroup is null, e10s is enabled and this will be handled by HttpChannelChild.
+    if (mLoadGroup) {
+      HttpBaseChannel::SetLoadGroupUserAgentOverride();
+    }
 
     // Check to see if we should redirect this channel elsewhere by
     // nsIHttpChannel.redirectTo API request
@@ -7202,14 +7218,11 @@ nsHttpChannel::MaybeWarnAboutAppCache()
     Telemetry::Accumulate(Telemetry::HTTP_OFFLINE_CACHE_DOCUMENT_LOAD,
                           true);
 
-    // Then, issue a deprecation warning if service worker interception is
-    // enabled.
-    if (nsContentUtils::ServiceWorkerInterceptionEnabled()) {
-        nsCOMPtr<nsIDeprecationWarner> warner;
-        GetCallback(warner);
-        if (warner) {
-            warner->IssueWarning(nsIDocument::eAppCache, false);
-        }
+    // Then, issue a deprecation warning.
+    nsCOMPtr<nsIDeprecationWarner> warner;
+    GetCallback(warner);
+    if (warner) {
+        warner->IssueWarning(nsIDocument::eAppCache, false);
     }
 }
 

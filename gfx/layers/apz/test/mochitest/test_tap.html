@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sanity panning test</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// this page just serially loads each one of the following test helper pages in
+// a new window and waits for it to call testDone()
+var tests = [
+  'helper_tap.html',
+];
+
+var testIndex = -1;
+var w = null;
+
+function testDone() {
+  if (w) {
+    w.close();
+  }
+  testIndex++;
+  if (testIndex < tests.length) {
+    w = window.open(tests[testIndex], "_blank");
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+window.onload = function() {
+  if (!SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled) {
+    ok(true, "APZ is not enabled, this test is not relevant, sorry!\n");
+    SimpleTest.finish();
+    return;
+  }
+  testDone();
+};
+
+  </script>
+</head>
+<body>
+</body>
+</html>

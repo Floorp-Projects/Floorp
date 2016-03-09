@@ -62,6 +62,9 @@ ParamTraits<GonkNativeHandle>::Read(const Message* aMsg,
     nativeHandle->data[i] = fd.fd;
   }
 
+  GonkNativeHandle handle(new GonkNativeHandle::NhObj(nativeHandle));
+  handle.TransferToAnother(*aResult);
+
   return true;
 }
 

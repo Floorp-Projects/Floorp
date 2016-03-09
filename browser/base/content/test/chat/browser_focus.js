@@ -7,6 +7,8 @@
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
 const CHAT_URL = "https://example.com/browser/browser/base/content/test/chat/chat.html";
 
+requestLongerTimeout(2);
+
 // Is the currently opened tab focused?
 function isTabFocused() {
   let tabb = gBrowser.getBrowserForTab(gBrowser.selectedTab);
@@ -250,7 +252,7 @@ add_chat_task(function* testFocusedElement() {
   yield promise;
 
   yield ContentTask.spawn(chat.content, null, function* () {
-    is(content.document.activeElement.getAttribute("id"), "input2",
+    Assert.equal(content.document.activeElement.getAttribute("id"), "input2",
       "correct input field still has focus");
   });
 });

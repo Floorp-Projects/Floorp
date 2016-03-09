@@ -6,6 +6,8 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 
+loader.lazyImporter(this, "ResponsiveUIManager", "resource://devtools/client/responsivedesign/responsivedesign.jsm");
+
 const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"].
                          getService(Ci.nsIStringBundleService).
                          createBundle("chrome://branding/locale/brand.properties").
@@ -48,24 +50,18 @@ exports.items = [
         if (!aTarget.tab) {
           return false;
         }
-        let browserWindow = aTarget.tab.ownerDocument.defaultView;
-        let mgr = browserWindow.ResponsiveUI.ResponsiveUIManager;
-        return mgr.isActiveForTab(aTarget.tab);
+        return ResponsiveUIManager.isActiveForTab(aTarget.tab);
       },
       onChange: function(aTarget, aChangeHandler) {
         if (aTarget.tab) {
-          let browserWindow = aTarget.tab.ownerDocument.defaultView;
-          let mgr = browserWindow.ResponsiveUI.ResponsiveUIManager;
-          mgr.on("on", aChangeHandler);
-          mgr.on("off", aChangeHandler);
+          ResponsiveUIManager.on("on", aChangeHandler);
+          ResponsiveUIManager.on("off", aChangeHandler);
         }
       },
       offChange: function(aTarget, aChangeHandler) {
         if (aTarget.tab) {
-          let browserWindow = aTarget.tab.ownerDocument.defaultView;
-          let mgr = browserWindow.ResponsiveUI.ResponsiveUIManager;
-          mgr.off("on", aChangeHandler);
-          mgr.off("off", aChangeHandler);
+          ResponsiveUIManager.off("on", aChangeHandler);
+          ResponsiveUIManager.off("off", aChangeHandler);
         }
       },
     },
@@ -94,9 +90,8 @@ exports.items = [
 
 function* gcli_cmd_resize(args, context) {
   let browserWindow = context.environment.chromeWindow;
-  let mgr = browserWindow.ResponsiveUI.ResponsiveUIManager;
-  yield mgr.handleGcliCommand(browserWindow,
-                              browserWindow.gBrowser.selectedTab,
-                              this.name,
-                              args);
+  yield ResponsiveUIManager.handleGcliCommand(browserWindow,
+                                              browserWindow.gBrowser.selectedTab,
+                                              this.name,
+                                              args);
 }

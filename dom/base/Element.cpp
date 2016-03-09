@@ -68,6 +68,7 @@
 #include "nsDocument.h"
 #include "nsAttrValueOrString.h"
 #include "nsAttrValueInlines.h"
+#include "nsCSSPseudoElements.h"
 #ifdef MOZ_XUL
 #include "nsXULElement.h"
 #endif /* MOZ_XUL */
@@ -136,13 +137,15 @@
 #include "nsITextControlElement.h"
 #include "nsITextControlFrame.h"
 #include "nsISupportsImpl.h"
+#include "mozilla/dom/CSSPseudoElement.h"
 #include "mozilla/dom/DocumentFragment.h"
-#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/VRDevice.h"
-#include "nsComputedDOMStyle.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
+#include "nsComputedDOMStyle.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1714,7 +1717,8 @@ RemoveFromBindingManagerRunnable::Run()
   // down the old binding if the element is inserted back into the
   // DOM and loads a different binding.
   if (!mContent->IsInComposedDoc()) {
-    mManager->RemovedFromDocumentInternal(mContent, mDoc);
+    mManager->RemovedFromDocumentInternal(mContent, mDoc,
+                                          nsBindingManager::eRunDtor);
   }
 
   return NS_OK;
@@ -3305,7 +3309,31 @@ Element::Animate(JSContext* aContext,
                  const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
                  ErrorResult& aError)
 {
-  nsCOMPtr<nsIGlobalObject> ownerGlobal = GetOwnerGlobal();
+  Nullable<ElementOrCSSPseudoElement> target;
+  target.SetValue().SetAsElement() = this;
+  return Animate(target, aContext, aFrames, aOptions, aError);
+}
+
+/* static */ already_AddRefed<Animation>
+Element::Animate(const Nullable<ElementOrCSSPseudoElement>& aTarget,
+                 JSContext* aContext,
+                 JS::Handle<JSObject*> aFrames,
+                 const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
+                 ErrorResult& aError)
+{
+  MOZ_ASSERT(!aTarget.IsNull() &&
+             (aTarget.Value().IsElement() ||
+              aTarget.Value().IsCSSPseudoElement()),
+             "aTarget should be initialized");
+
+  RefPtr<Element> referenceElement;
+  if (aTarget.Value().IsElement()) {
+    referenceElement = &aTarget.Value().GetAsElement();
+  } else {
+    referenceElement = aTarget.Value().GetAsCSSPseudoElement().ParentElement();
+  }
+
+  nsCOMPtr<nsIGlobalObject> ownerGlobal = referenceElement->GetOwnerGlobal();
   if (!ownerGlobal) {
     aError.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -3325,17 +3353,16 @@ Element::Animate(JSContext* aContext,
     }
   }
 
-  Nullable<ElementOrCSSPseudoElement> target;
-  target.SetValue().SetAsElement() = this;
   RefPtr<KeyframeEffect> effect =
-    KeyframeEffect::Constructor(global, target, frames,
-      TimingParams::FromOptionsUnion(aOptions, target), aError);
+    KeyframeEffect::Constructor(global, aTarget, frames,
+      TimingParams::FromOptionsUnion(aOptions, aTarget), aError);
   if (aError.Failed()) {
     return nullptr;
   }
 
   RefPtr<Animation> animation =
-    Animation::Constructor(global, effect, OwnerDoc()->Timeline(), aError);
+    Animation::Constructor(global, effect,
+                           referenceElement->OwnerDoc()->Timeline(), aError);
   if (aError.Failed()) {
     return nullptr;
   }
@@ -3360,15 +3387,21 @@ Element::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
     doc->FlushPendingNotifications(Flush_Style);
   }
 
-  GetAnimationsUnsorted(aAnimations);
+  GetAnimationsUnsorted(this, CSSPseudoElementType::NotPseudo, aAnimations);
   aAnimations.Sort(AnimationPtrComparator<RefPtr<Animation>>());
 }
 
-void
-Element::GetAnimationsUnsorted(nsTArray<RefPtr<Animation>>& aAnimations)
+/* static */ void
+Element::GetAnimationsUnsorted(Element* aElement,
+                               CSSPseudoElementType aPseudoType,
+                               nsTArray<RefPtr<Animation>>& aAnimations)
 {
-  EffectSet* effects = EffectSet::GetEffectSet(this,
-                         nsCSSPseudoElements::ePseudo_NotPseudoElement);
+  MOZ_ASSERT(aPseudoType == CSSPseudoElementType::NotPseudo ||
+             aPseudoType == CSSPseudoElementType::after ||
+             aPseudoType == CSSPseudoElementType::before,
+             "Unsupported pseudo type");
+
+  EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
   if (!effects) {
     return;
   }

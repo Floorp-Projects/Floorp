@@ -159,25 +159,18 @@ def run_tests(config, browser_config):
     LOG.debug("actual date: %d" % int(time.time()))
 
     # results container
-    talos_results = TalosResults(title=title,
-                                 date=date,
-                                 browser_config=browser_config)
+    talos_results = TalosResults()
 
     # results links
     if not browser_config['develop']:
         results_urls = dict(
-            # hardcoded, this will be removed soon anyway.
-            results_urls=['http://graphs.mozilla.org/server/collect.cgi'],
             # another hack; datazilla stands for Perfherder
             # and do not require url, but a non empty dict is required...
             datazilla_urls=['local.json'],
         )
     else:
         # local mode, output to files
-        results_urls = dict(
-            results_urls=[os.path.abspath('local.out')],
-            datazilla_urls=[os.path.abspath('local.json')]
-        )
+        results_urls = dict(datazilla_urls=[os.path.abspath('local.json')])
     talos_results.check_output_formats(results_urls)
 
     httpd = setup_webserver(browser_config['webserver'])
@@ -224,8 +217,7 @@ def run_tests(config, browser_config):
         if browser_config['develop']:
             print
             print ("Thanks for running Talos locally. Results are in"
-                   " %s and %s" % (results_urls['results_urls'],
-                                   results_urls['datazilla_urls']))
+                   " %s and %s" % (results_urls['datazilla_urls']))
 
     # we will stop running tests on a failed test, or we will return 0 for
     # green

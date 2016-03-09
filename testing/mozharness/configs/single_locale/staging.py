@@ -6,8 +6,11 @@ config = {
         # /home/mock_mozilla/.ssh
         "UPLOAD_SSH_KEY": "%(ssh_key_dir)s/stage-ffxbld_rsa",
         "UPLOAD_HOST": "upload.ffxbld.productdelivery.stage.mozaws.net",
-        "POST_UPLOAD_CMD": "post_upload.py -b %(branch)s-l10n -p %(stage_product)s -i %(buildid)s --release-to-latest --release-to-dated",
+        "POST_UPLOAD_CMD": "post_upload.py -b %(branch)s-l10n -p %(stage_product)s -i %(buildid)s --release-to-latest --release-to-dated %(post_upload_extra)s",
         "UPLOAD_TO_TEMP": "1"
     },
     'taskcluster_index': 'index.garbage.staging',
+    'post_upload_extra': ['--bucket-prefix', 'net-mozaws-stage-delivery',
+                          '--url-prefix', 'http://ftp.stage.mozaws.net/',
+                          ],
 }

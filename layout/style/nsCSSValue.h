@@ -446,6 +446,8 @@ public:
   nsCSSUnit GetUnit() const { return mUnit; }
   bool      IsLengthUnit() const
     { return eCSSUnit_PhysicalMillimeter <= mUnit && mUnit <= eCSSUnit_Pixel; }
+  bool      IsLengthPercentCalcUnit() const
+    { return IsLengthUnit() || mUnit == eCSSUnit_Percent || IsCalcUnit(); }
   /**
    * A "fixed" length unit is one that means a specific physical length
    * which we try to match based on the physical characteristics of an
@@ -1114,6 +1116,12 @@ struct nsCSSValuePair {
   ~nsCSSValuePair()
   {
     MOZ_COUNT_DTOR(nsCSSValuePair);
+  }
+
+  nsCSSValuePair& operator=(const nsCSSValuePair& aOther) {
+    mXValue = aOther.mXValue;
+    mYValue = aOther.mYValue;
+    return *this;
   }
 
   bool operator==(const nsCSSValuePair& aOther) const {

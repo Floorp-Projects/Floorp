@@ -640,17 +640,6 @@ public:
     mRegionToClear = aRegion;
   }
 
-  virtual bool SupportsMixBlendModes(EnumSet<gfx::CompositionOp>& aMixBlendModes)
-  {
-    return false;
-  }
-
-  bool SupportsMixBlendMode(gfx::CompositionOp aMixBlendMode)
-  {
-    EnumSet<gfx::CompositionOp> modes(aMixBlendMode);
-    return SupportsMixBlendModes(modes);
-  }
-
   virtual float RequestProperty(const nsAString& property) { return -1; }
 
   const TimeStamp& GetAnimationReadyTime() const {
@@ -1351,7 +1340,7 @@ public:
 
   /**
    * Returns the local transform for this layer: either mTransform or,
-   * for shadow layers, GetShadowTransform(), in either case with the
+   * for shadow layers, GetShadowBaseTransform(), in either case with the
    * pre- and post-scales applied.
    */
   const gfx::Matrix4x4 GetLocalTransform();
@@ -1845,7 +1834,9 @@ protected:
   // CSS pixels of the scrollframe's space).
   float mScrollbarThumbRatio;
   bool mIsScrollbarContainer;
-  DebugOnly<uint32_t> mDebugColorIndex;
+#ifdef DEBUG
+  uint32_t mDebugColorIndex;
+#endif
   // If this layer is used for OMTA, then this counter is used to ensure we
   // stay in sync with the animation manager
   uint64_t mAnimationGeneration;
@@ -2143,9 +2134,17 @@ public:
    */
   void SetVRDeviceID(uint32_t aVRDeviceID) {
     mVRDeviceID = aVRDeviceID;
+    Mutated();
   }
   uint32_t GetVRDeviceID() {
     return mVRDeviceID;
+  }
+  void SetInputFrameID(int32_t aInputFrameID) {
+    mInputFrameID = aInputFrameID;
+    Mutated();
+  }
+  int32_t GetInputFrameID() {
+    return mInputFrameID;
   }
 
   /**
@@ -2223,6 +2222,7 @@ protected:
   bool mChildrenChanged;
   EventRegionsOverride mEventRegionsOverride;
   uint32_t mVRDeviceID;
+  int32_t mInputFrameID;
 };
 
 /**

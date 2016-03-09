@@ -13,8 +13,11 @@ Cu.import('resource://gre/modules/Promise.jsm');
 Cu.import('resource://gre/modules/Preferences.jsm');
 Cu.import('resource://gre/modules/PlacesUtils.jsm');
 Cu.import('resource://gre/modules/ObjectUtils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
-                                  "resource://testing-common/PlacesTestUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, 'PlacesTestUtils',
+                                  'resource://testing-common/PlacesTestUtils.jsm');
+XPCOMUtils.defineLazyServiceGetter(this, 'PushServiceComponent',
+                                   '@mozilla.org/push/Service;1', 'nsIPushService');
 
 const serviceExports = Cu.import('resource://gre/modules/PushService.jsm', {});
 const servicePrefs = new Preferences('dom.push.');
@@ -507,7 +510,7 @@ var tearDownServiceInParent = Task.async(function* (db) {
   record = yield db.getByIdentifiers({
     scope: 'https://example.net/scope/1',
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: 1, inBrowser: true }),
+      { appId: 1, inIsolatedMozBrowser: true }),
   });
   ok(record.pushEndpoint.startsWith('https://example.org/push'),
     'Wrong push endpoint in app record');

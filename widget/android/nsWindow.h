@@ -186,6 +186,13 @@ public:
                                const FrameMetrics::ViewID& aViewId,
                                const mozilla::Maybe<ZoomConstraints>& aConstraints) override;
 
+    nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
+                                        TouchPointerState aPointerState,
+                                        ScreenIntPoint aPointerScreenPoint,
+                                        double aPointerPressure,
+                                        uint32_t aPointerOrientation,
+                                        nsIObserver* aObserver) override;
+
 protected:
     void BringToFront();
     nsWindow *FindTopLevel();

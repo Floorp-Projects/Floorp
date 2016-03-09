@@ -261,7 +261,7 @@ public:
   virtual bool            AutoErase(HDC dc);
   bool ComputeShouldAccelerate() override;
 
-  static void             ClearCompositor(nsWindow* aWindow);
+  void                    ForcePresent();
 
   /**
    * AssociateDefaultIMC() associates or disassociates the default IMC for

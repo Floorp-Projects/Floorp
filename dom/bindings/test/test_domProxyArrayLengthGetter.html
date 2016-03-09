@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1221421
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1221421</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript">
+
+  var x = document.documentElement.style;
+  x.__proto__ = [1, 2, 3];
+
+  var res = 0;
+  for (var h = 0; h < 5000; ++h) {
+    res += x.length;
+  }
+  is(res, 15000, "length getter should return array length");
+
+  </script>
+</head>
+
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1221421">Mozilla Bug 1221421</a>
+</body>
+</html>

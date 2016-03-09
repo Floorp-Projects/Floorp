@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/UniquePtr.h"
+
 #include "js/RootingAPI.h"
 #include "jsapi-tests/tests.h"
-
-using mozilla::ScopedDeletePtr;
 
 BEGIN_TEST(testGCHeapPostBarriers)
 {
@@ -46,9 +46,10 @@ TestHeapPostBarriers(T initialObj)
     CHECK(js::gc::IsInsideNursery(initialObj));
 
     /* Construct Heap<> wrapper. */
-    ScopedDeletePtr<JS::Heap<T>> heapData(new JS::Heap<T>);
-    CHECK(heapData.get());
-    CHECK(Passthrough(heapData->get() == nullptr));
+    auto heapDataStorage = mozilla::MakeUnique<char[]>(sizeof(JS::Heap<T>));
+    auto* heapData = new (heapDataStorage.get()) JS::Heap<T>();
+    CHECK(heapData);
+    CHECK(Passthrough(*heapData == nullptr));
     *heapData = initialObj;
 
     /* Store the pointer as an integer so that the hazard analysis will miss it. */
@@ -56,11 +57,11 @@ TestHeapPostBarriers(T initialObj)
 
     /* Perform minor GC and check heap wrapper is udated with new pointer. */
     cx->minorGC(JS::gcreason::API);
-    CHECK(uintptr_t(heapData->get()) != initialObjAsInt);
-    CHECK(!js::gc::IsInsideNursery(heapData->get()));
+    CHECK(uintptr_t(heapData) != initialObjAsInt);
+    CHECK(!js::gc::IsInsideNursery(*heapData));
 
     /* Check object is definitely still alive. */
-    JS::Rooted<T> obj(cx, heapData->get());
+    JS::Rooted<T> obj(cx, *heapData);
     JS::RootedValue value(cx);
     CHECK(JS_GetProperty(cx, obj, "x", &value));
     CHECK(value.isInt32());

@@ -354,19 +354,21 @@ HTMLOptionElement::IntrinsicState() const
 HTMLSelectElement*
 HTMLOptionElement::GetSelect()
 {
-  nsIContent* parent = this;
-  while ((parent = parent->GetParent()) &&
-         parent->IsHTMLElement()) {
-    HTMLSelectElement* select = HTMLSelectElement::FromContent(parent);
-    if (select) {
-      return select;
-    }
-    if (!parent->IsHTMLElement(nsGkAtoms::optgroup)) {
-      break;
-    }
+  nsIContent* parent = GetParent();
+  if (!parent) {
+    return nullptr;
   }
 
-  return nullptr;
+  HTMLSelectElement* select = HTMLSelectElement::FromContent(parent);
+  if (select) {
+    return select;
+  }
+
+  if (!parent->IsHTMLElement(nsGkAtoms::optgroup)) {
+    return nullptr;
+  }
+
+  return HTMLSelectElement::FromContentOrNull(parent->GetParent());
 }
 
 already_AddRefed<HTMLOptionElement>

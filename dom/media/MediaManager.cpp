@@ -54,8 +54,8 @@
 #include "nsNullPrincipal.h"
 #include "nsVariant.h"
 
-// For PR_snprintf
-#include "prprf.h"
+// For snprintf
+#include "mozilla/Snprintf.h"
 
 #include "nsJSUtils.h"
 #include "nsGlobalWindow.h"
@@ -179,19 +179,19 @@ HostInDomain(const nsCString &aHost, const nsCString &aPattern)
 }
 
 static bool
-HostHasPermission(nsIURI &docURI)
+HostIsHttps(nsIURI &docURI)
 {
-  nsresult rv;
-
   bool isHttps;
-  rv = docURI.SchemeIs("https",&isHttps);
+  nsresult rv = docURI.SchemeIs("https", &isHttps);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
-  if (!isHttps) {
-    return false;
-  }
+  return isHttps;
+}
 
+static bool
+HostHasPermission(nsIURI &docURI)
+{
   nsAdoptingCString hostName;
   docURI.GetAsciiHost(hostName); //normalize UTF8 to ASCII equivalent
   nsAdoptingCString domainWhiteList =
@@ -203,6 +203,7 @@ HostHasPermission(nsIURI &docURI)
   }
 
   // Get UTF8 to ASCII domain name normalization service
+  nsresult rv;
   nsCOMPtr<nsIIDNService> idnService =
     do_GetService("@mozilla.org/network/idn-service;1", &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -224,7 +225,7 @@ HostHasPermission(nsIURI &docURI)
       end = domainWhiteList.Length();
     }
 
-    rv = idnService->ConvertUTF8toACE(Substring(domainWhiteList, begin, end),
+    rv = idnService->ConvertUTF8toACE(Substring(domainWhiteList, begin, end - begin),
                                       domainName);
     if (NS_SUCCEEDED(rv)) {
       if (HostInDomain(hostName, domainName)) {
@@ -634,13 +635,15 @@ AudioDevice::GetSource()
 }
 
 nsresult VideoDevice::Allocate(const dom::MediaTrackConstraints &aConstraints,
-                               const MediaEnginePrefs &aPrefs) {
-  return GetSource()->Allocate(aConstraints, aPrefs, mID);
+                               const MediaEnginePrefs &aPrefs,
+                               const nsACString& aOrigin) {
+  return GetSource()->Allocate(aConstraints, aPrefs, mID, aOrigin);
 }
 
 nsresult AudioDevice::Allocate(const dom::MediaTrackConstraints &aConstraints,
-                               const MediaEnginePrefs &aPrefs) {
-  return GetSource()->Allocate(aConstraints, aPrefs, mID);
+                               const MediaEnginePrefs &aPrefs,
+                               const nsACString& aOrigin) {
+  return GetSource()->Allocate(aConstraints, aPrefs, mID, aOrigin);
 }
 
 nsresult VideoDevice::Restart(const dom::MediaTrackConstraints &aConstraints,
@@ -688,6 +691,26 @@ public:
 
     if (GetSourceStream()) {
       GetSourceStream()->Destroy();
+    }
+  }
+
+  // For gUM streams, we have a trackunion which assigns TrackIDs.  However, for a
+  // single-source trackunion like we have here, the TrackUnion will assign trackids
+  // that match the source's trackids, so we can avoid needing a mapping function.
+  // XXX This will not handle more complex cases well.
+  void StopTrack(TrackID aTrackID) override
+  {
+    if (GetSourceStream()) {
+      GetSourceStream()->EndTrack(aTrackID);
+      // We could override NotifyMediaStreamTrackEnded(), and maybe should, but it's
+      // risky to do late in a release since that will affect all track ends, and not
+      // just StopTrack()s.
+      RefPtr<dom::MediaStreamTrack> ownedTrack = FindOwnedDOMTrack(mOwnedStream, aTrackID);
+      if (ownedTrack) {
+        mListener->StopTrack(aTrackID);
+      } else {
+        LOG(("StopTrack(%d) on non-existent track", aTrackID));
+      }
     }
   }
 
@@ -1080,7 +1103,7 @@ static auto& MediaManager_AnonymizeDevices = MediaManager::AnonymizeDevices;
 already_AddRefed<MediaManager::PledgeChar>
 MediaManager::SelectSettings(
     MediaStreamConstraints& aConstraints,
-    RefPtr<Refcountable<ScopedDeletePtr<SourceSet>>>& aSources)
+    RefPtr<Refcountable<UniquePtr<SourceSet>>>& aSources)
 {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<PledgeChar> p = new PledgeChar();
@@ -1203,7 +1226,8 @@ public:
     nsresult rv;
 
     if (mAudioDevice) {
-      rv = mAudioDevice->Allocate(GetInvariant(mConstraints.mAudio), mPrefs);
+      rv = mAudioDevice->Allocate(GetInvariant(mConstraints.mAudio),
+                                  mPrefs, mOrigin);
       if (NS_FAILED(rv)) {
         LOG(("Failed to allocate audiosource %d",rv));
         Fail(NS_LITERAL_STRING("SourceUnavailableError"),
@@ -1212,7 +1236,8 @@ public:
       }
     }
     if (mVideoDevice) {
-      rv = mVideoDevice->Allocate(GetInvariant(mConstraints.mVideo), mPrefs);
+      rv = mVideoDevice->Allocate(GetInvariant(mConstraints.mVideo),
+                                  mPrefs, mOrigin);
       if (NS_FAILED(rv)) {
         LOG(("Failed to allocate videosource %d\n",rv));
         if (mAudioDevice) {
@@ -1389,7 +1414,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
       realBackend = manager->GetBackend(aWindowId);
     }
 
-    ScopedDeletePtr<SourceSet> result(new SourceSet);
+    auto result = MakeUnique<SourceSet>();
 
     if (hasVideo) {
       nsTArray<RefPtr<VideoDevice>> videos;
@@ -1407,16 +1432,16 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
         result->AppendElement(source);
       }
     }
-    SourceSet* handoff = result.forget();
+    SourceSet* handoff = result.release();
     NS_DispatchToMainThread(do_AddRef(NewRunnableFrom([id, handoff]() mutable {
-      ScopedDeletePtr<SourceSet> result(handoff); // grab result
+      UniquePtr<SourceSet> result(handoff); // grab result
       RefPtr<MediaManager> mgr = MediaManager_GetInstance();
       if (!mgr) {
         return NS_OK;
       }
       RefPtr<PledgeSourceSet> p = mgr->mOutstandingPledges.Remove(id);
       if (p) {
-        p->Resolve(result.forget());
+        p->Resolve(result.release());
       }
       return NS_OK;
     })));
@@ -1485,11 +1510,11 @@ MediaManager::IsInMediaThread()
 MediaManager::Get() {
   if (!sSingleton) {
     MOZ_ASSERT(NS_IsMainThread());
-#ifdef DEBUG
+
     static int timesCreated = 0;
     timesCreated++;
-    MOZ_ASSERT(timesCreated == 1);
-#endif
+    MOZ_RELEASE_ASSERT(timesCreated == 1);
+
     sSingleton = new MediaManager();
 
     sSingleton->mMediaThread = new base::Thread("MediaManager");
@@ -1584,9 +1609,9 @@ media::Parent<media::NonE10s>*
 MediaManager::GetNonE10sParent()
 {
   if (!mNonE10sParent) {
-    mNonE10sParent = new media::Parent<media::NonE10s>(true);
+    mNonE10sParent = MakeUnique<media::Parent<media::NonE10s>>(true);
   }
-  return mNonE10sParent;
+  return mNonE10sParent.get();
 }
 
 /* static */ void
@@ -1896,7 +1921,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 #endif
               ) ||
 #endif
-            (!privileged && !HostHasPermission(*docURI))) {
+            (!privileged && !HostIsHttps(*docURI)) ||
+            !(loop || HostHasPermission(*docURI))) {
           RefPtr<MediaStreamError> error =
               new MediaStreamError(aWindow,
                                    NS_LITERAL_STRING("SecurityError"));
@@ -2078,8 +2104,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   p->Then([this, onSuccess, onFailure, windowID, c, listener, askPermission,
            prefs, isHTTPS, callID, origin](SourceSet*& aDevices) mutable {
 
-    RefPtr<Refcountable<ScopedDeletePtr<SourceSet>>> devices(
-         new Refcountable<ScopedDeletePtr<SourceSet>>(aDevices)); // grab result
+    RefPtr<Refcountable<UniquePtr<SourceSet>>> devices(
+         new Refcountable<UniquePtr<SourceSet>>(aDevices)); // grab result
 
     // Ensure that the captured 'this' pointer and our windowID are still good.
     if (!MediaManager::Exists() ||
@@ -2139,7 +2165,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
                                                              onFailure.forget(),
                                                              windowID, listener,
                                                              prefs, origin,
-                                                             devices->forget()));
+                                                             devices->release()));
       // Store the task w/callbacks.
       mActiveCallbacks.Put(callID, task.forget());
 
@@ -2298,7 +2324,7 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
                                                          aVideoType, aAudioType,
                                                          aFake, aFakeTracks);
     p->Then([id, aWindowId, aOriginKey](SourceSet*& aDevices) mutable {
-      ScopedDeletePtr<SourceSet> devices(aDevices); // secondary result
+      UniquePtr<SourceSet> devices(aDevices); // secondary result
 
       // Only run if window is still on our active list.
       RefPtr<MediaManager> mgr = MediaManager_GetInstance();
@@ -2310,7 +2336,7 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
         return NS_OK;
       }
       MediaManager_AnonymizeDevices(*devices, aOriginKey);
-      p->Resolve(devices.forget());
+      p->Resolve(devices.release());
       return NS_OK;
     });
   });
@@ -2344,7 +2370,7 @@ MediaManager::EnumerateDevices(nsPIDOMWindowInner* aWindow,
                                                      MediaSourceEnum::Microphone,
                                                      fake);
   p->Then([onSuccess, windowId, listener](SourceSet*& aDevices) mutable {
-    ScopedDeletePtr<SourceSet> devices(aDevices); // grab result
+    UniquePtr<SourceSet> devices(aDevices); // grab result
     RefPtr<MediaManager> mgr = MediaManager_GetInstance();
     mgr->RemoveFromWindowList(windowId, listener);
     nsCOMPtr<nsIWritableVariant> array = MediaManager_ToJSArray(*devices);
@@ -2503,7 +2529,7 @@ MediaManager::RemoveWindowID(uint64_t aWindowId)
 
   // Notify the UI that this window no longer has gUM active
   char windowBuffer[32];
-  PR_snprintf(windowBuffer, sizeof(windowBuffer), "%llu", outerID);
+  snprintf_literal(windowBuffer, "%" PRIu64, outerID);
   nsString data = NS_ConvertUTF8toUTF16(windowBuffer);
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
@@ -3265,8 +3291,12 @@ GetUserMediaCallbackMediaStreamListener::NotifyFinished()
   mFinished = true;
   Stop(); // we know it's been activated
 
-  RefPtr<MediaManager> manager(MediaManager::GetInstance());
-  manager->RemoveFromWindowList(mWindowID, this);
+  RefPtr<MediaManager> manager(MediaManager::GetIfExists());
+  if (manager) {
+    manager->RemoveFromWindowList(mWindowID, this);
+  } else {
+    NS_WARNING("Late NotifyFinished after MediaManager shutdown");
+  }
 }
 
 // Called from the MediaStreamGraph thread

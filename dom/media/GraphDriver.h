@@ -197,15 +197,6 @@ public:
 
   virtual bool OnThread() = 0;
 
-  // These are invoked on the MSG thread (or MainThread in shutdown)
-  virtual void SetInputListener(AudioDataListener *aListener) {
-    mAudioInput = aListener;
-  }
-  // XXX do we need the param?  probably no
-  virtual void RemoveInputListener(AudioDataListener *aListener) {
-    mAudioInput = nullptr;
-  }
-
 protected:
   GraphTime StateComputedTime() const;
 
@@ -235,9 +226,6 @@ protected:
   };
   // This must be access with the monitor.
   WaitState mWaitState;
-
-  // Callback for mic data, if any
-  AudioDataListener *mAudioInput;
 
   // This is used on the main thread (during initialization), and the graph
   // thread. No monitor needed because we know the graph thread does not run
@@ -421,6 +409,17 @@ public:
                      uint32_t aFrames,
                      uint32_t aSampleRate) override;
 
+  // These are invoked on the MSG thread (we don't call this if not LIFECYCLE_RUNNING)
+  virtual void SetInputListener(AudioDataListener *aListener) {
+    MOZ_ASSERT(OnThread());
+    mAudioInput = aListener;
+  }
+  // XXX do we need the param?  probably no
+  virtual void RemoveInputListener(AudioDataListener *aListener) {
+    MOZ_ASSERT(OnThread());
+    mAudioInput = nullptr;
+  }
+
   AudioCallbackDriver* AsAudioCallbackDriver() override {
     return this;
   }
@@ -486,6 +485,9 @@ private:
   /* The sample rate for the aforementionned cubeb stream. This is set on
    * initialization and can be read safely afterwards. */
   uint32_t mSampleRate;
+  /* The number of input channels from cubeb.  Should be set before opening cubeb
+   * and then be static. */
+  uint32_t mInputChannels;
   /* Approximation of the time between two callbacks. This is used to schedule
    * video frames. This is in milliseconds. Only even used (after
    * inizatialization) on the audio callback thread. */

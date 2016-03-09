@@ -63,7 +63,7 @@ public:
     EXPECT_EQ(mTestCase.mSize, mSurface->GetSize());
 
     EXPECT_TRUE(IsSolidColor(mSurface, BGRAColor::Green(),
-                             mTestCase.mFlags & TEST_CASE_IS_FUZZY));
+                             mTestCase.mFlags & TEST_CASE_IS_FUZZY ? 1 : 0));
   }
 
 private:

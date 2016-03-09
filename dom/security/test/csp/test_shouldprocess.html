@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=908933
+-->
+<head>
+  <title>Test Bug 908933</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ * We load variations of 'objects' and make sure all the
+ * resource loads are correctly blocked by CSP.
+ * For all the testing we use a CSP with "object-src 'none'"
+ * so that all the loads are either blocked by
+ * shouldProcess or shouldLoad.
+ */
+
+const POLICY = "default-src http://mochi.test:8888; object-src 'none'";
+const TESTFILE = "tests/dom/security/test/csp/file_shouldprocess.html";
+
+SimpleTest.waitForExplicitFinish();
+
+var tests = [
+  // Note that the files listed below don't actually exist.
+  // Since loading of them should be blocked by shouldProcess, we don't
+  // really need these files.
+
+  // blocked by shouldProcess
+  "http://mochi.test:8888/tests/dom/security/test/csp/test1",
+  "http://mochi.test:8888/tests/dom/security/test/csp/test2",
+  "http://mochi.test:8888/tests/dom/security/test/csp/test3",
+  "http://mochi.test:8888/tests/dom/security/test/csp/test4",
+  "http://mochi.test:8888/tests/dom/security/test/csp/test5",
+  "http://mochi.test:8888/tests/dom/security/test/csp/test6",
+  // blocked by shouldLoad
+  "http://mochi.test:8888/tests/dom/security/test/csp/test7.class",
+  "http://mochi.test:8888/tests/dom/security/test/csp/test8.class",
+];
+
+function checkResults(aURI) {
+  var index = tests.indexOf(aURI);
+  if (index > -1) {
+    tests.splice(index, 1);
+    ok(true, "ShouldLoad or ShouldProcess blocks TYPE_OBJECT with uri: " + aURI + "!");
+  }
+  else {
+    ok(false, "ShouldLoad or ShouldProcess incorreclty blocks TYPE_OBJECT with uri: " + aURI + "!");
+  }
+  if (tests.length == 0) {
+    window.examiner.remove();
+    SimpleTest.finish();
+  }
+}
+
+// used to watch that shouldProcess blocks TYPE_OBJECT
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    if (topic === "csp-on-violate-policy") {
+      var asciiSpec =
+        SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+      checkResults(asciiSpec);
+    }
+  },
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+  }
+}
+window.examiner = new examiner();
+
+function loadFrame() {
+  var src = "file_testserver.sjs";
+  // append the file that should be served
+  src += "?file=" + escape(TESTFILE);
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(POLICY);
+
+  var iframe = document.createElement("iframe");
+  iframe.src = src;
+  document.body.appendChild(iframe);
+}
+
+SpecialPowers.pushPrefEnv(
+  { "set": [['plugin.java.mime', 'application/x-java-test']] },
+  loadFrame);
+
+</script>
+</pre>
+</body>
+</html>

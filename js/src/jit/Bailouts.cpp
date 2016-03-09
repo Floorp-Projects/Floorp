@@ -149,16 +149,14 @@ jit::InvalidationBailout(InvalidationBailoutStack* sp, size_t* frameSizeOut,
         probes::ExitScript(cx, script, script->functionNonDelazifying(),
                            /* popSPSFrame = */ false);
 
+#ifdef JS_JITSPEW
         JitFrameLayout* frame = iter.jsFrame();
-        JitSpew(JitSpew_IonInvalidate, "Bailout failed (%s): converting to exit frame",
+        JitSpew(JitSpew_IonInvalidate, "Bailout failed (%s)",
                 (retval == BAILOUT_RETURN_FATAL_ERROR) ? "Fatal Error" : "Over Recursion");
-        JitSpew(JitSpew_IonInvalidate, "   orig calleeToken %p", (void*) frame->calleeToken());
-        JitSpew(JitSpew_IonInvalidate, "   orig frameSize %u", unsigned(frame->prevFrameLocalSize()));
-        JitSpew(JitSpew_IonInvalidate, "   orig ra %p", (void*) frame->returnAddress());
-
-        frame->replaceCalleeToken(nullptr);
-
-        JitSpew(JitSpew_IonInvalidate, "   new  calleeToken %p", (void*) frame->calleeToken());
+        JitSpew(JitSpew_IonInvalidate, "   calleeToken %p", (void*) frame->calleeToken());
+        JitSpew(JitSpew_IonInvalidate, "   frameSize %u", unsigned(frame->prevFrameLocalSize()));
+        JitSpew(JitSpew_IonInvalidate, "   ra %p", (void*) frame->returnAddress());
+#endif
     }
 
     iter.ionScript()->decrementInvalidationCount(cx->runtime()->defaultFreeOp());
@@ -280,7 +278,7 @@ jit::CheckFrequentBailouts(JSContext* cx, JSScript* script, BailoutKind bailoutK
         // we compile this script LICM will be disabled.
         IonScript* ionScript = script->ionScript();
 
-        if (ionScript->numBailouts() >= JitOptions.frequentBailoutThreshold) {
+        if (ionScript->bailoutExpected()) {
             // If we bailout because of the first execution of a basic block,
             // then we should record which basic block we are returning in,
             // which should prevent this from happening again.  Also note that

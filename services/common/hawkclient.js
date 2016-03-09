@@ -101,6 +101,11 @@ this.HawkClient = function(host) {
 this.HawkClient.prototype = {
 
   /*
+   * A boolean for feature detection.
+   */
+  willUTF8EncodeRequests: HAWKAuthenticatedRESTRequest.prototype.willUTF8EncodeObjectRequests,
+
+  /*
    * Construct an error message for a response.  Private.
    *
    * @param restResponse

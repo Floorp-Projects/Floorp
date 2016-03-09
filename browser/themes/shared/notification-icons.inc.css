@@ -62,11 +62,6 @@
   list-style-image: url(chrome://mozapps/skin/passwordmgr/key-64.png);
 }
 
-.popup-notification-icon[popupid="webapps-install-progress"],
-.popup-notification-icon[popupid="webapps-install"] {
-  list-style-image: url(chrome://global/skin/icons/webapps-64.png);
-}
-
 .popup-notification-icon[popupid="webRTC-sharingDevices"],
 .popup-notification-icon[popupid="webRTC-shareDevices"] {
   list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64.png);
@@ -157,11 +152,6 @@
   /* Temporary icon until the capture and fill doorhangers are unified. */
   list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16.png);
   transform: scaleX(-1);
-}
-
-.webapps-notification-icon,
-#webapps-notification-icon {
-  list-style-image: url(chrome://global/skin/icons/webapps-16.png);
 }
 
 #plugins-notification-icon {

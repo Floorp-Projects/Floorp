@@ -8,6 +8,7 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
+const AssertCls = Cu.import("resource://testing-common/Assert.jsm", null).Assert;
 
 addMessageListener("content-task:spawn", function (msg) {
   let id = msg.data.id;
@@ -21,20 +22,18 @@ addMessageListener("content-task:spawn", function (msg) {
     return frames.join("\n");
   }
 
-  function ok(condition, name, diag) {
-    let stack = getStack(Components.stack.caller);
+  var Assert = new AssertCls((err, message, stack) => {
     sendAsyncMessage("content-task:test-result", {
-      id, condition: !!condition, name, diag, stack
+      id: id,
+      condition: !err,
+      name: err ? err.message : message,
+      stack: getStack(err ? err.stack : stack)
     });
-  }
+  });
 
-  function is(a, b, name) {
-    ok(Object.is(a, b), name, "Got " + a + ", expected " + b);
-  }
-
-  function isnot(a, b, name) {
-    ok(!Object.is(a, b), name, "Didn't expect " + a + ", but got it");
-  }
+  var ok = Assert.ok.bind(Assert);
+  var is = Assert.equal.bind(Assert);
+  var isnot = Assert.notEqual.bind(Assert);
 
   function info(name) {
     sendAsyncMessage("content-task:test-info", {id, name});

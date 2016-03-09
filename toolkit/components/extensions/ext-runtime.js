@@ -2,10 +2,6 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
-
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
@@ -69,21 +65,7 @@ extensions.registerSchemaAPI("runtime", null, (extension, context) => {
       },
 
       getPlatformInfo: function() {
-        let os = AppConstants.platform;
-        if (os == "macosx") {
-          os = "mac";
-        }
-
-        let abi = Services.appinfo.XPCOMABI;
-        let [arch] = abi.split("-");
-        if (arch == "x86") {
-          arch = "x86-32";
-        } else if (arch == "x86_64") {
-          arch = "x86-64";
-        }
-
-        let info = {os, arch};
-        return Promise.resolve(info);
+        return Promise.resolve(ExtensionUtils.PlatformInfo);
       },
 
       setUninstallURL: function(url) {

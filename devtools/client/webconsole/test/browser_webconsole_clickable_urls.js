@@ -8,9 +8,7 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,Bug 1005909 - Clickable URLS";
-
-var inputTests = [
+const inputTests = [
 
   // 0: URL opens page when clicked.
   {
@@ -96,11 +94,10 @@ var inputTests = [
 
 ];
 
-function test() {
-  Task.spawn(function*() {
-    let {tab} = yield loadTab(TEST_URI);
-    let hud = yield openConsole(tab);
-    yield checkOutputForInputs(hud, inputTests);
-    inputTests = null;
-  }).then(finishTest);
-}
+const url = "data:text/html;charset=utf8,Bug 1005909 - Clickable URLS";
+
+add_task(function* () {
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  let hud = yield openConsole();
+  yield checkOutputForInputs(hud, inputTests);
+});

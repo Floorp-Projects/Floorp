@@ -157,7 +157,8 @@ workerHelper.createTask(self, "getDominatorTree", request => {
     dominatorTreeId,
     breakdown,
     maxDepth,
-    maxSiblings
+    maxSiblings,
+    maxRetainingPaths,
   } = request;
 
   if (!(0 <= dominatorTreeId && dominatorTreeId < dominatorTrees.length)) {
@@ -168,11 +169,29 @@ workerHelper.createTask(self, "getDominatorTree", request => {
   const dominatorTree = dominatorTrees[dominatorTreeId];
   const snapshot = dominatorTreeSnapshots[dominatorTreeId];
 
-  return DominatorTreeNode.partialTraversal(dominatorTree,
-                                            snapshot,
-                                            breakdown,
-                                            maxDepth,
-                                            maxSiblings);
+  const tree = DominatorTreeNode.partialTraversal(dominatorTree,
+                                                  snapshot,
+                                                  breakdown,
+                                                  maxDepth,
+                                                  maxSiblings);
+
+  const nodes = [];
+  (function getNodes(node) {
+    nodes.push(node);
+    if (node.children) {
+      for (let i = 0, length = node.children.length; i < length; i++) {
+        getNodes(node.children[i]);
+      }
+    }
+  }(tree));
+
+  DominatorTreeNode.attachShortestPaths(snapshot,
+                                        breakdown,
+                                        dominatorTree.root,
+                                        nodes,
+                                        maxRetainingPaths);
+
+  return tree;
 });
 
 /**
@@ -184,7 +203,8 @@ workerHelper.createTask(self, "getImmediatelyDominated", request => {
     nodeId,
     breakdown,
     startIndex,
-    maxCount
+    maxCount,
+    maxRetainingPaths,
   } = request;
 
   if (!(0 <= dominatorTreeId && dominatorTreeId < dominatorTrees.length)) {
@@ -227,6 +247,12 @@ workerHelper.createTask(self, "getImmediatelyDominated", request => {
   path.reverse();
 
   const moreChildrenAvailable = childIds.length > end;
+
+  DominatorTreeNode.attachShortestPaths(snapshot,
+                                        breakdown,
+                                        dominatorTree.root,
+                                        nodes,
+                                        maxRetainingPaths);
 
   return { nodes, moreChildrenAvailable, path };
 });

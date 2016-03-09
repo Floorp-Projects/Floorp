@@ -223,28 +223,6 @@ nsCoreUtils::GetDOMNodeFromDOMPoint(nsINode *aNode, uint32_t aOffset)
   return aNode;
 }
 
-nsIContent*
-nsCoreUtils::GetRoleContent(nsINode *aNode)
-{
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  if (!content) {
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(aNode));
-    if (doc) {
-      nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(aNode));
-      if (htmlDoc) {
-        nsCOMPtr<nsIDOMHTMLElement> bodyElement;
-        htmlDoc->GetBody(getter_AddRefs(bodyElement));
-        content = do_QueryInterface(bodyElement);
-      }
-      else {
-        return doc->GetDocumentElement();
-      }
-    }
-  }
-
-  return content;
-}
-
 bool
 nsCoreUtils::IsAncestorOf(nsINode *aPossibleAncestorNode,
                           nsINode *aPossibleDescendantNode,
@@ -685,4 +663,16 @@ nsCoreUtils::DispatchAccEvent(RefPtr<nsIAccessibleEvent> event)
   NS_ENSURE_TRUE_VOID(obsService);
 
   obsService->NotifyObservers(event, NS_ACCESSIBLE_EVENT_TOPIC, nullptr);
+}
+
+void
+nsCoreUtils::XBLBindingRole(const nsIContent* aEl, nsAString& aRole)
+{
+  for (const nsXBLBinding* binding = aEl->GetXBLBinding(); binding;
+       binding = binding->GetBaseBinding()) {
+    nsIContent* bindingElm = binding->PrototypeBinding()->GetBindingElement();
+    bindingElm->GetAttr(kNameSpaceID_None, nsGkAtoms::role, aRole);
+    if (!aRole.IsEmpty())
+      break;
+  }
 }

@@ -69,6 +69,7 @@ public:
   CacheIndexEntryAutoManage(const SHA1Sum::Hash *aHash, CacheIndex *aIndex)
     : mIndex(aIndex)
     , mOldRecord(nullptr)
+    , mOldFrecency(0)
     , mDoNotSearchInIndex(false)
     , mDoNotSearchInUpdates(false)
   {
@@ -79,6 +80,7 @@ public:
     mIndex->mIndexStats.BeforeChange(entry);
     if (entry && entry->IsInitialized() && !entry->IsRemoved()) {
       mOldRecord = entry->mRec;
+      mOldFrecency = entry->mRec->mFrecency;
     }
   }
 
@@ -104,6 +106,8 @@ public:
         mIndex->ReplaceRecordInIterators(mOldRecord, entry->mRec);
         mIndex->RemoveRecordFromFrecencyArray(mOldRecord);
         mIndex->InsertRecordToFrecencyArray(entry->mRec);
+      } else if (entry->mRec->mFrecency != mOldFrecency) {
+        mIndex->mFrecencyArraySorted = false;
       }
     } else {
       // both entries were removed or not initialized, do nothing
@@ -147,6 +151,7 @@ private:
   const SHA1Sum::Hash *mHash;
   RefPtr<CacheIndex> mIndex;
   CacheIndexRecord    *mOldRecord;
+  uint32_t             mOldFrecency;
   bool                 mDoNotSearchInIndex;
   bool                 mDoNotSearchInUpdates;
 };
@@ -246,6 +251,7 @@ CacheIndex::CacheIndex()
   , mRWBufSize(0)
   , mRWBufPos(0)
   , mJournalReadSuccessfully(false)
+  , mFrecencyArraySorted(false)
 {
   sLock.AssertCurrentThreadOwns();
   LOG(("CacheIndex::CacheIndex [this=%p]", this));
@@ -341,13 +347,15 @@ CacheIndex::PreShutdown()
   nsCOMPtr<nsIRunnable> event;
   event = NS_NewRunnableMethod(index, &CacheIndex::PreShutdownInternal);
 
-  nsCOMPtr<nsIEventTarget> ioTarget = CacheFileIOManager::IOTarget();
-  MOZ_ASSERT(ioTarget);
+  RefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
+  MOZ_ASSERT(ioThread);
 
-  // PreShutdownInternal() will be executed before any queued event on INDEX
-  // level. That's OK since we don't want to wait for any operation in progess.
-  // We need to interrupt it and save journal as quickly as possible.
-  rv = ioTarget->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
+  // Executing PreShutdownInternal() on WRITE level ensures that read/write
+  // events holding pointer to mRWBuf will be executed before we release the
+  // buffer by calling FinishRead()/FinishWrite() in PreShutdownInternal(), but
+  // it will be executed before any queued event on INDEX level. That's OK since
+  // we don't want to wait until updating of the index finishes.
+  rv = ioThread->Dispatch(event, CacheIOThread::WRITE);
   if (NS_FAILED(rv)) {
     NS_WARNING("CacheIndex::PreShutdown() - Can't dispatch event");
     LOG(("CacheIndex::PreShutdown() - Can't dispatch event" ));
@@ -683,12 +691,12 @@ nsresult
 CacheIndex::InitEntry(const SHA1Sum::Hash *aHash,
                       uint32_t             aAppId,
                       bool                 aAnonymous,
-                      bool                 aInBrowser,
+                      bool                 aInIsolatedMozBrowser,
                       bool                 aPinned)
 {
   LOG(("CacheIndex::InitEntry() [hash=%08x%08x%08x%08x%08x, appId=%u, "
-       "anonymous=%d, inBrowser=%d, pinned=%d]", LOGSHA1(aHash), aAppId,
-       aAnonymous, aInBrowser, aPinned));
+       "anonymous=%d, inIsolatedMozBrowser=%d, pinned=%d]", LOGSHA1(aHash),
+       aAppId, aAnonymous, aInIsolatedMozBrowser, aPinned));
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
 
@@ -721,7 +729,7 @@ CacheIndex::InitEntry(const SHA1Sum::Hash *aHash,
       MOZ_ASSERT(entry);
       MOZ_ASSERT(entry->IsFresh());
 
-      if (IsCollision(entry, aAppId, aAnonymous, aInBrowser)) {
+      if (IsCollision(entry, aAppId, aAnonymous, aInIsolatedMozBrowser)) {
         index->mIndexNeedsUpdate = true; // TODO Does this really help in case of collision?
         reinitEntry = true;
       } else {
@@ -739,7 +747,7 @@ CacheIndex::InitEntry(const SHA1Sum::Hash *aHash,
       if (updated) {
         MOZ_ASSERT(updated->IsFresh());
 
-        if (IsCollision(updated, aAppId, aAnonymous, aInBrowser)) {
+        if (IsCollision(updated, aAppId, aAnonymous, aInIsolatedMozBrowser)) {
           index->mIndexNeedsUpdate = true;
           reinitEntry = true;
         } else {
@@ -750,7 +758,7 @@ CacheIndex::InitEntry(const SHA1Sum::Hash *aHash,
       } else {
         MOZ_ASSERT(entry->IsFresh());
 
-        if (IsCollision(entry, aAppId, aAnonymous, aInBrowser)) {
+        if (IsCollision(entry, aAppId, aAnonymous, aInIsolatedMozBrowser)) {
           index->mIndexNeedsUpdate = true;
           reinitEntry = true;
         } else {
@@ -778,10 +786,10 @@ CacheIndex::InitEntry(const SHA1Sum::Hash *aHash,
     }
 
     if (updated) {
-      updated->Init(aAppId, aAnonymous, aInBrowser, aPinned);
+      updated->Init(aAppId, aAnonymous, aInIsolatedMozBrowser, aPinned);
       updated->MarkDirty();
     } else {
-      entry->Init(aAppId, aAnonymous, aInBrowser, aPinned);
+      entry->Init(aAppId, aAnonymous, aInIsolatedMozBrowser, aPinned);
       entry->MarkDirty();
     }
   }
@@ -1187,7 +1195,11 @@ CacheIndex::GetEntryForEviction(bool aIgnoreEmptyEntries, SHA1Sum::Hash *aHash, 
   uint32_t i;
 
   // find first non-forced valid and unpinned entry with the lowest frecency
-  index->mFrecencyArray.Sort(FrecencyComparator());
+  if (!index->mFrecencyArraySorted) {
+    index->mFrecencyArray.Sort(FrecencyComparator());
+    index->mFrecencyArraySorted = true;
+  }
+
   for (i = 0; i < index->mFrecencyArray.Length(); ++i) {
     memcpy(&hash, &index->mFrecencyArray[i]->mHash, sizeof(SHA1Sum::Hash));
 
@@ -1385,7 +1397,11 @@ CacheIndex::GetIterator(nsILoadContextInfo *aInfo, bool aAddNew,
     iter = new CacheIndexIterator(index, aAddNew);
   }
 
-  index->mFrecencyArray.Sort(FrecencyComparator());
+  if (!index->mFrecencyArraySorted) {
+    index->mFrecencyArray.Sort(FrecencyComparator());
+    index->mFrecencyArraySorted = true;
+  }
+
   iter->AddRecords(index->mFrecencyArray);
 
   index->mIterators.AppendElement(iter);
@@ -1444,19 +1460,20 @@ bool
 CacheIndex::IsCollision(CacheIndexEntry *aEntry,
                         uint32_t         aAppId,
                         bool             aAnonymous,
-                        bool             aInBrowser)
+                        bool             aInIsolatedMozBrowser)
 {
   if (!aEntry->IsInitialized()) {
     return false;
   }
 
   if (aEntry->AppId() != aAppId || aEntry->Anonymous() != aAnonymous ||
-      aEntry->InBrowser() != aInBrowser) {
+      aEntry->InIsolatedMozBrowser() != aInIsolatedMozBrowser) {
     LOG(("CacheIndex::IsCollision() - Collision detected for entry hash=%08x"
          "%08x%08x%08x%08x, expected values: appId=%u, anonymous=%d, "
-         "inBrowser=%d; actual values: appId=%u, anonymous=%d, inBrowser=%d]",
-         LOGSHA1(aEntry->Hash()), aAppId, aAnonymous, aInBrowser,
-         aEntry->AppId(), aEntry->Anonymous(), aEntry->InBrowser()));
+         "inIsolatedMozBrowser=%d; actual values: appId=%u, anonymous=%d, "
+         "inIsolatedMozBrowser=%d]",
+         LOGSHA1(aEntry->Hash()), aAppId, aAnonymous, aInIsolatedMozBrowser,
+         aEntry->AppId(), aEntry->Anonymous(), aEntry->InIsolatedMozBrowser()));
     return true;
   }
 
@@ -2572,7 +2589,7 @@ CacheIndex::InitEntryFromDiskData(CacheIndexEntry *aEntry,
   // Bug 1201042 - will pass OriginAttributes directly.
   aEntry->Init(aMetaData->OriginAttributes().mAppId,
                aMetaData->IsAnonymous(),
-               aMetaData->OriginAttributes().mInBrowser,
+               aMetaData->OriginAttributes().mInIsolatedMozBrowser,
                aMetaData->Pinned());
 
   uint32_t expirationTime;
@@ -3161,6 +3178,7 @@ CacheIndex::InsertRecordToFrecencyArray(CacheIndexRecord *aRecord)
 
   MOZ_ASSERT(!mFrecencyArray.Contains(aRecord));
   mFrecencyArray.AppendElement(aRecord);
+  mFrecencyArraySorted = false;
 }
 
 void

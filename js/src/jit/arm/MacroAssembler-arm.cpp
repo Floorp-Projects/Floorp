@@ -2853,53 +2853,6 @@ MacroAssemblerARMCompat::testGCThing(Condition cond, const BaseIndex& address)
     return cond == Equal ? AboveOrEqual : Below;
 }
 
-void
-MacroAssemblerARMCompat::branchTestValue(Condition cond, const ValueOperand& value,
-                                         const Value& v, Label* label)
-{
-    // If cond == NotEqual, branch when a.payload != b.payload || a.tag !=
-    // b.tag. If the payloads are equal, compare the tags. If the payloads are
-    // not equal, short circuit true (NotEqual).
-    //
-    // If cand == Equal, branch when a.payload == b.payload && a.tag == b.tag.
-    // If the payloads are equal, compare the tags. If the payloads are not
-    // equal, short circuit false (NotEqual).
-    jsval_layout jv = JSVAL_TO_IMPL(v);
-    if (v.isMarkable())
-        ma_cmp(value.payloadReg(), ImmGCPtr(reinterpret_cast<gc::Cell*>(v.toGCThing())));
-    else
-        ma_cmp(value.payloadReg(), Imm32(jv.s.payload.i32));
-    ma_cmp(value.typeReg(), Imm32(jv.s.tag), Equal);
-    ma_b(label, cond);
-}
-
-void
-MacroAssemblerARMCompat::branchTestValue(Condition cond, const Address& valaddr,
-                                         const ValueOperand& value, Label* label)
-{
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    ScratchRegisterScope scratch(asMasm());
-
-    // Check payload before tag, since payload is more likely to differ.
-    if (cond == NotEqual) {
-        ma_ldr(ToPayload(valaddr), scratch);
-        asMasm().branchPtr(NotEqual, scratch, value.payloadReg(), label);
-
-        ma_ldr(ToType(valaddr), scratch);
-        asMasm().branchPtr(NotEqual, scratch, value.typeReg(), label);
-    } else {
-        Label fallthrough;
-
-        ma_ldr(ToPayload(valaddr), scratch);
-        asMasm().branchPtr(NotEqual, scratch, value.payloadReg(), &fallthrough);
-
-        ma_ldr(ToType(valaddr), scratch);
-        asMasm().branchPtr(Equal, scratch, value.typeReg(), label);
-
-        bind(&fallthrough);
-    }
-}
-
 // Unboxing code.
 void
 MacroAssemblerARMCompat::unboxNonDouble(const ValueOperand& operand, Register dest)
@@ -2942,7 +2895,7 @@ MacroAssemblerARMCompat::unboxValue(const ValueOperand& src, AnyRegister dest)
 {
     if (dest.isFloat()) {
         Label notInt32, end;
-        branchTestInt32(Assembler::NotEqual, src, &notInt32);
+        asMasm().branchTestInt32(Assembler::NotEqual, src, &notInt32);
         convertInt32ToDouble(src.payloadReg(), dest.fpu());
         ma_b(&end);
         bind(&notInt32);
@@ -3031,7 +2984,7 @@ MacroAssemblerARMCompat::loadInt32OrDouble(const Address& src, FloatRegister des
         ScratchRegisterScope scratch(asMasm());
 
         ma_ldr(ToType(src), scratch);
-        branchTestInt32(Assembler::NotEqual, scratch, &notInt32);
+        asMasm().branchTestInt32(Assembler::NotEqual, scratch, &notInt32);
         ma_ldr(ToPayload(src), scratch);
         convertInt32ToDouble(scratch, dest);
         ma_b(&end);
@@ -3059,7 +3012,7 @@ MacroAssemblerARMCompat::loadInt32OrDouble(Register base, Register index,
     // Since we only have one scratch register, we need to stomp over it with
     // the tag.
     ma_ldr(Address(scratch, NUNBOX32_TYPE_OFFSET), scratch);
-    branchTestInt32(Assembler::NotEqual, scratch, &notInt32);
+    asMasm().branchTestInt32(Assembler::NotEqual, scratch, &notInt32);
 
     // Implicitly requires NUNBOX32_PAYLOAD_OFFSET == 0: no offset provided
     ma_ldr(DTRAddr(base, DtrRegImmShift(index, LSL, shift)), scratch);
@@ -3448,8 +3401,8 @@ void
 MacroAssemblerARMCompat::ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure)
 {
     Label isDouble, done;
-    branchTestDouble(Assembler::Equal, source.typeReg(), &isDouble);
-    branchTestInt32(Assembler::NotEqual, source.typeReg(), failure);
+    asMasm().branchTestDouble(Assembler::Equal, source.typeReg(), &isDouble);
+    asMasm().branchTestInt32(Assembler::NotEqual, source.typeReg(), failure);
 
     convertInt32ToDouble(source.payloadReg(), dest);
     jump(&done);
@@ -4009,39 +3962,6 @@ MacroAssemblerARMCompat::jumpWithPatch(RepatchLabel* label, Condition cond, Labe
     // instruction loads from.
     CodeOffsetJump ret(bo.getOffset(), pe.index());
     return ret;
-}
-
-void
-MacroAssemblerARMCompat::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
-                                                 Label* label)
-{
-    AutoRegisterScope scratch2(asMasm(), secondScratchReg_);
-
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    MOZ_ASSERT(ptr != temp);
-    MOZ_ASSERT(ptr != scratch2);
-
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-    uintptr_t startChunk = nursery.start() >> Nursery::ChunkShift;
-
-    ma_mov(Imm32(startChunk), scratch2);
-    as_rsb(scratch2, scratch2, lsr(ptr, Nursery::ChunkShift));
-    asMasm().branch32(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-                      scratch2, Imm32(nursery.numChunks()), label);
-}
-
-void
-MacroAssemblerARMCompat::branchValueIsNurseryObject(Condition cond, ValueOperand value,
-                                                    Register temp, Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-
-    Label done;
-
-    branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
-    branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
-
-    bind(&done);
 }
 
 namespace js {
@@ -4659,6 +4579,15 @@ MacroAssemblerARMCompat::asMasm() const
 
 //{{{ check_macroassembler_style
 // ===============================================================
+// MacroAssembler high-level usage.
+
+void
+MacroAssembler::flush()
+{
+    Assembler::flush();
+}
+
+// ===============================================================
 // Stack manipulation functions.
 
 void
@@ -5063,6 +4992,63 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
 
     MOZ_ASSERT_IF(!oom(), pseudoReturnOffset - offsetBeforePush == 8);
     return pseudoReturnOffset;
+}
+
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
+                                        Label* label)
+{
+    AutoRegisterScope scratch2(*this, secondScratchReg_);
+
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(ptr != temp);
+    MOZ_ASSERT(ptr != scratch2);
+
+    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
+    uintptr_t startChunk = nursery.start() >> Nursery::ChunkShift;
+
+    ma_mov(Imm32(startChunk), scratch2);
+    as_rsb(scratch2, scratch2, lsr(ptr, Nursery::ChunkShift));
+    branch32(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+             scratch2, Imm32(nursery.numChunks()), label);
+}
+
+void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
+                                           Register temp, Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+    Label done;
+
+    branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
+    branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
+
+    bind(&done);
+}
+
+void
+MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
+                                const Value& rhs, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    // If cond == NotEqual, branch when a.payload != b.payload || a.tag !=
+    // b.tag. If the payloads are equal, compare the tags. If the payloads are
+    // not equal, short circuit true (NotEqual).
+    //
+    // If cand == Equal, branch when a.payload == b.payload && a.tag == b.tag.
+    // If the payloads are equal, compare the tags. If the payloads are not
+    // equal, short circuit false (NotEqual).
+    jsval_layout jv = JSVAL_TO_IMPL(rhs);
+    if (rhs.isMarkable())
+        ma_cmp(lhs.payloadReg(), ImmGCPtr(reinterpret_cast<gc::Cell*>(rhs.toGCThing())));
+    else
+        ma_cmp(lhs.payloadReg(), Imm32(jv.s.payload.i32));
+    ma_cmp(lhs.typeReg(), Imm32(jv.s.tag), Equal);
+    ma_b(label, cond);
 }
 
 //}}} check_macroassembler_style

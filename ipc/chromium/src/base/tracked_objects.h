@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "base/lock.h"
+#include "mozilla/StaticMutex.h"
 #include "base/message_loop.h"
 #include "base/thread_local_storage.h"
 #include "base/tracked.h"
@@ -428,7 +429,7 @@ class ThreadData {
   // Link to the most recently created instance (starts a null terminated list).
   static ThreadData* first_;
   // Protection for access to first_.
-  static Lock list_lock_;
+  static mozilla::StaticMutex list_lock_;
 
 
   // We set status_ to SHUTDOWN when we shut down the tracking service. This

@@ -50,7 +50,7 @@ add_task(function* test_notification_error() {
   }
 
   let scopes = [];
-  let notifyPromise = promiseObserverNotification('push-message', (subject, data) =>
+  let notifyPromise = promiseObserverNotification(PushServiceComponent.pushTopic, (subject, data) =>
     scopes.push(data) == 2);
 
   let ackDone;

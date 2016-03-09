@@ -94,7 +94,7 @@ class GetRunnable final : public nsRunnable
       } else {
         promise->MaybeResolve(JS::UndefinedHandleValue);
       }
-      mPromiseProxy->CleanUp(aCx);
+      mPromiseProxy->CleanUp();
       return true;
     }
   };
@@ -132,9 +132,7 @@ public:
                                        rv.StealNSResult());
     rv.SuppressException();
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    r->Dispatch(jsapi.cx());
+    r->Dispatch();
     return NS_OK;
   }
 };
@@ -174,7 +172,7 @@ class MatchAllRunnable final : public nsRunnable
       }
 
       promise->MaybeResolve(ret);
-      mPromiseProxy->CleanUp(aCx);
+      mPromiseProxy->CleanUp();
       return true;
     }
   };
@@ -212,9 +210,7 @@ public:
       new ResolvePromiseWorkerRunnable(mPromiseProxy->GetWorkerPrivate(),
                                        mPromiseProxy, result);
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    r->Dispatch(jsapi.cx());
+    r->Dispatch();
     return NS_OK;
   }
 };
@@ -250,7 +246,7 @@ public:
       promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     }
 
-    mPromiseProxy->CleanUp(aCx);
+    mPromiseProxy->CleanUp();
     return true;
   }
 };
@@ -292,9 +288,7 @@ public:
     RefPtr<ResolveClaimRunnable> r =
       new ResolveClaimRunnable(workerPrivate, mPromiseProxy, rv);
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    r->Dispatch(jsapi.cx());
+    r->Dispatch();
     return NS_OK;
   }
 };
@@ -332,7 +326,7 @@ public:
       promise->MaybeResolve(JS::NullHandleValue);
     }
 
-    mPromiseProxy->CleanUp(aCx);
+    mPromiseProxy->CleanUp();
     return true;
   }
 
@@ -405,10 +399,7 @@ public:
       new ResolveOpenWindowRunnable(mPromiseProxy,
                                     Move(clientInfo),
                                     NS_OK);
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    JSContext* cx = jsapi.cx();
-    r->Dispatch(cx);
+    r->Dispatch();
 
     return NS_OK;
   }
@@ -553,9 +544,7 @@ public:
     RefPtr<ResolveOpenWindowRunnable> resolveRunnable =
       new ResolveOpenWindowRunnable(mPromiseProxy, nullptr, rv);
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    NS_WARN_IF(!resolveRunnable->Dispatch(jsapi.cx()));
+    NS_WARN_IF(!resolveRunnable->Dispatch());
 
     return NS_OK;
   }

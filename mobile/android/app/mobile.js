@@ -273,8 +273,6 @@ pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.prop
 
 // pointer to the default engine name
 pref("browser.search.defaultenginename", "chrome://browser/locale/region.properties");
-// maximum number of search suggestions, as a string because the search service expects a string pref
-pref("browser.search.param.maxSuggestions", "4");
 // SSL error page behaviour
 pref("browser.ssl_override_behavior", 2);
 pref("browser.xul.error_pages.expert_bad_cert", false);
@@ -487,7 +485,8 @@ pref("app.support.baseURL", "http://support.mozilla.org/1/mobile/%VERSION%/%OS%/
 pref("app.feedback.postURL", "https://input.mozilla.org/api/v1/feedback/");
 
 // URL for feedback page
-pref("app.feedbackURL", "about:feedback");
+// This should be kept in sync with the "feedback_link" string defined in strings.xml.in
+pref("app.feedbackURL", "https://input.mozilla.org/feedback/android/%VERSION%/%CHANNEL%/?utm_source=feedback-prompt");
 
 pref("app.privacyURL", "https://www.mozilla.org/privacy/firefox/");
 pref("app.creditsURL", "http://www.mozilla.org/credits/");
@@ -619,6 +618,9 @@ pref("dom.webnotifications.enabled", true);
 
 // prevent tooltips from showing up
 pref("browser.chrome.toolbar_tips", false);
+
+// don't allow meta-refresh when backgrounded
+pref("browser.meta_refresh_when_inactive.disabled", true);
 
 // prevent video elements from preloading too much data
 pref("media.preload.default", 1); // default to preload none
@@ -826,15 +828,6 @@ pref("browser.contentHandlers.types.3.title", "chrome://browser/locale/region.pr
 pref("browser.contentHandlers.types.3.uri", "chrome://browser/locale/region.properties");
 pref("browser.contentHandlers.types.3.type", "application/vnd.mozilla.maybe.feed");
 
-// WebPayment
-pref("dom.mozPay.enabled", true);
-
-pref("dom.payment.provider.0.name", "Firefox Marketplace");
-pref("dom.payment.provider.0.description", "marketplace.firefox.com");
-pref("dom.payment.provider.0.uri", "https://marketplace.firefox.com/mozpay/?req=");
-pref("dom.payment.provider.0.type", "mozilla/payments/pay/v1");
-pref("dom.payment.provider.0.requestMethod", "GET");
-
 // Shortnumber matching needed for e.g. Brazil:
 // 01187654321 can be found with 87654321
 pref("dom.phonenumber.substringmatching.BR", 8);
@@ -876,30 +869,6 @@ pref("browser.snippets.enabled", true);
 pref("browser.snippets.syncPromo.enabled", true);
 pref("browser.snippets.firstrunHomepage.enabled", true);
 
-// The URL of the APK factory from which we obtain APKs for webapps.
-pref("browser.webapps.apkFactoryUrl", "https://controller.apk.firefox.com/application.apk");
-
-// How frequently to check for webapp updates, in seconds (86400 is daily).
-pref("browser.webapps.updateInterval", 86400);
-
-// Whether or not to check for updates.  Enabled by default, but the runtime
-// disables it for webapp profiles on firstrun, so only the main Fennec process
-// checks for updates (to avoid duplicate update notifications).
-//
-// In the future, we might want to make each webapp process check for updates
-// for its own webapp, in which case we'll need to have a third state for this
-// preference.  Thus it's an integer rather than a boolean.
-//
-// Possible values:
-//   0: don't check for updates
-//   1: do check for updates
-pref("browser.webapps.checkForUpdates", 1);
-
-// The URL of the service that checks for updates.
-// To test updates, set this to http://apk-update-checker.paas.allizom.org,
-// which is a test server that always reports all apps as having updates.
-pref("browser.webapps.updateCheckUrl", "https://controller.apk.firefox.com/app_updates");
-
 // The mode of home provider syncing.
 // 0: Sync always
 // 1: Sync only when on wifi
@@ -928,9 +897,6 @@ pref("reader.color_scheme.values", "[\"dark\",\"auto\",\"light\"]");
 // Whether to use a vertical or horizontal toolbar.
 pref("reader.toolbar.vertical", false);
 
-// Whether or not to display buttons related to reading list in reader view.
-pref("browser.readinglist.enabled", true);
-
 // Telemetry settings.
 // Whether to use the unified telemetry behavior, requires a restart.
 pref("toolkit.telemetry.unified", false);
@@ -941,6 +907,11 @@ pref("layout.accessiblecaret.enabled", true);
 #else
 pref("layout.accessiblecaret.enabled", false);
 #endif
+
+// AccessibleCaret CSS for the Android L style assets.
+pref("layout.accessiblecaret.width", "22.0");
+pref("layout.accessiblecaret.height", "22.0");
+pref("layout.accessiblecaret.margin-left", "-11.5");
 
 // Android hides the selection bars at the two ends of the selection highlight.
 pref("layout.accessiblecaret.bar.enabled", false);
@@ -955,9 +926,12 @@ pref("layout.accessiblecaret.timeout_ms", 0);
 pref("layout.accessiblecaret.use_long_tap_injector", false);
 
 // AccessibleCarets behaviour is extended to support Android specific
-// requirements during caret-drag, tapping into empty inputs, and to
-// hide carets while maintaining ActionBar visiblity during page scroll.
+// requirements to hide carets while maintaining ActionBar visiblity during page
+// scroll.
 pref("layout.accessiblecaret.extendedvisibility", true);
+
+// Androids carets are always tilt to match the text selection guideline.
+pref("layout.accessiblecaret.always_tilt", true);
 
 // Selection change notifications generated by Javascript changes
 // update active AccessibleCarets / UI interactions.
@@ -984,7 +958,6 @@ pref("dom.vr.enabled", true);
 pref("browser.tabs.showAudioPlayingIcon", true);
 
 pref("dom.serviceWorkers.enabled", true);
-pref("dom.serviceWorkers.interception.enabled", true);
 
 // The remote content URL where FxAccountsWebChannel messages originate.  Must use HTTPS.
 pref("identity.fxaccounts.remote.webchannel.uri", "https://accounts.firefox.com");

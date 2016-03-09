@@ -160,7 +160,7 @@ LoginStore.prototype = {
    */
   load: function ()
   {
-    return Task.spawn(function () {
+    return Task.spawn(function* () {
       try {
         let bytes = yield OS.File.read(this.path);
 
@@ -302,7 +302,7 @@ LoginStore.prototype = {
    */
   save: function ()
   {
-    return Task.spawn(function () {
+    return Task.spawn(function* () {
       // Create or overwrite the file.
       let bytes = gTextEncoder.encode(JSON.stringify(this.data));
       yield OS.File.writeAtomic(this.path, bytes,

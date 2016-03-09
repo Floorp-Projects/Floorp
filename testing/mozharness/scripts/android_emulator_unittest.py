@@ -347,8 +347,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
     def _verify_emulator_and_restart_on_fail(self):
         emulator_ok = self._verify_emulator()
         self._dump_host_state()
-        self._screenshot("emulator-startup-screenshot-")
         if not emulator_ok:
+            self._screenshot("emulator-startup-screenshot-")
             self._kill_processes(self.config["emulator_process_name"])
             self._dump_emulator_log()
             self._restart_adbd()

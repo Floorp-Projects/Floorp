@@ -35,16 +35,6 @@ if not CONFIG['MOZ_B2GDROID']:
         'PromptService.js',
         'SessionStore.js',
         'SiteSpecificUserAgent.js',
-        'WebappsUpdateTimer.js',
-    ]
-
-if CONFIG['MOZ_PAY']:
-    if not CONFIG['MOZ_B2GDROID']:
-        EXTRA_COMPONENTS += [
-            'PaymentProviderStrategy.js',
-        ]
-    EXTRA_COMPONENTS += [
-        'PaymentsUI.js'
     ]
 
 # Keep it this way if at all possible.  If you need preprocessing,

@@ -684,8 +684,10 @@
 
                     this.mBrowser.userTypedValue = null;
 
-                    if (this.mTab.selected && gURLBar)
+                    let inLoadURI = this.mBrowser.inLoadURI;
+                    if (this.mTab.selected && gURLBar && !inLoadURI) {
                       URLBarSetURI();
+                    }
                   } else {
                     // The document is done loading, we no longer want the
                     // value cleared.
@@ -1026,11 +1028,16 @@
 
             if (!aForceUpdate) {
               TelemetryStopwatch.start("FX_TAB_SWITCH_UPDATE_MS");
-              if (!Services.appinfo.browserTabsRemoteAutostart) {
-                // old way of measuring tab paint which is not
-                // valid with e10s.
-                window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)
-                                                               .beginTabSwitch();
+              if (!gMultiProcessBrowser) {
+                // old way of measuring tab paint which is not valid with e10s.
+                // Waiting until the next MozAfterPaint ensures that we capture
+                // the time it takes to paint, upload the textures to the compositor,
+                // and then composite.
+                TelemetryStopwatch.start("FX_TAB_SWITCH_TOTAL_MS");
+                window.addEventListener("MozAfterPaint", function onMozAfterPaint() {
+                  TelemetryStopwatch.finish("FX_TAB_SWITCH_TOTAL_MS");
+                  window.removeEventListener("MozAfterPaint", onMozAfterPaint);
+                });
               }
             }
 
@@ -1315,7 +1322,7 @@
         We ignore the effect of dragging tabs between windows.
       -->
       <method name="_recordTabAccess">
-	<parameter name="aTab"/>
+        <parameter name="aTab"/>
         <body><![CDATA[
           if (!Services.telemetry.canRecordExtended) {
             return;
@@ -1398,6 +1405,11 @@
 
                 crop = "center";
 
+              } else if (aTab.hasAttribute("customizemode")) {
+                let brandBundle = document.getElementById("bundle_brand");
+                let brandShortName = brandBundle.getString("brandShortName");
+                title = gNavigatorBundle.getFormattedString("customizeMode.tabTitle",
+                                                            [ brandShortName ]);
               } else // Still no title?  Fall back to our untitled string.
                 title = this.mStringBundle.getString("tabs.emptyTabTitle");
             }
@@ -1925,11 +1937,6 @@
             this._tabFilters.set(t, filter);
 
             b.droppedLinkHandler = handleDroppedLink;
-
-            // Swap in a preloaded customize tab, if available.
-            if (aURI == "about:customizing") {
-              usingPreloadedContent = gCustomizationTabPreloader.newTab(t);
-            }
 
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
@@ -2470,33 +2477,6 @@
             }
 
             this.selectedTab = tab;
-          ]]>
-        </body>
-      </method>
-
-      <method name="swapNewTabWithBrowser">
-        <parameter name="aNewTab"/>
-        <parameter name="aBrowser"/>
-        <body>
-          <![CDATA[
-            // The browser must be standalone.
-            if (aBrowser.getTabBrowser())
-              throw Cr.NS_ERROR_INVALID_ARG;
-
-            // The tab is definitely not loading.
-            aNewTab.removeAttribute("busy");
-            if (aNewTab.selected) {
-              this.mIsBusy = false;
-            }
-
-            this._swapBrowserDocShells(aNewTab, aBrowser);
-
-            // Update the new tab's title.
-            this.setTabTitle(aNewTab);
-
-            if (aNewTab.selected) {
-              this.updateCurrentBrowser(true);
-            }
           ]]>
         </body>
       </method>
@@ -5918,7 +5898,7 @@
             bgLoad = !bgLoad;
 
           let tab = this._getDragTargetTab(event, true);
-          if (!tab || dropEffect == "copy") {
+          if (!tab) {
             // We're adding a new tab.
             let newIndex = this._getDropIndex(event, true);
             let newTab = this.tabbrowser.loadOneTab(url, {inBackground: bgLoad, allowThirdPartyFixup: true});
@@ -6270,9 +6250,11 @@
           if (browser.audioMuted) {
             browser.unmute();
             this.removeAttribute("muted");
+            BrowserUITelemetry.countTabMutingEvent("unmute", aMuteReason);
           } else {
             browser.mute();
             this.setAttribute("muted", "true");
+            BrowserUITelemetry.countTabMutingEvent("mute", aMuteReason);
           }
           this.muteReason = aMuteReason || null;
           tabContainer.tabbrowser._tabAttrModified(this, ["muted"]);

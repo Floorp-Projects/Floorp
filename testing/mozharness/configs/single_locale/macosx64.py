@@ -24,7 +24,6 @@ config = {
     "log_name": "single_locale",
     "objdir": "obj-l10n",
     "js_src_dir": "js/src",
-    "make_dirs": ['config'],
     "vcs_share_base": "/builds/hg-shared",
 
     "upload_env_extra": {
@@ -41,7 +40,7 @@ config = {
     'balrog_credentials_file': 'oauth.txt',
 
     # l10n
-    "ignore_locales": ["en-US"],
+    "ignore_locales": ["en-US", "ja"],
     "l10n_dir": "l10n",
     "locales_file": "%(branch)s/browser/locales/all-locales",
     "locales_dir": "browser/locales",

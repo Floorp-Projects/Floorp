@@ -58,7 +58,9 @@ class BaselineCompilerShared
     js::Vector<ICLoadLabel, 16, SystemAllocPolicy> icLoadLabels_;
 
     uint32_t pushedBeforeCall_;
-    mozilla::DebugOnly<bool> inCall_;
+#ifdef DEBUG
+    bool inCall_;
+#endif
 
     CodeOffset spsPushToggleOffset_;
     CodeOffset profilerEnterFrameToggleOffset_;

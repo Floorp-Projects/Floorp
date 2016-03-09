@@ -5,9 +5,7 @@
 
 "use strict";
 
-const { breakdowns } = require("devtools/client/memory/constants");
 const { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
-const breakdownActions = require("devtools/client/memory/actions/breakdown");
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
@@ -28,11 +26,8 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   const doc = panel.panelWin.document;
 
   yield dispatch(takeSnapshotAndCensus(front, heapWorker));
-  yield dispatch(breakdownActions.setBreakdownAndRefresh(heapWorker,
-                                                         breakdowns.objectClass.breakdown));
-
-  is(getState().breakdown.by, "objectClass",
-     "Should be using object class breakdown");
+  is(getState().censusDisplay.breakdown.by, "coarseType",
+     "Should be using coarse type breakdown");
 
   const bytesCells = [...doc.querySelectorAll(".heap-tree-item-bytes")];
   checkCells(bytesCells);

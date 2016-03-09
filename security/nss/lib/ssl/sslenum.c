@@ -50,6 +50,8 @@ const PRUint16 SSL_ImplementedCiphers[] = {
 #ifndef NSS_DISABLE_ECC
     TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
     TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+    TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+    TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
     /* TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA must appear before
      * TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA to work around bug 946147.
      */
@@ -66,6 +68,7 @@ const PRUint16 SSL_ImplementedCiphers[] = {
 #endif /* NSS_DISABLE_ECC */
 
     TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
+    TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
     TLS_DHE_DSS_WITH_AES_128_GCM_SHA256,
     TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
     TLS_DHE_DSS_WITH_AES_128_CBC_SHA,
@@ -121,7 +124,7 @@ const PRUint16 SSL_ImplementedCiphers[] = {
     TLS_RSA_EXPORT_WITH_RC4_40_MD5,
     TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5,
 
-    /* ciphersuites with no encryption */
+/* ciphersuites with no encryption */
 #ifndef NSS_DISABLE_ECC
     TLS_ECDHE_ECDSA_WITH_NULL_SHA,
     TLS_ECDHE_RSA_WITH_NULL_SHA,
@@ -135,7 +138,7 @@ const PRUint16 SSL_ImplementedCiphers[] = {
     /* SSL2 cipher suites. */
     SSL_EN_RC4_128_WITH_MD5,
     SSL_EN_RC2_128_CBC_WITH_MD5,
-    SSL_EN_DES_192_EDE3_CBC_WITH_MD5,  /* actually 112, not 192 */
+    SSL_EN_DES_192_EDE3_CBC_WITH_MD5, /* actually 112, not 192 */
     SSL_EN_DES_64_CBC_WITH_MD5,
     SSL_EN_RC4_128_EXPORT40_WITH_MD5,
     SSL_EN_RC2_128_CBC_EXPORT40_WITH_MD5,
@@ -144,10 +147,10 @@ const PRUint16 SSL_ImplementedCiphers[] = {
 
 };
 
-const PRUint16 SSL_NumImplementedCiphers = 
+const PRUint16 SSL_NumImplementedCiphers =
     (sizeof SSL_ImplementedCiphers) / (sizeof SSL_ImplementedCiphers[0]) - 1;
 
-const PRUint16 *
+const PRUint16*
 SSL_GetImplementedCiphers(void)
 {
     return SSL_ImplementedCiphers;

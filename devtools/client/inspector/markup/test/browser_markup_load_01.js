@@ -13,11 +13,11 @@ const server = createTestHTTPServer();
 // Register a slow image handler so we can simulate a long time between
 // a reload and the load event firing.
 server.registerContentType("gif", "image/gif");
-server.registerPathHandler("/slow.gif", function (metadata, response) {
-  info ("Image has been requested");
+server.registerPathHandler("/slow.gif", function(metadata, response) {
+  info("Image has been requested");
   response.processAsync();
   setTimeout(() => {
-    info ("Image is responding");
+    info("Image is responding");
     response.finish();
   }, 500);
 });
@@ -37,17 +37,19 @@ add_task(function*() {
   let domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");
   let pageLoaded = waitForLinkedBrowserEvent(tab, "load");
 
-  ok (inspector.markup, "There is a markup view");
+  ok(inspector.markup, "There is a markup view");
 
   // Select an element while the tab is in the middle of a slow reload.
-  reloadTab(testActor);
+  testActor.eval("location.reload()");
   yield domContentLoaded;
   yield chooseWithInspectElementContextMenu("img", testActor);
   yield pageLoaded;
 
   yield inspector.once("markuploaded");
-  ok (inspector.markup, "There is a markup view");
-  is (inspector.markup._elt.children.length, 1, "The markup view is rendering");
+  yield waitForMultipleChildrenUpdates(inspector);
+
+  ok(inspector.markup, "There is a markup view");
+  is(inspector.markup._elt.children.length, 1, "The markup view is rendering");
 });
 
 function* chooseWithInspectElementContextMenu(selector, testActor) {

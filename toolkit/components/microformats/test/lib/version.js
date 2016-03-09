@@ -1,1 +1,1 @@
-	modules.version = '1.3.3';
+	modules.version = '1.4.0';

@@ -6,8 +6,8 @@
 #include <sddl.h>  // For ConvertSidToStringSidW.
 #include <string>
 #include <vector>
+#include "mozilla/ArrayUtils.h"
 
-#include "base/memory/scoped_ptr.h"
 #include "rlz/lib/assert.h"
 
 namespace rlz_lib {
@@ -41,13 +41,13 @@ bool GetSystemVolumeSerialNumber(int* number) {
 bool GetComputerSid(const wchar_t* account_name, SID* sid, DWORD sid_size) {
   static const DWORD kStartDomainLength = 128;  // reasonable to start with
 
-  scoped_array<wchar_t> domain_buffer(new wchar_t[kStartDomainLength]);
+  std::vector<wchar_t> domain_buffer(kStartDomainLength, 0);
   DWORD domain_size = kStartDomainLength;
   DWORD sid_dword_size = sid_size;
   SID_NAME_USE sid_name_use;
 
   BOOL success = ::LookupAccountNameW(NULL, account_name, sid,
-                                      &sid_dword_size, domain_buffer.get(),
+                                      &sid_dword_size, &domain_buffer.front(),
                                       &domain_size, &sid_name_use);
   if (!success && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
     // We could have gotten the insufficient buffer error because
@@ -57,10 +57,10 @@ bool GetComputerSid(const wchar_t* account_name, SID* sid, DWORD sid_size) {
       return false;
 
     if (domain_size > kStartDomainLength)
-      domain_buffer.reset(new wchar_t[domain_size]);
+      domain_buffer.resize(domain_size);
 
     success = ::LookupAccountNameW(NULL, account_name, sid, &sid_dword_size,
-                                   domain_buffer.get(), &domain_size,
+                                   &domain_buffer.front(), &domain_size,
                                    &sid_name_use);
   }
 
@@ -110,7 +110,7 @@ bool GetRawMachineId(std::vector<uint8_t>* sid_bytes, int* volume_id) {
   // Calculate the Windows SID.
 
   wchar_t computer_name[MAX_COMPUTERNAME_LENGTH + 1] = {0};
-  DWORD size = arraysize(computer_name);
+  DWORD size = mozilla::ArrayLength(computer_name);
 
   if (!GetComputerNameW(computer_name, &size)) {
     return false;

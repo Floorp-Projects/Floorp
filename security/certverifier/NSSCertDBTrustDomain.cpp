@@ -1017,7 +1017,7 @@ LoadLoadableRoots(/*optional*/ const char* dir, const char* modNameUTF8)
     return SECFailure;
   }
 
-  ScopedSECMODModule rootsModule(SECMOD_LoadUserModule(pkcs11ModuleSpec.get(),
+  UniqueSECMODModule rootsModule(SECMOD_LoadUserModule(pkcs11ModuleSpec.get(),
                                                        nullptr, false));
   if (!rootsModule) {
     return SECFailure;
@@ -1035,7 +1035,7 @@ void
 UnloadLoadableRoots(const char* modNameUTF8)
 {
   PR_ASSERT(modNameUTF8);
-  ScopedSECMODModule rootsModule(SECMOD_FindModule(modNameUTF8));
+  UniqueSECMODModule rootsModule(SECMOD_FindModule(modNameUTF8));
 
   if (rootsModule) {
     SECMOD_UnloadUserModule(rootsModule.get());

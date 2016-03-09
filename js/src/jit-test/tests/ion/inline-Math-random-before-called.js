@@ -1,4 +1,4 @@
-// |jit-test| ion-eager
+// |jit-test| --ion-eager
 
 function ionCompiledEagerly() {
     Math.random; // establish Math.random's identity for inlining

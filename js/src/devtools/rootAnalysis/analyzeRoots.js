@@ -140,7 +140,7 @@ function isReturningImmobileValue(edge, variable)
 //
 function edgeUsesVariable(edge, variable, body)
 {
-    if (ignoreEdgeUse(edge, variable))
+    if (ignoreEdgeUse(edge, variable, body))
         return 0;
 
     if (variable.Kind == "Return" && body.Index[1] == edge.Index[1] && body.BlockId.Kind == "Function")
@@ -192,9 +192,9 @@ function expressionIsVariableAddress(exp, variable)
     return exp.Kind == "Var" && sameVariable(exp.Variable, variable);
 }
 
-function edgeTakesVariableAddress(edge, variable)
+function edgeTakesVariableAddress(edge, variable, body)
 {
-    if (ignoreEdgeUse(edge, variable))
+    if (ignoreEdgeUse(edge, variable, body))
         return false;
     if (ignoreEdgeAddressTaken(edge))
         return false;
@@ -492,7 +492,7 @@ function unsafeVariableAddressTaken(suppressed, variable)
         if (!("PEdge" in body))
             continue;
         for (var edge of body.PEdge) {
-            if (edgeTakesVariableAddress(edge, variable)) {
+            if (edgeTakesVariableAddress(edge, variable, body)) {
                 if (edge.Kind == "Assign" || (!suppressed && edgeCanGC(edge)))
                     return {body:body, ppoint:edge.Index[0]};
             }
@@ -687,13 +687,6 @@ var each = Math.floor(N/numBatches);
 var start = minStream + each * (batch - 1);
 var end = Math.min(minStream + each * batch - 1, maxStream);
 
-// For debugging: Set this variable to the function name you're interested in
-// debugging and run once. That will print out the nameIndex of that function.
-// Insert that into the following statement to go directly to just that
-// function. Add your debugging printouts or debugger; statements or whatever.
-var theFunctionNameToFind;
-// var start = end = 12345;
-
 function process(name, json) {
     functionName = name;
     functionBodies = JSON.parse(json);
@@ -721,6 +714,11 @@ for (var nameIndex = start; nameIndex <= end; nameIndex++) {
     var data = xdb.read_entry(name);
     xdb.free_string(name);
     var json = data.readString();
-    process(functionName, json);
+    try {
+        process(functionName, json);
+    } catch (e) {
+        printErr("Exception caught while handling " + functionName);
+        throw(e);
+    }
     xdb.free_string(data);
 }

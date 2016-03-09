@@ -16,9 +16,6 @@ Cu.import("resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "WebappOSUtils",
-  "resource://gre/modules/WebappOSUtils.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
 
@@ -149,16 +146,17 @@ this.AppsUtils = {
     return obj;
   },
 
-  // Creates a nsILoadContext object with a given appId and isBrowser flag.
-  createLoadContext: function createLoadContext(aAppId, aIsBrowser) {
+  // Creates a nsILoadContext object with a given appId and inIsolatedMozBrowser
+  // flag.
+  createLoadContext: function createLoadContext(aAppId, aInIsolatedMozBrowser) {
     return {
        associatedWindow: null,
        topWindow : null,
        appId: aAppId,
-       isInBrowserElement: aIsBrowser,
+       isInIsolatedMozBrowserElement: aInIsolatedMozBrowser,
        originAttributes: {
          appId: aAppId,
-         inBrowser: aIsBrowser
+         inIsolatedMozBrowser: aInIsolatedMozBrowser
        },
        usePrivateBrowsing: false,
        isContent: false,
@@ -344,6 +342,10 @@ this.AppsUtils = {
     return "";
   },
 
+  areAnyAppsInstalled: function(aApps) {
+    return Object.getOwnPropertyNames(aApps).length > 0;
+  },
+
   getCoreAppsBasePath: function getCoreAppsBasePath() {
     debug("getCoreAppsBasePath()");
     try {
@@ -380,7 +382,7 @@ this.AppsUtils = {
                "isCoreApp": isCoreApp };
     }
 
-    return { "path": WebappOSUtils.getPackagePath(app),
+    return { "path": app.basePath + "/" + app.id,
              "isCoreApp": isCoreApp };
   },
 

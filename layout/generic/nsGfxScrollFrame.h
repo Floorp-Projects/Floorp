@@ -101,6 +101,29 @@ public:
 
   bool IsSmoothScrollingEnabled();
 
+  /**
+   * This class handles the dispatching of scroll events to content.
+   *
+   * nsRefreshDriver maintains three lists of refresh observers, one for each
+   * flush type: Flush_Style, Flush_Layout, and Flush_Display.
+   *
+   * During a tick, it runs through each list of observers, in order, and runs
+   * them. To iterate over each list, it uses an EndLimitedIterator, which is
+   * designed to iterate only over elements present when the iterator was
+   * created, not elements added afterwards. This means that, for a given flush
+   * type, a refresh observer added during the execution of another refresh
+   * observer of that flush type, will not run until the next tick.
+   *
+   * During main-thread animation-driven scrolling, ScrollEvents are *posted*
+   * by AsyncScroll::WillRefresh(). AsyncScroll registers itself as a Flush_Style
+   * refresh observer.
+   *
+   * Posting a scroll event, as of bug 1250550, registers a Flush_Layout
+   * refresh observer, which *fires* the event when run. This allows the event
+   * to be fired to content in the same refresh driver tick as it is posted.
+   * This is an important invariant to maintain to reduce scroll event latency
+   * for main-thread scrolling.
+   */
   class ScrollEvent : public nsARefreshObserver {
   public:
     NS_INLINE_DECL_REFCOUNTING(ScrollEvent, override)
@@ -356,6 +379,7 @@ public:
       // because we have special behaviour for it when APZ scrolling is active.
       mOuter->SchedulePaint();
     }
+    NotifyPluginFrames(aTransforming ? BEGIN_APZ : END_APZ);
   }
   bool IsTransformingByAPZ() const {
     return mTransformingByAPZ;
@@ -563,7 +587,7 @@ protected:
    * Helper that notifies plugins about async smooth scroll operations managed
    * by nsGfxScrollFrame.
    */
-  enum AsyncScrollEventType { BEGIN_DOM, END_DOM };
+  enum AsyncScrollEventType { BEGIN_DOM, BEGIN_APZ, END_DOM, END_APZ };
   void NotifyPluginFrames(AsyncScrollEventType aEvent);
   AsyncScrollEventType mAsyncScrollEvent;
 

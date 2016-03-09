@@ -188,7 +188,7 @@ config = {
                 "--homedir=%(homedir)s"
             ],
             "run_filename": "runtests.py",
-            "testsdir": "marionette/client/marionette"
+            "testsdir": "marionette/harness/marionette"
         }
     },
     "vcs_output_timeout": 1760,

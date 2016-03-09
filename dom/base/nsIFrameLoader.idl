@@ -150,7 +150,7 @@ interface nsIFrameLoader : nsISupports
   const unsigned long EVENT_MODE_NORMAL_DISPATCH = 0x00000000;
 
   /**
-   * With this event mode, it's the application's responsability to 
+   * With this event mode, it's the application's responsability to
    * convert and forward events to the content process
    */
   const unsigned long EVENT_MODE_DONT_FORWARD_TO_CHILD = 0x00000001;
@@ -196,14 +196,15 @@ interface nsIFrameLoader : nsISupports
   [infallible] attribute boolean visible;
 
   /**
-   * Find out whether the owner content really is a browser or app frame
-   * Especially, a widget frame is regarded as an app frame.
+   * Find out whether the owner content really is a mozbrowser or app frame
+   * Especially, a widget frame is regarded as an app frame.  <xul:browser> is
+   * not considered to be a mozbrowser frame.
    */
-  readonly attribute boolean ownerIsBrowserOrAppFrame;
+  readonly attribute boolean ownerIsMozBrowserOrAppFrame;
 
   /**
    * Find out whether the owner content really is a widget. If this attribute
-   * returns true, |ownerIsBrowserOrAppFrame| must return true.
+   * returns true, |ownerIsMozBrowserOrAppFrame| must return true.
    */
   readonly attribute boolean ownerIsWidget;
 

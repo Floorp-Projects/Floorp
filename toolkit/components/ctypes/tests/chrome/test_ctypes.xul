@@ -80,8 +80,8 @@
         SimpleTest.finish();
       }
       worker.onerror = function(event) {
-        if (event.message == "InternalError: uncaught exception: 7.5 million years for that?" ||
-            event.message == "InternalError: uncaught exception: Just following orders, sir!") {
+        if (event.message == "uncaught exception: 7.5 million years for that?" ||
+            event.message == "uncaught exception: Just following orders, sir!") {
           // We throw those on purpose in the worker, so ignore them.
           return true;
         }

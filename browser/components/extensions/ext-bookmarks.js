@@ -115,6 +115,10 @@ extensions.registerSchemaAPI("bookmarks", "bookmarks", (extension, context) => {
         return Bookmarks.search(query).then(result => result.map(convert));
       },
 
+      getRecent: function(numberOfItems) {
+        return Bookmarks.getRecent(numberOfItems).then(result => result.map(convert));
+      },
+
       create: function(bookmark) {
         let info = {
           title: bookmark.title || "",
@@ -189,6 +193,18 @@ extensions.registerSchemaAPI("bookmarks", "bookmarks", (extension, context) => {
         };
 
         // The API doesn't give you the old bookmark at the moment
+        try {
+          return Bookmarks.remove(info, {preventRemovalOfNonEmptyFolders: true}).then(result => {});
+        } catch (e) {
+          return Promise.reject({message: `Invalid bookmark: ${JSON.stringify(info)}`});
+        }
+      },
+
+      removeTree: function(id) {
+        let info = {
+          guid: id,
+        };
+
         try {
           return Bookmarks.remove(info).then(result => {});
         } catch (e) {

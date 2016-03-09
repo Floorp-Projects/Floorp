@@ -1013,6 +1013,26 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
 }
 
 // --------------------
+// nsStyleBasicShape
+
+nsCSSKeyword
+nsStyleBasicShape::GetShapeTypeName() const
+{
+  switch (mType) {
+    case nsStyleBasicShape::Type::ePolygon:
+      return eCSSKeyword_polygon;
+    case nsStyleBasicShape::Type::eCircle:
+      return eCSSKeyword_circle;
+    case nsStyleBasicShape::Type::eEllipse:
+      return eCSSKeyword_ellipse;
+    case nsStyleBasicShape::Type::eInset:
+      return eCSSKeyword_inset;
+  }
+  NS_NOTREACHED("unexpected type");
+  return eCSSKeyword_UNKNOWN;
+}
+
+// --------------------
 // nsStyleClipPath
 //
 nsStyleClipPath::nsStyleClipPath()
@@ -1285,6 +1305,11 @@ void nsStyleSVGReset::Destroy(nsPresContext* aContext) {
 nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) const
 {
   nsChangeHint hint = nsChangeHint(0);
+
+  if (HasFilters() != aOther.HasFilters()) {
+    // A change from/to being a containing block for position:fixed.
+    NS_UpdateHint(hint, nsChangeHint_UpdateContainingBlock);
+  }
 
   if (mClipPath != aOther.mClipPath ||
       mFilters != aOther.mFilters) {
@@ -2225,6 +2250,7 @@ const nsCSSProperty nsStyleImageLayers::kBackgroundLayerTable[] = {
   eCSSProperty_UNKNOWN                    // composite
 };
 
+#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
 const nsCSSProperty nsStyleImageLayers::kMaskLayerTable[] = {
   eCSSProperty_mask,                      // shorthand
   eCSSProperty_UNKNOWN,                   // color
@@ -2238,6 +2264,7 @@ const nsCSSProperty nsStyleImageLayers::kMaskLayerTable[] = {
   eCSSProperty_mask_mode,                 // maskMode
   eCSSProperty_mask_composite             // composite
 };
+#endif
 
 nsStyleImageLayers::nsStyleImageLayers()
   : mAttachmentCount(1)
@@ -2340,7 +2367,12 @@ bool
 nsStyleImageLayers::HasLayerWithImage() const
 {
   for (uint32_t i = 0; i < mImageCount; i++) {
-    if (mLayers[i].mSourceURI) {
+    // mLayers[i].mSourceURI can be nullptr if mask-image prop value is
+    // <element-reference> or <gradient>
+    // mLayers[i].mImage can be empty if mask-image prop value is a reference
+    // to SVG mask element.
+    // So we need to test both mSourceURI and mImage.
+    if (mLayers[i].mSourceURI || !mLayers[i].mImage.IsEmpty()) {
       return true;
     }
   }
@@ -2498,7 +2530,7 @@ nsStyleImageLayers::Layer::Layer()
   mAttachment(NS_STYLE_IMAGELAYER_ATTACHMENT_SCROLL),
   mBlendMode(NS_STYLE_BLEND_NORMAL),
   mComposite(NS_STYLE_MASK_COMPOSITE_ADD),
-  mMaskMode(NS_STYLE_MASK_MODE_AUTO)
+  mMaskMode(NS_STYLE_MASK_MODE_MATCH_SOURCE)
 {
   mPosition.SetInitialPercentValues(0.0f); // Initial value is "0% 0%"
   mImage.SetNull();
@@ -3737,7 +3769,7 @@ nsStyleText::TextEmphasisSide(WritingMode aWM) const
      !(mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT)) &&
     (!(mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_OVER) !=
      !(mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_UNDER)));
-  Side side = aWM.IsVertical() ?
+  mozilla::Side side = aWM.IsVertical() ?
     (mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_LEFT
      ? eSideLeft : eSideRight) :
     (mTextEmphasisPosition & NS_STYLE_TEXT_EMPHASIS_POSITION_OVER

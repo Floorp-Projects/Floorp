@@ -19,6 +19,7 @@ class EditorInitializerEntryTracker;
 class nsTextEditorState;
 class nsIEditor;
 namespace mozilla {
+enum class CSSPseudoElementType : uint8_t;
 namespace dom {
 class Element;
 } // namespace dom
@@ -98,10 +99,11 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual mozilla::dom::Element* GetPseudoElement(nsCSSPseudoElements::Type aType) override;
+  virtual mozilla::dom::Element*
+  GetPseudoElement(mozilla::CSSPseudoElementType aType) override;
 
 //==== BEGIN NSIFORMCONTROLFRAME
-  virtual void SetFocus(bool aOn , bool aRepaint) override; 
+  virtual void SetFocus(bool aOn , bool aRepaint) override;
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) override;
 
 //==== END NSIFORMCONTROLFRAME

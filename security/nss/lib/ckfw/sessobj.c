@@ -794,8 +794,7 @@ items_match(
 
     if (PR_TRUE == nsslibc_memequal(a->data, pValue, ulValueLen, (PRStatus *)NULL)) {
         return CK_TRUE;
-    }
-    else {
+    } else {
         return CK_FALSE;
     }
 }
@@ -826,8 +825,7 @@ findfcn(
             if (mdso->types[j] == p->type) {
                 if (!items_match(&mdso->attributes[j], p->pValue, p->ulValueLen)) {
                     return;
-                }
-                else {
+                } else {
                     break;
                 }
             }

@@ -5,6 +5,7 @@
 "use strict";
 
 const l10n = require("gcli/l10n");
+const Services = require("Services");
 require("devtools/server/actors/inspector");
 const {
   BoxModelHighlighter,

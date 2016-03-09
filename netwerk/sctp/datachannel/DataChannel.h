@@ -337,9 +337,10 @@ private:
   ~DataChannel();
 
 public:
-  void Destroy(); // when we disconnect from the connection after stream RESET
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataChannel)
+
+  // when we disconnect from the connection after stream RESET
+  void DestroyLocked();
 
   // Close this DataChannel.  Can be called multiple times.  MUST be called
   // before destroying the DataChannel (state must be CLOSED or CLOSING).

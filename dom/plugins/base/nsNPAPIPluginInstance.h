@@ -26,7 +26,6 @@
 #include "AndroidBridge.h"
 #include <map>
 class PluginEventRunnable;
-class SharedPluginTexture;
 #endif
 
 #include "mozilla/TimeStamp.h"
@@ -121,6 +120,10 @@ public:
   nsresult InvalidateRegion(NPRegion invalidRegion);
   nsresult GetMIMEType(const char* *result);
   nsresult GetJSContext(JSContext* *outContext);
+#if defined(XP_WIN)
+  nsresult GetScrollCaptureContainer(mozilla::layers::ImageContainer **aContainer);
+  nsresult UpdateScrollState(bool aIsScrolling);
+#endif
   nsPluginInstanceOwner* GetOwner();
   void SetOwner(nsPluginInstanceOwner *aOwner);
   void DidComposite();
@@ -205,13 +208,9 @@ public:
     GLuint mInternalFormat;
   };
 
-  TextureInfo LockContentTexture();
-  void ReleaseContentTexture(TextureInfo& aTextureInfo);
-
   // For ANPNativeWindow
   void* AcquireContentWindow();
 
-  EGLImage AsEGLImage();
   mozilla::gl::AndroidSurfaceTexture* AsSurfaceTexture();
 
   // For ANPVideo
@@ -356,7 +355,6 @@ protected:
   bool mFullScreen;
   mozilla::gl::OriginPos mOriginPos;
 
-  RefPtr<SharedPluginTexture> mContentTexture;
   RefPtr<mozilla::gl::AndroidSurfaceTexture> mContentSurface;
 #endif
 
@@ -407,7 +405,6 @@ private:
   mozilla::TimeStamp mStopTime;
 
 #ifdef MOZ_WIDGET_ANDROID
-  void EnsureSharedTexture();
   already_AddRefed<mozilla::gl::AndroidSurfaceTexture> CreateSurfaceTexture();
 
   std::map<void*, VideoInfo*> mVideos;

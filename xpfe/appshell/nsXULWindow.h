@@ -90,14 +90,12 @@ protected:
    NS_IMETHOD EnsurePrompter();
    NS_IMETHOD EnsureAuthPrompter();
 
-   mozilla::DesktopToLayoutDeviceScale
-   GetScaleForDestinationPosition(int32_t aX, int32_t aY);
-
    void OnChromeLoaded();
    void StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
                         int32_t aSpecWidth, int32_t aSpecHeight);
-   bool       LoadPositionFromXUL();
-   bool       LoadSizeFromXUL();
+   bool       LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight);
+   bool       LoadSizeFromXUL(int32_t& aSpecWidth, int32_t& aSpecHeight);
+   void       SetSpecifiedSize(int32_t aSpecWidth, int32_t aSpecHeight);
    bool       LoadMiscPersistentAttributesFromXUL();
    void       SyncAttributesToWidget();
    NS_IMETHOD SavePersistentAttributes();

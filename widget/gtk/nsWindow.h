@@ -8,8 +8,6 @@
 #ifndef __nsWindow_h__
 #define __nsWindow_h__
 
-#include "mozilla/ipc/SharedMemorySysV.h"
-
 #include "nsAutoPtr.h"
 
 #include "mozcontainer.h"
@@ -26,6 +24,8 @@
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #endif /* MOZ_X11 */
+
+#include "nsShmImage.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/Accessible.h"
@@ -64,10 +64,6 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 class gfxASurface;
 class gfxPattern;
 class nsPluginNativeWindowGtk;
-#if defined(MOZ_X11) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)
-#  define MOZ_HAVE_SHMIMAGE
-class nsShmImage;
-#endif
 
 namespace mozilla {
 class TimeStamp;
@@ -220,7 +216,8 @@ public:
 #endif
 
     virtual already_AddRefed<mozilla::gfx::DrawTarget>
-                       StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion) override;
+                       StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
+                                                  mozilla::layers::BufferMode* aBufferMode) override;
     virtual void       EndRemoteDrawingInRegion(mozilla::gfx::DrawTarget* aDrawTarget,
                                                 LayoutDeviceIntRegion& aInvalidRegion) override;
 
@@ -255,6 +252,7 @@ public:
 #endif /* MOZ_X11 */
 
     void               ThemeChanged(void);
+    void               OnDPIChanged(void);
 
 #ifdef MOZ_X11
     Window             mOldFocusWindow;
@@ -313,7 +311,9 @@ public:
    virtual nsresult    ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                             uint8_t* aAlphas, int32_t aStride);
-    virtual already_AddRefed<mozilla::gfx::DrawTarget> GetDrawTarget(const LayoutDeviceIntRegion& aRegion);
+
+    already_AddRefed<mozilla::gfx::DrawTarget> GetDrawTarget(const LayoutDeviceIntRegion& aRegion,
+                                                             mozilla::layers::BufferMode* aBufferMode);
 
 #if (MOZ_WIDGET_GTK == 2)
     static already_AddRefed<gfxASurface> GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
@@ -338,6 +338,15 @@ public:
                                                       uint32_t aModifierFlags,
                                                       uint32_t aAdditionalFlags,
                                                       nsIObserver* aObserver) override;
+
+#if GTK_CHECK_VERSION(3,4,0)
+    virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
+                                                TouchPointerState aPointerState,
+                                                ScreenIntPoint aPointerScreenPoint,
+                                                double aPointerPressure,
+                                                uint32_t aPointerOrientation,
+                                                nsIObserver* aObserver) override;
+#endif
 
     // HiDPI scale conversion
     gint GdkScaleFactor();
@@ -441,14 +450,15 @@ private:
 
 #ifdef MOZ_X11
     Display*            mXDisplay;
-    Drawable            mXWindow;
+    Window              mXWindow;
     Visual*             mXVisual;
     int                 mXDepth;
 #endif
 
 #ifdef MOZ_HAVE_SHMIMAGE
     // If we're using xshm rendering
-    RefPtr<nsShmImage>  mShmImage;
+    RefPtr<nsShmImage>  mFrontShmImage;
+    RefPtr<nsShmImage>  mBackShmImage;
 #endif
 
 #ifdef ACCESSIBILITY

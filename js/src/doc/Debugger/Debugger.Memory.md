@@ -109,25 +109,6 @@ following accessor properties from its prototype:
     [`drainAllocationsLog`][#drain-alloc-log] was called and some data has been
     lost. Returns `false` otherwise.
 
-`trackingTenurePromotions`
-:   A boolean value indicating whether this `Debugger.Memory` instance is
-    observing promotions from the nursery to the tenured heap. It is an accessor
-    property that has both a getter and setter: assigning to it enables or
-    disables the tenure promotion tracking. Reading the accessor produces `true`
-    if the Debugger is logging promotions, and `false` otherwise. Tenure
-    promotion tracking is initially disabled in a new Debugger.
-
-<code id="max-tenure-log">maxTenurePromotionsLogLength</code>
-:   The maximum number of entries to accumulate in the tenure promotions log at
-    a time. This accessor can be both fetched and stored to. Its default value
-    is `5000`.
-
-`tenurePromotionsLogOverflowed`
-:   Returns `true` if there have been more than
-    [`maxTenurePromotionsLogLength`][#max-tenure-log] allocations since the last time
-    [`drainTenurePromotionsLog`][#drain-tenure-log] was called and some data has been
-    lost. Returns `false` otherwise.
-
 Debugger.Memory Handler Functions
 ---------------------------------
 
@@ -276,46 +257,6 @@ Function Properties of the `Debugger.Memory.prototype` Object
     When `trackingAllocationSites` is `false`, `drainAllocationsLog()` throws an
     `Error`.
 
-<code id='drain-tenure-log'>drainTenurePromotionsLog</code>
-:   When `trackingTenurePromotions` is `true`, this method returns an array of
-    recent promotions from the nursery to the tenured heap within this
-    Debugger's set of debuggees. *Recent* is defined as the
-    `maxTenurePromotionsLogLength` most recent promotions since the last call to
-    `drainTenurePromotionsLog`. Therefore, calling this method effectively
-    clears the log.
-
-    Objects in the array are of the form:
-
-    <pre class='language-js'><code>
-    {
-      "timestamp": <i>timestamp</i>,
-      "frame": <i>allocationSite</i>,
-      "class": <i>className</i>,
-      "size": <i>byteSize</i>,
-    }
-    </pre>
-
-    Where
-
-    * *timestamp* is the [timestamp][timestamps] of the allocation event.
-
-    * *allocationSite* is an allocation site (as a
-      [captured stack][saved-frame]) if the promoted object's allocation site
-      was captured. Note that this property can be `null` if the object was
-      allocated with no JavaScript frames on the stack, the object's allocation
-      site was not [sampled](#alloc-sampling-probability), or if allocation
-      sites are not being [tracked](#trackingallocationsites').
-
-    * *className* is the string name of the allocated object's internal
-      `[[Class]]` property, for example "Array", "Date", "RegExp", or (most
-      commonly) "Object".
-
-    * *byteSize* is the size of the newly tenured object (within the tenured
-      heap, not the nursery) in bytes.
-
-    When `trackingTenurePromotions` is `false`, `drainTenurePromotionsLog()`
-    throws an `Error`.
-
 <code id='take-census'>takeCensus(<i>options</i>)</code>
 :   Carry out a census of the debuggee compartments' contents. A *census* is a
     complete traversal of the graph of all reachable memory items belonging to a
@@ -382,6 +323,22 @@ Function Properties of the `Debugger.Memory.prototype` Object
         Note that the census can produce byte sizes only for the most common
         types. When the census cannot find the byte size for a given type, it
         returns zero.
+
+    <code>{ by: "bucket" }</code>
+    :   Do not do any filtering or categorizing. Instead, accumulate a bucket of
+        each node's ID for every node that matches. The resulting report is an
+        array of the IDs.
+
+        For example, to find the ID of all nodes whose internal object
+        `[[class]]` property is named "RegExp", you could use the following code:
+
+            const report = dbg.memory.takeCensus({
+              breakdown: {
+                by: "objectClass",
+                then: { by: "bucket" }
+              }
+            });
+            doStuffWithRegExpIDs(report.RegExp);
 
     <code>{ by: "allocationStack", then:<i>breakdown</i>, noStack:<i>noStackBreakdown</i> }</code>
     :   Group items by the full JavaScript stack trace at which they were

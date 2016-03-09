@@ -54,10 +54,6 @@ const WINDOW_HIDEABLE_FEATURES = [
 
 // Messages that will be received via the Frame Message Manager.
 const MESSAGES = [
-  // The content script gives us a reference to an object that performs
-  // synchronous collection of session data.
-  "SessionStore:setupSyncHandler",
-
   // The content script sends us data that has been invalidated and needs to
   // be saved to disk.
   "SessionStore:update",
@@ -89,9 +85,6 @@ const MESSAGES = [
 // has just been closed.
 const NOTAB_MESSAGES = new Set([
   // For a description see above.
-  "SessionStore:setupSyncHandler",
-
-  // For a description see above.
   "SessionStore:crashedTabRevived",
 
   // For a description see above.
@@ -104,9 +97,6 @@ const NOTAB_MESSAGES = new Set([
 // The list of messages we accept without an "epoch" parameter.
 // See getCurrentEpoch() and friends to find out what an "epoch" is.
 const NOEPOCH_MESSAGES = new Set([
-  // For a description see above.
-  "SessionStore:setupSyncHandler",
-
   // For a description see above.
   "SessionStore:crashedTabRevived",
 
@@ -706,9 +696,6 @@ var SessionStoreInternal = {
     }
 
     switch (aMessage.name) {
-      case "SessionStore:setupSyncHandler":
-        TabState.setSyncHandler(browser, aMessage.objects.handler);
-        break;
       case "SessionStore:update":
         // |browser.frameLoader| might be empty if the browser was already
         // destroyed and its tab removed. In that case we still have the last
@@ -801,6 +788,8 @@ var SessionStoreInternal = {
             tab.label = activePageData.url;
             tab.crop = "center";
           }
+        } else if (tab.hasAttribute("customizemode")) {
+          win.gCustomizeMode.setTab(tab);
         }
 
         // Restore the tab icon.
@@ -2520,7 +2509,7 @@ var SessionStoreInternal = {
       let window = tab.ownerDocument && tab.ownerDocument.defaultView;
 
       // The tab or its window might be gone.
-      if (!window || !window.__SSi) {
+      if (!window || !window.__SSi || window.closed) {
         return;
       }
 
@@ -3299,6 +3288,10 @@ var SessionStoreInternal = {
    *        optional load arguments used for loadURI()
    */
   restoreTabContent: function (aTab, aLoadArguments = null) {
+    if (aTab.hasAttribute("customizemode")) {
+      return;
+    }
+
     let browser = aTab.linkedBrowser;
     let window = aTab.ownerDocument.defaultView;
     let tabbrowser = window.gBrowser;

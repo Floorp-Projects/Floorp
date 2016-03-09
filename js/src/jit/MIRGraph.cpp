@@ -19,8 +19,7 @@ using mozilla::Swap;
 
 MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOptions& options,
                            TempAllocator* alloc, MIRGraph* graph, const CompileInfo* info,
-                           const OptimizationInfo* optimizationInfo,
-                           bool usesSignalHandlersForAsmJSOOB)
+                           const OptimizationInfo* optimizationInfo)
   : compartment(compartment),
     info_(info),
     optimizationInfo_(optimizationInfo),
@@ -41,8 +40,9 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
     instrumentedProfilingIsCached_(false),
     safeForMinorGC_(true),
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-    usesSignalHandlersForAsmJSOOB_(usesSignalHandlersForAsmJSOOB),
+    usesSignalHandlersForAsmJSOOB_(false),
 #endif
+    minAsmJSHeapLength_(0),
     options(options),
     gs_(alloc)
 { }
@@ -126,6 +126,12 @@ MIRGenerator::needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const
 size_t
 MIRGenerator::foldableOffsetRange(const MAsmJSHeapAccess* access) const
 {
+    return foldableOffsetRange(access->needsBoundsCheck());
+}
+
+size_t
+MIRGenerator::foldableOffsetRange(bool accessNeedsBoundsCheck) const
+{
     // This determines whether it's ok to fold up to WasmImmediateSize
     // offsets, instead of just WasmCheckedImmediateSize.
 
@@ -148,7 +154,7 @@ MIRGenerator::foldableOffsetRange(const MAsmJSHeapAccess* access) const
     // On 32-bit platforms, if we've proven the access is in bounds after
     // 32-bit wrapping, we can fold full offsets because they're added with
     // 32-bit arithmetic.
-    if (sizeof(intptr_t) == sizeof(int32_t) && !access->needsBoundsCheck())
+    if (sizeof(intptr_t) == sizeof(int32_t) && !accessNeedsBoundsCheck)
         return WasmImmediateRange;
 
     // Otherwise, only allow the checked size. This is always less than the
@@ -603,8 +609,6 @@ MBasicBlock::shimmySlots(int discardDepth)
 bool
 MBasicBlock::linkOsrValues(MStart* start)
 {
-    MOZ_ASSERT(start->startType() == MStart::StartType_Osr);
-
     MResumePoint* res = start->resumePoint();
 
     for (uint32_t i = 0; i < stackDepth(); i++) {

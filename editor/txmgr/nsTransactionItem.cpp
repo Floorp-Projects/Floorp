@@ -237,7 +237,7 @@ nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
 
       if (NS_SUCCEEDED(result)) {
         item = mUndoStack->Pop();
-        mRedoStack->Push(item);
+        mRedoStack->Push(item.forget());
       }
 
       nsresult result2 = aTxMgr->DidUndoNotify(t, result);
@@ -310,7 +310,7 @@ nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
 
     if (NS_SUCCEEDED(result)) {
       item = mRedoStack->Pop();
-      mUndoStack->Push(item);
+      mUndoStack->Push(item.forget());
     }
 
     nsresult result2 = aTxMgr->DidUndoNotify(t, result);

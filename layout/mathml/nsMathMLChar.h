@@ -13,7 +13,7 @@
 #include "nsRect.h"
 #include "nsString.h"
 #include "nsBoundingMetrics.h"
-#include "gfxFont.h"
+#include "gfxTextRun.h"
 
 class nsGlyphTable;
 class nsIFrame;
@@ -85,6 +85,7 @@ struct nsGlyphCode {
 class nsMathMLChar
 {
 public:
+  typedef gfxTextRun::Range Range;
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
   // constructor and destructor

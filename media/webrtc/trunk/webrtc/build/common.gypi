@@ -320,7 +320,7 @@
               ['arm_neon==1', {
                 'defines': ['WEBRTC_ARCH_ARM_NEON',],
               }],
-              ['arm_neon==0 and (OS=="android" or moz_widget_toolkit_gonk==1)', {
+              ['arm_neon==0 and arm_neon_optional==1', {
                 'defines': ['WEBRTC_DETECT_ARM_NEON',],
               }],
             ],

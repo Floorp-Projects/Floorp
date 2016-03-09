@@ -14,11 +14,10 @@ add_task(function* testNoSessionRestoreButton() {
 
   yield BrowserTestUtils.browserLoaded(browser);
 
-  let disabled = yield ContentTask.spawn(browser, {}, function* (){
-    return content.document.getElementById("errorTryAgain").disabled;
+  yield ContentTask.spawn(browser, null, function* () {
+    Assert.ok(content.document.getElementById("errorTryAgain").disabled,
+      "The Restore about:sessionrestore button should be disabled");
   });
-
-  ok(disabled, "The Restore about:sessionrestore button should be disabled");
 
   win.close();
 });

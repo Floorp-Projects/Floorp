@@ -81,14 +81,10 @@ interface nsIXPCScriptable : nsISupports
                        in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
                        in jsval val);
 
-    // The returnCode should be set to NS_SUCCESS_I_DID_SOMETHING if
-    // this method does something.
     boolean getProperty(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
                        in JSValPtr vp);
 
-    // The returnCode should be set to NS_SUCCESS_I_DID_SOMETHING if
-    // this method does something.
     boolean setProperty(in nsIXPConnectWrappedNative wrapper,
                        in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
                        in JSValPtr vp);

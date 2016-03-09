@@ -10,6 +10,7 @@
 
 .frame-link {
   margin-left: 7px;
+  display: flex;
 }
 
 .focused .frame-link-filename,
@@ -20,9 +21,16 @@
   color: var(--theme-selection-color);
 }
 
-.frame-link .frame-link-filename {
+.frame-link a.frame-link-filename {
   color: var(--theme-highlight-blue);
   cursor: pointer;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  flex: 1;
+  text-align: right;
+  /* overrides styling some tools have with anchors */
+  text-decoration: none;
+  font-style: normal;
 }
 
 .frame-link .frame-link-filename:hover {
@@ -43,4 +51,5 @@
 .frame-link .frame-link-line,
 .frame-link .frame-link-colon {
   color: var(--theme-highlight-orange);
+  display: block;
 }

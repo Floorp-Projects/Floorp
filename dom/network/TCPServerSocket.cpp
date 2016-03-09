@@ -148,7 +148,7 @@ TCPServerSocket::OnSocketAccepted(nsIServerSocket* aServer, nsISocketTransport* 
   RefPtr<TCPSocket> socket = TCPSocket::CreateAcceptedSocket(global, aTransport, mUseArrayBuffers);
   if (mServerBridgeParent) {
     socket->SetAppIdAndBrowser(mServerBridgeParent->GetAppId(),
-                               mServerBridgeParent->GetInBrowser());
+                               mServerBridgeParent->GetInIsolatedMozBrowser());
   }
   FireEvent(NS_LITERAL_STRING("connect"), socket);
   return NS_OK;

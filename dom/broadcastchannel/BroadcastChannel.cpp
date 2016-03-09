@@ -421,8 +421,7 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     }
   } else {
     bc->mWorkerFeature = new BroadcastChannelFeature(bc);
-    JSContext* cx = workerPrivate->GetJSContext();
-    if (NS_WARN_IF(!workerPrivate->AddFeature(cx, bc->mWorkerFeature))) {
+    if (NS_WARN_IF(!workerPrivate->AddFeature(bc->mWorkerFeature))) {
       NS_WARNING("Failed to register the BroadcastChannel worker feature.");
       bc->mWorkerFeature = nullptr;
       aRv.Throw(NS_ERROR_FAILURE);
@@ -546,7 +545,7 @@ BroadcastChannel::Shutdown()
 
   if (mWorkerFeature) {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    workerPrivate->RemoveFeature(workerPrivate->GetJSContext(), mWorkerFeature);
+    workerPrivate->RemoveFeature(mWorkerFeature);
     mWorkerFeature = nullptr;
   }
 

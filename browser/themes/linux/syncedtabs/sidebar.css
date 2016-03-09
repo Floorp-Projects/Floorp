@@ -50,9 +50,19 @@ html {
   background-repeat: no-repeat;
   width: 16px;
   height: 16px;
+  display: block;
 }
 
 .textbox-search-icon[searchbutton]:not([disabled]) ,
 .textbox-search-clear:not([disabled]) {
   cursor: pointer;
+}
+
+.item.client .item-twisty-container {
+  -moz-appearance: treetwistyopen;
+  margin-top: 3px;
+}
+
+.item.client.closed .item-twisty-container {
+  -moz-appearance: treetwisty;
 }

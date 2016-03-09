@@ -116,9 +116,13 @@ interface nsILoadContext : nsISupports
   [noscript] void SetRemoteTabs(in boolean aUseRemoteTabs);
 
   /**
-   * Returns true iff the load is occurring inside a browser element.
+   * Returns true iff the load is occurring inside an isolated mozbrowser
+   * element. <iframe mozbrowser mozapp> and <xul:browser> are not considered to
+   * be mozbrowser elements.  <iframe mozbrowser noisolation> does not count as
+   * isolated since isolation is disabled.  Isolation can only be disabled if
+   * the containing document is chrome.
    */
-  readonly attribute boolean isInBrowserElement;
+  readonly attribute boolean isInIsolatedMozBrowserElement;
 
   /**
    * Returns the app id of the app the load is occurring is in. Returns

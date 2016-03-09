@@ -436,7 +436,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)
   // Don't need NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER because
   // DOMEventTargetHelper does it for us.
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mResultVal)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResultVal)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBRequest)
@@ -491,7 +491,7 @@ public:
     MOZ_COUNT_DTOR(IDBOpenDBRequest::WorkerFeature);
 
     if (mWorkerPrivate) {
-      mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), this);
+      mWorkerPrivate->RemoveFeature(this);
     }
   }
 
@@ -572,11 +572,8 @@ IDBOpenDBRequest::CreateForJS(IDBFactory* aFactory,
 
     workerPrivate->AssertIsOnWorkerThread();
 
-    JSContext* cx = workerPrivate->GetJSContext();
-    MOZ_ASSERT(cx);
-
     nsAutoPtr<WorkerFeature> feature(new WorkerFeature(workerPrivate));
-    if (NS_WARN_IF(!workerPrivate->AddFeature(cx, feature))) {
+    if (NS_WARN_IF(!workerPrivate->AddFeature(feature))) {
       feature->NoteAddFeatureFailed();
       return nullptr;
     }

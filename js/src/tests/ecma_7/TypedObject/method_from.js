@@ -200,6 +200,16 @@ function fromUntypedArrayToUint8s() {
   assertTypedEqual(type, r1, r2);
 }
 
+function fromNonArrayTypedObjects() {
+    var type = TypedObject.uint32.array(4);
+    var myStruct = new StructType({x: uint32});
+    var r1 = type.from(new myStruct({x: 42}), j => j);
+    assertTypedEqual(type, r1, new type([0,0,0,0]));
+
+    var r2 = type.from(SIMD.Int32x4(0,0,0,0), j => j);
+    assertTypedEqual(type, r1, new type([0,0,0,0]));
+}
+
 function runTests() {
     print(BUGNUMBER + ": " + summary);
 

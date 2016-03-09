@@ -385,6 +385,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     //{{{ check_macroassembler_style
   public:
     // ===============================================================
+    // MacroAssembler high-level usage.
+
+    // Flushes the assembly buffer, on platforms that need it.
+    void flush() PER_SHARED_ARCH;
+
+    // ===============================================================
     // Frame manipulation functions.
 
     inline uint32_t framePushed() const;
@@ -673,6 +679,12 @@ class MacroAssembler : public MacroAssemblerSpecific
 
   public:
     // ===============================================================
+    // Move instructions
+
+    inline void move64(Imm64 imm, Register64 dest) PER_ARCH;
+    inline void move64(Register64 src, Register64 dest) PER_ARCH;
+
+    // ===============================================================
     // Logical instructions
 
     inline void not32(Register reg) PER_SHARED_ARCH;
@@ -687,6 +699,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void andPtr(Imm32 imm, Register dest) PER_ARCH;
 
     inline void and64(Imm64 imm, Register64 dest) PER_ARCH;
+    inline void or64(Imm64 imm, Register64 dest) PER_ARCH;
+    inline void xor64(Imm64 imm, Register64 dest) PER_ARCH;
 
     inline void or32(Register src, Register dest) PER_SHARED_ARCH;
     inline void or32(Imm32 imm, Register dest) PER_SHARED_ARCH;
@@ -737,6 +751,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void subPtr(Register src, Register dest) PER_ARCH;
     inline void subPtr(Register src, const Address& dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
     inline void subPtr(Imm32 imm, Register dest) PER_ARCH;
+    inline void subPtr(ImmWord imm, Register dest) DEFINED_ON(x64);
     inline void subPtr(const Address& addr, Register dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
 
     inline void subDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
@@ -753,7 +768,10 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void divDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
+    inline void inc32(RegisterOrInt32Constant* key);
     inline void inc64(AbsoluteAddress dest) PER_ARCH;
+
+    inline void dec32(RegisterOrInt32Constant* key);
 
     inline void neg32(Register reg) PER_SHARED_ARCH;
 
@@ -781,8 +799,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branch32(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;
     template <class L>
     inline void branch32(Condition cond, Register lhs, Imm32 rhs, L label) PER_SHARED_ARCH;
+    inline void branch32(Condition cond, Register length, const RegisterOrInt32Constant& key,
+                         Label* label);
+
     inline void branch32(Condition cond, const Address& lhs, Register rhs, Label* label) PER_SHARED_ARCH;
     inline void branch32(Condition cond, const Address& lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
+    inline void branch32(Condition cond, const Address& length, const RegisterOrInt32Constant& key,
+                         Label* label);
 
     inline void branch32(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
@@ -818,6 +841,15 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rhs, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
+    template <typename T>
+    inline CodeOffsetJump branchPtrWithPatch(Condition cond, Register lhs, T rhs, RepatchLabel* label) PER_SHARED_ARCH;
+    template <typename T>
+    inline CodeOffsetJump branchPtrWithPatch(Condition cond, Address lhs, T rhs, RepatchLabel* label) PER_SHARED_ARCH;
+
+    void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label) PER_ARCH;
+
     // This function compares a Value (lhs) which is having a private pointer
     // boxed inside a js::Value, with a raw pointer (rhs).
     inline void branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label) PER_ARCH;
@@ -831,6 +863,13 @@ class MacroAssembler : public MacroAssemblerSpecific
                              Label* label) PER_SHARED_ARCH;
     inline void branchTruncateDouble(FloatRegister src, Register dest, Label* fail)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+
+    template <typename T>
+    inline void branchAdd32(Condition cond, T src, Register dest, Label* label) PER_SHARED_ARCH;
+    template <typename T>
+    inline void branchSub32(Condition cond, T src, Register dest, Label* label) PER_SHARED_ARCH;
+
+    inline void decBranchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
 
     template <class L>
     inline void branchTest32(Condition cond, Register lhs, Register rhs, L label) PER_SHARED_ARCH;
@@ -889,12 +928,145 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Emit type case branch on tag matching if the type tag in the definition
     // might actually be that type.
-    void branchEqualTypeIfNeeded(MIRType type, MDefinition* maybeDef, Register tag, Label* label);
-
-    template <typename T>
-    inline void branchKey(Condition cond, const T& length, const Int32Key& key, Label* label);
+    void maybeBranchTestType(MIRType type, MDefinition* maybeDef, Register tag, Label* label);
 
     inline void branchTestNeedsIncrementalBarrier(Condition cond, Label* label);
+
+    // Perform a type-test on a tag of a Value (32bits boxing), or the tagged
+    // value (64bits boxing).
+    inline void branchTestUndefined(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestInt32(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestDouble(Condition cond, Register tag, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+    inline void branchTestNumber(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestBoolean(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestString(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestSymbol(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestNull(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestObject(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestPrimitive(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+    inline void branchTestMagic(Condition cond, Register tag, Label* label) PER_SHARED_ARCH;
+
+    // Perform a type-test on a Value, addressed by Address or BaseIndex, or
+    // loaded into ValueOperand.
+    // BaseIndex and ValueOperand variants clobber the ScratchReg on x64.
+    // All Variants clobber the ScratchReg on arm64.
+    inline void branchTestUndefined(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestUndefined(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestUndefined(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestInt32(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestInt32(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestInt32(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestDouble(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestDouble(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestDouble(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestNumber(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestBoolean(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestBoolean(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestBoolean(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestString(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestString(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestSymbol(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestSymbol(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestNull(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestNull(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestNull(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    // Clobbers the ScratchReg on x64.
+    inline void branchTestObject(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestObject(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestObject(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestGCThing(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestGCThing(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+
+    inline void branchTestPrimitive(Condition cond, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestMagic(Condition cond, const Address& address, Label* label) PER_SHARED_ARCH;
+    inline void branchTestMagic(Condition cond, const BaseIndex& address, Label* label) PER_SHARED_ARCH;
+    template <class L>
+    inline void branchTestMagic(Condition cond, const ValueOperand& value, L label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    inline void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
+                                     Label* label);
+
+    void branchTestValue(Condition cond, const ValueOperand& lhs,
+                         const Value& rhs, Label* label) PER_ARCH;
+
+    // Checks if given Value is evaluated to true or false in a condition.
+    // The type of the value should match the type of the method.
+    inline void branchTestInt32Truthy(bool truthy, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+    inline void branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label* label) PER_SHARED_ARCH;
+    inline void branchTestBooleanTruthy(bool truthy, const ValueOperand& value, Label* label) PER_ARCH;
+    inline void branchTestStringTruthy(bool truthy, const ValueOperand& value, Label* label)
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+  private:
+
+    // Implementation for branch* methods.
+    template <typename T>
+    inline void branch32Impl(Condition cond, const T& length, const RegisterOrInt32Constant& key,
+                             Label* label);
+
+    template <typename T, typename S>
+    inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
+        DEFINED_ON(x86_shared);
+
+    template <typename T>
+    inline void branchTestUndefinedImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestInt32Impl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestDoubleImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestNumberImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestBooleanImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestStringImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestSymbolImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestNullImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestObjectImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestGCThingImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T>
+    inline void branchTestPrimitiveImpl(Condition cond, const T& t, Label* label)
+        DEFINED_ON(arm, arm64, x86_shared);
+    template <typename T, class L>
+    inline void branchTestMagicImpl(Condition cond, const T& t, L label)
+        DEFINED_ON(arm, arm64, x86_shared);
 
     //}}} check_macroassembler_style
   public:
@@ -1006,15 +1178,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             moveDouble(ReturnDoubleReg, reg);
     }
 
-    void storeCallResultValue(AnyRegister dest) {
-#if defined(JS_NUNBOX32)
-        unboxValue(ValueOperand(JSReturnReg_Type, JSReturnReg_Data), dest);
-#elif defined(JS_PUNBOX64)
-        unboxValue(ValueOperand(JSReturnReg), dest);
-#else
-#error "Bad architecture"
-#endif
-    }
+    inline void storeCallResultValue(AnyRegister dest);
 
     void storeCallResultValue(ValueOperand dest) {
 #if defined(JS_NUNBOX32)
@@ -1045,21 +1209,14 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
-    void storeCallResultValue(TypedOrValueRegister dest) {
-        if (dest.hasValue())
-            storeCallResultValue(dest.valueReg());
-        else
-            storeCallResultValue(dest.typedReg());
-    }
+    inline void storeCallResultValue(TypedOrValueRegister dest);
 
     template <typename T>
     Register extractString(const T& source, Register scratch) {
         return extractObject(source, scratch);
     }
-
-    inline void bumpKey(Int32Key* key, int diff);
-
-    void storeKey(const Int32Key& key, const Address& dest) {
+    using MacroAssemblerSpecific::store32;
+    void store32(const RegisterOrInt32Constant& key, const Address& dest) {
         if (key.isRegister())
             store32(key.reg(), dest);
         else
@@ -1150,8 +1307,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void storeUnboxedProperty(T address, JSValueType type,
                               ConstantOrRegister value, Label* failure);
 
-    void checkUnboxedArrayCapacity(Register obj, const Int32Key& index, Register temp,
-                                   Label* failure);
+    void checkUnboxedArrayCapacity(Register obj, const RegisterOrInt32Constant& index,
+                                   Register temp, Label* failure);
 
     Register extractString(const Address& address, Register scratch) {
         return extractObject(address, scratch);

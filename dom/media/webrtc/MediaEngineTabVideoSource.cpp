@@ -7,6 +7,7 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsGlobalWindow.h"
 #include "nsIDOMClientRect.h"
 #include "nsIDocShell.h"
@@ -128,7 +129,8 @@ MediaEngineTabVideoSource::GetUUID(nsACString_internal& aUuid)
 nsresult
 MediaEngineTabVideoSource::Allocate(const dom::MediaTrackConstraints& aConstraints,
                                     const MediaEnginePrefs& aPrefs,
-                                    const nsString& aDeviceId)
+                                    const nsString& aDeviceId,
+                                    const nsACString& aOrigin)
 {
   // windowId is not a proper constraint, so just read it.
   // It has no well-defined behavior in advanced, so ignore it there.
@@ -246,7 +248,7 @@ MediaEngineTabVideoSource::Draw() {
 
   if (mDataSize < static_cast<size_t>(stride * size.height)) {
     mDataSize = stride * size.height;
-    mData = static_cast<unsigned char*>(malloc(mDataSize));
+    mData = MakeUniqueFallible<unsigned char[]>(mDataSize);
   }
   if (!mData) {
     return;
@@ -277,7 +279,7 @@ MediaEngineTabVideoSource::Draw() {
   RefPtr<layers::ImageContainer> container = layers::LayerManager::CreateImageContainer();
   RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                     mData.rwget(),
+                                     mData.get(),
                                      size,
                                      stride,
                                      SurfaceFormat::B8G8R8X8);

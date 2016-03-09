@@ -35,50 +35,23 @@ extern "C" {
 typedef struct XPTArena XPTArena;
 
 XPT_PUBLIC_API(XPTArena *)
-XPT_NewArena(uint32_t block_size, size_t alignment, const char* name);
+XPT_NewArena(size_t block_size8, size_t block_size1);
 
 XPT_PUBLIC_API(void)
 XPT_DestroyArena(XPTArena *arena);
 
-XPT_PUBLIC_API(void)
-XPT_DumpStats(XPTArena *arena);
-
 XPT_PUBLIC_API(void *)
-XPT_ArenaMalloc(XPTArena *arena, size_t size);
-
-XPT_PUBLIC_API(char *)
-XPT_ArenaStrDup(XPTArena *arena, const char * s);
-
-XPT_PUBLIC_API(void)
-XPT_NotifyDoneLoading(XPTArena *arena);
-
-XPT_PUBLIC_API(void)
-XPT_ArenaFree(XPTArena *arena, void* block);
+XPT_ArenaCalloc(XPTArena *arena, size_t size, size_t alignment);
 
 XPT_PUBLIC_API(size_t)
-XPT_SizeOfArena(XPTArena *arena, MozMallocSizeOf mallocSizeOf);
+XPT_SizeOfArenaIncludingThis(XPTArena *arena, MozMallocSizeOf mallocSizeOf);
 
 /* --------------------------------------------------------- */
 
-#define XPT_MALLOC(_arena, _bytes) \
-    XPT_ArenaMalloc((_arena), (_bytes))
-
-#ifdef DEBUG
-#define XPT_FREE(_arena, _ptr) \
-    XPT_ArenaFree((_arena), (_ptr))
-#else
-#define XPT_FREE(_arena, _ptr) \
-    ((void)0)
-#endif
-
-#define XPT_STRDUP(_arena, _s) \
-    XPT_ArenaStrDup((_arena), (_s))
-
-#define XPT_CALLOC(_arena, _size) XPT_MALLOC((_arena), (_size))
-#define XPT_NEW(_arena, _struct) ((_struct *) XPT_MALLOC((_arena), sizeof(_struct)))
+#define XPT_CALLOC8(_arena, _bytes) XPT_ArenaCalloc((_arena), (_bytes), 8)
+#define XPT_CALLOC1(_arena, _bytes) XPT_ArenaCalloc((_arena), (_bytes), 1)
+#define XPT_NEW(_arena, _struct) ((_struct *) XPT_CALLOC8((_arena), sizeof(_struct)))
 #define XPT_NEWZAP(_arena, _struct) XPT_NEW((_arena), _struct)
-#define XPT_DELETE(_arena, _ptr) do{XPT_FREE((_arena), (_ptr)); ((_ptr)) = NULL;}while(0)
-#define XPT_FREEIF(_arena, _ptr) do{if ((_ptr)) XPT_FREE((_arena), (_ptr));}while(0)
 
 /* --------------------------------------------------------- */
 

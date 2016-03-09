@@ -37,14 +37,19 @@
     }
 
     var p = new Promise(function(res, rej) {
-      registration.installing.onstatechange = function(e) {
-        // The worker will become active only if claim will reject inside the
-        // install handler.
-
-        ok(registration.active, "Claim should reject if the worker is not active");
-        ok(navigator.serviceWorker.controller === null, "Client is not controlled.");
-        e.target.onstatechange = null;
-        res();
+      var worker = registration.installing;
+      worker.onstatechange = function(e) {
+        if (worker.state === 'installed') {
+          is(worker, registration.waiting, "Worker should be in waiting state");
+        } else if (worker.state === 'activated') {
+          // The worker will become active only if claim will reject inside the
+          // install handler.
+          is(worker, registration.active,
+             "Claim should reject if the worker is not active");
+          ok(navigator.serviceWorker.controller === null, "Client is not controlled.");
+          e.target.onstatechange = null;
+          res();
+        }
       }
     });
 
@@ -63,7 +68,6 @@
   SimpleTest.waitForExplicitFinish();
   SpecialPowers.pushPrefEnv({"set": [
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-    ["dom.serviceWorkers.interception.enabled", true],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true]
   ]}, runTest);

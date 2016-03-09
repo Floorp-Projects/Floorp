@@ -31,7 +31,9 @@ const expected_requested = [BASE + "/file_WebRequest_page1.html",
                             BASE + "/file_WebRequest_page2.html",
                             BASE + "/nonexistent_script_url.js",
                             BASE + "/redirection.sjs",
-                            BASE + "/xhr_resource"];
+                            BASE + "/dummy_page.html",
+                            BASE + "/xhr_resource",
+                            "data:text/plain,webRequestTest"];
 
 const expected_beforeSendHeaders = [BASE + "/file_WebRequest_page1.html",
                               BASE + "/file_style_good.css",
@@ -53,7 +55,7 @@ const expected_sendHeaders = expected_beforeSendHeaders.filter(u => !/_redirect\
 const expected_redirect = expected_beforeSendHeaders.filter(u => /_redirect\./.test(u))
                             .concat(BASE + "/redirection.sjs");
 
-const expected_complete = [BASE + "/file_WebRequest_page1.html",
+const expected_response = [BASE + "/file_WebRequest_page1.html",
                            BASE + "/file_style_good.css",
                            BASE + "/file_image_good.png",
                            BASE + "/file_script_good.js",
@@ -62,6 +64,8 @@ const expected_complete = [BASE + "/file_WebRequest_page1.html",
                            BASE + "/nonexistent_script_url.js",
                            BASE + "/dummy_page.html",
                            BASE + "/xhr_resource"];
+
+const expected_complete = expected_response.concat("data:text/plain,webRequestTest");
 
 function removeDupes(list) {
   let j = 0;
@@ -85,10 +89,26 @@ function compareLists(list1, list2, kind) {
 }
 
 function backgroundScript() {
-  const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
-
   let checkCompleted = true;
   let savedTabId = -1;
+
+  function shouldRecord(url) {
+    return url.startsWith(BASE) || /^data:.*\bwebRequestTest\b/.test(url);
+  }
+
+  let statuses = [
+    {url: /_script_good\b/, code: 200, line: /^HTTP\/1.1 200 OK\b/i},
+    {url: /\bredirection\b/, code: 302, line: /^HTTP\/1.1 302\b/},
+    {url: /\bnonexistent_script_/, code: 404, line: /^HTTP\/1.1 404 Not Found\b/i},
+  ];
+  function checkStatus(details) {
+    for (let {url, code, line} of statuses) {
+      if (url.test(details.url)) {
+        browser.test.assertTrue(code === details.statusCode, `HTTP status code ${code} for ${details.url} (found ${details.statusCode})`);
+        browser.test.assertTrue(line.test(details.statusLine), `HTTP status line ${line} for ${details.url} (found ${details.statusLine})`);
+      }
+    }
+  }
 
   function checkType(details) {
     let expected_type = "???";
@@ -100,12 +120,22 @@ function backgroundScript() {
       expected_type = "script";
     } else if (details.url.indexOf("page1") != -1) {
       expected_type = "main_frame";
-    } else if (/page2|redirection|dummy_page/.test(details.url)) {
+    } else if (/page2|redirection|dummy_page|data:text\/(?:plain|html),/.test(details.url)) {
       expected_type = "sub_frame";
     } else if (details.url.indexOf("xhr") != -1) {
       expected_type = "xmlhttprequest";
     }
     browser.test.assertEq(details.type, expected_type, "resource type is correct");
+  }
+
+  let requestIDs = new Map();
+  let idDisposalEvents = new Set(["completed", "error", "redirect"]);
+  function checkRequestId(details, event = "unknown") {
+    let ids = requestIDs.get(details.url);
+    browser.test.assertTrue(ids && ids.has(details.requestId), `correct requestId for ${details.url} (${details.requestId} in [${ids && [...ids].join(", ")}])`);
+    if (ids && idDisposalEvents.has(event)) {
+      ids.delete(details.requestId);
+    }
   }
 
   let frameIDs = new Map();
@@ -116,16 +146,120 @@ function backgroundScript() {
                   sendHeaders: [],
                   responseStarted: [],
                   completed: []};
+  let testHeaders = {
+    request: {
+      added: {
+        "X-WebRequest-request": "text",
+        "X-WebRequest-request-binary": "binary",
+      },
+      modified: {
+        "User-Agent": "WebRequest",
+      },
+      deleted: [
+        "Referer",
+      ],
+    },
+    response: {
+      added: {
+        "X-WebRequest-response": "text",
+        "X-WebRequest-response-binary": "binary",
+      },
+      modified: {
+        "Server": "WebRequest",
+      },
+      deleted: [
+        "Connection",
+      ],
+    },
+  };
 
   function checkResourceType(type) {
     let key = type.toUpperCase();
-    browser.test.assertTrue(key in browser.webRequest.ResourceType);
+    browser.test.assertTrue(key in browser.webRequest.ResourceType, `valid resource type ${key}`);
+  }
+
+  function processHeaders(phase, details) {
+    let headers = details[`${phase}Headers`];
+    browser.test.assertTrue(Array.isArray(headers), `${phase}Headers array present`);
+
+    let processedMark = "WebRequest-processed";
+    if (headers.find(h => h.name === processedMark)) {
+      // This may happen because of redirections or cache
+      browser.test.log(`${phase}Headers in ${details.requestId} already processed`);
+      return null;
+    }
+    headers.push({name: processedMark, value: "1"});
+
+    let {added, modified, deleted} = testHeaders[phase];
+
+    for (let name in added) {
+      browser.test.assertTrue(!headers.find(h => h.name === name), `header ${name} to be added not present yet in ${phase}Headers`);
+      let header = {name: name};
+      if (name.endsWith("-binary")) {
+        header.binaryValue = Array.from(added[name], c => c.charCodeAt(0));
+      } else {
+        header.value = added[name];
+      }
+      headers.push(header);
+    }
+
+    let modifiedAny = false;
+    for (let header of headers.filter(h => h.name in modified)) {
+      header.value = modified[header.name];
+      modifiedAny = true;
+    }
+    browser.test.assertTrue(modifiedAny, `at least one ${phase}Headers element to modify`);
+
+    let deletedAny = false;
+    for (let j = headers.length; j-- > 0;) {
+      if (deleted.includes(headers[j].name)) {
+        headers.splice(j, 1);
+        deletedAny = true;
+      }
+    }
+    browser.test.assertTrue(deletedAny, `at least one ${phase}Headers element to delete`);
+
+    return headers;
+  }
+
+  function checkHeaders(phase, details) {
+    if (!/^https?:/.test(details.url)) {
+      return;
+    }
+
+    let headers = details[`${phase}Headers`];
+    browser.test.assertTrue(Array.isArray(headers), `valid ${phase}Headers array`);
+
+    let {added, modified, deleted} = testHeaders[phase];
+    for (let name in added) {
+      browser.test.assertTrue(headers.some(h => h.name === name && h.value === added[name]), `header ${name} correctly injected in ${phase}Headers`);
+    }
+
+    let modifiedAny = false;
+    for (let header of headers.filter(h => h.name in modified)) {
+      let {name, value} = header;
+      browser.test.assertTrue(value === modified[name], `header "${name}: ${value}" matches modified value ("${modified[name]}")`);
+      modifiedAny = true;
+    }
+    browser.test.assertTrue(modifiedAny, `at least one modified ${phase}Headers element`);
+
+    for (let name of deleted) {
+      browser.test.assertFalse(headers.some(h => h.name === name), `deleted header ${name} still found in ${phase}Headers`);
+    }
   }
 
   function onBeforeRequest(details) {
-    browser.test.log(`onBeforeRequest ${details.url}`);
+    browser.test.log(`onBeforeRequest ${details.requestId} ${details.url}`);
+
+    browser.test.assertTrue(details.requestId > 0, `valid requestId ${details.requestId}`);
+    let ids = requestIDs.get(details.url);
+    if (ids) {
+      ids.add(details.requestId);
+    } else {
+      requestIDs.set(details.url, new Set([details.requestId]));
+    }
     checkResourceType(details.type);
-    if (details.url.startsWith(BASE)) {
+    if (shouldRecord(details.url)) {
       recorded.requested.push(details.url);
 
       if (savedTabId == -1) {
@@ -155,8 +289,10 @@ function backgroundScript() {
 
   function onBeforeSendHeaders(details) {
     browser.test.log(`onBeforeSendHeaders ${details.url}`);
+    checkRequestId(details);
     checkResourceType(details.type);
-    if (details.url.startsWith(BASE)) {
+    processHeaders("request", details);
+    if (shouldRecord(details.url)) {
       recorded.beforeSendHeaders.push(details.url);
 
       browser.test.assertEq(details.tabId, savedTabId, "correct tab ID");
@@ -168,17 +304,19 @@ function backgroundScript() {
     if (details.url.indexOf("_redirect.") != -1) {
       return {redirectUrl: details.url.replace("_redirect.", "_good.")};
     }
-    return {};
+    return {requestHeaders: details.requestHeaders};
   }
 
   function onBeforeRedirect(details) {
     browser.test.log(`onBeforeRedirect ${details.url} -> ${details.redirectUrl}`);
+    checkRequestId(details, "redirect");
     checkResourceType(details.type);
-    if (details.url.startsWith(BASE)) {
+    if (shouldRecord(details.url)) {
       recorded.beforeRedirect.push(details.url);
 
       browser.test.assertEq(details.tabId, savedTabId, "correct tab ID");
       checkType(details);
+      checkStatus(details);
 
       let id = frameIDs.get(details.url);
       browser.test.assertEq(id, details.frameId, "frame ID same in onBeforeRedirect as onBeforeRequest");
@@ -192,34 +330,57 @@ function backgroundScript() {
   }
 
   function onRecord(kind, details) {
+    browser.test.log(`${kind} ${details.requestId} ${details.url}`);
     checkResourceType(details.type);
-    if (details.url.startsWith(BASE)) {
+    checkRequestId(details, kind);
+    if (kind in recorded && shouldRecord(details.url)) {
       recorded[kind].push(details.url);
     }
   }
 
-  let completedUrls = {
-    responseStarted: new Set(),
-    completed: new Set(),
-  };
+  function onSendHeaders(details) {
+    onRecord("sendHeaders", details);
+    checkHeaders("request", details);
+  }
+
+  let completedUrls = {};
 
   function checkIpAndRecord(kind, details) {
     onRecord(kind, details);
-
     // When resources are cached, the ip property is not present,
     // so only check for the ip property the first time around.
+    if (!(kind in completedUrls)) {
+      completedUrls[kind] = new Set();
+    }
     if (checkCompleted && !completedUrls[kind].has(details.url)) {
-      browser.test.assertEq(details.ip, "127.0.0.1", "correct ip");
+      // We can only tell IPs for HTTP requests.
+      if (/^https?:/.test(details.url)) {
+        browser.test.assertEq(details.ip, "127.0.0.1", "correct ip");
+      }
       completedUrls[kind].add(details.url);
     }
+    checkStatus(details);
+  }
+
+  function onHeadersReceived(details) {
+    checkIpAndRecord("headersReceived", details);
+    processHeaders("response", details);
+    browser.test.log(`After processing response headers: ${details.responseHeaders.toSource()}`);
+    return {responseHeaders: details.responseHeaders};
+  }
+
+  function onCompleted(details) {
+    checkIpAndRecord("completed", details);
+    checkHeaders("response", details);
   }
 
   browser.webRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: ["<all_urls>"]}, ["blocking"]);
-  browser.webRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, {urls: ["<all_urls>"]}, ["blocking"]);
-  browser.webRequest.onSendHeaders.addListener(onRecord.bind(null, "sendHeaders"), {urls: ["<all_urls>"]});
+  browser.webRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, {urls: ["<all_urls>"]}, ["blocking", "requestHeaders"]);
+  browser.webRequest.onSendHeaders.addListener(onSendHeaders, {urls: ["<all_urls>"]}, ["requestHeaders"]);
   browser.webRequest.onBeforeRedirect.addListener(onBeforeRedirect, {urls: ["<all_urls>"]});
+  browser.webRequest.onHeadersReceived.addListener(onHeadersReceived, {urls: ["<all_urls>"]}, ["blocking", "responseHeaders"]);
   browser.webRequest.onResponseStarted.addListener(checkIpAndRecord.bind(null, "responseStarted"), {urls: ["<all_urls>"]});
-  browser.webRequest.onCompleted.addListener(checkIpAndRecord.bind(null, "completed"), {urls: ["<all_urls>"]});
+  browser.webRequest.onCompleted.addListener(onCompleted, {urls: ["<all_urls>"]}, ["responseHeaders"]);
 
   function onTestMessage(msg) {
     if (msg == "skipCompleted") {
@@ -243,7 +404,7 @@ function* test_once(skipCompleted) {
         "webRequestBlocking",
       ],
     },
-    background: "(" + backgroundScript.toString() + ")()",
+    background: `const BASE = ${JSON.stringify(BASE)}; (${backgroundScript.toString()})()`,
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
@@ -297,7 +458,7 @@ function* test_once(skipCompleted) {
   compareLists(recorded.beforeSendHeaders, expected_beforeSendHeaders, "beforeSendHeaders");
   compareLists(recorded.sendHeaders, expected_sendHeaders, "sendHeaders");
   compareLists(recorded.beforeRedirect, expected_redirect, "beforeRedirect");
-  compareLists(recorded.responseStarted, expected_complete, "responseStarted");
+  compareLists(recorded.responseStarted, expected_response, "responseStarted");
   compareLists(recorded.completed, expected_complete, "completed");
 
   yield extension.unload();

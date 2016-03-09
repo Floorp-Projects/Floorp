@@ -427,13 +427,6 @@ gfxPlatformMac::ReadAntiAliasingThreshold()
 }
 
 bool
-gfxPlatformMac::UseAcceleratedCanvas()
-{
-  // Lion or later is required
-  return nsCocoaFeatures::OnLionOrLater() && Preferences::GetBool("gfx.canvas.azure.accelerated", false);
-}
-
-bool
 gfxPlatformMac::UseProgressivePaint()
 {
   // Progressive painting requires cross-process mutexes, which don't work so

@@ -1,10 +1,9 @@
 [
 {
-"gcc_version": "4.7.2"
-},
-{
-"size": 79831648,
-"digest": "958d0dfb531ac6911187cf57907317144a547b884c79dcb483668f0e468ab9f031492ab49177edebf6a6437680b69f54a346a37b4316da78c0ff87aa39c5f2c3",
+"version": "gcc 4.9.3",
+"size": 102421980,
+"visibility": "public",
+"digest": "f25292aa93dc449e0472eee511c0ac15b5f1a4272ab76cf53ce5d20dc57f29e83da49ae1a9d9e994192647f75e13ae60f75ba2ac3cb9d26d5f5d6cabf88de921",
 "algorithm": "sha512",
 "filename": "gcc.tar.xz",
 "unpack": true

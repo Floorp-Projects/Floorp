@@ -13,6 +13,7 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 
 class nsMediaList;
+class nsAttrValue;
 
 namespace mozilla {
 namespace dom {
@@ -118,6 +119,9 @@ protected:
 private:
   RefPtr<nsMediaList> mMediaList;
   RefPtr<MediaSource> mSrcMediaSource;
+
+  // Generates a new nsMediaList using the given input
+  void UpdateMediaList(const nsAttrValue* aValue);
 };
 
 } // namespace dom

@@ -554,6 +554,9 @@
                   <menuitem id="javascriptConsole"
                             observes="devtoolsMenuBroadcaster_ErrorConsole"
                             accesskey="&errorConsoleCmd.accesskey;"/>
+                  <menuitem id="menu_devtools_serviceworkers"
+                            observes="devtoolsMenuBroadcaster_ServiceWorkers"
+                            accesskey="&devtoolsServiceWorkers.accesskey;"/>
                   <menuitem id="menu_devtools_connect"
                             observes="devtoolsMenuBroadcaster_connect"/>
                   <menuseparator id="devToolsEndSeparator"/>

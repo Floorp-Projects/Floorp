@@ -5,6 +5,7 @@
 #ifndef THREADSAFEREFCOUNTINGWITHMAINTHREADDESTRUCTION_H_
 #define THREADSAFEREFCOUNTINGWITHMAINTHREADDESTRUCTION_H_
 
+#include "base/message_loop.h"
 #include "MainThreadUtils.h"
 #include "nsThreadUtils.h"
 

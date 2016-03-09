@@ -17,14 +17,15 @@
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsCSSPseudoElements.h"
 #include "nsCSSPseudoClasses.h"
+#include "nsCSSPseudoElements.h"
 #include "nsIStyleRule.h"
 
 class nsIAtom;
 struct nsCSSSelectorList;
 
 namespace mozilla {
+enum class CSSPseudoElementType : uint8_t;
 class CSSStyleSheet;
 } // namespace mozilla
 
@@ -178,7 +179,7 @@ public:
                 bool aAppend = false) const;
 
   bool IsRestrictedSelector() const {
-    return PseudoType() == nsCSSPseudoElements::ePseudo_NotPseudoElement;
+    return PseudoType() == mozilla::CSSPseudoElementType::NotPseudo;
   }
 
 #ifdef DEBUG
@@ -208,14 +209,9 @@ private:
 
 public:
   // Get and set the selector's pseudo type
-  nsCSSPseudoElements::Type PseudoType() const {
-    return static_cast<nsCSSPseudoElements::Type>(mPseudoType);
-  }
-  void SetPseudoType(nsCSSPseudoElements::Type aType) {
-    NS_ASSERTION(static_cast<int32_t>(aType) >= INT16_MIN &&
-                 static_cast<int32_t>(aType) <= INT16_MAX,
-                 "Out of bounds - this will overflow mPseudoType");
-    mPseudoType = static_cast<int16_t>(aType);
+  mozilla::CSSPseudoElementType PseudoType() const { return mPseudoType; }
+  void SetPseudoType(mozilla::CSSPseudoElementType aType) {
+    mPseudoType = aType;
   }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -236,8 +232,9 @@ public:
   int32_t         mNameSpace;
   char16_t       mOperator;
 private:
-  // int16_t to make sure it packs well with mOperator
-  int16_t        mPseudoType;
+  // The underlying type of CSSPseudoElementType is uint8_t and
+  // it packs well with mOperator. (char16_t + uint8_t is less than 32bits.)
+  mozilla::CSSPseudoElementType mPseudoType;
 
   nsCSSSelector(const nsCSSSelector& aCopy) = delete;
   nsCSSSelector& operator=(const nsCSSSelector& aCopy) = delete;

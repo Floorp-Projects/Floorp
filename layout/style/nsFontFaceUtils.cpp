@@ -21,7 +21,7 @@ StyleContextContainsFont(nsStyleContext* aStyleContext,
   // if the font is null, simply check to see whether fontlist includes
   // downloadable fonts
   if (!aFont) {
-    const FontFamilyList& fontlist =
+    const mozilla::FontFamilyList& fontlist =
       aStyleContext->StyleFont()->mFont.fontlist;
     return aUserFontSet->ContainsUserFontSetFonts(fontlist);
   }

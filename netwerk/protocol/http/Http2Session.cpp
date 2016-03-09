@@ -535,6 +535,7 @@ Http2Session::FlushOutputQueue()
 void
 Http2Session::DontReuse()
 {
+  LOG3(("Http2Session::DontReuse %p\n", this));
   mShouldGoAway = true;
   if (!mStreamTransactionHash.Count())
     Close(NS_OK);
@@ -631,6 +632,11 @@ Http2Session::CreateFrameHeader(charType dest, uint16_t frameLength,
 {
   MOZ_ASSERT(frameLength <= kMaxFrameData, "framelength too large");
   MOZ_ASSERT(!(streamID & 0x80000000));
+  MOZ_ASSERT(!frameFlags ||
+             (frameType != FRAME_TYPE_PRIORITY &&
+              frameType != FRAME_TYPE_RST_STREAM &&
+              frameType != FRAME_TYPE_GOAWAY &&
+              frameType != FRAME_TYPE_WINDOW_UPDATE));
 
   dest[0] = 0x00;
   NetworkEndian::writeUint16(dest + 1, frameLength);
@@ -1580,8 +1586,8 @@ Http2Session::RecvPushPromise(Http2Session *self)
   bool resetStream = true;
   SpdyPushCache *cache = nullptr;
 
-  if (self->mShouldGoAway) {
-    LOG3(("Http2Session::RecvPushPromise %p push while in GoAway "
+  if (self->mShouldGoAway && !Http2PushedStream::TestOnPush(associatedStream)) {
+    LOG3(("Http2Session::RecvPushPromise %p cache push while in GoAway "
           "mode refused.\n", self));
     self->GenerateRstStream(REFUSED_STREAM_ERROR, promisedID);
   } else if (!gHttpHandler->AllowPush()) {
@@ -1657,6 +1663,7 @@ Http2Session::RecvPushPromise(Http2Session *self)
     LOG3(("Http2Session::PushPromise Semantics not Implemented\n"));
     self->GenerateRstStream(REFUSED_STREAM_ERROR, promisedID);
     delete pushedStream;
+    self->ResetDownstreamState();
     return NS_OK;
   }
 
@@ -1665,6 +1672,7 @@ Http2Session::RecvPushPromise(Http2Session *self)
     // the decoded headers. Reset the stream and go away.
     self->GenerateRstStream(PROTOCOL_ERROR, promisedID);
     delete pushedStream;
+    self->ResetDownstreamState();
     return NS_OK;
   } else if (NS_FAILED(rv)) {
     // This is fatal to the session.
@@ -2408,6 +2416,12 @@ Http2Session::ReadyToProcessDataFrame(enum internalStateType newState)
           this, mInputFrameID));
     if (mInputFrameDataStream->RecvdFin() || mInputFrameDataStream->RecvdReset())
       GenerateRstStream(STREAM_CLOSED_ERROR, mInputFrameID);
+    ChangeDownstreamState(DISCARDING_DATA_FRAME);
+  } else if (mInputFrameDataSize == 0 && !mInputFrameFinal) {
+    // Only if non-final because the stream properly handles final frames of any
+    // size, and we want the stream to be able to notice its own end flag.
+    LOG3(("Http2Session::ReadyToProcessDataFrame %p streamID 0x%X "
+          "Ignoring 0-length non-terminal data frame.", this, mInputFrameID));
     ChangeDownstreamState(DISCARDING_DATA_FRAME);
   }
 

@@ -144,6 +144,14 @@ const kMauPrefMap = new Map(
     return [LOOP_MAU_TYPE[name], parts[0] + parts[1].charAt(0).toUpperCase() + parts[1].substr(1)];
   })
 );
+
+/**
+ * WARNING: Every function in kMessageHandlers must call the reply() function,
+ * as otherwise the content requesters can be left hanging.
+ *
+ * Ideally, we should rewrite them to handle failure/long times better, at which
+ * point this could be relaxed slightly.
+ */
 const kMessageHandlers = {
   /**
    * Start browser sharing, which basically means to start listening for tab
@@ -819,6 +827,22 @@ const kMessageHandlers = {
   OpenGettingStartedTour: function(message, reply) {
     MozLoopService.openGettingStartedTour();
     reply();
+  },
+
+  /**
+   * Retrieves the Getting Started tour url.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [aSrc, aAdditionalParams]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  GettingStartedURL: function(message, reply) {
+    let aSrc = message.data[0] || null;
+    let aAdditionalParams = message.data[1] || {};
+    reply(MozLoopService.getTourURL(aSrc, aAdditionalParams).href);
   },
 
   /**

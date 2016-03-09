@@ -128,7 +128,6 @@
 @BINPATH@/components/dom_html.xpt
 @BINPATH@/components/dom_offline.xpt
 @BINPATH@/components/dom_json.xpt
-@BINPATH@/components/dom_payment.xpt
 @BINPATH@/components/dom_power.xpt
 @BINPATH@/components/dom_quota.xpt
 @BINPATH@/components/dom_range.xpt
@@ -483,20 +482,6 @@
 @BINPATH@/res/html/*
 @BINPATH@/res/language.properties
 @BINPATH@/res/entityTables/*
-#ifdef NIGHTLY_BUILD
-@BINPATH@/res/accessiblecaret.png
-@BINPATH@/res/accessiblecaret@1.5x.png
-@BINPATH@/res/accessiblecaret@2.25x.png
-@BINPATH@/res/accessiblecaret@2x.png
-@BINPATH@/res/accessiblecaret_tilt_left.png
-@BINPATH@/res/accessiblecaret_tilt_left@1.5x.png
-@BINPATH@/res/accessiblecaret_tilt_left@2.25x.png
-@BINPATH@/res/accessiblecaret_tilt_left@2x.png
-@BINPATH@/res/accessiblecaret_tilt_right.png
-@BINPATH@/res/accessiblecaret_tilt_right@1.5x.png
-@BINPATH@/res/accessiblecaret_tilt_right@2.25x.png
-@BINPATH@/res/accessiblecaret_tilt_right@2x.png
-#endif
 
 #ifndef MOZ_ANDROID_EXCLUDE_FONTS
 @BINPATH@/res/fonts/*
@@ -549,13 +534,6 @@
 @BINPATH@/components/SiteSpecificUserAgent.js
 @BINPATH@/components/Snippets.js
 
-@BINPATH@/components/Payment.js
-@BINPATH@/components/PaymentFlowInfo.js
-@BINPATH@/components/PaymentProvider.js
-@BINPATH@/components/Payment.manifest
-@BINPATH@/components/PaymentsUI.js
-@BINPATH@/components/PaymentProviderStrategy.js
-
 @BINPATH@/components/XPIDialogService.js
 
 #ifdef ENABLE_MARIONETTE
@@ -565,7 +543,6 @@
 @BINPATH@/components/marionettecomponent.js
 #endif
 
-@BINPATH@/components/WebappsUpdateTimer.js
 @BINPATH@/components/DataStore.manifest
 @BINPATH@/components/DataStoreImpl.js
 @BINPATH@/components/dom_datastore.xpt

@@ -115,7 +115,7 @@ TEST(ImageStreamingLexer, ChunkPerState)
   char data[9] = { 1, 2, 3, 1, 2, 3, 1, 2, 3 };
 
   // Test delivering in perfectly-sized chunks, one per state.
-  for (unsigned i = 0 ; i < 3 ; ++i) {
+  for (unsigned i = 0; i < 3; ++i) {
     Maybe<TerminalState> result = lexer.Lex(data + 3 * i, 3, DoLex);
 
     if (i == 2) {
@@ -134,7 +134,7 @@ TEST(ImageStreamingLexer, ChunkPerStateWithUnbuffered)
   Vector<char> unbufferedVector;
 
   // Test delivering in perfectly-sized chunks, one per state.
-  for (unsigned i = 0 ; i < 3 ; ++i) {
+  for (unsigned i = 0; i < 3; ++i) {
     Maybe<TerminalState> result =
       lexer.Lex(data + 3 * i, 3,
                 [&](TestState aState, const char* aData, size_t aLength) {
@@ -156,7 +156,7 @@ TEST(ImageStreamingLexer, OneByteChunks)
   char data[9] = { 1, 2, 3, 1, 2, 3, 1, 2, 3 };
 
   // Test delivering in one byte chunks.
-  for (unsigned i = 0 ; i < 9 ; ++i) {
+  for (unsigned i = 0; i < 9; ++i) {
     Maybe<TerminalState> result = lexer.Lex(data + i, 1, DoLex);
 
     if (i == 8) {
@@ -175,7 +175,7 @@ TEST(ImageStreamingLexer, OneByteChunksWithUnbuffered)
   Vector<char> unbufferedVector;
 
   // Test delivering in one byte chunks.
-  for (unsigned i = 0 ; i < 9 ; ++i) {
+  for (unsigned i = 0; i < 9; ++i) {
     Maybe<TerminalState> result =
       lexer.Lex(data + i, 1,
                 [&](TestState aState, const char* aData, size_t aLength) {
@@ -247,7 +247,7 @@ TEST(ImageStreamingLexer, TerminateUnbuffered)
   char data[9] = { 1, 2, 3, 1, 2, 3, 1, 2, 3 };
 
   // Test that Terminate works during an unbuffered read.
-  for (unsigned i = 0 ; i < 9 ; ++i) {
+  for (unsigned i = 0; i < 9; ++i) {
     Maybe<TerminalState> result =
       lexer.Lex(data + i, 1, DoLexWithUnbufferedTerminate);
 

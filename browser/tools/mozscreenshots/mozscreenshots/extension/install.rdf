@@ -9,7 +9,7 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>mozscreenshots@mozilla.org</em:id>
-#expand <em:version>__MOZILLA_VERSION_U__</em:version>
+    <em:version>0.3.2</em:version>
     <em:bootstrap>true</em:bootstrap>
 
     <!-- for running custom screenshot binaries -->

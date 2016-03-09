@@ -925,6 +925,9 @@ jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph)
                     continue;
                 }
 
+                if (!graph.alloc().ensureBallast())
+                    return false;
+
                 // Store an optimized out magic value in place of all dead
                 // resume point operands. Making any such substitution can in
                 // general alter the interpreter's behavior, even though the
@@ -947,7 +950,9 @@ jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph)
 bool
 js::jit::DeadIfUnused(const MDefinition* def)
 {
-    return !def->isEffectful() && !def->isGuard() && !def->isGuardRangeBailouts() &&
+    return !def->isEffectful() &&
+           (!def->isGuard() || def->block() == def->block()->graph().osrBlock()) &&
+           !def->isGuardRangeBailouts() &&
            !def->isControlInstruction() &&
            (!def->isInstruction() || !def->toInstruction()->resumePoint());
 }
@@ -1269,7 +1274,9 @@ GuessPhiType(MPhi* phi, bool* hasInputsWithEmptyTypes)
                 // If we only saw definitions that can be converted into Float32 before and
                 // encounter a Float32 value, promote previous values to Float32
                 type = MIRType_Float32;
-            } else if (IsNumberType(type) && IsNumberType(in->type())) {
+            } else if (IsTypeRepresentableAsDouble(type) &&
+                       IsTypeRepresentableAsDouble(in->type()))
+            {
                 // Specialize phis with int32 and double operands as double.
                 type = MIRType_Double;
                 convertibleToFloat32 &= in->canProduceFloat32();
@@ -1329,7 +1336,9 @@ TypeAnalyzer::propagateSpecialization(MPhi* phi)
             }
 
             // Specialize phis with int32 and double operands as double.
-            if (IsNumberType(use->type()) && IsNumberType(phi->type())) {
+            if (IsTypeRepresentableAsDouble(use->type()) &&
+                IsTypeRepresentableAsDouble(phi->type()))
+            {
                 if (!respecialize(use, MIRType_Double))
                     return false;
                 continue;
@@ -2501,6 +2510,7 @@ IsResumableMIRType(MIRType type)
       case MIRType_ObjectGroup:
       case MIRType_Doublex2: // NYI, see also RSimdBox::recover
       case MIRType_SinCosDouble:
+      case MIRType_Int64:
         return false;
     }
     MOZ_CRASH("Unknown MIRType.");
@@ -3184,7 +3194,7 @@ NeedsKeepAlive(MInstruction* slotsOrElements, MInstruction* use)
     MOZ_CRASH("Unreachable");
 }
 
-void
+bool
 jit::AddKeepAliveInstructions(MIRGraph& graph)
 {
     for (MBasicBlockIterator i(graph.begin()); i != graph.end(); i++) {
@@ -3246,11 +3256,15 @@ jit::AddKeepAliveInstructions(MIRGraph& graph)
                 if (!NeedsKeepAlive(ins, use))
                     continue;
 
+                if (!graph.alloc().ensureBallast())
+                    return false;
                 MKeepAliveObject* keepAlive = MKeepAliveObject::New(graph.alloc(), ownerObject);
                 use->block()->insertAfter(use, keepAlive);
             }
         }
     }
+
+    return true;
 }
 
 bool

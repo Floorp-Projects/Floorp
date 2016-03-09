@@ -13,8 +13,6 @@ function test()
   gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
     gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
 
-    ok(window.Scratchpad, "Scratchpad variable exists");
-
     openScratchpad(runTests);
   }, true);
 

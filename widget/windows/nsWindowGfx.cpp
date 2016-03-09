@@ -43,6 +43,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "nsIXULRuntime.h"
 
 #include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorChild.h"
 #include "ClientLayerManager.h"
 
 #include "nsUXThemeData.h"
@@ -166,6 +167,13 @@ nsIWidgetListener* nsWindow::GetPaintListener()
   return mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
 }
 
+void nsWindow::ForcePresent()
+{
+  if (CompositorChild* remoteRenderer = GetRemoteRenderer()) {
+    remoteRenderer->SendForcePresent();
+  }
+}
+
 bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 {
   // We never have reentrant paint events, except when we're running our RPC
@@ -177,7 +185,9 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 
   if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
     gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
-    EnumAllWindows(ClearCompositor);
+    EnumAllWindows([] (nsWindow* aWindow) -> void {
+      aWindow->OnRenderingDeviceReset();
+    });
     return false;
   }
 
@@ -218,10 +228,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     return true;
   }
 
-  ClientLayerManager *clientLayerManager =
-      (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT)
-      ? static_cast<ClientLayerManager*>(GetLayerManager())
-      : nullptr;
+  ClientLayerManager *clientLayerManager = GetLayerManager()->AsClientLayerManager();
 
   if (clientLayerManager && mCompositorParent &&
       !mBounds.IsEqualEdges(mLastPaintBounds))
@@ -516,8 +523,13 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
         }
         break;
       case LayersBackend::LAYERS_CLIENT:
-        result = listener->PaintWindow(
-          this, LayoutDeviceIntRegion::FromUnknownRegion(region));
+        {
+          result = listener->PaintWindow(
+            this, LayoutDeviceIntRegion::FromUnknownRegion(region));
+          nsCOMPtr<nsIRunnable> event =
+            NS_NewRunnableMethod(this, &nsWindow::ForcePresent);
+          NS_DispatchToMainThread(event);
+        }
         break;
       default:
         NS_ERROR("Unknown layers backend used!");

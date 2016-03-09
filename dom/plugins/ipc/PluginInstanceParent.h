@@ -316,18 +316,6 @@ public:
         aOutput = mSrcAttribute;
     }
 
-    /**
-     * This function tells us whether this plugin instance would have been
-     * whitelisted for Shumway if Shumway had been enabled. This is being used
-     * for the purpose of gathering telemetry on Flash hangs that could
-     * potentially be avoided by using Shumway instead.
-     */
-    bool
-    IsWhitelistedForShumway() const
-    {
-        return mIsWhitelistedForShumway;
-    }
-
     virtual bool
     AnswerPluginFocusChange(const bool& gotFocus) override;
 
@@ -342,6 +330,10 @@ public:
     nsresult BeginUpdateBackground(const nsIntRect& aRect,
                                    DrawTarget** aDrawTarget);
     nsresult EndUpdateBackground(const nsIntRect& aRect);
+#if defined(XP_WIN)
+    nsresult GetScrollCaptureContainer(mozilla::layers::ImageContainer** aContainer);
+    nsresult UpdateScrollState(bool aIsScrolling);
+#endif
     void DidComposite();
 
     bool IsUsingDirectDrawing();
@@ -398,9 +390,9 @@ private:
     NPP mNPP;
     const NPNetscapeFuncs* mNPNIface;
     nsCString mSrcAttribute;
-    bool mIsWhitelistedForShumway;
     NPWindowType mWindowType;
     int16_t mDrawingModel;
+    IntSize mWindowSize;
 
     // Since plugins may request different drawing models to find a compatible
     // one, we only record the drawing model after a SetWindow call and if the
@@ -465,6 +457,18 @@ private:
     RefPtr<gfxASurface>    mBackground;
 
     RefPtr<ImageContainer> mImageContainer;
+
+#if defined(XP_WIN)
+    void ScheduleScrollCapture(int aTimeout);
+    void ScheduledUpdateScrollCaptureCallback();
+    bool UpdateScrollCapture(bool& aRequestNewCapture);
+    void CancelScheduledScrollCapture();
+
+    RefPtr<gfxASurface> mScrollCapture;
+    CancelableTask* mCaptureRefreshTask;
+    bool mValidFirstCapture;
+    bool mIsScrolling;
+#endif
 };
 
 

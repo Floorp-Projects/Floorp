@@ -46,7 +46,7 @@ add_task(function* test_pushNotifications() {
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpointA',
     scope: 'https://example.net/a',
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     quota: Infinity,
   }, {
     subscriptionUri: serverURL + '/subscriptionB',
@@ -54,7 +54,7 @@ add_task(function* test_pushNotifications() {
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpointB',
     scope: 'https://example.net/b',
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     quota: Infinity,
   }, {
     subscriptionUri: serverURL + '/subscriptionC',
@@ -62,7 +62,7 @@ add_task(function* test_pushNotifications() {
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpointC',
     scope: 'https://example.net/c',
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     quota: Infinity,
   }];
 
@@ -78,7 +78,7 @@ add_task(function* test_pushNotifications() {
   let registration = yield PushService.registration({
     scope: 'https://example.net/a',
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
   });
   equal(
     registration.endpoint,

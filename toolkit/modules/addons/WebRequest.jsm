@@ -21,10 +21,44 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "WebRequestCommon",
                                   "resource://gre/modules/WebRequestCommon.jsm");
 
-// TODO
-// Figure out how to handle requestId. Gecko seems to have no such thing. (Bug 1163862)
-// We also don't know the method for content policy. (Bug 1163862)
-// We don't even have a window ID for HTTP observer stuff. (Bug 1163861)
+function attachToChannel(channel, key, data) {
+  if (channel instanceof Ci.nsIWritablePropertyBag2) {
+    let wrapper = {value: data};
+    wrapper.wrappedJSObject = wrapper;
+    channel.setPropertyAsInterface(key, wrapper);
+  }
+}
+
+function extractFromChannel(channel, key) {
+  if (channel instanceof Ci.nsIPropertyBag2 && channel.hasKey(key)) {
+    let data = channel.get(key);
+    if (data && data.wrappedJSObject) {
+      data = data.wrappedJSObject;
+    }
+    return "value" in data ? data.value : data;
+  }
+  return null;
+}
+
+var RequestId = {
+  count: 1,
+  KEY: "mozilla.webRequest.requestId",
+  create(channel = null) {
+    let id = this.count++;
+    if (channel) {
+      attachToChannel(channel, this.KEY, id);
+    }
+    return id;
+  },
+
+  get(channel) {
+    return channel && extractFromChannel(channel, this.KEY) || this.create(channel);
+  },
+};
+
+function runLater(job) {
+  Services.tm.currentThread.dispatch(job, Ci.nsIEventTarget.DISPATCH_NORMAL);
+}
 
 function parseFilter(filter) {
   if (!filter) {
@@ -53,6 +87,22 @@ function parseExtra(extra, allowed) {
   return result;
 }
 
+function mergeStatus(data, channel) {
+  try {
+    data.statusCode = channel.responseStatus;
+    let statusText = channel.responseStatusText;
+    let maj = {};
+    let min = {};
+    channel.QueryInterface(Ci.nsIHttpChannelInternal).getResponseVersion(maj, min);
+    data.statusLine = `HTTP/${maj.value}.${min.value} ${data.statusCode} ${statusText}`;
+  } catch (e) {
+    // NS_ERROR_NOT_AVAILABLE might be thrown.
+    Cu.reportError(e);
+  }
+}
+
+var HttpObserverManager;
+
 var ContentPolicyManager = {
   policyData: new Map(),
   policies: new Map(),
@@ -77,32 +127,50 @@ var ContentPolicyManager = {
         continue;
       }
       let response = null;
+      let data = {
+        url: msg.data.url,
+        windowId: msg.data.windowId,
+        parentWindowId: msg.data.parentWindowId,
+        type: msg.data.type,
+        browser: browser,
+        requestId: RequestId.create(),
+      };
       try {
-        response = callback({
-          url: msg.data.url,
-          windowId: msg.data.windowId,
-          parentWindowId: msg.data.parentWindowId,
-          type: msg.data.type,
-          browser: browser,
-        });
+        response = callback(data);
+        if (response && response.cancel) {
+          return {cancel: true};
+        }
+
+        // FIXME: Need to handle redirection here. (Bug 1163862)
       } catch (e) {
         Cu.reportError(e);
+      } finally {
+        runLater(() => this.runChannelListener("onStop", data));
       }
-
-      if (response && response.cancel) {
-        return {cancel: true};
-      }
-
-      // FIXME: Need to handle redirection here. (Bug 1163862)
     }
 
     return {};
   },
 
+  runChannelListener(kind, data) {
+    let listeners = HttpObserverManager.listeners[kind];
+    let uri = BrowserUtils.makeURI(data.url);
+    let policyType = data.type;
+    for (let [callback, opts] of listeners.entries()) {
+      if (!HttpObserverManager.shouldRunListener(policyType, uri, opts.filter)) {
+        continue;
+      }
+      callback(data);
+    }
+  },
+
   addListener(callback, opts) {
+    // Clone opts, since we're going to modify them for IPC.
+    opts = Object.assign({}, opts);
     let id = this.nextId++;
     opts.id = id;
     if (opts.filter.urls) {
+      opts.filter = Object.assign({}, opts.filter);
       opts.filter.urls = opts.filter.urls.serialize();
     }
     Services.ppmm.broadcastAsyncMessage("WebRequest:AddContentPolicy", opts);
@@ -151,8 +219,6 @@ StartStopListener.prototype = {
   },
 };
 
-var HttpObserverManager;
-
 var ChannelEventSink = {
   _classDescription: "WebRequest channel event sink",
   _classID: Components.ID("115062f8-92f1-11e5-8b7f-080027b0f7ec"),
@@ -178,7 +244,7 @@ var ChannelEventSink = {
 
   // nsIChannelEventSink implementation
   asyncOnChannelRedirect(oldChannel, newChannel, flags, redirectCallback) {
-    Services.tm.currentThread.dispatch(() => redirectCallback.onRedirectVerifyCallback(Cr.NS_OK), Ci.nsIEventTarget.DISPATCH_NORMAL);
+    runLater(() => redirectCallback.onRedirectVerifyCallback(Cr.NS_OK));
     try {
       HttpObserverManager.onChannelReplaced(oldChannel, newChannel);
     } catch (e) {
@@ -203,6 +269,7 @@ HttpObserverManager = {
   redirectInitialized: false,
 
   listeners: {
+    opening: new Map(),
     modify: new Map(),
     afterModify: new Map(),
     headersReceived: new Map(),
@@ -212,7 +279,7 @@ HttpObserverManager = {
   },
 
   addOrRemove() {
-    let needModify = this.listeners.modify.size || this.listeners.afterModify.size;
+    let needModify = this.listeners.opening.size || this.listeners.modify.size || this.listeners.afterModify.size;
     if (needModify && !this.modifyInitialized) {
       this.modifyInitialized = true;
       Services.obs.addObserver(this, "http-on-modify-request", false);
@@ -287,15 +354,47 @@ HttpObserverManager = {
     return headers;
   },
 
+  replaceHeaders(headers, originalNames, setHeader) {
+    let failures = new Set();
+    // Start by clearing everything.
+    for (let name of originalNames) {
+      try {
+        setHeader(name, "");
+      } catch (e) {
+        // Let's collect physiological failures in order
+        // to know what is worth reporting.
+        failures.add(name);
+      }
+    }
+    try {
+      for (let {name, value, binaryValue} of headers) {
+        try {
+          if (Array.isArray(binaryValue)) {
+            value = String.fromCharCode.apply(String, binaryValue);
+          }
+          setHeader(name, value);
+        } catch (e) {
+          if (!failures.has(name)) {
+            Cu.reportError(e);
+          }
+        }
+      }
+    } catch (e) {
+      Cu.reportError(e);
+    }
+  },
+
   observe(subject, topic, data) {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
-
-    if (topic == "http-on-modify-request") {
-      this.modify(channel, topic, data);
-    } else if (topic == "http-on-examine-response" ||
-               topic == "http-on-examine-cached-response" ||
-               topic == "http-on-examine-merged-response") {
-      this.examine(channel, topic, data);
+    switch (topic) {
+      case "http-on-modify-request":
+        this.modify(channel, topic, data);
+        break;
+      case "http-on-examine-response":
+      case "http-on-examine-cached-response":
+      case "http-on-examine-merged-response":
+        this.examine(channel, topic, data);
+        break;
     }
   },
 
@@ -305,6 +404,9 @@ HttpObserverManager = {
   },
 
   runChannelListener(channel, loadContext, kind, extraData = null) {
+    if (channel.status === Cr.NS_ERROR_ABORT) {
+      return false;
+    }
     let listeners = this.listeners[kind];
     let browser = loadContext ? loadContext.topFrameElement : null;
     let loadInfo = channel.loadInfo;
@@ -312,11 +414,11 @@ HttpObserverManager = {
                      loadInfo.externalContentPolicyType :
                      Ci.nsIContentPolicy.TYPE_OTHER;
 
-    let requestHeaders;
-    let responseHeaders;
+    let requestHeaderNames;
+    let responseHeaderNames;
 
     let includeStatus = kind === "headersReceived" ||
-                        kind === "onBeforeRedirect" ||
+                        kind === "onRedirect" ||
                         kind === "onStart" ||
                         kind === "onStop";
 
@@ -326,6 +428,7 @@ HttpObserverManager = {
       }
 
       let data = {
+        requestId: RequestId.get(channel),
         url: channel.URI.spec,
         method: channel.requestMethod,
         browser: browser,
@@ -346,19 +449,15 @@ HttpObserverManager = {
         Object.assign(data, extraData);
       }
       if (opts.requestHeaders) {
-        if (!requestHeaders) {
-          requestHeaders = this.getHeaders(channel, "visitRequestHeaders");
-        }
-        data.requestHeaders = requestHeaders;
+        data.requestHeaders = this.getHeaders(channel, "visitRequestHeaders");
+        requestHeaderNames = data.requestHeaders.map(h => h.name);
       }
       if (opts.responseHeaders) {
-        if (!responseHeaders) {
-          responseHeaders = this.getHeaders(channel, "visitResponseHeaders");
-        }
-        data.responseHeaders = responseHeaders;
+        data.responseHeaders = this.getHeaders(channel, "visitResponseHeaders");
+        responseHeaderNames = data.responseHeaders.map(h => h.name);
       }
       if (includeStatus) {
-        data.statusCode = channel.responseStatus;
+        mergeStatus(data, channel);
       }
 
       let result = null;
@@ -372,7 +471,7 @@ HttpObserverManager = {
         return true;
       }
       if (result.cancel) {
-        channel.cancel();
+        channel.cancel(Cr.NS_ERROR_ABORT);
         return false;
       }
       if (result.redirectUrl) {
@@ -380,24 +479,16 @@ HttpObserverManager = {
         return false;
       }
       if (opts.requestHeaders && result.requestHeaders) {
-        // Start by clearing everything.
-        for (let {name} of requestHeaders) {
-          channel.setRequestHeader(name, "", false);
-        }
-
-        for (let {name, value} of result.requestHeaders) {
-          channel.setRequestHeader(name, value, false);
-        }
+        this.replaceHeaders(
+          result.requestHeaders, requestHeaderNames,
+          (name, value) => channel.setRequestHeader(name, value, false)
+        );
       }
       if (opts.responseHeaders && result.responseHeaders) {
-        // Start by clearing everything.
-        for (let {name} of responseHeaders) {
-          channel.setResponseHeader(name, "", false);
-        }
-
-        for (let {name, value} of result.responseHeaders) {
-          channel.setResponseHeader(name, value, false);
-        }
+        this.replaceHeaders(
+          result.responseHeaders, responseHeaderNames,
+          (name, value) => channel.setResponseHeader(name, value, false)
+        );
       }
     }
 
@@ -407,7 +498,8 @@ HttpObserverManager = {
   modify(channel, topic, data) {
     let loadContext = this.getLoadContext(channel);
 
-    if (this.runChannelListener(channel, loadContext, "modify")) {
+    if (this.runChannelListener(channel, loadContext, "opening") &&
+        this.runChannelListener(channel, loadContext, "modify")) {
       this.runChannelListener(channel, loadContext, "afterModify");
     }
   },
@@ -450,9 +542,11 @@ var onBeforeRequest = {
     let opts = parseExtra(opt_extraInfoSpec, ["blocking"]);
     opts.filter = parseFilter(filter);
     ContentPolicyManager.addListener(callback, opts);
+    HttpObserverManager.addListener("opening", callback, opts);
   },
 
   removeListener(callback) {
+    HttpObserverManager.removeListener("opening", callback);
     ContentPolicyManager.removeListener(callback);
   },
 };
@@ -482,7 +576,7 @@ var onResponseStarted = new HttpEvent("onStart", ["responseHeaders"]);
 var onCompleted = new HttpEvent("onStop", ["responseHeaders"]);
 
 var WebRequest = {
-  // Handled via content policy.
+  // http-on-modify observer for HTTP(S), content policy for the other protocols (notably, data:)
   onBeforeRequest: onBeforeRequest,
 
   // http-on-modify observer.

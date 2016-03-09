@@ -7,9 +7,8 @@ const {rgbToHsl} = require("devtools/shared/css-color").colorUtils;
 const Telemetry = require("devtools/client/shared/telemetry");
 const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js");
 const promise = require("promise");
+const Services = require("Services");
 const {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
-
-Cu.import("resource://gre/modules/Services.jsm");
 
 loader.lazyGetter(this, "clipboardHelper", function() {
   return Cc["@mozilla.org/widget/clipboardhelper;1"]

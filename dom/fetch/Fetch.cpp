@@ -21,6 +21,7 @@
 #include "nsStringStream.h"
 
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/BodyUtil.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/FetchDriver.h"
@@ -42,7 +43,6 @@
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 #include "Workers.h"
-#include "FetchUtil.h"
 
 namespace mozilla {
 namespace dom {
@@ -307,7 +307,7 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
-    mResolver->mPromiseProxy->CleanUp(aCx);
+    mResolver->mPromiseProxy->CleanUp();
     return true;
   }
 };
@@ -326,9 +326,7 @@ WorkerFetchResolver::OnResponseAvailableInternal(InternalResponse* aResponse)
     new WorkerFetchResponseRunnable(mPromiseProxy->GetWorkerPrivate(), this,
                                     aResponse);
 
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  if (!r->Dispatch(jsapi.cx())) {
+  if (!r->Dispatch()) {
     NS_WARNING("Could not dispatch fetch response");
   }
 }
@@ -345,9 +343,7 @@ WorkerFetchResolver::OnResponseEnd()
   RefPtr<WorkerFetchResponseEndRunnable> r =
     new WorkerFetchResponseEndRunnable(mPromiseProxy->GetWorkerPrivate(), this);
 
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  if (!r->Dispatch(jsapi.cx())) {
+  if (!r->Dispatch()) {
     NS_WARNING("Could not dispatch fetch response end");
   }
 }
@@ -611,8 +607,7 @@ public:
       if (mBody->mWorkerPrivate) {
         RefPtr<FailConsumeBodyWorkerRunnable<Derived>> r =
           new FailConsumeBodyWorkerRunnable<Derived>(mBody);
-        AutoSafeJSContext cx;
-        if (!r->Dispatch(cx)) {
+        if (!r->Dispatch()) {
           MOZ_CRASH("We are going to leak");
         }
       } else {
@@ -662,8 +657,7 @@ public:
                                         aStatus,
                                         aResultLength,
                                         nonconstResult);
-      AutoSafeJSContext cx;
-      if (!r->Dispatch(cx)) {
+      if (!r->Dispatch()) {
         // XXXcatalinb: The worker is shutting down, the pump will be canceled
         // by FetchBodyFeature::Notify.
         NS_WARNING("Could not dispatch ConsumeBodyRunnable");
@@ -761,7 +755,9 @@ template <class Derived>
 FetchBody<Derived>::FetchBody()
   : mFeature(nullptr)
   , mBodyUsed(false)
+#ifdef DEBUG
   , mReadDone(false)
+#endif
 {
   if (!NS_IsMainThread()) {
     mWorkerPrivate = GetCurrentThreadWorkerPrivate();
@@ -824,7 +820,7 @@ FetchBody<Derived>::RegisterFeature()
   MOZ_ASSERT(!mFeature);
   mFeature = new FetchBodyFeature<Derived>(this);
 
-  if (!mWorkerPrivate->AddFeature(mWorkerPrivate->GetJSContext(), mFeature)) {
+  if (!mWorkerPrivate->AddFeature(mFeature)) {
     NS_WARNING("Failed to add feature");
     mFeature = nullptr;
     return false;
@@ -841,7 +837,7 @@ FetchBody<Derived>::UnregisterFeature()
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(mFeature);
 
-  mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), mFeature);
+  mWorkerPrivate->RemoveFeature(mFeature);
   mFeature = nullptr;
 }
 
@@ -946,7 +942,9 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
   MOZ_ASSERT(mBodyUsed);
   MOZ_ASSERT(!mReadDone);
   MOZ_ASSERT_IF(mWorkerPrivate, mFeature);
+#ifdef DEBUG
   mReadDone = true;
+#endif
 
   AutoFreeBuffer autoFree(aResult);
 
@@ -1010,7 +1008,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
   switch (mConsumeType) {
     case CONSUME_ARRAYBUFFER: {
       JS::Rooted<JSObject*> arrayBuffer(cx);
-      FetchUtil::ConsumeArrayBuffer(cx, &arrayBuffer, aResultLength, aResult,
+      BodyUtil::ConsumeArrayBuffer(cx, &arrayBuffer, aResultLength, aResult,
                                     error);
 
       if (!error.Failed()) {
@@ -1024,7 +1022,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
       break;
     }
     case CONSUME_BLOB: {
-      RefPtr<dom::Blob> blob = FetchUtil::ConsumeBlob(
+      RefPtr<dom::Blob> blob = BodyUtil::ConsumeBlob(
         DerivedClass()->GetParentObject(), NS_ConvertUTF8toUTF16(mMimeType),
         aResultLength, aResult, error);
       if (!error.Failed()) {
@@ -1039,7 +1037,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
       data.Adopt(reinterpret_cast<char*>(aResult), aResultLength);
       autoFree.Reset();
 
-      RefPtr<dom::FormData> fd = FetchUtil::ConsumeFormData(
+      RefPtr<dom::FormData> fd = BodyUtil::ConsumeFormData(
         DerivedClass()->GetParentObject(),
         mMimeType, data, error);
       if (!error.Failed()) {
@@ -1051,12 +1049,12 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
       // fall through handles early exit.
     case CONSUME_JSON: {
       nsString decoded;
-      if (NS_SUCCEEDED(FetchUtil::ConsumeText(aResultLength, aResult, decoded))) {
+      if (NS_SUCCEEDED(BodyUtil::ConsumeText(aResultLength, aResult, decoded))) {
         if (mConsumeType == CONSUME_TEXT) {
           localPromise->MaybeResolve(decoded);
         } else {
           JS::Rooted<JS::Value> json(cx);
-          FetchUtil::ConsumeJson(cx, &json, decoded, error);
+          BodyUtil::ConsumeJson(cx, &json, decoded, error);
           if (!error.Failed()) {
             localPromise->MaybeResolve(cx, json);
           }

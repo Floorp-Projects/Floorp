@@ -376,6 +376,44 @@ html[dir="rtl"] .settings-menu.dropdown-menu {
   }
 }
 
+/* Stream paused */
+.focus-stream > .room-inner-info-area > .remote-stream-paused {
+  background-color: #fff;
+  border: solid 1px #a6a6a6;
+  box-shadow: 0 2px 4px rgba(0,0,0,.25);
+  display: inline-block;
+  margin: auto;
+  padding: 10px 15px;
+}
+
+.focus-stream > .room-inner-info-area > .remote-stream-paused > h1 {
+  font-size: 1.6rem;
+  line-height: 3rem;
+  padding-left: 42px;
+  position: relative;
+  text-align: left;
+}
+
+.focus-stream > .room-inner-info-area > .remote-stream-paused > h1:before {
+  background: url("../img/paused-hello.svg") center center no-repeat;
+  content: "";
+  display: block;
+  height: 30px;
+  left: 0;
+  position: absolute;
+  width: 32px;
+}
+
+html[dir="rtl"] .focus-stream > .room-inner-info-area > .remote-stream-paused > h1 {
+  padding-left: 0;
+  padding-right: 42px;
+}
+
+html[dir="rtl"] .focus-stream > .room-inner-info-area > .remote-stream-paused > h1:before {
+  right: 0;
+  transform: scaleX(-1);
+}
+
 .remote > .avatar {
   /* make visually distinct from local avatar */
   opacity: 0.25;
@@ -593,6 +631,10 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
      second column that's 200px wide */
   height: 100%;
   background-color: #d8d8d8;
+}
+
+.media-wrapper > .focus-stream.screen-sharing-paused > .remote-video-box {
+  display: none;
 }
 
 .media-wrapper > .local {

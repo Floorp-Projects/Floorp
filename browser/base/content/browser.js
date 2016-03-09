@@ -160,7 +160,7 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
 XPCOMUtils.defineLazyGetter(this, "DeveloperToolbar", function() {
   let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
   let { DeveloperToolbar } = require("devtools/client/shared/developer-toolbar");
-  return new DeveloperToolbar(window, document.getElementById("developer-toolbar"));
+  return new DeveloperToolbar(window);
 });
 
 XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function() {
@@ -182,9 +182,6 @@ if (AppConstants.MOZ_SAFE_BROWSING) {
   XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
     "resource://gre/modules/SafeBrowsing.jsm");
 }
-
-XPCOMUtils.defineLazyModuleGetter(this, "gCustomizationTabPreloader",
-  "resource:///modules/CustomizationTabPreloader.jsm", "CustomizationTabPreloader");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -833,10 +830,16 @@ function _loadURIWithFlags(browser, uri, params) {
     browser.userTypedClear++;
   }
 
+  let wasRemote = browser.isRemoteBrowser;
+
   let process = browser.isRemoteBrowser ? Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
                                         : Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
   let mustChangeProcess = gMultiProcessBrowser &&
                           !E10SUtils.canLoadURIInProcess(uri, process);
+  if ((!wasRemote && !mustChangeProcess) ||
+      (wasRemote && mustChangeProcess)) {
+    browser.inLoadURI = true;
+  }
   try {
     if (!mustChangeProcess) {
       browser.webNavigation.loadURIWithOptions(uri, flags,
@@ -870,6 +873,10 @@ function _loadURIWithFlags(browser, uri, params) {
       throw e;
     }
   } finally {
+    if ((!wasRemote && !mustChangeProcess) ||
+        (wasRemote && mustChangeProcess)) {
+      browser.inLoadURI = false;
+    }
     if (browser.userTypedClear) {
       browser.userTypedClear--;
     }
@@ -1203,7 +1210,6 @@ var gBrowserInit = {
     gBrowser.tabContainer.updateVisibility();
 
     BookmarkingUI.init();
-    AutoShowBookmarksToolbar.init();
 
     gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
 
@@ -1294,9 +1300,6 @@ var gBrowserInit = {
       gDataNotificationInfoBar.init();
 
     gBrowserThumbnails.init();
-
-    // Add Devtools menuitems and listeners
-    gDevToolsBrowser.registerBrowserWindow(window);
 
     gMenuButtonBadgeManager.init();
 
@@ -1411,8 +1414,6 @@ var gBrowserInit = {
     if (!this._loadHandled)
       return;
 
-    gDevToolsBrowser.forgetBrowserWindow(window);
-
     let desc = Object.getOwnPropertyDescriptor(window, "DeveloperToolbar");
     if (desc && !desc.get) {
       DeveloperToolbar.destroy();
@@ -1507,7 +1508,6 @@ var gBrowserInit = {
       IndexedDBPromptHelper.uninit();
       LightweightThemeListener.uninit();
       PanelUI.uninit();
-      AutoShowBookmarksToolbar.uninit();
     }
 
     // Final window teardown, do this last.
@@ -2346,10 +2346,17 @@ function URLBarSetURI(aURI) {
     // 2. if remote newtab is enabled and it's the default remote newtab page
     let defaultRemoteURL = gAboutNewTabService.remoteEnabled &&
                            uri.spec === gAboutNewTabService.newTabURL;
-    if (gInitialPages.includes(uri.spec) || defaultRemoteURL)
-      value = gBrowser.selectedBrowser.hasContentOpener ? uri.spec : "";
-    else
-      value = losslessDecodeURI(uri);
+    if ((gInitialPages.includes(uri.spec) || defaultRemoteURL) &&
+        checkEmptyPageOrigin(gBrowser.selectedBrowser, uri)) {
+      value = "";
+    } else {
+      // We should deal with losslessDecodeURI throwing for exotic URIs
+      try {
+        value = losslessDecodeURI(uri);
+      } catch (ex) {
+        value = "about:blank";
+      }
+    }
 
     valid = !isBlankPageURL(uri.spec);
   }
@@ -2700,8 +2707,7 @@ var BrowserOnClick = {
       break;
       case "Browser:SendSSLErrorReport":
         this.onSSLErrorReport(msg.target,
-                              msg.data.documentURI,
-                              msg.data.location,
+                              msg.data.uri,
                               msg.data.securityInfo);
       break;
       case "Browser:SetSSLErrorReportAuto":
@@ -2721,7 +2727,7 @@ var BrowserOnClick = {
         let weakCryptoOverride = Cc["@mozilla.org/security/weakcryptooverride;1"]
                                    .getService(Ci.nsIWeakCryptoOverride);
         weakCryptoOverride.addWeakCryptoOverride(
-          msg.data.location.hostname,
+          msg.data.uri.host,
           PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser));
       break;
       case "Browser:SSLErrorGoBack":
@@ -2730,7 +2736,7 @@ var BrowserOnClick = {
     }
   },
 
-  onSSLErrorReport: function(browser, documentURI, location, securityInfo) {
+  onSSLErrorReport: function(browser, uri, securityInfo) {
     if (!Services.prefs.getBoolPref("security.ssl.errorReporting.enabled")) {
       Cu.reportError("User requested certificate error report sending, but certificate error reporting is disabled");
       return;
@@ -2743,11 +2749,8 @@ var BrowserOnClick = {
 
     let errorReporter = Cc["@mozilla.org/securityreporter;1"]
                           .getService(Ci.nsISecurityReporter);
-    // if location.port is the empty string, set to -1 (for consistency with
-    // port values from nsIURI)
-    let port = location.port === "" ? -1 : location.port;
     errorReporter.reportTLSError(transportSecurityInfo,
-                                 location.hostname, port);
+                                 uri.host, uri.port);
   },
 
   onAboutCertError: function (browser, elementId, isTopFrame, location, securityInfoAsString) {
@@ -2922,10 +2925,10 @@ var BrowserOnClick = {
         }
       };
     } else if (reason === 'phishing') {
-      title = gNavigatorBundle.getString("safebrowsing.reportedWebForgery");
+      title = gNavigatorBundle.getString("safebrowsing.deceptiveSite");
       buttons[1] = {
-        label: gNavigatorBundle.getString("safebrowsing.notAForgeryButton.label"),
-        accessKey: gNavigatorBundle.getString("safebrowsing.notAForgeryButton.accessKey"),
+        label: gNavigatorBundle.getString("safebrowsing.notADeceptiveSiteButton.label"),
+        accessKey: gNavigatorBundle.getString("safebrowsing.notADeceptiveSiteButton.accessKey"),
         callback: function() {
           openUILinkIn(gSafeBrowsing.getReportURL('PhishMistake'), 'tab');
         }
@@ -4329,7 +4332,7 @@ var XULBrowserWindow = {
     // Do not update urlbar if there was a subframe navigation
 
     if (aWebProgress.isTopLevel) {
-      if ((location == "about:blank" && !gBrowser.selectedBrowser.hasContentOpener) ||
+      if ((location == "about:blank" && checkEmptyPageOrigin()) ||
           location == "") {  // Second condition is for new tabs, otherwise
                              // reload function is enabled until tab is refreshed.
         this.reloadCommand.setAttribute("disabled", "true");
@@ -4341,7 +4344,7 @@ var XULBrowserWindow = {
         URLBarSetURI(aLocationURI);
 
         BookmarkingUI.onLocationChange();
-        SocialUI.updateState(location);
+        SocialUI.updateState();
         UITour.onLocationChange(location);
         gTabletModePageCounter.inc();
       }
@@ -4389,12 +4392,11 @@ var XULBrowserWindow = {
 
       // Try not to instantiate gCustomizeMode as much as possible,
       // so don't use CustomizeMode.jsm to check for URI or customizing.
-      let customizingURI = "about:customizing";
-      if (location == customizingURI) {
+      if (location == "about:blank" &&
+          gBrowser.selectedTab.hasAttribute("customizemode")) {
         gCustomizeMode.enter();
-      } else if (location != customizingURI &&
-                 (CustomizationHandler.isEnteringCustomizeMode ||
-                  CustomizationHandler.isCustomizing())) {
+      } else if (CustomizationHandler.isEnteringCustomizeMode ||
+                 CustomizationHandler.isCustomizing()) {
         gCustomizeMode.exit();
       }
     }
@@ -4719,7 +4721,8 @@ nsBrowserAccess.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow, Ci.nsISupports]),
 
   _openURIInNewTab: function(aURI, aReferrer, aReferrerPolicy, aIsPrivate,
-                             aIsExternal, aForceNotRemote=false) {
+                             aIsExternal, aForceNotRemote=false,
+                             aUserContextId=Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID) {
     let win, needToFocusWin;
 
     // try the current window.  if we're in a popup, fall back on the most recent browser window
@@ -4746,6 +4749,7 @@ nsBrowserAccess.prototype = {
     let tab = win.gBrowser.loadOneTab(aURI ? aURI.spec : "about:blank", {
                                       referrerURI: aReferrer,
                                       referrerPolicy: aReferrerPolicy,
+                                      userContextId: aUserContextId,
                                       fromExternal: aIsExternal,
                                       inBackground: loadInBackground,
                                       forceNotRemote: aForceNotRemote});
@@ -4818,9 +4822,12 @@ nsBrowserAccess.prototype = {
         // will do the job of shuttling off the newly opened browser to run in
         // the right process once it starts loading a URI.
         let forceNotRemote = !!aOpener;
+        let userContextId = aOpener && aOpener.document
+                              ? aOpener.document.nodePrincipal.originAttributes.userContextId
+                              : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
         let browser = this._openURIInNewTab(aURI, referrer, referrerPolicy,
                                             isPrivate, isExternal,
-                                            forceNotRemote);
+                                            forceNotRemote, userContextId);
         if (browser)
           newWindow = browser.contentWindow;
         break;
@@ -4849,9 +4856,17 @@ nsBrowserAccess.prototype = {
     }
 
     var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+
+    var userContextId = aParams.openerOriginAttributes &&
+                        ("userContextId" in aParams.openerOriginAttributes)
+                          ? aParams.openerOriginAttributes.userContextId
+                          : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID
+
     let browser = this._openURIInNewTab(aURI, aParams.referrer,
                                         aParams.referrerPolicy,
-                                        aParams.isPrivate, isExternal);
+                                        aParams.isPrivate,
+                                        isExternal, false,
+                                        userContextId);
     if (browser)
       return browser.QueryInterface(Ci.nsIFrameLoaderOwner);
 
@@ -5487,9 +5502,9 @@ function BrowserCharsetReload()
 }
 
 function UpdateCurrentCharset(target) {
+  let selectedCharset = CharsetMenu.foldCharset(gBrowser.selectedBrowser.characterSet);
   for (let menuItem of target.getElementsByTagName("menuitem")) {
-    let isSelected = menuItem.getAttribute("charset") ===
-                     CharsetMenu.foldCharset(gBrowser.selectedBrowser.characterSet);
+    let isSelected = menuItem.getAttribute("charset") === selectedCharset;
     menuItem.setAttribute("checked", isSelected);
   }
 }
@@ -6379,11 +6394,14 @@ function isTabEmpty(aTab) {
   if (aTab.hasAttribute("busy"))
     return false;
 
+  if (aTab.hasAttribute("customizemode"))
+    return false;
+
   let browser = aTab.linkedBrowser;
   if (!isBlankPageURL(browser.currentURI.spec))
     return false;
 
-  if (browser.hasContentOpener)
+  if (!checkEmptyPageOrigin(browser))
     return false;
 
   if (browser.canGoForward || browser.canGoBack)
@@ -6392,12 +6410,59 @@ function isTabEmpty(aTab) {
   return true;
 }
 
-function BrowserOpenSyncTabs() {
-  if (Services.prefs.getBoolPref("services.sync.syncedTabsUIRefresh")) {
-    gSyncUI.openSyncedTabsPanel();
-  } else {
-    switchToTabHavingURI("about:sync-tabs", true);
+/**
+ * Check whether a page can be considered as 'empty', that its URI
+ * reflects its origin, and that if it's loaded in a tab, that tab
+ * could be considered 'empty' (e.g. like the result of opening
+ * a 'blank' new tab).
+ *
+ * We have to do more than just check the URI, because especially
+ * for things like about:blank, it is possible that the opener or
+ * some other page has control over the contents of the page.
+ *
+ * @param browser {Browser}
+ *        The browser whose page we're checking (the selected browser
+ *        in this window if omitted).
+ * @param uri {nsIURI}
+ *        The URI against which we're checking (the browser's currentURI
+ *        if omitted).
+ *
+ * @return false if the page was opened by or is controlled by arbitrary web
+ *         content, unless that content corresponds with the URI.
+ *         true if the page is blank and controlled by a principal matching
+ *         that URI (or the system principal if the principal has no URI)
+ */
+function checkEmptyPageOrigin(browser = gBrowser.selectedBrowser,
+                              uri = browser.currentURI) {
+  // If another page opened this page with e.g. window.open, this page might
+  // be controlled by its opener - return false.
+  if (browser.hasContentOpener) {
+    return false;
   }
+  let contentPrincipal = browser.contentPrincipal;
+  if (gMultiProcessBrowser && browser.isRemoteBrowser &&
+      !contentPrincipal && uri.spec == "about:blank") {
+    // Need to specialcase this because of how stopping an about:blank
+    // load from chrome on e10s causes a permanently null contentPrincipal,
+    // see bug 1249362.
+    return true;
+  }
+  // Not all principals have URIs...
+  if (contentPrincipal.URI) {
+    // A manually entered about:blank URI is slightly magical:
+    if (uri.spec == "about:blank" && contentPrincipal.isNullPrincipal) {
+      return true;
+    }
+    return contentPrincipal.URI.equals(uri);
+  }
+  // ... so for those that don't have them, enforce that the page has the
+  // system principal (this matches e.g. on about:newtab).
+  let ssm = Services.scriptSecurityManager;
+  return ssm.isSystemPrincipal(contentPrincipal);
+}
+
+function BrowserOpenSyncTabs() {
+  gSyncUI.openSyncedTabsPanel();
 }
 
 /**
@@ -6473,6 +6538,10 @@ var gIdentityHandler = {
 
   get _isMixedPassiveContentLoaded() {
     return this._state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT;
+  },
+
+  get _isCertUserOverridden() {
+    return this._state & Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN;
   },
 
   get _hasInsecureLoginForms() {
@@ -6586,6 +6655,18 @@ var gIdentityHandler = {
     gBrowser.selectedBrowser.messageManager.sendAsyncMessage(
       "MixedContent:ReenableProtection", {});
     BrowserReload();
+    this._identityPopup.hidePopup();
+  },
+
+  removeCertException() {
+    if (!this._uriHasHost) {
+      Cu.reportError("Trying to revoke a cert exception on a URI without a host?");
+      return;
+    }
+    let host = this._uri.host;
+    let port = this._uri.port > 0 ? this._uri.port : 443;
+    this._overrideService.clearValidityOverride(host, port);
+    BrowserReloadSkipCache();
     this._identityPopup.hidePopup();
   },
 
@@ -6764,23 +6845,14 @@ var gIdentityHandler = {
       if (this._isMixedActiveContentBlocked) {
         this._identityBox.classList.add("mixedActiveBlocked");
       }
-
-      let iData = this.getIdentityData();
-
-      // Verifier is either the CA Org, for a normal cert, or a special string
-      // for certs that are trusted because of a security exception.
-      tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
-                                                    [iData.caOrg]);
-
-      let host = this._uri.host;
-      let port = 443;
-      try {
-        if (this._uri.port > 0)
-          port = this._uri.port;
-      } catch (e) {}
-
-      if (this._overrideService.hasMatchingOverride(host, port, iData.cert, {}, {})) {
+      if (this._isCertUserOverridden) {
+        this._identityBox.classList.add("certUserOverridden");
+        // Cert is trusted because of a security exception, verifier is a special string.
         tooltip = gNavigatorBundle.getString("identity.identified.verified_by_you");
+      } else {
+        // It's a normal cert, verifier is the CA Org.
+        tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
+                                                      [this.getIdentityData().caOrg]);
       }
     } else {
       this._identityBox.className = "unknownIdentity";
@@ -6884,6 +6956,8 @@ var gIdentityHandler = {
       connection = "file";
     } else if (this._isEV) {
       connection = "secure-ev";
+    } else if (this._isCertUserOverridden) {
+      connection = "secure-cert-user-overridden";
     } else if (this._isSecure) {
       connection = "secure";
     }
@@ -7281,7 +7355,6 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams={}) {
   // window being in private browsing mode:
   const kPrivateBrowsingWhitelist = new Set([
     "about:addons",
-    "about:customizing",
   ]);
 
   let ignoreFragment = aOpenParams.ignoreFragment;

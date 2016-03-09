@@ -321,8 +321,8 @@ sec_port_ucs2_utf8_conversion_function
     for( i = 0; i < inBufLen; i += 2 ) {
       if( (inBuf[i+H_0] == 0x00) && ((inBuf[i+H_1] & 0x80) == 0x00) ) len += 1;
       else if( inBuf[i+H_0] < 0x08 ) len += 2;
-      else if( ((inBuf[i+0+H_0] & 0xDC) == 0xD8) ) {
-        if( ((inBufLen - i) > 2) && ((inBuf[i+2+H_0] & 0xDC) == 0xDC) ) {
+      else if( ((inBuf[i+0+H_0] & 0xFC) == 0xD8) ) {
+        if( ((inBufLen - i) > 2) && ((inBuf[i+2+H_0] & 0xFC) == 0xDC) ) {
           i += 2;
           len += 4;
         } else {
@@ -356,10 +356,10 @@ sec_port_ucs2_utf8_conversion_function
         outBuf[len+1] = 0x80 | ((inBuf[i+H_1] & 0x3F) >> 0);
 
         len += 2;
-      } else if( (inBuf[i+H_0] & 0xDC) == 0xD8 ) {
+      } else if( (inBuf[i+H_0] & 0xFC) == 0xD8 ) {
         int abcde, BCDE;
 
-        PORT_Assert(((inBufLen - i) > 2) && ((inBuf[i+2+H_0] & 0xDC) == 0xDC) );
+        PORT_Assert(((inBufLen - i) > 2) && ((inBuf[i+2+H_0] & 0xFC) == 0xDC) );
 
         /* D800-DBFF DC00-DFFF -> 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
         /* 110110BC DEfghijk 110111lm nopqrstu ->
@@ -852,6 +852,7 @@ struct ucs2 ucs2[] = {
   { 0x9000, "\xE9\x80\x80" },
   { 0xA000, "\xEA\x80\x80" },
   { 0xC000, "\xEC\x80\x80" },
+  { 0xFB01, "\xEF\xAC\x81" },
   { 0xFFFF, "\xEF\xBF\xBF" }
 
 };
@@ -1161,6 +1162,8 @@ uint16_t utf16_bad[][3] = {
   { 0xD800, 0xfe, 0 },
   { 0xD800, 0x3bb, 0 },
   { 0xD800, 0xD800, 0 },
+  { 0xD800, 0xFEFF, 0 },
+  { 0xD800, 0xFFFD, 0 },
 };
 
 static void

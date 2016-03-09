@@ -221,6 +221,12 @@ BOffImm16::BOffImm16(InstImm inst)
 {
 }
 
+Instruction*
+BOffImm16::getDest(Instruction* src) const
+{
+    return &src[(((int32_t)data << 16) >> 16) + 1];
+}
+
 bool
 AssemblerMIPSShared::oom() const
 {
@@ -1329,7 +1335,21 @@ AssemblerMIPSShared::bind(Label* label, BufferOffset boff)
 void
 AssemblerMIPSShared::bindLater(Label* label, wasm::JumpTarget target)
 {
-    MOZ_CRASH("NYI");
+    if (label->used()) {
+        int32_t next;
+
+        BufferOffset b(label);
+        do {
+            Instruction* inst = editSrc(b);
+
+            append(target, b.getOffset());
+            next = inst[1].encode();
+            inst[1].makeNop();
+
+            b = BufferOffset(next);
+        } while (next != LabelBase::INVALID_OFFSET);
+    }
+    label->reset();
 }
 
 void

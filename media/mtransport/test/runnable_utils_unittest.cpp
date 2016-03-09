@@ -26,14 +26,12 @@
 #include "nsThreadUtils.h"
 
 #include "runnable_utils.h"
-#include "mtransport_test_utils.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 #include "gtest_utils.h"
 
 using namespace mozilla;
-MtransportTestUtils *test_utils;
 
 namespace {
 
@@ -84,9 +82,9 @@ class TargetClass {
 };
 
 
-class RunnableArgsTest : public ::testing::Test {
+class RunnableArgsTest : public MtransportTest {
  public:
-  RunnableArgsTest() : ran_(0), cl_(&ran_){}
+  RunnableArgsTest() : MtransportTest(), ran_(0), cl_(&ran_){}
 
   void Test1Arg() {
     nsRunnable * r = WrapRunnable(&cl_, &TargetClass::m1, 1);
@@ -105,11 +103,13 @@ class RunnableArgsTest : public ::testing::Test {
   TargetClass cl_;
 };
 
-class DispatchTest : public ::testing::Test {
+class DispatchTest : public MtransportTest {
  public:
-  DispatchTest() : ran_(0), cl_(&ran_) {}
+  DispatchTest() : MtransportTest(), ran_(0), cl_(&ran_) {}
 
   void SetUp() {
+    MtransportTest::SetUp();
+
     nsresult rv;
     target_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -185,7 +185,7 @@ int SetNonMethodRet(TargetClass *cl, int x) {
 }
 
 TEST_F(DispatchTest, TestNonMethod) {
-  test_utils->sts_target()->Dispatch(
+  test_utils_->sts_target()->Dispatch(
       WrapRunnableNM(SetNonMethod, &cl_, 10), NS_DISPATCH_SYNC);
 
   ASSERT_EQ(1, ran_);
@@ -194,7 +194,7 @@ TEST_F(DispatchTest, TestNonMethod) {
 TEST_F(DispatchTest, TestNonMethodRet) {
   int z;
 
-  test_utils->sts_target()->Dispatch(
+  test_utils_->sts_target()->Dispatch(
       WrapRunnableNMRet(&z, SetNonMethodRet, &cl_, 10), NS_DISPATCH_SYNC);
 
   ASSERT_EQ(1, ran_);
@@ -225,16 +225,3 @@ TEST_F(DispatchTest, TestDestructorRef) {
 
 
 } // end of namespace
-
-
-int main(int argc, char **argv) {
-  test_utils = new MtransportTestUtils();
-
-  // Start the tests
-  ::testing::InitGoogleTest(&argc, argv);
-
-  int rv = RUN_ALL_TESTS();
-  delete test_utils;
-  return rv;
-}
-

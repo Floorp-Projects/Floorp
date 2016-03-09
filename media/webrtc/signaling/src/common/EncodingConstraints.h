@@ -23,12 +23,23 @@ public:
     maxPps(0),
     maxMbps(0),
     maxCpb(0),
-    maxDpb(0)
+    maxDpb(0),
+    scaleDownBy(1.0)
   {}
 
   bool operator==(const EncodingConstraints& constraints) const
   {
-    return !memcmp(this, &constraints, sizeof(EncodingConstraints));
+    return
+      maxWidth == constraints.maxWidth &&
+      maxHeight == constraints.maxHeight &&
+      maxFps == constraints.maxFps &&
+      maxFs == constraints.maxFs &&
+      maxBr == constraints.maxBr &&
+      maxPps == constraints.maxPps &&
+      maxMbps == constraints.maxMbps &&
+      maxCpb == constraints.maxCpb &&
+      maxDpb == constraints.maxDpb &&
+      scaleDownBy == constraints.scaleDownBy;
   }
 
   uint32_t maxWidth;
@@ -40,6 +51,7 @@ public:
   uint32_t maxMbps; // macroblocks per second
   uint32_t maxCpb; // coded picture buffer size
   uint32_t maxDpb; // decoded picture buffer size
+  double scaleDownBy; // To preserve resolution
 };
 } // namespace mozilla
 

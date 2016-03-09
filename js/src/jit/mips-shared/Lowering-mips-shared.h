@@ -37,6 +37,11 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared
     void lowerForALU(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir,
                      MDefinition* lhs, MDefinition* rhs);
 
+    void lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins, MDefinition* mir,
+                          MDefinition* lhs, MDefinition* rhs);
+    void lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, 0>* ins,
+                            MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
+
     void lowerForFPU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,
                      MDefinition* src);
     template<size_t Temps>
@@ -58,6 +63,8 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared
                                  MDefinition* lhs, MDefinition* rhs);
     void lowerDivI(MDiv* div);
     void lowerModI(MMod* mod);
+    void lowerDivI64(MDiv* div);
+    void lowerModI64(MMod* mod);
     void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
     void lowerUDiv(MDiv* div);
     void lowerUMod(MMod* mod);
@@ -89,6 +96,7 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared
     void visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins);
     void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins);
     void visitSubstr(MSubstr* ins);
+    void visitTruncateToInt64(MTruncateToInt64* ins);
 };
 
 } // namespace jit

@@ -142,7 +142,8 @@ StrokeOptionsToPaint(SkPaint& aPaint, const StrokeOptions &aOptions)
 {
   // Skia renders 0 width strokes with a width of 1 (and in black),
   // so we should just skip the draw call entirely.
-  if (!aOptions.mLineWidth) {
+  // Skia does not handle non-finite line widths.
+  if (!aOptions.mLineWidth || !IsFinite(aOptions.mLineWidth)) {
     return false;
   }
   aPaint.setStrokeWidth(SkFloatToScalar(aOptions.mLineWidth));

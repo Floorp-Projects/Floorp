@@ -755,10 +755,13 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   } else {
     MOZ_ASSERT(joinedBorderArea.IsEqualEdges(aBorderArea),
                "Should use aBorderArea for box-decoration-break:clone");
-    MOZ_ASSERT(aForFrame->GetSkipSides().IsEmpty(),
+    MOZ_ASSERT(aForFrame->GetSkipSides().IsEmpty() ||
+               IS_TRUE_OVERFLOW_CONTAINER(aForFrame),
                "Should not skip sides for box-decoration-break:clone except "
                "::first-letter/line continuations or other frame types that "
-               "don't have borders but those shouldn't reach this point.");
+               "don't have borders but those shouldn't reach this point. "
+               "Overflow containers do reach this point though.");
+    border.ApplySkipSides(aSkipSides);
   }
 
   // Convert to dev pixels.
@@ -857,7 +860,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   nsRect innerRect;
   if (
 #ifdef MOZ_XUL
-      aStyleContext->GetPseudoType() == nsCSSPseudoElements::ePseudo_XULTree
+      aStyleContext->GetPseudoType() == CSSPseudoElementType::XULTree
 #else
       false
 #endif
@@ -1649,7 +1652,8 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
                                 const nsRect& aBorderArea,
                                 uint32_t aFlags,
                                 nsRect* aBGClipRect,
-                                int32_t aLayer)
+                                int32_t aLayer,
+                                CompositionOp aCompositonOp)
 {
   PROFILER_LABEL("nsCSSRendering", "PaintBackground",
     js::ProfileEntry::Category::GRAPHICS);
@@ -1679,7 +1683,7 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
   return PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                                aDirtyRect, aBorderArea, sc,
                                *aForFrame->StyleBorder(), aFlags,
-                               aBGClipRect, aLayer);
+                               aBGClipRect, aLayer, aCompositonOp);
 }
 
 static bool
@@ -2855,10 +2859,15 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                       const nsStyleBorder& aBorder,
                                       uint32_t aFlags,
                                       nsRect* aBGClipRect,
-                                      int32_t aLayer)
+                                      int32_t aLayer,
+                                      CompositionOp aCompositonOp)
 {
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
+
+  // If we're drawing all layers, aCompositonOp is ignored, so make sure that
+  // it was left at its default value.
+  MOZ_ASSERT_IF(aLayer == -1, aCompositonOp == CompositionOp::OP_OVER);
 
   DrawResult result = DrawResult::SUCCESS;
 
@@ -3030,20 +3039,24 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       }
       if ((aLayer < 0 || i == (uint32_t)startLayer) &&
           !clipState.mDirtyRectGfx.IsEmpty()) {
+        // When we're drawing a single layer, use the specified composition op,
+        // otherwise get the compositon op from the image layer.
+        CompositionOp co = (aLayer >= 0) ? aCompositonOp :
+          (paintMask ? GetGFXCompositeMode(layer.mComposite) :
+                       GetGFXBlendMode(layer.mBlendMode));
         nsBackgroundLayerState state =
           PrepareImageLayer(aPresContext, aForFrame,
                             aFlags, paintBorderArea, clipState.mBGClipArea,
-                            layer, paintMask);
+                            layer, co);
         result &= state.mImageRenderer.PrepareResult();
         if (!state.mFillArea.IsEmpty()) {
           // Always using OP_OVER mode while drawing the bottom mask layer.
           bool isBottomMaskLayer = paintMask ?
                                    (i == (layers.mImageCount - 1)) : false;
-          if (state.mCompositionOp != CompositionOp::OP_OVER &&
-              !isBottomMaskLayer) {
+          if (co != CompositionOp::OP_OVER && !isBottomMaskLayer) {
             NS_ASSERTION(ctx->CurrentOp() == CompositionOp::OP_OVER,
                          "It is assumed the initial op is OP_OVER, when it is restored later");
-            ctx->SetOp(state.mCompositionOp);
+            ctx->SetOp(co);
           }
 
           result &=
@@ -3052,7 +3065,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                                 state.mAnchor + paintBorderArea.TopLeft(),
                                                 clipState.mDirtyRect);
 
-          if (state.mCompositionOp != CompositionOp::OP_OVER) {
+          if (co != CompositionOp::OP_OVER) {
             ctx->SetOp(CompositionOp::OP_OVER);
           }
         }
@@ -3220,7 +3233,7 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
                                   const nsRect& aBorderArea,
                                   const nsRect& aBGClipRect,
                                   const nsStyleImageLayers::Layer& aLayer,
-                                  bool aMask)
+                                  CompositionOp aCompositonOp)
 {
   /*
    * The properties we need to keep in mind when drawing style image
@@ -3381,9 +3394,6 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
   state.mImageRenderer.SetExtendMode(repeatMode);
 
   state.mFillArea.IntersectRect(state.mFillArea, bgClipRect);
-
-  state.mCompositionOp = aMask ? GetGFXCompositeMode(aLayer.mComposite) :
-                                 GetGFXBlendMode(aLayer.mBlendMode);
 
   return state;
 }
@@ -3697,7 +3707,16 @@ DrawBorderImage(nsPresContext*       aPresContext,
 
       nsRect destArea(borderX[i], borderY[j], borderWidth[i], borderHeight[j]);
       nsRect subArea(sliceX[i], sliceY[j], sliceWidth[i], sliceHeight[j]);
+      if (subArea.IsEmpty())
+        continue;
+
       nsIntRect intSubArea = subArea.ToOutsidePixels(nsPresContext::AppUnitsPerCSSPixel());
+      // intrinsicSize.CanComputeConcreteSize() return false means we can not
+      // read intrinsic size from aStyleBorder.mBorderImageSource.
+      // In this condition, we pass imageSize(a resolved size comes from
+      // default sizing algorithm) to renderer as the viewport size.
+      Maybe<nsSize> svgViewportSize = intrinsicSize.CanComputeConcreteSize() ?
+        Nothing() : Some(imageSize);
 
       result &=
         renderer.DrawBorderImageComponent(aPresContext,
@@ -3707,7 +3726,8 @@ DrawBorderImage(nsPresContext*       aPresContext,
                                                                intSubArea.width,
                                                                intSubArea.height),
                                           fillStyleH, fillStyleV,
-                                          unitSize, j * (RIGHT + 1) + i);
+                                          unitSize, j * (RIGHT + 1) + i,
+                                          svgViewportSize);
     }
   }
 
@@ -4782,7 +4802,9 @@ nsImageRenderer::PrepareImage()
           // The cropped image is identical to the source image
           mImageContainer.swap(srcImage);
         } else {
-          nsCOMPtr<imgIContainer> subImage = ImageOps::Clip(srcImage, actualCropRect);
+          nsCOMPtr<imgIContainer> subImage = ImageOps::Clip(srcImage,
+                                                            actualCropRect,
+                                                            Nothing());
           mImageContainer.swap(subImage);
         }
       }
@@ -5251,7 +5273,8 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                           uint8_t              aHFill,
                                           uint8_t              aVFill,
                                           const nsSize&        aUnitSize,
-                                          uint8_t              aIndex)
+                                          uint8_t              aIndex,
+                                          const Maybe<nsSize>& aSVGViewportSize)
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
@@ -5264,11 +5287,19 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
   if (mType == eStyleImageType_Image || mType == eStyleImageType_Element) {
     nsCOMPtr<imgIContainer> subImage;
 
+    // To draw one portion of an image into a border component, we stretch that
+    // portion to match the size of that border component and then draw onto.
+    // However, preserveAspectRatio attribute of a SVG image may break this rule.
+    // To get correct rendering result, we add
+    // FLAG_FORCE_PRESERVEASPECTRATIO_NONE flag here, to tell mImage to ignore
+    // preserveAspectRatio attribute, and always do non-uniform stretch.
+    uint32_t drawFlags = ConvertImageRendererToDrawFlags(mFlags) |
+                           imgIContainer::FLAG_FORCE_PRESERVEASPECTRATIO_NONE;
     // Retrieve or create the subimage we'll draw.
     nsIntRect srcRect(aSrc.x, aSrc.y, aSrc.width, aSrc.height);
     if (mType == eStyleImageType_Image) {
       if ((subImage = mImage->GetSubImage(aIndex)) == nullptr) {
-        subImage = ImageOps::Clip(mImageContainer, srcRect);
+        subImage = ImageOps::Clip(mImageContainer, srcRect, aSVGViewportSize);
         mImage->SetSubImage(aIndex, subImage);
       }
     } else {
@@ -5288,8 +5319,11 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
       }
 
       nsCOMPtr<imgIContainer> image(ImageOps::CreateFromDrawable(drawable));
-      subImage = ImageOps::Clip(image, srcRect);
+      subImage = ImageOps::Clip(image, srcRect, aSVGViewportSize);
     }
+
+    MOZ_ASSERT_IF(aSVGViewportSize,
+                  subImage->GetType() == imgIContainer::TYPE_VECTOR);
 
     Filter filter = nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
 
@@ -5300,7 +5334,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                             filter,
                                             aFill, aDirtyRect,
                                             nullptr,
-                                            ConvertImageRendererToDrawFlags(mFlags));
+                                            drawFlags);
     }
 
     nsRect tile = ComputeTile(aFill, aHFill, aVFill, aUnitSize);
@@ -5309,7 +5343,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                     subImage,
                                     filter,
                                     tile, aFill, tile.TopLeft(), aDirtyRect,
-                                    ConvertImageRendererToDrawFlags(mFlags));
+                                    drawFlags);
   }
 
   nsRect destTile = RequiresScaling(aFill, aHFill, aVFill, aUnitSize)

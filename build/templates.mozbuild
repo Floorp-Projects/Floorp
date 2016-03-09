@@ -90,11 +90,17 @@ def HostStdCppCompat():
 
 
 @template
-def HostProgram(name):
+def HostProgram(name, c_only=False):
     '''Template for build tools executables.'''
     HOST_PROGRAM = name
 
-    HostStdCppCompat()
+    # With context-based templates, this won't be needed anymore, and will
+    # work better than relying on the caller setting it, but at the moment,
+    # this is the best we have. And it doesn't matter /that/ much, so there's
+    # really only one place using this, where it does matter to avoid the
+    # extra dependency (because it creates a circular one).
+    if not c_only:
+        HostStdCppCompat()
 
 
 @template

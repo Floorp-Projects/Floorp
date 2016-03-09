@@ -97,9 +97,10 @@ function checkFirst()
   is(first, ref, "The default Accept header used by image loader is correct");
 
   SpecialPowers.setCharPref("image.http.accept", "image/png");
-
-  var remoteCanvas = new RemoteCanvas("bug496292-iframe-2.html");
-  remoteCanvas.load(checkSecond);
+  SpecialPowers.pushPrefEnv({"set": [["image.http.accept", "image/png"]]}, function() {
+    var remoteCanvas = new RemoteCanvas("bug496292-iframe-2.html");
+    remoteCanvas.load(checkSecond);
+  });
 }
 
 function checkSecond()
@@ -107,12 +108,10 @@ function checkSecond()
   second = canvas.toDataURL();
   is(second, ref, "The modified Accept header used by image loader is correct");
 
-  try {
-    SpecialPowers.clearUserPref("image.http.accept");
-  } catch (ex) { }
-
-  var remoteCanvas = new RemoteCanvas("bug496292-iframe-1.html");
-  remoteCanvas.load(checkThird);
+  SpecialPowers.pushPrefEnv({"clear": [["image.http.accept"]]}, function() {
+    var remoteCanvas = new RemoteCanvas("bug496292-iframe-1.html");
+    remoteCanvas.load(checkThird);
+  });
 }
 
 function checkThird() {

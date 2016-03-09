@@ -24,6 +24,7 @@
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/SegmentedVector.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Likely.h"
@@ -2849,27 +2850,27 @@ struct DeferredFinalizerImpl
                                typename Conditional<IsRefcounted<T>::value,
                                                     RefPtr<T>,
                                                     nsAutoPtr<T>>::Type>::Type SmartPtr;
-  typedef nsTArray<SmartPtr> SmartPtrArray;
+  typedef SegmentedVector<SmartPtr> SmartPtrArray;
 
   static_assert(IsSame<T, nsISupports>::value || !IsBaseOf<nsISupports, T>::value,
                 "nsISupports classes should all use the nsISupports instantiation");
 
   static inline void
-  AppendAndTake(nsTArray<nsCOMPtr<nsISupports>>& smartPtrArray, nsISupports* ptr)
+  AppendAndTake(SegmentedVector<nsCOMPtr<nsISupports>>& smartPtrArray, nsISupports* ptr)
   {
-    smartPtrArray.AppendElement(dont_AddRef(ptr));
+    smartPtrArray.InfallibleAppend(dont_AddRef(ptr));
   }
   template<class U>
   static inline void
-  AppendAndTake(nsTArray<RefPtr<U>>& smartPtrArray, U* ptr)
+  AppendAndTake(SegmentedVector<RefPtr<U>>& smartPtrArray, U* ptr)
   {
-    smartPtrArray.AppendElement(dont_AddRef(ptr));
+    smartPtrArray.InfallibleAppend(dont_AddRef(ptr));
   }
   template<class U>
   static inline void
-  AppendAndTake(nsTArray<nsAutoPtr<U>>& smartPtrArray, U* ptr)
+  AppendAndTake(SegmentedVector<nsAutoPtr<U>>& smartPtrArray, U* ptr)
   {
-    smartPtrArray.AppendElement(ptr);
+    smartPtrArray.InfallibleAppend(ptr);
   }
 
   static void*
@@ -2892,7 +2893,7 @@ struct DeferredFinalizerImpl
       aSlice = oldLen;
     }
     uint32_t newLen = oldLen - aSlice;
-    pointers->RemoveElementsAt(newLen, aSlice);
+    pointers->PopLastN(aSlice);
     if (newLen == 0) {
       delete pointers;
       return true;

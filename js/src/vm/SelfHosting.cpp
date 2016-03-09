@@ -137,6 +137,59 @@ intrinsic_IsConstructor(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+/**
+ * Intrinsic for calling a wrapped self-hosted function without invoking the
+ * wrapper's security checks.
+ *
+ * Takes a wrapped function as the first and the receiver object as the
+ * second argument. Any additional arguments are passed on to the unwrapped
+ * function.
+ *
+ * Xray wrappers prevent lower-privileged code from passing objects to wrapped
+ * functions from higher-privileged realms. In some cases, this check is too
+ * strict, so this intrinsic allows getting around it.
+ *
+ * Note that it's not possible to replace all usages with dedicated intrinsics
+ * as the function in question might be an inner function that closes over
+ * state relevant to its execution.
+ *
+ * Right now, this is used for the Promise implementation to enable creating
+ * resolution functions for xrayed Promises in the privileged realm and then
+ * creating the Promise instance in the non-privileged one. The callbacks have
+ * to be called by non-privileged code in various places, in many cases
+ * passing objects as arguments.
+ */
+static bool
+intrinsic_UnsafeCallWrappedFunction(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() >= 2);
+    MOZ_ASSERT(IsCallable(args[0]));
+    MOZ_ASSERT(IsWrapper(&args[0].toObject()));
+    MOZ_ASSERT(args[1].isObject() || args[1].isUndefined());
+
+    MOZ_RELEASE_ASSERT(args[0].isObject());
+    RootedObject wrappedFun(cx, &args[0].toObject());
+    RootedObject fun(cx, UncheckedUnwrap(wrappedFun));
+    MOZ_RELEASE_ASSERT(fun->is<JSFunction>());
+    MOZ_RELEASE_ASSERT(fun->as<JSFunction>().isSelfHostedBuiltin());
+
+    InvokeArgs args2(cx);
+    if (!args2.init(args.length() - 2))
+        return false;
+
+    args2.setThis(args[1]);
+
+    for (size_t i = 0; i < args2.length(); i++)
+        args2[i].set(args[i + 2]);
+
+    AutoWaivePolicy waivePolicy(cx, wrappedFun, JSID_VOIDHANDLE, BaseProxyHandler::CALL);
+    if (!CrossCompartmentWrapper::singleton.call(cx, wrappedFun, args2))
+        return false;
+    args.rval().set(args2.rval());
+    return true;
+}
+
 template<typename T>
 static bool
 intrinsic_IsInstanceOfBuiltin(JSContext* cx, unsigned argc, Value* vp)
@@ -836,6 +889,36 @@ intrinsic_IsInt8TypedArray(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_IsUint16TypedArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Uint16);
+}
+
+static bool
+intrinsic_IsInt16TypedArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Int16);
+}
+
+static bool
+intrinsic_IsUint32TypedArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Uint32);
+}
+
+static bool
+intrinsic_IsInt32TypedArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Int32);
+}
+
+static bool
+intrinsic_IsFloat32TypedArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    return intrinsic_IsSpecificTypedArray(cx, argc, vp, Scalar::Float32);
+}
+
+static bool
 intrinsic_IsPossiblyWrappedTypedArray(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1444,6 +1527,23 @@ intrinsic_LocalTZA(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_AddContentTelemetry(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+
+    int id = args[0].toInt32();
+    MOZ_ASSERT(id < JS_TELEMETRY_END);
+    MOZ_ASSERT(id >= 0);
+
+    if (!cx->compartment()->isProbablySystemOrAddonCode())
+        cx->runtime()->addTelemetry(id, args[1].toInt32());
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 intrinsic_ConstructFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1634,7 +1734,7 @@ intrinsic_NewModuleNamespace(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
     RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
-    RootedArrayObject exports(cx, &args[1].toObject().as<ArrayObject>());
+    RootedObject exports(cx, &args[1].toObject());
     RootedObject namespace_(cx, ModuleObject::createNamespace(cx, module, exports));
     if (!namespace_)
         return false;
@@ -1774,6 +1874,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("_FinishBoundFunctionInit", intrinsic_FinishBoundFunctionInit, 4,0),
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
     JS_FN("LocalTZA",                intrinsic_LocalTZA,                0,0),
+    JS_FN("AddContentTelemetry",     intrinsic_AddContentTelemetry,     2,0),
 
     JS_INLINABLE_FN("_IsConstructing", intrinsic_IsConstructing,        0,0,
                     IntrinsicIsConstructing),
@@ -1793,6 +1894,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IntrinsicUnsafeGetStringFromReservedSlot),
     JS_INLINABLE_FN("UnsafeGetBooleanFromReservedSlot", intrinsic_UnsafeGetBooleanFromReservedSlot,2,0,
                     IntrinsicUnsafeGetBooleanFromReservedSlot),
+
+    JS_FN("UnsafeCallWrappedFunction", intrinsic_UnsafeCallWrappedFunction,2,0),
 
     JS_FN("IsPackedArray",           intrinsic_IsPackedArray,           1,0),
 
@@ -1855,6 +1958,11 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("IsUint8TypedArray",        intrinsic_IsUint8TypedArray,      1,0),
     JS_FN("IsInt8TypedArray",         intrinsic_IsInt8TypedArray,       1,0),
+    JS_FN("IsUint16TypedArray",       intrinsic_IsUint16TypedArray,     1,0),
+    JS_FN("IsInt16TypedArray",        intrinsic_IsInt16TypedArray,      1,0),
+    JS_FN("IsUint32TypedArray",       intrinsic_IsUint32TypedArray,     1,0),
+    JS_FN("IsInt32TypedArray",        intrinsic_IsInt32TypedArray,      1,0),
+    JS_FN("IsFloat32TypedArray",      intrinsic_IsFloat32TypedArray,    1,0),
     JS_INLINABLE_FN("IsTypedArray",
                     intrinsic_IsInstanceOfBuiltin<TypedArrayObject>,    1,0,
                     IntrinsicIsTypedArray),

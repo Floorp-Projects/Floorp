@@ -346,6 +346,26 @@ waitForAllPaints(function() {
     yield ensureElementRemoval(div);
   });
 
+  add_task_if_omta_enabled(function* change_duration_and_currenttime() {
+    var div = addDiv(null);
+    var animation = div.animate({ opacity: [ 0, 1 ] }, 10000);
+
+    yield animation.ready;
+    ok(animation.isRunningOnCompositor);
+
+    animation.currentTime = 50000;
+
+    ok(!animation.isRunningOnCompositor);
+
+    animation.effect.timing.duration = 100000;
+    var markers = yield observeStyling(5);
+    is(markers.length, 1,
+       'Animations running on the compositor should update style' +
+       'when timing.duration is made longer than the current time');
+
+    yield ensureElementRemoval(div);
+  });
+
 });
 
 </script>

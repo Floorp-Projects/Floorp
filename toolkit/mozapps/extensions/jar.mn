@@ -24,11 +24,11 @@ toolkit.jar:
   content/mozapps/extensions/eula.js                            (content/eula.js)
   content/mozapps/extensions/newaddon.xul                       (content/newaddon.xul)
   content/mozapps/extensions/newaddon.js                        (content/newaddon.js)
-  content/mozapps/extensions/setting.xml                        (content/setting.xml)
   content/mozapps/extensions/pluginPrefs.xul                    (content/pluginPrefs.xul)
   content/mozapps/extensions/gmpPrefs.xul                       (content/gmpPrefs.xul)
   content/mozapps/extensions/OpenH264-license.txt               (content/OpenH264-license.txt)
 #endif
+  content/mozapps/extensions/setting.xml                        (content/setting.xml)
   content/mozapps/xpinstall/xpinstallConfirm.xul                (content/xpinstallConfirm.xul)
   content/mozapps/xpinstall/xpinstallConfirm.js                 (content/xpinstallConfirm.js)
   content/mozapps/xpinstall/xpinstallConfirm.css                (content/xpinstallConfirm.css)

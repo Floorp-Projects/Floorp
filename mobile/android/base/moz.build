@@ -99,7 +99,6 @@ gujar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'util/ColorUtils.java',
     'util/DrawableUtil.java',
     'util/EventCallback.java',
-    'util/Experiments.java',
     'util/FileUtils.java',
     'util/FloatUtils.java',
     'util/GamepadUtils.java',
@@ -226,7 +225,9 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'db/LocalReadingListAccessor.java',
     'db/LocalSearches.java',
     'db/LocalTabsAccessor.java',
+    'db/LocalUrlAnnotations.java',
     'db/LocalURLMetadata.java',
+    'db/LoginsProvider.java',
     'db/PasswordsProvider.java',
     'db/PerProfileDatabaseProvider.java',
     'db/PerProfileDatabases.java',
@@ -243,7 +244,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'db/Table.java',
     'db/TabsAccessor.java',
     'db/TabsProvider.java',
-    'db/TopSitesCursorWrapper.java',
+    'db/UrlAnnotations.java',
     'db/URLMetadata.java',
     'db/URLMetadataTable.java',
     'DevToolsAuthHelper.java',
@@ -358,6 +359,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'health/SessionInformation.java',
     'health/StubbedHealthRecorder.java',
     'home/BookmarkFolderView.java',
+    'home/BookmarkScreenshotRow.java',
     'home/BookmarksListAdapter.java',
     'home/BookmarksListView.java',
     'home/BookmarksPanel.java',
@@ -442,6 +444,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'NotificationClient.java',
     'NotificationHandler.java',
     'NotificationHelper.java',
+    'notifications/WhatsNewReceiver.java',
     'NotificationService.java',
     'NSSBridge.java',
     'OrderedBroadcastHelper.java',
@@ -502,7 +505,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'RemoteClientsDialogFragment.java',
     'RemoteTabsExpandableListAdapter.java',
     'Restarter.java',
-    'Restrictions.java',
     'restrictions/DefaultConfiguration.java',
     'restrictions/GuestProfileConfiguration.java',
     'restrictions/Restrictable.java',
@@ -510,6 +512,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'restrictions/RestrictionCache.java',
     'restrictions/RestrictionConfiguration.java',
     'restrictions/RestrictionProvider.java',
+    'restrictions/Restrictions.java',
     'ScreenshotObserver.java',
     'ServiceNotificationClient.java',
     'SessionParser.java',
@@ -578,17 +581,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'trackingprotection/TrackingProtectionPrompt.java',
     'updater/UpdateService.java',
     'updater/UpdateServiceHelper.java',
-    'Webapp.java',
-    'webapp/Allocator.java',
-    'webapp/ApkResources.java',
-    'webapp/Dispatcher.java',
-    'webapp/EventListener.java',
-    'webapp/InstallHelper.java',
-    'webapp/InstallListener.java',
-    'webapp/TaskKiller.java',
-    'webapp/UninstallListener.java',
-    'webapp/WebappImpl.java',
-    'webapp/Webapps.java',
+    'util/Experiments.java',
     'widget/ActivityChooserModel.java',
     'widget/AllCapsTextView.java',
     'widget/AnchoredPopup.java',
@@ -659,6 +652,20 @@ gbjar.extra_jars += [
 if CONFIG['MOZ_CRASHREPORTER']:
     gbjar.sources += [ 'java/org/mozilla/gecko/CrashReporter.java' ]
     ANDROID_RES_DIRS += [ 'crashreporter/res' ]
+
+if CONFIG['MOZ_ANDROID_GCM']:
+    gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
+        'gcm/GcmInstanceIDListenerService.java',
+        'gcm/GcmMessageListenerService.java',
+        'gcm/GcmTokenClient.java',
+        'push/Fetched.java',
+        'push/PushClient.java',
+        'push/PushManager.java',
+        'push/PushRegistration.java',
+        'push/PushService.java',
+        'push/PushState.java',
+        'push/PushSubscription.java',
+    ]]
 
 if (CONFIG['MOZ_ANDROID_MAX_SDK_VERSION']):
     max_sdk_version = int(CONFIG['MOZ_ANDROID_MAX_SDK_VERSION'])

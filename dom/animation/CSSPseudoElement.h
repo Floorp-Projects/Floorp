@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/RefPtr.h"
 #include "nsCSSPseudoElements.h"
 #include "nsWrapperCache.h"
@@ -37,13 +38,18 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  nsCSSPseudoElements::Type GetType() const { return mPseudoType; }
+  CSSPseudoElementType GetType() const { return mPseudoType; }
   void GetType(nsString& aRetVal) const
   {
     MOZ_ASSERT(nsCSSPseudoElements::GetPseudoAtom(mPseudoType),
                "All pseudo-types allowed by this class should have a"
                " corresponding atom");
-    nsCSSPseudoElements::GetPseudoAtom(mPseudoType)->ToString(aRetVal);
+    // Our atoms use one colon and we would like to return two colons syntax
+    // for the returned pseudo type string, so serialize this to the
+    // non-deprecated two colon syntax.
+    aRetVal.Assign(char16_t(':'));
+    aRetVal.Append(
+      nsDependentAtomString(nsCSSPseudoElements::GetPseudoAtom(mPseudoType)));
   }
   already_AddRefed<Element> ParentElement() const
   {
@@ -63,20 +69,19 @@ public:
   // pseudo-type on element, a new CSSPseudoElement will be created and stored
   // on the element.
   static already_AddRefed<CSSPseudoElement>
-    GetCSSPseudoElement(Element* aElement, nsCSSPseudoElements::Type aType);
+    GetCSSPseudoElement(Element* aElement, CSSPseudoElementType aType);
 
 private:
   // Only ::before and ::after are supported.
-  CSSPseudoElement(Element* aElement, nsCSSPseudoElements::Type aType);
+  CSSPseudoElement(Element* aElement, CSSPseudoElementType aType);
 
-  static nsIAtom*
-  GetCSSPseudoElementPropertyAtom(nsCSSPseudoElements::Type aType);
+  static nsIAtom* GetCSSPseudoElementPropertyAtom(CSSPseudoElementType aType);
 
   // mParentElement needs to be an owning reference since if script is holding
   // on to the pseudo-element, it needs to continue to be able to refer to
   // the parent element.
   RefPtr<Element> mParentElement;
-  nsCSSPseudoElements::Type mPseudoType;
+  CSSPseudoElementType mPseudoType;
 };
 
 } // namespace dom

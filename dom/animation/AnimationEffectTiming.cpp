@@ -18,5 +18,50 @@ AnimationEffectTiming::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
   return AnimationEffectTimingBinding::Wrap(aCx, this, aGivenProto);
 }
 
+void
+AnimationEffectTiming::NotifyTimingUpdate()
+{
+  if (mEffect) {
+    mEffect->NotifySpecifiedTimingUpdated();
+  }
+}
+
+void
+AnimationEffectTiming::SetEndDelay(double aEndDelay)
+{
+  TimeDuration endDelay = TimeDuration::FromMilliseconds(aEndDelay);
+  if (mTiming.mEndDelay == endDelay) {
+    return;
+  }
+  mTiming.mEndDelay = endDelay;
+
+  NotifyTimingUpdate();
+}
+
+void
+AnimationEffectTiming::SetDuration(const UnrestrictedDoubleOrString& aDuration)
+{
+  if (mTiming.mDuration.IsUnrestrictedDouble() &&
+      aDuration.IsUnrestrictedDouble() &&
+      mTiming.mDuration.GetAsUnrestrictedDouble() ==
+        aDuration.GetAsUnrestrictedDouble()) {
+    return;
+  }
+
+  if (mTiming.mDuration.IsString() && aDuration.IsString() &&
+      mTiming.mDuration.GetAsString() == aDuration.GetAsString()) {
+    return;
+  }
+
+  if (aDuration.IsUnrestrictedDouble()) {
+    mTiming.mDuration.SetAsUnrestrictedDouble() =
+      aDuration.GetAsUnrestrictedDouble();
+  } else {
+    mTiming.mDuration.SetAsString() = aDuration.GetAsString();
+  }
+
+  NotifyTimingUpdate();
+}
+
 } // namespace dom
 } // namespace mozilla

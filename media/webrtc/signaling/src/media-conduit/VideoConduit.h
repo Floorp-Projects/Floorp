@@ -140,14 +140,18 @@ public:
 
   /**
    * Function to set the encoding bitrate limits based on incoming frame size and rate
-   * @param vie_codec: codec config structure to modify
    * @param width, height: dimensions of the frame
+   * @param cap: user-enforced max bitrate, or 0
    * @param aLastFramerateTenths: holds the current input framerate
+   * @param out_start, out_min, out_max: bitrate results
    */
-  void SelectBandwidth(webrtc::VideoCodec& vie_codec,
-                       unsigned short width,
-                       unsigned short height,
-                       mozilla::Atomic<int32_t, mozilla::Relaxed>& aLastFramerateTenths);
+  void SelectBitrates(unsigned short width,
+                      unsigned short height,
+                      unsigned int cap,
+                      mozilla::Atomic<int32_t, mozilla::Relaxed>& aLastFramerateTenths,
+                      unsigned int& out_min,
+                      unsigned int& out_start,
+                      unsigned int& out_max);
 
   /**
    * Function to select and change the encoding resolution based on incoming frame size

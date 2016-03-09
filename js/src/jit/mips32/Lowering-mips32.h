@@ -20,10 +20,9 @@ class LIRGeneratorMIPS : public LIRGeneratorMIPSShared
     { }
 
   protected:
-    // Adds a box input to an instruction, setting operand |n| to the type and
-    // |n+1| to the payload.
-    void useBoxFixed(LInstruction* lir, size_t n, MDefinition* mir, Register reg1, Register reg2,
-                     bool useAtStart = false);
+    // Returns a box allocation with type set to reg1 and payload set to reg2.
+    LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register reg2,
+                               bool useAtStart = false);
 
     inline LDefinition tempToUnbox() {
         return LDefinition::BogusTemp();

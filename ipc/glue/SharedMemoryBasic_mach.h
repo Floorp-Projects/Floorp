@@ -25,11 +25,9 @@ class ReceivePort;
 namespace mozilla {
 namespace ipc {
 
-class SharedMemoryBasic final : public SharedMemory
+class SharedMemoryBasic final : public SharedMemoryCommon<mach_port_t>
 {
 public:
-  typedef mach_port_t Handle;
-
   static void SetupMachMemory(pid_t pid,
                               ReceivePort* listen_port,
                               MachPortSender* listen_port_ack,
@@ -43,11 +41,13 @@ public:
 
   SharedMemoryBasic();
 
-  explicit SharedMemoryBasic(Handle aHandle);
+  virtual bool SetHandle(const Handle& aHandle) override;
 
   virtual bool Create(size_t aNbytes) override;
 
   virtual bool Map(size_t nBytes) override;
+
+  virtual void CloseHandle() override;
 
   virtual void* memory() const override
   {
@@ -65,16 +65,15 @@ public:
   }
 
 
-  static bool IsHandleValid(const Handle &aHandle);
+  virtual bool IsHandleValid(const Handle &aHandle) const override;
 
-  bool ShareToProcess(base::ProcessId aProcessId,
-                      Handle* aNewHandle);
+  virtual bool ShareToProcess(base::ProcessId aProcessId,
+                              Handle* aNewHandle) override;
 
 private:
   ~SharedMemoryBasic();
 
   void Unmap();
-  void Destroy();
   mach_port_t mPort;
   // Pointer to mapped region, null if unmapped.
   void *mMemory;

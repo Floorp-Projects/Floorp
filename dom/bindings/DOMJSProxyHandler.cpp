@@ -288,22 +288,6 @@ DOMProxyHandler::has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid
   return ok;
 }
 
-int32_t
-IdToInt32(JSContext* cx, JS::Handle<jsid> id)
-{
-  JS::Rooted<JS::Value> idval(cx);
-  double array_index;
-  int32_t i;
-  if (JSID_IS_SYMBOL(id) ||
-      !::JS_IdToValue(cx, id, &idval) ||
-      !JS::ToNumber(cx, idval, &array_index) ||
-      !::JS_DoubleIsInt32(array_index, &i)) {
-    return -1;
-  }
-
-  return i;
-}
-
 bool
 DOMProxyHandler::setCustom(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                            JS::Handle<JS::Value> v, bool *done) const

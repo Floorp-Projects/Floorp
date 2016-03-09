@@ -1,4 +1,4 @@
-// |jit-test| ion-eager
+// |jit-test| --ion-eager
 
 function causeBreak(t, n, r) {
     gcPreserveCode();

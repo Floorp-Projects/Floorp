@@ -187,6 +187,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         # So we override the branch with something that contains the platform
         # name.
         replace_dict['branch'] = c['upload_branch']
+        replace_dict['post_upload_extra'] = ' '.join(c.get('post_upload_extra', []))
 
         upload_env = self.query_env(partial_env=c.get("upload_env"),
                                     replace_dict=replace_dict)
@@ -366,18 +367,23 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                               env=env,
                               error_list=MakefileErrorList):
             self.fatal("Configure failed!")
-        for make_dir in c.get('make_dirs', []):
-            self.run_command_m([make, 'export'],
-                               cwd=os.path.join(dirs['abs_objdir'], make_dir),
-                               env=env,
-                               error_list=MakefileErrorList,
-                               halt_on_failure=True)
-            if buildid:
-                self.run_command_m([make, 'export',
-                                    'MOZ_BUILD_DATE=%s' % str(buildid)],
-                                   cwd=os.path.join(dirs['abs_objdir'], make_dir),
-                                   env=env,
-                                   error_list=MakefileErrorList)
+
+        # Run 'make export' in objdir/config to get nsinstall
+        self.run_command_m([make, 'export'],
+                           cwd=os.path.join(dirs['abs_objdir'], 'config'),
+                           env=env,
+                           error_list=MakefileErrorList,
+                           halt_on_failure=True)
+
+        # Run 'make buildid.h' in objdir/ to get the buildid.h file
+        cmd = [make, 'buildid.h']
+        if buildid:
+            cmd.append('MOZ_BUILD_DATE=%s' % str(buildid))
+        self.run_command_m(cmd,
+                           cwd=dirs['abs_objdir'],
+                           env=env,
+                           error_list=MakefileErrorList,
+                           halt_on_failure=True)
 
     def setup(self):
         c = self.config
@@ -553,7 +559,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                 continue
             total_count += 1
             if c.get('base_post_upload_cmd'):
-                upload_env['POST_UPLOAD_CMD'] = c['base_post_upload_cmd'] % {'version': version, 'locale': locale, 'buildnum': str(buildnum)}
+                upload_env['POST_UPLOAD_CMD'] = c['base_post_upload_cmd'] % {'version': version, 'locale': locale, 'buildnum': str(buildnum), 'post_upload_extra': ' '.join(c.get('post_upload_extra', []))}
             output = self.get_output_from_command_m(
                 # Ugly hack to avoid |make upload| stderr from showing up
                 # as get_output_from_command errors

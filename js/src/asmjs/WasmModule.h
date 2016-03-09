@@ -249,6 +249,9 @@ class CodeRange
     bool isImportExit() const {
         return kind() == ImportJitExit || kind() == ImportInterpExit;
     }
+    bool isErrorExit() const {
+        return kind() == ErrorExit;
+    }
     uint32_t funcProfilingEntry() const {
         MOZ_ASSERT(isFunction());
         return begin();
@@ -333,10 +336,10 @@ typedef Vector<CacheableChars, 0, SystemAllocPolicy> CacheableCharsVector;
 // Lastly, the 'exportFuncIndices' vector provides, for each exported function,
 // the internal index of the function.
 
+static const uint32_t MemoryExport = UINT32_MAX;
+
 struct ExportMap
 {
-    static const uint32_t MemoryExport = UINT32_MAX;
-
     CacheableCharsVector fieldNames;
     Uint32Vector fieldsToExports;
     Uint32Vector exportFuncIndices;

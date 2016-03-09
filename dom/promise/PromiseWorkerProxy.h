@@ -84,9 +84,7 @@ class WorkerPrivate;
 //
 //        RefPtr<FinishTaskWorkerRunnable> runnable =
 //          new FinishTaskWorkerRunnable(proxy->GetWorkerPrivate(), proxy, result);
-//        AutoJSAPI jsapi;
-//        jsapi.Init();
-//        if (!r->Dispatch(jsapi.cx())) {
+//        if (!r->Dispatch()) {
 //          // Worker is alive but not Running any more, so the Promise can't
 //          // be resolved, give up. The proxy will get Release()d at some
 //          // point.
@@ -103,7 +101,7 @@ class WorkerPrivate;
 //          aWorkerPrivate->AssertIsOnWorkerThread();
 //          RefPtr<Promise> promise = mProxy->WorkerPromise();
 //          promise->MaybeResolve(mResult);
-//          mProxy->CleanUp(aCx);
+//          mProxy->CleanUp();
 //        }
 //
 // Note: If a PromiseWorkerProxy is not cleaned up by a WorkerRunnable - this
@@ -156,7 +154,7 @@ public:
   // sure this is the last thing you do.
   // 1. WorkerPrivate() will no longer return a valid worker.
   // 2. WorkerPromise() will crash!
-  void CleanUp(JSContext* aCx);
+  void CleanUp();
 
   Mutex& Lock()
   {
@@ -229,8 +227,10 @@ private:
   // Ensure the worker and the main thread won't race to access |mCleanedUp|.
   Mutex mCleanUpLock;
 
+#ifdef DEBUG
   // Maybe get rid of this entirely and rely on mCleanedUp
-  DebugOnly<bool> mFeatureAdded;
+  bool mFeatureAdded;
+#endif
 };
 } // namespace dom
 } // namespace mozilla

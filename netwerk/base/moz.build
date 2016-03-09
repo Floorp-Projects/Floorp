@@ -253,6 +253,7 @@ UNIFIED_SOURCES += [
     'ProxyAutoConfig.cpp',
     'RedirectChannelRegistrar.cpp',
     'SchedulingContextService.cpp',
+    'SimpleBuffer.cpp',
     'StreamingProtocolService.cpp',
     'Tickler.cpp',
     'TLSServerSocket.cpp',
@@ -307,9 +308,6 @@ if CONFIG['MOZ_ENABLE_QTNETWORK']:
     LOCAL_INCLUDES += [
         '/netwerk/system/qt',
     ]
-
-if CONFIG['ENABLE_TESTS']:
-    DEFINES['PREDICTOR_TESTS'] = True
 
 if CONFIG['MOZ_ENABLE_QTNETWORK']:
     CXXFLAGS += CONFIG['MOZ_QT_CFLAGS']

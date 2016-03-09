@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_toggle.html";
 
 add_task(function*() {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Getting the container for the UL parent element");
   let container = yield getContainerForSelector("ul", inspector);
@@ -23,7 +23,8 @@ add_task(function*() {
   yield onUpdated;
 
   info("Checking that child LI elements have been created");
-  for (let i = 0; i < content.document.querySelectorAll("li").length; i ++) {
+  let numLi = yield testActor.getNumberOfElementMatches("li");
+  for (let i = 0; i < numLi; i++) {
     let liContainer = yield getContainerForSelector(
       "li:nth-child(" + (i + 1) + ")", inspector);
     ok(liContainer, "A container for the child LI element was created");
@@ -37,7 +38,8 @@ add_task(function*() {
     inspector.markup.doc.defaultView);
 
   info("Checking that child LI elements have been hidden");
-  for (let i = 0; i < content.document.querySelectorAll("li").length; i ++) {
+  numLi = yield testActor.getNumberOfElementMatches("li");
+  for (let i = 0; i < numLi; i++) {
     let liContainer = yield getContainerForSelector(
       "li:nth-child(" + (i + 1) + ")", inspector);
     is(liContainer.elt.getClientRects().length, 0,

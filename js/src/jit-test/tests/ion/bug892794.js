@@ -1,4 +1,4 @@
-// |jit-test| ion-eager
+// |jit-test| --ion-eager
 
 function test0(v) {
   return (2147483648-Math.max(1.1,-(((2<<(-v|v))-3)|0)))|0;

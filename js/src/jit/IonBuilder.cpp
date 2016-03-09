@@ -103,13 +103,13 @@ jit::NewBaselineFrameInspector(TempAllocator* temp, BaselineFrame* frame, Compil
         }
     }
 
-    if (!inspector->varTypes.reserve(frame->script()->nfixed()))
+    if (!inspector->varTypes.reserve(frame->numValueSlots()))
         return nullptr;
-    for (size_t i = 0; i < frame->script()->nfixed(); i++) {
+    for (size_t i = 0; i < frame->numValueSlots(); i++) {
         if (info->isSlotAliasedAtOsr(i + info->firstLocalSlot())) {
             inspector->varTypes.infallibleAppend(TypeSet::UndefinedType());
         } else {
-            TypeSet::Type type = TypeSet::GetMaybeUntrackedValueType(frame->unaliasedLocal(i));
+            TypeSet::Type type = TypeSet::GetMaybeUntrackedValueType(*frame->valueSlot(i));
             inspector->varTypes.infallibleAppend(type);
         }
     }
@@ -845,7 +845,7 @@ IonBuilder::build()
     }
 
     // Emit the start instruction, so we can begin real instructions.
-    current->add(MStart::New(alloc(), MStart::StartType_Default));
+    current->add(MStart::New(alloc()));
 
     // Guard against over-recursion. Do this before we start unboxing, since
     // this will create an OSI point that will read the incoming argument
@@ -3054,7 +3054,7 @@ IonBuilder::processSwitchEnd(DeferredEdge* breaks, jsbytecode* exitpc)
         successor = newBlock(current, exitpc);
 
     if (!successor)
-        return ControlStatus_Ended;
+        return ControlStatus_Error;
 
     // If there is current, the current block flows into this one.
     // So current is also a predecessor to this block
@@ -3538,8 +3538,15 @@ IonBuilder::replaceTypeSet(MDefinition* subject, TemporaryTypeSet* type, MTest* 
     if (type->unknown())
         return true;
 
-    if (subject->resultTypeSet() && type->equals(subject->resultTypeSet()))
-        return true;
+    // Don't emit MFilterTypeSet if it doesn't improve the typeset.
+    if (subject->resultTypeSet()) {
+        if (subject->resultTypeSet()->equals(type))
+            return true;
+    } else {
+        TemporaryTypeSet oldTypes(alloc_->lifoAlloc(), subject->type());
+        if (oldTypes.equals(type))
+            return true;
+    }
 
     MInstruction* replace = nullptr;
     MDefinition* ins;
@@ -4759,6 +4766,7 @@ IonBuilder::binaryArithTryConcat(bool* emitted, JSOp op, MDefinition* left, MDef
     if (!maybeInsertResume())
         return false;
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -4810,6 +4818,7 @@ IonBuilder::binaryArithTrySpecialized(bool* emitted, JSOp op, MDefinition* left,
     if (!maybeInsertResume())
         return false;
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -4842,6 +4851,7 @@ IonBuilder::binaryArithTrySpecializedOnBaselineInspector(bool* emitted, JSOp op,
     if (!maybeInsertResume())
         return false;
 
+    trackOptimizationSuccess();
     *emitted = true;
     return true;
 }
@@ -4863,8 +4873,10 @@ IonBuilder::arithTrySharedStub(bool* emitted, JSOp op,
         return true;
 
     // FIXME: The JSOP_BITNOT path doesn't track optimizations yet.
-    if (actualOp != JSOP_BITNOT)
+    if (actualOp != JSOP_BITNOT) {
         trackOptimizationAttempt(TrackedStrategy::BinaryArith_SharedCache);
+        trackOptimizationSuccess();
+    }
 
     MInstruction* stub = nullptr;
     switch (actualOp) {
@@ -4927,6 +4939,8 @@ IonBuilder::jsop_binary_arith(JSOp op, MDefinition* left, MDefinition* right)
 
     // Not possible to optimize. Do a slow vm call.
     trackOptimizationAttempt(TrackedStrategy::BinaryArith_Call);
+    trackOptimizationSuccess();
+
     MDefinition::Opcode def_op = JSOpToMDefinition(op);
     MBinaryArithInstruction* ins = MBinaryArithInstruction::New(alloc(), def_op, left, right);
 
@@ -7577,7 +7591,7 @@ IonBuilder::newOsrPreheader(MBasicBlock* predecessor, jsbytecode* loopEntry, jsb
     }
 
     // Create an MStart to hold the first valid MResumePoint.
-    MStart* start = MStart::New(alloc(), MStart::StartType_Osr);
+    MStart* start = MStart::New(alloc());
     osrBlock->add(start);
 
     // MOsrValue instructions are infallible, so the first MResumePoint must
@@ -7644,17 +7658,17 @@ IonBuilder::newPendingLoopHeader(MBasicBlock* predecessor, jsbytecode* pc, bool 
         // in which case this may avoid restarts of loop analysis or bailouts
         // during the OSR itself.
 
+        MOZ_ASSERT(info().firstLocalSlot() - info().firstArgSlot() ==
+                   baselineFrame_->argTypes.length());
+        MOZ_ASSERT(block->stackDepth() - info().firstLocalSlot() ==
+                   baselineFrame_->varTypes.length());
+
         // Unbox the MOsrValue if it is known to be unboxable.
         for (uint32_t i = info().startArgSlot(); i < block->stackDepth(); i++) {
 
             // The value of aliased args and slots are in the callobject. So we can't
             // the value from the baseline frame.
             if (info().isSlotAliasedAtOsr(i))
-                continue;
-
-            // Don't bother with expression stack values. The stack should be
-            // empty except for let variables (not Ion-compiled) or iterators.
-            if (i >= info().firstStackSlot())
                 continue;
 
             MPhi* phi = block->getSlot(i)->toPhi();
@@ -11103,7 +11117,7 @@ IonBuilder::jsop_getprop(PropertyName* name)
 
     // Try to emit a shared stub.
     trackOptimizationAttempt(TrackedStrategy::GetProp_SharedCache);
-    if (!getPropTrySharedStub(&emitted, obj) || emitted)
+    if (!getPropTrySharedStub(&emitted, obj, types) || emitted)
         return emitted;
 
     // Emit a call.
@@ -12043,7 +12057,7 @@ IonBuilder::getPropTryCache(bool* emitted, MDefinition* obj, PropertyName* name,
 }
 
 bool
-IonBuilder::getPropTrySharedStub(bool* emitted, MDefinition* obj)
+IonBuilder::getPropTrySharedStub(bool* emitted, MDefinition* obj, TemporaryTypeSet* types)
 {
     MOZ_ASSERT(*emitted == false);
 
@@ -12058,6 +12072,15 @@ IonBuilder::getPropTrySharedStub(bool* emitted, MDefinition* obj)
 
     if (!resumeAfter(stub))
         return false;
+
+    // Due to inlining, it's possible the observed TypeSet is non-empty,
+    // even though we know |obj| is null/undefined and the MCallGetProperty
+    // will throw. Don't push a TypeBarrier in this case, to avoid
+    // inlining the following (unreachable) JSOP_CALL.
+    if (*pc != JSOP_CALLPROP || !IsNullOrUndefined(obj->type())) {
+        if (!pushTypeBarrier(stub, types, BarrierKind::TypeSet))
+            return false;
+    }
 
     *emitted = true;
     return true;
@@ -12534,6 +12557,11 @@ IonBuilder::storeUnboxedValue(MDefinition* obj, MDefinition* elements, int32_t e
         break;
 
       case JSVAL_TYPE_OBJECT:
+        MOZ_ASSERT(value->type() == MIRType_Object ||
+                   value->type() == MIRType_Null ||
+                   value->type() == MIRType_Value);
+        MOZ_ASSERT(!value->mightBeType(MIRType_Undefined),
+                   "MToObjectOrNull slow path is invalid for unboxed objects");
         store = MStoreUnboxedObjectOrNull::New(alloc(), elements, scaledOffset, value, obj,
                                                elementsOffset, preBarrier);
         break;
@@ -13414,7 +13442,7 @@ IonBuilder::inTryFold(bool* emitted, MDefinition* obj, MDefinition* id)
         return true;
 
     TemporaryTypeSet* types = obj->resultTypeSet();
-    if (!types || types->unknownObject())
+    if (!types || types->unknownObject() || types->getKnownMIRType() != MIRType_Object)
         return true;
 
     for (unsigned i = 0, count = types->getObjectCount(); i < count; i++) {
@@ -14167,4 +14195,16 @@ IonBuilder::addLexicalCheck(MDefinition* input)
     }
 
     return input;
+}
+
+MDefinition*
+IonBuilder::convertToBoolean(MDefinition* input)
+{
+    // Convert to bool with the '!!' idiom
+    MNot* resultInverted = MNot::New(alloc(), input, constraints());
+    current->add(resultInverted);
+    MNot* result = MNot::New(alloc(), resultInverted, constraints());
+    current->add(result);
+
+    return result;
 }

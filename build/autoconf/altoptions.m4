@@ -20,6 +20,15 @@ dnl MOZ_ARG_WITH_STRING(           NAME, HELP, IF-SET [, ELSE])
 dnl MOZ_ARG_HEADER(Comment)
 dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 
+define([MOZ_DIVERSION_ARGS], 12)
+
+AC_DEFUN([MOZ_ARG],[dnl
+AC_DIVERT_PUSH(MOZ_DIVERSION_ARGS)dnl
+    '$1',
+AC_DIVERT_POP()dnl
+])
+AC_DEFUN([MOZ_AC_ARG_ENABLE],[MOZ_ARG([--enable-]translit([$1],[_],[-]))AC_ARG_ENABLE([$1], [$2], [$3], [$4])])
+AC_DEFUN([MOZ_AC_ARG_WITH],[MOZ_ARG([--with-]translit([$1],[_],[-]))AC_ARG_WITH([$1], [$2], [$3], [$4])])
 
 dnl MOZ_TWO_STRING_TEST(NAME, VAL, STR1, IF-STR1, STR2, IF-STR2 [, ELSE])
 AC_DEFUN([MOZ_TWO_STRING_TEST],
@@ -35,19 +44,19 @@ AC_DEFUN([MOZ_TWO_STRING_TEST],
 
 dnl MOZ_ARG_ENABLE_BOOL(NAME, HELP, IF-YES [, IF-NO [, ELSE]])
 AC_DEFUN([MOZ_ARG_ENABLE_BOOL],
-[AC_ARG_ENABLE([$1], [$2], 
+[MOZ_AC_ARG_ENABLE([$1], [$2],
  [MOZ_TWO_STRING_TEST([$1], [$enableval], yes, [$3], no, [$4])],
  [$5])])
 
 dnl MOZ_ARG_DISABLE_BOOL(NAME, HELP, IF-NO [, IF-YES [, ELSE]])
 AC_DEFUN([MOZ_ARG_DISABLE_BOOL],
-[AC_ARG_ENABLE([$1], [$2],
+[MOZ_AC_ARG_ENABLE([$1], [$2],
  [MOZ_TWO_STRING_TEST([$1], [$enableval], no, [$3], yes, [$4])],
  [$5])])
 
 dnl MOZ_ARG_ENABLE_STRING(NAME, HELP, IF-SET [, ELSE])
 AC_DEFUN([MOZ_ARG_ENABLE_STRING],
-[AC_ARG_ENABLE([$1], [$2], [$3], [$4])])
+[MOZ_AC_ARG_ENABLE([$1], [$2], [$3], [$4])])
 
 dnl MOZ_ARG_ENABLE_BOOL_OR_STRING(NAME, HELP, IF-YES, IF-NO, IF-SET[, ELSE]]])
 AC_DEFUN([MOZ_ARG_ENABLE_BOOL_OR_STRING],
@@ -55,25 +64,25 @@ AC_DEFUN([MOZ_ARG_ENABLE_BOOL_OR_STRING],
  [errprint([Option, $1, needs an "IF-SET" argument.
 ])
   m4exit(1)],
- [AC_ARG_ENABLE([$1], [$2],
+ [MOZ_AC_ARG_ENABLE([$1], [$2],
   [MOZ_TWO_STRING_TEST([$1], [$enableval], yes, [$3], no, [$4], [$5])],
   [$6])])])
 
 dnl MOZ_ARG_WITH_BOOL(NAME, HELP, IF-YES [, IF-NO [, ELSE])
 AC_DEFUN([MOZ_ARG_WITH_BOOL],
-[AC_ARG_WITH([$1], [$2],
+[MOZ_AC_ARG_WITH([$1], [$2],
  [MOZ_TWO_STRING_TEST([$1], [$withval], yes, [$3], no, [$4])],
  [$5])])
 
 dnl MOZ_ARG_WITHOUT_BOOL(NAME, HELP, IF-NO [, IF-YES [, ELSE])
 AC_DEFUN([MOZ_ARG_WITHOUT_BOOL],
-[AC_ARG_WITH([$1], [$2],
+[MOZ_AC_ARG_WITH([$1], [$2],
  [MOZ_TWO_STRING_TEST([$1], [$withval], no, [$3], yes, [$4])],
  [$5])])
 
 dnl MOZ_ARG_WITH_STRING(NAME, HELP, IF-SET [, ELSE])
 AC_DEFUN([MOZ_ARG_WITH_STRING],
-[AC_ARG_WITH([$1], [$2], [$3], [$4])])
+[MOZ_AC_ARG_WITH([$1], [$2], [$3], [$4])])
 
 dnl MOZ_ARG_HEADER(Comment)
 dnl This is used by webconfig to group options
@@ -82,42 +91,5 @@ define(MOZ_ARG_HEADER, [# $1])
 dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 AC_DEFUN([MOZ_READ_MOZCONFIG],
 [AC_REQUIRE([AC_INIT_BINSH])dnl
-inserted=
-dnl Shell is hard, so here is what the following does:
-dnl - Reset $@ (command line arguments)
-dnl - Add the configure options from mozconfig to $@ one by one
-dnl - Add the original command line arguments after that, one by one
-dnl
-dnl There are several tricks involved:
-dnl - It is not possible to preserve the whitespaces in $@ by assigning to
-dnl   another variable, so the two first steps above need to happen in the first
-dnl   iteration of the third step.
-dnl - We always want the configure options to be added, so the loop must be
-dnl   iterated at least once, so we add a dummy argument first, and discard it.
-dnl - something | while read line ... makes the while run in a subshell, meaning
-dnl   that anything it does is not propagated to the main shell, so we can't do
-dnl   set -- foo there. As a consequence, what the while loop reading mach
-dnl   environment output does is output a set of shell commands for the main shell
-dnl   to eval.
-dnl - Extra care is due when lines from mach environment output contain special
-dnl   shell characters, so we use ' for quoting and ensure no ' end up in between
-dnl   the quoting mark unescaped.
-dnl Some of the above is directly done in mach environment --format=configure.
-failed_eval() {
-  echo "Failed eval'ing the following:"
-  $(dirname [$]0)/[$1]/mach environment --format=configure
-  exit 1
-}
-
-set -- dummy "[$]@"
-for ac_option
-do
-  if test -z "$inserted"; then
-    set --
-    eval "$($(dirname [$]0)/[$1]/mach environment --format=configure)" || failed_eval
-    inserted=1
-  else
-    set -- "[$]@" "$ac_option"
-  fi
-done
+. ./old-configure.vars
 ])

@@ -8,8 +8,7 @@ import unittest
 import mozunit
 from taskcluster_graph.commit_parser import (
     parse_commit,
-    normalize_test_list,
-    InvalidCommitException
+    normalize_test_list
 )
 
 class TestCommitParser(unittest.TestCase):
@@ -82,13 +81,6 @@ class TestCommitParser(unittest.TestCase):
                 { 'test': t, 'only_chunks': set([1, 4])} for t in ['foo', 'bar', 'bing']])
         )
 
-    def test_invalid_commit(self):
-        '''
-        Disallow invalid commit messages from being parsed...
-        '''
-        with self.assertRaises(InvalidCommitException):
-            parse_commit("wootbarbaz", {})
-
     def test_commit_no_tests(self):
         '''
         This test covers the case of builds but no tests passed -u none
@@ -126,7 +118,7 @@ class TestCommitParser(unittest.TestCase):
             }
         ]
 
-        result = parse_commit(commit, jobs)
+        result, triggers = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
 
     def test_flag_aliasing(self):
@@ -166,7 +158,7 @@ class TestCommitParser(unittest.TestCase):
             }
         ]
 
-        result = parse_commit(commit, jobs)
+        result, triggers = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
 
     def test_try_flag_in_middle_of_commit(self):
@@ -207,9 +199,39 @@ class TestCommitParser(unittest.TestCase):
             }
         ]
 
-        result = parse_commit(commit, jobs)
+        result, triggers = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
 
+    def test_try_flags_not_specified(self):
+        '''
+        Try flags are optional, and if not provided, should cause an empty graph
+        to be generated.
+        '''
+        commit = 'Bug XXX - test commit with no flags'
+        jobs = {
+            'flags': {
+                'builds': ['linux', 'linux64'],
+                'tests': ['web-platform-tests'],
+            },
+            'builds': {
+                'linux': {
+                    'types': {
+                        'opt': {
+                            'task': 'task/linux',
+                         },
+                        'debug': {
+                            'task': 'task/linux-debug'
+                        }
+                    }
+                },
+            },
+            'tests': {}
+        }
+
+        expected = []
+
+        result, triggers = parse_commit(commit, jobs)
+        self.assertEqual(expected, result)
 
     def test_commit_all_builds_no_tests(self):
         '''
@@ -248,7 +270,7 @@ class TestCommitParser(unittest.TestCase):
             }
         ]
 
-        result = parse_commit(commit, jobs)
+        result, triggers = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
 
     def test_some_test_tasks_restricted(self):
@@ -311,8 +333,9 @@ class TestCommitParser(unittest.TestCase):
             }
         ]
 
-        result = parse_commit(commit, jobs)
+        result, triggers = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
+
 
     def test_specific_test_platforms(self):
         '''
@@ -420,7 +443,7 @@ class TestCommitParser(unittest.TestCase):
             }
         ]
 
-        result = parse_commit(commit, jobs)
+        result, triggers = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
 
     def test_specific_test_platforms_with_specific_platform(self):
@@ -500,7 +523,7 @@ class TestCommitParser(unittest.TestCase):
             }
         ]
 
-        result = parse_commit(commit, jobs)
+        result, triggers = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
 
     def test_specific_chunks(self):
@@ -558,7 +581,7 @@ class TestCommitParser(unittest.TestCase):
                 'interactive': False,
             }
         ]
-        result = parse_commit(commit, jobs)
+        result, triggers = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
 
     def test_commit_with_builds_and_tests(self):
@@ -705,7 +728,7 @@ class TestCommitParser(unittest.TestCase):
             }
         ]
 
-        result = parse_commit(commit, jobs)
+        result, triggers = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
 
     def test_commit_with_builds_and_tests(self):
@@ -866,7 +889,7 @@ class TestCommitParser(unittest.TestCase):
             }
         ]
 
-        result = parse_commit(commit, jobs)
+        result, triggers = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
 
 

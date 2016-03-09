@@ -220,7 +220,7 @@ public:
    *
    * @param aScanUuid [in] The UUID of the LE scan task.
    */
-  void RemoveLeScanHandle(const nsAString& aScanUuid);
+  void RemoveLeScanHandle(const BluetoothUuid& aScanUuid);
 
 private:
   BluetoothAdapter(nsPIDOMWindowInner* aOwner, const BluetoothValue& aValue);

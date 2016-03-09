@@ -5,19 +5,19 @@
 
 var Cu = Components.utils;
 
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { require } =
+  Cu.import("resource://devtools/shared/Loader.jsm", {});
+const Services = require("Services");
+const promise = require("promise");
+const EventEmitter = require("devtools/shared/event-emitter");
+const discovery = require("devtools/shared/discovery/discovery");
+const { setTimeout, clearTimeout } = require("sdk/timers");
+
 Services.prefs.setBoolPref("devtools.discovery.log", true);
 
 do_register_cleanup(() => {
   Services.prefs.clearUserPref("devtools.discovery.log");
 });
-
-const { require } =
-  Cu.import("resource://devtools/shared/Loader.jsm", {});
-const promise = require("promise");
-const EventEmitter = require("devtools/shared/event-emitter");
-const discovery = require("devtools/shared/discovery/discovery");
-const { setTimeout, clearTimeout } = require("sdk/timers");
 
 function log(msg) {
   do_print("DISCOVERY: " + msg);

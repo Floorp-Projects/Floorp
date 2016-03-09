@@ -172,8 +172,7 @@ public class TelemetryUploadService extends BackgroundService {
         try {
             clientId = profile.getClientId();
         } catch (final IOException e) {
-            // Don't log the exception to avoid leaking the profile path.
-            Log.w(LOGTAG, "Unable to get client ID to generate core ping: returning.");
+            Log.w(LOGTAG, "Unable to get client ID to generate core ping: returning.", e);
             return;
         }
 
@@ -200,6 +199,8 @@ public class TelemetryUploadService extends BackgroundService {
 
         delegate.setResource(resource);
         resource.delegate = delegate;
+        resource.setShouldCompressUploadedEntity(true);
+        resource.setShouldChunkUploadsHint(false); // Telemetry servers don't support chunking.
 
         // We're in a background thread so we don't have any reason to do this asynchronously.
         // If we tried, onStartCommand would return and IntentService might stop itself before we finish.

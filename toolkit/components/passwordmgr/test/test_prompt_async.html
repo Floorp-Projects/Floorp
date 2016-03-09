@@ -422,14 +422,17 @@
             var iframe1Doc = SpecialPowers.wrap(iframe1).contentDocument;
             var iframe2aDoc = SpecialPowers.wrap(iframe2a).contentDocument;
             var iframe2bDoc = SpecialPowers.wrap(iframe2b).contentDocument;
+            var authok1;
+            var proxyok1;
+            var footnote;
             switch (testNum)
             {
                 case 1:
                     ok(true, "doCheck testNum 1");
                     is(monitor.windowsRegistered, 3, "Registered 3 open dialogs");
 
-                    var authok1 = iframe1Doc.getElementById("ok").textContent;
-                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+                    authok1 = iframe1Doc.getElementById("ok").textContent;
+                    proxyok1 = iframe1Doc.getElementById("proxy").textContent;
 
                     var authok2a = iframe2aDoc.getElementById("ok").textContent;
                     var proxyok2a = iframe2aDoc.getElementById("proxy").textContent;
@@ -475,8 +478,8 @@
                 case 4:
                     ok(true, "doCheck testNum 4");
                     is(monitor.windowsRegistered, 2, "Registered 2 open dialogs");
-                    var authok1 = iframe1Doc.getElementById("ok").textContent;
-                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+                    authok1 = iframe1Doc.getElementById("ok").textContent;
+                    proxyok1 = iframe1Doc.getElementById("proxy").textContent;
 
                     is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
                     is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
@@ -493,9 +496,9 @@
                 case 6:
                     ok(true, "doCheck testNum 6");
                     is(monitor.windowsRegistered, 2, "Registered 2 open dialogs");
-                    var authok1 = iframe1Doc.getElementById("ok").textContent;
-                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
-                    var footnote = iframe1Doc.getElementById("footnote").textContent;
+                    authok1 = iframe1Doc.getElementById("ok").textContent;
+                    proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+                    footnote = iframe1Doc.getElementById("footnote").textContent;
 
                     is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
                     is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
@@ -506,9 +509,9 @@
                 case 7:
                     ok(true, "doCheck testNum 7");
                     is(monitor.windowsRegistered, 1, "Registered 1 open dialogs");
-                    var authok1 = iframe1Doc.getElementById("ok").textContent;
-                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
-                    var footnote = iframe1Doc.getElementById("footnote").textContent;
+                    authok1 = iframe1Doc.getElementById("ok").textContent;
+                    proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+                    footnote = iframe1Doc.getElementById("footnote").textContent;
 
                     is(authok1, "PASS", "WWW Authorization OK, frame1");
                     is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
@@ -519,9 +522,9 @@
                 case 8:
                     ok(true, "doCheck testNum 8");
                     is(monitor.windowsRegistered, 5, "Registered 5 open dialogs");
-                    var authok1 = iframe1Doc.getElementById("ok").textContent;
-                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
-                    var footnote = iframe1Doc.getElementById("footnote").textContent;
+                    authok1 = iframe1Doc.getElementById("ok").textContent;
+                    proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+                    footnote = iframe1Doc.getElementById("footnote").textContent;
 
                     is(authok1, "PASS", "WWW Authorization OK, frame1");
                     is(proxyok1, "PASS", "Proxy Authorization OK, frame1");

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>text-align-unsafe</title>
+  <meta charset="utf-8">
+  <style type="text/css">
+   p {
+     overflow:hidden;
+     width:8em;
+     white-space:nowrap;
+     margin:0;
+   }
+.test1 p {
+   text-align: end;
+}
+.test2 p {
+   text-align: right;
+}
+.test3 p {
+   text-align: end;
+}
+.test4 p {
+   text-align: left;
+}
+.test5 p {
+   text-align: right;
+}
+.r {
+   float:right;
+}
+.l {
+   float:left;
+}
+  </style>
+ </head>
+ <body>
+<div class=test1>
+ <p>Lorem ipsum dolor sit amet.</p>
+ <p dir="rtl">ישים אל לבו חובתו אשר הוא&nbsp;מתעלם&nbsp;ממנה.</p>
+</div>
+
+<div class=test2>
+ <p><span class="r">Lorem ipsum dolor sit amet.</span></p>
+ <p dir="rtl">ישים אל לבו חובתו אשר הוא&nbsp;מתעלם&nbsp;ממנה.</p>
+</div>
+
+<div class=test3>
+ <p><span class="r">Lorem ipsum dolor sit amet.</span></p>
+ <p dir="rtl"><span class="l">ישים אל לבו חובתו אשר הוא&nbsp;מתעלם&nbsp;ממנה.</span></p>
+</div>
+
+<div class=test4>
+ <p>Lorem ipsum dolor sit amet.</p>
+ <p dir="rtl"><span class="l">ישים אל לבו חובתו אשר הוא&nbsp;מתעלם&nbsp;ממנה.</span></p>
+</div>
+
+<div class=test5>
+ <p><span class="r">Lorem ipsum dolor sit amet.</span></p>
+</div>
+
+ left|unsafe right</body>
+</html>

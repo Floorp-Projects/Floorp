@@ -20,16 +20,12 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
-  yield testDisableProperty(inspector, view);
-});
 
-function* testDisableProperty(inspector, view) {
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let propEditor = ruleEditor.rule.textProps[0].editor;
+  let rule = getRuleViewRuleEditor(view, 1).rule;
+  let prop = rule.textProps[0];
 
   info("Disabling a property");
-  propEditor.enable.click();
-  yield ruleEditor.rule._applyingModifications;
+  yield togglePropStatus(view, prop);
 
   let newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
@@ -38,23 +34,21 @@ function* testDisableProperty(inspector, view) {
   });
   is(newValue, "", "background-color should have been unset.");
 
-  yield testEditDisableProperty(view, ruleEditor, propEditor,
-    propEditor.nameSpan, "VK_ESCAPE");
-  yield testEditDisableProperty(view, ruleEditor, propEditor,
-    propEditor.valueSpan, "VK_ESCAPE");
-  yield testEditDisableProperty(view, ruleEditor, propEditor,
-    propEditor.valueSpan, "VK_TAB");
-  yield testEditDisableProperty(view, ruleEditor, propEditor,
-    propEditor.valueSpan, "VK_RETURN");
-}
+  yield testEditDisableProperty(view, rule, prop, "name", "VK_ESCAPE");
+  yield testEditDisableProperty(view, rule, prop, "value", "VK_ESCAPE");
+  yield testEditDisableProperty(view, rule, prop, "value", "VK_TAB");
+  yield testEditDisableProperty(view, rule, prop, "value", "VK_RETURN");
+});
 
-function* testEditDisableProperty(view, ruleEditor, propEditor,
-    editableField, commitKey) {
-  let editor = yield focusEditableField(view, editableField);
+function* testEditDisableProperty(view, rule, prop, fieldType, commitKey) {
+  let field = fieldType === "name" ? prop.editor.nameSpan
+                                   : prop.editor.valueSpan;
 
-  ok(!propEditor.element.classList.contains("ruleview-overridden"),
+  let editor = yield focusEditableField(view, field);
+
+  ok(!prop.editor.element.classList.contains("ruleview-overridden"),
     "property is not overridden.");
-  is(propEditor.enable.style.visibility, "hidden",
+  is(prop.editor.enable.style.visibility, "hidden",
     "property enable checkbox is hidden.");
 
   let newValue = yield executeInContent("Test:GetRulePropertyValue", {
@@ -64,17 +58,22 @@ function* testEditDisableProperty(view, ruleEditor, propEditor,
   });
   is(newValue, "", "background-color should remain unset.");
 
+  let onChangeDone;
+  if (fieldType === "value") {
+    onChangeDone = view.once("ruleview-changed");
+  }
+
   let onBlur = once(editor.input, "blur");
   EventUtils.synthesizeKey(commitKey, {}, view.styleWindow);
   yield onBlur;
-  yield ruleEditor.rule._applyingModifications;
+  yield onChangeDone;
 
-  ok(!propEditor.prop.enabled, "property is disabled.");
-  ok(propEditor.element.classList.contains("ruleview-overridden"),
+  ok(!prop.enabled, "property is disabled.");
+  ok(prop.editor.element.classList.contains("ruleview-overridden"),
     "property is overridden.");
-  is(propEditor.enable.style.visibility, "visible",
+  is(prop.editor.enable.style.visibility, "visible",
     "property enable checkbox is visible.");
-  ok(!propEditor.enable.getAttribute("checked"),
+  ok(!prop.editor.enable.getAttribute("checked"),
     "property enable checkbox is not checked.");
 
   newValue = yield executeInContent("Test:GetRulePropertyValue", {

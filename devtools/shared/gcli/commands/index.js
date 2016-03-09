@@ -75,7 +75,6 @@ exports.devtoolsModules = [
   "devtools/shared/gcli/commands/rulers",
   "devtools/shared/gcli/commands/screenshot",
   "devtools/shared/gcli/commands/security",
-  "devtools/shared/gcli/commands/tools",
 ];
 
 /**

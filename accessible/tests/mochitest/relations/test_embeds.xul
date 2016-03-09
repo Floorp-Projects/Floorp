@@ -37,7 +37,7 @@
       }
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, currentBrowser)
+        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, currentTabDocument)
       ];
 
       this.finalCheck = function loadURI_finalCheck()
@@ -52,27 +52,6 @@
       }
     }
 
-    function browserReorderChecker()
-    {
-      this.type = EVENT_REORDER;
-
-      this.match = function browserReorderChecker_match(aEvent)
-      {
-        if (!isAccessible(currentBrowser()))
-          return false;
-
-        // Reorder event might be duped because of temporary document creation.
-        if (aEvent.accessible == getAccessible(currentBrowser())) {
-          this.cnt++;
-          return this.cnt != 2;
-        }
-
-        return false;
-      }
-
-      this.cnt = 0;
-    }
-
     function loadOneTab(aURI)
     {
       this.invoke = function loadOneTab_invoke()
@@ -81,7 +60,7 @@
       }
 
       this.eventSeq = [
-        new browserReorderChecker()
+        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, currentTabDocument)
       ];
 
       this.finalCheck = function loadURI_finalCheck()
@@ -99,7 +78,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Testing
 
-    gA11yEventDumpToConsole = true; // debug
+    //gA11yEventDumpToConsole = true; // debug
 
     var gQueue = null;
     function doTests()

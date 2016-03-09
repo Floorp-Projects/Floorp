@@ -1943,7 +1943,8 @@ gfxFont::DrawEmphasisMarks(gfxTextRun* aShapedText, gfxPoint* aPt,
                            const EmphasisMarkDrawParams& aParams)
 {
     gfxFloat& inlineCoord = aParams.isVertical ? aPt->y : aPt->x;
-    uint32_t markLength = aParams.mark->GetLength();
+    gfxTextRun::Range markRange(aParams.mark);
+    gfxTextRun::DrawParams params(aParams.context);
 
     gfxFloat clusterStart = -std::numeric_limits<gfxFloat>::infinity();
     bool shouldDrawEmphasisMark = false;
@@ -1965,8 +1966,7 @@ gfxFont::DrawEmphasisMarks(gfxTextRun* aShapedText, gfxPoint* aPt,
             // Move the coord backward to get the needed start point.
             gfxFloat delta = (clusterAdvance + aParams.advance) / 2;
             inlineCoord -= delta;
-            aParams.mark->Draw(aParams.context, *aPt, DrawMode::GLYPH_FILL,
-                               0, markLength, nullptr, nullptr, nullptr);
+            aParams.mark->Draw(markRange, *aPt, params);
             inlineCoord += delta;
             shouldDrawEmphasisMark = false;
         }
@@ -3187,7 +3187,8 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                         MergeCharactersInTextRun(mergedRun, tempRun,
                                                  charsToMergeArray.Elements(),
                                                  deletedCharsArray.Elements());
-                        aTextRun->CopyGlyphDataFrom(mergedRun, 0, runLength,
+                        gfxTextRun::Range runRange(0, runLength);
+                        aTextRun->CopyGlyphDataFrom(mergedRun, runRange,
                                                     aOffset + runStart);
                     }
                 } else {

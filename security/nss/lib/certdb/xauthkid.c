@@ -62,8 +62,7 @@ CERT_EncodeAuthKeyID(PLArenaPool *arena, CERTAuthKeyID *value,
                 PORT_SetError(SEC_ERROR_EXTENSION_VALUE_INVALID);
                 break;
             }
-        }
-        else if (value->authCertSerialNumber.data) {
+        } else if (value->authCertSerialNumber.data) {
             PORT_SetError(SEC_ERROR_EXTENSION_VALUE_INVALID);
             break;
         }

@@ -14,10 +14,6 @@
 @keyframes animRight {
   to { right: 100px }
 }
-.with-before-animation::before {
-  content: " ";
-  animation: animLeft 100s;
-}
 </style>
 <body>
 <script>
@@ -245,14 +241,35 @@ test(function(t) {
 }, 'CSS Animations cancelled and restarted via the API are returned');
 
 test(function(t) {
-  var div = addDiv(t, { class: 'with-before-animation' });
-  // FIXME: This should actually return the animation on the pseudo element
-  // but we haven't implemented a PseudoElement interface to use as
-  // animation's target (bug 1174575) so we simply don't return these animations
-  // until we can support them properly.
-  assert_equals(document.getAnimations().length, 0,
-                'CSS animations on pseudo elements are not returned');
-}, 'CSS Animations targetting pseudo-elements are not returned');
+  addStyle(t, { '#parent::after': 'animation: animLeft 10s;',
+                '#parent::before': 'animation: animRight 10s;' });
+  // create two divs with these arrangement:
+  //       parent
+  //     ::before,
+  //     ::after
+  //        |
+  //       child
+  var parent = addDiv(t, { 'id': 'parent' });
+  var child = addDiv(t);
+  parent.appendChild(child);
+  [parent, child].forEach((div) => {
+    div.setAttribute('style', 'animation: animBottom 10s');
+  });
+
+  var anims = document.getAnimations();
+  assert_equals(anims.length, 4,
+                'CSS animations on both pseudo-elements and elements ' +
+                'are returned');
+  assert_equals(anims[0].effect.target, parent,
+                'The animation targeting the parent element comes first');
+  assert_equals(anims[1].effect.target.type, '::before',
+                'The animation targeting the ::before element comes second');
+  assert_equals(anims[2].effect.target.type, '::after',
+                'The animation targeting the ::after element comes third');
+  assert_equals(anims[3].effect.target, child,
+                'The animation targeting the child element comes last');
+}, 'CSS Animations targetting (pseudo-)elements should have correct order ' +
+   'after sorting');
 
 done();
 </script>

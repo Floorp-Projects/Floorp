@@ -150,6 +150,17 @@ class StubTabsAccessor implements TabsAccessor {
     public synchronized void persistLocalTabs(final ContentResolver cr, final Iterable<Tab> tabs) { }
 }
 
+class StubUrlAnnotations implements UrlAnnotations {
+    @Override
+    public void insertAnnotation(ContentResolver cr, String url, String key, String value) {}
+
+    @Override
+    public Cursor getScreenshots(ContentResolver cr) { return null; }
+
+    @Override
+    public void insertScreenshot(ContentResolver cr, String pageUrl, final String screenshotLocation) {}
+}
+
 /*
  * This base implementation just stubs all methods. For the
  * real implementations, see LocalBrowserDB.java.
@@ -159,6 +170,8 @@ public class StubBrowserDB implements BrowserDB {
     private final StubTabsAccessor tabsAccessor = new StubTabsAccessor();
     private final StubURLMetadata urlMetadata = new StubURLMetadata();
     private final StubReadingListAccessor readingListAccessor = new StubReadingListAccessor();
+    private final StubUrlAnnotations urlAnnotations = new StubUrlAnnotations();
+    private SuggestedSites suggestedSites = null;
 
     @Override
     public Searches getSearches() {
@@ -178,6 +191,11 @@ public class StubBrowserDB implements BrowserDB {
     @Override
     public ReadingListAccessor getReadingListAccessor() {
         return readingListAccessor;
+    }
+
+    @Override
+    public UrlAnnotations getUrlAnnotations() {
+        return urlAnnotations;
     }
 
     protected static final Integer FAVICON_ID_NOT_FOUND = Integer.MIN_VALUE;
@@ -202,10 +220,6 @@ public class StubBrowserDB implements BrowserDB {
     @RobocopTarget
     public Cursor filter(ContentResolver cr, CharSequence constraint, int limit,
                          EnumSet<BrowserDB.FilterFlags> flags) {
-        return null;
-    }
-
-    public Cursor getTopSites(ContentResolver cr, int limit) {
         return null;
     }
 
@@ -352,10 +366,6 @@ public class StubBrowserDB implements BrowserDB {
     public void pinSite(ContentResolver cr, String url, String title, int position) {
     }
 
-    public Cursor getPinnedSites(ContentResolver cr, int limit) {
-        return null;
-    }
-
     public void unpinSite(ContentResolver cr, int position) {
     }
 
@@ -365,6 +375,11 @@ public class StubBrowserDB implements BrowserDB {
     }
 
     public void setSuggestedSites(SuggestedSites suggestedSites) {
+        this.suggestedSites = suggestedSites;
+    }
+
+    public SuggestedSites getSuggestedSites() {
+        return suggestedSites;
     }
 
     public boolean hasSuggestedImageUrl(String url) {
@@ -379,7 +394,7 @@ public class StubBrowserDB implements BrowserDB {
         return 0;
     }
 
-    public Cursor getTopSites(ContentResolver cr, int minLimit, int maxLimit) {
+    public Cursor getTopSites(ContentResolver cr, int suggestedRangeLimit, int limit) {
         return null;
     }
 

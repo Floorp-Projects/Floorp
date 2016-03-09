@@ -28,10 +28,12 @@
 #include "Layers.h"
 #include "FrameLayerBuilder.h"
 #include "nsCSSProps.h"
+#include "nsCSSPseudoElements.h"
 #include "nsDisplayList.h"
 #include "nsStyleChangeList.h"
 #include "nsStyleSet.h"
-#include "RestyleManager.h"
+#include "mozilla/RestyleManagerHandle.h"
+#include "mozilla/RestyleManagerHandleInlines.h"
 #include "nsDOMMutationObserver.h"
 
 using mozilla::TimeStamp;
@@ -129,7 +131,7 @@ CSSTransition::QueueEvents()
   }
 
   dom::Element* owningElement;
-  nsCSSPseudoElements::Type owningPseudoType;
+  CSSPseudoElementType owningPseudoType;
   mOwningElement.GetElement(owningElement, owningPseudoType);
   MOZ_ASSERT(owningElement, "Owning element should be set");
 
@@ -261,16 +263,16 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   // Return sooner (before the startedAny check below) for the most
   // common case: no transitions specified or running.
   const nsStyleDisplay *disp = newStyleContext->StyleDisplay();
-  nsCSSPseudoElements::Type pseudoType = newStyleContext->GetPseudoType();
-  if (pseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement) {
-    if (pseudoType != nsCSSPseudoElements::ePseudo_before &&
-        pseudoType != nsCSSPseudoElements::ePseudo_after) {
+  CSSPseudoElementType pseudoType = newStyleContext->GetPseudoType();
+  if (pseudoType != CSSPseudoElementType::NotPseudo) {
+    if (pseudoType != CSSPseudoElementType::before &&
+        pseudoType != CSSPseudoElementType::after) {
       return;
     }
 
-    NS_ASSERTION((pseudoType == nsCSSPseudoElements::ePseudo_before &&
+    NS_ASSERTION((pseudoType == CSSPseudoElementType::before &&
                   aElement->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentbefore) ||
-                 (pseudoType == nsCSSPseudoElements::ePseudo_after &&
+                 (pseudoType == CSSPseudoElementType::after &&
                   aElement->NodeInfo()->NameAtom() == nsGkAtoms::mozgeneratedcontentafter),
                  "Unexpected aElement coming through");
 
@@ -279,17 +281,20 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     aElement = aElement->GetParent()->AsElement();
   }
 
-  AnimationCollection* collection =
-    GetAnimationCollection(aElement, pseudoType, false /* aCreateIfNeeded */);
+  CSSTransitionCollection* collection =
+    CSSTransitionCollection::GetAnimationCollection(aElement, pseudoType);
   if (!collection &&
       disp->mTransitionPropertyCount == 1 &&
       disp->mTransitions[0].GetCombinedDuration() <= 0.0f) {
     return;
   }
 
+  MOZ_ASSERT(mPresContext->RestyleManager()->IsGecko(),
+             "ServoRestyleManager should not use nsTransitionManager "
+             "for transitions");
   if (collection &&
       collection->mCheckGeneration ==
-        mPresContext->RestyleManager()->GetAnimationGeneration()) {
+        mPresContext->RestyleManager()->AsGecko()->GetAnimationGeneration()) {
     // When we start a new transition, we immediately post a restyle.
     // If the animation generation on the collection is current, that
     // means *this* is that restyle, since we bump the animation
@@ -317,7 +322,10 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   // not stopping or starting right now.
   RefPtr<nsStyleContext> afterChangeStyle;
   if (collection) {
-    nsStyleSet* styleSet = mPresContext->StyleSet();
+    MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
+               "ServoStyleSets should not use nsTransitionManager "
+               "for transitions");
+    nsStyleSet* styleSet = mPresContext->StyleSet()->AsGecko();
     afterChangeStyle =
       styleSet->ResolveStyleWithoutAnimation(aElement, newStyleContext,
                                              eRestyle_CSSTransitions);
@@ -411,13 +419,13 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
       }
     }
 
-    AnimationPtrArray& animations = collection->mAnimations;
+    OwningCSSTransitionPtrArray& animations = collection->mAnimations;
     size_t i = animations.Length();
     MOZ_ASSERT(i != 0, "empty transitions list?");
     StyleAnimationValue currentValue;
     do {
       --i;
-      Animation* anim = animations[i];
+      CSSTransition* anim = animations[i];
       dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
       MOZ_ASSERT(effect && effect->Properties().Length() == 1,
                  "Should have one animation property for a transition");
@@ -488,7 +496,7 @@ nsTransitionManager::ConsiderStartingTransition(
   nsCSSProperty aProperty,
   const StyleTransition& aTransition,
   dom::Element* aElement,
-  AnimationCollection*& aElementTransitions,
+  CSSTransitionCollection*& aElementTransitions,
   nsStyleContext* aOldStyleContext,
   nsStyleContext* aNewStyleContext,
   bool* aStartedAny,
@@ -536,7 +544,7 @@ nsTransitionManager::ConsiderStartingTransition(
   size_t currentIndex = nsTArray<ElementPropertyTransition>::NoIndex;
   const ElementPropertyTransition *oldPT = nullptr;
   if (aElementTransitions) {
-    AnimationPtrArray& animations = aElementTransitions->mAnimations;
+    OwningCSSTransitionPtrArray& animations = aElementTransitions->mAnimations;
     for (size_t i = 0, i_end = animations.Length(); i < i_end; ++i) {
       const ElementPropertyTransition *iPt =
         animations[i]->GetEffect()->AsTransition();
@@ -563,10 +571,7 @@ nsTransitionManager::ConsiderStartingTransition(
   // endpoint of our finished transition, we also don't want to start
   // a new transition for the reasons described in
   // https://lists.w3.org/Archives/Public/www-style/2015Jan/0444.html .
-  MOZ_ASSERT(!oldPT || oldPT->Properties()[0].mSegments.Length() == 1,
-             "Should have one animation property segment for a transition");
-  if (haveCurrentTransition && haveValues &&
-      oldPT->Properties()[0].mSegments[0].mToValue == endValue) {
+  if (haveCurrentTransition && haveValues && oldPT->ToValue() == endValue) {
     // GetAnimationRule already called RestyleForAnimation.
     return;
   }
@@ -579,7 +584,8 @@ nsTransitionManager::ConsiderStartingTransition(
       // in-progress value (which is particularly easy to cause when we're
       // currently in the 'transition-delay').  It also might happen because we
       // just got a style change to a value that can't be interpolated.
-      AnimationPtrArray& animations = aElementTransitions->mAnimations;
+      OwningCSSTransitionPtrArray& animations =
+        aElementTransitions->mAnimations;
       animations[currentIndex]->CancelFromStyle();
       oldPT = nullptr; // Clear pointer so it doesn't dangle
       animations.RemoveElementAt(currentIndex);
@@ -645,7 +651,7 @@ nsTransitionManager::ConsiderStartingTransition(
 
     duration *= valuePortion;
 
-    startForReversingTest = oldPT->Properties()[0].mSegments[0].mToValue;
+    startForReversingTest = oldPT->ToValue();
     reversePortion = valuePortion;
   }
 
@@ -675,13 +681,17 @@ nsTransitionManager::ConsiderStartingTransition(
     segment.mTimingFunction = Some(computedTimingFunction);
   }
 
+  MOZ_ASSERT(mPresContext->RestyleManager()->IsGecko(),
+             "ServoRestyleManager should not use nsTransitionManager "
+             "for transitions");
+
   RefPtr<CSSTransition> animation =
     new CSSTransition(mPresContext->Document()->GetScopeObject());
   animation->SetOwningElement(
     OwningElementRef(*aElement, aNewStyleContext->GetPseudoType()));
   animation->SetTimeline(timeline);
   animation->SetCreationSequence(
-    mPresContext->RestyleManager()->GetAnimationGeneration());
+    mPresContext->RestyleManager()->AsGecko()->GetAnimationGeneration());
   // The order of the following two calls is important since PlayFromStyle
   // will add the animation to the PendingAnimationTracker of its effect's
   // document. When we come to make effect writeable (bug 1049975) we should
@@ -690,17 +700,22 @@ nsTransitionManager::ConsiderStartingTransition(
   animation->PlayFromStyle();
 
   if (!aElementTransitions) {
+    bool createdCollection = false;
     aElementTransitions =
-      GetAnimationCollection(aElement,
-                             aNewStyleContext->GetPseudoType(),
-                             true /* aCreateIfNeeded */);
+      CSSTransitionCollection::GetOrCreateAnimationCollection(
+        aElement, aNewStyleContext->GetPseudoType(), &createdCollection);
     if (!aElementTransitions) {
-      NS_WARNING("allocating CommonAnimationManager failed");
+      MOZ_ASSERT(!createdCollection, "outparam should agree with return value");
+      NS_WARNING("allocating collection failed");
       return;
+    }
+
+    if (createdCollection) {
+      AddElementCollection(aElementTransitions);
     }
   }
 
-  AnimationPtrArray& animations = aElementTransitions->mAnimations;
+  OwningCSSTransitionPtrArray& animations = aElementTransitions->mAnimations;
 #ifdef DEBUG
   for (size_t i = 0, i_end = animations.Length(); i < i_end; ++i) {
     MOZ_ASSERT(
@@ -734,12 +749,11 @@ nsTransitionManager::ConsiderStartingTransition(
 
 void
 nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
-                                               nsCSSPseudoElements::Type
-                                                 aPseudoType,
+                                               CSSPseudoElementType aPseudoType,
                                                nsStyleContext* aNewStyleContext)
 {
-  AnimationCollection* collection =
-    GetAnimationCollection(aElement, aPseudoType, false /* aCreateIfNeeded */);
+  CSSTransitionCollection* collection =
+    CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType);
   if (!collection) {
     return;
   }
@@ -750,12 +764,12 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
   // nsTransitionManager::StyleContextChanged.
   // FIXME (bug 1158431): Really, we should also cancel running
   // transitions whose destination doesn't match as well.
-  AnimationPtrArray& animations = collection->mAnimations;
+  OwningCSSTransitionPtrArray& animations = collection->mAnimations;
   size_t i = animations.Length();
   MOZ_ASSERT(i != 0, "empty transitions list?");
   do {
     --i;
-    Animation* anim = animations[i];
+    CSSTransition* anim = animations[i];
 
     if (anim->HasCurrentEffect()) {
       continue;

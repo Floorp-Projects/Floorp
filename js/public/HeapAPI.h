@@ -56,7 +56,8 @@ const size_t ChunkMarkBitmapBits = 129024;
 const size_t ChunkRuntimeOffset = ChunkSize - sizeof(void*);
 const size_t ChunkTrailerSize = 2 * sizeof(uintptr_t) + sizeof(uint64_t);
 const size_t ChunkLocationOffset = ChunkSize - ChunkTrailerSize;
-const size_t ArenaZoneOffset = 0;
+const size_t ArenaZoneOffset = sizeof(size_t);
+const size_t ArenaHeaderSize = sizeof(size_t) + 2 * sizeof(uintptr_t) + sizeof(size_t);
 
 /*
  * Live objects are marked black. How many other additional colors are available

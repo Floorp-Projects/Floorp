@@ -33,7 +33,7 @@ FrameAnimator::GetSingleLoopTime() const
     return -1;
   }
 
-  uint32_t looptime = 0;
+  int32_t looptime = 0;
   for (uint32_t i = 0; i < mImage->GetNumFrames(); ++i) {
     int32_t timeout = GetTimeoutForFrame(i);
     if (timeout >= 0) {
@@ -81,28 +81,30 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
                "Given time appears to be in the future");
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
 
+  RefreshResult ret;
+
+  // Determine what the next frame is, taking into account looping.
   uint32_t currentFrameIndex = mCurrentAnimationFrameIndex;
   uint32_t nextFrameIndex = currentFrameIndex + 1;
-  int32_t timeout = 0;
 
-  RefreshResult ret;
-  RawAccessFrameRef nextFrame = GetRawFrame(nextFrameIndex);
-
-  // If we're done decoding, we know we've got everything we're going to get.
-  // If we aren't, we only display fully-downloaded frames; everything else
-  // gets delayed.
-  bool canDisplay = mDoneDecoding ||
-                    (nextFrame && nextFrame->IsImageComplete());
-
-  if (!canDisplay) {
-    // Uh oh, the frame we want to show is currently being decoded (partial)
-    // Wait until the next refresh driver tick and try again
-    return ret;
-  }
-
-  // If we're done decoding the next frame, go ahead and display it now and
-  // reinit with the next frame's delay time.
   if (mImage->GetNumFrames() == nextFrameIndex) {
+    // We can only accurately determine if we are at the end of the loop if we are
+    // done decoding, otherwise we don't know how many frames there will be.
+    if (!mDoneDecoding) {
+      // We've already advanced to the last decoded frame, nothing more we can do.
+      // We're blocked by network/decoding from displaying the animation at the
+      // rate specified, so that means the frame we are displaying (the latest
+      // available) is the frame we want to be displaying at this time. So we
+      // update the current animation time. If we didn't update the current
+      // animation time then it could lag behind, which would indicate that we
+      // are behind in the animation and should try to catch up. When we are
+      // done decoding (and thus can loop around back to the start of the
+      // animation) we would then jump to a random point in the animation to
+      // try to catch up. But we were never behind in the animation.
+      mCurrentAnimationFrameTime = aTime;
+      return ret;
+    }
+
     // End of an animation loop...
 
     // If we are not looping forever, initialize the loop counter
@@ -129,10 +131,28 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
     }
   }
 
-  timeout = GetTimeoutForFrame(nextFrameIndex);
+  // There can be frames in the surface cache with index >= mImage->GetNumFrames()
+  // that GetRawFrame can access because the decoding thread has decoded them, but
+  // RasterImage hasn't acknowledged those frames yet. We don't want to go past
+  // what RasterImage knows about so that we stay in sync with RasterImage. The code
+  // above should obey this, the MOZ_ASSERT records this invariant.
+  MOZ_ASSERT(nextFrameIndex < mImage->GetNumFrames());
+  RawAccessFrameRef nextFrame = GetRawFrame(nextFrameIndex);
+
+  // If we're done decoding, we know we've got everything we're going to get.
+  // If we aren't, we only display fully-downloaded frames; everything else
+  // gets delayed.
+  bool canDisplay = mDoneDecoding ||
+                    (nextFrame && nextFrame->IsImageComplete());
+
+  if (!canDisplay) {
+    // Uh oh, the frame we want to show is currently being decoded (partial)
+    // Wait until the next refresh driver tick and try again
+    return ret;
+  }
 
   // Bad data
-  if (timeout < 0) {
+  if (GetTimeoutForFrame(nextFrameIndex) < 0) {
     ret.animationFinished = true;
     ret.error = true;
   }
@@ -140,13 +160,10 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
   if (nextFrameIndex == 0) {
     ret.dirtyRect = mFirstFrameRefreshArea;
   } else {
-    // Change frame
-    if (nextFrameIndex != currentFrameIndex + 1) {
-      nextFrame = GetRawFrame(nextFrameIndex);
-    }
+    MOZ_ASSERT(nextFrameIndex == currentFrameIndex + 1);
 
-    if (!DoBlend(&ret.dirtyRect, currentFrameIndex,
-                               nextFrameIndex)) {
+    // Change frame
+    if (!DoBlend(&ret.dirtyRect, currentFrameIndex, nextFrameIndex)) {
       // something went wrong, move on to next
       NS_WARNING("FrameAnimator::AdvanceFrame(): Compositing of frame failed");
       nextFrame->SetCompositingFailed(true);
@@ -163,14 +180,19 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
   mCurrentAnimationFrameTime = GetCurrentImgFrameEndTime();
 
   // If we can get closer to the current time by a multiple of the image's loop
-  // time, we should.
-  uint32_t loopTime = GetSingleLoopTime();
+  // time, we should. We need to be done decoding in order to know the full loop
+  // time though!
+  int32_t loopTime = GetSingleLoopTime();
   if (loopTime > 0) {
+    // We shouldn't be advancing by a whole loop unless we are decoded and know
+    // what a full loop actually is. GetSingleLoopTime should return -1 so this
+    // never happens.
+    MOZ_ASSERT(mDoneDecoding);
     TimeDuration delay = aTime - mCurrentAnimationFrameTime;
     if (delay.ToMilliseconds() > loopTime) {
       // Explicitly use integer division to get the floor of the number of
       // loops.
-      uint32_t loops = static_cast<uint32_t>(delay.ToMilliseconds()) / loopTime;
+      uint64_t loops = static_cast<uint64_t>(delay.ToMilliseconds()) / loopTime;
       mCurrentAnimationFrameTime +=
         TimeDuration::FromMilliseconds(loops * loopTime);
     }

@@ -4,9 +4,18 @@
 
 "use strict";
 
+/**
+ * This is the main module loaded in Firefox desktop that handles browser
+ * windows and coordinates devtools around each window.
+ *
+ * This module is loaded lazily by devtools-clhandler.js, once the first
+ * browser window is ready (i.e. fired browser-delayed-startup-finished event)
+ **/
+
 const {Cc, Ci, Cu} = require("chrome");
 const Services = require("Services");
 const promise = require("promise");
+const Telemetry = require("devtools/client/shared/telemetry");
 const {gDevTools} = require("./devtools");
 
 // Load target and toolbox lazily as they need gDevTools to be fully initialized
@@ -15,12 +24,14 @@ loader.lazyRequireGetter(this, "Toolbox", "devtools/client/framework/toolbox", t
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/main", true);
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
-                                  "resource:///modules/CustomizableUI.jsm");
+loader.lazyImporter(this, "CustomizableUI", "resource:///modules/CustomizableUI.jsm");
 
 const bundle = Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
+
+const TABS_OPEN_PEAK_HISTOGRAM = "DEVTOOLS_TABS_OPEN_PEAK_LINEAR";
+const TABS_OPEN_AVG_HISTOGRAM = "DEVTOOLS_TABS_OPEN_AVERAGE_LINEAR";
+const TABS_PINNED_PEAK_HISTOGRAM = "DEVTOOLS_TABS_PINNED_PEAK_LINEAR";
+const TABS_PINNED_AVG_HISTOGRAM = "DEVTOOLS_TABS_PINNED_AVERAGE_LINEAR";
 
 /**
  * gDevToolsBrowser exposes functions to connect the gDevTools instance with a
@@ -32,6 +43,8 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * as the window is closed
    */
   _trackedBrowserWindows: new Set(),
+
+  _telemetry: new Telemetry(),
 
   _tabStats: {
     peakOpen: 0,
@@ -116,10 +129,17 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   },
 
   observe: function(subject, topic, prefName) {
-    if (prefName.endsWith("enabled")) {
-      for (let win of this._trackedBrowserWindows) {
-        this.updateCommandAvailability(win);
-      }
+    switch (topic) {
+      case "browser-delayed-startup-finished":
+        this._registerBrowserWindow(subject);
+        break;
+      case "nsPref:changed":
+        if (prefName.endsWith("enabled")) {
+          for (let win of this._trackedBrowserWindows) {
+            this.updateCommandAvailability(win);
+          }
+        }
+        break;
     }
   },
 
@@ -175,6 +195,15 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         gDevTools.emit("select-tool-command", toolId);
       });
     }
+  },
+
+  /**
+   * Open a tab on "about:debugging", optionally pre-select a given tab.
+   */
+   // Used by browser-sets.inc, command
+  openAboutDebugging: function(gBrowser, hash) {
+    let url = "about:debugging" + (hash ? "#" + hash : "");
+    gBrowser.selectedTab = gBrowser.addTab(url);
   },
 
   /**
@@ -319,11 +348,11 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * @param {XULDocument} doc
    *        The document to which menuitems and handlers are to be added
    */
-  // Used by browser.js
-  registerBrowserWindow: function DT_registerBrowserWindow(win) {
+  _registerBrowserWindow: function(win) {
     this.updateCommandAvailability(win);
     this.ensurePrefObserver();
     gDevToolsBrowser._trackedBrowserWindows.add(win);
+    win.addEventListener("unload", this);
     gDevToolsBrowser._addAllToolsToMenu(win.document);
 
     if (this._isFirebugInstalled()) {
@@ -749,8 +778,9 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * @param  {XULWindow} win
    *         The window containing the menu entry
    */
-  forgetBrowserWindow: function DT_forgetBrowserWindow(win) {
+  _forgetBrowserWindow: function(win) {
     gDevToolsBrowser._trackedBrowserWindows.delete(win);
+    win.removeEventListener("unload", this);
 
     // Destroy toolboxes for closed window
     for (let [target, toolbox] of gDevTools._toolboxes) {
@@ -792,7 +822,29 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       break;
       case "TabSelect":
         gDevToolsBrowser._updateMenuCheckbox();
+      break;
+      case "unload":
+        // top-level browser window unload
+        gDevToolsBrowser._forgetBrowserWindow(event.target.defaultView);
+      break;
     }
+  },
+
+  _pingTelemetry: function() {
+    let mean = function(arr) {
+      if (arr.length === 0) {
+        return 0;
+      }
+
+      let total = arr.reduce((a, b) => a + b);
+      return Math.ceil(total / arr.length);
+    };
+
+    let tabStats = gDevToolsBrowser._tabStats;
+    this._telemetry.log(TABS_OPEN_PEAK_HISTOGRAM, tabStats.peakOpen);
+    this._telemetry.log(TABS_OPEN_AVG_HISTOGRAM, mean(tabStats.histOpen));
+    this._telemetry.log(TABS_PINNED_PEAK_HISTOGRAM, tabStats.peakPinned);
+    this._telemetry.log(TABS_PINNED_AVG_HISTOGRAM, mean(tabStats.histPinned));
   },
 
   /**
@@ -800,7 +852,15 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    */
   destroy: function() {
     Services.prefs.removeObserver("devtools.", gDevToolsBrowser);
+    Services.obs.removeObserver(gDevToolsBrowser, "browser-delayed-startup-finished");
     Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
+
+    gDevToolsBrowser._pingTelemetry();
+    gDevToolsBrowser._telemetry = null;
+
+    for (let win of gDevToolsBrowser._trackedBrowserWindows) {
+      gDevToolsBrowser._forgetBrowserWindow(win);
+    }
   },
 }
 
@@ -820,6 +880,16 @@ gDevTools.on("toolbox-ready", gDevToolsBrowser._updateMenuCheckbox);
 gDevTools.on("toolbox-destroyed", gDevToolsBrowser._updateMenuCheckbox);
 
 Services.obs.addObserver(gDevToolsBrowser.destroy, "quit-application", false);
+Services.obs.addObserver(gDevToolsBrowser, "browser-delayed-startup-finished", false);
+// Fake end of browser window load event for all already opened windows
+// that is already fully loaded.
+let enumerator = Services.wm.getEnumerator("navigator:browser");
+while (enumerator.hasMoreElements()) {
+  let win = enumerator.getNext();
+  if (win.gBrowserInit && win.gBrowserInit.delayedStartupFinished) {
+    gDevToolsBrowser._registerBrowserWindow(win);
+  }
+}
 
 // Load the browser devtools main module as the loader's main module.
 // This is done precisely here as main.js ends up dispatching the

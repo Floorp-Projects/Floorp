@@ -1184,7 +1184,7 @@ function UserAutoCompleteResult (aSearchString, matchingLogins) {
       return  1;
 
     return 0;
-  };
+  }
 
   this.searchString = aSearchString;
   this.logins = matchingLogins.sort(loginSort);
@@ -1323,12 +1323,18 @@ var FormLikeFactory = {
 
     let doc = aField.ownerDocument;
     log("Created non-form FormLike for rootElement:", doc.documentElement);
+    let elements = [];
+    for (let el of doc.documentElement.querySelectorAll("input")) {
+      if (!el.form) {
+        elements.push(el);
+      }
+    }
     let formLike = {
       action: LoginUtils._getPasswordOrigin(doc.baseURI),
       autocomplete: "on",
       // Exclude elements inside the rootElement that are already in a <form> as
       // they will be handled by their own FormLike.
-      elements: [for (el of doc.documentElement.querySelectorAll("input")) if (!el.form) el],
+      elements,
       ownerDocument: doc,
       rootElement: doc.documentElement,
     };
@@ -1344,7 +1350,10 @@ var FormLikeFactory = {
   _addToJSONProperty(aFormLike) {
     function prettyElementOutput(aElement) {
       let idText = aElement.id ? "#" + aElement.id : "";
-      let classText = [for (className of aElement.classList) "." + className].join("");
+      let classText = "";
+      for (let className of aElement.classList) {
+        classText += "." + className;
+      }
       return `<${aElement.nodeName + idText + classText}>`;
     }
 
@@ -1357,7 +1366,10 @@ var FormLikeFactory = {
 
           switch (key) {
             case "elements": {
-              cleansedValue = [for (element of value) prettyElementOutput(element)];
+              cleansedValue = [];
+              for (let element of value) {
+                cleansedValue.push(prettyElementOutput(element));
+              }
               break;
             }
 

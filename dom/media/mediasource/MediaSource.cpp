@@ -8,6 +8,7 @@
 
 #include "AsyncEventRunner.h"
 #include "DecoderTraits.h"
+#include "Benchmark.h"
 #include "MediaSourceUtils.h"
 #include "SourceBuffer.h"
 #include "SourceBufferList.h"
@@ -28,6 +29,7 @@
 #include "mozilla/Logging.h"
 #include "nsServiceManagerUtils.h"
 #include "gfxPlatform.h"
+#include "mozilla/Snprintf.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
@@ -71,13 +73,14 @@ static const char* const gMediaSourceTypes[6] = {
 //   * N/KN editions (Europe and Korea) of Windows 7/8/8.1/10 without the
 //     optional "Windows Media Feature Pack"
 // 2. If H264 hardware acceleration is not available.
+// 3. The CPU is considered to be fast enough
 static bool
 IsWebMForced()
 {
   bool mp4supported =
     DecoderTraits::IsMP4TypeAndEnabled(NS_LITERAL_CSTRING("video/mp4"));
   bool hwsupported = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
-  return !mp4supported || !hwsupported;
+  return !mp4supported || !hwsupported || VP9Benchmark::IsVP9DecodeFast();
 }
 
 static nsresult

@@ -614,30 +614,12 @@ this.Utils = {
    * Get the FxA identity hosts.
    */
   getSyncCredentialsHostsFxA: function() {
-    // This is somewhat expensive and the result static, so we cache the result.
-    if (this._syncCredentialsHostsFxA) {
-      return this._syncCredentialsHostsFxA;
-    }
     let result = new Set();
     // the FxA host
     result.add(FxAccountsCommon.FXA_PWDMGR_HOST);
-    //
-    // The FxA hosts - these almost certainly all have the same hostname, but
-    // better safe than sorry...
-    for (let prefName of ["identity.fxaccounts.remote.force_auth.uri",
-                          "identity.fxaccounts.remote.signup.uri",
-                          "identity.fxaccounts.remote.signin.uri",
-                          "identity.fxaccounts.settings.uri"]) {
-      let prefVal;
-      try {
-        prefVal = Services.prefs.getCharPref(prefName);
-      } catch (_) {
-        continue;
-      }
-      let uri = Services.io.newURI(prefVal, null, null);
-      result.add(uri.prePath);
-    }
-    return this._syncCredentialsHostsFxA = result;
+    // We used to include the FxA hosts (hence the Set() result) but we now
+    // don't give them special treatment (hence the Set() with exactly 1 item)
+    return result;
   },
 
   getDefaultDeviceName() {

@@ -212,6 +212,9 @@ private:
   // the next update
   PrefixArray mMissCache;
 
+  // Stores the last results that triggered a table update.
+  CacheResultArray mLastResults;
+
   nsresult mUpdateStatus;
   nsTArray<nsCString> mUpdateTables;
 

@@ -1,6 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* import-globals-from head.js */
+"use strict";
 
 /**
  * Run a series of add-attributes tests.
@@ -39,10 +42,10 @@ function runAddAttributesTests(tests, nodeOrSelector, inspector, testActor) {
  *        - text {String} the string to be inserted into the new attribute field
  *        - expectedAttributes {Object} a key/value pair object that will be
  *        used to check the attributes on the test element
- *        - validate {Function} optional extra function that will be called after
- *        the attributes have been added and which should be used to assert some
- *        more things this test runner might not be checking. The function will
- *        be called with the following arguments:
+ *        - validate {Function} optional extra function that will be called
+ *        after the attributes have been added and which should be used to
+ *        assert some more things this test runner might not be checking. The
+ *        function will be called with the following arguments:
  *          - {DOMNode} The element being tested
  *          - {MarkupContainer} The corresponding container in the markup-view
  *          - {InspectorPanel} The instance of the InspectorPanel opened
@@ -55,7 +58,6 @@ function* runAddAttributesTest(test, selector, inspector, testActor) {
   if (test.setUp) {
     test.setUp(inspector);
   }
-  let element = getNode(selector);
 
   info("Starting add-attribute test: " + test.desc);
   yield addNewAttributes(selector, test.text, inspector);
@@ -65,7 +67,7 @@ function* runAddAttributesTest(test, selector, inspector, testActor) {
 
   if (test.validate) {
     let container = yield getContainerForSelector(selector, inspector);
-    test.validate(element, container, inspector);
+    test.validate(container, inspector);
   }
 
   info("Undo the change");
@@ -81,9 +83,9 @@ function* runAddAttributesTest(test, selector, inspector, testActor) {
 /**
  * Run a series of edit-attributes tests.
  * This function will iterate over the provided tests array and run each test.
- * Each test's goal is to locate a given element on the current test page, assert
- * its current attributes, then provide the name of one of them and a value to
- * be set into it, and then check if the new attributes are correct.
+ * Each test's goal is to locate a given element on the current test page,
+ * assert its current attributes, then provide the name of one of them and a
+ * value to be set into it, and then check if the new attributes are correct.
  * After each test has run, the markup-view's undo and redo commands will be
  * called and the test runner will assert again that the attributes are correct.
  * @param {Array} tests See runEditAttributesTest for the structure
@@ -139,7 +141,8 @@ function* runEditAttributesTest(test, inspector, testActor) {
 
   info("Listening for the markupmutation event");
   let nodeMutated = inspector.once("markupmutation");
-  let attr = container.editor.attrElements.get(test.name).querySelector(".editable");
+  let attr = container.editor.attrElements.get(test.name)
+                                          .querySelector(".editable");
   setEditableFieldValue(attr, test.value, inspector);
   yield nodeMutated;
 
@@ -150,7 +153,8 @@ function* runEditAttributesTest(test, inspector, testActor) {
   yield undoChange(inspector);
   yield assertAttributes(test.node, test.originalAttributes, testActor);
 
-  info("Redo the change and assert that the attributes have been changed again");
+  info("Redo the change and assert that the attributes have been changed " +
+       "again");
   yield redoChange(inspector);
   yield assertAttributes(test.node, test.expectedAttributes, testActor);
 }

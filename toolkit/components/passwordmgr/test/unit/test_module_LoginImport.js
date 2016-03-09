@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
  */
 function promiseCreateDatabaseSchema(aConnection)
 {
-  return Task.spawn(function () {
+  return Task.spawn(function* () {
     yield aConnection.setSchemaVersion(5);
     yield aConnection.execute("CREATE TABLE moz_logins (" +
                               "id                  INTEGER PRIMARY KEY," +
@@ -113,7 +113,7 @@ function promiseInsertDisabledHost(aConnection, aHostname)
 /**
  * Imports login data from a SQLite file constructed using the test data.
  */
-add_task(function test_import()
+add_task(function* test_import()
 {
   let store = new LoginStore(getTempFile("test-import.json").path);
   let loginsSqlite = getTempFile("test-logins.sqlite").path;
@@ -177,7 +177,7 @@ add_task(function test_import()
 /**
  * Tests imports of NULL values due to a downgraded database.
  */
-add_task(function test_import_downgraded()
+add_task(function* test_import_downgraded()
 {
   let store = new LoginStore(getTempFile("test-import-downgraded.json").path);
   let loginsSqlite = getTempFile("test-logins-downgraded.sqlite").path;
@@ -215,7 +215,7 @@ add_task(function test_import_downgraded()
 /**
  * Verifies that importing from a SQLite file with database version 2 fails.
  */
-add_task(function test_import_v2()
+add_task(function* test_import_v2()
 {
   let store = new LoginStore(getTempFile("test-import-v2.json").path);
   let loginsSqlite = do_get_file("data/signons-v2.sqlite").path;
@@ -231,7 +231,7 @@ add_task(function test_import_v2()
 /**
  * Imports login data from a SQLite file, with database version 3.
  */
-add_task(function test_import_v3()
+add_task(function* test_import_v3()
 {
   let store = new LoginStore(getTempFile("test-import-v3.json").path);
   let loginsSqlite = do_get_file("data/signons-v3.sqlite").path;

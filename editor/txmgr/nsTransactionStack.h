@@ -21,12 +21,14 @@ public:
   ~nsTransactionStack();
 
   void Push(nsTransactionItem *aTransactionItem);
+  void Push(already_AddRefed<nsTransactionItem> aTransactionItem);
   already_AddRefed<nsTransactionItem> Pop();
   already_AddRefed<nsTransactionItem> PopBottom();
   already_AddRefed<nsTransactionItem> Peek();
   already_AddRefed<nsTransactionItem> GetItem(int32_t aIndex);
   void Clear();
   int32_t GetSize() { return mDeque.size(); }
+  bool IsEmpty() const { return mDeque.empty(); }
 
   void DoUnlink() { Clear(); }
   void DoTraverse(nsCycleCollectionTraversalCallback &cb);

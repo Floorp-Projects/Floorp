@@ -132,6 +132,10 @@ using namespace mozilla::system;
 #include "mozilla/layers/CompositorLRU.h"
 #include "mozilla/dom/devicestorage/DeviceStorageStatics.h"
 
+#ifdef MOZ_B2G_BT
+#include "mozilla/dom/BluetoothUUID.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::net;
 using namespace mozilla::dom;
@@ -440,4 +444,8 @@ nsLayoutStatics::Shutdown()
   CameraPreferences::Shutdown();
 
   PromiseDebugging::Shutdown();
+
+#ifdef MOZ_B2G_BT
+  BluetoothUUID::HandleShutdown();
+#endif
 }

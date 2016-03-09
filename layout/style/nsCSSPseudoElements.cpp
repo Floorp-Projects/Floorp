@@ -67,46 +67,48 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsIAtom *aAtom)
                   aAtom == nsCSSPseudoElements::firstLetter ||
                   aAtom == nsCSSPseudoElements::firstLine;
   NS_ASSERTION(nsCSSAnonBoxes::IsAnonBox(aAtom) ||
-               result ==
-                 PseudoElementHasFlags(GetPseudoType(aAtom), CSS_PSEUDO_ELEMENT_IS_CSS2),
+               result == PseudoElementHasFlags(GetPseudoType(aAtom),
+                                               CSS_PSEUDO_ELEMENT_IS_CSS2),
                "result doesn't match flags");
   return result;
 }
 
-/* static */ nsCSSPseudoElements::Type
+/* static */ CSSPseudoElementType
 nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom)
 {
-  for (uint32_t i = 0; i < ArrayLength(CSSPseudoElements_info); ++i) {
+  for (CSSPseudoElementTypeBase i = 0;
+       i < ArrayLength(CSSPseudoElements_info);
+       ++i) {
     if (*CSSPseudoElements_info[i].mAtom == aAtom) {
-      return Type(i);
+      return static_cast<Type>(i);
     }
   }
 
   if (nsCSSAnonBoxes::IsAnonBox(aAtom)) {
 #ifdef MOZ_XUL
     if (nsCSSAnonBoxes::IsTreePseudoElement(aAtom)) {
-      return ePseudo_XULTree;
+      return Type::XULTree;
     }
 #endif
 
-    return ePseudo_AnonBox;
+    return Type::AnonBox;
   }
 
-  return ePseudo_NotPseudoElement;
+  return Type::NotPseudo;
 }
 
 /* static */ nsIAtom*
 nsCSSPseudoElements::GetPseudoAtom(Type aType)
 {
-  NS_ASSERTION(aType < nsCSSPseudoElements::ePseudo_PseudoElementCount,
-               "Unexpected type");
-  return *CSSPseudoElements_info[aType].mAtom;
+  NS_ASSERTION(aType < Type::Count, "Unexpected type");
+  return *CSSPseudoElements_info[
+    static_cast<CSSPseudoElementTypeBase>(aType)].mAtom;
 }
 
 /* static */ uint32_t
 nsCSSPseudoElements::FlagsForPseudoElement(const Type aType)
 {
-  size_t index = static_cast<size_t>(aType);
+  CSSPseudoElementTypeBase index = static_cast<CSSPseudoElementTypeBase>(aType);
   NS_ASSERTION(index < ArrayLength(CSSPseudoElements_flags),
                "argument must be a pseudo-element");
   return CSSPseudoElements_flags[index];

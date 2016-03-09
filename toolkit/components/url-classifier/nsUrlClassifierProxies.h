@@ -191,6 +191,18 @@ public:
     uint64_t mUpdateTime;
   };
 
+  class ClearLastResultsRunnable : public nsRunnable
+  {
+  public:
+    explicit ClearLastResultsRunnable(nsUrlClassifierDBServiceWorker* aTarget)
+      : mTarget(aTarget)
+    { }
+
+    NS_DECL_NSIRUNNABLE
+  private:
+    RefPtr<nsUrlClassifierDBServiceWorker> mTarget;
+  };
+
 public:
   nsresult DoLocalLookup(const nsACString& spec,
                          const nsACString& tables,

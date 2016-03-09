@@ -79,6 +79,7 @@ extensions.registerSchemaAPI("webNavigation", "webNavigation", (extension, conte
       onCompleted: new WebNavigationEventManager(context, "onCompleted").api(),
       onErrorOccurred: new WebNavigationEventManager(context, "onErrorOccurred").api(),
       onReferenceFragmentUpdated: new WebNavigationEventManager(context, "onReferenceFragmentUpdated").api(),
+      onHistoryStateUpdated: new WebNavigationEventManager(context, "onHistoryStateUpdated").api(),
       onCreatedNavigationTarget: ignoreEvent(context, "webNavigation.onCreatedNavigationTarget"),
       getAllFrames(details) {
         let tab = TabManager.getTab(details.tabId);
@@ -89,7 +90,7 @@ extensions.registerSchemaAPI("webNavigation", "webNavigation", (extension, conte
         let {innerWindowID, messageManager} = tab.linkedBrowser;
         let recipient = {innerWindowID};
 
-        return context.sendMessage(messageManager, "WebNavigation:GetAllFrames", {}, recipient)
+        return context.sendMessage(messageManager, "WebNavigation:GetAllFrames", {}, {recipient})
                       .then((results) => results.map(convertGetFrameResult.bind(null, details.tabId)));
       },
       getFrame(details) {
@@ -103,7 +104,7 @@ extensions.registerSchemaAPI("webNavigation", "webNavigation", (extension, conte
         };
 
         let mm = tab.linkedBrowser.messageManager;
-        return context.sendMessage(mm, "WebNavigation:GetFrame", {options: details}, recipient)
+        return context.sendMessage(mm, "WebNavigation:GetFrame", {options: details}, {recipient})
                       .then((result) => {
                         return result ?
                           convertGetFrameResult(details.tabId, result) :

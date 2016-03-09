@@ -118,7 +118,7 @@ GMPVideoDecoder::InitTags(nsTArray<nsCString>& aTags)
 nsCString
 GMPVideoDecoder::GetNodeId()
 {
-  return NS_LITERAL_CSTRING("");
+  return SHARED_GMP_DECODING_NODE_ID;
 }
 
 GMPUniquePtr<GMPVideoEncodedFrame>

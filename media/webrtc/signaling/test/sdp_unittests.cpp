@@ -47,6 +47,8 @@ extern "C" {
 #include "FakeIPC.h"
 #include "FakeIPC.cpp"
 
+#include "TestHarness.h"
+
 using namespace mozilla;
 
 namespace test {
@@ -1141,6 +1143,7 @@ const std::string kBasicAudioVideoOffer =
 "c=IN IP4 0.0.0.0" CRLF
 "a=mid:first" CRLF
 "a=rtpmap:109 opus/48000/2" CRLF
+"a=fmtp:109 maxplaybackrate=32000;stereo=1" CRLF
 "a=ptime:20" CRLF
 "a=maxptime:20" CRLF
 "a=rtpmap:9 G722/8000" CRLF
@@ -1502,7 +1505,7 @@ const std::string kH264AudioVideoOffer =
 "a=rtpmap:0 PCMU/8000" CRLF
 "a=rtpmap:8 PCMA/8000" CRLF
 "a=rtpmap:101 telephone-event/8000" CRLF
-"a=fmtp:101 0-15" CRLF
+"a=fmtp:109 maxplaybackrate=32000;stereo=1" CRLF
 "a=ice-ufrag:00000000" CRLF
 "a=ice-pwd:0000000000000000000000000000000" CRLF
 "a=sendonly" CRLF
@@ -1557,8 +1560,13 @@ TEST_P(NewSdpTest, CheckFormatParameters) {
   auto audio_format_params =
       mSdp->GetMediaSection(0).GetAttributeList().GetFmtp().mFmtps;
   ASSERT_EQ(1U, audio_format_params.size());
-  ASSERT_EQ("101", audio_format_params[0].format);
-  ASSERT_EQ("0-15", audio_format_params[0].parameters_string);
+  ASSERT_EQ("109", audio_format_params[0].format);
+  ASSERT_TRUE(!!audio_format_params[0].parameters);
+  const SdpFmtpAttributeList::OpusParameters* opus_parameters =
+    static_cast<SdpFmtpAttributeList::OpusParameters*>(
+        audio_format_params[0].parameters.get());
+  ASSERT_EQ(32000U, opus_parameters->maxplaybackrate);
+  ASSERT_EQ(1U, opus_parameters->stereo);
 
   ASSERT_TRUE(mSdp->GetMediaSection(1).GetAttributeList().HasAttribute(
       SdpAttribute::kFmtpAttribute));
@@ -2825,16 +2833,16 @@ TEST(NewSdpTestNoFixture, CheckImageattrXYRangeParseInvalid)
 {
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[-1", 1);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[-", 1);
-  ParseInvalid<SdpImageattrAttributeList::XYRange>("[-x", 1);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[-v", 1);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:-1", 5);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:-1", 8);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640,-1", 5);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640,-]", 5);
-  ParseInvalid<SdpImageattrAttributeList::XYRange>("-x", 0);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("-v", 0);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("-1", 0);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("", 0);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[", 1);
-  ParseInvalid<SdpImageattrAttributeList::XYRange>("[x", 1);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[v", 1);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[", 1);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[ 640", 1);
   // It looks like the overflow detection only happens once the whole number
@@ -2842,23 +2850,23 @@ TEST(NewSdpTestNoFixture, CheckImageattrXYRangeParseInvalid)
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[99999999999999999:", 18);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640", 4);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:", 5);
-  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:x", 5);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:v", 5);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16", 7);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:", 8);
-  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:x", 8);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:v", 8);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:320]", 11);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:320", 11);
-  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:320x", 11);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:16:320v", 11);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:1024", 9);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:320]", 8);
-  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:1024x", 9);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640:1024v", 9);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640,", 5);
-  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640,x", 5);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("[640,v", 5);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640]", 4);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640x", 4);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[640,]", 5);
   ParseInvalid<SdpImageattrAttributeList::XYRange>(" ", 0);
-  ParseInvalid<SdpImageattrAttributeList::XYRange>("x", 0);
+  ParseInvalid<SdpImageattrAttributeList::XYRange>("v", 0);
 }
 
 static SdpImageattrAttributeList::SRange
@@ -2908,31 +2916,31 @@ TEST(NewSdpTestNoFixture, CheckImageattrSRangeParseInvalid)
 {
   ParseInvalid<SdpImageattrAttributeList::SRange>("", 0);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[", 1);
-  ParseInvalid<SdpImageattrAttributeList::SRange>("[x", 1);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[v", 1);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[-1", 1);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[", 1);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[-", 1);
-  ParseInvalid<SdpImageattrAttributeList::SRange>("[x", 1);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[v", 1);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[ 0.2", 1);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[10.1-", 5);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[0.08-", 5);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2", 4);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2-", 5);
-  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2-x", 5);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2-v", 5);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2--1", 5);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2-0.3", 8);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2-0.1]", 8);
-  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2-0.3x", 8);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2-0.3v", 8);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2,", 5);
-  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2,x", 5);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2,v", 5);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2,-1", 5);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2]", 4);
-  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2x", 4);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2v", 4);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2,]", 5);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[0.2,-]", 5);
   ParseInvalid<SdpImageattrAttributeList::SRange>(" ", 0);
-  ParseInvalid<SdpImageattrAttributeList::SRange>("x", 0);
-  ParseInvalid<SdpImageattrAttributeList::SRange>("-x", 0);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("v", 0);
+  ParseInvalid<SdpImageattrAttributeList::SRange>("-v", 0);
   ParseInvalid<SdpImageattrAttributeList::SRange>("-1", 0);
 }
 
@@ -2959,27 +2967,27 @@ TEST(NewSdpTestNoFixture, CheckImageattrPRangeParseInvalid)
 {
   ParseInvalid<SdpImageattrAttributeList::PRange>("", 0);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[", 1);
-  ParseInvalid<SdpImageattrAttributeList::PRange>("[x", 1);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[v", 1);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[-1", 1);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[", 1);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[-", 1);
-  ParseInvalid<SdpImageattrAttributeList::PRange>("[x", 1);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[v", 1);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[ 0.2", 1);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[10.1-", 5);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[0.08-", 5);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2", 4);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2-", 5);
-  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2-x", 5);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2-v", 5);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2--1", 5);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2-0.3", 8);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2-0.1]", 8);
-  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2-0.3x", 8);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2-0.3v", 8);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2,", 4);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2:", 4);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2]", 4);
-  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2x", 4);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("[0.2v", 4);
   ParseInvalid<SdpImageattrAttributeList::PRange>(" ", 0);
-  ParseInvalid<SdpImageattrAttributeList::PRange>("x", 0);
+  ParseInvalid<SdpImageattrAttributeList::PRange>("v", 0);
   ParseInvalid<SdpImageattrAttributeList::PRange>("-x", 0);
   ParseInvalid<SdpImageattrAttributeList::PRange>("-1", 0);
 }
@@ -3131,7 +3139,7 @@ TEST(NewSdpTestNoFixture, CheckImageattrSetParseInvalid)
   ParseInvalid<SdpImageattrAttributeList::Set>("[y=", 3);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=[", 4);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320", 6);
-  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320x", 6);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320v", 6);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,", 7);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,=", 8);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,x", 8);
@@ -3141,15 +3149,15 @@ TEST(NewSdpTestNoFixture, CheckImageattrSetParseInvalid)
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240x", 12);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,", 13);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=", 15);
-  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=x", 15);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=v", 15);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=0.5", 18);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=0.5,", 19);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=0.5,]", 20);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=0.5,=]", 20);
-  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=0.5,sar=x]", 23);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=0.5,sar=v]", 23);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,q=0.5,q=0.4", 21);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,sar=", 17);
-  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,sar=x", 17);
+  ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,sar=v", 17);
   ParseInvalid<SdpImageattrAttributeList::Set>(
       "[x=320,y=240,sar=[0.5-0.6],sar=[0.7-0.8]", 31);
   ParseInvalid<SdpImageattrAttributeList::Set>("[x=320,y=240,par=", 17);
@@ -4231,6 +4239,8 @@ TEST(NewSdpTestNoFixture, CheckRidSerialize)
 } // End namespace test.
 
 int main(int argc, char **argv) {
+  ScopedXPCOM xpcom("sdp_unittests");
+
   test_utils = new MtransportTestUtils();
   NSS_NoDB_Init(nullptr);
   NSS_SetDomesticPolicy();

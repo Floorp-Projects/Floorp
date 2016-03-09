@@ -1,29 +1,28 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Test toggling the top level inversion state of the tree.
 
-let { toggleInverted } = require("devtools/client/memory/actions/inverted");
+const { censusDisplays } = require("devtools/client/memory/constants");
+const { setCensusDisplay } = require("devtools/client/memory/actions/census-display");
 
 function run_test() {
   run_next_test();
 }
 
-add_task(function *() {
-  let front = new StubbedMemoryFront();
-  let heapWorker = new HeapAnalysesClient();
-  yield front.attach();
+add_task(function*() {
   let store = Store();
   const { getState, dispatch } = store;
 
-  equal(getState().inverted, false, "not inverted by default");
+  dispatch(setCensusDisplay(censusDisplays.allocationStack));
+  equal(getState().censusDisplay.inverted, false,
+        "not inverted initially");
 
-  dispatch(toggleInverted());
-  equal(getState().inverted, true, "now inverted after toggling");
+  dispatch(setCensusDisplay(censusDisplays.invertedAllocationStack));
+  equal(getState().censusDisplay.inverted, true, "now inverted after toggling");
 
-  dispatch(toggleInverted());
-  equal(getState().inverted, false, "not inverted again after toggling again");
-
-  heapWorker.destroy();
-  yield front.detach();
+  dispatch(setCensusDisplay(censusDisplays.allocationStack));
+  equal(getState().censusDisplay.inverted, false,
+        "not inverted again after toggling again");
 });

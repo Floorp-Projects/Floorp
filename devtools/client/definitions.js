@@ -5,8 +5,7 @@
 "use strict";
 
 const {Cc, Ci} = require("chrome");
-
-const { Services } = require("resource://gre/modules/Services.jsm");
+const Services = require("Services");
 
 loader.lazyGetter(this, "osString", () => Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS);
 
@@ -103,6 +102,9 @@ Tools.inspector = {
   ],
 
   preventClosingOnKey: true,
+  onkey: function(panel, toolbox) {
+    toolbox.highlighterUtils.togglePicker();
+  },
 
   isTargetSupported: function(target) {
     return target.hasActor("inspector");

@@ -7,9 +7,7 @@
 #ifndef __mozilla_widget_nsShmImage_h__
 #define __mozilla_widget_nsShmImage_h__
 
-#include "mozilla/ipc/SharedMemorySysV.h"
-
-#if defined(MOZ_X11) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)
+#if defined(MOZ_X11)
 #  define MOZ_HAVE_SHMIMAGE
 #endif
 
@@ -18,71 +16,55 @@
 #include "mozilla/gfx/2D.h"
 #include "nsIWidget.h"
 #include "nsAutoPtr.h"
+#include "Units.h"
 
-#include "mozilla/X11Util.h"
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include <X11/extensions/XShm.h>
 
-#ifdef MOZ_WIDGET_QT
-class QRect;
-class QWindow;
-#endif
-
 class nsShmImage {
-    // bug 1168843, compositor thread may create shared memory instances that are destroyed by main thread on shutdown, so this must use thread-safe RC to avoid hitting assertion
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsShmImage)
-
-    typedef mozilla::ipc::SharedMemorySysV SharedMemorySysV;
+  // bug 1168843, compositor thread may create shared memory instances that are destroyed by main thread on shutdown, so this must use thread-safe RC to avoid hitting assertion
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsShmImage)
 
 public:
-    static bool UseShm();
-    static already_AddRefed<nsShmImage>
-        Create(const mozilla::LayoutDeviceIntSize& aSize,
-               Display* aDisplay, Visual* aVisual, unsigned int aDepth);
-    static already_AddRefed<mozilla::gfx::DrawTarget>
-        EnsureShmImage(const mozilla::LayoutDeviceIntSize& aSize,
-                       Display* aDisplay, Visual* aVisual, unsigned int aDepth,
-                       RefPtr<nsShmImage>& aImage);
+  static bool UseShm();
+
+  already_AddRefed<mozilla::gfx::DrawTarget>
+    CreateDrawTarget(const mozilla::LayoutDeviceIntRegion& aRegion);
+
+  void Put(const mozilla::LayoutDeviceIntRegion& aRegion);
+
+  nsShmImage(Display* aDisplay,
+             Drawable aWindow,
+             Visual* aVisual,
+             unsigned int aDepth);
 
 private:
-    ~nsShmImage() {
-        if (mImage) {
-            mozilla::FinishX(mDisplay);
-            if (mXAttached) {
-                XShmDetach(mDisplay, &mInfo);
-            }
-            XDestroyImage(mImage);
-        }
-    }
+  ~nsShmImage();
 
-public:
-    already_AddRefed<mozilla::gfx::DrawTarget> CreateDrawTarget();
+  bool InitExtension();
 
-#ifdef MOZ_WIDGET_GTK
-    void Put(Display* aDisplay, Drawable aWindow,
-             const mozilla::LayoutDeviceIntRegion& aRegion);
-#elif defined(MOZ_WIDGET_QT)
-    void Put(QWindow* aWindow, QRect& aRect);
-#endif
+  bool CreateShmSegment();
+  void DestroyShmSegment();
 
-    mozilla::LayoutDeviceIntSize Size() const { return mSize; }
+  bool CreateImage(const mozilla::gfx::IntSize& aSize);
+  void DestroyImage();
 
-private:
-    nsShmImage()
-        : mImage(nullptr)
-        , mDisplay(nullptr)
-        , mFormat(mozilla::gfx::SurfaceFormat::UNKNOWN)
-        , mXAttached(false)
-    { mInfo.shmid = SharedMemorySysV::NULLHandle(); }
+  static Bool FindEvent(Display* aDisplay, XEvent* aEvent, XPointer aArg);
+  bool RequestWasProcessed();
+  void WaitForRequest();
+  void SendEvent();
 
-    RefPtr<SharedMemorySysV>   mSegment;
-    XImage*                      mImage;
-    Display*                     mDisplay;
-    XShmSegmentInfo              mInfo;
-    mozilla::LayoutDeviceIntSize mSize;
-    mozilla::gfx::SurfaceFormat  mFormat;
-    bool                         mXAttached;
+  XImage*                      mImage;
+  Display*                     mDisplay;
+  Window                       mWindow;
+  Visual*                      mVisual;
+  unsigned int                 mDepth;
+  XShmSegmentInfo              mInfo;
+  mozilla::gfx::SurfaceFormat  mFormat;
+  Pixmap                       mPixmap;
+  GC                           mGC;
+  unsigned long                mRequest;
+  unsigned long                mPreviousRequestProcessed;
 };
 
 #endif // MOZ_HAVE_SHMIMAGE

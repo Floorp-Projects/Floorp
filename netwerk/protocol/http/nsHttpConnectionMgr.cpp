@@ -2057,28 +2057,53 @@ nsHttpConnectionMgr::GetSpdyPreferredConn(nsConnectionEntry *ent)
     MOZ_ASSERT(ent);
 
     nsConnectionEntry *preferred = GetSpdyPreferredEnt(ent);
-
     // this entry is spdy-enabled if it is involved in a redirect
-    if (preferred)
+    if (preferred) {
         // all new connections for this entry will use spdy too
         ent->mUsingSpdy = true;
-    else
+    } else {
         preferred = ent;
+    }
 
-    nsHttpConnection *conn = nullptr;
+    if (!preferred->mUsingSpdy) {
+        return nullptr;
+    }
 
-    if (preferred->mUsingSpdy) {
-        for (uint32_t index = 0;
-             index < preferred->mActiveConns.Length();
-             ++index) {
-            if (preferred->mActiveConns[index]->CanDirectlyActivate()) {
-                conn = preferred->mActiveConns[index];
-                break;
-            }
+    nsHttpConnection *rv = nullptr;
+    uint32_t activeLen = preferred->mActiveConns.Length();
+    uint32_t index;
+
+    // activeLen should generally be 1.. this is a setup race being resolved
+    // take a conn who can activate and is experienced
+    for (index = 0; index < activeLen; ++index) {
+        nsHttpConnection *tmp = preferred->mActiveConns[index];
+        if (tmp->CanDirectlyActivate() && tmp->IsExperienced()) {
+            rv = tmp;
+            break;
         }
     }
 
-    return conn;
+    // if that worked, cleanup anything else
+    if (rv) {
+        for (index = 0; index < activeLen; ++index) {
+            nsHttpConnection *tmp = preferred->mActiveConns[index];
+            // in the case where there is a functional h2 session, drop the others
+            if (tmp != rv) {
+                tmp->DontReuse();
+            }
+        }
+        return rv;
+    }
+
+    // take a conn who can activate and leave the rest alone
+    for (index = 0; index < activeLen; ++index) {
+        nsHttpConnection *tmp = preferred->mActiveConns[index];
+        if (tmp->CanDirectlyActivate()) {
+            rv = tmp;
+            break;
+        }
+    }
+    return rv;
 }
 
 //-----------------------------------------------------------------------------

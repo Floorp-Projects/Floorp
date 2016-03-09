@@ -106,6 +106,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitValueToString(LValueToString* lir);
     void visitValueToObjectOrNull(LValueToObjectOrNull* lir);
     void visitInteger(LInteger* lir);
+    void visitInteger64(LInteger64* lir);
     void visitRegExp(LRegExp* lir);
     void visitRegExpMatcher(LRegExpMatcher* lir);
     void visitOutOfLineRegExpMatcher(OutOfLineRegExpMatcher* ool);

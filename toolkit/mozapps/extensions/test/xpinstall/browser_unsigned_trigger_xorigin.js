@@ -14,7 +14,7 @@ function test() {
 
   var inner_url = encodeURIComponent(TESTROOT + "installtrigger.html?" + encodeURIComponent(JSON.stringify({
     "Unsigned XPI": {
-      URL: TESTROOT + "unsigned.xpi",
+      URL: TESTROOT + "amosigned.xpi",
       IconURL: TESTROOT + "icon.png",
       toString: function() { return this.URL; }
     }

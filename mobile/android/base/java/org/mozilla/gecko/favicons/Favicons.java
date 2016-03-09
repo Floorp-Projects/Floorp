@@ -23,12 +23,11 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -144,6 +143,32 @@ public class Favicons {
     }
 
     private static FaviconCache faviconsCache;
+
+    /**
+     * Select the closest icon size from a list of icon sizes.
+     * We just find the first icon that is larger than the preferred size if available, or otherwise select the
+     * largest icon (if all icons are smaller than the preferred size).
+     *
+     * @return The closes icon size, or -1 if no sizes are supplied.
+     */
+    public static int selectBestSizeFromList(final List<Integer> sizes, final int preferredSize) {
+        Collections.sort(sizes);
+
+        for (int size : sizes) {
+            if (size >= preferredSize) {
+                return size;
+            }
+        }
+
+        // If all icons are smaller than the preferred size then we don't have an icon
+        // selected yet, therefore just take the largest (last) icon.
+        if (sizes.size() > 0) {
+            return sizes.get(sizes.size() - 1);
+        } else {
+            // This isn't ideal, however current code assumes this as an error value for now.
+            return -1;
+        }
+    }
 
     /**
      * Returns either NOT_LOADING, or LOADED if the onFaviconLoaded call could
@@ -422,8 +447,6 @@ public class Favicons {
             }
             loadTasks.clear();
         }
-
-        LoadFaviconTask.closeHTTPClient();
     }
 
     /**
@@ -514,19 +537,23 @@ public class Favicons {
         // is bundled in the database, keyed only by page URL, hence the need to return the page URL
         // here. If the database ever migrates to stop being silly in this way, this can plausibly
         // be removed.
+        if (TextUtils.isEmpty(pageURL)) {
+            return null;
+        }
         if (AboutPages.isAboutPage(pageURL) || pageURL.startsWith("jar:")) {
             return pageURL;
         }
 
         try {
             // Fall back to trying "someScheme:someDomain.someExtension/favicon.ico".
-            URI u = new URI(pageURL);
-            return new URI(u.getScheme(),
-                           u.getAuthority(),
-                           "/favicon.ico", null,
-                           null).toString();
-        } catch (URISyntaxException e) {
-            Log.e(LOGTAG, "URISyntaxException getting default favicon URL", e);
+            Uri u = Uri.parse(pageURL);
+            Uri.Builder builder = new Uri.Builder();
+            builder.scheme(u.getScheme())
+                   .authority(u.getAuthority())
+                   .appendPath("favicon.ico");
+            return builder.build().toString();
+        } catch (Exception e) {
+            Log.d(LOGTAG, "Exception getting default favicon URL");
             return null;
         }
     }
@@ -581,6 +608,6 @@ public class Favicons {
      */
     public static void getPreferredSizeFaviconForPage(Context context, String url, String iconURL, OnFaviconLoadedListener onFaviconLoadedListener) {
         int preferredSize = GeckoAppShell.getPreferredIconSize();
-        loadUncachedFavicon(context, url, iconURL, 0, preferredSize, onFaviconLoadedListener);
+        loadUncachedFavicon(context, url, iconURL, LoadFaviconTask.FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS, preferredSize, onFaviconLoadedListener);
     }
 }

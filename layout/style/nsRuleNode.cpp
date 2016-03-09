@@ -1534,7 +1534,9 @@ nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
      unused.  */
   if (!IsRoot()) {
     mParent->AddRef();
-    aContext->StyleSet()->RuleNodeUnused();
+    MOZ_ASSERT(aContext->StyleSet()->IsGecko(),
+               "ServoStyleSets should not have rule nodes");
+    aContext->StyleSet()->AsGecko()->RuleNodeUnused();
   }
 
   // nsStyleSet::GetContext depends on there being only one animation
@@ -3685,8 +3687,10 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
 
     if (variantAlternates & NS_FONT_VARIANT_ALTERNATES_FUNCTIONAL_MASK) {
       // fetch the feature lookup object from the styleset
+      MOZ_ASSERT(aPresContext->StyleSet()->IsGecko(),
+                 "ServoStyleSets should not have rule nodes");
       aFont->mFont.featureValueLookup =
-        aPresContext->StyleSet()->GetFontFeatureValuesLookup();
+        aPresContext->StyleSet()->AsGecko()->GetFontFeatureValuesLookup();
 
       NS_ASSERTION(variantAlternatesValue->GetPairValue().mYValue.GetUnit() ==
                    eCSSUnit_List, "function list not a list value");
@@ -4392,7 +4396,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
       const nsCSSValuePair& textAlignValuePair = textAlignValue->GetPairValue();
       textAlignValue = &textAlignValuePair.mXValue;
       if (eCSSUnit_Enumerated == textAlignValue->GetUnit()) {
-        if (textAlignValue->GetIntValue() == NS_STYLE_TEXT_ALIGN_TRUE) {
+        if (textAlignValue->GetIntValue() == NS_STYLE_TEXT_ALIGN_UNSAFE) {
           textAlignValue = &textAlignValuePair.mYValue;
         }
       } else if (eCSSUnit_String == textAlignValue->GetUnit()) {
@@ -4417,7 +4421,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     const nsCSSValuePair& textAlignLastValuePair = textAlignLastValue->GetPairValue();
     textAlignLastValue = &textAlignLastValuePair.mXValue;
     if (eCSSUnit_Enumerated == textAlignLastValue->GetUnit()) {
-      if (textAlignLastValue->GetIntValue() == NS_STYLE_TEXT_ALIGN_TRUE) {
+      if (textAlignLastValue->GetIntValue() == NS_STYLE_TEXT_ALIGN_UNSAFE) {
         textAlignLastValue = &textAlignLastValuePair.mYValue;
       }
     }
@@ -9755,6 +9759,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
               parentSVGReset->mMaskType,
               NS_STYLE_MASK_TYPE_LUMINANCE, 0, 0, 0, 0);
 
+#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
   uint32_t maxItemCount = 1;
   bool rebuild = false;
 
@@ -9833,7 +9838,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                     svgReset->mMask.mLayers,
                     parentSVGReset->mMask.mLayers,
                     &nsStyleImageLayers::Layer::mMaskMode,
-                    uint8_t(NS_STYLE_MASK_MODE_AUTO),
+                    uint8_t(NS_STYLE_MASK_MODE_MATCH_SOURCE),
                     parentSVGReset->mMask.mMaskModeCount,
                     svgReset->mMask.mMaskModeCount, maxItemCount, rebuild, conditions);
 
@@ -9881,6 +9886,21 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                        &nsStyleImageLayers::Layer::mComposite,
                        svgReset->mMask.mCompositeCount, fillCount);
   }
+#else
+  // mask: none | <url>
+  const nsCSSValue* maskValue = aRuleData->ValueForMask();
+  if (eCSSUnit_URL == maskValue->GetUnit()) {
+    svgReset->mMask.mLayers[0].mSourceURI = maskValue->GetURLValue();
+  } else if (eCSSUnit_None == maskValue->GetUnit() ||
+             eCSSUnit_Initial == maskValue->GetUnit() ||
+             eCSSUnit_Unset == maskValue->GetUnit()) {
+    svgReset->mMask.mLayers[0].mSourceURI = nullptr;
+  } else if (eCSSUnit_Inherit == maskValue->GetUnit()) {
+    conditions.SetUncacheable();
+    svgReset->mMask.mLayers[0].mSourceURI =
+      parentSVGReset->mMask.mLayers[0].mSourceURI;
+  }
+#endif
 
   svgReset->mMask.TrackImages(aContext->PresContext());
 
@@ -9963,9 +9983,11 @@ nsRuleNode::DestroyIfNotMarked()
   // However, we never allow the root node to GC itself, because nsStyleSet
   // wants to hold onto the root node and not worry about re-creating a
   // rule walker if the root node is deleted.
+  MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
+             "ServoStyleSets should not have rule nodes");
   if (!(mDependentBits & NS_RULE_NODE_GC_MARK) &&
       // Skip this only if we're the *current* root and not an old one.
-      !(IsRoot() && mPresContext->StyleSet()->GetRuleTree() == this)) {
+      !(IsRoot() && mPresContext->StyleSet()->AsGecko()->GetRuleTree() == this)) {
     Destroy();
     return true;
   }

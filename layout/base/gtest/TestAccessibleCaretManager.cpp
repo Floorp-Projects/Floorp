@@ -60,6 +60,8 @@ public:
     using AccessibleCaretManager::UpdateCarets;
     using AccessibleCaretManager::HideCarets;
     using AccessibleCaretManager::sCaretShownWhenLongTappingOnEmptyContent;
+    using AccessibleCaretManager::sCaretsExtendedVisibility;
+    using AccessibleCaretManager::sCaretsAlwaysTilt;
 
     MockAccessibleCaretManager()
       : AccessibleCaretManager(nullptr)
@@ -90,7 +92,20 @@ public:
       return true;
     }
 
-    virtual void UpdateCaretsForTilt() override {}
+    virtual void UpdateCaretsForOverlappingTilt() override {}
+
+    virtual void UpdateCaretsForAlwaysTilt(nsIFrame* aStartFrame,
+                                           nsIFrame* aEndFrame)
+    {
+      if (mFirstCaret->IsVisuallyVisible()) {
+        mFirstCaret->SetAppearance(Appearance::Left);
+      }
+      if (mSecondCaret->IsVisuallyVisible()) {
+        mSecondCaret->SetAppearance(Appearance::Right);
+      }
+    }
+
+    virtual bool IsTerminated() const override { return false; }
 
     MOCK_CONST_METHOD0(GetCaretMode, CaretMode());
     MOCK_CONST_METHOD1(DispatchCaretStateChangedEvent,
@@ -344,27 +359,33 @@ TEST_F(AccessibleCaretManagerTester, TestScrollInSelectionMode)
 
     // Initially, first caret is out of scrollport, and second caret is visible.
     EXPECT_CALL(mManager.FirstCaret(), SetPosition(_, _))
-      .WillRepeatedly(Return(PositionChangedResult::Invisible));
-    EXPECT_CALL(mManager.SecondCaret(), SetPosition(_, _))
-      .WillRepeatedly(Return(PositionChangedResult::Changed));
+      .WillOnce(Return(PositionChangedResult::Invisible));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                  CaretChangedReason::Updateposition)).Times(1);
+                  CaretChangedReason::Updateposition));
     EXPECT_CALL(check, Call("updatecarets"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                  CaretChangedReason::Visibilitychange)).Times(1);
-    EXPECT_CALL(check, Call("scrollstart"));
+                  CaretChangedReason::Visibilitychange));
+    EXPECT_CALL(check, Call("scrollstart1"));
 
     // After scroll ended, first caret is visible and second caret is out of
     // scroll port.
-    EXPECT_CALL(mManager.FirstCaret(), SetPosition(_, _))
-      .WillRepeatedly(Return(PositionChangedResult::Changed));
     EXPECT_CALL(mManager.SecondCaret(), SetPosition(_, _))
-      .WillRepeatedly(Return(PositionChangedResult::Invisible));
+      .WillOnce(Return(PositionChangedResult::Invisible));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                  CaretChangedReason::Updateposition)).Times(1);
+                  CaretChangedReason::Updateposition));
+    EXPECT_CALL(check, Call("scrollend1"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Visibilitychange));
+    EXPECT_CALL(check, Call("scrollstart2"));
+
+    // After the scroll ended, both carets are visible.
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition));
+    EXPECT_CALL(check, Call("scrollend2"));
   }
 
   mManager.UpdateCarets();
@@ -375,11 +396,123 @@ TEST_F(AccessibleCaretManagerTester, TestScrollInSelectionMode)
   mManager.OnScrollStart();
   EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
   EXPECT_EQ(SecondCaretAppearance(), Appearance::None);
-  check.Call("scrollstart");
+  check.Call("scrollstart1");
+
+  mManager.OnReflow();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::None);
 
   mManager.OnScrollEnd();
   EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
   EXPECT_EQ(SecondCaretAppearance(), Appearance::NormalNotShown);
+  check.Call("scrollend1");
+
+  mManager.OnScrollStart();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::None);
+  check.Call("scrollstart2");
+
+  mManager.OnReflow();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::None);
+
+  mManager.OnScrollEnd();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::Normal);
+  check.Call("scrollend2");
+}
+
+TEST_F(AccessibleCaretManagerTester,
+       TestScrollInSelectionModeWithExtendedVisibilityAndAlwaysTilt)
+{
+  EXPECT_CALL(mManager, GetCaretMode())
+    .WillRepeatedly(Return(CaretMode::Selection));
+
+  MockFunction<void(std::string aCheckPointName)> check;
+  {
+    InSequence dummy;
+
+    // Initially, first caret is out of scrollport, and second caret is visible.
+    EXPECT_CALL(mManager.FirstCaret(), SetPosition(_, _))
+      .WillOnce(Return(PositionChangedResult::Invisible));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition));
+    EXPECT_CALL(check, Call("updatecarets"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Visibilitychange));
+    EXPECT_CALL(check, Call("scrollstart1"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition));
+    EXPECT_CALL(check, Call("reflow1"));
+
+    // After scroll ended, first caret is visible and second caret is out of
+    // scroll port.
+    EXPECT_CALL(mManager.SecondCaret(), SetPosition(_, _))
+      .WillOnce(Return(PositionChangedResult::Invisible));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition));
+    EXPECT_CALL(check, Call("scrollend1"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Visibilitychange));
+    EXPECT_CALL(check, Call("scrollstart2"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition));
+    EXPECT_CALL(check, Call("reflow2"));
+
+    // After the scroll ended, both carets are visible.
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition));
+    EXPECT_CALL(check, Call("scrollend2"));
+  }
+
+  // Simulate Firefox Android preferences.
+  AutoRestore<bool> saveCaretsExtendedVisibility(
+    MockAccessibleCaretManager::sCaretsExtendedVisibility);
+  MockAccessibleCaretManager::sCaretsExtendedVisibility = true;
+  AutoRestore<bool> saveCaretsAlwaysTilt(
+    MockAccessibleCaretManager::sCaretsAlwaysTilt);
+  MockAccessibleCaretManager::sCaretsAlwaysTilt = true;
+
+  mManager.UpdateCarets();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::Right);
+  check.Call("updatecarets");
+
+  mManager.OnScrollStart();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::NormalNotShown);
+  check.Call("scrollstart1");
+
+  mManager.OnReflow();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::NormalNotShown);
+  check.Call("reflow1");
+
+  mManager.OnScrollEnd();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Left);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::NormalNotShown);
+  check.Call("scrollend1");
+
+  mManager.OnScrollStart();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::NormalNotShown);
+  check.Call("scrollstart2");
+
+  mManager.OnReflow();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::NormalNotShown);
+  check.Call("reflow2");
+
+  mManager.OnScrollEnd();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Left);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::Right);
+  check.Call("scrollend2");
 }
 
 TEST_F(AccessibleCaretManagerTester, TestScrollInCursorModeWhenLogicallyVisible)
@@ -537,7 +670,7 @@ TEST_F(AccessibleCaretManagerTester, TestScrollInCursorModeOnEmptyContent)
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
                    CaretChangedReason::Updateposition));
     EXPECT_CALL(check, Call("scrollend3"));
-}
+  }
 
   // Simulate a single tap on an empty content.
   mManager.UpdateCarets();
@@ -565,7 +698,6 @@ TEST_F(AccessibleCaretManagerTester, TestScrollInCursorModeOnEmptyContent)
   EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
   check.Call("scrollend3");
 }
-
 
 TEST_F(AccessibleCaretManagerTester,
        TestScrollInCursorModeOnEmptyContentWithSpecialPreference)

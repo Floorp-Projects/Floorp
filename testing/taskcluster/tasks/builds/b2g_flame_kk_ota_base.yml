@@ -1,7 +1,7 @@
 $inherits:
   from: 'tasks/builds/b2g_phone_base.yml'
 task:
-  workerType: balrog
+  workerType: flame-kk
   payload:
     env:
       TARGET: 'flame-kk'

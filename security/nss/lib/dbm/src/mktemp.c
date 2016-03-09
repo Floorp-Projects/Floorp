@@ -127,8 +127,7 @@ _gettemp(char *path, register int *doopen, int extraFlags)
                 return (1);
             if (errno != EEXIST)
                 return (0);
-        }
-        else if (stat(path, &sbuf))
+        } else if (stat(path, &sbuf))
             return (errno == ENOENT ? 1 : 0);
 
         /* tricky little algorithm for backward compatibility */

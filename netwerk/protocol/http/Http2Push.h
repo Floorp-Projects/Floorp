@@ -52,6 +52,7 @@ public:
   void ConnectPushedStream(Http2Stream *consumer);
 
   bool TryOnPush();
+  static bool TestOnPush(Http2Stream *consumer);
 
   virtual bool DeferCleanup(nsresult status) override;
   void SetDeferCleanupOnSuccess(bool val) { mDeferCleanupOnSuccess = val; }

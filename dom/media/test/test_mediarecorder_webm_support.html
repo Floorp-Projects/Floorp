@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media Recording - test WebM MIME support</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+ok(MediaRecorder.isTypeSupported('video/webm'), 'Should support video/webm');
+ok(MediaRecorder.isTypeSupported('video/webm; codecs="vp8, vorbis"'), 'Should support video/webm + vp8/vorbis');
+ok(!MediaRecorder.isTypeSupported('video/webm; codecs="vp9, vorbis"'), 'Should not support video/webm + vp9/vorbis');
+</script>
+</head>
+</html>

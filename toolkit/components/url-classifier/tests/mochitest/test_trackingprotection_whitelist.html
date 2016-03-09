@@ -129,12 +129,15 @@ function test() {
         aWindow.close();
 
         // Load the test from a URL on the whitelist but without the whitelist
-        SpecialPowers.setCharPref("urlclassifier.trackingWhitelistTable", "");
-        testOnWindow(contentPage1, function(aWindow) {
-        checkLoads(aWindow, false);
-          aWindow.close();
-          SimpleTest.finish();
-        });
+        SpecialPowers.pushPrefEnv({"set" : [["urlclassifier.trackingWhitelistTable", ""]]},
+          function() {
+            testOnWindow(contentPage1, function(aWindow) {
+              checkLoads(aWindow, false);
+              aWindow.close();
+              SimpleTest.finish();
+            });
+          });
+
       });
     });
   });

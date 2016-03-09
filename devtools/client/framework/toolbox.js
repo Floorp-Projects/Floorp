@@ -18,6 +18,7 @@ const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 
 var {Cc, Ci, Cu} = require("chrome");
 var promise = require("promise");
+var Services = require("Services");
 var {gDevTools} = require("devtools/client/framework/devtools");
 var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
@@ -25,7 +26,6 @@ var HUDService = require("devtools/client/webconsole/hudservice");
 var viewSource = require("devtools/client/shared/view-source");
 var { attachThread, detachThread } = require("./attach-thread");
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 Cu.import("resource://devtools/client/shared/DOMHelpers.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
@@ -89,8 +89,6 @@ const ToolboxButtons = exports.ToolboxButtons = [
     isTargetSupported: target => !target.isAddon },
   { id: "command-button-responsive" },
   { id: "command-button-paintflashing" },
-  { id: "command-button-tilt",
-    commands: "devtools/client/tilt/tilt-commands" },
   { id: "command-button-scratchpad" },
   { id: "command-button-eyedropper" },
   { id: "command-button-screenshot" },
@@ -563,11 +561,6 @@ Toolbox.prototype = {
     let toggleKey = this.doc.getElementById("toolbox-toggle-host-key");
     toggleKey.addEventListener("command", this.switchToPreviousHost.bind(this), true);
 
-    if (Services.prefs.prefHasUserValue("devtools.loader.srcdir")) {
-      let reloadKey = this.doc.getElementById("tools-reload-key");
-      reloadKey.addEventListener("command", this.reload.bind(this), true);
-    }
-
     // Split console uses keypress instead of command so the event can be
     // cancelled with stopPropagation on the keypress, and not preventDefault.
     this.doc.addEventListener("keypress", this._splitConsoleOnKeypress, false);
@@ -917,6 +910,10 @@ Toolbox.prototype = {
     if (!this.target.hasActor("gcli")) {
       return promise.resolve();
     }
+    // Disable gcli in browser toolbox until there is usages of it
+    if (this.target.chrome) {
+      return promise.resolve();
+    }
 
     const options = {
       environment: CommandUtils.createEnvironment(this, '_target')
@@ -1009,12 +1006,6 @@ Toolbox.prototype = {
         return false;
       }
 
-      // Disable tilt in E10S mode. Removing it from the list of toolbox buttons
-      // allows a bunch of tests to pass without modification.
-      if (this.target.isMultiProcess && options.id === "command-button-tilt") {
-        return false;
-      }
-
       return {
         id: options.id,
         button: button,
@@ -1051,22 +1042,6 @@ Toolbox.prototype = {
     });
 
     this._updateNoautohideButton();
-
-    // Tilt is handled separately because it is disabled in E10S mode. Because
-    // we have removed tilt from toolboxButtons we have to deal with it here.
-    let tiltEnabled = !this.target.isMultiProcess &&
-                      Services.prefs.getBoolPref("devtools.command-button-tilt.enabled");
-    let tiltButton = this.doc.getElementById("command-button-tilt");
-    // Remote toolboxes don't add the button to the DOM at all
-    if (!tiltButton) {
-      return;
-    }
-
-    if (tiltEnabled) {
-      tiltButton.removeAttribute("hidden");
-    } else {
-      tiltButton.setAttribute("hidden", "true");
-    }
   },
 
   /**
@@ -1700,11 +1675,6 @@ Toolbox.prototype = {
     let newHost = new Hosts[hostType](this.target.tab, options);
     newHost.on("window-closed", this.destroy);
     return newHost;
-  },
-
-  reload: function () {
-    const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-    devtools.reload(true);
   },
 
   /**

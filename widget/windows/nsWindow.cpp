@@ -1410,10 +1410,7 @@ nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
     c.mMinSize.width = std::max(int32_t(::GetSystemMetrics(SM_CXMINTRACK)), c.mMinSize.width);
     c.mMinSize.height = std::max(int32_t(::GetSystemMetrics(SM_CYMINTRACK)), c.mMinSize.height);
   }
-  ClientLayerManager *clientLayerManager =
-      (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT)
-      ? static_cast<ClientLayerManager*>(GetLayerManager())
-      : nullptr;
+  ClientLayerManager *clientLayerManager = GetLayerManager()->AsClientLayerManager();
 
   if (clientLayerManager) {
     int32_t maxSize = clientLayerManager->GetMaxTextureSize();
@@ -2329,18 +2326,6 @@ nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow)
     // maximized.  If we try to mess with the frame sizes by setting these
     // offsets to positive values, our client area will fall off the screen.
     mNonClientOffset.top = mCaptionHeight;
-    // Adjust for the case where the window is maximized on a screen with DPI
-    // different from the primary monitor; this seems to be linked to Windows'
-    // failure to scale the non-client area the same as the client area.
-    // Any modifications here need to be tested for both high- and low-dpi
-    // secondary displays, and for windows both with and without the titlebar
-    // and/or menubar displayed.
-    double ourScale = WinUtils::LogToPhysFactor(mWnd);
-    double primaryScale =
-      WinUtils::LogToPhysFactor(WinUtils::GetPrimaryMonitor());
-    mNonClientOffset.top +=
-      NSToIntRound(mVertResizeMargin * (ourScale - primaryScale));
-
     mNonClientOffset.bottom = 0;
     mNonClientOffset.left = 0;
     mNonClientOffset.right = 0;
@@ -6159,6 +6144,8 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
     pl.length = sizeof(pl);
     ::GetWindowPlacement(mWnd, &pl);
 
+    nsSizeMode previousSizeMode = mSizeMode;
+
     // Windows has just changed the size mode of this window. The call to
     // SizeModeChanged will trigger a call into SetSizeMode where we will
     // set the min/max window state again or for nsSizeMode_Normal, call
@@ -6203,7 +6190,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
     }
 #endif
 
-    if (mWidgetListener)
+    if (mWidgetListener && mSizeMode != previousSizeMode)
       mWidgetListener->SizeModeChanged(mSizeMode);
 
     // If window was restored, window activation was bypassed during the 
@@ -6794,12 +6781,6 @@ bool nsWindow::AutoErase(HDC dc)
   return false;
 }
 
-void
-nsWindow::ClearCompositor(nsWindow* aWindow)
-{
-  aWindow->DestroyLayerManager();
-}
-
 bool
 nsWindow::IsPopup()
 {
@@ -6882,13 +6863,19 @@ nsWindow::OnSysColorChanged()
 void
 nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width, int32_t height)
 {
+  // Don't try to handle WM_DPICHANGED for popup windows (see bug 1239353);
+  // they remain tied to their original parent's resolution.
+  if (mWindowType == eWindowType_popup) {
+    return;
+  }
   if (DefaultScaleOverride() > 0.0) {
     return;
   }
   double oldScale = mDefaultScale;
   mDefaultScale = -1.0; // force recomputation of scale factor
   double newScale = GetDefaultScaleInternal();
-  if (mResizeState != NOT_RESIZING) {
+
+  if (mResizeState != RESIZING) {
     // We want to try and maintain the size of the client area, rather than
     // the overall size of the window including non-client area, so we prefer
     // to calculate the new size instead of using Windows' suggested values.

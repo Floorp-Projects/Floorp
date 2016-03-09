@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+using base::ProcessId from "base/process.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 
 namespace mozilla {
@@ -19,6 +20,7 @@ struct SlowScriptData
 struct PluginHangData
 {
   uint32_t pluginId;
+  ProcessId contentProcessId;
 };
 
 union HangData

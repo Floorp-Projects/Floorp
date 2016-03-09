@@ -41,7 +41,7 @@ add_task(function* () {
   is(findResult.result, Ci.nsITypeAheadFind.FIND_FOUND, "should find link");
 
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* (arg) {
-    ok(!!content.document.getElementsByTagName("a")[0].style.outline, "outline set");
+    Assert.ok(!!content.document.getElementsByTagName("a")[0].style.outline, "outline set");
   });
 
   // Just a simple search for "test link".
@@ -51,7 +51,7 @@ add_task(function* () {
   is(findResult.result, Ci.nsITypeAheadFind.FIND_FOUND, "should find link again");
 
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* (arg) {
-    ok(!content.document.getElementsByTagName("a")[0].style.outline, "outline not set");
+    Assert.ok(!content.document.getElementsByTagName("a")[0].style.outline, "outline not set");
   });
 
   finder.removeResultListener(listener);

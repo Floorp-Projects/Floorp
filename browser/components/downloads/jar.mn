@@ -4,7 +4,6 @@
 
 browser.jar:
 *       content/browser/downloads/download.xml           (content/download.xml)
-        content/browser/downloads/download.css           (content/download.css)
         content/browser/downloads/downloads.css          (content/downloads.css)
         content/browser/downloads/downloads.js           (content/downloads.js)
 *       content/browser/downloads/downloadsOverlay.xul   (content/downloadsOverlay.xul)
@@ -12,7 +11,6 @@ browser.jar:
         content/browser/downloads/indicatorOverlay.xul   (content/indicatorOverlay.xul)
 *       content/browser/downloads/allDownloadsViewOverlay.xul (content/allDownloadsViewOverlay.xul)
         content/browser/downloads/allDownloadsViewOverlay.js  (content/allDownloadsViewOverlay.js)
-        content/browser/downloads/allDownloadsViewOverlay.css (content/allDownloadsViewOverlay.css)
 *       content/browser/downloads/contentAreaDownloadsView.xul (content/contentAreaDownloadsView.xul)
         content/browser/downloads/contentAreaDownloadsView.js  (content/contentAreaDownloadsView.js)
         content/browser/downloads/contentAreaDownloadsView.css (content/contentAreaDownloadsView.css)

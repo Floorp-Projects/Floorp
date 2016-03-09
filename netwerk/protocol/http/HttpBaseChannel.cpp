@@ -585,12 +585,23 @@ NS_IMETHODIMP
 HttpBaseChannel::Open(nsIInputStream **aResult)
 {
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_IN_PROGRESS);
+
+  if (!gHttpHandler->Active()) {
+    LOG(("HttpBaseChannel::Open after HTTP shutdown..."));
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   return NS_ImplementChannelOpen(this, aResult);
 }
 
 NS_IMETHODIMP
 HttpBaseChannel::Open2(nsIInputStream** aStream)
 {
+  if (!gHttpHandler->Active()) {
+    LOG(("HttpBaseChannel::Open after HTTP shutdown..."));
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsCOMPtr<nsIStreamListener> listener;
   nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1492,6 +1503,12 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
     rv = clone->GetAsciiSpec(spec);
     if (NS_FAILED(rv)) return rv;
     break;
+  }
+
+  // If any user trimming policy is in effect, use the trimmed URI.
+  if (userReferrerTrimmingPolicy) {
+    rv = NS_NewURI(getter_AddRefs(clone), spec);
+    if (NS_FAILED(rv)) return rv;
   }
 
   // finally, remember the referrer URI and set the Referer header.
@@ -2465,6 +2482,41 @@ HttpBaseChannel::ShouldIntercept(nsIURI* aURI)
   return shouldIntercept;
 }
 
+void
+HttpBaseChannel::SetLoadGroupUserAgentOverride()
+{
+  nsCOMPtr<nsIURI> uri;
+  GetURI(getter_AddRefs(uri));
+  nsAutoCString uriScheme;
+  if (uri) {
+    uri->GetScheme(uriScheme);
+  }
+  nsCOMPtr<nsILoadGroupChild> childLoadGroup = do_QueryInterface(mLoadGroup);
+  nsCOMPtr<nsILoadGroup> rootLoadGroup;
+  if (childLoadGroup) {
+    childLoadGroup->GetRootLoadGroup(getter_AddRefs(rootLoadGroup));
+  }
+  if (rootLoadGroup && !uriScheme.EqualsLiteral("file")) {
+    nsAutoCString ua;
+    if (nsContentUtils::IsNonSubresourceRequest(this)) {
+      gHttpHandler->OnUserAgentRequest(this);
+      GetRequestHeader(NS_LITERAL_CSTRING("User-Agent"), ua);
+      rootLoadGroup->SetUserAgentOverrideCache(ua);
+    } else {
+      GetRequestHeader(NS_LITERAL_CSTRING("User-Agent"), ua);
+      // Don't overwrite the UA if it is already set (eg by an XHR with explicit UA).
+      if (ua.IsEmpty()) {
+        rootLoadGroup->GetUserAgentOverrideCache(ua);
+        SetRequestHeader(NS_LITERAL_CSTRING("User-Agent"), ua, false);
+      }
+    }
+  } else {
+    // If the root loadgroup doesn't exist or if the channel's URI's scheme is "file",
+    // fall back on getting the UA override per channel.
+    gHttpHandler->OnUserAgentRequest(this);
+  }
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsITraceableChannel
 //-----------------------------------------------------------------------------
@@ -3190,21 +3242,32 @@ HttpBaseChannel::GetSecureUpgradedURI(nsIURI* aURI, nsIURI** aUpgradedURI)
   nsresult rv = aURI->Clone(getter_AddRefs(upgradedURI));
   NS_ENSURE_SUCCESS(rv,rv);
 
+  // Change the scheme to HTTPS:
   upgradedURI->SetScheme(NS_LITERAL_CSTRING("https"));
 
-  int32_t oldPort = -1;
-  rv = aURI->GetPort(&oldPort);
-  if (NS_FAILED(rv)) return rv;
+  // Change the default port to 443:
+  nsCOMPtr<nsIStandardURL> upgradedStandardURL = do_QueryInterface(upgradedURI);
+  if (upgradedStandardURL) {
+    upgradedStandardURL->SetDefaultPort(443);
+  } else {
+    // If we don't have a nsStandardURL, fall back to using GetPort/SetPort.
+    // XXXdholbert Is this function even called with a non-nsStandardURL arg,
+    // in practice?
+    int32_t oldPort = -1;
+    rv = aURI->GetPort(&oldPort);
+    if (NS_FAILED(rv)) return rv;
 
-  // Keep any nonstandard ports so only the scheme is changed.
-  // For example:
-  //  http://foo.com:80 -> https://foo.com:443
-  //  http://foo.com:81 -> https://foo.com:81
+    // Keep any nonstandard ports so only the scheme is changed.
+    // For example:
+    //  http://foo.com:80 -> https://foo.com:443
+    //  http://foo.com:81 -> https://foo.com:81
 
-  if (oldPort == 80 || oldPort == -1)
-      upgradedURI->SetPort(-1);
-  else
-      upgradedURI->SetPort(oldPort);
+    if (oldPort == 80 || oldPort == -1) {
+        upgradedURI->SetPort(-1);
+    } else {
+        upgradedURI->SetPort(oldPort);
+    }
+  }
 
   upgradedURI.forget(aUpgradedURI);
   return NS_OK;
