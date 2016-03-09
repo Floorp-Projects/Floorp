@@ -1458,6 +1458,20 @@ class PackageFrontend(MachCommandBase):
     def _set_log_level(self, verbose):
         self.log_manager.terminal_handler.setLevel(logging.INFO if not verbose else logging.DEBUG)
 
+    def _install_pip_package(self, package):
+        if os.environ.get('MOZ_AUTOMATION'):
+            self.virtualenv_manager._run_pip([
+                'install',
+                package,
+                '--no-index',
+                '--find-links',
+                'http://pypi.pub.build.mozilla.org/pub',
+                '--trusted-host',
+                'pypi.pub.build.mozilla.org',
+            ])
+            return
+        self.virtualenv_manager.install_pip_package(package)
+
     def _make_artifacts(self, tree=None, job=None, skip_cache=False):
         # Undo PATH munging that will be done by activating the virtualenv,
         # so that invoked subprocesses expecting to find system python
@@ -1465,9 +1479,11 @@ class PackageFrontend(MachCommandBase):
         original_path = os.environ.get('PATH', '')
         self._activate_virtualenv()
         os.environ['PATH'] = original_path
-        self.virtualenv_manager.install_pip_package('pylru==1.0.9')
-        self.virtualenv_manager.install_pip_package('taskcluster==0.0.32')
-        self.virtualenv_manager.install_pip_package('mozregression==1.0.2')
+
+        for package in ('pylru==1.0.9',
+                        'taskcluster==0.0.32',
+                        'mozregression==1.0.2'):
+            self._install_pip_package(package)
 
         state_dir = self._mach_context.state_dir
         cache_dir = os.path.join(state_dir, 'package-frontend')
