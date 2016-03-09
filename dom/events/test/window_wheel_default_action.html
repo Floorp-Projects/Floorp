@@ -85,12 +85,15 @@ function hitEventLoop(aFunc, aTimes)
   }
 }
 
+const zoomResetTopic = "browser-fullZoom:zoomReset";
+SpecialPowers.registerObservers(zoomResetTopic);
+
 function onZoomReset(aCallback) {
-  var topic = "browser-fullZoom:zoomReset";
+  var specialPowersTopic = "specialpowers-" + zoomResetTopic;
   SpecialPowers.addObserver(function observe() {
-    SpecialPowers.removeObserver(observe, topic);
+    SpecialPowers.removeObserver(observe, specialPowersTopic);
     SimpleTest.executeSoon(aCallback);
-  }, topic, false);
+  }, specialPowersTopic, false);
 }
 
 function setDeltaMultiplierSettings(aSettings, aCallback)
@@ -1770,6 +1773,7 @@ function doTestActionOverride(aCallback)
 function runTests()
 {
   SpecialPowers.pushPrefEnv({"set": [
+    ["test.events.async.enabled", true],
     ["general.smoothScroll", false],
     ["mousewheel.default.action", 1],      // scroll
     ["mousewheel.default.action.override_x", -1],
