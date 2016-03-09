@@ -8257,12 +8257,6 @@ if test -n "$MOZ_SERVICES_CLOUDSYNC"; then
   AC_DEFINE(MOZ_SERVICES_CLOUDSYNC)
 fi
 
-dnl Build second screen and casting features for external devices if required
-AC_SUBST(MOZ_DEVICES)
-if test -n "$MOZ_DEVICES"; then
-  AC_DEFINE(MOZ_DEVICES)
-fi
-
 dnl ========================================================
 if test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
