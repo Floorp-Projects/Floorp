@@ -348,4 +348,6 @@ public class AppConstants {
 //#else
     false;
 //#endif
+
+    public static final boolean SCREENSHOTS_IN_BOOKMARKS_ENABLED = AppConstants.NIGHTLY_BUILD;
 }
