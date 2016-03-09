@@ -11,8 +11,8 @@
     style="@style/Widget.RemoteTabsClientView"
     android:gravity="center_vertical"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/page_group_height"
-    android:minHeight="@dimen/page_group_height">
+    android:layout_height="@dimen/home_header_item_height"
+    android:minHeight="@dimen/home_header_item_height">
 
     <ImageView
         android:id="@+id/device_type"

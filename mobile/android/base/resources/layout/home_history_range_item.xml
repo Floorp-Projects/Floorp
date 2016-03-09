@@ -6,7 +6,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
              android:background="@color/about_page_header_grey"
              android:layout_width="match_parent"
-             android:layout_height="@dimen/page_row_height">
+             android:layout_height="@dimen/home_header_item_height">
 
     <TextView android:id="@+id/range_title"
               style="@style/Widget.TwoLinePageRow.Title"
