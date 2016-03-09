@@ -83,22 +83,10 @@ this.interaction = {};
  *     Element to click.
  * @param {boolean=} strict
  *     Enforce strict accessibility tests.
- * @param {boolean=} specCompat
- *     Use WebDriver specification compatible interactability definition.
  */
-interaction.clickElement = function(el, strict = false, specCompat = false) {
+interaction.clickElement = function(el, strict = false) {
   let win = getWindow(el);
-
-  let visible = false;
-  if (specCompat) {
-    visible = element.isInteractable(el);
-    if (visible) {
-      el.scrollIntoView(false);
-    }
-  } else {
-    visible = element.isVisible(el, win);
-  }
-
+  let visible = element.isVisible(el, win);
   if (!visible) {
     throw new ElementNotVisibleError("Element is not visible");
   }
