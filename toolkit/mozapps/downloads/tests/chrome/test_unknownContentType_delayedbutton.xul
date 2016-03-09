@@ -14,13 +14,13 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <script type="application/javascript"
-          src="utils.js"/>
 
   <script type="application/javascript"><![CDATA[
-    Components.utils.import("resource://gre/modules/Services.jsm");
-    Components.utils.import("resource://gre/modules/Task.jsm");
-    Components.utils.import("resource://gre/modules/Promise.jsm");
+    const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
+    Cu.import("resource://gre/modules/Services.jsm");
+    Cu.import("resource://gre/modules/Task.jsm");
+    Cu.import("resource://gre/modules/Promise.jsm");
 
     const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xul";
     const LOAD_URI = "http://mochi.test:8888/chrome/toolkit/mozapps/downloads/tests/chrome/unknownContentType_dialog_layout_data.txt";

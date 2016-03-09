@@ -383,3 +383,28 @@
  
  
  namespace google {
+diff --git a/toolkit/components/protobuf/src/google/protobuf/stubs/atomicops.h b/toolkit/components/protobuf/src/google/protobuf/stubs/atomicops.h
+--- a/toolkit/components/protobuf/src/google/protobuf/stubs/atomicops.h
++++ b/toolkit/components/protobuf/src/google/protobuf/stubs/atomicops.h
+@@ -73,17 +73,21 @@ typedef int32 Atomic32;
+ typedef int64 Atomic64;
+ #else
+ typedef intptr_t Atomic64;
+ #endif
+ #endif
+ 
+ // Use AtomicWord for a machine-sized pointer.  It will use the Atomic32 or
+ // Atomic64 routines below, depending on your architecture.
++#if defined(__OpenBSD__) && !defined(GOOGLE_PROTOBUF_ARCH_64_BIT)
++typedef Atomic32 AtomicWord;
++#else
+ typedef intptr_t AtomicWord;
++#endif
+ 
+ // Atomically execute:
+ //      result = *ptr;
+ //      if (*ptr == old_value)
+ //        *ptr = new_value;
+ //      return result;
+ //
+ // I.e., replace "*ptr" with "new_value" if "*ptr" used to be "old_value".

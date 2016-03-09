@@ -607,18 +607,6 @@
         <item name="android:background">@drawable/action_bar_button_inverse</item>
     </style>
 
-    <style name="WebView">
-    </style>
-
-    <style name="WebView.Titlebar">
-        <item name="android:background">@drawable/webapp_titlebar_bg</item>
-        <item name="android:padding">2dp</item>
-    </style>
-
-    <style name="WebView.Titlebar.Title">
-        <item name="android:textColor">@color/placeholder_active_grey</item>
-    </style>
-
     <style name="GeckoDialogTitle">
         <item name="android:textAppearance">@android:style/TextAppearance.DialogWindowTitle</item>
     </style>

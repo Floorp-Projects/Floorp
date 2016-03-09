@@ -22,13 +22,34 @@ module.exports = createClass({
     onRotateViewport: PropTypes.func.isRequired,
   },
 
+  onResizeViewport(width, height) {
+    let {
+      viewport,
+      onResizeViewport,
+    } = this.props;
+
+    onResizeViewport(viewport.id, width, height);
+  },
+
+  onRotateViewport() {
+    let {
+      viewport,
+      onRotateViewport,
+    } = this.props;
+
+    onRotateViewport(viewport.id);
+  },
+
   render() {
     let {
       location,
       viewport,
-      onResizeViewport,
-      onRotateViewport,
     } = this.props;
+
+    let {
+      onRotateViewport,
+      onResizeViewport,
+    } = this;
 
     return dom.div(
       {

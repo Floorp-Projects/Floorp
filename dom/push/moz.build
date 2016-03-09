@@ -46,6 +46,8 @@ UNIFIED_SOURCES += [
     'PushNotifier.cpp',
 ]
 
+TEST_DIRS += ['test/xpcshell']
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 if CONFIG['GNU_CXX']:

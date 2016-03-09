@@ -511,6 +511,13 @@ addMessageListener("NetworkPrioritizer:AdjustPriority", (msg) => {
   loadGroup.adjustPriority(msg.data.adjustment);
 });
 
+addMessageListener("NetworkPrioritizer:SetPriority", (msg) => {
+  let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+  let loadGroup = webNav.QueryInterface(Ci.nsIDocumentLoader)
+                        .loadGroup.QueryInterface(Ci.nsISupportsPriority);
+  loadGroup.priority = msg.data.priority;
+});
+
 var AutoCompletePopup = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup]),
 

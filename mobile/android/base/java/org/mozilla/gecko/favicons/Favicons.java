@@ -447,8 +447,6 @@ public class Favicons {
             }
             loadTasks.clear();
         }
-
-        LoadFaviconTask.closeHTTPClient();
     }
 
     /**

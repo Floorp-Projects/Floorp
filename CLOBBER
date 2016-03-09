@@ -23,4 +23,3 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 Bug 1250297 - Doesn't actually need a clobber, but updating the tree to an older changeset does.
-

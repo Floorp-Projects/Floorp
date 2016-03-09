@@ -74,6 +74,23 @@ ac_add_options --with-android-ndk="%s"
 >>>
 '''
 
+MOBILE_ANDROID_ARTIFACT_MODE_MOZCONFIG_TEMPLATE = '''
+Paste the lines between the chevrons (>>> and <<<) into your mozconfig file:
+
+<<<
+# Build Firefox for Android Artifact Mode:
+ac_add_options --enable-application=mobile/android
+ac_add_options --target=arm-linux-androideabi
+ac_add_options --enable-artifact-builds
+
+# With the following Android SDK:
+ac_add_options --with-android-sdk="%s"
+
+# Write build artifacts to:
+mk_add_options MOZ_OBJDIR=./objdir-frontend
+>>>
+'''
+
 
 def check_output(*args, **kwargs):
     """Run subprocess.check_output even if Python doesn't provide it."""
@@ -177,19 +194,21 @@ def install_mobile_android_sdk_or_ndk(url, path):
         os.chdir(old_path)
 
 
-def ensure_android_sdk_and_ndk(path, sdk_path, sdk_url, ndk_path, ndk_url):
+def ensure_android_sdk_and_ndk(path, sdk_path, sdk_url, ndk_path, ndk_url, artifact_mode):
     '''
     Ensure the Android SDK and NDK are found at the given paths.  If not, fetch
     and unpack the SDK and/or NDK from the given URLs into |path|.
     '''
 
-    # It's not particularyl bad to overwrite the NDK toolchain, but it does take
+    # It's not particularly bad to overwrite the NDK toolchain, but it does take
     # a while to unpack, so let's avoid the disk activity if possible.  The SDK
     # may prompt about licensing, so we do this first.
-    if os.path.isdir(ndk_path):
-        print(ANDROID_NDK_EXISTS % ndk_path)
-    else:
-        install_mobile_android_sdk_or_ndk(ndk_url, path)
+    # Check for Android NDK only if we are not in artifact mode.
+    if not artifact_mode:
+        if os.path.isdir(ndk_path):
+            print(ANDROID_NDK_EXISTS % ndk_path)
+        else:
+            install_mobile_android_sdk_or_ndk(ndk_url, path)
 
     # We don't want to blindly overwrite, since we use the |android| tool to
     # install additional parts of the Android toolchain.  If we overwrite,
@@ -232,8 +251,11 @@ def ensure_android_packages(android_tool, packages=None):
         raise Exception(MISSING_ANDROID_PACKAGES % (', '.join(missing), ', '.join(failing)))
 
 
-def suggest_mozconfig(sdk_path=None, ndk_path=None):
-    print(MOBILE_ANDROID_MOZCONFIG_TEMPLATE % (sdk_path, ndk_path))
+def suggest_mozconfig(sdk_path=None, ndk_path=None, artifact_mode=False):
+    if artifact_mode:
+        print(MOBILE_ANDROID_ARTIFACT_MODE_MOZCONFIG_TEMPLATE % (sdk_path))
+    else:
+        print(MOBILE_ANDROID_MOZCONFIG_TEMPLATE % (sdk_path, ndk_path))
 
 
 def android_ndk_url(os_name, ver='r10e'):
