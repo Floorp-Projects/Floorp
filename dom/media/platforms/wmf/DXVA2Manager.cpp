@@ -423,39 +423,11 @@ D3D9DXVA2Manager::CopyToImage(IMFSample* aSample,
                          getter_AddRefs(surface));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  RefPtr<D3D9SurfaceImage> image = new D3D9SurfaceImage();
+  RefPtr<D3D9SurfaceImage> image = new D3D9SurfaceImage(mFirstFrame);
   hr = image->AllocateAndCopy(mTextureClientAllocator, surface, aRegion);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  // Flush the draw command now, so that by the time we come to draw this
-  // image, we're less likely to need to wait for the draw operation to
-  // complete.
-  RefPtr<IDirect3DQuery9> query;
-  hr = mDevice->CreateQuery(D3DQUERYTYPE_EVENT, getter_AddRefs(query));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  hr = query->Issue(D3DISSUE_END);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  bool valid = false;
-  int iterations = 0;
-  while (iterations < (mFirstFrame ? 100 : 10)) {
-    hr = query->GetData(nullptr, 0, D3DGETDATA_FLUSH);
-    if (hr == S_FALSE) {
-      Sleep(1);
-      iterations++;
-      continue;
-    }
-    if (hr == S_OK) {
-      valid = true;
-    }
-    break;
-  }
-
   mFirstFrame = false;
-
-  if (!valid) {
-    image->Invalidate();
-  }
 
   image.forget(aOutImage);
   return S_OK;
