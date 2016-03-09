@@ -1374,6 +1374,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     // We are going to run script via JS_SetProperty, so we need a script entry
     // point, but as this is XUL related it does not appear in the HTML spec.
     AutoEntryScript entryScript(innerWin, "nsXULTemplateBuilder creation", true);
+    entryScript.TakeOwnershipOfErrorReporting();
     JSContext* jscontext = entryScript.cx();
 
     JS::Rooted<JS::Value> v(jscontext);
