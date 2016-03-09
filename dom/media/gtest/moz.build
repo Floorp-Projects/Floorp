@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
     'TestGMPRemoveAndDelete.cpp',
     'TestGMPUtils.cpp',
     'TestIntervalSet.cpp',
+    'TestMediaDataDecoder.cpp',
     'TestMediaEventSource.cpp',
     'TestMediaFormatReader.cpp',
     'TestMozPromise.cpp',
