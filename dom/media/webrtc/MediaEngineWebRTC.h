@@ -183,7 +183,7 @@ public:
     return 0;
   }
 
-  int32_t DeviceIndex(int aIndex)
+  static int32_t DeviceIndex(int aIndex)
   {
     if (aIndex == -1) {
       aIndex = 0; // -1 = system default
@@ -193,6 +193,16 @@ public:
     }
     // Note: if the device is gone, this will be -1
     return (*mDeviceIndexes)[aIndex]; // translate to mDevices index
+  }
+
+  static bool GetDeviceID(int aDeviceIndex, CubebUtils::AudioDeviceID &aID)
+  {
+    int dev_index = DeviceIndex(aDeviceIndex);
+    if (dev_index != -1) {
+      aID = mDevices->device[dev_index]->device_id;
+      return true;
+    }
+    return false;
   }
 
   int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
@@ -230,7 +240,7 @@ public:
     }
     mInUseCount++;
     // Always tell the stream we're using it for input
-    aStream->OpenAudioInput(mDevices->device[mSelectedDevice]->devid, aListener);
+    aStream->OpenAudioInput(mSelectedDevice, aListener);
   }
 
   void StopRecording(SourceMediaStream *aStream)
@@ -243,11 +253,7 @@ public:
 
   int SetRecordingDevice(int aIndex)
   {
-    int32_t devindex = DeviceIndex(aIndex);
-    if (!mDevices || devindex < 0) {
-      return 1;
-    }
-    mSelectedDevice = devindex;
+    mSelectedDevice = aIndex;
     return 0;
   }
 
@@ -258,50 +264,7 @@ protected:
 
 private:
   // It would be better to watch for device-change notifications
-  void UpdateDeviceList()
-  {
-    cubeb_device_collection *devices = nullptr;
-
-    if (CUBEB_OK != cubeb_enumerate_devices(CubebUtils::GetCubebContext(),
-                                            CUBEB_DEVICE_TYPE_INPUT,
-                                            &devices)) {
-      return;
-    }
-
-    for (auto& device_index : (*mDeviceIndexes)) {
-      device_index = -1; // unmapped
-    }
-    // We keep all the device names, but wipe the mappings and rebuild them
-
-    // Calculate translation from existing mDevices to new devices. Note we
-    // never end up with less devices than before, since people have
-    // stashed indexes.
-    // For some reason the "fake" device for automation is marked as DISABLED,
-    // so white-list it.
-    for (uint32_t i = 0; i < devices->count; i++) {
-      if (devices->device[i]->type == CUBEB_DEVICE_TYPE_INPUT && // paranoia
-          (devices->device[i]->state == CUBEB_DEVICE_STATE_ENABLED ||
-           devices->device[i]->state == CUBEB_DEVICE_STATE_UNPLUGGED ||
-           (devices->device[i]->state == CUBEB_DEVICE_STATE_DISABLED &&
-            strcmp(devices->device[i]->friendly_name, "Sine source at 440 Hz") == 0)))
-      {
-        auto j = mDeviceNames->IndexOf(devices->device[i]->device_id);
-        if (j != nsTArray<nsCString>::NoIndex) {
-          // match! update the mapping
-          (*mDeviceIndexes)[j] = i;
-        } else {
-          // new device, add to the array
-          mDeviceIndexes->AppendElement(i);
-          mDeviceNames->AppendElement(devices->device[i]->device_id);
-        }
-      }
-    }
-    // swap state
-    if (mDevices) {
-      cubeb_device_collection_destroy(mDevices);
-    }
-    mDevices = devices;
-  }
+  void UpdateDeviceList();
 
   // We have an array, which consists of indexes to the current mDevices
   // list.  This is updated on mDevices updates.  Many devices in mDevices
@@ -382,8 +345,9 @@ protected:
   virtual ~WebRTCAudioDataListener() {}
 
 public:
-  explicit WebRTCAudioDataListener(MediaEngineAudioSource* aAudioSource) :
-    mAudioSource(aAudioSource)
+  explicit WebRTCAudioDataListener(MediaEngineAudioSource* aAudioSource)
+    : mMutex("WebRTCAudioDataListener")
+    , mAudioSource(aAudioSource)
   {}
 
   // AudioDataListenerInterface methods
@@ -391,16 +355,29 @@ public:
                                 AudioDataValue* aBuffer, size_t aFrames,
                                 TrackRate aRate, uint32_t aChannels) override
   {
-    mAudioSource->NotifyOutputData(aGraph, aBuffer, aFrames, aRate, aChannels);
+    MutexAutoLock lock(mMutex);
+    if (mAudioSource) {
+      mAudioSource->NotifyOutputData(aGraph, aBuffer, aFrames, aRate, aChannels);
+    }
   }
   virtual void NotifyInputData(MediaStreamGraph* aGraph,
                                const AudioDataValue* aBuffer, size_t aFrames,
                                TrackRate aRate, uint32_t aChannels) override
   {
-    mAudioSource->NotifyInputData(aGraph, aBuffer, aFrames, aRate, aChannels);
+    MutexAutoLock lock(mMutex);
+    if (mAudioSource) {
+      mAudioSource->NotifyInputData(aGraph, aBuffer, aFrames, aRate, aChannels);
+    }
+  }
+
+  void Shutdown()
+  {
+    MutexAutoLock lock(mMutex);
+    mAudioSource = nullptr;
   }
 
 private:
+  Mutex mMutex;
   RefPtr<MediaEngineAudioSource> mAudioSource;
 };
 
@@ -496,7 +473,9 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
 protected:
-  ~MediaEngineWebRTCMicrophoneSource() { Shutdown(); }
+  ~MediaEngineWebRTCMicrophoneSource() {
+    Shutdown();
+  }
 
 private:
   void Init();
@@ -510,7 +489,9 @@ private:
   ScopedCustomReleasePtr<webrtc::VoENetwork> mVoENetwork;
   ScopedCustomReleasePtr<webrtc::VoEAudioProcessing> mVoEProcessing;
 
+  // accessed from the GraphDriver thread except for deletion
   nsAutoPtr<AudioPacketizer<AudioDataValue, int16_t>> mPacketizer;
+  ScopedCustomReleasePtr<webrtc::VoEExternalMedia> mVoERenderListener;
 
   // mMonitor protects mSources[] access/changes, and transitions of mState
   // from kStarted to kStopped (which are combined with EndTrack()).

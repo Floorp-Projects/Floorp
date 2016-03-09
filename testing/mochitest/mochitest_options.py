@@ -233,20 +233,6 @@ class MochitestArguments(ArgumentContainer):
           "default": False,
           "suppress": True,
           }],
-        [["--webapprt-content"],
-         {"action": "store_true",
-          "dest": "webapprtContent",
-          "help": "Run WebappRT content tests.",
-          "default": False,
-          "suppress": True,
-          }],
-        [["--webapprt-chrome"],
-         {"action": "store_true",
-          "dest": "webapprtChrome",
-          "help": "Run WebappRT chrome tests.",
-          "default": False,
-          "suppress": True,
-          }],
         [["--a11y"],
          {"action": "store_true",
           "help": "Run accessibility Mochitests.",
@@ -697,10 +683,6 @@ class MochitestArguments(ArgumentContainer):
             options.symbolsPath = self.get_full_path(options.symbolsPath, parser.oldcwd)
         elif not options.symbolsPath and build_obj:
             options.symbolsPath = os.path.join(build_obj.distdir, 'crashreporter-symbols')
-
-        if options.webapprtContent and options.webapprtChrome:
-            parser.error(
-                "Only one of --webapprt-content and --webapprt-chrome may be given.")
 
         if options.jsdebugger:
             options.extraPrefs += [

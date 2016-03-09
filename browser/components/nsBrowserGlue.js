@@ -52,9 +52,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkJSONUtils",
                                   "resource://gre/modules/BookmarkJSONUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "WebappManager",
-                                  "resource:///modules/WebappManager.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
                                   "resource://gre/modules/PageThumbs.jsm");
 
@@ -742,7 +739,6 @@ BrowserGlue.prototype = {
     // handle any UI migration
     this._migrateUI();
 
-    WebappManager.init();
     PageThumbs.init();
     webrtcUI.init();
     AboutHome.init();
@@ -1057,9 +1053,6 @@ BrowserGlue.prototype = {
     }
 
     SelfSupportBackend.uninit();
-
-    WebappManager.uninit();
-
     NewTabPrefsProvider.prefs.uninit();
     AboutNewTab.uninit();
     webrtcUI.uninit();

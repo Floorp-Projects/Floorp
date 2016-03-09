@@ -2797,7 +2797,9 @@ PromiseWorkerProxy::PromiseWorkerProxy(workers::WorkerPrivate* aWorkerPrivate,
   , mCleanedUp(false)
   , mCallbacks(aCallbacks)
   , mCleanUpLock("cleanUpLock")
+#ifdef DEBUG
   , mFeatureAdded(false)
+#endif
 {
 }
 
@@ -2837,7 +2839,9 @@ PromiseWorkerProxy::AddRefObject()
     return false;
   }
 
+#ifdef DEBUG
   mFeatureAdded = true;
+#endif
   // Maintain a reference so that we have a valid object to clean up when
   // removing the feature.
   AddRef();
@@ -2952,7 +2956,9 @@ PromiseWorkerProxy::CleanUp()
     // worker thread has been cancelled.
     MOZ_ASSERT(mFeatureAdded);
     mWorkerPrivate->RemoveFeature(this);
+#ifdef DEBUG
     mFeatureAdded = false;
+#endif
     CleanProperties();
   }
   Release();

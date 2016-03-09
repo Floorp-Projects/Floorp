@@ -3197,7 +3197,7 @@ MustBeUInt32(MDefinition* def, MDefinition** pwrapped)
     if (def->isUrsh()) {
         *pwrapped = def->toUrsh()->lhs();
         MDefinition* rhs = def->toUrsh()->rhs();
-        return !def->toUrsh()->bailoutsDisabled() &&
+        return def->toUrsh()->bailoutsDisabled() &&
                rhs->maybeConstantValue() &&
                rhs->maybeConstantValue()->isInt32(0);
     }

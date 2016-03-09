@@ -1550,9 +1550,6 @@ libs export::
 	$(CHECK_FROZEN_VARIABLES)
 
 PURGECACHES_DIRS ?= $(DIST)/bin
-ifdef MOZ_WEBAPP_RUNTIME
-PURGECACHES_DIRS += $(DIST)/bin/webapprt
-endif
 
 PURGECACHES_FILES = $(addsuffix /.purgecaches,$(PURGECACHES_DIRS))
 

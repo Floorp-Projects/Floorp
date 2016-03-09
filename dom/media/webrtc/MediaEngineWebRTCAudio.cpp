@@ -357,6 +357,9 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
   aStream->RegisterForAudioMixing();
   LOG(("Start audio for stream %p", aStream));
 
+  if (!mListener) {
+    mListener = new mozilla::WebRTCAudioDataListener(this);
+  }
   if (mState == kStarted) {
     MOZ_ASSERT(aID == mTrackID);
     // Make sure we're associated with this stream
@@ -418,6 +421,11 @@ MediaEngineWebRTCMicrophoneSource::Stop(SourceMediaStream *aSource, TrackID aID)
 
     mState = kStopped;
   }
+  if (mListener) {
+    // breaks a cycle, since the WebRTCAudioDataListener has a RefPtr to us
+    mListener->Shutdown();
+    mListener = nullptr;
+  }
 
   mAudioInput->StopRecording(aSource);
 
@@ -451,7 +459,8 @@ MediaEngineWebRTCMicrophoneSource::NotifyOutputData(MediaStreamGraph* aGraph,
 {
 }
 
-// Called back on GraphDriver thread
+// Called back on GraphDriver thread!
+// Note this can be called back after ::Shutdown()
 void
 MediaEngineWebRTCMicrophoneSource::NotifyInputData(MediaStreamGraph* aGraph,
                                                    const AudioDataValue* aBuffer,
@@ -553,6 +562,13 @@ MediaEngineWebRTCMicrophoneSource::Init()
 void
 MediaEngineWebRTCMicrophoneSource::Shutdown()
 {
+  if (mListener) {
+    // breaks a cycle, since the WebRTCAudioDataListener has a RefPtr to us
+    mListener->Shutdown();
+    // Don't release the webrtc.org pointers yet until the Listener is (async) shutdown
+    mListener = nullptr;
+  }
+
   if (!mInitDone) {
     // duplicate these here in case we failed during Init()
     if (mChannel != -1 && mVoENetwork) {
@@ -600,7 +616,6 @@ MediaEngineWebRTCMicrophoneSource::Shutdown()
   mVoEBase = nullptr;
 
   mAudioInput = nullptr;
-  mListener = nullptr; // breaks a cycle, since the WebRTCAudioDataListener has a RefPtr to us
 
   mState = kReleased;
   mInitDone = false;

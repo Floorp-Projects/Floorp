@@ -473,7 +473,9 @@ Connection::Connection(Service *aService,
 , threadOpenedOn(do_GetCurrentThread())
 , mDBConn(nullptr)
 , mAsyncExecutionThreadShuttingDown(false)
+#ifdef DEBUG
 , mAsyncExecutionThreadIsAlive(false)
+#endif
 , mConnectionClosed(false)
 , mTransactionInProgress(false)
 , mProgressHandler(nullptr)
@@ -559,7 +561,10 @@ Connection::getAsyncExecutionTarget()
                              mAsyncExecutionThread);
   }
 
+#ifdef DEBUG
   mAsyncExecutionThreadIsAlive = true;
+#endif
+
   return mAsyncExecutionThread;
 }
 
@@ -895,7 +900,9 @@ Connection::shutdownAsyncThread(nsIThread *aThread) {
 
   DebugOnly<nsresult> rv = aThread->Shutdown();
   MOZ_ASSERT(NS_SUCCEEDED(rv));
+#ifdef DEBUG
   mAsyncExecutionThreadIsAlive = false;
+#endif
 }
 
 nsresult

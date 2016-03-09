@@ -108,37 +108,28 @@ protected:
 
   static void Initialize()
   {
-    if (!sLock) {
-      sLock = new Mutex("AsyncTransactionTracker::sLock");
-    }
   }
 
   static void Finalize()
   {
-    if (sLock) {
-      delete sLock;
-      sLock = nullptr;
-    }
   }
 
   static uint64_t GetNextSerial()
   {
-    MOZ_ASSERT(sLock);
-    MutexAutoLock lock(*sLock);
-    ++sSerialCounter;
-    return sSerialCounter;
+    return ++sSerialCounter;
   }
 
   uint64_t mSerial;
   RefPtr<AsyncTransactionWaiter> mWaiter;
-  DebugOnly<bool> mCompleted;
+#ifdef DEBUG
+  bool mCompleted;
+#endif
 
   /**
    * gecko does not provide atomic operation for uint64_t.
    * Ensure atomicity by using Mutex.
    */
-  static uint64_t sSerialCounter;
-  static Mutex* sLock;
+  static Atomic<uint64_t> sSerialCounter;
 };
 
 class AsyncTransactionTrackersHolder
@@ -183,10 +174,7 @@ protected:
 
   static uint64_t GetNextSerial()
   {
-    MOZ_ASSERT(sHolderLock);
-    MutexAutoLock lock(*sHolderLock);
-    ++sSerialCounter;
-    return sSerialCounter;
+    return ++sSerialCounter;
   }
 
   void TransactionCompletetedInternal(uint64_t aTransactionId);
@@ -206,7 +194,7 @@ protected:
    * gecko does not provide atomic operation for uint64_t.
    * Ensure atomicity by using Mutex.
    */
-  static uint64_t sSerialCounter;
+  static Atomic<uint64_t> sSerialCounter;
   static Mutex* sHolderLock;
 
   /**

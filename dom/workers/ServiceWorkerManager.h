@@ -374,7 +374,7 @@ public:
   nsClassHashtable<nsCStringHashKey, InterceptionList> mNavigationInterceptions;
 
   bool
-  IsAvailable(const PrincipalOriginAttributes& aOriginAttributes, nsIURI* aURI);
+  IsAvailable(nsIPrincipal* aPrincipal, nsIURI* aURI);
 
   bool
   IsControlled(nsIDocument* aDocument, ErrorResult& aRv);
@@ -572,10 +572,6 @@ private:
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetServiceWorkerRegistrationInfo(nsIPrincipal* aPrincipal, nsIURI* aURI);
-
-  already_AddRefed<ServiceWorkerRegistrationInfo>
-  GetServiceWorkerRegistrationInfo(const PrincipalOriginAttributes& aOriginAttributes,
-                                   nsIURI* aURI);
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetServiceWorkerRegistrationInfo(const nsACString& aScopeKey,

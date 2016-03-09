@@ -432,5 +432,4 @@ var {v2i, i2i, i2v} = wasmEvalText(`(module
 wasmEvalText('(module (func $foo (nop)) (func (call $foo)))');
 wasmEvalText('(module (func (call $foo)) (func $foo (nop)))');
 wasmEvalText('(module (import $bar "a" "") (func (call_import $bar)) (func $foo (nop)))', {a:()=>{}});
-assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call_import $abc)))'), SyntaxError, /import not found/);
 

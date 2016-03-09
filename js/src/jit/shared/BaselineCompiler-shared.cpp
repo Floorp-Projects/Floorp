@@ -30,7 +30,9 @@ BaselineCompilerShared::BaselineCompilerShared(JSContext* cx, TempAllocator& all
     pcMappingEntries_(),
     icLoadLabels_(),
     pushedBeforeCall_(0),
+#ifdef DEBUG
     inCall_(false),
+#endif
     spsPushToggleOffset_(),
     profilerEnterFrameToggleOffset_(),
     profilerExitFrameToggleOffset_(),
@@ -43,7 +45,9 @@ void
 BaselineCompilerShared::prepareVMCall()
 {
     pushedBeforeCall_ = masm.framePushed();
+#ifdef DEBUG
     inCall_ = true;
+#endif
 
     // Ensure everything is synced.
     frame.syncStack(0);
@@ -63,9 +67,7 @@ BaselineCompilerShared::callVM(const VMFunction& fun, CallVMPhase phase)
     // Assert prepareVMCall() has been called.
     MOZ_ASSERT(inCall_);
     inCall_ = false;
-#endif
 
-#ifdef DEBUG
     // Assert the frame does not have an override pc when we're executing JIT code.
     {
         Label ok;

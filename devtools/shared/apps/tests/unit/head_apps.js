@@ -85,12 +85,6 @@ function setup() {
   Components.utils.import('resource://gre/modules/Webapps.jsm');
   DOMApplicationRegistry.allAppsLaunchable = true;
 
-  // Mock WebappOSUtils
-  Cu.import("resource://gre/modules/WebappOSUtils.jsm");
-  WebappOSUtils.getPackagePath = function(aApp) {
-    return aApp.basePath + "/" + aApp.id;
-  }
-
   // Enable launch/close method of the webapps actor
   let {WebappsActor} = require("devtools/server/actors/webapps");
   WebappsActor.prototype.supportsLaunch = true;

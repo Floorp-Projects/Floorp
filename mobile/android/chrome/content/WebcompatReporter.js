@@ -50,7 +50,7 @@ var WebcompatReporter = {
       let tab = BrowserApp.getTabForId(args.tabId);
       let currentURI = tab.browser.currentURI.spec;
       if (args.desktopMode && this.isReportableUrl(currentURI)) {
-        this.reportDesktopModePrompt();
+        this.reportDesktopModePrompt(tab);
       }
     }
   },
@@ -59,11 +59,40 @@ var WebcompatReporter = {
     this.menuItem = NativeWindow.menu.add({
       name: this.strings.GetStringFromName("webcompat.menu.name"),
       callback: () => {
-        let currentURI = BrowserApp.selectedTab.browser.currentURI.spec;
-        this.reportIssue(currentURI);
+        Promise.resolve(BrowserApp.selectedTab).then(this.getScreenshot)
+                                               .then(this.reportIssue)
+                                               .catch(Cu.reportError);
       },
       enabled: false,
       visible: visible,
+    });
+  },
+
+  getScreenshot: (tab) => {
+    return new Promise((resolve) => {
+      try {
+        let win = tab.window;
+        let dpr = win.devicePixelRatio;
+        let canvas = win.document.createElement("canvas");
+        let ctx = canvas.getContext("2d");
+        // Grab the visible viewport coordinates
+        let x = win.document.documentElement.scrollLeft;
+        let y = win.document.documentElement.scrollTop;
+        let w = win.innerWidth;
+        let h = win.innerHeight;
+        // Scale according to devicePixelRatio and coordinates
+        canvas.width = dpr * w;
+        canvas.height = dpr * h;
+        ctx.scale(dpr, dpr);
+        ctx.drawWindow(win, x, y, w, h, '#ffffff');
+        let screenshot = canvas.toDataURL();
+        resolve({tab: tab, data: screenshot});
+      } catch (e) {
+        // drawWindow can fail depending on memory or surface size. Rather than reject here,
+        // we resolve the URL so the user can continue to file an issue without a screenshot.
+        Cu.reportError("WebCompatReporter: getting a screenshot failed: " + e);
+        resolve({tab: tab});
+      }
     });
   },
 
@@ -74,25 +103,39 @@ var WebcompatReporter = {
                     url.startsWith("resource"));
   },
 
-  reportDesktopModePrompt: function() {
-    let currentURI = BrowserApp.selectedTab.browser.currentURI.spec;
+  reportDesktopModePrompt: function(tab) {
     let message = this.strings.GetStringFromName("webcompat.reportDesktopMode.message");
     let options = {
       action: {
         label: this.strings.GetStringFromName("webcompat.reportDesktopModeYes.label"),
-        callback: () => this.reportIssue(currentURI)
+        callback: () => this.reportIssue({tab: tab})
       }
     };
     Snackbars.show(message, Snackbars.LENGTH_LONG, options);
   },
 
-  reportIssue: function(url) {
-    let webcompatURL = `https://webcompat.com/?open=1&url=${url}`;
-    if (PrivateBrowsingUtils.isBrowserPrivate(BrowserApp.selectedTab.browser)) {
-      BrowserApp.addTab(webcompatURL, {parentId: BrowserApp.selectedTab.id, isPrivate: true});
-    } else {
-      BrowserApp.addTab(webcompatURL);
-    }
+  reportIssue: (tabData) => {
+    return new Promise((resolve) => {
+      const WEBCOMPAT_ORIGIN = "https://webcompat.com";
+      let url = tabData.tab.browser.currentURI.spec
+      let webcompatURL = `${WEBCOMPAT_ORIGIN}/?open=1&url=${url}`;
+
+      if (tabData.data && typeof tabData.data === "string") {
+        BrowserApp.deck.addEventListener("DOMContentLoaded", function sendDataToTab(event) {
+          BrowserApp.deck.removeEventListener("DOMContentLoaded", sendDataToTab, false);
+
+          if (event.target.defaultView.location.origin === WEBCOMPAT_ORIGIN) {
+            // Waive Xray vision so event.origin is not chrome://browser on the other side.
+            let win = Cu.waiveXrays(event.target.defaultView);
+            win.postMessage(tabData.data, WEBCOMPAT_ORIGIN);
+          }
+        }, false);
+      }
+
+      let isPrivateTab = PrivateBrowsingUtils.isBrowserPrivate(tabData.tab.browser);
+      BrowserApp.addTab(webcompatURL, {parentId: tabData.tab.id, isPrivate: isPrivateTab});
+      resolve();
+    });
   }
 };
 

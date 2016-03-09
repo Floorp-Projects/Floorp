@@ -3117,6 +3117,15 @@ class Resolver
         }
         return false;
     }
+    bool failResolveLabel(const char* kind, WasmName name) {
+        Vector<char16_t, 0, SystemAllocPolicy> nameWithNull;
+        if (!nameWithNull.append(name.begin(), name.length()))
+            return false;
+        if (!nameWithNull.append(0))
+            return false;
+        error_->reset(JS_smprintf("%s label '%hs' not found", kind, nameWithNull.begin()));
+        return false;
+    }
 
   public:
     explicit Resolver(LifoAlloc& lifo, UniqueChars* error)
@@ -3153,28 +3162,40 @@ class Resolver
         MOZ_ASSERT(targetStack_.back() == name);
         targetStack_.popBack();
     }
-    bool resolveSigRef(WasmRef& ref) {
-        return ref.name().empty() || resolveRef(sigMap_, ref);
+
+    bool resolveSignature(WasmRef& ref) {
+        if (!ref.name().empty() && !resolveRef(sigMap_, ref))
+            return failResolveLabel("signature", ref.name());
+        return true;
     }
-    bool resolveFuncRef(WasmRef& ref) {
-        return ref.name().empty() || resolveRef(funcMap_, ref);
+    bool resolveFunction(WasmRef& ref) {
+        if (!ref.name().empty() && !resolveRef(funcMap_, ref))
+            return failResolveLabel("function", ref.name());
+        return true;
     }
-    bool resolveImportRef(WasmRef& ref) {
-        return ref.name().empty() || resolveRef(importMap_, ref);
+    bool resolveImport(WasmRef& ref) {
+        if (!ref.name().empty() && !resolveRef(importMap_, ref))
+            return failResolveLabel("import", ref.name());
+        return true;
     }
-    bool resolveVarRef(WasmRef& ref) {
-        return ref.name().empty() || resolveRef(varMap_, ref);
+    bool resolveLocal(WasmRef& ref) {
+        if (!ref.name().empty() && !resolveRef(varMap_, ref))
+            return failResolveLabel("local", ref.name());
+        return true;
     }
-    bool resolveTarget(WasmRef& ref) {
+    bool resolveBranchTarget(WasmRef& ref) {
+        if (ref.name().empty())
+            return true;
         for (size_t i = 0, e = targetStack_.length(); i < e; i++) {
             if (targetStack_[e - i - 1] == ref.name()) {
                 ref.setIndex(i);
                 return true;
             }
         }
-        return false;
+        return failResolveLabel("branch target", ref.name());
     }
-    bool fail(const char*message) {
+
+    bool fail(const char* message) {
         error_->reset(JS_smprintf("%s", message));
         return false;
     }
@@ -3211,8 +3232,8 @@ ResolveBlock(Resolver& r, WasmAstBlock& b)
 static bool
 ResolveBranch(Resolver& r, WasmAstBranch& br)
 {
-    if (!br.target().name().empty() && !r.resolveTarget(br.target()))
-        return r.fail("label not found");
+    if (!r.resolveBranchTarget(br.target()))
+        return false;
 
     if (br.expr() == Expr::BrIf) {
         if (!ResolveExpr(r, br.cond()))
@@ -3240,12 +3261,12 @@ ResolveCall(Resolver& r, WasmAstCall& c)
         return false;
 
     if (c.expr() == Expr::Call) {
-        if (!r.resolveFuncRef(c.func()))
-            return r.fail("function not found");
+        if (!r.resolveFunction(c.func()))
+            return false;
     } else {
         MOZ_ASSERT(c.expr() == Expr::CallImport);
-        if (!r.resolveImportRef(c.func()))
-            return r.fail("import not found");
+        if (!r.resolveImport(c.func()))
+            return false;
     }
 
     return true;
@@ -3260,8 +3281,8 @@ ResolveCallIndirect(Resolver& r, WasmAstCallIndirect& c)
     if (!ResolveArgs(r, c.args()))
         return false;
 
-    if (!r.resolveSigRef(c.sig()))
-        return r.fail("signature not found");
+    if (!r.resolveSignature(c.sig()))
+        return false;
 
     return true;
 }
@@ -3269,10 +3290,7 @@ ResolveCallIndirect(Resolver& r, WasmAstCallIndirect& c)
 static bool
 ResolveGetLocal(Resolver& r, WasmAstGetLocal& gl)
 {
-    if (!r.resolveVarRef(gl.local()))
-        return r.fail("local not found");
-
-    return true;
+    return r.resolveLocal(gl.local());
 }
 
 static bool
@@ -3281,8 +3299,8 @@ ResolveSetLocal(Resolver& r, WasmAstSetLocal& sl)
     if (!ResolveExpr(r, sl.value()))
         return false;
 
-    if (!r.resolveVarRef(sl.local()))
-        return r.fail("local not found");
+    if (!r.resolveLocal(sl.local()))
+        return false;
 
     return true;
 }
@@ -3349,12 +3367,12 @@ ResolveReturn(Resolver& r, WasmAstReturn& ret)
 static bool
 ResolveBranchTable(Resolver& r, WasmAstBranchTable& bt)
 {
-    if (!bt.def().name().empty() && !r.resolveTarget(bt.def()))
-        return r.fail("switch default not found");
+    if (!r.resolveBranchTarget(bt.def()))
+        return false;
 
     for (WasmRef& elem : bt.table()) {
-        if (!elem.name().empty() && !r.resolveTarget(elem))
-            return r.fail("switch element not found");
+        if (!r.resolveBranchTarget(elem))
+            return false;
     }
 
     return ResolveExpr(r, bt.index());
@@ -3438,16 +3456,16 @@ ResolveModule(LifoAlloc& lifo, WasmAstModule* module, UniqueChars* error)
     size_t numFuncs = module->funcs().length();
     for (size_t i = 0; i < numFuncs; i++) {
         WasmAstFunc* func = module->funcs()[i];
-        if (!r.resolveSigRef(func->sig()))
-            return r.fail("signature not found");
+        if (!r.resolveSignature(func->sig()))
+            return false;
         if (!r.registerFuncName(func->name(), i))
             return r.fail("duplicate function");
     }
 
     if (module->maybeTable()) {
         for (WasmRef& ref : module->maybeTable()->elems()) {
-            if (!r.resolveFuncRef(ref))
-                return r.fail("function not found");
+            if (!r.resolveFunction(ref))
+                return false;
         }
     }
 
@@ -3461,8 +3479,8 @@ ResolveModule(LifoAlloc& lifo, WasmAstModule* module, UniqueChars* error)
     for (WasmAstExport* export_ : module->exports()) {
         if (export_->kind() != WasmAstExportKind::Func)
             continue;
-        if (!r.resolveFuncRef(export_->func()))
-            return r.fail("function not found");
+        if (!r.resolveFunction(export_->func()))
+            return false;
     }
 
     for (WasmAstFunc* func : module->funcs()) {
@@ -3564,10 +3582,10 @@ EncodeConst(Encoder& e, WasmAstConst& c)
     switch (c.val().type()) {
       case ValType::I32:
         return e.writeExpr(Expr::I32Const) &&
-               e.writeVarU32(c.val().i32());
+               e.writeVarS32(c.val().i32());
       case ValType::I64:
         return e.writeExpr(Expr::I64Const) &&
-               e.writeVarU64(c.val().i64());
+               e.writeVarS64(c.val().i64());
       case ValType::F32:
         return e.writeExpr(Expr::F32Const) &&
                e.writeFixedF32(c.val().f32());

@@ -1021,9 +1021,7 @@ static nsBoundingMetrics
 MeasureTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun)
 {
   gfxTextRun::Metrics metrics =
-    aTextRun->MeasureText(0, aTextRun->GetLength(),
-                          gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS,
-                          aDrawTarget, nullptr);
+    aTextRun->MeasureText(gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS, aDrawTarget);
 
   nsBoundingMetrics bm;
   bm.leftBearing = NSToCoordFloor(metrics.mBoundingBox.X());
@@ -2148,9 +2146,8 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
       // draw a single glyph (base size or size variant)
       // XXXfredw verify if mGlyphs[0] is non-null to workaround bug 973322.
       if (mGlyphs[0]) {
-        mGlyphs[0]->Draw(thebesContext, gfxPoint(0.0, mUnscaledAscent),
-                         DrawMode::GLYPH_FILL, 0, mGlyphs[0]->GetLength(),
-                         nullptr, nullptr, nullptr);
+        mGlyphs[0]->Draw(Range(mGlyphs[0]), gfxPoint(0.0, mUnscaledAscent),
+                         gfxTextRun::DrawParams(thebesContext));
       }
       break;
     case DRAW_PARTS: {
@@ -2277,6 +2274,8 @@ nsMathMLChar::PaintVertically(nsPresContext* aPresContext,
     mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing;
   unionRect.Inflate(oneDevPixel, oneDevPixel);
 
+  gfxTextRun::DrawParams params(aThebesContext);
+
   /////////////////////////////////////
   // draw top, middle, bottom
   for (i = 0; i <= 2; ++i) {
@@ -2305,9 +2304,7 @@ nsMathMLChar::PaintVertically(nsPresContext* aPresContext,
       }
       if (!clipRect.IsEmpty()) {
         AutoPushClipRect clip(aThebesContext, oneDevPixel, clipRect);
-        mGlyphs[i]->Draw(aThebesContext, gfxPoint(dx, dy),
-                         DrawMode::GLYPH_FILL, 0, mGlyphs[i]->GetLength(),
-                         nullptr, nullptr, nullptr);
+        mGlyphs[i]->Draw(Range(mGlyphs[i]), gfxPoint(dx, dy), params);
       }
     }
   }
@@ -2373,9 +2370,7 @@ nsMathMLChar::PaintVertically(nsPresContext* aPresContext,
         clipRect.height = std::min(bm.ascent + bm.descent, fillEnd - dy);
         AutoPushClipRect clip(aThebesContext, oneDevPixel, clipRect);
         dy += bm.ascent;
-        mGlyphs[3]->Draw(aThebesContext, gfxPoint(dx, dy),
-                            DrawMode::GLYPH_FILL, 0, mGlyphs[3]->GetLength(),
-                            nullptr, nullptr, nullptr);
+        mGlyphs[3]->Draw(Range(mGlyphs[3]), gfxPoint(dx, dy), params);
         dy += bm.descent;
       }
     }
@@ -2451,6 +2446,8 @@ nsMathMLChar::PaintHorizontally(nsPresContext* aPresContext,
   nsRect unionRect = aRect;
   unionRect.Inflate(oneDevPixel, oneDevPixel);
 
+  gfxTextRun::DrawParams params(aThebesContext);
+
   ///////////////////////////
   // draw left, middle, right
   for (i = 0; i <= 2; ++i) {
@@ -2477,9 +2474,7 @@ nsMathMLChar::PaintHorizontally(nsPresContext* aPresContext,
       }
       if (!clipRect.IsEmpty()) {
         AutoPushClipRect clip(aThebesContext, oneDevPixel, clipRect);
-        mGlyphs[i]->Draw(aThebesContext, gfxPoint(dx, dy),
-                         DrawMode::GLYPH_FILL, 0, mGlyphs[i]->GetLength(),
-                         nullptr, nullptr, nullptr);
+        mGlyphs[i]->Draw(Range(mGlyphs[i]), gfxPoint(dx, dy), params);
       }
     }
   }
@@ -2543,9 +2538,7 @@ nsMathMLChar::PaintHorizontally(nsPresContext* aPresContext,
         clipRect.width = std::min(bm.rightBearing - bm.leftBearing, fillEnd - dx);
         AutoPushClipRect clip(aThebesContext, oneDevPixel, clipRect);
         dx -= bm.leftBearing;
-        mGlyphs[3]->Draw(aThebesContext, gfxPoint(dx, dy),
-                            DrawMode::GLYPH_FILL, 0, mGlyphs[3]->GetLength(),
-                            nullptr, nullptr, nullptr);
+        mGlyphs[3]->Draw(Range(mGlyphs[3]), gfxPoint(dx, dy), params);
         dx += bm.rightBearing;
       }
     }

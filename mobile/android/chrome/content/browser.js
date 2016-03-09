@@ -3355,6 +3355,7 @@ function Tab(aURL, aParams) {
   this.desktopMode = false;
   this.originalURI = null;
   this.hasTouchListener = false;
+  this.playingAudio = false;
 
   this.create(aURL, aParams);
 }
@@ -4142,10 +4143,12 @@ Tab.prototype = {
           return;
         }
 
+        this.playingAudio = aEvent.type === "DOMAudioPlaybackStarted";
+
         Messaging.sendRequest({
           type: "Tab:AudioPlayingChange",
           tabID: this.id,
-          isAudioPlaying: aEvent.type === "DOMAudioPlaybackStarted"
+          isAudioPlaying: this.playingAudio
         });
         return;
       }
@@ -7281,8 +7284,11 @@ var Tabs = {
     let lruTab = null;
     // Find the least recently used non-zombie tab.
     for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i] == selected || tabs[i].browser.__SS_restore) {
-        // This tab is selected or already a zombie, skip it.
+      if (tabs[i] == selected ||
+          tabs[i].browser.__SS_restore ||
+          tabs[i].playingAudio) {
+        // This tab is selected, is already a zombie, or is currently playing
+        // audio, skip it.
         continue;
       }
       if (lruTab == null || tabs[i].lastTouchedAt < lruTab.lastTouchedAt) {

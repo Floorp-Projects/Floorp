@@ -152,8 +152,10 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     handlingJitInterrupt_(false),
     interruptCallback(nullptr),
     exclusiveAccessLock(nullptr),
+#ifdef DEBUG
     exclusiveAccessOwner(nullptr),
     mainThreadHasExclusiveAccess(false),
+#endif
     numExclusiveThreads(0),
     numCompartments(0),
     localeCallbacks(nullptr),
@@ -193,7 +195,9 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     profilingScripts(false),
     suppressProfilerSampling(false),
     hadOutOfMemory(false),
+#ifdef DEBUG
     handlingInitFailure(false),
+#endif
     haveCreatedContext(false),
     allowRelazificationForTesting(false),
     data(nullptr),
@@ -429,7 +433,9 @@ JSRuntime::~JSRuntime()
 
     // Avoid bogus asserts during teardown.
     MOZ_ASSERT(!numExclusiveThreads);
+#ifdef DEBUG
     mainThreadHasExclusiveAccess = true;
+#endif
 
     /*
      * Even though all objects in the compartment are dead, we may have keep
