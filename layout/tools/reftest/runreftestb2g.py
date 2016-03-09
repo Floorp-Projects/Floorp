@@ -52,6 +52,7 @@ class ProfileConfigParser(ConfigParser.RawConfigParser):
 class B2GRemoteReftest(RefTest):
 
     _devicemanager = None
+    use_marionette = False
     localProfile = None
     remoteApp = ''
     profile = None
@@ -328,7 +329,7 @@ class B2GRemoteReftest(RefTest):
 
 
 def run_remote_reftests(parser, options):
-    auto = B2GRemoteAutomation(None, "fennec", context_chrome=True)
+    auto = B2GRemoteAutomation(None, "fennec")
 
     # create our Marionette instance
     kwargs = {}
