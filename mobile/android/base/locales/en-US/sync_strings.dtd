@@ -36,100 +36,29 @@
 <!ENTITY bookmarks.folder.unfiled.label 'Unsorted Bookmarks'>
 <!ENTITY bookmarks.folder.desktop.label 'Desktop Bookmarks'>
 <!ENTITY bookmarks.folder.mobile.label 'Mobile Bookmarks'>
-<!ENTITY bookmarks.folder.readinglist.label 'Reading List'>
 <!-- Pinned sites on about:home. This folder should never be shown to the user, but we have to give it a string name -->
 <!ENTITY bookmarks.folder.pinned.label 'Pinned'>
 
-<!-- Send tab to device. -->
-<!ENTITY sync.title.redirect.to.set.up.sync.label 'Set up &syncBrand.shortName.label; to send tabs'>
-<!ENTITY sync.text.redirect.to.set.up.sync.label 'Set up &syncBrand.fullName.label; on your device to send tabs to other devices.'>
-<!ENTITY sync.text.tab.sent.label 'Your tab was sent!'>
-<!ENTITY sync.text.tab.not.sent.label 'There was a problem sending your tab.'>
-
 <!-- Firefox Account strings. -->
-
-<!ENTITY fxaccount_full_label 'Firefox Accounts'>
-
-<!ENTITY fxaccount_custom_server_account_title 'Using account on server'>
-<!ENTITY fxaccount_custom_server_sync_title 'Storing Sync data on server'>
-
-<!-- Localization note: these are shown in all screens that query the
-     user for an email address and password. Hide and show are button
-     labels. -->
-<!ENTITY fxaccount_email_hint 'Email'>
-<!ENTITY fxaccount_password_hint 'Password'>
-<!ENTITY fxaccount_password_hide 'Hide'>
-<!ENTITY fxaccount_password_show 'Show'>
 
 <!-- Localization note: these are shown in screens after the user has
      created or signed in to an account, and take the user back to
      Firefox. -->
 <!ENTITY fxaccount_back_to_browsing 'Back to browsing'>
 
-<!-- Localization note: the following two strings are interpolated
-     into fxaccount_create_account_policy_text2; see note for that
-     string as well.  Compare fxaccount_status_{linktos,linkprivacy}:
-     these strings are separated to accommodate languages that decline
-     the two uses differently. -->
-<!ENTITY fxaccount_policy_linktos 'Terms of Service'>
-<!ENTITY fxaccount_policy_linkprivacy 'Privacy Notice'>
-
 <!ENTITY fxaccount_getting_started_welcome_to_sync 'Welcome to &syncBrand.shortName.label;'>
 <!ENTITY fxaccount_getting_started_description2 'Sign in to sync your tabs, bookmarks, logins &amp; more.'>
 <!ENTITY fxaccount_getting_started_get_started 'Get started'>
 <!ENTITY fxaccount_getting_started_old_firefox 'Using an older version of &syncBrand.shortName.label;?'>
 
-<!-- Localization note: the Firefox below should not change with the
-     particular version of Firefox installed (Release, Beta, Aurora,
-     etc).  The account remains a "Firefox Account". -->
-<!ENTITY fxaccount_create_account_header2 'Create a Firefox Account'>
-<!ENTITY fxaccount_create_account_password_length_restriction 'Must be at least 8 characters'>
-<!ENTITY fxaccount_create_account_day_of_birth 'Day'>
-<!ENTITY fxaccount_create_account_month_of_birth 'Month'>
-<!ENTITY fxaccount_create_account_year_of_birth 'Year of birth'>
-<!-- Localization note: &formatS1; is fxaccount_policy_linktos, &formatS2; is fxaccount_policy_linkprivacy, both hyperlinked. -->
-<!ENTITY fxaccount_create_account_policy_text2 'By proceeding, I agree to the &formatS1; and &formatS2; of Firefox cloud services.'>
-<!ENTITY fxaccount_create_account_button 'Next'>
-<!ENTITY fxaccount_create_account_choose_what_to_sync 'Choose what to sync'>
-<!ENTITY fxaccount_create_account_sign_in_instead 'Already have an account? Sign in'>
-<!ENTITY fxaccount_create_account_1990_or_earlier '1990 or earlier'>
-<!ENTITY fxaccount_create_account_unknown_error 'Could not create account'>
-
-<!ENTITY fxaccount_account_create_not_allowed 'Cannot create account'>
-<!ENTITY fxaccount_account_create_not_allowed_you_must_meet_certain_age_requirements 'You must meet certain age requirements to create an account.'>
-<!ENTITY fxaccount_account_create_not_allowed_learn_more 'Learn more'>
-
 <!ENTITY fxaccount_confirm_account_header 'Confirm your account'>
-<!-- Localization note: &formatS; is the Firefox Account's email address. -->
-<!ENTITY fxaccount_confirm_account_verification_link 'A verification link has been sent to &formatS;'>
 <!ENTITY fxaccount_confirm_account_resend_email 'Resend email'>
-<!ENTITY fxaccount_confirm_account_change_email 'Forget this email address?'>
-<!ENTITY fxaccount_confirm_account_verification_link_sent2 'Verification email sent'>
-<!ENTITY fxaccount_confirm_account_verification_link_not_sent2 'Couldn\&apos;t send verification email'>
-<!ENTITY fxaccount_resend_unlock_code_button_label 'Resend unlock email'>
-<!ENTITY fxaccount_unlock_code_sent 'Account unlock email sent'>
-<!ENTITY fxaccount_unlock_code_not_sent 'Couldn\&apos;t send account unlock email'>
 
-<!ENTITY fxaccount_sign_in_sub_header 'Sign in'>
 <!ENTITY fxaccount_sign_in_button_label 'Sign in'>
-<!ENTITY fxaccount_sign_in_forgot_password 'Forgot password?'>
-<!ENTITY fxaccount_sign_in_create_account_instead 'Create an account'>
-<!ENTITY fxaccount_sign_in_unknown_error 'Could not sign in'>
-
-<!ENTITY fxaccount_account_verified_sub_header 'Account verified'>
-<!ENTITY fxaccount_account_verified_description2 'Your data will begin syncing momentarily.'>
-
-<!ENTITY fxaccount_migration_finished_header 'Upgrade finished'>
-
-<!ENTITY fxaccount_update_credentials_header 'Sign in'>
-<!ENTITY fxaccount_update_credentials_button_label 'Sign in'>
-<!ENTITY fxaccount_update_credentials_unknown_error 'Could not sign in'>
 
 <!ENTITY fxaccount_finish_migrating_header 'Sign in to finish upgrading'>
 <!ENTITY fxaccount_finish_migrating_button_label 'Finish upgrading'>
-<!ENTITY fxaccount_finish_migrating_description 'Upgrading can transfer a lot of data. It\&apos;s best to be on a Wi-Fi network.'>
 
-<!ENTITY fxaccount_status_header2 'Firefox Account'>
 <!ENTITY fxaccount_status_signed_in_as 'Signed in as'>
 <!ENTITY fxaccount_status_manage_account 'Manage account'>
 <!ENTITY fxaccount_status_auth_server 'Account server'>
@@ -192,7 +121,6 @@
 <!ENTITY fxaccount_remote_error_CLIENT_HAS_SENT_TOO_MANY_REQUESTS 'Server busy, try again soon'>
 <!ENTITY fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD 'Server busy, try again soon'>
 <!ENTITY fxaccount_remote_error_UNKNOWN_ERROR 'There was a problem'>
-<!ENTITY fxaccount_remote_error_COULD_NOT_CONNECT 'Cannot connect to network'>
 <!ENTITY fxaccount_remote_error_ACCOUNT_LOCKED 'Account is locked. &formatS1;'>
 
 <!ENTITY fxaccount_sync_sign_in_error_notification_title2 '&syncBrand.shortName.label; is not connected'>
@@ -204,8 +132,3 @@
 <!-- Localization note: the format string below will be replaced
      with the Firefox Account's email address. -->
 <!ENTITY fxaccount_sync_finish_migrating_notification_text 'Tap to sign in as &formatS;'>
-
-<!-- Localization note: the following strings are used in a
-     notification and should be kept as short as possible. -->
-<!ENTITY old_sync_deprecated_notification_title 'Sign in to continue syncing'>
-<!ENTITY old_sync_deprecated_notification_content 'Your account is no longer supported'>
