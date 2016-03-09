@@ -57,13 +57,21 @@ CaptureStreamTestHelper.prototype = {
 
   /*
    * Returns the pixel at (|offsetX|, |offsetY|) (from top left corner) of
-   * |video| as an array of the pixel's color channels: [R,G,B,A].
+   * |video| as an array of the pixel's color channels: [R,G,B,A].  Allows
+   * optional scaling of the drawImage() call (so that a 1x1 black image
+   * won't just draw 1 pixel in the corner)
    */
-  getPixel: function (video, offsetX, offsetY) {
+  getPixel: function (video, offsetX, offsetY, width, height) {
     offsetX = offsetX || 0; // Set to 0 if not passed in.
     offsetY = offsetY || 0; // Set to 0 if not passed in.
+    width = width || 0; // Set to 0 if not passed in.
+    height = height || 0; // Set to 0 if not passed in.
     var ctxout = this.cout.getContext('2d');
-    ctxout.drawImage(video, 0, 0);
+    if (width != 0 || height != 0) {
+      ctxout.drawImage(video, 0, 0, width, height);
+    } else {
+      ctxout.drawImage(video, 0, 0);
+    }
     return ctxout.getImageData(offsetX, offsetY, 1, 1).data;
   },
 
@@ -94,14 +102,14 @@ CaptureStreamTestHelper.prototype = {
    * Returns a promise that resolves when the provided function |test|
    * returns true.
    */
-  waitForPixel: function (video, offsetX, offsetY, test, timeout) {
+  waitForPixel: function (video, offsetX, offsetY, test, timeout, width, height) {
     return new Promise(resolve => {
       const startTime = video.currentTime;
       CaptureStreamTestHelper2D.prototype.clear.call(this, this.cout);
       var ontimeupdate = () => {
         var pixelMatch = false;
         try {
-          pixelMatch = test(this.getPixel(video, offsetX, offsetY));
+            pixelMatch = test(this.getPixel(video, offsetX, offsetY, width, height));
         } catch (NS_ERROR_NOT_AVAILABLE) {
           info("Waiting for pixel but no video available");
         }
