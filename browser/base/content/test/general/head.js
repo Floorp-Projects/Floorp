@@ -382,13 +382,32 @@ function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
  *
  * @param aExpectedURL
  *        The URL of the document that is expected to load.
+ * @param aStopFromProgressListener
+ *        Whether to cancel the load directly from the progress listener. Defaults to true.
+ *        If you're using this method to avoid hitting the network, you want the default (true).
+ *        However, the browser UI will behave differently for loads stopped directly from
+ *        the progress listener (effectively in the middle of a call to loadURI) and so there
+ *        are cases where you may want to avoid stopping the load directly from within the
+ *        progress listener callback.
  * @return promise
  */
-function waitForDocLoadAndStopIt(aExpectedURL, aBrowser=gBrowser.selectedBrowser) {
-  function content_script() {
+function waitForDocLoadAndStopIt(aExpectedURL, aBrowser=gBrowser.selectedBrowser, aStopFromProgressListener=true) {
+  function content_script(aStopFromProgressListener) {
     let { interfaces: Ci, utils: Cu } = Components;
     Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
     let wp = docShell.QueryInterface(Ci.nsIWebProgress);
+
+    function stopContent(now, uri) {
+      if (now) {
+        /* Hammer time. */
+        content.stop();
+
+        /* Let the parent know we're done. */
+        sendAsyncMessage("Test:WaitForDocLoadAndStopIt", { uri });
+      } else {
+        setTimeout(stopContent.bind(null, true, uri), 0);
+      }
+    }
 
     let progressListener = {
       onStateChange: function (webProgress, req, flags, status) {
@@ -401,11 +420,7 @@ function waitForDocLoadAndStopIt(aExpectedURL, aBrowser=gBrowser.selectedBrowser
           let chan = req.QueryInterface(Ci.nsIChannel);
           dump(`waitForDocLoadAndStopIt: Document start: ${chan.URI.spec}\n`);
 
-          /* Hammer time. */
-          content.stop();
-
-          /* Let the parent know we're done. */
-          sendAsyncMessage("Test:WaitForDocLoadAndStopIt", { uri: chan.originalURI.spec });
+          stopContent(aStopFromProgressListener, chan.originalURI.spec);
         }
       },
       QueryInterface: XPCOMUtils.generateQI(["nsISupportsWeakReference"])
@@ -432,7 +447,7 @@ function waitForDocLoadAndStopIt(aExpectedURL, aBrowser=gBrowser.selectedBrowser
     }
 
     let mm = aBrowser.messageManager;
-    mm.loadFrameScript("data:,(" + content_script.toString() + ")();", true);
+    mm.loadFrameScript("data:,(" + content_script.toString() + ")(" + aStopFromProgressListener + ");", true);
     mm.addMessageListener("Test:WaitForDocLoadAndStopIt", complete);
     info("waitForDocLoadAndStopIt: Waiting for URL: " + aExpectedURL);
   });
