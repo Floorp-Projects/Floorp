@@ -101,6 +101,27 @@ exports["test json atoms"] = function (assert) {
   assert.ok(utils.isJSON("foo bar"), "strings are JSON");
 };
 
+exports["test jsonable values"] = function (assert) {
+  assert.ok(utils.isJSONable(null), "`null` is JSONable");
+  assert.ok(!utils.isJSONable(undefined), "`undefined` is not JSONable");
+  assert.ok(utils.isJSONable(NaN), "`NaN` is JSONable");
+  assert.ok(utils.isJSONable(Infinity), "`Infinity` is JSONable");
+  assert.ok(utils.isJSONable(true) && utils.isJSONable(false), "booleans are JSONable");
+  assert.ok(utils.isJSONable(0), "numbers are JSONable");
+  assert.ok(utils.isJSONable("foo bar"), "strings are JSONable");
+  assert.ok(!utils.isJSONable(function(){}), "functions are not JSONable");
+
+  const functionWithToJSON = function(){};
+  functionWithToJSON.toJSON = function() { return "foo bar"; };
+  assert.ok(utils.isJSONable(functionWithToJSON), "functions with toJSON() are JSONable");
+
+  assert.ok(utils.isJSONable({}), "`{}` is JSONable");
+
+  const foo = {};
+  foo.bar = foo;
+  assert.ok(!utils.isJSONable(foo), "recursive objects are not JSONable");
+};
+
 exports["test instanceOf"] = function (assert) {
   assert.ok(utils.instanceOf(assert, Object),
             "assert is object from other sandbox");
