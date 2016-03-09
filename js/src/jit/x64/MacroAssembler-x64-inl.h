@@ -308,6 +308,28 @@ MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, L
 }
 
 void
+MacroAssembler::branch64(Condition cond, const Address& lhs, Imm64 val, Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::NotEqual,
+               "other condition codes not supported");
+
+    branchPtr(cond, lhs, ImmWord(val.value), label);
+}
+
+void
+MacroAssembler::branch64(Condition cond, const Address& lhs, const Address& rhs, Register scratch,
+                         Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::NotEqual,
+               "other condition codes not supported");
+    MOZ_ASSERT(lhs.base != scratch);
+    MOZ_ASSERT(rhs.base != scratch);
+
+    loadPtr(rhs, scratch);
+    branchPtr(cond, lhs, scratch, label);
+}
+
+void
 MacroAssembler::branchPtr(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
 {
     ScratchRegisterScope scratch(*this);
