@@ -10,15 +10,15 @@
 <script type="application/javascript;version=1.8">
 SimpleTest.waitForExplicitFinish();
 
-let parentScriptURL = SimpleTest.getTestFileURL("pwmgr_common.js");
-mm = SpecialPowers.loadChromeScript(parentScriptURL);
+const PWMGR_COMMON_URL = SimpleTest.getTestFileURL("pwmgr_common.js");
+let pwmgrCommonScript = SpecialPowers.loadChromeScript(PWMGR_COMMON_URL);
 
 // Tell the parent to setup test logins.
-mm.sendAsyncMessage("setupParent");
+pwmgrCommonScript.sendAsyncMessage("setupParent");
 
 // When the setup is done, load a recipe for this test.
-mm.addMessageListener("doneSetup", function doneSetup() {
-  mm.sendAsyncMessage("loadRecipes", {
+pwmgrCommonScript.addMessageListener("doneSetup", function doneSetup() {
+  pwmgrCommonScript.sendAsyncMessage("loadRecipes", {
     siteRecipes: [{
       hosts: ["mochi.test:8888"],
       usernameSelector: "input[name='uname1']",
@@ -27,7 +27,7 @@ mm.addMessageListener("doneSetup", function doneSetup() {
   });
 });
 
-mm.addMessageListener("loadedRecipes", function loadedRecipes() {
+pwmgrCommonScript.addMessageListener("loadedRecipes", function loadedRecipes() {
   // Append the form dynamically so autofill is triggered after setup above.
   document.getElementById("content").innerHTML += `
 <!-- form with recipe for the username and password -->
@@ -45,6 +45,7 @@ let fillCount = 0;
 function reportFill(element, expected) {
   ok(expected, `${element.name} was filled`);
   if (++fillCount == EXPECTED_FILLS) {
+    pwmgrCommonScript.destroy();
     SimpleTest.finish();
   } else if (fillCount == 2) {
     document.getElementById("content").innerHTML = `
