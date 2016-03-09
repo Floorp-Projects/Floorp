@@ -622,7 +622,6 @@ GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
         case "desiredCapabilities":
           to = copy(from[key], to);
           break;
-
         case "requiredCapabilities":
           if (from[key].proxy) {
               this.setUpProxy(from[key].proxy);
@@ -632,17 +631,16 @@ GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
           for (let caps in from[key]) {
             if (from[key][caps] !== this.sessionCapabilities[caps]) {
               errors.push(from[key][caps] + " does not equal " +
-                  this.sessionCapabilities[caps]);
+                  this.sessionCapabilities[caps])   ;
             }
           }
           break;
-
         default:
           to[key] = from[key];
       }
     }
 
-    if (Object.keys(errors).length == 0) {
+    if (Object.keys(errors).length === 0) {
       return to;
     }
 
