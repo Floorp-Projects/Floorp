@@ -21,9 +21,7 @@
   color: var(--theme-selection-color);
 }
 
-.frame-link a.frame-link-filename {
-  color: var(--theme-highlight-blue);
-  cursor: pointer;
+.frame-link .frame-link-filename {
   text-overflow: ellipsis;
   overflow: hidden;
   flex: 1;
@@ -32,8 +30,11 @@
   text-decoration: none;
   font-style: normal;
 }
-
-.frame-link .frame-link-filename:hover {
+.frame-link a.frame-link-filename {
+  cursor: pointer;
+  color: var(--theme-highlight-blue);
+}
+.frame-link a.frame-link-filename:hover {
   text-decoration: underline;
 }
 
