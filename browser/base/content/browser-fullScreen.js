@@ -565,14 +565,6 @@ var FullScreen = {
 
     if (aAnimate && gPrefService.getBoolPref("browser.fullscreen.animate")) {
       gNavToolbox.setAttribute("fullscreenShouldAnimate", true);
-      // Hide the fullscreen toggler until the transition ends.
-      let listener = () => {
-        gNavToolbox.removeEventListener("transitionend", listener, true);
-        if (this._isChromeCollapsed)
-          this._fullScrToggler.hidden = false;
-      };
-      gNavToolbox.addEventListener("transitionend", listener, true);
-      this._fullScrToggler.hidden = true;
     }
 
     gNavToolbox.style.marginTop =
