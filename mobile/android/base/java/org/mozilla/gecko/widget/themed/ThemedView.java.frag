@@ -7,10 +7,10 @@
 
 package org.mozilla.gecko.widget.themed;
 
+import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.DrawableUtil;
 
 import android.content.Context;
@@ -197,7 +197,7 @@ public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
 
 //#endif
     public ColorDrawable getColorDrawable(int id) {
-        return new ColorDrawable(ColorUtils.getColor(getContext(), id));
+        return new ColorDrawable(ContextCompat.getColor(getContext(), id));
     }
 
     protected LightweightTheme getTheme() {
