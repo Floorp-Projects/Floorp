@@ -180,6 +180,12 @@ FRAME_STATE_BIT(Generic, 33, NS_FRAME_DRAWING_AS_PAINTSERVER)
 // situation (possibly the frame itself).
 FRAME_STATE_BIT(Generic, 34, NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE)
 
+// A flag that tells us we can take the common path with respect to style
+// properties for this frame when building event regions. This flag is cleared
+// when any styles are changed and then we recompute it on the next build
+// of the event regions.
+FRAME_STATE_BIT(Generic, 35, NS_FRAME_SIMPLE_EVENT_REGIONS)
+
 // Frame is a display root and the retained layer tree needs to be updated
 // at the next paint via display list construction.
 // Only meaningful for display roots, so we don't really need a global state
