@@ -3498,6 +3498,11 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
     return false;
   }
 
+  if (static_cast<nsDocShell*>(targetDS.get())->GetOriginAttributes().mUserContextId !=
+      static_cast<nsDocShell*>(accessingDS.get())->GetOriginAttributes().mUserContextId) {
+    return false;
+  }
+
   // A private document can't access a non-private one, and vice versa.
   if (static_cast<nsDocShell*>(targetDS.get())->UsePrivateBrowsing() !=
       static_cast<nsDocShell*>(accessingDS.get())->UsePrivateBrowsing()) {
@@ -14191,7 +14196,9 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
   if (aIsNonSubresourceRequest) {
     PrincipalOriginAttributes attrs;
     attrs.InheritFromDocShellToDoc(mOriginAttributes, aURI);
-    *aShouldIntercept = swm->IsAvailable(attrs, aURI);
+    nsCOMPtr<nsIPrincipal> principal =
+      BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
+    *aShouldIntercept = swm->IsAvailable(principal, aURI);
     return NS_OK;
   }
 

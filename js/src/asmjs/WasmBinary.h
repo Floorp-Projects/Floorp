@@ -342,13 +342,28 @@ class Encoder
     template <typename UInt>
     MOZ_WARN_UNUSED_RESULT bool writeVarU(UInt i) {
         do {
-            uint8_t byte = i & 0x7F;
+            uint8_t byte = i & 0x7f;
             i >>= 7;
             if (i != 0)
                 byte |= 0x80;
             if (!bytes_.append(byte))
                 return false;
-        } while(i != 0);
+        } while (i != 0);
+        return true;
+    }
+
+    template <typename SInt>
+    MOZ_WARN_UNUSED_RESULT bool writeVarS(SInt i) {
+        bool done;
+        do {
+            uint8_t byte = i & 0x7f;
+            i >>= 7;
+            done = ((i == 0) && !(byte & 0x40)) || ((i == -1) && (byte & 0x40));
+            if (!done)
+                byte |= 0x80;
+            if (!bytes_.append(byte))
+                return false;
+        } while (!done);
         return true;
     }
 
@@ -428,8 +443,14 @@ class Encoder
     MOZ_WARN_UNUSED_RESULT bool writeVarU32(uint32_t i) {
         return writeVarU<uint32_t>(i);
     }
+    MOZ_WARN_UNUSED_RESULT bool writeVarS32(int32_t i) {
+        return writeVarS<int32_t>(i);
+    }
     MOZ_WARN_UNUSED_RESULT bool writeVarU64(uint64_t i) {
         return writeVarU<uint64_t>(i);
+    }
+    MOZ_WARN_UNUSED_RESULT bool writeVarS64(int64_t i) {
+        return writeVarS<int64_t>(i);
     }
     MOZ_WARN_UNUSED_RESULT bool writeExpr(Expr expr) {
         return writeEnum(expr);
@@ -573,7 +594,36 @@ class Decoder
         } while (shift != numBitsInSevens);
         if (!readFixedU8(&byte) || (byte & (unsigned(-1) << remainderBits)))
             return false;
-        *out = u | UInt(byte) << numBitsInSevens;
+        *out = u | (UInt(byte) << numBitsInSevens);
+        return true;
+    }
+
+    template <typename SInt>
+    MOZ_WARN_UNUSED_RESULT bool readVarS(SInt* out) {
+        const unsigned numBits = sizeof(SInt) * CHAR_BIT;
+        const unsigned remainderBits = numBits % 7;
+        const unsigned numBitsInSevens = numBits - remainderBits;
+        SInt s = 0;
+        uint8_t byte;
+        unsigned shift = 0;
+        do {
+            if (!readFixedU8(&byte))
+                return false;
+            s |= SInt(byte & 0x7f) << shift;
+            shift += 7;
+            if (!(byte & 0x80)) {
+                if (byte & 0x40)
+                    s |= SInt(-1) << shift;
+                *out = s;
+                return true;
+            }
+        } while (shift < numBitsInSevens);
+        if (!remainderBits || !readFixedU8(&byte) || (byte & 0x80))
+            return false;
+        uint8_t mask = 0x7f & (uint8_t(-1) << remainderBits);
+        if ((byte & mask) != ((byte & (1 << (remainderBits - 1))) ? mask : 0))
+            return false;
+        *out = s | SInt(byte) << shift;
         return true;
     }
 
@@ -631,8 +681,14 @@ class Decoder
     MOZ_WARN_UNUSED_RESULT bool readVarU32(uint32_t* out) {
         return readVarU<uint32_t>(out);
     }
+    MOZ_WARN_UNUSED_RESULT bool readVarS32(int32_t* out) {
+        return readVarS<int32_t>(out);
+    }
     MOZ_WARN_UNUSED_RESULT bool readVarU64(uint64_t* out) {
         return readVarU<uint64_t>(out);
+    }
+    MOZ_WARN_UNUSED_RESULT bool readVarS64(int64_t* out) {
+        return readVarS<int64_t>(out);
     }
     MOZ_WARN_UNUSED_RESULT bool readExpr(Expr* expr) {
         return readEnum(expr);
@@ -752,8 +808,18 @@ class Decoder
     uint32_t uncheckedReadVarU32() {
         return uncheckedReadVarU<uint32_t>();
     }
+    int32_t uncheckedReadVarS32() {
+        int32_t i32;
+        MOZ_ALWAYS_TRUE(readVarS32(&i32));
+        return i32;
+    }
     uint64_t uncheckedReadVarU64() {
         return uncheckedReadVarU<uint64_t>();
+    }
+    int64_t uncheckedReadVarS64() {
+        int64_t i64;
+        MOZ_ALWAYS_TRUE(readVarS64(&i64));
+        return i64;
     }
     Expr uncheckedReadExpr() {
         return uncheckedReadEnum<Expr>();

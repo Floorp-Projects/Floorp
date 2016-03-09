@@ -836,31 +836,6 @@ bin/libfreebl_32int64_3.so
 #endif
 #endif
 
-#ifdef MOZ_WEBAPP_RUNTIME
-[WebappRuntime]
-#ifdef XP_WIN
-@BINPATH@/webapp-uninstaller@BIN_SUFFIX@
-#endif
-@RESPATH@/webapprt-stub@BIN_SUFFIX@
-@RESPATH@/webapprt/webapprt.ini
-@RESPATH@/webapprt/chrome.manifest
-@RESPATH@/webapprt/chrome/webapprt@JAREXT@
-@RESPATH@/webapprt/chrome/webapprt.manifest
-@RESPATH@/webapprt/chrome/@AB_CD@@JAREXT@
-@RESPATH@/webapprt/chrome/@AB_CD@.manifest
-@RESPATH@/webapprt/components/CommandLineHandler.js
-@RESPATH@/webapprt/components/ContentPermission.js
-@RESPATH@/webapprt/components/DirectoryProvider.js
-@RESPATH@/webapprt/components/PaymentUIGlue.js
-@RESPATH@/webapprt/components/components.manifest
-@RESPATH@/webapprt/defaults/preferences/prefs.js
-@RESPATH@/webapprt/modules/DownloadView.jsm
-@RESPATH@/webapprt/modules/Startup.jsm
-@RESPATH@/webapprt/modules/WebappRT.jsm
-@RESPATH@/webapprt/modules/WebappManager.jsm
-@RESPATH@/webapprt/modules/WebRTCHandler.jsm
-#endif
-
 @RESPATH@/components/DataStore.manifest
 @RESPATH@/components/DataStoreImpl.js
 @RESPATH@/components/dom_datastore.xpt

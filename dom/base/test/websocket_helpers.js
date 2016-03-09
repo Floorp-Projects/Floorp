@@ -47,16 +47,20 @@ function forcegc() {
   SpecialPowers.gc();
 }
 
+function feedback() {
+  $("feedback").innerHTML = "executing test: " + (current_test+1) + " of " + tests.length + " tests.";
+}
+
+function finish() {
+  SimpleTest.finish();
+}
+
 function doTest() {
   if (current_test >= tests.length) {
-    SimpleTest.finish();
+    finish();
     return;
   }
 
-  $("feedback").innerHTML = "executing test: " + (current_test+1) + " of " + tests.length + " tests.";
+  feedback();
   tests[current_test++]().then(doTest);
 }
-
-SimpleTest.requestFlakyTimeout("The web socket tests are really fragile, but avoiding timeouts might be hard, since it's testing stuff on the network. " +
-                               "Expect all sorts of flakiness in this test...");
-SimpleTest.waitForExplicitFinish();

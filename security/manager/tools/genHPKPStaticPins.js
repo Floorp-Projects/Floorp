@@ -366,6 +366,11 @@ function downloadAndParseChromePins(filename,
     if (!pinsetName) {
       pinsetName = entry.pins;
     }
+
+    // We trim the entry name here to avoid breaking hostname comparisons in the
+    // HPKP implementation.
+    entry.name = entry.name.trim();
+
     let isProductionDomain =
       (cData.production_domains.indexOf(entry.name) != -1);
     let isProductionPinset =

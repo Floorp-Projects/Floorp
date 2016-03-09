@@ -720,7 +720,9 @@ private:
 
   bool mHasContentOpener;
 
-  DebugOnly<int32_t> mActiveSupressDisplayportCount;
+#ifdef DEBUG
+  int32_t mActiveSupressDisplayportCount;
+#endif
 
   ShowInfo GetShowInfo();
 

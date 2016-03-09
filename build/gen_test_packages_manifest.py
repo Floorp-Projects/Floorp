@@ -12,7 +12,6 @@ ALL_HARNESSES = [
     'common', # Harnesses without a specific package will look here.
     'mochitest',
     'reftest',
-    'webapprt',
     'xpcshell',
     'cppunittest',
     'jittest',

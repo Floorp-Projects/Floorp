@@ -7,7 +7,6 @@
 #ifndef gc_Statistics_h
 #define gc_Statistics_h
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/PodOperations.h"
 

@@ -96,71 +96,10 @@ dnl ==============================================================
 _topsrcdir=`cd \`dirname $0\`; pwd -W 2>/dev/null || pwd -P`
 _objdir=`pwd -P`
 
-if test "$_topsrcdir" = "$_objdir"; then
-  echo "  ***"
-  echo "  * Building directly in the main source directory is not allowed."
-  echo "  *"
-  echo "  * To build, you must run configure from a separate directory"
-  echo "  * (referred to as an object directory)."
-  echo "  *"
-  echo "  * If you are building with a mozconfig, you will need to change your"
-  echo "  * mozconfig to point to a different object directory."
-  echo "  ***"
-  exit 1
-fi
-
-# Check for a couple representative files in the source tree
-_conflict_files=
-for file in $_topsrcdir/Makefile $_topsrcdir/config/autoconf.mk; do
-  if test -f $file; then
-    _conflict_files="$_conflict_files $file"
-  fi
-done
-if test "$_conflict_files"; then
-  echo "***"
-  echo "*   Your source tree contains these files:"
-  for file in $_conflict_files; do
-    echo "*         $file"
-  done
-  cat 1>&2 <<-EOF
-  *   This indicates that you previously built in the source tree.
-  *   A source tree build can confuse the separate objdir build.
-  *
-  *   To clean up the source tree:
-  *     1. cd $_topsrcdir
-  *     2. gmake distclean
-  ***
-EOF
-  exit 1
-  break
-fi
 MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd -P`
 DIST="$MOZ_BUILD_ROOT/dist"
 
-MOZ_PYTHON
-
 MOZ_DEFAULT_COMPILER
-
-COMPILE_ENVIRONMENT=1
-MOZ_ARG_DISABLE_BOOL(compile-environment,
-[  --disable-compile-environment
-                          Disable compiler/library checks.],
-    COMPILE_ENVIRONMENT= )
-AC_SUBST(COMPILE_ENVIRONMENT)
-
-MOZ_ARG_ENABLE_BOOL(artifact-builds,
-[  --enable-artifact-builds
-                          Download and use prebuilt binary artifacts.],
-    MOZ_ARTIFACT_BUILDS=1,
-    MOZ_ARTIFACT_BUILDS= )
-AC_SUBST(MOZ_ARTIFACT_BUILDS)
-
-if test -n "$MOZ_ARTIFACT_BUILDS"; then
-    dnl Artifact builds imply --disable-compile-environment.
-    COMPILE_ENVIRONMENT=
-fi
-
-MOZ_BUILD_BACKEND(.)
 
 MOZ_ARG_WITH_STRING(l10n-base,
 [  --with-l10n-base=DIR    path to l10n repositories],
@@ -3621,7 +3560,6 @@ ENABLE_SYSTEM_EXTENSION_DIRS=1
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
-MOZ_WEBAPP_RUNTIME=
 MOZ_AUTH_EXTENSION=1
 if test "$MOZ_IOS"; then
    MOZ_AUTH_EXTENSION=
@@ -6291,24 +6229,6 @@ if test "$OS_ARCH" = "WINNT"; then
     fi
 fi
 
-dnl ========================================================
-dnl Web App Runtime
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(webapp-runtime,
-[  --disable-webapp-runtime  Disable Web App Runtime],
-    MOZ_WEBAPP_RUNTIME=,
-    MOZ_WEBAPP_RUNTIME=1)
-if test "$MOZ_WIDGET_TOOLKIT" != "windows" -a "$MOZ_WIDGET_TOOLKIT" != "cocoa" -a -z "$MOZ_WIDGET_GTK" ; then
-    MOZ_WEBAPP_RUNTIME=
-fi
-if test "$OS_ARCH" = "WINNT" -a -z "$MAKENSISU" -a -n "$CROSS_COMPILE"; then
-    MOZ_WEBAPP_RUNTIME=
-fi
-AC_SUBST(MOZ_WEBAPP_RUNTIME)
-if test "$MOZ_WEBAPP_RUNTIME"; then
-    AC_DEFINE(MOZ_WEBAPP_RUNTIME)
-fi
-
 AC_CHECK_PROGS(TAR, gnutar gtar tar, "")
 if test -z "$TAR"; then
     AC_MSG_ERROR([no tar archiver found in \$PATH])
@@ -8493,8 +8413,6 @@ AC_SUBST(MOZ_FIX_LINK_PATHS)
 
 AC_SUBST(USE_DEPENDENT_LIBS)
 
-AC_SUBST(MOZ_BUILD_ROOT)
-
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_LINKER_EXTRACT)
 
@@ -9135,8 +9053,6 @@ ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 # and $NSPR_LIBS.
 ac_configure_args="`echo $ac_configure_args | sed -e 's/--with-system-nspr\S* *//'`"
 
-ac_configure_args="$ac_configure_args --enable-threadsafe"
-
 if test "$_INTL_API" = no; then
     ac_configure_args="$ac_configure_args --without-intl-api"
 fi
@@ -9167,8 +9083,6 @@ export MOZ_ZLIB_CFLAGS
 export MOZ_ZLIB_LIBS
 export MOZ_APP_NAME
 export MOZ_APP_REMOTINGNAME
-export DONT_POPULATE_VIRTUALENV=1
-export PYTHON
 export RUSTC
 export MOZILLA_CENTRAL_PATH=$_topsrcdir
 export STLPORT_CPPFLAGS
@@ -9205,11 +9119,11 @@ ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 
 fi # COMPILE_ENVIRONMENT
 
-export WRITE_MOZINFO=1
 dnl we need to run config.status after js/src subconfigure because we're
 dnl traversing its moz.build and we need its config.status for that.
 dnl However, writing our own config.status needs to happen before
 dnl subconfigures because the setup surrounding subconfigures alters
 dnl many AC_SUBSTed variables.
-MOZ_RUN_CONFIG_STATUS()
-unset WRITE_MOZINFO
+MOZ_RUN_ALL_SUBCONFIGURES()
+
+rm -fr confdefs* $ac_clean_files

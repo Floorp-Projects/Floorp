@@ -358,6 +358,10 @@ this.FxAccountsClient.prototype = {
    *         Device name
    * @param  type
    *         Device type (mobile|desktop)
+   * @param  [options]
+   *         Extra device options
+   * @param  [options.pushCallback]
+   *         `pushCallback` push endpoint callback
    * @return Promise
    *         Resolves to an object:
    *         {
@@ -367,11 +371,15 @@ this.FxAccountsClient.prototype = {
    *           type: Type of device (mobile|desktop)
    *         }
    */
-  registerDevice(sessionTokenHex, name, type) {
+  registerDevice(sessionTokenHex, name, type, options = {}) {
     let path = "/account/device";
 
     let creds = deriveHawkCredentials(sessionTokenHex, "sessionToken");
     let body = { name, type };
+
+    if (options.pushCallback) {
+      body.pushCallback = options.pushCallback;
+    }
 
     return this._request(path, "POST", creds, body);
   },
@@ -386,6 +394,10 @@ this.FxAccountsClient.prototype = {
    *         Device identifier
    * @param  name
    *         Device name
+   * @param  [options]
+   *         Extra device options
+   * @param  [options.pushCallback]
+   *         `pushCallback` push endpoint callback
    * @return Promise
    *         Resolves to an object:
    *         {
@@ -393,11 +405,14 @@ this.FxAccountsClient.prototype = {
    *           name: Device name
    *         }
    */
-  updateDevice(sessionTokenHex, id, name) {
+  updateDevice(sessionTokenHex, id, name, options = {}) {
     let path = "/account/device";
 
     let creds = deriveHawkCredentials(sessionTokenHex, "sessionToken");
     let body = { id, name };
+    if (options.pushCallback) {
+      body.pushCallback = options.pushCallback;
+    }
 
     return this._request(path, "POST", creds, body);
   },
@@ -419,7 +434,7 @@ this.FxAccountsClient.prototype = {
    *         Resolves to an empty object:
    *         {}
    */
-  signOutAndDestroyDevice(sessionTokenHex, id, options={}) {
+  signOutAndDestroyDevice(sessionTokenHex, id, options = {}) {
     let path = "/account/device/destroy";
 
     if (options.service) {

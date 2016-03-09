@@ -155,10 +155,6 @@ TEST_FLAVORS = {
         'mach_command': 'web-platform-tests',
         'kwargs': {'include': []}
     },
-    'webapprt-chrome': {
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'webapprt-chrome', 'test_paths': []},
-    },
     'xpcshell': {
         'mach_command': 'xpcshell-test',
         'kwargs': {'test_paths': []},

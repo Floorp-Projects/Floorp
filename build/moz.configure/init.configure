@@ -1,0 +1,200 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include('util.configure')
+
+option(env='DIST', nargs=1, help='DIST directory')
+
+# Do not allow objdir == srcdir builds.
+# ==============================================================
+@depends('--help', 'DIST')
+def check_build_environment(help, dist):
+    topobjdir = os.path.realpath(os.path.abspath('.'))
+    topsrcdir = os.path.realpath(os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '..', '..')))
+
+    set_config('TOPSRCDIR', topsrcdir)
+    set_config('TOPOBJDIR', topobjdir)
+    set_config('MOZ_BUILD_ROOT', topobjdir)
+    if dist:
+        set_config('DIST', normsep(dist[0]))
+    else:
+        set_config('DIST', os.path.join(topobjdir, 'dist'))
+
+    if help:
+        return
+
+    if topsrcdir == topobjdir:
+        error(
+            '  ***\n'
+            '  * Building directly in the main source directory is not allowed.\n'
+            '  *\n'
+            '  * To build, you must run configure from a separate directory\n'
+            '  * (referred to as an object directory).\n'
+            '  *\n'
+            '  * If you are building with a mozconfig, you will need to change your\n'
+            '  * mozconfig to point to a different object directory.\n'
+            '  ***'
+        )
+
+    # Check for a couple representative files in the source tree
+    conflict_files = [
+        '*         %s' % f for f in ('Makefile', 'config/autoconf.mk')
+        if os.path.exists(os.path.join(topsrcdir, f))
+    ]
+    if conflict_files:
+        error(
+            '  ***\n'
+            '  *   Your source tree contains these files:\n'
+            '  %s\n'
+            '  *   This indicates that you previously built in the source tree.\n'
+            '  *   A source tree build can confuse the separate objdir build.\n'
+            '  *\n'
+            '  *   To clean up the source tree:\n'
+            '  *     1. cd %s\n'
+            '  *     2. gmake distclean\n'
+            '  ***'
+            % ('\n  '.join(conflict_files), topsrcdir)
+        )
+
+
+option(env='MOZ_CURRENT_PROJECT', nargs=1, help='Current build project')
+option(env='MOZCONFIG', nargs=1, help='Mozconfig location')
+
+# Read user mozconfig
+# ==============================================================
+# Note: the dependency on --help is only there to always read the mozconfig,
+# even when --help is passed. Without this dependency, the function wouldn't
+# be called when --help is passed, and the mozconfig wouldn't be read.
+@depends('MOZ_CURRENT_PROJECT', 'MOZCONFIG', check_build_environment, '--help')
+@advanced
+def mozconfig(current_project, mozconfig,  build_env, help):
+    from mozbuild.mozconfig import MozconfigLoader
+
+    # Don't read the mozconfig for the js configure (yay backwards
+    # compatibility)
+    if build_env['TOPOBJDIR'].endswith('/js/src'):
+        return {'path': None}
+
+    loader = MozconfigLoader(build_env['TOPSRCDIR'])
+    current_project = current_project[0] if current_project else None
+    mozconfig = mozconfig[0] if mozconfig else None
+    mozconfig = loader.find_mozconfig(env={'MOZCONFIG': mozconfig})
+    mozconfig = loader.read_mozconfig(mozconfig, moz_build_app=current_project)
+
+    return mozconfig
+
+
+option(env='PYTHON', nargs=1, help='Python interpreter')
+
+# Setup python virtualenv
+# ==============================================================
+@depends('PYTHON', check_build_environment, mozconfig)
+@advanced
+def virtualenv_python(env_python, build_env, mozconfig):
+    import os
+    import sys
+    import subprocess
+    from mozbuild.virtualenv import (
+	VirtualenvManager,
+        verify_python_version,
+    )
+
+    python = env_python[0] if env_python else None
+
+    # Ideally we'd rely on the mozconfig injection from mozconfig_options,
+    # but we'd rather avoid the verbosity when we need to reexecute with
+    # a different python.
+    if mozconfig['path']:
+        if 'PYTHON' in mozconfig['env']['added']:
+            python = mozconfig['env']['added']['PYTHON']
+        elif 'PYTHON' in mozconfig['env']['modified']:
+            python = mozconfig['env']['modified']['PYTHON'][1]
+        elif 'PYTHON' in mozconfig['vars']['added']:
+            python = mozconfig['vars']['added']['PYTHON']
+        elif 'PYTHON' in mozconfig['vars']['modified']:
+            python = mozconfig['vars']['modified']['PYTHON'][1]
+
+    verify_python_version(sys.stderr)
+    topsrcdir, topobjdir = build_env['TOPSRCDIR'], build_env['TOPOBJDIR']
+    if topobjdir.endswith('/js/src'):
+        topobjdir = topobjdir[:-7]
+
+    manager = VirtualenvManager(
+        topsrcdir, topobjdir,
+        os.path.join(topobjdir, '_virtualenv'), sys.stdout,
+        os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
+
+    if python:
+        # If we're not in the virtualenv, we need the which module for
+        # find_program.
+        if normsep(sys.executable) != normsep(manager.python_path):
+            sys.path.append(os.path.join(topsrcdir, 'python', 'which'))
+        found_python = find_program(python)
+        if not found_python:
+            error('The PYTHON environment variable does not contain '
+                  'a valid path. Cannot find %s' % python)
+        python = found_python
+    else:
+        python = sys.executable
+
+    if not manager.up_to_date(python):
+        warn('Creating Python environment')
+        manager.build(python)
+
+    python = normsep(manager.python_path)
+
+    if python != normsep(sys.executable):
+        warn('Reexecuting in the virtualenv')
+        if env_python:
+            del os.environ['PYTHON']
+        # One would prefer to use os.execl, but that's completely borked on
+        # Windows.
+        sys.exit(subprocess.call([python] + sys.argv))
+
+    # We are now in the virtualenv
+    import distutils.sysconfig
+    if not distutils.sysconfig.get_python_lib():
+        error('Could not determine python site packages directory')
+
+    set_config('PYTHON', python)
+    return python
+
+
+# Inject mozconfig options
+# ==============================================================
+@template
+@advanced
+def command_line_helper():
+    # This escapes the sandbox. Don't copy this. This is only here because
+    # it is a one off and because the required functionality doesn't need
+    # to be exposed for other usecases.
+    return depends.__self__._helper
+
+
+@depends(mozconfig)
+def mozconfig_options(mozconfig):
+    if mozconfig['path']:
+        helper = command_line_helper()
+        warn('Adding configure options from %s' % mozconfig['path'])
+        for arg in mozconfig['configure_args']:
+            warn('  %s' % arg)
+            # We could be using imply_option() here, but it has other
+            # contraints that don't really apply to the command-line
+            # emulation that mozconfig provides.
+            helper.add(arg, origin='mozconfig', args=helper._args)
+
+        # Ideally we'd handle mozconfig['env'] and mozconfig['vars'] here,
+        # but at the moment, moz.configure has no knowledge of the options
+        # that may appear there. We'll opt-in when we move things from
+        # old-configure.in, which will be tedious but necessary until we
+        # can discriminate what old-configure.in supports.
+
+del command_line_helper
+
+
+option(env='MOZILLABUILD', nargs=1,
+       help='Path to Mozilla Build (Windows-only)')

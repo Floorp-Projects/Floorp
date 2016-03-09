@@ -346,12 +346,13 @@ class MOZ_RAII js::EnterDebuggeeNoExecute
                     fprintf(stdout, "Dumping stack for DebuggeeWouldRun:\n");
                     DumpBacktrace(cx);
                 }
+                const char* filename = script->filename() ? script->filename() : "(none)";
                 char linenoStr[15];
                 JS_snprintf(linenoStr, sizeof(linenoStr), "%" PRIuSIZE, script->lineno());
                 unsigned flags = warning ? JSREPORT_WARNING : JSREPORT_ERROR;
                 return JS_ReportErrorFlagsAndNumber(cx, flags, GetErrorMessage, nullptr,
                                                     JSMSG_DEBUGGEE_WOULD_RUN,
-                                                    script->filename(), linenoStr);
+                                                    filename, linenoStr);
             }
         }
         return true;
@@ -1940,6 +1941,11 @@ Debugger::slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSav
     // Debuggers, and globals only hold their Debuggers weakly.
     Rooted<GCVector<JSObject*>> activeDebuggers(cx, GCVector<JSObject*>(cx));
     for (Debugger** dbgp = dbgs.begin(); dbgp < dbgs.end(); dbgp++) {
+        // Since we're pulling these Debugger objects out of the GlobalObject's
+        // debugger array, which holds them only weakly, we need to let the
+        // incremental GC know that a possibly previously unreachable Debugger
+        // object just became reachable.
+        InternalBarrierMethods<JSObject*>::readBarrier((*dbgp)->object);
         if (!activeDebuggers.append((*dbgp)->object))
             return false;
     }

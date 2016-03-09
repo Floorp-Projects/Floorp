@@ -960,7 +960,8 @@ function TypedObjectArrayTypeFrom(a, b, c) {
   if (!IsObject(this) || !ObjectIsTypeDescr(this))
     ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
-  var untypedInput = !IsObject(a) || !ObjectIsTypedObject(a);
+  var untypedInput = !IsObject(a) || !ObjectIsTypedObject(a) ||
+                     !TypeDescrIsArrayType(TypedObjectTypeDescr(a));
 
   // for untyped input array, the expectation (in terms of error
   // reporting for invalid parameters) is no-depth, despite
@@ -968,24 +969,18 @@ function TypedObjectArrayTypeFrom(a, b, c) {
   // the expectation is explicit depth.
 
   if (untypedInput) {
-    var explicitDepth = (b === 1);
-    if (explicitDepth && IsCallable(c))
+    if (b === 1 && IsCallable(c))
       return MapUntypedSeqImpl(a, this, c);
-    else if (IsCallable(b))
+    if (IsCallable(b))
       return MapUntypedSeqImpl(a, this, b);
-    else
-      ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
-  } else {
-    var explicitDepth = (typeof b === "number");
-    if (explicitDepth && IsCallable(c))
-      return MapTypedSeqImpl(a, b, this, c);
-    else if (IsCallable(b))
-      return MapTypedSeqImpl(a, 1, this, b);
-    else if (explicitDepth)
-      ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
-    else
-      ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   }
+
+  if (typeof b === "number" && IsCallable(c))
+    return MapTypedSeqImpl(a, b, this, c);
+  if (IsCallable(b))
+    return MapTypedSeqImpl(a, 1, this, b);
+  ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 }
 
 // Warning: user exposed!

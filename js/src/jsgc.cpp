@@ -1938,7 +1938,9 @@ GCMarker::delayMarkingArena(Arena* arena)
     }
     arena->setNextDelayedMarking(unmarkedArenaStackTop);
     unmarkedArenaStackTop = arena;
+#ifdef DEBUG
     markLaterArenas++;
+#endif
 }
 
 void
@@ -3513,11 +3515,11 @@ GCHelperState::waitForBackgroundThread()
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
 #ifdef DEBUG
-    rt->gc.lockOwner.value = nullptr;
+    rt->gc.lockOwner = nullptr;
 #endif
     PR_WaitCondVar(done, PR_INTERVAL_NO_TIMEOUT);
 #ifdef DEBUG
-    rt->gc.lockOwner.value = PR_GetCurrentThread();
+    rt->gc.lockOwner = PR_GetCurrentThread();
 #endif
 }
 
@@ -5097,7 +5099,9 @@ GCRuntime::beginSweepingZoneGroup()
         if (rt->sweepZoneCallback)
             rt->sweepZoneCallback(zone);
 
+#ifdef DEBUG
         zone->gcLastZoneGroupIndex = zoneGroupIndex;
+#endif
     }
 
     validateIncrementalMarking();

@@ -39,10 +39,6 @@
       </popupnotificationcontent>
     </popupnotification>
 
-    <popupnotification id="webapps-install-progress-notification" hidden="true">
-      <popupnotificationcontent id="webapps-install-progress-content" orient="vertical" align="start"/>
-    </popupnotification>
-
     <popupnotification id="servicesInstall-notification" hidden="true">
       <popupnotificationcontent orient="vertical" align="start">
         <!-- XXX bug 974146, tests are looking for this, can't remove yet. -->

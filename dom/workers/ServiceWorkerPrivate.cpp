@@ -106,7 +106,9 @@ class CheckScriptEvaluationWithCallback final : public WorkerRunnable
 {
   nsMainThreadPtrHandle<KeepAliveToken> mKeepAliveToken;
   RefPtr<LifeCycleEventCallback> mCallback;
-  DebugOnly<bool> mDone;
+#ifdef DEBUG
+  bool mDone;
+#endif
 
 public:
   CheckScriptEvaluationWithCallback(WorkerPrivate* aWorkerPrivate,
@@ -115,7 +117,9 @@ public:
     : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
     , mKeepAliveToken(new nsMainThreadPtrHolder<KeepAliveToken>(aKeepAliveToken))
     , mCallback(aCallback)
+#ifdef DEBUG
     , mDone(false)
+#endif
   {
     AssertIsOnMainThread();
   }
@@ -145,7 +149,9 @@ private:
   void
   Done(bool aResult)
   {
+#ifdef DEBUG
     mDone = true;
+#endif
     mCallback->SetResult(aResult);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(mCallback)));
   }

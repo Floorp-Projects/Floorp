@@ -79,7 +79,12 @@ private:
   class Singleton
   {
   public:
-    Singleton() : mValue(ReplaceMalloc::GetDMDFuncs()), mInitialized(true) {}
+    Singleton()
+      : mValue(ReplaceMalloc::GetDMDFuncs())
+#ifdef DEBUG
+      , mInitialized(true)
+#endif
+    {}
 
     DMDFuncs* Get()
     {
@@ -89,7 +94,9 @@ private:
 
   private:
     DMDFuncs* mValue;
-    DebugOnly<bool> mInitialized;
+#ifdef DEBUG
+    bool mInitialized;
+#endif
   };
 
   // This singleton pointer must be defined on the program side. In Gecko,
