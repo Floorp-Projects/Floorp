@@ -64,13 +64,11 @@ public:
   static void PropertyDtor(void *aObject, nsIAtom *aPropertyName,
                            void *aPropertyValue, void *aData);
 
-  // Get (and optionally create) the collection of animations for
-  // the given |aElement| and |aPseudoType|.
+  // Get the collection of animations for the given |aElement| and
+  // |aPseudoType|.
   static AnimationCollection<AnimationType>*
     GetAnimationCollection(dom::Element* aElement,
-                           CSSPseudoElementType aPseudoType,
-                           bool aCreateIfNeeded,
-                           bool* aCreatedCollection = nullptr);
+                           CSSPseudoElementType aPseudoType);
 
   // Given the frame |aFrame| with possibly animated content, finds its
   // associated collection of animations. If |aFrame| is a generated content
@@ -78,6 +76,17 @@ public:
   // animations.
   static AnimationCollection<AnimationType>* GetAnimationCollection(
     const nsIFrame* aFrame);
+
+  // Get the collection of animations for the given |aElement| and
+  // |aPseudoType| or create it if it does not already exist.
+  //
+  // We'll set the outparam |aCreatedCollection| to true if we have
+  // to create the collection and we successfully do so. Otherwise,
+  // we'll set it to false.
+  static AnimationCollection<AnimationType>*
+    GetOrCreateAnimationCollection(dom::Element* aElement,
+                                   CSSPseudoElementType aPseudoType,
+                                   bool* aCreatedCollection);
 
   bool IsForElement() const { // rather than for a pseudo-element
     return mElementProperty == TraitsType::ElementPropertyAtom();
@@ -125,6 +134,9 @@ public:
   void UpdateCheckGeneration(nsPresContext* aPresContext);
 
 private:
+  static nsIAtom* GetPropertyAtomForPseudoType(
+    CSSPseudoElementType aPseudoType);
+
 #ifdef DEBUG
   bool mCalledPropertyDtor;
 #endif

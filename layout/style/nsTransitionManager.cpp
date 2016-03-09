@@ -282,8 +282,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   }
 
   CSSTransitionCollection* collection =
-    CSSTransitionCollection::GetAnimationCollection(aElement, pseudoType,
-                                                    false /*aCreateIfNeeded*/);
+    CSSTransitionCollection::GetAnimationCollection(aElement, pseudoType);
   if (!collection &&
       disp->mTransitionPropertyCount == 1 &&
       disp->mTransitions[0].GetCombinedDuration() <= 0.0f) {
@@ -703,11 +702,8 @@ nsTransitionManager::ConsiderStartingTransition(
   if (!aElementTransitions) {
     bool createdCollection = false;
     aElementTransitions =
-      CSSTransitionCollection::GetAnimationCollection(aElement,
-                                                      aNewStyleContext->
-                                                        GetPseudoType(),
-                                                      true /*aCreateIfNeeded*/,
-                                                      &createdCollection);
+      CSSTransitionCollection::GetOrCreateAnimationCollection(
+        aElement, aNewStyleContext->GetPseudoType(), &createdCollection);
     if (!aElementTransitions) {
       MOZ_ASSERT(!createdCollection, "outparam should agree with return value");
       NS_WARNING("allocating collection failed");
@@ -757,8 +753,7 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
                                                nsStyleContext* aNewStyleContext)
 {
   CSSTransitionCollection* collection =
-    CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType,
-                                                    false /*aCreateIfNeeded*/);
+    CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType);
   if (!collection) {
     return;
   }
