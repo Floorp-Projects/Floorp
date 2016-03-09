@@ -958,10 +958,6 @@ nsComboboxControlFrame::SetDropDown(nsIFrame* aDropDownFrame)
 {
   mDropdownFrame = aDropDownFrame;
   mListControlFrame = do_QueryFrame(mDropdownFrame);
-  if (!sFocused && nsContentUtils::IsFocusedContent(GetContent())) {
-    sFocused = this;
-    nsListControlFrame::ComboboxFocusSet();
-  }
 }
 
 nsIFrame*
@@ -1391,10 +1387,6 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
 void
 nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  if (sFocused == this) {
-    sFocused = nullptr;
-  }
-
   // Revoke any pending RedisplayTextEvent
   mRedisplayTextEvent.Revoke();
 
