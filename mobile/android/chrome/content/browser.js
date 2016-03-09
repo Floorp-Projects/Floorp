@@ -4009,12 +4009,21 @@ Tab.prototype = {
 
         let docURI = target.documentURI;
         let errorType = "";
-        if (docURI.startsWith("about:certerror"))
+        if (docURI.startsWith("about:certerror")) {
           errorType = "certerror";
-        else if (docURI.startsWith("about:blocked"))
-          errorType = "blocked"
-        else if (docURI.startsWith("about:neterror"))
+        }
+        else if (docURI.startsWith("about:blocked")) {
+          errorType = "blocked";
+        }
+        else if (docURI.startsWith("about:neterror")) {
+          let error = docURI.search(/e\=/);
+          let duffUrl = docURI.search(/\&u\=/);
+          let errorExtra = decodeURIComponent(docURI.slice(error + 2, duffUrl));
+          // Here is a list of errorExtra types (et_*)
+          // http://mxr.mozilla.org/mozilla-central/source/mobile/android/chrome/content/netError.xhtml#287
+          UITelemetry.addEvent("neterror.1", "content", null, errorExtra);
           errorType = "neterror";
+        }
 
         // Attach a listener to watch for "click" events bubbling up from error
         // pages and other similar page. This lets us fix bugs like 401575 which

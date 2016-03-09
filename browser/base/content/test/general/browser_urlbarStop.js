@@ -25,7 +25,7 @@ function typeAndSubmitAndStop(url) {
   URLBarSetURI();
   is(gURLBar.textValue, gURLBar.trimValue(url), "location bar reflects loading page");
 
-  let promise = waitForDocLoadAndStopIt(url);
+  let promise = waitForDocLoadAndStopIt(url, gBrowser.selectedBrowser, false);
   gURLBar.handleCommand();
   return promise;
 }

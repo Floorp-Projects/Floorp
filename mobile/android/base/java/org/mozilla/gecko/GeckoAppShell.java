@@ -33,6 +33,7 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
@@ -476,6 +477,7 @@ public class GeckoAppShell
         return (location.hasAccuracy() && radius > 0) ? radius : 1001;
     }
 
+    @SuppressLint("MissingPermission") // Permissions are explicitly checked for in enableLocation()
     private static Location getLastKnownLocation(LocationManager lm) {
         Location lastKnownLocation = null;
         List<String> providers = lm.getAllProviders();
@@ -503,6 +505,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI
+    @SuppressLint("MissingPermission") // Permissions are explicitly checked for within this method
     public static void enableLocation(final boolean enable) {
         Permissions
                 .from((Activity) getContext())

@@ -6,7 +6,10 @@
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 var BrowserLoaderModule = {};
 Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
-var { loader, require } = BrowserLoaderModule.BrowserLoader("resource://devtools/client/performance/", this);
+var { loader, require } = BrowserLoaderModule.BrowserLoader({
+  baseURI: "resource://devtools/client/performance/",
+  window: this
+});
 var { Task } = require("resource://gre/modules/Task.jsm");
 var { Heritage, ViewHelpers, WidgetMethods } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 var { gDevTools } = require("devtools/client/framework/devtools");

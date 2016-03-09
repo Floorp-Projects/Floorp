@@ -748,9 +748,24 @@ public class BrowserApp extends GeckoApp
         // Watch for screenshots while browser is in foreground.
         mScreenshotObserver.setListener(getContext(), new ScreenshotObserver.OnScreenshotListener() {
             @Override
-            public void onScreenshotTaken(String data, String title) {
+            public void onScreenshotTaken(final String screenshotPath, final String title) {
                 // Treat screenshots as a sharing method.
                 Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.BUTTON, "screenshot");
+
+                if (!AppConstants.SCREENSHOTS_IN_BOOKMARKS_ENABLED) {
+                    return;
+                }
+
+                final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+                if (selectedTab == null) {
+                    Log.w(LOGTAG, "Selected tab is null: could not page info to store screenshot.");
+                    return;
+                }
+
+                getProfile().getDB().getUrlAnnotations().insertScreenshot(
+                        getContentResolver(), selectedTab.getURL(), screenshotPath);
+                SnackbarHelper.showSnackbar(BrowserApp.this,
+                        getResources().getString(R.string.screenshot_added_to_bookmarks), Snackbar.LENGTH_SHORT);
             }
         });
 

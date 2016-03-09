@@ -18,8 +18,10 @@ loader.lazyRequireGetter(this, "Telemetry",
 
 const { BrowserLoader } = Components.utils.import(
   "resource://devtools/client/shared/browser-loader.js", {});
-const { require } =
-  BrowserLoader("resource://devtools/client/aboutdebugging/", window);
+const { require } = BrowserLoader({
+  baseURI: "resource://devtools/client/aboutdebugging/",
+  window
+});
 
 const {
   createFactory,
