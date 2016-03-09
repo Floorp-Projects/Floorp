@@ -375,15 +375,14 @@ RTCPeerConnection.prototype = {
            JSON.parse(Services.prefs.getCharPref("media.peerconnection.default_iceservers") || "[]");
       } catch (e) {
         this.logWarning(
-            "Ignoring invalid media.peerconnection.default_iceservers in about:config",
-             null, 0);
+            "Ignoring invalid media.peerconnection.default_iceservers in about:config");
         rtcConfig.iceServers = [];
       }
       try {
         this._mustValidateRTCConfiguration(rtcConfig,
             "Ignoring invalid media.peerconnection.default_iceservers in about:config");
       } catch (e) {
-        this.logWarning(e.message, null, 0);
+        this.logWarning(e.message);
         rtcConfig.iceServers = [];
       }
     } else {
@@ -562,7 +561,7 @@ RTCPeerConnection.prototype = {
       } else if (!server.urls && server.url) {
         // TODO: Remove support for legacy iceServer.url eventually (Bug 1116766)
         server.urls = [server.url];
-        this.logWarning("RTCIceServer.url is deprecated! Use urls instead.", null, 0);
+        this.logWarning("RTCIceServer.url is deprecated! Use urls instead.");
       }
     });
 
@@ -596,8 +595,7 @@ RTCPeerConnection.prototype = {
             this.logWarning("RTCConfiguration TURN credentialType \""+
                             server.credentialType +
                             "\" is not yet implemented. Treating as password."+
-                            " https://bugzil.la/1247616",
-                            null, 0);
+                            " https://bugzil.la/1247616");
           }
         }
         else if (!(url.scheme in { stun:1, stuns:1 })) {
@@ -605,7 +603,7 @@ RTCPeerConnection.prototype = {
                                            "SyntaxError");
         }
         if (url.scheme in { stuns:1, turns:1 }) {
-          this.logWarning(url.scheme.toUpperCase() + " is not yet supported.", null, 0);
+          this.logWarning(url.scheme.toUpperCase() + " is not yet supported.");
         }
       });
     });
@@ -642,17 +640,22 @@ RTCPeerConnection.prototype = {
     } catch(e) {
       // If onerror itself throws, service it.
       try {
-        this.logError(e.message, e.fileName, e.lineNumber);
+        this.logMsg(e.message, e.fileName, e.lineNumber, Ci.nsIScriptError.errorFlag);
       } catch(e) {}
     }
   },
 
-  logError: function(msg, file, line) {
-    this.logMsg(msg, file, line, Ci.nsIScriptError.errorFlag);
+  logError: function(msg) {
+    this.logStackMsg(msg, Ci.nsIScriptError.errorFlag);
   },
 
-  logWarning: function(msg, file, line) {
-    this.logMsg(msg, file, line, Ci.nsIScriptError.warningFlag);
+  logWarning: function(msg) {
+    this.logStackMsg(msg, Ci.nsIScriptError.warningFlag);
+  },
+
+  logStackMsg: function(msg, flag) {
+    let err = this._win.Error();
+    this.logMsg(msg, err.fileName, err.lineNumber, flag);
   },
 
   logMsg: function(msg, file, line, flag) {
@@ -686,8 +689,7 @@ RTCPeerConnection.prototype = {
                           {
                             get:function()  { return this.getEH(name); },
                             set:function(h) {
-                              this.logWarning(name + " is deprecated! " + msg,
-                                              null, 0);
+                              this.logWarning(name + " is deprecated! " + msg);
                               return this.setEH(name, h);
                             }
                           });
@@ -753,8 +755,7 @@ RTCPeerConnection.prototype = {
       if (options && convertLegacyOptions(options)) {
         this.logError(
           "Mandatory/optional in createOffer options no longer works! Use " +
-            JSON.stringify(options) + " instead (note the case difference)!",
-          null, 0);
+            JSON.stringify(options) + " instead (note the case difference)!");
         options = {};
       }
 
@@ -1235,21 +1236,21 @@ RTCPeerConnection.prototype = {
     }
     if (dict.maxRetransmitNum != undefined) {
       dict.maxRetransmits = dict.maxRetransmitNum;
-      this.logWarning("Deprecated RTCDataChannelInit dictionary entry maxRetransmitNum used!", null, 0);
+      this.logWarning("Deprecated RTCDataChannelInit dictionary entry maxRetransmitNum used!");
     }
     if (dict.outOfOrderAllowed != undefined) {
       dict.ordered = !dict.outOfOrderAllowed; // the meaning is swapped with
                                               // the name change
-      this.logWarning("Deprecated RTCDataChannelInit dictionary entry outOfOrderAllowed used!", null, 0);
+      this.logWarning("Deprecated RTCDataChannelInit dictionary entry outOfOrderAllowed used!");
     }
 
     if (dict.preset != undefined) {
       dict.negotiated = dict.preset;
-      this.logWarning("Deprecated RTCDataChannelInit dictionary entry preset used!", null, 0);
+      this.logWarning("Deprecated RTCDataChannelInit dictionary entry preset used!");
     }
     if (dict.stream != undefined) {
       dict.id = dict.stream;
-      this.logWarning("Deprecated RTCDataChannelInit dictionary entry stream used!", null, 0);
+      this.logWarning("Deprecated RTCDataChannelInit dictionary entry stream used!");
     }
 
     if (dict.maxRetransmitTime !== null && dict.maxRetransmits !== null) {
@@ -1439,7 +1440,7 @@ PeerConnectionObserver.prototype = {
     }
 
     if (iceConnectionState === 'failed') {
-      pc.logError("ICE failed, see about:webrtc for more details", null, 0);
+      pc.logError("ICE failed, see about:webrtc for more details");
     }
 
     pc.changeIceConnectionState(iceConnectionState);
@@ -1491,7 +1492,7 @@ PeerConnectionObserver.prototype = {
         break;
 
       default:
-        this._dompc.logWarning("Unhandled state type: " + state, null, 0);
+        this._dompc.logWarning("Unhandled state type: " + state);
         break;
     }
   },
