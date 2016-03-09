@@ -356,7 +356,7 @@ nsFileChannel::OpenContentStream(bool async, nsIInputStream **result,
     rv = NS_NewChannel(getter_AddRefs(newChannel),
                        newURI,
                        nsContentUtils::GetSystemPrincipal(),
-                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                       nsILoadInfo::SEC_NORMAL,
                        nsIContentPolicy::TYPE_OTHER);
 
     if (NS_FAILED(rv))
