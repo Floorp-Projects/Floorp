@@ -153,10 +153,6 @@
     <dimen name="tab_panel_grid_padding_top">19dp</dimen>
 
     <dimen name="tab_highlight_stroke_width">4dp</dimen>
-    <dimen name="tab_title_height">22dp</dimen>
-    <dimen name="tab_vertical_padding">6dp</dimen>
-    <dimen name="tab_thumbnail_padding">4dp</dimen>
-    <dimen name="tab_thumbnail_margin">6dp</dimen>
 
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">32dp</dimen>
