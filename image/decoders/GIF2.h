@@ -67,10 +67,7 @@ typedef struct gif_struct {
     int32_t datum;              // 32-bit input buffer
 
     // Output state machine
-    int ipass;                  // Interlace pass; Ranges 1-4 if interlaced.
-    unsigned rows_remaining;    // Rows remaining to be output
-    unsigned irow;              // Current output row, starting at zero
-    uint8_t* rowp;              // Current output pointer
+    int64_t pixels_remaining;  // Pixels remaining to be output.
 
     // Parameters for image frame currently being decoded
     unsigned x_offset, y_offset; // With respect to "screen" origin
@@ -94,7 +91,6 @@ typedef struct gif_struct {
                                 // the number of animation loops a GIF
                                 // renders.
 
-    bool progressive_display;   // If TRUE, do Haeberli interlace hack
     bool interlaced;            // TRUE, if scanlines arrive interlaced order
     bool is_transparent;        // TRUE, if tpixel is valid
 
