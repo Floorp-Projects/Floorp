@@ -77,10 +77,6 @@
         <item>android_import.data.bookmarks</item>
         <item>android_import.data.history</item>
     </string-array>
-    <string-array name="pref_import_android_keys">
-        <item>android_import.data.bookmarks</item>
-        <item>android_import.data.history</item>
-    </string-array>
     <string-array name="pref_private_data_entries">
         <item>@string/pref_private_data_history2</item>
         <item>@string/pref_private_data_searchHistory</item>
