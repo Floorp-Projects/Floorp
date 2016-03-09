@@ -109,7 +109,7 @@ function registerSelf() {
   if (register[0]) {
     let {id, remotenessChange} = register[0][0];
     capabilities = register[0][2];
-    isB2G = capabilities.platformName == "B2G";
+    isB2G = capabilities.B2G;
     listenerId = id;
     if (typeof id != "undefined") {
       // check if we're the main process
@@ -300,7 +300,7 @@ function waitForReady() {
  */
 function newSession(msg) {
   capabilities = msg.json;
-  isB2G = capabilities.platformName == "B2G";
+  isB2G = capabilities.B2G;
   resetValues();
   if (isB2G) {
     readyStateTimer.initWithCallback(waitForReady, 100, Ci.nsITimer.TYPE_ONE_SHOT);
