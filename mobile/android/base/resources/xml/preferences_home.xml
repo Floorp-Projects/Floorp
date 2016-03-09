@@ -28,6 +28,10 @@
                             android:summary="@string/pref_home_suggested_sites_summary"
                             android:defaultValue="true" />
 
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_category_home_add_ons">
+
         <ListPreference android:key="home.sync.updateMode"
                         android:title="@string/pref_home_updates"
                         android:entries="@array/pref_home_updates_entries"
