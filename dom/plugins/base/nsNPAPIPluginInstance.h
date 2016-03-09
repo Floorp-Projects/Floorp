@@ -100,7 +100,6 @@ public:
   nsresult GetDrawingModel(int32_t* aModel);
   nsresult IsRemoteDrawingCoreAnimation(bool* aDrawing);
   nsresult ContentsScaleFactorChanged(double aContentsScaleFactor);
-  nsresult CSSZoomFactorChanged(float aCSSZoomFactor);
   nsresult GetJSObject(JSContext *cx, JSObject** outObject);
   bool ShouldCache();
   nsresult IsWindowless(bool* isWindowless);
@@ -306,9 +305,6 @@ public:
 
   // Returns the contents scale factor of the screen the plugin is drawn on.
   double GetContentsScaleFactor();
-
-  // Returns the css zoom factor of the document the plugin is drawn on.
-  float GetCSSZoomFactor();
 
   nsresult GetRunID(uint32_t *aRunID);
 
