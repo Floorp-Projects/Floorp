@@ -8,13 +8,18 @@
 
 #include "mozilla/RestyleManagerHandle.h"
 #include "mozilla/RestyleManagerHandleInlines.h"
+#include "nsAnimationManager.h" // For dom::CSSAnimation
 #include "nsPresContext.h"
+#include "nsTransitionManager.h" // For dom::CSSTransition
 
 namespace mozilla {
 
+template <class AnimationType>
 /* static */ void
-AnimationCollection::PropertyDtor(void* aObject, nsIAtom* aPropertyName,
-                                  void* aPropertyValue, void* aData)
+AnimationCollection<AnimationType>::PropertyDtor(void* aObject,
+                                                 nsIAtom* aPropertyName,
+                                                 void* aPropertyValue,
+                                                 void* aData)
 {
   AnimationCollection* collection =
     static_cast<AnimationCollection*>(aPropertyValue);
@@ -32,8 +37,10 @@ AnimationCollection::PropertyDtor(void* aObject, nsIAtom* aPropertyName,
   delete collection;
 }
 
+template <class AnimationType>
 /* static */ nsString
-AnimationCollection::PseudoTypeAsString(CSSPseudoElementType aPseudoType)
+AnimationCollection<AnimationType>::PseudoTypeAsString(
+  CSSPseudoElementType aPseudoType)
 {
   switch (aPseudoType) {
     case CSSPseudoElementType::before:
@@ -47,8 +54,10 @@ AnimationCollection::PseudoTypeAsString(CSSPseudoElementType aPseudoType)
   }
 }
 
+template <class AnimationType>
 void
-AnimationCollection::UpdateCheckGeneration(nsPresContext* aPresContext)
+AnimationCollection<AnimationType>::UpdateCheckGeneration(
+  nsPresContext* aPresContext)
 {
   if (aPresContext->RestyleManager()->IsServo()) {
     // stylo: ServoRestyleManager does not support animations yet.
@@ -57,5 +66,10 @@ AnimationCollection::UpdateCheckGeneration(nsPresContext* aPresContext)
   mCheckGeneration =
     aPresContext->RestyleManager()->AsGecko()->GetAnimationGeneration();
 }
+
+// Explicit class instantiations
+
+template class AnimationCollection<dom::CSSAnimation>;
+template class AnimationCollection<dom::CSSTransition>;
 
 } // namespace mozilla

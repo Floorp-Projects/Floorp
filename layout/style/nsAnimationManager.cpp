@@ -305,7 +305,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsAnimationManager, Release)
 // of animations and remove the matched animation from the list.
 static already_AddRefed<CSSAnimation>
 PopExistingAnimation(const nsAString& aName,
-                     AnimationCollection* aCollection)
+                     nsAnimationManager::CSSAnimationCollection* aCollection)
 {
   if (!aCollection) {
     return nullptr;
@@ -317,10 +317,7 @@ PopExistingAnimation(const nsAString& aName,
   // through the collection.
   for (size_t idx = 0, length = aCollection->mAnimations.Length();
        idx != length; ++ idx) {
-    CSSAnimation* cssAnim = aCollection->mAnimations[idx]->AsCSSAnimation();
-    MOZ_ASSERT(cssAnim,
-               "All animations stored by the animation manager should "
-               "be CSSAnimation objects");
+    CSSAnimation* cssAnim = aCollection->mAnimations[idx];
     if (cssAnim->AnimationName() == aName) {
       RefPtr<CSSAnimation> match = cssAnim;
       aCollection->mAnimations.RemoveElementAt(idx);
@@ -394,7 +391,7 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
   // style change, but also not in an animation restyle.
 
   const nsStyleDisplay* disp = aStyleContext->StyleDisplay();
-  AnimationCollection* collection =
+  CSSAnimationCollection* collection =
     GetAnimationCollection(aElement,
                            aStyleContext->GetPseudoType(),
                            false /* aCreateIfNeeded */);
@@ -408,7 +405,7 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
 
   // Build the updated animations list, extracting matching animations from
   // the existing collection as we go.
-  AnimationPtrArray newAnimations;
+  OwningCSSAnimationPtrArray newAnimations;
   if (!aStyleContext->IsInDisplayNoneSubtree()) {
     BuildAnimations(aStyleContext, aElement, collection, newAnimations);
   }
@@ -462,7 +459,7 @@ nsAnimationManager::StopAnimationsForElement(
   mozilla::CSSPseudoElementType aPseudoType)
 {
   MOZ_ASSERT(aElement);
-  AnimationCollection* collection =
+  CSSAnimationCollection* collection =
     GetAnimationCollection(aElement, aPseudoType, false /* aCreateIfNeeded */);
   if (!collection) {
     return;
@@ -535,7 +532,7 @@ class MOZ_STACK_CLASS CSSAnimationBuilder final {
 public:
   CSSAnimationBuilder(nsStyleContext* aStyleContext,
                       dom::Element* aTarget,
-                      AnimationCollection* aCollection)
+                      nsAnimationManager::CSSAnimationCollection* aCollection)
     : mStyleContext(aStyleContext)
     , mTarget(aTarget)
     , mCollection(aCollection)
@@ -588,7 +585,7 @@ private:
   ResolvedStyleCache mResolvedStyles;
   RefPtr<nsStyleContext> mStyleWithoutAnimation;
   // Existing collection, nullptr if the target element has no animations.
-  AnimationCollection* mCollection;
+  nsAnimationManager::CSSAnimationCollection* mCollection;
 };
 
 already_AddRefed<CSSAnimation>
@@ -654,7 +651,7 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
   // dispatched within the same tick as the animation is added
   // so we need to queue up any animationstart events from newly-created
   // animations.
-  animation->AsCSSAnimation()->QueueEvents();
+  animation->QueueEvents();
 
   return animation.forget();
 }
@@ -835,12 +832,10 @@ CSSAnimationBuilder::BuildSegment(InfallibleTArray<AnimationPropertySegment>&
                                   float aToKey, nsStyleContext* aToContext)
 {
   StyleAnimationValue fromValue, toValue, dummyValue;
-  if (!CommonAnimationManager::ExtractComputedValueForTransition(aProperty,
-                                                                 aFromContext,
-                                                                 fromValue) ||
-      !CommonAnimationManager::ExtractComputedValueForTransition(aProperty,
-                                                                 aToContext,
-                                                                 toValue) ||
+  if (!CommonAnimationManager<CSSAnimation>::ExtractComputedValueForTransition(
+        aProperty, aFromContext, fromValue) ||
+      !CommonAnimationManager<CSSAnimation>::ExtractComputedValueForTransition(
+        aProperty, aToContext, toValue) ||
       // Check that we can interpolate between these values
       // (If this is ever a performance problem, we could add a
       // CanInterpolate method, but it seems fine for now.)
@@ -874,8 +869,8 @@ CSSAnimationBuilder::BuildSegment(InfallibleTArray<AnimationPropertySegment>&
 void
 nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
                                     dom::Element* aTarget,
-                                    AnimationCollection* aCollection,
-                                    AnimationPtrArray& aAnimations)
+                                    CSSAnimationCollection* aCollection,
+                                    OwningCSSAnimationPtrArray& aAnimations)
 {
   MOZ_ASSERT(aAnimations.IsEmpty(), "expect empty array");
 
@@ -890,7 +885,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     // not generate animation events. This includes when the animation-name is
     // "none" which is represented by an empty name in the StyleAnimation.
     // Since such animations neither affect style nor dispatch events, we do
-    // not generate a corresponding Animation for them.
+    // not generate a corresponding CSSAnimation for them.
     MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
                "ServoStyleSet should not use nsAnimationManager for "
                "animations");

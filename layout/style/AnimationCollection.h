@@ -21,10 +21,13 @@ class nsPresContext;
 
 namespace mozilla {
 
-typedef InfallibleTArray<RefPtr<dom::Animation>> AnimationPtrArray;
-
-struct AnimationCollection : public LinkedListElement<AnimationCollection>
+template <class AnimationType>
+class AnimationCollection
+  : public LinkedListElement<AnimationCollection<AnimationType>>
 {
+public:
+  typedef AnimationCollection<AnimationType> self_type;
+
   AnimationCollection(dom::Element* aElement, nsIAtom* aElementProperty)
     : mElement(aElement)
     , mElementProperty(aElementProperty)
@@ -40,7 +43,7 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
     MOZ_ASSERT(mCalledPropertyDtor,
                "must call destructor through element property dtor");
     MOZ_COUNT_DTOR(AnimationCollection);
-    remove();
+    LinkedListElement<self_type>::remove();
   }
 
   void Destroy()
@@ -52,7 +55,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
   static void PropertyDtor(void *aObject, nsIAtom *aPropertyName,
                            void *aPropertyValue, void *aData);
 
-public:
   bool IsForElement() const { // rather than for a pseudo-element
     return mElementProperty == nsGkAtoms::animationsProperty ||
            mElementProperty == nsGkAtoms::transitionsProperty;
@@ -89,7 +91,7 @@ public:
   // i.e., in an atom list)
   nsIAtom *mElementProperty;
 
-  AnimationPtrArray mAnimations;
+  InfallibleTArray<RefPtr<AnimationType>> mAnimations;
 
   // For CSS transitions only, we record the most recent generation
   // for which we've done the transition update, so that we avoid doing

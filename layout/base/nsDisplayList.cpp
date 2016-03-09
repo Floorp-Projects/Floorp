@@ -436,7 +436,7 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
 
 static void
 AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
-                         AnimationPtrArray& aAnimations,
+                         nsTArray<RefPtr<dom::Animation>>& aAnimations,
                          Layer* aLayer, AnimationData& aData,
                          bool aPending)
 {
