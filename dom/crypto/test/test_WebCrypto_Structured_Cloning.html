@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>WebCrypto Test Suite</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" href="./test_WebCrypto.css"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<!-- Utilities for manipulating ABVs -->
+<script src="util.js"></script>
+
+<!-- A simple wrapper around IndexedDB -->
+<script src="simpledb.js"></script>
+
+<!-- Test vectors drawn from the literature -->
+<script src="./test-vectors.js"></script>
+
+<!-- General testing framework -->
+<script src="./test-array.js"></script>
+
+<script>/*<![CDATA[*/
+"use strict";
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Structured Cloning: AES-CTR",
+  function() {
+    var that = this;
+    var data = crypto.getRandomValues(new Uint8Array(128));
+    var iv = crypto.getRandomValues(new Uint8Array(16));
+    var alg = {name: "AES-CTR", length: 128, iv};
+
+    var counter = new Uint8Array(16);
+    var algEncrypt = {name: "AES-CTR", length: 128, counter};
+
+    crypto.subtle.generateKey(alg, true, ["encrypt"])
+      .then(util.cloneExportCompareKeys)
+      .then(x => crypto.subtle.encrypt(algEncrypt, x, data))
+      .then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Structured Cloning: AES-CBC",
+  function() {
+    var that = this;
+    var data = crypto.getRandomValues(new Uint8Array(128));
+    var iv = crypto.getRandomValues(new Uint8Array(16));
+    var alg = {name: "AES-CBC", length: 128, iv};
+
+    crypto.subtle.generateKey(alg, true, ["encrypt"])
+      .then(util.cloneExportCompareKeys)
+      .then(x => crypto.subtle.encrypt(alg, x, data))
+      .then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Structured Cloning: AES-GCM",
+  function() {
+    var that = this;
+    var data = crypto.getRandomValues(new Uint8Array(128));
+    var iv = crypto.getRandomValues(new Uint8Array(16));
+    var alg = {name: "AES-GCM", length: 128, iv};
+
+    crypto.subtle.generateKey(alg, true, ["encrypt"])
+      .then(util.cloneExportCompareKeys)
+      .then(x => crypto.subtle.encrypt(alg, x, data))
+      .then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Structured Cloning: AES-KW",
+  function() {
+    var that = this;
+    var alg = {name: "AES-KW", length: 128};
+
+    crypto.subtle.generateKey(alg, true, ["wrapKey"])
+      .then(util.cloneExportCompareKeys)
+      .then(x => crypto.subtle.wrapKey("raw", x, x, "AES-KW"))
+      .then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Structured Cloning: HMAC",
+  function() {
+    var that = this;
+    var data = crypto.getRandomValues(new Uint8Array(128));
+    var alg = {name: "HMAC", length: 256, hash: "SHA-256"};
+
+    crypto.subtle.generateKey(alg, true, ["sign", "verify"])
+      .then(util.cloneExportCompareKeys)
+      .then(x => crypto.subtle.sign("HMAC", x, data))
+      .then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Structured Cloning: PBKDF2",
+  function() {
+    var that = this;
+    var key = new TextEncoder("utf-8").encode("password");
+
+    var alg = {
+      name: "PBKDF2",
+      hash: "SHA-1",
+      salt: crypto.getRandomValues(new Uint8Array(8)),
+      iterations: 4096
+    };
+
+    crypto.subtle.importKey("raw", key, "PBKDF2", true, ["deriveBits"])
+      .then(util.cloneExportCompareKeys)
+      .then(x => crypto.subtle.deriveBits(alg, x, 160))
+      .then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Structured Cloning: HKDF",
+  function() {
+    var that = this;
+    var key = new TextEncoder("utf-8").encode("password");
+
+    var alg = {
+      name: "HKDF",
+      hash: "SHA-256",
+      salt: new Uint8Array(),
+      info: new Uint8Array()
+    };
+
+    crypto.subtle.importKey("raw", key, "HKDF", false, ["deriveBits"])
+      .then(util.clone)
+      .then(x => crypto.subtle.deriveBits(alg, x, 16))
+      .then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Structured Cloning: RSA-OAEP",
+  function() {
+    var that = this;
+    var data = crypto.getRandomValues(new Uint8Array(128));
+
+    var alg = {
+      name: "RSA-OAEP",
+      hash: "SHA-256",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1])
+    };
+
+    crypto.subtle.generateKey(alg, true, ["encrypt", "decrypt"])
+      .then(util.cloneExportCompareKeys)
+      .then(x => {
+        return crypto.subtle.encrypt(alg, x.publicKey, data)
+          .then(ct => crypto.subtle.decrypt(alg, x.privateKey, ct));
+      })
+      .then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Structured Cloning: RSASSA-PKCS1-v1_5",
+  function() {
+    var that = this;
+    var data = crypto.getRandomValues(new Uint8Array(128));
+
+    var alg = {
+      name: "RSASSA-PKCS1-v1_5",
+      hash: "SHA-256",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1])
+    };
+
+    crypto.subtle.generateKey(alg, true, ["sign", "verify"])
+      .then(util.cloneExportCompareKeys)
+      .then(x => {
+        return crypto.subtle.sign(alg, x.privateKey, data)
+          .then(sig => crypto.subtle.verify(alg, x.publicKey, sig, data));
+      })
+      .then(complete(that, x => x), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Structured Cloning: RSA-PSS",
+  function() {
+    var that = this;
+    var data = crypto.getRandomValues(new Uint8Array(128));
+
+    var alg = {
+      name: "RSA-PSS",
+      hash: "SHA-256",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      saltLength: 20
+    };
+
+    crypto.subtle.generateKey(alg, true, ["sign", "verify"])
+      .then(util.cloneExportCompareKeys)
+      .then(x => {
+        return crypto.subtle.sign(alg, x.privateKey, data)
+          .then(sig => crypto.subtle.verify(alg, x.publicKey, sig, data));
+      })
+      .then(complete(that, x => x), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+/*TestArray.addTest(
+  "Structured Cloning: DH",
+  function() {
+    var that = this;
+    var alg = {name: "DH", prime: tv.dh.prime, generator: new Uint8Array([2])};
+
+    crypto.subtle.generateKey(alg, true, ["deriveBits"])
+      .then(util.cloneExportCompareKeys)
+      .then(x => {
+        var alg = {name: "DH", public: x.publicKey};
+        return crypto.subtle.deriveBits(alg, x.privateKey, 16);
+      })
+      .then(complete(that), error(that));
+  }
+);*/
+
+// -----------------------------------------------------------------------------
+/*TestArray.addTest(
+  "Structured Cloning: ECDH",
+  function() {
+    var that = this;
+    var alg = {name: "ECDH", namedCurve: "P-256"};
+
+    crypto.subtle.generateKey(alg, true, ["deriveBits"])
+      .then(util.cloneExportCompareKeys)
+      .then(x => {
+        var alg = {name: "ECDH", public: x.publicKey};
+        return crypto.subtle.deriveBits(alg, x.privateKey, 16);
+      })
+      .then(complete(that), error(that));
+  }
+);*/
+
+// -----------------------------------------------------------------------------
+/*TestArray.addTest(
+  "Structured Cloning: ECDSA",
+  function() {
+    var that = this;
+    var data = crypto.getRandomValues(new Uint8Array(128));
+    var alg = {name: "ECDSA", namedCurve: "P-256", hash: "SHA-256"};
+
+    crypto.subtle.generateKey(alg, true, ["sign", "verify"])
+      .then(util.cloneExportCompareKeys)
+      .then(x => {
+        return crypto.subtle.sign(alg, x.privateKey, data)
+          .then(sig => crypto.subtle.verify(alg, x.publicKey, sig, data));
+      })
+      .then(complete(that), error(that));
+  }
+);*/
+/*]]>*/</script>
+</head>
+
+<body>
+
+<div id="content">
+	<div id="head">
+		<b>Web</b>Crypto<br>
+	</div>
+
+    <div id="start" onclick="start();">RUN ALL</div>
+
+    <div id="resultDiv" class="content">
+    Summary:
+    <span class="pass"><span id="passN">0</span> passed, </span>
+    <span class="fail"><span id="failN">0</span> failed, </span>
+    <span class="pending"><span id="pendingN">0</span> pending.</span>
+    <br/>
+    <br/>
+
+    <table id="results">
+        <tr>
+            <th>Test</th>
+            <th>Result</th>
+            <th>Time</th>
+        </tr>
+    </table>
+
+    </div>
+
+    <div id="foot"></div>
+</div>
+
+</body>
+</html>
