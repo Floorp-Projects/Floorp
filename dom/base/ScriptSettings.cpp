@@ -614,6 +614,14 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
   }
 }
 
+AutoEntryScript::AutoEntryScript(JSObject* aObject,
+                                 const char *aReason,
+                                 bool aIsMainThread,
+                                 JSContext* aCx)
+  : AutoEntryScript(xpc::NativeGlobal(aObject), aReason, aIsMainThread, aCx)
+{
+}
+
 AutoEntryScript::~AutoEntryScript()
 {
   // GC when we pop a script entry point. This is a useful heuristic that helps
