@@ -1408,11 +1408,11 @@ static bool EmitExpr(FunctionCompiler&, MDefinition**);
 static bool
 EmitHeapAddress(FunctionCompiler& f, MDefinition** base, MAsmJSHeapAccess* access)
 {
+    uint32_t alignLog2 = f.readVarU32();
+    access->setAlign(1 << alignLog2);
+
     uint32_t offset = f.readVarU32();
     access->setOffset(offset);
-
-    uint32_t align = f.readVarU32();
-    access->setAlign(align);
 
     if (!EmitExpr(f, base))
         return false;

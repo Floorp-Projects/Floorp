@@ -36,6 +36,7 @@ using namespace js;
 using namespace js::wasm;
 
 using mozilla::BitwiseCast;
+using mozilla::CeilingLog2;
 using mozilla::CountLeadingZeroes32;
 using mozilla::CheckedInt;
 using mozilla::FloatingPoint;
@@ -398,20 +399,19 @@ class WasmAstIf : public WasmAstExpr
 class WasmAstLoadStoreAddress
 {
     WasmAstExpr* base_;
+    int32_t flags_;
     int32_t offset_;
-    int32_t align_;
 
   public:
-    explicit WasmAstLoadStoreAddress(WasmAstExpr* base, int32_t offset,
-                                     int32_t align)
+    explicit WasmAstLoadStoreAddress(WasmAstExpr* base, int32_t flags, int32_t offset)
       : base_(base),
-        offset_(offset),
-        align_(align)
+        flags_(flags),
+        offset_(offset)
     {}
 
     WasmAstExpr& base() const { return *base_; }
+    int32_t flags() const { return flags_; }
     int32_t offset() const { return offset_; }
-    int32_t align() const { return align_; }
 };
 
 class WasmAstLoad : public WasmAstExpr
@@ -2496,7 +2496,7 @@ ParseIf(WasmParseContext& c)
 }
 
 static bool
-ParseLoadStoreAddress(WasmParseContext& c, int32_t* offset, int32_t* align, WasmAstExpr** base)
+ParseLoadStoreAddress(WasmParseContext& c, int32_t* offset, uint32_t* alignLog2, WasmAstExpr** base)
 {
     *offset = 0;
     if (c.ts.getIf(WasmToken::Offset)) {
@@ -2513,14 +2513,18 @@ ParseLoadStoreAddress(WasmParseContext& c, int32_t* offset, int32_t* align, Wasm
         }
     }
 
-    *align = 0;
+    *alignLog2 = UINT32_MAX;
     if (c.ts.getIf(WasmToken::Align)) {
         if (!c.ts.match(WasmToken::Equal, c.error))
             return false;
         WasmToken val = c.ts.get();
         switch (val.kind()) {
           case WasmToken::Index:
-            *align = val.index();
+            if (!IsPowerOfTwo(val.index())) {
+                c.ts.generateError(val, c.error);
+                return false;
+            }
+            *alignLog2 = CeilingLog2(val.index());
             break;
           default:
             c.ts.generateError(val, c.error);
@@ -2539,70 +2543,72 @@ static WasmAstLoad*
 ParseLoad(WasmParseContext& c, Expr expr)
 {
     int32_t offset;
-    int32_t align;
+    uint32_t alignLog2;
     WasmAstExpr* base;
-    if (!ParseLoadStoreAddress(c, &offset, &align, &base))
+    if (!ParseLoadStoreAddress(c, &offset, &alignLog2, &base))
         return nullptr;
 
-    if (align == 0) {
+    if (alignLog2 == UINT32_MAX) {
         switch (expr) {
           case Expr::I32Load8S:
           case Expr::I32Load8U:
           case Expr::I64Load8S:
           case Expr::I64Load8U:
-            align = 1;
+            alignLog2 = 0;
             break;
           case Expr::I32Load16S:
           case Expr::I32Load16U:
           case Expr::I64Load16S:
           case Expr::I64Load16U:
-            align = 2;
+            alignLog2 = 1;
             break;
           case Expr::I32Load:
           case Expr::F32Load:
           case Expr::I64Load32S:
           case Expr::I64Load32U:
-            align = 4;
+            alignLog2 = 2;
             break;
           case Expr::I64Load:
           case Expr::F64Load:
-            align = 8;
+            alignLog2 = 3;
             break;
           default:
             MOZ_CRASH("Bad load expr");
         }
     }
 
-    return new(c.lifo) WasmAstLoad(expr, WasmAstLoadStoreAddress(base, offset, align));
+    uint32_t flags = alignLog2;
+
+    return new(c.lifo) WasmAstLoad(expr, WasmAstLoadStoreAddress(base, flags, offset));
 }
 
 static WasmAstStore*
 ParseStore(WasmParseContext& c, Expr expr)
 {
     int32_t offset;
-    int32_t align;
+    uint32_t alignLog2;
     WasmAstExpr* base;
-    if (!ParseLoadStoreAddress(c, &offset, &align, &base))
+    if (!ParseLoadStoreAddress(c, &offset, &alignLog2, &base))
         return nullptr;
 
-    if (align == 0) {
+    if (alignLog2 == UINT32_MAX) {
         switch (expr) {
           case Expr::I32Store8:
           case Expr::I64Store8:
-            align = 1;
+            alignLog2 = 0;
             break;
           case Expr::I32Store16:
           case Expr::I64Store16:
-            align = 2;
+            alignLog2 = 1;
             break;
           case Expr::I32Store:
           case Expr::F32Store:
           case Expr::I64Store32:
-            align = 4;
+            alignLog2 = 2;
             break;
           case Expr::I64Store:
           case Expr::F64Store:
-            align = 8;
+            alignLog2 = 3;
             break;
           default:
             MOZ_CRASH("Bad load expr");
@@ -2613,7 +2619,9 @@ ParseStore(WasmParseContext& c, Expr expr)
     if (!value)
         return nullptr;
 
-    return new(c.lifo) WasmAstStore(expr, WasmAstLoadStoreAddress(base, offset, align), value);
+    uint32_t flags = alignLog2;
+
+    return new(c.lifo) WasmAstStore(expr, WasmAstLoadStoreAddress(base, flags, offset), value);
 }
 
 static WasmAstBranchTable*
@@ -3630,8 +3638,8 @@ EmitIf(Encoder& e, WasmAstIf& i)
 static bool
 EncodeLoadStoreAddress(Encoder &e, const WasmAstLoadStoreAddress &address)
 {
-    return e.writeVarU32(address.offset()) &&
-           e.writeVarU32(address.align()) &&
+    return e.writeVarU32(address.flags()) &&
+           e.writeVarU32(address.offset()) &&
            EncodeExpr(e, address.base());
 }
 

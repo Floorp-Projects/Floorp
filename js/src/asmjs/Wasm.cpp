@@ -461,18 +461,19 @@ DecodeIfElse(FunctionDecoder& f, bool hasElse, ExprType* type)
 }
 
 static bool
-DecodeLoadStoreAddress(FunctionDecoder &f)
+DecodeLoadStoreAddress(FunctionDecoder &f, unsigned width)
 {
+    uint32_t flags;
+    if (!f.d().readVarU32(&flags))
+        return f.fail("expected memory access flags");
+
+    uint32_t alignLog2 = flags;
+    if (alignLog2 >= 32 || (1u << alignLog2) > width)
+        return f.fail("greater than natural alignment");
+
     uint32_t offset;
     if (!f.d().readVarU32(&offset))
         return f.fail("expected memory access offset");
-
-    uint32_t align;
-    if (!f.d().readVarU32(&align))
-        return f.fail("expected memory access alignment");
-
-    if (!mozilla::IsPowerOfTwo(align))
-        return f.fail("memory access alignment must be a power of two");
 
     ExprType baseType;
     if (!DecodeExpr(f, &baseType))
@@ -482,9 +483,9 @@ DecodeLoadStoreAddress(FunctionDecoder &f)
 }
 
 static bool
-DecodeLoad(FunctionDecoder& f, ValType loadType, ExprType* type)
+DecodeLoad(FunctionDecoder& f, unsigned width, ValType loadType, ExprType* type)
 {
-    if (!DecodeLoadStoreAddress(f))
+    if (!DecodeLoadStoreAddress(f, width))
         return false;
 
     *type = ToExprType(loadType);
@@ -492,9 +493,9 @@ DecodeLoad(FunctionDecoder& f, ValType loadType, ExprType* type)
 }
 
 static bool
-DecodeStore(FunctionDecoder& f, ValType storeType, ExprType* type)
+DecodeStore(FunctionDecoder& f, unsigned width, ValType storeType, ExprType* type)
 {
-    if (!DecodeLoadStoreAddress(f))
+    if (!DecodeLoadStoreAddress(f, width))
         return false;
 
     ExprType actual;
@@ -785,12 +786,14 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
                DecodeConversionOperator(f, ValType::F64, ValType::I64, type);
       case Expr::F64PromoteF32:
         return DecodeConversionOperator(f, ValType::F64, ValType::F32, type);
-      case Expr::I32Load:
       case Expr::I32Load8S:
       case Expr::I32Load8U:
+        return DecodeLoad(f, 1, ValType::I32, type);
       case Expr::I32Load16S:
       case Expr::I32Load16U:
-        return DecodeLoad(f, ValType::I32, type);
+        return DecodeLoad(f, 2, ValType::I32, type);
+      case Expr::I32Load:
+        return DecodeLoad(f, 4, ValType::I32, type);
       case Expr::I64Load:
       case Expr::I64Load8S:
       case Expr::I64Load8U:
@@ -799,25 +802,27 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::I64Load32S:
       case Expr::I64Load32U:
         return f.fail("NYI: i64") &&
-               DecodeLoad(f, ValType::I64, type);
+               DecodeLoad(f, 0, ValType::I64, type);
       case Expr::F32Load:
-        return DecodeLoad(f, ValType::F32, type);
+        return DecodeLoad(f, 4, ValType::F32, type);
       case Expr::F64Load:
-        return DecodeLoad(f, ValType::F64, type);
-      case Expr::I32Store:
+        return DecodeLoad(f, 8, ValType::F64, type);
       case Expr::I32Store8:
+        return DecodeStore(f, 1, ValType::I32, type);
       case Expr::I32Store16:
-        return DecodeStore(f, ValType::I32, type);
+        return DecodeStore(f, 2, ValType::I32, type);
+      case Expr::I32Store:
+        return DecodeStore(f, 4, ValType::I32, type);
       case Expr::I64Store:
       case Expr::I64Store8:
       case Expr::I64Store16:
       case Expr::I64Store32:
         return f.fail("NYI: i64") &&
-               DecodeStore(f, ValType::I64, type);
+               DecodeStore(f, 0, ValType::I64, type);
       case Expr::F32Store:
-        return DecodeStore(f, ValType::F32, type);
+        return DecodeStore(f, 4, ValType::F32, type);
       case Expr::F64Store:
-        return DecodeStore(f, ValType::F64, type);
+        return DecodeStore(f, 8, ValType::F64, type);
       case Expr::Br:
         return DecodeBranch(f, expr, type);
       case Expr::BrIf:
