@@ -8943,6 +8943,16 @@ fi
 
 MOZ_CONFIG_ICU()
 
+dnl ========================================================
+dnl mask as short hand property
+dnl ========================================================
+dnl Uncommenting the next line would enable mask-as-shorthand feature.
+dnl MOZ_ENABLE_MASK_AS_SHORTHAND=1
+if test "$MOZ_ENABLE_MASK_AS_SHORTHAND"; then
+  AC_DEFINE(MOZ_ENABLE_MASK_AS_SHORTHAND)
+fi
+AC_SUBST(MOZ_ENABLE_MASK_AS_SHORTHAND)
+
 if test -z "$JS_SHARED_LIBRARY"; then
   AC_DEFINE(MOZ_STATIC_JS)
 fi
