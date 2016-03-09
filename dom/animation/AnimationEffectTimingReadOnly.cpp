@@ -27,6 +27,17 @@ AnimationEffectTimingReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> 
 }
 
 void
+AnimationEffectTimingReadOnly::GetDuration(
+    OwningUnrestrictedDoubleOrString& aRetVal) const
+{
+  if (mTiming.mDuration) {
+    aRetVal.SetAsUnrestrictedDouble() = mTiming.mDuration->ToMilliseconds();
+  } else {
+    aRetVal.SetAsString().AssignLiteral("auto");
+  }
+}
+
+void
 AnimationEffectTimingReadOnly::GetEasing(nsString& aRetVal) const
 {
   if (mTiming.mFunction.isSome()) {

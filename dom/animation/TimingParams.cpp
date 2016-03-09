@@ -10,20 +10,23 @@ namespace mozilla {
 
 TimingParams::TimingParams(const dom::AnimationEffectTimingProperties& aRhs,
                            const dom::Element* aTarget)
-  : mDuration(aRhs.mDuration)
-  , mDelay(TimeDuration::FromMilliseconds(aRhs.mDelay))
+  : mDelay(TimeDuration::FromMilliseconds(aRhs.mDelay))
   , mEndDelay(TimeDuration::FromMilliseconds(aRhs.mEndDelay))
   , mIterations(aRhs.mIterations)
   , mIterationStart(aRhs.mIterationStart)
   , mDirection(aRhs.mDirection)
   , mFill(aRhs.mFill)
 {
+  if (aRhs.mDuration.IsUnrestrictedDouble()) {
+    mDuration.emplace(StickyTimeDuration::FromMilliseconds(
+                        aRhs.mDuration.GetAsUnrestrictedDouble()));
+  }
   mFunction = AnimationUtils::ParseEasing(aTarget, aRhs.mEasing);
 }
 
 TimingParams::TimingParams(double aDuration)
 {
-  mDuration.SetAsUnrestrictedDouble() = aDuration;
+  mDuration.emplace(StickyTimeDuration::FromMilliseconds(aDuration));
 }
 
 template <class OptionsType>
@@ -95,18 +98,7 @@ TimingParams::FromOptionsUnion(
 bool
 TimingParams::operator==(const TimingParams& aOther) const
 {
-  bool durationEqual;
-  if (mDuration.IsUnrestrictedDouble()) {
-    durationEqual = aOther.mDuration.IsUnrestrictedDouble() &&
-                    (mDuration.GetAsUnrestrictedDouble() ==
-                     aOther.mDuration.GetAsUnrestrictedDouble());
-  } else {
-    // We consider all string values and uninitialized values as meaning "auto".
-    // Since mDuration is either a string or uninitialized, we consider it equal
-    // if aOther.mDuration is also either a string or uninitialized.
-    durationEqual = !aOther.mDuration.IsUnrestrictedDouble();
-  }
-  return durationEqual &&
+  return mDuration == aOther.mDuration &&
          mDelay == aOther.mDelay &&
          mIterations == aOther.mIterations &&
          mIterationStart == aOther.mIterationStart &&

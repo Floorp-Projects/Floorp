@@ -583,8 +583,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     }
 
     TimingParams timing;
-    timing.mDuration.SetAsUnrestrictedDouble() =
-      animation.duration().ToMilliseconds();
+    timing.mDuration.emplace(animation.duration());
     // Currently animations run on the compositor have their delay factored
     // into their start time, hence the delay is effectively zero.
     timing.mDelay = TimeDuration(0);
@@ -833,7 +832,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
   // async transformed for async scrolls of this scroll frame's ancestor
   // scroll frames, not for async scrolls of this scroll frame itself.
   // In the loop below, we iterate over scroll frames from inside to outside.
-  // At each iteration, this array contains the layer's ancestor mask layers 
+  // At each iteration, this array contains the layer's ancestor mask layers
   // of all scroll frames inside the current one.
   nsTArray<Layer*> ancestorMaskLayers;
 
