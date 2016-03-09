@@ -25,12 +25,28 @@ function send(element, event, handler) {
       wins[wins.length] = win;
     return win;
   }).close = function(n) {
+    var promises = [];
     if (arguments.length < 1)
       n = wins.length;
     while (n --> 0) {
       var win = wins.pop();
-      if (win) win.close();
-      else break;
+      if (win) {
+        promises.push((function(openedWindow) {
+          return new Promise(function(resolve) {
+            SpecialPowers.addObserver(function observer(subject, topic, data) {
+              if (subject == openedWindow) {
+                SpecialPowers.removeObserver(observer, "dom-window-destroyed");
+                SimpleTest.executeSoon(resolve);
+              }
+            }, "dom-window-destroyed", false);
+          });
+        })(win));
+        win.close();
+      } else {
+        promises.push(Promise.resolve());
+        break;
+      }
     }
+    return Promise.all(promises);
   };
 })(window.open);
