@@ -29,7 +29,6 @@ typedef enum {
     gif_global_colormap,
     gif_image_start,
     gif_image_header,
-    gif_image_header_continue,
     gif_image_colormap,
     gif_lzw_start,
     gif_lzw,
@@ -70,10 +69,6 @@ typedef struct gif_struct {
     int64_t pixels_remaining;  // Pixels remaining to be output.
 
     // Parameters for image frame currently being decoded
-    unsigned x_offset, y_offset; // With respect to "screen" origin
-    unsigned height, width;
-    unsigned clamped_height;    // Size of the frame rectangle clamped to the
-    unsigned clamped_width;     //  global logical size after x_ and y_offset.
     int tpixel;                 // Index of transparent pixel
     int32_t disposal_method;    // Restore to background, leave in place, etc.
     uint32_t* local_colormap;   // Per-image colormap
@@ -83,15 +78,14 @@ typedef struct gif_struct {
 
     // Global (multi-image) state
     int version;                // Either 89 for GIF89 or 87 for GIF87
-    unsigned screen_width;      // Logical screen width & height
-    unsigned screen_height;
+    int32_t screen_width;       // Logical screen width & height
+    int32_t screen_height;
     uint32_t global_colormap_depth; // Depth of global colormap array
     int images_decoded;         // Counts images for multi-part GIFs
     int loop_count;             // Netscape specific extension block to control
                                 // the number of animation loops a GIF
                                 // renders.
 
-    bool interlaced;            // TRUE, if scanlines arrive interlaced order
     bool is_transparent;        // TRUE, if tpixel is valid
 
     uint16_t  prefix[MAX_BITS];            // LZW decoding tables

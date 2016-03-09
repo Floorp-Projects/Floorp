@@ -33,11 +33,25 @@ private:
   // Decoders should only be instantiated via DecoderFactory.
   explicit nsGIFDecoder2(RasterImage* aImage);
 
-  // These functions will be called when the decoder has a decoded row,
-  // frame size information, etc.
+  /// Called when we begin decoding the image.
   void      BeginGIF();
-  nsresult  BeginImageFrame(uint16_t aDepth);
+
+  /**
+   * Called when we begin decoding a frame.
+   *
+   * @param aFrameRect The region of the image that contains data. The region
+   *                   outside this rect is transparent.
+   * @param aDepth The palette depth of this frame.
+   * @param aIsInterlaced If true, this frame is an interlaced frame.
+   */
+  nsresult  BeginImageFrame(const gfx::IntRect& aFrameRect,
+                            uint16_t aDepth,
+                            bool aIsInterlaced);
+
+  /// Called when we finish decoding a frame.
   void      EndImageFrame();
+
+  /// Called when we finish decoding the entire image.
   void      FlushImageData();
 
   nsresult  GifWrite(const uint8_t* buf, uint32_t numbytes);
