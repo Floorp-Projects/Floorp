@@ -66,7 +66,9 @@ android {
         main {
             manifest.srcFile "${topobjdir}/mobile/android/base/AndroidManifest.xml"
             assets {
-                if (mozconfig.substs.MOZ_ANDROID_DISTRIBUTION_DIRECTORY) {
+                if (mozconfig.substs.MOZ_ANDROID_DISTRIBUTION_DIRECTORY && !mozconfig.substs.MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER) {
+                    // If we are packaging the bouncer, it will have the distribution, so don't put
+                    // it in the main APK as well.
                     srcDir "${mozconfig.substs.MOZ_ANDROID_DISTRIBUTION_DIRECTORY}/assets"
                 }
             }
