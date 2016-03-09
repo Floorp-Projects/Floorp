@@ -14,3 +14,4 @@ SharedLibrary('pkcs11testmodule')
 # just export all the symbols.
 NO_VISIBILITY_FLAGS = True
 DIST_INSTALL = False
+SYMBOLS_FILE = 'pkcs11testmodule.symbols'

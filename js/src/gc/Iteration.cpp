@@ -43,9 +43,9 @@ IterateCompartmentsArenasCells(JSRuntime* rt, Zone* zone, void* data,
         size_t thingSize = Arena::thingSize(thingKind);
 
         for (ArenaIter aiter(zone, thingKind); !aiter.done(); aiter.next()) {
-            ArenaHeader* aheader = aiter.get();
-            (*arenaCallback)(rt, data, aheader->getArena(), traceKind, thingSize);
-            for (ArenaCellIterUnderGC iter(aheader); !iter.done(); iter.next())
+            Arena* arena = aiter.get();
+            (*arenaCallback)(rt, data, arena, traceKind, thingSize);
+            for (ArenaCellIterUnderGC iter(arena); !iter.done(); iter.next())
                 (*cellCallback)(rt, data, iter.getCell(), traceKind, thingSize);
         }
     }
@@ -94,7 +94,10 @@ void
 js::IterateScripts(JSRuntime* rt, JSCompartment* compartment,
                    void* data, IterateScriptCallback scriptCallback)
 {
+    MOZ_ASSERT(!rt->mainThread.suppressGC);
     rt->gc.evictNursery();
+    MOZ_ASSERT(rt->gc.nursery.isEmpty());
+
     AutoPrepareForTracing prep(rt, SkipAtoms);
 
     if (compartment) {

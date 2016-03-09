@@ -131,6 +131,11 @@ setting[type="menulist"] {
   display: none;
 }
 
+#show-disabled-unsigned-extensions .button-text {
+  -moz-margin-start: 3px !important;
+  -moz-margin-end: 2px !important;
+}
+
 #header-searching:not([active]) {
   visibility: hidden;
 }

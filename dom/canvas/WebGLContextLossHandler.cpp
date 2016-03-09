@@ -184,7 +184,7 @@ WebGLContextLossHandler::RunTimer()
         nsCOMPtr<nsIEventTarget> target = workerPrivate->GetEventTarget();
         mTimer->SetTarget(new ContextLossWorkerEventTarget(target));
         if (!mFeatureAdded) {
-            workerPrivate->AddFeature(workerPrivate->GetJSContext(), this);
+            workerPrivate->AddFeature(this);
             mFeatureAdded = true;
         }
     }
@@ -207,7 +207,7 @@ WebGLContextLossHandler::DisableTimer()
         dom::workers::WorkerPrivate* workerPrivate =
             dom::workers::GetCurrentThreadWorkerPrivate();
         MOZ_RELEASE_ASSERT(workerPrivate);
-        workerPrivate->RemoveFeature(workerPrivate->GetJSContext(), this);
+        workerPrivate->RemoveFeature(this);
         mFeatureAdded = false;
     }
 

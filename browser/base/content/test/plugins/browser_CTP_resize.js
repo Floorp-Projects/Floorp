@@ -42,13 +42,13 @@ add_task(function* () {
   let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "Test 2, Should have a click-to-play notification");
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return overlay && overlay.classList.contains("visible");
+    Assert.ok(!(overlay && overlay.classList.contains("visible")),
+      "Test 2, overlay should be hidden.");
   });
-  ok(!result, "Test 2, overlay should be hidden.");
 });
 
 add_task(function* () {
@@ -60,13 +60,13 @@ add_task(function* () {
   // Work around for delayed PluginBindingAttached
   yield promiseUpdatePluginBindings(gTestBrowser);
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return overlay && overlay.classList.contains("visible");
+    Assert.ok(!(overlay && overlay.classList.contains("visible")),
+      "Test 3, overlay should be hidden.");
   });
-  ok(!result, "Test 3, overlay should be hidden.");
 });
 
 
@@ -80,13 +80,13 @@ add_task(function* () {
     content.document.getElementById("test").clientTop;
   });
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return overlay && overlay.classList.contains("visible");
+    Assert.ok(overlay && overlay.classList.contains("visible"),
+      "Test 4, overlay should be visible.");
   });
-  ok(result, "Test 4, overlay should be visible.");
 });
 
 add_task(function* () {
@@ -100,13 +100,13 @@ add_task(function* () {
     content.document.getElementById("test").clientTop;
   });
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return overlay && overlay.classList.contains("visible");
+    Assert.ok(!(overlay && overlay.classList.contains("visible")),
+      "Test 5, overlay should be hidden.");
   });
-  ok(!result, "Test 5, overlay should be hidden.");
 });
 
 add_task(function* () {
@@ -120,11 +120,11 @@ add_task(function* () {
     content.document.getElementById("test").clientTop;
   });
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+  yield ContentTask.spawn(gTestBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return overlay && overlay.classList.contains("visible");
+    Assert.ok(overlay && overlay.classList.contains("visible"),
+      "Test 6, overlay should be visible.");
   });
-  ok(result, "Test 6, overlay should be visible.");
 });

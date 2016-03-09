@@ -25,6 +25,7 @@
 
   <vbox id="alertBox" class="alertBox">
     <box id="alertTitleBox">
+      <image id="alertIcon"/>
       <label id="alertTitleLabel" class="alertTitle plain" crop="end"/>
       <vbox class="alertCloseBox">
         <toolbarbutton class="alertCloseButton close-icon"

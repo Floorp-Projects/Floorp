@@ -41,6 +41,7 @@ static pfn_ovr_Destroy ovr_Destroy = nullptr;
 
 static pfn_ovr_RecenterPose ovr_RecenterPose = nullptr;
 static pfn_ovr_GetTrackingState ovr_GetTrackingState = nullptr;
+static pfn_ovr_GetPredictedDisplayTime ovr_GetPredictedDisplayTime = nullptr;
 static pfn_ovr_GetFovTextureSize ovr_GetFovTextureSize = nullptr;
 static pfn_ovr_GetRenderDesc ovr_GetRenderDesc = nullptr;
 
@@ -170,6 +171,7 @@ InitializeOculusCAPI()
   
   REQUIRE_FUNCTION(ovr_RecenterPose);
   REQUIRE_FUNCTION(ovr_GetTrackingState);
+  REQUIRE_FUNCTION(ovr_GetPredictedDisplayTime);
   REQUIRE_FUNCTION(ovr_GetFovTextureSize);
   REQUIRE_FUNCTION(ovr_GetRenderDesc);
 
@@ -199,26 +201,6 @@ static bool InitializeOculusCAPI()
 
 #endif
 
-static void
-do_CalcEyePoses(ovrPosef headPose,
-                const ovrVector3f hmdToEyeViewOffset[2],
-                ovrPosef outEyePoses[2])
-{
-  if (!hmdToEyeViewOffset || !outEyePoses)
-    return;
-
-  for (uint32_t i = 0; i < 2; ++i) {
-    gfx::Quaternion o(headPose.Orientation.x, headPose.Orientation.y, headPose.Orientation.z, headPose.Orientation.w);
-    Point3D vo(hmdToEyeViewOffset[i].x, hmdToEyeViewOffset[i].y, hmdToEyeViewOffset[i].z);
-    Point3D p = o.RotatePoint(vo);
-
-    outEyePoses[i].Orientation = headPose.Orientation;
-    outEyePoses[i].Position.x = p.x + headPose.Position.x;
-    outEyePoses[i].Position.y = p.y + headPose.Position.y;
-    outEyePoses[i].Position.z = p.z + headPose.Position.z;
-  }
-}
-
 ovrFovPort
 ToFovPort(const gfx::VRFieldOfView& aFOV)
 {
@@ -246,6 +228,7 @@ FromFovPort(const ovrFovPort& aFOV)
 HMDInfoOculus::HMDInfoOculus(ovrSession aSession)
   : VRHMDInfo(VRHMDType::Oculus, false)
   , mSession(aSession)
+  , mInputFrameID(0)
 {
   MOZ_ASSERT(sizeof(HMDInfoOculus::DistortionVertex) == sizeof(VRDistortionVertex),
              "HMDInfoOculus::DistortionVertex must match the size of VRDistortionVertex");
@@ -279,6 +262,10 @@ HMDInfoOculus::HMDInfoOculus(ovrSession aSession)
   mDeviceInfo.mIsFakeScreen = true;
 
   SetFOV(mDeviceInfo.mRecommendedEyeFOV[VRDeviceInfo::Eye_Left], mDeviceInfo.mRecommendedEyeFOV[VRDeviceInfo::Eye_Right], 0.01, 10000.0);
+
+  for (int i = 0; i < kMaxLatencyFrames; i++) {
+    mLastSensorState[i].Clear();
+  }
 }
 
 void
@@ -345,7 +332,7 @@ HMDInfoOculus::KeepSensorTracking()
 void
 HMDInfoOculus::NotifyVsync(const mozilla::TimeStamp& aVsyncTimestamp)
 {
-
+  ++mInputFrameID;
 }
 
 void
@@ -355,14 +342,32 @@ HMDInfoOculus::ZeroSensor()
 }
 
 VRHMDSensorState
+HMDInfoOculus::GetSensorState()
+{
+  VRHMDSensorState result;
+  double frameTiming = 0.0f;
+  if (gfxPrefs::VRPosePredictionEnabled()) {
+    frameTiming = ovr_GetPredictedDisplayTime(mSession, mInputFrameID);
+  }
+  result = GetSensorState(frameTiming);
+  result.inputFrameID = mInputFrameID;
+  mLastSensorState[mInputFrameID % kMaxLatencyFrames] = result;
+  return result;
+}
+
+VRHMDSensorState
+HMDInfoOculus::GetImmediateSensorState()
+{
+  return GetSensorState(0.0);
+}
+
+VRHMDSensorState
 HMDInfoOculus::GetSensorState(double timeOffset)
 {
   VRHMDSensorState result;
   result.Clear();
 
-  // XXX this is the wrong time base for timeOffset; we need to figure out how to synchronize
-  // the Oculus time base and the browser one.
-  ovrTrackingState state = ovr_GetTrackingState(mSession, ovr_GetTimeInSeconds() + timeOffset, true);
+  ovrTrackingState state = ovr_GetTrackingState(mSession, timeOffset, true);
   ovrPoseStatef& pose(state.HeadPose);
 
   result.timestamp = pose.TimeInSeconds;
@@ -399,8 +404,6 @@ HMDInfoOculus::GetSensorState(double timeOffset)
     result.linearAcceleration[1] = pose.LinearAcceleration.y;
     result.linearAcceleration[2] = pose.LinearAcceleration.z;
   }
-
-  mLastTrackingState = state;
   
   return result;
 }
@@ -518,13 +521,27 @@ HMDInfoOculus::DestroyRenderTargetSet(RenderTargetSet *aRTSet)
 }
 
 void
-HMDInfoOculus::SubmitFrame(RenderTargetSet *aRTSet)
+HMDInfoOculus::SubmitFrame(RenderTargetSet *aRTSet, int32_t aInputFrameID)
 {
   RenderTargetSetOculus *rts = static_cast<RenderTargetSetOculus*>(aRTSet);
   MOZ_ASSERT(rts->hmd != nullptr);
   MOZ_ASSERT(rts->textureSet != nullptr);
+  MOZ_ASSERT(aInputFrameID >= 0);
+  if (aInputFrameID < 0) {
+    // Sanity check to prevent invalid memory access on builds with assertions
+    // disabled.
+    aInputFrameID = 0;
+  }
 
+  VRHMDSensorState sensorState = mLastSensorState[aInputFrameID % kMaxLatencyFrames];
+  // It is possible to get a cache miss on mLastSensorState if latency is
+  // longer than kMaxLatencyFrames.  An optimization would be to find a frame
+  // that is closer than the one selected with the modulus.
+  // If we hit this; however, latency is already so high that the site is
+  // un-viewable and a more accurate pose prediction is not likely to
+  // compensate.
   ovrLayerEyeFov layer;
+  memset(&layer, 0, sizeof(layer));
   layer.Header.Type = ovrLayerType_EyeFov;
   layer.Header.Flags = 0;
   layer.ColorTexture[0] = rts->textureSet;
@@ -544,10 +561,26 @@ HMDInfoOculus::SubmitFrame(RenderTargetSet *aRTSet)
   const Point3D& r = rts->hmd->mDeviceInfo.mEyeTranslation[1];
   const ovrVector3f hmdToEyeViewOffset[2] = { { l.x, l.y, l.z },
                                               { r.x, r.y, r.z } };
-  do_CalcEyePoses(rts->hmd->mLastTrackingState.HeadPose.ThePose, hmdToEyeViewOffset, layer.RenderPose);
+
+  for (uint32_t i = 0; i < 2; ++i) {
+    gfx::Quaternion o(sensorState.orientation[0],
+                      sensorState.orientation[1],
+                      sensorState.orientation[2],
+                      sensorState.orientation[3]);
+    Point3D vo(hmdToEyeViewOffset[i].x, hmdToEyeViewOffset[i].y, hmdToEyeViewOffset[i].z);
+    Point3D p = o.RotatePoint(vo);
+
+    layer.RenderPose[i].Orientation.x = o.x;
+    layer.RenderPose[i].Orientation.y = o.y;
+    layer.RenderPose[i].Orientation.z = o.z;
+    layer.RenderPose[i].Orientation.w = o.w;
+    layer.RenderPose[i].Position.x = p.x + sensorState.position[0];
+    layer.RenderPose[i].Position.y = p.y + sensorState.position[1];
+    layer.RenderPose[i].Position.z = p.z + sensorState.position[2];
+  }
 
   ovrLayerHeader *layers = &layer.Header;
-  ovrResult orv = ovr_SubmitFrame(mSession, 0, nullptr, &layers, 1);
+  ovrResult orv = ovr_SubmitFrame(mSession, aInputFrameID, nullptr, &layers, 1);
   //printf_stderr("Submitted frame %d, result: %d\n", rts->textureSet->CurrentIndex, orv);
   if (orv != ovrSuccess) {
     // not visible? failed?
@@ -581,6 +614,7 @@ VRHMDManagerOculus::Init()
     mOculusThread = already_AddRefed<nsIThread>(thread);
 
     ovrInitParams params;
+    memset(&params, 0, sizeof(params));
     params.Flags = ovrInit_RequestVersion;
     params.RequestedMinorVersion = OVR_MINOR_VERSION;
     params.LogCallback = nullptr;

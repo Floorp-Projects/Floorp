@@ -97,6 +97,7 @@ EXPORTS += [
     'AudioSampleFormat.h',
     'AudioSegment.h',
     'AudioStream.h',
+    'Benchmark.h',
     'BufferMediaResource.h',
     'CubebUtils.h',
     'DecoderTraits.h',
@@ -132,6 +133,7 @@ EXPORTS += [
     'MP3Demuxer.h',
     'MP3FrameParser.h',
     'nsIDocumentActivity.h',
+    'QueueObject.h',
     'RtspMediaResource.h',
     'SeekTarget.h',
     'SelfRef.h',
@@ -154,6 +156,11 @@ EXPORTS.mozilla += [
 EXPORTS.mozilla.media.webrtc += [
     'webrtc/WebrtcGlobal.h',
 ]
+
+if not CONFIG['MOZ_WEBRTC']:
+  EXPORTS.mtransport += [
+      '../../media/mtransport/runnable_utils.h',
+  ]
 
 IPDL_SOURCES += [
     'webrtc/PWebrtcGlobal.ipdl'
@@ -196,6 +203,7 @@ UNIFIED_SOURCES += [
     'AudioStreamTrack.cpp',
     'AudioTrack.cpp',
     'AudioTrackList.cpp',
+    'Benchmark.cpp',
     'CanvasCaptureMediaStream.cpp',
     'CubebUtils.cpp',
     'DOMMediaStream.cpp',
@@ -226,6 +234,7 @@ UNIFIED_SOURCES += [
     'MP3Decoder.cpp',
     'MP3Demuxer.cpp',
     'MP3FrameParser.cpp',
+    'QueueObject.cpp',
     'RtspMediaResource.cpp',
     'StreamBuffer.cpp',
     'TextTrack.cpp',

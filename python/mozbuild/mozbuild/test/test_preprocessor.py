@@ -155,12 +155,12 @@ class TestPreprocessor(unittest.TestCase):
     def test_conditional_not_emptyval(self):
         self.do_include_compare([
             '#define EMPTYVAL',
-            '#if !EMPTYVAL',
+            '#ifndef EMPTYVAL',
             'FAIL',
             '#else',
             'PASS',
             '#endif',
-            '#if EMPTYVAL',
+            '#ifdef EMPTYVAL',
             'PASS',
             '#else',
             'FAIL',
@@ -456,6 +456,15 @@ class TestPreprocessor(unittest.TestCase):
             '#else',
             'FAIL',
             '#endif',
+        ])
+
+    def test_default_defines(self):
+        self.pp.handleCommandLine(["-DFOO"])
+        self.do_include_pass([
+            '#if FOO == 1',
+            'PASS',
+            '#else',
+            'FAIL',
         ])
 
     def test_number_value_equals_defines(self):

@@ -35,7 +35,7 @@ var Frames = {
     }
 
     Services.mm.addMessageListener("Extension:TopWindowID", this);
-    Services.mm.addMessageListener("Extension:RemoveTopWindowID", this);
+    Services.mm.addMessageListener("Extension:RemoveTopWindowID", this, true);
   },
 
   isTopWindowId(windowId) {
@@ -184,7 +184,7 @@ var Service = {
       return false;
     }
 
-    let path = uri.path;
+    let path = uri.QueryInterface(Ci.nsIURL).filePath;
     if (path.length > 0 && path[0] == "/") {
       path = path.substr(1);
     }

@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "argv": {"type": "array"},
+    "system": {
+      "type": "object",
+      "properties": {
+        "architecture": {"type": "array"},
+        "linux_distribution": {"type": "array"},
+        "mac_ver": {"type": "array"},
+        "machine": {"type": "string"},
+        "python_version": {"type": "string"},
+        "release": {"type": "string"},
+        "system": {"type": "string"},
+        "version": {"type": "string"},
+        "win_ver": {"type": "array"}
+      },
+      "required": ["architecture", "machine", "python_version",
+                   "release", "system", "version"]
+    }
+  },
+  "required": ["argv", "system"]
+}

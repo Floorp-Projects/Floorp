@@ -90,8 +90,8 @@ nsWindowBase::InjectTouchPoint(uint32_t aId, ScreenIntPoint& aPointerScreenPoint
   info.pointerInfo.pointerFlags = aFlags;
   info.pointerInfo.pointerType =  PT_TOUCH;
   info.pointerInfo.pointerId = aId;
-  info.pointerInfo.ptPixelLocation.x = LogToPhys(aPointerScreenPoint.x);
-  info.pointerInfo.ptPixelLocation.y = LogToPhys(aPointerScreenPoint.y);
+  info.pointerInfo.ptPixelLocation.x = aPointerScreenPoint.x;
+  info.pointerInfo.ptPixelLocation.y = aPointerScreenPoint.y;
 
   info.rcContact.top = info.pointerInfo.ptPixelLocation.y - 2;
   info.rcContact.bottom = info.pointerInfo.ptPixelLocation.y + 2;

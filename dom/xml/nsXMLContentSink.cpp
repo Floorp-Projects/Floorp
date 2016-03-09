@@ -411,7 +411,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::StyleSheetLoaded(CSSStyleSheet* aSheet,
+nsXMLContentSink::StyleSheetLoaded(StyleSheetHandle aSheet,
                                    bool aWasAlternate,
                                    nsresult aStatus)
 {
@@ -593,24 +593,6 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
       if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mRunsToCompletion) {
         ++mPendingSheetCount;
         mScriptLoader->AddExecuteBlocker();
-      }
-    }
-    // Look for <link rel="dns-prefetch" href="hostname">
-    // and look for <link rel="next" href="hostname"> like in HTML sink
-    if (nodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML)) {
-      nsAutoString relVal;
-      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, relVal);
-      if (!relVal.IsEmpty()) {
-        uint32_t linkTypes =
-          nsStyleLinkElement::ParseLinkTypes(relVal, aContent->NodePrincipal());
-        bool hasPrefetch = linkTypes & nsStyleLinkElement::ePREFETCH;
-        if (hasPrefetch || (linkTypes & nsStyleLinkElement::eNEXT)) {
-          nsAutoString hrefVal;
-          aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
-          if (!hrefVal.IsEmpty()) {
-            PrefetchHref(hrefVal, aContent, hasPrefetch);
-          }
-        }
       }
     }
   }

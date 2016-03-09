@@ -37,8 +37,8 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
 
+#include "mozilla/dom/BodyUtil.h"
 #include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/TypedArray.h"
 #endif
 
@@ -256,7 +256,9 @@ class RespondWithHandler final : public PromiseNativeHandler
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
   const RequestMode mRequestMode;
-  const DebugOnly<bool> mIsClientRequest;
+#ifdef DEBUG
+  const bool mIsClientRequest;
+#endif
   const bool mIsNavigationRequest;
   const nsCString mScriptSpec;
   const nsString mRequestURL;
@@ -277,7 +279,9 @@ public:
                      uint32_t aRespondWithColumnNumber)
     : mInterceptedChannel(aChannel)
     , mRequestMode(aRequestMode)
+#ifdef DEBUG
     , mIsClientRequest(aIsClientRequest)
+#endif
     , mIsNavigationRequest(aIsNavigationRequest)
     , mScriptSpec(aScriptSpec)
     , mRequestURL(aRequestURL)
@@ -553,15 +557,6 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
-
-  // Allow opaque response interception to be disabled until we can ensure the
-  // security implications are not a complete disaster.
-  if (response->Type() == ResponseType::Opaque &&
-      !worker->OpaqueInterceptionEnabled()) {
-    autoCancel.SetCancelMessage(
-      NS_LITERAL_CSTRING("OpaqueInterceptionDisabledWithURL"), mRequestURL);
-    return;
-  }
 
   // Section "HTTP Fetch", step 2.2:
   //  If one of the following conditions is true, return a network error:
@@ -1012,7 +1007,7 @@ PushMessageData::Json(JSContext* cx, JS::MutableHandle<JS::Value> aRetval,
     aRv.Throw(NS_ERROR_DOM_UNKNOWN_ERR);
     return;
   }
-  FetchUtil::ConsumeJson(cx, aRetval, mDecodedText, aRv);
+  BodyUtil::ConsumeJson(cx, aRetval, mDecodedText, aRv);
 }
 
 void
@@ -1030,7 +1025,7 @@ PushMessageData::ArrayBuffer(JSContext* cx,
 {
   uint8_t* data = GetContentsCopy();
   if (data) {
-    FetchUtil::ConsumeArrayBuffer(cx, aRetval, mBytes.Length(), data, aRv);
+    BodyUtil::ConsumeArrayBuffer(cx, aRetval, mBytes.Length(), data, aRv);
   }
 }
 
@@ -1039,7 +1034,7 @@ PushMessageData::Blob(ErrorResult& aRv)
 {
   uint8_t* data = GetContentsCopy();
   if (data) {
-    RefPtr<mozilla::dom::Blob> blob = FetchUtil::ConsumeBlob(
+    RefPtr<mozilla::dom::Blob> blob = BodyUtil::ConsumeBlob(
       mOwner, EmptyString(), mBytes.Length(), data, aRv);
     if (blob) {
       return blob.forget();
@@ -1054,7 +1049,7 @@ PushMessageData::EnsureDecodedText()
   if (mBytes.IsEmpty() || !mDecodedText.IsEmpty()) {
     return NS_OK;
   }
-  nsresult rv = FetchUtil::ConsumeText(
+  nsresult rv = BodyUtil::ConsumeText(
     mBytes.Length(),
     reinterpret_cast<uint8_t*>(mBytes.Elements()),
     mDecodedText
@@ -1247,7 +1242,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ExtendableMessageEvent, Event)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ExtendableMessageEvent, Event)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mData)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mData)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ExtendableMessageEvent)

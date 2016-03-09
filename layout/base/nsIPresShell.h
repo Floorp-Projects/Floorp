@@ -24,6 +24,8 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSheetHandle.h"
 #include "mozilla/WeakPtr.h"
 #include "gfxPoint.h"
 #include "nsTHashtable.h"
@@ -51,7 +53,6 @@ class nsDocShell;
 class nsIDocument;
 class nsIFrame;
 class nsPresContext;
-class nsStyleSet;
 class nsViewManager;
 class nsView;
 class nsRenderingContext;
@@ -331,7 +332,7 @@ public:
 #endif
 
 #ifdef MOZILLA_INTERNAL_API
-  nsStyleSet* StyleSet() const { return mStyleSet; }
+  mozilla::StyleSetHandle StyleSet() const { return mStyleSet; }
 
   nsCSSFrameConstructor* FrameConstructor() const { return mFrameConstructor; }
 
@@ -945,23 +946,23 @@ public:
    * Get the set of agent style sheets for this presentation
    */
   virtual nsresult GetAgentStyleSheets(
-      nsTArray<RefPtr<mozilla::CSSStyleSheet>>& aSheets) = 0;
+      nsTArray<mozilla::StyleSheetHandle::RefPtr>& aSheets) = 0;
 
   /**
    * Replace the set of agent style sheets
    */
   virtual nsresult SetAgentStyleSheets(
-      const nsTArray<RefPtr<mozilla::CSSStyleSheet>>& aSheets) = 0;
+      const nsTArray<mozilla::StyleSheetHandle::RefPtr>& aSheets) = 0;
 
   /**
    * Add an override style sheet for this presentation
    */
-  virtual nsresult AddOverrideStyleSheet(mozilla::CSSStyleSheet* aSheet) = 0;
+  virtual nsresult AddOverrideStyleSheet(mozilla::StyleSheetHandle aSheet) = 0;
 
   /**
    * Remove an override style sheet
    */
-  virtual nsresult RemoveOverrideStyleSheet(mozilla::CSSStyleSheet* aSheet) = 0;
+  virtual nsresult RemoveOverrideStyleSheet(mozilla::StyleSheetHandle aSheet) = 0;
 
   /**
    * Reconstruct frames for all elements in the document
@@ -1400,7 +1401,7 @@ public:
    * The resolution defaults to 1.0.
    */
   virtual nsresult SetResolution(float aResolution) = 0;
-  float GetResolution() { return mResolution.valueOr(1.0); }
+  float GetResolution() const { return mResolution.valueOr(1.0); }
   virtual float GetCumulativeResolution() = 0;
 
   /**
@@ -1569,7 +1570,8 @@ public:
   // Clears the current list of visible images on this presshell and replaces it
   // with images that are in the display list aList.
   virtual void RebuildImageVisibilityDisplayList(const nsDisplayList& aList) = 0;
-  virtual void RebuildImageVisibility(nsRect* aRect = nullptr) = 0;
+  virtual void RebuildImageVisibility(nsRect* aRect = nullptr,
+                                      bool aRemoveOnly = false) = 0;
 
   // Ensures the image is in the list of visible images.
   virtual void EnsureImageInVisibleList(nsIImageLoadingContent* aImage) = 0;
@@ -1689,7 +1691,7 @@ protected:
   // we must share ownership.
   nsCOMPtr<nsIDocument>     mDocument;
   RefPtr<nsPresContext>   mPresContext;
-  nsStyleSet*               mStyleSet;      // [OWNS]
+  mozilla::StyleSetHandle   mStyleSet;      // [OWNS]
   nsCSSFrameConstructor*    mFrameConstructor; // [OWNS]
   nsViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
   nsPresArena               mFrameArena;

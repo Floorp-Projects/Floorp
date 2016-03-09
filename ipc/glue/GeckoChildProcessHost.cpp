@@ -1034,7 +1034,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
       EnvironmentLog("MOZ_PROCESS_LOG").print(
         "==> process %d launched child process %d (%S)\n",
         base::GetCurrentProcId(), base::GetProcId(process),
-        cmdLine.command_line_string());
+        cmdLine.command_line_string().c_str());
     }
   } else
 #endif

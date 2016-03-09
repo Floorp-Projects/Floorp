@@ -4,11 +4,11 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { CurlUtils } = Cu.import("resource://devtools/client/shared/Curl.jsm", {});
+var Services = require("Services");
 var promise = require("promise");
 var NetworkHelper = require("devtools/shared/webconsole/network-helper");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -425,7 +425,7 @@ function testFilterButtons(aMonitor, aFilterType) {
  */
 function testFilterButtonsCustom(aMonitor, aIsChecked) {
   let doc = aMonitor.panelWin.document;
-  let buttons = doc.querySelectorAll(".requests-menu-footer-button");
+  let buttons = doc.querySelectorAll(".requests-menu-filter-button");
   for (let i = 0; i < aIsChecked.length; i++) {
     let button = buttons[i];
     if (aIsChecked[i]) {

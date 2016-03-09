@@ -11,6 +11,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
+#include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"
 #include "nsFormControlFrame.h"
 #include "nsIContent.h"
@@ -23,7 +24,8 @@
 #include "nsNodeInfoManager.h"
 #include "nsRenderingContext.h"
 #include "mozilla/dom/Element.h"
-#include "nsStyleSet.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 #include "nsThemeConstants.h"
 
 #ifdef ACCESSIBILITY
@@ -82,11 +84,11 @@ nsRangeFrame::Init(nsIContent*       aContent,
   }
   aContent->AddEventListener(NS_LITERAL_STRING("touchstart"), mDummyTouchListener, false);
 
-  nsStyleSet *styleSet = PresContext()->StyleSet();
+  StyleSetHandle styleSet = PresContext()->StyleSet();
 
   mOuterFocusStyle =
     styleSet->ProbePseudoElementStyle(aContent->AsElement(),
-                                      nsCSSPseudoElements::ePseudo_mozFocusOuter,
+                                      CSSPseudoElementType::mozFocusOuter,
                                       StyleContext());
 
   return nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
@@ -110,7 +112,7 @@ nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
 nsresult
 nsRangeFrame::MakeAnonymousDiv(Element** aResult,
-                               nsCSSPseudoElements::Type aPseudoType,
+                               CSSPseudoElementType aPseudoType,
                                nsTArray<ContentInfo>& aElements)
 {
   nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
@@ -138,19 +140,19 @@ nsRangeFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // Create the ::-moz-range-track pseuto-element (a div):
   rv = MakeAnonymousDiv(getter_AddRefs(mTrackDiv),
-                        nsCSSPseudoElements::ePseudo_mozRangeTrack,
+                        CSSPseudoElementType::mozRangeTrack,
                         aElements);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create the ::-moz-range-progress pseudo-element (a div):
   rv = MakeAnonymousDiv(getter_AddRefs(mProgressDiv),
-                        nsCSSPseudoElements::ePseudo_mozRangeProgress,
+                        CSSPseudoElementType::mozRangeProgress,
                         aElements);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create the ::-moz-range-thumb pseudo-element (a div):
   rv = MakeAnonymousDiv(getter_AddRefs(mThumbDiv),
-                        nsCSSPseudoElements::ePseudo_mozRangeThumb,
+                        CSSPseudoElementType::mozRangeThumb,
                         aElements);
   return rv;
 }
@@ -894,17 +896,17 @@ nsRangeFrame::ShouldUseNativeStyle() const
 }
 
 Element*
-nsRangeFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
+nsRangeFrame::GetPseudoElement(CSSPseudoElementType aType)
 {
-  if (aType == nsCSSPseudoElements::ePseudo_mozRangeTrack) {
+  if (aType == CSSPseudoElementType::mozRangeTrack) {
     return mTrackDiv;
   }
 
-  if (aType == nsCSSPseudoElements::ePseudo_mozRangeThumb) {
+  if (aType == CSSPseudoElementType::mozRangeThumb) {
     return mThumbDiv;
   }
 
-  if (aType == nsCSSPseudoElements::ePseudo_mozRangeProgress) {
+  if (aType == CSSPseudoElementType::mozRangeProgress) {
     return mProgressDiv;
   }
 

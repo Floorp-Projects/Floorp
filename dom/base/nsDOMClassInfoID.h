@@ -60,10 +60,6 @@ NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
     }                                                                         \
   } else
 
-#else
-
-// See nsIDOMClassInfo.h
-
 #endif // MOZILLA_INTERNAL_API
 
 #endif // nsDOMClassInfoID_h__

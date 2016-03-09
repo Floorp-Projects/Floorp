@@ -56,7 +56,7 @@ class TestCrash(unittest.TestCase):
         """
         self.stdouts.append(["this is some output"])
         self.assertFalse(mozcrash.check_for_crashes(self.tempdir,
-                                                    'symbols_path',
+                                                    symbols_path='symbols_path',
                                                     stackwalk_binary=self.stackwalk,
                                                     quiet=True))
 
@@ -67,7 +67,7 @@ class TestCrash(unittest.TestCase):
         open(os.path.join(self.tempdir, "test.dmp"), "w").write("foo")
         self.stdouts.append(["this is some output"])
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
-                                                'symbols_path',
+                                                symbols_path='symbols_path',
                                                 stackwalk_binary=self.stackwalk,
                                                 quiet=True))
 
@@ -79,7 +79,7 @@ class TestCrash(unittest.TestCase):
         self.stdouts.append(["this is some output"])
         os.environ['MINIDUMP_STACKWALK'] = self.stackwalk
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
-                                                'symbols_path',
+                                                symbols_path='symbols_path',
                                                 quiet=True))
         del os.environ['MINIDUMP_STACKWALK']
 
@@ -93,7 +93,7 @@ class TestCrash(unittest.TestCase):
         os.mkdir(save_path)
         self.stdouts.append(["this is some output"])
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
-                                                'symbols_path',
+                                                symbols_path='symbols_path',
                                                 stackwalk_binary=self.stackwalk,
                                                 dump_save_path=save_path,
                                                 quiet=True))
@@ -109,7 +109,7 @@ class TestCrash(unittest.TestCase):
         save_path = os.path.join(self.tempdir, "saved")
         self.stdouts.append(["this is some output"])
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
-                                                'symbols_path',
+                                                symbols_path='symbols_path',
                                                 stackwalk_binary=self.stackwalk,
                                                 dump_save_path=save_path,
                                                 quiet=True))
@@ -127,7 +127,7 @@ class TestCrash(unittest.TestCase):
         open(save_path, "w").write("junk")
         self.stdouts.append(["this is some output"])
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
-                                                'symbols_path',
+                                                symbols_path='symbols_path',
                                                 stackwalk_binary=self.stackwalk,
                                                 dump_save_path=save_path,
                                                 quiet=True))
@@ -145,12 +145,20 @@ class TestCrash(unittest.TestCase):
         self.stdouts.append(["this is some output"])
         os.environ['MINIDUMP_SAVE_PATH'] = save_path
         self.assert_(mozcrash.check_for_crashes(self.tempdir,
-                                                'symbols_path',
+                                                symbols_path='symbols_path',
                                                 stackwalk_binary=self.stackwalk,
                                                 quiet=True))
         del os.environ['MINIDUMP_SAVE_PATH']
         self.assert_(os.path.isfile(os.path.join(save_path, "test.dmp")))
         self.assert_(os.path.isfile(os.path.join(save_path, "test.extra")))
+
+    def test_symbol_path_not_present(self):
+        open(os.path.join(self.tempdir, "test.dmp"), "w").write("foo")
+        self.stdouts.append(["this is some output"])
+        self.assert_(mozcrash.check_for_crashes(self.tempdir,
+                                                symbols_path=None,
+                                                stackwalk_binary=self.stackwalk,
+                                                quiet=True))
 
     def test_symbol_path_url(self):
         """

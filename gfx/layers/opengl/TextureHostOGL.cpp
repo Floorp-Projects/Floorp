@@ -383,6 +383,7 @@ SurfaceTextureSource::SurfaceTextureSource(CompositorOGL* aCompositor,
 void
 SurfaceTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
 {
+  MOZ_ASSERT(mSurfTex);
   if (!gl()) {
     NS_WARNING("Trying to bind a texture without a GLContext");
     return;
@@ -425,10 +426,18 @@ SurfaceTextureSource::gl() const
 gfx::Matrix4x4
 SurfaceTextureSource::GetTextureTransform()
 {
+  MOZ_ASSERT(mSurfTex);
+
   gfx::Matrix4x4 ret;
   mSurfTex->GetTransformMatrix(ret);
 
   return ret;
+}
+
+void
+SurfaceTextureSource::DeallocateDeviceData()
+{
+  mSurfTex = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -456,6 +465,7 @@ SurfaceTextureHost::gl() const
 bool
 SurfaceTextureHost::Lock()
 {
+  MOZ_ASSERT(mSurfTex);
   if (!mCompositor) {
     return false;
   }
@@ -478,6 +488,7 @@ SurfaceTextureHost::Lock()
 void
 SurfaceTextureHost::Unlock()
 {
+  MOZ_ASSERT(mSurfTex);
   mSurfTex->Detach();
 }
 
@@ -497,6 +508,15 @@ SurfaceTextureHost::GetFormat() const
 {
   MOZ_ASSERT(mTextureSource);
   return mTextureSource->GetFormat();
+}
+
+void
+SurfaceTextureHost::DeallocateDeviceData()
+{
+  if (mTextureSource) {
+    mTextureSource->DeallocateDeviceData();
+  }
+  mSurfTex = nullptr;
 }
 
 #endif // MOZ_WIDGET_ANDROID

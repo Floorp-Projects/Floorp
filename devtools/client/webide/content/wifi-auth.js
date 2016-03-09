@@ -5,9 +5,9 @@
 "use strict";
 
 var Cu = Components.utils;
-const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 const { require } =
   Cu.import("resource://devtools/shared/Loader.jsm", {});
+const Services = require("Services");
 const QR = require("devtools/shared/qrcode/index");
 
 window.addEventListener("load", function onLoad() {

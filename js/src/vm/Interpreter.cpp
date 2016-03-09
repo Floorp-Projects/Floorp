@@ -389,6 +389,9 @@ js::RunScript(JSContext* cx, RunState& state)
 {
     JS_CHECK_RECURSION(cx, return false);
 
+    if (!Debugger::checkNoExecute(cx, state.script()))
+        return false;
+
 #if defined(MOZ_HAVE_RDTSC)
     js::AutoStopwatch stopwatch(cx);
 #endif // defined(MOZ_HAVE_RDTSC)
@@ -1018,7 +1021,7 @@ js::UnwindScopeToTryPc(JSScript* script, JSTryNote* tn)
 static bool
 ForcedReturn(JSContext* cx, ScopeIter& si, InterpreterRegs& regs, bool frameOk = true)
 {
-    bool ok = Debugger::onLeaveFrame(cx, regs.fp(), frameOk);
+    bool ok = Debugger::onLeaveFrame(cx, regs.fp(), regs.pc, frameOk);
     UnwindAllScopesInFrame(cx, si);
     // Point the frame to the end of the script, regardless of error. The
     // caller must jump to the correct continuation depending on 'ok'.
@@ -1204,7 +1207,7 @@ HandleError(JSContext* cx, InterpreterRegs& regs)
         }
 
         ok = HandleClosingGeneratorReturn(cx, regs.fp(), ok);
-        ok = Debugger::onLeaveFrame(cx, regs.fp(), ok);
+        ok = Debugger::onLeaveFrame(cx, regs.fp(), regs.pc, ok);
     } else {
         // We may be propagating a forced return from the interrupt
         // callback, which cannot easily force a return.
@@ -1904,7 +1907,7 @@ CASE(JSOP_RETRVAL)
         TraceLogStopEvent(logger, TraceLogger_Engine);
         TraceLogStopEvent(logger, TraceLogger_Scripts);
 
-        interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), interpReturnOK);
+        interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), REGS.pc, interpReturnOK);
 
         REGS.fp()->epilogue(cx);
 
@@ -2828,9 +2831,10 @@ CASE(JSOP_FUNCALL)
                 goto error;
             if (status == jit::Method_Compiled) {
                 jit::JitExecStatus exec = jit::IonCannon(cx, state.ref());
-                CHECK_BRANCH();
-                REGS.sp = args.spAfterCall();
                 interpReturnOK = !IsErrorStatus(exec);
+                if (interpReturnOK)
+                    CHECK_BRANCH();
+                REGS.sp = args.spAfterCall();
                 goto jit_return;
             }
         }
@@ -2841,9 +2845,10 @@ CASE(JSOP_FUNCALL)
                 goto error;
             if (status == jit::Method_Compiled) {
                 jit::JitExecStatus exec = jit::EnterBaselineMethod(cx, state.ref());
-                CHECK_BRANCH();
-                REGS.sp = args.spAfterCall();
                 interpReturnOK = !IsErrorStatus(exec);
+                if (interpReturnOK)
+                    CHECK_BRANCH();
+                REGS.sp = args.spAfterCall();
                 goto jit_return;
             }
         }
@@ -3990,7 +3995,7 @@ DEFAULT()
     MOZ_CRASH("Invalid HandleError continuation");
 
   exit:
-    interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), interpReturnOK);
+    interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), REGS.pc, interpReturnOK);
 
     REGS.fp()->epilogue(cx);
 

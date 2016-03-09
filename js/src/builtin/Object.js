@@ -62,10 +62,13 @@ function Object_toLocaleString() {
 
 function ObjectDefineSetter(name, setter) {
     var object;
-    if (this === null || this === undefined)
+    if (this === null || this === undefined) {
+        AddContentTelemetry(JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 1);
         object = global;
-    else
+    } else {
+        AddContentTelemetry(JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 0);
         object = ToObject(this);
+    }
 
     if (!IsCallable(setter))
         ThrowTypeError(JSMSG_BAD_GETTER_OR_SETTER, "setter");
@@ -84,10 +87,13 @@ function ObjectDefineSetter(name, setter) {
 
 function ObjectDefineGetter(name, getter) {
     var object;
-    if (this === null || this === undefined)
+    if (this === null || this === undefined) {
+        AddContentTelemetry(JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 1);
         object = global;
-    else
+    } else {
+        AddContentTelemetry(JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 0);
         object = ToObject(this);
+    }
 
     if (!IsCallable(getter))
         ThrowTypeError(JSMSG_BAD_GETTER_OR_SETTER, "getter");
@@ -132,50 +138,4 @@ function ObjectLookupGetter(name) {
         }
         object = std_Reflect_getPrototypeOf(object);
     } while (object !== null);
-}
-
-// Draft proposal http://tc39.github.io/proposal-object-values-entries/#Object.values
-function ObjectValues(O) {
-    // Steps 1-2.
-    var object = ToObject(O);
-
-    // Steps 3-4.
-    // EnumerableOwnProperties is inlined here.
-    var keys = OwnPropertyKeys(object, JSITER_OWNONLY | JSITER_HIDDEN);
-    var values = [];
-    var valuesCount = 0;
-    for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
-        if (!callFunction(std_Object_propertyIsEnumerable, object, key))
-            continue;
-
-        var value = object[key];
-        _DefineDataProperty(values, valuesCount++, value);
-    }
-
-    // Step 5.
-    return values;
-}
-
-// Draft proposal http://tc39.github.io/proposal-object-values-entries/#Object.entries
-function ObjectEntries(O) {
-    // Steps 1-2.
-    var object = ToObject(O);
-
-    // Steps 3-4.
-    // EnumerableOwnProperties is inlined here.
-    var keys = OwnPropertyKeys(object, JSITER_OWNONLY | JSITER_HIDDEN);
-    var entries = [];
-    var entriesCount = 0;
-    for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
-        if (!callFunction(std_Object_propertyIsEnumerable, object, key))
-            continue;
-
-        var value = object[key];
-        _DefineDataProperty(entries, entriesCount++, [key, value]);
-    }
-
-    // Step 5.
-    return entries;
 }

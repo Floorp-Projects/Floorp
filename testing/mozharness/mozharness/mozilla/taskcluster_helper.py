@@ -116,6 +116,9 @@ class Taskcluster(LogMixin):
         mime_type = self.get_mime_type(os.path.splitext(filename)[1])
         self.info("Create reference artifact: filename=%s mimetype=%s url=%s" %
                   (filename, mime_type, url))
+        # reclaim the task to avoid "claim-expired" errors
+        self.taskcluster_queue.reclaimTask(
+            task['status']['taskId'], task['status']['runs'][-1]['runId'])
         self.taskcluster_queue.createArtifact(
             task['status']['taskId'],
             task['status']['runs'][-1]['runId'],
@@ -133,6 +136,14 @@ class Taskcluster(LogMixin):
         self.info("Resolving %s, run %s. Full task:" % (task_id, run_id))
         self.info(str(task))
         self.taskcluster_queue.reportCompleted(task_id, run_id)
+
+    def report_failed(self, task):
+        task_id = task['status']['taskId']
+        run_id = task['status']['runs'][-1]['runId']
+        self.info("Resolving %s as failed, run %s. Full task:" %
+                  (task_id, run_id))
+        self.info(str(task))
+        self.taskcluster_queue.reportFailed(task_id, run_id)
 
     def get_taskcluster_url(self, filename):
         return 'https://queue.taskcluster.net/v1/task/%s/artifacts/public/build/%s' % (

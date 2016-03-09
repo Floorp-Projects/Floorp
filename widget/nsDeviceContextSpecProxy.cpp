@@ -49,13 +49,13 @@ nsDeviceContextSpecProxy::Init(nsIWidget* aWidget,
   rv = mPrintSettings->GetPrintSession(getter_AddRefs(mPrintSession));
   if (NS_FAILED(rv) || !mPrintSession) {
     NS_WARNING("We can't print via the parent without an nsIPrintSession.");
-    return rv;
+    return NS_ERROR_FAILURE;
   }
 
   rv = mPrintSession->GetRemotePrintJob(getter_AddRefs(mRemotePrintJob));
   if (NS_FAILED(rv) || !mRemotePrintJob) {
     NS_WARNING("We can't print via the parent without a RemotePrintJobChild.");
-    return rv;
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;

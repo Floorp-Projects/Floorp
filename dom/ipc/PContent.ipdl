@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PAPZ;
 include protocol PBackground;
 include protocol PBlob;
 include protocol PBluetooth;
@@ -93,6 +94,7 @@ using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
 using class mozilla::dom::ipc::StructuredCloneData from "ipc/IPCMessageUtils.h";
 using mozilla::DataStorageType from "ipc/DataStorageIPCUtils.h";
+using mozilla::DocShellOriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 
 union ChromeRegistryItem
 {
@@ -465,6 +467,7 @@ prio(normal upto urgent) sync protocol PContent
     parent opens PVRManager;
     child opens PBackground;
 
+    manages PAPZ;
     manages PBlob;
     manages PBluetooth;
     manages PBrowser;
@@ -574,6 +577,8 @@ child:
                                 FileDescriptor ccLog);
 
     async PTestShell();
+
+    async PAPZ(TabId tabId);
 
     async RegisterChrome(ChromePackage[] packages, SubstitutionMapping[] substitutions,
                          OverrideMapping[] overrides, nsCString locale, bool reset);
@@ -704,12 +709,6 @@ child:
      * Send gamepad status update to child.
      */
     async GamepadUpdate(GamepadChangeEvent aGamepadEvent);
-
-    /**
-     * Tell the child that for testing purposes, a graphics device reset has
-     * occurred.
-     */
-    async TestGraphicsDeviceReset(uint32_t aReason);
 
     /**
      * Notify the child that presentation receiver has been launched with the
@@ -993,7 +992,7 @@ parent:
     async CopyFavicon(URIParams oldURI, URIParams newURI, Principal aLoadingPrincipal, bool isPrivate);
 
     // Tell the compositor to allocate a layer tree id for nested remote mozbrowsers.
-    sync AllocateLayerTreeId()
+    sync AllocateLayerTreeId(ContentParentId cpId, TabId tabId)
         returns (uint64_t id);
     async DeallocateLayerTreeId(uint64_t id);
 
@@ -1015,6 +1014,9 @@ parent:
                                 bool isVideo);
 
     sync GetGraphicsFeatureStatus(int32_t aFeature) returns (int32_t aStatus, bool aSuccess);
+
+    // Graphics errors
+    async GraphicsError(nsCString aError);
 
     // Driver crash guards. aGuardType must be a member of CrashGuardType.
     sync BeginDriverCrashGuard(uint32_t aGuardType) returns (bool crashDetected);
@@ -1165,7 +1167,8 @@ parent:
                       nsCString aURI,
                       nsString aName,
                       nsCString aFeatures,
-                      nsCString aBaseURI)
+                      nsCString aBaseURI,
+                      DocShellOriginAttributes aOpenerOriginAttributes)
       returns (nsresult rv,
                bool windowOpened,
                FrameScriptInfo[] frameScripts,
@@ -1187,6 +1190,8 @@ parent:
      * chrome process as that's the process that receives the pointer event.
      */
     sync UngrabPointer(uint32_t time);
+
+    sync RemovePermission(Principal principal, nsCString permissionType) returns (nsresult rv);
 both:
      async AsyncMessage(nsString aMessage, ClonedMessageData aData,
                         CpowEntry[] aCpows, Principal aPrincipal);

@@ -31,6 +31,14 @@ constexpr char AlarmReceiver::NotifyAlarmFired_t::signature[];
 template<> const char mozilla::jni::Context<DownloadsIntegration, jobject>::name[] =
         "org/mozilla/gecko/DownloadsIntegration";
 
+constexpr char DownloadsIntegration::GetTemporaryDownloadDirectory_t::name[];
+constexpr char DownloadsIntegration::GetTemporaryDownloadDirectory_t::signature[];
+
+auto DownloadsIntegration::GetTemporaryDownloadDirectory() -> mozilla::jni::String::LocalRef
+{
+    return mozilla::jni::Method<GetTemporaryDownloadDirectory_t>::Call(DownloadsIntegration::Context(), nullptr);
+}
+
 constexpr char DownloadsIntegration::ScanMedia_t::name[];
 constexpr char DownloadsIntegration::ScanMedia_t::signature[];
 
@@ -768,6 +776,14 @@ auto GeckoEditable::NotifyIMEContext(int32_t a0, mozilla::jni::String::Param a1,
     return mozilla::jni::Method<NotifyIMEContext_t>::Call(GeckoEditable::mCtx, nullptr, a0, a1, a2, a3);
 }
 
+constexpr char GeckoEditable::OnDefaultKeyEvent_t::name[];
+constexpr char GeckoEditable::OnDefaultKeyEvent_t::signature[];
+
+auto GeckoEditable::OnDefaultKeyEvent(mozilla::jni::Object::Param a0) const -> void
+{
+    return mozilla::jni::Method<OnDefaultKeyEvent_t>::Call(GeckoEditable::mCtx, nullptr, a0);
+}
+
 constexpr char GeckoEditable::OnImeAcknowledgeFocus_t::name[];
 constexpr char GeckoEditable::OnImeAcknowledgeFocus_t::signature[];
 
@@ -1435,6 +1451,14 @@ constexpr char GeckoLayerClient::SyncViewportInfo_t::signature[];
 auto GeckoLayerClient::SyncViewportInfo(int32_t a0, int32_t a1, int32_t a2, int32_t a3, float a4, bool a5, int32_t a6) const -> mozilla::jni::Object::LocalRef
 {
     return mozilla::jni::Method<SyncViewportInfo_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5, a6);
+}
+
+constexpr char GeckoLayerClient::SynthesizeNativeTouchPoint_t::name[];
+constexpr char GeckoLayerClient::SynthesizeNativeTouchPoint_t::signature[];
+
+auto GeckoLayerClient::SynthesizeNativeTouchPoint(int32_t a0, int32_t a1, int32_t a2, int32_t a3, double a4, int32_t a5) const -> void
+{
+    return mozilla::jni::Method<SynthesizeNativeTouchPoint_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5);
 }
 
 template<> const char mozilla::jni::Context<ImmutableViewportMetrics, jobject>::name[] =

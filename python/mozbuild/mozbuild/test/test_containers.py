@@ -10,12 +10,33 @@ from mozbuild.util import (
     KeyedDefaultDict,
     List,
     OrderedDefaultDict,
+    ReadOnlyNamespace,
     ReadOnlyDefaultDict,
     ReadOnlyDict,
     ReadOnlyKeyedDefaultDict,
 )
 
 from collections import OrderedDict
+
+
+class TestReadOnlyNamespace(unittest.TestCase):
+    def test_basic(self):
+        test = ReadOnlyNamespace(foo=1, bar=2)
+
+        self.assertEqual(test.foo, 1)
+        self.assertEqual(test.bar, 2)
+        self.assertEqual(
+            sorted(i for i in dir(test) if not i.startswith('__')),
+            ['bar', 'foo'])
+
+        with self.assertRaises(AttributeError):
+            value = test.missing
+
+        with self.assertRaises(Exception):
+            test.foo = 2
+
+        with self.assertRaises(Exception):
+            del test.foo
 
 
 class TestReadOnlyDict(unittest.TestCase):

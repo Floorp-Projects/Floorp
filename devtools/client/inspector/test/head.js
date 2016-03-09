@@ -2,6 +2,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* import-globals-from ../../framework/test/shared-head.js */
 "use strict";
 
 // Load the shared-head file first.
@@ -90,6 +92,20 @@ function getNode(nodeOrSelector, options = {}) {
 }
 
 /**
+ * Start the element picker and focus the content window.
+ * @param {Toolbox} toolbox
+ */
+var startPicker = Task.async(function*(toolbox) {
+  info("Start the element picker");
+  yield toolbox.highlighterUtils.startPicker();
+  // Make sure the content window is focused since the picker does not focus
+  // the content window by default.
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+    content.focus();
+  });
+});
+
+/**
  * Highlight a node and set the inspector's current selection to the node or
  * the first match of the given css selector.
  * @param {String|NodeFront} selector
@@ -160,6 +176,36 @@ function getActiveInspector() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   return gDevTools.getToolbox(target).getPanel("inspector");
 }
+
+/**
+ * Right click on a node in the test page and click on the inspect menu item.
+ * @param {TestActor}
+ * @param {String} selector The selector for the node to click on in the page.
+ * @return {Promise} Resolves to the inspector when it has opened and is updated
+ */
+var clickOnInspectMenuItem = Task.async(function*(testActor, selector) {
+  info("Showing the contextual menu on node " + selector);
+  let contentAreaContextMenu = document.querySelector("#contentAreaContextMenu");
+  let contextOpened = once(contentAreaContextMenu, "popupshown");
+
+  yield testActor.synthesizeMouse({
+    selector: selector,
+    center: true,
+    options: {type: "contextmenu", button: 2}
+  });
+
+  yield contextOpened;
+
+  info("Triggering the inspect action");
+  yield gContextMenu.inspectNode();
+
+  info("Hiding the menu");
+  let contextClosed = once(contentAreaContextMenu, "popuphidden");
+  contentAreaContextMenu.hidePopup();
+  yield contextClosed;
+
+  return getActiveInspector();
+});
 
 /**
  * Open the toolbox, with the inspector tool visible, and the one of the sidebar

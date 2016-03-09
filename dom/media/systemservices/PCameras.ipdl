@@ -45,7 +45,7 @@ parent:
   async GetCaptureCapability(int engine, nsCString unique_idUTF8, int capability_number);
   async GetCaptureDevice(int engine, int num);
 
-  async AllocateCaptureDevice(int engine, nsCString unique_idUTF8);
+  async AllocateCaptureDevice(int engine, nsCString unique_idUTF8, nsCString origin);
   async ReleaseCaptureDevice(int engine, int numdev);
   async StartCapture(int engine, int numdev, CaptureCapability capability);
   async StopCapture(int engine, int numdev);

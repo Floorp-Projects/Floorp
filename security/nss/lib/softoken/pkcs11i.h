@@ -14,6 +14,7 @@
 #include "pkcs11t.h"
 
 #include "sftkdbt.h" 
+#include "chacha20poly1305.h"
 #include "hasht.h"
 
 /* 
@@ -104,6 +105,7 @@ typedef struct SFTKHashSignInfoStr SFTKHashSignInfo;
 typedef struct SFTKOAEPEncryptInfoStr SFTKOAEPEncryptInfo;
 typedef struct SFTKOAEPDecryptInfoStr SFTKOAEPDecryptInfo;
 typedef struct SFTKSSLMACInfoStr SFTKSSLMACInfo;
+typedef struct SFTKChaCha20Poly1305InfoStr SFTKChaCha20Poly1305Info;
 typedef struct SFTKItemTemplateStr SFTKItemTemplate;
 
 /* define function pointer typdefs for pointer tables */
@@ -397,6 +399,16 @@ struct SFTKSSLMACInfoStr {
     int			padSize;
     unsigned char	key[MAX_KEY_LEN];
     unsigned int	keySize;
+};
+
+/* SFTKChaCha20Poly1305Info saves the key, tag length, nonce,
+ * and additional data for a ChaCha20+Poly1305 AEAD operation. */
+struct SFTKChaCha20Poly1305InfoStr {
+    ChaCha20Poly1305Context freeblCtx;
+    unsigned char nonce[12];
+    unsigned char ad[16];
+    unsigned char *adOverflow;
+    unsigned int adLen;
 };
 
 /*

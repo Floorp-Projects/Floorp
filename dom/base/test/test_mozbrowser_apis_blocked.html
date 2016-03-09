@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Verify mozbrowser APIs are blocked without browser permission</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="mozbrowser_api_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<script type="application/javascript;version=1.8">
+  add_task(function*() {
+    yield new Promise(resolve => {
+      SpecialPowers.pushPrefEnv(
+        { "set": [["dom.mozBrowserFramesEnabled", true]] },
+        resolve);
+    });
+  });
+
+  add_task(function*() {
+    // Create <iframe mozbrowser>
+    let frame = yield loadFrame({
+      mozbrowser: "true"
+    });
+
+    // Verify that mozbrowser APIs are not accessible
+    for (let method in METHODS) {
+      ok(!(method in frame), `frame does not have method ${method}`);
+    }
+    for (let attribute of ATTRIBUTES) {
+      ok(!(attribute in frame), `frame does not have attribute ${attribute}`);
+    }
+  });
+</script>
+</body>
+</html>

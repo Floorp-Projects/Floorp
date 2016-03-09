@@ -26,4 +26,6 @@ dictionary PushPermissionDescriptor : PermissionDescriptor {
 interface Permissions {
   [Throws]
   Promise<PermissionStatus> query(object permission);
+  [Throws]
+  Promise<PermissionStatus> revoke(object permission);
 };

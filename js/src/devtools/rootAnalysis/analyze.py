@@ -127,7 +127,8 @@ JOBS = { 'dbs':
              (generate_hazards, 'rootingHazards.txt'),
 
          'explain':
-             (('python', '%(analysis_scriptdir)s/explain.py',
+             ((os.environ.get('PYTHON', 'python2.7'),
+               '%(analysis_scriptdir)s/explain.py',
                '%(hazards)s', '%(gcFunctions)s',
                '[explained_hazards]', '[unnecessary]', '[refs]'),
               ('hazards.txt', 'unnecessary.txt', 'refs.txt'))

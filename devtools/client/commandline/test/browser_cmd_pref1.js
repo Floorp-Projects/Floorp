@@ -17,8 +17,8 @@ function* spawnTest() {
   let options = yield helpers.openTab(TEST_URI);
   yield helpers.openToolbar(options);
 
-  let tiltEnabledOrig = prefBranch.getBoolPref("devtools.tilt.enabled");
-  info("originally: devtools.tilt.enabled = " + tiltEnabledOrig);
+  let netmonEnabledOrig = prefBranch.getBoolPref("devtools.netmonitor.enabled");
+  info("originally: devtools.netmonitor.enabled = " + netmonEnabledOrig);
 
   yield helpers.audit(options, [
     {
@@ -66,11 +66,11 @@ function* spawnTest() {
       },
     },
     {
-      setup: 'pref show devtools.til',
+      setup: 'pref show devtools.netmoni',
       check: {
-        input:  'pref show devtools.til',
-        hints:                        't.enabled',
-        markup: 'VVVVVVVVVVIIIIIIIIIIII',
+        input:  'pref show devtools.netmoni',
+        hints:                        'tor.enabled',
+        markup: 'VVVVVVVVVVIIIIIIIIIIIIIIII',
         status: 'ERROR',
         tooltipState: 'true:importantFieldFlag',
         args: {
@@ -79,32 +79,32 @@ function* spawnTest() {
       },
     },
     {
-      setup: 'pref reset devtools.tilt.enabled',
+      setup: 'pref reset devtools.netmonitor.enabled',
       check: {
-        input:  'pref reset devtools.tilt.enabled',
+        input:  'pref reset devtools.netmonitor.enabled',
         hints:                                  '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
         status: 'VALID'
       },
     },
     {
-      setup: 'pref show devtools.tilt.enabled 4',
+      setup: 'pref show devtools.netmonitor.enabled 4',
       check: {
-        input:  'pref show devtools.tilt.enabled 4',
+        input:  'pref show devtools.netmonitor.enabled 4',
         hints:                                   '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVE',
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVE',
         status: 'ERROR'
       },
     },
     {
-      setup: 'pref set devtools.tilt.enabled 4',
+      setup: 'pref set devtools.netmonitor.enabled 4',
       check: {
-        input:  'pref set devtools.tilt.enabled 4',
+        input:  'pref set devtools.netmonitor.enabled 4',
         hints:                                  '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVE',
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVE',
         status: 'ERROR',
         args: {
-          setting: { arg: ' devtools.tilt.enabled' },
+          setting: { arg: ' devtools.netmonitor.enabled' },
           value: { status: 'ERROR', message: 'Can\'t use \'4\'.' },
         }
       },
@@ -132,19 +132,19 @@ function* spawnTest() {
       },
     },
     {
-      setup: 'pref show devtools.tilt.enabled',
+      setup: 'pref show devtools.netmonitor.enabled',
       check: {
         args: {
           setting: {
-            value: options.requisition.system.settings.get("devtools.tilt.enabled")
+            value: options.requisition.system.settings.get("devtools.netmonitor.enabled")
           }
         },
       },
       exec: {
-        output: "devtools.tilt.enabled: " + tiltEnabledOrig,
+        output: "devtools.netmonitor.enabled: " + netmonEnabledOrig,
       },
       post: function() {
-        prefBranch.setBoolPref("devtools.tilt.enabled", tiltEnabledOrig);
+        prefBranch.setBoolPref("devtools.netmonitor.enabled", netmonEnabledOrig);
       }
     },
   ]);

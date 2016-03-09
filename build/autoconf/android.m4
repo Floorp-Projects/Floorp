@@ -153,7 +153,7 @@ case "$target" in
 
     CPPFLAGS="-idirafter $android_platform/usr/include $CPPFLAGS"
     CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
-    CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions -Wno-psabi $CXXFLAGS"
+    CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS"
     ASFLAGS="-idirafter $android_platform/usr/include -DANDROID $ASFLAGS"
 
     dnl Add -llog by default, since we use it all over the place.

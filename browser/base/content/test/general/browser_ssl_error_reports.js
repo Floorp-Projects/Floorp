@@ -66,6 +66,7 @@ function* testSendReportAutomatically(testURL, suffix, errorURISuffix) {
   // Load the page and wait for the error report submission.
   let promiseStatus = createReportResponseStatusPromise(URL_REPORTS + suffix);
   browser.loadURI(testURL);
+  yield promiseErrorPageLoaded(browser);
 
   ok(!isErrorStatus(yield promiseStatus),
      "SSL error report submitted successfully");
@@ -136,11 +137,11 @@ function* testSendReportDisabled(testURL, errorURISuffix) {
   yield checkErrorPage(browser, errorURISuffix);
 
   // Check that the error reporting section is hidden.
-  let hidden = yield ContentTask.spawn(browser, null, function* () {
+  yield ContentTask.spawn(browser, null, function* () {
     let section = content.document.getElementById("certificateErrorReporting");
-    return content.getComputedStyle(section).display == "none";
+    Assert.equal(content.getComputedStyle(section).display, "none",
+      "error reporting section should be hidden");
   });
-  ok(hidden, "error reporting section should be hidden");
 
   // Cleanup.
   gBrowser.removeTab(tab);
@@ -165,19 +166,9 @@ function createReportResponseStatusPromise(expectedURI) {
   });
 }
 
-function promiseErrorPageLoaded(browser) {
-  return new Promise(resolve => {
-    browser.addEventListener("DOMContentLoaded", function onLoad() {
-      browser.removeEventListener("DOMContentLoaded", onLoad, false, true);
-      resolve();
-    }, false, true);
-  });
-}
-
 function checkErrorPage(browser, suffix) {
-  return ContentTask.spawn(browser, null, function* () {
-    return content.document.documentURI;
-  }).then(uri => {
-    ok(uri.startsWith(`about:${suffix}`), "correct error page loaded");
+  return ContentTask.spawn(browser, { suffix }, function* (args) {
+    let uri = content.document.documentURI;
+    Assert.ok(uri.startsWith(`about:${args.suffix}`), "correct error page loaded");
   });
 }

@@ -74,7 +74,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
 
   private:
     void asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg, bool boundsCheck,
-                                   int32_t offset, int32_t endOffset);
+                                   uint32_t offset, uint32_t endOffset);
 };
 
 typedef CodeGeneratorX86 CodeGeneratorSpecific;

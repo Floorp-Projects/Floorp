@@ -14,11 +14,7 @@ h2, h3, h4 {
 button {
   padding-left: 20px;
   padding-right: 20px;
-}
-
-#body {
-  display: flex;
-  flex-direction: row;
+  min-width: 100px;
 }
 
 /* Category tabs */
@@ -33,23 +29,19 @@ button {
   cursor: default;
 }
 
+.app {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
 .main-content {
   flex: 1;
 }
 
 .tab {
   max-width: 800px;
-}
-
-.tab:not(.active) {
-  display: none;
-}
-
-/* Prefs */
-
-label {
-  display: block;
-  margin-bottom: 5px;
 }
 
 /* Targets */
@@ -60,6 +52,7 @@ label {
 
 .target {
   margin-top: 5px;
+  min-height: 34px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -82,11 +75,16 @@ label {
   flex: 1;
 }
 
-.addon-controls {
+.addons-controls {
   display: flex;
   flex-direction: row;
 }
 
-.addon-options {
+.addons-options {
   flex: 1;
+}
+
+.addons-debugging-label {
+  display: inline-block;
+  margin: 0 5px 5px 0;
 }

@@ -100,9 +100,6 @@ libs-%:
 	$(NSINSTALL) -D $(DIST)/install
 	@$(MAKE) -C ../../toolkit/locales libs-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
 	@$(MAKE) -C ../../services/sync/locales AB_CD=$* XPI_NAME=locale-$*
-ifdef MOZ_WEBAPP_RUNTIME
-	@$(MAKE) -C ../../webapprt/locales AB_CD=$* XPI_NAME=locale-$*
-endif
 	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../extensions/pocket/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../extensions/loop/chrome/locale AB_CD=$* XPI_NAME=locale-$*
@@ -138,14 +135,11 @@ endif
 clobber-zip:
 	$(RM) $(STAGEDIST)/chrome/$(AB_CD).jar \
 	  $(STAGEDIST)/chrome/$(AB_CD).manifest \
-	  $(STAGEDIST)/webapprt/chrome/$(AB_CD).jar \
-	  $(STAGEDIST)/webapprt/chrome/$(AB_CD).manifest \
 	  $(STAGEDIST)/$(PREF_DIR)/firefox-l10n.js
 	$(RM) -rf  $(STAGEDIST)/dictionaries \
 	  $(STAGEDIST)/hyphenation \
 	  $(STAGEDIST)/defaults/profile \
-	  $(STAGEDIST)/chrome/$(AB_CD) \
-	  $(STAGEDIST)/webapprt/chrome/$(AB_CD)
+	  $(STAGEDIST)/chrome/$(AB_CD)
 
 
 langpack: langpack-$(AB_CD)

@@ -18,14 +18,14 @@ namespace mozilla {
 class TimelineMarker : public AbstractTimelineMarker
 {
 public:
-  explicit TimelineMarker(const char* aName,
-                          MarkerTracingType aTracingType,
-                          MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
+  TimelineMarker(const char* aName,
+                 MarkerTracingType aTracingType,
+                 MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
 
-  explicit TimelineMarker(const char* aName,
-                          const TimeStamp& aTime,
-                          MarkerTracingType aTracingType,
-                          MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
+  TimelineMarker(const char* aName,
+                 const TimeStamp& aTime,
+                 MarkerTracingType aTracingType,
+                 MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
 
   virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override;
   virtual JSObject* GetStack() override;

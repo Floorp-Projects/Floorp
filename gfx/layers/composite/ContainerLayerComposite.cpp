@@ -114,7 +114,7 @@ static void PrintUniformityInfo(Layer* aLayer)
     return;
   }
 
-  Matrix4x4 transform = aLayer->AsLayerComposite()->GetShadowTransform();
+  Matrix4x4 transform = aLayer->AsLayerComposite()->GetShadowBaseTransform();
   if (!transform.Is2D()) {
     return;
   }
@@ -141,6 +141,8 @@ ContainerRenderVR(ContainerT* aContainer,
                   const gfx::IntRect& aClipRect,
                   RefPtr<gfx::VRHMDInfo> aHMD)
 {
+  int32_t inputFrameID = -1;
+
   RefPtr<CompositingRenderTarget> surface;
 
   Compositor* compositor = aManager->GetCompositor();
@@ -207,6 +209,9 @@ ContainerRenderVR(ContainerT* aContainer,
     if (!layer->IsVisible() && !layer->AsContainerLayer()) {
       continue;
     }
+    if (layerToRender->HasStaleCompositor()) {
+      continue;
+    }
 
     // We flip between pre-rendered and Gecko-rendered VR based on
     // whether the child layer of this VR container layer has
@@ -265,6 +270,32 @@ ContainerRenderVR(ContainerT* aContainer,
                                                  surfaceRect.width, surfaceRect.height));
       layerToRender->RenderLayer(surfaceRect);
 
+      // Search all children recursively until we find the canvas with
+      // an inputFrameID
+      std::stack<LayerComposite*> searchLayers;
+      searchLayers.push(layerToRender);
+      while (!searchLayers.empty() && inputFrameID == -1) {
+        LayerComposite* searchLayer = searchLayers.top();
+        searchLayers.pop();
+        if (searchLayer) {
+          searchLayers.push(searchLayer->GetFirstChildComposite());
+          Layer* sibling = searchLayer->GetLayer();
+          if (sibling) {
+            sibling = sibling->GetNextSibling();
+          }
+          if (sibling) {
+            searchLayers.push(sibling->AsLayerComposite());
+          }
+          CompositableHost *ch = searchLayer->GetCompositableHost();
+          if (ch) {
+            int32_t compositableInputFrameID = ch->GetLastInputFrameID();
+            if (compositableInputFrameID != -1) {
+              inputFrameID = compositableInputFrameID;
+            }
+          }
+        }
+      }
+
       if (restoreTransform) {
         layer->ReplaceEffectiveTransform(childTransform);
       }
@@ -282,7 +313,7 @@ ContainerRenderVR(ContainerT* aContainer,
   compositor->SetRenderTarget(previousTarget);
 
   if (vrRendering) {
-    vrRendering->SubmitFrame(aContainer->mVRRenderTargetSet);
+    vrRendering->SubmitFrame(aContainer->mVRRenderTargetSet, inputFrameID);
     DUMP("<<< ContainerRenderVR [used vrRendering] [%p]\n", aContainer);
     if (!gfxPrefs::VRMirrorTextures()) {
       return;
@@ -541,6 +572,10 @@ RenderLayers(ContainerT* aContainer,
     LayerComposite* layerToRender = preparedData.mLayer;
     const RenderTargetIntRect& clipRect = preparedData.mClipRect;
     Layer* layer = layerToRender->GetLayer();
+
+    if (layerToRender->HasStaleCompositor()) {
+      continue;
+    }
 
     Color color;
     if (NeedToDrawCheckerboardingForLayer(layer, &color)) {

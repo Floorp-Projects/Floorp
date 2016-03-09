@@ -1416,6 +1416,9 @@ WorkerClient.prototype = {
 
   detach: DebuggerClient.requester({ type: "detach" }, {
     after: function (aResponse) {
+      if (this.thread) {
+        this.client.unregisterClient(this.thread);
+      }
       this.client.unregisterClient(this);
       return aResponse;
     },
@@ -1447,7 +1450,8 @@ WorkerClient.prototype = {
 
       return this.request({
         to: connectReponse.threadActor,
-        type: "attach"
+        type: "attach",
+        options: aOptions
       }).then(attachResponse => {
         if (attachResponse.error) {
           aOnResponse(attachResponse, null);

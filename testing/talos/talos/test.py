@@ -150,7 +150,8 @@ class sessionrestore(TsBase):
     2. Launch Firefox.
     3. Measure the delta between firstPaint and sessionRestored.
     """
-    extensions = '${talos}/startup_test/sessionrestore/addon'
+    extensions = \
+        '${talos}/startup_test/sessionrestore/addon/sessionrestore-signed.xpi'
     cycles = 10
     timeout = 1000000
     sps_profile_startup = True
@@ -200,7 +201,7 @@ class tresize(TsBase):
     """
     This test does some resize thing.
     """
-    extensions = '${talos}/startup_test/tresize/addon'
+    extensions = '${talos}/startup_test/tresize/addon/tresize-signed.xpi'
     cycles = 20
     url = 'startup_test/tresize/addon/content/tresize-test.html'
     timeout = 150
@@ -238,11 +239,34 @@ class PageloaderTest(Test):
 
 
 @register_test()
+class tabpaint(PageloaderTest):
+    """
+    Tests the amount of time it takes to open new tabs, triggered from
+    both the parent process and the content process.
+    """
+    extensions = '${talos}/tests/tabpaint/tabpaint-signed.xpi'
+    tpmanifest = '${talos}/tests/tabpaint/tabpaint.manifest'
+    tppagecycles = 20
+    sps_profile_entries = 1000000
+    tploadnocache = True
+    unit = 'ms'
+    preferences = {
+        # By default, Talos is configured to open links from
+        # content in new windows. We're overriding them so that
+        # they open in new tabs instead.
+        # See http://kb.mozillazine.org/Browser.link.open_newwindow
+        # and http://kb.mozillazine.org/Browser.link.open_newwindow.restriction
+        'browser.link.open_newwindow': 3,
+        'browser.link.open_newwindow.restriction': 2,
+    }
+
+
+@register_test()
 class tps(PageloaderTest):
     """
     Tests the amount of time it takes to switch between tabs
     """
-    extensions = '${talos}/tests/tabswitch'
+    extensions = '${talos}/tests/tabswitch/tabswitch-signed.xpi'
     tpmanifest = '${talos}/tests/tabswitch/tps.manifest'
     tppagecycles = 5
     sps_profile_entries = 1000000
@@ -284,7 +308,7 @@ class tart(PageloaderTest):
       - all: average interval over all recorded intervals.
     """
     tpmanifest = '${talos}/tests/tart/tart.manifest'
-    extensions = '${talos}/tests/tart/addon'
+    extensions = '${talos}/tests/tart/addon/tart-signed.xpi'
     tpcycles = 1
     tppagecycles = 25
     tploadnocache = True
@@ -321,7 +345,7 @@ class cart(PageloaderTest):
     3-customize-enter-css - only the CSS animation part of entering customize
     """
     tpmanifest = '${talos}/tests/tart/cart.manifest'
-    extensions = '${talos}/tests/tart/addon'
+    extensions = '${talos}/tests/tart/addon/tart-signed.xpi'
     tpcycles = 1
     tppagecycles = 25
     tploadnocache = True
@@ -347,7 +371,7 @@ class damp(PageloaderTest):
     for each tool, across a very simple and very complicated page.
     """
     tpmanifest = '${talos}/tests/devtools/damp.manifest'
-    extensions = '${talos}/tests/devtools/addon'
+    extensions = '${talos}/tests/devtools/addon/devtools-signed.xpi'
     tpcycles = 1
     tppagecycles = 25
     tploadnocache = True
@@ -619,6 +643,7 @@ class tsvgr_opacity(PageloaderTest):
     tpmanifest = '${talos}/tests/svg_opacity/svg_opacity.manifest'
     tpcycles = 1
     tppagecycles = 25
+    tpmozafterpaint = True
     sps_profile_interval = 1
     sps_profile_entries = 10000000
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()

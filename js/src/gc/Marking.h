@@ -7,7 +7,6 @@
 #ifndef gc_Marking_h
 #define gc_Marking_h
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Move.h"
 
@@ -32,7 +31,7 @@ class NativeObject;
 class ObjectGroup;
 class WeakMapBase;
 namespace gc {
-struct ArenaHeader;
+class Arena;
 } // namespace gc
 namespace jit {
 class JitCode;
@@ -214,9 +213,9 @@ class GCMarker : public JSTracer
         linearWeakMarkingDisabled_ = true;
     }
 
-    void delayMarkingArena(gc::ArenaHeader* aheader);
+    void delayMarkingArena(gc::Arena* arena);
     void delayMarkingChildren(const void* thing);
-    void markDelayedChildren(gc::ArenaHeader* aheader);
+    void markDelayedChildren(gc::Arena* arena);
     bool markDelayedChildren(SliceBudget& budget);
     bool hasDelayedChildren() const {
         return !!unmarkedArenaStackTop;
@@ -283,7 +282,7 @@ class GCMarker : public JSTracer
     void eagerlyMarkChildren(Shape* shape);
     void lazilyMarkChildren(ObjectGroup* group);
 
-    // We may not have concrete types yet, so this has to be out of the header.
+    // We may not have concrete types yet, so this has to be outside the header.
     template <typename T>
     void dispatchToTraceChildren(T* thing);
 
@@ -331,7 +330,7 @@ class GCMarker : public JSTracer
     uint32_t color;
 
     /* Pointer to the top of the stack of arenas we are delaying marking on. */
-    js::gc::ArenaHeader* unmarkedArenaStackTop;
+    js::gc::Arena* unmarkedArenaStackTop;
 
     /*
      * If the weakKeys table OOMs, disable the linear algorithm and fall back
@@ -339,17 +338,19 @@ class GCMarker : public JSTracer
      */
     bool linearWeakMarkingDisabled_;
 
+#ifdef DEBUG
     /* Count of arenas that are currently in the stack. */
-    mozilla::DebugOnly<size_t> markLaterArenas;
+    size_t markLaterArenas;
 
     /* Assert that start and stop are called with correct ordering. */
-    mozilla::DebugOnly<bool> started;
+    bool started;
 
     /*
      * If this is true, all marked objects must belong to a compartment being
      * GCed. This is used to look for compartment bugs.
      */
-    mozilla::DebugOnly<bool> strictCompartmentChecking;
+    bool strictCompartmentChecking;
+#endif // DEBUG
 };
 
 #ifdef DEBUG
@@ -364,7 +365,7 @@ namespace gc {
 /*** Special Cases ***/
 
 void
-PushArena(GCMarker* gcmarker, ArenaHeader* aheader);
+PushArena(GCMarker* gcmarker, Arena* arena);
 
 /*** Liveness ***/
 

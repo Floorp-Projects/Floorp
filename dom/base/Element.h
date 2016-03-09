@@ -36,6 +36,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/ElementBinding.h"
+#include "mozilla/dom/Nullable.h"
 #include "Units.h"
 
 class nsIFrame;
@@ -56,6 +57,7 @@ namespace mozilla {
 namespace dom {
   struct ScrollIntoViewOptions;
   struct ScrollToOptions;
+  class ElementOrCSSPseudoElement;
   class UnrestrictedDoubleOrKeyframeAnimationOptions;
 } // namespace dom
 } // namespace mozilla
@@ -118,6 +120,7 @@ enum {
 ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET);
 
 namespace mozilla {
+enum class CSSPseudoElementType : uint8_t;
 class EventChainPostVisitor;
 class EventChainPreVisitor;
 class EventChainVisitor;
@@ -825,15 +828,26 @@ public:
   {
   }
 
-  already_AddRefed<Animation> Animate(
-    JSContext* aContext,
-    JS::Handle<JSObject*> aFrames,
-    const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
-    ErrorResult& aError);
+  already_AddRefed<Animation>
+  Animate(JSContext* aContext,
+          JS::Handle<JSObject*> aFrames,
+          const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
+          ErrorResult& aError);
+
+  // A helper method that factors out the common functionality needed by
+  // Element::Animate and CSSPseudoElement::Animate
+  static already_AddRefed<Animation>
+  Animate(const Nullable<ElementOrCSSPseudoElement>& aTarget,
+          JSContext* aContext,
+          JS::Handle<JSObject*> aFrames,
+          const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
+          ErrorResult& aError);
 
   // Note: GetAnimations will flush style while GetAnimationsUnsorted won't.
   void GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations);
-  void GetAnimationsUnsorted(nsTArray<RefPtr<Animation>>& aAnimations);
+  static void GetAnimationsUnsorted(Element* aElement,
+                                    CSSPseudoElementType aPseudoType,
+                                    nsTArray<RefPtr<Animation>>& aAnimations);
 
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
   virtual void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);

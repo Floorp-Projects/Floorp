@@ -26,6 +26,7 @@ const {
   SELECTOR_PSEUDO_CLASS
 } = require("devtools/client/shared/css-parsing-utils");
 const promise = require("promise");
+const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 XPCOMUtils.defineLazyGetter(this, "_strings", function() {

@@ -158,10 +158,11 @@
   }
 
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-  Cu.import("resource://gre/modules/Services.jsm");
-  const {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
-  const {gDevTools} = require("devtools/client/framework/devtools");
+  const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const Services = require("Services");
+  const { gDevTools } = require("devtools/client/framework/devtools");
   const StylesheetUtils = require("sdk/stylesheet/utils");
+  const { watchCSS } = require("devtools/client/shared/css-reload");
 
   if (documentElement.hasAttribute("force-theme")) {
     switchTheme(documentElement.getAttribute("force-theme"));
@@ -173,4 +174,6 @@
       gDevTools.off("pref-changed", handlePrefChange);
     });
   }
+
+  watchCSS(window);
 })();

@@ -13,7 +13,7 @@
 #include <algorithm>
 #include "nsIFrame.h"
 #include "nsPresContext.h"
-#include "RestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsDisplayList.h"

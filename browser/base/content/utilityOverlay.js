@@ -751,9 +751,9 @@ function trimURL(aURL) {
 
   let flags = Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP |
               Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
-  let fixedUpURL = Services.uriFixup.createFixupURI(urlWithoutProtocol, flags);
-  let expectedURLSpec;
+  let fixedUpURL, expectedURLSpec;
   try {
+    fixedUpURL = Services.uriFixup.createFixupURI(urlWithoutProtocol, flags);
     expectedURLSpec = makeURI(aURL).spec;
   } catch (ex) {
     return url;

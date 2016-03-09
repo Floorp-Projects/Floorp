@@ -964,23 +964,14 @@ GonkGPSGeolocationProvider::NetworkLocationUpdate::Update(nsIDOMGeoPosition *pos
       provider->mLocationCallback->Update(provider->mLastGPSPosition);
     }
   }
-
   provider->InjectLocation(lat, lon, acc);
   return NS_OK;
 }
-
-NS_IMETHODIMP
-GonkGPSGeolocationProvider::NetworkLocationUpdate::LocationUpdatePending()
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 GonkGPSGeolocationProvider::NetworkLocationUpdate::NotifyError(uint16_t error)
 {
   return NS_OK;
 }
-
 NS_IMETHODIMP
 GonkGPSGeolocationProvider::Startup()
 {

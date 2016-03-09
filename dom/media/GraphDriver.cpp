@@ -9,6 +9,8 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "CubebUtils.h"
 
+#include "webrtc/MediaEngineWebRTC.h"
+
 #ifdef XP_MACOSX
 #include <sys/sysctl.h>
 #endif
@@ -52,7 +54,6 @@ GraphDriver::GraphDriver(MediaStreamGraphImpl* aGraphImpl)
     mIterationEnd(0),
     mGraphImpl(aGraphImpl),
     mWaitState(WAITSTATE_RUNNING),
-    mAudioInput(nullptr),
     mCurrentTimeStamp(TimeStamp::Now()),
     mPreviousDriver(nullptr),
     mNextDriver(nullptr)
@@ -546,6 +547,7 @@ StreamAndPromiseForOperation::StreamAndPromiseForOperation(MediaStream* aStream,
 AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
   : GraphDriver(aGraphImpl)
   , mSampleRate(0)
+  , mInputChannels(1)
   , mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS)
   , mStarted(false)
   , mAudioInput(nullptr)
@@ -604,17 +606,24 @@ AudioCallbackDriver::Init()
   }
 
   input = output;
-  input.channels = 1; // change to support optional stereo capture
+  input.channels = mInputChannels; // change to support optional stereo capture
 
-  cubeb_stream* stream;
-  // XXX Only pass input input if we have an input listener.  Always
-  // set up output because it's easier, and it will just get silence.
-  // XXX Add support for adding/removing an input listener later.
-  if (cubeb_stream_init(CubebUtils::GetCubebContext(), &stream,
+  cubeb_stream* stream = nullptr;
+  CubebUtils::AudioDeviceID input_id = nullptr, output_id = nullptr;
+  // We have to translate the deviceID values to cubeb devid's since those can be
+  // freed whenever enumerate is called.
+  if ((!mGraphImpl->mInputWanted ||
+       AudioInputCubeb::GetDeviceID(mGraphImpl->mInputDeviceID, input_id)) &&
+      (mGraphImpl->mOutputDeviceID == -1 || // pass nullptr for ID for default output
+       AudioInputCubeb::GetDeviceID(mGraphImpl->mOutputDeviceID, output_id)) &&
+      // XXX Only pass input input if we have an input listener.  Always
+      // set up output because it's easier, and it will just get silence.
+      // XXX Add support for adding/removing an input listener later.
+      cubeb_stream_init(CubebUtils::GetCubebContext(), &stream,
                         "AudioCallbackDriver",
-                        mGraphImpl->mInputDeviceID,
+                        input_id,
                         mGraphImpl->mInputWanted ? &input : nullptr,
-                        mGraphImpl->mOutputDeviceID,
+                        output_id,
                         mGraphImpl->mOutputWanted ? &output : nullptr, latency,
                         DataCallback_s, StateCallback_s, this) == CUBEB_OK) {
     mAudioStream.own(stream);
@@ -922,14 +931,14 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // removed/added to this list and TSAN issues, but input and output will
   // use separate callback methods.
   mGraphImpl->NotifyOutputData(aOutputBuffer, static_cast<size_t>(aFrames),
-                               ChannelCount);
+                               mSampleRate, ChannelCount);
 
   // Process mic data if any/needed -- after inserting far-end data for AEC!
   if (aInputBuffer) {
     if (mAudioInput) { // for this specific input-only or full-duplex stream
       mAudioInput->NotifyInputData(mGraphImpl, aInputBuffer,
                                    static_cast<size_t>(aFrames),
-                                   ChannelCount);
+                                   mSampleRate, mInputChannels);
     }
   }
 

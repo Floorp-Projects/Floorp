@@ -7,8 +7,6 @@
 #ifndef jit_shared_IonAssemblerBufferWithConstantPools_h
 #define jit_shared_IonAssemblerBufferWithConstantPools_h
 
-#include "mozilla/DebugOnly.h"
-
 #include <algorithm>
 
 #include "jit/JitSpewer.h"

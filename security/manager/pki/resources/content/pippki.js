@@ -10,20 +10,23 @@
  */
 
 function setText(id, value) {
-  var element = document.getElementById(id);
-  if (!element) return;
-     if (element.hasChildNodes())
-       element.removeChild(element.firstChild);
-  var textNode = document.createTextNode(value);
-  element.appendChild(textNode);
+  let element = document.getElementById(id);
+  if (!element) {
+    return;
+  }
+  if (element.hasChildNodes()) {
+    element.removeChild(element.firstChild);
+  }
+  element.appendChild(document.createTextNode(value));
 }
 
 const nsICertificateDialogs = Components.interfaces.nsICertificateDialogs;
-const nsCertificateDialogs = "@mozilla.org/nsCertificateDialogs;1"
+const nsCertificateDialogs = "@mozilla.org/nsCertificateDialogs;1";
 
 function viewCertHelper(parent, cert) {
-  if (!cert)
+  if (!cert) {
     return;
+  }
 
   var cd = Components.classes[nsCertificateDialogs].getService(nsICertificateDialogs);
   cd.viewCert(parent, cert);
@@ -108,8 +111,9 @@ function exportToFile(parent, cert)
     case 1:
       content = getPEMString(cert);
       var chain = cert.getChain();
-      for (var i = 1; i < chain.length; i++)
+      for (let i = 1; i < chain.length; i++) {
         content += getPEMString(chain.queryElementAt(i, Components.interfaces.nsIX509Cert));
+      }
       break;
     case 2:
       content = getDERString(cert);
@@ -137,8 +141,7 @@ function exportToFile(parent, cert)
     fos.init(file, 0x02 | 0x08 | 0x20, 0o0644, 0);
     written = fos.write(content, content.length);
     fos.close();
-  }
-  catch(e) {
+  } catch (e) {
     switch (e.result) {
       case Components.results.NS_ERROR_FILE_ACCESS_DENIED:
         msg = bundle.getString("writeFileAccessDenied");
@@ -156,8 +159,9 @@ function exportToFile(parent, cert)
     }
   }
   if (written != content.length) {
-    if (!msg.length)
+    if (msg.length == 0) {
       msg = bundle.getString("writeFileUnknownError");
+    }
     alertPromptService(bundle.getString("writeFileFailure"),
                        bundle.getFormattedString("writeFileFailed",
                        [fp.file.path, msg]));

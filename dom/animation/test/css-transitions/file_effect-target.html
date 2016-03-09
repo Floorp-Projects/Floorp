@@ -18,6 +18,49 @@ test(function(t) {
     'Animation.target is the animatable div');
 }, 'Returned CSS transitions have the correct Animation.target');
 
+test(function(t) {
+  addStyle(t, { '.init::after': 'content: ""; width: 0px; height: 0px; ' +
+                                'transition: all 10s;',
+                '.change::after': 'width: 100px; height: 100px;' });
+  var div = addDiv(t, { class: 'init' });
+  flushComputedStyle(div);
+  div.classList.add('change');
+
+  var anims = document.getAnimations();
+  assert_equals(anims.length, 2,
+                'Got transitions running on ::after pseudo element');
+  assert_equals(anims[0].effect.target, anims[1].effect.target,
+                'Both transitions return the same target object');
+}, 'effect.target should return the same CSSPseudoElement object each time');
+
+test(function(t) {
+  addStyle(t, { '.init::after': 'content: ""; width: 0px; transition: all 10s;',
+                '.change::after': 'width: 100px;' });
+  var div = addDiv(t, { class: 'init' });
+  flushComputedStyle(div);
+  div.classList.add('change');
+  var pseudoTarget = document.getAnimations()[0].effect.target;
+  var effect = new KeyframeEffectReadOnly(pseudoTarget,
+                                          { background: ["blue", "red"] },
+                                          3000);
+  var newAnim = new Animation(effect, document.timeline);
+  newAnim.play();
+
+  var anims = document.getAnimations();
+  assert_equals(anims.length, 2,
+                'Got animations running on ::after pseudo element');
+  assert_not_equals(anims[0], newAnim,
+                    'The scriped-generated animation appears last');
+  assert_equals(newAnim.effect.target, pseudoTarget,
+                'The effect.target of the scripted-generated animation is ' +
+                'the same as the one from the argument of ' +
+                'KeyframeEffectReadOnly constructor');
+  assert_equals(anims[0].effect.target, newAnim.effect.target,
+                'Both the transition and the scripted-generated animation ' +
+                'return the same target object');
+}, 'effect.target from the script-generated animation should return the same ' +
+   'CSSPseudoElement object as that from the CSS generated transition');
+
 done();
 </script>
 </body>

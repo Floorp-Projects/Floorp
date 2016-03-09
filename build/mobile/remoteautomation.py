@@ -86,6 +86,10 @@ class RemoteAutomation(Automation):
         # Don't override the user's choice here.  See bug 1049688.
         env.setdefault('MOZ_DISABLE_NONLOCAL_CONNECTIONS', '1')
 
+        # Disable Switchboard by default. This will prevent nonlocal
+        # network connections to the Switchboard server.
+        env.setdefault('MOZ_DISABLE_SWITCHBOARD', '1')
+
         # Set WebRTC logging in case it is not set yet.
         # On Android, environment variables cannot contain ',' so the
         # standard WebRTC setting for NSPR_LOG_MODULES is not available.

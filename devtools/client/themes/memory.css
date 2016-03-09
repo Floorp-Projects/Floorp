@@ -87,7 +87,7 @@ html, body, #app, #memory-tool {
   margin-inline-end: 5px;
 }
 
-.devtools-toolbar > .toolbar-group > label.breakdown-by > span {
+.devtools-toolbar > .toolbar-group > label.display-by > span {
   margin-inline-end: 5px;
 }
 
@@ -181,11 +181,17 @@ html, body, #app, #memory-tool {
   color: var(--theme-body-color);
   border-bottom: 1px solid rgba(128,128,128,0.15);
   padding: 8px;
+  cursor: default;
 }
 
 .snapshot-list-item.selected {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
+}
+
+.snapshot-list-item.selected ::-moz-selection {
+  background-color: var(--theme-selection-color);
+  color: var(--theme-selection-background);
 }
 
 .snapshot-list-item .snapshot-info {
@@ -223,6 +229,26 @@ html, body, #app, #memory-tool {
 /**
  * Main panel
  */
+
+.vbox {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: 0;
+  margin: 0;
+}
+
+.vbox > * {
+  flex: 1;
+
+  /**
+   * By default, flex items have min-width: auto;
+   * (https://drafts.csswg.org/css-flexbox/#min-size-auto)
+   */
+  min-width: 0;
+}
 
 #heap-view {
   /**
@@ -267,7 +293,8 @@ html, body, #app, #memory-tool {
 }
 
 #heap-view > .heap-view-panel > .snapshot-status,
-#heap-view > .heap-view-panel > .take-snapshot {
+#heap-view > .heap-view-panel > .take-snapshot,
+#shortest-paths-select-node-msg {
   margin: auto;
   margin-top: 65px;
   font-size: 120%;
@@ -297,18 +324,35 @@ html, body, #app, #memory-tool {
   color: var(--theme-body-color);
   background-color: var(--theme-tab-toolbar-background);
   border-bottom: 1px solid var(--cell-border-color);
+  flex: 0;
+}
+
+.header > span,
+#shortest-paths-header {
+  text-overflow: ellipsis;
+  line-height: var(--heap-tree-header-height);
+  justify-content: center;
+  justify-self: center;
+  white-space: nowrap;
 }
 
 .header > span {
   overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: var(--heap-tree-header-height);
-  justify-content: center;
-  white-space: nowrap;
 }
 
 .header > .heap-tree-item-name {
   justify-content: flex-start;
+}
+
+#shortest-paths {
+  background-color: var(--theme-body-background);
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+#shortest-paths-select-node-msg {
+  justify-self: center;
 }
 
 /**
@@ -327,6 +371,11 @@ html, body, #app, #memory-tool {
 .tree-node {
   height: var(--heap-tree-row-height);
   line-height: var(--heap-tree-row-height);
+  cursor: default;
+}
+
+.children-pointer {
+  padding-inline-end: 5px;
 }
 
 /**
@@ -355,6 +404,11 @@ html, body, #app, #memory-tool {
   color: var(--theme-selection-color);
 }
 
+.heap-tree-item.focused ::-moz-selection {
+  background-color: var(--theme-selection-color);
+  color: var(--theme-selection-background);
+}
+
 .heap-tree-item-bytes,
 .heap-tree-item-count,
 .heap-tree-item-total-bytes,
@@ -374,11 +428,19 @@ html, body, #app, #memory-tool {
 .heap-tree-item-total-bytes {
   width: 10%;
   /*
-   * Provision for up to :
-   * - 12 characters for the number part (10s of GB and spaces every 3 digits)
-   * - 4 chars for the percent part (the maximum length string is "100%")
+   * Provision for up to 19 characters:
+   *
+   *     GG_MMM_KKK_BBB_100%
+   *     |            |||  |
+   *     '------------'|'--'
+   *     14 ch for 10s | 4 ch for the largest % we will
+   *     of GB and     | normally see: "100%"
+   *     spaces every  |
+   *     3 digits      |
+   *                   |
+   *             A space between the number and percent
    */
-  min-width: 16ch;
+  min-width: 19ch;
 }
 
 .heap-tree-item-name {
@@ -475,4 +537,51 @@ html, body, #app, #memory-tool {
   border-width: 0px 0px 1px 0px;
   text-align: center;
   padding: 5px;
+}
+
+/**
+ * Dagre-D3 graphs
+ */
+
+.edgePath path {
+  stroke-width: 1px;
+  fill: none;
+}
+
+.theme-dark .edgePath path {
+  stroke: var(--theme-body-color-alt);
+}
+.theme-light .edgePath path {
+  stroke: var(--theme-splitter-color);
+}
+
+g.edgeLabel rect {
+  fill: var(--theme-body-background);
+}
+g.edgeLabel tspan {
+  fill: var(--theme-body-color-alt);
+}
+
+.nodes rect {
+  stroke-width: 1px;
+}
+
+.nodes rect {
+  stroke: var(--theme-tab-toolbar-background);
+}
+.theme-light rect {
+  fill: var(--theme-tab-toolbar-background);
+}
+.theme-dark rect {
+  fill: var(--theme-toolbar-background);
+}
+
+text {
+  font-weight: 300;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+  font-size: 14px;
+}
+
+text {
+  fill: var(--theme-body-color-alt);
 }

@@ -7,8 +7,8 @@
 "use strict";
 
 const {Cu} = require("chrome");
+const Services = require("Services");
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://devtools/shared/event-emitter.js");
 
 exports.PREF_ORIG_SOURCES = "devtools.styleeditor.source-maps-enabled";

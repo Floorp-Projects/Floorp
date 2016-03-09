@@ -24,8 +24,7 @@ public class AppConstants {
     public static final String ANDROID_PACKAGE_NAME = "@ANDROID_PACKAGE_NAME@";
     public static final String MANGLED_ANDROID_PACKAGE_NAME = "@MANGLED_ANDROID_PACKAGE_NAME@";
 
-    public static final String MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@";
-    public static final String MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@";
+    public static final String MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "@ANDROID_PACKAGE_NAME@_fxaccount";
 
     /**
      * Encapsulates access to compile-time version definitions, allowing
@@ -64,8 +63,7 @@ public class AppConstants {
          * If our MAX_SDK_VERSION is lower than ICS, we must not be an ICS device.
          * Otherwise, we need a range check.
          */
-	public static final boolean preM = MAX_SDK_VERSION < 23 ||
-                (MIN_SDK_VERSION < 23 && Build.VERSION.SDK_INT < 23 && !Build.VERSION.RELEASE.equals("M"));
+        public static final boolean preMarshmallow = MAX_SDK_VERSION < 23 || (MIN_SDK_VERSION < 23 && Build.VERSION.SDK_INT < 23);
         public static final boolean preLollipop = MAX_SDK_VERSION < 21 || (MIN_SDK_VERSION < 21 && Build.VERSION.SDK_INT < 21);
         public static final boolean preJBMR2 = MAX_SDK_VERSION < 18 || (MIN_SDK_VERSION < 18 && Build.VERSION.SDK_INT < 18);
         public static final boolean preJBMR1 = MAX_SDK_VERSION < 17 || (MIN_SDK_VERSION < 17 && Build.VERSION.SDK_INT < 17);
@@ -350,4 +348,6 @@ public class AppConstants {
 //#else
     false;
 //#endif
+
+    public static final boolean SCREENSHOTS_IN_BOOKMARKS_ENABLED = AppConstants.NIGHTLY_BUILD;
 }

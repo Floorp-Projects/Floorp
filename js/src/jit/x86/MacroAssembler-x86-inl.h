@@ -15,6 +15,21 @@ namespace js {
 namespace jit {
 
 //{{{ check_macroassembler_style
+
+void
+MacroAssembler::move64(Imm64 imm, Register64 dest)
+{
+    movl(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
+    movl(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);
+}
+
+void
+MacroAssembler::move64(Register64 src, Register64 dest)
+{
+    movl(src.low, dest.low);
+    movl(src.high, dest.high);
+}
+
 // ===============================================================
 // Logical functions
 
@@ -35,6 +50,20 @@ MacroAssembler::and64(Imm64 imm, Register64 dest)
 {
     andl(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
     andl(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);
+}
+
+void
+MacroAssembler::or64(Imm64 imm, Register64 dest)
+{
+    orl(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
+    orl(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);
+}
+
+void
+MacroAssembler::xor64(Imm64 imm, Register64 dest)
+{
+    xorl(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
+    xorl(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);
 }
 
 void
@@ -350,6 +379,13 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
     }
 }
 
+void
+MacroAssembler::branchTestBooleanTruthy(bool truthy, const ValueOperand& value, Label* label)
+{
+    test32(value.payloadReg(), value.payloadReg());
+    j(truthy ? NonZero : Zero, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
@@ -377,28 +413,61 @@ MacroAssemblerX86::convertUInt32ToFloat32(Register src, FloatRegister dest)
 }
 
 void
-MacroAssemblerX86::branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                                   Label* label)
+MacroAssemblerX86::unboxValue(const ValueOperand& src, AnyRegister dest)
 {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    // Check payload before tag, since payload is more likely to differ.
-    if (cond == NotEqual) {
-        branchPtrImpl(NotEqual, payloadOf(valaddr), value.payloadReg(), label);
-        branchPtrImpl(NotEqual, tagOf(valaddr), value.typeReg(), label);
+    if (dest.isFloat()) {
+        Label notInt32, end;
+        asMasm().branchTestInt32(Assembler::NotEqual, src, &notInt32);
+        convertInt32ToDouble(src.payloadReg(), dest.fpu());
+        jump(&end);
+        bind(&notInt32);
+        unboxDouble(src, dest.fpu());
+        bind(&end);
     } else {
-        Label fallthrough;
-        branchPtrImpl(NotEqual, payloadOf(valaddr), value.payloadReg(), &fallthrough);
-        branchPtrImpl(Equal, tagOf(valaddr), value.typeReg(), label);
-        bind(&fallthrough);
+        if (src.payloadReg() != dest.gpr())
+            movl(src.payloadReg(), dest.gpr());
     }
 }
 
-template <typename T, typename S>
+template <typename T>
 void
-MacroAssemblerX86::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
+MacroAssemblerX86::loadInt32OrDouble(const T& src, FloatRegister dest)
 {
-    cmpPtr(Operand(lhs), rhs);
-    j(cond, label);
+    Label notInt32, end;
+    asMasm().branchTestInt32(Assembler::NotEqual, src, &notInt32);
+    convertInt32ToDouble(ToPayload(src), dest);
+    jump(&end);
+    bind(&notInt32);
+    loadDouble(src, dest);
+    bind(&end);
+}
+
+template <typename T>
+void
+MacroAssemblerX86::loadUnboxedValue(const T& src, MIRType type, AnyRegister dest)
+{
+    if (dest.isFloat())
+        loadInt32OrDouble(src, dest.fpu());
+    else
+        movl(Operand(src), dest.gpr());
+}
+
+// If source is a double, load it into dest. If source is int32,
+// convert it to double. Else, branch to failure.
+void
+MacroAssemblerX86::ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure)
+{
+    Label isDouble, done;
+    asMasm().branchTestDouble(Assembler::Equal, source.typeReg(), &isDouble);
+    asMasm().branchTestInt32(Assembler::NotEqual, source.typeReg(), failure);
+
+    convertInt32ToDouble(source.payloadReg(), dest);
+    jump(&done);
+
+    bind(&isDouble);
+    unboxDouble(source, dest);
+
+    bind(&done);
 }
 
 } // namespace jit

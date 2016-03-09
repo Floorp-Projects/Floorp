@@ -12,7 +12,7 @@
 #include "vm/Stack-inl.h"
 
 /* static */ inline bool
-js::Debugger::onLeaveFrame(JSContext* cx, AbstractFramePtr frame, bool ok)
+js::Debugger::onLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc, bool ok)
 {
     MOZ_ASSERT_IF(frame.isInterpreterFrame(), frame.asInterpreterFrame() == cx->interpreterFrame());
     MOZ_ASSERT_IF(frame.script()->isDebuggee(), frame.isDebuggee());
@@ -21,7 +21,7 @@ js::Debugger::onLeaveFrame(JSContext* cx, AbstractFramePtr frame, bool ok)
                                          frame.script()->hasAnyBreakpointsOrStepMode();
     MOZ_ASSERT_IF(evalTraps, frame.isDebuggee());
     if (frame.isDebuggee())
-        ok = slowPathOnLeaveFrame(cx, frame, ok);
+        ok = slowPathOnLeaveFrame(cx, frame, pc, ok);
     MOZ_ASSERT(!inFrameMaps(frame));
     return ok;
 }
@@ -31,6 +31,14 @@ js::Debugger::fromJSObject(const JSObject* obj)
 {
     MOZ_ASSERT(js::GetObjectClass(obj) == &jsclass);
     return (Debugger*) obj->as<NativeObject>().getPrivate();
+}
+
+/* static */ inline bool
+js::Debugger::checkNoExecute(JSContext* cx, HandleScript script)
+{
+    if (!cx->compartment()->isDebuggee() || !cx->runtime()->noExecuteDebuggerTop)
+        return true;
+    return slowPathCheckNoExecute(cx, script);
 }
 
 /* static */ JSTrapStatus

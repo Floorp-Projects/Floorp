@@ -41,6 +41,7 @@ XULMenuitemAccessible::
   XULMenuitemAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   AccessibleWrap(aContent, aDoc)
 {
+  mStateFlags |= eNoXBLKids;
 }
 
 uint64_t
@@ -268,13 +269,6 @@ XULMenuitemAccessible::GetLevelInternal()
 }
 
 bool
-XULMenuitemAccessible::CanHaveAnonChildren()
-{
-  // That indicates we don't walk anonymous children for menuitems
-  return false;
-}
-
-bool
 XULMenuitemAccessible::DoAction(uint8_t index)
 {
   if (index == eAction_Click) {   // default action
@@ -413,6 +407,8 @@ XULMenupopupAccessible::
   mSelectControl = do_QueryInterface(mContent->GetFlattenedTreeParent());
   if (!mSelectControl)
     mGenericTypes &= ~eSelect;
+
+  mStateFlags |= eNoXBLKids;
 }
 
 uint64_t

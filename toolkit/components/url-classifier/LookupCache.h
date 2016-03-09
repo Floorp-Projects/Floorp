@@ -67,6 +67,13 @@ typedef nsTArray<LookupResult> LookupResultArray;
 struct CacheResult {
   AddComplete entry;
   nsCString table;
+
+  bool operator==(const CacheResult& aOther) const {
+    if (entry != aOther.entry) {
+      return false;
+    }
+    return table == aOther.table;
+  }
 };
 typedef nsTArray<CacheResult> CacheResultArray;
 

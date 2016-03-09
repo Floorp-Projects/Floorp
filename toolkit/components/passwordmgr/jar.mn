@@ -6,8 +6,8 @@ toolkit.jar:
 %   content passwordmgr %content/passwordmgr/
     content/passwordmgr/login.xml                      (content/login.xml)
 *   content/passwordmgr/passwordManager.xul            (content/passwordManager.xul)
-*   content/passwordmgr/passwordManager.js             (content/passwordManager.js)
-*   content/passwordmgr/passwordManagerExceptions.js   (content/passwordManagerExceptions.js)
+    content/passwordmgr/passwordManager.js             (content/passwordManager.js)
+    content/passwordmgr/passwordManagerExceptions.js   (content/passwordManagerExceptions.js)
     content/passwordmgr/passwordManagerExceptions.xul  (content/passwordManagerExceptions.xul)
     content/passwordmgr/passwordManagerCommon.js       (content/passwordManagerCommon.js)
     content/passwordmgr/recipes.json                   (content/recipes.json)

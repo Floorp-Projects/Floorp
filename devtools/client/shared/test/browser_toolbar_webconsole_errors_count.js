@@ -6,8 +6,8 @@
 function test() {
   const TEST_URI = TEST_URI_ROOT + "browser_toolbar_webconsole_errors_count.html";
 
-  let webconsole = document.getElementById("developer-toolbar-toolbox-button");
-  let tab1, tab2;
+
+  let tab1, tab2, webconsole;
 
   Services.prefs.setBoolPref("javascript.options.strict", true);
 
@@ -34,6 +34,7 @@ function test() {
 
   function onOpenToolbar() {
     ok(DeveloperToolbar.visible, "DeveloperToolbar is visible");
+    webconsole = document.getElementById("developer-toolbar-toolbox-button");
 
     waitForButtonUpdate({
       name: "web console button shows page errors",

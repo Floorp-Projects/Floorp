@@ -13,8 +13,16 @@ const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 var DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
             .getService(Ci.mozIJSSubScriptLoader);
-var EventUtils = {};
-loader.loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
+
+// Set up a dummy environment so that EventUtils works. We need to be careful to
+// pass a window object into each EventUtils method we call rather than having
+// it rely on the |window| global.
+let EventUtils = {};
+EventUtils.window = {};
+EventUtils.parent = {};
+EventUtils._EU_Ci = Components.interfaces;
+EventUtils._EU_Cc = Components.classes;
+loader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
 const protocol = require("devtools/server/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
@@ -214,6 +222,28 @@ var TestActor = exports.TestActor = protocol.ActorClass({
     request: {
       event: Arg(0, "string"),
       actorID: Arg(1, "string")
+    },
+    response: {}
+  }),
+
+  /**
+   * Wait for a specific event on a node matching the provided selector.
+   * @param {String} eventName The name of the event to listen to
+   * @param {String} selector Optional:  css selector of the node which should
+   *        trigger the event. If ommitted, target will be the content window
+   */
+  waitForEventOnNode: protocol.method(function (eventName, selector) {
+    return new Promise(resolve => {
+      let node = selector ? this._querySelector(selector) : this.content;
+      node.addEventListener(eventName, function onEvent() {
+        node.removeEventListener(eventName, onEvent);
+        resolve();
+      });
+    });
+  }, {
+    request: {
+      eventName: Arg(0, "string"),
+      selector: Arg(1, "nullable:string")
     },
     response: {}
   }),
@@ -448,6 +478,25 @@ var TestActor = exports.TestActor = protocol.ActorClass({
   }),
 
   /**
+   * Get an attribute on a DOM Node.
+   * @param {String} selector The node selector
+   * @param {String} attribute The attribute name
+   * @return {String} value The attribute value
+   */
+  getAttribute: protocol.method(function (selector, attribute) {
+    let node = this._querySelector(selector);
+    return node.getAttribute(attribute);
+  }, {
+    request: {
+      selector: Arg(0, "string"),
+      property: Arg(1, "string")
+    },
+    response: {
+      value: RetVal("string")
+    }
+  }),
+
+  /**
    * Set an attribute on a DOM Node.
    * @param {String} selector The node selector
    * @param {String} attribute The attribute name
@@ -462,6 +511,32 @@ var TestActor = exports.TestActor = protocol.ActorClass({
       property: Arg(1, "string"),
       value: Arg(2, "string")
     },
+    response: {}
+  }),
+
+  /**
+   * Remove an attribute from a DOM Node.
+   * @param {String} selector The node selector
+   * @param {String} attribute The attribute name
+   */
+  removeAttribute: protocol.method(function (selector, attribute) {
+    let node = this._querySelector(selector);
+    node.removeAttribute(attribute);
+  }, {
+    request: {
+      selector: Arg(0, "string"),
+      property: Arg(1, "string")
+    },
+    response: {}
+  }),
+
+  /**
+   * Reload the content window.
+   */
+  reload: protocol.method(function () {
+    this.content.location.reload();
+  }, {
+    request: {},
     response: {}
   }),
 

@@ -159,6 +159,7 @@
 #include "nsThreadUtils.h"
 #include <comdef.h>
 #include <wbemidl.h>
+#include "WinUtils.h"
 #endif
 
 #ifdef XP_MACOSX
@@ -198,9 +199,7 @@
 #endif
 
 #include "base/command_line.h"
-#ifdef MOZ_ENABLE_TESTS
 #include "GTestRunner.h"
-#endif
 
 #ifdef MOZ_B2G_LOADER
 #include "ProcessUtils.h"
@@ -604,42 +603,54 @@ CanShowProfileManager()
   return true;
 }
 
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
 static already_AddRefed<nsIFile>
-GetAndCleanLowIntegrityTemp(const nsAString& aTempDirSuffix)
+GetAndCleanTempDir()
 {
-  // Get the base low integrity Mozilla temp directory.
-  nsCOMPtr<nsIFile> lowIntegrityTemp;
-  nsresult rv = NS_GetSpecialDirectory(NS_WIN_LOW_INTEGRITY_TEMP_BASE,
-                                       getter_AddRefs(lowIntegrityTemp));
+  // Get the directory within which we'll place the
+  // sandbox-writable temp directory
+  nsCOMPtr<nsIFile> tempDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
+                                       getter_AddRefs(tempDir));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
 
-  // Append our profile specific temp name.
-  rv = lowIntegrityTemp->Append(NS_LITERAL_STRING("Temp-") + aTempDirSuffix);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  rv = lowIntegrityTemp->Remove(/* aRecursive */ true);
+  rv = tempDir->Remove(/* aRecursive */ true);
   if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
-    NS_WARNING("Failed to delete low integrity temp directory.");
+    NS_WARNING("Failed to delete temp directory.");
     return nullptr;
   }
 
-  return lowIntegrityTemp.forget();
+  return tempDir.forget();
 }
 
 static void
 SetUpSandboxEnvironment()
 {
-  // A low integrity temp only currently makes sense for Vista and later, e10s
-  // and sandbox pref level >= 1.
-  if (!IsVistaOrLater() || !BrowserTabsRemoteAutostart() ||
-      Preferences::GetInt("security.sandbox.content.level") < 1) {
+  // Setup a sandbox-writable temp directory. i.e., a directory
+  // that is writable by a sandboxed content process. This
+  // only applies when e10s is enabled, depending on the platform
+  // and setting of security.sandbox.content.level.
+  if (!BrowserTabsRemoteAutostart()) {
     return;
   }
+
+#if defined(XP_WIN)
+  // For Windows, the temp dir only makes sense for Vista and later
+  // with a sandbox pref level >= 1
+  if (!IsVistaOrLater() ||
+      (Preferences::GetInt("security.sandbox.content.level") < 1)) {
+    return;
+  }
+#endif
+
+#if defined(XP_MACOSX)
+  // For OSX, we just require sandbox pref level >= 1.
+  if (Preferences::GetInt("security.sandbox.content.level") < 1) {
+    return;
+  }
+#endif
 
   // Get (and create if blank) temp directory suffix pref.
   nsresult rv;
@@ -680,14 +691,14 @@ SetUpSandboxEnvironment()
     }
   }
 
-  // Get (and clean up if still there) the low integrity Mozilla temp directory.
-  nsCOMPtr<nsIFile> lowIntegrityTemp = GetAndCleanLowIntegrityTemp(tempDirSuffix);
-  if (!lowIntegrityTemp) {
-    NS_WARNING("Failed to get or clean low integrity Mozilla temp directory.");
+  // Get (and clean up if still there) the sandbox-writable temp directory.
+  nsCOMPtr<nsIFile> tempDir = GetAndCleanTempDir();
+  if (!tempDir) {
+    NS_WARNING("Failed to get or clean sandboxed temp directory.");
     return;
   }
 
-  rv = lowIntegrityTemp->Create(nsIFile::DIRECTORY_TYPE, 0700);
+  rv = tempDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -696,21 +707,16 @@ SetUpSandboxEnvironment()
 static void
 CleanUpSandboxEnvironment()
 {
-  // We can't have created a low integrity temp before Vista.
+#if defined(XP_WIN)
+  // We can't have created the temp directory before Vista.
   if (!IsVistaOrLater()) {
     return;
   }
+#endif
 
-  // Get temp directory suffix pref.
-  nsAdoptingString tempDirSuffix =
-    Preferences::GetString("security.sandbox.content.tempDirSuffix");
-  if (tempDirSuffix.IsEmpty()) {
-    return;
-  }
-
-  // Get and remove the low integrity Mozilla temp directory.
+  // Get and remove the sandbox-writable temp directory.
   // This function already warns if the deletion fails.
-  nsCOMPtr<nsIFile> lowIntegrityTemp = GetAndCleanLowIntegrityTemp(tempDirSuffix);
+  nsCOMPtr<nsIFile> tempDir = GetAndCleanTempDir();
 }
 #endif
 
@@ -3296,6 +3302,15 @@ XREMain::XRE_mainInit(bool* aExitFlag)
                                        IsSignalHandlingBroken() ? NS_LITERAL_CSTRING("1")
                                                                 : NS_LITERAL_CSTRING("0"));
 #endif
+
+#ifdef XP_WIN
+    nsAutoString appInitDLLs;
+    if (widget::WinUtils::GetAppInitDLLs(appInitDLLs)) {
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AppInitDLLs"),
+                                         NS_ConvertUTF16toUTF8(appInitDLLs));
+    }
+#endif
+
     CrashReporter::SetRestartArgs(gArgc, gArgv);
 
     // annotate other data (user id etc)
@@ -4275,7 +4290,7 @@ XREMain::XRE_mainRun()
   }
 #endif /* MOZ_INSTRUMENT_EVENT_LOOP */
 
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
   SetUpSandboxEnvironment();
 #endif
 
@@ -4287,7 +4302,7 @@ XREMain::XRE_mainRun()
     }
   }
 
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
   CleanUpSandboxEnvironment();
 #endif
 
@@ -4597,6 +4612,7 @@ enum {
   kE10sDisabledForMacGfx = 5,
   kE10sDisabledForBidi = 6,
   kE10sDisabledForAddons = 7,
+  kE10sForceDisabled = 8,
 };
 
 #ifdef XP_WIN
@@ -4604,6 +4620,7 @@ const char* kAccessibilityLastRunDatePref = "accessibility.lastLoadDate";
 const char* kAccessibilityLoadedLastSessionPref = "accessibility.loadedInLastSession";
 #endif // XP_WIN
 const char* kForceEnableE10sPref = "browser.tabs.remote.force-enable";
+const char* kForceDisableE10sPref = "browser.tabs.remote.force-disable";
 
 #ifdef XP_WIN
 static inline uint32_t
@@ -4754,6 +4771,13 @@ mozilla::BrowserTabsRemoteAutostart()
     status = kE10sEnabledByUser;
   }
 
+  // Uber override pref for emergency blocking
+  if (gBrowserTabsRemoteAutostart &&
+      Preferences::GetBool(kForceDisableE10sPref, false)) {
+    gBrowserTabsRemoteAutostart = false;
+    status = kE10sForceDisabled;
+  }
+
   gBrowserTabsRemoteStatus = status;
 
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_STATUS, status);
@@ -4764,6 +4788,9 @@ mozilla::BrowserTabsRemoteAutostart()
   if (prefEnabled) {
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_BLOCKED_FROM_RUNNING,
                                     !gBrowserTabsRemoteAutostart);
+  }
+  if (Preferences::HasUserValue("extensions.e10sBlockedByAddons")) {
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_ADDONS_BLOCKER_RAN, true);
   }
   return gBrowserTabsRemoteAutostart;
 }

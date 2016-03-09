@@ -44,7 +44,7 @@ public:
 
   virtual void Unlock() override {}
 
-  virtual bool HasInternalBuffer() const override { return false; }
+  virtual bool HasIntermediateBuffer() const override { return false; }
 
   virtual gfx::SurfaceFormat GetFormat() const override {
     return gfx::SurfaceFormat::UNKNOWN;

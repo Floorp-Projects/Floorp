@@ -17,7 +17,7 @@ runNetworkTest(() => {
   var test = new PeerConnectionTest();
 
   // Always use fake tracks since we depend on video to be somewhat green and
-  // audio to have a large 1000Hz component.
+  // audio to have a large 1000Hz component (or 440Hz if using fake devices).
   test.setMediaConstraints([{audio: true, video: true, fake: true}], []);
   test.chain.append([
     function CHECK_ASSUMPTIONS() {
@@ -51,10 +51,11 @@ runNetworkTest(() => {
 
         .then(() => info("Checking local video disabled"))
         .then(() => h.waitForPixel(localVideo, offsetX, offsetY,
-                                   px => h.isPixel(px, h.blackTransparent, 128)))
+                                   px => h.isPixel(px, h.blackTransparent,
+                                   128), offsetX*2, offsetY*2))
         .then(() => info("Checking remote video disabled"))
         .then(() => h.waitForPixel(remoteVideo, offsetX, offsetY,
-                                   px => h.isPixel(px, h.black, 128)))
+                                   px => h.isPixel(px, h.black, 128), offsetX*2, offsetY*2))
     },
     function CHECK_AUDIO() {
       var ac = new AudioContext();

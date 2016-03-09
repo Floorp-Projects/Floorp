@@ -99,11 +99,12 @@ function waitForOutOfBoundScrubber({win, scrubberEl}) {
 
 function waitForScrubberStopped(timeline) {
   return new Promise(resolve => {
-    timeline.on("timeline-data-changed", function onTimelineData(e, {isMoving}) {
-      if (!isMoving) {
-        timeline.off("timeline-data-changed", onTimelineData);
-        resolve();
-      }
-    });
+    timeline.on("timeline-data-changed",
+      function onTimelineData(e, {isMoving}) {
+        if (!isMoving) {
+          timeline.off("timeline-data-changed", onTimelineData);
+          resolve();
+        }
+      });
   });
 }

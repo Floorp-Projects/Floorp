@@ -16,8 +16,8 @@ const Editor = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
 const {CssLogic} = require("devtools/shared/inspector/css-logic");
 const {console} = require("resource://gre/modules/Console.jsm");
+const Services = require("Services");
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 const { TextDecoder, OS } = Cu.import("resource://gre/modules/osfile.jsm", {});

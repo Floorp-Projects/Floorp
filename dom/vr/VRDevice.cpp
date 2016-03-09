@@ -351,7 +351,7 @@ HMDPositionVRDevice::GetState()
 already_AddRefed<VRPositionState>
 HMDPositionVRDevice::GetImmediateState()
 {
-  gfx::VRHMDSensorState state = mHMD->GetSensorState();
+  gfx::VRHMDSensorState state = mHMD->GetImmediateSensorState();
   RefPtr<VRPositionState> obj = new VRPositionState(mParent, state);
 
   return obj.forget();

@@ -187,7 +187,6 @@ public:
     bool IsGetter()      const {return 0 != (XPT_MD_IS_GETTER(flags) );}
     bool IsSetter()      const {return 0 != (XPT_MD_IS_SETTER(flags) );}
     bool IsNotXPCOM()    const {return 0 != (XPT_MD_IS_NOTXPCOM(flags));}
-    bool IsConstructor() const {return 0 != (XPT_MD_IS_CTOR(flags)   );}
     bool IsHidden()      const {return 0 != (XPT_MD_IS_HIDDEN(flags) );}
     bool WantsOptArgc()  const {return 0 != (XPT_MD_WANTS_OPT_ARGC(flags));}
     bool WantsContext()  const {return 0 != (XPT_MD_WANTS_CONTEXT(flags));}

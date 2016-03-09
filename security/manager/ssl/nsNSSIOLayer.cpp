@@ -731,8 +731,7 @@ bool
 nsSSLIOLayerHelpers::fallbackLimitReached(const nsACString& hostName,
                                           uint16_t intolerant)
 {
-  MutexAutoLock lock(mutex);
-  if (mInsecureFallbackSites.Contains(hostName)) {
+  if (isInsecureFallbackSite(hostName)) {
     return intolerant <= SSL_LIBRARY_VERSION_TLS_1_0;
   }
   return intolerant <= mVersionFallbackLimit;
@@ -1078,7 +1077,10 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
                                  nsIWebProgressListener::STATE_USES_SSL_3);
   }
 
-  if (err == SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT) {
+  // NSS will return SSL_ERROR_RX_MALFORMED_SERVER_HELLO if anti-downgrade
+  // detected the downgrade.
+  if (err == SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT ||
+      err == SSL_ERROR_RX_MALFORMED_SERVER_HELLO) {
     // This is a clear signal that we've fallen back too many versions.  Treat
     // this as a hard failure, but forget any intolerance so that later attempts
     // don't use this version (i.e., range.max) and trigger the error again.
@@ -1108,7 +1110,8 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
   if ((err == SSL_ERROR_NO_CYPHER_OVERLAP || err == PR_END_OF_FILE_ERROR ||
        err == PR_CONNECT_RESET_ERROR) &&
        nsNSSComponent::AreAnyWeakCiphersEnabled()) {
-    if (!fallbackLimitReached || helpers.mUnrestrictedRC4Fallback) {
+    if (helpers.isInsecureFallbackSite(socketInfo->GetHostName()) ||
+        helpers.mUnrestrictedRC4Fallback) {
       if (helpers.rememberStrongCiphersFailed(socketInfo->GetHostName(),
                                               socketInfo->GetPort(), err)) {
         Telemetry::Accumulate(Telemetry::SSL_WEAK_CIPHERS_FALLBACK,
@@ -1116,11 +1119,6 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
         return true;
       }
       Telemetry::Accumulate(Telemetry::SSL_WEAK_CIPHERS_FALLBACK, 0);
-    } else if (err == SSL_ERROR_NO_CYPHER_OVERLAP) {
-      // Indicate that the override UI should be shown.
-      socketInfo->SetSecurityState(
-        nsIWebProgressListener::STATE_IS_INSECURE |
-        nsIWebProgressListener::STATE_USES_WEAK_CRYPTO);
     }
   }
 
@@ -1799,6 +1797,13 @@ nsSSLIOLayerHelpers::removeInsecureFallbackSite(const nsACString& hostname,
   }
 }
 
+bool
+nsSSLIOLayerHelpers::isInsecureFallbackSite(const nsACString& hostname)
+{
+  MutexAutoLock lock(mutex);
+  return mInsecureFallbackSites.Contains(hostname);
+}
+
 void
 nsSSLIOLayerHelpers::setTreatUnsafeNegotiationAsBroken(bool broken)
 {
@@ -2092,7 +2097,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
   ScopedSECKEYPrivateKey privKey;
   ScopedCERTCertList certList;
   CERTCertListNode* node;
-  ScopedCERTCertNicknames nicknames;
+  UniqueCERTCertNicknames nicknames;
   int keyError = 0; // used for private key retrieval error
   SSM_UserCertChoice certChoice;
   int32_t NumberOfCerts = 0;
@@ -2296,7 +2301,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
         goto noCert;
       }
 
-      nicknames = getNSSCertNicknamesFromCertList(certList.get());
+      nicknames.reset(getNSSCertNicknamesFromCertList(certList.get()));
 
       if (!nicknames) {
         goto loser;
@@ -2553,6 +2558,10 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("[%p] nsSSLIOLayerSetOptions: enabling TLS_FALLBACK_SCSV\n", fd));
     if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_FALLBACK_SCSV, true)) {
+      return NS_ERROR_FAILURE;
+    }
+    // tell NSS the max enabled version to make anti-downgrade effective
+    if (SECSuccess != SSL_SetDowngradeCheckVersion(fd, maxEnabledVersion)) {
       return NS_ERROR_FAILURE;
     }
   }

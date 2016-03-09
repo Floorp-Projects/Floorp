@@ -6,18 +6,18 @@ const source = '<html xmlns="http://www.w3.org/1999/xhtml"><body><p>This is a pa
 
 add_task(function *() {
   let viewSourceTab = yield* openDocumentSelect("data:text/html," + source, "p");
-  let text = yield ContentTask.spawn(viewSourceTab.linkedBrowser, { }, function* () {
-    return content.document.body.textContent;
+  yield ContentTask.spawn(viewSourceTab.linkedBrowser, null, function* () {
+    Assert.equal(content.document.body.textContent, "<p>This is a paragraph.</p>",
+      "Correct source for text/html");
   });
-  is(text, "<p>This is a paragraph.</p>", "Correct source for text/html");
   gBrowser.removeTab(viewSourceTab);
 
   viewSourceTab = yield* openDocumentSelect("data:application/xhtml+xml," + source, "p");
-  text = yield ContentTask.spawn(viewSourceTab.linkedBrowser, { }, function* () {
-    return content.document.body.textContent;
+  yield ContentTask.spawn(viewSourceTab.linkedBrowser, null, function* () {
+    Assert.equal(content.document.body.textContent,
+      '<p xmlns="http://www.w3.org/1999/xhtml">This is a paragraph.</p>',
+      "Correct source for application/xhtml+xml");
   });
-  is(text, '<p xmlns="http://www.w3.org/1999/xhtml">This is a paragraph.</p>',
-     "Correct source for application/xhtml+xml");
   gBrowser.removeTab(viewSourceTab);
 });
 

@@ -634,6 +634,8 @@ UnboxedPlainObject::convertToNative(JSContext* cx, JSObject* obj)
 UnboxedPlainObject*
 UnboxedPlainObject::create(ExclusiveContext* cx, HandleObjectGroup group, NewObjectKind newKind)
 {
+    AutoSetNewObjectMetadata metadata(cx);
+
     MOZ_ASSERT(group->clasp() == &class_);
     gc::AllocKind allocKind = group->unboxedLayout().getAllocKind();
 
@@ -916,7 +918,8 @@ const Class UnboxedExpandoObject::class_ = {
 const Class UnboxedPlainObject::class_ = {
     js_Object_str,
     Class::NON_NATIVE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
+    JSCLASS_DELAY_METADATA_CALLBACK,
     nullptr,        /* addProperty */
     nullptr,        /* delProperty */
     nullptr,        /* getProperty */

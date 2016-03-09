@@ -2,20 +2,19 @@ var Cu = Components.utils;
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var Services = require("Services");
+var { DebuggerClient } = require("devtools/shared/client/main");
+var { DebuggerServer } = require("devtools/server/main");
+
+var { MemoryFront } = require("devtools/server/actors/memory");
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
 SimpleTest.registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
-
-Cu.import("resource://gre/modules/Task.jsm");
-var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var { DebuggerClient } = require("devtools/shared/client/main");
-var { DebuggerServer } = require("devtools/server/main");
-
-var { MemoryFront } = require("devtools/server/actors/memory");
 
 function startServerAndGetSelectedTabMemory() {
   DebuggerServer.init();

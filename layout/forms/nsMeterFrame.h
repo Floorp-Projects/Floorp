@@ -32,6 +32,8 @@ public:
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
+  virtual nsIAtom* GetType() const override;
+
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("Meter"), aResult);
@@ -73,7 +75,7 @@ public:
    */
   bool ShouldUseNativeStyle() const;
 
-  virtual Element* GetPseudoElement(nsCSSPseudoElements::Type aType) override;
+  virtual Element* GetPseudoElement(CSSPseudoElementType aType) override;
 
 protected:
   // Helper function which reflow the anonymous div frame.

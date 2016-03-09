@@ -107,6 +107,8 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "imgIContainer.h"
 #include "nsComputedDOMStyle.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2369,7 +2371,7 @@ nsGenericHTMLFormElement::IntrinsicState() const
 
   // Make the text controls read-write
   if (!state.HasState(NS_EVENT_STATE_MOZ_READWRITE) &&
-      IsTextControl(false)) {
+      IsTextOrNumberControl(/*aExcludePassword*/ false)) {
     bool roState = GetBoolAttr(nsGkAtoms::readonly);
 
     if (!roState) {
@@ -2490,6 +2492,9 @@ nsGenericHTMLFormElement::IsElementDisabledForEvents(EventMessage aMessage,
     case ePointerOut:
     case ePointerEnter:
     case ePointerLeave:
+    case eWheel:
+    case eLegacyMouseLineOrPageScroll:
+    case eLegacyMousePixelScroll:
       return false;
     default:
       break;
@@ -3334,7 +3339,7 @@ IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
     return false;
   }
 
-  nsStyleSet* styleSet = aPresShell->StyleSet();
+  StyleSetHandle styleSet = aPresShell->StyleSet();
   RefPtr<nsStyleContext> sc;
   for (int32_t i = elementsToCheck.Length() - 1; i >= 0; --i) {
     if (sc) {

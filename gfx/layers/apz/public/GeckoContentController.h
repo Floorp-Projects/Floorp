@@ -12,6 +12,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/EventForwards.h"      // for Modifiers
 #include "nsISupportsImpl.h"
+#include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 
 class Task;
 
@@ -21,7 +22,12 @@ namespace layers {
 class GeckoContentController
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GeckoContentController)
+  /**
+   * At least one class deriving from GeckoContentController needs to do
+   * synchronous cleanup on the main thread, so we use
+   * NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION.
+   */
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(GeckoContentController)
 
   /**
    * Requests a paint of the given FrameMetrics |aFrameMetrics| from Gecko.
@@ -88,6 +94,7 @@ public:
    * controller. This method allows APZ to query the controller for such a
    * region. A return value of true indicates that the controller has such a
    * region, and it is returned in |aOutRegion|.
+   * This method needs to be called on the main thread.
    * TODO: once bug 928833 is implemented, this should be removed, as
    * APZ can then get the correct touch-sensitive region for each frame
    * directly from the layer.
@@ -148,6 +155,10 @@ public:
   virtual void UpdateOverscrollOffset(const float aX,const  float aY) {}
 
   GeckoContentController() {}
+  virtual void ChildAdopted() {}
+  /**
+   * Needs to be called on the main thread.
+   */
   virtual void Destroy() {}
 
 protected:

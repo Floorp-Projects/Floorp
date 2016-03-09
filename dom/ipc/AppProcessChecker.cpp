@@ -91,7 +91,7 @@ AssertAppProcess(PBrowserParent* aActor,
   TabParent* tab = TabParent::GetFrom(aActor);
   nsCOMPtr<mozIApplication> app = tab->GetOwnOrContainingApp();
 
-  return CheckAppTypeHelper(app, aType, aCapability, tab->IsBrowserElement());
+  return CheckAppTypeHelper(app, aType, aCapability, tab->IsMozBrowserElement());
 }
 
 static bool
@@ -173,7 +173,7 @@ AssertAppProcess(TabContext& aContext,
   }
 
   nsCOMPtr<mozIApplication> app = aContext.GetOwnOrContainingApp();
-  return CheckAppTypeHelper(app, aType, aCapability, aContext.IsBrowserElement());
+  return CheckAppTypeHelper(app, aType, aCapability, aContext.IsMozBrowserElement());
 }
 
 bool
@@ -249,16 +249,16 @@ AssertAppPrincipal(PContentParent* aActor,
   }
 
   uint32_t principalAppId = aPrincipal->GetAppId();
-  bool inBrowserElement = aPrincipal->GetIsInBrowserElement();
+  bool inIsolatedBrowser = aPrincipal->GetIsInIsolatedMozBrowserElement();
 
   // Check if the permission's appId matches a child we manage.
   nsTArray<TabContext> contextArray =
     static_cast<ContentParent*>(aActor)->GetManagedTabContext();
   for (uint32_t i = 0; i < contextArray.Length(); ++i) {
     if (contextArray[i].OwnOrContainingAppId() == principalAppId) {
-      // If the child only runs inBrowserElement content and the principal claims
-      // it's not in a browser element, it's lying.
-      if (!contextArray[i].IsBrowserElement() || inBrowserElement) {
+      // If the child only runs isolated browser content and the principal
+      // claims it's not in an isolated browser element, it's lying.
+      if (!contextArray[i].IsIsolatedMozBrowserElement() || inIsolatedBrowser) {
         return true;
       }
       break;
@@ -319,8 +319,17 @@ CheckPermission(PContentParent* aActor,
 
   // For browser content (and if the app hasn't explicitly denied this),
   // consider the requesting origin, not the app.
+  // After bug 1238160, the principal no longer knows how to answer "is this a
+  // browser element", which is really what this code path wants. Currently,
+  // desktop is the only platform where we intend to disable isolation on a
+  // browser frame, so non-desktop should be able to assume that
+  // inIsolatedMozBrowser is true for all mozbrowser frames.  This code path is
+  // currently unused on desktop, since MOZ_CHILD_PERMISSIONS is only set for
+  // MOZ_B2G.  We use a release assertion in
+  // nsFrameLoader::OwnerIsIsolatedMozBrowserFrame so that platforms with apps
+  // can assume inIsolatedMozBrowser is true for all mozbrowser frames.
   if (appPerm == nsIPermissionManager::PROMPT_ACTION &&
-      aPrincipal->GetIsInBrowserElement()) {
+      aPrincipal->GetIsInIsolatedMozBrowserElement()) {
     return permission;
   }
 

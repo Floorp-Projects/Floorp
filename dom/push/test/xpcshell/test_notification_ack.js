@@ -46,7 +46,7 @@ add_task(function* test_notification_ack() {
   }
 
   let notifyCount = 0;
-  let notifyPromise = promiseObserverNotification('push-message', () =>
+  let notifyPromise = promiseObserverNotification(PushServiceComponent.pushTopic, () =>
     ++notifyCount == 3);
 
   let acks = 0;

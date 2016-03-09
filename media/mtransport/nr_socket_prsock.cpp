@@ -114,7 +114,11 @@ nrappkit copyright:
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#ifdef XP_WIN
+#include "mozilla/WindowsVersion.h"
+#endif
+
+#if defined(MOZILLA_INTERNAL_API)
 // csi_platform.h deep in nrappkit defines LOG_INFO and LOG_WARNING
 #ifdef LOG_INFO
 #define LOG_TEMP_INFO LOG_INFO
@@ -172,7 +176,7 @@ extern "C" {
 // Implement the nsISupports ref counting
 namespace mozilla {
 
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
 class SingletonThreadHolder final
 {
 private:
@@ -260,7 +264,7 @@ static void ClearSingletonOnShutdown()
 static nsIThread* GetIOThreadAndAddUse_s()
 {
   // Always runs on STS thread!
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
   // We need to safely release this on shutdown to avoid leaks
   if (!sThread) {
     sThread = new SingletonThreadHolder(NS_LITERAL_CSTRING("mtransport"));
@@ -600,6 +604,25 @@ int NrSocket::create(nr_transport_addr *addr) {
               "family=%d, err=%d", naddr.raw.family, PR_GetError());
         ABORT(R_INTERNAL);
       }
+#ifdef XP_WIN
+      if (!mozilla::IsWin8OrLater()) {
+        PRSocketOptionData opt_rcvbuf;
+        opt_rcvbuf.option = PR_SockOpt_RecvBufferSize;
+        // Increase default receive buffer size on <= Win7 to be able to
+        // receive an unpaced HD (>= 720p = 1280x720 - I Frame ~ 21K size)
+        // stream without losing packets.
+        // Manual testing showed that 100K buffer size was not enough and the
+        // packet loss dis-appeared with 256K buffer size.
+        // See bug 1252769 for future improvements of this.
+        opt_rcvbuf.value.recv_buffer_size = 256 * 1024;
+        status = PR_SetSocketOption(fd_, &opt_rcvbuf);
+        if (status != PR_SUCCESS) {
+          r_log(LOG_GENERIC, LOG_CRIT,
+            "Couldn't set receive buffer size socket option: %d", status);
+          ABORT(R_INTERNAL);
+        }
+      }
+#endif
       break;
     case IPPROTO_TCP:
       if (!(fd_ = PR_OpenTCPSocket(naddr.raw.family))) {
@@ -1076,7 +1099,7 @@ NrUdpSocketIpc::~NrUdpSocketIpc()
   // also guarantees socket_child_ is released from the io_thread, and
   // tells the SingletonThreadHolder we're done with it
 
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
   // close(), but transfer the socket_child_ reference to die as well
   RUN_ON_THREAD(io_thread_,
                 mozilla::WrapRunnableNM(&NrUdpSocketIpc::release_child_i,
@@ -1457,6 +1480,7 @@ int NrUdpSocketIpc::accept(nr_transport_addr *addrp, nr_socket **sockp) {
 void NrUdpSocketIpc::create_i(const nsACString &host, const uint16_t port) {
   ASSERT_ON_THREAD(io_thread_);
 
+  uint32_t recvBuffSize = 0;
   nsresult rv;
   nsCOMPtr<nsIUDPSocketChild> socketChild = do_CreateInstance("@mozilla.org/udp-socket-child;1", &rv);
   if (NS_FAILED(rv)) {
@@ -1485,10 +1509,22 @@ void NrUdpSocketIpc::create_i(const nsACString &host, const uint16_t port) {
     return;
   }
 
+#ifdef XP_WIN
+  if (!mozilla::IsWin8OrLater()) {
+    // Increase default receive buffer size on <= Win7 to be able to
+    // receive an unpaced HD (>= 720p = 1280x720 - I Frame ~ 21K size)
+    // stream without losing packets.
+    // Manual testing showed that 100K buffer size was not enough and the
+    // packet loss dis-appeared with 256K buffer size.
+    // See bug 1252769 for future improvements of this.
+    recvBuffSize = 256 * 1024;
+  }
+#endif
   // XXX bug 1126232 - don't use null Principal!
   if (NS_FAILED(socket_child_->Bind(proxy, nullptr, host, port,
                                     /* reuse = */ false,
-                                    /* loopback = */ false))) {
+                                    /* loopback = */ false,
+                                    /* recv buffer size */ recvBuffSize))) {
     err_ = true;
     MOZ_ASSERT(false, "Failed to create UDP socket");
     mon.NotifyAll();
@@ -1544,7 +1580,7 @@ void NrUdpSocketIpc::close_i() {
   }
 }
 
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
 // close(), but transfer the socket_child_ reference to die as well
 // static
 void NrUdpSocketIpc::release_child_i(nsIUDPSocketChild* aChild,
@@ -1583,7 +1619,7 @@ void NrUdpSocketIpc::recv_callback_s(RefPtr<nr_udp_message> msg) {
   }
 }
 
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
 // TCPSocket.
 class NrTcpSocketIpc::TcpSocketReadyRunner: public nsRunnable
 {
@@ -1880,12 +1916,10 @@ int NrTcpSocketIpc::read(void* buf, size_t maxlen, size_t *len) {
 }
 
 int NrTcpSocketIpc::listen(int backlog) {
-  MOZ_ASSERT(false);
   return R_INTERNAL;
 }
 
 int NrTcpSocketIpc::accept(nr_transport_addr *addrp, nr_socket **sockp) {
-  MOZ_ASSERT(false);
   return R_INTERNAL;
 }
 
@@ -2078,7 +2112,7 @@ NrSocketBase::CreateSocket(nr_transport_addr *addr, RefPtr<NrSocketBase> *sock)
         *sock = new NrUdpSocketIpc();
         break;
       case IPPROTO_TCP:
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZILLA_INTERNAL_API)
         {
           nsCOMPtr<nsIThread> main_thread;
           NS_GetMainThread(getter_AddRefs(main_thread));

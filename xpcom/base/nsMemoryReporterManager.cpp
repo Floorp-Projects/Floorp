@@ -23,9 +23,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h" // for dom::MemoryReport
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
@@ -622,14 +622,14 @@ ResidentUniqueDistinguishedAmount(int64_t* aN)
   }
 
   DWORD infoArraySize = tmpSize + (entries * sizeof(PSAPI_WORKING_SET_BLOCK));
-  mozilla::ScopedFreePtr<PSAPI_WORKING_SET_INFORMATION> infoArray(
+  UniqueFreePtr<PSAPI_WORKING_SET_INFORMATION> infoArray(
       static_cast<PSAPI_WORKING_SET_INFORMATION*>(malloc(infoArraySize)));
 
   if (!infoArray) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!QueryWorkingSet(proc, infoArray, infoArraySize)) {
+  if (!QueryWorkingSet(proc, infoArray.get(), infoArraySize)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -746,6 +746,58 @@ SystemHeapSize(int64_t* aSizeOut)
   return NS_OK;
 }
 
+struct SegmentKind
+{
+  DWORD mState;
+  DWORD mType;
+  DWORD mProtect;
+  int mIsStack;
+};
+
+struct SegmentEntry : public PLDHashEntryHdr
+{
+  static PLDHashNumber HashKey(PLDHashTable* aTable, const void* aKey)
+  {
+    auto kind = static_cast<const SegmentKind*>(aKey);
+    return mozilla::HashGeneric(kind->mState, kind->mType, kind->mProtect,
+                                kind->mIsStack);
+  }
+
+  static bool MatchEntry(PLDHashTable* aTable,
+                         const PLDHashEntryHdr* aEntry, const void* aKey)
+  {
+    auto kind = static_cast<const SegmentKind*>(aKey);
+    auto entry = static_cast<const SegmentEntry*>(aEntry);
+    return kind->mState == entry->mKind.mState &&
+           kind->mType == entry->mKind.mType &&
+           kind->mProtect == entry->mKind.mProtect &&
+           kind->mIsStack == entry->mKind.mIsStack;
+  }
+
+  static void InitEntry(PLDHashEntryHdr* aEntry, const void* aKey)
+  {
+    auto kind = static_cast<const SegmentKind*>(aKey);
+    auto entry = static_cast<SegmentEntry*>(aEntry);
+    entry->mKind = *kind;
+    entry->mCount = 0;
+    entry->mSize = 0;
+  }
+
+  static const PLDHashTableOps Ops;
+
+  SegmentKind mKind;  // The segment kind.
+  uint32_t mCount;    // The number of segments of this kind.
+  size_t mSize;       // The combined size of segments of this kind.
+};
+
+/* static */ const PLDHashTableOps SegmentEntry::Ops = {
+  SegmentEntry::HashKey,
+  SegmentEntry::MatchEntry,
+  PLDHashTable::MoveEntryStub,
+  PLDHashTable::ClearEntryStub,
+  SegmentEntry::InitEntry
+};
+
 class WindowsAddressSpaceReporter final : public nsIMemoryReporter
 {
   ~WindowsAddressSpaceReporter() {}
@@ -756,6 +808,11 @@ public:
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                            nsISupports* aData, bool aAnonymize) override
   {
+    // First iterate over all the segments and record how many of each kind
+    // there were and their aggregate sizes. We use a hash table for this
+    // because there are a couple of dozen different kinds possible.
+
+    PLDHashTable table(&SegmentEntry::Ops, sizeof(SegmentEntry));
     MEMORY_BASIC_INFORMATION info = { 0 };
     bool isPrevSegStackGuard = false;
     for (size_t currentAddress = 0; ; ) {
@@ -766,6 +823,41 @@ public:
 
       size_t size = info.RegionSize;
 
+      // Note that |type| and |protect| are ignored in some cases.
+      DWORD state = info.State;
+      DWORD type =
+        (state == MEM_RESERVE || state == MEM_COMMIT) ? info.Type : 0;
+      DWORD protect = (state == MEM_COMMIT) ? info.Protect : 0;
+      bool isStack = isPrevSegStackGuard &&
+                     state == MEM_COMMIT &&
+                     type == MEM_PRIVATE &&
+                     protect == PAGE_READWRITE;
+
+      SegmentKind kind = { state, type, protect, isStack ? 1 : 0 };
+      auto entry =
+        static_cast<SegmentEntry*>(table.Add(&kind, mozilla::fallible));
+      if (entry) {
+        entry->mCount += 1;
+        entry->mSize += size;
+      }
+
+      isPrevSegStackGuard = info.State == MEM_COMMIT &&
+                            info.Type == MEM_PRIVATE &&
+                            info.Protect == (PAGE_READWRITE|PAGE_GUARD);
+
+      size_t lastAddress = currentAddress;
+      currentAddress += size;
+
+      // If we overflow, we've examined all of the address space.
+      if (currentAddress < lastAddress) {
+        break;
+      }
+    }
+
+    // Then iterate over the hash table and report the details for each segment
+    // kind.
+
+    for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
       // For each range of pages, we consider one or more of its State, Type
       // and Protect values. These are documented at
       // https://msdn.microsoft.com/en-us/library/windows/desktop/aa366775%28v=vs.85%29.aspx
@@ -777,9 +869,11 @@ public:
       bool doType = false;
       bool doProtect = false;
 
+      auto entry = static_cast<const SegmentEntry*>(iter.Get());
+
       nsCString path("address-space");
 
-      switch (info.State) {
+      switch (entry->mKind.mState) {
         case MEM_FREE:
           path.AppendLiteral("/free");
           break;
@@ -802,7 +896,7 @@ public:
       }
 
       if (doType) {
-        switch (info.Type) {
+        switch (entry->mKind.mType) {
           case MEM_IMAGE:
             path.AppendLiteral("/image");
             break;
@@ -823,71 +917,59 @@ public:
       }
 
       if (doProtect) {
+        DWORD protect = entry->mKind.mProtect;
         // Basic attributes. Exactly one of these should be set.
-        if (info.Protect & PAGE_EXECUTE) {
+        if (protect & PAGE_EXECUTE) {
           path.AppendLiteral("/execute");
         }
-        if (info.Protect & PAGE_EXECUTE_READ) {
+        if (protect & PAGE_EXECUTE_READ) {
           path.AppendLiteral("/execute-read");
         }
-        if (info.Protect & PAGE_EXECUTE_READWRITE) {
+        if (protect & PAGE_EXECUTE_READWRITE) {
           path.AppendLiteral("/execute-readwrite");
         }
-        if (info.Protect & PAGE_EXECUTE_WRITECOPY) {
+        if (protect & PAGE_EXECUTE_WRITECOPY) {
           path.AppendLiteral("/execute-writecopy");
         }
-        if (info.Protect & PAGE_NOACCESS) {
+        if (protect & PAGE_NOACCESS) {
           path.AppendLiteral("/noaccess");
         }
-        if (info.Protect & PAGE_READONLY) {
+        if (protect & PAGE_READONLY) {
           path.AppendLiteral("/readonly");
         }
-        if (info.Protect & PAGE_READWRITE) {
+        if (protect & PAGE_READWRITE) {
           path.AppendLiteral("/readwrite");
         }
-        if (info.Protect & PAGE_WRITECOPY) {
+        if (protect & PAGE_WRITECOPY) {
           path.AppendLiteral("/writecopy");
         }
 
         // Modifiers. At most one of these should be set.
-        if (info.Protect & PAGE_GUARD) {
+        if (protect & PAGE_GUARD) {
           path.AppendLiteral("+guard");
         }
-        if (info.Protect & PAGE_NOCACHE) {
+        if (protect & PAGE_NOCACHE) {
           path.AppendLiteral("+nocache");
         }
-        if (info.Protect & PAGE_WRITECOMBINE) {
+        if (protect & PAGE_WRITECOMBINE) {
           path.AppendLiteral("+writecombine");
         }
 
         // Annotate likely stack segments, too.
-        if (isPrevSegStackGuard &&
-            info.State == MEM_COMMIT &&
-            doType && info.Type == MEM_PRIVATE &&
-            doProtect && info.Protect == PAGE_READWRITE) {
-          path.AppendLiteral(" (stack)");
+        if (entry->mKind.mIsStack) {
+          path.AppendLiteral("+stack");
         }
       }
 
-      isPrevSegStackGuard =
-        info.State == MEM_COMMIT &&
-        doType && info.Type == MEM_PRIVATE &&
-        doProtect && info.Protect == (PAGE_READWRITE|PAGE_GUARD);
+      // Append the segment count.
+      path.AppendPrintf("(segments=%u)", entry->mCount);
 
       nsresult rv;
       rv = aHandleReport->Callback(
-        EmptyCString(), path, KIND_OTHER, UNITS_BYTES, size,
+        EmptyCString(), path, KIND_OTHER, UNITS_BYTES, entry->mSize,
         NS_LITERAL_CSTRING("From MEMORY_BASIC_INFORMATION."), aData);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
-      }
-
-      size_t lastAddress = currentAddress;
-      currentAddress += size;
-
-      // If we overflow, we've examined all of the address space.
-      if (currentAddress < lastAddress) {
-        break;
       }
     }
 
@@ -1193,13 +1275,21 @@ NS_IMPL_ISUPPORTS(PageFaultsHardReporter, nsIMemoryReporter)
 
 #ifdef HAVE_JEMALLOC_STATS
 
-// This has UNITS_PERCENTAGE, so it is multiplied by 100.
-static int64_t
-HeapOverheadRatio(jemalloc_stats_t* aStats)
+static size_t
+HeapOverhead(jemalloc_stats_t* aStats)
 {
-  return (int64_t)10000 *
-    (aStats->waste + aStats->bookkeeping + aStats->page_cache) /
-    ((double)aStats->allocated);
+  return aStats->waste + aStats->bookkeeping +
+         aStats->page_cache + aStats->bin_unused;
+}
+
+// This has UNITS_PERCENTAGE, so it is multiplied by 100x *again* on top of the
+// 100x for the percentage.
+static int64_t
+HeapOverheadFraction(jemalloc_stats_t* aStats)
+{
+  size_t heapOverhead = HeapOverhead(aStats);
+  size_t heapCommitted = aStats->allocated + heapOverhead;
+  return int64_t(10000 * (heapOverhead / (double)heapCommitted));
 }
 
 class JemallocHeapReporter final : public nsIMemoryReporter
@@ -1218,11 +1308,16 @@ public:
     nsresult rv;
 
     rv = MOZ_COLLECT_REPORT(
-      "heap-allocated", KIND_OTHER, UNITS_BYTES, stats.allocated,
+      "heap-committed/allocated", KIND_OTHER, UNITS_BYTES, stats.allocated,
 "Memory mapped by the heap allocator that is currently allocated to the "
 "application.  This may exceed the amount of memory requested by the "
 "application because the allocator regularly rounds up request sizes. (The "
 "exact amount requested is not recorded.)");
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = MOZ_COLLECT_REPORT(
+      "heap-allocated", KIND_OTHER, UNITS_BYTES, stats.allocated,
+"The same as 'heap-committed/allocated'.");
     NS_ENSURE_SUCCESS(rv, rv);
 
     // We mark this and the other heap-overhead reporters as KIND_NONHEAP
@@ -1231,20 +1326,19 @@ public:
     rv = MOZ_COLLECT_REPORT(
       "explicit/heap-overhead/bin-unused", KIND_NONHEAP, UNITS_BYTES,
       stats.bin_unused,
-"Bytes reserved for bins of fixed-size allocations which do not correspond to "
-"an active allocation.");
+"Unused bytes due to fragmentation in the bins used for 'small' (<= 2 KiB) "
+"allocations. These bytes will be used if additional allocations occur.");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = MOZ_COLLECT_REPORT(
-      "explicit/heap-overhead/waste", KIND_NONHEAP, UNITS_BYTES,
-      stats.waste,
+    if (stats.waste > 0) {
+      rv = MOZ_COLLECT_REPORT(
+        "explicit/heap-overhead/waste", KIND_NONHEAP, UNITS_BYTES,
+        stats.waste,
 "Committed bytes which do not correspond to an active allocation and which the "
-"allocator is not intentionally keeping alive (i.e., not 'heap-bookkeeping' or "
-"'heap-page-cache' or 'heap-bin-unused').  Although the allocator will waste "
-"some space under any circumstances, a large value here may indicate that the "
-"heap is highly fragmented, or that allocator is performing poorly for some "
-"other reason.");
-    NS_ENSURE_SUCCESS(rv, rv);
+"allocator is not intentionally keeping alive (i.e., not "
+"'explicit/heap-overhead/{bookkeeping,page-cache,bin-unused}').");
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     rv = MOZ_COLLECT_REPORT(
       "explicit/heap-overhead/bookkeeping", KIND_NONHEAP, UNITS_BYTES,
@@ -1262,36 +1356,20 @@ public:
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = MOZ_COLLECT_REPORT(
-      "heap-committed", KIND_OTHER, UNITS_BYTES,
-      stats.allocated + stats.waste + stats.bookkeeping + stats.page_cache,
-"Memory mapped by the heap allocator that is committed, i.e. in physical "
-"memory or paged to disk.  This value corresponds to 'heap-allocated' + "
-"'heap-waste' + 'heap-bookkeeping' + 'heap-page-cache', but because "
-"these values are read at different times, the result probably won't match "
-"exactly.");
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = MOZ_COLLECT_REPORT(
-      "heap-overhead-ratio", KIND_OTHER, UNITS_PERCENTAGE,
-      HeapOverheadRatio(&stats),
-"Ratio of committed, unused bytes to allocated bytes; i.e., "
-"'heap-overhead' / 'heap-allocated'.  This measures the overhead of "
-"the heap allocator relative to amount of memory allocated.");
+      "heap-committed/overhead", KIND_OTHER, UNITS_BYTES,
+      HeapOverhead(&stats),
+"The sum of 'explicit/heap-overhead/*'.");
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = MOZ_COLLECT_REPORT(
       "heap-mapped", KIND_OTHER, UNITS_BYTES, stats.mapped,
-      "Amount of memory currently mapped.");
+"Amount of memory currently mapped. Includes memory that is uncommitted, i.e. "
+"neither in physical memory nor paged to disk.");
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = MOZ_COLLECT_REPORT(
       "heap-chunksize", KIND_OTHER, UNITS_BYTES, stats.chunksize,
       "Size of chunks.");
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = MOZ_COLLECT_REPORT(
-      "heap-chunks", KIND_OTHER, UNITS_COUNT, (stats.mapped / stats.chunksize),
-      "Number of chunks currently mapped.");
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -1438,6 +1516,30 @@ NS_IMPL_ISUPPORTS(nsMemoryReporterManager, nsIMemoryReporterManager)
 NS_IMETHODIMP
 nsMemoryReporterManager::Init()
 {
+  if (!NS_IsMainThread()) {
+    MOZ_CRASH();
+  }
+
+  // Under normal circumstances this function is only called once. However,
+  // we've (infrequently) seen memory report dumps in crash reports that
+  // suggest that this function is sometimes called multiple times. That in
+  // turn means that multiple reporters of each kind are registered, which
+  // leads to duplicated reports of individual measurements such as "resident",
+  // "vsize", etc.
+  //
+  // It's unclear how these multiple calls can occur. The only plausible theory
+  // so far is badly-written extensions, because this function is callable from
+  // JS code via nsIMemoryReporter.idl.
+  //
+  // Whatever the cause, it's a bad thing. So we protect against it with the
+  // following check.
+  static bool isInited = false;
+  if (isInited) {
+    NS_WARNING("nsMemoryReporterManager::Init() has already been called!");
+    return NS_OK;
+  }
+  isInited = true;
+
 #if defined(HAVE_JEMALLOC_STATS) && defined(MOZ_GLUE_IN_PROGRAM)
   if (!jemalloc_stats) {
     return NS_ERROR_FAILURE;
@@ -2282,12 +2384,12 @@ nsMemoryReporterManager::GetHeapAllocated(int64_t* aAmount)
 
 // This has UNITS_PERCENTAGE, so it is multiplied by 100x.
 NS_IMETHODIMP
-nsMemoryReporterManager::GetHeapOverheadRatio(int64_t* aAmount)
+nsMemoryReporterManager::GetHeapOverheadFraction(int64_t* aAmount)
 {
 #ifdef HAVE_JEMALLOC_STATS
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
-  *aAmount = HeapOverheadRatio(&stats);
+  *aAmount = HeapOverheadFraction(&stats);
   return NS_OK;
 #else
   *aAmount = 0;

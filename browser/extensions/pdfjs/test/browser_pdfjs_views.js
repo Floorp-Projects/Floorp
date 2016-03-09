@@ -21,36 +21,42 @@ add_task(function* test() {
       yield waitForPdfJS(browser, TESTROOT + "file_pdfjs_test.pdf");
 
       yield ContentTask.spawn(browser, null, function* () {
-        ok(content.document.querySelector('div#viewer'), "document content has viewer UI");
-        ok('PDFJS' in content.wrappedJSObject, "window content has PDFJS object");
+        Assert.ok(content.document.querySelector("div#viewer"), "document content has viewer UI");
+        Assert.ok("PDFJS" in content.wrappedJSObject, "window content has PDFJS object");
 
         //open sidebar
         var sidebar = content.document.querySelector('button#sidebarToggle');
         var outerContainer = content.document.querySelector('div#outerContainer');
 
         sidebar.click();
-        ok(outerContainer.classList.contains('sidebarOpen'), 'sidebar opens on click');
+        Assert.ok(outerContainer.classList.contains("sidebarOpen"), "sidebar opens on click");
 
         // check that thumbnail view is open
         var thumbnailView = content.document.querySelector('div#thumbnailView');
         var outlineView = content.document.querySelector('div#outlineView');
 
-        is(thumbnailView.getAttribute('class'), null, 'Initial view is thumbnail view');
-        is(outlineView.getAttribute('class'), 'hidden', 'Outline view is hidden initially');
+        Assert.equal(thumbnailView.getAttribute("class"), null,
+          "Initial view is thumbnail view");
+        Assert.equal(outlineView.getAttribute("class"), "hidden",
+          "Outline view is hidden initially");
 
         //switch to outline view
         var viewOutlineButton = content.document.querySelector('button#viewOutline');
         viewOutlineButton.click();
 
-        is(thumbnailView.getAttribute('class'), 'hidden', 'Thumbnail view is hidden when outline is selected');
-        is(outlineView.getAttribute('class'), '', 'Outline view is visible when selected');
+        Assert.equal(thumbnailView.getAttribute("class"), "hidden",
+          "Thumbnail view is hidden when outline is selected");
+        Assert.equal(outlineView.getAttribute("class"), "",
+          "Outline view is visible when selected");
 
         //switch back to thumbnail view
         var viewThumbnailButton = content.document.querySelector('button#viewThumbnail');
         viewThumbnailButton.click();
 
-        is(thumbnailView.getAttribute('class'), '', 'Thumbnail view is visible when selected');
-        is(outlineView.getAttribute('class'), 'hidden', 'Outline view is hidden when thumbnail is selected');
+        Assert.equal(thumbnailView.getAttribute("class"), "",
+          "Thumbnail view is visible when selected");
+        Assert.equal(outlineView.getAttribute("class"), "hidden",
+          "Outline view is hidden when thumbnail is selected");
 
         sidebar.click();
 

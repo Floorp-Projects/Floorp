@@ -197,7 +197,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY urlbar.indexedDBNotificationAnchor.label       "View the app-offline storage message">
 <!ENTITY urlbar.loginFillNotificationAnchor.label       "Manage your login information">
 <!ENTITY urlbar.passwordNotificationAnchor.label        "Check if you want to save your password">
-<!ENTITY urlbar.webappsNotificationAnchor.label         "View the app install message">
 <!ENTITY urlbar.pluginsNotificationAnchor.label         "Manage plugin usage on this page">
 <!ENTITY urlbar.webNotsNotificationAnchor3.label        "Change whether you can receive notifications from the site">
 
@@ -257,6 +256,9 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 
 <!ENTITY devToolsCmd.keycode          "VK_F12">
 <!ENTITY devToolsCmd.keytext          "F12">
+
+<!ENTITY devtoolsServiceWorkers.label      "Service Workers">
+<!ENTITY devtoolsServiceWorkers.accesskey  "k">
 
 <!ENTITY devtoolsConnect.label        "Connect…">
 <!ENTITY devtoolsConnect.accesskey    "e">
@@ -744,7 +746,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY spellAddDictionaries.accesskey "A">
 
 <!ENTITY editBookmark.done.label                     "Done">
-<!ENTITY editBookmark.cancel.label                   "Cancel">
 <!ENTITY editBookmark.removeBookmark.accessKey       "R">
 
 <!ENTITY identity.connectionSecure "Secure Connection">
@@ -778,6 +779,9 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY identity.disableMixedContentBlocking.accesskey "D">
 <!ENTITY identity.learnMore "Learn More">
 
+<!ENTITY identity.removeCertException.label "Remove Exception">
+<!ENTITY identity.removeCertException.accesskey "R">
+
 <!ENTITY identity.moreInfoLinkText2 "More Information">
 
 <!ENTITY identity.permissions "Permissions">
@@ -787,7 +791,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
      The word "toolbar" is appended automatically and should not be contained below! -->
 <!ENTITY tabsToolbar.label "Browser tabs">
 
-<!-- LOCALIZATION NOTE (syncTabsMenu3.label): This appears in the history menu and history panel -->
+<!-- LOCALIZATION NOTE (syncTabsMenu3.label): This appears in the history menu -->
 <!ENTITY syncTabsMenu3.label     "Synced Tabs">
 
 <!ENTITY syncedTabs.sidebar.label              "Synced Tabs">
@@ -804,8 +808,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY syncedTabs.context.openTab.accesskey               "O">
 <!ENTITY syncedTabs.context.bookmarkSingleTab.label         "Bookmark This Tab…">
 <!ENTITY syncedTabs.context.bookmarkSingleTab.accesskey     "B">
-<!ENTITY syncedTabs.context.refreshList.label               "Refresh List">
-<!ENTITY syncedTabs.context.refreshList.accesskey           "R">
 
 
 <!ENTITY syncBrand.shortName.label    "Sync">
@@ -844,7 +846,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY social.directory.introText "Click on a service to add it to &brandShortName;.">
 <!ENTITY social.directory.viewmore.text "View More">
 
-<!ENTITY customizeMode.tabTitle "Customize &brandShortName;">
 <!ENTITY customizeMode.menuAndToolbars.header2 "Additional Tools and Features">
 <!ENTITY customizeMode.menuAndToolbars.empty "Want more tools?">
 <!ENTITY customizeMode.menuAndToolbars.emptyLink "Choose from thousands of add-ons">

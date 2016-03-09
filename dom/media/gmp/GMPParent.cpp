@@ -162,6 +162,17 @@ GMPParent::LoadProcess()
     }
     LOGD("%s: Sent node id to child process", __FUNCTION__);
 
+#ifdef XP_WIN
+    if (!mLibs.IsEmpty()) {
+      bool ok = SendPreloadLibs(mLibs);
+      if (!ok) {
+        LOGD("%s: Failed to send preload-libs to child process", __FUNCTION__);
+        return NS_ERROR_FAILURE;
+      }
+      LOGD("%s: Sent preload-libs ('%s') to child process", __FUNCTION__, mLibs.get());
+    }
+#endif
+
     // Intr call to block initialization on plugin load.
     ok = CallStartPlugin();
     if (!ok) {
@@ -731,7 +742,7 @@ GMPParent::DeallocPGMPTimerParent(PGMPTimerParent* aActor)
 }
 
 bool
-ReadRequiredField(GMPInfoFileParser& aParser, const nsCString& aKey, nsACString& aOutValue)
+ReadInfoField(GMPInfoFileParser& aParser, const nsCString& aKey, nsACString& aOutValue)
 {
   if (!aParser.Contains(aKey) || aParser.Get(aKey).IsEmpty()) {
     return false;
@@ -759,12 +770,17 @@ GMPParent::ReadGMPMetaData()
   }
 
   nsAutoCString apis;
-  if (!ReadRequiredField(parser, NS_LITERAL_CSTRING("name"), mDisplayName) ||
-      !ReadRequiredField(parser, NS_LITERAL_CSTRING("description"), mDescription) ||
-      !ReadRequiredField(parser, NS_LITERAL_CSTRING("version"), mVersion) ||
-      !ReadRequiredField(parser, NS_LITERAL_CSTRING("apis"), apis)) {
+  if (!ReadInfoField(parser, NS_LITERAL_CSTRING("name"), mDisplayName) ||
+      !ReadInfoField(parser, NS_LITERAL_CSTRING("description"), mDescription) ||
+      !ReadInfoField(parser, NS_LITERAL_CSTRING("version"), mVersion) ||
+      !ReadInfoField(parser, NS_LITERAL_CSTRING("apis"), apis)) {
     return NS_ERROR_FAILURE;
   }
+
+#ifdef XP_WIN
+  // "Libraries" field is optional.
+  ReadInfoField(parser, NS_LITERAL_CSTRING("libraries"), mLibs);
+#endif
 
   nsTArray<nsCString> apiTokens;
   SplitAt(", ", apis, apiTokens);

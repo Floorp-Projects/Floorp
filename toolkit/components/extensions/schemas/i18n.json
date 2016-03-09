@@ -30,7 +30,6 @@
     "functions": [
       {
         "name": "getAcceptLanguages",
-        "unsupported": true,
         "type": "function",
         "description": "Gets the accept-languages of the browser. This is different from the locale used by the browser; to get the locale, use $(ref:i18n.getUILanguage).",
         "async": "callback",
@@ -68,7 +67,6 @@
       },
       {
         "name": "getUILanguage",
-        "unsupported": true,
         "type": "function",
         "description": "Gets the browser UI language of the browser. This is different from $(ref:i18n.getAcceptLanguages) which returns the preferred user languages.",
         "parameters": [],
@@ -79,7 +77,6 @@
       },
       {
         "name": "detectLanguage",
-        "unsupported": true,
         "type": "function",
         "description": "Detects the language of the provided text using CLD.",
         "async": "callback",

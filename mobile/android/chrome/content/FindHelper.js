@@ -53,6 +53,10 @@ var FindHelper = {
       this.findAgain(data, true);
       return this._getMatchesCountResult(data);
     }, "FindInPage:Prev");
+
+    // Initialize the finder component for the current page by performing a fake find.
+    this._init();
+    this._finder.requestMatchesCount("", 1);
   },
 
   _init: function() {

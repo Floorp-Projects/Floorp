@@ -554,6 +554,8 @@ DrawTargetSkia::ShouldLCDRenderText(FontType aFontType, AntialiasMode aAntialias
   if (aAntialiasMode == AntialiasMode::DEFAULT) {
     switch (aFontType) {
       case FontType::MAC:
+      case FontType::GDI:
+      case FontType::DWRITE:
         return true;
       default:
         // TODO: Figure out what to do for the other platforms.
@@ -588,7 +590,6 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
 
   bool shouldLCDRenderText = ShouldLCDRenderText(aFont->GetType(), aOptions.mAntialiasMode);
   paint.mPaint.setLCDRenderText(shouldLCDRenderText);
-  paint.mPaint.setSubpixelText(true);
 
   if (aRenderingOptions && aRenderingOptions->GetType() == FontType::CAIRO) {
     const GlyphRenderingOptionsCairo* cairoOptions =
@@ -603,11 +604,16 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
     if (cairoOptions->GetAntialiasMode() == AntialiasMode::NONE) {
       paint.mPaint.setAntiAlias(false);
     }
-  } else if (aFont->GetType() == FontType::MAC && shouldLCDRenderText) {
-    // SkFontHost_mac only supports subpixel antialiasing when hinting is turned off.
-    paint.mPaint.setHinting(SkPaint::kNo_Hinting);
   } else {
-    paint.mPaint.setHinting(SkPaint::kNormal_Hinting);
+    // SkFontHost_cairo does not support subpixel text, so only enable it for other font hosts.
+    paint.mPaint.setSubpixelText(true);
+
+    if (aFont->GetType() == FontType::MAC && shouldLCDRenderText) {
+      // SkFontHost_mac only supports subpixel antialiasing when hinting is turned off.
+      paint.mPaint.setHinting(SkPaint::kNo_Hinting);
+    } else {
+      paint.mPaint.setHinting(SkPaint::kNormal_Hinting);
+    }
   }
 
   std::vector<uint16_t> indices;
@@ -909,13 +915,35 @@ DrawTargetSkia::InitWithGrContext(GrContext* aGrContext,
 
 #endif
 
+#ifdef DEBUG
+bool
+VerifyRGBXFormat(uint8_t* aData, const IntSize &aSize, const int32_t aStride, SurfaceFormat aFormat)
+{
+  // We should've initialized the data to be opaque already
+  // On debug builds, verify that this is actually true.
+  int height = aSize.height;
+  int width = aSize.width;
+
+  for (int row = 0; row < height; ++row) {
+    for (int column = 0; column < width; column += 4) {
+#ifdef IS_BIG_ENDIAN
+      MOZ_ASSERT(aData[column] == 0xFF);
+#else
+      MOZ_ASSERT(aData[column + 3] == 0xFF);
+#endif
+    }
+    aData += aStride;
+  }
+
+  return true;
+}
+#endif
+
 void
 DrawTargetSkia::Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat)
 {
-  if (aFormat == SurfaceFormat::B8G8R8X8) {
-    // We have to manually set the A channel to be 255 as Skia doesn't understand BGRX
-    ConvertBGRXToBGRA(aData, aSize, aStride);
-  }
+  MOZ_ASSERT((aFormat != SurfaceFormat::B8G8R8X8) ||
+              VerifyRGBXFormat(aData, aSize, aStride, aFormat));
 
   SkBitmap bitmap;
   bitmap.setInfo(MakeSkiaImageInfo(aSize, aFormat), aStride);

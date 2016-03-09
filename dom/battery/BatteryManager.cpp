@@ -134,20 +134,23 @@ BatteryManager::UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInf
   mLevel = aBatteryInfo.level();
 
   // Round to the nearest ten percent for non-chrome and non-certified apps
-  nsIDocument* doc = GetOwner()->GetDoc();
+  nsIDocument* doc = GetOwner() ? GetOwner()->GetDoc() : nullptr;
   uint16_t status = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
   if (doc) {
     doc->NodePrincipal()->GetAppStatus(&status);
   }
 
+  mCharging = aBatteryInfo.charging();
+  mRemainingTime = aBatteryInfo.remainingTime();
+
   if (!nsContentUtils::IsChromeDoc(doc) &&
       status != nsIPrincipal::APP_STATUS_CERTIFIED)
   {
     mLevel = lround(mLevel * 10.0) / 10.0;
+    if (mLevel == 1.0) {
+      mRemainingTime = mCharging ? kDefaultRemainingTime : kUnknownRemainingTime;
+    }
   }
-
-  mCharging = aBatteryInfo.charging();
-  mRemainingTime = aBatteryInfo.remainingTime();
 
   // Add some guards to make sure the values are coherent.
   if (mLevel == 1.0 && mCharging == true &&

@@ -452,12 +452,12 @@ Experiments.Experiments.prototype = {
     this._shutdown = true;
     if (this._mainTask) {
       if (this._networkRequest) {
-	try {
-	  this._log.trace("Aborting pending network request: " + this._networkRequest);
-	  this._networkRequest.abort();
-	} catch (e) {
-	  // pass
-	}
+        try {
+          this._log.trace("Aborting pending network request: " + this._networkRequest);
+          this._networkRequest.abort();
+        } catch (e) {
+          // pass
+        }
       }
       try {
         this._log.trace("uninit: waiting on _mainTask");
@@ -634,7 +634,7 @@ Experiments.Experiments.prototype = {
           active: experiment.enabled,
           endDate: experiment.endDate.getTime(),
           detailURL: experiment._homepageURL,
-	  branch: experiment.branch,
+          branch: experiment.branch,
         });
       }
 
@@ -709,7 +709,7 @@ Experiments.Experiments.prototype = {
     } else {
       e = this._getActiveExperiment();
       if (e === null) {
-	throw new Error("No active experiment");
+        throw new Error("No active experiment");
       }
     }
     return e.branch;
@@ -958,7 +958,7 @@ Experiments.Experiments.prototype = {
       if (xhr.status !== 200 && xhr.state !== 0) {
         log.error("httpGetRequest::onLoad() - Request to " + url + " returned status " + xhr.status);
         deferred.reject(new Error("Experiments - XHR status for " + url + " is " + xhr.status));
-	this._networkRequest = null;
+        this._networkRequest = null;
         return;
       }
 
@@ -1043,6 +1043,14 @@ Experiments.Experiments.prototype = {
       if (!entry.initFromCacheData(item)) {
         continue;
       }
+
+      // Discard old experiments if they ended more than 180 days ago.
+      if (entry.shouldDiscard()) {
+        // We discarded an experiment, the cache needs to be updated.
+        this._dirty = true;
+        continue;
+      }
+
       experiments.set(entry.id, entry);
     }
 
@@ -1543,7 +1551,9 @@ Experiments.ExperimentEntry.prototype = {
       }
     });
 
-    this._lastChangedDate = this._policy.now();
+    // In order for the experiment's data expiration mechanism to work, use the experiment's
+    // |_endData| as the |_lastChangedDate| (if available).
+    this._lastChangedDate = !!this._endDate ? this._endDate : this._policy.now();
 
     return true;
   },

@@ -9,18 +9,19 @@
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/HashFunctions.h"
-#include "nsCSSPseudoElements.h"
 #include "PLDHashTable.h"
 
 namespace mozilla {
 
+enum class CSSPseudoElementType : uint8_t;
+
 struct PseudoElementHashKey
 {
   dom::Element* mElement;
-  nsCSSPseudoElements::Type mPseudoType;
+  CSSPseudoElementType mPseudoType;
 };
 
-// A hash entry that uses a RefPtr<dom::Element>, nsCSSPseudoElements::Type pair
+// A hash entry that uses a RefPtr<dom::Element>, CSSPseudoElementType pair
 class PseudoElementHashEntry : public PLDHashEntryHdr
 {
 public:
@@ -47,12 +48,16 @@ public:
     if (!aKey)
       return 0;
 
-    return mozilla::HashGeneric(aKey->mElement, aKey->mPseudoType);
+    // Convert the scoped enum into an integer while adding it to hash.
+    // Note: CSSPseudoElementTypeBase is uint8_t, so we convert it into
+    //       uint8_t directly to avoid including the header.
+    return mozilla::HashGeneric(aKey->mElement,
+                                static_cast<uint8_t>(aKey->mPseudoType));
   }
   enum { ALLOW_MEMMOVE = true };
 
   RefPtr<dom::Element> mElement;
-  nsCSSPseudoElements::Type mPseudoType;
+  CSSPseudoElementType mPseudoType;
 };
 
 } // namespace mozilla

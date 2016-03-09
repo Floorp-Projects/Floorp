@@ -62,7 +62,7 @@ public:
 
     MOZ_COUNT_DTOR(IDBTransaction::WorkerFeature);
 
-    mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), this);
+    mWorkerPrivate->RemoveFeature(this);
   }
 
 private:
@@ -239,11 +239,8 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
 
     workerPrivate->AssertIsOnWorkerThread();
 
-    JSContext* cx = workerPrivate->GetJSContext();
-    MOZ_ASSERT(cx);
-
     transaction->mWorkerFeature = new WorkerFeature(workerPrivate, transaction);
-    MOZ_ALWAYS_TRUE(workerPrivate->AddFeature(cx, transaction->mWorkerFeature));
+    MOZ_ALWAYS_TRUE(workerPrivate->AddFeature(transaction->mWorkerFeature));
   }
 
   return transaction.forget();

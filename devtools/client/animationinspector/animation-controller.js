@@ -3,7 +3,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* animation-panel.js is loaded in the same scope but we don't use
+   import-globals-from to avoid infinite loops since animation-panel.js already
+   imports globals from animation-controller.js */
 /* globals AnimationsPanel */
+/* eslint no-unused-vars: [2, {"vars": "local", "args": "none"}] */
 
 "use strict";
 
@@ -15,10 +20,8 @@ Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 loader.lazyRequireGetter(this, "promise");
-loader.lazyRequireGetter(this, "EventEmitter",
-                               "devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "AnimationsFront",
-                               "devtools/server/actors/animation", true);
+loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(this, "AnimationsFront", "devtools/server/actors/animation", true);
 
 const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
@@ -126,6 +129,7 @@ var getServerTraits = Task.async(function*(target) {
  */
 var AnimationsController = {
   PLAYERS_UPDATED_EVENT: "players-updated",
+  ALL_ANIMATIONS_TOGGLED_EVENT: "all-animations-toggled",
 
   initialize: Task.async(function*() {
     if (this.initialized) {
@@ -143,13 +147,6 @@ var AnimationsController = {
 
     // Expose actor capabilities.
     this.traits = yield getServerTraits(target);
-
-    // We want to handle animation mutation events synchronously to avoid race
-    // conditions when there are many rapid mutations. So when a mutation occurs
-    // and animations are removed, we don't release the corresponding actors
-    // in a blocking way, we just release asynchronously and don't wait for
-    // completion, but instead store the promise in this array.
-    this.nonBlockingPlayerReleases = [];
 
     if (this.destroyed) {
       console.warn("Could not fully initialize the AnimationsController");
@@ -180,11 +177,8 @@ var AnimationsController = {
     this.destroyed = promise.defer();
 
     this.stopListeners();
-    yield this.destroyAnimationPlayers();
+    this.destroyAnimationPlayers();
     this.nodeFront = null;
-
-    // Finish releasing players that haven't been released yet.
-    yield Promise.all(this.nonBlockingPlayerReleases);
 
     if (this.animationsFront) {
       this.animationsFront.destroy();
@@ -230,17 +224,18 @@ var AnimationsController = {
       return;
     }
 
+    this.nodeFront = gInspector.selection.nodeFront;
     let done = gInspector.updating("animationscontroller");
 
     if (!gInspector.selection.isConnected() ||
-        !gInspector.selection.isElementNode()) {
-      yield this.destroyAnimationPlayers();
+        !gInspector.selection.isElementNode() ||
+        gInspector.selection.isPseudoElementNode()) {
+      this.destroyAnimationPlayers();
       this.emit(this.PLAYERS_UPDATED_EVENT);
       done();
       return;
     }
 
-    this.nodeFront = gInspector.selection.nodeFront;
     yield this.refreshAnimationPlayers(this.nodeFront);
     this.emit(this.PLAYERS_UPDATED_EVENT, this.animationPlayers);
 
@@ -255,7 +250,9 @@ var AnimationsController = {
       return promise.resolve();
     }
 
-    return this.animationsFront.toggleAll().catch(e => console.error(e));
+    return this.animationsFront.toggleAll()
+      .then(() => this.emit(this.ALL_ANIMATIONS_TOGGLED_EVENT, this))
+      .catch(e => console.error(e));
   },
 
   /**
@@ -328,7 +325,7 @@ var AnimationsController = {
   animationPlayers: [],
 
   refreshAnimationPlayers: Task.async(function*(nodeFront) {
-    yield this.destroyAnimationPlayers();
+    this.destroyAnimationPlayers();
 
     this.animationPlayers = yield this.animationsFront
                                       .getAnimationPlayersForNode(nodeFront);
@@ -350,8 +347,6 @@ var AnimationsController = {
       }
 
       if (type === "removed") {
-        // Don't wait for the release request to complete, we can do that later.
-        this.nonBlockingPlayerReleases.push(player.release());
         let index = this.animationPlayers.indexOf(player);
         this.animationPlayers.splice(index, 1);
       }
@@ -380,19 +375,9 @@ var AnimationsController = {
     return time;
   },
 
-  destroyAnimationPlayers: Task.async(function*() {
-    // Let the server know that we're not interested in receiving updates about
-    // players for the current node. We're either being destroyed or a new node
-    // has been selected.
-    if (this.traits.hasMutationEvents) {
-      yield this.animationsFront.stopAnimationPlayerUpdates();
-    }
-
-    for (let front of this.animationPlayers) {
-      yield front.release();
-    }
+  destroyAnimationPlayers: function() {
     this.animationPlayers = [];
-  })
+  }
 };
 
 EventEmitter.decorate(AnimationsController);

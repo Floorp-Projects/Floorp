@@ -106,8 +106,7 @@ nsslibc_memequal(const void *a, const void *b, PRUint32 len,
 
     if (0 == memcmp(a, b, len)) {
         return PR_TRUE;
-    }
-    else {
+    } else {
         return PR_FALSE;
     }
 }

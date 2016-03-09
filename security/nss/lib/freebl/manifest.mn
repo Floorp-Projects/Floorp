@@ -56,6 +56,7 @@ EXPORTS = \
 PRIVATE_EXPORTS = \
 	alghmac.h \
 	blapi.h \
+	chacha20poly1305.h \
 	hmacct.h \
 	secmpi.h \
 	secrng.h \
@@ -101,6 +102,7 @@ CSRCS = \
 	desblapi.c \
 	des.c \
 	drbg.c \
+	chacha20poly1305.c \
 	cts.c \
 	ctr.c \
 	gcm.c \

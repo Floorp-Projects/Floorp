@@ -35,6 +35,7 @@ private:
   struct FormDataTuple
   {
     nsString name;
+    bool wasNullBlob;
     OwningBlobOrUSVString value;
   };
 
@@ -45,11 +46,12 @@ private:
 
   void SetNameValuePair(FormDataTuple* aData,
                         const nsAString& aName,
-                        const nsAString& aValue);
+                        const nsAString& aValue,
+                        bool aWasNullBlob = false);
 
-  void SetNameBlobPair(FormDataTuple* aData,
+  void SetNameFilePair(FormDataTuple* aData,
                        const nsAString& aName,
-                       Blob* aBlob);
+                       File* aFile);
 
 public:
   explicit FormData(nsISupports* aOwner = nullptr);
@@ -114,8 +116,8 @@ public:
     return NS_OK;
   }
 
-  virtual nsresult AddNameBlobPair(const nsAString& aName,
-                                   Blob* aBlob) override;
+  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
+                                         Blob* aBlob) override;
 
   typedef bool (*FormDataEntryCallback)(const nsString& aName,
                                         const OwningBlobOrUSVString& aValue,

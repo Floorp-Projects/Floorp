@@ -1930,45 +1930,66 @@ UncompressedSourceCache::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 const char16_t*
 ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder)
 {
-    switch (dataType) {
-      case DataUncompressed:
-        return uncompressedChars();
+    struct CharsMatcher
+    {
+        using ReturnType = const char16_t*;
 
-      case DataCompressed: {
-        if (const char16_t* decompressed = cx->runtime()->uncompressedSourceCache.lookup(this, holder))
+        JSContext* cx;
+        ScriptSource& ss;
+        UncompressedSourceCache::AutoHoldEntry& holder;
+
+        explicit CharsMatcher(JSContext* cx, ScriptSource& ss,
+                              UncompressedSourceCache::AutoHoldEntry& holder)
+          : cx(cx)
+          , ss(ss)
+          , holder(holder)
+        { }
+
+        ReturnType match(Uncompressed& u) {
+            return u.chars;
+        }
+
+        ReturnType match(Compressed& c) {
+            if (const char16_t* decompressed = cx->runtime()->uncompressedSourceCache.lookup(&ss, holder))
+                return decompressed;
+
+            const size_t nbytes = sizeof(char16_t) * (ss.length() + 1);
+            char16_t* decompressed = static_cast<char16_t*>(js_malloc(nbytes));
+            if (!decompressed) {
+                JS_ReportOutOfMemory(cx);
+                return nullptr;
+            }
+
+            if (!DecompressString((const unsigned char*) ss.compressedData(), ss.compressedBytes(),
+                                  reinterpret_cast<unsigned char*>(decompressed), nbytes)) {
+                JS_ReportOutOfMemory(cx);
+                js_free(decompressed);
+                return nullptr;
+            }
+
+            decompressed[ss.length()] = 0;
+
+            if (!cx->runtime()->uncompressedSourceCache.put(&ss, decompressed, holder)) {
+                JS_ReportOutOfMemory(cx);
+                js_free(decompressed);
+                return nullptr;
+            }
+
             return decompressed;
-
-        const size_t nbytes = sizeof(char16_t) * (length_ + 1);
-        char16_t* decompressed = static_cast<char16_t*>(js_malloc(nbytes));
-        if (!decompressed) {
-            JS_ReportOutOfMemory(cx);
-            return nullptr;
         }
 
-        if (!DecompressString((const unsigned char*) compressedData(), compressedBytes(),
-                              reinterpret_cast<unsigned char*>(decompressed), nbytes)) {
-            JS_ReportOutOfMemory(cx);
-            js_free(decompressed);
-            return nullptr;
+        ReturnType match(Parent& p) {
+            return p.parent->chars(cx, holder);
         }
 
-        decompressed[length_] = 0;
-
-        if (!cx->runtime()->uncompressedSourceCache.put(this, decompressed, holder)) {
-            JS_ReportOutOfMemory(cx);
-            js_free(decompressed);
+        ReturnType match(Missing&) {
+            MOZ_CRASH("ScriptSource::chars() on ScriptSource with SourceType = Missing");
             return nullptr;
         }
+    };
 
-        return decompressed;
-      }
-
-      case DataParent:
-        return parent()->chars(cx, holder);
-
-      default:
-        MOZ_CRASH();
-    }
+    CharsMatcher cm(cx, *this, holder);
+    return data.match(cm);
 }
 
 JSFlatString*
@@ -1996,26 +2017,21 @@ ScriptSource::substringDontDeflate(JSContext* cx, uint32_t start, uint32_t stop)
 void
 ScriptSource::setSource(const char16_t* chars, size_t length, bool ownsChars /* = true */)
 {
-    MOZ_ASSERT(dataType == DataMissing);
+    MOZ_ASSERT(data.is<Missing>());
 
-    dataType = DataUncompressed;
-    data.uncompressed.chars = chars;
-    data.uncompressed.ownsChars = ownsChars;
-
+    data = SourceType(Uncompressed(chars, ownsChars));
     length_ = length;
 }
 
 void
 ScriptSource::setCompressedSource(JSRuntime* maybert, void* raw, size_t nbytes, HashNumber hash)
 {
-    MOZ_ASSERT(dataType == DataMissing || dataType == DataUncompressed);
-    if (dataType == DataUncompressed && ownsUncompressedChars())
+    MOZ_ASSERT(data.is<Missing>() || data.is<Uncompressed>());
+
+    if (data.is<Uncompressed>() && data.as<Uncompressed>().ownsChars)
         js_free(const_cast<char16_t*>(uncompressedChars()));
 
-    dataType = DataCompressed;
-    data.compressed.raw = raw;
-    data.compressed.nbytes = nbytes;
-    data.compressed.hash = hash;
+    data = SourceType(Compressed(raw, nbytes, hash));
 
     if (maybert)
         updateCompressedSourceSet(maybert);
@@ -2024,7 +2040,7 @@ ScriptSource::setCompressedSource(JSRuntime* maybert, void* raw, size_t nbytes, 
 void
 ScriptSource::updateCompressedSourceSet(JSRuntime* rt)
 {
-    MOZ_ASSERT(dataType == DataCompressed);
+    MOZ_ASSERT(data.is<Compressed>());
     MOZ_ASSERT(!inCompressedSourceSet);
 
     CompressedSourceSet::AddPtr p = rt->compressedSourceSet.lookupForAdd(this);
@@ -2036,8 +2052,7 @@ ScriptSource::updateCompressedSourceSet(JSRuntime* rt)
         parent->incref();
 
         js_free(compressedData());
-        dataType = DataParent;
-        data.parent = parent;
+        data = SourceType(Parent(parent));
     } else {
         if (rt->compressedSourceSet.add(p, this))
             inCompressedSourceSet = true;
@@ -2047,7 +2062,7 @@ ScriptSource::updateCompressedSourceSet(JSRuntime* rt)
 bool
 ScriptSource::ensureOwnsSource(ExclusiveContext* cx)
 {
-    MOZ_ASSERT(dataType == DataUncompressed);
+    MOZ_ASSERT(data.is<Uncompressed>());
     if (ownsUncompressedChars())
         return true;
 
@@ -2058,8 +2073,8 @@ ScriptSource::ensureOwnsSource(ExclusiveContext* cx)
     }
     PodCopy(uncompressed, uncompressedChars(), length_);
 
-    data.uncompressed.chars = uncompressed;
-    data.uncompressed.ownsChars = true;
+    data.as<Uncompressed>().chars = uncompressed;
+    data.as<Uncompressed>().ownsChars = true;
     return true;
 }
 
@@ -2169,42 +2184,49 @@ SourceCompressionTask::work()
 
 ScriptSource::~ScriptSource()
 {
-    MOZ_ASSERT_IF(inCompressedSourceSet, dataType == DataCompressed);
+    struct DestroyMatcher
+    {
+        using ReturnType = void;
 
-    switch (dataType) {
-      case DataUncompressed:
-        if (ownsUncompressedChars())
-            js_free(const_cast<char16_t*>(uncompressedChars()));
-        break;
+        ScriptSource& ss;
 
-      case DataCompressed:
-        // Script source references are only manipulated on the main thread,
-        // except during off thread parsing when the source may be created
-        // and used exclusively by the thread doing the parse. In this case the
-        // ScriptSource might be destroyed while off the main thread, but it
-        // will not have been added to the runtime's compressed source set
-        // until the parse is finished on the main thread.
-        if (inCompressedSourceSet)
-            TlsPerThreadData.get()->runtimeFromMainThread()->compressedSourceSet.remove(this);
-        js_free(compressedData());
-        break;
+        explicit DestroyMatcher(ScriptSource& ss)
+          : ss(ss)
+        { }
 
-      case DataParent:
-        parent()->decref();
-        break;
+        ReturnType match(Uncompressed& u) {
+            if (u.ownsChars)
+                js_free(const_cast<char16_t*>(u.chars));
+        }
 
-      default:
-        break;
-    }
+        ReturnType match(Compressed& c) {
+            if (ss.inCompressedSourceSet)
+                TlsPerThreadData.get()->runtimeFromMainThread()->compressedSourceSet.remove(&ss);
+            js_free(c.raw);
+        }
+
+        ReturnType match(Parent& p) {
+            p.parent->decref();
+        }
+
+        ReturnType match(Missing&) {
+            // Nothing to do here.
+        }
+    };
+
+    MOZ_ASSERT_IF(inCompressedSourceSet, data.is<Compressed>());
+
+    DestroyMatcher dm(*this);
+    data.match(dm);
 }
 
 void
 ScriptSource::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                      JS::ScriptSourceInfo* info) const
 {
-    if (dataType == DataUncompressed && ownsUncompressedChars())
+    if (data.is<Uncompressed>() && ownsUncompressedChars())
         info->uncompressed += mallocSizeOf(uncompressedChars());
-    else if (dataType == DataCompressed)
+    else if (data.is<Compressed>())
         info->compressed += mallocSizeOf(compressedData());
     info->misc += mallocSizeOf(this) +
                   mallocSizeOf(filename_.get()) +
@@ -2216,6 +2238,50 @@ template<XDRMode mode>
 bool
 ScriptSource::performXDR(XDRState<mode>* xdr)
 {
+    struct CompressedLengthMatcher
+    {
+        using ReturnType = size_t;
+
+        ReturnType match(Uncompressed&) {
+            return 0;
+        }
+
+        ReturnType match(Compressed& c) {
+            return c.nbytes;
+        }
+
+        ReturnType match(Parent& p) {
+            return p.parent->data.match(*this);
+        }
+
+        ReturnType match(Missing&) {
+            MOZ_CRASH("Missing source data in ScriptSource::performXDR");
+            return 0;
+        }
+    };
+
+    struct RawDataMatcher
+    {
+        using ReturnType = void*;
+
+        ReturnType match(Uncompressed& u) {
+            return (void*) u.chars;
+        }
+
+        ReturnType match(Compressed& c) {
+            return c.raw;
+        }
+
+        ReturnType match(Parent& p) {
+            return p.parent->data.match(*this);
+        }
+
+        ReturnType match(Missing&) {
+            MOZ_CRASH("Missing source data in ScriptSource::performXDR");
+            return nullptr;
+        }
+    };
+
     uint8_t hasSource = hasSourceData();
     if (!xdr->codeUint8(&hasSource))
         return false;
@@ -2231,19 +2297,8 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
 
         uint32_t compressedLength;
         if (mode == XDR_ENCODE) {
-            switch (dataType) {
-              case DataUncompressed:
-                compressedLength = 0;
-                break;
-              case DataCompressed:
-                compressedLength = compressedBytes();
-                break;
-              case DataParent:
-                compressedLength = parent()->compressedBytes();
-                break;
-              default:
-                MOZ_CRASH();
-            }
+            CompressedLengthMatcher m;
+            compressedLength = data.match(m);
         }
         if (!xdr->codeUint32(&compressedLength))
             return false;
@@ -2272,20 +2327,8 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
             else
                 setSource((const char16_t*) p, length_);
         } else {
-            void* p;
-            switch (dataType) {
-              case DataUncompressed:
-                p = (void*) uncompressedChars();
-                break;
-              case DataCompressed:
-                p = compressedData();
-                break;
-              case DataParent:
-                p = parent()->compressedData();
-                break;
-              default:
-                MOZ_CRASH();
-            }
+            RawDataMatcher rdm;
+            void* p = data.match(rdm);
             if (!xdr->codeBytes(p, byteLen))
                 return false;
         }
@@ -2466,9 +2509,9 @@ ScriptSource::setSourceMapURL(ExclusiveContext* cx, const char16_t* sourceMapURL
 size_t
 ScriptSource::computedSizeOfData() const
 {
-    if (dataType == DataUncompressed && ownsUncompressedChars())
+    if (data.is<Uncompressed>() && ownsUncompressedChars())
         return sizeof(char16_t) * length_;
-    if (dataType == DataCompressed)
+    if (data.is<Compressed>())
         return compressedBytes();
     return 0;
 }

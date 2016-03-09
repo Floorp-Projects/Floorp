@@ -56,7 +56,7 @@ VorbisTrackEncoder::Init(int aChannels, int aSamplingRate)
   double quality = mAudioBitrate ? (double)mAudioBitrate/aSamplingRate :
                    BASE_QUALITY;
 
-  printf("quality %f \n", quality);
+  VORBISLOG("quality %f", quality);
   ret = vorbis_encode_init_vbr(&mVorbisInfo, mChannels, mSamplingRate,
                                quality);
 

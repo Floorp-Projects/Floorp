@@ -112,7 +112,7 @@
 
 #include "mozAutoDocUpdate.h"
 
-#include "prprf.h"
+#include "mozilla/Snprintf.h"
 #include "nsDOMMutationObserver.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsCycleCollector.h"
@@ -594,7 +594,9 @@ FragmentOrElement::nsDOMSlots::Unlink(bool aIsXUL)
   }
   if (aIsXUL)
     NS_IF_RELEASE(mControllers);
-  mXBLBinding = nullptr;
+
+  MOZ_ASSERT(!mXBLBinding);
+
   mXBLInsertionParent = nullptr;
   mShadowRoot = nullptr;
   mContainingShadow = nullptr;
@@ -1180,7 +1182,8 @@ void
 FragmentOrElement::DestroyContent()
 {
   nsIDocument *document = OwnerDoc();
-  document->BindingManager()->RemovedFromDocument(this, document);
+  document->BindingManager()->RemovedFromDocument(this, document,
+                                                  nsBindingManager::eRunDtor);
   document->ClearBoxObjectFor(this);
 
   // XXX We really should let cycle collection do this, but that currently still
@@ -1396,6 +1399,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
   // containing shadow root pointer.
   tmp->UnsetFlags(NODE_IS_IN_SHADOW_TREE);
 
+  nsIDocument* doc = tmp->OwnerDoc();
+  doc->BindingManager()->RemovedFromDocument(tmp, doc,
+                                             nsBindingManager::eDoNotRunDtor);
+
   // Unlink any DOM slots of interest.
   {
     nsDOMSlots *slots = tmp->GetExistingDOMSlots();
@@ -1404,12 +1411,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
     }
   }
 
-  {
-    nsIDocument *doc;
-    if (!tmp->GetParentNode() && (doc = tmp->OwnerDoc())) {
-      doc->BindingManager()->RemovedFromDocument(tmp, doc);
-    }
-  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(FragmentOrElement)
@@ -1882,13 +1883,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
     }
 
     const char* nsuri = nsid < ArrayLength(kNSURIs) ? kNSURIs[nsid] : "";
-    PR_snprintf(name, sizeof(name), "FragmentOrElement%s %s%s%s%s %s",
-                nsuri,
-                localName.get(),
-                NS_ConvertUTF16toUTF8(id).get(),
-                NS_ConvertUTF16toUTF8(classes).get(),
-                orphan.get(),
-                uri.get());
+    snprintf_literal(name, "FragmentOrElement%s %s%s%s%s %s",
+                     nsuri,
+                     localName.get(),
+                     NS_ConvertUTF16toUTF8(id).get(),
+                     NS_ConvertUTF16toUTF8(classes).get(),
+                     orphan.get(),
+                     uri.get());
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   }
   else {

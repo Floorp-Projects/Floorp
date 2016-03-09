@@ -265,6 +265,9 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
     } else {
         mTLSFilter->SetProxiedTransaction(mSpdySession);
     }
+    if (mDontReuse) {
+        mSpdySession->DontReuse();
+    }
 }
 
 bool
@@ -348,7 +351,7 @@ nsresult
 nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-    LOG(("nsHttpConnection::Activate [this=%p trans=%x caps=%x]\n",
+    LOG(("nsHttpConnection::Activate [this=%p trans=%p caps=%x]\n",
          this, trans, caps));
 
     if (!trans->IsNullTransaction())
@@ -657,6 +660,7 @@ nsHttpConnection::InitSSLParams(bool connectingToProxy, bool proxyStartSSL)
 void
 nsHttpConnection::DontReuse()
 {
+    LOG(("nsHttpConnection::DontReuse %p spdysession=%p\n", this, mSpdySession.get()));
     mKeepAliveMask = false;
     mKeepAlive = false;
     mDontReuse = true;

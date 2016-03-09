@@ -147,6 +147,31 @@ onfetch = function(ev) {
     ));
   }
 
+  else if (ev.request.url.includes("navigate.html")) {
+    var navigateModeCorrectlyChecked = false;
+    var requests = [ // should not throw
+      new Request(ev.request),
+      new Request(ev.request, undefined),
+      new Request(ev.request, null),
+      new Request(ev.request, {}),
+      new Request(ev.request, {someUnrelatedProperty: 42}),
+    ];
+    try {
+      var request3 = new Request(ev.request, {method: "GET"}); // should throw
+    } catch(e) {
+      navigateModeCorrectlyChecked = requests[0].mode == "navigate";
+    }
+    if (navigateModeCorrectlyChecked) {
+      ev.respondWith(Promise.resolve(
+        new Response("<script>window.frameElement.test_result = true;</script>", {
+          headers : {
+            "Content-Type": "text/html"
+          }
+        })
+      ));
+    }
+  }
+
   else if (ev.request.url.includes("nonexistent_worker_script.js")) {
     ev.respondWith(Promise.resolve(
       new Response("postMessage('worker-intercept-success')", {})

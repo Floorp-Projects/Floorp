@@ -21,19 +21,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=457672
 
 var windowBlurCount = 0;
 
-function setUserPref(reset) {
-  if (reset) {
-    SpecialPowers.clearUserPref("browser.link.open_newwindow");
-  } else {
-    SpecialPowers.setIntPref("browser.link.open_newwindow", 3);
-  }
-}
-
 function listener(evt) {
   if (evt.type == "focus") {
     is(windowBlurCount, 1,
        "Window should have got blur event when opening a new tab!");
-    setUserPref(true);
     document.getElementsByTagName("a")[0].focus();
     SimpleTest.finish();
   } else if (evt.type == "blur") {
@@ -43,13 +34,14 @@ function listener(evt) {
 }
 
 function startTest() {
-  setUserPref(false);
-  document.getElementsByTagName("a")[0].focus();
-  // Note, focus/blur don't bubble
-  window.addEventListener("focus", listener, false);
-  window.addEventListener("blur", listener, false);
-  var subwin = window.open("about:blank", "", "");
-  subwin.addEventListener("focus", function(e) { subwin.close(); }, false);
+  SpecialPowers.pushPrefEnv({"set": [["browser.link.open_newwindow", 3]]}, function() {
+    document.getElementsByTagName("a")[0].focus();
+    // Note, focus/blur don't bubble
+    window.addEventListener("focus", listener, false);
+    window.addEventListener("blur", listener, false);
+    var subwin = window.open("about:blank", "", "");
+    subwin.addEventListener("focus", function(e) { subwin.close(); }, false);
+  });
 }
 
 addLoadEvent(startTest);

@@ -45,7 +45,7 @@
 <script type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(runTest, window);
+SimpleTest.waitForFocus(startTest, window);
 
 var gScrollable128 = document.getElementById("Scrollable128");
 var gScrollable96 = document.getElementById("Scrollable96");
@@ -1315,50 +1315,8 @@ function* doTests()
 
 function* testBody()
 {
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_alt.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_control.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_meta.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_shift.delta_multiplier_z", 100);
-  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_x", 100);
-  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_y", 100);
-  SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_z", 100);
-  // If APZ is enabled we should ensure the preventDefault calls work even
-  // if the test is running slowly.
-  SpecialPowers.setIntPref("apz.content_response_timeout", 2000);
-
   yield* prepareScrollUnits();
   yield* doTests();
-
-  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_alt.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_control.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_meta.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_shift.delta_multiplier_z");
-  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_x");
-  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_y");
-  SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_z");
-  SpecialPowers.clearUserPref("apz.content_response_timeout");
 }
 
 var gTestContinuation = null;
@@ -1372,6 +1330,31 @@ function runTest()
   if (ret.done) {
     SimpleTest.finish();
   }
+}
+
+function startTest() {
+  SpecialPowers.pushPrefEnv({"set": [["mousewheel.default.delta_multiplier_x", 100],
+                                     ["mousewheel.default.delta_multiplier_y", 100],
+                                     ["mousewheel.default.delta_multiplier_z", 100],
+                                     ["mousewheel.with_alt.delta_multiplier_x", 100],
+                                     ["mousewheel.with_alt.delta_multiplier_y", 100],
+                                     ["mousewheel.with_alt.delta_multiplier_z", 100],
+                                     ["mousewheel.with_control.delta_multiplier_x", 100],
+                                     ["mousewheel.with_control.delta_multiplier_y", 100],
+                                     ["mousewheel.with_control.delta_multiplier_z", 100],
+                                     ["mousewheel.with_meta.delta_multiplier_x", 100],
+                                     ["mousewheel.with_meta.delta_multiplier_y", 100],
+                                     ["mousewheel.with_meta.delta_multiplier_z", 100],
+                                     ["mousewheel.with_shift.delta_multiplier_x", 100],
+                                     ["mousewheel.with_shift.delta_multiplier_y", 100],
+                                     ["mousewheel.with_shift.delta_multiplier_z", 100],
+                                     ["mousewheel.with_win.delta_multiplier_x", 100],
+                                     ["mousewheel.with_win.delta_multiplier_y", 100],
+                                     ["mousewheel.with_win.delta_multiplier_z", 100],
+  // If APZ is enabled we should ensure the preventDefault calls work even
+  // if the test is running slowly.
+                                     ["apz.content_response_timeout", 2000],
+                                    ]}, runTest);
 }
 
 </script>

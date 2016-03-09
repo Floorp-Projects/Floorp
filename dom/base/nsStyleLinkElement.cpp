@@ -12,7 +12,8 @@
 
 #include "nsStyleLinkElement.h"
 
-#include "mozilla/CSSStyleSheet.h"
+#include "mozilla/StyleSheetHandle.h"
+#include "mozilla/StyleSheetHandleInlines.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FragmentOrElement.h"
@@ -67,7 +68,7 @@ nsStyleLinkElement::Traverse(nsCycleCollectionTraversalCallback &cb)
 }
 
 NS_IMETHODIMP 
-nsStyleLinkElement::SetStyleSheet(CSSStyleSheet* aStyleSheet)
+nsStyleLinkElement::SetStyleSheet(StyleSheetHandle aStyleSheet)
 {
   if (mStyleSheet) {
     mStyleSheet->SetOwningNode(nullptr);
@@ -84,7 +85,7 @@ nsStyleLinkElement::SetStyleSheet(CSSStyleSheet* aStyleSheet)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(CSSStyleSheet*)
+NS_IMETHODIMP_(StyleSheetHandle)
 nsStyleLinkElement::GetStyleSheet()
 {
   return mStyleSheet;
@@ -316,8 +317,15 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     return NS_OK;
   }
 
-  Element* oldScopeElement =
-    mStyleSheet ? mStyleSheet->GetScopeElement() : nullptr;
+  // XXXheycam ServoStyleSheets do not support <style scoped>.
+  Element* oldScopeElement = nullptr;
+  if (mStyleSheet) {
+    if (mStyleSheet->IsServo()) {
+      NS_ERROR("stylo: ServoStyleSheets don't support <style scoped>");
+    } else {
+      oldScopeElement = mStyleSheet->AsGecko()->GetScopeElement();
+    }
+  }
 
   if (mStyleSheet && (aOldDocument || aOldShadowRoot)) {
     MOZ_ASSERT(!(aOldDocument && aOldShadowRoot),
@@ -465,10 +473,18 @@ nsStyleLinkElement::UpdateStyleSheetScopedness(bool aIsNowScoped)
     return;
   }
 
+  if (mStyleSheet->IsServo()) {
+    // XXXheycam ServoStyleSheets don't support <style scoped>.
+    NS_ERROR("stylo: ServoStyleSheets don't support <style scoped>");
+    return;
+  }
+
+  CSSStyleSheet* sheet = mStyleSheet->AsGecko();
+
   nsCOMPtr<nsIContent> thisContent;
   CallQueryInterface(this, getter_AddRefs(thisContent));
 
-  Element* oldScopeElement = mStyleSheet->GetScopeElement();
+  Element* oldScopeElement = sheet->GetScopeElement();
   Element* newScopeElement = aIsNowScoped ?
                                thisContent->GetParentElement() :
                                nullptr;
@@ -483,14 +499,14 @@ nsStyleLinkElement::UpdateStyleSheetScopedness(bool aIsNowScoped)
     ShadowRoot* containingShadow = thisContent->GetContainingShadow();
     containingShadow->RemoveSheet(mStyleSheet);
 
-    mStyleSheet->SetScopeElement(newScopeElement);
+    sheet->SetScopeElement(newScopeElement);
 
     containingShadow->InsertSheet(mStyleSheet, thisContent);
   } else {
     document->BeginUpdate(UPDATE_STYLE);
     document->RemoveStyleSheet(mStyleSheet);
 
-    mStyleSheet->SetScopeElement(newScopeElement);
+    sheet->SetScopeElement(newScopeElement);
 
     document->AddStyleSheet(mStyleSheet);
     document->EndUpdate(UPDATE_STYLE);

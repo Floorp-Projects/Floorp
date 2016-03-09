@@ -65,7 +65,7 @@ AnalyzeAsmHeapAddress(MDefinition* ptr, MIRGraph& graph)
         return;
 
     // The pattern was matched! Produce the replacement expression.
-    MInstruction* and_ = MBitAnd::NewAsmJS(graph.alloc(), op0, rhs);
+    MInstruction* and_ = MBitAnd::NewAsmJS(graph.alloc(), op0, rhs, MIRType_Int32);
     ptr->block()->insertBefore(ptr->toBitAnd(), and_);
     MInstruction* add = MAdd::NewAsmJS(graph.alloc(), and_, op1, MIRType_Int32);
     ptr->block()->insertBefore(ptr->toBitAnd(), add);
@@ -82,9 +82,9 @@ AlignmentMaskAnalysis::analyze()
             // or MAsmJSAtomicBinopHeap, because the backend and the OOB
             // mechanism don't support non-zero offsets for them yet.
             if (i->isAsmJSLoadHeap())
-                AnalyzeAsmHeapAddress(i->toAsmJSLoadHeap()->ptr(), graph_);
+                AnalyzeAsmHeapAddress(i->toAsmJSLoadHeap()->base(), graph_);
             else if (i->isAsmJSStoreHeap())
-                AnalyzeAsmHeapAddress(i->toAsmJSStoreHeap()->ptr(), graph_);
+                AnalyzeAsmHeapAddress(i->toAsmJSStoreHeap()->base(), graph_);
         }
     }
     return true;

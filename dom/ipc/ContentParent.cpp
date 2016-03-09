@@ -67,6 +67,7 @@
 #include "mozilla/dom/mobileconnection/MobileConnectionParent.h"
 #include "mozilla/dom/mobilemessage/SmsParent.h"
 #include "mozilla/dom/power/PowerManagerService.h"
+#include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/PresentationParent.h"
 #include "mozilla/dom/PPresentationParent.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
@@ -83,6 +84,7 @@
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
+#include "mozilla/layers/PAPZParent.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
@@ -155,8 +157,6 @@
 #include "nsPIWindowWatcher.h"
 #include "nsWindowWatcher.h"
 #include "nsIXULRuntime.h"
-#include "gfxDrawable.h"
-#include "ImageOps.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsMemoryInfoDumper.h"
 #include "nsMemoryReporterManager.h"
@@ -186,6 +186,8 @@
 #include "nsPluginHost.h"
 #include "nsPluginTags.h"
 #include "nsIBlocklistService.h"
+#include "mozilla/StyleSheetHandle.h"
+#include "mozilla/StyleSheetHandleInlines.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -241,13 +243,6 @@ using namespace mozilla::system;
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/SpeechSynthesisParent.h"
 #endif
-
-#ifdef ENABLE_TESTS
-#include "BackgroundChildImpl.h"
-#include "mozilla/ipc/PBackgroundChild.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
-#endif
-
 
 #if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
 #include "mozilla/SandboxInfo.h"
@@ -305,130 +300,6 @@ using namespace mozilla::net;
 using namespace mozilla::jsipc;
 using namespace mozilla::psm;
 using namespace mozilla::widget;
-
-#ifdef ENABLE_TESTS
-
-class BackgroundTester final : public nsIIPCBackgroundChildCreateCallback,
-                               public nsIObserver
-{
-  static uint32_t sCallbackCount;
-
-private:
-  ~BackgroundTester()
-  { }
-
-  virtual void
-  ActorCreated(PBackgroundChild* aActor) override
-  {
-    MOZ_RELEASE_ASSERT(aActor,
-                       "Failed to create a PBackgroundChild actor!");
-
-    NS_NAMED_LITERAL_CSTRING(testStr, "0123456789");
-
-    PBackgroundTestChild* testActor =
-      aActor->SendPBackgroundTestConstructor(testStr);
-    MOZ_RELEASE_ASSERT(testActor);
-
-    if (!sCallbackCount) {
-      PBackgroundChild* existingBackgroundChild =
-        BackgroundChild::GetForCurrentThread();
-
-      MOZ_RELEASE_ASSERT(existingBackgroundChild);
-      MOZ_RELEASE_ASSERT(existingBackgroundChild == aActor);
-
-      bool ok =
-        existingBackgroundChild->
-          SendPBackgroundTestConstructor(testStr);
-      MOZ_RELEASE_ASSERT(ok);
-
-      // Callback 3.
-      ok = BackgroundChild::GetOrCreateForCurrentThread(this);
-      MOZ_RELEASE_ASSERT(ok);
-    }
-
-    sCallbackCount++;
-  }
-
-  virtual void
-  ActorFailed() override
-  {
-    MOZ_CRASH("Failed to create a PBackgroundChild actor!");
-  }
-
-  NS_IMETHOD
-  Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
-      override
-  {
-    nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-    MOZ_RELEASE_ASSERT(observerService);
-
-    nsresult rv = observerService->RemoveObserver(this, aTopic);
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-
-    if (!strcmp(aTopic, "profile-after-change")) {
-      if (mozilla::Preferences::GetBool("pbackground.testing", false)) {
-        rv = observerService->AddObserver(this, "xpcom-shutdown", false);
-        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-
-        // Callback 1.
-        bool ok = BackgroundChild::GetOrCreateForCurrentThread(this);
-        MOZ_RELEASE_ASSERT(ok);
-
-        BackgroundChildImpl::ThreadLocal* threadLocal =
-          BackgroundChildImpl::GetThreadLocalForCurrentThread();
-        MOZ_RELEASE_ASSERT(threadLocal);
-
-        // Callback 2.
-        ok = BackgroundChild::GetOrCreateForCurrentThread(this);
-        MOZ_RELEASE_ASSERT(ok);
-      }
-
-      return NS_OK;
-    }
-
-    if (!strcmp(aTopic, "xpcom-shutdown")) {
-      MOZ_RELEASE_ASSERT(sCallbackCount == 3);
-
-      return NS_OK;
-    }
-
-    MOZ_CRASH("Unknown observer topic!");
-  }
-
-public:
-  NS_DECL_ISUPPORTS
-};
-
-uint32_t BackgroundTester::sCallbackCount = 0;
-
-NS_IMPL_ISUPPORTS(BackgroundTester, nsIIPCBackgroundChildCreateCallback,
-                  nsIObserver)
-
-#endif // ENABLE_TESTS
-
-void
-MaybeTestPBackground()
-{
-#ifdef ENABLE_TESTS
-  // This test relies on running the event loop and XPCShell does not always
-  // do so. Bail out here if we detect that we're running in XPCShell.
-  if (PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")) {
-    return;
-  }
-
-  // This is called too early at startup to test preferences directly. We have
-  // to install an observer to be notified when preferences are available.
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-  MOZ_RELEASE_ASSERT(observerService);
-
-  nsCOMPtr<nsIObserver> observer = new BackgroundTester();
-  nsresult rv = observerService->AddObserver(observer, "profile-after-change",
-                                             false);
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-#endif
-}
 
 // XXX Workaround for bug 986973 to maintain the existing broken semantics
 template<>
@@ -863,10 +734,6 @@ ContentParent::StartUp()
   // Try to preallocate a process that we can transform into an app later.
   PreallocatedProcessManager::AllocateAfterDelay();
 
-  // Test the PBackground infrastructure on ENABLE_TESTS builds when a special
-  // testing preference is set.
-  MaybeTestPBackground();
-
   sDisableUnsafeCPOWWarnings = PR_GetEnv("DISABLE_UNSAFE_CPOW_WARNINGS");
 
 #if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
@@ -1188,6 +1055,14 @@ ContentParent::RecvUngrabPointer(const uint32_t& aTime)
 }
 
 bool
+ContentParent::RecvRemovePermission(const IPC::Principal& aPrincipal,
+                                    const nsCString& aPermissionType,
+                                    nsresult* aRv) {
+  *aRv = Permissions::RemovePermission(aPrincipal, aPermissionType.get());
+  return true;
+}
+
+bool
 ContentParent::RecvConnectPluginBridge(const uint32_t& aPluginId, nsresult* aRv)
 {
   *aRv = NS_OK;
@@ -1256,11 +1131,11 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     openerTabId = TabParent::GetTabIdFrom(docShell);
   }
 
-  if (aContext.IsBrowserElement() || !aContext.HasOwnApp()) {
+  if (aContext.IsMozBrowserElement() || !aContext.HasOwnApp()) {
     RefPtr<TabParent> tp;
     RefPtr<nsIContentParent> constructorSender;
     if (isInContentProcess) {
-      MOZ_ASSERT(aContext.IsBrowserElement());
+      MOZ_ASSERT(aContext.IsMozBrowserElement());
       constructorSender = CreateContentBridgeParent(aContext, initialPriority,
                                                     openerTabId, &tabId);
     } else {
@@ -1268,7 +1143,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         constructorSender = aOpenerContentParent;
       } else {
         constructorSender =
-          GetNewOrUsedBrowserProcess(aContext.IsBrowserElement(),
+          GetNewOrUsedBrowserProcess(aContext.IsMozBrowserElement(),
                                      initialPriority);
         if (!constructorSender) {
           return nullptr;
@@ -2028,10 +1903,60 @@ NestedBrowserLayerIds()
 }
 } // namespace
 
+/* static */
 bool
-ContentParent::RecvAllocateLayerTreeId(uint64_t* aId)
+ContentParent::AllocateLayerTreeId(TabParent* aTabParent, uint64_t* aId)
+{
+  return AllocateLayerTreeId(aTabParent->Manager()->AsContentParent(),
+                             aTabParent, aTabParent->GetTabId(), aId);
+}
+
+/* static */
+bool
+ContentParent::AllocateLayerTreeId(ContentParent* aContent,
+                                   TabParent* aTopLevel, const TabId& aTabId,
+                                   uint64_t* aId)
 {
   *aId = CompositorParent::AllocateLayerTreeId();
+
+  if (!gfxPlatform::AsyncPanZoomEnabled()) {
+    return true;
+  }
+
+  if (!aContent || !aTopLevel) {
+    return false;
+  }
+
+  return CompositorParent::UpdateRemoteContentController(*aId, aContent,
+                                                         aTabId, aTopLevel);
+}
+
+bool
+ContentParent::RecvAllocateLayerTreeId(const ContentParentId& aCpId,
+                                       const TabId& aTabId, uint64_t* aId)
+{
+  // Protect against spoofing by a compromised child. aCpId must either
+  // correspond to the process that this ContentParent represents or be a
+  // child of it.
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  if (ChildID() != aCpId) {
+    ContentParentId parent;
+    if (!cpm->GetParentProcessId(aCpId, &parent) ||
+        ChildID() != parent) {
+      return false;
+    }
+  }
+
+  // GetTopLevelTabParentByProcessAndTabId will make sure that aTabId
+  // lives in the process for aCpId.
+  RefPtr<ContentParent> contentParent = cpm->GetContentProcessById(aCpId);
+  RefPtr<TabParent> browserParent =
+    cpm->GetTopLevelTabParentByProcessAndTabId(aCpId, aTabId);
+  MOZ_ASSERT(contentParent && browserParent);
+
+  if (!AllocateLayerTreeId(contentParent, browserParent, aTabId, aId)) {
+    return false;
+  }
 
   auto iter = NestedBrowserLayerIds().find(this);
   if (iter == NestedBrowserLayerIds().end()) {
@@ -2648,19 +2573,19 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     // This looks like a lot of work, but in a normal browser session we just
     // send two loads.
 
-    for (CSSStyleSheet* sheet : *sheetService->AgentStyleSheets()) {
+    for (StyleSheetHandle sheet : *sheetService->AgentStyleSheets()) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AGENT_SHEET);
     }
 
-    for (CSSStyleSheet* sheet : *sheetService->UserStyleSheets()) {
+    for (StyleSheetHandle sheet : *sheetService->UserStyleSheets()) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::USER_SHEET);
     }
 
-    for (CSSStyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
+    for (StyleSheetHandle sheet : *sheetService->AuthorStyleSheets()) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AUTHOR_SHEET);
@@ -2814,75 +2739,56 @@ ContentParent::RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
   nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
   NS_ENSURE_SUCCESS(rv, true);
 
-  nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
+  nsCOMPtr<nsITransferable> trans =
+    do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
   NS_ENSURE_SUCCESS(rv, true);
   trans->Init(nullptr);
 
   const nsTArray<IPCDataTransferItem>& items = aDataTransfer.items();
-  for (uint32_t j = 0; j < items.Length(); ++j) {
-    const IPCDataTransferItem& item = items[j];
-
+  for (const auto& item : items) {
     trans->AddDataFlavor(item.flavor().get());
 
     if (item.data().type() == IPCDataTransferData::TnsString) {
-    nsCOMPtr<nsISupportsString> dataWrapper =
-      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, true);
-
-    nsString text = item.data().get_nsString();
-    rv = dataWrapper->SetData(text);
-    NS_ENSURE_SUCCESS(rv, true);
-
-    rv = trans->SetTransferData(item.flavor().get(), dataWrapper,
-                                text.Length() * sizeof(char16_t));
-
-    NS_ENSURE_SUCCESS(rv, true);
-    } else if (item.data().type() == IPCDataTransferData::TnsCString) {
-    if (item.flavor().EqualsLiteral(kNativeImageMime) ||
-        item.flavor().EqualsLiteral(kJPEGImageMime) ||
-        item.flavor().EqualsLiteral(kJPGImageMime) ||
-        item.flavor().EqualsLiteral(kPNGImageMime) ||
-        item.flavor().EqualsLiteral(kGIFImageMime)) {
-      const IPCDataTransferImage& imageDetails = item.imageDetails();
-      const gfx::IntSize size(imageDetails.width(), imageDetails.height());
-      if (!size.width || !size.height) {
-      return true;
-      }
-
-      nsCString text = item.data().get_nsCString();
-      RefPtr<gfx::DataSourceSurface> image =
-      new mozilla::gfx::SourceSurfaceRawData();
-      mozilla::gfx::SourceSurfaceRawData* raw =
-      static_cast<mozilla::gfx::SourceSurfaceRawData*>(image.get());
-      raw->InitWrappingData(
-      reinterpret_cast<uint8_t*>(const_cast<nsCString&>(text).BeginWriting()),
-      size, imageDetails.stride(),
-      static_cast<mozilla::gfx::SurfaceFormat>(imageDetails.format()), false);
-      raw->GuaranteePersistance();
-
-      RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(image, size);
-      nsCOMPtr<imgIContainer> imageContainer(image::ImageOps::CreateFromDrawable(drawable));
-
-      nsCOMPtr<nsISupportsInterfacePointer>
-      imgPtr(do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv));
-
-      rv = imgPtr->SetData(imageContainer);
+      nsCOMPtr<nsISupportsString> dataWrapper =
+        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, true);
 
-      trans->SetTransferData(item.flavor().get(), imgPtr, sizeof(nsISupports*));
-    } else {
-      nsCOMPtr<nsISupportsCString> dataWrapper =
-      do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, true);
-
-      const nsCString& text = item.data().get_nsCString();
+      const nsString& text = item.data().get_nsString();
       rv = dataWrapper->SetData(text);
       NS_ENSURE_SUCCESS(rv, true);
 
-      rv = trans->SetTransferData(item.flavor().get(), dataWrapper, text.Length());
+      rv = trans->SetTransferData(item.flavor().get(), dataWrapper,
+                                  text.Length() * sizeof(char16_t));
 
       NS_ENSURE_SUCCESS(rv, true);
-    }
+    } else if (item.data().type() == IPCDataTransferData::TnsCString) {
+      if (nsContentUtils::IsFlavorImage(item.flavor())) {
+        nsCOMPtr<imgIContainer> imageContainer;
+        rv = nsContentUtils::DataTransferItemToImage(item,
+                                                     getter_AddRefs(imageContainer));
+        NS_ENSURE_SUCCESS(rv, true);
+
+        nsCOMPtr<nsISupportsInterfacePointer> imgPtr =
+          do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
+        NS_ENSURE_TRUE(imgPtr, true);
+
+        rv = imgPtr->SetData(imageContainer);
+        NS_ENSURE_SUCCESS(rv, true);
+
+        trans->SetTransferData(item.flavor().get(), imgPtr, sizeof(nsISupports*));
+      } else {
+        nsCOMPtr<nsISupportsCString> dataWrapper =
+          do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, true);
+
+        const nsCString& text = item.data().get_nsCString();
+        rv = dataWrapper->SetData(text);
+        NS_ENSURE_SUCCESS(rv, true);
+
+        rv = trans->SetTransferData(item.flavor().get(), dataWrapper, text.Length());
+
+        NS_ENSURE_SUCCESS(rv, true);
+      }
     }
   }
 
@@ -3398,6 +3304,21 @@ ContentParent::AllocPGMPServiceParent(mozilla::ipc::Transport* aTransport,
   return GMPServiceParent::Create(aTransport, aOtherProcess);
 }
 
+PAPZParent*
+ContentParent::AllocPAPZParent(const TabId& aTabId)
+{
+  // The PAPZParent should just be created in the main process and then an IPDL
+  // constructor message sent to hook it up.
+  MOZ_CRASH("This shouldn't be called");
+  return nullptr;
+}
+
+bool
+ContentParent::DeallocPAPZParent(PAPZParent* aActor)
+{
+  return true;
+}
+
 PCompositorParent*
 ContentParent::AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
                                       base::ProcessId aOtherProcess)
@@ -3629,13 +3550,11 @@ ContentParent::DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParen
 /* static */ void
 ContentParent::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure)
 {
-#ifdef ENABLE_TESTS
   // We don't want to time out the content process during XPCShell tests. This
   // is the easiest way to ensure that.
   if (PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")) {
     return;
   }
-#endif
 
   auto self = static_cast<ContentParent*>(aClosure);
   self->KillHard("ShutDownKill");
@@ -5399,6 +5318,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 const nsString& aName,
                                 const nsCString& aFeatures,
                                 const nsCString& aBaseURI,
+                                const DocShellOriginAttributes& aOpenerOriginAttributes,
                                 nsresult* aResult,
                                 bool* aWindowIsNew,
                                 InfallibleTArray<FrameScriptInfo>* aFrameScripts,
@@ -5423,7 +5343,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
     thisTabParent = TabParent::GetFrom(aThisTab);
   }
 
-  if (NS_WARN_IF(thisTabParent && thisTabParent->IsBrowserOrApp())) {
+  if (NS_WARN_IF(thisTabParent && thisTabParent->IsMozBrowserOrApp())) {
     return false;
   }
 
@@ -5497,7 +5417,8 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
       loadContext->GetUsePrivateBrowsing(&isPrivate);
     }
 
-    nsCOMPtr<nsIOpenURIInFrameParams> params = new nsOpenURIInFrameParams();
+    nsCOMPtr<nsIOpenURIInFrameParams> params =
+      new nsOpenURIInFrameParams(aOpenerOriginAttributes);
     params->SetReferrer(NS_ConvertUTF8toUTF16(aBaseURI));
     params->SetIsPrivate(isPrivate);
 
@@ -5694,6 +5615,18 @@ bool
 ContentParent::RecvGetGraphicsDeviceInitData(DeviceInitData* aOut)
 {
   gfxPlatform::GetPlatform()->GetDeviceInitData(aOut);
+  return true;
+}
+
+bool
+ContentParent::RecvGraphicsError(const nsCString& aError)
+{
+  gfx::LogForwarder* lf = gfx::Factory::GetLogForwarder();
+  if (lf) {
+    std::stringstream message;
+    message << "CP+" << aError.get();
+    lf->UpdateStringsVector(message.str());
+  }
   return true;
 }
 

@@ -140,6 +140,9 @@ public:
   PurgeActiveWorker();
 
   void
+  TryToActivateAsync();
+
+  void
   TryToActivate();
 
   void
@@ -302,6 +305,9 @@ public:
 
   void
   RemoveWorker(ServiceWorker* aWorker);
+
+  already_AddRefed<ServiceWorker>
+  GetOrCreateInstance(nsPIDOMWindowInner* aWindow);
 };
 
 #define NS_SERVICEWORKERMANAGER_IMPL_IID                 \
@@ -368,7 +374,7 @@ public:
   nsClassHashtable<nsCStringHashKey, InterceptionList> mNavigationInterceptions;
 
   bool
-  IsAvailable(const PrincipalOriginAttributes& aOriginAttributes, nsIURI* aURI);
+  IsAvailable(nsIPrincipal* aPrincipal, nsIURI* aURI);
 
   bool
   IsControlled(nsIDocument* aDocument, ErrorResult& aRv);
@@ -499,6 +505,9 @@ public:
                 const nsACString& aScope,
                 Maybe<nsTArray<uint8_t>> aData);
 
+  nsresult
+  NotifyUnregister(nsIPrincipal* aPrincipal, const nsAString& aScope);
+
 private:
   ServiceWorkerManager();
   ~ServiceWorkerManager();
@@ -563,10 +572,6 @@ private:
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetServiceWorkerRegistrationInfo(nsIPrincipal* aPrincipal, nsIURI* aURI);
-
-  already_AddRefed<ServiceWorkerRegistrationInfo>
-  GetServiceWorkerRegistrationInfo(const PrincipalOriginAttributes& aOriginAttributes,
-                                   nsIURI* aURI);
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetServiceWorkerRegistrationInfo(const nsACString& aScopeKey,
@@ -637,14 +642,6 @@ private:
 
   void
   MaybeRemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration);
-
-  // Does all cleanup except removing the registration from
-  // mServiceWorkerRegistrationInfos. This is useful when we clear
-  // registrations via remove()/removeAll() since we are iterating over the
-  // hashtable and can cleanly remove within the hashtable enumeration
-  // function.
-  void
-  RemoveRegistrationInternal(ServiceWorkerRegistrationInfo* aRegistration);
 
   // Removes all service worker registrations that matches the given pattern.
   void

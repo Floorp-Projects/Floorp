@@ -6,39 +6,30 @@
 # ***** END LICENSE BLOCK *****
 """beet_mover.py.
 
-downloads artifacts and uploads them to s3
+downloads artifacts, scans them and uploads them to s3
 """
 import hashlib
 import sys
 import os
 import pprint
+import re
+from os import listdir
+from os.path import isfile, join
+import sh
+import redo
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 from mozharness.base.log import FATAL
 from mozharness.base.python import VirtualenvMixin
 from mozharness.base.script import BaseScript
+from mozharness.mozilla.aws import pop_aws_auth_from_env
+import mozharness
 
 
 def get_hash(content, hash_type="md5"):
     h = hashlib.new(hash_type)
     h.update(content)
     return h.hexdigest()
-
-
-def get_aws_auth():
-    """
-    retrieves aws creds and deletes them from os.environ if present.
-    """
-    aws_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
-    aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
-
-    if aws_key_id and aws_secret_key:
-        del os.environ['AWS_ACCESS_KEY_ID']
-        del os.environ['AWS_SECRET_ACCESS_KEY']
-    else:
-        exit("could not determine aws credentials from os environment")
-
-    return aws_key_id, aws_secret_key
 
 
 CONFIG_OPTIONS = [
@@ -67,6 +58,11 @@ CONFIG_OPTIONS = [
         "dest": "partial_version",
         "help": "the partial version the mar is based off of"
     }],
+    [["--artifact-subdir"], {
+        "dest": "artifact_subdir",
+        "default": 'build',
+        "help": "subdir location for taskcluster artifacts after public/ base.",
+    }],
     [["--build-num"], {
         "dest": "build_num",
         "help": "the release build identifier"
@@ -75,12 +71,42 @@ CONFIG_OPTIONS = [
         "dest": "taskid",
         "help": "taskcluster task id to download artifacts from",
     }],
-    [["--production"], {
-        "dest": "production",
-        "default": False,
-        "help": "taskcluster task id to download artifacts from",
+    [["--bucket"], {
+        "dest": "bucket",
+        "help": "s3 bucket to move beets to.",
+    }],
+    [["--exclude"], {
+        "dest": "excludes",
+        "action": "append",
+        "help": "List of filename patterns to exclude. See script source for default",
+    }],
+    [["-s", "--scan-parallelization"], {
+        "dest": "scan_parallelization",
+        "default": 4,
+        "type": "int",
+        "help": "Number of concurrent file scans",
     }],
 ]
+
+DEFAULT_EXCLUDES = [
+    r"^.*tests.*$",
+    r"^.*crashreporter.*$",
+    r"^.*\.zip(\.asc)?$",
+    r"^.*\.log$",
+    r"^.*\.txt$",
+    r"^.*\.asc$",
+    r"^.*/partner-repacks.*$",
+    r"^.*.checksums(\.asc)?$",
+    r"^.*/logs/.*$",
+    r"^.*/jsshell.*$",
+    r"^.*json$",
+    r"^.*/host.*$",
+    r"^.*/mar-tools/.*$",
+    r"^.*gecko-unsigned-unaligned.apk$",
+    r"^.*robocop.apk$",
+    r"^.*contrib.*"
+]
+CACHE_DIR = 'cache'
 
 
 class BeetMover(BaseScript, VirtualenvMixin, object):
@@ -93,36 +119,41 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
                 'activate-virtualenv',
                 'generate-candidates-manifest',
                 'verify-bits',  # beets
+                'download-bits', # beets
+                'scan-bits',     # beets
                 'upload-bits',  # beets
             ],
             'require_config_file': False,
             # Default configuration
             'config': {
                 # base index url where to find taskcluster artifact based on taskid
-                # TODO - find out if we need to support taskcluster run number other than 0.
-                # e.g. maybe we could end up with artifacts in > 'run 0' in a re-trigger situation?
-                "artifact_base_url": 'https://queue.taskcluster.net/v1/task/{taskid}/runs/0/artifacts/public/build',
+                "artifact_base_url": 'https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/{subdir}',
                 "virtualenv_modules": [
                     "boto",
                     "PyYAML",
                     "Jinja2",
+                    "redo",
+                    "mar",
                 ],
                 "virtualenv_path": "venv",
-                'buckets': {
-                    'development': "mozilla-releng-beet-mover-dev",
-                    'production': "mozilla-releng-beet-mover",
-                },
                 'product': 'firefox',
             },
         }
+        #todo do excludes need to be configured via command line for specific builds?
         super(BeetMover, self).__init__(**beetmover_kwargs)
 
         c = self.config
         self.manifest = {}
         # assigned in _post_create_virtualenv
         self.virtualenv_imports = None
-        self.bucket = c['buckets']['production'] if c['production'] else c['buckets']['development']
+        self.bucket = c['bucket']
+        if not all(aws_creds):
+            self.fatal('credentials must be passed in env: "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"')
         self.aws_key_id, self.aws_secret_key = aws_creds
+        # if excludes is set from command line, use it otherwise use defaults
+        self.excludes = self.config.get('excludes', DEFAULT_EXCLUDES)
+        dirs = self.query_abs_dirs()
+        self.dest_dir = os.path.join(dirs['abs_work_dir'], CACHE_DIR)
 
     def activate_virtualenv(self):
         """
@@ -159,7 +190,7 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         template = jinja_env.get_template(template_file)
         template_vars = {
             "platform": self.config['platform'],
-            "locales": self.config['locales'],
+            "locales": self.config.get('locales'),
             "version": self.config['version'],
             "app_version": self.config.get('app_version', ''),
             "partial_version": self.config.get('partial_version', ''),
@@ -167,7 +198,7 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
             # mirror current release folder structure
             "s3_prefix": 'pub/{}/candidates'.format(self.config['product']),
             "artifact_base_url": self.config['artifact_base_url'].format(
-                    taskid=self.config['taskid']
+                    taskid=self.config['taskid'], subdir=self.config['artifact_subdir']
             )
         }
         self.manifest = yaml.safe_load(template.render(**template_vars))
@@ -182,37 +213,60 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         # TODO
         self.log('skipping verification. unimplemented...')
 
+    def download_bits(self):
+        """
+        downloads list of artifacts to self.dest_dir dir based on a given manifest
+        """
+        self.log('downloading and uploading artifacts to self_dest_dir...')
+
+        # TODO - do we want to mirror/upload to more than one region?
+        dirs = self.query_abs_dirs()
+
+        for locale in self.manifest['mapping']:
+            for deliverable in self.manifest['mapping'][locale]:
+                self.log("downloading '{}' deliverable for '{}' locale".format(deliverable, locale))
+                # download locally to working dir
+                source=self.manifest['mapping'][locale][deliverable]['artifact']
+                file_name = self.retry(self.download_file,
+                    args=[source],
+                    kwargs={'parent_dir': dirs['abs_work_dir']},
+                    error_level=FATAL)
+        self.log('Success!')
+
     def upload_bits(self):
         """
-        downloads and uploads list of artifacts to s3 candidates dir based on a given manifest
+        uploads list of artifacts to s3 candidates dir based on a given manifest
         """
-        self.log('downloading and uploading artifacts to s3...')
+        self.log('uploading artifacts to s3...')
+        dirs = self.query_abs_dirs()
 
         # connect to s3
         boto = self.virtualenv_imports['boto']
         conn = boto.connect_s3(self.aws_key_id, self.aws_secret_key)
         bucket = conn.get_bucket(self.bucket)
 
+        #todo change so this is not every entry in manifest - should exclude those that don't pass virus sign
+        #not sure how to determine this
         for locale in self.manifest['mapping']:
             for deliverable in self.manifest['mapping'][locale]:
                 self.log("uploading '{}' deliverable for '{}' locale".format(deliverable, locale))
+                #we have already downloaded the files locally so we can use that version
+                source = self.manifest['mapping'][locale][deliverable]['artifact']
+                downloaded_file = os.path.join(dirs['abs_work_dir'], self.get_filename_from_url(source))
                 self.upload_bit(
-                    source=self.manifest['mapping'][locale][deliverable]['artifact'],
+                    source=downloaded_file,
                     s3_key=self.manifest['mapping'][locale][deliverable]['s3_key'],
                     bucket=bucket,
                 )
         self.log('Success!')
+
 
     def upload_bit(self, source, s3_key, bucket):
         # TODO - do we want to mirror/upload to more than one region?
         dirs = self.query_abs_dirs()
         boto = self.virtualenv_imports['boto']
 
-        # download locally
-        file_name = self.retry(self.download_file,
-                               args=[source],
-                               kwargs={'parent_dir': dirs['abs_work_dir']},
-                               error_level=FATAL)
+        #todo need to copy from dir to s3
 
         self.info('uploading to s3 with key: {}'.format(s3_key))
         key = boto.s3.key.Key(bucket)  # create new key
@@ -223,23 +277,47 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         if not key:
             self.info("Uploading to `{}`".format(s3_key))
             key = bucket.new_key(s3_key)
-
             # set key value
-            self.retry(key.set_contents_from_filename, args=[file_name], error_level=FATAL),
-
-            # key.make_public() may lead to race conditions, because
-            # it doesn't pass version_id, so it may not set permissions
-            bucket.set_canned_acl(acl_str='public-read', key_name=s3_key,
-                                  version_id=key.version_id)
+            self.retry(key.set_contents_from_filename, args=[source], error_level=FATAL),
         else:
-            if not get_hash(key.get_contents_as_string()) == get_hash(open(file_name).read()):
+            if not get_hash(key.get_contents_as_string()) == get_hash(open(source).read()):
                 # for now, let's halt. If necessary, we can revisit this and allow for overwrites
                 #  to the same buildnum release with different bits
                 self.fatal("`{}` already exists with different checksum.".format(s3_key))
             self.log("`{}` has the same MD5 checksum, not uploading".format(s3_key))
 
+    def scan_bits(self):
 
+        dirs = self.query_abs_dirs()
+
+        filenames = [f for f in listdir(dirs['abs_work_dir']) if isfile(join(dirs['abs_work_dir'], f))]
+        self.mkdir_p(self.dest_dir)
+        for file_name in filenames:
+            if self._matches_exclude(file_name):
+                self.info("Excluding {} from virus scan".format(file_name))
+            else:
+                self.info('Copying {} to {}'.format(file_name,self.dest_dir))
+                self.copyfile(os.path.join(dirs['abs_work_dir'], file_name), os.path.join(self.dest_dir,file_name))
+        self._scan_files()
+        self.info('Emptying {}'.format(self.dest_dir))
+        self.rmtree(self.dest_dir)
+
+    def _scan_files(self):
+        """Scan the files we've collected. We do the download and scan concurrently to make
+        it easier to have a coherent log afterwards. Uses the venv python."""
+        self.info("Refreshing clamav db...")
+        redo.retry(lambda:
+            sh.freshclam("--stdout", "--verbose", _timeout=300, _err_to_out=True))
+        self.info("Done.")
+        external_tools_path = os.path.join(
+                              os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))), 'external_tools')
+        self.run_command([self.query_python_path(), os.path.join(external_tools_path,'extract_and_run_command.py'),
+                         '-j{}'.format(self.config['scan_parallelization']),
+                         'clamscan', '--no-summary', '--', self.dest_dir])
+
+    def _matches_exclude(self, keyname):
+         return any(re.search(exclude, keyname) for exclude in self.excludes)
 
 if __name__ == '__main__':
-    beet_mover = BeetMover(get_aws_auth())
+    beet_mover = BeetMover(pop_aws_auth_from_env())
     beet_mover.run_and_exit()

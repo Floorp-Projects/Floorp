@@ -37,6 +37,7 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'nsCollation.cpp',
+    'nsIDateTimeFormat.cpp',
     'nsLanguageAtomService.cpp',
     'nsLocale.cpp',
     'nsLocaleService.cpp',

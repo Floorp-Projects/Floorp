@@ -93,8 +93,7 @@ CERT_GetCertTrust(const CERTCertificate *cert, CERTCertTrust *trust)
     CERT_LockCertTrust(cert);
     if (cert->trust == NULL) {
         rv = SECFailure;
-    }
-    else {
+    } else {
         *trust = *cert->trust;
         rv = SECSuccess;
     }
@@ -359,8 +358,7 @@ CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
                 nssCertificate_Destroy(c);
                 PORT_SetError(SEC_ERROR_REUSED_ISSUER_AND_SERIAL);
                 cc = NULL;
-            }
-            else {
+            } else {
                 cc = STAN_GetCERTCertificateOrRelease(c);
                 if (cc == NULL) {
                     CERT_MapStanError();
@@ -384,8 +382,7 @@ CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
     if (copyDER) {
         nssItem_Create(c->object.arena, &c->encoding, derCert->len,
                        derCert->data);
-    }
-    else {
+    } else {
         NSSITEM_FROM_SECITEM(&c->encoding, derCert);
     }
     /* Forces a decoding of the cert in order to obtain the parts used
@@ -481,8 +478,7 @@ get_best_temp_or_perm(NSSCertificate *ct, NSSCertificate *cp)
     NSSCertificate *arr[3];
     if (!ct) {
         return nssCertificate_AddRef(cp);
-    }
-    else if (!cp) {
+    } else if (!cp) {
         return nssCertificate_AddRef(ct);
     }
     arr[0] = ct;
@@ -565,8 +561,7 @@ CERT_FindCertByNickname(CERTCertDBHandle *handle, const char *nickname)
         if (ct) {
             CERT_DestroyCertificate(STAN_GetCERTCertificateOrRelease(ct));
         }
-    }
-    else {
+    } else {
         c = ct;
     }
     return c ? STAN_GetCERTCertificateOrRelease(c) : NULL;
@@ -627,8 +622,7 @@ common_FindCertByNicknameOrEmailAddrForUsage(CERTCertDBHandle *handle,
 
     if (anyUsage) {
         cert = PK11_FindCertFromNickname(name, NULL);
-    }
-    else {
+    } else {
         if (ct) {
             /* Does ct really have the required usage? */
             nssDecodedCert *dc;
@@ -657,8 +651,7 @@ common_FindCertByNicknameOrEmailAddrForUsage(CERTCertDBHandle *handle,
         if (ct) {
             CERT_DestroyCertificate(STAN_GetCERTCertificateOrRelease(ct));
         }
-    }
-    else {
+    } else {
         c = ct;
     }
     return c ? STAN_GetCERTCertificateOrRelease(c) : NULL;
@@ -693,8 +686,7 @@ add_to_subject_list(CERTCertList *certList, CERTCertificate *cert,
         if (secrv != SECSuccess) {
             CERT_DestroyCertificate(cert);
         }
-    }
-    else {
+    } else {
         CERT_DestroyCertificate(cert);
     }
 }
@@ -776,8 +768,7 @@ CERT_DestroyCertificate(CERTCertificate *cert)
         if (tmp) {
             /* delete the NSSCertificate */
             NSSCertificate_Destroy(tmp);
-        }
-        else if (cert->arena) {
+        } else if (cert->arena) {
             PORT_FreeArena(cert->arena, PR_FALSE);
         }
     }
@@ -821,8 +812,7 @@ certdb_SaveSingleProfile(CERTCertificate *cert, const char *emailAddr,
             SECITEM_FROM_NSSITEM(&oldproftime, stanProfile->profileTime);
             oldProfileTime = &oldproftime;
         }
-    }
-    else {
+    } else {
         oldProfile = PK11_FindSMimeProfile(&slot, (char *)emailAddr,
                                            &cert->derSubject, &oldProfileTime);
         freeOldProfile = PR_TRUE;
@@ -833,23 +823,20 @@ certdb_SaveSingleProfile(CERTCertificate *cert, const char *emailAddr,
     /* both profileTime and emailProfile have to exist or not exist */
     if (emailProfile == NULL) {
         profileTime = NULL;
-    }
-    else if (profileTime == NULL) {
+    } else if (profileTime == NULL) {
         emailProfile = NULL;
     }
 
     if (oldProfileTime == NULL) {
         saveit = PR_TRUE;
-    }
-    else {
+    } else {
         /* there was already a profile for this email addr */
         if (profileTime) {
             /* we have an old and new profile - save whichever is more recent*/
             if (oldProfileTime->len == 0) {
                 /* always replace if old entry doesn't have a time */
                 oldtime = LL_MININT;
-            }
-            else {
+            } else {
                 rv = DER_UTCTimeToTime(&oldtime, oldProfileTime);
                 if (rv != SECSuccess) {
                     goto loser;
@@ -865,8 +852,7 @@ certdb_SaveSingleProfile(CERTCertificate *cert, const char *emailAddr,
                 /* this is a newer profile, save it and cert */
                 saveit = PR_TRUE;
             }
-        }
-        else {
+        } else {
             saveit = PR_TRUE;
         }
     }
@@ -882,8 +868,7 @@ certdb_SaveSingleProfile(CERTCertificate *cert, const char *emailAddr,
                     arena, NULL, profileTime->len, profileTime->data);
                 stanProfile->profileData = nssItem_Create(
                     arena, NULL, emailProfile->len, emailProfile->data);
-            }
-            else if (profileTime && emailProfile) {
+            } else if (profileTime && emailProfile) {
                 PRStatus nssrv;
                 NSSItem profTime, profData;
                 NSSITEM_FROM_SECITEM(&profTime, profileTime);
@@ -894,14 +879,12 @@ certdb_SaveSingleProfile(CERTCertificate *cert, const char *emailAddr,
                 nssrv = nssCryptoContext_ImportSMIMEProfile(cc, stanProfile);
                 rv = (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
             }
-        }
-        else {
+        } else {
             rv = PK11_SaveSMimeProfile(slot, (char *)emailAddr,
                                        &cert->derSubject, emailProfile,
                                        profileTime);
         }
-    }
-    else {
+    } else {
         rv = SECSuccess;
     }
 

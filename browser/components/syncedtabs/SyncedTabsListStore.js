@@ -188,12 +188,16 @@ Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
 
   focusInput() {
     this.inputFocused = true;
-    this._change("update");
+    // A change type of "all" updates rather than rebuilds, which is what we
+    // want here - only the selection/focus has changed.
+    this._change("all");
   },
 
   blurInput() {
     this.inputFocused = false;
-    this._change("update");
+    // A change type of "all" updates rather than rebuilds, which is what we
+    // want here - only the selection/focus has changed.
+    this._change("all");
   },
 
   clearFilter() {

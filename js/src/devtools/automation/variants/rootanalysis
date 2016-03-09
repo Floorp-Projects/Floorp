@@ -2,7 +2,3 @@
 --enable-debug
 --enable-stdcxx-compat
 --enable-ctypes
---disable-shared-js
---enable-exact-rooting
---enable-gcgenerational
---enable-threadsafe

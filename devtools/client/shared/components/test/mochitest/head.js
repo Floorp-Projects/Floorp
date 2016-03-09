@@ -6,12 +6,12 @@ var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://testing-common/Assert.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 var promise = require("promise");
+var Services = require("Services");
 var { DebuggerServer } = require("devtools/server/main");
 var { DebuggerClient } = require("devtools/shared/client/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -19,7 +19,10 @@ var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 
 DevToolsUtils.testing = true;
-var { require: browserRequire } = BrowserLoader("resource://devtools/client/shared/", this);
+var { require: browserRequire } = BrowserLoader({
+  baseURI: "resource://devtools/client/shared/",
+  window: this
+});
 
 var EXAMPLE_URL = "http://example.com/browser/browser/devtools/shared/test/";
 
@@ -136,16 +139,26 @@ var TEST_TREE = {
  */
 function checkFrameString (component, file, line, column) {
   let el = component.getDOMNode();
-  is(el.querySelector(".frame-link-filename").textContent, file);
-  is(+el.querySelector(".frame-link-line").textContent, +line);
-  if (column != null) {
-    is(+el.querySelector(".frame-link-column").textContent, +column);
-    is(el.querySelectorAll(".frame-link-colon").length, 2);
+  let $ = selector => el.querySelector(selector);
+
+  let $line = $(".frame-link-line");
+  let $column = $(".frame-link-column");
+
+  is($(".frame-link-filename").textContent, file);
+
+  is(el.getAttribute("data-line"), line ? `${line}` : null, "Expected `data-line` found");
+  is(el.getAttribute("data-column"), column ? `${column}` : null, "Expected `data-column` found");
+
+  if (line != null) {
+    is(+$line.textContent, +line);
   } else {
-    is(el.querySelector(".frame-link-column"), null,
-      "Should not render column when none specified");
-    is(el.querySelectorAll(".frame-link-colon").length, 1,
-      "Should only render one colon when no column specified");
+    ok(!$line, "Should not have an element for `line`");
+  }
+
+  if (column != null) {
+    is(+$column.textContent, +column);
+  } else {
+    ok(!$column, "Should not have an element for `column`");
   }
 }
 

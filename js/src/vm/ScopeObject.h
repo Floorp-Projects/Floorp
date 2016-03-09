@@ -130,10 +130,14 @@ class NestedStaticScope : public StaticScope
  */
 class StaticBlockScope : public NestedStaticScope
 {
-    static const unsigned LOCAL_OFFSET_SLOT = NestedStaticScope::RESERVED_SLOTS;
+    static const unsigned LOCAL_OFFSET_AND_FLAGS_SLOT = NestedStaticScope::RESERVED_SLOTS;
+
+    static const uint32_t LocalOffsetShift = 1;
+    static const uint32_t BlockFlagsMask = 0x1;
+    static const uint32_t IsForCatchParametersFlag = 0x1;
 
   public:
-    static const unsigned RESERVED_SLOTS = LOCAL_OFFSET_SLOT + 1;
+    static const unsigned RESERVED_SLOTS = LOCAL_OFFSET_AND_FLAGS_SLOT + 1;
 
     /* Return the number of variables associated with this block. */
     uint32_t numVariables() const {
@@ -152,6 +156,20 @@ class StaticBlockScope : public NestedStaticScope
 
     void setSlotValue(unsigned i, const Value& v) {
         setSlot(RESERVED_SLOTS + i, v);
+    }
+
+    uint32_t localOffsetAndBlockFlags() const {
+        return getReservedSlot(LOCAL_OFFSET_AND_FLAGS_SLOT).toPrivateUint32();
+    }
+
+    uint32_t blockFlags() const {
+        return localOffsetAndBlockFlags() & BlockFlagsMask;
+    }
+
+    void setBlockFlags(uint32_t flags) {
+        MOZ_ASSERT((flags & ~BlockFlagsMask) == 0);
+        setReservedSlot(LOCAL_OFFSET_AND_FLAGS_SLOT,
+                        PrivateUint32Value(localOffsetAndBlockFlags() | flags));
     }
 
   public:
@@ -184,15 +202,15 @@ class StaticBlockScope : public NestedStaticScope
      */
     inline StaticBlockScope* enclosingBlock() const;
 
-    uint32_t localOffset() {
-        return getReservedSlot(LOCAL_OFFSET_SLOT).toPrivateUint32();
+    uint32_t localOffset() const {
+        return localOffsetAndBlockFlags() >> LocalOffsetShift;
     }
 
     // Return the local corresponding to the 'var'th binding where 'var' is in the
     // range [0, numVariables()).
     uint32_t blockIndexToLocalIndex(uint32_t index) {
         MOZ_ASSERT(index < numVariables());
-        return getReservedSlot(LOCAL_OFFSET_SLOT).toPrivateUint32() + index;
+        return localOffset() + index;
     }
 
     // Return the slot corresponding to block index 'index', where 'index' is
@@ -239,6 +257,10 @@ class StaticBlockScope : public NestedStaticScope
         return !isExtensible() || isGlobal();
     }
 
+    bool isForCatchParameters() const {
+        return blockFlags() & IsForCatchParametersFlag;
+    }
+
     /* Frontend-only functions ***********************************************/
 
     /* Initialization functions for above fields. */
@@ -252,8 +274,20 @@ class StaticBlockScope : public NestedStaticScope
     }
 
     void setLocalOffset(uint32_t offset) {
-        MOZ_ASSERT(getReservedSlot(LOCAL_OFFSET_SLOT).isUndefined());
-        initReservedSlot(LOCAL_OFFSET_SLOT, PrivateUint32Value(offset));
+        MOZ_ASSERT(getReservedSlot(LOCAL_OFFSET_AND_FLAGS_SLOT).isUndefined());
+        MOZ_ASSERT(offset < LOCALNO_LIMIT);
+        initReservedSlot(LOCAL_OFFSET_AND_FLAGS_SLOT,
+                         PrivateUint32Value(offset << LocalOffsetShift));
+    }
+
+    void setLocalOffsetToInvalid() {
+        MOZ_ASSERT(getReservedSlot(LOCAL_OFFSET_AND_FLAGS_SLOT).isUndefined());
+        initReservedSlot(LOCAL_OFFSET_AND_FLAGS_SLOT,
+                         PrivateUint32Value(LOCALNO_LIMIT << LocalOffsetShift));
+    }
+
+    void setIsForCatchParameters() {
+        setBlockFlags(IsForCatchParametersFlag);
     }
 
     /*
@@ -995,6 +1029,10 @@ class ClonedBlockObject : public NestedScopeObject
 
     bool isSyntactic() const {
         return !isExtensible() || isGlobal();
+    }
+
+    bool isForCatchParameters() const {
+        return staticBlock().isForCatchParameters();
     }
 
     /* Copy in all the unaliased formals and locals. */

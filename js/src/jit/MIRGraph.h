@@ -368,8 +368,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         }
         MOZ_CRASH();
     }
+    bool hasAnyIns() const {
+        return !instructions_.empty();
+    }
     bool hasLastIns() const {
-        return !instructions_.empty() && instructions_.rbegin()->isControlInstruction();
+        return hasAnyIns() && instructions_.rbegin()->isControlInstruction();
     }
     MControlInstruction* lastIns() const {
         MOZ_ASSERT(hasLastIns());

@@ -7,6 +7,7 @@
 #include "builtin/TestingFunctions.h"
 
 #include "mozilla/Move.h"
+#include "mozilla/unused.h"
 
 #include <cmath>
 
@@ -20,6 +21,7 @@
 
 #include "asmjs/AsmJS.h"
 #include "asmjs/Wasm.h"
+#include "asmjs/WasmText.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitFrameIterator.h"
 #include "js/Debug.h"
@@ -496,6 +498,52 @@ IsProxy(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+WasmIsSupported(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(wasm::HasCompilerSupport(cx) && cx->runtime()->options().wasm());
+    return true;
+}
+
+static bool
+WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() != 1) {
+        ReportUsageError(cx, callee, "Wrong number of arguments");
+        return false;
+    }
+
+    if (!args[0].isString()) {
+        ReportUsageError(cx, callee, "First argument must be a String");
+        return false;
+    }
+
+    AutoStableStringChars twoByteChars(cx);
+    if (!twoByteChars.initTwoByte(cx, args[0].toString()))
+        return false;
+
+    wasm::Bytes bytes;
+    UniqueChars error;
+    if (!wasm::TextToBinary(twoByteChars.twoByteChars(), &bytes, &error)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
+                             error.get() ? error.get() : "out of memory");
+        return false;
+    }
+
+    RootedObject obj(cx, JS_NewUint8Array(cx, bytes.length()));
+    if (!obj)
+        return false;
+
+    memcpy(obj->as<TypedArrayObject>().viewDataUnshared(), bytes.begin(), bytes.length());
+
+    args.rval().setObject(*obj);
+    return true;
+}
+
+static bool
 IsLazyFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -711,6 +759,8 @@ GCState(JSContext* cx, unsigned argc, Value* vp)
         state = "mark";
     else if (globalState == gc::SWEEP)
         state = "sweep";
+    else if (globalState == gc::FINALIZE)
+        state = "finalize";
     else if (globalState == gc::COMPACT)
         state = "compact";
     else
@@ -1567,7 +1617,7 @@ DisplayName(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static JSObject*
-ShellObjectMetadataCallback(JSContext* cx, JSObject*)
+ShellObjectMetadataCallback(JSContext* cx, HandleObject)
 {
     AutoEnterOOMUnsafeRegion oomUnsafe;
 
@@ -2530,7 +2580,7 @@ FindPath(JSContext* cx, unsigned argc, Value* vp)
         RootedString edgeStr(cx, NewString<CanGC>(cx, edgeName.get(), js_strlen(edgeName.get())));
         if (!edgeStr)
             return false;
-        edgeName.release(); // edgeStr acquired ownership
+        mozilla::Unused << edgeName.release(); // edgeStr acquired ownership
 
         if (!JS_DefineProperty(cx, obj, "edge", edgeStr, JSPROP_ENUMERATE, nullptr, nullptr))
             return false;
@@ -2691,8 +2741,11 @@ ShortestPaths(JSContext* cx, unsigned argc, Value* vp)
                     return false;
 
                 RootedValue predecessor(cx, values[i][j][k]);
-                if (!JS_DefineProperty(cx, part, "predecessor", predecessor, JSPROP_ENUMERATE))
+                if (!cx->compartment()->wrap(cx, &predecessor) ||
+                    !JS_DefineProperty(cx, part, "predecessor", predecessor, JSPROP_ENUMERATE))
+                {
                     return false;
+                }
 
                 if (names[i][j][k]) {
                     RootedString edge(cx, NewStringCopyZ<CanGC>(cx, names[i][j][k].get()));
@@ -3619,6 +3672,14 @@ gc::ZealModeHelpText),
 "  Returns whether the given value is a nested function in an asm.js module that has been\n"
 "  both compile- and link-time validated."),
 
+    JS_FN_HELP("wasmIsSupported", WasmIsSupported, 0, 0,
+"wasmIsSupported()",
+"  Returns a boolean indicating whether WebAssembly is supported on the current device."),
+
+    JS_FN_HELP("wasmTextToBinary", WasmTextToBinary, 1, 0,
+"wasmTextToBinary(str)",
+"  Translates the given text wasm module into its binary encoding."),
+
     JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,
 "isLazyFunction(fun)",
 "  True if fun is a lazy JSFunction."),
@@ -3871,9 +3932,6 @@ js::DefineTestingFunctions(JSContext* cx, HandleObject obj, bool fuzzingSafe_,
         fuzzingSafe = true;
 
     disableOOMFunctions = disableOOMFunctions_;
-
-    if (!wasm::DefineTestingFunctions(cx, obj))
-        return false;
 
     if (!JS_DefineProperties(cx, obj, TestingProperties))
         return false;

@@ -91,13 +91,42 @@ html {
 }
 
 .item-twisty-container {
-  min-width: 12px;
-  max-width: 12px;
-  min-height: 12px;
-  max-height: 12px;
-  margin: 0 1px;
-  background-size: 16px 16px;
+  background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+  padding-top: 5px;
+  width: 9px; /* The image's width is 9 pixels */
+  height: 9px;
 }
 
+.item.client .item-twisty-container {
+  background-image: url("chrome://global/skin/tree/twisty.svg#open");
+}
+
+.item.client.closed .item-twisty-container {
+  background-image: url("chrome://global/skin/tree/twisty.svg#clsd");
+}
+
+.item.client .item-twisty-container:hover {
+  background-image: url("chrome://global/skin/tree/twisty.svg#open-hover");
+}
+
+.item.client.closed .item-twisty-container:hover {
+  background-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover");
+}
+
+.item.client .item-twisty-container:-moz-dir(rtl) {
+  background-image: url("chrome://global/skin/tree/twisty.svg#open-rtl");
+}
+
+.item.client.closed .item-twisty-container:-moz-dir(rtl) {
+  background-image: url("chrome://global/skin/tree/twisty.svg#clsd-rtl");
+}
+
+.item.client .item-twisty-container:hover:-moz-dir(rtl) {
+  background-image: url("chrome://global/skin/tree/twisty.svg#open-hover-rtl");
+}
+
+.item.client.closed .item-twisty-container:hover:-moz-dir(rtl) {
+  background-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover-rtl");
+}

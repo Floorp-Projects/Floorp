@@ -83,7 +83,7 @@ public:
 };
 
 /******************************************************************************
- * mozilla::WidgetTouchEvent
+ * mozilla::WidgetSimpleGestureEvent
  ******************************************************************************/
 
 class WidgetSimpleGestureEvent : public WidgetMouseEventBase
@@ -163,19 +163,20 @@ public:
 
   WidgetTouchEvent()
   {
+    MOZ_COUNT_CTOR(WidgetTouchEvent);
   }
 
   WidgetTouchEvent(const WidgetTouchEvent& aOther)
     : WidgetInputEvent(aOther.mFlags.mIsTrusted, aOther.mMessage, aOther.widget,
                        eTouchEventClass)
   {
+    MOZ_COUNT_CTOR(WidgetTouchEvent);
     modifiers = aOther.modifiers;
     time = aOther.time;
     timeStamp = aOther.timeStamp;
     touches.AppendElements(aOther.touches);
     mFlags.mCancelable = mMessage != eTouchCancel;
     mFlags.mHandledByAPZ = aOther.mFlags.mHandledByAPZ;
-    MOZ_COUNT_CTOR(WidgetTouchEvent);
   }
 
   WidgetTouchEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget)

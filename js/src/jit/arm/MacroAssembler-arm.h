@@ -684,21 +684,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testMagic(Condition cond, const BaseIndex& src);
     Condition testGCThing(Condition cond, const BaseIndex& src);
 
-    template <typename T>
-    void branchTestGCThing(Condition cond, const T& t, Label* label) {
-        Condition c = testGCThing(cond, t);
-        ma_b(label, c);
-    }
-    template <typename T>
-    void branchTestPrimitive(Condition cond, const T& t, Label* label) {
-        Condition c = testPrimitive(cond, t);
-        ma_b(label, c);
-    }
-
-    void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label);
-    void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
-                         Label* label);
-
     // Unboxing code.
     void unboxNonDouble(const ValueOperand& operand, Register dest);
     void unboxNonDouble(const Address& src, Register dest);
@@ -762,100 +747,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void int32ValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
 
-    template<typename T>
-    void branchTestInt32(Condition cond, const T & t, Label* label) {
-        Condition c = testInt32(cond, t);
-        ma_b(label, c);
-    }
-    template<typename T>
-    void branchTestBoolean(Condition cond, const T & t, Label* label) {
-        Condition c = testBoolean(cond, t);
-        ma_b(label, c);
-    }
-
-    template<typename T>
-    void branchTestDouble(Condition cond, const T & t, Label* label) {
-        Condition c = testDouble(cond, t);
-        ma_b(label, c);
-    }
-    template<typename T>
-    void branchTestNull(Condition cond, const T & t, Label* label) {
-        Condition c = testNull(cond, t);
-        ma_b(label, c);
-    }
-    template<typename T>
-    void branchTestObject(Condition cond, const T & t, Label* label) {
-        Condition c = testObject(cond, t);
-        ma_b(label, c);
-    }
-    template<typename T>
-    void branchTestString(Condition cond, const T & t, Label* label) {
-        Condition c = testString(cond, t);
-        ma_b(label, c);
-    }
-    template<typename T>
-    void branchTestSymbol(Condition cond, const T & t, Label* label) {
-        Condition c = testSymbol(cond, t);
-        ma_b(label, c);
-    }
-    template<typename T>
-    void branchTestUndefined(Condition cond, const T & t, Label* label) {
-        Condition c = testUndefined(cond, t);
-        ma_b(label, c);
-    }
-    template <typename T>
-    void branchTestNumber(Condition cond, const T& t, Label* label) {
-        cond = testNumber(cond, t);
-        ma_b(label, cond);
-    }
-    template <typename T, class L>
-    void branchTestMagic(Condition cond, const T& t, L label) {
-        cond = testMagic(cond, t);
-        ma_b(label, cond);
-    }
-    void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
-                              Label* label) {
-        MOZ_ASSERT(cond == Equal || cond == NotEqual);
-        branchTestValue(cond, val, MagicValue(why), label);
-    }
-    void branchTestInt32Truthy(bool truthy, const ValueOperand& operand, Label* label) {
-        Condition c = testInt32Truthy(truthy, operand);
-        ma_b(label, c);
-    }
-    void branchTestBooleanTruthy(bool truthy, const ValueOperand& operand, Label* label) {
-        Condition c = testBooleanTruthy(truthy, operand);
-        ma_b(label, c);
-    }
-    void branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label* label) {
-        Condition c = testDoubleTruthy(truthy, reg);
-        ma_b(label, c);
-    }
-    void branchTestStringTruthy(bool truthy, const ValueOperand& value, Label* label) {
-        Condition c = testStringTruthy(truthy, value);
-        ma_b(label, c);
-    }
-    void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        ma_sub(imm, lhs, SetCC);
-        as_b(label, cond);
-    }
     void moveValue(const Value& val, Register type, Register data);
 
     CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always,
                                  Label* documentation = nullptr);
     CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation) {
         return jumpWithPatch(label, Always, documentation);
-    }
-    template <typename T>
-    CodeOffsetJump branchPtrWithPatch(Condition cond, Register reg, T ptr, RepatchLabel* label) {
-        ma_cmp(reg, ptr);
-        return jumpWithPatch(label, cond);
-    }
-    template <typename T>
-    CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, T ptr, RepatchLabel* label) {
-        AutoRegisterScope scratch2(asMasm(), secondScratchReg_);
-        ma_ldr(addr, scratch2);
-        ma_cmp(scratch2, ptr);
-        return jumpWithPatch(label, cond);
     }
 
     void loadUnboxedValue(Address address, MIRType type, AnyRegister dest) {
@@ -985,13 +882,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // Common interface.
     /////////////////////////////////////////////////////////////////
   public:
-    template <typename T> inline void branchAdd32(Condition cond, T src, Register dest, Label* label);
-    template <typename T>
-    void branchSub32(Condition cond, T src, Register dest, Label* label) {
-        ma_sub(src, dest, SetCC);
-        j(cond, label);
-    }
-
     void not32(Register reg);
 
     void move32(Imm32 imm, Register dest);
@@ -1002,10 +892,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void movePtr(ImmPtr imm, Register dest);
     void movePtr(wasm::SymbolicAddress imm, Register dest);
     void movePtr(ImmGCPtr imm, Register dest);
-    void move64(Register64 src, Register64 dest) {
-        move32(src.low, dest.low);
-        move32(src.high, dest.high);
-    }
 
     void load8SignExtend(const Address& address, Register dest);
     void load8SignExtend(const BaseIndex& src, Register dest);
@@ -1551,9 +1437,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void moveFloat32(FloatRegister src, FloatRegister dest) {
         as_vmov(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay());
     }
-
-    void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label);
-    void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label);
 
     void loadWasmActivation(Register dest) {
         loadPtr(Address(GlobalReg, wasm::ActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);

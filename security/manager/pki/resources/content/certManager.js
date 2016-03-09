@@ -294,8 +294,10 @@ function backupCerts()
 {
   getSelectedCerts();
   var numcerts = selected_certs.length;
-  if (!numcerts)
+  if (numcerts == 0) {
     return;
+  }
+
   var bundle = document.getElementById("pippki_bundle");
   var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
   fp.init(window,
@@ -396,8 +398,9 @@ function deleteCerts()
 {
   getSelectedTreeItems();
   var numcerts = selected_tree_items.length;
-  if (!numcerts)
+  if (numcerts == 0) {
     return;
+  }
 
   var params = Components.classes[nsDialogParamBlock].createInstance(nsIDialogParamBlock);
 

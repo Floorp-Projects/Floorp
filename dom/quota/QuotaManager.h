@@ -230,6 +230,7 @@ public:
   void
   OpenDirectoryInternal(Nullable<PersistenceType> aPersistenceType,
                         const OriginScope& aOriginScope,
+                        Nullable<Client::Type> aClientType,
                         bool aExclusive,
                         OpenDirectoryListener* aOpenListener);
 

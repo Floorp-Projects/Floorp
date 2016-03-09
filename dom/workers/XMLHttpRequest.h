@@ -50,6 +50,8 @@ public:
       mResponseTextResult(NS_OK), mStatusResult(NS_OK),
       mResponseResult(NS_OK)
     { }
+
+    void trace(JSTracer* trc);
   };
 
 private:

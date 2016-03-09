@@ -12,6 +12,7 @@ var {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 var {Utils: WebConsoleUtils} = require("devtools/shared/webconsole/utils");
 var {Messages} = require("devtools/client/webconsole/console-output");
 const asyncStorage = require("devtools/shared/async-storage");
+const HUDService = require("devtools/client/webconsole/hudservice");
 
 // Services.prefs.setBoolPref("devtools.debugger.log", true);
 
@@ -38,7 +39,7 @@ const GROUP_INDENT = 12;
 
 const WEBCONSOLE_STRINGS_URI = "chrome://devtools/locale/" +
                                "webconsole.properties";
-var WCUL10n = new WebConsoleUtils.l10n(WEBCONSOLE_STRINGS_URI);
+var WCUL10n = new WebConsoleUtils.L10n(WEBCONSOLE_STRINGS_URI);
 
 DevToolsUtils.testing = true;
 
@@ -1476,7 +1477,7 @@ function checkOutputForInputs(hud, inputTests) {
   }
 
   function* checkConsoleLog(entry) {
-    info("Logging: " + entry.input);
+    info("Logging");
     hud.jsterm.clearOutput();
     hud.jsterm.execute("console.log(" + entry.input + ")");
 
@@ -1500,13 +1501,13 @@ function checkOutputForInputs(hud, inputTests) {
     }
 
     if (typeof entry.inspectorIcon == "boolean") {
-      info("Checking Inspector Link: " + entry.input);
+      info("Checking Inspector Link");
       yield checkLinkToInspector(entry.inspectorIcon, msg);
     }
   }
 
   function checkPrintOutput(entry) {
-    info("Printing: " + entry.input);
+    info("Printing");
     hud.jsterm.clearOutput();
     hud.jsterm.execute("print(" + entry.input + ")");
 
@@ -1523,7 +1524,7 @@ function checkOutputForInputs(hud, inputTests) {
   }
 
   function* checkJSEval(entry) {
-    info("Evaluating: " + entry.input);
+    info("Evaluating");
     hud.jsterm.clearOutput();
     hud.jsterm.execute(entry.input);
 
@@ -1549,7 +1550,7 @@ function checkOutputForInputs(hud, inputTests) {
   }
 
   function* checkObjectClick(entry, msg) {
-    info("Clicking: " + entry.input);
+    info("Clicking");
     let body;
     if (entry.getClickableNode) {
       body = entry.getClickableNode(msg);
@@ -1594,7 +1595,7 @@ function checkOutputForInputs(hud, inputTests) {
   }
 
   function onVariablesViewOpen(entry, {resolve, reject}, event, view, options) {
-    info("Variables view opened: " + entry.input);
+    info("Variables view opened");
     let label = entry.variablesViewLabel || entry.output;
     if (typeof label == "string" && options.label != label) {
       return;

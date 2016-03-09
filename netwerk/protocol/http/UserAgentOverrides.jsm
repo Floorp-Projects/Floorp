@@ -46,9 +46,9 @@ this.UserAgentOverrides = {
     Services.prefs.addObserver(PREF_OVERRIDES_ENABLED, buildOverrides, false);
 
     try {
-      Services.obs.addObserver(HTTP_on_modify_request, "http-on-modify-request", false);
+      Services.obs.addObserver(HTTP_on_useragent_request, "http-on-useragent-request", false);
     } catch (x) {
-      // The http-on-modify-request notification is disallowed in content processes.
+      // The http-on-useragent-request notification is disallowed in content processes.
     }
 
     UserAgentUpdates.init(function(overrides) {
@@ -118,7 +118,7 @@ this.UserAgentOverrides = {
 
     Services.prefs.removeObserver(PREF_OVERRIDES_ENABLED, buildOverrides);
 
-    Services.obs.removeObserver(HTTP_on_modify_request, "http-on-modify-request");
+    Services.obs.removeObserver(HTTP_on_useragent_request, "http-on-useragent-request");
   },
 
   receiveMessage: function(aMessage) {
@@ -169,7 +169,7 @@ function buildOverrides() {
   }
 }
 
-function HTTP_on_modify_request(aSubject, aTopic, aData) {
+function HTTP_on_useragent_request(aSubject, aTopic, aData) {
   let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
 
   for (let callback of gOverrideFunctions) {

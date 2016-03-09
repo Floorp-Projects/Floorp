@@ -525,13 +525,13 @@ GLContextCrashGuard::UpdateEnvironment()
 void
 GLContextCrashGuard::LogCrashRecovery()
 {
-  gfxCriticalNote << "GLContext just crashed and is now disabled.";
+  gfxCriticalNote << "GLContext just crashed.";
 }
 
 void
 GLContextCrashGuard::LogFeatureDisabled()
 {
-  gfxCriticalNote << "GLContext is disabled due to a previous crash.";
+  gfxCriticalNote << "GLContext remains enabled despite a previous crash.";
 }
 
 } // namespace gfx

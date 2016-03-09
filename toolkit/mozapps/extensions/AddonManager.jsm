@@ -308,37 +308,6 @@ function getLocale() {
 }
 
 /**
- * Previously the APIs for installing add-ons from webpages accepted nsIURI
- * arguments for the installing page. They now take an nsIPrincipal but for now
- * maintain backwards compatibility by converting an nsIURI to an nsIPrincipal.
- *
- * @param  aPrincipalOrURI
- *         The argument passed to the API function. Can be null, an nsIURI or
- *         an nsIPrincipal.
- * @return an nsIPrincipal.
- */
-function ensurePrincipal(principalOrURI) {
-  if (principalOrURI instanceof Ci.nsIPrincipal)
-    return principalOrURI;
-
-  logger.warn("Deprecated API call, please pass a non-null nsIPrincipal instead of an nsIURI");
-
-  // Previously a null installing URI meant allowing the install regardless.
-  if (!principalOrURI) {
-    return Services.scriptSecurityManager.getSystemPrincipal();
-  }
-
-  if (principalOrURI instanceof Ci.nsIURI) {
-    return Services.scriptSecurityManager.createCodebasePrincipal(principalOrURI, {
-      inBrowser: true
-    });
-  }
-
-  // Just return whatever we have, the API method will log an error about it.
-  return principalOrURI;
-}
-
-/**
  * A helper class to repeatedly call a listener with each object in an array
  * optionally checking whether the object has a method in it.
  *
@@ -2277,6 +2246,28 @@ var AddonManagerInternal = {
                                .installTemporaryAddon(aFile);
   },
 
+  /**
+   * Returns an Addon corresponding to an instance ID.
+   * @param aInstanceID
+   *        An Addon Instance ID symbol
+   * @return {Promise}
+   * @resolves The found Addon or null if no such add-on exists.
+   * @rejects  Never
+   * @throws if the aInstanceID argument is not specified
+   *         or the AddonManager is not initialized
+   */
+   getAddonByInstanceID: function(aInstanceID) {
+     if (!gStarted)
+       throw Components.Exception("AddonManager is not initialized",
+                                  Cr.NS_ERROR_NOT_INITIALIZED);
+
+     if (!aInstanceID || typeof aInstanceID != "symbol")
+       throw Components.Exception("aInstanceID must be a Symbol()",
+                                  Cr.NS_ERROR_INVALID_ARG);
+
+     return AddonManagerInternal._getProviderByName("XPIProvider")
+                                .getAddonByInstanceID(aInstanceID);
+   },
 
   /**
    * Gets an icon from the icon set provided by the add-on
@@ -3215,19 +3206,22 @@ this.AddonManager = {
   },
 
   isInstallAllowed: function(aType, aInstallingPrincipal) {
-    return AddonManagerInternal.isInstallAllowed(aType, ensurePrincipal(aInstallingPrincipal));
+    return AddonManagerInternal.isInstallAllowed(aType, aInstallingPrincipal);
   },
 
-  installAddonsFromWebpage: function(aType, aBrowser,
-                                                                 aInstallingPrincipal,
-                                                                 aInstalls) {
+  installAddonsFromWebpage: function(aType, aBrowser, aInstallingPrincipal,
+                                     aInstalls) {
     AddonManagerInternal.installAddonsFromWebpage(aType, aBrowser,
-                                                  ensurePrincipal(aInstallingPrincipal),
+                                                  aInstallingPrincipal,
                                                   aInstalls);
   },
 
   installTemporaryAddon: function(aDirectory) {
     return AddonManagerInternal.installTemporaryAddon(aDirectory);
+  },
+
+  getAddonByInstanceID: function(aInstanceID) {
+    return AddonManagerInternal.getAddonByInstanceID(aInstanceID);
   },
 
   addManagerListener: function(aListener) {

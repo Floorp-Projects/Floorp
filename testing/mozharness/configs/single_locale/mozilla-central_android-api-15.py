@@ -24,7 +24,7 @@ config = {
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
     },
     "exes": {
-        'tooltool.py': '/tools/tooltool.py',
+        'tooltool.py': '/builds/tooltool.py',
     },
     "repos": [{
         "repo": "https://hg.mozilla.org/mozilla-central",
@@ -58,7 +58,6 @@ config = {
     "upload_branch": "%s-android-api-15" % BRANCH,
     "ssh_key_dir": "~/.ssh",
     "merge_locales": True,
-    "make_dirs": ['config'],
     "mozilla_dir": MOZILLA_DIR,
     "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-15/l10n-nightly" % MOZILLA_DIR,
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",

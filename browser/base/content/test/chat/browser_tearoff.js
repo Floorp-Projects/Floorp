@@ -66,7 +66,7 @@ add_chat_task(function* testTearoffChat() {
 
   yield ContentTask.spawn(chatbox.content, null, function* () {
     let div = content.document.getElementById("testdiv");
-    is(div.getAttribute("test"), "1", "docshell should have been swapped");
+    Assert.equal(div.getAttribute("test"), "1", "docshell should have been swapped");
     div.setAttribute("test", "2");
   });
 
@@ -84,7 +84,7 @@ add_chat_task(function* testTearoffChat() {
 
   yield ContentTask.spawn(chatbox.content, null, function* () {
     let div = content.document.getElementById("testdiv");
-    is(div.getAttribute("test"), "2", "docshell should have been swapped");
+    Assert.equal(div.getAttribute("test"), "2", "docshell should have been swapped");
   });
 });
 

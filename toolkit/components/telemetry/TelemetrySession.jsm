@@ -660,13 +660,15 @@ var Impl = {
   // and payload is the telemetry payload from that child process.
   _childTelemetry: [],
   // Thread hangs from child processes.
+  // Used for TelemetrySession.getChildThreadHangs(); not sent with Telemetry pings.
+  // TelemetrySession.getChildThreadHangs() is used by extensions such as Statuser (https://github.com/chutten/statuser).
   // Each element is in the format {source: <weak-ref>, payload: <object>},
   // where source is a weak reference to the child process,
   // and payload contains the thread hang stats from that child process.
   _childThreadHangs: [],
-  // Array of the resolve functions of all the promises that are waiting for the child thread hang stats to arrive, used to resolve all those promises at once
+  // Array of the resolve functions of all the promises that are waiting for the child thread hang stats to arrive, used to resolve all those promises at once.
   _childThreadHangsResolveFunctions: [],
-  // Timeout function for child thread hang stats retrieval
+  // Timeout function for child thread hang stats retrieval.
   _childThreadHangsTimeout: null,
   // Unique id that identifies this session so the server can cope with duplicate
   // submissions, orphaning and other oddities. The id is shared across subsessions.
@@ -1075,7 +1077,7 @@ var Impl = {
     b("MEMORY_RESIDENT_FAST", "residentFast");
     b("MEMORY_UNIQUE", "residentUnique");
     b("MEMORY_HEAP_ALLOCATED", "heapAllocated");
-    p("MEMORY_HEAP_COMMITTED_UNUSED_RATIO", "heapOverheadRatio");
+    p("MEMORY_HEAP_OVERHEAD_FRACTION", "heapOverheadFraction");
     b("MEMORY_JS_GC_HEAP", "JSMainRuntimeGCHeap");
     b("MEMORY_JS_MAIN_RUNTIME_TEMPORARY_PEAK", "JSMainRuntimeTemporaryPeak");
     c("MEMORY_JS_COMPARTMENTS_SYSTEM", "JSMainRuntimeCompartmentsSystem");

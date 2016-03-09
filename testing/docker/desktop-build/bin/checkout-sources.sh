@@ -4,8 +4,8 @@ set -x -e
 
 # Inputs, with defaults
 
-# mozharness builds use three repositories: gecko (source), mozharness (build
-# scripts) and tools (miscellaneous) for each, specify *_REPOSITORY.  If the
+# mozharness builds use two repositories: gecko (source)
+# and build-tools (miscellaneous) for each, specify *_REPOSITORY.  If the
 # revision is not in the standard repo for the codebase, specify *_BASE_REPO as
 # the canonical repo to clone and *_HEAD_REPO as the repo containing the
 # desired revision.  For Mercurial clones, only *_HEAD_REV is required; for Git

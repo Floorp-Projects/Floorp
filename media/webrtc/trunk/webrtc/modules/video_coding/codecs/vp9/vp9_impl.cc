@@ -153,6 +153,7 @@ bool VP9EncoderImpl::SetSvcRates() {
     float rate_ratio[VPX_MAX_LAYERS] = {0};
     float total = 0;
 
+#ifdef LIBVPX_SVC
     for (i = 0; i < num_spatial_layers_; ++i) {
       if (svc_internal_.svc_params.scaling_factor_num[i] <= 0 ||
           svc_internal_.svc_params.scaling_factor_den[i] <= 0) {
@@ -164,6 +165,10 @@ bool VP9EncoderImpl::SetSvcRates() {
           svc_internal_.svc_params.scaling_factor_den[i];
       total += rate_ratio[i];
     }
+#else
+    rate_ratio[0] = 1;
+    total = 1;
+#endif
 
     for (i = 0; i < num_spatial_layers_; ++i) {
       config_->ss_target_bitrate[i] = static_cast<unsigned int>(
@@ -397,8 +402,8 @@ int VP9EncoderImpl::NumberOfThreads(int width,
 int VP9EncoderImpl::InitAndSetControlSettings(const VideoCodec* inst) {
   config_->ss_number_layers = num_spatial_layers_;
 
-  if (ExplicitlyConfiguredSpatialLayers()) {
 #ifdef LIBVPX_SVC
+  if (ExplicitlyConfiguredSpatialLayers()) {
     for (int i = 0; i < num_spatial_layers_; ++i) {
       const auto& layer = codec_.spatialLayers[i];
       svc_internal_.svc_params.max_quantizers[i] = config_->rc_max_quantizer;
@@ -406,7 +411,6 @@ int VP9EncoderImpl::InitAndSetControlSettings(const VideoCodec* inst) {
       svc_internal_.svc_params.scaling_factor_num[i] = layer.scaling_factor_num;
       svc_internal_.svc_params.scaling_factor_den[i] = layer.scaling_factor_den;
     }
-#endif
   } else {
     int scaling_factor_num = 256;
     for (int i = num_spatial_layers_ - 1; i >= 0; --i) {
@@ -419,6 +423,7 @@ int VP9EncoderImpl::InitAndSetControlSettings(const VideoCodec* inst) {
         scaling_factor_num /= 2;
     }
   }
+#endif
 
   if (!SetSvcRates()) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
@@ -433,6 +438,7 @@ int VP9EncoderImpl::InitAndSetControlSettings(const VideoCodec* inst) {
   vpx_codec_control(encoder_, VP9E_SET_AQ_MODE,
                     inst->codecSpecific.VP9.adaptiveQpMode ? 3 : 0);
 
+#ifdef LIBVPX_SVC
   vpx_codec_control(
       encoder_, VP9E_SET_SVC,
       (num_temporal_layers_ > 1 || num_spatial_layers_ > 1) ? 1 : 0);
@@ -440,6 +446,8 @@ int VP9EncoderImpl::InitAndSetControlSettings(const VideoCodec* inst) {
     vpx_codec_control(encoder_, VP9E_SET_SVC_PARAMETERS,
                       &svc_internal_.svc_params);
   }
+#endif
+
   // Register callback for getting each spatial layer.
   vpx_codec_priv_output_cx_pkt_cb_pair_t cbp = {
       VP9EncoderImpl::EncoderOutputCodedPacketCallback, (void*)(this)};
@@ -645,6 +653,7 @@ void VP9EncoderImpl::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
     vp9_info->temporal_up_switch = gof_.temporal_up_switch[vp9_info->gof_idx];
   }
 
+#ifdef LIBVPX_SVC
   if (vp9_info->ss_data_available) {
     vp9_info->spatial_layer_resolution_present = true;
     for (size_t i = 0; i < vp9_info->num_spatial_layers; ++i) {
@@ -659,6 +668,7 @@ void VP9EncoderImpl::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
       vp9_info->gof.CopyGofInfoVP9(gof_);
     }
   }
+#endif
 }
 
 int VP9EncoderImpl::GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt) {

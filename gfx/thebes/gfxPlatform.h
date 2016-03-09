@@ -183,7 +183,7 @@ public:
                              gfxImageFormat aFormat) = 0;
 
     /**
-     * Beware that these methods may return DrawTargets which are not fully supported
+     * Beware that this method may return DrawTargets which are not fully supported
      * on the current platform and might fail silently in subtle ways. This is a massive
      * potential footgun. You should only use these methods for canvas drawing really.
      * Use extreme caution if you use them for content where you are not 100% sure we
@@ -192,9 +192,6 @@ public:
      */
     virtual already_AddRefed<DrawTarget>
       CreateDrawTargetForSurface(gfxASurface *aSurface, const mozilla::gfx::IntSize& aSize);
-
-    virtual already_AddRefed<DrawTarget>
-      CreateDrawTargetForUpdateSurface(gfxASurface *aSurface, const mozilla::gfx::IntSize& aSize);
 
     /*
      * Creates a SourceSurface for a gfxASurface. This function does no caching,
@@ -252,15 +249,13 @@ public:
       return BackendTypeBit(aType) & mContentBackendBitmask;
     }
 
-    /// This function lets us know if the current preferences/platform
+    /// This function also lets us know if the current preferences/platform
     /// combination allows for both accelerated and not accelerated canvas
     /// implementations.  If it does, and other relevant preferences are
     /// asking for it, we will examine the commands in the first few seconds
     /// of the canvas usage, and potentially change to accelerated or
     /// non-accelerated canvas.
-    virtual bool HaveChoiceOfHWAndSWCanvas();
-
-    virtual bool UseAcceleratedSkiaCanvas();
+    virtual bool UseAcceleratedCanvas();
     virtual void InitializeSkiaCacheLimits();
 
     /// These should be used instead of directly accessing the preference,
@@ -271,7 +266,7 @@ public:
 
     virtual void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) {
       aObj.DefineProperty("AzureCanvasBackend", GetBackendName(mPreferredCanvasBackend));
-      aObj.DefineProperty("AzureSkiaAccelerated", UseAcceleratedSkiaCanvas());
+      aObj.DefineProperty("AzureCanvasAccelerated", UseAcceleratedCanvas());
       aObj.DefineProperty("AzureFallbackCanvasBackend", GetBackendName(mFallbackCanvasBackend));
       aObj.DefineProperty("AzureContentBackend", GetBackendName(mContentBackend));
     }
@@ -611,11 +606,14 @@ public:
 
     virtual void FlushContentDrawing() {}
 
-    // If a device reset has occurred, update the necessary platform backend
-    // bits.
-    virtual bool UpdateForDeviceReset() {
-      return false;
-    }
+    // If a device reset has occurred, schedule any necessary paints in the
+    // widget. This should only be used within nsRefreshDriver.
+    virtual void SchedulePaintIfDeviceReset() {}
+
+    // Immediately update all platform bits if a device reset has occurred.
+    // This should only be used at the top of the callstack (i.e. within
+    // a task, OS event, or IPDL message).
+    virtual void UpdateRenderModeIfDeviceReset() {}
 
     /**
      * Helper method, creates a draw target for a specific Azure backend.
@@ -637,10 +635,6 @@ public:
       return mCompositorBackend;
     }
 
-    // Trigger a test-driven graphics device reset.
-    virtual void TestDeviceReset(DeviceResetReason aReason)
-    {}
-
     // Return information on how child processes should initialize graphics
     // devices. Currently this is only used on Windows.
     virtual void GetDeviceInitData(mozilla::gfx::DeviceInitData* aOut);
@@ -654,6 +648,10 @@ public:
     // context. These platforms should return true here.
     virtual bool RequiresAcceleratedGLContextForCompositorOGL() const {
       return false;
+    }
+
+    uint64_t GetDeviceCounter() const {
+      return mDeviceCounter;
     }
 
 protected:
@@ -684,6 +682,11 @@ protected:
      * If in a child process, triggers a refresh of device preferences.
      */
     void UpdateDeviceInitData();
+
+    /**
+     * Increase the global device counter after a device has been removed/reset.
+     */
+    void BumpDeviceCounter();
 
     /**
      * Called when new device preferences are available.
@@ -797,6 +800,9 @@ private:
 
     int32_t mScreenDepth;
     mozilla::gfx::IntSize mScreenSize;
+
+    // Generation number for devices that ClientLayerManagers might depend on.
+    uint64_t mDeviceCounter;
 };
 
 #endif /* GFX_PLATFORM_H */

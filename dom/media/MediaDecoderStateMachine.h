@@ -212,12 +212,10 @@ public:
     OwnerThread()->Dispatch(r.forget());
   }
 
-  // Drop reference to mReader and mResource. Only called during shutdown dance.
+  // Drop reference to mResource. Only called during shutdown dance.
   void BreakCycles() {
     MOZ_ASSERT(NS_IsMainThread());
-    if (mReader) {
-      mReader->BreakCycles();
-    }
+    mReader->BreakCycles();
     mResource = nullptr;
   }
 
@@ -248,17 +246,11 @@ public:
   bool IsRealTime() const { return mRealTime; }
 
   size_t SizeOfVideoQueue() {
-    if (mReader) {
-      return mReader->SizeOfVideoQueueInBytes();
-    }
-    return 0;
+    return mReader->SizeOfVideoQueueInBytes();
   }
 
   size_t SizeOfAudioQueue() {
-    if (mReader) {
-      return mReader->SizeOfAudioQueueInBytes();
-    }
-    return 0;
+    return mReader->SizeOfAudioQueueInBytes();
   }
 
 private:
@@ -372,7 +364,7 @@ private:
   // TODO: Those callback function may receive demuxed-only data.
   // Need to figure out a suitable API name for this case.
   void OnAudioDecoded(MediaData* aAudioSample);
-  void OnVideoDecoded(MediaData* aVideoSample);
+  void OnVideoDecoded(MediaData* aVideoSample, TimeStamp aDecodeStartTime);
   void OnNotDecoded(MediaData::Type aType, MediaDecoderReader::NotDecodedReason aReason);
   void OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
   {
@@ -400,7 +392,6 @@ protected:
   // aSample must not be null.
 
   void Push(MediaData* aSample, MediaData::Type aSampleType);
-  void PushFront(MediaData* aSample, MediaData::Type aSampleType);
 
   void OnAudioPopped(const RefPtr<MediaData>& aSample);
   void OnVideoPopped(const RefPtr<MediaData>& aSample);
@@ -797,11 +788,6 @@ private:
   bool HaveStartTime() { return mStartTimeRendezvous && mStartTimeRendezvous->HaveStartTime(); }
   int64_t StartTime() { return mStartTimeRendezvous->StartTime(); }
 
-  // Time at which the last video sample was requested. If it takes too long
-  // before the sample arrives, we will increase the amount of audio we buffer.
-  // This is necessary for legacy synchronous decoders to prevent underruns.
-  TimeStamp mVideoDecodeStartTime;
-
   // Queue of audio frames. This queue is threadsafe, and is accessed from
   // the audio, decoder, state machine, and main threads.
   MediaQueue<MediaData> mAudioQueue;
@@ -903,7 +889,7 @@ private:
 
   // The reader, don't call its methods with the decoder monitor held.
   // This is created in the state machine's constructor.
-  RefPtr<MediaDecoderReader> mReader;
+  const RefPtr<MediaDecoderReader> mReader;
 
   // The end time of the last audio frame that's been pushed onto the media sink
   // in microseconds. This will approximately be the end time
@@ -1128,10 +1114,6 @@ private:
   // a "discontinuity".
   bool mDropAudioUntilNextDiscontinuity;
   bool mDropVideoUntilNextDiscontinuity;
-
-  // True if we need to decode forwards to the seek target inside
-  // mCurrentSeekTarget.
-  bool mDecodeToSeekTarget;
 
   // Track the current seek promise made by the reader.
   MozPromiseRequestHolder<MediaDecoderReader::SeekPromise> mSeekRequest;

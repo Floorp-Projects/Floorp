@@ -11,11 +11,11 @@ const ENCTYPE_SDR = 1;
 // kept in sync with the version there (or else the tests fail).
 const CURRENT_SCHEMA = 5;
 
-function copyFile(aLeafName)
+function* copyFile(aLeafName)
 {
   yield OS.File.copy(OS.Path.join(do_get_file("data").path, aLeafName),
                      OS.Path.join(OS.Constants.Path.profileDir, aLeafName));
-};
+}
 
 function openDB(aLeafName)
 {
@@ -23,7 +23,7 @@ function openDB(aLeafName)
   dbFile.append(aLeafName);
 
   return Services.storage.openDatabase(dbFile);
-};
+}
 
 function deleteFile(pathname, filename)
 {
@@ -37,13 +37,13 @@ function deleteFile(pathname, filename)
     if (file.exists())
       file.remove(false);
   } catch (e) {}
-};
+}
 
 function reloadStorage(aInputPathName, aInputFileName)
 {
   var inputFile = null;
   if (aInputFileName) {
-      var inputFile  = Cc["@mozilla.org/file/local;1"].
+      inputFile  = Cc["@mozilla.org/file/local;1"].
                        createInstance(Ci.nsILocalFile);
       inputFile.initWithPath(aInputPathName);
       inputFile.append(aInputFileName);
@@ -56,16 +56,16 @@ function reloadStorage(aInputPathName, aInputFileName)
          .initWithFile(inputFile);
 
   return storage;
-};
+}
 
 function checkStorageData(storage, ref_disabledHosts, ref_logins)
 {
   LoginTestUtils.assertLoginListsEqual(storage.getAllLogins(), ref_logins);
   LoginTestUtils.assertDisabledHostsEqual(storage.getAllDisabledHosts(),
                                           ref_disabledHosts);
-};
+}
 
-add_task(function test_execute()
+add_task(function* test_execute()
 {
 
 const OUTDIR = OS.Constants.Path.profileDir;
@@ -122,7 +122,7 @@ testuser5.init("http://test.gov", "http://test.gov", null,
 testnum++;
 testdesc = "Test downgrade from v999 storage"
 
-yield copyFile("signons-v999.sqlite");
+yield* copyFile("signons-v999.sqlite");
 // Verify the schema version in the test file.
 dbConnection = openDB("signons-v999.sqlite");
 do_check_eq(999, dbConnection.schemaVersion);
@@ -147,7 +147,7 @@ var origFile = OS.Path.join(OUTDIR, "signons-v999-2.sqlite");
 var failFile = OS.Path.join(OUTDIR, "signons-v999-2.sqlite.corrupt");
 
 // Make sure we always start clean in a clean state.
-yield copyFile("signons-v999-2.sqlite");
+yield* copyFile("signons-v999-2.sqlite");
 yield OS.File.remove(failFile);
 
 Assert.throws(() => reloadStorage(OUTDIR, "signons-v999-2.sqlite"),
@@ -163,7 +163,7 @@ yield OS.File.remove(failFile);
 testnum++;
 testdesc = "Test upgrade from v1->v2 storage"
 
-yield copyFile("signons-v1.sqlite");
+yield* copyFile("signons-v1.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v1.sqlite");
 do_check_eq(1, dbConnection.schemaVersion);
@@ -190,7 +190,7 @@ testdesc = "Test upgrade v2->v1 storage";
 // are upgrading it again. Any logins added by the v1 code must be properly
 // upgraded.
 
-yield copyFile("signons-v1v2.sqlite");
+yield* copyFile("signons-v1v2.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v1v2.sqlite");
 do_check_eq(1, dbConnection.schemaVersion);
@@ -222,7 +222,7 @@ deleteFile(OUTDIR, "signons-v1v2.sqlite");
 testnum++;
 testdesc = "Test upgrade from v2->v3 storage"
 
-yield copyFile("signons-v2.sqlite");
+yield* copyFile("signons-v2.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v2.sqlite");
 do_check_eq(2, dbConnection.schemaVersion);
@@ -250,7 +250,7 @@ testdesc = "Test upgrade v3->v2 storage";
 // are upgrading it again. Any logins added by the v2 code must be properly
 // upgraded.
 
-yield copyFile("signons-v2v3.sqlite");
+yield* copyFile("signons-v2v3.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v2v3.sqlite");
 do_check_eq(2, dbConnection.schemaVersion);
@@ -282,7 +282,7 @@ deleteFile(OUTDIR, "signons-v2v3.sqlite");
 testnum++;
 testdesc = "Test upgrade from v3->v4 storage"
 
-yield copyFile("signons-v3.sqlite");
+yield* copyFile("signons-v3.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v3.sqlite");
 do_check_eq(3, dbConnection.schemaVersion);
@@ -306,7 +306,7 @@ for (var i = 0; i < 2; i++) {
 testnum++;
 testdesc = "Test upgrade from v3->v4->v3 storage"
 
-yield copyFile("signons-v3v4.sqlite");
+yield* copyFile("signons-v3v4.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v3v4.sqlite");
 do_check_eq(3, dbConnection.schemaVersion);
@@ -317,7 +317,7 @@ do_check_eq(CURRENT_SCHEMA, dbConnection.schemaVersion);
 // testuser1 already has timestamps, testuser2 does not.
 checkStorageData(storage, [], [testuser1, testuser2]);
 
-var logins = storage.getAllLogins();
+logins = storage.getAllLogins();
 
 var t1, t2;
 if (logins[0].username == "testuser1") {
@@ -346,7 +346,7 @@ LoginTestUtils.assertTimeIsAboutNow(t2.timePasswordChanged);
 testnum++;
 testdesc = "Test upgrade from v4 storage"
 
-yield copyFile("signons-v4.sqlite");
+yield* copyFile("signons-v4.sqlite");
 // Sanity check the test file.
 dbConnection = openDB("signons-v4.sqlite");
 do_check_eq(4, dbConnection.schemaVersion);

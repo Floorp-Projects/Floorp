@@ -2083,6 +2083,7 @@ _cairo_surface_paint (cairo_surface_t	*surface,
 		      cairo_clip_t	    *clip)
 {
     cairo_status_t status;
+    cairo_rectangle_int_t extents;
 
     if (unlikely (surface->status))
 	return surface->status;
@@ -2114,7 +2115,10 @@ _cairo_surface_paint (cairo_surface_t	*surface,
     status = _cairo_surface_fallback_paint (surface, op, source, clip);
 
  FINISH:
-    surface->is_clear = op == CAIRO_OPERATOR_CLEAR && clip == NULL;
+    surface->is_clear = op == CAIRO_OPERATOR_CLEAR &&
+			(clip == NULL ||
+			 (_cairo_surface_get_extents (surface, &extents) &&
+			  _cairo_clip_contains_rectangle (clip, &extents)));
 
     return _cairo_surface_set_error (surface, status);
 }

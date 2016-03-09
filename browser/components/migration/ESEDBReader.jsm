@@ -103,6 +103,9 @@ let gOpenDBs = new Map();
 
 // Track open libraries
 let gLibs = {};
+this.ESE = ESE; // Required for tests.
+this.KERNEL = KERNEL; // ditto
+this.gLibs = gLibs; // ditto
 
 function convertESEError(errorCode) {
   switch (errorCode) {
@@ -285,7 +288,10 @@ ESEDB.prototype = {
       ESE.SetSystemParameterW(this._instanceId.address(), 0,
                               2 /* JET_paramLogFilePath*/, 0, this.logPath);
 
+      // Shouldn't try to call JetTerm if the following call fails.
+      this._instanceCreated = false;
       ESE.Init(this._instanceId.address());
+      this._instanceCreated = true;
       this._sessionId = new ESE.JET_SESID();
       ESE.BeginSessionW(this._instanceId, this._sessionId.address(), null,
                         null);

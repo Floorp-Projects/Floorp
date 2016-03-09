@@ -1441,6 +1441,7 @@ void nsBidi::ProcessPropertySeq(LevState *pLevState, uint8_t _prop, int32_t star
       break;
 
     case 2:                         /* prepend ON seq to current seq */
+      MOZ_ASSERT(pLevState->startON >= 0, "no valid ON sequence start!");
       start = pLevState->startON;
       break;
 
@@ -1489,6 +1490,7 @@ void nsBidi::ResolveImplicitLevels(int32_t aStart, int32_t aLimit,
   levState.runLevel = mLevels[aStart];
   levState.pImpTab = impTab[levState.runLevel & 1];
   levState.pImpAct = impAct0;
+  levState.startON = -1; /* initialize to invalid start position */
 
   /* The isolates[] entries contain enough information to
      resume the bidi algorithm in the same state as it was

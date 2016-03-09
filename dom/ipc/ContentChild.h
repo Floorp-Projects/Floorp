@@ -144,6 +144,11 @@ public:
   AllocPGMPServiceChild(mozilla::ipc::Transport* transport,
                         base::ProcessId otherProcess) override;
 
+  PAPZChild*
+  AllocPAPZChild(const TabId& aTabId) override;
+  bool
+  DeallocPAPZChild(PAPZChild* aActor) override;
+
   PCompositorChild*
   AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
                         base::ProcessId aOtherProcess) override;
@@ -604,8 +609,6 @@ public:
   DeallocPContentPermissionRequestChild(PContentPermissionRequestChild* actor) override;
 
   virtual bool RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent) override;
-
-  virtual bool RecvTestGraphicsDeviceReset(const uint32_t& aResetReason) override;
 
 private:
   virtual void ActorDestroy(ActorDestroyReason why) override;

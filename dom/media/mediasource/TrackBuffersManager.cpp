@@ -104,7 +104,6 @@ TrackBuffersManager::TrackBuffersManager(dom::SourceBufferAttributes* aAttribute
   , mEvictionOccurred(false)
   , mMonitor("TrackBuffersManager")
   , mAppendRunning(false)
-  , mSegmentParserLoopRunning(false)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be instanciated on the main thread");
 }
@@ -169,7 +168,7 @@ void
 TrackBuffersManager::ResetParserState()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(!mAppendRunning, "Append is running, abort must have been called");
+  MOZ_DIAGNOSTIC_ASSERT(!mAppendRunning, "Append is running, abort must have been called");
   MSE_DEBUG("");
 
   // 1. If the append state equals PARSING_MEDIA_SEGMENT and the input buffer contains some complete coded frames, then run the coded frame processing algorithm until all of these complete coded frames have been processed.
@@ -187,7 +186,7 @@ RefPtr<TrackBuffersManager::RangeRemovalPromise>
 TrackBuffersManager::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(!mAppendRunning, "Append is running");
+  MOZ_DIAGNOSTIC_ASSERT(!mAppendRunning, "Append is running");
   MSE_DEBUG("From %.2f to %.2f", aStart.ToSeconds(), aEnd.ToSeconds());
 
   mEnded = false;
@@ -301,7 +300,6 @@ void
 TrackBuffersManager::CompleteResetParserState()
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_RELEASE_ASSERT(!mSegmentParserLoopRunning);
   MSE_DEBUG("");
 
   for (auto& track : GetTracksList()) {
@@ -437,7 +435,6 @@ bool
 TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(!mSegmentParserLoopRunning, "Logic error: Append in progress");
   MSE_DEBUG("From %.2fs to %.2f",
             aInterval.mStart.ToSeconds(), aInterval.mEnd.ToSeconds());
 
@@ -539,7 +536,7 @@ RefPtr<TrackBuffersManager::AppendPromise>
 TrackBuffersManager::InitSegmentParserLoop()
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_RELEASE_ASSERT(mAppendPromise.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(mAppendPromise.IsEmpty());
   MSE_DEBUG("");
 
   RefPtr<AppendPromise> p = mAppendPromise.Ensure(__func__);
@@ -575,8 +572,6 @@ void
 TrackBuffersManager::SegmentParserLoop()
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  mSegmentParserLoopRunning = true;
 
   while (true) {
     // 1. If the input buffer is empty, then jump to the need more data step below.
@@ -702,7 +697,6 @@ TrackBuffersManager::NeedMoreData()
   MSE_DEBUG("");
   RestoreCachedVariables();
   mAppendRunning = false;
-  mSegmentParserLoopRunning = false;
   {
     // Wake-up any pending Abort()
     MonitorAutoLock mon(mMonitor);
@@ -716,7 +710,6 @@ TrackBuffersManager::RejectAppend(nsresult aRejectValue, const char* aName)
 {
   MSE_DEBUG("rv=%d", aRejectValue);
   mAppendRunning = false;
-  mSegmentParserLoopRunning = false;
   {
     // Wake-up any pending Abort()
     MonitorAutoLock mon(mMonitor);

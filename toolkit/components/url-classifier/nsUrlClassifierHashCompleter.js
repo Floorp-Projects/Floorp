@@ -542,13 +542,13 @@ HashCompleterRequest.prototype = {
         aStatusCode = Cr.NS_ERROR_ABORT;
       }
     }
-    log('Received a ' + httpStatus + ' status code from the gethash server.');
+    let success = Components.isSuccessCode(aStatusCode);
+    log('Received a ' + httpStatus + ' status code from the gethash server (success=' + success + ').');
 
     let histogram =
       Services.telemetry.getHistogramById("URLCLASSIFIER_COMPLETE_REMOTE_STATUS");
     histogram.add(httpStatusToBucket(httpStatus));
 
-    let success = Components.isSuccessCode(aStatusCode);
     // Notify the RequestBackoff once a response is received.
     this._completer.finishRequest(this.gethashUrl, httpStatus);
 

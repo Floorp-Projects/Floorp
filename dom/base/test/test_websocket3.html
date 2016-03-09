@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"></meta>
+  <title>WebSocket test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="websocket_helpers.js"></script>
+  <script type="text/javascript" src="websocket_tests.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="testWebSocket()">
+<script class="testbody" type="text/javascript">
+
+var tests = [
+ test21, // see bug 572975 - same as test 17, but delete strong event listeners
+         // when receiving the message event;
+ test22, // server takes too long to establish the ws connection;
+ test23, // should detect WebSocket on window object;
+ test24, // server rejects sub-protocol string
+ test25, // ctor with valid empty sub-protocol array
+ test26, // ctor with invalid sub-protocol array containing 1 empty element
+ test27, // ctor with invalid sub-protocol array containing an empty element in
+         // list
+ test28, // ctor using valid 1 element sub-protocol array
+ test29, // ctor using all valid 5 element sub-protocol array
+ test30, // ctor using valid 1 element sub-protocol array with element server
+         // will reject
+];
+
+function testWebSocket() {
+  doTest();
+}
+
+SimpleTest.requestFlakyTimeout("The web socket tests are really fragile, but avoiding timeouts might be hard, since it's testing stuff on the network. " +
+                               "Expect all sorts of flakiness in this test...");
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+<div id="feedback">
+</div>
+
+</body>
+</html>

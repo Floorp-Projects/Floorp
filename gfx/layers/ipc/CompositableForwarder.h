@@ -113,13 +113,14 @@ public:
 
   struct TimedTextureClient {
     TimedTextureClient()
-        : mTextureClient(nullptr), mFrameID(0), mProducerID(0) {}
+        : mTextureClient(nullptr), mFrameID(0), mProducerID(0), mInputFrameID(0) {}
 
     TextureClient* mTextureClient;
     TimeStamp mTimeStamp;
     nsIntRect mPictureRect;
     int32_t mFrameID;
     int32_t mProducerID;
+    int32_t mInputFrameID;
   };
   /**
    * Tell the CompositableHost on the compositor side what textures to use for
@@ -135,6 +136,9 @@ public:
 
   void IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier);
 
+  void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier) {
+    mTextureFactoryIdentifier = aNewIdentifier;
+  }
   virtual int32_t GetMaxTextureSize() const override
   {
     return mTextureFactoryIdentifier.mMaxTextureSize;
@@ -170,6 +174,8 @@ public:
   int32_t GetSerial() { return mSerial; }
 
   SyncObject* GetSyncObject() { return mSyncObject; }
+
+  virtual CompositableForwarder* AsCompositableForwarder() override { return this; }
 
 protected:
   TextureFactoryIdentifier mTextureFactoryIdentifier;

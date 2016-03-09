@@ -9,7 +9,6 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventForwards.h"
 #include "AnimationCommon.h"
-#include "nsCSSPseudoElements.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
@@ -26,6 +25,8 @@ class KeyframeEffectReadOnly;
 class Promise;
 } /* namespace dom */
 
+enum class CSSPseudoElementType : uint8_t;
+
 struct AnimationEventInfo {
   RefPtr<dom::Element> mElement;
   RefPtr<dom::Animation> mAnimation;
@@ -33,7 +34,7 @@ struct AnimationEventInfo {
   TimeStamp mTimeStamp;
 
   AnimationEventInfo(dom::Element* aElement,
-                     nsCSSPseudoElements::Type aPseudoType,
+                     CSSPseudoElementType aPseudoType,
                      EventMessage aMessage,
                      const nsSubstring& aAnimationName,
                      const StickyTimeDuration& aElapsedTime,
@@ -47,7 +48,8 @@ struct AnimationEventInfo {
     // XXX Looks like nobody initialize WidgetEvent::time
     mEvent.animationName = aAnimationName;
     mEvent.elapsedTime = aElapsedTime.ToSeconds();
-    mEvent.pseudoElement = AnimationCollection::PseudoTypeAsString(aPseudoType);
+    mEvent.pseudoElement =
+      AnimationCollection<dom::CSSAnimation>::PseudoTypeAsString(aPseudoType);
   }
 
   // InternalAnimationEvent doesn't support copy-construction, so we need
@@ -136,11 +138,6 @@ public:
   {
     MOZ_ASSERT(IsTiedToMarkup());
     mAnimationIndex = aIndex;
-  }
-  void CopyAnimationIndex(const CSSAnimation& aOther)
-  {
-    MOZ_ASSERT(IsTiedToMarkup() && aOther.IsTiedToMarkup());
-    mAnimationIndex = aOther.mAnimationIndex;
   }
 
   // Sets the owning element which is used for determining the composite
@@ -269,19 +266,42 @@ protected:
 };
 
 } /* namespace dom */
+
+template <>
+struct AnimationTypeTraits<dom::CSSAnimation>
+{
+  static nsIAtom* ElementPropertyAtom()
+  {
+    return nsGkAtoms::animationsProperty;
+  }
+  static nsIAtom* BeforePropertyAtom()
+  {
+    return nsGkAtoms::animationsOfBeforeProperty;
+  }
+  static nsIAtom* AfterPropertyAtom()
+  {
+    return nsGkAtoms::animationsOfAfterProperty;
+  }
+};
+
 } /* namespace mozilla */
 
 class nsAnimationManager final
-  : public mozilla::CommonAnimationManager
+  : public mozilla::CommonAnimationManager<mozilla::dom::CSSAnimation>
 {
 public:
   explicit nsAnimationManager(nsPresContext *aPresContext)
-    : mozilla::CommonAnimationManager(aPresContext)
+    : mozilla::CommonAnimationManager<mozilla::dom::CSSAnimation>(aPresContext)
   {
   }
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsAnimationManager)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsAnimationManager)
+
+  typedef mozilla::AnimationCollection<mozilla::dom::CSSAnimation>
+    CSSAnimationCollection;
+  typedef nsTArray<RefPtr<mozilla::dom::CSSAnimation>>
+    OwningCSSAnimationPtrArray;
 
   /**
    * Update the set of animations on |aElement| based on |aStyleContext|.
@@ -322,39 +342,19 @@ public:
   // rather than the element for the generated content for animations on
   // ::before and ::after.
   void StopAnimationsForElement(mozilla::dom::Element* aElement,
-                                nsCSSPseudoElements::Type aPseudoType);
-
-  bool IsAnimationManager() override {
-    return true;
-  }
+                                mozilla::CSSPseudoElementType aPseudoType);
 
 protected:
-  virtual ~nsAnimationManager() {}
-
-  virtual nsIAtom* GetAnimationsAtom() override {
-    return nsGkAtoms::animationsProperty;
-  }
-  virtual nsIAtom* GetAnimationsBeforeAtom() override {
-    return nsGkAtoms::animationsOfBeforeProperty;
-  }
-  virtual nsIAtom* GetAnimationsAfterAtom() override {
-    return nsGkAtoms::animationsOfAfterProperty;
-  }
-
-  mozilla::DelayedEventDispatcher<mozilla::AnimationEventInfo> mEventDispatcher;
+  ~nsAnimationManager() override = default;
 
 private:
+
   void BuildAnimations(nsStyleContext* aStyleContext,
                        mozilla::dom::Element* aTarget,
-                       mozilla::dom::AnimationTimeline* aTimeline,
-                       mozilla::AnimationPtrArray& aAnimations);
-  bool BuildSegment(InfallibleTArray<mozilla::AnimationPropertySegment>&
-                      aSegments,
-                    nsCSSProperty aProperty,
-                    const mozilla::StyleAnimation& aAnimation,
-                    float aFromKey, nsStyleContext* aFromContext,
-                    mozilla::css::Declaration* aFromDeclaration,
-                    float aToKey, nsStyleContext* aToContext);
+                       CSSAnimationCollection* aCollection,
+                       OwningCSSAnimationPtrArray& aAnimations);
+
+  mozilla::DelayedEventDispatcher<mozilla::AnimationEventInfo> mEventDispatcher;
 };
 
 #endif /* !defined(nsAnimationManager_h_) */

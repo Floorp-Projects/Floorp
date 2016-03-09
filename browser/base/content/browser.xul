@@ -69,6 +69,8 @@
 
 <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
 
+<script type="application/javascript" src="chrome://browser/content/downloads/downloads.js"/>
+<script type="application/javascript" src="chrome://browser/content/downloads/indicator.js"/>
 <script type="application/javascript" src="chrome://browser/content/places/editBookmarkOverlay.js"/>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the
@@ -180,12 +182,6 @@
         <vbox>
           <label id="editBookmarkPanelTitle"/>
           <description id="editBookmarkPanelDescription"/>
-          <hbox>
-            <button id="editBookmarkPanelRemoveButton"
-                    class="editBookmarkPanelHeaderButton"
-                    oncommand="StarUI.removeBookmarkButtonCommand();"
-                    accesskey="&editBookmark.removeBookmark.accessKey;"/>
-          </hbox>
         </vbox>
       </row>
       <vbox id="editBookmarkPanelContent" flex="1" hidden="true"/>
@@ -196,15 +192,15 @@
                 label="&editBookmark.done.label;"
                 default="true"
                 oncommand="StarUI.panel.hidePopup();"/>
-        <button id="editBookmarkPanelDeleteButton"
+        <button id="editBookmarkPanelRemoveButton"
                 class="editBookmarkPanelBottomButton"
-                label="&editBookmark.cancel.label;"
-                oncommand="StarUI.cancelButtonOnCommand();"/>
+                oncommand="StarUI.removeBookmarkButtonCommand();"
+                accesskey="&editBookmark.removeBookmark.accessKey;"/>
 #else
-        <button id="editBookmarkPanelDeleteButton"
+        <button id="editBookmarkPanelRemoveButton"
                 class="editBookmarkPanelBottomButton"
-                label="&editBookmark.cancel.label;"
-                oncommand="StarUI.cancelButtonOnCommand();"/>
+                oncommand="StarUI.removeBookmarkButtonCommand();"
+                accesskey="&editBookmark.removeBookmark.accessKey;"/>
         <button id="editBookmarkPanelDoneButton"
                 class="editBookmarkPanelBottomButton"
                 label="&editBookmark.done.label;"
@@ -472,8 +468,8 @@
                 accesskey="&syncedTabs.context.bookmarkSingleTab.accesskey;"
                 id="syncedTabsBookmarkSelected"/>
       <menuseparator/>
-      <menuitem label="&syncedTabs.context.refreshList.label;"
-                accesskey="&syncedTabs.context.refreshList.accesskey;"
+      <menuitem label="&syncSyncNowItem.label;"
+                accesskey="&syncSyncNowItem.accesskey;"
                 id="syncedTabsRefresh"/>
     </menupopup>
   </popupset>
@@ -682,8 +678,6 @@
                        aria-label="&urlbar.loginFillNotificationAnchor.label;"/>
                 <image id="password-notification-icon" class="notification-anchor-icon" role="button"
                        aria-label="&urlbar.passwordNotificationAnchor.label;"/>
-                <image id="webapps-notification-icon" class="notification-anchor-icon" role="button"
-                       aria-label="&urlbar.webappsNotificationAnchor.label;"/>
                 <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"
                        aria-label="&urlbar.pluginsNotificationAnchor.label;"/>
                 <image id="web-notifications-notification-icon" class="notification-anchor-icon" role="button"
@@ -1115,29 +1109,6 @@
 
   <vbox id="browser-bottombox" layer="true">
     <notificationbox id="global-notificationbox" notificationside="bottom"/>
-    <toolbar id="developer-toolbar"
-             hidden="true">
-#ifdef XP_MACOSX
-          <toolbarbutton id="developer-toolbar-closebutton"
-                         class="devtools-closebutton"
-                         oncommand="DeveloperToolbar.hide();"
-                         tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
-#endif
-          <stack class="gclitoolbar-stack-node" flex="1">
-            <textbox class="gclitoolbar-input-node" rows="1"/>
-            <hbox class="gclitoolbar-complete-node"/>
-          </stack>
-          <toolbarbutton id="developer-toolbar-toolbox-button"
-                         class="developer-toolbar-button"
-                         observes="devtoolsMenuBroadcaster_DevToolbox"
-                         tooltiptext="&devToolbarToolsButton.tooltip;"/>
-#ifndef XP_MACOSX
-          <toolbarbutton id="developer-toolbar-closebutton"
-                         class="devtools-closebutton"
-                         oncommand="DeveloperToolbar.hide();"
-                         tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
-#endif
-   </toolbar>
   </vbox>
 
   <svg:svg height="0">

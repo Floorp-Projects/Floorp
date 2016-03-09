@@ -29,13 +29,17 @@
 using mozilla::ipc::FileDescriptor;
 
 FileDescriptor::FileDescriptor()
-: mHandle(INVALID_HANDLE), mHandleCreatedByOtherProcess(false),
-  mHandleCreatedByOtherProcessWasUsed(false)
+  : mHandle(INVALID_HANDLE), mHandleCreatedByOtherProcess(false)
+#ifdef DEBUG
+  , mHandleCreatedByOtherProcessWasUsed(false)
+#endif
 { }
 
 FileDescriptor::FileDescriptor(PlatformHandleType aHandle)
-: mHandle(INVALID_HANDLE), mHandleCreatedByOtherProcess(false),
-  mHandleCreatedByOtherProcessWasUsed(false)
+  : mHandle(INVALID_HANDLE), mHandleCreatedByOtherProcess(false)
+#ifdef DEBUG
+  , mHandleCreatedByOtherProcessWasUsed(false)
+#endif
 {
   DuplicateInCurrentProcess(aHandle);
 }

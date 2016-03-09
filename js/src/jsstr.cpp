@@ -13,6 +13,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/unused.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -645,7 +646,7 @@ ToLowerCase(JSContext* cx, JSLinearString* str)
     if (!res)
         return nullptr;
 
-    newChars.release();
+    mozilla::Unused << newChars.release();
     return res;
 }
 
@@ -788,13 +789,13 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
         if (!res)
             return nullptr;
 
-        newChars.ref<Latin1CharPtr>().release();
+        mozilla::Unused << newChars.ref<Latin1CharPtr>().release();
     } else {
         res = NewStringDontDeflate<CanGC>(cx, newChars.ref<TwoByteCharPtr>().get(), length);
         if (!res)
             return nullptr;
 
-        newChars.ref<TwoByteCharPtr>().release();
+        mozilla::Unused << newChars.ref<TwoByteCharPtr>().release();
     }
 
     return res;

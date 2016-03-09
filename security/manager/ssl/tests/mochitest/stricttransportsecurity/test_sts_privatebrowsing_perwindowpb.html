@@ -111,8 +111,9 @@
       } else {
         onMessageReceived(win, isPrivate, "INSECURE " + testName);
       }
-      if (aCallback)
+      if (aCallback) {
         aCallback();
+      }
     });
     win.content.document.body.appendChild(frame);
   }
@@ -150,13 +151,15 @@
       // remove all the iframes in the document
       win.content.document.body.removeChild(
         win.content.document.getElementById('ifr_bootstrap'));
-      for (var test in testframes)
+      for (let test in testframes) {
         win.content.document.body.removeChild(
           win.content.document.getElementById('ifr_' + test));
+      }
       currentround = "";
 
-      if (!isPrivate)
+      if (!isPrivate) {
         clean_up_sts_state(isPrivate);
+      }
       // Close test window.
       win.close();
       // And advance to the next test.
@@ -192,7 +195,7 @@
   function clean_up_sts_state(isPrivate) {
     // erase all signs that this test ran.
     SimpleTest.info("Cleaning up STS data");
-    var flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0
+    let flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0;
     SpecialPowers.cleanUpSTSData("http://example.com", flags);
     dump_STSState(isPrivate);
   }
@@ -201,7 +204,7 @@
     var sss =
       Cc["@mozilla.org/ssservice;1"].
         getService(Ci.nsISiteSecurityService);
-    var flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0
+    let flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0;
     SimpleTest.info("State of example.com: " + sss.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS, "example.com", flags));
   }
 
@@ -221,7 +224,7 @@
   ];
 
   function finish() {
-    SpecialPowers.Services.prefs.clearUserPref("browser.startup.page")
+    SpecialPowers.Services.prefs.clearUserPref("browser.startup.page");
     SimpleTest.finish();
   }
   function nextTest() {

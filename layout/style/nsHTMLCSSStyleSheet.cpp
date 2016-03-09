@@ -18,7 +18,9 @@
 #include "mozilla/dom/Element.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
-#include "RestyleManager.h"
+#include "nsCSSPseudoElements.h"
+#include "mozilla/RestyleManagerHandle.h"
+#include "mozilla/RestyleManagerHandleInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -69,7 +71,10 @@ nsHTMLCSSStyleSheet::ElementRulesMatching(nsPresContext* aPresContext,
 
   declaration = aElement->GetSMILOverrideStyleDeclaration();
   if (declaration) {
-    RestyleManager* restyleManager = aPresContext->RestyleManager();
+    MOZ_ASSERT(aPresContext->RestyleManager()->IsGecko(),
+               "stylo: ElementRulesMatching must not be called when we have "
+               "a Servo-backed style system");
+    RestyleManager* restyleManager = aPresContext->RestyleManager()->AsGecko();
     if (!restyleManager->SkipAnimationRules()) {
       // Animation restyle (or non-restyle traversal of rules)
       // Now we can walk SMIL overrride style, without triggering transitions.
@@ -81,7 +86,7 @@ nsHTMLCSSStyleSheet::ElementRulesMatching(nsPresContext* aPresContext,
 
 void
 nsHTMLCSSStyleSheet::PseudoElementRulesMatching(Element* aPseudoElement,
-                                                nsCSSPseudoElements::Type
+                                                CSSPseudoElementType
                                                   aPseudoType,
                                                 nsRuleWalker* aRuleWalker)
 {

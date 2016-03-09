@@ -289,7 +289,7 @@ nsNotifyAddrListener::Shutdown(void)
     mShutdown = true;
     SetEvent(mCheckEvent);
 
-    nsresult rv = mThread->Shutdown();
+    nsresult rv = mThread ? mThread->Shutdown() : NS_OK;
 
     // Have to break the cycle here, otherwise nsNotifyAddrListener holds
     // onto the thread and the thread holds onto the nsNotifyAddrListener

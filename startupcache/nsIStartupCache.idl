@@ -9,6 +9,10 @@
 #include "nsIObserver.idl"
 #include "nsIObjectOutputStream.idl"
 
+%{C++
+#include "mozilla/UniquePtr.h"
+%}
+
 [uuid(25957820-90a1-428c-8739-b0845d3cc534)]
 interface nsIStartupCache : nsISupports
 {
@@ -19,6 +23,18 @@ interface nsIStartupCache : nsISupports
    *  in that file. */
 
   uint32_t getBuffer(in string aID, out charPtr aBuffer);
+%{C++
+  /* A more convenient interface for using from C++.  */
+  nsresult GetBuffer(const char* id, mozilla::UniquePtr<char[]>* outbuf, uint32_t* length)
+  {
+    char* buf;
+    nsresult rv = GetBuffer(id, &buf, length);
+    NS_ENSURE_SUCCESS(rv, rv);
+    outbuf->reset(buf);
+    return rv;
+  }
+%}
+
   void putBuffer(in string aID, in string aBuffer, 
                             in uint32_t aLength);
  

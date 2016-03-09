@@ -21,7 +21,7 @@
     const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
     const {AppValidator} = require("devtools/client/webide/modules/app-validator");
-    const {Services} = Cu.import("resource://gre/modules/Services.jsm");
+    const Services = require("Services");
     const nsFile = Components.Constructor("@mozilla.org/file/local;1",
                                            "nsILocalFile", "initWithPath");
     const cr = Cc["@mozilla.org/chrome/chrome-registry;1"]

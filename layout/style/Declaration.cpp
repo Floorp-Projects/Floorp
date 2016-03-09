@@ -351,7 +351,11 @@ Declaration::GetImageLayerValue(
         }
       // This layer is an mask layer
       } else {
+#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
         MOZ_ASSERT(aTable == nsStyleImageLayers::kMaskLayerTable);
+#else
+        MOZ_ASSERT_UNREACHABLE("Should never get here when mask-as-shorthand is disable");
+#endif
         if (repeat || position || clip || origin || size || composite || mode) {
           // Uneven length lists, so can't be serialized as shorthand.
           aValue.Truncate();
@@ -370,7 +374,11 @@ Declaration::GetImageLayerValue(
       }
     // This layer is an mask layer
     } else {
+#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
       MOZ_ASSERT(aTable == nsStyleImageLayers::kMaskLayerTable);
+#else
+      MOZ_ASSERT_UNREACHABLE("Should never get here when mask-as-shorthand is disable");
+#endif
       if (!repeat || !position || !clip || !origin || !size ||
           !composite || !mode) {
         // Uneven length lists, so can't be serialized as shorthand.
@@ -657,11 +665,13 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
                          nsStyleImageLayers::kBackgroundLayerTable);
       break;
     }
+#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
     case eCSSProperty_mask: {
       GetImageLayerValue(data, aValue, aSerialization,
                          nsStyleImageLayers::kMaskLayerTable);
       break;
     }
+#endif
     case eCSSProperty_font: {
       // systemFont might not be present; other values are guaranteed to be
       // available based on the shorthand check at the beginning of the
@@ -1136,16 +1146,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         // Not serializable, bail.
         return;
       }
-      // Fall through to eCSSProperty_grid_template
-      MOZ_FALLTHROUGH;
-    }
-    case eCSSProperty_grid_template: {
-      const nsCSSValue& areasValue =
-        *data->ValueFor(eCSSProperty_grid_template_areas);
-      const nsCSSValue& columnsValue =
-        *data->ValueFor(eCSSProperty_grid_template_columns);
-      const nsCSSValue& rowsValue =
-        *data->ValueFor(eCSSProperty_grid_template_rows);
+
+      // The <'grid-template'> part:
       if (areasValue.GetUnit() == eCSSUnit_None) {
         AppendValueToString(eCSSProperty_grid_template_rows,
                             aValue, aSerialization);

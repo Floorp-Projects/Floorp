@@ -7,6 +7,7 @@
 #include "mozilla/dom/CSSPseudoElement.h"
 #include "mozilla/dom/CSSPseudoElementBinding.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/AnimationComparator.h"
 
 namespace mozilla {
 namespace dom {
@@ -17,13 +18,13 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(CSSPseudoElement, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CSSPseudoElement, Release)
 
 CSSPseudoElement::CSSPseudoElement(Element* aElement,
-                                   nsCSSPseudoElements::Type aType)
+                                   CSSPseudoElementType aType)
   : mParentElement(aElement)
   , mPseudoType(aType)
 {
   MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aType == nsCSSPseudoElements::ePseudo_after ||
-             aType == nsCSSPseudoElements::ePseudo_before,
+  MOZ_ASSERT(aType == CSSPseudoElementType::after ||
+             aType == CSSPseudoElementType::before,
              "Unexpected Pseudo Type");
 }
 
@@ -51,8 +52,13 @@ CSSPseudoElement::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 CSSPseudoElement::GetAnimations(nsTArray<RefPtr<Animation>>& aRetVal)
 {
-  // Bug 1234403: Implement this API.
-  NS_NOTREACHED("CSSPseudoElement::GetAnimations() is not implemented yet.");
+  nsIDocument* doc = mParentElement->GetComposedDoc();
+  if (doc) {
+    doc->FlushPendingNotifications(Flush_Style);
+  }
+
+  Element::GetAnimationsUnsorted(mParentElement, mPseudoType, aRetVal);
+  aRetVal.Sort(AnimationPtrComparator<RefPtr<Animation>>());
 }
 
 already_AddRefed<Animation>
@@ -62,14 +68,14 @@ CSSPseudoElement::Animate(
     const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
     ErrorResult& aError)
 {
-  // Bug 1241784: Implement this API.
-  NS_NOTREACHED("CSSPseudoElement::Animate() is not implemented yet.");
-  return nullptr;
+  Nullable<ElementOrCSSPseudoElement> target;
+  target.SetValue().SetAsCSSPseudoElement() = this;
+  return Element::Animate(target, aContext, aFrames, aOptions, aError);
 }
 
 /* static */ already_AddRefed<CSSPseudoElement>
 CSSPseudoElement::GetCSSPseudoElement(Element* aElement,
-                                      nsCSSPseudoElements::Type aType)
+                                      CSSPseudoElementType aType)
 {
   if (!aElement) {
     return nullptr;
@@ -96,14 +102,13 @@ CSSPseudoElement::GetCSSPseudoElement(Element* aElement,
 }
 
 /* static */ nsIAtom*
-CSSPseudoElement::GetCSSPseudoElementPropertyAtom(
-    nsCSSPseudoElements::Type aType)
+CSSPseudoElement::GetCSSPseudoElementPropertyAtom(CSSPseudoElementType aType)
 {
   switch (aType) {
-    case nsCSSPseudoElements::ePseudo_before:
+    case CSSPseudoElementType::before:
       return nsGkAtoms::cssPseudoElementBeforeProperty;
 
-    case nsCSSPseudoElements::ePseudo_after:
+    case CSSPseudoElementType::after:
       return nsGkAtoms::cssPseudoElementAfterProperty;
 
     default:

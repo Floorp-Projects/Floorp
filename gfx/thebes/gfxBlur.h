@@ -188,7 +188,7 @@ protected:
     /**
      * The temporary alpha surface.
      */
-    nsAutoArrayPtr<unsigned char> mData;
+    mozilla::UniquePtr<unsigned char[]> mData;
 
      /**
       * The object that actually does the blurring for us.

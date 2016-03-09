@@ -43,6 +43,8 @@
 #include "gtest/gtest.h"
 #include "gtest_utils.h"
 
+#include "TestHarness.h"
+
 using namespace mozilla;
 MOZ_MTLOG_MODULE("mediapipeline")
 
@@ -699,6 +701,7 @@ TEST_F(MediaPipelineTest, TestAudioSendEmptyBundleFilter) {
 
 
 int main(int argc, char **argv) {
+  ScopedXPCOM xpcom("mediapipeline_unittest");
   test_utils = new MtransportTestUtils();
   // Start the tests
   NSS_NoDB_Init(nullptr);

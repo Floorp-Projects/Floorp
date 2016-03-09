@@ -22,6 +22,9 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/MessagePortTimelineMarker.h"
+#include "mozilla/TimelineConsumers.h"
+#include "mozilla/TimelineMarker.h"
 #include "mozilla/unused.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
@@ -86,15 +89,8 @@ private:
   nsresult
   DispatchMessage() const
   {
-    nsCOMPtr<nsIGlobalObject> globalObject;
-
-    if (NS_IsMainThread()) {
-      globalObject = do_QueryInterface(mPort->GetParentObject());
-    } else {
-      WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-      MOZ_ASSERT(workerPrivate);
-      globalObject = workerPrivate->GlobalScope();
-    }
+    nsCOMPtr<nsIGlobalObject> globalObject = mPort->GetParentObject();
+    MOZ_ASSERT(globalObject);
 
     AutoJSAPI jsapi;
     if (!globalObject || !jsapi.Init(globalObject)) {
@@ -104,13 +100,30 @@ private:
 
     JSContext* cx = jsapi.cx();
 
-    nsCOMPtr<nsPIDOMWindowInner> window =
-      do_QueryInterface(mPort->GetParentObject());
-
     ErrorResult rv;
     JS::Rooted<JS::Value> value(cx);
 
-    mData->Read(window, cx, &value, rv);
+    UniquePtr<AbstractTimelineMarker> start;
+    UniquePtr<AbstractTimelineMarker> end;
+    RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+    bool isTimelineRecording = timelines && !timelines->IsEmpty();
+
+    if (isTimelineRecording) {
+      start = MakeUnique<MessagePortTimelineMarker>(
+        ProfileTimelineMessagePortOperationType::DeserializeData,
+        MarkerTracingType::START);
+    }
+
+    mData->Read(mPort->GetParentObject(), cx, &value, rv);
+
+    if (isTimelineRecording) {
+      end = MakeUnique<MessagePortTimelineMarker>(
+        ProfileTimelineMessagePortOperationType::DeserializeData,
+        MarkerTracingType::END);
+      timelines->AddMarkerForAllObservedDocShells(start);
+      timelines->AddMarkerForAllObservedDocShells(end);
+    }
+
     if (NS_WARN_IF(rv.Failed())) {
       return rv.StealNSResult();
     }
@@ -262,12 +275,14 @@ NS_IMPL_ISUPPORTS(ForceCloseHelper, nsIIPCBackgroundChildCreateCallback)
 
 } // namespace
 
-MessagePort::MessagePort(nsPIDOMWindowInner* aWindow)
-  : DOMEventTargetHelper(aWindow)
+MessagePort::MessagePort(nsIGlobalObject* aGlobal)
+  : DOMEventTargetHelper(aGlobal)
   , mInnerID(0)
   , mMessageQueueEnabled(false)
   , mIsKeptAlive(false)
 {
+  MOZ_ASSERT(aGlobal);
+
   mIdentifier = new MessagePortIdentifier();
   mIdentifier->neutered() = true;
   mIdentifier->sequenceId() = 0;
@@ -280,21 +295,25 @@ MessagePort::~MessagePort()
 }
 
 /* static */ already_AddRefed<MessagePort>
-MessagePort::Create(nsPIDOMWindowInner* aWindow, const nsID& aUUID,
+MessagePort::Create(nsIGlobalObject* aGlobal, const nsID& aUUID,
                     const nsID& aDestinationUUID, ErrorResult& aRv)
 {
-  RefPtr<MessagePort> mp = new MessagePort(aWindow);
+  MOZ_ASSERT(aGlobal);
+
+  RefPtr<MessagePort> mp = new MessagePort(aGlobal);
   mp->Initialize(aUUID, aDestinationUUID, 1 /* 0 is an invalid sequence ID */,
                  false /* Neutered */, eStateUnshippedEntangled, aRv);
   return mp.forget();
 }
 
 /* static */ already_AddRefed<MessagePort>
-MessagePort::Create(nsPIDOMWindowInner* aWindow,
+MessagePort::Create(nsIGlobalObject* aGlobal,
                     const MessagePortIdentifier& aIdentifier,
                     ErrorResult& aRv)
 {
-  RefPtr<MessagePort> mp = new MessagePort(aWindow);
+  MOZ_ASSERT(aGlobal);
+
+  RefPtr<MessagePort> mp = new MessagePort(aGlobal);
   mp->Initialize(aIdentifier.uuid(), aIdentifier.destinationUuid(),
                  aIdentifier.sequenceId(), aIdentifier.neutered(),
                  eStateEntangling, aRv);
@@ -345,8 +364,7 @@ MessagePort::Initialize(const nsID& aUUID,
     MOZ_ASSERT(!mWorkerFeature);
 
     nsAutoPtr<WorkerFeature> feature(new MessagePortFeature(this));
-    JSContext* cx = workerPrivate->GetJSContext();
-    if (NS_WARN_IF(!workerPrivate->AddFeature(cx, feature))) {
+    if (NS_WARN_IF(!workerPrivate->AddFeature(feature))) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
@@ -419,7 +437,27 @@ MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   RefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
 
+  UniquePtr<AbstractTimelineMarker> start;
+  UniquePtr<AbstractTimelineMarker> end;
+  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+  bool isTimelineRecording = timelines && !timelines->IsEmpty();
+
+  if (isTimelineRecording) {
+    start = MakeUnique<MessagePortTimelineMarker>(
+      ProfileTimelineMessagePortOperationType::SerializeData,
+      MarkerTracingType::START);
+  }
+
   data->Write(aCx, aMessage, transferable, aRv);
+
+  if (isTimelineRecording) {
+    end = MakeUnique<MessagePortTimelineMarker>(
+      ProfileTimelineMessagePortOperationType::SerializeData,
+      MarkerTracingType::END);
+    timelines->AddMarkerForAllObservedDocShells(start);
+    timelines->AddMarkerForAllObservedDocShells(end);
+  }
+
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -882,8 +920,7 @@ MessagePort::UpdateMustKeepAlive()
       WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
       MOZ_ASSERT(workerPrivate);
 
-      workerPrivate->RemoveFeature(workerPrivate->GetJSContext(),
-                                   mWorkerFeature);
+      workerPrivate->RemoveFeature(mWorkerFeature);
       mWorkerFeature = nullptr;
     }
 

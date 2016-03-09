@@ -79,6 +79,8 @@ builds:
     platforms:
       - MacOSX64
     types:
+      opt:
+        task: tasks/builds/opt_macosx64_clobber.yml
       debug:
         task: tasks/builds/dbg_macosx64_clobber.yml
   macosx64-st-an:
@@ -156,14 +158,18 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64_clobber.yml:
         task: tasks/tests/fx_linux64_crashtest_e10s.yml
+  firefox-ui-functional:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64_clobber.yml:
+        task: tasks/tests/fx_linux64_firefox_ui_functional.yml
+  firefox-ui-functional-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64_clobber.yml:
+        task: tasks/tests/fx_linux64_firefox_ui_functional_e10s.yml
   gtest:
     allowed_build_tasks:
       tasks/builds/dbg_linux64_clobber.yml:
         task: tasks/tests/fx_linux64_gtest.yml
-  jetpack:
-    allowed_build_tasks:
-      tasks/builds/dbg_linux64_clobber.yml:
-        task: tasks/tests/fx_linux64_jetpack.yml
   jittests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64_clobber.yml:
@@ -180,6 +186,12 @@ tests:
     allowed_build_tasks:
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
         task: tasks/tests/b2g_emulator_marionette.yml
+      tasks/builds/dbg_linux64_clobber.yml:
+        task: tasks/tests/fx_linux64_marionette.yml
+  marionette-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64_clobber.yml:
+        task: tasks/tests/fx_linux64_marionette_e10s.yml
   mochitest:
     allowed_build_tasks:
       tasks/builds/b2g_emulator_x86_l_opt.yml:
@@ -212,6 +224,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64_clobber.yml:
         task: tasks/tests/fx_linux64_mochitest_dt.yml
+  mochitest-jetpack:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64_clobber.yml:
+        task: tasks/tests/fx_linux64_mochitest_jetpack.yml
   mochitest-push:
     allowed_build_tasks:
       tasks/builds/dbg_linux64_clobber.yml:

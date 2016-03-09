@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Enable relevant checks disabled by default -->
+    <issue id="NegativeMargin" severity="warning" />
+
+    <!-- We have a custom menu and don't conform to the recommended styles. -->
+    <issue id="IconColors" severity="ignore" />
+
+    <!-- We use our own preprocessing to either add or remove
+         `android:debuggable` when building with mach so it's
+         not actually hard-coded. We can probably remove this
+         warning when we switch to gradle. -->
+    <issue id="HardcodedDebugMode" severity="ignore" />
+
+    <!-- We want all lint warnings to be fatal errors.
+         Right now, we set these to lint warnings so:
+
+         DO NOT ADD TO THIS LIST.
+
+         We did this so we can land lint in automation
+         and not fail everything. -->
+    <issue id="AppCompatResource" severity="warning" />
+    <issue id="GoogleAppIndexingDeepLinkError" severity="warning" />
+    <issue id="Instantiatable" severity="warning" />
+    <issue id="LongLogTag" severity="warning" />
+    <issue id="MissingPermission" severity="warning" />
+    <issue id="MissingSuperCall" severity="warning" />
+    <issue id="NewApi" severity="warning" />
+    <issue id="OnClick" severity="warning" />
+    <issue id="ReferenceType" severity="warning" />
+    <issue id="ResourceAsColor" severity="warning" />
+    <issue id="ResourceType" severity="warning" />
+    <issue id="ValidFragment" severity="warning" />
+    <issue id="WrongConstant" severity="warning" />
+
+    <!-- WHEN YOU FIX A LINT WARNING, ADD IT TO THIS LIST.
+
+         We want all lint warnings to be fatal errors.
+         This is the list of checks that we've explicitly
+         set as errors. Ideally, once we have no more warnings,
+         we switch to the `warningsAsErrors` lint option
+         (bug 1253737) rather than listing everything explicitly. -->
+    <issue id="AaptCrash" severity="error" />
+    <issue id="Accessibility" severity="error" />
+    <issue id="AccidentalOctal" severity="error" />
+    <issue id="AdapterViewChildren" severity="error" />
+    <issue id="AddJavascriptInterface" severity="error" />
+    <issue id="AllowBackup" severity="error" />
+    <issue id="AlwaysShowAction" severity="error" />
+    <issue id="AndroidGradlePluginVersion" severity="error" />
+    <issue id="AppCompatMethod" severity="error" />
+    <issue id="AppIndexingError" severity="error" />
+    <issue id="AppIndexingWarning" severity="error" />
+    <issue id="ButtonCase" severity="error" />
+    <issue id="ButtonOrder" severity="error" />
+    <issue id="ByteOrderMark" severity="error" />
+    <issue id="CheckResult" severity="error" />
+    <issue id="Correctness" severity="error" />
+    <issue id="CutPasteId" severity="error" />
+    <issue id="DalvikOverride" severity="error" />
+    <issue id="DeviceAdmin" severity="error" />
+    <issue id="DisableBaselineAlignment" severity="error" />
+    <issue id="DrawAllocation" severity="error" />
+    <issue id="DuplicateActivity" severity="error" />
+    <issue id="DuplicateDefinition" severity="error" />
+    <issue id="DuplicateIds" severity="error" />
+    <issue id="DuplicateIncludedIds" severity="error" />
+    <issue id="DuplicateUsesFeature" severity="error" />
+    <issue id="ExportedContentProvider" severity="error" />
+    <issue id="ExportedPreferenceActivity" severity="error" />
+    <issue id="ExtraText" severity="error" />
+    <issue id="ExtraTranslation" severity="error" />
+    <issue id="FloatMath" severity="error" />
+    <issue id="FullBackupContent" severity="error" />
+    <issue id="GetInstance" severity="error" />
+    <issue id="GifUsage" severity="error" />
+    <issue id="GradleCompatible" severity="error" />
+    <issue id="GradleDependency" severity="error" />
+    <issue id="GradleDeprecated" severity="error" />
+    <issue id="GradleDynamicVersion" severity="error" />
+    <issue id="GradleGetter" severity="error" />
+    <issue id="GradleIdeError" severity="error" />
+    <issue id="GradlePath" severity="error" />
+    <issue id="GrantAllUris" severity="error" />
+    <issue id="GridLayout" severity="error" />
+    <issue id="HandlerLeak" severity="error" />
+    <issue id="HardcodedText" severity="error" />
+    <issue id="IconExtension" severity="error" />
+    <issue id="IconLauncherShape" severity="error" />
+    <issue id="IconMixedNinePatch" severity="error" />
+    <issue id="IconNoDpi" severity="error" />
+    <issue id="IllegalResourceRef" severity="error" />
+    <issue id="ImpliedQuantity" severity="error" />
+    <issue id="InOrMmUsage" severity="error" />
+    <issue id="IncludeLayoutParam" severity="error" />
+    <issue id="InconsistentArrays" severity="error" />
+    <issue id="InefficientWeight" severity="error" />
+    <issue id="InnerclassSeparator" severity="error" />
+    <issue id="Internationalization" severity="error" />
+    <issue id="InvalidId" severity="error" />
+    <issue id="InvalidPackage" severity="error" />
+    <issue id="InvalidResourceFolder" severity="error" />
+    <issue id="JavascriptInterface" severity="error" />
+    <issue id="LabelFor" severity="error" />
+    <issue id="LibraryCustomView" severity="error" />
+    <issue id="LocalSuppress" severity="error" />
+    <issue id="LocaleFolder" severity="error" />
+    <issue id="LogTagMismatch" severity="error" />
+    <issue id="MangledCRLF" severity="error" />
+    <issue id="ManifestOrder" severity="error" />
+    <issue id="ManifestTypo" severity="error" />
+    <issue id="MenuTitle" severity="error" />
+    <issue id="MergeRootFrame" severity="error" />
+    <issue id="MipmapIcons" severity="error" />
+    <issue id="MissingApplicationIcon" severity="error" />
+    <issue id="MissingId" severity="error" />
+    <issue id="MissingPrefix" severity="error" />
+    <issue id="MissingQuantity" severity="error" />
+    <issue id="MissingRegistered" severity="error" />
+    <issue id="MissingTranslation" severity="error" />
+    <issue id="MissingVersion" severity="error" />
+    <issue id="MockLocation" severity="error" />
+    <issue id="MultipleUsesSdk" severity="error" />
+    <issue id="NamespaceTypo" severity="error" />
+    <issue id="NestedScrolling" severity="error" />
+    <issue id="NfcTechWhitespace" severity="error" />
+    <issue id="NotSibling" severity="error" />
+    <issue id="ObsoleteLayoutParam" severity="error" />
+    <issue id="OldTargetApi" severity="error" />
+    <issue id="OnClick" severity="error" />
+    <issue id="Orientation" severity="error" />
+    <issue id="Override" severity="error" />
+    <issue id="OverrideAbstract" severity="error" />
+    <issue id="PackagedPrivateKey" severity="error" />
+    <issue id="ParcelCreator" severity="error" />
+    <issue id="Performance" severity="error" />
+    <issue id="Proguard" severity="error" />
+    <issue id="ProguardSplit" severity="error" />
+    <issue id="PropertyEscape" severity="error" />
+    <issue id="ProtectedPermissions" severity="error" />
+    <issue id="PxUsage" severity="error" />
+    <issue id="Range" severity="error" />
+    <issue id="Registered" severity="error" />
+    <issue id="RelativeOverlap" severity="error" />
+    <issue id="RequiredSize" severity="error" />
+    <issue id="ResAuto" severity="error" />
+    <issue id="ResourceCycle" severity="error" />
+    <issue id="ResourceName" severity="error" />
+    <issue id="ResourceType" severity="error" />
+    <issue id="RtlCompat" severity="error" />
+    <issue id="RtlEnabled" severity="error" />
+    <issue id="ScrollViewCount" severity="error" />
+    <issue id="ScrollViewSize" severity="error" />
+    <issue id="SecureRandom" severity="error" />
+    <issue id="Security" severity="error" />
+    <issue id="ServiceCast" severity="error" />
+    <issue id="SetJavaScriptEnabled" severity="error" />
+    <issue id="ShiftFlags" severity="error" />
+    <issue id="ShortAlarm" severity="error" />
+    <issue id="ShowToast" severity="error" />
+    <issue id="SignatureOrSystemPermissions" severity="error" />
+    <issue id="StringFormatCount" severity="error" />
+    <issue id="StringFormatInvalid" severity="error" />
+    <issue id="StringFormatMatches" severity="error" />
+    <issue id="StringShouldBeInt" severity="error" />
+    <issue id="SuspiciousImport" severity="error" />
+    <issue id="TextFields" severity="error" />
+    <issue id="TextViewEdits" severity="error" />
+    <issue id="TooDeepLayout" severity="error" />
+    <issue id="TooManyViews" severity="error" />
+    <issue id="TrulyRandom" severity="error" />
+    <issue id="TypographyDashes" severity="error" />
+    <issue id="TypographyFractions" severity="error" />
+    <issue id="TypographyOther" severity="error" />
+    <issue id="Typos" severity="error" />
+    <issue id="UniqueConstants" severity="error" />
+    <issue id="UniquePermission" severity="error" />
+    <issue id="UnknownId" severity="error" />
+    <issue id="UnknownIdInLayout" severity="error" />
+    <issue id="UnlocalizedSms" severity="error" />
+    <issue id="UnusedNamespace" severity="error" />
+    <issue id="UnusedQuantity" severity="error" />
+    <issue id="Usability" severity="error" />
+    <issue id="UseCheckPermission" severity="error" />
+    <issue id="UseCompoundDrawables" severity="error" />
+    <issue id="UselessLeaf" severity="error" />
+    <issue id="UsesMinSdkAttributes" severity="error" />
+    <issue id="UsingHttp" severity="error" />
+    <issue id="ViewHolder" severity="error" />
+    <issue id="ViewTag" severity="error" />
+    <issue id="Wakelock" severity="error" />
+    <issue id="WebViewLayout" severity="error" />
+    <issue id="WorldReadableFiles" severity="error" />
+    <issue id="WorldWriteableFiles" severity="error" />
+    <issue id="WrongCall" severity="error" />
+    <issue id="WrongCase" severity="error" />
+    <issue id="WrongConstant" severity="error" />
+    <issue id="WrongFolder" severity="error" />
+    <issue id="WrongManifestParent" severity="error" />
+    <issue id="WrongRegion" severity="error" />
+    <issue id="WrongThread" severity="error" />
+    <issue id="WrongViewCast" severity="error" />
+
+</lint>

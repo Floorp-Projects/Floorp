@@ -16,10 +16,10 @@ const {colorUtils} = require("devtools/shared/css-color");
 const Heritage = require("sdk/core/heritage");
 const {Eyedropper} = require("devtools/client/eyedropper/eyedropper");
 const Editor = require("devtools/client/sourceeditor/editor");
+const Services = require("Services");
 
 loader.lazyRequireGetter(this, "beautify", "devtools/shared/jsbeautify/beautify");
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "setNamedTimeout",

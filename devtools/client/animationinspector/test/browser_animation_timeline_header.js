@@ -8,11 +8,10 @@ requestLongerTimeout(2);
 
 // Check that the timeline shows correct time graduations in the header.
 
-const {
-  findOptimalTimeInterval,
-  TimeScale
-} = require("devtools/client/animationinspector/utils");
-// Should be kept in sync with TIME_GRADUATION_MIN_SPACING in animation-timeline.js
+const {findOptimalTimeInterval, TimeScale} = require("devtools/client/animationinspector/utils");
+
+// Should be kept in sync with TIME_GRADUATION_MIN_SPACING in
+// animation-timeline.js
 const TIME_GRADUATION_MIN_SPACING = 40;
 
 add_task(function*() {

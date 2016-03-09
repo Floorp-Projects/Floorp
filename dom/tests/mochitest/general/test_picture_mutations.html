@@ -165,7 +165,6 @@
 
         expectEvents(1, 0, function() {
           is(img.currentSrc, testPNG50, "Should have switched to testPNG50");
-Math.sin(90);
 
           // Now add a source *also* wanting that DPI *just before* the
           // selected source. Properly re-running the algorithm should
@@ -231,7 +230,7 @@ Math.sin(90);
           is(img.currentSrc, testPNG100, "Should still have testPNG100");
 
           // And a valid MQ
-          source1.media = "(min-resolution: 3dppx)";
+          source1.media = "(min-resolution: 1dppx)";
           expectEvents(1, 0, function() {
             // And a valid type...
             source1.type = "image/png";

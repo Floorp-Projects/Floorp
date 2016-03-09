@@ -725,6 +725,58 @@ CodeGeneratorX86Shared::visitClzI(LClzI* ins)
 }
 
 void
+CodeGeneratorX86Shared::visitCtzI(LCtzI* ins)
+{
+    Register input = ToRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    // bsf is undefined on 0
+    Label done, nonzero;
+    if (!ins->mir()->operandIsNeverZero()) {
+        masm.test32(input, input);
+        masm.j(Assembler::NonZero, &nonzero);
+        masm.move32(Imm32(32), output);
+        masm.jump(&done);
+    }
+
+    masm.bind(&nonzero);
+    masm.bsf(input, output);
+    masm.bind(&done);
+}
+
+void
+CodeGeneratorX86Shared::visitPopcntI(LPopcntI* ins)
+{
+    Register input = ToRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    if (AssemblerX86Shared::HasPOPCNT()) {
+        masm.popcnt(input, output);
+        return;
+    }
+
+    // Equivalent to mozilla::CountPopulation32()
+    Register tmp = ToRegister(ins->temp());
+
+    masm.movl(input, output);
+    masm.movl(input, tmp);
+    masm.shrl(Imm32(1), output);
+    masm.andl(Imm32(0x55555555), output);
+    masm.subl(output, tmp);
+    masm.movl(tmp, output);
+    masm.andl(Imm32(0x33333333), output);
+    masm.shrl(Imm32(2), tmp);
+    masm.andl(Imm32(0x33333333), tmp);
+    masm.addl(output, tmp);
+    masm.movl(tmp, output);
+    masm.shrl(Imm32(4), output);
+    masm.addl(tmp, output);
+    masm.andl(Imm32(0xF0F0F0F), output);
+    masm.imull(Imm32(0x1010101), output, output);
+    masm.shrl(Imm32(24), output);
+}
+
+void
 CodeGeneratorX86Shared::visitSqrtD(LSqrtD* ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
@@ -2374,8 +2426,8 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
 
     // Classify lane values into 4 disjoint classes:
     //
-    //   N-lanes:             in < -0.0
-    //   A-lanes:     -0.0 <= in <= 0x0.ffffffp31
+    //   N-lanes:             in <= -1.0
+    //   A-lanes:      -1.0 < in <= 0x0.ffffffp31
     //   B-lanes: 0x1.0p31 <= in <= 0x0.ffffffp32
     //   V-lanes: 0x1.0p32 <= in, or isnan(in)
     //
@@ -2398,18 +2450,6 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
 
     ScratchSimd128Scope scratch(masm);
 
-    // First we need to filter out N-lanes. We need to use a floating point
-    // comparison to do that because cvttps2dq maps the negative range
-    // [-0x0.ffffffp0;-0.0] to 0. We can't simply look at the sign bits of in
-    // because -0.0 is a valid input.
-    // TODO: It may be faster to let ool code deal with -0.0 and skip the
-    // vcmpleps here.
-    masm.zeroFloat32x4(scratch);
-    masm.vcmpleps(Operand(in), scratch, scratch);
-    masm.vmovmskps(scratch, temp);
-    masm.cmp32(temp, Imm32(15));
-    bailoutIf(Assembler::NotEqual, ins->snapshot());
-
     // TODO: If the majority of lanes are A-lanes, it could be faster to compute
     // A first, use vmovmskps to check for any non-A-lanes and handle them in
     // ool code. OTOH, we we're wrong about the lane distribution, that would be
@@ -2426,9 +2466,9 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     // we use |out|, so we can tolerate if they are the same register.
     masm.convertFloat32x4ToInt32x4(in, out);
 
-    // Since we filtered out N-lanes, we can identify A-lanes by the sign bits
-    // in A: Any A-lanes will be positive in A, and B-lanes and V-lanes will be
-    // 0x80000000 in A. Compute a mask of non-A-lanes into |tempF|.
+    // We can identify A-lanes by the sign bits in A: Any A-lanes will be
+    // positive in A, and N, B, and V-lanes will be 0x80000000 in A. Compute a
+    // mask of non-A-lanes into |tempF|.
     masm.zeroFloat32x4(tempF);
     masm.packedGreaterThanInt32x4(Operand(out), tempF);
 
@@ -2443,7 +2483,11 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     // the remaining negative lanes in B.
     masm.vmovmskps(scratch, temp);
     masm.cmp32(temp, Imm32(0));
-    bailoutIf(Assembler::NotEqual, ins->snapshot());
+
+    if (gen->compilingAsmJS())
+        masm.j(Assembler::NotEqual, wasm::JumpTarget::ConversionError);
+    else
+        bailoutIf(Assembler::NotEqual, ins->snapshot());
 }
 
 void
@@ -3425,24 +3469,11 @@ CodeGeneratorX86Shared::visitSimdShift(LSimdShift* ins)
     FloatRegister out = ToFloatRegister(ins->output());
     MOZ_ASSERT(ToFloatRegister(ins->vector()) == out); // defineReuseInput(0);
 
-    // If the shift count is greater than 31, this will just zero all lanes by
-    // default for lsh and ursh, and for rsh extend the sign bit to all bits,
-    // per the SIMD.js spec (as of March 19th 2015).
+    // If the shift count is out of range, only use the low 5 bits.
     const LAllocation* val = ins->value();
     if (val->isConstant()) {
-        uint32_t c = uint32_t(ToInt32(val));
-        if (c > 31) {
-            switch (ins->operation()) {
-              case MSimdShift::lsh:
-              case MSimdShift::ursh:
-                masm.zeroInt32x4(out);
-                return;
-              default:
-                c = 31;
-                break;
-            }
-        }
-        Imm32 count(c);
+        MOZ_ASSERT(ins->temp()->isBogusTemp());
+        Imm32 count(uint32_t(ToInt32(val)) % 32);
         switch (ins->operation()) {
           case MSimdShift::lsh:
             masm.packedLeftShiftByScalar(count, out);
@@ -3457,9 +3488,13 @@ CodeGeneratorX86Shared::visitSimdShift(LSimdShift* ins)
         MOZ_CRASH("unexpected SIMD bitwise op");
     }
 
+    // Truncate val to 5 bits. We should have a temp register for that.
     MOZ_ASSERT(val->isRegister());
+    Register count = ToRegister(ins->temp());
+    masm.mov(ToRegister(val), count);
+    masm.andl(Imm32(31), count);
     ScratchFloat32Scope scratch(masm);
-    masm.vmovd(ToRegister(val), scratch);
+    masm.vmovd(count, scratch);
 
     switch (ins->operation()) {
       case MSimdShift::lsh:

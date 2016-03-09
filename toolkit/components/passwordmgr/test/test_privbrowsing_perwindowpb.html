@@ -110,6 +110,8 @@ function loadNextTest() {
 
 function checkTest() {
   var popup;
+  var gotUser;
+  var gotPass;
 
   switch (testNum) {
     case 1:
@@ -155,32 +157,32 @@ function checkTest() {
 
     case 7:
       // verify that the user/pass pair was autofilled
-      var gotUser = iframe.contentDocument.getElementById("user").textContent;
-      var gotPass = iframe.contentDocument.getElementById("pass").textContent;
+      gotUser = iframe.contentDocument.getElementById("user").textContent;
+      gotPass = iframe.contentDocument.getElementById("pass").textContent;
       is(gotUser, "notifyu1", "Checking submitted username");
       is(gotPass, "notifyp1", "Checking submitted password");
       break;
 
     case 8:
       // verify that the user/pass pair was not autofilled
-      var gotUser = iframe.contentDocument.getElementById("user").textContent;
-      var gotPass = iframe.contentDocument.getElementById("pass").textContent;
+      gotUser = iframe.contentDocument.getElementById("user").textContent;
+      gotPass = iframe.contentDocument.getElementById("pass").textContent;
       is(gotUser, "", "Checking submitted username");
       is(gotPass, "", "Checking submitted password");
       break;
 
     case 9:
       // verify that the user/pass pair was available for autocomplete
-      var gotUser = iframe.contentDocument.getElementById("user").textContent;
-      var gotPass = iframe.contentDocument.getElementById("pass").textContent;
+      gotUser = iframe.contentDocument.getElementById("user").textContent;
+      gotPass = iframe.contentDocument.getElementById("pass").textContent;
       is(gotUser, "notifyu1", "Checking submitted username");
       is(gotPass, "notifyp1", "Checking submitted password");
       break;
 
     case 10:
       // verify that the user/pass pair was autofilled
-      var gotUser = iframe.contentDocument.getElementById("user").textContent;
-      var gotPass = iframe.contentDocument.getElementById("pass").textContent;
+      gotUser = iframe.contentDocument.getElementById("user").textContent;
+      gotPass = iframe.contentDocument.getElementById("pass").textContent;
       is(gotUser, "notifyu1", "Checking submitted username");
       is(gotPass, "notifyp1", "Checking submitted password");
       pwmgr.removeLogin(login);

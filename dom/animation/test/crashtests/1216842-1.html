@@ -1,0 +1,35 @@
+<!doctype html>
+<html class="reftest-wait">
+  <head>
+    <title>Bug 1216842: effect-level easing function produces negative values (compositor thread)</title>
+    <style>
+    #target {
+      width: 100px; height: 100px;
+      background: blue;
+    }
+    </style>
+  </head>
+  <body>
+  <div id="target"></div>
+  </body>
+  <script>
+    var target = document.getElementById("target");
+    var effect =
+      new KeyframeEffectReadOnly(
+        target,
+        { opacity: [0, 1] },
+        {
+          fill: "forwards",
+          /* The function produces negative values in (0, 0.766312060) */
+          easing: "cubic-bezier(0,-0.5,1,-0.5)",
+          duration: 100,
+          iterations: 0.75 /* To finish in the extraporation range */
+        }
+      );
+    var animation = new Animation(effect, document.timeline);
+    animation.play();
+    animation.finished.then(function() {
+      document.documentElement.className = "";
+    });
+  </script>
+</html>

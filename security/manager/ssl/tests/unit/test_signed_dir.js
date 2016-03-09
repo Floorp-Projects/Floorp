@@ -23,7 +23,7 @@ function prepare(tamper) {
   if (tamper.copy) {
     tamper.copy.forEach(i => {
       let f = gTarget.clone();
-      i[0].split('/').forEach(seg => {f.append(seg);});
+      i[0].split("/").forEach(seg => { f.append(seg); });
       f.copyTo(null, i[1]);
     });
   }
@@ -32,7 +32,7 @@ function prepare(tamper) {
   if (tamper.delete) {
     tamper.delete.forEach(i => {
       let f = gTarget.clone();
-      i.split('/').forEach(seg => {f.append(seg);});
+      i.split("/").forEach(seg => { f.append(seg); });
       f.remove(true);
     });
   }
@@ -41,7 +41,7 @@ function prepare(tamper) {
   if (tamper.corrupt) {
     tamper.corrupt.forEach(i => {
       let f = gTarget.clone();
-      i.split('/').forEach(seg => {f.append(seg);});
+      i.split("/").forEach(seg => { f.append(seg); });
       let s = FileUtils.openFileOutputStream(f, FileUtils.MODE_WRONLY);
       const str = "Kilroy was here";
       s.write(str, str.length);
@@ -94,7 +94,7 @@ add_test(function() {
 
 add_test(function() {
   verifyDirAsync("'two rsa files'", Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
-                 {copy: [["META-INF/mozilla.rsa","extra.rsa"]]});
+                 {copy: [["META-INF/mozilla.rsa", "extra.rsa"]]});
 });
 
 add_test(function() {
@@ -114,12 +114,12 @@ add_test(function() {
 
 add_test(function() {
   verifyDirAsync("'extra .sf file (invalid)'", Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY,
-                 {copy: [["META-INF/mozilla.rsa","extra.sf"]]});
+                 {copy: [["META-INF/mozilla.rsa", "extra.sf"]]});
 });
 
 add_test(function() {
   verifyDirAsync("'extra .sf file (valid)'", Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY,
-                 {copy: [["META-INF/mozilla.sf","extra.sf"]]});
+                 {copy: [["META-INF/mozilla.sf", "extra.sf"]]});
 });
 
 add_test(function() {
@@ -144,7 +144,7 @@ add_test(function() {
 
 add_test(function() {
   verifyDirAsync("'extra file'", Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY,
-                 {copy: [["bootstrap.js","extra"]]});
+                 {copy: [["bootstrap.js", "extra"]]});
 });
 
 add_test(function() {
@@ -159,7 +159,7 @@ add_test(function() {
 
 add_test(function() {
   verifyDirAsync("'extra file in dir'", Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY,
-                 {copy: [["content/options.xul","extra"]]});
+                 {copy: [["content/options.xul", "extra"]]});
 });
 
 do_register_cleanup(function() {

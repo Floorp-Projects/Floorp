@@ -27,8 +27,6 @@ endif
 DEFINES += \
   -DANDROID_VERSION_CODE=$(ANDROID_VERSION_CODE) \
   -DMOZ_ANDROID_SHARED_ID="$(MOZ_ANDROID_SHARED_ID)" \
-  -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_ACCOUNT_TYPE)" \
-  -DMOZ_ANDROID_SHARED_FXACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_FXACCOUNT_TYPE)" \
   -DMOZ_BUILDID=$(MOZ_BUILDID) \
   $(NULL)
 
@@ -213,7 +211,6 @@ ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 .gradle.deps: .aapt.deps FORCE
 	@$(TOUCH) $@
 	$(topsrcdir)/mach gradle \
-		$(if $(MOZILLA_OFFICIAL),--no-daemon --offline --info) \
 		app:assembleAutomationDebug app:assembleAutomationDebugAndroidTest -x lint
 
 classes.dex: .gradle.deps

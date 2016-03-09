@@ -414,6 +414,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
         containerLayer->SetScaleToResolution(attrs.scaleToResolution(),
                                              attrs.presShellResolution());
         containerLayer->SetEventRegionsOverride(attrs.eventRegionsOverride());
+        containerLayer->SetInputFrameID(attrs.inputFrameID());
 
         if (attrs.hmdDeviceID()) {
           containerLayer->SetVRDeviceID(attrs.hmdDeviceID());
@@ -730,7 +731,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
   // from the shadow transform by undoing the translations in
   // AsyncCompositionManager::SampleValue.
 
-  Matrix4x4 transform = layer->AsLayerComposite()->GetShadowTransform();
+  Matrix4x4 transform = layer->AsLayerComposite()->GetShadowBaseTransform();
   if (ContainerLayer* c = layer->AsContainerLayer()) {
     // Undo the scale transform applied by AsyncCompositionManager::SampleValue
     transform.PostScale(1.0f/c->GetInheritedXScale(),
@@ -982,8 +983,7 @@ LayerTransactionParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessag
             GetChildProcessId(),
             op.holderId(),
             op.transactionId(),
-            op.textureParent(),
-            compositable);
+            op.textureParent());
           // Send message back via PImageBridge.
           ImageBridgeParent::ReplyRemoveTexture(
             GetChildProcessId(),
@@ -1045,25 +1045,22 @@ bool LayerTransactionParent::IsSameProcess() const
 }
 
 void
-LayerTransactionParent::SendFenceHandleIfPresent(PTextureParent* aTexture,
-                                                 CompositableHost* aCompositableHost)
+LayerTransactionParent::SendFenceHandleIfPresent(PTextureParent* aTexture)
 {
   RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
-  if (!texture) {
+  if (!texture || !texture->NeedsFenceHandle()) {
     return;
   }
 
   // Send a ReleaseFence of CompositorOGL.
-  if (aCompositableHost && aCompositableHost->GetCompositor()) {
-    FenceHandle fence = aCompositableHost->GetCompositor()->GetReleaseFence();
-    if (fence.IsValid()) {
-      mPendingAsyncMessage.push_back(OpDeliverFence(aTexture, nullptr,
-                                                    fence));
-    }
+  FenceHandle fence = texture->GetCompositorReleaseFence();
+  if (fence.IsValid()) {
+    mPendingAsyncMessage.push_back(OpDeliverFence(aTexture, nullptr,
+                                                  fence));
   }
 
-  // Send a ReleaseFence that is set by HwcComposer2D.
-  FenceHandle fence = texture->GetAndResetReleaseFenceHandle();
+  // Send a ReleaseFence that is set to TextureHost by HwcComposer2D.
+  fence = texture->GetAndResetReleaseFenceHandle();
   if (fence.IsValid()) {
     mPendingAsyncMessage.push_back(OpDeliverFence(aTexture, nullptr,
                                                   fence));

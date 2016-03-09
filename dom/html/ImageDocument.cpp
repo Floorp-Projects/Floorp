@@ -6,6 +6,7 @@
 
 #include "ImageDocument.h"
 #include "mozilla/dom/ImageDocumentBinding.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "nsRect.h"
 #include "nsIImageLoadingContent.h"
 #include "nsGenericHTMLElement.h"
@@ -27,7 +28,6 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsAutoPtr.h"
-#include "nsStyleSet.h"
 #include "nsIChannel.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
@@ -337,11 +337,28 @@ ImageDocument::ShrinkToFit()
   }
   if (GetZoomLevel() != mOriginalZoomLevel && mImageIsResized &&
       !nsContentUtils::IsChildOfSameType(this)) {
+    // If we're zoomed, so that we don't maintain the invariant that
+    // mImageIsResized if and only if its displayed width/height fit in
+    // mVisibleWidth/mVisibleHeight, then we may need to switch to/from the
+    // overflowingVertical class here, because our viewport size may have
+    // changed and we don't plan to adjust the image size to compensate.  Since
+    // mImageIsResized it has a "height" attribute set, and we can just get the
+    // displayed image height by getting .height on the HTMLImageElement.
+    HTMLImageElement* img = HTMLImageElement::FromContent(mImageContent);
+    uint32_t imageHeight = img->Height();
+    nsDOMTokenList* classList = img->ClassList();
+    ErrorResult ignored;
+    if (imageHeight > mVisibleHeight) {
+      classList->Add(NS_LITERAL_STRING("overflowingVertical"), ignored);
+    } else {
+      classList->Remove(NS_LITERAL_STRING("overflowingVertical"), ignored);
+    }
+    ignored.SuppressException();
     return;
   }
 
   // Keep image content alive while changing the attributes.
-  nsCOMPtr<nsIContent> imageContent = mImageContent;
+  nsCOMPtr<Element> imageContent = mImageContent;
   nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(mImageContent);
   image->SetWidth(std::max(1, NSToCoordFloor(GetRatio() * mImageWidth)));
   image->SetHeight(std::max(1, NSToCoordFloor(GetRatio() * mImageHeight)));
@@ -409,7 +426,7 @@ ImageDocument::RestoreImage()
     return;
   }
   // Keep image content alive while changing the attributes.
-  nsCOMPtr<nsIContent> imageContent = mImageContent;
+  nsCOMPtr<Element> imageContent = mImageContent;
   imageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::width, true);
   imageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::height, true);
   
@@ -493,7 +510,7 @@ ImageDocument::OnHasTransparency()
     return;
   }
 
-  nsDOMTokenList* classList = mImageContent->AsElement()->ClassList();
+  nsDOMTokenList* classList = mImageContent->ClassList();
   mozilla::ErrorResult rv;
   classList->Add(NS_LITERAL_STRING("transparent"), rv);
 }
@@ -501,8 +518,8 @@ ImageDocument::OnHasTransparency()
 void
 ImageDocument::SetModeClass(eModeClasses mode)
 {
-  nsDOMTokenList* classList = mImageContent->AsElement()->ClassList();
-  mozilla::ErrorResult rv;
+  nsDOMTokenList* classList = mImageContent->ClassList();
+  ErrorResult rv;
 
   if (mode == eShrinkToFit) {
     classList->Add(NS_LITERAL_STRING("shrinkToFit"), rv);
@@ -521,6 +538,8 @@ ImageDocument::SetModeClass(eModeClasses mode)
   } else {
     classList->Remove(NS_LITERAL_STRING("overflowingHorizontalOnly"), rv);
   }
+
+  rv.SuppressException();
 }
 
 nsresult
@@ -604,12 +623,11 @@ ImageDocument::UpdateSizeFromLayout()
 {
   // Pull an updated size from the content frame to account for any size
   // change due to CSS properties like |image-orientation|.
-  Element* contentElement = mImageContent->AsElement();
-  if (!contentElement) {
+  if (!mImageContent) {
     return;
   }
 
-  nsIFrame* contentFrame = contentElement->GetPrimaryFrame(Flush_Frames);
+  nsIFrame* contentFrame = mImageContent->GetPrimaryFrame(Flush_Frames);
   if (!contentFrame) {
     return;
   }

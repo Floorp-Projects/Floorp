@@ -203,7 +203,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   mTile.Flip();
   UnlockTile(mTile);
 
-  if (backBuffer->HasInternalBuffer()) {
+  if (backBuffer->HasIntermediateBuffer()) {
     // If our new buffer has an internal buffer, we don't want to keep another
     // TextureClient around unnecessarily, so discard the back-buffer.
     mTile.DiscardBackBuffer();

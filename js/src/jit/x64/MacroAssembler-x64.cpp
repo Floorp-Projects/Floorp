@@ -265,44 +265,6 @@ MacroAssemblerX64::storeUnboxedValue(ConstantOrRegister value, MIRType valueType
                                      MIRType slotType);
 
 void
-MacroAssemblerX64::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label)
-{
-    ScratchRegisterScope scratch(asMasm());
-
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    MOZ_ASSERT(ptr != temp);
-    MOZ_ASSERT(ptr != scratch);
-
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-    movePtr(ImmWord(-ptrdiff_t(nursery.start())), scratch);
-    asMasm().addPtr(ptr, scratch);
-    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-                       scratch, Imm32(nursery.nurserySize()), label);
-}
-
-void
-MacroAssemblerX64::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
-                                              Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-
-    // Avoid creating a bogus ObjectValue below.
-    if (!nursery.exists())
-        return;
-
-    // 'Value' representing the start of the nursery tagged as a JSObject
-    Value start = ObjectValue(*reinterpret_cast<JSObject*>(nursery.start()));
-
-    ScratchRegisterScope scratch(asMasm());
-    movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), scratch);
-    asMasm().addPtr(value.valueReg(), scratch);
-    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-                       scratch, Imm32(nursery.nurserySize()), label);
-}
-
-void
 MacroAssemblerX64::profilerEnterFrame(Register framePtr, Register scratch)
 {
     AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());
@@ -462,6 +424,59 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
     callWithABIPre(&stackAdjust);
     call(safeFun);
     callWithABIPost(stackAdjust, result);
+}
+
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(ptr != temp);
+    MOZ_ASSERT(ptr != scratch);
+
+    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
+    movePtr(ImmWord(-ptrdiff_t(nursery.start())), scratch);
+    addPtr(ptr, scratch);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              scratch, Imm32(nursery.nurserySize()), label);
+}
+
+void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
+                                           Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
+
+    // Avoid creating a bogus ObjectValue below.
+    if (!nursery.exists())
+        return;
+
+    // 'Value' representing the start of the nursery tagged as a JSObject
+    Value start = ObjectValue(*reinterpret_cast<JSObject*>(nursery.start()));
+
+    ScratchRegisterScope scratch(*this);
+    movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), scratch);
+    addPtr(value.valueReg(), scratch);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              scratch, Imm32(nursery.nurserySize()), label);
+}
+
+void
+MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
+                                const Value& rhs, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    ScratchRegisterScope scratch(*this);
+    MOZ_ASSERT(lhs.valueReg() != scratch);
+    moveValue(rhs, scratch);
+    cmpPtr(lhs.valueReg(), scratch);
+    j(cond, label);
 }
 
 //}}} check_macroassembler_style

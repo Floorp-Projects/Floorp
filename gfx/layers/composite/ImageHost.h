@@ -86,6 +86,10 @@ public:
 
   virtual already_AddRefed<TexturedEffect> GenEffect(const gfx::Filter& aFilter) override;
 
+  void SetCurrentTextureHost(TextureHost* aTexture);
+
+  virtual void CleanupResources() override;
+
   int32_t GetFrameID()
   {
     const TimedImage* img = ChooseImage();
@@ -100,6 +104,7 @@ public:
 
   int32_t GetLastFrameID() const { return mLastFrameID; }
   int32_t GetLastProducerID() const { return mLastProducerID; }
+  virtual int32_t GetLastInputFrameID() const override { return mLastInputFrameID; }
 
   enum Bias {
     // Don't apply bias to frame times
@@ -112,13 +117,20 @@ public:
 
 protected:
   struct TimedImage {
-    CompositableTextureHostRef mFrontBuffer;
-    CompositableTextureSourceRef mTextureSource;
+    RefPtr<TextureHost> mTextureHost;
     TimeStamp mTimeStamp;
     gfx::IntRect mPictureRect;
     int32_t mFrameID;
     int32_t mProducerID;
+    int32_t mInputFrameID;
   };
+
+  CompositableTextureHostRef mCurrentTextureHost;
+  CompositableTextureSourceRef mCurrentTextureSource;
+  // When doing texture uploads it's best to alternate between two (or three)
+  // texture sources so that the texture we upload to isn't being used by
+  // the GPU to composite the previous frame.
+  RefPtr<TextureSource> mExtraTextureSource;
 
   /**
    * ChooseImage is guaranteed to return the same TimedImage every time it's
@@ -135,6 +147,7 @@ protected:
   ImageContainerParent* mImageContainer;
   int32_t mLastFrameID;
   int32_t mLastProducerID;
+  int32_t mLastInputFrameID;
   /**
    * Bias to apply to the next frame.
    */

@@ -28,7 +28,8 @@ public:
   void UpdateSensorState(const VRHMDSensorState& aSensorState);
 
   const VRDeviceInfo& GetDeviceInfo() const { return mDeviceInfo; }
-  virtual VRHMDSensorState GetSensorState(double timeOffset = 0.0);
+  virtual VRHMDSensorState GetSensorState();
+  virtual VRHMDSensorState GetImmediateSensorState();
 
   bool SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRight,
               double zNear, double zFar);

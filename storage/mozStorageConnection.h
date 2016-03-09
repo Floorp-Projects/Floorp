@@ -320,7 +320,9 @@ private:
    * Tracks whether the async thread has been initialized and Shutdown() has
    * not yet been invoked on it.
    */
-  DebugOnly<bool> mAsyncExecutionThreadIsAlive;
+#ifdef DEBUG
+  bool mAsyncExecutionThreadIsAlive;
+#endif
 
   /**
    * Set to true just prior to calling sqlite3_close on the

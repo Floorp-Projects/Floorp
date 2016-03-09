@@ -479,6 +479,8 @@ typedef enum {
     SEC_OID_TLS_DH_ANON_EXPORT         = 344,
     SEC_OID_APPLY_SSL_POLICY           = 345,
 
+    SEC_OID_CHACHA20_POLY1305          = 346,
+
     SEC_OID_TOTAL
 } SECOidTag;
 

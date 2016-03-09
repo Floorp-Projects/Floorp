@@ -700,9 +700,6 @@ protected:
   // isPending state at the time of the suspend request.
   bool mIgnoreResume;
 
-  // Start and end offset of the bytes to be requested.
-  MediaByteRange mByteRange;
-
   // True if the stream can seek into unbuffered ranged, i.e. if the
   // connection supports byte range requests.
   bool mIsTransportSeekable;

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <script src="u2futil.js"></script>
+</head>
+<body>
+<p>Test for Remote AppId Load behavior for FIDO Universal Second Factor</p>
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SpecialPowers.setBoolPref("security.webauth.u2f", true);
+SpecialPowers.setBoolPref("security.webauth.u2f.softtoken", true);
+
+var version = "U2F_V2";
+var challenge = new Uint8Array(16);
+
+local_is(window.location.origin, "https://example.com", "Is loaded correctly");
+
+// TODO: Must support remote loads of AppID manifests first.
+//
+// u2f.register("https://test1.example.com/dom/u2f/tests/facet/facetList.txt", [{
+//   version: version,
+//   challenge: bytesToBase64UrlSafe(challenge),
+// }], [], function(res){
+//   local_is(res.errorCode, 2, "Should not permit this AppId contentType");
+// });
+
+// u2f.register("https://test1.example.com/dom/u2f/tests/facet/facetListMissing", [{
+//   version: version,
+//   challenge: bytesToBase64UrlSafe(challenge),
+// }], [], function(res){
+//   local_is(res.errorCode, 2, "Should not permit with a missing AppID list");
+// });
+
+// u2f.register("https://test1.example.com/dom/u2f/tests/facet/facetList-good", [{
+//   version: version,
+//   challenge: bytesToBase64UrlSafe(challenge),
+// }], [], function(res){
+//   local_is(res.errorCode, 0, "The AppId should permit example.com");
+// });
+
+// u2f.register("https://test1.example.com/dom/u2f/tests/facet/facetList-no_overlap", [{
+//   version: version,
+//   challenge: bytesToBase64UrlSafe(challenge),
+// }], [], function(res){
+//   local_is(res.errorCode, 2, "Should not permit with a missing AppID list");
+// });
+
+// u2f.register("https://test1.example.com/dom/u2f/tests/facet/facetList-invalid_format", [{
+//   version: version,
+//   challenge: bytesToBase64UrlSafe(challenge),
+// }], [], function(res){
+//   local_is(res.errorCode, 2, "Should not fail gracefully on invalid formatted facet lists");
+// });
+
+local_finished();
+
+</script>
+</body>
+</html>

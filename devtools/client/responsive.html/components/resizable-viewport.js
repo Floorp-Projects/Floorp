@@ -9,12 +9,13 @@
 const { DOM: dom, createClass, createFactory, PropTypes } =
   require("devtools/client/shared/vendor/react");
 
+const Constants = require("../constants");
 const Types = require("../types");
 const Browser = createFactory(require("./browser"));
 const ViewportToolbar = createFactory(require("./viewport-toolbar"));
 
-const VIEWPORT_MIN_WIDTH = 280;
-const VIEWPORT_MIN_HEIGHT = 280;
+const VIEWPORT_MIN_WIDTH = Constants.MIN_VIEWPORT_DIMENSION;
+const VIEWPORT_MIN_HEIGHT = Constants.MIN_VIEWPORT_DIMENSION;
 
 module.exports = createClass({
 

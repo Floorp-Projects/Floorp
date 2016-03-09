@@ -24,7 +24,10 @@ if CONFIG['HOST_OS_ARCH'] != 'WINNT':
         'nsinstall.c',
         'pathsub.c',
     ]
-    HostProgram('nsinstall_real')
+    # stdc++compat depends on config/export, so avoid a circular
+    # dependency added by HostProgram depending on stdc++compat,
+    # while the program here is in C.
+    HostProgram('nsinstall_real', c_only=True)
 
 if CONFIG['MOZ_SHARED_ICU']:
     DEFINES['MOZ_SHARED_ICU'] = True

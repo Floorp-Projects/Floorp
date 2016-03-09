@@ -107,7 +107,7 @@ http://creativecommons.org/licenses/publicdomain/
   function waitForMessage(pushSubscription, message) {
     return Promise.all([
       controlledFrame.waitOnWorkerMessage("finished"),
-      webpush(pushSubscription, message),
+      webpush(pushSubscription, message, 120),
     ]).then(([message]) => message);
   }
 
@@ -167,6 +167,7 @@ http://creativecommons.org/licenses/publicdomain/
         headers: {
           "X-Push-Method": "POST",
           "X-Push-Server": pushSubscription.endpoint,
+          "TTL": "120",
         },
       }),
     ]);

@@ -88,6 +88,8 @@ public:
 
   virtual ~TextureSource();
 
+  virtual const char* Name() const = 0;
+
   /**
    * Should be overridden in order to deallocate the data that is associated
    * with the rendering backend, such as GL textures.
@@ -230,8 +232,11 @@ class DataTextureSource : public TextureSource
 {
 public:
   DataTextureSource()
-    : mUpdateSerial(0)
+    : mOwner(0)
+    , mUpdateSerial(0)
   {}
+
+  virtual const char* Name() const override { return "DataTextureSource"; }
 
   virtual DataTextureSource* AsDataTextureSource() override { return this; }
 
@@ -273,7 +278,23 @@ public:
   virtual already_AddRefed<gfx::DataSourceSurface> ReadBack() { return nullptr; };
 #endif
 
+  void SetOwner(TextureHost* aOwner)
+  {
+    auto newOwner = (uintptr_t)aOwner;
+    if (newOwner != mOwner) {
+      mOwner = newOwner;
+      SetUpdateSerial(0);
+    }
+  }
+
+  bool IsOwnedBy(TextureHost* aOwner) const { return mOwner == (uintptr_t)aOwner; }
+
+  bool HasOwner() const { return !IsOwnedBy(nullptr); }
+
 private:
+  // We store mOwner as an integer rather than as a pointer to make it clear
+  // it is not intended to be dereferenced.
+  uintptr_t mOwner;
   uint32_t mUpdateSerial;
 };
 
@@ -359,6 +380,11 @@ public:
    * format and produce 3 "alpha" textures sources.
    */
   virtual gfx::SurfaceFormat GetFormat() const = 0;
+  /**
+   * Return the format used for reading the texture.
+   * Apple's YCBCR_422 is R8G8B8X8.
+   */
+  virtual gfx::SurfaceFormat GetReadFormat() const { return GetFormat(); }
 
   /**
    * Called during the transaction. The TextureSource may or may not be composited.
@@ -504,7 +530,7 @@ public:
    * in-memory buffer. The consequence of this is that locking the
    * TextureHost does not contend with locking the texture on the client side.
    */
-  virtual bool HasInternalBuffer() const { return false; }
+  virtual bool HasIntermediateBuffer() const { return false; }
 
   void AddCompositableRef() { ++mCompositableCount; }
 
@@ -538,6 +564,10 @@ public:
   FenceHandle GetAndResetAcquireFenceHandle();
 
   virtual void WaitAcquireFenceHandleSyncComplete() {};
+
+  virtual bool NeedsFenceHandle() { return false; }
+
+  virtual FenceHandle GetCompositorReleaseFence() { return FenceHandle(); }
 
 protected:
   FenceHandle mReleaseFenceHandle;
@@ -583,6 +613,8 @@ public:
 
   virtual void Unlock() override;
 
+  virtual void PrepareTextureSource(CompositableTextureSourceRef& aTexture) override;
+
   virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
 
   virtual void DeallocateDeviceData() override;
@@ -602,11 +634,12 @@ public:
 
   virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
-  virtual bool HasInternalBuffer() const override { return true; }
+  virtual bool HasIntermediateBuffer() const override { return mHasIntermediateBuffer; }
 
 protected:
   bool Upload(nsIntRegion *aRegion = nullptr);
   bool MaybeUpload(nsIntRegion *aRegion = nullptr);
+  bool EnsureWrappingTextureSource();
 
   virtual void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
 
@@ -619,6 +652,7 @@ protected:
   uint32_t mUpdateSerial;
   bool mLocked;
   bool mNeedsFullUpdate;
+  bool mHasIntermediateBuffer;
 };
 
 /**
@@ -723,6 +757,8 @@ public:
     , mHasComplexProjection(false)
   {}
   virtual ~CompositingRenderTarget() {}
+
+  virtual const char* Name() const override { return "CompositingRenderTarget"; }
 
 #ifdef MOZ_DUMP_PAINTING
   virtual already_AddRefed<gfx::DataSourceSurface> Dump(Compositor* aCompositor) { return nullptr; }

@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import "resource://devtools/client/shared/components/reps/reps.css";
+
 @import "general.css";
-@import "reps.css";
 @import "dom-tree.css";
 @import "search-box.css";
 @import "tabs.css";

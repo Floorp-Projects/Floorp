@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
 const NETWORKSERVICE_CONTRACTID = "@mozilla.org/network/service;1";
-const NETWORKSERVICE_CID = Components.ID("{baec696c-c78d-42db-8b44-603f8fbfafb4}");
+const NETWORKSERVICE_CID = Components.ID("{48c13741-aec9-4a86-8962-432011708261}");
 
 const TOPIC_PREF_CHANGED             = "nsPref:changed";
 const TOPIC_XPCOM_SHUTDOWN           = "xpcom-shutdown";
@@ -689,6 +689,48 @@ NetworkService.prototype = {
       let reason = aData.resultReason;
       debug("updateUpStream result: Code " + code + " reason " + reason);
       aCallback.updateUpStreamResult(!isError(code), aData.curExternalIfname);
+    });
+  },
+
+  getInterfaces: function(callback) {
+    let params = {
+      cmd: "getInterfaces",
+      isAsync: true
+    };
+
+    this.controlMessage(params, function(data) {
+      debug("getInterfaces result: " + JSON.stringify(data));
+      let success = !isError(data.resultCode);
+      callback.getInterfacesResult(success, data.interfaceList);
+    });
+  },
+
+  getInterfaceConfig: function(ifname, callback) {
+    let params = {
+      cmd: "getInterfaceConfig",
+      ifname: ifname,
+      isAsync: true
+    };
+
+    this.controlMessage(params, function(data) {
+      debug("getInterfaceConfig result: " + JSON.stringify(data));
+      let success = !isError(data.resultCode);
+      let result = { ip: data.ipAddr,
+                     prefix: data.prefixLength,
+                     link: data.flag,
+                     mac: data.macAddr };
+      callback.getInterfaceConfigResult(success, result);
+    });
+  },
+
+  setInterfaceConfig: function(config, callback) {
+    config.cmd = "setInterfaceConfig";
+    config.isAsync = true;
+
+    this.controlMessage(config, function(data) {
+      debug("setInterfaceConfig result: " + JSON.stringify(data));
+      let success = !isError(data.resultCode);
+      callback.setInterfaceConfigResult(success);
     });
   },
 

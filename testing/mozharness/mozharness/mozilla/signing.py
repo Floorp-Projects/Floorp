@@ -9,6 +9,7 @@
 
 import os
 import re
+import json
 
 from mozharness.base.errors import BaseErrorList
 from mozharness.base.log import ERROR, FATAL
@@ -59,6 +60,22 @@ class SigningMixin(BaseSigningMixin):
         for h in os.environ['MOZ_SIGNING_SERVERS'].split(","):
             cmd += ['-H', h]
         return cmd
+
+    def generate_signing_manifest(self, files):
+        """Generate signing manifest for signingworkers
+
+        Every entry in the manifest requires a dictionary of
+        "file_to_sign" (basename) and "hash" (SHA512) of every file to be
+        signed. Signing format is defined in the signing task.
+        """
+        manifest_content = [
+            {
+                "file_to_sign": os.path.basename(f),
+                "hash": self.query_sha512sum(f)
+            }
+            for f in files
+        ]
+        return json.dumps(manifest_content)
 
 
 # MobileSigningMixin {{{1

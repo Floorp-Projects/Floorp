@@ -227,6 +227,12 @@
   filter: url(images/filters.svg#checked-icon-state);
 }
 
+/* Icon-and-text buttons */
+.devtools-toolbarbutton.icon-and-text .toolbarbutton-text {
+  margin-inline-start: .5em !important;
+  font-weight: 600;
+}
+
 /* Text-only buttons */
 .theme-light .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]),
 .theme-light .devtools-toolbarbutton[data-text-only],
@@ -274,6 +280,18 @@
 .theme-light .devtools-button:not(:empty)[checked=true],
 .theme-light #toolbox-buttons .devtools-toolbarbutton[text-as-image][checked=true] {
   background: rgba(76, 158, 217, .3); /* Select highlight blue */
+}
+
+:root {
+  --clear-icon-url: url("chrome://devtools/skin/images/clear.svg");
+}
+
+.devtools-button.devtools-clear-icon::before {
+  background-image: var(--clear-icon-url);
+}
+
+.devtools-toolbarbutton.devtools-clear-icon {
+  list-style-image: var(--clear-icon-url);
 }
 
 .devtools-option-toolbarbutton {
@@ -656,9 +674,7 @@
 .devtools-separator {
   margin: 0 2px;
   width: 2px;
-  background-image: linear-gradient(transparent, hsla(204,45%,98%,.1), transparent),
-                    linear-gradient(transparent, hsla(206,37%,4%,.6), transparent),
-                    linear-gradient(transparent, hsla(204,45%,98%,.1), transparent);
+  background-image: linear-gradient(transparent 15%, var(--theme-splitter-color) 15%, var(--theme-splitter-color) 85%, transparent 85%);
   background-size: 1px 100%;
   background-repeat: no-repeat;
   background-position: 0, 1px, 2px;
@@ -724,10 +740,6 @@
   background-image: url("chrome://devtools/skin/images/command-responsivemode.png");
 }
 
-#command-button-tilt > image {
-  background-image: url("chrome://devtools/skin/images/command-tilt.png");
-}
-
 #command-button-scratchpad > image {
   background-image: url("chrome://devtools/skin/images/command-scratchpad.png");
 }
@@ -773,10 +785,6 @@
     background-image: url("chrome://devtools/skin/images/command-responsivemode@2x.png");
   }
 
-  #command-button-tilt > image {
-    background-image: url("chrome://devtools/skin/images/command-tilt@2x.png");
-  }
-
   #command-button-scratchpad > image {
     background-image: url("chrome://devtools/skin/images/command-scratchpad@2x.png");
   }
@@ -818,10 +826,6 @@
   border-bottom-color: var(--theme-splitter-color);
 }
 
-.theme-light .devtools-tabbar {
-  box-shadow: 0 -2px 0 rgba(170,170,170,.1) inset;
-}
-
 .theme-dark .devtools-tabbar {
   box-shadow: 0 -2px 0 rgba(0,0,0,.1) inset;
 }
@@ -836,7 +840,7 @@
   -moz-box-align: center;
   min-width: 32px;
   min-height: 24px;
-  max-width: 95px;
+  max-width: 100px;
   margin: 0;
   padding: 0;
   border-style: solid;
@@ -918,12 +922,6 @@
   box-shadow: 0 2px 0 #d7f1ff inset,
               0 8px 3px -5px #2b82bf inset,
               0 -2px 0 rgba(0,0,0,.2) inset;
-}
-
-.theme-light .devtools-tabbar .devtools-tab[selected] {
-  box-shadow: 0 2px 0 #d7f1ff inset,
-              0 8px 3px -5px #2b82bf inset,
-              0 -2px 0 rgba(0,0,0,.06) inset;
 }
 
 #toolbox-tabs .devtools-tab[selected],

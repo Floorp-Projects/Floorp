@@ -416,7 +416,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Promise)
 #ifndef SPIDERMONKEY_PROMISE
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mResult)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResult)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mAllocationStack)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mRejectionStack)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mFullfillmentStack)
@@ -2607,7 +2607,7 @@ Promise::Settle(JS::Handle<JS::Value> aValue, PromiseState aState)
     worker->AssertIsOnWorkerThread();
 
     mFeature = new PromiseReportRejectFeature(this);
-    if (NS_WARN_IF(!worker->AddFeature(worker->GetJSContext(), mFeature))) {
+    if (NS_WARN_IF(!worker->AddFeature(mFeature))) {
       // To avoid a false RemoveFeature().
       mFeature = nullptr;
       // Worker is shutting down, report rejection immediately since it is
@@ -2657,7 +2657,7 @@ Promise::RemoveFeature()
   if (mFeature) {
     workers::WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
-    worker->RemoveFeature(worker->GetJSContext(), mFeature);
+    worker->RemoveFeature(mFeature);
     mFeature = nullptr;
   }
 }
@@ -2747,7 +2747,7 @@ public:
     (workerPromise->*mFunc)(aCx, value);
 
     // Release the Promise because it has been resolved/rejected for sure.
-    mPromiseWorkerProxy->CleanUp(aCx);
+    mPromiseWorkerProxy->CleanUp();
     return true;
   }
 
@@ -2797,7 +2797,9 @@ PromiseWorkerProxy::PromiseWorkerProxy(workers::WorkerPrivate* aWorkerPrivate,
   , mCleanedUp(false)
   , mCallbacks(aCallbacks)
   , mCleanUpLock("cleanUpLock")
+#ifdef DEBUG
   , mFeatureAdded(false)
+#endif
 {
 }
 
@@ -2833,12 +2835,13 @@ PromiseWorkerProxy::AddRefObject()
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(!mFeatureAdded);
-  if (!mWorkerPrivate->AddFeature(mWorkerPrivate->GetJSContext(),
-                                  this)) {
+  if (!mWorkerPrivate->AddFeature(this)) {
     return false;
   }
 
+#ifdef DEBUG
   mFeatureAdded = true;
+#endif
   // Maintain a reference so that we have a valid object to clean up when
   // removing the feature.
   AddRef();
@@ -2905,7 +2908,7 @@ PromiseWorkerProxy::RunCallback(JSContext* aCx,
   RefPtr<PromiseWorkerProxyRunnable> runnable =
     new PromiseWorkerProxyRunnable(this, aFunc);
 
-  runnable->Dispatch(aCx);
+  runnable->Dispatch();
 }
 
 void
@@ -2926,14 +2929,14 @@ bool
 PromiseWorkerProxy::Notify(JSContext* aCx, Status aStatus)
 {
   if (aStatus >= Canceling) {
-    CleanUp(aCx);
+    CleanUp();
   }
 
   return true;
 }
 
 void
-PromiseWorkerProxy::CleanUp(JSContext* aCx)
+PromiseWorkerProxy::CleanUp()
 {
   // Can't release Mutex while it is still locked, so scope the lock.
   {
@@ -2947,14 +2950,15 @@ PromiseWorkerProxy::CleanUp(JSContext* aCx)
 
     MOZ_ASSERT(mWorkerPrivate);
     mWorkerPrivate->AssertIsOnWorkerThread();
-    MOZ_ASSERT(mWorkerPrivate->GetJSContext() == aCx);
 
     // Release the Promise and remove the PromiseWorkerProxy from the features of
     // the worker thread since the Promise has been resolved/rejected or the
     // worker thread has been cancelled.
     MOZ_ASSERT(mFeatureAdded);
-    mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), this);
+    mWorkerPrivate->RemoveFeature(this);
+#ifdef DEBUG
     mFeatureAdded = false;
+#endif
     CleanProperties();
   }
   Release();

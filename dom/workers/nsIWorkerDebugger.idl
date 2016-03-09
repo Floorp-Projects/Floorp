@@ -39,10 +39,9 @@ interface nsIWorkerDebugger : nsISupports
 
   readonly attribute unsigned long serviceWorkerID;
 
-  [implicit_jscontext]
   void initialize(in DOMString url);
 
-  [implicit_jscontext, binaryname(PostMessageMoz)]
+  [binaryname(PostMessageMoz)]
   void postMessage(in DOMString message);
 
   void addListener(in nsIWorkerDebuggerListener listener);

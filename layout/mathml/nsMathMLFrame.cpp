@@ -14,7 +14,8 @@
 #include "nsMathMLElement.h"
 
 // used to map attributes into CSS rules
-#include "nsStyleSet.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 #include "nsAutoPtr.h"
 #include "nsDisplayList.h"
 #include "nsRenderingContext.h"
@@ -98,8 +99,8 @@ nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext*  aPresContext,
                                       nsStyleContext*  aParentStyleContext,
                                       nsMathMLChar*    aMathMLChar)
 {
-  nsCSSPseudoElements::Type pseudoType =
-    nsCSSPseudoElements::ePseudo_mozMathAnonymous; // savings
+  CSSPseudoElementType pseudoType =
+    CSSPseudoElementType::mozMathAnonymous; // savings
   RefPtr<nsStyleContext> newStyleContext;
   newStyleContext = aPresContext->StyleSet()->
     ResolvePseudoElementStyle(aContent->AsElement(), pseudoType,

@@ -54,9 +54,7 @@
 #include "nsTerminator.h"
 #endif
 
-#if defined(NIGHTLY_BUILD)
 #define MOZ_HAS_PERFSTATS
-#endif // defined(NIGHTLY_BUILD)
 
 #if defined(MOZ_HAS_PERFSTATS)
 #include "nsPerformanceStats.h"

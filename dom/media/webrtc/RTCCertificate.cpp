@@ -13,6 +13,7 @@
 #include "mozilla/dom/RTCCertificateBinding.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/WebCryptoTask.h"
+#include "mozilla/Snprintf.h"
 
 #include <cstdio>
 
@@ -43,9 +44,10 @@ const size_t RTCCertificateMinRsaSize = 1024;
 class GenerateRTCCertificateTask : public GenerateAsymmetricKeyTask
 {
 public:
-  GenerateRTCCertificateTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-                     const Sequence<nsString>& aKeyUsages)
-      : GenerateAsymmetricKeyTask(aCx, aAlgorithm, true, aKeyUsages),
+  GenerateRTCCertificateTask(nsIGlobalObject* aGlobal, JSContext* aCx,
+                             const ObjectOrString& aAlgorithm,
+                             const Sequence<nsString>& aKeyUsages)
+      : GenerateAsymmetricKeyTask(aGlobal, aCx, aAlgorithm, true, aKeyUsages),
         mExpires(0),
         mAuthType(ssl_kea_null),
         mCertificate(nullptr),
@@ -95,7 +97,7 @@ private:
     char buf[sizeof(randomName) * 2 + 4];
     PL_strncpy(buf, "CN=", 3);
     for (size_t i = 0; i < sizeof(randomName); ++i) {
-      PR_snprintf(&buf[i * 2 + 3], 2, "%.2x", randomName[i]);
+      snprintf(&buf[i * 2 + 3], 2, "%.2x", randomName[i]);
     }
     buf[sizeof(buf) - 1] = '\0';
 
@@ -262,7 +264,7 @@ RTCCertificate::GenerateCertificate(
     return nullptr;
   }
   RefPtr<WebCryptoTask> task =
-      new GenerateRTCCertificateTask(aGlobal.Context(),
+      new GenerateRTCCertificateTask(global, aGlobal.Context(),
                                      aKeygenAlgorithm, usages);
   task->DispatchWithPromise(p);
   return p.forget();

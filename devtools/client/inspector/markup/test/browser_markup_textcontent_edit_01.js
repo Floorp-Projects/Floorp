@@ -9,36 +9,47 @@
 const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 
 add_task(function*() {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Expanding all nodes");
   yield inspector.markup.expandAll();
   yield waitForMultipleChildrenUpdates(inspector);
 
-  yield editContainer(inspector, {
+  yield editContainer(inspector, testActor, {
     selector: ".node6",
     newValue: "New text",
     oldValue: "line6"
   });
 
-  yield editContainer(inspector, {
+  yield editContainer(inspector, testActor, {
     selector: "#node17",
-    newValue: "LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. DONEC POSUERE PLACERAT MAGNA ET IMPERDIET.",
-    oldValue: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec posuere placerat magna et imperdiet.",
+    newValue: "LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. " +
+              "DONEC POSUERE PLACERAT MAGNA ET IMPERDIET.",
+    oldValue: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+              "Donec posuere placerat magna et imperdiet.",
     shortValue: true
   });
 
-  yield editContainer(inspector, {
+  yield editContainer(inspector, testActor, {
     selector: "#node17",
     newValue: "New value",
-    oldValue: "LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. DONEC POSUERE PLACERAT MAGNA ET IMPERDIET.",
+    oldValue: "LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. " +
+              "DONEC POSUERE PLACERAT MAGNA ET IMPERDIET.",
     shortValue: true
   });
 });
 
-function* editContainer(inspector, {selector, newValue, oldValue, shortValue}) {
-  let node = getNode(selector).firstChild;
-  is(node.nodeValue, oldValue, "The test node's text content is correct");
+function* getNodeValue(selector, testActor) {
+  let nodeValue = yield testActor.eval(`
+    content.document.querySelector("${selector}").firstChild.nodeValue;
+  `);
+  return nodeValue;
+}
+
+function* editContainer(inspector, testActor,
+                        {selector, newValue, oldValue, shortValue}) {
+  let nodeValue = yield getNodeValue(selector, testActor);
+  is(nodeValue, oldValue, "The test node's text content is correct");
 
   info("Changing the text content");
   let onMutated = inspector.once("markupmutation");
@@ -46,11 +57,15 @@ function* editContainer(inspector, {selector, newValue, oldValue, shortValue}) {
   let field = container.elt.querySelector("pre");
 
   if (shortValue) {
-    is (oldValue.indexOf(field.textContent.substring(0, field.textContent.length - 1)), 0,
-        "The shortened value starts with the full value " + field.textContent);
-    ok (oldValue.length > field.textContent.length, "The shortened value is short");
+    is(oldValue.indexOf(
+       field.textContent.substring(0, field.textContent.length - 1)),
+       0,
+       "The shortened value starts with the full value " + field.textContent);
+    ok(oldValue.length > field.textContent.length,
+       "The shortened value is short");
   } else {
-    is (field.textContent, oldValue, "The text node has the correct original value");
+    is(field.textContent, oldValue,
+       "The text node has the correct original value");
   }
 
   inspector.markup.markNodeAsSelected(container.node);
@@ -60,13 +75,15 @@ function* editContainer(inspector, {selector, newValue, oldValue, shortValue}) {
     yield inspector.markup.once("text-expand");
   }
 
-  is (field.textContent, oldValue, "The text node has the correct original value after selecting");
+  is(field.textContent, oldValue,
+     "The text node has the correct original value after selecting");
   setEditableFieldValue(field, newValue, inspector);
 
   info("Listening to the markupmutation event");
   yield onMutated;
 
-  is(node.nodeValue, newValue, "The test node's text content has changed");
+  nodeValue = yield getNodeValue(selector, testActor);
+  is(nodeValue, newValue, "The test node's text content has changed");
 
   info("Selecting the <body> to reset the selection");
   let bodyContainer = yield getContainerForSelector("body", inspector);

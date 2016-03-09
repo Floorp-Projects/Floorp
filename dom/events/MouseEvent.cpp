@@ -59,7 +59,7 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
                            int32_t aScreenX,
                            int32_t aScreenY,
                            int32_t aClientX,
-                           int32_t aClientY, 
+                           int32_t aClientY,
                            bool aCtrlKey,
                            bool aAltKey,
                            bool aShiftKey,
@@ -94,7 +94,35 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
     default:
        break;
   }
-}   
+}
+
+NS_IMETHODIMP
+MouseEvent::InitMouseEvent(const nsAString& aType,
+                           bool aCanBubble,
+                           bool aCancelable,
+                           mozIDOMWindow* aView,
+                           int32_t aDetail,
+                           int32_t aScreenX,
+                           int32_t aScreenY,
+                           int32_t aClientX,
+                           int32_t aClientY,
+                           bool aCtrlKey,
+                           bool aAltKey,
+                           bool aShiftKey,
+                           bool aMetaKey,
+                           uint16_t aButton,
+                           nsIDOMEventTarget* aRelatedTarget)
+{
+  MouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable,
+                             nsGlobalWindow::Cast(aView), aDetail,
+                             aScreenX, aScreenY,
+                             aClientX, aClientY,
+                             aCtrlKey, aAltKey, aShiftKey,
+                             aMetaKey, aButton,
+                             static_cast<EventTarget *>(aRelatedTarget));
+
+  return NS_OK;
+}
 
 void
 MouseEvent::InitMouseEvent(const nsAString& aType,

@@ -12,8 +12,6 @@
 #include "nss.h"
 #include "ssl.h"
 
-#include "mozilla/Scoped.h"
-
 extern "C" {
 #include "nr_api.h"
 #include "nr_socket.h"
@@ -23,7 +21,6 @@ extern "C" {
 }
 
 #include "databuffer.h"
-#include "mtransport_test_utils.h"
 #include "dummysocket.h"
 
 #include "nr_socket_prsock.h"
@@ -33,7 +30,6 @@ extern "C" {
 #include "gtest_utils.h"
 
 using namespace mozilla;
-MtransportTestUtils *test_utils;
 
 static uint8_t kStunMessage[] = {
   0x00, 0x01, 0x00, 0x08, 0x21, 0x12, 0xa4, 0x42,
@@ -43,17 +39,20 @@ static uint8_t kStunMessage[] = {
 };
 static size_t kStunMessageLen = sizeof(kStunMessage);
 
-class BufferedStunSocketTest : public ::testing::Test {
+class BufferedStunSocketTest : public MtransportTest {
  public:
   BufferedStunSocketTest()
-      : dummy_(nullptr),
-        test_socket_(nullptr) {}
+      : MtransportTest(),
+        dummy_(nullptr),
+        test_socket_(nullptr) { }
 
   ~BufferedStunSocketTest() {
     nr_socket_destroy(&test_socket_);
   }
 
   void SetUp() {
+    MtransportTest::SetUp();
+
     RefPtr<DummySocket> dummy(new DummySocket());
 
     int r = nr_socket_buffered_stun_create(
@@ -294,21 +293,4 @@ TEST_F(BufferedStunSocketTest, TestReceiveRecvFromReallyLong) {
                              tmp, kStunMessageLen - 1, &len, 0,
                              &addr);
   ASSERT_EQ(R_BAD_DATA, r);
-}
-
-
-
-int main(int argc, char **argv)
-{
-  test_utils = new MtransportTestUtils();
-  NSS_NoDB_Init(nullptr);
-  NSS_SetDomesticPolicy();
-
-  // Start the tests
-  ::testing::InitGoogleTest(&argc, argv);
-
-  int rv = RUN_ALL_TESTS();
-
-  delete test_utils;
-  return rv;
 }

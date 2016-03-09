@@ -29,8 +29,8 @@ BluetoothDiscoveryHandle::BluetoothDiscoveryHandle(nsPIDOMWindowInner* aWindow)
 
 BluetoothDiscoveryHandle::BluetoothDiscoveryHandle(
   nsPIDOMWindowInner* aWindow,
-  const nsTArray<nsString>& aServiceUuids,
-  const nsAString& aLeScanUuid)
+  const nsTArray<BluetoothUuid>& aServiceUuids,
+  const BluetoothUuid& aLeScanUuid)
   : DOMEventTargetHelper(aWindow)
   , mLeScanUuid(aLeScanUuid)
   , mServiceUuids(aServiceUuids)
@@ -57,8 +57,8 @@ BluetoothDiscoveryHandle::Create(nsPIDOMWindowInner* aWindow)
 already_AddRefed<BluetoothDiscoveryHandle>
 BluetoothDiscoveryHandle::Create(
   nsPIDOMWindowInner* aWindow,
-  const nsTArray<nsString>& aServiceUuids,
-  const nsAString& aLeScanUuid)
+  const nsTArray<BluetoothUuid>& aServiceUuids,
+  const BluetoothUuid& aLeScanUuid)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
@@ -89,7 +89,7 @@ BluetoothDiscoveryHandle::DispatchLeDeviceEvent(BluetoothDevice* aLeDevice,
 {
   MOZ_ASSERT(aLeDevice);
 
-  nsTArray<nsString> remoteUuids;
+  nsTArray<BluetoothUuid> remoteUuids;
   aLeDevice->GetUuids(remoteUuids);
 
   bool hasUuidsFilter = !mServiceUuids.IsEmpty();

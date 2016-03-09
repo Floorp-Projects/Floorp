@@ -500,23 +500,24 @@ bool PACMyAppOrigin(JSContext *cx, unsigned int argc, JS::Value *vp)
   return GetRunning()->MyAppOrigin(args);
 }
 
-// IsInBrowser() javascript implementation
+// IsInIsolatedMozBrowser() javascript implementation
 static
-bool PACIsInBrowser(JSContext *cx, unsigned int argc, JS::Value *vp)
+bool PACIsInIsolatedMozBrowser(JSContext *cx, unsigned int argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
   if (NS_IsMainThread()) {
-    NS_WARNING("PACIsInBrowser on Main Thread. How did that happen?");
+    NS_WARNING("PACIsInIsolatedMozBrowser on Main Thread. How did that happen?");
     return false;
   }
 
   if (!GetRunning()) {
-    NS_WARNING("PACIsInBrowser without a running ProxyAutoConfig object");
+    NS_WARNING("PACIsInIsolatedMozBrowser without a running ProxyAutoConfig"
+               "object");
     return false;
   }
 
-  return GetRunning()->IsInBrowser(args);
+  return GetRunning()->IsInIsolatedMozBrowser(args);
 }
 
 // proxyAlert(msg) javascript implementation
@@ -554,7 +555,7 @@ static const JSFunctionSpec PACGlobalFunctions[] = {
   JS_FS("myIpAddress", PACMyIpAddress, 0, 0),
   JS_FS("myAppId", PACMyAppId, 0, 0),
   JS_FS("myAppOrigin", PACMyAppOrigin, 0, 0),
-  JS_FS("isInBrowser", PACIsInBrowser, 0, 0),
+  JS_FS("isInIsolatedMozBrowser", PACIsInIsolatedMozBrowser, 0, 0),
   JS_FS("alert", PACProxyAlert, 1, 0),
   JS_FS_END
 };
@@ -636,7 +637,7 @@ private:
      * Not setting this will cause JS_CHECK_RECURSION to report false
      * positives
      */
-    JS_SetNativeStackQuota(mRuntime, 128 * sizeof(size_t) * 1024); 
+    JS_SetNativeStackQuota(mRuntime, 128 * sizeof(size_t) * 1024);
 
     JS_SetErrorReporter(mRuntime, PACErrorReporter);
 
@@ -764,7 +765,7 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
                                 const nsCString &aTestHost,
                                 uint32_t aAppId,
                                 const nsString &aAppOrigin,
-                                bool aIsInBrowser,
+                                bool aIsInIsolatedMozBrowser,
                                 nsACString &result)
 {
   if (mJSNeedsSetup)
@@ -783,7 +784,7 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
   mRunningHost = aTestHost;
   mRunningAppId = aAppId;
   mRunningAppOrigin = aAppOrigin;
-  mRunningIsInBrowser = aIsInBrowser;
+  mRunningIsInIsolatedMozBrowser = aIsInIsolatedMozBrowser;
 
   nsresult rv = NS_ERROR_FAILURE;
   JS::RootedString uriString(cx, JS_NewStringCopyZ(cx, aTestURI.get()));
@@ -865,11 +866,11 @@ ProxyAutoConfig::SrcAddress(const NetAddr *remoteAddress, nsCString &localAddres
   }
 
   PR_Close(fd);
-  
+
   char dottedDecimal[128];
   if (PR_NetAddrToString(&localName, dottedDecimal, sizeof(dottedDecimal)) != PR_SUCCESS)
     return false;
-  
+
   localAddress.Assign(dottedDecimal);
 
   return true;
@@ -947,7 +948,7 @@ ProxyAutoConfig::MyIPAddress(const JS::CallArgs &aArgs)
       rvalAssigned) {
     return rvalAssigned;
   }
-  
+
   // finally, use the old algorithm based on the local hostname
   nsAutoCString hostName;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
@@ -1015,9 +1016,9 @@ ProxyAutoConfig::MyAppOrigin(const JS::CallArgs &aArgs)
 }
 
 bool
-ProxyAutoConfig::IsInBrowser(const JS::CallArgs &aArgs)
+ProxyAutoConfig::IsInIsolatedMozBrowser(const JS::CallArgs &aArgs)
 {
-  aArgs.rval().setBoolean(mRunningIsInBrowser);
+  aArgs.rval().setBoolean(mRunningIsInIsolatedMozBrowser);
   return true;
 }
 

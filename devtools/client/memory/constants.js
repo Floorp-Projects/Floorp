@@ -65,11 +65,11 @@ actions.TAKE_CENSUS_DIFF_START = "take-census-diff-start";
 actions.TAKE_CENSUS_DIFF_END = "take-census-diff-end";
 actions.DIFFING_ERROR = "diffing-error";
 
-// Fired to set a new breakdown.
-actions.SET_BREAKDOWN = "set-breakdown";
+// Fired to set a new census display.
+actions.SET_CENSUS_DISPLAY = "set-census-display";
 
-// Fired to change the breakdown that controls the dominator tree labels.
-actions.SET_DOMINATOR_TREE_BREAKDOWN = "set-dominator-tree-breakdown";
+// Fired to change the display that controls the dominator tree labels.
+actions.SET_DOMINATOR_TREE_DISPLAY = "set-dominator-tree-display";
 
 // Fired when changing between census or dominators view.
 actions.CHANGE_VIEW = "change-view";
@@ -101,23 +101,26 @@ actions.FETCH_IMMEDIATELY_DOMINATED_END = "fetch-immediately-dominated-end";
 actions.EXPAND_DOMINATOR_TREE_NODE = "expand-dominator-tree-node";
 actions.COLLAPSE_DOMINATOR_TREE_NODE = "collapse-dominator-tree-node";
 
-/*** Breakdowns ***************************************************************/
+actions.RESIZE_SHORTEST_PATHS = "resize-shortest-paths";
 
-const COUNT = { by: "count", count: true, bytes: true };
-const INTERNAL_TYPE = { by: "internalType", then: COUNT };
-const ALLOCATION_STACK = { by: "allocationStack", then: COUNT, noStack: COUNT };
-const OBJECT_CLASS = { by: "objectClass", then: COUNT, other: COUNT };
+/*** Census Displays ***************************************************************/
 
-const breakdowns = exports.breakdowns = {
-  coarseType: {
-    displayName: "Coarse Type",
+const COUNT = Object.freeze({ by: "count", count: true, bytes: true });
+const INTERNAL_TYPE = Object.freeze({ by: "internalType", then: COUNT });
+const ALLOCATION_STACK = Object.freeze({ by: "allocationStack", then: COUNT, noStack: COUNT });
+const OBJECT_CLASS = Object.freeze({ by: "objectClass", then: COUNT, other: COUNT });
+
+exports.censusDisplays = Object.freeze({
+  coarseType: Object.freeze({
+    displayName: "Type",
     get tooltip() {
       // Importing down here is necessary because of the circular dependency
       // this introduces with `./utils.js`.
       const { L10N } = require("./utils");
-      return L10N.getStr("breakdowns.coarseType.tooltip");
+      return L10N.getStr("censusDisplays.coarseType.tooltip");
     },
-    breakdown: {
+    inverted: true,
+    breakdown: Object.freeze({
       by: "coarseType",
       objects: OBJECT_CLASS,
       strings: COUNT,
@@ -127,84 +130,68 @@ const breakdowns = exports.breakdowns = {
         noFilename: INTERNAL_TYPE
       },
       other: INTERNAL_TYPE,
-    }
-  },
+    })
+  }),
 
-  allocationStack: {
-    displayName: "Allocation Stack",
+  allocationStack: Object.freeze({
+    displayName: "Call Stack",
     get tooltip() {
       const { L10N } = require("./utils");
-      return L10N.getStr("breakdowns.allocationStack.tooltip");
+      return L10N.getStr("censusDisplays.allocationStack.tooltip");
     },
+    inverted: false,
     breakdown: ALLOCATION_STACK,
-  },
+  }),
 
-  objectClass: {
-    displayName: "Object Class",
+  invertedAllocationStack: Object.freeze({
+    displayName: "Inverted Call Stack",
     get tooltip() {
       const { L10N } = require("./utils");
-      return L10N.getStr("breakdowns.objectClass.tooltip");
+      return L10N.getStr("censusDisplays.invertedAllocationStack.tooltip");
     },
-    breakdown: OBJECT_CLASS,
-  },
+    inverted: true,
+    breakdown: ALLOCATION_STACK,
+  }),
+});
 
-  internalType: {
-    displayName: "Internal Type",
-    get tooltip() {
-      const { L10N } = require("./utils");
-      return L10N.getStr("breakdowns.internalType.tooltip");
-    },
-    breakdown: INTERNAL_TYPE,
-  },
-};
-
-const DOMINATOR_TREE_LABEL_COARSE_TYPE = {
+const DOMINATOR_TREE_LABEL_COARSE_TYPE = Object.freeze({
   by: "coarseType",
   objects: OBJECT_CLASS,
-  scripts: {
+  scripts: Object.freeze({
     by: "internalType",
-    then: {
+    then: Object.freeze({
       by: "filename",
       then: COUNT,
       noFilename: COUNT,
-    },
-  },
+    }),
+  }),
   strings: INTERNAL_TYPE,
   other: INTERNAL_TYPE,
-};
+});
 
-const dominatorTreeBreakdowns = exports.dominatorTreeBreakdowns = {
-  coarseType: {
-    displayName: "Coarse Type",
+exports.dominatorTreeDisplays = Object.freeze({
+  coarseType: Object.freeze({
+    displayName: "Type",
     get tooltip() {
       const { L10N } = require("./utils");
-      return L10N.getStr("dominatorTreeBreakdowns.coarseType.tooltip");
+      return L10N.getStr("dominatorTreeDisplays.coarseType.tooltip");
     },
     breakdown: DOMINATOR_TREE_LABEL_COARSE_TYPE
-  },
+  }),
 
-  allocationStack: {
-    displayName: "Allocation Stack",
+  allocationStack: Object.freeze({
+    displayName: "Call Stack",
     get tooltip() {
       const { L10N } = require("./utils");
-      return L10N.getStr("dominatorTreeBreakdowns.allocationStack.tooltip");
+      return L10N.getStr("dominatorTreeDisplays.allocationStack.tooltip");
     },
-    breakdown: {
+    breakdown: Object.freeze({
       by: "allocationStack",
       then: DOMINATOR_TREE_LABEL_COARSE_TYPE,
       noStack: DOMINATOR_TREE_LABEL_COARSE_TYPE,
-    },
-  },
-
-  internalType: {
-    displayName: "Internal Type",
-    get tooltip() {
-      const { L10N } = require("./utils");
-      return L10N.getStr("dominatorTreeBreakdowns.internalType.tooltip");
-    },
-    breakdown: INTERNAL_TYPE,
-  },
-};
+    }),
+  }),
+});
 
 /*** View States **************************************************************/
 

@@ -83,4 +83,9 @@
 #define NS_APP_INDEXEDDB_PARENT_DIR             "indexedDBPDir"
 
 #define NS_APP_PERMISSION_PARENT_DIR            "permissionDBPDir"
-#endif
+
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
+#define NS_APP_CONTENT_PROCESS_TEMP_DIR         "ContentTmpD"
+#endif // (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
+
+#endif // nsAppDirectoryServiceDefs_h___

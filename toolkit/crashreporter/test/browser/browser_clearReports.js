@@ -8,13 +8,13 @@ function clickClearReports(browser) {
   let button = doc.getElementById("clear-reports");
 
   if (!button) {
-    ok(false, "Button not found");
+    Assert.ok(false, "Button not found");
     return Promise.resolve();
   }
 
   let style = doc.defaultView.getComputedStyle(button, "");
 
-  isnot(style.display, "none", "Clear reports button visible");
+  Assert.notEqual(style.display, "none", "Clear reports button visible");
 
   let deferred = {};
   deferred.promise = new Promise(resolve => deferred.resolve = resolve);
@@ -23,7 +23,7 @@ function clickClearReports(browser) {
       if (mutation.type == "attributes" &&
           mutation.attributeName == "style") {
         observer.disconnect();
-        is(style.display, "none", "Clear reports button hidden");
+        Assert.equal(style.display, "none", "Clear reports button hidden");
         deferred.resolve();
       }
     }

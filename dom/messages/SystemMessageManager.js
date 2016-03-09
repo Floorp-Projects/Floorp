@@ -332,7 +332,17 @@ SystemMessageManager.prototype = {
                                "SystemMessageManager:GetPendingMessages:Return"]);
 
     let principal = aWindow.document.nodePrincipal;
-    this._isInBrowserElement = principal.isInBrowserElement;
+
+    // After bug 1238160, the principal no longer knows how to answer "is this a
+    // browser element", which is really what this code path wants. Currently,
+    // desktop is the only platform where we intend to disable isolation on a
+    // browser frame, so non-desktop should be able to assume that
+    // inIsolatedMozBrowser is true for all mozbrowser frames.  Additionally,
+    // this system message API is disabled on desktop behind the pref
+    // "dom.sysmsg.enabled".   We use a release assertion in
+    // nsFrameLoader::OwnerIsIsolatedMozBrowserFrame so that platforms with apps
+    // can assume inIsolatedMozBrowser is true for all mozbrowser frames.
+    this._isInBrowserElement = principal.isInIsolatedMozBrowserElement;
     this._pageURL = principal.URI.spec;
 
     let appsService = Cc["@mozilla.org/AppsService;1"]

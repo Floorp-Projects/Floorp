@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* import-globals-from ../../debugger-controller.js */
 "use strict";
 
 const utils = require('../utils');
@@ -1146,7 +1147,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    */
   _onCmdAddBreakpoint: function(e) {
     let actor = this.selectedValue;
-    let line = (e && e.sourceEvent.target.tagName == 'menuitem' ?
+    let line = (this.DebuggerView.clickedLine ?
                 this.DebuggerView.clickedLine + 1 :
                 this.DebuggerView.editor.getCursor().line + 1);
     let location = { actor, line };

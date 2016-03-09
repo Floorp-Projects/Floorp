@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that the ShortestPaths component renders a suggestion to select a node when there is no graph.
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+
+    <script type="application/javascript"
+            src="chrome://devtools/content/shared/vendor/d3.js">
+    </script>
+    <script type="application/javascript"
+            src="chrome://devtools/content/shared/vendor/dagre-d3.js">
+    </script>
+</head>
+<body>
+    <!-- Give the container height so that the whole tree is rendered. -->
+    <div id="container" style="height: 900px;"></div>
+
+    <pre id="test">
+        <script src="head.js" type="application/javascript;version=1.8"></script>
+        <script type="application/javascript;version=1.8">
+         window.onload = Task.async(function* () {
+           try {
+             const container = document.getElementById("container");
+
+             yield renderComponent(ShortestPaths(immutableUpdate(TEST_SHORTEST_PATHS_PROPS,
+                                                                 { graph: null })),
+                                   container);
+
+             ok(container.textContent.indexOf(L10N.getStr("shortest-paths.select-node")) !== -1,
+                "The node selection prompt is displayed");
+           } catch(e) {
+             ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+           } finally {
+             SimpleTest.finish();
+           }
+         });
+        </script>
+    </pre>
+</body>
+</html>

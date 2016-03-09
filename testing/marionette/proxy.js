@@ -171,7 +171,8 @@ proxy.AsyncMessageChannel = class {
     if (typeof obj == "undefined") {
       this.sendReply_(uuid, proxy.AsyncMessageChannel.ReplyType.Ok);
     } else if (error.isError(obj)) {
-      let serr = error.toJson(obj);
+      let err = error.wrap(obj);
+      let serr = error.toJson(err);
       this.sendReply_(uuid, proxy.AsyncMessageChannel.ReplyType.Error, serr);
     } else {
       this.sendReply_(uuid, proxy.AsyncMessageChannel.ReplyType.Value, obj);

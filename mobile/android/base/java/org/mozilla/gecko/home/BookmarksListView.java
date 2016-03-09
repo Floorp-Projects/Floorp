@@ -11,6 +11,7 @@ import android.util.Log;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
@@ -83,6 +84,14 @@ public class BookmarksListView extends HomeListView
         }
 
         cursor.moveToPosition(position);
+
+        if (adapter.getOpenFolderType() == BookmarksListAdapter.FolderType.SCREENSHOTS) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "bookmarks-screenshot");
+
+            final String fileUrl = "file://" + cursor.getString(cursor.getColumnIndex(BrowserContract.UrlAnnotations.VALUE));
+            getOnUrlOpenListener().onUrlOpen(fileUrl, EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
+            return;
+        }
 
         int type = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE));
         if (type == Bookmarks.TYPE_FOLDER) {

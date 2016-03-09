@@ -5,14 +5,6 @@
 
 #include "nsISupports.idl"
 
-%{C++
-namespace mozilla {
-class CSSStyleSheet;
-} // namespace mozilla
-%}
-
-[ptr] native CSSStyleSheet(mozilla::CSSStyleSheet);
-
 [scriptable, uuid(4805e682-49b9-11d3-9ce4-ed60bd6cb5bc)]
 
 interface nsIEditorStyleSheets : nsISupports
@@ -76,18 +68,4 @@ interface nsIEditorStyleSheets : nsISupports
     * @param aEnable true to enable, or false to disable the style sheet
     */
   void enableStyleSheet(in AString aURL, in boolean aEnable);
-
-  /** Get the CSSStyleSheet associated with the given URL.
-    *
-    * @param aURL         The style sheet's URL
-    * @return             the style sheet
-    */
-  [noscript] CSSStyleSheet getStyleSheetForURL(in AString aURL);
-
-  /** Get the URL associated with the given CSSStyleSheet.
-    *
-    * @param aStyleSheet  The style sheet
-    * @return             the style sheet's URL
-    */
-  [noscript] AString getURLForStyleSheet(in CSSStyleSheet aStyleSheet);
 };

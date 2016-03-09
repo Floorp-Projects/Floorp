@@ -2,6 +2,11 @@
 
 var { Ci, Cu } = require("chrome");
 var { DebuggerServer } = require("devtools/server/main");
+var Services = require("Services");
+const protocol = require("devtools/server/protocol");
+const { Arg, method, RetVal } = protocol;
+
+loader.lazyRequireGetter(this, "ChromeUtils");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -35,31 +40,41 @@ function matchWorkerDebugger(dbg, options) {
   return true;
 }
 
-function WorkerActor(dbg) {
-  this._dbg = dbg;
-  this._isAttached = false;
-  this._threadActor = null;
-  this._transport = null;
-}
+let WorkerActor = protocol.ActorClass({
+  typeName: "worker",
 
-WorkerActor.prototype = {
-  actorPrefix: "worker",
+  initialize: function (conn, dbg) {
+    protocol.Actor.prototype.initialize.call(this, conn);
+    this._dbg = dbg;
+    this._attached = false;
+    this._threadActor = null;
+    this._transport = null;
+    this.manage(this);
+  },
 
-  form: function () {
-    return {
+  form: function (detail) {
+    if (detail === "actorid") {
+      return this.actorID;
+    }
+    let form = {
       actor: this.actorID,
       consoleActor: this._consoleActor,
       url: this._dbg.url,
       type: this._dbg.type
     };
+    if (this._dbg.type === Ci.nsIWorkerDebugger.TYPE_SERVICE) {
+      let registration = this._getServiceWorkerRegistrationInfo();
+      form.scope = registration.scope;
+    }
+    return form;
   },
 
-  onAttach: function () {
+  attach: method(function () {
     if (this._dbg.isClosed) {
       return { error: "closed" };
     }
 
-    if (!this._isAttached) {
+    if (!this._attached) {
       // Automatically disable their internal timeout that shut them down
       // Should be refactored by having actors specific to service workers
       if (this._dbg.type == Ci.nsIWorkerDebugger.TYPE_SERVICE) {
@@ -69,27 +84,33 @@ WorkerActor.prototype = {
         }
       }
       this._dbg.addListener(this);
-      this._isAttached = true;
+      this._attached = true;
     }
 
     return {
       type: "attached",
       url: this._dbg.url
     };
-  },
+  }, {
+    request: {},
+    response: RetVal("json")
+  }),
 
-  onDetach: function () {
-    if (!this._isAttached) {
+  detach: method(function () {
+    if (!this._attached) {
       return { error: "wrongState" };
     }
 
     this._detach();
 
     return { type: "detached" };
-  },
+  }, {
+    request: {},
+    response: RetVal("json")
+  }),
 
-  onConnect: function (request) {
-    if (!this._isAttached) {
+  connect: method(function (options) {
+    if (!this._attached) {
       return { error: "wrongState" };
     }
 
@@ -101,7 +122,7 @@ WorkerActor.prototype = {
     }
 
     return DebuggerServer.connectToWorker(
-      this.conn, this._dbg, this.actorID, request.options
+      this.conn, this._dbg, this.actorID, options
     ).then(({ threadActor, transport, consoleActor }) => {
       this._threadActor = threadActor;
       this._transport = transport;
@@ -115,10 +136,29 @@ WorkerActor.prototype = {
     }, (error) => {
       return { error: error.toString() };
     });
-  },
+  }, {
+    request: {
+      options: Arg(0, "json"),
+    },
+    response: RetVal("json")
+  }),
+
+  push: method(function () {
+    if (this._dbg.type !== Ci.nsIWorkerDebugger.TYPE_SERVICE) {
+      return { error: "wrongType" };
+    }
+    let registration = this._getServiceWorkerRegistrationInfo();
+    let originAttributes = ChromeUtils.originAttributesToSuffix(
+      this._dbg.principal.originAttributes);
+    swm.sendPushEvent(originAttributes, registration.scope);
+    return { type: "pushed" };
+  }, {
+    request: {},
+    response: RetVal("json")
+  }),
 
   onClose: function () {
-    if (this._isAttached) {
+    if (this._attached) {
       this._detach();
     }
 
@@ -129,9 +169,13 @@ WorkerActor.prototype = {
     reportError("ERROR:" + filename + ":" + lineno + ":" + message + "\n");
   },
 
+  _getServiceWorkerRegistrationInfo() {
+    return swm.getRegistrationByPrincipal(this._dbg.principal, this._dbg.url);
+  },
+
   _getServiceWorkerInfo: function () {
-    let info = swm.getRegistrationByPrincipal(this._dbg.principal, this._dbg.url);
-    return info.getWorkerByID(this._dbg.serviceWorkerID);
+    let registration = this._getServiceWorkerRegistrationInfo();
+    return registration.getWorkerByID(this._dbg.serviceWorkerID);
   },
 
   _detach: function () {
@@ -156,19 +200,14 @@ WorkerActor.prototype = {
     }
 
     this._dbg.removeListener(this);
-    this._isAttached = false;
+    this._attached = false;
   }
-};
-
-WorkerActor.prototype.requestTypes = {
-  "attach": WorkerActor.prototype.onAttach,
-  "detach": WorkerActor.prototype.onDetach,
-  "connect": WorkerActor.prototype.onConnect
-};
+});
 
 exports.WorkerActor = WorkerActor;
 
-function WorkerActorList(options) {
+function WorkerActorList(conn, options) {
+  this._conn = conn;
   this._options = options;
   this._actors = new Map();
   this._onListChanged = null;
@@ -199,7 +238,7 @@ WorkerActorList.prototype = {
     // Create an actor for each debugger for which we don't have one.
     for (let dbg of dbgs) {
       if (!this._actors.has(dbg)) {
-        this._actors.set(dbg, new WorkerActor(dbg));
+        this._actors.set(dbg, new WorkerActor(this._conn, dbg));
       }
     }
 
@@ -265,22 +304,48 @@ WorkerActorList.prototype = {
 
 exports.WorkerActorList = WorkerActorList;
 
-function ServiceWorkerRegistrationActor(registration) {
-  this._registration = registration;
-};
+// Lazily load the service-worker-child.js process script only once.
+let _serviceWorkerProcessScriptLoaded = false;
 
-ServiceWorkerRegistrationActor.prototype = {
-  actorPrefix: "serviceWorkerRegistration",
+let ServiceWorkerRegistrationActor = protocol.ActorClass({
+  typeName: "serviceWorkerRegistration",
 
-  form: function () {
+  initialize: function(conn, registration) {
+    protocol.Actor.prototype.initialize.call(this, conn);
+    this._registration = registration;
+    this.manage(this);
+  },
+
+  form: function(detail) {
+    if (detail === "actorid") {
+      return this.actorID;
+    }
     return {
       actor: this.actorID,
-      scope: this._registration.scope
+      scope: this._registration.scope,
+      url: this._registration.scriptSpec
     };
-  }
-};
+  },
 
-function ServiceWorkerRegistrationActorList() {
+  start: method(function() {
+    if (!_serviceWorkerProcessScriptLoaded) {
+      Services.ppmm.loadProcessScript(
+        "resource://devtools/server/service-worker-child.js", true);
+      _serviceWorkerProcessScriptLoaded = true;
+    }
+    Services.ppmm.broadcastAsyncMessage("serviceWorkerRegistration:start", {
+      scope: this._registration.scope
+    });
+    return { type: "started" };
+  }, {
+    request: {},
+    response: RetVal("json")
+  }),
+
+});
+
+function ServiceWorkerRegistrationActorList(conn) {
+  this._conn = conn;
   this._actors = new Map();
   this._onListChanged = null;
   this._mustNotify = false;
@@ -309,7 +374,7 @@ ServiceWorkerRegistrationActorList.prototype = {
     for (let registration of registrations) {
       if (!this._actors.has(registration)) {
         this._actors.set(registration,
-          new ServiceWorkerRegistrationActor(registration));
+          new ServiceWorkerRegistrationActor(this._conn, registration));
       }
     }
 

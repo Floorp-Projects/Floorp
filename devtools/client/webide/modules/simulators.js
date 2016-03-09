@@ -12,6 +12,7 @@ loader.lazyRequireGetter(this, "CustomSimulatorProcess", "devtools/client/webide
 const asyncStorage = require("devtools/shared/async-storage");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
+const Services = require("Services");
 
 const SimulatorRegExp = new RegExp(Services.prefs.getCharPref("devtools.webide.simulatorAddonRegExp"));
 const LocaleCompare = (a, b) => {

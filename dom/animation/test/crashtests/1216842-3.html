@@ -1,0 +1,27 @@
+<!doctype html>
+<html class="reftest-wait">
+  <head>
+    <title>Bug 1216842: effect-level easing function produces values greater than 1 (main-thread)</title>
+  </head>
+  <body>
+  <div id="target"></div>
+  </body>
+  <script>
+    var target = document.getElementById("target");
+    var effect =
+      new KeyframeEffectReadOnly(
+        target,
+        { color: ["red", "blue"] },
+        {
+          fill: "forwards",
+          /* The function produces values greater than 1 in (0.23368794, 1) */
+          easing: "cubic-bezier(0,1.5,1,1.5)",
+          duration: 100
+        }
+      );
+    var animation = new Animation(effect, document.timeline);
+    animation.pause();
+    animation.currentTime = 250;
+    document.documentElement.className = "";
+  </script>
+</html>

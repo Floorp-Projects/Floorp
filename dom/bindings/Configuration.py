@@ -228,6 +228,8 @@ class Configuration:
                 getter = lambda x: x.interface.getNavigatorProperty() is not None
             elif key == 'isExposedInAnyWorker':
                 getter = lambda x: x.interface.isExposedInAnyWorker()
+            elif key == 'isExposedInWorkerDebugger':
+                getter = lambda x: x.interface.isExposedInWorkerDebugger()
             elif key == 'isExposedInSystemGlobals':
                 getter = lambda x: x.interface.isExposedInSystemGlobals()
             elif key == 'isExposedInWindow':
@@ -908,8 +910,5 @@ def getAllTypes(descriptors, dictionaries, callbacks):
 def iteratorNativeType(descriptor):
     assert descriptor.interface.isIterable()
     iterableDecl = descriptor.interface.maplikeOrSetlikeOrIterable
-    if iterableDecl.valueType is None:
-        iterClass = "OneTypeIterableIterator"
-    else:
-        iterClass = "TwoTypeIterableIterator"
-    return "mozilla::dom::%s<%s>" % (iterClass, descriptor.nativeType)
+    assert iterableDecl.isPairIterator()
+    return "mozilla::dom::IterableIterator<%s>" % descriptor.nativeType

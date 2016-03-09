@@ -110,12 +110,31 @@
   "END" \
 )
 
+// This is a hack to workaround the lack of FOR EACH STATEMENT in Sqlite, until
+// bug 871908 can be fixed properly.
+// We store the modified hosts in a temp table, and after every DELETE FROM
+// moz_places, we issue a DELETE FROM moz_updatehosts_temp.  The AFTER DELETE
+// trigger will then take care of updating the moz_hosts table.
+// Note this way we lose atomicity, crashing between the 2 queries may break the
+// hosts table coherency. So it's better to run those DELETE queries in a single
+// transaction.
+// Regardless, this is still better than hanging the browser for several minutes
+// on a fast machine.
 #define CREATE_PLACES_AFTERDELETE_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMP TRIGGER moz_places_afterdelete_trigger " \
   "AFTER DELETE ON moz_places FOR EACH ROW " \
   "BEGIN " \
+    "INSERT OR IGNORE INTO moz_updatehosts_temp (host)" \
+    "VALUES (fixup_url(get_unreversed_host(OLD.rev_host)));" \
+  "END" \
+)
+
+#define CREATE_UPDATEHOSTS_AFTERDELETE_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMP TRIGGER moz_updatehosts_afterdelete_trigger " \
+  "AFTER DELETE ON moz_updatehosts_temp FOR EACH ROW " \
+  "BEGIN " \
     "DELETE FROM moz_hosts " \
-    "WHERE host = fixup_url(get_unreversed_host(OLD.rev_host)) " \
+    "WHERE host = OLD.host " \
       "AND NOT EXISTS(" \
         "SELECT 1 FROM moz_places " \
           "WHERE rev_host = get_unreversed_host(host || '.') || '.' " \
@@ -123,7 +142,7 @@
       "); " \
     "UPDATE moz_hosts " \
     "SET prefix = (" HOSTS_PREFIX_PRIORITY_FRAGMENT ") " \
-    "WHERE host = fixup_url(get_unreversed_host(OLD.rev_host)); " \
+    "WHERE host = OLD.host; " \
   "END" \
 )
 

@@ -267,6 +267,13 @@ BRFrame::AccessibleType()
     return a11y::eNoType;
   }
 
+  // Trailing HTML br element don't play any difference. We don't need to expose
+  // it to AT (see bug https://bugzilla.mozilla.org/show_bug.cgi?id=899433#c16
+  // for details).
+  if (!mContent->GetNextSibling() && !GetNextSibling()) {
+    return a11y::eNoType;
+  }
+
   return a11y::eHTMLBRType;
 }
 #endif

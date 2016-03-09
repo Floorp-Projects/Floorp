@@ -71,48 +71,20 @@ function doConfirm(msg)
 
 function RefreshDeviceList()
 {
-  var modules = secmoddb.listModules();
-  var done = false;
-
-  try {
-    modules.isDone();
-  } catch (e) { done = true; }
-  while (!done) {
-    var module = modules.currentItem().QueryInterface(nsIPKCS11Module);
-    if (module) {
-      var slotnames = [];
-      var slots = module.listSlots();
-      var slots_done = false;
-      try {
-        slots.isDone();
-      } catch (e) { slots_done = true; }
-      while (!slots_done) {
-        var slot = null;
-        try {
-          slot = slots.currentItem().QueryInterface(nsIPKCS11Slot);
-        } catch (e) { slot = null; }
-        // in the ongoing discussion of whether slot names or token names
-        // are to be shown, I've gone with token names because NSS will
-        // prefer lookup by token name.  However, the token may not be
-        // present, so maybe slot names should be listed, while token names
-        // are "remembered" for lookup?
-	if (slot != null) {
-          if (slot.tokenName)
-            slotnames[slotnames.length] = slot.tokenName;
-          else
-            slotnames[slotnames.length] = slot.name;
-	}
-        try {
-          slots.next();
-        } catch (e) { slots_done = true; }
-      }
-      AddModule(module.name, slotnames);
+  let modules = secmoddb.listModules();
+  while (modules.hasMoreElements()) {
+    let module = modules.getNext().QueryInterface(nsIPKCS11Module);
+    let slotnames = [];
+    let slots = module.listSlots();
+    while (slots.hasMoreElements()) {
+      let slot = slots.getNext().QueryInterface(nsIPKCS11Slot);
+      // Token names are preferred because NSS prefers lookup by token name.
+      slotnames.push(slot.tokenName ? slot.tokenName : slot.name);
     }
-    try {
-      modules.next();
-    } catch (e) { done = true; }
+    AddModule(module.name, slotnames);
   }
-  /* Set the text on the fips button */
+
+  // Set the text on the FIPS button.
   SetFIPSButton();
 }
 
@@ -199,8 +171,9 @@ function getSelectedItem()
 
 function enableButtons()
 {
-  if (skip_enable_buttons)
+  if (skip_enable_buttons) {
     return;
+  }
 
   var login_toggle = "true";
   var logout_toggle = "true";
@@ -217,7 +190,7 @@ function enableButtons()
     if (selected_token != null) {
       if (selected_token.needsLogin() || !(selected_token.needsUserInit)) {
         pw_toggle = "false";
-        if(selected_token.needsLogin()) {
+        if (selected_token.needsLogin()) {
           if (selected_token.isLoggedIn()) {
             logout_toggle = "false";
           } else {
@@ -244,9 +217,10 @@ function enableButtons()
 // clear the display of information for the slot
 function ClearInfoList()
 {
-  var info_list = document.getElementById("info_list");
-  while (info_list.firstChild)
-      info_list.removeChild(info_list.firstChild);
+  let infoList = document.getElementById("info_list");
+  while (infoList.hasChildNodes()) {
+    infoList.removeChild(infoList.firstChild);
+  }
 }
 
 function ClearDeviceList()
@@ -468,13 +442,13 @@ function doLoadDevice()
   var name_box = document.getElementById("device_name");
   var path_box = document.getElementById("device_path");
   try {
-    getPKCS11().addModule(name_box.value, path_box.value, 0,0);
-  }
-  catch (e) {
-    if (e.result == Components.results.NS_ERROR_ILLEGAL_VALUE)
+    getPKCS11().addModule(name_box.value, path_box.value, 0, 0);
+  } catch (e) {
+    if (e.result == Components.results.NS_ERROR_ILLEGAL_VALUE) {
       doPrompt(getNSSString("AddModuleDup"));
-    else
+    } else {
       doPrompt(getNSSString("AddModuleFailure"));
+    }
 
     return false;
   }

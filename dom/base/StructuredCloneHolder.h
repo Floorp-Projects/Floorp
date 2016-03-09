@@ -210,7 +210,7 @@ public:
     return Move(mTransferredPorts);
   }
 
-  nsTArray<MessagePortIdentifier>& PortIdentifiers()
+  nsTArray<MessagePortIdentifier>& PortIdentifiers() const
   {
     MOZ_ASSERT(mSupportsTransferring);
     return mPortIdentifiers;
@@ -310,7 +310,7 @@ protected:
   // This array contains the identifiers of the MessagePorts. Based on these we
   // are able to reconnect the new transferred ports with the other
   // MessageChannel ports.
-  nsTArray<MessagePortIdentifier> mPortIdentifiers;
+  mutable nsTArray<MessagePortIdentifier> mPortIdentifiers;
 
 #ifdef DEBUG
   nsCOMPtr<nsIThread> mCreationThread;

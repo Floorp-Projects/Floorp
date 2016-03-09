@@ -83,19 +83,25 @@ class Context {
     this.params = params;
 
     this.path = [];
+    this.preprocessors = {
+      localize(value, context) {
+        return value;
+      },
+    };
 
     let props = ["addListener", "callFunction", "callAsyncFunction",
                  "hasListener", "removeListener",
-                 "getProperty", "setProperty"];
+                 "getProperty", "setProperty",
+                 "checkLoadURL", "logError",
+                 "preprocessors"];
     for (let prop of props) {
-      this[prop] = params[prop];
-    }
-
-    if ("checkLoadURL" in params) {
-      this.checkLoadURL = params.checkLoadURL;
-    }
-    if ("logError" in params) {
-      this.logError = params.logError;
+      if (prop in params) {
+        if (prop in this && typeof this[prop] == "object") {
+          Object.assign(this[prop], params[prop]);
+        } else {
+          this[prop] = params[prop];
+        }
+      }
     }
   }
 
@@ -243,6 +249,21 @@ const FORMATS = {
 
     throw new SyntaxError(`String ${JSON.stringify(string)} must be a relative URL`);
   },
+
+  date(string, context) {
+    // A valid ISO 8601 timestamp.
+    const PATTERN = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|([-+]\d{2}:?\d{2})))?$/;
+    if (!PATTERN.test(string)) {
+      throw new Error(`Invalid date string ${string}`);
+    }
+    // Our pattern just checks the format, we could still have invalid
+    // values (e.g., month=99 or month=02 and day=31).  Let the Date
+    // constructor do the dirty work of validating.
+    if (isNaN(new Date(string))) {
+      throw new Error(`Invalid date string ${string}`);
+    }
+    return string;
+  },
 };
 
 // Schema files contain namespaces, and each namespace contains types,
@@ -267,6 +288,24 @@ class Entry {
     if ("deprecated" in schema) {
       this.deprecated = schema.deprecated;
     }
+
+    /**
+     * If set to a string value, and a preprocessor of the same is
+     * defined in the validation context, it will be applied to this
+     * value prior to any normalization.
+     */
+    this.preprocessor = schema.preprocess || null;
+  }
+
+  /**
+   * Preprocess the given value with the preprocessor declared in
+   * `preprocessor`.
+   */
+  preprocess(value, context) {
+    if (this.preprocessor) {
+      return context.preprocessors[this.preprocessor](value, context);
+    }
+    return value;
   }
 
   /**
@@ -335,7 +374,7 @@ class Type extends Entry {
   normalizeBase(type, value, context) {
     if (this.checkBaseType(getValueBaseType(value))) {
       this.checkDeprecated(context, value);
-      return {value};
+      return {value: this.preprocess(value, context)};
     }
     return context.error(`Expected ${type} instead of ${JSON.stringify(value)}`);
   }
@@ -434,6 +473,7 @@ class StringType extends Type {
     if (r.error) {
       return r;
     }
+    value = r.value;
 
     if (this.enumeration) {
       if (this.enumeration.includes(value)) {
@@ -510,6 +550,7 @@ class ObjectType extends Type {
     if (v.error) {
       return v;
     }
+    value = v.value;
 
     if (this.isInstanceOf) {
       if (Object.keys(this.properties).length ||
@@ -639,7 +680,7 @@ class NumberType extends Type {
       return r;
     }
 
-    if (isNaN(value) || !Number.isFinite(value)) {
+    if (isNaN(r.value) || !Number.isFinite(r.value)) {
       return context.error("NaN or infinity are not valid");
     }
 
@@ -663,9 +704,10 @@ class IntegerType extends Type {
     if (r.error) {
       return r;
     }
+    value = r.value;
 
     // Ensure it's between -2**31 and 2**31-1
-    if ((value | 0) !== value) {
+    if (!Number.isSafeInteger(value)) {
       return context.error("Integer is out of range");
     }
 
@@ -707,6 +749,7 @@ class ArrayType extends Type {
     if (v.error) {
       return v;
     }
+    value = v.value;
 
     let result = [];
     for (let [i, element] of value.entries()) {
@@ -1032,7 +1075,7 @@ this.Schemas = {
 
     // Do some simple validation of our own schemas.
     function checkTypeProperties(...extra) {
-      let allowedSet = new Set([...allowedProperties, ...extra, "description", "deprecated"]);
+      let allowedSet = new Set([...allowedProperties, ...extra, "description", "deprecated", "preprocess"]);
       for (let prop of Object.keys(type)) {
         if (!allowedSet.has(prop)) {
           throw new Error(`Internal error: Namespace ${path.join(".")} has invalid type property "${prop}" in type "${type.id || JSON.stringify(type)}"`);
@@ -1319,7 +1362,9 @@ this.Schemas = {
     for (let [namespace, ns] of this.namespaces) {
       let obj = Cu.createObjectIn(dest, {defineAs: namespace});
       for (let [name, entry] of ns) {
-        entry.inject([namespace], name, obj, new Context(wrapperFuncs));
+        if (wrapperFuncs.shouldInject([namespace], name)) {
+          entry.inject([namespace], name, obj, new Context(wrapperFuncs));
+        }
       }
 
       if (!Object.keys(obj).length) {

@@ -7,6 +7,8 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
+import android.view.KeyEvent;
+
 /**
  * Interface for the Editable to listen on the Gecko thread, as well as for the IC thread to listen
  * to the Editable.
@@ -17,9 +19,13 @@ interface GeckoEditableListener {
     int NOTIFY_IME_OPEN_VKB = -2;
     @WrapForJNI
     int NOTIFY_IME_REPLY_EVENT = -1;
+    @WrapForJNI
     int NOTIFY_IME_OF_FOCUS = 1;
+    @WrapForJNI
     int NOTIFY_IME_OF_BLUR = 2;
+    @WrapForJNI
     int NOTIFY_IME_TO_COMMIT_COMPOSITION = 8;
+    @WrapForJNI
     int NOTIFY_IME_TO_CANCEL_COMPOSITION = 9;
     // IME enabled state for notifyIMEContext()
     int IME_STATE_DISABLED = 0;
@@ -31,4 +37,5 @@ interface GeckoEditableListener {
     void notifyIMEContext(int state, String typeHint, String modeHint, String actionHint);
     void onSelectionChange(int start, int end);
     void onTextChange(CharSequence text, int start, int oldEnd, int newEnd);
+    void onDefaultKeyEvent(KeyEvent event);
 }

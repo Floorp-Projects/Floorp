@@ -67,6 +67,7 @@ for (var i=0; i<gSmallTests.length; ++i) {
   }
   // ensure metadata is loaded for default preload is none on b2g 
   v.preload = "metadata";
+  v.autoplay = "true";
   v._complete = false;
   v.addEventListener("error", loadError, false);
   v.addEventListener("loadedmetadata", loadedMetadata, false);

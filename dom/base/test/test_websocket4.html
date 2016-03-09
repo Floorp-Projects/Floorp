@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"></meta>
+  <title>WebSocket test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="websocket_helpers.js"></script>
+  <script type="text/javascript" src="websocket_tests.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="testWebSocket()">
+<script class="testbody" type="text/javascript">
+
+var tests = [
+  test31, // ctor using valid 2 element sub-protocol array with 1 element server
+          // will reject and one server will accept
+  test32, // ctor using invalid sub-protocol array that contains duplicate items
+  test33, // test for sending/receiving custom close code (but no close reason)
+  test34, // test for receiving custom close code and reason
+  test35, // test for sending custom close code and reason
+  test36, // negative test for sending out of range close code
+  test37, // negative test for too long of a close reason
+  test38, // ensure extensions attribute is defined
+  test39, // a basic wss:// connectivity test
+  test40, // negative test for wss:// with no cert
+];
+
+function testWebSocket() {
+  doTest();
+}
+
+SimpleTest.requestFlakyTimeout("The web socket tests are really fragile, but avoiding timeouts might be hard, since it's testing stuff on the network. " +
+                               "Expect all sorts of flakiness in this test...");
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+<div id="feedback">
+</div>
+
+</body>
+</html>

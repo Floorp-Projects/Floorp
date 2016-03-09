@@ -10,6 +10,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.FaviconColumns;
@@ -18,6 +21,8 @@ import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Schema;
 import org.mozilla.gecko.db.BrowserContract.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
+import org.mozilla.gecko.db.BrowserContract.TopSites;
+import org.mozilla.gecko.db.BrowserContract.UrlAnnotations;
 import org.mozilla.gecko.db.DBUtils.UpdateOperation;
 import org.mozilla.gecko.sync.Utils;
 
@@ -31,6 +36,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.MatrixCursor;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
@@ -60,6 +66,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final String TABLE_FAVICONS = Favicons.TABLE_NAME;
     static final String TABLE_THUMBNAILS = Thumbnails.TABLE_NAME;
     static final String TABLE_TABS = Tabs.TABLE_NAME;
+    static final String TABLE_URL_ANNOTATIONS = UrlAnnotations.TABLE_NAME;
 
     static final String VIEW_COMBINED = Combined.VIEW_NAME;
     static final String VIEW_BOOKMARKS_WITH_FAVICONS = Bookmarks.VIEW_WITH_FAVICONS;
@@ -98,6 +105,10 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final int THUMBNAILS = 800;
     static final int THUMBNAIL_ID = 801;
 
+    static final int URL_ANNOTATIONS = 900;
+
+    static final int TOPSITES = 1000;
+
     static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.TYPE
             + " ASC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
             + " ASC";
@@ -112,6 +123,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     static final Map<String, String> SCHEMA_PROJECTION_MAP;
     static final Map<String, String> FAVICONS_PROJECTION_MAP;
     static final Map<String, String> THUMBNAILS_PROJECTION_MAP;
+    static final Map<String, String> URL_ANNOTATIONS_PROJECTION_MAP;
     static final Table[] sTables;
 
     static {
@@ -190,6 +202,19 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         map.put(Thumbnails.DATA, Thumbnails.DATA);
         THUMBNAILS_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
+        // Url annotations
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, TABLE_URL_ANNOTATIONS, URL_ANNOTATIONS);
+
+        map = new HashMap<>();
+        map.put(UrlAnnotations._ID, UrlAnnotations._ID);
+        map.put(UrlAnnotations.URL, UrlAnnotations.URL);
+        map.put(UrlAnnotations.KEY, UrlAnnotations.KEY);
+        map.put(UrlAnnotations.VALUE, UrlAnnotations.VALUE);
+        map.put(UrlAnnotations.DATE_CREATED, UrlAnnotations.DATE_CREATED);
+        map.put(UrlAnnotations.DATE_MODIFIED, UrlAnnotations.DATE_MODIFIED);
+        map.put(UrlAnnotations.SYNC_STATUS, UrlAnnotations.SYNC_STATUS);
+        URL_ANNOTATIONS_PROJECTION_MAP = Collections.unmodifiableMap(map);
+
         // Combined bookmarks and history
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "combined", COMBINED);
 
@@ -222,6 +247,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 URI_MATCHER.addURI(BrowserContract.AUTHORITY, type.name, type.id);
             }
         }
+
+        // Combined pinned sites, top visited sites, and suggested sites
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "topsites", TOPSITES);
     }
 
     // Convenience accessor.
@@ -490,6 +518,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 break;
             }
 
+            case URL_ANNOTATIONS: {
+                trace("Insert on URL_ANNOTATIONS: " + uri);
+                id = insertUrlAnnotation(uri, values);
+                break;
+            }
+
             default: {
                 Table table = findTableFor(match);
                 if (table == null) {
@@ -639,11 +673,239 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return updated;
     }
 
+    private Cursor getTopSites(final Uri uri) {
+        // In order to correctly merge the top and pinned sites we:
+        //
+        // 1. Generate a list of free ids for topsites - this is the positions that are NOT used by pinned sites.
+        //    We do this using a subquery with a self-join in order to generate rowids, that allow us to join with
+        //    the list of topsites.
+        // 2. Generate the list of topsites in order of frecency.
+        // 3. Join these, so that each topsite is given its resulting position
+        // 4. UNION all with the pinned sites, and order by position
+        //
+        // Suggested sites are placed after the topsites, but might still be interspersed with the suggested sites,
+        // hence we append these to the topsite list, and treat these identically to topsites from this point on.
+        //
+        // We require rowids to join the two lists, however subqueries aren't given rowids - hence we use two different
+        // tricks to generate these:
+        // 1. The list of free ids is small, hence we can do a self-join to generate rowids.
+        // 2. The topsites list is larger, hence we use a temporary table, which automatically provides rowids.
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+
+        final String TABLE_TOPSITES = "topsites";
+
+        final String limitParam = uri.getQueryParameter(BrowserContract.PARAM_LIMIT);
+        final String gridLimitParam = uri.getQueryParameter(BrowserContract.PARAM_SUGGESTEDSITES_LIMIT);
+
+        final int totalLimit;
+        final int suggestedGridLimit;
+
+        if (limitParam == null) {
+            totalLimit = 50;
+        } else {
+            totalLimit = Integer.parseInt(limitParam, 10);
+        }
+
+        if (gridLimitParam == null) {
+            suggestedGridLimit = getContext().getResources().getInteger(R.integer.number_of_top_sites);
+        } else {
+            suggestedGridLimit = Integer.parseInt(gridLimitParam, 10);
+        }
+
+        final String pinnedSitesFromClause = "FROM " + TABLE_BOOKMARKS + " WHERE " + Bookmarks.PARENT + " == " + Bookmarks.FIXED_PINNED_LIST_ID;
+
+        // Ideally we'd use a recursive CTE to generate our sequence, e.g. something like this worked at one point:
+        // " WITH RECURSIVE" +
+        // " cnt(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM cnt WHERE x < 6)" +
+        // However that requires SQLite >= 3.8.3 (available on Android >= 5.0), so in the meantime
+        // we use a temporary numbers table.
+        // Note: SQLite rowids are 1-indexed, whereas we're expecting 0-indexed values for the position. Our numbers
+        // table starts at position = 0, which ensures the correct results here.
+        final String freeIDSubquery =
+                " SELECT count(free_ids.position) + 1 AS rowid, numbers.position AS " + Bookmarks.POSITION +
+                " FROM (SELECT position FROM numbers WHERE position NOT IN (SELECT " + Bookmarks.POSITION + " " + pinnedSitesFromClause + ")) AS numbers" +
+                " LEFT OUTER JOIN " +
+                " (SELECT position FROM numbers WHERE position NOT IN (SELECT " + Bookmarks.POSITION + " " + pinnedSitesFromClause + ")) AS free_ids" +
+                " ON numbers.position > free_ids.position" +
+                " GROUP BY numbers.position" +
+                " ORDER BY numbers.position ASC" +
+                " LIMIT " + suggestedGridLimit;
+
+        // Filter out: unvisited pages (history_id == -1) pinned (and other special) sites, deleted sites,
+        // and about: pages.
+        final String ignoreForTopSitesWhereClause =
+                "(" + Combined.HISTORY_ID + " IS NOT -1)" +
+                " AND " +
+                Combined.URL + " NOT IN (SELECT " +
+                Bookmarks.URL + " FROM bookmarks WHERE " +
+                DBUtils.qualifyColumn("bookmarks", Bookmarks.PARENT) + " < " + Bookmarks.FIXED_ROOT_ID + " AND " +
+                DBUtils.qualifyColumn("bookmarks", Bookmarks.IS_DELETED) + " == 0)" +
+                " AND " +
+                "(" + Combined.URL + " NOT LIKE ?)";
+
+        final String[] ignoreForTopSitesArgs = new String[] {
+                AboutPages.URL_FILTER
+        };
+
+        // Stuff the suggested sites into SQL: this allows us to filter pinned and topsites out of the suggested
+        // sites list as part of the final query (as opposed to walking cursors in java)
+        final SuggestedSites suggestedSites = GeckoProfile.get(getContext(), uri.getQueryParameter(BrowserContract.PARAM_PROFILE)).getDB().getSuggestedSites();
+
+        StringBuilder suggestedSitesBuilder = new StringBuilder();
+        // We could access the underlying data here, however SuggestedSites also performs filtering on the suggested
+        // sites list, which means we'd need to process the lists within SuggestedSites in any case. If we're doing
+        // that processing, there is little real between us using a MatrixCursor, or a Map (or List) instead of the
+        // MatrixCursor.
+        final Cursor suggestedSitesCursor = suggestedSites.get(suggestedGridLimit);
+
+        String[] suggestedSiteArgs = new String[0];
+
+        boolean hasProcessedAnySuggestedSites = true;
+
+        final int idColumnIndex = suggestedSitesCursor.getColumnIndexOrThrow(Bookmarks._ID);
+        final int urlColumnIndex = suggestedSitesCursor.getColumnIndexOrThrow(Bookmarks.URL);
+        final int titleColumnIndex = suggestedSitesCursor.getColumnIndexOrThrow(Bookmarks.TITLE);
+
+        while (suggestedSitesCursor.moveToNext()) {
+            // We'll be using this as a subquery, hence we need to avoid the preceding UNION ALL
+            if (!hasProcessedAnySuggestedSites) {
+                suggestedSitesBuilder.append(" UNION ALL");
+            } else {
+                hasProcessedAnySuggestedSites = false;
+            }
+            suggestedSitesBuilder.append(" SELECT" +
+                                         " ? AS " + Bookmarks._ID + "," +
+                                         " ? AS " + Bookmarks.URL + "," +
+                                         " ? AS " + Bookmarks.TITLE);
+
+            suggestedSiteArgs = DBUtils.appendSelectionArgs(suggestedSiteArgs,
+                                                            new String[] {
+                                                                    suggestedSitesCursor.getString(idColumnIndex),
+                                                                    suggestedSitesCursor.getString(urlColumnIndex),
+                                                                    suggestedSitesCursor.getString(titleColumnIndex)
+                                                            });
+        }
+
+        // To restrict suggested sites to the grid, we simply subtract the number of topsites (which have already had
+        // the pinned sites filtered out), and the number of pinned sites.
+        // SQLite completely ignores negative limits, hence we need to manually limit to 0 in this case.
+        final String suggestedLimitClause = " LIMIT MAX(0, (" + suggestedGridLimit + " - (SELECT COUNT(*) FROM " + TABLE_TOPSITES + ") - (SELECT COUNT(*) " + pinnedSitesFromClause + "))) ";
+
+        db.beginTransaction();
+        try {
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_TOPSITES);
+
+            db.execSQL("CREATE TEMP TABLE " + TABLE_TOPSITES + " AS" +
+                       " SELECT " +
+                       Bookmarks._ID + ", " +
+                       Combined.BOOKMARK_ID + ", " +
+                       Combined.HISTORY_ID + ", " +
+                       Bookmarks.URL + ", " +
+                       Bookmarks.TITLE + ", " +
+                       Combined.HISTORY_ID + ", " +
+                       TopSites.TYPE_TOP + " AS " + TopSites.TYPE +
+                       " FROM " + Combined.VIEW_NAME +
+                       " WHERE " + ignoreForTopSitesWhereClause +
+                       " ORDER BY " + BrowserContract.getFrecencySortOrder(true, false) +
+                       " LIMIT " + totalLimit,
+
+                       ignoreForTopSitesArgs);
+
+            if (!hasProcessedAnySuggestedSites) {
+                db.execSQL("INSERT INTO " + TABLE_TOPSITES +
+                           // We need to LIMIT _after_ selecting the relevant suggested sites, which requires us to
+                           // use an additional internal subquery, since we cannot LIMIT a subquery that is part of UNION ALL.
+                           // Hence the weird SELECT * FROM (SELECT ...relevant suggested sites... LIMIT ?)
+                           " SELECT * FROM (SELECT " +
+                           Bookmarks._ID + ", " +
+                           Bookmarks._ID + " AS " + Combined.BOOKMARK_ID + ", " +
+                           " -1 AS " + Combined.HISTORY_ID + ", " +
+                           Bookmarks.URL + ", " +
+                           Bookmarks.TITLE + ", " +
+                           "NULL AS " + Combined.HISTORY_ID + ", " +
+                           TopSites.TYPE_SUGGESTED + " as " + TopSites.TYPE +
+                           " FROM ( " + suggestedSitesBuilder.toString() + " )" +
+                           " WHERE " +
+                           Bookmarks.URL + " NOT IN (SELECT url FROM " + TABLE_TOPSITES + ")" +
+                           " AND " +
+                           Bookmarks.URL + " NOT IN (SELECT url " + pinnedSitesFromClause + ")" +
+                           suggestedLimitClause + " )",
+
+                           suggestedSiteArgs);
+            }
+
+            // If we retrieve more topsites than we have free positions for in the freeIdSubquery,
+            // we will have topsites that don't receive a position when joining TABLE_TOPSITES
+            // with freeIdSubquery. Hence we need to coalesce the position with a generated position.
+            // We know that the difference in positions will be at most suggestedGridLimit, hence we
+            // can add that to the rowid to generate a safe position.
+            // I.e. if we have 6 pinned sites then positions 0..5 are filled, the JOIN results in
+            // the first N rows having positions 6..(N+6), so row N+1 should receive a position that is at
+            // least N+1+6, which is equal to rowid + 6.
+            final SQLiteCursor c = (SQLiteCursor) db.rawQuery(
+                        "SELECT " +
+                        Bookmarks._ID + ", " +
+                        TopSites.BOOKMARK_ID + ", " +
+                        TopSites.HISTORY_ID + ", " +
+                        Bookmarks.URL + ", " +
+                        Bookmarks.TITLE + ", " +
+                        "COALESCE(" + Bookmarks.POSITION + ", " +
+                            DBUtils.qualifyColumn(TABLE_TOPSITES, "rowid") + " + " + suggestedGridLimit +
+                        ")" + " AS " + Bookmarks.POSITION + ", " +
+                        Combined.HISTORY_ID + ", " +
+                        TopSites.TYPE +
+                        " FROM " + TABLE_TOPSITES +
+                        " LEFT OUTER JOIN " + // TABLE_IDS +
+                        "(" + freeIDSubquery + ") AS id_results" +
+                        " ON " + DBUtils.qualifyColumn(TABLE_TOPSITES, "rowid") +
+                        " = " + DBUtils.qualifyColumn("id_results", "rowid") +
+
+                        " UNION ALL " +
+
+                        "SELECT " +
+                        Bookmarks._ID + ", " +
+                        Bookmarks._ID + " AS " + TopSites.BOOKMARK_ID + ", " +
+                        " -1 AS " + TopSites.HISTORY_ID + ", " +
+                        Bookmarks.URL + ", " +
+                        Bookmarks.TITLE + ", " +
+                        Bookmarks.POSITION + ", " +
+                        "NULL AS " + Combined.HISTORY_ID + ", " +
+                        TopSites.TYPE_PINNED + " as " + TopSites.TYPE +
+                        " FROM " + TABLE_BOOKMARKS +
+                        " WHERE " + Bookmarks.PARENT + " == " + Bookmarks.FIXED_PINNED_LIST_ID +
+
+                        " ORDER BY " + Bookmarks.POSITION,
+
+                        null);
+
+            c.setNotificationUri(getContext().getContentResolver(),
+                                 BrowserContract.AUTHORITY_URI);
+
+            // Force the cursor to be compiled and the cursor-window filled now:
+            // (A) without compiling the cursor now we won't have access to the TEMP table which
+            // is removed as soon as we close our connection.
+            // (B) this might also mitigate the situation causing this crash where we're accessing
+            // a cursor and crashing in fillWindow.
+            c.moveToFirst();
+
+            db.setTransactionSuccessful();
+            return c;
+        } finally {
+            db.endTransaction();
+        }
+    }
+
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
             String[] selectionArgs, String sortOrder) {
-        SQLiteDatabase db = getReadableDatabase(uri);
         final int match = URI_MATCHER.match(uri);
+
+        if (match == TOPSITES) {
+            return getTopSites(uri);
+        }
+
+        SQLiteDatabase db = getReadableDatabase(uri);
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         String limit = uri.getQueryParameter(BrowserContract.PARAM_LIMIT);
@@ -735,6 +997,13 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
                 break;
             }
+
+            case URL_ANNOTATIONS:
+                debug("Query is on url annotations: " + uri);
+
+                qb.setProjectionMap(URL_ANNOTATIONS_PROJECTION_MAP);
+                qb.setTables(TABLE_URL_ANNOTATIONS);
+                break;
 
             case SCHEMA: {
                 debug("Query is on schema.");
@@ -1186,6 +1455,15 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         final SQLiteDatabase db = getWritableDatabase(uri);
         beginWrite(db);
         return db.insertOrThrow(TABLE_THUMBNAILS, null, values);
+    }
+
+    private long insertUrlAnnotation(final Uri uri, final ContentValues values) {
+        final String url = values.getAsString(UrlAnnotations.URL);
+        trace("Inserting url annotations for URL: " + url);
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        beginWrite(db);
+        return db.insertOrThrow(TABLE_URL_ANNOTATIONS, null, values);
     }
 
     private int updateOrInsertThumbnail(Uri uri, ContentValues values, String selection,

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Services } = require("resource://gre/modules/Services.jsm");
+const Services = require("Services");
 const { listenOnce } = require("devtools/shared/async-utils");
 const l10n = require("gcli/l10n");
 

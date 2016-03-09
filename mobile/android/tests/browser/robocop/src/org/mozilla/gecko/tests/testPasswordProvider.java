@@ -6,6 +6,8 @@ package org.mozilla.gecko.tests;
 
 import java.io.File;
 
+import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserContract.GeckoDisabledHosts;
 import org.mozilla.gecko.db.BrowserContract.Passwords;
 
 import android.content.ContentResolver;
@@ -20,6 +22,8 @@ import android.net.Uri;
  * - inserts a password
  * - updates a password
  * - deletes a password
+ * - inserts a disabled host
+ * - queries for disabled host
  */
 public class testPasswordProvider extends BaseTest {
     private static final String DB_NAME = "signons.sqlite";
@@ -65,6 +69,23 @@ public class testPasswordProvider extends BaseTest {
         cvs = new ContentValues[0];
         c = cr.query(passwordUri, null, null, null, null);
         SqliteCompare(c, cvs);
+
+        ContentValues values = new ContentValues();
+        values.put("hostname", "http://www.example.com");
+
+        // Attempt to insert into the db.
+        Uri disabledHostUri = GeckoDisabledHosts.CONTENT_URI;
+        builder = disabledHostUri.buildUpon();
+        disabledHostUri = builder.appendQueryParameter("profilePath", mProfile).build();
+
+        uri = cr.insert(disabledHostUri, values);
+        expectedUri = disabledHostUri.buildUpon().appendPath("1").build();
+        mAsserter.is(uri.toString(), expectedUri.toString(), "Insert returned correct uri");
+        Cursor cursor = cr.query(disabledHostUri, null, null, null, null);
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        cursor.moveToFirst();
+        CursorMatches(cursor, values);
     }
 
     @Override

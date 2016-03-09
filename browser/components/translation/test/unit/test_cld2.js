@@ -308,7 +308,7 @@ const kTestPairs = [
   ["bg", "BULGARIAN", kTeststr_bg_Cyrl],
   ["ca", "CATALAN", kTeststr_ca_Latn],
   ["ceb", "CEBUANO", kTeststr_ceb_Latn],
-  ["hr", "CROATIAN", kTeststr_hr_Latn],
+  ["hr", "CROATIAN", kTeststr_hr_Latn, [false, 0, "el", 4]],
   ["cs", "CZECH", kTeststr_cs_Latn],
   ["da", "DANISH", kTeststr_da_Latn],
   ["nl", "DUTCH", kTeststr_nl_Latn],
@@ -335,7 +335,7 @@ const kTestPairs = [
   ["mk", "MACEDONIAN", kTeststr_mk_Cyrl],
   ["ms", "MALAY", kTeststr_ms_Latn],
   ["mt", "MALTESE", kTeststr_mt_Latn],
-  ["mr", "MARATHI", kTeststr_mr_Deva],
+  ["mr", "MARATHI", kTeststr_mr_Deva, [false, 0, "te", 3]],
   ["ne", "NEPALI", kTeststr_ne_Deva],
   ["no", "NORWEGIAN", kTeststr_no_Latn],
   ["fa", "PERSIAN", kTeststr_fa_Arab],
@@ -370,11 +370,11 @@ const kTestPairs = [
   ["bs", "BOSNIAN", kTeststr_bs_Latn],
 
 // 2 statistically-close languages
-  ["id", "INDONESIAN", kTeststr_id_close, true],
+  ["id", "INDONESIAN", kTeststr_id_close, [true, 80], []],
   ["ms", "MALAY", kTeststr_ms_close],
 
 // Simple intermixed French/English text
-  ["fr", "FRENCH", kTeststr_fr_en_Latn],
+  ["fr", "FRENCH", kTeststr_fr_en_Latn, [false, 80, "en", 32]],
 
 // Cross-check the main quadgram table build date
 // Change the expected language each time it is rebuilt
@@ -382,14 +382,92 @@ const kTestPairs = [
   ["az", "AZERBAIJANI", kTeststr_version]   // 2014.01.31
 ];
 
-Components.utils.import("resource:///modules/translation/LanguageDetector.jsm");
+Components.utils.import("resource://gre/modules/Timer.jsm");
+let detectorModule = Components.utils.import("resource:///modules/translation/LanguageDetector.jsm");
 
-add_task(function test_pairs() {
-  for (let pair of kTestPairs) {
-    let result = yield LanguageDetector.detectLanguage(pair[2]);
-    do_check_eq(result.language, pair[0]);
-    do_check_eq(result.confident, !pair[3]);
+function check_result(result, langCode, expected) {
+  equal(result.language, langCode, "Expected language code");
+
+  // Round percentage up to the nearest 5%, since most strings are
+  // detected at slightly less than 100%, and we don't want to
+  // encode each exact value.
+  let percent = result.languages[0].percent;
+  percent = Math.ceil(percent / 20) * 20;
+
+  equal(result.languages[0].languageCode, langCode, "Expected first guess language code");
+  equal(percent, expected[1] || 100, "Expected first guess language percent");
+
+  if (expected.length < 3) {
+    // We're not expecting a second language.
+    equal(result.languages.length, 1, "Expected only one language result");
+  } else {
+    equal(result.languages.length, 2, "Expected two language results");
+
+    equal(result.languages[1].languageCode, expected[2], "Expected second guess language code");
+    equal(result.languages[1].percent, expected[3], "Expected second guess language percent");
+  }
+
+  equal(result.confident, !expected[0], "Expected confidence");
+}
+
+add_task(function* test_pairs() {
+  for (let item of kTestPairs) {
+    let params = [item[2],
+                  { text: item[2], tld: "com", language: item[0], encoding: "utf-8" }]
+
+    for (let [i, param] of params.entries()) {
+      // For test items with different expected results when using the
+      // language hint, use those for the hinted version of the API.
+      // Otherwise, fall back to the first set of expected values.
+      let expected = item[3 + i] || item[3] || [];
+
+      let result = yield LanguageDetector.detectLanguage(param);
+      check_result(result, item[0], expected);
+    }
   }
 });
 
-var run_test = run_next_test;
+// Test that the worker is flushed shortly after processing a large
+// string.
+add_task(function* test_worker_flush() {
+  let test_string = kTeststr_fr_en_Latn;
+  let test_item = kTestPairs.find(item => item[2] == test_string);
+
+  // Set shorter timeouts and lower string lengths to make things easier
+  // on the test infrastructure.
+  detectorModule.LARGE_STRING = test_string.length - 1;
+  detectorModule.IDLE_TIMEOUT = 1000;
+
+  equal(detectorModule.workerManager._idleTimeout, null,
+        "Should have no idle timeout to start with");
+
+  let result = yield LanguageDetector.detectLanguage(test_string);
+
+  // Make sure the results are still correct.
+  check_result(result, test_item[0], test_item[3]);
+
+  // We should have an idle timeout after processing the string.
+  ok(detectorModule.workerManager._idleTimeout != null,
+     "Should have an idle timeout");
+  ok(detectorModule.workerManager._worker != null,
+     "Should have a worker instance");
+  ok(detectorModule.workerManager._workerReadyPromise != null,
+     "Should have a worker promise");
+
+  // Wait for the idle timeout to elapse.
+  yield new Promise(resolve => setTimeout(resolve, detectorModule.IDLE_TIMEOUT));
+
+  equal(detectorModule.workerManager._idleTimeout, null,
+        "Should have no idle timeout after it has elapsed");
+  equal(detectorModule.workerManager._worker, null,
+        "Should have no worker instance after idle timeout");
+  equal(detectorModule.workerManager._workerReadyPromise, null,
+        "Should have no worker promise after idle timeout");
+
+  // We should still be able to use the language detector after its
+  // worker has been flushed.
+  result = yield LanguageDetector.detectLanguage(test_string);
+
+  // Make sure the results are still correct.
+  check_result(result, test_item[0], test_item[3]);
+});

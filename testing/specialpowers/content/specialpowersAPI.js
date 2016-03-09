@@ -482,6 +482,11 @@ SpecialPowersAPI.prototype = {
                               { id: id, name: name, message: message });
       },
 
+      sendSyncMessage: (name, message) => {
+        return this._sendSyncMessage("SPChromeScriptMessage",
+                                     { id, name, message });
+      },
+
       destroy: () => {
         listeners = [];
         this._removeMessageListener("SPChromeScriptMessage", chromeScript);
@@ -830,7 +835,7 @@ SpecialPowersAPI.prototype = {
     if (this._permissionsUndoStack.length > 0) {
       // See pushPermissions comment regarding delay.
       let cb = callback ? this._delayCallbackTwice(callback) : null;
-      /* Each pop from the stack will yield an object {op/type/permission/value/url/appid/isInBrowserElement} or null */
+      /* Each pop from the stack will yield an object {op/type/permission/value/url/appid/isInIsolatedMozBrowserElement} or null */
       this._pendingPermissions.push([this._permissionsUndoStack.pop(), cb]);
       this._applyPermissions();
     } else {
@@ -1571,15 +1576,20 @@ SpecialPowersAPI.prototype = {
       getService(Components.interfaces.nsICategoryManager).
       deleteCategoryEntry(category, entry, persists);
   },
-
   openDialog: function(win, args) {
     return win.openDialog.apply(win, args);
+  },
+  // This is a blocking call which creates and spins a native event loop
+  spinEventLoop: function(win) {
+    // simply do a sync XHR back to our windows location.
+    var syncXHR = new win.XMLHttpRequest();
+    syncXHR.open('GET', win.location, false);
+    syncXHR.send();
   },
 
   // :jdm gets credit for this.  ex: getPrivilegedProps(window, 'location.href');
   getPrivilegedProps: function(obj, props) {
     var parts = props.split('.');
-
     for (var i = 0; i < parts.length; i++) {
       var p = parts[i];
       if (obj[p]) {
@@ -1848,10 +1858,6 @@ SpecialPowersAPI.prototype = {
     this._sendSyncMessage('SPObserverService', msg);
   },
 
-  createDOMFile: function(path, options) {
-    return new File(path, options);
-  },
-
   removeAllServiceWorkerData: function() {
     this.notifyObserversInParentProcess(null, "browser:purge-session-history", "");
   },
@@ -1885,15 +1891,20 @@ SpecialPowersAPI.prototype = {
     ext = Cu.waiveXrays(ext);
 
     let sp = this;
+    let state = "uninitialized";
     let extension = {
       id,
 
+      get state() { return state; },
+
       startup() {
+        state = "pending";
         sp._sendAsyncMessage("SPStartupExtension", {id});
         return startupPromise;
       },
 
       unload() {
+        state = "unloading";
         sp._sendAsyncMessage("SPUnloadExtension", {id});
         return unloadPromise;
       },
@@ -1908,11 +1919,14 @@ SpecialPowersAPI.prototype = {
     let listener = (msg) => {
       if (msg.data.id == id) {
         if (msg.data.type == "extensionStarted") {
+          state = "running";
           resolveStartup();
         } else if (msg.data.type == "extensionFailed") {
+          state = "failed";
           rejectStartup("startup failed");
         } else if (msg.data.type == "extensionUnloaded") {
           this._removeMessageListener("SPExtensionMessage", listener);
+          state = "unloaded";
           resolveUnload();
         } else if (msg.data.type in handler) {
           handler[msg.data.type](...msg.data.args);

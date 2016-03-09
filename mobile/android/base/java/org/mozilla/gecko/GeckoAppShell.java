@@ -33,6 +33,7 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
@@ -476,6 +477,7 @@ public class GeckoAppShell
         return (location.hasAccuracy() && radius > 0) ? radius : 1001;
     }
 
+    @SuppressLint("MissingPermission") // Permissions are explicitly checked for in enableLocation()
     private static Location getLastKnownLocation(LocationManager lm) {
         Location lastKnownLocation = null;
         List<String> providers = lm.getAllProviders();
@@ -503,6 +505,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI
+    @SuppressLint("MissingPermission") // Permissions are explicitly checked for within this method
     public static void enableLocation(final boolean enable) {
         Permissions
                 .from((Activity) getContext())
@@ -1935,7 +1938,8 @@ public class GeckoAppShell
 
         // An awful hack to detect Tegra devices. Easiest way to do it without spinning up a EGL context.
         boolean isTegra = (new File("/system/lib/hw/gralloc.tegra.so")).exists() ||
-                          (new File("/system/lib/hw/gralloc.tegra3.so")).exists();
+                          (new File("/system/lib/hw/gralloc.tegra3.so")).exists() ||
+                          (new File("/sys/class/nvidia-gpu")).exists();
         if (isTegra) {
             // disable on KitKat (bug 957694)
             if (Versions.feature19Plus) {
@@ -2670,7 +2674,7 @@ public class GeckoAppShell
     private static final void showImageShareFailureSnackbar() {
         SnackbarHelper.showSnackbar((Activity) getContext(),
                 getApplicationContext().getString(R.string.share_image_failed),
-                Snackbar.LENGTH_SHORT
+                Snackbar.LENGTH_LONG
         );
     }
 
@@ -2834,10 +2838,5 @@ public class GeckoAppShell
                 getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
         final Display disp = wm.getDefaultDisplay();
         return new Rect(0, 0, disp.getWidth(), disp.getHeight());
-    }
-
-    @JNITarget
-    static boolean isWebAppProcess() {
-        return GeckoProfile.get(getApplicationContext()).isWebAppProfile();
     }
 }

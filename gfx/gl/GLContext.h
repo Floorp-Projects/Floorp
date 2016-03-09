@@ -126,6 +126,7 @@ enum class GLFeature {
     sRGB_framebuffer,
     sRGB_texture,
     sampler_objects,
+    seamless_cube_map_opt_in,
     split_framebuffer,
     standard_derivatives,
     sync,
@@ -284,8 +285,8 @@ public:
         }
 
         if (profile == ContextProfile::OpenGL) {
-            return profile == ContextProfile::OpenGLCore ||
-                   profile == ContextProfile::OpenGLCompatibility;
+            return mProfile == ContextProfile::OpenGLCore ||
+                   mProfile == ContextProfile::OpenGLCompatibility;
         }
 
         return profile == mProfile;
@@ -420,6 +421,7 @@ public:
         ARB_pixel_buffer_object,
         ARB_robustness,
         ARB_sampler_objects,
+        ARB_seamless_cube_map,
         ARB_sync,
         ARB_texture_compression,
         ARB_texture_float,

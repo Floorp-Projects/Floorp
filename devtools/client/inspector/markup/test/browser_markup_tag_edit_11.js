@@ -12,11 +12,13 @@ const TEST_URL = "data:text/html;charset=utf-8,<div></div>";
 add_task(function*() {
   let isEditTagNameCalled = false;
 
-  let {toolbox, inspector} = yield openInspectorForURL(TEST_URL);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   // Overriding the editTagName walkerActor method here to check that it isn't
   // called when blurring the tagname field.
-  inspector.walker.editTagName = function() { isEditTagNameCalled = true; }
+  inspector.walker.editTagName = function() {
+    isEditTagNameCalled = true;
+  };
 
   yield selectNode("div", inspector);
   let container = yield getContainerForSelector("div", inspector);

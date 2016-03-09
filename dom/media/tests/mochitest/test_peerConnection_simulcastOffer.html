@@ -74,26 +74,15 @@
       ]);
 
       test.chain.insertBefore('PC_LOCAL_CREATE_OFFER', [
-        // addTrack will not finish until GMP is initted, but addTrack doesn't
-        // give us a promise to wait on or a callback. We cannot do
-        // setParameters until addTrack is finished. So, we create a dummy
-        // offer, which _does_ give us a promise to wait on, and once that is
-        // done we know that addTrack is done too.
-        // TODO(bug 1241153): Remove the need for this hack.
-        function PC_LOCAL_CREATE_OFFER(test) {
-          return test.createOffer(test.pcLocal);
-        },
         function PC_LOCAL_SET_RIDS(test) {
           var senders = test.pcLocal._pc.getSenders();
           is(senders.length, 1, "We have exactly one RTP sender");
           var sender = senders[0];
           ok(sender.track, "Sender has a track");
 
-          sender.setParameters({
-            encodings: [
-            { rid: "foo", maxBitrate: 40000 },
-            { rid: "bar", maxBitrate: 40000 },
-            ]
+          return sender.setParameters({
+            encodings: [{ rid: "foo", maxBitrate: 40000 },
+                        { rid: "bar", maxBitrate: 40000, scaleResolutionDownBy: 2 }]
           });
         }
       ]);
@@ -122,6 +111,16 @@
           ok(vremote, "Should have remote video element for pcRemote");
           return waitForColorChange(helper, vremote);
         },
+        function PC_REMOTE_CHECK_SIZE_1() {
+          var vlocal = document.getElementById('pcLocal_local1_video');
+          var vremote = document.getElementById('pcRemote_remote1_video');
+          ok(vlocal, "Should have local video element for pcLocal");
+          ok(vremote, "Should have remote video element for pcRemote");
+          ok(vlocal.videoWidth > 0, "source width is positive");
+          ok(vlocal.videoHeight > 0, "source height is positive");
+          is(vremote.videoWidth, vlocal.videoWidth, "sink is same width as source");
+          is(vremote.videoHeight, vlocal.videoHeight, "sink is same height as source");
+        },
         function PC_REMOTE_SET_RTP_SECOND_RID(test) {
           // Now, cause pcRemote to filter out everything but the second SSRC.
           // This lets only the other simulcast stream through.
@@ -134,6 +133,16 @@
           var vremote = document.getElementById('pcRemote_remote1_video');
           ok(vremote, "Should have remote video element for pcRemote");
           return waitForColorChange(helper, vremote);
+        },
+        function PC_REMOTE_CHECK_SIZE_2() {
+          var vlocal = document.getElementById('pcLocal_local1_video');
+          var vremote = document.getElementById('pcRemote_remote1_video');
+          ok(vlocal, "Should have local video element for pcLocal");
+          ok(vremote, "Should have remote video element for pcRemote");
+          ok(vlocal.videoWidth > 0, "source width is positive");
+          ok(vlocal.videoHeight > 0, "source height is positive");
+          is(vremote.videoWidth, vlocal.videoWidth / 2, "sink is 1/2 width of source");
+          is(vremote.videoHeight, vlocal.videoHeight / 2,  "sink is 1/2 height of source");
         },
         function PC_REMOTE_SET_RTP_NONEXISTENT_RID(test) {
           // Now, cause pcRemote to filter out everything, just to make sure

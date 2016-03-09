@@ -66,13 +66,10 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
             'sandbox_staticruntime_s',
         ]
 
-    # clang-cl can't deal with this delay-load due to bug 1188045
-    # (also filed as https://llvm.org/bugs/show_bug.cgi?id=24291)
-    if not CONFIG['CLANG_CL']:
-        DELAYLOAD_DLLS += [
-            'nss3.dll',
-            'xul.dll'
-        ]
+    DELAYLOAD_DLLS += [
+        'nss3.dll',
+        'xul.dll'
+    ]
 
     DEFINES['HASH_NODE_ID_WITH_DEVICE_ID'] = 1;
     SOURCES += [

@@ -63,7 +63,9 @@ class FilteringWrapper : public Base {
  */
 class CrossOriginXrayWrapper : public SecurityXrayDOM {
   public:
-    explicit CrossOriginXrayWrapper(unsigned flags);
+    MOZ_CONSTEXPR explicit CrossOriginXrayWrapper(unsigned flags) :
+      SecurityXrayDOM(flags) {}
+
 
     virtual bool getOwnPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                           JS::Handle<jsid> id,

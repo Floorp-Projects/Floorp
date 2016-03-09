@@ -5,6 +5,7 @@
 
 #include "SVGDocumentWrapper.h"
 
+#include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/Element.h"
 #include "nsICategoryManager.h"
 #include "nsIChannel.h"
@@ -114,9 +115,28 @@ SVGDocumentWrapper::FlushImageTransformInvalidation()
 bool
 SVGDocumentWrapper::IsAnimated()
 {
+  // Can be called for animated images during shutdown, after we've
+  // already Observe()'d XPCOM shutdown and cleared out our mViewer pointer.
+  if (!mViewer) {
+    return false;
+  }
+
   nsIDocument* doc = mViewer->GetDocument();
-  return doc && doc->HasAnimationController() &&
-    doc->GetAnimationController()->HasRegisteredAnimations();
+  if (!doc) {
+    return false;
+  }
+  if (doc->Timeline()->HasAnimations()) {
+    // CSS animations (technically HasAnimations() also checks for CSS
+    // transitions and Web animations but since SVG-as-an-image doesn't run
+    // script they will never run in the document that we wrap).
+    return true;
+  }
+  if (doc->HasAnimationController() &&
+      doc->GetAnimationController()->HasRegisteredAnimations()) {
+    // SMIL animations
+    return true;
+  }
+  return false;
 }
 
 void

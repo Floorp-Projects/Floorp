@@ -4357,8 +4357,8 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType)
   // previous type does, we should clear out mFocusedValue.
   if (MayFireChangeOnBlur(mType) && !MayFireChangeOnBlur(oldType)) {
     GetValue(mFocusedValue);
-  } else if (!IsSingleLineTextControl(mType, false) &&
-             IsSingleLineTextControl(oldType, false)) {
+  } else if (!IsSingleLineTextControl(false, mType) &&
+             IsSingleLineTextControl(false, oldType)) {
     mFocusedValue.Truncate();
   }
 
@@ -5582,14 +5582,11 @@ HTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
     const nsTArray<RefPtr<File>>& files = GetFilesInternal();
 
     for (uint32_t i = 0; i < files.Length(); ++i) {
-      aFormSubmission->AddNameBlobPair(name, files[i]);
+      aFormSubmission->AddNameBlobOrNullPair(name, files[i]);
     }
 
     if (files.IsEmpty()) {
-      RefPtr<BlobImpl> blobImpl =
-        new EmptyBlobImpl(NS_LITERAL_STRING("application/octet-stream"));
-      RefPtr<Blob> blob = Blob::Create(OwnerDoc()->GetInnerWindow(), blobImpl);
-      aFormSubmission->AddNameBlobPair(name, blob);
+      aFormSubmission->AddNameBlobOrNullPair(name, nullptr);
     }
 
     return NS_OK;

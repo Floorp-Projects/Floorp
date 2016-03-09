@@ -155,8 +155,9 @@ Http2PushListener.prototype = new Http2CheckListener();
 Http2PushListener.prototype.onDataAvailable = function(request, ctx, stream, off, cnt) {
   this.onDataAvailableFired = true;
   this.isHttp2Connection = checkIsHttp2(request);
-  if (request.originalURI.spec == "https://localhost:" + serverPort + "/push.js" ||
-      request.originalURI.spec == "https://localhost:" + serverPort + "/push2.js") {
+  if (request.originalURI.spec == "https://localhost:" + serverPort + "/push.js"  ||
+      request.originalURI.spec == "https://localhost:" + serverPort + "/push2.js" ||
+      request.originalURI.spec == "https://localhost:" + serverPort + "/push5.js") {
     do_check_eq(request.getResponseHeader("pushed"), "yes");
   }
   read_stream(stream, cnt);
@@ -517,6 +518,20 @@ function test_http2_push4() {
   chan.asyncOpen2(listener);
 }
 
+function test_http2_push5() {
+  var chan = makeChan("https://localhost:" + serverPort + "/push5");
+  chan.loadGroup = loadGroup;
+  var listener = new Http2PushListener();
+  chan.asyncOpen2(listener);
+}
+
+function test_http2_push6() {
+  var chan = makeChan("https://localhost:" + serverPort + "/push5.js");
+  chan.loadGroup = loadGroup;
+  var listener = new Http2PushListener();
+  chan.asyncOpen2(listener);
+}
+
 // this is a basic test where the server sends a simple document with 2 header
 // blocks. bug 1027364
 function test_http2_doubleheader() {
@@ -856,6 +871,12 @@ function test_http2_folded_header() {
   chan.asyncOpen2(listener);
 }
 
+function test_http2_empty_data() {
+  var chan = makeChan("https://localhost:" + serverPort + "/emptydata");
+  var listener = new Http2CheckListener();
+  chan.asyncOpen2(listener);
+}
+
 function test_complete() {
   resetPrefs();
   do_test_pending();
@@ -882,6 +903,8 @@ var tests = [ test_http2_post_big
             , test_http2_push2
             , test_http2_push3
             , test_http2_push4
+            , test_http2_push5
+            , test_http2_push6
             , test_http2_altsvc
             , test_http2_doubleheader
             , test_http2_xhr
@@ -898,6 +921,7 @@ var tests = [ test_http2_post_big
             , test_http2_illegalhpacksoft
             , test_http2_illegalhpackhard
             , test_http2_folded_header
+            , test_http2_empty_data
             // Add new tests above here - best to add new tests before h1
             // streams get too involved
             // These next two must always come in this order
@@ -984,8 +1008,10 @@ var altsvcpref1;
 var altsvcpref2;
 var loadGroup;
 var serverPort;
+var speculativeLimit;
 
 function resetPrefs() {
+  prefs.setIntPref("network.http.speculative-parallel-limit", speculativeLimit);
   prefs.setBoolPref("network.http.spdy.enabled", spdypref);
   prefs.setBoolPref("network.http.spdy.enabled.v3-1", spdy3pref);
   prefs.setBoolPref("network.http.spdy.allow-push", spdypush);
@@ -1004,15 +1030,13 @@ function run_test() {
   // Set to allow the cert presented by our H2 server
   do_get_profile();
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  var oldPref = prefs.getIntPref("network.http.speculative-parallel-limit");
+  speculativeLimit = prefs.getIntPref("network.http.speculative-parallel-limit");
   prefs.setIntPref("network.http.speculative-parallel-limit", 0);
 
   addCertOverride("localhost", serverPort,
                   Ci.nsICertOverrideService.ERROR_UNTRUSTED |
                   Ci.nsICertOverrideService.ERROR_MISMATCH |
                   Ci.nsICertOverrideService.ERROR_TIME);
-
-  prefs.setIntPref("network.http.speculative-parallel-limit", oldPref);
 
   // Enable all versions of spdy to see that we auto negotiate http/2
   spdypref = prefs.getBoolPref("network.http.spdy.enabled");

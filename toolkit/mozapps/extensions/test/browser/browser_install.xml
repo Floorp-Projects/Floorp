@@ -3,7 +3,7 @@
   <addon>
     <name>Install Tests</name>
     <type id='1'>Extension</type>
-    <guid>addon1@tests.mozilla.org</guid>
+    <guid>install1@tests.mozilla.org</guid>
     <version>1.0</version>
     <authors>
       <author>

@@ -6,7 +6,8 @@
 
 // Tests that doesn't fit into any specific category.
 
-const TEST_URL = "data:text/html;charset=utf8,<div a b id='order' c class></div>";
+const TEST_URL = `data:text/html;charset=utf8,
+                  <div a b id='order' c class></div>`;
 
 add_task(function*() {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
@@ -25,7 +26,6 @@ function* testOriginalAttributesOrder(inspector) {
 function* testOrderAfterAttributeChange(inspector, testActor) {
   info("Testing order of attributes after attribute is change by setAttribute");
 
-  let container = getContainerForSelector("#order", inspector);
   yield testActor.setAttribute("#order", "a", "changed");
 
   let attributes = yield getAttributesFromEditor("#order", inspector);

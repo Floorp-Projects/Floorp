@@ -63,6 +63,10 @@
     -moz-image-region: rect(0px, 1024px, 32px, 992px);
   }
 
+  #sync-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
+    -moz-image-region: rect(32px, 1024px, 64px, 992px);
+  }
+
   #feed-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #feed-button {
     -moz-image-region: rect(0px, 416px, 32px, 384px);
@@ -261,6 +265,10 @@
   #sync-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #sync-button {
     -moz-image-region: rect(0px, 2048px, 64px, 1984px);
+  }
+
+  #sync-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
+    -moz-image-region: rect(64px, 2048px, 128px, 1984px);
   }
 
   #feed-button[cui-areatype="menu-panel"],

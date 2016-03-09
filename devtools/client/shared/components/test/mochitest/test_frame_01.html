@@ -55,7 +55,7 @@ window.onload = Task.async(function* () {
       onClick: ()=>{},
     }), window.document.body);
     yield forceRender(frame);
-    checkFrameString(frame, "mahscripts.js", 55, 0);
+    checkFrameString(frame, "mahscripts.js", 55);
 
     // Check when there's no parseable URL source
     frame = ReactDOM.render(Frame({
@@ -77,7 +77,33 @@ window.onload = Task.async(function* () {
     }), window.document.body);
     yield forceRender(frame);
     checkFrameString(frame, "(unknown)",1);
-  } catch(e) {
+
+    // Check when there's a column, but no number;
+    // no line/column info should render
+    frame = ReactDOM.render(Frame({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        column: 55,
+      },
+      onClick: ()=>{},
+    }), window.document.body);
+    yield forceRender(frame);
+    checkFrameString(frame, "mahscripts.js");
+
+    // Check when line is 0; this should be an invalid
+    // line option, so don't render line/column
+    frame = ReactDOM.render(Frame({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 0,
+        column: 55,
+      },
+      onClick: ()=>{},
+    }), window.document.body);
+    yield forceRender(frame);
+    checkFrameString(frame, "mahscripts.js");
+
+  } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
     SimpleTest.finish();

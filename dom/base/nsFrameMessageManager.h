@@ -215,8 +215,10 @@ public:
                                 const JS::Value& aJSON,
                                 const JS::Value& aObjects,
                                 nsIPrincipal* aPrincipal,
+                                const JS::Value& aTransfers,
                                 JSContext* aCx,
                                 uint8_t aArgc);
+
   nsresult DispatchAsyncMessageInternal(JSContext* aCx,
                                         const nsAString& aMessage,
                                         StructuredCloneData& aData,

@@ -20,6 +20,7 @@
       <property name="scrollAmount" exposeToUntrustedContent="true">
         <getter>
           <![CDATA[
+          this._mutationActor(this._mutationObserver.takeRecords());
           var val = parseInt(this.getAttribute("scrollamount"));
 
           if (val <= 0 || isNaN(val))
@@ -36,6 +37,7 @@
       <property name="scrollDelay" exposeToUntrustedContent="true">
         <getter>
           <![CDATA[
+          this._mutationActor(this._mutationObserver.takeRecords());
           var val = parseInt(this.getAttribute("scrolldelay"));
 
           if (val <= 0 || isNaN(val))
@@ -79,6 +81,7 @@
 
       <property name="behavior" exposeToUntrustedContent="true">
         <getter>
+          this._mutationActor(this._mutationObserver.takeRecords());
           return this._behavior;
         </getter>
         <setter>
@@ -90,6 +93,7 @@
       <property name="loop" exposeToUntrustedContent="true">
         <getter>
           <![CDATA[
+          this._mutationActor(this._mutationObserver.takeRecords());
           var val = parseInt(this.getAttribute('loop'));
     
           if (val < -1 || isNaN(val))
@@ -156,6 +160,7 @@
         <parameter name="aValue"/>
         <body>
         <![CDATA[
+          aValue = parseInt(aValue);
           if (aValue <= 0 || isNaN(aValue) || aValue == null)
             return false;
 
@@ -177,6 +182,7 @@
         <parameter name="aValue"/>
         <body>
         <![CDATA[
+          aValue = parseInt(aValue);
           if (aValue < 0 || isNaN(aValue) || aValue == null)
             return false;
 
@@ -488,6 +494,88 @@
         </body>
       </method>
 
+      <method name="_mutationActor">
+        <parameter name="aMutations"/>
+        <body>
+        <![CDATA[
+          while (aMutations.length > 0) {
+            var mutation = aMutations.shift();
+            var attrName = mutation.attributeName.toLowerCase();
+            var oldValue = mutation.oldValue;
+            var target = mutation.target;
+            var newValue = target.getAttribute(attrName);
+
+            if (oldValue != newValue) {
+              switch (attrName) {
+                case "loop":
+                  if (!target._set_loop(newValue)) {
+                    if (!newValue) {
+                      target._loop = -1;
+                      if (target.runId == 0)
+                        target.start();
+                    }
+                  }
+                  if (target.rundId == 0)
+                    target.start();
+                  break;
+                case "scrollamount":
+                  if (!newValue)
+                    target._scrollAmount = 6;
+                  else
+                    target._set_scrollAmount(newValue);
+                  break;
+                case "scrolldelay":
+                  if (!newValue)
+                    target._scrollDelay = 85;
+                  else
+                    target._set_scrollDelay(newValue);
+                  target.stop();
+                  target.start();
+                  break;
+                case "truespeed":
+                  //needed to update target._scrollDelay
+                  var myThis = target;
+                  var lambda = function() {myThis._set_scrollDelay(myThis.getAttribute('scrolldelay'));}
+                  window.setTimeout(lambda, 0);
+                  break;
+                case "behavior":
+                  if (!newValue)
+                    target._behavior = "scroll";
+                  else
+                    target._set_behavior(newValue);
+                  target.startNewDirection = true;
+                  if ((oldValue == "slide" && target.newPosition == target.stopAt) ||
+                      newValue == "alternate" || newValue == "slide") {
+                    target.stop();
+                    target._doMove(true);
+                  }
+                  break;
+                case "direction":
+                  if (!newValue)
+                    target._direction = "left";
+                  else
+                    target._set_direction(newValue);
+                  break;
+                case "width":
+                case "height":
+                  target.startNewDirection = true;
+                  break;
+                case "onstart":
+                  target._setEventListener("start", newValue);
+                  break;
+                case "onfinish":
+                  target._setEventListener("finish", newValue);
+                  break;
+                case "onbounce":
+                  target._setEventListener("bounce", newValue);
+                  break;
+              }
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
       <constructor>
         <![CDATA[
           // Set up state.
@@ -518,6 +606,9 @@
           this._setEventListener("bounce", this.getAttribute("onbounce"));
           this.startNewDirection = true;
 
+          this._mutationObserver = new MutationObserver(this._mutationActor);
+          this._mutationObserver.observe(this, { attributes: true, attributeOldValue: true });
+
           // init needs to be run after the page has loaded in order to calculate
           // the correct height/width
           if (document.readyState == "complete")
@@ -527,99 +618,6 @@
         ]]>
       </constructor>
     </implementation>
-
-    <handlers>
-      <handler event="DOMAttrModified" phase="target">
-        <![CDATA[
-          var attrName = event.attrName.toLowerCase();
-          var oldValue = event.prevValue.toLowerCase();
-          var newValue = event.newValue.toLowerCase();
-          var attributeRemoval = false;
-          if (event.attrChange == event.REMOVAL) {
-            newValue = null;
-            attributeRemoval = true;
-          };
-
-          if (oldValue != newValue) {
-            switch (attrName) {
-              case "loop":
-                if (!this._set_loop(newValue)) {
-                  if (attributeRemoval) {
-                    this._loop = -1;
-                    if (this.runId == 0)
-                      this.start();
-                  }
-                  else
-                    throw new Error("Invalid argument for Marquee::loop");
-                }
-                if (this.rundId == 0)
-                  this.start();
-                break;
-              case "scrollamount":
-                if (!this._set_scrollAmount(newValue)) {
-                  if (attributeRemoval)
-                    this._scrollAmount = 6;
-                  else
-                    throw new Error("Invalid argument for Marquee::scrollAmount");
-                }
-                break;
-              case "scrolldelay":
-                if (!this._set_scrollDelay(newValue)) {
-                  if (attributeRemoval)
-                    this._scrollDelay = 85;
-                  else
-                    throw new Error("Invalid argument for Marquee::scrollDelay");
-                }
-                this.stop();
-                this.start();
-                break;
-              case "truespeed":
-                //needed to update this._scrollDelay
-                var myThis = this;
-                var lambda = function() {myThis._set_scrollDelay(myThis.getAttribute('scrolldelay'));}
-                window.setTimeout(lambda, 0);
-                break;
-              case "behavior":
-                if (!this._set_behavior(newValue)) {
-                  if (attributeRemoval)
-                    this._behavior = "scroll";
-                  else
-                    throw new Error("Invalid argument for Marquee::behavior");
-                }
-
-                this.startNewDirection = true;
-                if ((oldValue == "slide" && this.newPosition == this.stopAt) ||
-                    newValue == "alternate" || newValue == "slide") {
-                  this.stop();
-                  this._doMove(true);
-                }
-                break;
-              case "direction":
-                if (!this._set_direction(newValue)) {
-                  if (attributeRemoval)
-                    this._direction = "left";
-                  else
-                    throw new Error("Invalid argument for Marquee::direction");
-                }
-                break;
-              case "width":
-              case "height":
-                this.startNewDirection = true;
-                break;
-              case "onstart":
-                this._setEventListener("start", newValue);
-                break;
-              case "onfinish":
-                this._setEventListener("finish", newValue);
-                break;
-              case "onbounce":
-                this._setEventListener("bounce", newValue);
-                break;
-            }
-          }
-        ]]>
-      </handler>
-    </handlers>
 
   </binding>
 

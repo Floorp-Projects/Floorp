@@ -780,9 +780,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
    private:
     int width_;
     int height_;
-#if defined(MOZILLA_XPCOMRT_API)
-    RefPtr<mozilla::SimpleImageBuffer> image_;
-#elif defined(MOZILLA_INTERNAL_API)
+#if defined(MOZILLA_INTERNAL_API)
     RefPtr<layers::ImageContainer> image_container_;
     RefPtr<layers::Image> image_;
 #endif

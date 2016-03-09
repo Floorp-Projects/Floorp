@@ -44,6 +44,15 @@ add_task(function* () {
   equal(response.path.length, 1);
   equal(response.path[0], partialTree.nodeId);
 
+  for (let node of response.nodes) {
+    equal(typeof node.shortestPaths, "object",
+          "Should have shortest paths");
+    equal(typeof node.shortestPaths.nodes, "object",
+          "Should have shortest paths' nodes");
+    equal(typeof node.shortestPaths.edges, "object",
+          "Should have shortest paths' edges");
+  }
+
   // Next, test getting a subset of children available.
   const secondResponse = yield client.getImmediatelyDominated({
     dominatorTreeId,
@@ -58,6 +67,15 @@ add_task(function* () {
   ok(!secondResponse.moreChildrenAvailable);
   equal(secondResponse.path.length, 1);
   equal(secondResponse.path[0], partialTree.nodeId);
+
+  for (let node of secondResponse.nodes) {
+    equal(typeof node.shortestPaths, "object",
+          "Should have shortest paths");
+    equal(typeof node.shortestPaths.nodes, "object",
+          "Should have shortest paths' nodes");
+    equal(typeof node.shortestPaths.edges, "object",
+          "Should have shortest paths' edges");
+  }
 
   client.destroy();
 });

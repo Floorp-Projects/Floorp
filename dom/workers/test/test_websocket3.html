@@ -1,0 +1,46 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for WebSocket object in workers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<pre id="feedback"></pre>
+<script class="testbody" type="text/javascript">
+
+  var worker = new Worker("websocket_worker3.js");
+
+  worker.onmessage = function(event) {
+    is(event.target, worker, "event.target should be a worker!");
+
+    if (event.data.type == 'finish') {
+      info("All done!");
+      SimpleTest.finish();
+    } else if (event.data.type == 'status') {
+      ok(event.data.status, event.data.msg);
+    } else if (event.data.type == 'feedback') {
+      info(event.data.msg);
+      document.getElementById('feedback').innerHTML += event.data.msg + "\n";
+    }
+  };
+
+  worker.onerror = function(event) {
+    is(event.target, worker);
+    info("error!");
+    ok(false, "Worker had an error: " + event.data);
+    SimpleTest.finish();
+  };
+
+  worker.postMessage('foobar');
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

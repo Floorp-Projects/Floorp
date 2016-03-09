@@ -44,7 +44,7 @@ public:
   // Android Jelly Bean.
   static already_AddRefed<AndroidSurfaceTexture> Create();
 
-  static AndroidSurfaceTexture* Find(int id);
+  static AndroidSurfaceTexture* Find(int aId);
 
   // If we are on Jelly Bean, the SurfaceTexture can be detached and reattached
   // to allow consumption from different GLContexts. It is recommended to only
@@ -56,21 +56,21 @@ public:
 
   nsresult Detach();
 
-  // Ability to detach is based on API version (16+), and we also block PowerVR since it has some type
-  // of fencing problem. Bug 1100126.
-  bool CanDetach() { return mCanDetach; }
+  // Ability to detach is based on API version (16+), and we also block PowerVR
+  // since it has some type of fencing problem. Bug 1100126.
+  bool CanDetach() const;
 
-  GLContext* GetAttachedContext() { return mAttachedContext; }
+  GLContext* AttachedContext() const { return mAttachedContext; }
 
-  AndroidNativeWindow* NativeWindow() {
+  AndroidNativeWindow* NativeWindow() const {
     return mNativeWindow;
   }
 
   // This attaches the updated data to the TEXTURE_EXTERNAL target
   void UpdateTexImage();
 
-  void GetTransformMatrix(mozilla::gfx::Matrix4x4& aMatrix);
-  int ID() { return mID; }
+  void GetTransformMatrix(mozilla::gfx::Matrix4x4& aMatrix) const;
+  int ID() const { return mID; }
 
   void SetDefaultSize(mozilla::gfx::IntSize size);
 
@@ -82,27 +82,26 @@ public:
   // callback from the underlying SurfaceTexture instance
   void NotifyFrameAvailable();
 
-  GLuint Texture() { return mTexture; }
-  const widget::sdk::Surface::Ref& JavaSurface() { return mSurface; }
+  GLuint Texture() const { return mTexture; }
+  const widget::sdk::Surface::Ref& JavaSurface() const { return mSurface; }
 
 private:
   AndroidSurfaceTexture();
   ~AndroidSurfaceTexture();
 
   bool Init(GLContext* aContext, GLuint aTexture);
-  void UpdateCanDetach();
 
   GLuint mTexture;
   widget::sdk::SurfaceTexture::GlobalRef mSurfaceTexture;
   widget::sdk::Surface::GlobalRef mSurface;
 
-  Monitor mMonitor;
   GLContext* mAttachedContext;
-  bool mCanDetach;
 
   RefPtr<AndroidNativeWindow> mNativeWindow;
   int mID;
   nsCOMPtr<nsIRunnable> mFrameAvailableCallback;
+
+  mutable Monitor mMonitor;
 };
 
 }

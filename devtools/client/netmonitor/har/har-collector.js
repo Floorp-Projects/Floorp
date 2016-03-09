@@ -7,8 +7,7 @@ const { Cu, Ci, Cc } = require("chrome");
 const { defer, all } = require("promise");
 const { setTimeout, clearTimeout } = require("sdk/timers");
 const { makeInfallible } = require("devtools/shared/DevToolsUtils");
-
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const Services = require("Services");
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {

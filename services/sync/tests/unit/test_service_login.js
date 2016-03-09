@@ -183,7 +183,7 @@ add_test(function test_login_on_sync() {
     // This test exercises these two branches.
 
     _("We're ready to sync if locked.");
-    Svc.Prefs.set("enabled", true);
+    Service.enabled = true;
     Services.io.offline = false;
     Service.scheduler.checkSyncStatus();
     do_check_true(scheduleCalled);

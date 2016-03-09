@@ -28,7 +28,7 @@ add_task(function* test_notification_version_string() {
     systemRecord: true,
   });
 
-  let notifyPromise = promiseObserverNotification('push-message');
+  let notifyPromise = promiseObserverNotification(PushServiceComponent.pushTopic);
 
   let ackDone;
   let ackPromise = new Promise(resolve => ackDone = resolve);

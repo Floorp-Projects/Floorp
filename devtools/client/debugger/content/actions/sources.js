@@ -5,6 +5,7 @@
 
 const constants = require('../constants');
 const promise = require('promise');
+const Services = require('Services');
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { PROMISE, HISTOGRAM_ID } = require('devtools/client/shared/redux/middleware/promise');
 const { getSource, getSourceText } = require('../queries');

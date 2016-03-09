@@ -37,12 +37,6 @@ TiledLayerBufferComposite::~TiledLayerBufferComposite()
   Clear();
 }
 
-/* static */ void
-TiledLayerBufferComposite::RecycleCallback(TextureHost* textureHost, void* aClosure)
-{
-  textureHost->CompositorRecycle();
-}
-
 void
 TiledLayerBufferComposite::SetCompositor(Compositor* aCompositor)
 {
@@ -149,7 +143,7 @@ UseTileTexture(CompositableTextureHostRef& aTexture,
     // We possibly upload the entire texture contents here. This is a purposeful
     // decision, as sub-image upload can often be slow and/or unreliable, but
     // we may want to reevaluate this in the future.
-    // For !HasInternalBuffer() textures, this is likely a no-op.
+    // For !HasIntermediateBuffer() textures, this is likely a no-op.
     nsIntRegion region = aUpdateRect;
     aTexture->Updated(&region);
 #endif
@@ -367,7 +361,7 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
                      aCompositor);
     }
 
-    if (tile.mTextureHost->HasInternalBuffer()) {
+    if (tile.mTextureHost->HasIntermediateBuffer()) {
       // Now that we did the texture upload (in UseTileTexture), we can release
       // the lock.
       tile.ReadUnlock();

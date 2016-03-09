@@ -163,15 +163,17 @@ public:
   void SetCapacity(uint32_t aCapacity) { mArray.SetCapacity(aCapacity); }
   uint32_t Capacity() { return mArray.Capacity(); }
 
-  typedef size_t (*nsBaseArraySizeOfElementIncludingThisFunc)(
-    nsISupports* aElement, mozilla::MallocSizeOf aMallocSizeOf, void* aData);
-
-  // Measures the size of the array's element storage, and if
-  // |aSizeOfElement| is non-nullptr, measures the size of things pointed to
-  // by elements.
-  size_t SizeOfExcludingThis(
-    nsBaseArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis,
-    mozilla::MallocSizeOf aMallocSizeOf, void* aData = nullptr) const;
+  // Measures the size of the array's element storage. If you want to measure
+  // anything hanging off the array, you must iterate over the elements and
+  // measure them individually; hence the "Shallow" prefix. Note that because
+  // each element in an nsCOMArray<T> is actually a T* any such iteration
+  // should use a SizeOfIncludingThis() function on each element rather than a
+  // SizeOfExcludingThis() function, so that the memory taken by the T itself
+  // is included as well as anything it points to.
+  size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    return mArray.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  }
 
 private:
 
@@ -400,21 +402,6 @@ public:
   void SwapElements(nsCOMArray<T>& aOther)
   {
     nsCOMArray_base::SwapElements(aOther);
-  }
-
-  // Each element in an nsCOMArray<T> is actually a T*, so this function is
-  // "IncludingThis" rather than "ExcludingThis" because it needs to measure
-  // the memory taken by the T itself as well as anything it points to.
-  typedef size_t (*nsCOMArraySizeOfElementIncludingThisFunc)(
-    T* aElement, mozilla::MallocSizeOf aMallocSizeOf, void* aData);
-
-  size_t SizeOfExcludingThis(
-      nsCOMArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis,
-      mozilla::MallocSizeOf aMallocSizeOf, void* aData = nullptr) const
-  {
-    return nsCOMArray_base::SizeOfExcludingThis(
-      nsBaseArraySizeOfElementIncludingThisFunc(aSizeOfElementIncludingThis),
-      aMallocSizeOf, aData);
   }
 
   /**

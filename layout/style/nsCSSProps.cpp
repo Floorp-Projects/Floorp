@@ -933,10 +933,7 @@ const KTableEntry nsCSSProps::kImageLayerSizeKTable[] = {
 const KTableEntry nsCSSProps::kImageLayerModeKTable[] = {
   { eCSSKeyword_alpha, NS_STYLE_MASK_MODE_ALPHA },
   { eCSSKeyword_luminance, NS_STYLE_MASK_MODE_LUMINANCE },
-  // FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=1224424
-  // It's ambigious at mask shorthand parsing while we have both mask-mode:auto
-  // and mask-size:auto.
-  { eCSSKeyword_auto, NS_STYLE_MASK_MODE_AUTO },
+  { eCSSKeyword_match_source, NS_STYLE_MASK_MODE_MATCH_SOURCE },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -1959,7 +1956,7 @@ KTableEntry nsCSSProps::kTextAlignKTable[] = {
   { eCSSKeyword__moz_left, NS_STYLE_TEXT_ALIGN_MOZ_LEFT },
   { eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_DEFAULT },
   { eCSSKeyword_end, NS_STYLE_TEXT_ALIGN_END },
-  { eCSSKeyword_true, NS_STYLE_TEXT_ALIGN_TRUE },
+  { eCSSKeyword_unsafe, NS_STYLE_TEXT_ALIGN_UNSAFE },
   { eCSSKeyword_match_parent, NS_STYLE_TEXT_ALIGN_MATCH_PARENT },
   { eCSSKeyword_UNKNOWN, -1 }
 };
@@ -1972,7 +1969,7 @@ KTableEntry nsCSSProps::kTextAlignLastKTable[] = {
   { eCSSKeyword_justify, NS_STYLE_TEXT_ALIGN_JUSTIFY },
   { eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_DEFAULT },
   { eCSSKeyword_end, NS_STYLE_TEXT_ALIGN_END },
-  { eCSSKeyword_true, NS_STYLE_TEXT_ALIGN_TRUE },
+  { eCSSKeyword_unsafe, NS_STYLE_TEXT_ALIGN_UNSAFE },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -2824,13 +2821,6 @@ static const nsCSSProperty gFlexFlowSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gGridTemplateSubpropTable[] = {
-  eCSSProperty_grid_template_areas,
-  eCSSProperty_grid_template_rows, 
-  eCSSProperty_grid_template_columns,
-  eCSSProperty_UNKNOWN
-};
-
 static const nsCSSProperty gGridSubpropTable[] = {
   eCSSProperty_grid_template_areas,
   eCSSProperty_grid_template_rows,
@@ -2933,7 +2923,7 @@ static const nsCSSProperty gScrollSnapTypeSubpropTable[] = {
   eCSSProperty_scroll_snap_type_y,
   eCSSProperty_UNKNOWN
 };
-
+#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
 static const nsCSSProperty gMaskSubpropTable[] = {
   eCSSProperty_mask_image,
   eCSSProperty_mask_repeat,
@@ -2945,7 +2935,7 @@ static const nsCSSProperty gMaskSubpropTable[] = {
   eCSSProperty_mask_mode,
   eCSSProperty_UNKNOWN
 };
-
+#endif
 // FIXME: mask-border tables should be added when we implement
 // mask-border properties.
 

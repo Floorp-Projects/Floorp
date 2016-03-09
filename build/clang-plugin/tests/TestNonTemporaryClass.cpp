@@ -6,8 +6,8 @@
 struct MOZ_NON_TEMPORARY_CLASS NonTemporary {
   int i;
   NonTemporary() {}
-  MOZ_IMPLICIT NonTemporary(int i) {}
-  NonTemporary(int i, int j) {}
+  MOZ_IMPLICIT NonTemporary(int a) {}
+  NonTemporary(int a, int b) {}
   void *operator new(size_t x) throw() { return 0; }
   void *operator new(size_t blah, char *buffer) { return buffer; }
 };

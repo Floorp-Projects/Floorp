@@ -374,6 +374,7 @@ enum PropListType { ObjectLiteral, ClassBody, DerivedClassBody };
 enum class PropertyType {
     Normal,
     Shorthand,
+    CoverInitializedName,
     Getter,
     GetterNoExpressionClosure,
     Setter,
@@ -413,6 +414,72 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
         StmtInfoPC& operator*() { return stmt_; }
         StmtInfoPC* operator->() { return &stmt_; }
         operator StmtInfoPC*() { return &stmt_; }
+    };
+
+    /*
+     * A class for temporarily stashing errors while parsing continues.
+     *
+     * The ability to stash an error is useful for handling situations where we
+     * aren't able to verify that an error has occurred until later in the parse.
+     * For instance | ({x=1}) | is always parsed as an object literal with
+     * a SyntaxError, however, in the case where it is followed by '=>' we rewind
+     * and reparse it as a valid arrow function. Here a PossibleError would be
+     * set to 'pending' when the initial SyntaxError was encountered then 'resolved'
+     * just before rewinding the parser.
+     *
+     * When using PossibleError one should set a pending error at the location
+     * where an error occurs. From that point, the error may be resolved
+     * (invalidated) or left until the PossibleError is checked.
+     *
+     * Ex:
+     *   PossibleError possibleError(*this);
+     *   possibleError.setPending(ParseError, JSMSG_BAD_PROP_ID, false);
+     *   // A JSMSG_BAD_PROP_ID ParseError is reported, returns false.
+     *   possibleError.checkForExprErrors();
+     *
+     *   PossibleError possibleError(*this);
+     *   possibleError.setPending(ParseError, JSMSG_BAD_PROP_ID, false);
+     *   possibleError.setResolved();
+     *   // Returns true, no error is reported.
+     *   possibleError.checkForExprErrors();
+     *
+     *   PossibleError possibleError(*this);
+     *   // Returns true, no error is reported.
+     *   possibleError.checkForExprErrors();
+     */
+    class MOZ_STACK_CLASS PossibleError
+    {
+        enum ErrorState { None, Pending };
+        ErrorState state_;
+
+        // Error reporting fields.
+        uint32_t offset_;
+        unsigned errorNumber_;
+        ParseReportKind reportKind_;
+        Parser<ParseHandler>& parser_;
+        bool strict_;
+
+        public:
+          explicit PossibleError(Parser<ParseHandler>& parser);
+
+          // Set a pending error.
+          void setPending(ParseReportKind kind, unsigned errorNumber, bool strict);
+
+          // Resolve any pending error.
+          void setResolved();
+
+          // Return true if an error is pending without reporting
+          bool hasError();
+
+          // If there is a pending error report it and return false, otherwise return
+          // true.
+          bool checkForExprErrors();
+
+          // Pass pending errors between possible error instances. This is useful
+          // for extending the lifetime of a pending error beyond the scope of
+          // the PossibleError where it was initially set (keeping in mind that
+          // PossibleError is a MOZ_STACK_CLASS).
+          void transferErrorTo(PossibleError* other);
     };
 
   public:
@@ -765,7 +832,15 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     Node expr(InHandling inHandling, YieldHandling yieldHandling,
               TripledotHandling tripledotHandling,
+              PossibleError* possibleError,
               InvokedPrediction invoked = PredictUninvoked);
+    Node expr(InHandling inHandling, YieldHandling yieldHandling,
+              TripledotHandling tripledotHandling,
+              InvokedPrediction invoked = PredictUninvoked);
+    Node assignExpr(InHandling inHandling, YieldHandling yieldHandling,
+                    TripledotHandling tripledotHandling,
+                    PossibleError* possibleError,
+                    InvokedPrediction invoked = PredictUninvoked);
     Node assignExpr(InHandling inHandling, YieldHandling yieldHandling,
                     TripledotHandling tripledotHandling,
                     InvokedPrediction invoked = PredictUninvoked);
@@ -773,16 +848,26 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node yieldExpression(InHandling inHandling);
     Node condExpr1(InHandling inHandling, YieldHandling yieldHandling,
                    TripledotHandling tripledotHandling,
+                   PossibleError* possibleError,
                    InvokedPrediction invoked = PredictUninvoked);
     Node orExpr1(InHandling inHandling, YieldHandling yieldHandling,
                  TripledotHandling tripledotHandling,
-                   InvokedPrediction invoked = PredictUninvoked);
+                 PossibleError* possibleError,
+                 InvokedPrediction invoked = PredictUninvoked);
     Node unaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
+                   PossibleError* possibleError,
                    InvokedPrediction invoked = PredictUninvoked);
+    Node memberExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
+                    PossibleError* possibleError, TokenKind tt,
+                    bool allowCallSyntax, InvokedPrediction invoked = PredictUninvoked);
     Node memberExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling, TokenKind tt,
                     bool allowCallSyntax, InvokedPrediction invoked = PredictUninvoked);
-    Node primaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling, TokenKind tt,
+    Node primaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
+                     PossibleError* possibleError, TokenKind tt,
                      InvokedPrediction invoked = PredictUninvoked);
+    Node exprInParens(InHandling inHandling, YieldHandling yieldHandling,
+                      TripledotHandling tripledotHandling,
+                      PossibleError* possibleError);
     Node exprInParens(InHandling inHandling, YieldHandling yieldHandling,
                       TripledotHandling tripledotHandling);
 
@@ -854,7 +939,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
         ForInOrOfTarget
     };
 
-    bool checkAndMarkAsAssignmentLhs(Node pn, AssignmentFlavor flavor);
+    bool checkAndMarkAsAssignmentLhs(Node pn, AssignmentFlavor flavor,
+                                     PossibleError* possibleError=nullptr);
     bool matchInOrOf(bool* isForInp, bool* isForOfp);
 
     bool checkFunctionArguments();
@@ -909,7 +995,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node arrayInitializer(YieldHandling yieldHandling);
     Node newRegExp();
 
-    Node objectLiteral(YieldHandling yieldHandling);
+    Node objectLiteral(YieldHandling yieldHandling, PossibleError* possibleError);
 
     enum PrepareLexicalKind {
         PrepareLet,

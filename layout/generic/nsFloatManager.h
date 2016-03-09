@@ -340,7 +340,9 @@ private:
     nsRect mRect;
   };
 
-  mozilla::DebugOnly<mozilla::WritingMode> mWritingMode;
+#ifdef DEBUG
+  mozilla::WritingMode mWritingMode;
+#endif
 
   // Translation from local to global coordinate space.
   nscoord mLineLeft, mBlockStart;

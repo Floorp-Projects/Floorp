@@ -69,7 +69,7 @@ skip-if(Android||B2G||Mulet||(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.osc
 skip-if(!(Android||B2G||Mulet)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1b-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(!winWidget||/^Windows\x20NT\x205\.1/.test(http.oscpu)) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1c-ref.html
 == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1-ref.html
-skip-if(Android||B2G||Mulet) fuzzy-if(skiaContent,2,5) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(Android||B2G||Mulet) fuzzy-if(skiaContent,2,6) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(!(Android||B2G||Mulet)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
 == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
@@ -169,7 +169,7 @@ fuzzy-if(gtkWidget||B2G,255,6) fuzzy-if(cocoaWidget,65,69) == 1193519-sideways-l
 
 == 1243125-1-floats-overflowing.html 1243125-1-floats-overflowing-ref.html
 
-HTTP(..) == 1248248-1-orientation-break-glyphrun.html 1248248-1-orientation-break-glyphrun-ref.html
+skip-if(Android) HTTP(..) == 1248248-1-orientation-break-glyphrun.html 1248248-1-orientation-break-glyphrun-ref.html # Android bug 1250229
 
 # Suite of tests from Gérard Talbot in bug 1079151
 # Frequent Windows 7 load failed: timed out waiting for test to complete (waiting for onload scripts to complete), bug 1167155 and friends

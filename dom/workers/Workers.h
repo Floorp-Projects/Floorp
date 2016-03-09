@@ -294,6 +294,8 @@ SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow);
 void
 ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
+// A class that can be used with WorkerCrossThreadDispatcher to run a
+// bit of C++ code on the worker thread.
 class WorkerTask
 {
 protected:
@@ -306,6 +308,8 @@ protected:
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WorkerTask)
 
+  // The return value here has the same semantics as the return value
+  // of WorkerRunnable::WorkerRun.
   virtual bool
   RunTask(JSContext* aCx) = 0;
 };

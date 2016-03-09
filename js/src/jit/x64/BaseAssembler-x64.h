@@ -113,6 +113,18 @@ class BaseAssemblerX64 : public BaseAssembler
         m_formatter.oneByteOp64(OP_OR_GvEv, addr, dst);
     }
 
+    void xorq_mr(int32_t offset, RegisterID base, RegisterID dst)
+    {
+        spew("xorq       " MEM_ob ", %s", ADDR_ob(offset, base), GPReg64Name(dst));
+        m_formatter.oneByteOp64(OP_XOR_GvEv, offset, base, dst);
+    }
+
+    void xorq_mr(const void* addr, RegisterID dst)
+    {
+        spew("xorq       %p, %s", addr, GPReg64Name(dst));
+        m_formatter.oneByteOp64(OP_XOR_GvEv, addr, dst);
+    }
+
     void andq_ir(int32_t imm, RegisterID dst)
     {
         spew("andq       $0x%" PRIx64 ", %s", int64_t(imm), GPReg64Name(dst));
@@ -227,6 +239,18 @@ class BaseAssemblerX64 : public BaseAssembler
         m_formatter.oneByteOp64(OP_GROUP2_EvCL, dst, GROUP2_OP_SAR);
     }
 
+    void shlq_CLr(RegisterID dst)
+    {
+        spew("shlq       %%cl, %s", GPReg64Name(dst));
+        m_formatter.oneByteOp64(OP_GROUP2_EvCL, dst, GROUP2_OP_SHL);
+    }
+
+    void shrq_CLr(RegisterID dst)
+    {
+        spew("shrq       %%cl, %s", GPReg64Name(dst));
+        m_formatter.oneByteOp64(OP_GROUP2_EvCL, dst, GROUP2_OP_SHR);
+    }
+
     void sarq_ir(int32_t imm, RegisterID dst)
     {
         MOZ_ASSERT(imm < 64);
@@ -267,6 +291,30 @@ class BaseAssemblerX64 : public BaseAssembler
     {
         spew("imulq      %s, %s", GPReg64Name(src), GPReg64Name(dst));
         m_formatter.twoByteOp64(OP2_IMUL_GvEv, src, dst);
+    }
+
+    void imulq_mr(int32_t offset, RegisterID base, RegisterID dst)
+    {
+        spew("imulq      " MEM_ob ", %s", ADDR_ob(offset, base), GPReg64Name(dst));
+        m_formatter.twoByteOp64(OP2_IMUL_GvEv, offset, base, dst);
+    }
+
+    void cqo()
+    {
+        spew("cqo        ");
+        m_formatter.oneByteOp64(OP_CDQ);
+    }
+
+    void idivq_r(RegisterID divisor)
+    {
+        spew("idivq      %s", GPReg64Name(divisor));
+        m_formatter.oneByteOp64(OP_GROUP3_Ev, divisor, GROUP3_OP_IDIV);
+    }
+
+    void divq_r(RegisterID divisor)
+    {
+        spew("divq       %s", GPReg64Name(divisor));
+        m_formatter.oneByteOp64(OP_GROUP3_Ev, divisor, GROUP3_OP_DIV);
     }
 
     // Comparisons:

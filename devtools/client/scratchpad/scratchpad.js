@@ -45,17 +45,16 @@ const VARIABLES_VIEW_URL = "chrome://devtools/content/shared/widgets/VariablesVi
 
 const {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
-const Telemetry = require("devtools/client/shared/telemetry");
 const Editor    = require("devtools/client/sourceeditor/editor");
 const TargetFactory = require("devtools/client/framework/target").TargetFactory;
 const EventEmitter = require("devtools/shared/event-emitter");
 const {DevToolsWorker} = require("devtools/shared/worker/worker");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const promise = require("promise");
+const Services = require("Services");
 const {gDevTools} = require("devtools/client/framework/devtools");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 Cu.import("resource://gre/modules/jsdebugger.jsm");
@@ -81,6 +80,7 @@ loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/main", true);
 loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/shared/client/main", true);
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/main", true);
+loader.lazyRequireGetter(this, "HUDService", "devtools/client/webconsole/hudservice");
 
 XPCOMUtils.defineLazyGetter(this, "REMOTE_TIMEOUT", () =>
   Services.prefs.getIntPref("devtools.debugger.remote-timeout"));
@@ -90,11 +90,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
 
 XPCOMUtils.defineLazyModuleGetter(this, "Reflect",
   "resource://gre/modules/reflect.jsm");
-
-// Because we have no constructor / destructor where we can log metrics we need
-// to do so here.
-var telemetry = new Telemetry();
-telemetry.toolOpened("scratchpad");
 
 var WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
 
@@ -1591,7 +1586,7 @@ var Scratchpad = {
    */
   openErrorConsole: function SP_openErrorConsole()
   {
-    this.browserWindow.HUDService.toggleBrowserConsole();
+    HUDService.toggleBrowserConsole();
   },
 
   /**
@@ -1922,7 +1917,6 @@ var Scratchpad = {
       }
 
       if (shouldClose) {
-        telemetry.toolClosed("scratchpad");
         window.close();
       }
 

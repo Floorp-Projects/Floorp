@@ -2,153 +2,164 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function test() {
-  /** Tests for NetworkPrioritizer.jsm (Bug 514490) **/
+/** Tests for NetworkPrioritizer.jsm (Bug 514490) **/
 
-  waitForExplicitFinish();
+const LOWEST  = Ci.nsISupportsPriority.PRIORITY_LOWEST;
+const LOW     = Ci.nsISupportsPriority.PRIORITY_LOW;
+const NORMAL  = Ci.nsISupportsPriority.PRIORITY_NORMAL;
+const HIGH    = Ci.nsISupportsPriority.PRIORITY_HIGH;
+const HIGHEST = Ci.nsISupportsPriority.PRIORITY_HIGHEST;
 
-  const PRIORITY_DELTA = -10; // same as in NetworkPrioritizer
+const DELTA = NORMAL - LOW; // lower value means higher priority
 
-  // Test helper functions.
-  // getPriority and setPriority can take a Tab or a Browser
-  function getPriority(aBrowser) {
-    // Assume we were passed a tab if it's not a browser
-    if (!aBrowser.webNavigation)
-      aBrowser = aBrowser.linkedBrowser;
-    return aBrowser.webNavigation.QueryInterface(Ci.nsIDocumentLoader)
-                   .loadGroup.QueryInterface(Ci.nsISupportsPriority).priority;
+// Test helper functions.
+// getPriority and setPriority can take a tab or a Browser
+function* getPriority(aBrowser) {
+  if (aBrowser.localName == "tab")
+    aBrowser = aBrowser.linkedBrowser;
+
+  return yield ContentTask.spawn(aBrowser, null, function* () {
+    return docShell.QueryInterface(Components.interfaces.nsIWebNavigation)
+                   .QueryInterface(Components.interfaces.nsIDocumentLoader)
+                   .loadGroup
+                   .QueryInterface(Components.interfaces.nsISupportsPriority)
+                   .priority;
+  });
+}
+
+function* setPriority(aBrowser, aPriority) {
+  if (aBrowser.localName == "tab")
+    aBrowser = aBrowser.linkedBrowser;
+
+  yield ContentTask.spawn(aBrowser, aPriority, function* (aPriority) {
+    docShell.QueryInterface(Components.interfaces.nsIWebNavigation)
+                                    .QueryInterface(Components.interfaces.nsIDocumentLoader)
+                                    .loadGroup
+                                    .QueryInterface(Ci.nsISupportsPriority)
+                                    .priority = aPriority;
+  });
+}
+
+function* isWindowState(aWindow, aTabPriorities) {
+  let browsers = aWindow.gBrowser.browsers;
+  // Make sure we have the right number of tabs & priorities
+  is(browsers.length, aTabPriorities.length,
+     "Window has expected number of tabs");
+  // aState should be in format [ priority, priority, priority ]
+  for (let i = 0; i < browsers.length; i++) {
+    is(yield getPriority(browsers[i]), aTabPriorities[i],
+       "Tab " + i + " had expected priority");
   }
-  function setPriority(aBrowser, aPriority) {
-    if (!aBrowser.webNavigation)
-      aBrowser = aBrowser.linkedBrowser;
-    aBrowser.webNavigation.QueryInterface(Ci.nsIDocumentLoader)
-            .loadGroup.QueryInterface(Ci.nsISupportsPriority).priority = aPriority;
-  }
+}
 
-  function isWindowState(aWindow, aTabPriorities) {
-    let browsers = aWindow.gBrowser.browsers;
-    // Make sure we have the right number of tabs & priorities
-    is(browsers.length, aTabPriorities.length,
-       "Window has expected number of tabs");
-    // aState should be in format [ priority, priority, priority ]
-    for (let i = 0; i < browsers.length; i++) {
-      is(getPriority(browsers[i]), aTabPriorities[i],
-         "Tab had expected priority");
-    }
-  }
+function promiseWaitForFocus(aWindow) {
+  return new Promise((resolve) => {
+    waitForFocus(resolve, aWindow);
+  });
+}
 
-
+add_task(function*() {
   // This is the real test. It creates multiple tabs & windows, changes focus,
   // closes windows/tabs to make sure we behave correctly.
   // This test assumes that no priorities have been adjusted and the loadgroup
   // priority starts at 0.
-  function test_behavior() {
 
-    // Call window "window_A" to make the test easier to follow
-    let window_A = window;
+  // Call window "window_A" to make the test easier to follow
+  let window_A = window;
 
-    // Test 1 window, 1 tab case.
-    isWindowState(window_A, [-10]);
+  // Test 1 window, 1 tab case.
+  yield isWindowState(window_A, [HIGH]);
 
-    // Exising tab is tab_A1
-    let tab_A2 = window_A.gBrowser.addTab("http://example.com");
-    let tab_A3 = window_A.gBrowser.addTab("about:config");
-    tab_A3.linkedBrowser.addEventListener("load", function(aEvent) {
-      tab_A3.linkedBrowser.removeEventListener("load", arguments.callee, true);
+  // Exising tab is tab_A1
+  let tab_A2 = window_A.gBrowser.addTab("http://example.com");
+  let tab_A3 = window_A.gBrowser.addTab("about:config");
+  yield BrowserTestUtils.browserLoaded(tab_A3.linkedBrowser);
 
-      // tab_A2 isn't focused yet
-      isWindowState(window_A, [-10, 0, 0]);
+  // tab_A2 isn't focused yet
+  yield isWindowState(window_A, [HIGH, NORMAL, NORMAL]);
 
-      // focus tab_A2 & make sure priority got updated
-      window_A.gBrowser.selectedTab = tab_A2;
-      isWindowState(window_A, [0, -10, 0]);
+  // focus tab_A2 & make sure priority got updated
+  window_A.gBrowser.selectedTab = tab_A2;
+  yield isWindowState(window_A, [NORMAL, HIGH, NORMAL]);
 
-      window_A.gBrowser.removeTab(tab_A2);
-      // Next tab is auto selected
-      isWindowState(window_A, [0, -10]);
+  window_A.gBrowser.removeTab(tab_A2);
+  // Next tab is auto selected synchronously as part of removeTab, and we
+  // expect the priority to be updated immediately.
+  yield isWindowState(window_A, [NORMAL, HIGH]);
 
-      // Open another window then play with focus
-      let window_B = openDialog(location, "_blank", "chrome,all,dialog=no", "http://example.com");
-      window_B.addEventListener("load", function(aEvent) {
-        window_B.removeEventListener("load", arguments.callee, false);
-        window_B.gBrowser.addEventListener("load", function(aEvent) {
-          // waitForFocus can attach to the wrong "window" with about:blank loading first
-          // So just ensure that we're getting the load event for the right URI
-          if (window_B.gBrowser.currentURI.spec == "about:blank")
-            return;
-          window_B.gBrowser.removeEventListener("load", arguments.callee, true);
+  // Open another window then play with focus
+  let window_B = yield BrowserTestUtils.openNewBrowserWindow();
 
-          waitForFocus(function() {
-            isWindowState(window_A, [10, 0]);
-            isWindowState(window_B, [-10]);
+  yield promiseWaitForFocus(window_B);
+  yield isWindowState(window_A, [LOW, NORMAL]);
+  yield isWindowState(window_B, [HIGH]);
 
-            waitForFocus(function() {
-              isWindowState(window_A, [0, -10]);
-              isWindowState(window_B, [0]);
+  yield promiseWaitForFocus(window_A);
+  yield isWindowState(window_A, [NORMAL, HIGH]);
+  yield isWindowState(window_B, [NORMAL]);
 
-              waitForFocus(function() {
-                isWindowState(window_A, [10, 0]);
-                isWindowState(window_B, [-10]);
+  yield promiseWaitForFocus(window_B);
+  yield isWindowState(window_A, [LOW, NORMAL]);
+  yield isWindowState(window_B, [HIGH]);
 
-                // And we're done. Cleanup & run the next test
-                window_B.close();
-                window_A.gBrowser.removeTab(tab_A3);
-                executeSoon(runNextTest);
-              }, window_B);
-            }, window_A);
-          }, window_B);
-        }, true);
-      }, false);
-    }, true);
+  // Cleanup
+  window_A.gBrowser.removeTab(tab_A3);
+  yield BrowserTestUtils.closeWindow(window_B);
+});
 
-  }
-
-
+add_task(function*() {
   // This is more a test of nsLoadGroup and how it handles priorities. But since
   // we depend on its behavior, it's good to test it. This is testing that there
   // are no errors if we adjust beyond nsISupportsPriority's bounds.
-  function test_extremePriorities() {
-    let tab_A1 = gBrowser.tabContainer.getItemAtIndex(0);
-    let oldPriority = getPriority(tab_A1);
 
-    // Set the priority of tab_A1 to the lowest possible. Selecting the other tab
-    // will try to lower it
-    setPriority(tab_A1, Ci.nsISupportsPriority.PRIORITY_LOWEST);
+  yield promiseWaitForFocus();
 
-    let tab_A2 = gBrowser.addTab("http://example.com");
-    tab_A2.linkedBrowser.addEventListener("load", function(aEvent) {
-      tab_A2.linkedBrowser.removeEventListener("load", arguments.callee, true);
-      gBrowser.selectedTab = tab_A2;
-      is(getPriority(tab_A1), Ci.nsISupportsPriority.PRIORITY_LOWEST - PRIORITY_DELTA,
-         "Can adjust priority beyond 'lowest'");
+  let tab1 = gBrowser.tabs[0];
+  let oldPriority = yield getPriority(tab1);
 
-      // Now set priority to "highest" and make sure that no errors occur.
-      setPriority(tab_A1, Ci.nsISupportsPriority.PRIORITY_HIGHEST);
-      gBrowser.selectedTab = tab_A1;
+  // Set the priority of tab1 to the lowest possible. Selecting the other tab
+  // will try to lower it
+  yield setPriority(tab1, LOWEST);
 
-      is(getPriority(tab_A1), Ci.nsISupportsPriority.PRIORITY_HIGHEST + PRIORITY_DELTA,
-         "Can adjust priority beyond 'highest'");
+  let tab2 = gBrowser.addTab("http://example.com");
+  yield BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
+  gBrowser.selectedTab = tab2;
+  is(yield getPriority(tab1), LOWEST - DELTA, "Can adjust priority beyond 'lowest'");
 
-      // Cleanup, run next test
-      gBrowser.removeTab(tab_A2);
-      executeSoon(function() {
-        setPriority(tab_A1, oldPriority);
-        runNextTest();
-      });
+  // Now set priority to "highest" and make sure that no errors occur.
+  yield setPriority(tab1, HIGHEST);
+  gBrowser.selectedTab = tab1;
 
-    }, true);
+  is(yield getPriority(tab1), HIGHEST + DELTA, "Can adjust priority beyond 'highest'");
+
+  // Cleanup
+  gBrowser.removeTab(tab2);
+  yield setPriority(tab1, oldPriority);
+});
+
+add_task(function*() {
+  // This tests that the priority doesn't get lost when switching the browser's remoteness
+
+  if (!gMultiProcessBrowser) {
+    return;
   }
 
+  let browser = gBrowser.selectedBrowser;
 
-  let tests = [test_behavior, test_extremePriorities];
-  function runNextTest() {
-    if (tests.length) {
-      // Linux has problems if window isn't focused. Should help prevent [orange].
-      waitForFocus(tests.shift());
-    } else {
-      finish();
-    }
-  }
+  browser.loadURI("http://example.com");
+  yield BrowserTestUtils.browserLoaded(browser);
+  ok(browser.isRemoteBrowser, "web page should be loaded in remote browser");
+  is(yield getPriority(browser), HIGH, "priority of selected tab should be 'high'");
 
-  runNextTest();
-}
+  browser.loadURI("about:rights");
+  yield BrowserTestUtils.browserLoaded(browser);
+  ok(!browser.isRemoteBrowser, "about:rights should switch browser to non-remote");
+  is(yield getPriority(browser), HIGH,
+     "priority of selected tab should be 'high' when going from remote to non-remote");
+
+  browser.loadURI("http://example.com");
+  yield BrowserTestUtils.browserLoaded(browser);
+  ok(browser.isRemoteBrowser, "going from about:rights to web page should switch browser to remote");
+  is(yield getPriority(browser), HIGH,
+     "priority of selected tab should be 'high' when going from non-remote to remote");
+});

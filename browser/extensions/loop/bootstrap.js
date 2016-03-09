@@ -593,7 +593,7 @@ var WindowListener = {
        *                    }
        */
       addRemoteCursor: function(cursorData) {
-        if (!this._listeningToTabSelect) {
+        if (this._browserSharePaused || !this._listeningToTabSelect) {
           return;
         }
 
@@ -601,18 +601,25 @@ var WindowListener = {
 
         let cursor = document.getElementById("loop-remote-cursor");
         if (!cursor) {
-          cursor = document.createElement("image");
+          // Create a container to keep the pointer inside.
+          // This allows us to hide the overflow when out of bounds.
+          let cursorContainer = document.createElement("div");
+          cursorContainer.setAttribute("id", "loop-remote-cursor-container");
+
+          cursor = document.createElement("img");
           cursor.setAttribute("id", "loop-remote-cursor");
+
+          cursorContainer.appendChild(cursor);
+          // Note that browser.parent is a xul:stack so container will use
+          // 100% of space if no other constrains added.
+          browser.parentNode.appendChild(cursorContainer);
         }
 
-        // Update the cursor's position.
-        cursor.setAttribute("left",
-                            cursorData.ratioX * browser.boxObject.width);
-        cursor.setAttribute("top",
-                            cursorData.ratioY * browser.boxObject.height);
-
-        // browser's parent is a xul:stack, so positioning with left/top works.
-        browser.parentNode.appendChild(cursor);
+        // Update the cursor's position with CSS.
+        cursor.style.left =
+          Math.abs(cursorData.ratioX * browser.boxObject.width) + "px";
+        cursor.style.top =
+          Math.abs(cursorData.ratioY * browser.boxObject.height) + "px";
       },
 
       /**
@@ -649,9 +656,6 @@ var WindowListener = {
        * conversation.
        */
       _maybeShowBrowserSharingInfoBar: function() {
-        this._hideBrowserSharingInfoBar();
-
-        let box = gBrowser.getNotificationBox();
         // Pre-load strings
         let pausedStrings = {
           label: this._getString("infobar_button_restart_label2"),
@@ -663,14 +667,18 @@ var WindowListener = {
           accesskey: this._getString("infobar_button_stop_accesskey"),
           message: this._getString("infobar_screenshare_browser_message2")
         };
-        let initStrings = this._browserSharePaused ? pausedStrings : unpausedStrings;
+        let initStrings =
+          this._browserSharePaused ? pausedStrings : unpausedStrings;
+
+        this._hideBrowserSharingInfoBar();
+        let box = gBrowser.getNotificationBox();
         let bar = box.appendNotification(
-          initStrings.message,
-          kBrowserSharingNotificationId,
-          // Icon is defined in browser theme CSS.
-          null,
-          box.PRIORITY_WARNING_LOW,
-          [{
+          initStrings.message,            // label
+          kBrowserSharingNotificationId,  // value
+          // Icon defined in browser theme CSS.
+          null,                           // image
+          box.PRIORITY_WARNING_LOW,       // priority
+          [{                              // buttons (Pause, Stop)
             label: initStrings.label,
             accessKey: initStrings.accessKey,
             isDefault: false,
@@ -684,6 +692,8 @@ var WindowListener = {
               LoopUI.MozLoopService.toggleBrowserSharing(this._browserSharePaused);
               if (this._browserSharePaused) {
                 this._pauseButtonClicked = true;
+                // if paused we stop sharing remote cursors
+                this.removeRemoteCursor();
               } else {
                 this._resumeButtonClicked = true;
               }
@@ -696,6 +706,7 @@ var WindowListener = {
             accessKey: this._getString("infobar_button_disconnect_accesskey"),
             isDefault: true,
             callback: () => {
+              this.removeRemoteCursor();
               this._hideBrowserSharingInfoBar();
               LoopUI.MozLoopService.hangupAllChatWindows();
             },
@@ -780,8 +791,8 @@ var WindowListener = {
        * through the sdk.
        */
       handleMousemove: function(event) {
-        // We want to stop sending events if sharing is paused.
-        if (this._browserSharePaused) {
+        // Won't send events if not sharing (paused or not started).
+        if (this._browserSharePaused || !this._listeningToTabSelect) {
           return;
         }
 
@@ -956,6 +967,11 @@ function loadDefaultPrefs() {
   var branch = Services.prefs.getDefaultBranch("");
   Services.scriptloader.loadSubScript("chrome://loop/content/preferences/prefs.js", {
     pref: (key, val) => {
+      // If a previously set default pref exists don't overwrite it.  This can
+      // happen for ESR or distribution.ini.
+      if (branch.getPrefType(key) != branch.PREF_INVALID) {
+        return;
+      }
       switch (typeof val) {
         case "boolean":
           branch.setBoolPref(key, val);
@@ -979,6 +995,9 @@ function startup(data) {
   WindowListener.addonVersion = data.version;
 
   loadDefaultPrefs();
+  if (!Services.prefs.getBoolPref("loop.enabled")) {
+    return;
+  }
 
   createLoopButton();
 

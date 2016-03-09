@@ -23,30 +23,44 @@ add_task(function* test_notificationPreventDefaultAndSwitchTabs() {
     isnot(gBrowser.selectedBrowser, aBrowser, "Notification page loaded as a background tab");
 
     // First, show a notification that will be have the tab-switching prevented.
-    let win = aBrowser.contentWindow.wrappedJSObject;
-    let notification = win.showNotification1();
-    yield BrowserTestUtils.waitForEvent(notification, "show");
+    function promiseNotificationEvent(evt) {
+      return ContentTask.spawn(aBrowser, evt, function* (evt) {
+        return yield new Promise(resolve => {
+          let notification = content.wrappedJSObject._notification;
+          notification.addEventListener(evt, function l(event) {
+            notification.removeEventListener(evt, l);
+            resolve({ defaultPrevented: event.defaultPrevented });
+          });
+        });
+      });
+    }
+    yield openNotification(aBrowser, "showNotification1");
     info("Notification alert showing");
     let alertWindow = Services.wm.getMostRecentWindow("alert:alert");
     if (!alertWindow) {
       ok(true, "Notifications don't use XUL windows on all platforms.");
-      notification.close();
+      yield closeNotification(aBrowser);
       return;
     }
     info("Clicking on notification");
-    let promiseClickEvent = BrowserTestUtils.waitForEvent(notification, "click");
-    EventUtils.synthesizeMouseAtCenter(alertWindow.document.getElementById("alertTitleLabel"),
-                                       {},
-                                       alertWindow);
+    let promiseClickEvent = promiseNotificationEvent("click");
+
+    // NB: This executeSoon is needed to allow the non-e10s runs of this test
+    // a chance to set the event listener on the page. Otherwise, we
+    // synchronously fire the click event before we listen for the event.
+    executeSoon(() => {
+      EventUtils.synthesizeMouseAtCenter(alertWindow.document.getElementById("alertTitleLabel"),
+                                         {}, alertWindow);
+    });
     let clickEvent = yield promiseClickEvent;
     ok(clickEvent.defaultPrevented, "The event handler for the first notification cancels the event");
     isnot(gBrowser.selectedBrowser, aBrowser, "Notification page still a background tab");
-    notification.close();
-    yield BrowserTestUtils.waitForEvent(notification, "close");
+    let notificationClosed = promiseNotificationEvent("close");
+    yield closeNotification(aBrowser);
+    yield notificationClosed;
 
     // Second, show a notification that will cause the tab to get switched.
-    let notification2 = win.showNotification2();
-    yield BrowserTestUtils.waitForEvent(notification2, "show");
+    yield openNotification(aBrowser, "showNotification2");
     alertWindow = Services.wm.getMostRecentWindow("alert:alert");
     let promiseTabSelect = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabSelect");
     EventUtils.synthesizeMouseAtCenter(alertWindow.document.getElementById("alertTitleLabel"),
@@ -55,8 +69,9 @@ add_task(function* test_notificationPreventDefaultAndSwitchTabs() {
     yield promiseTabSelect;
     is(gBrowser.selectedBrowser.currentURI.spec, notificationURL,
        "Clicking on the second notification should select its originating tab");
-    notification2.close();
-    yield BrowserTestUtils.waitForEvent(notification2, "close");
+    notificationClosed = promiseNotificationEvent("close");
+    yield closeNotification(aBrowser);
+    yield notificationClosed;
   });
 });
 

@@ -47,6 +47,7 @@ namespace layers {
 
 class AsyncTransactionWaiter;
 class CompositableForwarder;
+class GrallocTextureData;
 class ISurfaceAllocator;
 class CompositableClient;
 struct PlanarYCbCrData;
@@ -69,15 +70,16 @@ class KeepAlive;
  */
 
 enum TextureAllocationFlags {
-  ALLOC_DEFAULT = 0x0,
-  ALLOC_CLEAR_BUFFER = 0x1,
-  ALLOC_CLEAR_BUFFER_WHITE = 0x2,
-  ALLOC_DISALLOW_BUFFERTEXTURECLIENT = 0x4,
+  ALLOC_DEFAULT = 0,
+  ALLOC_CLEAR_BUFFER = 1 << 1,  // Clear the buffer to whatever is best for the draw target
+  ALLOC_CLEAR_BUFFER_WHITE = 1 << 2,  // explicit all white
+  ALLOC_CLEAR_BUFFER_BLACK = 1 << 3,  // explicit all black
+  ALLOC_DISALLOW_BUFFERTEXTURECLIENT = 1 << 4,
 
   // Allocate the texture for out-of-band content updates. This is mostly for
   // TextureClientD3D11, which may otherwise choose D3D10 or non-KeyedMutex
   // surfaces when used on the main thread.
-  ALLOC_FOR_OUT_OF_BAND_CONTENT = 0x8
+  ALLOC_FOR_OUT_OF_BAND_CONTENT = 1 << 5,
 };
 
 #ifdef XP_WIN
@@ -191,7 +193,7 @@ public:
 
   virtual bool CanExposeMappedData() const { return false; }
 
-  virtual bool HasInternalBuffer() const = 0;
+  virtual bool HasIntermediateBuffer() const = 0;
 
   virtual bool HasSynchronization() const { return false; }
 
@@ -230,6 +232,8 @@ public:
     return nullptr;
   }
 #endif
+
+  virtual GrallocTextureData* AsGrallocTextureData() { return nullptr; }
 };
 
 /**
@@ -409,7 +413,7 @@ public:
    * in-memory buffer. The consequence of this is that locking the
    * TextureClient does not contend with locking the texture on the host side.
    */
-  bool HasInternalBuffer() const;
+  bool HasIntermediateBuffer() const;
 
   /**
    * Allocate and deallocate a TextureChild actor.
@@ -458,6 +462,12 @@ public:
    * client in a transaction.
    */
   void WaitForCompositorRecycle();
+
+  /**
+   * Should only be called when dying. We no longer care whether the compositor
+   * has finished with the texture.
+   */
+  void CancelWaitForCompositorRecycle();
 
   /**
    * After being shared with the compositor side, an immutable texture is never
@@ -576,6 +586,9 @@ public:
   TextureData* GetInternalData() { return mData; }
   const TextureData* GetInternalData() const { return mData; }
 
+  virtual void RemoveFromCompositable(CompositableClient* aCompositable,
+                                      AsyncTransactionWaiter* aWaiter = nullptr);
+
 private:
   static void TextureClientRecycleCallback(TextureClient* aClient, void* aClosure);
 
@@ -616,7 +629,9 @@ protected:
   gl::GfxTextureWasteTracker mWasteTracker;
 
   OpenMode mOpenMode;
-  DebugOnly<uint32_t> mExpectedDtRefs;
+#ifdef DEBUG
+  uint32_t mExpectedDtRefs;
+#endif
   bool mIsLocked;
 
   bool mAddedToCompositableClient;
@@ -671,7 +686,9 @@ public:
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
     mSucceeded = mTexture->Lock(aMode);
+#ifdef DEBUG
     mChecked = false;
+#endif
   }
   ~TextureClientAutoLock() {
     MOZ_ASSERT(mChecked);
@@ -681,13 +698,17 @@ public:
   }
 
   bool Succeeded() {
+#ifdef DEBUG
     mChecked = true;
+#endif
     return mSucceeded;
   }
 
 private:
   TextureClient* mTexture;
-  DebugOnly<bool> mChecked;
+#ifdef DEBUG
+  bool mChecked;
+#endif
   bool mSucceeded;
 };
 

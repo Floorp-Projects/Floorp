@@ -315,6 +315,7 @@ enum AVCodecID {
     AV_CODEC_ID_SMVJPEG,
     AV_CODEC_ID_APNG,
     AV_CODEC_ID_DAALA,
+    AV_CODEC_ID_CFHD,
 
     /* various PCM "codecs" */
     AV_CODEC_ID_FIRST_AUDIO = 0x10000,     ///< A dummy id pointing at the start of audio codecs
@@ -1823,7 +1824,11 @@ typedef struct AVCodecContext {
 #define FF_RC_STRATEGY_XVID 1
 #endif
 
+#if FF_API_PRIVATE_OPT
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int b_frame_strategy;
+#endif
 
     /**
      * qscale offset between IP and B-frames
@@ -1840,12 +1845,11 @@ typedef struct AVCodecContext {
      */
     int has_b_frames;
 
-    /**
-     * 0-> h263 quant 1-> mpeg quant
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+#if FF_API_PRIVATE_OPT
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int mpeg_quant;
+#endif
 
     /**
      * qscale factor between P and I-frames
@@ -1904,15 +1908,15 @@ typedef struct AVCodecContext {
      * - decoding: Set by user (or 0).
      */
     int slice_count;
-    /**
-     * prediction method (needed for huffyuv)
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+
+#if FF_API_PRIVATE_OPT
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
      int prediction_method;
 #define FF_PRED_LEFT   0
 #define FF_PRED_PLANE  1
 #define FF_PRED_MEDIAN 2
+#endif
 
     /**
      * slice offsets in the frame in bytes
@@ -1985,12 +1989,11 @@ typedef struct AVCodecContext {
      */
     int last_predictor_count;
 
-    /**
-     * prepass for motion estimation
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+#if FF_API_PRIVATE_OPT
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int pre_me;
+#endif
 
     /**
      * motion estimation prepass comparison function
@@ -2099,20 +2102,15 @@ typedef struct AVCodecContext {
      */
     uint16_t *inter_matrix;
 
-    /**
-     * scene change detection threshold
-     * 0 is default, larger means fewer detected scene changes.
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+#if FF_API_PRIVATE_OPT
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int scenechange_threshold;
 
-    /**
-     * noise reduction strength
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int noise_reduction;
+#endif
 
 #if FF_API_MPV_OPT
     /**
@@ -2171,12 +2169,13 @@ typedef struct AVCodecContext {
      */
     int mb_lmax;
 
+#if FF_API_PRIVATE_OPT
     /**
-     *
-     * - encoding: Set by user.
-     * - decoding: unused
+     * @deprecated use encoder private options instead
      */
+    attribute_deprecated
     int me_penalty_compensation;
+#endif
 
     /**
      *
@@ -2185,12 +2184,11 @@ typedef struct AVCodecContext {
      */
     int bidir_refine;
 
-    /**
-     *
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+#if FF_API_PRIVATE_OPT
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int brd_scale;
+#endif
 
     /**
      * minimum GOP size
@@ -2206,12 +2204,11 @@ typedef struct AVCodecContext {
      */
     int refs;
 
-    /**
-     * chroma qp offset from luma
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+#if FF_API_PRIVATE_OPT
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int chromaoffset;
+#endif
 
 #if FF_API_UNUSED_MEMBERS
     /**
@@ -2230,12 +2227,11 @@ typedef struct AVCodecContext {
      */
     int mv0_threshold;
 
-    /**
-     * Adjust sensitivity of b_frame_strategy 1.
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+#if FF_API_PRIVATE_OPT
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int b_sensitivity;
+#endif
 
     /**
      * Chromaticity coordinates of the source primaries.
@@ -2580,12 +2576,11 @@ typedef struct AVCodecContext {
     int coder_type;
 #endif /* FF_API_CODER_TYPE */
 
-    /**
-     * context model
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+#if FF_API_PRIVATE_OPT
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int context_model;
+#endif
 
 #if FF_API_MPV_OPT
     /**
@@ -2601,33 +2596,23 @@ typedef struct AVCodecContext {
     int lmax;
 #endif
 
-    /**
-     * frame skip threshold
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+#if FF_API_PRIVATE_OPT
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int frame_skip_threshold;
 
-    /**
-     * frame skip factor
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int frame_skip_factor;
 
-    /**
-     * frame skip exponent
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int frame_skip_exp;
 
-    /**
-     * frame skip comparison function
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int frame_skip_cmp;
+#endif /* FF_API_PRIVATE_OPT */
 
     /**
      * trellis RD quantization
@@ -2636,24 +2621,19 @@ typedef struct AVCodecContext {
      */
     int trellis;
 
-    /**
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+#if FF_API_PRIVATE_OPT
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int min_prediction_order;
 
-    /**
-     * - encoding: Set by user.
-     * - decoding: unused
-     */
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int max_prediction_order;
 
-    /**
-     * GOP timecode frame start number
-     * - encoding: Set by user, in non drop frame format
-     * - decoding: Set by libavcodec (timecode in the 25 bits format, -1 if unset)
-     */
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int64_t timecode_frame_start;
+#endif
 
 #if FF_API_RTP_CALLBACK
     /**
@@ -2669,12 +2649,16 @@ typedef struct AVCodecContext {
     void (*rtp_callback)(struct AVCodecContext *avctx, void *data, int size, int mb_nb);
 #endif
 
+#if FF_API_PRIVATE_OPT
+    /** @deprecated use encoder private options instead */
+    attribute_deprecated
     int rtp_payload_size;   /* The size of the RTP payload: the coder will  */
                             /* do its best to deliver a chunk with size     */
                             /* below rtp_payload_size, the chunk will start */
                             /* with a start code on some codecs like H.263. */
                             /* This doesn't take account of any particular  */
                             /* headers inside the transmitted RTP payload.  */
+#endif
 
 #if FF_API_STAT_BITS
     /* statistics, used for 2-pass encoding */

@@ -486,7 +486,7 @@ class BOffImm16
     bool isInvalid() {
         return data == INVALID;
     }
-    Instruction* getDest(Instruction* src);
+    Instruction* getDest(Instruction* src) const;
 
     BOffImm16(InstImm inst);
 };

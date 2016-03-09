@@ -1090,7 +1090,7 @@ var SelectionHandler = {
     if (selectedText.length) {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
       clipboard.copyString(selectedText);
-      Snackbars.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), Snackbars.LENGTH_SHORT);
+      Snackbars.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), Snackbars.LENGTH_LONG);
     }
     this._closeSelection();
   },

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1453149152000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1457114202000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -366,6 +366,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i1129" id="youtubeunblocker__web@unblocker.yt">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i17" id="{3252b9ae-c69a-4eaf-9502-dc9c1f6c009e}">
                         <versionRange  minVersion="2.2" maxVersion="2.2">
                     </versionRange>
@@ -528,10 +534,12 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i990" id="youtubeunblocker@unblocker.yt">
+      <emItem  blockID="i1128" id="youtubeunblocker@unblocker.yt">
                         <versionRange  minVersion="43.4.1" maxVersion="77.5.1" severity="3">
                     </versionRange>
                                 <versionRange  minVersion="0" maxVersion="0.6.16" severity="1">
+                    </versionRange>
+                                <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -804,6 +812,12 @@
                   <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
+      <emItem  blockID="i1137" id="/^({d50bfa5f-291d-48a8-909c-5f1a77b31948}|{d54bc985-6e7b-46cd-ad72-a4a266ad879e}|{d89e5de3-5543-4363-b320-a98cf150f86a}|{f3465017-6f51-4980-84a5-7bee2f961eba}|{fae25f38-ff55-46ea-888f-03b49aaf8812})$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i40" id="{28387537-e3f9-4ed7-860c-11e69af4a8a0}">
                         <versionRange  minVersion="0.1" maxVersion="4.3.1.00" severity="1">
                     </versionRange>
@@ -863,6 +877,12 @@
     </emItem>
       <emItem  blockID="i360" id="ytd@mybrowserbar.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1119" id="/^(test3@test.org|test2@test.org|test@test.org|support@mozilla.org)$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -978,6 +998,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i1136" id="/^({1f43c8af-e9e4-4e5a-b77a-f51c7a916324}|{3a3bd700-322e-440a-8a6a-37243d5c7f92}|{6a5b9fc2-733a-4964-a96a-958dd3f3878e}|{7b5d6334-8bc7-4bca-a13e-ff218d5a3f17}|{b87bca5b-2b5d-4ae8-ad53-997aa2e238d4}|{bf8e032b-150f-4656-8f2d-6b5c4a646e0d})$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i479" id="mbrsepone@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -1057,6 +1083,12 @@
     </emItem>
       <emItem  blockID="i43" id="supportaccessplugin@gmail.com">
                           <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1126" id="{bbea93c6-64a3-4a5a-854a-9cc61c8d309e}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
               </prefs>
     </emItem>
       <emItem  blockID="i537" id="rally_toolbar_ff@bulletmedia.com">
@@ -3381,6 +3413,22 @@
                   <match name="filename" exp="libflashplayer\.so" />                      <versionRange  minVersion="11.2.202.549" maxVersion="11.2.202.554" severity="0" vulnerabilitystatus="1"></versionRange>
                             <infoURL>https://get.adobe.com/flashplayer/</infoURL>
           </pluginItem>
+      <pluginItem  blockID="p1120">
+                  <match name="filename" exp="(Silverlight\.plugin|npctrl\.dll)" />                      <versionRange  minVersion="5.1.20125" maxVersion="5.1.41105.0" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://www.microsoft.com/getsilverlight</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1121">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="20.0.0.235" maxVersion="20.0.0.286" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1122">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="18.0.0.268" maxVersion="18.0.0.326" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  os="Linux" blockID="p1123">
+                  <match name="filename" exp="libflashplayer\.so" />                      <versionRange  minVersion="11.2.202.554" maxVersion="11.2.202.559" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
     </pluginItems>
 
   <gfxItems>
@@ -3477,7 +3525,7 @@
                   </devices>
             <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g1057">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>WEBGL_ANGLE</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>6.14.10.5218</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1068">      <vendor>0x8086</vendor>              <devices>
+    <gfxBlacklistEntry  blockID="g1068">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
                       <device>0x2e12</device>
@@ -3485,7 +3533,7 @@
                       <device>0x0046</device>
                   </devices>
             <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1851</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1069">      <vendor>0x8086</vendor>              <devices>
+    <gfxBlacklistEntry  blockID="g1069">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
                       <device>0x2e12</device>
@@ -3493,7 +3541,7 @@
                       <device>0x0046</device>
                   </devices>
             <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1855</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1070">      <vendor>0x8086</vendor>              <devices>
+    <gfxBlacklistEntry  blockID="g1070">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
                       <device>0x2e12</device>
@@ -3501,7 +3549,7 @@
                       <device>0x0046</device>
                   </devices>
             <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1872</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1071">      <vendor>0x8086</vendor>              <devices>
+    <gfxBlacklistEntry  blockID="g1071">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
                       <device>0x2e12</device>
@@ -3509,7 +3557,7 @@
                       <device>0x0046</device>
                   </devices>
             <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1883</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1072">      <vendor>0x8086</vendor>              <devices>
+    <gfxBlacklistEntry  blockID="g1072">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
                       <device>0x2e12</device>
@@ -3517,7 +3565,7 @@
                       <device>0x0046</device>
                   </devices>
             <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1892</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1073">      <vendor>0x8086</vendor>              <devices>
+    <gfxBlacklistEntry  blockID="g1073">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
                       <device>0x2e12</device>
@@ -3525,6 +3573,14 @@
                       <device>0x0046</device>
                   </devices>
             <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1994</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1124">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
+                      <device>0x2a42</device>
+                      <device>0x2e22</device>
+                      <device>0x2e12</device>
+                      <device>0x2e32</device>
+                      <device>0x0046</device>
+                  </devices>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.2086</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
     </gfxItems>
 
   <certItems>
@@ -3674,6 +3730,31 @@
     </certItem>
         <certItem issuerName="MIGBMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTElMCMGA1UECxMcUHJpbWFyeSBPYmplY3QgUHVibGlzaGluZyBDQTEwMC4GA1UEAxMnR2xvYmFsU2lnbiBQcmltYXJ5IE9iamVjdCBQdWJsaXNoaW5nIENB">
       <serialNumber>BAAAAAABI54PryQ=</serialNumber>
+    </certItem>
+        <certItem issuerName="MGExCzAJBgNVBAYTAlVTMRIwEAYDVQQKEwlJZGVuVHJ1c3QxIDAeBgNVBAsTF0lkZW5UcnVzdCBQdWJsaWMgU2VjdG9yMRwwGgYDVQQDExNJZGVuVHJ1c3QgQUNFUyBDQSAx">
+      <serialNumber>fwAAAQAAAUrz/HmrAAAAAg==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=
+">
+      <serialNumber>By7fBTreouRwX/qrpgSUsg==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>Gd/pPu+qLnXUdvP9sW73CQ==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>LdbnCbsA9sOgI4mkUpWXPw==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>NMpMcEnex3eXx4ohk9glcQ==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>JV/LVzSKI/wsDgg3UuZHlA==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>COwoDFvz7GD8R2K7Lo0rYQ==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>VOcIuNbTqkpOMUyI108FOg==</serialNumber>
     </certItem>
       </certItems>
 

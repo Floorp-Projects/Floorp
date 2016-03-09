@@ -127,7 +127,7 @@ function test() {
     info("testBrowserConsole()");
     closeConsole(privateTab).then(() => {
       info("web console closed");
-      privateWindow.HUDService.toggleBrowserConsole().then(onBrowserConsoleOpen);
+      HUDService.toggleBrowserConsole().then(onBrowserConsoleOpen);
     });
   }
 
@@ -163,7 +163,7 @@ function test() {
       checkNoPrivateMessages();
 
       info("close the browser console");
-      privateWindow.HUDService.toggleBrowserConsole().then(() => {
+      HUDService.toggleBrowserConsole().then(() => {
         info("reopen the browser console");
         executeSoon(() =>
           HUDService.toggleBrowserConsole().then(onBrowserConsoleReopen));

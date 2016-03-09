@@ -108,12 +108,14 @@ LoginManagerPromptFactory.prototype = {
           ok = prompter.promptAuth(prompt.channel,
                                    prompt.level,
                                    prompt.authInfo);
-        } catch (e if (e instanceof Components.Exception) &&
-                       e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
-          self.log("_doAsyncPrompt:run bypassed, UI is not available in this context");
         } catch (e) {
-          Components.utils.reportError("LoginManagerPrompter: " +
-              "_doAsyncPrompt:run: " + e + "\n");
+          if (e instanceof Components.Exception &&
+              e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
+            self.log("_doAsyncPrompt:run bypassed, UI is not available in this context");
+          } else {
+            Components.utils.reportError("LoginManagerPrompter: " +
+                                         "_doAsyncPrompt:run: " + e + "\n");
+          }
         }
 
         delete self._asyncPrompts[hashKey];
@@ -613,7 +615,7 @@ LoginManagerPrompter.prototype = {
         this.log("New login seen for " + username +
                  " @ " + hostname + " (" + httpRealm + ")");
 
-        var notifyObj = this._getPopupNote() || notifyBox;
+        let notifyObj = this._getPopupNote() || notifyBox;
         if (notifyObj)
           this._showSaveLoginNotification(notifyObj, newLogin);
         else
@@ -623,7 +625,7 @@ LoginManagerPrompter.prototype = {
 
         this.log("Updating password for " + username +
                  " @ " + hostname + " (" + httpRealm + ")");
-        var notifyObj = this._getPopupNote() || notifyBox;
+        let notifyObj = this._getPopupNote() || notifyBox;
         if (notifyObj)
           this._showChangeLoginNotification(notifyObj,
                                             selectedLogin, newLogin);
