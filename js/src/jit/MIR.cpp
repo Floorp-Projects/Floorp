@@ -4690,6 +4690,9 @@ MLoadSlot::foldsTo(TempAllocator& alloc)
     if (store->slots() != slots())
         return this;
 
+    if (store->slot() != slot())
+        return this;
+
     return foldsToStoredValue(alloc, store->value());
 }
 
