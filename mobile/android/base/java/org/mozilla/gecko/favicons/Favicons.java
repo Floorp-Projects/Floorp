@@ -197,20 +197,6 @@ public class Favicons {
     }
 
     /**
-     * Only returns a non-null Bitmap if the entire path is cached -- the
-     * page URL to favicon URL, and the favicon URL to in-memory bitmaps.
-     *
-     * Returns null otherwise.
-     */
-    public static Bitmap getSizedFaviconForPageFromCache(final String pageURL, int targetSize) {
-        final String faviconURL = pageURLMappings.get(pageURL);
-        if (faviconURL == null) {
-            return null;
-        }
-        return getSizedFaviconFromCache(faviconURL, targetSize);
-    }
-
-    /**
      * Get a Favicon as close as possible to the target dimensions for the URL provided.
      * If a result is instantly available from the cache, it is returned and the listener is invoked.
      * Otherwise, the result is drawn from the database or network and the listener invoked when the
