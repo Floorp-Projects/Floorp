@@ -35,7 +35,7 @@ module.exports = createClass({
         getStr("responsive.title")),
       dom.button({
         id: "global-exit-button",
-        className: "toolbar-button",
+        className: "toolbar-button devtools-button",
         title: getStr("responsive.exit"),
         onClick: onExit,
       })
