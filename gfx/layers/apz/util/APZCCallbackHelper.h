@@ -163,8 +163,14 @@ public:
     /* Notify content that the repaint flush is complete. */
     static void NotifyFlushComplete();
 
-    /* Temporarily ignore the Displayport for better paint performance. */
-    static void SuppressDisplayport(const bool& aEnabled);
+    /* Temporarily ignore the Displayport for better paint performance. If at
+     * all possible, pass in a presShell if you have one at the call site, we
+     * use it to trigger a repaint once suppression is disabled. Without that
+     * the displayport may get left at the suppressed size for an extended
+     * period of time and result in unnecessary checkerboarding (see bug
+     * 1255054). */
+    static void SuppressDisplayport(const bool& aEnabled,
+                                    const nsCOMPtr<nsIPresShell>& aShell);
     static bool IsDisplayportSuppressed();
 
 private:
