@@ -178,7 +178,7 @@ public class ThemedImageView extends android.widget.ImageView
     private void setTintedImageDrawable(final Drawable drawable) {
         final Drawable tintedDrawable;
         if (drawableColors == null) {
-            // If we tint a drawable with a null ColorStateList, it will override
+            // NB: If we tint a drawable with a null ColorStateList, it will override
             // any existing colorFilters and tint... so don't!
             tintedDrawable = drawable;
         } else if (drawable == null) {
