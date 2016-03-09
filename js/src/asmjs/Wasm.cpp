@@ -461,18 +461,19 @@ DecodeIfElse(FunctionDecoder& f, bool hasElse, ExprType* type)
 }
 
 static bool
-DecodeLoadStoreAddress(FunctionDecoder &f)
+DecodeLoadStoreAddress(FunctionDecoder &f, unsigned width)
 {
+    uint32_t flags;
+    if (!f.d().readVarU32(&flags))
+        return f.fail("expected memory access flags");
+
+    uint32_t alignLog2 = flags;
+    if (alignLog2 >= 32 || (1u << alignLog2) > width)
+        return f.fail("greater than natural alignment");
+
     uint32_t offset;
     if (!f.d().readVarU32(&offset))
         return f.fail("expected memory access offset");
-
-    uint32_t align;
-    if (!f.d().readVarU32(&align))
-        return f.fail("expected memory access alignment");
-
-    if (!mozilla::IsPowerOfTwo(align))
-        return f.fail("memory access alignment must be a power of two");
 
     ExprType baseType;
     if (!DecodeExpr(f, &baseType))
@@ -482,9 +483,9 @@ DecodeLoadStoreAddress(FunctionDecoder &f)
 }
 
 static bool
-DecodeLoad(FunctionDecoder& f, ValType loadType, ExprType* type)
+DecodeLoad(FunctionDecoder& f, unsigned width, ValType loadType, ExprType* type)
 {
-    if (!DecodeLoadStoreAddress(f))
+    if (!DecodeLoadStoreAddress(f, width))
         return false;
 
     *type = ToExprType(loadType);
@@ -492,9 +493,9 @@ DecodeLoad(FunctionDecoder& f, ValType loadType, ExprType* type)
 }
 
 static bool
-DecodeStore(FunctionDecoder& f, ValType storeType, ExprType* type)
+DecodeStore(FunctionDecoder& f, unsigned width, ValType storeType, ExprType* type)
 {
-    if (!DecodeLoadStoreAddress(f))
+    if (!DecodeLoadStoreAddress(f, width))
         return false;
 
     ExprType actual;
@@ -509,8 +510,10 @@ DecodeStore(FunctionDecoder& f, ValType storeType, ExprType* type)
 }
 
 static bool
-DecodeBr(FunctionDecoder& f, ExprType* type)
+DecodeBranch(FunctionDecoder& f, Expr expr, ExprType* type)
 {
+    MOZ_ASSERT(expr == Expr::Br || expr == Expr::BrIf);
+
     uint32_t relativeDepth;
     if (!f.d().readVarU32(&relativeDepth))
         return f.fail("expected relative depth");
@@ -518,28 +521,26 @@ DecodeBr(FunctionDecoder& f, ExprType* type)
     if (!f.branchWithType(relativeDepth, ExprType::Void))
         return f.fail("branch depth exceeds current nesting level");
 
-    *type = AnyType;
-    return true;
-}
+    Expr value;
+    if (!f.d().readExpr(&value))
+        return f.fail("expected branch value");
 
-static bool
-DecodeBrIf(FunctionDecoder& f, ExprType* type)
-{
-    uint32_t relativeDepth;
-    if (!f.d().readVarU32(&relativeDepth))
-        return f.fail("expected relative depth");
+    if (value != Expr::Nop)
+        return f.fail("NYI: branch values");
 
-    if (!f.branchWithType(relativeDepth, ExprType::Void))
-        return f.fail("branch depth exceeds current nesting level");
+    if (expr == Expr::BrIf) {
+        ExprType actual;
+        if (!DecodeExpr(f, &actual))
+            return false;
 
-    ExprType actual;
-    if (!DecodeExpr(f, &actual))
-        return false;
+        if (!CheckType(f, actual, ValType::I32))
+            return false;
 
-    if (!CheckType(f, actual, ValType::I32))
-        return false;
+        *type = ExprType::Void;
+    } else {
+        *type = AnyType;
+    }
 
-    *type = ExprType::Void;
     return true;
 }
 
@@ -555,7 +556,7 @@ DecodeBrTable(FunctionDecoder& f, ExprType* type)
 
     for (uint32_t i = 0; i < tableLength; i++) {
         uint32_t depth;
-        if (!f.d().readVarU32(&depth))
+        if (!f.d().readFixedU32(&depth))
             return f.fail("missing br_table entry");
 
         if (!f.branchWithType(depth, ExprType::Void))
@@ -563,7 +564,7 @@ DecodeBrTable(FunctionDecoder& f, ExprType* type)
     }
 
     uint32_t defaultDepth;
-    if (!f.d().readVarU32(&defaultDepth))
+    if (!f.d().readFixedU32(&defaultDepth))
         return f.fail("expected default relative depth");
 
     if (!f.branchWithType(defaultDepth, ExprType::Void))
@@ -785,12 +786,14 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
                DecodeConversionOperator(f, ValType::F64, ValType::I64, type);
       case Expr::F64PromoteF32:
         return DecodeConversionOperator(f, ValType::F64, ValType::F32, type);
-      case Expr::I32Load:
       case Expr::I32Load8S:
       case Expr::I32Load8U:
+        return DecodeLoad(f, 1, ValType::I32, type);
       case Expr::I32Load16S:
       case Expr::I32Load16U:
-        return DecodeLoad(f, ValType::I32, type);
+        return DecodeLoad(f, 2, ValType::I32, type);
+      case Expr::I32Load:
+        return DecodeLoad(f, 4, ValType::I32, type);
       case Expr::I64Load:
       case Expr::I64Load8S:
       case Expr::I64Load8U:
@@ -799,29 +802,31 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::I64Load32S:
       case Expr::I64Load32U:
         return f.fail("NYI: i64") &&
-               DecodeLoad(f, ValType::I64, type);
+               DecodeLoad(f, 0, ValType::I64, type);
       case Expr::F32Load:
-        return DecodeLoad(f, ValType::F32, type);
+        return DecodeLoad(f, 4, ValType::F32, type);
       case Expr::F64Load:
-        return DecodeLoad(f, ValType::F64, type);
-      case Expr::I32Store:
+        return DecodeLoad(f, 8, ValType::F64, type);
       case Expr::I32Store8:
+        return DecodeStore(f, 1, ValType::I32, type);
       case Expr::I32Store16:
-        return DecodeStore(f, ValType::I32, type);
+        return DecodeStore(f, 2, ValType::I32, type);
+      case Expr::I32Store:
+        return DecodeStore(f, 4, ValType::I32, type);
       case Expr::I64Store:
       case Expr::I64Store8:
       case Expr::I64Store16:
       case Expr::I64Store32:
         return f.fail("NYI: i64") &&
-               DecodeStore(f, ValType::I64, type);
+               DecodeStore(f, 0, ValType::I64, type);
       case Expr::F32Store:
-        return DecodeStore(f, ValType::F32, type);
+        return DecodeStore(f, 4, ValType::F32, type);
       case Expr::F64Store:
-        return DecodeStore(f, ValType::F64, type);
+        return DecodeStore(f, 8, ValType::F64, type);
       case Expr::Br:
-        return DecodeBr(f, type);
+        return DecodeBranch(f, expr, type);
       case Expr::BrIf:
-        return DecodeBrIf(f, type);
+        return DecodeBranch(f, expr, type);
       case Expr::BrTable:
         return DecodeBrTable(f, type);
       case Expr::Return:
@@ -1304,7 +1309,14 @@ DecodeFunctionBodies(JSContext* cx, Decoder& d, ModuleGenerator& mg)
         return mg.finishFuncDefs();
     }
 
-    for (uint32_t funcIndex = 0; funcIndex < mg.numFuncSigs(); funcIndex++) {
+    uint32_t numFuncBodies;
+    if (!d.readVarU32(&numFuncBodies))
+        return Fail(cx, d, "expected function body count");
+
+    if (numFuncBodies != mg.numFuncSigs())
+        return Fail(cx, d, "function body count does not match function signature count");
+
+    for (uint32_t funcIndex = 0; funcIndex < numFuncBodies; funcIndex++) {
         if (!DecodeFunctionBody(cx, d, mg, funcIndex))
             return false;
     }
@@ -1504,9 +1516,30 @@ ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& i
     return true;
 }
 
+static const char ExportField[] = "exports";
+
+static bool
+CreateInstance(JSContext* cx, HandleObject exportObj, MutableHandleObject instance)
+{
+    instance.set(JS_NewPlainObject(cx));
+    if (!instance)
+        return false;
+
+    JSAtom* atom = Atomize(cx, ExportField, strlen(ExportField));
+    if (!atom)
+        return false;
+
+    RootedId id(cx, AtomToId(atom));
+    RootedValue val(cx, ObjectValue(*exportObj));
+    if (!JS_DefinePropertyById(cx, instance, id, val, JSPROP_ENUMERATE))
+        return false;
+
+    return true;
+}
+
 bool
 wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
-           MutableHandleObject exportObj)
+           MutableHandleObject instance)
 {
     MOZ_ASSERT(!code->isSharedMemory());
 
@@ -1546,7 +1579,11 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     if (!ImportFunctions(cx, importObj, importNames, &imports))
         return false;
 
-    return moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, exportObj);
+    RootedObject exportObj(cx);
+    if (!moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, &exportObj))
+        return false;
+
+    return CreateInstance(cx, exportObj, instance);
 }
 
 static bool

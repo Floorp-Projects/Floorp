@@ -2335,11 +2335,12 @@ public:
                                               const nsAString& aName,
                                               nsIVariant** aResult);
 
+private:
     static nsresult CheckForException(XPCCallContext & ccx,
+                                      mozilla::dom::AutoEntryScript& aes,
                                       const char * aPropertyName,
                                       const char * anInterfaceName,
                                       bool aForceReport);
-private:
     virtual ~nsXPCWrappedJSClass();
 
     nsXPCWrappedJSClass();   // not implemented

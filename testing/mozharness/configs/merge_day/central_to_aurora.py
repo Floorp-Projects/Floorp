@@ -94,10 +94,7 @@ config = {
         "requests==2.8.1",
     ],
 
-    "post_merge_builders": [
-        "mozilla-aurora hg bundle",
-        "mozilla-central hg bundle",
-    ],
+    "post_merge_builders": [],
     "post_merge_nightly_branches": [
         "mozilla-central",
         "mozilla-aurora",

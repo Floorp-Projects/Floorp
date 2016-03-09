@@ -81,9 +81,6 @@ private:
     // Network changed events are enabled
     bool mAllowChangedEvent;
 
-    // Flag to signal child thread kill with
-    mozilla::Atomic<bool, mozilla::Relaxed> mChildThreadShutdown;
-
     // Flag set while coalescing change events
     bool mCoalescingActive;
 

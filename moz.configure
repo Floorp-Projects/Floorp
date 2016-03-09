@@ -6,6 +6,13 @@
 
 include('build/moz.configure/init.configure')
 
+# Note:
+# - Gecko-specific options and rules should go in toolkit/moz.configure.
+# - Firefox-specific options and rules should go in browser/moz.configure.
+# - Fennec-specific options and rules should go in
+#   mobile/android/moz.configure.
+# - Spidermonkey-specific options and rules should go in js/moz.configure.
+# - etc.
 
 option('--enable-artifact-builds', env='MOZ_ARTIFACT_BUILDS',
        help='Download and use prebuilt binary artifacts.')

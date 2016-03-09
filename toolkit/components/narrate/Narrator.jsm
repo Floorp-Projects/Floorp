@@ -47,23 +47,54 @@ Narrator.prototype = {
     return this._voiceMapInner;
   },
 
-  get _paragraphs() {
-    if (!this._paragraphsInner) {
+  get _treeWalker() {
+    if (!this._treeWalkerRef) {
       let wu = this._win.QueryInterface(
         Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      let queryString = "#reader-header > *:not(style):not(:empty), " +
-        "#moz-reader-content > .page > * > *:not(style):not(:empty)";
-      // filter out zero sized paragraphs.
-      let paragraphs = Array.from(this._doc.querySelectorAll(queryString));
-      paragraphs = paragraphs.filter(p => {
-        let bb = wu.getBoundsWithoutFlushing(p);
-        return bb.width && bb.height;
-      });
+      let nf = this._win.NodeFilter;
 
-      this._paragraphsInner = paragraphs.map(Cu.getWeakReference);
+      let filter = {
+        _matches: new Set(),
+
+        // We want high-level elements that have non-empty text nodes.
+        // For example, paragraphs. But nested anchors and other elements
+        // are not interesting since their text already appears in their
+        // parent's textContent.
+        acceptNode: function(node) {
+          if (this._matches.has(node.parentNode)) {
+            // Reject sub-trees of accepted nodes.
+            return nf.FILTER_REJECT;
+          }
+
+          let bb = wu.getBoundsWithoutFlushing(node);
+          if (!bb.width || !bb.height) {
+            // Skip non-rendered nodes.
+            return nf.FILTER_SKIP;
+          }
+
+          for (let c = node.firstChild; c; c = c.nextSibling) {
+            if (c.nodeType == c.TEXT_NODE && !!c.textContent.match(/\S/)) {
+              // If node has a non-empty text child accept it.
+              this._matches.add(node);
+              return nf.FILTER_ACCEPT;
+            }
+          }
+
+          return nf.FILTER_SKIP;
+        }
+      };
+
+      this._treeWalkerRef = new WeakMap();
+
+      // We can't hold a weak reference on the treewalker, because there
+      // are no other strong references, and it will be GC'ed. Instead,
+      // we rely on the window's lifetime and use it as a weak reference.
+      this._treeWalkerRef.set(this._win,
+        this._doc.createTreeWalker(this._doc.getElementById("container"),
+          nf.SHOW_ELEMENT, filter, false));
     }
 
-    return this._paragraphsInner;
+    return this._treeWalkerRef.get(this._win);
   },
 
   get _timeIntoParagraph() {
@@ -76,13 +107,7 @@ Narrator.prototype = {
       this._win.speechSynthesis.pending;
   },
 
-  _getParagraphAt: function(index) {
-    let paragraph = this._paragraphsInner[index];
-    return paragraph ? paragraph.get() : null;
-  },
-
-  _isParagraphInView: function(paragraphRef) {
-    let paragraph = paragraphRef && paragraphRef.get && paragraphRef.get();
+  _isParagraphInView: function(paragraph) {
     if (!paragraph) {
       return false;
     }
@@ -113,7 +138,13 @@ Narrator.prototype = {
 
   _speakInner: function() {
     this._win.speechSynthesis.cancel();
-    let paragraph = this._getParagraphAt(this._index);
+    let tw = this._treeWalker;
+    let paragraph = tw.nextNode();
+    if (!paragraph) {
+      tw.currentNode = tw.root;
+      return Promise.resolve();
+    }
+
     let utterance = new this._win.SpeechSynthesisUtterance(
       paragraph.textContent);
     utterance.rate = this._speechOptions.rate;
@@ -137,7 +168,7 @@ Narrator.prototype = {
           this._sendTestEvent("paragraphstart", {
             voice: utterance.chosenVoiceURI,
             rate: utterance.rate,
-            paragraph: this._index
+            paragraph: paragraph.textContent
           });
         }
       });
@@ -154,11 +185,10 @@ Narrator.prototype = {
           this._sendTestEvent("paragraphend", {});
         }
 
-        if (this._index + 1 >= this._paragraphs.length || this._stopped) {
-          // We reached the end of the document, or the user pressed stopped.
+        if (this._stopped) {
+          // User pressed stopped.
           resolve();
         } else {
-          this._index++;
           this._speakInner().then(resolve);
         }
       });
@@ -179,9 +209,13 @@ Narrator.prototype = {
 
     this._stopped = false;
     return this._detectLanguage().then(() => {
-      if (!this._isParagraphInView(this._paragraphs[this._index])) {
-        this._index = this._paragraphs.findIndex(
-          this._isParagraphInView.bind(this));
+      let tw = this._treeWalker;
+      if (!this._isParagraphInView(tw.currentNode)) {
+        tw.currentNode = tw.root;
+        while (tw.nextNode() && !this._isParagraphInView(tw.currentNode)) {}
+        // _speakInner will advance to the next node for us, so we need
+        // to have it one paragraph back from the first visible one.
+        tw.previousNode();
       }
 
       return this._speakInner();
@@ -198,22 +232,25 @@ Narrator.prototype = {
   },
 
   skipPrevious: function() {
-    this._index -=
-      this._index > 0 && this._timeIntoParagraph < PREV_THRESHOLD ? 2 : 1;
+    let tw = this._treeWalker;
+    tw.previousNode();
+    if (this._timeIntoParagraph < PREV_THRESHOLD) {
+      tw.previousNode();
+    }
     this._win.speechSynthesis.cancel();
   },
 
   setRate: function(rate) {
     this._speechOptions.rate = rate;
     /* repeat current paragraph */
-    this._index--;
+    this._treeWalker.previousNode();
     this._win.speechSynthesis.cancel();
   },
 
   setVoice: function(voice) {
     this._speechOptions.voice = this._voiceMap.get(voice);
     /* repeat current paragraph */
-    this._index--;
+    this._treeWalker.previousNode();
     this._win.speechSynthesis.cancel();
   }
 };
