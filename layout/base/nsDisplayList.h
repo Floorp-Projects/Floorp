@@ -641,7 +641,6 @@ public:
    * automatically when the arena goes away.
    */
   DisplayItemScrollClip* AllocateDisplayItemScrollClip(const DisplayItemScrollClip* aParent,
-                                                 const DisplayItemScrollClip* aCrossStackingContextParent,
                                                  nsIScrollableFrame* aScrollableFrame,
                                                  const DisplayItemClip* aClip,
                                                  bool aIsAsyncScrollable);
@@ -1029,14 +1028,8 @@ public:
    * has a blend mode attached. We do this so we can insert a 
    * nsDisplayBlendContainer in the parent stacking context.
    */
-  void SetContainsBlendMode(uint8_t aBlendMode);
-  void SetContainsBlendModes(const BlendModeSet& aModes) {
-    mContainedBlendModes = aModes;
-  }
-  bool ContainsBlendMode() const { return !mContainedBlendModes.isEmpty(); }
-  BlendModeSet& ContainedBlendModes() {
-    return mContainedBlendModes;
-  }
+  void SetContainsBlendMode(bool aContainsBlendMode) { mContainsBlendMode = aContainsBlendMode; }
+  bool ContainsBlendMode() const { return mContainsBlendMode; }
 
   uint32_t AllocatePerspectiveItemIndex() { return mPerspectiveItemIndex++; }
 
@@ -1240,10 +1233,10 @@ private:
   ViewID                         mCurrentScrollParentId;
   ViewID                         mCurrentScrollbarTarget;
   uint32_t                       mCurrentScrollbarFlags;
-  BlendModeSet                   mContainedBlendModes;
   Preserves3DContext             mPreserves3DCtx;
   uint32_t                       mPerspectiveItemIndex;
   int32_t                        mSVGEffectsBuildingDepth;
+  bool                           mContainsBlendMode;
   bool                           mIsBuildingScrollbar;
   bool                           mCurrentScrollbarWillHaveLayer;
   bool                           mBuildCaret;
@@ -1321,6 +1314,8 @@ public:
   // This is never instantiated directly (it has pure virtual methods), so no
   // need to count constructors and destructors.
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
+  nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                const DisplayItemScrollClip* aScrollClip);
   /**
    * This constructor is only used in rare cases when we need to construct
    * temporary items.
@@ -1428,17 +1423,6 @@ public:
    * account.
    */
   nsRect GetClippedBounds(nsDisplayListBuilder* aBuilder);
-  /**
-   * Returns the result of GetClippedBounds, intersected with the item's
-   * scroll clips. The item walks up its chain of scroll clips, *not* crossing
-   * stacking contexts, applying each scroll clip until aIncludeScrollClipsUpTo
-   * is reached. aIncludeScrollClipsUpTo is *not* applied.
-   * The intersection is approximate since rounded corners are not taking into
-   * account.
-   */
-  nsRect GetScrollClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
-                                    const DisplayItemScrollClip* aIncludeScrollClipsUpTo);
-
   nsRect GetBorderRect() {
     return nsRect(ToReferenceFrame(), Frame()->GetSize());
   }
@@ -2149,7 +2133,14 @@ public:
    */
   nsRect GetBounds(nsDisplayListBuilder* aBuilder) const;
   /**
-   * Return the union of the scroll clipped bounds of all children.
+   * Return the union of the scroll clipped bounds of all children. To get the
+   * scroll clipped bounds of a child item, we start with the item's clipped
+   * bounds and walk its scroll clip chain up to (but not including)
+   * aIncludeScrollClipsUpTo, and take each scroll clip into account. For
+   * scroll clips from async scrollable frames we assume that the item can move
+   * anywhere inside that scroll frame.
+   * In other words, the return value from this method includes all pixels that
+   * could potentially be covered by items in this list under async scrolling.
    */
   nsRect GetScrollClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
                                     const DisplayItemScrollClip* aIncludeScrollClipsUpTo) const;
@@ -2739,8 +2730,6 @@ public:
 
   virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) override;
 
-  void MarkBoundsAsVisible(nsDisplayListBuilder* aBuilder);
-
 protected:
   typedef class mozilla::layers::ImageContainer ImageContainer;
   typedef class mozilla::layers::ImageLayer ImageLayer;
@@ -3192,6 +3181,9 @@ public:
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayList* aList);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                    nsDisplayList* aList,
+                    const DisplayItemScrollClip* aScrollClip);
+  nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayItem* aItem);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame), mOverrideZIndex(0), mHasZIndexOverride(false)
@@ -3349,7 +3341,7 @@ class nsDisplayOpacity : public nsDisplayWrapList {
 public:
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                    nsDisplayList* aList,
-                   const DisplayItemScrollClip* aScrollClipForSameAGRChildren,
+                   const DisplayItemScrollClip* aScrollClip,
                    bool aForEventsOnly);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOpacity();
@@ -3383,21 +3375,19 @@ public:
 
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) override;
 
-  const DisplayItemScrollClip* ScrollClipForSameAGRChildren() const
-  { return mScrollClipForSameAGRChildren; }
-
 private:
-  const DisplayItemScrollClip* mScrollClipForSameAGRChildren;
   float mOpacity;
   bool mForEventsOnly;
 };
 
-class nsDisplayMixBlendMode : public nsDisplayWrapList {
+class nsDisplayBlendMode : public nsDisplayWrapList {
 public:
-  nsDisplayMixBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                        nsDisplayList* aList);
+  nsDisplayBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                        nsDisplayList* aList, uint8_t aBlendMode,
+                        const DisplayItemScrollClip* aScrollClip,
+                        uint32_t aIndex = 0);
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayMixBlendMode();
+  virtual ~nsDisplayBlendMode();
 #endif
 
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
@@ -3412,6 +3402,10 @@ public:
   {
     // We don't need to compute an invalidation region since we have LayerTreeInvalidation
   }
+  virtual uint32_t GetPerFrameKey() override {
+    return (mIndex << nsDisplayItem::TYPE_BITS) |
+      nsDisplayItem::GetPerFrameKey();
+  }
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
@@ -3421,14 +3415,18 @@ public:
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
   }
-  NS_DISPLAY_DECL_NAME("MixBlendMode", TYPE_MIX_BLEND_MODE)
+  NS_DISPLAY_DECL_NAME("BlendMode", TYPE_BLEND_MODE)
+
+private:
+  uint8_t mBlendMode;
+  uint32_t mIndex;
 };
 
 class nsDisplayBlendContainer : public nsDisplayWrapList {
 public:
     nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             nsDisplayList* aList,
-                            const BlendModeSet& aContainedBlendModes = BlendModeSet());
+                            const DisplayItemScrollClip* aScrollClip);
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual ~nsDisplayBlendContainer();
 #endif
@@ -3453,9 +3451,6 @@ private:
     // Used to distinguish containers created at building stacking
     // context or appending background.
     uint32_t mIndex;
-    // If this is true, then we should make the layer active if all contained blend
-    // modes can be supported by the current layer manager.
-    bool mCanBeActive;
 };
 
 /**

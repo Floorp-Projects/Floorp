@@ -215,6 +215,23 @@ protected:
 
 } // namespace dom
 
+template <>
+struct AnimationTypeTraits<dom::CSSTransition>
+{
+  static nsIAtom* ElementPropertyAtom()
+  {
+    return nsGkAtoms::transitionsProperty;
+  }
+  static nsIAtom* BeforePropertyAtom()
+  {
+    return nsGkAtoms::transitionsOfBeforeProperty;
+  }
+  static nsIAtom* AfterPropertyAtom()
+  {
+    return nsGkAtoms::transitionsOfAfterProperty;
+  }
+};
+
 struct TransitionEventInfo {
   RefPtr<dom::Element> mElement;
   RefPtr<dom::Animation> mAnimation;
@@ -236,7 +253,8 @@ struct TransitionEventInfo {
     mEvent.propertyName =
       NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
     mEvent.elapsedTime = aDuration.ToSeconds();
-    mEvent.pseudoElement = AnimationCollection::PseudoTypeAsString(aPseudoType);
+    mEvent.pseudoElement =
+      AnimationCollection<dom::CSSTransition>::PseudoTypeAsString(aPseudoType);
   }
 
   // InternalTransitionEvent doesn't support copy-construction, so we need
@@ -254,11 +272,11 @@ struct TransitionEventInfo {
 } // namespace mozilla
 
 class nsTransitionManager final
-  : public mozilla::CommonAnimationManager
+  : public mozilla::CommonAnimationManager<mozilla::dom::CSSTransition>
 {
 public:
   explicit nsTransitionManager(nsPresContext *aPresContext)
-    : mozilla::CommonAnimationManager(aPresContext)
+    : mozilla::CommonAnimationManager<mozilla::dom::CSSTransition>(aPresContext)
     , mInAnimationOnlyStyleUpdate(false)
   {
   }
@@ -266,7 +284,8 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsTransitionManager)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTransitionManager)
 
-  typedef mozilla::AnimationCollection AnimationCollection;
+  typedef mozilla::AnimationCollection<mozilla::dom::CSSTransition>
+    CSSTransitionCollection;
 
   /**
    * StyleContextChanged
@@ -323,22 +342,14 @@ public:
 protected:
   virtual ~nsTransitionManager() {}
 
-  virtual nsIAtom* GetAnimationsAtom() override {
-    return nsGkAtoms::transitionsProperty;
-  }
-  virtual nsIAtom* GetAnimationsBeforeAtom() override {
-    return nsGkAtoms::transitionsOfBeforeProperty;
-  }
-  virtual nsIAtom* GetAnimationsAfterAtom() override {
-    return nsGkAtoms::transitionsOfAfterProperty;
-  }
+  typedef nsTArray<RefPtr<mozilla::dom::CSSTransition>>
+    OwningCSSTransitionPtrArray;
 
-private:
   void
   ConsiderStartingTransition(nsCSSProperty aProperty,
                              const mozilla::StyleTransition& aTransition,
                              mozilla::dom::Element* aElement,
-                             AnimationCollection*& aElementTransitions,
+                             CSSTransitionCollection*& aElementTransitions,
                              nsStyleContext* aOldStyleContext,
                              nsStyleContext* aNewStyleContext,
                              bool* aStartedAny,

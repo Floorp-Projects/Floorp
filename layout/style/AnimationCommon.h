@@ -30,9 +30,13 @@ namespace dom {
 class Element;
 }
 
+template <class AnimationType>
 class CommonAnimationManager {
 public:
-  explicit CommonAnimationManager(nsPresContext *aPresContext);
+  explicit CommonAnimationManager(nsPresContext *aPresContext)
+    : mPresContext(aPresContext)
+  {
+  }
 
   // NOTE:  This can return null after Disconnect().
   nsPresContext* PresContext() const { return mPresContext; }
@@ -40,7 +44,13 @@ public:
   /**
    * Notify the manager that the pres context is going away.
    */
-  void Disconnect();
+  void Disconnect()
+  {
+    // Content nodes might outlive the transition or animation manager.
+    RemoveAllElementCollections();
+
+    mPresContext = nullptr;
+  }
 
   static bool ExtractComputedValueForTransition(
                   nsCSSProperty aProperty,
@@ -48,33 +58,46 @@ public:
                   StyleAnimationValue& aComputedValue);
 
 protected:
-  virtual ~CommonAnimationManager();
+  virtual ~CommonAnimationManager()
+  {
+    MOZ_ASSERT(!mPresContext, "Disconnect should have been called");
+  }
 
-  void AddElementCollection(AnimationCollection* aCollection);
-  void RemoveAllElementCollections();
+  void AddElementCollection(AnimationCollection<AnimationType>* aCollection)
+  {
+    mElementCollections.insertBack(aCollection);
+  }
+  void RemoveAllElementCollections()
+  {
+    while (AnimationCollection<AnimationType>* head =
+           mElementCollections.getFirst()) {
+      head->Destroy(); // Note: this removes 'head' from mElementCollections.
+    }
+  }
 
-  virtual nsIAtom* GetAnimationsAtom() = 0;
-  virtual nsIAtom* GetAnimationsBeforeAtom() = 0;
-  virtual nsIAtom* GetAnimationsAfterAtom() = 0;
-
-public:
-  // Get (and optionally create) the collection of animations managed
-  // by this class for the given |aElement| and |aPseudoType|.
-  AnimationCollection*
-  GetAnimationCollection(dom::Element *aElement,
-                         CSSPseudoElementType aPseudoType,
-                         bool aCreateIfNeeded);
-
-  // Given the frame |aFrame| with possibly animated content, finds its
-  // associated collection of animations. If it is a generated content
-  // frame, it may examine the parent frame to search for such animations.
-  AnimationCollection*
-  GetAnimationCollection(const nsIFrame* aFrame);
-
-protected:
-  LinkedList<AnimationCollection> mElementCollections;
+  LinkedList<AnimationCollection<AnimationType>> mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
 };
+
+template <class AnimationType>
+/* static */ bool
+CommonAnimationManager<AnimationType>::ExtractComputedValueForTransition(
+  nsCSSProperty aProperty,
+  nsStyleContext* aStyleContext,
+  StyleAnimationValue& aComputedValue)
+{
+  bool result = StyleAnimationValue::ExtractComputedValue(aProperty,
+                                                          aStyleContext,
+                                                          aComputedValue);
+  if (aProperty == eCSSProperty_visibility) {
+    MOZ_ASSERT(aComputedValue.GetUnit() ==
+                 StyleAnimationValue::eUnit_Enumerated,
+               "unexpected unit");
+    aComputedValue.SetIntValue(aComputedValue.GetIntValue(),
+                               StyleAnimationValue::eUnit_Visibility);
+  }
+  return result;
+}
 
 /**
  * Utility class for referencing the element that created a CSS animation or

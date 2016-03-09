@@ -514,7 +514,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
            very quickly).
         2) Arbitrary builders ("post_merge_builders"). These are additional
            builders to trigger that aren't part of the nightly builder set.
-           For example: hg bundle generation builders.
+           Previous example: hg bundle generation builders.
         """
         dirs = self.query_abs_dirs()
         branch = self.config["to_repo_url"].rstrip("/").split("/")[-1]

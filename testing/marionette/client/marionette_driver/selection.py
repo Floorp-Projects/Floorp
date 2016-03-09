@@ -7,6 +7,9 @@
 class SelectionManager(object):
     '''Interface for manipulating the selection and carets of the element.
 
+    We call the blinking cursor (nsCaret) as cursor, and call AccessibleCaret as
+    caret for short.
+
     Simple usage example:
 
     ::
@@ -41,10 +44,10 @@ class SelectionManager(object):
         else:
             return '''var sel = window.getSelection();'''
 
-    def move_caret_by_offset(self, offset, backward=False):
-        '''Move caret in the element by character offset.
+    def move_cursor_by_offset(self, offset, backward=False):
+        '''Move cursor in the element by character offset.
 
-        :param offset: Move the caret to the direction by offset characters.
+        :param offset: Move the cursor to the direction by offset characters.
         :param backward: Optional, True to move backward; Default to False to
          move forward.
 
@@ -58,8 +61,8 @@ class SelectionManager(object):
         self.element.marionette.execute_script(
             cmd, script_args=[self.element], sandbox='system')
 
-    def move_caret_to_front(self):
-        '''Move caret in the element to the front of the content.'''
+    def move_cursor_to_front(self):
+        '''Move cursor in the element to the front of the content.'''
         if self._input_or_textarea():
             cmd = '''arguments[0].setSelectionRange(0, 0);'''
         else:
@@ -68,8 +71,8 @@ class SelectionManager(object):
 
         self.element.marionette.execute_script(cmd, script_args=[self.element])
 
-    def move_caret_to_end(self):
-        '''Move caret in the element to the end of the content.'''
+    def move_cursor_to_end(self):
+        '''Move cursor in the element to the end of the content.'''
         if self._input_or_textarea():
             cmd = '''var len = arguments[0].value.length;
                   arguments[0].setSelectionRange(len, len);'''
@@ -153,33 +156,42 @@ class SelectionManager(object):
         '''
         return self._selection_location_helper('center')
 
-    def selection_carets_location(self):
-        '''Return a pair of the two selection carets' location.
+    def carets_location(self):
+        '''Return a pair of the two carets' location.
 
         Return a tuple containing two pairs of (x, y) coordinates of the two
-        selection carets' tip. The coordinates are relative to the top left-hand
-        corner of the element. Both ltr and rtl direction are considered.
+        carets' tip. The coordinates are relative to the top left-hand corner of
+        the element. Both ltr and rtl direction are considered.
 
         '''
         return self._selection_location_helper('caret')
 
-    def caret_location(self):
-        '''Return caret's center location within the element.
+    def cursor_location(self):
+        '''Return the blanking cursor's center location within the element.
 
-        Return (x, y) coordinates of the caret's center relative to the top
+        Return (x, y) coordinates of the cursor's center relative to the top
         left-hand corner of the element.
 
         '''
         return self._selection_location_helper('center')[0]
 
-    def touch_caret_location(self):
-        '''Return touch caret's location (based on current caret location).
+    def first_caret_location(self):
+        '''Return the first caret's location.
 
-        Return (x, y) coordinates of the touch caret's tip relative to the top
+        Return (x, y) coordinates of the first caret's tip relative to the top
         left-hand corner of the element.
 
         '''
-        return self._selection_location_helper('caret')[0]
+        return self.carets_location()[0]
+
+    def second_caret_location(self):
+        '''Return the second caret's location.
+
+        Return (x, y) coordinates of the second caret's tip relative to the top
+        left-hand corner of the element.
+
+        '''
+        return self.carets_location()[1]
 
     def select_all(self):
         '''Select all the content in the element.'''

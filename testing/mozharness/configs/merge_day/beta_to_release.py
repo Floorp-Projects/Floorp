@@ -43,9 +43,7 @@ config = {
         "requests==2.8.1",
     ],
 
-    "post_merge_builders": [
-        "mozilla-release hg bundle",
-    ],
+    "post_merge_builders": [],
     "post_merge_nightly_branches": [
         # No nightlies on mozilla-release
     ],

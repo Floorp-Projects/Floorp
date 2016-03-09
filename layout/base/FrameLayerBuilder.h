@@ -56,6 +56,7 @@ struct ContainerLayerParameters {
     , mLayerContentsVisibleRect(nullptr)
     , mBackgroundColor(NS_RGBA(0,0,0,0))
     , mScrollClip(nullptr)
+    , mScrollClipForPerspectiveChild(nullptr)
     , mInTransformedSubtree(false)
     , mInActiveTransformedSubtree(false)
     , mDisableSubpixelAntialiasingInDescendants(false)
@@ -68,6 +69,7 @@ struct ContainerLayerParameters {
     , mLayerContentsVisibleRect(nullptr)
     , mBackgroundColor(NS_RGBA(0,0,0,0))
     , mScrollClip(nullptr)
+    , mScrollClipForPerspectiveChild(nullptr)
     , mInTransformedSubtree(false)
     , mInActiveTransformedSubtree(false)
     , mDisableSubpixelAntialiasingInDescendants(false)
@@ -83,6 +85,7 @@ struct ContainerLayerParameters {
     , mOffset(aOffset)
     , mBackgroundColor(aParent.mBackgroundColor)
     , mScrollClip(aParent.mScrollClip)
+    , mScrollClipForPerspectiveChild(aParent.mScrollClipForPerspectiveChild)
     , mInTransformedSubtree(aParent.mInTransformedSubtree)
     , mInActiveTransformedSubtree(aParent.mInActiveTransformedSubtree)
     , mDisableSubpixelAntialiasingInDescendants(aParent.mDisableSubpixelAntialiasingInDescendants)
@@ -113,6 +116,10 @@ struct ContainerLayerParameters {
 
   nscolor mBackgroundColor;
   const DisplayItemScrollClip* mScrollClip;
+
+  // usually nullptr, except when building children of an nsDisplayPerspective
+  const DisplayItemScrollClip* mScrollClipForPerspectiveChild;
+
   bool mInTransformedSubtree;
   bool mInActiveTransformedSubtree;
   bool mDisableSubpixelAntialiasingInDescendants;

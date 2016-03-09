@@ -6121,59 +6121,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
     ]
   };
 
-  gCSSProperties["grid-template"] = {
-    domProp: "gridTemplate",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [
-      "grid-template-areas",
-      "grid-template-rows",
-      "grid-template-columns",
-    ],
-    initial_values: [
-      "none",
-      "none / none",
-    ],
-    other_values: [
-      // <'grid-template-rows'> / <'grid-template-columns'>
-      "40px / 100px",
-      "[foo] 40px [bar] / [baz] 100px [fizz]",
-      " none/100px",
-      "40px/none",
-      // [ <track-list> / ]? [ <line-names>? <string> <track-size>? <line-names>? ]+
-      "'fizz'",
-      "[bar] 'fizz'",
-      "'fizz' / [foo] 40px",
-      "[bar] 'fizz' / [foo] 40px",
-      "'fizz' 100px / [foo] 40px",
-      "[bar] 'fizz' 100px / [foo] 40px",
-      "[bar] 'fizz' 100px [buzz] / [foo] 40px",
-      "[bar] 'fizz' 100px [buzz] \n [a] '.' 200px [b] / [foo] 40px",
-    ],
-    invalid_values: [
-      "[foo] [bar] 40px / 100px",
-      "[fizz] [buzz] 100px / 40px",
-      "[fizz] [buzz] 'foo' / 40px",
-      "'foo' / none"
-    ]
-  };
-  if (isGridTemplateSubgridValueEnabled) {
-    gCSSProperties["grid-template"].other_values.push(
-      "subgrid",
-      "subgrid/40px 20px",
-      "subgrid [foo] [] [bar baz] / 40px 20px",
-      "40px 20px/subgrid",
-      "40px 20px/subgrid  [foo] [] repeat(3, [a] [b]) [bar baz]",
-      "subgrid/subgrid",
-      "subgrid [foo] [] [bar baz]/subgrid [foo] [] [bar baz]"
-    );
-    gCSSProperties["grid-template"].invalid_values.push(
-      "subgrid []",
-      "subgrid [] / 'fizz'",
-      "subgrid / 'fizz'"
-    );
-  }
-
   gCSSProperties["grid"] = {
     domProp: "grid",
     inherited: false,
@@ -6197,8 +6144,21 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "column dense auto",
       "dense row minmax(min-content, 2fr)",
       "row 40px / 100px",
+      // <'grid-template-rows'> / <'grid-template-columns'>
+      "40px / 100px",
+      "[foo] 40px [bar] / [baz] 100px [fizz]",
+      " none/100px",
+      "40px/none",
+      // [ <track-list> / ]? [ <line-names>? <string> <track-size>? <line-names>? ]+
+      "'fizz'",
+      "[bar] 'fizz'",
+      "'fizz' / [foo] 40px",
+      "[bar] 'fizz' / [foo] 40px",
+      "'fizz' 100px / [foo] 40px",
+      "[bar] 'fizz' 100px / [foo] 40px",
+      "[bar] 'fizz' 100px [buzz] / [foo] 40px",
+      "[bar] 'fizz' 100px [buzz] \n [a] '.' 200px [b] / [foo] 40px",
     ].concat(
-      gCSSProperties["grid-template"].other_values,
       gCSSProperties["grid-auto-flow"].other_values
     ),
     invalid_values: [
@@ -6206,12 +6166,31 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "row -20px",
       "row 200ms",
       "row 40px 100px",
+      "[foo] [bar] 40px / 100px",
+      "[fizz] [buzz] 100px / 40px",
+      "[fizz] [buzz] 'foo' / 40px",
+      "'foo' / none"
     ].concat(
-      gCSSProperties["grid-template"].invalid_values,
       gCSSProperties["grid-auto-flow"].invalid_values
         .filter((v) => v != 'none')
     )
   };
+  if (isGridTemplateSubgridValueEnabled) {
+    gCSSProperties["grid"].other_values.push(
+      "subgrid",
+      "subgrid/40px 20px",
+      "subgrid [foo] [] [bar baz] / 40px 20px",
+      "40px 20px/subgrid",
+      "40px 20px/subgrid  [foo] [] repeat(3, [a] [b]) [bar baz]",
+      "subgrid/subgrid",
+      "subgrid [foo] [] [bar baz]/subgrid [foo] [] [bar baz]"
+    );
+    gCSSProperties["grid"].invalid_values.push(
+      "subgrid []",
+      "subgrid [] / 'fizz'",
+      "subgrid / 'fizz'"
+    );
+  }
 
   var gridLineOtherValues = [
     "foo",

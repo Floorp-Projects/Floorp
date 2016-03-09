@@ -29,8 +29,7 @@ class DisplayItemClip;
  * in that case, mIsAsyncScrollable on the scroll clip will be false.
  * When async-scrollable scroll frames are nested, the inner display items
  * can walk the whole chain of scroll clips via the DisplayItemScrollClip's
- * mParent pointer, or its mCrossStackingContextParent pointer if they need
- * access to the complete chain.
+ * mParent pointer.
  * Storing scroll clips on display items allows easy access of all scroll
  * frames that affect a certain display item, and it allows some display list
  * operations to compute more accurate clips, for example when computing the
@@ -40,7 +39,6 @@ class DisplayItemClip;
 class DisplayItemScrollClip {
 public:
   DisplayItemScrollClip(const DisplayItemScrollClip* aParent,
-                        const DisplayItemScrollClip* aCrossStackingContextParent,
                         nsIScrollableFrame* aScrollableFrame,
                         const DisplayItemClip* aClip,
                         bool aIsAsyncScrollable)
@@ -48,28 +46,36 @@ public:
     , mScrollableFrame(aScrollableFrame)
     , mClip(aClip)
     , mIsAsyncScrollable(aIsAsyncScrollable)
-    , mCrossStackingContextParent(aCrossStackingContextParent)
-    , mCrossStackingContextDepth(aCrossStackingContextParent ?
-        aCrossStackingContextParent->mCrossStackingContextDepth + 1 : 1)
+    , mDepth(aParent ? aParent->mDepth + 1 : 1)
   {
     MOZ_ASSERT(mScrollableFrame);
   }
 
   /**
-   * "Pick innermost" is analogous to the intersection operation on regular
+   * "Pick descendant" is analogous to the intersection operation on regular
    * clips: In some cases, there are multiple candidate clips that can apply to
    * an item, one of them being the ancestor of the other. This method picks
    * the descendant.
    * Both aClip1 and aClip2 are allowed to be null.
    */
   static const DisplayItemScrollClip*
-  PickInnermost(const DisplayItemScrollClip* aClip1,
+  PickDescendant(const DisplayItemScrollClip* aClip1,
                 const DisplayItemScrollClip* aClip2)
   {
     MOZ_ASSERT(IsAncestor(aClip1, aClip2) || IsAncestor(aClip2, aClip1),
                "one of the scroll clips must be an ancestor of the other");
     return Depth(aClip1) > Depth(aClip2) ? aClip1 : aClip2;
   }
+
+  static const DisplayItemScrollClip*
+  PickAncestor(const DisplayItemScrollClip* aClip1,
+                const DisplayItemScrollClip* aClip2)
+  {
+    MOZ_ASSERT(IsAncestor(aClip1, aClip2) || IsAncestor(aClip2, aClip1),
+               "one of the scroll clips must be an ancestor of the other");
+    return Depth(aClip1) < Depth(aClip2) ? aClip1 : aClip2;
+  }
+
 
   /**
    * Returns whether aAncestor is an ancestor scroll clip of aDescendant.
@@ -108,14 +114,9 @@ public:
 
 private:
   static uint32_t Depth(const DisplayItemScrollClip* aSC)
-  { return aSC ? aSC->mCrossStackingContextDepth : 0; }
+  { return aSC ? aSC->mDepth : 0; }
 
-  /**
-   * The previous (outer) scroll clip, across stacking contexts, or null.
-   */
-  const DisplayItemScrollClip* mCrossStackingContextParent;
-
-  const uint32_t mCrossStackingContextDepth;
+  const uint32_t mDepth;
 };
 
 } // namespace mozilla
