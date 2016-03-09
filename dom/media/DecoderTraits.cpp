@@ -280,7 +280,7 @@ bool DecoderTraits::DecoderWaitsForOnConnected(const nsACString& aMimeType) {
 static bool
 IsAndroidMediaType(const nsACString& aType)
 {
-  if (!MediaDecoder::IsAndroidMediaEnabled()) {
+  if (!MediaDecoder::IsAndroidMediaPluginEnabled()) {
     return false;
   }
 
@@ -420,7 +420,7 @@ DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
   DirectShowDecoder::GetSupportedCodecs(nsDependentCString(aMIMEType), &codecList);
 #endif
 #ifdef MOZ_ANDROID_OMX
-  if (MediaDecoder::IsAndroidMediaEnabled()) {
+  if (MediaDecoder::IsAndroidMediaPluginEnabled()) {
     EnsureAndroidMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), &codecList);
   }
 #endif
@@ -499,7 +499,7 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
   }
 #endif
 #ifdef MOZ_ANDROID_OMX
-  if (MediaDecoder::IsAndroidMediaEnabled() &&
+  if (MediaDecoder::IsAndroidMediaPluginEnabled() &&
       EnsureAndroidMediaPluginHost()->FindDecoder(nsDependentCString(aMIMEType), nullptr)) {
     return CANPLAY_MAYBE;
   }
@@ -576,7 +576,7 @@ InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
   }
 #endif
 #ifdef MOZ_ANDROID_OMX
-  if (MediaDecoder::IsAndroidMediaEnabled() &&
+  if (MediaDecoder::IsAndroidMediaPluginEnabled() &&
       EnsureAndroidMediaPluginHost()->FindDecoder(aType, nullptr)) {
     decoder = new AndroidMediaDecoder(aOwner, aType);
     return decoder.forget();
@@ -648,7 +648,7 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   } else
 #endif
 #ifdef MOZ_ANDROID_OMX
-  if (MediaDecoder::IsAndroidMediaEnabled() &&
+  if (MediaDecoder::IsAndroidMediaPluginEnabled() &&
       EnsureAndroidMediaPluginHost()->FindDecoder(aType, nullptr)) {
     decoderReader = new AndroidMediaReader(aDecoder, aType);
   } else
@@ -689,7 +689,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
 #endif
     IsWebMSupportedType(aType) ||
 #ifdef MOZ_ANDROID_OMX
-    (MediaDecoder::IsAndroidMediaEnabled() && IsAndroidMediaType(aType)) ||
+    (MediaDecoder::IsAndroidMediaPluginEnabled() && IsAndroidMediaType(aType)) ||
 #endif
 #ifdef MOZ_FMP4
     IsMP4SupportedType(aType) ||

@@ -30,6 +30,10 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Telemetry.h"
 
+#ifdef MOZ_ANDROID_OMX
+#include "AndroidBridge.h"
+#endif
+
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::media;
@@ -1691,9 +1695,11 @@ MediaDecoder::IsOmxEnabled()
 
 #ifdef MOZ_ANDROID_OMX
 bool
-MediaDecoder::IsAndroidMediaEnabled()
+MediaDecoder::IsAndroidMediaPluginEnabled()
 {
-  return Preferences::GetBool("media.plugins.enabled");
+  return AndroidBridge::Bridge() &&
+         AndroidBridge::Bridge()->GetAPIVersion() < 16 &&
+         Preferences::GetBool("media.plugins.enabled");
 }
 #endif
 
