@@ -162,7 +162,7 @@ CheckValType(JSContext* cx, Decoder& d, ValType type)
         break;
     }
 
-    return Fail(cx, d, "bad value type");
+    return Fail(cx, d, "bad type");
 }
 
 static bool
