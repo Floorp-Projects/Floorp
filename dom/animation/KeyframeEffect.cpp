@@ -34,6 +34,7 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
 {
   // AnimationEffectTimingProperties
   aRetVal.mDelay = aTiming.mDelay.ToMilliseconds();
+  aRetVal.mEndDelay = aTiming.mEndDelay.ToMilliseconds();
   aRetVal.mFill = aComputedTiming.mFill;
   aRetVal.mIterations = aComputedTiming.mIterations;
   aRetVal.mIterationStart = aComputedTiming.mIterationStart;
@@ -249,8 +250,8 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   result.mIterationStart = std::max(aTiming.mIterationStart, 0.0);
 
   result.mActiveDuration = ActiveDuration(result.mDuration, result.mIterations);
-  // Bug 1244635: Add endDelay to the end time calculation
-  result.mEndTime = aTiming.mDelay + result.mActiveDuration;
+  result.mEndTime = aTiming.mDelay + result.mActiveDuration +
+                    aTiming.mEndDelay;
   result.mFill = aTiming.mFill == dom::FillMode::Auto ?
                  dom::FillMode::None :
                  aTiming.mFill;
@@ -269,7 +270,9 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
 
   // Get the normalized time within the active interval.
   StickyTimeDuration activeTime;
-  if (localTime >= aTiming.mDelay + result.mActiveDuration) {
+  if (localTime >=
+        std::min(StickyTimeDuration(aTiming.mDelay + result.mActiveDuration),
+                 result.mEndTime)) {
     result.mPhase = ComputedTiming::AnimationPhase::After;
     if (!result.FillsForwards()) {
       // The animation isn't active or filling at this time.
@@ -282,7 +285,8 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
       + result.mIterationStart;
     isEndOfFinalIteration = result.mIterations != 0.0 &&
                             fmod(finiteProgress, 1.0) == 0;
-  } else if (localTime < aTiming.mDelay) {
+  } else if (localTime <
+               std::min(StickyTimeDuration(aTiming.mDelay), result.mEndTime)) {
     result.mPhase = ComputedTiming::AnimationPhase::Before;
     if (!result.FillsBackwards()) {
       // The animation isn't active or filling at this time.

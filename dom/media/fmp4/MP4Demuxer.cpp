@@ -302,6 +302,9 @@ MP4TrackDemuxer::GetSamples(int32_t aNumSamples)
   }
   RefPtr<MediaRawData> sample;
   while (aNumSamples && (sample = mIterator->GetNext())) {
+    if (!sample->Size()) {
+      continue;
+    }
     samples->mSamples.AppendElement(sample);
     aNumSamples--;
   }

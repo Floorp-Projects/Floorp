@@ -21,10 +21,20 @@ class nsPresContext;
 
 namespace mozilla {
 
-typedef InfallibleTArray<RefPtr<dom::Animation>> AnimationPtrArray;
+// Traits class to define the specific atoms used when storing specializations
+// of AnimationCollection as a property on an Element (e.g. which atom
+// to use when storing an AnimationCollection<CSSAnimation> for a ::before
+// pseudo-element).
+template <class AnimationType>
+struct AnimationTypeTraits { };
 
-struct AnimationCollection : public LinkedListElement<AnimationCollection>
+template <class AnimationType>
+class AnimationCollection
+  : public LinkedListElement<AnimationCollection<AnimationType>>
 {
+  typedef AnimationCollection<AnimationType> SelfType;
+  typedef AnimationTypeTraits<AnimationType> TraitsType;
+
   AnimationCollection(dom::Element* aElement, nsIAtom* aElementProperty)
     : mElement(aElement)
     , mElementProperty(aElementProperty)
@@ -35,12 +45,14 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
   {
     MOZ_COUNT_CTOR(AnimationCollection);
   }
+
+public:
   ~AnimationCollection()
   {
     MOZ_ASSERT(mCalledPropertyDtor,
                "must call destructor through element property dtor");
     MOZ_COUNT_DTOR(AnimationCollection);
-    remove();
+    LinkedListElement<SelfType>::remove();
   }
 
   void Destroy()
@@ -52,20 +64,40 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
   static void PropertyDtor(void *aObject, nsIAtom *aPropertyName,
                            void *aPropertyValue, void *aData);
 
-public:
+  // Get the collection of animations for the given |aElement| and
+  // |aPseudoType|.
+  static AnimationCollection<AnimationType>*
+    GetAnimationCollection(dom::Element* aElement,
+                           CSSPseudoElementType aPseudoType);
+
+  // Given the frame |aFrame| with possibly animated content, finds its
+  // associated collection of animations. If |aFrame| is a generated content
+  // frame, this function may examine the parent frame to search for such
+  // animations.
+  static AnimationCollection<AnimationType>* GetAnimationCollection(
+    const nsIFrame* aFrame);
+
+  // Get the collection of animations for the given |aElement| and
+  // |aPseudoType| or create it if it does not already exist.
+  //
+  // We'll set the outparam |aCreatedCollection| to true if we have
+  // to create the collection and we successfully do so. Otherwise,
+  // we'll set it to false.
+  static AnimationCollection<AnimationType>*
+    GetOrCreateAnimationCollection(dom::Element* aElement,
+                                   CSSPseudoElementType aPseudoType,
+                                   bool* aCreatedCollection);
+
   bool IsForElement() const { // rather than for a pseudo-element
-    return mElementProperty == nsGkAtoms::animationsProperty ||
-           mElementProperty == nsGkAtoms::transitionsProperty;
+    return mElementProperty == TraitsType::ElementPropertyAtom();
   }
 
   bool IsForBeforePseudo() const {
-    return mElementProperty == nsGkAtoms::animationsOfBeforeProperty ||
-           mElementProperty == nsGkAtoms::transitionsOfBeforeProperty;
+    return mElementProperty == TraitsType::BeforePropertyAtom();
   }
 
   bool IsForAfterPseudo() const {
-    return mElementProperty == nsGkAtoms::animationsOfAfterProperty ||
-           mElementProperty == nsGkAtoms::transitionsOfAfterProperty;
+    return mElementProperty == TraitsType::AfterPropertyAtom();
   }
 
   CSSPseudoElementType PseudoElementType() const
@@ -89,7 +121,7 @@ public:
   // i.e., in an atom list)
   nsIAtom *mElementProperty;
 
-  AnimationPtrArray mAnimations;
+  InfallibleTArray<RefPtr<AnimationType>> mAnimations;
 
   // For CSS transitions only, we record the most recent generation
   // for which we've done the transition update, so that we avoid doing
@@ -102,6 +134,9 @@ public:
   void UpdateCheckGeneration(nsPresContext* aPresContext);
 
 private:
+  static nsIAtom* GetPropertyAtomForPseudoType(
+    CSSPseudoElementType aPseudoType);
+
 #ifdef DEBUG
   bool mCalledPropertyDtor;
 #endif

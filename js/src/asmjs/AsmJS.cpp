@@ -51,6 +51,7 @@ using namespace js::frontend;
 using namespace js::jit;
 using namespace js::wasm;
 
+using mozilla::CeilingLog2;
 using mozilla::Compression::LZ4;
 using mozilla::HashGeneric;
 using mozilla::IsNaN;
@@ -2704,7 +2705,8 @@ class MOZ_STACK_CLASS FunctionValidator
         MOZ_ASSERT(expr == Expr::Br || expr == Expr::BrIf);
         MOZ_ASSERT(absolute < blockDepth_);
         return encoder().writeExpr(expr) &&
-               encoder().writeVarU32(blockDepth_ - 1 - absolute);
+               encoder().writeVarU32(blockDepth_ - 1 - absolute) &&
+               encoder().writeExpr(Expr::Nop);
     }
     void removeLabel(PropertyName* label, LabelMap* map) {
         LabelMap::Ptr p = map->lookup(label);
@@ -3698,12 +3700,12 @@ static bool
 CheckAndPrepareArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr,
                            bool isSimd, Scalar::Type* viewType)
 {
-    // asm.js doesn't have constant offsets, so just encode a 0.
-    if (!f.encoder().writeVarU32(0))
+    size_t flagsAt;
+    if (!f.encoder().writePatchableU8(&flagsAt))
         return false;
 
-    size_t alignAt;
-    if (!f.encoder().writePatchableVarU8(&alignAt))
+    // asm.js doesn't have constant offsets, so just encode a 0.
+    if (!f.encoder().writeVarU32(0))
         return false;
 
     size_t prepareAt;
@@ -3715,7 +3717,9 @@ CheckAndPrepareArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode*
         return false;
 
     // asm.js only has naturally-aligned accesses.
-    f.encoder().patchVarU8(alignAt, TypedArrayElemSize(*viewType));
+    size_t align = TypedArrayElemSize(*viewType);
+    MOZ_ASSERT(IsPowerOfTwo(align));
+    f.encoder().patchVarU8(flagsAt, CeilingLog2(align));
 
     // Don't generate the mask op if there is no need for it which could happen for
     // a shift of zero or a SIMD access.
@@ -6519,12 +6523,12 @@ CheckSwitch(FunctionValidator& f, ParseNode* switchStmt)
     // a case is not explicitly defined, it goes to the default.
     for (size_t i = 0; i < tableLength; i++) {
         uint32_t target = caseDepths[i] == CASE_NOT_DEFINED ? defaultDepth : caseDepths[i];
-        if (!f.encoder().writeVarU32(target))
+        if (!f.encoder().writeFixedU32(target))
             return false;
     }
 
     // Write the default depth.
-    if (!f.encoder().writeVarU32(defaultDepth))
+    if (!f.encoder().writeFixedU32(defaultDepth))
         return false;
 
     // Subtract lowest case value, so that all the cases start from 0.

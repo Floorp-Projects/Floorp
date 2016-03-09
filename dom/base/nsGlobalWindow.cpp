@@ -612,6 +612,7 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   mMayHavePaintEventListener(false), mMayHaveTouchEventListener(false),
   mMayHaveMouseEnterLeaveEventListener(false),
   mMayHavePointerEnterLeaveEventListener(false),
+  mInnerObjectsFreed(false),
   mIsModalContentWindow(false),
   mIsActive(false), mIsBackground(false),
   mAudioMuted(false), mAudioVolume(1.0), mAudioCaptured(false),
@@ -840,8 +841,7 @@ nsOuterWindowProxy::defineProperty(JSContext* cx,
                                    JS::Handle<JS::PropertyDescriptor> desc,
                                    JS::ObjectOpResult &result) const
 {
-  int32_t index = GetArrayIndexFromId(cx, id);
-  if (IsArrayIndex(index)) {
+  if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {
     // Spec says to Reject whether this is a supported index or not,
     // since we have no indexed setter or indexed creator.  It is up
     // to the caller to decide whether to throw a TypeError.
@@ -900,8 +900,7 @@ nsOuterWindowProxy::delete_(JSContext *cx, JS::Handle<JSObject*> proxy,
     return result.failCantDeleteWindowElement();
   }
 
-  int32_t index = GetArrayIndexFromId(cx, id);
-  if (IsArrayIndex(index)) {
+  if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {
     // Indexed, but not supported.  Spec says return true.
     return result.succeed();
   }
@@ -984,8 +983,7 @@ nsOuterWindowProxy::set(JSContext *cx, JS::Handle<JSObject*> proxy,
                         JS::Handle<JS::Value> receiver,
                         JS::ObjectOpResult &result) const
 {
-  int32_t index = GetArrayIndexFromId(cx, id);
-  if (IsArrayIndex(index)) {
+  if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {
     // Reject the set.  It's up to the caller to decide whether to throw a
     // TypeError.  If the caller is strict mode JS code, it'll throw.
     return result.failReadOnly();
@@ -1046,7 +1044,7 @@ nsOuterWindowProxy::GetSubframeWindow(JSContext *cx,
                                       JS::Handle<JSObject*> proxy,
                                       JS::Handle<jsid> id) const
 {
-  int32_t index = GetArrayIndexFromId(cx, id);
+  uint32_t index = GetArrayIndexFromId(cx, id);
   if (!IsArrayIndex(index)) {
     return nullptr;
   }
@@ -1174,7 +1172,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 #endif
     mShowFocusRingForContent(false),
     mFocusByKeyOccurred(false),
-    mInnerObjectsFreed(false),
     mHasGamepad(false),
 #ifdef MOZ_GAMEPAD
     mHasSeenGamepadInput(false),
