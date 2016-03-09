@@ -600,6 +600,8 @@ DecodeReturn(FunctionDecoder& f, ExprType* type)
 static bool
 DecodeExpr(FunctionDecoder& f, ExprType* type)
 {
+    JS_CHECK_RECURSION(f.cx(), return false);
+
     Expr expr;
     if (!f.d().readExpr(&expr))
         return f.fail("unable to read expression");
