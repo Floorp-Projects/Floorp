@@ -1,6 +1,4 @@
-/*
- * $_
- *
+/**
  * Returns the element with the specified |name| attribute.
  */
 function $_(formNum, name) {
@@ -30,10 +28,7 @@ function $_(formNum, name) {
   return element;
 }
 
-
-/*
- * checkForm
- *
+/**
  * Check a form for expected values. If an argument is null, a field's
  * expected value will be the default value.
  *
@@ -79,10 +74,7 @@ function checkForm(formNum, val1, val2, val3) {
        " in form " + formNum);
 }
 
-
-/*
- * checkUnmodifiedForm
- *
+/**
  * Check a form for unmodified values from when page was loaded.
  *
  * <form id="form#">
@@ -104,9 +96,10 @@ function checkUnmodifiedForm(formNum) {
   }
 }
 
-
-// Mochitest gives us a sendKey(), but it's targeted to a specific element.
-// This basically sends an untargeted key event, to whatever's focused.
+/**
+ * Mochitest gives us a sendKey(), but it's targeted to a specific element.
+ * This basically sends an untargeted key event, to whatever's focused.
+ */
 function doKey(aKey, modifier) {
   var keyName = "DOM_VK_" + aKey.toUpperCase();
   var key = KeyEvent[keyName];
@@ -126,10 +119,12 @@ function doKey(aKey, modifier) {
   wutils.sendKeyEvent("keyup",    key, 0, modifier);
 }
 
-// Init with a common login
-// If selfFilling is true or non-undefined, fires an event at the page so that
-// the test can start checking filled-in values. Tests that check observer
-// notifications might be confused by this.
+/**
+ * Init with a common login
+ * If selfFilling is true or non-undefined, fires an event at the page so that
+ * the test can start checking filled-in values. Tests that check observer
+ * notifications might be confused by this.
+ */
 function commonInit(selfFilling) {
   var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"].
               getService(SpecialPowers.Ci.nsILoginManager);
@@ -238,7 +233,7 @@ function dumpLogins(pwmgr) {
 }
 
 function dumpLogin(label, login) {
-  loginText = "";
+  var loginText = "";
   loginText += "host: ";
   loginText += login.hostname;
   loginText += " / formURL: ";
