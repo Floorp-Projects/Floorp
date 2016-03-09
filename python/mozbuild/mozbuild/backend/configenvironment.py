@@ -78,12 +78,11 @@ class ConfigEnvironment(object):
     Creating a ConfigEnvironment requires a few arguments:
       - topsrcdir and topobjdir are, respectively, the top source and
         the top object directory.
-      - defines is a list of (name, value) tuples. In autoconf, these are
-        set with AC_DEFINE and AC_DEFINE_UNQUOTED
+      - defines is a dict filled from AC_DEFINE and AC_DEFINE_UNQUOTED in
+        autoconf.
       - non_global_defines are a list of names appearing in defines above
         that are not meant to be exported in ACDEFINES (see below)
-      - substs is a list of (name, value) tuples. In autoconf, these are
-        set with AC_SUBST.
+      - substs is a dict filled from AC_SUBST in autoconf.
 
     ConfigEnvironment automatically defines one additional substs variable
     from all the defines not appearing in non_global_defines:
@@ -106,15 +105,15 @@ class ConfigEnvironment(object):
     path or a path relative to the topobjdir.
     """
 
-    def __init__(self, topsrcdir, topobjdir, defines=[], non_global_defines=[],
-        substs=[], source=None):
+    def __init__(self, topsrcdir, topobjdir, defines=None,
+        non_global_defines=None, substs=None, source=None):
 
         if not source:
             source = mozpath.join(topobjdir, 'config.status')
         self.source = source
-        self.defines = ReadOnlyDict(defines)
-        self.non_global_defines = non_global_defines
-        self.substs = dict(substs)
+        self.defines = ReadOnlyDict(defines or {})
+        self.non_global_defines = non_global_defines or []
+        self.substs = dict(substs or {})
         self.topsrcdir = mozpath.abspath(topsrcdir)
         self.topobjdir = mozpath.abspath(topobjdir)
         self.lib_prefix = self.substs.get('LIB_PREFIX', '')
@@ -129,10 +128,11 @@ class ConfigEnvironment(object):
             self.import_prefix = self.dll_prefix
             self.import_suffix = self.dll_suffix
 
-        global_defines = [name for name, value in defines
-            if not name in non_global_defines]
+        global_defines = [name for name in self.defines
+            if not name in self.non_global_defines]
         self.substs['ACDEFINES'] = ' '.join(['-D%s=%s' % (name,
-            shell_quote(self.defines[name]).replace('$', '$$')) for name in global_defines])
+            shell_quote(self.defines[name]).replace('$', '$$'))
+            for name in sorted(global_defines)])
         def serialize(obj):
             if isinstance(obj, StringTypes):
                 return obj

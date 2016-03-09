@@ -60,6 +60,17 @@ public:
 
   gl::GLContext* GetGLContext() const { return mCompositor ? mCompositor->gl() : nullptr; }
 
+  virtual bool NeedsFenceHandle() override
+  {
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+    return true;
+#else
+    return false;
+#endif
+  }
+
+  virtual FenceHandle GetCompositorReleaseFence() override;
+
 private:
   void DestroyEGLImage();
 

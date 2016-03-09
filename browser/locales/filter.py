@@ -7,7 +7,7 @@ def test(mod, path, entity = None):
   # ignore anything but Firefox
   if mod not in ("netwerk", "dom", "toolkit", "security/manager",
                  "devtools/client", "devtools/shared",
-                 "browser", "webapprt",
+                 "browser",
                  "extensions/reporter", "extensions/spellcheck",
                  "other-licenses/branding/firefox",
                  "browser/branding/official",

@@ -233,9 +233,7 @@
     function createTester(links) {
       var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
                              getService(Ci.nsIWindowMediator);
-      var winType = gConfig.testRoot == "browser" ? "navigator:browser" :
-                    gConfig.testRoot == "webapprtChrome" ? "webapprt:webapp" :
-                    null;
+      var winType = gConfig.testRoot == "browser" ? "navigator:browser" : null;
       if (!winType) {
         throw new Error("Unrecognized gConfig.testRoot: " + gConfig.testRoot);
       }

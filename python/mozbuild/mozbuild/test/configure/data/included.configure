@@ -1,0 +1,47 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# For more complex and repetitive things, we can create templates
+@template
+def check_compiler_flag(flag):
+    @depends(is_gcc)
+    def check(value):
+        if value:
+            set_config('CFLAGS', [flag])
+
+    return check
+
+check_compiler_flag('-Werror=foobar')
+
+# A template that doesn't return functions can be used in @depends functions.
+@template
+def fortytwo():
+    return 42
+
+@template
+def twentyone():
+    yield 21
+
+@depends(is_gcc)
+def check(value):
+    if value:
+        set_config('TEMPLATE_VALUE', fortytwo())
+        for val in twentyone():
+            set_config('TEMPLATE_VALUE_2', val)
+
+# Templates can use @advanced too to import modules and get the full set of
+# builtins.
+@template
+@advanced
+def platform():
+    import sys
+    return sys.platform
+
+option('--enable-advanced-template', help='Advanced template')
+@depends('--enable-advanced-template')
+def check(value):
+    if value:
+        set_config('PLATFORM', platform())

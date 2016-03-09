@@ -85,6 +85,7 @@ VRManager::~VRManager()
 void
 VRManager::Destroy()
 {
+  mVRDevices.Clear();
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
     mManagers[i]->Destroy();
   }

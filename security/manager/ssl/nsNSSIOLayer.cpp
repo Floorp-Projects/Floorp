@@ -1119,11 +1119,6 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
         return true;
       }
       Telemetry::Accumulate(Telemetry::SSL_WEAK_CIPHERS_FALLBACK, 0);
-    } else if (err == SSL_ERROR_NO_CYPHER_OVERLAP) {
-      // Indicate that the override UI should be shown.
-      socketInfo->SetSecurityState(
-        nsIWebProgressListener::STATE_IS_INSECURE |
-        nsIWebProgressListener::STATE_USES_WEAK_CRYPTO);
     }
   }
 

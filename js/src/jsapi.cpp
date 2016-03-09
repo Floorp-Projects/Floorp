@@ -1684,10 +1684,15 @@ JS::GetFirstArgumentAsTypeHint(JSContext* cx, CallArgs args, JSType *result)
     }
 
     JSAutoByteString bytes;
+    const char* source = ValueToSourceForError(cx, args.get(0), bytes);
+    if (!source) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
                          "Symbol.toPrimitive",
-                         "\"string\", \"number\", or \"default\"",
-                         ValueToSourceForError(cx, args.get(0), bytes));
+                         "\"string\", \"number\", or \"default\"", source);
     return false;
 }
 

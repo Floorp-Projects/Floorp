@@ -54,8 +54,10 @@ class WorkerThread final
   // Protected by nsThread::mLock and waited on with mWorkerPrivateCondVar.
   uint32_t mOtherThreadsDispatchingViaEventTarget;
 
+#ifdef DEBUG
   // Protected by nsThread::mLock.
-  DebugOnly<bool> mAcceptingNonWorkerRunnables;
+  bool mAcceptingNonWorkerRunnables;
+#endif
 
 public:
   static already_AddRefed<WorkerThread>

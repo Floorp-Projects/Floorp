@@ -67,7 +67,9 @@ protected:
   android::MediaBuffer* mMediaBuffer;
   // Check if current thread is the same one which called SetMediaBuffer().
   // It doesn't need to hold reference count.
-  DebugOnly<nsIThread*> mThread;
+#ifdef DEBUG
+  nsIThread* mThread;
+#endif
 };
 
 } // namespace mozilla

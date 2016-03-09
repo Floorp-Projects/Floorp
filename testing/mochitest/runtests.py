@@ -368,8 +368,7 @@ class MochitestServer(object):
         self.shutdownURL = "http://%(server)s:%(port)s/server/shutdown" % {
             "server": self.webServer,
             "port": self.httpPort}
-        self.testPrefix = "'webapprt_'" if options.get(
-            'webapprtContent') else "undefined"
+        self.testPrefix = "undefined"
 
         if options.get('httpdPath'):
             self._httpdPath = options['httpdPath']
@@ -534,6 +533,7 @@ class MochitestBase(object):
 
         self.marionette = None
         self.start_script = None
+        self.nsprLogs = None
         self.start_script_args = []
 
         if self.log is None:
@@ -614,8 +614,7 @@ class MochitestBase(object):
             options.logFile = self.getLogFilePath(options.logFile)
 
         if options.browserChrome or options.chrome or \
-           options.a11y or options.webapprtChrome or options.jetpackPackage or \
-           options.jetpackAddon:
+           options.a11y or options.jetpackPackage or options.jetpackAddon:
             self.makeTestConfig(options)
         else:
             if options.autorun:
@@ -626,8 +625,6 @@ class MochitestBase(object):
                 self.urlOpts.append("maxTimeouts=%d" % options.maxTimeouts)
             if not options.keep_open:
                 self.urlOpts.append("closeWhenDone=1")
-            if options.webapprtContent:
-                self.urlOpts.append("testRoot=webapprtContent")
             if options.logFile:
                 self.urlOpts.append(
                     "logFile=" +
@@ -697,10 +694,6 @@ class MochitestBase(object):
             return "chrome"
         elif options.a11y:
             return "a11y"
-        elif options.webapprtChrome:
-            return "webapprt-chrome"
-        elif options.webapprtContent:
-            return "webapprt-content"
         else:
             return "mochitest"
 
@@ -717,11 +710,6 @@ class MochitestBase(object):
             testPattern = re.compile(r".+\.xpi")
         elif options.chrome or options.a11y:
             testPattern = re.compile(r"(browser|test)_.+\.(xul|html|js|xhtml)")
-        elif options.webapprtContent:
-            testPattern = re.compile(r"webapprt_")
-        elif options.webapprtChrome:
-            allow_js_css = True
-            testPattern = re.compile(r"browser_")
         else:
             testPattern = re.compile(r"test_")
 
@@ -745,10 +733,6 @@ class MochitestBase(object):
             self.testRoot = 'jetpack-addon'
         elif options.a11y:
             self.testRoot = 'a11y'
-        elif options.webapprtChrome:
-            self.testRoot = 'webapprtChrome'
-        elif options.webapprtContent:
-            self.testRoot = 'webapprtContent'
         elif options.chrome:
             self.testRoot = 'chrome'
         else:
@@ -2166,7 +2150,7 @@ class MochitestDesktop(MochitestBase):
         self.killNamedOrphans('xpcshell')
 
         # Until we have all green, this only runs on bc*/dt*/mochitest-chrome
-        # jobs, not webapprt*, jetpack*, a11yr (for perf reasons), or plain
+        # jobs, not jetpack*, a11yr (for perf reasons), or plain
 
         testsToRun = self.getTestsToRun(options)
         if not options.runByDir:
@@ -2315,15 +2299,6 @@ class MochitestDesktop(MochitestBase):
             if self.urlOpts:
                 testURL += "?" + "&".join(self.urlOpts)
 
-            # On Mac, pass the path to the runtime, to ensure the test app
-            # uses that specific runtime instead of another one on the system.
-            if mozinfo.isMac and options.webapprtChrome:
-                options.browserArgs.extend(('-runtime', os.path.dirname(os.path.dirname(options.xrePath))))
-
-            if options.webapprtContent:
-                options.browserArgs.extend(('-test-mode', testURL))
-                testURL = None
-
             if options.immersiveMode:
                 options.browserArgs.extend(('-firefoxpath', options.app))
                 options.app = self.immersiveHelperPath
@@ -2347,7 +2322,7 @@ class MochitestDesktop(MochitestBase):
 
             # detect shutdown leaks for m-bc runs
             detectShutdownLeaks = mozinfo.info[
-                "debug"] and options.browserChrome and not options.webapprtChrome
+                "debug"] and options.browserChrome
 
             self.start_script_args.append(self.getTestFlavor(options))
             marionette_args = {

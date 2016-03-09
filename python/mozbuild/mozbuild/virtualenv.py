@@ -82,7 +82,7 @@ class VirtualenvManager(object):
     def activate_path(self):
         return os.path.join(self.bin_path, 'activate_this.py')
 
-    def up_to_date(self):
+    def up_to_date(self, python=sys.executable):
         """Returns whether the virtualenv is present and up to date."""
 
         deps = [self.manifest_path, __file__]
@@ -99,6 +99,12 @@ class VirtualenvManager(object):
         if dep_mtime > activate_mtime:
             return False
 
+        # check interpreter. Assume that a different size is enough to
+        # know whether we've been given a different interpreter, and thus
+        # should refresh the virtualenv.
+        if os.path.getsize(python) != os.path.getsize(self.python_path):
+            return False
+
         # recursively check sub packages.txt files
         submanifests = [i[1] for i in self.packages()
                         if i[0] == 'packages.txt']
@@ -109,12 +115,12 @@ class VirtualenvManager(object):
                                            self.virtualenv_root,
                                            self.log_handle,
                                            submanifest)
-            if not submanager.up_to_date():
+            if not submanager.up_to_date(python):
                 return False
 
         return True
 
-    def ensure(self):
+    def ensure(self, python=sys.executable):
         """Ensure the virtualenv is present and up to date.
 
         If the virtualenv is up to date, this does nothing. Otherwise, it
@@ -123,11 +129,11 @@ class VirtualenvManager(object):
         This should be the main API used from this class as it is the
         highest-level.
         """
-        if self.up_to_date():
+        if self.up_to_date(python):
             return self.virtualenv_root
-        return self.build()
+        return self.build(python)
 
-    def create(self):
+    def create(self, python=sys.executable):
         """Create a new, empty virtualenv.
 
         Receives the path to virtualenv's virtualenv.py script (which will be
@@ -137,7 +143,7 @@ class VirtualenvManager(object):
         env = dict(os.environ)
         env.pop('PYTHONDONTWRITEBYTECODE', None)
 
-        args = [sys.executable, self.virtualenv_script_path,
+        args = [python, self.virtualenv_script_path,
             self.virtualenv_root]
 
         result = subprocess.call(args, stdout=self.log_handle,
@@ -373,13 +379,13 @@ class VirtualenvManager(object):
 
             raise Exception('Error installing package: %s' % directory)
 
-    def build(self):
+    def build(self, python=sys.executable):
         """Build a virtualenv per tree conventions.
 
         This returns the path of the created virtualenv.
         """
 
-        self.create()
+        self.create(python)
 
         # We need to populate the virtualenv using the Python executable in
         # the virtualenv for paths to be proper.

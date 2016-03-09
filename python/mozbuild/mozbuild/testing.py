@@ -6,6 +6,7 @@ from __future__ import absolute_import, unicode_literals
 
 import json
 import os
+import sys
 
 import mozpack.path as mozpath
 
@@ -13,6 +14,8 @@ from .base import MozbuildObject
 from .util import OrderedDefaultDict
 from collections import defaultdict
 
+import manifestparser
+import reftest
 
 def rewrite_test_base(test, new_base, honor_install_to_subdir=False):
     """Rewrite paths in a test to be under a new base path.
@@ -179,10 +182,6 @@ class TestResolver(MozbuildObject):
                 'mochitest', 'chrome'),
             'mochitest': os.path.join(self.topobjdir, '_tests', 'testing',
                 'mochitest', 'tests'),
-            'webapprt-chrome': os.path.join(self.topobjdir, '_tests', 'testing',
-                'mochitest', 'webapprtChrome'),
-            'webapprt-content': os.path.join(self.topobjdir, '_tests', 'testing',
-                'mochitest', 'webapprtContent'),
             'web-platform-tests': os.path.join(self.topobjdir, '_tests', 'testing',
                                                'web-platform'),
             'xpcshell': os.path.join(self.topobjdir, '_tests', 'xpcshell'),
@@ -272,8 +271,6 @@ TEST_MANIFESTS = dict(
     METRO_CHROME=('metro-chrome', 'testing/mochitest', 'metro', True),
     MOCHITEST=('mochitest', 'testing/mochitest', 'tests', True),
     MOCHITEST_CHROME=('chrome', 'testing/mochitest', 'chrome', True),
-    MOCHITEST_WEBAPPRT_CONTENT=('webapprt-content', 'testing/mochitest', 'webapprtContent', True),
-    MOCHITEST_WEBAPPRT_CHROME=('webapprt-chrome', 'testing/mochitest', 'webapprtChrome', True),
     WEBRTC_SIGNALLING_TEST=('steeplechase', 'steeplechase', '.', True),
     XPCSHELL_TESTS=('xpcshell', 'xpcshell', '.', True),
 )
@@ -288,3 +285,36 @@ def all_test_flavors():
     return ([v[0] for v in TEST_MANIFESTS.values()] +
             list(REFTEST_FLAVORS) +
             list(WEB_PATFORM_TESTS_FLAVORS))
+
+# Convenience methods for test manifest reading.
+def read_manifestparser_manifest(context, manifest_path):
+    path = mozpath.normpath(mozpath.join(context.srcdir, manifest_path))
+    return manifestparser.TestManifest(manifests=[path], strict=True,
+                                       rootdir=context.config.topsrcdir,
+                                       finder=context._finder)
+
+def read_reftest_manifest(context, manifest_path):
+    path = mozpath.normpath(mozpath.join(context.srcdir, manifest_path))
+    manifest = reftest.ReftestManifest(finder=context._finder)
+    manifest.load(path)
+    return manifest
+
+def read_wpt_manifest(context, paths):
+    manifest_path, tests_root = paths
+    full_path = mozpath.normpath(mozpath.join(context.srcdir, manifest_path))
+    old_path = sys.path[:]
+    try:
+        # Setup sys.path to include all the dependencies required to import
+        # the web-platform-tests manifest parser. web-platform-tests provides
+        # a the localpaths.py to do the path manipulation, which we load,
+        # providing the __file__ variable so it can resolve the relative
+        # paths correctly.
+        paths_file = os.path.join(context.config.topsrcdir, "testing",
+                                  "web-platform", "tests", "tools", "localpaths.py")
+        _globals = {"__file__": paths_file}
+        execfile(paths_file, _globals)
+        import manifest as wptmanifest
+    finally:
+        sys.path = old_path
+        f = context._finder.get(full_path)
+        return wptmanifest.manifest.load(tests_root, f)
