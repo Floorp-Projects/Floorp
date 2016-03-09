@@ -357,19 +357,19 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
 {
   nsAutoPtr<RespondWithClosure> data(static_cast<RespondWithClosure*>(aClosure));
   nsCOMPtr<nsIRunnable> event;
-  if (NS_SUCCEEDED(aStatus)) {
-    event = new FinishResponse(data->mInterceptedChannel,
-                               data->mInternalResponse,
-                               data->mWorkerChannelInfo,
-                               data->mScriptSpec,
-                               data->mResponseURLSpec);
-  } else {
+  if (NS_WARN_IF(NS_FAILED(aStatus))) {
     AsyncLog(data->mInterceptedChannel, data->mRespondWithScriptSpec,
              data->mRespondWithLineNumber, data->mRespondWithColumnNumber,
              NS_LITERAL_CSTRING("InterceptionFailedWithURL"),
              data->mRequestURL);
     event = new CancelChannelRunnable(data->mInterceptedChannel,
                                       NS_ERROR_INTERCEPTION_FAILED);
+  } else {
+    event = new FinishResponse(data->mInterceptedChannel,
+                               data->mInternalResponse,
+                               data->mWorkerChannelInfo,
+                               data->mScriptSpec,
+                               data->mResponseURLSpec);
   }
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(event)));
 }
@@ -629,6 +629,25 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
       return;
     }
 
+    const uint32_t kCopySegmentSize = 4096;
+
+    // Depending on how the Response passed to .respondWith() was created, we may
+    // get a non-buffered input stream.  In addition, in some configurations the
+    // destination channel's output stream can be unbuffered.  We wrap the output
+    // stream side here so that NS_AsyncCopy() works.  Wrapping the output side
+    // provides the most consistent operation since there are fewer stream types
+    // we are writing to.  The input stream can be a wide variety of concrete
+    // objects which may or many not play well with NS_InputStreamIsBuffered().
+    if (!NS_OutputStreamIsBuffered(responseBody)) {
+      nsCOMPtr<nsIOutputStream> buffered;
+      rv = NS_NewBufferedOutputStream(getter_AddRefs(buffered), responseBody,
+           kCopySegmentSize);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+      responseBody = buffered;
+    }
+
     nsCOMPtr<nsIEventTarget> stsThread = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
     if (NS_WARN_IF(!stsThread)) {
       return;
@@ -636,8 +655,8 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 
     // XXXnsm, Fix for Bug 1141332 means that if we decide to make this
     // streaming at some point, we'll need a different solution to that bug.
-    rv = NS_AsyncCopy(body, responseBody, stsThread, NS_ASYNCCOPY_VIA_READSEGMENTS, 4096,
-                      RespondWithCopyComplete, closure.forget());
+    rv = NS_AsyncCopy(body, responseBody, stsThread, NS_ASYNCCOPY_VIA_WRITESEGMENTS,
+                      kCopySegmentSize, RespondWithCopyComplete, closure.forget());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
     }
