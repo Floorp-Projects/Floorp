@@ -1794,7 +1794,7 @@ nsIOService::SpeculativeConnectInternal(nsIURI *aURI,
                             nullptr, // aLoadingNode,
                             systemPrincipal,
                             nullptr, //aTriggeringPrincipal,
-                            nsILoadInfo::SEC_NORMAL,
+                            nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                             nsIContentPolicy::TYPE_OTHER,
                             getter_AddRefs(channel));
     NS_ENSURE_SUCCESS(rv, rv);
