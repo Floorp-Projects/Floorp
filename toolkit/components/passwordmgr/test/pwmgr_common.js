@@ -160,6 +160,10 @@ function commonInit(selfFilling) {
   if (selfFilling)
     return;
 
+  registerRunTests();
+}
+
+function registerRunTests() {
   // We provide a general mechanism for our tests to know when they can
   // safely run: we add a final form that we know will be filled in, wait
   // for the login manager to tell us that it's filled in and then continue
@@ -253,6 +257,9 @@ function dumpLogin(label, login) {
 
 function getRecipeParent() {
   var { LoginManagerParent } = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerParent.jsm", {});
+  if (!LoginManagerParent.recipeParentPromise) {
+    return null;
+  }
   return LoginManagerParent.recipeParentPromise.then((recipeParent) => {
     return SpecialPowers.wrap(recipeParent);
   });
@@ -273,6 +280,29 @@ function promiseFormsProcessed(expectedCount = 1) {
     }
     SpecialPowers.addObserver(onProcessedForm, "passwordmgr-processed-form", false);
   });
+}
+
+function loadParentTestFile(aRelativeFilePath) {
+  let fileURL = SimpleTest.getTestFileURL(aRelativeFilePath);
+  let testScript = SpecialPowers.loadChromeScript(fileURL);
+  SimpleTest.registerCleanupFunction(function destroyChromeScript() {
+    testScript.destroy();
+  });
+  return testScript;
+}
+
+/**
+ * Run a function synchronously in the parent process and destroy it in the test cleanup function.
+ * @param {Function} aFunction - function that will be stringified and run.
+ * @return {Object} - the return value of loadChromeScript providing message-related methods.
+ *                    @see loadChromeScript in specialpowersAPI.js
+ */
+function runFunctionInParent(aFunction) {
+  let chromeScript = SpecialPowers.loadChromeScript(aFunction);
+  SimpleTest.registerCleanupFunction(() => {
+    chromeScript.destroy();
+  });
+  return chromeScript;
 }
 
 // Code to run when loaded as a chrome script in tests via loadChromeScript
@@ -304,6 +334,11 @@ if (this.addMessageListener) {
 } else {
   // Code to only run in the mochitest pages (not in the chrome script).
   SimpleTest.registerCleanupFunction(() => {
-    getRecipeParent().then(recipeParent => recipeParent.reset());
+    let recipeParent = getRecipeParent();
+    if (!recipeParent) {
+      // No need to reset the recipes if the module wasn't even loaded.
+      return;
+    }
+    recipeParent.then(recipeParent => recipeParent.reset());
   });
 }
