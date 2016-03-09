@@ -347,6 +347,7 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 
     nsCOMPtr<nsIGlobalObject> globalObject = xpc::NativeGlobal(mTargetObj);
     AutoEntryScript aes(globalObject, "async loadSubScript");
+    aes.TakeOwnershipOfErrorReporting();
     JSContext* cx = aes.cx();
     AutoRejectPromise autoPromise(cx, mPromise, globalObject);
 
