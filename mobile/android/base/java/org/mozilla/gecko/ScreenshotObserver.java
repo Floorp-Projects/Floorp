@@ -106,8 +106,8 @@ public class ScreenshotObserver {
             @Override
             public void run() {
                 // Find the most recent image added to the MediaStore and see if it's a screenshot.
+                final Cursor cursor = cr.query(uri, mediaProjections, null, null, MediaStore.Images.ImageColumns.DATE_ADDED + " DESC LIMIT 1");
                 try {
-                    Cursor cursor = cr.query(uri, mediaProjections, null, null, MediaStore.Images.ImageColumns.DATE_ADDED + " DESC LIMIT 1");
                     if (cursor == null) {
                         return;
                     }
@@ -129,9 +129,12 @@ public class ScreenshotObserver {
                             }
                         }
                     }
-                    cursor.close();
                 } catch (Exception e) {
                     Log.e(LOGTAG, "Failure to process media change: ", e);
+                } finally {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
                 }
             }
         });

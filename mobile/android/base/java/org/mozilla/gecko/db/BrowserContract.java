@@ -154,6 +154,7 @@ public class BrowserContract {
         public static final int FAKE_DESKTOP_FOLDER_ID = -1;
         public static final int FIXED_READING_LIST_ID = -2;
         public static final int FIXED_PINNED_LIST_ID = -3;
+        public static final int FIXED_SCREENSHOT_FOLDER_ID = -4;
 
         public static final String MOBILE_FOLDER_GUID = "mobile";
         public static final String PLACES_FOLDER_GUID = "places";
@@ -163,6 +164,7 @@ public class BrowserContract {
         public static final String UNFILED_FOLDER_GUID = "unfiled";
         public static final String FAKE_DESKTOP_FOLDER_GUID = "desktop";
         public static final String PINNED_FOLDER_GUID = "pinned";
+        public static final String SCREENSHOT_FOLDER_GUID = "screenshots";
 
         public static final int TYPE_FOLDER = 0;
         public static final int TYPE_BOOKMARK = 1;
@@ -511,6 +513,17 @@ public class BrowserContract {
         public static final String KEY = "key";
         public static final String VALUE = "value";
         public static final String SYNC_STATUS = "sync_status";
+
+        public enum Key {
+            // We use a parameter, rather than name(), as defensive coding: we can't let the
+            // enum name change because we've already stored values into the DB.
+            SCREENSHOT ("screenshot");
+
+            private final String dbValue;
+
+            Key(final String dbValue) { this.dbValue = dbValue; }
+            public String getDbValue() { return dbValue; }
+        }
 
         public enum SyncStatus {
             // We use a parameter, rather than ordinal(), as defensive coding: we can't let the
