@@ -179,9 +179,9 @@ BenchmarkPlayback::InitDecoder(TrackInfo&& aInfo)
   }
   RefPtr<Benchmark> ref(mMainThreadState);
   mDecoder->Init()->Then(
-    ref->Thread(), __func__,
+    Thread(), __func__,
     [this, ref](TrackInfo::TrackType aTrackType) {
-      Dispatch(NS_NewRunnableFunction([this, ref]() { InputExhausted(); }));
+      InputExhausted();
     },
     [this, ref](MediaDataDecoder::DecoderFailureReason aReason) {
       MainThreadShutdown();
