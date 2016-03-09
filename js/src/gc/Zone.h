@@ -35,7 +35,7 @@ class ZoneHeapThreshold
     double gcHeapGrowthFactor_;
 
     // GC trigger threshold for allocations on the GC heap.
-    size_t gcTriggerBytes_;
+    mozilla::Atomic<size_t, mozilla::Relaxed> gcTriggerBytes_;
 
   public:
     ZoneHeapThreshold()
@@ -50,6 +50,7 @@ class ZoneHeapThreshold
     void updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
                        const GCSchedulingTunables& tunables, const GCSchedulingState& state,
                        const AutoLockGC& lock);
+    void updateForRemovedArena(const GCSchedulingTunables& tunables);
 
   private:
     static double computeZoneHeapGrowthFactorForHeapSize(size_t lastBytes,

@@ -1097,6 +1097,8 @@ void
 GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock)
 {
     arena->zone->usage.removeGCArena();
+    if (isBackgroundSweeping())
+        arena->zone->threshold.updateForRemovedArena(tunables);
     return arena->chunk()->releaseArena(rt, arena, lock);
 }
 
@@ -1911,6 +1913,20 @@ ZoneHeapThreshold::updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
     gcHeapGrowthFactor_ = computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
     gcTriggerBytes_ = computeZoneTriggerBytes(gcHeapGrowthFactor_, lastBytes, gckind, tunables,
                                               lock);
+}
+
+void
+ZoneHeapThreshold::updateForRemovedArena(const GCSchedulingTunables& tunables)
+{
+    size_t amount = ArenaSize * gcHeapGrowthFactor_;
+
+    MOZ_ASSERT(amount > 0);
+    MOZ_ASSERT(gcTriggerBytes_ >= amount);
+
+    if (gcTriggerBytes_ - amount < tunables.gcZoneAllocThresholdBase() * gcHeapGrowthFactor_)
+        return;
+
+    gcTriggerBytes_ -= amount;
 }
 
 void
@@ -5629,26 +5645,6 @@ GCRuntime::endSweepPhase(bool destroyingRuntime)
 }
 
 void
-GCRuntime::endFinalizePhase(bool destroyingRuntime)
-{
-    // Now that background finalization is finished, sweep the zones list to
-    // remove and free dead zones.
-    gcstats::AutoPhase ap1(stats, gcstats::PHASE_SWEEP);
-    gcstats::AutoPhase ap2(stats, gcstats::PHASE_DESTROY);
-    AutoSetThreadIsSweeping threadIsSweeping;
-    FreeOp fop(rt);
-    sweepZones(&fop, destroyingRuntime);
-
-    // Then update GC trigger thresholds a second time.
-    AutoLockGC lock(rt);
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-        MOZ_ASSERT(zone->isGCFinished());
-        zone->threshold.updateAfterGC(zone->usage.gcBytes(), invocationKind, tunables,
-                                      schedulingState, lock);
-    }
-}
-
-void
 GCRuntime::beginCompactPhase()
 {
     MOZ_ASSERT(!isBackgroundSweeping());
@@ -6128,7 +6124,15 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
             }
         }
 
-        endFinalizePhase(destroyingRuntime);
+        {
+            // Re-sweep the zones list, now that background finalization is
+            // finished to actually remove and free dead zones.
+            gcstats::AutoPhase ap1(stats, gcstats::PHASE_SWEEP);
+            gcstats::AutoPhase ap2(stats, gcstats::PHASE_DESTROY);
+            AutoSetThreadIsSweeping threadIsSweeping;
+            FreeOp fop(rt);
+            sweepZones(&fop, destroyingRuntime);
+        }
 
         MOZ_ASSERT(!startedCompacting);
         incrementalState = COMPACT;
