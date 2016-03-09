@@ -230,7 +230,7 @@ TableBackgroundPainter::PaintTableFrame(nsTableFrame*         aTableFrame,
   DrawResult result = DrawResult::SUCCESS;
 
   if (tableData.IsVisible()) {
-    result =
+    result &=
       nsCSSRendering::PaintBackgroundWithSC(mPresContext, mRenderingContext,
                                             tableData.mFrame, mDirtyRect,
                                             tableData.mRect + mRenderPt,
@@ -276,7 +276,7 @@ TableBackgroundPainter::PaintTable(nsTableFrame*   aTableFrame,
 
   if (rowGroups.Length() < 1) { //degenerate case
     if (aPaintTableBackground) {
-      PaintTableFrame(aTableFrame, nullptr, nullptr, nsMargin(0,0,0,0));
+      result &= PaintTableFrame(aTableFrame, nullptr, nullptr, nsMargin(0,0,0,0));
     }
     /* No cells; nothing else to paint */
     return result;
