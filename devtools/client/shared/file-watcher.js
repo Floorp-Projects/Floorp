@@ -4,31 +4,22 @@
 "use strict";
 
 const { Ci, ChromeWorker } = require("chrome");
-const { Services } = require("resource://gre/modules/Services.jsm");
+const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const HOTRELOAD_PREF = "devtools.loader.hotreload";
 
-function resolveResourceURI(uri) {
+function resolveResourcePath(uri) {
   const handler = Services.io.getProtocolHandler("resource")
         .QueryInterface(Ci.nsIResProtocolHandler);
-  return handler.resolveURI(Services.io.newURI(uri, null, null));
+  const resolved = handler.resolveURI(Services.io.newURI(uri, null, null));
+  return resolved.replace(/file:\/\//, "");
 }
 
 function watchFiles(path, onFileChanged) {
   if (!path.startsWith("devtools/")) {
     throw new Error("`watchFiles` expects a devtools path");
   }
-
-  // We need to figure out a local path to watch. We start with
-  // whatever devtools points to.
-  let resolvedRootURI = resolveResourceURI("resource://devtools");
-  if (resolvedRootURI.match(/\/obj\-.*/)) {
-    // Move from the built directory to the user's local files
-    resolvedRootURI = resolvedRootURI.replace(/\/obj\-.*/, "") + "/devtools";
-  }
-  resolvedRootURI = resolvedRootURI.replace(/^file:\/\//, "");
-  const localURI = resolvedRootURI + "/" + path.replace(/^devtools\//, "");
 
   const watchWorker = new ChromeWorker(
     "resource://devtools/client/shared/file-watcher-worker.js"
@@ -39,15 +30,16 @@ function watchFiles(path, onFileChanged) {
     // chrome). This means that this system will only work when built
     // files are symlinked, so that these URIs actually read from
     // local sources. There might be a better way to do this.
-    const relativePath = event.data.replace(resolvedRootURI + "/", "");
-    if (relativePath.startsWith("client/themes")) {
-      onFileChanged(relativePath.replace("client/themes",
-                                         "chrome://devtools/skin"));
-    }
-    onFileChanged("resource://devtools/" + relativePath);
+    const { relativePath, fullPath } = event.data;
+    onFileChanged(relativePath, fullPath);
   };
 
-  watchWorker.postMessage({ path: localURI, fileRegex: /\.(js|css)$/ });
+  watchWorker.postMessage({
+    path: path,
+    // We must do this here because we can't access the needed APIs in
+    // a worker.
+    devtoolsPath: resolveResourcePath("resource://devtools"),
+    fileRegex: /\.(js|css|svg|png)$/ });
   return watchWorker;
 }
 
@@ -56,11 +48,10 @@ EventEmitter.decorate(module.exports);
 let watchWorker;
 function onPrefChange() {
   if (Services.prefs.getBoolPref(HOTRELOAD_PREF) && !watchWorker) {
-    watchWorker = watchFiles("devtools/client", changedFile => {
-      module.exports.emit("file-changed", changedFile);
+    watchWorker = watchFiles("devtools/client", (relativePath, fullPath) => {
+      module.exports.emit("file-changed", relativePath, fullPath);
     });
-  }
-  else if(watchWorker) {
+  } else if (watchWorker) {
     watchWorker.terminate();
     watchWorker = null;
   }

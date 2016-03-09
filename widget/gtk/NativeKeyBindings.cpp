@@ -226,7 +226,7 @@ NativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
 
     default:
       // fallback to multiline editor case in release build
-      MOZ_ASSERT(false, "aType is invalid or not yet implemented");
+      MOZ_FALLTHROUGH_ASSERT("aType is invalid or not yet implemented");
     case nsIWidget::NativeKeyBindingsForMultiLineEditor:
     case nsIWidget::NativeKeyBindingsForRichTextEditor:
       if (!sInstanceForMultiLineEditor) {

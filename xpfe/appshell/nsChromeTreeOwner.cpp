@@ -63,8 +63,6 @@ nsChromeTreeOwner::InitGlobals()
 {
   NS_ASSERTION(gLiterals == nullptr, "already initialized");
   gLiterals = new nsChromeTreeOwnerLiterals();
-  if (!gLiterals)
-    return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
 
@@ -386,6 +384,12 @@ NS_IMETHODIMP nsChromeTreeOwner::GetDevicePixelsPerDesktopPixel(double *aScale)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetDevicePixelsPerDesktopPixel(aScale);
+}
+
+NS_IMETHODIMP nsChromeTreeOwner::SetPositionDesktopPix(int32_t x, int32_t y)
+{
+   NS_ENSURE_STATE(mXULWindow);
+   return mXULWindow->SetPositionDesktopPix(x, y);
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SetPosition(int32_t x, int32_t y)

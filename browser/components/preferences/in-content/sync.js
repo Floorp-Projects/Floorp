@@ -271,9 +271,7 @@ var gSyncPane = {
       gSyncPane.signIn();
       return false;
     });
-    setEventListener("verifiedManage", "click",
-      gSyncPane.manageFirefoxAccount);
-    setEventListener("fxaUnlinkButton", "click", function () {
+    setEventListener("fxaUnlinkButton", "command", function () {
       gSyncPane.unlinkFirefoxAccount(true);
     });
     setEventListener("verifyFxaAccount", "command",
@@ -425,19 +423,6 @@ var gSyncPane = {
     }
   },
 
-  // Called whenever one of the sync engine preferences is changed.
-  onPreferenceChanged: function() {
-    let prefElts = document.querySelectorAll("#syncEnginePrefs > preference");
-    let syncEnabled = false;
-    for (let elt of prefElts) {
-      if (elt.name.startsWith("services.sync.") && elt.value) {
-        syncEnabled = true;
-        break;
-      }
-    }
-    Services.prefs.setBoolPref("services.sync.enabled", syncEnabled);
-  },
-
   startOver: function (showDialog) {
     if (showDialog) {
       let flags = Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING +
@@ -563,13 +548,34 @@ var gSyncPane = {
     this._openAboutAccounts("reauth");
   },
 
-  openChangeProfileImage: function() {
-    fxAccounts.promiseAccountsChangeProfileURI(this._getEntryPoint(), "avatar")
-      .then(url => {
+
+  clickOrSpaceOrEnterPressed: function(event) {
+    // Note: charCode is deprecated, but 'char' not yet implemented.
+    // Replace charCode with char when implemented, see Bug 680830
+    if ((event.type == "click" && event.button == 0) ||    // button 0 = 'main button', typically left click.
+        (event.type == "keypress" &&
+        (event.charCode == KeyEvent.DOM_VK_SPACE || event.keyCode == KeyEvent.DOM_VK_RETURN))) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  openChangeProfileImage: function(event) {
+    if (this.clickOrSpaceOrEnterPressed(event)) {
+      fxAccounts.promiseAccountsChangeProfileURI(this._getEntryPoint(), "avatar")
+          .then(url => {
         this.openContentInBrowser(url, {
           replaceQueryString: true
         });
       });
+    }
+  },
+
+  openManageFirefoxAccount: function(event) {
+    if (this.clickOrSpaceOrEnterPressed(event)) {
+      this.manageFirefoxAccount();
+    }
   },
 
   manageFirefoxAccount: function() {

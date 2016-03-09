@@ -63,6 +63,34 @@ public class DBUtils {
         return result;
     }
 
+    /**
+     * Concatenate multiple lists of selection arguments. <code>values</code> may be <code>null</code>.
+     */
+    public static String[] concatenateSelectionArgs(String[]... values) {
+        // Since we're most likely to be concatenating a few arrays of many values, it is most
+        // efficient to iterate over the arrays once to obtain their lengths, allowing us to create one target array
+        // (as opposed to copying arrays on every iteration, which would result in many more copies).
+        int totalLength = 0;
+        for (String[] v : values) {
+            if (v != null) {
+                totalLength += v.length;
+            }
+        }
+
+        String[] result = new String[totalLength];
+
+        int position = 0;
+        for (String[] v: values) {
+            if (v != null) {
+                int currentLength = v.length;
+                System.arraycopy(v, 0, result, position, currentLength);
+                position += currentLength;
+            }
+        }
+
+        return result;
+    }
+
     public static void replaceKey(ContentValues aValues, String aOriginalKey,
                                   String aNewKey, String aDefault) {
         String value = aDefault;

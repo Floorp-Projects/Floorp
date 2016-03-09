@@ -98,7 +98,7 @@ final class GeckoEditable extends JNIObject
     private native void onKeyEvent(int action, int keyCode, int scanCode, int metaState,
                                    long time, int unicodeChar, int baseUnicodeChar,
                                    int domPrintableKeyValue, int repeatCount, int flags,
-                                   boolean isSynthesizedImeKey);
+                                   boolean isSynthesizedImeKey, KeyEvent event);
 
     private void onKeyEvent(KeyEvent event, int action, int savedMetaState,
                             boolean isSynthesizedImeKey) {
@@ -123,7 +123,7 @@ final class GeckoEditable extends JNIObject
                    // e.g. for Ctrl+A, Android returns 0 for unicodeChar,
                    // but Gecko expects 'a', so we return that in baseUnicodeChar.
                    event.getUnicodeChar(0), domPrintableKeyValue, event.getRepeatCount(),
-                   event.getFlags(), isSynthesizedImeKey);
+                   event.getFlags(), isSynthesizedImeKey, event);
     }
 
     @WrapForJNI
@@ -1121,6 +1121,31 @@ final class GeckoEditable extends JNIObject
                     return;
                 }
                 mListener.onTextChange(text, start, oldEnd, newEnd);
+            }
+        });
+    }
+
+    @WrapForJNI @Override
+    public void onDefaultKeyEvent(final KeyEvent event) {
+        if (DEBUG) {
+            // GeckoEditableListener methods should all be called from the Gecko thread
+            ThreadUtils.assertOnGeckoThread();
+            StringBuilder sb = new StringBuilder("onDefaultKeyEvent(");
+            sb.append("action=").append(event.getAction()).append(", ")
+                .append("keyCode=").append(event.getKeyCode()).append(", ")
+                .append("metaState=").append(event.getMetaState()).append(", ")
+                .append("time=").append(event.getEventTime()).append(", ")
+                .append("repeatCount=").append(event.getRepeatCount()).append(")");
+            Log.d(LOGTAG, sb.toString());
+        }
+
+        geckoPostToIc(new Runnable() {
+            @Override
+            public void run() {
+                if (mListener == null) {
+                    return;
+                }
+                mListener.onDefaultKeyEvent(event);
             }
         });
     }

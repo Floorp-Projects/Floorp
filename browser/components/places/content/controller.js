@@ -972,7 +972,7 @@ PlacesController.prototype = {
         PlacesUtils.bhistory.removePages(URIslice, URIslice.length);
         Services.tm.mainThread.dispatch(() => gen.next(),
                                         Ci.nsIThread.DISPATCH_NORMAL);
-        yield unefined;
+        yield undefined;
       }
     }
     let gen = pagesChunkGenerator(URIs);

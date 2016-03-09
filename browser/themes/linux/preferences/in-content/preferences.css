@@ -25,6 +25,10 @@
   margin-top: 2px !important;
 }
 
+#fxaProfileImage {
+  -moz-user-focus: normal;
+}
+
 menulist.actionsMenu > .menulist-dropmarker {
   margin-top: 11px;
   margin-bottom: 11px;

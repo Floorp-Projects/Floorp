@@ -1,17 +1,20 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* import-globals-from head.js */
+"use strict";
 
 /**
  * Generator function that runs checkEventsForNode() for each object in the
  * TEST_DATA array.
  */
-function* runEventPopupTests() {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+function* runEventPopupTests(url, tests) {
+  let {inspector, testActor} = yield openInspectorForURL(url);
 
   yield inspector.markup.expandAll();
 
-  for (let test of TEST_DATA) {
+  for (let test of tests) {
     yield checkEventsForNode(test, inspector, testActor);
   }
 
@@ -61,13 +64,13 @@ function* checkEventsForNode(test, inspector, testActor) {
 
   // Click button to show tooltip
   info("Clicking evHolder");
-  EventUtils.synthesizeMouseAtCenter(evHolder, {}, inspector.markup.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(evHolder, {},
+    inspector.markup.doc.defaultView);
   yield tooltip.once("shown");
   info("tooltip shown");
 
   // Check values
-  let content = tooltip.content;
-  let headers = content.querySelectorAll(".event-header");
+  let headers = tooltip.content.querySelectorAll(".event-header");
   let nodeFront = container.node;
   let cssSelector = nodeFront.nodeName + "#" + nodeFront.id;
 

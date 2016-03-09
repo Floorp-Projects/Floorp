@@ -259,6 +259,13 @@ interface nsIUDPSocket : nsISupports
      * Note: This is currently write-only.
      */
     [noscript] attribute NetAddr multicastInterfaceAddr;
+
+    /**
+     * recvBufferSize
+     *
+     * The size of the receive buffer. Default depends on the OS.
+     */
+    [noscript] attribute long recvBufferSize;
 };
 
 /**

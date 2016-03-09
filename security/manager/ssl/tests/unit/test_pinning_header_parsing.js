@@ -17,7 +17,7 @@ function certFromFile(cert_name) {
 
 function loadCert(cert_name, trust_string) {
   let cert_filename = "test_pinning_dynamic/" + cert_name + ".pem";
-  addCertFromFile(certdb,  cert_filename, trust_string);
+  addCertFromFile(certdb, cert_filename, trust_string);
   return constructCertFromFile(cert_filename);
 }
 
@@ -75,7 +75,7 @@ function checkPassRemovingPin(pinValue) {
 const NON_ISSUED_KEY_HASH1 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 const NON_ISSUED_KEY_HASH2 = "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ=";
 const PINNING_ROOT_KEY_HASH = "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=";
-const MAX_AGE_ZERO = "max-age=0;"
+const MAX_AGE_ZERO = "max-age=0;";
 const VALID_PIN1 = `pin-sha256="${PINNING_ROOT_KEY_HASH}";`;
 const BACKUP_PIN1 = `pin-sha256="${NON_ISSUED_KEY_HASH1}";`;
 const BACKUP_PIN2 = `pin-sha256="${NON_ISSUED_KEY_HASH2}";`;

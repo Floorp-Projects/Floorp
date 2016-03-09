@@ -4,17 +4,11 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-
-// Disable logging for all the tests. Both the debugger server and frontend will
-// be affected by this pref.
-var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
-Services.prefs.setBoolPref("devtools.debugger.log", false);
-
 var { generateUUID } = Cc['@mozilla.org/uuid-generator;1'].getService(Ci.nsIUUIDGenerator);
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
+var Services = require("Services");
 var promise = require("promise");
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { DebuggerClient } = require("devtools/shared/client/main");
@@ -23,9 +17,9 @@ var { CallWatcherFront } = require("devtools/server/actors/call-watcher");
 var { CanvasFront } = require("devtools/server/actors/canvas");
 var { setTimeout } = require("sdk/timers");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var TiltGL = require("devtools/client/tilt/tilt-gl");
 var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
+var { isWebGLSupported } = require("devtools/client/shared/webgl-utils");
 var mm = null
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js";
@@ -42,6 +36,11 @@ const WEBGL_BINDINGS_URL = EXAMPLE_URL + "doc_webgl-bindings.html";
 const WEBGL_DRAW_ARRAYS = EXAMPLE_URL + "doc_webgl-drawArrays.html";
 const WEBGL_DRAW_ELEMENTS = EXAMPLE_URL + "doc_webgl-drawElements.html";
 const RAF_BEGIN_URL = EXAMPLE_URL + "doc_raf-begin.html";
+
+// Disable logging for all the tests. Both the debugger server and frontend will
+// be affected by this pref.
+var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+Services.prefs.setBoolPref("devtools.debugger.log", false);
 
 // All tests are asynchronous.
 waitForExplicitFinish();
@@ -141,10 +140,7 @@ function isTestingSupported() {
     return true;
   }
 
-  let supported =
-    !TiltGL.isWebGLForceEnabled() &&
-     TiltGL.isWebGLSupported() &&
-     TiltGL.create3DContext(createCanvas());
+  let supported = isWebGLSupported(document);
 
   info("This test requires WebGL support.");
   info("Apparently, WebGL is" + (supported ? "" : " not") + " supported.");

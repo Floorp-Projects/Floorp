@@ -233,10 +233,7 @@ class MacroAssemblerNone : public Assembler
     CodeOffsetJump jumpWithPatch(RepatchLabel*, Label* doc = nullptr) { MOZ_CRASH(); }
     CodeOffsetJump jumpWithPatch(RepatchLabel*, Condition, Label* doc = nullptr) { MOZ_CRASH(); }
     CodeOffsetJump backedgeJump(RepatchLabel* label, Label* doc = nullptr) { MOZ_CRASH(); }
-    template <typename T, typename S>
-    CodeOffsetJump branchPtrWithPatch(Condition, T, S, RepatchLabel*) { MOZ_CRASH(); }
 
-    template <typename T, typename S> void branchTestValue(Condition, T, S, Label*) { MOZ_CRASH(); }
     void testNullSet(Condition, ValueOperand, Register) { MOZ_CRASH(); }
     void testObjectSet(Condition, ValueOperand, Register) { MOZ_CRASH(); }
     void testUndefinedSet(Condition, ValueOperand, Register) { MOZ_CRASH(); }
@@ -244,9 +241,6 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void cmpPtrSet(Condition, T, S, Register) { MOZ_CRASH(); }
     template <typename T, typename S> void cmp32Set(Condition, T, S, Register) { MOZ_CRASH(); }
 
-    template <typename T, typename S> void branchAdd32(Condition, T, S, Label*) { MOZ_CRASH(); }
-    template <typename T, typename S> void branchSub32(Condition, T, S, Label*) { MOZ_CRASH(); }
-    template <typename T, typename S> void decBranchPtr(Condition, T, S, Label*) { MOZ_CRASH(); }
     template <typename T, typename S> void mov(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void movq(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void movePtr(T, S) { MOZ_CRASH(); }
@@ -350,19 +344,6 @@ class MacroAssemblerNone : public Assembler
 
     Register splitTagForTest(ValueOperand) { MOZ_CRASH(); }
 
-    template <typename T> void branchTestUndefined(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestInt32(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestBoolean(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestDouble(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestNull(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestString(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestSymbol(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestObject(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestNumber(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestGCThing(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T> void branchTestPrimitive(Condition, T, Label*) { MOZ_CRASH(); }
-    template <typename T, typename L> void branchTestMagic(Condition, T, L) { MOZ_CRASH(); }
-    template <typename T> void branchTestMagicValue(Condition, T, JSWhyMagic, Label*) { MOZ_CRASH(); }
     void boxDouble(FloatRegister, ValueOperand) { MOZ_CRASH(); }
     void boxNonDouble(JSValueType, Register, ValueOperand) { MOZ_CRASH(); }
     template <typename T> void unboxInt32(T, Register) { MOZ_CRASH(); }
@@ -400,10 +381,6 @@ class MacroAssemblerNone : public Assembler
     void loadConstantFloat32(float, FloatRegister) { MOZ_CRASH(); }
     Condition testInt32Truthy(bool, ValueOperand) { MOZ_CRASH(); }
     Condition testStringTruthy(bool, ValueOperand) { MOZ_CRASH(); }
-    void branchTestInt32Truthy(bool, ValueOperand, Label*) { MOZ_CRASH(); }
-    void branchTestBooleanTruthy(bool, ValueOperand, Label*) { MOZ_CRASH(); }
-    void branchTestStringTruthy(bool, ValueOperand, Label*) { MOZ_CRASH(); }
-    void branchTestDoubleTruthy(bool, FloatRegister, Label*) { MOZ_CRASH(); }
 
     template <typename T> void loadUnboxedValue(T, MIRType, AnyRegister) { MOZ_CRASH(); }
     template <typename T> void storeUnboxedValue(ConstantOrRegister, MIRType, T, MIRType) { MOZ_CRASH(); }
@@ -414,9 +391,6 @@ class MacroAssemblerNone : public Assembler
     void incrementInt32Value(Address) { MOZ_CRASH(); }
     void ensureDouble(ValueOperand, FloatRegister, Label*) { MOZ_CRASH(); }
     void handleFailureWithHandlerTail(void*) { MOZ_CRASH(); }
-
-    void branchPtrInNurseryRange(Condition, Register, Register, Label*) { MOZ_CRASH(); }
-    void branchValueIsNurseryObject(Condition, ValueOperand, Register, Label*) { MOZ_CRASH(); }
 
     void buildFakeExitFrame(Register, uint32_t*) { MOZ_CRASH(); }
     bool buildOOLFakeExitFrame(void*) { MOZ_CRASH(); }

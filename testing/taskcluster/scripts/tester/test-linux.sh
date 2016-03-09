@@ -32,6 +32,7 @@ if [[ -z ${MOZHARNESS_CONFIG} ]]; then exit 1; fi
 mkdir -p ~/artifacts/public
 
 cleanup() {
+    local rv=$?
     if [[ -s /home/worker/.xsession-errors ]]; then
       # To share X issues
       cp /home/worker/.xsession-errors ~/artifacts/public/xsession-errors.log
@@ -41,6 +42,7 @@ cleanup() {
     if [ -n "$xvfb_pid" ] && [ $START_VNC == false ] ; then
         kill $xvfb_pid || true
     fi
+    exit $rv
 }
 trap cleanup EXIT INT
 
@@ -110,6 +112,12 @@ if $NEED_WINDOW_MANAGER; then
     # Disable the screen saver
     xset s off s reset
 fi
+
+# For telemetry purposes, the build process wants information about the
+# source it is running; tc-vcs obscures this a little, but we can provide
+# it directly.
+export MOZ_SOURCE_REPO="${GECKO_HEAD_REPOSITORY}"
+export MOZ_SOURCE_CHANGESET="${GECKO_HEAD_REV}"
 
 # support multiple, space delimited, config files
 config_cmds=""

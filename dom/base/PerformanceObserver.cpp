@@ -135,14 +135,14 @@ PerformanceObserver::QueueEntry(PerformanceEntry* aEntry)
   mQueuedEntries.AppendElement(aEntry);
 }
 
-static nsString sValidTypeNames[7] = {
-  NS_LITERAL_STRING("composite"),
-  NS_LITERAL_STRING("mark"),
-  NS_LITERAL_STRING("measure"),
-  NS_LITERAL_STRING("navigation"),
-  NS_LITERAL_STRING("render"),
-  NS_LITERAL_STRING("resource"),
-  NS_LITERAL_STRING("server")
+static const char16_t* sValidTypeNames[7] = {
+  MOZ_UTF16("composite"),
+  MOZ_UTF16("mark"),
+  MOZ_UTF16("measure"),
+  MOZ_UTF16("navigation"),
+  MOZ_UTF16("render"),
+  MOZ_UTF16("resource"),
+  MOZ_UTF16("server")
 };
 
 void
@@ -156,7 +156,8 @@ PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
 
   nsTArray<nsString> validEntryTypes;
 
-  for (const nsString& validTypeName : sValidTypeNames) {
+  for (const char16_t* name : sValidTypeNames) {
+    nsDependentString validTypeName(name);
     if (aOptions.mEntryTypes.Contains<nsString>(validTypeName) &&
         !validEntryTypes.Contains<nsString>(validTypeName)) {
       validEntryTypes.AppendElement(validTypeName);

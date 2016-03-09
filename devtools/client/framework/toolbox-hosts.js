@@ -9,7 +9,7 @@
 const {Cu} = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
-Cu.import("resource://gre/modules/Services.jsm");
+const Services = require("Services");
 Cu.import("resource://devtools/client/shared/DOMHelpers.jsm");
 
 loader.lazyRequireGetter(this, "system", "devtools/shared/system");

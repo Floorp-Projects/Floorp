@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"></meta>
+  <title>WebSocket test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="websocket_helpers.js"></script>
+  <script type="text/javascript" src="websocket_tests.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="testWebSocket()">
+<script class="testbody" type="text/javascript">
+
+var tests = [
+  test11, // a simple hello echo;
+  test12, // client sends a message containing unpaired surrogates
+  test13, //server sends an invalid message;
+  test14, // server sends the close frame, it doesn't close the tcp connection
+          // and it keeps sending normal ws messages;
+  test15, // server closes the tcp connection, but it doesn't send the close
+          // frame;
+  test16, // client calls close() and tries to send a message;
+  test17, // see bug 572975 - all event listeners set
+  test18, // client tries to connect to an http resource;
+  test19, // server closes the tcp connection before establishing the ws
+          // connection;
+  test20, // see bug 572975 - only on error and onclose event listeners set
+];
+
+function testWebSocket() {
+  doTest();
+}
+
+SimpleTest.requestFlakyTimeout("The web socket tests are really fragile, but avoiding timeouts might be hard, since it's testing stuff on the network. " +
+                               "Expect all sorts of flakiness in this test...");
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+<div id="feedback">
+</div>
+
+</body>
+</html>

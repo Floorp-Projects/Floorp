@@ -24,7 +24,6 @@ DIRS += [
     'system',
     '../chrome',
     'build',
-    'libxpcomrt',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_DEBUG']:
@@ -32,7 +31,6 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_DEBUG']:
 
 TEST_DIRS += [
     'tests',
-    'typelib/xpt/tests',
 ]
 
 #  Can't build internal xptcall tests that use symbols which are not exported.
@@ -44,4 +42,8 @@ TEST_DIRS += [
 CONFIGURE_DEFINE_FILES += [
     'xpcom-config.h',
     'xpcom-private.h',
+]
+
+EXPORTS += [
+    '!xpcom-config.h',
 ]

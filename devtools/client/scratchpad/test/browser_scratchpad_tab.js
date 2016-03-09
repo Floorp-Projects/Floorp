@@ -11,8 +11,6 @@ function test()
   gBrowser.selectedBrowser.addEventListener("load", function onTabLoad() {
     gBrowser.selectedBrowser.removeEventListener("load", onTabLoad, true);
 
-    ok(window.Scratchpad, "Scratchpad variable exists");
-
     Services.prefs.setIntPref("devtools.editor.tabsize", 5);
 
     openScratchpad(runTests);

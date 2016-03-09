@@ -120,7 +120,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars filename)
         return false;
 
     module_->globalBytes = InitialGlobalDataBytes;
-    module_->compileArgs = CompileArgs(cx_);
+    module_->compileArgs = shared->args;
     module_->kind = shared->kind;
     module_->heapUsage = HeapUsage::None;
     module_->filename = Move(filename);
@@ -301,7 +301,7 @@ ModuleGenerator::convertOutOfRangeBranchesToThunks()
 bool
 ModuleGenerator::finishTask(IonCompileTask* task)
 {
-    const FuncBytecode& func = task->func();
+    const FuncBytes& func = task->func();
     FuncCompileResults& results = task->results();
 
     // Before merging in the new function's code, if jumps/calls in a previous
@@ -333,7 +333,7 @@ ModuleGenerator::finishTask(IonCompileTask* task)
     funcIndexToCodeRange_[func.index()] = funcCodeRangeIndex;
 
     // Merge the compiled results into the whole-module masm.
-    DebugOnly<size_t> sizeBefore = masm_.size();
+    mozilla::DebugOnly<size_t> sizeBefore = masm_.size();
     if (!masm_.asmMergeWith(results.masm()))
         return false;
     MOZ_ASSERT(masm_.size() == offsetInWhole + results.masm().size());
@@ -522,20 +522,6 @@ ModuleGenerator::finishStaticLinkData(uint8_t* code, uint32_t codeBytes, StaticL
     }
 #endif
 
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    // On MIPS we need to update all the long jumps because they contain an
-    // absolute adress. The values are correctly patched for the current address
-    // space, but not after serialization or profiling-mode toggling.
-    for (size_t i = 0; i < masm_.numLongJumps(); i++) {
-        size_t off = masm_.longJump(i);
-        StaticLinkData::InternalLink inLink(StaticLinkData::InternalLink::InstructionImmediate);
-        inLink.patchAtOffset = off;
-        inLink.targetOffset = Assembler::ExtractInstructionImmediate(code + off) - uintptr_t(code);
-        if (!link->internalLinks.append(inLink))
-            return false;
-    }
-#endif
-
 #if defined(JS_CODEGEN_X64)
     // Global data accesses on x64 use rip-relative addressing and thus do
     // not need patching after deserialization.
@@ -651,6 +637,15 @@ ModuleGenerator::initFuncSig(uint32_t funcIndex, uint32_t sigIndex)
     return true;
 }
 
+void
+ModuleGenerator::bumpMinHeapLength(uint32_t newMinHeapLength)
+{
+    MOZ_ASSERT(isAsmJS());
+    MOZ_ASSERT(newMinHeapLength >= shared_->minHeapLength);
+
+    shared_->minHeapLength = newMinHeapLength;
+}
+
 const DeclaredSig&
 ModuleGenerator::funcSig(uint32_t funcIndex) const
 {
@@ -730,7 +725,7 @@ bool
 ModuleGenerator::addMemoryExport(UniqueChars fieldName)
 {
     return exportMap_->fieldNames.append(Move(fieldName)) &&
-           exportMap_->fieldsToExports.append(ExportMap::MemoryExport);
+           exportMap_->fieldsToExports.append(MemoryExport);
 }
 
 bool
@@ -764,7 +759,7 @@ ModuleGenerator::startFuncDefs()
         return false;
     JSRuntime* rt = cx_->compartment()->runtimeFromAnyThread();
     for (size_t i = 0; i < numTasks; i++)
-        tasks_.infallibleEmplaceBack(rt, args(), *threadView_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+        tasks_.infallibleEmplaceBack(rt, *threadView_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
 
     if (!freeTasks_.reserve(numTasks))
         return false;
@@ -787,15 +782,8 @@ ModuleGenerator::startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg)
 
     IonCompileTask* task = freeTasks_.popCopy();
 
-    task->reset(&fg->bytecode_);
-    if (fg->bytecode_) {
-        fg->bytecode_->clear();
-    } else {
-        fg->bytecode_ = MakeUnique<Bytecode>();
-        if (!fg->bytecode_)
-            return false;
-    }
-
+    task->reset(&fg->bytes_);
+    fg->bytes_.clear();
     fg->lineOrBytecode_ = lineOrBytecode;
     fg->m_ = this;
     fg->task_ = task;
@@ -808,14 +796,12 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, unsigned generateTime, Functi
 {
     MOZ_ASSERT(activeFunc_ == fg);
 
-    UniqueFuncBytecode func =
-        js::MakeUnique<FuncBytecode>(funcIndex,
-                                     funcSig(funcIndex),
-                                     Move(fg->bytecode_),
-                                     Move(fg->locals_),
-                                     fg->lineOrBytecode_,
-                                     Move(fg->callSiteLineNums_),
-                                     generateTime);
+    auto func = js::MakeUnique<FuncBytes>(Move(fg->bytes_),
+                                          funcIndex,
+                                          funcSig(funcIndex),
+                                          fg->lineOrBytecode_,
+                                          Move(fg->callSiteLineNums_),
+                                          generateTime);
     if (!func)
         return false;
 

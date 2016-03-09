@@ -3103,6 +3103,8 @@ ICSetElemDenseOrUnboxedArrayAddCompiler::generateStubCode(MacroAssembler& masm)
     // But R0 and R1 still hold their values.
     EmitStowICValues(masm, 2);
 
+    uint32_t framePushedAfterStow = masm.framePushed();
+
     // We may need to free up some registers.
     regs = availableGeneralRegs(0);
     regs.take(R0);
@@ -3227,7 +3229,7 @@ ICSetElemDenseOrUnboxedArrayAddCompiler::generateStubCode(MacroAssembler& masm)
         masm.branch32(Assembler::NotEqual, scratchReg, key, &failure);
 
         // Capacity check.
-        masm.checkUnboxedArrayCapacity(obj, Int32Key(key), scratchReg, &failure);
+        masm.checkUnboxedArrayCapacity(obj, RegisterOrInt32Constant(key), scratchReg, &failure);
 
         // Load obj->elements.
         masm.loadPtr(Address(obj, UnboxedArrayObject::offsetOfElements()), scratchReg);
@@ -3264,6 +3266,7 @@ ICSetElemDenseOrUnboxedArrayAddCompiler::generateStubCode(MacroAssembler& masm)
 
     // Failure case - fail but first unstow R0 and R1
     masm.bind(&failureUnstow);
+    masm.setFramePushed(framePushedAfterStow);
     EmitUnstowICValues(masm, 2);
 
     // Failure case - jump to next stub
@@ -5216,7 +5219,6 @@ ICSetProp_TypedObject::Compiler::generateStubCode(MacroAssembler& masm)
         StoreToTypedArray(cx, masm, type, value, dest,
                           secondScratch, &failurePopRHS, &failurePopRHS);
         masm.popValue(R1);
-        EmitReturnFromIC(masm);
     } else {
         ReferenceTypeDescr::Type type = fieldDescr_->as<ReferenceTypeDescr>().type();
 
@@ -5252,9 +5254,11 @@ ICSetProp_TypedObject::Compiler::generateStubCode(MacroAssembler& masm)
           default:
             MOZ_CRASH();
         }
-
-        EmitReturnFromIC(masm);
     }
+
+    // The RHS has to be in R0.
+    masm.moveValue(R1, R0);
+    EmitReturnFromIC(masm);
 
     masm.bind(&failurePopRHS);
     masm.popValue(R1);

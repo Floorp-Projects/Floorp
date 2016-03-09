@@ -11,8 +11,10 @@ import unittest
 from mozunit import main
 
 from mozbuild.frontend.context import BugzillaComponent
-from mozbuild.frontend.reader import BuildReaderError
-from mozbuild.frontend.reader import BuildReader
+from mozbuild.frontend.reader import (
+    BuildReaderError,
+    BuildReader,
+)
 
 from mozbuild.test.common import MockConfig
 
@@ -246,6 +248,15 @@ class TestBuildReader(unittest.TestCase):
 
         contexts = list(reader.read_topsrcdir())
 
+    def test_error_empty_list(self):
+        reader = self.reader('reader-error-empty-list')
+
+        with self.assertRaises(BuildReaderError) as bre:
+            list(reader.read_topsrcdir())
+
+        e = bre.exception
+        self.assertIn('Variable DIRS assigned an empty value.', str(e))
+
     def test_inheriting_variables(self):
         reader = self.reader('inheriting-variables')
 
@@ -423,7 +434,8 @@ class TestBuildReader(unittest.TestCase):
         ])
 
         expected = {
-            'default/module.js': set(['default/tests/xpcshell/**']),
+            'default/module.js': set(['default/tests/xpcshell/**',
+                                      'default/tests/reftests/**']),
         }
 
         for path, pattern_set in expected.items():

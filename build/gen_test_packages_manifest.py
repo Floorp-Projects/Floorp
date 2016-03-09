@@ -12,7 +12,6 @@ ALL_HARNESSES = [
     'common', # Harnesses without a specific package will look here.
     'mochitest',
     'reftest',
-    'webapprt',
     'xpcshell',
     'cppunittest',
     'jittest',
@@ -45,9 +44,6 @@ def parse_args():
     parser.add_argument("--jsshell", required=True,
                         action="store", dest="jsshell",
                         help="Name of the jsshell zip.")
-    parser.add_argument("--use-short-names", action="store_true",
-                        help="Use short names for packages (target.$name.tests.zip "
-                             "instead of $(PACKAGE_BASENAME).$name.tests.zip)")
     for harness in PACKAGE_SPECIFIED_HARNESSES:
         parser.add_argument("--%s" % harness, required=True,
                             action="store", dest=harness,
@@ -61,6 +57,7 @@ def parse_args():
                         help="Path to the output file to be written.")
     return parser.parse_args()
 
+
 def generate_package_data(args):
     # Generate a dictionary mapping test harness names (exactly as they're known to
     # mozharness and testsuite-targets.mk, ideally) to the set of archive names that
@@ -69,9 +66,6 @@ def generate_package_data(args):
     # which will be an optimization once parts of the main zip are split to harness
     # specific zips.
     tests_common = args.tests_common
-    if args.use_short_names:
-        tests_common = 'target.common.tests.zip'
-
     jsshell = args.jsshell
 
     harness_requirements = dict([(k, [tests_common]) for k in ALL_HARNESSES])
@@ -80,8 +74,6 @@ def generate_package_data(args):
         pkg_name = getattr(args, harness, None)
         if pkg_name is None:
             continue
-        if args.use_short_names:
-            pkg_name = 'target.%s.tests.zip' % harness
         harness_requirements[harness].append(pkg_name)
     return harness_requirements
 

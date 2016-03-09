@@ -33,8 +33,8 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
   yield onShown;
 
   yield simulateColorPickerChange(ruleView, cPicker, [0, 255, 0, .5], {
-    element: content.document.body,
-    name: "borderLeftColor",
+    selector: "body",
+    name: "border-left-color",
     value: "rgba(0, 255, 0, 0.5)"
   });
 
@@ -51,7 +51,7 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
   yield onHidden;
   yield onModified;
 
-  is(content.getComputedStyle(content.document.body).borderLeftColor,
+  is((yield getComputedStyleProperty("body", null, "border-left-color")),
     "rgba(0, 255, 0, 0.5)", "The element's border was kept after RETURN");
   is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
     "The color swatch's background was kept after RETURN");

@@ -11,9 +11,8 @@ import os.path
 
 # Don't forgot to add new mozboot modules to the bootstrap download
 # list in bin/bootstrap.py!
-from mozboot.centos import CentOSBootstrapper
+from mozboot.centosfedora import CentOSFedoraBootstrapper
 from mozboot.debian import DebianBootstrapper
-from mozboot.fedora import FedoraBootstrapper
 from mozboot.freebsd import FreeBSDBootstrapper
 from mozboot.gentoo import GentooBootstrapper
 from mozboot.osx import OSXBootstrapper
@@ -23,19 +22,42 @@ from mozboot.archlinux import ArchlinuxBootstrapper
 APPLICATION_CHOICE = '''
 Please choose the version of Firefox you want to build:
 %s
+
+Note: (For Firefox for Android)
+
+The Firefox for Android front-end is built using Java, the Android
+Platform SDK, JavaScript, HTML, and CSS. If you want to work on the
+look-and-feel of Firefox for Android, you want "Firefox for Android
+Artifact Mode".
+
+Firefox for Android is built on top of the Gecko technology
+platform. Gecko is Mozilla's web rendering engine, similar to Edge,
+Blink, and WebKit. Gecko is implemented in C++ and JavaScript. If you
+want to work on web rendering, you want "Firefox for Android".
+
+If you don't know what you want, start with just "Firefox for Android
+Artifact Mode". Your builds will be much shorter than if you build
+Gecko as well. But don't worry! You can always switch configurations
+later.
+
+You can learn more about Artifact mode builds at
+https://developer.mozilla.org/en-US/docs/Artifact_builds.
+
 Your choice:
 '''
 
 APPLICATIONS_LIST=[
     ('Firefox for Desktop', 'browser'),
-    ('Firefox for Android', 'mobile_android')
+    ('Firefox for Android Artifact Mode', 'mobile_android_artifact_mode'),
+    ('Firefox for Android', 'mobile_android'),
 ]
 
 # This is a workaround for the fact that we must support python2.6 (which has
 # no OrderedDict)
 APPLICATIONS = dict(
-    desktop=APPLICATIONS_LIST[0],
-    android=APPLICATIONS_LIST[1],
+    browser=APPLICATIONS_LIST[0],
+    mobile_android_artifact_mode=APPLICATIONS_LIST[1],
+    mobile_android=APPLICATIONS_LIST[2],
 )
 
 FINISHED = '''
@@ -78,12 +100,11 @@ class Bootstrapper(object):
         if sys.platform.startswith('linux'):
             distro, version, dist_id = platform.linux_distribution()
 
-            if distro in ('CentOS', 'CentOS Linux'):
-                cls = CentOSBootstrapper
+            if distro in ('CentOS', 'CentOS Linux', 'Fedora'):
+                cls = CentOSFedoraBootstrapper
+                args['distro'] = distro
             elif distro in DEBIAN_DISTROS:
                 cls = DebianBootstrapper
-            elif distro == 'Fedora':
-                cls = FedoraBootstrapper
             elif distro == 'Gentoo Base System':
                 cls = GentooBootstrapper
             elif os.path.exists('/etc/arch-release'):
@@ -121,7 +142,7 @@ class Bootstrapper(object):
 
     def bootstrap(self):
         if self.choice is None:
-            # Like ['1. Firefox for Desktop', '2. Firefox for Android'].
+            # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
             labels = ['%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS_LIST)]
             prompt = APPLICATION_CHOICE % '\n'.join(labels)
             prompt_choice = self.instance.prompt_int(prompt=prompt, low=1, high=len(APPLICATIONS))

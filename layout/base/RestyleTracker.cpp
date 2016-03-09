@@ -15,7 +15,7 @@
 #include "nsFrameManager.h"
 #include "nsIDocument.h"
 #include "nsStyleChangeList.h"
-#include "RestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "RestyleTrackerInlines.h"
 #include "nsTransitionManager.h"
 #include "mozilla/RestyleTimelineMarker.h"
@@ -58,7 +58,7 @@ RestyleTracker::Document() const {
 
 struct RestyleEnumerateData : RestyleTracker::Hints {
   RefPtr<dom::Element> mElement;
-#if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZ_ENABLE_PROFILER_SPS)
   UniquePtr<ProfilerBacktrace> mBacktrace;
 #endif
 };
@@ -253,7 +253,7 @@ RestyleTracker::DoProcessRestyles()
               data->mRestyleHint, MarkerTracingType::START)));
         }
 
-#if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZ_ENABLE_PROFILER_SPS)
         Maybe<GeckoProfilerTracingRAII> profilerRAII;
         if (profiler_feature_active("restyle")) {
           profilerRAII.emplace("Paint", "Styles", Move(data->mBacktrace));
@@ -333,7 +333,7 @@ RestyleTracker::DoProcessRestyles()
           // We can move data since we'll be clearing mPendingRestyles after
           // we finish enumerating it.
           restyle->mRestyleHintData = Move(data->mRestyleHintData);
-#if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZ_ENABLE_PROFILER_SPS)
           restyle->mBacktrace = Move(data->mBacktrace);
 #endif
 
@@ -361,7 +361,7 @@ RestyleTracker::DoProcessRestyles()
                       index++, count);
           LOG_RESTYLE_INDENT();
 
-#if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZ_ENABLE_PROFILER_SPS)
           Maybe<GeckoProfilerTracingRAII> profilerRAII;
           if (profiler_feature_active("restyle")) {
             profilerRAII.emplace("Paint", "Styles", Move(currentRestyle->mBacktrace));
@@ -413,8 +413,19 @@ RestyleTracker::GetRestyleData(Element* aElement, nsAutoPtr<RestyleData>& aData)
     // element.  Leave it around for now, but remove the other restyle
     // hints and the change hint for it.  Also unset its root bit,
     // since it's no longer a root with the new restyle data.
-    NS_ASSERTION(aData->mDescendants.IsEmpty(),
+
+    // During a normal restyle, we should have already processed the
+    // mDescendants array the last time we processed the restyle
+    // for this element.  But in RebuildAllStyleData, we don't initially
+    // expand out eRestyle_LaterSiblings, so we can get in here the
+    // first time we need to process a restyle for this element.  In that
+    // case, it's fine for us to have a non-empty mDescendants, since
+    // we know that RebuildAllStyleData adds eRestyle_ForceDescendants
+    // and we're guaranteed we'll restyle the entire tree.
+    NS_ASSERTION(mRestyleManager->InRebuildAllStyleData() ||
+                 aData->mDescendants.IsEmpty(),
                  "expected descendants to be handled by now");
+
     RestyleData* newData = new RestyleData;
     newData->mChangeHint = nsChangeHint(0);
     newData->mRestyleHint = eRestyle_LaterSiblings;

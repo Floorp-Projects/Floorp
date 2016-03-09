@@ -114,27 +114,3 @@ function* testBreadcrumbs(selector, inspector) {
   ok(button, "A crumbs is checked=true");
   is(button.getAttribute("tooltiptext"), expectedText, "Crumb refers to the right node");
 }
-
-function* clickOnInspectMenuItem(testActor, selector) {
-  info("Showing the contextual menu on node " + selector);
-  let contentAreaContextMenu = document.querySelector("#contentAreaContextMenu");
-  let contextOpened = once(contentAreaContextMenu, "popupshown");
-
-  yield testActor.synthesizeMouse({
-    selector: selector,
-    center: true,
-    options: {type: "contextmenu", button: 2}
-  });
-
-  yield contextOpened;
-
-  info("Triggering inspect action and hiding the menu.");
-  yield gContextMenu.inspectNode();
-
-  let contextClosed = once(contentAreaContextMenu, "popuphidden");
-  contentAreaContextMenu.hidePopup();
-
-  info("Waiting for inspector to update.");
-  yield getActiveInspector().once("inspector-updated");
-  yield contextClosed;
-}

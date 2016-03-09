@@ -45,8 +45,19 @@ interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
   [Throws] sequence<object> getFrames();
 };
 
+// Non-standard extensions
+dictionary AnimationPropertyState {
+  DOMString property;
+  boolean runningOnCompositor;
+  DOMString? warning;
+};
 
-[Constructor ((Element or CSSPseudoElement)? target,
+partial interface KeyframeEffectReadOnly {
+  [ChromeOnly] sequence<AnimationPropertyState> getPropertyState();
+};
+
+[Func="nsDocument::IsWebAnimationsEnabled",
+ Constructor ((Element or CSSPseudoElement)? target,
               object? frames,
               optional (unrestricted double or KeyframeEffectOptions) options)]
 interface KeyframeEffect : KeyframeEffectReadOnly {

@@ -106,8 +106,7 @@ function* populateInputHistory(hud) {
  */
 function* testNaviatingHistoryInUI(hud) {
   let jsterm = hud.jsterm;
-  let {inputNode} = jsterm;
-  inputNode.focus();
+  jsterm.focus();
 
   // Count backwards from original input and make sure that pressing up
   // restores this.

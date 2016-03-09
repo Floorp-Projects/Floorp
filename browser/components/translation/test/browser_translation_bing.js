@@ -48,7 +48,7 @@ add_task(function* test_bing_translation() {
     let result = yield client.translate();
 
     // XXXmikedeboer; here you would continue the test/ content inspection.
-    ok(result, "There should be a result");
+    Assert.ok(result, "There should be a result");
   });
 
   gBrowser.removeTab(tab);
@@ -89,7 +89,7 @@ add_task(function* test_handling_out_of_valid_key_error() {
     client._resetToken();
 
     // Checking if the client detected service and unavailable.
-    ok(client._serviceUnavailable, "Service should be detected unavailable.");
+    Assert.ok(client._serviceUnavailable, "Service should be detected unavailable.");
   });
 
   // Cleaning up.

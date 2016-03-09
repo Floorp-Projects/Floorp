@@ -9,6 +9,26 @@
 const { ActorClass, method } = require("devtools/server/protocol");
 
 /**
+ * Set breakpoints on all the given entry points with the given
+ * BreakpointActor as the handler.
+ *
+ * @param BreakpointActor actor
+ *        The actor handling the breakpoint hits.
+ * @param Array entryPoints
+ *        An array of objects of the form `{ script, offsets }`.
+ */
+function setBreakpointAtEntryPoints(actor, entryPoints) {
+  for (let { script, offsets } of entryPoints) {
+    actor.addScript(script);
+    for (let offset of offsets) {
+      script.setBreakpoint(offset, actor);
+    }
+  }
+}
+
+exports.setBreakpointAtEntryPoints = setBreakpointAtEntryPoints;
+
+/**
  * BreakpointActors exist for the lifetime of their containing thread and are
  * responsible for deleting breakpoints, handling breakpoint hits and
  * associating breakpoints with scripts.

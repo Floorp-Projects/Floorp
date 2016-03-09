@@ -36,7 +36,8 @@
 #include "nsIDocument.h"
 
 #include "nsCSSPseudoElements.h"
-#include "nsStyleSet.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 #include "imgIRequest.h"
 #include "nsLayoutUtils.h"
 #include "nsCSSKeywords.h"
@@ -484,12 +485,12 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
   if (!presContext)
     return nullptr;
 
-  nsStyleSet *styleSet = presShell->StyleSet();
+  StyleSetHandle styleSet = presShell->StyleSet();
 
   RefPtr<nsStyleContext> sc;
   if (aPseudo) {
-    nsCSSPseudoElements::Type type = nsCSSPseudoElements::GetPseudoType(aPseudo);
-    if (type >= nsCSSPseudoElements::ePseudo_PseudoElementCount) {
+    CSSPseudoElementType type = nsCSSPseudoElements::GetPseudoType(aPseudo);
+    if (type >= CSSPseudoElementType::Count) {
       return nullptr;
     }
     nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
@@ -502,6 +503,11 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
   }
 
   if (aStyleType == eDefaultOnly) {
+    if (styleSet->IsServo()) {
+      NS_ERROR("stylo: ServoStyleSets cannot supply UA-only styles yet");
+      return nullptr;
+    }
+
     // We really only want the user and UA rules.  Filter out the other ones.
     nsTArray< nsCOMPtr<nsIStyleRule> > rules;
     for (nsRuleNode* ruleNode = sc->RuleNode();
@@ -522,7 +528,7 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
       rules[i].swap(rules[length - i - 1]);
     }
     
-    sc = styleSet->ResolveStyleForRules(parentContext, rules);
+    sc = styleSet->AsGecko()->ResolveStyleForRules(parentContext, rules);
   }
 
   return sc.forget();
@@ -696,8 +702,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
       while (topWithPseudoElementData->GetParent()->HasPseudoElementData()) {
         topWithPseudoElementData = topWithPseudoElementData->GetParent();
       }
-      nsCSSPseudoElements::Type pseudo =
-        topWithPseudoElementData->GetPseudoType();
+      CSSPseudoElementType pseudo = topWithPseudoElementData->GetPseudoType();
       nsIAtom* pseudoAtom = nsCSSPseudoElements::GetPseudoAtom(pseudo);
       nsAutoString assertMsg(
         NS_LITERAL_STRING("we should be in a pseudo-element that is expected to contain elements ("));
@@ -3535,7 +3540,7 @@ nsComputedDOMStyle::CreateTextAlignValue(uint8_t aAlign, bool aAlignTrue,
   }
 
   RefPtr<nsROCSSPrimitiveValue> first = new nsROCSSPrimitiveValue;
-  first->SetIdent(eCSSKeyword_true);
+  first->SetIdent(eCSSKeyword_unsafe);
 
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
   valueList->AppendCSSValue(first.forget());
@@ -5757,31 +5762,6 @@ nsComputedDOMStyle::DoGetStopColor()
   return val.forget();
 }
 
-inline void AppendBasicShapeTypeToString(nsStyleBasicShape::Type aType,
-                                         nsAutoString& aString)
-{
-  nsCSSKeyword functionName;
-  switch (aType) {
-    case nsStyleBasicShape::Type::ePolygon:
-      functionName = eCSSKeyword_polygon;
-      break;
-    case nsStyleBasicShape::Type::eCircle:
-      functionName = eCSSKeyword_circle;
-      break;
-    case nsStyleBasicShape::Type::eEllipse:
-      functionName = eCSSKeyword_ellipse;
-      break;
-    case nsStyleBasicShape::Type::eInset:
-      functionName = eCSSKeyword_inset;
-      break;
-    default:
-      functionName = eCSSKeyword_UNKNOWN;
-      NS_NOTREACHED("unexpected type");
-  }
-  AppendASCIItoUTF16(nsCSSKeywords::GetStringValue(functionName),
-                     aString);
-}
-
 void
 nsComputedDOMStyle::BoxValuesToString(nsAString& aString,
                                       const nsTArray<nsStyleCoord>& aBoxValues)
@@ -5841,7 +5821,9 @@ nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
     nsStyleBasicShape::Type type = aStyleBasicShape->GetShapeType();
     // Shape function name and opening parenthesis.
     nsAutoString shapeFunctionString;
-    AppendBasicShapeTypeToString(type, shapeFunctionString);
+    AppendASCIItoUTF16(nsCSSKeywords::GetStringValue(
+                         aStyleBasicShape->GetShapeTypeName()),
+                       shapeFunctionString);
     shapeFunctionString.Append('(');
     switch (type) {
       case nsStyleBasicShape::Type::ePolygon: {
@@ -5869,7 +5851,8 @@ nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
       case nsStyleBasicShape::Type::eCircle:
       case nsStyleBasicShape::Type::eEllipse: {
         const nsTArray<nsStyleCoord>& radii = aStyleBasicShape->Coordinates();
-        MOZ_ASSERT(radii.Length() == (nsStyleBasicShape::Type::eCircle ? 1 : 2),
+        MOZ_ASSERT(radii.Length() ==
+                   (type == nsStyleBasicShape::Type::eCircle ? 1 : 2),
                    "wrong number of radii");
         for (size_t i = 0; i < radii.Length(); ++i) {
           nsAutoString radius;
@@ -6035,7 +6018,7 @@ nsComputedDOMStyle::DoGetMask()
       firstLayer.mClip != NS_STYLE_IMAGELAYER_CLIP_BORDER ||
       firstLayer.mOrigin != NS_STYLE_IMAGELAYER_ORIGIN_PADDING ||
       firstLayer.mComposite != NS_STYLE_MASK_COMPOSITE_ADD ||
-      firstLayer.mMaskMode != NS_STYLE_MASK_MODE_AUTO ||
+      firstLayer.mMaskMode != NS_STYLE_MASK_MODE_MATCH_SOURCE ||
       !firstLayer.mPosition.IsInitialValue() ||
       !firstLayer.mRepeat.IsInitialValue() ||
       !firstLayer.mSize.IsInitialValue() ||
@@ -6055,6 +6038,7 @@ nsComputedDOMStyle::DoGetMask()
   return val.forget();
 }
 
+#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMaskClip()
 {
@@ -6118,6 +6102,7 @@ nsComputedDOMStyle::DoGetMaskSize()
   const nsStyleImageLayers& layers = StyleSVGReset()->mMask;
   return DoGetImageLayerSize(layers);
 }
+#endif
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetMaskType()

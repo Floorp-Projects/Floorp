@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* globals document, window */
+/* import-globals-from ./debugger-controller.js */
 "use strict";
 
 // Maps known URLs to friendly source group names and put them at the

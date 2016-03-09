@@ -197,10 +197,30 @@ CompositorChild::DeallocPLayerTransactionChild(PLayerTransactionChild* actor)
 }
 
 bool
-CompositorChild::RecvInvalidateAll()
+CompositorChild::RecvInvalidateLayers(const uint64_t& aLayersId)
 {
   if (mLayerManager) {
+    MOZ_ASSERT(aLayersId == 0);
     FrameLayerBuilder::InvalidateAllLayers(mLayerManager);
+  } else if (aLayersId != 0) {
+    if (dom::TabChild* child = dom::TabChild::GetFrom(aLayersId)) {
+      child->InvalidateLayers();
+    }
+  }
+  return true;
+}
+
+bool
+CompositorChild::RecvCompositorUpdated(const uint64_t& aLayersId,
+                                      const TextureFactoryIdentifier& aNewIdentifier)
+{
+  if (mLayerManager) {
+    // This case is handled directly by nsBaseWidget.
+    MOZ_ASSERT(aLayersId == 0);
+  } else if (aLayersId != 0) {
+    if (dom::TabChild* child = dom::TabChild::GetFrom(aLayersId)) {
+      child->CompositorUpdated(aNewIdentifier);
+    }
   }
   return true;
 }
@@ -395,18 +415,22 @@ CompositorChild::RecvClearCachedResources(const uint64_t& aId)
 void
 CompositorChild::ActorDestroy(ActorDestroyReason aWhy)
 {
-  MOZ_ASSERT(!mCanSend);
   MOZ_ASSERT(sCompositor == this);
 
+  if (aWhy == AbnormalShutdown) {
 #ifdef MOZ_B2G
   // Due to poor lifetime management of gralloc (and possibly shmems) we will
   // crash at some point in the future when we get destroyed due to abnormal
   // shutdown. Its better just to crash here. On desktop though, we have a chance
   // of recovering.
-  if (aWhy == AbnormalShutdown) {
     NS_RUNTIMEABORT("ActorDestroy by IPC channel failure at CompositorChild");
-  }
 #endif
+
+    // If the parent side runs into a problem then the actor will be destroyed.
+    // There is nothing we can do in the child side, here sets mCanSend as false.
+    mCanSend = false;
+    gfxCriticalNote << "Receive IPC close with reason=" << aWhy;
+  }
 
   MessageLoop::current()->PostTask(
     FROM_HERE,
@@ -450,7 +474,8 @@ CompositorChild::SharedFrameMetricsData::SharedFrameMetricsData(
   , mLayersId(aLayersId)
   , mAPZCId(aAPZCId)
 {
-  mBuffer = new ipc::SharedMemoryBasic(metrics);
+  mBuffer = new ipc::SharedMemoryBasic;
+  mBuffer->SetHandle(metrics);
   mBuffer->Map(sizeof(FrameMetrics));
   mMutex = new CrossProcessMutex(handle);
   MOZ_COUNT_CTOR(SharedFrameMetricsData);

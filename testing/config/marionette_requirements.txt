@@ -1,5 +1,5 @@
 -r mozbase_requirements.txt
 ../tools/wptserve
-../marionette/driver
+../marionette/client
 ../marionette/marionette/runner/mixins/browsermob-proxy-py
 ../marionette

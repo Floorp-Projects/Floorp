@@ -84,15 +84,12 @@ DEFAULTS = dict(
         'extensions.checkCompatibility': False,
         'extensions.enabledScopes': 5,
         'extensions.update.notifyUser': False,
-        'xpinstall.signatures.required': False,
         'hangmonitor.timeout': 0,
         'network.proxy.http': 'localhost',
         'network.proxy.http_port': 80,
         'network.proxy.type': 1,
         'security.enable_java': False,
         'security.fileuri.strict_origin_policy': False,
-        'toolkit.telemetry.prompted': 999,
-        'toolkit.telemetry.notifiedOptOut': 999,
         'dom.send_after_paint_to_content': True,
         'security.turn_off_all_security_so_that_viruses_can_'
         'take_over_this_computer': True,
@@ -269,6 +266,7 @@ def update_prefs(config):
     # if e10s is enabled, set prefs accordingly
     if config['e10s']:
         config['preferences']['browser.tabs.remote.autostart'] = True
+        config['preferences']['extensions.e10sBlocksEnabling'] = False
     else:
         config['preferences']['browser.tabs.remote.autostart'] = False
         config['preferences']['browser.tabs.remote.autostart.1'] = False

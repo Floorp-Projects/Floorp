@@ -292,7 +292,13 @@ protected:
   }
 };
 
-static BatteryObserversManager sBatteryObservers;
+static BatteryObserversManager&
+BatteryObservers()
+{
+  static BatteryObserversManager sBatteryObservers;
+  AssertMainThread();
+  return sBatteryObservers;
+}
 
 class NetworkObserversManager : public CachingObserversManager<NetworkInformation>
 {
@@ -310,7 +316,13 @@ protected:
   }
 };
 
-static NetworkObserversManager sNetworkObservers;
+static NetworkObserversManager&
+NetworkObservers()
+{
+  static NetworkObserversManager sNetworkObservers;
+  AssertMainThread();
+  return sNetworkObservers;
+}
 
 class WakeLockObserversManager : public ObserversManager<WakeLockInformation>
 {
@@ -324,7 +336,13 @@ protected:
   }
 };
 
-static WakeLockObserversManager sWakeLockObservers;
+static WakeLockObserversManager&
+WakeLockObservers()
+{
+  static WakeLockObserversManager sWakeLockObservers;
+  AssertMainThread();
+  return sWakeLockObservers;
+}
 
 class ScreenConfigurationObserversManager : public CachingObserversManager<ScreenConfiguration>
 {
@@ -342,35 +360,41 @@ protected:
   }
 };
 
-static ScreenConfigurationObserversManager sScreenConfigurationObservers;
+static ScreenConfigurationObserversManager&
+ScreenConfigurationObservers()
+{
+  AssertMainThread();
+  static ScreenConfigurationObserversManager sScreenConfigurationObservers;
+  return sScreenConfigurationObservers;
+}
 
 void
 RegisterBatteryObserver(BatteryObserver* aObserver)
 {
   AssertMainThread();
-  sBatteryObservers.AddObserver(aObserver);
+  BatteryObservers().AddObserver(aObserver);
 }
 
 void
 UnregisterBatteryObserver(BatteryObserver* aObserver)
 {
   AssertMainThread();
-  sBatteryObservers.RemoveObserver(aObserver);
+  BatteryObservers().RemoveObserver(aObserver);
 }
 
 void
 GetCurrentBatteryInformation(BatteryInformation* aInfo)
 {
   AssertMainThread();
-  *aInfo = sBatteryObservers.GetCurrentInformation();
+  *aInfo = BatteryObservers().GetCurrentInformation();
 }
 
 void
 NotifyBatteryChange(const BatteryInformation& aInfo)
 {
   AssertMainThread();
-  sBatteryObservers.CacheInformation(aInfo);
-  sBatteryObservers.BroadcastCachedInformation();
+  BatteryObservers().CacheInformation(aInfo);
+  BatteryObservers().BroadcastCachedInformation();
 }
 
 bool GetScreenEnabled()
@@ -437,26 +461,32 @@ protected:
   }
 };
 
-static SystemClockChangeObserversManager sSystemClockChangeObservers;
+static SystemClockChangeObserversManager&
+SystemClockChangeObservers()
+{
+  static SystemClockChangeObserversManager sSystemClockChangeObservers;
+  AssertMainThread();
+  return sSystemClockChangeObservers;
+}
 
 void
 RegisterSystemClockChangeObserver(SystemClockChangeObserver* aObserver)
 {
   AssertMainThread();
-  sSystemClockChangeObservers.AddObserver(aObserver);
+  SystemClockChangeObservers().AddObserver(aObserver);
 }
 
 void
 UnregisterSystemClockChangeObserver(SystemClockChangeObserver* aObserver)
 {
   AssertMainThread();
-  sSystemClockChangeObservers.RemoveObserver(aObserver);
+  SystemClockChangeObservers().RemoveObserver(aObserver);
 }
 
 void
 NotifySystemClockChange(const int64_t& aClockDeltaMS)
 {
-  sSystemClockChangeObservers.BroadcastInformation(aClockDeltaMS);
+  SystemClockChangeObservers().BroadcastInformation(aClockDeltaMS);
 }
 
 class SystemTimezoneChangeObserversManager : public ObserversManager<SystemTimezoneChangeInformation>
@@ -471,27 +501,32 @@ protected:
   }
 };
 
-static SystemTimezoneChangeObserversManager sSystemTimezoneChangeObservers;
+static SystemTimezoneChangeObserversManager&
+SystemTimezoneChangeObservers()
+{
+  static SystemTimezoneChangeObserversManager sSystemTimezoneChangeObservers;
+  return sSystemTimezoneChangeObservers;
+}
 
 void
 RegisterSystemTimezoneChangeObserver(SystemTimezoneChangeObserver* aObserver)
 {
   AssertMainThread();
-  sSystemTimezoneChangeObservers.AddObserver(aObserver);
+  SystemTimezoneChangeObservers().AddObserver(aObserver);
 }
 
 void
 UnregisterSystemTimezoneChangeObserver(SystemTimezoneChangeObserver* aObserver)
 {
   AssertMainThread();
-  sSystemTimezoneChangeObservers.RemoveObserver(aObserver);
+  SystemTimezoneChangeObservers().RemoveObserver(aObserver);
 }
 
 void
 NotifySystemTimezoneChange(const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo)
 {
   nsJSUtils::ResetTimeZone();
-  sSystemTimezoneChangeObservers.BroadcastInformation(aSystemTimezoneChangeInfo);
+  SystemTimezoneChangeObservers().BroadcastInformation(aSystemTimezoneChangeInfo);
 }
 
 void
@@ -596,28 +631,28 @@ void
 RegisterNetworkObserver(NetworkObserver* aObserver)
 {
   AssertMainThread();
-  sNetworkObservers.AddObserver(aObserver);
+  NetworkObservers().AddObserver(aObserver);
 }
 
 void
 UnregisterNetworkObserver(NetworkObserver* aObserver)
 {
   AssertMainThread();
-  sNetworkObservers.RemoveObserver(aObserver);
+  NetworkObservers().RemoveObserver(aObserver);
 }
 
 void
 GetCurrentNetworkInformation(NetworkInformation* aInfo)
 {
   AssertMainThread();
-  *aInfo = sNetworkObservers.GetCurrentInformation();
+  *aInfo = NetworkObservers().GetCurrentInformation();
 }
 
 void
 NotifyNetworkChange(const NetworkInformation& aInfo)
 {
-  sNetworkObservers.CacheInformation(aInfo);
-  sNetworkObservers.BroadcastCachedInformation();
+  NetworkObservers().CacheInformation(aInfo);
+  NetworkObservers().BroadcastCachedInformation();
 }
 
 void Reboot()
@@ -645,14 +680,14 @@ void
 RegisterWakeLockObserver(WakeLockObserver* aObserver)
 {
   AssertMainThread();
-  sWakeLockObservers.AddObserver(aObserver);
+  WakeLockObservers().AddObserver(aObserver);
 }
 
 void
 UnregisterWakeLockObserver(WakeLockObserver* aObserver)
 {
   AssertMainThread();
-  sWakeLockObservers.RemoveObserver(aObserver);
+  WakeLockObservers().RemoveObserver(aObserver);
 }
 
 void
@@ -683,35 +718,35 @@ void
 NotifyWakeLockChange(const WakeLockInformation& aInfo)
 {
   AssertMainThread();
-  sWakeLockObservers.BroadcastInformation(aInfo);
+  WakeLockObservers().BroadcastInformation(aInfo);
 }
 
 void
 RegisterScreenConfigurationObserver(ScreenConfigurationObserver* aObserver)
 {
   AssertMainThread();
-  sScreenConfigurationObservers.AddObserver(aObserver);
+  ScreenConfigurationObservers().AddObserver(aObserver);
 }
 
 void
 UnregisterScreenConfigurationObserver(ScreenConfigurationObserver* aObserver)
 {
   AssertMainThread();
-  sScreenConfigurationObservers.RemoveObserver(aObserver);
+  ScreenConfigurationObservers().RemoveObserver(aObserver);
 }
 
 void
 GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
 {
   AssertMainThread();
-  *aScreenConfiguration = sScreenConfigurationObservers.GetCurrentInformation();
+  *aScreenConfiguration = ScreenConfigurationObservers().GetCurrentInformation();
 }
 
 void
 NotifyScreenConfigurationChange(const ScreenConfiguration& aScreenConfiguration)
 {
-  sScreenConfigurationObservers.CacheInformation(aScreenConfiguration);
-  sScreenConfigurationObservers.BroadcastCachedInformation();
+  ScreenConfigurationObservers().CacheInformation(aScreenConfiguration);
+  ScreenConfigurationObservers().BroadcastCachedInformation();
 }
 
 bool

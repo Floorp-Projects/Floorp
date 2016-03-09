@@ -752,7 +752,8 @@ SVGSVGElement::BindToTree(nsIDocument* aDocument,
     // Setup the style sheet during binding, not element construction,
     // because we could move the root SVG element from the document
     // that created it to another document.
-    doc->EnsureOnDemandBuiltInUASheet(nsLayoutStylesheetCache::SVGSheet());
+    auto cache = nsLayoutStylesheetCache::For(doc->GetStyleBackendType());
+    doc->EnsureOnDemandBuiltInUASheet(cache->SVGSheet());
   }
 
   if (mTimedDocumentRoot && smilController) {

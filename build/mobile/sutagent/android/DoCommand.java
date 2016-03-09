@@ -2853,19 +2853,19 @@ private void CancelNotification()
         String sPort = "";
         int nEnd = 0;
         int nStart = 0;
+        FileInputStream fis = null;
 
         if ((sFileName == null) || (sFileName.length() == 0))
             return(sRet);
 
         Context ctx = contextWrapper.getApplicationContext();
         try {
-            FileInputStream fis = ctx.openFileInput(sFileName);
+            fis = ctx.openFileInput(sFileName);
             int nBytes = fis.available();
             if (nBytes > 0)
                 {
                 byte [] buffer = new byte [nBytes + 1];
                 int nRead = fis.read(buffer, 0, nBytes);
-                fis.close();
                 ctx.deleteFile(sFileName);
                 if (nRead > 0)
                     {
@@ -2897,6 +2897,19 @@ private void CancelNotification()
         catch (InterruptedException e)
             {
             e.printStackTrace();
+            }
+        finally
+            {
+            if (fis != null)
+                {
+                try {
+                    fis.close();
+                    }
+                catch(IOException e)
+                    {
+                    e.printStackTrace();
+                    }
+                }
             }
         return(sRet);
         }

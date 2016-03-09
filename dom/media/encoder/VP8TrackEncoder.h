@@ -54,7 +54,9 @@ private:
                                          StreamTime aProcessedDuration);
 
   // Get the encoded data from encoder to aData.
-  nsresult GetEncodedPartitions(EncodedFrameContainer& aData);
+  // Return value: false if the vpx_codec_get_cx_data returns null
+  //               for EOS detection.
+  bool GetEncodedPartitions(EncodedFrameContainer& aData);
 
   // Prepare the input data to the mVPXImageWrapper for encoding.
   nsresult PrepareRawFrame(VideoChunk &aChunk);

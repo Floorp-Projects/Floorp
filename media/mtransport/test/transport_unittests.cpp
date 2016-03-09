@@ -35,7 +35,6 @@
 #include "transportlayerlog.h"
 #include "transportlayerloopback.h"
 
-#include "mtransport_test_utils.h"
 #include "runnable_utils.h"
 
 #define GTEST_HAS_RTTI 0
@@ -44,8 +43,6 @@
 
 using namespace mozilla;
 MOZ_MTLOG_MODULE("mtransport")
-
-MtransportTestUtils *test_utils;
 
 
 const uint8_t kTlsChangeCipherSpecType = 0x14;
@@ -436,7 +433,7 @@ class TlsServerKeyExchangeECDHE {
 namespace {
 class TransportTestPeer : public sigslot::has_slots<> {
  public:
-  TransportTestPeer(nsCOMPtr<nsIEventTarget> target, std::string name)
+  TransportTestPeer(nsCOMPtr<nsIEventTarget> target, std::string name, MtransportTestUtils* utils)
       : name_(name), target_(target),
         received_packets_(0),received_bytes_(0),flow_(new TransportFlow(name)),
         loopback_(new TransportLayerLoopback()),
@@ -453,7 +450,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
         gathering_complete_(false),
         enabled_cipersuites_(),
         disabled_cipersuites_(),
-        reuse_dhe_key_(false) {
+        reuse_dhe_key_(false),
+        test_utils_(utils) {
     std::vector<NrIceStunServer> stun_servers;
     UniquePtr<NrIceStunServer> server(NrIceStunServer::Create(
         std::string((char *)"stun.services.mozilla.com"), 3478));
@@ -474,7 +472,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   }
 
   ~TransportTestPeer() {
-    test_utils->sts_target()->Dispatch(
+    test_utils_->sts_target()->Dispatch(
       WrapRunnable(this, &TransportTestPeer::DestroyFlow),
       NS_DISPATCH_SYNC);
   }
@@ -591,7 +589,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   }
 
   void ConnectSocket(TransportTestPeer *peer) {
-    RUN_ON_THREAD(test_utils->sts_target(),
+    RUN_ON_THREAD(test_utils_->sts_target(),
                   WrapRunnable(this, & TransportTestPeer::ConnectSocket_s,
                                peer),
                   NS_DISPATCH_SYNC);
@@ -630,7 +628,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     layers->push(ice_);
     layers->push(dtls_);
 
-    test_utils->sts_target()->Dispatch(
+    test_utils_->sts_target()->Dispatch(
       WrapRunnableRet(&res, flow_, &TransportFlow::PushLayers, layers),
       NS_DISPATCH_SYNC);
 
@@ -641,7 +639,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     flow_->SignalStateChange.connect(this, &TransportTestPeer::StateChanged);
 
     // Start gathering
-    test_utils->sts_target()->Dispatch(
+    test_utils_->sts_target()->Dispatch(
         WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartGathering),
         NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
@@ -681,7 +679,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     }
 
     // First send attributes
-    test_utils->sts_target()->Dispatch(
+    test_utils_->sts_target()->Dispatch(
       WrapRunnableRet(&res, peer_->ice_ctx_,
                       &NrIceCtx::ParseGlobalAttributes,
                       ice_ctx_->GetGlobalAttributes()),
@@ -689,7 +687,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     ASSERT_TRUE(NS_SUCCEEDED(res));
 
     for (size_t i=0; i<streams_.size(); ++i) {
-      test_utils->sts_target()->Dispatch(
+      test_utils_->sts_target()->Dispatch(
         WrapRunnableRet(&res, peer_->streams_[i], &NrIceMediaStream::ParseAttributes,
                         candidates_[streams_[i]->name()]), NS_DISPATCH_SYNC);
 
@@ -697,7 +695,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     }
 
     // Start checks on the other peer.
-    test_utils->sts_target()->Dispatch(
+    test_utils_->sts_target()->Dispatch(
       WrapRunnableRet(&res, peer_->ice_ctx_, &NrIceCtx::StartChecks),
       NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
@@ -705,7 +703,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
   TransportResult SendPacket(const unsigned char* data, size_t len) {
     TransportResult ret;
-    test_utils->sts_target()->Dispatch(
+    test_utils_->sts_target()->Dispatch(
       WrapRunnableRet(&ret, flow_, &TransportFlow::SendPacket, data, len),
       NS_DISPATCH_SYNC);
 
@@ -757,7 +755,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   TransportLayer::State state() {
     TransportLayer::State tstate;
 
-    RUN_ON_THREAD(test_utils->sts_target(),
+    RUN_ON_THREAD(test_utils_->sts_target(),
                   WrapRunnableRet(&tstate, flow_, &TransportFlow::state));
 
     return tstate;
@@ -778,7 +776,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   uint16_t cipherSuite() const {
     nsresult rv;
     uint16_t cipher;
-    RUN_ON_THREAD(test_utils->sts_target(),
+    RUN_ON_THREAD(test_utils_->sts_target(),
                   WrapRunnableRet(&rv, dtls_, &TransportLayerDtls::GetCipherSuite,
                                   &cipher));
 
@@ -791,7 +789,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   uint16_t srtpCipher() const {
     nsresult rv;
     uint16_t cipher;
-    RUN_ON_THREAD(test_utils->sts_target(),
+    RUN_ON_THREAD(test_utils_->sts_target(),
                   WrapRunnableRet(&rv, dtls_, &TransportLayerDtls::GetSrtpCipher,
                                   &cipher));
     if (NS_FAILED(rv)) {
@@ -822,23 +820,25 @@ class TransportTestPeer : public sigslot::has_slots<> {
   std::vector<uint16_t> enabled_cipersuites_;
   std::vector<uint16_t> disabled_cipersuites_;
   bool reuse_dhe_key_;
+  MtransportTestUtils* test_utils_;
 };
 
 
-class TransportTest : public ::testing::Test {
+class TransportTest : public MtransportTest {
  public:
   TransportTest() {
     fds_[0] = nullptr;
     fds_[1] = nullptr;
   }
 
-  ~TransportTest() {
+  void TearDown() override {
     delete p1_;
     delete p2_;
 
     //    Can't detach these
     //    PR_Close(fds_[0]);
     //    PR_Close(fds_[1]);
+    MtransportTest::TearDown();
   }
 
   void DestroyPeerFlows() {
@@ -846,7 +846,9 @@ class TransportTest : public ::testing::Test {
     p2_->DisconnectDestroyFlow();
   }
 
-  void SetUp() {
+  void SetUp() override {
+    MtransportTest::SetUp();
+
     nsresult rv;
     target_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -855,8 +857,8 @@ class TransportTest : public ::testing::Test {
   }
 
   void Reset() {
-    p1_ = new TransportTestPeer(target_, "P1");
-    p2_ = new TransportTestPeer(target_, "P2");
+    p1_ = new TransportTestPeer(target_, "P1", test_utils_);
+    p2_ = new TransportTestPeer(target_, "P2", test_utils_);
   }
 
   void SetupSrtp() {
@@ -941,10 +943,10 @@ class TransportTest : public ::testing::Test {
 
  protected:
   void ConnectSocketInternal() {
-    test_utils->sts_target()->Dispatch(
+    test_utils_->sts_target()->Dispatch(
       WrapRunnable(p1_, &TransportTestPeer::ConnectSocket, p2_),
       NS_DISPATCH_SYNC);
-    test_utils->sts_target()->Dispatch(
+    test_utils_->sts_target()->Dispatch(
       WrapRunnable(p2_, &TransportTestPeer::ConnectSocket, p1_),
       NS_DISPATCH_SYNC);
   }
@@ -1324,17 +1326,3 @@ TEST(PushTests, LayersFail) {
 }
 
 }  // end namespace
-
-int main(int argc, char **argv)
-{
-  test_utils = new MtransportTestUtils();
-
-  NSS_NoDB_Init(nullptr);
-  NSS_SetDomesticPolicy();
-  // Start the tests
-  ::testing::InitGoogleTest(&argc, argv);
-
-  int rv = RUN_ALL_TESTS();
-  delete test_utils;
-  return rv;
-}

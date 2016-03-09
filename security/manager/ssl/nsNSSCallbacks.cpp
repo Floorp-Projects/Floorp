@@ -5,22 +5,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsNSSCallbacks.h"
-#include "pkix/pkixtypes.h"
+
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
-#include "nsNSSComponent.h"
-#include "nsNSSIOLayer.h"
-#include "nsIWebProgressListener.h"
-#include "nsProtectedAuthThread.h"
+#include "nsContentUtils.h"
+#include "nsICertOverrideService.h"
+#include "nsIHttpChannelInternal.h"
+#include "nsIPrompt.h"
+#include "nsISupportsPriority.h"
 #include "nsITokenDialogs.h"
 #include "nsIUploadChannel.h"
-#include "nsIPrompt.h"
-#include "nsProxyRelease.h"
-#include "PSMRunnable.h"
-#include "nsContentUtils.h"
-#include "nsIHttpChannelInternal.h"
-#include "nsISupportsPriority.h"
+#include "nsIWebProgressListener.h"
 #include "nsNetUtil.h"
+#include "nsNSSComponent.h"
+#include "nsNSSIOLayer.h"
+#include "nsProtectedAuthThread.h"
+#include "nsProxyRelease.h"
+#include "pkix/pkixtypes.h"
+#include "PSMRunnable.h"
 #include "SharedSSLState.h"
 #include "ssl.h"
 #include "sslproto.h"
@@ -987,9 +989,9 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
   // Prevent downgrade attacks on the symmetric cipher. We do not allow CBC
   // mode due to BEAST, POODLE, and other attacks on the MAC-then-Encrypt
   // design. See bug 1109766 for more details.
-  if (cipherInfo.symCipher != ssl_calg_aes_gcm) {
+  if (cipherInfo.macAlgorithm != ssl_mac_aead) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("CanFalseStartCallback [%p] failed - Symmetric cipher used, %d, "
+           ("CanFalseStartCallback [%p] failed - non-AEAD cipher used, %d, "
             "is not supported with False Start.\n", fd,
             static_cast<int32_t>(cipherInfo.symCipher)));
     reasonsForNotFalseStarting |= POSSIBLE_CIPHER_SUITE_DOWNGRADE;
@@ -1075,6 +1077,8 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case TLS_ECDHE_RSA_WITH_RC4_128_SHA: value = 8; break;
     case TLS_ECDHE_ECDSA_WITH_RC4_128_SHA: value = 9; break;
     case TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA: value = 10; break;
+    case TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256: value = 11; break;
+    case TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256: value = 12; break;
     // DHE key exchange
     case TLS_DHE_RSA_WITH_AES_128_CBC_SHA: value = 21; break;
     case TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA: value = 22; break;
@@ -1235,6 +1239,17 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   bool renegotiationUnsafe = !siteSupportsSafeRenego &&
                              ioLayerHelpers.treatUnsafeNegotiationAsBroken();
 
+
+  /* Set the SSL Status information */
+  RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
+  if (!status) {
+    status = new nsSSLStatus();
+    infoObject->SetSSLStatus(status);
+  }
+
+  RememberCertErrorsTable::GetInstance().LookupCertErrorBits(infoObject,
+                                                             status);
+
   uint32_t state;
   if (usesWeakCipher || renegotiationUnsafe) {
     state = nsIWebProgressListener::STATE_IS_BROKEN;
@@ -1252,6 +1267,39 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                                 infoObject->GetPort());
     }
   }
+
+  if (status->HasServerCert()) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+           ("HandshakeCallback KEEPING existing cert\n"));
+  } else {
+    ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
+    RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(serverCert.get()));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+           ("HandshakeCallback using NEW cert %p\n", nssc.get()));
+    status->SetServerCert(nssc, nsNSSCertificate::ev_status_unknown);
+  }
+
+  nsCOMPtr<nsICertOverrideService> overrideService =
+      do_GetService(NS_CERTOVERRIDE_CONTRACTID);
+
+  if (overrideService) {
+    bool haveOverride;
+    uint32_t overrideBits = 0; // Unused.
+    bool isTemporaryOverride; // Unused.
+    const nsACString& hostString(infoObject->GetHostName());
+    const int32_t port(infoObject->GetPort());
+    nsCOMPtr<nsIX509Cert> cert;
+    status->GetServerCert(getter_AddRefs(cert));
+    nsresult nsrv = overrideService->HasMatchingOverride(hostString, port,
+                                                         cert,
+                                                         &overrideBits,
+                                                         &isTemporaryOverride,
+                                                         &haveOverride);
+    if (NS_SUCCEEDED(nsrv) && haveOverride) {
+      state |= nsIWebProgressListener::STATE_CERT_USER_OVERRIDDEN;
+    }
+  }
+
   infoObject->SetSecurityState(state);
 
   // XXX Bug 883674: We shouldn't be formatting messages here in PSM; instead,
@@ -1268,27 +1316,6 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     msg.AppendLiteral(" : server does not support RFC 5746, see CVE-2009-3555");
 
     nsContentUtils::LogSimpleConsoleError(msg, "SSL");
-  }
-
-  /* Set the SSL Status information */
-  RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
-  if (!status) {
-    status = new nsSSLStatus();
-    infoObject->SetSSLStatus(status);
-  }
-
-  RememberCertErrorsTable::GetInstance().LookupCertErrorBits(infoObject,
-                                                             status);
-
-  if (status->HasServerCert()) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("HandshakeCallback KEEPING existing cert\n"));
-  } else {
-    ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
-    RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(serverCert.get()));
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("HandshakeCallback using NEW cert %p\n", nssc.get()));
-    status->SetServerCert(nssc, nsNSSCertificate::ev_status_unknown);
   }
 
   infoObject->NoteTimeUntilReady();

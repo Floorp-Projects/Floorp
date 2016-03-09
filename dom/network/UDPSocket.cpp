@@ -503,7 +503,8 @@ UDPSocket::InitRemote(const nsAString& aLocalAddress,
                   NS_ConvertUTF16toUTF8(aLocalAddress),
                   aLocalPort,
                   mAddressReuse,
-                  mLoopback);
+                  mLoopback,
+                  0);
 
   if (NS_FAILED(rv)) {
     return rv;

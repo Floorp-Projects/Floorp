@@ -4,17 +4,11 @@
 
 package org.mozilla.gecko.favicons;
 
-
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
-import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 import android.text.TextUtils;
 import android.util.Log;
-import ch.boye.httpclientandroidlib.Header;
-import ch.boye.httpclientandroidlib.HttpEntity;
-import ch.boye.httpclientandroidlib.HttpResponse;
-import ch.boye.httpclientandroidlib.client.methods.HttpGet;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserDB;
@@ -22,15 +16,20 @@ import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.IOUtils;
+import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -50,6 +49,14 @@ public class LoadFaviconTask {
     private static final HashMap<String, LoadFaviconTask> loadsInFlight = new HashMap<>();
 
     public static final int FLAG_PERSIST = 1;
+    /**
+     * Bypass all caches - this is used to directly retrieve the requested icon. Without this flag,
+     * favicons will first be pushed into the memory cache (and possibly permanent cache if using FLAG_PERSIST),
+     * where they will be downscaled to the maximum cache size, before being retrieved from the cache (resulting
+     * in a possibly smaller icon size).
+     */
+    public static final int FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS = 2;
+
     private static final int MAX_REDIRECTS_TO_FOLLOW = 5;
     // The default size of the buffer to use for downloading Favicons in the event no size is given
     // by the server.
@@ -68,14 +75,18 @@ public class LoadFaviconTask {
     volatile boolean mCancelled;
 
     // Assuming square favicons, judging by width only is acceptable.
-    protected int targetWidth;
+    protected int targetWidthAndHeight;
     private LinkedList<LoadFaviconTask> chainees;
     private boolean isChaining;
 
-    static DefaultHttpClient httpClient = new DefaultHttpClient();
+    private static class Response {
+        public final int contentLength;
+        public final InputStream stream;
 
-    public LoadFaviconTask(Context context, String pageURL, String faviconURL, int flags, OnFaviconLoadedListener listener) {
-        this(context, pageURL, faviconURL, flags, listener, -1, false);
+        private Response(InputStream stream, int contentLength) {
+            this.stream = stream;
+            this.contentLength = contentLength;
+        }
     }
 
     public LoadFaviconTask(Context context, String pageURL, String faviconURL, int flags, OnFaviconLoadedListener listener,
@@ -88,7 +99,7 @@ public class LoadFaviconTask {
         this.faviconURL = faviconURL;
         this.listener = listener;
         this.flags = flags;
-        this.targetWidth = targetWidth;
+        this.targetWidthAndHeight = targetWidth;
         this.onlyFromLocal = onlyFromLocal;
     }
 
@@ -117,73 +128,53 @@ public class LoadFaviconTask {
      * @param faviconURI URL of Favicon to try and download
      * @return The HttpResponse containing the downloaded Favicon if successful, null otherwise.
      */
-    private HttpResponse tryDownload(URI faviconURI) throws URISyntaxException, IOException {
+    private Response tryDownload(URI faviconURI) throws URISyntaxException, IOException {
         HashSet<String> visitedLinkSet = new HashSet<>();
         visitedLinkSet.add(faviconURI.toString());
         return tryDownloadRecurse(faviconURI, visitedLinkSet);
     }
-    private HttpResponse tryDownloadRecurse(URI faviconURI, HashSet<String> visited) throws URISyntaxException, IOException {
+    private Response tryDownloadRecurse(URI faviconURI, HashSet<String> visited) throws URISyntaxException, IOException {
         if (visited.size() == MAX_REDIRECTS_TO_FOLLOW) {
             return null;
         }
 
-        HttpGet request = new HttpGet(faviconURI);
-        request.setHeader("User-Agent", GeckoAppShell.getGeckoInterface().getDefaultUAString());
-        HttpResponse response = httpClient.execute(request);
-        if (response == null) {
+        HttpURLConnection connection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(faviconURI);
+        connection.setRequestProperty("User-Agent", GeckoAppShell.getGeckoInterface().getDefaultUAString());
+
+        connection.connect();
+
+        // Was the response a failure?
+        int status = connection.getResponseCode();
+
+        // Handle HTTP status codes requesting a redirect.
+        if (status >= 300 && status < 400) {
+            final String newURI = connection.getHeaderField("Location");
+
+            // Handle mad webservers.
+            try {
+                if (newURI == null || newURI.equals(faviconURI.toString())) {
+                    return null;
+                }
+
+                if (visited.contains(newURI)) {
+                    // Already been redirected here - abort.
+                    return null;
+                }
+
+                visited.add(newURI);
+            } finally {
+                connection.disconnect();
+            }
+
+            return tryDownloadRecurse(new URI(newURI), visited);
+        }
+
+        if (status >= 400) {
+            connection.disconnect();
             return null;
         }
 
-        if (response.getStatusLine() != null) {
-
-            // Was the response a failure?
-            int status = response.getStatusLine().getStatusCode();
-
-            // Handle HTTP status codes requesting a redirect.
-            if (status >= 300 && status < 400) {
-                Header header = response.getFirstHeader("Location");
-
-                // Handle mad webservers.
-                final String newURI;
-                try {
-                    if (header == null) {
-                        return null;
-                    }
-
-                    newURI = header.getValue();
-                    if (newURI == null || newURI.equals(faviconURI.toString())) {
-                        return null;
-                    }
-
-                    if (visited.contains(newURI)) {
-                        // Already been redirected here - abort.
-                        return null;
-                    }
-
-                    visited.add(newURI);
-                } finally {
-                    // Consume the entity before recurse or exit.
-                    try {
-                        response.getEntity().consumeContent();
-                    } catch (Exception e) {
-                        // Doesn't matter.
-                    }
-                }
-
-                return tryDownloadRecurse(new URI(newURI), visited);
-            }
-
-            if (status >= 400) {
-                // Consume the entity and exit.
-                try {
-                    response.getEntity().consumeContent();
-                } catch (Exception e) {
-                    // Doesn't matter.
-                }
-                return null;
-            }
-        }
-        return response;
+        return new Response(connection.getInputStream(), connection.getHeaderFieldInt("Content-Length", -1));
     }
 
     /**
@@ -246,22 +237,17 @@ public class LoadFaviconTask {
      */
     private LoadFaviconResult downloadAndDecodeImage(URI targetFaviconURL) throws IOException, URISyntaxException {
         // Try the URL we were given.
-        HttpResponse response = tryDownload(targetFaviconURL);
+        Response response = tryDownload(targetFaviconURL);
         if (response == null) {
-            return null;
-        }
-
-        HttpEntity entity = response.getEntity();
-        if (entity == null) {
             return null;
         }
 
         // Decode the image from the fetched response.
         try {
-            return decodeImageFromResponse(entity);
+            return decodeImageFromResponse(response);
         } finally {
             // Close the stream and free related resources.
-            entity.consumeContent();
+            IOUtils.safeStreamClose(response.stream);
         }
     }
 
@@ -269,27 +255,26 @@ public class LoadFaviconTask {
      * Copies the favicon stream to a buffer and decodes downloaded content  into bitmaps using the
      * FaviconDecoder.
      *
-     * @param entity HttpEntity containing the favicon stream to decode.
+     * @param response Response containing the favicon stream to decode.
      * @return A LoadFaviconResult containing the bitmap(s) extracted from the downloaded file, or
      *         null if no or corrupt data were received.
      * @throws IOException If attempts to fully read the stream result in such an exception, such as
      *                     in the event of a transient connection failure.
      */
-    private LoadFaviconResult decodeImageFromResponse(HttpEntity entity) throws IOException {
+    private LoadFaviconResult decodeImageFromResponse(Response response) throws IOException {
         // This may not be provided, but if it is, it's useful.
-        final long entityReportedLength = entity.getContentLength();
         int bufferSize;
-        if (entityReportedLength > 0) {
+        if (response.contentLength > 0) {
             // The size was reported and sane, so let's use that.
             // Integer overflow should not be a problem for Favicon sizes...
-            bufferSize = (int) entityReportedLength + 1;
+            bufferSize = response.contentLength + 1;
         } else {
             // No declared size, so guess and reallocate later if it turns out to be too small.
             bufferSize = DEFAULT_FAVICON_BUFFER_SIZE;
         }
 
         // Read the InputStream into a byte[].
-        ConsumedInputStream result = IOUtils.readFully(entity.getContent(), bufferSize);
+        ConsumedInputStream result = IOUtils.readFully(response.stream, bufferSize);
         if (result == null) {
             return null;
         }
@@ -417,10 +402,13 @@ public class LoadFaviconTask {
             return null;
         }
 
+        LoadFaviconResult loadedBitmaps = null;
         // If there are no valid bitmaps decoded, the returned LoadFaviconResult is null.
-        LoadFaviconResult loadedBitmaps = loadFaviconFromDb(db);
-        if (loadedBitmaps != null) {
-            return pushToCacheAndGetResult(loadedBitmaps);
+        if ((flags & FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS) == 0) {
+            loadedBitmaps = loadFaviconFromDb(db);
+            if (loadedBitmaps != null) {
+                return pushToCacheAndGetResult(loadedBitmaps);
+            }
         }
 
         if (onlyFromLocal || isCancelled()) {
@@ -445,11 +433,25 @@ public class LoadFaviconTask {
         }
 
         if (loadedBitmaps != null) {
-            // Fetching bytes to store can fail. saveFaviconToDb will
-            // do the right thing, but we still choose to cache the
-            // downloaded icon in memory.
-            saveFaviconToDb(db, loadedBitmaps.getBytesForDatabaseStorage());
-            return pushToCacheAndGetResult(loadedBitmaps);
+            if ((flags & FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS) == 0) {
+                // Fetching bytes to store can fail. saveFaviconToDb will
+                // do the right thing, but we still choose to cache the
+                // downloaded icon in memory.
+                saveFaviconToDb(db, loadedBitmaps.getBytesForDatabaseStorage());
+                return pushToCacheAndGetResult(loadedBitmaps);
+            } else {
+                final Map<Integer, Bitmap> iconMap = new HashMap<>();
+                final List<Integer> sizes = new ArrayList<>();
+
+                while (loadedBitmaps.getBitmaps().hasNext()) {
+                    final Bitmap b = loadedBitmaps.getBitmaps().next();
+                    iconMap.put(b.getWidth(), b);
+                    sizes.add(b.getWidth());
+                }
+
+                int bestSize = Favicons.selectBestSizeFromList(sizes, targetWidthAndHeight);
+                return iconMap.get(bestSize);
+            }
         }
 
         if (isUsingDefaultURL) {
@@ -501,8 +503,7 @@ public class LoadFaviconTask {
      */
     private Bitmap pushToCacheAndGetResult(LoadFaviconResult loadedBitmaps) {
         Favicons.putFaviconsInMemCache(faviconURL, loadedBitmaps.getBitmaps());
-        Bitmap result = Favicons.getSizedFaviconFromCache(faviconURL, targetWidth);
-        return result;
+        return Favicons.getSizedFaviconFromCache(faviconURL, targetWidthAndHeight);
     }
 
     private static boolean imageIsValid(final Bitmap image) {
@@ -545,11 +546,15 @@ public class LoadFaviconTask {
 
     private void processResult(Bitmap image) {
         Favicons.removeLoadTask(id);
-        Bitmap scaled = image;
+        final Bitmap scaled;
 
         // Notify listeners, scaling if required.
-        if (targetWidth != -1 && image != null &&  image.getWidth() != targetWidth) {
-            scaled = Favicons.getSizedFaviconFromCache(faviconURL, targetWidth);
+        if ((flags & FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS) != 0) {
+            scaled = Bitmap.createScaledBitmap(image, targetWidthAndHeight, targetWidthAndHeight, true);
+        } else if (targetWidthAndHeight != -1 && image != null &&  image.getWidth() != targetWidthAndHeight) {
+            scaled = Favicons.getSizedFaviconFromCache(faviconURL, targetWidthAndHeight);
+        } else {
+            scaled = image;
         }
 
         Favicons.dispatchResult(pageUrl, faviconURL, scaled, listener);
@@ -597,24 +602,5 @@ public class LoadFaviconTask {
 
     int getId() {
         return id;
-    }
-
-    static void closeHTTPClient() {
-        // This work must be done on a background thread because it shuts down
-        // the connection pool, which typically involves closing a connection --
-        // which counts as network activity.
-        if (ThreadUtils.isOnBackgroundThread()) {
-            if (httpClient != null) {
-                httpClient.close();
-            }
-            return;
-        }
-
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                LoadFaviconTask.closeHTTPClient();
-            }
-        });
     }
 }

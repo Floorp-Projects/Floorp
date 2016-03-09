@@ -30,13 +30,13 @@ NS_IMPL_ISUPPORTS(nsEffectiveTLDService, nsIEffectiveTLDService,
 #define ETLD_STR_NUM(line) ETLD_STR_NUM_1(line)
 #define ETLD_ENTRY_OFFSET(name) offsetof(struct etld_string_list, ETLD_STR_NUM(__LINE__))
 
-const ETLDEntry nsDomainEntry::entries[] = {
+const ETLDEntry ETLDEntry::entries[] = {
 #define ETLD_ENTRY(name, ex, wild) { ETLD_ENTRY_OFFSET(name), ex, wild },
 #include "etld_data.inc"
 #undef ETLD_ENTRY
 };
 
-const union nsDomainEntry::etld_strings nsDomainEntry::strings = {
+const union ETLDEntry::etld_strings ETLDEntry::strings = {
   {
 #define ETLD_ENTRY(name, ex, wild) name,
 #include "etld_data.inc"
@@ -44,10 +44,21 @@ const union nsDomainEntry::etld_strings nsDomainEntry::strings = {
   }
 };
 
+/* static */ const ETLDEntry*
+ETLDEntry::GetEntry(const char* aDomain)
+{
+  size_t i;
+  if (BinarySearchIf(entries, 0, ArrayLength(ETLDEntry::entries),
+                     Cmp(aDomain), &i)) {
+    return &entries[i];
+  }
+  return nullptr;
+}
+
 // Dummy function to statically ensure that our indices don't overflow
 // the storage provided for them.
 void
-nsDomainEntry::FuncForStaticAsserts(void)
+ETLDEntry::FuncForStaticAsserts(void)
 {
 #define ETLD_ENTRY(name, ex, wild)                                      \
   static_assert(ETLD_ENTRY_OFFSET(name) < (1 << ETLD_ENTRY_N_INDEX_BITS), \
@@ -65,33 +76,33 @@ nsDomainEntry::FuncForStaticAsserts(void)
 static nsEffectiveTLDService *gService = nullptr;
 
 nsEffectiveTLDService::nsEffectiveTLDService()
-  : mHash(ArrayLength(nsDomainEntry::entries))
 {
 }
 
 nsresult
 nsEffectiveTLDService::Init()
 {
-  const ETLDEntry *entries = nsDomainEntry::entries;
-
   nsresult rv;
   mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  // Initialize eTLD hash from static array
-  for (uint32_t i = 0; i < ArrayLength(nsDomainEntry::entries); i++) {
-    const char *domain = nsDomainEntry::GetEffectiveTLDName(entries[i].strtab_index);
 #ifdef DEBUG
+  // Sanity-check the eTLD entries.
+  for (uint32_t i = 0; i < ArrayLength(ETLDEntry::entries); i++) {
+    const char* domain = ETLDEntry::entries[i].GetEffectiveTLDName();
     nsDependentCString name(domain);
     nsAutoCString normalizedName(domain);
-    NS_ASSERTION(NS_SUCCEEDED(NormalizeHostname(normalizedName)),
-                 "normalization failure!");
-    NS_ASSERTION(name.Equals(normalizedName), "domain not normalized!");
-#endif
-    nsDomainEntry *entry = mHash.PutEntry(domain);
-    NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
-    entry->SetData(entries[i]);
+    MOZ_ASSERT(NS_SUCCEEDED(NormalizeHostname(normalizedName)),
+               "normalization failure!");
+    MOZ_ASSERT(name.Equals(normalizedName), "domain not normalized!");
+
+    // Domains must be in sorted order for binary search to work.
+    if (i > 0) {
+      const char* domain0 = ETLDEntry::entries[i - 1].GetEffectiveTLDName();
+      MOZ_ASSERT(strcmp(domain0, domain) < 0, "domains not in sorted order!");
+    }
   }
+#endif
 
   MOZ_ASSERT(!gService);
   gService = this;
@@ -108,6 +119,10 @@ nsEffectiveTLDService::~nsEffectiveTLDService()
 
 MOZ_DEFINE_MALLOC_SIZE_OF(EffectiveTLDServiceMallocSizeOf)
 
+// The amount of heap memory measured here is tiny. It used to be bigger when
+// nsEffectiveTLDService used a separate hash table instead of binary search.
+// Nonetheless, we keep this code here in anticipation of bug 1083971 which will
+// change ETLDEntries::entries to a heap-allocated array modifiable at runtime.
 NS_IMETHODIMP
 nsEffectiveTLDService::CollectReports(nsIHandleReportCallback* aHandleReport,
                                       nsISupports* aData, bool aAnonymize)
@@ -122,7 +137,6 @@ size_t
 nsEffectiveTLDService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
-  n += mHash.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
@@ -263,8 +277,8 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
     if (*currDomain == '.')
       return NS_ERROR_INVALID_ARG;
 
-    // perform the hash lookup.
-    nsDomainEntry *entry = mHash.GetEntry(currDomain);
+    // Perform the lookup.
+    const ETLDEntry* entry = ETLDEntry::GetEntry(currDomain);
     if (entry) {
       if (entry->IsWild() && prevDomain) {
         // wildcard rules imply an eTLD one level inferior to the match.

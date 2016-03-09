@@ -658,10 +658,9 @@ ContentEventHandler::AppendFontRanges(FontRangeArray& aFontRanges,
       }
     }
 
-    uint32_t skipStart = iter.ConvertOriginalToSkipped(frameXPStart);
-    uint32_t skipEnd = iter.ConvertOriginalToSkipped(frameXPEnd);
-    gfxTextRun::GlyphRunIterator runIter(
-      textRun, skipStart, skipEnd - skipStart);
+    gfxTextRun::Range skipRange(iter.ConvertOriginalToSkipped(frameXPStart),
+                                iter.ConvertOriginalToSkipped(frameXPEnd));
+    gfxTextRun::GlyphRunIterator runIter(textRun, skipRange);
     int32_t lastXPEndOffset = frameXPStart;
     while (runIter.NextRun()) {
       gfxFont* font = runIter.GetGlyphRun()->mFont.get();
@@ -1121,6 +1120,15 @@ ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
   nsresult rv = Init(aEvent);
   if (NS_FAILED(rv)) {
     return rv;
+  }
+
+  nsINode* const startNode = mFirstSelectedRange->GetStartParent();
+  nsINode* const endNode = mFirstSelectedRange->GetEndParent();
+
+  // Make sure the selection is within the root content range.
+  if (!nsContentUtils::ContentIsDescendantOf(startNode, mRootContent) ||
+      !nsContentUtils::ContentIsDescendantOf(endNode, mRootContent)) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   NS_ASSERTION(aEvent->mReply.mString.IsEmpty(),

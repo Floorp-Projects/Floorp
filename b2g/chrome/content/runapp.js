@@ -57,7 +57,7 @@ AppRunner.prototype = {
     // get a ref to the app <iframe>
     frameLoader.QueryInterface(Ci.nsIFrameLoader);
     // Ignore notifications that aren't from a BrowserOrApp
-    if (!frameLoader.ownerIsBrowserOrAppFrame) {
+    if (!frameLoader.ownerIsMozBrowserOrAppFrame) {
       return;
     }
 

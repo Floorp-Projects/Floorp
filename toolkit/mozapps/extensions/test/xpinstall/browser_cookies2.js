@@ -16,7 +16,7 @@ function test() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(JSON.stringify({
-    "Cookie check": TESTROOT + "cookieRedirect.sjs?" + TESTROOT + "unsigned.xpi"
+    "Cookie check": TESTROOT + "cookieRedirect.sjs?" + TESTROOT + "amosigned.xpi"
   }));
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
@@ -31,7 +31,7 @@ function finish_test(count) {
 
   var cm = Components.classes["@mozilla.org/cookiemanager;1"]
                      .getService(Components.interfaces.nsICookieManager2);
-  cm.remove("example.com", "xpinstall", "/browser/" + RELATIVE_DIR, false);
+  cm.remove("example.com", "xpinstall", "/browser/" + RELATIVE_DIR, {}, false);
 
   Services.perms.remove(makeURI("http://example.com"), "install");
 

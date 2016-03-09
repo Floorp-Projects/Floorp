@@ -4,7 +4,7 @@
 
 "use strict";
 
-// Tests the behaviour of adding a new rule to the rule view and the
+// Tests the behaviour of adding a new rule using the add rule button and the
 // various inplace-editor behaviours in the new rule editor.
 
 const TEST_URI = `
@@ -34,47 +34,19 @@ const TEST_DATA = [
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+  let {inspector, view, testActor} = yield openRuleView();
 
   for (let data of TEST_DATA) {
-    yield runTestData(inspector, view, data, "context-menu");
-    yield runTestData(inspector, view, data, "button");
+    let {node, expected} = data;
+    yield selectNode(node, inspector);
+    yield addNewRule(inspector, view);
+    yield testNewRule(view, expected, 1);
+
+    info("Resetting page content");
+    yield testActor.eval(
+      "content.document.body.innerHTML = `" + TEST_URI + "`;");
   }
 });
-
-function* runTestData(inspector, view, data, method) {
-  let {node, expected} = data;
-  yield selectNode(node, inspector);
-  yield addNewRule(inspector, view, method);
-  yield testNewRule(view, expected, 1);
-
-  info("Resetting page content");
-  content.document.body.innerHTML = TEST_URI;
-}
-
-function* addNewRule(inspector, view, method) {
-  if (method == "context-menu") {
-    info("Waiting for context menu to be shown");
-    let onPopup = once(view._contextmenu._menupopup, "popupshown");
-    let win = view.styleWindow;
-
-    EventUtils.synthesizeMouseAtCenter(view.element,
-      {button: 2, type: "contextmenu"}, win);
-    yield onPopup;
-
-    ok(!view._contextmenu.menuitemAddRule.hidden, "Add rule is visible");
-
-    info("Adding the new rule");
-    view._contextmenu.menuitemAddRule.click();
-    view._contextmenu._menupopup.hidePopup();
-  } else {
-    info("Adding the new rule using the button");
-    view.addRuleButton.click();
-  }
-
-  info("Waiting for rule view to change");
-  yield view.once("ruleview-changed");
-}
 
 function* testNewRule(view, expected, index) {
   let idRuleEditor = getRuleViewRuleEditor(view, index);

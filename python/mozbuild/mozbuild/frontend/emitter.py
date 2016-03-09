@@ -19,8 +19,6 @@ from mozbuild.util import (
 )
 
 import mozpack.path as mozpath
-import manifestparser
-import reftest
 import mozinfo
 
 from .data import (
@@ -54,7 +52,6 @@ from .data import (
     JARManifest,
     Library,
     Linkable,
-    LinkageWrongKindError,
     LocalInclude,
     PerSourceFlag,
     PreprocessedTestWebIDLFile,
@@ -181,9 +178,8 @@ class TreeMetadataEmitter(LoggingMixin):
             else:
                 raise Exception('Unhandled output type: %s' % type(out))
 
-        # Don't emit Linkable objects when COMPILE_ENVIRONMENT is explicitely
-        # set to a value meaning false (usually '').
-        if self.config.substs.get('COMPILE_ENVIRONMENT', True):
+        # Don't emit Linkable objects when COMPILE_ENVIRONMENT is not set
+        if self.config.substs.get('COMPILE_ENVIRONMENT'):
             start = time.time()
             objs = list(self._emit_libs_derived(contexts))
             self._emitter_time += time.time() - start
@@ -570,9 +566,12 @@ class TreeMetadataEmitter(LoggingMixin):
                     script = mozpath.join(
                         mozpath.dirname(mozpath.dirname(__file__)),
                         'action', 'generate_symbols_file.py')
+                    defines = ()
+                    if lib.defines:
+                        defines = lib.defines.get_defines()
                     yield GeneratedFile(context, script,
                         'generate_symbols_file', lib.symbols_file,
-                        [symbols_file.full_path], lib.defines.get_defines())
+                        [symbols_file.full_path], defines)
             if static_lib:
                 lib = StaticLibrary(context, libname, **static_args)
                 self._libs[libname].append(lib)
@@ -711,10 +710,6 @@ class TreeMetadataEmitter(LoggingMixin):
         # the recursive make backend.
         for o in self._emit_directory_traversal_from_context(context): yield o
 
-        for path in context['CONFIGURE_SUBST_FILES']:
-            yield self._create_substitution(ConfigFileSubstitution, context,
-                path)
-
         for obj in self._process_xpidl(context):
             yield obj
 
@@ -787,6 +782,12 @@ class TreeMetadataEmitter(LoggingMixin):
         for obj in self._process_generated_files(context):
             generated_files.add(obj.output)
             yield obj
+
+        for path in context['CONFIGURE_SUBST_FILES']:
+            sub = self._create_substitution(ConfigFileSubstitution, context,
+                path)
+            generated_files.add(str(sub.relpath))
+            yield sub
 
         for obj in self._process_test_harness_files(context):
             yield obj
@@ -1056,24 +1057,23 @@ class TreeMetadataEmitter(LoggingMixin):
 
     def _process_test_manifests(self, context):
         for prefix, info in TEST_MANIFESTS.items():
-            for path in context.get('%s_MANIFESTS' % prefix, []):
-                for obj in self._process_test_manifest(context, info, path):
+            for path, manifest in context.get('%s_MANIFESTS' % prefix, []):
+                for obj in self._process_test_manifest(context, info, path, manifest):
                     yield obj
 
         for flavor in REFTEST_FLAVORS:
-            for path in context.get('%s_MANIFESTS' % flavor.upper(), []):
-                for obj in self._process_reftest_manifest(context, flavor, path):
+            for path, manifest in context.get('%s_MANIFESTS' % flavor.upper(), []):
+                for obj in self._process_reftest_manifest(context, flavor, path, manifest):
                     yield obj
 
         for flavor in WEB_PATFORM_TESTS_FLAVORS:
-            for path in context.get("%s_MANIFESTS" % flavor.upper().replace('-', '_'), []):
-                for obj in self._process_web_platform_tests_manifest(context, path):
+            for path, manifest in context.get("%s_MANIFESTS" % flavor.upper().replace('-', '_'), []):
+                for obj in self._process_web_platform_tests_manifest(context, path, manifest):
                     yield obj
 
-    def _process_test_manifest(self, context, info, manifest_path):
+    def _process_test_manifest(self, context, info, manifest_path, mpmanifest):
         flavor, install_root, install_subdir, package_tests = info
 
-        manifest_path = mozpath.normpath(manifest_path)
         path = mozpath.normpath(mozpath.join(context.srcdir, manifest_path))
         manifest_dir = mozpath.dirname(path)
         manifest_reldir = mozpath.dirname(mozpath.relpath(path,
@@ -1081,19 +1081,17 @@ class TreeMetadataEmitter(LoggingMixin):
         install_prefix = mozpath.join(install_root, install_subdir)
 
         try:
-            m = manifestparser.TestManifest(manifests=[path], strict=True,
-                                            rootdir=context.config.topsrcdir)
-            defaults = m.manifest_defaults[os.path.normpath(path)]
-            if not m.tests:
+            defaults = mpmanifest.manifest_defaults[os.path.normpath(path)]
+            if not mpmanifest.tests:
                 raise SandboxValidationError('Empty test manifest: %s'
                     % path, context)
 
-            obj = TestManifest(context, path, m, flavor=flavor,
+            obj = TestManifest(context, path, mpmanifest, flavor=flavor,
                 install_prefix=install_prefix,
                 relpath=mozpath.join(manifest_reldir, mozpath.basename(path)),
                 dupe_manifest='dupe-manifest' in defaults)
 
-            filtered = m.tests
+            filtered = mpmanifest.tests
 
             # Jetpack add-on tests are expected to be generated during the
             # build process so they won't exist here.
@@ -1185,7 +1183,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
             # We also copy manifests into the output directory,
             # including manifests from [include:foo] directives.
-            for mpath in m.manifests():
+            for mpath in mpmanifest.manifests():
                 mpath = mozpath.normpath(mpath)
                 out_path = mozpath.join(out_dir, mozpath.basename(mpath))
                 obj.installs[mpath] = (out_path, False)
@@ -1213,15 +1211,11 @@ class TreeMetadataEmitter(LoggingMixin):
                     '\n'.join(traceback.format_exception(*sys.exc_info()))),
                 context)
 
-    def _process_reftest_manifest(self, context, flavor, manifest_path):
-        manifest_path = mozpath.normpath(manifest_path)
+    def _process_reftest_manifest(self, context, flavor, manifest_path, manifest):
         manifest_full_path = mozpath.normpath(mozpath.join(
             context.srcdir, manifest_path))
         manifest_reldir = mozpath.dirname(mozpath.relpath(manifest_full_path,
             context.config.topsrcdir))
-
-        manifest = reftest.ReftestManifest()
-        manifest.load(manifest_full_path)
 
         # reftest manifests don't come from manifest parser. But they are
         # similar enough that we can use the same emitted objects. Note
@@ -1245,36 +1239,13 @@ class TreeMetadataEmitter(LoggingMixin):
 
         yield obj
 
-    def _load_web_platform_tests_manifest(self, context, manifest_path, tests_root):
-        old_path = sys.path[:]
-        try:
-            # Setup sys.path to include all the dependencies required to import
-            # the web-platform-tests manifest parser. web-platform-tests provides
-            # a the localpaths.py to do the path manipulation, which we load,
-            # providing the __file__ variable so it can resolve the relative
-            # paths correctly.
-            paths_file = os.path.join(context.config.topsrcdir, "testing",
-                                      "web-platform", "tests", "tools", "localpaths.py")
-            _globals = {"__file__": paths_file}
-            execfile(paths_file, _globals)
-            import manifest as wptmanifest
-        finally:
-            sys.path = old_path
-
-        return wptmanifest.manifest.load(tests_root, manifest_path)
-
-    def _process_web_platform_tests_manifest(self, context, paths):
+    def _process_web_platform_tests_manifest(self, context, paths, manifest):
         manifest_path, tests_root = paths
-
-        manifest_path = mozpath.normpath(manifest_path)
         manifest_full_path = mozpath.normpath(mozpath.join(
             context.srcdir, manifest_path))
         manifest_reldir = mozpath.dirname(mozpath.relpath(manifest_full_path,
             context.config.topsrcdir))
-
         tests_root = mozpath.normpath(mozpath.join(context.srcdir, tests_root))
-
-        manifest = self._load_web_platform_tests_manifest(context, manifest_full_path, tests_root)
 
         # Create a equivalent TestManifest object
         obj = TestManifest(context, manifest_full_path, manifest,

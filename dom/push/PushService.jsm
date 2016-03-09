@@ -10,22 +10,26 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-const {PushDB} = Cu.import("resource://gre/modules/PushDB.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const {PushServiceWebSocket} = Cu.import("resource://gre/modules/PushServiceWebSocket.jsm");
-const {PushServiceHttp2} = Cu.import("resource://gre/modules/PushServiceHttp2.jsm");
 const {PushCrypto} = Cu.import("resource://gre/modules/PushCrypto.jsm");
+const {PushDB} = Cu.import("resource://gre/modules/PushDB.jsm");
 
-// Currently supported protocols: WebSocket.
-const CONNECTION_PROTOCOLS = [PushServiceWebSocket, PushServiceHttp2];
-
-XPCOMUtils.defineLazyModuleGetter(this, "AlarmService",
-                                  "resource://gre/modules/AlarmService.jsm");
+const CONNECTION_PROTOCOLS = (function() {
+  if ('android' != AppConstants.MOZ_WIDGET_TOOLKIT) {
+    const {PushServiceWebSocket} = Cu.import("resource://gre/modules/PushServiceWebSocket.jsm");
+    const {PushServiceHttp2} = Cu.import("resource://gre/modules/PushServiceHttp2.jsm");
+    return [PushServiceWebSocket, PushServiceHttp2];
+  } else {
+    const {PushServiceAndroidGCM} = Cu.import("resource://gre/modules/PushServiceAndroidGCM.jsm");
+    return [PushServiceAndroidGCM];
+  }
+})();
 
 XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
                                    "@mozilla.org/contentsecuritymanager;1",
@@ -96,7 +100,6 @@ this.PushService = {
   _state: PUSH_SERVICE_UNINIT,
   _db: null,
   _options: null,
-  _alarmID: null,
   _visibleNotifications: new Map(),
 
   // Callback that is called after attempting to
@@ -548,13 +551,11 @@ this.PushService = {
       return;
     }
 
-    this.stopAlarm();
     this._stopObservers();
 
     this._service.disconnect();
     this._service.uninit();
     this._service = null;
-    this.stopAlarm();
 
     if (!this._db) {
       return Promise.resolve();
@@ -598,65 +599,15 @@ this.PushService = {
       return;
     }
 
-    this._setState(PUSH_SERVICE_UNINIT);
-
     prefs.ignore("serverURL", this);
     Services.obs.removeObserver(this, "xpcom-shutdown");
 
     this._stateChangeProcessEnqueue(_ =>
-            this._changeServerURL("", UNINIT_EVENT));
-    console.debug("uninit: shutdown complete!");
-  },
-
-  /** |delay| should be in milliseconds. */
-  setAlarm: function(delay) {
-    if (this._state <= PUSH_SERVICE_ACTIVATING) {
-      return;
-    }
-
-    // Bug 909270: Since calls to AlarmService.add() are async, calls must be
-    // 'queued' to ensure only one alarm is ever active.
-    if (this._settingAlarm) {
-        // onSuccess will handle the set. Overwriting the variable enforces the
-        // last-writer-wins semantics.
-        this._queuedAlarmDelay = delay;
-        this._waitingForAlarmSet = true;
-        return;
-    }
-
-    // Stop any existing alarm.
-    this.stopAlarm();
-
-    this._settingAlarm = true;
-    AlarmService.add(
       {
-        date: new Date(Date.now() + delay),
-        ignoreTimezone: true
-      },
-      () => {
-        if (this._state > PUSH_SERVICE_ACTIVATING) {
-          this._service.onAlarmFired();
-        }
-      }, (alarmID) => {
-        this._alarmID = alarmID;
-        console.debug("setAlarm: Set alarm", delay, "in the future",
-          this._alarmID);
-        this._settingAlarm = false;
-
-        if (this._waitingForAlarmSet) {
-          this._waitingForAlarmSet = false;
-          this.setAlarm(this._queuedAlarmDelay);
-        }
-      }
-    );
-  },
-
-  stopAlarm: function() {
-    if (this._alarmID !== null) {
-      console.debug("stopAlarm: Stopped existing alarm", this._alarmID);
-      AlarmService.remove(this._alarmID);
-      this._alarmID = null;
-    }
+        this._changeServerURL("", UNINIT_EVENT);
+        this._setState(PUSH_SERVICE_UNINIT);
+        console.debug("uninit: shutdown complete!");
+      });
   },
 
   /**

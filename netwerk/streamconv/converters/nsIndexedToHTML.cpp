@@ -12,7 +12,6 @@
 #include "nsIFileURL.h"
 #include "nsEscape.h"
 #include "nsIDirIndex.h"
-#include "nsDateTimeFormatCID.h"
 #include "nsURLHelper.h"
 #include "nsIPlatformCharset.h"
 #include "nsIPrefService.h"
@@ -70,9 +69,9 @@ nsIndexedToHTML::Init(nsIStreamListener* aListener) {
 
     mListener = aListener;
 
-    mDateTime = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-      return rv;
+    mDateTime = nsIDateTimeFormat::Create();
+    if (!mDateTime)
+      return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIStringBundleService> sbs =
         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);

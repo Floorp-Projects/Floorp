@@ -7,6 +7,7 @@
 "use strict";
 
 const {Cu, Cc, Ci, components} = require("chrome");
+const Services = require("Services");
 const {Class} = require("sdk/core/heritage");
 const {Unknown} = require("sdk/platform/xpcom");
 const xpcom = require("sdk/platform/xpcom");
@@ -18,7 +19,6 @@ loader.lazyRequireGetter(this, "NetworkHelper",
 loader.lazyRequireGetter(this, "JsonViewUtils",
                                "devtools/client/jsonview/utils");
 
-const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const childProcessMessageManager =
   Cc["@mozilla.org/childprocessmessagemanager;1"].

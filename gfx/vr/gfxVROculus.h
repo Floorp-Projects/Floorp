@@ -28,7 +28,8 @@ public:
   bool SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRight,
               double zNear, double zFar) override;
 
-  VRHMDSensorState GetSensorState(double timeOffset) override;
+  virtual VRHMDSensorState GetSensorState() override;
+  virtual VRHMDSensorState GetImmediateSensorState() override;
   void ZeroSensor() override;
   bool KeepSensorTracking() override;
   void NotifyVsync(const TimeStamp& aVsyncTimestamp) override;
@@ -45,7 +46,7 @@ public:
   /* VRHMDRenderingSupport */
   already_AddRefed<RenderTargetSet> CreateRenderTargetSet(layers::Compositor *aCompositor, const IntSize& aSize) override;
   void DestroyRenderTargetSet(RenderTargetSet *aRTSet) override;
-  void SubmitFrame(RenderTargetSet *aRTSet) override;
+  void SubmitFrame(RenderTargetSet *aRTSet, int32_t aInputFrameID) override;
 
   ovrSession GetOculusSession() const { return mSession; }
 
@@ -67,7 +68,19 @@ protected:
   ovrSession mSession;
   ovrHmdDesc mDesc;
   ovrFovPort mFOVPort[2];
-  ovrTrackingState mLastTrackingState;
+
+  VRHMDSensorState GetSensorState(double timeOffset);
+
+  // The maximum number of frames of latency that we would expect before we
+  // should give up applying pose prediction.
+  // If latency is greater than one second, then the experience is not likely
+  // to be corrected by pose prediction.  Setting this value too
+  // high may result in unnecessary memory allocation.
+  // As the current fastest refresh rate is 90hz, 100 is selected as a
+  // conservative value.
+  static const int kMaxLatencyFrames = 100;
+  VRHMDSensorState mLastSensorState[kMaxLatencyFrames];
+  int32_t mInputFrameID;
 };
 
 } // namespace impl

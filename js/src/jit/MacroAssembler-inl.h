@@ -317,8 +317,51 @@ MacroAssembler::addPtr(ImmPtr imm, Register dest)
     addPtr(ImmWord(uintptr_t(imm.value)), dest);
 }
 
+void
+MacroAssembler::inc32(RegisterOrInt32Constant* key)
+{
+    if (key->isRegister())
+        add32(Imm32(1), key->reg());
+    else
+        key->bumpConstant(1);
+}
+
+void
+MacroAssembler::dec32(RegisterOrInt32Constant* key)
+{
+    if (key->isRegister())
+        add32(Imm32(-1), key->reg());
+    else
+        key->bumpConstant(-1);
+}
+
 // ===============================================================
 // Branch functions
+
+void
+MacroAssembler::branch32(Condition cond, Register length, const RegisterOrInt32Constant& key,
+                         Label* label)
+{
+    branch32Impl(cond, length, key, label);
+}
+
+void
+MacroAssembler::branch32(Condition cond, const Address& length, const RegisterOrInt32Constant& key,
+                         Label* label)
+{
+    branch32Impl(cond, length, key, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branch32Impl(Condition cond, const T& length, const RegisterOrInt32Constant& key,
+                             Label* label)
+{
+    if (key.isRegister())
+        branch32(cond, length, key.reg(), label);
+    else
+        branch32(cond, length, Imm32(key.constant()), label);
+}
 
 template <class L>
 void
@@ -491,16 +534,6 @@ MacroAssembler::branchTestMIRType(Condition cond, const Value& val, MIRType type
     }
 }
 
-template <typename T>
-void
-MacroAssembler::branchKey(Condition cond, const T& length, const Int32Key& key, Label* label)
-{
-    if (key.isRegister())
-        branch32(cond, length, key.reg(), label);
-    else
-        branch32(cond, length, Imm32(key.constant()), label);
-}
-
 void
 MacroAssembler::branchTestNeedsIncrementalBarrier(Condition cond, Label* label)
 {
@@ -508,6 +541,14 @@ MacroAssembler::branchTestNeedsIncrementalBarrier(Condition cond, Label* label)
     CompileZone* zone = GetJitContext()->compartment->zone();
     AbsoluteAddress needsBarrierAddr(zone->addressOfNeedsIncrementalBarrier());
     branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
+}
+
+void
+MacroAssembler::branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
+                                     Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    branchTestValue(cond, val, MagicValue(why), label);
 }
 
 //}}} check_macroassembler_style
@@ -582,15 +623,6 @@ MacroAssembler::storeObjectOrNull(Register src, const T& dest)
 }
 
 void
-MacroAssembler::bumpKey(Int32Key* key, int diff)
-{
-    if (key->isRegister())
-        add32(Imm32(diff), key->reg());
-    else
-        key->bumpConstant(diff);
-}
-
-void
 MacroAssembler::assertStackAlignment(uint32_t alignment, int32_t offset /* = 0 */)
 {
 #ifdef DEBUG
@@ -617,6 +649,21 @@ MacroAssembler::assertStackAlignment(uint32_t alignment, int32_t offset /* = 0 *
     breakpoint();
     bind(&ok);
 #endif
+}
+
+void
+MacroAssembler::storeCallResultValue(AnyRegister dest)
+{
+    unboxValue(JSReturnOperand, dest);
+}
+
+void
+MacroAssembler::storeCallResultValue(TypedOrValueRegister dest)
+{
+    if (dest.hasValue())
+        storeCallResultValue(dest.valueReg());
+    else
+        storeCallResultValue(dest.typedReg());
 }
 
 } // namespace jit

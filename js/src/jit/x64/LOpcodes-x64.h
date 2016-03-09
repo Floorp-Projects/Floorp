@@ -11,6 +11,9 @@
 
 #define LIR_CPU_OPCODE_LIST(_)      \
     _(DivOrModConstantI)            \
+    _(DivOrModI64)                  \
+    _(UDivOrMod64)                  \
+    _(TruncateToInt64)              \
     _(SimdValueInt32x4)             \
     _(SimdValueFloat32x4)           \
     _(UDivOrMod)                    \

@@ -14,6 +14,7 @@
     _(OsiPoint)                     \
     _(MoveGroup)                    \
     _(Integer)                      \
+    _(Integer64)                    \
     _(Pointer)                      \
     _(Double)                       \
     _(Float32)                      \
@@ -96,8 +97,10 @@
     _(BitNotI)                      \
     _(BitNotV)                      \
     _(BitOpI)                       \
+    _(BitOpI64)                     \
     _(BitOpV)                       \
     _(ShiftI)                       \
+    _(ShiftI64)                     \
     _(UrshD)                        \
     _(Return)                       \
     _(Throw)                        \
@@ -111,6 +114,8 @@
     _(ObjectGroupDispatch)          \
     _(Compare)                      \
     _(CompareAndBranch)             \
+    _(Compare64)                    \
+    _(Compare64AndBranch)           \
     _(CompareD)                     \
     _(CompareDAndBranch)            \
     _(CompareF)                     \
@@ -137,6 +142,8 @@
     _(AbsD)                         \
     _(AbsF)                         \
     _(ClzI)                         \
+    _(CtzI)                         \
+    _(PopcntI)                      \
     _(SqrtD)                        \
     _(SqrtF)                        \
     _(Atan2D)                       \
@@ -153,8 +160,11 @@
     _(NotO)                         \
     _(NotV)                         \
     _(AddI)                         \
+    _(AddI64)                       \
     _(SubI)                         \
+    _(SubI64)                       \
     _(MulI)                         \
+    _(MulI64)                       \
     _(MathD)                        \
     _(MathF)                        \
     _(DivI)                         \
@@ -179,6 +189,8 @@
     _(Float32ToInt32)               \
     _(TruncateDToInt32)             \
     _(TruncateFToInt32)             \
+    _(WrapInt64ToInt32)             \
+    _(ExtendInt32ToInt64)           \
     _(BooleanToString)              \
     _(IntToString)                  \
     _(DoubleToString)               \

@@ -2,6 +2,11 @@ importScripts('/resources/testharness.js');
 
 promise_test(function(test) {
     var durationMsec = 100;
+    // There are limits to our accuracy here.  Timers may fire up to a
+    // millisecond early due to platform-dependent rounding.  In addition
+    // the performance API introduces some rounding as well to prevent
+    // timing attacks.
+    var accuracy = 1.5;
     return new Promise(function(resolve) {
         performance.mark('startMark');
         setTimeout(resolve, durationMsec);
@@ -14,10 +19,7 @@ promise_test(function(test) {
           assert_equals(measure.startTime, startMark.startTime);
           assert_approx_equals(endMark.startTime - startMark.startTime,
                                measure.duration, 0.001);
-          //XXXnsm: Timers aren't always precise. on treeherder sometimes the
-          //measured duration is like 99.5 something. Let's just measure the
-          //ballpark.
-          assert_greater_than(measure.duration, durationMsec - 1);
+          assert_greater_than(measure.duration, durationMsec - accuracy);
           assert_equals(performance.getEntriesByType('mark').length, 2);
           assert_equals(performance.getEntriesByType('measure').length, 1);
           performance.clearMarks('startMark');

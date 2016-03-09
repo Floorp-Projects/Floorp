@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* globals Services, sendAsyncMessage, addMessageListener */
+
 // XXX Some helper API could go to testing/mochitest/tests/SimpleTest/AsyncContentUtils.js
 // (or at least to share test API in devtools)
 

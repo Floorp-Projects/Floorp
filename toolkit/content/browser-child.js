@@ -128,8 +128,11 @@ var WebProgressListener = {
     // the documentURI.
     if (aWebProgress && aWebProgress.isTopLevel) {
       json.documentURI = content.document.documentURIObject.spec;
+      json.charset = content.document.characterSet;
+      json.mayEnableCharacterEncodingMenu = docShell.mayEnableCharacterEncodingMenu;
     }
 
+    json.inLoadURI = WebNavigation.inLoadURI;
     this._send("Content:StateChange", json, objects);
   },
 
@@ -206,6 +209,10 @@ var WebProgressListener = {
     return true;
   },
 
+  sendLoadCallResult() {
+    this._send("Content:LoadURIResult");
+  },
+
   QueryInterface: function QueryInterface(aIID) {
     if (aIID.equals(Ci.nsIWebProgressListener) ||
         aIID.equals(Ci.nsIWebProgressListener2) ||
@@ -235,6 +242,12 @@ var WebNavigation =  {
 
   get webNavigation() {
     return docShell.QueryInterface(Ci.nsIWebNavigation);
+  },
+
+  _inLoadURI: false,
+
+  get inLoadURI() {
+    return this._inLoadURI;
   },
 
   receiveMessage: function(message) {
@@ -298,8 +311,14 @@ var WebNavigation =  {
       headers = makeInputStream(headers);
     if (baseURI)
       baseURI = Services.io.newURI(baseURI, null, null);
-    this.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
-                                          postData, headers, baseURI);
+    this._inLoadURI = true;
+    try {
+      this.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
+                                            postData, headers, baseURI);
+    } finally {
+      this._inLoadURI = false;
+      WebProgressListener.sendLoadCallResult();
+    }
   },
 
   reload: function(flags) {
@@ -507,6 +526,13 @@ addMessageListener("NetworkPrioritizer:AdjustPriority", (msg) => {
   let loadGroup = webNav.QueryInterface(Ci.nsIDocumentLoader)
                         .loadGroup.QueryInterface(Ci.nsISupportsPriority);
   loadGroup.adjustPriority(msg.data.adjustment);
+});
+
+addMessageListener("NetworkPrioritizer:SetPriority", (msg) => {
+  let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+  let loadGroup = webNav.QueryInterface(Ci.nsIDocumentLoader)
+                        .loadGroup.QueryInterface(Ci.nsISupportsPriority);
+  loadGroup.priority = msg.data.priority;
 });
 
 var AutoCompletePopup = {

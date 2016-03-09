@@ -37,6 +37,7 @@
 #include "mozilla/dom/ipc/IdType.h"
 #include "AudioChannelService.h"
 #include "PuppetWidget.h"
+#include "mozilla/layers/GeckoContentController.h"
 
 class nsICachedFileDescriptorListener;
 class nsIDOMWindowUtils;
@@ -47,7 +48,9 @@ class RenderFrameChild;
 } // namespace layout
 
 namespace layers {
+class APZChild;
 class APZEventState;
+class AsyncDragMetrics;
 class ImageCompositeNotification;
 } // namespace layers
 
@@ -323,47 +326,17 @@ public:
            const TextureFactoryIdentifier& aTextureFactoryIdentifier,
            const uint64_t& aLayersId,
            PRenderFrameChild* aRenderFrame,
-           const bool& aParentIsActive) override;
+           const bool& aParentIsActive,
+           const nsSizeMode& aSizeMode) override;
 
   virtual bool
   RecvUpdateDimensions(const CSSRect& aRect,
                        const CSSSize& aSize,
-                       const nsSizeMode& aSizeMode,
                        const ScreenOrientationInternal& aOrientation,
+                       const LayoutDeviceIntPoint& aClientOffset,
                        const LayoutDeviceIntPoint& aChromeDisp) override;
-
   virtual bool
-  RecvUpdateFrame(const layers::FrameMetrics& aFrameMetrics) override;
-
-  virtual bool
-  RecvRequestFlingSnap(const ViewID& aScrollId,
-                       const CSSPoint& aDestination) override;
-
-  virtual bool
-  RecvAcknowledgeScrollUpdate(const ViewID& aScrollId,
-                              const uint32_t& aScrollGeneration) override;
-
-  virtual bool
-  RecvHandleDoubleTap(const CSSPoint& aPoint,
-                      const Modifiers& aModifiers,
-                      const mozilla::layers::ScrollableLayerGuid& aGuid) override;
-
-  virtual bool
-  RecvHandleSingleTap(const CSSPoint& aPoint,
-                      const Modifiers& aModifiers,
-                      const mozilla::layers::ScrollableLayerGuid& aGuid) override;
-
-  virtual bool
-  RecvHandleLongTap(const CSSPoint& aPoint,
-                    const Modifiers& aModifiers,
-                    const mozilla::layers::ScrollableLayerGuid& aGuid,
-                    const uint64_t& aInputBlockId) override;
-
-  virtual bool RecvNotifyAPZStateChange(const ViewID& aViewId,
-                                        const APZStateChange& aChange,
-                                        const int& aArg) override;
-
-  virtual bool RecvNotifyFlushComplete() override;
+  RecvSizeModeChanged(const nsSizeMode& aSizeMode) override;
 
   virtual bool RecvActivate() override;
 
@@ -418,7 +391,8 @@ public:
                             const int32_t& aModifiers,
                             const bool& aPreventDefault) override;
 
-  virtual bool RecvMouseScrollTestEvent(const FrameMetrics::ViewID& aScrollId,
+  virtual bool RecvMouseScrollTestEvent(const uint64_t& aLayersId,
+                                        const FrameMetrics::ViewID& aScrollId,
                                         const nsString& aEvent) override;
 
   virtual bool RecvNativeSynthesisResponse(const uint64_t& aObserverId,
@@ -572,6 +546,8 @@ public:
                            const TimeStamp& aCompositeReqEnd);
 
   void ClearCachedResources();
+  void InvalidateLayers();
+  void CompositorUpdated(const TextureFactoryIdentifier& aNewIdentifier);
 
   static inline TabChild* GetFrom(nsIDOMWindow* aWindow)
   {
@@ -603,6 +579,7 @@ public:
 
   nsresult CreatePluginWidget(nsIWidget* aParent, nsIWidget** aOut);
 
+  LayoutDeviceIntPoint GetClientOffset() const { return mClientOffset; }
   LayoutDeviceIntPoint GetChromeDisplacement() const { return mChromeDisp; };
 
   bool IPCOpen() const { return mIPCOpen; }
@@ -621,6 +598,40 @@ public:
                   const uint64_t& aLayersId,
                   PRenderFrameChild* aRenderFrame,
                   const ShowInfo& aShowInfo);
+
+  void ContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
+                                 uint64_t aInputBlockId,
+                                 bool aPreventDefault) const;
+  void SetTargetAPZC(uint64_t aInputBlockId,
+                    const nsTArray<ScrollableLayerGuid>& aTargets) const;
+  void HandleDoubleTap(const CSSPoint& aPoint,
+                       const Modifiers& aModifiers,
+                       const mozilla::layers::ScrollableLayerGuid& aGuid);
+  void HandleSingleTap(const CSSPoint& aPoint,
+                       const Modifiers& aModifiers,
+                       const mozilla::layers::ScrollableLayerGuid& aGuid,
+                       bool aCallTakeFocusForClickFromTap);
+  void HandleLongTap(const CSSPoint& aPoint,
+                     const Modifiers& aModifiers,
+                     const mozilla::layers::ScrollableLayerGuid& aGuid,
+                     const uint64_t& aInputBlockId);
+  void SetAllowedTouchBehavior(uint64_t aInputBlockId,
+                               const nsTArray<TouchBehaviorFlags>& aFlags) const;
+
+  bool UpdateFrame(const FrameMetrics& aFrameMetrics);
+  bool NotifyAPZStateChange(const ViewID& aViewId,
+                            const layers::GeckoContentController::APZStateChange& aChange,
+                            const int& aArg);
+  void StartScrollbarDrag(const layers::AsyncDragMetrics& aDragMetrics);
+  void ZoomToRect(const uint32_t& aPresShellId,
+                  const FrameMetrics::ViewID& aViewId,
+                  const CSSRect& aRect,
+                  const uint32_t& aFlags);
+
+  void SetAPZChild(layers::APZChild* aAPZChild)
+  {
+      mAPZChild = aAPZChild;
+  }
 
 protected:
   virtual ~TabChild();
@@ -720,6 +731,8 @@ private:
   SetAllowedTouchBehaviorCallback mSetAllowedTouchBehaviorCallback;
   bool mHasValidInnerSize;
   bool mDestroyed;
+  // Position of client area relative to the outer window
+  LayoutDeviceIntPoint mClientOffset;
   // Position of tab, relative to parent widget (typically the window)
   LayoutDeviceIntPoint mChromeDisp;
   TabId mUniqueId;
@@ -735,6 +748,10 @@ private:
   bool mDidSetRealShowInfo;
 
   AutoTArray<bool, NUMBER_OF_AUDIO_CHANNELS> mAudioChannelsActive;
+
+  // APZChild clears this pointer from its destructor, so it shouldn't be a
+  // dangling pointer.
+  layers::APZChild* mAPZChild;
 
   DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

@@ -45,6 +45,7 @@ interface nsIPluginTag : nsISupports
 
   readonly attribute boolean disabled;
   readonly attribute boolean clicktoplay;
+  readonly attribute boolean loaded;
   // See the STATE_* values above.
            attribute unsigned long enabledState;
 

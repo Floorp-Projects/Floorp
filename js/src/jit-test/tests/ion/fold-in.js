@@ -30,3 +30,15 @@ function g(arr) {
 assertEq(g(arr), 250);
 arr[0].abcd = 3;
 assertEq(g(arr), 375);
+
+function testPrimitive() {
+    var x = 7;
+    var c = 0;
+    for (var i=0; i<5; i++) {
+	try {
+	    "z" in x;
+	} catch(e) { c++; }
+    }
+    assertEq(c, 5);
+}
+testPrimitive();

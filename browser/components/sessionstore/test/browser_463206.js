@@ -32,24 +32,20 @@ add_task(function* () {
   yield promiseTabRestored(tab2);
 
   // Query a few values from the top and its child frames.
-  let query = ContentTask.spawn(tab2.linkedBrowser, null, function* () {
-    return [
-      content.document.getElementById("out1").value,
+  yield ContentTask.spawn(tab2.linkedBrowser, null, function* () {
+    Assert.notEqual(content.document.getElementById("out1").value,
       content.frames[1].document.getElementById("out1").value,
-      content.document.getElementsByName("1|#out2")[0].value,
-      content.frames[1].document.getElementById("out2").value,
-      content.frames[0].frames[1].document.getElementById("in1").value,
-      content.frames[1].frames[0].document.getElementById("in1").value
-    ];
+      "text isn't reused for frames");
+    Assert.notEqual(content.document.getElementsByName("1|#out2")[0].value,
+      "", "text containing | and # is correctly restored");
+    Assert.equal(content.frames[1].document.getElementById("out2").value,
+      "", "id prefixes can't be faked");
+    // Disabled for now, Bug 588077
+    //Assert.equal(content.frames[0].frames[1].document.getElementById("in1").value,
+    //  "", "id prefixes aren't mixed up");
+    Assert.equal(content.frames[1].frames[0].document.getElementById("in1").value,
+      "", "id prefixes aren't mixed up");
   });
-
-  let [v1, v2, v3, v4, v5, v6] = yield query;
-  isnot(v1, v2, "text isn't reused for frames");
-  isnot(v3, "", "text containing | and # is correctly restored");
-  is(v4, "", "id prefixes can't be faked");
-  // Disabled for now, Bug 588077
-  //is(v5, "", "id prefixes aren't mixed up");
-  is(v6, "", "id prefixes aren't mixed up");
 
   // Cleanup.
   gBrowser.removeTab(tab2);

@@ -43,8 +43,6 @@ import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.webapp.EventListener;
-import org.mozilla.gecko.webapp.UninstallListener;
 import org.mozilla.gecko.widget.ButtonToast;
 
 import android.annotation.SuppressLint;
@@ -140,13 +138,13 @@ public abstract class GeckoApp
     private static final String LOGTAG = "GeckoApp";
     private static final int ONE_DAY_MS = 1000*60*60*24;
 
-    public static enum StartupAction {
+    public enum StartupAction {
         NORMAL,     /* normal application start */
         URL,        /* launched with a passed URL */
         PREFETCH,   /* launched with a passed URL that we prefetch */
-        WEBAPP,     /* launched as a webapp runtime */
         GUEST,      /* launched in guest browsing */
-        RESTRICTED  /* launched with restricted profile */
+        RESTRICTED, /* launched with restricted profile */
+        SHORTCUT    /* launched from a homescreen shortcut */
     }
 
     public static final String ACTION_ALERT_CALLBACK       = "org.mozilla.gecko.ACTION_ALERT_CALLBACK";
@@ -212,8 +210,6 @@ public abstract class GeckoApp
 
     private volatile HealthRecorder mHealthRecorder;
     private volatile Locale mLastLocale;
-
-    private EventListener mWebappEventListener;
 
     private Intent mRestartIntent;
 
@@ -575,7 +571,7 @@ public abstract class GeckoApp
                     ThreadUtils.postToUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            SnackbarHelper.showSnackbar(GeckoApp.this, getString(resId), Snackbar.LENGTH_SHORT);
+                            SnackbarHelper.showSnackbar(GeckoApp.this, getString(resId), Snackbar.LENGTH_LONG);
                         }
                     });
                 }
@@ -690,9 +686,7 @@ public abstract class GeckoApp
     @Override
     public void handleMessage(String event, JSONObject message) {
         try {
-            if (event.equals("Gecko:DelayedStartup")) {
-                ThreadUtils.postToBackgroundThread(new UninstallListener.DelayedStartupTask(this));
-            } else if (event.equals("Gecko:Ready")) {
+            if (event.equals("Gecko:Ready")) {
                 mGeckoReadyStartupTimer.stop();
                 geckoConnected();
 
@@ -710,10 +704,6 @@ public abstract class GeckoApp
                 doShutdown();
                 return;
 
-            } else if ("NativeApp:IsDebuggable".equals(event)) {
-                JSONObject ret = new JSONObject();
-                ret.put("isDebuggable", getIsDebuggable());
-                EventDispatcher.sendResponse(message, ret);
             } else if (event.equals("Accessibility:Event")) {
                 GeckoAccessibility.sendAccessibilityEvent(message);
             }
@@ -1013,12 +1003,12 @@ public abstract class GeckoApp
                 File dcimDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
 
                 if (!dcimDir.mkdirs() && !dcimDir.isDirectory()) {
-                    SnackbarHelper.showSnackbar(this, getString(R.string.set_image_path_fail), Snackbar.LENGTH_SHORT);
+                    SnackbarHelper.showSnackbar(this, getString(R.string.set_image_path_fail), Snackbar.LENGTH_LONG);
                     return;
                 }
                 String path = Media.insertImage(getContentResolver(),image, null, null);
                 if (path == null) {
-                    SnackbarHelper.showSnackbar(this, getString(R.string.set_image_path_fail), Snackbar.LENGTH_SHORT);
+                    SnackbarHelper.showSnackbar(this, getString(R.string.set_image_path_fail), Snackbar.LENGTH_LONG);
                     return;
                 }
                 final Intent intent = new Intent(Intent.ACTION_ATTACH_DATA);
@@ -1035,7 +1025,7 @@ public abstract class GeckoApp
                 };
                 ActivityHandlerHelper.startIntentForActivity(this, chooser, handler);
             } else {
-                SnackbarHelper.showSnackbar(this, getString(R.string.set_image_fail), Snackbar.LENGTH_SHORT);
+                SnackbarHelper.showSnackbar(this, getString(R.string.set_image_fail), Snackbar.LENGTH_LONG);
             }
         } catch(OutOfMemoryError ome) {
             Log.e(LOGTAG, "Out of Memory when converting to byte array", ome);
@@ -1267,10 +1257,8 @@ public abstract class GeckoApp
 
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
             "Gecko:Ready",
-            "Gecko:DelayedStartup",
             "Gecko:Exited",
-            "Accessibility:Event",
-            "NativeApp:IsDebuggable");
+            "Accessibility:Event");
 
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
             "Accessibility:Ready",
@@ -1297,11 +1285,6 @@ public abstract class GeckoApp
 
         EventDispatcher.getInstance().registerBackgroundThreadListener((BundleEventListener) this,
                 "History:GetPrePathLastVisitedTimeMilliseconds");
-
-        if (mWebappEventListener == null) {
-            mWebappEventListener = new EventListener();
-            mWebappEventListener.registerEvents();
-        }
 
         GeckoThread.launch();
 
@@ -1588,7 +1571,7 @@ public abstract class GeckoApp
             getProfile().moveSessionFile();
         }
 
-        final StartupAction startupAction = getStartupAction(passedUri);
+        final StartupAction startupAction = getStartupAction(passedUri, action);
         Telemetry.addToHistogram("FENNEC_GECKOAPP_STARTUP_ACTION", startupAction.ordinal());
 
         // Check if launched from data reporting notification.
@@ -1901,9 +1884,16 @@ public abstract class GeckoApp
 
         final String action = intent.getAction();
 
+        final String uri = getURIFromIntent(intent);
+        final String passedUri;
+        if (!TextUtils.isEmpty(uri)) {
+            passedUri = uri;
+        } else {
+            passedUri = null;
+        }
+
         if (ACTION_LOAD.equals(action)) {
-            String uri = intent.getDataString();
-            Tabs.getInstance().loadUrl(uri);
+            Tabs.getInstance().loadUrl(intent.getDataString());
         } else if (Intent.ACTION_VIEW.equals(action)) {
             processActionViewIntent(new Runnable() {
                 @Override
@@ -1915,10 +1905,8 @@ public abstract class GeckoApp
                 }
             });
         } else if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
-            String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBookmarkLoadEvent(uri));
         } else if (Intent.ACTION_SEARCH.equals(action)) {
-            String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
         } else if (ACTION_ALERT_CALLBACK.equals(action)) {
             processAlertCallback(intent);
@@ -1931,6 +1919,9 @@ public abstract class GeckoApp
             settingsIntent.putExtras(intent.getUnsafe());
             startActivity(settingsIntent);
         }
+
+        final StartupAction startupAction = getStartupAction(passedUri, action);
+        Telemetry.addToHistogram("FENNEC_GECKOAPP_STARTUP_ACTION", startupAction.ordinal());
     }
 
     /**
@@ -2094,10 +2085,8 @@ public abstract class GeckoApp
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
             "Gecko:Ready",
-            "Gecko:DelayedStartup",
             "Gecko:Exited",
-            "Accessibility:Event",
-            "NativeApp:IsDebuggable");
+            "Accessibility:Event");
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener)this,
             "Accessibility:Ready",
@@ -2123,11 +2112,6 @@ public abstract class GeckoApp
 
         EventDispatcher.getInstance().unregisterBackgroundThreadListener((BundleEventListener) this,
                 "History:GetPrePathLastVisitedTimeMilliseconds");
-
-        if (mWebappEventListener != null) {
-            mWebappEventListener.unregisterEvents();
-            mWebappEventListener = null;
-        }
 
         deleteTempFiles();
 
@@ -2664,23 +2648,6 @@ public abstract class GeckoApp
         return versionCode;
     }
 
-    protected boolean getIsDebuggable() {
-        // Return false so Fennec doesn't appear to be debuggable.  WebappImpl
-        // then overrides this and returns the value of android:debuggable for
-        // the webapp APK, so webapps get the behavior supported by this method
-        // (i.e. automatic configuration and enabling of the remote debugger).
-        return false;
-
-        // If we ever want to expose this for Fennec, here's how we would do it:
-        // int flags = 0;
-        // try {
-        //     flags = getPackageManager().getPackageInfo(getPackageName(), 0).applicationInfo.flags;
-        // } catch (NameNotFoundException e) {
-        //     Log.wtf(LOGTAG, getPackageName() + " not found", e);
-        // }
-        // return (flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0;
-    }
-
     // FHR reason code for a session end prior to a restart for a
     // locale change.
     private static final String SESSION_END_LOCALE_CHANGED = "L";
@@ -2768,7 +2735,7 @@ public abstract class GeckoApp
         return new StubbedHealthRecorder();
     }
 
-    protected StartupAction getStartupAction(final String passedURL) {
+    protected StartupAction getStartupAction(final String passedURL, final String action) {
         // Default to NORMAL here. Subclasses can handle the other types.
         return StartupAction.NORMAL;
     }

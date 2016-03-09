@@ -25,7 +25,6 @@ config = {
     "exe_suffix": EXE_SUFFIX,
     "run_file_names": {
         "mochitest": "runtests.py",
-        "webapprt": "runtests.py",
         "reftest": "runreftest.py",
         "xpcshell": "runxpcshelltests.py",
         "cppunittest": "runcppunittests.py",
@@ -45,7 +44,6 @@ config = {
     ],
     "specific_tests_zip_dirs": {
         "mochitest": ["mochitest/*"],
-        "webapprt": ["mochitest/*"],
         "reftest": ["reftest/*", "jsreftest/*"],
         "xpcshell": ["xpcshell/*"],
         "cppunittest": ["cppunittest/*"],
@@ -101,6 +99,7 @@ config = {
             "options": [
                 "--binary=%(binary_path)s",
                 "--testing-modules-dir=test/modules",
+                "--plugins-path=%(test_plugin_path)s",
                 "--symbols-path=%(symbols_path)s"
             ],
             "run_filename": "runtestlist.py",
@@ -115,21 +114,6 @@ config = {
             ],
             "run_filename": "runreftest.py",
             "testsdir": "reftest"
-        },
-        "webapprt": {
-            "options": [
-                "--app=%(app_path)s",
-                "--xre-path=%(abs_res_dir)s",
-                "--utility-path=tests/bin",
-                "--extra-profile-file=tests/bin/plugins",
-                "--symbols-path=%(symbols_path)s",
-                "--certificate-path=tests/certs",
-                "--console-level=INFO",
-                "--testing-modules-dir=tests/modules",
-                "--quiet"
-            ],
-            "run_filename": "runtests.py",
-            "testsdir": "mochitest"
         },
         "xpcshell": {
             "options": [
@@ -171,11 +155,6 @@ config = {
         "jetpack-addon": ["--jetpack-addon"],
         "a11y": ["--a11y"],
     },
-    # local webapprt suites
-    "all_webapprt_suites": {
-        "chrome": ["--webapprt-chrome", "--browser-arg=-test-mode"],
-        "content": ["--webapprt-content"]
-    },
     # local reftest suites
     "all_reftest_suites": {
         "reftest": {
@@ -194,6 +173,7 @@ config = {
             'options': ['--suite=reftest',
                         '--setpref=browser.tabs.remote=true',
                         '--setpref=browser.tabs.remote.autostart=true',
+                        '--setpref=extensions.e10sBlocksEnabling=false',
                         '--setpref=layers.async-pan-zoom.enabled=true'],
             'tests': ['tests/reftest/tests/layout/reftests/reftest-sanity/reftest.list']
         },
@@ -201,6 +181,7 @@ config = {
             'options': ['--suite=crashtest',
                         '--setpref=browser.tabs.remote=true',
                         '--setpref=browser.tabs.remote.autostart=true',
+                        '--setpref=extensions.e10sBlocksEnabling=false',
                         '--setpref=layers.async-pan-zoom.enabled=true'],
             'tests': ['tests/reftest/tests/testing/crashtest/crashtests.list']
         },
@@ -208,13 +189,13 @@ config = {
     "all_xpcshell_suites": {
         "xpcshell": {
             'options': ["--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
-                        "--manifest=tests/xpcshell/tests/all-test-dirs.list"],
+                        "--manifest=tests/xpcshell/tests/xpcshell.ini"],
             'tests': []
         },
         "xpcshell-addons": {
             'options': ["--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
                         "--tag=addons",
-                        "--manifest=tests/xpcshell/tests/all-test-dirs.list"],
+                        "--manifest=tests/xpcshell/tests/xpcshell.ini"],
             'tests': []
         },
     },

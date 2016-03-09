@@ -457,7 +457,7 @@ class IonBuilder
                             TemporaryTypeSet* types);
     bool getPropTryCache(bool* emitted, MDefinition* obj, PropertyName* name,
                          BarrierKind barrier, TemporaryTypeSet* types);
-    bool getPropTrySharedStub(bool* emitted, MDefinition* obj);
+    bool getPropTrySharedStub(bool* emitted, MDefinition* obj, TemporaryTypeSet* types);
 
     // jsop_setprop() helpers.
     bool setPropTryCommonSetter(bool* emitted, MDefinition* obj,
@@ -647,6 +647,8 @@ class IonBuilder
     MDefinition* getCallee();
     MDefinition* getAliasedVar(ScopeCoordinate sc);
     MDefinition* addLexicalCheck(MDefinition* input);
+
+    MDefinition* convertToBoolean(MDefinition* input);
 
     bool tryFoldInstanceOf(MDefinition* lhs, JSObject* protoObject);
     bool hasOnProtoChain(TypeSet::ObjectKey* key, JSObject* protoObject, bool* hasOnProto);

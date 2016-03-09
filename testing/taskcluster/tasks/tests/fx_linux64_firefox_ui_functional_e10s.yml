@@ -1,0 +1,28 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_desktop_generic.yml'
+task:
+  payload:
+    command:
+      - --installer-url={{build_url}}
+      - --test-packages-url={{test_packages_url}}
+      - --download-symbols=ondemand
+      - --e10s
+    env:
+        MOZHARNESS_SCRIPT: 'mozharness/scripts/firefox_ui_tests/functional.py'
+        MOZHARNESS_CONFIG: >
+          mozharness/configs/firefox_ui_tests/taskcluster.py
+          mozharness/configs/remove_executables.py
+    maxRunTime: 5400
+  metadata:
+    name: '[TC] Linux64 firefox-ui-tests functional e10s'
+    description: firefox-ui-tests functional e10s run
+  extra:
+    suite:
+      name: firefox-ui
+      flavor: functional
+    treeherder:
+      groupName: Desktop firefox-ui-tests
+      groupSymbol: tc-Fxfn-e10s
+      symbol: en-US
+      tier: 3

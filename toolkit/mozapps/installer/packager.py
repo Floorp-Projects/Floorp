@@ -80,12 +80,16 @@ class ToolLauncher(object):
         for e in extra_env:
             env[e] = extra_env[e]
 
-        # For VC12, make sure we can find the right bitness of pgort120.dll
-        if 'VS120COMNTOOLS' in env and not buildconfig.substs['HAVE_64BIT_BUILD']:
-            vc12dir = os.path.abspath(os.path.join(env['VS120COMNTOOLS'],
-                                                   '../../VC/bin'))
-            if os.path.exists(vc12dir):
-                env['PATH'] = vc12dir + ';' + env['PATH']
+        # For VC12+, make sure we can find the right bitness of pgort1x0.dll
+        if not buildconfig.substs['HAVE_64BIT_BUILD']:
+            for e in ('VS140COMNTOOLS', 'VS120COMNTOOLS'):
+                if e not in env:
+                    continue
+
+                vcdir = os.path.abspath(os.path.join(env[e], '../../VC/bin'))
+                if os.path.exists(vcdir):
+                    env['PATH'] = '%s;%s' % (vcdir, env['PATH'])
+                    break
 
         # Work around a bug in Python 2.7.2 and lower where unicode types in
         # environment variables aren't handled by subprocess.

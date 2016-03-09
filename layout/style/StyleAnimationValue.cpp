@@ -10,6 +10,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/UniquePtr.h"
 #include "nsStyleTransformMatrix.h"
 #include "nsCOMArray.h"
 #include "nsIStyleRule.h"
@@ -19,6 +20,7 @@
 #include "nsStyleSet.h"
 #include "nsComputedDOMStyle.h"
 #include "nsCSSParser.h"
+#include "nsCSSPseudoElements.h"
 #include "mozilla/css/Declaration.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/FloatingPoint.h"
@@ -1751,6 +1753,74 @@ AddFilterFunction(double aCoeff1, const nsCSSValueList* aList1,
   return AddFilterFunctionImpl(aCoeff1, aList1, aCoeff2, aList2, aResultTail);
 }
 
+static void
+AddPositions(double aCoeff1, const nsCSSValue& aPos1,
+             double aCoeff2, const nsCSSValue& aPos2,
+             nsCSSValue& aResultPos)
+{
+  MOZ_ASSERT(aPos1.GetUnit() == eCSSUnit_Array &&
+             aPos2.GetUnit() == eCSSUnit_Array,
+             "Args should be CSS <position>s, encoded as arrays");
+
+  const nsCSSValue::Array* posArray1 = aPos1.GetArrayValue();
+  const nsCSSValue::Array* posArray2 = aPos2.GetArrayValue();
+  MOZ_ASSERT(posArray1->Count() == 4 && posArray2->Count() == 4,
+             "CSSParserImpl::ParsePositionValue creates an array of length "
+             "4 - how did we get here?");
+
+  nsCSSValue::Array* resultPosArray = nsCSSValue::Array::Create(4);
+  aResultPos.SetArrayValue(resultPosArray, eCSSUnit_Array);
+
+  // Only iterate over elements 1 and 3.  The <position> is 'uncomputed' to
+  // only those elements.  See also the comment in SetPositionValue.
+  for (size_t i = 1; i < 4; i += 2) {
+    const nsCSSValue& v1 = posArray1->Item(i);
+    const nsCSSValue& v2 = posArray2->Item(i);
+    nsCSSValue& vr = resultPosArray->Item(i);
+    AddCSSValueCanonicalCalc(aCoeff1, v1,
+                             aCoeff2, v2, vr);
+  }
+}
+
+static UniquePtr<nsCSSValuePair>
+AddCSSValuePair(nsCSSProperty aProperty, uint32_t aRestrictions,
+                double aCoeff1, const nsCSSValuePair* aPair1,
+                double aCoeff2, const nsCSSValuePair* aPair2)
+{
+  MOZ_ASSERT(aPair1, "expected pair");
+  MOZ_ASSERT(aPair2, "expected pair");
+
+  UniquePtr<nsCSSValuePair> result;
+  nsCSSUnit unit[2];
+  unit[0] = GetCommonUnit(aProperty, aPair1->mXValue.GetUnit(),
+                          aPair2->mXValue.GetUnit());
+  unit[1] = GetCommonUnit(aProperty, aPair1->mYValue.GetUnit(),
+                          aPair2->mYValue.GetUnit());
+  if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
+      unit[0] == eCSSUnit_URL || unit[0] == eCSSUnit_Enumerated) {
+    return result; // nullptr (returning |result| for RVO)
+  }
+
+  result = MakeUnique<nsCSSValuePair>();
+
+  static nsCSSValue nsCSSValuePair::* const pairValues[2] = {
+    &nsCSSValuePair::mXValue, &nsCSSValuePair::mYValue
+  };
+  for (uint32_t i = 0; i < 2; ++i) {
+    nsCSSValue nsCSSValuePair::*member = pairValues[i];
+    if (!AddCSSValuePixelPercentCalc(aRestrictions, unit[i],
+                                     aCoeff1, aPair1->*member,
+                                     aCoeff2, aPair2->*member,
+                                     result.get()->*member) ) {
+      MOZ_ASSERT(false, "unexpected unit");
+      result.reset();
+      return result; // nullptr (returning |result| for RVO)
+    }
+  }
+
+  return result;
+}
+
 static nsCSSValueList*
 AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
                   double aCoeff2, const nsCSSValueList* aList2)
@@ -1909,28 +1979,6 @@ AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
              "resultTail isn't pointing to the tail");
 
   return result.forget();
-}
-
-static void
-AddPositions(double aCoeff1, const nsCSSValue& aPos1,
-             double aCoeff2, const nsCSSValue& aPos2,
-             nsCSSValue& aResultPos)
-{
-  const nsCSSValue::Array* posArray1 = aPos1.GetArrayValue();
-  const nsCSSValue::Array* posArray2 = aPos2.GetArrayValue();
-  nsCSSValue::Array* resultPosArray = nsCSSValue::Array::Create(4);
-  aResultPos.SetArrayValue(resultPosArray, eCSSUnit_Array);
-
-  /* Only iterate over elements 1 and 3. The <position> is
-   * 'uncomputed' to only those elements.
-   */
-  for (size_t i = 1; i < 4; i += 2) {
-    const nsCSSValue& v1 = posArray1->Item(i);
-    const nsCSSValue& v2 = posArray2->Item(i);
-    nsCSSValue& vr = resultPosArray->Item(i);
-    AddCSSValueCanonicalCalc(aCoeff1, v1,
-                             aCoeff2, v2, vr);
-  }
 }
 
 bool
@@ -2098,35 +2146,16 @@ StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
       return true;
     }
     case eUnit_CSSValuePair: {
-      const nsCSSValuePair *pair1 = aValue1.GetCSSValuePairValue();
-      const nsCSSValuePair *pair2 = aValue2.GetCSSValuePairValue();
-      nsCSSUnit unit[2];
-      unit[0] = GetCommonUnit(aProperty, pair1->mXValue.GetUnit(),
-                              pair2->mXValue.GetUnit());
-      unit[1] = GetCommonUnit(aProperty, pair1->mYValue.GetUnit(),
-                              pair2->mYValue.GetUnit());
-      if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
-          unit[0] == eCSSUnit_URL || unit[0] == eCSSUnit_Enumerated) {
+      uint32_t restrictions = nsCSSProps::ValueRestrictions(aProperty);
+      UniquePtr<nsCSSValuePair> result(
+        AddCSSValuePair(aProperty, restrictions,
+                        aCoeff1, aValue1.GetCSSValuePairValue(),
+                        aCoeff2, aValue2.GetCSSValuePairValue()));
+      if (!result) {
         return false;
       }
 
-      nsAutoPtr<nsCSSValuePair> result(new nsCSSValuePair);
-      static nsCSSValue nsCSSValuePair::* const pairValues[2] = {
-        &nsCSSValuePair::mXValue, &nsCSSValuePair::mYValue
-      };
-      uint32_t restrictions = nsCSSProps::ValueRestrictions(aProperty);
-      for (uint32_t i = 0; i < 2; ++i) {
-        nsCSSValue nsCSSValuePair::*member = pairValues[i];
-        if (!AddCSSValuePixelPercentCalc(restrictions, unit[i],
-                                         aCoeff1, pair1->*member,
-                                         aCoeff2, pair2->*member,
-                                         result->*member) ) {
-          MOZ_ASSERT(false, "unexpected unit");
-          return false;
-        }
-      }
-
-      aResultValue.SetAndAdoptCSSValuePairValue(result.forget(),
+      aResultValue.SetAndAdoptCSSValuePairValue(result.release(),
                                                 eUnit_CSSValuePair);
       return true;
     }
@@ -2526,7 +2555,7 @@ BuildStyleRule(nsCSSProperty aProperty,
 inline
 already_AddRefed<nsStyleContext>
 LookupStyleContext(dom::Element* aElement,
-                   nsCSSPseudoElements::Type aPseudoType)
+                   CSSPseudoElementType aPseudoType)
 {
   nsIDocument* doc = aElement->GetCurrentDoc();
   nsIPresShell* shell = doc->GetShell();
@@ -2535,7 +2564,7 @@ LookupStyleContext(dom::Element* aElement,
   }
 
   nsIAtom* pseudo =
-    aPseudoType < nsCSSPseudoElements::ePseudo_PseudoElementCount ?
+    aPseudoType < CSSPseudoElementType::Count ?
     nsCSSPseudoElements::GetPseudoAtom(aPseudoType) : nullptr;
   return nsComputedDOMStyle::GetStyleContextForElement(aElement, pseudo, shell);
 }
@@ -2543,7 +2572,7 @@ LookupStyleContext(dom::Element* aElement,
 /* static */ bool
 StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
                                   dom::Element* aTargetElement,
-                                  nsCSSPseudoElements::Type aPseudoType,
+                                  CSSPseudoElementType aPseudoType,
                                   const nsAString& aSpecifiedValue,
                                   bool aUseSVGMode,
                                   StyleAnimationValue& aComputedValue,
@@ -2595,7 +2624,7 @@ StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
 StyleAnimationValue::ComputeValues(nsCSSProperty aProperty,
                                    nsCSSProps::EnabledState aEnabledState,
                                    dom::Element* aTargetElement,
-                                   nsCSSPseudoElements::Type aPseudoType,
+                                   CSSPseudoElementType aPseudoType,
                                    const nsAString& aSpecifiedValue,
                                    bool aUseSVGMode,
                                    nsTArray<PropertyStyleAnimationValuePair>& aResult)
@@ -2625,7 +2654,7 @@ StyleAnimationValue::ComputeValues(
     nsCSSProperty aProperty,
     nsCSSProps::EnabledState aEnabledState,
     dom::Element* aTargetElement,
-    nsCSSPseudoElements::Type aPseudoType,
+    CSSPseudoElementType aPseudoType,
     css::StyleRule* aStyleRule,
     nsTArray<PropertyStyleAnimationValuePair>& aValues,
     bool* aIsContextSensitive)
@@ -2640,7 +2669,9 @@ StyleAnimationValue::ComputeValues(
   if (!styleContext) {
     return false;
   }
-  nsStyleSet* styleSet = styleContext->PresContext()->StyleSet();
+  MOZ_ASSERT(styleContext->PresContext()->StyleSet()->IsGecko(),
+             "ServoStyleSet should not use StyleAnimationValue for animations");
+  nsStyleSet* styleSet = styleContext->PresContext()->StyleSet()->AsGecko();
 
   RefPtr<nsStyleContext> tmpStyleContext;
   if (aIsContextSensitive) {
@@ -3400,28 +3431,28 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
           ExtractImageLayerPositionList(layers, aComputedValue);
           break;
         }
-
+#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
         case eCSSProperty_mask_position: {
           const nsStyleImageLayers& layers =
             static_cast<const nsStyleSVGReset*>(styleStruct)->mMask;
           ExtractImageLayerPositionList(layers, aComputedValue);
           break;
         }
-
+#endif
         case eCSSProperty_background_size: {
           const nsStyleImageLayers& layers =
             static_cast<const nsStyleBackground*>(styleStruct)->mImage;
           ExtractImageLayerSizePairList(layers, aComputedValue);
           break;
         }
-
+#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
         case eCSSProperty_mask_size: {
           const nsStyleImageLayers& layers =
             static_cast<const nsStyleSVGReset*>(styleStruct)->mMask;
           ExtractImageLayerSizePairList(layers, aComputedValue);
           break;
         }
-
+#endif
         case eCSSProperty_filter: {
           const nsStyleSVGReset *svgReset =
             static_cast<const nsStyleSVGReset*>(styleStruct);

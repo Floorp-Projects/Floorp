@@ -7,8 +7,9 @@
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const {console} = Cu.import("resource://gre/modules/Console.jsm", {});
+const {ScratchpadManager} = Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm", {});
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const promise = require("promise");
 
@@ -44,7 +45,7 @@ SimpleTest.registerCleanupFunction(() => {
 function openScratchpad(aReadyCallback, aOptions = {})
 {
   let win = aOptions.window ||
-            Scratchpad.ScratchpadManager.openScratchpad(aOptions.state);
+            ScratchpadManager.openScratchpad(aOptions.state);
   if (!win) {
     return;
   }
@@ -190,21 +191,19 @@ function runAsyncTests(aScratchpad, aTests)
  * @return Promise
  *         The promise that will be resolved when all tests are finished.
  */
-function runAsyncCallbackTests(aScratchpad, aTests)
-{
-  let deferred = promise.defer();
+var runAsyncCallbackTests = Task.async(function*(aScratchpad, aTests) {
+  for (let {prepare, method, then} of aTests) {
+    yield prepare();
+    let res = yield aScratchpad[method]();
+    yield then(res);
+  }
+});
 
-  (function runTest() {
-    if (aTests.length) {
-      let test = aTests.shift();
-      test.prepare();
-      aScratchpad[test.method]().then(test.then.bind(test)).then(runTest);
-    } else {
-      deferred.resolve();
-    }
-  })();
-
-  return deferred.promise;
+/**
+ * A simple wrapper for ContentTask.spawn for more compact code.
+ */
+function inContent(generator) {
+  return ContentTask.spawn(gBrowser.selectedBrowser, {}, generator);
 }
 
 function cleanup()

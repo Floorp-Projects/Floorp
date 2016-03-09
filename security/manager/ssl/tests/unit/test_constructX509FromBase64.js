@@ -18,9 +18,9 @@ function excMessage(e) {
       msg = msg + ": " + e.data;
     }
     return msg;
-  } else {
-    return e.toString();
   }
+
+  return e.toString();
 }
 
 function testGood(data) {
@@ -29,7 +29,7 @@ function testGood(data) {
     equal(cert.commonName, data.cn,
           "Actual and expected commonName should match");
   } catch (e) {
-    do_print(`Exception: ${excMessage(e)}`)
+    do_print(`Exception: ${excMessage(e)}`);
     ok(false, `Should not have gotten an exception for "CN=${data.cn}"`);
   }
 }

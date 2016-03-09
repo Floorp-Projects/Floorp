@@ -30,7 +30,7 @@ add_task(function* () {
   yield promiseUpdatePluginBindings(gBrowser.selectedBrowser);
 
   // Tests that the overlay can be hidden for plugins using the close icon.
-  let overlayIsVisible = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
@@ -43,10 +43,8 @@ add_task(function* () {
     utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
 
-    return overlay.classList.contains("visible");
+    Assert.ok(!overlay.classList.contains("visible"), "overlay should be hidden.");
   });
-
-  ok(!overlayIsVisible, "overlay should be hidden.");
 });
 
 // Test that the overlay cannot be interacted with after the user closes the overlay
@@ -59,7 +57,7 @@ add_task(function* () {
   // Work around for delayed PluginBindingAttached
   yield promiseUpdatePluginBindings(gBrowser.selectedBrowser);
 
-  let overlayHidden = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
@@ -80,11 +78,11 @@ add_task(function* () {
     utils.sendMouseEvent("mousedown", overlayLeft, overlayTop, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", overlayLeft, overlayTop, 0, 1, 0, false, 0, 0);
 
-    return overlay.hasAttribute("dismissed") && !overlay.classList.contains("visible");
+    Assert.ok(overlay.hasAttribute("dismissed") && !overlay.classList.contains("visible"),
+      "Overlay should be hidden");
   });
 
   let notification = PopupNotifications.getNotification("click-to-play-plugins");
 
   ok(notification.dismissed, "No notification should be shown");
-  ok(overlayHidden, "Overlay should be hidden");
 });

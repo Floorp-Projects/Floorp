@@ -27,7 +27,7 @@
   max-width: 150px;
 }
 
-.inspector-tabpanel {
+.inspector-tabpanel > * {
   /*
    * Override `-moz-user-focus:ignore;` from toolkit/content/minimal-xul.css
    */

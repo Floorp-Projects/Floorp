@@ -60,9 +60,11 @@ class LUnboxFloatingPoint : public LInstructionHelper<1, 2, 0>
 
     static const size_t Input = 0;
 
-    LUnboxFloatingPoint(MIRType type)
+    LUnboxFloatingPoint(const LBoxAllocation& input, MIRType type)
       : type_(type)
-    { }
+    {
+        setBoxOperand(Input, input);
+    }
 
     MUnbox* mir() const {
         return mir_->toUnbox();
@@ -301,9 +303,10 @@ class LTableSwitchV : public LInstructionHelper<0, BOX_PIECES, 2>
   public:
     LIR_HEADER(TableSwitchV);
 
-    LTableSwitchV(const LDefinition& inputCopy, const LDefinition& floatCopy,
-                  MTableSwitch* ins)
+    LTableSwitchV(const LBoxAllocation& input, const LDefinition& inputCopy,
+                  const LDefinition& floatCopy, MTableSwitch* ins)
     {
+        setBoxOperand(InputValue, input);
         setTemp(0, inputCopy);
         setTemp(1, floatCopy);
         setMir(ins);

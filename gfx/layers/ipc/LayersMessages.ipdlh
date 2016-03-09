@@ -195,6 +195,7 @@ struct Animation {
   // Values <= 0 mean the animation will not play (although events are still
   // dispatched on the main thread).
   float iterations;
+  float iterationStart;
   // This uses the NS_STYLE_ANIMATION_DIRECTION_* constants.
   int32_t direction;
   nsCSSProperty property;
@@ -252,6 +253,7 @@ struct ContainerLayerAttributes {
   bool scaleToResolution;
   EventRegionsOverride eventRegionsOverride;
   uint32_t hmdDeviceID;
+  int32_t inputFrameID;
 };
 struct ColorLayerAttributes     { LayerColor color; IntRect bounds; };
 struct CanvasLayerAttributes    { Filter filter; IntRect bounds; };
@@ -396,6 +398,7 @@ struct TimedTexture {
   IntRect picture;
   uint32_t frameID;
   uint32_t producerID;
+  int32_t inputFrameID;
 };
 
 /**

@@ -259,7 +259,7 @@ fuzzy-if(d2d,7,1) == menclose-5-downdiagonalstrike.html menclose-5-downdiagonals
 == menclose-5-right.html menclose-5-right-ref.html
 fuzzy-if(skiaContent,5,5) == menclose-5-roundedbox.html menclose-5-roundedbox-ref.html
 == menclose-5-top.html menclose-5-top-ref.html
-== menclose-5-updiagonalarrow.html menclose-5-updiagonalarrow-ref.html
+fuzzy-if(skiaContent,1,1) == menclose-5-updiagonalarrow.html menclose-5-updiagonalarrow-ref.html
 fuzzy-if(d2d,7,1) == menclose-5-updiagonalstrike.html menclose-5-updiagonalstrike-ref.html
 == menclose-5-verticalstrike.html menclose-5-verticalstrike-ref.html
 == menclose-5-phasorangle.html menclose-5-phasorangle-ref.html

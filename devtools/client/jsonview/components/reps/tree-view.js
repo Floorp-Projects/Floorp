@@ -8,9 +8,9 @@ define(function(require, exports, module) {
 
 // Dependencies
 const React = require("devtools/client/shared/vendor/react");
-const { createFactories } = require("./rep-utils");
-const { Rep } = createFactories(require("./rep"));
-const { StringRep } = require("./string");
+const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
+const { Rep } = createFactories(require("devtools/client/shared/components/reps/rep"));
+const { StringRep } = require("devtools/client/shared/components/reps/string");
 const DOM = React.DOM;
 
 var uid = 0;

@@ -79,17 +79,39 @@ function* iterateDocShellTree(docShell) {
 }
 
 /**
+ * Returns the frame ID of the given window. If the window is the
+ * top-level content window, its frame ID is 0. Otherwise, its frame ID
+ * is its outer window ID.
+ *
+ * @param {Window} window - The window to retrieve the frame ID for.
+ * @returns {number}
+ */
+function getFrameId(window) {
+  let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDocShell);
+
+  if (!docShell.sameTypeParent) {
+    return 0;
+  }
+
+  let utils = window.getInterface(Ci.nsIDOMWindowUtils);
+  return utils.outerWindowID;
+}
+
+/**
  * Search for a frame starting from the passed root docShell and
  * convert it to its related frame detail representation.
  *
- * @param  {number}      windowId - the windowId of the frame to retrieve
+ * @param  {number}      frameId - the frame ID of the frame to retrieve, as
+ *                                 described in getFrameId.
  * @param  {nsIDocShell} docShell - the root docShell object
- * @return {FrameDetail} the FrameDetail JSON object which represents the docShell.
+ * @return {nsIDocShell?} the docShell with the given frameId, or null
+ *                        if no match.
  */
-function findFrame(windowId, rootDocShell) {
+function findDocShell(frameId, rootDocShell) {
   for (let docShell of iterateDocShellTree(rootDocShell)) {
-    if (windowId == getWindowId(docShellToWindow(docShell))) {
-      return convertDocShellToFrameDetail(docShell);
+    if (frameId == getFrameId(docShellToWindow(docShell))) {
+      return docShell;
     }
   }
 
@@ -97,13 +119,19 @@ function findFrame(windowId, rootDocShell) {
 }
 
 var WebNavigationFrames = {
-  getFrame(docShell, frameId) {
-    if (frameId == 0) {
-      return convertDocShellToFrameDetail(docShell);
-    }
+  iterateDocShellTree,
 
-    return findFrame(frameId, docShell);
+  findDocShell,
+
+  getFrame(docShell, frameId) {
+    let result = findDocShell(frameId, docShell);
+    if (result) {
+      return convertDocShellToFrameDetail(result);
+    }
+    return null;
   },
+
+  getFrameId,
 
   getAllFrames(docShell) {
     return Array.from(iterateDocShellTree(docShell), convertDocShellToFrameDetail);

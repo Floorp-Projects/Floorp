@@ -273,32 +273,6 @@ MacroAssemblerX86::handleFailureWithHandlerTail(void* handler)
     jmp(Operand(esp, offsetof(ResumeFromException, target)));
 }
 
-void
-MacroAssemblerX86::branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label)
-{
-    jsval_layout jv = JSVAL_TO_IMPL(v);
-    if (v.isMarkable())
-        cmpPtr(value.payloadReg(), ImmGCPtr(reinterpret_cast<gc::Cell*>(v.toGCThing())));
-    else
-        cmpPtr(value.payloadReg(), ImmWord(jv.s.payload.i32));
-
-    if (cond == Equal) {
-        Label done;
-        j(NotEqual, &done);
-        {
-            cmp32(value.typeReg(), Imm32(jv.s.tag));
-            j(Equal, label);
-        }
-        bind(&done);
-    } else {
-        MOZ_ASSERT(cond == NotEqual);
-        j(NotEqual, label);
-
-        cmp32(value.typeReg(), Imm32(jv.s.tag));
-        j(NotEqual, label);
-    }
-}
-
 template <typename T>
 void
 MacroAssemblerX86::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T& dest,
@@ -327,35 +301,6 @@ MacroAssemblerX86::storeUnboxedValue(ConstantOrRegister value, MIRType valueType
 template void
 MacroAssemblerX86::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const BaseIndex& dest,
                                      MIRType slotType);
-
-void
-MacroAssemblerX86::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
-                                           Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    MOZ_ASSERT(ptr != temp);
-    MOZ_ASSERT(temp != InvalidReg);  // A temp register is required for x86.
-
-    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
-    movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
-    asMasm().addPtr(ptr, temp);
-    asMasm().branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
-                       temp, Imm32(nursery.nurserySize()), label);
-}
-
-void
-MacroAssemblerX86::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
-                                              Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-
-    Label done;
-
-    branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
-    branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
-
-    bind(&done);
-}
 
 void
 MacroAssemblerX86::profilerEnterFrame(Register framePtr, Register scratch)
@@ -496,6 +441,65 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
     callWithABIPre(&stackAdjust);
     call(fun);
     callWithABIPost(stackAdjust, result);
+}
+
+// ===============================================================
+// Branch functions
+
+void
+MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
+                                        Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(ptr != temp);
+    MOZ_ASSERT(temp != InvalidReg);  // A temp register is required for x86.
+
+    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
+    movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
+    addPtr(ptr, temp);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              temp, Imm32(nursery.nurserySize()), label);
+}
+
+void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
+                                           Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+    Label done;
+
+    branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
+    branchPtrInNurseryRange(cond, value.payloadReg(), temp, label);
+
+    bind(&done);
+}
+
+void
+MacroAssembler::branchTestValue(Condition cond, const ValueOperand& lhs,
+                                const Value& rhs, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    jsval_layout jv = JSVAL_TO_IMPL(rhs);
+    if (rhs.isMarkable())
+        cmpPtr(lhs.payloadReg(), ImmGCPtr(reinterpret_cast<gc::Cell*>(rhs.toGCThing())));
+    else
+        cmpPtr(lhs.payloadReg(), ImmWord(jv.s.payload.i32));
+
+    if (cond == Equal) {
+        Label done;
+        j(NotEqual, &done);
+        {
+            cmp32(lhs.typeReg(), Imm32(jv.s.tag));
+            j(Equal, label);
+        }
+        bind(&done);
+    } else {
+        j(NotEqual, label);
+
+        cmp32(lhs.typeReg(), Imm32(jv.s.tag));
+        j(NotEqual, label);
+    }
 }
 
 //}}} check_macroassembler_style

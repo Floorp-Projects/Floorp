@@ -582,14 +582,8 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
 
         const JSAtomState& names = cx->names();
 
-        if (obj->is<RegExpObject>()) {
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.source), TypeSet::StringType());
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.global), TypeSet::BooleanType());
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.ignoreCase), TypeSet::BooleanType());
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.multiline), TypeSet::BooleanType());
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.sticky), TypeSet::BooleanType());
+        if (obj->is<RegExpObject>())
             AddTypePropertyId(cx, group, nullptr, NameToId(names.lastIndex), TypeSet::Int32Type());
-        }
 
         if (obj->is<StringObject>())
             AddTypePropertyId(cx, group, nullptr, NameToId(names.length), TypeSet::Int32Type());
@@ -1814,14 +1808,20 @@ ObjectGroupCompartment::fixupNewTableAfterMovingGC(NewTable* table)
     if (table && table->initialized()) {
         for (NewTable::Enum e(*table); !e.empty(); e.popFront()) {
             NewEntry entry = e.front();
+            ObjectGroup* group = entry.group.unbarrieredGet();
+
             bool needRekey = false;
             if (IsForwarded(entry.group.unbarrieredGet())) {
-                entry.group.set(Forwarded(entry.group.unbarrieredGet()));
+                group = Forwarded(entry.group.unbarrieredGet());
+                entry.group.set(group);
                 needRekey = true;
             }
-            TaggedProto proto = entry.group.unbarrieredGet()->proto();
+            TaggedProto proto = group->proto();
             if (proto.isObject() && IsForwarded(proto.toObject())) {
                 proto = TaggedProto(Forwarded(proto.toObject()));
+                // Update the group's proto here so that we are able to lookup
+                // entries in this table before all object pointers are updated.
+                group->proto() = proto;
                 needRekey = true;
             }
             if (entry.associated && IsForwarded(entry.associated)) {
@@ -1829,7 +1829,7 @@ ObjectGroupCompartment::fixupNewTableAfterMovingGC(NewTable* table)
                 needRekey = true;
             }
             if (needRekey) {
-                const Class* clasp = entry.group.unbarrieredGet()->clasp();
+                const Class* clasp = group->clasp();
                 if (entry.associated && entry.associated->is<JSFunction>())
                     clasp = nullptr;
                 NewEntry::Lookup lookup(clasp, proto, entry.associated);

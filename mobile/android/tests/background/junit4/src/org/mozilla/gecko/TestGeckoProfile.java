@@ -1,0 +1,214 @@
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.gecko;
+
+import android.content.Context;
+
+import org.json.JSONObject;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.helpers.FileUtil;
+import org.robolectric.RuntimeEnvironment;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.UUID;
+
+import static org.junit.Assert.*;
+
+/**
+ * Unit test methods of the GeckoProfile class.
+ */
+@RunWith(TestRunner.class)
+public class TestGeckoProfile {
+    private static final String PROFILE_NAME = "profileName";
+
+    private static final String CLIENT_ID_JSON_ATTR = "clientID";
+
+    @Rule
+    public TemporaryFolder dirContainingProfile = new TemporaryFolder();
+
+    private File profileDir;
+    private GeckoProfile profile;
+
+    private File clientIdFile;
+
+    @Before
+    public void setUp() throws IOException {
+        final Context context = RuntimeEnvironment.application;
+        profileDir = dirContainingProfile.newFolder();
+        profile = GeckoProfile.get(context, PROFILE_NAME, profileDir);
+
+        clientIdFile = new File(profileDir, "datareporting/state.json");
+    }
+
+    public void assertValidClientId(final String clientId) {
+        // This isn't the method we use in the main GeckoProfile code, but it should be equivalent.
+        UUID.fromString(clientId); // assert: will throw if null or invalid UUID.
+    }
+
+    @Test
+    public void testGetDir() {
+        assertEquals("Profile dir argument during construction and returned value are equal",
+                profileDir, profile.getDir());
+    }
+
+    @Test
+    public void testGetClientIdFreshProfile() throws Exception {
+        assertFalse("client ID file does not exist", clientIdFile.exists());
+
+        // No existing client ID file: we're expected to create one.
+        final String clientId = profile.getClientId();
+        assertValidClientId(clientId);
+        assertTrue("client ID file exists", clientIdFile.exists());
+
+        assertEquals("Returned client ID is the same as the one previously returned", clientId, profile.getClientId());
+        assertEquals("clientID file format matches expectations", clientId, readClientIdFromFile(clientIdFile));
+    }
+
+    @Test
+    public void testGetClientIdFileAlreadyExists() throws Exception {
+        final String validClientId = "905de1c0-0ea6-4a43-95f9-6170035f5a82";
+        assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
+        writeClientIdToFile(clientIdFile, validClientId);
+
+        final String clientIdFromProfile = profile.getClientId();
+        assertEquals("Client ID from method matches ID written to disk", validClientId, clientIdFromProfile);
+    }
+
+    @Test
+    public void testGetClientIdMigrateFromFHR() throws Exception {
+        final File fhrClientIdFile = new File(profileDir, "healthreport/state.json");
+        final String fhrClientId = "905de1c0-0ea6-4a43-95f9-6170035f5a82";
+
+        assertFalse("client ID file does not exist", clientIdFile.exists());
+        assertTrue("Created FHR data directory", new File(profileDir, "healthreport").mkdirs());
+        writeClientIdToFile(fhrClientIdFile, fhrClientId);
+        assertEquals("Migrated Client ID equals FHR client ID", fhrClientId, profile.getClientId());
+
+        // Verify migration wrote to contemporary client ID file.
+        assertTrue("Client ID file created during migration", clientIdFile.exists());
+        assertEquals("Migrated client ID on disk equals value returned from method",
+                fhrClientId, readClientIdFromFile(clientIdFile));
+
+        assertTrue("Deleted FHR clientID file", fhrClientIdFile.delete());
+        assertEquals("Ensure method calls read from newly created client ID file & not FHR client ID file",
+                fhrClientId, profile.getClientId());
+    }
+
+    @Test
+    public void testGetClientIdInvalidIdOnDisk() throws Exception {
+        assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
+        writeClientIdToFile(clientIdFile, "");
+        final String clientIdForEmptyString = profile.getClientId();
+        assertValidClientId(clientIdForEmptyString);
+        assertNotEquals("A new client ID was created when the empty String was written to disk", "", clientIdForEmptyString);
+
+        writeClientIdToFile(clientIdFile, "invalidClientId");
+        final String clientIdForInvalidClientId = profile.getClientId();
+        assertValidClientId(clientIdForInvalidClientId);
+        assertNotEquals("A new client ID was created when an invalid client ID was written to disk",
+                "invalidClientId", clientIdForInvalidClientId);
+    }
+
+    @Test
+    public void testGetClientIdMissingClientIdJSONAttr() throws Exception {
+        final String validClientId = "905de1c0-0ea6-4a43-95f9-6170035f5a82";
+        final JSONObject objMissingClientId = new JSONObject();
+        objMissingClientId.put("irrelevantKey", validClientId);
+        assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
+        FileUtil.writeJSONObjectToFile(clientIdFile, objMissingClientId);
+
+        final String clientIdForMissingAttr = profile.getClientId();
+        assertValidClientId(clientIdForMissingAttr);
+        assertNotEquals("Did not use other attr when JSON attr was missing", validClientId, clientIdForMissingAttr);
+    }
+
+    @Test
+    public void testGetClientIdInvalidIdFileFormat() throws Exception {
+        final String validClientId = "905de1c0-0ea6-4a43-95f9-6170035f5a82";
+        assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
+        FileUtil.writeStringToFile(clientIdFile, "clientID: \"" + validClientId + "\"");
+
+        final String clientIdForInvalidFormat = profile.getClientId();
+        assertValidClientId(clientIdForInvalidFormat);
+        assertNotEquals("Created new ID when file format was invalid", validClientId, clientIdForInvalidFormat);
+    }
+
+    @Test
+    public void testEnsureParentDirs() {
+        final File grandParentDir = new File(profileDir, "grandParent");
+        final File parentDir = new File(grandParentDir, "parent");
+        final File childFile = new File(parentDir, "child");
+
+        // Assert initial state.
+        assertFalse("Topmost parent dir should not exist yet", grandParentDir.exists());
+        assertFalse("Bottommost parent dir should not exist yet", parentDir.exists());
+        assertFalse("Child file should not exist", childFile.exists());
+
+        final String fakeFullPath = "grandParent/parent/child";
+        assertTrue("Parent directories should be created", profile.ensureParentDirs(fakeFullPath));
+        assertTrue("Topmost parent dir should have been created", grandParentDir.exists());
+        assertTrue("Bottommost parent dir should have been created", parentDir.exists());
+        assertFalse("Child file should not have been created", childFile.exists());
+
+        // Parents already exist because this is the second time we're calling ensureParentDirs.
+        assertTrue("Expect true if parent directories already exist", profile.ensureParentDirs(fakeFullPath));
+
+        // Assert error condition.
+        assertTrue("Ensure we can change permissions on profile dir for testing", profileDir.setReadOnly());
+        assertFalse("Expect false if the parent dir could not be created", profile.ensureParentDirs("unwritableDir/child"));
+    }
+
+    @Test
+    public void testIsClientIdValid() {
+        final String[] validClientIds = new String[] {
+                "905de1c0-0ea6-4a43-95f9-6170035f5a82",
+                "905de1c0-0ea6-4a43-95f9-6170035f5a83",
+                "57472f82-453d-4c55-b59c-d3c0e97b76a1",
+                "895745d1-f31e-46c3-880e-b4dd72963d4f",
+        };
+        for (final String validClientId : validClientIds) {
+            assertTrue("Client ID, " + validClientId + ", is valid", profile.isClientIdValid(validClientId));
+        }
+
+        final String[] invalidClientIds = new String[] {
+                null,
+                "",
+                "a",
+                "anInvalidClientId",
+                "905de1c0-0ea6-4a43-95f9-6170035f5a820", // too long (last section)
+                "905de1c0-0ea6-4a43-95f9-6170035f5a8", // too short (last section)
+                "05de1c0-0ea6-4a43-95f9-6170035f5a82", // too short (first section)
+                "905de1c0-0ea6-4a43-95f9-6170035f5a8!", // contains a symbol
+        };
+        for (final String invalidClientId : invalidClientIds) {
+            assertFalse("Client ID, " + invalidClientId + ", is invalid", profile.isClientIdValid(invalidClientId));
+        }
+
+        // We generate client IDs using UUID - better make sure they're valid.
+        for (int i = 0; i < 30; ++i) {
+            final String generatedClientId = UUID.randomUUID().toString();
+            assertTrue("Generated client ID from UUID, " + generatedClientId + ", is valid",
+                    profile.isClientIdValid(generatedClientId));
+        }
+    }
+
+    private String readClientIdFromFile(final File file) throws Exception {
+        final JSONObject obj = FileUtil.readJSONObjectFromFile(file);
+        return obj.getString(CLIENT_ID_JSON_ATTR);
+    }
+
+    private void writeClientIdToFile(final File file, final String clientId) throws Exception {
+        final JSONObject obj = new JSONObject();
+        obj.put(CLIENT_ID_JSON_ATTR, clientId);
+        FileUtil.writeJSONObjectToFile(file, obj);
+    }
+}

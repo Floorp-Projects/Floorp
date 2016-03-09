@@ -34,7 +34,7 @@ function getTopWindow(win) {
                     .getInterface(Ci.nsIWebNavigation)
                     .QueryInterface(Ci.nsIDocShell);
 
-  if (!docShell.isBrowserOrApp) {
+  if (!docShell.isMozBrowserOrApp) {
     return win.top;
   }
 
@@ -94,7 +94,7 @@ function getParentWindow(win) {
                  .getInterface(Ci.nsIWebNavigation)
                  .QueryInterface(Ci.nsIDocShell);
 
-  if (!docShell.isBrowserOrApp) {
+  if (!docShell.isMozBrowserOrApp) {
     return win.parent;
   }
 

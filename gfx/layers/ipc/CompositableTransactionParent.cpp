@@ -133,7 +133,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       MOZ_ASSERT(tex.get());
       compositable->RemoveTextureHost(tex);
       // send FenceHandle if present.
-      SendFenceHandleIfPresent(op.textureParent(), compositable);
+      SendFenceHandleIfPresent(op.textureParent());
       break;
     }
     case CompositableOperation::TOpRemoveTextureAsync: {
@@ -150,8 +150,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
                              GetChildProcessId(),
                              op.holderId(),
                              op.transactionId(),
-                             op.textureParent(),
-                             compositable);
+                             op.textureParent());
 
         // If the message is recievied via PLayerTransaction,
         // Send message back via PImageBridge.
@@ -161,7 +160,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
                                                   op.transactionId()));
       } else {
         // send FenceHandle if present.
-        SendFenceHandleIfPresent(op.textureParent(), compositable);
+        SendFenceHandleIfPresent(op.textureParent());
 
         ReplyRemoveTexture(OpReplyRemoveTexture(op.holderId(),
                                                 op.transactionId()));
@@ -182,6 +181,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         t->mPictureRect = timedTexture.picture();
         t->mFrameID = timedTexture.frameID();
         t->mProducerID = timedTexture.producerID();
+        t->mInputFrameID = timedTexture.inputFrameID();
         MOZ_ASSERT(ValidatePictureRect(t->mTexture->GetSize(), t->mPictureRect));
 
         MaybeFence maybeFence = timedTexture.fence();

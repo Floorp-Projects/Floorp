@@ -5,6 +5,7 @@
 browser.jar:
     content/browser/schemas/bookmarks.json
     content/browser/schemas/browser_action.json
+    content/browser/schemas/commands.json
     content/browser/schemas/context_menus.json
     content/browser/schemas/context_menus_internal.json
     content/browser/schemas/page_action.json

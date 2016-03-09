@@ -7,6 +7,7 @@
 "use strict";
 
 const {Cu, Cc, Ci} = require("chrome");
+const Services = require("Services");
 const {getMostRecentBrowserWindow} = require("sdk/window/utils");
 
 const OPEN_FLAGS = {

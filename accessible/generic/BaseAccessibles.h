@@ -38,6 +38,8 @@ public:
   virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) override final;
   virtual bool RemoveChild(Accessible* aChild) override final;
 
+  virtual bool IsAcceptableChild(nsIContent* aEl) const override;
+
 protected:
   virtual ~LeafAccessible() {}
 

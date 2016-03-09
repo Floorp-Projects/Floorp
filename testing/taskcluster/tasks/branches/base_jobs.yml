@@ -92,18 +92,6 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_flame_kk_spark_eng.yml
-  nexus-4:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_nexus_4_user.yml
-  nexus-4-eng:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_nexus_4_eng.yml
   nexus-4-kk:
     platforms:
       - b2g
@@ -154,6 +142,8 @@ builds:
     platforms:
       - MacOSX64
     types:
+      opt:
+        task: tasks/builds/opt_macosx64.yml
       debug:
         task: tasks/builds/dbg_macosx64.yml
   macosx64-st-an:
@@ -162,18 +152,24 @@ builds:
     types:
       opt:
         task: tasks/builds/opt_macosx64_st-an.yml
+  android-api-15-frontend:
+    platforms:
+      - Android
+    types:
+      opt:
+        task: tasks/builds/android_api_15_frontend.yml
   android-b2gdroid:
     platforms:
       - Android
     types:
       opt:
         task: tasks/builds/android_api_15_b2gdroid.yml
-  eslint-gecko:
+  linux64-mulet-haz:
     platforms:
-      - lint
+      - Mulet Linux
     types:
-      opt:
-        task: tasks/tests/eslint-gecko.yml
+      debug:
+        task: tasks/builds/mulet_haz_linux.yml
 
 tests:
   cppunit:
@@ -194,6 +190,14 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_crashtest_e10s.yml
+  firefox-ui-functional:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_firefox_ui_functional.yml
+  firefox-ui-functional-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_firefox_ui_functional_e10s.yml
   gaia-build:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:
@@ -222,10 +226,6 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_gtest.yml
-  jetpack:
-    allowed_build_tasks:
-      tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_jetpack.yml
   jittests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
@@ -238,6 +238,14 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_jsreftest_e10s.yml
+  marionette:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_marionette.yml
+  marionette-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_marionette_e10s.yml
   marionette-webapi:
     allowed_build_tasks:
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
@@ -250,6 +258,10 @@ tests:
         task: tasks/tests/b2g_emulator_mochitest.yml
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_plain.yml
+  mochitest-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_plain_e10s.yml
   mochitest-a11y:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
@@ -258,6 +270,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_bc.yml
+  mochitest-browser-chrome-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_bc_e10s.yml
   mochitest-chrome:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
@@ -266,6 +282,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_dt.yml
+  mochitest-jetpack:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_jetpack.yml
   mochitest-push:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
@@ -310,3 +330,24 @@ tests:
         task: tasks/tests/b2g_emulator_xpcshell_chunked.yml
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_xpcshell.yml
+
+# Miscellaneous tasks.
+tasks:
+  eslint-gecko:
+    task: tasks/tests/eslint-gecko.yml
+    root: true
+    when:
+      file_patterns:
+        # Files that are likely audited.
+        - '**/*.js'
+        - '**/*.jsm'
+        - '**/*.jsx'
+        - '**/*.html'
+        - '**/*.xml'
+        # Run when eslint policies change.
+        - '**/.eslintignore'
+        - '**/*eslintrc*'
+        # The plugin implementing custom checks.
+        - 'testing/eslint-plugin-mozilla/**'
+        # Other misc lint related files.
+        - 'tools/lint/**'

@@ -32,7 +32,9 @@ using namespace mozilla::ipc;
 
 NS_DEFINE_NAMED_CID(NS_TIMER_CID);
 
-static mozilla::DebugOnly<MessagePump::Delegate*> gFirstDelegate;
+#ifdef DEBUG
+static MessagePump::Delegate* gFirstDelegate;
+#endif
 
 namespace mozilla {
 namespace ipc {
@@ -253,7 +255,9 @@ MessagePumpForChildProcess::Run(base::MessagePump::Delegate* aDelegate)
 {
   if (mFirstRun) {
     MOZ_ASSERT(aDelegate && !gFirstDelegate);
+#ifdef DEBUG
     gFirstDelegate = aDelegate;
+#endif
 
     mFirstRun = false;
     if (NS_FAILED(XRE_RunAppShell())) {
@@ -261,7 +265,9 @@ MessagePumpForChildProcess::Run(base::MessagePump::Delegate* aDelegate)
     }
 
     MOZ_ASSERT(aDelegate && aDelegate == gFirstDelegate);
+#ifdef DEBUG
     gFirstDelegate = nullptr;
+#endif
 
     return;
   }

@@ -114,6 +114,8 @@
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsLayoutStylesheetCache.h"
+#include "mozilla/StyleSheetHandle.h"
+#include "mozilla/StyleSheetHandleInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -267,7 +269,7 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
 already_AddRefed<nsIPresShell>
 nsHTMLDocument::CreateShell(nsPresContext* aContext,
                             nsViewManager* aViewManager,
-                            nsStyleSet* aStyleSet)
+                            StyleSetHandle aStyleSet)
 {
   return doCreateShell(aContext, aViewManager, aStyleSet);
 }
@@ -1034,7 +1036,7 @@ nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
 void
 nsHTMLDocument::SetBody(nsGenericHTMLElement* newBody, ErrorResult& rv)
 {
-  Element* root = GetRootElement();
+  nsCOMPtr<Element> root = GetRootElement();
 
   // The body element must be either a body tag or a frameset tag. And we must
   // have a html root tag, otherwise GetBody will not return the newly set
@@ -2641,12 +2643,14 @@ nsHTMLDocument::TearingDownEditor(nsIEditor *aEditor)
     if (!presShell)
       return;
 
-    nsTArray<RefPtr<CSSStyleSheet>> agentSheets;
+    nsTArray<StyleSheetHandle::RefPtr> agentSheets;
     presShell->GetAgentStyleSheets(agentSheets);
 
-    agentSheets.RemoveElement(nsLayoutStylesheetCache::ContentEditableSheet());
+    auto cache = nsLayoutStylesheetCache::For(GetStyleBackendType());
+
+    agentSheets.RemoveElement(cache->ContentEditableSheet());
     if (oldState == eDesignMode)
-      agentSheets.RemoveElement(nsLayoutStylesheetCache::DesignModeSheet());
+      agentSheets.RemoveElement(cache->DesignModeSheet());
 
     presShell->SetAgentStyleSheets(agentSheets);
 
@@ -2780,12 +2784,13 @@ nsHTMLDocument::EditingStateChanged()
     // Before making this window editable, we need to modify UA style sheet
     // because new style may change whether focused element will be focusable
     // or not.
-    nsTArray<RefPtr<CSSStyleSheet>> agentSheets;
+    nsTArray<StyleSheetHandle::RefPtr> agentSheets;
     rv = presShell->GetAgentStyleSheets(agentSheets);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    CSSStyleSheet* contentEditableSheet =
-      nsLayoutStylesheetCache::ContentEditableSheet();
+    auto cache = nsLayoutStylesheetCache::For(GetStyleBackendType());
+
+    StyleSheetHandle contentEditableSheet = cache->ContentEditableSheet();
 
     if (!agentSheets.Contains(contentEditableSheet)) {
       agentSheets.AppendElement(contentEditableSheet);
@@ -2796,8 +2801,7 @@ nsHTMLDocument::EditingStateChanged()
     // specific states on the elements.
     if (designMode) {
       // designMode is being turned on (overrides contentEditable).
-      CSSStyleSheet* designModeSheet =
-        nsLayoutStylesheetCache::DesignModeSheet();
+      StyleSheetHandle designModeSheet = cache->DesignModeSheet();
       if (!agentSheets.Contains(designModeSheet)) {
         agentSheets.AppendElement(designModeSheet);
       }
@@ -2807,7 +2811,7 @@ nsHTMLDocument::EditingStateChanged()
     }
     else if (oldState == eDesignMode) {
       // designMode is being turned off (contentEditable is still on).
-      agentSheets.RemoveElement(nsLayoutStylesheetCache::DesignModeSheet());
+      agentSheets.RemoveElement(cache->DesignModeSheet());
       updateState = true;
     }
 

@@ -81,8 +81,7 @@ getFSType(const char *path)
     if (isalpha(path[0]) && path[1] == ':') {
         unit = toupper(path[0]) - '@';
         path += 2;
-    }
-    else {
+    } else {
         ULONG driveMap;
 #if OS2 >= 2
         if (DosQueryCurrentDisk(&unit, &driveMap))
@@ -109,8 +108,7 @@ getFSType(const char *path)
     if (infolen >= sizeof(FSQBUFFER2)) {
         FSQBUFFER2 *p = (FSQBUFFER2 *)info;
         r = p->szFSDName[p->cbName];
-    }
-    else
+    } else
 #else
     if (DosQFSAttach((PSZ)drive, 0, FSAIL_QUERYNAME, (PVOID)info, &infolen, 0))
         return 0;
@@ -118,8 +116,7 @@ getFSType(const char *path)
         char *p = info + sizeof(USHORT);
         p += sizeof(USHORT) + *(USHORT *)p + 1 + sizeof(USHORT);
         r = *p;
-    }
-    else
+    } else
 #endif
         r = 0;
     return cache[unit] = r;

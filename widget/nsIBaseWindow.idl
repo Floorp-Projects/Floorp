@@ -91,6 +91,12 @@ interface nsIBaseWindow : nsISupports
 	*/
 	void setPosition(in long x, in long y);
 
+  /*
+  Ditto, with arguments in global desktop pixels rather than (potentially
+  ambiguous) device pixels
+  */
+	void setPositionDesktopPix(in long x, in long y);
+
 	/*
 	Gets the current x and y coordinates of the control.  This is relatie to the
 	parent window.

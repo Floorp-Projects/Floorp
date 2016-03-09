@@ -372,13 +372,18 @@ var Bookmarks = Object.freeze({
    * @param guidOrInfo
    *        The globally unique identifier of the item to remove, or an
    *        object representing it, as defined above.
+   * @param {Object} [options={}]
+   *        Additional options that can be passed to the function.
+   *        Currently supports preventRemovalOfNonEmptyFolders which
+   *        will cause an exception to be thrown if attempting to remove
+   *        a folder that is not empty.
    *
    * @return {Promise} resolved when the removal is complete.
    * @resolves to an object representing the removed bookmark.
    * @rejects if the provided guid doesn't match any existing bookmark.
    * @throws if the arguments are invalid.
    */
-  remove(guidOrInfo) {
+  remove(guidOrInfo, options={}) {
     let info = guidOrInfo;
     if (!info)
       throw new Error("Input should be a valid object");
@@ -400,7 +405,7 @@ var Bookmarks = Object.freeze({
       if (!item)
         throw new Error("No bookmarks found for the provided GUID.");
 
-      item = yield removeBookmark(item);
+      item = yield removeBookmark(item, options);
 
       // Notify onItemRemoved to listeners.
       let observers = PlacesUtils.bookmarks.getObservers();
@@ -497,6 +502,32 @@ var Bookmarks = Object.freeze({
       let results = yield queryBookmarks(query);
 
       return results;
+    });
+  },
+
+  /**
+   * Returns a list of recently bookmarked items.
+   *
+   * @param {integer} numberOfItems
+   *        The maximum number of bookmark items to return.
+   *
+   * @return {Promise} resolved when the listing is complete.
+   * @resolves to an array of recent bookmark-items.
+   * @rejects if an error happens while querying.
+   */
+  getRecent(numberOfItems) {
+    if (numberOfItems === undefined) {
+      throw new Error("numberOfItems argument is required");
+    }
+    if (!typeof numberOfItems === 'number' || (numberOfItems % 1) !== 0) {
+      throw new Error("numberOfItems argument must be an integer");
+    }
+    if (numberOfItems <= 0) {
+      throw new Error("numberOfItems argument must be greater than zero");
+    }
+
+    return Task.spawn(function* () {
+      return yield fetchRecentBookmarks(numberOfItems);
     });
   },
 
@@ -998,6 +1029,26 @@ function fetchBookmarksByURL(info) {
   }));
 }
 
+function fetchRecentBookmarks(numberOfItems) {
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchRecentBookmarks",
+    Task.async(function*(db) {
+
+    let rows = yield db.executeCached(
+      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+              NULL AS _id, NULL AS _parentId, NULL AS _childCount, NULL AS _grandParentId
+       FROM moz_bookmarks b
+       LEFT JOIN moz_bookmarks p ON p.id = b.parent
+       LEFT JOIN moz_places h ON h.id = b.fk
+       WHERE p.parent <> :tags_folder
+       ORDER BY b.dateAdded DESC, b.ROWID DESC
+       LIMIT :numberOfItems
+      `, { tags_folder: PlacesUtils.tagsFolderId, numberOfItems });
+
+    return rows.length ? rowsToItemsArray(rows) : [];
+  }));
+}
+
 function fetchBookmarksByParent(info) {
   return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarksByParent",
     Task.async(function*(db) {
@@ -1022,7 +1073,7 @@ function fetchBookmarksByParent(info) {
 ////////////////////////////////////////////////////////////////////////////////
 // Remove implementation.
 
-function removeBookmark(item) {
+function removeBookmark(item, options) {
   return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: updateBookmark",
     Task.async(function*(db) {
 
@@ -1030,8 +1081,12 @@ function removeBookmark(item) {
 
     yield db.executeTransaction(function* transaction() {
       // If it's a folder, remove its contents first.
-      if (item.type == Bookmarks.TYPE_FOLDER)
+      if (item.type == Bookmarks.TYPE_FOLDER) {
+        if (options.preventRemovalOfNonEmptyFolders && item._childCount > 0) {
+          throw new Error("Cannot remove a non-empty folder.");
+        }
         yield removeFoldersContents(db, [item.guid]);
+      }
 
       // Remove annotations first.  If it's a tag, we can avoid paying that cost.
       if (!isUntagging) {

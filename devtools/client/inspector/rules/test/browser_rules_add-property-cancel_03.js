@@ -9,29 +9,23 @@
 
 const TEST_URI = `
   <style type='text/css'>
-    #testid {
+    div {
       background-color: blue;
     }
-    .testclass {
-      background-color: green;
-    }
   </style>
-  <div id='testid' class='testclass'>Styled Node</div>
+  <div>Test node</div>
 `;
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
-  yield testCancelNewOnEscape(inspector, view);
-});
+  yield selectNode("div", inspector);
 
-function* testCancelNewOnEscape(inspector, view) {
-  // Start at the beginning: start to add a rule to the element's style
-  // declaration, add some text, then press escape.
+  // Add a property to the element's style declaration, add some text,
+  // then press escape.
 
-  let elementRuleEditor = getRuleViewRuleEditor(view, 0);
-  let editor = yield focusEditableField(view, elementRuleEditor.closeBrace);
+  let elementRuleEditor = getRuleViewRuleEditor(view, 1);
+  let editor = yield focusNewRuleViewProperty(elementRuleEditor);
 
   is(inplaceEditor(elementRuleEditor.newPropSpan), editor,
     "Next focused editor should be the new property editor.");
@@ -42,12 +36,8 @@ function* testCancelNewOnEscape(inspector, view) {
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   yield onBlur;
 
-  ok(!elementRuleEditor.rule._applyingModifications,
-    "Shouldn't have an outstanding modification request after a cancel.");
-  is(elementRuleEditor.rule.textProps.length, 0,
+  is(elementRuleEditor.rule.textProps.length, 1,
     "Should have canceled creating a new text property.");
-  ok(!elementRuleEditor.propertyList.hasChildNodes(),
-    "Should not have any properties.");
   is(view.styleDocument.documentElement, view.styleDocument.activeElement,
     "Correct element has focus");
-}
+});

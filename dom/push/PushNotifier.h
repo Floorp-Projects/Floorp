@@ -17,6 +17,10 @@
 #define PUSHNOTIFIER_CONTRACTID \
   "@mozilla.org/push/Notifier;1"
 
+// These constants are duplicated in `PushComponents.js`.
+#define OBSERVER_TOPIC_PUSH "push-message"
+#define OBSERVER_TOPIC_SUBSCRIPTION_CHANGE "push-subscription-change"
+
 namespace mozilla {
 namespace dom {
 
@@ -53,6 +57,8 @@ private:
   nsresult NotifyPushObservers(const nsACString& aScope,
                                Maybe<nsTArray<uint8_t>> aData);
   nsresult NotifySubscriptionChangeObservers(const nsACString& aScope);
+  nsresult DoNotifyObservers(nsISupports *aSubject, const char *aTopic,
+                             const nsACString& aScope);
   bool ShouldNotifyObservers(nsIPrincipal* aPrincipal);
   bool ShouldNotifyWorkers(nsIPrincipal* aPrincipal);
 };

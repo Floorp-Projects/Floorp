@@ -45,8 +45,7 @@ add_task(function* shift_left_click_test() {
 
   info("URL should be loaded in a new window");
   is(gURLBar.value, "", "Urlbar reverted to original value");
-  let childFocus = yield promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
-  ok(childFocus, "There should be no focused element");
+  yield promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
   is(document.activeElement, gBrowser.selectedBrowser, "Content window should be focused");
   is(win.gURLBar.textValue, TEST_VALUE, "New URL is loaded in new window");
 
@@ -115,8 +114,7 @@ add_task(function* load_in_current_tab_test() {
 
     info("URL should be loaded in the current tab");
     is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
-    let childFocus = yield promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
-    ok(childFocus, "There should be no focused element");
+    yield promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
     is(document.activeElement, gBrowser.selectedBrowser, "Content window should be focused");
     is(gBrowser.selectedTab, tab, "New URL was loaded in the current tab");
 
@@ -145,8 +143,7 @@ add_task(function* load_in_new_tab_test() {
     // Check the load occurred in a new tab.
     info("URL should be loaded in a new focused tab");
     is(gURLBar.inputField.value, TEST_VALUE, "Urlbar still has the value we entered");
-    let childFocus = yield promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
-    ok(childFocus, "There should be no focused element");
+    yield promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
     is(document.activeElement, gBrowser.selectedBrowser, "Content window should be focused");
     isnot(gBrowser.selectedTab, tab, "New URL was loaded in a new tab");
 
@@ -224,12 +221,13 @@ function promiseWaitForNewWindow() {
 function promiseCheckChildNoFocusedElement(browser)
 {
   if (!gMultiProcessBrowser) {
-    return Services.focus.focusedElement == null;
+    Assert.equal(Services.focus.focusedElement, null, "There should be no focused element");
+    return;
   }
 
   return ContentTask.spawn(browser, { }, function* () {
     const fm = Components.classes["@mozilla.org/focus-manager;1"].
                           getService(Components.interfaces.nsIFocusManager);
-    return fm.focusedElement == null;
+    Assert.equal(fm.focusedElement, null, "There should be no focused element");
   });
 }

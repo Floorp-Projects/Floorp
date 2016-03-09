@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "mozilla/ipc/DaemonSocketPDU.h"
+#include "mozilla/UniquePtr.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -786,19 +787,19 @@ struct UnpackArray
     , mLength(aLength)
   { }
 
-  UnpackArray(nsAutoArrayPtr<T>& aData, size_t aLength)
+  UnpackArray(UniquePtr<T[]>& aData, size_t aLength)
     : mData(nullptr)
     , mLength(aLength)
   {
-    aData = new T[mLength];
+    aData.reset(new T[mLength]);
     mData = aData.get();
   }
 
-  UnpackArray(nsAutoArrayPtr<T>& aData, size_t aSize, size_t aElemSize)
+  UnpackArray(UniquePtr<T>& aData, size_t aSize, size_t aElemSize)
     : mData(nullptr)
     , mLength(aSize / aElemSize)
   {
-    aData = new T[mLength];
+    aData.reset(new T[mLength]);
     mData = aData.get();
   }
 

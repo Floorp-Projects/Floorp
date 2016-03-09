@@ -29,6 +29,6 @@ add_task(function*() {
     let nodeFront = yield getNodeFront(selector, inspector);
     let container = getContainerForNodeFront(nodeFront, inspector);
     is(!container.elt.classList.contains("not-displayed"), isDisplayed,
-      "The container for " + selector + " is marked as displayed " + isDisplayed);
+       `The container for ${selector} is marked as displayed ${isDisplayed}`);
   }
 });

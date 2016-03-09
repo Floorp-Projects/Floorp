@@ -75,6 +75,7 @@ ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
 
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/alarms.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/cookies.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/downloads.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extension.json");
@@ -91,7 +92,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   BaseContext,
   LocaleData,
-  MessageBroker,
   Messenger,
   injectAPI,
   instanceOf,
@@ -216,12 +216,6 @@ var Management = {
   },
 };
 
-// A MessageBroker that's used to send and receive messages for
-// extension pages (which run in the chrome process).
-var globalBroker = new MessageBroker([Services.mm, Services.ppmm]);
-
-var gContextId = 0;
-
 // An extension page is an execution context for any extension content
 // that runs in the chrome process. It's used for background pages
 // (type="background"), popups (type="popup"), and any extension
@@ -243,7 +237,6 @@ ExtensionPage = class extends BaseContext {
     this.contentWindow = contentWindow || null;
     this.uri = uri || extension.baseURI;
     this.incognito = params.incognito || false;
-    this.contextId = gContextId++;
     this.unloaded = false;
 
     // This is the MessageSender property passed to extension.
@@ -260,7 +253,7 @@ ExtensionPage = class extends BaseContext {
     // Properties in |filter| must match those in the |recipient|
     // parameter of sendMessage.
     let filter = {extensionId: extension.id};
-    this.messenger = new Messenger(this, globalBroker, sender, filter, delegate);
+    this.messenger = new Messenger(this, [Services.mm, Services.ppmm], sender, filter, delegate);
 
     this.extension.views.add(this);
   }
@@ -271,17 +264,6 @@ ExtensionPage = class extends BaseContext {
 
   get principal() {
     return this.contentWindow.document.nodePrincipal;
-  }
-
-  // A wrapper around MessageChannel.sendMessage which adds the extension ID
-  // to the recipient object, and ensures replies are not processed after the
-  // context has been unloaded.
-  sendMessage(target, messageName, data, recipient = {}, sender = {}) {
-    recipient.extensionId = this.extension.id;
-    sender.extensionId = this.extension.id;
-    sender.contextId = this.contextId;
-
-    return MessageChannel.sendMessage(target, messageName, data, recipient, sender);
   }
 
   // Called when the extension shuts down.
@@ -302,16 +284,11 @@ ExtensionPage = class extends BaseContext {
 
     this.unloaded = true;
 
-    MessageChannel.abortResponses({
-      extensionId: this.extension.id,
-      contextId: this.contextId,
-    });
+    super.unload();
 
     Management.emit("page-unload", this);
 
     this.extension.views.delete(this);
-
-    super.unload();
   }
 };
 
@@ -384,9 +361,17 @@ GlobalManager = {
         injectAPI(api, browserObj);
 
         let schemaApi = Management.generateAPIs(extension, context, Management.schemaApis);
+
+        // Add in any extra API namespaces which do not have implementations
+        // outside of their schema file.
+        schemaApi.extensionTypes = {};
+
         function findPath(path) {
           let obj = schemaApi;
           for (let elt of path) {
+            if (!(elt in obj)) {
+              return null;
+            }
             obj = obj[elt];
           }
           return obj;
@@ -421,6 +406,10 @@ GlobalManager = {
             }
 
             return context.wrapPromise(promise || Promise.resolve(), callback);
+          },
+
+          shouldInject(path, name) {
+            return findPath(path) != null;
           },
 
           getProperty(path, name) {
@@ -627,6 +616,13 @@ ExtensionData.prototype = {
       this.readJSON("manifest.json"),
       Management.lazyInit(),
     ]).then(([manifest]) => {
+      this.manifest = manifest;
+      this.rawManifest = manifest;
+
+      if (manifest && manifest.default_locale) {
+        return this.initLocale();
+      }
+    }).then(() => {
       let context = {
         url: this.baseURI && this.baseURI.spec,
 
@@ -635,12 +631,17 @@ ExtensionData.prototype = {
         logError: error => {
           this.logger.warn(`Loading extension '${this.id}': Reading manifest: ${error}`);
         },
+
+        preprocessors: {},
       };
 
-      let normalized = Schemas.normalize(manifest, "manifest.WebExtensionManifest", context);
+      if (this.localeData) {
+        context.preprocessors.localize = this.localize.bind(this);
+      }
+
+      let normalized = Schemas.normalize(this.manifest, "manifest.WebExtensionManifest", context);
       if (normalized.error) {
         this.manifestError(normalized.error);
-        this.manifest = manifest;
       } else {
         this.manifest = normalized.value;
       }
@@ -684,7 +685,7 @@ ExtensionData.prototype = {
   // stores its parsed contents in |this.localeMessages.get(locale)|.
   readLocaleFile: Task.async(function* (locale) {
     let locales = yield this.promiseLocales();
-    let dir = locales.get(locale);
+    let dir = locales.get(locale) || locale;
     let file = `_locales/${dir}/messages.json`;
 
     try {
@@ -1214,4 +1215,3 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
     return this.localize(this.manifest.name);
   },
 });
-

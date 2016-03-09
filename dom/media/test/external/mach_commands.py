@@ -34,15 +34,12 @@ def run_external_media_test(tests, testtype=None, topsrcdir=None, **kwargs):
 
     parser = MediaTestArguments()
     commandline.add_logging_group(parser)
-    args = parser.parse_args()
 
     if not tests:
         tests = [os.path.join(topsrcdir,
                  'dom/media/test/external/external_media_tests/manifest.ini')]
-    args.tests = tests
 
-    if not args.binary:
-        args.binary = kwargs['binary']
+    args = parser.parse_args(args=tests)
 
     for k, v in kwargs.iteritems():
         setattr(args, k, v)
@@ -69,5 +66,5 @@ class MachCommands(MachCommandBase):
              parser=setup_argument_parser,
              )
     def run_external_media_test(self, tests, **kwargs):
-        kwargs['binary'] = self.get_binary_path('app')
+        kwargs['binary'] = kwargs['binary'] or self.get_binary_path('app')
         return run_external_media_test(tests, topsrcdir=self.topsrcdir, **kwargs)

@@ -34,8 +34,8 @@
         sendAsyncMessage(message.name, "principal.origin: " +
                          ("origin" in message.principal ? "OK" : "KO"));
 
-        sendAsyncMessage(message.name, "principal.isInBrowserElement: " +
-                         ("isInBrowserElement" in message.principal ? "OK" : "KO"));
+        sendAsyncMessage(message.name, "principal.isInIsolatedMozBrowserElement: " +
+                         ("isInIsolatedMozBrowserElement" in message.principal ? "OK" : "KO"));
 
         sendAsyncMessage(message.name, "DONE");
       });

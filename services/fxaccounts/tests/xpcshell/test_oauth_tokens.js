@@ -97,7 +97,16 @@ function MockFxAccounts(mockGrantClient) {
     },
     _getDeviceName() {
       return "mock device name";
-    }
+    },
+    fxaPushService: {
+      registerPushEndpoint() {
+        return new Promise((resolve) => {
+          resolve({
+            endpoint: "http://mochi.test:8888"
+          });
+        });
+      },
+    },
   });
 }
 

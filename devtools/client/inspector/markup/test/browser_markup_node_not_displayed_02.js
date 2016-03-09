@@ -13,11 +13,13 @@ const TEST_DATA = [
     desc: "Hiding a node by creating a new stylesheet",
     selector: "#normal-div",
     before: true,
-    changeStyle: (doc, node) => {
-      let div = doc.createElement("div");
-      div.id = "new-style";
-      div.innerHTML = "<style>#normal-div {display:none;}</style>";
-      doc.body.appendChild(div);
+    changeStyle: function*(testActor) {
+      yield testActor.eval(`
+        let div = content.document.createElement("div");
+        div.id = "new-style";
+        div.innerHTML = "<style>#normal-div {display:none;}</style>";
+        content.document.body.appendChild(div);
+      `);
     },
     after: false
   },
@@ -25,8 +27,10 @@ const TEST_DATA = [
     desc: "Showing a node by deleting an existing stylesheet",
     selector: "#normal-div",
     before: false,
-    changeStyle: (doc, node) => {
-      doc.getElementById("new-style").remove();
+    changeStyle: function*(testActor) {
+      yield testActor.eval(`
+        content.document.getElementById("new-style").remove();
+      `);
     },
     after: true
   },
@@ -34,8 +38,11 @@ const TEST_DATA = [
     desc: "Hiding a node by changing its style property",
     selector: "#display-none",
     before: false,
-    changeStyle: (doc, node) => {
-      node.style.display = "block";
+    changeStyle: function*(testActor) {
+      yield testActor.eval(`
+        let node = content.document.querySelector("#display-none");
+        node.style.display = "block";
+      `);
     },
     after: true
   },
@@ -43,8 +50,11 @@ const TEST_DATA = [
     desc: "Showing a node by removing its hidden attribute",
     selector: "#hidden-true",
     before: false,
-    changeStyle: (doc, node) => {
-      node.removeAttribute("hidden");
+    changeStyle: function*(testActor) {
+      yield testActor.eval(`
+        content.document.querySelector("#hidden-true")
+                        .removeAttribute("hidden");
+      `);
     },
     after: true
   },
@@ -52,8 +62,8 @@ const TEST_DATA = [
     desc: "Hiding a node by adding a hidden attribute",
     selector: "#hidden-true",
     before: true,
-    changeStyle: (doc, node) => {
-      node.setAttribute("hidden", "true");
+    changeStyle: function*(testActor) {
+      yield testActor.setAttribute("#hidden-true", "hidden", "true");
     },
     after: false
   },
@@ -61,8 +71,12 @@ const TEST_DATA = [
     desc: "Showing a node by changin a stylesheet's rule",
     selector: "#hidden-via-stylesheet",
     before: false,
-    changeStyle: (doc, node) => {
-      doc.styleSheets[0].cssRules[0].style.setProperty("display", "inline");
+    changeStyle: function*(testActor) {
+      yield testActor.eval(`
+        content.document.styleSheets[0]
+                        .cssRules[0].style
+                        .setProperty("display", "inline");
+      `);
     },
     after: true
   },
@@ -70,9 +84,11 @@ const TEST_DATA = [
     desc: "Hiding a node by adding a new rule to a stylesheet",
     selector: "#hidden-via-stylesheet",
     before: true,
-    changeStyle: (doc, node) => {
-      doc.styleSheets[0].insertRule(
-        "#hidden-via-stylesheet {display: none;}", 1);
+    changeStyle: function*(testActor) {
+      yield testActor.eval(`
+        content.document.styleSheets[0].insertRule(
+          "#hidden-via-stylesheet {display: none;}", 1);
+      `);
     },
     after: false
   },
@@ -80,25 +96,29 @@ const TEST_DATA = [
     desc: "Hiding a node by adding a class that matches an existing rule",
     selector: "#normal-div",
     before: true,
-    changeStyle: (doc, node) => {
-      doc.styleSheets[0].insertRule(
-        ".a-new-class {display: none;}", 2);
-      node.classList.add("a-new-class");
+    changeStyle: function*(testActor) {
+      yield testActor.eval(`
+        content.document.styleSheets[0].insertRule(
+          ".a-new-class {display: none;}", 2);
+        content.document.querySelector("#normal-div")
+                        .classList.add("a-new-class");
+      `);
     },
     after: false
   }
 ];
 
 add_task(function*() {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   for (let data of TEST_DATA) {
     info("Running test case: " + data.desc);
-    yield runTestData(inspector, data);
+    yield runTestData(inspector, testActor, data);
   }
 });
 
-function* runTestData(inspector, {selector, before, changeStyle, after}) {
+function* runTestData(inspector, testActor,
+                      {selector, before, changeStyle, after}) {
   info("Getting the " + selector + " test node");
   let nodeFront = yield getNodeFront(selector, inspector);
   let container = getContainerForNodeFront(nodeFront, inspector);
@@ -110,7 +130,7 @@ function* runTestData(inspector, {selector, before, changeStyle, after}) {
   inspector.markup.walker.once("display-change", onDisplayChanged.resolve);
 
   info("Making style changes");
-  changeStyle(content.document, getNode(selector));
+  yield changeStyle(testActor);
   let nodes = yield onDisplayChanged.promise;
 
   info("Verifying that the list of changed nodes include our container");

@@ -11,6 +11,17 @@ function handleReferrer(event) {
     ['Referrer: ' + event.request.referrer])));
 }
 
+function handleReferrerPolicy(event) {
+  event.respondWith(new Response(new Blob(
+    ['ReferrerPolicy: ' + event.request.referrerPolicy])));
+}
+
+function handleReferrerFull(event) {
+  event.respondWith(new Response(new Blob(
+    ['Referrer: ' + event.request.referrer + '\n' +
+     'ReferrerPolicy: ' + event.request.referrerPolicy])));
+}
+
 function handleClientId(event) {
   var body;
   if (event.clientId !== null) {
@@ -70,11 +81,23 @@ function handleUsedCheck(event) {
   }
 }
 
+function handleFragmentCheck(event) {
+  var body;
+  if (event.request.url.indexOf('#') === -1) {
+    body = 'Fragment Not Found';
+  } else {
+    body = 'Fragment Found';
+  }
+  event.respondWith(new Response(body));
+}
+
 self.addEventListener('fetch', function(event) {
     var url = event.request.url;
     var handlers = [
       { pattern: '?string', fn: handleString },
       { pattern: '?blob', fn: handleBlob },
+      { pattern: '?referrerFull', fn: handleReferrerFull },
+      { pattern: '?referrerPolicy', fn: handleReferrerPolicy },
       { pattern: '?referrer', fn: handleReferrer },
       { pattern: '?clientId', fn: handleClientId },
       { pattern: '?ignore', fn: function() {} },
@@ -82,7 +105,8 @@ self.addEventListener('fetch', function(event) {
       { pattern: '?fetch', fn: handleFetch },
       { pattern: '?form-post', fn: handleFormPost },
       { pattern: '?multiple-respond-with', fn: handleMultipleRespondWith },
-      { pattern: '?used-check', fn: handleUsedCheck }
+      { pattern: '?used-check', fn: handleUsedCheck },
+      { pattern: '?fragment-check', fn: handleFragmentCheck }
     ];
 
     var handler = null;

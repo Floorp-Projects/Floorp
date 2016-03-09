@@ -81,8 +81,16 @@ inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
 
   // Get the agent, then user and finally xbl sheets in the style set.
   nsIPresShell* presShell = document->GetShell();
+
+  if (presShell && presShell->StyleSet()->IsServo()) {
+    // XXXheycam ServoStyleSets don't have the ability to expose their
+    // sheets in a script-accessible way yet.
+    NS_ERROR("stylo: ServoStyleSets cannot expose their sheets to script yet");
+    return NS_ERROR_FAILURE;
+  }
+
   if (presShell) {
-    nsStyleSet* styleSet = presShell->StyleSet();
+    nsStyleSet* styleSet = presShell->StyleSet()->AsGecko();
     SheetType sheetType = SheetType::Agent;
     for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
       sheets.AppendElement(styleSet->StyleSheetAt(sheetType, i));
@@ -106,7 +114,9 @@ inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
 
   // Get the document sheets.
   for (int32_t i = 0; i < document->GetNumberOfStyleSheets(); i++) {
-    sheets.AppendElement(document->GetStyleSheetAt(i));
+    // XXXheycam ServoStyleSets don't have the ability to expose their
+    // sheets in a script-accessible way yet.
+    sheets.AppendElement(document->GetStyleSheetAt(i)->AsGecko());
   }
 
   nsISupports** ret = static_cast<nsISupports**>(moz_xmalloc(sheets.Length() *
@@ -745,7 +755,6 @@ PropertySupportsVariant(nsCSSProperty aPropertyID, uint32_t aVariant)
     uint32_t supported;
     switch (aPropertyID) {
       case eCSSProperty_border_image_slice:
-      case eCSSProperty_grid_template:
       case eCSSProperty_grid:
         supported = VARIANT_PN;
         break;
@@ -765,8 +774,10 @@ PropertySupportsVariant(nsCSSProperty aPropertyID, uint32_t aVariant)
       case eCSSProperty_border_bottom_right_radius:
       case eCSSProperty_background_position:
       case eCSSProperty_background_size:
+#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
       case eCSSProperty_mask_position:
       case eCSSProperty_mask_size:
+#endif
       case eCSSProperty_grid_auto_columns:
       case eCSSProperty_grid_auto_rows:
       case eCSSProperty_grid_template_columns:
@@ -1194,8 +1205,10 @@ inDOMUtils::GetCSSPseudoElementNames(uint32_t* aLength, char16_t*** aNames)
 {
   nsTArray<nsIAtom*> array;
 
-  for (int i = 0; i < nsCSSPseudoElements::ePseudo_PseudoElementCount; ++i) {
-    nsCSSPseudoElements::Type type = static_cast<nsCSSPseudoElements::Type>(i);
+  const CSSPseudoElementTypeBase pseudoCount =
+    static_cast<CSSPseudoElementTypeBase>(CSSPseudoElementType::Count);
+  for (CSSPseudoElementTypeBase i = 0; i < pseudoCount; ++i) {
+    CSSPseudoElementType type = static_cast<CSSPseudoElementType>(i);
     if (!nsCSSPseudoElements::PseudoElementIsUASheetOnly(type)) {
       nsIAtom* atom = nsCSSPseudoElements::GetPseudoAtom(type);
       array.AppendElement(atom);

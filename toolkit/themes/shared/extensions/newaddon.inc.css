@@ -89,23 +89,25 @@
   margin-bottom: 20px;
 }
 
-#continuePanel,
-#restartPanel {
+#buttonDeck {
   margin-top: 25px;
-  -moz-box-pack: end;
-  -moz-box-align: center;
+  -moz-box-align: stretch;
+  -moz-box-pack: stretch;
 }
 
 #continuePanel {
   -moz-box-pack: end;
+  -moz-box-align: end;
 }
 
-#restartMessage {
-  text-align: right;
+#restartPanel {
+  -moz-box-pack: end;
+  -moz-box-align: stretch;
 }
 
-#restartSpacer {
-  -moz-box-flex: 1;
+#restartPanelButtons {
+  margin-top: 25px;
+  -moz-box-pack: end;
 }
 
 #later {

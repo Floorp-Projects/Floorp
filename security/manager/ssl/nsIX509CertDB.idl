@@ -80,21 +80,6 @@ interface nsIX509CertDB : nsISupports {
   nsIX509Cert findCertByDBKey(in string aDBkey);
 
   /**
-   *  Obtain a list of certificate nicknames from the database.
-   *  What the name is depends on type:
-   *    user, ca, or server cert - the nickname
-   *    email cert - the email address
-   *
-   *  @param aType Type of certificate to obtain
-   *               See certificate type constants in nsIX509Cert.
-   *  @param count The number of nicknames in the returned array
-   *  @param certNameList The returned array of certificate nicknames.
-   */
-  void findCertNicknames(in unsigned long aType,
-                         out unsigned long count,
-                         [array, size_is(count)] out wstring certNameList);
-
-  /**
    *  Find user's own email encryption certificate by nickname.
    *
    *  @param aNickname The nickname to be used as the key

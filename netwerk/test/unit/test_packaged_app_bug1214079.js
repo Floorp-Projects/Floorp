@@ -154,7 +154,7 @@ function getChannelForURL(url) {
 
   tmpChannel.notificationCallbacks =
     new LoadContextCallback(principal.appId,
-                            principal.isInBrowserElement,
+                            principal.isInIsolatedMozBrowserElement,
                             false,
                             false);
 

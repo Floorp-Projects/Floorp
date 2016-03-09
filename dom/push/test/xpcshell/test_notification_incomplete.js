@@ -55,8 +55,8 @@ add_task(function* test_notification_incomplete() {
     ok(false, 'Should not deliver malformed updates');
   }
   do_register_cleanup(() =>
-    Services.obs.removeObserver(observeMessage, 'push-message'));
-  Services.obs.addObserver(observeMessage, 'push-message', false);
+    Services.obs.removeObserver(observeMessage, PushServiceComponent.pushTopic));
+  Services.obs.addObserver(observeMessage, PushServiceComponent.pushTopic, false);
 
   let notificationDone;
   let notificationPromise = new Promise(resolve => notificationDone = after(2, resolve));

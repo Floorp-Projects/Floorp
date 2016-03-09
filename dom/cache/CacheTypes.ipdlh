@@ -10,6 +10,7 @@ include ChannelInfo;
 include PBackgroundSharedTypes;
 
 using HeadersGuardEnum from "mozilla/dom/cache/IPCUtils.h";
+using ReferrerPolicy from "mozilla/dom/cache/IPCUtils.h";
 using RequestCredentials from "mozilla/dom/cache/IPCUtils.h";
 using RequestMode from "mozilla/dom/cache/IPCUtils.h";
 using RequestCache from "mozilla/dom/cache/IPCUtils.h";
@@ -60,6 +61,7 @@ struct CacheRequest
   HeadersEntry[] headers;
   HeadersGuardEnum headersGuard;
   nsString referrer;
+  ReferrerPolicy referrerPolicy;
   RequestMode mode;
   RequestCredentials credentials;
   CacheReadStreamOrVoid body;

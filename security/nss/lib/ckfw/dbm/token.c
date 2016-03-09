@@ -150,8 +150,7 @@ nss_dbm_mdToken_GetIsWriteProtected(
 
     if (token->slot->flags & O_RDWR) {
         return CK_FALSE;
-    }
-    else {
+    } else {
         return CK_TRUE;
     }
 }

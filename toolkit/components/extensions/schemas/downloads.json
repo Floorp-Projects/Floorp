@@ -22,7 +22,7 @@
         "id": "FilenameConflictAction",
         "type": "string",
         "enum": [
-          "uniqify",
+          "uniquify",
           "overwrite",
           "prompt"
         ]
@@ -208,13 +208,26 @@
             "type": "boolean"
           }
         }
+      },
+      {
+        "id": "DownloadTime",
+        "description": "A time specified as a Date object, a number of string representing milliseconds since the epoch, or an ISO 8601 string",
+        "choices": [
+          {
+            "type": "string",
+            "pattern": "^[1-9]\\d*$"
+          },
+          {
+            "$ref": "extensionTypes.Date"
+          }
+        ]
       }
     ],
     "functions": [
       {
         "name": "download",
         "type": "function",
-        "unsupported": true,
+        "async": "callback",
         "description": "Download a URL. If the URL uses the HTTP[S] protocol, then the request will include all cookies currently set for its hostname. If both <code>filename</code> and <code>saveAs</code> are specified, then the Save As dialog will be displayed, pre-populated with the specified <code>filename</code>. If the download started successfully, <code>callback</code> will be called with the new <a href='#type-DownloadItem'>DownloadItem</a>'s <code>downloadId</code>. If there was an error starting the download, then <code>callback</code> will be called with <code>downloadId=undefined</code> and <a href='extension.html#property-lastError'>chrome.extension.lastError</a> will contain a descriptive string. The error strings are not guaranteed to remain backwards compatible between releases. You must not parse it.",
         "parameters": [
           {
@@ -224,7 +237,8 @@
             "properties": {
               "url": {
                 "description": "The URL to download.",
-                "type": "string"
+                "type": "string",
+                "format": "url"
               },
               "filename": {
                 "description": "A file path relative to the Downloads directory to contain the downloaded file.",
@@ -236,11 +250,13 @@
                 "optional": true
               },
               "saveAs": {
+                "unsupported": true,
                 "description": "Use a file-chooser to allow the user to select a filename.",
                 "optional": true,
                 "type": "boolean"
               },
               "method": {
+                "unsupported": true,
                 "description": "The HTTP method to use if the URL uses the HTTP[S] protocol.",
                 "enum": [
                   "GET",
@@ -250,6 +266,7 @@
                 "type": "string"
               },
               "headers": {
+                "unsupported": true,
                 "optional": true,
                 "type": "array",
                 "description": "Extra HTTP headers to send with the request if the URL uses the HTTP[s] protocol. Each header is represented as a dictionary containing the keys <code>name</code> and either <code>value</code> or <code>binaryValue</code>, restricted to those allowed by XMLHttpRequest.",
@@ -268,6 +285,7 @@
                 }
               },
               "body": {
+                "unsupported": true,
                 "description": "Post body.",
                 "optional": true,
                 "type": "string"
@@ -290,7 +308,7 @@
       {
         "name": "search",
         "type": "function",
-        "unsupported": true,
+        "async": "callback",
         "description": "Find <a href='#type-DownloadItem'>DownloadItems</a>. Set <code>query</code> to the empty object to get all <a href='#type-DownloadItem'>DownloadItems</a>. To get a specific <a href='#type-DownloadItem'>DownloadItem</a>, set only the <code>id</code> field.",
         "parameters": [
           {
@@ -306,22 +324,22 @@
               "startedBefore": {
                 "description": "Limits results to downloads that started before the given ms since the epoch.",
                 "optional": true,
-                "type": "string"
+                "$ref": "DownloadTime"
               },
               "startedAfter": {
                 "description": "Limits results to downloads that started after the given ms since the epoch.",
                 "optional": true,
-                "type": "string"
+                "$ref": "DownloadTime"
               },
               "endedBefore": {
                 "description": "Limits results to downloads that ended before the given ms since the epoch.",
                 "optional": true,
-                "type": "string"
+                "$ref": "DownloadTime"
               },
               "endedAfter": {
                 "description": "Limits results to downloads that ended after the given ms since the epoch.",
                 "optional": true,
-                "type": "string"
+                "$ref": "DownloadTime"
               },
               "totalBytesGreater": {
                 "description": "Limits results to downloads whose totalBytes is greater than the given integer.",
@@ -680,7 +698,6 @@
       {
         "name": "onChanged",
         "description": "When any of a <a href='#type-DownloadItem'>DownloadItem</a>'s properties except <code>bytesReceived</code> changes, this event fires with the <code>downloadId</code> and an object containing the properties that changed.",
-        "unsupported": true,
         "parameters": [
           {
             "name": "downloadDelta",

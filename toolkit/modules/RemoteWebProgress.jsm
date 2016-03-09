@@ -117,6 +117,7 @@ RemoteWebProgressManager.prototype = {
       this._messageManager.removeMessageListener("Content:SecurityChange", this);
       this._messageManager.removeMessageListener("Content:StatusChange", this);
       this._messageManager.removeMessageListener("Content:ProgressChange", this);
+      this._messageManager.removeMessageListener("Content:LoadURIResult", this);
     }
 
     this._browser = aBrowser;
@@ -126,6 +127,7 @@ RemoteWebProgressManager.prototype = {
     this._messageManager.addMessageListener("Content:SecurityChange", this);
     this._messageManager.addMessageListener("Content:StatusChange", this);
     this._messageManager.addMessageListener("Content:ProgressChange", this);
+    this._messageManager.addMessageListener("Content:LoadURIResult", this);
   },
 
   get topLevelWebProgress() {
@@ -211,6 +213,11 @@ RemoteWebProgressManager.prototype = {
     if (isTopLevel) {
       this._browser._contentWindow = objects.contentWindow;
       this._browser._documentContentType = json.documentContentType;
+      this._browser.inLoadURI = json.inLoadURI;
+      if (json.charset) {
+        this._browser._characterSet = json.charset;
+        this._browser._mayEnableCharacterEncodingMenu = json.mayEnableCharacterEncodingMenu;
+      }
     }
 
     switch (aMessage.name) {
@@ -232,11 +239,9 @@ RemoteWebProgressManager.prototype = {
 
       if (isTopLevel) {
         remoteWebNav._currentURI = location;
-        this._browser._characterSet = json.charset;
         this._browser._documentURI = newURI(json.documentURI);
         this._browser._contentTitle = json.title;
         this._browser._imageDocument = null;
-        this._browser._mayEnableCharacterEncodingMenu = json.mayEnableCharacterEncodingMenu;
         this._browser._contentPrincipal = json.principal;
         this._browser._isSyntheticDocument = json.synthetic;
         this._browser._innerWindowID = json.innerWindowID;
@@ -265,6 +270,9 @@ RemoteWebProgressManager.prototype = {
 
     case "Content:ProgressChange":
       this._callProgressListeners("onProgressChange", webProgress, request, json.curSelf, json.maxSelf, json.curTotal, json.maxTotal);
+      break;
+    case "Content:LoadURIResult":
+      this._browser.inLoadURI = false;
       break;
     }
   },

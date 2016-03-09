@@ -24,3 +24,24 @@ SSLInt_IncrementClientHandshakeVersion(PRFileDesc *fd)
 
     return SECSuccess;
 }
+
+PRUint32
+SSLInt_DetermineKEABits(PRUint16 serverKeyBits, SSLAuthType authAlgorithm) {
+    // For ECDSA authentication we expect a curve for key exchange with the
+    // same strength as the one used for the certificate's signature.
+    if (authAlgorithm == ssl_auth_ecdsa) {
+        return serverKeyBits;
+    }
+
+    PORT_Assert(authAlgorithm == ssl_auth_rsa);
+    PRUint32 minKeaBits;
+#ifdef NSS_ECC_MORE_THAN_SUITE_B
+    // P-192 is the smallest curve we want to use.
+    minKeaBits = 192U;
+#else
+    // P-256 is the smallest supported curve.
+    minKeaBits = 256U;
+#endif
+
+    return PR_MAX(SSL_RSASTRENGTH_TO_ECSTRENGTH(serverKeyBits), minKeaBits);
+}

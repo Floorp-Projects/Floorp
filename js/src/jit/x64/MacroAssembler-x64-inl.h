@@ -18,6 +18,18 @@ namespace jit {
 // ===============================================================
 
 void
+MacroAssembler::move64(Imm64 imm, Register64 dest)
+{
+    movq(ImmWord(imm.value), dest.reg);
+}
+
+void
+MacroAssembler::move64(Register64 src, Register64 dest)
+{
+    movq(src.reg, dest.reg);
+}
+
+void
 MacroAssembler::andPtr(Register src, Register dest)
 {
     andq(src, dest);
@@ -32,8 +44,37 @@ MacroAssembler::andPtr(Imm32 imm, Register dest)
 void
 MacroAssembler::and64(Imm64 imm, Register64 dest)
 {
-    movq(ImmWord(uintptr_t(imm.value)), ScratchReg);
-    andq(ScratchReg, dest.reg);
+    if (INT32_MIN <= int64_t(imm.value) && int64_t(imm.value) <= INT32_MAX) {
+        andq(Imm32(imm.value), dest.reg);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        movq(ImmWord(uintptr_t(imm.value)), scratch);
+        andq(scratch, dest.reg);
+    }
+}
+
+void
+MacroAssembler::or64(Imm64 imm, Register64 dest)
+{
+    if (INT32_MIN <= int64_t(imm.value) && int64_t(imm.value) <= INT32_MAX) {
+        orq(Imm32(imm.value), dest.reg);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        movq(ImmWord(uintptr_t(imm.value)), scratch);
+        orq(scratch, dest.reg);
+    }
+}
+
+void
+MacroAssembler::xor64(Imm64 imm, Register64 dest)
+{
+    if (INT32_MIN <= int64_t(imm.value) && int64_t(imm.value) <= INT32_MAX) {
+        xorq(Imm32(imm.value), dest.reg);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        movq(ImmWord(uintptr_t(imm.value)), scratch);
+        xorq(scratch, dest.reg);
+    }
 }
 
 void
@@ -146,6 +187,19 @@ void
 MacroAssembler::subPtr(Imm32 imm, Register dest)
 {
     subq(imm, dest);
+}
+
+void
+MacroAssembler::subPtr(ImmWord imm, Register dest)
+{
+    ScratchRegisterScope scratch(*this);
+    MOZ_ASSERT(dest != scratch);
+    if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {
+        subq(Imm32((int32_t)imm.value), dest);
+    } else {
+        mov(imm, scratch);
+        subq(scratch, dest);
+    }
 }
 
 void
@@ -344,6 +398,13 @@ MacroAssembler::branchTest64(Condition cond, Register64 lhs, Register64 rhs, Reg
     branchTestPtr(cond, lhs.reg, rhs.reg, label);
 }
 
+void
+MacroAssembler::branchTestBooleanTruthy(bool truthy, const ValueOperand& value, Label* label)
+{
+    test32(value.valueReg(), value.valueReg());
+    j(truthy ? NonZero : Zero, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
@@ -354,19 +415,53 @@ MacroAssemblerX64::incrementInt32Value(const Address& addr)
 }
 
 void
-MacroAssemblerX64::branchTestValue(Condition cond, const Address& valaddr, const
-                                   ValueOperand& value, Label* label)
+MacroAssemblerX64::unboxValue(const ValueOperand& src, AnyRegister dest)
 {
-    MOZ_ASSERT(cond == Equal || cond == NotEqual);
-    asMasm().branchPtr(cond, valaddr, value.valueReg(), label);
+    if (dest.isFloat()) {
+        Label notInt32, end;
+        asMasm().branchTestInt32(Assembler::NotEqual, src, &notInt32);
+        convertInt32ToDouble(src.valueReg(), dest.fpu());
+        jump(&end);
+        bind(&notInt32);
+        unboxDouble(src, dest.fpu());
+        bind(&end);
+    } else {
+        unboxNonDouble(src, dest.gpr());
+    }
 }
 
-template <typename T, typename S>
+template <typename T>
 void
-MacroAssemblerX64::branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
+MacroAssemblerX64::loadInt32OrDouble(const T& src, FloatRegister dest)
 {
-    cmpPtr(Operand(lhs), rhs);
-    j(cond, label);
+    Label notInt32, end;
+    asMasm().branchTestInt32(Assembler::NotEqual, src, &notInt32);
+    convertInt32ToDouble(src, dest);
+    jump(&end);
+    bind(&notInt32);
+    loadDouble(src, dest);
+    bind(&end);
+}
+
+// If source is a double, load it into dest. If source is int32,
+// convert it to double. Else, branch to failure.
+void
+MacroAssemblerX64::ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure)
+{
+    Label isDouble, done;
+    Register tag = splitTagForTest(source);
+    asMasm().branchTestDouble(Assembler::Equal, tag, &isDouble);
+    asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
+
+    ScratchRegisterScope scratch(asMasm());
+    unboxInt32(source, scratch);
+    convertInt32ToDouble(scratch, dest);
+    jump(&done);
+
+    bind(&isDouble);
+    unboxDouble(source, dest);
+
+    bind(&done);
 }
 
 } // namespace jit

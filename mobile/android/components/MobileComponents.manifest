@@ -41,11 +41,6 @@ category app-startup SessionStore service,@mozilla.org/browser/sessionstore;1
 component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} ContentPermissionPrompt.js
 contract @mozilla.org/content-permission/prompt;1 {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}
 
-# WebappsUpdateTimer.js
-component {8f7002cb-e959-4f0a-a2e8-563232564385} WebappsUpdateTimer.js
-contract @mozilla.org/webapps-update-timer;1 {8f7002cb-e959-4f0a-a2e8-563232564385}
-category update-timer WebappsUpdateTimer @mozilla.org/webapps-update-timer;1,getService,webapp-background-update-timer,browser.webapps.updateInterval,86400
-
 # PromptService.js
 component {9a61149b-2276-4a0a-b79c-be994ad106cf} PromptService.js
 contract @mozilla.org/prompter;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
@@ -98,12 +93,6 @@ contract @mozilla.org/nsClientAuthDialogs;1 {cbc08081-49b6-4561-9c18-a7707a50bda
 # SiteSpecificUserAgent.js
 component {d5234c9d-0ee2-4b3c-9da3-18be9e5cf7e6} SiteSpecificUserAgent.js
 contract @mozilla.org/dom/site-specific-user-agent;1 {d5234c9d-0ee2-4b3c-9da3-18be9e5cf7e6}
-
-# Payments
-component {3c6c9575-f57e-427b-a8aa-57bc3cbff48f} PaymentsUI.js
-contract @mozilla.org/payment/ui-glue;1 {3c6c9575-f57e-427b-a8aa-57bc3cbff48f}
-component {a497520d-37e7-4f18-8c27-5b8938e9490d} PaymentProviderStrategy.js
-contract @mozilla.org/payment/provider-strategy;1 {a497520d-37e7-4f18-8c27-5b8938e9490d}
 
 # FilePicker.js
 component {18a4e042-7c7c-424b-a583-354e68553a7f} FilePicker.js

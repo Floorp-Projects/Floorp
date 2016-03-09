@@ -8,10 +8,9 @@
 
 const {Cc, Ci, Cu, components} = require("chrome");
 const {isWindowIncluded} = require("devtools/shared/layout/utils");
+const Services = require("Services");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 
 // TODO: Bug 842672 - browser/ imports modules from toolkit/.
 // Note that these are only used in WebConsoleCommands, see $0 and pprint().
@@ -179,58 +178,6 @@ var WebConsoleUtils = {
   {
     return aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
            getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
-  },
-
-  /**
-   * Abbreviates the given source URL so that it can be displayed flush-right
-   * without being too distracting.
-   *
-   * @param string aSourceURL
-   *        The source URL to shorten.
-   * @param object [aOptions]
-   *        Options:
-   *        - onlyCropQuery: boolean that tells if the URL abbreviation function
-   *        should only remove the query parameters and the hash fragment from
-   *        the given URL.
-   * @return string
-   *         The abbreviated form of the source URL.
-   */
-  abbreviateSourceURL:
-  function WCU_abbreviateSourceURL(aSourceURL, aOptions = {})
-  {
-    if (!aOptions.onlyCropQuery && aSourceURL.substr(0, 5) == "data:") {
-      let commaIndex = aSourceURL.indexOf(",");
-      if (commaIndex > -1) {
-        aSourceURL = "data:" + aSourceURL.substring(commaIndex + 1);
-      }
-    }
-
-    // Remove any query parameters.
-    let hookIndex = aSourceURL.indexOf("?");
-    if (hookIndex > -1) {
-      aSourceURL = aSourceURL.substring(0, hookIndex);
-    }
-
-    // Remove any hash fragments.
-    let hashIndex = aSourceURL.indexOf("#");
-    if (hashIndex > -1) {
-      aSourceURL = aSourceURL.substring(0, hashIndex);
-    }
-
-    // Remove a trailing "/".
-    if (aSourceURL[aSourceURL.length - 1] == "/") {
-      aSourceURL = aSourceURL.replace(/\/+$/, "");
-    }
-
-    // Remove all but the last path component.
-    if (!aOptions.onlyCropQuery) {
-      let slashIndex = aSourceURL.lastIndexOf("/");
-      if (slashIndex > -1) {
-        aSourceURL = aSourceURL.substring(slashIndex + 1);
-      }
-    }
-
-    return aSourceURL;
   },
 
   /**
@@ -618,12 +565,11 @@ exports.Utils = WebConsoleUtils;
 // Localization
 //////////////////////////////////////////////////////////////////////////
 
-WebConsoleUtils.l10n = function WCU_l10n(aBundleURI)
-{
-  this._bundleUri = aBundleURI;
+WebConsoleUtils.L10n = function(bundleURI) {
+  this._bundleUri = bundleURI;
 };
 
-WebConsoleUtils.l10n.prototype = {
+WebConsoleUtils.L10n.prototype = {
   _stringBundle: null,
 
   get stringBundle()

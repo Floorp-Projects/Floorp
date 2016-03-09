@@ -285,7 +285,7 @@ private:
   RefPtr<BluetoothSocket> mMnsSocket;
 
   int mBodySegmentLength;
-  nsAutoArrayPtr<uint8_t> mBodySegment;
+  UniquePtr<uint8_t[]> mBodySegment;
 
   /**
    * The bMessage/message-listing data stream for current processing response

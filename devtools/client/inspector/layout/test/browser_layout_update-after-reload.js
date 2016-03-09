@@ -14,7 +14,7 @@ add_task(function*() {
   yield assertLayoutView(inspector, view, testActor);
 
   info("Reload the page");
-  yield testActor.eval("content.location.reload();");
+  yield testActor.reload();
   yield inspector.once("markuploaded");
 
   info("Test that the layout-view works on the reloaded page");

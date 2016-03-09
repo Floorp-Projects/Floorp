@@ -47,7 +47,7 @@ add_task(function* test_register_case() {
     PushService.register({
       scope: 'https://example.net/case',
       originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
     DEFAULT_TIMEOUT,
     'Mixed-case register response timed out'

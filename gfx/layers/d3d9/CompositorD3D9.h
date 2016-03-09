@@ -21,7 +21,7 @@ namespace layers {
 class CompositorD3D9 : public Compositor
 {
 public:
-  CompositorD3D9(PCompositorParent* aParent, nsIWidget *aWidget);
+  CompositorD3D9(CompositorParent* aParent, nsIWidget *aWidget);
   ~CompositorD3D9();
 
   virtual bool Initialize() override;
@@ -64,6 +64,7 @@ public:
   virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
                           const gfx::Rect *aClipRectIn,
                           const gfx::Rect& aRenderBounds,
+                          bool aOpaque,
                           gfx::Rect *aClipRectOut = nullptr,
                           gfx::Rect *aRenderBoundsOut = nullptr) override;
 

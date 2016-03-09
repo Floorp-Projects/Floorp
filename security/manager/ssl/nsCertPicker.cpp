@@ -103,7 +103,8 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
     }
   }
 
-  ScopedCERTCertNicknames nicknames(getNSSCertNicknamesFromCertList(certList.get()));
+  UniqueCERTCertNicknames nicknames(
+    getNSSCertNicknamesFromCertList(certList.get()));
   if (!nicknames) {
     return NS_ERROR_NOT_AVAILABLE;
   }

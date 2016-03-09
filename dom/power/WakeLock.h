@@ -15,7 +15,7 @@
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
 
-class nsIDOMWindow;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {

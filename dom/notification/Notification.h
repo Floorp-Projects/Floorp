@@ -279,7 +279,7 @@ public:
 
   void InitFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aData, ErrorResult& aRv);
 
-  void InitFromBase64(JSContext* aCx, const nsAString& aData, ErrorResult& aRv);
+  void InitFromBase64(const nsAString& aData, ErrorResult& aRv);
 
   void AssertIsOnTargetThread() const
   {

@@ -63,4 +63,6 @@
 #define JSITER_SYMBOLS    0x20  /* also include symbol property keys */
 #define JSITER_SYMBOLSONLY 0x40 /* exclude string property keys */
 
+#define JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED 25
+
 #endif

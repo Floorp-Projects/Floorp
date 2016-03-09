@@ -40,6 +40,23 @@ class Shmem;
 
 namespace layers {
 
+static int sShmemCreationCounter = 0;
+
+static void ResetShmemCounter()
+{
+  sShmemCreationCounter = 0;
+}
+
+static void ShmemAllocated(LayerTransactionChild* aProtocol)
+{
+  sShmemCreationCounter++;
+  if (sShmemCreationCounter > 256) {
+    aProtocol->SendSyncWithCompositor();
+    ResetShmemCounter();
+    MOZ_PERFORMANCE_WARNING("gfx", "The number of shmem allocations is too damn high!");
+  }
+}
+
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
 using namespace mozilla::ipc;
@@ -396,9 +413,9 @@ ShadowLayerForwarder::UseTextures(CompositableClient* aCompositable,
     textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
                                         fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
                                         t.mTimeStamp, t.mPictureRect,
-                                        t.mFrameID, t.mProducerID));
+                                        t.mFrameID, t.mProducerID, t.mInputFrameID));
     if ((t.mTextureClient->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD)
-        && t.mTextureClient->HasInternalBuffer()) {
+        && t.mTextureClient->HasIntermediateBuffer()) {
 
       // We use IMMEDIATE_UPLOAD when we want to be sure that the upload cannot
       // race with updates on the main thread. In this case we want the transaction
@@ -551,6 +568,8 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
                                      bool* aSent)
 {
   *aSent = false;
+
+  ResetShmemCounter();
 
   MOZ_ASSERT(aId);
 
@@ -744,6 +763,8 @@ ShadowLayerForwarder::AllocShmem(size_t aSize,
       !mShadowManager->IPCOpen()) {
     return false;
   }
+
+  ShmemAllocated(mShadowManager);
   return mShadowManager->AllocShmem(aSize, aType, aShmem);
 }
 bool
@@ -756,6 +777,7 @@ ShadowLayerForwarder::AllocUnsafeShmem(size_t aSize,
       !mShadowManager->IPCOpen()) {
     return false;
   }
+  ShmemAllocated(mShadowManager);
   return mShadowManager->AllocUnsafeShmem(aSize, aType, aShmem);
 }
 void

@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+/* import-globals-from ../includes.js */
+
 const { debounce } = require("sdk/lang/functional");
 
 // Globals for d3 stuff

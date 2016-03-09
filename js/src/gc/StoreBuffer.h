@@ -8,7 +8,6 @@
 #define gc_StoreBuffer_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/ReentrancyGuard.h"
 
 #include <algorithm>
@@ -314,8 +313,8 @@ class StoreBuffer
         // overlap.
         void merge(const SlotsEdge& other) {
             MOZ_ASSERT(overlaps(other));
-            auto end = std::max(start_ + count_, other.start_ + other.count_);
-            start_ = std::min(start_, other.start_);
+            auto end = Max(start_ + count_, other.start_ + other.count_);
+            start_ = Min(start_, other.start_);
             count_ = end - start_;
         }
 
@@ -408,13 +407,18 @@ class StoreBuffer
 
     bool aboutToOverflow_;
     bool enabled_;
-    mozilla::DebugOnly<bool> mEntered; /* For ReentrancyGuard. */
+#ifdef DEBUG
+    bool mEntered; /* For ReentrancyGuard. */
+#endif
 
   public:
     explicit StoreBuffer(JSRuntime* rt, const Nursery& nursery)
       : bufferVal(), bufferCell(), bufferSlot(), bufferWholeCell(), bufferGeneric(),
         cancelIonCompilations_(false), runtime_(rt), nursery_(nursery), aboutToOverflow_(false),
-        enabled_(false), mEntered(false)
+        enabled_(false)
+#ifdef DEBUG
+        , mEntered(false)
+#endif
     {
     }
 

@@ -90,6 +90,21 @@ class DownloadsIntegration : public mozilla::jni::ObjectBase<DownloadsIntegratio
 public:
     explicit DownloadsIntegration(const Context& ctx) : ObjectBase<DownloadsIntegration, jobject>(ctx) {}
 
+    struct GetTemporaryDownloadDirectory_t {
+        typedef DownloadsIntegration Owner;
+        typedef mozilla::jni::String::LocalRef ReturnType;
+        typedef mozilla::jni::String::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getTemporaryDownloadDirectory";
+        static constexpr char signature[] =
+                "()Ljava/lang/String;";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto GetTemporaryDownloadDirectory() -> mozilla::jni::String::LocalRef;
+
     struct ScanMedia_t {
         typedef DownloadsIntegration Owner;
         typedef void ReturnType;
@@ -1597,6 +1612,22 @@ public:
 
     auto NotifyIMEContext(int32_t, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) const -> void;
 
+    struct OnDefaultKeyEvent_t {
+        typedef GeckoEditable Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "onDefaultKeyEvent";
+        static constexpr char signature[] =
+                "(Landroid/view/KeyEvent;)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto OnDefaultKeyEvent(mozilla::jni::Object::Param) const -> void;
+
     struct OnImeAcknowledgeFocus_t {
         typedef GeckoEditable Owner;
         typedef void ReturnType;
@@ -1691,10 +1722,11 @@ public:
                 int32_t,
                 int32_t,
                 int32_t,
-                bool> Args;
+                bool,
+                mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "onKeyEvent";
         static constexpr char signature[] =
-                "(IIIIJIIIIIZ)V";
+                "(IIIIJIIIIIZLandroid/view/KeyEvent;)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -1762,9 +1794,17 @@ class GeckoEditableListener : public mozilla::jni::ObjectBase<GeckoEditableListe
 public:
     explicit GeckoEditableListener(const Context& ctx) : ObjectBase<GeckoEditableListener, jobject>(ctx) {}
 
+    static const int32_t NOTIFY_IME_OF_BLUR = 2;
+
+    static const int32_t NOTIFY_IME_OF_FOCUS = 1;
+
     static const int32_t NOTIFY_IME_OPEN_VKB = -2;
 
     static const int32_t NOTIFY_IME_REPLY_EVENT = -1;
+
+    static const int32_t NOTIFY_IME_TO_CANCEL_COMPOSITION = 9;
+
+    static const int32_t NOTIFY_IME_TO_COMMIT_COMPOSITION = 8;
 
     static const bool isMultithreaded = false;
 
@@ -3369,6 +3409,27 @@ public:
     };
 
     auto SyncViewportInfo(int32_t, int32_t, int32_t, int32_t, float, bool, int32_t) const -> mozilla::jni::Object::LocalRef;
+
+    struct SynthesizeNativeTouchPoint_t {
+        typedef GeckoLayerClient Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                double,
+                int32_t> Args;
+        static constexpr char name[] = "synthesizeNativeTouchPoint";
+        static constexpr char signature[] =
+                "(IIIIDI)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto SynthesizeNativeTouchPoint(int32_t, int32_t, int32_t, int32_t, double, int32_t) const -> void;
 
     static const bool isMultithreaded = true;
 

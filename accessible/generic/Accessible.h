@@ -396,6 +396,11 @@ public:
   virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild);
   virtual bool RemoveChild(Accessible* aChild);
 
+  /**
+   * Reallocates the child withing its parent.
+   */
+  void MoveChild(uint32_t aNewIndex, Accessible* aChild);
+
   //////////////////////////////////////////////////////////////////////////////
   // Accessible tree traverse methods
 
@@ -490,14 +495,10 @@ public:
   virtual nsresult HandleAccEvent(AccEvent* aAccEvent);
 
   /**
-   * Return true if this accessible allows accessible children from anonymous subtree.
-   */
-  virtual bool CanHaveAnonChildren();
-
-  /**
    * Return true if the accessible is an acceptable child.
    */
-  virtual bool IsAcceptableChild(Accessible* aPossibleChild) const { return true; }
+  virtual bool IsAcceptableChild(nsIContent* aEl) const
+    { return true; }
 
   /**
    * Returns text of accessible if accessible has text role otherwise empty
@@ -567,6 +568,8 @@ public:
     return mContent->IsAnyOfHTMLElements(nsGkAtoms::abbr, nsGkAtoms::acronym);
   }
 
+  bool IsAlert() const { return HasGenericType(eAlert); }
+
   bool IsApplication() const { return mType == eApplicationType; }
   ApplicationAccessible* AsApplication();
 
@@ -587,6 +590,7 @@ public:
   HyperTextAccessible* AsHyperText();
 
   bool IsHTMLBr() const { return mType == eHTMLBRType; }
+  bool IsHTMLCaption() const { return mType == eHTMLCaptionType; }
   bool IsHTMLCombobox() const { return mType == eHTMLComboboxType; }
   bool IsHTMLFileInput() const { return mType == eHTMLFileInputType; }
 
@@ -926,6 +930,12 @@ public:
   }
 
   /**
+   * Return true if the accessible doesn't allow accessible children from XBL
+   * anonymous subtree.
+   */
+  bool NoXBLKids() { return mStateFlags & eNoXBLKids; }
+
+  /**
    * Return true if this accessible has a parent whose name depends on this
    * accessible.
    */
@@ -938,6 +948,11 @@ public:
    */
   bool IsARIAHidden() const { return mContextFlags & eARIAHidden; }
   void SetARIAHidden(bool aIsDefined);
+
+  /**
+   * Return true if the element is inside an alert.
+   */
+  bool IsInsideAlert() const { return mContextFlags & eInsideAlert; }
 
 protected:
   virtual ~Accessible();
@@ -1016,8 +1031,9 @@ protected:
     eIgnoreDOMUIEvent = 1 << 7, // don't process DOM UI events for a11y events
     eSurvivingInUpdate = 1 << 8, // parent drops children to recollect them
     eRelocated = 1 << 9, // accessible was moved in tree
+    eNoXBLKids = 1 << 10, // accessible don't allows XBL children
 
-    eLastStateFlag = eRelocated
+    eLastStateFlag = eNoXBLKids
   };
 
   /**
@@ -1026,8 +1042,9 @@ protected:
   enum ContextFlags {
     eHasNameDependentParent = 1 << 0, // Parent's name depends on this accessible.
     eARIAHidden = 1 << 1,
+    eInsideAlert = 1 << 2,
 
-    eLastContextFlag = eARIAHidden
+    eLastContextFlag = eInsideAlert
   };
 
 protected:
@@ -1132,10 +1149,10 @@ protected:
   int32_t mIndexInParent;
 
   static const uint8_t kChildrenFlagsBits = 2;
-  static const uint8_t kStateFlagsBits = 10;
-  static const uint8_t kContextFlagsBits = 2;
+  static const uint8_t kStateFlagsBits = 11;
+  static const uint8_t kContextFlagsBits = 3;
   static const uint8_t kTypeBits = 6;
-  static const uint8_t kGenericTypesBits = 14;
+  static const uint8_t kGenericTypesBits = 15;
 
   /**
    * Keep in sync with ChildrenFlags, StateFlags, ContextFlags, and AccTypes.

@@ -653,7 +653,7 @@ protected:
   typedef mozilla::ipc::DaemonNotificationRunnable9<
     NotificationHandlerWrapper, void,
     int, int, BluetoothAddress, BluetoothAttributeHandle,
-    int, int, nsAutoArrayPtr<uint8_t>, bool, bool,
+    int, int, UniquePtr<uint8_t[]>, bool, bool,
     int, int, const BluetoothAddress&, const BluetoothAttributeHandle&,
     int, int, const uint8_t*, bool, bool>
     ServerRequestWriteNotification;

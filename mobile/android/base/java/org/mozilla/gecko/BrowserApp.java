@@ -33,7 +33,6 @@ import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.HomeBanner;
-import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.home.HomeConfigPrefsBackend;
 import org.mozilla.gecko.home.HomePager;
@@ -154,6 +153,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -161,6 +162,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.Vector;
+import java.util.regex.Pattern;
 
 public class BrowserApp extends GeckoApp
                         implements TabsPanel.TabsLayoutChangeListener,
@@ -179,9 +181,13 @@ public class BrowserApp extends GeckoApp
 
     private static final int TABS_ANIMATION_DURATION = 450;
 
-    private static final String ADD_SHORTCUT_TOAST = "add_shortcut_toast";
     public static final String GUEST_BROWSING_ARG = "--guest";
-    public static final String INTENT_KEY_SWITCHBOARD_UUID = "switchboard-uuid";
+
+    // Intent String extras used to specify custom Switchboard configurations.
+    private static final String INTENT_KEY_SWITCHBOARD_UUID = "switchboard-uuid";
+    private static final String INTENT_KEY_SWITCHBOARD_HOST = "switchboard-host";
+
+    private static final String DEFAULT_SWITCHBOARD_HOST = "switchboard.services.mozilla.com";
 
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
 
@@ -193,7 +199,7 @@ public class BrowserApp extends GeckoApp
 
     @RobocopTarget
     public static final String EXTRA_SKIP_STARTPANE = "skipstartpane";
-    private static final String HONEYCOMB_EOL_NOTIFIED = "honeycomb_eol_notified";
+    private static final String EOL_NOTIFIED = "eol_notified";
 
     private BrowserSearch mBrowserSearch;
     private View mBrowserSearchContainer;
@@ -424,7 +430,7 @@ public class BrowserApp extends GeckoApp
     }
 
     private void showBookmarkRemovedSnackbar() {
-        SnackbarHelper.showSnackbar(this, getResources().getString(R.string.bookmark_removed), Snackbar.LENGTH_SHORT);
+        SnackbarHelper.showSnackbar(this, getResources().getString(R.string.bookmark_removed), Snackbar.LENGTH_LONG);
     }
 
     private void showSwitchToReadingListSnackbar(String message) {
@@ -456,7 +462,7 @@ public class BrowserApp extends GeckoApp
     public void onRemovedFromReadingList(String url) {
         SnackbarHelper.showSnackbar(this,
                 getResources().getString(R.string.reading_list_removed),
-                Snackbar.LENGTH_SHORT);
+                Snackbar.LENGTH_LONG);
     }
 
     @Override
@@ -587,20 +593,7 @@ public class BrowserApp extends GeckoApp
 
         final Context appContext = getApplicationContext();
 
-        if (AppConstants.MOZ_SWITCHBOARD) {
-            // Initializes the default URLs the first time.
-            SwitchBoard.initDefaultServerUrls("https://switchboard-server.dev.mozaws.net/urls", "https://switchboard-server.dev.mozaws.net/v1", true);
-
-            final String switchboardUUID = ContextUtils.getStringExtra(intent, INTENT_KEY_SWITCHBOARD_UUID);
-            SwitchBoard.setUUIDFromExtra(switchboardUUID);
-
-            // Looks at the server if there are changes in the server URL that should be used in the future
-            new AsyncConfigLoader(this, AsyncConfigLoader.UPDATE_SERVER, switchboardUUID).execute();
-
-            // Loads the actual config. This can be done on app start or on app onResume() depending
-            // how often you want to update the config.
-            new AsyncConfigLoader(this, AsyncConfigLoader.CONFIG_SERVER, switchboardUUID).execute();
-        }
+        initSwitchboard(intent);
 
         mBrowserChrome = (ViewGroup) findViewById(R.id.browser_chrome);
         mActionBarFlipper = (ViewFlipper) findViewById(R.id.browser_actionbar);
@@ -679,6 +672,7 @@ public class BrowserApp extends GeckoApp
         mMediaCastingBar = (MediaCastingBar) findViewById(R.id.media_casting);
 
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
+            "Gecko:DelayedStartup",
             "Menu:Open",
             "Menu:Update",
             "LightweightTheme:Update",
@@ -695,7 +689,6 @@ public class BrowserApp extends GeckoApp
             "Feedback:OpenPlayStore",
             "Menu:Add",
             "Menu:Remove",
-            "Reader:Share",
             "Sanitize:ClearHistory",
             "Sanitize:ClearSyncedTabs",
             "Settings:Show",
@@ -755,9 +748,24 @@ public class BrowserApp extends GeckoApp
         // Watch for screenshots while browser is in foreground.
         mScreenshotObserver.setListener(getContext(), new ScreenshotObserver.OnScreenshotListener() {
             @Override
-            public void onScreenshotTaken(String data, String title) {
+            public void onScreenshotTaken(final String screenshotPath, final String title) {
                 // Treat screenshots as a sharing method.
                 Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.BUTTON, "screenshot");
+
+                if (!AppConstants.SCREENSHOTS_IN_BOOKMARKS_ENABLED) {
+                    return;
+                }
+
+                final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+                if (selectedTab == null) {
+                    Log.w(LOGTAG, "Selected tab is null: could not page info to store screenshot.");
+                    return;
+                }
+
+                getProfile().getDB().getUrlAnnotations().insertScreenshot(
+                        getContentResolver(), selectedTab.getURL(), screenshotPath);
+                SnackbarHelper.showSnackbar(BrowserApp.this,
+                        getResources().getString(R.string.screenshot_added_to_bookmarks), Snackbar.LENGTH_SHORT);
             }
         });
 
@@ -781,6 +789,41 @@ public class BrowserApp extends GeckoApp
         }
     }
 
+    /**
+     * Initializes the default Switchboard URLs the first time.
+     * @param intent
+     */
+    private void initSwitchboard(Intent intent) {
+        if (Experiments.isDisabled(new SafeIntent(intent)) || !AppConstants.MOZ_SWITCHBOARD) {
+            return;
+        }
+
+        final String hostExtra = ContextUtils.getStringExtra(intent, INTENT_KEY_SWITCHBOARD_HOST);
+        final String host = TextUtils.isEmpty(hostExtra) ? DEFAULT_SWITCHBOARD_HOST : hostExtra;
+
+        final String configServerUpdateUrl;
+        final String configServerUrl;
+        try {
+            configServerUpdateUrl = new URL("https", host, "urls").toString();
+            configServerUrl = new URL("https", host, "v1").toString();
+        } catch (MalformedURLException e) {
+            Log.e(LOGTAG, "Error creating Switchboard server URL", e);
+            return;
+        }
+
+        SwitchBoard.initDefaultServerUrls(configServerUpdateUrl, configServerUrl, true);
+
+        final String switchboardUUID = ContextUtils.getStringExtra(intent, INTENT_KEY_SWITCHBOARD_UUID);
+        SwitchBoard.setUUIDFromExtra(switchboardUUID);
+
+        // Looks at the server if there are changes in the server URL that should be used in the future
+        new AsyncConfigLoader(this, AsyncConfigLoader.UPDATE_SERVER, switchboardUUID).execute();
+
+        // Loads the actual config. This can be done on app start or on app onResume() depending
+        // how often you want to update the config.
+        new AsyncConfigLoader(this, AsyncConfigLoader.CONFIG_SERVER, switchboardUUID).execute();
+    }
+
     private void showUpdaterPermissionSnackbar() {
         SnackbarHelper.SnackbarCallback allowCallback = new SnackbarHelper.SnackbarCallback() {
             @Override
@@ -798,11 +841,11 @@ public class BrowserApp extends GeckoApp
                 allowCallback);
     }
 
-    private void conditionallyNotifyHCEOL() {
+    private void conditionallyNotifyEOL() {
         final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
         try {
             final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
-            if (!prefs.getBoolean(HONEYCOMB_EOL_NOTIFIED, false)) {
+            if (!prefs.contains(EOL_NOTIFIED)) {
 
                 // Launch main App to load SUMO url on EOL notification.
                 final String link = getString(R.string.eol_notification_url,
@@ -824,12 +867,12 @@ public class BrowserApp extends GeckoApp
                         .build();
 
                 final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                final int notificationID = HONEYCOMB_EOL_NOTIFIED.hashCode();
+                final int notificationID = EOL_NOTIFIED.hashCode();
                 notificationManager.notify(notificationID, notification);
 
                 GeckoSharedPrefs.forProfile(this)
                                 .edit()
-                                .putBoolean(HONEYCOMB_EOL_NOTIFIED, true)
+                                .putBoolean(EOL_NOTIFIED, true)
                                 .apply();
             }
         } finally {
@@ -1391,6 +1434,7 @@ public class BrowserApp extends GeckoApp
         }
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
+            "Gecko:DelayedStartup",
             "Menu:Open",
             "Menu:Update",
             "LightweightTheme:Update",
@@ -1407,7 +1451,6 @@ public class BrowserApp extends GeckoApp
             "Feedback:OpenPlayStore",
             "Menu:Add",
             "Menu:Remove",
-            "Reader:Share",
             "Sanitize:ClearHistory",
             "Sanitize:ClearSyncedTabs",
             "Settings:Show",
@@ -1728,11 +1771,6 @@ public class BrowserApp extends GeckoApp
                     removeAddonMenuItem(id);
                 }
             });
-
-        } else if ("Reader:Share".equals(event)) {
-            final String title = message.getString("title");
-            final String url = message.getString("url");
-            GeckoAppShell.openUriExternal(url, "text/plain", "", "", Intent.ACTION_SEND, title, false);
         } else if ("Sanitize:ClearHistory".equals(event)) {
             handleClearHistory(message.optBoolean("clearSearchHistory", false));
             callback.sendSuccess(true);
@@ -2016,7 +2054,7 @@ public class BrowserApp extends GeckoApp
         if (Tabs.getInstance().getDisplayCount() == 0)
             return;
 
-        hideFirstrunPager(TelemetryContract.Method.TABSTRAY);
+        hideFirstrunPager(TelemetryContract.Method.BUTTON);
 
         if (ensureTabsPanelExists()) {
             // If we've just inflated the tabs panel, only show it once the current
@@ -2433,6 +2471,11 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
+        // Filter out URLs and long suggestions
+        if (query.length() > 50 || Pattern.matches("^(https?|ftp|file)://.*", query)) {
+            return;
+        }
+
         final GeckoProfile profile = getProfile();
         // Don't bother storing search queries in guest mode
         if (profile.inGuestMode()) {
@@ -2519,8 +2562,8 @@ public class BrowserApp extends GeckoApp
             onCreateOptionsMenu(mMenu);
         }
 
-        if (!Versions.preHC && !Versions.feature14Plus) {
-            conditionallyNotifyHCEOL();
+        if (!Versions.feature14Plus) {
+            conditionallyNotifyEOL();
         }
     }
 
@@ -3126,6 +3169,7 @@ public class BrowserApp extends GeckoApp
         }
 
         Tab tab = Tabs.getInstance().getSelectedTab();
+        // Unlike other menu items, the bookmark star is not tinted. See {@link ThemedImageButton#setTintedDrawable}.
         final MenuItem bookmark = aMenu.findItem(R.id.bookmark);
         final MenuItem reader = aMenu.findItem(R.id.reading_list);
         final MenuItem back = aMenu.findItem(R.id.back);
@@ -3359,7 +3403,7 @@ public class BrowserApp extends GeckoApp
 
     private int resolveBookmarkIconID(final boolean isBookmark) {
         if (isBookmark) {
-            return R.drawable.ic_menu_bookmark_remove;
+            return R.drawable.star_blue;
         } else {
             return R.drawable.ic_menu_bookmark_add;
         }
@@ -3979,6 +4023,9 @@ public class BrowserApp extends GeckoApp
         final SharedPreferences sharedPrefs = GeckoSharedPrefs.forProfileName(this, profile.getName());
         final int seq = sharedPrefs.getInt(TelemetryConstants.PREF_SEQ_COUNT, 1);
 
+        // We store synchronously before sending the Intent to ensure this sequence number will not be re-used.
+        sharedPrefs.edit().putInt(TelemetryConstants.PREF_SEQ_COUNT, seq + 1).commit();
+
         final Intent i = new Intent(TelemetryConstants.ACTION_UPLOAD_CORE);
         i.setClass(this, TelemetryUploadService.class);
         i.putExtra(TelemetryConstants.EXTRA_DOC_ID, UUID.randomUUID().toString());
@@ -3986,9 +4033,6 @@ public class BrowserApp extends GeckoApp
         i.putExtra(TelemetryConstants.EXTRA_PROFILE_PATH, profile.getDir().toString());
         i.putExtra(TelemetryConstants.EXTRA_SEQ, seq);
         startService(i);
-
-        // Intent redelivery will ensure this value gets used - see TelemetryUploadService class comments for details.
-        sharedPrefs.edit().putInt(TelemetryConstants.PREF_SEQ_COUNT, seq + 1).apply();
     }
 
     public static interface TabStripInterface {
@@ -4000,13 +4044,16 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override
-    protected StartupAction getStartupAction(final String passedURL) {
+    protected StartupAction getStartupAction(final String passedURL, final String action) {
         final boolean inGuestMode = GeckoProfile.get(this).inGuestMode();
         if (inGuestMode) {
             return StartupAction.GUEST;
         }
         if (Restrictions.isRestrictedProfile(this)) {
             return StartupAction.RESTRICTED;
+        }
+        if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
+            return StartupAction.SHORTCUT;
         }
         return (passedURL == null ? StartupAction.NORMAL : StartupAction.URL);
     }

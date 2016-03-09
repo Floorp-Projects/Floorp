@@ -115,7 +115,6 @@ public:
   virtual a11y::role NativeRole() override;
   virtual uint64_t NativeState() override;
   virtual uint64_t NativeInteractiveState() const override;
-  virtual bool CanHaveAnonChildren() override;
 
   // Actions
   virtual void ActionNameAt(uint8_t index, nsAString& aName) override;

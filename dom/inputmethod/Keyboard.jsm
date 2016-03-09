@@ -151,7 +151,7 @@ this.Keyboard = {
       }
     } else {
       // Ignore notifications that aren't from a BrowserOrApp
-      if (!frameLoader.ownerIsBrowserOrAppFrame) {
+      if (!frameLoader.ownerIsMozBrowserOrAppFrame) {
         return;
       }
       this.initFormsFrameScript(mm);

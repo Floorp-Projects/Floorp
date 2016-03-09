@@ -6,6 +6,8 @@
 
 #include "jit/mips-shared/MacroAssembler-mips-shared.h"
 
+#include "jit/MacroAssembler.h"
+
 using namespace js;
 using namespace jit;
 
@@ -441,10 +443,38 @@ MacroAssemblerMIPSShared::ma_b(Register lhs, ImmPtr imm, Label* l, Condition c, 
     asMasm().ma_b(lhs, ImmWord(uintptr_t(imm.value)), l, c, jumpKind);
 }
 
+template <typename T>
+void
+MacroAssemblerMIPSShared::ma_b(Register lhs, T rhs, wasm::JumpTarget target, Condition c,
+                               JumpKind jumpKind)
+{
+    Label label;
+    ma_b(lhs, rhs, &label, c, jumpKind);
+    bindLater(&label, target);
+}
+
+template void MacroAssemblerMIPSShared::ma_b<Register>(Register lhs, Register rhs,
+                                                       wasm::JumpTarget target, Condition c,
+                                                       JumpKind jumpKind);
+template void MacroAssemblerMIPSShared::ma_b<Imm32>(Register lhs, Imm32 rhs,
+                                                       wasm::JumpTarget target, Condition c,
+                                                       JumpKind jumpKind);
+template void MacroAssemblerMIPSShared::ma_b<ImmTag>(Register lhs, ImmTag rhs,
+                                                       wasm::JumpTarget target, Condition c,
+                                                       JumpKind jumpKind);
+
 void
 MacroAssemblerMIPSShared::ma_b(Label* label, JumpKind jumpKind)
 {
     asMasm().branchWithCode(getBranchCode(BranchIsJump), label, jumpKind);
+}
+
+void
+MacroAssemblerMIPSShared::ma_b(wasm::JumpTarget target, JumpKind jumpKind)
+{
+    Label label;
+    asMasm().branchWithCode(getBranchCode(BranchIsJump), &label, jumpKind);
+    bindLater(&label, target);
 }
 
 Assembler::Condition
@@ -1061,6 +1091,14 @@ MacroAssemblerMIPSShared::atomicExchange(int nbytes, bool signExtend, const Base
 
 //{{{ check_macroassembler_style
 // ===============================================================
+// MacroAssembler high-level usage.
+
+void
+MacroAssembler::flush()
+{
+}
+
+// ===============================================================
 // Stack manipulation functions.
 
 void
@@ -1143,35 +1181,47 @@ MacroAssembler::call(Label* label)
 CodeOffset
 MacroAssembler::callWithPatch()
 {
-    addLongJump(nextOffset());
-    ma_liPatchable(ScratchRegister, ImmWord(0));
-    return call(ScratchRegister);
+    as_bal(BOffImm16(0));
+    as_nop();
+    return CodeOffset(currentOffset());
 }
 
 void
 MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
 {
-    BufferOffset li(callerOffset - Assembler::PatchWrite_NearCallSize());
-    Assembler::PatchInstructionImmediate((uint8_t*)editSrc(li),
-                                         PatchedImmPtr((const void*)calleeOffset));
+    BufferOffset call(callerOffset - 2 * sizeof(uint32_t));
+    InstImm* bal = (InstImm*)editSrc(call);
+    bal->setBOffImm16(BufferOffset(calleeOffset).diffB<BOffImm16>(call));
 }
 
 CodeOffset
 MacroAssembler::thunkWithPatch()
 {
-    MOZ_CRASH("NYI");
+    ma_move(SecondScratchReg, ra);
+    as_bal(BOffImm16(3 * sizeof(uint32_t)));
+    as_lw(ScratchRegister, ra, 0);
+    // Allocate space which will be patched by patchThunk().
+    CodeOffset u32Offset(currentOffset());
+    writeInst(UINT32_MAX);
+    addPtr(ra, ScratchRegister);
+    as_jr(ScratchRegister);
+    ma_move(ra, SecondScratchReg);
+    return u32Offset;
 }
 
 void
-MacroAssembler::patchThunk(uint32_t callerOffset, uint32_t calleeOffset)
+MacroAssembler::patchThunk(uint32_t u32Offset, uint32_t targetOffset)
 {
-    MOZ_CRASH("NYI");
+    uint32_t* u32 = reinterpret_cast<uint32_t*>(editSrc(BufferOffset(u32Offset)));
+    MOZ_ASSERT(*u32 == UINT32_MAX);
+    *u32 = targetOffset - u32Offset;
 }
 
 void
-MacroAssembler::repatchThunk(uint8_t* code, uint32_t callerOffset, uint32_t calleeOffset)
+MacroAssembler::repatchThunk(uint8_t* code, uint32_t u32Offset, uint32_t targetOffset)
 {
-    MOZ_CRASH("NYI");
+    uint32_t* u32 = reinterpret_cast<uint32_t*>(code + u32Offset);
+    *u32 = targetOffset - u32Offset;
 }
 
 void
@@ -1237,6 +1287,21 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
 
     addCodeLabel(cl);
     return retAddr;
+}
+
+void
+MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
+                                        Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(ptr != temp);
+    MOZ_ASSERT(ptr != SecondScratchReg);
+
+    const Nursery& nursery = GetJitContext()->runtime->gcNursery();
+    movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
+    addPtr(ptr, SecondScratchReg);
+    branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
+              SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }
 
 //}}} check_macroassembler_style

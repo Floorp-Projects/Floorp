@@ -43,7 +43,7 @@ Transaction.prototype = {
 };
 
 
-function LoginManagerStorage_mozStorage() { };
+function LoginManagerStorage_mozStorage() { }
 
 LoginManagerStorage_mozStorage.prototype = {
 
@@ -1017,10 +1017,12 @@ LoginManagerStorage_mozStorage.prototype = {
       } else if (version != DB_VERSION) {
         this._dbMigrate(version);
       }
-    } catch (e if e.result == Cr.NS_ERROR_FILE_CORRUPTED) {
-      // Database is corrupted, so we backup the database, then throw
-      // causing initialization to fail and a new db to be created next use
-      this._dbCleanup(true);
+    } catch (e) {
+      if (e.result == Cr.NS_ERROR_FILE_CORRUPTED) {
+        // Database is corrupted, so we backup the database, then throw
+        // causing initialization to fail and a new db to be created next use
+        this._dbCleanup(true);
+      }
       throw e;
     }
 

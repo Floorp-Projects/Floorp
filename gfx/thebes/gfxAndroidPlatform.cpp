@@ -414,23 +414,6 @@ gfxAndroidPlatform::RequiresLinearZoom()
     return gfxPlatform::RequiresLinearZoom();
 }
 
-bool
-gfxAndroidPlatform::UseAcceleratedSkiaCanvas()
-{
-    return HaveChoiceOfHWAndSWCanvas() && gfxPlatform::UseAcceleratedSkiaCanvas();
-}
-
-bool gfxAndroidPlatform::HaveChoiceOfHWAndSWCanvas()
-{
-#ifdef MOZ_WIDGET_ANDROID
-    if (!AndroidBridge::Bridge() || AndroidBridge::Bridge()->GetAPIVersion() < 11) {
-        // It's slower than software due to not having a compositing fast path
-        return false;
-    }
-#endif
-    return gfxPlatform::HaveChoiceOfHWAndSWCanvas();
-}
-
 #ifdef MOZ_WIDGET_GONK
 class GonkVsyncSource final : public VsyncSource
 {

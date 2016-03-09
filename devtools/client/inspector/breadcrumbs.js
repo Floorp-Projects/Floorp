@@ -8,7 +8,7 @@
 
 const {Cu, Ci} = require("chrome");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+const Services = require("Services");
 const promise = require("promise");
 
 const ENSURE_SELECTION_VISIBLE_DELAY = 50; // ms

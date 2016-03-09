@@ -2339,7 +2339,11 @@ CanOptimizeForDenseStorage(HandleObject arr, uint32_t startingIndex, uint32_t co
      * visited.  See bug 690622.
      */
     ObjectGroup* arrGroup = arr->getGroup(cx);
-    if (MOZ_UNLIKELY(!arrGroup || arrGroup->hasAllFlags(OBJECT_FLAG_ITERATED)))
+    if (!arrGroup) {
+        cx->recoverFromOutOfMemory();
+        return false;
+    }
+    if (MOZ_UNLIKELY(arrGroup->hasAllFlags(OBJECT_FLAG_ITERATED)))
         return false;
 
     /*
@@ -3673,6 +3677,20 @@ js::NewCopiedArrayForCallingAllocationSite(JSContext* cx, const Value* vp, size_
     if (!group)
         return nullptr;
     return NewCopiedArrayTryUseGroup(cx, group, vp, length);
+}
+
+bool
+js::NewValuePair(JSContext* cx, const Value& val1, const Value& val2, MutableHandleValue rval)
+{
+    JS::AutoValueArray<2> vec(cx);
+    vec[0].set(val1);
+    vec[1].set(val2);
+
+    JSObject* aobj = js::NewDenseCopiedArray(cx, 2, vec.begin());
+    if (!aobj)
+        return false;
+    rval.setObject(*aobj);
+    return true;
 }
 
 #ifdef DEBUG

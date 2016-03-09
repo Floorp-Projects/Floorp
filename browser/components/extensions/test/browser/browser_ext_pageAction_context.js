@@ -82,6 +82,8 @@ function* runTests(options) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: options.manifest,
 
+    files: options.files || {},
+
     background: `(${background})(${options.getTests})`,
   });
 
@@ -154,11 +156,27 @@ add_task(function* testTabSwitchContext() {
 
       "page_action": {
         "default_icon": "default.png",
-        "default_popup": "default.html",
-        "default_title": "Default Title \u263a",
+        "default_popup": "__MSG_popup__",
+        "default_title": "Default __MSG_title__ \u263a",
       },
 
+      "default_locale": "en",
+
       "permissions": ["tabs"],
+    },
+
+    "files": {
+      "_locales/en/messages.json": {
+        "popup": {
+          "message": "default.html",
+          "description": "Popup",
+        },
+
+        "title": {
+          "message": "Title",
+          "description": "Title",
+        },
+      },
     },
 
     getTests(tabs) {

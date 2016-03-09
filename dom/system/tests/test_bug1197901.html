@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1197901
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1197901</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1197901 **/
+  SimpleTest.requestFlakyTimeout("requestFlakyTimeout is silly");
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    SimpleTest.waitForFocus(function() {
+      SpecialPowers.pushPrefEnv({"set": [['device.sensors.test.events', true]]},
+                                doTest); 
+      }, window);
+  }
+
+  function doTest() {
+    window.onmessage = function(event) {
+      ok(event.data.result, event.data.message);
+    }
+
+    // Only same-origin iframe should get the events.
+    var xo = document.getElementById("cross-origin");
+    xo.contentWindow.postMessage(
+      { command: "addEventListener",
+        expected: false,
+        message: "Cross-origin iframe shouldn't get the sensor events."},
+      "*");
+
+    var so = document.getElementById("same-origin");
+    so.contentWindow.postMessage(
+      { command: "addEventListener",
+        expected: true,
+        message: "Same-origin iframe should get the sensor events." },
+      "*");
+
+    // We need a timeout here to check that something does not happen.
+    setTimeout(function() {
+      so.parentNode.removeChild(so);
+      xo.parentNode.removeChild(xo);
+      doWindowTest();
+    }, 500);
+  }
+
+  function doWindowTest() {
+    var win = window.open("file_bug1197901.html", "w1", "height=100,width=100");
+    win.onload = function() {
+      win.focus();
+      SimpleTest.waitForFocus(function() {
+        var win2 = window.open("file_bug1197901.html", "w2", "height=100,width=100,left=100");
+        win2.onload = function() {
+          win2.focus();
+          SimpleTest.waitForFocus(function() {
+            // Only focused window should get the events.
+            win.postMessage(
+              { command: "addEventListener",
+                expected: false,
+                message: "Only focused window should get the sensor events." },
+              "*");
+            win2.postMessage(
+              { command: "addEventListener",
+                expected: true,
+                message: "Focused window should get the sensor events." },
+              "*");
+            setTimeout(function() {
+              window.onmessage = null;
+              win.close();
+              win2.close();
+              SimpleTest.finish();
+            }, 500);
+          }, win2);
+        }
+      }, win);
+    }
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<iframe src="file_bug1197901.html" id="same-origin"></iframe>
+<iframe src="http://example.com/tests/dom/system/tests/file_bug1197901.html" id="cross-origin"></iframe>
+</body>
+</html>

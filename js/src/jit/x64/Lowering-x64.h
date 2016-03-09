@@ -23,8 +23,8 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
     void defineUntypedPhi(MPhi* phi, size_t lirIndex);
 
-    // Adds a use at operand |n| of a value-typed insturction.
-    void useBoxFixed(LInstruction* lir, size_t n, MDefinition* mir, Register reg1, Register, bool useAtStart = false);
+    // Returns a box allocation. reg2 is ignored on 64-bit platforms.
+    LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register, bool useAtStart = false);
 
     // x86 has constraints on what registers can be formatted for 1-byte
     // stores and loads; on x64 all registers are okay.
@@ -35,6 +35,11 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     LDefinition tempToUnbox();
 
     bool needTempForPostBarrier() { return false; }
+
+    void lowerDivI64(MDiv* div);
+    void lowerModI64(MMod* mod);
+    void lowerUDiv64(MDiv* div);
+    void lowerUMod64(MMod* mod);
 
   public:
     void visitBox(MBox* box);
@@ -54,6 +59,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
     void visitSubstr(MSubstr* ins);
     void visitRandom(MRandom* ins);
+    void visitTruncateToInt64(MTruncateToInt64* ins);
 };
 
 typedef LIRGeneratorX64 LIRGeneratorSpecific;

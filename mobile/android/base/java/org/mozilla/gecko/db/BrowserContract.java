@@ -36,9 +36,13 @@ public class BrowserContract {
     public static final String SEARCH_HISTORY_AUTHORITY = AppConstants.ANDROID_PACKAGE_NAME + ".db.searchhistory";
     public static final Uri SEARCH_HISTORY_AUTHORITY_URI = Uri.parse("content://" + SEARCH_HISTORY_AUTHORITY);
 
+    public static final String LOGINS_AUTHORITY = AppConstants.ANDROID_PACKAGE_NAME + ".db.logins";
+    public static final Uri LOGINS_AUTHORITY_URI = Uri.parse("content://" + LOGINS_AUTHORITY);
+
     public static final String PARAM_PROFILE = "profile";
     public static final String PARAM_PROFILE_PATH = "profilePath";
     public static final String PARAM_LIMIT = "limit";
+    public static final String PARAM_SUGGESTEDSITES_LIMIT = "suggestedsites_limit";
     public static final String PARAM_IS_SYNC = "sync";
     public static final String PARAM_SHOW_DELETED = "show_deleted";
     public static final String PARAM_IS_TEST = "test";
@@ -150,6 +154,7 @@ public class BrowserContract {
         public static final int FAKE_DESKTOP_FOLDER_ID = -1;
         public static final int FIXED_READING_LIST_ID = -2;
         public static final int FIXED_PINNED_LIST_ID = -3;
+        public static final int FIXED_SCREENSHOT_FOLDER_ID = -4;
 
         public static final String MOBILE_FOLDER_GUID = "mobile";
         public static final String PLACES_FOLDER_GUID = "places";
@@ -159,6 +164,7 @@ public class BrowserContract {
         public static final String UNFILED_FOLDER_GUID = "unfiled";
         public static final String FAKE_DESKTOP_FOLDER_GUID = "desktop";
         public static final String PINNED_FOLDER_GUID = "pinned";
+        public static final String SCREENSHOT_FOLDER_GUID = "screenshots";
 
         public static final int TYPE_FOLDER = 0;
         public static final int TYPE_BOOKMARK = 1;
@@ -246,6 +252,15 @@ public class BrowserContract {
         private DeletedPasswords() {}
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/deleted-passwords";
         public static final Uri CONTENT_URI = Uri.withAppendedPath(PASSWORDS_AUTHORITY_URI, "deleted-passwords");
+    }
+
+    @RobocopTarget
+    public static final class GeckoDisabledHosts {
+        private GeckoDisabledHosts() {}
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/disabled-hosts";
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(PASSWORDS_AUTHORITY_URI, "disabled-hosts");
+
+        public static final String HOSTNAME = "hostname";
     }
 
     public static final class FormHistory {
@@ -464,6 +479,8 @@ public class BrowserContract {
         public static final String BOOKMARK_ID = "bookmark_id";
         public static final String HISTORY_ID = "history_id";
         public static final String TYPE = "type";
+
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "topsites");
     }
 
     @RobocopTarget
@@ -483,6 +500,104 @@ public class BrowserContract {
         private SuggestedSites() {}
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "suggestedsites");
+    }
+
+    @RobocopTarget
+    public static final class UrlAnnotations implements CommonColumns, DateSyncColumns {
+        private UrlAnnotations() {}
+
+        public static final String TABLE_NAME = "urlannotations";
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, TABLE_NAME);
+
+        public static final String URL = "url";
+        public static final String KEY = "key";
+        public static final String VALUE = "value";
+        public static final String SYNC_STATUS = "sync_status";
+
+        public enum Key {
+            // We use a parameter, rather than name(), as defensive coding: we can't let the
+            // enum name change because we've already stored values into the DB.
+            SCREENSHOT ("screenshot");
+
+            private final String dbValue;
+
+            Key(final String dbValue) { this.dbValue = dbValue; }
+            public String getDbValue() { return dbValue; }
+        }
+
+        public enum SyncStatus {
+            // We use a parameter, rather than ordinal(), as defensive coding: we can't let the
+            // ordinal values change because we've already stored values into the DB.
+            NEW (0);
+
+            // Value stored into the database for this column.
+            private final int dbValue;
+
+            SyncStatus(final int dbValue) {
+                this.dbValue = dbValue;
+            }
+
+            public int getDBValue() { return dbValue; }
+        }
+    }
+
+    public static final class Numbers {
+        private Numbers() {}
+
+        public static final String TABLE_NAME = "numbers";
+
+        public static final String POSITION = "position";
+
+        public static final int MAX_VALUE = 50;
+    }
+
+    @RobocopTarget
+    public static final class Logins implements CommonColumns {
+        private Logins() {}
+
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(LOGINS_AUTHORITY_URI, "logins");
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/logins";
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/logins";
+        public static final String TABLE_LOGINS = "logins";
+
+        public static final String HOSTNAME = "hostname";
+        public static final String HTTP_REALM = "httpRealm";
+        public static final String FORM_SUBMIT_URL = "formSubmitURL";
+        public static final String USERNAME_FIELD = "usernameField";
+        public static final String PASSWORD_FIELD = "passwordField";
+        public static final String ENCRYPTED_USERNAME = "encryptedUsername";
+        public static final String ENCRYPTED_PASSWORD = "encryptedPassword";
+        public static final String ENC_TYPE = "encType";
+        public static final String TIME_CREATED = "timeCreated";
+        public static final String TIME_LAST_USED = "timeLastUsed";
+        public static final String TIME_PASSWORD_CHANGED = "timePasswordChanged";
+        public static final String TIMES_USED = "timesUsed";
+        public static final String GUID = "guid";
+    }
+
+    @RobocopTarget
+    public static final class DeletedLogins implements CommonColumns {
+        private DeletedLogins() {}
+
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(LOGINS_AUTHORITY_URI, "deleted-logins");
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/deleted-logins";
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/deleted-logins";
+        public static final String TABLE_DELETED_LOGINS = "deleted_logins";
+
+        public static final String GUID = "guid";
+        public static final String TIME_DELETED = "timeDeleted";
+    }
+
+    @RobocopTarget
+    public static final class LoginsDisabledHosts implements CommonColumns {
+        private LoginsDisabledHosts() {}
+
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(LOGINS_AUTHORITY_URI, "logins-disabled-hosts");
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/logins-disabled-hosts";
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/logins-disabled-hosts";
+        public static final String TABLE_DISABLED_HOSTS = "logins_disabled_hosts";
+
+        public static final String HOSTNAME = "hostname";
     }
 
     // We refer to the service by name to decouple services from the rest of the code base.

@@ -54,8 +54,6 @@ using mozilla::PodZero;
 using mozilla::Swap;
 using JS::GenericNaN;
 
-const uint32_t ExportMap::MemoryExport;
-
 UniqueCodePtr
 wasm::AllocateCode(ExclusiveContext* cx, size_t bytes)
 {
@@ -231,14 +229,9 @@ StaticLinkData::clone(JSContext* cx, StaticLinkData* out) const
 size_t
 StaticLinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    size_t size = internalLinks.sizeOfExcludingThis(mallocSizeOf) +
-                  symbolicLinks.sizeOfExcludingThis(mallocSizeOf) +
-                  SizeOfVectorExcludingThis(funcPtrTables, mallocSizeOf);
-
-    for (const Uint32Vector& offsets : symbolicLinks)
-        size += offsets.sizeOfExcludingThis(mallocSizeOf);
-
-    return size;
+    return internalLinks.sizeOfExcludingThis(mallocSizeOf) +
+           symbolicLinks.sizeOfExcludingThis(mallocSizeOf) +
+           SizeOfVectorExcludingThis(funcPtrTables, mallocSizeOf);
 }
 
 static size_t
@@ -805,10 +798,13 @@ Module::setProfilingEnabled(JSContext* cx, bool enabled)
     }
 
     // Update the function-pointer tables to point to profiling prologues.
-    for (FuncPtrTable& funcPtrTable : funcPtrTables_) {
-        auto array = reinterpret_cast<void**>(globalData() + funcPtrTable.globalDataOffset);
-        for (size_t i = 0; i < funcPtrTable.numElems; i++) {
+    for (FuncPtrTable& table : funcPtrTables_) {
+        auto array = reinterpret_cast<void**>(globalData() + table.globalDataOffset);
+        for (size_t i = 0; i < table.numElems; i++) {
             const CodeRange* codeRange = lookupCodeRange(array[i]);
+            // Don't update entries for the BadIndirectCall exit.
+            if (codeRange->isErrorExit())
+                continue;
             void* from = code() + codeRange->funcNonProfilingEntry();
             void* to = code() + codeRange->funcProfilingEntry();
             if (!enabled)
@@ -1062,8 +1058,9 @@ Module::staticallyLink(ExclusiveContext* cx, const StaticLinkData& linkData)
         auto array = reinterpret_cast<void**>(globalData() + table.globalDataOffset);
         for (size_t i = 0; i < table.elemOffsets.length(); i++) {
             uint8_t* elem = code() + table.elemOffsets[i];
-            if (profilingEnabled_)
-                elem = code() + lookupCodeRange(elem)->funcProfilingEntry();
+            const CodeRange* codeRange = lookupCodeRange(elem);
+            if (profilingEnabled_ && !codeRange->isErrorExit())
+                elem = code() + codeRange->funcProfilingEntry();
             array[i] = elem;
         }
     }
@@ -1131,7 +1128,7 @@ CreateExportObject(JSContext* cx,
         if (!*fieldName) {
             MOZ_ASSERT(!exportObj);
             uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
-            if (exportIndex == ExportMap::MemoryExport) {
+            if (exportIndex == MemoryExport) {
                 MOZ_ASSERT(heap);
                 exportObj.set(heap);
             } else {
@@ -1168,7 +1165,7 @@ CreateExportObject(JSContext* cx,
         RootedId id(cx, AtomToId(atom));
         RootedValue val(cx);
         uint32_t exportIndex = exportMap.fieldsToExports[fieldIndex];
-        if (exportIndex == ExportMap::MemoryExport)
+        if (exportIndex == MemoryExport)
             val = ObjectValue(*heap);
         else
             val = vals[exportIndex];

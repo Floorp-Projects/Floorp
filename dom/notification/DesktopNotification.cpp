@@ -78,7 +78,8 @@ DesktopNotification::PostDesktopNotification()
     do_GetService("@mozilla.org/system-alerts-service;1");
   if (appNotifier) {
     nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
-    uint32_t appId = (window.get())->GetDoc()->NodePrincipal()->GetAppId();
+    uint32_t appId = window ? window->GetDoc()->NodePrincipal()->GetAppId()
+                            : nsIScriptSecurityManager::UNKNOWN_APP_ID;
 
     if (appId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
       nsCOMPtr<nsIAppsService> appsService = do_GetService("@mozilla.org/AppsService;1");
@@ -111,7 +112,11 @@ DesktopNotification::PostDesktopNotification()
   // to nsIObservers, thus cookies must be unique to differentiate observers.
   nsString uniqueName = NS_LITERAL_STRING("desktop-notification:");
   uniqueName.AppendInt(sCount++);
-  nsCOMPtr<nsIDocument> doc = GetOwner()->GetDoc();
+  nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
+  if (!owner) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIDocument> doc = owner->GetDoc();
   nsIPrincipal* principal = doc->NodePrincipal();
   nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
   bool inPrivateBrowsing = loadContext && loadContext->UsePrivateBrowsing();

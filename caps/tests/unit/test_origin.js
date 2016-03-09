@@ -24,7 +24,7 @@ function checkCrossOrigin(a, b) {
 function checkOriginAttributes(prin, attrs, suffix) {
   attrs = attrs || {};
   do_check_eq(prin.originAttributes.appId, attrs.appId || 0);
-  do_check_eq(prin.originAttributes.inBrowser, attrs.inBrowser || false);
+  do_check_eq(prin.originAttributes.inIsolatedMozBrowser, attrs.inIsolatedMozBrowser || false);
   do_check_eq(prin.originSuffix, suffix || '');
   do_check_eq(ChromeUtils.originAttributesToSuffix(attrs), suffix || '');
   do_check_true(ChromeUtils.originAttributesMatchPattern(prin.originAttributes, attrs));
@@ -33,9 +33,28 @@ function checkOriginAttributes(prin, attrs, suffix) {
   } else {
     checkThrows(() => ssm.createCodebasePrincipalFromOrigin(prin.origin));
   }
+}
 
-  do_check_eq(ChromeUtils.createOriginAttributesWithUserContextId("http://example.org", 2).userContextId, 2);
-  do_check_eq(ChromeUtils.createOriginAttributesWithUserContextId("https://www.example.com:123^userContextId=4", 2).userContextId, 2);
+// utility function useful for debugging
+function printAttrs(name, attrs) {
+  do_print(name + " {\n" +
+           "\tappId: " + attrs.appId + ",\n" +
+           "\tuserContextId: " + attrs.userContextId + ",\n" +
+           "\tinIsolatedMozBrowser: " + attrs.inIsolatedMozBrowser + ",\n" +
+           "\taddonId: '" + attrs.addonId + "',\n" +
+           "\tsignedPkg: '" + attrs.signedPkg + "'\n}");
+}
+
+
+function checkValues(attrs, values) {
+  values = values || {};
+  //printAttrs("attrs", attrs);
+  //printAttrs("values", values);
+  do_check_eq(attrs.appId, values.appId || 0);
+  do_check_eq(attrs.userContextId, values.userContextId || 0);
+  do_check_eq(attrs.inIsolatedMozBrowser, values.inIsolatedMozBrowser || false);
+  do_check_eq(attrs.addonId, values.addonId || '');
+  do_check_eq(attrs.signedPkg, values.signedPkg || '');
 }
 
 function run_test() {
@@ -80,22 +99,22 @@ function run_test() {
   do_check_eq(exampleOrg_app.origin, 'http://example.org^appId=42');
 
   // Just browser.
-  var exampleOrg_browser = ssm.createCodebasePrincipal(makeURI('http://example.org'), {inBrowser: true});
-  var nullPrin_browser = ssm.createNullPrincipal({inBrowser: true});
-  checkOriginAttributes(exampleOrg_browser, {inBrowser: true}, '^inBrowser=1');
-  checkOriginAttributes(nullPrin_browser, {inBrowser: true}, '^inBrowser=1');
+  var exampleOrg_browser = ssm.createCodebasePrincipal(makeURI('http://example.org'), {inIsolatedMozBrowser: true});
+  var nullPrin_browser = ssm.createNullPrincipal({inIsolatedMozBrowser: true});
+  checkOriginAttributes(exampleOrg_browser, {inIsolatedMozBrowser: true}, '^inBrowser=1');
+  checkOriginAttributes(nullPrin_browser, {inIsolatedMozBrowser: true}, '^inBrowser=1');
   do_check_eq(exampleOrg_browser.origin, 'http://example.org^inBrowser=1');
 
   // App and browser.
-  var exampleOrg_appBrowser = ssm.createCodebasePrincipal(makeURI('http://example.org'), {inBrowser: true, appId: 42});
-  var nullPrin_appBrowser = ssm.createNullPrincipal({inBrowser: true, appId: 42});
-  checkOriginAttributes(exampleOrg_appBrowser, {appId: 42, inBrowser: true}, '^appId=42&inBrowser=1');
-  checkOriginAttributes(nullPrin_appBrowser, {appId: 42, inBrowser: true}, '^appId=42&inBrowser=1');
+  var exampleOrg_appBrowser = ssm.createCodebasePrincipal(makeURI('http://example.org'), {inIsolatedMozBrowser: true, appId: 42});
+  var nullPrin_appBrowser = ssm.createNullPrincipal({inIsolatedMozBrowser: true, appId: 42});
+  checkOriginAttributes(exampleOrg_appBrowser, {appId: 42, inIsolatedMozBrowser: true}, '^appId=42&inBrowser=1');
+  checkOriginAttributes(nullPrin_appBrowser, {appId: 42, inIsolatedMozBrowser: true}, '^appId=42&inBrowser=1');
   do_check_eq(exampleOrg_appBrowser.origin, 'http://example.org^appId=42&inBrowser=1');
 
   // App and browser, different domain.
-  var exampleCom_appBrowser = ssm.createCodebasePrincipal(makeURI('https://www.example.com:123'), {appId: 42, inBrowser: true});
-  checkOriginAttributes(exampleCom_appBrowser, {appId: 42, inBrowser: true}, '^appId=42&inBrowser=1');
+  var exampleCom_appBrowser = ssm.createCodebasePrincipal(makeURI('https://www.example.com:123'), {appId: 42, inIsolatedMozBrowser: true});
+  checkOriginAttributes(exampleCom_appBrowser, {appId: 42, inIsolatedMozBrowser: true}, '^appId=42&inBrowser=1');
   do_check_eq(exampleCom_appBrowser.origin, 'https://www.example.com:123^appId=42&inBrowser=1');
 
   // Addon.
@@ -142,8 +161,8 @@ function run_test() {
   do_check_eq(exampleOrg_signedPkg.origin, 'http://example.org^signedPkg=whatever');
 
   // signedPkg and browser
-  var exampleOrg_signedPkg_browser = ssm.createCodebasePrincipal(makeURI('http://example.org'), {signedPkg: 'whatever', inBrowser: true});
-  checkOriginAttributes(exampleOrg_signedPkg_browser, { signedPkg: 'whatever', inBrowser: true }, '^inBrowser=1&signedPkg=whatever');
+  var exampleOrg_signedPkg_browser = ssm.createCodebasePrincipal(makeURI('http://example.org'), {signedPkg: 'whatever', inIsolatedMozBrowser: true});
+  checkOriginAttributes(exampleOrg_signedPkg_browser, { signedPkg: 'whatever', inIsolatedMozBrowser: true }, '^inBrowser=1&signedPkg=whatever');
   do_check_eq(exampleOrg_signedPkg_browser.origin, 'http://example.org^inBrowser=1&signedPkg=whatever');
 
   // Just signedPkg (but different value from 'exampleOrg_signedPkg_app')
@@ -177,4 +196,83 @@ function run_test() {
   checkKind(ssm.createCodebasePrincipal(makeURI('http://www.example.com'), {}), 'codebasePrincipal');
   checkKind(ssm.createExpandedPrincipal([ssm.createCodebasePrincipal(makeURI('http://www.example.com'), {})]), 'expandedPrincipal');
   checkKind(ssm.getSystemPrincipal(), 'systemPrincipal');
+
+  //
+  // Test Origin Attribute Manipulation
+  //
+
+  // check that we can create an empty origin attributes dict with default
+  // members and values.
+  emptyAttrs = ChromeUtils.createDefaultOriginAttributes();
+  checkValues(emptyAttrs);
+
+  var uri = "http://example.org";
+  var tests = [
+    [ "", {} ],
+    [ "^appId=5", {appId: 5} ],
+    [ "^userContextId=3", {userContextId: 3} ],
+    [ "^addonId=fooBar", {addonId: "fooBar"} ],
+    [ "^inBrowser=1", {inIsolatedMozBrowser: true} ],
+    [ "^signedPkg=bazQux", {signedPkg: "bazQux"} ],
+    [ "^appId=3&inBrowser=1&userContextId=6",
+      {appId: 3, userContextId: 6, inIsolatedMozBrowser: true} ] ];
+
+  // check that we can create an origin attributes from an origin properly
+  tests.forEach(function(t) {
+    let attrs = ChromeUtils.createOriginAttributesFromOrigin(uri + t[0]);
+    checkValues(attrs, t[1]);
+    do_check_eq(ChromeUtils.originAttributesToSuffix(attrs), t[0]);
+  });
+
+  // check that we can create an origin attributes from a dict properly
+  tests.forEach(function(t) {
+    let attrs = ChromeUtils.createOriginAttributesFromDict(t[1]);
+    checkValues(attrs, t[1]);
+    do_check_eq(ChromeUtils.originAttributesToSuffix(attrs), t[0]);
+  });
+
+  // each row in the set_tests array has these values:
+  // [0] - the suffix used to create an origin attribute from
+  // [1] - the expected result of creating an origin attribute from [0]
+  // [2] - the pattern to set on the origin attributes
+  // [3] - the expected result of setting [2] values on [1]
+  // [4] - the expected result of creating a suffix from [3]
+  var set_tests = [
+    [ "", {}, {appId: 5}, {appId: 5}, "^appId=5" ],
+    [ "^appId=5", {appId: 5}, {appId: 3}, {appId: 3}, "^appId=3" ],
+    [ "^appId=5", {appId: 5}, {userContextId: 3}, {appId: 5, userContextId: 3}, "^appId=5&userContextId=3" ],
+    [ "^appId=5", {appId: 5}, {appId: 3, userContextId: 7}, {appId: 3, userContextId: 7}, "^appId=3&userContextId=7" ] ];
+
+  // check that we can set origin attributes values properly
+  set_tests.forEach(function(t) {
+    let orig = ChromeUtils.createOriginAttributesFromOrigin(uri + t[0]);
+    checkValues(orig, t[1]);
+    let mod = orig;
+    for (var key in t[2]) {
+      mod[key] = t[2][key];
+    }
+    checkValues(mod, t[3]);
+    do_check_eq(ChromeUtils.originAttributesToSuffix(mod), t[4]);
+  });
+
+  // each row in the dflt_tests array has these values:
+  // [0] - the suffix used to create an origin attribute from
+  // [1] - the expected result of creating an origin attributes from [0]
+  // [2] - the expected result after setting userContextId to the default
+  // [3] - the expected result of creating a suffix from [2]
+  var dflt_tests = [
+    [ "", {}, {}, "" ],
+    [ "^userContextId=3", {userContextId: 3}, {}, "" ],
+    [ "^appId=5", {appId: 5}, {appId: 5}, "^appId=5" ],
+    [ "^appId=5&userContextId=3", {appId: 5, userContextId: 3}, {appId: 5}, "^appId=5" ] ];
+
+  // check that we can set the userContextId to default properly
+  dflt_tests.forEach(function(t) {
+    let orig = ChromeUtils.createOriginAttributesFromOrigin(uri + t[0]);
+    checkValues(orig, t[1]);
+    let mod = orig;
+    mod['userContextId'] = 0;
+    checkValues(mod, t[2]);
+    do_check_eq(ChromeUtils.originAttributesToSuffix(mod), t[3]);
+  });
 }

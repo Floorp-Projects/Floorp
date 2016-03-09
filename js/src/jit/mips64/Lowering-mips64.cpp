@@ -15,14 +15,13 @@
 using namespace js;
 using namespace js::jit;
 
-void
-LIRGeneratorMIPS64::useBoxFixed(LInstruction* lir, size_t n, MDefinition* mir, Register reg1,
-                                Register reg2, bool useAtStart)
+LBoxAllocation
+LIRGeneratorMIPS64::useBoxFixed(MDefinition* mir, Register reg1, Register reg2, bool useAtStart)
 {
     MOZ_ASSERT(mir->type() == MIRType_Value);
 
     ensureDefined(mir);
-    lir->setOperand(n, LUse(reg1, mir->virtualRegister(), useAtStart));
+    return LBoxAllocation(LUse(reg1, mir->virtualRegister(), useAtStart));
 }
 
 void
@@ -37,7 +36,7 @@ LIRGeneratorMIPS64::visitBox(MBox* box)
     }
 
     if (opd->isConstant()) {
-        define(new(alloc()) LValue(opd->toConstant()->value()), box, LDefinition(LDefinition::BOX));
+        define(new(alloc()) LValue(opd->toConstant()->toJSValue()), box, LDefinition(LDefinition::BOX));
     } else {
         LBox* ins = new(alloc()) LBox(useRegister(opd), opd->type());
         define(ins, box, LDefinition(LDefinition::BOX));

@@ -1,0 +1,29 @@
+        <!-- Handle GCM registration updates from on-device Google Play Services. -->
+        <service
+            android:name="org.mozilla.gecko.gcm.GcmInstanceIDListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID"/>
+            </intent-filter>
+        </service>
+
+        <!-- Provided by on-device Google Play Services.  Directs inbound messages to internal listener service. -->
+        <receiver
+            android:name="com.google.android.gms.gcm.GcmReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+                <category android:name="@ANDROID_PACKAGE_NAME@" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Handle messages directed by the GCM receiver. -->
+        <service
+            android:name="org.mozilla.gecko.gcm.GcmMessageListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </service>

@@ -306,7 +306,7 @@ enum class FillMode : uint32_t;
 // Mask mode
 #define NS_STYLE_MASK_MODE_ALPHA                0
 #define NS_STYLE_MASK_MODE_LUMINANCE            1
-#define NS_STYLE_MASK_MODE_AUTO                 2
+#define NS_STYLE_MASK_MODE_MATCH_SOURCE         2
 
 // See nsStyleBackground
 #define NS_STYLE_BG_INLINE_POLICY_EACH_BOX      0
@@ -809,7 +809,7 @@ enum class FillMode : uint32_t;
 // NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT is only used in data structs; it
 // is never present in stylesheets or computed data.
 #define NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT 11
-#define NS_STYLE_TEXT_ALIGN_TRUE                  12
+#define NS_STYLE_TEXT_ALIGN_UNSAFE                12
 #define NS_STYLE_TEXT_ALIGN_MATCH_PARENT          13
 // Note: make sure that the largest NS_STYLE_TEXT_ALIGN_* value is smaller than
 // the smallest NS_STYLE_VERTICAL_ALIGN_* value below!
@@ -1204,6 +1204,12 @@ enum class FillMode : uint32_t;
 // scan
 #define NS_STYLE_SCAN_PROGRESSIVE               0
 #define NS_STYLE_SCAN_INTERLACE                 1
+
+// display-mode
+#define NS_STYLE_DISPLAY_MODE_BROWSER           0
+#define NS_STYLE_DISPLAY_MODE_MINIMAL_UI        1
+#define NS_STYLE_DISPLAY_MODE_STANDALONE        2
+#define NS_STYLE_DISPLAY_MODE_FULLSCREEN        3
 
 } // namespace mozilla
 

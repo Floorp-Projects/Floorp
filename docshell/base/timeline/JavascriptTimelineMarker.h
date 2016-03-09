@@ -17,13 +17,13 @@ namespace mozilla {
 class JavascriptTimelineMarker : public TimelineMarker
 {
 public:
-  explicit JavascriptTimelineMarker(const char* aReason,
-                                    const char16_t* aFunctionName,
-                                    const char16_t* aFileName,
-                                    uint32_t aLineNumber,
-                                    MarkerTracingType aTracingType,
-                                    JS::Handle<JS::Value> aAsyncStack,
-                                    JS::Handle<JS::Value> aAsyncCause)
+  JavascriptTimelineMarker(const char* aReason,
+                           const char16_t* aFunctionName,
+                           const char16_t* aFileName,
+                           uint32_t aLineNumber,
+                           MarkerTracingType aTracingType,
+                           JS::Handle<JS::Value> aAsyncStack,
+                           JS::Handle<JS::Value> aAsyncCause)
     : TimelineMarker("Javascript", aTracingType, MarkerStackRequest::NO_STACK)
     , mCause(NS_ConvertUTF8toUTF16(aReason))
     , mFunctionName(aFunctionName)

@@ -44,7 +44,7 @@ test case:
 The first line of a test case can contain a special comment controlling how the
 test is run. For example:
 
-    // |jit-test| allow-oom;
+    // |jit-test| allow-oom; --no-threads
 
 The general format in EBNF is:
 
@@ -52,14 +52,13 @@ The general format in EBNF is:
     cookie    ::= "|jit-test|"
     item      ::= flag | attribute
 
-    flag      ::= "slow" | "allow-oom" | "valgrind" | "tz-pacific" |
-                  "ion-eager" | "debug" |
-                  "dump-bytecode" |
-
+    flag      ::= "slow" | "allow-oom" | "valgrind" | "tz-pacific" | "debug" |
+                  "--" switch
 
     attribute ::= name ":" value
     name      ::= "error" | "exitstatus"
     value     ::= <string>
+    switch    ::= <string>
 
 The metaline may appear anywhere in the first line of the file: this allows it
 to be placed inside any kind of comment.
@@ -70,12 +69,12 @@ The meaning of the items:
     allow-oom    If the test runs out of memory, it counts as passing.
     valgrind     Run test under valgrind.
     tz-pacific   Always run test with the Pacific time zone (TZ=PST8PDT).
-    ion-eager    Run js with --ion-eager, whether --jitflags says to or not
-    debug        Run js with -d, whether --jitflags says to or not
-    dump-bytecode Run js with -D, whether --jitflags says to or not
 
     error        The test should be considered to pass iff it throws the
                  given JS exception.
     exitstatus   The test should exit with the given status value (an integer).
+
+    debug        Run js with -d, whether --jitflags says to or not
+    --SWITCH     Pass --SWITCH through to js
 
 * END

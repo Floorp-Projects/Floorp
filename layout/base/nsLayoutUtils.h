@@ -16,7 +16,6 @@
 #include "mozilla/layout/FrameChildList.h"
 #include "nsThreadUtils.h"
 #include "nsIPrincipal.h"
-#include "nsCSSPseudoElements.h"
 #include "FrameMetrics.h"
 #include "nsIWidget.h"
 #include "nsCSSProperty.h"
@@ -63,6 +62,7 @@ struct nsStyleImageOrientation;
 struct nsOverflowAreas;
 
 namespace mozilla {
+enum class CSSPseudoElementType : uint8_t;
 class EventListenerManager;
 class SVGImageContext;
 struct IntrinsicSize;
@@ -661,7 +661,7 @@ public:
    */
   static bool HasPseudoStyle(nsIContent* aContent,
                                nsStyleContext* aStyleContext,
-                               nsCSSPseudoElements::Type aPseudoElement,
+                               mozilla::CSSPseudoElementType aPseudoElement,
                                nsPresContext* aPresContext);
 
   /**
@@ -2199,7 +2199,8 @@ public:
    */
   static bool GetAnimationContent(const nsIFrame* aFrame,
                                   nsIContent* &aContentResult,
-                                  nsCSSPseudoElements::Type &aPseudoTypeResult);
+                                  mozilla::CSSPseudoElementType
+                                    &aPseudoTypeResult);
 
   /**
    * Returns true if the frame has current (i.e. running or scheduled-to-run)
@@ -2290,7 +2291,7 @@ public:
    * Checks whether support for the CSS text-align (and -moz-text-align-last)
    * 'true' value is enabled.
    */
-  static bool IsTextAlignTrueValueEnabled();
+  static bool IsTextAlignUnsafeValueEnabled();
 
   /**
    * Checks if CSS variables are currently enabled.

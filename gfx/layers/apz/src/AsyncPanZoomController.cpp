@@ -278,6 +278,11 @@ using mozilla::gfx::PointTyped;
  * Units: screen pixels (for distance)
  *        screen pixels per millisecond (for velocity)
  *
+ * \li\b apz.paint_skipping.enabled
+ * When APZ is scrolling and sending repaint requests to the main thread, often
+ * the main thread doesn't actually need to do a repaint. This pref allows the
+ * main thread to skip doing those repaints in cases where it doesn't need to.
+ *
  * \li\b apz.record_checkerboarding
  * Whether or not to record detailed info on checkerboarding events.
  *
@@ -885,9 +890,11 @@ AsyncPanZoomController::GetSharedFrameMetricsCompositor()
   APZThreadUtils::AssertOnCompositorThread();
 
   if (mSharingFrameMetricsAcrossProcesses) {
-    const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(mLayersId);
     // |state| may be null here if the CrossProcessCompositorParent has already been destroyed.
-    return state ? state->mCrossProcessParent : nullptr;
+    if (const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(mLayersId)) {
+      return state->CrossProcessPCompositor();
+    }
+    return nullptr;
   }
   return mCompositorParent.get();
 }
@@ -2677,7 +2684,10 @@ void AsyncPanZoomController::AdjustScrollForSurfaceShift(const ScreenPoint& aShi
     / mFrameMetrics.GetZoom();
   APZC_LOG("%p adjusting scroll position by %s for surface shift\n",
     this, Stringify(adjustment).c_str());
-  mFrameMetrics.ScrollBy(adjustment);
+  CSSPoint scrollOffset = mFrameMetrics.GetScrollOffset();
+  scrollOffset.y = mY.ClampOriginToScrollableRect(scrollOffset.y + adjustment.y);
+  scrollOffset.x = mX.ClampOriginToScrollableRect(scrollOffset.x + adjustment.x);
+  mFrameMetrics.SetScrollOffset(scrollOffset);
   ScheduleCompositeAndMaybeRepaint();
   UpdateSharedCompositorFrameMetrics();
 }
@@ -2973,7 +2983,10 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
       mAnimation = nullptr;
       SetState(NOTHING);
     }
-    if (wantsRepaints) {
+    // Request a repaint at the end of the animation in case something such as a
+    // call to NotifyLayersUpdated was invoked during the animation and Gecko's
+    // current state is some intermediate point of the animation.
+    if (!continueAnimation || wantsRepaints) {
       RequestContentRepaint();
     }
     UpdateSharedCompositorFrameMetrics();
@@ -3544,11 +3557,30 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
     FrameMetrics endZoomToMetrics = mFrameMetrics;
     if (aFlags & PAN_INTO_VIEW_ONLY) {
       targetZoom = currentZoom;
+    } else if(aFlags & ONLY_ZOOM_TO_DEFAULT_SCALE) {
+      CSSToParentLayerScale zoomAtDefaultScale =
+        mFrameMetrics.GetDevPixelsPerCSSPixel() * LayoutDeviceToParentLayerScale(1.0);
+      if (targetZoom.scale > zoomAtDefaultScale.scale) {
+        // Only change the zoom if we are less than the default zoom
+        if (currentZoom.scale < zoomAtDefaultScale.scale) {
+          targetZoom = zoomAtDefaultScale;
+        } else {
+          targetZoom = currentZoom;
+        }
+      }
     }
     endZoomToMetrics.SetZoom(CSSToParentLayerScale2D(targetZoom));
 
     // Adjust the zoomToRect to a sensible position to prevent overscrolling.
     CSSSize sizeAfterZoom = endZoomToMetrics.CalculateCompositedSizeInCssPixels();
+
+    // Vertically center the zoomed element in the screen.
+    if (!zoomOut && (sizeAfterZoom.height > aRect.height)) {
+      aRect.y -= (sizeAfterZoom.height - aRect.height) * 0.5f;
+      if (aRect.y < 0.0f) {
+        aRect.y = 0.0f;
+      }
+    }
 
     // If either of these conditions are met, the page will be
     // overscrolled after zoomed
@@ -3559,14 +3591,6 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
     if (aRect.x + sizeAfterZoom.width > cssPageRect.width) {
       aRect.x = cssPageRect.width - sizeAfterZoom.width;
       aRect.x = aRect.x > 0 ? aRect.x : 0;
-    }
-
-    // Vertically center the zoomed element in the screen.
-    if (!zoomOut && (sizeAfterZoom.height > aRect.height)) {
-      aRect.y -= (sizeAfterZoom.height - aRect.height) * 0.5f;
-      if (aRect.y < 0.0f) {
-        aRect.y = 0.0f;
-      }
     }
 
     endZoomToMetrics.SetScrollOffset(aRect.TopLeft());

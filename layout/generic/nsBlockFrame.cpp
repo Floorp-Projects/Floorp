@@ -52,6 +52,8 @@
 #include "nsIFrameInlines.h"
 #include "CounterStyleManager.h"
 #include "nsISelection.h"
+#include "mozilla/StyleSetHandle.h"
+#include "mozilla/StyleSetHandleInlines.h"
 
 #include "nsBidiPresUtils.h"
 
@@ -6897,9 +6899,9 @@ nsBlockFrame::CreateBulletFrameForListItem(bool aCreateBulletList,
 {
   nsIPresShell* shell = PresContext()->PresShell();
 
-  nsCSSPseudoElements::Type pseudoType = aCreateBulletList ?
-    nsCSSPseudoElements::ePseudo_mozListBullet :
-    nsCSSPseudoElements::ePseudo_mozListNumber;
+  CSSPseudoElementType pseudoType = aCreateBulletList ?
+    CSSPseudoElementType::mozListBullet :
+    CSSPseudoElementType::mozListNumber;
 
   nsStyleContext* parentStyle =
     CorrectStyleParentFrame(this,
@@ -7650,5 +7652,14 @@ nsBlockFrame::GetDepth() const
     depth++;
   }
   return depth;
+}
+
+already_AddRefed<nsStyleContext>
+nsBlockFrame::GetFirstLetterStyle(nsPresContext* aPresContext)
+{
+  return aPresContext->StyleSet()->
+    ProbePseudoElementStyle(mContent->AsElement(),
+                            CSSPseudoElementType::firstLetter,
+                            mStyleContext);
 }
 #endif

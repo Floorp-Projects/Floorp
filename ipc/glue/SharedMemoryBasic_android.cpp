@@ -40,15 +40,18 @@ SharedMemoryBasic::SharedMemoryBasic()
   , mMemory(nullptr)
 { }
 
-SharedMemoryBasic::SharedMemoryBasic(const Handle& aHandle)
-  : mShmFd(aHandle.fd)
-  , mMemory(nullptr)
-{ }
-
 SharedMemoryBasic::~SharedMemoryBasic()
 {
   Unmap();
-  Destroy();
+  CloseHandle();
+}
+
+bool
+SharedMemoryBasic::SetHandle(const Handle& aHandle)
+{
+  MOZ_ASSERT(-1 == mShmFd, "Already Create()d");
+  mShmFd = aHandle.fd;
+  return true;
 }
 
 bool
@@ -125,10 +128,11 @@ SharedMemoryBasic::Unmap()
 }
 
 void
-SharedMemoryBasic::Destroy()
+SharedMemoryBasic::CloseHandle()
 {
-  if (mShmFd > 0) {
+  if (mShmFd != -1) {
     close(mShmFd);
+    mShmFd = -1;
   }
 }
 

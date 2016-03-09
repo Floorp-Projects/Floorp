@@ -158,7 +158,7 @@ public:
 
     ConsoleCallData* tmp = this;
     for (uint32_t i = 0; i < mCopiedArguments.Length(); ++i) {
-      NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mCopiedArguments[i]);
+      NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCopiedArguments[i])
     }
   }
 
@@ -298,7 +298,7 @@ public:
       return false;
     }
 
-    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(cx, this))) {
+    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(this))) {
       return false;
     }
 
@@ -360,7 +360,7 @@ private:
         mRunnable->ReleaseData();
         mRunnable->mConsole = nullptr;
 
-        aWorkerPrivate->RemoveFeature(aCx, mRunnable);
+        aWorkerPrivate->RemoveFeature(mRunnable);
         return true;
       }
 
@@ -371,7 +371,7 @@ private:
 
     RefPtr<WorkerControlRunnable> runnable =
       new ConsoleReleaseRunnable(mWorkerPrivate, this);
-    runnable->Dispatch(nullptr);
+    runnable->Dispatch();
   }
 
   void

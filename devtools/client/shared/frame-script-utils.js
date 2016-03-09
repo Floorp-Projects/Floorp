@@ -3,14 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const promise = require("promise");
 loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm", "Task");
-const subScriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-                          .getService(Ci.mozIJSSubScriptLoader);
-var EventUtils = {};
-subScriptLoader.loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
+
 loader.lazyGetter(this, "nsIProfilerModule", () => {
   return Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
 });
@@ -178,20 +175,6 @@ addMessageListener("devtools:test:setAttribute", function(msg) {
   node.setAttribute(attributeName, attributeValue);
 
   sendAsyncMessage("devtools:test:setAttribute");
-});
-
-/**
- * Synthesize a key event for an element. This handler doesn't send a message
- * back. Consumers should listen to specific events on the inspector/highlighter
- * to know when the event got synthesized.
- * @param  {Object} msg The msg.data part expects the following properties:
- * - {String} key
- * - {Object} options
- */
-addMessageListener("Test:SynthesizeKey", function(msg) {
-  let {key, options} = msg.data;
-
-  EventUtils.synthesizeKey(key, options, content);
 });
 
 /**

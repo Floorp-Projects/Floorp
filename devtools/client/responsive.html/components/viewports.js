@@ -38,9 +38,8 @@ module.exports = createClass({
           key: viewport.id,
           location,
           viewport,
-          onResizeViewport: (width, height) =>
-            onResizeViewport(viewport.id, width, height),
-          onRotateViewport: () => onRotateViewport(viewport.id),
+          onResizeViewport,
+          onRotateViewport,
         });
       })
     );

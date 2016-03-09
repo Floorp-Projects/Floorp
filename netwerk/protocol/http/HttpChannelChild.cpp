@@ -698,7 +698,7 @@ HttpChannelChild::OnTransportAndData(const nsresult& channelStatus,
     LOG(("UnknownDecoder is involved queue OnDataAvailable call. [this=%p]",
          this));
     mUnknownDecoderEventQ.AppendElement(
-      new MaybeDivertOnDataHttpEvent(this, data, offset, count));
+      MakeUnique<MaybeDivertOnDataHttpEvent>(this, data, offset, count));
   }
 
   // Hold queue lock throughout all three calls, else we might process a later
@@ -885,7 +885,7 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
    LOG(("UnknownDecoder is involved queue OnStopRequest call. [this=%p]",
         this));
     mUnknownDecoderEventQ.AppendElement(
-      new MaybeDivertOnStopHttpEvent(this, channelStatus));
+      MakeUnique<MaybeDivertOnStopHttpEvent>(this, channelStatus));
   }
 
   nsCOMPtr<nsICompressConvStats> conv = do_QueryInterface(mCompressListener);
@@ -906,6 +906,9 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
   mTransferSize = timing.transferSize;
   mEncodedBodySize = timing.encodedBodySize;
   mProtocolVersion = timing.protocolVersion;
+
+  mCacheReadStart = timing.cacheReadStart;
+  mCacheReadEnd = timing.cacheReadEnd;
 
   nsPerformance* documentPerformance = GetPerformance();
   if (documentPerformance) {
@@ -1805,8 +1808,11 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     return NS_OK;
   }
 
-  // Set user agent override
+  // Set user agent override from docshell
   HttpBaseChannel::SetDocshellUserAgentOverride();
+
+  // Set user agent override from loadgroup
+  HttpBaseChannel::SetLoadGroupUserAgentOverride();
 
   MOZ_ASSERT_IF(mPostRedirectChannelShouldUpgrade,
                 mPostRedirectChannelShouldIntercept);

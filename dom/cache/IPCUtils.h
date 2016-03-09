@@ -24,6 +24,11 @@ namespace IPC {
                                     mozilla::dom::HeadersGuardEnum::None,
                                     mozilla::dom::HeadersGuardEnum::EndGuard_> {};
   template<>
+  struct ParamTraits<mozilla::dom::ReferrerPolicy> :
+    public ContiguousEnumSerializer<mozilla::dom::ReferrerPolicy,
+                                    mozilla::dom::ReferrerPolicy::_empty,
+                                    mozilla::dom::ReferrerPolicy::EndGuard_> {};
+  template<>
   struct ParamTraits<mozilla::dom::RequestMode> :
     public ContiguousEnumSerializer<mozilla::dom::RequestMode,
                                     mozilla::dom::RequestMode::Same_origin,

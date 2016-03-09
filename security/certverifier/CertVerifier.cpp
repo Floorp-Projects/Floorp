@@ -82,8 +82,7 @@ SECStatus
 IsCertBuiltInRoot(CERTCertificate* cert, bool& result)
 {
   result = false;
-  ScopedPK11SlotList slots;
-  slots = PK11_GetAllSlotsForCert(cert, nullptr);
+  UniquePK11SlotList slots(PK11_GetAllSlotsForCert(cert, nullptr));
   if (!slots) {
     if (PORT_GetError() == SEC_ERROR_NO_TOKEN) {
       // no list

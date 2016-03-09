@@ -20,10 +20,9 @@ class LIRGeneratorARM : public LIRGeneratorShared
     { }
 
   protected:
-    // Adds a box input to an instruction, setting operand |n| to the type and
-    // |n+1| to the payload.
-    void useBoxFixed(LInstruction* lir, size_t n, MDefinition* mir, Register reg1, Register reg2,
-                     bool useAtStart = false);
+    // Returns a box allocation with type set to reg1 and payload set to reg2.
+    LBoxAllocation useBoxFixed(MDefinition* mir, Register reg1, Register reg2,
+                               bool useAtStart = false);
 
     // x86 has constraints on what registers can be formatted for 1-byte
     // stores and loads; on ARM all registers are okay.
@@ -48,6 +47,11 @@ class LIRGeneratorARM : public LIRGeneratorShared
     void lowerForALU(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir,
                      MDefinition* lhs, MDefinition* rhs);
 
+    void lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins, MDefinition* mir,
+                          MDefinition* lhs, MDefinition* rhs);
+    void lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, 0>* ins,
+                            MDefinition* mir, MDefinition* lhs, MDefinition* rhs);
+
     void lowerForFPU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,
                      MDefinition* src);
     template<size_t Temps>
@@ -71,6 +75,8 @@ class LIRGeneratorARM : public LIRGeneratorShared
     void lowerTruncateFToInt32(MTruncateToInt32* ins);
     void lowerDivI(MDiv* div);
     void lowerModI(MMod* mod);
+    void lowerDivI64(MDiv* div);
+    void lowerModI64(MMod* mod);
     void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
     void lowerUDiv(MDiv* div);
     void lowerUMod(MMod* mod);
@@ -106,6 +112,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins);
     void visitSubstr(MSubstr* ins);
     void visitRandom(MRandom* ins);
+    void visitTruncateToInt64(MTruncateToInt64* ins);
 };
 
 typedef LIRGeneratorARM LIRGeneratorSpecific;

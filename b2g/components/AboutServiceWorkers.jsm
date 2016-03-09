@@ -144,7 +144,7 @@ this.AboutServiceWorkers = {
             !message.principal.origin ||
             !message.principal.originAttributes ||
             !message.principal.originAttributes.appId ||
-            (message.principal.originAttributes.inBrowser == null)) {
+            (message.principal.originAttributes.inIsolatedMozBrowser == null)) {
           self.sendError(message.id, "MissingPrincipal");
           return;
         }

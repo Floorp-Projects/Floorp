@@ -818,7 +818,9 @@ gfxContext::PushGroupForBlendBack(gfxContentType content, Float aOpacity, Source
 
     CurrentState().mBlendOpacity = aOpacity;
     CurrentState().mBlendMask = aMask;
+#ifdef DEBUG
     CurrentState().mWasPushedForBlendBack = true;
+#endif
     CurrentState().mBlendMaskTransform = aMaskTransform;
   }
 }
@@ -870,7 +872,9 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content, Float aOpacity, S
 
       CurrentState().mBlendOpacity = aOpacity;
       CurrentState().mBlendMask = aMask;
+#ifdef DEBUG
       CurrentState().mWasPushedForBlendBack = true;
+#endif
       CurrentState().mBlendMaskTransform = aMaskTransform;
 
       Point offset = CurrentState().deviceOffset - oldDeviceOffset;
@@ -918,7 +922,9 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content, Float aOpacity, S
     mDT->SetTransform(GetDTTransform());
     CurrentState().mBlendOpacity = aOpacity;
     CurrentState().mBlendMask = aMask;
+#ifdef DEBUG
     CurrentState().mWasPushedForBlendBack = true;
+#endif
     CurrentState().mBlendMaskTransform = aMaskTransform;
   }
 }

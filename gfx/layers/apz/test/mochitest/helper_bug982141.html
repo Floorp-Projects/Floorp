@@ -59,12 +59,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
       // Reconstruct the APZC tree structure in the last paint.
       var apzcTree = buildApzcTree(compositorTestData.paints[lastCompositorPaintSeqNo]);
 
-      // The apzc tree for this page should consist of a single root APZC
-      // and a child APZC for the scrollable <div>.
-      SimpleTest.is(apzcTree.children.length, 1, "expected a single root APZC");
-      var rootApzc = apzcTree.children[0];
-      SimpleTest.is(rootApzc.children.length, 1, "expected a single child APZC");
-      var childScrollId = rootApzc.children[0].scrollId;
+      // The apzc tree for this page should consist of a single child APZC on
+      // the RCD node (the child is for scrollable <div>). Note that in e10s/B2G
+      // cases the RCD will be the root of the tree but on Fennec it will not.
+      var rcd = findRcdNode(apzcTree);
+      SimpleTest.ok(rcd != null, "found the RCD node");
+      SimpleTest.is(rcd.children.length, 1, "expected a single child APZC");
+      var childScrollId = rcd.children[0].scrollId;
 
       // We should have content-side data for the same paint.
       SimpleTest.ok(lastCompositorPaintSeqNo in contentTestData.paints,
@@ -82,7 +83,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
       var dpWidth = dpFields[2];
       var dpHeight = dpFields[3];
       SimpleTest.ok(dpWidth >= 50 && dpHeight >= 50,
-                    "expected a displayport at least as large as the scrollable element");
+                    "expected a displayport at least as large as the scrollable element, got " + childDisplayport);
 
       window.opener.finishTest();
     }
@@ -92,6 +93,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=982141">Mozilla Bug 982141</a>
   <!-- A scrollable subframe, with enough content to make it have a nonzero scroll range -->
   <div style="height: 50px; width: 50px; overflow: scroll">
+    <div style="width: 100px">
+      Wide content so that the vertical scrollbar for the parent div
+      doesn't eat into the 50px width and reduce the width of the
+      displayport.
+    </div>
     Line 1<br>
     Line 2<br>
     Line 3<br>

@@ -963,7 +963,8 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
         MOZ_ASSERT(Wrapper::wrappedObject(newIdentityWrapper) == newIdentity);
         if (!JSObject::swap(cx, origobj, newIdentityWrapper))
             MOZ_CRASH();
-        origobj->compartment()->putWrapper(cx, CrossCompartmentKey(newIdentity), origv);
+        if (!origobj->compartment()->putWrapper(cx, CrossCompartmentKey(newIdentity), origv))
+            MOZ_CRASH();
     }
 
     // The new identity object might be one of several things. Return it to avoid
@@ -1683,10 +1684,15 @@ JS::GetFirstArgumentAsTypeHint(JSContext* cx, CallArgs args, JSType *result)
     }
 
     JSAutoByteString bytes;
+    const char* source = ValueToSourceForError(cx, args.get(0), bytes);
+    if (!source) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
                          "Symbol.toPrimitive",
-                         "\"string\", \"number\", or \"default\"",
-                         ValueToSourceForError(cx, args.get(0), bytes));
+                         "\"string\", \"number\", or \"default\"", source);
     return false;
 }
 
@@ -3668,15 +3674,14 @@ JS_IsConstructor(JSFunction* fun)
 }
 
 JS_PUBLIC_API(bool)
-JS_DefineFunctions(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs,
-                   PropertyDefinitionBehavior behavior)
+JS_DefineFunctions(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs)
 {
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    return DefineFunctions(cx, obj, fs, NotIntrinsic, behavior);
+    return DefineFunctions(cx, obj, fs, NotIntrinsic);
 }
 
 JS_PUBLIC_API(JSFunction*)
@@ -4132,11 +4137,11 @@ JS::FinishOffThreadScript(JSContext* maybecx, JSRuntime* rt, void* token)
         RootedScript script(maybecx);
         {
             AutoLastFrameCheck lfc(maybecx);
-            script = HelperThreadState().finishParseTask(maybecx, rt, token);
+            script = HelperThreadState().finishScriptParseTask(maybecx, rt, token);
         }
         return script;
     } else {
-        return HelperThreadState().finishParseTask(maybecx, rt, token);
+        return HelperThreadState().finishScriptParseTask(maybecx, rt, token);
     }
 }
 

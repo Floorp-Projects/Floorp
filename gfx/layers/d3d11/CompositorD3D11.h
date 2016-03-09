@@ -111,6 +111,7 @@ public:
   virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
                           const gfx::Rect *aClipRectIn,
                           const gfx::Rect& aRenderBounds,
+                          bool aOpaque,
                           gfx::Rect *aClipRectOut = nullptr,
                           gfx::Rect *aRenderBoundsOut = nullptr) override;
 
@@ -142,6 +143,8 @@ public:
   virtual LayersBackend GetBackendType() const override {
     return LayersBackend::LAYERS_D3D11;
   }
+
+  virtual void ForcePresent() { mSwapChain->Present(0, 0); }
 
   virtual nsIWidget* GetWidget() const override { return mWidget; }
 

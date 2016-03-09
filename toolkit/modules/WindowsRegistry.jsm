@@ -47,4 +47,30 @@ var WindowsRegistry = {
     }
     return undefined;
   },
+
+  /**
+   * Safely removes a key from the registry.
+   *
+   * @param aRoot
+   *        The root registry to use.
+   * @param aPath
+   *        The registry path to the key.
+   * @param aKey
+   *        The key name.
+   */
+  removeRegKey: function(aRoot, aPath, aKey) {
+    let registry = Cc["@mozilla.org/windows-registry-key;1"].
+                   createInstance(Ci.nsIWindowsRegKey);
+    try {
+      let mode = Ci.nsIWindowsRegKey.ACCESS_QUERY_VALUE |
+                 Ci.nsIWindowsRegKey.ACCESS_SET_VALUE;
+      registry.open(aRoot, aPath, mode);
+      if (registry.hasValue(aKey)) {
+        registry.removeValue(aKey);
+      }
+    } catch (ex) {
+    } finally {
+      registry.close();
+    }
+  }
 };

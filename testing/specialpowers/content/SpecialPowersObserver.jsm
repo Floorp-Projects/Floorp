@@ -251,22 +251,27 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
       break;
     case "SpecialPowers.CreateFiles":
       let filePaths = new Array;
-      if (!this.createdFiles) {
+      if (!this._createdFiles) {
         this._createdFiles = new Array;
       }
       let createdFiles = this._createdFiles;
       try {
         aMessage.data.forEach(function(request) {
-              let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-              testFile.append(request.name);
-              let outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-              outStream.init(testFile, 0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-                             0666, 0);
-              if (request.data) {
+          const filePerms = 0666;
+          let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
+          if (request.name) {
+            testFile.append(request.name);
+          } else {
+            testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, filePerms);
+          }
+          let outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+          outStream.init(testFile, 0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
+                         filePerms, 0);
+          if (request.data) {
             outStream.write(request.data, request.data.length);
             outStream.close();
           }
-          filePaths.push(new File(testFile.path));
+          filePaths.push(new File(testFile.path, request.options));
           createdFiles.push(testFile);
         });
         aMessage.target

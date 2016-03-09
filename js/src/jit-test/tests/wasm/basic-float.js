@@ -1,5 +1,18 @@
 load(libdir + "wasm.js");
 
+assertEq(wasmEvalText('(module (func (result f32) (f32.const -1)) (export "" 0))')(), -1);
+assertEq(wasmEvalText('(module (func (result f32) (f32.const 1)) (export "" 0))')(), 1);
+assertEq(wasmEvalText('(module (func (result f64) (f64.const -2)) (export "" 0))')(), -2);
+assertEq(wasmEvalText('(module (func (result f64) (f64.const 2)) (export "" 0))')(), 2);
+assertEq(wasmEvalText('(module (func (result f64) (f64.const 4294967296)) (export "" 0))')(), 4294967296);
+assertEq(wasmEvalText('(module (func (result f32) (f32.const 1.5)) (export "" 0))')(), 1.5);
+assertEq(wasmEvalText('(module (func (result f64) (f64.const 2.5)) (export "" 0))')(), 2.5);
+assertEq(wasmEvalText('(module (func (result f64) (f64.const 10e2)) (export "" 0))')(), 10e2);
+assertEq(wasmEvalText('(module (func (result f32) (f32.const 10e2)) (export "" 0))')(), 10e2);
+assertEq(wasmEvalText('(module (func (result f64) (f64.const -0x8000000000000000)) (export "" 0))')(), -0x8000000000000000);
+assertEq(wasmEvalText('(module (func (result f64) (f64.const -9223372036854775808)) (export "" 0))')(), -9223372036854775808);
+assertEq(wasmEvalText('(module (func (result f64) (f64.const 1797693134862315708145274e284)) (export "" 0))')(), 1797693134862315708145274e284);
+
 function testUnary(type, opcode, op, expect) {
   assertEq(wasmEvalText('(module (func (param ' + type + ') (result ' + type + ') (' + type + '.' + opcode + ' (get_local 0))) (export "" 0))')(op), expect);
 }
@@ -60,20 +73,20 @@ testComparison('f64', 'ge', 40, 40, 1);
 
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result f32) (f32.sqrt (get_local 0))))'), TypeError, mismatchError("i32", "f32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param f32) (result i32) (f32.sqrt (get_local 0))))'), TypeError, mismatchError("f32", "i32"));
-assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result i32) (f32.sqrt (get_local 0))))'), TypeError, mismatchError("f32", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result i32) (f32.sqrt (get_local 0))))'), TypeError, mismatchError("i32", "f32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result f64) (f64.sqrt (get_local 0))))'), TypeError, mismatchError("i32", "f64"));
 assertErrorMessage(() => wasmEvalText('(module (func (param f64) (result i32) (f64.sqrt (get_local 0))))'), TypeError, mismatchError("f64", "i32"));
-assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result i32) (f64.sqrt (get_local 0))))'), TypeError, mismatchError("f64", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result i32) (f64.sqrt (get_local 0))))'), TypeError, mismatchError("i32", "f64"));
 assertErrorMessage(() => wasmEvalText('(module (func (f32.sqrt (nop))))'), TypeError, mismatchError("void", "f32"));
 
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param f32) (result f32) (f32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param f32) (param i32) (result f32) (f32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param f32) (param f32) (result i32) (f32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
-assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param i32) (result i32) (f32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("f32", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param i32) (result i32) (f32.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param f64) (result f64) (f64.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f64"));
 assertErrorMessage(() => wasmEvalText('(module (func (param f64) (param i32) (result f64) (f64.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f64"));
 assertErrorMessage(() => wasmEvalText('(module (func (param f64) (param f64) (result i32) (f64.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("f64", "i32"));
-assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param i32) (result i32) (f64.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("f64", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param i32) (result i32) (f64.add (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f64"));
 
 assertErrorMessage(() => wasmEvalText('(module (func (param i32) (param f32) (result f32) (f32.eq (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f32"));
 assertErrorMessage(() => wasmEvalText('(module (func (param f32) (param i32) (result f32) (f32.eq (get_local 0) (get_local 1))))'), TypeError, mismatchError("i32", "f32"));

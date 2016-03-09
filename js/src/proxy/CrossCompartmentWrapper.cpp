@@ -88,8 +88,10 @@ CrossCompartmentWrapper::getPrototype(JSContext* cx, HandleObject wrapper,
         AutoCompartment call(cx, wrapped);
         if (!GetPrototype(cx, wrapped, protop))
             return false;
-        if (protop)
-            protop->setDelegate(cx);
+        if (protop) {
+            if (!protop->setDelegate(cx))
+                return false;
+        }
     }
 
     return cx->compartment()->wrap(cx, protop);
@@ -470,9 +472,8 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
             if (k.kind != CrossCompartmentKey::ObjectWrapper)
                 continue;
 
-            NonEscapingWrapperVector wobj(cx->runtime());
-            MOZ_ALWAYS_TRUE(wobj.append(e));
-            JSObject* wrapped = UncheckedUnwrap(&wobj[0].toObject());
+            AutoWrapperRooter wobj(cx, WrapperValue(e));
+            JSObject* wrapped = UncheckedUnwrap(wobj);
 
             if (nukeReferencesToWindow == DontNukeWindowReferences &&
                 IsWindowProxy(wrapped))
@@ -483,7 +484,7 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
             if (targetFilter.match(wrapped->compartment())) {
                 // We found a wrapper to nuke.
                 e.removeFront();
-                NukeCrossCompartmentWrapper(cx, &wobj[0].toObject());
+                NukeCrossCompartmentWrapper(cx, wobj);
             }
         }
     }
@@ -566,18 +567,18 @@ js::RemapAllWrappersForObject(JSContext* cx, JSObject* oldTargetArg,
     RootedValue origv(cx, ObjectValue(*oldTargetArg));
     RootedObject newTarget(cx, newTargetArg);
 
-    NonEscapingWrapperVector toTransplant(cx->runtime());
+    AutoWrapperVector toTransplant(cx);
     if (!toTransplant.reserve(cx->runtime()->numCompartments))
         return false;
 
     for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
         if (WrapperMap::Ptr wp = c->lookupWrapper(origv)) {
             // We found a wrapper. Remember and root it.
-            toTransplant.infallibleAppend(wp);
+            toTransplant.infallibleAppend(WrapperValue(wp));
         }
     }
 
-    for (const Value& v : toTransplant)
+    for (const WrapperValue& v : toTransplant)
         RemapWrapper(cx, &v.toObject(), newTarget);
 
     return true;
@@ -587,7 +588,7 @@ JS_FRIEND_API(bool)
 js::RecomputeWrappers(JSContext* cx, const CompartmentFilter& sourceFilter,
                       const CompartmentFilter& targetFilter)
 {
-    NonEscapingWrapperVector toRecompute(cx->runtime());
+    AutoWrapperVector toRecompute(cx);
 
     for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
         // Filter by source compartment.
@@ -606,13 +607,13 @@ js::RecomputeWrappers(JSContext* cx, const CompartmentFilter& sourceFilter,
                 continue;
 
             // Add it to the list.
-            if (!toRecompute.append(e))
+            if (!toRecompute.append(WrapperValue(e)))
                 return false;
         }
     }
 
     // Recompute all the wrappers in the list.
-    for (const Value& v : toRecompute) {
+    for (const WrapperValue& v : toRecompute) {
         JSObject* wrapper = &v.toObject();
         JSObject* wrapped = Wrapper::wrappedObject(wrapper);
         RemapWrapper(cx, wrapper, wrapped);

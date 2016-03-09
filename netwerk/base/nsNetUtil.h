@@ -317,6 +317,14 @@ nsresult NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
                                           nsContentPolicyType aContentPolicyType,
                                           bool                aIsSrcdocChannel = false);
 
+nsresult
+NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
+                                 nsIURI             *aUri,
+                                 const nsAString    &aData,
+                                 const nsACString   &aContentType,
+                                 nsILoadInfo        *aLoadInfo,
+                                 bool                aIsSrcdocChannel = false);
+
 nsresult NS_NewInputStreamChannel(nsIChannel        **outChannel,
                                   nsIURI             *aUri,
                                   const nsAString    &aData,
@@ -709,12 +717,12 @@ bool NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport = false);
 #define NECKO_SAFEBROWSING_APP_ID UINT32_MAX - 1
 
 /**
- * Gets AppId and isInBrowserElement from channel's nsILoadContext.
+ * Gets AppId and isInIsolatedMozBrowserElement from channel's nsILoadContext.
  * Returns false if error or channel's callbacks don't implement nsILoadContext.
  */
 bool NS_GetAppInfo(nsIChannel *aChannel,
                    uint32_t *aAppID,
-                   bool *aIsInBrowserElement);
+                   bool *aIsInIsolatedMozBrowserElement);
 
 /**
  *  Gets appId and browserOnly parameters from the TOPIC_WEB_APP_CLEAR_DATA

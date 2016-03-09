@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for plugin child widgets not being invalidated by scrolling</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="initialize()">
+<script type="application/javascript">
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED,
+                          "Test Plug-in");
+</script>
+
+<p id="display">
+  <iframe id="i" src="plugin_scroll_invalidation.html"
+   width="50" height="50" scrolling="no"></iframe>
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var scrolling;
+var scrolling_plugins = [];
+var paint_waiter;
+var last_paint_counts;
+
+function initialize() {
+  scrolling = document.getElementById("i").contentWindow;
+  scrolling_plugins = scrolling.document.querySelectorAll("embed.scrolling");
+  paint_waiter = scrolling.document.getElementById("paint-waiter");
+
+  scrolling.scrollTo(50, 45);
+
+  is(paint_waiter.getPaintCount(), 0, "zero-sized plugin not painted");
+
+  waitForPaint(scrollAround);
+}
+
+function scrollAround() {
+  var paints = getPaintCounts();
+
+  for (var i = 0; i < paints.length; ++i) {
+    isnot(paints[i], 0, "embed " + scrolling_plugins[i].id + " is painted"); 
+  }
+
+  last_paint_counts = paints;
+
+  scrolling.scrollBy(-5, 5);
+  scrolling.scrollBy(5, 5);
+  scrolling.scrollBy(5, -5);
+  scrolling.scrollBy(-5, -5);
+
+  scrolling.scrollTo(45, 45);
+  scrolling.scrollBy(10, 0);
+  scrolling.scrollBy(0, 10);
+  scrolling.scrollBy(-10, 0);
+  scrolling.scrollBy(0, -10);
+
+  waitForPaint(done);
+}
+
+function done() {
+  var paints = getPaintCounts();
+  for (var i = 0; i < paints.length; ++i) {
+    is(paints[i], last_paint_counts[i], "embed " + scrolling_plugins[i].id + " is not painted on scroll");
+  }
+  SimpleTest.finish();  
+}
+
+// Waits for the paint_waiter plugin to be repainted and then
+// calls 'func' to continue.
+function waitForPaint(func) {
+  paint_waiter.last_paint_count = paint_waiter.getPaintCount();
+
+  paint_waiter.style.left = scrolling.scrollX + "px";
+  paint_waiter.style.top = scrolling.scrollY + "px";
+
+  // Fiddle with the style in a way that should force some repainting
+  paint_waiter.style.width =
+    (paint_waiter.getBoundingClientRect().width + 1) + "px"; 
+  paint_waiter.style.height = "1px";
+
+  function waitForPaintHelper() {
+    if (paint_waiter.getPaintCount() != paint_waiter.last_paint_count) {
+      setTimeout(func, 0);
+      return;
+    }
+    setTimeout(waitForPaintHelper, 0);
+  }
+  waitForPaintHelper();
+}
+
+function getPaintCounts() {
+  var result = [];
+  for (var i = 0; i < scrolling_plugins.length; ++i) {
+    result[i] = scrolling_plugins[i].getPaintCount();
+  }
+  return result;
+}
+
+</script>
+</body>
+</html>

@@ -863,9 +863,6 @@ endif	# WINNT && !GCC
 ifdef ENABLE_STRIP
 	$(STRIP) $(STRIP_FLAGS) $@
 endif
-ifdef MOZ_POST_DSO_LIB_COMMAND
-	$(MOZ_POST_DSO_LIB_COMMAND) $@
-endif
 
 ifeq ($(SOLARIS_SUNPRO_CC),1)
 _MDDEPFILE = $(MDDEPDIR)/$(@F).pp
@@ -1159,18 +1156,6 @@ PREF_DIR = defaults/pref
 # PREF_DIR should point to the app prefs location.
 ifneq (,$(DIST_SUBDIR)$(XPI_NAME))
 PREF_DIR = defaults/preferences
-endif
-
-################################################################################
-# Copy each element of AUTOCFG_JS_EXPORTS to $(FINAL_TARGET)/defaults/autoconfig
-
-ifneq ($(AUTOCFG_JS_EXPORTS),)
-ifndef NO_DIST_INSTALL
-AUTOCFG_JS_EXPORTS_FILES := $(AUTOCFG_JS_EXPORTS)
-AUTOCFG_JS_EXPORTS_DEST := $(FINAL_TARGET)/defaults/autoconfig
-AUTOCFG_JS_EXPORTS_TARGET := export
-INSTALL_TARGETS += AUTOCFG_JS_EXPORTS
-endif
 endif
 
 ################################################################################
@@ -1565,9 +1550,6 @@ libs export::
 	$(CHECK_FROZEN_VARIABLES)
 
 PURGECACHES_DIRS ?= $(DIST)/bin
-ifdef MOZ_WEBAPP_RUNTIME
-PURGECACHES_DIRS += $(DIST)/bin/webapprt
-endif
 
 PURGECACHES_FILES = $(addsuffix /.purgecaches,$(PURGECACHES_DIRS))
 

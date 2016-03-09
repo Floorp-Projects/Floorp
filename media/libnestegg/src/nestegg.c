@@ -2142,6 +2142,8 @@ nestegg_track_seek(nestegg * ctx, unsigned int track, uint64_t tstamp)
 
   /* Seek and set up parser state for segment-level element (Cluster). */
   r = nestegg_offset_seek(ctx, ctx->segment_offset + seek_pos);
+  if (r != 0)
+    return -1;
 
   if (!ne_is_suspend_element(ctx->last_id))
     return -1;

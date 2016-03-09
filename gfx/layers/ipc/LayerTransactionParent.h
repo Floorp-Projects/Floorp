@@ -78,8 +78,7 @@ public:
   void SetPendingTransactionId(uint64_t aId) { mPendingTransaction = aId; }
 
   // CompositableParentManager
-  virtual void SendFenceHandleIfPresent(PTextureParent* aTexture,
-                                        CompositableHost* aCompositableHost) override;
+  virtual void SendFenceHandleIfPresent(PTextureParent* aTexture) override;
 
   virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
 
@@ -91,6 +90,8 @@ public:
   virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) override;
 
 protected:
+  virtual bool RecvSyncWithCompositor() override { return true; }
+
   virtual bool RecvShutdown() override;
 
   virtual bool RecvUpdate(EditArray&& cset,

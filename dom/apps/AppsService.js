@@ -106,6 +106,10 @@ AppsService.prototype = {
     return DOMApplicationRegistry.getWebAppsBasePath();
   },
 
+  areAnyAppsInstalled: function() {
+    return DOMApplicationRegistry.areAnyAppsInstalled();
+  },
+
   getAppInfo: function getAppInfo(aAppId) {
     debug("getAppInfo()");
     return DOMApplicationRegistry.getAppInfo(aAppId);

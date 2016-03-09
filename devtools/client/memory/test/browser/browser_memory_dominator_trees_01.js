@@ -8,14 +8,11 @@
 
 const {
   dominatorTreeState,
-  snapshotState,
   viewState,
 } = require("devtools/client/memory/constants");
 const {
   expandDominatorTreeNode,
-  takeSnapshotAndCensus,
 } = require("devtools/client/memory/actions/snapshot");
-const { toggleInverted } = require("devtools/client/memory/actions/inverted");
 const { changeView } = require("devtools/client/memory/actions/view");
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_big_tree.html";
@@ -24,8 +21,6 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   // Taking snapshots and computing dominator trees is slow :-/
   requestLongerTimeout(4);
 
-  const heapWorker = panel.panelWin.gHeapAnalysesClient;
-  const front = panel.panelWin.gFront;
   const store = panel.panelWin.gStore;
   const { getState, dispatch } = store;
   const doc = panel.panelWin.document;

@@ -468,10 +468,6 @@ DowncastCCParticipant(void* aPtr)
     NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Trace(s, aCallbacks, aClosure);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(_field)              \
-  if (tmp->_field)                                                             \
-    aCallbacks.Trace(&tmp->_field, #_field, aClosure);
-
-#define NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(_field)           \
   aCallbacks.Trace(&tmp->_field, #_field, aClosure);
 
 // NB: The (void)tmp; hack in the TRACE_END macro exists to support

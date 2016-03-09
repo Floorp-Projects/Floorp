@@ -210,9 +210,6 @@ DEFAULT_TEST_PREFS = {
     'security.default_personal_cert': 'Select Automatically',
     'network.http.prompt-temp-redirect': False,
     'security.warn_viewing_mixed': False,
-    # Set a future policy version to avoid the telemetry prompt.
-    'toolkit.telemetry.prompted': 999,
-    'toolkit.telemetry.notifiedOptOut': 999,
     'extensions.defaultProviders.enabled': True,
     'datareporting.policy.dataSubmissionPolicyBypassNotification': True,
     'layout.css.report_errors': True,

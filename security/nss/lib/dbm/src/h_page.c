@@ -256,8 +256,7 @@ __delpair(HTAB *hashp, BUFHEAD *bufp, int ndx)
             if (bp[i + 1] == OVFLPAGE) {
                 bp[i - 2] = bp[i];
                 bp[i - 1] = bp[i + 1];
-            }
-            else {
+            } else {
                 bp[i - 2] = bp[i] + pairlen;
                 bp[i - 1] = bp[i + 1] + pairlen;
             }
@@ -341,12 +340,10 @@ __split_page(HTAB *hashp, uint32 obucket, uint32 nbucket)
                         off - ino[n + 1]);
                 ino[ndx] = copyto + ino[n] - ino[n + 1];
                 ino[ndx + 1] = copyto;
-            }
-            else
+            } else
                 copyto = ino[n + 1];
             ndx += 2;
-        }
-        else {
+        } else {
             /* Switch page */
             val.data = (uint8 *)op + ino[n + 1];
             val.size = ino[n] - ino[n + 1];
@@ -460,8 +457,7 @@ ugly_split(HTAB *hashp, uint32 obucket, BUFHEAD *old_bufp,
             cino = (char *)bufp->page;
             ino = (uint16 *)cino;
             last_bfp = ret.nextp;
-        }
-        else if (ino[n + 1] == OVFLPAGE) {
+        } else if (ino[n + 1] == OVFLPAGE) {
             ov_addr = ino[n];
             /*
              * Fix up the old page -- the extra 2 are the fields
@@ -508,8 +504,7 @@ ugly_split(HTAB *hashp, uint32 obucket, BUFHEAD *old_bufp,
                     putpair((char *)op, &key, &val);
                 }
                 old_bufp->flags |= BUF_MOD;
-            }
-            else {
+            } else {
                 /* Move to new page */
                 if (PAIRFITS(np, (&key), (&val)))
                     putpair((char *)np, &key, &val);
@@ -560,8 +555,7 @@ __addel(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
                 return (-1);
             }
             bp = (uint16 *)bufp->page;
-        }
-        else
+        } else
             /* Try to squeeze key on this page */
             if (FREESPACE(bp) > PAIRSIZE(key, val)) {
             {
@@ -575,8 +569,7 @@ __addel(HTAB *hashp, BUFHEAD *bufp, const DBT *key, const DBT *val)
                 hashp->NKEYS++;
                 return (0);
             }
-        }
-        else {
+        } else {
             bufp = __get_buf(hashp, bp[bp[0] - 1], bufp, 0);
             if (!bufp) {
 #ifdef DEBUG
@@ -716,8 +709,7 @@ __get_page(HTAB *hashp,
 
     if (!is_bitmap && !bp[0]) {
         PAGE_INIT(p);
-    }
-    else {
+    } else {
 
         if (hashp->LORDER != BYTE_ORDER) {
             register int i, max;
@@ -726,8 +718,7 @@ __get_page(HTAB *hashp,
                 max = hashp->BSIZE >> 2; /* divide by 4 */
                 for (i = 0; i < max; i++)
                     M_32_SWAP(((int *)p)[i]);
-            }
-            else {
+            } else {
                 M_16_SWAP(bp[0]);
                 max = bp[0] + 2;
 
@@ -779,8 +770,7 @@ __get_page(HTAB *hashp,
                         return (DATABASE_CORRUPTED_ERROR);
 
                     offset = bp[i + 1];
-                }
-                else {
+                } else {
                     /* there are no other valid keys after
                      * seeing a non REAL_KEY
                      */
@@ -820,8 +810,7 @@ __put_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_bitmap)
             max = hashp->BSIZE >> 2; /* divide by 4 */
             for (i = 0; i < max; i++)
                 M_32_SWAP(((int *)p)[i]);
-        }
-        else {
+        } else {
             max = ((uint16 *)p)[0] + 2;
 
             /* bound the size of max by
@@ -865,8 +854,7 @@ __put_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_bitmap)
             max = hashp->BSIZE >> 2; /* divide by 4 */
             for (i = 0; i < max; i++)
                 M_32_SWAP(((int *)p)[i]);
-        }
-        else {
+        } else {
             uint16 *bp = (uint16 *)p;
 
             M_16_SWAP(bp[0]);
@@ -959,8 +947,7 @@ overflow_page(HTAB *hashp)
                   ((hashp->BSIZE << BYTE_SHIFT) - 1);
             j = bit / BITS_PER_MAP;
             bit = bit & ~(BITS_PER_MAP - 1);
-        }
-        else {
+        } else {
             bit = 0;
             j = 0;
         }
@@ -1029,8 +1016,7 @@ overflow_page(HTAB *hashp)
             hashp->SPARES[splitnum - 1]--;
             offset = 0;
         }
-    }
-    else {
+    } else {
         /*
          * Free_bit addresses the last used bit.  Bump it to address
          * the first available bit.

@@ -6,6 +6,8 @@
 
 #include "OmxPlatformLayer.h"
 
+#include "OMX_VideoExt.h" // For VP8.
+
 #if defined(MOZ_WIDGET_GONK) && (ANDROID_VERSION == 20 || ANDROID_VERSION == 19)
 #define OMX_PLATFORM_GONK
 #include "GonkOmxPlatformLayer.h"
@@ -45,6 +47,42 @@ typedef OmxConfig<VideoInfo> OmxVideoConfig;
 template<typename ConfigType>
 UniquePtr<ConfigType> ConfigForMime(const nsACString&);
 
+static OMX_ERRORTYPE
+ConfigAudioOutputPort(OmxPlatformLayer& aOmx, const AudioInfo& aInfo)
+{
+  OMX_ERRORTYPE err;
+
+  OMX_PARAM_PORTDEFINITIONTYPE def;
+  InitOmxParameter(&def);
+  def.nPortIndex = aOmx.OutputPortIndex();
+  err = aOmx.GetParameter(OMX_IndexParamPortDefinition, &def, sizeof(def));
+  RETURN_IF_ERR(err);
+
+  def.format.audio.eEncoding = OMX_AUDIO_CodingPCM;
+  err = aOmx.SetParameter(OMX_IndexParamPortDefinition, &def, sizeof(def));
+  RETURN_IF_ERR(err);
+
+  OMX_AUDIO_PARAM_PCMMODETYPE pcmParams;
+  InitOmxParameter(&pcmParams);
+  pcmParams.nPortIndex = def.nPortIndex;
+  err = aOmx.GetParameter(OMX_IndexParamAudioPcm, &pcmParams, sizeof(pcmParams));
+  RETURN_IF_ERR(err);
+
+  pcmParams.nChannels = aInfo.mChannels;
+  pcmParams.eNumData = OMX_NumericalDataSigned;
+  pcmParams.bInterleaved = OMX_TRUE;
+  pcmParams.nBitPerSample = 16;
+  pcmParams.nSamplingRate = aInfo.mRate;
+  pcmParams.ePCMMode = OMX_AUDIO_PCMModeLinear;
+  err = aOmx.SetParameter(OMX_IndexParamAudioPcm, &pcmParams, sizeof(pcmParams));
+  RETURN_IF_ERR(err);
+
+  LOG("Config OMX_IndexParamAudioPcm, channel %d, sample rate %d",
+      pcmParams.nChannels, pcmParams.nSamplingRate);
+
+  return OMX_ErrorNone;
+}
+
 class OmxAacConfig : public OmxAudioConfig
 {
 public:
@@ -54,6 +92,7 @@ public:
 
     OMX_AUDIO_PARAM_AACPROFILETYPE aacProfile;
     InitOmxParameter(&aacProfile);
+    aacProfile.nPortIndex = aOmx.InputPortIndex();
     err = aOmx.GetParameter(OMX_IndexParamAudioAac, &aacProfile, sizeof(aacProfile));
     RETURN_IF_ERR(err);
 
@@ -66,7 +105,62 @@ public:
     LOG("Config OMX_IndexParamAudioAac, channel %d, sample rate %d, profile %d",
         aacProfile.nChannels, aacProfile.nSampleRate, aacProfile.eAACProfile);
 
-    return OMX_ErrorNone;
+    return ConfigAudioOutputPort(aOmx, aInfo);
+  }
+};
+
+class OmxMp3Config : public OmxAudioConfig
+{
+public:
+  OMX_ERRORTYPE Apply(OmxPlatformLayer& aOmx, const AudioInfo& aInfo) override
+  {
+    OMX_ERRORTYPE err;
+
+    OMX_AUDIO_PARAM_MP3TYPE mp3Param;
+    InitOmxParameter(&mp3Param);
+    mp3Param.nPortIndex = aOmx.InputPortIndex();
+    err = aOmx.GetParameter(OMX_IndexParamAudioMp3, &mp3Param, sizeof(mp3Param));
+    RETURN_IF_ERR(err);
+
+    mp3Param.nChannels = aInfo.mChannels;
+    mp3Param.nSampleRate = aInfo.mRate;
+    err = aOmx.SetParameter(OMX_IndexParamAudioMp3, &mp3Param, sizeof(mp3Param));
+    RETURN_IF_ERR(err);
+
+    LOG("Config OMX_IndexParamAudioMp3, channel %d, sample rate %d",
+        mp3Param.nChannels, mp3Param.nSampleRate);
+
+    return ConfigAudioOutputPort(aOmx, aInfo);
+  }
+};
+
+enum OmxAmrSampleRate {
+  kNarrowBand = 8000,
+  kWideBand = 16000,
+};
+
+template <OmxAmrSampleRate R>
+class OmxAmrConfig : public OmxAudioConfig
+{
+public:
+  OMX_ERRORTYPE Apply(OmxPlatformLayer& aOmx, const AudioInfo& aInfo) override
+  {
+    OMX_ERRORTYPE err;
+
+    OMX_AUDIO_PARAM_AMRTYPE def;
+    InitOmxParameter(&def);
+    def.nPortIndex = aOmx.InputPortIndex();
+    err = aOmx.GetParameter(OMX_IndexParamAudioAmr, &def, sizeof(def));
+    RETURN_IF_ERR(err);
+
+    def.eAMRFrameFormat = OMX_AUDIO_AMRFrameFormatFSF;
+    err = aOmx.SetParameter(OMX_IndexParamAudioAmr, &def, sizeof(def));
+    RETURN_IF_ERR(err);
+
+    MOZ_ASSERT(aInfo.mChannels == 1);
+    MOZ_ASSERT(aInfo.mRate == R);
+
+    return ConfigAudioOutputPort(aOmx, aInfo);
   }
 };
 
@@ -79,6 +173,13 @@ ConfigForMime(const nsACString& aMimeType)
   if (OmxPlatformLayer::SupportsMimeType(aMimeType)) {
     if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
       conf.reset(new OmxAacConfig());
+    } else if (aMimeType.EqualsLiteral("audio/mp3") ||
+                aMimeType.EqualsLiteral("audio/mpeg")) {
+      conf.reset(new OmxMp3Config());
+    } else if (aMimeType.EqualsLiteral("audio/3gpp")) {
+      conf.reset(new OmxAmrConfig<OmxAmrSampleRate::kNarrowBand>());
+    } else if (aMimeType.EqualsLiteral("audio/amr-wb")) {
+      conf.reset(new OmxAmrConfig<OmxAmrSampleRate::kWideBand>());
     }
   }
   return Move(conf);
@@ -90,9 +191,8 @@ ConfigForMime(const nsACString& aMimeType)
 class OmxCommonVideoConfig : public OmxVideoConfig
 {
 public:
-  explicit OmxCommonVideoConfig(OMX_VIDEO_CODINGTYPE aCodec)
+  explicit OmxCommonVideoConfig()
     : OmxVideoConfig()
-    , mCodec(aCodec)
   {}
 
   OMX_ERRORTYPE Apply(OmxPlatformLayer& aOmx, const VideoInfo& aInfo) override
@@ -102,7 +202,7 @@ public:
 
     // Set up in/out port definition.
     nsTArray<uint32_t> ports;
-    GetOmxPortIndex(ports);
+    aOmx.GetPortIndices(ports);
     for (auto idx : ports) {
       InitOmxParameter(&def);
       def.nPortIndex = idx;
@@ -115,7 +215,7 @@ public:
       def.format.video.nSliceHeight = aInfo.mImage.height;
 
       if (def.eDir == OMX_DirInput) {
-        def.format.video.eCompressionFormat = mCodec;
+        def.format.video.eCompressionFormat = aOmx.CompressionFormat();
         def.format.video.eColorFormat = OMX_COLOR_FormatUnused;
         if (def.nBufferSize < MIN_VIDEO_INPUT_BUFFER_SIZE) {
           def.nBufferSize = aInfo.mImage.width * aInfo.mImage.height;
@@ -129,9 +229,6 @@ public:
     }
     return err;
   }
-
-private:
-  const OMX_VIDEO_CODINGTYPE mCodec;
 };
 
 template<>
@@ -141,14 +238,7 @@ ConfigForMime(const nsACString& aMimeType)
   UniquePtr<OmxVideoConfig> conf;
 
   if (OmxPlatformLayer::SupportsMimeType(aMimeType)) {
-    if (aMimeType.EqualsLiteral("video/avc")) {
-      conf.reset(new OmxCommonVideoConfig(OMX_VIDEO_CodingAVC));
-    } else if (aMimeType.EqualsLiteral("video/mp4v-es") ||
-         aMimeType.EqualsLiteral("video/mp4")) {
-      conf.reset(new OmxCommonVideoConfig(OMX_VIDEO_CodingMPEG4));
-    } else if (aMimeType.EqualsLiteral("video/3gpp")) {
-      conf.reset(new OmxCommonVideoConfig(OMX_VIDEO_CodingH263));
-    }
+    conf.reset(new OmxCommonVideoConfig());
   }
   return Move(conf);
 }
@@ -158,17 +248,42 @@ OmxPlatformLayer::Config()
 {
   MOZ_ASSERT(mInfo);
 
+  OMX_PORT_PARAM_TYPE portParam;
+  InitOmxParameter(&portParam);
   if (mInfo->IsAudio()) {
+    GetParameter(OMX_IndexParamAudioInit, &portParam, sizeof(portParam));
+    mStartPortNumber = portParam.nStartPortNumber;
     UniquePtr<OmxAudioConfig> conf(ConfigForMime<OmxAudioConfig>(mInfo->mMimeType));
     MOZ_ASSERT(conf.get());
     return conf->Apply(*this, *(mInfo->GetAsAudioInfo()));
   } else if (mInfo->IsVideo()) {
+    GetParameter(OMX_IndexParamVideoInit, &portParam, sizeof(portParam));
     UniquePtr<OmxVideoConfig> conf(ConfigForMime<OmxVideoConfig>(mInfo->mMimeType));
     MOZ_ASSERT(conf.get());
     return conf->Apply(*this, *(mInfo->GetAsVideoInfo()));
   } else {
     MOZ_ASSERT_UNREACHABLE("non-AV data (text?) is not supported.");
     return OMX_ErrorNotImplemented;
+  }
+}
+
+OMX_VIDEO_CODINGTYPE
+OmxPlatformLayer::CompressionFormat()
+{
+  MOZ_ASSERT(mInfo);
+
+  if (mInfo->mMimeType.EqualsLiteral("video/avc")) {
+    return OMX_VIDEO_CodingAVC;
+  } else if (mInfo->mMimeType.EqualsLiteral("video/mp4v-es") ||
+       mInfo->mMimeType.EqualsLiteral("video/mp4")) {
+    return OMX_VIDEO_CodingMPEG4;
+  } else if (mInfo->mMimeType.EqualsLiteral("video/3gpp")) {
+    return OMX_VIDEO_CodingH263;
+  } else if (mInfo->mMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
+    return static_cast<OMX_VIDEO_CODINGTYPE>(OMX_VIDEO_CodingVP8);
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Unsupported compression format");
+    return OMX_VIDEO_CodingUnused;
   }
 }
 

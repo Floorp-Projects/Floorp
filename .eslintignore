@@ -44,7 +44,6 @@ testing/**
 tools/**
 uriloader/**
 view/**
-webapprt/**
 widget/**
 xpcom/**
 xpfe/**
@@ -64,7 +63,6 @@ browser/base/content/test/**
 browser/base/content/newtab/**
 browser/components/downloads/**
 browser/components/feeds/**
-browser/components/pocket/**
 browser/components/preferences/**
 browser/components/privatebrowsing/**
 browser/components/sessionstore/**
@@ -73,7 +71,6 @@ browser/components/tabview/**
 browser/components/translation/**
 browser/extensions/pdfjs/**
 browser/extensions/pocket/content/panels/js/vendor/**
-browser/extensions/shumway/**
 browser/locales/**
 
 # Ignore all of loop since it is imported from github and checked at source.
@@ -81,7 +78,6 @@ browser/extensions/loop/**
 
 # devtools/ exclusions
 devtools/*.js
-devtools/client/animationinspector/**
 devtools/client/canvasdebugger/**
 devtools/client/commandline/**
 devtools/client/debugger/**
@@ -91,8 +87,6 @@ devtools/client/framework/**
 # included in the ignore list.
 devtools/client/inspector/computed/**
 devtools/client/inspector/fonts/**
-devtools/client/inspector/markup/test/**
-devtools/client/inspector/rules/**
 devtools/client/inspector/shared/test/**
 devtools/client/inspector/test/**
 devtools/client/inspector/*.js
@@ -107,8 +101,6 @@ devtools/client/scratchpad/**
 devtools/client/shadereditor/**
 devtools/client/shared/**
 devtools/client/sourceeditor/**
-devtools/client/storage/**
-devtools/client/tilt/**
 devtools/client/webaudioeditor/**
 devtools/client/webconsole/**
 devtools/client/webide/**
@@ -135,7 +127,7 @@ devtools/client/webaudioeditor/lib/dagre-d3.js
 devtools/client/sourceeditor/codemirror/*.js
 devtools/client/sourceeditor/codemirror/**/*.js
 devtools/client/sourceeditor/test/codemirror/*
-devtools/client/markupview/test/lib_*
+devtools/client/inspector/markup/test/lib_*
 
 # mobile/android/ exclusions
 mobile/android/chrome/content
@@ -155,10 +147,6 @@ mobile/android/locales/
 
 # Pretty sure we're disabling this one anyway
 mobile/android/modules/ContactService.jsm
-
-# es7 proposed: array comprehensions
-#   https://github.com/eslint/espree/issues/125
-mobile/android/modules/WebappManager.jsm
 
 # Non-standard `(catch ex if ...)`
 mobile/android/components/Snippets.js
@@ -184,7 +172,10 @@ toolkit/modules/tests/xpcshell/test_task.js
 
 # Not yet updated
 toolkit/components/osfile/**
-toolkit/components/passwordmgr/**
+
+# External code:
+toolkit/components/reader/Readability.js
+toolkit/components/reader/JSDOMParser.js
 
 # Uses preprocessing
 toolkit/content/widgets/videocontrols.xml

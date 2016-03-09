@@ -15,7 +15,10 @@ var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 
 DevToolsUtils.testing = true;
-var { require: browserRequire } = BrowserLoader("resource://devtools/client/performance/", this);
+var { require: browserRequire } = BrowserLoader({
+  baseURI: "resource://devtools/client/performance/",
+  window: this
+});
 
 var $ = (selector, scope=document) => scope.querySelector(selector);
 var $$ = (selector, scope=document) => scope.querySelectorAll(selector);

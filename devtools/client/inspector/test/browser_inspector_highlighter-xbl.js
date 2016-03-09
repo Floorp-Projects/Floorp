@@ -10,8 +10,7 @@ const TEST_URL = URL_ROOT + "doc_inspector_highlighter_xbl.xul";
 add_task(function*() {
   let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
 
-  info("Starting element picker");
-  yield toolbox.highlighterUtils.startPicker();
+  yield startPicker(toolbox);
 
   info("Selecting the scale");
   yield moveMouseOver("#scale");

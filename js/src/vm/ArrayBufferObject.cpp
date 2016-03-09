@@ -373,7 +373,7 @@ AllocateWasmMappedMemory(uint32_t numBytes)
     if (!data)
         return nullptr;
 
-    if (!VirtualAlloc(data, numBytes, MEM_COMMIT, PAGE_READWRITE)) {
+    if (numBytes && !VirtualAlloc(data, numBytes, MEM_COMMIT, PAGE_READWRITE)) {
         VirtualFree(data, 0, MEM_RELEASE);
         return nullptr;
     }
@@ -398,7 +398,7 @@ AllocateWasmMappedMemory(uint32_t numBytes)
     if (data == MAP_FAILED)
         return nullptr;
 
-    if (mprotect(data, numBytes, PROT_READ | PROT_WRITE)) {
+    if (numBytes && mprotect(data, numBytes, PROT_READ | PROT_WRITE)) {
         munmap(data, wasm::MappedSize);
         return nullptr;
     }
@@ -576,16 +576,17 @@ ArrayBufferObject::setDataPointer(BufferContents contents, OwnsState ownsData)
     setFlags((flags() & ~KIND_MASK) | contents.kind());
 }
 
-size_t
+uint32_t
 ArrayBufferObject::byteLength() const
 {
-    return size_t(getSlot(BYTE_LENGTH_SLOT).toDouble());
+    return getSlot(BYTE_LENGTH_SLOT).toInt32();
 }
 
 void
-ArrayBufferObject::setByteLength(size_t length)
+ArrayBufferObject::setByteLength(uint32_t length)
 {
-    setSlot(BYTE_LENGTH_SLOT, DoubleValue(length));
+    MOZ_ASSERT(length <= INT32_MAX);
+    setSlot(BYTE_LENGTH_SLOT, Int32Value(length));
 }
 
 uint32_t

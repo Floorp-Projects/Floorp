@@ -15,20 +15,16 @@
  * Resource Acquisition Is Initialization is a programming idiom used
  * to write robust code that is able to deallocate resources properly,
  * even in presence of execution errors or exceptions that need to be
- * propagated.  The Scoped* classes defined in this header perform the
+ * propagated.  The Scoped* classes defined via the |SCOPED_TEMPLATE|
+ * and |MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLTE| macros perform the
  * deallocation of the resource they hold once program execution
  * reaches the end of the scope for which they have been defined.
+ * These macros have been used to automatically close file
+ * descriptors/file handles when reaching the end of the scope,
+ * graphics contexts, etc.
  *
- * This header provides the following RAII classes:
- *
- * - |ScopedFreePtr| - a container for a pointer, that automatically calls
- *   |free()| at the end of the scope;
- * - |ScopedDeletePtr| - a container for a pointer, that automatically calls
- *   |delete| at the end of the scope;
- *
- * |ScopedDeleteArray| is removed in favor of |UniquePtr<T[]>|.
- *
- * The general scenario for each of the RAII classes is the following:
+ * The general scenario for RAII classes created by the above macros
+ * is the following:
  *
  * ScopedClass foo(create_value());
  * // ... In this scope, |foo| is defined. Use |foo.get()| or |foo.rwget()|
@@ -44,14 +40,6 @@
  *   the end of the scope;
  * - if |forget()| has been called, any control on the resource is unbound
  *   and the resource is not deallocated by the class.
- *
- * Extension:
- *
- * In addition, this header provides class |Scoped| and macros |SCOPED_TEMPLATE|
- * and |MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE|  to simplify the definition
- * of RAII classes for other scenarios. These macros have been used to
- * automatically close file descriptors/file handles when reaching the end of
- * the scope, graphics contexts, etc.
  */
 
 #include "mozilla/Assertions.h"
@@ -218,35 +206,6 @@ private:                                                                      \
   explicit name(name&) = delete;                                              \
   name& operator=(name&) = delete;                                            \
 };
-
-/*
- * ScopedFreePtr is a RAII wrapper for pointers that need to be free()d.
- *
- *   struct S { ... };
- *   ScopedFreePtr<S> foo = malloc(sizeof(S));
- *   ScopedFreePtr<char> bar = strdup(str);
- */
-template<typename T>
-struct ScopedFreePtrTraits
-{
-  typedef T* type;
-  static T* empty() { return nullptr; }
-  static void release(T* aPtr) { free(aPtr); }
-};
-SCOPED_TEMPLATE(ScopedFreePtr, ScopedFreePtrTraits)
-
-/*
- * ScopedDeletePtr is a RAII wrapper for pointers that need to be deleted.
- *
- *   struct S { ... };
- *   ScopedDeletePtr<S> foo = new S();
- */
-template<typename T>
-struct ScopedDeletePtrTraits : public ScopedFreePtrTraits<T>
-{
-  static void release(T* aPtr) { delete aPtr; }
-};
-SCOPED_TEMPLATE(ScopedDeletePtr, ScopedDeletePtrTraits)
 
 /*
  * MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE makes it easy to create scoped

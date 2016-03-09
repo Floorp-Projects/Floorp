@@ -20,5 +20,5 @@ mkdir -p $MOZBUILD_STATE_PATH
 install-packages.sh $GECKO_DIR
 
 # Ensure object-folder exists
-export MOZ_OBJDIR=$(get-objdir.py $GECKO_DIR $WORKSPACE/object-folder/)
+export MOZ_OBJDIR=$WORKSPACE/object-folder/
 mkdir -p $MOZ_OBJDIR

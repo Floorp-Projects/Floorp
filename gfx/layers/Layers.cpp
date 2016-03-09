@@ -250,7 +250,9 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mScrollbarDirection(ScrollDirection::NONE),
   mScrollbarThumbRatio(0.0f),
   mIsScrollbarContainer(false),
+#ifdef DEBUG
   mDebugColorIndex(0),
+#endif
   mAnimationGeneration(0)
 {
   MOZ_COUNT_CTOR(Layer);
@@ -893,7 +895,7 @@ Layer::GetLocalTransform()
 {
   Matrix4x4 transform;
   if (LayerComposite* shadow = AsLayerComposite())
-    transform = shadow->GetShadowTransform();
+    transform = shadow->GetShadowBaseTransform();
   else
     transform = mTransform;
 
@@ -1117,7 +1119,8 @@ ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
     mMayHaveReadbackChild(false),
     mChildrenChanged(false),
     mEventRegionsOverride(EventRegionsOverride::NoOverride),
-    mVRDeviceID(0)
+    mVRDeviceID(0),
+    mInputFrameID(0)
 {
   MOZ_COUNT_CTOR(ContainerLayer);
   mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
@@ -1279,7 +1282,8 @@ ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
                                     mInheritedXScale, mInheritedYScale,
                                     mPresShellResolution, mScaleToResolution,
                                     mEventRegionsOverride,
-                                    mVRDeviceID);
+                                    mVRDeviceID,
+                                    mInputFrameID);
 }
 
 bool
@@ -2011,8 +2015,8 @@ Layer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
     if (const Maybe<ParentLayerIntRect>& clipRect = lc->GetShadowClipRect()) {
       DumpRect(s->mutable_clip(), *clipRect);
     }
-    if (!lc->GetShadowTransform().IsIdentity()) {
-      DumpTransform(s->mutable_transform(), lc->GetShadowTransform());
+    if (!lc->GetShadowBaseTransform().IsIdentity()) {
+      DumpTransform(s->mutable_transform(), lc->GetShadowBaseTransform());
     }
     if (!lc->GetShadowVisibleRegion().IsEmpty()) {
       DumpRegion(s->mutable_vregion(), lc->GetShadowVisibleRegion().ToUnknownRegion());
@@ -2146,7 +2150,7 @@ ContainerLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
     aStream << " [force-ehr]";
   }
   if (mVRDeviceID) {
-    aStream << nsPrintfCString(" [hmd=%lu]", mVRDeviceID).get();
+    aStream << nsPrintfCString(" [hmd=%lu] [hmdframe=%l]", mVRDeviceID, mInputFrameID).get();
   }
 }
 
@@ -2420,8 +2424,8 @@ PrintInfo(std::stringstream& aStream, LayerComposite* aLayerComposite)
   if (const Maybe<ParentLayerIntRect>& clipRect = aLayerComposite->GetShadowClipRect()) {
     AppendToString(aStream, *clipRect, " [shadow-clip=", "]");
   }
-  if (!aLayerComposite->GetShadowTransform().IsIdentity()) {
-    AppendToString(aStream, aLayerComposite->GetShadowTransform(), " [shadow-transform=", "]");
+  if (!aLayerComposite->GetShadowBaseTransform().IsIdentity()) {
+    AppendToString(aStream, aLayerComposite->GetShadowBaseTransform(), " [shadow-transform=", "]");
   }
   if (!aLayerComposite->GetShadowVisibleRegion().IsEmpty()) {
     AppendToString(aStream, aLayerComposite->GetShadowVisibleRegion().ToUnknownRegion(), " [shadow-visible=", "]");

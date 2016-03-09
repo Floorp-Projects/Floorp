@@ -38,8 +38,8 @@ class MOZ_RAII AutoTimelineMarker
   RefPtr<nsIDocShell> mDocShell;
 
 public:
-  explicit AutoTimelineMarker(nsIDocShell* aDocShell, const char* aName
-                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  AutoTimelineMarker(nsIDocShell* aDocShell,
+                     const char* aName MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   ~AutoTimelineMarker();
 
   AutoTimelineMarker(const AutoTimelineMarker& aOther) = delete;

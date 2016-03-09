@@ -612,13 +612,17 @@ typedef struct {
   bool weak;
 } CipherPref;
 
-// Update the switch statement in HandshakeCallback in nsNSSCallbacks.cpp when
-// you add/remove cipher suites here.
+// Update the switch statement in AccumulateCipherSuite in nsNSSCallbacks.cpp
+// when you add/remove cipher suites here.
 static const CipherPref sCipherPrefs[] = {
  { "security.ssl3.ecdhe_rsa_aes_128_gcm_sha256",
    TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, true },
  { "security.ssl3.ecdhe_ecdsa_aes_128_gcm_sha256",
    TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, true },
+ { "security.ssl3.ecdhe_ecdsa_chacha20_poly1305_sha256",
+   TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256, true },
+ { "security.ssl3.ecdhe_rsa_chacha20_poly1305_sha256",
+   TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256, true },
  { "security.ssl3.ecdhe_rsa_aes_128_sha",
    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA, true },
  { "security.ssl3.ecdhe_ecdsa_aes_128_sha",
@@ -1114,6 +1118,14 @@ nsNSSComponent::InitializeNSS()
     do_GetService(NS_SSSERVICE_CONTRACTID);
   if (!sssService) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Cannot initialize site security service\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  // Initialize the cert override service
+  nsCOMPtr<nsICertOverrideService> coService =
+    do_GetService(NS_CERTOVERRIDE_CONTRACTID);
+  if (!coService) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Cannot initialize cert override service\n"));
     return NS_ERROR_FAILURE;
   }
 

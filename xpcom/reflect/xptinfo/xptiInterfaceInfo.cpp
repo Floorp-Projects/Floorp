@@ -48,9 +48,10 @@ xptiInterfaceEntry::Create(const char* name, const nsID& iid,
                            xptiTypelibGuts* aTypelib)
 {
     int namelen = strlen(name);
-    return new (XPT_MALLOC(gXPTIStructArena,
-                           sizeof(xptiInterfaceEntry) + namelen))
-        xptiInterfaceEntry(name, namelen, iid, aDescriptor, aTypelib);
+    void* place =
+        XPT_CALLOC8(gXPTIStructArena, sizeof(xptiInterfaceEntry) + namelen);
+    return new (place) xptiInterfaceEntry(name, namelen, iid, aDescriptor,
+                                          aTypelib);
 }
 
 xptiInterfaceEntry::xptiInterfaceEntry(const char* name,
@@ -60,11 +61,11 @@ xptiInterfaceEntry::xptiInterfaceEntry(const char* name,
                                        xptiTypelibGuts* aTypelib)
     : mIID(iid)
     , mDescriptor(aDescriptor)
-    , mMethodBaseIndex(0)
-    , mConstantBaseIndex(0)
     , mTypelib(aTypelib)
     , mParent(nullptr)
     , mInfo(nullptr)
+    , mMethodBaseIndex(0)
+    , mConstantBaseIndex(0)
     , mFlags(0)
 {
     memcpy(mName, name, nameLength);
@@ -343,7 +344,7 @@ xptiInterfaceEntry::GetInterfaceIndexForParam(uint16_t methodIndex,
     const XPTTypeDescriptor *td = &param->type;
 
     while (XPT_TDP_TAG(td->prefix) == TD_ARRAY) {
-        td = &mDescriptor->additional_types[td->type.additional_type];
+        td = &mDescriptor->additional_types[td->u.array.additional_type];
     }
 
     if(XPT_TDP_TAG(td->prefix) != TD_INTERFACE_TYPE) {
@@ -351,7 +352,7 @@ xptiInterfaceEntry::GetInterfaceIndexForParam(uint16_t methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
-    *interfaceIndex = td->type.iface;
+    *interfaceIndex = (td->u.iface.iface_hi8 << 8) | td->u.iface.iface_lo8;
     return NS_OK;
 }
 
@@ -482,7 +483,7 @@ xptiInterfaceEntry::GetTypeInArray(const nsXPTParamInfo* param,
             NS_ERROR("bad dimension");
             return NS_ERROR_INVALID_ARG;
         }
-        td = &additional_types[td->type.additional_type];
+        td = &additional_types[td->u.array.additional_type];
     }
 
     *type = td;
@@ -556,15 +557,17 @@ xptiInterfaceEntry::GetSizeIsArgNumberForParam(uint16_t methodIndex,
     // verify that this is a type that has size_is
     switch (XPT_TDP_TAG(td->prefix)) {
       case TD_ARRAY:
+        *argnum = td->u.array.argnum;
+        break;
       case TD_PSTRING_SIZE_IS:
       case TD_PWSTRING_SIZE_IS:
+        *argnum = td->u.pstring_is.argnum;
         break;
       default:
         NS_ERROR("not a size_is");
         return NS_ERROR_INVALID_ARG;
     }
 
-    *argnum = td->argnum;
     return NS_OK;
 }
 
@@ -590,8 +593,7 @@ xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16_t methodIndex,
     const XPTTypeDescriptor *td = &param->type;
 
     while (XPT_TDP_TAG(td->prefix) == TD_ARRAY) {
-        td = &mDescriptor->
-                                additional_types[td->type.additional_type];
+        td = &mDescriptor->additional_types[td->u.array.additional_type];
     }
 
     if(XPT_TDP_TAG(td->prefix) != TD_INTERFACE_IS_TYPE) {
@@ -599,7 +601,7 @@ xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16_t methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
-    *argnum = td->argnum;
+    *argnum = td->u.interface_is.argnum;
     return NS_OK;
 }
 

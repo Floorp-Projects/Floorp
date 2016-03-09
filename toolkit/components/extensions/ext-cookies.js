@@ -277,7 +277,7 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
         let secure = details.secure !== null ? details.secure : false;
         let httpOnly = details.httpOnly !== null ? details.httpOnly : false;
         let isSession = details.expirationDate === null;
-        let expiry = isSession ? 0 : details.expirationDate;
+        let expiry = isSession ? Number.MAX_SAFE_INTEGER : details.expirationDate;
         // Ignore storeID.
 
         let cookieAttrs = {host: details.domain, path: path, isSecure: secure};
@@ -295,7 +295,7 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
 
       remove: function(details) {
         for (let cookie of query(details, ["url", "name", "storeId"], extension)) {
-          Services.cookies.remove(cookie.host, cookie.name, cookie.path, false);
+          Services.cookies.remove(cookie.host, cookie.name, cookie.path, cookie.originAttributes, false);
           // Todo: could there be multiple per subdomain?
           return Promise.resolve({
             url: details.url,

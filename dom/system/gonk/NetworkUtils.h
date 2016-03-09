@@ -315,6 +315,9 @@ private:
   CommandResult destroyNetwork(NetworkParams& aOptions);
   CommandResult getNetId(NetworkParams& aOptions);
   CommandResult setMtu(NetworkParams& aOptions);
+  CommandResult getInterfaces(NetworkParams& aOptions);
+  CommandResult getInterfaceConfig(NetworkParams& aOptions);
+  CommandResult setInterfaceConfig(NetworkParams& aOptions);
 
   CommandResult addHostRouteLegacy(NetworkParams& aOptions);
   CommandResult removeHostRouteLegacy(NetworkParams& aOptions);
@@ -344,6 +347,10 @@ private:
   static const CommandFunc sTetheringInterfaceSetAlarmChain[];
   static const CommandFunc sTetheringInterfaceRemoveAlarmChain[];
   static const CommandFunc sTetheringGetStatusChain[];
+  static const CommandFunc sGetInterfacesChain[];
+  static const CommandFunc sGetInterfaceConfigChain[];
+  static const CommandFunc sSetInterfaceConfigChain[];
+
   /**
    * Individual netd command stored in command chain.
    */
@@ -366,7 +373,6 @@ private:
   static void removeAlarm(PARAMS);
   static void setGlobalAlarm(PARAMS);
   static void removeGlobalAlarm(PARAMS);
-  static void setInterfaceUp(PARAMS);
   static void tetherInterface(PARAMS);
   static void addInterfaceToLocalNetwork(PARAMS);
   static void addRouteToLocalNetwork(PARAMS);
@@ -385,6 +391,9 @@ private:
   static void disableNat(PARAMS);
   static void setDefaultInterface(PARAMS);
   static void setInterfaceDns(PARAMS);
+  static void getInterfaceList(PARAMS);
+  static void getConfig(PARAMS);
+  static void setConfig(PARAMS);
   static void wifiTetheringSuccess(PARAMS);
   static void usbTetheringSuccess(PARAMS);
   static void networkInterfaceAlarmSuccess(PARAMS);
@@ -410,6 +419,9 @@ private:
   static void addRouteToSecondaryTable(PARAMS);
   static void removeRouteFromSecondaryTable(PARAMS);
   static void defaultAsyncSuccessHandler(PARAMS);
+  static void getInterfacesSuccess(PARAMS);
+  static void getInterfaceConfigSuccess(PARAMS);
+  static void setInterfaceConfigSuccess(PARAMS);
 
 #undef PARAMS
 
@@ -426,6 +438,10 @@ private:
   static void networkInterfaceAlarmFail(PARAMS);
   static void setDnsFail(PARAMS);
   static void defaultAsyncFailureHandler(PARAMS);
+  static void getInterfacesFail(PARAMS);
+  static void getInterfaceConfigFail(PARAMS);
+  static void setInterfaceConfigFail(PARAMS);
+
 #undef PARAMS
 
   /**

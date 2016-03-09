@@ -18,15 +18,15 @@
   </broadcasterset>
   <menupopup id="menu_HelpPopup">
     <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
-              label="&reportPhishSiteMenu.title2;"
-              accesskey="&reportPhishSiteMenu.accesskey;"
+              label="&reportDeceptiveSiteMenu.title;"
+              accesskey="&reportDeceptiveSiteMenu.accesskey;"
               insertbefore="aboutSeparator"
               observes="reportPhishingBroadcaster"
               oncommand="openUILink(gSafeBrowsing.getReportURL('Phish'), event);"
               onclick="checkForMiddleClick(this, event);"/>
     <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
-              label="&safeb.palm.notforgery.label2;"
-              accesskey="&reportPhishSiteMenu.accesskey;"
+              label="&safeb.palm.notdeceptive.label;"
+              accesskey="&reportDeceptiveSiteMenu.accesskey;"
               insertbefore="aboutSeparator"
               observes="reportPhishingErrorBroadcaster"
               oncommand="openUILinkIn(gSafeBrowsing.getReportURL('PhishMistake'), 'tab');"

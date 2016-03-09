@@ -7,7 +7,7 @@
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
 #include "nsTextFrame.h"
-#include "RestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include <algorithm>
 
 using namespace mozilla;

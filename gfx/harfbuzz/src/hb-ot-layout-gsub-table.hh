@@ -1268,7 +1268,6 @@ struct GSUB : GSUBGPOS
   { return CastR<SubstLookup> (GSUBGPOS::get_lookup (i)); }
 
   static inline void substitute_start (hb_font_t *font, hb_buffer_t *buffer);
-  static inline void substitute_finish (hb_font_t *font, hb_buffer_t *buffer);
 
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
@@ -1295,11 +1294,6 @@ GSUB::substitute_start (hb_font_t *font, hb_buffer_t *buffer)
     _hb_glyph_info_clear_lig_props (&buffer->info[i]);
     buffer->info[i].syllable() = 0;
   }
-}
-
-void
-GSUB::substitute_finish (hb_font_t *font HB_UNUSED, hb_buffer_t *buffer HB_UNUSED)
-{
 }
 
 

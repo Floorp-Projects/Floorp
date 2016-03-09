@@ -36,7 +36,7 @@ global.IconDetails = {
   //
   // If no context is specified, instead of throwing an error, this
   // function simply logs a warning message.
-  normalize(details, extension, context = null, localize = false) {
+  normalize(details, extension, context = null) {
     let result = {};
 
     try {
@@ -73,12 +73,7 @@ global.IconDetails = {
             throw new Error(`Invalid icon size ${size}, must be an integer`);
           }
 
-          let url = path[size];
-          if (localize) {
-            url = extension.localize(url);
-          }
-
-          url = baseURI.resolve(path[size]);
+          let url = baseURI.resolve(path[size]);
 
           // The Chrome documentation specifies these parameters as
           // relative paths. We currently accept absolute URLs as well,
@@ -107,10 +102,10 @@ global.IconDetails = {
 
   // Returns the appropriate icon URL for the given icons object and the
   // screen resolution of the given window.
-  getURL(icons, window, extension) {
+  getURL(icons, window, extension, size = 18) {
     const DEFAULT = "chrome://browser/content/extension.svg";
 
-    return AddonManager.getPreferredIconURL({icons: icons}, 18, window) || DEFAULT;
+    return AddonManager.getPreferredIconURL({icons: icons}, size, window) || DEFAULT;
   },
 
   convertImageDataToPNG(imageData, context) {
@@ -129,6 +124,19 @@ global.makeWidgetId = id => {
   // FIXME: This allows for collisions.
   return id.replace(/[^a-z0-9_-]/g, "_");
 };
+
+function promisePopupShown(popup) {
+  return new Promise(resolve => {
+    if (popup.state == "open") {
+      resolve();
+    } else {
+      popup.addEventListener("popupshown", function onPopupShown(event) {
+        popup.removeEventListener("popupshown", onPopupShown);
+        resolve();
+      });
+    }
+  });
+}
 
 class BasePopup {
   constructor(extension, viewNode, popupURL) {
@@ -259,6 +267,10 @@ class BasePopup {
 
   // Resizes the browser to match the preferred size of the content.
   resizeBrowser() {
+    if (!this.browser) {
+      return;
+    }
+
     let width, height;
     try {
       let w = {}, h = {};
@@ -315,7 +327,12 @@ global.PanelPopup = class PanelPopup extends BasePopup {
   }
 
   closePopup() {
-    this.viewNode.hidePopup();
+    promisePopupShown(this.viewNode).then(() => {
+      // Make sure we're not already destroyed.
+      if (this.viewNode) {
+        this.viewNode.hidePopup();
+      }
+    });
   }
 };
 
@@ -471,11 +488,60 @@ ExtensionTabManager.prototype = {
 global.TabManager = {
   _tabs: new WeakMap(),
   _nextId: 1,
+  _initialized: false,
+
+  // We begin listening for TabOpen and TabClose events once we've started
+  // assigning IDs to tabs, so that we can remap the IDs of tabs which are moved
+  // between windows.
+  initListener() {
+    if (this._initialized) {
+      return;
+    }
+
+    AllWindowEvents.addListener("TabOpen", this);
+    AllWindowEvents.addListener("TabClose", this);
+    WindowListManager.addOpenListener(this.handleWindowOpen.bind(this));
+
+    this._initialized = true;
+  },
+
+  handleEvent(event) {
+    if (event.type == "TabOpen") {
+      let {adoptedTab} = event.detail;
+      if (adoptedTab) {
+        // This tab is being created to adopt a tab from a different window.
+        // Copy the ID from the old tab to the new.
+        this._tabs.set(event.target, this.getId(adoptedTab));
+      }
+    } else if (event.type == "TabClose") {
+      let {adoptedBy} = event.detail;
+      if (adoptedBy) {
+        // This tab is being closed because it was adopted by a new window.
+        // Copy its ID to the new tab, in case it was created as the first tab
+        // of a new window, and did not have an `adoptedTab` detail when it was
+        // opened.
+        this._tabs.set(adoptedBy, this.getId(event.target));
+      }
+    }
+  },
+
+  handleWindowOpen(window) {
+    if (window.arguments[0] instanceof window.XULElement) {
+      // If the first window argument is a XUL element, it means the
+      // window is about to adopt a tab from another window to replace its
+      // initial tab.
+      let adoptedTab = window.arguments[0];
+
+      this._tabs.set(window.gBrowser.tabs[0], this.getId(adoptedTab));
+    }
+  },
 
   getId(tab) {
     if (this._tabs.has(tab)) {
       return this._tabs.get(tab);
     }
+    this.initListener();
+
     let id = this._nextId++;
     this._tabs.set(tab, id);
     return id;
@@ -559,6 +625,16 @@ global.WindowManager = {
 
   windowType(window) {
     // TODO: Make this work.
+
+    let {chromeFlags} = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIDocShell)
+                              .treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIXULWindow);
+
+    if (chromeFlags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG) {
+      return "popup";
+    }
+
     return "normal";
   },
 
@@ -571,7 +647,11 @@ global.WindowManager = {
     return id;
   },
 
-  getWindow(id) {
+  getWindow(id, context) {
+    if (id == this.WINDOW_ID_CURRENT) {
+      return currentWindow(context);
+    }
+
     for (let window of WindowListManager.browserWindows(true)) {
       if (this.getId(window) == id) {
         return window;
@@ -580,19 +660,66 @@ global.WindowManager = {
     return null;
   },
 
+  setState(window, state) {
+    if (state != "fullscreen" && window.fullScreen) {
+      window.fullScreen = false;
+    }
+
+    switch (state) {
+      case "maximized":
+        window.maximize();
+        break;
+
+      case "minimized":
+      case "docked":
+        window.minimize();
+        break;
+
+      case "normal":
+        // Restore sometimes returns the window to its previous state, rather
+        // than to the "normal" state, so it may need to be called anywhere from
+        // zero to two times.
+        window.restore();
+        if (window.windowState != window.STATE_NORMAL) {
+          window.restore();
+        }
+        if (window.windowState != window.STATE_NORMAL) {
+          // And on OS-X, where normal vs. maximized is basically a heuristic,
+          // we need to cheat.
+          window.sizeToContent();
+        }
+        break;
+
+      case "fullscreen":
+        window.fullScreen = true;
+        break;
+
+      default:
+        throw new Error(`Unexpected window state: ${state}`);
+    }
+  },
+
   convert(extension, window, getInfo) {
+    const STATES = {
+      [window.STATE_MAXIMIZED]: "maximized",
+      [window.STATE_MINIMIZED]: "minimized",
+      [window.STATE_NORMAL]: "normal",
+    };
+    let state = STATES[window.windowState];
+    if (window.fullScreen) {
+      state = "fullscreen";
+    }
+
     let result = {
       id: this.getId(window),
-      focused: window == WindowManager.topWindow,
+      focused: window.document.hasFocus(),
       top: window.screenY,
       left: window.screenX,
       width: window.outerWidth,
       height: window.outerHeight,
       incognito: PrivateBrowsingUtils.isWindowPrivate(window),
-
-      // We fudge on these next two.
       type: this.windowType(window),
-      state: window.fullScreen ? "fullscreen" : "normal",
+      state,
     };
 
     if (getInfo && getInfo.populate) {

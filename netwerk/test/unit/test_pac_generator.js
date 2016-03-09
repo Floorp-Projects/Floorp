@@ -4,6 +4,7 @@
 "use strict";
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var ios = Cc["@mozilla.org/network/io-service;1"]
              .getService(Components.interfaces.nsIIOService);
@@ -138,14 +139,10 @@ function test_resolve_type(type, host, callback) {
     return app;
   };
 
-  let channel = ios.newChannel2(type + "://" + host + "/",
-                                null,
-                                null,
-                                null,      // aLoadingNode
-                                Services.scriptSecurityManager.getSystemPrincipal(),
-                                null,      // aTriggeringPrincipal
-                                Ci.nsILoadInfo.SEC_NORMAL,
-                                Ci.nsIContentPolicy.TYPE_OTHER);
+  let channel = NetUtil.newChannel({
+    uri: type + "://" + host + "/",
+    loadUsingSystemPrincipal: true
+  });
   channel.notificationCallbacks =
     AppsUtils.createLoadContext(MY_APP_ID, true);
 

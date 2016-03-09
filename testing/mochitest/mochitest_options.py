@@ -233,20 +233,6 @@ class MochitestArguments(ArgumentContainer):
           "default": False,
           "suppress": True,
           }],
-        [["--webapprt-content"],
-         {"action": "store_true",
-          "dest": "webapprtContent",
-          "help": "Run WebappRT content tests.",
-          "default": False,
-          "suppress": True,
-          }],
-        [["--webapprt-chrome"],
-         {"action": "store_true",
-          "dest": "webapprtChrome",
-          "help": "Run WebappRT chrome tests.",
-          "default": False,
-          "suppress": True,
-          }],
         [["--a11y"],
          {"action": "store_true",
           "help": "Run accessibility Mochitests.",
@@ -407,6 +393,13 @@ class MochitestArguments(ArgumentContainer):
           "default": False,
           "help": "Run tests with electrolysis preferences and test filtering enabled.",
           }],
+        [["--disable-e10s"],
+         {"action": "store_false",
+          "default": False,
+          "dest": "e10s",
+          "help": "Run tests with electrolysis preferences and test filtering disabled.",
+          "suppress": True,
+          }],
         [["--store-chrome-manifest"],
          {"action": "store",
           "help": "Destination path to write a copy of any chrome manifest "
@@ -562,6 +555,16 @@ class MochitestArguments(ArgumentContainer):
          {"default": None,
           "help": "host:port to use when connecting to Marionette",
           }],
+        [["--marionette-port-timeout"],
+         {"default": None,
+          "help": "Timeout while waiting for the marionette port to open.",
+          "suppress": True,
+          }],
+        [["--marionette-socket-timeout"],
+         {"default": None,
+          "help": "Timeout while waiting to receive a message from the marionette server.",
+          "suppress": True,
+          }],
     ]
 
     defaults = {
@@ -681,10 +684,6 @@ class MochitestArguments(ArgumentContainer):
         elif not options.symbolsPath and build_obj:
             options.symbolsPath = os.path.join(build_obj.distdir, 'crashreporter-symbols')
 
-        if options.webapprtContent and options.webapprtChrome:
-            parser.error(
-                "Only one of --webapprt-content and --webapprt-chrome may be given.")
-
         if options.jsdebugger:
             options.extraPrefs += [
                 "devtools.debugger.remote-enabled=true",
@@ -700,6 +699,12 @@ class MochitestArguments(ArgumentContainer):
         if options.debuggerArgs and not options.debugger:
             parser.error(
                 "--debugger-args requires --debugger.")
+
+        if options.valgrind or options.debugger:
+            # valgrind and some debuggers may cause Gecko to start slowly. Make sure
+            # marionette waits long enough to connect.
+            options.marionette_port_timeout = 900
+            options.marionette_socket_timeout = 540
 
         if options.store_chrome_manifest:
             options.store_chrome_manifest = os.path.abspath(options.store_chrome_manifest)

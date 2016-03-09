@@ -18,17 +18,16 @@ window.onload = function() {
   var Cc = Components.classes;
   var Ci = Components.interfaces;
 
-  Cu.import("resource://gre/modules/Services.jsm");
+  var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  var Services = require("Services");
+  var { DebuggerClient } = require("devtools/shared/client/main");
+  var { DebuggerServer } = require("devtools/server/main");
 
   // Always log packets when running tests.
   Services.prefs.setBoolPref("devtools.debugger.log", true);
   SimpleTest.registerCleanupFunction(function() {
     Services.prefs.clearUserPref("devtools.debugger.log");
   });
-
-  var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  var { DebuggerClient } = require("devtools/shared/client/main");
-  var { DebuggerServer } = require("devtools/server/main");
 
   SimpleTest.waitForExplicitFinish();
 

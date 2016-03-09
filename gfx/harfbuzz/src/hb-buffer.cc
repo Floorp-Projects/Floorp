@@ -407,6 +407,8 @@ hb_buffer_t::move_to (unsigned int i)
     idx = i;
     return true;
   }
+  if (unlikely (in_error))
+    return false;
 
   assert (i <= out_len + (len - idx));
 

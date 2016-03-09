@@ -7,6 +7,7 @@
 #include "FileReaderSync.h"
 
 #include "jsfriendapi.h"
+#include "mozilla/unused.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/File.h"
@@ -85,7 +86,9 @@ FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
-  bufferData.release();
+  // arrayBuffer takes the ownership when it is not null. Otherwise we
+  // need to release it explicitly.
+  mozilla::Unused << bufferData.release();
 
   aRetval.set(arrayBuffer);
 }

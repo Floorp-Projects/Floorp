@@ -143,7 +143,7 @@ add_task(function* testChromeHearsPluginCrashFirst() {
   mm.sendAsyncMessage(CRASHED_MESSAGE,
                       { pluginName: "", runID, state: "please" });
 
-  let [gotExpected, msg] = yield ContentTask.spawn(browser, {}, function* () {
+  yield ContentTask.spawn(browser, null, function* () {
     // At this point, the content process should have heard the
     // plugin crash message from the parent, and we are OK to emit
     // the PluginCrashed event.
@@ -154,7 +154,8 @@ add_task(function* testChromeHearsPluginCrashFirst() {
                                                           "submitStatus");
 
     if (statusDiv.getAttribute("status") == "please") {
-      return [false, "Did not expect plugin to be in crash report mode yet."];
+      Assert.ok(false, "Did not expect plugin to be in crash report mode yet.");
+      return;
     }
 
     // Now we need the plugin to seem crashed to PluginContent.jsm, without
@@ -176,11 +177,9 @@ add_task(function* testChromeHearsPluginCrashFirst() {
     });
 
     plugin.dispatchEvent(event);
-    return [statusDiv.getAttribute("status") == "please",
-            "Should have been showing crash report UI"];
+    Assert.equal(statusDiv.getAttribute("status"), "please",
+      "Should have been showing crash report UI");
   });
-
-  ok(gotExpected, msg);
   yield BrowserTestUtils.closeWindow(win);
 });
 
@@ -202,7 +201,7 @@ add_task(function* testContentHearsCrashFirst() {
   let runID = yield preparePlugin(browser,
                                   Ci.nsIObjectLoadingContent.PLUGIN_CRASHED);
 
-  let [gotExpected, msg] = yield ContentTask.spawn(browser, null, function* () {
+  yield ContentTask.spawn(browser, null, function* () {
     // At this point, the content process has not yet heard from the
     // parent about the crash report. Let's ensure that by making sure
     // we're not showing the plugin crash report UI.
@@ -213,7 +212,7 @@ add_task(function* testContentHearsCrashFirst() {
                                                           "submitStatus");
 
     if (statusDiv.getAttribute("status") == "please") {
-      return [false, "Did not expect plugin to be in crash report mode yet."];
+      Assert.ok(false, "Did not expect plugin to be in crash report mode yet.");
     }
 
     let event = new content.PluginCrashedEvent("PluginCrashed", {
@@ -227,11 +226,9 @@ add_task(function* testContentHearsCrashFirst() {
 
     plugin.dispatchEvent(event);
 
-    return [statusDiv.getAttribute("status") != "please",
-            "Should not yet be showing crash report UI"];
+    Assert.notEqual(statusDiv.getAttribute("status"), "please",
+      "Should not yet be showing crash report UI");
   });
-
-  ok(gotExpected, msg);
 
   // Now send the message down to PluginContent.jsm that the plugin has
   // crashed...
@@ -239,7 +236,7 @@ add_task(function* testContentHearsCrashFirst() {
   mm.sendAsyncMessage(CRASHED_MESSAGE,
                       { pluginName: "", runID, state: "please"});
 
-  [gotExpected, msg] = yield ContentTask.spawn(browser, null, function* () {
+  yield ContentTask.spawn(browser, null, function* () {
     // At this point, the content process will have heard the message
     // from the parent and reacted to it. We should be showing the plugin
     // crash report UI now.
@@ -249,11 +246,9 @@ add_task(function* testContentHearsCrashFirst() {
                           .getAnonymousElementByAttribute(plugin, "anonid",
                                                           "submitStatus");
 
-    return [statusDiv.getAttribute("status") == "please",
-            "Should have been showing crash report UI"];
+    Assert.equal(statusDiv.getAttribute("status"), "please",
+      "Should have been showing crash report UI");
   });
-
-  ok(gotExpected, msg);
 
   yield BrowserTestUtils.closeWindow(win);
 });

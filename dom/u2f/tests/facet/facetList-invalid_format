@@ -1,0 +1,6 @@
+# This file isn't actually JSON, so it shouldn't successfully parse.
+{
+  "trustedFacets" : [{
+    "version": { "major": 1, "minor" : 0 },
+  },{}]
+}

@@ -43,8 +43,7 @@ function resetPassword()
           wallet.WALLET_DeleteAll();
         }
       }
-    }
-    catch(e) {
+    } catch (e) {
       // wallet.crypto pref is missing
     }
   }

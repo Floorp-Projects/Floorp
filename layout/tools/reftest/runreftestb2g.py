@@ -250,9 +250,6 @@ class B2GRemoteReftest(RefTest):
         prefs["reftest.browser.iframe.enabled"] = False
         prefs["reftest.remote"] = True
 
-        # Set a future policy version to avoid the telemetry prompt.
-        prefs["toolkit.telemetry.prompted"] = 999
-        prefs["toolkit.telemetry.notifiedOptOut"] = 999
         # Make sure we disable system updates
         prefs["app.update.enabled"] = False
         prefs["app.update.url"] = ""

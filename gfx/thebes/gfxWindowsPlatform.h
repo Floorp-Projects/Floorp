@@ -204,7 +204,8 @@ public:
     virtual bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags) override;
 
     bool DidRenderingDeviceReset(DeviceResetReason* aResetReason = nullptr) override;
-    bool UpdateForDeviceReset() override;
+    void SchedulePaintIfDeviceReset() override;
+    void UpdateRenderModeIfDeviceReset() override;
 
     mozilla::gfx::BackendType GetContentBackendFor(mozilla::layers::LayersBackend aLayers) override;
 
@@ -272,7 +273,7 @@ public:
     mozilla::gfx::FeatureStatus GetD2D1Status() const;
     unsigned GetD3D11Version();
 
-    void TestDeviceReset(DeviceResetReason aReason) override;
+    void TestDeviceReset(DeviceResetReason aReason);
 
     virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
     static mozilla::Atomic<size_t> sD3D11MemoryUsed;

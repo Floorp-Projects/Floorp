@@ -57,8 +57,9 @@ function tamper(inFilePath, outFilePath, modifications, newEntries) {
                                     outEntryInput,
                                     false);
             } finally {
-              if (entryInput != outEntryInput)
+              if (entryInput != outEntryInput) {
                 outEntryInput.close();
+              }
             }
           }
         } finally {
@@ -71,9 +72,9 @@ function tamper(inFilePath, outFilePath, modifications, newEntries) {
 
     // Any leftover modification means that we were expecting to modify an entry
     // in the input file that wasn't there.
-    for(var name in modifications) {
+    for (let name in modifications) {
       if (modifications.hasOwnProperty(name)) {
-        throw "input file was missing expected entries: " + name;
+        throw new Error("input file was missing expected entries: " + name);
       }
     }
 
@@ -100,14 +101,16 @@ function tamper(inFilePath, outFilePath, modifications, newEntries) {
 function removeEntry(entry, entryInput) { return [null, null]; }
 
 function truncateEntry(entry, entryInput) {
-  if (entryInput.available() == 0)
-    throw "Truncating already-zero length entry will result in identical entry.";
+  if (entryInput.available() == 0) {
+    throw new Error("Truncating already-zero length entry will result in " +
+                    "identical entry.");
+  }
 
   var content = Cc["@mozilla.org/io/string-input-stream;1"]
                   .createInstance(Ci.nsIStringInputStream);
   content.data = "";
 
-  return [entry, content]
+  return [entry, content];
 }
 
 function run_test() {

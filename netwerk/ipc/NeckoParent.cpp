@@ -127,8 +127,8 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
     TabContext tabContext = contextArray[i];
     uint32_t appId = tabContext.OwnOrContainingAppId();
     bool inBrowserElement = aSerialized.IsNotNull() ?
-                              aSerialized.mOriginAttributes.mInBrowser :
-                              tabContext.IsBrowserElement();
+                              aSerialized.mOriginAttributes.mInIsolatedMozBrowser :
+                              tabContext.IsIsolatedMozBrowserElement();
 
     if (appId == NECKO_UNKNOWN_APP_ID) {
       continue;
@@ -138,7 +138,7 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
       if (tabContext.HasOwnApp()) {
         continue;
       }
-      if (UsingNeckoIPCSecurity() && tabContext.IsBrowserElement()) {
+      if (UsingNeckoIPCSecurity() && tabContext.IsIsolatedMozBrowserElement()) {
         // <iframe mozbrowser> which doesn't have an <iframe mozapp> above it.
         // This is not supported now, and we'll need to do a code audit to make
         // sure we can handle it (i.e don't short-circuit using separate
@@ -156,7 +156,7 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
     }
     aAttrs = DocShellOriginAttributes();
     aAttrs.mAppId = appId;
-    aAttrs.mInBrowser = inBrowserElement;
+    aAttrs.mInIsolatedMozBrowser = inBrowserElement;
     aAttrs.mSignedPkg = aSerialized.mOriginAttributes.mSignedPkg;
     aAttrs.mUserContextId = aSerialized.mOriginAttributes.mUserContextId;
 

@@ -8,10 +8,10 @@
    since they aren't loaded in this context (within commandlineoutput.xhtml
    and commandlinetooltip.xhtml). */
 :root[devtoolstheme="light"] {
-  --gcli-background-color: #ebeced; /* --theme-tab-toolbar-background */
-  --gcli-input-focused-background: #f7f7f7; /* --theme-sidebar-background */
-  --gcli-input-color: #18191a; /* --theme-body-color */
-  --gcli-border-color: #aaaaaa; /* --theme-splitter-color */
+  --gcli-background-color: #fcfcfc; /* --theme-tab-toolbar-background */
+  --gcli-input-focused-background: #ffffff; /* --theme-sidebar-background */
+  --gcli-input-color: #393f4c; /* --theme-body-color */
+  --gcli-border-color: #dde1e4; /* --theme-splitter-color */
 }
 
 :root[devtoolstheme="dark"] {

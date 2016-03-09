@@ -290,10 +290,15 @@ void
 ContentClientRemoteBuffer::CreateBackBuffer(const IntRect& aBufferRect)
 {
   // gfx::BackendType::NONE means fallback to the content backend
+  TextureAllocationFlags textureAllocFlags
+                         = (mTextureFlags & TextureFlags::COMPONENT_ALPHA) ?
+                            TextureAllocationFlags::ALLOC_CLEAR_BUFFER_BLACK :
+                            TextureAllocationFlags::ALLOC_CLEAR_BUFFER;
+
   mTextureClient = CreateTextureClientForDrawing(
     mSurfaceFormat, mSize, BackendSelector::Content,
     mTextureFlags | ExtraTextureFlags(),
-    TextureAllocationFlags::ALLOC_CLEAR_BUFFER
+    textureAllocFlags
   );
   if (!mTextureClient || !AddTextureClient(mTextureClient)) {
     AbortTextureClientCreation();
@@ -443,31 +448,13 @@ ContentClientDoubleBuffered::Updated(const nsIntRegion& aRegionToDraw,
 {
   ContentClientRemoteBuffer::Updated(aRegionToDraw, aVisibleRegion, aDidSelfCopy);
 
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   if (mFrontClient) {
-    // remove old buffer from CompositableHost
-    RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
-    RefPtr<AsyncTransactionTracker> tracker =
-        new RemoveTextureFromCompositableTracker(waiter);
-    // Hold TextureClient until transaction complete.
-    tracker->SetTextureClient(mFrontClient);
-    mFrontClient->SetRemoveFromCompositableWaiter(waiter);
-    // RemoveTextureFromCompositableAsync() expects CompositorChild's presence.
-    GetForwarder()->RemoveTextureFromCompositableAsync(tracker, this, mFrontClient);
+    mFrontClient->RemoveFromCompositable(this);
   }
 
   if (mFrontClientOnWhite) {
-    // remove old buffer from CompositableHost
-    RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
-    RefPtr<AsyncTransactionTracker> tracker =
-        new RemoveTextureFromCompositableTracker(waiter);
-    // Hold TextureClient until transaction complete.
-    tracker->SetTextureClient(mFrontClientOnWhite);
-    mFrontClientOnWhite->SetRemoveFromCompositableWaiter(waiter);
-    // RemoveTextureFromCompositableAsync() expects CompositorChild's presence.
-    GetForwarder()->RemoveTextureFromCompositableAsync(tracker, this, mFrontClientOnWhite);
+    mFrontClientOnWhite->RemoveFromCompositable(this);
   }
-#endif
 }
 
 void

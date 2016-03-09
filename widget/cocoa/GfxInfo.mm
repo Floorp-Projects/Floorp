@@ -50,6 +50,8 @@ OSXVersionToOperatingSystem(uint32_t aOSXVersion)
         return DRIVER_OS_OS_X_10_9;
       case 10:
         return DRIVER_OS_OS_X_10_10;
+      case 11:
+        return DRIVER_OS_OS_X_10_11;
     }
   }
 
@@ -346,6 +348,10 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
         return NS_OK;
       }
+    } else if (aFeature == nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION) {
+      // See bug 1249659
+      *aStatus = (os > DRIVER_OS_OS_X_10_7) ? nsIGfxInfo::FEATURE_STATUS_OK : nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
+      return NS_OK;
     }
   }
 

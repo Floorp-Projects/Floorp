@@ -336,7 +336,7 @@ TextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextText
 </div>
 
 <div id="svgContainer">
-  <svg id="svg" style="width:200px; height:200px; background:lightgray;">
+  <svg id="svg" style="width:200px; height:200px; background:lightgray; border:7px solid blue; padding:4px">
     <circle id="circle" cx="50" cy="50" r="20" fill="red" style="margin:20px; padding:10px; border:15px solid black"></circle>
     <g transform="scale(2)">
       <foreignObject x="50" y="20">
@@ -660,19 +660,26 @@ function runTest() {
   var svgContainerX = svgContainer.getBoundingClientRect().left;
   var svgContainerY = svgContainer.getBoundingClientRect().top;
   checkQuadIsRect("circle", {},
-                  svgContainerX + 30, svgContainerY + 30, 40, 40);
+                  svgContainerX + 41, svgContainerY + 41, 40, 40);
   // Box types are ignored for SVG elements.
   checkQuadIsRect("circle", {box:"content"},
-                  svgContainerX + 30, svgContainerY + 30, 40, 40);
+                  svgContainerX + 41, svgContainerY + 41, 40, 40);
   checkQuadIsRect("circle", {box:"padding"},
-                  svgContainerX + 30, svgContainerY + 30, 40, 40);
+                  svgContainerX + 41, svgContainerY + 41, 40, 40);
   checkQuadIsRect("circle", {box:"margin"},
-                  svgContainerX + 30, svgContainerY + 30, 40, 40);
+                  svgContainerX + 41, svgContainerY + 41, 40, 40);
   checkQuadIsRect("d", {toStr:"circle"},
-                  dX - (svgContainerX + 30), dY - (svgContainerY + 30), dW, dH);
+                  dX - (svgContainerX + 41), dY - (svgContainerY + 41), dW, dH);
   // Test foreignObject inside an SVG transform.
   checkQuadIsRect("foreign", {},
-                  svgContainerX + 100, svgContainerY + 40, 200, 120);
+                  svgContainerX + 111, svgContainerY + 51, 200, 120);
+  // Outer <svg> elements support padding and content boxes
+  checkQuadIsRect("svg", {box:"border"},
+                  svgContainerX, svgContainerY, 222, 222);
+  checkQuadIsRect("svg", {box:"padding"},
+                  svgContainerX + 7, svgContainerY + 7, 208, 208);
+  checkQuadIsRect("svg", {box:"content"},
+                  svgContainerX + 11, svgContainerY + 11, 200, 200);
 
   // XXX Test SVG text (probably broken; unclear what the best way is to handle it)
 

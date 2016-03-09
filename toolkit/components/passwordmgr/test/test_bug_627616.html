@@ -65,7 +65,7 @@
     }
     function cleanup() {
         var pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-        pwmgr.removeLogin(login);        
+        pwmgr.removeLogin(login);
         pwmgr.removeLogin(login2);
         timer.cancel();
     }

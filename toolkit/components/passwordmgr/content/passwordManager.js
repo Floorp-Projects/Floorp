@@ -4,6 +4,8 @@
 
 /*** =================== SAVED SIGNONS CODE =================== ***/
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
+
 var kSignonBundle;
 var showingPasswords = false;
 var dateFormatter = new Intl.DateTimeFormat(undefined,
@@ -243,11 +245,10 @@ function HandleSignonKeyPress(e) {
   if (signonsTree.getAttribute("editing")) {
     return;
   }
-  if (e.keyCode == KeyEvent.DOM_VK_DELETE
-#ifdef XP_MACOSX
-      || e.keyCode == KeyEvent.DOM_VK_BACK_SPACE
-#endif
-   ) {
+  if (e.keyCode == KeyEvent.DOM_VK_DELETE ||
+      (AppConstants.platform == "macosx" &&
+       e.keyCode == KeyEvent.DOM_VK_BACK_SPACE))
+  {
     DeleteSignon();
   }
 }

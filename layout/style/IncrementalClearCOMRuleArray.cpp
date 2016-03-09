@@ -6,6 +6,7 @@
 
 #include "mozilla/IncrementalClearCOMRuleArray.h"
 
+#include <algorithm> // For std::min
 #include "nsCycleCollector.h"
 #include "mozilla/DeferredFinalize.h"
 #include "nsTArray.h"

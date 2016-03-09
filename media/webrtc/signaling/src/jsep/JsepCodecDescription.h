@@ -130,14 +130,71 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
       : JsepCodecDescription(mozilla::SdpMediaSection::kAudio, defaultPt, name,
                              clock, channels, enabled),
         mPacketSize(packetSize),
-        mBitrate(bitRate)
+        mBitrate(bitRate),
+        mMaxPlaybackRate(0),
+        mForceMono(false)
   {
   }
 
   JSEP_CODEC_CLONE(JsepAudioCodecDescription)
 
+  SdpFmtpAttributeList::OpusParameters
+  GetOpusParameters(const std::string& pt,
+                    const SdpMediaSection& msection) const
+  {
+    // Will contain defaults if nothing else
+    SdpFmtpAttributeList::OpusParameters result;
+    auto* params = msection.FindFmtp(pt);
+
+    if (params && params->codec_type == SdpRtpmapAttributeList::kOpus) {
+      result =
+        static_cast<const SdpFmtpAttributeList::OpusParameters&>(*params);
+    }
+
+    return result;
+  }
+
+  void
+  AddParametersToMSection(SdpMediaSection& msection) const override
+  {
+    if (mDirection == sdp::kSend) {
+      return;
+    }
+
+    if (mName == "opus") {
+      SdpFmtpAttributeList::OpusParameters opusParams(
+          GetOpusParameters(mDefaultPt, msection));
+      if (mMaxPlaybackRate) {
+        opusParams.maxplaybackrate = mMaxPlaybackRate;
+      }
+      if (mChannels == 2 && !mForceMono) {
+        // We prefer to receive stereo, if available.
+        opusParams.stereo = 1;
+      }
+      msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, opusParams));
+    }
+  }
+
+  bool
+  Negotiate(const std::string& pt,
+            const SdpMediaSection& remoteMsection) override
+  {
+    JsepCodecDescription::Negotiate(pt, remoteMsection);
+    if (mName == "opus" && mDirection == sdp::kSend) {
+      SdpFmtpAttributeList::OpusParameters opusParams(
+          GetOpusParameters(mDefaultPt, remoteMsection));
+
+      mMaxPlaybackRate = opusParams.maxplaybackrate;
+      mForceMono = !opusParams.stereo;
+    }
+
+    return true;
+  }
+
   uint32_t mPacketSize;
   uint32_t mBitrate;
+  uint32_t mMaxPlaybackRate;
+  bool mForceMono;
 };
 
 class JsepVideoCodecDescription : public JsepCodecDescription {
@@ -200,8 +257,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
       // Hard-coded, may need to change someday?
       h264Params.level_asymmetry_allowed = true;
 
-      msection.SetFmtp(
-          SdpFmtpAttributeList::Fmtp(mDefaultPt, "", h264Params));
+      msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, h264Params));
     } else if (mName == "VP8" || mName == "VP9") {
       if (mDirection == sdp::kRecv) {
         // VP8 and VP9 share the same SDP parameters thus far
@@ -210,8 +266,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
 
         vp8Params.max_fs = mConstraints.maxFs;
         vp8Params.max_fr = mConstraints.maxFps;
-        msection.SetFmtp(
-            SdpFmtpAttributeList::Fmtp(mDefaultPt, "", vp8Params));
+        msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, vp8Params));
       }
     }
   }

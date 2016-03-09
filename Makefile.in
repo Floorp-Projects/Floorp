@@ -66,19 +66,19 @@ CLOBBER: $(topsrcdir)/CLOBBER
 	@exit 1
 endif
 
-$(topsrcdir)/configure: $(topsrcdir)/configure.in
-$(topsrcdir)/js/src/configure: $(topsrcdir)/js/src/configure.in
+$(topsrcdir)/configure: $(topsrcdir)/configure.in $(topsrcdir)/old-configure.in
+$(topsrcdir)/js/src/configure: $(topsrcdir)/js/src/configure.in $(topsrcdir)/js/src/old-configure.in
 $(topsrcdir)/configure $(topsrcdir)/js/src/configure:
-	@echo 'STOP!  $^ has changed, and your configure is out of date.'
+	@echo 'STOP!  $? has changed, and your configure is out of date.'
 	@echo 'Please rerun autoconf and re-configure your build directory.'
 	@echo 'To ignore this message, touch "$@",'
 	@echo 'but your build might not succeed.'
 	@exit 1
 
-config.status: $(configure_dir)/configure
-js/src/config.status: $(topsrcdir)/js/src/configure
+config.status: $(configure_dir)/configure $(configure_dir)/old-configure
+js/src/config.status: $(topsrcdir)/js/src/configure $(topsrcdir)/js/src/old-configure
 config.status js/src/config.status:
-	@echo 'STOP!  $^ has changed and needs to be run again.'
+	@echo 'STOP!  $? has changed and needs to be run again.'
 	@echo 'Please rerun it.'
 	@echo 'To ignore this message, touch "$(CURDIR)/$@",'
 	@echo 'but your build might not succeed.'
@@ -249,7 +249,11 @@ MAKE_SYM_STORE_ARGS := -c --vcs-info
 ifdef PDBSTR_PATH
 MAKE_SYM_STORE_ARGS += -i
 endif
+ifdef MSVC_HAS_DIA_SDK
+DUMP_SYMS_BIN ?= $(DIST)/host/bin/dump_syms.exe
+else
 DUMP_SYMS_BIN ?= $(topsrcdir)/toolkit/crashreporter/tools/win32/dump_syms_vc$(_MSC_VER).exe
+endif
 # PDB files don't get moved to dist, so we need to scan the whole objdir
 MAKE_SYM_STORE_PATH := .
 endif

@@ -35,7 +35,7 @@ namespace mozilla
 class MockAccessibleCaretManager : public AccessibleCaretManager
 {
 public:
-  explicit MockAccessibleCaretManager()
+  MockAccessibleCaretManager()
     : AccessibleCaretManager(nullptr)
   {
   }
@@ -63,7 +63,7 @@ public:
   using AccessibleCaretEventHub::LongTapState;
   using AccessibleCaretEventHub::FireScrollEnd;
 
-  explicit MockAccessibleCaretEventHub()
+  MockAccessibleCaretEventHub()
     : AccessibleCaretEventHub(nullptr)
   {
     mManager = MakeUnique<MockAccessibleCaretManager>();
@@ -101,10 +101,20 @@ public:
 class AccessibleCaretEventHubTester : public ::testing::Test
 {
 public:
-  explicit AccessibleCaretEventHubTester()
+  AccessibleCaretEventHubTester()
   {
     DefaultValue<nsresult>::Set(NS_OK);
     EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
+
+    // AccessibleCaretEventHub requires the caller to hold a ref to it. We just
+    // add ref here for the sake of convenience.
+    mHub.get()->AddRef();
+  }
+
+  ~AccessibleCaretEventHubTester()
+  {
+    // Release the ref added in the constructor.
+    mHub.get()->Release();
   }
 
   static UniquePtr<WidgetEvent> CreateMouseEvent(EventMessage aMessage,
@@ -158,7 +168,7 @@ public:
     return Move(event);
   }
 
-  static UniquePtr<WidgetEvent> CreateTouchPressEvent(nscoord aX, nscoord aY)
+  static UniquePtr<WidgetEvent> CreateTouchStartEvent(nscoord aX, nscoord aY)
   {
     return CreateTouchEvent(eTouchStart, aX, aY);
   }
@@ -168,9 +178,14 @@ public:
     return CreateTouchEvent(eTouchMove, aX, aY);
   }
 
-  static UniquePtr<WidgetEvent> CreateTouchReleaseEvent(nscoord aX, nscoord aY)
+  static UniquePtr<WidgetEvent> CreateTouchEndEvent(nscoord aX, nscoord aY)
   {
     return CreateTouchEvent(eTouchEnd, aX, aY);
+  }
+
+  static UniquePtr<WidgetEvent> CreateTouchCancelEvent(nscoord aX, nscoord aY)
+  {
+    return CreateTouchEvent(eTouchCancel, aX, aY);
   }
 
   static UniquePtr<WidgetEvent> CreateWheelEvent(EventMessage aMessage)
@@ -242,7 +257,7 @@ TEST_F(AccessibleCaretEventHubTester, TestMousePressReleaseOnNoCaret)
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchPressReleaseOnNoCaret)
 {
-  TestPressReleaseOnNoCaret(CreateTouchPressEvent, CreateTouchReleaseEvent);
+  TestPressReleaseOnNoCaret(CreateTouchStartEvent, CreateTouchEndEvent);
 }
 
 template <typename PressEventCreator, typename ReleaseEventCreator>
@@ -274,7 +289,7 @@ TEST_F(AccessibleCaretEventHubTester, TestMousePressReleaseOnCaret)
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchPressReleaseOnCaret)
 {
-  TestPressReleaseOnCaret(CreateTouchPressEvent, CreateTouchReleaseEvent);
+  TestPressReleaseOnCaret(CreateTouchStartEvent, CreateTouchEndEvent);
 }
 
 template <typename PressEventCreator, typename ReleaseEventCreator>
@@ -317,8 +332,8 @@ TEST_F(AccessibleCaretEventHubTester, TestMousePressMoveReleaseOnNoCaret)
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchPressMoveReleaseOnNoCaret)
 {
-  TestPressMoveReleaseOnNoCaret(CreateTouchPressEvent, CreateTouchMoveEvent,
-                                CreateTouchReleaseEvent);
+  TestPressMoveReleaseOnNoCaret(CreateTouchStartEvent, CreateTouchMoveEvent,
+                                CreateTouchEndEvent);
 }
 
 template <typename PressEventCreator, typename MoveEventCreator,
@@ -371,8 +386,8 @@ TEST_F(AccessibleCaretEventHubTester, TestMousePressMoveReleaseOnCaret)
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchPressMoveReleaseOnCaret)
 {
-  TestPressMoveReleaseOnCaret(CreateTouchPressEvent, CreateTouchMoveEvent,
-                              CreateTouchReleaseEvent);
+  TestPressMoveReleaseOnCaret(CreateTouchStartEvent, CreateTouchMoveEvent,
+                              CreateTouchEndEvent);
 }
 
 template <typename PressEventCreator, typename MoveEventCreator,
@@ -429,6 +444,65 @@ AccessibleCaretEventHubTester::TestPressMoveReleaseOnCaret(
                            nsEventStatus_eConsumeNoDefault);
 }
 
+TEST_F(AccessibleCaretEventHubTester,
+       TestTouchStartMoveEndOnCaretWithTouchCancelIgnored)
+{
+  nscoord x0 = 0, y0 = 0;
+  nscoord x1 = 100, y1 = 100;
+  nscoord x2 = 300, y2 = 300;
+  nscoord x3 = 400, y3 = 400;
+
+  {
+    InSequence dummy;
+
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), PressCaret(_))
+      .WillOnce(Return(NS_OK));
+
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), DragCaret(_))
+      .WillOnce(Return(NS_OK));
+
+    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), ReleaseCaret())
+      .WillOnce(Return(NS_OK));
+  }
+
+  // All the eTouchCancel events should be ignored in this test.
+
+  HandleEventAndCheckState(CreateTouchStartEvent(x0, y0),
+                           MockAccessibleCaretEventHub::PressCaretState(),
+                           nsEventStatus_eConsumeNoDefault);
+
+  HandleEventAndCheckState(CreateTouchCancelEvent(x0, y0),
+                           MockAccessibleCaretEventHub::PressCaretState(),
+                           nsEventStatus_eIgnore);
+
+  // A small move with the distance between (x0, y0) and (x1, y1) below the
+  // tolerance value.
+  HandleEventAndCheckState(CreateTouchMoveEvent(x1, y1),
+                           MockAccessibleCaretEventHub::PressCaretState(),
+                           nsEventStatus_eConsumeNoDefault);
+
+  HandleEventAndCheckState(CreateTouchCancelEvent(x1, y1),
+                           MockAccessibleCaretEventHub::PressCaretState(),
+                           nsEventStatus_eIgnore);
+
+  // A large move forms a valid drag since the distance between (x0, y0) and
+  // (x2, y2) is above the tolerance value.
+  HandleEventAndCheckState(CreateTouchMoveEvent(x2, y2),
+                           MockAccessibleCaretEventHub::DragCaretState(),
+                           nsEventStatus_eConsumeNoDefault);
+
+  HandleEventAndCheckState(CreateTouchCancelEvent(x2, y2),
+                           MockAccessibleCaretEventHub::DragCaretState(),
+                           nsEventStatus_eIgnore);
+
+  HandleEventAndCheckState(CreateTouchEndEvent(x3, y3),
+                           MockAccessibleCaretEventHub::NoActionState(),
+                           nsEventStatus_eConsumeNoDefault);
+
+  HandleEventAndCheckState(CreateTouchCancelEvent(x3, y3),
+                           MockAccessibleCaretEventHub::NoActionState(),
+                           nsEventStatus_eIgnore);}
+
 TEST_F(AccessibleCaretEventHubTester, TestMouseLongTapWithSelectWordSuccessful)
 {
   TestLongTapWithSelectWordSuccessful(CreateMousePressEvent,
@@ -437,8 +511,8 @@ TEST_F(AccessibleCaretEventHubTester, TestMouseLongTapWithSelectWordSuccessful)
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchLongTapWithSelectWordSuccessful)
 {
-  TestLongTapWithSelectWordSuccessful(CreateTouchPressEvent,
-                                      CreateTouchReleaseEvent);
+  TestLongTapWithSelectWordSuccessful(CreateTouchStartEvent,
+                                      CreateTouchEndEvent);
 }
 
 template <typename PressEventCreator, typename ReleaseEventCreator>
@@ -521,8 +595,8 @@ TEST_F(AccessibleCaretEventHubTester, TestMouseLongTapWithSelectWordFailed)
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchLongTapWithSelectWordFailed)
 {
-  TestLongTapWithSelectWordFailed(CreateTouchPressEvent,
-                                  CreateTouchReleaseEvent);
+  TestLongTapWithSelectWordFailed(CreateTouchStartEvent,
+                                  CreateTouchEndEvent);
 }
 
 template <typename PressEventCreator, typename ReleaseEventCreator>
@@ -556,8 +630,8 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordFailed(
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchEventDrivenAsyncPanZoomScroll)
 {
-  TestEventDrivenAsyncPanZoomScroll(CreateTouchPressEvent, CreateTouchMoveEvent,
-                                    CreateTouchReleaseEvent);
+  TestEventDrivenAsyncPanZoomScroll(CreateTouchStartEvent, CreateTouchMoveEvent,
+                                    CreateTouchEndEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestMouseEventDrivenAsyncPanZoomScroll)

@@ -17,6 +17,7 @@
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/ProxyObject.h"
 
 #include "jsscriptinlines.h"
 
@@ -328,16 +329,23 @@ IonBuilder::inlineNativeGetter(CallInfo& callInfo, JSFunction* target)
     }
 
     // Try to optimize RegExp getters.
-    unsigned slot = 0;
-    if (RegExpObject::isOriginalFlagGetter(native, &slot)) {
+    RegExpFlag mask = NoFlags;
+    if (RegExpObject::isOriginalFlagGetter(native, &mask)) {
         const Class* clasp = thisTypes->getKnownClass(constraints());
         if (clasp != &RegExpObject::class_)
             return InliningStatus_NotInlined;
 
-        MLoadFixedSlot* load = MLoadFixedSlot::New(alloc(), thisArg, slot);
-        current->add(load);
-        current->push(load);
-        load->setResultType(MIRType_Boolean);
+        MLoadFixedSlot* flags = MLoadFixedSlot::New(alloc(), thisArg, RegExpObject::flagsSlot());
+        current->add(flags);
+        flags->setResultType(MIRType_Int32);
+        MConstant* maskConst = MConstant::New(alloc(), Int32Value(mask));
+        current->add(maskConst);
+        MBitAnd* maskedFlag = MBitAnd::New(alloc(), flags, maskConst);
+        maskedFlag->setInt32Specialization();
+        current->add(maskedFlag);
+
+        MDefinition* result = convertToBoolean(maskedFlag);
+        current->push(result);
         return InliningStatus_Inlined;
     }
 
@@ -1280,7 +1288,7 @@ IonBuilder::inlineMathPowHelper(MDefinition* lhs, MDefinition* rhs, MIRType outp
 
     // Optimize some constant powers.
     if (rhs->isConstant()) {
-        double pow = rhs->toConstant()->toNumber();
+        double pow = rhs->toConstant()->numberToDouble();
 
         // Math.pow(x, 0.5) is a sqrt with edge-case detection.
         if (pow == 0.5) {
@@ -1486,7 +1494,7 @@ IonBuilder::inlineMathMinMax(CallInfo& callInfo, bool max)
             // Don't force a double MMinMax for arguments that would be a NOP
             // when doing an integer MMinMax.
             if (arg->isConstant()) {
-                double cte = arg->toConstant()->toNumber();
+                double cte = arg->toConstant()->numberToDouble();
                 // min(int32, cte >= INT32_MAX) = int32
                 if (cte >= INT32_MAX && !max)
                     break;
@@ -2173,11 +2181,7 @@ IonBuilder::inlineHasClass(CallInfo& callInfo,
                 last = either;
             }
 
-            // Convert to bool with the '!!' idiom
-            MNot* resultInverted = MNot::New(alloc(), last, constraints());
-            current->add(resultInverted);
-            MNot* result = MNot::New(alloc(), resultInverted, constraints());
-            current->add(result);
+            MDefinition* result = convertToBoolean(last);
             current->push(result);
         }
     }
@@ -2207,17 +2211,26 @@ IonBuilder::inlineIsTypedArrayHelper(CallInfo& callInfo, WrappingBehavior wrappi
     bool result = false;
     switch (types->forAllClasses(constraints(), IsTypedArrayClass)) {
       case TemporaryTypeSet::ForAllResult::ALL_FALSE:
-      case TemporaryTypeSet::ForAllResult::EMPTY: {
         // Wrapped typed arrays won't appear to be typed arrays per a
         // |forAllClasses| query.  If wrapped typed arrays are to be considered
         // typed arrays, a negative answer is not conclusive.  Don't inline in
         // that case.
-        if (wrappingBehavior == AllowWrappedTypedArrays)
-            return InliningStatus_NotInlined;
+        if (wrappingBehavior == AllowWrappedTypedArrays) {
+            switch (types->forAllClasses(constraints(), IsProxyClass)) {
+              case TemporaryTypeSet::ForAllResult::ALL_FALSE:
+              case TemporaryTypeSet::ForAllResult::EMPTY:
+                break;
+              case TemporaryTypeSet::ForAllResult::ALL_TRUE:
+              case TemporaryTypeSet::ForAllResult::MIXED:
+                return InliningStatus_NotInlined;
+            }
+        }
 
+        MOZ_FALLTHROUGH;
+
+      case TemporaryTypeSet::ForAllResult::EMPTY:
         result = false;
         break;
-      }
 
       case TemporaryTypeSet::ForAllResult::ALL_TRUE:
         result = true;
@@ -3165,10 +3178,6 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, SimdType type)
         return inlineSimdShift(callInfo, native, MSimdShift::lsh, type);
       case SimdOperation::Fn_shiftRightByScalar:
         return inlineSimdShift(callInfo, native, MSimdShift::rshForSign(GetSimdSign(type)), type);
-      case SimdOperation::Fn_shiftRightArithmeticByScalar:
-        return inlineSimdShift(callInfo, native, MSimdShift::rsh, type);
-      case SimdOperation::Fn_shiftRightLogicalByScalar:
-        return inlineSimdShift(callInfo, native, MSimdShift::ursh, type);
 
         // Boolean unary.
       case SimdOperation::Fn_allTrue:
@@ -3307,7 +3316,7 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
             defVal = constant(DoubleNaNValue());
         } else {
             MOZ_ASSERT(laneType == MIRType_Float32);
-            defVal = MConstant::NewFloat32(alloc(), GenericNaN());
+            defVal = MConstant::NewFloat32(alloc(), JS::GenericNaN());
             current->add(defVal);
         }
     }
@@ -3647,9 +3656,9 @@ IonBuilder::inlineSimdAnyAllTrue(CallInfo& callInfo, bool IsAllTrue, JSNative na
 
     MUnaryInstruction* ins;
     if (IsAllTrue)
-        ins = MSimdAllTrue::New(alloc(), arg);
+        ins = MSimdAllTrue::New(alloc(), arg, MIRType_Boolean);
     else
-        ins = MSimdAnyTrue::New(alloc(), arg);
+        ins = MSimdAnyTrue::New(alloc(), arg, MIRType_Boolean);
 
     current->add(ins);
     current->push(ins);

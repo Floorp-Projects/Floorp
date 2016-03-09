@@ -68,7 +68,7 @@ public:
   virtual bool RecvRequestDelete() override;
   virtual nsresult OfflineNotification(nsISupports *) override;
   virtual uint32_t GetAppId() override;
-  bool GetInBrowser();
+  bool GetInIsolatedMozBrowser();
 
   void FireErrorEvent(const nsAString& aName, const nsAString& aType, TCPReadyState aReadyState);
   void FireEvent(const nsAString& aType, TCPReadyState aReadyState);
