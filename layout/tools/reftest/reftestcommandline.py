@@ -130,6 +130,10 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           "the extension's id as indicated in its install.rdf. "
                           "An optional path can be specified too.")
 
+        self.add_argument("--marionette",
+                          default=None,
+                          help="host:port to use when connecting to Marionette")
+
         self.add_argument("--setenv",
                           action="append",
                           type=str,
@@ -381,12 +385,6 @@ class B2GArgumentParser(ReftestArgumentsParser):
                           type=str,
                           dest="b2gPath",
                           help="path to B2G repo or qemu dir")
-
-        self.add_argument("--marionette",
-                          action="store",
-                          type=str,
-                          dest="marionette",
-                          help="host:port to use when connecting to Marionette")
 
         self.add_argument("--emulator",
                           action="store",
@@ -649,12 +647,6 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           dest="pidFile",
                           default="",
                           help="name of the pidfile to generate")
-
-        self.add_argument("--bootstrap",
-                          action="store_true",
-                          dest="bootstrap",
-                          default=False,
-                          help="test with a bootstrap addon required for native Fennec")
 
         self.add_argument("--dm_trans",
                           action="store",

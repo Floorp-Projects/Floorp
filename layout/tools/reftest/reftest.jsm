@@ -4,10 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if BOOTSTRAP
-this.EXPORTED_SYMBOLS = ["OnRefTestLoad"];
-#endif
-
+this.EXPORTED_SYMBOLS = ["OnRefTestLoad", "OnRefTestUnload"];
 
 var CC = Components.classes;
 const CI = Components.interfaces;
@@ -180,29 +177,33 @@ function HasUnexpectedResult()
 }
 
 // By default we just log to stdout
-var gDumpFn = dump;
+var gLogFile = null;
 var gDumpRawLog = function(record) {
   // Dump JSON representation of data on a single line
-  var line = JSON.stringify(record);
-  gDumpFn("\n" + line + "\n");
+  var line = "\n" + JSON.stringify(record) + "\n";
+  dump(line);
+
+  if (gLogFile) {
+    gLogFile.write(line, line.length);
+  }
 }
 var logger = new StructuredLogger('reftest', gDumpRawLog);
 
 function TestBuffer(str)
 {
-    logger.debug(str);
-    gTestLog.push(str);
+  logger.debug(str);
+  gTestLog.push(str);
 }
 
 function FlushTestBuffer()
 {
-    // In debug mode, we've dumped all these messages already.
-    if (gLogLevel !== 'debug') {
-        for (var i = 0; i < gTestLog.length; ++i) {
-            logger.info("Saved log: " + gTestLog[i]);
-        }
+  // In debug mode, we've dumped all these messages already.
+  if (gLogLevel !== 'debug') {
+    for (var i = 0; i < gTestLog.length; ++i) {
+      logger.info("Saved log: " + gTestLog[i]);
     }
-    gTestLog = [];
+  }
+  gTestLog = [];
 }
 
 function AllocateCanvas()
@@ -305,19 +306,20 @@ this.OnRefTestLoad = function OnRefTestLoad(win)
     // what size our window is
     gBrowser.setAttribute("style", "padding: 0px; margin: 0px; border:none; min-width: 800px; min-height: 1000px; max-width: 800px; max-height: 1000px");
 
-#ifdef BOOTSTRAP
-#ifdef REFTEST_B2G
-    var doc = gContainingWindow.document.getElementsByTagName("html")[0];
-#else
-    var doc = gContainingWindow.document.getElementById('main-window');
-#endif
-    while (doc.hasChildNodes()) {
-      doc.removeChild(doc.firstChild);
+    if (Services.appinfo.OS == "Android") {
+      let doc;
+      if (Services.appinfo.widgetToolkit == "gonk") {
+        doc = gContainingWindow.document.getElementsByTagName("html")[0];
+      } else {
+        doc = gContainingWindow.document.getElementById('main-window');
+      }
+      while (doc.hasChildNodes()) {
+        doc.removeChild(doc.firstChild);
+      }
+      doc.appendChild(gBrowser);
+    } else {
+      document.getElementById("reftest-window").appendChild(gBrowser);
     }
-    doc.appendChild(gBrowser);
-#else
-    document.getElementById("reftest-window").appendChild(gBrowser);
-#endif
 
     // reftests should have the test plugins enabled, not click-to-play
     let plugin1 = getTestPlugin("Test Plug-in");
@@ -362,27 +364,8 @@ function InitAndStartRefTests()
     try {
         var logFile = prefs.getCharPref("reftest.logFile");
         if (logFile) {
-            try {
-                var f = FileUtils.File(logFile);
-                var mfl = FileUtils.openFileOutputStream(f, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
-                // Set to mirror to stdout as well as the file
-                gDumpFn = function (msg) {
-#ifdef BOOTSTRAP
-#ifdef REFTEST_B2G
-                    dump(msg);
-#else
-                    //NOTE: on android-xul, we have a libc crash if we do a dump with %7s in the string
-#endif
-#else
-                    dump(msg);
-#endif
-                    mfl.write(msg, msg.length);
-                };
-            }
-            catch(e) {
-                // If there is a problem, just use stdout
-                gDumpFn = dump;
-            }
+            var f = FileUtils.File(logFile);
+            gLogFile = FileUtils.openFileOutputStream(f, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
         }
     } catch(e) {}
 
@@ -1382,8 +1365,8 @@ function StartCurrentURI(aState)
         var currentTest = gTotalTests - gURLs.length;
         // Log this to preserve the same overall log format,
         // should be removed if the format is updated
-        gDumpFn("REFTEST TEST-LOAD | " + gCurrentURL + " | " + currentTest + " / " + gTotalTests +
-                " (" + Math.floor(100 * (currentTest / gTotalTests)) + "%)\n");
+        dump("REFTEST TEST-LOAD | " + gCurrentURL + " | " + currentTest + " / " + gTotalTests +
+             " (" + Math.floor(100 * (currentTest / gTotalTests)) + "%)\n");
         TestBuffer("START " + gCurrentURL);
         var type = gURLs[0].type
         if (TYPE_SCRIPT == type) {
@@ -1835,19 +1818,19 @@ function DoAssertionCheck(numAsserts)
 
         if (numAsserts < minAsserts) {
             ++gTestResults.AssertionUnexpectedFixed;
-            gDumpFn("REFTEST TEST-UNEXPECTED-PASS | " + gURLs[0].prettyPath +
-                    " | assertion count" + numAsserts + " is less than " +
+            dump("REFTEST TEST-UNEXPECTED-PASS | " + gURLs[0].prettyPath +
+                 " | assertion count" + numAsserts + " is less than " +
                     expectedAssertions + "\n");
         } else if (numAsserts > maxAsserts) {
             ++gTestResults.AssertionUnexpected;
-            gDumpFn("REFTEST TEST-UNEXPECTED-FAIL | " + gURLs[0].prettyPath +
-                    " | assertion count " + numAsserts + " is more than " +
+            dump("REFTEST TEST-UNEXPECTED-FAIL | " + gURLs[0].prettyPath +
+                 " | assertion count " + numAsserts + " is more than " +
                     expectedAssertions + "\n");
         } else if (numAsserts != 0) {
             ++gTestResults.AssertionKnown;
-            gDumpFn("REFTEST TEST-KNOWN-FAIL | " + gURLs[0].prettyPath +
-                    "assertion count " + numAsserts + " matches " +
-                    expectedAssertions + "\n");
+            dump("REFTEST TEST-KNOWN-FAIL | " + gURLs[0].prettyPath +
+                 "assertion count " + numAsserts + " matches " +
+                 expectedAssertions + "\n");
         }
     }
 
