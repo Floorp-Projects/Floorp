@@ -3497,8 +3497,8 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
     return false;
   }
 
-  if (static_cast<nsDocShell*>(targetDS.get())->GetOriginAttributes().mUserContextId !=
-      static_cast<nsDocShell*>(accessingDS.get())->GetOriginAttributes().mUserContextId) {
+  if (static_cast<nsDocShell*>(targetDS.get())->GetOriginAttributes() !=
+      static_cast<nsDocShell*>(accessingDS.get())->GetOriginAttributes()) {
     return false;
   }
 
