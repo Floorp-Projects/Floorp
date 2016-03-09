@@ -39,7 +39,7 @@ nsSVGClipPathFrame::ApplyClipPath(gfxContext& aContext,
 
   DrawTarget& aDrawTarget = *aContext.GetDrawTarget();
 
-  // No need for AutoReferenceLoopDetector since simple clip paths can't create
+  // No need for AutoReferenceLimiter since simple clip paths can't create
   // a reference loop (they don't reference other clip paths).
 
   // Restore current transform after applying clip path:
@@ -90,10 +90,11 @@ nsSVGClipPathFrame::GetClipMask(gfxContext& aReferenceContext,
 
   DrawTarget& aReferenceDT = *aReferenceContext.GetDrawTarget();
 
-  AutoReferenceLoopDetector loopDetector;
-  if (!loopDetector.MarkAsInUse(this)) {
-    // Reference loop! This reference should be ignored, so return nullptr.
-    return nullptr;
+  // To prevent reference loops we check that this clipPath only appears
+  // once in the reference chain (if any) that we're currently processing:
+  AutoReferenceLimiter refLoopDetector(&mReferencing, 1);
+  if (!refLoopDetector.Reference()) {
+    return nullptr; // Reference loop!
   }
 
   IntRect devSpaceClipExtents;
@@ -238,11 +239,11 @@ bool
 nsSVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
                                           const gfxPoint &aPoint)
 {
-  AutoReferenceLoopDetector loopDetector;
-  if (!loopDetector.MarkAsInUse(this)) {
-    // Reference loop! This reference is ignored, so return true (point not
-    // clipped out).
-    return true;
+  // To prevent reference loops we check that this clipPath only appears
+  // once in the reference chain (if any) that we're currently processing:
+  AutoReferenceLimiter refLoopDetector(&mReferencing, 1);
+  if (!refLoopDetector.Reference()) {
+    return true; // Reference loop!
   }
 
   gfxMatrix matrix = GetClipPathTransform(aClippedFrame);
@@ -322,8 +323,10 @@ nsSVGClipPathFrame::IsTrivial(nsISVGChildFrame **aSingleChild)
 bool
 nsSVGClipPathFrame::IsValid()
 {
-  AutoReferenceLoopDetector loopDetector;
-  if (!loopDetector.MarkAsInUse(this)) {
+  // To prevent reference loops we check that this clipPath only appears
+  // once in the reference chain (if any) that we're currently processing:
+  AutoReferenceLimiter refLoopDetector(&mReferencing, 1);
+  if (!refLoopDetector.Reference()) {
     return false; // Reference loop!
   }
 
