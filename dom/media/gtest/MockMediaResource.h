@@ -15,7 +15,7 @@ namespace mozilla
 class MockMediaResource : public MediaResource
 {
 public:
-  explicit MockMediaResource(const char* aFileName);
+  explicit MockMediaResource(const char* aFileName, const nsACString& aMimeType = NS_LITERAL_CSTRING("video/mp4"));
   nsIURI* URI() const override { return nullptr; }
   nsresult Close() override { return NS_OK; }
   void Suspend(bool aCloseImmediately) override {}
@@ -75,7 +75,7 @@ private:
   const char* mFileName;
   MediaByteRangeSet mRanges;
   Atomic<int> mEntry;
-  nsCString mContentType;
+  const nsCString mContentType;
 };
 
 } // namespace mozilla
