@@ -1837,8 +1837,6 @@ function runTests2()
 
 function finishTests()
 {
-  SpecialPowers.clearUserPref("mousewheel.default.action");
-
   winUtils.restoreNormalRefresh();
 
   window.opener.finish();
