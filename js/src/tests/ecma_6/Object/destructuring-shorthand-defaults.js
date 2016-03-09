@@ -19,6 +19,7 @@ const SYNTAX_ERROR_STMTS = [
     "({z={x=1}})=>{};",
     "({x = ({y=1}) => y})",
     "(({x=1})) => x",
+    "({e=[]}==(;",
     // declarations
     "let o = {x=1};",
     "var j = {x=1};",
