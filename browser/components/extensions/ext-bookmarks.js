@@ -157,9 +157,8 @@ extensions.registerSchemaAPI("bookmarks", "bookmarks", (extension, context) => {
         if (destination.parentId !== null) {
           info.parentGuid = destination.parentId;
         }
-        if (destination.index !== null) {
-          info.index = destination.index;
-        }
+        info.index = (destination.index === null) ?
+          Bookmarks.DEFAULT_INDEX : destination.index;
 
         try {
           return Bookmarks.update(info).then(convert);
