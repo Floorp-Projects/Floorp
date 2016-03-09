@@ -19,17 +19,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479143
   SimpleTest.waitForExplicitFinish();
 
   setTimeout(function() {
-    var interval = setInterval(function() { var i = 0; i++; }, 10);
+    if ("showModalDialog" in window) {
+      var interval = setInterval(function() { var i = 0; i++; }, 10);
 
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "test_bug479143.html", false);
-    xhr.send(null);
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "test_bug479143.html", false);
+      xhr.send(null);
 
-    window.showModalDialog("javascript:" +
-                           "setTimeout(function() { window.close(); }, 1000);",
-                           null);
+      window.showModalDialog("javascript:" +
+                             "setTimeout(function() { window.close(); }, 1000);",
+                             null);
 
-    clearInterval(interval);
+      clearInterval(interval);
+    }
 
     ok(true, "did not crash");
 
