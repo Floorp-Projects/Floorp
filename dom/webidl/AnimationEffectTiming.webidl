@@ -21,7 +21,8 @@ interface AnimationEffectTiming : AnimationEffectTimingReadOnly {
    //inherit attribute double                             iterationStart;
    //Bug 1244640 - implement AnimationEffectTiming iterations
    //inherit attribute unrestricted double                iterations;
-   inherit attribute (unrestricted double or DOMString) duration;
+  [SetterThrows]
+  inherit attribute (unrestricted double or DOMString) duration;
    //Bug 1244642 - implement AnimationEffectTiming direction
    //inherit attribute PlaybackDirection                  direction;
    //Bug 1244643 - implement AnimationEffectTiming easing

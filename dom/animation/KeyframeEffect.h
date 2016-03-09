@@ -204,9 +204,13 @@ public:
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
               ErrorResult& aRv)
   {
+    TimingParams timingParams =
+      TimingParams::FromOptionsUnion(aOptions, aTarget, aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
     return ConstructKeyframeEffect<KeyframeEffectReadOnly>(
-      aGlobal, aTarget, aFrames,
-      TimingParams::FromOptionsUnion(aOptions, aTarget), aRv);
+             aGlobal, aTarget, aFrames, timingParams, aRv);
   }
 
   void GetTarget(Nullable<OwningElementOrCSSPseudoElement>& aRv) const;
@@ -431,9 +435,13 @@ public:
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
               ErrorResult& aRv)
   {
+    TimingParams timingParams =
+      TimingParams::FromOptionsUnion(aOptions, aTarget, aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
     return ConstructKeyframeEffect<KeyframeEffect>(
-      aGlobal, aTarget, aFrames,
-      TimingParams::FromOptionsUnion(aOptions, aTarget), aRv);
+      aGlobal, aTarget, aFrames, timingParams, aRv);
   }
 
   // More generalized version for Animatable.animate.
