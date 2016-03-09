@@ -10590,7 +10590,13 @@ nsDocShell::DoURILoad(nsIURI* aURI,
       // If we have a requesting node, then use that as our loadingPrincipal.
       loadingPrincipal = requestingNode->NodePrincipal();
     } else {
-      MOZ_ASSERT(aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
+      if (aContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT) {
+        // If this isn't a top-level load and mScriptGlobal's frame element is
+        // null, then the element got removed from the DOM while we were trying to
+        // load this resource. This docshell is scheduled for destruction already,
+        // so bail out here.
+        return NS_OK;
+      }
       requestingWindow = mScriptGlobal->AsOuter();
     }
   }
