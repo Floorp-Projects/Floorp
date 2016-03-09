@@ -2,8 +2,8 @@
 <html>
 <head>
   <title>Test for scrolling selection into view</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 
@@ -15,12 +15,14 @@ var FOCUS = 1;
 var win;
 
 function testCollapsed(id, vPercent, startAt, expected) {
-  var selection = win.getSelection().QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
+  var selection = SpecialPowers.wrap(win.getSelection())
+                               .QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
 
   var c = win.document.getElementById("c" + id);
   var target = win.document.getElementById("target" + id);
   if (target.contentDocument) {
-    selection = target.contentWindow.getSelection().QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
+    selection = SpecialPowers.wrap(target.contentWindow.getSelection())
+                             .QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
     target = target.contentDocument.getElementById("target" + id);
   }
   selection.collapse(target.parentNode, 0);
