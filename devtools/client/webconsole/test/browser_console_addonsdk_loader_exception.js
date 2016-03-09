@@ -57,12 +57,12 @@ function test() {
 
     let msg = [...result.matched][0];
     ok(msg, "message element found");
-    let locationNode = msg.querySelector(".message > .message-location");
+    let locationNode = msg.querySelector(".message > .message-location > .frame-link");
     ok(locationNode, "message location element found");
 
-    let title = locationNode.getAttribute("title");
-    info("location node title: " + title);
-    isnot(title.indexOf(" -> "), -1, "error comes from a subscript");
+    let url = locationNode.getAttribute("data-url");
+    info("location node url: " + url);
+    ok(url.indexOf("resource://") === 0, "error comes from a subscript");
 
     let viewSource = browserconsole.viewSource;
     let URL = null;
