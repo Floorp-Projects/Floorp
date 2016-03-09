@@ -394,8 +394,7 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
   CSSAnimationCollection* collection =
     CSSAnimationCollection::GetAnimationCollection(aElement,
                                                    aStyleContext->
-                                                     GetPseudoType(),
-                                                   false /* aCreateIfNeeded */);
+                                                     GetPseudoType());
   if (!collection &&
       disp->mAnimationNameCount == 1 &&
       disp->mAnimations[0].GetName().IsEmpty()) {
@@ -427,11 +426,8 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
   } else {
     bool createdCollection = false;
     collection =
-      CSSAnimationCollection::GetAnimationCollection(aElement,
-                                                     aStyleContext->
-                                                       GetPseudoType(),
-                                                     true /*aCreateIfNeeded*/,
-                                                     &createdCollection);
+      CSSAnimationCollection::GetOrCreateAnimationCollection(
+        aElement, aStyleContext->GetPseudoType(), &createdCollection);
     if (!collection) {
       MOZ_ASSERT(!createdCollection, "outparam should agree with return value");
       NS_WARNING("allocating collection failed");
@@ -474,8 +470,7 @@ nsAnimationManager::StopAnimationsForElement(
 {
   MOZ_ASSERT(aElement);
   CSSAnimationCollection* collection =
-    CSSAnimationCollection::GetAnimationCollection(aElement, aPseudoType,
-                                                   false /* aCreateIfNeeded */);
+    CSSAnimationCollection::GetAnimationCollection(aElement, aPseudoType);
   if (!collection) {
     return;
   }
