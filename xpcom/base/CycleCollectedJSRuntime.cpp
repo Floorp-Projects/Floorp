@@ -908,7 +908,7 @@ protected:
   NS_IMETHOD
   Run() override
   {
-    mCallback->Call();
+    mCallback->Call("promise callback");
     return NS_OK;
   }
 
