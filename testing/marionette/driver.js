@@ -158,6 +158,8 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
     "version": Services.appinfo.version,
   };
 
+  this.interactions = new Interactions(() => this.sessionCapabilities);
+
   this.mm = globalMessageManager;
   this.listener = proxy.toListener(() => this.mm, this.sendAsync.bind(this));
 
@@ -1964,9 +1966,8 @@ GeckoDriver.prototype.clickElement = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, {frame: win});
-      yield interaction.clickElement(
-          el, this.sessionCapabilities.raisesAccessibilityExceptions);
+      yield this.interactions.clickElement({ frame: win },
+        this.curBrowser.elementManager, id);
       break;
 
     case Context.CONTENT:
@@ -2064,10 +2065,8 @@ GeckoDriver.prototype.isElementDisplayed = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(
-          id, {frame: win});
-      resp.body.value = yield interaction.isElementDisplayed(
-          el, this.sessionCapabilities.raisesAccessibilityExceptions);
+      resp.body.value = yield this.interactions.isElementDisplayed(
+        {frame: win}, this.curBrowser.elementManager, id);
       break;
 
     case Context.CONTENT:
@@ -2114,10 +2113,8 @@ GeckoDriver.prototype.isElementEnabled = function*(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(
-          id, {frame: win});
-      resp.body.value = yield interaction.isElementEnabled(
-          el, this.sessionCapabilities.raisesAccessibilityExceptions);
+      resp.body.value = yield this.interactions.isElementEnabled(
+        {frame: win}, this.curBrowser.elementManager, id);
       break;
 
     case Context.CONTENT:
@@ -2139,10 +2136,8 @@ GeckoDriver.prototype.isElementSelected = function*(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(
-          id, {frame: win});
-      resp.body.value = yield interaction.isElementSelected(
-          el, this.sessionCapabilities.raisesAccessibilityExceptions);
+      resp.body.value = yield this.interactions.isElementSelected(
+        { frame: win }, this.curBrowser.elementManager, id);
       break;
 
     case Context.CONTENT:
@@ -2191,10 +2186,8 @@ GeckoDriver.prototype.sendKeysToElement = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(
-          id, {frame: win});
-      yield interaction.sendKeysToElement(
-          el, value, true, this.sessionCapabilities.raisesAccessibilityExceptions);
+      yield this.interactions.sendKeysToElement(
+        { frame: win }, this.curBrowser.elementManager, id, value, true);
       break;
 
     case Context.CONTENT:
