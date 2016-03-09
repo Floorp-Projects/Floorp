@@ -3103,13 +3103,13 @@ class ICGetProp_CallDOMProxyWithGenerationNative : public ICGetPropCallDOMProxyN
 {
   protected:
     ExpandoAndGeneration* expandoAndGeneration_;
-    uint32_t generation_;
+    uint64_t generation_;
 
   public:
     ICGetProp_CallDOMProxyWithGenerationNative(JitCode* stubCode, ICStub* firstMonitorStub,
                                                Shape* shape,
                                                ExpandoAndGeneration* expandoAndGeneration,
-                                               uint32_t generation, Shape* expandoShape,
+                                               uint64_t generation, Shape* expandoShape,
                                                JSObject* holder, Shape* holderShape,
                                                JSFunction* getter, uint32_t pcOffset)
       : ICGetPropCallDOMProxyNativeStub(ICStub::GetProp_CallDOMProxyWithGenerationNative,
@@ -3127,11 +3127,11 @@ class ICGetProp_CallDOMProxyWithGenerationNative : public ICGetPropCallDOMProxyN
     void* expandoAndGeneration() const {
         return expandoAndGeneration_;
     }
-    uint32_t generation() const {
+    uint64_t generation() const {
         return generation_;
     }
 
-    void setGeneration(uint32_t value) {
+    void setGeneration(uint64_t value) {
         generation_ = value;
     }
 

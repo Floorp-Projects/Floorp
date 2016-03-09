@@ -823,6 +823,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
+    inline void branch64(Condition cond, const Address& lhs, Imm64 val, Label* label) PER_ARCH;
+
+    // Compare the value at |lhs| with the value at |rhs|.  The scratch
+    // register *must not* be the base of |lhs| or |rhs|.
+    inline void branch64(Condition cond, const Address& lhs, const Address& rhs, Register scratch,
+                         Label* label) PER_ARCH;
+
     inline void branchPtr(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;
     inline void branchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
     inline void branchPtr(Condition cond, Register lhs, ImmPtr rhs, Label* label) PER_SHARED_ARCH;
