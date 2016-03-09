@@ -990,7 +990,6 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable
   nsCString mMethod;
   nsString mClientId;
   bool mIsReload;
-  RequestCache mCacheMode;
   RequestMode mRequestMode;
   RequestRedirect mRequestRedirect;
   RequestCredentials mRequestCredentials;
@@ -1014,7 +1013,6 @@ public:
     , mScriptSpec(aScriptSpec)
     , mClientId(aDocumentId)
     , mIsReload(aIsReload)
-    , mCacheMode(RequestCache::Default)
     , mRequestMode(RequestMode::No_cors)
     , mRequestRedirect(RequestRedirect::Follow)
     // By default we set it to same-origin since normal HTTP fetches always
@@ -1112,15 +1110,10 @@ public:
 
     mRequestMode = InternalRequest::MapChannelToRequestMode(channel);
 
-    // This is safe due to static_asserts in ServiceWorkerManager.cpp.
+    // This is safe due to static_asserts at top of file.
     uint32_t redirectMode;
     internalChannel->GetRedirectMode(&redirectMode);
     mRequestRedirect = static_cast<RequestRedirect>(redirectMode);
-
-    // This is safe due to static_asserts in ServiceWorkerManager.cpp.
-    uint32_t cacheMode;
-    internalChannel->GetFetchCacheMode(&cacheMode);
-    mCacheMode = static_cast<RequestCache>(cacheMode);
 
     mRequestCredentials = InternalRequest::MapChannelToRequestCredentials(channel);
 
@@ -1213,7 +1206,6 @@ private:
     RefPtr<InternalRequest> internalReq = new InternalRequest(mSpec,
                                                               mMethod,
                                                               internalHeaders.forget(),
-                                                              mCacheMode,
                                                               mRequestMode,
                                                               mRequestRedirect,
                                                               mRequestCredentials,
