@@ -48,7 +48,8 @@ struct AnimationEventInfo {
     // XXX Looks like nobody initialize WidgetEvent::time
     mEvent.animationName = aAnimationName;
     mEvent.elapsedTime = aElapsedTime.ToSeconds();
-    mEvent.pseudoElement = AnimationCollection::PseudoTypeAsString(aPseudoType);
+    mEvent.pseudoElement =
+      AnimationCollection<dom::CSSAnimation>::PseudoTypeAsString(aPseudoType);
   }
 
   // InternalAnimationEvent doesn't support copy-construction, so we need
@@ -265,19 +266,42 @@ protected:
 };
 
 } /* namespace dom */
+
+template <>
+struct AnimationTypeTraits<dom::CSSAnimation>
+{
+  static nsIAtom* ElementPropertyAtom()
+  {
+    return nsGkAtoms::animationsProperty;
+  }
+  static nsIAtom* BeforePropertyAtom()
+  {
+    return nsGkAtoms::animationsOfBeforeProperty;
+  }
+  static nsIAtom* AfterPropertyAtom()
+  {
+    return nsGkAtoms::animationsOfAfterProperty;
+  }
+};
+
 } /* namespace mozilla */
 
 class nsAnimationManager final
-  : public mozilla::CommonAnimationManager
+  : public mozilla::CommonAnimationManager<mozilla::dom::CSSAnimation>
 {
 public:
   explicit nsAnimationManager(nsPresContext *aPresContext)
-    : mozilla::CommonAnimationManager(aPresContext)
+    : mozilla::CommonAnimationManager<mozilla::dom::CSSAnimation>(aPresContext)
   {
   }
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsAnimationManager)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsAnimationManager)
+
+  typedef mozilla::AnimationCollection<mozilla::dom::CSSAnimation>
+    CSSAnimationCollection;
+  typedef nsTArray<RefPtr<mozilla::dom::CSSAnimation>>
+    OwningCSSAnimationPtrArray;
 
   /**
    * Update the set of animations on |aElement| based on |aStyleContext|.
@@ -321,25 +345,16 @@ public:
                                 mozilla::CSSPseudoElementType aPseudoType);
 
 protected:
-  virtual ~nsAnimationManager() {}
-
-  virtual nsIAtom* GetAnimationsAtom() override {
-    return nsGkAtoms::animationsProperty;
-  }
-  virtual nsIAtom* GetAnimationsBeforeAtom() override {
-    return nsGkAtoms::animationsOfBeforeProperty;
-  }
-  virtual nsIAtom* GetAnimationsAfterAtom() override {
-    return nsGkAtoms::animationsOfAfterProperty;
-  }
-
-  mozilla::DelayedEventDispatcher<mozilla::AnimationEventInfo> mEventDispatcher;
+  ~nsAnimationManager() override = default;
 
 private:
+
   void BuildAnimations(nsStyleContext* aStyleContext,
                        mozilla::dom::Element* aTarget,
-                       mozilla::AnimationCollection* aCollection,
-                       mozilla::AnimationPtrArray& aAnimations);
+                       CSSAnimationCollection* aCollection,
+                       OwningCSSAnimationPtrArray& aAnimations);
+
+  mozilla::DelayedEventDispatcher<mozilla::AnimationEventInfo> mEventDispatcher;
 };
 
 #endif /* !defined(nsAnimationManager_h_) */

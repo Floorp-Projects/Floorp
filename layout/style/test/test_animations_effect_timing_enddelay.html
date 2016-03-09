@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for animation.effect.timing.endDelay on compositor</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="display"></div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  { "set": [[ "dom.animations-api.core.enabled", true]] },
+  function() {
+    window.open("file_animations_effect_timing_enddelay.html");
+  });
+</script>
+</pre>
+</body>
+</html>

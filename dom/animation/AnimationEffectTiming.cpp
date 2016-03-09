@@ -19,6 +19,26 @@ AnimationEffectTiming::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
 }
 
 void
+AnimationEffectTiming::NotifyTimingUpdate()
+{
+  if (mEffect) {
+    mEffect->NotifySpecifiedTimingUpdated();
+  }
+}
+
+void
+AnimationEffectTiming::SetEndDelay(double aEndDelay)
+{
+  TimeDuration endDelay = TimeDuration::FromMilliseconds(aEndDelay);
+  if (mTiming.mEndDelay == endDelay) {
+    return;
+  }
+  mTiming.mEndDelay = endDelay;
+
+  NotifyTimingUpdate();
+}
+
+void
 AnimationEffectTiming::SetDuration(const UnrestrictedDoubleOrString& aDuration)
 {
   if (mTiming.mDuration.IsUnrestrictedDouble() &&
@@ -40,9 +60,7 @@ AnimationEffectTiming::SetDuration(const UnrestrictedDoubleOrString& aDuration)
     mTiming.mDuration.SetAsString() = aDuration.GetAsString();
   }
 
-  if (mEffect) {
-    mEffect->NotifySpecifiedTimingUpdated();
-  }
+  NotifyTimingUpdate();
 }
 
 } // namespace dom

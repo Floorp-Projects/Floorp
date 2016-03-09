@@ -603,6 +603,7 @@ protected:
   CSSToLayoutDeviceScale mDefaultScale;
   bool mUpdatedDimensions;
   nsSizeMode mSizeMode;
+  LayoutDeviceIntPoint mClientOffset;
   LayoutDeviceIntPoint mChromeOffset;
 
 private:

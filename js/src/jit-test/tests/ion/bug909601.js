@@ -1,4 +1,4 @@
-// |jit-test| ion-eager
+// |jit-test| --ion-eager
 for (var i=0; i<3; i++)
     z = new Int32Array;
 

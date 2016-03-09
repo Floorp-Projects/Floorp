@@ -450,7 +450,7 @@ CSSCoord Axis::ClampOriginToScrollableRect(CSSCoord aOrigin) const
   } else if (origin + GetCompositionLength() > GetPageEnd()) {
     result = GetPageEnd() - GetCompositionLength();
   } else {
-    result = origin;
+    return aOrigin;
   }
 
   return result / zoom;

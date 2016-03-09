@@ -12,7 +12,6 @@
 #include "nsNSSCertificate.h"
 #include "nsIX509CertValidity.h"
 #include "nsIDateTimeFormat.h"
-#include "nsDateTimeFormatCID.h"
 #include "nsICertOverrideService.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
@@ -834,9 +833,10 @@ GetDateBoundary(nsIX509Cert* ix509,
     trueExpired_falseNotYetValid = false;
   }
 
-  nsCOMPtr<nsIDateTimeFormat> dateTimeFormat(do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
+  nsCOMPtr<nsIDateTimeFormat> dateTimeFormat = nsIDateTimeFormat::Create();
+  if (!dateTimeFormat) {
     return;
+  }
 
   dateTimeFormat->FormatPRTime(nullptr, kDateFormatLong, kTimeFormatNoSeconds,
                                timeToUse, formattedDate);

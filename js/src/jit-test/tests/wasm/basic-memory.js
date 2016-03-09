@@ -145,8 +145,18 @@ testStore('f64', '', 1, 7, 4, 0.89012345);
 testStore('i32', '8', 0, 0, 0, 0x23);
 testStore('i32', '16', 0, 0, 0, 0x2345);
 
-testLoadError('i32', '', 0, 0, 3, /memory access alignment must be a power of two/);
-testStoreError('i32', '', 0, 0, 3, /memory access alignment must be a power of two/);
+testLoadError('i32', '8_s', 0, 0, 2, /greater than natural alignment/);
+testLoadError('i32', '8_u', 0, 0, 2, /greater than natural alignment/);
+testLoadError('i32', '16_s', 0, 0, 4, /greater than natural alignment/);
+testLoadError('i32', '16_u', 0, 0, 4, /greater than natural alignment/);
+testLoadError('i32', '', 0, 0, 8, /greater than natural alignment/);
+testLoadError('f32', '', 0, 0, 8, /greater than natural alignment/);
+testLoadError('f64', '', 0, 0, 16, /greater than natural alignment/);
+testStoreError('i32', '8', 0, 0, 2, /greater than natural alignment/);
+testStoreError('i32', '16', 0, 0, 4, /greater than natural alignment/);
+testStoreError('i32', '', 0, 0, 8, /greater than natural alignment/);
+testStoreError('f32', '', 0, 0, 8, /greater than natural alignment/);
+testStoreError('f64', '', 0, 0, 16, /greater than natural alignment/);
 
 assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (i32.const 0))))'), TypeError, mismatchError("i32", "f64"));
 assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "f64"));
