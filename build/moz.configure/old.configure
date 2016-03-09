@@ -62,12 +62,12 @@ option(env='OLD_CONFIGURE', nargs=1, help='Path to the old configure script')
 @depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell,
          virtualenv_python, compile_environment, build_project,
          extra_old_configure_args, '--with-external-source-dir',
-         '--enable-shared-js')
+         '--enable-shared-js', old_configure_assignments)
 @advanced
 def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
                       python, compile_env, build_project,
                       extra_old_configure_args, external_source_dir,
-                      shared_js):
+                      shared_js, old_configure_assignments):
     import glob
     import itertools
     import subprocess
@@ -127,14 +127,8 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
                 for key in mozconfig[t]['removed'].keys():
                     print("unset %s" % key, file=out)
 
-        print('PYTHON=%s' % quote(python), file=out)
-        if compile_env:
-            print('COMPILE_ENVIRONMENT=1', file=out)
-        print('MOZ_BUILD_APP=%s' % build_project, file=out)
-        if external_source_dir:
-            print(external_source_dir.format('EXTERNAL_SOURCE_DIR'), file=out)
-        if shared_js:
-            print('JS_SHARED_LIBRARY=1', file=out)
+        for assignment in old_configure_assignments:
+            print(assignment, file=out)
 
     if extra_old_configure_args:
         cmd += extra_old_configure_args
