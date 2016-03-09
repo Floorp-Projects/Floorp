@@ -193,7 +193,8 @@
      selected to be added to the home page. -->
 <!ENTITY home_add_panel_installed "\'&formatS;\' added to homepage">
 <!ENTITY pref_category_home_content_settings "Content settings">
-<!ENTITY pref_home_updates "Automatic updates">
+<!ENTITY pref_category_home_add_ons "Add-ons">
+<!ENTITY pref_home_updates2 "Content updates">
 <!ENTITY pref_home_updates_enabled "Enabled">
 <!ENTITY pref_home_updates_wifi "Only over Wi-Fi">
 <!ENTITY pref_home_suggested_sites "Show site suggestions">
