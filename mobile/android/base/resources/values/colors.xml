@@ -122,10 +122,6 @@
   <color name="panel_icon_item_title_background">#32000000</color>
   <color name="panel_tab_text_normal">#FFBFBFBF</color>
 
-  <!-- Swipe to refresh colors for dynamic panel -->
-  <color name="swipe_refresh_orange">#FFFFC26C</color>
-  <color name="swipe_refresh_white">#FFFFFFFF</color>
-
   <!-- Remote tabs setup -->
   <color name="remote_tabs_setup_button_background_hit">#D95300</color>
 

@@ -44,7 +44,7 @@
                   android:minWidth="72dp"
                   android:layout_width="wrap_content"
                   android:gravity="center"
-                  android:textColor="@color/swipe_refresh_white"
+                  android:textColor="@android:color/white"
                   android:background="@drawable/search_suggestion_prompt_yes"
                   android:focusable="true"
                   android:text="@string/button_yes"/>
