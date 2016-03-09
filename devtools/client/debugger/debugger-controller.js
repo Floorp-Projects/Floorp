@@ -111,7 +111,10 @@ Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 var L10N = new ViewHelpers.L10N(DBG_STRINGS_URI);
 
 Cu.import("resource://devtools/client/shared/browser-loader.js");
-const require = BrowserLoader("resource://devtools/client/debugger/", window).require;
+const { require } = BrowserLoader({
+  baseURI: "resource://devtools/client/debugger/",
+  window,
+});
 XPCOMUtils.defineConstant(this, "require", require);
 const { gDevTools } = require("devtools/client/framework/devtools");
 
