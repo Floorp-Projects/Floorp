@@ -117,7 +117,6 @@ public:
   InternalRequest(const nsACString& aURL,
                   const nsACString& aMethod,
                   already_AddRefed<InternalHeaders> aHeaders,
-                  RequestCache aCacheMode,
                   RequestMode aMode,
                   RequestRedirect aRequestRedirect,
                   RequestCredentials aRequestCredentials,
@@ -133,7 +132,7 @@ public:
     , mMode(aMode)
     , mCredentialsMode(aRequestCredentials)
     , mResponseTainting(LoadTainting::Basic)
-    , mCacheMode(aCacheMode)
+    , mCacheMode(RequestCache::Default)
     , mRedirectMode(aRequestRedirect)
     , mAuthenticationFlag(false)
     , mForceOriginHeader(false)
@@ -424,9 +423,6 @@ public:
 
   bool
   IsClientRequest() const;
-
-  void
-  MaybeSkipCacheIfPerformingRevalidation();
 
   static RequestMode
   MapChannelToRequestMode(nsIChannel* aChannel);
