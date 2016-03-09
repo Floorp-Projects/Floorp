@@ -4,12 +4,14 @@
 
 "use strict";
 
-const { DOM: dom, createClass, PropTypes } =
+const { DOM: dom, createClass, PropTypes, addons } =
   require("devtools/client/shared/vendor/react");
 
 module.exports = createClass({
 
   displayName: "ViewportToolbar",
+
+  mixins: [ addons.PureRenderMixin ],
 
   propTypes: {
     onRotateViewport: PropTypes.func.isRequired,

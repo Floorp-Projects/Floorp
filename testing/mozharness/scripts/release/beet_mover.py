@@ -277,14 +277,8 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         if not key:
             self.info("Uploading to `{}`".format(s3_key))
             key = bucket.new_key(s3_key)
-
             # set key value
             self.retry(key.set_contents_from_filename, args=[source], error_level=FATAL),
-
-            # key.make_public() may lead to race conditions, because
-            # it doesn't pass version_id, so it may not set permissions
-            bucket.set_canned_acl(acl_str='public-read', key_name=s3_key,
-                                  version_id=key.version_id)
         else:
             if not get_hash(key.get_contents_as_string()) == get_hash(open(source).read()):
                 # for now, let's halt. If necessary, we can revisit this and allow for overwrites

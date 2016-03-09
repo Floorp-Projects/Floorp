@@ -1403,8 +1403,7 @@ var BookmarkingUI = {
                                  extraCSSClass);
       item.addEventListener("command", onItemCommand);
       if (icon) {
-        let iconURL = "moz-anno:favicon:" + icon;
-        item.setAttribute("image", iconURL);
+        item.setAttribute("image", icon);
       }
       fragment.appendChild(item);
     }
