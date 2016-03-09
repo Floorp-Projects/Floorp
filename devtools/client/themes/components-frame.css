@@ -12,14 +12,6 @@
   margin-left: 7px;
 }
 
-.focused .frame-link-filename,
-.focused .frame-link-column,
-.focused .frame-link-line,
-.focused .frame-link-host,
-.focused .frame-link-colon {
-  color: var(--theme-selection-color);
-}
-
 .frame-link .frame-link-filename {
   color: var(--theme-highlight-blue);
   cursor: pointer;
@@ -43,4 +35,12 @@
 .frame-link .frame-link-line,
 .frame-link .frame-link-colon {
   color: var(--theme-highlight-orange);
+}
+
+.focused .frame-link-filename,
+.focused .frame-link-column,
+.focused .frame-link-line,
+.focused .frame-link-host,
+.focused .frame-link-colon {
+  color: var(--theme-selection-color);
 }
