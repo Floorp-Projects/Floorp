@@ -1,4 +1,4 @@
-// |jit-test| ion-eager
+// |jit-test| --ion-eager
 
 // bug 944963
 function bug944963(x, y) {

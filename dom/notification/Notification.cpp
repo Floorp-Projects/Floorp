@@ -1658,8 +1658,16 @@ ServiceWorkerNotificationObserver::Observe(nsISupports* aSubject,
 bool
 Notification::IsInPrivateBrowsing()
 {
-  nsIDocument* doc = mWorkerPrivate ? mWorkerPrivate->GetDocument()
-                                    : GetOwner()->GetExtantDoc();
+  AssertIsOnMainThread();
+
+  nsIDocument* doc = nullptr;
+
+  if (mWorkerPrivate) {
+    doc = mWorkerPrivate->GetDocument();
+  } else if (GetOwner()) {
+    doc = GetOwner()->GetExtantDoc();
+  }
+
   if (doc) {
     nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
     return loadContext && loadContext->UsePrivateBrowsing();
@@ -1765,7 +1773,9 @@ Notification::ShowInternal()
       appId = mWorkerPrivate->GetPrincipal()->GetAppId();
     } else {
       nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
-      appId = (window.get())->GetDoc()->NodePrincipal()->GetAppId();
+      if (window) {
+        appId = window->GetDoc()->NodePrincipal()->GetAppId();
+      }
     }
 
     if (appId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
@@ -1977,7 +1987,7 @@ Notification::ResolveIconAndSoundURL(nsString& iconUrl, nsString& soundUrl)
   if (mWorkerPrivate) {
     baseUri = mWorkerPrivate->GetBaseURI();
   } else {
-    nsIDocument* doc = GetOwner()->GetExtantDoc();
+    nsIDocument* doc = GetOwner() ? GetOwner()->GetExtantDoc() : nullptr;
     if (doc) {
       baseUri = doc->GetBaseURI();
       charset = doc->GetDocumentCharacterSet().get();
@@ -2761,7 +2771,7 @@ Notification::Observe(nsISupports* aSubject, const char* aTopic,
       uint16_t appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
       uint32_t appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
 
-      nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+      nsCOMPtr<nsIDocument> doc = window ? window->GetExtantDoc() : nullptr;
       nsCOMPtr<nsIPrincipal> nodePrincipal = doc ? doc->NodePrincipal() :
                                              nullptr;
       if (nodePrincipal) {

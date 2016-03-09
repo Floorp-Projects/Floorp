@@ -863,10 +863,6 @@ CGRGBPixel* Offscreen::getCG(const SkScalerContext_Mac& context, const SkGlyph& 
 
         CGContextSetTextDrawingMode(fCG, kCGTextFill);
 
-        // Draw white on black to create mask.
-        // TODO: Draw black on white and invert, CG has a special case codepath.
-        CGContextSetGrayFillColor(fCG, 1.0f, 1.0f);
-
         // force our checks below to happen
         fDoAA = !doAA;
         fDoLCD = !doLCD;
@@ -889,12 +885,21 @@ CGRGBPixel* Offscreen::getCG(const SkScalerContext_Mac& context, const SkGlyph& 
         fDoLCD = doLCD;
     }
 
+    // CG has two masks for white-on-black or black-on-white on OS X 10.11
+    // On 10.9, it doesn't matter.
+    // On 10.11, the white-on-black is slightly thinner text than
+    // black-on-white due to less dilation. This only happens with FontSmoothing
+    // When fDoLCD is true, draw black on white.
+    uint32_t backgroundColor = fDoLCD ? 0xFFFFFFFF : 0;
+    uint32_t foregroundColor = fDoLCD ? 0.0f : 1.0f;
+
+    CGContextSetGrayFillColor(fCG, foregroundColor, 1.0f);
+
     CGRGBPixel* image = (CGRGBPixel*)fImageStorage.get();
+    sk_memset_rect32(image, backgroundColor, fSize.fWidth, fSize.fHeight, rowBytes);
+
     // skip rows based on the glyph's height
     image += (fSize.fHeight - glyph.fHeight) * fSize.fWidth;
-
-    // erase to black
-    sk_memset_rect32(image, 0, glyph.fWidth, glyph.fHeight, rowBytes);
 
     float subX = 0;
     float subY = 0;
@@ -1283,7 +1288,11 @@ void SkScalerContext_Mac::generateImage(const SkGlyph& glyph) {
                 int r = (addr[x] >> 16) & 0xFF;
                 int g = (addr[x] >>  8) & 0xFF;
                 int b = (addr[x] >>  0) & 0xFF;
-                addr[x] = (table[r] << 16) | (table[g] << 8) | table[b];
+
+                // Since we drew black on white, the rest of skia expects white on black
+                // Invert it once we're back to linear.
+                addr[x] = ((255 - table[r]) << 16) | ((255 - table[g]) << 8) | (255 - table[b]);
+
             }
             addr = SkTAddByteOffset(addr, cgRowBytes);
         }
