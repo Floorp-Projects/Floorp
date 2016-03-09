@@ -1,0 +1,86 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1253777 - Test interception using file blob response body</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  var registration;
+  var scope = './file_blob_response/';
+  function start() {
+    return navigator.serviceWorker.register("file_blob_response_worker.js",
+                                            { scope: scope })
+      .then(function(swr) {
+        registration = swr;
+        return new Promise(function(resolve) {
+          registration.installing.onstatechange = function(evt) {
+            if (evt.target.state === 'activated') {
+              evt.target.onstate = null;
+              resolve();
+            }
+          }
+        });
+      });
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    }, function(e) {
+      ok(false, "Unregistering the SW failed with " + e + "\n");
+    });
+  }
+
+  function withFrame(url) {
+    return new Promise(function(resolve, reject) {
+      var content = document.getElementById("content");
+      ok(content, "Parent exists.");
+
+      var frame = document.createElement("iframe");
+      frame.setAttribute('src', url);
+      content.appendChild(frame);
+
+      frame.addEventListener('load', function loadCallback(evt) {
+        frame.removeEventListener('load', loadCallback);
+        resolve(frame);
+      });
+    });
+  }
+
+  function runTest() {
+    start()
+      .then(function() {
+        return withFrame(scope + 'dummy.txt');
+      })
+      .then(function(frame) {
+        var result = JSON.parse(frame.contentWindow.document.body.textContent);
+        frame.remove();
+        is(result.value, 'success');
+      })
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      })
+      .then(unregister)
+      .then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+
