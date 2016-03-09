@@ -1347,7 +1347,7 @@ nsProtocolProxyService::AsyncResolve(nsISupports *channelOrURI, uint32_t flags,
         rv = NS_NewChannel(getter_AddRefs(channel),
                            uri,
                            systemPrincipal,
-                           nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                           nsILoadInfo::SEC_NORMAL,
                            nsIContentPolicy::TYPE_OTHER);
         NS_ENSURE_SUCCESS(rv, rv);
     }
