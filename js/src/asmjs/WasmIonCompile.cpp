@@ -1254,6 +1254,7 @@ class FunctionCompiler
     /************************************************************ DECODING ***/
 
     uint8_t        readU8()       { return decoder_.uncheckedReadFixedU8(); }
+    uint32_t       readU32()      { return decoder_.uncheckedReadFixedU32(); }
     uint32_t       readVarS32()   { return decoder_.uncheckedReadVarS32(); }
     uint32_t       readVarU32()   { return decoder_.uncheckedReadVarU32(); }
     uint64_t       readVarU64()   { return decoder_.uncheckedReadVarU64(); }
@@ -1407,11 +1408,11 @@ static bool EmitExpr(FunctionCompiler&, MDefinition**);
 static bool
 EmitHeapAddress(FunctionCompiler& f, MDefinition** base, MAsmJSHeapAccess* access)
 {
+    uint32_t alignLog2 = f.readVarU32();
+    access->setAlign(1 << alignLog2);
+
     uint32_t offset = f.readVarU32();
     access->setOffset(offset);
-
-    uint32_t align = f.readVarU32();
-    access->setAlign(align);
 
     if (!EmitExpr(f, base))
         return false;
@@ -2557,9 +2558,9 @@ EmitBrTable(FunctionCompiler& f, MDefinition** def)
         return false;
 
     for (size_t i = 0; i < numCases; i++)
-        depths[i] = f.readVarU32();
+        depths[i] = f.readU32();
 
-    uint32_t defaultDepth = f.readVarU32();
+    uint32_t defaultDepth = f.readU32();
 
     MDefinition* index;
     if (!EmitExpr(f, &index))
@@ -2641,28 +2642,25 @@ EmitBlock(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
-EmitBr(FunctionCompiler& f, MDefinition** def)
+EmitBranch(FunctionCompiler& f, Expr op, MDefinition** def)
 {
+    MOZ_ASSERT(op == Expr::Br || op == Expr::BrIf);
+
     uint32_t relativeDepth = f.readVarU32();
 
-    if (!f.br(relativeDepth))
-        return false;
+    MOZ_ALWAYS_TRUE(f.readExpr() == Expr::Nop);
 
-    *def = nullptr;
-    return true;
-}
+    if (op == Expr::Br) {
+        if (!f.br(relativeDepth))
+            return false;
+    } else {
+        MDefinition* condition;
+        if (!EmitExpr(f, &condition))
+            return false;
 
-static bool
-EmitBrIf(FunctionCompiler& f, MDefinition** def)
-{
-    uint32_t relativeDepth = f.readVarU32();
-
-    MDefinition* condition;
-    if (!EmitExpr(f, &condition))
-        return false;
-
-    if (!f.brIf(relativeDepth, condition))
-        return false;
+        if (!f.brIf(relativeDepth, condition))
+            return false;
+    }
 
     *def = nullptr;
     return true;
@@ -2691,9 +2689,8 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
       case Expr::Loop:
         return EmitLoop(f, def);
       case Expr::Br:
-        return EmitBr(f, def);
       case Expr::BrIf:
-        return EmitBrIf(f, def);
+        return EmitBranch(f, op, def);
       case Expr::BrTable:
         return EmitBrTable(f, def);
       case Expr::Return:

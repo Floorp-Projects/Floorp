@@ -50,6 +50,7 @@ struct TimingParams
   // Bug 1237173: We will replace this with Maybe<TimeDuration>.
   dom::OwningUnrestrictedDoubleOrString mDuration;
   TimeDuration mDelay;      // Initializes to zero
+  TimeDuration mEndDelay;
   double mIterations = 1.0; // Can be NaN, negative, +/-Infinity
   double mIterationStart = 0.0;
   dom::PlaybackDirection mDirection = dom::PlaybackDirection::Normal;
@@ -84,7 +85,7 @@ public:
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   double Delay() const { return mTiming.mDelay.ToMilliseconds(); }
-  double EndDelay() const { return 0.0; }
+  double EndDelay() const { return mTiming.mEndDelay.ToMilliseconds(); }
   FillMode Fill() const { return mTiming.mFill; }
   double IterationStart() const { return mTiming.mIterationStart; }
   double Iterations() const { return mTiming.mIterations; }

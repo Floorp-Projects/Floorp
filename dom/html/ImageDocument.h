@@ -110,7 +110,7 @@ protected:
   nsresult OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
   void OnHasTransparency();
 
-  nsCOMPtr<nsIContent>          mImageContent;
+  nsCOMPtr<Element>             mImageContent;
 
   float                         mVisibleWidth;
   float                         mVisibleHeight;

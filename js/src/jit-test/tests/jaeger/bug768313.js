@@ -1,4 +1,4 @@
-// |jit-test| dump-bytecode
+// |jit-test| --dump-bytecode
 
 function f() { }
 evaluate('function g() { f(); }', {newContext: true});

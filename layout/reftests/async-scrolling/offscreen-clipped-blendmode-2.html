@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en"
+     reftest-async-scroll
+     reftest-displayport-x="0" reftest-displayport-y="0"
+     reftest-displayport-w="800" reftest-displayport-h="2000"
+     reftest-async-scroll-x="0" reftest-async-scroll-y="1200">
+<meta charset="utf-8">
+<title>Scrolled blend mode</title>
+
+<style>
+
+body {
+  margin: 0;
+  padding: 100px;
+  height: 4000px;
+  background: white;
+}
+
+#outer {
+  height: 4000px;
+  overflow: hidden;
+}
+
+#inner {
+  transform: translateX(0);
+}
+
+#inner-contents {
+  border: 1px solid black;
+  box-sizing: border-box;
+  width: 50px;
+  height: 50px;
+  mix-blend-mode: multiply;
+  margin-top: 1400px;
+}
+
+</style>
+
+<div id="outer">
+  <div id="inner">
+    <div id="inner-contents"></div>
+  </div>
+</div>
