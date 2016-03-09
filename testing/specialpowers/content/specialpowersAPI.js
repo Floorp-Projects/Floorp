@@ -453,15 +453,24 @@ SpecialPowersAPI.prototype = {
     return MockPermissionPrompt;
   },
 
-  loadChromeScript: function (url) {
+  loadChromeScript: function (urlOrFunction) {
     // Create a unique id for this chrome script
     let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
                           .getService(Ci.nsIUUIDGenerator);
     let id = uuidGenerator.generateUUID().toString();
 
     // Tells chrome code to evaluate this chrome script
+    let scriptArgs = { id };
+    if (typeof(urlOrFunction) == "function") {
+      scriptArgs.function = {
+        body: "(" + urlOrFunction.toString() + ")();",
+        name: urlOrFunction.name,
+      };
+    } else {
+      scriptArgs.url = urlOrFunction;
+    }
     this._sendSyncMessage("SPLoadChromeScript",
-                          { url: url, id: id });
+                          scriptArgs);
 
     // Returns a MessageManager like API in order to be
     // able to communicate with this chrome script
@@ -514,7 +523,7 @@ SpecialPowersAPI.prototype = {
 
     let assert = json => {
       // An assertion has been done in a mochitest chrome script
-      let {url, err, message, stack} = json;
+      let {name, err, message, stack} = json;
 
       // Try to fetch a test runner from the mochitest
       // in order to properly log these assertions and notify
@@ -540,10 +549,10 @@ SpecialPowersAPI.prototype = {
           ", expected " + repr(err.expected) +
           " (operator " + err.operator + ")";
       }
-      var msg = [resultString, url, diagnostic].join(" | ");
+      var msg = [resultString, name, diagnostic].join(" | ");
       if (parentRunner) {
         if (err) {
-          parentRunner.addFailedTest(url);
+          parentRunner.addFailedTest(name);
           parentRunner.error(msg);
         } else {
           parentRunner.log(msg);
