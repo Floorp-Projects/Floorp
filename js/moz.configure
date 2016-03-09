@@ -34,6 +34,17 @@ def js_shell(value):
         set_config('JS_DISABLE_SHELL', '1')
 
 
+# Use SpiderMonkey Promise implementation if it's enabled
+# =======================================================
+js_option('--enable-sm-promise', help='Enable SpiderMonkey promises')
+
+@depends('--enable-sm-promise')
+def sm_promise(value):
+    if value:
+        set_config('SPIDERMONKEY_PROMISE', '1')
+        set_define('SPIDERMONKEY_PROMISE', '1')
+
+
 # SpiderMonkey as a shared library, and how its symbols are exported
 # ==================================================================
 js_option('--disable-shared-js', default=building_js,
