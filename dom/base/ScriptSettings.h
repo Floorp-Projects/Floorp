@@ -346,6 +346,12 @@ public:
                   // Note: aCx is mandatory off-main-thread.
                   JSContext* aCx = nullptr);
 
+  AutoEntryScript(JSObject* aObject, // Any object from the relevant global
+                  const char *aReason,
+                  bool aIsMainThread = NS_IsMainThread(),
+                  // Note: aCx is mandatory off-main-thread.
+                  JSContext* aCx = nullptr);
+
   ~AutoEntryScript();
 
   void SetWebIDLCallerPrincipal(nsIPrincipal *aPrincipal) {
