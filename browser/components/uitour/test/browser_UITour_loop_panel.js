@@ -50,12 +50,11 @@ if (!Services.prefs.getBoolPref("loop.enabled")) {
     gContentAPI.showMenu("loop");
 
     yield waitForConditionPromise(() => {
-      return loopButton.open;
+      return loopPanel.state == "open";
     }, "Menu should be visible after showMenu()");
 
     ok(loopPanel.hasAttribute("noautohide"), "@noautohide should be on the loop panel");
     ok(loopPanel.hasAttribute("panelopen"), "The panel should have @panelopen");
-    is(loopPanel.state, "open", "The panel should be open");
     ok(loopButton.hasAttribute("open"), "Loop button should know that the menu is open");
 
     gContentAPI.hideMenu("loop");

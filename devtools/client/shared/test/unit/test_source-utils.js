@@ -72,6 +72,14 @@ add_task(function* () {
 
 // Test `sourceUtils.getSourceNames`.
 add_task(function* () {
+  testAbbreviation("http://example.com/foo/bar/baz/boo.js",
+                   "boo.js",
+                   "http://example.com/foo/bar/baz/boo.js",
+                   "example.com");
+});
+
+// Test `sourceUtils.getSourceNames`.
+add_task(function* () {
 
   // Check length
   let longMalformedURL = `example.com${new Array(100).fill("/a").join("")}/file.js`;
@@ -95,10 +103,10 @@ add_task(function* () {
   equal(longDataURIShort.substr(0, 10), "data:aaaaa",
     "truncated data URI short names still have `data:...`");
 
-  testAbbreviation("http://example.com/foo/bar/baz/boo.js",
-                   "boo.js",
-                   "http://example.com/foo/bar/baz/boo.js",
-                   "example.com");
+  // Test simple URL and cache retrieval by calling the same input multiple times.
+  let testUrl = "http://example.com/foo/bar/baz/boo.js";
+  testAbbreviation(testUrl, "boo.js", testUrl, "example.com");
+  testAbbreviation(testUrl, "boo.js", testUrl, "example.com");
 
   // Check query and hash and port
   testAbbreviation("http://example.com:8888/foo/bar/baz.js?q=query#go",
@@ -135,11 +143,11 @@ add_task(function* () {
                    "foo",
                    "http://example.com/foo/",
                    "example.com");
-
-  function testAbbreviation(source, short, long, host) {
-    let results = sourceUtils.getSourceNames(source);
-    equal(results.short, short, `${source} has correct "short" name`);
-    equal(results.long, long, `${source} has correct "long" name`);
-    equal(results.host, host, `${source} has correct "host" name`);
-  }
 });
+
+function testAbbreviation(source, short, long, host) {
+  let results = sourceUtils.getSourceNames(source);
+  equal(results.short, short, `${source} has correct "short" name`);
+  equal(results.long, long, `${source} has correct "long" name`);
+  equal(results.host, host, `${source} has correct "host" name`);
+}

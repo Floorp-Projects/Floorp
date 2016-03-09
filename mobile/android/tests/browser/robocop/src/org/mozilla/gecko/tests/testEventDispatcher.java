@@ -6,8 +6,6 @@ package org.mozilla.gecko.tests;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
 
-import org.mozilla.gecko.tests.helpers.*;
-
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -26,7 +24,7 @@ import org.json.JSONObject;
  * Tests the proper operation of EventDispatcher,
  * including associated NativeJSObject objects.
  */
-public class testEventDispatcher extends UITest
+public class testEventDispatcher extends JavascriptBridgeTest
         implements BundleEventListener, GeckoEventListener, NativeEventListener {
 
     private static final String TEST_JS = "testEventDispatcher.js";
@@ -42,7 +40,6 @@ public class testEventDispatcher extends UITest
 
     private static final long WAIT_FOR_BUNDLE_EVENT_TIMEOUT_MILLIS = 20000; // 20 seconds
 
-    private JavascriptBridge js;
     private NativeJSObject savedMessage;
 
     private boolean handledGeckoEvent;
@@ -52,7 +49,6 @@ public class testEventDispatcher extends UITest
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        js = new JavascriptBridge(this);
 
         EventDispatcher.getInstance().registerGeckoThreadListener(
                 (GeckoEventListener) this, GECKO_EVENT, GECKO_RESPONSE_EVENT);
@@ -77,7 +73,6 @@ public class testEventDispatcher extends UITest
         EventDispatcher.getInstance().unregisterBackgroundThreadListener(
                 this, BACKGROUND_EVENT, BACKGROUND_RESPONSE_EVENT);
 
-        js.disconnect();
         super.tearDown();
     }
 
@@ -103,22 +98,21 @@ public class testEventDispatcher extends UITest
     }
 
     public void testEventDispatcher() {
-        GeckoHelper.blockForReady();
-        NavigationHelper.enterAndLoadUrl(mStringHelper.getHarnessUrlForJavascript(TEST_JS));
+        blockForReadyAndLoadJS(TEST_JS);
 
-        js.syncCall("send_test_message", GECKO_EVENT);
+        getJS().syncCall("send_test_message", GECKO_EVENT);
         fAssertTrue("Should have handled Gecko event synchronously", handledGeckoEvent);
 
-        js.syncCall("send_message_for_response", GECKO_RESPONSE_EVENT, "success");
-        js.syncCall("send_message_for_response", GECKO_RESPONSE_EVENT, "error");
+        getJS().syncCall("send_message_for_response", GECKO_RESPONSE_EVENT, "success");
+        getJS().syncCall("send_message_for_response", GECKO_RESPONSE_EVENT, "error");
 
-        js.syncCall("send_test_message", NATIVE_EVENT);
+        getJS().syncCall("send_test_message", NATIVE_EVENT);
         fAssertTrue("Should have handled native event synchronously", handledNativeEvent);
 
-        js.syncCall("send_message_for_response", NATIVE_RESPONSE_EVENT, "success");
-        js.syncCall("send_message_for_response", NATIVE_RESPONSE_EVENT, "error");
+        getJS().syncCall("send_message_for_response", NATIVE_RESPONSE_EVENT, "success");
+        getJS().syncCall("send_message_for_response", NATIVE_RESPONSE_EVENT, "error");
 
-        js.syncCall("send_test_message", NATIVE_EXCEPTION_EVENT);
+        getJS().syncCall("send_test_message", NATIVE_EXCEPTION_EVENT);
         fAssertNotSame("Should have saved a message", null, savedMessage);
         try {
             savedMessage.toString();
@@ -126,25 +120,25 @@ public class testEventDispatcher extends UITest
         } catch (final NullPointerException e) {
         }
 
-        js.syncCall("send_test_message", UI_EVENT);
+        getJS().syncCall("send_test_message", UI_EVENT);
         waitForAsyncEvent();
 
-        js.syncCall("send_message_for_response", UI_RESPONSE_EVENT, "success");
+        getJS().syncCall("send_message_for_response", UI_RESPONSE_EVENT, "success");
         waitForAsyncEvent();
 
-        js.syncCall("send_message_for_response", UI_RESPONSE_EVENT, "error");
+        getJS().syncCall("send_message_for_response", UI_RESPONSE_EVENT, "error");
         waitForAsyncEvent();
 
-        js.syncCall("send_test_message", BACKGROUND_EVENT);
+        getJS().syncCall("send_test_message", BACKGROUND_EVENT);
         waitForAsyncEvent();
 
-        js.syncCall("send_message_for_response", BACKGROUND_RESPONSE_EVENT, "success");
+        getJS().syncCall("send_message_for_response", BACKGROUND_RESPONSE_EVENT, "success");
         waitForAsyncEvent();
 
-        js.syncCall("send_message_for_response", BACKGROUND_RESPONSE_EVENT, "error");
+        getJS().syncCall("send_message_for_response", BACKGROUND_RESPONSE_EVENT, "error");
         waitForAsyncEvent();
 
-        js.syncCall("finish_test");
+        getJS().syncCall("finish_test");
     }
 
     @Override
