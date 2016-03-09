@@ -586,7 +586,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/AnchoredPopup.java',
     'widget/AnimatedHeightLayout.java',
     'widget/BasicColorPicker.java',
-    'widget/ButtonToast.java',
     'widget/CheckableLinearLayout.java',
     'widget/ClickableWhenDisabledEditText.java',
     'widget/ContentSecurityDoorHanger.java',
