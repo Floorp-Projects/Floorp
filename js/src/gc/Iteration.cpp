@@ -94,7 +94,10 @@ void
 js::IterateScripts(JSRuntime* rt, JSCompartment* compartment,
                    void* data, IterateScriptCallback scriptCallback)
 {
+    MOZ_ASSERT(!rt->mainThread.suppressGC);
     rt->gc.evictNursery();
+    MOZ_ASSERT(rt->gc.nursery.isEmpty());
+
     AutoPrepareForTracing prep(rt, SkipAtoms);
 
     if (compartment) {

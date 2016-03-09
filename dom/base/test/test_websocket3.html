@@ -5,196 +5,11 @@
   <title>WebSocket test</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="websocket_helpers.js"></script>
+  <script type="text/javascript" src="websocket_tests.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="testWebSocket()">
 <script class="testbody" type="text/javascript">
-
-function test21() {
-  return new Promise(function(resolve, reject) {
-    var test21func = function() {
-      var local_ws = new WebSocket("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-21");
-      var received_message = false;
-
-      local_ws.onopen = function(e) {
-        e.target.send("client data");
-        forcegc();
-        e.target.onopen = null;
-        forcegc();
-      }
-
-      local_ws.onerror = function() {
-        ok(false, "onerror called on test " + current_test + "!");
-      }
-
-      local_ws.onmessage = function(e) {
-        is(e.data, "server data", "Bad message in test-21");
-        received_message = true;
-        forcegc();
-        e.target.onmessage = null;
-        forcegc();
-      }
-
-      local_ws.onclose = function(e) {
-        shouldCloseCleanly(e);
-        ok(received_message, "close transitioned through onmessage");
-        resolve();
-      }
-
-      local_ws = null;
-      window._test21 = null;
-      forcegc();
-    }
-
-    window._test21 = test21func;
-    window._test21();
-  });
-}
-
-function test22() {
-  return new Promise(function(resolve, reject) {
-    const pref_open = "network.websocket.timeout.open";
-    SpecialPowers.setIntPref(pref_open, 5);
-  
-    var ws = CreateTestWS("ws://sub2.test2.example.org/tests/dom/base/test/file_websocket", "test-22");
-
-    ws.onopen = shouldNotOpen;
-    ws.onerror = ignoreError;
-
-    ws.onclose = function(e) {
-      shouldCloseNotCleanly(e);
-      resolve();
-    }
-  
-    SpecialPowers.clearUserPref(pref_open);
-  });
-}
-
-function test23() {
-  return new Promise(function(resolve, reject) {
-    ok("WebSocket" in window, "WebSocket should be available on window object");
-    resolve();
-  });
-}
-
-function test24() {
-  return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-does-not-exist");
-
-    ws.onopen = shouldNotOpen;
-    ws.onclose = function(e) {
-      shouldCloseNotCleanly(e);
-      resolve();
-    }
-
-    ws.onerror = function() {
-    }
-  });
-}
-
-function test25() {
-  return new Promise(function(resolve, reject) {
-    var prots=[];
-  
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
-  
-    // This test errors because the server requires a sub-protocol, but
-    // the test just wants to ensure that the ctor doesn't generate an
-    // exception
-    ws.onerror = ignoreError;
-    ws.onopen = shouldNotOpen;
-  
-    ws.onclose = function(e) {
-      is(ws.protocol, "", "test25 subprotocol selection");
-      ok(true, "test 25 protocol array close");
-      resolve();
-    }
-  });
-}
-
-function test26() {
-  return new Promise(function(resolve, reject) {
-    var prots=[""];
-  
-    try {
-      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
-      ok(false, "testing empty element sub protocol array");
-    } catch (e) {
-      ok(true, "testing empty sub element protocol array");
-    }
-
-    resolve();
-  });
-}
-
-function test27() {
-  return new Promise(function(resolve, reject) {
-    var prots=["test27", ""];
-  
-    try {
-      var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
-      ok(false, "testing empty element mixed sub protocol array");
-    } catch (e) {
-      ok(true, "testing empty element mixed sub protocol array");
-    }
-
-    resolve();
-  });
-}
-
-function test28() {
-  return new Promise(function(resolve, reject) {
-    var prots=["test28"];
-  
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
-
-    ws.onopen = function(e) {
-      ok(true, "test 28 protocol array open");
-      ws.close();
-    }
-  
-    ws.onclose = function(e) {
-      is(ws.protocol, "test28", "test28 subprotocol selection");
-      ok(true, "test 28 protocol array close");
-      resolve();
-    }
-  });
-}
-
-function test29() {
-  return new Promise(function(resolve, reject) {
-    var prots=["test29a", "test29b"];
-  
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
-
-    ws.onopen = function(e) {
-      ok(true, "test 29 protocol array open");
-      ws.close();
-    }
-  
-    ws.onclose = function(e) {
-      ok(true, "test 29 protocol array close");
-      resolve();
-    }
-  });
-}
-
-function test30() {
-  return new Promise(function(resolve, reject) {
-    var prots=["test-does-not-exist"];
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", prots);
-  
-    ws.onopen = shouldNotOpen;
-
-    ws.onclose = function(e) {
-      shouldCloseNotCleanly(e);
-      resolve();
-    }
-
-    ws.onerror = function() {
-    }
-  });
-}
 
 var tests = [
  test21, // see bug 572975 - same as test 17, but delete strong event listeners
@@ -215,6 +30,10 @@ var tests = [
 function testWebSocket() {
   doTest();
 }
+
+SimpleTest.requestFlakyTimeout("The web socket tests are really fragile, but avoiding timeouts might be hard, since it's testing stuff on the network. " +
+                               "Expect all sorts of flakiness in this test...");
+SimpleTest.waitForExplicitFinish();
 
 </script>
 

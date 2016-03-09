@@ -99,7 +99,16 @@ function MockFxAccounts(device = {}) {
     _getDeviceName() {
       return device.name || "mock device name";
     },
-    fxAccountsClient: new MockFxAccountsClient(device)
+    fxAccountsClient: new MockFxAccountsClient(device),
+    fxaPushService: {
+      registerPushEndpoint() {
+        return new Promise((resolve) => {
+          resolve({
+            endpoint: "http://mochi.test:8888"
+          });
+        });
+      },
+    },
   });
 }
 
@@ -145,10 +154,11 @@ add_task(function* test_updateDeviceRegistration_with_new_device() {
   do_check_eq(spy.updateDevice.count, 0);
   do_check_eq(spy.getDeviceList.count, 0);
   do_check_eq(spy.registerDevice.count, 1);
-  do_check_eq(spy.registerDevice.args[0].length, 3);
+  do_check_eq(spy.registerDevice.args[0].length, 4);
   do_check_eq(spy.registerDevice.args[0][0], credentials.sessionToken);
   do_check_eq(spy.registerDevice.args[0][1], deviceName);
   do_check_eq(spy.registerDevice.args[0][2], "desktop");
+  do_check_eq(spy.registerDevice.args[0][3].pushCallback, "http://mochi.test:8888");
 
   const state = fxa.internal.currentAccountState;
   const data = yield state.getUserAccountData();
@@ -195,10 +205,11 @@ add_task(function* test_updateDeviceRegistration_with_existing_device() {
   do_check_eq(spy.registerDevice.count, 0);
   do_check_eq(spy.getDeviceList.count, 0);
   do_check_eq(spy.updateDevice.count, 1);
-  do_check_eq(spy.updateDevice.args[0].length, 3);
+  do_check_eq(spy.updateDevice.args[0].length, 4);
   do_check_eq(spy.updateDevice.args[0][0], credentials.sessionToken);
   do_check_eq(spy.updateDevice.args[0][1], credentials.deviceId);
   do_check_eq(spy.updateDevice.args[0][2], deviceName);
+  do_check_eq(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
 
   const state = fxa.internal.currentAccountState;
   const data = yield state.getUserAccountData();
@@ -251,10 +262,12 @@ add_task(function* test_updateDeviceRegistration_with_unknown_device_error() {
   do_check_eq(spy.getDeviceList.count, 0);
   do_check_eq(spy.registerDevice.count, 0);
   do_check_eq(spy.updateDevice.count, 1);
-  do_check_eq(spy.updateDevice.args[0].length, 3);
+  do_check_eq(spy.updateDevice.args[0].length, 4);
   do_check_eq(spy.updateDevice.args[0][0], credentials.sessionToken);
   do_check_eq(spy.updateDevice.args[0][1], credentials.deviceId);
   do_check_eq(spy.updateDevice.args[0][2], deviceName);
+  do_check_eq(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
+
 
   const state = fxa.internal.currentAccountState;
   const data = yield state.getUserAccountData();
@@ -312,10 +325,11 @@ add_task(function* test_updateDeviceRegistration_with_device_session_conflict_er
   do_check_eq(result, credentials.deviceId);
   do_check_eq(spy.registerDevice.count, 0);
   do_check_eq(spy.updateDevice.count, 1);
-  do_check_eq(spy.updateDevice.args[0].length, 3);
+  do_check_eq(spy.updateDevice.args[0].length, 4);
   do_check_eq(spy.updateDevice.args[0][0], credentials.sessionToken);
   do_check_eq(spy.updateDevice.args[0][1], credentials.deviceId);
   do_check_eq(spy.updateDevice.args[0][2], deviceName);
+  do_check_eq(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
   do_check_eq(spy.getDeviceList.count, 1);
   do_check_eq(spy.getDeviceList.args[0].length, 1);
   do_check_eq(spy.getDeviceList.args[0][0], credentials.sessionToken);
@@ -368,7 +382,7 @@ add_task(function* test_updateDeviceRegistration_with_unrecoverable_error() {
   do_check_eq(spy.getDeviceList.count, 0);
   do_check_eq(spy.updateDevice.count, 0);
   do_check_eq(spy.registerDevice.count, 1);
-  do_check_eq(spy.registerDevice.args[0].length, 3);
+  do_check_eq(spy.registerDevice.args[0].length, 4);
 
   const state = fxa.internal.currentAccountState;
   const data = yield state.getUserAccountData();

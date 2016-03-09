@@ -16,6 +16,7 @@ Cu.import("resource://gre/modules/Downloads.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/HelperApps.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -64,13 +65,11 @@ HelperAppLauncherDialog.prototype = {
 
     // For all other URIs, try to resolve them to an inner URI, and check that.
     if (!alreadyResolved) {
-      let ioSvc = Cc["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-      let innerURI = ioSvc.newChannelFromURI2(url,
-                                              null,      // aLoadingNode
-                                              Services.scriptSecurityManager.getSystemPrincipal(),
-                                              null,      // aTriggeringPrincipal
-                                              Ci.nsILoadInfo.SEC_NORMAL,
-                                              Ci.nsIContentPolicy.TYPE_OTHER).URI;
+      let innerURI = NetUtil.newChannel({
+        uri: url,
+        loadUsingSystemPrincipal: true
+      }).URI;
+
       if (!url.equals(innerURI)) {
         return this._canDownload(innerURI, true);
       }

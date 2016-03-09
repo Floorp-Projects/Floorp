@@ -2769,13 +2769,6 @@
     "n_buckets": 20,
     "description": "Time spent loading plugin DLL and obtaining metadata (ms)"
   },
-  "PLUGIN_STARTUP_MS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 5000,
-    "n_buckets": 20,
-    "description": "Time spent starting up plugins (ms)"
-  },
   "PLUGIN_SHUTDOWN_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -8533,7 +8526,7 @@
   },
   "BLOCKED_ON_PLUGIN_MODULE_INIT_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "50",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 20,
@@ -8542,7 +8535,7 @@
   },
   "BLOCKED_ON_PLUGIN_INSTANCE_INIT_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "50",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 20,
@@ -8551,7 +8544,7 @@
   },
   "BLOCKED_ON_PLUGIN_STREAM_INIT_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "50",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 20,
@@ -8569,7 +8562,7 @@
   },
   "BLOCKED_ON_PLUGIN_INSTANCE_DESTROY_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "50",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 20,

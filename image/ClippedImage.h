@@ -64,7 +64,8 @@ public:
                                     uint32_t aFlags) override;
 
 protected:
-  ClippedImage(Image* aImage, nsIntRect aClip);
+  ClippedImage(Image* aImage, nsIntRect aClip,
+               const Maybe<nsSize>& aSVGViewportSize);
 
   virtual ~ClippedImage();
 
@@ -86,9 +87,10 @@ private:
   // If we are forced to draw a temporary surface, we cache it here.
   UniquePtr<ClippedImageCachedSurface> mCachedSurface;
 
-  nsIntRect   mClip;              // The region to clip to.
-  Maybe<bool> mShouldClip;        // Memoized ShouldClip() if present.
-
+  nsIntRect        mClip;            // The region to clip to.
+  Maybe<bool>      mShouldClip;      // Memoized ShouldClip() if present.
+  Maybe<nsIntSize> mSVGViewportSize; // If we're clipping a VectorImage, this
+                                     // is the size of viewport of that image.
   friend class DrawSingleTileCallback;
   friend class ImageOps;
 };

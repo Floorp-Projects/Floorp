@@ -486,7 +486,7 @@ public:
    *
    * https://dom.spec.whatwg.org/#dom-node-ownerdocument
    *
-   * For all other cases GetOwnerDoc and GetOwnerDocument behave identically.
+   * For all other cases OwnerDoc and GetOwnerDocument behave identically.
    */
   nsIDocument *OwnerDoc() const
   {

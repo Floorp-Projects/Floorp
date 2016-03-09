@@ -23,7 +23,6 @@ class CDMProxy;
 class MediaFormatReader final : public MediaDecoderReader
 {
   typedef TrackInfo::TrackType TrackType;
-  typedef media::Interval<int64_t> ByteInterval;
 
 public:
   MediaFormatReader(AbstractMediaDecoder* aDecoder,

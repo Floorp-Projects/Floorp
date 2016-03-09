@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>test of svg-as-border-image</title>
+<style>
+div.border {
+  width: 10px;
+  height: 10px;
+  background-color: blue;
+  border: 15px solid;
+  border-image: 25% url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" ><rect x="0" y="0" width="10" height="10" fill="pink"/><rect x="30" y="30" width="10" height="10" fill="green"/></svg>');
+}
+</style>
+</head>
+<body>
+<div class="border"></div>
+</body>
+</html>

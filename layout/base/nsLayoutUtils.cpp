@@ -947,7 +947,7 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
   //   the choosing of the resolution to display-list building time.
   ScreenSize alignment;
 
-  if (gfxPrefs::LayersTilesEnabled()) {
+  if (gfxPrefs::LayersTilesEnabled() && !APZCCallbackHelper::IsDisplayportSuppressed()) {
     alignment = ScreenSize(gfxPlatform::GetPlatform()->GetTileWidth(),
                            gfxPlatform::GetPlatform()->GetTileHeight());
   } else {
@@ -1149,14 +1149,20 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
     return false;
   }
 
-  if (currentData && currentData->mMargins == aMargins) {
-    return true;
-  }
+  nsRect oldDisplayPort;
+  bool hadDisplayPort = GetDisplayPort(aContent, &oldDisplayPort);
 
   aContent->SetProperty(nsGkAtoms::DisplayPortMargins,
                         new DisplayPortMarginsPropertyData(
                             aMargins, aPriority),
                         nsINode::DeleteProperty<DisplayPortMarginsPropertyData>);
+
+  nsRect newDisplayPort;
+  DebugOnly<bool> hasDisplayPort = GetDisplayPort(aContent, &newDisplayPort);
+  MOZ_ASSERT(hasDisplayPort);
+
+  bool changed = !hadDisplayPort ||
+        !oldDisplayPort.IsEqualEdges(newDisplayPort);
 
   if (gfxPrefs::LayoutUseContainersForRootFrames()) {
     nsIFrame* rootScrollFrame = aPresShell->GetRootScrollFrame();
@@ -1171,7 +1177,7 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
     }
   }
 
-  if (aRepaintMode == RepaintMode::Repaint) {
+  if (changed && aRepaintMode == RepaintMode::Repaint) {
     nsIFrame* frame = aContent->GetPrimaryFrame();
     if (frame) {
       frame->SchedulePaint();
@@ -1188,12 +1194,8 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
 
   // Display port margins changing means that the set of visible images may
   // have drastically changed. Check if we should schedule an update.
-  nsRect oldDisplayPort;
-  bool hadDisplayPort =
+  hadDisplayPort =
     scrollableFrame->GetDisplayPortAtLastImageVisibilityUpdate(&oldDisplayPort);
-
-  nsRect newDisplayPort;
-  Unused << GetDisplayPort(aContent, &newDisplayPort);
 
   bool needImageVisibilityUpdate = !hadDisplayPort;
   // Check if the total size has changed by a large factor.

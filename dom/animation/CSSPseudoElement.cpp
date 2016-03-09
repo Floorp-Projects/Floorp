@@ -68,9 +68,9 @@ CSSPseudoElement::Animate(
     const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
     ErrorResult& aError)
 {
-  // Bug 1241784: Implement this API.
-  NS_NOTREACHED("CSSPseudoElement::Animate() is not implemented yet.");
-  return nullptr;
+  Nullable<ElementOrCSSPseudoElement> target;
+  target.SetValue().SetAsCSSPseudoElement() = this;
+  return Element::Animate(target, aContext, aFrames, aOptions, aError);
 }
 
 /* static */ already_AddRefed<CSSPseudoElement>

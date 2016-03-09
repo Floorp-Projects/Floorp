@@ -8,7 +8,6 @@
 #define jit_x86_shared_MacroAssembler_x86_shared_h
 
 #include "mozilla/Casting.h"
-#include "mozilla/DebugOnly.h"
 
 #if defined(JS_CODEGEN_X86)
 # include "jit/x86/Assembler-x86.h"

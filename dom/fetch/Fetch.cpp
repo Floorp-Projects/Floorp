@@ -755,7 +755,9 @@ template <class Derived>
 FetchBody<Derived>::FetchBody()
   : mFeature(nullptr)
   , mBodyUsed(false)
+#ifdef DEBUG
   , mReadDone(false)
+#endif
 {
   if (!NS_IsMainThread()) {
     mWorkerPrivate = GetCurrentThreadWorkerPrivate();
@@ -940,7 +942,9 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
   MOZ_ASSERT(mBodyUsed);
   MOZ_ASSERT(!mReadDone);
   MOZ_ASSERT_IF(mWorkerPrivate, mFeature);
+#ifdef DEBUG
   mReadDone = true;
+#endif
 
   AutoFreeBuffer autoFree(aResult);
 

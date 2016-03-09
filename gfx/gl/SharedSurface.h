@@ -68,7 +68,9 @@ protected:
     bool mIsLocked;
     bool mIsProducerAcquired;
     bool mIsConsumerAcquired;
-    DebugOnly<nsIThread* const> mOwningThread;
+#ifdef DEBUG
+    nsIThread* const mOwningThread;
+#endif
 
     SharedSurface(SharedSurfaceType type,
                   AttachmentType attachType,

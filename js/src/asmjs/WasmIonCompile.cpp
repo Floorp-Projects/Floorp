@@ -1254,8 +1254,10 @@ class FunctionCompiler
     /************************************************************ DECODING ***/
 
     uint8_t        readU8()       { return decoder_.uncheckedReadFixedU8(); }
+    uint32_t       readVarS32()   { return decoder_.uncheckedReadVarS32(); }
     uint32_t       readVarU32()   { return decoder_.uncheckedReadVarU32(); }
     uint64_t       readVarU64()   { return decoder_.uncheckedReadVarU64(); }
+    uint64_t       readVarS64()   { return decoder_.uncheckedReadVarS64(); }
     float          readF32()      { return decoder_.uncheckedReadFixedF32(); }
     double         readF64()      { return decoder_.uncheckedReadFixedF64(); }
     Expr           readExpr()     { return decoder_.uncheckedReadExpr(); }
@@ -1342,12 +1344,12 @@ EmitLiteral(FunctionCompiler& f, ValType type, MDefinition** def)
 {
     switch (type) {
       case ValType::I32: {
-        int32_t val = f.readVarU32();
+        int32_t val = f.readVarS32();
         *def = f.constant(Int32Value(val), MIRType_Int32);
         return true;
       }
       case ValType::I64: {
-        int64_t val = f.readVarU64();
+        int64_t val = f.readVarS64();
         *def = f.constant(val);
         return true;
       }

@@ -80,14 +80,14 @@ class MozbuildObject(ProcessExecutionMixin):
         and a LogManager instance. The topobjdir may be passed in as well. If
         it isn't, it will be calculated from the active mozconfig.
         """
-        self.topsrcdir = topsrcdir
+        self.topsrcdir = mozpath.normsep(topsrcdir)
         self.settings = settings
 
         self.populate_logger()
         self.log_manager = log_manager
 
         self._make = None
-        self._topobjdir = topobjdir
+        self._topobjdir = mozpath.normsep(topobjdir) if topobjdir else topobjdir
         self._mozconfig = None
         self._config_guess_output = None
         self._config_environment = None
@@ -184,9 +184,10 @@ class MozbuildObject(ProcessExecutionMixin):
             if not samepath(topobjdir, _config_topobjdir):
                 raise ObjdirMismatchException(topobjdir, _config_topobjdir)
 
+        topsrcdir = mozpath.normsep(topsrcdir)
         topobjdir = topobjdir or config_topobjdir
         if topobjdir:
-            topobjdir = os.path.normpath(topobjdir)
+            topobjdir = mozpath.normsep(os.path.normpath(topobjdir))
 
             if topsrcdir == topobjdir:
                 raise BadEnvironmentException('The object directory appears '
@@ -210,7 +211,7 @@ class MozbuildObject(ProcessExecutionMixin):
         if not os.path.isabs(topobjdir):
             topobjdir = os.path.abspath(os.path.join(topsrcdir, topobjdir))
 
-        return os.path.normpath(topobjdir)
+        return mozpath.normsep(os.path.normpath(topobjdir))
 
     @property
     def topobjdir(self):

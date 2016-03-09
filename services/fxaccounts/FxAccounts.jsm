@@ -36,6 +36,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Utils",
 // All properties exposed by the public FxAccounts API.
 var publicProperties = [
   "accountStatus",
+  "checkVerificationStatus",
   "getAccountsClient",
   "getAccountsSignInURI",
   "getAccountsSignUpURI",
@@ -135,7 +136,7 @@ AccountState.prototype = {
     });
   },
 
-  // Get user account data. Optionally specify explcit field names to fetch
+  // Get user account data. Optionally specify explicit field names to fetch
   // (and note that if you require an in-memory field you *must* specify the
   // field name(s).)
   getUserAccountData(fieldNames = null) {
@@ -315,6 +316,16 @@ this.FxAccounts = function (mockInternal) {
     external.internal = internal;
   }
 
+  if (!internal.fxaPushService) {
+    // internal.fxaPushService option is used in testing.
+    // Otherwise we load the service lazily.
+    XPCOMUtils.defineLazyGetter(internal, "fxaPushService", function () {
+      return Components.classes["@mozilla.org/fxaccounts/push;1"]
+        .getService(Components.interfaces.nsISupports)
+        .wrappedJSObject;
+    });
+  }
+
   // wait until after the mocks are setup before initializing.
   internal.initialize();
 
@@ -337,9 +348,9 @@ function FxAccountsInternal() {
  */
 FxAccountsInternal.prototype = {
   // The timeout (in ms) we use to poll for a verified mail for the first 2 mins.
-  VERIFICATION_POLL_TIMEOUT_INITIAL: 5000, // 5 seconds
+  VERIFICATION_POLL_TIMEOUT_INITIAL: 15000, // 15 seconds
   // And how often we poll after the first 2 mins.
-  VERIFICATION_POLL_TIMEOUT_SUBSEQUENT: 15000, // 15 seconds.
+  VERIFICATION_POLL_TIMEOUT_SUBSEQUENT: 30000, // 30 seconds.
 
   _fxAccountsClient: null,
 
@@ -495,14 +506,16 @@ FxAccountsInternal.prototype = {
       // We're telling the caller that this is durable now (although is that
       // really something we should commit to? Why not let the write happen in
       // the background? Already does for updateAccountData ;)
-      return currentAccountState.promiseInitialized.then(() =>
-        this.updateDeviceRegistration()
-      ).then(() => {
-        Services.telemetry.getHistogramById("FXA_CONFIGURED").add(1);
-        this.notifyObservers(ONLOGIN_NOTIFICATION);
+      return currentAccountState.promiseInitialized.then(() => {
+        // Starting point for polling if new user
         if (!this.isUserEmailVerified(credentials)) {
           this.startVerifiedCheck(credentials);
         }
+
+        return this.updateDeviceRegistration();
+      }).then(() => {
+        Services.telemetry.getHistogramById("FXA_CONFIGURED").add(1);
+        this.notifyObservers(ONLOGIN_NOTIFICATION);
       }).then(() => {
         return currentAccountState.resolve();
       });
@@ -608,6 +621,22 @@ FxAccountsInternal.prototype = {
         return false;
       }
       return this.fxAccountsClient.accountStatus(data.uid);
+    });
+  },
+
+  checkVerificationStatus: function() {
+    log.trace('checkVerificationStatus');
+    let currentState = this.currentAccountState;
+    return currentState.getUserAccountData().then(data => {
+      if (!data) {
+        log.trace("checkVerificationStatus - no user data");
+        return null;
+      }
+
+      if (!this.isUserEmailVerified(data)) {
+        log.trace("checkVerificationStatus - forcing verification status check");
+        this.pollEmailStatus(currentState, data.sessionToken, "start");
+      }
     });
   },
 
@@ -1066,7 +1095,7 @@ FxAccountsInternal.prototype = {
     let ageMs = Date.now() - this.pollStartDate;
     if (ageMs >= this.POLL_SESSION) {
       if (currentState.whenVerifiedDeferred) {
-        let error = new Error("User email verification timed out.")
+        let error = new Error("User email verification timed out.");
         currentState.whenVerifiedDeferred.reject(error);
         delete currentState.whenVerifiedDeferred;
       }
@@ -1400,18 +1429,24 @@ FxAccountsInternal.prototype = {
       }
     } catch(ignore) {}
 
-    return Promise.resolve().then(() => {
+    return this.fxaPushService.registerPushEndpoint().then(subscription => {
       const deviceName = this._getDeviceName();
+      let deviceOptions = {};
+
+      // if we were able to obtain a subscription
+      if (subscription && subscription.endpoint) {
+        deviceOptions.pushCallback = subscription.endpoint;
+      }
 
       if (signedInUser.deviceId) {
         log.debug("updating existing device details");
         return this.fxAccountsClient.updateDevice(
-          signedInUser.sessionToken, signedInUser.deviceId, deviceName);
+          signedInUser.sessionToken, signedInUser.deviceId, deviceName, deviceOptions);
       }
 
       log.debug("registering new device details");
       return this.fxAccountsClient.registerDevice(
-        signedInUser.sessionToken, deviceName, this._getDeviceType());
+        signedInUser.sessionToken, deviceName, this._getDeviceType(), deviceOptions);
     }).then(device =>
       this.currentAccountState.updateUserAccountData({
         deviceId: device.id,
@@ -1468,7 +1503,7 @@ FxAccountsInternal.prototype = {
         const matchingDevices = devices.filter(device => device.isCurrentDevice);
         const length = matchingDevices.length;
         if (length === 1) {
-          const deviceId = matchingDevices[0].id
+          const deviceId = matchingDevices[0].id;
           return this.currentAccountState.updateUserAccountData({
             deviceId,
             isDeviceStale: true

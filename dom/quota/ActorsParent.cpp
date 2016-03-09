@@ -918,7 +918,9 @@ private:
 class Quota final
   : public PQuotaParent
 {
-  DebugOnly<bool> mActorDestroyed;
+#ifdef DEBUG
+  bool mActorDestroyed;
+#endif
 
 public:
   Quota();
@@ -5125,7 +5127,9 @@ SaveOriginAccessTimeOp::SendResults()
  ******************************************************************************/
 
 Quota::Quota()
+#ifdef DEBUG
   : mActorDestroyed(false)
+#endif
 {
 }
 
@@ -5152,9 +5156,10 @@ void
 Quota::ActorDestroy(ActorDestroyReason aWhy)
 {
   AssertIsOnBackgroundThread();
+#ifdef DEBUG
   MOZ_ASSERT(!mActorDestroyed);
-
   mActorDestroyed = true;
+#endif
 }
 
 PQuotaUsageRequestParent*

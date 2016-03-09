@@ -2426,8 +2426,8 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
 
     // Classify lane values into 4 disjoint classes:
     //
-    //   N-lanes:             in < -0.0
-    //   A-lanes:     -0.0 <= in <= 0x0.ffffffp31
+    //   N-lanes:             in <= -1.0
+    //   A-lanes:      -1.0 < in <= 0x0.ffffffp31
     //   B-lanes: 0x1.0p31 <= in <= 0x0.ffffffp32
     //   V-lanes: 0x1.0p32 <= in, or isnan(in)
     //
@@ -2450,22 +2450,6 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
 
     ScratchSimd128Scope scratch(masm);
 
-    // First we need to filter out N-lanes. We need to use a floating point
-    // comparison to do that because cvttps2dq maps the negative range
-    // [-0x0.ffffffp0;-0.0] to 0. We can't simply look at the sign bits of in
-    // because -0.0 is a valid input.
-    // TODO: It may be faster to let ool code deal with -0.0 and skip the
-    // vcmpleps here.
-    masm.zeroFloat32x4(scratch);
-    masm.vcmpleps(Operand(in), scratch, scratch);
-    masm.vmovmskps(scratch, temp);
-    masm.cmp32(temp, Imm32(15));
-
-    if (gen->compilingAsmJS())
-        masm.j(Assembler::NotEqual, wasm::JumpTarget::ConversionError);
-    else
-        bailoutIf(Assembler::NotEqual, ins->snapshot());
-
     // TODO: If the majority of lanes are A-lanes, it could be faster to compute
     // A first, use vmovmskps to check for any non-A-lanes and handle them in
     // ool code. OTOH, we we're wrong about the lane distribution, that would be
@@ -2482,9 +2466,9 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     // we use |out|, so we can tolerate if they are the same register.
     masm.convertFloat32x4ToInt32x4(in, out);
 
-    // Since we filtered out N-lanes, we can identify A-lanes by the sign bits
-    // in A: Any A-lanes will be positive in A, and B-lanes and V-lanes will be
-    // 0x80000000 in A. Compute a mask of non-A-lanes into |tempF|.
+    // We can identify A-lanes by the sign bits in A: Any A-lanes will be
+    // positive in A, and N, B, and V-lanes will be 0x80000000 in A. Compute a
+    // mask of non-A-lanes into |tempF|.
     masm.zeroFloat32x4(tempF);
     masm.packedGreaterThanInt32x4(Operand(out), tempF);
 

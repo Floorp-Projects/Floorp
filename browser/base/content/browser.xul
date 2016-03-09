@@ -678,8 +678,6 @@
                        aria-label="&urlbar.loginFillNotificationAnchor.label;"/>
                 <image id="password-notification-icon" class="notification-anchor-icon" role="button"
                        aria-label="&urlbar.passwordNotificationAnchor.label;"/>
-                <image id="webapps-notification-icon" class="notification-anchor-icon" role="button"
-                       aria-label="&urlbar.webappsNotificationAnchor.label;"/>
                 <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"
                        aria-label="&urlbar.pluginsNotificationAnchor.label;"/>
                 <image id="web-notifications-notification-icon" class="notification-anchor-icon" role="button"

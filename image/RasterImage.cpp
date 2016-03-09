@@ -290,9 +290,10 @@ RasterImage::LookupFrameInternal(uint32_t aFrameNum,
 
   SurfaceFlags surfaceFlags = ToSurfaceFlags(aFlags);
 
-  // We don't want any substitution for sync decodes, so we use
+  // We don't want any substitution for sync decodes, and substitution would be
+  // illegal when high quality downscaling is disabled, so we use
   // SurfaceCache::Lookup in this case.
-  if (aFlags & FLAG_SYNC_DECODE) {
+  if ((aFlags & FLAG_SYNC_DECODE) || !(aFlags & FLAG_HIGH_QUALITY_SCALING)) {
     return SurfaceCache::Lookup(ImageKey(this),
                                 RasterSurfaceKey(aSize,
                                                  surfaceFlags,
@@ -494,12 +495,16 @@ RasterImage::CopyFrame(uint32_t aWhichFrame, uint32_t aFlags)
     return nullptr;
   }
 
-  // Create a 32-bit image surface of our size, but draw using the frame's
-  // rect, implicitly padding the frame out to the image's size.
-
-  IntSize size(mSize.width, mSize.height);
+  // Create a 32-bit surface at the decoded size of the image. If
+  // FLAG_SYNC_DECODE was not passed, we may have substituted a downscaled
+  // version of the image we already had available, so this is not necessarily
+  // the intrinsic size of the image. We'll take the frame rect of the image
+  // into account when we draw, implicitly adding padding so that the caller
+  // doesn't need to worry about frame rects.
+  // XXX(seth): In bug 1247520 we'll remove support for frame rects, rendering
+  // this additional padding unnecessary.
   RefPtr<DataSourceSurface> surf =
-    Factory::CreateDataSourceSurface(size,
+    Factory::CreateDataSourceSurface(frameRef->GetImageSize(),
                                      SurfaceFormat::B8G8R8A8,
                                      /* aZero = */ true);
   if (NS_WARN_IF(!surf)) {
@@ -515,7 +520,7 @@ RasterImage::CopyFrame(uint32_t aWhichFrame, uint32_t aFlags)
   RefPtr<DrawTarget> target =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                      mapping.mData,
-                                     size,
+                                     frameRef->GetImageSize(),
                                      mapping.mStride,
                                      SurfaceFormat::B8G8R8A8);
   if (!target) {
@@ -595,7 +600,7 @@ RasterImage::GetFrameInternal(const IntSize& aSize,
   // surface.
   RefPtr<SourceSurface> frameSurf;
   if (!frameRef->NeedsPadding() &&
-      frameRef->GetSize() == aSize) {
+      frameRef->GetSize() == frameRef->GetImageSize()) {
     frameSurf = frameRef->GetSurface();
   }
 

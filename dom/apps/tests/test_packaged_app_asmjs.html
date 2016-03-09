@@ -23,20 +23,12 @@ const gSJS = gBaseURL + 'asmjs_app.sjs';
 const gManifestURL = gSJS + '?getManifest=true';
 let gGenerator = runTest();
 
-// Mock WebappOSUtils
-Cu.import("resource://gre/modules/WebappOSUtils.jsm");
-let oldWebappOSUtils = WebappOSUtils;
-WebappOSUtils.getPackagePath = function(aApp) {
-  return aApp.basePath + "/" + aApp.id;
-}
-
 // Enable the ScriptPreloader module
 Cu.import("resource://gre/modules/ScriptPreloader.jsm");
 let oldScriptPreloaderEnabled = ScriptPreloader._enabled;
 ScriptPreloader._enabled = true;
 
 SimpleTest.registerCleanupFunction(() => {
-  WebappOSUtils = oldWebappOSUtils;
   ScriptPreloader._enabled = oldScriptPreloaderEnabled;
 });
 

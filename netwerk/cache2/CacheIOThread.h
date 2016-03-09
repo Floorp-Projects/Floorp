@@ -96,7 +96,9 @@ private:
   Atomic<bool, Relaxed> mHasXPCOMEvents;
   bool mRerunCurrentEvent;
   bool mShutdown;
-  DebugOnly<bool> mInsideLoop;
+#ifdef DEBUG
+  bool mInsideLoop;
+#endif
 };
 
 } // namespace net
