@@ -19,7 +19,10 @@ var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 
 DevToolsUtils.testing = true;
-var { require: browserRequire } = BrowserLoader("resource://devtools/client/shared/", this);
+var { require: browserRequire } = BrowserLoader({
+  baseURI: "resource://devtools/client/shared/",
+  window: this
+});
 
 var EXAMPLE_URL = "http://example.com/browser/browser/devtools/shared/test/";
 

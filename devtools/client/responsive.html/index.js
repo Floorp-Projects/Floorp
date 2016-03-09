@@ -9,8 +9,10 @@
 const { utils: Cu } = Components;
 const { BrowserLoader } =
   Cu.import("resource://devtools/client/shared/browser-loader.js", {});
-const { require } =
-  BrowserLoader("resource://devtools/client/responsive.html/", this);
+const { require } = BrowserLoader({
+  baseURI: "resource://devtools/client/responsive.html/",
+  window: this
+});
 const Telemetry = require("devtools/client/shared/telemetry");
 
 const { createFactory, createElement } =
