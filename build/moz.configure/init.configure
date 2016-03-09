@@ -218,19 +218,29 @@ def default_project(build_env, help):
 option('--enable-project', nargs=1, default=default_project,
        help='Project to build')
 
-@depends('--enable-project', check_build_environment, '--help')
-def include_project_configure(project, build_env, help):
+option('--with-external-source-dir', env='EXTERNAL_SOURCE_DIR', nargs=1,
+       help='External directory containing additional build files')
+
+@depends('--enable-project', '--with-external-source-dir',
+         check_build_environment, '--help')
+def include_project_configure(project, external_source_dir, build_env, help):
     if not project:
         error('--enable-project is required.')
 
-    path = os.path.join(build_env['TOPSRCDIR'], project[0], 'moz.configure')
+    base_dir = build_env['TOPSRCDIR']
+    if external_source_dir:
+        set_config('EXTERNAL_SOURCE_DIR', external_source_dir[0])
+        base_dir = os.path.join(base_dir, external_source_dir[0])
+
+    path = os.path.join(base_dir, project[0], 'moz.configure')
     if not os.path.exists(path):
         error('Cannot find project %s' % project[0])
     return path
 
-@depends('--enable-project', '--help')
-def build_project(project, help):
-    return project[0]
+@depends(include_project_configure, check_build_environment, '--help')
+def build_project(include_project_configure, build_env, help):
+    return os.path.dirname(os.path.relpath(include_project_configure,
+                                           build_env['TOPSRCDIR']))
 
 
 # This is temporary until js/src/configure and configure are merged.
