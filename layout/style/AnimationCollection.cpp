@@ -38,6 +38,83 @@ AnimationCollection<AnimationType>::PropertyDtor(void* aObject,
 }
 
 template <class AnimationType>
+/* static */ AnimationCollection<AnimationType>*
+AnimationCollection<AnimationType>::GetAnimationCollection(
+  dom::Element *aElement,
+  CSSPseudoElementType aPseudoType,
+  bool aCreateIfNeeded,
+  bool* aCreatedCollection)
+{
+  if (aCreatedCollection) {
+    *aCreatedCollection = false;
+  }
+
+  if (!aCreateIfNeeded && !aElement->MayHaveAnimations()) {
+    // Early return for the most common case.
+    return nullptr;
+  }
+
+  nsIAtom *propName;
+  if (aPseudoType == CSSPseudoElementType::NotPseudo) {
+    propName = TraitsType::ElementPropertyAtom();
+  } else if (aPseudoType == CSSPseudoElementType::before) {
+    propName = TraitsType::BeforePropertyAtom();
+  } else if (aPseudoType == CSSPseudoElementType::after) {
+    propName = TraitsType::AfterPropertyAtom();
+  } else {
+    NS_ASSERTION(!aCreateIfNeeded,
+                 "should never try to create transitions for pseudo "
+                 "other than :before or :after");
+    return nullptr;
+  }
+  auto collection = static_cast<AnimationCollection<AnimationType>*>(
+                      aElement->GetProperty(propName));
+  if (!collection && aCreateIfNeeded) {
+    // FIXME: Consider arena-allocating?
+    collection = new AnimationCollection<AnimationType>(aElement, propName);
+    nsresult rv =
+      aElement->SetProperty(propName, collection,
+                            &AnimationCollection<AnimationType>::PropertyDtor,
+                            false);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("SetProperty failed");
+      // The collection must be destroyed via PropertyDtor, otherwise
+      // mCalledPropertyDtor assertion is triggered in destructor.
+      AnimationCollection<AnimationType>::PropertyDtor(aElement, propName,
+                                                       collection, nullptr);
+      return nullptr;
+    }
+
+    if (aCreatedCollection) {
+      *aCreatedCollection = true;
+    }
+    aElement->SetMayHaveAnimations();
+  }
+
+  return collection;
+}
+
+template <class AnimationType>
+/* static */ AnimationCollection<AnimationType>*
+AnimationCollection<AnimationType>::GetAnimationCollection(
+  const nsIFrame* aFrame)
+{
+  Maybe<Pair<dom::Element*, CSSPseudoElementType>> pseudoElement =
+    EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
+  if (!pseudoElement) {
+    return nullptr;
+  }
+
+  if (!pseudoElement->first()->MayHaveAnimations()) {
+    return nullptr;
+  }
+
+  return GetAnimationCollection(pseudoElement->first(),
+                                pseudoElement->second(),
+                                false /* aCreateIfNeeded */);
+}
+
+template <class AnimationType>
 /* static */ nsString
 AnimationCollection<AnimationType>::PseudoTypeAsString(
   CSSPseudoElementType aPseudoType)

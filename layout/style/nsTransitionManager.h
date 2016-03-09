@@ -215,6 +215,23 @@ protected:
 
 } // namespace dom
 
+template <>
+struct AnimationTypeTraits<dom::CSSTransition>
+{
+  static nsIAtom* ElementPropertyAtom()
+  {
+    return nsGkAtoms::transitionsProperty;
+  }
+  static nsIAtom* BeforePropertyAtom()
+  {
+    return nsGkAtoms::transitionsOfBeforeProperty;
+  }
+  static nsIAtom* AfterPropertyAtom()
+  {
+    return nsGkAtoms::transitionsOfAfterProperty;
+  }
+};
+
 struct TransitionEventInfo {
   RefPtr<dom::Element> mElement;
   RefPtr<dom::Animation> mAnimation;
@@ -328,17 +345,6 @@ protected:
   typedef nsTArray<RefPtr<mozilla::dom::CSSTransition>>
     OwningCSSTransitionPtrArray;
 
-  virtual nsIAtom* GetAnimationsAtom() override {
-    return nsGkAtoms::transitionsProperty;
-  }
-  virtual nsIAtom* GetAnimationsBeforeAtom() override {
-    return nsGkAtoms::transitionsOfBeforeProperty;
-  }
-  virtual nsIAtom* GetAnimationsAfterAtom() override {
-    return nsGkAtoms::transitionsOfAfterProperty;
-  }
-
-private:
   void
   ConsiderStartingTransition(nsCSSProperty aProperty,
                              const mozilla::StyleTransition& aTransition,

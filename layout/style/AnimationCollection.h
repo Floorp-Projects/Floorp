@@ -21,12 +21,19 @@ class nsPresContext;
 
 namespace mozilla {
 
+// Traits class to define the specific atoms used when storing specializations
+// of AnimationCollection as a property on an Element (e.g. which atom
+// to use when storing an AnimationCollection<CSSAnimation> for a ::before
+// pseudo-element).
+template <class AnimationType>
+struct AnimationTypeTraits { };
+
 template <class AnimationType>
 class AnimationCollection
   : public LinkedListElement<AnimationCollection<AnimationType>>
 {
-public:
-  typedef AnimationCollection<AnimationType> self_type;
+  typedef AnimationCollection<AnimationType> SelfType;
+  typedef AnimationTypeTraits<AnimationType> TraitsType;
 
   AnimationCollection(dom::Element* aElement, nsIAtom* aElementProperty)
     : mElement(aElement)
@@ -38,12 +45,14 @@ public:
   {
     MOZ_COUNT_CTOR(AnimationCollection);
   }
+
+public:
   ~AnimationCollection()
   {
     MOZ_ASSERT(mCalledPropertyDtor,
                "must call destructor through element property dtor");
     MOZ_COUNT_DTOR(AnimationCollection);
-    LinkedListElement<self_type>::remove();
+    LinkedListElement<SelfType>::remove();
   }
 
   void Destroy()
@@ -55,19 +64,31 @@ public:
   static void PropertyDtor(void *aObject, nsIAtom *aPropertyName,
                            void *aPropertyValue, void *aData);
 
+  // Get (and optionally create) the collection of animations for
+  // the given |aElement| and |aPseudoType|.
+  static AnimationCollection<AnimationType>*
+    GetAnimationCollection(dom::Element* aElement,
+                           CSSPseudoElementType aPseudoType,
+                           bool aCreateIfNeeded,
+                           bool* aCreatedCollection = nullptr);
+
+  // Given the frame |aFrame| with possibly animated content, finds its
+  // associated collection of animations. If |aFrame| is a generated content
+  // frame, this function may examine the parent frame to search for such
+  // animations.
+  static AnimationCollection<AnimationType>* GetAnimationCollection(
+    const nsIFrame* aFrame);
+
   bool IsForElement() const { // rather than for a pseudo-element
-    return mElementProperty == nsGkAtoms::animationsProperty ||
-           mElementProperty == nsGkAtoms::transitionsProperty;
+    return mElementProperty == TraitsType::ElementPropertyAtom();
   }
 
   bool IsForBeforePseudo() const {
-    return mElementProperty == nsGkAtoms::animationsOfBeforeProperty ||
-           mElementProperty == nsGkAtoms::transitionsOfBeforeProperty;
+    return mElementProperty == TraitsType::BeforePropertyAtom();
   }
 
   bool IsForAfterPseudo() const {
-    return mElementProperty == nsGkAtoms::animationsOfAfterProperty ||
-           mElementProperty == nsGkAtoms::transitionsOfAfterProperty;
+    return mElementProperty == TraitsType::AfterPropertyAtom();
   }
 
   CSSPseudoElementType PseudoElementType() const

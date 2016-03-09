@@ -282,7 +282,8 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   }
 
   CSSTransitionCollection* collection =
-    GetAnimationCollection(aElement, pseudoType, false /* aCreateIfNeeded */);
+    CSSTransitionCollection::GetAnimationCollection(aElement, pseudoType,
+                                                    false /*aCreateIfNeeded*/);
   if (!collection &&
       disp->mTransitionPropertyCount == 1 &&
       disp->mTransitions[0].GetCombinedDuration() <= 0.0f) {
@@ -700,13 +701,21 @@ nsTransitionManager::ConsiderStartingTransition(
   animation->PlayFromStyle();
 
   if (!aElementTransitions) {
+    bool createdCollection = false;
     aElementTransitions =
-      GetAnimationCollection(aElement,
-                             aNewStyleContext->GetPseudoType(),
-                             true /* aCreateIfNeeded */);
+      CSSTransitionCollection::GetAnimationCollection(aElement,
+                                                      aNewStyleContext->
+                                                        GetPseudoType(),
+                                                      true /*aCreateIfNeeded*/,
+                                                      &createdCollection);
     if (!aElementTransitions) {
-      NS_WARNING("allocating CommonAnimationManager failed");
+      MOZ_ASSERT(!createdCollection, "outparam should agree with return value");
+      NS_WARNING("allocating collection failed");
       return;
+    }
+
+    if (createdCollection) {
+      AddElementCollection(aElementTransitions);
     }
   }
 
@@ -748,7 +757,8 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
                                                nsStyleContext* aNewStyleContext)
 {
   CSSTransitionCollection* collection =
-    GetAnimationCollection(aElement, aPseudoType, false /* aCreateIfNeeded */);
+    CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType,
+                                                    false /*aCreateIfNeeded*/);
   if (!collection) {
     return;
   }
