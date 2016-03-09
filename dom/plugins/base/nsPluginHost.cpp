@@ -640,20 +640,15 @@ nsresult nsPluginHost::FindProxyForURL(const char* url, char* *result)
     return NS_ERROR_FAILURE;
   }
 
-  // make a temporary channel from the argument url
-  nsCOMPtr<nsIURI> uri;
-  res = NS_NewURI(getter_AddRefs(uri), nsDependentCString(url));
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &res);
+  if (NS_FAILED(res) || !ioService)
+    return res;
 
-  nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
-  NS_ENSURE_TRUE(nullPrincipal, NS_ERROR_FAILURE);
-  // The following channel is never openend, so it does not matter what
-  // securityFlags we pass; let's follow the principle of least privilege.
+  // make a temporary channel from the argument url
   nsCOMPtr<nsIChannel> tempChannel;
-  res = NS_NewChannel(getter_AddRefs(tempChannel), uri, nullPrincipal,
-                      nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
-                      nsIContentPolicy::TYPE_OTHER);
-  NS_ENSURE_SUCCESS(res, res);
+  res = ioService->NewChannel(nsDependentCString(url), nullptr, nullptr, getter_AddRefs(tempChannel));
+  if (NS_FAILED(res))
+    return res;
 
   nsCOMPtr<nsIProxyInfo> pi;
 
