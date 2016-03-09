@@ -103,17 +103,4 @@ interface nsIIOService2 : nsIIOService
                                               in unsigned long aSecurityFlags,
                                               in unsigned long aContentPolicyType);
 
-  /**
-   * Creates a channel for a given URI.
-   *
-   * @param aURI nsIURI from which to make a channel
-   * @param aProxyURI nsIURI to use for proxy resolution. Can be null in which
-   *        case aURI is used
-   * @param aProxyFlags flags from nsIProtocolProxyService to use
-   *        when resolving proxies for this new channel
-   * @return reference to the new nsIChannel object
-   */
-  nsIChannel newChannelFromURIWithProxyFlags(in nsIURI aURI,
-                                             in nsIURI aProxyURI,
-                                             in unsigned long aProxyFlags);
 };
