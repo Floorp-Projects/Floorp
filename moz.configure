@@ -32,6 +32,7 @@ option('--disable-compile-environment',
 def compile_environment(value):
     if value:
         set_config('COMPILE_ENVIRONMENT', '1')
+        add_old_configure_assignment('COMPILE_ENVIRONMENT', '1')
     return bool(value)
 
 

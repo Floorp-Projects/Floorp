@@ -88,6 +88,22 @@ def mozconfig(current_project, mozconfig,  build_env, help):
     return mozconfig
 
 
+# Hacks related to old-configure
+# ==============================
+
+@depends('--help')
+def old_configure_assignments(help):
+    return []
+
+@template
+def add_old_configure_assignment(var, value):
+    @depends(old_configure_assignments)
+    @advanced
+    def add_assignment(assignments):
+        from mozbuild.shellutil import quote
+        assignments.append('%s=%s' % (var, quote(value)))
+
+
 option(env='PYTHON', nargs=1, help='Python interpreter')
 
 # Setup python virtualenv
@@ -161,6 +177,7 @@ def virtualenv_python(env_python, build_env, mozconfig):
         error('Could not determine python site packages directory')
 
     set_config('PYTHON', python)
+    add_old_configure_assignment('PYTHON', python)
     return python
 
 
@@ -230,6 +247,8 @@ def include_project_configure(project, external_source_dir, build_env, help):
     base_dir = build_env['TOPSRCDIR']
     if external_source_dir:
         set_config('EXTERNAL_SOURCE_DIR', external_source_dir[0])
+        add_old_configure_assignment('EXTERNAL_SOURCE_DIR',
+                                     external_source_dir[0])
         base_dir = os.path.join(base_dir, external_source_dir[0])
 
     path = os.path.join(base_dir, project[0], 'moz.configure')
@@ -239,8 +258,10 @@ def include_project_configure(project, external_source_dir, build_env, help):
 
 @depends(include_project_configure, check_build_environment, '--help')
 def build_project(include_project_configure, build_env, help):
-    return os.path.dirname(os.path.relpath(include_project_configure,
-                                           build_env['TOPSRCDIR']))
+    ret = os.path.dirname(os.path.relpath(include_project_configure,
+                                          build_env['TOPSRCDIR']))
+    add_old_configure_assignment('MOZ_BUILD_APP', ret)
+    return ret
 
 
 # This is temporary until js/src/configure and configure are merged.
