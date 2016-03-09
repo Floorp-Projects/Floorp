@@ -126,6 +126,7 @@ class ReftestServer:
                 self._process.kill()
 
 class RemoteReftest(RefTest):
+    use_marionette = False
     remoteApp = ''
     resolver_cls = RemoteReftestResolver
 
