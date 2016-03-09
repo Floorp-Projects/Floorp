@@ -1581,8 +1581,12 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
         bytes = copy.begin();
     }
 
-    UniqueChars file;
-    if (!DescribeScriptedCaller(cx, &file))
+    JS::AutoFilename filename;
+    if (!DescribeScriptedCaller(cx, &filename))
+        return false;
+
+    UniqueChars file = DuplicateString(filename.get());
+    if (!file)
         return false;
 
     ImportNameVector importNames;

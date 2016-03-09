@@ -141,7 +141,7 @@ GetLocationProperty(JSContext* cx, unsigned argc, Value* vp)
     //XXX: your platform should really implement this
     return false;
 #else
-    JS::UniqueChars filename;
+    JS::AutoFilename filename;
     if (JS::DescribeScriptedCaller(cx, &filename) && filename.get()) {
         nsresult rv;
         nsCOMPtr<nsIXPConnect> xpc =
