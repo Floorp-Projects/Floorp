@@ -11,8 +11,22 @@
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
-var url = SimpleTest.getTestFileURL("SpecialPowersLoadChromeScript.js");
-var script = SpecialPowers.loadChromeScript(url);
+
+var script = SpecialPowers.loadChromeScript(function loadChromeScriptTest() {
+  // Copied from SpecialPowersLoadChromeScript.js
+
+  // Just receive 'foo' message and forward it back
+  // as 'bar' message
+  addMessageListener("foo", function (message) {
+    sendAsyncMessage("bar", message);
+  });
+
+  addMessageListener("valid-assert", function (message) {
+    assert.ok(true, "valid assertion");
+    assert.equal(1, 1, "another valid assertion");
+    sendAsyncMessage("valid-assert-done");
+  });
+});
 
 var MESSAGE = { bar: true };
 script.addMessageListener("bar", function (message) {
