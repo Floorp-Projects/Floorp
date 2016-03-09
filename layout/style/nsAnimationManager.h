@@ -266,6 +266,24 @@ protected:
 };
 
 } /* namespace dom */
+
+template <>
+struct AnimationTypeTraits<dom::CSSAnimation>
+{
+  static nsIAtom* ElementPropertyAtom()
+  {
+    return nsGkAtoms::animationsProperty;
+  }
+  static nsIAtom* BeforePropertyAtom()
+  {
+    return nsGkAtoms::animationsOfBeforeProperty;
+  }
+  static nsIAtom* AfterPropertyAtom()
+  {
+    return nsGkAtoms::animationsOfAfterProperty;
+  }
+};
+
 } /* namespace mozilla */
 
 class nsAnimationManager final
@@ -327,25 +345,16 @@ public:
                                 mozilla::CSSPseudoElementType aPseudoType);
 
 protected:
-  virtual ~nsAnimationManager() {}
-
-  virtual nsIAtom* GetAnimationsAtom() override {
-    return nsGkAtoms::animationsProperty;
-  }
-  virtual nsIAtom* GetAnimationsBeforeAtom() override {
-    return nsGkAtoms::animationsOfBeforeProperty;
-  }
-  virtual nsIAtom* GetAnimationsAfterAtom() override {
-    return nsGkAtoms::animationsOfAfterProperty;
-  }
-
-  mozilla::DelayedEventDispatcher<mozilla::AnimationEventInfo> mEventDispatcher;
+  ~nsAnimationManager() override = default;
 
 private:
+
   void BuildAnimations(nsStyleContext* aStyleContext,
                        mozilla::dom::Element* aTarget,
                        CSSAnimationCollection* aCollection,
                        OwningCSSAnimationPtrArray& aAnimations);
+
+  mozilla::DelayedEventDispatcher<mozilla::AnimationEventInfo> mEventDispatcher;
 };
 
 #endif /* !defined(nsAnimationManager_h_) */

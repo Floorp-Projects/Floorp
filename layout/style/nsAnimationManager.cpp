@@ -392,9 +392,10 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
 
   const nsStyleDisplay* disp = aStyleContext->StyleDisplay();
   CSSAnimationCollection* collection =
-    GetAnimationCollection(aElement,
-                           aStyleContext->GetPseudoType(),
-                           false /* aCreateIfNeeded */);
+    CSSAnimationCollection::GetAnimationCollection(aElement,
+                                                   aStyleContext->
+                                                     GetPseudoType(),
+                                                   false /* aCreateIfNeeded */);
   if (!collection &&
       disp->mAnimationNameCount == 1 &&
       disp->mAnimations[0].GetName().IsEmpty()) {
@@ -424,9 +425,22 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
       effectSet->UpdateAnimationGeneration(mPresContext);
     }
   } else {
-    collection = GetAnimationCollection(aElement,
-                                        aStyleContext->GetPseudoType(),
-                                        true /* aCreateIfNeeded */);
+    bool createdCollection = false;
+    collection =
+      CSSAnimationCollection::GetAnimationCollection(aElement,
+                                                     aStyleContext->
+                                                       GetPseudoType(),
+                                                     true /*aCreateIfNeeded*/,
+                                                     &createdCollection);
+    if (!collection) {
+      MOZ_ASSERT(!createdCollection, "outparam should agree with return value");
+      NS_WARNING("allocating collection failed");
+      return;
+    }
+
+    if (createdCollection) {
+      AddElementCollection(collection);
+    }
   }
   collection->mAnimations.SwapElements(newAnimations);
 
@@ -460,7 +474,8 @@ nsAnimationManager::StopAnimationsForElement(
 {
   MOZ_ASSERT(aElement);
   CSSAnimationCollection* collection =
-    GetAnimationCollection(aElement, aPseudoType, false /* aCreateIfNeeded */);
+    CSSAnimationCollection::GetAnimationCollection(aElement, aPseudoType,
+                                                   false /* aCreateIfNeeded */);
   if (!collection) {
     return;
   }
