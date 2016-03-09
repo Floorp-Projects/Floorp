@@ -8,5 +8,4 @@ DevToolsModules(
     'close.svg',
     'grippers.svg',
     'rotate-viewport.svg',
-    'select-arrow.svg',
 )
