@@ -6,18 +6,11 @@
 
 XPI_NAME = 'workerbootstrap'
 
-JAR_MANIFESTS += ['jar.mn']
-USE_EXTENSION_MANIFEST = True
-NO_JS_MANIFEST = True
-
 FINAL_TARGET_PP_FILES += [
     'install.rdf',
 ]
 
 FINAL_TARGET_FILES += [
     'bootstrap.js',
-]
-
-TEST_HARNESS_FILES.testing.mochitest.extensions += [
-    'workerbootstrap-test@mozilla.org.xpi',
+    'worker.js',
 ]
