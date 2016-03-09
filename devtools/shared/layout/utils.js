@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
+const { Ci, Cc } = require("chrome");
 const { memoize } = require("sdk/lang/functional");
 
 loader.lazyRequireGetter(this, "setIgnoreLayoutChanges",
@@ -155,8 +155,7 @@ function getFrameOffsets(boundaryWindow, node) {
     // offset (borders and padding).
     let frameRect = frameElement.getBoundingClientRect();
 
-    let [offsetTop, offsetLeft] =
-      getIframeContentOffset(frameElement);
+    let [offsetTop, offsetLeft] = getFrameContentOffset(frameElement);
 
     xOffset += frameRect.left + offsetLeft;
     yOffset += frameRect.top + offsetTop;
@@ -288,8 +287,7 @@ function getRect(boundaryWindow, aNode, aContentWindow) {
     // offset (borders and padding).
     let frameRect = frameElement.getBoundingClientRect();
 
-    let [offsetTop, offsetLeft] =
-      getIframeContentOffset(frameElement);
+    let [offsetTop, offsetLeft] = getFrameContentOffset(frameElement);
 
     rect.top += frameRect.top + offsetTop;
     rect.left += frameRect.left + offsetLeft;
@@ -363,21 +361,49 @@ function getNodeBounds(boundaryWindow, node) {
 exports.getNodeBounds = getNodeBounds;
 
 /**
- * Returns iframe content offset (iframe border + padding).
+ * Same as doing iframe.contentWindow but works with all types of container
+ * elements that act like frames (e.g. <embed>), where 'contentWindow' isn't a
+ * property that can be accessed.
+ * This uses the inIDeepTreeWalker instead.
+ * @param {DOMNode} aFrame
+ * @return {Window}
+ */
+function safelyGetContentWindow(aFrame) {
+  if (aFrame.contentWindow) {
+    return aFrame.contentWindow;
+  }
+
+  let walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"]
+               .createInstance(Ci.inIDeepTreeWalker);
+  walker.showSubDocuments = true;
+  walker.showDocumentsAsNodes = true;
+  walker.init(aFrame, Ci.nsIDOMNodeFilter.SHOW_ALL);
+  walker.currentNode = aFrame;
+
+  let document = walker.nextNode();
+  if (!document || !document.defaultView) {
+    throw new Error("Couldn't get the content window inside aFrame " + aFrame);
+  }
+
+  return document.defaultView;
+}
+
+/**
+ * Returns a frame's content offset (frame border + padding).
  * Note: this function shouldn't need to exist, had the platform provided a
- * suitable API for determining the offset between the iframe's content and
+ * suitable API for determining the offset between the frame's content and
  * its bounding client rect. Bug 626359 should provide us with such an API.
  *
- * @param {DOMNode} aIframe
- *        The iframe.
+ * @param {DOMNode} aFrame
+ *        The frame.
  * @return {Array} [offsetTop, offsetLeft]
- *         offsetTop is the distance from the top of the iframe and the top of
+ *         offsetTop is the distance from the top of the frame and the top of
  *         the content document.
- *         offsetLeft is the distance from the left of the iframe and the left
+ *         offsetLeft is the distance from the left of the frame and the left
  *         of the content document.
  */
-function getIframeContentOffset(aIframe) {
-  let style = aIframe.contentWindow.getComputedStyle(aIframe, null);
+function getFrameContentOffset(aFrame) {
+  let style = safelyGetContentWindow(aFrame).getComputedStyle(aFrame, null);
 
   // In some cases, the computed style is null
   if (!style) {
@@ -392,7 +418,6 @@ function getIframeContentOffset(aIframe) {
 
   return [borderTop + paddingTop, borderLeft + paddingLeft];
 }
-exports.getIframeContentOffset = getIframeContentOffset;
 
 /**
  * Find an element from the given coordinates. This method descends through
@@ -412,14 +437,14 @@ function getElementFromPoint(aDocument, aX, aY) {
     if (node instanceof Ci.nsIDOMHTMLIFrameElement) {
       let rect = node.getBoundingClientRect();
 
-      // Gap between the iframe and its content window.
-      let [offsetTop, offsetLeft] = getIframeContentOffset(node);
+      // Gap between the frame and its content window.
+      let [offsetTop, offsetLeft] = getFrameContentOffset(node);
 
       aX -= rect.left + offsetLeft;
       aY -= rect.top + offsetTop;
 
       if (aX < 0 || aY < 0) {
-        // Didn't reach the content document, still over the iframe.
+        // Didn't reach the content document, still over the frame.
         return node;
       }
     }
