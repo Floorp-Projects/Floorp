@@ -48,9 +48,14 @@ bool OpenProcessHandle(ProcessId pid, ProcessHandle* handle) {
   return true;
 }
 
-bool OpenPrivilegedProcessHandle(ProcessId pid, ProcessHandle* handle) {
+bool OpenPrivilegedProcessHandle(ProcessId pid,
+                                 ProcessHandle* handle,
+                                 int64_t* error) {
   // On POSIX permissions are checked for each operation on process,
   // not when opening a "handle".
+  if (error) {
+    *error = 0;
+  }
   return OpenProcessHandle(pid, handle);
 }
 
