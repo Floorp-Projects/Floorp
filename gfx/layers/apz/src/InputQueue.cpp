@@ -551,6 +551,19 @@ InputQueue::AllowScrollHandoff() const
   return true;
 }
 
+bool
+InputQueue::IsDragOnScrollbar(bool aHitScrollbar)
+{
+  if (!mDragTracker.InDrag()) {
+    return false;
+  }
+  // Now that we know we are in a drag, get the info from the drag tracker.
+  // We keep it in the tracker rather than the block because the block can get
+  // interrupted by something else (like a wheel event) and then a new block
+  // will get created without the info we want. The tracker will persist though.
+  return mDragTracker.IsOnScrollbar(aHitScrollbar);
+}
+
 void
 InputQueue::ScheduleMainThreadTimeout(const RefPtr<AsyncPanZoomController>& aTarget, uint64_t aInputBlockId) {
   INPQ_LOG("scheduling main thread timeout for target %p\n", aTarget.get());

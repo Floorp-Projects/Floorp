@@ -25,8 +25,10 @@ public:
   static bool EndsDrag(const MouseInput& aInput);
   void Update(const MouseInput& aInput);
   bool InDrag() const;
+  bool IsOnScrollbar(bool aOnScrollbar);
 
 private:
+  Maybe<bool> mOnScrollbar;
   bool mInDrag;
 };
 
