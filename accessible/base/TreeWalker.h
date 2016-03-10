@@ -45,7 +45,7 @@ public:
    * @param aAnchorNode [in] the node the search will be prepared relative to
    * @param aFlags   [in] flags (see enum above)
    */
-  TreeWalker(Accessible* aContext, nsIContent* aAnchorNode, uint32_t aFlags = 0);
+  TreeWalker(Accessible* aContext, nsIContent* aAnchorNode, uint32_t aFlags = eWalkCache);
 
   ~TreeWalker();
 
