@@ -157,7 +157,6 @@ nsHTTPIndex::OnFTPControlLog(bool server, const char *msg)
     // AutoEntryScript. This is Gecko specific and not in any spec.
     dom::AutoEntryScript aes(globalObject,
                              "nsHTTPIndex OnFTPControlLog");
-    aes.TakeOwnershipOfErrorReporting();
     JSContext* cx = aes.cx();
 
     JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
@@ -232,7 +231,6 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     // This is Gecko specific and not in any spec.
     dom::AutoEntryScript aes(globalObject,
                              "nsHTTPIndex set HTTPIndex property");
-    aes.TakeOwnershipOfErrorReporting();
     JSContext* cx = aes.cx();
 
     JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));

@@ -639,7 +639,6 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
         // Gecko-specific concept at present.
         dom::AutoEntryScript aes(holder->GetJSObject(),
                                  "component loader report global");
-        aes.TakeOwnershipOfErrorReporting();
         RootedObject global(aes.cx(), holder->GetJSObject());
         JS_FireOnNewGlobalObject(aes.cx(), global);
     }
@@ -941,7 +940,6 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         // This is Gecko-specific and not in any spec.
         dom::AutoEntryScript aes(CurrentGlobalOrNull(cx),
                                  "component loader load module");
-        aes.TakeOwnershipOfErrorReporting();
         JSContext* aescx = aes.cx();
         AutoSaveContextOptions asco(aescx);
         if (aPropagateExceptions)

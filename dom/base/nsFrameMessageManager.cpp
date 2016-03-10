@@ -1104,7 +1104,6 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       }
 
       AutoEntryScript aes(wrappedJS->GetJSObject(), "message manager handler");
-      aes.TakeOwnershipOfErrorReporting();
       JSContext* cx = aes.cx();
       JS::Rooted<JSObject*> object(cx, wrappedJS->GetJSObject());
 
@@ -1687,7 +1686,6 @@ nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
   JS::Rooted<JSObject*> global(rt, mGlobal->GetJSObject());
   if (global) {
     AutoEntryScript aes(global, "message manager script load");
-    aes.TakeOwnershipOfErrorReporting();
     JSContext* cx = aes.cx();
     if (script) {
       if (aRunInGlobalScope) {
