@@ -530,7 +530,7 @@ AutoJSAPI::ReportException()
         DispatchScriptErrorEvent(inner, JS_GetRuntime(cx()), xpcReport, exn);
       } else {
         JS::Rooted<JSObject*> stack(cx(),
-          xpc::FindExceptionStackForConsoleReport(cx(), inner, exn));
+          xpc::FindExceptionStackForConsoleReport(inner, exn));
         xpcReport->LogToConsoleWithStack(stack);
       }
     } else {
