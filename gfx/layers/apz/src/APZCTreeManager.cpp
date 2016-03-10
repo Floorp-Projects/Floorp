@@ -679,8 +679,9 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         FlushRepaintsToClearScreenToGeckoTransform();
       }
 
+      bool hitScrollbar = false;
       RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(mouseInput.mOrigin,
-                                                            &hitResult);
+            &hitResult, &hitScrollbar);
 
       // When the mouse is outside the window we still want to handle dragging
       // but we won't find an APZC. Fallback to root APZC then.
@@ -694,14 +695,21 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
           /* aTargetConfirmed = */ false,
           mouseInput, aOutInputBlockId);
 
+        if (result == nsEventStatus_eConsumeDoDefault) {
+          // This input event is part of a drag block, so whether or not it is
+          // directed at a scrollbar depends on whether the drag block started
+          // on a scrollbar.
+          hitScrollbar = mInputQueue->IsDragOnScrollbar(hitScrollbar);
+        }
+
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
 
-        if (result == nsEventStatus_eIgnore) {
-          // The input was not part of a drag block, so we should untransform.
-          // TODO: I think ideally we want to also untransform if the drag block
-          // is not dragging a scrollbar (either on the main thread or in APZ),
-          // but that's a little harder to detect right now.
+        if (!hitScrollbar) {
+          // The input was not targeted at a scrollbar, so we untransform it
+          // like we do for other content. Scrollbars are "special" because they
+          // have special handling in AsyncCompositionManager when resolution is
+          // applied. TODO: we should find a better way to deal with this.
           ScreenToParentLayerMatrix4x4 transformToApzc = GetScreenToApzcTransform(apzc);
           ParentLayerToScreenMatrix4x4 transformToGecko = GetApzcToGeckoTransform(apzc);
           ScreenToScreenMatrix4x4 outTransform = transformToApzc * transformToGecko;
@@ -1550,13 +1558,16 @@ APZCTreeManager::GetTargetNode(const ScrollableLayerGuid& aGuid,
 }
 
 already_AddRefed<AsyncPanZoomController>
-APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint, HitTestResult* aOutHitResult)
+APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
+                               HitTestResult* aOutHitResult,
+                               bool* aOutHitScrollbar)
 {
   MutexAutoLock lock(mTreeLock);
   HitTestResult hitResult = HitNothing;
   ParentLayerPoint point = ViewAs<ParentLayerPixel>(aPoint,
     PixelCastJustification::ScreenIsParentLayerForRoot);
-  RefPtr<AsyncPanZoomController> target = GetAPZCAtPoint(mRootNode, point, &hitResult);
+  RefPtr<AsyncPanZoomController> target = GetAPZCAtPoint(mRootNode, point,
+      &hitResult, aOutHitScrollbar);
 
   if (aOutHitResult) {
     *aOutHitResult = hitResult;
@@ -1669,7 +1680,8 @@ APZCTreeManager::FindScrollNode(const AsyncDragMetrics& aDragMetrics)
 AsyncPanZoomController*
 APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
                                 const ParentLayerPoint& aHitTestPoint,
-                                HitTestResult* aOutHitResult)
+                                HitTestResult* aOutHitResult,
+                                bool* aOutHitScrollbar)
 {
   mTreeLock.AssertCurrentThreadOwns();
 
@@ -1721,6 +1733,13 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
 
   if (*aOutHitResult != HitNothing) {
       MOZ_ASSERT(resultNode);
+      if (aOutHitScrollbar) {
+        for (HitTestingTreeNode* n = resultNode; n; n = n->GetParent()) {
+          if (n->IsScrollbarNode()) {
+            *aOutHitScrollbar = true;
+          }
+        }
+      }
       AsyncPanZoomController* result = resultNode->GetNearestContainingApzcWithSameLayersId();
       if (!result) {
         result = FindRootApzcForLayersId(resultNode->GetLayersId());

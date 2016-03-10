@@ -119,6 +119,12 @@ public:
    * Whether the current pending block allows scroll handoff.
    */
   bool AllowScrollHandoff() const;
+  /**
+   * If there is currently a drag in progress, return whether or not it was
+   * targeted at a scrollbar. If the drag was newly-created and doesn't know,
+   * use the provided |aOnScrollbar| to populate that information.
+   */
+  bool IsDragOnScrollbar(bool aOnScrollbar);
 
 private:
   ~InputQueue();
