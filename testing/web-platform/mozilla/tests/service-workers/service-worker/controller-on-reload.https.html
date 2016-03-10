@@ -8,6 +8,8 @@
 promise_test(function(t) {
     var scope = 'resources/blank.html';
     var frame;
+    var registration;
+    var controller;
     return service_worker_unregister(t, scope)
       .then(function() {
           return with_iframe(scope);
@@ -17,7 +19,8 @@ promise_test(function(t) {
           return frame.contentWindow.navigator.serviceWorker.register(
               'resources/empty-worker.js', {scope: scope});
         })
-      .then(function(registration) {
+      .then(function(swr) {
+          registration = swr;
           return wait_for_state(t, registration.installing, 'activated');
         })
       .then(function() {
@@ -32,9 +35,17 @@ promise_test(function(t) {
         })
       .then(function() {
           var w = frame.contentWindow;
-          assert_true(
-              w.navigator.serviceWorker.controller instanceof w.ServiceWorker,
-              'controller should be a ServiceWorker object upon reload');
+          controller = w.navigator.serviceWorker.controller;
+          assert_true(controller instanceof w.ServiceWorker,
+                      'controller should be a ServiceWorker object upon reload');
+
+          // objects from separate windows should not be equal
+          assert_not_equals(controller, registration.active);
+
+          return w.navigator.serviceWorker.getRegistration();
+        })
+      .then(function(frameRegistration) {
+          assert_equals(frameRegistration.active, controller);
           frame.remove();
           service_worker_unregister_and_done(t, scope);
         });
