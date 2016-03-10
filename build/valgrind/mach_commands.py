@@ -73,7 +73,7 @@ class MachCommands(MachCommandBase):
             for pref in prefs:
                 prefs[pref] = Preferences.cast(prefs[pref])
 
-            quitter = os.path.join(self.distdir, 'xpi-stage', 'quitter')
+            quitter = os.path.join(self.topsrcdir, 'tools', 'quitter', 'quitter@mozilla.org.xpi')
 
             locations = ServerLocations()
             locations.add_host(host='127.0.0.1',
