@@ -4962,8 +4962,8 @@ pref("layout.accessiblecaret.height", "36.0");
 pref("layout.accessiblecaret.margin-left", "-18.5");
 pref("layout.accessiblecaret.bar.width", "2.0");
 
-// Show the selection bars at the two ends of the selection highlight.
-pref("layout.accessiblecaret.bar.enabled", true);
+// Show no selection bars at the two ends of the selection highlight.
+pref("layout.accessiblecaret.bar.enabled", false);
 
 // Show the caret when long tapping on an empty content.
 pref("layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content", false);

@@ -913,9 +913,6 @@ pref("layout.accessiblecaret.width", "22.0");
 pref("layout.accessiblecaret.height", "22.0");
 pref("layout.accessiblecaret.margin-left", "-11.5");
 
-// Android hides the selection bars at the two ends of the selection highlight.
-pref("layout.accessiblecaret.bar.enabled", false);
-
 // Android needs to show the caret when long tapping on an empty content.
 pref("layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content", true);
 
