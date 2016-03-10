@@ -535,6 +535,7 @@ enum class SymbolicAddress
     OnOutOfBounds,
     OnImpreciseConversion,
     BadIndirectCall,
+    UnreachableTrap,
     HandleExecutionInterrupt,
     InvokeImport_Void,
     InvokeImport_I32,
@@ -558,6 +559,7 @@ enum class JumpTarget
     OutOfBounds,
     ConversionError,
     BadIndirectCall,
+    UnreachableTrap,
     Throw,
     Limit
 };

@@ -865,6 +865,17 @@ class FunctionCompiler
         curBlock_ = nullptr;
     }
 
+    bool unreachableTrap()
+    {
+        if (inDeadCode())
+            return true;
+
+        auto* ins = MAsmThrowUnreachable::New(alloc());
+        curBlock_->end(ins);
+        curBlock_ = nullptr;
+        return true;
+    }
+
     bool branchAndStartThen(MDefinition* cond, MBasicBlock** thenBlock, MBasicBlock** elseBlock)
     {
         if (inDeadCode())
@@ -2618,6 +2629,13 @@ EmitReturn(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
+EmitUnreachable(FunctionCompiler& f, MDefinition** def)
+{
+    *def = nullptr;
+    return f.unreachableTrap();
+}
+
+static bool
 EmitBlock(FunctionCompiler& f, MDefinition** def)
 {
     if (!f.startBlock())
@@ -2690,6 +2708,8 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
         return EmitBrTable(f, def);
       case Expr::Return:
         return EmitReturn(f, def);
+      case Expr::Unreachable:
+        return EmitUnreachable(f, def);
 
       // Calls
       case Expr::Call:
@@ -2698,7 +2718,6 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
         return EmitCallIndirect(f, exprOffset, def);
       case Expr::CallImport:
         return EmitCallImport(f, exprOffset, def);
-
 
       // Locals and globals
       case Expr::GetLocal:
@@ -3033,7 +3052,6 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
       case Expr::I64Rotl:
       case Expr::MemorySize:
       case Expr::GrowMemory:
-      case Expr::Unreachable:
         MOZ_CRASH("NYI");
         break;
       case Expr::Limit:;
