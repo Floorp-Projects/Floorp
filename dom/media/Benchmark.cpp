@@ -142,6 +142,7 @@ BenchmarkPlayback::DemuxSamples()
         mDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
       if (!mTrackDemuxer) {
         MainThreadShutdown();
+        return;
       }
       DemuxNextSample();
     },
@@ -204,6 +205,8 @@ BenchmarkPlayback::MainThreadShutdown()
 {
   MOZ_ASSERT(OnThread());
 
+  mFinished = true;
+
   if (mDecoder) {
     mDecoder->Flush();
     mDecoder->Shutdown();
@@ -242,7 +245,6 @@ BenchmarkPlayback::Output(MediaData* aData)
         (frames == ref->mParameters.mFramesToMeasure ||
          elapsedTime >= ref->mParameters.mTimeout)) {
       uint32_t decodeFps = frames / elapsedTime.ToSeconds();
-      mFinished = true;
       MainThreadShutdown();
       ref->Dispatch(NS_NewRunnableFunction([ref, decodeFps]() {
         ref->ReturnResult(decodeFps);
@@ -287,7 +289,6 @@ BenchmarkPlayback::DrainComplete()
     int32_t frames = mFrameCount - ref->mParameters.mStartupFrame;
     TimeDuration elapsedTime = TimeStamp::Now() - mDecodeStartTime;
     uint32_t decodeFps = frames / elapsedTime.ToSeconds();
-    mFinished = true;
     MainThreadShutdown();
     ref->Dispatch(NS_NewRunnableFunction([ref, decodeFps]() {
       ref->ReturnResult(decodeFps);
