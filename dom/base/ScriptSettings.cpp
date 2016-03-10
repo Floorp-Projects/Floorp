@@ -414,14 +414,6 @@ AutoJSAPI::Init(JSObject* aObject)
 }
 
 bool
-AutoJSAPI::InitWithLegacyErrorReporting(nsIGlobalObject* aGlobalObject)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  return Init(aGlobalObject, FindJSContext(aGlobalObject));
-}
-
-bool
 AutoJSAPI::Init(nsPIDOMWindowInner* aWindow, JSContext* aCx)
 {
   return Init(nsGlobalWindow::Cast(aWindow), aCx);
@@ -443,18 +435,6 @@ bool
 AutoJSAPI::Init(nsGlobalWindow* aWindow)
 {
   return Init(static_cast<nsIGlobalObject*>(aWindow));
-}
-
-bool
-AutoJSAPI::InitWithLegacyErrorReporting(nsPIDOMWindowInner* aWindow)
-{
-  return InitWithLegacyErrorReporting(nsGlobalWindow::Cast(aWindow));
-}
-
-bool
-AutoJSAPI::InitWithLegacyErrorReporting(nsGlobalWindow* aWindow)
-{
-  return InitWithLegacyErrorReporting(static_cast<nsIGlobalObject*>(aWindow));
 }
 
 // Even with autoJSAPIOwnsErrorReporting, the JS engine still sends warning
