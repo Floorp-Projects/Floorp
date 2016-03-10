@@ -166,6 +166,7 @@
 
     function() {
       info("enabling use of mozbrowser");
+      //SpecialPowers.setAllAppsLaunchable(true);
       SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
       runTests();
     },

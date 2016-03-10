@@ -117,6 +117,7 @@
         SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
       }
 
+      SpecialPowers.setAllAppsLaunchable(true);
       SpecialPowers.pushPrefEnv({"set":[["dom.mozBrowserFramesEnabled", true]]}, runTest);
     },
 

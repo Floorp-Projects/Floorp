@@ -196,6 +196,7 @@ this.DOMApplicationRegistry = {
   // Path to the webapps.json file where we store the registry data.
   appsFile: null,
   webapps: { },
+  allAppsLaunchable: false,
   _updateHandlers: [ ],
   _pendingUninstalls: {},
   _contentActions: new Map(),

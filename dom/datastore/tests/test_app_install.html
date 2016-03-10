@@ -49,6 +49,7 @@
     ok("getDataStores" in navigator, "getDataStores exists");
     is(typeof navigator.getDataStores, "function", "getDataStores exists and it's a function");
 
+    SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.autoConfirmAppInstall(continueTest);
     yield undefined;
 

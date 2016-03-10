@@ -20,6 +20,8 @@
 
 SimpleTest.waitForExplicitFinish();
 
+SpecialPowers.setAllAppsLaunchable(true);
+
 var mmListener = {
   receiveMessage: function(aMessage) {
     ppmm.removeMessageListener("Webapps:Install", mmListener);
