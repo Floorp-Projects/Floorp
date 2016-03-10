@@ -475,8 +475,10 @@ case "$target" in
             MSVC_C_RUNTIME_DLL=vcruntime140.dll
             MSVC_CXX_RUNTIME_DLL=msvcp140.dll
 
-            MSVC_HAS_DIA_SDK=1
-            AC_DEFINE(MSVC_HAS_DIA_SDK)
+            MOZ_CHECK_HEADER(dia2.h, MSVC_HAS_DIA_SDK=1)
+            if test -n "$MSVC_HAS_DIA_SDK"; then
+                AC_DEFINE(MSVC_HAS_DIA_SDK)
+            fi
 
             # -Wv:18 disables all warnings introduced after VS2013
             # See http://blogs.msdn.com/b/vcblog/archive/2014/11/12/improvements-to-warnings-in-the-c-compiler.aspx
