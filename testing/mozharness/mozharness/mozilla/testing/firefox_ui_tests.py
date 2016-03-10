@@ -213,7 +213,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         dirs = {
             'abs_reports_dir': os.path.join(abs_dirs['base_work_dir'], 'reports'),
             'abs_test_install_dir': abs_tests_install_dir,
-            'abs_fxui_tests_dir': os.path.join(abs_tests_install_dir, 'firefox-ui', 'tests'),
+            'abs_fxui_dir': os.path.join(abs_tests_install_dir, 'firefox-ui'),
         }
 
         for key in dirs:
@@ -303,7 +303,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
             '--address', 'localhost:{}'.format(marionette_port),
 
             # Resource files to serve via local webserver
-            '--server-root', os.path.join(dirs['abs_fxui_tests_dir'], 'resources'),
+            '--server-root', os.path.join(dirs['abs_fxui_dir'], 'resources'),
 
             # Use the work dir to get temporary data stored
             '--workspace', dirs['abs_work_dir'],
@@ -334,7 +334,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
                                         strict=False)
 
         # Add the top-level tests manifest file
-        cmd.append(os.path.join(dirs['abs_fxui_tests_dir'], self.tests_manifest))
+        cmd.append(os.path.join(dirs['abs_fxui_dir'], 'tests', self.tests_manifest))
 
         return_code = self.run_command(cmd,
                                        cwd=dirs['abs_work_dir'],
