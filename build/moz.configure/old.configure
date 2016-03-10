@@ -58,14 +58,13 @@ def autoconf(mozconfig, autoconf):
 
 
 @depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell,
-         extra_old_configure_args, old_configure_assignments)
+         old_configure_assignments)
 @advanced
 def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
-                      extra_old_configure_args, old_configure_assignments):
+                      old_configure_assignments):
     import glob
     import itertools
     import subprocess
-    import sys
     # Import getmtime without overwriting the sandbox os.path.
     from os.path import getmtime
 
@@ -100,12 +99,9 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
                 '--localdir=%s' % os.path.dirname(old_configure),
                 old_configure + '.in'], stdout=fh)
 
-    cmd = [shell, old_configure] + sys.argv[1:]
+    cmd = [shell, old_configure]
     with open('old-configure.vars', 'w') as out:
         if mozconfig['path']:
-            if mozconfig['configure_args']:
-                cmd += mozconfig['configure_args']
-
             for key, value in mozconfig['env']['added'].items():
                 print("export %s=%s" % (key, quote(value)), file=out)
             for key, (old, value) in mozconfig['env']['modified'].items():
@@ -121,9 +117,6 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
         for assignment in old_configure_assignments:
             print(assignment, file=out)
 
-    if extra_old_configure_args:
-        cmd += extra_old_configure_args
-
     return cmd
 
 
@@ -134,9 +127,10 @@ def old_configure_options(*options):
 
     @depends('--help')
     def all_options(help):
-        return set(options)
+        return list(options)
 
-    return depends(prepare_configure, all_options, *options)
+    return depends(prepare_configure, extra_old_configure_args, all_options,
+                   *options)
 
 
 @old_configure_options(
@@ -360,14 +354,36 @@ def old_configure_options(*options):
     '--enable-incomplete-external-linkage',
 )
 @advanced
-def old_configure(prepare_configure, all_options, *options):
+def old_configure(prepare_configure, extra_old_configure_args, all_options,
+                  *options):
     import codecs
     import os
     import subprocess
     import sys
     import types
+    from mozbuild.shellutil import quote
 
-    ret = subprocess.call(prepare_configure)
+    cmd = prepare_configure
+
+    # old-configure only supports the options listed in @old_configure_options
+    # so we don't need to pass it every single option we've been passed. Only
+    # the ones that are not supported by python configure need to.
+    cmd += [
+        value.format(name)
+        for name, value in zip(all_options, options)
+        if value.origin != 'default'
+    ]
+
+    # We also pass it the options from js/moz.configure so that it can pass
+    # them down to js/src/configure. Note this list is empty when running
+    # js/src/configure, in which case we don't need to pass those options
+    # to old-configure since old-configure doesn't handle them anyways.
+    if extra_old_configure_args:
+        cmd += extra_old_configure_args
+
+    # For debugging purpose, in case it's not what we'd expect.
+    warn('running %s' % ' '.join(quote(a) for a in cmd))
+    ret = subprocess.call(cmd)
     if ret:
         sys.exit(ret)
 
@@ -382,6 +398,7 @@ def old_configure(prepare_configure, all_options, *options):
 
     # Ensure all the flags known to old-configure appear in the
     # @old_configure_options above.
+    all_options = set(all_options)
     for flag in raw_config['flags']:
         if flag not in all_options:
             error('Missing option in `@old_configure_options` in %s: %s'
