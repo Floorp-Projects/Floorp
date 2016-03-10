@@ -441,6 +441,9 @@ public:
                     nsIScrollableFrame::ScrollUnit aUnit,
                     nsIScrollbarMediator::ScrollSnapMode aSnap
                       = nsIScrollbarMediator::DISABLE_SNAP);
+  bool ShouldSuppressScrollbarRepaints() const {
+    return mSuppressScrollbarRepaints;
+  }
 
   // owning references to the nsIAnonymousContentCreator-built content
   nsCOMPtr<nsIContent> mHScrollbarContent;
@@ -573,9 +576,33 @@ public:
   // True if the APZ is allowed to zoom this scrollframe.
   bool mZoomableByAPZ:1;
 
+  // True if we don't want the scrollbar to repaint itself right now.
+  bool mSuppressScrollbarRepaints:1;
+
   mozilla::layout::ScrollVelocityQueue mVelocityQueue;
 
 protected:
+  class AutoScrollbarRepaintSuppression;
+  friend class AutoScrollbarRepaintSuppression;
+  class AutoScrollbarRepaintSuppression {
+  public:
+    AutoScrollbarRepaintSuppression(ScrollFrameHelper* aHelper, bool aSuppress)
+      : mHelper(aHelper)
+      , mOldSuppressValue(aHelper->mSuppressScrollbarRepaints)
+    {
+      mHelper->mSuppressScrollbarRepaints = aSuppress;
+    }
+
+    ~AutoScrollbarRepaintSuppression()
+    {
+      mHelper->mSuppressScrollbarRepaints = mOldSuppressValue;
+    }
+
+  private:
+    ScrollFrameHelper* mHelper;
+    bool mOldSuppressValue;
+  };
+
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
@@ -959,6 +986,10 @@ public:
 
   virtual bool IsScrollbarOnRight() const override {
     return mHelper.IsScrollbarOnRight();
+  }
+
+  virtual bool ShouldSuppressScrollbarRepaints() const override {
+    return mHelper.ShouldSuppressScrollbarRepaints();
   }
 
   virtual void SetTransformingByAPZ(bool aTransforming) override {
@@ -1354,6 +1385,10 @@ public:
 
   virtual bool IsScrollbarOnRight() const override {
     return mHelper.IsScrollbarOnRight();
+  }
+
+  virtual bool ShouldSuppressScrollbarRepaints() const override {
+    return mHelper.ShouldSuppressScrollbarRepaints();
   }
 
   virtual void SetTransformingByAPZ(bool aTransforming) override {

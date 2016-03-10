@@ -160,6 +160,9 @@ public:
   virtual bool IsScrollbarOnRight() const override {
     return (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR);
   }
+  virtual bool ShouldSuppressScrollbarRepaints() const override {
+    return false;
+  }
 
   // Overridden from nsIFrame to cache our pres context.
   virtual void Init(nsIContent*       aContent,
