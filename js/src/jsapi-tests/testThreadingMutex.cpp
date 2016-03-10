@@ -25,3 +25,12 @@ BEGIN_TEST(testThreadingLockGuard)
     return true;
 }
 END_TEST(testThreadingLockGuard)
+
+BEGIN_TEST(testThreadingUnlockGuard)
+{
+    js::Mutex mutex;
+    js::LockGuard<js::Mutex> guard(mutex);
+    js::UnlockGuard<js::Mutex> unguard(guard);
+    return true;
+}
+END_TEST(testThreadingUnlockGuard)
