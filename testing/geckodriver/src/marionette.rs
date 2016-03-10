@@ -152,7 +152,16 @@ impl ToMarionette for GeckoContextParameters {
     }
 }
 
-pub static FIREFOX_PREFERENCES: [(&'static str, PrefValue); 50] = [
+pub static E10S_PREFERENCES: [(&'static str, PrefValue); 1] = [
+    ("browser.tabs.remote.autostart", PrefValue::PrefBool(true)),
+];
+
+pub static NON_E10S_PREFERENCES: [(&'static str, PrefValue); 2] = [
+    ("browser.tabs.remote.autostart", PrefValue::PrefBool(false)),
+    ("browser.tabs.remote.autostart.2", PrefValue::PrefBool(false))
+];
+
+pub static FIREFOX_PREFERENCES: [(&'static str, PrefValue); 48] = [
     ("app.update.auto", PrefValue::PrefBool(false)),
     ("app.update.enabled", PrefValue::PrefBool(false)),
     ("browser.displayedE10SPrompt.1", PrefValue::PrefInt(5)),
@@ -170,8 +179,6 @@ pub static FIREFOX_PREFERENCES: [(&'static str, PrefValue); 50] = [
     ("browser.sessionstore.resume_from_crash", PrefValue::PrefBool(false)),
     ("browser.shell.checkDefaultBrowser", PrefValue::PrefBool(false)),
     ("browser.startup.page", PrefValue::PrefInt(0)),
-    ("browser.tabs.remote.autostart.1", PrefValue::PrefBool(false)),
-    ("browser.tabs.remote.autostart.2", PrefValue::PrefBool(false)),
     ("browser.tabs.warnOnClose", PrefValue::PrefBool(false)),
     ("browser.tabs.warnOnOpen", PrefValue::PrefBool(false)),
     ("browser.warnOnQuit", PrefValue::PrefBool(false)),
@@ -213,14 +220,16 @@ pub enum BrowserLauncher {
 
 pub struct MarionetteSettings {
     port: u16,
-    launcher: BrowserLauncher
+    launcher: BrowserLauncher,
+    e10s: bool
 }
 
 impl MarionetteSettings {
-    pub fn new(port: u16, launcher: BrowserLauncher) -> MarionetteSettings {
+    pub fn new(port: u16, launcher: BrowserLauncher, e10s: bool) -> MarionetteSettings {
         MarionetteSettings {
             port: port,
-            launcher: launcher
+            launcher: launcher,
+            e10s: e10s
         }
     }
 }
@@ -230,6 +239,7 @@ pub struct MarionetteHandler {
     launcher: BrowserLauncher,
     browser: Option<FirefoxRunner>,
     port: u16,
+    e10s: bool,
 }
 
 impl MarionetteHandler {
@@ -238,7 +248,8 @@ impl MarionetteHandler {
             connection: Mutex::new(None),
             launcher: settings.launcher,
             browser: None,
-            port: settings.port
+            port: settings.port,
+            e10s: settings.e10s
         }
     }
 
@@ -254,11 +265,17 @@ impl MarionetteHandler {
     }
 
     fn start_browser(&mut self) -> IoResult<()> {
+
         match self.launcher {
             BrowserLauncher::BinaryLauncher(ref binary) => {
                 let mut runner = try!(FirefoxRunner::new(&binary, None));
                 runner.profile.preferences.insert("marionette.defaultPrefs.port", PrefValue::PrefInt(self.port as isize));
     runner.profile.preferences.insert("startup.homepage_welcome_url", PrefValue::PrefString("about:blank".to_string()));
+                if self.e10s {
+                    runner.profile.preferences.insert_vec(&E10S_PREFERENCES);
+                } else {
+                    runner.profile.preferences.insert_vec(&NON_E10S_PREFERENCES);
+                }
                 runner.profile.preferences.insert_vec(&FIREFOX_PREFERENCES);
 
                 try!(runner.start());
