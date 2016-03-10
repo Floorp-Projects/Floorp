@@ -1180,34 +1180,25 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
   const int16_t* samples = nullptr;
   UniquePtr<int16_t[]> convertedSamples;
 
-  // If this track is not enabled, simply ignore the data in the chunk.
-  if (!enabled_) {
-    chunk.mBufferFormat = AUDIO_FORMAT_SILENCE;
-  }
-
   // We take advantage of the fact that the common case (microphone directly to
   // PeerConnection, that is, a normal call), the samples are already 16-bits
   // mono, so the representation in interleaved and planar is the same, and we
   // can just use that.
-  if (outputChannels == 1 && chunk.mBufferFormat == AUDIO_FORMAT_S16) {
+  if (enabled_ && outputChannels == 1 && chunk.mBufferFormat == AUDIO_FORMAT_S16) {
     samples = chunk.ChannelData<int16_t>().Elements()[0];
   } else {
     convertedSamples = MakeUnique<int16_t[]>(chunk.mDuration * outputChannels);
 
-    switch (chunk.mBufferFormat) {
-        case AUDIO_FORMAT_FLOAT32:
-          DownmixAndInterleave(chunk.ChannelData<float>(),
-                               chunk.mDuration, chunk.mVolume, outputChannels,
-                               convertedSamples.get());
-          break;
-        case AUDIO_FORMAT_S16:
-          DownmixAndInterleave(chunk.ChannelData<int16_t>(),
-                               chunk.mDuration, chunk.mVolume, outputChannels,
-                               convertedSamples.get());
-          break;
-        case AUDIO_FORMAT_SILENCE:
-          PodZero(convertedSamples.get(), chunk.mDuration * outputChannels);
-          break;
+    if (!enabled_ || chunk.mBufferFormat == AUDIO_FORMAT_SILENCE) {
+      PodZero(convertedSamples.get(), chunk.mDuration * outputChannels);
+    } else if (chunk.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
+      DownmixAndInterleave(chunk.ChannelData<float>(),
+                           chunk.mDuration, chunk.mVolume, outputChannels,
+                           convertedSamples.get());
+    } else if (chunk.mBufferFormat == AUDIO_FORMAT_S16) {
+      DownmixAndInterleave(chunk.ChannelData<int16_t>(),
+                           chunk.mDuration, chunk.mVolume, outputChannels,
+                           convertedSamples.get());
     }
     samples = convertedSamples.get();
   }
