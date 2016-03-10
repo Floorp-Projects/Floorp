@@ -180,7 +180,7 @@ MP4Decoder::CanHandleMediaType(const nsAString& aContentType)
 bool
 MP4Decoder::IsEnabled()
 {
-  return Preferences::GetBool("media.mp4.enabled");
+  return Preferences::GetBool("media.mp4.enabled", true);
 }
 
 // sTestH264ExtraData represents the content of the avcC atom found in
