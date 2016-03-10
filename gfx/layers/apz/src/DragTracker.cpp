@@ -7,6 +7,9 @@
 
 #include "InputData.h"
 
+#define DRAG_LOG(...)
+// #define DRAG_LOG(...) printf_stderr("DRAG: " __VA_ARGS__)
+
 namespace mozilla {
 namespace layers {
 
@@ -31,9 +34,12 @@ void
 DragTracker::Update(const MouseInput& aInput)
 {
   if (StartsDrag(aInput)) {
+    DRAG_LOG("Starting drag\n");
     mInDrag = true;
   } else if (EndsDrag(aInput)) {
+    DRAG_LOG("Ending drag\n");
     mInDrag = false;
+    mOnScrollbar = Nothing();
   }
 }
 
@@ -41,6 +47,16 @@ bool
 DragTracker::InDrag() const
 {
   return mInDrag;
+}
+
+bool
+DragTracker::IsOnScrollbar(bool aOnScrollbar)
+{
+  if (!mOnScrollbar) {
+    DRAG_LOG("Setting hitscrollbar %d\n", aOnScrollbar);
+    mOnScrollbar = Some(aOnScrollbar);
+  }
+  return mOnScrollbar.value();
 }
 
 } // namespace layers
