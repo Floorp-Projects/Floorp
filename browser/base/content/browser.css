@@ -663,8 +663,12 @@ window[chromehidden~="toolbar"] toolbar:not(#nav-bar):not(#TabsToolbar):not(#pri
 /*  Full Screen UI */
 
 #fullscr-toggler {
+  top: 0;
+  left: 0;
+  width: 100%;
   height: 1px;
-  background: black;
+  position: fixed;
+  z-index: 2147483647;
 }
 
 html|*#fullscreen-warning {
