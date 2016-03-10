@@ -14,6 +14,8 @@ SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
+SpecialPowers.setAllAppsLaunchable(true);
+
 function runTest() {
   var canEmbedApp = !browserElementTestHelpers.getOOPByDefaultPref();
   var iframe = document.createElement('iframe');
