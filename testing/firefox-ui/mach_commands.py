@@ -49,7 +49,7 @@ def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
         }
     }
 
-    tests_root = os.path.join(topsrcdir, 'testing', 'firefox-ui', 'tests', 'firefox_ui_tests')
+    tests_root = os.path.join(topsrcdir, 'testing', 'firefox-ui', 'tests')
 
     # Set the resources path which is used to serve test data via wptserve
     if not kwargs['server_root']:
