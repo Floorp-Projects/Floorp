@@ -1637,7 +1637,6 @@ CycleCollectedJSRuntime::EnvironmentPreparer::invoke(JS::HandleObject scope,
   JSContext* cx =
     mainThread ? nullptr : nsContentUtils::GetDefaultJSContextForThread();
   AutoEntryScript aes(global, "JS-engine-initiated execution", mainThread, cx);
-  aes.TakeOwnershipOfErrorReporting();
 
   MOZ_ASSERT(!JS_IsExceptionPending(aes.cx()));
 

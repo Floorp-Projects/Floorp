@@ -11915,13 +11915,12 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
     // New script entry point required, due to the "Create a script" sub-step of
     // http://www.whatwg.org/specs/web-apps/current-work/#timer-initialisation-steps
     nsAutoMicroTask mt;
-    AutoEntryScript entryScript(this, reason, true, aScx->GetNativeContext());
-    entryScript.TakeOwnershipOfErrorReporting();
-    JS::CompileOptions options(entryScript.cx());
+    AutoEntryScript aes(this, reason, true, aScx->GetNativeContext());
+    JS::CompileOptions options(aes.cx());
     options.setFileAndLine(filename, lineNo)
            .setVersion(JSVERSION_DEFAULT);
-    JS::Rooted<JSObject*> global(entryScript.cx(), FastGetGlobalJSObject());
-    nsJSUtils::EvaluateString(entryScript.cx(), nsDependentString(script),
+    JS::Rooted<JSObject*> global(aes.cx(), FastGetGlobalJSObject());
+    nsJSUtils::EvaluateString(aes.cx(), nsDependentString(script),
                               global, options);
   } else {
     // Hold strong ref to ourselves while we call the callback.
@@ -13967,7 +13966,6 @@ nsGlobalWindow::FireOnNewGlobalObject()
   // AutoEntryScript required to invoke debugger hook, which is a
   // Gecko-specific concept at present.
   AutoEntryScript aes(this, "nsGlobalWindow report new global");
-  aes.TakeOwnershipOfErrorReporting();
   JS::Rooted<JSObject*> global(aes.cx(), GetWrapper());
   JS_FireOnNewGlobalObject(aes.cx(), global);
 }
