@@ -124,6 +124,7 @@ function runNextTest() {
 }
 
 function startTest() {
+  SpecialPowers.setAllAppsLaunchable(true);
   SpecialPowers.autoConfirmAppInstall(continueTest);
   yield undefined;
 
