@@ -7,6 +7,7 @@
 #include "APZCTreeManager.h"
 #include "AsyncPanZoomController.h"
 #include "Compositor.h"                 // for Compositor
+#include "DragTracker.h"                // for DragTracker
 #include "gfxPrefs.h"                   // for gfxPrefs
 #include "HitTestingTreeNode.h"         // for HitTestingTreeNode
 #include "InputBlockState.h"            // for InputBlockState
@@ -618,10 +619,6 @@ WillHandleWheelEvent(WidgetWheelEvent* aEvent)
 static bool
 WillHandleMouseEvent(const WidgetMouseEventBase& aEvent)
 {
-  if (!gfxPrefs::APZDragEnabled()) {
-    return false;
-  }
-
   return aEvent.mMessage == eMouseMove ||
          aEvent.mMessage == eMouseDown ||
          aEvent.mMessage == eMouseUp;
@@ -674,6 +671,14 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
     } case MOUSE_INPUT: {
       MouseInput& mouseInput = aEvent.AsMouseInput();
 
+      if (DragTracker::StartsDrag(mouseInput)) {
+        // If this is the start of a drag we need to unambiguously know if it's
+        // going to land on a scrollbar or not. We can't apply an untransform
+        // here without knowing that, so we need to ensure the untransform is
+        // a no-op.
+        FlushRepaintsToClearScreenToGeckoTransform();
+      }
+
       RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(mouseInput.mOrigin,
                                                             &hitResult);
 
@@ -692,12 +697,20 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
 
-        // TODO Dagging on a scrollbar probably behaves differently from
-        // the other input types in that the gecko coordinates are the same
-        // as the screen coordinates even though the async transform on the APZC
-        // is changing. I'm not really sure at this point and it'll take some
-        // though to figure out properly.
-        //mouseInput.mOrigin = untransformedOrigin;
+        if (result == nsEventStatus_eIgnore) {
+          // The input was not part of a drag block, so we should untransform.
+          // TODO: I think ideally we want to also untransform if the drag block
+          // is not dragging a scrollbar (either on the main thread or in APZ),
+          // but that's a little harder to detect right now.
+          ScreenToParentLayerMatrix4x4 transformToApzc = GetScreenToApzcTransform(apzc);
+          ParentLayerToScreenMatrix4x4 transformToGecko = GetApzcToGeckoTransform(apzc);
+          ScreenToScreenMatrix4x4 outTransform = transformToApzc * transformToGecko;
+          Maybe<ScreenPoint> untransformedRefPoint = UntransformBy(
+            outTransform, mouseInput.mOrigin);
+          if (untransformedRefPoint) {
+            mouseInput.mOrigin = *untransformedRefPoint;
+          }
+        }
       }
       break;
     } case SCROLLWHEEL_INPUT: {

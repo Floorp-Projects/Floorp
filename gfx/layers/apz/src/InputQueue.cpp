@@ -207,7 +207,9 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
   mDragTracker.Update(aEvent);
 
   if (!newBlock && !block) {
-    return nsEventStatus_eConsumeDoDefault;
+    // This input event is not in a drag block, so we're not doing anything
+    // with it, return eIgnore.
+    return nsEventStatus_eIgnore;
   }
 
   if (!block) {
@@ -228,7 +230,7 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
 
     block->AddEvent(aEvent.AsMouseInput());
 
-    // The first event will confirm the block or not.
+    // This input event created a new drag block, so return DoDefault.
     return nsEventStatus_eConsumeDoDefault;
   }
 
@@ -244,8 +246,8 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
     block->MarkMouseUpReceived();
   }
 
-  // If we're not the first event then we need to wait for the confirmation of
-  // the block.
+  // The event was added to the drag block and could potentially cause
+  // scrolling, so return DoDefault.
   return nsEventStatus_eConsumeDoDefault;
 }
 
