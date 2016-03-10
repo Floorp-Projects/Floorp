@@ -549,27 +549,31 @@ CompositorD3D11::CreateTexture(const gfx::IntRect& aRect,
     const CompositingRenderTargetD3D11* sourceD3D11 =
       static_cast<const CompositingRenderTargetD3D11*>(aSource);
 
-    D3D11_BOX srcBox;
-    srcBox.left = aSourcePoint.x;
-    srcBox.top = aSourcePoint.y;
-    srcBox.front = 0;
-    srcBox.right = aSourcePoint.x + aRect.width;
-    srcBox.bottom = aSourcePoint.y + aRect.height;
-    srcBox.back = 1;
-
     const IntSize& srcSize = sourceD3D11->GetSize();
     MOZ_ASSERT(srcSize.width >= 0 && srcSize.height >= 0,
                "render targets should have nonnegative sizes");
-    if (srcBox.left < srcBox.right &&
-        srcBox.top < srcBox.bottom &&
-        srcBox.right <= static_cast<uint32_t>(srcSize.width) &&
-        srcBox.bottom <= static_cast<uint32_t>(srcSize.height)) {
+
+    IntRect srcRect(IntPoint(), srcSize);
+    IntRect copyRect(aSourcePoint, aRect.Size());
+    if (!srcRect.Contains(copyRect)) {
+      NS_WARNING("Could not copy the whole copy rect from the render target");
+    }
+
+    copyRect = copyRect.Intersect(srcRect);
+
+    if (!copyRect.IsEmpty()) {
+      D3D11_BOX copyBox;
+      copyBox.front = 0;
+      copyBox.back = 1;
+      copyBox.left = copyRect.x;
+      copyBox.top = copyRect.y;
+      copyBox.right = copyRect.XMost();
+      copyBox.bottom = copyRect.YMost();
+
       mContext->CopySubresourceRegion(texture, 0,
                                       0, 0, 0,
                                       sourceD3D11->GetD3D11Texture(), 0,
-                                      &srcBox);
-    } else {
-      NS_WARNING("Could not copy render target - source rect out of bounds");
+                                      &copyBox);
     }
   }
 
