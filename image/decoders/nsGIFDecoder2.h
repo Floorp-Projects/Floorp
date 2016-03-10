@@ -8,9 +8,8 @@
 #define mozilla_image_decoders_nsGIFDecoder2_h
 
 #include "Decoder.h"
-#include "Deinterlacer.h"
 #include "GIF2.h"
-#include "nsCOMPtr.h"
+#include "SurfacePipe.h"
 
 namespace mozilla {
 namespace image {
@@ -34,20 +33,40 @@ private:
   // Decoders should only be instantiated via DecoderFactory.
   explicit nsGIFDecoder2(RasterImage* aImage);
 
-  uint8_t*  GetCurrentRowBuffer();
-  uint8_t*  GetRowBuffer(uint32_t aRow);
-
-  // These functions will be called when the decoder has a decoded row,
-  // frame size information, etc.
+  /// Called when we begin decoding the image.
   void      BeginGIF();
-  nsresult  BeginImageFrame(uint16_t aDepth);
+
+  /**
+   * Called when we begin decoding a frame.
+   *
+   * @param aFrameRect The region of the image that contains data. The region
+   *                   outside this rect is transparent.
+   * @param aDepth The palette depth of this frame.
+   * @param aIsInterlaced If true, this frame is an interlaced frame.
+   */
+  nsresult  BeginImageFrame(const gfx::IntRect& aFrameRect,
+                            uint16_t aDepth,
+                            bool aIsInterlaced);
+
+  /// Called when we finish decoding a frame.
   void      EndImageFrame();
+
+  /// Called when we finish decoding the entire image.
   void      FlushImageData();
-  void      FlushImageData(uint32_t fromRow, uint32_t rows);
 
   nsresult  GifWrite(const uint8_t* buf, uint32_t numbytes);
-  uint32_t  OutputRow();
-  bool      DoLzw(const uint8_t* q);
+
+  /// Transforms a palette index into a pixel.
+  template <typename PixelSize> PixelSize
+  ColormapIndexToPixel(uint8_t aIndex);
+
+  /// A generator function that performs LZW decompression and yields pixels.
+  template <typename PixelSize> NextPixel<PixelSize>
+  YieldPixel(const uint8_t*& aCurrentByte);
+
+  /// The entry point for LZW decompression.
+  bool      DoLzw(const uint8_t* aData);
+
   bool      SetHold(const uint8_t* buf, uint32_t count,
                     const uint8_t* buf2 = nullptr, uint32_t count2 = 0);
   bool      CheckForTransparency(const gfx::IntRect& aFrameRect);
@@ -55,23 +74,19 @@ private:
 
   inline int ClearCode() const { return 1 << mGIFStruct.datasize; }
 
-  int32_t mCurrentRow;
-  int32_t mLastFlushedRow;
-
   uint32_t mOldColor;        // The old value of the transparent pixel
 
   // The frame number of the currently-decoding frame when we're in the middle
   // of decoding it, and -1 otherwise.
   int32_t mCurrentFrameIndex;
 
-  uint8_t mCurrentPass;
-  uint8_t mLastFlushedPass;
   uint8_t mColorMask;        // Apply this to the pixel to keep within colormap
   bool mGIFOpen;
   bool mSawTransparency;
 
   gif_struct mGIFStruct;
-  Maybe<Deinterlacer> mDeinterlacer;
+
+  SurfacePipe mPipe;  /// The SurfacePipe used to write to the output surface.
 };
 
 } // namespace image

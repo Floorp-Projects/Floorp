@@ -257,6 +257,7 @@ child:
 
   prio(high) sync Extents(uint64_t aID, bool aNeedsScreenCoords)
     returns(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight);
+  prio(high) sync DOMNodeID(uint64_t aID) returns(nsString aDOMNodeID);
 };
 
 }

@@ -2628,9 +2628,7 @@ ShortestPaths(JSContext* cx, unsigned argc, Value* vp)
     for (size_t i = 0; i < length; i++) {
         RootedValue el(cx, objs->getDenseElement(i));
         if (!el.isObject() && !el.isString() && !el.isSymbol()) {
-            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                                  JSDVG_SEARCH_STACK, el, nullptr,
-                                  "not an object, string, or symbol", nullptr);
+            JS_ReportError(cx, "Each target must be an object, string, or symbol");
             return false;
         }
     }

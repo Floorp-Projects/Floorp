@@ -1103,17 +1103,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         continue;
       }
 
-      // Note - The ergonomics here will get a lot better with bug 971673:
-      //
-      // AutoEntryScript aes;
-      // if (!aes.Init(wrappedJS->GetJSObject())) {
-      //   continue;
-      // }
-      // JSContext* cx = aes.cx();
-      nsIGlobalObject* nativeGlobal =
-        xpc::NativeGlobal(js::GetGlobalForObjectCrossCompartment(wrappedJS->GetJSObject()));
-      AutoEntryScript aes(nativeGlobal, "message manager handler");
-      aes.TakeOwnershipOfErrorReporting();
+      AutoEntryScript aes(wrappedJS->GetJSObject(), "message manager handler");
       JSContext* cx = aes.cx();
       JS::Rooted<JSObject*> object(cx, wrappedJS->GetJSObject());
 
@@ -1695,9 +1685,7 @@ nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
 
   JS::Rooted<JSObject*> global(rt, mGlobal->GetJSObject());
   if (global) {
-    AutoEntryScript aes(xpc::NativeGlobal(global),
-                        "message manager script load");
-    aes.TakeOwnershipOfErrorReporting();
+    AutoEntryScript aes(global, "message manager script load");
     JSContext* cx = aes.cx();
     if (script) {
       if (aRunInGlobalScope) {

@@ -63,7 +63,9 @@
 #include "nsPluginFrame.h"
 #include <mozilla/layers/AxisPhysicsModel.h>
 #include <mozilla/layers/AxisPhysicsMSDModel.h>
+#include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ScrollLinkedEffectDetector.h"
+#include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/unused.h"
 #include <algorithm>
 #include <cstdlib> // for std::abs(int/long)
@@ -1114,6 +1116,12 @@ static bool IsFocused(nsIContent* aContent)
 #endif
 
 void
+ScrollFrameHelper::SetScrollableByAPZ(bool aScrollable)
+{
+  mScrollableByAPZ = aScrollable;
+}
+
+void
 ScrollFrameHelper::SetZoomableByAPZ(bool aZoomable)
 {
   if (mZoomableByAPZ != aZoomable) {
@@ -1872,6 +1880,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mHasBeenScrolled(false)
   , mIgnoreMomentumScroll(false)
   , mTransformingByAPZ(false)
+  , mScrollableByAPZ(false)
   , mZoomableByAPZ(false)
   , mVelocityQueue(aOuter->PresContext())
   , mAsyncScrollEvent(END_DOM)
@@ -2381,6 +2390,9 @@ RemoveDisplayPortCallback(nsITimer* aTimer, void* aClosure)
   nsLayoutUtils::RemoveDisplayPort(helper->mOuter->GetContent());
   nsLayoutUtils::ExpireDisplayPortOnAsyncScrollableAncestor(helper->mOuter);
   helper->mOuter->SchedulePaint();
+  // Be conservative and unflag this this scrollframe as being scrollable by
+  // APZ. If it is still scrollable this will get flipped back soon enough.
+  helper->mScrollableByAPZ = false;
 }
 
 void ScrollFrameHelper::MarkNotRecentlyScrolled()
@@ -2666,25 +2678,44 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
 
   ScrollVisual();
 
-  if (LastScrollOrigin() == nsGkAtoms::apz && gfxPrefs::APZPaintSkipping()) {
-    // If this was an apz scroll and the displayport (relative to the
-    // scrolled frame) hasn't changed, then this won't trigger
-    // any painting, so no need to schedule one.
+  bool schedulePaint = true;
+  if (nsLayoutUtils::AsyncPanZoomEnabled(mOuter) && gfxPrefs::APZPaintSkipping()) {
+    // If APZ is enabled with paint-skipping, there are certain conditions in
+    // which we can skip paints:
+    // 1) If APZ triggered this scroll, and the tile-aligned displayport is
+    //    unchanged.
+    // 2) If non-APZ triggered this scroll, but we can handle it by just asking
+    //    APZ to update the scroll position. Again we make this conditional on
+    //    the tile-aligned displayport being unchanged.
+    // We do the displayport check first since it's common to all scenarios,
+    // and then if the displayport is unchanged, we check if APZ triggered,
+    // or can handle, this scroll. If so, we set schedulePaint to false and
+    // skip the paint.
     nsRect displayPort;
-    DebugOnly<bool> usingDisplayPort =
+    bool usingDisplayPort =
       nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
-    NS_ASSERTION(usingDisplayPort, "Must have a displayport for apz scrolls!");
-
     displayPort.MoveBy(-mScrolledFrame->GetPosition());
 
-    if (!displayPort.IsEqualEdges(oldDisplayPort)) {
-      mOuter->SchedulePaint();
-
-      if (needImageVisibilityUpdate) {
-        presContext->PresShell()->ScheduleImageVisibilityUpdate();
+    if (usingDisplayPort && displayPort.IsEqualEdges(oldDisplayPort)) {
+      if (LastScrollOrigin() == nsGkAtoms::apz) {
+        schedulePaint = false;
+      } else if (mScrollableByAPZ) {
+        nsIWidget* widget = presContext->GetNearestWidget();
+        LayerManager* manager = widget ? widget->GetLayerManager() : nullptr;
+        ShadowLayerForwarder* forwarder = manager ? manager->AsShadowForwarder() : nullptr;
+        if (forwarder && forwarder->HasShadowManager()) {
+          mozilla::layers::FrameMetrics::ViewID id;
+          DebugOnly<bool> success = nsLayoutUtils::FindIDFor(mOuter->GetContent(), &id);
+          MOZ_ASSERT(success); // we have a displayport, we better have an ID
+          forwarder->GetShadowManager()->SendUpdateScrollOffset(id,
+              mScrollGeneration, CSSPoint::FromAppUnits(GetScrollPosition()));
+          schedulePaint = false;
+        }
       }
     }
-  } else {
+  }
+
+  if (schedulePaint) {
     mOuter->SchedulePaint();
 
     if (needImageVisibilityUpdate) {
@@ -2699,11 +2730,16 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
   }
 
   ScheduleSyntheticMouseMove();
-  nsWeakFrame weakFrame(mOuter);
-  UpdateScrollbarPosition();
-  if (!weakFrame.IsAlive()) {
-    return;
+
+  { // scope the AutoScrollbarRepaintSuppression
+    AutoScrollbarRepaintSuppression repaintSuppression(this, !schedulePaint);
+    nsWeakFrame weakFrame(mOuter);
+    UpdateScrollbarPosition();
+    if (!weakFrame.IsAlive()) {
+      return;
+    }
   }
+
   PostScrollEvent();
 
   // notify the listeners.

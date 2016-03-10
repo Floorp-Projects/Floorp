@@ -6906,15 +6906,13 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
     for (CompartmentsInZoneIter c(source->zone()); !c.done(); c.next())
         MOZ_ASSERT(c.get() == source);
 
-    // Merge the allocator in source's zone into target's zone.
+    // Merge the allocator, stats and UIDs in source's zone into target's zone.
     target->zone()->arenas.adoptArenas(rt, &source->zone()->arenas);
     target->zone()->usage.adopt(source->zone()->usage);
+    target->zone()->adoptUniqueIds(source->zone());
 
     // Merge other info in source's zone into target's zone.
     target->zone()->types.typeLifoAlloc.transferFrom(&source->zone()->types.typeLifoAlloc);
-
-    // Ensure that we did not create any UIDs when running off-thread.
-    source->zone()->assertNoUniqueIdsInZone();
 }
 
 void

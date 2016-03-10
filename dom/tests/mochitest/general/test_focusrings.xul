@@ -21,20 +21,6 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function setOrRestoreTabFocus(newValue) {
-  const prefSvcContractID = "@mozilla.org/preferences-service;1";
-  const prefSvcIID = SpecialPowers.Ci.nsIPrefService;
-  var prefs = SpecialPowers.Cc[prefSvcContractID].getService(prefSvcIID)
-                                                   .getBranch("accessibility.");
-  if (!newValue) {
-    if (prefs.prefHasUserValue("tabfocus")) {
-      prefs.clearUserPref("tabfocus");
-    }
-  } else {
-    prefs.setIntPref("tabfocus", newValue);
-  }
-}
-
 function snapShot(element) {
   var rect = element.getBoundingClientRect();
   adjustedRect = { left: rect.left - 6, top: rect.top - 6,
@@ -42,10 +28,13 @@ function snapShot(element) {
   return SpecialPowers.snapshotRect(window, adjustedRect, "transparent");
 }
 
+function initTest()
+{
+  SpecialPowers.pushPrefEnv({"set": [['accessibility.tabfocus', 7]]}, runTest);
+}
+
 function runTest()
 {
-  setOrRestoreTabFocus(7);
-
   var isMac = (navigator.platform.indexOf("Mac") >= 0);
   var isWin = (navigator.platform.indexOf("Win") >= 0);
 
@@ -72,16 +61,6 @@ function runTest()
   $("l1").focus();
   var expectedVisible = (!isWin || getComputedStyle($("l1"), "").outlineWidth == "2px");
   testHTMLElements(htmlElements, isMac, isWin && !expectedVisible);
-
-  if (isMac) {
-    var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"].
-                  getService(SpecialPowers.Ci.nsIPrefBranch);
-    prefs.setBoolPref("accessibility.mouse_focuses_formcontrol", true);
-
-    testHTMLElements(htmlElementsMacPrefSet, true, false);
-
-    prefs.setBoolPref("accessibility.mouse_focuses_formcontrol", false);
-  }
 
   $("l1").focus();
   checkFocus($("l1"), expectedVisible, "appearance on list after focus() with :moz-focusring");
@@ -110,7 +89,17 @@ function runTest()
   synthesizeKey("VK_TAB", { });
   checkFocus($("l3"), true, "appearance on list after tab focus");
 
-  setOrRestoreTabFocus(0);
+  if (isMac) {
+    SpecialPowers.pushPrefEnv({"set": [['accessibility.mouse_focuses_formcontrol', true]]}, testMacFocusesFormControl);
+  }
+  else {
+    SimpleTest.finish();
+  }
+}
+
+function testMacFocusesFormControl()
+{
+  testHTMLElements(htmlElementsMacPrefSet, true, false);
   SimpleTest.finish();
 }
 

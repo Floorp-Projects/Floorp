@@ -87,6 +87,7 @@ public:
     nsresult SetVolumeIndexToActiveDevices(uint32_t aIndex);
     // Set volume index to all alias streams for device. Alias streams have same volume.
     nsresult SetVolumeIndexToAliasStreams(uint32_t aIndex, uint32_t aDevice);
+    nsresult SetVolumeIndexToConsistentDeviceIfNeeded(uint32_t aIndex, uint32_t aDevice);
     nsresult SetVolumeIndex(uint32_t aIndex, uint32_t aDevice, bool aUpdateCache = true);
     // Restore volume index to all devices. Called when AudioFlinger is restarted.
     void RestoreVolumeIndexToAllDevices();

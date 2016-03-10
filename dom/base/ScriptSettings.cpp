@@ -334,6 +334,7 @@ AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
   mCx = aCx;
   mIsMainThread = aIsMainThread;
@@ -414,14 +415,6 @@ AutoJSAPI::Init(JSObject* aObject)
 }
 
 bool
-AutoJSAPI::InitWithLegacyErrorReporting(nsIGlobalObject* aGlobalObject)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  return Init(aGlobalObject, FindJSContext(aGlobalObject));
-}
-
-bool
 AutoJSAPI::Init(nsPIDOMWindowInner* aWindow, JSContext* aCx)
 {
   return Init(nsGlobalWindow::Cast(aWindow), aCx);
@@ -443,18 +436,6 @@ bool
 AutoJSAPI::Init(nsGlobalWindow* aWindow)
 {
   return Init(static_cast<nsIGlobalObject*>(aWindow));
-}
-
-bool
-AutoJSAPI::InitWithLegacyErrorReporting(nsPIDOMWindowInner* aWindow)
-{
-  return InitWithLegacyErrorReporting(nsGlobalWindow::Cast(aWindow));
-}
-
-bool
-AutoJSAPI::InitWithLegacyErrorReporting(nsGlobalWindow* aWindow)
-{
-  return InitWithLegacyErrorReporting(static_cast<nsIGlobalObject*>(aWindow));
 }
 
 // Even with autoJSAPIOwnsErrorReporting, the JS engine still sends warning
@@ -549,7 +530,7 @@ AutoJSAPI::ReportException()
         DispatchScriptErrorEvent(inner, JS_GetRuntime(cx()), xpcReport, exn);
       } else {
         JS::Rooted<JSObject*> stack(cx(),
-          xpc::FindExceptionStackForConsoleReport(cx(), inner, exn));
+          xpc::FindExceptionStackForConsoleReport(inner, exn));
         xpcReport->LogToConsoleWithStack(stack);
       }
     } else {
@@ -612,6 +593,16 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
   if (aIsMainThread && gRunToCompletionListeners > 0) {
     mDocShellEntryMonitor.emplace(cx(), aReason);
   }
+
+  TakeOwnershipOfErrorReporting();
+}
+
+AutoEntryScript::AutoEntryScript(JSObject* aObject,
+                                 const char *aReason,
+                                 bool aIsMainThread,
+                                 JSContext* aCx)
+  : AutoEntryScript(xpc::NativeGlobal(aObject), aReason, aIsMainThread, aCx)
+{
 }
 
 AutoEntryScript::~AutoEntryScript()

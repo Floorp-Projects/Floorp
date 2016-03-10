@@ -23,7 +23,7 @@ config = {
     "update_channels": {
         "date": {
             "version_regex": r"^(\d+\.\d+(b\d+)?)$",
-            "requires_mirrors": False,
+            "requires_mirrors": True,
             "patcher_config": "mozDate-branch-patcher2.cfg",
             "update_verify_channel": "date-localtest",
             "mar_channel_ids": [],

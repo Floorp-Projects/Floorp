@@ -3227,7 +3227,6 @@ WrappedJSToDictionary(nsISupports* aObject, T& aDictionary)
   // we need this AutoEntryScript here because the spec requires us to execute
   // getters when parsing a dictionary
   AutoEntryScript aes(global, "WebIDL dictionary creation");
-  aes.TakeOwnershipOfErrorReporting();
 
   JS::Rooted<JS::Value> v(aes.cx(), JS::ObjectValue(*obj));
   return aDictionary.Init(aes.cx(), v);

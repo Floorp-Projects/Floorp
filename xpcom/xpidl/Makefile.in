@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 export::
-	$(call SUBMAKE,xpidl-parser,$(DEPTH)/xpcom/idl-parser/xpidl)
+	$(call SUBMAKE,xpidllex.py,$(DEPTH)/xpcom/idl-parser/xpidl)
 	$(call py_action,process_install_manifest,$(DIST)/idl $(DEPTH)/_build_manifests/install/dist_idl)
 	$(call SUBMAKE,xpidl,$(DEPTH)/config/makefiles/xpidl)
 

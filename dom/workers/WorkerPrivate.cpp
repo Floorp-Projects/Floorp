@@ -6011,9 +6011,7 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
 
     { // scope for the AutoEntryScript, so it comes off the stack before we do
       // Promise::PerformMicroTaskCheckpoint.
-      AutoEntryScript entryScript(xpc::NativeGlobal(global), reason,
-                                  false, aCx);
-      entryScript.TakeOwnershipOfErrorReporting();
+      AutoEntryScript aes(global, reason, false, aCx);
       if (!info->mTimeoutCallable.isUndefined()) {
         JS::Rooted<JS::Value> rval(aCx);
         JS::HandleValueArray args =

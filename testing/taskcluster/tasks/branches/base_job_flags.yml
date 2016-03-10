@@ -108,6 +108,7 @@ flags:
     - linux
     - linux64
     - linux64-st-an
+    - linux64-artifact
     - macosx64
     - macosx64-st-an
 

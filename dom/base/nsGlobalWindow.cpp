@@ -3421,9 +3421,9 @@ nsGlobalWindow::DefineArgumentsProperty(nsIArray *aArguments)
 
   nsIScriptContext *ctx = GetOuterWindowInternal()->mContext;
   NS_ENSURE_TRUE(aArguments && ctx, NS_ERROR_NOT_INITIALIZED);
-  AutoJSContext cx;
 
-  JS::Rooted<JSObject*> obj(cx, GetWrapperPreserveColor());
+  JS::Rooted<JSObject*> obj(nsContentUtils::RootingCx(),
+                            GetWrapperPreserveColor());
   return ctx->SetProperty(obj, "arguments", aArguments);
 }
 
@@ -11915,13 +11915,12 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
     // New script entry point required, due to the "Create a script" sub-step of
     // http://www.whatwg.org/specs/web-apps/current-work/#timer-initialisation-steps
     nsAutoMicroTask mt;
-    AutoEntryScript entryScript(this, reason, true, aScx->GetNativeContext());
-    entryScript.TakeOwnershipOfErrorReporting();
-    JS::CompileOptions options(entryScript.cx());
+    AutoEntryScript aes(this, reason, true, aScx->GetNativeContext());
+    JS::CompileOptions options(aes.cx());
     options.setFileAndLine(filename, lineNo)
            .setVersion(JSVERSION_DEFAULT);
-    JS::Rooted<JSObject*> global(entryScript.cx(), FastGetGlobalJSObject());
-    nsJSUtils::EvaluateString(entryScript.cx(), nsDependentString(script),
+    JS::Rooted<JSObject*> global(aes.cx(), FastGetGlobalJSObject());
+    nsJSUtils::EvaluateString(aes.cx(), nsDependentString(script),
                               global, options);
   } else {
     // Hold strong ref to ourselves while we call the callback.

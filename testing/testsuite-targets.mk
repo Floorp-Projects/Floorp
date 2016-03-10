@@ -26,6 +26,10 @@ ifneq (browser,$(MOZ_BUILD_APP))
 BUILD_GTEST=
 endif
 
+ifndef COMPILE_ENVIRONMENT
+BUILD_GTEST=
+endif
+
 ifndef NO_FAIL_ON_TEST_ERRORS
 define check_test_error_internal
   @errors=`grep 'TEST-UNEXPECTED-' $@.log` ;\
@@ -179,12 +183,15 @@ stage-all: \
   stage-jstests \
   stage-jetpack \
   stage-marionette \
-  stage-cppunittests \
   stage-luciddream \
   test-packages-manifest \
   $(NULL)
 ifdef MOZ_WEBRTC
 stage-all: stage-steeplechase
+endif
+
+ifdef COMPILE_ENVIRONMENT
+stage-all: stage-cppunittests
 endif
 
 TEST_PKGS := \

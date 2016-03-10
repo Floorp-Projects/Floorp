@@ -588,7 +588,6 @@ public:
     , mKey(aKey)
   {
     MOZ_COUNT_CTOR(OpenFileEvent);
-    mIOMan = CacheFileIOManager::gInstance;
   }
 
 protected:
@@ -608,17 +607,17 @@ public:
       sum.finish(mHash);
     }
 
-    if (!mIOMan) {
+    if (!CacheFileIOManager::gInstance) {
       rv = NS_ERROR_NOT_INITIALIZED;
     } else {
       if (mFlags & CacheFileIOManager::SPECIAL_FILE) {
-        rv = mIOMan->OpenSpecialFileInternal(mKey, mFlags,
-                                             getter_AddRefs(mHandle));
+        rv = CacheFileIOManager::gInstance->OpenSpecialFileInternal(
+               mKey, mFlags, getter_AddRefs(mHandle));
       } else {
-        rv = mIOMan->OpenFileInternal(&mHash, mKey, mFlags,
-                                      getter_AddRefs(mHandle));
+        rv = CacheFileIOManager::gInstance->OpenFileInternal(
+               &mHash, mKey, mFlags, getter_AddRefs(mHandle));
       }
-      mIOMan = nullptr;
+
       if (mHandle) {
         if (mHandle->Key().IsEmpty()) {
           mHandle->Key() = mKey;
@@ -634,7 +633,6 @@ protected:
   SHA1Sum::Hash                 mHash;
   uint32_t                      mFlags;
   nsCOMPtr<CacheFileIOListener> mCallback;
-  RefPtr<CacheFileIOManager>    mIOMan;
   RefPtr<CacheFileHandle>       mHandle;
   nsCString                     mKey;
 };
@@ -717,8 +715,9 @@ public:
       // We usually get here only after the internal shutdown
       // (i.e. mShuttingDown == true).  Pretend write has succeeded
       // to avoid any past-shutdown file dooming.
-      rv = (CacheFileIOManager::gInstance->IsPastShutdownIOLag() ||
-            CacheFileIOManager::gInstance->mShuttingDown)
+      rv = (CacheFileIOManager::gInstance &&
+            (CacheFileIOManager::gInstance->IsPastShutdownIOLag() ||
+             CacheFileIOManager::gInstance->mShuttingDown))
         ? NS_OK
         : NS_ERROR_NOT_INITIALIZED;
     } else {
@@ -800,8 +799,6 @@ public:
     SHA1Sum sum;
     sum.update(aKey.BeginReading(), aKey.Length());
     sum.finish(mHash);
-
-    mIOMan = CacheFileIOManager::gInstance;
   }
 
 protected:
@@ -815,11 +812,10 @@ public:
   {
     nsresult rv;
 
-    if (!mIOMan) {
+    if (!CacheFileIOManager::gInstance) {
       rv = NS_ERROR_NOT_INITIALIZED;
     } else {
-      rv = mIOMan->DoomFileByKeyInternal(&mHash);
-      mIOMan = nullptr;
+      rv = CacheFileIOManager::gInstance->DoomFileByKeyInternal(&mHash);
     }
 
     if (mCallback) {
@@ -832,7 +828,6 @@ public:
 protected:
   SHA1Sum::Hash                 mHash;
   nsCOMPtr<CacheFileIOListener> mCallback;
-  RefPtr<CacheFileIOManager>    mIOMan;
 };
 
 class ReleaseNSPRHandleEvent : public nsRunnable {
@@ -1052,14 +1047,11 @@ public:
   } mMode;
 
   RefPtr<CacheFile> mFile;
-  RefPtr<CacheFileIOManager> mIOMan;
 
-  MetadataWriteScheduleEvent(CacheFileIOManager * aManager,
-                             CacheFile * aFile,
+  MetadataWriteScheduleEvent(CacheFile * aFile,
                              EMode aMode)
     : mMode(aMode)
     , mFile(aFile)
-    , mIOMan(aManager)
   { }
 
   virtual ~MetadataWriteScheduleEvent() { }
@@ -1166,6 +1158,8 @@ CacheFileIOManager::Shutdown()
 
   ShutdownMetadataWriteScheduling();
 
+  RefPtr<CacheFileIOManager> ioMan = gInstance;
+
   {
     mozilla::Mutex lock("CacheFileIOManager::Shutdown() lock");
     mozilla::CondVar condVar(lock, "CacheFileIOManager::Shutdown() condVar");
@@ -1178,24 +1172,22 @@ CacheFileIOManager::Shutdown()
     rv = ioTarget->Dispatch(ev, nsIEventTarget::DISPATCH_NORMAL);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     condVar.Wait();
+    MOZ_ASSERT(!gInstance);
   }
 
-  MOZ_ASSERT(gInstance->mHandles.HandleCount() == 0);
-  MOZ_ASSERT(gInstance->mHandlesByLastUsed.Length() == 0);
+  MOZ_ASSERT(ioMan->mHandles.HandleCount() == 0);
+  MOZ_ASSERT(ioMan->mHandlesByLastUsed.Length() == 0);
 
-  if (gInstance->mIOThread) {
-    gInstance->mIOThread->Shutdown();
+  if (ioMan->mIOThread) {
+    ioMan->mIOThread->Shutdown();
   }
 
   CacheIndex::Shutdown();
 
   if (CacheObserver::ClearCacheOnShutdown()) {
     Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE2_SHUTDOWN_CLEAR_PRIVATE> totalTimer;
-    gInstance->SyncRemoveAllCacheFiles();
+    ioMan->SyncRemoveAllCacheFiles();
   }
-
-  RefPtr<CacheFileIOManager> ioMan;
-  ioMan.swap(gInstance);
 
   return NS_OK;
 }
@@ -1263,6 +1255,9 @@ CacheFileIOManager::ShutdownInternal()
     mTrashDirEnumerator->Close();
     mTrashDirEnumerator = nullptr;
   }
+
+  RefPtr<CacheFileIOManager> ioMan;
+  ioMan.swap(gInstance);
 
   return NS_OK;
 }
@@ -1440,7 +1435,7 @@ CacheFileIOManager::ScheduleMetadataWrite(CacheFile * aFile)
   NS_ENSURE_TRUE(!ioMan->mShuttingDown, NS_ERROR_NOT_INITIALIZED);
 
   RefPtr<MetadataWriteScheduleEvent> event = new MetadataWriteScheduleEvent(
-    ioMan, aFile, MetadataWriteScheduleEvent::SCHEDULE);
+    aFile, MetadataWriteScheduleEvent::SCHEDULE);
   nsCOMPtr<nsIEventTarget> target = ioMan->IOTarget();
   NS_ENSURE_TRUE(target, NS_ERROR_UNEXPECTED);
   return target->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
@@ -1482,7 +1477,7 @@ CacheFileIOManager::UnscheduleMetadataWrite(CacheFile * aFile)
   NS_ENSURE_TRUE(!ioMan->mShuttingDown, NS_ERROR_NOT_INITIALIZED);
 
   RefPtr<MetadataWriteScheduleEvent> event = new MetadataWriteScheduleEvent(
-    ioMan, aFile, MetadataWriteScheduleEvent::UNSCHEDULE);
+    aFile, MetadataWriteScheduleEvent::UNSCHEDULE);
   nsCOMPtr<nsIEventTarget> target = ioMan->IOTarget();
   NS_ENSURE_TRUE(target, NS_ERROR_UNEXPECTED);
   return target->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
@@ -1512,7 +1507,7 @@ CacheFileIOManager::ShutdownMetadataWriteScheduling()
   NS_ENSURE_TRUE(ioMan, NS_ERROR_NOT_INITIALIZED);
 
   RefPtr<MetadataWriteScheduleEvent> event = new MetadataWriteScheduleEvent(
-    ioMan, nullptr, MetadataWriteScheduleEvent::SHUTDOWN);
+    nullptr, MetadataWriteScheduleEvent::SHUTDOWN);
   nsCOMPtr<nsIEventTarget> target = ioMan->IOTarget();
   NS_ENSURE_TRUE(target, NS_ERROR_UNEXPECTED);
   return target->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);

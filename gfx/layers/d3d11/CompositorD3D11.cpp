@@ -1302,6 +1302,20 @@ CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize)
 }
 
 void
+CompositorD3D11::ForcePresent()
+{
+  LayoutDeviceIntRect rect;
+  mWidget->GetClientBounds(rect);
+
+  DXGI_SWAP_CHAIN_DESC desc;
+  mSwapChain->GetDesc(&desc);
+
+  if (desc.BufferDesc.Width == rect.width && desc.BufferDesc.Height == rect.height) {
+    mSwapChain->Present(0, 0);
+  }
+}
+
+void
 CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize,
                                  const gfx::Matrix4x4& aProjection,
                                  float aZNear, float aZFar)

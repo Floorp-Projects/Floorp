@@ -138,7 +138,7 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
     "browserVersion": Services.appinfo.version,
     "platformName": Services.sysinfo.getProperty("name"),
     "platformVersion": Services.sysinfo.getProperty("version"),
-    "specificationLevel": "1",
+    "specificationLevel": 0,
 
     // supported features
     "raisesAccessibilityExceptions": false,
@@ -157,8 +157,6 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
     "device": device,
     "version": Services.appinfo.version,
   };
-
-  this.interactions = new Interactions(() => this.sessionCapabilities);
 
   this.mm = globalMessageManager;
   this.listener = proxy.toListener(() => this.mm, this.sendAsync.bind(this));
@@ -453,19 +451,14 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
 
   this.curBrowser.elementManager.seenItems[reg.id] =
       Cu.getWeakReference(listenerWindow);
-  let flags = {
-    B2G: (this.appName == "B2G"),
-    raisesAccessibilityExceptions:
-      this.sessionCapabilities.raisesAccessibilityExceptions
-  };
   if (nullPrevious && (this.curBrowser.curFrameId !== null)) {
-    this.sendAsync("newSession", flags, this.newSessionCommandId);
+    this.sendAsync("newSession", this.sessionCapabilities, this.newSessionCommandId);
     if (this.curBrowser.isNewSession) {
       this.newSessionCommandId = null;
     }
   }
 
-  return [reg, mainContent, flags];
+  return [reg, mainContent, this.sessionCapabilities];
 };
 
 GeckoDriver.prototype.registerPromise = function() {
@@ -629,6 +622,7 @@ GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
         case "desiredCapabilities":
           to = copy(from[key], to);
           break;
+
         case "requiredCapabilities":
           if (from[key].proxy) {
               this.setUpProxy(from[key].proxy);
@@ -638,16 +632,17 @@ GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
           for (let caps in from[key]) {
             if (from[key][caps] !== this.sessionCapabilities[caps]) {
               errors.push(from[key][caps] + " does not equal " +
-                  this.sessionCapabilities[caps])   ;
+                  this.sessionCapabilities[caps]);
             }
           }
           break;
+
         default:
           to[key] = from[key];
       }
     }
 
-    if (Object.keys(errors).length === 0) {
+    if (Object.keys(errors).length == 0) {
       return to;
     }
 
@@ -1966,8 +1961,9 @@ GeckoDriver.prototype.clickElement = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      yield this.interactions.clickElement({ frame: win },
-        this.curBrowser.elementManager, id);
+      let el = this.curBrowser.elementManager.getKnownElement(id, {frame: win});
+      yield interaction.clickElement(
+          el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
 
     case Context.CONTENT:
@@ -2065,8 +2061,10 @@ GeckoDriver.prototype.isElementDisplayed = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      resp.body.value = yield this.interactions.isElementDisplayed(
-        {frame: win}, this.curBrowser.elementManager, id);
+      let el = this.curBrowser.elementManager.getKnownElement(
+          id, {frame: win});
+      resp.body.value = yield interaction.isElementDisplayed(
+          el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
 
     case Context.CONTENT:
@@ -2113,8 +2111,10 @@ GeckoDriver.prototype.isElementEnabled = function*(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      resp.body.value = yield this.interactions.isElementEnabled(
-        {frame: win}, this.curBrowser.elementManager, id);
+      let el = this.curBrowser.elementManager.getKnownElement(
+          id, {frame: win});
+      resp.body.value = yield interaction.isElementEnabled(
+          el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
 
     case Context.CONTENT:
@@ -2136,8 +2136,10 @@ GeckoDriver.prototype.isElementSelected = function*(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      resp.body.value = yield this.interactions.isElementSelected(
-        { frame: win }, this.curBrowser.elementManager, id);
+      let el = this.curBrowser.elementManager.getKnownElement(
+          id, {frame: win});
+      resp.body.value = yield interaction.isElementSelected(
+          el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
 
     case Context.CONTENT:
@@ -2186,8 +2188,10 @@ GeckoDriver.prototype.sendKeysToElement = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      yield this.interactions.sendKeysToElement(
-        { frame: win }, this.curBrowser.elementManager, id, value, true);
+      let el = this.curBrowser.elementManager.getKnownElement(
+          id, {frame: win});
+      yield interaction.sendKeysToElement(
+          el, value, true, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
 
     case Context.CONTENT:
@@ -2891,12 +2895,7 @@ GeckoDriver.prototype.receiveMessage = function(message) {
         // If remoteness gets updated we need to call newSession. In the case
         // of desktop this just sets up a small amount of state that doesn't
         // change over the course of a session.
-        let newSessionValues = {
-          B2G: (this.appName == "B2G"),
-          raisesAccessibilityExceptions:
-              this.sessionCapabilities.raisesAccessibilityExceptions
-        };
-        this.sendAsync("newSession", newSessionValues);
+        this.sendAsync("newSession", this.sessionCapabilities);
         this.curBrowser.flushPendingCommands();
       }
       break;

@@ -1955,7 +1955,6 @@ nsFrameLoader::MaybeCreateDocShell()
     attrs.mAppId = containingAppId;
     attrs.mInIsolatedMozBrowser = OwnerIsIsolatedMozBrowserFrame();
     mDocShell->SetFrameType(nsIDocShell::FRAME_TYPE_BROWSER);
-    mDocShell->SetIsInIsolatedMozBrowserElement(OwnerIsIsolatedMozBrowserFrame());
   }
 
   // Grab the userContextId from owner if XUL
