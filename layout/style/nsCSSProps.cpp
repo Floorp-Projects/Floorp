@@ -2366,6 +2366,12 @@ const KTableEntry nsCSSProps::kVectorEffectKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
+const KTableEntry nsCSSProps::kColorAdjustKTable[] = {
+  { eCSSKeyword_economy, NS_STYLE_COLOR_ADJUST_ECONOMY },
+  { eCSSKeyword_exact, NS_STYLE_COLOR_ADJUST_EXACT },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
 const KTableEntry nsCSSProps::kColorInterpolationKTable[] = {
   { eCSSKeyword_auto, NS_STYLE_COLOR_INTERPOLATION_AUTO },
   { eCSSKeyword_srgb, NS_STYLE_COLOR_INTERPOLATION_SRGB },
