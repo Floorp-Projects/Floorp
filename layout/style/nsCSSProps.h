@@ -707,6 +707,7 @@ public:
   static const KTableEntry kVectorEffectKTable[];
   static const KTableEntry kTextAnchorKTable[];
   static const KTableEntry kTextRenderingKTable[];
+  static const KTableEntry kColorAdjustKTable[];
   static const KTableEntry kColorInterpolationKTable[];
   static const KTableEntry kColumnFillKTable[];
   static const KTableEntry kBoxPropSourceKTable[];
