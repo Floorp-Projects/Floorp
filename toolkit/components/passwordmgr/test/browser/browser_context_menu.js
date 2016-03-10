@@ -4,8 +4,6 @@
 
 "use strict";
 
-Cu.import("resource://testing-common/LoginTestUtils.jsm", this);
-
 // The hostname for the test URIs.
 const TEST_HOSTNAME = "https://example.com";
 const MULTIPLE_FORMS_PAGE_PATH = "/browser/toolkit/components/passwordmgr/test/browser/multiple_forms.html";

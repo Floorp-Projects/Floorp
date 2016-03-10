@@ -1,8 +1,4 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
-Cu.import("resource://testing-common/LoginTestUtils.jsm", this);
 /**
  * Test that the doorhanger notification for password saving is populated with
  * the correct values in various password capture cases.
