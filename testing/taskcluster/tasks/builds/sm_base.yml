@@ -3,6 +3,10 @@ $inherits:
 task:
   workerType: spidermonkey
 
+  routes:
+    - 'index.buildbot.branches.{{project}}.sm-plain'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.sm-plain'
+
   scopes:
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:cache:level-{{level}}-{{project}}-build-spidermonkey-workspace'
@@ -18,6 +22,8 @@ task:
       TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
 
     maxRunTime: 36000
+
+    command: ["/bin/bash", "-c", "cd /home/worker/ && ./bin/checkout-sources.sh && ./workspace/build/src/testing/taskcluster/scripts/builder/build-sm.sh" ]
 
   extra:
     treeherderEnv:
