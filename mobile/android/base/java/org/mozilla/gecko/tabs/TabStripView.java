@@ -18,10 +18,10 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.View;
 import android.view.ViewTreeObserver.OnPreDrawListener;
 
-import com.nineoldandroids.animation.Animator;
-import com.nineoldandroids.animation.Animator.AnimatorListener;
-import com.nineoldandroids.animation.AnimatorSet;
-import com.nineoldandroids.animation.ObjectAnimator;
+import android.animation.Animator;
+import android.animation.Animator.AnimatorListener;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 
 import java.util.ArrayList;
 import java.util.List;
