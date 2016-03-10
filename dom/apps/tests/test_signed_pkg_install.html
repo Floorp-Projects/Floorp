@@ -95,7 +95,6 @@ var steps = [
       var url = SimpleTest.getTestFileURL("chromeAddCert.js");
       var script = SpecialPowers.loadChromeScript(url);
       script.addMessageListener("addCertCompleted", function() {
-        SpecialPowers.setAllAppsLaunchable(true);
         SpecialPowers.addPermission("webapps-manage", true, document);
         info("Test CA Certificate Selected");
         PackagedTestHelper.next();

@@ -149,7 +149,6 @@ function launchApp(app) {
 
 const tests = [() => {
   info("Test start");
-  SpecialPowers.setAllAppsLaunchable(true);
   SpecialPowers.autoConfirmAppInstall(() => {
     SpecialPowers.autoConfirmAppUninstall(next);
   });

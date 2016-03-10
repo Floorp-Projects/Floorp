@@ -87,7 +87,6 @@ SimpleTest.requestFlakyTimeout("untriaged");
 var steps = [
   function() {
     // Set up
-    SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.addPermission("webapps-manage", true, document);
     info("Set up");
     PackagedTestHelper.next();
