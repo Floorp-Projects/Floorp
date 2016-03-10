@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let logger = LoginHelper.createLogger("nsLoginManager");
-  return logger.log.bind(logger);
+  return logger;
 });
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -119,9 +119,9 @@ LoginManager.prototype = {
                    getService(Ci.nsICategoryManager);
       contractID = catMan.getCategoryEntry("login-manager-storage",
                                            "nsILoginManagerStorage");
-      log("Found alternate nsILoginManagerStorage with contract ID:", contractID);
+      log.debug("Found alternate nsILoginManagerStorage with contract ID:", contractID);
     } catch (e) {
-      log("No alternate nsILoginManagerStorage registered");
+      log.debug("No alternate nsILoginManagerStorage registered");
     }
 
     this._storage = Cc[contractID].
@@ -150,13 +150,13 @@ LoginManager.prototype = {
 
       if (topic == "nsPref:changed") {
         var prefName = data;
-        log("got change to", prefName, "preference");
+        log.debug("got change to", prefName, "preference");
 
         if (prefName == "rememberSignons") {
           this._pwmgr._remember =
               this._pwmgr._prefBranch.getBoolPref("rememberSignons");
         } else {
-          log("Oops! Pref not handled, change ignored.");
+          log.debug("Oops! Pref not handled, change ignored.");
         }
       } else if (topic == "xpcom-shutdown") {
         delete this._pwmgr.__formFillService;
@@ -177,7 +177,7 @@ LoginManager.prototype = {
         this._pwmgr._gatherTelemetry(data ? parseInt(data)
                                           : new Date().getTime());
       } else {
-        log("Oops! Unexpected notification:", topic);
+        log.debug("Oops! Unexpected notification:", topic);
       }
     }
   },
@@ -303,7 +303,7 @@ LoginManager.prototype = {
     if (logins.some(l => login.matches(l, true)))
       throw new Error("This login already exists.");
 
-    log("Adding login");
+    log.debug("Adding login");
     return this._storage.addLogin(login);
   },
 
@@ -313,7 +313,7 @@ LoginManager.prototype = {
    * Remove the specified login from the stored logins.
    */
   removeLogin : function (login) {
-    log("Removing login");
+    log.debug("Removing login");
     return this._storage.removeLogin(login);
   },
 
@@ -324,7 +324,7 @@ LoginManager.prototype = {
    * Change the specified login to match the new login.
    */
   modifyLogin : function (oldLogin, newLogin) {
-    log("Modifying login");
+    log.debug("Modifying login");
     return this._storage.modifyLogin(oldLogin, newLogin);
   },
 
@@ -339,7 +339,7 @@ LoginManager.prototype = {
    * Returns an array of logins. If there are no logins, the array is empty.
    */
   getAllLogins : function (count) {
-    log("Getting a list of all logins");
+    log.debug("Getting a list of all logins");
     return this._storage.getAllLogins(count);
   },
 
@@ -350,7 +350,7 @@ LoginManager.prototype = {
    * Remove all stored logins.
    */
   removeAllLogins : function () {
-    log("Removing all logins");
+    log.debug("Removing all logins");
     this._storage.removeAllLogins();
   },
 
@@ -365,7 +365,7 @@ LoginManager.prototype = {
    * the array is empty.
    */
   getAllDisabledHosts : function (count) {
-    log("Getting a list of all disabled hosts");
+    log.debug("Getting a list of all disabled hosts");
     return this._storage.getAllDisabledHosts(count);
   },
 
@@ -376,7 +376,7 @@ LoginManager.prototype = {
    * Search for the known logins for entries matching the specified criteria.
    */
   findLogins : function (count, hostname, formSubmitURL, httpRealm) {
-    log("Searching for logins matching host:", hostname,
+    log.debug("Searching for logins matching host:", hostname,
         "formSubmitURL:", formSubmitURL, "httpRealm:", httpRealm);
 
     return this._storage.findLogins(count, hostname, formSubmitURL,
@@ -393,7 +393,7 @@ LoginManager.prototype = {
    * Returns an array of decrypted nsILoginInfo.
    */
   searchLogins : function(count, matchData) {
-   log("Searching for logins");
+   log.debug("Searching for logins");
 
     return this._storage.searchLogins(count, matchData);
   },
@@ -406,7 +406,7 @@ LoginManager.prototype = {
    * returns only the count.
    */
   countLogins : function (hostname, formSubmitURL, httpRealm) {
-    log("Counting logins matching host:", hostname,
+    log.debug("Counting logins matching host:", hostname,
         "formSubmitURL:", formSubmitURL, "httpRealm:", httpRealm);
 
     return this._storage.countLogins(hostname, formSubmitURL, httpRealm);
@@ -435,7 +435,7 @@ LoginManager.prototype = {
    * Check to see if user has disabled saving logins for the host.
    */
   getLoginSavingEnabled : function (host) {
-    log("Checking if logins to", host, "can be saved.");
+    log.debug("Checking if logins to", host, "can be saved.");
     if (!this._remember)
       return false;
 
@@ -453,7 +453,7 @@ LoginManager.prototype = {
     if (hostname.indexOf("\0") != -1)
       throw new Error("Invalid hostname");
 
-    log("Login saving for", hostname, "now enabled?", enabled);
+    log.debug("Login saving for", hostname, "now enabled?", enabled);
     return this._storage.setLoginSavingEnabled(hostname, enabled);
   },
 
@@ -479,7 +479,7 @@ LoginManager.prototype = {
       return;
     }
 
-    log("AutoCompleteSearch invoked. Search is:", aSearchString);
+    log.debug("AutoCompleteSearch invoked. Search is:", aSearchString);
 
     var previousResult;
     if (aPreviousResult) {
