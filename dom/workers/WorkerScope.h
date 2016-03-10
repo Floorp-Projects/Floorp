@@ -115,7 +115,7 @@ public:
              const int32_t aTimeout, const Sequence<JS::Value>& /* unused */,
              ErrorResult& aRv);
   void
-  ClearTimeout(int32_t aHandle, ErrorResult& aRv);
+  ClearTimeout(int32_t aHandle);
   int32_t
   SetInterval(JSContext* aCx, Function& aHandler,
               const Optional<int32_t>& aTimeout,
@@ -125,7 +125,7 @@ public:
               const Optional<int32_t>& aTimeout,
               const Sequence<JS::Value>& /* unused */, ErrorResult& aRv);
   void
-  ClearInterval(int32_t aHandle, ErrorResult& aRv);
+  ClearInterval(int32_t aHandle);
 
   void
   Atob(const nsAString& aAtob, nsAString& aOutput, ErrorResult& aRv) const;
