@@ -980,6 +980,16 @@ nsComputedDOMStyle::DoGetColor()
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetColorAdjust()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StyleVisibility()->mColorAdjust,
+                                   nsCSSProps::kColorAdjustKTable));
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetOpacity()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
