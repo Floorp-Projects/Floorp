@@ -3254,6 +3254,16 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
   ReentrantMonitorAutoEnter lock(mMonitor);
   bool isDefault = mFrameMetrics.IsDefault();
 
+  if (!aThisLayerTreeUpdated && !isDefault) {
+    // No new information here, skip it. Note that this is not just an
+    // optimization; it's correctness too. In the case where we get one of these
+    // stale aLayerMetrics *after* a call to UpdateScrollOffset, processing the
+    // stale aLayerMetrics would clobber the more up-to-date information from
+    // UpdateScrollOffset.
+    MOZ_ASSERT(aLayerMetrics == mLastContentPaintMetrics);
+    APZC_LOG("%p NotifyLayersUpdated short-circuit\n", this);
+    return;
+  }
   mLastContentPaintMetrics = aLayerMetrics;
 
   mFrameMetrics.SetScrollParentId(aLayerMetrics.GetScrollParentId());
