@@ -8,6 +8,7 @@
 #include "MockMediaResource.h"
 #include "DecoderTraits.h"
 #include "MP4Demuxer.h"
+#include "WebMDemuxer.h"
 
 using namespace mozilla;
 
@@ -50,6 +51,21 @@ TEST(MediaDataDecoder, H264)
     EXPECT_TRUE(NS_SUCCEEDED(rv));
 
     BenchmarkRunner runner(new Benchmark(new MP4Demuxer(resource)));
+    EXPECT_GT(runner.Run(), 0u);
+  }
+}
+
+TEST(MediaDataDecoder, VP9)
+{
+  if (!DecoderTraits::IsWebMTypeAndEnabled(NS_LITERAL_CSTRING("video/webm"))) {
+    EXPECT_TRUE(true);
+  } else {
+    RefPtr<MediaResource> resource =
+      new MockMediaResource("vp9cake.webm", NS_LITERAL_CSTRING("video/webm"));
+    nsresult rv = resource->Open(nullptr);
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+    BenchmarkRunner runner(new Benchmark(new WebMDemuxer(resource)));
     EXPECT_GT(runner.Run(), 0u);
   }
 }
