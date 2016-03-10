@@ -5,10 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cc, Ci, Cu, Cr } = require("chrome");
 const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 function NetMonitorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
@@ -19,7 +17,7 @@ function NetMonitorPanel(iframeWindow, toolbox) {
   this._controller._target = this.target;
 
   EventEmitter.decorate(this);
-};
+}
 
 exports.NetMonitorPanel = NetMonitorPanel;
 
