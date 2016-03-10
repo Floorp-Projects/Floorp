@@ -990,6 +990,65 @@ this.Extension.generateXPI = function(id, data) {
 };
 
 /**
+ * A skeleton Extension-like object, used for testing, which installs an
+ * add-on via the add-on manager when startup() is called, and
+ * uninstalles it on shutdown().
+ */
+function MockExtension(id, file, rootURI) {
+  this.id = id;
+  this.file = file;
+  this.rootURI = rootURI;
+
+  this._extension = null;
+  this._extensionPromise = new Promise(resolve => {
+    let onstartup = (msg, extension) => {
+      if (extension.id == this.id) {
+        Management.off("startup", onstartup);
+
+        this._extension = extension;
+        resolve(extension);
+      }
+    };
+    Management.on("startup", onstartup);
+  });
+}
+
+MockExtension.prototype = {
+  testMessage(...args) {
+    return this._extension.testMessage(...args);
+  },
+
+  on(...args) {
+    this._extensionPromise.then(extension => {
+      extension.on(...args);
+    });
+  },
+
+  off(...args) {
+    this._extensionPromise.then(extension => {
+      extension.off(...args);
+    });
+  },
+
+  startup() {
+    return AddonManager.installTemporaryAddon(this.file).then(addon => {
+      this.addon = addon;
+      return this._extensionPromise;
+    });
+  },
+
+  shutdown() {
+    this.addon.uninstall(true);
+    return this.cleanupGeneratedFile();
+  },
+
+  cleanupGeneratedFile() {
+    flushJarCache(this.file);
+    return OS.File.remove(this.file.path);
+  },
+};
+
+/**
  * Generates a new extension using |Extension.generateXPI|, and initializes a
  * new |Extension| instance which will execute it.
  */
@@ -1001,6 +1060,10 @@ this.Extension.generate = function(id, data) {
 
   let fileURI = Services.io.newFileURI(file);
   let jarURI = Services.io.newURI("jar:" + fileURI.spec + "!/", null, null);
+
+  if (data.useAddonManager) {
+    return new MockExtension(id, file, jarURI);
+  }
 
   return new Extension({
     id,
