@@ -1881,7 +1881,7 @@
             if (!remote) {
               this._outerWindowIDBrowserMap.set(browser.outerWindowID, browser);
             }
-            
+
             return { usingPreloadedContent: usingPreloadedContent };
           ]]>
         </body>
@@ -2001,7 +2001,7 @@
             // trigger SessionStore.jsm to run code that expects the existence
             // of tab.linkedBrowser.
             let { usingPreloadedContent } = this._linkBrowserToTab(t, aURI, options);
-            
+
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
             // even if the event listener opens or closes tabs.
