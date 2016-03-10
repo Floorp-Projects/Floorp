@@ -71,6 +71,10 @@ public:
 
     nsresult rv = DispatchMessage();
 
+    // We must check if we were waiting for this message in order to shutdown
+    // the port.
+    mPort->UpdateMustKeepAlive();
+
     mPort->mPostMessageRunnable = nullptr;
     mPort->Dispatch();
 
@@ -151,9 +155,6 @@ private:
     bool dummy;
     mPort->DispatchEvent(static_cast<dom::Event*>(event.get()), &dummy);
 
-    // We must check if we were waiting for this message in order to shutdown
-    // the port.
-    mPort->UpdateMustKeepAlive();
     return NS_OK;
   }
 
