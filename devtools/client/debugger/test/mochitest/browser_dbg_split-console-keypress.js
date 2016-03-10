@@ -10,6 +10,11 @@
 const TAB_URL = EXAMPLE_URL + "doc_step-many-statements.html";
 
 function test() {
+  // This does the same assertions over a series of sub-tests, and it
+  // can timeout in linux e10s.  No sense in breaking it up into multiple
+  // tests, so request extra time.
+  requestLongerTimeout(2);
+
   let gDebugger, gToolbox, gThreadClient, gTab, gPanel;
   initDebugger(TAB_URL).then(([aTab,debuggeeWin,aPanel]) => {
     gPanel = aPanel;

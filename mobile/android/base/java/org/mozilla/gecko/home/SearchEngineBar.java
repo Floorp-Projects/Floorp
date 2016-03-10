@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
@@ -21,7 +22,6 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.preferences.GeckoPreferences;
-import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import java.util.List;
@@ -52,7 +52,7 @@ public class SearchEngineBar extends RecyclerView
         super(context, attrs);
 
         mDividerPaint = new Paint();
-        mDividerPaint.setColor(ColorUtils.getColor(context, R.color.toolbar_divider_grey));
+        mDividerPaint.setColor(ContextCompat.getColor(context, R.color.toolbar_divider_grey));
         mDividerPaint.setStyle(Paint.Style.FILL_AND_STROKE);
 
         final DisplayMetrics displayMetrics = getResources().getDisplayMetrics();

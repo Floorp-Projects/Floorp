@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
+import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.R;
@@ -21,7 +22,6 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.toolbar.BrowserToolbarTabletBase.ForwardButtonAnimation;
-import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
@@ -141,11 +141,11 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mTitle = (ThemedTextView) findViewById(R.id.url_bar_title);
         mTitlePadding = mTitle.getPaddingRight();
 
-        mUrlColorSpan = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_urltext));
-        mBlockedColorSpan = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_blockedtext));
-        mDomainColorSpan = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_domaintext));
-        mPrivateDomainColorSpan = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.url_bar_domaintext_private));
-        mCertificateOwnerColorSpan = new ForegroundColorSpan(ColorUtils.getColor(context, R.color.affirmative_green));
+        mUrlColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_urltext));
+        mBlockedColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_blockedtext));
+        mDomainColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_domaintext));
+        mPrivateDomainColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_domaintext_private));
+        mCertificateOwnerColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.affirmative_green));
 
         mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
 
