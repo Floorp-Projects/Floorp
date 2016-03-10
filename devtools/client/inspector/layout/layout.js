@@ -306,7 +306,10 @@ LayoutView.prototype = {
     let editor = new InplaceEditor({
       element: element,
       initial: initialValue,
-
+      contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
+      property: {
+        name: dimension.property
+      },
       start: self => {
         self.elt.parentNode.classList.add("layout-editing");
       },
