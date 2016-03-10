@@ -49,15 +49,15 @@ def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
         }
     }
 
-    tests_root = os.path.join(topsrcdir, 'testing', 'firefox-ui', 'tests')
+    fxui_dir = os.path.join(topsrcdir, 'testing', 'firefox-ui')
 
     # Set the resources path which is used to serve test data via wptserve
     if not kwargs['server_root']:
-        kwargs['server_root'] = os.path.join(tests_root, 'resources')
+        kwargs['server_root'] = os.path.join(fxui_dir, 'resources')
 
     # If no tests have been selected, set default ones
     if not kwargs.get('tests'):
-        kwargs['tests'] = [os.path.join(tests_root, test)
+        kwargs['tests'] = [os.path.join(fxui_dir, 'tests', test)
                            for test in test_types[testtype]['default_tests']]
 
     kwargs['logger'] = commandline.setup_logging('Firefox UI - {} Tests'.format(testtype),
