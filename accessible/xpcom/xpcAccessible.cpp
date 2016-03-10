@@ -174,6 +174,21 @@ xpcAccessible::GetDOMNode(nsIDOMNode** aDOMNode)
 }
 
 NS_IMETHODIMP
+xpcAccessible::GetId(nsAString& aID)
+{
+  ProxyAccessible* proxy = IntlGeneric().AsProxy();
+  if (!proxy) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsString id;
+  proxy->DOMNodeID(id);
+  aID.Assign(id);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 xpcAccessible::GetDocument(nsIAccessibleDocument** aDocument)
 {
   NS_ENSURE_ARG_POINTER(aDocument);

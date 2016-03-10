@@ -173,7 +173,6 @@ endif
 endif
 
 SCRIPTS = $(JS_CONFIG_NAME)
-SDK_BINARY = $(JS_CONFIG_NAME)
 
 $(LIBRARY_NAME).pc: js.pc
 	cp $^ $@

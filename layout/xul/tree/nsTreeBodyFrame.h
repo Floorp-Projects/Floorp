@@ -160,6 +160,9 @@ public:
   virtual bool IsScrollbarOnRight() const override {
     return (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR);
   }
+  virtual bool ShouldSuppressScrollbarRepaints() const override {
+    return false;
+  }
 
   // Overridden from nsIFrame to cache our pres context.
   virtual void Init(nsIContent*       aContent,
@@ -259,13 +262,13 @@ protected:
                         nscoord&             aCurrX);
 
   // This method paints the text string inside a particular cell of the tree.
-  void PaintText(int32_t              aRowIndex, 
-                 nsTreeColumn*        aColumn,
-                 const nsRect&        aTextRect,
-                 nsPresContext*      aPresContext,
-                 nsRenderingContext& aRenderingContext,
-                 const nsRect&        aDirtyRect,
-                 nscoord&             aCurrX);
+  DrawResult PaintText(int32_t             aRowIndex,
+                       nsTreeColumn*       aColumn,
+                       const nsRect&       aTextRect,
+                       nsPresContext*      aPresContext,
+                       nsRenderingContext& aRenderingContext,
+                       const nsRect&       aDirtyRect,
+                       nscoord&            aCurrX);
 
   // This method paints the checkbox inside a particular cell of the tree.
   DrawResult PaintCheckbox(int32_t              aRowIndex, 

@@ -6,13 +6,13 @@
 #ifndef nsTransactionStack_h__
 #define nsTransactionStack_h__
 
-#include <deque>
+#include "nsDeque.h"
 #include "nsAutoPtr.h"
 
 class nsCycleCollectionTraversalCallback;
 class nsTransactionItem;
 
-class nsTransactionStack
+class nsTransactionStack : private nsDeque
 {
 public:
   enum Type { FOR_UNDO, FOR_REDO };
@@ -27,14 +27,13 @@ public:
   already_AddRefed<nsTransactionItem> Peek();
   already_AddRefed<nsTransactionItem> GetItem(int32_t aIndex);
   void Clear();
-  int32_t GetSize() { return mDeque.size(); }
-  bool IsEmpty() const { return mDeque.empty(); }
+  int32_t GetSize() const { return static_cast<int32_t>(nsDeque::GetSize()); }
+  bool IsEmpty() const { return GetSize() == 0; }
 
   void DoUnlink() { Clear(); }
   void DoTraverse(nsCycleCollectionTraversalCallback &cb);
 
 private:
-  std::deque<RefPtr<nsTransactionItem> > mDeque;
   const Type mType;
 };
 

@@ -806,7 +806,6 @@ nsDocShell::nsDocShell()
   , mDefaultLoadFlags(nsIRequest::LOAD_NORMAL)
   , mBlankTiming(false)
   , mFrameType(FRAME_TYPE_REGULAR)
-  , mIsInIsolatedMozBrowser(false)
   , mParentCharsetSource(0)
   , mJSRunToCompletionDepth(0)
 {
@@ -3498,8 +3497,8 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
     return false;
   }
 
-  if (static_cast<nsDocShell*>(targetDS.get())->GetOriginAttributes().mUserContextId !=
-      static_cast<nsDocShell*>(accessingDS.get())->GetOriginAttributes().mUserContextId) {
+  if (static_cast<nsDocShell*>(targetDS.get())->GetOriginAttributes() !=
+      static_cast<nsDocShell*>(accessingDS.get())->GetOriginAttributes()) {
     return false;
   }
 
@@ -4012,7 +4011,6 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild)
   }
 
   aChild->SetTreeOwner(mTreeOwner);
-  childDocShell->SetIsInIsolatedMozBrowserElement(mIsInIsolatedMozBrowser);
 
   nsCOMPtr<nsIDocShell> childAsDocShell(do_QueryInterface(aChild));
   if (!childAsDocShell) {
@@ -9609,6 +9607,11 @@ nsDocShell::InternalLoad(nsIURI* aURI,
 
   NS_ENSURE_TRUE(!mIsBeingDestroyed, NS_ERROR_NOT_AVAILABLE);
 
+  rv = EnsureScriptEnvironment();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   // wyciwyg urls can only be loaded through history. Any normal load of
   // wyciwyg through docshell is  illegal. Disallow such loads.
   if (aLoadType & LOAD_CMD_NORMAL) {
@@ -9624,15 +9627,11 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     isJavaScript = false;
   }
 
-  //
   // First, notify any nsIContentPolicy listeners about the document load.
   // Only abort the load if a content policy listener explicitly vetos it!
-  //
-  nsCOMPtr<Element> requestingElement;
   // Use nsPIDOMWindow since we _want_ to cross the chrome boundary if needed
-  if (mScriptGlobal) {
-    requestingElement = mScriptGlobal->AsOuter()->GetFrameElementInternal();
-  }
+  nsCOMPtr<Element> requestingElement =
+    mScriptGlobal->AsOuter()->GetFrameElementInternal();
 
   RefPtr<nsGlobalWindow> MMADeathGrip = mScriptGlobal;
 
@@ -10500,10 +10499,16 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                       nsIURI* aBaseURI,
                       nsContentPolicyType aContentPolicyType)
 {
-  nsresult rv;
-  nsCOMPtr<nsIURILoader> uriLoader;
+  // Double-check that we're still around to load this URI.
+  if (mIsBeingDestroyed) {
+    // Return NS_OK despite not doing anything to avoid throwing exceptions from
+    // nsLocation::SetHref if the unload handler of the existing page tears us
+    // down.
+    return NS_OK;
+  }
 
-  uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
+  nsresult rv;
+  nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -10542,30 +10547,28 @@ nsDocShell::DoURILoad(nsIURI* aURI,
 
   // For mozWidget, display a load error if we navigate to a page which is not
   // claimed in |widgetPages|.
-  if (mScriptGlobal) {
-    // When we go to display a load error for an invalid mozWidget page, we will
-    // try to load an about:neterror page, which is also an invalid mozWidget
-    // page. To avoid recursion, we skip this check if aURI's scheme is "about".
+  // When we go to display a load error for an invalid mozWidget page, we will
+  // try to load an about:neterror page, which is also an invalid mozWidget
+  // page. To avoid recursion, we skip this check if aURI's scheme is "about".
 
-    // The goal is to prevent leaking sensitive information of an invalid page of
-    // an app, so allowing about:blank would not be conflict to the goal.
-    bool isAbout = false;
-    rv = aURI->SchemeIs("about", &isAbout);
-    if (NS_SUCCEEDED(rv) && !isAbout &&
-        nsIDocShell::GetIsApp()) {
-      nsCOMPtr<Element> frameElement = mScriptGlobal->AsOuter()->GetFrameElementInternal();
-      if (frameElement) {
-        nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(frameElement);
-        // |GetReallyIsApp| indicates the browser frame is a valid app or widget.
-        // Here we prevent navigating to an app or widget which loses its validity
-        // by loading invalid page or other way.
-        if (browserFrame && !browserFrame->GetReallyIsApp()) {
-          nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
-          if (serv) {
-              serv->NotifyObservers(GetDocument(), "invalid-widget", nullptr);
-          }
-          return NS_ERROR_MALFORMED_URI;
+  // The goal is to prevent leaking sensitive information of an invalid page of
+  // an app, so allowing about:blank would not be conflict to the goal.
+  bool isAbout = false;
+  rv = aURI->SchemeIs("about", &isAbout);
+  if (NS_SUCCEEDED(rv) && !isAbout &&
+      nsIDocShell::GetIsApp()) {
+    nsCOMPtr<Element> frameElement = mScriptGlobal->AsOuter()->GetFrameElementInternal();
+    if (frameElement) {
+      nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(frameElement);
+      // |GetReallyIsApp| indicates the browser frame is a valid app or widget.
+      // Here we prevent navigating to an app or widget which loses its validity
+      // by loading invalid page or other way.
+      if (browserFrame && !browserFrame->GetReallyIsApp()) {
+        nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
+        if (serv) {
+            serv->NotifyObservers(GetDocument(), "invalid-widget", nullptr);
         }
+        return NS_ERROR_MALFORMED_URI;
       }
     }
   }
@@ -10575,10 +10578,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
 
   bool isSrcdoc = !aSrcdoc.IsVoid();
 
-  // There are three cases we care about:
-  // * Null mScriptGlobal: shouldn't happen but does (see bug 1240246). In this
-  //   case, we create a loadingPrincipal as for a top-level load, but we leave
-  //   requestingNode and requestingWindow null.
+  // There are two cases we care about:
   // * Top-level load (GetFrameElementInternal returns null). In this case,
   //   requestingNode is null, but requestingWindow is our mScriptGlobal.
   //   TODO we want to pass null for loadingPrincipal in this case.
@@ -10589,18 +10589,20 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   nsCOMPtr<nsPIDOMWindowOuter> requestingWindow;
 
   nsCOMPtr<nsIPrincipal> loadingPrincipal;
-  if (mScriptGlobal) {
-    requestingNode = mScriptGlobal->AsOuter()->GetFrameElementInternal();
-    if (requestingNode) {
-      // If we have a requesting node, then use that as our loadingPrincipal.
-      loadingPrincipal = requestingNode->NodePrincipal();
-    } else {
-      MOZ_ASSERT(aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
-      requestingWindow = mScriptGlobal->AsOuter();
+  requestingNode = mScriptGlobal->AsOuter()->GetFrameElementInternal();
+  if (requestingNode) {
+    // If we have a requesting node, then use that as our loadingPrincipal.
+    loadingPrincipal = requestingNode->NodePrincipal();
+  } else {
+    if (aContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT) {
+      // If this isn't a top-level load and mScriptGlobal's frame element is
+      // null, then the element got removed from the DOM while we were trying to
+      // load this resource. This docshell is scheduled for destruction already,
+      // so bail out here.
+      return NS_OK;
     }
-  }
 
-  if (!loadingPrincipal) {
+    requestingWindow = mScriptGlobal->AsOuter();
     if (mItemType != typeChrome) {
       nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
       ssm->GetDocShellCodebasePrincipal(aURI, this, getter_AddRefs(loadingPrincipal));
@@ -13916,7 +13918,8 @@ nsDocShell::GetInheritedFrameType()
 /* [infallible] */ NS_IMETHODIMP
 nsDocShell::GetIsIsolatedMozBrowserElement(bool* aIsIsolatedMozBrowserElement)
 {
-  bool result = mFrameType == FRAME_TYPE_BROWSER && mIsInIsolatedMozBrowser;
+  bool result = mFrameType == FRAME_TYPE_BROWSER &&
+                mOriginAttributes.mInIsolatedMozBrowser;
   *aIsIsolatedMozBrowserElement = result;
   return NS_OK;
 }
@@ -13924,19 +13927,12 @@ nsDocShell::GetIsIsolatedMozBrowserElement(bool* aIsIsolatedMozBrowserElement)
 /* [infallible] */ NS_IMETHODIMP
 nsDocShell::GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserElement)
 {
-  MOZ_ASSERT(!mIsInIsolatedMozBrowser ||
+  MOZ_ASSERT(!mOriginAttributes.mInIsolatedMozBrowser ||
              (GetInheritedFrameType() == FRAME_TYPE_BROWSER),
              "Isolated mozbrowser should only be true inside browser frames");
   bool result = (GetInheritedFrameType() == FRAME_TYPE_BROWSER) &&
-                mIsInIsolatedMozBrowser;
+                mOriginAttributes.mInIsolatedMozBrowser;
   *aIsInIsolatedMozBrowserElement = result;
-  return NS_OK;
-}
-
-/* [infallible] */ NS_IMETHODIMP
-nsDocShell::SetIsInIsolatedMozBrowserElement(bool aIsInIsolatedMozBrowserElement)
-{
-  mIsInIsolatedMozBrowser = aIsInIsolatedMozBrowserElement;
   return NS_OK;
 }
 

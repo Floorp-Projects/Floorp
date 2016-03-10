@@ -844,6 +844,87 @@ element.isVisible = function(el, x = undefined, y = undefined) {
   return true;
 };
 
+element.isInteractable = function(el) {
+  return element.isPointerInteractable(el) ||
+      element.isKeyboardInteractable(el);
+};
+
+/**
+ * A pointer-interactable element is defined to be the first
+ * non-transparent element, defined by the paint order found at the centre
+ * point of its rectangle that is inside the viewport, excluding the size
+ * of any rendered scrollbars.
+ *
+ * @param {DOMElement} el
+ *     Element determine if is pointer-interactable.
+ *
+ * @return {boolean}
+ *     True if interactable, false otherwise.
+ */
+element.isPointerInteractable = function(el) {
+  let tree = element.getInteractableElementTree(el);
+  return tree.length > 0;
+};
+
+/**
+ * Produces a pointer-interactable elements tree from a given element.
+ *
+ * The tree is defined by the paint order found at the centre point of
+ * the element's rectangle that is inside the viewport, excluding the size
+ * of any rendered scrollbars.
+ *
+ * @param {DOMElement} el
+ *     Element to determine if is pointer-interactable.
+ *
+ * @return {Array.<DOMElement>}
+ *     Sequence of non-opaque elements in paint order.
+ */
+element.getInteractableElementTree = function(el) {
+  let doc = el.ownerDocument;
+  let win = doc.defaultView;
+
+  // step 1
+  // TODO
+
+  // steps 2-3
+  let box = el.getBoundingClientRect();
+  let visible = {
+    width: Math.max(box.x, box.x + box.width) - win.innerWidth,
+    height: Math.max(box.y, box.y + box.height) - win.innerHeight,
+  };
+
+  // steps 4-5
+  let offset = {
+    vertical: visible.width / 2.0,
+    horizontal: visible.height / 2.0,
+  };
+
+  // step 6
+  let centre = {
+    x: box.x + offset.horizontal,
+    y: box.y + offset.vertical,
+  };
+
+  // step 7
+  let tree = doc.elementsFromPoint(centre.x, centre.y);
+
+  // filter out non-interactable elements
+  let rv = [];
+  for (let el of tree) {
+    if (win.getComputedStyle(el).opacity === "1") {
+      rv.push(el);
+    }
+  }
+
+  return rv;
+};
+
+// TODO(ato): Not implemented.
+// In fact, it's not defined in the spec.
+element.isKeyboardInteractable = function(el) {
+  return true;
+};
+
 element.isXULElement = function(el) {
   let ns = atom.getElementAttribute(el, "namespaceURI");
   return ns.indexOf("there.is.only.xul") >= 0;

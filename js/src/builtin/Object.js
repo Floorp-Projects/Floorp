@@ -63,10 +63,10 @@ function Object_toLocaleString() {
 function ObjectDefineSetter(name, setter) {
     var object;
     if (this === null || this === undefined) {
-        AddContentTelemetry(JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 1);
+        AddContentTelemetry(TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 1);
         object = global;
     } else {
-        AddContentTelemetry(JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 0);
+        AddContentTelemetry(TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 0);
         object = ToObject(this);
     }
 
@@ -88,10 +88,10 @@ function ObjectDefineSetter(name, setter) {
 function ObjectDefineGetter(name, getter) {
     var object;
     if (this === null || this === undefined) {
-        AddContentTelemetry(JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 1);
+        AddContentTelemetry(TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 1);
         object = global;
     } else {
-        AddContentTelemetry(JS_TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 0);
+        AddContentTelemetry(TELEMETRY_DEFINE_GETTER_SETTER_THIS_NULL_UNDEFINED, 0);
         object = ToObject(this);
     }
 

@@ -665,7 +665,19 @@ struct JSClass {
                                                 // SetNewObjectMetadata itself
 #define JSCLASS_PRIVATE_IS_NSISUPPORTS  (1<<3)  // private is (nsISupports*)
 #define JSCLASS_IS_DOMJSCLASS           (1<<4)  // objects are DOM
-// Bit 5 is unused.
+#define JSCLASS_HAS_XRAYED_CONSTRUCTOR  (1<<5)  // if wrapped by an xray
+                                                // wrapper, the builtin
+                                                // class's constructor won't
+                                                // be unwrapped and invoked.
+                                                // Instead, the constructor is
+                                                // resolved in the caller's
+                                                // compartment and invoked
+                                                // with a wrapped newTarget.
+                                                // The constructor has to
+                                                // detect and handle this
+                                                // situation.
+                                                // See PromiseConstructor for
+                                                // details.
 #define JSCLASS_EMULATES_UNDEFINED      (1<<6)  // objects of this class act
                                                 // like the value undefined,
                                                 // in some contexts

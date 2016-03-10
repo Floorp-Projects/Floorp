@@ -1,27 +1,13 @@
-var listener = {
-  handleEvent : function(e) {
-    if (e.target == theBrowser.contentDocument)
-      doTest();
-  }
-}
+add_task(function* () {
+  let uri = getRootDirectory(gTestPath) + "bug453896_iframe.html";
 
-var theTab;
-var theBrowser;
-
-function test() {
-  waitForExplicitFinish();
-
-  theTab = gBrowser.addTab();
-  theBrowser = gBrowser.getBrowserForTab(theTab);
-  theBrowser.addEventListener("load", listener, true);
-  
-  var rootDir = getRootDirectory(gTestPath);
-  theBrowser.contentWindow.location = rootDir + "bug453896_iframe.html";
-}
-
-function doTest() {
-  theBrowser.removeEventListener("load", listener, true);
-  var fake_window = { ok: ok, SimpleTest: { finish: finish } };
-  theBrowser.contentWindow.wrappedJSObject.run(fake_window);
-  gBrowser.removeTab(theTab);
-}
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: uri
+  }, function*(browser) {
+    return ContentTask.spawn(browser, null, function* () {
+      var fake_window = { ok: ok };
+      content.wrappedJSObject.run(fake_window);
+    });
+  });
+});

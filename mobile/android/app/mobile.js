@@ -955,6 +955,8 @@ pref("dom.vr.enabled", true);
 pref("browser.tabs.showAudioPlayingIcon", true);
 
 pref("dom.serviceWorkers.enabled", true);
+pref("dom.serviceWorkers.interception.enabled", true);
+pref("dom.serviceWorkers.openWindow.enabled", true);
 
 pref("dom.push.debug", false);
 // The upstream autopush endpoint must have the Google API key corresponding to

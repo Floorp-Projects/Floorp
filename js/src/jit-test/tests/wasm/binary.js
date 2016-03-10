@@ -32,6 +32,9 @@ const I64Code = 2;
 const F32Code = 3;
 const F64Code = 4;
 
+const NopCode = 0x00;
+const BlockCode = 0x01;
+
 function toU8(array) {
     for (let b of array)
         assertEq(b < 256, true);
@@ -39,9 +42,17 @@ function toU8(array) {
 }
 
 function varU32(u32) {
-    // TODO
-    assertEq(u32 < 128, true);
-    return [u32];
+    assertEq(u32 >= 0, true);
+    assertEq(u32 < Math.pow(2,32), true);
+    var bytes = [];
+    do {
+        var byte = u32 & 0x7f;
+        u32 >>>= 7;
+        if (u32 != 0)
+            byte |= 0x80;
+        bytes.push(byte);
+    } while (u32 != 0);
+    return bytes;
 }
 
 const U32MAX_LEB = [255, 255, 255, 255, 15];
@@ -167,8 +178,8 @@ wasmEval(moduleWithSections([sigSection([v2vSig])]));
 wasmEval(moduleWithSections([sigSection([i2vSig])]));
 wasmEval(moduleWithSections([sigSection([v2vSig, i2vSig])]));
 
-assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([{args:[], ret:100}])])), TypeError, /expression type/);
-assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([{args:[100], ret:VoidCode}])])), TypeError, /value type/);
+assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([{args:[], ret:100}])])), TypeError, /bad type/);
+assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([{args:[100], ret:VoidCode}])])), TypeError, /bad type/);
 
 assertThrowsInstanceOf(() => wasmEval(moduleWithSections([sigSection([]), declSection([0])])), TypeError, /signature index out of range/);
 assertThrowsInstanceOf(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([1])])), TypeError, /signature index out of range/);
@@ -197,3 +208,15 @@ wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), tableSectio
 assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), tableSection([0,1]), bodySection([v2vBody])])), TypeError, /table element out of range/);
 wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0,0,0]), tableSection([0,1,0,2]), bodySection([v2vBody, v2vBody, v2vBody])]));
 wasmEval(moduleWithSections([sigSection([v2vSig,i2vSig]), declSection([0,0,1]), tableSection([0,1,2]), bodySection([v2vBody, v2vBody, v2vBody])]));
+
+// Deep nesting shouldn't crash. With iterative decoding, we should test that
+// this doesn't even throw.
+try {
+    var manyBlocks = [];
+    for (var i = 0; i < 20000; i++)
+        manyBlocks.push(BlockCode, 1);
+    manyBlocks.push(NopCode);
+    wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:manyBlocks})])]));
+} catch (e) {
+    assertEq(String(e).indexOf("too much recursion") == -1, false);
+}
