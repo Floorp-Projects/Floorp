@@ -37,6 +37,7 @@ function getPopupNotifications(aWindow) {
  * Checks if we have a password popup notification
  * of the right type and with the right label.
  *
+ * @deprecated Write a browser-chrome test instead and use the fork of this method there.
  * @returns the found password popup notification.
  */
 function getPopup(aPopupNote, aKind) {
@@ -54,8 +55,8 @@ function getPopup(aPopupNote, aKind) {
 }
 
 
-/*
- * clickPopupButton
+/**
+ * @deprecated - Use a browser chrome test instead.
  *
  * Clicks the specified popup notification button.
  */
