@@ -263,7 +263,6 @@ AccessibleCaretManager::HasNonEmptyTextContent(nsINode* aNode) const
            aNode, nsContentUtils::eRecurseIntoChildren);
 }
 
-
 void
 AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHint aHint)
 {
@@ -1084,30 +1083,44 @@ AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint)
 }
 
 nsRect
-AccessibleCaretManager::GetContentBoundaryForFrame(nsIFrame* aFrame) const
+AccessibleCaretManager::GetAllChildFrameRectsUnion(nsIFrame* aFrame) const
 {
-  nsRect resultRect;
-  nsIFrame* rootFrame = mPresShell->GetRootFrame();
+  nsRect unionRect;
 
-  for (; aFrame; aFrame = aFrame->GetNextContinuation()) {
-    nsRect rect = aFrame->GetContentRectRelativeToSelf();
-    nsLayoutUtils::TransformRect(aFrame, rootFrame, rect);
-    resultRect = resultRect.Union(rect);
+  // Drill through scroll frames, we don't want to include scrollbar child
+  // frames below.
+  for (nsIFrame* frame = aFrame->GetContentInsertionFrame();
+       frame;
+       frame = frame->GetNextContinuation()) {
+    nsRect frameRect;
 
-    nsIFrame::ChildListIterator lists(aFrame);
-    for (; !lists.IsDone(); lists.Next()) {
-      // Loop over all children to take the overflow rect into consideration.
+    for (nsIFrame::ChildListIterator lists(frame); !lists.IsDone(); lists.Next()) {
+      // Loop all children to union their scrollable overflow rect.
       for (nsIFrame* child : lists.CurrentList()) {
-        nsRect overflowRect = child->GetScrollableOverflowRect();
-        nsLayoutUtils::TransformRect(child, rootFrame, overflowRect);
-        resultRect = resultRect.Union(overflowRect);
+        nsRect childRect = child->GetScrollableOverflowRectRelativeToSelf();
+        nsLayoutUtils::TransformRect(child, frame, childRect);
+
+        // A TextFrame containing only '\n' has positive height and width 0, or
+        // positive width and height 0 if it's vertical. Need to use UnionEdges
+        // to add its rect. BRFrame rect should be non-empty.
+        if (childRect.IsEmpty()) {
+          frameRect = frameRect.UnionEdges(childRect);
+        } else {
+          frameRect = frameRect.Union(childRect);
+        }
       }
     }
+
+    MOZ_ASSERT(!frameRect.IsEmpty(),
+               "Editable frames should have at least one BRFrame child to make "
+               "frameRect non-empty!");
+    if (frame != aFrame) {
+      nsLayoutUtils::TransformRect(frame, aFrame, frameRect);
+    }
+    unionRect = unionRect.Union(frameRect);
   }
 
-  // Shrink rect to make sure we never hit the boundary.
-  resultRect.Deflate(kBoundaryAppUnits);
-  return resultRect;
+  return unionRect;
 }
 
 nsPoint
@@ -1121,9 +1134,17 @@ AccessibleCaretManager::AdjustDragBoundary(const nsPoint& aPoint) const
   Element* editingHost = GetEditingHostForFrame(focusFrame);
 
   if (editingHost) {
-    nsRect boundary =
-      GetContentBoundaryForFrame(editingHost->GetPrimaryFrame());
-    adjustedPoint = boundary.ClampPoint(adjustedPoint);
+    nsIFrame* editingHostFrame = editingHost->GetPrimaryFrame();
+    if (editingHostFrame) {
+      nsRect boundary = GetAllChildFrameRectsUnion(editingHostFrame);
+      nsLayoutUtils::TransformRect(editingHostFrame, mPresShell->GetRootFrame(),
+                                   boundary);
+
+      // Shrink the rect to make sure we never hit the boundary.
+      boundary.Deflate(kBoundaryAppUnits);
+
+      adjustedPoint = boundary.ClampPoint(adjustedPoint);
+    }
   }
 
   if (GetCaretMode() == CaretMode::Selection) {
