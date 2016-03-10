@@ -297,6 +297,12 @@ CallbackObject::CallSetup::~CallSetup()
       if (saved) {
         JS_RestoreFrameChain(mCx);
       }
+
+      if (mErrorResult.IsJSContextException()) {
+        // XXXkhuey bug 1117269.
+        // This isn't true anymore ... so throw something else.
+        mErrorResult.Throw(NS_ERROR_UNEXPECTED);
+      }
     }
   }
 
