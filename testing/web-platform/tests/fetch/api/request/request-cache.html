@@ -372,6 +372,24 @@
              "&expires=" + dates[info.state] +
              vary + cache_control + ignore_request_headers;
     }
+    function expected_status(type, identifier, init) {
+      if (type == "date" &&
+          init.headers &&
+          init.headers["If-Modified-Since"] == identifier) {
+        // The server will respond with a 304 in this case.
+        return [304, "Not Modified"];
+      }
+      return [200, "OK"];
+    }
+    function expected_response_text(type, identifier, init, content) {
+      if (type == "date" &&
+          init.headers &&
+          init.headers["If-Modified-Since"] == identifier) {
+        // The server will respond with a 304 in this case.
+        return "";
+      }
+      return content;
+    }
     function server_state(uuid) {
       return fetch("resources/cache.py?querystate&token=" + uuid)
         .then(function(response) {
@@ -380,18 +398,18 @@
           return JSON.parse(text);
         });
     }
-    function populate_cache(url, content, info) {
+    function populate_cache(url, content, info, type, identifier) {
       var init = {cache: info.request_cache[0]};
       if ("request_headers" in info) {
         init.headers = info.request_headers[0];
       }
       return fetch(url, init)
         .then(function(response) {
-          assert_equals(response.status, 200);
-          assert_equals(response.statusText, "OK");
+          assert_array_equals([response.status, response.statusText],
+                              expected_status(type, identifier, init));
           return response.text();
         }).then(function(text) {
-          assert_equals(text, content);
+          assert_equals(text, expected_response_text(type, identifier, init, content));
         });
     }
     function make_test(type, info) {
@@ -401,7 +419,7 @@
         var content = Math.random().toString();
         var url = make_url(uuid, type, identifier, content, info);
         var fetch_functions = [function() {
-          return populate_cache(url, content, info);
+          return populate_cache(url, content, info, type, identifier);
         }];
         for (var i = 1; i < info.request_cache.length; ++i) {
           fetch_functions.push(function(idx) {
@@ -411,11 +429,11 @@
             }
             return fetch(url, init)
               .then(function(response) {
-                assert_equals(response.status, 200);
-                assert_equals(response.statusText, "OK");
+                assert_array_equals([response.status, response.statusText],
+                                    expected_status(type, identifier, init));
                 return response.text();
               }).then(function(text) {
-                assert_equals(text, content);
+                assert_equals(text, expected_response_text(type, identifier, init, content));
               });
           });
         }
