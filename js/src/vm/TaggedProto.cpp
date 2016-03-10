@@ -30,17 +30,18 @@ InternalBarrierMethods<TaggedProto>::postBarrier(TaggedProto* vp, TaggedProto pr
                                                    nextObj);
 }
 
+/* static */ void
+InternalBarrierMethods<TaggedProto>::readBarrier(const TaggedProto& proto)
+{
+    InternalBarrierMethods<JSObject*>::readBarrier(proto.toObjectOrNull());
+}
+
 } // namespace js
 
 js::HashNumber
 js::TaggedProto::hashCode() const
 {
-    if (isLazy())
-        return HashNumber(1);
-    JSObject* obj = toObjectOrNull();
-    if (!obj)
-        return HashNumber(0);
-    return obj->zone()->getHashCodeInfallible(obj);
+    return Zone::UniqueIdToHash(uniqueId());
 }
 
 uint64_t
