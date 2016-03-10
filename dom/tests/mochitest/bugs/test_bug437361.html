@@ -32,16 +32,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=437361
   }
 
   function test(disableOpen, exceptionExpected, testFn, errorMsg) {
-    var oldPrefVal = SpecialPowers.getBoolPref("dom.disable_open_during_load");
-    try {
-      SpecialPowers.setBoolPref("dom.disable_open_during_load", disableOpen);
-      testFn();
-      ok(!exceptionExpected, errorMsg);
-    } catch (_) {
-      ok(exceptionExpected, errorMsg);
-    }
-    finally {
-      SpecialPowers.setBoolPref("dom.disable_open_during_load", oldPrefVal);
+    if ("showModalDialog" in window) {
+      var oldPrefVal = SpecialPowers.getBoolPref("dom.disable_open_during_load");
+      try {
+        SpecialPowers.setBoolPref("dom.disable_open_during_load", disableOpen);
+        testFn();
+        ok(!exceptionExpected, errorMsg);
+      } catch (_) {
+        ok(exceptionExpected, errorMsg);
+      }
+      finally {
+        SpecialPowers.setBoolPref("dom.disable_open_during_load", oldPrefVal);
+      }
+    } else {
+      ok(true, "nothing to do in e10s mode");
     }
   }
 

@@ -368,12 +368,13 @@ IDBRequest::SetResultCallback(ResultCallback* aCallback)
   } else {
     // Otherwise our owner is a window and we use that to initialize.
     MOZ_ASSERT(GetOwner());
-    if (!autoJS.InitWithLegacyErrorReporting(GetOwner())) {
+    if (!autoJS.Init(GetOwner())) {
       IDB_WARNING("Failed to initialize AutoJSAPI!");
       SetError(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       return;
     }
   }
+  autoJS.TakeOwnershipOfErrorReporting();
 
   JSContext* cx = autoJS.cx();
 

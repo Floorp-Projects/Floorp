@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=967157
+-->
+<head>
+  <meta charset='utf-8'>
+  <title>Test for Bug 967157 - Setting TextTrackCue::DisplayState should set TextTrackCue::HasBeenReset to false</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  var cue = SpecialPowers.wrap(new VTTCue(0, 1, "Some text."));
+  is(cue.hasBeenReset, false, "Cue's hasBeenReset flag should be false.");
+  is(cue.displayState, null, "Cue's displayState should be null.");
+
+  cue.startTime = 0.5;
+  is(cue.hasBeenReset, true, "Cue's hasBeenReset flag should now be true.");
+
+  cue.displayState = document.createElement("div");
+  is(cue.hasBeenReset, false, "Cue's hasBeenReset flag should now be false.");
+
+  SimpleTest.finish();
+</script>
+</body>
+</html>

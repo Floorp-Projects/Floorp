@@ -125,11 +125,7 @@ MovableCellHasher<T>::hash(const Lookup& l)
     MOZ_ASSERT(CurrentThreadCanAccessZone(l->zoneFromAnyThread()) ||
                l->zoneFromAnyThread()->isSelfHostingZone());
 
-    HashNumber hn;
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!l->zoneFromAnyThread()->getHashCode(l, &hn))
-        oomUnsafe.crash("failed to get a stable hash code");
-    return hn;
+    return l->zoneFromAnyThread()->getHashCodeInfallible(l);
 }
 
 template <typename T>
@@ -154,10 +150,7 @@ MovableCellHasher<T>::match(const Key& k, const Lookup& l)
     MOZ_ASSERT(zone->hasUniqueId(l));
 
     // Since both already have a uid (from hash), the get is infallible.
-    uint64_t uidK, uidL;
-    MOZ_ALWAYS_TRUE(zone->getUniqueId(k, &uidK));
-    MOZ_ALWAYS_TRUE(zone->getUniqueId(l, &uidL));
-    return uidK == uidL;
+    return zone->getUniqueIdInfallible(k) == zone->getUniqueIdInfallible(l);
 }
 
 template struct MovableCellHasher<JSObject*>;

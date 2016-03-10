@@ -42,6 +42,44 @@ var util = {
     }
     return abv;
   },
+
+  clone: function (obj) {
+    return new Promise(resolve => {
+      let {port1, port2} = new MessageChannel();
+
+      // Wait for the cloned object to arrive.
+      port1.onmessage = msg => resolve(msg.data);
+
+      // Clone the object.
+      port2.postMessage(obj);
+    });
+  },
+
+  cloneExportCompareKeys: function (key) {
+    return util.clone(key).then(clone => {
+      var exports = [];
+
+      if (key instanceof CryptoKey) {
+        exports.push(crypto.subtle.exportKey("raw", key));
+        exports.push(crypto.subtle.exportKey("raw", clone));
+      } else {
+        exports.push(crypto.subtle.exportKey("spki", key.publicKey));
+        exports.push(crypto.subtle.exportKey("spki", clone.publicKey));
+        exports.push(crypto.subtle.exportKey("pkcs8", key.privateKey));
+        exports.push(crypto.subtle.exportKey("pkcs8", clone.privateKey));
+      }
+
+      return Promise.all(exports).then(pairs => {
+        for (var i = 0; i < pairs.length; i += 2) {
+          if (!util.memcmp(pairs[i], pairs[i + 1])) {
+            throw new Error("keys don't match");
+          }
+        }
+
+        return clone;
+      });
+    });
+  }
 };
 
 function exists(x) {

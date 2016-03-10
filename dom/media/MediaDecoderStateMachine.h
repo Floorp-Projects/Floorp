@@ -527,9 +527,47 @@ protected:
 
   void EnqueueFirstFrameLoadedEvent();
 
+  struct SeekJob {
+    void Steal(SeekJob& aOther)
+    {
+      MOZ_DIAGNOSTIC_ASSERT(!Exists());
+      mTarget = aOther.mTarget;
+      aOther.mTarget.Reset();
+      mPromise = Move(aOther.mPromise);
+    }
+
+    bool Exists()
+    {
+      MOZ_ASSERT(mTarget.IsValid() == !mPromise.IsEmpty());
+      return mTarget.IsValid();
+    }
+
+    void Resolve(bool aAtEnd, const char* aCallSite)
+    {
+      mTarget.Reset();
+      MediaDecoder::SeekResolveValue val(aAtEnd, mTarget.mEventVisibility);
+      mPromise.Resolve(val, aCallSite);
+    }
+
+    void RejectIfExists(const char* aCallSite)
+    {
+      mTarget.Reset();
+      mPromise.RejectIfExists(true, aCallSite);
+    }
+
+    ~SeekJob()
+    {
+      MOZ_DIAGNOSTIC_ASSERT(!mTarget.IsValid());
+      MOZ_DIAGNOSTIC_ASSERT(mPromise.IsEmpty());
+    }
+
+    SeekTarget mTarget;
+    MozPromiseHolder<MediaDecoder::SeekPromise> mPromise;
+  };
+
   // Clears any previous seeking state and initiates a new see on the decoder.
   // The decoder monitor must be held.
-  void InitiateSeek();
+  void InitiateSeek(SeekJob& aSeekJob);
 
   nsresult DispatchAudioDecodeTaskIfNeeded();
 
@@ -834,49 +872,8 @@ private:
            mNextPlayState == MediaDecoder::PLAY_STATE_PLAYING;
   }
 
-  struct SeekJob {
-    void Steal(SeekJob& aOther)
-    {
-      MOZ_DIAGNOSTIC_ASSERT(!Exists());
-      mTarget = aOther.mTarget;
-      aOther.mTarget.Reset();
-      mPromise = Move(aOther.mPromise);
-    }
-
-    bool Exists()
-    {
-      MOZ_ASSERT(mTarget.IsValid() == !mPromise.IsEmpty());
-      return mTarget.IsValid();
-    }
-
-    void Resolve(bool aAtEnd, const char* aCallSite)
-    {
-      mTarget.Reset();
-      MediaDecoder::SeekResolveValue val(aAtEnd, mTarget.mEventVisibility);
-      mPromise.Resolve(val, aCallSite);
-    }
-
-    void RejectIfExists(const char* aCallSite)
-    {
-      mTarget.Reset();
-      mPromise.RejectIfExists(true, aCallSite);
-    }
-
-    ~SeekJob()
-    {
-      MOZ_DIAGNOSTIC_ASSERT(!mTarget.IsValid());
-      MOZ_DIAGNOSTIC_ASSERT(mPromise.IsEmpty());
-    }
-
-    SeekTarget mTarget;
-    MozPromiseHolder<MediaDecoder::SeekPromise> mPromise;
-  };
-
-  // Queued seek - moves to mPendingSeek when DecodeFirstFrame completes.
+  // Queued seek - moves to mCurrentSeek when DecodeFirstFrame completes.
   SeekJob mQueuedSeek;
-
-  // Position to seek to in microseconds when the seek state transition occurs.
-  SeekJob mPendingSeek;
 
   // The position that we're currently seeking to.
   SeekJob mCurrentSeek;
@@ -1135,6 +1132,9 @@ private:
   mozilla::MediaMetadataManager mMetadataManager;
 
   mozilla::RollingMean<uint32_t, uint32_t> mCorruptFrames;
+
+  // Track our request to update the buffered ranges
+  MozPromiseRequestHolder<MediaDecoderReader::BufferedUpdatePromise> mBufferedUpdateRequest;
 
   // True if we need to call FinishDecodeFirstFrame() upon frame decoding
   // successeeding.

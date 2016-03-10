@@ -18,7 +18,8 @@
 #include "jit/RegisterSets.h"
 #include "vm/HelperThreads.h"
 
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 // Push return addresses callee-side.
 # define JS_USE_LINK_REGISTER
 #endif

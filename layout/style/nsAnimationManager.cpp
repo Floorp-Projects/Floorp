@@ -579,7 +579,8 @@ private:
   {
     TimingParams timing;
 
-    timing.mDuration.SetAsUnrestrictedDouble() = aStyleAnimation.GetDuration();
+    timing.mDuration.emplace(StickyTimeDuration::FromMilliseconds(
+			       aStyleAnimation.GetDuration()));
     timing.mDelay = TimeDuration::FromMilliseconds(aStyleAnimation.GetDelay());
     timing.mIterations = aStyleAnimation.GetIterationCount();
     timing.mDirection = aStyleAnimation.GetDirection();

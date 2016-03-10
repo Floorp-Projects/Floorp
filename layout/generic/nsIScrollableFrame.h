@@ -420,6 +420,14 @@ public:
   virtual bool IsTransformingByAPZ() const = 0;
 
   /**
+   * Notify this scroll frame that it can be scrolled by APZ. In particular,
+   * this is called *after* the APZ code has created an APZC for this scroll
+   * frame and verified that it is not a scrollinfo layer. Therefore, setting an
+   * async transform on it is actually user visible.
+   */
+  virtual void SetScrollableByAPZ(bool aScrollable) = 0;
+
+  /**
    * Notify this scroll frame that it can be zoomed by APZ.
    */
   virtual void SetZoomableByAPZ(bool aZoomable) = 0;

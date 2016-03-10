@@ -666,7 +666,7 @@ decode_mcu_fast (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     d_derived_tbl * actbl = entropy->ac_cur_tbls[blkn];
     register int s, k, r, l;
 
-    HUFF_DECODE_FAST(s, l, dctbl);
+    HUFF_DECODE_FAST(s, l, dctbl, slow_decode_mcu);
     if (s) {
       FILL_BIT_BUFFER_FAST
       r = GET_BITS(s);
@@ -683,7 +683,7 @@ decode_mcu_fast (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     if (entropy->ac_needed[blkn]) {
 
       for (k = 1; k < DCTSIZE2; k++) {
-        HUFF_DECODE_FAST(s, l, actbl);
+        HUFF_DECODE_FAST(s, l, actbl, slow_decode_mcu);
         r = s >> 4;
         s &= 15;
 
@@ -702,7 +702,7 @@ decode_mcu_fast (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     } else {
 
       for (k = 1; k < DCTSIZE2; k++) {
-        HUFF_DECODE_FAST(s, l, actbl);
+        HUFF_DECODE_FAST(s, l, actbl, slow_decode_mcu);
         r = s >> 4;
         s &= 15;
 
@@ -719,6 +719,7 @@ decode_mcu_fast (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
   }
 
   if (cinfo->unread_marker != 0) {
+slow_decode_mcu:
     cinfo->unread_marker = 0;
     return FALSE;
   }

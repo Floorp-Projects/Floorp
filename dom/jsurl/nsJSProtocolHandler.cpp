@@ -240,13 +240,9 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     // New script entry point required, due to the "Create a script" step of
     // http://www.whatwg.org/specs/web-apps/current-work/#javascript-protocol
     nsAutoMicroTask mt;
-    AutoEntryScript entryScript(innerGlobal, "javascript: URI", true,
-                                scriptContext->GetNativeContext());
-    // We want to make sure we report any exceptions that happen before we
-    // return, since whatever happens inside our execution shouldn't affect any
-    // other scripts that might happen to be running.
-    entryScript.TakeOwnershipOfErrorReporting();
-    JSContext* cx = entryScript.cx();
+    AutoEntryScript aes(innerGlobal, "javascript: URI", true,
+                        scriptContext->GetNativeContext());
+    JSContext* cx = aes.cx();
     JS::Rooted<JSObject*> globalJSObject(cx, innerGlobal->GetGlobalJSObject());
     NS_ENSURE_TRUE(globalJSObject, NS_ERROR_UNEXPECTED);
 
@@ -261,6 +257,11 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
 
     if (!subsumes) {
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
+    }
+
+    // Fail if someone tries to execute in a global with system principal.
+    if (nsContentUtils::IsSystemPrincipal(objectPrincipal)) {
+        return NS_ERROR_DOM_SECURITY_ERR;
     }
 
     JS::Rooted<JS::Value> v (cx, JS::UndefinedValue());
@@ -421,11 +422,13 @@ nsresult nsJSChannel::Init(nsIURI *aURI)
 
     // If the resultant script evaluation actually does return a value, we
     // treat it as html.
+    // The following channel is never openend, so it does not matter what
+    // securityFlags we pass; let's follow the principle of least privilege.
     rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
                                   aURI,
                                   mIOThunk,
                                   nullPrincipal,
-                                  nsILoadInfo::SEC_NORMAL,
+                                  nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
                                   nsIContentPolicy::TYPE_OTHER,
                                   NS_LITERAL_CSTRING("text/html"));
     if (NS_FAILED(rv)) return rv;

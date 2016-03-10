@@ -44,6 +44,9 @@ class TaggedProto
     bool operator ==(const TaggedProto& other) const { return proto == other.proto; }
     bool operator !=(const TaggedProto& other) const { return proto != other.proto; }
 
+    HashNumber hashCode() const;
+    uint64_t uniqueId() const;
+
     void trace(JSTracer* trc) {
         if (isObject())
             TraceManuallyBarrieredEdge(trc, &proto, "TaggedProto");
@@ -83,6 +86,8 @@ class TaggedProtoOperations
     inline JSObject* toObject() const { return value().toObject(); }
     inline JSObject* toObjectOrNull() const { return value().toObjectOrNull(); }
     JSObject* raw() const { return value().raw(); }
+    HashNumber hashCode() const { return value().hashCode(); }
+    uint64_t uniqueId() const { return value().uniqueId(); }
 };
 
 template <>

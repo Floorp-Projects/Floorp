@@ -3683,12 +3683,6 @@ case "${target}" in
 
 esac
 
-MOZ_ARG_WITH_STRING(external-source-dir,
-[  --with-external-source-dir=dir
-                          External directory containing additional build files.],
-[ EXTERNAL_SOURCE_DIR=$withval])
-AC_SUBST(EXTERNAL_SOURCE_DIR)
-
 MOZ_ARG_WITH_STRING(xulrunner-stub-name,
 [  --with-xulrunner-stub-name=appname   Create the xulrunner stub with the given name],
   XULRUNNER_STUB_NAME=$withval)
@@ -3697,31 +3691,6 @@ if test -z "$XULRUNNER_STUB_NAME"; then
   XULRUNNER_STUB_NAME=xulrunner-stub
 fi
 AC_SUBST(XULRUNNER_STUB_NAME)
-
-AC_MSG_CHECKING([for application to build])
-if test -z "$MOZ_BUILD_APP"; then
-  AC_MSG_RESULT([browser])
-  MOZ_BUILD_APP=browser
-else
-  # "mobile" no longer exists.
-  if test "$MOZ_BUILD_APP" = "mobile" ; then
-    AC_MSG_RESULT([none])
-    AC_MSG_ERROR([--enable-application=mobile is no longer supported.])
-  fi
-  # Support comm-central.
-  if test -n "$EXTERNAL_SOURCE_DIR" ; then
-    MOZ_BUILD_APP="$EXTERNAL_SOURCE_DIR/$MOZ_BUILD_APP"
-    MOZ_BUILD_APP=`${PYTHON} -c "import mozpack.path as mozpath; print(mozpath.relpath(\"${MOZ_BUILD_APP}\", \"${srcdir}\"))"`
-  fi
-  # We have a valid application only if it has a build.mk file in its top
-  # directory.
-  if test ! -f "${srcdir}/${MOZ_BUILD_APP}/build.mk" ; then
-    AC_MSG_RESULT([none])
-    AC_MSG_ERROR([--enable-application value not recognized (${MOZ_BUILD_APP}/build.mk does not exist).])
-  else
-    AC_MSG_RESULT([$MOZ_BUILD_APP])
-  fi
-fi
 
 # The app update channel is 'default' when not supplied. The value is used in
 # the application's confvars.sh so it must be set before confvars.sh is called.

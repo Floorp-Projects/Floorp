@@ -51,8 +51,6 @@ toolkit.jar:
    skin/classic/global/icons/panelarrow-vertical.svg           (icons/panelarrow-vertical.svg)
    skin/classic/global/icons/resizer.png                       (icons/resizer.png)
    skin/classic/global/icons/sslWarning.png                    (icons/sslWarning.png)
-   skin/classic/global/icons/webapps-16.png                    (icons/webapps-16.png)
-   skin/classic/global/icons/webapps-64.png                    (icons/webapps-64.png)
 
 *  skin/classic/global/in-content/common.css                   (in-content/common.css)
 *  skin/classic/global/in-content/info-pages.css               (in-content/info-pages.css)

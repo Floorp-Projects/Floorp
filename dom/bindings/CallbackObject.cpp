@@ -189,9 +189,6 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
 
   // And now we're ready to go.
   mCx = cx;
-
-  // Make sure the JS engine doesn't report exceptions we want to re-throw.
-  mAutoEntryScript->TakeOwnershipOfErrorReporting();
 }
 
 bool

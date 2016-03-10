@@ -8,6 +8,9 @@ To upgrade to a new revision of libjpeg-turbo, do the following:
 
     $ ./media/update-libjpeg.sh /path/to/libjpeg-turbo [tag]
 
+  and fix up any rejects from applying the Mozilla specific patches at the end
+  of that script.
+
 * Since libjpeg-turbo normally creates jconfig.h and jconfigint.h at build time
   and we use pre-generated versions, changes to jconfig.h.in and jconfigint.h.in
   should be looked for and noted for later inclusion.

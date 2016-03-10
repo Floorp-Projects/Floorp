@@ -1,0 +1,120 @@
+Bug 1050342. Fix a case where the fast huffman decoder in libjpeg-turbo can produce different results depending on how data is fed to it.
+
+This change comes from the blink repo https://codereview.appspot.com/229430043/ and is unlikely to be accepted upstream into libjpeg-turbo.
+
+diff --git jdhuff.c jdhuff.c
+--- jdhuff.c
++++ jdhuff.c
+@@ -661,34 +661,34 @@ decode_mcu_fast (j_decompress_ptr cinfo,
+   ASSIGN_STATE(state, entropy->saved);
+ 
+   for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
+     JBLOCKROW block = MCU_data[blkn];
+     d_derived_tbl * dctbl = entropy->dc_cur_tbls[blkn];
+     d_derived_tbl * actbl = entropy->ac_cur_tbls[blkn];
+     register int s, k, r, l;
+ 
+-    HUFF_DECODE_FAST(s, l, dctbl);
++    HUFF_DECODE_FAST(s, l, dctbl, slow_decode_mcu);
+     if (s) {
+       FILL_BIT_BUFFER_FAST
+       r = GET_BITS(s);
+       s = HUFF_EXTEND(r, s);
+     }
+ 
+     if (entropy->dc_needed[blkn]) {
+       int ci = cinfo->MCU_membership[blkn];
+       s += state.last_dc_val[ci];
+       state.last_dc_val[ci] = s;
+       (*block)[0] = (JCOEF) s;
+     }
+ 
+     if (entropy->ac_needed[blkn]) {
+ 
+       for (k = 1; k < DCTSIZE2; k++) {
+-        HUFF_DECODE_FAST(s, l, actbl);
++        HUFF_DECODE_FAST(s, l, actbl, slow_decode_mcu);
+         r = s >> 4;
+         s &= 15;
+ 
+         if (s) {
+           k += r;
+           FILL_BIT_BUFFER_FAST
+           r = GET_BITS(s);
+           s = HUFF_EXTEND(r, s);
+@@ -697,33 +697,34 @@ decode_mcu_fast (j_decompress_ptr cinfo,
+           if (r != 15) break;
+           k += 15;
+         }
+       }
+ 
+     } else {
+ 
+       for (k = 1; k < DCTSIZE2; k++) {
+-        HUFF_DECODE_FAST(s, l, actbl);
++        HUFF_DECODE_FAST(s, l, actbl, slow_decode_mcu);
+         r = s >> 4;
+         s &= 15;
+ 
+         if (s) {
+           k += r;
+           FILL_BIT_BUFFER_FAST
+           DROP_BITS(s);
+         } else {
+           if (r != 15) break;
+           k += 15;
+         }
+       }
+     }
+   }
+ 
+   if (cinfo->unread_marker != 0) {
++slow_decode_mcu:
+     cinfo->unread_marker = 0;
+     return FALSE;
+   }
+ 
+   br_state.bytes_in_buffer -= (buffer - br_state.next_input_byte);
+   br_state.next_input_byte = buffer;
+   BITREAD_SAVE_STATE(cinfo,entropy->bitstate);
+   ASSIGN_STATE(entropy->saved, state);
+diff --git jdhuff.h jdhuff.h
+--- jdhuff.h
++++ jdhuff.h
+@@ -200,32 +200,34 @@ EXTERN(boolean) jpeg_fill_bit_buffer
+   } else { \
+ slowlabel: \
+     if ((result=jpeg_huff_decode(&state,get_buffer,bits_left,htbl,nb)) < 0) \
+         { failaction; } \
+     get_buffer = state.get_buffer; bits_left = state.bits_left; \
+   } \
+ }
+ 
+-#define HUFF_DECODE_FAST(s,nb,htbl) \
++#define HUFF_DECODE_FAST(s,nb,htbl,slowlabel) \
+   FILL_BIT_BUFFER_FAST; \
+   s = PEEK_BITS(HUFF_LOOKAHEAD); \
+   s = htbl->lookup[s]; \
+   nb = s >> HUFF_LOOKAHEAD; \
+   /* Pre-execute the common case of nb <= HUFF_LOOKAHEAD */ \
+   DROP_BITS(nb); \
+   s = s & ((1 << HUFF_LOOKAHEAD) - 1); \
+   if (nb > HUFF_LOOKAHEAD) { \
+     /* Equivalent of jpeg_huff_decode() */ \
+     /* Don't use GET_BITS() here because we don't want to modify bits_left */ \
+     s = (get_buffer >> bits_left) & ((1 << (nb)) - 1); \
+     while (s > htbl->maxcode[nb]) { \
+       s <<= 1; \
+       s |= GET_BITS(1); \
+       nb++; \
+     } \
+-    s = htbl->pub->huffval[ (int) (s + htbl->valoffset[nb]) & 0xFF ]; \
++    if (nb > 16) \
++      goto slowlabel; \
++    s = htbl->pub->huffval[ (int) (s + htbl->valoffset[nb]) ]; \
+   }
+ 
+ /* Out-of-line case for Huffman code fetching */
+ EXTERN(int) jpeg_huff_decode
+         (bitread_working_state * state, register bit_buf_type get_buffer,
+          register int bits_left, d_derived_tbl * htbl, int min_bits);

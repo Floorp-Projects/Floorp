@@ -826,9 +826,10 @@ nsScriptLoader::AttemptAsyncScriptCompile(nsScriptLoadRequest* aRequest)
   }
 
   AutoJSAPI jsapi;
-  if (!jsapi.InitWithLegacyErrorReporting(globalObject)) {
+  if (!jsapi.Init(globalObject)) {
     return NS_ERROR_FAILURE;
   }
+  jsapi.TakeOwnershipOfErrorReporting();
 
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
@@ -1113,10 +1114,9 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   // New script entry point required, due to the "Create a script" sub-step of
   // http://www.whatwg.org/specs/web-apps/current-work/#execute-the-script-block
   nsAutoMicroTask mt;
-  AutoEntryScript entryScript(globalObject, "<script> element", true,
-                              context->GetNativeContext());
-  entryScript.TakeOwnershipOfErrorReporting();
-  JS::Rooted<JSObject*> global(entryScript.cx(),
+  AutoEntryScript aes(globalObject, "<script> element", true,
+                      context->GetNativeContext());
+  JS::Rooted<JSObject*> global(aes.cx(),
                                globalObject->GetGlobalJSObject());
 
   bool oldProcessingScriptTag = context->GetProcessingScriptTag();
@@ -1137,9 +1137,9 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
                                   aRequest->mElement);
     }
 
-    JS::CompileOptions options(entryScript.cx());
-    FillCompileOptionsForRequest(entryScript, aRequest, global, &options);
-    rv = nsJSUtils::EvaluateString(entryScript.cx(), aSrcBuf, global, options,
+    JS::CompileOptions options(aes.cx());
+    FillCompileOptionsForRequest(aes, aRequest, global, &options);
+    rv = nsJSUtils::EvaluateString(aes.cx(), aSrcBuf, global, options,
                                    aRequest->OffThreadTokenPtr());
   }
 

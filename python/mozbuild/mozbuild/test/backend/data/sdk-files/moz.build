@@ -1,0 +1,11 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+SDK_FILES += [
+    'bar.ico',
+    'sub/quux.png',
+]
+
+SDK_FILES.icons += [
+    'foo.ico',
+]

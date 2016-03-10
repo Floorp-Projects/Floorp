@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/AnimationEffectTimingBinding.h"
+#include "mozilla/TimingParams.h"
 
 namespace mozilla {
 namespace dom {
@@ -39,26 +40,20 @@ AnimationEffectTiming::SetEndDelay(double aEndDelay)
 }
 
 void
-AnimationEffectTiming::SetDuration(const UnrestrictedDoubleOrString& aDuration)
+AnimationEffectTiming::SetDuration(const UnrestrictedDoubleOrString& aDuration,
+                                   ErrorResult& aRv)
 {
-  if (mTiming.mDuration.IsUnrestrictedDouble() &&
-      aDuration.IsUnrestrictedDouble() &&
-      mTiming.mDuration.GetAsUnrestrictedDouble() ==
-        aDuration.GetAsUnrestrictedDouble()) {
+  Maybe<StickyTimeDuration> newDuration =
+    TimingParams::ParseDuration(aDuration, aRv);
+  if (aRv.Failed()) {
     return;
   }
 
-  if (mTiming.mDuration.IsString() && aDuration.IsString() &&
-      mTiming.mDuration.GetAsString() == aDuration.GetAsString()) {
+  if (mTiming.mDuration == newDuration) {
     return;
   }
 
-  if (aDuration.IsUnrestrictedDouble()) {
-    mTiming.mDuration.SetAsUnrestrictedDouble() =
-      aDuration.GetAsUnrestrictedDouble();
-  } else {
-    mTiming.mDuration.SetAsString() = aDuration.GetAsString();
-  }
+  mTiming.mDuration = newDuration;
 
   NotifyTimingUpdate();
 }
