@@ -135,6 +135,12 @@ builds:
         task: tasks/builds/sm_warnaserr.yml
       debug:
         task: tasks/builds/sm_warnaserrdebug.yml
+  sm-gdb:
+    platforms:
+      - Linux64
+    types:
+      debug:
+        task: tasks/builds/sm_gdb.yml
 
 post-build:
   upload-symbols:
