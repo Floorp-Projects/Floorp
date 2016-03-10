@@ -718,6 +718,12 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
           if (untransformedRefPoint) {
             mouseInput.mOrigin = *untransformedRefPoint;
           }
+        } else {
+          // Likewise, if the input was targeted at a scrollbar, we don't want to
+          // apply the callback transform in the main thread, so we remove the
+          // scrollid from the guid. We need to keep the layersId intact so
+          // that the response from the child process doesn't get discarded.
+          aOutTargetGuid->mScrollId = FrameMetrics::NULL_SCROLL_ID;
         }
       }
       break;
