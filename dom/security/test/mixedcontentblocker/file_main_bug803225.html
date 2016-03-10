@@ -106,16 +106,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   testContent.appendChild(newscript);
 
   // Test 7: mailto protocol
-  var ioService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"].
-     getService(SpecialPowers.Ci.nsIIOService);
+  SpecialPowers.loadChromeScript(function launchHandler() {
+    var { classes: Cc, interfaces: Ci } = Components;
+    var ioService = Cc["@mozilla.org/network/io-service;1"].
+                      getService(Ci.nsIIOService);
 
-  var webHandler = SpecialPowers.Cc["@mozilla.org/uriloader/web-handler-app;1"].
-                   createInstance(SpecialPowers.Ci.nsIWebHandlerApp);
-  webHandler.name = "Web Handler";
-  webHandler.uriTemplate = "http://example.com/tests/dom/security/test/mixedcontentblocker/file_bug803225_test_mailto.html?s=%";
+    var webHandler = Cc["@mozilla.org/uriloader/web-handler-app;1"].
+                       createInstance(Ci.nsIWebHandlerApp);
+    webHandler.name = "Web Handler";
+    webHandler.uriTemplate = "http://example.com/tests/dom/security/test/mixedcontentblocker/file_bug803225_test_mailto.html?s=%";
 
-  var uri = ioService.newURI("mailto:foo@bar.com", null, null);
-  webHandler.launchWithURI(uri);
+    var uri = ioService.newURI("mailto:foo@bar.com", null, null);
+    webHandler.launchWithURI(uri);
+  });
 
   var mailto = false;
 
