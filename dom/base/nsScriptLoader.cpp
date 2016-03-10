@@ -826,9 +826,10 @@ nsScriptLoader::AttemptAsyncScriptCompile(nsScriptLoadRequest* aRequest)
   }
 
   AutoJSAPI jsapi;
-  if (!jsapi.InitWithLegacyErrorReporting(globalObject)) {
+  if (!jsapi.Init(globalObject)) {
     return NS_ERROR_FAILURE;
   }
+  jsapi.TakeOwnershipOfErrorReporting();
 
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
