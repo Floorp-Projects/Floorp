@@ -1,5 +1,5 @@
 $inherits:
-  from: 'tasks/builds/sm_base.yml'
+  from: 'tasks/builds/sm_build_base.yml'
   variables:
     build_name: 'sm-warnaserrdebug'
     build_type: 'debug'
