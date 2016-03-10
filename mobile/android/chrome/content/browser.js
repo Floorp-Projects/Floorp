@@ -6963,6 +6963,9 @@ var Experiments = {
   // Enable malware download protection (bug 936041)
   MALWARE_DOWNLOAD_PROTECTION: "malware-download-protection",
 
+  // Try to load pages from disk cache when network is offline (bug 935190)
+  OFFLINE_CACHE: "offline-cache",
+
   init() {
     Messaging.sendRequestForResult({
       type: "Experiments:GetActive"
@@ -6977,6 +6980,12 @@ var Experiments = {
             let defaults = Services.prefs.getDefaultBranch(null);
             defaults.setBoolPref("browser.safebrowsing.downloads.enabled", true);
             defaults.setBoolPref("browser.safebrowsing.downloads.remote.enabled", true);
+            continue;
+          }
+
+          case this.OFFLINE_CACHE: {
+            let defaults = Services.prefs.getDefaultBranch(null);
+            defaults.setBoolPref("browser.tabs.useCache", true);
             continue;
           }
         }
