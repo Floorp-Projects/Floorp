@@ -334,6 +334,7 @@ AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
+  MOZ_ASSERT(!JS_IsExceptionPending(mCx));
 
   mCx = aCx;
   mIsMainThread = aIsMainThread;
