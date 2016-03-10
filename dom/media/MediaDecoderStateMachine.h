@@ -528,12 +528,21 @@ protected:
   void EnqueueFirstFrameLoadedEvent();
 
   struct SeekJob {
-    void Steal(SeekJob& aOther)
+    SeekJob() {}
+
+    SeekJob(SeekJob&& aOther) : mTarget(aOther.mTarget)
+    {
+      aOther.mTarget.Reset();
+      mPromise = Move(aOther.mPromise);
+    }
+
+    SeekJob& operator=(SeekJob&& aOther)
     {
       MOZ_DIAGNOSTIC_ASSERT(!Exists());
       mTarget = aOther.mTarget;
       aOther.mTarget.Reset();
       mPromise = Move(aOther.mPromise);
+      return *this;
     }
 
     bool Exists()
@@ -567,7 +576,7 @@ protected:
 
   // Clears any previous seeking state and initiates a new see on the decoder.
   // The decoder monitor must be held.
-  void InitiateSeek(SeekJob& aSeekJob);
+  void InitiateSeek(SeekJob aSeekJob);
 
   nsresult DispatchAudioDecodeTaskIfNeeded();
 
