@@ -11,9 +11,7 @@
 #endif
 
 #ifdef MOZ_ANDROID_GCM
-#ifdef NIGHTLY_BUILD
 #include GcmAndroidManifest_permissions.xml.in
-#endif
 #endif
 
     <!-- A signature level permission specific to each Firefox version (Android

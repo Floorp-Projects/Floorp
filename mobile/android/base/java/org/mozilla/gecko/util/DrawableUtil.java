@@ -25,7 +25,7 @@ public class DrawableUtil {
                 @ColorRes final int colorID) {
         final Drawable icon = DrawableCompat.wrap(
                 ContextCompat.getDrawable(context, drawableID).mutate());
-        DrawableCompat.setTint(icon, ColorUtils.getColor(context, colorID));
+        DrawableCompat.setTint(icon, ContextCompat.getColor(context, colorID));
         return icon;
     }
 

@@ -184,6 +184,13 @@ RemoteWebProgressManager.prototype = {
   receiveMessage: function (aMessage) {
     let json = aMessage.json;
     let objects = aMessage.objects;
+    // This message is a custom one we send as a result of a loadURI call.
+    // It shouldn't go through the same processing as all the forwarded
+    // webprogresslistener messages.
+    if (aMessage.name == "Content:LoadURIResult") {
+      this._browser.inLoadURI = false;
+      return;
+    }
 
     let webProgress = null;
     let isTopLevel = json.webProgress && json.webProgress.isTopLevel;
@@ -270,9 +277,6 @@ RemoteWebProgressManager.prototype = {
 
     case "Content:ProgressChange":
       this._callProgressListeners("onProgressChange", webProgress, request, json.curSelf, json.maxSelf, json.curTotal, json.maxTotal);
-      break;
-    case "Content:LoadURIResult":
-      this._browser.inLoadURI = false;
       break;
     }
   },
