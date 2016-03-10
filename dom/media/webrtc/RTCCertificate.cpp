@@ -44,9 +44,10 @@ const size_t RTCCertificateMinRsaSize = 1024;
 class GenerateRTCCertificateTask : public GenerateAsymmetricKeyTask
 {
 public:
-  GenerateRTCCertificateTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
-                     const Sequence<nsString>& aKeyUsages)
-      : GenerateAsymmetricKeyTask(aCx, aAlgorithm, true, aKeyUsages),
+  GenerateRTCCertificateTask(nsIGlobalObject* aGlobal, JSContext* aCx,
+                             const ObjectOrString& aAlgorithm,
+                             const Sequence<nsString>& aKeyUsages)
+      : GenerateAsymmetricKeyTask(aGlobal, aCx, aAlgorithm, true, aKeyUsages),
         mExpires(0),
         mAuthType(ssl_kea_null),
         mCertificate(nullptr),
@@ -263,7 +264,7 @@ RTCCertificate::GenerateCertificate(
     return nullptr;
   }
   RefPtr<WebCryptoTask> task =
-      new GenerateRTCCertificateTask(aGlobal.Context(),
+      new GenerateRTCCertificateTask(global, aGlobal.Context(),
                                      aKeygenAlgorithm, usages);
   task->DispatchWithPromise(p);
   return p.forget();

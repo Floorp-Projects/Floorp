@@ -987,6 +987,52 @@ TestArray.addTest(
     doCheckRSASSA().then(error(that), complete(that));
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test that we're using the right globals when creating objects",
+  function() {
+    var that = this;
+    var data = crypto.getRandomValues(new Uint8Array(10));
+    var hmacAlg = {name: "HMAC", length: 256, hash: "SHA-1"};
+
+    var rsaAlg = {
+      name: "RSA-PSS",
+      hash: "SHA-1",
+      modulusLength: 1024,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+    };
+
+    function checkPrototypes(obj, type) {
+      return obj.__proto__ != window[type].prototype &&
+             obj.__proto__ == frames[0][type].prototype
+    }
+
+    var p1 = crypto.subtle.importKey.call(
+      frames[0].crypto.subtle, "raw", data, hmacAlg, false, ["sign", "verify"]);
+    var p2 = crypto.subtle.generateKey.call(
+      frames[0].crypto.subtle, hmacAlg, false, ["sign", "verify"]);
+    var p3 = crypto.subtle.generateKey.call(
+      frames[0].crypto.subtle, rsaAlg, false, ["sign", "verify"]);
+
+    if (!checkPrototypes(p1, "Promise") ||
+        !checkPrototypes(p2, "Promise") ||
+        !checkPrototypes(p3, "Promise")) {
+      error(that)();
+    }
+
+    Promise.all([p1, p2, p3]).then(complete(that, keys => {
+      return keys.every(key => {
+        if (key instanceof CryptoKey) {
+          return checkPrototypes(key, "CryptoKey");
+        }
+
+        return checkPrototypes(key.publicKey, "CryptoKey") &&
+               checkPrototypes(key.privateKey, "CryptoKey");
+      });
+    }), error(that));
+  }
+);
 /*]]>*/</script>
 </head>
 
@@ -997,6 +1043,7 @@ TestArray.addTest(
 		<b>Web</b>Crypto<br>
 	</div>
 
+    <iframe style="display: none;"></iframe>
     <div id="start" onclick="start();">RUN ALL</div>
 
     <div id="resultDiv" class="content">
