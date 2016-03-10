@@ -23,18 +23,12 @@
   <string name="moz_app_displayname">@MOZ_APP_DISPLAYNAME@</string>
   <string name="android_package_name">@ANDROID_PACKAGE_NAME@</string>
   <string name="content_authority_db_browser">@ANDROID_PACKAGE_NAME@.db.browser</string>
-  <string name="content_authority_db_formhistory">@ANDROID_PACKAGE_NAME@.db.formhistory</string>
-  <string name="content_authority_db_passwords">@ANDROID_PACKAGE_NAME@.db.passwords</string>
-  <string name="content_authority_db_tabs">@ANDROID_PACKAGE_NAME@.db.tabs</string>
-  <string name="content_authority_db_readinglist">@ANDROID_PACKAGE_NAME@.db.readinglist</string>
   <string name="moz_android_shared_fxaccount_type">@ANDROID_PACKAGE_NAME@_fxaccount</string>
   <string name="android_package_name_for_ui">@ANDROID_PACKAGE_NAME@</string>
 
 #include ../search/strings/search_strings.xml.in
 
 #include ../services/strings.xml.in
-  <string name="no_space_to_start_error">&no_space_to_start_error;</string>
-  <string name="error_loading_file">&error_loading_file;</string>
 
   <string name="firstrun_panel_title_welcome">&firstrun_panel_title_welcome;</string>
   <string name="firstrun_welcome_message">&onboard_start_message3;</string>
@@ -55,7 +49,6 @@
   <string name="firstrun_signin_button">&firstrun_signin_button;</string>
   <string name="firstrun_welcome_button_browser">&onboard_start_button_browser;</string>
   <string name="firstrun_button_next">&firstrun_button_next;</string>
-  <string name="firstrun_empty_contentDescription"></string>
 
   <string name="firstrun_welcome_restricted">&onboard_start_restricted1;</string>
 
@@ -78,12 +71,6 @@
   <string name="sending_crash_report">&sending_crash_report;</string>
   <string name="crash_close_label">&crash_close_label;</string>
   <string name="crash_restart_label">&crash_restart_label;</string>
-  <string name="exit_label">&exit_label;</string>
-
-  <string name="launcher_shortcuts_title">&launcher_shortcuts_title;</string>
-  <string name="launcher_shortcuts_empty">&launcher_shortcuts_empty;</string>
-
-  <string name="choose_file">&choose_file;</string>
 
   <string name="url_bar_default_text">&url_bar_default_text2;</string>
 
@@ -112,7 +99,6 @@
   <string name="history_today_section">&history_today_section;</string>
   <string name="history_yesterday_section">&history_yesterday_section;</string>
   <string name="history_week_section">&history_week_section3;</string>
-  <string name="history_this_month_section">&history_this_month_section;</string>
   <string name="history_older_section">&history_older_section3;</string>
 
   <string name="share">&share;</string>
@@ -174,7 +160,6 @@
 
   <string name="pref_category_advanced">&pref_category_advanced;</string>
   <string name="pref_category_advanced_summary">&pref_category_advanced_summary2;</string>
-  <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
   <string name="pref_developer_remotedebugging_usb">&pref_developer_remotedebugging_usb;</string>
   <string name="pref_developer_remotedebugging_wifi">&pref_developer_remotedebugging_wifi;</string>
   <string name="pref_developer_remotedebugging_wifi_disabled_summary">&pref_developer_remotedebugging_wifi_disabled_summary;</string>
@@ -182,9 +167,6 @@
   <string name="pref_category_home">&pref_category_home;</string>
   <string name="pref_category_home_summary">&pref_category_home_summary;</string>
   <string name="pref_category_home_panels">&pref_category_home_panels;</string>
-  <string name="home_add_panel_title">&home_add_panel_title;</string>
-  <string name="home_add_panel_empty">&home_add_panel_empty;</string>
-  <string name="home_add_panel_installed">&home_add_panel_installed;</string>
   <string name="pref_category_home_content_settings">&pref_category_home_content_settings;</string>
   <string name="pref_home_updates_wifi">&pref_home_updates_wifi;</string>
   <string name="pref_home_suggested_sites">&pref_home_suggested_sites;</string>
@@ -323,10 +305,8 @@
   <string name="pref_panels_move_down">&pref_panels_move_down;</string>
 
   <string name="datareporting_notification_title">&datareporting_notification_title;</string>
-  <string name="datareporting_notification_action_long">&datareporting_notification_action_long;</string>
   <string name="datareporting_notification_action">&datareporting_notification_action;</string>
   <string name="datareporting_notification_summary">&datareporting_notification_summary;</string>
-  <string name="datareporting_notification_summary_short">&datareporting_notification_summary_short;</string>
   <string name="datareporting_notification_ticker_text">&datareporting_notification_ticker_text;</string>
 
   <string name="datareporting_telemetry_title">&datareporting_telemetry_title;</string>
@@ -339,7 +319,6 @@
   <string name="datareporting_wifi_title">&datareporting_wifi_title2;</string>
   <string name="datareporting_wifi_geolocation_summary">&datareporting_wifi_geolocation_summary4;</string>
 
-  <string name="go">&go;</string>
   <string name="search">&search;</string>
   <string name="reload">&reload;</string>
   <string name="forward">&forward;</string>
@@ -364,7 +343,6 @@
   <string name="close_private_tabs">&close_private_tabs;</string>
   <string name="tabs_normal">&tabs_normal;</string>
   <string name="tabs_private">&tabs_private;</string>
-  <string name="tabs_synced">&tabs_synced;</string>
   <string name="edit_mode_cancel">&edit_mode_cancel;</string>
 
   <string name="site_settings_title">&site_settings_title3;</string>
@@ -375,8 +353,6 @@
   <string name="reading_list_removed">&reading_list_removed;</string>
   <string name="reading_list_remove">&reading_list_remove;</string>
   <string name="reading_list_duplicate">&reading_list_duplicate;</string>
-  <string name="reading_list_time_minutes">&reading_list_time_minutes2;</string>
-  <string name="reading_list_time_over_an_hour">&reading_list_time_over_an_hour;</string>
 
   <string name="page_action_dropmarker_description">&page_action_dropmarker_description;</string>
 
@@ -468,9 +444,6 @@
   <string name="home_remote_tabs_unhide_selected_devices">&home_remote_tabs_unhide_selected_devices;</string>
   <string name="pin_site_dialog_hint">&pin_site_dialog_hint;</string>
 
-  <string name="remote_tabs_panel_moved_title">&remote_tabs_panel_moved_title;</string>
-  <string name="remote_tabs_panel_moved_desc">&remote_tabs_panel_moved_desc;</string>
-  <string name="remote_tabs_panel_moved_link">&remote_tabs_panel_moved_link;</string>
   <string name="remote_tabs_never_synced">&remote_tabs_never_synced;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
@@ -517,7 +490,6 @@
   <string name="learn_more">&learn_more;</string>
   <string name="enable_protection">&enable_protection;</string>
   <string name="disable_protection">&disable_protection;</string>
-  <string name="keep_blocking">&keep_blocking;</string>
 
   <!-- Clear private data -->
   <string name="private_data_success">&private_data_success;</string>
@@ -605,7 +577,6 @@
 
   <string name="remote_tabs_last_synced">&remote_tabs_last_synced;</string>
 
-  <string name="intent_uri_cannot_open">&intent_uri_cannot_open;</string>
   <string name="intent_uri_private_browsing_prompt">&intent_uri_private_browsing_prompt;</string>
   <string name="intent_uri_private_browsing_multiple_match_title">&intent_uri_private_browsing_multiple_match_title;</string>
 
