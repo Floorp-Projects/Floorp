@@ -32,7 +32,6 @@ public class SearchEngineBar extends RecyclerView
 
     private static final float ICON_CONTAINER_MIN_WIDTH_DP = 72;
     private static final float LABEL_CONTAINER_WIDTH_DP = 48;
-    private static final float DIVIDER_HEIGHT_DP = 1;
 
     public interface OnSearchBarClickListener {
         void onSearchBarClickListener(SearchEngine searchEngine);
@@ -58,8 +57,7 @@ public class SearchEngineBar extends RecyclerView
         final DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         mMinIconContainerWidth = TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, ICON_CONTAINER_MIN_WIDTH_DP, displayMetrics);
-        mDividerHeight = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, DIVIDER_HEIGHT_DP, displayMetrics);
+        mDividerHeight = context.getResources().getDimension(R.dimen.page_row_divider_height);
         mLabelContainerWidth = Math.round(TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, LABEL_CONTAINER_WIDTH_DP, displayMetrics));
 
