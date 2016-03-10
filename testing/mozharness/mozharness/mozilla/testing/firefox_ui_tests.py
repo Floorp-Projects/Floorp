@@ -333,8 +333,9 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
                                         log_obj=self.log_obj,
                                         strict=False)
 
-        # Add the top-level tests manifest file
-        cmd.append(os.path.join(dirs['abs_fxui_dir'], 'tests', self.tests_manifest))
+        # Add the default tests to run
+        tests = [os.path.join(dirs['abs_fxui_dir'], 'tests', test) for test in self.default_tests]
+        cmd.extend(tests)
 
         return_code = self.run_command(cmd,
                                        cwd=dirs['abs_work_dir'],
@@ -411,13 +412,18 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 class FirefoxUIFunctionalTests(FirefoxUITests):
 
     cli_script = 'cli_functional.py'
-    tests_manifest = 'manifest.ini'
+    default_tests = [
+        os.path.join('puppeteer', 'manifest.ini'),
+        os.path.join('functional', 'manifest.ini'),
+    ]
 
 
 class FirefoxUIUpdateTests(FirefoxUITests):
 
     cli_script = 'cli_update.py'
-    tests_manifest = os.path.join('update', 'manifest.ini')
+    default_tests = [
+        os.path.join('update', 'manifest.ini')
+    ]
 
     def __init__(self, config_options=None, *args, **kwargs):
         config_options = config_options or firefox_ui_update_config_options
