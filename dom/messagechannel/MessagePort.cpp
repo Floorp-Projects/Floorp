@@ -94,7 +94,6 @@ private:
   DispatchMessage() const
   {
     nsCOMPtr<nsIGlobalObject> globalObject = mPort->GetParentObject();
-    MOZ_ASSERT(globalObject);
 
     AutoJSAPI jsapi;
     if (!globalObject || !jsapi.Init(globalObject)) {
