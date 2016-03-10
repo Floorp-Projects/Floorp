@@ -1094,10 +1094,9 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
                                    ScrollableLayerGuid* aOutTargetGuid,
                                    uint64_t* aOutInputBlockId)
 {
-  // This function will be removed once metro code is modified to use the
-  // InputData version of ReceiveInputEvent.
   // In general it is preferable to use the version of ReceiveInputEvent
-  // that takes an InputData, as that is usable from off-main-thread.
+  // that takes an InputData, as that is usable from off-main-thread. On some
+  // platforms OMT input isn't possible, and there we can use this version.
 
   MOZ_ASSERT(NS_IsMainThread());
   APZThreadUtils::AssertOnControllerThread();
