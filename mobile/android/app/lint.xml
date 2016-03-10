@@ -180,6 +180,7 @@
     <issue id="UnlocalizedSms" severity="error" />
     <issue id="UnusedNamespace" severity="error" />
     <issue id="UnusedQuantity" severity="error" />
+    <issue id="UnusedResources" severity="error" />
     <issue id="Usability" severity="error" />
     <issue id="UseCheckPermission" severity="error" />
     <issue id="UseCompoundDrawables" severity="error" />
