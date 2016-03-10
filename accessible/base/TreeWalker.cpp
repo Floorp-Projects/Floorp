@@ -43,9 +43,8 @@ TreeWalker::
   mChildFilter(nsIContent::eSkipPlaceholderContent), mFlags(aFlags),
   mPhase(eAtStart)
 {
+  MOZ_ASSERT(mFlags & eWalkCache, "This constructor cannot be used for tree creation");
   MOZ_ASSERT(aAnchorNode, "No anchor node for the accessible tree walker");
-  MOZ_ASSERT(mDoc->GetAccessibleOrContainer(aAnchorNode) == mContext,
-             "Unexpected anchor node was given");
 
   mChildFilter |= mContext->NoXBLKids() ?
     nsIContent::eAllButXBL : nsIContent::eAllChildren;
@@ -169,9 +168,16 @@ TreeWalker::Next()
   }
 
   // If we traversed the whole subtree of the anchor node. Move to next node
-  // relative anchor node within the context subtree if possible.
-  if (mFlags != eWalkContextTree)
+  // relative anchor node within the context subtree if asked.
+  if (mFlags != eWalkContextTree) {
+    // eWalkCache flag presence indicates that the search is scoped to the
+    // anchor (no ARIA owns stuff).
+    if (mFlags & eWalkCache) {
+      mPhase = eAtEnd;
+      return nullptr;
+    }
     return Next();
+  }
 
   nsINode* contextNode = mContext->GetNode();
   while (mAnchorNode != contextNode) {
