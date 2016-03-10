@@ -891,13 +891,6 @@ public:
                             nscoord aInflateSize);
 
   /**
-   * Check whether aRect is visible in the boundary of the scroll frames
-   * boundary.
-   */
-  static bool IsRectVisibleInScrollFrames(nsIFrame* aFrame,
-                                          const nsRect& aRect);
-
-  /**
    * Clamp aRect relative to aFrame to the scroll frames boundary searching from
    * aFrame.
    */
