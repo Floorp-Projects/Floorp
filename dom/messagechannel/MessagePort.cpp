@@ -98,6 +98,30 @@ public:
   NS_IMETHOD
   Run() override
   {
+    nsresult rv = DispatchMessage();
+
+    // We must check if we were waiting for this message in order to shutdown
+    // the port.
+    mPort->UpdateMustKeepAlive();
+
+    return rv;
+  }
+
+  NS_IMETHOD
+  Cancel() override
+  {
+    mPort = nullptr;
+    mData = nullptr;
+    return NS_OK;
+  }
+
+private:
+  ~PostMessageRunnable()
+  {}
+
+  nsresult
+  DispatchMessage()
+  {
     nsCOMPtr<nsIGlobalObject> globalObject;
 
     if (NS_IsMainThread()) {
@@ -149,24 +173,8 @@ public:
 
     bool dummy;
     mPort->DispatchEvent(static_cast<dom::Event*>(event.get()), &dummy);
-
-    // We must check if we were waiting for this message in order to shutdown
-    // the port.
-    mPort->UpdateMustKeepAlive();
     return NS_OK;
   }
-
-  NS_IMETHOD
-  Cancel() override
-  {
-    mPort = nullptr;
-    mData = nullptr;
-    return NS_OK;
-  }
-
-private:
-  ~PostMessageRunnable()
-  {}
 
   RefPtr<MessagePort> mPort;
   RefPtr<SharedMessagePortMessage> mData;
