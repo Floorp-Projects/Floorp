@@ -1388,6 +1388,16 @@ CSS_PROP_COLOR(
     nullptr,
     offsetof(nsStyleColor, mColor),
     eStyleAnimType_Color)
+CSS_PROP_VISIBILITY(
+    color-adjust,
+    color_adjust,
+    ColorAdjust,
+    CSS_PROPERTY_PARSE_VALUE,
+    "layout.css.color-adjust.enabled",
+    VARIANT_HK,
+    kColorAdjustKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
     -moz-columns,
     _moz_columns,
