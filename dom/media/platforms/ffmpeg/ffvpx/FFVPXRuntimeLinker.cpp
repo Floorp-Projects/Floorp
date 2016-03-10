@@ -32,7 +32,11 @@ MozAVLink(const char* aName)
   PRLibSpec lspec;
   lspec.type = PR_LibSpec_Pathname;
   lspec.value.pathname = aName;
-  return PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
+  PRLibrary* lib = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
+  if (!lib) {
+    FFMPEG_LOG("unable to load library %s", aName);
+  }
+  return lib;
 }
 
 /* static */ bool
