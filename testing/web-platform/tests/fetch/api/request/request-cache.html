@@ -11,6 +11,7 @@
   </head>
   <body>
     <script>
+    var now = new Date();
     var tests = [
       {
         name: 'RequestCache "default" mode checks the cache for previously cached content and goes to the network for stale responses',
@@ -132,7 +133,7 @@
         name: 'RequestCache "default" mode with an If-Modified-Since header is treated similarly to "no-store"',
         state: "stale",
         request_cache: ["default", "default"],
-        request_headers: [{}, {"If-Modified-Since": new Date().toGMTString()}],
+        request_headers: [{}, {"If-Modified-Since": now.toGMTString()}],
         expected_validation_headers: [false, false],
         expected_no_cache_headers: [false, true],
       },
@@ -140,7 +141,7 @@
         name: 'RequestCache "default" mode with an If-Modified-Since header is treated similarly to "no-store"',
         state: "fresh",
         request_cache: ["default", "default"],
-        request_headers: [{}, {"If-Modified-Since": new Date().toGMTString()}],
+        request_headers: [{}, {"If-Modified-Since": now.toGMTString()}],
         expected_validation_headers: [false, false],
         expected_no_cache_headers: [false, true],
       },
@@ -148,7 +149,7 @@
         name: 'RequestCache "default" mode with an If-Modified-Since header is treated similarly to "no-store"',
         state: "stale",
         request_cache: ["default", "default"],
-        request_headers: [{"If-Modified-Since": new Date().toGMTString()}, {}],
+        request_headers: [{"If-Modified-Since": now.toGMTString()}, {}],
         expected_validation_headers: [false, false],
         expected_no_cache_headers: [true, false],
       },
@@ -156,7 +157,7 @@
         name: 'RequestCache "default" mode with an If-Modified-Since header is treated similarly to "no-store"',
         state: "fresh",
         request_cache: ["default", "default"],
-        request_headers: [{"If-Modified-Since": new Date().toGMTString()}, {}],
+        request_headers: [{"If-Modified-Since": now.toGMTString()}, {}],
         expected_validation_headers: [false, false],
         expected_no_cache_headers: [true, false],
       },
@@ -196,7 +197,7 @@
         name: 'RequestCache "default" mode with an If-Unmodified-Since header is treated similarly to "no-store"',
         state: "stale",
         request_cache: ["default", "default"],
-        request_headers: [{}, {"If-Unmodified-Since": new Date().toGMTString()}],
+        request_headers: [{}, {"If-Unmodified-Since": now.toGMTString()}],
         expected_validation_headers: [false, false],
         expected_no_cache_headers: [false, true],
       },
@@ -204,7 +205,7 @@
         name: 'RequestCache "default" mode with an If-Unmodified-Since header is treated similarly to "no-store"',
         state: "fresh",
         request_cache: ["default", "default"],
-        request_headers: [{}, {"If-Unmodified-Since": new Date().toGMTString()}],
+        request_headers: [{}, {"If-Unmodified-Since": now.toGMTString()}],
         expected_validation_headers: [false, false],
         expected_no_cache_headers: [false, true],
       },
@@ -212,7 +213,7 @@
         name: 'RequestCache "default" mode with an If-Unmodified-Since header is treated similarly to "no-store"',
         state: "stale",
         request_cache: ["default", "default"],
-        request_headers: [{"If-Unmodified-Since": new Date().toGMTString()}, {}],
+        request_headers: [{"If-Unmodified-Since": now.toGMTString()}, {}],
         expected_validation_headers: [false, false],
         expected_no_cache_headers: [true, false],
       },
@@ -220,7 +221,7 @@
         name: 'RequestCache "default" mode with an If-Unmodified-Since header is treated similarly to "no-store"',
         state: "fresh",
         request_cache: ["default", "default"],
-        request_headers: [{"If-Unmodified-Since": new Date().toGMTString()}, {}],
+        request_headers: [{"If-Unmodified-Since": now.toGMTString()}, {}],
         expected_validation_headers: [false, false],
         expected_no_cache_headers: [true, false],
       },
@@ -348,7 +349,6 @@
       },
     ];
     function make_url(uuid, id, value, content, info) {
-      var now = new Date();
       var dates = {
         fresh: new Date(now.getFullYear() + 1, now.getMonth(), now.getDay()).toGMTString(),
         stale: new Date(now.getFullYear() - 1, now.getMonth(), now.getDay()).toGMTString(),
@@ -397,7 +397,7 @@
     function make_test(type, info) {
       return function(test) {
         var uuid = token();
-        var identifier = (type == "tag" ? Math.random() : new Date().toGMTString());
+        var identifier = (type == "tag" ? Math.random() : now.toGMTString());
         var content = Math.random().toString();
         var url = make_url(uuid, type, identifier, content, info);
         var fetch_functions = [function() {
