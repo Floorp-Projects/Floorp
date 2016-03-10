@@ -85,7 +85,7 @@ import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
 import org.mozilla.gecko.widget.AnchoredPopup;
-import org.mozilla.gecko.widget.ButtonToast;
+
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import android.app.Activity;
@@ -684,9 +684,7 @@ public class BrowserApp extends GeckoApp
             "CharEncoding:State",
             "Experiments:GetActive",
             "Favicon:CacheLoad",
-            "Feedback:LastUrl",
             "Feedback:MaybeLater",
-            "Feedback:OpenPlayStore",
             "Menu:Add",
             "Menu:Remove",
             "Sanitize:ClearHistory",
@@ -1446,9 +1444,7 @@ public class BrowserApp extends GeckoApp
             "CharEncoding:State",
             "Experiments:GetActive",
             "Favicon:CacheLoad",
-            "Feedback:LastUrl",
             "Feedback:MaybeLater",
-            "Feedback:OpenPlayStore",
             "Menu:Add",
             "Menu:Remove",
             "Sanitize:ClearHistory",
@@ -1733,18 +1729,8 @@ public class BrowserApp extends GeckoApp
         } else if ("Favicon:CacheLoad".equals(event)) {
             final String url = message.getString("url");
             getFaviconFromCache(callback, url);
-
-        } else if ("Feedback:LastUrl".equals(event)) {
-            getLastUrl(callback);
-
         } else if ("Feedback:MaybeLater".equals(event)) {
             resetFeedbackLaunchCount();
-
-        } else if ("Feedback:OpenPlayStore".equals(event)) {
-            final Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse("market://details?id=" + getPackageName()));
-            startActivity(intent);
-
         } else if ("Menu:Add".equals(event)) {
             final MenuItemInfo info = new MenuItemInfo();
             info.label = message.getString("name");
@@ -2862,12 +2848,7 @@ public class BrowserApp extends GeckoApp
                 SnackbarHelper.dismissCurrentSnackbar();
             }
 
-            // Only try to hide the button toast if it's already inflated and if we are starting a tap action.
-            // By only hiding a toast at the start of a tap action, a button toast opened in response to a tap
-            // action is not immediately hidden as the tap action continues.
-            if (event.getActionMasked() == MotionEvent.ACTION_DOWN && mToast != null) {
-                mToast.hide(false, ButtonToast.ReasonHidden.TOUCH_OUTSIDE);
-            }
+
 
             // We need to account for scroll state for the touched view otherwise
             // tapping on an "empty" part of the view will still be considered a
@@ -3824,33 +3805,6 @@ public class BrowserApp extends GeckoApp
     private void resetFeedbackLaunchCount() {
         SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
         settings.edit().putInt(getPackageName() + ".feedback_launch_count", 0).apply();
-    }
-
-    private void getLastUrl(final EventCallback callback) {
-        final BrowserDB db = getProfile().getDB();
-        (new UIAsyncTask.WithoutParams<String>(ThreadUtils.getBackgroundHandler()) {
-            @Override
-            public synchronized String doInBackground() {
-                // Get the most recent URL stored in browser history.
-                final Cursor c = db.getRecentHistory(getContentResolver(), 1);
-                if (c == null) {
-                    return "";
-                }
-                try {
-                    if (c.moveToFirst()) {
-                        return c.getString(c.getColumnIndexOrThrow(Combined.URL));
-                    }
-                    return "";
-                } finally {
-                    c.close();
-                }
-            }
-
-            @Override
-            public void onPostExecute(String url) {
-                callback.sendSuccess(url);
-            }
-        }).execute();
     }
 
     // HomePager.OnUrlOpenListener

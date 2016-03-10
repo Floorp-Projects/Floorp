@@ -22,6 +22,10 @@ buildscript {
         maven {
             url gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORY
         }
+        // For android-sdk-manager SNAPSHOT releases.
+        maven {
+            url "file://${gradle.mozconfig.topsrcdir}/mobile/android/gradle/m2repo"
+        }
     }
 
     dependencies {
@@ -30,6 +34,8 @@ buildscript {
             // Without these, we get errors linting.
             exclude module: 'guava'
         }
+        // Provided in tree.
+        classpath 'com.jakewharton.sdkmanager:gradle-plugin:1.5.0-SNAPSHOT'
     }
 }
 
@@ -116,4 +122,18 @@ idea {
 }
 
 task wrapper(type: Wrapper) {
+}
+
+// From http://jdpgrailsdev.github.io/blog/2014/10/28/gradle_resolve_all_dependencies.html.
+task resolveDependencies {
+    doLast {
+        project.rootProject.allprojects.each { subProject ->
+            subProject.buildscript.configurations.each { configuration ->
+                configuration.resolve()
+            }
+            subProject.configurations.each { configuration ->
+                configuration.resolve()
+            }
+        }
+    }
 }

@@ -25,7 +25,6 @@ var Feedback = {
     let browser = BrowserApp.selectOrAddTab(url, { parentId: BrowserApp.selectedTab.id }).browser;
     browser.addEventListener("FeedbackClose", this, false, true);
     browser.addEventListener("FeedbackMaybeLater", this, false, true);
-    browser.addEventListener("FeedbackOpenPlay", this, false, true);
   },
 
   handleEvent: function(event) {
@@ -41,11 +40,6 @@ var Feedback = {
       case "FeedbackMaybeLater":
         Messaging.sendRequest({ type: "Feedback:MaybeLater" });
         break;
-
-      case "FeedbackOpenPlay":
-        Messaging.sendRequest({ type: "Feedback:OpenPlayStore" });
-        break;
-
     }
 
     let win = event.target.ownerDocument.defaultView.top;

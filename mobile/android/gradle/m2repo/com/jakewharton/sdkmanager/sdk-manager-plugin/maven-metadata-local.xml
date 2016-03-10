@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>com.jakewharton.sdkmanager</groupId>
+  <artifactId>sdk-manager-plugin</artifactId>
+  <versioning>
+    <versions>
+      <version>1.5.0-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20160302034904</lastUpdated>
+  </versioning>
+</metadata>
