@@ -25,21 +25,21 @@
 namespace mozilla {
 
 namespace gfx {
- 
+
 // 16.16 fixed point arithmetic
 const int kFractionBits = 16;
 const int kFractionMax = 1 << kFractionBits;
 const int kFractionMask = ((1 << kFractionBits) - 1);
 
-YUVType TypeFromSize(int ywidth, 
-                              int yheight, 
-                              int cbcrwidth, 
+YUVType TypeFromSize(int ywidth,
+                              int yheight,
+                              int cbcrwidth,
                               int cbcrheight)
 {
   if (ywidth == cbcrwidth && yheight == cbcrheight) {
     return YV24;
   }
-  else if (ywidth / 2 == cbcrwidth && yheight == cbcrheight) {
+  else if ((ywidth + 1) / 2 == cbcrwidth && yheight == cbcrheight) {
     return YV16;
   }
   else {
