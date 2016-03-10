@@ -60,8 +60,6 @@ SimpleTest.waitForExplicitFinish();
   * Install 2 apps from the same origin and uninstall them.
   */
 function runTest() {
-  SpecialPowers.setAllAppsLaunchable(true);
-
   SpecialPowers.autoConfirmAppInstall(continueTest);
   yield undefined;
 
