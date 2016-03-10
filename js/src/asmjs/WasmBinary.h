@@ -137,6 +137,7 @@ enum class Expr
     I32Clz                               = 0x57,
     I32Ctz                               = 0x58,
     I32Popcnt                            = 0x59,
+    I32Eqz                               = 0x5a,
 
     // i64 operators
     I64Add                               = 0x5b,
@@ -237,6 +238,15 @@ enum class Expr
     I32ReinterpretF32                    = 0xb4,
     I64ReinterpretF64                    = 0xb5,
 
+    // Bitwise rotates.
+    I32Rotr                              = 0xb6,
+    I32Rotl                              = 0xb7,
+    I64Rotr                              = 0xb8,
+    I64Rotl                              = 0xb9,
+
+    // i64.eqz.
+    I64Eqz                               = 0xba,
+
     // ------------------------------------------------------------------------
     // The rest of these operators are currently only emitted internally when
     // compiling asm.js and are rejected by wasm validation.
@@ -247,7 +257,6 @@ enum class Expr
     StoreGlobal,
     I32Min,
     I32Max,
-    I32Not,
     I32Neg,
     I32BitNot,
     I32Abs,

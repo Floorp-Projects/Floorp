@@ -5544,7 +5544,7 @@ CheckNot(FunctionValidator& f, ParseNode* expr, Type* type)
     MOZ_ASSERT(expr->isKind(PNK_NOT));
     ParseNode* operand = UnaryKid(expr);
 
-    if (!f.encoder().writeExpr(Expr::I32Not))
+    if (!f.encoder().writeExpr(Expr::I32Eqz))
         return false;
 
     Type operandType;
