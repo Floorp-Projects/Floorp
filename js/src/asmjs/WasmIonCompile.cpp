@@ -2739,7 +2739,7 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
         return EmitMathMinMax(f, ValType::I32, IsMax(false), def);
       case Expr::I32Max:
         return EmitMathMinMax(f, ValType::I32, IsMax(true), def);
-      case Expr::I32Not:
+      case Expr::I32Eqz:
         return EmitUnary<MNot>(f, def);
       case Expr::I32TruncSF32:
       case Expr::I32TruncUF32:
@@ -3036,6 +3036,11 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
+      case Expr::I64Eqz:
+      case Expr::I32Rotr:
+      case Expr::I32Rotl:
+      case Expr::I64Rotr:
+      case Expr::I64Rotl:
       case Expr::MemorySize:
       case Expr::GrowMemory:
       case Expr::Unreachable:
