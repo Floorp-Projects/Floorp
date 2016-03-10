@@ -3365,7 +3365,8 @@ nsTreeBodyFrame::PaintCell(int32_t              aRowIndex,
       switch (aColumn->GetType()) {
         case nsITreeColumn::TYPE_TEXT:
         case nsITreeColumn::TYPE_PASSWORD:
-          PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, currX);
+          result &= PaintText(aRowIndex, aColumn, elementRect, aPresContext,
+                              aRenderingContext, aDirtyRect, currX);
           break;
         case nsITreeColumn::TYPE_CHECKBOX:
           result &= PaintCheckbox(aRowIndex, aColumn, elementRect, aPresContext,
@@ -3383,7 +3384,8 @@ nsTreeBodyFrame::PaintCell(int32_t              aRowIndex,
               break;
             case nsITreeView::PROGRESS_NONE:
             default:
-              PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, currX);
+              result &= PaintText(aRowIndex, aColumn, elementRect, aPresContext,
+                                  aRenderingContext, aDirtyRect, currX);
               break;
           }
           break;
@@ -3673,7 +3675,7 @@ nsTreeBodyFrame::PaintImage(int32_t              aRowIndex,
   return result;
 }
 
-void
+DrawResult
 nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
                            nsTreeColumn*        aColumn,
                            const nsRect&        aTextRect,
@@ -3698,8 +3700,12 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
   // necessary
   CheckTextForBidi(text);
 
-  if (text.Length() == 0)
-    return; // Don't paint an empty string. XXX What about background/borders? Still paint?
+  DrawResult result = DrawResult::SUCCESS;
+
+  if (text.Length() == 0) {
+    // Don't paint an empty string. XXX What about background/borders? Still paint?
+    return result;
+  }
 
   int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
   DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
@@ -3745,7 +3751,8 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
   if (!isRTL)
     aCurrX += textRect.width + textMargin.LeftRight();
 
-  PaintBackgroundLayer(textContext, aPresContext, aRenderingContext, textRect, aDirtyRect);
+  result &= PaintBackgroundLayer(textContext, aPresContext, aRenderingContext,
+                                 textRect, aDirtyRect);
 
   // Time to paint our text.
   textRect.Deflate(bp);
@@ -3799,6 +3806,7 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
     ctx->PopGroupAndBlend();
   }
 
+  return result;
 }
 
 DrawResult

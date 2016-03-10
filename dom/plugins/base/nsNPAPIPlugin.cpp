@@ -1357,7 +1357,6 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 
   nsAutoMicroTask mt;
   dom::AutoEntryScript aes(win, "NPAPI NPN_evaluate");
-  aes.TakeOwnershipOfErrorReporting();
   JSContext* cx = aes.cx();
 
   JS::Rooted<JSObject*> obj(cx, nsNPObjWrapper::GetNewOrUsed(npp, cx, npobj));

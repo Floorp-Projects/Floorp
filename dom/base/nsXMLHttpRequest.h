@@ -207,7 +207,6 @@ public:
   // The WebIDL constructors.
   static already_AddRefed<nsXMLHttpRequest>
   Constructor(const mozilla::dom::GlobalObject& aGlobal,
-              JSContext* aCx,
               const mozilla::dom::MozXMLHttpRequestParameters& aParams,
               ErrorResult& aRv)
   {
@@ -227,18 +226,17 @@ public:
 
   static already_AddRefed<nsXMLHttpRequest>
   Constructor(const mozilla::dom::GlobalObject& aGlobal,
-              JSContext* aCx,
               const nsAString& ignored,
               ErrorResult& aRv)
   {
     // Pretend like someone passed null, so we can pick up the default values
     mozilla::dom::MozXMLHttpRequestParameters params;
-    if (!params.Init(aCx, JS::NullHandleValue)) {
+    if (!params.Init(aGlobal.Context(), JS::NullHandleValue)) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
 
-    return Constructor(aGlobal, aCx, params, aRv);
+    return Constructor(aGlobal, params, aRv);
   }
 
   void Construct(nsIPrincipal* aPrincipal,

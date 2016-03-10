@@ -277,9 +277,8 @@ WrapperAnswer::RecvGet(const ObjectId& objId, const JSVariant& receiverVar,
                        const JSIDVariant& idVar, ReturnStatus* rs, JSVariant* result)
 {
     // We may run scripted getters.
-    AutoEntryScript aes(xpc::NativeGlobal(scopeForTargetObjects()),
+    AutoEntryScript aes(scopeForTargetObjects(),
                         "Cross-Process Object Wrapper 'get'");
-    aes.TakeOwnershipOfErrorReporting();
     JSContext* cx = aes.cx();
 
     // The outparam will be written to the buffer, so it must be set even if
@@ -315,9 +314,8 @@ WrapperAnswer::RecvSet(const ObjectId& objId, const JSIDVariant& idVar, const JS
                        const JSVariant& receiverVar, ReturnStatus* rs)
 {
     // We may run scripted setters.
-    AutoEntryScript aes(xpc::NativeGlobal(scopeForTargetObjects()),
+    AutoEntryScript aes(scopeForTargetObjects(),
                         "Cross-Process Object Wrapper 'set'");
-    aes.TakeOwnershipOfErrorReporting();
     JSContext* cx = aes.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
@@ -377,9 +375,8 @@ WrapperAnswer::RecvCallOrConstruct(const ObjectId& objId,
                                    JSVariant* result,
                                    nsTArray<JSParam>* outparams)
 {
-    AutoEntryScript aes(xpc::NativeGlobal(scopeForTargetObjects()),
+    AutoEntryScript aes(scopeForTargetObjects(),
                         "Cross-Process Object Wrapper call/construct");
-    aes.TakeOwnershipOfErrorReporting();
     JSContext* cx = aes.cx();
 
     // The outparam will be written to the buffer, so it must be set even if

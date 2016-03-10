@@ -6874,7 +6874,7 @@ JitRuntime::generateLazyLinkStub(JSContext* cx)
 #ifdef JS_USE_LINK_REGISTER
     // Restore the return address such that the emitPrologue function of the
     // CodeGenerator can push it back on the stack with pushReturnAddress.
-    masm.pop(lr);
+    masm.popReturnAddress();
 #endif
     masm.jump(ReturnReg);
 

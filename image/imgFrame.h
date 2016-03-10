@@ -41,7 +41,7 @@ enum class DisposalMethod : int8_t {
 };
 
 enum class Opacity : uint8_t {
-  OPAQUE,
+  FULLY_OPAQUE,
   SOME_TRANSPARENCY
 };
 

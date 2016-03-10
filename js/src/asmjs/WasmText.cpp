@@ -3854,7 +3854,7 @@ EncodeMemory(Encoder& e, WasmAstModule& module)
         }
     }
 
-    if (!e.writeU8(exported))
+    if (!e.writeFixedU8(exported))
         return false;
 
     e.finishSection(offset);

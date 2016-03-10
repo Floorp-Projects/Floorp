@@ -149,13 +149,9 @@ public:
                                 bool isBinary);
 
   // ConnectionCloseEvents: 'error' event if needed, then 'close' event.
-  // - These must not be dispatched while we are still within an incoming call
-  //   from JS (ex: close()).  Set 'sync' to false in that case to dispatch in a
-  //   separate new event.
   nsresult ScheduleConnectionCloseEvents(nsISupports* aContext,
-                                         nsresult aStatusCode,
-                                         bool sync);
-  // 2nd half of ScheduleConnectionCloseEvents, sometimes run in its own event.
+                                         nsresult aStatusCode);
+  // 2nd half of ScheduleConnectionCloseEvents, run in its own event.
   void DispatchConnectionCloseEvents();
 
   nsresult UpdateURI();
@@ -516,14 +512,11 @@ WebSocketImpl::CloseConnection(uint16_t aReasonCode,
 
   mWebSocket->SetReadyState(WebSocket::CLOSING);
 
-  // Can be called from Cancel() or Init() codepaths, so need to dispatch
-  // onerror/onclose asynchronously
   ScheduleConnectionCloseEvents(
                     nullptr,
                     (aReasonCode == nsIWebSocketChannel::CLOSE_NORMAL ||
                      aReasonCode == nsIWebSocketChannel::CLOSE_GOING_AWAY) ?
-                     NS_OK : NS_ERROR_FAILURE,
-                    false);
+                     NS_OK : NS_ERROR_FAILURE);
 
   return NS_OK;
 }
@@ -797,14 +790,12 @@ WebSocketImpl::OnStop(nsISupports* aContext, nsresult aStatusCode)
   MOZ_ASSERT(mWebSocket->ReadyState() != WebSocket::CLOSED,
              "Shouldn't already be CLOSED when OnStop called");
 
-  // called by network stack, not JS, so can dispatch JS events synchronously
-  return ScheduleConnectionCloseEvents(aContext, aStatusCode, true);
+  return ScheduleConnectionCloseEvents(aContext, aStatusCode);
 }
 
 nsresult
 WebSocketImpl::ScheduleConnectionCloseEvents(nsISupports* aContext,
-                                             nsresult aStatusCode,
-                                             bool sync)
+                                             nsresult aStatusCode)
 {
   AssertIsOnTargetThread();
 
@@ -824,11 +815,7 @@ WebSocketImpl::ScheduleConnectionCloseEvents(nsISupports* aContext,
 
     mOnCloseScheduled = true;
 
-    if (sync) {
-      DispatchConnectionCloseEvents();
-    } else {
-      NS_DispatchToCurrentThread(new CallDispatchConnectionCloseEvents(this));
-    }
+    NS_DispatchToCurrentThread(new CallDispatchConnectionCloseEvents(this));
   }
 
   return NS_OK;

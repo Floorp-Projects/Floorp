@@ -162,7 +162,7 @@ CheckValType(JSContext* cx, Decoder& d, ValType type)
         break;
     }
 
-    return Fail(cx, d, "bad value type");
+    return Fail(cx, d, "bad type");
 }
 
 static bool
@@ -600,6 +600,8 @@ DecodeReturn(FunctionDecoder& f, ExprType* type)
 static bool
 DecodeExpr(FunctionDecoder& f, ExprType* type)
 {
+    JS_CHECK_RECURSION(f.cx(), return false);
+
     Expr expr;
     if (!f.d().readExpr(&expr))
         return f.fail("unable to read expression");

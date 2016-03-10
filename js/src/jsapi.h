@@ -5269,8 +5269,15 @@ JS_DropExceptionState(JSContext* cx, JSExceptionState* state);
 extern JS_PUBLIC_API(JSErrorReport*)
 JS_ErrorFromException(JSContext* cx, JS::HandleObject obj);
 
+/**
+ * If the given object is an exception object (or an unwrappable
+ * cross-compartment wrapper for one), return the stack for that exception, if
+ * any.  Will return null if the given object is not an exception object
+ * (including if it's null or a security wrapper that can't be unwrapped) or if
+ * the exception has no stack.
+ */
 extern JS_PUBLIC_API(JSObject*)
-ExceptionStackOrNull(JSContext* cx, JS::HandleObject obj);
+ExceptionStackOrNull(JS::HandleObject obj);
 
 /*
  * Throws a StopIteration exception on cx.
