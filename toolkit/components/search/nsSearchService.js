@@ -3181,8 +3181,8 @@ SearchService.prototype = {
       stream = Cc["@mozilla.org/network/file-input-stream;1"].
                  createInstance(Ci.nsIFileInputStream);
       stream.init(cacheFile, MODE_RDONLY, FileUtils.PERMS_FILE, 0);
-      let metadata = json.decodeFromStream(stream, stream.available());
-      let json;
+      let metadata = parseJsonFromStream(stream);
+      let json = {};
       if ("[global]" in metadata) {
         LOG("_readCacheFile: migrating metadata from search-metadata.json");
         let data = metadata["[global]"];
@@ -3201,7 +3201,7 @@ SearchService.prototype = {
 
       return json;
     } catch(ex) {
-      LOG("_readCacheFile: failed to read old metadata");
+      LOG("_readCacheFile: failed to read old metadata: " + ex);
       return {};
     } finally {
       stream.close();
