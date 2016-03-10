@@ -327,12 +327,9 @@ js::ErrorFromException(JSContext* cx, HandleObject objArg)
 }
 
 JS_PUBLIC_API(JSObject*)
-ExceptionStackOrNull(JSContext* cx, HandleObject objArg)
+ExceptionStackOrNull(HandleObject objArg)
 {
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, objArg);
-    RootedObject obj(cx, CheckedUnwrap(objArg));
+    JSObject* obj = CheckedUnwrap(objArg);
     if (!obj || !obj->is<ErrorObject>()) {
       return nullptr;
     }

@@ -2305,7 +2305,7 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
     nsCOMPtr<nsIScriptError> scripterr;
 
     if (errorObj) {
-        JS::RootedObject stackVal(cx, ExceptionStackOrNull(cx, errorObj));
+        JS::RootedObject stackVal(cx, ExceptionStackOrNull(errorObj));
         if (stackVal) {
             scripterr = new nsScriptErrorWithStack(stackVal);
         }
