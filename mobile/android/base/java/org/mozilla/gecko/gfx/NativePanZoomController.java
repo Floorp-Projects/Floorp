@@ -10,6 +10,7 @@ import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -294,5 +295,14 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
                 });
             }
         }
+    }
+
+    /**
+     * Active SelectionCaretDrag requires DynamicToolbarAnimator to be pinned
+     * to avoid unwanted scroll interactions.
+     */
+    @WrapForJNI
+    private void onSelectionDragState(boolean state) {
+        mView.getDynamicToolbarAnimator().setPinned(state, PinReason.CARET_DRAG);
     }
 }

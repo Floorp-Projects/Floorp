@@ -16,11 +16,23 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.MotionEvent;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 public class DynamicToolbarAnimator {
     private static final String LOGTAG = "GeckoDynamicToolbarAnimator";
     private static final String PREF_SCROLL_TOOLBAR_THRESHOLD = "browser.ui.scroll-toolbar-threshold";
+
+    public static enum PinReason {
+        RELAYOUT,
+        ACTION_MODE,
+        FULL_SCREEN,
+        CARET_DRAG
+    }
+
+    private final Set<PinReason> pinFlags = Collections.synchronizedSet(EnumSet.noneOf(PinReason.class));
 
     // The duration of the animation in ns
     private static final long ANIMATION_DURATION = 250000000;
@@ -48,9 +60,6 @@ public class DynamicToolbarAnimator {
      * and layerview when scrolling. This is populated with the height of the
      * toolbar. */
     private float mMaxTranslation;
-
-    /* If this boolean is true, scroll changes will not affect translation */
-    private boolean mPinned;
 
     /* This interpolator is used for the above mentioned animation */
     private DecelerateInterpolator mInterpolator;
@@ -149,12 +158,23 @@ public class DynamicToolbarAnimator {
         return mToolbarTranslation;
     }
 
-    public void setPinned(boolean pinned) {
-        mPinned = pinned;
+    /**
+     * If true, scroll changes will not affect translation.
+     */
+    public boolean isPinned() {
+        return !pinFlags.isEmpty();
     }
 
-    public boolean isPinned() {
-        return mPinned;
+    public boolean isPinnedBy(PinReason reason) {
+        return pinFlags.contains(reason);
+    }
+
+    public void setPinned(boolean pinned, PinReason reason) {
+        if (pinned) {
+            pinFlags.add(reason);
+        } else {
+            pinFlags.remove(reason);
+        }
     }
 
     public void showToolbar(boolean immediately) {
@@ -345,7 +365,7 @@ public class DynamicToolbarAnimator {
     }
 
     boolean onInterceptTouchEvent(MotionEvent event) {
-        if (mPinned) {
+        if (isPinned()) {
             return false;
         }
 

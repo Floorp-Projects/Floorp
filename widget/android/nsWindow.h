@@ -159,10 +159,11 @@ public:
     NS_IMETHOD_(InputContext) GetInputContext() override;
     virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
 
-    LayerManager* GetLayerManager (PLayerTransactionChild* aShadowManager = nullptr,
-                                   LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
-                                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
-                                   bool* aAllowRetaining = nullptr) override;
+    void SetSelectionDragState(bool aState);
+    LayerManager* GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
+                                  LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
+                                  LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
+                                  bool* aAllowRetaining = nullptr) override;
 
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) override;
 
