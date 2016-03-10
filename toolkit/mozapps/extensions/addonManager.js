@@ -24,6 +24,9 @@ const MSG_INSTALL_ENABLED  = "WebInstallerIsInstallEnabled";
 const MSG_INSTALL_ADDONS   = "WebInstallerInstallAddonsFromWebpage";
 const MSG_INSTALL_CALLBACK = "WebInstallerInstallCallback";
 
+const MSG_PROMISE_REQUEST  = "WebAPIPromiseRequest";
+const MSG_PROMISE_RESULT   = "WebAPIPromiseResult";
+
 const CHILD_SCRIPT = "resource://gre/modules/addons/Content.js";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -38,14 +41,13 @@ function amManager() {
   Cu.import("resource://gre/modules/AddonManager.jsm");
   /*globals AddonManagerPrivate*/
 
-  let globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
-                 .getService(Ci.nsIMessageListenerManager);
+  let globalMM = Services.mm;
   globalMM.loadFrameScript(CHILD_SCRIPT, true);
   globalMM.addMessageListener(MSG_INSTALL_ADDONS, this);
 
-  gParentMM = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-                 .getService(Ci.nsIMessageListenerManager);
+  gParentMM = Services.ppmm;
   gParentMM.addMessageListener(MSG_INSTALL_ENABLED, this);
+  gParentMM.addMessageListener(MSG_PROMISE_REQUEST, this);
 
   // Needed so receiveMessage can be called directly by JS callers
   this.wrappedJSObject = this;
@@ -173,6 +175,30 @@ amManager.prototype = {
         return this.installAddonsFromWebpage(payload.mimetype,
           aMessage.target, payload.triggeringPrincipal, payload.uris,
           payload.hashes, payload.names, payload.icons, callback);
+      }
+
+      case MSG_PROMISE_REQUEST: {
+        let resolve = (value) => {
+          aMessage.target.sendAsyncMessage(MSG_PROMISE_RESULT, {
+            callbackID: payload.callbackID,
+            resolve: value
+          });
+        }
+        let reject = (value) => {
+          aMessage.target.sendAsyncMessage(MSG_PROMISE_RESULT, {
+            callbackID: payload.callbackID,
+            reject: value
+          });
+        }
+
+        let API = AddonManager.webAPI;
+        if (payload.type in API) {
+          API[payload.type](...payload.args).then(resolve, reject);
+        }
+        else {
+          reject("Unknown Add-on API request.");
+        }
+        break;
       }
     }
     return undefined;

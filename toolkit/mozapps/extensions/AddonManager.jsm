@@ -307,6 +307,27 @@ function getLocale() {
   return "en-US";
 }
 
+function webAPIForAddon(addon) {
+  if (!addon) {
+    return null;
+  }
+
+  let result = {};
+
+  // By default just pass through any plain property, the webidl will control
+  // access.
+  for (let prop in addon) {
+    if (typeof(addon[prop]) != "function") {
+      result[prop] = addon[prop];
+    }
+  }
+
+  // A few properties are computed for a nicer API
+  result.isEnabled = !addon.userDisabled;
+
+  return result;
+}
+
 /**
  * A helper class to repeatedly call a listener with each object in an array
  * optionally checking whether the object has a method in it.
@@ -2761,6 +2782,16 @@ var AddonManagerInternal = {
   get hotfixID() {
     return gHotfixID;
   },
+
+  webAPI: {
+    getAddonByID(id) {
+      return new Promise(resolve => {
+        AddonManager.getAddonByID(id, (addon) => {
+          resolve(webAPIForAddon(addon));
+        });
+      });
+    }
+  },
 };
 
 /**
@@ -3340,6 +3371,10 @@ this.AddonManager = {
 
   getPreferredIconURL: function(aAddon, aSize, aWindow = undefined) {
     return AddonManagerInternal.getPreferredIconURL(aAddon, aSize, aWindow);
+  },
+
+  get webAPI() {
+    return AddonManagerInternal.webAPI;
   },
 
   get shutdown() {

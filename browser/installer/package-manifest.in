@@ -404,6 +404,7 @@
 @RESPATH@/components/addonManager.js
 @RESPATH@/components/amContentHandler.js
 @RESPATH@/components/amInstallTrigger.js
+@RESPATH@/components/amWebAPI.js
 @RESPATH@/components/amWebInstallListener.js
 @RESPATH@/components/nsBlocklistService.js
 @RESPATH@/components/nsBlocklistServiceContent.js
