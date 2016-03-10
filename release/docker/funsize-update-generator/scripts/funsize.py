@@ -238,6 +238,9 @@ def main():
             "platform": e["platform"],
             "locale": e["locale"],
         }
+        # Override ACCEPTED_MAR_CHANNEL_IDS if needed
+        if "ACCEPTED_MAR_CHANNEL_IDS" in os.environ:
+            mar_data["ACCEPTED_MAR_CHANNEL_IDS"] = os.environ["ACCEPTED_MAR_CHANNEL_IDS"]
         for field in ("update_number", "previousVersion",
                       "previousBuildNumber", "toVersion",
                       "toBuildNumber"):
