@@ -384,6 +384,7 @@ public:
   bool IsTransformingByAPZ() const {
     return mTransformingByAPZ;
   }
+  void SetScrollableByAPZ(bool aScrollable);
   void SetZoomableByAPZ(bool aZoomable);
 
   bool UsesContainerScrolling() const;
@@ -564,6 +565,10 @@ public:
   // True if the APZ is in the process of async-transforming this scrollframe,
   // (as best as we can tell on the main thread, anyway).
   bool mTransformingByAPZ:1;
+
+  // True if APZ can scroll this frame asynchronously (i.e. it has an APZC
+  // set up for this frame and it's not a scrollinfo layer).
+  bool mScrollableByAPZ:1;
 
   // True if the APZ is allowed to zoom this scrollframe.
   bool mZoomableByAPZ:1;
@@ -962,6 +967,9 @@ public:
   bool IsTransformingByAPZ() const override {
     return mHelper.IsTransformingByAPZ();
   }
+  void SetScrollableByAPZ(bool aScrollable) override {
+    mHelper.SetScrollableByAPZ(aScrollable);
+  }
   void SetZoomableByAPZ(bool aZoomable) override {
     mHelper.SetZoomableByAPZ(aZoomable);
   }
@@ -1356,6 +1364,9 @@ public:
   }
   bool IsTransformingByAPZ() const override {
     return mHelper.IsTransformingByAPZ();
+  }
+  void SetScrollableByAPZ(bool aScrollable) override {
+    mHelper.SetScrollableByAPZ(aScrollable);
   }
   void SetZoomableByAPZ(bool aZoomable) override {
     mHelper.SetZoomableByAPZ(aZoomable);
