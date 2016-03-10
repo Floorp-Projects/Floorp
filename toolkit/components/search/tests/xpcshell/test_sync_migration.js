@@ -13,11 +13,10 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_metadata_migration() {
-
-  yield new Promise(function(resolve) {
-    Services.search.init(resolve);
-  });
+add_task(function* test_sync_metadata_migration() {
+  do_check_false(Services.search.isInitialized);
+  let engines = Services.search.getEngines();
+  do_check_true(Services.search.isInitialized);
   yield promiseAfterCache();
 
   // Check that the entries are placed as specified correctly
