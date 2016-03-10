@@ -343,13 +343,16 @@ RuleEditor.prototype = {
    *        Property value.
    * @param {String} priority
    *        Property priority.
+   * @param {Boolean} enabled
+   *        True if the property should be enabled.
    * @param {TextProperty} siblingProp
    *        Optional, property next to which the new property will be added.
    * @return {TextProperty}
    *        The new property
    */
-  addProperty: function(name, value, priority, siblingProp) {
-    let prop = this.rule.createProperty(name, value, priority, siblingProp);
+  addProperty: function(name, value, priority, enabled, siblingProp) {
+    let prop = this.rule.createProperty(name, value, priority, enabled,
+      siblingProp);
     let index = this.rule.textProps.indexOf(prop);
     let editor = new TextPropertyEditor(this, prop);
 
@@ -386,7 +389,10 @@ RuleEditor.prototype = {
 
     let lastProp = siblingProp;
     for (let p of properties) {
-      lastProp = this.addProperty(p.name, p.value, p.priority, lastProp);
+      let isCommented = Boolean(p.commentOffsets);
+      let enabled = !isCommented;
+      lastProp = this.addProperty(p.name, p.value, p.priority, enabled,
+        lastProp);
     }
 
     // Either focus on the last value if incomplete, or start a new one.
@@ -455,7 +461,7 @@ RuleEditor.prototype = {
     // case, we're creating a new declaration, it doesn't make sense to accept
     // these entries
     this.multipleAddedProperties =
-      parseDeclarations(value).filter(d => d.name);
+      parseDeclarations(value, true).filter(d => d.name);
 
     // Blur the editor field now and deal with adding declarations later when
     // the field gets destroyed (see _newPropertyDestroy)
