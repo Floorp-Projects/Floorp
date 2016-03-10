@@ -68,6 +68,14 @@ extensions.registerSchemaAPI("runtime", null, (extension, context) => {
         return Promise.resolve(ExtensionUtils.PlatformInfo);
       },
 
+      openOptionsPage: function() {
+        if (!extension.manifest.options_ui) {
+          return Promise.reject({message: "No `options_ui` declared"});
+        }
+
+        return openOptionsPage(extension).then(() => {});
+      },
+
       setUninstallURL: function(url) {
         if (url.length == 0) {
           return Promise.resolve();
