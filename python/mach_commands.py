@@ -77,12 +77,16 @@ class MachCommands(MachCommandBase):
         default=False,
         action='store_true',
         help='Stop running tests after the first error or failure.')
-    @CommandArgument('tests', nargs='+',
+    @CommandArgument('tests', nargs='*',
         metavar='TEST',
         help='Tests to run. Each test can be a single file or a directory.')
-    def python_test(self, tests, verbose=False, stop=False):
+    def python_test(self,
+                    tests=[],
+                    test_objects=None,
+                    subsuite=None,
+                    verbose=False,
+                    stop=False):
         self._activate_virtualenv()
-        import glob
 
         # Python's unittest, and in particular discover, has problems with
         # clashing namespaces when importing multiple test modules. What follows
@@ -90,35 +94,21 @@ class MachCommands(MachCommandBase):
         # launching Python multiple times. This also runs tests via mozunit,
         # which produces output in the format Mozilla infrastructure expects.
         return_code = 0
-        files = []
-        # We search for files in both the current directory (for people running
-        # from topsrcdir or cd'd into their test directory) and topsrcdir (to
-        # support people running mach from the objdir).  The |break|s in the
-        # loop below ensure that we don't run tests twice if we're running mach
-        # from topsrcdir
-        search_dirs = ['.', self.topsrcdir]
-        last_search_dir = search_dirs[-1]
-        for t in tests:
-            for d in search_dirs:
-                test = mozpath.join(d, t)
-                if test.endswith('.py') and os.path.isfile(test):
-                    files.append(test)
-                    break
-                elif os.path.isfile(test + '.py'):
-                    files.append(test + '.py')
-                    break
-                elif os.path.isdir(test):
-                    files += glob.glob(mozpath.join(test, 'test*.py'))
-                    files += glob.glob(mozpath.join(test, 'unit*.py'))
-                    break
-                elif d == last_search_dir:
-                    self.log(logging.WARN, 'python-test',
-                             {'test': t},
-                             'TEST-UNEXPECTED-FAIL | Invalid test: {test}')
-                    if stop:
-                        return 1
+        if test_objects is None:
+            # If we're not being called from `mach test`, do our own
+            # test resolution.
+            from mozbuild.testing import TestResolver
+            resolver = self._spawn(TestResolver)
+            if tests:
+                # If we were given test paths, try to find tests matching them.
+                test_objects = resolver.resolve_tests(paths=tests,
+                                                      flavor='python')
+            else:
+                # Otherwise just run all Python tests.
+                test_objects = resolver.resolve_tests(flavor='python')
 
-        for f in files:
+        for test in test_objects:
+            f = test['path']
             file_displayed_test = []  # Used as a boolean.
 
             def _line_handler(line):
