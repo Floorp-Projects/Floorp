@@ -23,6 +23,9 @@
 #include "nsFrameSelection.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIHapticFeedback.h"
+#ifdef MOZ_WIDGET_ANDROID
+#include "nsWindow.h"
+#endif
 
 namespace mozilla {
 
@@ -822,6 +825,15 @@ AccessibleCaretManager::SetSelectionDragState(bool aState) const
   if (fs) {
     fs->SetDragState(aState);
   }
+
+  // Pin Fennecs DynamicToolbarAnimator in place before/after dragging,
+  // to avoid co-incident screen scrolling.
+  #ifdef MOZ_WIDGET_ANDROID
+    nsIDocument* doc = mPresShell->GetDocument();
+    MOZ_ASSERT(doc);
+    nsIWidget* widget = nsContentUtils::WidgetForDocument(doc);
+    static_cast<nsWindow*>(widget)->SetSelectionDragState(aState);
+  #endif
 }
 
 void
