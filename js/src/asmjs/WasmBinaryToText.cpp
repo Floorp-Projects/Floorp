@@ -159,6 +159,12 @@ RenderNop(WasmRenderContext& c)
 }
 
 static bool
+RenderUnreachable(WasmRenderContext& c)
+{
+    return c.buffer.append("(trap)");
+}
+
+static bool
 RenderCallWithSig(WasmRenderContext& c, uint32_t sigIndex)
 {
     const DeclaredSig& sig = c.signatures[sigIndex];
@@ -877,6 +883,8 @@ RenderExpr(WasmRenderContext& c)
     switch (expr) {
       case Expr::Nop:
         return RenderNop(c);
+      case Expr::Unreachable:
+        return RenderUnreachable(c);
       case Expr::Call:
         return RenderCall(c);
       case Expr::CallImport:

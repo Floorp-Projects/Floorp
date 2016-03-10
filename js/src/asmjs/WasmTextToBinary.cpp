@@ -209,6 +209,7 @@ enum class WasmAstExprKind
     Return,
     SetLocal,
     Store,
+    Trap,
     UnaryOperator,
 };
 
@@ -235,6 +236,13 @@ struct WasmAstNop : WasmAstExpr
 {
     WasmAstNop()
       : WasmAstExpr(WasmAstExprKind::Nop)
+    {}
+};
+
+struct WasmAstTrap : WasmAstExpr
+{
+    WasmAstTrap()
+      : WasmAstExpr(WasmAstExprKind::Trap)
     {}
 };
 
@@ -796,6 +804,7 @@ class WasmToken
         Store,
         Table,
         Text,
+        Trap,
         Type,
         UnaryOpcode,
         ValueType
@@ -1931,6 +1940,8 @@ WasmTokenStream::next()
             return WasmToken(WasmToken::Table, begin, cur_);
         if (consume(MOZ_UTF16("type")))
             return WasmToken(WasmToken::Type, begin, cur_);
+        if (consume(MOZ_UTF16("trap")))
+            return WasmToken(WasmToken::Trap, begin, cur_);
         break;
 
       default:
@@ -2669,6 +2680,8 @@ ParseExprInsideParens(WasmParseContext& c)
     switch (token.kind()) {
       case WasmToken::Nop:
         return new(c.lifo) WasmAstNop;
+      case WasmToken::Trap:
+        return new(c.lifo) WasmAstTrap;
       case WasmToken::BinaryOpcode:
         return ParseBinaryOperator(c, token.expr());
       case WasmToken::Block:
@@ -3373,6 +3386,7 @@ ResolveExpr(Resolver& r, WasmAstExpr& expr)
 {
     switch (expr.kind()) {
       case WasmAstExprKind::Nop:
+      case WasmAstExprKind::Trap:
         return true;
       case WasmAstExprKind::BinaryOperator:
         return ResolveBinaryOperator(r, expr.as<WasmAstBinaryOperator>());
@@ -3703,6 +3717,8 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
     switch (expr.kind()) {
       case WasmAstExprKind::Nop:
         return e.writeExpr(Expr::Nop);
+      case WasmAstExprKind::Trap:
+        return e.writeExpr(Expr::Unreachable);
       case WasmAstExprKind::BinaryOperator:
         return EncodeBinaryOperator(e, expr.as<WasmAstBinaryOperator>());
       case WasmAstExprKind::Block:

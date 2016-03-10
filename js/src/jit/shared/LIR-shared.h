@@ -1247,6 +1247,15 @@ class LAsmJSInterruptCheck : public LInstructionHelper<0, 0, 0>
     }
 };
 
+class LAsmThrowUnreachable : public LInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(AsmThrowUnreachable);
+
+    LAsmThrowUnreachable()
+    { }
+};
+
 class LInterruptCheck : public LInstructionHelper<0, 0, 0>
 {
     Label* oolEntry_;
