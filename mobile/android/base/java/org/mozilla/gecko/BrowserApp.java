@@ -143,8 +143,8 @@ import android.widget.RelativeLayout;
 import android.widget.ViewFlipper;
 import com.keepsafe.switchboard.AsyncConfigLoader;
 import com.keepsafe.switchboard.SwitchBoard;
-import com.nineoldandroids.animation.Animator;
-import com.nineoldandroids.animation.ObjectAnimator;
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import org.json.JSONException;
 import org.json.JSONObject;
 
