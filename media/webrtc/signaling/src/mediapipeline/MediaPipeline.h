@@ -401,9 +401,11 @@ public:
   virtual bool IsVideo() const override { return !!domtrack_->AsVideoStreamTrack(); }
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  // when the principal of the PeerConnection changes, it calls through to here
-  // so that we can determine whether to enable stream transmission
-  virtual void UpdateSinkIdentity_m(nsIPrincipal* principal,
+  // When the principal of the domtrack changes, it calls through to here
+  // so that we can determine whether to enable track transmission.
+  // `track` has to be null or equal `domtrack_` for us to apply the update.
+  virtual void UpdateSinkIdentity_m(dom::MediaStreamTrack* track,
+                                    nsIPrincipal* principal,
                                     const PeerIdentity* sinkIdentity);
 #endif
 

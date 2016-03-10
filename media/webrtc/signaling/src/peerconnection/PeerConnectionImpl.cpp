@@ -2140,7 +2140,8 @@ PeerConnectionImpl::SetPeerIdentity(const nsAString& aPeerIdentity)
       CSFLogInfo(logTag, "Can't update principal on streams; document gone");
       return NS_ERROR_FAILURE;
     }
-    mMedia->UpdateSinkIdentity_m(doc->NodePrincipal(), mPeerIdentity);
+    MediaStreamTrack* allTracks = nullptr;
+    mMedia->UpdateSinkIdentity_m(allTracks, doc->NodePrincipal(), mPeerIdentity);
   }
   return NS_OK;
 }
@@ -2173,10 +2174,10 @@ PeerConnectionImpl::SetDtlsConnected(bool aPrivacyRequested)
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
 void
-PeerConnectionImpl::PrincipalChanged(DOMMediaStream* aMediaStream) {
+PeerConnectionImpl::PrincipalChanged(MediaStreamTrack* aTrack) {
   nsIDocument* doc = GetWindow()->GetExtantDoc();
   if (doc) {
-    mMedia->UpdateSinkIdentity_m(doc->NodePrincipal(), mPeerIdentity);
+    mMedia->UpdateSinkIdentity_m(aTrack, doc->NodePrincipal(), mPeerIdentity);
   } else {
     CSFLogInfo(logTag, "Can't update sink principal; document gone");
   }
@@ -2254,7 +2255,6 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
     CSFLogError(logTag, "%s: Track is not in owned stream (Bug 1259236)", __FUNCTION__);
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  uint32_t num = mMedia->LocalStreamsLength();
 
   std::string streamId = PeerConnectionImpl::GetStreamId(aMediaStream);
   std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
@@ -2266,9 +2266,7 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
   CSFLogDebug(logTag, "Added track (%s) to stream %s",
                       trackId.c_str(), streamId.c_str());
 
-  if (num != mMedia->LocalStreamsLength()) {
-    aMediaStream.AddPrincipalChangeObserver(this);
-  }
+  aTrack.AddPrincipalChangeObserver(this);
 
   if (aTrack.AsAudioStreamTrack()) {
     res = AddTrackToJsepSession(SdpMediaSection::kAudio, streamId, trackId);
@@ -2339,6 +2337,8 @@ PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
   }
 
   media()->RemoveLocalTrack(info->GetId(), trackId);
+
+  aTrack.RemovePrincipalChangeObserver(this);
 
   OnNegotiationNeeded();
 
@@ -2429,6 +2429,8 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
     }
     return NS_OK;
   }
+  aThisTrack.RemovePrincipalChangeObserver(this);
+  aWithTrack.AddPrincipalChangeObserver(this);
   pco->OnReplaceTrackSuccess(jrv);
   if (jrv.Failed()) {
     CSFLogError(logTag, "Error firing replaceTrack success callback");
@@ -2792,10 +2794,12 @@ PeerConnectionImpl::ShutdownMedia()
     return;
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  // before we destroy references to local streams, detach from them
+  // before we destroy references to local tracks, detach from them
   for(uint32_t i = 0; i < media()->LocalStreamsLength(); ++i) {
     LocalSourceStreamInfo *info = media()->GetLocalStreamByIndex(i);
-    info->GetMediaStream()->RemovePrincipalChangeObserver(this);
+    for (const auto& pair : info->GetMediaStreamTracks()) {
+      pair.second->RemovePrincipalChangeObserver(this);
+    }
   }
 
   // End of call to be recorded in Telemetry
