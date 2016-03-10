@@ -8,10 +8,6 @@ config = {
     # l10n
     "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-beta",
 
-    # mar
-    # No nightly on beta, using aurora mar tools
-    "mar_tools_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-aurora/mar-tools/%(platform)s",
-
     # repositories
     "mozilla_dir": "mozilla-beta",
     "repos": [{

@@ -139,7 +139,7 @@ ThrowAndReport(nsPIDOMWindowInner* aWindow, nsresult aRv)
   MOZ_ASSERT(aRv != NS_ERROR_UNCATCHABLE_EXCEPTION,
              "Doesn't make sense to report uncatchable exceptions!");
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(aWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(aWindow))) {
     return;
   }
   jsapi.TakeOwnershipOfErrorReporting();

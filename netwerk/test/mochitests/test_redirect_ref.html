@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title> Bug 1234575 - Test redirect ref</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<pre id="test">
+<script type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var iframe = document.createElement("iframe");
+iframe.src = "about:blank";
+iframe.addEventListener("load", finishTest);
+document.body.appendChild(iframe);
+iframe.src = "redirect.sjs#start";
+
+function finishTest(e) {
+  is(iframe.contentWindow.location.href, "http://mochi.test:8888/tests/netwerk/test/mochitests/empty.html#");
+  SimpleTest.finish();
+}
+
+</script>
+
+</body>
+</html>
+

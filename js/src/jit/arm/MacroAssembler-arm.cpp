@@ -4853,6 +4853,12 @@ MacroAssembler::pushReturnAddress()
     push(lr);
 }
 
+void
+MacroAssembler::popReturnAddress()
+{
+    pop(lr);
+}
+
 // ===============================================================
 // ABI function calls.
 

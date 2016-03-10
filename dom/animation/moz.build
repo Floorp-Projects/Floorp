@@ -28,6 +28,7 @@ EXPORTS.mozilla += [
     'EffectSet.h',
     'PendingAnimationTracker.h',
     'PseudoElementHashEntry.h',
+    'TimingParams.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -46,6 +47,7 @@ UNIFIED_SOURCES += [
     'EffectSet.cpp',
     'KeyframeEffect.cpp',
     'PendingAnimationTracker.cpp',
+    'TimingParams.cpp',
 ]
 
 LOCAL_INCLUDES += [

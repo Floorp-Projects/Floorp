@@ -97,5 +97,7 @@ class PurgeMixin(object):
                     always_clobber_dirs = []
                 for path in always_clobber_dirs:
                     self.rmtree(path)
+            if 'clobberer_url' in c and c.get('use_clobberer', True):
+                self.clobberer()
         else:
             super(PurgeMixin, self).clobber()

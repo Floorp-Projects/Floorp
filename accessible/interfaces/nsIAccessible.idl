@@ -80,6 +80,11 @@ interface nsIAccessible : nsISupports
   readonly attribute nsIDOMNode DOMNode;
 
   /**
+    * For remote accessibles the id of the related DOM node.
+    */
+  readonly attribute DOMString id;
+
+  /**
    * The document accessible that this access node resides in.
    */
   readonly attribute nsIAccessibleDocument document;

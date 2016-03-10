@@ -124,6 +124,10 @@ ScrollFrame(nsIContent* aContent,
 {
   // Scroll the window to the desired spot
   nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aMetrics.GetScrollId());
+  if (sf) {
+    sf->SetScrollableByAPZ(!aMetrics.IsScrollInfoLayer());
+  }
+
   bool scrollUpdated = false;
   CSSPoint apzScrollOffset = aMetrics.GetScrollOffset();
   CSSPoint actualScrollOffset = ScrollFrameTo(sf, apzScrollOffset, scrollUpdated);
@@ -913,12 +917,16 @@ APZCCallbackHelper::NotifyFlushComplete(nsIPresShell* aShell)
 static int32_t sActiveSuppressDisplayport = 0;
 
 void
-APZCCallbackHelper::SuppressDisplayport(const bool& aEnabled)
+APZCCallbackHelper::SuppressDisplayport(const bool& aEnabled,
+                                        const nsCOMPtr<nsIPresShell>& aShell)
 {
   if (aEnabled) {
     sActiveSuppressDisplayport++;
   } else {
     sActiveSuppressDisplayport--;
+    if (sActiveSuppressDisplayport == 0 && aShell && aShell->GetRootFrame()) {
+      aShell->GetRootFrame()->SchedulePaint();
+    }
   }
 
   MOZ_ASSERT(sActiveSuppressDisplayport >= 0);

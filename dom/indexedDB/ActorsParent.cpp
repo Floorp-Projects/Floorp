@@ -29,6 +29,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/storage.h"
 #include "mozilla/unused.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/StructuredCloneTags.h"
@@ -252,18 +253,6 @@ const int32_t kDEBUGTransactionThreadPriority =
 const uint32_t kDEBUGTransactionThreadSleepMS = 0;
 
 #endif
-
-struct FreeDeleter
-{
-  void
-  operator()(void* aPtr) const
-  {
-    free(aPtr);
-  }
-};
-
-template <typename T>
-using UniqueFreePtr = UniquePtr<T, FreeDeleter>;
 
 template <size_t N>
 MOZ_CONSTEXPR size_t

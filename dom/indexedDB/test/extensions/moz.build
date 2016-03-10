@@ -6,10 +6,11 @@
 
 XPI_NAME = 'indexedDB'
 
-FINAL_TARGET_PP_FILES += [
+FINAL_TARGET_FILES += [
+    'bootstrap.js',
     'install.rdf',
 ]
 
-FINAL_TARGET_FILES += [
-    'bootstrap.js',
+TEST_HARNESS_FILES.testing.mochitest.extensions += [
+    'indexedDB-test@mozilla.org.xpi',
 ]

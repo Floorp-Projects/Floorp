@@ -92,6 +92,7 @@
   height: 16px;
   margin-top: -8px;
   margin-inline-start: -15px;
+  margin-inline-end: -1px;
   position: relative;
 }
 

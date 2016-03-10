@@ -1567,9 +1567,8 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
                 AutoEntryScript aes(backstagePass, "xpcshell argument processing");
 
                 // If an exception is thrown, we'll set our return code
-                // appropriately, and then let the AutoJSAPI destructor report
+                // appropriately, and then let the AutoEntryScript destructor report
                 // the error to the console.
-                aes.TakeOwnershipOfErrorReporting();
                 if (!ProcessArgs(aes, argv, argc, &dirprovider)) {
                     if (gExitCode) {
                         result = gExitCode;

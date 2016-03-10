@@ -104,6 +104,7 @@ function onStart() {
   } 
 
   let width, height, ratio = 1.0;
+  let lastResizedWidth;
 
   if (screenarg in screens) {
     // If this is a named screen, get its data
@@ -154,6 +155,12 @@ function onStart() {
     } else {
       let chromewidth = window.outerWidth - window.innerWidth;
       let chromeheight = window.outerHeight - window.innerHeight + controlsHeight;
+
+      if (lastResizedWidth == width) {
+        return;
+      }
+      lastResizedWidth = width;
+
       window.resizeTo(width + chromewidth,
                       height + chromeheight);
     }
