@@ -75,6 +75,10 @@ final class UnusedResourcesUtil {
             R.raw.bookmarkdefaults_favicon_support,
             R.raw.bookmarkdefaults_favicon_restricted_support,
             R.raw.bookmarkdefaults_favicon_restricted_webmaker,
+            R.string.bookmarkdefaults_title_restricted_support,
+            R.string.bookmarkdefaults_url_restricted_support,
+            R.string.bookmarkdefaults_title_restricted_webmaker,
+            R.string.bookmarkdefaults_url_restricted_webmaker,
     };
 
     public static final int[] USED_IN_PREFS = {
