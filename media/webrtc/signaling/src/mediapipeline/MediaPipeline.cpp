@@ -676,9 +676,18 @@ void MediaPipelineTransmit::AttachToTrack(const std::string& track_id) {
 }
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-void MediaPipelineTransmit::UpdateSinkIdentity_m(nsIPrincipal* principal,
+void MediaPipelineTransmit::UpdateSinkIdentity_m(MediaStreamTrack* track,
+                                                 nsIPrincipal* principal,
                                                  const PeerIdentity* sinkIdentity) {
   ASSERT_ON_THREAD(main_thread_);
+
+  if (track != nullptr && track != domtrack_) {
+    // If a track is specified, then it might not be for this pipeline,
+    // since we receive notifications for all tracks on the PC.
+    // nullptr means that the PeerIdentity has changed and shall be applied
+    // to all tracks of the PC.
+    return;
+  }
 
   bool enableTrack = principal->Subsumes(domtrack_->GetPrincipal());
   if (!enableTrack) {

@@ -97,6 +97,10 @@ public:
   const std::map<std::string, RefPtr<MediaPipeline>>&
   GetPipelines() const { return mPipelines; }
   RefPtr<MediaPipeline> GetPipelineByTrackId_m(const std::string& trackId);
+  // This is needed so PeerConnectionImpl can unregister itself as
+  // PrincipalChangeObserver from each track.
+  const std::map<std::string, RefPtr<dom::MediaStreamTrack>>&
+  GetMediaStreamTracks() const { return mTracks; }
   dom::MediaStreamTrack* GetTrackById(const std::string& trackId)
   {
     auto it = mTracks.find(trackId);
@@ -142,7 +146,8 @@ public:
                             const std::string& newTrackId);
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  void UpdateSinkIdentity_m(nsIPrincipal* aPrincipal,
+  void UpdateSinkIdentity_m(dom::MediaStreamTrack* aTrack,
+                            nsIPrincipal* aPrincipal,
                             const PeerIdentity* aSinkIdentity);
 #endif
 
@@ -364,7 +369,9 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // In cases where the peer isn't yet identified, we disable the pipeline (not
   // the stream, that would potentially affect others), so that it sends
   // black/silence.  Once the peer is identified, re-enable those streams.
-  void UpdateSinkIdentity_m(nsIPrincipal* aPrincipal,
+  // aTrack will be set if this update came from a principal change on aTrack.
+  void UpdateSinkIdentity_m(dom::MediaStreamTrack* aTrack,
+                            nsIPrincipal* aPrincipal,
                             const PeerIdentity* aSinkIdentity);
   // this determines if any stream is peerIdentity constrained
   bool AnyLocalStreamHasPeerIdentity() const;

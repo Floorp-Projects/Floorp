@@ -591,7 +591,8 @@ MediaPipelineFactory::CreateMediaPipelineSending(
   // implement checking for peerIdentity (where failure == black/silence)
   nsIDocument* doc = mPC->GetWindow()->GetExtantDoc();
   if (doc) {
-    pipeline->UpdateSinkIdentity_m(doc->NodePrincipal(),
+    pipeline->UpdateSinkIdentity_m(track,
+                                   doc->NodePrincipal(),
                                    mPC->GetPeerIdentity());
   } else {
     MOZ_MTLOG(ML_ERROR, "Cannot initialize pipeline without attached doc");
