@@ -1932,8 +1932,7 @@ NS_IsHSTSUpgradeRedirect(nsIChannel *aOldChannel,
   }
 
   nsCOMPtr<nsIURI> upgradedURI;
-  nsresult rv =
-    HttpBaseChannel::GetSecureUpgradedURI(oldURI, getter_AddRefs(upgradedURI));
+  nsresult rv = NS_GetSecureUpgradedURI(oldURI, getter_AddRefs(upgradedURI));
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -2318,6 +2317,45 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
     Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 0);
   }
   aShouldUpgrade = false;
+  return NS_OK;
+}
+
+nsresult
+NS_GetSecureUpgradedURI(nsIURI* aURI, nsIURI** aUpgradedURI)
+{
+  nsCOMPtr<nsIURI> upgradedURI;
+
+  nsresult rv = aURI->Clone(getter_AddRefs(upgradedURI));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // Change the scheme to HTTPS:
+  upgradedURI->SetScheme(NS_LITERAL_CSTRING("https"));
+
+  // Change the default port to 443:
+  nsCOMPtr<nsIStandardURL> upgradedStandardURL = do_QueryInterface(upgradedURI);
+  if (upgradedStandardURL) {
+    upgradedStandardURL->SetDefaultPort(443);
+  } else {
+    // If we don't have a nsStandardURL, fall back to using GetPort/SetPort.
+    // XXXdholbert Is this function even called with a non-nsStandardURL arg,
+    // in practice?
+    int32_t oldPort = -1;
+    rv = aURI->GetPort(&oldPort);
+    if (NS_FAILED(rv)) return rv;
+
+    // Keep any nonstandard ports so only the scheme is changed.
+    // For example:
+    //  http://foo.com:80 -> https://foo.com:443
+    //  http://foo.com:81 -> https://foo.com:81
+
+    if (oldPort == 80 || oldPort == -1) {
+        upgradedURI->SetPort(-1);
+    } else {
+        upgradedURI->SetPort(oldPort);
+    }
+  }
+
+  upgradedURI.forget(aUpgradedURI);
   return NS_OK;
 }
 
