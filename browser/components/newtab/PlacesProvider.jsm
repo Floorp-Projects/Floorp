@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global XPCOMUtils, Services, BinarySearch, PlacesUtils, gPrincipal, EventEmitter */
+/* global XPCOMUtils, Services, PlacesUtils, gPrincipal, EventEmitter */
 /* global gLinks */
 /* exported PlacesProvider */
 
@@ -13,9 +13,6 @@ this.EXPORTED_SYMBOLS = ["PlacesProvider"];
 const {interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "BinarySearch",
-  "resource://gre/modules/BinarySearch.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
@@ -140,14 +137,22 @@ Links.prototype = {
    * Makes it easy to disable under pref
    */
   init: function PlacesProvider_init() {
-    PlacesUtils.history.addObserver(this.historyObserver, true);
+    try {
+      PlacesUtils.history.addObserver(this.historyObserver, true);
+    } catch (e) {
+      Cu.reportError(e);
+    }
   },
 
   /**
    * Must be called before the provider is unloaded.
    */
-  destroy: function PlacesProvider_destroy() {
-    PlacesUtils.history.removeObserver(this.historyObserver);
+  uninit: function PlacesProvider_uninit() {
+    try {
+      PlacesUtils.history.removeObserver(this.historyObserver);
+    } catch (e) {
+      Cu.reportError(e);
+    }
   },
 
   /**
