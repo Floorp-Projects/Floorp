@@ -392,6 +392,8 @@ public:
 
   void SetNextPaintCompressed() { mNextPaintCompressed = true; }
 
+  void ReportAnyBadState();
+
 protected:
   virtual ~PresShell();
 
