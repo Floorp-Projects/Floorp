@@ -241,7 +241,7 @@ set +e
 for arg in "${REQ_TESTS[@]}"; do
     [[ $arg == skip-* ]]
     select=$? # 0 means skip-TEST, 1 means TEST
-    if [[ $arg = all ]]; then
+    if [[ ${arg#skip-} = all ]]; then
         for t in "${!TESTS[@]}"; do
             TESTS[$t]=$select
         done
@@ -250,6 +250,9 @@ for arg in "${REQ_TESTS[@]}"; do
     fi
 done
 set -e
+
+# Dump out the final set of tests
+declare -p TESTS
 
 RESULT=0
 
