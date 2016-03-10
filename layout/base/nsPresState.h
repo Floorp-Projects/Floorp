@@ -25,6 +25,7 @@ public:
     , mScaleToResolution(false)
     , mDisabledSet(false)
     , mDisabled(false)
+    , mDroppedDown(false)
   {}
 
   void SetScrollState(const nsPoint& aState)
@@ -89,6 +90,16 @@ public:
     mContentData = aProperty;
   }
 
+  void SetDroppedDown(bool aDroppedDown)
+  {
+    mDroppedDown = aDroppedDown;
+  }
+
+  bool GetDroppedDown() const
+  {
+    return mDroppedDown;
+  }
+
 // MEMBER VARIABLES
 protected:
   nsCOMPtr<nsISupports> mContentData;
@@ -97,6 +108,7 @@ protected:
   bool mScaleToResolution;
   bool mDisabledSet;
   bool mDisabled;
+  bool mDroppedDown;
 };
 
 #endif /* nsPresState_h_ */
