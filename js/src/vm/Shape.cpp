@@ -1349,12 +1349,13 @@ BaseShape::finalize(FreeOp* fop)
 }
 
 inline
-InitialShapeEntry::InitialShapeEntry() : shape(nullptr), proto(nullptr)
+InitialShapeEntry::InitialShapeEntry() : shape(nullptr), proto(TaggedProto(nullptr))
 {
 }
 
 inline
-InitialShapeEntry::InitialShapeEntry(const ReadBarrieredShape& shape, TaggedProto proto)
+InitialShapeEntry::InitialShapeEntry(const ReadBarriered<Shape*>& shape,
+                                     const ReadBarriered<TaggedProto>& proto)
   : shape(shape), proto(proto)
 {
 }
@@ -1368,72 +1369,19 @@ InitialShapeEntry::getLookup() const
 /* static */ inline HashNumber
 InitialShapeEntry::hash(const Lookup& lookup)
 {
-    HashNumber hash = uintptr_t(lookup.clasp) >> 3;
-    hash = RotateLeft(hash, 4) ^
-        (uintptr_t(lookup.hashProto.toWord()) >> 3);
-    return hash + lookup.nfixed;
+    return (RotateLeft(uintptr_t(lookup.clasp) >> 3, 4) ^ lookup.proto.hashCode()) +
+           lookup.nfixed;
 }
 
 /* static */ inline bool
 InitialShapeEntry::match(const InitialShapeEntry& key, const Lookup& lookup)
 {
-    const Shape* shape = *key.shape.unsafeGet();
+    const Shape* shape = key.shape.unbarrieredGet();
     return lookup.clasp == shape->getObjectClass()
-        && lookup.matchProto.toWord() == key.proto.toWord()
         && lookup.nfixed == shape->numFixedSlots()
-        && lookup.baseFlags == shape->getObjectFlags();
+        && lookup.baseFlags == shape->getObjectFlags()
+        && lookup.proto.uniqueId() == key.proto.unbarrieredGet().uniqueId();
 }
-
-/*
- * This class is used to add a post barrier on the initialShapes set, as the key
- * is calculated based on objects which may be moved by generational GC.
- */
-class InitialShapeSetRef : public BufferableRef
-{
-    InitialShapeSet* set;
-    const Class* clasp;
-    TaggedProto proto;
-    size_t nfixed;
-    uint32_t objectFlags;
-
-  public:
-    InitialShapeSetRef(InitialShapeSet* set,
-                       const Class* clasp,
-                       TaggedProto proto,
-                       size_t nfixed,
-                       uint32_t objectFlags)
-        : set(set),
-          clasp(clasp),
-          proto(proto),
-          nfixed(nfixed),
-          objectFlags(objectFlags)
-    {}
-
-    void trace(JSTracer* trc) override {
-        TaggedProto priorProto = proto;
-        if (proto.isObject()) {
-            TraceManuallyBarrieredEdge(trc, reinterpret_cast<JSObject**>(&proto),
-                                       "initialShapes set proto");
-        }
-        if (proto == priorProto)
-            return;
-
-        /* Find the original entry, which must still be present. */
-        InitialShapeEntry::Lookup lookup(clasp, priorProto, nfixed, objectFlags);
-        InitialShapeSet::Ptr p = set->lookup(lookup);
-        MOZ_ASSERT(p);
-
-        /* Update the entry's possibly-moved proto, and ensure lookup will still match. */
-        InitialShapeEntry& entry = const_cast<InitialShapeEntry&>(*p);
-        entry.proto = proto;
-        lookup.matchProto = proto;
-
-        /* Rekey the entry. */
-        set->rekeyAs(lookup,
-                     InitialShapeEntry::Lookup(clasp, proto, nfixed, objectFlags),
-                     *p);
-    }
-};
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 
@@ -1450,7 +1398,7 @@ JSCompartment::checkInitialShapesTableAfterMovingGC()
      */
     for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
         InitialShapeEntry entry = e.front();
-        TaggedProto proto = entry.proto;
+        TaggedProto proto = entry.proto.unbarrieredGet();
         Shape* shape = entry.shape.unbarrieredGet();
 
         if (proto.isObject())
@@ -1511,15 +1459,9 @@ EmptyShape::getInitialShape(ExclusiveContext* cx, const Class* clasp, TaggedProt
         return nullptr;
 
     Lookup lookup(clasp, protoRoot, nfixed, objectFlags);
-    if (!p.add(cx, table, lookup, InitialShapeEntry(ReadBarrieredShape(shape), protoRoot)))
+    if (!p.add(cx, table, lookup, InitialShapeEntry(shape, protoRoot.get()))) {
+        ReportOutOfMemory(cx);
         return nullptr;
-
-    // Post-barrier for the initial shape table update.
-    if (cx->isJSContext()) {
-        if (protoRoot.isObject() && IsInsideNursery(protoRoot.toObject())) {
-            InitialShapeSetRef ref(&table, clasp, protoRoot, nfixed, objectFlags);
-            cx->asJSContext()->runtime()->gc.storeBuffer.putGeneric(ref);
-        }
     }
 
     return shape;
