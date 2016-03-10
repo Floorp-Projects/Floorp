@@ -90,7 +90,11 @@
               {
                 "type": "object",
                 "properties": {
-                  "page": { "$ref": "ExtensionURL" }
+                  "page": { "$ref": "ExtensionURL" },
+                  "persistent": {
+                    "optional": true,
+                    "$ref": "PersistentBackgroundProperty"
+                  }
                 }
               },
               {
@@ -99,6 +103,10 @@
                   "scripts": {
                     "type": "array",
                     "items": { "$ref": "ExtensionURL" }
+                  },
+                  "persistent": {
+                    "optional": true,
+                    "$ref": "PersistentBackgroundProperty"
                   }
                 }
               }
@@ -284,6 +292,11 @@
             "isInstanceOf": "ImageData"
           }
         ]
+      },
+      {
+        "id": "PersistentBackgroundProperty",
+        "type": "boolean",
+        "deprecated": "Event pages are not currently supported. This will run as a persistent background page."
       }
     ]
   }
