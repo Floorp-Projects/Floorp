@@ -120,6 +120,11 @@ ARCHIVE_FILES = {
             'pattern': '**',
             'dest': 'tools/wptserve',
         },
+        {
+            'source': buildconfig.topobjdir,
+            'base': '',
+            'pattern': 'mozinfo.json',
+        },
     ],
     'cppunittest': [
         {
