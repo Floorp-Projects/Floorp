@@ -239,16 +239,6 @@ public:
   // If aCx is null it will cause an assertion.
   bool Init(nsIGlobalObject* aGlobalObject, JSContext* aCx);
 
-  // This may only be used on the main thread.
-  // This attempts to use the JSContext associated with aGlobalObject, otherwise
-  // it uses the SafeJSContext. It then enters the compartment of aGlobalObject.
-  // This means that existing error reporting mechanisms that use the JSContext
-  // to find the JSErrorReporter should still work as before.
-  // We should be able to remove this around bug 981198.
-  // If aGlobalObject or its associated JS global are null then it returns
-  // false and use of cx() will cause an assertion.
-  bool InitWithLegacyErrorReporting(nsIGlobalObject* aGlobalObject);
-
   // Convenience functions to take an nsPIDOMWindow* or nsGlobalWindow*,
   // when it is more easily available than an nsIGlobalObject.
   bool Init(nsPIDOMWindowInner* aWindow);
@@ -256,9 +246,6 @@ public:
 
   bool Init(nsGlobalWindow* aWindow);
   bool Init(nsGlobalWindow* aWindow, JSContext* aCx);
-
-  bool InitWithLegacyErrorReporting(nsPIDOMWindowInner* aWindow);
-  bool InitWithLegacyErrorReporting(nsGlobalWindow* aWindow);
 
   JSContext* cx() const {
     MOZ_ASSERT(mCx, "Must call Init before using an AutoJSAPI");
