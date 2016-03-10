@@ -1121,6 +1121,10 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_TEXT_RENDERING_OPTIMIZELEGIBILITY 2
 #define NS_STYLE_TEXT_RENDERING_GEOMETRICPRECISION 3
 
+// adjust-color
+#define NS_STYLE_COLOR_ADJUST_ECONOMY               0
+#define NS_STYLE_COLOR_ADJUST_EXACT                 1
+
 // color-interpolation and color-interpolation-filters
 #define NS_STYLE_COLOR_INTERPOLATION_AUTO           0
 #define NS_STYLE_COLOR_INTERPOLATION_SRGB           1

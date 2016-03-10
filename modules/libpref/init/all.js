@@ -5261,5 +5261,7 @@ pref("dom.input.fallbackUploadDir", "");
 // Turn rewriting of youtube embeds on/off
 pref("plugins.rewrite_youtube_embeds", true);
 
+// Is support for 'color-adjust' CSS property enabled?
+pref("layout.css.color-adjust.enabled", true);
 // Disable browser frames by default
 pref("dom.mozBrowserFramesEnabled", false);
