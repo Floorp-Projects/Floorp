@@ -732,6 +732,11 @@ public:
     {
         mNPZC->UpdateOverscrollOffset(x, y);
     }
+
+    void SetSelectionDragState(const bool aState)
+    {
+        mNPZC->OnSelectionDragState(aState);
+    }
 };
 
 /**
@@ -1826,6 +1831,14 @@ nsWindow::UpdateOverscrollOffset(const float aX, const float aY)
 {
     if (mNPZCSupport) {
         mNPZCSupport->UpdateOverscrollOffset(aX, aY);
+    }
+}
+
+void
+nsWindow::SetSelectionDragState(bool aState)
+{
+    if (mNPZCSupport) {
+        mNPZCSupport->SetSelectionDragState(aState);
     }
 }
 
