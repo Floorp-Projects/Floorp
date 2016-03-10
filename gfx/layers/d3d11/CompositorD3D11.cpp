@@ -1304,7 +1304,6 @@ CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize)
 void
 CompositorD3D11::ForcePresent()
 {
-  RECT clientRect;
   LayoutDeviceIntRect rect;
   mWidget->GetClientBounds(rect);
 
