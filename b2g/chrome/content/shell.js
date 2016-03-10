@@ -45,7 +45,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Screenshot",
                                   "resource://gre/modules/Screenshot.jsm");
 
 Cu.import('resource://gre/modules/Webapps.jsm');
-DOMApplicationRegistry.allAppsLaunchable = true;
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                    '@mozilla.org/process/environment;1',

@@ -53,8 +53,6 @@ SimpleTest.waitForExplicitFinish();
   * Flip the `enabled` state of an app back and forth.
   */
 function runTest() {
-  SpecialPowers.setAllAppsLaunchable(true);
-
   SpecialPowers.autoConfirmAppInstall(continueTest);
   yield undefined;
 

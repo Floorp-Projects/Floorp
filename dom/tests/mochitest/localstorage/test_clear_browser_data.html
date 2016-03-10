@@ -76,9 +76,6 @@ SimpleTest.registerCleanupFunction(() => {
                                   Ci.nsIPermissionManager.ALLOW_ACTION);
 });
 
-// We want to simulate that all apps are launchable, for testing purpose.
-SpecialPowers.setAllAppsLaunchable(true);
-
 // URL of the manifest of the app we want to install.
 const gManifestURL = "http://www.example.com/chrome/dom/apps/tests/apps/basic.webapp";
 // ID of the installed app.
