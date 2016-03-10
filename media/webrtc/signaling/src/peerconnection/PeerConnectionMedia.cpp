@@ -1226,24 +1226,27 @@ PeerConnectionMedia::UpdateRemoteStreamPrincipals_m(nsIPrincipal* aPrincipal)
 }
 
 void
-PeerConnectionMedia::UpdateSinkIdentity_m(nsIPrincipal* aPrincipal,
+PeerConnectionMedia::UpdateSinkIdentity_m(MediaStreamTrack* aTrack,
+                                          nsIPrincipal* aPrincipal,
                                           const PeerIdentity* aSinkIdentity)
 {
   ASSERT_ON_THREAD(mMainThread);
 
   for (uint32_t u = 0; u < mLocalSourceStreams.Length(); u++) {
-    mLocalSourceStreams[u]->UpdateSinkIdentity_m(aPrincipal, aSinkIdentity);
+    mLocalSourceStreams[u]->UpdateSinkIdentity_m(aTrack, aPrincipal,
+                                                 aSinkIdentity);
   }
 }
 
 void
-LocalSourceStreamInfo::UpdateSinkIdentity_m(nsIPrincipal* aPrincipal,
+LocalSourceStreamInfo::UpdateSinkIdentity_m(MediaStreamTrack* aTrack,
+                                            nsIPrincipal* aPrincipal,
                                             const PeerIdentity* aSinkIdentity)
 {
   for (auto it = mPipelines.begin(); it != mPipelines.end(); ++it) {
     MediaPipelineTransmit* pipeline =
       static_cast<MediaPipelineTransmit*>((*it).second.get());
-    pipeline->UpdateSinkIdentity_m(aPrincipal, aSinkIdentity);
+    pipeline->UpdateSinkIdentity_m(aTrack, aPrincipal, aSinkIdentity);
   }
 }
 

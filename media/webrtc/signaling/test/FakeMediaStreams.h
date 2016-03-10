@@ -405,6 +405,15 @@ public:
   {
     RemoveListener(aListener);
   }
+
+  class PrincipalChangeObserver
+  {
+  public:
+    virtual void PrincipalChanged(Fake_MediaStreamTrack* aMediaStreamTrack) = 0;
+  };
+  void AddPrincipalChangeObserver(void* ignoredObserver) {}
+  void RemovePrincipalChangeObserver(void* ignoredObserver) {}
+
 private:
   ~Fake_MediaStreamTrack() {}
 
@@ -542,14 +551,6 @@ public:
       }
     }
   }
-
-  class PrincipalChangeObserver
-  {
-  public:
-    virtual void PrincipalChanged(Fake_DOMMediaStream* aMediaStream) = 0;
-  };
-  void AddPrincipalChangeObserver(void* ignoredObserver) {}
-  void RemovePrincipalChangeObserver(void* ignoredObserver) {}
 
 private:
   RefPtr<Fake_MediaStream> mMediaStream;
