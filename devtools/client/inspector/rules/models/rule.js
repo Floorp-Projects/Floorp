@@ -177,11 +177,13 @@ Rule.prototype = {
    *        The property's value (not including priority).
    * @param {String} priority
    *        The property's priority (either "important" or an empty string).
+   * @param {Boolean} enabled
+   *        True if the property should be enabled.
    * @param {TextProperty} siblingProp
    *        Optional, property next to which the new property will be added.
    */
-  createProperty: function(name, value, priority, siblingProp) {
-    let prop = new TextProperty(this, name, value, priority);
+  createProperty: function(name, value, priority, enabled, siblingProp) {
+    let prop = new TextProperty(this, name, value, priority, enabled);
 
     let ind;
     if (siblingProp) {
