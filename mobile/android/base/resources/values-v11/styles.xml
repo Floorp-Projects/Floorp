@@ -61,7 +61,7 @@
     <style name="DropDownListView" parent="@android:style/Widget.Holo.ListView.DropDown">
          <item name="android:listSelector">@drawable/action_bar_button</item>
          <item name="android:divider">@color/toolbar_divider_grey</item>
-         <item name="android:dividerHeight">1dp</item>
+         <item name="android:dividerHeight">@dimen/page_row_divider_height</item>
     </style>
 
     <!-- Spinner DropDown Item -->
