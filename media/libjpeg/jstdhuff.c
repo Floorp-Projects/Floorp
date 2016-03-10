@@ -41,6 +41,7 @@ add_huff_table (j_common_ptr cinfo,
     ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
 
   MEMCOPY((*htblptr)->huffval, val, nsymbols * sizeof(UINT8));
+  MEMZERO(&((*htblptr)->huffval[nsymbols]), (256 - nsymbols) * sizeof(UINT8));
 
   /* Initialize sent_table FALSE so table will be written to JPEG file. */
   (*htblptr)->sent_table = FALSE;
