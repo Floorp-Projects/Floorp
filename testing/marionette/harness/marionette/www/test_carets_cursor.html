@@ -16,9 +16,15 @@
     </style>
   </head>
   <body>
-    <div><input id="input" value="ABCDEFGHI"></div>
+    <div>
+      <input id="input" value="ABCDEFGHI">
+      <input id="input-padding" style="padding: 1em;" value="ABCDEFGHI">
+    </div>
     <br>
-    <div><textarea name="textarea" id="textarea" rows="4" cols="6">ABCDEFGHI</textarea></div>
+    <div>
+      <textarea name="textarea" id="textarea" rows="4" cols="6">ABCDEFGHI</textarea>
+      <textarea id="textarea-one-line" rows="3">ABCDEFGHI</textarea>
+    </div>
     <br>
     <div class="block" contenteditable="true" id="contenteditable">ABCDEFGHI</div>
   </body>
