@@ -49,7 +49,9 @@ function SyncedTabsDeckComponent({
     window: this._window,
     store: this._syncedTabsListStore,
     View: TabListView,
-    SyncedTabs: SyncedTabs
+    SyncedTabs: SyncedTabs,
+    clipboardHelper: Cc["@mozilla.org/widget/clipboardhelper;1"]
+                       .getService(Ci.nsIClipboardHelper),
   });
 }
 

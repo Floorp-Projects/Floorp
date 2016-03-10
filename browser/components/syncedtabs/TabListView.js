@@ -293,21 +293,28 @@ TabListView.prototype = {
   },
 
   onBookmarkTab() {
-    let item = this.container.querySelector('.item.selected');
-    if (!item || !item.dataset.url) {
-      return;
+    let item = this._getSelectedTabNode();
+    if (item) {
+      let title = item.querySelector(".item-title").textContent;
+      this.props.onBookmarkTab(item.dataset.url, title);
     }
+  },
 
-    let uri = item.dataset.url;
-    let title = item.querySelector(".item-title").textContent;
-
-    this.props.onBookmarkTab(uri, title);
+  onCopyTabLocation() {
+    let item = this._getSelectedTabNode();
+    if (item) {
+      this.props.onCopyTabLocation(item.dataset.url);
+    }
   },
 
   onOpenSelected(event) {
-    let item = this.container.querySelector('.item.selected');
-    if (this._isTab(item) && item.dataset.url) {
-      this.props.onOpenTab(item.dataset.url, event);
+    let item = this._getSelectedTabNode();
+    if (item) {
+      let where = event.target.getAttribute("where");
+      let params = {
+        private: event.target.hasAttribute("private"),
+      };
+      this.props.onOpenTab(item.dataset.url, where, params);
     }
   },
 
@@ -329,6 +336,14 @@ TabListView.prototype = {
   },
   onFilterBlur() {
     this.props.onFilterBlur();
+  },
+
+  _getSelectedTabNode() {
+    let item = this.container.querySelector('.item.selected');
+    if (this._isTab(item) && item.dataset.url) {
+      return item;
+    }
+    return null;
   },
 
   // Set up the custom context menu
@@ -404,10 +419,16 @@ TabListView.prototype = {
     let id = event.target.getAttribute("id");
     switch (id) {
       case "syncedTabsOpenSelected":
+      case "syncedTabsOpenSelectedInTab":
+      case "syncedTabsOpenSelectedInWindow":
+      case "syncedTabsOpenSelectedInPrivateWindow":
         this.onOpenSelected(event);
         break;
       case "syncedTabsBookmarkSelected":
         this.onBookmarkTab();
+        break;
+      case "syncedTabsCopySelected":
+        this.onCopyTabLocation();
         break;
       case "syncedTabsRefresh":
       case "syncedTabsRefreshFilter":
