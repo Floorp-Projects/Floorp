@@ -10,8 +10,10 @@ ABSDIR="$(cd $DIR; pwd)"
 SOURCE="$(cd $DIR/../../../..; pwd)"
 
 function usage() {
-  echo "Usage: $0 [--dep] <variant>"
+  echo "Usage: $0 [--dep] [--test NAME] [--skip-test NAME] [--timeout SEC] <variant>"
 }
+
+declare -a REQ_TESTS
 
 clean=1
 platform=""
@@ -31,6 +33,16 @@ while [ $# -gt 1 ]; do
         --timeout)
             shift
             TIMEOUT="$1"
+            shift
+            ;;
+        --test)
+            shift
+            REQ_TESTS+=($1)
+            shift
+            ;;
+        --skip-test)
+            shift
+            REQ_TESTS+=(skip-$1)
             shift
             ;;
         *)
@@ -174,9 +186,8 @@ if type setarch >/dev/null 2>&1; then
     COMMAND_PREFIX="setarch $(uname -m) -R "
 fi
 
-RUN_JSTESTS=true
-RUN_JITTEST=true
-RUN_JSAPITESTS=true
+declare -A TESTS
+TESTS=([check]=1 [jstest]=1 [jittest]=1 [jsapitest]=1 [gdb]=0)
 
 PARENT=$$
 
@@ -205,8 +216,9 @@ elif [[ "$VARIANT" = "compacting" ]]; then
     export JSTESTS_EXTRA_ARGS="--exclude-file=$ABSDIR/cgc-jstests-slow.txt"
 
     case "$platform" in
-    win*)
-        RUN_JSTESTS=false
+        win*)
+            TESTS[jstest]=0
+            ;;
     esac
 elif [[ "$VARIANT" = "warnaserr" ||
         "$VARIANT" = "warnaserrdebug" ||
@@ -223,18 +235,38 @@ elif [[ "$VARIANT" = arm64* ]]; then
     export JITTEST_EXTRA_ARGS="--jitflags=none --args=--baseline-eager -x ion/ -x asm.js/"
 fi
 
-$COMMAND_PREFIX $MAKE check || exit 1
+# Override default test collection with command-line arguments, allowing 'all'
+# (in either --test=all or --skip-test=all) to mean all known tests.
+set +e
+for arg in "${REQ_TESTS[@]}"; do
+    [[ $arg == skip-* ]]
+    select=$? # 0 means skip-TEST, 1 means TEST
+    if [[ $arg = all ]]; then
+        for t in "${!TESTS[@]}"; do
+            TESTS[$t]=$select
+        done
+    else
+        TESTS[$arg]=$select
+    fi
+done
+set -e
 
 RESULT=0
 
-if $RUN_JITTEST; then
+if [ ${TESTS[check]} = 1 ]; then
+    $COMMAND_PREFIX $MAKE check || RESULT=$?
+fi
+if [ ${TESTS[jittest]} = 1 ]; then
     $COMMAND_PREFIX $MAKE check-jit-test || RESULT=$?
 fi
-if $RUN_JSAPITESTS; then
+if [ ${TESTS[jsapitest]} = 1 ]; then
     $COMMAND_PREFIX $OBJDIR/dist/bin/jsapi-tests || RESULT=$?
 fi
-if $RUN_JSTESTS; then
+if [ ${TESTS[jstest]} = 1 ]; then
     $COMMAND_PREFIX $MAKE check-jstests || RESULT=$?
+fi
+if [ ${TESTS[gdb]} = 1 ]; then
+    $COMMAND_PREFIX ${PYTHON:-python2.7} $SOURCE/js/src/gdb/run-tests.py $OBJDIR || RESULT=$?
 fi
 
 exit $RESULT
