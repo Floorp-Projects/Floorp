@@ -48,8 +48,10 @@ function promiseLoadEvent(browser, url, eventType="load") {
   });
 }
 
-// Wait 4 seconds for the pending visits to flush (which should happen in 3 seconds)
+// Wait 6 seconds for the pending visits to flush (which should happen in 3 seconds)
 const PENDING_VISIT_WAIT = 6000;
+// Longer wait required after first load
+const PENDING_VISIT_WAIT_LONG = 20000;
 
 // Manage the saved history visits so we can compare in the tests
 var gVisitURLs = [];
@@ -89,7 +91,7 @@ add_task(function* () {
   // Load a simple HTML page with no redirects
   gVisitURLs = [];
   yield promiseLoadEvent(gBrowser, "http://example.org/tests/robocop/robocop_blank_01.html");
-  yield sleep(PENDING_VISIT_WAIT);
+  yield sleep(PENDING_VISIT_WAIT_LONG);
 
   do_print("visit counts: " + gVisitURLs.length);
   ok(gVisitURLs.length == 1, "Simple visit makes 1 history item");
