@@ -1,0 +1,17 @@
+$inherits:
+  from: 'tasks/builds/sm_base.yml'
+  variables:
+    build_name: 'sm-gdb'
+    build_type: 'debug'
+task:
+  payload:
+    command: ["/bin/bash", "-c", "cd /home/worker/ && ./bin/checkout-sources.sh && ./workspace/build/src/testing/taskcluster/scripts/builder/build-sm-gdb.sh" ]
+  metadata:
+    name: '[TC] Spidermonkey GDB Tests'
+    description: 'Spidermonkey GDB Tests'
+  extra:
+    treeherder:
+      symbol: gdb
+    locations:
+      build: null
+      tests: null
