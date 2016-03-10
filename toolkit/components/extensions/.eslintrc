@@ -17,6 +17,7 @@
     "ExtensionManagement": true,
     "ExtensionPage": true,
     "GlobalManager": true,
+    "openOptionsPage": true,
     "runSafe": true,
     "runSafeSync": true,
     "runSafeSyncWithoutClone": true,

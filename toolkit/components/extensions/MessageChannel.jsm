@@ -439,7 +439,9 @@ this.MessageChannel = {
    */
   removeListener(targets, messageName, handler) {
     for (let target of [].concat(targets)) {
-      this.messageManagers.get(target).removeHandler(messageName, handler);
+      if (this.messageManagers.has(target)) {
+        this.messageManagers.get(target).removeHandler(messageName, handler);
+      }
     }
   },
 
