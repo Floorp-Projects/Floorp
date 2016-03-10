@@ -7,12 +7,12 @@ package org.mozilla.gecko.toolbar;
 
 import java.util.Arrays;
 
+import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.menu.MenuItemActionBar;
-import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
 
@@ -66,7 +66,7 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
         urlDisplayLayout.updateSiteIdentityAnchor(backButton);
 
         privateBrowsingTabletMenuItemColorFilter = new PorterDuffColorFilter(
-                ColorUtils.getColor(context, R.color.tabs_tray_icon_grey), PorterDuff.Mode.SRC_IN);
+                ContextCompat.getColor(context, R.color.tabs_tray_icon_grey), PorterDuff.Mode.SRC_IN);
 
         menuButtonMarginView = findViewById(R.id.menu_margin);
         if (menuButtonMarginView != null) {

@@ -72,7 +72,7 @@ add_task(function* tabsSendMessageReply() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`
+    background: `(${background})()`,
   });
 
   yield extension.startup();

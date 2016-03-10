@@ -10,6 +10,14 @@ for var in ('APP_NAME', 'APP_VERSION'):
 for var in ('MOZ_UPDATER', 'MOZ_APP_UA_NAME', 'ANDROID_PACKAGE_NAME'):
     DEFINES[var] = CONFIG[var]
 
+for var in ('MOZ_ANDROID_GCM', ):
+    if CONFIG[var]:
+        DEFINES[var] = 1
+
+for var in ('MOZ_ANDROID_GCM_SENDERID', ):
+    if CONFIG[var]:
+        DEFINES[var] = CONFIG[var]
+
 if CONFIG['MOZ_PKG_SPECIAL']:
     DEFINES['MOZ_PKG_SPECIAL'] = CONFIG['MOZ_PKG_SPECIAL']
 

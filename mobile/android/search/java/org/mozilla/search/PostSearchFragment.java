@@ -8,11 +8,11 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.search.providers.SearchEngine;
 
 import android.annotation.SuppressLint;
@@ -179,7 +179,7 @@ public class PostSearchFragment extends Fragment {
 
                 final TextView message = (TextView) errorView.findViewById(R.id.empty_message);
                 message.setText(R.string.network_error_message);
-                message.setTextColor(ColorUtils.getColor(view.getContext(), R.color.network_error_link));
+                message.setTextColor(ContextCompat.getColor(view.getContext(), R.color.network_error_link));
                 message.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
