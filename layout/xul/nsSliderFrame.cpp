@@ -766,12 +766,11 @@ nsSliderFrame::CurrentPositionChanged()
   // set the rect
   thumbFrame->SetRect(newThumbRect);
 
-  // Request a repaint of the scrollbar unless we have paint-skipping enabled
-  // and this is an APZ scroll.
-  nsIScrollableFrame* scrollableFrame = do_QueryFrame(GetScrollbar()->GetParent());
-  if (!gfxPrefs::APZPaintSkipping() ||
-      !scrollableFrame ||
-      scrollableFrame->LastScrollOrigin() != nsGkAtoms::apz) {
+  // Request a repaint of the scrollbar
+  nsScrollbarFrame* scrollbarFrame = do_QueryFrame(scrollbarBox);
+  nsIScrollbarMediator* mediator = scrollbarFrame
+      ? scrollbarFrame->GetScrollbarMediator() : nullptr;
+  if (!mediator || !mediator->ShouldSuppressScrollbarRepaints()) {
     SchedulePaint();
   }
 
