@@ -397,12 +397,7 @@ GlobalManager = {
             try {
               promise = findPath(path)[name](...args);
             } catch (e) {
-              if (e instanceof context.cloneScope.Error) {
-                promise = Promise.reject(e);
-              } else {
-                Cu.reportError(e);
-                promise = Promise.reject({message: "An unexpected error occurred"});
-              }
+              promise = Promise.reject(e);
             }
 
             return context.wrapPromise(promise || Promise.resolve(), callback);
