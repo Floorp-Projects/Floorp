@@ -33,7 +33,8 @@ pref("browser.tabs.expireTime", 900);
 
 // Control whether tab content should try to load from disk cache when network
 // is offline.
-pref("browser.tabs.useCache", true);
+// Controlled by Switchboard experiment "offline-cache".
+pref("browser.tabs.useCache", false);
 
 // From libpref/src/init/all.js, extended to allow a slightly wider zoom range.
 pref("zoom.minPercent", 20);
