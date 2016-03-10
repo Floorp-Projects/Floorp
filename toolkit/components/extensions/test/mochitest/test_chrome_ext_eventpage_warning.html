@@ -73,6 +73,29 @@ add_task(function* test_eventpages() {
 
     SimpleTest.endMonitorConsole();
     yield waitForConsole;
+
+    waitForConsole = new Promise(resolve => {
+      SimpleTest.monitorConsole(resolve, [{
+        message: /Reading manifest: Error processing background.nonExistentProp: An unexpected property was found/,
+      }]);
+    });
+
+    info("testing additional unrecognized properties on background page");
+
+    extension = createEventPageExtension({
+      "scripts": ["event-page-script.js"],
+      "nonExistentProp": true,
+    });
+
+    info("load complete");
+    [, x] = yield Promise.all([extension.startup(), extension.awaitMessage("running")]);
+    is(x, 1, "got correct value from extension");
+    info("test complete");
+    yield extension.unload();
+    info("extension unloaded successfully");
+
+    SimpleTest.endMonitorConsole();
+    yield waitForConsole;
   }
 });
 
