@@ -5,13 +5,13 @@
 
 const { Cu, Cc, Ci } = require("chrome");
 const Services = require("Services");
-const { defer, resolve } = require("promise");
+const { resolve } = require("promise");
 const { HarUtils } = require("./har-utils.js");
 const { HarBuilder } = require("./har-builder.js");
 
 XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
-  return Cc["@mozilla.org/widget/clipboardhelper;1"].
-    getService(Ci.nsIClipboardHelper);
+  return Cc["@mozilla.org/widget/clipboardhelper;1"]
+    .getService(Ci.nsIClipboardHelper);
 });
 
 var uid = 1;
@@ -20,7 +20,7 @@ var uid = 1;
 const trace = {
   log: function(...args) {
   }
-}
+};
 
 /**
  * This object represents the main public API designed to access
@@ -117,9 +117,10 @@ const HarExporter = {
     options.jsonp = options.jsonp ||
       Services.prefs.getBoolPref("devtools.netmonitor.har.jsonp");
     options.includeResponseBodies = options.includeResponseBodies ||
-      Services.prefs.getBoolPref("devtools.netmonitor.har.includeResponseBodies");
+      Services.prefs.getBoolPref(
+        "devtools.netmonitor.har.includeResponseBodies");
     options.jsonpCallback = options.jsonpCallback ||
-      Services.prefs.getCharPref( "devtools.netmonitor.har.jsonpCallback");
+      Services.prefs.getCharPref("devtools.netmonitor.har.jsonpCallback");
     options.forceExport = options.forceExport ||
       Services.prefs.getBoolPref("devtools.netmonitor.har.forceExport");
 
@@ -172,8 +173,7 @@ const HarExporter = {
 
     try {
       return JSON.stringify(har, null, "  ");
-    }
-    catch (err) {
+    } catch (err) {
       Cu.reportError(err);
     }
   },
