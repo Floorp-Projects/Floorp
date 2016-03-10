@@ -9,9 +9,12 @@
 
 namespace js {
 
+template <typename Mutex> class MOZ_RAII UnlockGuard;
+
 template <typename Mutex>
 class MOZ_RAII LockGuard
 {
+  friend class UnlockGuard<Mutex>;
   Mutex& lock;
 
 public:
@@ -23,6 +26,23 @@ public:
 
   ~LockGuard() {
     lock.unlock();
+  }
+};
+
+template <typename Mutex>
+class MOZ_RAII UnlockGuard
+{
+  Mutex& lock;
+
+public:
+  explicit UnlockGuard(LockGuard<Mutex>& aGuard)
+    : lock(aGuard.lock)
+  {
+    lock.unlock();
+  }
+
+  ~UnlockGuard() {
+    lock.lock();
   }
 };
 
