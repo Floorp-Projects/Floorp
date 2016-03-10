@@ -1325,7 +1325,11 @@ function Engine(aLocation, aIsReadOnly) {
 
     // Build the id used for the legacy metadata storage, so that we
     // can do a one-time import of data from old profiles.
-    if (this._isDefault) {
+    if (this._isDefault ||
+        (uri && uri.spec.startsWith(APP_SEARCH_PREFIX))) {
+      // The second part of the check is to catch engines from language packs.
+      // They aren't default engines (because they aren't app-shipped), but we
+      // still need to give their id an [app] prefix for backward compat.
       this._id = "[app]/" + this._shortName + ".xml";
     }
     else if (!aIsReadOnly) {
