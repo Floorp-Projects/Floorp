@@ -902,6 +902,8 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
     PresContext()->SetBidiEnabled();
   }
+
+  RemoveStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS);
 }
 
 // MSVC fails with link error "one or more multiply defined symbols found",
@@ -2534,27 +2536,28 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
     child->MarkAbsoluteFramesForDisplayList(aBuilder, dirty);
 
-    if (!pseudoStackingContext) {
-      // THIS IS THE COMMON CASE.
-      // Not a pseudo or real stacking context. Do the simple thing and
-      // return early.
-
-      if (aBuilder->IsBuildingLayerEventRegions()) {
-        // If this frame has a different animated geometry root than its parent,
-        // make sure we accumulate event regions for its layer.
-        if (buildingForChild.IsAnimatedGeometryRoot()) {
-          nsDisplayLayerEventRegions* eventRegions =
-            new (aBuilder) nsDisplayLayerEventRegions(aBuilder, child);
-          eventRegions->AddFrame(aBuilder, child);
-          aBuilder->SetLayerEventRegions(eventRegions);
-          aLists.BorderBackground()->AppendNewToTop(eventRegions);
-        }
+    if (aBuilder->IsBuildingLayerEventRegions()) {
+      // If this frame has a different animated geometry root than its parent,
+      // make sure we accumulate event regions for its layer.
+      if (buildingForChild.IsAnimatedGeometryRoot()) {
+        nsDisplayLayerEventRegions* eventRegions =
+          new (aBuilder) nsDisplayLayerEventRegions(aBuilder, child);
+        eventRegions->AddFrame(aBuilder, child);
+        aBuilder->SetLayerEventRegions(eventRegions);
+        aLists.BorderBackground()->AppendNewToTop(eventRegions);
       }
 
       nsDisplayLayerEventRegions* eventRegions = aBuilder->GetLayerEventRegions();
       if (eventRegions) {
         eventRegions->AddFrame(aBuilder, child);
       }
+    }
+
+    if (!pseudoStackingContext) {
+      // THIS IS THE COMMON CASE.
+      // Not a pseudo or real stacking context. Do the simple thing and
+      // return early.
+
       aBuilder->AdjustWindowDraggingRegion(child);
       child->BuildDisplayList(aBuilder, dirty, aLists);
       aBuilder->DisplayCaret(child, dirty, aLists.Content());
@@ -2569,13 +2572,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // stacking context's positioned descendant list, because they might be
     // z-index:non-auto
     nsDisplayListCollection pseudoStack;
-    if (aBuilder->IsBuildingLayerEventRegions()) {
-      nsDisplayLayerEventRegions* eventRegions =
-        new (aBuilder) nsDisplayLayerEventRegions(aBuilder, child);
-      eventRegions->AddFrame(aBuilder, child);
-      aBuilder->SetLayerEventRegions(eventRegions);
-      pseudoStack.BorderBackground()->AppendNewToTop(eventRegions);
-    }
     aBuilder->AdjustWindowDraggingRegion(child);
     child->BuildDisplayList(aBuilder, dirty, pseudoStack);
     aBuilder->DisplayCaret(child, dirty, pseudoStack.Content());

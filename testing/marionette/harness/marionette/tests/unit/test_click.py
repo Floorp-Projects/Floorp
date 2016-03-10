@@ -2,15 +2,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from unittest import skip
+
 from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException, ElementNotVisibleException
-from marionette import MarionetteTestCase
-from marionette_driver.marionette import Actions
 from marionette_driver.keys import Keys
+from marionette_driver.marionette import Actions
 from marionette_driver.wait import Wait
+from marionette import MarionetteTestCase
 
 
-class TestClick(MarionetteTestCase):
+class TestLegacyClick(MarionetteTestCase):
+    """Uses legacy Selenium element displayedness checks."""
+
+    def setUp(self):
+        MarionetteTestCase.setUp(self)
+        self.marionette.delete_session()
+        self.marionette.start_session()
+
     def test_click(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
@@ -38,3 +47,18 @@ class TestClick(MarionetteTestCase):
         self.marionette.navigate(test_html)
         self.marionette.find_element(By.ID, "overflowLink").click()
         self.wait_for_condition(lambda mn: self.marionette.title == "XHTML Test Page")
+
+
+class TestClick(TestLegacyClick):
+    """Uses WebDriver specification compatible element interactability
+    checks.
+    """
+
+    def setUp(self):
+        TestLegacyClick.setUp(self)
+        self.marionette.delete_session()
+        self.marionette.start_session({"specificationLevel": 1})
+
+    @skip("fails with spec compatible interactability checks")
+    def test_clicking_an_element_that_is_not_displayed_raises(self):
+        pass

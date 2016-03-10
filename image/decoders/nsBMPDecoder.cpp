@@ -262,7 +262,7 @@ nsBMPDecoder::FinishInternal()
       MOZ_ASSERT(mMayHaveTransparency);
       PostFrameStop(Opacity::SOME_TRANSPARENCY);
     } else {
-      PostFrameStop(Opacity::OPAQUE);
+      PostFrameStop(Opacity::FULLY_OPAQUE);
     }
     PostDecodeDone();
   }

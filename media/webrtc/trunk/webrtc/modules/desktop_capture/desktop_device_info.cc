@@ -96,6 +96,21 @@ DesktopApplication::DesktopApplication() {
 }
 
 DesktopApplication::~DesktopApplication() {
+  if (processPathNameUTF8_) {
+    delete [] processPathNameUTF8_;
+  }
+
+  if (applicationNameUTF8_) {
+    delete [] applicationNameUTF8_;
+  }
+
+  if (processUniqueIdUTF8_) {
+    delete [] processUniqueIdUTF8_;
+  }
+
+  processPathNameUTF8_= NULL;
+  applicationNameUTF8_= NULL;
+  processUniqueIdUTF8_= NULL;
 }
 
 void DesktopApplication::setProcessId(const ProcessId processId) {

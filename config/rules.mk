@@ -262,7 +262,6 @@ SIMPLE_PROGRAMS :=
 HOST_LIBRARY :=
 HOST_PROGRAM :=
 HOST_SIMPLE_PROGRAMS :=
-SDK_BINARY := $(filter %.py,$(SDK_BINARY))
 SDK_LIBRARY :=
 endif
 
@@ -1169,18 +1168,6 @@ SDK_LIBRARY_TARGET := target
 INSTALL_TARGETS += SDK_LIBRARY
 endif
 endif # SDK_LIBRARY
-
-# SDK_BINARY is still used in various makefiles for non-products of the
-# compilation, so we need to keep that running on the libs tier.
-ifneq (,$(strip $(SDK_BINARY)))
-ifndef NO_DIST_INSTALL
-SDK_BINARY_FILES := $(SDK_BINARY)
-SDK_BINARY_DEST := $(SDK_BIN_DIR)
-# SDK_BINARY_TARGET is set in xpcom/idl-parser/Makefile.in
-SDK_BINARY_TARGET ?= libs target
-INSTALL_TARGETS += SDK_BINARY
-endif
-endif # SDK_BINARY
 
 ################################################################################
 # CHROME PACKAGING

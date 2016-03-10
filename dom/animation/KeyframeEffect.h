@@ -19,8 +19,9 @@
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/TimingParams.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
-#include "mozilla/dom/AnimationEffectTimingReadOnly.h" // TimingParams
+#include "mozilla/dom/AnimationEffectTimingReadOnly.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeBinding.h"
 #include "mozilla/dom/Nullable.h"
@@ -203,9 +204,13 @@ public:
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
               ErrorResult& aRv)
   {
+    TimingParams timingParams =
+      TimingParams::FromOptionsUnion(aOptions, aTarget, aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
     return ConstructKeyframeEffect<KeyframeEffectReadOnly>(
-      aGlobal, aTarget, aFrames,
-      TimingParams::FromOptionsUnion(aOptions, aTarget), aRv);
+             aGlobal, aTarget, aFrames, timingParams, aRv);
   }
 
   void GetTarget(Nullable<OwningElementOrCSSPseudoElement>& aRv) const;
@@ -430,9 +435,13 @@ public:
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
               ErrorResult& aRv)
   {
+    TimingParams timingParams =
+      TimingParams::FromOptionsUnion(aOptions, aTarget, aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
     return ConstructKeyframeEffect<KeyframeEffect>(
-      aGlobal, aTarget, aFrames,
-      TimingParams::FromOptionsUnion(aOptions, aTarget), aRv);
+      aGlobal, aTarget, aFrames, timingParams, aRv);
   }
 
   // More generalized version for Animatable.animate.

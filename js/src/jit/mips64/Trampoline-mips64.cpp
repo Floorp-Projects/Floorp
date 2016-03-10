@@ -393,6 +393,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     // Do not erase the frame pointer in this function.
 
     MacroAssembler masm(cx);
+    masm.pushReturnAddress();
     // Caller:
     // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- sp
     // '--- s3 ---'
@@ -671,6 +672,10 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
     Register cxreg = a0;
     regs.take(cxreg);
 
+    // If it isn't a tail call, then the return address needs to be saved
+    if (f.expectTailCall == NonTailCall)
+        masm.pushReturnAddress();
+
     // We're aligned to an exit frame, so link it up.
     masm.enterExitFrame(&f);
     masm.loadJSContext(cxreg);
@@ -846,6 +851,7 @@ JitRuntime::generatePreBarrier(JSContext* cx, MIRType type)
         save.set() = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
                            FloatRegisterSet());
     }
+    save.add(ra);
     masm.PushRegsInMask(save);
 
     MOZ_ASSERT(PreBarrierReg == a1);
@@ -856,6 +862,7 @@ JitRuntime::generatePreBarrier(JSContext* cx, MIRType type)
     masm.passABIArg(a1);
     masm.callWithABI(IonMarkFunction(type));
 
+    save.take(AnyRegister(ra));
     masm.PopRegsInMask(save);
     masm.ret();
 

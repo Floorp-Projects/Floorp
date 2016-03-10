@@ -77,6 +77,8 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     if CONFIG['USE_ICU']:
         DIRS += ['config/external/icu']
     DIRS += ['js/src']
+else:
+    TEST_DIRS += ['js/src/tests']
 
 if not CONFIG['JS_STANDALONE'] and CONFIG['MOZ_BUILD_APP']:
     # Bring in the configuration for the configured application.

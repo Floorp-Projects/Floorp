@@ -21,14 +21,15 @@
   <!--
     B2G repositories for all targets
     -->
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="4f0e2a1a42a2d049b6fe8f4f095cdcdf0fd5465c"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4eb8f37d2239ea7746462aa603f585116a9eaa92"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="eeedf205f728573c570c3b86f71d51916288bd04"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="6b2254b3e272133e9286d5986960e66bdecac0eb"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="99c333dab00ed79baff9e1cf76b320aee8e1c123"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
+  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="34adfb400e031f3dd3353d92413572db5e3a7376"/>
   <project name="platform_system_libpdu" path="system/libpdu" remote="b2g" revision="ac4e539dbd73522c466ebffba53edea61702082f"/>
-  <project name="platform_system_sensorsd" path="system/sensorsd" remote="b2g" revision="3799a1cb57f08e9468d1cec6c74f8abe93ddae36"/>
+  <project name="platform_system_sensorsd" path="system/sensorsd" remote="b2g" revision="3618678c472320de386f5ddc27897992d0e148a8"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="d3c9acb642baee501cff89e4efdb16b0c7480760">
+  <project name="platform_build" path="build" remote="b2g" revision="964d9fa4eabe9eb473ef9101ca2a690880f28547">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
@@ -36,13 +37,15 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="5f931350fbc87c3df9db8b0ceb37734b8b471593"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="48d8c7c950745f1b166b42125e6f0d3293d71636"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="2d5b6b107d77a31935aa4fe53ba67a8574372672"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="fc7902b057d00a3bd94548bec58e5c04ec5643f7"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="f92a936f2aa97526d4593386754bdbf02db07a12"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="6e47ff2790f5656b5b074407829ceecf3e6188c4"/>
   <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.7" path="prebuilts/gcc/linux-x86/arm/arm-eabi-4.7" revision="1950e4760fa14688b83cdbb5acaa1af9f82ef434"/>
   <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.7" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.7" revision="ac6eb97a37035c09fb5ede0852f0881e9aadf9ad"/>
+  <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9" remote="caf" revision="c09e1b3a55153d1ba142d5bf548c90487ea71f9e"/>
   <project groups="linux,x86" name="platform/prebuilts/gcc/linux-x86/x86/i686-linux-android-4.7" path="prebuilts/gcc/linux-x86/x86/i686-linux-android-4.7" revision="737f591c5f95477148d26602c7be56cbea0cdeb9"/>
+  <project groups="linux,x86" name="platform/prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.9" path="prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.9" remote="caf" revision="c33513f9de95fcdf4ec832db5e3ebd612382f541"/>
   <project groups="linux,x86" name="platform/prebuilts/python/linux-x86/2.7.5" path="prebuilts/python/linux-x86/2.7.5" revision="51da9b1981be481b92a59a826d4d78dc73d0989a"/>
   <project name="device/common" path="device/common" revision="798a3664597e6041985feab9aef42e98d458bc3d"/>
   <project name="device/sample" path="device/sample" revision="9aebb4ac5b6c1b2552599651a0e51b01e720eea6"/>
@@ -129,7 +132,6 @@
   <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="bb356d6505f914347690c8143dbd03af427dd07e"/>
   <project name="platform/system/extras" path="system/extras" revision="5356165f67f4a81c2ef28671c13697f1657590df"/>
   <project name="platform/system/media" path="system/media" revision="be0e2fe59a8043fa5200f75697df9220a99abe9d"/>
-  <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="34adfb400e031f3dd3353d92413572db5e3a7376"/>
   <project name="platform/system/netd" path="system/netd" revision="36704b0da24debcab8090156568ac236315036bb"/>
   <project name="platform/system/security" path="system/security" revision="583374f69f531ba68fc3dcbff1f74893d2a96406"/>
   <project name="platform/system/vold" path="system/vold" revision="d4455b8cf361f8353e8aebac15ffd64b4aedd2b9"/>
@@ -141,7 +143,7 @@
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="566810728cd485ff2f30766499d32ada7cbd487a"/>
   <project name="platform_bionic" path="bionic" remote="b2g" revision="3e85c4683c121530c1c3a48c696a569bf5f587e2"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="3e4affc1794fef1ad96d6fcc727cca92b032a429"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="5fff3b73c4ca30765ac70a696fcc2c81979eb384"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="f37bd545063039e30a92f2550ae78c0e6e4e2d08"/>
   <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="0c6a6547cd1fd302fa2b0f6e375654df36bf0ec4"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="c0dd0098328f3992e1ca09d6d4355729243863d5"/>

@@ -11,8 +11,16 @@
 #include "nsTransactionStack.h"
 #include "nscore.h"
 
-nsTransactionStack::nsTransactionStack(nsTransactionStack::Type aType)
-  : mType(aType)
+class nsTransactionStackDeallocator : public nsDequeFunctor {
+  virtual void* operator() (void* aObject) {
+    RefPtr<nsTransactionItem> releaseMe = dont_AddRef(static_cast<nsTransactionItem*>(aObject));
+    return nullptr;
+  }
+};
+
+nsTransactionStack::nsTransactionStack(Type aType)
+  : nsDeque(new nsTransactionStackDeallocator())
+  , mType(aType)
 {
 }
 
@@ -22,88 +30,77 @@ nsTransactionStack::~nsTransactionStack()
 }
 
 void
-nsTransactionStack::Push(nsTransactionItem *aTransaction)
+nsTransactionStack::Push(nsTransactionItem* aTransactionItem)
 {
-  if (!aTransaction) {
+  if (!aTransactionItem) {
     return;
   }
 
-  // The stack's bottom is the front of the deque, and the top is the back.
-  RefPtr<nsTransactionItem> item(aTransaction);
+  RefPtr<nsTransactionItem> item(aTransactionItem);
   Push(item.forget());
 }
 
 void
-nsTransactionStack::Push(already_AddRefed<nsTransactionItem> aTransaction)
+nsTransactionStack::Push(already_AddRefed<nsTransactionItem> aTransactionItem)
 {
-  RefPtr<nsTransactionItem> item(aTransaction);
+  RefPtr<nsTransactionItem> item(aTransactionItem);
   if (!item) {
     return;
   }
 
-  // XXX we really want to use emplace_back here, but we don't have a
-  // C++11 stdlib everywhere.
-  RefPtr<nsTransactionItem> dummy;
-  auto pushedItem = mDeque.insert(mDeque.end(), dummy);
-  *pushedItem = item.forget();
+  nsDeque::Push(item.forget().take());
 }
 
 already_AddRefed<nsTransactionItem>
 nsTransactionStack::Pop()
 {
-  if (mDeque.empty()) {
-    return nullptr;
-  }
-  RefPtr<nsTransactionItem> ret = mDeque.back().forget();
-  mDeque.pop_back();
-  return ret.forget();
+  RefPtr<nsTransactionItem> item =
+    dont_AddRef(static_cast<nsTransactionItem*>(nsDeque::Pop()));
+  return item.forget();
 }
 
 already_AddRefed<nsTransactionItem>
 nsTransactionStack::PopBottom()
 {
-  if (mDeque.empty()) {
-    return nullptr;
-  }
-  RefPtr<nsTransactionItem> ret = mDeque.front().forget();
-  mDeque.pop_front();
-  return ret.forget();
+  RefPtr<nsTransactionItem> item =
+    dont_AddRef(static_cast<nsTransactionItem*>(nsDeque::PopFront()));
+  return item.forget();
 }
 
 already_AddRefed<nsTransactionItem>
 nsTransactionStack::Peek()
 {
-  if (mDeque.empty()) {
-    return nullptr;
-  }
-  RefPtr<nsTransactionItem> ret = mDeque.back();
-  return ret.forget();
+  RefPtr<nsTransactionItem> item =
+    static_cast<nsTransactionItem*>(nsDeque::Peek());
+  return item.forget();
 }
 
 already_AddRefed<nsTransactionItem>
 nsTransactionStack::GetItem(int32_t aIndex)
 {
-  if (aIndex < 0 || aIndex >= static_cast<int32_t>(mDeque.size())) {
+  if (aIndex < 0 || aIndex >= static_cast<int32_t>(nsDeque::GetSize())) {
     return nullptr;
   }
-  RefPtr<nsTransactionItem> ret = mDeque[aIndex];
-  return ret.forget();
+  RefPtr<nsTransactionItem> item =
+    static_cast<nsTransactionItem*>(nsDeque::ObjectAt(aIndex));
+  return item.forget();
 }
 
 void
 nsTransactionStack::Clear()
 {
-  while (!mDeque.empty()) {
-    RefPtr<nsTransactionItem> tx = mType == FOR_UNDO ? Pop() : PopBottom();
+  while (GetSize() != 0) {
+    RefPtr<nsTransactionItem> item =
+      mType == FOR_UNDO ? Pop() : PopBottom();
   }
 }
 
 void
 nsTransactionStack::DoTraverse(nsCycleCollectionTraversalCallback &cb)
 {
-  int32_t size = mDeque.size();
+  int32_t size = GetSize();
   for (int32_t i = 0; i < size; ++i) {
-    nsTransactionItem* item = mDeque[i];
+    nsTransactionItem* item = static_cast<nsTransactionItem*>(nsDeque::ObjectAt(i));
     if (item) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "transaction stack mDeque[i]");
       cb.NoteNativeChild(item, NS_CYCLE_COLLECTION_PARTICIPANT(nsTransactionItem));
