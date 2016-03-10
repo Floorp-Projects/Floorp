@@ -38,7 +38,7 @@ add_task(function* test_alarm_fires() {
     let ALARM_NAME = "test_ext_alarms";
 
     browser.alarms.onAlarm.addListener(alarm => {
-      browser.test.assertEq(alarm.name, ALARM_NAME, "alarm has the correct name");
+      browser.test.assertEq(ALARM_NAME, alarm.name, "alarm has the correct name");
       browser.test.notifyPass("alarms");
     });
     browser.alarms.create(ALARM_NAME, {delayInMinutes: 0.02});
@@ -68,7 +68,8 @@ add_task(function* test_cleared_alarm_does_not_fire() {
       browser.test.fail("cleared alarm does not fire");
     });
     browser.alarms.create(ALARM_NAME, {when: Date.now() + 1000});
-    browser.alarms.clear(ALARM_NAME, wasCleared => {
+
+    browser.alarms.clear(ALARM_NAME).then(wasCleared => {
       browser.test.assertTrue(wasCleared, "alarm was cleared");
       setTimeout(() => {
         browser.test.notifyPass("alarms");
@@ -94,13 +95,13 @@ add_task(function* test_alarm_fires_with_when() {
     let ALARM_NAME = "test_ext_alarms";
 
     browser.alarms.onAlarm.addListener(alarm => {
-      browser.test.assertEq(alarm.name, ALARM_NAME, "alarm has the expected name");
+      browser.test.assertEq(ALARM_NAME, alarm.name, "alarm has the expected name");
       browser.test.notifyPass("alarms");
     });
     browser.alarms.create(ALARM_NAME, {when: Date.now() + 1000});
     setTimeout(() => {
       browser.test.fail("alarm fired within expected time");
-      browser.alarms.clear(ALARM_NAME, (wasCleared) => {
+      browser.alarms.clear(ALARM_NAME).then(wasCleared => {
         browser.test.assertTrue(wasCleared, "alarm was cleared");
       });
     }, 10000);
@@ -125,12 +126,12 @@ add_task(function* test_alarm_clear_non_matching_name() {
 
     browser.alarms.create(ALARM_NAME, {when: Date.now() + 2000});
 
-    browser.alarms.clear(ALARM_NAME + "1", wasCleared => {
+    browser.alarms.clear(ALARM_NAME + "1").then(wasCleared => {
       browser.test.assertFalse(wasCleared, "alarm was not cleared");
-      browser.alarms.getAll(alarms => {
-        browser.test.assertEq(1, alarms.length, "alarm was not removed");
-        browser.test.notifyPass("alarms");
-      });
+      return browser.alarms.getAll();
+    }).then(alarms => {
+      browser.test.assertEq(1, alarms.length, "alarm was not removed");
+      browser.test.notifyPass("alarms");
     });
   }
 
@@ -151,15 +152,15 @@ add_task(function* test_alarm_get_and_clear_single_argument() {
   function backgroundScript() {
     browser.alarms.create({when: Date.now() + 2000});
 
-    browser.alarms.get(alarm => {
+    browser.alarms.get().then(alarm => {
       browser.test.assertEq("", alarm.name, "expected alarm returned");
-      browser.alarms.clear(wasCleared => {
-        browser.test.assertTrue(wasCleared, "alarm was cleared");
-        browser.alarms.getAll(alarms => {
-          browser.test.assertEq(0, alarms.length, "alarm was removed");
-          browser.test.notifyPass("alarms");
-        });
-      });
+      return browser.alarms.clear();
+    }).then(wasCleared => {
+      browser.test.assertTrue(wasCleared, "alarm was cleared");
+      return browser.alarms.getAll();
+    }).then(alarms => {
+      browser.test.assertEq(0, alarms.length, "alarm was removed");
+      browser.test.notifyPass("alarms");
     });
   }
 
@@ -184,7 +185,7 @@ add_task(function* test_periodic_alarm_fires() {
     browser.alarms.onAlarm.addListener(alarm => {
       browser.test.assertEq(alarm.name, ALARM_NAME, "alarm has the expected name");
       if (count++ === 3) {
-        browser.alarms.clear(ALARM_NAME, (wasCleared) => {
+        browser.alarms.clear(ALARM_NAME).then(wasCleared => {
           browser.test.assertTrue(wasCleared, "alarm was cleared");
           browser.test.notifyPass("alarms");
         });
@@ -193,7 +194,7 @@ add_task(function* test_periodic_alarm_fires() {
     browser.alarms.create(ALARM_NAME, {periodInMinutes: 0.02});
     setTimeout(() => {
       browser.test.notify("alarm fired within expected time");
-      browser.alarms.clear(ALARM_NAME, (wasCleared) => {
+      browser.alarms.clear(ALARM_NAME).then(wasCleared => {
         browser.test.assertTrue(wasCleared, "alarm was cleared");
       });
     }, 30000);
@@ -218,52 +219,43 @@ add_task(function* test_get_get_all_clear_all_alarms() {
 
     let suffixes = [0, 1, 2];
 
-    // Wrap API methods in promise-based variants.
-    let promiseAlarms = {};
-    Object.keys(browser.alarms).forEach(method => {
-      promiseAlarms[method] = (...args) => {
-        return new Promise(resolve => {
-          browser.alarms[method](...args, resolve);
-        });
-      };
-    });
-
-    suffixes.forEach(suffix => {
+    for (let suffix of suffixes) {
       browser.alarms.create(ALARM_NAME + suffix, {when: Date.now() + (suffix + 1) * 10000});
-    });
+    }
 
-    promiseAlarms.getAll().then(alarms => {
-      browser.test.assertEq(suffixes.length, alarms.length);
+    browser.alarms.getAll().then(alarms => {
+      browser.test.assertEq(suffixes.length, alarms.length, "expected number of alarms were found");
       alarms.forEach((alarm, index) => {
         browser.test.assertEq(ALARM_NAME + index, alarm.name, "alarm has the expected name");
       });
 
       return Promise.all(
         suffixes.map(suffix => {
-          return promiseAlarms.get(ALARM_NAME + suffix).then(alarm => {
+          return browser.alarms.get(ALARM_NAME + suffix).then(alarm => {
             browser.test.assertEq(ALARM_NAME + suffix, alarm.name, "alarm has the expected name");
             browser.test.sendMessage(`get-${suffix}`);
           });
-        }));
+        })
+      );
     }).then(() => {
-      return promiseAlarms.clear(ALARM_NAME + suffixes[0]);
+      return browser.alarms.clear(ALARM_NAME + suffixes[0]);
     }).then(wasCleared => {
       browser.test.assertTrue(wasCleared, "alarm was cleared");
 
-      return promiseAlarms.getAll();
+      return browser.alarms.getAll();
     }).then(alarms => {
       browser.test.assertEq(2, alarms.length, "alarm was removed");
 
-      return promiseAlarms.get(ALARM_NAME + suffixes[0]);
+      return browser.alarms.get(ALARM_NAME + suffixes[0]);
     }).then(alarm => {
       browser.test.assertEq(undefined, alarm, "non-existent alarm is undefined");
       browser.test.sendMessage(`get-invalid`);
 
-      return promiseAlarms.clearAll();
+      return browser.alarms.clearAll();
     }).then(wasCleared => {
       browser.test.assertTrue(wasCleared, "alarms were cleared");
 
-      return promiseAlarms.getAll();
+      return browser.alarms.getAll();
     }).then(alarms => {
       browser.test.assertEq(0, alarms.length, "no alarms exist");
       browser.test.sendMessage("clearAll");
@@ -289,6 +281,47 @@ add_task(function* test_get_get_all_clear_all_alarms() {
     extension.awaitMessage("get-invalid"),
     extension.awaitMessage("clearAll"),
   ]);
+  yield extension.unload();
+});
+
+add_task(function* test_duplicate_alarm_name_replaces_alarm() {
+  function backgroundScript() {
+    let count = 0;
+
+    browser.alarms.onAlarm.addListener(alarm => {
+      if (alarm.name === "master alarm") {
+        browser.alarms.create("child alarm", {delayInMinutes: 0.05});
+        browser.alarms.getAll().then(results => {
+          browser.test.assertEq(2, results.length, "exactly two alarms exist");
+          browser.test.assertEq("master alarm", results[0].name, "first alarm has the expected name");
+          browser.test.assertEq("child alarm", results[1].name, "second alarm has the expected name");
+        }).then(() => {
+          if (count++ === 3) {
+            browser.alarms.clear("master alarm").then(wasCleared => {
+              return browser.alarms.clear("child alarm");
+            }).then(wasCleared => {
+              browser.test.notifyPass("alarms");
+            });
+          }
+        });
+      } else {
+        browser.test.fail("duplicate named alarm replaced existing alarm");
+        browser.test.notifyFail("alarms");
+      }
+    });
+
+    browser.alarms.create("master alarm", {delayInMinutes: 0.025, periodInMinutes: 0.025});
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript})()`,
+    manifest: {
+      permissions: ["alarms"],
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish("alarms");
   yield extension.unload();
 });
 

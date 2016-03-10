@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewStub;
@@ -19,7 +20,6 @@ import android.widget.TextView;
 import org.json.JSONObject;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.util.ColorUtils;
 
 public abstract class DoorHanger extends LinearLayout {
 
@@ -92,7 +92,7 @@ public abstract class DoorHanger extends LinearLayout {
         mPositiveButton = (Button) findViewById(R.id.doorhanger_button_positive);
         mOnButtonClickListener = config.getButtonClickListener();
 
-        mDividerColor = ColorUtils.getColor(context, R.color.toolbar_divider_grey);
+        mDividerColor = ContextCompat.getColor(context, R.color.toolbar_divider_grey);
 
         final ViewStub contentStub = (ViewStub) findViewById(R.id.content);
         contentStub.setLayoutResource(getContentResource());
