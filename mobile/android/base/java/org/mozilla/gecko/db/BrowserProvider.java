@@ -761,7 +761,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         String[] suggestedSiteArgs = new String[0];
 
-        boolean hasProcessedAnySuggestedSites = true;
+        boolean hasProcessedAnySuggestedSites = false;
 
         final int idColumnIndex = suggestedSitesCursor.getColumnIndexOrThrow(Bookmarks._ID);
         final int urlColumnIndex = suggestedSitesCursor.getColumnIndexOrThrow(Bookmarks.URL);
@@ -769,10 +769,10 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         while (suggestedSitesCursor.moveToNext()) {
             // We'll be using this as a subquery, hence we need to avoid the preceding UNION ALL
-            if (!hasProcessedAnySuggestedSites) {
+            if (hasProcessedAnySuggestedSites) {
                 suggestedSitesBuilder.append(" UNION ALL");
             } else {
-                hasProcessedAnySuggestedSites = false;
+                hasProcessedAnySuggestedSites = true;
             }
             suggestedSitesBuilder.append(" SELECT" +
                                          " ? AS " + Bookmarks._ID + "," +
@@ -812,7 +812,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
                        ignoreForTopSitesArgs);
 
-            if (!hasProcessedAnySuggestedSites) {
+            if (hasProcessedAnySuggestedSites) {
                 db.execSQL("INSERT INTO " + TABLE_TOPSITES +
                            // We need to LIMIT _after_ selecting the relevant suggested sites, which requires us to
                            // use an additional internal subquery, since we cannot LIMIT a subquery that is part of UNION ALL.
