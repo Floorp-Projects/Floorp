@@ -1740,12 +1740,6 @@ NS_IMETHODIMP NrTcpSocketIpc::FireErrorEvent(const nsAString &type,
 
 // methods of nsITCPSocketCallback that we are not going to implement.
 
-NS_IMETHODIMP NrTcpSocketIpc::FireDataEvent(JSContext* aCx,
-                                            const nsAString &type,
-                                            const JS::HandleValue data) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP NrTcpSocketIpc::FireDataStringEvent(const nsAString &type,
                                                   const nsACString &data) {
   return NS_ERROR_NOT_IMPLEMENTED;
