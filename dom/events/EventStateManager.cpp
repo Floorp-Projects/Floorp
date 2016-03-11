@@ -5624,6 +5624,10 @@ EventStateManager::WheelPrefs::Init(EventStateManager::WheelPrefs::Index aIndex)
 void
 EventStateManager::WheelPrefs::ApplyUserPrefsToDelta(WidgetWheelEvent* aEvent)
 {
+  if (aEvent->customizedByUserPrefs) {
+    return;
+  }
+
   Index index = GetIndexFor(aEvent);
   Init(index);
 
