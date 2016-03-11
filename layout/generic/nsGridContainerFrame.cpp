@@ -254,6 +254,13 @@ MergeSortedFrameLists(nsFrameList& aDest, nsFrameList& aSrc,
   MOZ_ASSERT(aSrc.IsEmpty());
 }
 
+static void
+MergeSortedFrameListsFor(nsFrameList& aDest, nsFrameList& aSrc,
+                         nsContainerFrame* aParent)
+{
+  MergeSortedFrameLists(aDest, aSrc, aParent->GetContent());
+}
+
 class nsGridContainerFrame::GridItemCSSOrderIterator
 {
 public:
@@ -4725,7 +4732,8 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
   nsReflowStatus ocStatus = NS_FRAME_COMPLETE;
   if (GetPrevInFlow()) {
     ReflowOverflowContainerChildren(PresContext(), *aState.mReflowState,
-                                    ocBounds, 0, ocStatus);
+                                    ocBounds, 0, ocStatus,
+                                    MergeSortedFrameListsFor);
   }
 
   WritingMode wm = aState.mReflowState->GetWritingMode();
