@@ -121,7 +121,7 @@ void LinearScaleYUVToRGB32Row_C(const uint8* y_buf,
 #else
 #define SIMD_ALIGNED(var) var __attribute__((aligned(16)))
 #endif
-extern SIMD_ALIGNED(int16 kCoefficientsRgbY[768][4]);
+extern SIMD_ALIGNED(const int16 kCoefficientsRgbY[768][4]);
 
 // x64 uses MMX2 (SSE) so emms is not required.
 // Warning C4799: function has no EMMS instruction.
