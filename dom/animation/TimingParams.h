@@ -17,17 +17,16 @@
 #ifdef None
 #undef None
 #endif
-#include "mozilla/dom/AnimationEffectReadOnlyBinding.h"  // for FillMode
-                                                         // and PlaybackDirection
+#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for FillMode
+                                                        // and PlaybackDirection
+
+class nsIDocument;
 
 namespace mozilla {
 
 namespace dom {
-struct AnimationEffectTimingProperties;
-class Element;
 class UnrestrictedDoubleOrKeyframeEffectOptions;
 class UnrestrictedDoubleOrKeyframeAnimationOptions;
-class ElementOrCSSPseudoElement;
 }
 
 struct TimingParams
@@ -36,12 +35,10 @@ struct TimingParams
 
   static TimingParams FromOptionsUnion(
     const dom::UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
-    const Nullable<dom::ElementOrCSSPseudoElement>& aTarget,
-    ErrorResult& aRv);
+    nsIDocument* aDocument, ErrorResult& aRv);
   static TimingParams FromOptionsUnion(
     const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
-    const Nullable<dom::ElementOrCSSPseudoElement>& aTarget,
-    ErrorResult& aRv);
+    nsIDocument* aDocument, ErrorResult& aRv);
 
   // Range-checks and validates an UnrestrictedDoubleOrString or
   // OwningUnrestrictedDoubleOrString object and converts to a
