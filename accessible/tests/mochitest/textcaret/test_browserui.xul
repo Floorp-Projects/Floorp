@@ -28,8 +28,8 @@
     ////////////////////////////////////////////////////////////////////////////
     // Tests
 
-    //gA11yEventDumpID = "eventdump"; // debug stuff
     //gA11yEventDumpToConsole = true; // debug
+    //enableLogging("tree,verbose");
 
     var gQueue = null;
     function doTests()
@@ -55,7 +55,7 @@
     <a target="_blank"
        href="https://bugzilla.mozilla.org/show_bug.cgi?id=723833"
        title="IAccessibleText::setCaretOffset on location or search bar causes focus to jump">
-      Mozilla Bug 723833
+      Bug 723833
     </a>
     <p id="display"></p>
     <div id="content" style="display: none">
@@ -63,7 +63,5 @@
     <pre id="test">
     </pre>
   </body>
-
-  <vbox id="eventdump"></vbox>
   </vbox>
 </window>
