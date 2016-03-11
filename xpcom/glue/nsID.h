@@ -97,7 +97,7 @@ typedef nsID nsCID;
   const nsCID _name = _cidspec
 
 #define NS_DEFINE_NAMED_CID(_name) \
-  static nsCID k##_name = _name
+  static const nsCID k##_name = _name
 
 #define REFNSCID const nsCID&
 
