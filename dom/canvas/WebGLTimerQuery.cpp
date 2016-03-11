@@ -10,7 +10,6 @@
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "nsContentUtils.h"
 #include "WebGLContext.h"
-#include "nsThreadUtils.h"
 
 namespace mozilla {
 
@@ -24,7 +23,6 @@ WebGLTimerQuery::WebGLTimerQuery(WebGLContext* webgl, GLuint name)
   : WebGLContextBoundObject(webgl)
   , mGLName(name)
   , mTarget(LOCAL_GL_NONE)
-  , mCanBeAvailable(false)
 {
 }
 
@@ -55,12 +53,6 @@ WebGLTimerQuery::GetParentObject() const
   return mContext;
 }
 
-void
-WebGLTimerQuery::QueueAvailablity()
-{
-  RefPtr<WebGLTimerQuery> self = this;
-  NS_DispatchToCurrentThread(NS_NewRunnableFunction([self] { self->mCanBeAvailable = true; }));
-}
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLTimerQuery)
 

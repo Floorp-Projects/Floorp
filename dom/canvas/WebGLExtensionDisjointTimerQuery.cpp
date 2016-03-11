@@ -12,7 +12,6 @@
 #include "GLContext.h"
 #include "WebGLContext.h"
 #include "WebGLTimerQuery.h"
-#include "gfxPrefs.h"
 
 namespace mozilla {
 
@@ -118,7 +117,6 @@ WebGLExtensionDisjointTimerQuery::EndQueryEXT(GLenum target)
 
   mContext->MakeContextCurrent();
   mContext->GL()->fEndQuery(target);
-  mActiveQuery->QueueAvailablity();
   mActiveQuery = nullptr;
 }
 
@@ -223,8 +221,7 @@ WebGLExtensionDisjointTimerQuery::GetQueryObjectEXT(JSContext* cx,
     mContext->GL()->fGetQueryObjectuiv(query->mGLName,
                                        LOCAL_GL_QUERY_RESULT_AVAILABLE_EXT,
                                        &avail);
-    bool canBeAvailable = query->CanBeAvailable() || gfxPrefs::WebGLImmediateQueries();
-    retval.set(JS::BooleanValue(bool(avail) && canBeAvailable));
+    retval.set(JS::BooleanValue(bool(avail)));
     break;
   }
   default:
