@@ -91,6 +91,10 @@ html, body, #app, #memory-tool {
   margin-inline-end: 5px;
 }
 
+.devtools-toolbar > .toolbar-group > label.label-by > span {
+  margin-inline-end: 5px;
+}
+
 .devtools-toolbar > label {
   margin-inline-end: 5px;
 }
