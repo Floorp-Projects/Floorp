@@ -1169,7 +1169,11 @@ class JavaPanZoomController
         mLastZoomFocus = new PointF(detector.getFocusX(), detector.getFocusY());
         cancelTouch();
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createNativeGestureEvent(GeckoEvent.ACTION_MAGNIFY_START, mLastZoomFocus, getMetrics().zoomFactor));
+        final GeckoEvent event = GeckoEvent.createNativeGestureEvent(
+                GeckoEvent.ACTION_MAGNIFY_START, mLastZoomFocus, getMetrics().zoomFactor);
+        if (event != null) {
+            GeckoAppShell.sendEventToGecko(event);
+        }
 
         return true;
     }
@@ -1202,8 +1206,11 @@ class JavaPanZoomController
             mTarget.setViewportMetrics(target);
         }
 
-        GeckoEvent event = GeckoEvent.createNativeGestureEvent(GeckoEvent.ACTION_MAGNIFY, mLastZoomFocus, getMetrics().zoomFactor);
-        GeckoAppShell.sendEventToGecko(event);
+        final GeckoEvent event = GeckoEvent.createNativeGestureEvent(
+                GeckoEvent.ACTION_MAGNIFY, mLastZoomFocus, getMetrics().zoomFactor);
+        if (event != null) {
+            GeckoAppShell.sendEventToGecko(event);
+        }
 
         return true;
     }
