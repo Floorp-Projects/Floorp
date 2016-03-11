@@ -25,6 +25,7 @@ public:
   void Unlink() override { mEffect = nullptr; }
 
   void SetEndDelay(double aEndDelay);
+  void SetIterationStart(double aIterationStart);
   void SetDuration(const UnrestrictedDoubleOrString& aDuration,
                    ErrorResult& aRv);
 

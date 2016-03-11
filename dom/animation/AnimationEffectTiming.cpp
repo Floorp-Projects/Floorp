@@ -40,6 +40,18 @@ AnimationEffectTiming::SetEndDelay(double aEndDelay)
 }
 
 void
+AnimationEffectTiming::SetIterationStart(double aIterationStart)
+{
+  if (mTiming.mIterationStart == aIterationStart) {
+    return;
+  }
+  mTiming.mIterationStart = aIterationStart;
+  if (mEffect) {
+    mEffect->NotifySpecifiedTimingUpdated();
+  }
+}
+
+void
 AnimationEffectTiming::SetDuration(const UnrestrictedDoubleOrString& aDuration,
                                    ErrorResult& aRv)
 {
