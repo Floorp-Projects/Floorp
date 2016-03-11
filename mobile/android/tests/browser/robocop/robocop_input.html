@@ -5,16 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
-    <p><input id="input" type="text"></p>
-    <p><input id="resetting-input" type="text"></p>
+    <p>Input: <input id="input" type="text"></p>
+    <p>Resetting input: <input id="resetting-input" type="text"></p>
+    <p>Hiding input: <input id="hiding-input" type="text"></p>
     <script type="application/javascript;version=1.8" src="robocop_head.js"></script>
     <script type="application/javascript;version=1.8">
       let input = document.getElementById("input");
 
       // An input that resets the editor on every input by resetting the value property.
       let resetting_input = document.getElementById("resetting-input");
-      resetting_input.addEventListener('input', function () {
-          this.value = this.value;
+      resetting_input.addEventListener('input', function() {
+        this.value = this.value;
+      });
+
+      // An input that hides on input.
+      let hiding_input = document.getElementById("hiding-input");
+      hiding_input.addEventListener('keydown', function(e) {
+        if (e.key === "!") { // '!' key event as sent by testInputConnection.java.
+          this.value = "";
+          this.style.display = "none";
+        }
       });
 
       let test = {
@@ -30,7 +40,7 @@
 
           // Ending the composition then setting the input value triggers the bug.
           inputIme.forceCompositionEnd();
-          input.value = "good";
+          input.value = "good"; // Value that testInputConnection.java expects.
         },
 
         test_set_selection: function() {
@@ -40,12 +50,18 @@
 
           // Ending the composition then setting the selection triggers the bug.
           inputIme.forceCompositionEnd();
-          input.setSelectionRange(3, 3);
+          input.setSelectionRange(3, 3); // Offsets that testInputConnection.java expects.
         },
 
         focus_resetting_input: function(val) {
           resetting_input.value = val;
           resetting_input.focus();
+        },
+
+        focus_hiding_input: function(val) {
+          hiding_input.value = val;
+          hiding_input.style.display = "";
+          hiding_input.focus();
         },
 
         finish_test: function() {
