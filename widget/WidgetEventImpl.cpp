@@ -522,7 +522,7 @@ WidgetKeyboardEvent::GetCodeNameIndex(const nsAString& aCodeValue)
 WidgetKeyboardEvent::GetCommandStr(Command aCommand)
 {
 #define NS_DEFINE_COMMAND(aName, aCommandStr) , #aCommandStr
-  static const char* kCommands[] = {
+  static const char* const kCommands[] = {
     "" // CommandDoNothing
 #include "mozilla/CommandList.h"
   };
