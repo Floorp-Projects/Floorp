@@ -11,6 +11,10 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-error.html";
 
+var getItemForAttachment;
+var Sources;
+var getItemInvoked = false;
+
 add_task(function*() {
   yield loadTab(TEST_URI);
   let hud = yield openConsole(null);
@@ -26,6 +30,12 @@ add_task(function*() {
   }
   EventUtils.sendMouseEvent({ type: "click" }, button, content);
 
+  let { panelWin: { DebuggerView } } = yield openDebugger();
+  info("debugger opened");
+  Sources = DebuggerView.Sources;
+  hud = yield openConsole();
+  info("console opened again");
+
   let [result] = yield waitForMessages({
     webconsole: hud,
     messages: [{
@@ -37,10 +47,16 @@ add_task(function*() {
 
   let msg = [...result.matched][0];
   ok(msg, "error message");
-  let locationNode = msg.querySelector(".message-location .frame-link-filename");
+  let locationNode = msg.querySelector(".message-location");
   ok(locationNode, "location node");
 
   let onTabOpen = waitForTab();
+
+  getItemForAttachment = Sources.getItemForAttachment;
+  Sources.getItemForAttachment = () => {
+    getItemInvoked = true;
+    return false;
+  };
 
   EventUtils.sendMouseEvent({ type: "click" }, locationNode);
 
@@ -48,4 +64,8 @@ add_task(function*() {
   ok(true, "the view source tab was opened in response to clicking " +
            "the location node");
   gBrowser.removeTab(tab);
+
+  ok(getItemInvoked, "custom getItemForAttachment() was invoked");
+  Sources.getItemForAttachment = getItemForAttachment;
+  Sources = getItemForAttachment = null;
 });

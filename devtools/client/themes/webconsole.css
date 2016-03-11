@@ -102,8 +102,14 @@ a {
   text-decoration: underline;
 }
 
-.message-location > .frame-link {
-  width: 10em;
+.message-location > .filename {
+  text-overflow: ellipsis;
+  text-align: end;
+  overflow: hidden;
+}
+
+.message-location > .line-number {
+  flex: none;
 }
 
 .message-flex-body {

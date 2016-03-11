@@ -3667,7 +3667,8 @@ Widgets.Stacktrace.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
     }
 
     let location = this.output.owner.createLocationNode({url: frame.filename,
-                                                        line: frame.lineNumber});
+                                                        line: frame.lineNumber},
+                                                        "jsdebugger");
 
     // .devtools-monospace sets font-size to 80%, however .body already has
     // .devtools-monospace. If we keep it here, the location would be rendered
