@@ -1,0 +1,172 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Fragmentation of a height:auto  definite max-height grid, forced break growing min-content row</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+body { overflow:hidden; }
+
+.columns {
+  position:relative;
+     -moz-columns: 5;
+      -ms-columns: 5;
+  -webkit-columns: 5;
+          columns: 5;
+     -moz-column-fill: auto;
+      -ms-column-fill: auto;
+  -webkit-column-fill: auto;
+          column-fill: auto;
+  border: 2px dashed;
+  margin-bottom: 5px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 30px 30px 30px;
+  grid-auto-rows: 30px;
+  grid-gap: 12px;
+  border:5px solid;
+  align-content: start;
+}
+span { background:lime; border:1px solid black; }
+x { display:block; height:20px; }
+.t { border-bottom-width:0; }
+.b { border-top-width:0; }
+.m { border-top-width:0; border-bottom-width:0; }
+
+i { display:block; height:10px; margin-top:7px; background:blue; }
+</style>
+</head>
+<body>
+
+<div class="columns" style="height: 100px">
+<div style="padding-top:1px; background:grey">
+<div class="grid t" style="grid-template-rows: 1fr; grid-gap:0; height:94px">
+<span style="height:50px"><i style="height:60px"></i><x></x></span>
+<span style="height:60px"><i></i><i></i><i></i><x></x></span>
+</div>
+<div class="grid b" style="grid-template-rows: 50px; grid-gap:0; height:50px">
+<span><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 100px">
+<div style="padding-top:1px; background:grey">
+<div class="grid t" style="grid-template-rows: 1fr; grid-gap:0; height:94px">
+<span class="t"><x></x></span>
+<span style="height:50px"><i style="height:60px"></i><x></x></span>
+<span style="height:60px"><i></i><i></i><i></i><x></x></span>
+</div>
+<div class="grid b" style="grid-template-rows: 50px; grid-gap:0; height:50px">
+<span class="b"><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 100px">
+<div style="padding-top:1px; background:grey">
+<div class="grid t" style="grid-template-rows: 1fr; grid-gap:0; height:94px">
+<span class="t"><x></x></span>
+<span style="height:50px"><i style="height:60px"></i><x></x></span>
+<span style="height:60px"><i></i><i></i><i></i><x></x></span>
+</div>
+<div class="grid m" style="grid-template-rows: 80px; grid-gap:0;">
+<span class="m"><x></x></span>
+</div>
+<div style="height:20px"></div>
+<div class="grid b" style="grid-gap:0; height:6px">
+<span class="b"><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 100px">
+<div style="padding-top:1px; background:grey">
+<div class="grid t" style="grid-template-rows: 17px 1fr; grid-row-gap:0; height:94px">
+<span style="grid-row:2; height:50px"><x></x><i style="height:60px"></i></span>
+<span style="grid-row:2; height:60px"><x></x><i></i><i></i><i></i></span>
+<span class="t" style="grid-row:1/span 2"><x></x></span>
+</div>
+<div class="grid b" style="grid-template-rows: 92px; grid-row-gap:0; height:86px">
+<span class="m" style="height:10px; background:blue; margin: 0 1px; border-width:0"><x></x></span>
+<span class="m" style="grid-column:3"><x></x></span>
+</div></div>
+<div style="height:9px"></div>
+<div class="grid" style="grid-template-rows: auto; grid-row-gap:0; height:1px; border-width:0; margin-left:5px;">
+<span class="b" style="grid-column:3; height:29px"><x></x></span>
+</div>
+</div>
+
+<div class="columns" style="height: 100px">
+<div style="padding-top:1px; background:grey">
+<div class="grid t" style="grid-template-rows: 17px 1fr; grid-row-gap:0; height:94px">
+<span class="t" style="grid-row:1/span 2"><x></x></span>
+<span style="grid-row:2; height:50px"><x></x><i style="height:50px"></i></span>
+<span style="grid-row:2; height:60px"><x></x><i></i><i></i><i></i></span>
+</div>
+<div class="grid b" style="grid-template-rows: 92px; grid-row-gap:0; height:86px">
+<span class="m"><x></x></span>
+<span class="m" style="height:11px; color:blue; background:blue; margin: 0 1px; border-width:0"></span>
+</div></div>
+<div style="height:9px"></div>
+<div class="grid" style="grid-template-rows: auto; grid-row-gap:0; height:1px; border-width:0; margin-left:5px;">
+<span class="b" style="height:29px"><x></x></span>
+</div>
+</div>
+
+<div class="columns" style="height: 100px">
+<div style="padding-top:1px; background:grey">
+<div class="grid t" style="grid-template-rows: 50px; grid-gap:0;">
+</div>
+<div class="grid m" style="grid-template-rows: 1fr; grid-gap:0; height:100px">
+<span class="t"><x></x></span>
+<span style="height:50px"><i style="height:60px"></i><x></x></span>
+<span style="height:60px"><i></i><i></i><i></i><x></x></span>
+</div>
+<div class="grid b" style="grid-template-rows: 50px; grid-gap:0; height:30px;">
+<span class="b" style="height:49px"><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 100px">
+<div style="padding-top:1px; background:grey">
+<div class="grid t" style="grid-template-rows: 1fr; grid-gap:0; height:94px">
+<span class="t"><x></x></span>
+<span style="height:50px"><i style="height:60px"></i><x></x></span>
+<span style="height:60px"><i></i><i></i><i></i><x></x></span>
+</div>
+<div class="grid m" style="grid-template-rows: 80px; grid-gap:0;">
+<span class="m"><x></x></span>
+</div>
+<div style="height:20px"></div>
+<div class="grid b" style="grid-gap:0; height:6px">
+<span class="b"><x></x></span>
+<span><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 100px">
+<div style="padding-top:1px; background:grey">
+<div class="grid t" style="grid-template-rows: 17px 1fr; grid-row-gap:0; height:94px">
+<span style="grid-row:2; height:50px"><x></x><i style="height:60px"></i></span>
+<span style="grid-row:2; height:60px"><x></x><i></i><i></i><i></i></span>
+<span class="t" style="grid-row:1/span 2"><x></x></span>
+</div>
+<div class="grid b" style="grid-template-rows: 92px; grid-row-gap:0; height:86px">
+<span class="m" style="height:10px; background:blue; margin: 0 1px; border-width:0"><x></x></span>
+<span class="m" style="grid-column:3"><x></x></span>
+</div></div>
+<div style="height:9px"></div>
+<div class="grid m" style="border-style:none; margin-left:5px">
+<span><x></x></span>
+<span class="b" style="grid-column:3; height:29px"><x></x></span>
+</div>
+</div>
+
+</body>
+</html>

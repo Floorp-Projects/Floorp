@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html lang="en-US" class="reftest-print"><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Fragmentation in print context of height:auto grid with first grid row at top-of-page</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#pagination">
+  <link rel="match" href="grid-fragmentation-011-ref.html">
+  <style type="text/css">
+@page { size:5in 3in; margin:0.5in; }
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 0.6in 0.6in 0.6in;
+  grid-auto-rows: 1in;
+  grid-gap: 0.1in;
+  border: 0.1in solid;
+  border-top-width: 0;
+  align-content: start;
+}
+span { display:block; background:lime; border:0.05in solid black; }
+x { display:block; height:0.2in; }
+
+</style>
+</head>
+<body>
+
+<div style="background:grey">
+<div class="grid">
+<span style="grid-row:span 2"><x></x></span>
+<span style="height:1.5in; background:cyan"><x></x></span>
+<span><x></x></span>
+<span style="align-self:end; background:pink"><x></x></span>
+<span style="grid-row:1"><x></x></span>
+</div></div>
+
+</body>
+</html>
