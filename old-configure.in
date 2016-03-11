@@ -1069,8 +1069,13 @@ arm*)
     ;;
 
 mips|mipsel)
-    CPU_ARCH="mips"
+    CPU_ARCH="mips32"
     ;;
+
+mips64|mips64el)
+    CPU_ARCH="mips64"
+    ;;
+
 
 aarch64*)
     CPU_ARCH=aarch64
@@ -5923,7 +5928,7 @@ if test -n "$MOZ_LIBJPEG_TURBO"; then
   *:aarch64)
     LIBJPEG_TURBO_ASFLAGS="-march=armv8-a"
   ;;
-  *:mips)
+  *:mips32)
     LIBJPEG_TURBO_ASFLAGS="-mdspr2"
   ;;
   *:x86)
