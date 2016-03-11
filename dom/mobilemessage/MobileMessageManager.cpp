@@ -277,8 +277,9 @@ MobileMessageManager::SendMMS(const MmsParameters& aParams,
 
   JSContext *cx = jsapi.cx();
   JS::Rooted<JS::Value> val(cx);
+  aRv.MightThrowJSException();
   if (!ToJSValue(cx, aParams, &val)) {
-    aRv.Throw(NS_ERROR_TYPE_ERR);
+    aRv.StealExceptionFromJSContext(cx);
     return nullptr;
   }
 
