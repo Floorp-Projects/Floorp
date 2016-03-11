@@ -4076,23 +4076,43 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   MOZ_ASSERT(isGridItem == (aChild->GetType() != nsGkAtoms::placeholderFrame));
   LogicalRect cb(wm);
   WritingMode childWM = aChild->GetWritingMode();
+  bool isConstrainedBSize = false;
+  nscoord toFragmentainerEnd;
   if (MOZ_LIKELY(isGridItem)) {
     MOZ_ASSERT(aGridItemInfo->mFrame == aChild);
     const GridArea& area = aGridItemInfo->mArea;
     MOZ_ASSERT(area.IsDefinite());
     cb = aState.ContainingBlockFor(area);
+    isConstrainedBSize = aFragmentainer && !wm.IsOrthogonalTo(childWM);
+    if (isConstrainedBSize) {
+      nscoord fragCBOffset = cb.BStart(wm) - aState.mFragBStart;
+      if (fragCBOffset < 0) {
+        // Subtract the "consumed" part of the grid area.
+        cb.BSize(wm) = std::max(fragCBOffset + cb.BSize(wm), 0);
+      }
+      cb.BStart(wm) = std::max(fragCBOffset, 0);
+      toFragmentainerEnd = aFragmentainer->mToFragmentainerEnd -
+        aState.mFragBStart - cb.BStart(wm);
+      toFragmentainerEnd = std::max(toFragmentainerEnd, 0);
+    }
     cb += aContentArea.Origin(wm);
   } else {
     cb = aContentArea;
   }
-  LogicalSize childCBSize = cb.Size(wm).ConvertTo(childWM, wm);
-  LogicalSize percentBasis(childCBSize);
-  // XXX temporary workaround to avoid being INCOMPLETE until we have
-  // support for fragmentation (bug 1144096)
-  childCBSize.BSize(childWM) = NS_UNCONSTRAINEDSIZE;
 
+  LogicalSize reflowSize(cb.Size(wm));
+  if (isConstrainedBSize) {
+    reflowSize.BSize(wm) = toFragmentainerEnd;
+  }
+  LogicalSize childCBSize = reflowSize.ConvertTo(childWM, wm);
+  if (!isConstrainedBSize) {
+    childCBSize.BSize(childWM) = NS_UNCONSTRAINEDSIZE;
+  }
+
+  LogicalSize percentBasis(cb.Size(wm).ConvertTo(childWM, wm));
   Maybe<nsHTMLReflowState> childRS; // Maybe<> so we can reuse the space
   childRS.emplace(pc, *aState.mReflowState, aChild, childCBSize, &percentBasis);
+  childRS->mFlags.mIsTopOfPage = aFragmentainer ? aFragmentainer->mIsTopOfPage : false;
   // We need the width of the child before we can correctly convert
   // the writing-mode of its origin, so we reflow at (0, 0) using a dummy
   // aContainerSize, and then pass the correct position to FinishReflowChild.
@@ -4105,12 +4125,15 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     cb.Origin(wm).ConvertTo(childWM, wm,
                             aContainerSize - childSize->PhysicalSize());
   // Apply align/justify-self and reflow again if that affects the size.
-  if (isGridItem) {
+  if (MOZ_LIKELY(isGridItem)) {
     LogicalSize oldSize = childSize->Size(childWM); // from the ReflowChild()
     LogicalSize newContentSize(childWM);
     auto align = childRS->mStylePosition->ComputedAlignSelf(containerSC);
-    Maybe<LogicalAxis> alignResize =
-      AlignSelf(align, cb, wm, *childRS, oldSize, &newContentSize, &childPos);
+    Maybe<LogicalAxis> alignResize;
+    if (NS_FRAME_IS_COMPLETE(aStatus)) {
+      alignResize =
+        AlignSelf(align, cb, wm, *childRS, oldSize, &newContentSize, &childPos);
+    }
     auto justify = childRS->mStylePosition->ComputedJustifySelf(containerSC);
     Maybe<LogicalAxis> justifyResize =
       JustifySelf(justify, cb, wm, *childRS, oldSize, &newContentSize, &childPos);
@@ -4121,9 +4144,17 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
       childSize.reset(); // In reverse declaration order since it runs
       childRS.reset();   // destructors.
       childRS.emplace(pc, *aState.mReflowState, aChild, childCBSize, &percentBasis);
+      childRS->mFlags.mIsTopOfPage = aFragmentainer ? aFragmentainer->mIsTopOfPage : false;
       if ((alignResize && alignResize.value() == eLogicalAxisBlock) ||
           (justifyResize && justifyResize.value() == eLogicalAxisBlock)) {
-        childRS->SetComputedBSize(newContentSize.BSize(childWM));
+        nscoord childConsumedBSize = 0;
+        if (isConstrainedBSize) {
+          // XXX use aChild->GetConsumedBSize() instead after bug 1232194 is fixed
+          for (auto prev = aChild->GetPrevInFlow(); prev; prev = prev->GetPrevInFlow()) {
+            childConsumedBSize += prev->ContentBSize(childWM);
+          }
+        }
+        childRS->SetComputedBSize(childConsumedBSize + newContentSize.BSize(childWM));
         childRS->SetBResize(true);
       }
       if ((alignResize && alignResize.value() == eLogicalAxisInline) ||
