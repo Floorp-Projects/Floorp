@@ -25,7 +25,7 @@ class AnimationUtils
 {
 public:
   static dom::Nullable<double>
-    TimeDurationToDouble(const dom::Nullable<TimeDuration>& aTime)
+  TimeDurationToDouble(const dom::Nullable<TimeDuration>& aTime)
   {
     dom::Nullable<double> result;
 
@@ -37,7 +37,7 @@ public:
   }
 
   static dom::Nullable<TimeDuration>
-    DoubleToTimeDuration(const dom::Nullable<double>& aTime)
+  DoubleToTimeDuration(const dom::Nullable<double>& aTime)
   {
     dom::Nullable<TimeDuration> result;
 
@@ -57,7 +57,7 @@ public:
    * be returned.
    */
   static Maybe<ComputedTimingFunction>
-    ParseEasing(const dom::Element* aTarget, const nsAString& aEasing);
+  ParseEasing(const dom::Element* aTarget, const nsAString& aEasing);
 };
 
 } // namespace mozilla
