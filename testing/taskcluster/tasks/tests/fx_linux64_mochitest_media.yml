@@ -1,0 +1,20 @@
+$inherits:
+  from: 'tasks/tests/fx_desktop_unittest.yml'
+task:
+  scopes:
+    - 'docker-worker:capability:device:loopbackVideo'
+  metadata:
+    name: '[TC] Linux64 mochitest-media'
+    description: Mochitest media run
+  payload:
+    capabilities:
+      devices:
+        loopbackVideo: true
+  extra:
+    suite:
+      name: mochitest
+      flavor: mochitest-media
+    treeherder:
+      groupName: Desktop mochitests
+      groupSymbol: tc-M
+      symbol: mda
