@@ -60,7 +60,7 @@ class RobocopTestRunner(MochitestDesktop):
         self.remoteLog = options.remoteLogFile
         self.auto.setRemoteLog(self.remoteLog)
         self.remoteScreenshots = "/mnt/sdcard/Robotium-Screenshots"
-        self.remoteNSPR = os.path.join(options.remoteTestRoot, "nspr")
+        self.remoteMozLog = os.path.join(options.remoteTestRoot, "mozlog")
         self.auto.setServerInfo(
             self.options.webServer, self.options.httpPort, self.options.sslPort)
         self.localLog = options.logFile
@@ -92,8 +92,8 @@ class RobocopTestRunner(MochitestDesktop):
         self.auto.deleteTombstones()
         self.dm.killProcess(self.options.app.split('/')[-1])
         self.dm.removeDir(self.remoteScreenshots)
-        self.dm.removeDir(self.remoteNSPR)
-        self.dm.mkDir(self.remoteNSPR)
+        self.dm.removeDir(self.remoteMozLog)
+        self.dm.mkDir(self.remoteMozLog)
         self.dm.mkDir(os.path.dirname(self.options.remoteLogFile))
         # Add Android version (SDK level) to mozinfo so that manifest entries
         # can be conditional on android_version.
@@ -128,9 +128,9 @@ class RobocopTestRunner(MochitestDesktop):
         self.dm.killProcess(self.options.app.split('/')[-1])
         blobberUploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
         if blobberUploadDir:
-            self.log.debug("Pulling any remote nspr logs and screenshots to %s." %
+            self.log.debug("Pulling any remote moz logs and screenshots to %s." %
                            blobberUploadDir)
-            self.dm.getDirectory(self.remoteNSPR, blobberUploadDir)
+            self.dm.getDirectory(self.remoteMozLog, blobberUploadDir)
             self.dm.getDirectory(self.remoteScreenshots, blobberUploadDir)
         MochitestDesktop.cleanup(self, self.options)
         if self.localProfile:
@@ -138,7 +138,7 @@ class RobocopTestRunner(MochitestDesktop):
         self.dm.removeDir(self.remoteProfile)
         self.dm.removeDir(self.remoteProfileCopy)
         self.dm.removeDir(self.remoteScreenshots)
-        self.dm.removeDir(self.remoteNSPR)
+        self.dm.removeDir(self.remoteMozLog)
         self.dm.removeFile(self.remoteConfigFile)
         if self.dm.fileExists(self.remoteLog):
             self.dm.removeFile(self.remoteLog)
@@ -400,9 +400,9 @@ class RobocopTestRunner(MochitestDesktop):
             del browserEnv["MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA"]
         if "XPCOM_MEM_BLOAT_LOG" in browserEnv:
             del browserEnv["XPCOM_MEM_BLOAT_LOG"]
-        browserEnv["NSPR_LOG_FILE"] = os.path.join(
-            self.remoteNSPR,
-            self.nsprLogName)
+        browserEnv["MOZ_LOG_FILE"] = os.path.join(
+            self.remoteMozLog,
+            self.mozLogName)
         return browserEnv
 
     def runSingleTest(self, test):
@@ -410,7 +410,7 @@ class RobocopTestRunner(MochitestDesktop):
            Run the specified test.
         """
         self.log.debug("Running test %s" % test['name'])
-        self.nsprLogName = "nspr-%s.log" % test['name']
+        self.mozLogName = "moz-%s.log" % test['name']
         browserEnv = self.buildBrowserEnv()
         self.setupRobotiumConfig(browserEnv)
         self.setupRemoteProfile()
