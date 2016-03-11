@@ -911,7 +911,6 @@ esac
 if test -z "$OS_TARGET"; then
     OS_TARGET=$OS_ARCH
 fi
-OS_CONFIG="${OS_TARGET}${OS_RELEASE}"
 
 dnl Set INTEL_ARCHITECTURE if we're compiling for x86-32 or x86-64.
 dnl ===============================================================
