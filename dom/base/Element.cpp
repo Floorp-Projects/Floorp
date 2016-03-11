@@ -3392,7 +3392,24 @@ Element::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
     doc->FlushPendingNotifications(Flush_Style);
   }
 
-  GetAnimationsUnsorted(this, CSSPseudoElementType::NotPseudo, aAnimations);
+  Element* elem = this;
+  CSSPseudoElementType pseudoType = CSSPseudoElementType::NotPseudo;
+  // For animations on generated-content elements, the animations are stored
+  // on the parent element.
+  nsIAtom* name = NodeInfo()->NameAtom();
+  if (name == nsGkAtoms::mozgeneratedcontentbefore) {
+    elem = GetParentElement();
+    pseudoType = CSSPseudoElementType::before;
+  } else if (name == nsGkAtoms::mozgeneratedcontentafter) {
+    elem = GetParentElement();
+    pseudoType = CSSPseudoElementType::after;
+  }
+
+  if (!elem) {
+    return;
+  }
+
+  GetAnimationsUnsorted(elem, pseudoType, aAnimations);
   aAnimations.Sort(AnimationPtrComparator<RefPtr<Animation>>());
 }
 
@@ -3405,6 +3422,7 @@ Element::GetAnimationsUnsorted(Element* aElement,
              aPseudoType == CSSPseudoElementType::after ||
              aPseudoType == CSSPseudoElementType::before,
              "Unsupported pseudo type");
+  MOZ_ASSERT(aElement, "Null element");
 
   EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
   if (!effects) {
