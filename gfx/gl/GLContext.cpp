@@ -65,7 +65,7 @@ uint32_t GLContext::sDebugMode = 0;
 #define END_SYMBOLS { nullptr, { nullptr } }
 
 // should match the order of GLExtensions, and be null-terminated.
-static const char *sExtensionNames[] = {
+static const char *const sExtensionNames[] = {
     "NO_EXTENSION",
     "GL_AMD_compressed_ATC_texture",
     "GL_ANGLE_depth_texture",
