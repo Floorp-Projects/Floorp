@@ -57,8 +57,6 @@ def autoconf(mozconfig, autoconf):
     return autoconf
 
 
-option(env='OLD_CONFIGURE', nargs=1, help='Path to the old configure script')
-
 @depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell,
          virtualenv_python, compile_environment, build_project,
          extra_old_configure_args, '--with-external-source-dir',
@@ -76,9 +74,6 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
     from os.path import getmtime
 
     from mozbuild.shellutil import quote
-
-    if not old_configure:
-        error('The OLD_CONFIGURE environment variable must be set')
 
     # os.path.abspath in the sandbox will ensure forward slashes on Windows,
     # which is actually necessary because this path actually ends up literally

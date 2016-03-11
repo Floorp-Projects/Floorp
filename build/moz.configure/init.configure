@@ -61,6 +61,8 @@ def check_build_environment(help, dist):
         )
 
 
+option(env='OLD_CONFIGURE', nargs=1, help='Path to the old configure script')
+
 option(env='MOZ_CURRENT_PROJECT', nargs=1, help='Current build project')
 option(env='MOZCONFIG', nargs=1, help='Mozconfig location')
 
@@ -69,14 +71,32 @@ option(env='MOZCONFIG', nargs=1, help='Mozconfig location')
 # Note: the dependency on --help is only there to always read the mozconfig,
 # even when --help is passed. Without this dependency, the function wouldn't
 # be called when --help is passed, and the mozconfig wouldn't be read.
-@depends('MOZ_CURRENT_PROJECT', 'MOZCONFIG', check_build_environment, '--help')
+@depends('MOZ_CURRENT_PROJECT', 'MOZCONFIG', 'OLD_CONFIGURE',
+         check_build_environment, '--help')
 @advanced
-def mozconfig(current_project, mozconfig,  build_env, help):
+def mozconfig(current_project, mozconfig, old_configure, build_env, help):
     from mozbuild.mozconfig import MozconfigLoader
+
+    if not old_configure:
+        error('The OLD_CONFIGURE environment variable must be set')
 
     # Don't read the mozconfig for the js configure (yay backwards
     # compatibility)
-    if build_env['TOPOBJDIR'].endswith('/js/src'):
+    # While the long term goal is that js and top-level use the same configure
+    # and the same overall setup, including the possibility to use mozconfigs,
+    # figuring out what we want to do wrt mozconfig vs. command line and
+    # environment variable is not a clear-cut case, and it's more important to
+    # fix the immediate problem mozconfig causes to js developers by
+    # "temporarily" returning to the previous behavior of not loading the
+    # mozconfig for the js configure.
+    # Separately to the immediate problem for js developers, there is also the
+    # need to not load a mozconfig when running js configure as a subconfigure.
+    # Unfortunately, there is no direct way to tell whether the running
+    # configure is the js configure. The indirect way is to look at the
+    # OLD_CONFIGURE path, which points to js/src/old-configure.
+    # I expect we'll have figured things out for mozconfigs well before
+    # old-configure dies.
+    if os.path.dirname(old_configure[0]).endswith('/js/src'):
         return {'path': None}
 
     loader = MozconfigLoader(build_env['TOPSRCDIR'])
