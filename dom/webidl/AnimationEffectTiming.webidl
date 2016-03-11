@@ -12,19 +12,18 @@
 
 [Func="nsDocument::IsWebAnimationsEnabled"]
 interface AnimationEffectTiming : AnimationEffectTimingReadOnly {
-   //Bug 1244633 - implement AnimationEffectTiming delay
-   //inherit attribute double                             delay;
-   inherit attribute double                             endDelay;
-   //Bug 1244637 - implement AnimationEffectTiming fill
-   //inherit attribute FillMode                           fill;
-   //Bug 1244638 - implement AnimationEffectTiming iterationStart
-   //inherit attribute double                             iterationStart;
-   //Bug 1244640 - implement AnimationEffectTiming iterations
-   //inherit attribute unrestricted double                iterations;
+  //Bug 1244633 - implement AnimationEffectTiming delay
+  //inherit attribute double                             delay;
+  inherit attribute double                             endDelay;
+  //Bug 1244637 - implement AnimationEffectTiming fill
+  //inherit attribute FillMode                           fill;
+  inherit attribute double                             iterationStart;
+  //Bug 1244640 - implement AnimationEffectTiming iterations
+  //inherit attribute unrestricted double                iterations;
   [SetterThrows]
   inherit attribute (unrestricted double or DOMString) duration;
-   //Bug 1244642 - implement AnimationEffectTiming direction
-   //inherit attribute PlaybackDirection                  direction;
-   //Bug 1244643 - implement AnimationEffectTiming easing
-   //inherit attribute DOMString                          easing;
+  //Bug 1244642 - implement AnimationEffectTiming direction
+  //inherit attribute PlaybackDirection                  direction;
+  //Bug 1244643 - implement AnimationEffectTiming easing
+  //inherit attribute DOMString                          easing;
 };
