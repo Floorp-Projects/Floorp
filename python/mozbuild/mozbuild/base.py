@@ -16,7 +16,7 @@ import which
 from mach.mixin.logging import LoggingMixin
 from mach.mixin.process import ProcessExecutionMixin
 
-from mozfile.mozfile import rmtree
+from mozfile.mozfile import remove as mozfileremove
 
 from .backend.configenvironment import ConfigEnvironment
 from .controller.clobber import Clobberer
@@ -306,7 +306,7 @@ class MozbuildObject(ProcessExecutionMixin):
         else:
             # We use mozfile because it is faster than shutil.rmtree().
             # mozfile doesn't like unicode arguments (bug 818783).
-            rmtree(self.topobjdir.encode('utf-8'))
+            mozfileremove(self.topobjdir.encode('utf-8'))
 
     def get_binary_path(self, what='app', validate_exists=True, where='default'):
         """Obtain the path to a compiled binary for this build configuration.
