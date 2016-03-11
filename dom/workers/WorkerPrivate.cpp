@@ -5781,9 +5781,9 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aFallbackMessage,
     xpc::ErrorReport::ErrorReportToMessageString(aReport, message);
 
     filename = NS_ConvertUTF8toUTF16(aReport->filename);
-    line = aReport->uclinebuf;
+    line.Assign(aReport->linebuf(), aReport->linebufLength());
     lineNumber = aReport->lineno;
-    columnNumber = aReport->uctokenptr - aReport->uclinebuf;
+    columnNumber = aReport->tokenOffset();
     flags = aReport->flags;
     errorNumber = aReport->errorNumber;
     MOZ_ASSERT(aReport->exnType >= JSEXN_NONE && aReport->exnType < JSEXN_LIMIT);

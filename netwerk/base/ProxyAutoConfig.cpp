@@ -322,7 +322,7 @@ PACErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
   nsString formattedMessage(NS_LITERAL_STRING("PAC Execution Error: "));
   formattedMessage += report->ucmessage;
   formattedMessage += NS_LITERAL_STRING(" [");
-  formattedMessage += report->uclinebuf;
+  formattedMessage.Append(report->linebuf(), report->linebufLength());
   formattedMessage += NS_LITERAL_STRING("]");
   PACLogToConsole(formattedMessage);
 }
