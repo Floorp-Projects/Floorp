@@ -17,6 +17,7 @@ interface AnimationEffectTiming : AnimationEffectTimingReadOnly {
   inherit attribute double                             endDelay;
   //Bug 1244637 - implement AnimationEffectTiming fill
   //inherit attribute FillMode                           fill;
+  [SetterThrows]
   inherit attribute double                             iterationStart;
   //Bug 1244640 - implement AnimationEffectTiming iterations
   //inherit attribute unrestricted double                iterations;

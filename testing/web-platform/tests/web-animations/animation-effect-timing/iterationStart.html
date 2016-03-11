@@ -54,5 +54,20 @@ test(function(t) {
   assert_equals(anim.effect.getComputedTiming().currentIteration, 3);
 }, 'Test that changing the iterationStart affects computed timing ' +
    'when forwards-filling');
+
+test(function(t) {
+  var div = createDiv(t);
+  var anim = div.animate({ opacity: [ 0, 1 ] }, 100);
+  assert_throws({ name: 'TypeError' },
+                function() {
+                  anim.effect.timing.iterationStart = -1;
+                });
+  assert_throws({ name: 'TypeError' },
+                function() {
+                  div.animate({ opacity: [ 0, 1 ] },
+                              { iterationStart: -1 });
+                });
+}, 'Test invalid iterationStart value');
+
 </script>
 </body>
