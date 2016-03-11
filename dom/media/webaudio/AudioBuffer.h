@@ -39,15 +39,15 @@ public:
   Create(AudioContext* aContext, uint32_t aNumberOfChannels,
          uint32_t aLength, float aSampleRate,
          already_AddRefed<ThreadSharedFloatArrayBufferList> aInitialContents,
-         JSContext* aJSContext, ErrorResult& aRv);
+         ErrorResult& aRv);
 
   static already_AddRefed<AudioBuffer>
   Create(AudioContext* aContext, uint32_t aNumberOfChannels,
          uint32_t aLength, float aSampleRate,
-         JSContext* aJSContext, ErrorResult& aRv)
+         ErrorResult& aRv)
   {
     return Create(aContext, aNumberOfChannels, aLength, aSampleRate,
-                  nullptr, aJSContext, aRv);
+                  nullptr, aRv);
   }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;

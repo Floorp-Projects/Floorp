@@ -71,7 +71,7 @@ AudioBuffer::Create(AudioContext* aContext, uint32_t aNumberOfChannels,
                     uint32_t aLength, float aSampleRate,
                     already_AddRefed<ThreadSharedFloatArrayBufferList>
                       aInitialContents,
-                    JSContext* aJSContext, ErrorResult& aRv)
+                    ErrorResult& aRv)
 {
   // Note that a buffer with zero channels is permitted here for the sake of
   // AudioProcessingEvent, where channel counts must match parameters passed
