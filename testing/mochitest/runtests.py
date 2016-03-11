@@ -77,19 +77,19 @@ except ImportError:
 here = os.path.abspath(os.path.dirname(__file__))
 
 
-###########################
-# Option for NSPR logging #
-###########################
+########################################
+# Option for MOZ (former NSPR) logging #
+########################################
 
-# Set the desired log modules you want an NSPR log be produced by a try run for, or leave blank to disable the feature.
-# This will be passed to NSPR_LOG_MODULES environment variable. Try run will then put a download link for the log file
+# Set the desired log modules you want a log be produced by a try run for, or leave blank to disable the feature.
+# This will be passed to MOZ_LOG_MODULES environment variable. Try run will then put a download link for all log files
 # on tbpl.mozilla.org.
 
-NSPR_LOG_MODULES = ""
+MOZ_LOG_MODULES = ""
 
-####################
-# LOG HANDLING     #
-####################
+#####################
+# Test log handling #
+#####################
 
 # output processing
 
@@ -533,7 +533,7 @@ class MochitestBase(object):
 
         self.marionette = None
         self.start_script = None
-        self.nsprLogs = None
+        self.mozLogs = None
         self.start_script_args = []
 
         if self.log is None:
@@ -1190,12 +1190,11 @@ toolbar#nav-bar {
         if options.fatalAssertions:
             browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
 
-        # Produce an NSPR log, is setup (see NSPR_LOG_MODULES global at the top of
+        # Produce a mozlog, if setup (see MOZ_LOG_MODULES global at the top of
         # this script).
-        self.nsprLogs = NSPR_LOG_MODULES and "MOZ_UPLOAD_DIR" in os.environ
-        if self.nsprLogs:
-            browserEnv["NSPR_LOG_MODULES"] = NSPR_LOG_MODULES
-            browserEnv["GECKO_SEPARATE_NSPR_LOGS"] = "1"
+        self.mozLogs = MOZ_LOG_MODULES and "MOZ_UPLOAD_DIR" in os.environ
+        if self.mozLogs:
+            browserEnv["MOZ_LOG_MODULES"] = MOZ_LOG_MODULES
 
         if debugger and not options.slowscript:
             browserEnv["JS_DISABLE_SLOW_SCRIPT_SIGNALS"] = "1"
@@ -2275,8 +2274,8 @@ class MochitestDesktop(MochitestBase):
         if self.browserEnv is None:
             return 1
 
-        if self.nsprLogs:
-            self.browserEnv["NSPR_LOG_FILE"] = "{}/nspr-pid=%PID-uid={}.log".format(self.browserEnv["MOZ_UPLOAD_DIR"], str(uuid.uuid4()))
+        if self.mozLogs:
+            self.browserEnv["MOZ_LOG_FILE"] = "{}/moz-pid=%PID-uid={}.log".format(self.browserEnv["MOZ_UPLOAD_DIR"], str(uuid.uuid4()))
 
         try:
             self.startServers(options, debuggerInfo)
@@ -2627,10 +2626,10 @@ def run_test_harness(options):
 
     result = runner.runTests(options)
 
-    if runner.nsprLogs:
-        with zipfile.ZipFile("{}/nsprlogs.zip".format(runner.browserEnv["MOZ_UPLOAD_DIR"]),
+    if runner.mozLogs:
+        with zipfile.ZipFile("{}/mozLogs.zip".format(runner.browserEnv["MOZ_UPLOAD_DIR"]),
                              "w", zipfile.ZIP_DEFLATED) as logzip:
-            for logfile in glob.glob("{}/nspr*.log*".format(runner.browserEnv["MOZ_UPLOAD_DIR"])):
+            for logfile in glob.glob("{}/moz*.log*".format(runner.browserEnv["MOZ_UPLOAD_DIR"])):
                 logzip.write(logfile)
                 os.remove(logfile)
             logzip.close()
