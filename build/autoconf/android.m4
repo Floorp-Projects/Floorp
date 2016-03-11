@@ -203,7 +203,7 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
     x86-*)
         ANDROID_CPU_ARCH=x86
         ;;
-    mips-*) # When target_cpu is mipsel, CPU_ARCH is mips
+    mips32-*) # When target_cpu is mipsel, CPU_ARCH is mips32
         ANDROID_CPU_ARCH=mips
         ;;
     esac
