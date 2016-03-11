@@ -19,11 +19,11 @@ AnimationEffectTiming::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
   return AnimationEffectTimingBinding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-AnimationEffectTiming::NotifyTimingUpdate()
+static inline void
+PostSpecifiedTimingUpdated(KeyframeEffect* aEffect)
 {
-  if (mEffect) {
-    mEffect->NotifySpecifiedTimingUpdated();
+  if (aEffect) {
+    aEffect->NotifySpecifiedTimingUpdated();
   }
 }
 
@@ -36,7 +36,7 @@ AnimationEffectTiming::SetEndDelay(double aEndDelay)
   }
   mTiming.mEndDelay = endDelay;
 
-  NotifyTimingUpdate();
+  PostSpecifiedTimingUpdated(mEffect);
 }
 
 void
@@ -54,7 +54,7 @@ AnimationEffectTiming::SetIterationStart(double aIterationStart,
 
   mTiming.mIterationStart = aIterationStart;
 
-  NotifyTimingUpdate();
+  PostSpecifiedTimingUpdated(mEffect);
 }
 
 void
@@ -73,7 +73,7 @@ AnimationEffectTiming::SetDuration(const UnrestrictedDoubleOrString& aDuration,
 
   mTiming.mDuration = newDuration;
 
-  NotifyTimingUpdate();
+  PostSpecifiedTimingUpdated(mEffect);
 }
 
 } // namespace dom
