@@ -13761,10 +13761,7 @@ nsGlobalWindow::GetConsole(ErrorResult& aRv)
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   if (!mConsole) {
-    mConsole = Console::Create(AsInner(), aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
+    mConsole = new Console(AsInner());
   }
 
   return mConsole;

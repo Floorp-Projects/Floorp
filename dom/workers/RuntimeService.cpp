@@ -2450,12 +2450,6 @@ RuntimeService::SendOfflineStatusChangeEventToAllWorkers(bool aIsOffline)
   BROADCAST_ALL_WORKERS(OfflineStatusChangeEvent, aIsOffline);
 }
 
-void
-RuntimeService::MemoryPressureAllWorkers()
-{
-  BROADCAST_ALL_WORKERS(MemoryPressure, /* dummy = */ false);
-}
-
 // nsISupports
 NS_IMPL_ISUPPORTS(RuntimeService, nsIObserver)
 
@@ -2484,7 +2478,6 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
   }
   if (!strcmp(aTopic, MEMORY_PRESSURE_OBSERVER_TOPIC)) {
     GarbageCollectAllWorkers(/* shrinking = */ true);
-    MemoryPressureAllWorkers();
     CycleCollectAllWorkers();
     return NS_OK;
   }
