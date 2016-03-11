@@ -280,8 +280,8 @@ interface nsITelemetry : nsISupports
 
   /**
    * A flag indicating whether Telemetry can submit official results (for base or extended
-   * data). This is true on official builds with built in support for Mozilla Telemetry
-   * reporting.
+   * data). This is true on official, non-debug builds with built in support for Mozilla
+   * Telemetry reporting.
    */
   readonly attribute boolean isOfficialTelemetry;
 
