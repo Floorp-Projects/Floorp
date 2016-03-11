@@ -1731,8 +1731,8 @@ CallGetter(JSContext* cx, HandleObject obj, HandleValue receiver, HandleShape sh
     MOZ_ASSERT(!shape->hasDefaultGetter());
 
     if (shape->hasGetterValue()) {
-        Value fval = shape->getterValue();
-        return InvokeGetter(cx, receiver, fval, vp);
+        RootedValue getter(cx, shape->getterValue());
+        return js::CallGetter(cx, receiver, getter, vp);
     }
 
     // In contrast to normal getters JSGetterOps always want the holder.
@@ -2348,9 +2348,11 @@ SetExistingProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleVa
     MOZ_ASSERT_IF(!shape->hasSetterObject(), shape->hasDefaultSetter());
     if (shape->hasDefaultSetter())
         return result.fail(JSMSG_GETTER_ONLY);
-    Value setter = ObjectValue(*shape->setterObject());
-    if (!InvokeSetter(cx, receiver, setter, v))
+
+    RootedValue setter(cx, ObjectValue(*shape->setterObject()));
+    if (!js::CallSetter(cx, receiver, setter, v))
         return false;
+
     return result.succeed();
 }
 
