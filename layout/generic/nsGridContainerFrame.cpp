@@ -5075,6 +5075,18 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   aDesiredSize.mOverflowAreas.UnionAllWith(nsRect(0, 0,
                                                   aDesiredSize.Width(),
                                                   aDesiredSize.Height()));
+
+  // Convert INCOMPLETE -> OVERFLOW_INCOMPLETE and zero bsize if we're an OC.
+  if (HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+    if (!NS_FRAME_IS_COMPLETE(aStatus)) {
+      NS_FRAME_SET_OVERFLOW_INCOMPLETE(aStatus);
+      aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+    }
+    bSize = 0;
+    desiredSize.BSize(wm) = bSize + bp.BStartEnd(wm);
+    aDesiredSize.SetSize(wm, desiredSize);
+  }
+
   if (!prevInFlow) {
     auto sharedGridData = static_cast<SharedGridData*>(
       Properties().Get(SharedGridData::Prop()));
