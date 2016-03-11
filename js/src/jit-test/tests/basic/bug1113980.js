@@ -1,4 +1,4 @@
-var p = Proxy.create({
+var p = new Proxy({}, {
     getOwnPropertyDescriptor: function() {
         return {value: 1, configurable: true, writable: true};
     },
