@@ -24,12 +24,6 @@ interface WorkerDebuggerGlobalScope : EventTarget {
   void setImmediate(Function handler);
 
   void reportError(DOMString message);
-
-  [Throws]
-  sequence<any> retrieveConsoleEvents();
-
-  [Throws]
-  void setConsoleEventHandler(AnyCallback handler);
 };
 
 // So you can debug while you debug

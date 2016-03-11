@@ -249,9 +249,6 @@ public:
   void
   SendOfflineStatusChangeEventToAllWorkers(bool aIsOffline);
 
-  void
-  MemoryPressureAllWorkers();
-
 private:
   RuntimeService();
   ~RuntimeService();
