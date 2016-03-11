@@ -1936,6 +1936,11 @@ public class GeckoAppShell
     // Returns null if plugins are blocked on the device.
     static String[] getPluginDirectories() {
 
+        // Block on Pixel C.
+        if ((new File("/system/lib/hw/power.dragon.so")).exists()) {
+            Log.w(LOGTAG, "Blocking plugins because of Pixel C device (bug 1255122)");
+            return null;
+        }
         // An awful hack to detect Tegra devices. Easiest way to do it without spinning up a EGL context.
         boolean isTegra = (new File("/system/lib/hw/gralloc.tegra.so")).exists() ||
                           (new File("/system/lib/hw/gralloc.tegra3.so")).exists() ||

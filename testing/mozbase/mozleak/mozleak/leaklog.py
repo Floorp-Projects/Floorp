@@ -117,6 +117,22 @@ def expectedTabProcessLeakCounts():
             'nsTArray_base': 17,
         })
 
+        # Canvas mochitests leak even more textures, as seen in bug 1252677.
+        numExtraTextureLeaks = 4
+        appendExpectedLeakCounts({
+            'CondVar': numExtraTextureLeaks,
+            'Mutex': numExtraTextureLeaks,
+            'PTextureChild': numExtraTextureLeaks,
+            'SharedMemory': numExtraTextureLeaks,
+            'TextureChild': numExtraTextureLeaks,
+            'TextureData': numExtraTextureLeaks,
+        })
+
+        # dom/html/test/ mochitests leak even more stuff.
+        appendExpectedLeakCounts({
+            'WeakReference<MessageListener>': 3
+        })
+
     return leaks
 
 

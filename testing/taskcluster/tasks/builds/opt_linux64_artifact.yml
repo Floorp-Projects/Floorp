@@ -25,3 +25,4 @@ task:
     treeherder:
       groupSymbol: "?"
       symbol: AB
+      tier: 2

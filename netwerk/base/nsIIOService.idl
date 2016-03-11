@@ -141,14 +141,6 @@ interface nsIIOService : nsISupports
                                              in nsILoadInfo aLoadInfo);
 
     /**
-     * Creates a channel for a given URI.
-     *
-     * @param aURI nsIURI from which to make a channel
-     * @return reference to the new nsIChannel object
-     */
-    nsIChannel newChannelFromURI(in nsIURI aURI);
-
-    /**
      * Equivalent to newChannelFromURI2(newURI(...))
      */
     nsIChannel newChannel2(in AUTF8String aSpec,
@@ -159,13 +151,6 @@ interface nsIIOService : nsISupports
                            in nsIPrincipal aTriggeringPrincipal,
                            in unsigned long aSecurityFlags,
                            in unsigned long aContentPolicyType);
-
-    /**
-     * Equivalent to newChannelFromURI(newURI(...))
-     */
-    nsIChannel newChannel(in AUTF8String aSpec,
-                          in string aOriginCharset,
-                          in nsIURI aBaseURI);
 
     /**
      * Returns true if networking is in "offline" mode. When in offline mode, 

@@ -391,6 +391,7 @@ RegExpStatics::clear()
     lazySource = nullptr;
     lazyFlags = RegExpFlag(0);
     lazyIndex = size_t(-1);
+    lazySticky = false;
     pendingInput = nullptr;
     flags = RegExpFlag(0);
     pendingLazyEvaluation = false;

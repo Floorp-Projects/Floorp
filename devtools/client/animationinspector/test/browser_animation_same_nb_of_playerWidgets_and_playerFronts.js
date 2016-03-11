@@ -10,12 +10,12 @@ requestLongerTimeout(2);
 // are created in the panel.
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel, controller} = yield openAnimationInspector();
   let timeline = panel.animationsTimelineComponent;
 
   info("Selecting the test animated node again");
-  yield selectNode(".multi", inspector);
+  yield selectNodeAndWaitForAnimations(".multi", inspector);
 
   is(controller.animationPlayers.length,
     timeline.animationsEl.querySelectorAll(".animation").length,

@@ -567,16 +567,6 @@ protected:
     */
   static uint32_t sNumLivingContexts;
 
-  /**
-    * Lookup table used to speed up GetImageData().
-    */
-  static uint8_t (*sUnpremultiplyTable)[256];
-
-  /**
-    * Lookup table used to speed up PutImageData().
-    */
-  static uint8_t (*sPremultiplyTable)[256];
-
   static mozilla::gfx::DrawTarget* sErrorTarget;
 
   // Some helpers.  Doesn't modify a color on failure.

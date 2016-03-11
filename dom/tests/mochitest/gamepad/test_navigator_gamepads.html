@@ -27,26 +27,28 @@ function run_next_test(event) {
 // gamepads should be empty first
 is(navigator.getGamepads().length, 0, "should be zero gamepads exposed");
 
-function connecthandler(e) {
+function buttonhandler(e) {
  run_next_test(e);
 }
 
 function disconnecthandler(e) {
   run_next_test(e);
 }
-window.addEventListener("gamepadconnected", connecthandler);
+window.addEventListener("gamepadbuttondown", buttonhandler);
 window.addEventListener("gamepaddisconnected", disconnecthandler);
 // Add a gamepad
-var internal_index1 = GamepadService.addGamepad("test gamepad 1", // id
-                                       SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
-                                       4, // buttons
-                                       2);// axes
+addGamepad("test gamepad 1", // id
+           SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
+           4, // buttons
+           2).then(function(index) {
+             internal_index1 = index;
+             // Press a button to make the gamepad visible to the page.
+             GamepadService.newButtonEvent(internal_index1, 0, true);
+           });
+
 var content_index1 = 0;
 var internal_index2;
 var content_index2 = 1;
-
-// Press a button to make the gamepad visible to the page.
-GamepadService.newButtonEvent(internal_index1, 0, true);
 
 function check_first_gamepad(e) {
   ok(true, "Checking first gamepad");
@@ -57,15 +59,18 @@ function check_first_gamepad(e) {
   is(gamepads[e.gamepad.index], e.gamepad, "right gamepad exposed at index");
   is(gamepads[content_index1], e.gamepad, "gamepad counter working correctly");
   // Add a second gamepad, should automatically show up.
-  internal_index2 = GamepadService.addGamepad("test gamepad 2", // id
-                                     SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
-                                     4, // buttons
-                                     2);// axes
+  addGamepad("test gamepad 2", // id
+             SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
+             4, // buttons
+             2).then(function(index) {
+               internal_index2 = index;
+               GamepadService.newButtonEvent(internal_index2, 0, true);
+             });
   ok(true, "Done checking first gamepad");
 }
 
 function check_second_gamepad(e) {
-  ok(true, "Checking seceond gamepad");
+  ok(true, "Checking second gamepad");
   // Second gamepad gets added.
   is(e.gamepad.index, 1, "gamepad index should be 1")
   is(e.gamepad.id, "test gamepad 2", "correct gamepad name");
@@ -100,4 +105,3 @@ function check_no_gamepads(e) {
 </script>
 </body>
 </html>
-

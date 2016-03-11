@@ -13,7 +13,7 @@
 #include "BluetoothService.h"
 #include "BluetoothSocket.h"
 #include "BluetoothUtils.h"
-#include "BluetoothUuid.h"
+#include "BluetoothUuidHelper.h"
 
 #include "jsapi.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"

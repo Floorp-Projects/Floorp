@@ -31,7 +31,6 @@ public:
   NS_INLINE_DECL_REFCOUNTING(ServoStyleSheet)
 
   bool IsApplicable() const;
-  void SetComplete();
   bool HasRules() const;
 
   nsIDocument* GetOwningDocument() const;

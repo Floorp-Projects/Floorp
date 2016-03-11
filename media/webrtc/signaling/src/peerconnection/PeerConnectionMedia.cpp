@@ -253,12 +253,6 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIChannel> channel;
-
-#if defined(MOZILLA_INTERNAL_API)
-  nsCOMPtr<nsIDocument> principal = mParent->GetWindow()->GetExtantDoc();
-#else
-  // For unit-tests
   nsCOMPtr<nsIScriptSecurityManager> secMan(
       do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
   if (NS_FAILED(rv)) {
@@ -268,18 +262,18 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIPrincipal> principal;
-  rv = secMan->GetSystemPrincipal(getter_AddRefs(principal));
+  nsCOMPtr<nsIPrincipal> systemPrincipal;
+  rv = secMan->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
   if (NS_FAILED(rv)) {
     CSFLogError(logTag, "%s: Failed to get systemPrincipal: %d", __FUNCTION__, (int)rv);
     return NS_ERROR_FAILURE;
   }
-#endif // defined(MOZILLA_INTERNAL_API)
 
+  nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
                      fakeHttpsLocation,
-                     principal,
-                     nsILoadInfo::SEC_NORMAL,
+                     systemPrincipal,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER);
 
   if (NS_FAILED(rv)) {

@@ -11,14 +11,14 @@ const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel, window} = yield openAnimationInspector();
   let {document} = window;
 
   info("Select node .still and check that the panel is empty");
   let stillNode = yield getNodeFront(".still", inspector);
   let onUpdated = panel.once(panel.UI_UPDATED_EVENT);
-  yield selectNode(stillNode, inspector);
+  yield selectNodeAndWaitForAnimations(stillNode, inspector);
   yield onUpdated;
 
   is(panel.animationsTimelineComponent.animations.length, 0,
@@ -32,7 +32,7 @@ add_task(function*() {
   info("Select the comment text node and check that the panel is empty");
   let commentNode = yield inspector.walker.previousSibling(stillNode);
   onUpdated = panel.once(panel.UI_UPDATED_EVENT);
-  yield selectNode(commentNode, inspector);
+  yield selectNodeAndWaitForAnimations(commentNode, inspector);
   yield onUpdated;
 
   is(panel.animationsTimelineComponent.animations.length, 0,

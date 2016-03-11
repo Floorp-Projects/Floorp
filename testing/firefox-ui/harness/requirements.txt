@@ -9,6 +9,3 @@ mozinstall >= 1.12
 
 # Necessary because of the testcase classes
 # firefox-puppeteer == 3.2.0
-
-# Necessary because of server-root, and manifest files
-# firefox-ui-tests

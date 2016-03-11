@@ -18,6 +18,7 @@ UNIFIED_SOURCES += [
     'tests/test-jsval.cpp',
     'tests/test-prettyprinters.cpp',
     'tests/test-Root.cpp',
+    'tests/test-unwind.cpp',
     'tests/typedef-printers.cpp',
 ]
 

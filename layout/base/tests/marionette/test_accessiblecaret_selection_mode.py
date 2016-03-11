@@ -25,8 +25,10 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
     '''Test cases for AccessibleCaret under selection mode.'''
     # Element IDs.
     _input_id = 'input'
+    _input_padding_id = 'input-padding'
     _textarea_id = 'textarea'
     _textarea2_id = 'textarea2'
+    _textarea_one_line_id = 'textarea-one-line'
     _textarea_rtl_id = 'textarea-rtl'
     _contenteditable_id = 'contenteditable'
     _contenteditable2_id = 'contenteditable2'
@@ -542,16 +544,20 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         self.actions.flick(el, caret2_x, caret2_y, caret1_x, caret1_y).perform()
         self.assertEqual(words[0][0], sel.selected_content)
 
-    def test_carets_do_not_jump_when_dragging_to_editable_content_boundary(self):
+    @parameterized(_input_id, el_id=_input_id)
+    @parameterized(_input_padding_id, el_id=_input_padding_id)
+    @parameterized(_textarea_one_line_id, el_id=_textarea_one_line_id)
+    @parameterized(_contenteditable_id, el_id=_contenteditable_id)
+    def test_carets_not_jump_when_dragging_to_editable_content_boundary(self, el_id):
         self.open_test_html(self._selection_html)
-        el = self.marionette.find_element(By.ID, self._input_id)
+        el = self.marionette.find_element(By.ID, el_id)
         sel = SelectionManager(el)
         original_content = sel.content
         words = original_content.split()
         self.assertTrue(len(words) >= 3, 'Expect at least three words in the content.')
 
-        # Goal: the selection does not being changed after dragging the caret
-        # on the Y-axis only.
+        # Goal: the selection is not changed after dragging the caret on the
+        # Y-axis.
         target_content = words[1]
 
         self.long_press_on_word(el, 1)
@@ -561,6 +567,6 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         self.actions.flick(el, caret1_x, caret1_y, caret1_x, caret1_y - 50).perform()
         self.assertEqual(target_content, sel.selected_content)
 
-        # Drag the first caret down by 50px.
+        # Drag the second caret down by 50px.
         self.actions.flick(el, caret2_x, caret2_y, caret2_x, caret2_y + 50).perform()
         self.assertEqual(target_content, sel.selected_content)
