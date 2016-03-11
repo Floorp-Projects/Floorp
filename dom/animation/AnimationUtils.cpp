@@ -10,10 +10,13 @@
 #include "nsDebug.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
+#include "nsIDocument.h"
+#include "nsGlobalWindow.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ComputedTimingFunction.h" // ComputedTimingFunction
 #include "mozilla/dom/Element.h" // For dom::Element
+#include "xpcpublic.h" // For xpc::CurrentWindowOrNull
 
 namespace mozilla {
 
@@ -97,6 +100,16 @@ AnimationUtils::ParseEasing(const dom::Element* aTarget,
       break;
   }
   return Nothing();
+}
+
+/* static */ nsIDocument*
+AnimationUtils::GetCurrentRealmDocument(JSContext* aCx)
+{
+  nsGlobalWindow* win = xpc::CurrentWindowOrNull(aCx);
+  if (!win) {
+    return nullptr;
+  }
+  return win->GetDoc();
 }
 
 } // namespace mozilla
