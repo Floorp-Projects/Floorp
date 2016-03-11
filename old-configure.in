@@ -894,82 +894,8 @@ USE_DEPENDENT_LIBS=1
 
 _PLATFORM_DEFAULT_TOOLKIT=cairo-gtk3
 
-if test -n "$CROSS_COMPILE"; then
-    OS_TARGET="${target_os}"
-    OS_ARCH=`echo $target_os | sed -e 's|/|_|g'`
-    case "${target_os}" in
-        linux*)       OS_ARCH=Linux OS_TARGET=Linux ;;
-        kfreebsd*-gnu) OS_ARCH=GNU_kFreeBSD OS_TARGET=GNU/kFreeBSD ;;
-        gnu*)         OS_ARCH=GNU ;;
-        solaris*)     OS_ARCH=SunOS ;;
-        mingw*)       OS_ARCH=WINNT OS_TARGET=WINNT ;;
-        darwin*)      OS_ARCH=Darwin OS_TARGET=Darwin ;;
-        dragonfly*)   OS_ARCH=DragonFly OS_TARGET=DragonFly ;;
-        freebsd*)     OS_ARCH=FreeBSD OS_TARGET=FreeBSD ;;
-        netbsd*)      OS_ARCH=NetBSD OS_TARGET=NetBSD ;;
-        openbsd*)     OS_ARCH=OpenBSD OS_TARGET=OpenBSD ;;
-    esac
-    case "${target}" in
-        *-android*|*-linuxandroid*) OS_ARCH=Linux OS_TARGET=Android ;;
-    esac
-else
-    OS_TARGET=`uname -s`
-    OS_ARCH=`uname -s | sed -e 's|/|_|g'`
-fi
-
-# Before this used `uname -m` when not cross compiling
-# but that breaks when you have a 64 bit kernel with a 32 bit userland.
-OS_TEST="${target_cpu}"
-
-HOST_OS_ARCH=`echo $host_os | sed -e 's|/|_|g'`
-
-#######################################################################
-# Master "Core Components" macros for getting the OS target           #
-#######################################################################
-
-#
-# If OS_TARGET is not specified, it defaults to $(OS_ARCH), i.e., no
-# cross-compilation.
-#
-
-#
-# Define and override various archtecture-specific variables, including
-# HOST_OS_ARCH
-# OS_ARCH
-# OS_TEST
-# OS_TARGET
-#
-
 case "$HOST_OS_ARCH" in
-mingw*)
-    HOST_OS_ARCH=WINNT
-    ;;
-darwin*)
-    HOST_OS_ARCH=Darwin
-    ;;
-linux*)
-    HOST_OS_ARCH=Linux
-    ;;
-kfreebsd*-gnu)
-    HOST_OS_ARCH=GNU_kFreeBSD
-    ;;
-gnu*)
-    HOST_OS_ARCH=GNU
-    ;;
-dragonfly*)
-    HOST_OS_ARCH=DragonFly
-    ;;
-freebsd*)
-    HOST_OS_ARCH=FreeBSD
-    ;;
-netbsd*)
-    HOST_OS_ARCH=NetBSD
-    ;;
-openbsd*)
-    HOST_OS_ARCH=OpenBSD
-    ;;
-solaris*)
-    HOST_OS_ARCH=SunOS
+SunOS)
     SOLARIS_SUNPRO_CC=
     SOLARIS_SUNPRO_CXX=
     if test -z "$GNU_CC"; then
@@ -986,112 +912,6 @@ solaris*)
     AC_SUBST(SOLARIS_SUNPRO_CC)
     AC_SUBST(SOLARIS_SUNPRO_CXX)
     ;;
-esac
-
-case "$OS_ARCH" in
-WINNT)
-    if test -z "$CROSS_COMPILE" ; then
-        OS_TEST=`uname -p`
-    fi
-    ;;
-Windows_NT)
-    OS_ARCH=WINNT
-    OS_TARGET=WINNT
-    ;;
-MINGW*_NT*)
-    OS_ARCH=WINNT
-    OS_TARGET=WINNT
-    ;;
-AIX)
-    OS_TEST=${target_cpu}
-    ;;
-Darwin)
-    case "${target_cpu}" in
-    powerpc*)
-        OS_TEST=ppc
-        ;;
-    i*86*)
-        OS_TEST=i386
-        ;;
-    x86_64)
-        OS_TEST=x86_64
-        ;;
-    *)
-        if test -z "$CROSS_COMPILE" ; then
-            OS_TEST=`uname -p`
-        fi
-        ;;
-    esac
-    ;;
-esac
-
-# Only set CPU_ARCH if we recognize the value of OS_TEST
-
-case "$OS_TEST" in
-*86 | i86pc)
-    CPU_ARCH=x86
-    ;;
-
-powerpc64 | ppc64 | powerpc64le | ppc64le)
-    CPU_ARCH=ppc64
-    ;;
-
-powerpc | ppc | rs6000)
-    CPU_ARCH=ppc
-    ;;
-
-Alpha | alpha | ALPHA)
-    CPU_ARCH=Alpha
-    ;;
-
-s390)
-    CPU_ARCH=s390
-    ;;
-
-s390x)
-    CPU_ARCH=s390x
-    ;;
-
-hppa* | parisc)
-    CPU_ARCH=hppa
-    ;;
-
-sun4u | sparc*)
-    CPU_ARCH=sparc
-    ;;
-
-x86_64 | ia64)
-    CPU_ARCH="$OS_TEST"
-    ;;
-
-arm*)
-    CPU_ARCH=arm
-    ;;
-
-mips|mipsel)
-    CPU_ARCH="mips32"
-    ;;
-
-mips64|mips64el)
-    CPU_ARCH="mips64"
-    ;;
-
-
-aarch64*)
-    CPU_ARCH=aarch64
-    ;;
-esac
-
-if test -z "$OS_TARGET"; then
-    OS_TARGET=$OS_ARCH
-fi
-
-dnl Set INTEL_ARCHITECTURE if we're compiling for x86-32 or x86-64.
-dnl ===============================================================
-INTEL_ARCHITECTURE=
-case "$OS_TEST" in
-    x86_64|i?86)
-      INTEL_ARCHITECTURE=1
 esac
 
 dnl Configure platform-specific CPU architecture compiler options.
@@ -8671,7 +8491,6 @@ AC_SUBST(HOST_AR_FLAGS)
 AC_SUBST(HOST_LD)
 AC_SUBST(HOST_RANLIB)
 AC_SUBST(HOST_BIN_SUFFIX)
-AC_SUBST(HOST_OS_ARCH)
 
 AC_SUBST(RUSTFLAGS)
 
@@ -8679,11 +8498,6 @@ AC_SUBST(TARGET_CPU)
 AC_SUBST(TARGET_VENDOR)
 AC_SUBST(TARGET_OS)
 AC_SUBST(TARGET_XPCOM_ABI)
-AC_SUBST(OS_TARGET)
-AC_SUBST(OS_ARCH)
-AC_SUBST(OS_TEST)
-AC_SUBST(CPU_ARCH)
-AC_SUBST(INTEL_ARCHITECTURE)
 AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
 AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSE4_1)
 AC_SUBST(HAVE_X86_AVX2)

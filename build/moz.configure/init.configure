@@ -263,6 +263,166 @@ def shell(mozillabuild):
     return shell
 
 
+# Host and target systems
+# ==============================================================
+option('--host', nargs=1, help='Define the system type performing the build')
+
+option('--target', nargs=1,
+       help='Define the system type where the resulting executables will be '
+            'used')
+
+@template
+def split_triplet(triplet):
+    # The standard triplet is defined as
+    #   CPU_TYPE-MANUFACTURER-OPERATING_SYSTEM
+    # There is also a quartet form:
+    #   CPU_TYPE-MANUFACTURER-KERNEL-OPERATING_SYSTEM
+    # But we can consider the "KERNEL-OPERATING_SYSTEM" as one.
+    cpu, manufacturer, os = triplet.split('-', 2)
+
+    # Autoconf uses config.sub to validate and canonicalize those triplets,
+    # but the granularity of its results has never been satisfying to our
+    # use, so we've had our own, different, canonicalization. We've also
+    # historically not been very consistent with how we use the canonicalized
+    # values. Hopefully, this will help us make things better.
+    # The tests are inherited from our decades-old autoconf-based configure,
+    # which can probably be improved/cleaned up because they are based on a
+    # mix of uname and config.guess output, while we now only use the latter,
+    # which presumably has a cleaner and leaner output. Let's refine later.
+    os = os.replace('/', '_')
+    if 'android' in os:
+        canonical_os = 'Android'
+        canonical_kernel = 'Linux'
+    elif os.startswith('linux'):
+        canonical_os = 'GNU'
+        canonical_kernel = 'Linux'
+    elif os.startswith('kfreebsd') and os.endswith('-gnu'):
+        canonical_os = 'GNU'
+        canonical_kernel = 'kFreeBSD'
+    elif os.startswith('gnu'):
+        canonical_os = canonical_kernel = 'GNU'
+    elif os.startswith('mingw'):
+        canonical_os = canonical_kernel = 'WINNT'
+    elif os.startswith('darwin'):
+        canonical_os = canonical_kernel = 'Darwin'
+    elif os.startswith('dragonfly'):
+        canonical_os = canonical_kernel = 'DragonFly'
+    elif os.startswith('freebsd'):
+        canonical_os = canonical_kernel = 'FreeBSD'
+    elif os.startswith('netbsd'):
+        canonical_os = canonical_kernel = 'NetBSD'
+    elif os.startswith('openbsd'):
+        canonical_os = canonical_kernel = 'OpenBSD'
+    else:
+        error('Unknown OS: %s' % os)
+
+    # The CPU granularity is probably not enough. Moving more things from
+    # old-configure will tell us if we need more
+    if cpu.endswith('86') or (cpu.startswith('i') and '86' in cpu):
+        canonical_cpu = 'x86'
+    elif cpu in ('s390', 's390x', 'x86_64', 'ia64'):
+        canonical_cpu = cpu
+    elif cpu in ('powerpc64', 'ppc64', 'powerpc64le', 'ppc64le'):
+        canonical_cpu = 'ppc64'
+    elif cpu in ('powerpc', 'ppc', 'rs6000') or cpu.startswith('powerpc'):
+        canonical_cpu = 'ppc'
+    elif cpu in ('Alpha', 'alpha', 'ALPHA'):
+        canonical_cpu = 'Alpha'
+    elif cpu.startswith('hppa') or cpu == 'parisc':
+        canonical_cpu = 'hppa'
+    elif cpu.startswith('sparc') or cpu == 'sun4u':
+        canonical_cpu = 'sparc'
+    elif cpu.startswith('arm'):
+        canonical_cpu = 'arm'
+    elif cpu in ('mips', 'mipsel'):
+        canonical_cpu = 'mips32'
+    elif cpu in ('mips64', 'mips64el'):
+        canonical_cpu = 'mips64'
+    elif cpu.startswith('aarch64'):
+        canonical_cpu = 'aarch64'
+    else:
+        canonical_cpu = cpu
+
+    return namespace(
+        alias=triplet,
+        cpu=canonical_cpu,
+        kernel=canonical_kernel,
+        os=canonical_os,
+        raw_cpu=cpu,
+    )
+
+
+@depends('--host', shell)
+@advanced
+def host(value, shell):
+    if not value:
+        import subprocess
+        config_guess = os.path.join(os.path.dirname(__file__), '..',
+                                    'autoconf', 'config.guess')
+        host = subprocess.check_output([shell, config_guess]).strip()
+    else:
+        host = value[0]
+
+    return split_triplet(host)
+
+
+@depends('--target', host)
+def target(value, host):
+    if not value:
+        return host
+    return split_triplet(value[0])
+
+
+@depends(host, target)
+def host_and_target_for_old_configure(host, target):
+    # Autoconf needs these set
+    add_old_configure_arg('--host=%s' % host.alias)
+    add_old_configure_arg('--target=%s' % target.alias)
+
+
+# These variables are for compatibility with the current moz.builds and
+# old-configure. Eventually, we'll want to canonicalize better.
+@depends(target)
+def target_variables(target):
+    if target.kernel == 'kFreeBSD':
+        os_target = 'GNU/kFreeBSD'
+        os_arch = 'GNU_kFreeBSD'
+    elif target.kernel == 'Linux' and target.os == 'GNU':
+        os_target = target.kernel
+        os_arch = target.kernel
+    else:
+        os_target = target.os
+        os_arch = target.kernel
+    add_old_configure_assignment('OS_TARGET', os_target)
+    set_config('OS_TARGET', os_target)
+    add_old_configure_assignment('OS_ARCH', os_arch)
+    set_config('OS_ARCH', os_arch)
+
+    if target.os == 'Darwin' and target.cpu == 'x86':
+        os_test = 'i386'
+    else:
+        os_test = target.raw_cpu
+    add_old_configure_assignment('OS_TEST', os_test)
+    set_config('OS_TEST', os_test)
+
+    add_old_configure_assignment('CPU_ARCH', target.cpu)
+    set_config('CPU_ARCH', target.cpu)
+
+    if target.cpu in ('x86', 'x86_64'):
+        set_config('INTEL_ARCHITECTURE', '1')
+
+@depends(host)
+def host_variables(host):
+    if host.kernel == 'kFreeBSD':
+        os_arch = 'GNU_kFreeBSD'
+    else:
+        os_arch = host.kernel
+    add_old_configure_assignment('HOST_OS_ARCH', os_arch)
+    set_config('HOST_OS_ARCH', os_arch)
+
+
+# The application/project to build
+# ==============================================================
 option('--enable-application', nargs=1, env='MOZ_BUILD_APP',
        help='Application to build. Same as --enable-project.')
 
