@@ -44,9 +44,11 @@
   <project groups="pdk,linux,arm" name="platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" path="prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" revision="6b1fb5b730b1299f99f9194c1fcf088579cc7977"/>
   <project groups="pdk,linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.8" path="prebuilts/gcc/linux-x86/arm/arm-eabi-4.8" revision="755656d9a7c79c6463920ad13f95d71e45e21397"/>
   <project groups="pdk,linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8" revision="ad086223028d281b2ea95f0f42f23ff4435917dd"/>
+  <project depth="1" groups="pdk,linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9" remote="caf" revision="c09e1b3a55153d1ba142d5bf548c90487ea71f9e"/>
   <project groups="pdk,linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.11-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.11-4.6" revision="94d88f335cdc90bf43471bacf243006e99cff908"/>
   <project groups="pdk,linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.11-4.8" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.11-4.8" revision="ac160a43fddd833d4a0bc430f44f8b1956bac1e9"/>
   <project groups="pdk,linux,x86" name="platform/prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.8" path="prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.8" revision="966dbeff106bf36966d4c80a4f2c58a464ae314e"/>
+  <project depth="1" groups="pdk,linux,x86" name="platform/prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.9" path="prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.9" remote="caf" revision="c33513f9de95fcdf4ec832db5e3ebd612382f541"/>
   <project groups="linux" name="platform/prebuilts/python/linux-x86/2.7.5" path="prebuilts/python/linux-x86/2.7.5" revision="accd992f11a8ec0a0ec52cdc891302dc54e2941e"/>
   <project name="device/common" path="device/common" revision="cf1543ff569188c1df9f4e9c7fa53b75393c49e3"/>
   <project name="device/sample" path="device/sample" revision="3bbddd699b3e093a664aae7d9a63032b798b561b"/>
