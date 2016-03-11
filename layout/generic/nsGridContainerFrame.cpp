@@ -4954,7 +4954,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   }
 
 #ifdef DEBUG
-  SanityCheckAnonymousGridItems();
+  SanityCheckGridItemsBeforeReflow();
 #endif // DEBUG
 
   const nsStylePosition* stylePos = aReflowState.mStylePosition;
@@ -5296,8 +5296,46 @@ nsGridContainerFrame::SetInitialChildList(ChildListID  aListID,
 }
 
 void
-nsGridContainerFrame::SanityCheckAnonymousGridItems() const
+nsGridContainerFrame::SanityCheckGridItemsBeforeReflow() const
 {
+  ChildListIDs absLists = kAbsoluteList | kFixedList |
+    kOverflowContainersList | kExcessOverflowContainersList;
+  ChildListIDs itemLists = kPrincipalList | kOverflowList;
+  for (const nsIFrame* f = this; f; f = f->GetNextInFlow()) {
+    MOZ_ASSERT(!f->HasAnyStateBits(NS_STATE_GRID_DID_PUSH_ITEMS),
+               "At start of reflow, we should've pulled items back from all "
+               "NIFs and cleared NS_STATE_GRID_DID_PUSH_ITEMS in the process");
+    for (nsIFrame::ChildListIterator childLists(f);
+         !childLists.IsDone(); childLists.Next()) {
+      if (!itemLists.Contains(childLists.CurrentID())) {
+        MOZ_ASSERT(absLists.Contains(childLists.CurrentID()),
+                   "unexpected non-empty child list");
+        continue;
+      }
+      for (auto child : childLists.CurrentList()) {
+        MOZ_ASSERT(f == this || child->GetPrevInFlow(),
+                   "all pushed items must be pulled up before reflow");
+      }
+    }
+  }
+  // If we have a prev-in-flow, each of its children's next-in-flow
+  // should be one of our children or be null.
+  const auto pif = static_cast<nsGridContainerFrame*>(GetPrevInFlow());
+  if (pif) {
+    const nsFrameList* oc =
+      GetPropTableFrames(OverflowContainersProperty());
+    const nsFrameList* eoc =
+      GetPropTableFrames(ExcessOverflowContainersProperty());
+    const nsFrameList* pifEOC =
+      pif->GetPropTableFrames(ExcessOverflowContainersProperty());
+    for (const nsIFrame* child : pif->GetChildList(kPrincipalList)) {
+      const nsIFrame* childNIF = child->GetNextInFlow();
+      MOZ_ASSERT(!childNIF || mFrames.ContainsFrame(childNIF) ||
+                 (pifEOC && pifEOC->ContainsFrame(childNIF)) ||
+                 (oc && oc->ContainsFrame(childNIF)) ||
+                 (eoc && eoc->ContainsFrame(childNIF)));
+    }
+  }
 }
 
 void

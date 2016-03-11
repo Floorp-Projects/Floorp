@@ -162,7 +162,7 @@ protected:
   void MergeSortedExcessOverflowContainers(nsFrameList& aList);
 
 #ifdef DEBUG
-  void SanityCheckAnonymousGridItems() const;
+  void SanityCheckGridItemsBeforeReflow() const;
 #endif // DEBUG
 
 private:
