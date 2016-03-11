@@ -774,6 +774,7 @@ FunctionBox::FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunct
     usesArguments(false),
     usesApply(false),
     usesThis(false),
+    usesReturn(false),
     funCxFlags()
 {
     // Functions created at parse time may be set singleton after parsing and
@@ -2863,8 +2864,8 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox* funbo
     if (pc->sc->strict())
         lazy->setStrict();
     lazy->setGeneratorKind(funbox->generatorKind());
-    if (funbox->usesArguments && funbox->usesApply && funbox->usesThis)
-        lazy->setUsesArgumentsApplyAndThis();
+    if (funbox->isLikelyConstructorWrapper())
+        lazy->setLikelyConstructorWrapper();
     if (funbox->isDerivedClassConstructor())
         lazy->setIsDerivedClassConstructor();
     if (funbox->needsHomeObject())
@@ -6327,6 +6328,7 @@ Parser<ParseHandler>::returnStatement(YieldHandling yieldHandling)
     uint32_t begin = pos().begin;
 
     MOZ_ASSERT(pc->sc->isFunctionBox());
+    pc->sc->asFunctionBox()->usesReturn = true;
 
     // Parse an optional operand.
     //
