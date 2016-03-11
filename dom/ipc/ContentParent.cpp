@@ -1606,12 +1606,9 @@ RemoteWindowContext::GetInterface(const nsIID& aIID, void** aSink)
 }
 
 NS_IMETHODIMP
-RemoteWindowContext::OpenURI(nsIURI* aURI, uint32_t aFlags)
+RemoteWindowContext::OpenURI(nsIURI* aURI)
 {
-  URIParams uri;
-  SerializeURI(aURI, uri);
-
-  Unused << mTabParent->SendOpenURI(uri, aFlags);
+  mTabParent->LoadURL(aURI);
   return NS_OK;
 }
 
