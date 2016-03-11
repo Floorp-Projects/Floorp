@@ -5272,6 +5272,37 @@ nsIFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
 
 /*static*/ uint8_t nsIFrame::sLayerIsPrerenderedDataKey;
 
+static bool
+DoesLayerHaveOutOfDateFrameMetrics(Layer* aLayer)
+{
+  for (uint32_t i = 0; i < aLayer->GetFrameMetricsCount(); i++) {
+    const FrameMetrics& metrics = aLayer->GetFrameMetrics(i);
+    nsIScrollableFrame* scrollableFrame =
+      nsLayoutUtils::FindScrollableFrameFor(metrics.GetScrollId());
+    if (!scrollableFrame) {
+      // This shouldn't happen, so let's do the safe thing and trigger a full
+      // paint if it does.
+      return true;
+    }
+    nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
+    if (metrics.GetScrollOffset() != CSSPoint::FromAppUnits(scrollPosition)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool
+DoesLayerOrAncestorsHaveOutOfDateFrameMetrics(Layer* aLayer)
+{
+  for (Layer* layer = aLayer; layer; layer = layer->GetParent()) {
+    if (DoesLayerHaveOutOfDateFrameMetrics(layer)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool
 nsIFrame::TryUpdateTransformOnly(Layer** aLayerResult)
 {
@@ -5281,6 +5312,14 @@ nsIFrame::TryUpdateTransformOnly(Layer** aLayerResult)
     // If this layer isn't prerendered or we clip composites to our OS
     // window, then we can't correctly optimize to an empty
     // transaction in general.
+    return false;
+  }
+
+  if (DoesLayerOrAncestorsHaveOutOfDateFrameMetrics(layer)) {
+    // At least one scroll frame that can affect the position of this layer
+    // has changed its scroll offset since the last paint. Schedule a full
+    // paint to make sure that this layer's transform and all the frame
+    // metrics that affect it are in sync.
     return false;
   }
 
