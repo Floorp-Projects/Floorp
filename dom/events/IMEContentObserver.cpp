@@ -740,10 +740,10 @@ IMEContentObserver::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
   mIsHandlingQueryContentEvent = true;
   ContentEventHandler handler(GetPresContext());
   nsresult rv = handler.HandleQueryContentEvent(aEvent);
-
-  if (NS_WARN_IF(aEvent->mReply.mContentsRoot != mRootContent)) {
-    // Focus has changed unexpectedly, so make the query fail.
-    aEvent->mSucceeded = false;
+  if (aEvent->mSucceeded) {
+    // We need to guarantee that mRootContent should be always same value for
+    // the observing editor.
+    aEvent->mReply.mContentsRoot = mRootContent;
   }
   return rv;
 }
@@ -1261,8 +1261,7 @@ IMEContentObserver::UpdateSelectionCache()
   WidgetQueryContentEvent selection(true, eQuerySelectedText, mWidget);
   ContentEventHandler handler(GetPresContext());
   handler.OnQuerySelectedText(&selection);
-  if (NS_WARN_IF(!selection.mSucceeded) ||
-      NS_WARN_IF(selection.mReply.mContentsRoot != mRootContent)) {
+  if (NS_WARN_IF(!selection.mSucceeded)) {
     return false;
   }
 
