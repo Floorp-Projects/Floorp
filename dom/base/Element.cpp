@@ -3354,7 +3354,8 @@ Element::Animate(const Nullable<ElementOrCSSPseudoElement>& aTarget,
   }
 
   TimingParams timingParams =
-    TimingParams::FromOptionsUnion(aOptions, aTarget, aError);
+    TimingParams::FromOptionsUnion(aOptions, referenceElement->OwnerDoc(),
+                                   aError);
   if (aError.Failed()) {
     return nullptr;
   }
