@@ -19,10 +19,6 @@ namespace mozilla {
 
 class ComputedTimingFunction;
 
-namespace dom {
-class Element;
-}
-
 class AnimationUtils
 {
 public:
@@ -59,7 +55,7 @@ public:
    * be returned.
    */
   static Maybe<ComputedTimingFunction>
-  ParseEasing(const dom::Element* aTarget, const nsAString& aEasing);
+  ParseEasing(const nsAString& aEasing, nsIDocument* aDocument);
 
   /**
    * Get the document from the JS context to use when parsing CSS properties.
