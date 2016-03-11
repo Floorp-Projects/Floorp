@@ -4164,48 +4164,24 @@ EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
   wrapper->mFirstOverEventElement = nullptr;
 }
 
-// Returns the center point of the window's inner content area.
-// This is in widget coordinates, i.e. relative to the widget's top
-// left corner, not in screen coordinates, the same units that
-// UIEvent::refPoint is in.
-//
-// XXX Hack alert: XXX
-// However, we do the computation in integer CSS pixels, NOT device pix,
-// in order to fudge around the one-pixel error in innerHeight in fullscreen
-// mode (see bug 799523 comment 35, and bug 729011). Using integer CSS pix
-// makes us throw away the fractional error that results, rather than having
-// it manifest as a potential one-device-pix discrepancy.
+// Returns the center point of the window's client area. This is
+// in widget coordinates, i.e. relative to the widget's top-left
+// corner, not in screen coordinates, the same units that UIEvent::
+// refpoint is in. It may not be the exact center of the window if
+// the platform requires rounding the coordinate.
 static LayoutDeviceIntPoint
-GetWindowInnerRectCenter(nsPIDOMWindowOuter* aWindow,
-                         nsIWidget* aWidget,
-                         nsPresContext* aContext)
+GetWindowClientRectCenter(nsIWidget* aWidget)
 {
-  NS_ENSURE_TRUE(aWindow && aWidget && aContext, LayoutDeviceIntPoint(0, 0));
+  NS_ENSURE_TRUE(aWidget, LayoutDeviceIntPoint(0, 0));
 
-  nsGlobalWindow* window = nsGlobalWindow::Cast(aWindow);
-
-  float cssInnerX = window->GetMozInnerScreenXOuter();
-  int32_t innerX = int32_t(NS_round(cssInnerX));
-
-  float cssInnerY = window->GetMozInnerScreenYOuter();
-  int32_t innerY = int32_t(NS_round(cssInnerY));
-
-  ErrorResult dummy;
-  int32_t innerWidth = window->GetInnerWidthOuter(dummy);
-  dummy.SuppressException();
-
-  int32_t innerHeight = window->GetInnerHeightOuter(dummy);
-  dummy.SuppressException();
-
-  LayoutDeviceIntRect screen;
-  aWidget->GetScreenBounds(screen);
-
-  int32_t cssScreenX = aContext->DevPixelsToIntCSSPixels(screen.x);
-  int32_t cssScreenY = aContext->DevPixelsToIntCSSPixels(screen.y);
-
-  return LayoutDeviceIntPoint(
-    aContext->CSSPixelsToDevPixels(innerX - cssScreenX + innerWidth / 2),
-    aContext->CSSPixelsToDevPixels(innerY - cssScreenY + innerHeight / 2));
+  LayoutDeviceIntRect rect;
+  aWidget->GetClientBounds(rect);
+  LayoutDeviceIntPoint point(rect.x + rect.width / 2,
+                             rect.y + rect.height / 2);
+  int32_t round = aWidget->RoundsWidgetCoordinatesTo();
+  point.x = point.x / round * round;
+  point.y = point.y / round * round;
+  return point - aWidget->WidgetToScreenOffset();
 }
 
 void
@@ -4241,8 +4217,7 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
         // boundary. We cancel the synthetic event so that we don't end up
         // dispatching the centering move event to content.
         LayoutDeviceIntPoint center =
-          GetWindowInnerRectCenter(mDocument->GetWindow(), aMouseEvent->widget,
-                                   mPresContext);
+          GetWindowClientRectCenter(aMouseEvent->widget);
         aMouseEvent->lastRefPoint = center;
         if (aMouseEvent->refPoint != center) {
           // Mouse move doesn't finish at the center of the window. Dispatch a
@@ -4386,9 +4361,7 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
     // Fire a synthetic mouse move to ensure event state is updated. We first
     // set the mouse to the center of the window, so that the mouse event
     // doesn't report any movement.
-    sLastRefPoint = GetWindowInnerRectCenter(aElement->OwnerDoc()->GetWindow(),
-                                             aWidget,
-                                             mPresContext);
+    sLastRefPoint = GetWindowClientRectCenter(aWidget);
     aWidget->SynthesizeNativeMouseMove(sLastRefPoint + aWidget->WidgetToScreenOffset(),
                                        nullptr);
 
