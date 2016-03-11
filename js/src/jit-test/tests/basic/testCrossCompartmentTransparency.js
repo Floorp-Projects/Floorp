@@ -2,16 +2,14 @@
 
 var g1 = newGlobal('same-compartment');
 var g2 = newGlobal();
-var proxyStr = "Proxy.create(                              "+
+var proxyStr = "new Proxy({},                              "+
 "  { getOwnPropertyDescriptor: () =>assertEq(true,false),  "+
-"    getPropertyDescriptor: () =>assertEq(true,false),     "+
-"    getOwnPropertyNames: () =>assertEq(true,false),       "+
-"    getPropertyNames: () =>assertEq(true,false),          "+
+"    ownKeys: () =>assertEq(true,false),                   "+
 "    defineProperty: () =>assertEq(true,false),            "+
-"    delete: () =>assertEq(true,false),                    "+
-"    fix: () =>assertEq(true,false), },                    "+
-"  Object.prototype                                        "+
-");                                                        ";
+"    deleteProperty: () =>assertEq(true,false),            "+
+"    get: () =>assertEq(true,false),                       "+
+"    set: () =>assertEq(true,false),                       "+
+"});                                                       ";
 var proxy1 = g1.eval(proxyStr);
 var proxy2 = g2.eval(proxyStr);
 

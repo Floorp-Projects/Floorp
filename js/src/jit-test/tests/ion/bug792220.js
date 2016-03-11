@@ -1,4 +1,4 @@
-var p = Proxy.create({
+var p = new Proxy({}, {
   has : function(id) {}
 });
 RegExp.prototype.__proto__ = p;
