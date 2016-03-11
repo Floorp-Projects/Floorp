@@ -48,6 +48,8 @@ module.exports = createClass({
     // to Scratchpad URIs.
     const isLinkable = !!(isScratchpadScheme(source) || parseURL(source));
     const elements = [];
+    const sourceElements = [];
+    let sourceEl;
 
     let tooltip = long;
     // Exclude all falsy values, including `0`, as even
@@ -62,35 +64,29 @@ module.exports = createClass({
       }
     }
 
-    let onClickTooltipString = l10n.getFormatStr("frame.viewsourceindebugger", tooltip);
     let attributes = {
       "data-url": long,
       className: "frame-link",
-      title: tooltip,
     };
 
-    if (isLinkable) {
-      elements.push(dom.a({
-        className: "frame-link-filename",
-        onClick,
-        title: onClickTooltipString
-      }, short));
-    } else {
-      // If source is not a URL (self-hosted, eval, etc.), don't make
-      // it an anchor link, as we can't link to it.
-      elements.push(dom.span({
-        className: "frame-link-filename"
-      }, short));
+    if (showFunctionName && frame.functionDisplayName) {
+      elements.push(
+        dom.span({ className: "frame-link-function-display-name" }, frame.functionDisplayName)
+      );
     }
+
+    sourceElements.push(dom.span({
+      className: "frame-link-filename",
+    }, short));
 
     // If source is linkable, and we have a line number > 0
     if (isLinkable && line) {
-      elements.push(dom.span({ className: "frame-link-colon" }, ":"));
-      elements.push(dom.span({ className: "frame-link-line" }, line));
+      sourceElements.push(dom.span({ className: "frame-link-colon" }, ":"));
+      sourceElements.push(dom.span({ className: "frame-link-line" }, line));
       // Intentionally exclude 0
       if (column) {
-        elements.push(dom.span({ className: "frame-link-colon" }, ":"));
-        elements.push(dom.span({ className: "frame-link-column" }, column));
+        sourceElements.push(dom.span({ className: "frame-link-colon" }, ":"));
+        sourceElements.push(dom.span({ className: "frame-link-column" }, column));
         // Add `data-column` attribute for testing
         attributes["data-column"] = column;
       }
@@ -99,11 +95,21 @@ module.exports = createClass({
       attributes["data-line"] = line;
     }
 
-    if (showFunctionName && frame.functionDisplayName) {
-      elements.unshift(
-        dom.span({ className: "frame-link-function-display-name" }, frame.functionDisplayName)
-      );
+    // If source is not a URL (self-hosted, eval, etc.), don't make
+    // it an anchor link, as we can't link to it.
+    if (isLinkable) {
+      sourceEl = dom.a({
+        onClick,
+        className: "frame-link-source",
+        title: l10n.getFormatStr("frame.viewsourceindebugger", tooltip)
+      }, sourceElements);
+    } else {
+      sourceEl = dom.span({
+        className: "frame-link-source",
+        title: tooltip,
+      }, sourceElements);
     }
+    elements.push(sourceEl);
 
     if (showHost && host) {
       elements.push(dom.span({ className: "frame-link-host" }, host));

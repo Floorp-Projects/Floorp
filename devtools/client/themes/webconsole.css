@@ -102,7 +102,7 @@ a {
   text-decoration: underline;
 }
 
-.message-location > .frame-link {
+.message-location > .frame-link .frame-link-source {
   width: 10em;
 }
 
