@@ -629,24 +629,22 @@ js::InternalConstructWithProvidedThis(JSContext* cx, HandleValue fval, HandleVal
 }
 
 bool
-js::InvokeGetter(JSContext* cx, const Value& thisv, Value fval, MutableHandleValue rval)
+js::CallGetter(JSContext* cx, HandleValue thisv, HandleValue getter, MutableHandleValue rval)
 {
-    /*
-     * Invoke could result in another try to get or set the same id again, see
-     * bug 355497.
-     */
+    // Invoke could result in another try to get or set the same id again, see
+    // bug 355497.
     JS_CHECK_RECURSION(cx, return false);
 
-    return Invoke(cx, thisv, fval, 0, nullptr, rval);
+    return Invoke(cx, thisv, getter, 0, nullptr, rval);
 }
 
 bool
-js::InvokeSetter(JSContext* cx, const Value& thisv, Value fval, HandleValue v)
+js::CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter, HandleValue v)
 {
     JS_CHECK_RECURSION(cx, return false);
 
     RootedValue ignored(cx);
-    return Invoke(cx, thisv, fval, 1, v.address(), &ignored);
+    return Invoke(cx, thisv, setter, 1, v.address(), &ignored);
 }
 
 bool

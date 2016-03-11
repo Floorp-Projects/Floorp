@@ -74,10 +74,10 @@ Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, cons
  * getter/setter calls.
  */
 extern bool
-InvokeGetter(JSContext* cx, const Value& thisv, Value fval, MutableHandleValue rval);
+CallGetter(JSContext* cx, HandleValue thisv, HandleValue getter, MutableHandleValue rval);
 
 extern bool
-InvokeSetter(JSContext* cx, const Value& thisv, Value fval, HandleValue v);
+CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter, HandleValue rval);
 
 // ES6 7.3.13 Construct(F, argumentsList, newTarget).  All parameters are
 // required, hopefully forcing callers to be careful not to (say) blindly pass
