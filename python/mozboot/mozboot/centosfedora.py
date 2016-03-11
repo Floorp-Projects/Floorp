@@ -132,5 +132,5 @@ class CentOSFedoraBootstrapper(BaseBootstrapper):
     def suggest_mobile_android_artifact_mode_mozconfig(self):
         self.suggest_mobile_android_mozconfig(artifact_mode=True)
 
-    def upgrade_mercurial(self):
+    def upgrade_mercurial(self, current):
         self.dnf_update('mercurial')

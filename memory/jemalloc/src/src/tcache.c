@@ -10,7 +10,7 @@ ssize_t	opt_lg_tcache_max = LG_TCACHE_MAXCLASS_DEFAULT;
 tcache_bin_info_t	*tcache_bin_info;
 static unsigned		stack_nelms; /* Total stack elms per tcache. */
 
-size_t			nhbins;
+unsigned		nhbins;
 size_t			tcache_maxclass;
 
 tcaches_t		*tcaches;
@@ -67,7 +67,6 @@ tcache_event_hard(tsd_t *tsd, tcache_t *tcache)
 	tcache->next_gc_bin++;
 	if (tcache->next_gc_bin == nhbins)
 		tcache->next_gc_bin = 0;
-	tcache->ev_cnt = 0;
 }
 
 void *
@@ -76,7 +75,7 @@ tcache_alloc_small_hard(tsd_t *tsd, arena_t *arena, tcache_t *tcache,
 {
 	void *ret;
 
-	arena_tcache_fill_small(arena, tbin, binind, config_prof ?
+	arena_tcache_fill_small(tsd, arena, tbin, binind, config_prof ?
 	    tcache->prof_accumbytes : 0);
 	if (config_prof)
 		tcache->prof_accumbytes = 0;
@@ -144,6 +143,7 @@ tcache_bin_flush_small(tsd_t *tsd, tcache_t *tcache, tcache_bin_t *tbin,
 			}
 		}
 		malloc_mutex_unlock(&bin->lock);
+		arena_decay_ticks(tsd, bin_arena, nflush - ndeferred);
 	}
 	if (config_stats && !merged_stats) {
 		/*
@@ -227,6 +227,7 @@ tcache_bin_flush_large(tsd_t *tsd, tcache_bin_t *tbin, szind_t binind,
 		malloc_mutex_unlock(&locked_arena->lock);
 		if (config_prof && idump)
 			prof_idump();
+		arena_decay_ticks(tsd, locked_arena, nflush - ndeferred);
 	}
 	if (config_stats && !merged_stats) {
 		/*
@@ -324,11 +325,14 @@ tcache_create(tsd_t *tsd, arena_t *arena)
 	/* Avoid false cacheline sharing. */
 	size = sa2u(size, CACHELINE);
 
-	tcache = ipallocztm(tsd, size, CACHELINE, true, false, true, a0get());
+	tcache = ipallocztm(tsd, size, CACHELINE, true, false, true,
+	    arena_get(0, false));
 	if (tcache == NULL)
 		return (NULL);
 
 	tcache_arena_associate(tcache, arena);
+
+	ticker_init(&tcache->gc_ticker, TCACHE_GC_INCR);
 
 	assert((TCACHE_NSLOTS_SMALL_MAX & 1U) == 0);
 	for (i = 0; i < nhbins; i++) {
@@ -450,7 +454,7 @@ tcaches_create(tsd_t *tsd, unsigned *r_ind)
 
 	if (tcaches_avail == NULL && tcaches_past > MALLOCX_TCACHE_MAX)
 		return (true);
-	tcache = tcache_create(tsd, a0get());
+	tcache = tcache_create(tsd, arena_get(0, false));
 	if (tcache == NULL)
 		return (true);
 
@@ -458,7 +462,7 @@ tcaches_create(tsd_t *tsd, unsigned *r_ind)
 		elm = tcaches_avail;
 		tcaches_avail = tcaches_avail->next;
 		elm->tcache = tcache;
-		*r_ind = elm - tcaches;
+		*r_ind = (unsigned)(elm - tcaches);
 	} else {
 		elm = &tcaches[tcaches_past];
 		elm->tcache = tcache;

@@ -364,7 +364,7 @@ Promise::PromiseCapability::RejectWithException(JSContext* aCx,
   JS::Rooted<JS::Value> ignored(aCx);
   if (!JS::Call(aCx, JS::UndefinedHandleValue, mReject, JS::HandleValueArray(exn),
                 &ignored)) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(aCx);
   }
 }
 
@@ -537,7 +537,7 @@ Promise::Resolve(nsIGlobalObject* aGlobal, JSContext* aCx,
   JS::Rooted<JSObject*> p(aCx,
                           JS::CallOriginalPromiseResolve(aCx, aValue));
   if (!p) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(aCx);
     return nullptr;
   }
 
@@ -553,7 +553,7 @@ Promise::Reject(nsIGlobalObject* aGlobal, JSContext* aCx,
   JS::Rooted<JSObject*> p(aCx,
                           JS::CallOriginalPromiseReject(aCx, aValue));
   if (!p) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(aCx);
     return nullptr;
   }
 
@@ -576,7 +576,7 @@ Promise::All(const GlobalObject& aGlobal,
 
   JS::AutoObjectVector promises(cx);
   if (!promises.reserve(aPromiseList.Length())) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(cx);
     return nullptr;
   }
 
@@ -584,7 +584,7 @@ Promise::All(const GlobalObject& aGlobal,
     JS::Rooted<JSObject*> promiseObj(cx, promise->PromiseObj());
     // Just in case, make sure these are all in the context compartment.
     if (!JS_WrapObject(cx, &promiseObj)) {
-      aRv.NoteJSContextException();
+      aRv.NoteJSContextException(cx);
       return nullptr;
     }
     promises.infallibleAppend(promiseObj);
@@ -592,7 +592,7 @@ Promise::All(const GlobalObject& aGlobal,
 
   JS::Rooted<JSObject*> result(cx, JS::GetWaitForAllPromise(cx, promises));
   if (!result) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(cx);
     return nullptr;
   }
 
@@ -615,7 +615,7 @@ Promise::Then(JSContext* aCx,
   // should be OK.
   JS::Rooted<JSObject*> promise(aCx, PromiseObj());
   if (!JS_WrapObject(aCx, &promise)) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(aCx);
     return;
   }
 
@@ -623,7 +623,7 @@ Promise::Then(JSContext* aCx,
   if (aResolveCallback) {
     resolveCallback = aResolveCallback->Callback();
     if (!JS_WrapObject(aCx, &resolveCallback)) {
-      aRv.NoteJSContextException();
+      aRv.NoteJSContextException(aCx);
       return;
     }
   }
@@ -632,7 +632,7 @@ Promise::Then(JSContext* aCx,
   if (aRejectCallback) {
     rejectCallback = aRejectCallback->Callback();
     if (!JS_WrapObject(aCx, &rejectCallback)) {
-      aRv.NoteJSContextException();
+      aRv.NoteJSContextException(aCx);
       return;
     }
   }
@@ -641,7 +641,7 @@ Promise::Then(JSContext* aCx,
   retval = JS::CallOriginalPromiseThen(aCx, promise, resolveCallback,
                                        rejectCallback);
   if (!retval) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(aCx);
     return;
   }
 
@@ -1131,6 +1131,11 @@ Promise::CallInitFunction(const GlobalObject& aGlobal,
   aRv.WouldReportJSException();
 
   if (aRv.Failed()) {
+    if (aRv.IsUncatchableException()) {
+      // Just propagate this to the caller.
+      return;
+    }
+
     // There are two possibilities here.  Either we've got a rethrown exception,
     // or we reported that already and synthesized a generic NS_ERROR_FAILURE on
     // the ErrorResult.  In the former case, it doesn't much matter how we get
@@ -1230,13 +1235,13 @@ Promise::NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
     // the canonical Promise for that compartment actually makes sense.
     JS::Rooted<JS::Value> constructorValue(aCx, aConstructor);
     if (!MaybeWrapObjectValue(aCx, &constructorValue)) {
-      aRv.NoteJSContextException();
+      aRv.NoteJSContextException(aCx);
       return;
     }
 
     JSObject* defaultCtor = PromiseBinding::GetConstructorObject(aCx, global);
     if (!defaultCtor) {
-      aRv.NoteJSContextException();
+      aRv.NoteJSContextException(aCx);
       return;
     }
     if (defaultCtor == &constructorValue.toObject()) {
@@ -1260,7 +1265,7 @@ Promise::NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
           CreateFunction(aCx, aCapability.mNativePromise,
                          PromiseCallback::Resolve);
         if (!resolveFuncObj) {
-          aRv.NoteJSContextException();
+          aRv.NoteJSContextException(aCx);
           return;
         }
         aCapability.mResolve.setObject(*resolveFuncObj);
@@ -1269,7 +1274,7 @@ Promise::NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
           CreateFunction(aCx, aCapability.mNativePromise,
                          PromiseCallback::Reject);
         if (!rejectFuncObj) {
-          aRv.NoteJSContextException();
+          aRv.NoteJSContextException(aCx);
           return;
         }
         aCapability.mReject.setObject(*rejectFuncObj);
@@ -1307,7 +1312,7 @@ Promise::NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
   if (!JS::Construct(aCx, aConstructor,
                      JS::HandleValueArray(getCapabilities),
                      &promiseObj)) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(aCx);
     return;
   }
 
@@ -1368,7 +1373,7 @@ Promise::Resolve(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
     if (NS_SUCCEEDED(rv)) {
       JS::Rooted<JS::Value> constructor(cx);
       if (!JS_GetProperty(cx, valueObj, "constructor", &constructor)) {
-        aRv.NoteJSContextException();
+        aRv.NoteJSContextException(cx);
         return;
       }
 
@@ -1400,7 +1405,7 @@ Promise::Resolve(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
                   capability.mResolve, JS::HandleValueArray(value),
                   &ignored)) {
       // Step 7.
-      aRv.NoteJSContextException();
+      aRv.NoteJSContextException(cx);
       return;
     }
   }
@@ -1465,7 +1470,7 @@ Promise::Reject(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
                   capability.mReject, JS::HandleValueArray(value),
                   &ignored)) {
       // Step 6.
-      aRv.NoteJSContextException();
+      aRv.NoteJSContextException(cx);
       return;
     }
   }
@@ -1505,7 +1510,7 @@ SpeciesConstructor(JSContext* aCx,
   JS::Rooted<JS::Value> constructorVal(aCx);
   if (!JS_GetProperty(aCx, promise, "constructor", &constructorVal)) {
     // Step 3.
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(aCx);
     return;
   }
 
@@ -1528,7 +1533,7 @@ SpeciesConstructor(JSContext* aCx,
   JS::Rooted<JSObject*> constructorObj(aCx, &constructorVal.toObject());
   if (!JS_GetPropertyById(aCx, constructorObj, species, &speciesVal)) {
     // Step 7.
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(aCx);
     return;
   }
 
@@ -1560,7 +1565,7 @@ Promise::Then(JSContext* aCx, JS::Handle<JSObject*> aCalleeGlobal,
   // Step 1.
   JS::Rooted<JS::Value> promiseVal(aCx, JS::ObjectValue(*GetWrapper()));
   if (!MaybeWrapObjectValue(aCx, &promiseVal)) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(aCx);
     return;
   }
   JS::Rooted<JSObject*> promiseObj(aCx, &promiseVal.toObject());
@@ -1578,13 +1583,13 @@ Promise::Then(JSContext* aCx, JS::Handle<JSObject*> aCalleeGlobal,
     JSObject* defaultCtor =
       PromiseBinding::GetConstructorObject(aCx, calleeGlobal);
     if (!defaultCtor) {
-      aRv.NoteJSContextException();
+      aRv.NoteJSContextException(aCx);
       return;
     }
     defaultCtorVal.setObject(*defaultCtor);
   }
   if (!MaybeWrapObjectValue(aCx, &defaultCtorVal)) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(aCx);
     return;
   }
 
@@ -1598,7 +1603,7 @@ Promise::Then(JSContext* aCx, JS::Handle<JSObject*> aCalleeGlobal,
   // Step 5.
   GlobalObject globalObj(aCx, GetWrapper());
   if (globalObj.Failed()) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(aCx);
     return;
   }
   nsCOMPtr<nsIGlobalObject> globalObject =
@@ -1697,7 +1702,7 @@ Promise::Catch(JSContext* aCx, AnyCallback* aRejectCallback,
   // overridden Promise.prototype.then.
   JS::Rooted<JS::Value> promiseVal(aCx, JS::ObjectValue(*GetWrapper()));
   if (!MaybeWrapObjectValue(aCx, &promiseVal)) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(aCx);
     return;
   }
   JS::Rooted<JSObject*> promiseObj(aCx, &promiseVal.toObject());
@@ -1708,14 +1713,14 @@ Promise::Catch(JSContext* aCx, AnyCallback* aRejectCallback,
     callbacks[1].setObject(*aRejectCallback->Callable());
     // It could be in any compartment, so put it in ours.
     if (!MaybeWrapObjectValue(aCx, callbacks[1])) {
-      aRv.NoteJSContextException();
+      aRv.NoteJSContextException(aCx);
       return;
     }
   } else {
     callbacks[1].setNull();
   }
   if (!JS_CallFunctionName(aCx, promiseObj, "then", callbacks, aRetval)) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(aCx);
   }
 }
 
@@ -1975,7 +1980,7 @@ Promise::All(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
   // want to do that anyway.
   aRetval.set(capability.PromiseValue());
   if (!MaybeWrapValue(cx, aRetval)) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(cx);
     return;
   }
 
@@ -2262,7 +2267,7 @@ Promise::Race(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
   // want to do that anyway.
   aRetval.set(capability.PromiseValue());
   if (!MaybeWrapValue(cx, aRetval)) {
-    aRv.NoteJSContextException();
+    aRv.NoteJSContextException(cx);
     return;
   }
 

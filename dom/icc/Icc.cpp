@@ -104,7 +104,7 @@ Icc::NotifyStkEvent(const nsAString& aName, nsIStkProactiveCmd* aStkProactiveCmd
   cmdFactory->CreateCommandMessage(aStkProactiveCmd, &value);
   NS_ENSURE_TRUE(value.isObject(), NS_ERROR_UNEXPECTED);
 
-  MozStkCommandEventInit init;
+  RootedDictionary<MozStkCommandEventInit> init(cx);
   init.mBubbles = false;
   init.mCancelable = false;
   init.mCommand = value;

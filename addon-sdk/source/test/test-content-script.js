@@ -259,22 +259,6 @@ var html = '<input id="input" type="text" /><input id="input3" type="checkbox" /
              '<input id="input2" type="checkbox" />';
 
 exports.testStringOverload = createProxyTest(html, function (helper, assert) {
-  // Proxy - toString error
-  let originalString = "string";
-  let p = Proxy.create({
-    get: function(receiver, name) {
-      if (name == "binded")
-        return originalString.toString.bind(originalString);
-      return originalString[name];
-    }
-  });
-  assert.throws(function () {
-    p.toString();
-  },
-  /toString method called on incompatible Proxy/,
-  "toString can't be called with this being the proxy");
-  assert.equal(p.binded(), "string", "but it works if we bind this to the original string");
-
   helper.createWorker(
     'new ' + function ContentScriptScope() {
       // RightJS is hacking around String.prototype, and do similar thing:

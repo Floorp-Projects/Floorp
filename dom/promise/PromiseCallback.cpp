@@ -341,6 +341,11 @@ WrapperPromiseCallback::Call(JSContext* aCx,
 
   // PromiseReactionTask step 7
   if (rv.Failed()) {
+    if (rv.IsUncatchableException()) {
+      // We have nothing to resolve/reject the promise with.
+      return rv.StealNSResult();
+    }
+
     JS::Rooted<JS::Value> value(aCx);
     { // Scope for JSAutoCompartment
       // Convert the ErrorResult to a JS exception object that we can reject

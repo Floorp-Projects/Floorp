@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1252268
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1252268</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1252268">Mozilla Bug 1252268</a>
+
+<script type="text/javascript">
+  function go() {
+    SimpleTest.requestFlakyTimeout("I'm smarter than the test harness");
+
+    var ranOnce = false;
+    var finished = false;
+
+    var interval = setInterval(function () {
+      if (ranOnce) {
+        ok(false, "Don't execute me again!");
+        clearInterval(interval);
+        if (!finished) {
+          finished = true;
+          SimpleTest.finish();
+        }
+      } else {
+        ranOnce = true;
+        ok(true, "Ran the first time");
+        try {
+          TestFunctions.throwUncatchableException();
+          ok(false, "How did we get here!");
+        } catch (e) {
+          ok(false, "How did we get here!?");
+        }
+      }
+    }, 100);
+
+    setTimeout(function() {
+      if (!finished) {
+        finished = true;
+        SimpleTest.finish();
+      }
+    }, 1000);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, go);
+</script>
+
+</body>
+</html>

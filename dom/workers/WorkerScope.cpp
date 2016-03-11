@@ -246,7 +246,7 @@ WorkerGlobalScope::SetTimeout(JSContext* /* unused */,
 }
 
 void
-WorkerGlobalScope::ClearTimeout(int32_t aHandle, ErrorResult& aRv)
+WorkerGlobalScope::ClearTimeout(int32_t aHandle)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   mWorkerPrivate->ClearTimeout(aHandle);
@@ -287,7 +287,7 @@ WorkerGlobalScope::SetInterval(JSContext* /* unused */,
 }
 
 void
-WorkerGlobalScope::ClearInterval(int32_t aHandle, ErrorResult& aRv)
+WorkerGlobalScope::ClearInterval(int32_t aHandle)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   mWorkerPrivate->ClearTimeout(aHandle);

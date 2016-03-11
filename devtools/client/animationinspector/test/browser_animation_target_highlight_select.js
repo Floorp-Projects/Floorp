@@ -10,13 +10,13 @@ requestLongerTimeout(2);
 // be used to highlight elements in the DOM and select them in the inspector.
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
 
   let {toolbox, inspector, panel} = yield openAnimationInspector();
 
   info("Select the simple animated node");
   let onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);
-  yield selectNode(".animated", inspector);
+  yield selectNodeAndWaitForAnimations(".animated", inspector);
   yield onPanelUpdated;
 
   let targets = yield waitForAllAnimationTargets(panel);
@@ -50,7 +50,7 @@ add_task(function*() {
 
   info("Select the body node in order to have the list of all animations");
   onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);
-  yield selectNode("body", inspector);
+  yield selectNodeAndWaitForAnimations("body", inspector);
   yield onPanelUpdated;
 
   targets = yield waitForAllAnimationTargets(panel);

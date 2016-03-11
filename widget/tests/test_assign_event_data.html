@@ -198,21 +198,23 @@ const kTests = [
   { description: "WidgetKeyboardEvent (keyup during composition)",
     targetID: "input-text", eventType: "keyup",
     dispatchEvent: function () {
-      SpecialPowers.setBoolPref("dom.keyboardevent.dispatch_during_composition", true);
-      document.getElementById(this.targetID).value = "";
-      document.getElementById(this.targetID).focus();
-      synthesizeCompositionChange({ "composition":
-        { "string": "\u306D",
-          "clauses":
-          [
-            { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-          ]
-        },
-        "caret": { "start": 1, "length": 0 },
-        "key": { key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A },
+      setAndObserveCompositionPref(true, () => {
+        document.getElementById(this.targetID).value = "";
+        document.getElementById(this.targetID).focus();
+        synthesizeCompositionChange({ "composition":
+          { "string": "\u306D",
+            "clauses":
+            [
+              { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+            ]
+          },
+          "caret": { "start": 1, "length": 0 },
+          "key": { key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A },
+        });
+        synthesizeComposition({ type: "compositioncommitasis" });
+        setAndObserveCompositionPref(null, runNextTest);
       });
-      synthesizeComposition({ type: "compositioncommitasis" });
-      SpecialPowers.clearUserPref("dom.keyboardevent.dispatch_during_composition");
+      return true;
     },
     canRun: function () {
       return true;
@@ -222,21 +224,23 @@ const kTests = [
   { description: "WidgetKeyboardEvent (keydown during composition)",
     targetID: "input-text", eventType: "keydown",
     dispatchEvent: function () {
-      SpecialPowers.setBoolPref("dom.keyboardevent.dispatch_during_composition", true);
-      document.getElementById(this.targetID).value = "";
-      document.getElementById(this.targetID).focus();
-      synthesizeCompositionChange({ "composition":
-        { "string": "\u306D",
-          "clauses":
-          [
-            { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
-          ]
-        },
-        "caret": { "start": 1, "length": 0 }
+      setAndObserveCompositionPref(true, () => {
+        document.getElementById(this.targetID).value = "";
+        document.getElementById(this.targetID).focus();
+        synthesizeCompositionChange({ "composition":
+          { "string": "\u306D",
+            "clauses":
+            [
+              { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+            ]
+          },
+          "caret": { "start": 1, "length": 0 }
+        });
+        synthesizeComposition({ type: "compositioncommitasis",
+          key: { key: "KEY_Enter", code: "Enter" } });
+        setAndObserveCompositionPref(null, runNextTest);
       });
-      synthesizeComposition({ type: "compositioncommitasis",
-        key: { key: "KEY_Enter", code: "Enter" } });
-      SpecialPowers.clearUserPref("dom.keyboardevent.dispatch_during_composition");
+      return true;
     },
     canRun: function () {
       return true;
@@ -620,6 +624,33 @@ const kTests = [
   },
 ];
 
+/**
+ * Sets or clears dom.keyboardevent.dispatch_during_composition and calls the
+ * given callback when the change is observed.
+ *
+ * @param aValue
+ *        Pass null to clear the pref.  Otherwise pass a bool.
+ * @param aCallback
+ *        Called when the pref change is observed.
+ */
+function setAndObserveCompositionPref(aValue, aCallback) {
+  let pref = "dom.keyboardevent.dispatch_during_composition";
+  let branch = SpecialPowers.Cc["@mozilla.org/preferences-service;1"].
+               getService(SpecialPowers.Ci.nsIPrefService).
+               getBranch(pref);
+  let obs = SpecialPowers.wrapCallback(function () {
+    branch.removeObserver("", obs);
+    // Make sure the code under test sees the change first, so executeSoon().
+    SimpleTest.executeSoon(aCallback);
+  });
+  branch.addObserver("", obs, false);
+  if (aValue === null) {
+    SpecialPowers.clearUserPref(pref);
+  } else {
+    SpecialPowers.setBoolPref(pref, aValue);
+  }
+}
+
 function doTest(aTest)
 {
   if (!aTest.canRun()) {
@@ -652,9 +683,11 @@ function doTest(aTest)
         is(gEvent[name], gCopiedEvent[i].value, description + ": mismatch (" + name + ")");
       }
     }
-    runNextTest();
+    if (!testWillCallRunNextTest) {
+      runNextTest();
+    }
   };
-  aTest.dispatchEvent();
+  var testWillCallRunNextTest = aTest.dispatchEvent();
 }
 
 var gIndex = -1;

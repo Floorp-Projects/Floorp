@@ -61,6 +61,8 @@ protected:
 #ifdef DEBUG
   bool                   mPrincipalSet;
 #endif
+
+  friend class StyleSheet;
 };
 
 } // namespace mozilla

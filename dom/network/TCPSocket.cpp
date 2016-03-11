@@ -534,7 +534,7 @@ TCPSocket::FireDataStringEvent(const nsAString& aType,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 TCPSocket::FireDataEvent(JSContext* aCx, const nsAString& aType, JS::Handle<JS::Value> aData)
 {
   MOZ_ASSERT(!mSocketBridgeParent);

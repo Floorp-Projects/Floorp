@@ -208,7 +208,8 @@ WebGLTexture::TexOrSubImage(bool isSubImage, const char* funcName, TexImageTarge
                             GLint yOffset, GLint zOffset, GLenum unpackFormat,
                             GLenum unpackType, dom::ImageData* imageData)
 {
-    dom::Uint8ClampedArray scopedArr;
+    dom::RootedTypedArray<dom::Uint8ClampedArray> scopedArr(
+      nsContentUtils::RootingCxForThread());
 
     UniquePtr<webgl::TexUnpackBlob> blob;
     blob = UnpackBlobFromImageData(mContext, funcName, unpackType, imageData, &scopedArr);

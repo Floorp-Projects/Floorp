@@ -83,7 +83,7 @@ struct tcache_bin_s {
 struct tcache_s {
 	ql_elm(tcache_t) link;		/* Used for aggregating stats. */
 	uint64_t	prof_accumbytes;/* Cleared after arena_prof_accum(). */
-	unsigned	ev_cnt;		/* Event count since incremental GC. */
+	ticker_t	gc_ticker;	/* Drives incremental GC. */
 	szind_t		next_gc_bin;	/* Next bin to GC. */
 	tcache_bin_t	tbins[1];	/* Dynamically sized. */
 	/*
@@ -115,7 +115,7 @@ extern tcache_bin_info_t	*tcache_bin_info;
  * Number of tcache bins.  There are NBINS small-object bins, plus 0 or more
  * large-object bins.
  */
-extern size_t	nhbins;
+extern unsigned	nhbins;
 
 /* Maximum cached size class. */
 extern size_t	tcache_maxclass;
@@ -247,9 +247,7 @@ tcache_event(tsd_t *tsd, tcache_t *tcache)
 	if (TCACHE_GC_INCR == 0)
 		return;
 
-	tcache->ev_cnt++;
-	assert(tcache->ev_cnt <= TCACHE_GC_INCR);
-	if (unlikely(tcache->ev_cnt == TCACHE_GC_INCR))
+	if (unlikely(ticker_tick(&tcache->gc_ticker)))
 		tcache_event_hard(tsd, tcache);
 }
 
@@ -346,7 +344,6 @@ tcache_alloc_large(tsd_t *tsd, arena_t *arena, tcache_t *tcache, size_t size,
 	void *ret;
 	tcache_bin_t *tbin;
 	bool tcache_success;
-	size_t usize JEMALLOC_CC_SILENCE_INIT(0);
 
 	assert(binind < nhbins);
 	tbin = &tcache->tbins[binind];
@@ -361,14 +358,15 @@ tcache_alloc_large(tsd_t *tsd, arena_t *arena, tcache_t *tcache, size_t size,
 		if (unlikely(arena == NULL))
 			return (NULL);
 
-		usize = index2size(binind);
-		assert(usize <= tcache_maxclass);
-		ret = arena_malloc_large(arena, usize, binind, zero);
+		ret = arena_malloc_large(tsd, arena, binind, zero);
 		if (ret == NULL)
 			return (NULL);
 	} else {
+		size_t usize JEMALLOC_CC_SILENCE_INIT(0);
+
 		/* Only compute usize on demand */
-		if (config_prof || (slow_path && config_fill) || unlikely(zero)) {
+		if (config_prof || (slow_path && config_fill) ||
+		    unlikely(zero)) {
 			usize = index2size(binind);
 			assert(usize <= tcache_maxclass);
 		}

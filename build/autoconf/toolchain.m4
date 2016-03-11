@@ -225,6 +225,18 @@ if test "$GNU_CXX"; then
         AC_MSG_ERROR([Your toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
     fi
 
+    if test -n "$CLANG_CC"; then
+        dnl We'd normally just check for the version from CC_VERSION (fed
+        dnl from __clang_major__ and __clang_minor__), but the clang that
+        dnl comes with Xcode has a completely different version scheme
+        dnl despite exposing the version with the same defines.
+        dnl So instead of a version check, check for one of the C++11
+        dnl features that was added in clang 3.3.
+        AC_TRY_COMPILE([], [#if !__has_feature(cxx_inheriting_constructors)
+                            #error inheriting constructors are not supported
+                            #endif],,AC_MSG_ERROR([Only clang/llvm 3.3 or newer supported]))
+    fi
+
     AC_CACHE_CHECK([whether 64-bits std::atomic requires -latomic],
         ac_cv_needs_atomic,
         AC_TRY_LINK(
@@ -321,6 +333,12 @@ EOF
         elif test "$ac_cv_host_cxx0x_headers_bug" = "yes"; then
             AC_MSG_ERROR([Your host toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
         fi
+        if test "$host_compiler" = CLANG; then
+            AC_TRY_COMPILE([], [#if !__has_feature(cxx_inheriting_constructors)
+                                #error inheriting constructors are not supported
+                                #endif],,AC_MSG_ERROR([Only clang/llvm 3.3 or newer supported]))
+        fi
+
         CXXFLAGS="$_SAVE_CXXFLAGS"
         CPPFLAGS="$_SAVE_CPPFLAGS"
         CXX="$_SAVE_CXX"

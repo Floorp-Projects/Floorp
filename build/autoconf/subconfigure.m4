@@ -9,7 +9,7 @@ define([AC_DEFUN], [define($1, [$2])])
 
 dnl AC_ARG_ENABLE(FEATURE, HELP-STRING, IF-TRUE[, IF-FALSE])
 dnl We have to ignore the help string due to how help works in autoconf...
-AC_DEFUN([AC_ARG_ENABLE],
+AC_DEFUN([MOZ_AC_ARG_ENABLE],
 [#] Check whether --enable-[$1] or --disable-[$1] was given.
 [if test "[${enable_]patsubst([$1], -, _)+set}" = set; then
   enableval="[$enable_]patsubst([$1], -, _)"

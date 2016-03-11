@@ -2,9 +2,9 @@
 <html>
 <head>
 <title>selection preventDefault test</title>
-<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <style type="text/css">
   #fixedDiv1 {
@@ -40,8 +40,9 @@ function test()
   function getSelectionForEditor(aEditorElement)
   {
     const nsIDOMNSEditableElement =
-      Components.interfaces.nsIDOMNSEditableElement;
-    return aEditorElement.QueryInterface(nsIDOMNSEditableElement).editor.selection;
+      SpecialPowers.Ci.nsIDOMNSEditableElement;
+    return SpecialPowers.wrap(aEditorElement)
+             .QueryInterface(nsIDOMNSEditableElement).editor.selection;
   }
 
   function clear()

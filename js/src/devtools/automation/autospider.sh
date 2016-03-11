@@ -86,7 +86,7 @@ if [[ "$OSTYPE" == darwin* ]]; then
   source "$ABSDIR/macbuildenv.sh"
 elif [ "$OSTYPE" = "linux-gnu" ]; then
   if [ -n "$AUTOMATION" ]; then
-      GCCDIR="${GCCDIR:-/tools/gcc-4.7.2-0moz1}"
+      GCCDIR="${GCCDIR:-$SOURCE/../gcc}"
       CONFIGURE_ARGS="$CONFIGURE_ARGS --with-ccache"
   fi
   UNAME_M=$(uname -m)
