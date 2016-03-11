@@ -210,7 +210,7 @@ extern nsRoleMapEntry gEmptyRoleMap;
  * @return        a pointer to the role map entry for the ARIA role, or nullptr
  *                if none
  */
-nsRoleMapEntry* GetRoleMap(dom::Element* aEl);
+const nsRoleMapEntry* GetRoleMap(dom::Element* aEl);
 
 /**
  * Return accessible state from ARIA universal states applied to the given
