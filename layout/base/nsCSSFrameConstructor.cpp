@@ -8893,6 +8893,9 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
   } else if (nsGkAtoms::flexContainerFrame == frameType) {
     newFrame = NS_NewFlexContainerFrame(shell, styleContext);
     newFrame->Init(content, aParentFrame, aFrame);
+  } else if (nsGkAtoms::gridContainerFrame == frameType) {
+    newFrame = NS_NewGridContainerFrame(shell, styleContext);
+    newFrame->Init(content, aParentFrame, aFrame);
   } else if (nsGkAtoms::rubyFrame == frameType) {
     newFrame = NS_NewRubyFrame(shell, styleContext);
     newFrame->Init(content, aParentFrame, aFrame);

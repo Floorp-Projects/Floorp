@@ -55,7 +55,12 @@ public:
   nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
   nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
   void MarkIntrinsicISizesDirty() override;
-  virtual nsIAtom* GetType() const override;
+  nsIAtom* GetType() const override;
+  bool IsFrameOfType(uint32_t aFlags) const override
+  {
+    return nsContainerFrame::IsFrameOfType(aFlags &
+             ~nsIFrame::eCanContainOverflowContainers);
+  }
 
   void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                         const nsRect&           aDirtyRect,
