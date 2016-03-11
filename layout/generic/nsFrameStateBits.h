@@ -304,6 +304,17 @@ FRAME_STATE_GROUP(FlexContainer, nsFlexContainerFrame)
 // (Means that we have to be more thorough about checking them for sortedness.)
 FRAME_STATE_BIT(FlexContainer, 20, NS_STATE_FLEX_CHILDREN_REORDERED)
 
+// == Frame state bits that apply to grid container frames ====================
+
+FRAME_STATE_GROUP(GridContainer, nsGridContainerFrame)
+
+// True iff the normal flow children are already in CSS 'order' in the
+// order they occur in the child frame list.
+FRAME_STATE_BIT(GridContainer, 20, NS_STATE_GRID_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER)
+
+// True iff some first-in-flow in-flow children were pushed.
+FRAME_STATE_BIT(GridContainer, 21, NS_STATE_GRID_DID_PUSH_ITEMS)
+
 // == Frame state bits that apply to SVG frames ===============================
 
 FRAME_STATE_GROUP(SVG, nsISVGChildFrame)
