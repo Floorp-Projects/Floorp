@@ -3,7 +3,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-DIST_INSTALL = False
+FINAL_TARGET = '_tests/xpcshell/toolkit/crashreporter/test'
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini', 'unit_ipc/xpcshell.ini']
 BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
@@ -27,6 +27,9 @@ DEFINES['SHARED_LIBRARY'] = '%s%s%s' % (
     LIBRARY_NAME,
     CONFIG['DLL_SUFFIX']
 )
+
+TEST_HARNESS_FILES.xpcshell.toolkit.crashreporter.test.unit += ['CrashTestUtils.jsm']
+TEST_HARNESS_FILES.xpcshell.toolkit.crashreporter.test.unit_ipc += ['CrashTestUtils.jsm']
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')
 
