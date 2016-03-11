@@ -69,6 +69,14 @@ public:
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
 #endif
+
+  // nsContainerFrame overrides
+  bool DrainSelfOverflowList() override;
+  void AppendFrames(ChildListID aListID, nsFrameList& aFrameList) override;
+  void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                    nsFrameList& aFrameList) override;
+  void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+
 #ifdef DEBUG
   void SetInitialChildList(ChildListID  aListID,
                            nsFrameList& aChildList) override;
@@ -156,6 +164,9 @@ protected:
   nscoord IntrinsicISize(nsRenderingContext* aRenderingContext,
                          IntrinsicISizeType  aConstraint);
 
+  // Helper for AppendFrames / InsertFrames.
+  void NoteNewChildren(ChildListID aListID, const nsFrameList& aFrameList);
+
   // Helper to move child frames into the kOverflowList.
   void MergeSortedOverflow(nsFrameList& aList);
   // Helper to move child frames into the kExcessOverflowContainersList:.
@@ -231,6 +242,13 @@ private:
    */
   nscoord mCachedMinISize;
   nscoord mCachedPrefISize;
+
+#ifdef DEBUG
+  // If true, NS_STATE_GRID_DID_PUSH_ITEMS may be set even though all pushed
+  // frames may have been removed.  This is used to suppress an assertion
+  // in case RemoveFrame removed all associated child frames.
+  bool mDidPushItemsBitMayLie;
+#endif
 };
 
 #endif /* nsGridContainerFrame_h___ */
