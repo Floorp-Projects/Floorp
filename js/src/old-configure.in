@@ -1751,9 +1751,6 @@ ia64*-hpux*)
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
     fi
-    if test "$OS_RELEASE" = "5.5.1"; then
-        AC_DEFINE(NEED_USLEEP_PROTOTYPE)
-    fi
     ;;
 
 *-sunos*)
