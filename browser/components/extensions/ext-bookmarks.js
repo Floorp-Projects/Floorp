@@ -55,7 +55,7 @@ function getTree(rootGuid, onlyChildren) {
       // It seems like the array always just contains the root node.
       return [convert(root, null)];
     }
-  });
+  }).catch(e => Promise.reject({message: e.message}));
 }
 
 function convert(result) {
