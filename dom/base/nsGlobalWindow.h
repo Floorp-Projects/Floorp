@@ -883,10 +883,10 @@ public:
 protected:
   explicit nsGlobalWindow(nsGlobalWindow *aOuterWindow);
   nsPIDOMWindowOuter* GetOpenerWindowOuter();
-  nsPIDOMWindowOuter* GetOpenerWindow(mozilla::ErrorResult& aError);
   // Initializes the mWasOffline member variable
   void InitWasOffline();
 public:
+  nsPIDOMWindowOuter* GetOpenerWindow(mozilla::ErrorResult& aError);
   void GetOpener(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval,
                  mozilla::ErrorResult& aError);
   already_AddRefed<nsPIDOMWindowOuter> GetOpener() override;
