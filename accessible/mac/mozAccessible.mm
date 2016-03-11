@@ -811,7 +811,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   // Now, deal with widget roles
   nsIAtom* roleAtom = nullptr;
   if (accWrap && accWrap->HasARIARole()) {
-    nsRoleMapEntry* roleMap = accWrap->ARIARoleMap();
+    const nsRoleMapEntry* roleMap = accWrap->ARIARoleMap();
     roleAtom = *roleMap->roleAtom;
   }
   if (proxy)
