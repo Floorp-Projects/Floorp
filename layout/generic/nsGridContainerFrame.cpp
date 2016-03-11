@@ -4058,6 +4058,94 @@ nsGridContainerFrame::GetNearestFragmentainer(const GridReflowState& aState) con
 }
 
 void
+nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
+                                        const GridItemInfo*    aGridItemInfo,
+                                        nsSize                 aContainerSize,
+                                        const Fragmentainer*   aFragmentainer,
+                                        const GridReflowState& aState,
+                                        const LogicalRect&     aContentArea,
+                                        nsHTMLReflowMetrics&   aDesiredSize,
+                                        nsReflowStatus&        aStatus)
+{
+  nsPresContext* pc = PresContext();
+  nsStyleContext* containerSC = StyleContext();
+  WritingMode wm = aState.mReflowState->GetWritingMode();
+  LogicalMargin pad(aState.mReflowState->ComputedLogicalPadding());
+  const LogicalPoint padStart(wm, pad.IStart(wm), pad.BStart(wm));
+  const bool isGridItem = !!aGridItemInfo;
+  MOZ_ASSERT(isGridItem == (aChild->GetType() != nsGkAtoms::placeholderFrame));
+  LogicalRect cb(wm);
+  WritingMode childWM = aChild->GetWritingMode();
+  if (MOZ_LIKELY(isGridItem)) {
+    MOZ_ASSERT(aGridItemInfo->mFrame == aChild);
+    const GridArea& area = aGridItemInfo->mArea;
+    MOZ_ASSERT(area.IsDefinite());
+    cb = aState.ContainingBlockFor(area);
+    cb += aContentArea.Origin(wm);
+  } else {
+    cb = aContentArea;
+  }
+  LogicalSize childCBSize = cb.Size(wm).ConvertTo(childWM, wm);
+  LogicalSize percentBasis(childCBSize);
+  // XXX temporary workaround to avoid being INCOMPLETE until we have
+  // support for fragmentation (bug 1144096)
+  childCBSize.BSize(childWM) = NS_UNCONSTRAINEDSIZE;
+
+  Maybe<nsHTMLReflowState> childRS; // Maybe<> so we can reuse the space
+  childRS.emplace(pc, *aState.mReflowState, aChild, childCBSize, &percentBasis);
+  // We need the width of the child before we can correctly convert
+  // the writing-mode of its origin, so we reflow at (0, 0) using a dummy
+  // aContainerSize, and then pass the correct position to FinishReflowChild.
+  Maybe<nsHTMLReflowMetrics> childSize; // Maybe<> so we can reuse the space
+  childSize.emplace(*childRS);
+  const nsSize dummyContainerSize;
+  ReflowChild(aChild, pc, *childSize, *childRS, childWM, LogicalPoint(childWM),
+              dummyContainerSize, 0, aStatus);
+  LogicalPoint childPos =
+    cb.Origin(wm).ConvertTo(childWM, wm,
+                            aContainerSize - childSize->PhysicalSize());
+  // Apply align/justify-self and reflow again if that affects the size.
+  if (isGridItem) {
+    LogicalSize oldSize = childSize->Size(childWM); // from the ReflowChild()
+    LogicalSize newContentSize(childWM);
+    auto align = childRS->mStylePosition->ComputedAlignSelf(containerSC);
+    Maybe<LogicalAxis> alignResize =
+      AlignSelf(align, cb, wm, *childRS, oldSize, &newContentSize, &childPos);
+    auto justify = childRS->mStylePosition->ComputedJustifySelf(containerSC);
+    Maybe<LogicalAxis> justifyResize =
+      JustifySelf(justify, cb, wm, *childRS, oldSize, &newContentSize, &childPos);
+    if (alignResize || justifyResize) {
+      FinishReflowChild(aChild, pc, *childSize, childRS.ptr(), childWM,
+                        LogicalPoint(childWM), aContainerSize,
+                        NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW);
+      childSize.reset(); // In reverse declaration order since it runs
+      childRS.reset();   // destructors.
+      childRS.emplace(pc, *aState.mReflowState, aChild, childCBSize, &percentBasis);
+      if ((alignResize && alignResize.value() == eLogicalAxisBlock) ||
+          (justifyResize && justifyResize.value() == eLogicalAxisBlock)) {
+        childRS->SetComputedBSize(newContentSize.BSize(childWM));
+        childRS->SetBResize(true);
+      }
+      if ((alignResize && alignResize.value() == eLogicalAxisInline) ||
+          (justifyResize && justifyResize.value() == eLogicalAxisInline)) {
+        childRS->SetComputedISize(newContentSize.ISize(childWM));
+        childRS->SetIResize(true);
+      }
+      childSize.emplace(*childRS);
+      ReflowChild(aChild, pc, *childSize, *childRS, childWM,
+                  LogicalPoint(childWM), dummyContainerSize, 0, aStatus);
+    }
+  } else {
+    // Put a placeholder at the padding edge, in case an ancestor is its CB.
+    childPos -= padStart;
+  }
+  childRS->ApplyRelativePositioning(&childPos, aContainerSize);
+  FinishReflowChild(aChild, pc, *childSize, childRS.ptr(), childWM, childPos,
+                    aContainerSize, 0);
+  ConsiderChildOverflow(aDesiredSize.mOverflowAreas, aChild);
+}
+
+void
 nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
                                      const LogicalRect&   aContentArea,
                                      nsHTMLReflowMetrics& aDesiredSize,
@@ -4074,89 +4162,26 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
   }
 
   WritingMode wm = aState.mReflowState->GetWritingMode();
-  const LogicalPoint gridOrigin(aContentArea.Origin(wm));
   const nsSize containerSize =
     (aContentArea.Size(wm) +
      aState.mReflowState->ComputedLogicalBorderPadding().Size(wm)).GetPhysicalSize(wm);
-  nsPresContext* pc = PresContext();
-  nsStyleContext* containerSC = StyleContext();
-  LogicalMargin pad(aState.mReflowState->ComputedLogicalPadding());
-  const LogicalPoint padStart(wm, pad.IStart(wm), pad.BStart(wm));
-  for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-    nsIFrame* child = *aState.mIter;
-    const bool isGridItem = child->GetType() != nsGkAtoms::placeholderFrame;
-    LogicalRect cb(wm);
-    if (MOZ_LIKELY(isGridItem)) {
-      MOZ_ASSERT(aState.mGridItems[aState.mIter.GridItemIndex()].mFrame == child,
-                 "iterator out of sync with mGridItems");
-      GridArea& area = aState.mGridItems[aState.mIter.GridItemIndex()].mArea;
-      MOZ_ASSERT(area.IsDefinite());
-      cb = aState.ContainingBlockFor(area);
-      cb += gridOrigin;
-    } else {
-      cb = aContentArea;
-    }
-    WritingMode childWM = child->GetWritingMode();
-    LogicalSize childCBSize = cb.Size(wm).ConvertTo(childWM, wm);
-    LogicalSize percentBasis(childCBSize);
-    // XXX temporary workaround to avoid being INCOMPLETE until we have
-    // support for fragmentation (bug 1144096)
-    childCBSize.BSize(childWM) = NS_UNCONSTRAINEDSIZE;
 
-    Maybe<nsHTMLReflowState> childRS; // Maybe<> so we can reuse the space
-    childRS.emplace(pc, *aState.mReflowState, child, childCBSize, &percentBasis);
-    // We need the width of the child before we can correctly convert
-    // the writing-mode of its origin, so we reflow at (0, 0) using a dummy
-    // containerSize, and then pass the correct position to FinishReflowChild.
-    Maybe<nsHTMLReflowMetrics> childSize; // Maybe<> so we can reuse the space
-    childSize.emplace(*childRS);
-    nsReflowStatus childStatus;
-    const nsSize dummyContainerSize;
-    ReflowChild(child, pc, *childSize, *childRS, childWM, LogicalPoint(childWM),
-                dummyContainerSize, 0, childStatus);
-    LogicalPoint childPos =
-      cb.Origin(wm).ConvertTo(childWM, wm,
-                              containerSize - childSize->PhysicalSize());
-    // Apply align/justify-self and reflow again if that affects the size.
-    if (isGridItem) {
-      LogicalSize oldSize = childSize->Size(childWM); // from the ReflowChild()
-      LogicalSize newContentSize(childWM);
-      auto align = childRS->mStylePosition->ComputedAlignSelf(containerSC);
-      Maybe<LogicalAxis> alignResize =
-        AlignSelf(align, cb, wm, *childRS, oldSize, &newContentSize, &childPos);
-      auto justify = childRS->mStylePosition->ComputedJustifySelf(containerSC);
-      Maybe<LogicalAxis> justifyResize =
-        JustifySelf(justify, cb, wm, *childRS, oldSize, &newContentSize, &childPos);
-      if (alignResize || justifyResize) {
-        FinishReflowChild(child, pc, *childSize, childRS.ptr(), childWM,
-                          LogicalPoint(childWM), containerSize,
-                          NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW);
-        childSize.reset(); // In reverse declaration order since it runs
-        childRS.reset();   // destructors.
-        childRS.emplace(pc, *aState.mReflowState, child, childCBSize, &percentBasis);
-        if ((alignResize && alignResize.value() == eLogicalAxisBlock) ||
-            (justifyResize && justifyResize.value() == eLogicalAxisBlock)) {
-          childRS->SetComputedBSize(newContentSize.BSize(childWM));
-          childRS->SetBResize(true);
-        }
-        if ((alignResize && alignResize.value() == eLogicalAxisInline) ||
-            (justifyResize && justifyResize.value() == eLogicalAxisInline)) {
-          childRS->SetComputedISize(newContentSize.ISize(childWM));
-          childRS->SetIResize(true);
-        }
-        childSize.emplace(*childRS);
-        ReflowChild(child, pc, *childSize, *childRS, childWM,
-                    LogicalPoint(childWM), dummyContainerSize, 0, childStatus);
+  nscoord bSize = aContentArea.BSize(wm);
+  if (false) {
+    // XXX TBD: a later patch will add the fragmented reflow here...
+  } else {
+    aState.mIter.Reset(GridItemCSSOrderIterator::eIncludeAll);
+    for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
+      nsIFrame* child = *aState.mIter;
+      const GridItemInfo* info = nullptr;
+      if (child->GetType() != nsGkAtoms::placeholderFrame) {
+        info = &aState.mGridItems[aState.mIter.GridItemIndex()];
       }
-    } else {
-      // Put a placeholder at the padding edge, in case an ancestor is its CB.
-      childPos -= padStart;
+      ReflowInFlowChild(*aState.mIter, info, containerSize, nullptr,
+                        aState, aContentArea, aDesiredSize, aStatus);
+      MOZ_ASSERT(NS_FRAME_IS_COMPLETE(aStatus), "child should be complete "
+                 "in unconstrained reflow");
     }
-    childRS->ApplyRelativePositioning(&childPos, containerSize);
-    FinishReflowChild(child, pc, *childSize, childRS.ptr(), childWM, childPos,
-                      containerSize, 0);
-    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, child);
-    // XXX deal with 'childStatus' not being COMPLETE (bug 1144096)
   }
 
   // Merge overflow container bounds and status.
@@ -4166,11 +4191,13 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
   if (IsAbsoluteContainer()) {
     nsFrameList children(GetChildList(GetAbsoluteListID()));
     if (!children.IsEmpty()) {
-      // 'padStart' is the origin of the grid (the start of the first track),
+      // 'gridOrigin' is the origin of the grid (the start of the first track),
       // with respect to the grid container's padding-box (CB).
+      LogicalMargin pad(aState.mReflowState->ComputedLogicalPadding());
+      const LogicalPoint gridOrigin(wm, pad.IStart(wm), pad.BStart(wm));
       const LogicalRect gridCB(wm, 0, 0,
                                aContentArea.ISize(wm) + pad.IStartEnd(wm),
-                               aContentArea.BSize(wm) + pad.BStartEnd(wm));
+                               bSize + pad.BStartEnd(wm));
       const nsSize gridCBPhysicalSize = gridCB.Size(wm).GetPhysicalSize(wm);
       size_t i = 0;
       for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next(), ++i) {
@@ -4179,7 +4206,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
         MOZ_ASSERT(aState.mAbsPosItems[i].mFrame == child);
         GridArea& area = aState.mAbsPosItems[i].mArea;
         LogicalRect itemCB =
-          aState.ContainingBlockForAbsPos(area, padStart, gridCB);
+          aState.ContainingBlockForAbsPos(area, gridOrigin, gridCB);
         // nsAbsoluteContainingBlock::Reflow uses physical coordinates.
         nsRect* cb = static_cast<nsRect*>(child->Properties().Get(
                        GridItemContainingBlockRect()));
@@ -4197,7 +4224,8 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
         AbsPosReflowFlags::eCBWidthAndHeightChanged; // XXX could be optimized
       flags |= AbsPosReflowFlags::eConstrainHeight;
       flags |= AbsPosReflowFlags::eIsGridContainerCB;
-      GetAbsoluteContainingBlock()->Reflow(this, pc, *aState.mReflowState,
+      GetAbsoluteContainingBlock()->Reflow(this, PresContext(),
+                                           *aState.mReflowState,
                                            aStatus, dummyRect, flags,
                                            &aDesiredSize.mOverflowAreas);
     }
