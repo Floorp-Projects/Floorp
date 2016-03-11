@@ -930,11 +930,8 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
     return false;
   }
 
-  dom::ConstantSpec umask_cs[] = {
-    { "umask", JS::NumberValue(gUserUmask) },
-    PROP_END
-  };
-  if (!dom::DefineConstants(cx, objSys, umask_cs)) {
+  if (!JS_DefineProperty(cx, objSys, "umask", gUserUmask,
+                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)) {
       return false;
   }
 

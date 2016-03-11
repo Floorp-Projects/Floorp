@@ -10,11 +10,11 @@ requestLongerTimeout(2);
 // content, then the widget reflects the changes.
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {panel, controller, inspector} = yield openAnimationInspector();
 
   info("Select the test node");
-  yield selectNode(".animated", inspector);
+  yield selectNodeAndWaitForAnimations(".animated", inspector);
 
   let animation = controller.animationPlayers[0];
   yield setStyle(animation, panel, "animationDuration", "5.5s");

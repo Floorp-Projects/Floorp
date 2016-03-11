@@ -28,8 +28,6 @@ class PropertyProvider;
 struct SelectionDetails;
 class nsTextFragment;
 
-typedef nsFrame nsTextFrameBase;
-
 class nsDisplayTextGeometry;
 class nsDisplayText;
 
@@ -39,7 +37,7 @@ public:
   static void Shutdown();
 };
 
-class nsTextFrame : public nsTextFrameBase {
+class nsTextFrame : public nsFrame {
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
   typedef mozilla::TextRangeStyle TextRangeStyle;
   typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -57,7 +55,7 @@ public:
   friend class nsDisplayText;
 
   explicit nsTextFrame(nsStyleContext* aContext)
-    : nsTextFrameBase(aContext)
+    : nsFrame(aContext)
   {
     NS_ASSERTION(mContentOffset == 0, "Bogus content offset");
   }

@@ -694,10 +694,14 @@ nsBaseDragService::DrawDragForImage(nsIImageLoadingContent* aImageLoader,
     if (!ctx)
       return NS_ERROR_FAILURE;
 
-    imgContainer->Draw(ctx, destSize, ImageRegion::Create(destSize),
-                       imgIContainer::FRAME_CURRENT,
-                       Filter::GOOD, Nothing(),
-                       imgIContainer::FLAG_SYNC_DECODE);
+    DrawResult res =
+      imgContainer->Draw(ctx, destSize, ImageRegion::Create(destSize),
+                         imgIContainer::FRAME_CURRENT,
+                         Filter::GOOD, Nothing(),
+                         imgIContainer::FLAG_SYNC_DECODE);
+    if (res == DrawResult::BAD_IMAGE || res == DrawResult::BAD_ARGS) {
+      return NS_ERROR_FAILURE;
+    }
     *aSurface = dt->Snapshot();
   } else {
     *aSurface = aCanvas->GetSurfaceSnapshot();

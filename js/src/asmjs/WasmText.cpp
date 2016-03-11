@@ -1616,6 +1616,8 @@ WasmTokenStream::next()
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32DivU, begin, cur_);
                 break;
               case 'e':
+                if (consume(MOZ_UTF16("eqz")))
+                    return WasmToken(WasmToken::UnaryOpcode, Expr::I32Eqz, begin, cur_);
                 if (consume(MOZ_UTF16("eq")))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I32Eq, begin, cur_);
                 break;
@@ -1676,6 +1678,10 @@ WasmTokenStream::next()
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32RemS, begin, cur_);
                 if (consume(MOZ_UTF16("rem_u")))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I32RemU, begin, cur_);
+                if (consume(MOZ_UTF16("rotr")))
+                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32Rotr, begin, cur_);
+                if (consume(MOZ_UTF16("rotl")))
+                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32Rotl, begin, cur_);
                 break;
               case 's':
                 if (consume(MOZ_UTF16("sub")))
@@ -1748,6 +1754,8 @@ WasmTokenStream::next()
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64DivU, begin, cur_);
                 break;
               case 'e':
+                if (consume(MOZ_UTF16("eqz")))
+                    return WasmToken(WasmToken::UnaryOpcode, Expr::I64Eqz, begin, cur_);
                 if (consume(MOZ_UTF16("eq")))
                     return WasmToken(WasmToken::ComparisonOpcode, Expr::I64Eq, begin, cur_);
                 if (consume(MOZ_UTF16("extend_s/i32")))
@@ -1818,6 +1826,10 @@ WasmTokenStream::next()
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64RemS, begin, cur_);
                 if (consume(MOZ_UTF16("rem_u")))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::I64RemU, begin, cur_);
+                if (consume(MOZ_UTF16("rotr")))
+                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64Rotr, begin, cur_);
+                if (consume(MOZ_UTF16("rotl")))
+                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64Rotl, begin, cur_);
                 break;
               case 's':
                 if (consume(MOZ_UTF16("sub")))

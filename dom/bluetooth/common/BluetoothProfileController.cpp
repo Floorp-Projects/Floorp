@@ -199,11 +199,19 @@ BluetoothProfileController::SetupProfiles(bool aAssignServiceClass)
   }
 
   // Rendering bit should be set if remote device supports A2DP.
-  // A device which supports AVRCP should claim that it's a peripheral and it's
-  // a remote control.
-  if (hasRendering || (isPeripheral && isRemoteControl)) {
+  if (hasRendering) {
     AddProfile(BluetoothA2dpManager::Get());
-    AddProfile(BluetoothAvrcpManager::Get()); // register after A2DP
+  }
+
+  // A remote control may either support HID or AVRCP since class of device
+  // value are the same. So we can only differentiate between AVRCP and HID
+  // by using hasRendering bit.
+  if ((isPeripheral && isRemoteControl)) {
+    if (hasRendering) {
+      AddProfile(BluetoothAvrcpManager::Get());
+    } else {
+      AddProfile(BluetoothHidManager::Get());
+    }
   }
 
   // A device which supports HID should claim that it's a peripheral and it's

@@ -2174,9 +2174,11 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
     nsCOMPtr<nsIURI> clone;
     if (NS_SUCCEEDED(sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS,
                                       aURI, flags, &isStsHost)) && isStsHost) {
-        if (NS_SUCCEEDED(aURI->Clone(getter_AddRefs(clone)))) {
-            clone->SetScheme(NS_LITERAL_CSTRING("https"));
+        if (NS_SUCCEEDED(NS_GetSecureUpgradedURI(aURI,
+                                                 getter_AddRefs(clone)))) {
             aURI = clone.get();
+            // (NOTE: We better make sure |clone| stays alive until the end
+            // of the function now, since our aURI arg now points to it!)
         }
     }
 

@@ -149,12 +149,6 @@ public:
    */
   void SetEnabled(bool aEnabled);
 
-  /**
-   * Whether the sheet is complete.
-   */
-  bool IsComplete() const;
-  void SetComplete();
-
   // style sheet owner info
   CSSStyleSheet* GetParentSheet() const;  // may be null
   nsIDocument* GetOwningDocument() const;  // may be null
@@ -193,9 +187,6 @@ public:
 
   // Principal() never returns a null pointer.
   nsIPrincipal* Principal() const { return mInner->mPrincipal; }
-
-  // The document this style sheet is associated with.  May be null
-  nsIDocument* GetDocument() const { return mDocument; }
 
   void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
   void SetMedia(nsMediaList* aMedia);
@@ -372,7 +363,6 @@ protected:
   css::ImportRule*      mOwnerRule; // weak ref
 
   RefPtr<CSSRuleListImpl> mRuleCollection;
-  nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   bool                  mDirty; // has been modified 
   bool                  mInRuleProcessorCache;
   RefPtr<dom::Element> mScopeElement;
@@ -384,6 +374,7 @@ protected:
 
   friend class ::nsMediaList;
   friend class ::nsCSSRuleProcessor;
+  friend class mozilla::StyleSheet;
   friend struct mozilla::ChildSheetListBuilder;
 };
 

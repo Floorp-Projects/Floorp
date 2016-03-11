@@ -206,7 +206,10 @@ class AndroidXPCShellRunner(MozbuildObject):
                     print ("using APK: %s" % kwargs["localAPK"])
                     break
             else:
-                raise Exception("You must specify an APK")
+                raise Exception("APK not found in objdir. You must specify an APK.")
+
+        if not kwargs["sequential"]:
+            kwargs["sequential"] = True
 
         options = argparse.Namespace(**kwargs)
         xpcshell = remotexpcshelltests.XPCShellRemote(dm, options, log)

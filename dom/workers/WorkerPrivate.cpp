@@ -5795,7 +5795,13 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aFallbackMessage,
   }
 
   if (message.IsEmpty()) {
-    message = NS_ConvertUTF8toUTF16(aFallbackMessage);
+    nsDependentCString fallbackMessage(aFallbackMessage);
+    if (!AppendUTF8toUTF16(fallbackMessage, message, mozilla::fallible)) {
+      // Try again, with only a 1 KB string. Do this infallibly this time.
+      // If the user doesn't have 1 KB to spare we're done anyways.
+      nsDependentCString truncatedFallbackMessage(aFallbackMessage, 1024);
+      AppendUTF8toUTF16(truncatedFallbackMessage, message);
+    }
   }
 
   mErrorHandlerRecursionCount++;

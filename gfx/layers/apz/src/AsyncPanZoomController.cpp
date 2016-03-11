@@ -1033,6 +1033,10 @@ static float GetAxisScale(AsyncDragMetrics::DragDirection aDir, T aValue) {
 nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
                                                       const AsyncDragMetrics& aDragMetrics)
 {
+  if (!gfxPrefs::APZDragEnabled()) {
+    return nsEventStatus_eIgnore;
+  }
+
   if (!GetApzcTreeManager()) {
     return nsEventStatus_eConsumeNoDefault;
   }

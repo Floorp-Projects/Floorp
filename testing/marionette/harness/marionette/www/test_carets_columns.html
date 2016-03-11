@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    #columns {
+      -moz-column-count: 2;
+      -webkit-column-count: 2;
+      -moz-column-rule: 1px solid lightgray;
+      -webkit-column-rule: 1px solid lightgray;
+      border: 1px solid lightblue;
+      width: 450px;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="columns">
+      <div id="columns-inner" style="border: 1px solid red;" contenteditable="true">
+        <p id="before-image-1">Before image 1</p>
+        <p><img width="100px" height="30px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs="></p>
+        <p>After image 1</p>
+        <p>Before image 2</p>
+        <p><img width="100px" height="30px" src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs="></p>
+        <p>After image 2</p>
+      </div>
+    </div>
+  </body>
+</html>

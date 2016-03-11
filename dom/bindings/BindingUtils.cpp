@@ -476,9 +476,8 @@ ErrorResult::SetPendingException(JSContext* cx)
     return;
   }
   if (IsJSContextException()) {
-    // Whatever we need to throw is on the JSContext already.  We
-    // can't assert that there is a pending exception on it, though,
-    // because in the uncatchable exception case there won't be one.
+    // Whatever we need to throw is on the JSContext already.
+    MOZ_ASSERT(JS_IsExceptionPending(cx));
     mResult = NS_OK;
     return;
   }
@@ -511,6 +510,16 @@ ErrorResult::StealExceptionFromJSContext(JSContext* cx)
 
   ThrowJSException(cx, exn);
   JS_ClearPendingException(cx);
+}
+
+void
+ErrorResult::NoteJSContextException(JSContext* aCx)
+{
+  if (JS_IsExceptionPending(aCx)) {
+    mResult = NS_ERROR_DOM_EXCEPTION_ON_JSCONTEXT;
+  } else {
+    mResult = NS_ERROR_UNCATCHABLE_EXCEPTION;
+  }
 }
 
 namespace dom {

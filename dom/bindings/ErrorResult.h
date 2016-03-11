@@ -235,9 +235,9 @@ public:
 
   // Flag on the ErrorResult that whatever needs throwing has been
   // thrown on the JSContext already and we should not mess with it.
-  void NoteJSContextException() {
-    mResult = NS_ERROR_DOM_EXCEPTION_ON_JSCONTEXT;
-  }
+  // If nothing was thrown, this becomes an uncatchable exception.
+  void NoteJSContextException(JSContext* aCx);
+
   // Check whether the ErrorResult says to just throw whatever is on
   // the JSContext already.
   bool IsJSContextException() {
