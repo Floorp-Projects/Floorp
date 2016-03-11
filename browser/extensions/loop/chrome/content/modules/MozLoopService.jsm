@@ -1013,24 +1013,6 @@ var MozLoopServiceInternal = {
           mm.sendAsyncMessage("Social:HookWindowCloseForPanelClose");
           messageName = "Social:DOMWindowClose";
           mm.addMessageListener(messageName, listeners[messageName] = () => {
-            // Remove message listeners.
-            for (let name of Object.getOwnPropertyNames(listeners)) {
-              mm.removeMessageListener(name, listeners[name]);
-            }
-            listeners = {};
-
-            windowCloseCallback();
-
-            if (conversationWindowData.type == "room") {
-              // NOTE: if you add something here, please also consider if something
-              //       needs to be done on the content side as well (e.g.
-              //       activeRoomStore#windowUnload).
-              LoopAPI.sendMessageToHandler({
-                name: "HangupNow",
-                data: [conversationWindowData.roomToken, windowId]
-              });
-            }
-
             chatbox.close();
           });
 
@@ -1065,6 +1047,28 @@ var MozLoopServiceInternal = {
             }
           });
 
+          let closeListener = function() {
+            this.removeEventListener("ChatboxClosed", closeListener);
+
+            // Remove message listeners.
+            for (let name of Object.getOwnPropertyNames(listeners)) {
+              mm.removeMessageListener(name, listeners[name]);
+            }
+            listeners = {};
+
+            windowCloseCallback();
+
+            if (conversationWindowData.type == "room") {
+              // NOTE: if you add something here, please also consider if something
+              //       needs to be done on the content side as well (e.g.
+              //       activeRoomStore#windowUnload).
+              LoopAPI.sendMessageToHandler({
+                name: "HangupNow",
+                data: [conversationWindowData.roomToken, windowId]
+              });
+            }
+          };
+
           // When a chat window is attached or detached, the docShells hosting
           // about:loopconverstation is swapped to the newly created chat window.
           // (Be it inside a popup or back inside a chatbox element attached to the
@@ -1074,17 +1078,21 @@ var MozLoopServiceInternal = {
           // the new messageManager. This is not a bug in swapDocShells, merely
           // a design decision.
           chatbox.content.addEventListener("SwapDocShells", function swapped(ev) {
-            chatbox.content.removeEventListener("SwapDocShells", swapped);
+            this.removeEventListener("SwapDocShells", swapped);
+            this.removeEventListener("ChatboxClosed", closeListener);
 
             let otherBrowser = ev.detail;
             chatbox = otherBrowser.ownerDocument.getBindingParent(otherBrowser);
             mm = otherBrowser.messageManager;
             otherBrowser.addEventListener("SwapDocShells", swapped);
+            chatbox.addEventListener("ChatboxClosed", closeListener);
 
             for (let name of Object.getOwnPropertyNames(listeners)) {
               mm.addMessageListener(name, listeners[name]);
             }
           });
+
+          chatbox.addEventListener("ChatboxClosed", closeListener);
 
           UITour.notify("Loop:ChatWindowOpened");
           resolve(windowId);

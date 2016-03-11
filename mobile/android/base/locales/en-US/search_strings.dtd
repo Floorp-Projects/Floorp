@@ -22,8 +22,6 @@
 <!ENTITY pref_clearHistory_dialogMessage 'Delete all search history from this device?'>
 <!ENTITY pref_clearHistory_title 'Clear search history'>
 
-<!ENTITY pref_searchProvider_title 'Search engine'>
-
 <!ENTITY search_widget_button_label 'Search'>
 
 <!ENTITY network_error_title 'No internet connection'>
