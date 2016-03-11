@@ -117,12 +117,15 @@ WorkerGlobalScope::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 Console*
-WorkerGlobalScope::GetConsole()
+WorkerGlobalScope::GetConsole(ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   if (!mConsole) {
-    mConsole = new Console(nullptr);
+    mConsole = Console::Create(nullptr, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
   }
 
   return mConsole;
@@ -914,6 +917,34 @@ WorkerDebuggerGlobalScope::ReportError(JSContext* aCx,
   mWorkerPrivate->ReportErrorToDebugger(filename, lineno, aMessage);
 }
 
+void
+WorkerDebuggerGlobalScope::RetrieveConsoleEvents(JSContext* aCx,
+                                                 nsTArray<JS::Value>& aEvents,
+                                                 ErrorResult& aRv)
+{
+  RefPtr<Console> console =
+    mWorkerPrivate->GetOrCreateGlobalScope(aCx)->GetConsole(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  console->RetrieveConsoleEvents(aCx, aEvents, aRv);
+}
+
+void
+WorkerDebuggerGlobalScope::SetConsoleEventHandler(JSContext* aCx,
+                                                  AnyCallback& aHandler,
+                                                  ErrorResult& aRv)
+{
+  RefPtr<Console> console =
+    mWorkerPrivate->GetOrCreateGlobalScope(aCx)->GetConsole(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  console->SetConsoleEventHandler(aHandler);
+}
+
 Console*
 WorkerDebuggerGlobalScope::GetConsole(ErrorResult& aRv)
 {
@@ -921,7 +952,10 @@ WorkerDebuggerGlobalScope::GetConsole(ErrorResult& aRv)
 
   // Debugger console has its own console object.
   if (!mConsole) {
-    mConsole = new Console(nullptr);
+    mConsole = Console::Create(nullptr, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
   }
 
   return mConsole;

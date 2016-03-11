@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test for WorkerDebuggerGlobalScope.console methods"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    const WORKER_URL = "WorkerDebugger.console_worker.js";
+    const CHILD_WORKER_URL = "WorkerDebugger.console_childWorker.js";
+    const DEBUGGER_URL = BASE_URL + "WorkerDebugger.console_debugger.js";
+
+    consoleMessagesReceived = 0;
+    function test() {
+      function consoleListener() {
+        SpecialPowers.addObserver(this, "console-api-log-event", false);
+      }
+
+      consoleListener.prototype  = {
+        observe: function(aSubject, aTopic, aData) {
+          if (aTopic == "console-api-log-event") {
+            var obj = aSubject.wrappedJSObject;
+            if (obj.arguments[0] == "Hello from the debugger script!" &&
+                !consoleMessagesReceived) {
+              consoleMessagesReceived++;
+              ok(true, "Something has been received");
+              SpecialPowers.removeObserver(this, "console-api-log-event");
+            }
+          }
+        }
+      }
+
+      var cl = new consoleListener();
+
+      Task.spawn(function* () {
+        SimpleTest.waitForExplicitFinish();
+
+        info("Create a worker that creates a child worker, wait for their " +
+             "debuggers to be registered, and initialize them.");
+        let promise = waitForMultiple([
+          waitForRegister(WORKER_URL, DEBUGGER_URL),
+          waitForRegister(CHILD_WORKER_URL, DEBUGGER_URL)
+        ]);
+        let worker = new Worker(WORKER_URL);
+        let [dbg, childDbg] = yield promise;
+
+        info("Send a request to the worker debugger. This should cause the " +
+             "the worker debugger to send a response.");
+        dbg.addListener({
+          onMessage: function(msg) {
+            try {
+              msg = JSON.parse(msg);
+            } catch(e) {
+              ok(false, "Something went wrong");
+              return;
+            }
+
+            if (msg.type == 'finish') {
+              ok(consoleMessagesReceived, "We received something via debugger console!");
+              dbg.removeListener(this);
+              SimpleTest.finish();
+              return;
+            }
+
+            if (msg.type == 'status') {
+              ok(msg.what, msg.msg);
+              return;
+            }
+
+            ok(false, "Something went wrong");
+          }
+        });
+
+        dbg.postMessage("do magic");
+      });
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>
