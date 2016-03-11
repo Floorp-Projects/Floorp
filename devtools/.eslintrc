@@ -3,6 +3,8 @@
     "react"
   ],
   "globals": {
+    "atob": true,
+    "btoa": true,
     "Cc": true,
     "Ci": true,
     "Components": true,
@@ -13,13 +15,16 @@
     "dump": true,
     "EventEmitter": true,
     "exports": true,
+    "isWorker": true,
     "loader": true,
     "module": true,
+    "reportError": true,
     "require": true,
     "Services": true,
     "Task": true,
     "XPCNativeWrapper": true,
     "XPCOMUtils": true,
+    "_Iterator": true,
   },
   "rules": {
     // These are the rules that have been configured so far to match the
