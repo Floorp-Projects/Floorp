@@ -4631,19 +4631,30 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
           childNIF = fc->CreateContinuingFrame(pc, child, this);
           incompleteList.AppendFrame(nullptr, childNIF);
         } else {
-          MOZ_ASSERT(childNIF->GetParent() != this ||
-                     !mFrames.ContainsFrame(childNIF),
+          auto parent = static_cast<nsGridContainerFrame*>(childNIF->GetParent());
+          MOZ_ASSERT(parent != this || !mFrames.ContainsFrame(childNIF),
                      "child's NIF shouldn't be in the same principal list");
           // If child's existing NIF is an overflow container, convert it to an
           // actual NIF, since now |child| has non-overflow stuff to give it.
-          if (childNIF->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
-            auto parent = childNIF->GetParent();
+          // Or, if it's further away then our next-in-flow, then pull it up.
+          if ((childNIF->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) ||
+              (parent != this && parent != GetNextInFlow())) {
             parent->StealFrame(childNIF);
-            if (parent != this) {
-              ReparentFrame(childNIF, parent, this);
-            }
             childNIF->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
-            incompleteList.AppendFrame(nullptr, childNIF);
+            if (parent == this) {
+              incompleteList.AppendFrame(nullptr, childNIF);
+            } else {
+              // If childNIF already lives on the next grid fragment, then we
+              // don't need to reparent it, since we know it's destined to end
+              // up there anyway.  Just move it to its parent's overflow list.
+              if (parent == GetNextInFlow()) {
+                nsFrameList toMove(childNIF, childNIF);
+                parent->MergeSortedOverflow(toMove);
+              } else {
+                ReparentFrame(childNIF, parent, this);
+                incompleteList.AppendFrame(nullptr, childNIF);
+              }
+            }
           }
         }
       } else if (overflowIncompleteItems.Contains(child)) {
@@ -4653,17 +4664,31 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
           childNIF->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
           overflowIncompleteList.AppendFrame(nullptr, childNIF);
         } else {
+          DebugOnly<nsGridContainerFrame*> lastParent = this;
+          auto nif = static_cast<nsGridContainerFrame*>(GetNextInFlow());
           // If child has any non-overflow-container NIFs, convert them to
           // overflow containers, since that's all |child| needs now.
           while (childNIF &&
                  !childNIF->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
-            auto parent = childNIF->GetParent();
+            auto parent = static_cast<nsGridContainerFrame*>(childNIF->GetParent());
             parent->StealFrame(childNIF);
-            if (parent != this) {
-              ReparentFrame(childNIF, parent, this);
-            }
             childNIF->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
-            overflowIncompleteList.AppendFrame(nullptr, childNIF);
+            if (parent == this) {
+              overflowIncompleteList.AppendFrame(nullptr, childNIF);
+            } else {
+              if (!nif || parent == nif) {
+                nsFrameList toMove(childNIF, childNIF);
+                parent->MergeSortedExcessOverflowContainers(toMove);
+              } else {
+                ReparentFrame(childNIF, parent, nif);
+                nsFrameList toMove(childNIF, childNIF);
+                nif->MergeSortedExcessOverflowContainers(toMove);
+              }
+              // We only need to reparent the first childNIF (or not at all if
+              // its parent is our NIF).
+              nif = nullptr;
+            }
+            lastParent = parent;
             childNIF = childNIF->GetNextInFlow();
           }
         }
@@ -4673,31 +4698,14 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
 
     // Merge the results into our respective overflow child lists.
     if (!pushedList.IsEmpty()) {
-      nsFrameList* overflow = GetOverflowFrames();
-      if (overflow) {
-        ::MergeSortedFrameLists(*overflow, pushedList, GetContent());
-      } else {
-        SetOverflowFrames(pushedList);
-      }
+      MergeSortedOverflow(pushedList);
       AddStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
     }
     if (!incompleteList.IsEmpty()) {
-      nsFrameList* overflow = GetOverflowFrames();
-      if (overflow) {
-        ::MergeSortedFrameLists(*overflow, incompleteList, GetContent());
-      } else {
-        SetOverflowFrames(incompleteList);
-      }
+      MergeSortedOverflow(incompleteList);
     }
     if (!overflowIncompleteList.IsEmpty()) {
-      auto eoc = static_cast<nsFrameList*>(Properties().Get(
-                                           ExcessOverflowContainersProperty()));
-      if (eoc) {
-        ::MergeSortedFrameLists(*eoc, overflowIncompleteList, GetContent());
-      } else {
-        auto list = new (pc->PresShell()) nsFrameList(overflowIncompleteList);
-        SetPropTableFrames(list, ExcessOverflowContainersProperty());
-      }
+      MergeSortedExcessOverflowContainers(overflowIncompleteList);
     }
   }
   return aBSize;
@@ -4844,13 +4852,26 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
         }
         f = next;
       }
-      if (!continuations.IsEmpty()) {
-        nsFrameList* ourOverflow = GetOverflowFrames();
-        if (ourOverflow) {
-          ::MergeSortedFrameLists(*ourOverflow, continuations, GetContent());
-        } else {
-          SetOverflowFrames(continuations);
+      MergeSortedOverflow(continuations);
+
+      // Move trailing OC next-in-flows into our excess overflow containers list.
+      nsFrameList* overflowContainers =
+        GetPropTableFrames(OverflowContainersProperty());
+      if (overflowContainers) {
+        nsFrameList moveToEOC;
+        for (nsIFrame* f = overflowContainers->FirstChild(); f; ) {
+          nsIFrame* next = f->GetNextSibling();
+          nsIFrame* pif = f->GetPrevInFlow();
+          if (pif && pif->GetParent() == this) {
+            overflowContainers->RemoveFrame(f);
+            moveToEOC.AppendFrame(nullptr, f);
+          }
+          f = next;
         }
+        if (overflowContainers->IsEmpty()) {
+          Properties().Delete(OverflowContainersProperty());
+        }
+        MergeSortedExcessOverflowContainers(moveToEOC);
       }
     }
   }
