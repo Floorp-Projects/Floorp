@@ -3914,6 +3914,60 @@ nsGridContainerFrame::GridReflowState::ContainingBlockForAbsPos(
   return LogicalRect(mWM, i, b, iSize, bSize);
 }
 
+/**
+ * Return a Fragmentainer object if we have a fragmentainer frame in our
+ * ancestor chain of containing block (CB) reflow states.  We'll only
+ * continue traversing the ancestor chain as long as the CBs have
+ * the same writing-mode and have overflow:visible.
+ */
+Maybe<nsGridContainerFrame::Fragmentainer>
+nsGridContainerFrame::GetNearestFragmentainer(const GridReflowState& aState) const
+{
+  Maybe<nsGridContainerFrame::Fragmentainer> data;
+  WritingMode wm = aState.mWM;
+  const nsHTMLReflowState* gridRS = aState.mReflowState;
+  const nsHTMLReflowState* cbRS = gridRS->mCBReflowState;
+  for ( ; cbRS; cbRS = cbRS->mCBReflowState) {
+    nsIScrollableFrame* sf = do_QueryFrame(cbRS->frame);
+    if (sf) {
+      break;
+    }
+    if (wm.IsOrthogonalTo(cbRS->GetWritingMode())) {
+      break;
+    }
+    nsIAtom* frameType = cbRS->frame->GetType();
+    if ((frameType == nsGkAtoms::canvasFrame &&
+         PresContext()->IsPaginated()) ||
+        frameType == nsGkAtoms::columnSetFrame) {
+      data.emplace();
+      data->mIsTopOfPage = gridRS->mFlags.mIsTopOfPage;
+      LogicalMargin bp = gridRS->ComputedLogicalBorderPadding();
+      const auto logicalSkipSides = GetLogicalSkipSides();
+      bp.ApplySkipSides(logicalSkipSides);
+      data->mToFragmentainerEnd = aState.mFragBStart +
+        gridRS->AvailableBSize() - bp.BStart(wm);
+      const auto numRows = aState.mRows.mSizes.Length();
+      data->mCanBreakAtStart =
+        numRows > 0 && aState.mRows.mSizes[0].mPosition > 0;
+      nscoord bSize = gridRS->ComputedBSize();
+      data->mIsAutoBSize = bSize == NS_AUTOHEIGHT;
+      if (data->mIsAutoBSize) {
+        bSize = gridRS->ComputedMinBSize();
+      } else {
+        bSize = NS_CSS_MINMAX(bSize,
+                              gridRS->ComputedMinBSize(),
+                              gridRS->ComputedMaxBSize());
+      }
+      nscoord gridEnd =
+        aState.mRows.GridLineEdge(numRows, GridLineSide::eBeforeGridGap);
+      data->mCanBreakAtEnd = bSize > gridEnd &&
+                             bSize > aState.mFragBStart;
+      break;
+    }
+  }
+  return data;
+}
+
 void
 nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
                                      const LogicalRect&   aContentArea,
