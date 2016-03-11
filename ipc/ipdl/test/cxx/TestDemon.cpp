@@ -4,12 +4,13 @@
 #include "TestDemon.h"
 
 #include <stdlib.h>
-#include <sys/time.h>
 
 #include "IPDLUnitTests.h"      // fail etc.
 #if defined(OS_POSIX)
+#include <sys/time.h>
 #include <unistd.h>
 #else
+#include <time.h>
 #include <windows.h>
 #endif
 
@@ -34,7 +35,7 @@ const int kMaxStackHeight = 4;
 
 static LazyLogModule sLogModule("demon");
 
-#define DEMON_LOG(args...) MOZ_LOG(sLogModule, LogLevel::Debug, (args))
+#define DEMON_LOG(...) MOZ_LOG(sLogModule, LogLevel::Debug, (__VA_ARGS__))
 
 static int gStackHeight = 0;
 static bool gFlushStack = false;
@@ -42,7 +43,11 @@ static bool gFlushStack = false;
 static int
 Choose(int count)
 {
+#if defined(OS_POSIX)
   return random() % count;
+#else
+  return rand() % count;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -68,7 +73,11 @@ TestDemonParent::Main()
     QuitParent();
     return;
   }
+#if defined(OS_POSIX)
   srandom(time(nullptr));
+#else
+  srand(time(nullptr));
+#endif
 
   DEMON_LOG("Start demon");
 
@@ -269,7 +278,11 @@ TestDemonChild::~TestDemonChild()
 bool
 TestDemonChild::RecvStart()
 {
+#ifdef OS_POSIX
   srandom(time(nullptr));
+#else
+  srand(time(nullptr));
+#endif
 
   DEMON_LOG("RecvStart");
 
