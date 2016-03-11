@@ -2817,7 +2817,9 @@ nsDisplayBackgroundImage::ConfigureLayer(ImageLayer* aLayer,
   // asynchronously, this is not enough. Bug 1183378 will provide a more
   // complete fix, but this solution is safe in more cases than simply relying
   // on the intrinsic size.
-  IntSize containerSize = aLayer->GetContainer()->GetCurrentSize();
+  IntSize containerSize = aLayer->GetContainer()
+                        ? aLayer->GetContainer()->GetCurrentSize()
+                        : IntSize(imageWidth, imageHeight);
 
   const LayoutDevicePoint p = mImageLayerDestRect.TopLeft();
   Matrix transform = Matrix::Translation(p.x, p.y);

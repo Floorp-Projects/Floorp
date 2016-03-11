@@ -434,6 +434,7 @@ You can set this by:
         aliases = {
             'robocop': 'mochitest',
             'mochitest-chrome': 'mochitest',
+            'mochitest-media': 'mochitest',
             'mochitest-gl': 'mochitest',
             'jsreftest': 'reftest',
             'crashtest': 'reftest',
