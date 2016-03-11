@@ -46,9 +46,9 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
             float hScroll, float vScroll);
 
     @WrapForJNI
-    private native boolean handleHoverEvent(
+    private native boolean handleMouseEvent(
             int action, long time, int metaState,
-            float x, float y);
+            float x, float y, int buttons);
 
     private boolean handleMotionEvent(MotionEvent event, boolean keepInViewCoordinates) {
         if (mDestroyed) {
@@ -127,7 +127,7 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         return handleScrollEvent(event.getEventTime(), event.getMetaState(), x, y, hScroll, vScroll);
     }
 
-    private boolean handleHoverEvent(MotionEvent event) {
+    private boolean handleMouseEvent(MotionEvent event) {
         if (mDestroyed) {
             return false;
         }
@@ -143,7 +143,7 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         final float x = coords.x;
         final float y = coords.y;
 
-        return handleHoverEvent(event.getActionMasked(), event.getEventTime(), event.getMetaState(), x, y);
+        return handleMouseEvent(event.getActionMasked(), event.getEventTime(), event.getMetaState(), x, y, event.getButtonState());
     }
 
 
@@ -171,7 +171,11 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        return handleMotionEvent(event, /* keepInViewCoordinates */ true);
+        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE) {
+            return handleMouseEvent(event);
+        } else {
+            return handleMotionEvent(event, /* keepInViewCoordinates */ true);
+        }
     }
 
     @Override
@@ -183,7 +187,7 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         } else if ((action == MotionEvent.ACTION_HOVER_MOVE) ||
                    (action == MotionEvent.ACTION_HOVER_ENTER) ||
                    (action == MotionEvent.ACTION_HOVER_EXIT)) {
-            return handleHoverEvent(event);
+            return handleMouseEvent(event);
         } else {
             return false;
         }
