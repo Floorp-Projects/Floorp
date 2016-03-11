@@ -2586,6 +2586,10 @@ nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(IMEStateManager::GetFocusSelectionAndRoot(
             getter_AddRefs(imeSelection), getter_AddRefs(imeRoot))));
 
+    // Make sure we still have a valid selection/root. We can potentially get
+    // a stale selection/root if the editor becomes hidden, for example.
+    NS_ENSURE_TRUE_VOID(imeRoot->IsInComposedDoc());
+
     RefPtr<nsWindow> kungFuDeathGrip(&window);
     window.UserActivity();
 
