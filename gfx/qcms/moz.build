@@ -39,24 +39,10 @@ elif 'ppc' in CONFIG['CPU_ARCH']:
 if use_sse1:
     SOURCES += ['transform-sse1.c']
     SOURCES['transform-sse1.c'].flags += CONFIG['SSE_FLAGS']
-    if CONFIG['SOLARIS_SUNPRO_CC']:
-        if '64' in CONFIG['OS_TEST']:
-            # Sun Studio doesn't work correctly for x86 intristics
-            # with -m64 and without optimization.
-            SOURCES['transform-sse1.c'].flags += ['-xO4']
-        else:
-            SOURCES['transform-sse1.c'].flags += ['-xarch=sse']
 
 if use_sse2:
     SOURCES += ['transform-sse2.c']
     SOURCES['transform-sse2.c'].flags += CONFIG['SSE2_FLAGS']
-    if CONFIG['SOLARIS_SUNPRO_CC']:
-        if '64' in CONFIG['OS_TEST']:
-            # Sun Studio doesn't work correctly for x86 intristics
-            # with -m64 and without optimization.
-            SOURCES['transform-sse2.c'].flags += ['-xO4']
-        else:
-            SOURCES['transform-sse2.c'].flags += ['-xarch=sse2']
 
 if use_altivec:
     SOURCES += ['transform-altivec.c']

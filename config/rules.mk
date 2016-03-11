@@ -207,12 +207,6 @@ MOZ_PROGRAM_LDFLAGS += -Wl,-rpath -Wl,@executable_path/Frameworks
 endif
 endif
 
-ifeq ($(SOLARIS_SUNPRO_CXX),1)
-ifeq (86,$(findstring 86,$(OS_TEST)))
-OS_LDFLAGS += -M $(MOZILLA_DIR)/config/solaris_ia32.map
-endif # x86
-endif # Solaris Sun Studio C++
-
 ifeq ($(HOST_OS_ARCH),WINNT)
 HOST_PDBFILE=$(basename $(@F)).pdb
 HOST_PDB_FLAG ?= -Fd$(HOST_PDBFILE)
@@ -291,14 +285,6 @@ endif
 
 ifdef HOST_SIMPLE_PROGRAMS
 GARBAGE			+= $(HOST_SIMPLE_PROGRAMS:%=%.$(OBJ_SUFFIX))
-endif
-
-#
-# the Solaris WorkShop template repository cache.  it occasionally can get
-# out of sync, so targets like clobber should kill it.
-#
-ifeq ($(SOLARIS_SUNPRO_CXX),1)
-GARBAGE_DIRS += SunWS_cache
 endif
 
 ifdef MOZ_UPDATE_XTERM
@@ -864,25 +850,6 @@ ifdef ENABLE_STRIP
 	$(STRIP) $(STRIP_FLAGS) $@
 endif
 
-ifeq ($(SOLARIS_SUNPRO_CC),1)
-_MDDEPFILE = $(MDDEPDIR)/$(@F).pp
-
-define MAKE_DEPS_AUTO_CC
-if test -d $(@D); then \
-	echo 'Building deps for $< using Sun Studio cc'; \
-	$(CC) $(COMPILE_CFLAGS) -xM  $< >$(_MDDEPFILE) ; \
-	$(PYTHON) $(MOZILLA_DIR)/build/unix/add_phony_targets.py $(_MDDEPFILE) ; \
-fi
-endef
-define MAKE_DEPS_AUTO_CXX
-if test -d $(@D); then \
-	echo 'Building deps for $< using Sun Studio CC'; \
-	$(CXX) $(COMPILE_CXXFLAGS) -xM $< >$(_MDDEPFILE) ; \
-	$(PYTHON) $(MOZILLA_DIR)/build/unix/add_phony_targets.py $(_MDDEPFILE) ; \
-fi
-endef
-endif # Sun Studio on Solaris
-
 # The object file is in the current directory, and the source file can be any
 # relative path. This macro adds the dependency obj: src for each source file.
 # This dependency must be first for the $< flag to work correctly, and the
@@ -922,7 +889,6 @@ $(HOST_CMMOBJS):
 
 $(COBJS):
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 # DEFINES and ACDEFINES are needed here to enable conditional compilation of Q_OBJECTs:
@@ -963,17 +929,14 @@ $(SOBJS):
 $(CPPOBJS):
 	$(REPORT_BUILD)
 	$(call BUILDSTATUS,OBJECT_FILE $@)
-	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(CMMOBJS):
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(CMOBJS):
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $(COMPILE_CMFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(filter %.s,$(CPPSRCS:%.cpp=%.s)): %.s: %.cpp $(call mkdir_deps,$(MDDEPDIR))
