@@ -68,15 +68,14 @@ function performTest(HUD, [result]) {
                            .getControllerForCommand("cmd_copy");
   is(controller.isCommandEnabled("cmd_copy"), true, "cmd_copy is enabled");
 
-  // Remove new lines and whitespace since getSelection() includes
-  // a new line between message and line number, but the clipboard doesn't
-  // @see bug 1119503
+  // Remove new lines since getSelection() includes one between message and line
+  // number, but the clipboard doesn't (see bug 1119503)
   let selectionText = (HUD.iframeWindow.getSelection() + "")
-    .replace(/\r?\n|\r| /g, "");
+    .replace(/\r?\n|\r/g, " ");
   isnot(selectionText.indexOf("foobarBazBug613280"), -1,
         "selection text includes 'foobarBazBug613280'");
 
   waitForClipboard((str) => {
-    return selectionText.trim() === str.trim().replace(/ /g, "");
+    return str.trim() == selectionText.trim();
   }, clipboardSetup, clipboardCopyDone, clipboardCopyDone);
 }
