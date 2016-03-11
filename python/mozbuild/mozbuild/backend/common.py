@@ -7,7 +7,6 @@ from __future__ import absolute_import, unicode_literals
 import itertools
 import json
 import os
-import re
 
 import mozpack.path as mozpath
 import mozwebidlcodegen
