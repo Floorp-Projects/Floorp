@@ -55,6 +55,8 @@
 #include "ADTSDecoder.h"
 #include "ADTSDemuxer.h"
 
+#include "nsPluginHost.h"
+
 namespace mozilla
 {
 
@@ -354,6 +356,18 @@ bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType)
     // means.
     return false;
   }
+
+  // If an external plugin which can handle quicktime video is available
+  // (and not disabled), prefer it over native playback as there several
+  // codecs found in the wild that we do not handle.
+  if (nsDependentCString(aMIMEType).EqualsASCII("video/quicktime")) {
+    RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
+    if (pluginHost &&
+        pluginHost->HavePluginForType(nsDependentCString(aMIMEType))) {
+      return false;
+    }
+  }
+
   return CanHandleMediaType(aMIMEType, false, EmptyString()) != CANPLAY_NO;
 }
 
