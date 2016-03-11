@@ -39,6 +39,8 @@
 #include <media/stagefright/MetaData.h>
 #include <utils/String8.h>
 
+#include <limits>
+
 static const uint32_t kMAX_ALLOCATION =
     (SIZE_MAX < INT32_MAX ? SIZE_MAX : INT32_MAX) - 128;
 
@@ -629,13 +631,24 @@ static bool convertTimeToDate(int64_t time_1904, String8 *s) {
         return false;
     }
 
-    time_t time_1970 = time_1904 - (((66 * 365 + 17) * 24) * 3600);
+    int64_t time_1970 = time_1904 - (((66 * 365 + 17) * 24) * 3600);
     if (time_1970 < 0) {
+        return false;
+    }
+    if (time_1970 >= std::numeric_limits<time_t>::max()) {
+        return false;
+    }
+    time_t time_checked = time_1970;
+
+    struct tm* time_gm = gmtime(&time_checked);
+    if (!time_gm) {
         return false;
     }
 
     char tmp[32];
-    strftime(tmp, sizeof(tmp), "%Y%m%dT%H%M%S.000Z", gmtime(&time_1970));
+    if (!strftime(tmp, sizeof(tmp), "%Y%m%dT%H%M%S.000Z", time_gm)) {
+        return false;
+    }
 
     s->setTo(tmp);
     return true;
