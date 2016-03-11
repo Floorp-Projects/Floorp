@@ -16,6 +16,7 @@ let login1B = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888"
 let login2B = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
                               "", "notifyp1B", "", "pass");
 
+requestLongerTimeout(2);
 
 add_task(function* setup() {
   // Load recipes for this test.
