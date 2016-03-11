@@ -4528,7 +4528,8 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
     nsReflowStatus childStatus;
     ReflowInFlowChild(child, info, aContainerSize, &aFragmentainer,
                       aState, aContentArea, aDesiredSize, childStatus);
-    MOZ_ASSERT(!NS_FRAME_IS_FULLY_COMPLETE(childStatus) ||
+    MOZ_ASSERT(NS_INLINE_IS_BREAK_BEFORE(childStatus) ||
+               !NS_FRAME_IS_FULLY_COMPLETE(childStatus) ||
                !child->GetNextInFlow(),
                "fully-complete reflow should destroy any NIFs");
 
