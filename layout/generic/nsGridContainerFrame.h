@@ -154,12 +154,6 @@ private:
    */
   nscoord mCachedMinISize;
   nscoord mCachedPrefISize;
-
-  /**
-   * True iff the normal flow children are already in CSS 'order' in the
-   * order they occur in the child frame list.
-   */
-  bool mIsNormalFlowInCSSOrder : 1;
 };
 
 #endif /* nsGridContainerFrame_h___ */
