@@ -404,14 +404,14 @@ WidgetWheelEvent::OverriddenDeltaY() const
  ******************************************************************************/
 
 #define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName) MOZ_UTF16(aDOMKeyName),
-const char16_t* WidgetKeyboardEvent::kKeyNames[] = {
+const char16_t* const WidgetKeyboardEvent::kKeyNames[] = {
 #include "mozilla/KeyNameList.h"
 };
 #undef NS_DEFINE_KEYNAME
 
 #define NS_DEFINE_PHYSICAL_KEY_CODE_NAME(aCPPName, aDOMCodeName) \
     MOZ_UTF16(aDOMCodeName),
-const char16_t* WidgetKeyboardEvent::kCodeNames[] = {
+const char16_t* const WidgetKeyboardEvent::kCodeNames[] = {
 #include "mozilla/PhysicalKeyCodeNameList.h"
 };
 #undef NS_DEFINE_PHYSICAL_KEY_CODE_NAME
