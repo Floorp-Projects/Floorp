@@ -313,6 +313,9 @@ FRAME_STATE_GROUP(GridContainer, nsGridContainerFrame)
 FRAME_STATE_BIT(GridContainer, 20, NS_STATE_GRID_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER)
 
 // True iff some first-in-flow in-flow children were pushed.
+// Note that those child frames may have been removed without this bit
+// being updated for performance reasons, so code shouldn't depend on
+// actually finding any pushed items when this bit is set.
 FRAME_STATE_BIT(GridContainer, 21, NS_STATE_GRID_DID_PUSH_ITEMS)
 
 // == Frame state bits that apply to SVG frames ===============================

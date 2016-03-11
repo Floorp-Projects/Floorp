@@ -4925,7 +4925,8 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
       ::MergeSortedFrameLists(items, nifItems, GetContent());
 
       if (!nif->HasAnyStateBits(NS_STATE_GRID_DID_PUSH_ITEMS)) {
-        MOZ_ASSERT(!nifNeedPushedItem, "NS_STATE_GRID_DID_PUSH_ITEMS lied");
+        MOZ_ASSERT(!nifNeedPushedItem || mDidPushItemsBitMayLie,
+                   "NS_STATE_GRID_DID_PUSH_ITEMS lied");
         break;
       }
       nifNeedPushedItem = true;
@@ -4945,15 +4946,17 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
       nif->RemoveStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
       nif = static_cast<nsGridContainerFrame*>(nif->GetNextInFlow());
-      MOZ_ASSERT(nif || !nifNeedPushedItem, "NS_STATE_GRID_DID_PUSH_ITEMS lied");
+      MOZ_ASSERT(nif || !nifNeedPushedItem || mDidPushItemsBitMayLie,
+                 "NS_STATE_GRID_DID_PUSH_ITEMS lied");
     }
 
-    MOZ_ASSERT(foundOwnPushedChild || !items.IsEmpty(),
+    MOZ_ASSERT(foundOwnPushedChild || !items.IsEmpty() || mDidPushItemsBitMayLie,
                "NS_STATE_GRID_DID_PUSH_ITEMS lied");
     ::MergeSortedFrameLists(mFrames, items, GetContent());
   }
 
 #ifdef DEBUG
+  mDidPushItemsBitMayLie = false;
   SanityCheckGridItemsBeforeReflow();
 #endif // DEBUG
 
@@ -5208,6 +5211,54 @@ nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   aLists.PositionedDescendants()->AppendToTop(&positionedDescendants);
 }
 
+bool
+nsGridContainerFrame::DrainSelfOverflowList()
+{
+  // Unlike nsContainerFrame::DrainSelfOverflowList we need to merge these lists
+  // so that the resulting mFrames is in document content order.
+  // NOTE: nsContainerFrame::AppendFrames/InsertFrames calls this method.
+  AutoFrameListPtr overflowFrames(PresContext(), StealOverflowFrames());
+  if (overflowFrames) {
+    ::MergeSortedFrameLists(mFrames, *overflowFrames, GetContent());
+    return true;
+  }
+  return false;
+}
+
+void
+nsGridContainerFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList)
+{
+  NoteNewChildren(aListID, aFrameList);
+  nsContainerFrame::AppendFrames(aListID, aFrameList);
+}
+
+void
+nsGridContainerFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                                   nsFrameList& aFrameList)
+{
+  NoteNewChildren(aListID, aFrameList);
+  nsContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
+}
+
+void
+nsGridContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame)
+{
+#ifdef DEBUG
+  ChildListIDs supportedLists =
+    kAbsoluteList | kFixedList | kPrincipalList | kNoReflowPrincipalList;
+  MOZ_ASSERT(supportedLists.Contains(aListID), "unexpected child list");
+
+  // Note that kPrincipalList doesn't mean aOldFrame must be on that list.
+  // It can also be on kOverflowList, in which case it might be a pushed
+  // item, and if it's the only pushed item our DID_PUSH_ITEMS bit will lie.
+  mDidPushItemsBitMayLie = mDidPushItemsBitMayLie ||
+                           (aListID == kPrincipalList &&
+                            !aOldFrame->GetPrevInFlow());
+#endif
+
+  nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+}
+
 #ifdef DEBUG_FRAME_DUMP
 nsresult
 nsGridContainerFrame::GetFrameName(nsAString& aResult) const
@@ -5215,6 +5266,25 @@ nsGridContainerFrame::GetFrameName(nsAString& aResult) const
   return MakeFrameName(NS_LITERAL_STRING("GridContainer"), aResult);
 }
 #endif
+
+void
+nsGridContainerFrame::NoteNewChildren(ChildListID aListID,
+                                      const nsFrameList& aFrameList)
+{
+#ifdef DEBUG
+  ChildListIDs supportedLists =
+    kAbsoluteList | kFixedList | kPrincipalList | kNoReflowPrincipalList;
+  MOZ_ASSERT(supportedLists.Contains(aListID), "unexpected child list");
+#endif
+
+  nsIPresShell* shell = PresContext()->PresShell();
+  for (auto pif = GetPrevInFlow(); pif; pif = pif->GetPrevInFlow()) {
+    if (aListID == kPrincipalList) {
+      pif->AddStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
+    }
+    shell->FrameNeedsReflow(pif, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
+  }
+}
 
 void
 nsGridContainerFrame::MergeSortedOverflow(nsFrameList& aList)
