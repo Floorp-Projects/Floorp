@@ -50,6 +50,13 @@ class VirtualenvManager(object):
         self.topsrcdir = topsrcdir
         self.topobjdir = topobjdir
         self.virtualenv_root = virtualenv_path
+
+        # Record the Python executable that was used to create the Virtualenv
+        # so we can check this against sys.executable when verifying the
+        # integrity of the virtualenv.
+        self.exe_info_path = os.path.join(self.virtualenv_root,
+                                          'python_exe.txt')
+
         self.log_handle = log_handle
         self.manifest_path = manifest_path
 
@@ -82,6 +89,24 @@ class VirtualenvManager(object):
     def activate_path(self):
         return os.path.join(self.bin_path, 'activate_this.py')
 
+    def get_exe_info(self):
+        """Returns the path to python executable that was in use when
+        this virutalenv was created.
+        """
+        with open(self.exe_info_path, 'r') as fh:
+            path, size = fh.read().splitlines()
+        return path, int(size)
+
+    def write_exe_info(self, python):
+        """Records the path to python executable that was in use when
+        this virutalenv was created. We record this explicitly because
+        on OS X our python path may end up being a different or modified
+        executable.
+        """
+        with open(self.exe_info_path, 'w') as fh:
+            fh.write("%s\n" % python)
+            fh.write("%s\n" % os.path.getsize(python))
+
     def up_to_date(self, python=sys.executable):
         """Returns whether the virtualenv is present and up to date."""
 
@@ -99,10 +124,13 @@ class VirtualenvManager(object):
         if dep_mtime > activate_mtime:
             return False
 
-        # check interpreter. Assume that a different size is enough to
-        # know whether we've been given a different interpreter, and thus
-        # should refresh the virtualenv.
-        if os.path.getsize(python) != os.path.getsize(self.python_path):
+        # Verify that the Python we're checking here is either the virutalenv
+        # python, or is the Python that was used to create the virtualenv.
+        # If this fails, it is likely system Python has been upgraded, and
+        # our virtualenv would not be usable.
+        python_size = os.path.getsize(python)
+        if ((python, python_size) != (self.python_path, os.path.getsize(self.python_path)) and
+            (python, python_size) != self.get_exe_info()):
             return False
 
         # recursively check sub packages.txt files
@@ -152,6 +180,8 @@ class VirtualenvManager(object):
         if result:
             raise Exception(
                 'Failed to create virtualenv: %s' % self.virtualenv_root)
+
+        self.write_exe_info(python)
 
         return self.virtualenv_root
 
