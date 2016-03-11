@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cu, Cc, Ci} = require("chrome");
+const {Cu} = require("chrome");
 const Services = require("Services");
 const promise = require("promise");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -17,15 +17,14 @@ exports.OptionsPanel = OptionsPanel;
 
 XPCOMUtils.defineLazyGetter(this, "l10n", function() {
   let bundle = Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
-  let l10n = function(aName, ...aArgs) {
+  let l10n = function(name, ...aArgs) {
     try {
       if (aArgs.length == 0) {
-        return bundle.GetStringFromName(aName);
-      } else {
-        return bundle.formatStringFromName(aName, aArgs, aArgs.length);
+        return bundle.GetStringFromName(name);
       }
+      return bundle.formatStringFromName(name, aArgs, aArgs.length);
     } catch (ex) {
-      Services.console.logStringMessage("Error reading '" + aName + "'");
+      Services.console.logStringMessage("Error reading '" + name + "'");
     }
   };
   return l10n;
@@ -67,7 +66,6 @@ function InfallibleGetBoolPref(key) {
   }
 }
 
-
 /**
  * Represents the Options Panel in the Toolbox.
  */
@@ -83,7 +81,8 @@ function OptionsPanel(iframeWindow, toolbox) {
   this._themeUnregistered = this._themeUnregistered.bind(this);
   this._disableJSClicked = this._disableJSClicked.bind(this);
 
-  this.disableJSNode = this.panelDoc.getElementById("devtools-disable-javascript");
+  this.disableJSNode = this.panelDoc.getElementById(
+    "devtools-disable-javascript");
 
   this._addListeners();
 
@@ -130,8 +129,7 @@ OptionsPanel.prototype = {
       let cbx = this.panelDoc.getElementById("devtools-disable-cache");
 
       cbx.checked = cacheDisabled;
-    }
-    else if (data.pref === "devtools.theme") {
+    } else if (data.pref === "devtools.theme") {
       this.updateCurrentTheme();
     }
   },
@@ -158,8 +156,10 @@ OptionsPanel.prototype = {
       this.toolbox.setToolboxButtonsVisibility.bind(this.toolbox);
 
     let onCheckboxClick = (checkbox) => {
-      let toolDefinition = toggleableButtons.filter(tool => tool.id === checkbox.id)[0];
-      Services.prefs.setBoolPref(toolDefinition.visibilityswitch, checkbox.checked);
+      let toolDefinition = toggleableButtons.filter(
+        toggleableButton => toggleableButton.id === checkbox.id)[0];
+      Services.prefs.setBoolPref(
+        toolDefinition.visibilityswitch, checkbox.checked);
       setToolboxButtonsVisibility();
     };
 
@@ -192,8 +192,10 @@ OptionsPanel.prototype = {
 
   setupToolsList: function() {
     let defaultToolsBox = this.panelDoc.getElementById("default-tools-box");
-    let additionalToolsBox = this.panelDoc.getElementById("additional-tools-box");
-    let toolsNotSupportedLabel = this.panelDoc.getElementById("tools-not-supported-label");
+    let additionalToolsBox = this.panelDoc.getElementById(
+      "additional-tools-box");
+    let toolsNotSupportedLabel = this.panelDoc.getElementById(
+      "tools-not-supported-label");
     let atleastOneToolNotSupported = false;
 
     let onCheckboxClick = function(id) {
@@ -202,8 +204,7 @@ OptionsPanel.prototype = {
       Services.prefs.setBoolPref(toolDefinition.visibilityswitch, this.checked);
       if (this.checked) {
         gDevTools.emit("tool-registered", id);
-      }
-      else {
+      } else {
         gDevTools.emit("tool-unregistered", toolDefinition);
       }
     };
@@ -218,8 +219,7 @@ OptionsPanel.prototype = {
       let checkboxSpanLabel = this.panelDoc.createElement("span");
       if (tool.isTargetSupported(this.target)) {
         checkboxSpanLabel.textContent = tool.label;
-      }
-      else {
+      } else {
         atleastOneToolNotSupported = true;
         checkboxSpanLabel.textContent = l10n(
           "options.toolNotSupportedMarker", tool.label);
@@ -347,12 +347,13 @@ OptionsPanel.prototype = {
     }
 
     if (this.target.activeTab) {
-      return this.target.client.attachTab(this.target.activeTab._actor).then(([response, client]) => {
-        this._origJavascriptEnabled = !response.javascriptEnabled;
-        this.disableJSNode.checked = this._origJavascriptEnabled;
-        this.disableJSNode.addEventListener("click",
-          this._disableJSClicked, false);
-      });
+      return this.target.client.attachTab(this.target.activeTab._actor)
+        .then(([response, client]) => {
+          this._origJavascriptEnabled = !response.javascriptEnabled;
+          this.disableJSNode.checked = this._origJavascriptEnabled;
+          this.disableJSNode.addEventListener("click",
+            this._disableJSClicked, false);
+        });
     }
     this.disableJSNode.hidden = true;
   },
