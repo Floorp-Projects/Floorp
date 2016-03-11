@@ -9,9 +9,6 @@
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1231681">Mozilla Bug 1231681</a>
-<p id="display"></p>
-
-<div id="content" style="display: none"></div>
 
 <div id="framediv">
   <iframe id="testing_frame"></iframe>
@@ -19,48 +16,48 @@
 
 <pre id="log"></pre>
 
-
 <script class="testbody" type="text/javascript">
-SpecialPowers.setBoolPref("security.webauth.u2f", true);
-SpecialPowers.setBoolPref("security.webauth.u2f.softtoken", true);
 
-var testList = [
-  "https://example.com/tests/dom/u2f/tests/test_frame_register.html",
-  "http://mochi.test:8888/tests/dom/u2f/tests/test_frame_appid_facet_insecure.html",
-  "https://example.com/tests/dom/u2f/tests/test_frame_appid_facet.html",
-  "https://example.com/tests/dom/u2f/tests/test_frame_appid_facet_remoteload.html",
-  "https://test1.example.com/tests/dom/u2f/tests/test_frame_appid_facet_subdomain.html"
-];
+SpecialPowers.pushPrefEnv({"set": [["security.webauth.u2f", true],
+                                   ["security.webauth.u2f.softtoken", true]]},
+function() {
+  var testList = [
+    "https://example.com/tests/dom/u2f/tests/test_frame_register.html",
+    "http://mochi.test:8888/tests/dom/u2f/tests/test_frame_appid_facet_insecure.html",
+    "https://example.com/tests/dom/u2f/tests/test_frame_appid_facet.html",
+    "https://example.com/tests/dom/u2f/tests/test_frame_appid_facet_remoteload.html",
+    "https://test1.example.com/tests/dom/u2f/tests/test_frame_appid_facet_subdomain.html"
+  ];
 
-function log(msg) {
-  document.getElementById("log").textContent += "\n" + msg;
-}
-
-function nextTest() {
-  if (testList.length < 1) {
-    SimpleTest.finish();
-    return;
+  function log(msg) {
+    document.getElementById("log").textContent += "\n" + msg;
   }
 
-  document.getElementById('testing_frame').src = testList.shift();
-}
+  function nextTest() {
+    if (testList.length < 1) {
+      SimpleTest.finish();
+      return;
+    }
 
-// listen for a messages from the mixed content test harness
-function receiveMessage(event) {
-  if ("test" in event.data) {
-    var summary = event.data.test + ": " + event.data.msg;
-    log(event.data.status + ": " + summary);
-    ok(event.data.status, summary);
-  } else if ("done" in event.data) {
-    nextTest();
+    document.getElementById('testing_frame').src = testList.shift();
   }
-}
+
+  // listen for a messages from the mixed content test harness
+  function receiveMessage(event) {
+    if ("test" in event.data) {
+      var summary = event.data.test + ": " + event.data.msg;
+      log(event.data.status + ": " + summary);
+      ok(event.data.status, summary);
+    } else if ("done" in event.data) {
+      nextTest();
+    }
+  }
+
+  window.addEventListener("message", receiveMessage, false);
+  nextTest();
+});
 
 SimpleTest.waitForExplicitFinish();
-
-window.addEventListener("message", receiveMessage, false);
-nextTest();
-
 </script>
 
   </body>
