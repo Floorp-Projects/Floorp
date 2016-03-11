@@ -233,8 +233,24 @@ def mozconfig_options(mozconfig):
 del command_line_helper
 
 
+# Mozilla-Build
+# ==============================================================
 option(env='MOZILLABUILD', nargs=1,
        help='Path to Mozilla Build (Windows-only)')
+
+# It feels dirty replicating this from python/mozbuild/mozbuild/mozconfig.py,
+# but the end goal being that the configure script would go away...
+@depends('MOZILLABUILD')
+@advanced
+def shell(mozillabuild):
+    import sys
+
+    shell = 'sh'
+    if mozillabuild:
+        shell = mozillabuild[0] + '/msys/bin/sh'
+    if sys.platform == 'win32':
+        shell = shell + '.exe'
+    return shell
 
 
 option('--enable-application', nargs=1, env='MOZ_BUILD_APP',
