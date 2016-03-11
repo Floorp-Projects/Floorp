@@ -55,7 +55,7 @@
 namespace mozilla {
 namespace dom {
 
-JSErrorFormatString ErrorFormatString[] = {
+const JSErrorFormatString ErrorFormatString[] = {
 #define MSG_DEF(_name, _argc, _exn, _str) \
   { #_name, _str, _argc, _exn },
 #include "mozilla/dom/Errors.msg"
