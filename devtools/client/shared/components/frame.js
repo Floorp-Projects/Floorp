@@ -5,7 +5,7 @@
 "use strict";
 
 const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
-const { getSourceNames } = require("devtools/client/shared/source-utils");
+const { getSourceNames, parseURL } = require("devtools/client/shared/source-utils");
 const { L10N } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm").ViewHelpers;
 const l10n = new L10N("chrome://devtools/locale/components.properties");
 
@@ -38,11 +38,18 @@ module.exports = createClass({
   render() {
     let { onClick, frame, showFunctionName, showHost } = this.props;
     const { short, long, host } = getSourceNames(frame.source);
+    // Reparse the URL to determine if we should link this; `getSourceNames`
+    // has already cached this indirectly. We don't want to attempt to
+    // link to "self-hosted" and "(unknown)".
+    const isLinkable = !!parseURL(frame.source);
+    const elements = [];
 
     let tooltip = long;
     // Exclude all falsy values, including `0`, as even
     // a number 0 for line doesn't make sense, and should not be displayed.
-    if (frame.line) {
+    // If source isn't linkable, don't attempt to append line and column
+    // info, as this probably doesn't make sense.
+    if (isLinkable && frame.line) {
       tooltip += `:${frame.line}`;
       // Intentionally exclude 0
       if (frame.column) {
@@ -57,22 +64,28 @@ module.exports = createClass({
       title: tooltip,
     };
 
-    let fields = [
-      dom.a({
+    if (isLinkable) {
+      elements.push(dom.a({
         className: "frame-link-filename",
         onClick,
         title: onClickTooltipString
-      }, short)
-    ];
+      }, short));
+    } else {
+      // If source is not a URL (self-hosted, eval, etc.), don't make
+      // it an anchor link, as we can't link to it.
+      elements.push(dom.span({
+        className: "frame-link-filename"
+      }, short));
+    }
 
-    // Intentionally exclude 0
-    if (frame.line) {
-      fields.push(dom.span({ className: "frame-link-colon" }, ":"));
-      fields.push(dom.span({ className: "frame-link-line" }, frame.line));
+    // If source is linkable, and we have a line number > 0
+    if (isLinkable && frame.line) {
+      elements.push(dom.span({ className: "frame-link-colon" }, ":"));
+      elements.push(dom.span({ className: "frame-link-line" }, frame.line));
       // Intentionally exclude 0
       if (frame.column) {
-        fields.push(dom.span({ className: "frame-link-colon" }, ":"));
-        fields.push(dom.span({ className: "frame-link-column" }, frame.column));
+        elements.push(dom.span({ className: "frame-link-colon" }, ":"));
+        elements.push(dom.span({ className: "frame-link-column" }, frame.column));
         // Add `data-column` attribute for testing
         attributes["data-column"] = frame.column;
       }
@@ -82,15 +95,15 @@ module.exports = createClass({
     }
 
     if (showFunctionName && frame.functionDisplayName) {
-      fields.unshift(
+      elements.unshift(
         dom.span({ className: "frame-link-function-display-name" }, frame.functionDisplayName)
       );
     }
 
     if (showHost && host) {
-      fields.push(dom.span({ className: "frame-link-host" }, host));
+      elements.push(dom.span({ className: "frame-link-host" }, host));
     }
 
-    return dom.span(attributes, ...fields);
+    return dom.span(attributes, ...elements);
   }
 });

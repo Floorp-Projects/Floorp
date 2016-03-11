@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cu, Ci, Cc } = require("chrome");
+const { Cu, Ci } = require("chrome");
 const { Class } = require("sdk/core/heritage");
-const { defer, resolve } = require("promise");
+const { resolve } = require("promise");
 const Services = require("Services");
 
 Cu.import("resource://gre/modules/Task.jsm");
@@ -20,7 +20,7 @@ const prefDomain = "devtools.netmonitor.har.";
 const trace = {
   log: function(...args) {
   }
-}
+};
 
 /**
  * This object is responsible for automated HAR export. It listens
@@ -77,7 +77,7 @@ var HarAutomation = Class({
     this.tabWatcher.connect();
   },
 
-  pageLoadBegin: function(aResponse) {
+  pageLoadBegin: function(response) {
     this.resetCollector();
   },
 
@@ -106,8 +106,8 @@ var HarAutomation = Class({
    * The additional traffic can be exported by executing
    * triggerExport on this object.
    */
-  pageLoadDone: function(aResponse) {
-    trace.log("HarAutomation.pageLoadDone; ", aResponse);
+  pageLoadDone: function(response) {
+    trace.log("HarAutomation.pageLoadDone; ", response);
 
     if (this.collector) {
       this.collector.waitForHarLoad().then(collector => {
@@ -128,7 +128,7 @@ var HarAutomation = Class({
     // into a file and use all the default options.
     let data = {
       fileName: Services.prefs.getCharPref(prefDomain + "defaultFileName"),
-    }
+    };
 
     return this.executeExport(data);
   },
@@ -169,7 +169,7 @@ var HarAutomation = Class({
       getString: this.getString.bind(this),
       view: this,
       items: items,
-    }
+    };
 
     options.defaultFileName = data.fileName;
     options.compress = data.compress;
@@ -198,39 +198,43 @@ var HarAutomation = Class({
   /**
    * Fetches the full text of a string.
    */
-  getString: function(aStringGrip) {
-    return this.webConsoleClient.getString(aStringGrip);
+  getString: function(stringGrip) {
+    return this.webConsoleClient.getString(stringGrip);
   },
 
   /**
    * Extracts any urlencoded form data sections (e.g. "?foo=bar&baz=42") from a
    * POST request.
    *
-   * @param object aHeaders
+   * @param object headers
    *        The "requestHeaders".
-   * @param object aUploadHeaders
+   * @param object uploadHeaders
    *        The "requestHeadersFromUploadStream".
-   * @param object aPostData
+   * @param object postData
    *        The "requestPostData".
    * @return array
    *        A promise that is resolved with the extracted form data.
    */
-  _getFormDataSections: Task.async(function*(aHeaders, aUploadHeaders, aPostData) {
+  _getFormDataSections: Task.async(function*(headers, uploadHeaders, postData) {
     let formDataSections = [];
 
-    let { headers: requestHeaders } = aHeaders;
-    let { headers: payloadHeaders } = aUploadHeaders;
+    let { headers: requestHeaders } = headers;
+    let { headers: payloadHeaders } = uploadHeaders;
     let allHeaders = [...payloadHeaders, ...requestHeaders];
 
-    let contentTypeHeader = allHeaders.find(e => e.name.toLowerCase() == "content-type");
-    let contentTypeLongString = contentTypeHeader ? contentTypeHeader.value : "";
+    let contentTypeHeader = allHeaders.find(e => {
+      return e.name.toLowerCase() == "content-type";
+    });
+
+    let contentTypeLongString = contentTypeHeader ?
+      contentTypeHeader.value : "";
     let contentType = yield this.getString(contentTypeLongString);
 
     if (contentType.includes("x-www-form-urlencoded")) {
-      let postDataLongString = aPostData.postData.text;
-      let postData = yield this.getString(postDataLongString);
+      let postDataLongString = postData.postData.text;
+      let data = yield this.getString(postDataLongString);
 
-      for (let section of postData.split(/\r\n|\r|\n/)) {
+      for (let section of data.split(/\r\n|\r|\n/)) {
         // Before displaying it, make sure this section of the POST data
         // isn't a line containing upload stream headers.
         if (payloadHeaders.every(header => !section.startsWith(header.name))) {
@@ -279,14 +283,14 @@ TabWatcher.prototype = {
    * @param object aPacket
    *        Packet received from the server.
    */
-  onTabNavigated: function(aType, aPacket) {
-    switch (aType) {
+  onTabNavigated: function(type, packet) {
+    switch (type) {
       case "will-navigate": {
-        this.listener.pageLoadBegin(aPacket);
+        this.listener.pageLoadBegin(packet);
         break;
       }
       case "navigate": {
-        this.listener.pageLoadDone(aPacket);
+        this.listener.pageLoadDone(packet);
         break;
       }
     }

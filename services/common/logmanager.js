@@ -196,12 +196,6 @@ LogManager.prototype = {
     // now attach the appenders to all our logs.
     for (let logName of logNames) {
       let log = Log.repository.getLogger(logName);
-      // Set all of the logs themselves to log all messages, and rely on the
-      // more restrictive levels on the appenders to restrict what is seen.
-      // (We possibly could find the smallest appender level and set the logs
-      // to that, but that gets tricky when we consider a singe log might end
-      // up being managed by multiple log managers - so this is fine for now.)
-      log.level = Log.Level.All;
       for (let appender of [fapp, dumpAppender, consoleAppender]) {
         log.addAppender(appender);
       }

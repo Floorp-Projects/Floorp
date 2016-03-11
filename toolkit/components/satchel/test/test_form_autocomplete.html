@@ -651,7 +651,8 @@ function runTest() {
         input.focus();
         doKey("left");
         expectPopup();
-        sendChar("a");
+        // Check case-insensitivity.
+        sendChar("A");
         break;
 
     case 206:
@@ -660,6 +661,7 @@ function runTest() {
         break;
 
     case 207:
+        // check that results were cached
         input.focus();
         doKey("right");
         sendChar("q");
@@ -971,7 +973,7 @@ function runTest() {
 
     case 601:
         checkMenuEntries([], testNum);
-        SpecialPowers.removeAutoCompletePopupEventListener(window, "popupshown", popupShownListener);
+        input.blur();
         SimpleTest.finish();
         return;
 

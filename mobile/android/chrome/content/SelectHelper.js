@@ -55,13 +55,20 @@ var SelectHelper = {
             changed = true;
             aNode.selected = true;
           }
-          i++;
+          if (SelectHelper._isListItemVisible(aNode)) {
+            i++;
+          }
         });
 
         if (changed)
           this.fireOnChange(aElement);
       }
     }).bind(this));
+  },
+
+
+  _isListItemVisible: function(aNode){
+    return (aNode.style.display !== "none");
   },
 
   _isMenu: function(aElement) {
@@ -73,20 +80,22 @@ var SelectHelper = {
     let index = 0;
     let items = [];
     this.forOptions(aElement, function(aNode, aOptions, aParent) {
-      let item = {
-        label: aNode.text || aNode.label,
-        header: aOptions.isGroup,
-        disabled: aNode.disabled,
-        id: index,
-        selected: aNode.selected
-      }
+      if (SelectHelper._isListItemVisible(aNode)) {
+        let item = {
+          label: aNode.text || aNode.label,
+          header: aOptions.isGroup,
+          disabled: aNode.disabled,
+          id: index,
+          selected: aNode.selected,
+          visible: (aNode.style.display!=="none")
+        };
 
-      if (aParent) {
-        item.child = true;
-        item.disabled = item.disabled || aParent.disabled;
+        if (aParent) {
+          item.child = true;
+          item.disabled = item.disabled || aParent.disabled;
+        }
+        items.push(item);
       }
-      items.push(item);
-
       index++;
     });
     return items;
