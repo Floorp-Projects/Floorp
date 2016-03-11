@@ -109,6 +109,7 @@ protected:
   struct GridReflowState;
   class LineNameMap;
   struct LineRange;
+  struct SharedGridData;
   struct TrackSizingFunctions;
   struct Tracks;
   struct TranslatedLineRange;
