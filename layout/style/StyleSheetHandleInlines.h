@@ -21,6 +21,21 @@
 
 namespace mozilla {
 
+StyleSheet*
+StyleSheetHandle::Ptr::AsStyleSheet()
+{
+  if (IsServo()) {
+    return AsServo();
+  }
+  return AsGecko();
+}
+
+const StyleSheet*
+StyleSheetHandle::Ptr::AsStyleSheet() const
+{
+  return const_cast<Ptr*>(this)->AsStyleSheet();
+}
+
 MozExternalRefCountType
 StyleSheetHandle::Ptr::AddRef()
 {
@@ -61,12 +76,6 @@ bool
 StyleSheetHandle::Ptr::IsApplicable() const
 {
   FORWARD(IsApplicable, ());
-}
-
-void
-StyleSheetHandle::Ptr::SetComplete()
-{
-  FORWARD(SetComplete, ());
 }
 
 void

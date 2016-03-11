@@ -6,12 +6,26 @@
 <html id="html">
   <head>
     <title>Marionette tests for AccessibleCaret in cursor mode</title>
+    <style>
+    .block {
+      width: 10em;
+      height: 6em;
+      word-wrap: break-word;
+      overflow: auto;
+    }
+    </style>
   </head>
   <body>
-    <div><input id="input" value="ABCDEFGHI"></div>
-    <br />
-    <div><textarea name="textarea" id="textarea" rows="4" cols="6">ABCDEFGHI</textarea></div>
-    <br />
-    <div style="width: 10em; height: 2em; word-wrap: break-word; overflow: auto;" contenteditable="true" id="contenteditable">ABCDEFGHI</div>
+    <div>
+      <input id="input" value="ABCDEFGHI">
+      <input id="input-padding" style="padding: 1em;" value="ABCDEFGHI">
+    </div>
+    <br>
+    <div>
+      <textarea name="textarea" id="textarea" rows="4" cols="6">ABCDEFGHI</textarea>
+      <textarea id="textarea-one-line" rows="3">ABCDEFGHI</textarea>
+    </div>
+    <br>
+    <div class="block" contenteditable="true" id="contenteditable">ABCDEFGHI</div>
   </body>
 </html>

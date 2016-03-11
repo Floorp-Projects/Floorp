@@ -159,7 +159,7 @@ class ConfigureSandbox(dict):
                     'Cannot include `%s` because it is not in a subdirectory '
                     'of `%s`' % (path, mozpath.dirname(self._paths[0])))
         else:
-            path = mozpath.abspath(path)
+            path = mozpath.realpath(mozpath.abspath(path))
         if path in self._paths:
             raise ConfigureError(
                 'Cannot include `%s` because it was included already.' % path)

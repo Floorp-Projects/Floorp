@@ -10,45 +10,9 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 
-#include "jslock.h"
+#include "threading/Mutex.h"
 
 namespace js {
-
-namespace detail {
-
-class ExclusiveDataBase
-{
-  private:
-    mutable PRLock* lock_;
-
-    ExclusiveDataBase(const ExclusiveDataBase&) = delete;
-    ExclusiveDataBase& operator=(const ExclusiveDataBase&) = delete;
-
-  public:
-    // This move constructor is only public for `mozilla::Forward`.
-    ExclusiveDataBase(ExclusiveDataBase&& rhs)
-      : lock_(rhs.lock_)
-    {
-        MOZ_ASSERT(&rhs != this, "self-move disallowed!");
-        rhs.lock_ = nullptr;
-    }
-
-    ~ExclusiveDataBase();
-
-  protected:
-    explicit ExclusiveDataBase(PRLock* lock)
-      : lock_(lock)
-    {
-        MOZ_ASSERT(lock_);
-    }
-
-    static mozilla::Maybe<ExclusiveDataBase> Create();
-
-    void acquire() const;
-    void release() const;
-};
-
-} // namespace detail
 
 /**
  * A mutual exclusion lock class.
@@ -113,38 +77,30 @@ class ExclusiveDataBase
  *      to the protected value in other structures!
  */
 template <typename T>
-class ExclusiveData : private detail::ExclusiveDataBase
+class ExclusiveData
 {
+    mutable Mutex lock_;
     mutable T value_;
 
     ExclusiveData(const ExclusiveData&) = delete;
     ExclusiveData& operator=(const ExclusiveData&) = delete;
 
-    template <typename U>
-    explicit ExclusiveData(U&& u, ExclusiveDataBase&& base)
-      : ExclusiveDataBase(mozilla::Move(base))
-      , value_(mozilla::Forward<U>(u))
-    { }
+    void acquire() const { lock_.lock(); }
+    void release() const { lock_.unlock(); }
 
   public:
     /**
      * Create a new `ExclusiveData`, with perfect forwarding of the protected
      * value.
-     *
-     * On success, `mozilla::Some` is returned. On failure, `mozilla::Nothing`
-     * is returned.
      */
     template <typename U>
-    static mozilla::Maybe<ExclusiveData<T>> Create(U&& u) {
-        auto base = detail::ExclusiveDataBase::Create();
-        if (base.isNothing())
-            return mozilla::Nothing();
-        return mozilla::Some(ExclusiveData(mozilla::Forward<U>(u), mozilla::Move(*base)));
+    explicit ExclusiveData(U&& u)
+      : value_(mozilla::Forward<U>(u))
+    {
     }
 
     ExclusiveData(ExclusiveData&& rhs)
-      : ExclusiveDataBase(mozilla::Move(static_cast<ExclusiveDataBase&&>(rhs)))
-      , value_(mozilla::Move(rhs.value_))
+      : value_(mozilla::Move(rhs.value_))
     {
         MOZ_ASSERT(&rhs != this, "self-move disallowed!");
     }

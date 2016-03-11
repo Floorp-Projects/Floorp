@@ -17,6 +17,11 @@
 // Silence "warning: #include_next is a GCC extension"
 #pragma GCC system_header
 
+// Don't include mozalloc for cstdlib. See bug 1245076.
+#ifndef moz_dont_include_mozalloc_for_cstdlib
+#  define moz_dont_include_mozalloc_for_cstdlib
+#endif
+#ifndef moz_dont_include_mozalloc_for_${HEADER}
 // mozalloc.h wants <new>; break the cycle by always explicitly
 // including <new> here.  NB: this is a tad sneaky.  Sez the gcc docs:
 //
@@ -25,15 +30,17 @@
 //    same name as the current file. It simply looks for the file
 //    named, starting with the directory in the search path after the
 //    one where the current file was found.
-#include_next <new>
+#  include_next <new>
 
 // See if we're in code that can use mozalloc.  NB: this duplicates
 // code in nscore.h because nscore.h pulls in prtypes.h, and chromium
 // can't build with that being included before base/basictypes.h.
-#if !defined(XPCOM_GLUE) && !defined(NS_NO_XPCOM) && !defined(MOZ_NO_MOZALLOC)
-#  include "mozilla/mozalloc.h"
-#else
-#  error "STL code can only be used with infallible ::operator new()"
+#  if !defined(XPCOM_GLUE) && !defined(NS_NO_XPCOM) && !defined(MOZ_NO_MOZALLOC)
+#    include "mozilla/mozalloc.h"
+#  else
+#    error "STL code can only be used with infallible ::operator new()"
+#  endif
+
 #endif
 
 #if defined(DEBUG) && !defined(_GLIBCXX_DEBUG)

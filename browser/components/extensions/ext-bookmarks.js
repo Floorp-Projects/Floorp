@@ -219,4 +219,3 @@ extensions.registerSchemaAPI("bookmarks", "bookmarks", (extension, context) => {
     },
   };
 });
-

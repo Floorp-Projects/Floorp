@@ -546,9 +546,17 @@
 
   /*
    * A success code that indicates that evaluating a string of JS went
-   * just fine except it threw an exception.
+   * just fine except it threw an exception. Only for legacy use by
+   * nsJSUtils.
    */
   ERROR(NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW,    SUCCESS(2)),
+
+  /*
+   * A success code that indicates that evaluating a string of JS went
+   * just fine except it was killed by an uncatchable exception.
+   * Only for legacy use by nsJSUtils.
+   */
+  ERROR(NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE, SUCCESS(3)),
 #undef MODULE
 
 

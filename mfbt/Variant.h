@@ -169,9 +169,10 @@ struct VariantImplementation<N, T> {
       return aLhs.template as<T>() == aRhs.template as<T>();
   }
 
-  template<typename Matcher, typename ConcreteVariant>
-  static typename Matcher::ReturnType
-  match(Matcher& aMatcher, ConcreteVariant& aV) {
+  template<typename Matcher, typename ConcreteVariant,
+           typename ReturnType = typename RemoveReference<Matcher>::Type::ReturnType>
+  static ReturnType
+  match(Matcher&& aMatcher, ConcreteVariant& aV) {
     return aMatcher.match(aV.template as<T>());
   }
 };
@@ -225,9 +226,10 @@ struct VariantImplementation<N, T, Ts...>
     }
   }
 
-  template<typename Matcher, typename ConcreteVariant>
-  static typename Matcher::ReturnType
-  match(Matcher& aMatcher, ConcreteVariant& aV)
+  template<typename Matcher, typename ConcreteVariant,
+           typename ReturnType = typename RemoveReference<Matcher>::Type::ReturnType>
+  static ReturnType
+  match(Matcher&& aMatcher, ConcreteVariant& aV)
   {
     if (aV.template is<T>()) {
       return aMatcher.match(aV.template as<T>());
@@ -552,19 +554,19 @@ public:
     return T(Move(as<T>()));
   }
 
-  // Exhaustive matching of all variant types no the contained value.
+  // Exhaustive matching of all variant types on the contained value.
 
   /** Match on an immutable const reference. */
   template<typename Matcher>
-  typename Matcher::ReturnType
-  match(Matcher& aMatcher) const {
+  typename RemoveReference<Matcher>::Type::ReturnType
+  match(Matcher&& aMatcher) const {
     return Impl::match(aMatcher, *this);
   }
 
-  /**  Match on a mutable non-const reference. */
+  /** Match on a mutable non-const reference. */
   template<typename Matcher>
-  typename Matcher::ReturnType
-  match(Matcher& aMatcher) {
+  typename RemoveReference<Matcher>::Type::ReturnType
+  match(Matcher&& aMatcher) {
     return Impl::match(aMatcher, *this);
   }
 };

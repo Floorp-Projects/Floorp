@@ -168,6 +168,11 @@ ARCHIVE_FILES = {
         },
         {
             'source': buildconfig.topobjdir,
+            'base': '',
+            'pattern': 'mozinfo.json',
+        },
+        {
+            'source': buildconfig.topobjdir,
             'base': 'dist/bin',
             'patterns': [
                 '%s%s' % (f, buildconfig.substs['BIN_SUFFIX'])

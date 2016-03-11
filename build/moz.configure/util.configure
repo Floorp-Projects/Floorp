@@ -76,3 +76,27 @@ def unique_list(l):
         if l not in result:
             result.append(i)
     return result
+
+
+# Denotes a deprecated option. Combines option() and @depends:
+# @deprecated_option('--option')
+# def option(value):
+#     ...
+# @deprecated_option() takes the same arguments as option(), except `help`.
+# The function may handle the option like a typical @depends function would,
+# but it is recommended it emits a deprecation error message suggesting an
+# alternative option to use if there is one.
+@template
+def deprecated_option(*args, **kwargs):
+    assert 'help' not in kwargs
+    kwargs['help'] = 'Deprecated'
+    opt = option(*args, **kwargs)
+
+    def decorator(func):
+        @depends(opt.option)
+        def deprecated(value):
+            if value.origin != 'default':
+                return func(value)
+        return deprecated
+
+    return decorator

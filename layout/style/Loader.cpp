@@ -1878,7 +1878,7 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
       MOZ_ASSERT(!(data->mSheet->IsGecko() &&
                    data->mSheet->AsGecko()->IsModified()),
                  "should not get marked modified during parsing");
-      data->mSheet->SetComplete();
+      data->mSheet->AsStyleSheet()->SetComplete();
       data->ScheduleLoadEventIfNeeded(aStatus);
     }
     if (data->mMustNotify && (data->mObserver || !mObservers.IsEmpty())) {
