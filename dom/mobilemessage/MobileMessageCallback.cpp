@@ -307,7 +307,7 @@ MobileMessageCallback::NotifySegmentInfoForTextGot(int32_t aSegments,
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> val(cx);
   if (!ToJSValue(cx, info, &val)) {
-    JS_ClearPendingException(cx);
+    jsapi.ClearException();
     return NotifyError(nsIMobileMessageCallback::INTERNAL_ERROR);
   }
 
