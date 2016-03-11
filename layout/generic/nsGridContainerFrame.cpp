@@ -32,6 +32,7 @@ typedef nsGridContainerFrame::TrackSize TrackSize;
 const uint32_t nsGridContainerFrame::kTranslatedMaxLine =
   uint32_t(nsStyleGridLine::kMaxLine - nsStyleGridLine::kMinLine);
 const uint32_t nsGridContainerFrame::kAutoLine = kTranslatedMaxLine + 3457U;
+typedef nsTHashtable< nsPtrHashKey<nsIFrame> > FrameHashtable;
 
 static void
 ReparentFrame(nsIFrame* aFrame, nsContainerFrame* aOldParent,
@@ -54,6 +55,39 @@ ReparentFrames(nsFrameList& aFrameList, nsContainerFrame* aOldParent,
   for (auto f : aFrameList) {
     ReparentFrame(f, aOldParent, aNewParent);
   }
+}
+
+static nscoord
+ClampToCSSMaxBSize(nscoord aSize, const nsHTMLReflowState* aReflowState)
+{
+  auto maxSize = aReflowState->ComputedMaxBSize();
+  if (MOZ_UNLIKELY(maxSize != NS_UNCONSTRAINEDSIZE)) {
+    MOZ_ASSERT(aReflowState->ComputedMinBSize() <= maxSize);
+    aSize = std::min(aSize, maxSize);
+  }
+  return aSize;
+}
+
+// Same as above and set aStatus INCOMPLETE if aSize wasn't clamped.
+// (If we clamp aSize it means our size is less than the break point,
+// i.e. we're effectively breaking in our overflow, so we should leave
+// aStatus as is (it will likely be set to OVERFLOW_INCOMPLETE later)).
+static nscoord
+ClampToCSSMaxBSize(nscoord aSize, const nsHTMLReflowState* aReflowState,
+                   nsReflowStatus* aStatus)
+{
+  auto maxSize = aReflowState->ComputedMaxBSize();
+  if (MOZ_UNLIKELY(maxSize != NS_UNCONSTRAINEDSIZE)) {
+    MOZ_ASSERT(aReflowState->ComputedMinBSize() <= maxSize);
+    if (aSize < maxSize) {
+      NS_FRAME_SET_INCOMPLETE(*aStatus);
+    } else {
+      aSize = maxSize;
+    }
+  } else {
+    NS_FRAME_SET_INCOMPLETE(*aStatus);
+  }
+  return aSize;
 }
 
 enum class GridLineSide
@@ -563,6 +597,11 @@ struct nsGridContainerFrame::GridItemInfo
   {
     mIsFlexing[0] = false;
     mIsFlexing[1] = false;
+  }
+
+  static bool IsStartRowLessThan(const GridItemInfo* a, const GridItemInfo* b)
+  {
+    return a->mArea.mRows.mStart < b->mArea.mRows.mStart;
   }
 
   nsIFrame* const mFrame;
@@ -4183,7 +4222,488 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   ConsiderChildOverflow(aDesiredSize.mOverflowAreas, aChild);
 }
 
-void
+nscoord
+nsGridContainerFrame::ReflowInFragmentainer(GridReflowState&     aState,
+                                            const LogicalRect&   aContentArea,
+                                            nsHTMLReflowMetrics& aDesiredSize,
+                                            nsReflowStatus&      aStatus,
+                                            Fragmentainer&       aFragmentainer,
+                                            const nsSize&        aContainerSize)
+{
+  MOZ_ASSERT(aStatus == NS_FRAME_COMPLETE);
+  MOZ_ASSERT(aState.mReflowState);
+
+  // Collect our grid items and sort them in row order.  Collect placeholders
+  // and put them in a separate array.
+  nsTArray<const GridItemInfo*> sortedItems(aState.mGridItems.Length());
+  nsTArray<nsIFrame*> placeholders(aState.mAbsPosItems.Length());
+  aState.mIter.Reset(GridItemCSSOrderIterator::eIncludeAll);
+  for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
+    nsIFrame* child = *aState.mIter;
+    if (child->GetType() != nsGkAtoms::placeholderFrame) {
+      const GridItemInfo* info = &aState.mGridItems[aState.mIter.GridItemIndex()];
+      sortedItems.AppendElement(info);
+    } else {
+      placeholders.AppendElement(child);
+    }
+  }
+  // NOTE: no need to use stable_sort here, there are no dependencies on
+  // having content order between items on the same row in the code below.
+  std::sort(sortedItems.begin(), sortedItems.end(),
+            GridItemInfo::IsStartRowLessThan);
+
+  // Reflow our placeholder children; they must all be complete.
+  for (auto child : placeholders) {
+    nsReflowStatus childStatus;
+    ReflowInFlowChild(child, nullptr, aContainerSize, &aFragmentainer,
+                      aState, aContentArea, aDesiredSize, childStatus);
+    MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childStatus),
+               "nsPlaceholderFrame should never need to be fragmented");
+  }
+
+  // The available size for children - we'll set this to the edge of the last
+  // row in most cases below, but for now use the full size.
+  nscoord childAvailableSize = aFragmentainer.mToFragmentainerEnd;
+  const uint32_t startRow = aState.mStartRow;
+  const uint32_t numRows = aState.mRows.mSizes.Length();
+  bool isBDBClone = aState.mReflowState->mStyleBorder->mBoxDecorationBreak ==
+                      NS_STYLE_BOX_DECORATION_BREAK_CLONE;
+  nscoord bpBEnd = aState.mBorderPadding.BEnd(aState.mWM);
+
+  // Set |endRow| to the first row that doesn't fit.
+  uint32_t endRow = numRows;
+  for (uint32_t row = startRow; row < numRows; ++row) {
+    auto& sz = aState.mRows.mSizes[row];
+    const nscoord bEnd = sz.mPosition + sz.mBase;
+    nscoord remainingAvailableSize = childAvailableSize - bEnd;
+    if (remainingAvailableSize < 0 ||
+        (isBDBClone && remainingAvailableSize < bpBEnd)) {
+      endRow = row;
+      break;
+    }
+  }
+
+  // Check for forced breaks on the items.
+  const bool isTopOfPage = aFragmentainer.mIsTopOfPage;
+  bool isForcedBreak = false;
+  const bool avoidBreakInside = ShouldAvoidBreakInside(*aState.mReflowState);
+  for (const GridItemInfo* info : sortedItems) {
+    uint32_t itemStartRow = info->mArea.mRows.mStart;
+    if (itemStartRow == endRow) {
+      break;
+    }
+    auto disp = info->mFrame->StyleDisplay();
+    if (disp->mBreakBefore) {
+      // Propagate break-before on the first row to the container unless we're
+      // already at top-of-page.
+      if ((itemStartRow == 0 && !isTopOfPage) || avoidBreakInside) {
+        aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+        return aState.mFragBStart;
+      }
+      if ((itemStartRow > startRow ||
+           (itemStartRow == startRow && !isTopOfPage)) &&
+          itemStartRow < endRow) {
+        endRow = itemStartRow;
+        isForcedBreak = true;
+        // reset any BREAK_AFTER we found on an earlier item
+        aStatus = NS_FRAME_COMPLETE;
+        break;  // we're done since the items are sorted in row order
+      }
+    }
+    uint32_t itemEndRow = info->mArea.mRows.mEnd;
+    if (disp->mBreakAfter) {
+      if (itemEndRow != numRows) {
+        if (itemEndRow > startRow && itemEndRow < endRow) {
+          endRow = itemEndRow;
+          isForcedBreak = true;
+          // No "break;" here since later items with break-after may have
+          // a shorter span.
+        }
+      } else {
+        // Propagate break-after on the last row to the container, we may still
+        // find a break-before on this row though (and reset aStatus).
+        aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus); // tentative
+      }
+    }
+  }
+
+  // Consume at least one row in each fragment until we have consumed them all.
+  // Except for the first row if there's a break opportunity before it.
+  if (startRow == endRow && startRow != numRows &&
+      (startRow != 0 || !aFragmentainer.mCanBreakAtStart)) {
+    ++endRow;
+  }
+
+  // Honor break-inside:avoid if we can't fit all rows.
+  if (avoidBreakInside && endRow < numRows) {
+    aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+    return aState.mFragBStart;
+  }
+
+  // Calculate the block-size including this fragment.
+  nscoord bEndRow =
+    aState.mRows.GridLineEdge(endRow, GridLineSide::eBeforeGridGap);
+  nscoord bSize;
+  if (aFragmentainer.mIsAutoBSize) {
+    // We only apply min-bsize once all rows are complete (when bsize is auto).
+    if (endRow < numRows) {
+      bSize = bEndRow;
+      auto clampedBSize = ClampToCSSMaxBSize(bSize, aState.mReflowState);
+      if (MOZ_UNLIKELY(clampedBSize != bSize)) {
+        // We apply max-bsize in all fragments though.
+        bSize = clampedBSize;
+      } else if (!isBDBClone) {
+        // The max-bsize won't make this fragment COMPLETE, so the block-end
+        // border will be in a later fragment.
+        bpBEnd = 0;
+      }
+    } else {
+      bSize = NS_CSS_MINMAX(bEndRow,
+                            aState.mReflowState->ComputedMinBSize(),
+                            aState.mReflowState->ComputedMaxBSize());
+    }
+  } else {
+    bSize = NS_CSS_MINMAX(aState.mReflowState->ComputedBSize(),
+                          aState.mReflowState->ComputedMinBSize(),
+                          aState.mReflowState->ComputedMaxBSize());
+  }
+
+  // Check for overflow and set aStatus INCOMPLETE if so.
+  bool overflow = bSize + bpBEnd > childAvailableSize;
+  if (overflow) {
+    if (avoidBreakInside) {
+      aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+      return aState.mFragBStart;
+    }
+    bool breakAfterLastRow = endRow == numRows && aFragmentainer.mCanBreakAtEnd;
+    if (breakAfterLastRow) {
+      MOZ_ASSERT(bEndRow < bSize, "bogus aFragmentainer.mCanBreakAtEnd");
+      nscoord availableSize = childAvailableSize;
+      if (isBDBClone) {
+        availableSize -= bpBEnd;
+      }
+      // Pretend we have at least 1px available size, otherwise we'll never make
+      // progress in consuming our bSize.
+      availableSize = std::max(availableSize,
+                               aState.mFragBStart + AppUnitsPerCSSPixel());
+      // Fill the fragmentainer, but not more than our desired block-size and
+      // at least to the size of the last row (even if that overflows).
+      nscoord newBSize = std::min(bSize, availableSize);
+      newBSize = std::max(newBSize, bEndRow);
+      // If it's just the border+padding that is overflowing and we have
+      // box-decoration-break:clone then we are technically COMPLETE.  There's
+      // no point in creating another zero-bsize fragment in this case.
+      if (newBSize < bSize || !isBDBClone) {
+        NS_FRAME_SET_INCOMPLETE(aStatus);
+      }
+      bSize = newBSize;
+    } else if (bSize <= bEndRow && startRow + 1 < endRow) {
+      if (endRow == numRows) {
+        // We have more than one row in this fragment, so we can break before
+        // the last row instead.
+        --endRow;
+        bEndRow = aState.mRows.GridLineEdge(endRow, GridLineSide::eBeforeGridGap);
+        bSize = bEndRow;
+        if (aFragmentainer.mIsAutoBSize) {
+          bSize = ClampToCSSMaxBSize(bSize, aState.mReflowState);
+        }
+      }
+      NS_FRAME_SET_INCOMPLETE(aStatus);
+    } else if (endRow < numRows) {
+      bSize = ClampToCSSMaxBSize(bEndRow, aState.mReflowState, &aStatus);
+    } // else - no break opportunities.
+  } else {
+    // Even though our block-size fits we need to honor forced breaks, or if
+    // a row doesn't fit in an auto-sized container (unless it's constrained
+    // by a max-bsize which make us overflow-incomplete).
+    if (endRow < numRows && (isForcedBreak ||
+                             (aFragmentainer.mIsAutoBSize && bEndRow == bSize))) {
+      bSize = ClampToCSSMaxBSize(bEndRow, aState.mReflowState, &aStatus);
+    }
+  }
+
+  // If we can't fit all rows then we're at least overflow-incomplete.
+  if (endRow < numRows) {
+    childAvailableSize = bEndRow;
+    if (NS_FRAME_IS_COMPLETE(aStatus)) {
+      NS_FRAME_SET_OVERFLOW_INCOMPLETE(aStatus);
+      aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+    }
+  } else {
+    // Children always have the full size of the rows in this fragment.
+    childAvailableSize = std::max(childAvailableSize, bEndRow);
+  }
+
+  return ReflowRowsInFragmentainer(aState, aContentArea, aDesiredSize, aStatus,
+                                   aFragmentainer, aContainerSize, sortedItems,
+                                   startRow, endRow, bSize, childAvailableSize);
+}
+
+nscoord
+nsGridContainerFrame::ReflowRowsInFragmentainer(
+  GridReflowState&                     aState,
+  const LogicalRect&                   aContentArea,
+  nsHTMLReflowMetrics&                 aDesiredSize,
+  nsReflowStatus&                      aStatus,
+  Fragmentainer&                       aFragmentainer,
+  const nsSize&                        aContainerSize,
+  const nsTArray<const GridItemInfo*>& aSortedItems,
+  uint32_t                             aStartRow,
+  uint32_t                             aEndRow,
+  nscoord                              aBSize,
+  nscoord                              aAvailableSize)
+{
+  FrameHashtable pushedItems;
+  FrameHashtable incompleteItems;
+  FrameHashtable overflowIncompleteItems;
+  bool isBDBClone = aState.mReflowState->mStyleBorder->mBoxDecorationBreak ==
+                      NS_STYLE_BOX_DECORATION_BREAK_CLONE;
+  bool didGrowRow = false;
+  // As we walk across rows, we track whether the current row is at the top
+  // of its grid-fragment, to help decide whether we can break before it. When
+  // this function starts, our row is at the top of the current fragment if:
+  //  - we're starting with a nonzero row (i.e. we're a continuation)
+  // OR:
+  //  - we're starting with the first row, & we're not allowed to break before
+  //    it (which makes it effectively at the top of its grid-fragment).
+  bool isRowTopOfPage = aStartRow != 0 || !aFragmentainer.mCanBreakAtStart;
+  const bool isStartRowTopOfPage = isRowTopOfPage;
+  // Save our full available size for later.
+  const nscoord gridAvailableSize = aFragmentainer.mToFragmentainerEnd;
+  // Propagate the constrained size to our children.
+  aFragmentainer.mToFragmentainerEnd = aAvailableSize;
+  // Reflow the items in row order up to |aEndRow| and push items after that.
+  uint32_t row = 0;
+  // |i| is intentionally signed, so we can set it to -1 to restart the loop.
+  for (int32_t i = 0, len = aSortedItems.Length(); i < len; ++i) {
+    const GridItemInfo* const info = aSortedItems[i];
+    nsIFrame* child = info->mFrame;
+    row = info->mArea.mRows.mStart;
+    MOZ_ASSERT(child->GetPrevInFlow() ? row < aStartRow : row >= aStartRow,
+               "unexpected child start row");
+    if (row >= aEndRow) {
+      pushedItems.PutEntry(child);
+      continue;
+    }
+
+    bool rowCanGrow = false;
+    nscoord maxRowSize = 0;
+    if (row >= aStartRow) {
+      if (row > aStartRow) {
+        isRowTopOfPage = false;
+      }
+      // Can we grow this row?  Only consider span=1 items per spec...
+      rowCanGrow = !didGrowRow && info->mArea.mRows.Extent() == 1;
+      if (rowCanGrow) {
+        auto& sz = aState.mRows.mSizes[row];
+        // and only min-/max-content rows or flex rows in an auto-sized container
+        rowCanGrow = (sz.mState & TrackSize::eMinOrMaxContentMinSizing) ||
+                     ((sz.mState & TrackSize::eFlexMaxSizing) &&
+                      aFragmentainer.mIsAutoBSize);
+        if (rowCanGrow) {
+          if (isBDBClone) {
+            maxRowSize = gridAvailableSize -
+                         aState.mBorderPadding.BEnd(aState.mWM);
+          } else {
+            maxRowSize = gridAvailableSize;
+          }
+          maxRowSize -= sz.mPosition;
+          // ...and only if there is space for it to grow.
+          rowCanGrow = maxRowSize > sz.mBase;
+        }
+      }
+    }
+
+    // aFragmentainer.mIsTopOfPage is propagated to the child reflow state.
+    // When it's false the child can request BREAK_BEFORE.  We intentionally
+    // set it to false when the row is growable (as determined in CSS Grid
+    // Fragmentation) and there is a non-zero space between it and the
+    // fragmentainer end (that can be used to grow it).  If the child reports
+    // a forced break in this case, we grow this row to fill the fragment and
+    // restart the loop.  We also restart the loop with |aEndRow = row|
+    // (but without growing any row) for a BREAK_BEFORE child if it spans
+    // beyond the last row in this fragment.  This is to avoid fragmenting it.
+    // We only restart the loop once.
+    aFragmentainer.mIsTopOfPage = isRowTopOfPage && !rowCanGrow;
+    nsReflowStatus childStatus;
+    ReflowInFlowChild(child, info, aContainerSize, &aFragmentainer,
+                      aState, aContentArea, aDesiredSize, childStatus);
+    MOZ_ASSERT(!NS_FRAME_IS_FULLY_COMPLETE(childStatus) ||
+               !child->GetNextInFlow(),
+               "fully-complete reflow should destroy any NIFs");
+
+    if (NS_INLINE_IS_BREAK_BEFORE(childStatus)) {
+      MOZ_ASSERT(!child->GetPrevInFlow(),
+                 "continuations should never report BREAK_BEFORE status");
+      MOZ_ASSERT(!aFragmentainer.mIsTopOfPage,
+                 "got NS_INLINE_IS_BREAK_BEFORE at top of page");
+      if (!didGrowRow) {
+        if (rowCanGrow) {
+          // Grow this row and restart with the next row as |aEndRow|.
+          aState.mRows.ResizeRow(row, maxRowSize);
+          if (aState.mSharedGridData) {
+            aState.mSharedGridData->mRows.ResizeRow(row, maxRowSize);
+          }
+          didGrowRow = true;
+          aEndRow = row + 1;  // growing this row makes the next one not fit
+          i = -1;  // i == 0 after the next loop increment
+          isRowTopOfPage = isStartRowTopOfPage;
+          overflowIncompleteItems.Clear();
+          incompleteItems.Clear();
+          nscoord bEndRow =
+            aState.mRows.GridLineEdge(aEndRow, GridLineSide::eBeforeGridGap);
+          aFragmentainer.mToFragmentainerEnd = bEndRow;
+          if (aFragmentainer.mIsAutoBSize) {
+            aBSize = ClampToCSSMaxBSize(bEndRow, aState.mReflowState, &aStatus);
+          } else if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+            aBSize = NS_CSS_MINMAX(aState.mReflowState->ComputedBSize(),
+                                   aState.mReflowState->ComputedMinBSize(),
+                                   aState.mReflowState->ComputedMaxBSize());
+            aBSize = std::min(bEndRow, aBSize);
+          }
+          continue;
+        }
+
+        if (!isRowTopOfPage) {
+          // We can break before this row - restart with it as the new end row.
+          aEndRow = row;
+          aBSize = aState.mRows.GridLineEdge(aEndRow, GridLineSide::eBeforeGridGap);
+          i = -1;  // i == 0 after the next loop increment
+          isRowTopOfPage = isStartRowTopOfPage;
+          overflowIncompleteItems.Clear();
+          incompleteItems.Clear();
+          NS_FRAME_SET_INCOMPLETE(aStatus);
+          continue;
+        }
+        NS_ERROR("got BREAK_BEFORE at top-of-page");
+        childStatus = NS_FRAME_COMPLETE;
+      } else {
+        NS_ERROR("got BREAK_BEFORE again after growing the row?");
+        NS_FRAME_SET_INCOMPLETE(childStatus);
+      }
+    } else if (NS_INLINE_IS_BREAK_AFTER(childStatus)) {
+      MOZ_ASSERT_UNREACHABLE("unexpected child reflow status");
+    }
+
+    if (NS_FRAME_IS_NOT_COMPLETE(childStatus)) {
+      incompleteItems.PutEntry(child);
+    } else if (!NS_FRAME_IS_FULLY_COMPLETE(childStatus)) {
+      overflowIncompleteItems.PutEntry(child);
+    }
+  }
+
+  // Record a break before |aEndRow|.
+  if (aEndRow < aState.mRows.mSizes.Length()) {
+    aState.mRows.BreakBeforeRow(aEndRow);
+    if (aState.mSharedGridData) {
+      aState.mSharedGridData->mRows.BreakBeforeRow(aEndRow);
+    }
+  }
+
+  if (!pushedItems.IsEmpty() ||
+      !incompleteItems.IsEmpty() ||
+      !overflowIncompleteItems.IsEmpty()) {
+    if (NS_FRAME_IS_COMPLETE(aStatus)) {
+      NS_FRAME_SET_OVERFLOW_INCOMPLETE(aStatus);
+      aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+    }
+    // Iterate the children in normal document order and append them (or a NIF)
+    // to one of the following frame lists according to their status.
+    nsFrameList pushedList;
+    nsFrameList incompleteList;
+    nsFrameList overflowIncompleteList;
+    auto* pc = PresContext();
+    auto* fc = pc->PresShell()->FrameConstructor();
+    for (nsIFrame* child = GetChildList(kPrincipalList).FirstChild(); child; ) {
+      MOZ_ASSERT((pushedItems.Contains(child) ? 1 : 0) +
+                 (incompleteItems.Contains(child) ? 1 : 0) +
+                 (overflowIncompleteItems.Contains(child) ? 1 : 0) <= 1,
+                 "child should only be in one of these sets");
+      // Save the next-sibling so we can continue the loop if |child| is moved.
+      nsIFrame* next = child->GetNextSibling();
+      if (pushedItems.Contains(child)) {
+        MOZ_ASSERT(child->GetParent() == this);
+        StealFrame(child);
+        pushedList.AppendFrame(nullptr, child);
+      } else if (incompleteItems.Contains(child)) {
+        nsIFrame* childNIF = child->GetNextInFlow();
+        if (!childNIF) {
+          childNIF = fc->CreateContinuingFrame(pc, child, this);
+          incompleteList.AppendFrame(nullptr, childNIF);
+        } else {
+          MOZ_ASSERT(childNIF->GetParent() != this ||
+                     !mFrames.ContainsFrame(childNIF),
+                     "child's NIF shouldn't be in the same principal list");
+          // If child's existing NIF is an overflow container, convert it to an
+          // actual NIF, since now |child| has non-overflow stuff to give it.
+          if (childNIF->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+            auto parent = childNIF->GetParent();
+            parent->StealFrame(childNIF);
+            if (parent != this) {
+              ReparentFrame(childNIF, parent, this);
+            }
+            childNIF->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
+            incompleteList.AppendFrame(nullptr, childNIF);
+          }
+        }
+      } else if (overflowIncompleteItems.Contains(child)) {
+        nsIFrame* childNIF = child->GetNextInFlow();
+        if (!childNIF) {
+          childNIF = fc->CreateContinuingFrame(pc, child, this);
+          childNIF->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
+          overflowIncompleteList.AppendFrame(nullptr, childNIF);
+        } else {
+          // If child has any non-overflow-container NIFs, convert them to
+          // overflow containers, since that's all |child| needs now.
+          while (childNIF &&
+                 !childNIF->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+            auto parent = childNIF->GetParent();
+            parent->StealFrame(childNIF);
+            if (parent != this) {
+              ReparentFrame(childNIF, parent, this);
+            }
+            childNIF->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
+            overflowIncompleteList.AppendFrame(nullptr, childNIF);
+            childNIF = childNIF->GetNextInFlow();
+          }
+        }
+      }
+      child = next;
+    }
+
+    // Merge the results into our respective overflow child lists.
+    if (!pushedList.IsEmpty()) {
+      nsFrameList* overflow = GetOverflowFrames();
+      if (overflow) {
+        ::MergeSortedFrameLists(*overflow, pushedList, GetContent());
+      } else {
+        SetOverflowFrames(pushedList);
+      }
+      AddStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
+    }
+    if (!incompleteList.IsEmpty()) {
+      nsFrameList* overflow = GetOverflowFrames();
+      if (overflow) {
+        ::MergeSortedFrameLists(*overflow, incompleteList, GetContent());
+      } else {
+        SetOverflowFrames(incompleteList);
+      }
+    }
+    if (!overflowIncompleteList.IsEmpty()) {
+      auto eoc = static_cast<nsFrameList*>(Properties().Get(
+                                           ExcessOverflowContainersProperty()));
+      if (eoc) {
+        ::MergeSortedFrameLists(*eoc, overflowIncompleteList, GetContent());
+      } else {
+        auto list = new (pc->PresShell()) nsFrameList(overflowIncompleteList);
+        SetPropTableFrames(list, ExcessOverflowContainersProperty());
+      }
+    }
+  }
+  return aBSize;
+}
+
+nscoord
 nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
                                      const LogicalRect&   aContentArea,
                                      nsHTMLReflowMetrics& aDesiredSize,
@@ -4204,8 +4724,10 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
     (aContentArea.Size(wm) + aState.mBorderPadding.Size(wm)).GetPhysicalSize(wm);
 
   nscoord bSize = aContentArea.BSize(wm);
-  if (false) {
-    // XXX TBD: a later patch will add the fragmented reflow here...
+  Maybe<Fragmentainer> fragmentainer = GetNearestFragmentainer(aState);
+  if (MOZ_UNLIKELY(fragmentainer.isSome())) {
+    bSize = ReflowInFragmentainer(aState, aContentArea, aDesiredSize, aStatus,
+                                  *fragmentainer, containerSize);
   } else {
     aState.mIter.Reset(GridItemCSSOrderIterator::eIncludeAll);
     for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
@@ -4267,6 +4789,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
                                            &aDesiredSize.mOverflowAreas);
     }
   }
+  return bSize;
 }
 
 void
@@ -4510,8 +5033,8 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     gridReflowState.mRows.AlignJustifyContent(aReflowState, contentArea.Size(wm));
   }
 
-  gridReflowState.mIter.Reset(GridItemCSSOrderIterator::eIncludeAll);
-  ReflowChildren(gridReflowState, contentArea, aDesiredSize, aStatus);
+  bSize = ReflowChildren(gridReflowState, contentArea, aDesiredSize, aStatus);
+  bSize = std::max(bSize - consumedBSize, 0);
 
   // Skip our block-end border if we're INCOMPLETE.
   if (!NS_FRAME_IS_COMPLETE(aStatus) &&

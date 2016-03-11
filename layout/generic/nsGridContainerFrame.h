@@ -138,11 +138,13 @@ protected:
 
   /**
    * Reflow and place our children.
+   * @return the consumed size of all of this grid container's continuations
+   *         so far including this frame
    */
-  void ReflowChildren(GridReflowState&     aState,
-                      const LogicalRect&   aContentArea,
-                      nsHTMLReflowMetrics& aDesiredSize,
-                      nsReflowStatus&      aStatus);
+  nscoord ReflowChildren(GridReflowState&     aState,
+                         const LogicalRect&   aContentArea,
+                         nsHTMLReflowMetrics& aDesiredSize,
+                         nsReflowStatus&      aStatus);
 
   /**
    * Helper for GetMinISize / GetPrefISize.
@@ -182,6 +184,28 @@ private:
 
   Maybe<nsGridContainerFrame::Fragmentainer>
     GetNearestFragmentainer(const GridReflowState& aState) const;
+
+  // @return the consumed size of all continuations so far including this frame
+  nscoord ReflowInFragmentainer(GridReflowState&     aState,
+                                const LogicalRect&   aContentArea,
+                                nsHTMLReflowMetrics& aDesiredSize,
+                                nsReflowStatus&      aStatus,
+                                Fragmentainer&       aFragmentainer,
+                                const nsSize&        aContainerSize);
+
+  // Helper for ReflowInFragmentainer
+  // @return the consumed size of all continuations so far including this frame
+  nscoord ReflowRowsInFragmentainer(GridReflowState&     aState,
+                                    const LogicalRect&   aContentArea,
+                                    nsHTMLReflowMetrics& aDesiredSize,
+                                    nsReflowStatus&      aStatus,
+                                    Fragmentainer&       aFragmentainer,
+                                    const nsSize&        aContainerSize,
+                                    const nsTArray<const GridItemInfo*>& aItems,
+                                    uint32_t             aStartRow,
+                                    uint32_t             aEndRow,
+                                    nscoord              aBSize,
+                                    nscoord              aAvailableSize);
 
   // Helper for ReflowChildren / ReflowInFragmentainer
   void ReflowInFlowChild(nsIFrame*              aChild,
