@@ -7,6 +7,8 @@ package org.mozilla.gecko.telemetry;
 
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Locales;
@@ -62,14 +64,16 @@ public class TelemetryPingGenerator {
      * @throws IOException when client ID could not be created
      */
     public static TelemetryPing createCorePing(final Context context, final String docId, final String clientId,
-            final String serverURLSchemeHostPort, final int seq, final long profileCreationDateDays) {
+            final String serverURLSchemeHostPort, final int seq, final long profileCreationDateDays,
+            @Nullable final String defaultSearchEngine) {
         final String serverURL = getTelemetryServerURL(docId, serverURLSchemeHostPort, CorePing.NAME);
-        final ExtendedJSONObject payload = createCorePingPayload(context, clientId, seq, profileCreationDateDays);
+        final ExtendedJSONObject payload =
+                createCorePingPayload(context, clientId, seq, profileCreationDateDays, defaultSearchEngine);
         return new TelemetryPing(serverURL, payload);
     }
 
     private static ExtendedJSONObject createCorePingPayload(final Context context, final String clientId,
-            final int seq, final long profileCreationDate) {
+            final int seq, final long profileCreationDate, @Nullable final String defaultSearchEngine) {
         final ExtendedJSONObject ping = new ExtendedJSONObject();
         ping.put(CorePing.VERSION_ATTR, CorePing.VERSION_VALUE);
         ping.put(CorePing.OS_ATTR, CorePing.OS_VALUE);
@@ -82,6 +86,7 @@ public class TelemetryPingGenerator {
 
         ping.put(CorePing.ARCHITECTURE, AppConstants.ANDROID_CPU_ARCH);
         ping.put(CorePing.CLIENT_ID, clientId);
+        ping.put(CorePing.DEFAULT_SEARCH_ENGINE, TextUtils.isEmpty(defaultSearchEngine) ? null : defaultSearchEngine);
         ping.put(CorePing.DEVICE, deviceDescriptor);
         ping.put(CorePing.LOCALE, Locales.getLanguageTag(Locale.getDefault()));
         ping.put(CorePing.OS_VERSION, Integer.toString(Build.VERSION.SDK_INT)); // A String for cross-platform reasons.
