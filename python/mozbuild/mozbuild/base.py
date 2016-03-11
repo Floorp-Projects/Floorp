@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import errno
 import json
 import logging
 import mozpack.path as mozpath
@@ -298,15 +299,43 @@ class MozbuildObject(ProcessExecutionMixin):
         except:
             return False
 
-    def remove_objdir(self):
-        """Remove the entire object directory."""
+    def remove_objdir(self, full=True):
+        """Remove the object directory.
 
-        if sys.platform.startswith('win') and self.have_winrm():
-            subprocess.check_call(['winrm', '-rf', self.topobjdir])
-        else:
-            # We use mozfile because it is faster than shutil.rmtree().
+        ``full`` controls whether to fully delete the objdir. If False,
+        some directories (e.g. Visual Studio Project Files) will not be
+        deleted.
+        """
+        # Top-level files and directories to not clobber by default.
+        no_clobber = {
+            'msvc',
+        }
+
+        if full:
             # mozfile doesn't like unicode arguments (bug 818783).
-            mozfileremove(self.topobjdir.encode('utf-8'))
+            paths = [self.topobjdir.encode('utf-8')]
+        else:
+            try:
+                paths = []
+                for p in os.listdir(self.topobjdir):
+                    if p not in no_clobber:
+                        paths.append(os.path.join(self.topobjdir, p).encode('utf-8'))
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
+                return
+
+        procs = []
+        for p in sorted(paths):
+            path = os.path.join(self.topobjdir, p)
+            if sys.platform.startswith('win') and self.have_winrm() and os.path.isdir(path):
+                procs.append(subprocess.Popen(['winrm', '-rf', path]))
+            else:
+                # We use mozfile because it is faster than shutil.rmtree().
+                mozfileremove(path)
+
+        for p in procs:
+            p.wait()
 
     def get_binary_path(self, what='app', validate_exists=True, where='default'):
         """Obtain the path to a compiled binary for this build configuration.
