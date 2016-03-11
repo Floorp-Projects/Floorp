@@ -1563,6 +1563,8 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowState
   nsRenderingContext& mRenderingContext;
   nsGridContainerFrame* const mFrame;
   SharedGridData* mSharedGridData; // [weak] owned by mFrame's first-in-flow.
+  /** Computed border+padding with mSkipSides applied. */
+  LogicalMargin mBorderPadding;
   /**
    * BStart of this fragment in "grid space" (i.e. the concatenation of content
    * areas of all fragments).  Equal to mRows.mSizes[mStartRow].mPosition,
@@ -1571,6 +1573,8 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowState
   nscoord mFragBStart;
   /** The start row for this fragment. */
   uint32_t mStartRow;
+  /** Our tentative ApplySkipSides bits. */
+  LogicalSides mSkipSides;
   const WritingMode mWM;
 
 private:
@@ -1593,11 +1597,17 @@ private:
     , mRenderingContext(aRenderingContext)
     , mFrame(aFrame)
     , mSharedGridData(nullptr)
+    , mBorderPadding(aWM)
     , mFragBStart(0)
     , mStartRow(0)
     , mWM(aWM)
   {
     MOZ_ASSERT(!aReflowState || aReflowState->frame == mFrame);
+    if (aReflowState) {
+      mBorderPadding = aReflowState->ComputedLogicalBorderPadding();
+      mSkipSides = aFrame->PreReflowBlockLevelLogicalSkipSides();
+      mBorderPadding.ApplySkipSides(mSkipSides);
+    }
   }
 };
 
@@ -4030,11 +4040,8 @@ nsGridContainerFrame::GetNearestFragmentainer(const GridReflowState& aState) con
         frameType == nsGkAtoms::columnSetFrame) {
       data.emplace();
       data->mIsTopOfPage = gridRS->mFlags.mIsTopOfPage;
-      LogicalMargin bp = gridRS->ComputedLogicalBorderPadding();
-      const auto logicalSkipSides = GetLogicalSkipSides();
-      bp.ApplySkipSides(logicalSkipSides);
       data->mToFragmentainerEnd = aState.mFragBStart +
-        gridRS->AvailableBSize() - bp.BStart(wm);
+        gridRS->AvailableBSize() - aState.mBorderPadding.BStart(wm);
       const auto numRows = aState.mRows.mSizes.Length();
       data->mCanBreakAtStart =
         numRows > 0 && aState.mRows.mSizes[0].mPosition > 0;
@@ -4194,8 +4201,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
 
   WritingMode wm = aState.mReflowState->GetWritingMode();
   const nsSize containerSize =
-    (aContentArea.Size(wm) +
-     aState.mReflowState->ComputedLogicalBorderPadding().Size(wm)).GetPhysicalSize(wm);
+    (aContentArea.Size(wm) + aState.mBorderPadding.Size(wm)).GetPhysicalSize(wm);
 
   nscoord bSize = aContentArea.BSize(wm);
   if (false) {
@@ -4407,8 +4413,6 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   SanityCheckAnonymousGridItems();
 #endif // DEBUG
 
-  LogicalMargin bp = aReflowState.ComputedLogicalBorderPadding();
-  bp.ApplySkipSides(GetLogicalSkipSides());
   const nsStylePosition* stylePos = aReflowState.mStylePosition;
   if (!prevInFlow) {
     InitImplicitNamedAreas(stylePos);
@@ -4496,6 +4500,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     bSize = computedBSize;
   }
   bSize = std::max(bSize - consumedBSize, 0);
+  auto& bp = gridReflowState.mBorderPadding;
   LogicalRect contentArea(wm, bp.IStart(wm), bp.BStart(wm),
                           computedISize, bSize);
 
@@ -4507,6 +4512,14 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   gridReflowState.mIter.Reset(GridItemCSSOrderIterator::eIncludeAll);
   ReflowChildren(gridReflowState, contentArea, aDesiredSize, aStatus);
+
+  // Skip our block-end border if we're INCOMPLETE.
+  if (!NS_FRAME_IS_COMPLETE(aStatus) &&
+      !gridReflowState.mSkipSides.BEnd() &&
+      StyleBorder()->mBoxDecorationBreak !=
+        NS_STYLE_BOX_DECORATION_BREAK_CLONE) {
+    bp.BEnd(wm) = nscoord(0);
+  }
 
   LogicalSize desiredSize(wm, computedISize + bp.IStartEnd(wm),
                               bSize         + bp.BStartEnd(wm));
