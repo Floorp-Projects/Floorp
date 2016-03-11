@@ -65,6 +65,7 @@ struct nsGridContainerFrame::TrackSize
     eSkipGrowUnlimited1 =    0x200,
     eSkipGrowUnlimited2 =    0x400,
     eSkipGrowUnlimited = eSkipGrowUnlimited1 | eSkipGrowUnlimited2,
+    eBreakBefore =           0x800,
   };
 
   static bool IsMinContent(const nsStyleCoord& aCoord)
@@ -4160,7 +4161,7 @@ nsGridContainerFrame::SanityCheckAnonymousGridItems() const
 void
 nsGridContainerFrame::TrackSize::Dump() const
 {
-  printf("mBase=%d mLimit=%d", mBase, mLimit);
+  printf("mPosition=%d mBase=%d mLimit=%d", mPosition, mBase, mLimit);
 
   printf(" min:");
   if (mState & eAutoMinSizing) {
@@ -4186,6 +4187,9 @@ nsGridContainerFrame::TrackSize::Dump() const
 
   if (mState & eFrozen) {
     printf("frozen ");
+  }
+  if (mState & eBreakBefore) {
+    printf("break-before ");
   }
 }
 
