@@ -173,7 +173,6 @@
 <!ENTITY pref_category_home "Home">
 <!ENTITY pref_category_home_summary "Customize your homepage">
 <!ENTITY pref_category_home_panels "Panels">
-<!ENTITY pref_category_home_content_settings "Content settings">
 <!ENTITY pref_category_home_add_ons "Add-ons">
 <!ENTITY pref_home_updates2 "Content updates">
 <!ENTITY pref_home_updates_enabled "Enabled">
