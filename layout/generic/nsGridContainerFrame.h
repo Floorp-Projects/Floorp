@@ -155,6 +155,34 @@ protected:
 #endif // DEBUG
 
 private:
+  // Helpers for ReflowChildren
+  struct Fragmentainer {
+    /**
+     * The distance from the first grid container fragment's block-axis content
+     * edge to the fragmentainer end.
+     */
+    nscoord mToFragmentainerEnd;
+    /**
+     * True if the current fragment is at the start of the fragmentainer.
+     */
+    bool mIsTopOfPage;
+    /**
+     * Is there a Class C break opportunity at the start content edge?
+     */
+    bool mCanBreakAtStart;
+    /**
+     * Is there a Class C break opportunity at the end content edge?
+     */
+    bool mCanBreakAtEnd;
+    /**
+     * Is the grid container's block-size unconstrained?
+     */
+    bool mIsAutoBSize;
+  };
+
+  Maybe<nsGridContainerFrame::Fragmentainer>
+    GetNearestFragmentainer(const GridReflowState& aState) const;
+
   /**
    * Cached values to optimize GetMinISize/GetPrefISize.
    */
