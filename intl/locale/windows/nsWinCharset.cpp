@@ -17,7 +17,7 @@
 
 using namespace mozilla;
 
-static const char* kWinCharsets[][3] = {
+static const char* const kWinCharsets[][3] = {
 #include "wincharset.properties.h"
 };
 

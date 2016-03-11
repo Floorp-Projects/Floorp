@@ -15,7 +15,7 @@
 
 using namespace mozilla;
 
-static const char* kLangGroups[][3] = {
+static const char* const kLangGroups[][3] = {
 #include "langGroups.properties.h"
 };
 
