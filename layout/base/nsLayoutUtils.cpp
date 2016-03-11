@@ -948,9 +948,7 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
   //   the choosing of the resolution to display-list building time.
   ScreenSize alignment;
 
-  if (APZCCallbackHelper::IsDisplayportSuppressed()) {
-    alignment = ScreenSize(1, 1);
-  } else if (gfxPrefs::LayersTilesEnabled()) {
+  if (gfxPrefs::LayersTilesEnabled() && !APZCCallbackHelper::IsDisplayportSuppressed()) {
     alignment = ScreenSize(gfxPlatform::GetPlatform()->GetTileWidth(),
                            gfxPlatform::GetPlatform()->GetTileHeight());
   } else {
