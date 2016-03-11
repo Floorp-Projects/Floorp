@@ -183,6 +183,16 @@ private:
   Maybe<nsGridContainerFrame::Fragmentainer>
     GetNearestFragmentainer(const GridReflowState& aState) const;
 
+  // Helper for ReflowChildren / ReflowInFragmentainer
+  void ReflowInFlowChild(nsIFrame*              aChild,
+                         const GridItemInfo*    aGridItemInfo,
+                         nsSize                 aContainerSize,
+                         const Fragmentainer*   aFragmentainer,
+                         const GridReflowState& aState,
+                         const LogicalRect&     aContentArea,
+                         nsHTMLReflowMetrics&   aDesiredSize,
+                         nsReflowStatus&        aStatus);
+
   /**
    * Cached values to optimize GetMinISize/GetPrefISize.
    */
