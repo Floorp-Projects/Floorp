@@ -58,14 +58,10 @@ def autoconf(mozconfig, autoconf):
 
 
 @depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell,
-         virtualenv_python, compile_environment, build_project,
-         extra_old_configure_args, '--with-external-source-dir',
-         '--enable-shared-js', old_configure_assignments)
+         extra_old_configure_args, old_configure_assignments)
 @advanced
 def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
-                      python, compile_env, build_project,
-                      extra_old_configure_args, external_source_dir,
-                      shared_js, old_configure_assignments):
+                      extra_old_configure_args, old_configure_assignments):
     import glob
     import itertools
     import subprocess
