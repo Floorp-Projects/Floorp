@@ -332,7 +332,7 @@ public:
 
     JSContext* cx = jsapi.cx();
     if (!ToJSValue(cx, v.get_ArrayOfuint8_t(), aValue)) {
-      JS_ClearPendingException(cx);
+      jsapi.ClearException();
       return false;
     }
 
