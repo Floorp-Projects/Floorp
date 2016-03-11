@@ -63,7 +63,7 @@ function nextTest() {
 function runNextTest() {
   if (gTestIndex < gTestWindows.length) {
     info("Run test " + gTestWindows[gTestIndex]);
-    testWindow = window.open(gTestWindows[gTestIndex], "", "width=500,height=500");
+    testWindow = window.open(gTestWindows[gTestIndex], "", "width=500,height=500,scrollbars=yes");
     // We'll wait for the window to load, then make sure our window is refocused
     // before starting the test, which will get kicked off on "focus".
     // This ensures that we're essentially back on the primary "desktop" on
