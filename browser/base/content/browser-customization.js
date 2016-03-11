@@ -85,10 +85,8 @@ var CustomizationHandler = {
     UpdateUrlbarSearchSplitterState();
 
     // Update the urlbar
-    if (gURLBar) {
-      URLBarSetURI();
-      XULBrowserWindow.asyncUpdateUI();
-    }
+    URLBarSetURI();
+    XULBrowserWindow.asyncUpdateUI();
 
     // Re-enable parts of the UI we disabled during the dialog
     let menubar = document.getElementById("main-menubar");

@@ -137,8 +137,8 @@ var TEST_TREE = {
 /**
  * Frame
  */
-function checkFrameString (component, file, line, column) {
-  let el = component.getDOMNode();
+function checkFrameString({ frame, file, line, column, shouldLink }) {
+  let el = frame.getDOMNode();
   let $ = selector => el.querySelector(selector);
 
   let $line = $(".frame-link-line");
@@ -148,6 +148,12 @@ function checkFrameString (component, file, line, column) {
 
   is(el.getAttribute("data-line"), line ? `${line}` : null, "Expected `data-line` found");
   is(el.getAttribute("data-column"), column ? `${column}` : null, "Expected `data-column` found");
+
+  if (shouldLink) {
+    ok($("a.frame-link-filename"), "Should have a linkable filename");
+  } else {
+    ok(!$("a.frame-link-filename"), "Should not have a linkable filename");
+  }
 
   if (line != null) {
     is(+$line.textContent, +line);
@@ -165,5 +171,5 @@ function checkFrameString (component, file, line, column) {
 function checkFrameTooltips (component, mainTooltip, linkTooltip) {
   let el = component.getDOMNode();
   is(el.getAttribute("title"), mainTooltip);
-  is(el.querySelector("a.frame-link-filename").getAttribute("title"), linkTooltip);
+  is(el.querySelector(".frame-link-filename").getAttribute("title"), linkTooltip);
 }

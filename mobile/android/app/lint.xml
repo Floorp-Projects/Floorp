@@ -51,6 +51,7 @@
     <issue id="AppCompatMethod" severity="error" />
     <issue id="AppIndexingError" severity="error" />
     <issue id="AppIndexingWarning" severity="error" />
+    <issue id="Assert" severity="error" />
     <issue id="ButtonCase" severity="error" />
     <issue id="ButtonOrder" severity="error" />
     <issue id="ByteOrderMark" severity="error" />
@@ -180,6 +181,7 @@
     <issue id="UnlocalizedSms" severity="error" />
     <issue id="UnusedNamespace" severity="error" />
     <issue id="UnusedQuantity" severity="error" />
+    <issue id="UnusedResources" severity="error" />
     <issue id="Usability" severity="error" />
     <issue id="UseCheckPermission" severity="error" />
     <issue id="UseCompoundDrawables" severity="error" />

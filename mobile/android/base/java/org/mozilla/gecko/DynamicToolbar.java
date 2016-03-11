@@ -1,8 +1,7 @@
 package org.mozilla.gecko;
 
-import java.util.EnumSet;
-
 import org.mozilla.gecko.PrefsHelper.PrefHandlerBase;
+import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -26,16 +25,9 @@ public class DynamicToolbar {
     private final boolean forceDisabled;
 
     private final PrefsHelper.PrefHandler prefObserver;
-    private final EnumSet<PinReason> pinFlags = EnumSet.noneOf(PinReason.class);
     private LayerView layerView;
     private OnEnabledChangedListener enabledChangedListener;
     private boolean temporarilyVisible;
-
-    public enum PinReason {
-        RELAYOUT,
-        ACTION_MODE,
-        FULL_SCREEN
-    }
 
     public enum VisibilityTransition {
         IMMEDIATE,
@@ -136,7 +128,8 @@ public class DynamicToolbar {
         }
 
         // Don't hide the ActionBar/Toolbar, if it's pinned open by TextSelection.
-        if (visible == false && pinFlags.contains(PinReason.ACTION_MODE)) {
+        if (visible == false &&
+            layerView.getDynamicToolbarAnimator().isPinnedBy(PinReason.ACTION_MODE)) {
             return;
         }
 
@@ -180,18 +173,11 @@ public class DynamicToolbar {
 
     public void setPinned(boolean pinned, PinReason reason) {
         ThreadUtils.assertOnUiThread();
-
         if (layerView == null) {
             return;
         }
 
-        if (pinned) {
-            pinFlags.add(reason);
-        } else {
-            pinFlags.remove(reason);
-        }
-
-        layerView.getDynamicToolbarAnimator().setPinned(!pinFlags.isEmpty());
+        layerView.getDynamicToolbarAnimator().setPinned(pinned, reason);
     }
 
     private void triggerEnabledListener() {

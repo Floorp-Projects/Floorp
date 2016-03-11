@@ -58,8 +58,8 @@ window.onload = Task.async(function* () {
     }), window.document.body);
     yield forceRender(frame);
     checkFrameTooltips(frame,
-      "self-hosted:1",
-      "View source in Debugger → self-hosted:1");
+      "self-hosted",
+      null);
 
     // Check when there's no source
     frame = ReactDOM.render(Frame({
@@ -70,8 +70,8 @@ window.onload = Task.async(function* () {
     }), window.document.body);
     yield forceRender(frame);
     checkFrameTooltips(frame,
-      "(unknown):1",
-      "View source in Debugger → (unknown):1");
+      "(unknown)",
+      null);
 
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));

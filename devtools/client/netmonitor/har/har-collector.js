@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cu, Ci, Cc } = require("chrome");
+const { Cu } = require("chrome");
 const { defer, all } = require("promise");
 const { setTimeout, clearTimeout } = require("sdk/timers");
 const { makeInfallible } = require("devtools/shared/DevToolsUtils");
@@ -13,7 +13,7 @@ const Services = require("Services");
 const trace = {
   log: function(...args) {
   }
-}
+};
 
 /**
  * This object is responsible for collecting data related to all
@@ -43,12 +43,14 @@ HarCollector.prototype = {
 
   start: function() {
     this.debuggerClient.addListener("networkEvent", this.onNetworkEvent);
-    this.debuggerClient.addListener("networkEventUpdate", this.onNetworkEventUpdate);
+    this.debuggerClient.addListener("networkEventUpdate",
+      this.onNetworkEventUpdate);
   },
 
   stop: function() {
     this.debuggerClient.removeListener("networkEvent", this.onNetworkEvent);
-    this.debuggerClient.removeListener("networkEventUpdate", this.onNetworkEventUpdate);
+    this.debuggerClient.removeListener("networkEventUpdate",
+      this.onNetworkEventUpdate);
   },
 
   clear: function() {
@@ -62,7 +64,8 @@ HarCollector.prototype = {
   },
 
   waitForHarLoad: function() {
-    // There should be yet another timeout 'devtools.netmonitor.har.pageLoadTimeout'
+    // There should be yet another timeout e.g.:
+    // 'devtools.netmonitor.har.pageLoadTimeout'
     // that should force export even if page isn't fully loaded.
     let deferred = defer();
     this.waitForResponses().then(() => {
@@ -95,7 +98,7 @@ HarCollector.prototype = {
 
         // New requests executed, let's wait again.
         return this.waitForResponses();
-      })
+      });
     });
   },
 
@@ -225,19 +228,24 @@ HarCollector.prototype = {
     let request;
     switch (packet.updateType) {
       case "requestHeaders":
-        request = this.getData(actor, "getRequestHeaders", this.onRequestHeaders);
+        request = this.getData(actor, "getRequestHeaders",
+          this.onRequestHeaders);
         break;
       case "requestCookies":
-        request = this.getData(actor, "getRequestCookies", this.onRequestCookies);
+        request = this.getData(actor, "getRequestCookies",
+          this.onRequestCookies);
         break;
       case "requestPostData":
-        request = this.getData(actor, "getRequestPostData", this.onRequestPostData);
+        request = this.getData(actor, "getRequestPostData",
+          this.onRequestPostData);
         break;
       case "responseHeaders":
-        request = this.getData(actor, "getResponseHeaders", this.onResponseHeaders);
+        request = this.getData(actor, "getResponseHeaders",
+          this.onResponseHeaders);
         break;
       case "responseCookies":
-        request = this.getData(actor, "getResponseCookies", this.onResponseCookies);
+        request = this.getData(actor, "getResponseCookies",
+          this.onResponseCookies);
         break;
       case "responseStart":
         file.httpVersion = packet.response.httpVersion;
@@ -250,11 +258,13 @@ HarCollector.prototype = {
         file.transferredSize = packet.transferredSize;
 
         if (includeResponseBodies) {
-          request = this.getData(actor, "getResponseContent", this.onResponseContent);
+          request = this.getData(actor, "getResponseContent",
+            this.onResponseContent);
         }
         break;
       case "eventTimings":
-        request = this.getData(actor, "getEventTimings", this.onEventTimings);
+        request = this.getData(actor, "getEventTimings",
+          this.onEventTimings);
         break;
     }
 
@@ -271,7 +281,7 @@ HarCollector.prototype = {
     if (!this.webConsoleClient[method]) {
       Cu.reportError("HarCollector.getData; ERROR " +
         "Unknown method!");
-      return;
+      return deferred.resolve();
     }
 
     let file = this.getFile(actor);
@@ -332,8 +342,8 @@ HarCollector.prototype = {
     let text = response.postData.text;
     if (typeof text == "object") {
       this.getString(text).then(value => {
-          response.postData.text = value;
-      })
+        response.postData.text = value;
+      });
     }
   },
 
@@ -378,7 +388,7 @@ HarCollector.prototype = {
     if (typeof text == "object") {
       this.getString(text).then(value => {
         response.content.text = value;
-      })
+      });
     }
   },
 
