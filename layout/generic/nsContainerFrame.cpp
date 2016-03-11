@@ -1030,7 +1030,8 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
 
   // If the child frame is complete, delete any next-in-flows,
   // but only if the NO_DELETE_NEXT_IN_FLOW flag isn't set.
-  if (NS_FRAME_IS_FULLY_COMPLETE(aStatus) &&
+  if (!NS_INLINE_IS_BREAK_BEFORE(aStatus) &&
+      NS_FRAME_IS_FULLY_COMPLETE(aStatus) &&
       !(aFlags & NS_FRAME_NO_DELETE_NEXT_IN_FLOW_CHILD)) {
     nsIFrame* kidNextInFlow = aKidFrame->GetNextInFlow();
     if (kidNextInFlow) {
