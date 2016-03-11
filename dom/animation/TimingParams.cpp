@@ -83,7 +83,7 @@ TimingParamsFromOptionsUnion(
     result.mDirection = timing.mDirection;
     result.mFill = timing.mFill;
     result.mFunction =
-      AnimationUtils::ParseEasing(targetElement, timing.mEasing);
+      AnimationUtils::ParseEasing(timing.mEasing, targetElement->OwnerDoc());
   }
   return result;
 }

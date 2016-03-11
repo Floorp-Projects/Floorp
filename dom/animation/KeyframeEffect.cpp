@@ -1287,10 +1287,9 @@ GenerateValueEntries(Element* aTarget,
 
   for (OffsetIndexedKeyframe& keyframe : aKeyframes) {
     float offset = float(keyframe.mKeyframeDict.mOffset.Value());
-    // ParseEasing uses element's owner doc, so if it is a pseudo element,
-    // we use its parent element's owner doc.
     Maybe<ComputedTimingFunction> easing =
-      AnimationUtils::ParseEasing(aTarget, keyframe.mKeyframeDict.mEasing);
+      AnimationUtils::ParseEasing(keyframe.mKeyframeDict.mEasing,
+                                  aTarget->OwnerDoc());
     // We ignore keyframe.mKeyframeDict.mComposite since we don't support
     // composite modes on keyframes yet.
 
@@ -1554,10 +1553,8 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
     return;
   }
 
-  // ParseEasing uses element's owner doc, so if it is a pseudo element,
-  // we use its parent element's owner doc.
   Maybe<ComputedTimingFunction> easing =
-    AnimationUtils::ParseEasing(aTarget, keyframes.mEasing);
+    AnimationUtils::ParseEasing(keyframes.mEasing, aTarget->OwnerDoc());
 
   // We ignore easing.mComposite since we don't support composite modes on
   // keyframes yet.
