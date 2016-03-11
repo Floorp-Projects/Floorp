@@ -67,7 +67,11 @@ public:
                         const nsDisplayListSet& aLists) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
+#endif
+#ifdef DEBUG
+  void SetInitialChildList(ChildListID  aListID,
+                           nsFrameList& aChildList) override;
 #endif
 
   /**
