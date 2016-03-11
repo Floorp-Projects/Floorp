@@ -19,6 +19,8 @@ public:
 
   nsBidiKeyboard();
 
+  static void OnLayoutChange();
+
 protected:
 
   nsresult SetupBidiKeyboards();
