@@ -19,6 +19,15 @@ def shell(mozillabuild):
     return shell
 
 
+@template
+@advanced
+def encoded_open(path, mode):
+    import codecs
+    import sys
+    encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
+    return codecs.open(path, mode, encoding)
+
+
 option(env='AUTOCONF', nargs=1, help='Path to autoconf 2.13')
 
 @depends(mozconfig, 'AUTOCONF')
@@ -100,7 +109,7 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
                 old_configure + '.in'], stdout=fh)
 
     cmd = [shell, old_configure]
-    with open('old-configure.vars', 'w') as out:
+    with encoded_open('old-configure.vars', 'w') as out:
         if mozconfig['path']:
             for key, value in mozconfig['env']['added'].items():
                 print("export %s=%s" % (key, quote(value)), file=out)
@@ -356,7 +365,6 @@ def old_configure_options(*options):
 @advanced
 def old_configure(prepare_configure, extra_old_configure_args, all_options,
                   *options):
-    import codecs
     import os
     import subprocess
     import sys
@@ -388,8 +396,7 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
         sys.exit(ret)
 
     raw_config = {}
-    encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
-    with codecs.open('config.data', 'r', encoding) as fh:
+    with encoded_open('config.data', 'r') as fh:
         code = compile(fh.read(), 'config.data', 'exec')
         # Every variation of the exec() function I tried led to:
         # SyntaxError: unqualified exec is not allowed in function 'main' it
