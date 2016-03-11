@@ -1249,16 +1249,15 @@ XPCConvert::JSErrorToXPCException(const char* message,
             bestMessage.AssignLiteral("JavaScript Error");
         }
 
-        const char16_t* uclinebuf =
-            static_cast<const char16_t*>(report->uclinebuf);
+        const char16_t* linebuf = report->linebuf();
 
         data = new nsScriptError();
         data->InitWithWindowID(
             bestMessage,
             NS_ConvertASCIItoUTF16(report->filename),
-            uclinebuf ? nsDependentString(uclinebuf) : EmptyString(),
+            linebuf ? nsDependentString(linebuf, report->linebufLength()) : EmptyString(),
             report->lineno,
-            report->uctokenptr - report->uclinebuf, report->flags,
+            report->tokenOffset(), report->flags,
             NS_LITERAL_CSTRING("XPConnect JavaScript"),
             nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
     }
