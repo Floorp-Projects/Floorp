@@ -364,6 +364,9 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             if binary.endswith('.exe'):
                 binary_path = binary_path.replace('\\', '\\\\\\\\')
             bootstrap_env[name] = binary_path
+            if 'LOCALE_MERGEDIR' in bootstrap_env:
+                # windows fix
+                bootstrap_env['LOCALE_MERGEDIR'] = bootstrap_env['LOCALE_MERGEDIR'].replace('\\', '\\\\\\\\')
         if self.query_is_nightly():
             bootstrap_env["IS_NIGHTLY"] = "yes"
         self.bootstrap_env = bootstrap_env
