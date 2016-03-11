@@ -2461,8 +2461,10 @@ nsWindow::GeckoViewSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
         bool aIsSynthesizedImeKey, jni::Object::Param originalEvent)
 {
     RefPtr<nsWindow> kungFuDeathGrip(&window);
-    window.UserActivity();
-    window.RemoveIMEComposition();
+    if (!aIsSynthesizedImeKey) {
+        window.UserActivity();
+        window.RemoveIMEComposition();
+    }
 
     EventMessage msg;
     if (aAction == sdk::KeyEvent::ACTION_DOWN) {
@@ -2491,17 +2493,19 @@ nsWindow::GeckoViewSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
         // these keys are dispatched in sequence.
         mIMEKeyEvents.AppendElement(
                 mozilla::UniquePtr<WidgetEvent>(event.Duplicate()));
+
     } else {
         window.DispatchEvent(&event, status);
 
-        if (status != nsEventStatus_eConsumeNoDefault) {
-            mEditable->OnDefaultKeyEvent(originalEvent);
+        if (window.Destroyed() || status == nsEventStatus_eConsumeNoDefault) {
+            // Skip default processing.
+            return;
         }
+
+        mEditable->OnDefaultKeyEvent(originalEvent);
     }
 
-    if (window.Destroyed() ||
-            status == nsEventStatus_eConsumeNoDefault ||
-            msg != eKeyDown || IsModifierKey(aKeyCode)) {
+    if (msg != eKeyDown || IsModifierKey(aKeyCode)) {
         // Skip sending key press event.
         return;
     }
