@@ -58,6 +58,7 @@ import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.RestrictedProfileConfiguration;
+import org.mozilla.gecko.search.SearchEngineManager;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.tabqueue.TabQueuePrompt;
@@ -155,6 +156,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -287,6 +289,8 @@ public class BrowserApp extends GeckoApp
 
     private final DynamicToolbar mDynamicToolbar = new DynamicToolbar();
     private final ScreenshotObserver mScreenshotObserver = new ScreenshotObserver();
+
+    private SearchEngineManager searchEngineManager;
 
     @Override
     public View onCreateView(final String name, final Context context, final AttributeSet attrs) {
@@ -699,7 +703,10 @@ public class BrowserApp extends GeckoApp
             "Telemetry:Gather",
             "Updater:Launch");
 
+        // We want to upload the telemetry core ping as soon after startup as possible. It relies on the
+        // Distribution being initialized. If you move this initialization, ensure it plays well with telemetry.
         Distribution distribution = Distribution.init(this);
+        searchEngineManager = new SearchEngineManager(this, distribution);
 
         // Init suggested sites engine in BrowserDB.
         final SuggestedSites suggestedSites = new SuggestedSites(appContext, distribution);
@@ -1413,6 +1420,9 @@ public class BrowserApp extends GeckoApp
         if (mZoomedView != null) {
             mZoomedView.destroy();
         }
+
+        searchEngineManager.destroy();
+        searchEngineManager = null;
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
             "Gecko:DelayedStartup",
@@ -4021,13 +4031,38 @@ public class BrowserApp extends GeckoApp
         // We store synchronously before sending the Intent to ensure this sequence number will not be re-used.
         sharedPrefs.edit().putInt(TelemetryConstants.PREF_SEQ_COUNT, seq + 1).commit();
 
-        final Intent i = new Intent(TelemetryConstants.ACTION_UPLOAD_CORE);
-        i.setClass(this, TelemetryUploadService.class);
-        i.putExtra(TelemetryConstants.EXTRA_DOC_ID, UUID.randomUUID().toString());
-        i.putExtra(TelemetryConstants.EXTRA_PROFILE_NAME, profile.getName());
-        i.putExtra(TelemetryConstants.EXTRA_PROFILE_PATH, profile.getDir().toString());
-        i.putExtra(TelemetryConstants.EXTRA_SEQ, seq);
-        startService(i);
+        searchEngineManager.getEngine(new UploadTelemetryCallback(getContext(), seq, profile.getName(), profile.getDir()));
+    }
+
+    private static class UploadTelemetryCallback implements SearchEngineManager.SearchEngineCallback {
+        private final WeakReference<Context> contextWeakReference;
+        private final int seq;
+        private final String profileName;
+        private final String profileDirPath;
+
+        public UploadTelemetryCallback(final Context context, final int seq, final String profileName, final File profileDir) {
+            this.contextWeakReference = new WeakReference<>(context);
+            this.seq = seq;
+            this.profileName = profileName;
+            this.profileDirPath = profileDir.toString();
+        }
+
+        @Override
+        public void execute(final org.mozilla.gecko.search.SearchEngine engine) {
+            final Context context = this.contextWeakReference.get();
+            if (context == null) {
+                return;
+            }
+
+            final Intent i = new Intent(TelemetryConstants.ACTION_UPLOAD_CORE);
+            i.setClass(context, TelemetryUploadService.class);
+            i.putExtra(TelemetryConstants.EXTRA_DEFAULT_SEARCH_ENGINE, engine.getIdentifier());
+            i.putExtra(TelemetryConstants.EXTRA_DOC_ID, UUID.randomUUID().toString());
+            i.putExtra(TelemetryConstants.EXTRA_PROFILE_NAME, this.profileName);
+            i.putExtra(TelemetryConstants.EXTRA_PROFILE_PATH, this.profileDirPath);
+            i.putExtra(TelemetryConstants.EXTRA_SEQ, this.seq);
+            context.startService(i);
+        }
     }
 
     public static interface TabStripInterface {
