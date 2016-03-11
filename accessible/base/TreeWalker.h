@@ -45,7 +45,7 @@ public:
    * @param aAnchorNode [in] the node the search will be prepared relative to
    * @param aFlags   [in] flags (see enum above)
    */
-  TreeWalker(Accessible* aContext, nsIContent* aAnchorNode, uint32_t aFlags = 0);
+  TreeWalker(Accessible* aContext, nsIContent* aAnchorNode, uint32_t aFlags = eWalkCache);
 
   ~TreeWalker();
 
@@ -62,7 +62,7 @@ public:
    *       rejected during tree creation then the caller should be unbind it
    *       from the document.
    */
-  Accessible* Next();
+  Accessible* Next(nsIContent* aStopNode = nullptr);
   Accessible* Prev();
 
   Accessible* Context() const { return mContext; }
@@ -72,6 +72,12 @@ private:
   TreeWalker();
   TreeWalker(const TreeWalker&);
   TreeWalker& operator =(const TreeWalker&);
+
+  /**
+   * Return an accessible for the given node if any.
+   */
+  Accessible* AccessibleFor(nsIContent* aNode, uint32_t aFlags,
+                            bool* aSkipSubtree);
 
   /**
    * Create new state for the given node and push it on top of stack / at bottom

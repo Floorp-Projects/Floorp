@@ -108,8 +108,7 @@ var SessionStorageInternal = {
       let principal;
 
       try {
-        let attrs = ChromeUtils.createDefaultOriginAttributes();
-        attrs.userContextId = aDocShell.userContextId;
+        let attrs = aDocShell.getOriginAttributes();
         let originURI = Services.io.newURI(origin, null, null);
         principal = Services.scriptSecurityManager.createCodebasePrincipal(originURI, attrs);
       } catch (e) {

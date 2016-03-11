@@ -62,6 +62,7 @@ MSG_DEF(MSG_MISSING_REQUIRED_DICTIONARY_MEMBER, 1, JSEXN_TYPEERR, "Missing requi
 MSG_DEF(MSG_INVALID_REQUEST_METHOD, 1, JSEXN_TYPEERR, "Invalid request method {0}.")
 MSG_DEF(MSG_INVALID_REQUEST_MODE, 1, JSEXN_TYPEERR, "Invalid request mode {0}.")
 MSG_DEF(MSG_INVALID_REFERRER_URL, 1, JSEXN_TYPEERR, "Invalid referrer URL {0}.")
+MSG_DEF(MSG_CROSS_ORIGIN_REFERRER_URL, 2, JSEXN_TYPEERR, "Referrer URL {0} cannot be cross-origin to the entry settings object ({1}).")
 MSG_DEF(MSG_FETCH_BODY_CONSUMED_ERROR, 0, JSEXN_TYPEERR, "Body has already been consumed.")
 MSG_DEF(MSG_RESPONSE_INVALID_STATUSTEXT_ERROR, 0, JSEXN_TYPEERR, "Response statusText may not contain newline or carriage return.")
 MSG_DEF(MSG_FETCH_FAILED, 0, JSEXN_TYPEERR, "NetworkError when attempting to fetch resource.")

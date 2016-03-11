@@ -15183,7 +15183,7 @@ class CallbackMethod(CallbackMember):
             $*{declThis}
             if (${callGuard}!JS::Call(cx, ${thisVal}, callable,
                           ${args}, &rval)) {
-              aRv.Throw(NS_ERROR_UNEXPECTED);
+              aRv.NoteJSContextException(cx);
               return${errorReturn};
             }
             """,

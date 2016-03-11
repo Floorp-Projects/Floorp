@@ -8,9 +8,12 @@
 #include "FFmpegLibWrapper.h"
 #include "FFmpegLog.h"
 #include "nsIFile.h"
-#include "nsXPCOMPrivate.h" // for XUL_DLL
 #include "prmem.h"
 #include "prlink.h"
+
+// We use a known symbol located in lgpllibs to determine its location.
+// soundtouch happens to be always included in lgpllibs
+#include "soundtouch/SoundTouch.h"
 
 namespace mozilla
 {
@@ -32,7 +35,11 @@ MozAVLink(const char* aName)
   PRLibSpec lspec;
   lspec.type = PR_LibSpec_Pathname;
   lspec.value.pathname = aName;
-  return PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
+  PRLibrary* lib = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
+  if (!lib) {
+    FFMPEG_LOG("unable to load library %s", aName);
+  }
+  return lib;
 }
 
 /* static */ bool
@@ -45,10 +52,16 @@ FFVPXRuntimeLinker::Init()
   MOZ_ASSERT(NS_IsMainThread());
   sLinkStatus = LinkStatus_FAILED;
 
-  // We retrieve the path of the XUL library as this is where mozavcodec and
-  // mozavutil libs are located.
+  // We retrieve the path of the lgpllibs library as this is where mozavcodec
+  // and mozavutil libs are located.
+  char* lgpllibsname = PR_GetLibraryName(nullptr, "lgpllibs");
+  if (!lgpllibsname) {
+    return false;
+  }
   char* path =
-    PR_GetLibraryFilePathname(XUL_DLL, (PRFuncPtr)&FFVPXRuntimeLinker::Init);
+    PR_GetLibraryFilePathname(lgpllibsname,
+                              (PRFuncPtr)&soundtouch::SoundTouch::getVersionId);
+  PR_FreeLibraryName(lgpllibsname);
   if (!path) {
     return false;
   }

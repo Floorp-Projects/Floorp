@@ -184,6 +184,7 @@
 #include "nsSubDocumentFrame.h"
 #include "nsQueryObject.h"
 #include "nsLayoutStylesheetCache.h"
+#include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/ScrollInputMethods.h"
 #include "nsStyleSet.h"
 #include "mozilla/StyleSetHandle.h"
@@ -5503,6 +5504,13 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
 
   nsCOMPtr<nsIPresShell> shell = pointVM->GetPresShell();
   if (shell) {
+    // Since this gets run in a refresh tick there isn't an InputAPZContext on
+    // the stack from the nsBaseWidget. We need to simulate one with at least
+    // the correct target guid, so that the correct callback transform gets
+    // applied if this event goes to a child process. The input block id is set
+    // to 0 because this is a synthetic event which doesn't really belong to any
+    // input block. Same for the APZ response field.
+    InputAPZContext apzContext(mMouseEventTargetGuid, 0, nsEventStatus_eIgnore);
     shell->DispatchSynthMouseMove(&event, !aFromScroll);
   }
 
@@ -5538,11 +5546,45 @@ PresShell::MarkImagesInListVisible(const nsDisplayList& aList)
   }
 }
 
+void
+PresShell::ReportAnyBadState()
+{
+  if (mIsZombie) {
+    gfxCriticalNote << "Got null image in image visibility: mIsZombie";
+  }
+  if (mIsDestroying) {
+    gfxCriticalNote << "Got null image in image visibility: mIsDestroying";
+  }
+  if (mIsReflowing) {
+    gfxCriticalNote << "Got null image in image visibility: mIsReflowing";
+  }
+  if (mPaintingIsFrozen) {
+    gfxCriticalNote << "Got null image in image visibility: mPaintingIsFrozen";
+  }
+  if (mForwardingContainer) {
+    gfxCriticalNote << "Got null image in image visibility: mForwardingContainer";
+  }
+  if (mIsNeverPainting) {
+    gfxCriticalNote << "Got null image in image visibility: mIsNeverPainting";
+  }
+  if (mIsDocumentGone) {
+    gfxCriticalNote << "Got null image in image visibility: mIsDocumentGone";
+  }
+  if (!nsContentUtils::IsSafeToRunScript()) {
+    gfxCriticalNote << "Got null image in image visibility: not safe to run script";
+  }
+}
+
 static void
 DecrementVisibleCount(nsTHashtable<nsRefPtrHashKey<nsIImageLoadingContent>>& aImages,
-                      uint32_t aNonvisibleAction)
+                      uint32_t aNonvisibleAction, PresShell* aPresShell)
 {
   for (auto iter = aImages.Iter(); !iter.Done(); iter.Next()) {
+    if (MOZ_UNLIKELY(!iter.Get()->GetKey())) {
+      // We are about to crash, annotate crash report with some info that might
+      // help debug the crash (bug 1251150)
+      aPresShell->ReportAnyBadState();
+    }
     iter.Get()->GetKey()->DecrementVisibleCount(aNonvisibleAction);
   }
 }
@@ -5558,7 +5600,7 @@ PresShell::RebuildImageVisibilityDisplayList(const nsDisplayList& aList)
   mVisibleImages.SwapElements(oldVisibleImages);
   MarkImagesInListVisible(aList);
   DecrementVisibleCount(oldVisibleImages,
-                        nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION);
+                        nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION, this);
 }
 
 /* static */ void
@@ -5581,7 +5623,7 @@ PresShell::ClearImageVisibilityVisited(nsView* aView, bool aClear)
 void
 PresShell::ClearVisibleImagesList(uint32_t aNonvisibleAction)
 {
-  DecrementVisibleCount(mVisibleImages, aNonvisibleAction);
+  DecrementVisibleCount(mVisibleImages, aNonvisibleAction, this);
   mVisibleImages.Clear();
 }
 
@@ -5698,7 +5740,7 @@ PresShell::RebuildImageVisibility(nsRect* aRect,
   MarkImagesInSubtreeVisible(rootFrame, vis, aRemoveOnly);
 
   DecrementVisibleCount(oldVisibleImages,
-                        nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION);
+                        nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION, this);
 }
 
 void
@@ -6480,9 +6522,11 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
       nsView* rootView = mViewManager->GetRootView();
       mMouseLocation = nsLayoutUtils::TranslateWidgetToView(mPresContext,
         aEvent->widget, aEvent->refPoint, rootView);
+      mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     } else {
       mMouseLocation =
         nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, rootFrame);
+      mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     }
 #ifdef DEBUG_MOUSE_LOCATION
     if (aEvent->mMessage == eMouseEnterIntoWidget) {
@@ -6502,6 +6546,7 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
     // this won't matter at all since we'll get the mouse move or enter after
     // the mouse exit when the mouse moves from one of our widgets into another.
     mMouseLocation = nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+    mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
 #ifdef DEBUG_MOUSE_LOCATION
     printf("[ps=%p]got mouse exit for %p\n",
            this, aEvent->widget);

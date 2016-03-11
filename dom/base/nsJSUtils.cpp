@@ -233,7 +233,12 @@ nsJSUtils::EvaluateString(JSContext* aCx,
   }
 
   if (!ok) {
-    rv = NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW;
+    if (JS_IsExceptionPending(aCx)) {
+      rv = NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW;
+    } else {
+      rv = NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE;
+    }
+
     if (!aCompileOptions.noScriptRval) {
       aRetValue.setUndefined();
     }

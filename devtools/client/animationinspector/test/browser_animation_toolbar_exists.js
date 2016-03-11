@@ -12,7 +12,7 @@ requestLongerTimeout(2);
 // are animations to be displayed.
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, window} = yield openAnimationInspector();
   let doc = window.document;
   let toolbar = doc.querySelector("#global-toolbar");
@@ -27,7 +27,7 @@ add_task(function*() {
      "The timeline toolbar is visible when there are animations");
 
   info("Select a node that has no animations");
-  yield selectNode(".still", inspector);
+  yield selectNodeAndWaitForAnimations(".still", inspector);
 
   ok(isNodeVisible(toolbar),
      "The toolbar is shown when there are no animations");

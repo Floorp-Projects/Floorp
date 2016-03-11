@@ -29,7 +29,7 @@
 #include "BluetoothProfileController.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothUtils.h"
-#include "BluetoothUuid.h"
+#include "BluetoothUuidHelper.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/ipc/SocketBase.h"
 #include "mozilla/StaticMutex.h"
