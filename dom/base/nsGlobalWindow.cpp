@@ -13776,8 +13776,7 @@ nsGlobalWindow::GetExternal(ErrorResult& aRv)
   if (!mExternal) {
     AutoJSContext cx;
     JS::Rooted<JSObject*> jsImplObj(cx);
-    ConstructJSImplementation(cx, "@mozilla.org/sidebar;1",
-                              this, &jsImplObj, aRv);
+    ConstructJSImplementation("@mozilla.org/sidebar;1", this, &jsImplObj, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }

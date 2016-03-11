@@ -2259,7 +2259,7 @@ GetContentGlobalForJSImplementedObject(JSContext* cx, JS::Handle<JSObject*> obj,
 }
 
 already_AddRefed<nsIGlobalObject>
-ConstructJSImplementation(JSContext* aCx, const char* aContractId,
+ConstructJSImplementation(const char* aContractId,
                           const GlobalObject& aGlobal,
                           JS::MutableHandle<JSObject*> aObject,
                           ErrorResult& aRv)
@@ -2271,7 +2271,7 @@ ConstructJSImplementation(JSContext* aCx, const char* aContractId,
     return nullptr;
   }
 
-  ConstructJSImplementation(aCx, aContractId, global, aObject, aRv);
+  ConstructJSImplementation(aContractId, global, aObject, aRv);
 
   if (aRv.Failed()) {
     return nullptr;
@@ -2280,11 +2280,13 @@ ConstructJSImplementation(JSContext* aCx, const char* aContractId,
 }
 
 void
-ConstructJSImplementation(JSContext* aCx, const char* aContractId,
+ConstructJSImplementation(const char* aContractId,
                           nsIGlobalObject* aGlobal,
                           JS::MutableHandle<JSObject*> aObject,
                           ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // Make sure to divorce ourselves from the calling JS while creating and
   // initializing the object, so exceptions from that will get reported
   // properly, since those are never exceptions that a spec wants to be thrown.
@@ -2307,7 +2309,7 @@ ConstructJSImplementation(JSContext* aCx, const char* aContractId,
       do_QueryInterface(implISupports);
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
     if (gpi) {
-      JS::Rooted<JS::Value> initReturn(aCx);
+      JS::Rooted<JS::Value> initReturn(nsContentUtils::RootingCxForThread());
       rv = gpi->Init(window, &initReturn);
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
