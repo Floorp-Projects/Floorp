@@ -330,20 +330,19 @@ protected:
   };
 
   struct GridItemInfo {
-    explicit GridItemInfo(const GridArea& aArea)
-      : mArea(aArea)
+    GridItemInfo(nsIFrame* aFrame, const GridArea& aArea)
+      : mFrame(aFrame)
+      , mArea(aArea)
     {
       mIsFlexing[0] = false;
       mIsFlexing[1] = false;
     }
 
+    nsIFrame* mFrame;
     GridArea mArea;
     bool mIsFlexing[2]; // does the item span a flex track? (LogicalAxis index)
     static_assert(mozilla::eLogicalAxisBlock == 0, "unexpected index value");
     static_assert(mozilla::eLogicalAxisInline == 1, "unexpected index value");
-#ifdef DEBUG
-    nsIFrame* mFrame;
-#endif
   };
 
   /**

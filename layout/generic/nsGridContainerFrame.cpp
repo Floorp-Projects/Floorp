@@ -2344,15 +2344,13 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowState& aState,
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
     nsIFrame* child = *aState.mIter;
     GridItemInfo* info =
-      aState.mGridItems.AppendElement(GridItemInfo(PlaceDefinite(child,
-                                                                 colLineNameMap,
-                                                                 rowLineNameMap,
-                                                                 gridStyle)));
-#ifdef DEBUG
+        aState.mGridItems.AppendElement(GridItemInfo(child,
+                                          PlaceDefinite(child,
+                                                        colLineNameMap,
+                                                        rowLineNameMap,
+                                                        gridStyle)));
     MOZ_ASSERT(aState.mIter.GridItemIndex() == aState.mGridItems.Length() - 1,
                "GridItemIndex() is broken");
-    info->mFrame = child;
-#endif
     GridArea& area = info->mArea;
     if (area.mCols.IsDefinite()) {
       minCol = std::min(minCol, area.mCols.mUntranslatedStart);
@@ -2501,13 +2499,11 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowState& aState,
     for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next(), ++i) {
       nsIFrame* child = e.get();
       GridItemInfo* info =
-        aState.mAbsPosItems.AppendElement(GridItemInfo(PlaceAbsPos(child,
-                                                                   colLineNameMap,
-                                                                   rowLineNameMap,
-                                                                   gridStyle)));
-#ifdef DEBUG
-      info->mFrame = child;
-#endif
+          aState.mAbsPosItems.AppendElement(GridItemInfo(child,
+                                              PlaceAbsPos(child,
+                                                          colLineNameMap,
+                                                          rowLineNameMap,
+                                                          gridStyle)));
       GridArea& area = info->mArea;
       if (area.mCols.mUntranslatedStart != int32_t(kAutoLine)) {
         area.mCols.mStart = area.mCols.mUntranslatedStart + offsetToColZero;
