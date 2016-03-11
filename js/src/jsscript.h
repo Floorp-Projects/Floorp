@@ -1139,7 +1139,7 @@ class JSScript : public js::gc::TenuredCell
     bool isCachedEval_:1;
 
     // 'this', 'arguments' and f.apply() are used. This is likely to be a wrapper.
-    bool usesArgumentsApplyAndThis_:1;
+    bool isLikelyConstructorWrapper_:1;
 
     // IonMonkey compilation hints.
     bool failedBoundsCheck_:1; /* script has had hoisted bounds checks fail */
@@ -1403,10 +1403,10 @@ class JSScript : public js::gc::TenuredCell
 
     void setActiveEval() { isActiveEval_ = true; }
 
-    bool usesArgumentsApplyAndThis() const {
-        return usesArgumentsApplyAndThis_;
+    bool isLikelyConstructorWrapper() const {
+        return isLikelyConstructorWrapper_;
     }
-    void setUsesArgumentsApplyAndThis() { usesArgumentsApplyAndThis_ = true; }
+    void setLikelyConstructorWrapper() { isLikelyConstructorWrapper_ = true; }
 
     bool isGeneratorExp() const { return isGeneratorExp_; }
 
@@ -2177,7 +2177,7 @@ class LazyScript : public gc::TenuredCell
         uint32_t bindingsAccessedDynamically : 1;
         uint32_t hasDebuggerStatement : 1;
         uint32_t hasDirectEval : 1;
-        uint32_t usesArgumentsApplyAndThis : 1;
+        uint32_t isLikelyConstructorWrapper : 1;
         uint32_t hasBeenCloned : 1;
         uint32_t treatAsRunOnce : 1;
         uint32_t isDerivedClassConstructor : 1;
@@ -2331,11 +2331,11 @@ class LazyScript : public gc::TenuredCell
         p_.hasDirectEval = true;
     }
 
-    bool usesArgumentsApplyAndThis() const {
-        return p_.usesArgumentsApplyAndThis;
+    bool isLikelyConstructorWrapper() const {
+        return p_.isLikelyConstructorWrapper;
     }
-    void setUsesArgumentsApplyAndThis() {
-        p_.usesArgumentsApplyAndThis = true;
+    void setLikelyConstructorWrapper() {
+        p_.isLikelyConstructorWrapper = true;
     }
 
     bool hasBeenCloned() const {
