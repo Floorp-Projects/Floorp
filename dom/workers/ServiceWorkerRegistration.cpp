@@ -22,6 +22,7 @@
 #include "nsIServiceWorkerManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsPIDOMWindow.h"
+#include "nsContentUtils.h"
 
 #include "WorkerPrivate.h"
 #include "Workers.h"
@@ -767,21 +768,10 @@ ServiceWorkerRegistrationMainThread::GetPushManager(ErrorResult& aRv)
       return nullptr;
     }
 
-    AutoJSAPI jsapi;
-    if (NS_WARN_IF(!jsapi.Init(globalObject))) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-
-    JSContext* cx = jsapi.cx();
-
-    JS::RootedObject globalJs(cx, globalObject->GetGlobalJSObject());
-    GlobalObject global(cx, globalJs);
-
     // TODO: bug 1148117.  This will fail when swr is exposed on workers
-    JS::Rooted<JSObject*> jsImplObj(cx);
-    nsCOMPtr<nsIGlobalObject> unused = ConstructJSImplementation(cx, "@mozilla.org/push/PushManager;1",
-                              global, &jsImplObj, aRv);
+    JS::Rooted<JSObject*> jsImplObj(nsContentUtils::RootingCxForThread());
+    ConstructJSImplementation("@mozilla.org/push/PushManager;1",
+                              globalObject, &jsImplObj, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
