@@ -575,10 +575,12 @@ public class LoadFaviconTask {
         final Bitmap scaled;
 
         // Notify listeners, scaling if required.
-        if ((flags & FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS) != 0) {
-            scaled = Bitmap.createScaledBitmap(image, targetWidth, targetWidth, true);
-        } else if (targetWidth != -1 && image != null &&  image.getWidth() != targetWidth) {
-            scaled = Favicons.getSizedFaviconFromCache(faviconURL, targetWidth);
+        if (targetWidth != -1 && image != null && image.getWidth() != targetWidth) {
+            if ((flags & FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS) != 0) {
+                scaled = Bitmap.createScaledBitmap(image, targetWidth, targetWidth, true);
+            } else {
+                scaled = Favicons.getSizedFaviconFromCache(faviconURL, targetWidth);
+            }
         } else {
             scaled = image;
         }
