@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Test for FIDO Universal Second Factor No Token</title>
+  <script src="u2futil.js"></script>
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+
+var challenge = new Uint8Array(16);
+window.crypto.getRandomValues(challenge);
+
+var regRequest = {
+  version: "U2F_V2",
+  challenge: bytesToBase64UrlSafe(challenge),
+};
+
+u2f.register(window.location.origin, [regRequest], [], function (regResponse) {
+  parent.postMessage(regResponse.errorCode, '*');
+});
+
+</script>
+
+</body>
+</html>
+
