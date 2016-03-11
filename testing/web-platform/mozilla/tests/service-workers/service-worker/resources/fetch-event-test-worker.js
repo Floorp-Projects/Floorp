@@ -91,10 +91,6 @@ function handleFragmentCheck(event) {
   event.respondWith(new Response(body));
 }
 
-function handleCache(event) {
-  event.respondWith(new Response(event.request.cache));
-}
-
 self.addEventListener('fetch', function(event) {
     var url = event.request.url;
     var handlers = [
@@ -110,8 +106,7 @@ self.addEventListener('fetch', function(event) {
       { pattern: '?form-post', fn: handleFormPost },
       { pattern: '?multiple-respond-with', fn: handleMultipleRespondWith },
       { pattern: '?used-check', fn: handleUsedCheck },
-      { pattern: '?fragment-check', fn: handleFragmentCheck },
-      { pattern: '?cache', fn: handleCache },
+      { pattern: '?fragment-check', fn: handleFragmentCheck }
     ];
 
     var handler = null;
