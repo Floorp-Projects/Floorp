@@ -383,6 +383,7 @@ class nsWindow::NPZCSupport final
     // Lock for keeping mWindow alive when accessed off of the Gecko thread.
     Mutex mWindowLock;
     NativePanZoomController::GlobalRef mNPZC;
+    int mPreviousButtons;
 
 public:
     typedef NativePanZoomController::Natives<NPZCSupport> Base;
@@ -392,6 +393,7 @@ public:
         : mWindow(aWindow)
         , mWindowLock("NPZCSupport")
         , mNPZC(aNPZC)
+        , mPreviousButtons(0)
     {
         if (mWindow->mNPZCSupport) {
             mWindow->mNPZCSupport->DetachFromWindow();
@@ -580,8 +582,51 @@ public:
         return true;
     }
 
-    bool HandleHoverEvent(int32_t aAction, int64_t aTime, int32_t aMetaState,
-                          float aX, float aY)
+    static MouseInput::ButtonType GetButtonType(int button)
+    {
+        MouseInput::ButtonType result = MouseInput::NONE;
+
+        switch (button) {
+            case widget::sdk::MotionEvent::BUTTON_PRIMARY:
+                result = MouseInput::LEFT_BUTTON;
+                break;
+            case widget::sdk::MotionEvent::BUTTON_SECONDARY:
+                result = MouseInput::RIGHT_BUTTON;
+                break;
+            case widget::sdk::MotionEvent::BUTTON_TERTIARY:
+                result = MouseInput::MIDDLE_BUTTON;
+                break;
+            default:
+                break;
+        }
+
+        return result;
+    }
+
+    static int16_t ConvertButtons(int buttons) {
+        int16_t result = 0;
+
+        if (buttons & widget::sdk::MotionEvent::BUTTON_PRIMARY) {
+            result |= WidgetMouseEventBase::eLeftButtonFlag;
+        }
+        if (buttons & widget::sdk::MotionEvent::BUTTON_SECONDARY) {
+            result |= WidgetMouseEventBase::eRightButtonFlag;
+        }
+        if (buttons & widget::sdk::MotionEvent::BUTTON_TERTIARY) {
+            result |= WidgetMouseEventBase::eMiddleButtonFlag;
+        }
+        if (buttons & widget::sdk::MotionEvent::BUTTON_BACK) {
+            result |= WidgetMouseEventBase::e4thButtonFlag;
+        }
+        if (buttons & widget::sdk::MotionEvent::BUTTON_FORWARD) {
+            result |= WidgetMouseEventBase::e5thButtonFlag;
+        }
+
+        return result;
+    }
+
+    bool HandleMouseEvent(int32_t aAction, int64_t aTime, int32_t aMetaState,
+                          float aX, float aY, int buttons)
     {
         MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
@@ -596,28 +641,42 @@ public:
             return false;
         }
 
-        MouseInput::MouseType type = MouseInput::MOUSE_NONE;
+        MouseInput::MouseType mouseType = MouseInput::MOUSE_NONE;
+        MouseInput::ButtonType buttonType = MouseInput::NONE;
         switch (aAction) {
+            case AndroidMotionEvent::ACTION_DOWN:
+                mouseType = MouseInput::MOUSE_DOWN;
+                buttonType = GetButtonType(buttons ^ mPreviousButtons);
+                mPreviousButtons = buttons;
+                break;
+            case AndroidMotionEvent::ACTION_UP:
+                mouseType = MouseInput::MOUSE_UP;
+                buttonType = GetButtonType(buttons ^ mPreviousButtons);
+                mPreviousButtons = buttons;
+                break;
+            case AndroidMotionEvent::ACTION_MOVE:
+                mouseType = MouseInput::MOUSE_MOVE;
+                break;
             case AndroidMotionEvent::ACTION_HOVER_MOVE:
-                type = MouseInput::MOUSE_MOVE;
+                mouseType = MouseInput::MOUSE_MOVE;
                 break;
             case AndroidMotionEvent::ACTION_HOVER_ENTER:
-                type = MouseInput::MOUSE_WIDGET_ENTER;
+                mouseType = MouseInput::MOUSE_WIDGET_ENTER;
                 break;
             case AndroidMotionEvent::ACTION_HOVER_EXIT:
-                type = MouseInput::MOUSE_WIDGET_EXIT;
+                mouseType = MouseInput::MOUSE_WIDGET_EXIT;
                 break;
             default:
                 break;
         }
 
-        if (type == MouseInput::MOUSE_NONE) {
+        if (mouseType == MouseInput::MOUSE_NONE) {
             return false;
         }
 
         ScreenPoint origin = ScreenPoint(aX, aY);
 
-        MouseInput input(type, MouseInput::NONE, 0, origin, aTime, TimeStamp(), GetModifiers(aMetaState));
+        MouseInput input(mouseType, buttonType, nsIDOMMouseEvent::MOZ_SOURCE_MOUSE, ConvertButtons(buttons), origin, aTime, TimeStamp(), GetModifiers(aMetaState));
 
         ScrollableLayerGuid guid;
         uint64_t blockId;
