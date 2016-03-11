@@ -202,16 +202,7 @@ public:
               const Nullable<ElementOrCSSPseudoElement>& aTarget,
               JS::Handle<JSObject*> aFrames,
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
-              ErrorResult& aRv)
-  {
-    TimingParams timingParams =
-      TimingParams::FromOptionsUnion(aOptions, aTarget, aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-    return ConstructKeyframeEffect<KeyframeEffectReadOnly>(
-             aGlobal, aTarget, aFrames, timingParams, aRv);
-  }
+              ErrorResult& aRv);
 
   void GetTarget(Nullable<OwningElementOrCSSPseudoElement>& aRv) const;
   void GetFrames(JSContext*& aCx,
@@ -354,7 +345,14 @@ protected:
 
   virtual ~KeyframeEffectReadOnly();
 
-  template<typename KeyframeEffectType>
+  template<class KeyframeEffectType, class OptionsType>
+  static already_AddRefed<KeyframeEffectType>
+  ConstructKeyframeEffect(const GlobalObject& aGlobal,
+                          const Nullable<ElementOrCSSPseudoElement>& aTarget,
+                          JS::Handle<JSObject*> aFrames,
+                          const OptionsType& aOptions,
+                          ErrorResult& aRv);
+  template<class KeyframeEffectType>
   static already_AddRefed<KeyframeEffectType>
   ConstructKeyframeEffect(const GlobalObject& aGlobal,
                           const Nullable<ElementOrCSSPseudoElement>& aTarget,
@@ -433,29 +431,16 @@ public:
               const Nullable<ElementOrCSSPseudoElement>& aTarget,
               JS::Handle<JSObject*> aFrames,
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
-              ErrorResult& aRv)
-  {
-    TimingParams timingParams =
-      TimingParams::FromOptionsUnion(aOptions, aTarget, aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-    return ConstructKeyframeEffect<KeyframeEffect>(
-      aGlobal, aTarget, aFrames, timingParams, aRv);
-  }
+              ErrorResult& aRv);
 
-  // More generalized version for Animatable.animate.
+  // More generalized version of Constructor for Animatable.animate.
   // Not exposed to content.
   static already_AddRefed<KeyframeEffect>
-  inline Constructor(const GlobalObject& aGlobal,
-                     const Nullable<ElementOrCSSPseudoElement>& aTarget,
-                     JS::Handle<JSObject*> aFrames,
-                     const TimingParams& aTiming,
-                     ErrorResult& aRv)
-  {
-    return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aTarget, aFrames,
-                                                   aTiming, aRv);
-  }
+  Constructor(const GlobalObject& aGlobal,
+              const Nullable<ElementOrCSSPseudoElement>& aTarget,
+              JS::Handle<JSObject*> aFrames,
+              const TimingParams& aTiming,
+              ErrorResult& aRv);
 
   void NotifySpecifiedTimingUpdated();
 
