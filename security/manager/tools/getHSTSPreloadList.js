@@ -259,8 +259,8 @@ function output(sortedStatuses, currentList) {
     writeTo(HEADER, fos);
     writeTo(getExpirationTimeString(), fos);
     writeTo(PREFIX, fos);
-    for (var status of sortedStatuses) {
 
+    for (let status in sortedStatuses) {
       // If we've encountered an error for this entry (other than the site not
       // sending an HSTS header), be safe and don't remove it from the list
       // (given that it was already on the list).
@@ -273,19 +273,26 @@ function output(sortedStatuses, currentList) {
         status.maxAge = MINIMUM_REQUIRED_MAX_AGE;
         status.includeSubdomains = currentList[status.name];
       }
+    }
 
-      if (status.maxAge >= MINIMUM_REQUIRED_MAX_AGE || status.forceInclude) {
-        writeEntry(status, fos);
-        dump("INFO: " + status.name + " ON the preload list\n");
-        if (status.forceInclude && status.error != ERROR_NONE) {
-          writeTo(status.name + ": " + errorToString(status) + " (error "
-                  + "ignored - included regardless)\n", eos);
-        }
-      }
-      else {
+    // Filter out entries we aren't including.
+    var includedStatuses = sortedStatuses.filter(function (status) {
+      if (status.maxAge < MINIMUM_REQUIRED_MAX_AGE && !status.forceInclude) {
         dump("INFO: " + status.name + " NOT ON the preload list\n");
         writeTo(status.name + ": " + errorToString(status) + "\n", eos);
+        return false;
       }
+
+      dump("INFO: " + status.name + " ON the preload list\n");
+      if (status.forceInclude && status.error != ERROR_NONE) {
+        writeTo(status.name + ": " + errorToString(status) + " (error "
+                + "ignored - included regardless)\n", eos);
+      }
+      return true;
+    });
+
+    for (var status of includedStatuses) {
+      writeEntry(status, fos);
     }
     writeTo(POSTFIX, fos);
     FileUtils.closeSafeFileOutputStream(fos);
