@@ -296,6 +296,8 @@ function editableTextTest(aID)
       invoke: aInvokeFunc,
       finalCheck: function finalCheck()
       {
+        //dumpTree(aID, `'${aID}' tree:`);
+
         aChecker.check();
         et.unwrapNextTest(); // replace dummy invoker on real invoker object.
       },
