@@ -894,26 +894,6 @@ USE_DEPENDENT_LIBS=1
 
 _PLATFORM_DEFAULT_TOOLKIT=cairo-gtk3
 
-case "$HOST_OS_ARCH" in
-SunOS)
-    SOLARIS_SUNPRO_CC=
-    SOLARIS_SUNPRO_CXX=
-    if test -z "$GNU_CC"; then
-        if test "`$CC -V 2>&1 | egrep -c 'Sun.*C '`" != "0"; then
-            SOLARIS_SUNPRO_CC=1
-       fi
-    fi
-
-    if test -z "$GNU_CXX"; then
-       if test "`$CXX -V 2>&1 | egrep -c 'Sun.*C\+\+ '`" != "0"; then
-           SOLARIS_SUNPRO_CXX=1
-       fi
-    fi
-    AC_SUBST(SOLARIS_SUNPRO_CC)
-    AC_SUBST(SOLARIS_SUNPRO_CXX)
-    ;;
-esac
-
 dnl Configure platform-specific CPU architecture compiler options.
 dnl ==============================================================
 if test "$COMPILE_ENVIRONMENT"; then
@@ -1189,15 +1169,6 @@ if test "$GNU_CC"; then
 
     ASFLAGS="$ASFLAGS $_DEFINES_CFLAGS"
 
-elif test "$SOLARIS_SUNPRO_CC"; then
-    DSO_CFLAGS=''
-    if test "$CPU_ARCH" = "sparc"; then
-        # for Sun Studio on Solaris/SPARC
-        DSO_PIC_CFLAGS='-xcode=pic32'
-    else
-        DSO_PIC_CFLAGS='-KPIC'
-    fi
-    _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
 else
     MKSHLIB='$(LD) $(DSO_LDOPTS) -h $(DSO_SONAME) -o $@'
     MKCSHLIB='$(LD) $(DSO_LDOPTS) -h $(DSO_SONAME) -o $@'
@@ -1539,61 +1510,6 @@ dnl System overrides of the defaults for target
 dnl ========================================================
 
 case "$target" in
-*-aix*)
-    AC_DEFINE(AIX)
-    if test ! "$GNU_CC"; then
-        if test ! "$HAVE_64BIT_BUILD"; then
-            # Compiling with Visual Age C++ object model compat is the
-            # default. To compile with object model ibm, add
-            # AIX_OBJMODEL=ibm to .mozconfig.
-            if test "$AIX_OBJMODEL" = "ibm"; then
-                CXXFLAGS="$CXXFLAGS -qobjmodel=ibm"
-            else
-                AIX_OBJMODEL=compat
-            fi
-        else
-            AIX_OBJMODEL=compat
-        fi
-        AC_SUBST(AIX_OBJMODEL)
-        DSO_LDOPTS='-qmkshrobj=1'
-        DSO_CFLAGS='-qflag=w:w'
-        DSO_PIC_CFLAGS=
-        LDFLAGS="$LDFLAGS -Wl,-brtl -blibpath:/usr/lib:/lib"
-        MOZ_FIX_LINK_PATHS=
-        MKSHLIB='$(CXX) $(DSO_LDOPTS) -o $@'
-        MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
-        if test "$COMPILE_ENVIRONMENT"; then
-            AC_LANG_SAVE
-            AC_LANG_CPLUSPLUS
-            AC_MSG_CHECKING([for IBM XLC/C++ compiler version >= 9.0.0.7])
-            AC_TRY_COMPILE([],
-                [#if (__IBMCPP__ < 900)
-                 #error "Bad compiler"
-                 #endif],
-                _BAD_COMPILER=,_BAD_COMPILER=1)
-            if test -n "$_BAD_COMPILER"; then
-                AC_MSG_RESULT([no])
-                AC_MSG_ERROR([IBM XLC/C++ 9.0.0.7 or higher is required to build.])
-            else
-                AC_MSG_RESULT([yes])
-            fi
-            AC_LANG_RESTORE
-            TARGET_COMPILER_ABI="ibmc"
-            CC_VERSION=`lslpp -Lcq vac.C 2>/dev/null | awk -F: '{ print $3 }'`
-            CXX_VERSION=`lslpp -Lcq vacpp.cmp.core 2>/dev/null | awk -F: '{ print $3 }'`
-        fi # COMPILE_ENVIRONMENT
-    fi
-    case "${target_os}" in
-    aix4.1*)
-        DLL_SUFFIX='_shr.a'
-        ;;
-    esac
-    if test "$COMPILE_ENVIRONMENT"; then
-        MOZ_CHECK_HEADERS(sys/inttypes.h)
-    fi # COMPILE_ENVIRONMENT
-    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    ;;
-
 *-darwin*)
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
@@ -1671,43 +1587,6 @@ case "$target" in
     LDFLAGS=$_SAVE_LDFLAGS
 
     MOZ_FIX_LINK_PATHS="-Wl,-executable_path,${DIST}/bin"
-    ;;
-
-ia64*-hpux*)
-    DLL_SUFFIX=".so"
-    if test ! "$GNU_CC"; then
-       DSO_LDOPTS='-b'
-       DSO_CFLAGS=""
-       DSO_PIC_CFLAGS=
-       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
-       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
-       CXXFLAGS="$CXXFLAGS -Wc,-ansi_for_scope,on"
-    else
-       DSO_LDOPTS='-b -E'
-       MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
-       MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
-    fi
-    MOZ_FIX_LINK_PATHS=
-    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    AC_DEFINE(_LARGEFILE64_SOURCE)
-    ;;
-
-*-hpux*)
-    DLL_SUFFIX=".sl"
-    if test ! "$GNU_CC"; then
-        DSO_LDOPTS='-b -Wl,+s'
-        DSO_CFLAGS=""
-        DSO_PIC_CFLAGS="+Z"
-        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -L$(DIST)/bin -o $@'
-        MKCSHLIB='$(LD) -b +s -L$(DIST)/bin -o $@'
-        CXXFLAGS="$CXXFLAGS -Wc,-ansi_for_scope,on"
-    else
-        DSO_LDOPTS='-b -E +s'
-        MKSHLIB='$(LD) $(DSO_LDOPTS) -L$(DIST)/bin -L$(DIST)/lib -o $@'
-        MKCSHLIB='$(LD) $(DSO_LDOPTS) -L$(DIST)/bin -L$(DIST)/lib -o $@'
-    fi
-    MOZ_POST_PROGRAM_COMMAND='chatr +s enable'
-    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
 
 *-android*|*-linuxandroid*)
@@ -2080,93 +1959,6 @@ ia64*-hpux*)
     fi
     ;;
 
-*-solaris*)
-    AC_DEFINE(SOLARIS)
-    MOZ_FIX_LINK_PATHS=
-    # $ORIGIN/.. is for shared libraries under components/ to locate shared
-    # libraries one level up (e.g. libnspr4.so)
-    if test "$SOLARIS_SUNPRO_CC"; then
-       LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..' -z lazyload -z combreloc -z muldefs"
-       LIBS="-lCrun -lCstd -lc $LIBS"
-       AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-       CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all -D__FUNCTION__=__func__"
-       CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic,extensions,no%except -norunpath -D__FUNCTION__=__func__ -template=no%extdef"
-       LDFLAGS="-xildoff $LDFLAGS"
-       MMX_FLAGS="-xarch=mmx -xO4"
-       SSE_FLAGS="-xarch=sse"
-       SSE2_FLAGS="-xarch=ssei2 -xO4"
-       if test -z "$CROSS_COMPILE" -a -f /usr/lib/ld/map.noexstk; then
-           _SAVE_LDFLAGS=$LDFLAGS
-           LDFLAGS="-M /usr/lib/ld/map.noexstk $LDFLAGS"
-           AC_TRY_LINK([#include <stdio.h>],
-                       [printf("Hello World\n");],
-                       ,
-                       [LDFLAGS=$_SAVE_LDFLAGS])
-       fi
-       MOZ_OPTIMIZE_FLAGS="-xO4"
-       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $(DSO_SONAME) -o $@'
-       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $(DSO_SONAME) -o $@'
-       DSO_LDOPTS='-G'
-       AR_LIST="$AR t"
-       AR_EXTRACT="$AR x"
-       AR_DELETE="$AR d"
-       AR='$(CXX) -xar'
-       AR_FLAGS='-o $@'
-       AS='/usr/ccs/bin/as'
-       ASFLAGS="$ASFLAGS -K PIC -L -P -D_ASM -D__STDC__=0"
-       AS_DASH_C_FLAG=''
-       TARGET_COMPILER_ABI="sunc"
-       CC_VERSION=`$CC -V 2>&1 | grep '^cc:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
-       CXX_VERSION=`$CXX -V 2>&1 | grep '^CC:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
-       AC_MSG_CHECKING([for Sun C++ compiler version >= 5.9])
-       AC_LANG_SAVE
-       AC_LANG_CPLUSPLUS
-       AC_TRY_COMPILE([],
-           [#if (__SUNPRO_CC < 0x590)
-           #error "Denied"
-           #endif],
-           _BAD_COMPILER=,_BAD_COMPILER=1)
-       if test -n "$_BAD_COMPILER"; then
-           _res="no"
-           AC_MSG_ERROR([Sun C++ 5.9 (Sun Studio 12) or higher is required to build. Your compiler version is $CXX_VERSION .])
-       else
-           _res="yes"
-       fi
-       AC_TRY_COMPILE([],
-           [#if (__SUNPRO_CC >= 0x5100)
-           #error "Sun C++ 5.10 or above"
-           #endif],
-           _ABOVE_SS12U1=,_ABOVE_SS12U1=1)
-       if test "$_ABOVE_SS12U1"; then
-           # disable xannotate
-           CXXFLAGS="$CXXFLAGS -xannotate=no"
-       fi
-       AC_MSG_RESULT([$_res])
-       AC_LANG_RESTORE
-    else
-       LDFLAGS="$LDFLAGS -Wl,-z,ignore -Wl,-R,'\$\$ORIGIN:\$\$ORIGIN/..' -Wl,-z,lazyload -Wl,-z,combreloc -Wl,-z,muldefs"
-       LIBS="-lc $LIBS"
-       ASFLAGS="$ASFLAGS -fPIC"
-       DSO_LDOPTS='-shared'
-       WARNINGS_AS_ERRORS='-Werror'
-       _WARNINGS_CFLAGS=''
-       _WARNINGS_CXXFLAGS=''
-    fi
-    ;;
-
-*-sunos*)
-    DSO_LDOPTS='-Bdynamic'
-    MKSHLIB='-$(LD) $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='-$(LD) $(DSO_LDOPTS) -o $@'
-    AC_DEFINE(SUNOS4)
-    AC_DEFINE(SPRINTF_RETURNS_STRING)
-    case "$(target_os)" in
-    sunos4.1*)
-        DLL_SUFFIX='.so.1.0'
-        ;;
-    esac
-    ;;
-
 esac
 
 AC_SUBST_LIST(MMX_FLAGS)
@@ -2196,17 +1988,6 @@ dnl ========================================================
 case "$target" in
     *-linux*|*-kfreebsd*-gnu|*-gnu*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
-        ;;
-    *-solaris*)
-        if test -z "$GNU_CC"; then
-         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-M $(BUILD_TOOLS)/gnu-ld-scripts/components-mapfile'
-        else
-         if test -z "$GCC_USE_GNU_LD"; then
-          MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-M -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-mapfile'
-         else
-          MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
-         fi
-        fi
         ;;
     *-darwin*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-exported_symbols_list -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-export-list'
@@ -2260,11 +2041,6 @@ if test "$GNU_CC" -a "$OS_TARGET" != WINNT; then
     ;;
   esac
 fi         # GNU_CC
-
-# visibility hidden flag for Sun Studio on Solaris
-if test "$SOLARIS_SUNPRO_CC"; then
-VISIBILITY_FLAGS='-xldscope=hidden'
-fi         # Sun Studio on Solaris
 
 case "${OS_TARGET}" in
 WINNT|Darwin|Android)
@@ -2367,13 +2143,7 @@ MOZ_LINUX_PERF_EVENT
 
 dnl Checks for libraries.
 dnl ========================================================
-case $target in
-*-hpux11.*)
-    ;;
-*)
-    AC_CHECK_LIB(c_r, gethostbyname_r)
-    ;;
-esac
+AC_CHECK_LIB(c_r, gethostbyname_r)
 
 dnl We don't want to link with libdl even if it's present on OS X, since
 dnl it's not used and not part of the default installation. OS/2 has dlfcn
@@ -2397,15 +2167,7 @@ AC_CHECK_FUNCS(dladdr memmem)
 CFLAGS="$_SAVE_CFLAGS"
 
 if test ! "$GNU_CXX"; then
-
-    case $target in
-    *-aix*)
-        AC_CHECK_LIB(C_r, demangle)
-        ;;
-     *)
-        AC_CHECK_LIB(C, demangle)
-        ;;
-     esac
+    AC_CHECK_LIB(C, demangle)
 fi
 
 AC_CHECK_LIB(socket, socket)
@@ -2437,14 +2199,6 @@ else
         AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt $XT_LIBS"],
             [MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XT_LIBS $XLIBS)
         ])
-
-    # AIX needs the motif library linked before libXt to prevent
-    # crashes in plugins linked against Motif - Bug #98892
-    case "${target_os}" in
-    aix*)
-        XT_LIBS="-lXm $XT_LIBS"
-        ;;
-    esac
 
     dnl ========================================================
     dnl = Check for XShm
@@ -2578,21 +2332,6 @@ then
             AC_DEFINE(_REENTRANT)
             ;;
 
-        *-aix4.3*|*-aix5*)
-            AC_DEFINE(_REENTRANT)
-            ;;
-
-        *-hpux11.*)
-            AC_DEFINE(_REENTRANT)
-            ;;
-
-        *-*-solaris*)
-            AC_DEFINE(_REENTRANT)
-            if test "$SOLARIS_SUNPRO_CC"; then
-                CFLAGS="$CFLAGS -mt"
-                CXXFLAGS="$CXXFLAGS -mt"
-            fi
-            ;;
     esac
     LDFLAGS="${_PTHREAD_LDFLAGS} ${LDFLAGS}"
     AC_SUBST(MOZ_USE_PTHREADS)
@@ -5659,9 +5398,6 @@ i?86-*-linux*|x86_64-*-linux*|arm-*-linux*)
 *-android*|*-linuxandroid*)
   MOZ_CRASHREPORTER=1
   ;;
-*solaris*)
-  MOZ_CRASHREPORTER=1
-  ;;
 esac
 
 MOZ_ARG_DISABLE_BOOL(crashreporter,
@@ -5679,7 +5415,7 @@ fi
 if test -n "$MOZ_CRASHREPORTER"; then
    AC_DEFINE(MOZ_CRASHREPORTER)
 
-  if test "$OS_TARGET" = "Linux" -o "$OS_ARCH" = "SunOS" && \
+  if test "$OS_TARGET" = "Linux" && \
     test -z "$SKIP_LIBRARY_CHECKS"; then
     PKG_CHECK_MODULES(MOZ_GTHREAD, gthread-2.0)
   fi
@@ -6838,9 +6574,6 @@ else
   *-netbsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
-  *-solaris*)
-    AC_DEFINE(MOZ_MEMORY_SOLARIS)
-    ;;
   *-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     export MOZ_NO_DEBUG_RTL=1
@@ -7485,14 +7218,6 @@ if test -n "$INTEL_CC"; then
   PROFILE_USE_LDFLAGS=
 fi
 
-dnl Sun Studio on Solaris
-if test "$SOLARIS_SUNPRO_CC"; then
-  PROFILE_GEN_CFLAGS="-xprofile=collect:$_objdir/$enable_application"
-  PROFILE_GEN_LDFLAGS="-xprofile=collect:$_objdir/$enable_application"
-  PROFILE_USE_CFLAGS="-xprofile=use:$_objdir/$enable_application"
-  PROFILE_USE_LDFLAGS="-xprofile=use:$_objdir/$enable_application"
-fi
-
 AC_SUBST(PROFILE_GEN_CFLAGS)
 AC_SUBST(PROFILE_GEN_LDFLAGS)
 AC_SUBST(PROFILE_USE_CFLAGS)
@@ -7535,9 +7260,6 @@ MOZ_ARG_HEADER(Build dependencies)
 
 if test "$GNU_CC" -a "$GNU_CXX"; then
   _DEPEND_CFLAGS='-MD -MP -MF $(MDDEPDIR)/$(@F).pp'
-dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
-elif test "$SOLARIS_SUNPRO_CC"; then
-  _DEPEND_CFLAGS=
 else
   dnl Don't override this for MSVC
   if test -z "$_WIN32_MSVC"; then
@@ -7641,8 +7363,7 @@ MOZ_ENABLE_SKIA=)
 
 dnl Skia GPU support may not reliably build on certain *BSDs (see bug 1234494).
 if test "${OS_TARGET}" = "OpenBSD" -o \
-        "${OS_TARGET}" = "NetBSD" -o \
-        "${OS_ARCH}" = "SunOS"; then
+        "${OS_TARGET}" = "NetBSD"; then \
     MOZ_DISABLE_SKIA_GPU=1
 else
     MOZ_DISABLE_SKIA_GPU=
@@ -7965,7 +7686,7 @@ case "$OS_TARGET" in
       NECKO_WIFI=1
     fi
     ;;
-  DragonFly|FreeBSD|SunOS|WINNT)
+  DragonFly|FreeBSD|WINNT)
     NECKO_WIFI=1
     ;;
   Linux)
