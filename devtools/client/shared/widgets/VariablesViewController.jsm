@@ -675,12 +675,12 @@ VariablesViewController.prototype = {
    *
    * This function will empty the variables view.
    *
-   * @param object aOptions
+   * @param object options
    *        Options for the contents of the view:
    *        - objectActor: the grip of the new ObjectActor to show.
    *        - rawObject: the raw object to show.
    *        - label: the label for the inspected object.
-   * @param object aConfiguration
+   * @param object configuration
    *        Additional options for the controller:
    *        - overrideValueEvalMacro: @see _setEvaluationMacros
    *        - getterOrSetterEvalMacro: @see _setEvaluationMacros
@@ -689,24 +689,28 @@ VariablesViewController.prototype = {
    *         - variable: the created Variable.
    *         - expanded: the Promise that resolves when the variable expands.
    */
-  setSingleVariable: function(aOptions, aConfiguration = {}) {
-    this._setEvaluationMacros(aConfiguration);
+  setSingleVariable: function(options, configuration = {}) {
+    this._setEvaluationMacros(configuration);
     this.view.empty();
 
-    let scope = this.view.addScope(aOptions.label);
+    let scope = this.view.addScope(options.label);
     scope.expanded = true; // Expand the scope by default.
     scope.locked = true; // Prevent collapsing the scope.
 
     let variable = scope.addItem("", { enumerable: true });
     let populated;
 
-    if (aOptions.objectActor) {
+    if (options.objectActor) {
       // Save objectActor for properties filtering
-      this.objectActor = aOptions.objectActor;
-      populated = this.populate(variable, aOptions.objectActor);
-      variable.expand();
-    } else if (aOptions.rawObject) {
-      variable.populate(aOptions.rawObject, { expanded: true });
+      this.objectActor = options.objectActor;
+      if (VariablesView.isPrimitive({ value: this.objectActor })) {
+        populated = promise.resolve();
+      } else {
+        populated = this.populate(variable, options.objectActor);
+        variable.expand();
+      }
+    } else if (options.rawObject) {
+      variable.populate(options.rawObject, { expanded: true });
       populated = promise.resolve();
     }
 
