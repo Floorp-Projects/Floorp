@@ -39,7 +39,11 @@ add_task(function* () {
                                               getState().snapshots[0]));
   dispatch(selectSnapshotForDiffingAndRefresh(heapWorker,
                                               getState().snapshots[1]));
+
   ok(getState().diffing, "We should be in diffing view");
+
+  yield waitUntilAction(store, actions.TAKE_CENSUS_DIFF_END);
+  ok(true, "Received TAKE_CENSUS_DIFF_END action");
 
   ok(true, "Dispatch clearSnapshots action");
   let deleteEvents = Promise.all([
