@@ -695,12 +695,11 @@ _PLATFORM_DEFAULT_TOOLKIT=cairo-gtk2
 if test -n "$CROSS_COMPILE"; then
     OS_TARGET="${target_os}"
     OS_ARCH=`echo $target_os | sed -e 's|/|_|g'`
-    OS_RELEASE=
     case "${target_os}" in
         linux*)       OS_ARCH=Linux OS_TARGET=Linux ;;
         kfreebsd*-gnu) OS_ARCH=GNU_kFreeBSD OS_TARGET=GNU/kFreeBSD ;;
         gnu*)         OS_ARCH=GNU ;;
-        solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
+        solaris*)     OS_ARCH=SunOS ;;
         mingw*)       OS_ARCH=WINNT OS_TARGET=WINNT ;;
         darwin*)      OS_ARCH=Darwin OS_TARGET=Darwin ;;
         dragonfly*)   OS_ARCH=DragonFly OS_TARGET=DragonFly ;;
@@ -714,7 +713,6 @@ if test -n "$CROSS_COMPILE"; then
 else
     OS_TARGET=`uname -s`
     OS_ARCH=`uname -s | sed -e 's|/|_|g'`
-    OS_RELEASE=`uname -r`
 fi
 
 # Before this used `uname -m` when not cross compiling
@@ -738,8 +736,6 @@ HOST_OS_ARCH=`echo $host_os | sed -e 's|/|_|g'`
 # OS_ARCH
 # OS_TEST
 # OS_TARGET
-# OS_RELEASE
-# OS_MINOR_RELEASE
 #
 
 case "$HOST_OS_ARCH" in
@@ -797,33 +793,14 @@ WINNT)
     fi
     ;;
 Windows_NT)
-#
-# If uname -s returns "Windows_NT", we assume that we are using
-# the uname.exe in MKS toolkit.
-#
-# The -r option of MKS uname only returns the major version number.
-# So we need to use its -v option to get the minor version number.
-# Moreover, it doesn't have the -p option, so we need to use uname -m.
-#
     OS_ARCH=WINNT
     OS_TARGET=WINNT
-    OS_MINOR_RELEASE=`uname -v`
-    if test "$OS_MINOR_RELEASE" = "00"; then
-        OS_MINOR_RELEASE=0
-    fi
-    OS_RELEASE="${OS_RELEASE}.${OS_MINOR_RELEASE}"
     ;;
 MINGW*_NT*)
-#
-# If uname -s returns MINGW32_NT-5.1, we assume that we are using
-# the uname.exe in the MSYS tools.
-#
-    OS_RELEASE=`expr $OS_ARCH : '.*NT-\(.*\)'`
     OS_ARCH=WINNT
     OS_TARGET=WINNT
     ;;
 AIX)
-    OS_RELEASE=`uname -v`.`uname -r`
     OS_TEST=${target_cpu}
     if test -z "$GNU_CC"; then
         if test "`$CC -qversion 2>&1 | egrep -c 'IBM XL'`" != "0"; then
@@ -3428,7 +3405,6 @@ AC_SUBST(TARGET_OS)
 AC_SUBST(TARGET_XPCOM_ABI)
 AC_SUBST(OS_TARGET)
 AC_SUBST(OS_ARCH)
-AC_SUBST(OS_RELEASE)
 AC_SUBST(OS_TEST)
 AC_SUBST(CPU_ARCH)
 AC_SUBST(INTEL_ARCHITECTURE)
