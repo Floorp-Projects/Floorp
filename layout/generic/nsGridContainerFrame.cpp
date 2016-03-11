@@ -5195,6 +5195,41 @@ nsGridContainerFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
+void
+nsGridContainerFrame::MergeSortedOverflow(nsFrameList& aList)
+{
+  if (aList.IsEmpty()) {
+    return;
+  }
+  MOZ_ASSERT(!aList.FirstChild()->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER),
+             "this is the wrong list to put this child frame");
+  MOZ_ASSERT(aList.FirstChild()->GetParent() == this);
+  nsFrameList* overflow = GetOverflowFrames();
+  if (overflow) {
+    ::MergeSortedFrameLists(*overflow, aList, GetContent());
+  } else {
+    SetOverflowFrames(aList);
+  }
+}
+
+void
+nsGridContainerFrame::MergeSortedExcessOverflowContainers(nsFrameList& aList)
+{
+  if (aList.IsEmpty()) {
+    return;
+  }
+  MOZ_ASSERT(aList.FirstChild()->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER),
+             "this is the wrong list to put this child frame");
+  MOZ_ASSERT(aList.FirstChild()->GetParent() == this);
+  nsFrameList* eoc = GetPropTableFrames(ExcessOverflowContainersProperty());
+  if (eoc) {
+    ::MergeSortedFrameLists(*eoc, aList, GetContent());
+  } else {
+    SetPropTableFrames(new (PresContext()->PresShell()) nsFrameList(aList),
+                       ExcessOverflowContainersProperty());
+  }
+}
+
 #ifdef DEBUG
 static bool
 FrameWantsToBeInAnonymousGridItem(nsIFrame* aFrame)
