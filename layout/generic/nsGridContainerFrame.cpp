@@ -5260,43 +5260,27 @@ FrameWantsToBeInAnonymousGridItem(nsIFrame* aFrame)
   return aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
 }
 
-// Debugging method, to let us assert that our anonymous grid items are
-// set up correctly -- in particular, we assert:
+// Debug-only override, to let us assert that our anonymous grid items are
+// set up correctly by the frame constructor -- in particular, we assert:
 //  (1) we don't have any inline non-replaced children
 //  (2) we don't have any consecutive anonymous grid items
 //  (3) we don't have any empty anonymous grid items
 //  (4) all children are on the expected child lists
 void
-nsGridContainerFrame::SanityCheckAnonymousGridItems() const
+nsGridContainerFrame::SetInitialChildList(ChildListID  aListID,
+                                          nsFrameList& aChildList)
 {
-  ChildListIDs noCheckLists = kAbsoluteList | kFixedList |
-    kOverflowContainersList | kExcessOverflowContainersList;
-  ChildListIDs checkLists = kPrincipalList | kOverflowList;
-  for (nsIFrame::ChildListIterator childLists(this);
-       !childLists.IsDone(); childLists.Next()) {
-    if (!checkLists.Contains(childLists.CurrentID())) {
-      MOZ_ASSERT(noCheckLists.Contains(childLists.CurrentID()),
-                 "unexpected non-empty child list");
-      continue;
-    }
+  ChildListIDs supportedLists = kAbsoluteList | kFixedList | kPrincipalList;
+  MOZ_ASSERT(supportedLists.Contains(aListID), "unexpected child list");
 
+  if (aListID == kPrincipalList) {
     bool prevChildWasAnonGridItem = false;
-    nsFrameList children = childLists.CurrentList();
-    for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
+    for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
       nsIFrame* child = e.get();
       MOZ_ASSERT(!FrameWantsToBeInAnonymousGridItem(child),
-                 "frame wants to be inside an anonymous grid item, "
-                 "but it isn't");
+                 "frame wants to be inside an anonymous grid item, but it isn't");
       if (child->StyleContext()->GetPseudo() ==
             nsCSSAnonBoxes::anonymousGridItem) {
-/*
-  XXX haven't decided yet whether to reorder children or not.
-  XXX If we do, we want this assertion instead of the one below.
-        MOZ_ASSERT(!prevChildWasAnonGridItem ||
-                   HasAnyStateBits(NS_STATE_GRID_CHILDREN_REORDERED),
-                   "two anon grid items in a row (shouldn't happen, unless our "
-                   "children have been reordered with the 'order' property)");
-*/
         MOZ_ASSERT(!prevChildWasAnonGridItem, "two anon grid items in a row");
         nsIFrame* firstWrappedChild = child->PrincipalChildList().FirstChild();
         MOZ_ASSERT(firstWrappedChild,
@@ -5307,6 +5291,13 @@ nsGridContainerFrame::SanityCheckAnonymousGridItems() const
       }
     }
   }
+
+  return nsContainerFrame::SetInitialChildList(aListID, aChildList);
+}
+
+void
+nsGridContainerFrame::SanityCheckAnonymousGridItems() const
+{
 }
 
 void
