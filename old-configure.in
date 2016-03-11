@@ -2351,9 +2351,6 @@ ia64*-hpux*)
        WARNINGS_AS_ERRORS='-Werror'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
-       if test "$OS_RELEASE" = "5.3"; then
-           AC_DEFINE(MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES)
-       fi
     fi
     if test "$OS_RELEASE" = "5.5.1"; then
         AC_DEFINE(NEED_USLEEP_PROTOTYPE)
