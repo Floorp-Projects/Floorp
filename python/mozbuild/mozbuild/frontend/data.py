@@ -366,6 +366,9 @@ class BaseProgram(Linkable):
         self.program = program
         self.is_unit_test = is_unit_test
 
+    def __repr__(self):
+        return '<%s: %s/%s>' % (type(self).__name__, self.relobjdir, self.program)
+
 
 class Program(BaseProgram):
     """Context derived container object for PROGRAM"""
@@ -414,6 +417,9 @@ class BaseLibrary(Linkable):
             self.import_name = self.lib_name
 
         self.refs = []
+
+    def __repr__(self):
+        return '<%s: %s/%s>' % (type(self).__name__, self.relobjdir, self.lib_name)
 
 
 class Library(BaseLibrary):
