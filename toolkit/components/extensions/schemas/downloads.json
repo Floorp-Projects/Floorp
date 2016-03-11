@@ -575,7 +575,6 @@
       {
         "name": "showDefaultFolder",
         "type": "function",
-        "unsupported": true,
         "parameters": []
       },
       {

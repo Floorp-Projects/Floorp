@@ -446,6 +446,17 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
         });
       },
 
+      showDefaultFolder() {
+        Downloads.getPreferredDownloadsDirectory().then(dir => {
+          let dirobj = new FileUtils.File(dir);
+          if (dirobj.isDirectory()) {
+            dirobj.launch();
+          } else {
+            throw new Error(`Download directory ${dirobj.path} is not actually a directory`);
+          }
+        }).catch(Cu.reportError);
+      },
+
       // When we do open(), check for additional downloads.open permission.
       // i.e.:
       // open(downloadId) {
