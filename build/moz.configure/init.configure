@@ -96,7 +96,7 @@ def mozconfig(current_project, mozconfig, old_configure, build_env, help):
     # OLD_CONFIGURE path, which points to js/src/old-configure.
     # I expect we'll have figured things out for mozconfigs well before
     # old-configure dies.
-    if os.path.dirname(old_configure[0]).endswith('/js/src'):
+    if os.path.dirname(os.path.abspath(old_configure[0])).endswith('/js/src'):
         return {'path': None}
 
     loader = MozconfigLoader(build_env['TOPSRCDIR'])
