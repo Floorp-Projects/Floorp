@@ -115,6 +115,10 @@ def mozconfig(current_project, mozconfig, old_configure, build_env, help):
 def old_configure_assignments(help):
     return []
 
+@depends('--help')
+def extra_old_configure_args(help):
+    return []
+
 @template
 def add_old_configure_assignment(var, value):
     @depends(old_configure_assignments)
@@ -122,6 +126,12 @@ def add_old_configure_assignment(var, value):
     def add_assignment(assignments):
         from mozbuild.shellutil import quote
         assignments.append('%s=%s' % (var, quote(value)))
+
+@template
+def add_old_configure_arg(arg):
+    @depends(extra_old_configure_args)
+    def add_arg(args):
+        args.append(arg)
 
 
 option(env='PYTHON', nargs=1, help='Python interpreter')
@@ -301,21 +311,15 @@ def build_project(include_project_configure, build_env, help):
 
 
 # This is temporary until js/src/configure and configure are merged.
-@depends(build_project)
-def extra_old_configure_args(build_project):
-    if build_project != 'js':
-        return []
-    return False
-
 # Use instead of option() in js/moz.configure
 @template
 def js_option(*args, **kwargs):
     opt = option(*args, **kwargs)
 
-    @depends(opt.option, extra_old_configure_args)
-    def js_option(value, extra_old_configure_args):
-        if extra_old_configure_args is not False:
-            extra_old_configure_args.append(value.format(opt.option))
+    @depends(opt.option, build_project)
+    def js_option(value, build_project):
+        if build_project != 'js':
+            add_old_configure_arg(value.format(opt.option))
 
 
 include(include_project_configure)
