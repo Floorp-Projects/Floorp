@@ -1344,18 +1344,6 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Grid
       }
     }
 
-    void ClearOccupied()
-    {
-      const size_t numRows = mCells.Length();
-      for (size_t i = 0; i < numRows; ++i) {
-        nsTArray<Cell>& cellsInRow = mCells[i];
-        const size_t numCols = cellsInRow.Length();
-        for (size_t j = 0; j < numCols; ++j) {
-          cellsInRow[j].mIsOccupied = false;
-        }
-      }
-    }
-
     uint32_t IsEmptyCol(uint32_t aCol) const
     {
       for (auto& row : mCells) {
@@ -2308,7 +2296,7 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowState& aState,
 {
   mAreas = aState.mFrame->GetImplicitNamedAreas();
   const nsStylePosition* const gridStyle = aState.mGridStyle;
-  mCellMap.ClearOccupied();
+  MOZ_ASSERT(mCellMap.mCells.IsEmpty(), "unexpected entries in cell map");
 
   // http://dev.w3.org/csswg/css-grid/#grid-definition
   // Initialize the end lines of the Explicit Grid (mExplicitGridCol[Row]End).
