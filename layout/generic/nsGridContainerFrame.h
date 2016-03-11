@@ -152,6 +152,11 @@ protected:
   nscoord IntrinsicISize(nsRenderingContext* aRenderingContext,
                          IntrinsicISizeType  aConstraint);
 
+  // Helper to move child frames into the kOverflowList.
+  void MergeSortedOverflow(nsFrameList& aList);
+  // Helper to move child frames into the kExcessOverflowContainersList:.
+  void MergeSortedExcessOverflowContainers(nsFrameList& aList);
+
 #ifdef DEBUG
   void SanityCheckAnonymousGridItems() const;
 #endif // DEBUG
