@@ -475,44 +475,67 @@ GeckoChildProcessHost::SetAlreadyDead()
 
 int32_t GeckoChildProcessHost::mChildCounter = 0;
 
-//
-// Wrapper function for handling GECKO_SEPARATE_NSPR_LOGS
-//
-bool
-GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, base::ProcessArchitecture arch)
+void
+GeckoChildProcessHost::SetChildLogName(const char* varName, const char* origLogName)
 {
-  // If NSPR log files are not requested, we're done.
-  const char* origLogName = PR_GetEnv("NSPR_LOG_FILE");
-  if (!origLogName) {
-    return PerformAsyncLaunchInternal(aExtraOpts, arch);
-  }
-
   // We currently have no portable way to launch child with environment
   // different than parent.  So temporarily change NSPR_LOG_FILE so child
   // inherits value we want it to have. (NSPR only looks at NSPR_LOG_FILE at
   // startup, so it's 'safe' to play with the parent's environment this way.)
-  nsAutoCString setChildLogName("NSPR_LOG_FILE=");
+  nsAutoCString setChildLogName(varName);
   setChildLogName.Append(origLogName);
-
-  // remember original value so we can restore it.
-  // - buffer needs to be permanently allocated for PR_SetEnv()
-  // - Note: this code is not called re-entrantly, nor are restoreOrigLogName
-  //   or mChildCounter touched by any other thread, so this is safe.
-  static char* restoreOrigLogName = 0;
-  if (!restoreOrigLogName)
-    restoreOrigLogName = strdup(setChildLogName.get());
 
   // Append child-specific postfix to name
   setChildLogName.AppendLiteral(".child-");
-  setChildLogName.AppendInt(++mChildCounter);
+  setChildLogName.AppendInt(mChildCounter);
 
   // Passing temporary to PR_SetEnv is ok here because env gets copied
   // by exec, etc., to permanent storage in child when process launched.
   PR_SetEnv(setChildLogName.get());
+}
+
+bool
+GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, base::ProcessArchitecture arch)
+{
+  // If NSPR log files are not requested, we're done.
+  const char* origNSPRLogName = PR_GetEnv("NSPR_LOG_FILE");
+  const char* origMozLogName = PR_GetEnv("MOZ_LOG_FILE");
+  if (!origNSPRLogName && !origMozLogName) {
+    return PerformAsyncLaunchInternal(aExtraOpts, arch);
+  }
+
+  ++mChildCounter;
+
+  // remember original value so we can restore it.
+  // - Note: this code is not called re-entrantly, nor are restoreOrig*LogName
+  //   or mChildCounter touched by any other thread, so this is safe.
+  static nsAutoCString restoreOrigNSPRLogName;
+  static nsAutoCString restoreOrigMozLogName;
+
+  if (origNSPRLogName) {
+    if (restoreOrigNSPRLogName.IsEmpty()) {
+      restoreOrigNSPRLogName.AssignLiteral("NSPR_LOG_FILE=");
+      restoreOrigNSPRLogName.Append(origNSPRLogName);
+    }
+    SetChildLogName("NSPR_LOG_FILE=", origNSPRLogName);
+  }
+  if (origMozLogName) {
+    if (restoreOrigMozLogName.IsEmpty()) {
+      restoreOrigMozLogName.AssignLiteral("MOZ_LOG_FILE=");
+      restoreOrigMozLogName.Append(origMozLogName);
+    }
+    SetChildLogName("MOZ_LOG_FILE=", origMozLogName);
+  }
+
   bool retval = PerformAsyncLaunchInternal(aExtraOpts, arch);
 
   // Revert to original value
-  PR_SetEnv(restoreOrigLogName);
+  if (origNSPRLogName) {
+    PR_SetEnv(restoreOrigNSPRLogName.get());
+  }
+  if (origMozLogName) {
+    PR_SetEnv(restoreOrigMozLogName.get());
+  }
 
   return retval;
 }
