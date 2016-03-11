@@ -59,7 +59,11 @@ namespace std {
     #define false_type FalseType
     #define true_type TrueType
 
-    using mozilla::Function;
+    // If we have 'using mozilla::function', we're going to collide with
+    // 'std::function' on platforms that have it. Therefore we use a macro
+    // work around.
+    template<typename Signature>
+    using Function = mozilla::function<Signature>;
     #define function Function
 #endif
 }
