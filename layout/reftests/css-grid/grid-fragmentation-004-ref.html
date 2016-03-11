@@ -1,0 +1,166 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Fragmentation with first grid row at top-of-page and Class C break opportunities</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+body { overflow:hidden; }
+
+.columns {
+  position:relative;
+     -moz-columns: 5;
+      -ms-columns: 5;
+  -webkit-columns: 5;
+          columns: 5;
+     -moz-column-fill: auto;
+      -ms-column-fill: auto;
+  -webkit-column-fill: auto;
+          column-fill: auto;
+  border: 2px dashed;
+  margin-bottom: 5px;
+}
+
+.block {
+  border:5px solid;
+  border-top-width:0;
+  border-bottom-width:10px;
+  height: 120px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 30px 30px 30px;
+  grid-auto-rows: 50px;
+  grid-gap: 12px;
+  border:5px solid;
+  border-top-width: 0;
+  border-bottom-width: 10px;
+  align-content: center;
+}
+span { background:lime; border:1px solid black; }
+x { display:block; height:20px; }
+
+.t { border-bottom-width:0; }
+.b { border-top-width:0; }
+.m { border-top-width:0; border-bottom-width:0; }
+.grid.t {padding-top:4px;}
+
+.br1 { height:1px; }
+
+</style>
+</head>
+<body>
+
+<div class="columns" style="height: 122px/*fragmentainer ends in the end border*/">
+<div style="background:grey">
+<div class="grid t" style="height:112px; padding-bottom:4px;">
+<span style="grid-row:span 2"><x></x></span>
+<span style="height:60px; background:cyan"><x></x></span>
+<span><x></x></span>
+<span style="align-self:end; background:pink"><x></x></span>
+<span style="grid-row:1"><x></x></span>
+</div>
+<div style="height:2px;"></div>
+<div class="block" style="border-top-style:none; height:0px;">
+</div></div></div>
+
+<div class="columns" style="height: 122px/*fragmentainer ends in the end border*/">
+<div style="background:grey">
+<div class="block">
+</div></div></div>
+
+<div class="columns" style="height: 90px/*fragmentainer ends in the last row*/">
+<div style="background:grey">
+<div class="grid t">
+<span class="t"><x></x></span>
+<span class="t"><x></x></span>
+<span style="background:cyan" class="t"><x></x></span>
+</div>
+<div class="br1"></div>
+<div class="grid b" style="padding-bottom:16px">
+<span class="b"><x></x></span>
+<span class="b" style="grid-row:1; grid-column:1; height:11px;"><x></x></span>
+<span class="b" style="grid-row:1; grid-column:3; height:11px; background:cyan"><x></x></span>
+<span style="grid-row:1; grid-column:1; align-self:end; background:pink"><x></x></span>
+</div></div></div>
+
+<div class="columns" style="height: 60px/*fragmentainer ends in the grid gap between the rows */">
+<div style="background:grey">
+<div class="grid t">
+<span class="t"><x></x></span>
+<span class="t"><x></x></span>
+<span style="background:cyan" class="t"><x></x></span>
+</div>
+<div class="grid m" style="padding-bottom:10px">
+<span class="b"><x></x></span>
+<span class="b" style="grid-row:1; grid-column:1; height:11px;"><x></x></span>
+<span class="b" style="grid-row:1; grid-column:3; height:11px; background:cyan"><x></x></span>
+<span style="grid-row:1; grid-column:1; align-self:end; background:pink"><x></x></span>
+</div>
+<div class="block" style="border-top-style:none; height:6px;">
+</div>
+</div></div>
+
+<!--  TODO XXX depends on bug 1238294
+
+<div class="columns" style="height: 30px/*fragmentainer ends in the first row*/; margin-bottom:30px">
+<div style="background:grey">
+<div class="br1"></div>
+<div class="grid m">
+<span class="t"><x></x></span>
+<span class="t"><x></x></span>
+<span style="background:cyan" class="t"><x></x></span>
+</div>
+<div class="grid m">
+<span class="b"><x></x></span>
+<span class="b" style="grid-row:1; grid-column:1; height:11px;"><x></x></span>
+<span class="b" style="grid-row:1; grid-column:3; height:11px; background:cyan"><x></x></span>
+<span style="grid-row:1; grid-column:1; align-self:end; background:pink"><x></x></span>
+</div>
+<div class="block" style="margin-top:-19px; border-top-style:none; height:20px;">
+</div>
+</div></div>
+
+<div class="columns" style="height: 0px/*zero height fragmentainer*/; margin-bottom:60px">
+<div style="background:grey">
+<div class="br1"></div>
+<div class="grid m">
+<span class="t"><x></x></span>
+<span class="t"><x></x></span>
+<span style="background:cyan" class="t"><x></x></span>
+</div>
+<div class="grid m">
+<span class="b"><x></x></span>
+<span class="b" style="grid-row:1; grid-column:1; height:11px;"><x></x></span>
+<span class="b" style="grid-row:1; grid-column:3; height:11px; background:cyan"><x></x></span>
+<span style="grid-row:1; grid-column:1; align-self:end; background:pink"><x></x></span>
+</div>
+<div style="background:black; padding-bottom:10px;"></div>
+</div></div>
+
+<div class="columns" style="height: 2px/*fragmentainer ends between the start border but before the first row */">
+<div style="background:grey;">
+<div class="br1"></div>
+<div class="grid m">
+<span><x></x></span>
+<span class="t" style="background:cyan"><x></x></span>
+<span class="t"><x></x></span>
+</div>
+<div class="grid m">
+<span><x></x></span>
+<span class="b" style="height:11px; background:cyan"><x></x></span>
+<span class="b"style=""><x></x></span>
+</div>
+<div style="background:black; padding-bottom:10px;"></div>
+</div></div>
+
+-->
+
+</body>
+</html>
