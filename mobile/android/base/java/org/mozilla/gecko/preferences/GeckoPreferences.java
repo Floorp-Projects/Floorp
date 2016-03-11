@@ -160,6 +160,7 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_BROWSER_LOCALE = "locale";
 
     public static final String PREFS_RESTORE_SESSION = NON_PREF_PREFIX + "restoreSession3";
+    public static final String PREFS_SUGGESTED_SITES = NON_PREF_PREFIX + "home_suggested_sites";
     public static final String PREFS_TAB_QUEUE = NON_PREF_PREFIX + "tab_queue";
     public static final String PREFS_TAB_QUEUE_LAST_SITE = NON_PREF_PREFIX + "last_site";
     public static final String PREFS_TAB_QUEUE_LAST_TIME = NON_PREF_PREFIX + "last_time";
@@ -1182,6 +1183,8 @@ OnSharedPreferenceChangeListener
         if (PREFS_BROWSER_LOCALE.equals(key)) {
             onLocaleSelected(Locales.getLanguageTag(lastLocale),
                              sharedPreferences.getString(key, null));
+        } else if (PREFS_SUGGESTED_SITES.equals(key)) {
+            refreshSuggestedSites();
         }
     }
 
