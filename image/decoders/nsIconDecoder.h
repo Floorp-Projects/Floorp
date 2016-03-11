@@ -9,10 +9,11 @@
 
 #include "Decoder.h"
 #include "StreamingLexer.h"
-#include "nsCOMPtr.h"
+#include "SurfacePipe.h"
 
 namespace mozilla {
 namespace image {
+
 class RasterImage;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -21,16 +22,13 @@ class RasterImage;
 // and this decoder takes that format and converts it into 24-bit RGB with
 // alpha channel support. It was modeled a bit off the PPM decoder.
 //
-// Assumptions about the decoder:
-// (1) We receive ALL of the data from the icon channel in one OnDataAvailable
-//     call. We don't support multiple ODA calls yet.
-// (2) the format of the incoming data is as follows:
-//     The first two bytes contain the width and the height of the icon.
-//     The remaining bytes contain the icon data, 4 bytes per pixel, in
-//       ARGB order (platform endianness, A in highest bits, B in lowest
-//       bits), row-primary, top-to-bottom, left-to-right, with
-//       premultiplied alpha.
+// The format of the incoming data is as follows:
 //
+// The first two bytes contain the width and the height of the icon.
+// The remaining bytes contain the icon data, 4 bytes per pixel, in
+// ARGB order (platform endianness, A in highest bits, B in lowest
+// bits), row-primary, top-to-bottom, left-to-right, with
+// premultiplied alpha.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,11 +56,8 @@ private:
   LexerTransition<State> Finish();
 
   StreamingLexer<State> mLexer;
-  uint8_t mWidth;
-  uint8_t mHeight;
+  SurfacePipe mPipe;
   uint32_t mBytesPerRow;
-  uint32_t mBytesTotal;
-  uint32_t mCurrentRow;
 };
 
 } // namespace image
