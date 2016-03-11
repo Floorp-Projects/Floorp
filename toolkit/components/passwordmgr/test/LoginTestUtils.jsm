@@ -243,15 +243,3 @@ this.LoginTestUtils.testData = {
     ];
   },
 };
-
-this.LoginTestUtils.recipes = {
-  getRecipeParent() {
-    let { LoginManagerParent } = Cu.import("resource://gre/modules/LoginManagerParent.jsm", {});
-    if (!LoginManagerParent.recipeParentPromise) {
-      return null;
-    }
-    return LoginManagerParent.recipeParentPromise.then((recipeParent) => {
-      return recipeParent;
-    });
-  },
-};
