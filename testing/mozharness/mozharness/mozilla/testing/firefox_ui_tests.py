@@ -145,9 +145,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         # If tests are used from common.tests.zip install every Python package
         # via the single requirements file
         if self.test_packages_url or self.test_url:
-            test_install_dir = dirs.get('abs_test_install_dir',
-                                        os.path.join(dirs['abs_work_dir'], 'tests'))
-            requirements = os.path.join(test_install_dir,
+            requirements = os.path.join(dirs['abs_test_install_dir'],
                                         'config', 'firefox_ui_requirements.txt')
             self.register_virtualenv_module(requirements=[requirements], two_pass=True)
 
@@ -157,8 +155,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         else:
             # Register all modules for firefox-ui-tests including all dependencies
             # as strict versions to ensure newer releases won't break something
-            requirements = os.path.join(dirs.get('abs_test_install_dir',
-                                                 os.path.join(dirs['abs_work_dir'], 'tests')),
+            requirements = os.path.join(dirs['abs_test_install_dir'],
                                         'requirements.txt')
             self.register_virtualenv_module(requirements=[requirements])
 
@@ -211,9 +208,12 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
             return self.abs_dirs
 
         abs_dirs = super(FirefoxUITests, self).query_abs_dirs()
+        abs_tests_install_dir = os.path.join(abs_dirs['abs_work_dir'], 'tests')
+
         dirs = {
             'abs_reports_dir': os.path.join(abs_dirs['base_work_dir'], 'reports'),
-            'abs_test_install_dir': os.path.join(abs_dirs['abs_work_dir'], 'tests'),
+            'abs_test_install_dir': abs_tests_install_dir,
+            'abs_fxui_dir': os.path.join(abs_tests_install_dir, 'firefox-ui'),
         }
 
         for key in dirs:
@@ -302,6 +302,9 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
             '--binary', binary_path,
             '--address', 'localhost:{}'.format(marionette_port),
 
+            # Resource files to serve via local webserver
+            '--server-root', os.path.join(dirs['abs_fxui_dir'], 'resources'),
+
             # Use the work dir to get temporary data stored
             '--workspace', dirs['abs_work_dir'],
 
@@ -329,6 +332,10 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         parser = StructuredOutputParser(config=self.config,
                                         log_obj=self.log_obj,
                                         strict=False)
+
+        # Add the default tests to run
+        tests = [os.path.join(dirs['abs_fxui_dir'], 'tests', test) for test in self.default_tests]
+        cmd.extend(tests)
 
         return_code = self.run_command(cmd,
                                        cwd=dirs['abs_work_dir'],
@@ -405,11 +412,18 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 class FirefoxUIFunctionalTests(FirefoxUITests):
 
     cli_script = 'cli_functional.py'
+    default_tests = [
+        os.path.join('puppeteer', 'manifest.ini'),
+        os.path.join('functional', 'manifest.ini'),
+    ]
 
 
 class FirefoxUIUpdateTests(FirefoxUITests):
 
     cli_script = 'cli_update.py'
+    default_tests = [
+        os.path.join('update', 'manifest.ini')
+    ]
 
     def __init__(self, config_options=None, *args, **kwargs):
         config_options = config_options or firefox_ui_update_config_options

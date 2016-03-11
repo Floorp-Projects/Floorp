@@ -59,6 +59,10 @@ testUnary('i32', 'popcnt', 40, 2);
 testUnary('i32', 'popcnt', 0, 0);
 testUnary('i32', 'popcnt', 0xFFFFFFFF, 32);
 
+testUnary('i32', 'eqz', 0, 1);
+testUnary('i32', 'eqz', 1, 0);
+testUnary('i32', 'eqz', 0xFFFFFFFF, 0);
+
 testBinary('i32', 'add', 40, 2, 42);
 testBinary('i32', 'sub', 40, 2, 38);
 testBinary('i32', 'mul', 40, 2, 80);
@@ -72,6 +76,8 @@ testBinary('i32', 'xor', 42, 2, 40);
 testBinary('i32', 'shl', 40, 2, 160);
 testBinary('i32', 'shr_s', -40, 2, -10);
 testBinary('i32', 'shr_u', -40, 2, 1073741814);
+//testBinary('i32', 'rotl', 40, 2, 160); // NYI: rotate
+//testBinary('i32', 'rotr', 40, 2, 10); // NYI: rotate
 
 testComparison('i32', 'eq', 40, 40, 1);
 testComparison('i32', 'ne', 40, 40, 0);
@@ -87,6 +93,7 @@ testComparison('i32', 'ge_u', 40, 40, 1);
 //testUnary('i64', 'clz', 40, 58); // TODO: NYI
 //testUnary('i64', 'ctz', 40, 0); // TODO: NYI
 //testUnary('i64', 'popcnt', 40, 0); // TODO: NYI
+//testUnary('i64', 'eqz', 40, 0); // TODO: NYI
 
 if (getBuildConfiguration().x64) {
     testBinary('i64', 'add', 40, 2, 42);
@@ -134,6 +141,8 @@ if (getBuildConfiguration().x64) {
     testBinary('i64', 'shl', 1, 64, 1);
     testBinary('i64', 'shr_s', "0xff00ff0000000", 28, 0xff00ff);
     testBinary('i64', 'shr_u', "0x8ffff00ff0000000", 56, 0x8f);
+    //testBinary('i64', 'rotl', 40, 2, 160); // NYI: rotate
+    //testBinary('i64', 'rotr', 40, 2, 10); // NYI: rotate
 
     testComparison('i64', 'eq', 40, 40, 1);
     testComparison('i64', 'ne', 40, 40, 0);

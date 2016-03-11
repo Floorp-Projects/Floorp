@@ -3945,10 +3945,13 @@ Parser<ParseHandler>::PossibleError::PossibleError(Parser<ParseHandler>& parser)
 }
 
 template <typename ParseHandler>
-void
+bool
 Parser<ParseHandler>::PossibleError::setPending(ParseReportKind kind, unsigned errorNumber,
                                                 bool strict)
 {
+    if (hasError())
+        return false;
+
     // If we report an error later, we'll do it from the position where we set
     // the state to pending.
     offset_      = parser_.pos().begin;
@@ -3956,6 +3959,8 @@ Parser<ParseHandler>::PossibleError::setPending(ParseReportKind kind, unsigned e
     strict_      = strict;
     errorNumber_ = errorNumber;
     state_       = ErrorState::Pending;
+
+    return true;
 }
 
 template <typename ParseHandler>
@@ -3977,9 +3982,8 @@ bool
 Parser<ParseHandler>::PossibleError::checkForExprErrors()
 {
     bool err = hasError();
-    if (err) {
+    if (err)
         parser_.reportWithOffset(reportKind_, strict_, offset_, errorNumber_);
-    }
     return !err;
 }
 
@@ -7828,7 +7832,6 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
                                  InvokedPrediction invoked)
 {
     JS_CHECK_RECURSION(context, return null());
-    MOZ_ASSERT(!possibleError->hasError());
 
     // It's very common at this point to have a "detectably simple" expression,
     // i.e. a name/number/string token followed by one of the following tokens
@@ -9310,8 +9313,13 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
                 // valid in the case of destructuring. Here we set a pending error so
                 // that later in the parse, once we've determined whether or not we're
                 // destructuring, the error can be reported or ignored appropriately.
-                if (possibleError)
-                    possibleError->setPending(ParseError, JSMSG_BAD_PROP_ID, false);
+                if (possibleError &&
+                    !possibleError->setPending(ParseError, JSMSG_BAD_PROP_ID, false)) {
+
+                    // Report any previously pending error.
+                    possibleError->checkForExprErrors();
+                    return null();
+                }
             }
 
         } else {

@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 // Check that the timeline does have a scrubber element.
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {panel} = yield openAnimationInspector();
 
   let timeline = panel.animationsTimelineComponent;

@@ -19,12 +19,15 @@ UNIFIED_SOURCES += [
     'src/src/jemalloc.c',
     'src/src/mb.c',
     'src/src/mutex.c',
+    'src/src/nstime.c',
     'src/src/pages.c',
+    'src/src/prng.c',
     'src/src/prof.c',
     'src/src/quarantine.c',
     'src/src/rtree.c',
     'src/src/stats.c',
     'src/src/tcache.c',
+    'src/src/ticker.c',
     'src/src/tsd.c',
     'src/src/util.c',
     # FIXME do we ever want valgrind.c?
@@ -76,3 +79,5 @@ LOCAL_INCLUDES += [
 
 # We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True
+
+OS_LIBS += CONFIG['REALTIME_LIBS']

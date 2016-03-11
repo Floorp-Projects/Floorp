@@ -786,6 +786,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                                                                     suggestedSitesCursor.getString(titleColumnIndex)
                                                             });
         }
+        suggestedSitesCursor.close();
 
         // To restrict suggested sites to the grid, we simply subtract the number of topsites (which have already had
         // the pinned sites filtered out), and the number of pinned sites.

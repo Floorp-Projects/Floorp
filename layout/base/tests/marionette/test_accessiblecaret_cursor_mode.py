@@ -22,7 +22,9 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
     '''
     # Element IDs.
     _input_id = 'input'
+    _input_padding_id = 'input-padding'
     _textarea_id = 'textarea'
+    _textarea_one_line_id = 'textarea-one-line'
     _contenteditable_id = 'contenteditable'
 
     # Test html files.
@@ -185,15 +187,19 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
 
         self.assertEqual(target_content, sel.content)
 
-    def test_caret_not_jump_when_dragging_to_editable_content_boundary(self):
+    @parameterized(_input_id, el_id=_input_id)
+    @parameterized(_input_padding_id, el_id=_input_padding_id)
+    @parameterized(_textarea_one_line_id, el_id=_textarea_one_line_id)
+    @parameterized(_contenteditable_id, el_id=_contenteditable_id)
+    def test_caret_not_jump_when_dragging_to_editable_content_boundary(self, el_id):
         self.open_test_html(self._cursor_html)
-        el = self.marionette.find_element(By.ID, self._input_id)
+        el = self.marionette.find_element(By.ID, el_id)
         sel = SelectionManager(el)
         content_to_add = '!'
         non_target_content = sel.content + content_to_add
 
-        # Goal: the cursor position does not being changed after dragging the
-        # caret down on the Y-axis.
+        # Goal: the cursor position is not changed after dragging the caret down
+        # on the Y-axis.
         el.tap()
         sel.move_cursor_to_front()
         el.tap(*sel.cursor_location())
@@ -203,3 +209,87 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         self.actions.flick(el, x, y, x, y + 50).perform()
         self.actions.key_down(content_to_add).key_up(content_to_add).perform()
         self.assertNotEqual(non_target_content, sel.content)
+
+    @parameterized(_input_id, el_id=_input_id)
+    @parameterized(_input_padding_id, el_id=_input_padding_id)
+    @parameterized(_textarea_one_line_id, el_id=_textarea_one_line_id)
+    @parameterized(_contenteditable_id, el_id=_contenteditable_id)
+    def test_caret_not_jump_to_front_when_dragging_up_to_editable_content_boundary(self, el_id):
+        self.open_test_html(self._cursor_html)
+        el = self.marionette.find_element(By.ID, el_id)
+        sel = SelectionManager(el)
+        content_to_add = '!'
+        non_target_content = content_to_add + sel.content
+
+        # Goal: the cursor position is not changed after dragging the caret down
+        # on the Y-axis.
+        el.tap()
+        sel.move_cursor_to_end()
+        sel.move_cursor_by_offset(1, backward=True)
+        el.tap(*sel.cursor_location())
+        x, y = sel.first_caret_location()
+
+        # Drag the caret up by 50px, and insert '!'.
+        self.actions.flick(el, x, y, x, y - 50).perform()
+        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
+        self.assertNotEqual(non_target_content, sel.content)
+
+    def test_drag_caret_from_front_to_end_across_columns(self):
+        self.open_test_html('test_carets_columns.html')
+        el = self.marionette.find_element(By.ID, 'columns-inner')
+        sel = SelectionManager(el)
+        content_to_add = '!'
+        target_content = sel.content + content_to_add
+
+        # Goal: the cursor position can be changed by dragging the caret from
+        # the front to the end of the content.
+
+        # Tap to make the cursor appear.
+        before_image_1 = self.marionette.find_element(By.ID, 'before-image-1')
+        before_image_1.tap()
+
+        # Tap the front of the content to make first caret appear.
+        sel.move_cursor_to_front()
+        el.tap(*sel.cursor_location())
+        src_x, src_y = sel.first_caret_location()
+        dest_x, dest_y = el.size['width'], el.size['height']
+
+        # Drag the first caret to the bottom-right corner of the element.
+        self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
+
+        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
+        self.assertEqual(target_content, sel.content)
+
+    def test_move_cursor_to_front_by_dragging_caret_to_front_br_element(self):
+        self.open_test_html(self._cursor_html)
+        el = self.marionette.find_element(By.ID, self._contenteditable_id)
+        sel = SelectionManager(el)
+        content_to_add_1 = '!'
+        content_to_add_2 = '\n\n'
+        target_content = content_to_add_1 + content_to_add_2 + sel.content
+
+        # Goal: the cursor position can be changed by dragging the caret from
+        # the end of the content to the front br element. Because we cannot get
+        # caret location if it's on a br element, we need to get the first caret
+        # location then adding the new lines.
+
+        # Get first caret location at the front.
+        el.tap()
+        sel.move_cursor_to_front()
+        dest_x, dest_y = sel.first_caret_location()
+
+        # Append new line to the front of the content.
+        el.send_keys(content_to_add_2);
+
+        # Tap to make first caret appear.
+        el.tap()
+        sel.move_cursor_to_end()
+        sel.move_cursor_by_offset(1, backward=True)
+        el.tap(*sel.cursor_location())
+        src_x, src_y = sel.first_caret_location()
+
+        # Move first caret to the front of the input box.
+        self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
+
+        self.actions.key_down(content_to_add_1).key_up(content_to_add_1).perform()
+        self.assertEqual(target_content, sel.content)

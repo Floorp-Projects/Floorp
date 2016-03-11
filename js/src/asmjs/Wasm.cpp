@@ -638,10 +638,12 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::I32Clz:
       case Expr::I32Ctz:
       case Expr::I32Popcnt:
+      case Expr::I32Eqz:
         return DecodeUnaryOperator(f, ValType::I32, type);
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
+      case Expr::I64Eqz:
         return f.fail("NYI: i64") &&
                DecodeUnaryOperator(f, ValType::I64, type);
       case Expr::F32Abs:
@@ -678,6 +680,9 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::I32ShrS:
       case Expr::I32ShrU:
         return DecodeBinaryOperator(f, ValType::I32, type);
+      case Expr::I32Rotl:
+      case Expr::I32Rotr:
+        return f.fail("NYI: rotate");
       case Expr::I64Add:
       case Expr::I64Sub:
       case Expr::I64Mul:
@@ -692,6 +697,9 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::I64ShrS:
       case Expr::I64ShrU:
         return DecodeBinaryOperator(f, ValType::I64, type);
+      case Expr::I64Rotl:
+      case Expr::I64Rotr:
+        return f.fail("NYI: rotate");
       case Expr::F32Add:
       case Expr::F32Sub:
       case Expr::F32Mul:

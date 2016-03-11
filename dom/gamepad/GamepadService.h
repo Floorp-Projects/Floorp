@@ -39,6 +39,7 @@ class GamepadService : public nsIObserver
   static bool IsAPIEnabled();
 
   void BeginShutdown();
+  void StopMonitoring();
 
   // Indicate that |aWindow| wants to receive gamepad events.
   void AddListener(nsGlobalWindow* aWindow);

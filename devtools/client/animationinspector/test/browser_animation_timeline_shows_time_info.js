@@ -10,7 +10,7 @@ requestLongerTimeout(2);
 // counts in tooltips.
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {panel, controller} = yield openAnimationInspector();
 
   info("Getting the animation element from the panel");

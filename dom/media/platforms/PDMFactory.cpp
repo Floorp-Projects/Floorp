@@ -82,10 +82,10 @@ PDMFactory::Init()
   alreadyInitialized = true;
 
   Preferences::AddBoolVarCache(&sUseBlankDecoder,
-                               "media.use-blank-decoder");
+                               "media.use-blank-decoder", false);
 #ifdef MOZ_GONK_MEDIACODEC
   Preferences::AddBoolVarCache(&sGonkDecoderEnabled,
-                               "media.gonk.enabled", false);
+                               "media.gonk.enabled", true);
 #endif
 #ifdef MOZ_WIDGET_ANDROID
   Preferences::AddBoolVarCache(&sAndroidMCDecoderEnabled,
@@ -95,18 +95,18 @@ PDMFactory::Init()
 #endif
 
   Preferences::AddBoolVarCache(&sGMPDecoderEnabled,
-                               "media.gmp.decoder.enabled", false);
+                               "media.gmp.decoder.enabled", true);
 #ifdef MOZ_FFMPEG
   Preferences::AddBoolVarCache(&sFFmpegDecoderEnabled,
-                               "media.ffmpeg.enabled", false);
+                               "media.ffmpeg.enabled", true);
 #endif
 #ifdef MOZ_FFVPX
   Preferences::AddBoolVarCache(&sFFVPXDecoderEnabled,
-                               "media.ffvpx.enabled", false);
+                               "media.ffvpx.enabled", true);
 #endif
 #ifdef XP_WIN
   Preferences::AddBoolVarCache(&sWMFDecoderEnabled,
-                               "media.wmf.enabled", false);
+                               "media.wmf.enabled", true);
 #endif
 
   Preferences::AddBoolVarCache(&sEnableFuzzingWrapper,

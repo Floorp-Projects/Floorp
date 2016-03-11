@@ -6,6 +6,14 @@
 "filename": "mozmake.exe"
 },
 {
+"size": 80157273,
+"digest": "c4704dcc6774b9f3baaa9313192d26e36bfba2d4380d0518ee7cb89153d9adfe63f228f0ac29848f02948eb1ab7e6624ba71210f0121196d2b54ecebd640d1e6",
+"algorithm": "sha512",
+"visibility": "public",
+"filename": "rustc.tar.bz2",
+"unpack": true
+},
+{
 "size": 167175,
 "digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
 "algorithm": "sha512",
@@ -13,9 +21,9 @@
 "unpack": true
 },
 {
-"version": "clang 3.9.0/r259916",
-"size": 168551971,
-"digest": "af127aba2ed881bad6e83fd162125038f2450f7b6de64efe84d1281052225ec92db6d96d6ade6ac2642f1b00761b3be5725f79c41953dc885a81185097cc81a5",
+"version": "clang 3.9.0/r262971",
+"size": 173306045,
+"digest": "806413640a964dad44c0c6055d2a89a1075730fb6f659ff37341378a14a7dc032e672941765225608b71f6b385ac721ed36bfa04eb38c211b07e2776cb72a0ee",
 "algorithm": "sha512",
 "filename": "clang64.tar.bz2",
 "unpack": true

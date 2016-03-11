@@ -6,6 +6,7 @@ config = {
     'default_actions': [
         'clobber',
         'clone-tools',
+        'checkout-sources',
         # 'setup-mock', windows do not use mock
         'build',
         # 'generate-build-stats',
