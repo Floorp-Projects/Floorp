@@ -1240,19 +1240,6 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
     return REFLECT_FAILURE;
   }
 
-  if (h->histogram_type() != Histogram::HISTOGRAM) {
-    // Export |sum_squares| as two separate 32-bit properties so that we
-    // can accurately reconstruct it on the analysis side.
-    uint64_t sum_squares = ss.sum_squares(locker);
-    // Cast to avoid implicit truncation warnings.
-    uint32_t lo = static_cast<uint32_t>(sum_squares);
-    uint32_t hi = static_cast<uint32_t>(sum_squares >> 32);
-    if (!(JS_DefineProperty(cx, obj, "sum_squares_lo", lo, JSPROP_ENUMERATE)
-          && JS_DefineProperty(cx, obj, "sum_squares_hi", hi, JSPROP_ENUMERATE))) {
-      return REFLECT_FAILURE;
-    }
-  }
-
   const size_t count = h->bucket_count();
   JS::Rooted<JSObject*> rarray(cx, JS_NewArrayObject(cx, count));
   if (!rarray) {
