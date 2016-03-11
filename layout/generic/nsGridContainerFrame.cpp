@@ -3892,7 +3892,11 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   const nsStylePosition* stylePos = aReflowState.mStylePosition;
   InitImplicitNamedAreas(stylePos);
   GridReflowState gridReflowState(this, aReflowState);
-  mIsNormalFlowInCSSOrder = gridReflowState.mIter.ItemsAreAlreadyInOrder();
+  if (gridReflowState.mIter.ItemsAreAlreadyInOrder()) {
+    AddStateBits(NS_STATE_GRID_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER);
+  } else {
+    RemoveStateBits(NS_STATE_GRID_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER);
+  }
   const nscoord computedBSize = aReflowState.ComputedBSize();
   const nscoord computedISize = aReflowState.ComputedISize();
   const WritingMode& wm = gridReflowState.mWM;
@@ -4058,8 +4062,9 @@ nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               &positionedDescendants,
                               aLists.Outlines());
   typedef GridItemCSSOrderIterator::OrderState OrderState;
-  OrderState order = mIsNormalFlowInCSSOrder ? OrderState::eKnownOrdered
-                                             : OrderState::eKnownUnordered;
+  OrderState order = HasAnyStateBits(NS_STATE_GRID_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER)
+                       ? OrderState::eKnownOrdered
+                       : OrderState::eKnownUnordered;
   GridItemCSSOrderIterator iter(this, kPrincipalList,
                                 GridItemCSSOrderIterator::eIncludeAll, order);
   for (; !iter.AtEnd(); iter.Next()) {
