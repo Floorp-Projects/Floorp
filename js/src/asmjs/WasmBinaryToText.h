@@ -16,23 +16,29 @@
  * limitations under the License.
  */
 
-#ifndef wasm_text_h
-#define wasm_text_h
+#ifndef wasm_binary_to_text_h
+#define wasm_binary_to_text_h
 
-#include "asmjs/WasmBinary.h"
-#include "js/Utility.h"
+#include "NamespaceImports.h"
+
+#include "gc/Rooting.h"
+#include "js/Class.h"
 
 namespace js {
+
+class TypedArrayObject;
+class StringBuffer;
+
 namespace wasm {
 
-// Translate the textual representation of a wasm module (given by a
-// null-terminated char16_t array) into serialized bytes. If there is an error
-// other than out-of-memory an error message string will be stored in 'error'.
+// Translate the given binary representation of a wasm module (given by a
+// typed array) into the module's textual representation.
 
-extern bool
-TextToBinary(const char16_t* text, Bytes* bytes, UniqueChars* error);
+bool
+BinaryToText(JSContext* cx, Handle<TypedArrayObject*> code, StringBuffer& buffer);
 
-} // namespace wasm
-} // namespace js
+}  // namespace wasm
 
-#endif // wasm_text_h
+}  // namespace js
+
+#endif // namespace wasm_binary_to_text_h

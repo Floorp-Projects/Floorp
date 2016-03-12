@@ -23,7 +23,6 @@
 #include "jsprf.h"
 
 #include "asmjs/WasmGenerator.h"
-#include "asmjs/WasmText.h"
 #include "vm/ArrayBufferObject.h"
 
 #include "jsatominlines.h"

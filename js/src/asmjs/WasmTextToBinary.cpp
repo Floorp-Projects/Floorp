@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "asmjs/WasmText.h"
+#include "asmjs/WasmTextToBinary.h"
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
