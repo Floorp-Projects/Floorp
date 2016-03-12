@@ -19,7 +19,6 @@
 #include "jsprf.h"
 #include "jswrapper.h"
 
-#include "asmjs/WasmModule.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "gc/Marking.h"
@@ -29,7 +28,6 @@
 #include "jit/JSONSpewer.h"
 #include "jit/MIRGraph.h"
 #include "js/GCAPI.h"
-#include "js/GCVariant.h"
 #include "js/UbiNodeBreadthFirst.h"
 #include "js/Vector.h"
 #include "vm/ArgumentsObject.h"
@@ -531,6 +529,7 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
     sources(cx),
     objects(cx),
     environments(cx),
+    wasmModuleScripts(cx),
 #ifdef NIGHTLY_BUILD
     traceLoggerLastDrainedSize(0),
     traceLoggerLastDrainedIteration(0),
@@ -570,7 +569,8 @@ Debugger::init(JSContext* cx)
               sources.init() &&
               objects.init() &&
               observedGCs.init() &&
-              environments.init();
+              environments.init() &&
+              wasmModuleScripts.init();
     if (!ok)
         ReportOutOfMemory(cx);
     return ok;
@@ -955,7 +955,6 @@ Debugger::wrapEnvironment(JSContext* cx, Handle<Env*> env, MutableHandleValue rv
         CrossCompartmentKey key(CrossCompartmentKey::DebuggerEnvironment, object, env);
         if (!object->compartment()->putWrapper(cx, key, ObjectValue(*envobj))) {
             environments.remove(env);
-            ReportOutOfMemory(cx);
             return false;
         }
     }
@@ -2822,6 +2821,7 @@ Debugger::markAll(JSTracer* trc)
         dbg->sources.trace(trc);
         dbg->objects.trace(trc);
         dbg->environments.trace(trc);
+        dbg->wasmModuleScripts.trace(trc);
 
         for (Breakpoint* bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
             TraceManuallyBarrieredEdge(trc, &bp->site->script, "breakpoint script");
@@ -2862,7 +2862,7 @@ Debugger::trace(JSTracer* trc)
     /* Trace the weak map from JSScript instances to Debugger.Script objects. */
     scripts.trace(trc);
 
-    /* Trace the referent ->Debugger.Source weak map */
+    /* Trace the referent -> Debugger.Source weak map */
     sources.trace(trc);
 
     /* Trace the referent -> Debugger.Object weak map. */
@@ -2870,6 +2870,9 @@ Debugger::trace(JSTracer* trc)
 
     /* Trace the referent -> Debugger.Environment weak map. */
     environments.trace(trc);
+
+    /* Trace the WasmModuleObject -> synthesized Debugger.Script weak map. */
+    wasmModuleScripts.trace(trc);
 }
 
 /* static */ void
@@ -3850,9 +3853,11 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         compartments(cx->runtime()),
         url(cx),
         displayURLString(cx),
-        source(cx),
+        hasSource(false),
+        source(cx, AsVariant(static_cast<ScriptSourceObject*>(nullptr))),
         innermostForCompartment(cx->runtime()),
-        vector(cx, ScriptVector(cx))
+        vector(cx, ScriptVector(cx)),
+        wasmModuleVector(cx, WasmModuleObjectVector(cx))
     {}
 
     /*
@@ -3921,15 +3926,8 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
                 return false;
             }
 
-            DebuggerSourceReferent referent = GetSourceReferent(&debuggerSource.toObject());
-            if (!referent.is<ScriptSourceObject*>()) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                                     "query object's 'source' property",
-                                     "not undefined nor a Debugger.Source object for a JS script");
-                return false;
-            }
-
-            source = referent.as<ScriptSourceObject*>();
+            hasSource = true;
+            source = GetSourceReferent(&debuggerSource.toObject());
         }
 
         /* Check for a 'displayURL' property. */
@@ -3956,7 +3954,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         if (lineProperty.isUndefined()) {
             hasLine = false;
         } else if (lineProperty.isNumber()) {
-            if (displayURL.isUndefined() && url.isUndefined() && !source) {
+            if (displayURL.isUndefined() && url.isUndefined() && !hasSource) {
                 JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                                      JSMSG_QUERY_LINE_WITHOUT_URL);
                 return false;
@@ -3983,7 +3981,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         innermost = ToBoolean(innermostProperty);
         if (innermost) {
             /* Technically, we need only check hasLine, but this is clearer. */
-            if ((displayURL.isUndefined() && url.isUndefined() && !source) || !hasLine) {
+            if ((displayURL.isUndefined() && url.isUndefined() && !hasSource) || !hasLine) {
                 JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                                      JSMSG_QUERY_INNERMOST_WITHOUT_LINE_URL);
                 return false;
@@ -4046,11 +4044,22 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
             }
         }
 
+        // TODOshu: Until such time that wasm modules are real ES6 modules,
+        // unconditionally consider all wasm toplevel module scripts.
+        for (WeakGlobalObjectSet::Range r = debugger->allDebuggees(); !r.empty(); r.popFront()) {
+            for (wasm::Module* module : r.front()->compartment()->wasmModules)
+                consider(module->owner());
+        }
+
         return true;
     }
 
     Handle<ScriptVector> foundScripts() const {
         return vector;
+    }
+
+    Handle<WasmModuleObjectVector> foundWasmModules() const {
+        return wasmModuleVector;
     }
 
   private:
@@ -4080,10 +4089,12 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
     RootedLinearString displayURLString;
 
     /*
-     * If this is a source object, matching scripts will have sources
-     * equal to this instance.
+     * If this is a source referent, matching scripts will have sources equal
+     * to this instance. Ideally we'd use a Maybe here, but Maybe interacts
+     * very badly with Rooted's LIFO invariant.
      */
-    RootedScriptSource source;
+    bool hasSource;
+    Rooted<DebuggerSourceReferent> source;
 
     /* True if the query contained a 'line' property. */
     bool hasLine;
@@ -4110,6 +4121,11 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
      * while we use the CellIter.
      */
     Rooted<ScriptVector> vector;
+
+    /*
+     * Like above, but for wasm modules.
+     */
+    Rooted<WasmModuleObjectVector> wasmModuleVector;
 
     /* Indicates whether OOM has occurred while matching. */
     bool oom;
@@ -4211,8 +4227,11 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
             if (CompareChars(s, js_strlen(s), displayURLString) != 0)
                 return;
         }
-        if (source && source != script->sourceObject())
+        if (hasSource && !(source.is<ScriptSourceObject*>() &&
+                           source.as<ScriptSourceObject*>() == script->sourceObject()))
+        {
             return;
+        }
 
         if (innermost) {
             /*
@@ -4256,6 +4275,21 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
 
         return;
     }
+
+    /*
+     * If |wasmModule| matches this query, append it to |wasmModuleVector|.
+     * Set |oom| if an out of memory condition occurred.
+     */
+    void consider(WasmModuleObject* wasmModule) {
+        if (oom)
+            return;
+
+        if (hasSource && source != AsVariant(wasmModule))
+            return;
+
+        if (!wasmModuleVector.append(wasmModule))
+            oom = true;
+    }
 };
 
 /* static */ bool
@@ -4280,17 +4314,28 @@ Debugger::findScripts(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     Handle<ScriptVector> scripts(query.foundScripts());
-    RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, scripts.length()));
+    Handle<WasmModuleObjectVector> wasmModules(query.foundWasmModules());
+
+    size_t resultLength = scripts.length() + wasmModules.length();
+    RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, resultLength));
     if (!result)
         return false;
 
-    result->ensureDenseInitializedLength(cx, 0, scripts.length());
+    result->ensureDenseInitializedLength(cx, 0, resultLength);
 
     for (size_t i = 0; i < scripts.length(); i++) {
         JSObject* scriptObject = dbg->wrapScript(cx, scripts[i]);
         if (!scriptObject)
             return false;
         result->setDenseElement(i, ObjectValue(*scriptObject));
+    }
+
+    size_t wasmStart = scripts.length();
+    for (size_t i = 0; i < wasmModules.length(); i++) {
+        JSObject* scriptObject = dbg->wrapWasmScript(cx, wasmModules[i]);
+        if (!scriptObject)
+            return false;
+        result->setDenseElement(wasmStart + i, ObjectValue(*scriptObject));
     }
 
     args.rval().setObject(*result);
@@ -4921,16 +4966,6 @@ const JSFunctionSpec Debugger::static_methods[] {
 
 /*** Debugger.Script *****************************************************************************/
 
-// Either a real JSScript or synthesized.
-//
-// If synthesized, the referent is one of the following:
-//
-//   1. A WasmModuleObject, denoting a synthesized toplevel wasm module
-//      script.
-//   2. A wasm JSFunction, denoting a synthesized wasm function script.
-//      NYI!
-using DebuggerScriptReferent = Variant<JSScript*, WasmModuleObject*>;
-
 // Get the Debugger.Script referent as bare Cell. This should only be used for
 // GC operations like tracing. Please use GetScriptReferent below.
 static inline gc::Cell*
@@ -4984,8 +5019,18 @@ const Class DebuggerScript_class = {
     DebuggerScript_trace
 };
 
+class DebuggerScriptSetPrivateMatcher
+{
+    NativeObject* obj_;
+  public:
+    explicit DebuggerScriptSetPrivateMatcher(NativeObject* obj) : obj_(obj) { }
+    using ReturnType = void;
+    ReturnType match(HandleScript script) { obj_->setPrivateGCThing(script); }
+    ReturnType match(Handle<WasmModuleObject*> module) { obj_->setPrivateGCThing(module); }
+};
+
 JSObject*
-Debugger::newDebuggerScript(JSContext* cx, HandleScript script)
+Debugger::newDebuggerScript(JSContext* cx, Handle<DebuggerScriptReferent> referent)
 {
     assertSameCompartment(cx, object.get());
 
@@ -4996,35 +5041,69 @@ Debugger::newDebuggerScript(JSContext* cx, HandleScript script)
     if (!scriptobj)
         return nullptr;
     scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_OWNER, ObjectValue(*object));
-    scriptobj->setPrivateGCThing(script);
+    DebuggerScriptSetPrivateMatcher matcher(scriptobj);
+    referent.match(matcher);
 
     return scriptobj;
 }
 
+template <typename ReferentVariant, typename Referent, typename Map>
 JSObject*
-Debugger::wrapScript(JSContext* cx, HandleScript script)
+Debugger::wrapVariantReferent(JSContext* cx, Map& map, CrossCompartmentKey::Kind keyKind,
+                              Handle<ReferentVariant> referent)
 {
-    assertSameCompartment(cx, object.get());
-    MOZ_ASSERT(cx->compartment() != script->compartment());
-    DependentAddPtr<ScriptWeakMap> p(cx, scripts, script);
+    assertSameCompartment(cx, object);
+
+    Handle<Referent> untaggedReferent = referent.template as<Referent>();
+    MOZ_ASSERT(cx->compartment() != untaggedReferent->compartment());
+
+    DependentAddPtr<Map> p(cx, map, untaggedReferent);
     if (!p) {
-        JSObject* scriptobj = newDebuggerScript(cx, script);
-        if (!scriptobj)
+        JSObject* wrapper = newVariantWrapper(cx, referent);
+        if (!wrapper)
             return nullptr;
 
-        if (!p.add(cx, scripts, script, scriptobj))
+        if (!p.add(cx, map, untaggedReferent, wrapper))
             return nullptr;
 
-        CrossCompartmentKey key(CrossCompartmentKey::DebuggerScript, object, script);
-        if (!object->compartment()->putWrapper(cx, key, ObjectValue(*scriptobj))) {
-            scripts.remove(script);
+        CrossCompartmentKey key(keyKind, object, untaggedReferent);
+        if (!object->compartment()->putWrapper(cx, key, ObjectValue(*wrapper))) {
+            map.remove(untaggedReferent);
             ReportOutOfMemory(cx);
             return nullptr;
         }
     }
 
-    MOZ_ASSERT(GetScriptReferent(p->value()).as<JSScript*>() == script);
     return p->value();
+}
+
+JSObject*
+Debugger::wrapVariantReferent(JSContext* cx, Handle<DebuggerScriptReferent> referent)
+{
+    JSObject* obj;
+    if (referent.is<JSScript*>()) {
+        obj = wrapVariantReferent<DebuggerScriptReferent, JSScript*, ScriptWeakMap>(
+            cx, scripts, CrossCompartmentKey::DebuggerScript, referent);
+    } else {
+        obj = wrapVariantReferent<DebuggerScriptReferent, WasmModuleObject*, WasmModuleWeakMap>(
+            cx, wasmModuleScripts, CrossCompartmentKey::DebuggerObject, referent);
+    }
+    MOZ_ASSERT_IF(obj, GetScriptReferent(obj) == referent);
+    return obj;
+}
+
+JSObject*
+Debugger::wrapScript(JSContext* cx, HandleScript script)
+{
+    Rooted<DebuggerScriptReferent> referent(cx, script.get());
+    return wrapVariantReferent(cx, referent);
+}
+
+JSObject*
+Debugger::wrapWasmScript(JSContext* cx, Handle<WasmModuleObject*> wasmModule)
+{
+    Rooted<DebuggerScriptReferent> referent(cx, wasmModule.get());
+    return wrapVariantReferent(cx, referent);
 }
 
 static JSObject*
