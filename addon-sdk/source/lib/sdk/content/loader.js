@@ -9,19 +9,9 @@ module.metadata = {
 
 const { isValidURI, isLocalURL, URL } = require('../url');
 const { contract } = require('../util/contract');
-const { isString, isNil, instanceOf } = require('../lang/type');
+const { isString, isNil, instanceOf, isJSONable } = require('../lang/type');
 const { validateOptions,
   string, array, object, either, required } = require('../deprecated/api-utils');
-
-const isJSONable = (value) => {
-  try {
-    JSON.parse(JSON.stringify(value));
-  }
-  catch (e) {
-    return false;
-  }
-  return true;
-};
 
 const isValidScriptFile = (value) =>
   (isString(value) || instanceOf(value, URL)) && isLocalURL(value);

@@ -11,6 +11,8 @@
                  type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/webconsole.css"
                  type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/components-frame.css"
+                 type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="devtools-webconsole"

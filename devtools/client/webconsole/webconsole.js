@@ -11,6 +11,9 @@ const {Cc, Ci, Cu} = require("chrome");
 const {Utils: WebConsoleUtils, CONSOLE_WORKER_IDS} =
   require("devtools/shared/webconsole/utils");
 const { getSourceNames } = require("devtools/client/shared/source-utils");
+const BrowserLoaderModule = {};
+Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
+
 const promise = require("promise");
 const Debugger = require("Debugger");
 const Services = require("Services");
@@ -219,6 +222,7 @@ function WebConsoleFrame(webConsoleOwner) {
 
   this.output = new ConsoleOutput(this);
 
+  this.unmountMessage = this.unmountMessage.bind(this);
   this._toggleFilter = this._toggleFilter.bind(this);
   this.resize = this.resize.bind(this);
   this._onPanelSelected = this._onPanelSelected.bind(this);
@@ -228,6 +232,15 @@ function WebConsoleFrame(webConsoleOwner) {
 
   this._outputTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   this._outputTimerInitialized = false;
+
+  let require = BrowserLoaderModule.BrowserLoader({
+    window: this.window,
+    useOnlyShared: true
+  }).require;
+
+  this.React = require("devtools/client/shared/vendor/react");
+  this.ReactDOM = require("devtools/client/shared/vendor/react-dom");
+  this.FrameView = this.React.createFactory(require("devtools/client/shared/components/frame"));
 
   EventEmitter.decorate(this);
 }
@@ -1162,6 +1175,10 @@ WebConsoleFrame.prototype = {
 
     if (dupeNode) {
       this.mergeFilteredMessageNode(dupeNode);
+      // Even though this node was never rendered, we create the location
+      // nodes before rendering, so we still have to clean up any
+      // React components
+      this.unmountMessage(node);
       return dupeNode;
     }
 
@@ -2271,6 +2288,22 @@ WebConsoleFrame.prototype = {
   },
 
   /**
+   * Cleans up a message via a node that may or may not
+   * have actually been rendered in the DOM. Currently, only
+   * cleans up React components.
+   *
+   * @param nsIDOMNode node
+   *        The message node you want to clean up.
+   */
+  unmountMessage(node) {
+    // Select all `.message-location` within this node to ensure we get
+    // messages of stacktraces, which contain multiple location nodes.
+    for (let locationNode of node.querySelectorAll(".message-location")) {
+      this.ReactDOM.unmountComponentAtNode(locationNode);
+    }
+  },
+
+  /**
    * Ensures that the number of message nodes of type category don't exceed that
    * category's line limit by removing old messages as needed.
    *
@@ -2323,6 +2356,8 @@ WebConsoleFrame.prototype = {
       }
       node._variablesView = null;
     }
+
+    this.unmountMessage(node);
 
     node.remove();
   },
@@ -2478,80 +2513,56 @@ WebConsoleFrame.prototype = {
    * Creates the anchor that displays the textual location of an incoming
    * message.
    *
-   * @param object aLocation
+   * @param {Object} aLocation
    *        An object containing url, line and column number of the message
    *        source (destructured).
-   * @param string target [optional]
-   *        Tells which tool to open the link with, on click. Supported tools:
-   *        jsdebugger, styleeditor, scratchpad.
-   * @return nsIDOMNode
+   * @return {Element}
    *         The new anchor element, ready to be added to the message node.
    */
-  createLocationNode: function({url, line, column}, target) {
+  createLocationNode: function({url, line, column}) {
     if (!url) {
       url = "";
     }
+
+    let fullURL = url.split(" -> ").pop();
     let locationNode = this.document.createElementNS(XHTML_NS, "a");
-    let filenameNode = this.document.createElementNS(XHTML_NS, "span");
-
-    // Create the text, which consists of an abbreviated version of the URL
-    // Scratchpad URLs should not be abbreviated.
-    let filename;
-    let fullURL;
-    let isScratchpad = false;
-
-    if (/^Scratchpad\/\d+$/.test(url)) {
-      filename = url;
-      fullURL = url;
-      isScratchpad = true;
-    } else {
-      fullURL = url.split(" -> ").pop();
-      filename = getSourceNames(fullURL).short;
-    }
-
-    filenameNode.className = "filename";
-    filenameNode.textContent = ` ${filename}`;
-    locationNode.appendChild(filenameNode);
-
-    locationNode.href = isScratchpad || !fullURL ? "#" : fullURL;
     locationNode.draggable = false;
-    if (target) {
-      locationNode.target = target;
-    }
-    locationNode.setAttribute("title", url);
-    locationNode.className = "message-location theme-link devtools-monospace";
+    locationNode.className = "message-location devtools-monospace";
 
     // Make the location clickable.
     let onClick = () => {
-      let nodeTarget = locationNode.target;
-      if (nodeTarget == "scratchpad" || isScratchpad) {
-        this.owner.viewSourceInScratchpad(url, line);
-        return;
-      }
-
       let category = locationNode.parentNode.category;
-      if (nodeTarget == "styleeditor" || category == CATEGORY_CSS) {
-        this.owner.viewSourceInStyleEditor(fullURL, line);
-      } else if (nodeTarget == "jsdebugger" ||
-                 category == CATEGORY_JS || category == CATEGORY_WEBDEV) {
-        this.owner.viewSourceInDebugger(fullURL, line);
-      } else {
-        this.owner.viewSource(fullURL, line);
+      let target = category === CATEGORY_CSS ? "styleeditor" :
+                   category === CATEGORY_JS ? "jsdebugger" :
+                   category === CATEGORY_WEBDEV ? "jsdebugger" :
+                   /^Scratchpad\/\d+$/.test(url) ? "scratchpad" :
+                   // If it ends in .js, let's attempt to open in debugger
+                   // anyway, as this falls back to normal view-source.
+                   /\.js$/.test(fullURL) ? "jsdebugger" : null;
+
+      switch (target) {
+        case "scratchpad":
+          this.owner.viewSourceInScratchpad(url, line);
+          return;
+        case "jsdebugger":
+          this.owner.viewSourceInDebugger(fullURL, line);
+          return;
+        case "styleeditor":
+          this.owner.viewSourceInStyleEditor(fullURL, line);
+          return;
       }
+      // No matching tool found; use old school view-source
+      this.owner.viewSource(fullURL, line);
     };
 
-    if (fullURL) {
-      this._addMessageLinkCallback(locationNode, onClick);
-    }
-
-    if (line) {
-      let lineNumberNode = this.document.createElementNS(XHTML_NS, "span");
-      lineNumberNode.className = "line-number";
-      lineNumberNode.textContent =
-        ":" + line + (column >= 0 ? ":" + column : "");
-      locationNode.appendChild(lineNumberNode);
-      locationNode.sourceLine = line;
-    }
+    this.ReactDOM.render(this.FrameView({
+      frame: {
+        source: fullURL,
+        line,
+        column,
+      },
+      onClick
+    }), locationNode);
 
     return locationNode;
   },
@@ -2788,6 +2799,12 @@ WebConsoleFrame.prototype = {
     this._pruneCategoriesQueue = {};
     this.webConsoleClient.clearNetworkRequests();
 
+    // Unmount any currently living frame components in DOM, since
+    // currently we only clean up messages in `this.removeOutputMessage`,
+    // via `this.pruneOutputIfNecessary`.
+    let liveMessages = this.outputNode.querySelectorAll(".message");
+    Array.prototype.forEach.call(liveMessages, this.unmountMessage);
+
     if (this._outputTimerInitialized) {
       this._outputTimerInitialized = false;
       this._outputTimer.cancel();
@@ -2801,6 +2818,8 @@ WebConsoleFrame.prototype = {
     }
     this.output.destroy();
     this.output = null;
+
+    this.React = this.ReactDOM = this.FrameView = null;
 
     if (this._contextMenuHandler) {
       this._contextMenuHandler.destroy();

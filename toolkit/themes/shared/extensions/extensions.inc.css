@@ -803,6 +803,7 @@ setting {
   margin-bottom: 1em;
 }
 
+.inline-options-browser,
 setting[first-row="true"] {
   margin-top: 2em;
 }

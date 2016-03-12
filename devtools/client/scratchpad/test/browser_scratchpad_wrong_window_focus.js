@@ -50,10 +50,11 @@ function testFocus(sw, hud) {
     let msg = [...messages][0];
     let node = msg.node;
 
-    var loc = node.querySelector(".message-location");
+    var loc = node.querySelector(".frame-link");
     ok(loc, "location element exists");
-    is(loc.textContent.trim(), sw.Scratchpad.uniqueName + ":1:1",
-        "location value is correct");
+    is(loc.getAttribute("data-url"), sw.Scratchpad.uniqueName, "location value is correct");
+    is(loc.getAttribute("data-line"), "1", "line value is correct");
+    is(loc.getAttribute("data-column"), "1", "column value is correct");
 
     sw.addEventListener("focus", function onFocus() {
       sw.removeEventListener("focus", onFocus, true);

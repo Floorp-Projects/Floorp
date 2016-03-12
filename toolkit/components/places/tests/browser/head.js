@@ -1,18 +1,19 @@
-/* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
-const TRANSITION_LINK = Ci.nsINavHistoryService.TRANSITION_LINK;
-const TRANSITION_TYPED = Ci.nsINavHistoryService.TRANSITION_TYPED;
-const TRANSITION_BOOKMARK = Ci.nsINavHistoryService.TRANSITION_BOOKMARK;
-const TRANSITION_REDIRECT_PERMANENT = Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT;
-const TRANSITION_REDIRECT_TEMPORARY = Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY;
-const TRANSITION_EMBED = Ci.nsINavHistoryService.TRANSITION_EMBED;
-const TRANSITION_FRAMED_LINK = Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK;
-const TRANSITION_DOWNLOAD = Ci.nsINavHistoryService.TRANSITION_DOWNLOAD;
-
+Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
                                   "resource://testing-common/PlacesTestUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserTestUtils",
+                                  "resource://testing-common/BrowserTestUtils.jsm");
+
+const TRANSITION_LINK = PlacesUtils.history.TRANSITION_LINK;
+const TRANSITION_TYPED = PlacesUtils.history.TRANSITION_TYPED;
+const TRANSITION_BOOKMARK = PlacesUtils.history.TRANSITION_BOOKMARK;
+const TRANSITION_REDIRECT_PERMANENT = PlacesUtils.history.TRANSITION_REDIRECT_PERMANENT;
+const TRANSITION_REDIRECT_TEMPORARY = PlacesUtils.history.TRANSITION_REDIRECT_TEMPORARY;
+const TRANSITION_EMBED = PlacesUtils.history.TRANSITION_EMBED;
+const TRANSITION_FRAMED_LINK = PlacesUtils.history.TRANSITION_FRAMED_LINK;
+const TRANSITION_DOWNLOAD = PlacesUtils.history.TRANSITION_DOWNLOAD;
 
 /**
  * Returns a moz_places field value for a url.

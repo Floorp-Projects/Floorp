@@ -85,12 +85,6 @@ if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
     privileged: true
   };
 }
-if (AppConstants.MOZ_DEVICES) {
-  modules['devices'] = {
-    uri: "chrome://browser/content/aboutDevices.xhtml",
-    privileged: true
-  };
-}
 
 function AboutRedirector() {}
 AboutRedirector.prototype = {
