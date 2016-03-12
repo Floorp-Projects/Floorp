@@ -1733,33 +1733,6 @@ NonPrimitiveError(JSContext* cx, HandleObject typeObj)
 }
 
 static bool
-NonStringBaseError(JSContext* cx, HandleValue thisVal)
-{
-  JSAutoByteString valBytes;
-  const char* valStr = CTypesToSourceForError(cx, thisVal, valBytes);
-  if (!valStr)
-    return false;
-
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_NON_STRING_BASE, valStr);
-  return false;
-}
-
-static bool
-NullPointerError(JSContext* cx, const char* action, HandleObject obj)
-{
-  JSAutoByteString valBytes;
-  RootedValue val(cx, ObjectValue(*obj));
-  const char* valStr = CTypesToSourceForError(cx, val, valBytes);
-  if (!valStr)
-    return false;
-
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_NULL_POINTER, action, valStr);
-  return false;
-}
-
-static bool
 PropNameNonStringError(JSContext* cx, HandleId id, HandleValue actual,
                        ConversionType convType,
                        HandleObject funObj = nullptr, unsigned argIndex = 0)
@@ -1823,20 +1796,6 @@ TypeOverflow(JSContext* cx, const char* expected, HandleValue actual)
 
   JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                        CTYPESMSG_TYPE_OVERFLOW, valStr, expected);
-  return false;
-}
-
-static bool
-UndefinedSizePointerError(JSContext* cx, const char* action, HandleObject obj)
-{
-  JSAutoByteString valBytes;
-  RootedValue val(cx, ObjectValue(*obj));
-  const char* valStr = CTypesToSourceForError(cx, val, valBytes);
-  if (!valStr)
-    return false;
-
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_UNDEFINED_SIZE, action, valStr);
   return false;
 }
 
@@ -5184,7 +5143,7 @@ PointerType::IsNull(JSContext* cx, unsigned argc, Value* vp)
 bool
 PointerType::OffsetBy(JSContext* cx, const CallArgs& args, int offset)
 {
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, args.base()));
+  JSObject* obj = JS_THIS_OBJECT(cx, args.base());
   if (!obj)
     return false;
   if (!CData::IsCData(obj)) {
@@ -5208,7 +5167,8 @@ PointerType::OffsetBy(JSContext* cx, const CallArgs& args, int offset)
 
   RootedObject baseType(cx, PointerType::GetBaseType(typeObj));
   if (!CType::IsSizeDefined(baseType)) {
-    return UndefinedSizePointerError(cx, "modify", obj);
+    JS_ReportError(cx, "cannot modify pointer of undefined size");
+    return false;
   }
 
   size_t elementSize = CType::GetSize(baseType);
@@ -5244,12 +5204,14 @@ PointerType::ContentsGetter(JSContext* cx, const JS::CallArgs& args)
   RootedObject obj(cx, &args.thisv().toObject());
   RootedObject baseType(cx, GetBaseType(CData::GetCType(obj)));
   if (!CType::IsSizeDefined(baseType)) {
-    return UndefinedSizePointerError(cx, "get contents of", obj);
+    JS_ReportError(cx, "cannot get contents of undefined size");
+    return false;
   }
 
   void* data = *static_cast<void**>(CData::GetData(obj));
   if (data == nullptr) {
-    return NullPointerError(cx, "read contents of", obj);
+    JS_ReportError(cx, "cannot read contents of null pointer");
+    return false;
   }
 
   RootedValue result(cx);
@@ -5266,12 +5228,14 @@ PointerType::ContentsSetter(JSContext* cx, const JS::CallArgs& args)
   RootedObject obj(cx, &args.thisv().toObject());
   RootedObject baseType(cx, GetBaseType(CData::GetCType(obj)));
   if (!CType::IsSizeDefined(baseType)) {
-    return UndefinedSizePointerError(cx, "set contents of", obj);
+    JS_ReportError(cx, "cannot set contents of undefined size");
+    return false;
   }
 
   void* data = *static_cast<void**>(CData::GetData(obj));
   if (data == nullptr) {
-    return NullPointerError(cx, "write contents to", obj);
+    JS_ReportError(cx, "cannot write contents to null pointer");
+    return false;
   }
 
   args.rval().setUndefined();
@@ -7774,7 +7738,8 @@ ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8, unsigned argc,
     baseType = PointerType::GetBaseType(typeObj);
     data = *static_cast<void**>(CData::GetData(obj));
     if (data == nullptr) {
-      return NullPointerError(cx, "read contents of", obj);
+      JS_ReportError(cx, "cannot read contents of null pointer");
+      return false;
     }
     break;
   case TYPE_array:
@@ -7783,7 +7748,8 @@ ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8, unsigned argc,
     maxLength = ArrayType::GetLength(typeObj);
     break;
   default:
-    return TypeError(cx, "PointerType or ArrayType", args.thisv());
+    JS_ReportError(cx, "not a PointerType or ArrayType");
+    return false;
   }
 
   // Convert the string buffer, taking care to determine the correct string
@@ -7817,7 +7783,9 @@ ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8, unsigned argc,
     break;
   }
   default:
-    return NonStringBaseError(cx, args.thisv());
+    JS_ReportError(cx,
+      "base type is not an 8-bit or 16-bit integer or character type");
+    return false;
   }
 
   if (!result)
