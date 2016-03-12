@@ -95,7 +95,7 @@
       <hbox id="netmonitor-toolbar" class="devtools-toolbar">
         <toolbarbutton id="requests-menu-clear-button"
                        class="devtools-toolbarbutton devtools-clear-icon"
-                       tooltip="&netmonitorUI.footer.clear;"/>
+                       tooltiptext="&netmonitorUI.footer.clear;"/>
         <hbox id="requests-menu-filter-buttons">
           <button id="requests-menu-filter-all-button"
                   class="requests-menu-filter-button"
