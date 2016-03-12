@@ -6394,10 +6394,45 @@ DebuggerSource_checkThis(JSContext* cx, const CallArgs& args, const char* fnname
         return false;                                                               \
     RootedScriptSource sourceObject(cx, GetSourceReferent(obj).as<ScriptSourceObject*>())
 
+class DebuggerSourceGetTextMatcher
+{
+    JSContext* cx_;
+
+  public:
+    explicit DebuggerSourceGetTextMatcher(JSContext* cx) : cx_(cx) { }
+
+    using ReturnType = JSString*;
+
+    ReturnType match(HandleScriptSource sourceObject) {
+        ScriptSource* ss = sourceObject->source();
+        bool hasSourceData = ss->hasSourceData();
+        if (!ss->hasSourceData() && !JSScript::loadSource(cx_, ss, &hasSourceData))
+            return nullptr;
+        return hasSourceData ? ss->substring(cx_, 0, ss->length())
+                             : NewStringCopyZ<CanGC>(cx_, "[no source]");
+    }
+
+    ReturnType match(Handle<WasmModuleObject*> wasmModule) {
+        const char* placeholder =
+            "/*\n"
+            " * .--.      .--.   ____       .-'''-. ,---.    ,---.\n"
+            " * |  |_     |  | .'  __ `.   / _     \\|    \\  /    |\n"
+            " * | _( )_   |  |/   '  \\  \\ (`' )/`--'|  ,  \\/  ,  |\n"
+            " * |(_ o _)  |  ||___|  /  |(_ o _).   |  |\\_   /|  |\n"
+            " * | (_,_) \\ |  |   _.-`   | (_,_). '. |  _( )_/ |  |\n"
+            " * |  |/    \\|  |.'   _    |.---.  \\  :| (_ o _) |  |\n"
+            " * |  '  /\\  `  ||  _( )_  |\\    `-'  ||  (_,_)  |  |\n"
+            " * |    /  \\    |\\ (_ o _) / \\       / |  |      |  |\n"
+            " * `---'    `---` '.(_,_).'   `-...-'  '--'      '--'\n"
+            " */";
+        return NewStringCopyZ<CanGC>(cx_, placeholder);
+    }
+};
+
 static bool
 DebuggerSource_getText(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSOURCE_SOURCE(cx, argc, vp, "(get text)", args, obj, sourceObject);
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get text)", args, obj, referent);
     Value textv = obj->getReservedSlot(JSSLOT_DEBUGSOURCE_TEXT);
     if (!textv.isUndefined()) {
         MOZ_ASSERT(textv.isString());
@@ -6405,13 +6440,8 @@ DebuggerSource_getText(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    ScriptSource* ss = sourceObject->source();
-    bool hasSourceData = ss->hasSourceData();
-    if (!ss->hasSourceData() && !JSScript::loadSource(cx, ss, &hasSourceData))
-        return false;
-
-    JSString* str = hasSourceData ? ss->substring(cx, 0, ss->length())
-                                  : NewStringCopyZ<CanGC>(cx, "[no source]");
+    DebuggerSourceGetTextMatcher matcher(cx);
+    JSString* str = referent.match(matcher);
     if (!str)
         return false;
 
