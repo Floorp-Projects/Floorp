@@ -92,6 +92,9 @@ interface GlobalEventHandlers {
            [Pref="dom.select_events.enabled"]
            attribute EventHandler onselectstart;
 
+           [Pref="dom.details_element.enabled"]
+           attribute EventHandler ontoggle;
+
            // Pointer events handlers
            [Pref="dom.w3c_pointer_events.enabled"]
            attribute EventHandler onpointercancel;
