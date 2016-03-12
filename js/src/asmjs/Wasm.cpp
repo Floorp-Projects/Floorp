@@ -1454,7 +1454,6 @@ DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t len
     if (!moduleObj->init(cx->new_<Module>(Move(module))))
         return false;
 
-    cx->compartment()->wasmModules.insertBack(&moduleObj->module());
     return moduleObj->module().staticallyLink(cx, *staticLink);
 }
 
