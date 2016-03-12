@@ -400,7 +400,10 @@ MemoryTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
   return true;
 }
 
-static bool InitBuffer(uint8_t* buf, size_t bufSize, gfx::SurfaceFormat aFormat, TextureAllocationFlags aAllocFlags)
+static bool
+InitBuffer(uint8_t* buf, size_t bufSize,
+           gfx::SurfaceFormat aFormat, TextureAllocationFlags aAllocFlags,
+           bool aAlreadyZero)
 {
   if (!buf) {
     gfxDebug() << "BufferTextureData: Failed to allocate " << bufSize << " bytes";
@@ -413,7 +416,7 @@ static bool InitBuffer(uint8_t* buf, size_t bufSize, gfx::SurfaceFormat aFormat,
       // Even though BGRX was requested, XRGB_UINT32 is what is meant,
       // so use 0xFF000000 to put alpha in the right place.
       std::fill_n(reinterpret_cast<uint32_t*>(buf), bufSize / sizeof(uint32_t), 0xFF000000);
-    } else {
+    } else if (!aAlreadyZero) {
       memset(buf, 0, bufSize);
     }
   }
@@ -445,7 +448,7 @@ MemoryTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   }
 
   uint8_t* buf = new (fallible) uint8_t[bufSize];
-  if (!InitBuffer(buf, bufSize, aFormat, aAllocFlags)) {
+  if (!InitBuffer(buf, bufSize, aFormat, aAllocFlags, false)) {
     return nullptr;
   }
 
@@ -522,7 +525,7 @@ ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   }
 
   uint8_t* buf = shm.get<uint8_t>();
-  if (!InitBuffer(buf, bufSize, aFormat, aAllocFlags)) {
+  if (!InitBuffer(buf, bufSize, aFormat, aAllocFlags, true)) {
     return nullptr;
   }
 
