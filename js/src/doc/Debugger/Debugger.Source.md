@@ -204,7 +204,7 @@ from its prototype:
     **If the instance refers to WebAssembly code**, `"wasm"`.
 
 `introductionScript`, `introductionOffset`
-:   **If the instance refers to JavaScript source**, if this source was
+:   **If the instance refers to JavaScript source**, and if this source was
     introduced by calling a function from debuggee code, then
     `introductionScript` is the [`Debugger.Script`][script] instance referring
     to the script containing that call, and `introductionOffset` is the call's
