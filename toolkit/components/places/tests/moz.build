@@ -67,16 +67,6 @@ TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests += [
     'bug94514-postpage.html',
 ]
 
-TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.mochitest.bug_411966 += [
-    'mochitest/bug_411966/ClickedPage.htm',
-    'mochitest/bug_411966/ClickedPage.htm^headers^',
-    'mochitest/bug_411966/PermRedirectPage.htm',
-    'mochitest/bug_411966/redirect.js',
-    'mochitest/bug_411966/TempRedirectPage.htm',
-    'mochitest/bug_411966/TempRedirectPage.htm^headers^',
-    'mochitest/bug_411966/TypedPage.htm',
-]
-
 TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.mochitest.bug_461710 += [
     'mochitest/bug_461710/iframe.html',
     'mochitest/bug_461710/link_page-2.html',

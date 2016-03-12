@@ -131,7 +131,9 @@ function clickPageAction(extension, win = window) {
 function closePageAction(extension, win = window) {
   let node = getPageActionPopup(extension, win);
   if (node) {
-    node.hidePopup();
+    return promisePopupShown(node).then(() => {
+      node.hidePopup();
+    });
   }
 
   return Promise.resolve();

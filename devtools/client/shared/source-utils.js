@@ -187,6 +187,7 @@ function isScratchpadScheme(location, i=0) {
          location.charCodeAt(++i) === CHAR_CODE_R &&
          location.charCodeAt(++i) === CHAR_CODE_A &&
          location.charCodeAt(++i) === CHAR_CODE_T &&
+         location.charCodeAt(++i) === CHAR_CODE_C &&
          location.charCodeAt(++i) === CHAR_CODE_H &&
          location.charCodeAt(++i) === CHAR_CODE_P &&
          location.charCodeAt(++i) === CHAR_CODE_A &&

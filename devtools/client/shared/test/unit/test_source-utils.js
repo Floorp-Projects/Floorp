@@ -78,6 +78,13 @@ add_task(function* () {
                    "example.com");
 });
 
+// Test `sourceUtils.isScratchpadTheme`
+add_task(function* () {
+  ok(sourceUtils.isScratchpadScheme("Scratchpad/1"), "Scratchpad/1 identified as scratchpad");
+  ok(sourceUtils.isScratchpadScheme("Scratchpad/20"), "Scratchpad/20 identified as scratchpad");
+  ok(!sourceUtils.isScratchpadScheme("http://www.mozilla.org"), "http://www.mozilla.org not identified as scratchpad");
+});
+
 // Test `sourceUtils.getSourceNames`.
 add_task(function* () {
 

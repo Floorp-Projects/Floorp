@@ -101,8 +101,6 @@ const CACHE_VERSION = 1;
 
 const CACHE_FILENAME = "search.json.mozlz4";
 
-const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
-
 const NEW_LINES = /(\r\n|\r|\n)/;
 
 // Set an arbitrary cap on the maximum icon size. Without this, large icons can
@@ -1740,6 +1738,11 @@ Engine.prototype = {
    *        String with the icon's URI.
    */
   _addIconToMap: function SRCH_ENG_addIconToMap(aWidth, aHeight, aURISpec) {
+    if (aWidth == 16 && aHeight == 16) {
+      // The 16x16 icon is stored in _iconURL, we don't need to store it twice.
+      return;
+    }
+
     // Use an object instead of a Map() because it needs to be serializable.
     this._iconMapObj = this._iconMapObj || {};
     let key = this._getIconKey(aWidth, aHeight);
@@ -1789,7 +1792,6 @@ Engine.prototype = {
       case "http":
       case "https":
       case "ftp":
-        // No use downloading the icon if the engine file is read-only
         LOG("_setIcon: Downloading icon: \"" + uri.spec +
             "\" for engine: \"" + this.name + "\"");
         var chan = NetUtil.newChannel({
@@ -1808,8 +1810,12 @@ Engine.prototype = {
             return;
           }
 
-          var str = btoa(String.fromCharCode.apply(null, aByteArray));
-          let dataURL = ICON_DATAURL_PREFIX + str;
+          let type = chan.contentType;
+          if (!type.startsWith("image/"))
+            type = "image/x-icon";
+          let dataURL = "data:" + type + ";base64," +
+            btoa(String.fromCharCode.apply(null, aByteArray));
+
           aEngine._iconURI = makeURI(dataURL);
 
           if (aWidth && aHeight) {
@@ -1818,7 +1824,7 @@ Engine.prototype = {
 
           notifyAction(aEngine, SEARCH_ENGINE_CHANGED);
           aEngine._hasPreferredIcon = aIsPreferred;
-        }
+        };
 
         // If we're currently acting as an "update engine", then the callback
         // should set the icon on the engine we're updating and not us, since
@@ -2511,6 +2517,9 @@ Engine.prototype = {
    *        Height of the requested icon.
    */
   getIconURLBySize: function SRCH_ENG_getIconURLBySize(aWidth, aHeight) {
+    if (aWidth == 16 && aHeight == 16)
+      return this._iconURL;
+
     if (!this._iconMapObj)
       return null;
 
@@ -2529,6 +2538,8 @@ Engine.prototype = {
    */
   getIcons: function SRCH_ENG_getIcons() {
     let result = [];
+    if (this._iconURL)
+      result.push({width: 16, height: 16, url: this._iconURL});
 
     if (!this._iconMapObj)
       return result;

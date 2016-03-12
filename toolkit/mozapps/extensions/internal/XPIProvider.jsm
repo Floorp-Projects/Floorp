@@ -890,6 +890,14 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   addon.optionsType = null;
   addon.aboutURL = null;
 
+  if (manifest.options_ui) {
+    addon.optionsURL = extension.getURL(manifest.options_ui.page);
+    if (manifest.options_ui.open_in_tab)
+      addon.optionsType = AddonManager.OPTIONS_TYPE_TAB;
+    else
+      addon.optionsType = AddonManager.OPTIONS_TYPE_INLINE_BROWSER;
+  }
+
   // WebExtensions don't use iconURLs
   addon.iconURL = null;
   addon.icon64URL = null;
@@ -3810,8 +3818,9 @@ this.XPIProvider = {
    * @param aFile
    *        An nsIFile for the unpacked add-on directory or XPI file.
    *
-   * @return a Promise that rejects if the add-on is not a valid restartless
-   *         add-on or if the same ID is already temporarily installed
+   * @return a Promise that resolves to an Addon object on success, or rejects
+   *         if the add-on is not a valid restartless add-on or if the
+   *         same ID is already temporarily installed
    */
   installTemporaryAddon: Task.async(function*(aFile) {
     let addon = yield loadManifestFromFile(aFile, TemporaryInstallLocation);
@@ -6919,6 +6928,7 @@ AddonWrapper.prototype = {
         return hasOptionsURL ? addon.optionsType : null;
       case AddonManager.OPTIONS_TYPE_INLINE:
       case AddonManager.OPTIONS_TYPE_INLINE_INFO:
+      case AddonManager.OPTIONS_TYPE_INLINE_BROWSER:
         return (hasOptionsXUL || hasOptionsURL) ? addon.optionsType : null;
       }
       return null;

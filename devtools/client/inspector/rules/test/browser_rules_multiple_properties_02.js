@@ -15,7 +15,10 @@ add_task(function*() {
   yield selectNode("div", inspector);
 
   let ruleEditor = getRuleViewRuleEditor(view, 0);
-  let onDone = view.once("ruleview-changed");
+  // Expect 2 ruleview-changed events.
+  // - one when focusing the property-name editor
+  // - one after pressing RETURN, which will focus the property-value editor
+  let onDone = waitForNEvents(view, "ruleview-changed", 2);
   yield createNewRuleViewProperty(ruleEditor, "width:");
   yield onDone;
 
