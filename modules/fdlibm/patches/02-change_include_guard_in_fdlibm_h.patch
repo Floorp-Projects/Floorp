@@ -1,0 +1,43 @@
+# HG changeset patch
+# User Tooru Fujisawa <arai_a@mac.com>
+# Date 1452137427 -32400
+#      Thu Jan 07 12:30:27 2016 +0900
+# Node ID 7775dba49d062c28eca221ab804966f1ddd7c359
+# Parent  b928f0090a041b6eb0c3f8e97f038233f3fda55b
+Bug 933257 - Part 2.2: Change include guard in fdlibm.h.
+
+diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
+--- a/modules/fdlibm/src/fdlibm.h
++++ b/modules/fdlibm/src/fdlibm.h
+@@ -9,18 +9,18 @@
+  * ====================================================
+  */
+ 
+ /*
+  * from: @(#)fdlibm.h 5.1 93/09/24
+  * $FreeBSD$
+  */
+ 
+-#ifndef _MATH_H_
+-#define	_MATH_H_
++#ifndef mozilla_imported_fdlibm_h
++#define mozilla_imported_fdlibm_h
+ 
+ double	acos(double);
+ double	asin(double);
+ double	atan(double);
+ double	atan2(double, double);
+ double	cos(double);
+ double	sin(double);
+ double	tan(double);
+@@ -51,9 +51,9 @@ double	log1p(double);
+ double	log2(double);
+ 
+ double	copysign(double, double);
+ double	scalbn(double, int);
+ double	trunc(double);
+ 
+ float	floorf(float);
+ 
+-#endif /* !_MATH_H_ */
++#endif /* mozilla_imported_fdlibm_h */
