@@ -56,10 +56,10 @@ class TestAnonymousContent(MarionetteTestCase):
 
     def test_find_anonymous_children(self):
         el = Wait(self.marionette).until(element_present(By.ID, "dia"))
-        self.assertEquals(HTMLElement, type(el.find_element("anon", None)))
-        self.assertEquals(2, len(el.find_elements("anon", None)))
+        self.assertEquals(HTMLElement, type(el.find_element(By.ANON, None)))
+        self.assertEquals(2, len(el.find_elements(By.ANON, None)))
 
         el = self.marionette.find_element(By.ID, "framebox")
         with self.assertRaises(NoSuchElementException):
-            el.find_element("anon", None)
-        self.assertEquals([], el.find_elements("anon", None))
+            el.find_element(By.ANON, None)
+        self.assertEquals([], el.find_elements(By.ANON, None))
