@@ -1495,40 +1495,6 @@ IncompatibleThisType(JSContext* cx, const char* funName, const char* actualType,
 }
 
 static bool
-InvalidIndexError(JSContext* cx, HandleValue val)
-{
-  JSAutoByteString idBytes;
-  const char* indexStr = CTypesToSourceForError(cx, val, idBytes);
-  if (!indexStr)
-    return false;
-
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_INVALID_INDEX, indexStr);
-  return false;
-}
-
-static bool
-InvalidIndexError(JSContext* cx, HandleId id)
-{
-  RootedValue idVal(cx, IdToValue(id));
-  return InvalidIndexError(cx, idVal);
-}
-
-static bool
-InvalidIndexRangeError(JSContext* cx, size_t index, size_t length)
-{
-  char indexStr[16];
-  JS_snprintf(indexStr, 16, "%u", index);
-
-  char lengthStr[16];
-  JS_snprintf(lengthStr, 16, "%u", length);
-
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_INVALID_RANGE, indexStr, lengthStr);
-  return false;
-}
-
-static bool
 NonPrimitiveError(JSContext* cx, HandleObject typeObj)
 {
   MOZ_ASSERT(CType::IsCType(typeObj));
@@ -5410,11 +5376,9 @@ ArrayType::Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandle
     // Chances are it's a regular property lookup, so return.
     return true;
   }
-  if (!ok) {
-    return InvalidIndexError(cx, idval);
-  }
-  if (index >= length) {
-    return InvalidIndexRangeError(cx, index, length);
+  if (!ok || index >= length) {
+    JS_ReportError(cx, "invalid index");
+    return false;
   }
 
   RootedObject baseType(cx, GetBaseType(typeObj));
@@ -5453,11 +5417,9 @@ ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandle
     // Chances are it's a regular property lookup, so return.
     return result.succeed();
   }
-  if (!ok) {
-    return InvalidIndexError(cx, idval);
-  }
-  if (index >= length) {
-    return InvalidIndexRangeError(cx, index, length);
+  if (!ok || index >= length) {
+    JS_ReportError(cx, "invalid index");
+    return false;
   }
 
   RootedObject baseType(cx, GetBaseType(typeObj));
@@ -5507,11 +5469,10 @@ ArrayType::AddressOfElement(JSContext* cx, unsigned argc, Value* vp)
   // Convert the index to a size_t and bounds-check it.
   size_t index;
   size_t length = GetLength(typeObj);
-  if (!jsvalToSize(cx, args[0], false, &index)) {
-    return InvalidIndexError(cx, args[0]);
-  }
-  if (index >= length) {
-    return InvalidIndexRangeError(cx, index, length);
+  if (!jsvalToSize(cx, args[0], false, &index) ||
+      index >= length) {
+    JS_ReportError(cx, "invalid index");
+    return false;
   }
 
   // Manually set the pointer inside the object, so we skip the conversion step.
