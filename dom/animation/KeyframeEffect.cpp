@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/KeyframeEffect.h"
 
+#include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/PropertyIndexedKeyframesBinding.h"
 #include "mozilla/AnimationUtils.h"
@@ -673,19 +674,6 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
     return nullptr;
   }
 
-  return ConstructKeyframeEffect<KeyframeEffectType>(
-    aGlobal, aTarget, aFrames, timingParams, aRv);
-}
-
-template <class KeyframeEffectType>
-/* static */ already_AddRefed<KeyframeEffectType>
-KeyframeEffectReadOnly::ConstructKeyframeEffect(
-    const GlobalObject& aGlobal,
-    const Nullable<ElementOrCSSPseudoElement>& aTarget,
-    JS::Handle<JSObject*> aFrames,
-    const TimingParams& aTiming,
-    ErrorResult& aRv)
-{
   if (aTarget.IsNull()) {
     // We don't support null targets yet.
     aRv.Throw(NS_ERROR_DOM_ANIM_NO_TARGET_ERR);
@@ -720,7 +708,7 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
 
   RefPtr<KeyframeEffectType> effect =
     new KeyframeEffectType(targetElement->OwnerDoc(), targetElement,
-                           pseudoType, aTiming);
+                           pseudoType, timingParams);
   effect->mProperties = Move(animationProperties);
   return effect.forget();
 }
@@ -2250,11 +2238,11 @@ KeyframeEffect::Constructor(
     const GlobalObject& aGlobal,
     const Nullable<ElementOrCSSPseudoElement>& aTarget,
     JS::Handle<JSObject*> aFrames,
-    const TimingParams& aTiming,
+    const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
     ErrorResult& aRv)
 {
   return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aTarget, aFrames,
-                                                 aTiming, aRv);
+                                                 aOptions, aRv);
 }
 
 void KeyframeEffect::NotifySpecifiedTimingUpdated()

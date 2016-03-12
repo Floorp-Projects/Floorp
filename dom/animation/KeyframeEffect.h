@@ -42,6 +42,7 @@ enum class CSSPseudoElementType : uint8_t;
 namespace dom {
 class ElementOrCSSPseudoElement;
 class OwningElementOrCSSPseudoElement;
+class UnrestrictedDoubleOrKeyframeAnimationOptions;
 class UnrestrictedDoubleOrKeyframeEffectOptions;
 enum class IterationCompositeOperation : uint32_t;
 enum class CompositeOperation : uint32_t;
@@ -352,13 +353,6 @@ protected:
                           JS::Handle<JSObject*> aFrames,
                           const OptionsType& aOptions,
                           ErrorResult& aRv);
-  template<class KeyframeEffectType>
-  static already_AddRefed<KeyframeEffectType>
-  ConstructKeyframeEffect(const GlobalObject& aGlobal,
-                          const Nullable<ElementOrCSSPseudoElement>& aTarget,
-                          JS::Handle<JSObject*> aFrames,
-                          const TimingParams& aTiming,
-                          ErrorResult& aRv);
 
   void ResetIsRunningOnCompositor();
 
@@ -433,13 +427,14 @@ public:
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
               ErrorResult& aRv);
 
-  // More generalized version of Constructor for Animatable.animate.
+  // Variant of Constructor that accepts a KeyframeAnimationOptions object
+  // for use with for Animatable.animate.
   // Not exposed to content.
   static already_AddRefed<KeyframeEffect>
   Constructor(const GlobalObject& aGlobal,
               const Nullable<ElementOrCSSPseudoElement>& aTarget,
               JS::Handle<JSObject*> aFrames,
-              const TimingParams& aTiming,
+              const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
               ErrorResult& aRv);
 
   void NotifySpecifiedTimingUpdated();
