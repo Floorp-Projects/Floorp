@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette import MarionetteTestCase
+from marionette_driver.by import By
 
 
 OOP_BY_DEFAULT = "dom.ipc.browser_frames.oop_by_default"
@@ -58,7 +59,7 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
             iframe.src = "%s";
             document.body.appendChild(iframe);
             """ % self.marionette.absolute_url("test.html"))
-        remote_iframe = self.marionette.find_element("id", "remote_iframe")
+        remote_iframe = self.marionette.find_element(By.ID, "remote_iframe")
         self.marionette.switch_to_frame(remote_iframe)
         main_process = self.is_main_process
         self.assertFalse(main_process)
@@ -77,7 +78,7 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
             iframe.src = "%s";
             document.body.appendChild(iframe);
             """ % self.marionette.absolute_url("test.html"))
-        self.marionette.switch_to_frame(self.marionette.find_element("id",
+        self.marionette.switch_to_frame(self.marionette.find_element(By.ID,
                                                                      "remote_iframe"))
         main_process = self.is_main_process
         self.assertFalse(main_process)
@@ -85,7 +86,7 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
         main_process = self.is_main_process
         should_be_main_process = not self.multi_process_browser
         self.assertEqual(main_process, should_be_main_process)
-        self.marionette.switch_to_frame(self.marionette.find_element("id",
+        self.marionette.switch_to_frame(self.marionette.find_element(By.ID,
                                                                      "remote_iframe"))
         main_process = self.is_main_process
         self.assertFalse(main_process)

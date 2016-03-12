@@ -4,19 +4,21 @@
 
 from marionette import MarionetteTestCase
 from marionette_driver.errors import InvalidElementStateException
+from marionette_driver.by import By
+
 
 class TestClear(MarionetteTestCase):
     def testWriteableTextInputShouldClear(self):
         test_html = self.marionette.absolute_url("test_clearing.html")
         self.marionette.navigate(test_html)
-        element = self.marionette.find_element("id", "writableTextInput")
+        element = self.marionette.find_element(By.ID, "writableTextInput")
         element.clear()
         self.assertEqual("", element.get_attribute("value"))
 
     def testTextInputShouldNotClearWhenReadOnly(self):
         test_html = self.marionette.absolute_url("test_clearing.html")
         self.marionette.navigate(test_html)
-        element = self.marionette.find_element("id","readOnlyTextInput")
+        element = self.marionette.find_element(By.ID,"readOnlyTextInput")
         try:
             element.clear()
             self.fail("Should not have been able to clear")
@@ -26,14 +28,14 @@ class TestClear(MarionetteTestCase):
     def testWritableTextAreaShouldClear(self):
         test_html = self.marionette.absolute_url("test_clearing.html")
         self.marionette.navigate(test_html)
-        element = self.marionette.find_element("id","writableTextArea")
+        element = self.marionette.find_element(By.ID,"writableTextArea")
         element.clear()
         self.assertEqual("", element.get_attribute("value"))
 
     def testTextAreaShouldNotClearWhenDisabled(self):
         test_html = self.marionette.absolute_url("test_clearing.html")
         self.marionette.navigate(test_html)
-        element = self.marionette.find_element("id","textAreaNotenabled")
+        element = self.marionette.find_element(By.ID,"textAreaNotenabled")
         try:
             element.clear()
             self.fail("Should not have been able to clear")
@@ -43,7 +45,7 @@ class TestClear(MarionetteTestCase):
     def testTextAreaShouldNotClearWhenReadOnly(self):
         test_html = self.marionette.absolute_url("test_clearing.html")
         self.marionette.navigate(test_html)
-        element = self.marionette.find_element("id","textAreaReadOnly")
+        element = self.marionette.find_element(By.ID,"textAreaReadOnly")
         try:
             element.clear()
             self.fail("Should not have been able to clear")
@@ -53,7 +55,7 @@ class TestClear(MarionetteTestCase):
     def testContentEditableAreaShouldClear(self):
         test_html = self.marionette.absolute_url("test_clearing.html")
         self.marionette.navigate(test_html)
-        element = self.marionette.find_element("id","content-editable")
+        element = self.marionette.find_element(By.ID,"content-editable")
         element.clear()
         self.assertEqual("", element.text)
 
@@ -61,7 +63,7 @@ class TestClear(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test_clearing.html")
         self.marionette.navigate(test_html)
         try:
-            element = self.marionette.find_element("id","textInputnotenabled")
+            element = self.marionette.find_element(By.ID,"textInputnotenabled")
             self.assertFalse(element.is_enabled())
             element.clear()
             self.fail("Should not have been able to clear")

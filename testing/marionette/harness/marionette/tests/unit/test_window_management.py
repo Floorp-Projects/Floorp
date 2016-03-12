@@ -4,6 +4,8 @@
 
 import time
 from marionette import MarionetteTestCase
+from marionette_driver.by import By
+
 
 class TestSwitchWindow(MarionetteTestCase):
     def open_new_window(self):
@@ -60,7 +62,7 @@ if (win != null)
         self.marionette.navigate(test_html)
         current = self.marionette.current_window_handle
 
-        self.marionette.find_element('link text', "Open new window").click()
+        self.marionette.find_element(By.LINK_TEXT, "Open new window").click()
         count = 0
         while True:
             window_handles = self.marionette.window_handles
@@ -91,7 +93,7 @@ if (win != null)
         self.marionette.navigate(test_html)
         current = self.marionette.current_window_handle
 
-        self.marionette.find_element('link text',"Open new window").click()
+        self.marionette.find_element(By.LINK_TEXT,"Open new window").click()
         all_handles = self.marionette.window_handles
         self.assertEqual(2, len(all_handles))
         self.marionette.switch_to_window([x for x in all_handles if x != current][0])

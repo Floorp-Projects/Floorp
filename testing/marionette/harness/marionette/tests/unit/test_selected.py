@@ -3,13 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette import MarionetteTestCase
+from marionette_driver.by import By
 
 
 class TestSelected(MarionetteTestCase):
     def test_selected(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
-        box = self.marionette.find_element("name", "myCheckBox")
+        box = self.marionette.find_element(By.NAME, "myCheckBox")
         self.assertFalse(box.is_selected())
         box.click()
         self.assertTrue(box.is_selected())
