@@ -4,7 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional MozContactChangeEventInit eventInitDict)]
+[Constructor(DOMString type, optional MozContactChangeEventInit eventInitDict),
+ CheckAnyPermissions="contacts-read contacts-write contacts-create"]
 interface MozContactChangeEvent : Event
 {
   readonly attribute DOMString? contactID;

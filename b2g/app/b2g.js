@@ -442,9 +442,6 @@ pref("dom.sms.enabled", true);
 //The waiting time in network manager.
 pref("network.gonk.ms-release-mms-connection", 30000);
 
-// WebContacts
-pref("dom.mozContacts.enabled", true);
-
 // Shortnumber matching needed for e.g. Brazil:
 // 03187654321 can be found with 87654321
 pref("dom.phonenumber.substringmatching.BR", 8);
