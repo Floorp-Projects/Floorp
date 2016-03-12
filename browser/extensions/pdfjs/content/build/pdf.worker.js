@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdfWorker = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.4.121';
-var pdfjsBuild = '51f6aba';
+var pdfjsVersion = '1.4.135';
+var pdfjsBuild = 'c6d2b7f';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -15658,6 +15658,36 @@ exports.isStream = isStream;
     return code;
   }
 
+  function getUnicodeForGlyph(name, glyphsUnicodeMap) {
+    var unicode = glyphsUnicodeMap[name];
+    if (unicode !== undefined) {
+      return unicode;
+    }
+    if (!name) {
+      return -1;
+    }
+    // Try to recover valid Unicode values from 'uniXXXX'/'uXXXX{XX}' glyphs.
+    if (name[0] === 'u') {
+      var nameLen = name.length, hexStr;
+
+      if (nameLen === 7 && name[1] === 'n' && name[2] === 'i') { // 'uniXXXX'
+        hexStr = name.substr(3);
+      } else if (nameLen >= 5 && nameLen <= 7) { // 'uXXXX{XX}'
+        hexStr = name.substr(1);
+      } else {
+        return -1;
+      }
+      // Check for upper-case hexadecimal characters, to avoid false positives.
+      if (hexStr === hexStr.toUpperCase()) {
+        unicode = parseInt(hexStr, 16);
+        if (unicode >= 0) {
+          return unicode;
+        }
+      }
+    }
+    return -1;
+  }
+
   var UnicodeRanges = [
     { 'begin': 0x0000, 'end': 0x007F }, // Basic Latin
     { 'begin': 0x0080, 'end': 0x00FF }, // Latin-1 Supplement
@@ -17205,6 +17235,7 @@ exports.isStream = isStream;
   exports.reverseIfRtl = reverseIfRtl;
   exports.getUnicodeRangeFor = getUnicodeRangeFor;
   exports.getNormalizedUnicodes = getNormalizedUnicodes;
+  exports.getUnicodeForGlyph = getUnicodeForGlyph;
 }));
 
 
@@ -24895,6 +24926,7 @@ var getSupplementalGlyphMapForArialBlack =
   coreStandardFonts.getSupplementalGlyphMapForArialBlack;
 var getUnicodeRangeFor = coreUnicode.getUnicodeRangeFor;
 var mapSpecialUnicodeValues = coreUnicode.mapSpecialUnicodeValues;
+var getUnicodeForGlyph = coreUnicode.getUnicodeForGlyph;
 
 // Unicode Private Use Area
 var PRIVATE_USE_OFFSET_START = 0xE000;
@@ -25280,7 +25312,7 @@ var ProblematicCharRanges = new Int32Array([
  */
 var Font = (function FontClosure() {
   function Font(name, file, properties) {
-    var charCode, glyphName, fontChar;
+    var charCode, glyphName, unicode, fontChar;
 
     this.name = name;
     this.loadedName = properties.loadedName;
@@ -25424,21 +25456,25 @@ var Font = (function FontClosure() {
           this.toFontChar[charCode] = fontChar;
         }
       } else if (isStandardFont) {
-        this.toFontChar = [];
         glyphsUnicodeMap = getGlyphsUnicode();
         for (charCode in properties.defaultEncoding) {
           glyphName = (properties.differences[charCode] ||
                        properties.defaultEncoding[charCode]);
-          this.toFontChar[charCode] = glyphsUnicodeMap[glyphName];
+          unicode = getUnicodeForGlyph(glyphName, glyphsUnicodeMap);
+          if (unicode !== -1) {
+            this.toFontChar[charCode] = unicode;
+          }
         }
       } else {
-        var unicodeCharCode, notCidFont = (type.indexOf('CIDFontType') === -1);
         glyphsUnicodeMap = getGlyphsUnicode();
         this.toUnicode.forEach(function(charCode, unicodeCharCode) {
-          if (notCidFont) {
+          if (!this.composite) {
             glyphName = (properties.differences[charCode] ||
                          properties.defaultEncoding[charCode]);
-            unicodeCharCode = (glyphsUnicodeMap[glyphName] || unicodeCharCode);
+            unicode = getUnicodeForGlyph(glyphName, glyphsUnicodeMap);
+            if (unicode !== -1) {
+              unicodeCharCode = unicode;
+            }
           }
           this.toFontChar[charCode] = unicodeCharCode;
         }.bind(this));
@@ -25536,6 +25572,11 @@ var Font = (function FontClosure() {
 
   function int16(b0, b1) {
     return (b0 << 8) + b1;
+  }
+
+  function signedInt16(b0, b1) {
+    var value = (b0 << 8) + b1;
+    return value & (1 << 15) ? value - 0x10000 : value;
   }
 
   function int32(b0, b1, b2, b3) {
@@ -27055,9 +27096,9 @@ var Font = (function FontClosure() {
       var metricsOverride = {
         unitsPerEm: int16(tables['head'].data[18], tables['head'].data[19]),
         yMax: int16(tables['head'].data[42], tables['head'].data[43]),
-        yMin: int16(tables['head'].data[38], tables['head'].data[39]) - 0x10000,
+        yMin: signedInt16(tables['head'].data[38], tables['head'].data[39]),
         ascent: int16(tables['hhea'].data[4], tables['hhea'].data[5]),
-        descent: int16(tables['hhea'].data[6], tables['hhea'].data[7]) - 0x10000
+        descent: signedInt16(tables['hhea'].data[6], tables['hhea'].data[7])
       };
 
       // PDF FontDescriptor metrics lie -- using data from actual font.
@@ -27092,6 +27133,26 @@ var Font = (function FontClosure() {
         }
         return false;
       }
+
+      // Some bad PDF generators, e.g. Scribus PDF, include glyph names
+      // in a 'uniXXXX' format -- attempting to recover proper ones.
+      function recoverGlyphName(name, glyphsUnicodeMap) {
+        if (glyphsUnicodeMap[name] !== undefined) {
+          return name;
+        }
+        // The glyph name is non-standard, trying to recover.
+        var unicode = getUnicodeForGlyph(name, glyphsUnicodeMap);
+        if (unicode !== -1) {
+          for (var key in glyphsUnicodeMap) {
+            if (glyphsUnicodeMap[key] === unicode) {
+              return key;
+            }
+          }
+        }
+        warn('Unable to recover a standard glyph name for: ' + name);
+        return name;
+      }
+
 
       if (properties.type === 'CIDFontType2') {
         var cidToGidMap = properties.cidToGidMap || [];
@@ -27147,7 +27208,7 @@ var Font = (function FontClosure() {
           }
           var glyphsUnicodeMap = getGlyphsUnicode();
           for (charCode = 0; charCode < 256; charCode++) {
-            var glyphName;
+            var glyphName, standardGlyphName;
             if (this.differences && charCode in this.differences) {
               glyphName = this.differences[charCode];
             } else if (charCode in baseEncoding &&
@@ -27159,13 +27220,16 @@ var Font = (function FontClosure() {
             if (!glyphName) {
               continue;
             }
+            // Ensure that non-standard glyph names are resolved to valid ones.
+            standardGlyphName = recoverGlyphName(glyphName, glyphsUnicodeMap);
+
             var unicodeOrCharCode, isUnicode = false;
             if (cmapPlatformId === 3 && cmapEncodingId === 1) {
-              unicodeOrCharCode = glyphsUnicodeMap[glyphName];
+              unicodeOrCharCode = glyphsUnicodeMap[standardGlyphName];
               isUnicode = true;
             } else if (cmapPlatformId === 1 && cmapEncodingId === 0) {
               // TODO: the encoding needs to be updated with mac os table.
-              unicodeOrCharCode = MacRomanEncoding.indexOf(glyphName);
+              unicodeOrCharCode = MacRomanEncoding.indexOf(standardGlyphName);
             }
 
             var found = false;
@@ -27183,6 +27247,11 @@ var Font = (function FontClosure() {
             if (!found && properties.glyphNames) {
               // Try to map using the post table.
               var glyphId = properties.glyphNames.indexOf(glyphName);
+              // The post table ought to use the same kind of glyph names as the
+              // `differences` array, but check the standard ones as a fallback.
+              if (glyphId === -1 && standardGlyphName !== glyphName) {
+                glyphId = properties.glyphNames.indexOf(standardGlyphName);
+              }
               if (glyphId > 0 && hasGlyph(glyphId, -1, -1)) {
                 charCodeToGlyphId[charCode] = glyphId;
                 found = true;
@@ -27496,6 +27565,12 @@ var Font = (function FontClosure() {
                   code = +glyphName.substr(1);
                 }
                 break;
+              default:
+                // 'uniXXXX'/'uXXXX{XX}' glyphs
+                var unicode = getUnicodeForGlyph(glyphName, glyphsUnicodeMap);
+                if (unicode !== -1) {
+                  code = unicode;
+                }
             }
             if (code) {
               // If |baseEncodingName| is one the predefined encodings,
@@ -41317,6 +41392,254 @@ exports.setPDFNetworkStreamClass = setPDFNetworkStreamClass;
 exports.WorkerTask = WorkerTask;
 exports.WorkerMessageHandler = WorkerMessageHandler;
 }));
+
+
+
+  
+  Components.utils.import('resource://gre/modules/Services.jsm');
+  
+  var EXPORTED_SYMBOLS = ['NetworkManager'];
+  
+  var console = {
+    log: function console_log(aMsg) {
+      var msg = 'network.js: ' + (aMsg.join ? aMsg.join('') : aMsg);
+      Services.console.logStringMessage(msg);
+      // TODO(mack): dump() doesn't seem to work here...
+      dump(msg + '\n');
+    }
+  }
+
+var NetworkManager = (function NetworkManagerClosure() {
+
+  var OK_RESPONSE = 200;
+  var PARTIAL_CONTENT_RESPONSE = 206;
+
+  function NetworkManager(url, args) {
+    this.url = url;
+    args = args || {};
+    this.isHttp = /^https?:/i.test(url);
+    this.httpHeaders = (this.isHttp && args.httpHeaders) || {};
+    this.withCredentials = args.withCredentials || false;
+    this.getXhr = args.getXhr ||
+      function NetworkManager_getXhr() {
+        return new XMLHttpRequest();
+      };
+
+    this.currXhrId = 0;
+    this.pendingRequests = Object.create(null);
+    this.loadedRequests = Object.create(null);
+  }
+
+  function getArrayBuffer(xhr) {
+    var data = xhr.response;
+    if (typeof data !== 'string') {
+      return data;
+    }
+    var length = data.length;
+    var array = new Uint8Array(length);
+    for (var i = 0; i < length; i++) {
+      array[i] = data.charCodeAt(i) & 0xFF;
+    }
+    return array.buffer;
+  }
+
+
+  NetworkManager.prototype = {
+    requestRange: function NetworkManager_requestRange(begin, end, listeners) {
+      var args = {
+        begin: begin,
+        end: end
+      };
+      for (var prop in listeners) {
+        args[prop] = listeners[prop];
+      }
+      return this.request(args);
+    },
+
+    requestFull: function NetworkManager_requestFull(listeners) {
+      return this.request(listeners);
+    },
+
+    request: function NetworkManager_request(args) {
+      var xhr = this.getXhr();
+      var xhrId = this.currXhrId++;
+      var pendingRequest = this.pendingRequests[xhrId] = {
+        xhr: xhr
+      };
+
+      xhr.open('GET', this.url);
+      xhr.withCredentials = this.withCredentials;
+      for (var property in this.httpHeaders) {
+        var value = this.httpHeaders[property];
+        if (typeof value === 'undefined') {
+          continue;
+        }
+        xhr.setRequestHeader(property, value);
+      }
+      if (this.isHttp && 'begin' in args && 'end' in args) {
+        var rangeStr = args.begin + '-' + (args.end - 1);
+        xhr.setRequestHeader('Range', 'bytes=' + rangeStr);
+        pendingRequest.expectedStatus = 206;
+      } else {
+        pendingRequest.expectedStatus = 200;
+      }
+
+      var useMozChunkedLoading = !!args.onProgressiveData;
+      if (useMozChunkedLoading) {
+        xhr.responseType = 'moz-chunked-arraybuffer';
+        pendingRequest.onProgressiveData = args.onProgressiveData;
+        pendingRequest.mozChunked = true;
+      } else {
+        xhr.responseType = 'arraybuffer';
+      }
+
+      if (args.onError) {
+        xhr.onerror = function(evt) {
+          args.onError(xhr.status);
+        };
+      }
+      xhr.onreadystatechange = this.onStateChange.bind(this, xhrId);
+      xhr.onprogress = this.onProgress.bind(this, xhrId);
+
+      pendingRequest.onHeadersReceived = args.onHeadersReceived;
+      pendingRequest.onDone = args.onDone;
+      pendingRequest.onError = args.onError;
+      pendingRequest.onProgress = args.onProgress;
+
+      xhr.send(null);
+
+      return xhrId;
+    },
+
+    onProgress: function NetworkManager_onProgress(xhrId, evt) {
+      var pendingRequest = this.pendingRequests[xhrId];
+      if (!pendingRequest) {
+        // Maybe abortRequest was called...
+        return;
+      }
+
+      if (pendingRequest.mozChunked) {
+        var chunk = getArrayBuffer(pendingRequest.xhr);
+        pendingRequest.onProgressiveData(chunk);
+      }
+
+      var onProgress = pendingRequest.onProgress;
+      if (onProgress) {
+        onProgress(evt);
+      }
+    },
+
+    onStateChange: function NetworkManager_onStateChange(xhrId, evt) {
+      var pendingRequest = this.pendingRequests[xhrId];
+      if (!pendingRequest) {
+        // Maybe abortRequest was called...
+        return;
+      }
+
+      var xhr = pendingRequest.xhr;
+      if (xhr.readyState >= 2 && pendingRequest.onHeadersReceived) {
+        pendingRequest.onHeadersReceived();
+        delete pendingRequest.onHeadersReceived;
+      }
+
+      if (xhr.readyState !== 4) {
+        return;
+      }
+
+      if (!(xhrId in this.pendingRequests)) {
+        // The XHR request might have been aborted in onHeadersReceived()
+        // callback, in which case we should abort request
+        return;
+      }
+
+      delete this.pendingRequests[xhrId];
+
+      // success status == 0 can be on ftp, file and other protocols
+      if (xhr.status === 0 && this.isHttp) {
+        if (pendingRequest.onError) {
+          pendingRequest.onError(xhr.status);
+        }
+        return;
+      }
+      var xhrStatus = xhr.status || OK_RESPONSE;
+
+      // From http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35.2:
+      // "A server MAY ignore the Range header". This means it's possible to
+      // get a 200 rather than a 206 response from a range request.
+      var ok_response_on_range_request =
+          xhrStatus === OK_RESPONSE &&
+          pendingRequest.expectedStatus === PARTIAL_CONTENT_RESPONSE;
+
+      if (!ok_response_on_range_request &&
+          xhrStatus !== pendingRequest.expectedStatus) {
+        if (pendingRequest.onError) {
+          pendingRequest.onError(xhr.status);
+        }
+        return;
+      }
+
+      this.loadedRequests[xhrId] = true;
+
+      var chunk = getArrayBuffer(xhr);
+      if (xhrStatus === PARTIAL_CONTENT_RESPONSE) {
+        var rangeHeader = xhr.getResponseHeader('Content-Range');
+        var matches = /bytes (\d+)-(\d+)\/(\d+)/.exec(rangeHeader);
+        var begin = parseInt(matches[1], 10);
+        pendingRequest.onDone({
+          begin: begin,
+          chunk: chunk
+        });
+      } else if (pendingRequest.onProgressiveData) {
+        pendingRequest.onDone(null);
+      } else if (chunk) {
+        pendingRequest.onDone({
+          begin: 0,
+          chunk: chunk
+        });
+      } else if (pendingRequest.onError) {
+        pendingRequest.onError(xhr.status);
+      }
+    },
+
+    hasPendingRequests: function NetworkManager_hasPendingRequests() {
+      for (var xhrId in this.pendingRequests) {
+        return true;
+      }
+      return false;
+    },
+
+    getRequestXhr: function NetworkManager_getXhr(xhrId) {
+      return this.pendingRequests[xhrId].xhr;
+    },
+
+    isStreamingRequest: function NetworkManager_isStreamingRequest(xhrId) {
+      return !!(this.pendingRequests[xhrId].onProgressiveData);
+    },
+
+    isPendingRequest: function NetworkManager_isPendingRequest(xhrId) {
+      return xhrId in this.pendingRequests;
+    },
+
+    isLoadedRequest: function NetworkManager_isLoadedRequest(xhrId) {
+      return xhrId in this.loadedRequests;
+    },
+
+    abortAllRequests: function NetworkManager_abortAllRequests() {
+      for (var xhrId in this.pendingRequests) {
+        this.abortRequest(xhrId | 0);
+      }
+    },
+
+    abortRequest: function NetworkManager_abortRequest(xhrId) {
+      var xhr = this.pendingRequests[xhrId].xhr;
+      delete this.pendingRequests[xhrId];
+      xhr.abort();
+    }
+  };
+
+  return NetworkManager;
+})();
+
 
 
   }).call(pdfjsLibs);

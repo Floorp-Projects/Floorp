@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdf = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.4.121';
-var pdfjsBuild = '51f6aba';
+var pdfjsVersion = '1.4.135';
+var pdfjsBuild = 'c6d2b7f';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -2767,6 +2767,8 @@ exports.Metadata = Metadata;
 }));
 
 
+
+
 (function (root, factory) {
   {
     factory((root.pdfjsDisplayTextLayer = {}), root.pdfjsSharedUtil,
@@ -4687,7 +4689,10 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       if (this.transparentCanvas) {
         this.ctx = this.compositeCtx;
+        this.ctx.save();
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0); // Avoid apply transform twice
         this.ctx.drawImage(this.transparentCanvas, 0, 0);
+        this.ctx.restore();
         this.transparentCanvas = null;
       }
 
