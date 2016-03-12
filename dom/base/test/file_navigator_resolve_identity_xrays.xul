@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=985827
+-->
+<window title="Mozilla Bug 985827"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <iframe id="t"></iframe>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 985827 **/
+
+  addLoadEvent(function() {
+    var ok = parent.ok;
+    var is = parent.is;
+
+    var nav = document.getElementById("t").contentWindow.navigator;
+
+    ok(Components.utils.isXrayWrapper(nav), "Should have an Xray here");
+
+    // Test WebIDL NavigatorProperty objects
+    is(typeof nav.mozContacts, "object", "Should have a mozContacts object");
+    is(nav.mozContacts, nav.mozContacts,
+       "Should have gotten the same mozContacts object again");
+  });
+
+  ]]>
+  </script>
+</window>

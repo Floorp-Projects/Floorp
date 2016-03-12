@@ -3,6 +3,7 @@
 
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
+MARIONETTE_CONTEXT = "chrome";
 
 function testReadContacts(aIcc, aType) {
   log("testReadContacts: type=" + aType);
