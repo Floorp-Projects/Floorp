@@ -22,8 +22,6 @@
 # include <unistd.h>
 #endif
 
-#include "fdlibm.h"
-
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
@@ -141,14 +139,14 @@ double
 js::math_acos_impl(MathCache* cache, double x)
 {
     ACOS_IF_OUT_OF_RANGE(x);
-    return cache->lookup(fdlibm::acos, x, MathCache::Acos);
+    return cache->lookup(acos, x, MathCache::Acos);
 }
 
 double
 js::math_acos_uncached(double x)
 {
     ACOS_IF_OUT_OF_RANGE(x);
-    return fdlibm::acos(x);
+    return acos(x);
 }
 
 #undef ACOS_IF_OUT_OF_RANGE
@@ -186,14 +184,14 @@ double
 js::math_asin_impl(MathCache* cache, double x)
 {
     ASIN_IF_OUT_OF_RANGE(x);
-    return cache->lookup(fdlibm::asin, x, MathCache::Asin);
+    return cache->lookup(asin, x, MathCache::Asin);
 }
 
 double
 js::math_asin_uncached(double x)
 {
     ASIN_IF_OUT_OF_RANGE(x);
-    return fdlibm::asin(x);
+    return asin(x);
 }
 
 #undef ASIN_IF_OUT_OF_RANGE
@@ -224,13 +222,13 @@ js::math_asin(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_atan_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::atan, x, MathCache::Atan);
+    return cache->lookup(atan, x, MathCache::Atan);
 }
 
 double
 js::math_atan_uncached(double x)
 {
-    return fdlibm::atan(x);
+    return atan(x);
 }
 
 bool
@@ -283,7 +281,7 @@ js::ecmaAtan2(double y, double x)
             return y;
     }
 #endif
-    return fdlibm::atan2(y, x);
+    return atan2(y, x);
 }
 
 bool
@@ -317,7 +315,7 @@ js::math_ceil_impl(double x)
     if (x < 0 && x > -1.0)
         return js_copysign(0, -1);
 #endif
-    return fdlibm::ceil(x);
+    return ceil(x);
 }
 
 bool
@@ -371,13 +369,13 @@ js::math_clz32(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_cos_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::cos, x, MathCache::Cos);
+    return cache->lookup(cos, x, MathCache::Cos);
 }
 
 double
 js::math_cos_uncached(double x)
 {
-    return fdlibm::cos(x);
+    return cos(x);
 }
 
 bool
@@ -419,14 +417,14 @@ double
 js::math_exp_impl(MathCache* cache, double x)
 {
     EXP_IF_OUT_OF_RANGE(x);
-    return cache->lookup(fdlibm::exp, x, MathCache::Exp);
+    return cache->lookup(exp, x, MathCache::Exp);
 }
 
 double
 js::math_exp_uncached(double x)
 {
     EXP_IF_OUT_OF_RANGE(x);
-    return fdlibm::exp(x);
+    return exp(x);
 }
 
 #undef EXP_IF_OUT_OF_RANGE
@@ -457,7 +455,7 @@ js::math_exp(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_floor_impl(double x)
 {
-    return fdlibm::floor(x);
+    return floor(x);
 }
 
 bool
@@ -561,7 +559,7 @@ double
 js::math_log_uncached(double x)
 {
     LOG_IF_OUT_OF_RANGE(x);
-    return fdlibm::log(x);
+    return log(x);
 }
 
 #undef LOG_IF_OUT_OF_RANGE
@@ -681,7 +679,7 @@ js::powi(double x, int y)
 
                 double result = 1.0 / p;
                 return (result == 0 && IsInfinite(p))
-                       ? fdlibm::pow(x, static_cast<double>(y))  // Avoid pow(double, int).
+                       ? pow(x, static_cast<double>(y))  // Avoid pow(double, int).
                        : result;
             }
 
@@ -719,11 +717,11 @@ js::ecmaPow(double x, double y)
      */
     if (IsFinite(x) && x != 0.0) {
         if (y == 0.5)
-            return fdlibm::sqrt(x);
+            return sqrt(x);
         if (y == -0.5)
-            return 1.0 / fdlibm::sqrt(x);
+            return 1.0 / sqrt(x);
     }
-    return fdlibm::pow(x, y);
+    return pow(x, y);
 }
 
 bool
@@ -845,7 +843,7 @@ js::math_round_impl(double x)
         return x;
 
     double add = (x >= 0) ? GetBiggestNumberLessThan(0.5) : 0.5;
-    return js_copysign(fdlibm::floor(x + add), x);
+    return js_copysign(floor(x + add), x);
 }
 
 float
@@ -860,7 +858,7 @@ js::math_roundf_impl(float x)
         return x;
 
     float add = (x >= 0) ? GetBiggestNumberLessThan(0.5f) : 0.5f;
-    return js_copysign(fdlibm::floorf(x + add), x);
+    return js_copysign(floorf(x + add), x);
 }
 
 bool /* ES5 15.8.2.15. */
@@ -885,7 +883,13 @@ js::math_sin_impl(MathCache* cache, double x)
 double
 js::math_sin_uncached(double x)
 {
-    return fdlibm::sin(x);
+#ifdef _WIN64
+    // Workaround MSVC bug where sin(-0) is +0 instead of -0 on x64 on
+    // CPUs without FMA3 (pre-Haswell). See bug 1076670.
+    if (IsNegativeZero(x))
+        return -0.0;
+#endif
+    return sin(x);
 }
 
 bool
@@ -962,7 +966,7 @@ js::math_sqrt_handle(JSContext* cx, HandleValue number, MutableHandleValue resul
     if (!mathCache)
         return false;
 
-    double z = mathCache->lookup(fdlibm::sqrt, x, MathCache::Sqrt);
+    double z = mathCache->lookup(sqrt, x, MathCache::Sqrt);
     result.setDouble(z);
     return true;
 }
@@ -983,13 +987,13 @@ js::math_sqrt(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_tan_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::tan, x, MathCache::Tan);
+    return cache->lookup(tan, x, MathCache::Tan);
 }
 
 double
 js::math_tan_uncached(double x)
 {
-    return fdlibm::tan(x);
+    return tan(x);
 }
 
 bool
@@ -1042,13 +1046,13 @@ static bool math_function(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_log10_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::log10, x, MathCache::Log10);
+    return cache->lookup(log10, x, MathCache::Log10);
 }
 
 double
 js::math_log10_uncached(double x)
 {
-    return fdlibm::log10(x);
+    return log10(x);
 }
 
 bool
@@ -1067,13 +1071,13 @@ double log2(double x)
 double
 js::math_log2_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::log2, x, MathCache::Log2);
+    return cache->lookup(log2, x, MathCache::Log2);
 }
 
 double
 js::math_log2_uncached(double x)
 {
-    return fdlibm::log2(x);
+    return log2(x);
 }
 
 bool
@@ -1110,14 +1114,14 @@ double
 js::math_log1p_impl(MathCache* cache, double x)
 {
     LOG1P_IF_OUT_OF_RANGE(x);
-    return cache->lookup(fdlibm::log1p, x, MathCache::Log1p);
+    return cache->lookup(log1p, x, MathCache::Log1p);
 }
 
 double
 js::math_log1p_uncached(double x)
 {
     LOG1P_IF_OUT_OF_RANGE(x);
-    return fdlibm::log1p(x);
+    return log1p(x);
 }
 
 #undef LOG1P_IF_OUT_OF_RANGE
@@ -1152,13 +1156,13 @@ double expm1(double x)
 double
 js::math_expm1_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::expm1, x, MathCache::Expm1);
+    return cache->lookup(expm1, x, MathCache::Expm1);
 }
 
 double
 js::math_expm1_uncached(double x)
 {
-    return fdlibm::expm1(x);
+    return expm1(x);
 }
 
 bool
@@ -1181,13 +1185,13 @@ double sqrt1pm1(double x)
 double
 js::math_cosh_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::cosh, x, MathCache::Cosh);
+    return cache->lookup(cosh, x, MathCache::Cosh);
 }
 
 double
 js::math_cosh_uncached(double x)
 {
-    return fdlibm::cosh(x);
+    return cosh(x);
 }
 
 bool
@@ -1199,13 +1203,13 @@ js::math_cosh(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_sinh_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::sinh, x, MathCache::Sinh);
+    return cache->lookup(sinh, x, MathCache::Sinh);
 }
 
 double
 js::math_sinh_uncached(double x)
 {
-    return fdlibm::sinh(x);
+    return sinh(x);
 }
 
 bool
@@ -1217,13 +1221,13 @@ js::math_sinh(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_tanh_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::tanh, x, MathCache::Tanh);
+    return cache->lookup(tanh, x, MathCache::Tanh);
 }
 
 double
 js::math_tanh_uncached(double x)
 {
-    return fdlibm::tanh(x);
+    return tanh(x);
 }
 
 bool
@@ -1266,13 +1270,13 @@ double acosh(double x)
 double
 js::math_acosh_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::acosh, x, MathCache::Acosh);
+    return cache->lookup(acosh, x, MathCache::Acosh);
 }
 
 double
 js::math_acosh_uncached(double x)
 {
-    return fdlibm::acosh(x);
+    return acosh(x);
 }
 
 bool
@@ -1320,7 +1324,7 @@ double
 js::math_asinh_impl(MathCache* cache, double x)
 {
 #ifdef HAVE_ASINH
-    return cache->lookup(fdlibm::asinh, x, MathCache::Asinh);
+    return cache->lookup(asinh, x, MathCache::Asinh);
 #else
     return cache->lookup(my_asinh, x, MathCache::Asinh);
 #endif
@@ -1330,7 +1334,7 @@ double
 js::math_asinh_uncached(double x)
 {
 #ifdef HAVE_ASINH
-    return fdlibm::asinh(x);
+    return asinh(x);
 #else
     return my_asinh(x);
 #endif
@@ -1373,13 +1377,13 @@ double atanh(double x)
 double
 js::math_atanh_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::atanh, x, MathCache::Atanh);
+    return cache->lookup(atanh, x, MathCache::Atanh);
 }
 
 double
 js::math_atanh_uncached(double x)
 {
-    return fdlibm::atanh(x);
+    return atanh(x);
 }
 
 bool
@@ -1401,7 +1405,7 @@ js::ecmaHypot(double x, double y)
         return mozilla::PositiveInfinity<double>();
     }
 #endif
-    return fdlibm::hypot(x, y);
+    return hypot(x, y);
 }
 
 static inline
@@ -1439,7 +1443,7 @@ js::hypot4(double x, double y, double z, double w)
     hypot_step(scale, sumsq, z);
     hypot_step(scale, sumsq, w);
 
-    return scale * fdlibm::sqrt(sumsq);
+    return scale * sqrt(sumsq);
 }
 
 double
@@ -1493,7 +1497,7 @@ js::math_hypot_handle(JSContext* cx, HandleValueArray args, MutableHandleValue r
 
     double result = isInfinite ? PositiveInfinity<double>() :
                     isNaN ? GenericNaN() :
-                    scale * fdlibm::sqrt(sumsq);
+                    scale * sqrt(sumsq);
     res.setNumber(result);
     return true;
 }
@@ -1501,13 +1505,13 @@ js::math_hypot_handle(JSContext* cx, HandleValueArray args, MutableHandleValue r
 double
 js::math_trunc_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::trunc, x, MathCache::Trunc);
+    return cache->lookup(trunc, x, MathCache::Trunc);
 }
 
 double
 js::math_trunc_uncached(double x)
 {
-    return fdlibm::trunc(x);
+    return trunc(x);
 }
 
 bool
@@ -1558,13 +1562,13 @@ double cbrt(double x)
 double
 js::math_cbrt_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::cbrt, x, MathCache::Cbrt);
+    return cache->lookup(cbrt, x, MathCache::Cbrt);
 }
 
 double
 js::math_cbrt_uncached(double x)
 {
-    return fdlibm::cbrt(x);
+    return cbrt(x);
 }
 
 bool
