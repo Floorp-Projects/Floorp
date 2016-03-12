@@ -1476,14 +1476,6 @@ PropNameNonStringError(JSContext* cx, HandleId id, HandleValue actual,
 }
 
 static bool
-SizeOverflow(JSContext* cx, const char* name, const char* limit)
-{
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_SIZE_OVERFLOW, name, limit);
-  return false;
-}
-
-static bool
 TypeError(JSContext* cx, const char* expected, HandleValue actual)
 {
   JSAutoByteString bytes;
@@ -1493,19 +1485,6 @@ TypeError(JSContext* cx, const char* expected, HandleValue actual)
 
   JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                        CTYPESMSG_TYPE_ERROR, expected, src);
-  return false;
-}
-
-static bool
-TypeOverflow(JSContext* cx, const char* expected, HandleValue actual)
-{
-  JSAutoByteString valBytes;
-  const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
-  if (!valStr)
-    return false;
-
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_TYPE_OVERFLOW, valStr, expected);
   return false;
 }
 
@@ -2410,8 +2389,7 @@ jsvalToFloat(JSContext* cx, Value val, FloatType* result)
 
 template <class IntegerType, class CharT>
 static bool
-StringToInteger(JSContext* cx, CharT* cp, size_t length, IntegerType* result,
-                bool* overflow)
+StringToInteger(JSContext* cx, CharT* cp, size_t length, IntegerType* result)
 {
   JS_STATIC_ASSERT(NumericLimits<IntegerType>::is_exact);
 
@@ -2451,10 +2429,8 @@ StringToInteger(JSContext* cx, CharT* cp, size_t length, IntegerType* result,
 
     IntegerType ii = i;
     i = ii * base + sign * c;
-    if (i / base != ii) {
-      *overflow = true;
+    if (i / base != ii) // overflow
       return false;
-    }
   }
 
   *result = i;
@@ -2463,8 +2439,7 @@ StringToInteger(JSContext* cx, CharT* cp, size_t length, IntegerType* result,
 
 template<class IntegerType>
 static bool
-StringToInteger(JSContext* cx, JSString* string, IntegerType* result,
-                bool* overflow)
+StringToInteger(JSContext* cx, JSString* string, IntegerType* result)
 {
   JSLinearString* linear = string->ensureLinear(cx);
   if (!linear)
@@ -2473,10 +2448,8 @@ StringToInteger(JSContext* cx, JSString* string, IntegerType* result,
   AutoCheckCannotGC nogc;
   size_t length = linear->length();
   return string->hasLatin1Chars()
-         ? StringToInteger<IntegerType>(cx, linear->latin1Chars(nogc), length,
-                                        result, overflow)
-         : StringToInteger<IntegerType>(cx, linear->twoByteChars(nogc), length,
-                                        result, overflow);
+         ? StringToInteger<IntegerType>(cx, linear->latin1Chars(nogc), length, result)
+         : StringToInteger<IntegerType>(cx, linear->twoByteChars(nogc), length, result);
 }
 
 // Implicitly convert val to IntegerType, allowing int, double,
@@ -2487,8 +2460,7 @@ static bool
 jsvalToBigInteger(JSContext* cx,
                   Value val,
                   bool allowString,
-                  IntegerType* result,
-                  bool* overflow)
+                  IntegerType* result)
 {
   JS_STATIC_ASSERT(NumericLimits<IntegerType>::is_exact);
 
@@ -2509,7 +2481,7 @@ jsvalToBigInteger(JSContext* cx,
     // fits in IntegerType. (This allows an Int64 or UInt64 object to be passed
     // to the JS array element operator, which will automatically call
     // toString() on the object for us.)
-    return StringToInteger(cx, val.toString(), result, overflow);
+    return StringToInteger(cx, val.toString(), result);
   }
   if (val.isObject()) {
     // Allow conversion from an Int64 or UInt64 object directly.
@@ -2532,7 +2504,7 @@ jsvalToBigInteger(JSContext* cx,
       if (!CDataFinalizer::GetValue(cx, obj, &innerData)) {
         return false; // Nothing to convert
       }
-      return jsvalToBigInteger(cx, innerData, allowString, result, overflow);
+      return jsvalToBigInteger(cx, innerData, allowString, result);
     }
 
   }
@@ -2544,8 +2516,7 @@ jsvalToBigInteger(JSContext* cx,
 static bool
 jsvalToSize(JSContext* cx, Value val, bool allowString, size_t* result)
 {
-  bool dummy;
-  if (!jsvalToBigInteger(cx, val, allowString, result, &dummy))
+  if (!jsvalToBigInteger(cx, val, allowString, result))
     return false;
 
   // Also check that the result fits in a double.
@@ -2575,8 +2546,7 @@ jsidToBigInteger(JSContext* cx,
     // fits in IntegerType. (This allows an Int64 or UInt64 object to be passed
     // to the JS array element operator, which will automatically call
     // toString() on the object for us.)
-    bool dummy;
-    return StringToInteger(cx, JSID_TO_STRING(val), result, &dummy);
+    return StringToInteger(cx, JSID_TO_STRING(val), result);
   }
   return false;
 }
@@ -2599,6 +2569,7 @@ static bool
 SizeTojsval(JSContext* cx, size_t size, MutableHandleValue result)
 {
   if (Convert<size_t>(double(size)) != size) {
+    JS_ReportError(cx, "size overflow");
     return false;
   }
 
@@ -3421,15 +3392,10 @@ ExplicitConvert(JSContext* cx, HandleValue val, HandleObject targetType,
     /* Convert numeric values with a C-style cast, and */                      \
     /* allow conversion from a base-10 or base-16 string. */                   \
     type result;                                                               \
-    bool overflow = false;                                                     \
     if (!jsvalToIntegerExplicit(val, &result) &&                               \
         (!val.isString() ||                                                    \
-         !StringToInteger(cx, val.toString(), &result, &overflow))) {          \
-      if (overflow) {                                                          \
-        return TypeOverflow(cx, #name, val);                                   \
-      }                                                                        \
+         !StringToInteger(cx, val.toString(), &result)))                       \
       return ConvError(cx, #name, val, convType);                              \
-    }                                                                          \
     *static_cast<type*>(buffer) = result;                                      \
     break;                                                                     \
   }
@@ -4997,17 +4963,12 @@ ArrayType::CreateInternal(JSContext* cx,
     // Check for overflow, and convert to an int or double as required.
     size_t size = length * baseSize;
     if (length > 0 && size / length != baseSize) {
-      SizeOverflow(cx, "array size", "size_t");
+      JS_ReportError(cx, "size overflow");
       return nullptr;
     }
-    if (!SizeTojsval(cx, size, &sizeVal)) {
-      SizeOverflow(cx, "array size", "JavaScript number");
+    if (!SizeTojsval(cx, size, &sizeVal) ||
+        !SizeTojsval(cx, length, &lengthVal))
       return nullptr;
-    }
-    if (!SizeTojsval(cx, length, &lengthVal)) {
-      SizeOverflow(cx, "array length", "JavaScript number");
-      return nullptr;
-    }
   }
 
   size_t align = CType::GetAlignment(baseType);
@@ -5297,9 +5258,8 @@ ArrayType::Getter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandle
   int32_t dummy;
   if (!ok && JSID_IS_SYMBOL(idval))
     return true;
-  bool dummy2;
   if (!ok && JSID_IS_STRING(idval) &&
-      !StringToInteger(cx, JSID_TO_STRING(idval), &dummy, &dummy2)) {
+      !StringToInteger(cx, JSID_TO_STRING(idval), &dummy)) {
     // String either isn't a number, or doesn't fit in size_t.
     // Chances are it's a regular property lookup, so return.
     return true;
@@ -5338,9 +5298,8 @@ ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandle
   int32_t dummy;
   if (!ok && JSID_IS_SYMBOL(idval))
     return true;
-  bool dummy2;
   if (!ok && JSID_IS_STRING(idval) &&
-      !StringToInteger(cx, JSID_TO_STRING(idval), &dummy, &dummy2)) {
+      !StringToInteger(cx, JSID_TO_STRING(idval), &dummy)) {
     // String either isn't a number, or doesn't fit in size_t.
     // Chances are it's a regular property lookup, so return.
     return result.succeed();
@@ -5631,7 +5590,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
       // be zero, we can safely check fieldOffset + fieldSize without first
       // checking fieldOffset for overflow.
       if (fieldOffset + fieldSize < structSize) {
-        SizeOverflow(cx, "struct size", "size_t");
+        JS_ReportError(cx, "size overflow");
         return false;
       }
 
@@ -5654,7 +5613,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
     // Pad the struct tail according to struct alignment.
     size_t structTail = Align(structSize, structAlign);
     if (structTail < structSize) {
-      SizeOverflow(cx, "struct size", "size_t");
+      JS_ReportError(cx, "size overflow");
       return false;
     }
     structSize = structTail;
@@ -5669,10 +5628,8 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
   }
 
   RootedValue sizeVal(cx);
-  if (!SizeTojsval(cx, structSize, &sizeVal)) {
-    SizeOverflow(cx, "struct size", "double");
+  if (!SizeTojsval(cx, structSize, &sizeVal))
     return false;
-  }
 
   // Move the field hash to the heap and store it in the typeObj.
   FieldInfoHash *heapHash = cx->new_<FieldInfoHash>(mozilla::Move(fields.get()));
@@ -8243,11 +8200,7 @@ Int64::Construct(JSContext* cx,
   }
 
   int64_t i = 0;
-  bool overflow = false;
-  if (!jsvalToBigInteger(cx, args[0], true, &i, &overflow)) {
-    if (overflow) {
-      return TypeOverflow(cx, "int64", args[0]);
-    }
+  if (!jsvalToBigInteger(cx, args[0], true, &i)) {
     return ArgumentConvError(cx, args[0], "Int64", 0);
   }
 
@@ -8419,11 +8372,7 @@ UInt64::Construct(JSContext* cx,
   }
 
   uint64_t u = 0;
-  bool overflow = false;
-  if (!jsvalToBigInteger(cx, args[0], true, &u, &overflow)) {
-    if (overflow) {
-      return TypeOverflow(cx, "uint64", args[0]);
-    }
+  if (!jsvalToBigInteger(cx, args[0], true, &u)) {
     return ArgumentConvError(cx, args[0], "UInt64", 0);
   }
 
