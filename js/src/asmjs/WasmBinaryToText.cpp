@@ -1672,25 +1672,10 @@ RenderModule(WasmRenderContext& c)
 // Top-level functions
 
 bool
-wasm::BinaryToText(JSContext* cx, Handle<TypedArrayObject*> code, StringBuffer& buffer)
+wasm::BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer)
 {
-    MOZ_ASSERT(!code->isSharedMemory());
-
-    if (!TypedArrayObject::ensureHasBuffer(cx, code))
-        return false;
-
-    const uint8_t* bufferStart = code->bufferUnshared()->dataPointer();
-    const uint8_t* bytes = bufferStart + code->byteOffset();
-    uint32_t length = code->byteLength();
-
-    Vector<uint8_t> copy(cx);
-    if (code->bufferUnshared()->hasInlineData()) {
-        if (!copy.append(bytes, length))
-            return false;
-        bytes = copy.begin();
-    }
-
     Decoder d(bytes, bytes + length);
+
     WasmRenderContext c(cx, d, buffer);
 
     if (!RenderModule(c)) {

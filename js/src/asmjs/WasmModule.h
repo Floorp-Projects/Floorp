@@ -470,6 +470,7 @@ class Module : public mozilla::LinkedListElement<Module>
     typedef Vector<FuncPtrTable, 0, SystemAllocPolicy> FuncPtrTableVector;
     typedef Vector<CacheableChars, 0, SystemAllocPolicy> FuncLabelVector;
     typedef RelocatablePtrArrayBufferObjectMaybeShared BufferPtr;
+    typedef HeapPtr<WasmModuleObject*> ModuleObjectPtr;
 
     // Initialized when constructed:
     const UniqueConstModuleData  module_;
@@ -489,7 +490,10 @@ class Module : public mozilla::LinkedListElement<Module>
     FuncLabelVector              funcLabels_;
 
     // Back pointer to the JS object.
-    HeapPtr<WasmModuleObject*> ownerObject_;
+    ModuleObjectPtr              ownerObject_;
+
+    // Possibly stored copy of the bytes from which this module was compiled.
+    Bytes                        source_;
 
     uint8_t* rawHeapPtr() const;
     uint8_t*& rawHeapPtr();
@@ -519,6 +523,8 @@ class Module : public mozilla::LinkedListElement<Module>
 
     void setOwner(WasmModuleObject* owner) { MOZ_ASSERT(!ownerObject_); ownerObject_ = owner; }
     inline const HeapPtr<WasmModuleObject*>& owner() const;
+
+    void setSource(Bytes&& source) { source_ = Move(source); }
 
     uint8_t* code() const { return module_->code.get(); }
     uint32_t codeBytes() const { return module_->codeBytes; }
@@ -612,6 +618,11 @@ class Module : public mozilla::LinkedListElement<Module>
     const char* prettyFuncName(uint32_t funcIndex) const;
     const char* getFuncName(JSContext* cx, uint32_t funcIndex, UniqueChars* owner) const;
     JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
+
+    // If debuggerObservesAsmJS was true when the module was compiled, render
+    // the binary to a new source string.
+
+    JSString* createText(JSContext* cx);
 
     // Each Module has a profilingEnabled state which is updated to match
     // SPSProfiler::enabled() on the next Module::callExport when there are no

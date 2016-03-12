@@ -562,8 +562,19 @@ WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
+    const uint8_t* bufferStart = code->bufferUnshared()->dataPointer();
+    const uint8_t* bytes = bufferStart + code->byteOffset();
+    uint32_t length = code->byteLength();
+
+    Vector<uint8_t> copy(cx);
+    if (code->bufferUnshared()->hasInlineData()) {
+        if (!copy.append(bytes, length))
+            return false;
+        bytes = copy.begin();
+    }
+
     StringBuffer buffer(cx);
-    if (!wasm::BinaryToText(cx, code, buffer)) {
+    if (!wasm::BinaryToText(cx, bytes, length, buffer)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
                              "print error");
         return false;

@@ -24,6 +24,7 @@
 
 #include "jsprf.h"
 
+#include "asmjs/WasmBinaryToText.h"
 #include "asmjs/WasmSerialize.h"
 #include "builtin/AtomicsObject.h"
 #include "builtin/SIMD.h"
@@ -34,6 +35,7 @@
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCommon.h"
 #include "js/MemoryMetrics.h"
+#include "vm/StringBuffer.h"
 #ifdef MOZ_VTUNE
 # include "vtune/VTuneWrapper.h"
 #endif
@@ -919,6 +921,7 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data)
              globalBytes() +
              mallocSizeOf(module_.get()) +
              module_->sizeOfExcludingThis(mallocSizeOf) +
+             source_.sizeOfExcludingThis(mallocSizeOf) +
              funcPtrTables_.sizeOfExcludingThis(mallocSizeOf) +
              SizeOfVectorExcludingThis(funcLabels_, mallocSizeOf);
 }
@@ -1508,6 +1511,38 @@ Module::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
         return nullptr;
 
     return atom;
+}
+
+const char experimentalWarning[] =
+    "Experimental\n"
+    ".--.      .--.   ____       .-'''-. ,---.    ,---.\n"
+    "|  |_     |  | .'  __ `.   / _     \\|    \\  /    |\n"
+    "| _( )_   |  |/   '  \\  \\ (`' )/`--'|  ,  \\/  ,  |\n"
+    "|(_ o _)  |  ||___|  /  |(_ o _).   |  |\\_   /|  |\n"
+    "| (_,_) \\ |  |   _.-`   | (_,_). '. |  _( )_/ |  |\n"
+    "|  |/    \\|  |.'   _    |.---.  \\  :| (_ o _) |  |\n"
+    "|  '  /\\  `  ||  _( )_  |\\    `-'  ||  (_,_)  |  |\n"
+    "|    /  \\    |\\ (_ o _) / \\       / |  |      |  |\n"
+    "`---'    `---` '.(_,_).'   `-...-'  '--'      '--'\n"
+    "text support (Work In Progress):\n\n";
+
+const char enabledMessage[] =
+    "Restart with debugger open to view WebAssembly source";
+
+JSString*
+Module::createText(JSContext* cx)
+{
+    StringBuffer buffer(cx);
+    if (!source_.empty()) {
+        if (!buffer.append(experimentalWarning))
+            return nullptr;
+        if (!BinaryToText(cx, source_.begin(), source_.length(), buffer))
+            return nullptr;
+    } else {
+        if (!buffer.append(enabledMessage))
+            return nullptr;
+    }
+    return buffer.finishString();
 }
 
 const char*

@@ -1591,12 +1591,21 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     if (!ImportFunctions(cx, importObj, importNames, &imports))
         return false;
 
+    Module& module = moduleObj->module();
+
     RootedObject exportObj(cx);
-    if (!moduleObj->module().dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, &exportObj))
+    if (!module.dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, &exportObj))
         return false;
 
     if (!CreateInstance(cx, exportObj, instance))
         return false;
+
+    if (cx->compartment()->debuggerObservesAsmJS()) {
+        Bytes source;
+        if (!source.append(bytes, length))
+            return false;
+        module.setSource(Move(source));
+    }
 
     Debugger::onNewWasmModule(cx, moduleObj);
     return true;
