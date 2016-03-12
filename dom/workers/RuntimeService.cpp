@@ -793,7 +793,8 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     AsmJSCacheOpenEntryForRead,
     asmjscache::CloseEntryForRead,
     AsmJSCacheOpenEntryForWrite,
-    asmjscache::CloseEntryForWrite
+    asmjscache::CloseEntryForWrite,
+    asmjscache::GetBuildId
   };
   JS::SetAsmJSCacheOps(aRuntime, &asmJSCacheOps);
 

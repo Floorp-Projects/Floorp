@@ -2601,7 +2601,8 @@ nsJSContext::EnsureStatics()
     AsmJSCacheOpenEntryForRead,
     asmjscache::CloseEntryForRead,
     AsmJSCacheOpenEntryForWrite,
-    asmjscache::CloseEntryForWrite
+    asmjscache::CloseEntryForWrite,
+    asmjscache::GetBuildId
   };
   JS::SetAsmJSCacheOps(sRuntime, &asmJSCacheOps);
 
