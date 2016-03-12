@@ -1655,7 +1655,7 @@ fuzzy-if(skiaContent,1,500) == 630835-1.html about:blank
 skip-if(!haveTestPlugin) skip-if(B2G||Mulet) fails-if(Android) fuzzy-if(winWidget&&!layersGPUAccelerated,102,535) fuzzy-if(skiaContent,1,11000) == 632423-1.html 632423-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(Android||B2G||Mulet) random-if(winWidget||OSX==1010) == 632781-verybig.html 632781-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 632781-normalsize.html 632781-ref.html
-fuzzy-if(d2d&&/^Windows\x20NT\x206\.2/.test(http.oscpu),1,559) == 633344-1.html 633344-1-ref.html # bug 1103623
+fuzzy-if(d2d&&/^Windows\x20NT\x206\.2/.test(http.oscpu),1,559) fuzzy-if(!isDebugBuild&&gtkWidget&&/^Linux\x20i686/.test(http.oscpu),102,140) == 633344-1.html 633344-1-ref.html # bug 1103623, Linux32 from GCC update
 fuzzy-if(skiaContent,1,500) == 634232-1.html 634232-1-ref.html
 fails-if(Android&&AndroidVersion<17&&AndroidVersion!=10) fuzzy-if(skiaContent,3,120000) == 635302-1.html 635302-1-ref.html
 fuzzy(1,68) fuzzy-if(gtkWidget,1,70) skip-if(B2G||Mulet) fails-if(Android) fuzzy-if(skiaContent,1,300) == 635373-1.html 635373-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
