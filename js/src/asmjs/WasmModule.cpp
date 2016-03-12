@@ -1514,7 +1514,7 @@ Module::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
 }
 
 const char experimentalWarning[] =
-    "Experimental\n"
+    "Temporary\n"
     ".--.      .--.   ____       .-'''-. ,---.    ,---.\n"
     "|  |_     |  | .'  __ `.   / _     \\|    \\  /    |\n"
     "| _( )_   |  |/   '  \\  \\ (`' )/`--'|  ,  \\/  ,  |\n"
