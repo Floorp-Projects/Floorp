@@ -514,6 +514,7 @@ class Module : public mozilla::LinkedListElement<Module>
     explicit Module(UniqueModuleData module);
     virtual ~Module();
     virtual void trace(JSTracer* trc);
+    virtual void readBarrier();
     virtual void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data);
 
     void setOwner(WasmModuleObject* owner) { MOZ_ASSERT(!ownerObject_); ownerObject_ = owner; }
