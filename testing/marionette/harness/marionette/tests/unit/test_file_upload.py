@@ -107,7 +107,7 @@ class TestFileUpload(MarionetteTestCase):
         self.assertIn("multipart/form-data", self.body.text)
 
     def find_inputs(self):
-        return self.marionette.find_elements("tag name", "input")
+        return self.marionette.find_elements(By.TAG_NAME, "input")
 
     @property
     def input(self):

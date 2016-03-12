@@ -6,6 +6,7 @@ from marionette import MarionetteTestCase
 from marionette_driver.by import By
 from marionette_driver.errors import (JavascriptException,
                                       NoSuchFrameException)
+from marionette_driver.by import By
 
 
 class TestSwitchFrame(MarionetteTestCase):
@@ -15,7 +16,7 @@ class TestSwitchFrame(MarionetteTestCase):
         test_html = self.marionette.absolute_url(start_url)
         self.marionette.navigate(test_html)
         self.assertEqual(self.marionette.get_active_frame(), None)
-        frame = self.marionette.find_element("id", "test_iframe")
+        frame = self.marionette.find_element(By.ID, "test_iframe")
         self.marionette.switch_to_frame(frame)
         self.assertTrue(start_url in self.marionette.get_url())
         inner_frame_element = self.marionette.get_active_frame()
@@ -31,7 +32,7 @@ class TestSwitchFrame(MarionetteTestCase):
         verify_title = "Marionette IFrame Test"
         test_html = self.marionette.absolute_url(start_url)
         self.marionette.navigate(test_html)
-        frame = self.marionette.find_element("id", "test_iframe")
+        frame = self.marionette.find_element(By.ID, "test_iframe")
         self.assertEqual(self.marionette.get_active_frame(), None)
         self.marionette.switch_to_frame(frame)
         self.assertTrue(start_url in self.marionette.get_url())
@@ -42,7 +43,7 @@ class TestSwitchFrame(MarionetteTestCase):
         self.assertEqual(verify_title, self.marionette.title)
         self.marionette.switch_to_frame(inner_frame_element)
         self.assertTrue(start_url in self.marionette.get_url())
-        inner_frame = self.marionette.find_element('id', 'inner_frame')
+        inner_frame = self.marionette.find_element(By.ID, 'inner_frame')
         self.marionette.switch_to_frame(inner_frame)
         self.assertTrue(start_url in self.marionette.get_url())
         self.marionette.switch_to_frame() # go back to main frame
@@ -55,7 +56,7 @@ class TestSwitchFrame(MarionetteTestCase):
         verify_title = "Marionette IFrame Test"
         test_html = self.marionette.absolute_url(start_url)
         self.marionette.navigate(test_html)
-        frame = self.marionette.find_element("id", "test_iframe")
+        frame = self.marionette.find_element(By.ID, "test_iframe")
         self.assertEqual(self.marionette.get_active_frame(), None)
         self.marionette.switch_to_frame(frame)
         self.assertTrue(start_url in self.marionette.get_url())
@@ -76,45 +77,45 @@ class TestSwitchFrame(MarionetteTestCase):
         test_html = self.marionette.absolute_url("deletingFrame.html")
         self.marionette.navigate(test_html)
 
-        self.marionette.switch_to_frame(self.marionette.find_element('id',
+        self.marionette.switch_to_frame(self.marionette.find_element(By.ID,
                                                                      'iframe1'))
-        killIframe = self.marionette.find_element("id", "killIframe")
+        killIframe = self.marionette.find_element(By.ID, "killIframe")
         killIframe.click()
         self.marionette.switch_to_frame()
 
-        self.assertEqual(0, len(self.marionette.find_elements("id", "iframe1")))
+        self.assertEqual(0, len(self.marionette.find_elements(By.ID, "iframe1")))
 
-        addIFrame = self.marionette.find_element("id", "addBackFrame")
+        addIFrame = self.marionette.find_element(By.ID, "addBackFrame")
         addIFrame.click()
-        self.marionette.find_element("id", "iframe1")
+        self.marionette.find_element(By.ID, "iframe1")
 
-        self.marionette.switch_to_frame(self.marionette.find_element("id",
+        self.marionette.switch_to_frame(self.marionette.find_element(By.ID,
                                                                      "iframe1"))
 
-        self.marionette.find_element("id", "checkbox")
+        self.marionette.find_element(By.ID, "checkbox")
 
     def test_should_allow_a_user_to_switch_from_an_iframe_back_to_the_main_content_of_the_page(self):
         test_iframe = self.marionette.absolute_url("test_iframe.html")
         self.marionette.navigate(test_iframe)
         self.marionette.switch_to_frame(0)
         self.marionette.switch_to_default_content()
-        header = self.marionette.find_element("id", "iframe_page_heading")
+        header = self.marionette.find_element(By.ID, "iframe_page_heading")
         self.assertEqual(header.text, "This is the heading")
 
     def test_should_be_able_to_switch_to_a_frame_by_its_index(self):
         test_html = self.marionette.absolute_url("frameset.html")
         self.marionette.navigate(test_html)
         self.marionette.switch_to_frame(2)
-        element = self.marionette.find_element("id", "email")
+        element = self.marionette.find_element(By.ID, "email")
         self.assertEquals("email", element.get_attribute("type"))
 
     def test_should_be_able_to_switch_to_a_frame_using_a_previously_located_element(self):
         test_html = self.marionette.absolute_url("frameset.html")
         self.marionette.navigate(test_html)
-        frame = self.marionette.find_element("name", "third")
+        frame = self.marionette.find_element(By.NAME, "third")
         self.marionette.switch_to_frame(frame)
 
-        element = self.marionette.find_element("id", "email")
+        element = self.marionette.find_element(By.ID, "email")
         self.assertEquals("email", element.get_attribute("type"))
 
     def test_switch_to_frame_with_out_of_bounds_index(self):
@@ -129,7 +130,7 @@ class TestSwitchFrame(MarionetteTestCase):
     def test_after_switching_to_child_frame_navigates_changes_top(self):
         frame_html = self.marionette.absolute_url("frameset.html")
         self.marionette.navigate(frame_html)
-        frame = self.marionette.find_element("name", "third")
+        frame = self.marionette.find_element(By.NAME, "third")
         self.marionette.switch_to_frame(frame)
         self.assertEqual("Unique title", self.marionette.title)
         test_html = self.marionette.absolute_url("test.html")
@@ -139,7 +140,7 @@ class TestSwitchFrame(MarionetteTestCase):
     def test_switch_to_parent_frame(self):
         frame_html = self.marionette.absolute_url("frameset.html")
         self.marionette.navigate(frame_html)
-        frame = self.marionette.find_element("name", "third")
+        frame = self.marionette.find_element(By.NAME, "third")
         self.marionette.switch_to_frame(frame)
 
         # If we don't find the following element we aren't on the right page

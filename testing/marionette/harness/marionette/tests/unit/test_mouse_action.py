@@ -7,6 +7,7 @@ from marionette_driver.marionette import Actions
 from marionette_driver.keys import Keys
 from marionette_driver.by import By
 
+
 class TestMouseAction(MarionetteTestCase):
 
     def setUp(self):
@@ -37,7 +38,7 @@ class TestMouseAction(MarionetteTestCase):
         el = self.marionette.find_element(By.ID, 'one-word-div')
         self.action.double_click(el).perform()
         el.send_keys(self.mod_key + 'c')
-        rel = self.marionette.find_element("id", "input-field")
+        rel = self.marionette.find_element(By.ID, "input-field")
         rel.send_keys(self.mod_key + 'v')
         self.assertEqual(rel.get_attribute('value'), 'zyxw')
 

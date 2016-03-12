@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette import MarionetteTestCase
+from marionette_driver.by import By
 
 
 ''' Disabled in bug 896043 and when working on Chrome code re-enable for bug 896046
@@ -26,7 +27,7 @@ class TestTextChrome(MarionetteTestCase):
         wins.remove(self.win)
         newWin = wins.pop()
         self.marionette.switch_to_window(newWin)
-        box = self.marionette.find_element("id", "textInput")
+        box = self.marionette.find_element(By.ID, "textInput")
         self.assertEqual("test", box.text)
 
     def test_clearText(self):
@@ -34,7 +35,7 @@ class TestTextChrome(MarionetteTestCase):
         wins.remove(self.win)
         newWin = wins.pop()
         self.marionette.switch_to_window(newWin)
-        box = self.marionette.find_element("id", "textInput")
+        box = self.marionette.find_element(By.ID, "textInput")
         self.assertEqual("test", box.text)
         box.clear()
         self.assertEqual("", box.text)
@@ -44,7 +45,7 @@ class TestTextChrome(MarionetteTestCase):
         wins.remove(self.win)
         newWin = wins.pop()
         self.marionette.switch_to_window(newWin)
-        box = self.marionette.find_element("id", "textInput")
+        box = self.marionette.find_element(By.ID, "textInput")
         self.assertEqual("test", box.text)
         box.send_keys("at")
         self.assertEqual("attest", box.text)
