@@ -3934,14 +3934,8 @@ DeviceStorageRequestManager::Resolve(uint32_t aId, uint64_t aValue,
     return NS_OK;
   }
 
-  nsIGlobalObject* global = mPending[i].mRequest->GetOwnerGlobal();
-
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(global))) {
-    return RejectInternal(i, NS_LITERAL_STRING(POST_ERROR_EVENT_UNKNOWN));
-  }
-
-  JS::RootedValue value(jsapi.cx(), JS_NumberValue((double)aValue));
+  JS::RootedValue value(nsContentUtils::RootingCxForThread(),
+                        JS_NumberValue((double)aValue));
   return ResolveInternal(i, value);
 }
 
