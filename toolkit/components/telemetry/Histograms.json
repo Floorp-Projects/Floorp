@@ -10117,5 +10117,11 @@
     "bug_numbers": [1229961],
     "n_values": 12,
     "description": "Plugin drawing model. 0 when windowed, otherwise NPDrawingModel + 1."
+  "REMOTE_JAR_PROTOCOL_USED": {
+    "alert_emails": ["dev-platform@lists.mozilla.org"],
+    "expires_in_version": "55",
+    "bug_numbers": [1255934],
+    "kind": "count",
+    "description": "Remote JAR protocol usage"
   }
 }
