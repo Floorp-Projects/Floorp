@@ -1338,14 +1338,6 @@ ArgumentTypeMismatch(JSContext* cx, const char* arg, const char* func,
 }
 
 static bool
-CannotConstructError(JSContext* cx, const char* type)
-{
-  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                       CTYPESMSG_CANNOT_CONSTRUCT, type);
-  return false;
-}
-
-static bool
 DuplicateFieldError(JSContext* cx, Handle<JSFlatString*> name)
 {
   JSAutoByteString nameBytes;
@@ -4201,7 +4193,8 @@ ConstructAbstract(JSContext* cx,
                   Value* vp)
 {
   // Calling an abstract base class constructor is disallowed.
-  return CannotConstructError(cx, "abstract type");
+  JS_ReportError(cx, "cannot construct from abstract type");
+  return false;
 }
 
 /*******************************************************************************
@@ -4226,7 +4219,8 @@ CType::ConstructData(JSContext* cx,
   //   * __proto__ === t.prototype
   switch (GetTypeCode(obj)) {
   case TYPE_void_t:
-    return CannotConstructError(cx, "void_t");
+    JS_ReportError(cx, "cannot construct from void_t");
+    return false;
   case TYPE_function:
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                          CTYPESMSG_FUNCTION_CONSTRUCT);
