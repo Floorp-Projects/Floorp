@@ -155,6 +155,8 @@ from its prototype:
 
     * `"setInterval"`, for code passed to `setInterval` as a string.
 
+    * `"wasm"`, for serialized WebAssembly source.
+
     * `undefined`, if the implementation doesn't know how the code was
       introduced.
 

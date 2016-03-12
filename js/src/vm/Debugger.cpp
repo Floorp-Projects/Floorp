@@ -6470,14 +6470,27 @@ DebuggerSource_getText(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerSource_getUrl(JSContext* cx, unsigned argc, Value* vp)
+struct DebuggerSourceGetURLMatcher
 {
-    THIS_DEBUGSOURCE_SOURCE(cx, argc, vp, "(get url)", args, obj, sourceObject);
+    using ReturnType = const char*;
+    ReturnType match(HandleScriptSource sourceObject) {
+        ScriptSource* ss = sourceObject->source();
+        MOZ_ASSERT(ss);
+        return ss->filename();
+    }
+    ReturnType match(Handle<WasmModuleObject*> wasmModule) {
+        return wasmModule->module().filename();
+    }
+};
 
-    ScriptSource* ss = sourceObject->source();
-    if (ss->filename()) {
-        JSString* str = NewStringCopyZ<CanGC>(cx, ss->filename());
+static bool
+DebuggerSource_getURL(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get url)", args, obj, referent);
+
+    DebuggerSourceGetURLMatcher matcher;
+    if (const char* url = referent.match(matcher)) {
+        JSString* str = NewStringCopyZ<CanGC>(cx, url);
         if (!str)
             return false;
         args.rval().setString(str);
@@ -6486,34 +6499,56 @@ DebuggerSource_getUrl(JSContext* cx, unsigned argc, Value* vp)
     }
     return true;
 }
+
+struct DebuggerSourceGetDisplayURLMatcher
+{
+    using ReturnType = const char16_t*;
+    ReturnType match(HandleScriptSource sourceObject) {
+        ScriptSource* ss = sourceObject->source();
+        MOZ_ASSERT(ss);
+        return ss->hasDisplayURL() ? ss->displayURL() : nullptr;
+    }
+    ReturnType match(Handle<WasmModuleObject*> wasmModule) {
+        return wasmModule->module().displayURL();
+    }
+};
 
 static bool
 DebuggerSource_getDisplayURL(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSOURCE_SOURCE(cx, argc, vp, "(get url)", args, obj, sourceObject);
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get url)", args, obj, referent);
 
-    ScriptSource* ss = sourceObject->source();
-    MOZ_ASSERT(ss);
-
-    if (ss->hasDisplayURL()) {
-        JSString* str = JS_NewUCStringCopyZ(cx, ss->displayURL());
+    DebuggerSourceGetDisplayURLMatcher matcher;
+    if (const char16_t* displayURL = referent.match(matcher)) {
+        JSString* str = JS_NewUCStringCopyZ(cx, displayURL);
         if (!str)
             return false;
         args.rval().setString(str);
     } else {
         args.rval().setNull();
     }
-
     return true;
 }
+
+struct DebuggerSourceGetElementMatcher
+{
+    using ReturnType = JSObject*;
+    ReturnType match(HandleScriptSource sourceObject) {
+        return sourceObject->element();
+    }
+    ReturnType match(Handle<WasmModuleObject*> wasmModule) {
+        return nullptr;
+    }
+};
 
 static bool
 DebuggerSource_getElement(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSOURCE_SOURCE(cx, argc, vp, "(get element)", args, obj, sourceObject);
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get element)", args, obj, referent);
 
-    if (sourceObject->element()) {
-        args.rval().setObjectOrNull(sourceObject->element());
+    DebuggerSourceGetElementMatcher matcher;
+    if (JSObject* element = referent.match(matcher)) {
+        args.rval().setObjectOrNull(element);
         if (!Debugger::fromChildJSObject(obj)->wrapDebuggeeValue(cx, args.rval()))
             return false;
     } else {
@@ -6522,66 +6557,132 @@ DebuggerSource_getElement(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+struct DebuggerSourceGetElementPropertyMatcher
+{
+    using ReturnType = Value;
+    ReturnType match(HandleScriptSource sourceObject) {
+        return sourceObject->elementAttributeName();
+    }
+    ReturnType match(Handle<WasmModuleObject*> wasmModule) {
+        return UndefinedValue();
+    }
+};
+
 static bool
 DebuggerSource_getElementProperty(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSOURCE_SOURCE(cx, argc, vp, "(get elementAttributeName)", args, obj, sourceObject);
-    args.rval().set(sourceObject->elementAttributeName());
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get elementAttributeName)", args, obj, referent);
+    DebuggerSourceGetElementPropertyMatcher matcher;
+    args.rval().set(referent.match(matcher));
     return Debugger::fromChildJSObject(obj)->wrapDebuggeeValue(cx, args.rval());
 }
+
+class DebuggerSourceGetIntroductionScriptMatcher
+{
+    JSContext* cx_;
+    Debugger* dbg_;
+    MutableHandleValue rval_;
+
+  public:
+    DebuggerSourceGetIntroductionScriptMatcher(JSContext* cx, Debugger* dbg,
+                                               MutableHandleValue rval)
+      : cx_(cx),
+        dbg_(dbg),
+        rval_(rval)
+    { }
+
+    using ReturnType = bool;
+
+    ReturnType match(HandleScriptSource sourceObject) {
+        RootedScript script(cx_, sourceObject->introductionScript());
+        if (script) {
+            RootedObject scriptDO(cx_, dbg_->wrapScript(cx_, script));
+            if (!scriptDO)
+                return false;
+            rval_.setObject(*scriptDO);
+        } else {
+            rval_.setUndefined();
+        }
+        return true;
+    }
+
+    ReturnType match(Handle<WasmModuleObject*> wasmModule) {
+        RootedObject ds(cx_, dbg_->wrapWasmScript(cx_, wasmModule));
+        if (!ds)
+            return false;
+        rval_.setObject(*ds);
+        return true;
+    }
+};
 
 static bool
 DebuggerSource_getIntroductionScript(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSOURCE_SOURCE(cx, argc, vp, "(get introductionScript)", args, obj, sourceObject);
-
-    RootedScript script(cx, sourceObject->introductionScript());
-    if (script) {
-        RootedObject scriptDO(cx, Debugger::fromChildJSObject(obj)->wrapScript(cx, script));
-        if (!scriptDO)
-            return false;
-        args.rval().setObject(*scriptDO);
-    } else {
-        args.rval().setUndefined();
-    }
-    return true;
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get introductionScript)", args, obj, referent);
+    Debugger* dbg = Debugger::fromChildJSObject(obj);
+    DebuggerSourceGetIntroductionScriptMatcher matcher(cx, dbg, args.rval());
+    return referent.match(matcher);
 }
+
+struct DebuggerGetIntroductionOffsetMatcher
+{
+    using ReturnType = Value;
+    ReturnType match(HandleScriptSource sourceObject) {
+        // Regardless of what's recorded in the ScriptSourceObject and
+        // ScriptSource, only hand out the introduction offset if we also have
+        // the script within which it applies.
+        ScriptSource* ss = sourceObject->source();
+        if (ss->hasIntroductionOffset() && sourceObject->introductionScript())
+            return Int32Value(ss->introductionOffset());
+        return UndefinedValue();
+    }
+    ReturnType match(Handle<WasmModuleObject*> wasmModule) {
+        return UndefinedValue();
+    }
+};
 
 static bool
 DebuggerSource_getIntroductionOffset(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSOURCE_SOURCE(cx, argc, vp, "(get introductionOffset)", args, obj, sourceObject);
-
-    // Regardless of what's recorded in the ScriptSourceObject and
-    // ScriptSource, only hand out the introduction offset if we also have
-    // the script within which it applies.
-    ScriptSource* ss = sourceObject->source();
-    if (ss->hasIntroductionOffset() && sourceObject->introductionScript())
-        args.rval().setInt32(ss->introductionOffset());
-    else
-        args.rval().setUndefined();
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get introductionOffset)", args, obj, referent);
+    DebuggerGetIntroductionOffsetMatcher matcher;
+    args.rval().set(referent.match(matcher));
     return true;
 }
+
+struct DebuggerSourceGetIntroductionTypeMatcher
+{
+    using ReturnType = const char*;
+    ReturnType match(HandleScriptSource sourceObject) {
+        ScriptSource* ss = sourceObject->source();
+        MOZ_ASSERT(ss);
+        return ss->hasIntroductionType() ? ss->introductionType() : nullptr;
+    }
+    ReturnType match(Handle<WasmModuleObject*> wasmModule) {
+        return "wasm";
+    }
+};
 
 static bool
 DebuggerSource_getIntroductionType(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSOURCE_SOURCE(cx, argc, vp, "(get introductionType)", args, obj, sourceObject);
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get introductionType)", args, obj, referent);
 
-    ScriptSource* ss = sourceObject->source();
-    if (ss->hasIntroductionType()) {
-        JSString* str = NewStringCopyZ<CanGC>(cx, ss->introductionType());
+    DebuggerSourceGetIntroductionTypeMatcher matcher;
+    if (const char* introductionType = referent.match(matcher)) {
+        JSString* str = NewStringCopyZ<CanGC>(cx, introductionType);
         if (!str)
             return false;
         args.rval().setString(str);
     } else {
         args.rval().setUndefined();
     }
+
     return true;
 }
 
 static bool
-DebuggerSource_setSourceMapUrl(JSContext* cx, unsigned argc, Value* vp)
+DebuggerSource_setSourceMapURL(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGSOURCE_SOURCE(cx, argc, vp, "sourceMapURL", args, obj, sourceObject);
     ScriptSource* ss = sourceObject->source();
@@ -6600,23 +6701,33 @@ DebuggerSource_setSourceMapUrl(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerSource_getSourceMapUrl(JSContext* cx, unsigned argc, Value* vp)
+struct DebuggerSourceGetSourceMapURLMatcher
 {
-    THIS_DEBUGSOURCE_SOURCE(cx, argc, vp, "(get sourceMapURL)", args, obj, sourceObject);
+    using ReturnType = const char16_t*;
+    ReturnType match(HandleScriptSource sourceObject) {
+        ScriptSource* ss = sourceObject->source();
+        MOZ_ASSERT(ss);
+        return ss->hasSourceMapURL() ? ss->sourceMapURL() : nullptr;
+    }
+    ReturnType match(Handle<WasmModuleObject*> wasmModule) {
+        return nullptr;
+    }
+};
 
-    ScriptSource* ss = sourceObject->source();
-    MOZ_ASSERT(ss);
+static bool
+DebuggerSource_getSourceMapURL(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get sourceMapURL)", args, obj, referent);
 
-    if (ss->hasSourceMapURL()) {
-        JSString* str = JS_NewUCStringCopyZ(cx, ss->sourceMapURL());
+    DebuggerSourceGetSourceMapURLMatcher matcher;
+    if (const char16_t* sourceMapURL = referent.match(matcher)) {
+        JSString* str = JS_NewUCStringCopyZ(cx, sourceMapURL);
         if (!str)
             return false;
         args.rval().setString(str);
     } else {
         args.rval().setNull();
     }
-
     return true;
 }
 
@@ -6647,14 +6758,14 @@ DebuggerSource_getCanonicalId(JSContext* cx, unsigned argc, Value* vp)
 
 static const JSPropertySpec DebuggerSource_properties[] = {
     JS_PSG("text", DebuggerSource_getText, 0),
-    JS_PSG("url", DebuggerSource_getUrl, 0),
+    JS_PSG("url", DebuggerSource_getURL, 0),
     JS_PSG("element", DebuggerSource_getElement, 0),
     JS_PSG("displayURL", DebuggerSource_getDisplayURL, 0),
     JS_PSG("introductionScript", DebuggerSource_getIntroductionScript, 0),
     JS_PSG("introductionOffset", DebuggerSource_getIntroductionOffset, 0),
     JS_PSG("introductionType", DebuggerSource_getIntroductionType, 0),
     JS_PSG("elementAttributeName", DebuggerSource_getElementProperty, 0),
-    JS_PSGS("sourceMapURL", DebuggerSource_getSourceMapUrl, DebuggerSource_setSourceMapUrl, 0),
+    JS_PSGS("sourceMapURL", DebuggerSource_getSourceMapURL, DebuggerSource_setSourceMapURL, 0),
     JS_PSG("canonicalId", DebuggerSource_getCanonicalId, 0),
     JS_PS_END
 };
