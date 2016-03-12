@@ -12,12 +12,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=985827
 
   /** Test for Bug 985827 **/
 
-  // Test WebIDL NavigatorProperty objects
-  var x = navigator.mozContacts;
-  is(typeof x, "object", "Should have a mozContacts object");
-  delete navigator.mozContacts;
-  var y = navigator.mozContacts;
-  is(x, y, "Should have gotten the same mozContacts object again");
+  function test() {
+    var is = parent.is;
+
+    // Test WebIDL NavigatorProperty objects
+    var x = navigator.mozContacts;
+    is(typeof x, "object", "Should have a mozContacts object");
+    delete navigator.mozContacts;
+    var y = navigator.mozContacts;
+    is(x, y, "Should have gotten the same mozContacts object again");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  SpecialPowers.pushPermissions([
+    {type: "contacts-read", allow: true, context: document},
+    {type: "contacts-write", allow: true, context: document},
+    {type: "contacts-create", allow: true, context: document},
+  ], function() {
+    var iframe = document.createElement("iframe");
+    iframe.src = "data:text/html,<script>(" + escape(test.toString()) + ")();</scr" + "ipt>";
+    document.body.appendChild(iframe);
+    iframe.onload = function() { SimpleTest.finish(); };
+  });
 
   </script>
 </head>
