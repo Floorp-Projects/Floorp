@@ -159,7 +159,7 @@ IccCallback::NotifyGetCardLockEnabled(bool aResult)
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> jsResult(cx);
   if (!ToJSValue(cx, result, &jsResult)) {
-    JS_ClearPendingException(cx);
+    jsapi.ClearException();
     return NS_ERROR_TYPE_ERR;
   }
 
@@ -201,7 +201,7 @@ IccCallback::NotifyGetCardLockRetryCount(int32_t aCount)
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> jsResult(cx);
   if (!ToJSValue(cx, result, &jsResult)) {
-    JS_ClearPendingException(cx);
+    jsapi.ClearException();
     return NS_ERROR_TYPE_ERR;
   }
 

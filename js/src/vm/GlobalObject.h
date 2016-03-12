@@ -137,7 +137,6 @@ class GlobalObject : public NativeObject
         WARN_WATCH_DEPRECATED                   = 1 << 0,
         WARN_PROTO_SETTING_SLOW                 = 1 << 1,
         WARN_STRING_CONTAINS_DEPRECATED         = 1 << 2,
-        WARN_PROXY_CREATE_DEPRECATED            = 1 << 3,
     };
 
     // Emit the specified warning if the given slot in |obj|'s global isn't
@@ -710,12 +709,6 @@ class GlobalObject : public NativeObject
     static bool warnOnceAboutStringContains(JSContext* cx, HandleObject strContains) {
         return warnOnceAbout(cx, strContains, WARN_STRING_CONTAINS_DEPRECATED,
                              JSMSG_DEPRECATED_STRING_CONTAINS);
-    }
-
-    // Warn about uses of Proxy.create and Proxy.createFunction
-    static bool warnOnceAboutProxyCreate(JSContext* cx, HandleObject create) {
-        return warnOnceAbout(cx, create, WARN_PROXY_CREATE_DEPRECATED,
-                             JSMSG_DEPRECATED_PROXY_CREATE);
     }
 
     static bool getOrCreateEval(JSContext* cx, Handle<GlobalObject*> global,

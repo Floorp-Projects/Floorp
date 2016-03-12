@@ -792,7 +792,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
       if (isChildProcess) {
           /* This message is used when an inner child frame must be focused. */
           addMessageListener("WaitForFocus:FocusChild", function focusChild(msg) {
-              removeMessageListener("WaitForFocus:ChildFocused", focusChild);
+              removeMessageListener("WaitForFocus:FocusChild", focusChild);
               finished = false;
               waitForLoadAndFocusOnWindow(msg.objects.child);
           });
@@ -849,6 +849,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
             }
             else {
                 browser.messageManager.removeMessageListener("WaitForFocus:ChildFocused", waitTest);
+                SimpleTest._pendingWaitForFocusCount--;
                 setTimeout(callback, 0, browser ? browser.contentWindowAsCPOW : targetWindow);
             }
         });

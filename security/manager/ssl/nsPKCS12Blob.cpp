@@ -32,9 +32,8 @@
 
 #include "secerr.h"
 
-extern PRLogModuleInfo* gPIPNSSLog;
-
 using namespace mozilla;
+extern LazyLogModule gPIPNSSLog;
 
 #define PIP_PKCS12_TMPFILENAME   NS_LITERAL_CSTRING(".pip_p12tmp")
 #define PIP_PKCS12_BUFFER_SIZE   2048

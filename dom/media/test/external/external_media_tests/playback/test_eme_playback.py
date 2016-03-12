@@ -5,13 +5,30 @@
 import re
 
 from external_media_harness.testcase import MediaTestCase, VideoPlaybackTestsMixin
+from external_media_tests.media_utils.video_puppeteer import VideoException
 
+reset_adobe_gmp_script = """
+navigator.requestMediaKeySystemAccess('com.adobe.primetime',
+[{initDataType: 'cenc'}]).then(
+    function(access) {
+        marionetteScriptFinished('success');
+    },
+    function(ex) {
+        marionetteScriptFinished(ex);
+    }
+);
+"""
 
 class TestEMEPlayback(MediaTestCase, VideoPlaybackTestsMixin):
+
+    # Class variable. We only need to reset the adobe GMP version once, not
+    # every time we instantiate the class.
+    version_needs_reset = True
 
     def setUp(self):
         super(TestEMEPlayback, self).setUp()
         self.set_eme_prefs()
+        self.reset_GMP_version()
         assert(self.check_eme_prefs())
 
     def set_eme_prefs(self):
@@ -21,6 +38,18 @@ class TestEMEPlayback(MediaTestCase, VideoPlaybackTestsMixin):
             # 2015-09-28 cpearce says this is no longer necessary, but in case
             # we are working with older firefoxes...
             self.prefs.set_pref('media.gmp.trial-create.enabled', False)
+
+    def reset_GMP_version(self):
+        if TestEMEPlayback.version_needs_reset:
+            with self.marionette.using_context('chrome'):
+                if self.prefs.get_pref('media.gm-eme-adobe.version'):
+                    self.prefs.set_pref('media.gm-eme-adobe.version', None)
+                result = self.marionette.execute_async_script(reset_adobe_gmp_script,
+                                                              script_timeout=60000)
+                if not result == 'success':
+                    raise VideoException('ERROR: Resetting Adobe GMP failed % s' % result)
+
+            TestEMEPlayback.version_needs_reset = False
 
     def check_and_log_boolean_pref(self, pref_name, expected_value):
         with self.marionette.using_context('chrome'):

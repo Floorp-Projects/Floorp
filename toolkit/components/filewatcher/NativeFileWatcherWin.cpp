@@ -132,16 +132,8 @@ private:
   nsString mChangedResource;
 };
 
-static PRLogModuleInfo* GetFileWatcherContextLog()
-{
-  static PRLogModuleInfo *gNativeWatcherPRLog;
-  if (!gNativeWatcherPRLog) {
-    gNativeWatcherPRLog = PR_NewLogModule("NativeFileWatcherService");
-  }
-  return gNativeWatcherPRLog;
-}
-
-#define FILEWATCHERLOG(...) MOZ_LOG(GetFileWatcherContextLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
+static mozilla::LazyLogModule gNativeWatcherPRLog("NativeFileWatcherService");
+#define FILEWATCHERLOG(...) MOZ_LOG(gNativeWatcherPRLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 // The number of notifications to store within WatchedResourceDescriptor:mNotificationBuffer.
 // If the buffer overflows, its contents are discarded and a change callback is dispatched

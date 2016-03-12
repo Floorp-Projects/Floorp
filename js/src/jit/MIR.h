@@ -1221,7 +1221,7 @@ class MVariadicT : public T
     FixedList<MUse> operands_;
 
   protected:
-    bool init(TempAllocator& alloc, size_t length) {
+    MOZ_WARN_UNUSED_RESULT bool init(TempAllocator& alloc, size_t length) {
         return operands_.init(alloc, length);
     }
     void initOperand(size_t index, MDefinition* operand) {
@@ -2022,7 +2022,7 @@ class MSimdGeneralShuffle :
         return new(alloc) MSimdGeneralShuffle(numVectors, numLanes, type);
     }
 
-    bool init(TempAllocator& alloc) {
+    MOZ_WARN_UNUSED_RESULT bool init(TempAllocator& alloc) {
         return MVariadicInstruction::init(alloc, numVectors_ + numLanes_);
     }
     void setVector(unsigned i, MDefinition* vec) {
@@ -2666,7 +2666,7 @@ class MTableSwitch final
         return successors_.length();
     }
 
-    bool addSuccessor(MBasicBlock* successor, size_t* index) {
+    MOZ_WARN_UNUSED_RESULT bool addSuccessor(MBasicBlock* successor, size_t* index) {
         MOZ_ASSERT(successors_.length() < (size_t)(high_ - low_ + 2));
         MOZ_ASSERT(!successors_.empty());
         *index = successors_.length();
@@ -2711,14 +2711,14 @@ class MTableSwitch final
         return high() - low() + 1;
     }
 
-    bool addDefault(MBasicBlock* block, size_t* index = nullptr) {
+    MOZ_WARN_UNUSED_RESULT bool addDefault(MBasicBlock* block, size_t* index = nullptr) {
         MOZ_ASSERT(successors_.empty());
         if (index)
             *index = 0;
         return successors_.append(block);
     }
 
-    bool addCase(size_t successorIndex) {
+    MOZ_WARN_UNUSED_RESULT bool addCase(size_t successorIndex) {
         return cases_.append(successorIndex);
     }
 
@@ -2727,7 +2727,7 @@ class MTableSwitch final
         return blocks_[i];
     }
 
-    bool addBlock(MBasicBlock* block) {
+    MOZ_WARN_UNUSED_RESULT bool addBlock(MBasicBlock* block) {
         return blocks_.append(block);
     }
 
@@ -3628,7 +3628,7 @@ class MArrayState
 
     explicit MArrayState(MDefinition* arr);
 
-    bool init(TempAllocator& alloc, MDefinition* obj, MDefinition* len);
+    MOZ_WARN_UNUSED_RESULT bool init(TempAllocator& alloc, MDefinition* obj, MDefinition* len);
 
     void initElement(uint32_t index, MDefinition* def) {
         initOperand(index + 2, def);
@@ -13248,7 +13248,7 @@ class MResumePoint final :
   protected:
     // Initializes operands_ to an empty array of a fixed length.
     // The array may then be filled in by inherit().
-    bool init(TempAllocator& alloc);
+    MOZ_WARN_UNUSED_RESULT bool init(TempAllocator& alloc);
 
     void clearOperand(size_t index) {
         // FixedList doesn't initialize its elements, so do an unchecked init.

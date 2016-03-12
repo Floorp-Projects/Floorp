@@ -1538,6 +1538,9 @@ auto NativePanZoomController::Destroy() const -> void
 constexpr char NativePanZoomController::DisposeNative_t::name[];
 constexpr char NativePanZoomController::DisposeNative_t::signature[];
 
+constexpr char NativePanZoomController::HandleHoverEvent_t::name[];
+constexpr char NativePanZoomController::HandleHoverEvent_t::signature[];
+
 constexpr char NativePanZoomController::HandleMotionEvent_t::name[];
 constexpr char NativePanZoomController::HandleMotionEvent_t::signature[];
 

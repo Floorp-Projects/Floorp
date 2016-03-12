@@ -201,7 +201,7 @@ protected:
   // traversed by the cycle collector if the busy count is zero.
   RefPtr<WorkerPrivate> mSelfRef;
 
-  WorkerPrivateParent(JSContext* aCx, WorkerPrivate* aParent,
+  WorkerPrivateParent(WorkerPrivate* aParent,
                       const nsAString& aScriptURL, bool aIsChromeWorker,
                       WorkerType aWorkerType,
                       const nsACString& aSharedWorkerName,
@@ -216,13 +216,11 @@ private:
     return static_cast<Derived*>(const_cast<WorkerPrivateParent*>(this));
   }
 
-  // aCx is null when called from the finalizer
   bool
   NotifyPrivate(Status aStatus);
 
-  // aCx is null when called from the finalizer
   bool
-  TerminatePrivate(JSContext* aCx)
+  TerminatePrivate()
   {
     return NotifyPrivate(Terminating);
   }
@@ -318,10 +316,10 @@ public:
   Resume();
 
   bool
-  Terminate(JSContext* aCx)
+  Terminate()
   {
     AssertIsOnParentThread();
-    return TerminatePrivate(aCx);
+    return TerminatePrivate();
   }
 
   bool
@@ -1337,7 +1335,7 @@ public:
   MaybeDispatchLoadFailedRunnable();
 
 private:
-  WorkerPrivate(JSContext* aCx, WorkerPrivate* aParent,
+  WorkerPrivate(WorkerPrivate* aParent,
                 const nsAString& aScriptURL, bool aIsChromeWorker,
                 WorkerType aWorkerType, const nsACString& aSharedWorkerName,
                 WorkerLoadInfo& aLoadInfo);

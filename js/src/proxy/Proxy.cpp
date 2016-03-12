@@ -17,7 +17,6 @@
 #include "gc/Marking.h"
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/ScriptedDirectProxyHandler.h"
-#include "proxy/ScriptedIndirectProxyHandler.h"
 #include "vm/WrapperObject.h"
 
 #include "jsatominlines.h"
@@ -752,8 +751,6 @@ JS_FRIEND_API(JSObject*)
 js::InitProxyClass(JSContext* cx, HandleObject obj)
 {
     static const JSFunctionSpec static_methods[] = {
-        JS_FN("create",         proxy_create,          2, 0),
-        JS_FN("createFunction", proxy_createFunction,  3, 0),
         JS_FN("revocable",      proxy_revocable,       2, 0),
         JS_FS_END
     };

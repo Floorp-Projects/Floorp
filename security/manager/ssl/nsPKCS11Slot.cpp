@@ -13,7 +13,7 @@
 
 using mozilla::LogLevel;
 
-extern PRLogModuleInfo* gPIPNSSLog;
+extern mozilla::LazyLogModule gPIPNSSLog;
 
 NS_IMPL_ISUPPORTS(nsPKCS11Slot, nsIPKCS11Slot)
 

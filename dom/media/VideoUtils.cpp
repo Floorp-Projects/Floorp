@@ -498,8 +498,8 @@ ParseCodecsString(const nsAString& aCodecs, nsTArray<nsString>& aOutCodecs)
 
 static bool
 CheckContentType(const nsAString& aContentType,
-                 mozilla::Function<bool(const nsAString&)> aSubtypeFilter,
-                 mozilla::Function<bool(const nsAString&)> aCodecFilter)
+                 mozilla::function<bool(const nsAString&)> aSubtypeFilter,
+                 mozilla::function<bool(const nsAString&)> aCodecFilter)
 {
   nsContentTypeParser parser(aContentType);
   nsAutoString mimeType;

@@ -2208,7 +2208,6 @@ typename WorkerPrivateParent<Derived>::cycleCollection
 
 template <class Derived>
 WorkerPrivateParent<Derived>::WorkerPrivateParent(
-                                           JSContext* aCx,
                                            WorkerPrivate* aParent,
                                            const nsAString& aScriptURL,
                                            bool aIsChromeWorker,
@@ -3521,7 +3520,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 template <class Derived>
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WorkerPrivateParent<Derived>,
                                                 DOMEventTargetHelper)
-  tmp->Terminate(nullptr);
+  tmp->Terminate();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 template <class Derived>
@@ -3903,13 +3902,12 @@ WorkerDebugger::ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
   LogErrorToConsole(aMessage, aFilename, nsString(), aLineno, 0, 0, 0);
 }
 
-WorkerPrivate::WorkerPrivate(JSContext* aCx,
-                             WorkerPrivate* aParent,
+WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
                              const nsAString& aScriptURL,
                              bool aIsChromeWorker, WorkerType aWorkerType,
                              const nsACString& aWorkerName,
                              WorkerLoadInfo& aLoadInfo)
-  : WorkerPrivateParent<WorkerPrivate>(aCx, aParent, aScriptURL,
+  : WorkerPrivateParent<WorkerPrivate>(aParent, aScriptURL,
                                        aIsChromeWorker, aWorkerType,
                                        aWorkerName, aLoadInfo)
   , mDebuggerRegistered(false)
@@ -4081,7 +4079,7 @@ WorkerPrivate::Constructor(JSContext* aCx,
   MOZ_ASSERT(runtimeService);
 
   RefPtr<WorkerPrivate> worker =
-    new WorkerPrivate(aCx, parent, aScriptURL, aIsChromeWorker,
+    new WorkerPrivate(parent, aScriptURL, aIsChromeWorker,
                       aWorkerType, aWorkerName, *aLoadInfo);
 
   if (!runtimeService->RegisterWorker(aCx, worker)) {
@@ -5781,9 +5779,9 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aFallbackMessage,
     xpc::ErrorReport::ErrorReportToMessageString(aReport, message);
 
     filename = NS_ConvertUTF8toUTF16(aReport->filename);
-    line = aReport->uclinebuf;
+    line.Assign(aReport->linebuf(), aReport->linebufLength());
     lineNumber = aReport->lineno;
-    columnNumber = aReport->uctokenptr - aReport->uclinebuf;
+    columnNumber = aReport->tokenOffset();
     flags = aReport->flags;
     errorNumber = aReport->errorNumber;
     MOZ_ASSERT(aReport->exnType >= JSEXN_NONE && aReport->exnType < JSEXN_LIMIT);

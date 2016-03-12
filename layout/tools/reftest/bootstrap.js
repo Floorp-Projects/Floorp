@@ -1,73 +1,78 @@
-Components.utils.import("resource://gre/modules/FileUtils.jsm");        
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function loadIntoWindow(window) {}
-function unloadFromWindow(window) {}
+const { utils: Cu, interfaces: Ci, classes: Cc, manager: Cm } = Components;
 
-function setDefaultPrefs() {
-    // This code sets the preferences for extension-based reftest.
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                getService(Components.interfaces.nsIPrefService);
-    var branch = prefs.getDefaultBranch("");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-#include reftest-preferences.js
-}
+var WindowListener = {
+  onOpenWindow: function(win) {
+    Services.wm.removeListener(WindowListener);
 
-var windowListener = {
-    onOpenWindow: function(aWindow) {
-        let domWindow = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowInternal || Components.interfaces.nsIDOMWindow);
-        domWindow.addEventListener("load", function() {
-            domWindow.removeEventListener("load", arguments.callee, false);
+    win = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+    win.addEventListener("load", function listener() {
+      win.removeEventListener("load", listener, false);
 
-            let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
+      // Load into any existing windows.
+      let windows = Services.wm.getEnumerator("navigator:browser");
+      while (windows.hasMoreElements()) {
+        win = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
+        break;
+      }
 
-            // Load into any existing windows
-            let enumerator = wm.getEnumerator("navigator:browser");
-            while (enumerator.hasMoreElements()) {
-                let win = enumerator.getNext().QueryInterface(Components.interfaces.nsIDOMWindow);
-                setDefaultPrefs();
-                Components.utils.import("chrome://reftest/content/reftest.jsm");
-                win.addEventListener("pageshow", function() {
-                    win.removeEventListener("pageshow", arguments.callee); 
-                    // We add a setTimeout here because windows.innerWidth/Height are not set yet;
-                    win.setTimeout(function () {OnRefTestLoad(win);}, 0);
-                });
-                break;
-            }
-        }, false);
-   },
-   onCloseWindow: function(aWindow){ },
-   onWindowTitleChange: function(){ },
+      Cu.import("chrome://reftest/content/reftest.jsm");
+      win.addEventListener("pageshow", function listener() {
+        win.removeEventListener("pageshow", listener);
+        // Add setTimeout here because windows.innerWidth/Height are not set yet.
+        win.setTimeout(function() {OnRefTestLoad(win);}, 0);
+      });
+    }, false);
+  }
 };
 
-function startup(aData, aReason) {
-    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
-             getService (Components.interfaces.nsIWindowMediator);
+function startup(data, reason) {
+  // b2g is bootstrapped by b2g_start_script.js
+  if (Services.appinfo.widgetToolkit == "gonk") {
+    return;
+  }
 
-    Components.manager.addBootstrappedManifestLocation(aData.installPath);
+  if (Services.appinfo.OS == "Android") {
+    Cm.addBootstrappedManifestLocation(data.installPath);
+    Services.wm.addListener(WindowListener);
+    return;
+  }
 
-    // Load into any new windows
-    wm.addListener(windowListener);
+  let ios = Cc["@mozilla.org/network/io-service;1"]
+            .getService(Ci.nsIIOService2);
+  ios.manageOfflineStatus = false;
+  ios.offline = false;
+
+  let wwatch = Cc["@mozilla.org/embedcomp/window-watcher;1"]
+                .getService(Ci.nsIWindowWatcher);
+  let dummy = wwatch.openWindow(null, "about:blank", "dummy",
+                                "chrome,dialog=no,left=800,height=200,width=200,all",null);
+  dummy.onload = function() {
+    dummy.focus();
+    wwatch.openWindow(null, "chrome://reftest/content/reftest.xul", "_blank",
+                      "chrome,dialog=no,all", {});
+  };
 }
 
-function shutdown(aData, aReason) {
-    // When the application is shutting down we normally don't have to clean up any UI changes
-    if (aReason == APP_SHUTDOWN)
-        return;
+function shutdown(data, reason) {
+  if (Services.appinfo.widgetToolkit == "gonk") {
+    return;
+  }
 
-    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
-             getService(Components.interfaces.nsIWindowMediator);
-
-    // Stop watching for new windows
-    wm.removeListener(windowListener);
-
-    // Unload from any existing windows
-    let enumerator = wm.getEnumerator("navigator:browser");
-    while (enumerator.hasMoreElements()) {
-        let win = enumerator.getNext().QueryInterface(Components.interfaces.nsIDOMWindow);
-        unloadFromWindow(win);
-    }
+  if (Services.appinfo.OS == "Android") {
+    Services.wm.removeListener(WindowListener);
+    Cm.removedBootstrappedManifestLocation(data.installPath);
+    OnRefTestUnload();
+    Cu.unload("chrome://reftest/content/reftest.jsm");
+  }
 }
 
-function install(aData, aReason) { }
-function uninstall(aData, aReason) { }
 
+function install(data, reason) {}
+function uninstall(data, reason) {}

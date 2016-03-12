@@ -254,11 +254,14 @@ class MouseInput : public InputData
 public:
   enum MouseType
   {
+    MOUSE_NONE,
     MOUSE_MOVE,
     MOUSE_DOWN,
     MOUSE_UP,
     MOUSE_DRAG_START,
     MOUSE_DRAG_END,
+    MOUSE_WIDGET_ENTER,
+    MOUSE_WIDGET_EXIT,
   };
 
   enum ButtonType
@@ -269,15 +272,20 @@ public:
     NONE
   };
 
-  MouseInput(MouseType aType, ButtonType aButtonType, uint32_t aTime,
-             TimeStamp aTimeStamp, Modifiers aModifiers)
+  MouseInput(MouseType aType, ButtonType aButtonType, int16_t aButtons, const ScreenPoint& aPoint,
+             uint32_t aTime, TimeStamp aTimeStamp, Modifiers aModifiers)
     : InputData(MOUSE_INPUT, aTime, aTimeStamp, aModifiers)
     , mType(aType)
     , mButtonType(aButtonType)
+    , mButtons(aButtons)
+    , mOrigin(aPoint)
   {}
 
   MouseInput()
     : InputData(MOUSE_INPUT)
+    , mType(MOUSE_NONE)
+    , mButtonType(NONE)
+    , mButtons(0)
   {}
 
   explicit MouseInput(const WidgetMouseEventBase& aMouseEvent);
@@ -285,9 +293,11 @@ public:
   bool IsLeftButton() const { return mButtonType == LEFT_BUTTON; }
 
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
+  WidgetMouseEvent ToWidgetMouseEvent(nsIWidget* aWidget) const;
 
   MouseType mType;
   ButtonType mButtonType;
+  int16_t mButtons;
   ScreenPoint mOrigin;
   ParentLayerPoint mLocalOrigin;
 };

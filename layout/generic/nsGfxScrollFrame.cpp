@@ -67,9 +67,13 @@
 #include "mozilla/layers/ScrollLinkedEffectDetector.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/unused.h"
+#include "LayersLogging.h"  // for Stringify
 #include <algorithm>
 #include <cstdlib> // for std::abs(int/long)
 #include <cmath> // for std::abs(float/double)
+
+#define PAINT_SKIP_LOG(...)
+// #define PAINT_SKIP_LOG(...) printf_stderr("PSKIP: " __VA_ARGS__)
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2696,9 +2700,14 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
       nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
     displayPort.MoveBy(-mScrolledFrame->GetPosition());
 
+    PAINT_SKIP_LOG("New scrollpos %s usingDP %d dpEqual %d scrollableByApz %d\n",
+        Stringify(CSSPoint::FromAppUnits(GetScrollPosition())).c_str(),
+        usingDisplayPort, displayPort.IsEqualEdges(oldDisplayPort),
+        mScrollableByAPZ);
     if (usingDisplayPort && displayPort.IsEqualEdges(oldDisplayPort)) {
       if (LastScrollOrigin() == nsGkAtoms::apz) {
         schedulePaint = false;
+        PAINT_SKIP_LOG("Skipping due to APZ scroll\n");
       } else if (mScrollableByAPZ) {
         nsIWidget* widget = presContext->GetNearestWidget();
         LayerManager* manager = widget ? widget->GetLayerManager() : nullptr;
@@ -2710,6 +2719,7 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
           forwarder->GetShadowManager()->SendUpdateScrollOffset(id,
               mScrollGeneration, CSSPoint::FromAppUnits(GetScrollPosition()));
           schedulePaint = false;
+          PAINT_SKIP_LOG("Skipping due to APZ-forwarded main-thread scroll\n");
         }
       }
     }

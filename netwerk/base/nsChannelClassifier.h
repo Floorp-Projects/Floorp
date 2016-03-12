@@ -44,6 +44,8 @@ private:
     nsresult StartInternal();
     // Helper function to check a tracking URI against the whitelist
     nsresult IsTrackerWhitelisted();
+    // Helper function to check a URI against the hostname whitelist
+    bool IsHostnameWhitelisted(nsIURI *aUri, const nsACString &aWhitelisted);
     // Checks that the channel was loaded by the URI currently loaded in aDoc
     static bool SameLoadingURI(nsIDocument *aDoc, nsIChannel *aChannel);
 

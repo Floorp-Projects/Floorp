@@ -27,9 +27,8 @@ ok(document.location === location, "properties are properly aliased");
 
 var canDefine = false;
 try {
-    var foo;
-    this.__defineGetter__.call(foo, 'bar', function() {});
-    this.__defineSetter__.call(foo, 'bar', function() {});
+    this.__defineGetter__.call(this, 'bar', function() {});
+    this.__defineSetter__.call(this, 'bar', function() {});
     canDefine = true;
 } catch (e) {}
 ok(canDefine, "Should have access to __defineGetter__ and __defineSetter__");

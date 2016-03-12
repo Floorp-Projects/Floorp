@@ -5,5 +5,5 @@
 //
 var a = [];
 for (var i = 0; i < 200; ++i) a.push({});
-var p = Proxy.create({fix: function() { return a; }});
+var p = new Proxy({}, {preventExtensions() { return false; }});
 Object.preventExtensions(p);

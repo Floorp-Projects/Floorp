@@ -1,5 +1,6 @@
+var global = this;
 (function() {
-  __defineGetter__("x", /x/.constructor)
+  global.__defineGetter__("x", /x/.constructor)
 })()
 for (var a = 0; a < 4; ++a) {
   if (a % 4 == 1) {

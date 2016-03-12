@@ -300,6 +300,26 @@ add_task(function* test_bad_cookie_permissions() {
     shouldPass: false,
     shouldWrite: false,
   });
+
+  info("Test non-matching domain");
+  yield testCookies({
+    permissions: ["http://example.com/", "cookies"],
+    url: "http://example.com/",
+    domain: "example.net",
+    secure: false,
+    shouldPass: false,
+    shouldWrite: false,
+  });
+
+  info("Test invalid scheme");
+  yield testCookies({
+    permissions: ["ftp://example.com/", "cookies"],
+    url: "ftp://example.com/",
+    domain: "example.com",
+    secure: false,
+    shouldPass: false,
+    shouldWrite: false,
+  });
 });
 
 </script>

@@ -11,5 +11,5 @@ dbg.onDebuggerStatement = function (frame) {
     assertEq(proxy.call(null, 33).return, 34);
     hits++;
 };
-g.eval("f(Proxy.createFunction({}, function (arg) { return arg + 1; }));");
+g.eval("f(new Proxy(function (arg) { return arg + 1; }, {}));");
 assertEq(hits, 1);

@@ -68,10 +68,10 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoop)
     exit->add(u);
     exit->end(MReturn::New(func.alloc, u));
 
-    innerHeader->addPredecessorWithoutPhis(innerBackedge);
-    outerHeader->addPredecessorWithoutPhis(outerBackedge);
-    exit->addPredecessorWithoutPhis(entry);
-    merge->addPredecessorWithoutPhis(osrEntry);
+    MOZ_ALWAYS_TRUE(innerHeader->addPredecessorWithoutPhis(innerBackedge));
+    MOZ_ALWAYS_TRUE(outerHeader->addPredecessorWithoutPhis(outerBackedge));
+    MOZ_ALWAYS_TRUE(exit->addPredecessorWithoutPhis(entry));
+    MOZ_ALWAYS_TRUE(merge->addPredecessorWithoutPhis(osrEntry));
 
     outerHeader->setLoopHeader(outerBackedge);
     innerHeader->setLoopHeader(innerBackedge);
@@ -160,11 +160,11 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoopNested)
     exit->add(u);
     exit->end(MReturn::New(func.alloc, u));
 
-    innerHeader->addPredecessorWithoutPhis(innerBackedge);
-    middleHeader->addPredecessorWithoutPhis(middleBackedge);
-    outerHeader->addPredecessorWithoutPhis(outerBackedge);
-    exit->addPredecessorWithoutPhis(entry);
-    merge->addPredecessorWithoutPhis(osrEntry);
+    MOZ_ALWAYS_TRUE(innerHeader->addPredecessorWithoutPhis(innerBackedge));
+    MOZ_ALWAYS_TRUE(middleHeader->addPredecessorWithoutPhis(middleBackedge));
+    MOZ_ALWAYS_TRUE(outerHeader->addPredecessorWithoutPhis(outerBackedge));
+    MOZ_ALWAYS_TRUE(exit->addPredecessorWithoutPhis(entry));
+    MOZ_ALWAYS_TRUE(merge->addPredecessorWithoutPhis(osrEntry));
 
     outerHeader->setLoopHeader(outerBackedge);
     middleHeader->setLoopHeader(middleBackedge);
@@ -269,8 +269,8 @@ BEGIN_TEST(testJitGVN_PinnedPhis)
     exit->add(z7);
     exit->end(MGoto::New(func.alloc, outerHeader));
 
-    innerHeader->addPredecessorWithoutPhis(innerBackedge);
-    outerHeader->addPredecessorWithoutPhis(exit);
+    MOZ_ALWAYS_TRUE(innerHeader->addPredecessorWithoutPhis(innerBackedge));
+    MOZ_ALWAYS_TRUE(outerHeader->addPredecessorWithoutPhis(exit));
 
     outerHeader->setLoopHeader(exit);
     innerHeader->setLoopHeader(innerBackedge);

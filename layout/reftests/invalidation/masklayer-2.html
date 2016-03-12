@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" reftest-async-scroll>
 <meta charset="utf-8">
 <title>Moving a layer in a box with a rounded clip shouldn't invalidate.</title>
 
@@ -33,7 +33,10 @@
 
 <body>
 
-<div id="scrollbox">
+<div id="scrollbox" reftest-displayport-x="0"
+                    reftest-displayport-y="0"
+                    reftest-displayport-w="300"
+                    reftest-displayport-h="200">
   <div id="scrollable">
     <div id="scrolledLayer" class="reftest-no-paint"></div>
   </div>

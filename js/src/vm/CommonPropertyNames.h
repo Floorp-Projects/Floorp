@@ -144,6 +144,7 @@
     macro(isExtensible, isExtensible, "isExtensible") \
     macro(iteratorIntrinsic, iteratorIntrinsic, "__iterator__") \
     macro(join, join, "join") \
+    macro(js, js, "js") \
     macro(keys, keys, "keys") \
     macro(label, label, "label") \
     macro(lastIndex, lastIndex, "lastIndex") \
@@ -269,6 +270,7 @@
     macro(var, var, "var") \
     macro(variable, variable, "variable") \
     macro(void0, void0, "(void 0)") \
+    macro(wasm, wasm, "wasm") \
     macro(watch, watch, "watch") \
     macro(WeakSet_add, WeakSet_add, "WeakSet_add") \
     macro(weekday, weekday, "weekday") \

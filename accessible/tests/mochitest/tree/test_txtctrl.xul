@@ -18,6 +18,9 @@
 
   <script type="application/javascript">
   <![CDATA[
+    //gA11yEventDumpToConsole = true;
+    //enableLogging("tree,verbose"); // debug stuff
+
     ////////////////////////////////////////////////////////////////////////////
     // Test
 
@@ -160,6 +163,7 @@
         SimpleTest.ok(true, "Testing (New) Toolkit autocomplete widget.");
 
         // Dumb access to trigger popup lazy creation.
+        dump("Trigget popup lazy creation");
         waitForEvent(EVENT_REORDER, txc, test_AutocompleteControl);
         txc.popup;
 

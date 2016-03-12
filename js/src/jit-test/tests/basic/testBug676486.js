@@ -1,8 +1,6 @@
-var proxy = Proxy.createFunction(
-    {},
-    function() {
+var proxy = new Proxy(function() {
         return (function () { eval("foo") })();
-    });
+    }, {});
 
 try {
     new proxy();

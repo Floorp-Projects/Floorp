@@ -41,16 +41,9 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-static PRLogModuleInfo *
-GetSSSLog()
-{
-  static PRLogModuleInfo *gSSSLog;
-  if (!gSSSLog)
-    gSSSLog = PR_NewLogModule("nsSSService");
-  return gSSSLog;
-}
+static LazyLogModule gSSSLog("nsSSService");
 
-#define SSSLOG(args) MOZ_LOG(GetSSSLog(), mozilla::LogLevel::Debug, args)
+#define SSSLOG(args) MOZ_LOG(gSSSLog, mozilla::LogLevel::Debug, args)
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Fragmentation with forced break propagation</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#pagination">
+  <link rel="match" href="grid-fragmentation-020-ref.html">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+body { overflow:hidden; }
+
+.columns {
+  position:relative;
+     -moz-columns: 5;
+      -ms-columns: 5;
+  -webkit-columns: 5;
+          columns: 5;
+     -moz-column-fill: auto;
+      -ms-column-fill: auto;
+  -webkit-column-fill: auto;
+          column-fill: auto;
+  border: 2px dashed;
+  margin-bottom: 5px;
+}
+.no-border { border-style:none; }
+
+.grid {
+  display: grid;
+  grid-template-columns: 30px;
+  grid-auto-rows: 10px;
+  grid-gap: 2px;
+  border:5px solid;
+  height: 20px; /* create Class C break opportunities at both ends */
+  align-content: center;
+}
+.start {
+  align-content: start;
+}
+
+span { background:lime; border:1px solid black; }
+.bb { border-bottom-width:6px; }
+x { display:block; height: 40px; }
+m { display:block; padding-top:1px; }
+.break-before { page-break-before:always; break-before:always; }
+.break-after { page-break-after:always; break-after:always; }
+.avoid-break { page-break-inside:avoid; break-inside:avoid; }
+
+</style>
+</head>
+<body>
+
+<div class="columns" style="height:40px">
+<div style="background:grey">
+<div class="grid">
+<span class="break-before"></span>
+</div></div></div>
+
+<div class="columns" style="height:40px">
+<div style="background:grey">
+<div class="grid start">
+<span class="break-before"></span>
+</div></div></div>
+
+<div class="columns" style="height:40px">
+<div style="background:grey">
+<div class="grid">
+<span class="avoid-break"><x></x></span>
+</div></div></div>
+
+<div class="columns" style="height:40px">
+<div style="background:grey">
+<div class="grid start">
+<span class="avoid-break"><x></x></span>
+</div></div></div>
+
+<div class="columns" style="height:40px">
+<div style="background:grey"><m></m>
+<div class="grid">
+<span class="break-before"></span>
+</div></div></div>
+
+<div class="columns" style="height:40px">
+<div style="background:grey"><m></m>
+<div class="grid start">
+<span class="break-before"></span>
+</div></div></div>
+
+<div class="columns" style="height:40px">
+<div style="background:grey"><m></m>
+<div class="grid">
+<span class="avoid-break"><x></x></span>
+</div></div></div>
+
+<div class="columns" style="height:40px">
+<div style="background:grey"><m></m>
+<div class="grid start">
+<span class="avoid-break"><x></x></span>
+</div></div></div>
+
+<div class="columns" style="height:16px">
+<div style="background:grey">
+<div class="grid" style="height:10px">
+<span class="break-before"></span>
+</div></div></div>
+
+<div class="columns" style="height:16px">
+<div style="background:grey"><m></m>
+<div class="grid" style="height:10px">
+<span class="break-before"></span>
+</div></div></div>
+
+<div class="columns" style="height:10px">
+<div style="background:grey">
+<div class="grid" style="height:10px">
+<span class="break-before"></span>
+</div></div></div>
+
+<div class="columns" style="height:10px">
+<div style="background:grey"><m></m>
+<div class="grid" style="height:10px">
+<span class="break-before"></span>
+</div></div></div>
+
+<div class="columns" style="height:0px">
+<div style="background:grey">
+<div class="grid" style="height:10px">
+<span class="break-before"></span>
+</div></div></div>
+
+<div class="columns" style="height:0px; margin-top:20px">
+<div style="background:grey"><m></m>
+<div class="grid" style="height:10px;">
+<span class="break-before"></span>
+</div></div></div>
+
+<div class="columns no-border" style="height:0px; margin-top:20px">
+<div><m></m>
+<div class="grid" style="height:10px;grid-auto-rows: 0px;">
+<span class="break-before bb"></span>
+</div></div></div>
+
+<div class="columns no-border" style="height:0px; margin-top:20px">
+<div><m></m>
+<div class="grid" style="height:10px;grid-auto-rows: 0px;">
+<span class="break-before bb"></span>
+<span class="break-before bb"></span>
+</div></div></div>
+
+<div class="columns no-border" style="height:0px; margin-top:20px">
+<div><m></m>
+<div class="grid" style="height:1px;grid-auto-rows: 1px;">
+<span class="break-before bb"></span>
+</div></div></div>
+
+<div class="columns no-border" style="height:0px; margin-top:20px">
+<div><m></m>
+<div class="grid" style="height:1px;grid-auto-rows: 1px;">
+<span class="break-before bb"></span>
+<span class="break-before bb"></span>
+</div></div></div>
+
+<div class="columns no-border" style="height:0px; margin-top:20px">
+<div><m></m>
+<div class="grid" style="height:1px;grid-auto-rows: 11px;">
+<span class="break-before bb"></span>
+<span class="break-before bb"></span>
+</div></div></div>
+
+<div class="columns no-border" style="height:0px; margin-top:20px">
+<div><m></m>
+<div class="grid" style="height:1px;grid-auto-rows: 11px;">
+<span class="break-before bb" style="grid-row:span 2"></span>
+<span class="break-before bb"></span>
+</div></div></div>
+
+
+<div class="columns no-border" style="height:0px; margin-top:20px">
+<div><m></m>
+<div class="grid" style="height:1px;grid-auto-rows: 11px;">
+<span class="break-before bb"></span>
+<span class="break-before bb" style="grid-row:span 2"></span>
+</div></div></div>
+
+<!--
+
+XXX TODO: propagation of break-after on the last row to the container doesn't work.
+XXX TODO: I'm guessing the block frame code doesn't know how to deal with that b/c
+XXX TODO: it expects the frame constructor to have created a nsPageBreakFrame...
+
+<div class="columns" style="height:40px">
+<div style="background:grey">
+<div class="grid">
+<span class="break-after"></span>
+</div>
+<div style="border-top:2px solid blue"></div>
+</div></div>
+
+<div class="columns" style="height:40px">
+<div style="background:grey">
+<div class="grid">
+<img src="data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=" class="break-after"></button>
+</div>
+<div style="border-top:2px solid blue"></div>
+</div></div>
+
+-->
+
+</body>
+</html>
