@@ -128,6 +128,9 @@ from its prototype:
 :   This is `true` if this script's code is ECMAScript strict mode code, and
     `false` otherwise.
 
+`format`
+:   If the script is WebAssembly, this is `"wasm"`. Otherwise, this is `"js"`.
+
 ## Function Properties of the Debugger.Script Prototype Object
 
 The functions described below may only be called with a `this` value
