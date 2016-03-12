@@ -34,7 +34,6 @@ const uint32_t nsGridContainerFrame::kTranslatedMaxLine =
   uint32_t(nsStyleGridLine::kMaxLine - nsStyleGridLine::kMinLine);
 const uint32_t nsGridContainerFrame::kAutoLine = kTranslatedMaxLine + 3457U;
 typedef nsTHashtable< nsPtrHashKey<nsIFrame> > FrameHashtable;
-typedef mozilla::layout::AutoFrameListPtr AutoFrameListPtr;
 
 static void
 ReparentFrame(nsIFrame* aFrame, nsContainerFrame* aOldParent,
