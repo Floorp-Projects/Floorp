@@ -1,6 +1,7 @@
 Can't find hash in builtin certs for Chrome nickname GoogleG2, inserting GOOGLE_PIN_GoogleG2
 Can't find hash in builtin certs for Chrome nickname RapidSSL, inserting GOOGLE_PIN_RapidSSL
 Can't find hash in builtin certs for Chrome nickname VeriSignClass4_G3, inserting GOOGLE_PIN_VeriSignClass4_G3
+Can't find hash in builtin certs for Chrome nickname VeriSignClass3_G2, inserting GOOGLE_PIN_VeriSignClass3_G2
 Can't find hash in builtin certs for Chrome nickname Entrust_SSL, inserting GOOGLE_PIN_Entrust_SSL
 Can't find hash in builtin certs for Chrome nickname UTNDATACorpSGC, inserting GOOGLE_PIN_UTNDATACorpSGC
 Can't find hash in builtin certs for Chrome nickname GTECyberTrustGlobalRoot, inserting GOOGLE_PIN_GTECyberTrustGlobalRoot
