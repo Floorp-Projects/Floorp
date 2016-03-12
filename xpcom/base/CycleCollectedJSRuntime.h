@@ -417,9 +417,6 @@ inline bool AddToCCKind(JS::TraceKind aKind)
   return aKind == JS::TraceKind::Object || aKind == JS::TraceKind::Script;
 }
 
-bool
-GetBuildId(JS::BuildIdCharVector* aBuildID);
-
 } // namespace mozilla
 
 #endif // mozilla_CycleCollectedJSRuntime_h__
