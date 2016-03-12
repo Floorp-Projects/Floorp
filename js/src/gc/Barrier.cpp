@@ -158,6 +158,7 @@ template struct MovableCellHasher<JSObject*>;
 template struct MovableCellHasher<GlobalObject*>;
 template struct MovableCellHasher<SavedFrame*>;
 template struct MovableCellHasher<ScopeObject*>;
+template struct MovableCellHasher<WasmModuleObject*>;
 template struct MovableCellHasher<JSScript*>;
 
 } // namespace js
