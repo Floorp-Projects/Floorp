@@ -19,6 +19,8 @@
 #ifndef wasm_module_h
 #define wasm_module_h
 
+#include "mozilla/LinkedList.h"
+
 #include "asmjs/WasmTypes.h"
 #include "gc/Barrier.h"
 #include "vm/MallocProvider.h"
@@ -443,7 +445,7 @@ typedef UniquePtr<ModuleData> UniqueModuleData;
 // Once fully dynamically linked, a Module can have its exports invoked via
 // callExport().
 
-class Module
+class Module : public mozilla::LinkedListElement<Module>
 {
     typedef UniquePtr<const ModuleData> UniqueConstModuleData;
     struct ImportExit {
@@ -486,6 +488,9 @@ class Module
     bool                         profilingEnabled_;
     FuncLabelVector              funcLabels_;
 
+    // Back pointer to the JS object.
+    HeapPtr<WasmModuleObject*> ownerObject_;
+
     uint8_t* rawHeapPtr() const;
     uint8_t*& rawHeapPtr();
     WasmActivation*& activation();
@@ -510,6 +515,9 @@ class Module
     virtual ~Module();
     virtual void trace(JSTracer* trc);
     virtual void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data);
+
+    void setOwner(WasmModuleObject* owner) { MOZ_ASSERT(!ownerObject_); ownerObject_ = owner; }
+    inline const HeapPtr<WasmModuleObject*>& owner() const;
 
     uint8_t* code() const { return module_->code.get(); }
     uint32_t codeBytes() const { return module_->codeBytes; }
@@ -648,6 +656,12 @@ class WasmModuleObject : public NativeObject
     void addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code, size_t* data);
     static const Class class_;
 };
+
+inline const HeapPtr<WasmModuleObject*>&
+wasm::Module::owner() const {
+    MOZ_ASSERT(&ownerObject_->module() == this);
+    return ownerObject_;
+}
 
 } // namespace js
 

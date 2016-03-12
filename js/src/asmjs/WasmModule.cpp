@@ -900,6 +900,9 @@ Module::trace(JSTracer* trc)
 
     if (heap_)
         TraceEdge(trc, &heap_, "wasm buffer");
+
+    MOZ_ASSERT(ownerObject_);
+    TraceEdge(trc, &ownerObject_, "wasm owner object");
 }
 
 /* virtual */ void
@@ -1568,6 +1571,7 @@ WasmModuleObject::init(Module* module)
     MOZ_ASSERT(!hasModule());
     if (!module)
         return false;
+    module->setOwner(this);
     setReservedSlot(MODULE_SLOT, PrivateValue(module));
     return true;
 }
