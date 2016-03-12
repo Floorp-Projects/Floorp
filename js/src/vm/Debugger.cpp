@@ -1509,7 +1509,7 @@ Debugger::fireEnterFrame(JSContext* cx, AbstractFramePtr frame, MutableHandleVal
 }
 
 void
-Debugger::fireNewScript(JSContext* cx, HandleScript script)
+Debugger::fireNewScript(JSContext* cx, Handle<DebuggerScriptReferent> scriptReferent)
 {
     RootedObject hook(cx, getHook(OnNewScript));
     MOZ_ASSERT(hook);
@@ -1518,7 +1518,7 @@ Debugger::fireNewScript(JSContext* cx, HandleScript script)
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, object);
 
-    JSObject* dsobj = wrapScript(cx, script);
+    JSObject* dsobj = wrapVariantReferent(cx, scriptReferent);
     if (!dsobj) {
         handleUncaughtException(ac, false);
         return;
@@ -1675,7 +1675,30 @@ Debugger::slowPathOnNewScript(JSContext* cx, HandleScript script)
             return dbg->observesNewScript() && dbg->observesScript(script);
         },
         [&](Debugger* dbg) -> JSTrapStatus {
-            dbg->fireNewScript(cx, script);
+            Rooted<DebuggerScriptReferent> scriptReferent(cx, script.get());
+            dbg->fireNewScript(cx, scriptReferent);
+            return JSTRAP_CONTINUE;
+        });
+
+    if (status == JSTRAP_ERROR) {
+        ReportOutOfMemory(cx);
+        return;
+    }
+
+    MOZ_ASSERT(status == JSTRAP_CONTINUE);
+}
+
+void
+Debugger::slowPathOnNewWasmModule(JSContext* cx, Handle<WasmModuleObject*> wasmModule)
+{
+    JSTrapStatus status = dispatchHook(
+        cx,
+        [wasmModule](Debugger* dbg) -> bool {
+            return dbg->observesNewScript() && dbg->observesGlobal(&wasmModule->global());
+        },
+        [&](Debugger* dbg) -> JSTrapStatus {
+            Rooted<DebuggerScriptReferent> scriptReferent(cx, wasmModule.get());
+            dbg->fireNewScript(cx, scriptReferent);
             return JSTRAP_CONTINUE;
         });
 

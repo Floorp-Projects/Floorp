@@ -661,6 +661,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static JSTrapStatus slowPathOnDebuggerStatement(JSContext* cx, AbstractFramePtr frame);
     static JSTrapStatus slowPathOnExceptionUnwind(JSContext* cx, AbstractFramePtr frame);
     static void slowPathOnNewScript(JSContext* cx, HandleScript script);
+    static void slowPathOnNewWasmModule(JSContext* cx, Handle<WasmModuleObject*> wasmModule);
     static void slowPathOnNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global);
     static bool slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
                                             double when, GlobalObject::DebuggerVector& dbgs);
@@ -716,7 +717,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * Receive a "new script" event from the engine. A new script was compiled
      * or deserialized.
      */
-    void fireNewScript(JSContext* cx, HandleScript script);
+    void fireNewScript(JSContext* cx, Handle<DebuggerScriptReferent> scriptReferent);
 
     /*
      * Receive a "garbage collection" event from the engine. A GC cycle with the
@@ -849,6 +850,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static inline bool onLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc, bool ok);
 
     static inline void onNewScript(JSContext* cx, HandleScript script);
+    static inline void onNewWasmModule(JSContext* cx, Handle<WasmModuleObject*> wasmModule);
     static inline void onNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global);
     static inline bool onLogAllocationSite(JSContext* cx, JSObject* obj, HandleSavedFrame frame,
                                            double when);
