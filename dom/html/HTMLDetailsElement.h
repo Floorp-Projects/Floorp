@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_HTMLDetailsElement_h
 #define mozilla_dom_HTMLDetailsElement_h
 
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 
@@ -38,12 +39,14 @@ public:
   nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                       int32_t aModType) const override;
 
+  nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                         nsAttrValueOrString* aValue, bool aNotify) override;
+
   // HTMLDetailsElement WebIDL
   bool Open() const { return GetBoolAttr(nsGkAtoms::open); }
 
   void SetOpen(bool aOpen, ErrorResult& aError)
   {
-    // TODO: Bug 1225412: Need to follow the spec to fire "toggle" event.
     SetHTMLBoolAttr(nsGkAtoms::open, aOpen, aError);
   }
 
@@ -59,6 +62,26 @@ protected:
 
   JSObject* WrapNode(JSContext* aCx,
                      JS::Handle<JSObject*> aGivenProto) override;
+
+  class ToggleEventDispatcher final : public AsyncEventDispatcher
+  {
+  public:
+    // According to the html spec, a 'toggle' event is a simple event which does
+    // not bubble.
+    explicit ToggleEventDispatcher(nsINode* aTarget)
+      : AsyncEventDispatcher(aTarget, NS_LITERAL_STRING("toggle"), false)
+    {
+    }
+
+    NS_IMETHOD Run() override
+    {
+      auto* details = static_cast<HTMLDetailsElement*>(mTarget.get());
+      details->mToggleEventDispatcher = nullptr;
+      return AsyncEventDispatcher::Run();
+    }
+  };
+
+  RefPtr<ToggleEventDispatcher> mToggleEventDispatcher;
 };
 
 } // namespace dom
