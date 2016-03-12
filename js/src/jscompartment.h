@@ -470,8 +470,10 @@ struct JSCompartment
     // All unboxed layouts in the compartment.
     mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
 
-    // All wasm modules in the compartment.
-    mozilla::LinkedList<js::wasm::Module> wasmModules;
+    // All wasm modules in the compartment. Weakly held.
+    //
+    // The caller needs to call wasm::Module::readBarrier() manually!
+    mozilla::LinkedList<js::wasm::Module> wasmModuleWeakList;
 
   private:
     // All non-syntactic lexical scopes in the compartment. These are kept in

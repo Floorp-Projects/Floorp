@@ -92,6 +92,9 @@ js::Debugger::onIonCompilation(JSContext* cx, Handle<ScriptVector> scripts, LSpr
 /* static */ void
 js::Debugger::onNewWasmModule(JSContext* cx, Handle<WasmModuleObject*> wasmModule)
 {
+    // Insert the wasm::Module into a compartment-wide list for discovery
+    // later without a heap walk.
+    cx->compartment()->wasmModuleWeakList.insertBack(&wasmModule->module());
     if (cx->compartment()->isDebuggee())
         slowPathOnNewWasmModule(cx, wasmModule);
 }
