@@ -23,7 +23,6 @@ using namespace dom;
 AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
                                            WidgetEvent& aEvent)
   : mTarget(aTarget)
-  , mOnlyChromeDispatch(false)
 {
   MOZ_ASSERT(mTarget);
   RefPtr<Event> event =
@@ -37,6 +36,9 @@ AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
 NS_IMETHODIMP
 AsyncEventDispatcher::Run()
 {
+  if (mCanceled) {
+    return NS_OK;
+  }
   RefPtr<Event> event = mEvent ? mEvent->InternalDOMEvent() : nullptr;
   if (!event) {
     event = NS_NewDOMEvent(mTarget, nullptr, nullptr);
@@ -49,6 +51,13 @@ AsyncEventDispatcher::Run()
   }
   bool dummy;
   mTarget->DispatchEvent(event, &dummy);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AsyncEventDispatcher::Cancel()
+{
+  mCanceled = true;
   return NS_OK;
 }
 
