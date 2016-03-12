@@ -7,6 +7,7 @@ from marionette.marionette_test import skip_if_e10s
 from marionette_driver.keys import Keys
 from marionette_driver.by import By
 
+
 class TestAboutPages(MarionetteTestCase):
 
     def setUp(self):
@@ -44,7 +45,7 @@ class TestAboutPages(MarionetteTestCase):
         start_win = self.marionette.current_window_handle
         start_win_handles = self.marionette.window_handles
         with self.marionette.using_context("chrome"):
-            main_win = self.marionette.find_element("id", "main-window")
+            main_win = self.marionette.find_element(By.ID, "main-window")
             main_win.send_keys(self.mod_key, Keys.SHIFT, 'a')
 
         self.wait_for_condition(lambda mn: len(mn.window_handles) == 2)
@@ -58,7 +59,7 @@ class TestAboutPages(MarionetteTestCase):
     @skip_if_e10s
     def test_type_to_non_remote_tab(self):
         with self.marionette.using_context("chrome"):
-            urlbar = self.marionette.find_element('id', 'urlbar')
+            urlbar = self.marionette.find_element(By.ID, 'urlbar')
             urlbar.send_keys(self.mod_key + 'a')
             urlbar.send_keys(self.mod_key + 'x')
             urlbar.send_keys('about:preferences' + Keys.ENTER)
@@ -67,7 +68,7 @@ class TestAboutPages(MarionetteTestCase):
     def test_type_to_remote_tab(self):
         self.marionette.navigate("about:preferences")
         with self.marionette.using_context("chrome"):
-            urlbar = self.marionette.find_element('id', 'urlbar')
+            urlbar = self.marionette.find_element(By.ID, 'urlbar')
             urlbar.send_keys(self.mod_key + 'a')
             urlbar.send_keys(self.mod_key + 'x')
             urlbar.send_keys(self.remote_uri + Keys.ENTER)

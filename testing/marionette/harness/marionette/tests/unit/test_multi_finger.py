@@ -4,14 +4,16 @@
 
 from marionette import MarionetteTestCase
 from marionette_driver.marionette import MultiActions, Actions
+from marionette_driver.by import By
+
 
 class testMultiFinger(MarionetteTestCase):
     def test_move_element(self):
       testAction = self.marionette.absolute_url("testAction.html")
       self.marionette.navigate(testAction)
-      start = self.marionette.find_element("id", "button1")
-      drop = self.marionette.find_element("id", "button2")
-      ele = self.marionette.find_element("id", "button3")
+      start = self.marionette.find_element(By.ID, "button1")
+      drop = self.marionette.find_element(By.ID, "button2")
+      ele = self.marionette.find_element(By.ID, "button3")
       multi_action = MultiActions(self.marionette)
       action1 = Actions(self.marionette)
       action2 = Actions(self.marionette)
@@ -26,8 +28,8 @@ class testMultiFinger(MarionetteTestCase):
     def test_move_offset_element(self):
       testAction = self.marionette.absolute_url("testAction.html")
       self.marionette.navigate(testAction)
-      start = self.marionette.find_element("id", "button1")
-      ele = self.marionette.find_element("id", "button3")
+      start = self.marionette.find_element(By.ID, "button1")
+      ele = self.marionette.find_element(By.ID, "button3")
       multi_action = MultiActions(self.marionette)
       action1 = Actions(self.marionette)
       action2 = Actions(self.marionette)
@@ -42,10 +44,10 @@ class testMultiFinger(MarionetteTestCase):
     def test_three_fingers(self):
       testAction = self.marionette.absolute_url("testAction.html")
       self.marionette.navigate(testAction)
-      start_one = self.marionette.find_element("id", "button1")
-      start_two = self.marionette.find_element("id", "button2")
-      element1 = self.marionette.find_element("id", "button3")
-      element2 = self.marionette.find_element("id", "button4")
+      start_one = self.marionette.find_element(By.ID, "button1")
+      start_two = self.marionette.find_element(By.ID, "button2")
+      element1 = self.marionette.find_element(By.ID, "button3")
+      element2 = self.marionette.find_element(By.ID, "button4")
       multi_action = MultiActions(self.marionette)
       action1 = Actions(self.marionette)
       action2 = Actions(self.marionette)
