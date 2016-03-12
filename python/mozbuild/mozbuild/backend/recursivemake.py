@@ -505,9 +505,10 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_defines(obj, backend_file)
 
         elif isinstance(obj, GeneratedFile):
-            self._no_skip['export'].add(backend_file.relobjdir)
+            tier = 'misc' if any(isinstance(f, ObjDirPath) for f in obj.inputs) else 'export'
+            self._no_skip[tier].add(backend_file.relobjdir)
             dep_file = "%s.pp" % obj.output
-            backend_file.write('export:: %s\n' % obj.output)
+            backend_file.write('%s:: %s\n' % (tier, obj.output))
             backend_file.write('GARBAGE += %s\n' % obj.output)
             backend_file.write('EXTRA_MDDEPEND_FILES += %s\n' % dep_file)
             if obj.script:
@@ -517,7 +518,7 @@ class RecursiveMakeBackend(CommonBackend):
 
 """.format(output=obj.output,
            dep_file=dep_file,
-           inputs=' ' + ' '.join(obj.inputs) if obj.inputs else '',
+           inputs=' ' + ' '.join([f.full_path for f in obj.inputs]) if obj.inputs else '',
            flags=' ' + ' '.join(obj.flags) if obj.flags else '',
            backend=' backend.mk' if obj.flags else '',
            script=obj.script,
