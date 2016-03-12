@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<head>
+<meta charset=utf-8>
+<title>Test getAnimations() for generated-content elements</title>
+<script type="application/javascript" src="../testharness.js"></script>
+<script type="application/javascript" src="../testharnessreport.js"></script>
+<script type="application/javascript" src="../testcommon.js"></script>
+<style>
+@keyframes anim { }
+@keyframes anim2 { }
+.before::before {
+  content: '';
+  animation: anim 100s;
+}
+.after::after {
+  content: '';
+  animation: anim 100s, anim2 100s;
+}
+</style>
+</head>
+<body>
+<div id='root' class='before after'>
+  <div class='before'></div>
+  <div></div>
+</div>
+<script>
+'use strict';
+
+const {Cc, Ci, Cu} = SpecialPowers;
+
+function getWalker(node) {
+  var walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"].
+    createInstance(Ci.inIDeepTreeWalker);
+  walker.showAnonymousContent = true;
+  walker.init(node.ownerDocument, Ci.nsIDOMNodeFilter.SHOW_ALL);
+  walker.currentNode = node;
+  return walker;
+}
+
+test(function(t) {
+  var root = document.getElementById('root');
+  // Flush first to make sure the generated-content elements are ready
+  // in the tree.
+  flushComputedStyle(root);
+  var before = getWalker(root).firstChild();
+  var after = getWalker(root).lastChild();
+
+  // Sanity Checks
+  assert_equals(document.getAnimations().length, 4,
+                'All animations in this document');
+  assert_equals(before.tagName, '_moz_generated_content_before',
+                'First child is ::before element');
+  assert_equals(after.tagName, '_moz_generated_content_after',
+                'Last child is ::after element');
+
+  // Test Element.getAnimations() for generated-content elements
+  assert_equals(before.getAnimations().length, 1,
+                'Animations of ::before generated-content element');
+  assert_equals(after.getAnimations().length, 2,
+                'Animations of ::after generated-content element');
+}, 'Element.getAnimations() used on generated-content elements');
+
+test(function(t) {
+  var root = document.getElementById('root');
+  flushComputedStyle(root);
+  var walker = getWalker(root);
+
+  var animations = [];
+  var element = walker.currentNode;
+  while (element) {
+    if (element.getAnimations) {
+      animations = [...animations, ...element.getAnimations()];
+    }
+    element = walker.nextNode();
+  }
+
+  assert_equals(animations.length, document.getAnimations().length,
+                'The number of animations got by DeepTreeWalker and ' +
+                'document.getAnimations() should be the same');
+}, 'Element.getAnimations() used by traversing DeepTreeWalker');
+
+</script>
+</body>

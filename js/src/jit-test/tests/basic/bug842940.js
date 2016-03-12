@@ -1,1 +1,1 @@
-try { for (let v of wrapWithProto(Proxy.create({}), [])) { } } catch (e) {}
+try { for (let v of wrapWithProto(new Proxy({}, {}), [])) { } } catch (e) {}

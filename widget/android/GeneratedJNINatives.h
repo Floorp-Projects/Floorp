@@ -294,6 +294,10 @@ public:
                 mozilla::jni::NativeStub<NativePanZoomController::DisposeNative_t, Impl>
                 ::template Wrap<&Impl::DisposeNative>),
 
+        mozilla::jni::MakeNativeMethod<NativePanZoomController::HandleHoverEvent_t>(
+                mozilla::jni::NativeStub<NativePanZoomController::HandleHoverEvent_t, Impl>
+                ::template Wrap<&Impl::HandleHoverEvent>),
+
         mozilla::jni::MakeNativeMethod<NativePanZoomController::HandleMotionEvent_t>(
                 mozilla::jni::NativeStub<NativePanZoomController::HandleMotionEvent_t, Impl>
                 ::template Wrap<&Impl::HandleMotionEvent>),

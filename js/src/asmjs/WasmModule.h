@@ -19,6 +19,8 @@
 #ifndef wasm_module_h
 #define wasm_module_h
 
+#include "mozilla/LinkedList.h"
+
 #include "asmjs/WasmTypes.h"
 #include "gc/Barrier.h"
 #include "vm/MallocProvider.h"
@@ -443,7 +445,7 @@ typedef UniquePtr<ModuleData> UniqueModuleData;
 // Once fully dynamically linked, a Module can have its exports invoked via
 // callExport().
 
-class Module
+class Module : public mozilla::LinkedListElement<Module>
 {
     typedef UniquePtr<const ModuleData> UniqueConstModuleData;
     struct ImportExit {
@@ -468,6 +470,7 @@ class Module
     typedef Vector<FuncPtrTable, 0, SystemAllocPolicy> FuncPtrTableVector;
     typedef Vector<CacheableChars, 0, SystemAllocPolicy> FuncLabelVector;
     typedef RelocatablePtrArrayBufferObjectMaybeShared BufferPtr;
+    typedef HeapPtr<WasmModuleObject*> ModuleObjectPtr;
 
     // Initialized when constructed:
     const UniqueConstModuleData  module_;
@@ -485,6 +488,12 @@ class Module
     // Mutated after dynamicallyLink:
     bool                         profilingEnabled_;
     FuncLabelVector              funcLabels_;
+
+    // Back pointer to the JS object.
+    ModuleObjectPtr              ownerObject_;
+
+    // Possibly stored copy of the bytes from which this module was compiled.
+    Bytes                        source_;
 
     uint8_t* rawHeapPtr() const;
     uint8_t*& rawHeapPtr();
@@ -509,7 +518,13 @@ class Module
     explicit Module(UniqueModuleData module);
     virtual ~Module();
     virtual void trace(JSTracer* trc);
+    virtual void readBarrier();
     virtual void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data);
+
+    void setOwner(WasmModuleObject* owner) { MOZ_ASSERT(!ownerObject_); ownerObject_ = owner; }
+    inline const HeapPtr<WasmModuleObject*>& owner() const;
+
+    void setSource(Bytes&& source) { source_ = Move(source); }
 
     uint8_t* code() const { return module_->code.get(); }
     uint32_t codeBytes() const { return module_->codeBytes; }
@@ -604,6 +619,11 @@ class Module
     const char* getFuncName(JSContext* cx, uint32_t funcIndex, UniqueChars* owner) const;
     JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
 
+    // If debuggerObservesAsmJS was true when the module was compiled, render
+    // the binary to a new source string.
+
+    JSString* createText(JSContext* cx);
+
     // Each Module has a profilingEnabled state which is updated to match
     // SPSProfiler::enabled() on the next Module::callExport when there are no
     // frames from the Module on the stack. The ProfilingFrameIterator only
@@ -648,6 +668,14 @@ class WasmModuleObject : public NativeObject
     void addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code, size_t* data);
     static const Class class_;
 };
+
+inline const HeapPtr<WasmModuleObject*>&
+wasm::Module::owner() const {
+    MOZ_ASSERT(&ownerObject_->module() == this);
+    return ownerObject_;
+}
+
+using WasmModuleObjectVector = GCVector<WasmModuleObject*>;
 
 } // namespace js
 

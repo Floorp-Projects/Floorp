@@ -101,7 +101,7 @@ load 522394-1.svg
 load 522394-2.svg
 load 522394-3.svg
 load 566216-1.svg
-skip-if(Android&&!browserIsRemote) load 587336-1.html
+load 587336-1.html
 load 590291-1.svg
 load 601999-1.html
 load 605626-1.svg

@@ -1,8 +1,8 @@
 function *f() {
-    var o = Proxy.createFunction({
+    var o = new Proxy({}, {
         get: function() { assertEq(0, 1); },
         has: function() { assertEq(0, 2); }
-    }, function() {});
+    });
 
     with (o) {
         yield 1;

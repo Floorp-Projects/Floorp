@@ -36,7 +36,7 @@
 using namespace mozilla;
 
 //
-// To enable logging (see prlog.h for full details):
+// To enable logging (see mozilla/Logging.h for full details):
 //
 //    set NSPR_LOG_MODULES=nsPrefetch:5
 //    set NSPR_LOG_FILE=prefetch.log
@@ -44,7 +44,7 @@ using namespace mozilla;
 // this enables LogLevel::Debug level information and places all output in
 // the file http.log
 //
-static PRLogModuleInfo *gPrefetchLog;
+static LazyLogModule gPrefetchLog("nsPrefetch");
 
 #undef LOG
 #define LOG(args) MOZ_LOG(gPrefetchLog, mozilla::LogLevel::Debug, args)
@@ -343,9 +343,6 @@ nsPrefetchService::~nsPrefetchService()
 nsresult
 nsPrefetchService::Init()
 {
-    if (!gPrefetchLog)
-        gPrefetchLog = PR_NewLogModule("nsPrefetch");
-
     nsresult rv;
 
     // read prefs and hook up pref observer

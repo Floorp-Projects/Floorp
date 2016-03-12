@@ -36,21 +36,6 @@ nsSelectionState::~nsSelectionState()
 }
 
 void
-nsSelectionState::DoTraverse(nsCycleCollectionTraversalCallback &cb)
-{
-  for (uint32_t i = 0, iEnd = mArray.Length(); i < iEnd; ++i)
-  {
-    nsRangeStore* item = mArray[i];
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-                                       "selection state mArray[i].startNode");
-    cb.NoteXPCOMChild(item->startNode);
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-                                       "selection state mArray[i].endNode");
-    cb.NoteXPCOMChild(item->endNode);
-  }
-}
-
-void
 nsSelectionState::SaveSelection(Selection* aSel)
 {
   MOZ_ASSERT(aSel);
@@ -651,6 +636,10 @@ nsRangeStore::nsRangeStore()
 nsRangeStore::~nsRangeStore()
 {
 }
+
+NS_IMPL_CYCLE_COLLECTION(nsRangeStore, startNode, endNode)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsRangeStore, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsRangeStore, Release)
 
 void
 nsRangeStore::StoreRange(nsRange* aRange)

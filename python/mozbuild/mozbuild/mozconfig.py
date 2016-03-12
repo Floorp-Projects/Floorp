@@ -358,7 +358,8 @@ class MozconfigLoader(object):
             # XXX This is an ugly hack. Data may be lost from things
             # like environment variable values.
             # See https://bugzilla.mozilla.org/show_bug.cgi?id=831381
-            line = line.decode('utf-8', 'ignore')
+            line = line.decode('mbcs' if sys.platform == 'win32' else 'utf-8',
+                               'ignore')
 
             if not line:
                 continue

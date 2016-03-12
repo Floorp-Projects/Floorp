@@ -242,6 +242,18 @@ interface nsIHttpChannelInternal : nsISupports
      */
     attribute unsigned long redirectMode;
 
+    const unsigned long FETCH_CACHE_MODE_DEFAULT = 0;
+    const unsigned long FETCH_CACHE_MODE_NO_STORE = 1;
+    const unsigned long FETCH_CACHE_MODE_RELOAD = 2;
+    const unsigned long FETCH_CACHE_MODE_NO_CACHE = 3;
+    const unsigned long FETCH_CACHE_MODE_FORCE_CACHE = 4;
+    /**
+     * Set to indicate Request.cache mode, which simulates the fetch API
+     * semantics, and is also used for exposing this value to the Web page
+     * during service worker interception.
+     */
+    attribute unsigned long fetchCacheMode;
+
     /**
      * The URI of the top-level window that's associated with this channel.
      */

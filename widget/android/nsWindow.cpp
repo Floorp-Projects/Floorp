@@ -539,8 +539,7 @@ public:
             return false;
         }
 
-        ScreenIntPoint offset = ViewAs<ScreenPixel>(mWindow->WidgetToScreenOffset(), PixelCastJustification::LayoutDeviceIsScreenForBounds);
-        ScreenPoint origin = ScreenPoint(aX, aY) - offset;
+        ScreenPoint origin = ScreenPoint(aX, aY);
 
         ScrollWheelInput input(aTime, TimeStamp::Now(), GetModifiers(aMetaState),
                                ScrollWheelInput::SCROLLMODE_SMOOTH,
@@ -575,6 +574,77 @@ public:
             window->UserActivity();
             WidgetWheelEvent wheelEvent = input.ToWidgetWheelEvent(window);
             window->ProcessUntransformedAPZEvent(&wheelEvent, guid,
+                                                 blockId, status);
+        });
+
+        return true;
+    }
+
+    bool HandleHoverEvent(int32_t aAction, int64_t aTime, int32_t aMetaState,
+                          float aX, float aY)
+    {
+        MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+
+        MutexAutoLock lock(mWindowLock);
+        if (!mWindow) {
+            // We already shut down.
+            return false;
+        }
+
+        RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
+        if (!controller) {
+            return false;
+        }
+
+        MouseInput::MouseType type = MouseInput::MOUSE_NONE;
+        switch (aAction) {
+            case AndroidMotionEvent::ACTION_HOVER_MOVE:
+                type = MouseInput::MOUSE_MOVE;
+                break;
+            case AndroidMotionEvent::ACTION_HOVER_ENTER:
+                type = MouseInput::MOUSE_WIDGET_ENTER;
+                break;
+            case AndroidMotionEvent::ACTION_HOVER_EXIT:
+                type = MouseInput::MOUSE_WIDGET_EXIT;
+                break;
+            default:
+                break;
+        }
+
+        if (type == MouseInput::MOUSE_NONE) {
+            return false;
+        }
+
+        ScreenPoint origin = ScreenPoint(aX, aY);
+
+        MouseInput input(type, MouseInput::NONE, 0, origin, aTime, TimeStamp(), GetModifiers(aMetaState));
+
+        ScrollableLayerGuid guid;
+        uint64_t blockId;
+        nsEventStatus status = controller->ReceiveInputEvent(input, &guid, &blockId);
+
+        if (status == nsEventStatus_eConsumeNoDefault) {
+            return true;
+        }
+
+        NativePanZoomController::GlobalRef npzc = mNPZC;
+        nsAppShell::PostEvent([npzc, input, guid, blockId, status] {
+            MOZ_ASSERT(NS_IsMainThread());
+
+            JNIEnv* const env = jni::GetGeckoThreadEnv();
+            NPZCSupport* npzcSupport = GetNative(
+                    NativePanZoomController::LocalRef(env, npzc));
+
+            if (!npzcSupport || !npzcSupport->mWindow) {
+                // We already shut down.
+                env->ExceptionClear();
+                return;
+            }
+
+            nsWindow* const window = npzcSupport->mWindow;
+            window->UserActivity();
+            WidgetMouseEvent mouseEvent = input.ToWidgetMouseEvent(window);
+            window->ProcessUntransformedAPZEvent(&mouseEvent, guid,
                                                  blockId, status);
         });
 
@@ -652,9 +722,6 @@ public:
         MOZ_ASSERT(pointerId.Length() == toolMajor.Length());
         MOZ_ASSERT(pointerId.Length() == toolMinor.Length());
 
-        const nsIntPoint& offset =
-                mWindow->WidgetToScreenOffset().ToUnknownPoint();
-
         for (size_t i = startIndex; i < endIndex; i++) {
 
             float orien = orientation[i] * 180.0f / M_PI;
@@ -665,7 +732,7 @@ public:
             }
 
             nsIntPoint point = nsIntPoint(int32_t(floorf(x[i])),
-                                          int32_t(floorf(y[i]))) - offset;
+                                          int32_t(floorf(y[i])));
 
             // w3c touchevent radii are given with an orientation between 0 and
             // 90. The radii are found by removing the orientation and
@@ -2461,8 +2528,10 @@ nsWindow::GeckoViewSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
         bool aIsSynthesizedImeKey, jni::Object::Param originalEvent)
 {
     RefPtr<nsWindow> kungFuDeathGrip(&window);
-    window.UserActivity();
-    window.RemoveIMEComposition();
+    if (!aIsSynthesizedImeKey) {
+        window.UserActivity();
+        window.RemoveIMEComposition();
+    }
 
     EventMessage msg;
     if (aAction == sdk::KeyEvent::ACTION_DOWN) {
@@ -2491,17 +2560,19 @@ nsWindow::GeckoViewSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
         // these keys are dispatched in sequence.
         mIMEKeyEvents.AppendElement(
                 mozilla::UniquePtr<WidgetEvent>(event.Duplicate()));
+
     } else {
         window.DispatchEvent(&event, status);
 
-        if (status != nsEventStatus_eConsumeNoDefault) {
-            mEditable->OnDefaultKeyEvent(originalEvent);
+        if (window.Destroyed() || status == nsEventStatus_eConsumeNoDefault) {
+            // Skip default processing.
+            return;
         }
+
+        mEditable->OnDefaultKeyEvent(originalEvent);
     }
 
-    if (window.Destroyed() ||
-            status == nsEventStatus_eConsumeNoDefault ||
-            msg != eKeyDown || IsModifierKey(aKeyCode)) {
+    if (msg != eKeyDown || IsModifierKey(aKeyCode)) {
         // Skip sending key press event.
         return;
     }
@@ -2686,6 +2757,10 @@ nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
     // If we are receiving notifications, we must have selection/root content.
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(IMEStateManager::GetFocusSelectionAndRoot(
             getter_AddRefs(imeSelection), getter_AddRefs(imeRoot))));
+
+    // Make sure we still have a valid selection/root. We can potentially get
+    // a stale selection/root if the editor becomes hidden, for example.
+    NS_ENSURE_TRUE_VOID(imeRoot->IsInComposedDoc());
 
     RefPtr<nsWindow> kungFuDeathGrip(&window);
     window.UserActivity();

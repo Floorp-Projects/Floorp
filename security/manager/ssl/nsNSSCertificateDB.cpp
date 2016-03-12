@@ -56,7 +56,7 @@ using namespace mozilla;
 using namespace mozilla::psm;
 using mozilla::psm::SharedSSLState;
 
-extern PRLogModuleInfo* gPIPNSSLog;
+extern LazyLogModule gPIPNSSLog;
 
 static nsresult
 attemptToLogInWithDefaultPassword()

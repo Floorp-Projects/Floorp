@@ -429,7 +429,7 @@ private:
           inputBuffer =
             AudioBuffer::Create(context, inputChannelCount,
                                 aNode->BufferSize(), context->SampleRate(),
-                                mInputBuffer.forget(), cx, rv);
+                                mInputBuffer.forget(), rv);
           if (rv.Failed()) {
             return nullptr;
           }

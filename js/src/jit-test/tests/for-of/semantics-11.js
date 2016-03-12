@@ -5,31 +5,31 @@ load(libdir + "iteration.js");
 var s = '';
 
 var i = 0;
-var next_fn = Proxy.createFunction({}, function () {
-    s += "n";
-    if (i == 3)
-        return { value: undefined, done: true };
-    return { value: i++, done: false };
+var next_fn = new Proxy(function() {}, {
+    apply() {
+        s += "n";
+        if (i == 3)
+            return { value: undefined, done: true };
+        return { value: i++, done: false };
+    }
 });
 
-var it = Proxy.create({
-    get: function (receiver, name) {
-        if (name == 'toSource') {
-            s += '?';
-            return () => 'it';
-        }
-        assertEq(name, "next");
+var it = new Proxy({}, {
+    get(target, property, receiver) {
+        assertEq(property, "next");
         s += "N";
         return next_fn;
     }
 });
 
-var iterator_fn = Proxy.createFunction({}, function () {
-    s += 'i';
-    return it;
+var iterator_fn = new Proxy(function() {}, {
+    apply() {
+        s += 'i';
+        return it;
+    }
 });
 
-var obj = Proxy.create({
+var obj = new Proxy({}, {
     get: function (receiver, name) {
         assertEq(name, Symbol.iterator);
         s += "I";

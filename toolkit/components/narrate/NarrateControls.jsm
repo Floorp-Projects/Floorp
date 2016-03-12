@@ -148,6 +148,9 @@ NarrateControls.prototype = {
           let options = { rate: this.rate, voice: this.voice };
           this.narrator.start(options).then(() => {
             this._updateSpeechControls(false);
+          }, err => {
+            Cu.reportError(`Narrate failed: ${err}.`)
+            this._updateSpeechControls(false);
           });
         }
         break;

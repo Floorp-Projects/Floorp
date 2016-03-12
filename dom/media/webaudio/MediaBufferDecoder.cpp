@@ -470,18 +470,12 @@ WebAudioDecodeJob::AllocateBuffer()
   MOZ_ASSERT(!mOutput);
   MOZ_ASSERT(NS_IsMainThread());
 
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(mContext->GetOwner()))) {
-    return false;
-  }
-  JSContext* cx = jsapi.cx();
-
   // Now create the AudioBuffer
   ErrorResult rv;
   uint32_t channelCount = mBuffer->GetChannels();
   mOutput = AudioBuffer::Create(mContext, channelCount,
                                 mWriteIndex, mContext->SampleRate(),
-                                mBuffer.forget(), cx, rv);
+                                mBuffer.forget(), rv);
   return !rv.Failed();
 }
 

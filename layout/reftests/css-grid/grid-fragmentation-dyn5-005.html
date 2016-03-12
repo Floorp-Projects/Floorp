@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html class="reftest-wait"><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: test 005 dynamic insert/remove 20 dummy items at the start</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#pagination">
+  <link rel="match" href="grid-fragmentation-004-ref.html">
+
+<script src="support/dyn.js"></script>
+<script>
+function runTest(text) {
+  document.body.innerHTML = text;
+  dyn5('.grid');
+  document.documentElement.removeAttribute("class");
+}
+</script>
+
+</head>
+<body onload='dynamicTest("grid-fragmentation-005.html", runTest)'></body>
+</html>

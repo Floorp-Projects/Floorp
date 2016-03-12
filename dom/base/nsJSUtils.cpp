@@ -83,19 +83,8 @@ nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(JSContext *aContext)
   if (!aContext)
     return 0;
 
-  uint64_t innerWindowID = 0;
-
-  JSObject *jsGlobal = JS::CurrentGlobalOrNull(aContext);
-  if (jsGlobal) {
-    nsIScriptGlobalObject *scriptGlobal = GetStaticScriptGlobal(jsGlobal);
-    if (scriptGlobal) {
-      if (nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(scriptGlobal)) {
-        innerWindowID = win->WindowID();
-      }
-    }
-  }
-
-  return innerWindowID;
+  nsGlobalWindow* win = xpc::CurrentWindowOrNull(aContext);
+  return win ? win->WindowID() : 0;
 }
 
 nsresult

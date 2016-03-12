@@ -154,17 +154,8 @@ class CommandAction(argparse.Action):
                 self._handle_subcommand_help(parser, command, subcommand, subhandler)
                 sys.exit(0)
             # We are running a sub command.
-            else:
+            elif args[0] in handler.subcommand_handlers:
                 subcommand = args[0]
-                if subcommand[0] == '-':
-                    raise MachError('%s invoked improperly. A sub-command name '
-                        'must be the first argument after the command name.' %
-                        command)
-
-                if subcommand not in handler.subcommand_handlers:
-                    raise UnknownCommandError(subcommand, 'run',
-                        handler.subcommand_handlers.keys())
-
                 handler = handler.subcommand_handlers[subcommand]
                 usage = '%(prog)s [global arguments] ' + command + ' ' + \
                     subcommand + ' [command arguments]'

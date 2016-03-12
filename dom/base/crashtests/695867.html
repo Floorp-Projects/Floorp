@@ -3,7 +3,7 @@
 
 var nodeList = document.documentElement.childNodes;
 nodeList.__proto__ = null;
-var p = Proxy.create({getPropertyDescriptor: function() {return nodeList}});
-p.x;
+var p = new Proxy({}, {getOwnPropertyDescriptor: function() {return nodeList}});
+Reflect.getOwnPropertyDescriptor(p, "x");
 
 </script>

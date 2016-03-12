@@ -24,7 +24,7 @@
 #include "mozIStorageBindingParams.h"
 
 #include "mozilla/Logging.h"
-extern PRLogModuleInfo* gStorageLog;
+extern mozilla::LazyLogModule gStorageLog;
 
 namespace mozilla {
 namespace storage {

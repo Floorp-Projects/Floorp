@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase #1 for bug 1253977</title>
+    <style type="text/css">
+
+* { -moz-appearance:none; }
+:focus {
+  border:2px solid black;
+}
+:-moz-focusring {
+  outline: 2px dashed black;
+}
+
+    </style>
+</head>
+<body>
+
+<select><option>1<option>2</select>
+<input>
+
+<script>
+
+function runTests() {
+  var b = document.querySelector("input");
+  b.focus();
+  document.body.offsetHeight;
+  setTimeout(function(){ document.body.offsetHeight; document.documentElement.removeAttribute("class"); }, 100);
+}
+
+window.focus();
+window.addEventListener("MozReftestInvalidate", runTests, false);
+
+</script>
+
+</body>
+</html>

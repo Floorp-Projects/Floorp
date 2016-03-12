@@ -76,7 +76,7 @@ public:
     JSContext* cx = jsapi.cx();
     if (!ToJSValue(cx, uuids, aValue)) {
       BT_WARNING("Cannot create JS array!");
-      JS_ClearPendingException(cx);
+      jsapi.ClearException();
       return false;
     }
 

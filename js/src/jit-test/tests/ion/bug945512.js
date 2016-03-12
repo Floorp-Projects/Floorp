@@ -7,6 +7,6 @@ var handler = {
 
 for (var i=0; i<10; i++) {
     var regex = /undefined/;
-    regex.__proto__ = Proxy.createFunction(handler, function(){})
+    regex.__proto__ = new Proxy(function() {}, handler)
 }
 

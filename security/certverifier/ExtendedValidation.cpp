@@ -16,7 +16,7 @@
 #include "prerror.h"
 #include "prinit.h"
 
-extern PRLogModuleInfo* gPIPNSSLog;
+extern mozilla::LazyLogModule gPIPNSSLog;
 
 #define CONST_OID static const unsigned char
 #define OI(x) { siDEROID, (unsigned char*) x, sizeof x }

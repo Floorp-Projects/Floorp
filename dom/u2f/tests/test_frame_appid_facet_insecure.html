@@ -8,9 +8,6 @@
 <script class="testbody" type="text/javascript">
 "use strict";
 
-SpecialPowers.setBoolPref("security.webauth.u2f", true);
-SpecialPowers.setBoolPref("security.webauth.u2f.softtoken", true);
-
 local_is(window.location.origin, "http://mochi.test:8888", "Is loaded correctly");
 
 var version = "U2F_V2";

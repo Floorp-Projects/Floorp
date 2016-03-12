@@ -97,6 +97,18 @@ protected:
    */
   virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
 
+  /**
+   * A faster version of GetLogicalSkipSides() that is intended to be used
+   * inside Reflow before it's known if |this| frame will be COMPLETE or not.
+   * It returns a result that assumes this fragment is the last and thus
+   * should apply the block-end border/padding etc (except for "true" overflow
+   * containers which always skip block sides).  You're then expected to
+   * recalculate the block-end side (as needed) when you know |this| frame's
+   * reflow status is INCOMPLETE.
+   * This method is intended for frames that breaks in the block axis.
+   */
+  LogicalSides PreReflowBlockLevelLogicalSkipSides() const;
+
 #ifdef DEBUG
   virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent) override;
 #endif

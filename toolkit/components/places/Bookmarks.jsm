@@ -227,7 +227,6 @@ var Bookmarks = Object.freeze({
       { guid: { required: true }
       , index: { requiredIf: b => b.hasOwnProperty("parentGuid")
                , validIf: b => b.index >= 0 || b.index == this.DEFAULT_INDEX }
-      , parentGuid: { requiredIf: b => b.hasOwnProperty("index") }
       });
 
     // There should be at last one more property in addition to guid.

@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Fragmentation with ::before/::after items</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#pagination">
+  <link rel="match" href="grid-fragmentation-021-ref.html">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+body { overflow:hidden; }
+
+.columns {
+  position:relative;
+     -moz-columns: 3;
+      -ms-columns: 3;
+  -webkit-columns: 3;
+          columns: 3;
+     -moz-column-fill: auto;
+      -ms-column-fill: auto;
+  -webkit-column-fill: auto;
+          column-fill: auto;
+  border: 2px dashed;
+  margin-bottom: 1px;
+  height: 150px;
+}
+.no-border { border-style:none; }
+
+.grid {
+  display: grid;
+  grid-template-columns: 30px;
+  grid-auto-rows: 20px;
+  grid-gap: 2px;
+  border:5px solid;
+  counter-reset: item;
+}
+.start {
+  align-content: start;
+}
+
+span { display:contents; }
+span::before { counter-increment:item; content: counter(item) ":before"; }
+span::after { content: counter(item) ":after"; }
+c::before { content: counter(item); }
+.br1::before { grid-row:1; }
+.ar1::after { grid-row:1; }
+.br2::before { grid-row:2; }
+.ar2::after { grid-row:2; }
+.br7::before { grid-row:7; }
+.ar7::after { grid-row:7; }
+
+.span5 * { grid-row-end: span 5; background:lime; }
+.span5::before { grid-row-end: span 5; background:lime; }
+.span5::after { grid-row-end: span 5; background:lime; }
+
+.span15 * { grid-row: 1 / span 15; background:lime; }
+.span15::before { grid-row-end: span 15; background:grey; }
+.span15::after { grid-row: 2 / span 15; background:lime; }
+
+.break-before { page-break-before:always; break-before:always; }
+.break-after { page-break-after:always; break-after:always; }
+.avoid-break { page-break-inside:avoid; break-inside:avoid; }
+
+</style>
+</head>
+<body>
+
+<div class="columns">
+<div class="grid">
+<span><c></c></span>
+<span class="ar2"><c></c></span>
+<span><c></c></span>
+<span><c></c></span>
+<span class="br1"><c></c></span>
+</div></div>
+
+<div class="columns">
+<div class="grid">
+<span><c></c></span>
+<span><c></c></span>
+<span><c></c></span>
+<span class="ar2"><c></c></span>
+<span class="ar1"><c></c></span>
+</div></div>
+
+<div class="columns">
+<div class="grid">
+<span><c></c></span>
+<span><c></c></span>
+<span><c></c></span>
+<span><c></c></span>
+<span class="ar1 br2"><c></c></span>
+</div></div>
+
+<div class="columns">
+<div class="grid">
+<span><c></c></span>
+<span><c></c></span>
+<span><c></c></span>
+<span><c></c></span>
+<span class="ar2 br1"><c></c></span>
+</div></div>
+
+<div class="columns">
+<div class="grid">
+<span><c></c></span>
+<span><c></c></span>
+<span><c></c></span>
+<span class="br2"><c></c></span>
+<span class="br1"><c></c></span>
+</div></div>
+
+<div class="columns">
+<div class="grid">
+<span><c></c></span>
+<span><c></c></span>
+<span class="span5"><c></c></span>
+<span class="br7"><c></c></span>
+<span class="br2"><c></c></span>
+</div></div>
+
+<div class="columns">
+<div class="grid" style="grid-template-columns: 30px 30px 30px">
+<span class="span15"><c></c></span>
+</div></div>
+
+</body>
+</html>

@@ -324,16 +324,17 @@ let SourceActor = ActorClass({
         }
       }
 
-      // Use `source.text` if it exists, is not the "no source"
-      // string, and the content type of the source is JavaScript. It
-      // will be "no source" if the Debugger API wasn't able to load
+      // Use `source.text` if it exists, is not the "no source" string, and
+      // the content type of the source is JavaScript or it is synthesized
+      // wasm. It will be "no source" if the Debugger API wasn't able to load
       // the source because sources were discarded
-      // (javascript.options.discardSystemSource == true). Re-fetch
-      // non-JS sources to get the contentType from the headers.
+      // (javascript.options.discardSystemSource == true). Re-fetch non-JS
+      // sources to get the contentType from the headers.
       if (this.source &&
           this.source.text !== "[no source]" &&
           this._contentType &&
-          this._contentType.indexOf('javascript') !== -1) {
+          (this._contentType.indexOf("javascript") !== -1 ||
+           this._contentType === "text/wasm")) {
         return toResolvedContent(this.source.text);
       }
       else {

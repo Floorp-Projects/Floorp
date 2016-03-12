@@ -107,7 +107,7 @@ public:
     RefPtr<BluetoothDiscoveryHandle> discoveryHandle =
       BluetoothDiscoveryHandle::Create(mAdapter->GetParentObject());
     if (!ToJSValue(cx, discoveryHandle, aValue)) {
-      JS_ClearPendingException(cx);
+      jsapi.ClearException();
       return false;
     }
 
@@ -161,7 +161,7 @@ public:
                                        mServiceUuids, v.get_BluetoothUuid());
 
     if (!ToJSValue(cx, discoveryHandle, aValue)) {
-      JS_ClearPendingException(cx);
+      jsapi.ClearException();
       return false;
     }
 

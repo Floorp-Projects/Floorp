@@ -59,7 +59,7 @@ MobileConnectionCallback::NotifySuccessWithString(const nsAString& aResult)
   JS::Rooted<JS::Value> jsResult(cx);
 
   if (!ToJSValue(cx, aResult, &jsResult)) {
-    JS_ClearPendingException(cx);
+    jsapi.ClearException();
     return NS_ERROR_TYPE_ERR;
   }
 
@@ -102,7 +102,7 @@ MobileConnectionCallback::NotifyGetNetworksSuccess(uint32_t aCount,
   JS::Rooted<JS::Value> jsResult(cx);
 
   if (!ToJSValue(cx, results, &jsResult)) {
-    JS_ClearPendingException(cx);
+    jsapi.ClearException();
     return NS_ERROR_TYPE_ERR;
   }
 
@@ -159,7 +159,7 @@ MobileConnectionCallback::NotifyGetCallForwardingSuccess(uint32_t aCount,
   JS::Rooted<JS::Value> jsResult(cx);
 
   if (!ToJSValue(cx, results, &jsResult)) {
-    JS_ClearPendingException(cx);
+    jsapi.ClearException();
     return NS_ERROR_TYPE_ERR;
   }
 
@@ -184,7 +184,7 @@ MobileConnectionCallback::NotifyGetCallBarringSuccess(uint16_t aProgram,
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> jsResult(cx);
   if (!ToJSValue(cx, result, &jsResult)) {
-    JS_ClearPendingException(cx);
+    jsapi.ClearException();
     return NS_ERROR_TYPE_ERR;
   }
 
@@ -214,7 +214,7 @@ MobileConnectionCallback::NotifyGetClirStatusSuccess(uint16_t aN, uint16_t aM)
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> jsResult(cx);
   if (!ToJSValue(cx, result, &jsResult)) {
-    JS_ClearPendingException(cx);
+    jsapi.ClearException();
     return NS_ERROR_TYPE_ERR;
   }
 

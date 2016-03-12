@@ -7,6 +7,7 @@
 #include "nsChannelClassifier.h"
 
 #include "mozIThirdPartyUtil.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsICacheEntry.h"
 #include "nsICachingChannel.h"
@@ -313,6 +314,18 @@ nsChannelClassifier::StartInternal()
     NS_ENSURE_SUCCESS(rv, rv);
     if (hasFlags) return NS_ERROR_UNEXPECTED;
 
+    // Skip whitelisted hostnames.
+    nsAutoCString whitelisted;
+    Preferences::GetCString("urlclassifier.skipHostnames", &whitelisted);
+    if (!whitelisted.IsEmpty()) {
+      ToLowerCase(whitelisted);
+      LOG(("nsChannelClassifier[%p]:StartInternal whitelisted hostnames = %s",
+           this, whitelisted.get()));
+      if (IsHostnameWhitelisted(uri, whitelisted)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+    }
+
     nsCOMPtr<nsIURIClassifier> uriClassifier =
         do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
     if (rv == NS_ERROR_FACTORY_NOT_REGISTERED ||
@@ -370,6 +383,30 @@ nsChannelClassifier::StartInternal()
     }
 
     return NS_OK;
+}
+
+bool
+nsChannelClassifier::IsHostnameWhitelisted(nsIURI *aUri,
+                                           const nsACString &aWhitelisted)
+{
+  nsAutoCString host;
+  nsresult rv = aUri->GetHost(host);
+  if (NS_FAILED(rv) || host.IsEmpty()) {
+    return false;
+  }
+  ToLowerCase(host);
+
+  nsCCharSeparatedTokenizer tokenizer(aWhitelisted, ',');
+  while (tokenizer.hasMoreTokens()) {
+    const nsCSubstring& token = tokenizer.nextToken();
+    if (token.Equals(host)) {
+      LOG(("nsChannelClassifier[%p]:StartInternal skipping %s (whitelisted)",
+           this, host.get()));
+      return true;
+    }
+  }
+
+  return false;
 }
 
 // Note in the cache entry that this URL was classified, so that future

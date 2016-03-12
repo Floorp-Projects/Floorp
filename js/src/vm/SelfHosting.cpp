@@ -42,6 +42,7 @@
 #include "vm/TypedArrayCommon.h"
 
 #include "jsfuninlines.h"
+#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "vm/BooleanObject-inl.h"
@@ -114,7 +115,7 @@ intrinsic_ToPropertyKey(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, args[0], &id))
+    if (!ToPropertyKey(cx, args[0], &id))
         return false;
 
     args.rval().set(IdToValue(id));

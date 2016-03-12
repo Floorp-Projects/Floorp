@@ -21,6 +21,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
+#include "nsGlobalWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
@@ -1581,11 +1582,85 @@ WebSocketImpl::Init(JSContext* aCx,
       if (globalObject) {
         principal = globalObject->PrincipalOrNull();
       }
+
+      nsCOMPtr<nsPIDOMWindowInner> innerWindow;
+
+      while (true) {
+        bool isNullPrincipal = true;
+        if (principal) {
+          nsresult rv = principal->GetIsNullPrincipal(&isNullPrincipal);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+            return;
+          }
+        }
+
+        if (!isNullPrincipal) {
+          break;
+        }
+
+        if (!innerWindow) {
+          innerWindow = do_QueryInterface(globalObject);
+          if (NS_WARN_IF(!innerWindow)) {
+            aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+            return;
+          }
+        }
+
+        nsCOMPtr<nsPIDOMWindowOuter> parentWindow =
+          innerWindow->GetScriptableParent();
+        if (NS_WARN_IF(!parentWindow)) {
+          aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+          return;
+        }
+
+        nsCOMPtr<nsPIDOMWindowInner> currentInnerWindow =
+          parentWindow->GetCurrentInnerWindow();
+        if (NS_WARN_IF(!currentInnerWindow)) {
+          aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+          return;
+        }
+
+        // We are at the top. Let's see if we have an opener window.
+        if (innerWindow == currentInnerWindow) {
+          ErrorResult error;
+          parentWindow =
+            nsGlobalWindow::Cast(innerWindow)->GetOpenerWindow(error);
+          if (NS_WARN_IF(error.Failed())) {
+            error.SuppressException();
+            aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+            return;
+          }
+
+          if (!parentWindow) {
+            break;
+          }
+
+          currentInnerWindow = parentWindow->GetCurrentInnerWindow();
+          if (NS_WARN_IF(!currentInnerWindow)) {
+            aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+            return;
+          }
+
+          MOZ_ASSERT(currentInnerWindow != innerWindow);
+        }
+
+        innerWindow = currentInnerWindow;
+
+        nsCOMPtr<nsIDocument> document = innerWindow->GetExtantDoc();
+        if (NS_WARN_IF(!document)) {
+          aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+          return;
+        }
+
+        principal = document->NodePrincipal();
+      }
     }
 
     if (principal) {
       principal->GetURI(getter_AddRefs(originURI));
     }
+
     if (originURI) {
       bool originIsHttps = false;
       aRv = originURI->SchemeIs("https", &originIsHttps);
