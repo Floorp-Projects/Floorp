@@ -663,6 +663,8 @@ wasm::Module::owner() const {
     return ownerObject_;
 }
 
+using WasmModuleObjectVector = GCVector<WasmModuleObject*>;
+
 } // namespace js
 
 #endif // wasm_module_h

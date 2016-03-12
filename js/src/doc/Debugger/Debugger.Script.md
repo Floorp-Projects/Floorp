@@ -1,6 +1,6 @@
-# Debugger.Script
+# Debugger.Script for JS
 
-A `Debugger.Script` instance refers to a sequence of bytecode in the
+A `Debugger.Script` instance may refer to a sequence of bytecode in the
 debuggee; it is the [`Debugger`][debugger-object] API's presentation of a JSAPI `JSScript`
 object. Each of the following is represented by single JSScript object:
 
@@ -16,6 +16,8 @@ object. Each of the following is represented by single JSScript object:
   by other JavaScript code.
 
 * Code appearing in a `javascript:` URL.
+
+These instances are distinguished by their `format` property being `"js"`.
 
 The [`Debugger`][debugger-object] interface constructs `Debugger.Script` objects as scripts
 of debuggee code are uncovered by the debugger: via the `onNewScript`
@@ -40,6 +42,14 @@ Note that SpiderMonkey may use the same `Debugger.Script` instances for
 equivalent functions or evaluated code—that is, scripts representing the
 same source code, at the same position in the same source file,
 evaluated in the same lexical environment.
+
+# Debugger.Script for WebAssembly
+
+A `Debugger.Script` instance may also refer to WebAssembly code. These
+instances are distinguished by their `format` property being `"wasm"`.
+
+Currently, only the `format` and `text` properties works for WebAssembly
+`Debugger.Script` instances. All other properties and methods throw.
 
 ## Accessor Properties of the Debugger.Script Prototype Object
 
