@@ -1,6 +1,6 @@
 (function f() {
     let x = (new function() {})
-    __defineGetter__("x", function() {
+    this.__defineGetter__("x", function() {
         ({
             e: x
         })
