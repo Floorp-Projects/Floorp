@@ -1,6 +1,6 @@
 // |jit-test| --baseline-eager; error: TypeError
 try {
-    __defineGetter__("x", Iterator)()
+    this.__defineGetter__("x", Iterator)()
 } catch (e) {}
 f = function() {
     return (function() {

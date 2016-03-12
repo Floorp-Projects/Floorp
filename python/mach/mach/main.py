@@ -554,8 +554,11 @@ To see more help for a specific command, run:
             help='Prefix log line with interval from last message rather '
                 'than relative time. Note that this is NOT execution time '
                 'if there are parallel operations.')
+        suppress_log_by_default = False
+        if 'INSIDE_EMACS' in os.environ:
+            suppress_log_by_default = True
         global_group.add_argument('--log-no-times', dest='log_no_times',
-            action='store_true', default=False,
+            action='store_true', default=suppress_log_by_default,
             help='Do not prefix log lines with times. By default, mach will '
                 'prefix each output line with the time since command start.')
         global_group.add_argument('-h', '--help', dest='help',

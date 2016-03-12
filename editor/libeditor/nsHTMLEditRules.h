@@ -64,6 +64,7 @@ class nsHTMLEditRules : public nsTextEditRules, public nsIEditActionListener
 public:
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLEditRules, nsTextEditRules)
 
   nsHTMLEditRules();
 

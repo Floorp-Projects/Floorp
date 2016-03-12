@@ -713,6 +713,12 @@ public:
   nscoord BSize(mozilla::WritingMode aWritingMode) const {
     return GetLogicalSize(aWritingMode).BSize(aWritingMode);
   }
+  nscoord ContentBSize() const { return ContentBSize(GetWritingMode()); }
+  nscoord ContentBSize(mozilla::WritingMode aWritingMode) const {
+    auto bp = GetLogicalUsedBorderAndPadding(aWritingMode);
+    bp.ApplySkipSides(GetLogicalSkipSides());
+    return std::max(0, BSize(aWritingMode) - bp.BStartEnd(aWritingMode));
+  }
 
   /**
    * When we change the size of the frame's border-box rect, we may need to

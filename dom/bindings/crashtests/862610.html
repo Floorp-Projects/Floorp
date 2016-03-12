@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script>
-  HTMLElement.prototype.__proto__ = Proxy.create({}, {});
+  HTMLElement.prototype.__proto__ = new Proxy({}, {});
   try {
     window.Image;
   } finally {

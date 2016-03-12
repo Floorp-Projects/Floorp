@@ -5,7 +5,7 @@
 
 var s = "grape";
 function f() { "use strict"; return this; }
-var p = Proxy.createFunction(f, f);
+var p = new Proxy(f, {});
 String.prototype.p = p;
 assertEq(s.p(), "grape");
 

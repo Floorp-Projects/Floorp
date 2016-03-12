@@ -2,13 +2,13 @@
 function f() {
     (e)
 }
-(x = Proxy.createFunction((function(x) {
+(x = new Proxy(Function, (function(x) {
   return {
     get: function(r, b) {
       return x[b]
     }
   }
-})(/x/), Function))
+})(/x/)))
 for (z = 0; z < 100; x.unwatch(), z++)
 for (e in [0]) {
   gczeal(2)

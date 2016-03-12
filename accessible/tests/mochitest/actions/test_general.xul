@@ -21,6 +21,9 @@
 
   <script type="application/javascript">
   <![CDATA[
+    //gA11yEventDumpToConsole = true;
+    //enableLogging("tree,verbose"); // debug
+
     if (navigator.platform.startsWith("Mac")) {
       SimpleTest.expectAssertions(0, 1);
     } else {

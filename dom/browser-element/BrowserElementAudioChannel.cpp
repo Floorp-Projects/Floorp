@@ -26,6 +26,7 @@
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -526,12 +527,7 @@ BrowserElementAudioChannel::NotifyChannel(const nsAString& aEvent,
     do_GetService("@mozilla.org/system-message-internal;1");
   MOZ_ASSERT(systemMessenger);
 
-  AutoJSAPI jsAPI;
-  if (!jsAPI.Init(GetOwner())) {
-    return nullptr;
-  }
-
-  JS::Rooted<JS::Value> value(jsAPI.cx());
+  JS::Rooted<JS::Value> value(nsContentUtils::RootingCxForThread());
   value.setInt32((uint32_t)mAudioChannel);
 
   nsCOMPtr<nsIURI> manifestURI;

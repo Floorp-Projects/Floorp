@@ -234,8 +234,13 @@ nsHTMLEditRules::~nsHTMLEditRules()
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLEditRules, nsTextEditRules)
 NS_IMPL_RELEASE_INHERITED(nsHTMLEditRules, nsTextEditRules)
-NS_IMPL_QUERY_INTERFACE_INHERITED(nsHTMLEditRules, nsTextEditRules, nsIEditActionListener)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLEditRules)
+  NS_INTERFACE_TABLE_INHERITED(nsHTMLEditRules, nsIEditActionListener)
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsTextEditRules)
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHTMLEditRules, nsTextEditRules,
+                                   mDocChangeRange, mUtilRange, mNewBlock,
+                                   mRangeItem)
 
 /********************************************************
  *  Public methods

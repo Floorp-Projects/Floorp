@@ -7,25 +7,8 @@
 with Files('**'):
     BUG_COMPONENT = ('Testing', 'Reftest')
 
-if CONFIG['MOZ_BUILD_APP'] in ('b2g', 'b2g/dev', 'mobile/android'):
-    DEFINES['BOOTSTRAP'] = True
-    if CONFIG['MOZ_BUILD_APP'] in ('b2g', 'b2g/dev'):
-        DEFINES['REFTEST_B2G'] = True
-else:
-    EXTRA_PP_COMPONENTS += [
-        'reftest-cmdline.js',
-    ]
-    EXTRA_COMPONENTS += [
-        'reftest-cmdline.manifest',
-    ]
-
-JAR_MANIFESTS += ['jar.mn']
-
-USE_EXTENSION_MANIFEST = True
-
 XPI_NAME = 'reftest'
-
+USE_EXTENSION_MANIFEST = True
+JAR_MANIFESTS += ['jar.mn']
 FINAL_TARGET_PP_FILES += ['install.rdf']
-
-if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
-    FINAL_TARGET_PP_FILES += ['bootstrap.js']
+FINAL_TARGET_FILES += ['bootstrap.js']

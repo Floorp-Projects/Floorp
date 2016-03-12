@@ -12,6 +12,11 @@
 
 <script>
 
+function defer(f)
+{
+    setTimeout(f, 0);
+}
+
 function doTest() {
   var gl = WebGLUtil.getWebGL('c', true);
   var ext = gl.getExtension('EXT_disjoint_timer_query');
@@ -36,24 +41,36 @@ function doTest() {
 
   ok(!ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT),
      "Query is inactive after endQueryEXT.");
-  ok(ext.getQueryObjectEXT(elapsedQuery, ext.QUERY_RESULT_AVAILABLE_EXT),
-     "Time elapsed query is available immediately after flush.");
 
-  ext.deleteQueryEXT(elapsedQuery);
-  ok(!ext.isQueryEXT(elapsedQuery), "Query is no longer valid after deletion.");
+  defer(function() {
+    ok(ext.getQueryObjectEXT(elapsedQuery, ext.QUERY_RESULT_AVAILABLE_EXT),
+       "Time elapsed query is available immediately after flush and event loop tick.");
 
-  var timestampQuery = ext.createQueryEXT();
-  ext.queryCounterEXT(timestampQuery, ext.TIMESTAMP_EXT);
-  gl.flush();
-  ok(ext.getQueryObjectEXT(timestampQuery, ext.QUERY_RESULT_AVAILABLE_EXT),
-     "Timestamp query should be available immediately after flush.");
+    ext.deleteQueryEXT(elapsedQuery);
+    ok(!ext.isQueryEXT(elapsedQuery), "Query is no longer valid after deletion.");
 
-  ok(ext.getQueryEXT(ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30,
-     "Timestamp must be at least 30 bits to hold at least 1 second of timing.");
-  ok(ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30,
-     "Time elapsed must be at least 30 bits to hold at least 1 second of timing.");
+    ok(ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30,
+       "Time elapsed must be at least 30 bits to hold at least 1 second of timing.");
 
-  SimpleTest.finish();
+    // D3D11 doesn't support TIMESTAMP_EXT so check for it before using it.
+    if (ext.getQueryEXT(ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT) > 0) {
+        var timestampQuery = ext.createQueryEXT();
+        ext.queryCounterEXT(timestampQuery, ext.TIMESTAMP_EXT);
+        gl.flush();
+        defer(function() {
+          ok(ext.getQueryObjectEXT(timestampQuery, ext.QUERY_RESULT_AVAILABLE_EXT),
+          "Timestamp query should be available immediately after flush and event loop tick.");
+
+          ok(ext.getQueryEXT(ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30,
+          "Time elapsed must be at least 30 bits to hold at least 1 second of timing.");
+
+          SimpleTest.finish();
+
+          });
+    } else {
+      SimpleTest.finish();
+    }
+  });
 }
 
 SimpleTest.waitForExplicitFinish();

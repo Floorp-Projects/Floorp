@@ -517,6 +517,11 @@ class MercurialSetupWizard(object):
         if hg_version < LooseVersion('3.4') or not have_modern_ssl:
             c.add_mozilla_host_fingerprints()
 
+        # We always update fingerprints if they are present. We /could/ offer to
+        # remove fingerprints if running modern Python and Mercurial. But that
+        # just adds more UI complexity and isn't worth it.
+        c.update_mozilla_host_fingerprints()
+
         # References to multiple version-control-tools checkouts can confuse
         # version-control-tools, since various Mercurial extensions resolve
         # dependencies via __file__ and repos could reference another copy.

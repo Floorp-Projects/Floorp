@@ -1,11 +1,16 @@
 #define MOZ_MUST_USE __attribute__((annotate("moz_must_use")))
 
+struct Temporary { ~Temporary(); };
 class MOZ_MUST_USE MustUse {};
 class MayUse {};
 
 MustUse producesMustUse();
 MustUse *producesMustUsePointer();
 MustUse &producesMustUseRef();
+
+MustUse producesMustUse(const Temporary& t);
+MustUse *producesMustUsePointer(const Temporary& t);
+MustUse &producesMustUseRef(const Temporary& t);
 
 MayUse producesMayUse();
 MayUse *producesMayUsePointer();
@@ -29,6 +34,7 @@ void foo() {
   producesMayUsePointer();
   producesMayUseRef();
   u = producesMustUse();
+  u = producesMustUse(Temporary());
   {
     producesMustUse(); // expected-error {{Unused value of must-use type 'MustUse'}}
     producesMustUsePointer();
@@ -37,6 +43,7 @@ void foo() {
     producesMayUsePointer();
     producesMayUseRef();
     u = producesMustUse();
+    u = producesMustUse(Temporary());
   }
   if (true) {
     producesMustUse(); // expected-error {{Unused value of must-use type 'MustUse'}}
@@ -46,6 +53,7 @@ void foo() {
     producesMayUsePointer();
     producesMayUseRef();
     u = producesMustUse();
+    u = producesMustUse(Temporary());
   } else {
     producesMustUse(); // expected-error {{Unused value of must-use type 'MustUse'}}
     producesMustUsePointer();
@@ -54,6 +62,7 @@ void foo() {
     producesMayUsePointer();
     producesMayUseRef();
     u = producesMustUse();
+    u = producesMustUse(Temporary());
   }
 
   if(true) producesMustUse(); // expected-error {{Unused value of must-use type 'MustUse'}}
@@ -70,6 +79,8 @@ void foo() {
   else producesMayUseRef();
   if(true) u = producesMustUse();
   else u = producesMustUse();
+  if(true) u = producesMustUse(Temporary());
+  else u = producesMustUse(Temporary());
 
   while (true) producesMustUse(); // expected-error {{Unused value of must-use type 'MustUse'}}
   while (true) producesMustUsePointer();
@@ -78,6 +89,7 @@ void foo() {
   while (true) producesMayUsePointer();
   while (true) producesMayUseRef();
   while (true) u = producesMustUse();
+  while (true) u = producesMustUse(Temporary());
 
   do producesMustUse(); // expected-error {{Unused value of must-use type 'MustUse'}}
   while (true);
@@ -93,6 +105,8 @@ void foo() {
   while (true);
   do u = producesMustUse();
   while (true);
+  do u = producesMustUse(Temporary());
+  while (true);
 
   for (;;) producesMustUse(); // expected-error {{Unused value of must-use type 'MustUse'}}
   for (;;) producesMustUsePointer();
@@ -101,6 +115,7 @@ void foo() {
   for (;;) producesMayUsePointer();
   for (;;) producesMayUseRef();
   for (;;) u = producesMustUse();
+  for (;;) u = producesMustUse(Temporary());
 
   for (producesMustUse();;); // expected-error {{Unused value of must-use type 'MustUse'}}
   for (producesMustUsePointer();;);
@@ -109,6 +124,7 @@ void foo() {
   for (producesMayUsePointer();;);
   for (producesMayUseRef();;);
   for (u = producesMustUse();;);
+  for (u = producesMustUse(Temporary());;);
 
   for (;;producesMustUse()); // expected-error {{Unused value of must-use type 'MustUse'}}
   for (;;producesMustUsePointer());
@@ -117,6 +133,7 @@ void foo() {
   for (;;producesMayUsePointer());
   for (;;producesMayUseRef());
   for (;;u = producesMustUse());
+  for (;;u = producesMustUse(Temporary()));
 
   use((producesMustUse(), false)); // expected-error {{Unused value of must-use type 'MustUse'}}
   use((producesMustUsePointer(), false));
@@ -125,6 +142,7 @@ void foo() {
   use((producesMayUsePointer(), false));
   use((producesMayUseRef(), false));
   use((u = producesMustUse(), false));
+  use((u = producesMustUse(Temporary()), false));
 
   switch (1) {
   case 1:
@@ -135,6 +153,7 @@ void foo() {
     producesMayUsePointer();
     producesMayUseRef();
     u = producesMustUse();
+    u = producesMustUse(Temporary());
   case 2:
     producesMustUse(); // expected-error {{Unused value of must-use type 'MustUse'}}
   case 3:
@@ -149,6 +168,8 @@ void foo() {
     producesMayUseRef();
   case 8:
     u = producesMustUse();
+  case 9:
+    u = producesMustUse(Temporary());
   default:
     producesMustUse(); // expected-error {{Unused value of must-use type 'MustUse'}}
     producesMustUsePointer();
@@ -157,6 +178,7 @@ void foo() {
     producesMayUsePointer();
     producesMayUseRef();
     u = producesMustUse();
+    u = producesMustUse(Temporary());
   }
 
   use(producesMustUse());
@@ -166,6 +188,7 @@ void foo() {
   use(producesMayUsePointer());
   use(producesMayUseRef());
   use(u = producesMustUse());
+  use(u = producesMustUse(Temporary()));
 
   MustUse a = producesMustUse();
   MustUse *b = producesMustUsePointer();
@@ -174,4 +197,5 @@ void foo() {
   MayUse *e = producesMayUsePointer();
   MayUse &f = producesMayUseRef();
   MustUse g = u = producesMustUse();
+  MustUse h = u = producesMustUse(Temporary());
 }

@@ -6,7 +6,7 @@
 
 function K(v) { return function() { return v; } }
 
-var errorProxy = Proxy.create({get: function() { throw new Error(); }});
+var errorProxy = new Proxy({}, {get: function() { throw new Error(); }});
 
 function boom()
 {

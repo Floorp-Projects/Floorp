@@ -66,14 +66,20 @@ Narrator.prototype = {
             return nf.FILTER_REJECT;
           }
 
+          if (!/\S/.test(node.textContent)) {
+            // Reject nodes with no text.
+            return nf.FILTER_REJECT;
+          }
+
           let bb = wu.getBoundsWithoutFlushing(node);
           if (!bb.width || !bb.height) {
-            // Skip non-rendered nodes.
+            // Skip non-rendered nodes. We don't reject because a zero-sized
+            // container can still have visible, "overflowed", content.
             return nf.FILTER_SKIP;
           }
 
           for (let c = node.firstChild; c; c = c.nextSibling) {
-            if (c.nodeType == c.TEXT_NODE && !!c.textContent.match(/\S/)) {
+            if (c.nodeType == c.TEXT_NODE && /\S/.test(c.textContent)) {
               // If node has a non-empty text child accept it.
               this._matches.add(node);
               return nf.FILTER_ACCEPT;
@@ -156,7 +162,7 @@ Narrator.prototype = {
 
     this._startTime = Date.now();
 
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       utterance.addEventListener("start", () => {
         paragraph.classList.add("narrating");
         let bb = paragraph.getBoundingClientRect();
@@ -189,8 +195,12 @@ Narrator.prototype = {
           // User pressed stopped.
           resolve();
         } else {
-          this._speakInner().then(resolve);
+          this._speakInner().then(resolve, reject);
         }
+      });
+
+      utterance.addEventListener("error", () => {
+        reject("speech synthesis failed")
       });
 
       this._win.speechSynthesis.speak(utterance);

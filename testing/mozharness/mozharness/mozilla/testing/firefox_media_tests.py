@@ -62,6 +62,12 @@ media_test_config_options = [
       "default": "media-tests",
       "help": "suite name",
       }],
+    [['--browsermob-script'],
+     {'help': 'path to the browsermob-proxy shell script or batch file',
+     }],
+    [['--browsermob-port'],
+     {'help': 'port to run the browsermob proxy on',
+     }],
 ] + (copy.deepcopy(testing_config_options))
 
 class JobResultParser(TestSummaryOutputParserHelper):
@@ -135,6 +141,8 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
         self.binary_path = c.get('binary_path')
         self.test_packages_url = c.get('test_packages_url')
         self.test_url = c.get('test_url')
+        self.browsermob_script = c.get('browsermob_script')
+        self.browsermob_port = c.get('browsermob_port')
 
     @PreScriptAction('create-virtualenv')
     def _pre_create_virtualenv(self, action):
@@ -204,6 +212,10 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
             cmd.append(self.tests)
         if self.e10s:
             cmd.append('--e10s')
+        if self.browsermob_script:
+            cmd += ['--browsermob-script', self.browsermob_script]
+        if self.browsermob_port:
+            cmd += ['--browsermob-port', self.browsermob_port]
 
         test_suite = self.config.get('test_suite')
         if test_suite not in self.config["suite_definitions"]:

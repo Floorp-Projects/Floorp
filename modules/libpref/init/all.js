@@ -1561,7 +1561,12 @@ pref("dom.server-events.default-reconnection-time", 5000); // in milliseconds
 // by the jar channel.
 pref("network.jar.open-unsafe-types", false);
 // If true, loading remote JAR files using the jar: protocol will be prevented.
+#ifdef RELEASE_BUILD
+// Keep allowing remote JAR files for IBM iNotes (see bug 1255139) for now.
+pref("network.jar.block-remote-files", false);
+#else
 pref("network.jar.block-remote-files", true);
+#endif
 
 // This preference, if true, causes all UTF-8 domain names to be normalized to
 // punycode.  The intention is to allow UTF-8 domain names as input, but never
@@ -5214,9 +5219,6 @@ pref("memory.report_concurrency", 10);
 
 // Add Mozilla AudioChannel APIs.
 pref("media.useAudioChannelAPI", false);
-
-// Expose Request.cache. Currently disabled since the implementation is incomplete.
-pref("dom.requestcache.enabled", false);
 
 // Expose Request.context. Currently disabled since the spec is in flux.
 pref("dom.requestcontext.enabled", false);

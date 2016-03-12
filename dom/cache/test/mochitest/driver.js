@@ -22,7 +22,6 @@ function runTests(testFile, order) {
       SpecialPowers.pushPrefEnv({
         "set": [["dom.caches.enabled", true],
                 ["dom.caches.testing.enabled", true],
-                ["dom.requestcache.enabled", true],
                 ["dom.serviceWorkers.enabled", true],
                 ["dom.serviceWorkers.testing.enabled", true],
                 ["dom.serviceWorkers.exemptFromPerDomainMax", true]]

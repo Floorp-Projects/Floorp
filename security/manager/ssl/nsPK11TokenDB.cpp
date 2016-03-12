@@ -14,7 +14,7 @@
 #include "ScopedNSSTypes.h"
 #include "secerr.h"
 
-extern PRLogModuleInfo* gPIPNSSLog;
+extern mozilla::LazyLogModule gPIPNSSLog;
 
 NS_IMPL_ISUPPORTS(nsPK11Token, nsIPK11Token)
 

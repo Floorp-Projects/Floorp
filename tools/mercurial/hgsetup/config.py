@@ -96,6 +96,15 @@ class MercurialConfig(object):
         for k, v in HOST_FINGERPRINTS.items():
             self._c['hostfingerprints'][k] = v
 
+    def update_mozilla_host_fingerprints(self):
+        """Update host fingerprints if they are present."""
+        if 'hostfingerprints' not in self._c:
+            return
+
+        for k, v in HOST_FINGERPRINTS.items():
+            if k in self._c['hostfingerprints']:
+                self._c['hostfingerprints'][k] = v
+
     def set_username(self, name, email):
         """Set the username to use for commits.
 

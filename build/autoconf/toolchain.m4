@@ -107,9 +107,9 @@ AC_SUBST(CLANG_CXX)
 AC_SUBST(CLANG_CL)
 
 if test -n "$GNU_CC" -a -z "$CLANG_CC" ; then
-    if test "$GCC_MAJOR_VERSION" -eq 4 -a "$GCC_MINOR_VERSION" -lt 7 ||
+    if test "$GCC_MAJOR_VERSION" -eq 4 -a "$GCC_MINOR_VERSION" -lt 8 ||
        test "$GCC_MAJOR_VERSION" -lt 4; then
-        AC_MSG_ERROR([Only GCC 4.7 or newer supported])
+        AC_MSG_ERROR([Only GCC 4.8 or newer supported])
     fi
 fi
 ])
@@ -298,9 +298,9 @@ EOF
             HOST_GCC_MINOR_VERSION=`echo ${HOST_GCC_VERSION} | $AWK -F\. '{ print <<$>>2 }'`
             changequote([,])
 
-            if test "$HOST_GCC_MAJOR_VERSION" -eq 4 -a "$HOST_GCC_MINOR_VERSION" -lt 7 ||
+            if test "$HOST_GCC_MAJOR_VERSION" -eq 4 -a "$HOST_GCC_MINOR_VERSION" -lt 8 ||
                test "$HOST_GCC_MAJOR_VERSION" -lt 4; then
-                AC_MSG_ERROR([Only GCC 4.7 or newer supported for host compiler])
+                AC_MSG_ERROR([Only GCC 4.8 or newer supported for host compiler])
             fi
         fi
 

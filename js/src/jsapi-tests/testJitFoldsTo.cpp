@@ -156,7 +156,7 @@ BEGIN_TEST(testJitNotTest)
     MReturn* ret = MReturn::New(func.alloc, p);
     exit->end(ret);
 
-    exit->addPredecessorWithoutPhis(then);
+    MOZ_ALWAYS_TRUE(exit->addPredecessorWithoutPhis(then));
 
     if (!func.runGVN())
         return false;
@@ -195,7 +195,7 @@ BEGIN_TEST(testJitNotNotTest)
     MReturn* ret = MReturn::New(func.alloc, p);
     exit->end(ret);
 
-    exit->addPredecessorWithoutPhis(then);
+    MOZ_ALWAYS_TRUE(exit->addPredecessorWithoutPhis(then));
 
     if (!func.runGVN())
         return false;

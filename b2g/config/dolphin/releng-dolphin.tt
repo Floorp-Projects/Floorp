@@ -1,8 +1,8 @@
 [
 {
-"version": "gcc 4.7.3",
-"size": 80458572,
-"digest": "e5101f9dee1e462f6cbd3897ea57eede41d23981825c7b20d91d23ab461875d54d3dfc24999aa58a31e8b01f49fb3140e05ffe5af2957ef1d1afb89fd0dfe1ad",
+"version": "gcc 4.8.5",
+"size": 81065660,
+"digest": "db26f498ab56a3b5c65d7cda290cbb74174af9f2d021ca9c158f53b0382924ccf5ed9638d41eef449434aa9383a9113994d9729d9dd910321d1f35f9411eae38",
 "algorithm": "sha512",
 "filename": "gcc.tar.xz",
 "unpack": "True"

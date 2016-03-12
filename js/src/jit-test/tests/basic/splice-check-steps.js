@@ -3,7 +3,7 @@
  * visible externally.
  */
 
-function handlerMaker(obj, expected_exceptions) {
+function handlerMaker(expected_exceptions) {
   var order = [];
   function note(trap, name)
   {
@@ -15,68 +15,23 @@ function handlerMaker(obj, expected_exceptions) {
 
   return [{
     /* this is the only trap we care about */
-    delete: function(name) {
+    deleteProperty: function(target, name) {
       note("del", name);
-      return delete obj[name];
+      return Reflect.deleteProperty(target, name);
     },
-
-    // Fundamental traps
-    getOwnPropertyDescriptor: function(name) {
-      var desc = Object.getOwnPropertyDescriptor(obj, name);
-      // a trapping proxy's properties must always be configurable
-      if (desc !== undefined)
-        desc.configurable = true;
-      return desc;
-    },
-    getPropertyDescriptor:  function(name) {
-      var desc = Object.getPropertyDescriptor(obj, name); // not in ES5
-      // a trapping proxy's properties must always be configurable
-      if (desc !== undefined)
-        desc.configurable = true;
-      return desc;
-    },
-    getOwnPropertyNames: function() {
-      return Object.getOwnPropertyNames(obj);
-    },
-    getPropertyNames: function() {
-      return Object.getPropertyNames(obj);                // not in ES5
-    },
-    defineProperty: function(name, desc) {
-      note("def", name);
-      Object.defineProperty(obj, name, desc);
-    },
-    fix:          function() {
-      if (Object.isFrozen(obj)) {
-        return Object.getOwnPropertyNames(obj).map(function(name) {
-          return Object.getOwnPropertyDescriptor(obj, name);
-        });
-      }
-      // As long as obj is not frozen, the proxy won't allow itself to be fixed
-      return undefined; // will cause a TypeError to be thrown
-    },
-
     // derived traps
-    has:          function(name) {
+    has:          function(target, name) {
       note("has", name);
-      return name in obj;
+      return name in target;
     },
-    hasOwn:       function(name) { return Object.prototype.hasOwnProperty.call(obj, name); },
-    get:          function(receiver, name) {
+    get:          function(target, name, receiver) {
       note("get", name);
-      return obj[name];
+      return Reflect.get(target, name, receiver);
     },
-    set:          function(receiver, name, val) {
+    set:          function(target, name, value, receiver) {
       note("set", name);
-      obj[name] = val;
-      return true; // bad behavior when set fails in non-strict mode
+      return Reflect.set(target, name, value, receiver);
     },
-    enumerate:    function() {
-      var result = [];
-      for (name in obj)
-        result.push(name);
-      return result;
-    },
-    keys: function() { return Object.keys(obj) }
   }, order];
 }
 
@@ -84,8 +39,8 @@ function handlerMaker(obj, expected_exceptions) {
 // expected_order: the expected order of operations on arr, stringified
 function check_splice_proxy(arr, expected_order, expected_exceptions, expected_array, expected_result) {
     print (arr);
-    var [handler, store] = handlerMaker(arr, expected_exceptions);
-    var proxy = Proxy.create(handler);
+    var [handler, store] = handlerMaker(expected_exceptions);
+    var proxy = new Proxy(arr, handler);
 
     try {
         var args = Array.prototype.slice.call(arguments, 5);

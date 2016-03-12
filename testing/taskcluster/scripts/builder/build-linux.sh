@@ -28,6 +28,12 @@ echo "running as" $(id)
 
 set -v
 
+fail() {
+    echo # make sure error message is on a new line
+    echo "[build-linux.sh:error]" "${@}"
+    exit 1
+}
+
 export MOZ_CRASHREPORTER_NO_REPORT=1
 export MOZ_OBJDIR=obj-firefox
 export MOZ_SYMBOLS_EXTRA_BUILDID=linux64
@@ -41,8 +47,8 @@ export MOZ_SIMPLE_PACKAGE_NAME=target
 export LIBRARY_PATH=$LIBRARY_PATH:$WORKSPACE/src/obj-firefox:$WORKSPACE/src/gcc/lib64
 
 # test required parameters are supplied
-if [[ -z ${MOZHARNESS_SCRIPT} ]]; then exit 1; fi
-if [[ -z ${MOZHARNESS_CONFIG} ]]; then exit 1; fi
+if [[ -z ${MOZHARNESS_SCRIPT} ]]; then fail "MOZHARNESS_SCRIPT is not set"; fi
+if [[ -z ${MOZHARNESS_CONFIG} ]]; then fail "MOZHARNESS_CONFIG is not set"; fi
 
 cleanup() {
     local rv=$?
@@ -74,8 +80,9 @@ if $NEED_XVFB; then
             retry_count=$(($retry_count + 1))
             echo "Failed to start Xvfb, retry: $retry_count"
             sleep 2
-        fi done
-    if [ $xvfb_test == 255 ]; then exit 255; fi
+        fi
+    done
+    if [ $xvfb_test == 255 ]; then fail "xvfb did not start properly"; fi
 fi
 
 # set up mozharness configuration, via command line, env, etc.

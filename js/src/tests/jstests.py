@@ -168,7 +168,14 @@ def parse_args():
         op.error("--valgrind, --debug, and --rr are mutually exclusive.")
 
     # Fill the debugger field, as needed.
-    debugger_prefix = options.debugger.split() if options.debug else []
+    if options.debug:
+        if options.debugger == 'lldb':
+            debugger_prefix = ['lldb', '--']
+        else:
+            debugger_prefix = options.debugger.split()
+    else:
+        debugger_prefix = []
+
     if options.valgrind:
         debugger_prefix = ['valgrind'] + options.valgrind_args.split()
         if os.uname()[0] == 'Darwin':

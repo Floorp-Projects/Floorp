@@ -34,6 +34,8 @@
 #include "ShimInterfaceInfo.h"
 #include "nsIAddonInterposition.h"
 #include "nsISimpleEnumerator.h"
+#include "nsPIDOMWindow.h"
+#include "nsGlobalWindow.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -2297,7 +2299,9 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
     if (!console)
         return NS_OK;
 
-    const uint64_t innerWindowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx);
+    nsGlobalWindow* globalWin = CurrentWindowOrNull(cx);
+    nsPIDOMWindowInner* win = globalWin ? globalWin->AsInner() : nullptr;
+    const uint64_t innerWindowID = win ? win->WindowID() : 0;
 
     RootedObject errorObj(cx, error.isObject() ? &error.toObject() : nullptr);
     JSErrorReport* err = errorObj ? JS_ErrorFromException(cx, errorObj) : nullptr;
@@ -2305,7 +2309,8 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
     nsCOMPtr<nsIScriptError> scripterr;
 
     if (errorObj) {
-        JS::RootedObject stackVal(cx, ExceptionStackOrNull(errorObj));
+        JS::RootedObject stackVal(cx,
+          FindExceptionStackForConsoleReport(win, error));
         if (stackVal) {
             scripterr = new nsScriptErrorWithStack(stackVal);
         }
@@ -2337,17 +2342,15 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
         nsAutoString fileUni;
         CopyUTF8toUTF16(err->filename, fileUni);
 
-        uint32_t column = err->uctokenptr - err->uclinebuf;
+        uint32_t column = err->tokenOffset();
 
-        const char16_t* ucmessage =
-            static_cast<const char16_t*>(err->ucmessage);
-        const char16_t* uclinebuf =
-            static_cast<const char16_t*>(err->uclinebuf);
+        const char16_t* ucmessage = err->ucmessage;
+        const char16_t* linebuf = err->linebuf();
 
         nsresult rv = scripterr->InitWithWindowID(
                 ucmessage ? nsDependentString(ucmessage) : EmptyString(),
                 fileUni,
-                uclinebuf ? nsDependentString(uclinebuf) : EmptyString(),
+                linebuf ? nsDependentString(linebuf, err->linebufLength()) : EmptyString(),
                 err->lineno,
                 column, err->flags, "XPConnect JavaScript", innerWindowID);
         NS_ENSURE_SUCCESS(rv, NS_OK);

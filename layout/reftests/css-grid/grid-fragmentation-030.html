@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Fragmentation of a height:auto, growing min-content row that makes the grid container break</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1144096">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#pagination">
+  <link rel="match" href="grid-fragmentation-030-ref.html">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+body { overflow:hidden; }
+
+.columns {
+  position:relative;
+     -moz-columns: 5;
+      -ms-columns: 5;
+  -webkit-columns: 5;
+          columns: 5;
+     -moz-column-fill: auto;
+      -ms-column-fill: auto;
+  -webkit-column-fill: auto;
+          column-fill: auto;
+  border: 2px dashed;
+  margin-bottom: 5px;
+}
+
+.grid {
+  display: grid;
+  max-height: 20px;
+  grid-template-columns: 30px 30px 30px;
+  grid-gap: 12px;
+  border:5px solid;
+  align-content: start;
+}
+span { background:lime; border:1px solid black; }
+x { display:block; height:20px; }
+.avoid-break { page-break-inside:avoid; break-inside:avoid; }
+
+i { display:block; height:10px; margin-top:7px; background:blue; }
+</style>
+</head>
+<body>
+
+<div class="columns" style="height: 100px/*trigger NS_INLINE_IS_BREAK_BEFORE for the item: grow the row*/">
+<div style="padding-top:1px; background:grey">
+<div class="grid" style="grid-template-rows: min-content 10px; grid-gap:0;">
+<span></span>
+<span class="avoid-break" style="height:60px"><i></i><x></x><i></i><x></x><i></i><x></x></span>
+<span style="grid-row:2;"><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 100px/*trigger NS_INLINE_IS_BREAK_BEFORE for the item: grow the row*/">
+<div style="padding-top:1px; background:grey">
+<div class="grid" style="grid-template-rows: min-content 10px; grid-gap:0; max-height:90px;">
+<span></span>
+<span class="avoid-break" style="height:60px"><i></i><x></x><i></i><x></x><i></i><x></x></span>
+<span style="grid-row:2;"><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 100px/*trigger NS_INLINE_IS_BREAK_BEFORE for the item: grow the row*/">
+<div style="padding-top:1px; background:grey">
+<div class="grid" style="grid-template-rows: min-content 10px; grid-gap:0; max-height:89px;">
+<span></span>
+<span class="avoid-break" style="height:60px"><i></i><x></x><i></i><x></x><i></i><x></x></span>
+<span style="grid-row:2;"><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 100px/*trigger NS_INLINE_IS_BREAK_BEFORE for the item: grow the row*/">
+<div style="padding-top:1px; background:grey">
+<div class="grid" style="grid-template-rows: min-content 10px; grid-gap:0; max-height:94px;">
+<span></span>
+<span class="avoid-break" style="height:60px"><i></i><x></x><i></i><x></x><i></i><x></x></span>
+<span style="grid-row:2;"><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 100px/*trigger NS_INLINE_IS_BREAK_BEFORE for the item: grow the row*/">
+<div style="padding-top:1px; background:grey">
+<div class="grid" style="grid-template-rows: min-content 10px; grid-gap:0; max-height:95px;">
+<span></span>
+<span class="avoid-break" style="height:60px"><i></i><x></x><i></i><x></x><i></i><x></x></span>
+<span style="grid-row:2;"><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 100px/*trigger NS_INLINE_IS_BREAK_BEFORE for the item: grow the row*/">
+<div style="padding-top:1px; background:grey">
+<div class="grid" style="grid-template-rows: min-content 10px; grid-gap:0; max-height:200px;">
+<span></span>
+<span class="avoid-break" style="height:60px"><i></i><x></x><i></i><x></x><i></i><x></x></span>
+<span style="grid-row:2;"><x></x></span>
+</div>
+</div></div>
+
+<div class="columns" style="height: 100px/*trigger NS_INLINE_IS_BREAK_BEFORE for the item: grow the row*/">
+<div style="padding-top:1px; background:grey">
+<div class="grid" style="grid-template-rows: min-content 10px; grid-gap:0; max-height:none;">
+<span></span>
+<span class="avoid-break" style="height:60px"><i></i><x></x><i></i><x></x><i></i><x></x></span>
+<span style="grid-row:2;"></span>
+</div>
+</div></div>
+
+
+</body>
+</html>

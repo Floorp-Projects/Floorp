@@ -22,7 +22,7 @@ template<class T> class nsCOMPtr;
 namespace mozilla {
 namespace layers {
 
-typedef Function<void(uint64_t, const nsTArray<TouchBehaviorFlags>&)>
+typedef function<void(uint64_t, const nsTArray<TouchBehaviorFlags>&)>
         SetAllowedTouchBehaviorCallback;
 
 /* This class contains some helper methods that facilitate implementing the
