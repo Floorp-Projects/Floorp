@@ -1439,16 +1439,6 @@ EmitHeapAddress(FunctionCompiler& f, MDefinition** base, MAsmJSHeapAccess* acces
         access->setOffset(offset);
     }
 
-    // TODO Remove this after implementing unaligned loads/stores.
-    int32_t maskVal = ~(Scalar::byteSize(access->accessType()) - 1);
-    if (maskVal == -1)
-        return true;
-
-    offset &= maskVal;
-    access->setOffset(offset);
-
-    MDefinition* mask = f.constant(Int32Value(maskVal), MIRType_Int32);
-    *base = f.bitwise<MBitAnd>(*base, mask, MIRType_Int32);
     return true;
 }
 
