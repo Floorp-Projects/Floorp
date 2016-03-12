@@ -100,7 +100,7 @@ nsSVGClipPathFrame::GetClipMask(gfxContext& aReferenceContext,
     refChainLengthLimiter(&sRefChainLengthCounter,
                           MAX_SVG_CLIP_PATH_REFERENCE_CHAIN_LENGTH);
   if (!refChainLengthLimiter.Reference()) {
-    return false; // Reference chain is too long!
+    return nullptr; // Reference chain is too long!
   }
 
   // And to prevent reference loops we check that this clipPath only appears
