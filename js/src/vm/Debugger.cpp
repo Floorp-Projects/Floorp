@@ -19,14 +19,17 @@
 #include "jsprf.h"
 #include "jswrapper.h"
 
+#include "asmjs/WasmModule.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "gc/Marking.h"
+#include "gc/Policy.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineJIT.h"
 #include "jit/JSONSpewer.h"
 #include "jit/MIRGraph.h"
 #include "js/GCAPI.h"
+#include "js/GCVariant.h"
 #include "js/UbiNodeBreadthFirst.h"
 #include "js/Vector.h"
 #include "vm/ArgumentsObject.h"
@@ -52,6 +55,8 @@ using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::MakeScopeExit;
 using mozilla::Maybe;
+using mozilla::Variant;
+using mozilla::AsVariant;
 
 
 /*** Forward declarations ************************************************************************/
@@ -2668,6 +2673,7 @@ Debugger::markCrossCompartmentEdges(JSTracer* trc)
     environments.markCrossCompartmentEdges<DebuggerEnv_trace>(trc);
     scripts.markCrossCompartmentEdges<DebuggerScript_trace>(trc);
     sources.markCrossCompartmentEdges<DebuggerSource_trace>(trc);
+    wasmModuleScripts.markCrossCompartmentEdges<DebuggerScript_trace>(trc);
 }
 
 /*
@@ -2902,7 +2908,8 @@ Debugger::findZoneEdges(Zone* zone, js::gc::ComponentFinder<Zone>& finder)
             dbg->scripts.hasKeyInZone(zone) ||
             dbg->sources.hasKeyInZone(zone) ||
             dbg->objects.hasKeyInZone(zone) ||
-            dbg->environments.hasKeyInZone(zone))
+            dbg->environments.hasKeyInZone(zone) ||
+            dbg->wasmModuleScripts.hasKeyInZone(zone))
         {
             finder.addEdgeTo(w);
         }
@@ -4897,20 +4904,54 @@ const JSFunctionSpec Debugger::static_methods[] {
 
 /*** Debugger.Script *****************************************************************************/
 
-static inline JSScript*
+// Either a real JSScript or synthesized.
+//
+// If synthesized, the NativeObject is one of the following:
+//
+//   1. A WasmModuleObject, denoting a synthesized toplevel wasm module
+//      script.
+//   2. A wasm JSFunction, denoting a synthesized wasm function script.
+//      NYI!
+using DebuggerScriptReferent = Variant<JSScript*, WasmModuleObject*>;
+
+// Get the Debugger.Script referent as bare Cell. This should only be used for
+// GC operations like tracing. Please use GetScriptReferent below.
+static inline gc::Cell*
+GetScriptReferentCell(JSObject* obj)
+{
+    MOZ_ASSERT(obj->getClass() == &DebuggerScript_class);
+    return static_cast<gc::Cell*>(obj->as<NativeObject>().getPrivate());
+}
+
+static inline DebuggerScriptReferent
 GetScriptReferent(JSObject* obj)
 {
     MOZ_ASSERT(obj->getClass() == &DebuggerScript_class);
-    return static_cast<JSScript*>(obj->as<NativeObject>().getPrivate());
+    if (gc::Cell* cell = GetScriptReferentCell(obj)) {
+        if (cell->getTraceKind() == JS::TraceKind::Script)
+            return AsVariant(static_cast<JSScript*>(cell));
+        MOZ_ASSERT(cell->getTraceKind() == JS::TraceKind::Object);
+        return AsVariant(&static_cast<NativeObject*>(cell)->as<WasmModuleObject>());
+    }
+    return AsVariant(static_cast<JSScript*>(nullptr));
 }
 
 void
 DebuggerScript_trace(JSTracer* trc, JSObject* obj)
 {
     /* This comes from a private pointer, so no barrier needed. */
-    if (JSScript* script = GetScriptReferent(obj)) {
-        TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &script, "Debugger.Script referent");
-        obj->as<NativeObject>().setPrivateUnbarriered(script);
+    DebuggerScriptReferent referent = GetScriptReferent(obj);
+    if (referent.is<JSScript*>()) {
+        if (JSScript* script = referent.as<JSScript*>()) {
+            TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &script,
+                                                       "Debugger.Script script referent");
+            obj->as<NativeObject>().setPrivateUnbarriered(script);
+        }
+    } else {
+        JSObject* wasm = referent.as<WasmModuleObject*>();
+        TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &wasm,
+                                                   "Debugger.Script wasm referent");
+        obj->as<NativeObject>().setPrivateUnbarriered(wasm);
     }
 }
 
@@ -4965,7 +5006,7 @@ Debugger::wrapScript(JSContext* cx, HandleScript script)
         }
     }
 
-    MOZ_ASSERT(GetScriptReferent(p->value()) == script);
+    MOZ_ASSERT(GetScriptReferent(p->value()).as<JSScript*>() == script);
     return p->value();
 }
 
@@ -4985,8 +5026,7 @@ DebuggerScript_check(JSContext* cx, const Value& v, const char* clsname, const c
      * Check for Debugger.Script.prototype, which is of class DebuggerScript_class
      * but whose script is null.
      */
-    if (!GetScriptReferent(thisobj)) {
-        MOZ_ASSERT(!GetScriptReferent(thisobj));
+    if (!GetScriptReferentCell(thisobj)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              clsname, fnname, "prototype object");
         return nullptr;
@@ -4995,18 +5035,39 @@ DebuggerScript_check(JSContext* cx, const Value& v, const char* clsname, const c
     return thisobj;
 }
 
+template <typename ReferentT>
 static JSObject*
-DebuggerScript_checkThis(JSContext* cx, const CallArgs& args, const char* fnname)
+DebuggerScript_checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
+                         const char* refname)
 {
-    return DebuggerScript_check(cx, args.thisv(), "Debugger.Script", fnname);
+    JSObject* thisobj = DebuggerScript_check(cx, args.thisv(), "Debugger.Script", fnname);
+    if (!thisobj)
+        return nullptr;
+
+    if (!GetScriptReferent(thisobj).is<ReferentT>()) {
+        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
+                              JSDVG_SEARCH_STACK, args.thisv(), nullptr,
+                              refname, nullptr);
+        return nullptr;
+    }
+
+    return thisobj;
 }
+
+#define THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, fnname, args, obj, referent)        \
+    CallArgs args = CallArgsFromVp(argc, vp);                                       \
+    RootedObject obj(cx, DebuggerScript_check(cx, args.thisv(), fnname));           \
+    if (!obj)                                                                       \
+        return false;                                                               \
+    Rooted<DebuggerScriptReferent> referent(cx, GetScriptReferent(obj))
 
 #define THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, fnname, args, obj, script)            \
     CallArgs args = CallArgsFromVp(argc, vp);                                       \
-    RootedObject obj(cx, DebuggerScript_checkThis(cx, args, fnname));               \
+    RootedObject obj(cx, DebuggerScript_checkThis<JSScript*>(cx, args, fnname,      \
+                                                             "a JS script"));       \
     if (!obj)                                                                       \
         return false;                                                               \
-    Rooted<JSScript*> script(cx, GetScriptReferent(obj))
+    RootedScript script(cx, GetScriptReferent(obj).as<JSScript*>())
 
 static bool
 DebuggerScript_getDisplayName(JSContext* cx, unsigned argc, Value* vp)
