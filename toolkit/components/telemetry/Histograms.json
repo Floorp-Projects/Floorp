@@ -10429,5 +10429,12 @@
     "high": 100,
     "n_buckets": 50,
     "description": "Position in (theoretical) tab cache of tab being switched to"
+  },
+  "REMOTE_JAR_PROTOCOL_USED": {
+    "alert_emails": ["dev-platform@lists.mozilla.org"],
+    "expires_in_version": "55",
+    "bug_numbers": [1255934],
+    "kind": "count",
+    "description": "Remote JAR protocol usage"
   }
 }
