@@ -4634,18 +4634,27 @@ var CombinedStopReload = {
 };
 
 var TabsProgressListener = {
+  // Keep track of which browsers we've started load timers for, since
+  // we won't see STATE_START events for pre-rendered tabs.
+  _startedLoadTimer: new WeakSet(),
+
   onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     // Collect telemetry data about tab load times.
     if (aWebProgress.isTopLevel && (!aRequest.originalURI || aRequest.originalURI.spec.scheme != "about")) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+          this._startedLoadTimer.add(aBrowser);
           TelemetryStopwatch.start("FX_PAGE_LOAD_MS", aBrowser);
           Services.telemetry.getHistogramById("FX_TOTAL_TOP_VISITS").add(true);
-        } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+        } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+                   this._startedLoadTimer.has(aBrowser)) {
+          this._startedLoadTimer.delete(aBrowser);
           TelemetryStopwatch.finish("FX_PAGE_LOAD_MS", aBrowser);
         }
       } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-                 aStatus == Cr.NS_BINDING_ABORTED) {
+                 aStatus == Cr.NS_BINDING_ABORTED &&
+                 this._startedLoadTimer.has(aBrowser)) {
+        this._startedLoadTimer.delete(aBrowser);
         TelemetryStopwatch.cancel("FX_PAGE_LOAD_MS", aBrowser);
       }
     }
@@ -6261,45 +6270,51 @@ var MailIntegration = {
 };
 
 function BrowserOpenAddonsMgr(aView) {
-  if (aView) {
-    let emWindow;
-    let browserWindow;
+  return new Promise(resolve => {
+    if (aView) {
+      let emWindow;
+      let browserWindow;
 
-    var receivePong = function receivePong(aSubject, aTopic, aData) {
-      let browserWin = aSubject.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIWebNavigation)
-                               .QueryInterface(Ci.nsIDocShellTreeItem)
-                               .rootTreeItem
-                               .QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIDOMWindow);
-      if (!emWindow || browserWin == window /* favor the current window */) {
-        emWindow = aSubject;
-        browserWindow = browserWin;
+      var receivePong = function receivePong(aSubject, aTopic, aData) {
+        let browserWin = aSubject.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIWebNavigation)
+                                 .QueryInterface(Ci.nsIDocShellTreeItem)
+                                 .rootTreeItem
+                                 .QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindow);
+        if (!emWindow || browserWin == window /* favor the current window */) {
+          emWindow = aSubject;
+          browserWindow = browserWin;
+        }
+      }
+      Services.obs.addObserver(receivePong, "EM-pong", false);
+      Services.obs.notifyObservers(null, "EM-ping", "");
+      Services.obs.removeObserver(receivePong, "EM-pong");
+
+      if (emWindow) {
+        emWindow.loadView(aView);
+        browserWindow.gBrowser.selectedTab =
+          browserWindow.gBrowser._getTabForContentWindow(emWindow);
+        emWindow.focus();
+        resolve(emWindow);
+        return;
       }
     }
-    Services.obs.addObserver(receivePong, "EM-pong", false);
-    Services.obs.notifyObservers(null, "EM-ping", "");
-    Services.obs.removeObserver(receivePong, "EM-pong");
 
-    if (emWindow) {
-      emWindow.loadView(aView);
-      browserWindow.gBrowser.selectedTab =
-        browserWindow.gBrowser._getTabForContentWindow(emWindow);
-      emWindow.focus();
-      return;
+    switchToTabHavingURI("about:addons", true);
+
+    if (aView) {
+      // This must be a new load, else the ping/pong would have
+      // found the window above.
+      Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+        Services.obs.removeObserver(observer, aTopic);
+        aSubject.loadView(aView);
+        resolve(aSubject);
+      }, "EM-loaded", false);
+    } else {
+      resolve();
     }
-  }
-
-  var newLoad = !switchToTabHavingURI("about:addons", true);
-
-  if (aView) {
-    // This must be a new load, else the ping/pong would have
-    // found the window above.
-    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(observer, aTopic);
-      aSubject.loadView(aView);
-    }, "EM-loaded", false);
-  }
+  });
 }
 
 function AddKeywordForSearchField() {

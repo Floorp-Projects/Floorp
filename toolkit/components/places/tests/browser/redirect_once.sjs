@@ -4,6 +4,6 @@
  */
 
 function handleRequest(request, response) {
-  response.setStatusLine("1.1", 302, "Found");
+  response.setStatusLine("1.1", 301, "Found");
   response.setHeader("Location", "final.html", false);
 }

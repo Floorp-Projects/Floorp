@@ -267,6 +267,7 @@ DevToolsLoader.prototype = {
 
     // Pass through internal loader settings specific to this loader instance
     this._provider.invisibleToDebugger = this.invisibleToDebugger;
+    // Changes here should be mirrored to devtools/.eslintrc.
     this._provider.globals = {
       isWorker: false,
       reportError: Cu.reportError,

@@ -1070,16 +1070,16 @@ function waitForMessages(options) {
   }
 
   function checkSource(rule, element) {
-    let location = element.querySelector(".message-location");
+    let location = getRenderedSource(element);
     if (!location) {
       return false;
     }
 
-    if (!checkText(rule.source.url, location.getAttribute("title"))) {
+    if (!checkText(rule.source.url, location.url)) {
       return false;
     }
 
-    if ("line" in rule.source && location.sourceLine != rule.source.line) {
+    if ("line" in rule.source && location.line === rule.source.line) {
       return false;
     }
 
@@ -1111,10 +1111,10 @@ function waitForMessages(options) {
       }
 
       if (expected.file) {
-        let file = frame.querySelector(".message-location").title;
-        if (!checkText(expected.file, file)) {
+        let url = getRenderedSource(frame).url;
+        if (!checkText(expected.file, url)) {
           ok(false, "frame #" + i + " does not match file name: " +
-                    expected.file + " != " + file);
+                    expected.file + " != " + url);
           displayErrorContext(rule, element);
           return false;
         }
@@ -1131,7 +1131,7 @@ function waitForMessages(options) {
       }
 
       if (expected.line) {
-        let line = frame.querySelector(".message-location").sourceLine;
+        let line = getRenderedSource(frame).line;
         if (!checkText(expected.line, line)) {
           ok(false, "frame #" + i + " does not match the line number: " +
                     expected.line + " != " + line);
@@ -1317,9 +1317,9 @@ function waitForMessages(options) {
   function onMessagesAdded(event, newMessages) {
     for (let msg of newMessages) {
       let elem = msg.node;
-      let location = elem.querySelector(".message-location");
-      if (location) {
-        let url = location.title;
+      let location = getRenderedSource(elem);
+      if (location && location.url) {
+        let url = location.url;
         // Prevent recursion with the browser console and any potential
         // messages coming from head.js.
         if (url.indexOf("devtools/client/webconsole/test/head.js") != -1) {
@@ -1752,4 +1752,13 @@ function simulateMessageLinkClick(element, expectedLink) {
   element.dispatchEvent(event);
 
   return deferred.promise;
+}
+
+function getRenderedSource (root) {
+  let location = root.querySelector(".message-location .frame-link");
+  return location ? {
+    url: location.getAttribute("data-url"),
+    line: location.getAttribute("data-line"),
+    column: location.getAttribute("data-column"),
+  } : null;
 }

@@ -106,6 +106,33 @@
             "optional": true
           },
 
+          "options_ui": {
+            "type": "object",
+
+            "optional": true,
+
+            "properties": {
+              "page": { "$ref": "ExtensionURL" },
+              "browser_style": {
+                "type": "boolean",
+                "optional": true
+              },
+              "chrome_style": {
+                "type": "boolean",
+                "optional": true
+              },
+              "open_in_tab": {
+                "type": "boolean",
+                "optional": true
+              }
+            },
+
+            "additionalProperties": {
+              "type": "any",
+              "deprecated": "An unexpected property was found in the WebExtension manifest"
+            }
+          },
+
           "content_scripts": {
             "type": "array",
             "optional": true,

@@ -43,8 +43,8 @@ function test() {
 
     let exceptionMsg = [...exceptionRule.matched][0];
     let consoleMsg = [...consoleRule.matched][0];
-    let nodes = [exceptionMsg.querySelector(".message-location"),
-                 consoleMsg.querySelector(".message-location")];
+    let nodes = [exceptionMsg.querySelector(".message-location > .frame-link"),
+                 consoleMsg.querySelector(".message-location > .frame-link")];
     ok(nodes[0], ".location node for the exception message");
     ok(nodes[1], ".location node for the console message");
 
@@ -60,14 +60,14 @@ function test() {
   function* checkClickOnNode(index, node) {
     info("checking click on node index " + index);
 
-    let url = node.getAttribute("title");
+    let url = node.getAttribute("data-url");
     ok(url, "source url found for index " + index);
 
-    let line = node.sourceLine;
+    let line = node.getAttribute("data-line");
     ok(line, "found source line for index " + index);
 
     executeSoon(() => {
-      EventUtils.sendMouseEvent({ type: "click" }, node);
+      EventUtils.sendMouseEvent({ type: "click" }, node.querySelector(".frame-link-filename"));
     });
 
     yield hud.ui.once("source-in-debugger-opened");

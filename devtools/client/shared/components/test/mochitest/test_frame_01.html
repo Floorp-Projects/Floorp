@@ -137,6 +137,60 @@ window.onload = Task.async(function* () {
       shouldLink: true,
     });
 
+    // Check when source is via Scratchpad; we should render out the
+    // lines and columns as this is linkable.
+    frame = ReactDOM.render(Frame({
+      frame: {
+        source: "Scratchpad/1",
+        line: 10,
+        column: 50,
+      },
+      onClick: ()=>{},
+    }), window.document.body);
+    yield forceRender(frame);
+    checkFrameString({
+      frame,
+      file: "Scratchpad/1",
+      line: 10,
+      column: 50,
+      shouldLink: true,
+    });
+
+    // Check that line and column can be strings
+    frame = ReactDOM.render(Frame({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: "10",
+        column: "55",
+      },
+      onClick: ()=>{},
+    }), window.document.body);
+    yield forceRender(frame);
+    checkFrameString({
+      frame,
+      file: "mahscripts.js",
+      line: 10,
+      column: 55,
+      shouldLink: true,
+    });
+
+    // Check that line and column can be strings,
+    // and that the `0` rendering rules apply when they are strings as well
+    frame = ReactDOM.render(Frame({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: "0",
+        column: "55",
+      },
+      onClick: ()=>{},
+    }), window.document.body);
+    yield forceRender(frame);
+    checkFrameString({
+      frame,
+      file: "mahscripts.js",
+      shouldLink: true,
+    });
+
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {

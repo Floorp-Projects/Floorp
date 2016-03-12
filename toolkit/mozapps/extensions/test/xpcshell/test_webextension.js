@@ -25,6 +25,17 @@ function promiseAddonStartup() {
   });
 }
 
+function promiseInstallWebExtension(aData) {
+  let addonFile = createTempWebExtensionFile(aData);
+
+  return promiseInstallAllFiles([addonFile]).then(() => {
+    Services.obs.notifyObservers(addonFile, "flush-cache-entry", null);
+    return promiseAddonStartup();
+  }).then(() => {
+    return promiseAddonByID(aData.id);
+  });
+}
+
 add_task(function*() {
   do_check_eq(GlobalManager.count, 0);
   do_check_false(GlobalManager.extensionMap.has(ID));
@@ -262,4 +273,42 @@ add_task(function*() {
   do_check_eq(last_addon, null);
 
   yield promiseRestartManager();
+});
+
+// Test that the "options_ui" manifest section is processed correctly.
+add_task(function* test_options_ui() {
+  let OPTIONS_RE = /^moz-extension:\/\/[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}\/options\.html$/;
+
+  let addon = yield promiseInstallWebExtension({
+    manifest: {
+      "options_ui": {
+        "page": "options.html",
+      },
+    },
+  });
+
+  equal(addon.optionsType, AddonManager.OPTIONS_TYPE_INLINE_BROWSER,
+        "Addon should have an INLINE_BROWSER options type");
+
+  ok(OPTIONS_RE.test(addon.optionsURL),
+     "Addon should have a moz-extension: options URL for /options.html");
+
+  addon.uninstall();
+
+  addon = yield promiseInstallWebExtension({
+    manifest: {
+      "options_ui": {
+        "page": "options.html",
+        "open_in_tab": true,
+      },
+    },
+  });
+
+  equal(addon.optionsType, AddonManager.OPTIONS_TYPE_TAB,
+        "Addon should have a TAB options type");
+
+  ok(OPTIONS_RE.test(addon.optionsURL),
+     "Addon should have a moz-extension: options URL for /options.html");
+
+  addon.uninstall();
 });
