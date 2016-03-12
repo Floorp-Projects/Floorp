@@ -165,16 +165,33 @@ CoverageCollector.prototype._getMethodNames = function() {
 CoverageCollector.prototype.recordTestCoverage = function (testName) {
   dump("Collecting coverage for: " + testName + "\n");
   let rawLines = this._getLinesCovered(testName);
+  let methods = this._getMethodNames();
+  let uncoveredLines = this._getUncoveredLines();
   let result = [];
+  let versionControlBlock = {version: 1.0};
+  result.push(versionControlBlock);
+
   for (let scriptName in rawLines) {
     let rec = {
       testUrl: testName,
       sourceFile: scriptName,
-      covered: []
+      methods: {},
+      covered: [],
+      uncovered: []
     };
+
+    for (let methodName in methods[scriptName]){
+      rec.methods[methodName] = methods[scriptName][methodName];
+    }
+
     for (let line of rawLines[scriptName]) {
       rec.covered.push(line);
     }
+
+    for (let line of uncoveredLines[scriptName]){
+      rec.uncovered.push(line);
+    }
+
     result.push(rec);
   }
   let arr = this._encoder.encode(JSON.stringify(result, null, 2));
