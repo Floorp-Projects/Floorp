@@ -26,16 +26,15 @@
 
 namespace js {
 
-class TypedArrayObject;
 class StringBuffer;
 
 namespace wasm {
 
-// Translate the given binary representation of a wasm module (given by a
-// typed array) into the module's textual representation.
+// Translate the given binary representation of a wasm module into the module's textual
+// representation.
 
 bool
-BinaryToText(JSContext* cx, Handle<TypedArrayObject*> code, StringBuffer& buffer);
+BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer);
 
 }  // namespace wasm
 

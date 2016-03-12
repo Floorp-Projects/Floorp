@@ -6463,19 +6463,7 @@ class DebuggerSourceGetTextMatcher
     }
 
     ReturnType match(Handle<WasmModuleObject*> wasmModule) {
-        const char* placeholder =
-            "/*\n"
-            " * .--.      .--.   ____       .-'''-. ,---.    ,---.\n"
-            " * |  |_     |  | .'  __ `.   / _     \\|    \\  /    |\n"
-            " * | _( )_   |  |/   '  \\  \\ (`' )/`--'|  ,  \\/  ,  |\n"
-            " * |(_ o _)  |  ||___|  /  |(_ o _).   |  |\\_   /|  |\n"
-            " * | (_,_) \\ |  |   _.-`   | (_,_). '. |  _( )_/ |  |\n"
-            " * |  |/    \\|  |.'   _    |.---.  \\  :| (_ o _) |  |\n"
-            " * |  '  /\\  `  ||  _( )_  |\\    `-'  ||  (_,_)  |  |\n"
-            " * |    /  \\    |\\ (_ o _) / \\       / |  |      |  |\n"
-            " * `---'    `---` '.(_,_).'   `-...-'  '--'      '--'\n"
-            " */";
-        return NewStringCopyZ<CanGC>(cx_, placeholder);
+        return wasmModule->module().createText(cx_);
     }
 };
 
