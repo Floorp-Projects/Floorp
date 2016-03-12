@@ -89,4 +89,11 @@ js::Debugger::onIonCompilation(JSContext* cx, Handle<ScriptVector> scripts, LSpr
     slowPathOnIonCompilation(cx, scripts, graph);
 }
 
+/* static */ void
+js::Debugger::onNewWasmModule(JSContext* cx, Handle<WasmModuleObject*> wasmModule)
+{
+    if (cx->compartment()->isDebuggee())
+        slowPathOnNewWasmModule(cx, wasmModule);
+}
+
 #endif /* vm_Debugger_inl_h */
