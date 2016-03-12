@@ -5,7 +5,7 @@ function f(param) {
   var w;
   return eval("\
     (function(){\
-      __defineGetter__(\"y\", function()({\
+      this.__defineGetter__(\"y\", function()({\
         x: function(){ return w }()\
       }))\
     });\
