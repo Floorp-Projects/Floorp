@@ -53,6 +53,8 @@ using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::MakeScopeExit;
 using mozilla::Maybe;
+using mozilla::Some;
+using mozilla::Nothing;
 using mozilla::Variant;
 using mozilla::AsVariant;
 
@@ -6493,16 +6495,32 @@ DebuggerSource_getText(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-struct DebuggerSourceGetURLMatcher
+class DebuggerSourceGetURLMatcher
 {
-    using ReturnType = const char*;
+    JSContext* cx_;
+
+  public:
+    explicit DebuggerSourceGetURLMatcher(JSContext* cx) : cx_(cx) { }
+
+    using ReturnType = Maybe<JSString*>;
+
     ReturnType match(HandleScriptSource sourceObject) {
         ScriptSource* ss = sourceObject->source();
         MOZ_ASSERT(ss);
-        return ss->filename();
+        if (ss->filename()) {
+            JSString* str = NewStringCopyZ<CanGC>(cx_, ss->filename());
+            return Some(str);
+        }
+        return Nothing();
     }
     ReturnType match(Handle<WasmModuleObject*> wasmModule) {
-        return wasmModule->module().filename();
+        // TODOshu: Until wasm modules have real URLs, append "> wasm" to the
+        // end to prevent them from being blacklisted by devtools by having
+        // the same value as a source mapped URL.
+        char* buf = JS_smprintf("%s > wasm", wasmModule->module().filename());
+        JSString* str = NewStringCopyZ<CanGC>(cx_, buf);
+        JS_smprintf_free(buf);
+        return Some(str);
     }
 };
 
@@ -6511,12 +6529,12 @@ DebuggerSource_getURL(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get url)", args, obj, referent);
 
-    DebuggerSourceGetURLMatcher matcher;
-    if (const char* url = referent.match(matcher)) {
-        JSString* str = NewStringCopyZ<CanGC>(cx, url);
-        if (!str)
+    DebuggerSourceGetURLMatcher matcher(cx);
+    Maybe<JSString*> str = referent.match(matcher);
+    if (str.isSome()) {
+        if (!*str)
             return false;
-        args.rval().setString(str);
+        args.rval().setString(*str);
     } else {
         args.rval().setNull();
     }
