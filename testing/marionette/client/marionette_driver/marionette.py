@@ -196,8 +196,8 @@ class Actions(object):
         # navigate to the file
         marionette.navigate(testAction)
         # find element1 and element2
-        element1 = marionette.find_element("id", "element1")
-        element2 = marionette.find_element("id", "element2")
+        element1 = marionette.find_element(By.ID, "element1")
+        element2 = marionette.find_element(By.ID, "element2")
         # create action object
         action = Actions(marionette)
         # add actions (press, wait, move, release) into the object
@@ -1626,7 +1626,7 @@ class Marionette(object):
             result = marionette.execute_script("return arguments[0] + arguments[1];",
                                                script_args=[2, 3])
             assert result == 5
-            some_element = marionette.find_element("id", "someElement")
+            some_element = marionette.find_element(By.ID, "someElement")
             sid = marionette.execute_script("return arguments[0].id;", script_args=[some_element])
             assert some_element.get_attribute("id") == sid
 

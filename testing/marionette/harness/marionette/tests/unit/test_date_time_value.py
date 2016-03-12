@@ -5,6 +5,8 @@
 from marionette import MarionetteTestCase
 from datetime import datetime
 from marionette_driver.date_time_value import DateTimeValue
+from marionette_driver.by import By
+
 
 class TestDateTime(MarionetteTestCase):
 
@@ -12,7 +14,7 @@ class TestDateTime(MarionetteTestCase):
         test_html = self.marionette.absolute_url("datetimePage.html")
         self.marionette.navigate(test_html)
 
-        element = self.marionette.find_element("id", "date-test")
+        element = self.marionette.find_element(By.ID, "date-test")
         dt_value = DateTimeValue(element)
         dt_value.date = datetime(1998, 6, 2)
         self.assertEqual(element.get_attribute("value"), "1998-06-02")
@@ -21,7 +23,7 @@ class TestDateTime(MarionetteTestCase):
         test_html = self.marionette.absolute_url("datetimePage.html")
         self.marionette.navigate(test_html)
 
-        element = self.marionette.find_element("id", "time-test")
+        element = self.marionette.find_element(By.ID, "time-test")
         dt_value = DateTimeValue(element)
         dt_value.time = datetime(1998, 11, 19, 9, 8, 7)
         self.assertEqual(element.get_attribute("value"), "09:08:07")

@@ -14,7 +14,7 @@ class SelectionManager(object):
 
     ::
 
-        element = marionette.find_element('id', 'input')
+        element = marionette.find_element(By.ID, 'input')
         sel = SelectionManager(element)
         sel.move_caret_to_front()
 

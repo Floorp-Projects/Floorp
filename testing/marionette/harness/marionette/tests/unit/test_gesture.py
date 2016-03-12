@@ -4,6 +4,8 @@
 
 from marionette import MarionetteTestCase
 from marionette.gestures import smooth_scroll
+from marionette_driver.by import By
+
 
 class testGestures(MarionetteTestCase):
     check_in_viewport = """
@@ -19,10 +21,10 @@ class testGestures(MarionetteTestCase):
     def test_smooth_scroll(self):
         testAction = self.marionette.absolute_url("testAction.html")
         self.marionette.navigate(testAction)
-        button = self.marionette.find_element("id", "button2")
+        button = self.marionette.find_element(By.ID, "button2")
         self.assertFalse(self.marionette.execute_script("%s; return elementInViewport(document.getElementById('buttonScroll'));" % self.check_in_viewport))
         smooth_scroll(self.marionette, button, "y",  -1, 800)
-        buttonScroll = self.marionette.find_element("id", "buttonScroll")
+        buttonScroll = self.marionette.find_element(By.ID, "buttonScroll")
         self.wait_for_condition(lambda m: m.execute_script("%s; return elementInViewport(arguments[0]);" % self.check_in_viewport, [buttonScroll]) == True)
         self.assertEqual("button2-touchstart", self.marionette.execute_script("return document.getElementById('button2').innerHTML;"))
 
@@ -31,6 +33,6 @@ class testGestures(MarionetteTestCase):
     def test_pinch(self):
         testAction = self.marionette.absolute_url("testAction.html")
         self.marionette.navigate(testAction)
-        button = self.marionette.find_element("id", "button1")
+        button = self.marionette.find_element(By.ID, "button1")
         pinch(self.marionette, button, 0, 0, 0, 0, 0, -50, 0, 50)
     """

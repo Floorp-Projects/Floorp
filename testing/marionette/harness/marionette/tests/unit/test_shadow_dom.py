@@ -4,6 +4,7 @@
 
 from marionette import MarionetteTestCase
 from marionette_driver.errors import (NoSuchElementException, StaleElementException)
+from marionette_driver.by import By
 
 
 class TestShadowDom(MarionetteTestCase):
@@ -13,9 +14,9 @@ class TestShadowDom(MarionetteTestCase):
         self.marionette.enforce_gecko_prefs({"dom.webcomponents.enabled": True})
         self.marionette.navigate(self.marionette.absolute_url("test_shadow_dom.html"))
 
-        self.host = self.marionette.find_element("id", "host")
+        self.host = self.marionette.find_element(By.ID, "host")
         self.marionette.switch_to_shadow_root(self.host)
-        self.button = self.marionette.find_element("id", "button")
+        self.button = self.marionette.find_element(By.ID, "button")
 
     def test_shadow_dom(self):
         # Button in shadow root should be actionable
@@ -44,14 +45,14 @@ class TestShadowDom(MarionetteTestCase):
         self.marionette.switch_to_shadow_root()
         # When no ShadowRoot is found, switch_to_shadow_root throws NoSuchElementException
         self.assertRaises(NoSuchElementException, self.marionette.switch_to_shadow_root,
-                          self.marionette.find_element("id", "empty-host"))
+                          self.marionette.find_element(By.ID, "empty-host"))
 
     def test_inner_shadow_dom(self):
         # Button in shadow root should be actionable
         self.button.click()
-        self.inner_host = self.marionette.find_element("id", "inner-host")
+        self.inner_host = self.marionette.find_element(By.ID, "inner-host")
         self.marionette.switch_to_shadow_root(self.inner_host)
-        self.inner_button = self.marionette.find_element("id", "inner-button")
+        self.inner_button = self.marionette.find_element(By.ID, "inner-button")
         # Nested nutton in nested shadow root should be actionable
         self.inner_button.click()
         self.marionette.switch_to_shadow_root()
