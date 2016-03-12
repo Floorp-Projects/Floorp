@@ -777,6 +777,32 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
 };
 
 template <>
+struct ParamTraits<mozilla::layers::ScrollSnapInfo>
+{
+  typedef mozilla::layers::ScrollSnapInfo paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mScrollSnapTypeX);
+    WriteParam(aMsg, aParam.mScrollSnapTypeY);
+    WriteParam(aMsg, aParam.mScrollSnapIntervalX);
+    WriteParam(aMsg, aParam.mScrollSnapIntervalY);
+    WriteParam(aMsg, aParam.mScrollSnapDestination);
+    WriteParam(aMsg, aParam.mScrollSnapCoordinates);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mScrollSnapTypeX) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollSnapTypeY) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollSnapIntervalX) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollSnapIntervalY) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollSnapDestination) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollSnapCoordinates));
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::layers::ScrollMetadata>
 {
   typedef mozilla::layers::ScrollMetadata paramType;
@@ -784,6 +810,7 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, aParam.mMetrics);
+    WriteParam(aMsg, aParam.mSnapInfo);
     WriteParam(aMsg, aParam.mMaskLayerIndex);
     WriteParam(aMsg, aParam.mClipRect);
   }
@@ -791,6 +818,7 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return (ReadParam(aMsg, aIter, &aResult->mMetrics) &&
+            ReadParam(aMsg, aIter, &aResult->mSnapInfo) &&
             ReadParam(aMsg, aIter, &aResult->mMaskLayerIndex) &&
             ReadParam(aMsg, aIter, &aResult->mClipRect));
   }

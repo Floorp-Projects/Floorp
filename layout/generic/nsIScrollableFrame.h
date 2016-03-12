@@ -48,6 +48,7 @@ public:
   typedef mozilla::CSSIntPoint CSSIntPoint;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::layers::FrameMetrics FrameMetrics;
+  typedef mozilla::layers::ScrollSnapInfo ScrollSnapInfo;
 
   NS_DECL_QUERYFRAME_TARGET(nsIScrollableFrame)
 
@@ -470,6 +471,11 @@ public:
    * own displayport and schedule a timer to do that if it is safe.
    */
   virtual void TriggerDisplayPortExpiration() = 0;
+
+  /**
+   * Returns information required to determine where to snap to after a scroll.
+   */
+  virtual ScrollSnapInfo GetScrollSnapInfo() const = 0;
 };
 
 #endif
