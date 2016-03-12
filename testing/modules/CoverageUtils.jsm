@@ -123,6 +123,40 @@ CoverageCollector.prototype._getUncoveredLines = function() {
   return uncoveredLines;
 }
 
+CoverageCollector.prototype._getMethodNames = function() {
+  let methodNames = {};
+  this._scripts.forEach(s => {
+    let method = s.displayName;
+    // If the method name is undefined, we return early
+    if (!method){
+      return;
+    }
+
+    let scriptName = s.url;
+    let tempMethodCov = [];
+    let scriptOffsets = s.getAllOffsets();
+
+    if (!methodNames[scriptName]){
+      methodNames[scriptName] = {};
+    }
+
+    /**
+    * Get all lines contained within the method and
+    * push a record of the form:
+    * <method name> : <lines covered>
+    */
+    scriptOffsets.forEach(function (element, index){
+      if (!element){
+        return;
+      }
+      tempMethodCov.push(index);
+    });
+    methodNames[scriptName][method] = tempMethodCov;
+  });
+
+  return methodNames;
+}
+
 /**
  * Records lines covered since the last time coverage was recorded,
  * associating them with the given test name. The result is written
