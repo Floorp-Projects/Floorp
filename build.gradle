@@ -123,17 +123,3 @@ idea {
 
 task wrapper(type: Wrapper) {
 }
-
-// From http://jdpgrailsdev.github.io/blog/2014/10/28/gradle_resolve_all_dependencies.html.
-task resolveDependencies {
-    doLast {
-        project.rootProject.allprojects.each { subProject ->
-            subProject.buildscript.configurations.each { configuration ->
-                configuration.resolve()
-            }
-            subProject.configurations.each { configuration ->
-                configuration.resolve()
-            }
-        }
-    }
-}
