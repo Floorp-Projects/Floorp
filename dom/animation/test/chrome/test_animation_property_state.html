@@ -1,8 +1,8 @@
 <!doctype html>
 <head>
 <meta charset=utf-8>
-<title>Bug 1196114 - Animation property which indicates
-       running on the compositor or not</title>
+<title>Bug 1196114 - Test metadata related to which animation properties
+       are running on the compositor</title>
 <script type="application/javascript" src="../testharness.js"></script>
 <script type="application/javascript" src="../testharnessreport.js"></script>
 <script type="application/javascript" src="../testcommon.js"></script>
@@ -215,7 +215,7 @@ gAnimationsTests.forEach(function(subtest) {
     var animation = div.animate(subtest.frames, 100000);
     return animation.ready.then(t.step_func(function() {
       assert_animation_property_state_equals(
-        animation.effect.getPropertyState(),
+        animation.effect.getProperties(),
         subtest.expected);
     }));
   }, subtest.desc);
@@ -501,7 +501,7 @@ function start() {
       var animation = div.animate(subtest.frames, 100000);
       return animation.ready.then(t.step_func(function() {
         assert_animation_property_state_equals(
-          animation.effect.getPropertyState(),
+          animation.effect.getProperties(),
           subtest.expected);
       }));
     }, subtest.desc);
@@ -518,19 +518,19 @@ function start() {
       var animation = div.animate(subtest.frames, 100000);
       return animation.ready.then(t.step_func(function() {
         assert_property_state_on_compositor(
-          animation.effect.getPropertyState(),
+          animation.effect.getProperties(),
           subtest.expected);
         div.style = subtest.style;
         return waitForFrame();
       })).then(t.step_func(function() {
         assert_animation_property_state_equals(
-          animation.effect.getPropertyState(),
+          animation.effect.getProperties(),
           subtest.expected);
         div.style = '';
         return waitForFrame();
       })).then(t.step_func(function() {
         assert_property_state_on_compositor(
-          animation.effect.getPropertyState(),
+          animation.effect.getProperties(),
           subtest.expected);
       }));
     }, subtest.desc);
@@ -554,7 +554,7 @@ function start() {
       return waitForAllAnimations(animations).then(t.step_func(function() {
         animations.forEach(t.step_func(function(anim) {
           assert_property_state_on_compositor(
-            anim.effect.getPropertyState(),
+            anim.effect.getProperties(),
             anim.expected);
         }));
         div.style = subtest.style;
@@ -562,7 +562,7 @@ function start() {
       })).then(t.step_func(function() {
         animations.forEach(t.step_func(function(anim) {
           assert_animation_property_state_equals(
-            anim.effect.getPropertyState(),
+            anim.effect.getProperties(),
             anim.expected);
         }));
         div.style = '';
@@ -570,7 +570,7 @@ function start() {
       })).then(t.step_func(function() {
         animations.forEach(t.step_func(function(anim) {
           assert_property_state_on_compositor(
-            anim.effect.getPropertyState(),
+            anim.effect.getProperties(),
             anim.expected);
         }));
       }));
@@ -590,7 +590,7 @@ function start() {
       return waitForAllAnimations(animations).then(t.step_func(function() {
         animations.forEach(t.step_func(function(anim) {
           assert_animation_property_state_equals(
-            anim.effect.getPropertyState(),
+            anim.effect.getProperties(),
             anim.expected);
         }));
       }));
@@ -613,7 +613,7 @@ function start() {
       return waitForAllAnimations(animations).then(t.step_func(function() {
         animations.forEach(t.step_func(function(anim) {
           assert_property_state_on_compositor(
-            anim.effect.getPropertyState(),
+            anim.effect.getProperties(),
             anim.expected);
         }));
       })).then(t.step_func(function() {
@@ -625,7 +625,7 @@ function start() {
         // the 'width' animation.
         animations.forEach(t.step_func(function(anim) {
           assert_animation_property_state_equals(
-            anim.effect.getPropertyState(),
+            anim.effect.getProperties(),
             anim.expected);
         }));
         // Remove the 'width' animation.
@@ -635,7 +635,7 @@ function start() {
         // Now all animations are running on compositor.
         animations.forEach(t.step_func(function(anim) {
           assert_property_state_on_compositor(
-            anim.effect.getPropertyState(),
+            anim.effect.getProperties(),
             anim.expected);
         }));
       }));
@@ -648,7 +648,7 @@ function start() {
       { transform: ['translate(0px)', 'translate(100px)'] }, 100000);
     return animation.ready.then(t.step_func(function() {
       assert_animation_property_state_equals(
-        animation.effect.getPropertyState(),
+        animation.effect.getProperties(),
         [ { property: 'transform', runningOnCompositor: true } ]);
       div.style = 'width: 10000px; height: 10000px';
       return waitForFrame();
@@ -659,7 +659,7 @@ function start() {
         "bigger than the viewport \\(\\d+, \\d+\\) or the visual rectangle " +
         "\\(10000, 10000\\) is larger than the max allowed value \\(\\d+\\)");
       assert_animation_property_state_equals(
-        animation.effect.getPropertyState(),
+        animation.effect.getProperties(),
         [ {
           property: 'transform',
           runningOnCompositor: false,
@@ -670,7 +670,7 @@ function start() {
     })).then(t.step_func(function() {
       // FIXME: Bug 1253164: the animation should get back on compositor.
       assert_animation_property_state_equals(
-        animation.effect.getPropertyState(),
+        animation.effect.getProperties(),
         [ { property: 'transform', runningOnCompositor: false } ]);
     }));
   }, 'transform on too big element');
@@ -693,13 +693,13 @@ function start() {
       { transform: ['translate(0px)', 'translate(100px)'] }, 100000);
     return animation.ready.then(t.step_func(function() {
       assert_animation_property_state_equals(
-        animation.effect.getPropertyState(),
+        animation.effect.getProperties(),
         [ { property: 'transform', runningOnCompositor: true } ]);
       svg.setAttribute('transform', 'translate(10, 20)');
       return waitForFrame();
     })).then(t.step_func(function() {
       assert_animation_property_state_equals(
-        animation.effect.getPropertyState(),
+        animation.effect.getProperties(),
         [ {
           property: 'transform',
           runningOnCompositor: false,
@@ -709,7 +709,7 @@ function start() {
       return waitForFrame();
     })).then(t.step_func(function() {
       assert_animation_property_state_equals(
-        animation.effect.getPropertyState(),
+        animation.effect.getProperties(),
         [ { property: 'transform', runningOnCompositor: true } ]);
     }));
   }, 'transform of nsIFrame with SVG transform');
