@@ -131,6 +131,11 @@ android {
         test {
             java {
                 srcDir "${topsrcdir}/mobile/android/tests/background/junit4/src"
+
+                if (!mozconfig.substs.MOZ_ANDROID_GCM) {
+                    exclude 'org/mozilla/gecko/gcm/**/*.java'
+                    exclude 'org/mozilla/gecko/push/**/*.java'
+                }
             }
         }
 
