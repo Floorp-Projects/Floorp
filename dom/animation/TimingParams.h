@@ -49,7 +49,8 @@ struct TimingParams
   // Caller must check aRv.Failed().
   template <class DoubleOrString>
   static Maybe<StickyTimeDuration> ParseDuration(DoubleOrString& aDuration,
-                                                 ErrorResult& aRv) {
+                                                 ErrorResult& aRv)
+  {
     Maybe<StickyTimeDuration> result;
     if (aDuration.IsUnrestrictedDouble()) {
       double durationInMs = aDuration.GetAsUnrestrictedDouble();
@@ -62,6 +63,14 @@ struct TimingParams
     }
     aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return result;
+  }
+
+  static void ValidateIterationStart(double aIterationStart,
+                                     ErrorResult& aRv)
+  {
+    if (aIterationStart < 0) {
+      aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+    }
   }
 
   // mDuration.isNothing() represents the "auto" value

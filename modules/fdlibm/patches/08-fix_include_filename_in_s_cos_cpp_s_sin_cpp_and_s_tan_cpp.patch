@@ -1,0 +1,74 @@
+# HG changeset patch
+# User Tooru Fujisawa <arai_a@mac.com>
+# Date 1452576930 -32400
+#      Tue Jan 12 14:35:30 2016 +0900
+# Node ID f89358beccec76c798b417ebd54eb9e153c6de02
+# Parent  c562cc8bf5092962341e3fd1a20223f244666e8b
+Bug 933257 - Part 2.8: Fix include filename in s_cos.cpp, s_sin.cpp, and s_tan.cpp.
+
+diff --git a/modules/fdlibm/src/s_cos.cpp b/modules/fdlibm/src/s_cos.cpp
+--- a/modules/fdlibm/src/s_cos.cpp
++++ b/modules/fdlibm/src/s_cos.cpp
+@@ -43,17 +43,17 @@
+  * Accuracy:
+  *	TRIG(x) returns trig(x) nearly rounded
+  */
+ 
+ #include <float.h>
+ 
+ #define INLINE_REM_PIO2
+ #include "math_private.h"
+-#include "e_rem_pio2.c"
++#include "e_rem_pio2.cpp"
+ 
+ double
+ cos(double x)
+ {
+ 	double y[2],z=0.0;
+ 	int32_t n, ix;
+ 
+     /* High word of x. */
+diff --git a/modules/fdlibm/src/s_sin.cpp b/modules/fdlibm/src/s_sin.cpp
+--- a/modules/fdlibm/src/s_sin.cpp
++++ b/modules/fdlibm/src/s_sin.cpp
+@@ -43,17 +43,17 @@
+  * Accuracy:
+  *	TRIG(x) returns trig(x) nearly rounded
+  */
+ 
+ #include <float.h>
+ 
+ #define INLINE_REM_PIO2
+ #include "math_private.h"
+-#include "e_rem_pio2.c"
++#include "e_rem_pio2.cpp"
+ 
+ double
+ sin(double x)
+ {
+ 	double y[2],z=0.0;
+ 	int32_t n, ix;
+ 
+     /* High word of x. */
+diff --git a/modules/fdlibm/src/s_tan.cpp b/modules/fdlibm/src/s_tan.cpp
+--- a/modules/fdlibm/src/s_tan.cpp
++++ b/modules/fdlibm/src/s_tan.cpp
+@@ -42,17 +42,17 @@
+  * Accuracy:
+  *	TRIG(x) returns trig(x) nearly rounded
+  */
+ 
+ #include <float.h>
+ 
+ #define INLINE_REM_PIO2
+ #include "math_private.h"
+-#include "e_rem_pio2.c"
++#include "e_rem_pio2.cpp"
+ 
+ double
+ tan(double x)
+ {
+ 	double y[2],z=0.0;
+ 	int32_t n, ix;
+ 
+     /* High word of x. */
