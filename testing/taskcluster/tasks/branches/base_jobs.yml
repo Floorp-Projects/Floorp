@@ -361,3 +361,4 @@ tasks:
     when:
       file_patterns:
         - 'testing/docker/android-gradle-build/**'
+        - '**/*.gradle'
