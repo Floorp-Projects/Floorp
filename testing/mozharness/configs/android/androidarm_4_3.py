@@ -180,7 +180,7 @@ config = {
                 "--httpd-path",
                 "%(modules_dir)s",
                 "--symbols-path=%(symbols_path)s",
-                "--total-chunks=2",
+                "--total-chunks=4",
                 "--suite=crashtest",
             ],
             "tests": ["tests/testing/crashtest/crashtests.list",],
@@ -201,7 +201,7 @@ config = {
                 "--httpd-path",
                 "%(modules_dir)s",
                 "--symbols-path=%(symbols_path)s",
-                "--total-chunks=4",
+                "--total-chunks=10",
                 "tests/testing/crashtest/crashtests.list",
             ],
         },
@@ -723,6 +723,14 @@ config = {
             "category": "crashtest",
             "extra_args": ["--this-chunk=2"],
         },
+        "crashtest-3": {
+            "category": "crashtest",
+            "extra_args": ["--this-chunk=3"],
+        },
+        "crashtest-4": {
+            "category": "crashtest",
+            "extra_args": ["--this-chunk=4"],
+        },
         "crashtest-debug-1": {
             "category": "crashtest-debug",
             "extra_args": ["--this-chunk=1"],
@@ -738,6 +746,30 @@ config = {
         "crashtest-debug-4": {
             "category": "crashtest-debug",
             "extra_args": ["--this-chunk=4"],
+        },
+        "crashtest-debug-5": {
+            "category": "crashtest-debug",
+            "extra_args": ["--this-chunk=5"],
+        },
+        "crashtest-debug-6": {
+            "category": "crashtest-debug",
+            "extra_args": ["--this-chunk=6"],
+        },
+        "crashtest-debug-7": {
+            "category": "crashtest-debug",
+            "extra_args": ["--this-chunk=7"],
+        },
+        "crashtest-debug-8": {
+            "category": "crashtest-debug",
+            "extra_args": ["--this-chunk=8"],
+        },
+        "crashtest-debug-9": {
+            "category": "crashtest-debug",
+            "extra_args": ["--this-chunk=9"],
+        },
+        "crashtest-debug-10": {
+            "category": "crashtest-debug",
+            "extra_args": ["--this-chunk=10"],
         },
         "xpcshell-1": {
             "category": "xpcshell",
