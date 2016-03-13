@@ -46,14 +46,14 @@ interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
 };
 
 // Non-standard extensions
-dictionary AnimationPropertyState {
-  DOMString property;
-  boolean runningOnCompositor;
+dictionary AnimationPropertyDetails {
+  DOMString  property;
+  boolean    runningOnCompositor;
   DOMString? warning;
 };
 
 partial interface KeyframeEffectReadOnly {
-  [ChromeOnly] sequence<AnimationPropertyState> getPropertyState();
+  [ChromeOnly] sequence<AnimationPropertyDetails> getProperties();
 };
 
 [Func="nsDocument::IsWebAnimationsEnabled",
