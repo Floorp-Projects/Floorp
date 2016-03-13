@@ -46,10 +46,18 @@ interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
 };
 
 // Non-standard extensions
+dictionary AnimationPropertyValueDetails {
+  double             offset;
+  DOMString          value;
+  DOMString          easing;
+  CompositeOperation composite;
+};
+
 dictionary AnimationPropertyDetails {
-  DOMString  property;
-  boolean    runningOnCompositor;
-  DOMString? warning;
+  DOMString                               property;
+  boolean                                 runningOnCompositor;
+  DOMString?                              warning;
+  sequence<AnimationPropertyValueDetails> values;
 };
 
 partial interface KeyframeEffectReadOnly {
