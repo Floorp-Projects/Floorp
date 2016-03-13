@@ -6,7 +6,7 @@
 #include "nsIDOMCSSRule.idl"
 
 [scriptable, uuid(a281a8b4-eaa2-49a8-8b97-acc2814a57c9)]
-interface nsIDOMMozCSSKeyframeRule : nsIDOMCSSRule
+interface nsIDOMCSSKeyframeRule : nsIDOMCSSRule
 {
            attribute DOMString                 keyText;
   readonly attribute nsIDOMCSSStyleDeclaration style;

@@ -6,12 +6,12 @@
 #include "nsIDOMCSSRule.idl"
 
 [scriptable, uuid(400f4b70-ad0a-4047-aba4-ee8019f6b907)]
-interface nsIDOMMozCSSKeyframesRule : nsIDOMCSSRule
+interface nsIDOMCSSKeyframesRule : nsIDOMCSSRule
 {
            attribute DOMString         name;
   readonly attribute nsIDOMCSSRuleList cssRules;
 
   void                     appendRule(in DOMString rule);
   void                     deleteRule(in DOMString key);
-  nsIDOMMozCSSKeyframeRule findRule(in DOMString key);
+  nsIDOMCSSKeyframeRule    findRule(in DOMString key);
 };
