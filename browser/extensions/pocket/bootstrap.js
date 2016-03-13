@@ -109,7 +109,8 @@ PocketAboutPage.prototype = {
   },
 
   newChannel: function(aURI, aLoadInfo) {
-    let channel = Services.io.newChannelFromURIWithLoadInfo(this.chromeURL,
+    let newURI = Services.io.newURI(this.chromeURL, null, null);
+    let channel = Services.io.newChannelFromURIWithLoadInfo(newURI,
                                                             aLoadInfo);
     channel.originalURI = aURI;
     return channel;
