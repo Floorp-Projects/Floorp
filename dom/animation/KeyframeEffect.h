@@ -46,7 +46,7 @@ class UnrestrictedDoubleOrKeyframeAnimationOptions;
 class UnrestrictedDoubleOrKeyframeEffectOptions;
 enum class IterationCompositeOperation : uint32_t;
 enum class CompositeOperation : uint32_t;
-struct AnimationPropertyState;
+struct AnimationPropertyDetails;
 }
 
 /**
@@ -209,7 +209,7 @@ public:
   void GetFrames(JSContext*& aCx,
                  nsTArray<JSObject*>& aResult,
                  ErrorResult& aRv);
-  void GetPropertyState(nsTArray<AnimationPropertyState>& aStates) const;
+  void GetProperties(nsTArray<AnimationPropertyDetails>& aProperties) const;
 
   // Temporary workaround to return both the target element and pseudo-type
   // until we implement PseudoElement (bug 1174575).
