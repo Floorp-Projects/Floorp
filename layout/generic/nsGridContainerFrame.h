@@ -9,6 +9,7 @@
 #ifndef nsGridContainerFrame_h___
 #define nsGridContainerFrame_h___
 
+#include "mozilla/Maybe.h"
 #include "mozilla/TypeTraits.h"
 #include "nsContainerFrame.h"
 #include "nsHashKeys.h"
@@ -46,6 +47,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
   NS_DECL_QUERYFRAME_TARGET(nsGridContainerFrame)
   NS_DECL_QUERYFRAME
+  typedef mozilla::ComputedGridTrackInfo ComputedGridTrackInfo;
 
   // nsIFrame overrides
   void Reflow(nsPresContext*           aPresContext,
@@ -113,6 +115,7 @@ protected:
   typedef mozilla::LogicalSize LogicalSize;
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::css::GridNamedArea GridNamedArea;
+  typedef mozilla::layout::AutoFrameListPtr AutoFrameListPtr;
   typedef nsLayoutUtils::IntrinsicISizeType IntrinsicISizeType;
   struct Grid;
   struct GridArea;
@@ -202,7 +205,7 @@ private:
     bool mIsAutoBSize;
   };
 
-  Maybe<nsGridContainerFrame::Fragmentainer>
+  mozilla::Maybe<nsGridContainerFrame::Fragmentainer>
     GetNearestFragmentainer(const GridReflowState& aState) const;
 
   // @return the consumed size of all continuations so far including this frame

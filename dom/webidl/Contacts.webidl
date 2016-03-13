@@ -58,7 +58,8 @@ dictionary ContactProperties {
 };
 
 [Constructor(optional ContactProperties properties),
- JSImplementation="@mozilla.org/contact;1"]
+ JSImplementation="@mozilla.org/contact;1",
+ CheckAnyPermissions="contacts-read contacts-write contacts-create"]
 interface mozContact {
                  attribute DOMString  id;
         readonly attribute Date?      published;
@@ -116,7 +117,8 @@ dictionary ContactFindOptions : ContactFindSortOptions {
 };
 
 [NoInterfaceObject, NavigatorProperty="mozContacts",
- JSImplementation="@mozilla.org/contactManager;1"]
+ JSImplementation="@mozilla.org/contactManager;1",
+ CheckAnyPermissions="contacts-read contacts-write contacts-create"]
 interface ContactManager : EventTarget {
   DOMRequest find(optional ContactFindOptions options);
   DOMCursor  getAll(optional ContactFindSortOptions options);

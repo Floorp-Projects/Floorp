@@ -1,0 +1,33 @@
+# HG changeset patch
+# User Tooru Fujisawa <arai_a@mac.com>
+# Date 1457079240 -32400
+#      Fri Mar 04 17:14:00 2016 +0900
+# Node ID 01acfb90ba766f1078ca3c91432e3e490f299c0d
+# Parent  61a88bbd6f42b7e35e6f5605da348da5d7bc57ed
+Bug 933257 - Part 2.16: Define u_int32_t and u_int64_t on Windows.
+
+diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
+--- a/modules/fdlibm/src/math_private.h
++++ b/modules/fdlibm/src/math_private.h
+@@ -33,16 +33,21 @@
+  * to dig two 32 bit words out of the 64 bit IEEE floating point
+  * value.  That is non-ANSI, and, moreover, the gcc instruction
+  * scheduler gets it wrong.  We instead use the following macros.
+  * Unlike the original code, we determine the endianness at compile
+  * time, not at run time; I don't see much benefit to selecting
+  * endianness at run time.
+  */
+ 
++#ifdef WIN32
++#define u_int32_t uint32_t
++#define u_int64_t uint64_t
++#endif
++
+ /*
+  * A union which permits us to convert between a double and two 32 bit
+  * ints.
+  */
+ 
+ #if MOZ_BIG_ENDIAN
+ 
+ typedef union

@@ -28350,6 +28350,10 @@
         "url": "/web-animations/animation-effect-timing/getComputedStyle.html"
       },
       {
+        "path": "web-animations/animation-effect-timing/iterationStart.html",
+        "url": "/web-animations/animation-effect-timing/iterationStart.html"
+      },
+      {
         "path": "web-animations/animation-node/animation-node-after.html",
         "url": "/web-animations/animation-node/animation-node-after.html"
       },

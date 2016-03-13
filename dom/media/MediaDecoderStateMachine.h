@@ -1239,6 +1239,9 @@ private:
   // True if the media is seekable (i.e. supports random access).
   Mirror<bool> mMediaSeekable;
 
+  // True if the media is seekable only in buffered ranges.
+  Mirror<bool> mMediaSeekableOnlyInBufferedRanges;
+
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.
   Canonical<media::NullableTimeUnit> mDuration;
