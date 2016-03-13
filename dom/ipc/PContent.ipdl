@@ -742,6 +742,13 @@ child:
      */
     async PushSubscriptionChange(nsCString scope, Principal principal);
 
+    /**
+     * Windows specific: associate this content process with the browsers
+     * audio session.
+     */
+    async SetAudioSessionData(nsID aID,
+                              nsString aDisplayName,
+                              nsString aIconPath);
 parent:
     /**
      * Tell the content process some attributes of itself.  This is
