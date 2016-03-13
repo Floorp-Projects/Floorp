@@ -2010,10 +2010,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // QueryInterface implementation for nsCSSKeyframeRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSKeyframeRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozCSSKeyframeRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSKeyframeRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozCSSKeyframeRule)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSKeyframeRule)
 NS_INTERFACE_MAP_END
 
 IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(nsCSSKeyframeRule, Rule)
@@ -2218,9 +2218,9 @@ NS_IMPL_RELEASE_INHERITED(nsCSSKeyframesRule, css::GroupRule)
 // QueryInterface implementation for nsCSSKeyframesRule
 NS_INTERFACE_MAP_BEGIN(nsCSSKeyframesRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozCSSKeyframesRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSKeyframesRule)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozCSSKeyframesRule)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSKeyframesRule)
 NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
 #ifdef DEBUG
@@ -2411,7 +2411,7 @@ nsCSSKeyframesRule::DeleteRule(const nsAString& aKey)
 
 NS_IMETHODIMP
 nsCSSKeyframesRule::FindRule(const nsAString& aKey,
-                             nsIDOMMozCSSKeyframeRule** aResult)
+                             nsIDOMCSSKeyframeRule** aResult)
 {
   uint32_t index = FindRuleIndexForKey(aKey);
   if (index == RULE_NOT_FOUND) {
