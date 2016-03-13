@@ -2365,8 +2365,8 @@ PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
             SetPluginFuncs(mNPPIface);
         }
 
-        // Send the info needed to join the chrome process's audio session to the
-        // plugin process
+        // Send the info needed to join the browser process's audio session to the
+        // plugin process.
         nsID id;
         nsString sessionName;
         nsString iconPath;

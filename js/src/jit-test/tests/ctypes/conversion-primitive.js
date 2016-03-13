@@ -18,8 +18,8 @@ function test() {
                          "can't convert the typed array ({}) to the type int32_t");
   assertTypeErrorMessage(() => { ctypes.int32_t(ctypes.int32_t); },
                          "can't convert ctypes.int32_t to the type int32_t");
-  assertTypeErrorMessage(() => { ctypes.int32_t("0xfffffffffffffffffffffff"); },
-                         "can't convert the string \"0xfffffffffffffffffffffff\" to the type int32_t");
+  assertRangeErrorMessage(() => { ctypes.int32_t("0xfffffffffffffffffffffff"); },
+                          "the string \"0xfffffffffffffffffffffff\" does not fit in the type int32_t");
   if (typeof Symbol === "function") {
     assertTypeErrorMessage(() => { ctypes.int32_t(Symbol.iterator); },
                            "can't convert Symbol.iterator to the type int32_t");

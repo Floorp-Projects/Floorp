@@ -16,6 +16,7 @@
 #include "nsAlgorithm.h" // for clamped()
 #include "nsAutoPtr.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsDataHashtable.h"
 #include "nsDisplayList.h"
 #include "nsHashKeys.h"

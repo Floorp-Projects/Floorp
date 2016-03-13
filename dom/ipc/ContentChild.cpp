@@ -147,6 +147,7 @@
 #ifdef XP_WIN
 #include <process.h>
 #define getpid _getpid
+#include "mozilla/widget/AudioSession.h"
 #endif
 
 #ifdef MOZ_X11
@@ -3043,6 +3044,10 @@ ContentChild::RecvShutdown()
                           "content-child-shutdown", nullptr);
   }
 
+#if defined(XP_WIN)
+    mozilla::widget::StopAudioSession();
+#endif
+
   GetIPCChannel()->SetAbortOnError(false);
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
@@ -3159,6 +3164,26 @@ ContentChild::RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
   }
 #endif
   return true;
+}
+
+bool
+ContentChild::RecvSetAudioSessionData(const nsID& aId,
+                                      const nsString& aDisplayName,
+                                      const nsString& aIconPath)
+{
+#if defined(XP_WIN)
+    if (NS_FAILED(mozilla::widget::RecvAudioSessionData(aId, aDisplayName,
+                                                        aIconPath))) {
+      return true;
+    }
+
+    // Ignore failures here; we can't really do anything about them
+    mozilla::widget::StartAudioSession();
+    return true;
+#else
+    NS_RUNTIMEABORT("Not Reached!");
+    return false;
+#endif
 }
 
 // This code goes here rather than nsGlobalWindow.cpp because nsGlobalWindow.cpp

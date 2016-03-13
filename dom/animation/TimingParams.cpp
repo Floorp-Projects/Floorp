@@ -64,11 +64,17 @@ TimingParamsFromOptionsUnion(
     }
     const dom::AnimationEffectTimingProperties& timing =
       GetTimingProperties(aOptions);
+
     Maybe<StickyTimeDuration> duration =
       TimingParams::ParseDuration(timing.mDuration, aRv);
     if (aRv.Failed()) {
       return result;
     }
+    TimingParams::ValidateIterationStart(timing.mIterationStart, aRv);
+    if (aRv.Failed()) {
+      return result;
+    }
+
     result.mDuration = duration;
     result.mDelay = TimeDuration::FromMilliseconds(timing.mDelay);
     result.mEndDelay = TimeDuration::FromMilliseconds(timing.mEndDelay);
