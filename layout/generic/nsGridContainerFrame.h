@@ -115,6 +115,7 @@ protected:
   typedef mozilla::LogicalSize LogicalSize;
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::css::GridNamedArea GridNamedArea;
+  typedef mozilla::layout::AutoFrameListPtr AutoFrameListPtr;
   typedef nsLayoutUtils::IntrinsicISizeType IntrinsicISizeType;
   struct Grid;
   struct GridArea;
