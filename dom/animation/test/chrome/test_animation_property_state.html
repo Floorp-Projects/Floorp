@@ -13,6 +13,10 @@
   height: 100px;
   background-color: white;
 }
+@keyframes fade {
+  from { opacity: 1 }
+  to   { opacity: 0 }
+}
 </style>
 </head>
 <body>
@@ -41,7 +45,7 @@ function compare_property_state(a, b) {
 }
 
 function assert_animation_property_state_equals(actual, expected) {
-  assert_equals(actual.length, expected.length);
+  assert_equals(actual.length, expected.length, 'Number of properties');
 
   var sortedActual = actual.sort(compare_property_state);
   var sortedExpected = expected.sort(compare_property_state);
@@ -713,6 +717,21 @@ function start() {
         [ { property: 'transform', runningOnCompositor: true } ]);
     }));
   }, 'transform of nsIFrame with SVG transform');
+
+  promise_test(function(t) {
+    var div = addDiv(t, { class: 'compositable',
+                          style: 'animation: fade 100s' });
+    var cssAnimation = div.getAnimations()[0];
+    var scriptAnimation = div.animate({ opacity: [ 1, 0 ] }, 1000);
+    return scriptAnimation.ready.then(function() {
+      assert_animation_property_state_equals(
+        cssAnimation.effect.getProperties(),
+        [ { property: 'opacity', runningOnCompositor: false } ]);
+      assert_animation_property_state_equals(
+        scriptAnimation.effect.getProperties(),
+        [ { property: 'opacity', runningOnCompositor: true } ]);
+    });
+  }, 'overridden animation');
 }
 
 </script>
