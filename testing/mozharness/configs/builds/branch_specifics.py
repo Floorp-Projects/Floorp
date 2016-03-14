@@ -38,14 +38,28 @@ config = {
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     'mozilla-release': {
+        'enable_release_promotion': True,
         'repo_path': 'releases/mozilla-release',
-        # TODO I think we can remove update_channel since we don't run
-        # nightlies for mozilla-release
         'update_channel': 'release',
         'branch_uses_per_checkin_strategy': True,
         'use_branch_in_symbols_extra_buildid': False,
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
         'platform_overrides': {
+            'linux': {
+                'src_mozconfig': 'browser/config/mozconfigs/linux32/release',
+            },
+            'linux64': {
+                'src_mozconfig': 'browser/config/mozconfigs/linux64/release',
+            },
+            'macosx64': {
+                'src_mozconfig': 'browser/config/mozconfigs/macosx-universal/release',
+            },
+            'win32': {
+                'src_mozconfig': 'browser/config/mozconfigs/win32/release',
+            },
+            'win64': {
+                'src_mozconfig': 'browser/config/mozconfigs/win64/release',
+            },
             'linux-debug': {
                 'update_channel': 'default',
             },
@@ -96,8 +110,6 @@ config = {
     'mozilla-beta': {
         'enable_release_promotion': 1,
         'repo_path': 'releases/mozilla-beta',
-        # TODO I think we can remove update_channel since we don't run
-        # nightlies for mozilla-beta
         'update_channel': 'beta',
         'branch_uses_per_checkin_strategy': True,
         'use_branch_in_symbols_extra_buildid': False,
