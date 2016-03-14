@@ -79,7 +79,8 @@ function assert_property_state_on_compositor(actual, expected) {
                   sortedExpected[i].property,
                   'CSS property name should match');
     assert_true(sortedActual[i].runningOnCompositor,
-                'runningOnCompositor property should be true');
+                'runningOnCompositor property should be true on ' +
+                sortedActual[i].property);
     assert_not_exists(sortedActual[i], 'warning',
                       'warning property should not be set');
   }
@@ -145,10 +146,27 @@ var gAnimationsTests = [
     ]
   },
   {
+    desc: 'opacity on compositor with animation of geometric properties',
+    frames: {
+      width: ['100px', '200px'],
+      opacity: [0, 1]
+    },
+    expected: [
+      {
+        property: 'width',
+        runningOnCompositor: false
+      },
+      {
+        property: 'opacity',
+        runningOnCompositor: true
+      }
+    ]
+  },
+  {
     // FIXME: Once we have KeyframeEffect.setFrames, we should rewrite
     // this test case to check that runningOnCompositor is restored to true
     // after 'width' keyframe is removed from the keyframes.
-    desc: 'animation on compositor with animation of geometric properties',
+    desc: 'transform on compositor with animation of geometric properties',
     frames: {
       width: ['100px', '200px'],
       transform: ['translate(0px)', 'translate(100px)']
@@ -161,7 +179,31 @@ var gAnimationsTests = [
       {
         property: 'transform',
         runningOnCompositor: false,
-        warning: 'AnimationWarningWithGeometricProperties'
+        warning: 'AnimationWarningTransformWithGeometricProperties'
+      }
+    ]
+  },
+  {
+    desc: 'opacity and transform on compositor with animation of geometric ' +
+          'properties',
+    frames: {
+      width: ['100px', '200px'],
+      opacity: [0, 1],
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    expected: [
+      {
+        property: 'width',
+        runningOnCompositor: false
+      },
+      {
+        property: 'opacity',
+        runningOnCompositor: true
+      },
+      {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: 'AnimationWarningTransformWithGeometricProperties'
       }
     ]
   },
@@ -208,6 +250,243 @@ var gPerformanceWarningTests = [
       }
     ]
   },
+  {
+    desc: 'opacity and transform with preserve-3d',
+    frames: {
+      opacity: [0, 1],
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    style: 'transform-style: preserve-3d',
+    expected: [
+      {
+        property: 'opacity',
+        runningOnCompositor: true
+      },
+      {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: 'AnimationWarningTransformPreserve3D'
+      }
+    ]
+  },
+  {
+    desc: 'opacity and transform with backface-visibility:hidden',
+    frames: {
+      opacity: [0, 1],
+      transform: ['translate(0px)', 'translate(100px)']
+    },
+    style: 'backface-visibility: hidden;',
+    expected: [
+      {
+        property: 'opacity',
+        runningOnCompositor: true
+      },
+      {
+        property: 'transform',
+        runningOnCompositor: false,
+        warning: 'AnimationWarningTransformBackfaceVisibilityHidden'
+      }
+    ]
+  },
+];
+
+var gMultipleAsyncAnimationsTests = [
+  {
+    desc: 'opacity and transform with preserve-3d',
+    style: 'transform-style: preserve-3d',
+    animations: [
+      {
+        frames: {
+          transform: ['translate(0px)', 'translate(100px)']
+        },
+        expected: [
+          {
+            property: 'transform',
+            runningOnCompositor: false,
+            warning: 'AnimationWarningTransformPreserve3D'
+          }
+        ]
+      },
+      {
+        frames: {
+          opacity: [0, 1]
+        },
+        expected: [
+          {
+            property: 'opacity',
+            runningOnCompositor: true,
+          }
+        ]
+      }
+    ],
+  },
+  {
+    desc: 'opacity and transform with backface-visibility:hidden',
+    style: 'backface-visibility: hidden;',
+    animations: [
+      {
+        frames: {
+          transform: ['translate(0px)', 'translate(100px)']
+        },
+        expected: [
+          {
+            property: 'transform',
+            runningOnCompositor: false,
+            warning: 'AnimationWarningTransformBackfaceVisibilityHidden'
+          }
+        ]
+      },
+      {
+        frames: {
+          opacity: [0, 1]
+        },
+        expected: [
+          {
+            property: 'opacity',
+            runningOnCompositor: true,
+          }
+        ]
+      }
+    ],
+  },
+];
+
+// FIXME: Once we have KeyframeEffect.setFrames, we should rewrite
+// these test cases to check that runningOnCompositor is restored to true
+// after 'width' keyframe is removed from the keyframes.
+var gMultipleAsyncAnimationsWithGeometricKeyframeTests = [
+  {
+    desc: 'transform and opacity with animation of geometric properties',
+    animations: [
+      {
+        frames: {
+          transform: ['translate(0px)', 'translate(100px)']
+        },
+        expected: [
+          {
+            property: 'transform',
+            runningOnCompositor: false,
+            warning: 'AnimationWarningTransformWithGeometricProperties'
+          }
+        ]
+      },
+      {
+        frames: {
+          width: ['100px', '200px'],
+          opacity: [0, 1]
+        },
+        expected: [
+          {
+            property: 'width',
+            runningOnCompositor: false,
+          },
+          {
+            property: 'opacity',
+            runningOnCompositor: true,
+          }
+        ]
+      }
+    ],
+  },
+  {
+    desc: 'opacity and transform with animation of geometric properties',
+    animations: [
+      {
+        frames: {
+          width: ['100px', '200px'],
+          transform: ['translate(0px)', 'translate(100px)']
+        },
+        expected: [
+          {
+            property: 'width',
+            runningOnCompositor: false,
+          },
+          {
+            property: 'transform',
+            runningOnCompositor: false,
+            warning: 'AnimationWarningTransformWithGeometricProperties'
+          }
+        ]
+      },
+      {
+        frames: {
+          opacity: [0, 1]
+        },
+        expected: [
+          {
+            property: 'opacity',
+            runningOnCompositor: true,
+          }
+        ]
+      }
+    ],
+  },
+];
+
+// Test cases that check results of adding/removing 'width' animation on the
+// same element which has async animations.
+var gMultipleAsyncAnimationsWithGeometricAnimationTests = [
+  {
+    desc: 'transform',
+    animations: [
+      {
+        frames: {
+          transform: ['translate(0px)', 'translate(100px)']
+        },
+        expected: [
+          {
+            property: 'transform',
+            runningOnCompositor: false,
+            warning: 'AnimationWarningTransformWithGeometricProperties'
+          }
+        ]
+      },
+    ]
+  },
+  {
+    desc: 'opacity',
+    animations: [
+      {
+        frames: {
+          opacity: [0, 1]
+        },
+        expected: [
+          {
+            property: 'opacity',
+            runningOnCompositor: true
+          }
+        ]
+      },
+    ]
+  },
+  {
+    desc: 'opacity and transform',
+    animations: [
+      {
+        frames: {
+          transform: ['translate(0px)', 'translate(100px)']
+        },
+        expected: [
+          {
+            property: 'transform',
+            runningOnCompositor: false,
+            warning: 'AnimationWarningTransformWithGeometricProperties'
+          }
+        ]
+      },
+      {
+        frames: {
+          opacity: [0, 1]
+        },
+        expected: [
+          {
+            property: 'opacity',
+            runningOnCompositor: true,
+          }
+        ]
+      }
+    ],
+  },
 ];
 
 function start() {
@@ -250,6 +529,107 @@ function start() {
           subtest.expected);
       }));
     }, subtest.desc);
+  });
+
+  gMultipleAsyncAnimationsTests.forEach(function(subtest) {
+    promise_test(function(t) {
+      var div = addDiv(t, { class: 'compositable' });
+      var animations = subtest.animations.map(function(anim) {
+        var animation = div.animate(anim.frames, 100000);
+
+        // Bind expected values to animation object.
+        animation.expected = anim.expected;
+        return animation;
+      });
+      return waitForAllAnimations(animations).then(t.step_func(function() {
+        animations.forEach(t.step_func(function(anim) {
+          assert_property_state_on_compositor(
+            anim.effect.getPropertyState(),
+            anim.expected);
+        }));
+        div.style = subtest.style;
+        return waitForFrame();
+      })).then(t.step_func(function() {
+        animations.forEach(t.step_func(function(anim) {
+          assert_animation_property_state_equals(
+            anim.effect.getPropertyState(),
+            anim.expected);
+        }));
+        div.style = '';
+        return waitForFrame();
+      })).then(t.step_func(function() {
+        animations.forEach(t.step_func(function(anim) {
+          assert_property_state_on_compositor(
+            anim.effect.getPropertyState(),
+            anim.expected);
+        }));
+      }));
+    }, 'Multiple animations: ' + subtest.desc);
+  });
+
+  gMultipleAsyncAnimationsWithGeometricKeyframeTests.forEach(function(subtest) {
+    promise_test(function(t) {
+      var div = addDiv(t, { class: 'compositable' });
+      var animations = subtest.animations.map(function(anim) {
+        var animation = div.animate(anim.frames, 100000);
+
+        // Bind expected values to animation object.
+        animation.expected = anim.expected;
+        return animation;
+      });
+      return waitForAllAnimations(animations).then(t.step_func(function() {
+        animations.forEach(t.step_func(function(anim) {
+          assert_animation_property_state_equals(
+            anim.effect.getPropertyState(),
+            anim.expected);
+        }));
+      }));
+    }, 'Multiple animations with geometric property: ' + subtest.desc);
+  });
+
+  gMultipleAsyncAnimationsWithGeometricAnimationTests.forEach(function(subtest) {
+    promise_test(function(t) {
+      var div = addDiv(t, { class: 'compositable' });
+      var animations = subtest.animations.map(function(anim) {
+        var animation = div.animate(anim.frames, 100000);
+
+        // Bind expected values to animation object.
+        animation.expected = anim.expected;
+        return animation;
+      });
+
+      var widthAnimation;
+
+      return waitForAllAnimations(animations).then(t.step_func(function() {
+        animations.forEach(t.step_func(function(anim) {
+          assert_property_state_on_compositor(
+            anim.effect.getPropertyState(),
+            anim.expected);
+        }));
+      })).then(t.step_func(function() {
+        // Append 'width' animation on the same element.
+        widthAnimation = div.animate({ width: ['100px', '200px'] }, 100000);
+        return waitForFrame();
+      })).then(t.step_func(function() {
+        // Now transform animations are not running on compositor because of
+        // the 'width' animation.
+        animations.forEach(t.step_func(function(anim) {
+          assert_animation_property_state_equals(
+            anim.effect.getPropertyState(),
+            anim.expected);
+        }));
+        // Remove the 'width' animation.
+        widthAnimation.cancel();
+        return waitForFrame();
+      })).then(t.step_func(function() {
+        // Now all animations are running on compositor.
+        animations.forEach(t.step_func(function(anim) {
+          assert_property_state_on_compositor(
+            anim.effect.getPropertyState(),
+            anim.expected);
+        }));
+      }));
+    }, 'Multiple async animations and geometric animation: ' + subtest.desc);
   });
 
   promise_test(function(t) {

@@ -2141,7 +2141,7 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
 }
 
 bool
-KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(
+KeyframeEffectReadOnly::ShouldBlockAsyncTransformAnimations(
   const nsIFrame* aFrame,
   AnimationPerformanceWarning::Type& aPerformanceWarning) const
 {
@@ -2161,7 +2161,7 @@ KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(
     // Check for geometric properties
     if (IsGeometricProperty(property.mProperty)) {
       aPerformanceWarning =
-        AnimationPerformanceWarning::Type::WithGeometricProperties;
+        AnimationPerformanceWarning::Type::TransformWithGeometricProperties;
       return true;
     }
 
