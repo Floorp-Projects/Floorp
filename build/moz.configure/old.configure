@@ -55,12 +55,21 @@ def autoconf(mozconfig, autoconf):
                 break
     else:
         fink = find_program('fink')
-        if find:
+        if fink:
             autoconf = os.path.normpath(os.path.join(
                 fink, '..', '..', 'lib', 'autoconf2.13', 'bin', 'autoconf'))
+        else:
+            brew = find_program('brew')
+            if brew:
+                autoconf = os.path.normpath(os.path.join(
+                    brew, '..', '..', 'Cellar', 'autoconf213', '2.13', 'bin',
+                    'autoconf213'))
 
     if not autoconf:
         error('Could not find autoconf 2.13')
+
+    if not os.path.exists(autoconf):
+        error('Could not find autoconf 2.13 at %s' % (autoconf,))
 
     set_config('AUTOCONF', autoconf)
     return autoconf
