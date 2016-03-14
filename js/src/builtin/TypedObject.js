@@ -690,6 +690,24 @@ function SimdTypeToLength(type) {
   return undefined;
 }
 
+// This implements SIMD.*.prototype.valueOf().
+// Once we have proper value semantics for SIMD types, this function should just
+// perform a type check and return this.
+// For now, throw a TypeError unconditionally since valueOf() was probably
+// called from ToNumber() which is supposed to throw when attempting to convert
+// a SIMD value to a number.
+function SimdValueOf() {
+  if (!IsObject(this) || !ObjectIsTypedObject(this))
+    ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO, "SIMD", "valueOf", typeof this);
+
+  var descr = TypedObjectTypeDescr(this);
+
+  if (DESCR_KIND(descr) != JS_TYPEREPR_SIMD_KIND)
+    ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO, "SIMD", "valueOf", typeof this);
+
+  ThrowTypeError(JSMSG_SIMD_TO_NUMBER);
+}
+
 function SimdToSource() {
   if (!IsObject(this) || !ObjectIsTypedObject(this))
     ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO, "SIMD.*", "toSource", typeof this);
