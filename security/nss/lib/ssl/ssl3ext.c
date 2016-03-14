@@ -306,10 +306,15 @@ static const ssl3HelloExtensionHandler serverHelloHandlersSSL3[] = {
  * These static tables are for the formatting of client hello extensions.
  * The server's table of hello senders is dynamic, in the socket struct,
  * and sender functions are registered there.
+ * NB: the order of these extensions can have an impact on compatibility. Some
+ * servers (e.g. Tomcat) will terminate the connection if the last extension in
+ * the client hello is empty (for example, the extended master secret
+ * extension, if it were listed last). See bug 1243641.
  */
 static const
 ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] = {
     { ssl_server_name_xtn,        &ssl3_SendServerNameXtn        },
+    { ssl_extended_master_secret_xtn,       &ssl3_SendExtendedMasterSecretXtn},
     { ssl_renegotiation_info_xtn, &ssl3_SendRenegotiationInfoXtn },
 #ifndef NSS_DISABLE_ECC
     { ssl_elliptic_curves_xtn,    &ssl3_SendSupportedCurvesXtn },
@@ -322,7 +327,6 @@ ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] = {
     { ssl_cert_status_xtn,        &ssl3_ClientSendStatusRequestXtn },
     { ssl_signature_algorithms_xtn, &ssl3_ClientSendSigAlgsXtn },
     { ssl_tls13_draft_version_xtn, &ssl3_ClientSendDraftVersionXtn },
-    { ssl_extended_master_secret_xtn,       &ssl3_SendExtendedMasterSecretXtn},
     { ssl_signed_cert_timestamp_xtn, &ssl3_ClientSendSignedCertTimestampXtn },
     /* any extra entries will appear as { 0, NULL }    */
 };
