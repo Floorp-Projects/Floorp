@@ -18,6 +18,9 @@ Structure::
       environment: { ... },
       payload: {
         crashDate: "YYYY-MM-DD",
+        sessionId: <UUID>, // may be missing for crashes that happen early
+                           // in startup. Added in Firefox 48 with the
+                           // intention of uplifting to Firefox 46
         metadata: {...}, // Annotations saved while Firefox was running. See nsExceptionHandler.cpp for more information
         hasCrashEnvironment: bool
       }
