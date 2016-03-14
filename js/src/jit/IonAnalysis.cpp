@@ -1905,7 +1905,8 @@ jit::RenumberBlocks(MIRGraph& graph)
 // A utility for code which deletes blocks. Renumber the remaining blocks,
 // recompute dominators, and optionally recompute AliasAnalysis dependencies.
 bool
-jit::AccountForCFGChanges(MIRGenerator* mir, MIRGraph& graph, bool updateAliasAnalysis)
+jit::AccountForCFGChanges(MIRGenerator* mir, MIRGraph& graph, bool updateAliasAnalysis,
+                          bool underValueNumberer)
 {
     // Renumber the blocks and clear out the old dominator info.
     size_t id = 0;
@@ -1924,7 +1925,7 @@ jit::AccountForCFGChanges(MIRGenerator* mir, MIRGraph& graph, bool updateAliasAn
              return false;
     }
 
-    AssertExtendedGraphCoherency(graph);
+    AssertExtendedGraphCoherency(graph, underValueNumberer);
     return true;
 }
 
@@ -2550,7 +2551,7 @@ AssertResumePointDominatedByOperands(MResumePoint* resume)
 #endif // DEBUG
 
 void
-jit::AssertExtendedGraphCoherency(MIRGraph& graph)
+jit::AssertExtendedGraphCoherency(MIRGraph& graph, bool underValueNumberer)
 {
     // Checks the basic GraphCoherency but also other conditions that
     // do not hold immediately (such as the fact that critical edges
@@ -2574,8 +2575,15 @@ jit::AssertExtendedGraphCoherency(MIRGraph& graph)
                 MOZ_ASSERT(block->getSuccessor(i)->numPredecessors() == 1);
 
         if (block->isLoopHeader()) {
-            MOZ_ASSERT(block->numPredecessors() == 2);
-            MBasicBlock* backedge = block->getPredecessor(1);
+            if (underValueNumberer && block->numPredecessors() == 3) {
+                // Fixup block.
+                MOZ_ASSERT(block->getPredecessor(1)->numPredecessors() == 0);
+                MOZ_ASSERT(graph.osrBlock(),
+                           "Fixup blocks should only exists if we have an osr block.");
+            } else {
+                MOZ_ASSERT(block->numPredecessors() == 2);
+            }
+            MBasicBlock* backedge = block->backedge();
             MOZ_ASSERT(backedge->id() >= block->id());
             MOZ_ASSERT(backedge->numSuccessors() == 1);
             MOZ_ASSERT(backedge->getSuccessor(0) == *block);
