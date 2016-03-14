@@ -26,6 +26,7 @@ import org.mozilla.gecko.FennecNativeDriver;
 import org.mozilla.gecko.FennecTalosAssert;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 
 import java.net.HttpURLConnection;
@@ -276,5 +277,13 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         final PowerManager pm = (PowerManager) getActivity().getSystemService(Context.POWER_SERVICE);
         mAsserter.ok(pm.isScreenOn(),
             "Robocop tests need the test device screen to be powered on.", "");
+    }
+
+    protected GeckoProfile getTestProfile() {
+        if (mProfile.startsWith("/")) {
+            return GeckoProfile.get(getActivity(), "default", mProfile);
+        }
+
+        return GeckoProfile.get(getActivity(), mProfile);
     }
 }

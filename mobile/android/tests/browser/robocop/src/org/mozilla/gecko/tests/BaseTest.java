@@ -105,14 +105,6 @@ abstract class BaseTest extends BaseRobocopTest {
         throwIfScreenNotOn();
     }
 
-    protected GeckoProfile getTestProfile() {
-        if (mProfile.startsWith("/")) {
-            return GeckoProfile.get(getActivity(), "default", mProfile);
-        }
-
-        return GeckoProfile.get(getActivity(), mProfile);
-    }
-
     protected void initializeProfile() {
         final GeckoProfile profile = getTestProfile();
 
