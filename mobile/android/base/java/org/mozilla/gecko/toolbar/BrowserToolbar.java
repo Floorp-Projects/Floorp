@@ -18,6 +18,7 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.TouchEventInterceptor;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.PropertyAnimator.PropertyAnimationListener;
 import org.mozilla.gecko.animation.ViewHelper;
@@ -128,6 +129,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     private OnFocusChangeListener focusChangeListener;
     private OnStartEditingListener startEditingListener;
     private OnStopEditingListener stopEditingListener;
+    private TouchEventInterceptor mTouchEventInterceptor;
 
     protected final BrowserApp activity;
 
@@ -891,6 +893,18 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         stateList.addState(EMPTY_STATE_SET, drawable);
 
         setBackgroundDrawable(stateList);
+    }
+
+    public void setTouchEventInterceptor(TouchEventInterceptor interceptor) {
+        mTouchEventInterceptor = interceptor;
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent event) {
+        if (mTouchEventInterceptor != null && mTouchEventInterceptor.onInterceptTouchEvent(this, event)) {
+            return true;
+        }
+        return super.onInterceptTouchEvent(event);
     }
 
     @Override
