@@ -257,16 +257,6 @@ txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
 
-    nsCOMPtr<nsIPrincipal> channelPrincipal;
-    nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
-        channel, getter_AddRefs(channelPrincipal));
-    mCompiler->setPrincipal(channelPrincipal);
-
-    nsCOMPtr<nsIURI> baseURI;
-    nsresult rv = NS_GetFinalChannelURI(channel, getter_AddRefs(baseURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-    mCompiler->setBaseURI(baseURI);
-
     // check channel's charset...
     nsAutoCString charsetVal;
     nsAutoCString charset;
@@ -385,8 +375,9 @@ public:
     TX_DECL_ACOMPILEOBSERVER
     NS_INLINE_DECL_REFCOUNTING(txCompileObserver)
 
-    nsresult startLoad(nsIURI* aUri, nsIPrincipal* aSourcePrincipal,
-                       txStylesheetCompiler* aCompiler);
+    nsresult startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
+                       nsIPrincipal* aSourcePrincipal,
+                       ReferrerPolicy aReferrerPolicy);
 
 private:
     RefPtr<txMozillaXSLTProcessor> mProcessor;
@@ -409,15 +400,30 @@ txCompileObserver::txCompileObserver(txMozillaXSLTProcessor* aProcessor,
 }
 
 nsresult
-txCompileObserver::loadURI(nsIURI* aUri,
-                           nsIPrincipal* aReferrerPrincipal,
+txCompileObserver::loadURI(const nsAString& aUri,
+                           const nsAString& aReferrerUri,
+                           ReferrerPolicy aReferrerPolicy,
                            txStylesheetCompiler* aCompiler)
 {
-    if (mProcessor->IsLoadDisabled() || !mLoaderDocument) {
+    if (mProcessor->IsLoadDisabled()) {
         return NS_ERROR_XSLT_LOAD_BLOCKED_ERROR;
     }
 
-    return startLoad(aUri, aReferrerPrincipal, aCompiler);
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), aUri);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> referrerUri;
+    rv = NS_NewURI(getter_AddRefs(referrerUri), aReferrerUri);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPrincipal> referrerPrincipal;
+    rv = nsContentUtils::GetSecurityManager()->
+      GetSimpleCodebasePrincipal(referrerUri,
+                                 getter_AddRefs(referrerPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return startLoad(uri, aCompiler, referrerPrincipal, aReferrerPolicy);
 }
 
 void
@@ -435,11 +441,10 @@ txCompileObserver::onDoneCompiling(txStylesheetCompiler* aCompiler,
 }
 
 nsresult
-txCompileObserver::startLoad(nsIURI* aUri, nsIPrincipal* aReferrerPrincipal,
-                             txStylesheetCompiler* aCompiler)
+txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
+                             nsIPrincipal* aReferrerPrincipal,
+                             ReferrerPolicy aReferrerPolicy)
 {
-    MOZ_ASSERT(aReferrerPrincipal);
-
     nsCOMPtr<nsILoadGroup> loadGroup = mLoaderDocument->GetDocumentLoadGroup();
     if (!loadGroup) {
         return NS_ERROR_FAILURE;
@@ -468,8 +473,7 @@ txCompileObserver::startLoad(nsIURI* aUri, nsIPrincipal* aReferrerPrincipal,
         nsCOMPtr<nsIURI> referrerURI;
         aReferrerPrincipal->GetURI(getter_AddRefs(referrerURI));
         if (referrerURI) {
-            httpChannel->SetReferrerWithPolicy(referrerURI,
-                mLoaderDocument->GetReferrerPolicy());
+            httpChannel->SetReferrerWithPolicy(referrerURI, aReferrerPolicy);
         }
     }
 
@@ -477,6 +481,7 @@ txCompileObserver::startLoad(nsIURI* aUri, nsIPrincipal* aReferrerPrincipal,
     NS_ENSURE_SUCCESS(rv, rv);
 
     RefPtr<txStylesheetSink> sink = new txStylesheetSink(aCompiler, parser);
+    NS_ENSURE_TRUE(sink, NS_ERROR_OUT_OF_MEMORY);
 
     channel->SetNotificationCallbacks(sink);
 
@@ -489,26 +494,24 @@ txCompileObserver::startLoad(nsIURI* aUri, nsIPrincipal* aReferrerPrincipal,
 
 nsresult
 TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
-             nsIDocument* aLoaderDocument)
+             nsIDocument* aLoaderDocument, ReferrerPolicy aReferrerPolicy)
 {
-    if (MOZ_LOG_TEST(txLog::xslt, LogLevel::Info)) {
-        nsAutoCString spec;
-        aUri->GetSpec(spec);
-        MOZ_LOG(txLog::xslt, LogLevel::Info,
-                ("TX_LoadSheet: %s\n", spec.get()));
-    }
+    nsIPrincipal* principal = aLoaderDocument->NodePrincipal();
+
+    nsAutoCString spec;
+    aUri->GetSpec(spec);
+    MOZ_LOG(txLog::xslt, LogLevel::Info, ("TX_LoadSheet: %s\n", spec.get()));
 
     RefPtr<txCompileObserver> observer =
         new txCompileObserver(aProcessor, aLoaderDocument);
-
-    nsAutoCString fragment;
-    aUri->GetRef(fragment);
+    NS_ENSURE_TRUE(observer, NS_ERROR_OUT_OF_MEMORY);
 
     RefPtr<txStylesheetCompiler> compiler =
-        new txStylesheetCompiler(NS_ConvertUTF8toUTF16(fragment), observer);
+        new txStylesheetCompiler(NS_ConvertUTF8toUTF16(spec), aReferrerPolicy,
+                                 observer);
+    NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
-    return observer->startLoad(aUri, aLoaderDocument->NodePrincipal(),
-                               compiler);
+    return observer->startLoad(aUri, compiler, principal, aReferrerPolicy);
 }
 
 /**
@@ -582,11 +585,7 @@ handleNode(nsINode* aNode, txStylesheetCompiler* aCompiler)
 class txSyncCompileObserver final : public txACompileObserver
 {
 public:
-    explicit txSyncCompileObserver(txMozillaXSLTProcessor* aProcessor,
-                                   nsIDocument* aLoaderDocument)
-        : mProcessor(aProcessor),
-          mLoaderDocument(aLoaderDocument)
-    {}
+    explicit txSyncCompileObserver(txMozillaXSLTProcessor* aProcessor);
 
     TX_DECL_ACOMPILEOBSERVER
     NS_INLINE_DECL_REFCOUNTING(txSyncCompileObserver)
@@ -598,43 +597,60 @@ private:
     }
 
     RefPtr<txMozillaXSLTProcessor> mProcessor;
-    nsCOMPtr<nsIDocument> mLoaderDocument;
 };
 
+txSyncCompileObserver::txSyncCompileObserver(txMozillaXSLTProcessor* aProcessor)
+  : mProcessor(aProcessor)
+{
+}
+
 nsresult
-txSyncCompileObserver::loadURI(nsIURI* aUri,
-                               nsIPrincipal* aReferrerPrincipal,
+txSyncCompileObserver::loadURI(const nsAString& aUri,
+                               const nsAString& aReferrerUri,
+                               ReferrerPolicy aReferrerPolicy,
                                txStylesheetCompiler* aCompiler)
 {
-    MOZ_ASSERT(aReferrerPrincipal);
-
-    if (mProcessor->IsLoadDisabled() || !mLoaderDocument) {
+    if (mProcessor->IsLoadDisabled()) {
         return NS_ERROR_XSLT_LOAD_BLOCKED_ERROR;
     }
 
-    nsAutoSyncOperation sync(mLoaderDocument);
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), aUri);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> referrerUri;
+    rv = NS_NewURI(getter_AddRefs(referrerUri), aReferrerUri);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPrincipal> referrerPrincipal;
+    rv = nsContentUtils::GetSecurityManager()->
+      GetSimpleCodebasePrincipal(referrerUri,
+                                 getter_AddRefs(referrerPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // This is probably called by js, a loadGroup for the channel doesn't
+    // make sense.
+    nsCOMPtr<nsINode> source;
+    if (mProcessor) {
+      source =
+        do_QueryInterface(mProcessor->GetSourceContentModel());
+    }
+    nsAutoSyncOperation sync(source ? source->OwnerDoc() : nullptr);
     nsCOMPtr<nsIDOMDocument> document;
 
-    nsCOMPtr<nsILoadGroup> loadGroup = mLoaderDocument->GetDocumentLoadGroup();
-    nsresult rv =
-        nsSyncLoadService::LoadDocument(aUri,
-                                        nsIContentPolicy::TYPE_XSLT,
-                                        aReferrerPrincipal,
-                                        nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
-                                        loadGroup,
-                                        false,
-                                        mLoaderDocument->GetReferrerPolicy(),
-                                        getter_AddRefs(document));
+    rv = nsSyncLoadService::LoadDocument(uri, nsIContentPolicy::TYPE_XSLT,
+                                         referrerPrincipal,
+                                         nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
+                                         nullptr, false,
+                                         aReferrerPolicy,
+                                         getter_AddRefs(document));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
-    nsCOMPtr<nsIURI> baseURI = doc->GetBaseURI();
-    aCompiler->setBaseURI(baseURI);
-    aCompiler->setPrincipal(doc->NodePrincipal());
     rv = handleNode(doc, aCompiler);
     if (NS_FAILED(rv)) {
         nsAutoCString spec;
-        aUri->GetSpec(spec);
+        uri->GetSpec(spec);
         aCompiler->cancel(rv, nullptr, NS_ConvertUTF8toUTF16(spec).get());
         return rv;
     }
@@ -651,20 +667,46 @@ void txSyncCompileObserver::onDoneCompiling(txStylesheetCompiler* aCompiler,
 }
 
 nsresult
-TX_CompileStylesheet(nsINode* aNode,
-                     nsIDocument* aLoaderDocument,
-                     txMozillaXSLTProcessor* aProcessor,
+TX_CompileStylesheet(nsINode* aNode, txMozillaXSLTProcessor* aProcessor,
                      txStylesheet** aStylesheet)
 {
+    // If we move GetBaseURI to nsINode this can be simplified.
+    nsCOMPtr<nsIDocument> doc = aNode->OwnerDoc();
+
+    nsCOMPtr<nsIURI> uri;
+    if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
+      uri = static_cast<nsIContent*>(aNode)->GetBaseURI();
+    }
+    else { 
+      NS_ASSERTION(aNode->IsNodeOfType(nsINode::eDOCUMENT), "not a doc");
+      uri = static_cast<nsIDocument*>(aNode)->GetBaseURI();
+    }
+    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+    
+    nsAutoCString spec;
+    uri->GetSpec(spec);
+    NS_ConvertUTF8toUTF16 baseURI(spec);
+
+    nsIURI* docUri = doc->GetDocumentURI();
+    NS_ENSURE_TRUE(docUri, NS_ERROR_FAILURE);
+
+    // We need to remove the ref, a URI with a ref would mean that we have an
+    // embedded stylesheet.
+    docUri->CloneIgnoringRef(getter_AddRefs(uri));
+    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+
+    uri->GetSpec(spec);
+    NS_ConvertUTF8toUTF16 stylesheetURI(spec);
+
     RefPtr<txSyncCompileObserver> obs =
-        new txSyncCompileObserver(aProcessor, aLoaderDocument);
+        new txSyncCompileObserver(aProcessor);
+    NS_ENSURE_TRUE(obs, NS_ERROR_OUT_OF_MEMORY);
 
     RefPtr<txStylesheetCompiler> compiler =
-        new txStylesheetCompiler(EmptyString(), obs);
+        new txStylesheetCompiler(stylesheetURI, doc->GetReferrerPolicy(), obs);
+    NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
-    nsCOMPtr<nsIURI> baseURI = aNode->GetBaseURI();
     compiler->setBaseURI(baseURI);
-    compiler->setPrincipal(aNode->NodePrincipal());
 
     nsresult rv = handleNode(aNode, compiler);
     if (NS_FAILED(rv)) {
