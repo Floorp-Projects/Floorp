@@ -13,8 +13,8 @@ LOCAL_INCLUDES += [
 UNIFIED_SOURCES = [
     'DeserializedNodeUbiNodes.cpp',
     'DeserializedStackFrameUbiStackFrames.cpp',
-    'DoesCrossZoneBoundaries.cpp',
-    'DoesntCrossZoneBoundaries.cpp',
+    'DoesCrossCompartmentBoundaries.cpp',
+    'DoesntCrossCompartmentBoundaries.cpp',
     'SerializesEdgeNames.cpp',
     'SerializesEverythingInHeapGraphOnce.cpp',
     'SerializesTypeNames.cpp',
