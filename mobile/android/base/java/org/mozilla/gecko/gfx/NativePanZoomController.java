@@ -50,7 +50,7 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
             int action, long time, int metaState,
             float x, float y, int buttons);
 
-    private boolean handleMotionEvent(MotionEvent event, boolean keepInViewCoordinates) {
+    private boolean handleMotionEvent(MotionEvent event) {
         if (mDestroyed) {
             return false;
         }
@@ -73,30 +73,20 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         final float[] toolMinor = new float[count];
 
         final MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
-        final PointF point = !keepInViewCoordinates ? new PointF() : null;
-        final float zoom = !keepInViewCoordinates ? mView.getViewportMetrics().zoomFactor : 1.0f;
 
         for (int i = 0; i < count; i++) {
             pointerId[i] = event.getPointerId(i);
             event.getPointerCoords(i, coords);
 
-            if (keepInViewCoordinates) {
-                x[i] = coords.x;
-                y[i] = coords.y;
-            } else {
-                point.x = coords.x;
-                point.y = coords.y;
-                final PointF newPoint = mView.convertViewPointToLayerPoint(point);
-                x[i] = newPoint.x;
-                y[i] = newPoint.y;
-            }
+            x[i] = coords.x;
+            y[i] = coords.y;
 
             orientation[i] = coords.orientation;
             pressure[i] = coords.pressure;
 
             // If we are converting to CSS pixels, we should adjust the radii as well.
-            toolMajor[i] = coords.toolMajor / zoom;
-            toolMinor[i] = coords.toolMinor / zoom;
+            toolMajor[i] = coords.toolMajor;
+            toolMinor[i] = coords.toolMinor;
         }
 
         return handleMotionEvent(action, event.getActionIndex(), event.getEventTime(),
@@ -174,7 +164,7 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         if (event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE) {
             return handleMouseEvent(event);
         } else {
-            return handleMotionEvent(event, /* keepInViewCoordinates */ true);
+            return handleMotionEvent(event);
         }
     }
 
