@@ -306,24 +306,16 @@ public:
 
   void GetPropertyState(nsTArray<AnimationPropertyState>& aStates) const;
 
-  // Returns true if this effect, applied to |aFrame|, contains
-  // properties that mean we shouldn't run *any* compositor animations on this
-  // element.
+  // Returns true if this effect, applied to |aFrame|, contains properties
+  // that mean we shouldn't run transform compositor animations on this element.
   //
   // For example, if we have an animation of geometric properties like 'left'
-  // and 'top' on an element, we force all 'transform' and 'opacity' animations
-  // running at the same time on the same element to run on the main thread.
+  // and 'top' on an element, we force all 'transform' animations running at
+  // the same time on the same element to run on the main thread.
   //
-  // Similarly, some transform animations cannot be run on the compositor and
-  // when that is the case we simply disable all compositor animations
-  // on the same element.
-  //
-  // Bug 1218620 - It seems like we don't need to be this restrictive. Wouldn't
-  // it be ok to do 'opacity' animations on the compositor in either case?
-  //
-  // When returning true, |aOutPerformanceWarning| stores the reason why
-  // we shouldn't run the compositor animations.
-  bool ShouldBlockCompositorAnimations(
+  // When returning true, |aPerformanceWarning| stores the reason why
+  // we shouldn't run the transform animations.
+  bool ShouldBlockAsyncTransformAnimations(
     const nsIFrame* aFrame,
     AnimationPerformanceWarning::Type& aPerformanceWarning) const;
 
