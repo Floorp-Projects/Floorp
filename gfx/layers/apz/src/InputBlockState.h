@@ -57,6 +57,11 @@ protected:
   virtual void UpdateTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc);
 
 private:
+  // Checks whether |aA| is an ancestor of |aB| (or the same as |aB|) in
+  // |mOverscrollHandoffChain|.
+  bool IsAncestorOf(AsyncPanZoomController* aA, AsyncPanZoomController* aB);
+
+private:
   RefPtr<AsyncPanZoomController> mTargetApzc;
   bool mTargetConfirmed;
   const uint64_t mBlockId;
