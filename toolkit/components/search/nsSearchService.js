@@ -2856,6 +2856,9 @@ SearchService.prototype = {
     }
 
     try {
+      if (!cache.engines.length)
+        throw "cannot write without any engine.";
+
       LOG("_buildCache: Writing to cache file.");
       let path = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
       let data = gEncoder.encode(JSON.stringify(cache));
@@ -3174,7 +3177,10 @@ SearchService.prototype = {
       bis.readArrayBuffer(count, array.buffer);
 
       let bytes = Lz4.decompressFileContent(array);
-      return JSON.parse(new TextDecoder().decode(bytes));
+      let json = JSON.parse(new TextDecoder().decode(bytes));
+      if (!json.engines || !json.engines.length)
+        throw "no engine in the file";
+      return json;
     } catch(ex) {
       LOG("_readCacheFile: Error reading cache file: " + ex);
     } finally {
@@ -3227,6 +3233,8 @@ SearchService.prototype = {
         let cacheFilePath = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
         let bytes = yield OS.File.read(cacheFilePath, {compression: "lz4"});
         json = JSON.parse(new TextDecoder().decode(bytes));
+        if (!json.engines || !json.engines.length)
+          throw "no engine in the file";
         this._cacheFileJSON = json;
       } catch (ex) {
         LOG("_asyncReadCacheFile: Error reading cache file: " + ex);
