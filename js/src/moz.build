@@ -661,6 +661,7 @@ if CONFIG['_MSC_VER']:
     CXXFLAGS += ['-wd4661']
     CXXFLAGS += ['-we4067', '-we4258', '-we4275']
     CXXFLAGS += ['-wd4146'] # FIXME: unary minus operator applied to unsigned type (bug 1229189)
+    CXXFLAGS += ['-wd4273'] # FIXME: inconsistent dll linkage (bug 1229666)
 
 if CONFIG['OS_ARCH'] not in ('WINNT', 'HP-UX'):
     OS_LIBS += [
