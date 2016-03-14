@@ -219,6 +219,20 @@ function toLocalTimeISOString(date) {
 }
 
 /**
+ * Annotate the current session ID with the crash reporter to map potential
+ * crash pings with the related main ping.
+ */
+function annotateCrashReport(sessionId) {
+  try {
+    const cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
+            .getService(Ci.nsICrashReporter);
+    cr.setTelemetrySessionId(sessionId);
+  } catch (e) {
+    // Ignore errors when crash reporting is disabled
+  }
+}
+
+/**
  * Read current process I/O counters.
  */
 var processInfo = {
@@ -1370,6 +1384,8 @@ var Impl = {
     // startNewSubsession sets |_subsessionStartDate| to the current date/time. Use
     // the very same value for |_sessionStartDate|.
     this._sessionStartDate = this._subsessionStartDate;
+
+    annotateCrashReport(this._sessionId);
 
     // Initialize some probes that are kept in their own modules
     this._thirdPartyCookies = new ThirdPartyCookieProbe();
