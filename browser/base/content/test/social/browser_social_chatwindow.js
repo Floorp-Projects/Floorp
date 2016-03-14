@@ -96,28 +96,29 @@ var tests = {
       let topic = e.data.topic;
       switch (topic) {
         case "got-sidebar-message":
-          port.postMessage({topic: "test-chatbox-open"});
+          openChatViaUser();
           break;
         case "got-chatbox-visibility":
+          let selectedChat = chats.selectedChat || chats.lastElementChild;
           if (e.data.result == "hidden") {
             ok(true, "chatbox got minimized");
-            chats.selectedChat.toggle();
+            selectedChat.toggle();
           } else if (e.data.result == "shown") {
             ok(true, "chatbox got shown");
             // close it now
-            let content = chats.selectedChat.content;
+            let content = selectedChat.content;
             content.addEventListener("unload", function chatUnload() {
               content.removeEventListener("unload", chatUnload, true);
               ok(true, "got chatbox unload on close");
               next();
             }, true);
-            chats.selectedChat.close();
+            selectedChat.close();
           }
           break;
         case "got-chatbox-message":
           ok(true, "got chatbox message");
           ok(e.data.result == "ok", "got chatbox windowRef result: "+e.data.result);
-          chats.selectedChat.toggle();
+          selectedChat.toggle();
           break;
       }
     }
@@ -153,7 +154,7 @@ var tests = {
       let topic = e.data.topic;
       switch (topic) {
         case "test-init-done":
-          port.postMessage({topic: "test-chatbox-open"});
+          openChatViaUser();
           break;
         case "got-chatbox-visibility":
           is(e.data.result, "shown", "chatbox shown");
@@ -161,12 +162,9 @@ var tests = {
           let chat = chats.selectedChat;
           ok(chat.parentNode, "chat has a parent node before it is closed");
           // ask it to close itself.
-          let doc = chat.contentDocument;
-          let evt = doc.createEvent("CustomEvent");
-          evt.initCustomEvent("socialTest-CloseSelf", true, true, {});
-          doc.documentElement.dispatchEvent(evt);
-          ok(!chat.parentNode, "chat is now closed");
-          next();
+          let mm = chat.content.messageManager;
+          mm.sendAsyncMessage("Social:CustomEvent", { name: "socialTest-CloseSelf" });
+          waitForCondition(() => !chat.parentNode, next, "chat should close");
           break;
       }
     }
