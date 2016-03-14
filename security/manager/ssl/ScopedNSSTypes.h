@@ -294,6 +294,11 @@ inline void SECKEYEncryptedPrivateKeyInfo_true(SECKEYEncryptedPrivateKeyInfo * e
   return SECKEY_DestroyEncryptedPrivateKeyInfo(epki, PR_TRUE);
 }
 
+inline void VFY_DestroyContext_true(VFYContext * ctx)
+{
+  VFY_DestroyContext(ctx, true);
+}
+
 } // namespace internal
 
 // Deprecated: use the equivalent UniquePtr templates instead.
@@ -361,6 +366,9 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECKEYPublicKey,
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECMODModule,
                                       SECMODModule,
                                       SECMOD_DestroyModule)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueVFYContext,
+                                      VFYContext,
+                                      internal::VFY_DestroyContext_true)
 } // namespace mozilla
 
 #endif // mozilla_ScopedNSSTypes_h
