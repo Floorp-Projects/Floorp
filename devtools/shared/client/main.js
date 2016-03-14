@@ -178,6 +178,8 @@ const UnsolicitedNotifications = {
   "appInstall": "appInstall",
   "appUninstall": "appUninstall",
   "evaluationResult": "evaluationResult",
+  "newSource": "newSource",
+  "updatedSource": "updatedSource",
 };
 
 /**
@@ -247,8 +249,8 @@ const DebuggerClient = exports.DebuggerClient = function (aTransport)
  *         The `Request` object that is a Promise object and resolves once
  *         we receive the response. (See request method for more details)
  */
-DebuggerClient.requester = function (aPacketSkeleton,
-                                     { telemetry, before, after }) {
+DebuggerClient.requester = function (aPacketSkeleton, config={}) {
+  let { telemetry, before, after } = config;
   return DevToolsUtils.makeInfallible(function (...args) {
     let histogram, startTime;
     if (telemetry) {
@@ -1375,7 +1377,20 @@ TabClient.prototype = {
 
   attachWorker: function (aWorkerActor, aOnResponse) {
     this.client.attachWorker(aWorkerActor, aOnResponse);
-  }
+  },
+
+  /**
+   * Resolve a location ({ url, line, column }) to its current
+   * source mapping location.
+   *
+   * @param {String} arg[0].url
+   * @param {Number} arg[0].line
+   * @param {Number?} arg[0].column
+   */
+  resolveLocation: DebuggerClient.requester({
+    type: "resolveLocation",
+    location: args(0)
+  }),
 };
 
 eventSource(TabClient.prototype);

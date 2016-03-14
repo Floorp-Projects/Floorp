@@ -437,7 +437,7 @@ function ThreadActor(aParent, aGlobal)
 
   this._allEventsListener = this._allEventsListener.bind(this);
   this.onNewGlobal = this.onNewGlobal.bind(this);
-  this.onNewSource = this.onNewSource.bind(this);
+  this.onSourceEvent = this.onSourceEvent.bind(this);
   this.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
   this.onDebuggerStatement = this.onDebuggerStatement.bind(this);
   this.onNewScript = this.onNewScript.bind(this);
@@ -583,6 +583,8 @@ ThreadActor.prototype = {
     this._sourceActorStore = null;
 
     events.off(this._parent, "window-ready", this._onWindowReady);
+    this.sources.off("newSource", this.onSourceEvent);
+    this.sources.off("updatedSource", this.onSourceEvent);
     this.clearDebuggees();
     this.conn.removeActorPool(this._threadLifetimePool);
     this._threadLifetimePool = null;
@@ -623,9 +625,8 @@ ThreadActor.prototype = {
 
     update(this._options, aRequest.options || {});
     this.sources.setOptions(this._options);
-    this.sources.on('newSource', (name, source) => {
-      this.onNewSource(source);
-    });
+    this.sources.on("newSource", this.onSourceEvent);
+    this.sources.on("updatedSource", this.onSourceEvent);
 
     // Initialize an event loop stack. This can't be done in the constructor,
     // because this.conn is not yet initialized by the actor pool at that time.
@@ -1894,12 +1895,29 @@ ThreadActor.prototype = {
     this._addSource(aScript.source);
   },
 
-  onNewSource: function (aSource) {
+  /**
+   * A function called when there's a new or updated source from a thread actor's
+   * sources. Emits `newSource` and `updatedSource` on the tab actor.
+   *
+   * @param {String} name
+   * @param {SourceActor} source
+   */
+  onSourceEvent: function (name, source) {
     this.conn.send({
-      from: this.actorID,
-      type: "newSource",
-      source: aSource.form()
+      from: this._parent.actorID,
+      type: name,
+      source: source.form()
     });
+
+    // For compatibility and debugger still using `newSource` on the thread client,
+    // still emit this event here. Clean up in bug 1247084
+    if (name === "newSource") {
+      this.conn.send({
+        from: this.actorID,
+        type: name,
+        source: source.form()
+      });
+    }
   },
 
   /**
@@ -2024,7 +2042,7 @@ ThreadActor.prototype.requestTypes = {
   "releaseMany": ThreadActor.prototype.onReleaseMany,
   "sources": ThreadActor.prototype.onSources,
   "threadGrips": ThreadActor.prototype.onThreadGrips,
-  "prototypesAndProperties": ThreadActor.prototype.onPrototypesAndProperties
+  "prototypesAndProperties": ThreadActor.prototype.onPrototypesAndProperties,
 };
 
 exports.ThreadActor = ThreadActor;
