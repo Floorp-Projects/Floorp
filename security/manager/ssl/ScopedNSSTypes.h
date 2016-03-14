@@ -149,9 +149,9 @@ class Digest
 public:
   Digest()
   {
-    item.type = siBuffer;
-    item.data = buf;
-    item.len = 0;
+    mItem.type = siBuffer;
+    mItem.data = mItemBuf;
+    mItem.len = 0;
   }
 
   nsresult DigestBuf(SECOidTag hashAlg, const uint8_t * buf, uint32_t len)
@@ -161,7 +161,7 @@ public:
     }
     nsresult rv = SetLength(hashAlg);
     NS_ENSURE_SUCCESS(rv, rv);
-    return MapSECStatus(PK11_HashBuf(hashAlg, item.data, buf,
+    return MapSECStatus(PK11_HashBuf(hashAlg, mItem.data, buf,
                                      static_cast<int32_t>(len)));
   }
 
@@ -170,14 +170,14 @@ public:
     nsresult rv = SetLength(hashAlg);
     NS_ENSURE_SUCCESS(rv, rv);
     uint32_t len;
-    rv = MapSECStatus(PK11_DigestFinal(context, item.data, &len, item.len));
+    rv = MapSECStatus(PK11_DigestFinal(context, mItem.data, &len, mItem.len));
     NS_ENSURE_SUCCESS(rv, rv);
     context = nullptr;
-    NS_ENSURE_TRUE(len == item.len, NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(len == mItem.len, NS_ERROR_UNEXPECTED);
     return NS_OK;
   }
 
-  const SECItem & get() const { return item; }
+  const SECItem & get() const { return mItem; }
 
 private:
   nsresult SetLength(SECOidTag hashType)
@@ -190,10 +190,10 @@ private:
 #endif
     switch (hashType)
     {
-      case SEC_OID_SHA1:   item.len = SHA1_LENGTH;   break;
-      case SEC_OID_SHA256: item.len = SHA256_LENGTH; break;
-      case SEC_OID_SHA384: item.len = SHA384_LENGTH; break;
-      case SEC_OID_SHA512: item.len = SHA512_LENGTH; break;
+      case SEC_OID_SHA1:   mItem.len = SHA1_LENGTH;   break;
+      case SEC_OID_SHA256: mItem.len = SHA256_LENGTH; break;
+      case SEC_OID_SHA384: mItem.len = SHA384_LENGTH; break;
+      case SEC_OID_SHA512: mItem.len = SHA512_LENGTH; break;
       default:
         return NS_ERROR_INVALID_ARG;
     }
@@ -204,8 +204,8 @@ private:
     return NS_OK;
   }
 
-  uint8_t buf[HASH_LENGTH_MAX];
-  SECItem item;
+  uint8_t mItemBuf[HASH_LENGTH_MAX];
+  SECItem mItem;
 };
 
 // Deprecated: use the equivalent UniquePtr templates instead.
