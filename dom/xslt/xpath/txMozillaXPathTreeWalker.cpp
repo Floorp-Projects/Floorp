@@ -563,9 +563,9 @@ txXPathNodeUtils::getXSLTId(const txXPathNode& aNode,
 
 /* static */
 void
-txXPathNodeUtils::getBaseURI(const txXPathNode& aNode, nsIURI** aUri)
+txXPathNodeUtils::getBaseURI(const txXPathNode& aNode, nsAString& aURI)
 {
-    *aUri = aNode.mNode->GetBaseURI().take();
+    aNode.mNode->GetBaseURI(aURI);
 }
 
 /* static */
