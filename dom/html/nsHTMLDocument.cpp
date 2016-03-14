@@ -2673,8 +2673,8 @@ nsHTMLDocument::TurnEditingOff()
   if (!docshell)
     return NS_ERROR_FAILURE;
 
-  nsresult rv;
-  nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell, &rv);
+  nsCOMPtr<nsIEditingSession> editSession;
+  nsresult rv = docshell->GetEditingSession(getter_AddRefs(editSession));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // turn editing off
@@ -2744,8 +2744,8 @@ nsHTMLDocument::EditingStateChanged()
   if (!docshell)
     return NS_ERROR_FAILURE;
 
-  nsresult rv;
-  nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell, &rv);
+  nsCOMPtr<nsIEditingSession> editSession;
+  nsresult rv = docshell->GetEditingSession(getter_AddRefs(editSession));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIEditor> existingEditor;
