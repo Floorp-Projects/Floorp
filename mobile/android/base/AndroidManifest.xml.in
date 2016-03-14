@@ -15,79 +15,12 @@
 #endif
               android:targetSdkVersion="23"/>
 
-#include ../services/manifests/FxAccountAndroidManifest_permissions.xml.in
-
-#ifdef MOZ_ANDROID_SEARCH_ACTIVITY
-#include ../search/manifests/SearchAndroidManifest_permissions.xml.in
-#endif
-
-    <!-- A signature level permission specific to each Firefox version (Android
-         package name, e.g., org.mozilla.firefox).  Use this permission to
-         broadcast securely within a single Firefox version.  This needs to
-         agree with GlobalConstants.PER_ANDROID_PACKAGE_PERMISSION. -->
-    <permission
-        android:name="@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE"
-        android:protectionLevel="signature"/>
-
-    <uses-permission android:name="@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE" />
-
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>
-    <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT"/>
-    <uses-permission android:name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
-
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <uses-permission android:name="android.permission.VIBRATE"/>
-#ifdef MOZ_ANDROID_DOWNLOADS_INTEGRATION
-    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
-#endif
-#ifdef MOZ_WEBSMS_BACKEND
-    <!-- WebSMS -->
-    <uses-permission android:name="android.permission.SEND_SMS"/>
-    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
-    <uses-permission android:name="android.permission.WRITE_SMS"/>
-    <uses-permission android:name="android.permission.READ_SMS"/>
-
-    <uses-feature android:name="android.hardware.telephony"/>
-#endif
-
-    <uses-feature android:name="android.hardware.location" android:required="false"/>
-    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
-    <uses-feature android:name="android.hardware.touchscreen"/>
-
-#ifdef NIGHTLY_BUILD
-    <!-- Contacts API -->
-    <uses-permission android:name="android.permission.READ_CONTACTS"/>
-    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
-    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
-#endif
-
-    <!-- Tab Queue -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-
-#ifdef MOZ_ANDROID_BEAM
-    <!-- Android Beam support -->
-    <uses-permission android:name="android.permission.NFC"/>
-    <uses-feature android:name="android.hardware.nfc" android:required="false"/>
-#endif
-
-#ifdef MOZ_WEBRTC
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-    <uses-feature android:name="android.hardware.audio.low_latency" android:required="false"/>
-    <uses-feature android:name="android.hardware.camera.any" android:required="false"/>
-    <uses-feature android:name="android.hardware.microphone" android:required="false"/>
-#endif
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="false"/>
-    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
-
-    <!-- App requires OpenGL ES 2.0 -->
-    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+<!-- The bouncer APK and the main APK should define the same set of
+     <permission>, <uses-permission>, and <uses-feature> elements.  This reduces
+     the likelihood of permission-related surprises when installing the main APK
+     on top of a pre-installed bouncer APK.  Add such shared elements in the
+     fileincluded here, so that they can be referenced by both APKs. -->
+#include FennecManifest_permissions.xml.in
 
     <application android:label="@string/moz_app_displayname"
                  android:icon="@drawable/icon"
