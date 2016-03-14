@@ -441,8 +441,6 @@ public:
 
   virtual bool RecvAddPermission(const IPC::Permission& permission) override;
 
-  virtual bool RecvScreenSizeChanged(const gfx::IntSize &size) override;
-
   virtual bool RecvFlushMemory(const nsString& reason) override;
 
   virtual bool RecvActivateA11y() override;
@@ -544,10 +542,6 @@ public:
   RecvPushSubscriptionChange(const nsCString& aScope,
                              const IPC::Principal& aPrincipal) override;
 
-#ifdef ANDROID
-  gfx::IntSize GetScreenSize() { return mScreenSize; }
-#endif
-
   // Get the directory for IndexedDB files. We query the parent for this and
   // cache the value
   nsString &GetIndexedDBPath();
@@ -644,10 +638,6 @@ private:
   ContentParentId mID;
 
   AppInfo mAppInfo;
-
-#ifdef ANDROID
-  gfx::IntSize mScreenSize;
-#endif
 
   bool mIsForApp;
   bool mIsForBrowser;
