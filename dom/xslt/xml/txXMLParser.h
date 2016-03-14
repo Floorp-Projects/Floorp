@@ -9,8 +9,6 @@
 #include "txCore.h"
 
 class txXPathNode;
-class nsIURI;
-class nsIDocument;
 
 /**
  * API to load XML files into DOM datastructures.
@@ -22,9 +20,7 @@ class nsIDocument;
  * of the document aLoader.
  */
 extern "C" nsresult
-txParseDocumentFromURI(nsIURI* aUri,
-                       nsIDocument* aLoadingDocument,
-                       nsAString& aErrMsg,
-                       txXPathNode** aResult);
+txParseDocumentFromURI(const nsAString& aHref, const txXPathNode& aLoader,
+                       nsAString& aErrMsg, txXPathNode** aResult);
 
 #endif
