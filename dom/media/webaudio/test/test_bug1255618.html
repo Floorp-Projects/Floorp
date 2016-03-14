@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test sync XHR does not crash unlinked AudioContext</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+const filename = "test_bug1255618.html";
+
+function collect_and_fetch() {
+    SpecialPowers.forceGC();
+    SpecialPowers.forceCC();
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", filename, false);
+    var ended = false;
+    xhr.onloadend = function() { ended = true; }
+    // Sync XHR will suspend timeouts, which involves any AudioContexts still
+    // registered with the window.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1255618#c0
+    xhr.send(null);
+
+    ok(ended, "No crash during fetch");
+    SimpleTest.finish();
+}
+
+var ac = new AudioContext();
+
+ac.onstatechange = function () {
+    ac.onstatechange = null;
+    is(ac.state, "running", "statechange to running");
+    ac = null;
+    SimpleTest.executeSoon(collect_and_fetch);
+}
+
+</script>
+</body>
