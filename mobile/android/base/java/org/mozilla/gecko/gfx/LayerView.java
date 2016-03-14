@@ -282,6 +282,8 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     @Override
     protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
         // We are adding descendants to this LayerView, but we don't want the
         // descendants to affect the way LayerView retains its focus.
         setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);

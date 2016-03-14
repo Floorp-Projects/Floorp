@@ -9,6 +9,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.lwt.LightweightThemeDrawable;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -44,6 +45,8 @@ public class ShapedButton extends ThemedImageButton
     }
 
     @Override
+    @SuppressLint("MissingSuperCall") // Super gets called from defaultDraw().
+                                      // It is intentionally not called in the other case.
     public void draw(Canvas canvas) {
         if (mCanvasDelegate != null)
             mCanvasDelegate.draw(canvas, mPath, getWidth(), getHeight());
