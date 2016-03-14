@@ -49,6 +49,7 @@ task:
       TOOLTOOL_REPO: 'https://git.mozilla.org/build/tooltool.git'
       TOOLTOOL_REV: 'master'
       MOZ_BUILD_DATE: '{{pushdate}}'
+      MOZ_SCM_LEVEL: '{{level}}'
 
   extra:
     build_product: '{{build_product}}'
