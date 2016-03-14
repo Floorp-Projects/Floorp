@@ -18,6 +18,7 @@
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/layers/PersistentBufferProvider.h"
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
