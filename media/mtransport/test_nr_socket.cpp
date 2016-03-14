@@ -258,8 +258,10 @@ void TestNrSocket::close() {
     NR_async_timer_cancel(timer_handle_);
     timer_handle_ = 0;
   }
-  // TODO: close port mappings too?
   internal_socket_->close();
+  for (RefPtr<PortMapping>& port_mapping : port_mappings_) {
+    port_mapping->external_socket_->close();
+  }
 }
 
 int TestNrSocket::listen(int backlog) {

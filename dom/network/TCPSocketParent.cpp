@@ -340,7 +340,7 @@ TCPSocketParent::RecvData(const SendableData& aData,
     default:
       MOZ_CRASH("unexpected SendableData type");
   }
-  NS_ENSURE_FALSE(rv.Failed(), true);
+  NS_ENSURE_SUCCESS(rv.StealNSResult(), true);
   return true;
 }
 
