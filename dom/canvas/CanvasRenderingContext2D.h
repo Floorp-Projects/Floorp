@@ -346,6 +346,9 @@ public:
   void Rect(double aX, double aY, double aW, double aH);
   void Arc(double aX, double aY, double aRadius, double aStartAngle,
            double aEndAngle, bool aAnticlockwise, mozilla::ErrorResult& aError);
+  void Ellipse(double aX, double aY, double aRadiusX, double aRadiusY,
+               double aRotation, double aStartAngle, double aEndAngle,
+               bool aAnticlockwise, ErrorResult& aError);
 
   void GetMozCurrentTransform(JSContext* aCx,
                               JS::MutableHandle<JSObject*> aResult,

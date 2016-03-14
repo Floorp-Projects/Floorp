@@ -3046,6 +3046,22 @@ CanvasRenderingContext2D::Rect(double aX, double aY, double aW, double aH)
 }
 
 void
+CanvasRenderingContext2D::Ellipse(double aX, double aY, double aRadiusX, double aRadiusY,
+                                  double aRotation, double aStartAngle, double aEndAngle,
+                                  bool aAnticlockwise, ErrorResult& aError)
+{
+  if (aRadiusX < 0.0 || aRadiusY < 0.0) {
+    aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  EnsureWritablePath();
+
+  ArcToBezier(this, Point(aX, aY), Size(aRadiusX, aRadiusY), aStartAngle, aEndAngle,
+              aAnticlockwise, aRotation);
+}
+
+void
 CanvasRenderingContext2D::EnsureWritablePath()
 {
   EnsureTarget();
@@ -5939,6 +5955,22 @@ CanvasPath::Arc(double aX, double aY, double aRadius,
   EnsurePathBuilder();
 
   ArcToBezier(this, Point(aX, aY), Size(aRadius, aRadius), aStartAngle, aEndAngle, aAnticlockwise);
+}
+
+void
+CanvasPath::Ellipse(double x, double y, double radiusX, double radiusY,
+                    double rotation, double startAngle, double endAngle,
+                    bool anticlockwise, ErrorResult& error)
+{
+  if (radiusX < 0.0 || radiusY < 0.0) {
+    error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  EnsurePathBuilder();
+
+  ArcToBezier(this, Point(x, y), Size(radiusX, radiusY), startAngle, endAngle,
+              anticlockwise, rotation);
 }
 
 void
