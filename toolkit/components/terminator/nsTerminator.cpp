@@ -358,7 +358,12 @@ nsTerminator::Start()
 {
   MOZ_ASSERT(!mInitialized);
   StartWatchdog();
+#if !defined(DEBUG)
+  // Only allow nsTerminator to write on non-debug builds so we don't get leak warnings on
+  // shutdown for intentional leaks (see bug 1242084). This will be enabled again by bug
+  // 1255484 when 1255478 lands.
   StartWriter();
+#endif // !defined(DEBUG)
   mInitialized = true;
 }
 
@@ -399,7 +404,6 @@ nsTerminator::StartWatchdog()
 void
 nsTerminator::StartWriter()
 {
-
   if (!Telemetry::CanRecordExtended()) {
     return;
   }
@@ -448,7 +452,12 @@ nsTerminator::Observe(nsISupports *, const char *aTopic, const char16_t *)
   }
 
   UpdateHeartbeat(aTopic);
+#if !defined(DEBUG)
+  // Only allow nsTerminator to write on non-debug builds so we don't get leak warnings on
+  // shutdown for intentional leaks (see bug 1242084). This will be enabled again by bug
+  // 1255484 when 1255478 lands.
   UpdateTelemetry();
+#endif // !defined(DEBUG)
   UpdateCrashReport(aTopic);
 
   // Perform a little cleanup
