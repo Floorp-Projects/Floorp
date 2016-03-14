@@ -1005,12 +1005,6 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen)
         MOZ_ASSERT_IF(!funCon && !fun->isArrow(),
                       src->length() > 0 && src->latin1OrTwoByteChar(0) == '(');
 
-        // If a function inherits strict mode by having scopes above it that
-        // have "use strict", we insert "use strict" into the body of the
-        // function. This ensures that if the result of toString is evaled, the
-        // resulting function will have the same semantics.
-        bool addUseStrict = script->strict() && !script->explicitUseStrict() && !fun->isArrow();
-
         bool buildBody = funCon;
         if (buildBody) {
             // This function was created with the Function constructor. We don't
@@ -1036,44 +1030,8 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen)
             if (!out.append(") {\n"))
                 return nullptr;
         }
-        if (addUseStrict) {
-            // We need to get at the body either because we're only supposed to
-            // return the body or we need to insert "use strict" into the body.
-            size_t bodyStart = 0, bodyEnd;
-
-            // If the function is defined in the Function constructor, we
-            // already have a body.
-            if (!funCon) {
-                MOZ_ASSERT(!buildBody);
-                if (!FindBody(cx, fun, src, &bodyStart, &bodyEnd))
-                    return nullptr;
-            } else {
-                bodyEnd = src->length();
-            }
-
-            if (addUseStrict) {
-                // Output source up to beginning of body.
-                if (!out.appendSubstring(src, 0, bodyStart))
-                    return nullptr;
-                if (exprBody) {
-                    // We can't insert a statement into a function with an
-                    // expression body. Do what the decompiler did, and insert a
-                    // comment.
-                    if (!out.append("/* use strict */ "))
-                        return nullptr;
-                } else {
-                    if (!out.append("\n\"use strict\";\n"))
-                        return nullptr;
-                }
-            }
-
-            // Output the body and possibly closing braces (for addUseStrict).
-            if (!out.appendSubstring(src, bodyStart, src->length() - bodyStart))
-                return nullptr;
-        } else {
-            if (!out.append(src))
-                return nullptr;
-        }
+        if (!out.append(src))
+            return nullptr;
         if (buildBody) {
             if (!out.append("\n}"))
                 return nullptr;
