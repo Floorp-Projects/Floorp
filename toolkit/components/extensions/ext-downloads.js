@@ -543,6 +543,23 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
         });
       },
 
+      open(downloadId) {
+        if (!extension.hasPermission("downloads.open")) {
+          throw new context.cloneScope.Error(
+            "Permission denied because 'downloads.open' permission is missing.");
+        }
+        return DownloadMap.lazyInit().then(() => {
+          let download = DownloadMap.fromId(downloadId).download;
+          if (download.succeeded) {
+            return download.launch();
+          } else {
+            return Promise.reject({message: "Download has not completed."});
+          }
+        }).catch((error) => {
+          return Promise.reject({message: error.message});
+        });
+      },
+
       show(downloadId) {
         return DownloadMap.lazyInit().then(() => {
           let download = DownloadMap.fromId(downloadId);
@@ -554,15 +571,14 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
         });
       },
 
-      // When we do open(), check for additional downloads.open permission.
+      // When we do setShelfEnabled(), check for additional "downloads.shelf" permission.
       // i.e.:
-      // open(downloadId) {
-      //   if (!extension.hasPermission("downloads.open")) {
-      //     throw new context.cloneScope.Error("Permission denied because 'downloads.open' permission is missing.");
+      // setShelfEnabled(enabled) {
+      //   if (!extension.hasPermission("downloads.shelf")) {
+      //     throw new context.cloneScope.Error("Permission denied because 'downloads.shelf' permission is missing.");
       //   }
       //   ...
       // }
-      // likewise for setShelfEnabled() and the "download.shelf" permission
 
       onChanged: new SingletonEventManager(context, "downloads.onChanged", fire => {
         const handler = (what, item) => {

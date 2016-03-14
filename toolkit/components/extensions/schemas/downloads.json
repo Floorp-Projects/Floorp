@@ -556,12 +556,18 @@
       {
         "name": "open",
         "type": "function",
-        "unsupported": true,
+        "async": "callback",
         "description": "Open the downloaded file.",
         "parameters": [
           {
             "name": "downloadId",
             "type": "integer"
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "optional": true,
+            "parameters": []
           }
         ]
       },
