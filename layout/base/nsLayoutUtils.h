@@ -185,6 +185,16 @@ public:
    */
   static bool HasDisplayPort(nsIContent* aContent);
 
+
+  /**
+   * Go through the IPC Channel and update displayport margins for content
+   * elements based on UpdateFrame messages. The messages are left in the
+   * queue and will be fully processed when dequeued. The aim is to paint
+   * the most up-to-date displayport without waiting for these message to
+   * go through the message queue.
+   */
+  static void UpdateDisplayPortMarginsFromPendingMessages();
+
   /**
    * @return the display port for the given element which should be used for
    * visibility testing purposes.
