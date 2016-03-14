@@ -42,10 +42,15 @@ function run_test()
              crashReporter.annotateCrashReport("\u2665", "\u{1F4A9}");
              crashReporter.appendAppNotesToCrashReport("Junk");
              crashReporter.appendAppNotesToCrashReport("MoreJunk");
+             // TelemetrySession setup will trigger the session annotation
+             let scope = {};
+             Components.utils.import("resource://gre/modules/TelemetrySession.jsm", scope);
+             scope.TelemetrySession.setup();
            },
            function(mdump, extra) {
              do_check_eq(extra.TestKey, "TestValue");
              do_check_eq(extra["\u2665"], "\u{1F4A9}");
              do_check_eq(extra.Notes, "JunkMoreJunk");
+             do_check_true(!("TelemetrySessionId" in extra));
            });
 }
