@@ -614,6 +614,20 @@ public class BrowserApp extends GeckoApp
         mActionBar = (ActionModeCompatView) findViewById(R.id.actionbar);
 
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
+        mBrowserToolbar.setTouchEventInterceptor(new TouchEventInterceptor() {
+            @Override
+            public boolean onInterceptTouchEvent(View view, MotionEvent event) {
+                // Manually dismiss text selection bar if it's not overlaying the toolbar.
+                mTextSelection.dismiss();
+                return false;
+            }
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return false;
+            }
+        });
+
         mProgressView = (ToolbarProgressView) findViewById(R.id.progress);
         mBrowserToolbar.setProgressBar(mProgressView);
 
@@ -946,6 +960,10 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onBackPressed() {
+        if (mTextSelection.dismiss()) {
+            return;
+        }
+
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
             super.onBackPressed();
             return;
