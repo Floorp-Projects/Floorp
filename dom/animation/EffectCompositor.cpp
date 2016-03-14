@@ -111,13 +111,15 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     }
 
     AnimationPerformanceWarning::Type warningType;
-    if (effect->ShouldBlockCompositorAnimations(aFrame,
-                                                warningType)) {
+    if (aProperty == eCSSProperty_transform &&
+        effect->ShouldBlockAsyncTransformAnimations(aFrame,
+                                                    warningType)) {
       if (aMatches) {
         aMatches->Clear();
       }
-      effect->SetPerformanceWarning(
-        aProperty, AnimationPerformanceWarning(warningType));
+      EffectCompositor::SetPerformanceWarning(
+        aFrame, aProperty,
+        AnimationPerformanceWarning(warningType));
       return false;
     }
 
