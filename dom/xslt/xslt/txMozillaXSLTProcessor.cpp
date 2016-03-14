@@ -361,13 +361,6 @@ txMozillaXSLTProcessor::txMozillaXSLTProcessor(nsISupports* aOwner)
 {
 }
 
-NS_IMETHODIMP
-txMozillaXSLTProcessor::Init(nsISupports* aOwner)
-{
-    mOwner = aOwner;
-    return NS_OK;
-}
-
 txMozillaXSLTProcessor::~txMozillaXSLTProcessor()
 {
     if (mStylesheetDocument) {
@@ -611,7 +604,7 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
                     styleNode->IsNodeOfType(nsINode::eDOCUMENT)),
                    NS_ERROR_INVALID_ARG);
 
-    nsresult rv = TX_CompileStylesheet(styleNode, getLoaderDoc(), this,
+    nsresult rv = TX_CompileStylesheet(styleNode, this,
                                        getter_AddRefs(mStylesheet));
     // XXX set up exception context, bug 204658
     NS_ENSURE_SUCCESS(rv, rv);
@@ -666,7 +659,7 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument **aResult,
         sourceDOMDocument = do_QueryInterface(mSource);
     }
 
-    txExecutionState es(mStylesheet, IsLoadDisabled(), getLoaderDoc());
+    txExecutionState es(mStylesheet, IsLoadDisabled());
 
     // XXX Need to add error observers
 
@@ -734,7 +727,7 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    txExecutionState es(mStylesheet, IsLoadDisabled(), getLoaderDoc());
+    txExecutionState es(mStylesheet, IsLoadDisabled());
 
     // XXX Need to add error observers
 
@@ -1043,7 +1036,12 @@ NS_IMETHODIMP
 txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri,
                                        nsIDocument* aLoaderDocument)
 {
-    nsresult rv = TX_LoadSheet(aUri, this, aLoaderDocument);
+    mozilla::net::ReferrerPolicy refpol = mozilla::net::RP_Default;
+    if (mStylesheetDocument) {
+        refpol = mStylesheetDocument->GetReferrerPolicy();
+    }
+
+    nsresult rv = TX_LoadSheet(aUri, this, aLoaderDocument, refpol);
     if (NS_FAILED(rv) && mObserver) {
         // This is most likely a network or security error, just
         // use the uri as context.
@@ -1200,24 +1198,6 @@ txMozillaXSLTProcessor::notifyError()
     mObserver->OnTransformDone(mTransformResult, document);
 }
 
-nsIDocument*
-txMozillaXSLTProcessor::getLoaderDoc()
-{
-    if (mOwner) {
-        nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(mOwner);
-        if (win) {
-            return win->GetExtantDoc();
-        }
-    }
-
-    if (mSource) {
-        nsCOMPtr<nsINode> node = do_QueryInterface(mSource);
-        return node->OwnerDoc();
-    }
-
-    return nullptr;
-}
-
 nsresult
 txMozillaXSLTProcessor::ensureStylesheet()
 {
@@ -1232,8 +1212,7 @@ txMozillaXSLTProcessor::ensureStylesheet()
         style = mStylesheetDocument;
     }
 
-    return TX_CompileStylesheet(style, getLoaderDoc(), this,
-                                getter_AddRefs(mStylesheet));
+    return TX_CompileStylesheet(style, this, getter_AddRefs(mStylesheet));
 }
 
 void
