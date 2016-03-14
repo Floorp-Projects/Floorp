@@ -2266,6 +2266,9 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
                       trackId.c_str(), streamId.c_str());
 
   aTrack.AddPrincipalChangeObserver(this);
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  PrincipalChanged(&aTrack);
+#endif
 
   if (aTrack.AsAudioStreamTrack()) {
     res = AddTrackToJsepSession(SdpMediaSection::kAudio, streamId, trackId);
@@ -2430,6 +2433,10 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
   }
   aThisTrack.RemovePrincipalChangeObserver(this);
   aWithTrack.AddPrincipalChangeObserver(this);
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  PrincipalChanged(&aWithTrack);
+#endif
+
   pco->OnReplaceTrackSuccess(jrv);
   if (jrv.Failed()) {
     CSFLogError(logTag, "Error firing replaceTrack success callback");
