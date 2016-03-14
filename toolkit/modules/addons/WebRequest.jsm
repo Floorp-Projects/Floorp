@@ -44,7 +44,7 @@ var RequestId = {
   count: 1,
   KEY: "mozilla.webRequest.requestId",
   create(channel = null) {
-    let id = this.count++;
+    let id = (this.count++).toString();
     if (channel) {
       attachToChannel(channel, this.KEY, id);
     }
