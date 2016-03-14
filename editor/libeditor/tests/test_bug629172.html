@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=629172
+-->
+<head>
+  <title>Test for Bug 629172</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=629172">Mozilla Bug 629172</a>
+<p id="display"></p>
+<div id="content">
+<textarea id="ltr-ref" style="display: none">test.</textarea>
+<textarea id="rtl-ref" style="display: none; direction: rtl">test.</textarea>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 629172 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var LTRRef = document.getElementById("ltr-ref");
+  var RTLRef = document.getElementById("rtl-ref");
+  var Screenshots = {};
+
+  // generate the reference screenshots
+  LTRRef.style.display = "";
+  document.body.clientWidth;
+  Screenshots.ltr = snapshotWindow(window);
+  LTRRef.parentNode.removeChild(LTRRef);
+  RTLRef.style.display = "";
+  document.body.clientWidth;
+  Screenshots.rtl = snapshotWindow(window);
+  RTLRef.parentNode.removeChild(RTLRef);
+  Screenshots.get = function(dir, flip) {
+    if (flip) {
+      return this[dir == "rtl" ? "ltr" : "rtl"];
+    } else {
+      return this[dir];
+    }
+  };
+
+  function testDirection(initialDir) {
+    var t = document.createElement("textarea");
+    t.setAttribute("dir", initialDir);
+    t.value = "test.";
+    var inputEventCount = 0;
+    t.oninput = function() { inputEventCount++; };
+    document.getElementById("content").appendChild(t);
+    document.body.clientWidth;
+    var s1 = snapshotWindow(window);
+    ok(compareSnapshots(s1, Screenshots.get(initialDir, false), true)[0],
+       "Textarea should appear correctly before switching the direction (" + initialDir + ")");
+    t.focus();
+    is(inputEventCount, 0, "input event count must be 0 before");
+    synthesizeKey("x", {accelKey: true, shiftKey: true});
+    is(t.getAttribute("dir"), initialDir == "ltr" ? "rtl" : "ltr", "The dir attribute must be correctly updated");
+    is(inputEventCount, 1, "input event count must be 1 after");
+    t.blur();
+    var s2 = snapshotWindow(window);
+    ok(compareSnapshots(s2, Screenshots.get(initialDir, true), true)[0],
+       "Textarea should appear correctly after switching the direction (" + initialDir + ")");
+    t.focus();
+    is(inputEventCount, 1, "input event count must be 1 before");
+    synthesizeKey("x", {accelKey: true, shiftKey: true});
+    is(inputEventCount, 2, "input event count must be 2 after");
+    is(t.getAttribute("dir"), initialDir == "ltr" ? "ltr" : "rtl", "The dir attribute must be correctly updated");
+    t.blur();
+    var s3 = snapshotWindow(window);
+    ok(compareSnapshots(s3, Screenshots.get(initialDir, false), true)[0],
+       "Textarea should appear correctly after switching back the direction (" + initialDir + ")");
+    t.parentNode.removeChild(t);
+  }
+
+  testDirection("ltr");
+  testDirection("rtl");
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
