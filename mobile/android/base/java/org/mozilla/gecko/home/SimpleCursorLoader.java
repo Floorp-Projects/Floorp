@@ -23,6 +23,21 @@ import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.content.AsyncTaskLoader;
 
+/**
+ * A copy of the framework's {@link android.content.CursorLoader} that
+ * instead allows the caller to load the Cursor themselves via the abstract
+ * {@link #loadCursor()} method, rather than calling out to a ContentProvider via
+ * class methods.
+ *
+ * For new code, prefer {@link android.content.CursorLoader} (see @deprecated).
+ *
+ * This was originally created to re-use existing code which loaded Cursors manually.
+ *
+ * @deprecated since the framework provides an implementation, we'd like to eventually remove
+ *             this class to reduce maintenance burden. Originally planned for bug 1239491, but
+ *             it'd be more efficient to do this over time, rather than all at once.
+ */
+@Deprecated
 abstract class SimpleCursorLoader extends AsyncTaskLoader<Cursor> {
     final ForceLoadContentObserver mObserver;
     Cursor mCursor;
