@@ -416,7 +416,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/TopSitesGridView.java',
     'home/TopSitesPanel.java',
     'home/TopSitesThumbnailView.java',
-    'home/TransitionAwareCursorLoaderCallbacks.java',
     'home/TwoLinePageRow.java',
     'InputConnectionListener.java',
     'InputMethods.java',
