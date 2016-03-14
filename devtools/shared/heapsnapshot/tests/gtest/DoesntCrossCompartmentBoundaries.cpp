@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Test that heap snapshots walk the zone boundaries correctly.
+// Test that heap snapshots walk the compartment boundaries correctly.
 
 #include "DevTools.h"
 
-DEF_TEST(DoesntCrossZoneBoundaries, {
-    // Create a new global to get a new zone.
+DEF_TEST(DoesntCrossCompartmentBoundaries, {
+    // Create a new global to get a new compartment.
     JS::CompartmentOptions options;
     JS::RootedObject newGlobal(cx, JS_NewGlobalObject(cx,
                                                       getGlobalClass(),
@@ -16,38 +16,38 @@ DEF_TEST(DoesntCrossZoneBoundaries, {
                                                       JS::FireOnNewGlobalHook,
                                                       options));
     ASSERT_TRUE(newGlobal);
-    JS::Zone* newZone = nullptr;
+    JSCompartment* newCompartment = nullptr;
     {
       JSAutoCompartment ac(cx, newGlobal);
       ASSERT_TRUE(JS_InitStandardClasses(cx, newGlobal));
-      newZone = js::GetContextZone(cx);
+      newCompartment = js::GetContextCompartment(cx);
     }
-    ASSERT_TRUE(newZone);
-    ASSERT_NE(newZone, zone);
+    ASSERT_TRUE(newCompartment);
+    ASSERT_NE(newCompartment, compartment);
 
-    // Our set of target zones is only the pre-existing zone and does not
-    // include the new zone.
-    JS::ZoneSet targetZones;
-    ASSERT_TRUE(targetZones.init());
-    ASSERT_TRUE(targetZones.put(zone));
+    // Our set of target compartments is only the pre-existing compartment and
+    // does not include the new compartment.
+    JS::CompartmentSet targetCompartments;
+    ASSERT_TRUE(targetCompartments.init());
+    ASSERT_TRUE(targetCompartments.put(compartment));
 
     FakeNode nodeA;
     FakeNode nodeB;
     FakeNode nodeC;
 
-    nodeA.zone = zone;
-    nodeB.zone = nullptr;
-    nodeC.zone = newZone;
+    nodeA.compartment = compartment;
+    nodeB.compartment = nullptr;
+    nodeC.compartment = newCompartment;
 
     AddEdge(nodeA, nodeB);
     AddEdge(nodeB, nodeC);
 
     ::testing::NiceMock<MockWriter> writer;
 
-    // Should serialize nodeA, because it is in our target zones.
+    // Should serialize nodeA, because it is in our target compartments.
     ExpectWriteNode(writer, nodeA);
 
-    // Should serialize nodeB, because it doesn't belong to a zone and is
+    // Should serialize nodeB, because it doesn't belong to a compartment and is
     // therefore assumed to be shared.
     ExpectWriteNode(writer, nodeB);
 
@@ -59,6 +59,6 @@ DEF_TEST(DoesntCrossZoneBoundaries, {
                                JS::ubi::Node(&nodeA),
                                writer,
                                /* wantNames = */ false,
-                               &targetZones,
+                               &targetCompartments,
                                noGC));
   });
