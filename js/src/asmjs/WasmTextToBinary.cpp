@@ -28,6 +28,7 @@
 #include "jsstr.h"
 
 #include "asmjs/WasmBinary.h"
+#include "asmjs/WasmTypes.h"
 #include "ds/LifoAlloc.h"
 #include "js/CharacterEncoding.h"
 #include "js/HashTable.h"
