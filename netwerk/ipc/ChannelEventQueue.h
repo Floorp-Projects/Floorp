@@ -52,10 +52,10 @@ class ChannelEventQueue final
   // automatically when EndForcedQueueing and/or Resume is called.
   //
   // @param aCallback - the ChannelEvent
-  // @param aAssertWhenNotQueued - this optional param will be used in an
+  // @param aAssertionWhenNotQueued - this optional param will be used in an
   //   assertion when the event is executed directly.
   inline void RunOrEnqueue(ChannelEvent* aCallback,
-                           bool aAssertWhenNotQueued = true);
+                           bool aAssertionWhenNotQueued = false);
   inline nsresult PrependEvents(nsTArray<UniquePtr<ChannelEvent>>& aEvents);
 
   // After StartForcedQueueing is called, RunOrEnqueue() will start enqueuing
@@ -109,9 +109,12 @@ class ChannelEventQueue final
 
 inline void
 ChannelEventQueue::RunOrEnqueue(ChannelEvent* aCallback,
-                                bool aAssertWhenNotQueued)
+                                bool aAssertionWhenNotQueued)
 {
   MOZ_ASSERT(aCallback);
+
+  // To avoid leaks.
+  UniquePtr<ChannelEvent> event(aCallback);
 
   {
     MutexAutoLock lock(mMutex);
@@ -121,13 +124,13 @@ ChannelEventQueue::RunOrEnqueue(ChannelEvent* aCallback,
                "Should always enqueue if ChannelEventQueue not empty");
 
     if (enqueue) {
-      mEventQueue.AppendElement(aCallback);
+      mEventQueue.AppendElement(Move(event));
       return;
     }
   }
 
-  MOZ_RELEASE_ASSERT(aAssertWhenNotQueued);
-  aCallback->Run();
+  MOZ_RELEASE_ASSERT(!aAssertionWhenNotQueued);
+  event->Run();
 }
 
 inline void
