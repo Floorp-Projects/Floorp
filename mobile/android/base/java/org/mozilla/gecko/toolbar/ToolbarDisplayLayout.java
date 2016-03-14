@@ -305,6 +305,11 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     }
 
     private void updateAndColorTitleFromFullURL(String url, String baseDomain, boolean isPrivate) {
+        if (TextUtils.isEmpty(baseDomain)) {
+            setTitle(url);
+            return;
+        }
+
         int index = url.indexOf(baseDomain);
         if (index == -1) {
             setTitle(url);
