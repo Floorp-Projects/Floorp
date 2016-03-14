@@ -8379,6 +8379,15 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of sessions where at least one chat message was exchanged"
   },
+  "LOOP_COPY_PANEL_ACTIONS": {
+    "alert_emails": ["firefox-dev@mozilla.org", "edilee@mozilla.com"],
+    "expires_in_version": "51",
+    "kind": "enumerated",
+    "n_values": 5,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1239965, 1259506],
+    "description": "Number of times each of the following copy panel actions are triggered: 0=SHOWN, 1=NO_AGAIN, 2=NO_NEVER, 3=YES_AGAIN, 4=YES_NEVER"
+  },
   "LOOP_INFOBAR_ACTION_BUTTONS": {
     "alert_emails": ["firefox-dev@mozilla.org", "mbanner@mozilla.com"],
     "expires_in_version": "51",
