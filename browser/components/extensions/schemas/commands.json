@@ -27,7 +27,6 @@
             "optional": true,
             "additionalProperties": {
               "type": "object",
-              "additionalProperties": { "$ref": "UnrecognizedProperty" },
               "properties": {
                 "suggested_key": {
                   "type": "object",
