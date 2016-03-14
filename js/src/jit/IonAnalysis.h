@@ -60,7 +60,8 @@ bool
 RenumberBlocks(MIRGraph& graph);
 
 bool
-AccountForCFGChanges(MIRGenerator* mir, MIRGraph& graph, bool updateAliasAnalysis);
+AccountForCFGChanges(MIRGenerator* mir, MIRGraph& graph, bool updateAliasAnalysis,
+                     bool underValueNumberer = false);
 
 bool
 RemoveUnmarkedBlocks(MIRGenerator* mir, MIRGraph& graph, uint32_t numMarkedBlocks);
@@ -81,7 +82,7 @@ void
 AssertGraphCoherency(MIRGraph& graph);
 
 void
-AssertExtendedGraphCoherency(MIRGraph& graph);
+AssertExtendedGraphCoherency(MIRGraph& graph, bool underValueNumberer = false);
 
 bool
 EliminateRedundantChecks(MIRGraph& graph);
