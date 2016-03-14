@@ -17,25 +17,23 @@ namespace mozilla {
 class JavascriptTimelineMarker : public TimelineMarker
 {
 public:
-  // The caller owns |aAsyncCause| here, so we must copy it into a separate
-  // string for use later on.
   JavascriptTimelineMarker(const char* aReason,
                            const char16_t* aFunctionName,
                            const char16_t* aFileName,
                            uint32_t aLineNumber,
                            MarkerTracingType aTracingType,
                            JS::Handle<JS::Value> aAsyncStack,
-                           const char* aAsyncCause)
+                           JS::Handle<JS::Value> aAsyncCause)
     : TimelineMarker("Javascript", aTracingType, MarkerStackRequest::NO_STACK)
     , mCause(NS_ConvertUTF8toUTF16(aReason))
     , mFunctionName(aFunctionName)
     , mFileName(aFileName)
     , mLineNumber(aLineNumber)
-    , mAsyncCause(aAsyncCause)
   {
     JSContext* ctx = nsContentUtils::GetCurrentJSContext();
     if (ctx) {
       mAsyncStack.init(ctx, aAsyncStack);
+      mAsyncCause.init(ctx, aAsyncCause);
     }
   }
 
@@ -52,16 +50,10 @@ public:
       stackFrame.mFunctionDisplayName.Construct(mFunctionName);
 
       if (mAsyncStack.isObject() && !mAsyncStack.isNullOrUndefined() &&
-          !mAsyncCause.IsEmpty()) {
+          mAsyncCause.isString()) {
         JS::Rooted<JSObject*> asyncStack(aCx, mAsyncStack.toObjectOrNull());
+        JS::Rooted<JSString*> asyncCause(aCx, mAsyncCause.toString());
         JS::Rooted<JSObject*> parentFrame(aCx);
-        JS::Rooted<JSString*> asyncCause(aCx, JS_NewUCStringCopyN(aCx, mAsyncCause.BeginReading(),
-                                                                  mAsyncCause.Length()));
-        if (!asyncCause) {
-          JS_ClearPendingException(aCx);
-          return;
-        }
-
         if (!JS::CopyAsyncStack(aCx, asyncStack, asyncCause, &parentFrame, 0)) {
           JS_ClearPendingException(aCx);
         } else {
@@ -86,7 +78,7 @@ private:
   nsString mFileName;
   uint32_t mLineNumber;
   JS::PersistentRooted<JS::Value> mAsyncStack;
-  NS_ConvertUTF8toUTF16 mAsyncCause;
+  JS::PersistentRooted<JS::Value> mAsyncCause;
 };
 
 } // namespace mozilla
