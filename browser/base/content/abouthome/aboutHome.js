@@ -152,16 +152,8 @@ function ensureSnippetsMapThen(aCallback)
     }
 
     let cache = new Map();
-    let cursorRequest;
-    try {
-      cursorRequest = db.transaction(SNIPPETS_OBJECTSTORE_NAME)
-                        .objectStore(SNIPPETS_OBJECTSTORE_NAME).openCursor();
-    } catch(ex) {
-      console.error(ex);
-      invokeCallbacks();
-      return;
-    }
-
+    let cursorRequest = db.transaction(SNIPPETS_OBJECTSTORE_NAME)
+                          .objectStore(SNIPPETS_OBJECTSTORE_NAME).openCursor();
     cursorRequest.onerror = function (event) {
       invokeCallbacks();
     }
