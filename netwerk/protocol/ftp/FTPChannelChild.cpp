@@ -377,7 +377,7 @@ FTPChannelChild::RecvOnDataAvailable(const nsresult& channelStatus,
 
   mEventQ->RunOrEnqueue(new FTPDataAvailableEvent(this, channelStatus, data,
                                                   offset, count),
-                        !mDivertingToParent);
+                        mDivertingToParent);
 
   return true;
 }
@@ -632,7 +632,7 @@ FTPChannelChild::RecvFlushedForDiversion()
   LOG(("FTPChannelChild::RecvFlushedForDiversion [this=%p]\n", this));
   MOZ_ASSERT(mDivertingToParent);
 
-  mEventQ->RunOrEnqueue(new FTPFlushedForDiversionEvent(this));
+  mEventQ->RunOrEnqueue(new FTPFlushedForDiversionEvent(this), true);
   return true;
 }
 
