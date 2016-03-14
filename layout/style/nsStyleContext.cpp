@@ -314,9 +314,16 @@ nsStyleContext::MoveTo(nsStyleContext* aNewParent)
 
   // This function shouldn't be getting called if the parents have different
   // values for some flags in mBits, because if that were the case we would need
-  // to recompute those bits for |this|. (TODO: add more flags to |mask|.)
-  DebugOnly<uint64_t> mask = NS_STYLE_IN_DISPLAY_NONE_SUBTREE;
+  // to recompute those bits for |this|.
+  DebugOnly<uint64_t> mask = NS_STYLE_HAS_PSEUDO_ELEMENT_DATA |
+                             NS_STYLE_IN_DISPLAY_NONE_SUBTREE;
   MOZ_ASSERT((mParent->mBits & mask) == (aNewParent->mBits & mask));
+  MOZ_ASSERT((mParent->mBits & NS_STYLE_HAS_TEXT_DECORATION_LINES) ==
+             (aNewParent->mBits & NS_STYLE_HAS_TEXT_DECORATION_LINES) ||
+             StyleTextReset()->HasTextDecorationLines());
+  MOZ_ASSERT((mParent->mBits & NS_STYLE_RELEVANT_LINK_VISITED) ==
+             (aNewParent->mBits & NS_STYLE_RELEVANT_LINK_VISITED) ||
+             IsLinkContext());
 
   // Assertions checking for visited style are just to avoid some tricky
   // cases we can't be bothered handling at the moment.
@@ -589,10 +596,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
   } else {
     // We might have defined a decoration.
-    const nsStyleTextReset* text = StyleTextReset();
-    uint8_t decorationLine = text->mTextDecorationLine;
-    if (decorationLine != NS_STYLE_TEXT_DECORATION_LINE_NONE &&
-        decorationLine != NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL) {
+    if (StyleTextReset()->HasTextDecorationLines()) {
       mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
     }
   }
