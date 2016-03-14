@@ -658,6 +658,15 @@ function closeAllChats() {
   }
 }
 
+function openChatViaUser() {
+  let sidebarDoc = document.getElementById("social-sidebar-browser").contentDocument;
+  let button = sidebarDoc.getElementById("chat-opener");
+  // Note we must use synthesizeMouseAtCenter() rather than calling
+  // .click() directly as this causes nsIDOMWindowUtils.isHandlingUserInput
+  // to be true.
+  EventUtils.synthesizeMouseAtCenter(button, {}, sidebarDoc.defaultView);
+}
+
 
 // Support for going on and offline.
 // (via browser/base/content/test/browser_bookmark_titles.js)
