@@ -383,10 +383,6 @@ obj_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedObject setPrototypeOf(cx, &args.callee());
-    if (!GlobalObject::warnOnceAboutPrototypeMutation(cx, setPrototypeOf))
-        return false;
-
     if (args.length() < 2) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              "Object.setPrototypeOf", "1", "");
@@ -1053,13 +1049,6 @@ static bool
 ProtoSetter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-
-    // Do this here, rather than after the this-check so even likely-buggy
-    // use of the __proto__ setter on unacceptable values, where no subsequent
-    // use occurs on an acceptable value, will trigger a warning.
-    RootedObject callee(cx, &args.callee());
-    if (!GlobalObject::warnOnceAboutPrototypeMutation(cx, callee))
-       return false;
 
     HandleValue thisv = args.thisv();
     if (thisv.isNullOrUndefined()) {

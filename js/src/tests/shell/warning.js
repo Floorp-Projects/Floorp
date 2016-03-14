@@ -9,14 +9,15 @@ print(BUGNUMBER + ": " + summary);
 
 enableLastWarning();
 
-eval(`({}).__proto__ = {};`);
+let line0 = new Error().lineNumber;
+assertEq("foo".contains("bar"), false);
 
 var warning = getLastWarning();
 assertEq(warning !== null, true);
 assertEq(warning.name, "None");
-assertEq(warning.message.includes("mutating"), true);
-assertEq(warning.lineNumber, 1);
-assertEq(warning.columnNumber, 2);
+assertEq(warning.message.includes("deprecated"), true);
+assertEq(warning.lineNumber, line0 + 1);
+assertEq(warning.columnNumber, 10);
 
 // Clear last warning.
 
