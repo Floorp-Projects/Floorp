@@ -5,9 +5,6 @@
 
 package org.mozilla.gecko;
 
-import android.content.ContentResolver;
-import android.widget.AdapterView;
-import android.widget.Button;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.db.BrowserDB;
@@ -34,6 +31,8 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
+import org.mozilla.gecko.text.FloatingToolbarTextSelection;
+import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.ActivityUtils;
@@ -48,10 +47,10 @@ import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -96,6 +95,8 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.widget.AbsoluteLayout;
+import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -179,7 +180,7 @@ public abstract class GeckoApp
 
     private ContactService mContactService;
     private PromptService mPromptService;
-    private TextSelection mTextSelection;
+    protected TextSelection mTextSelection;
 
     protected DoorHangerPopup mDoorHangerPopup;
     protected FormAssistPopup mFormAssistPopup;
@@ -1268,6 +1269,16 @@ public abstract class GeckoApp
         // Use global layout state change to kick off additional initialization
         mMainLayout.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
+        if (Versions.preMarshmallow || !AppConstants.NIGHTLY_BUILD) {
+            mTextSelection = new ActionBarTextSelection(
+                    (TextSelectionHandle) findViewById(R.id.anchor_handle),
+                    (TextSelectionHandle) findViewById(R.id.caret_handle),
+                    (TextSelectionHandle) findViewById(R.id.focus_handle));
+        } else {
+            mTextSelection = new FloatingToolbarTextSelection(this, mLayerView);
+        }
+        mTextSelection.create();
+
         // Determine whether we should restore tabs.
         mShouldRestore = getSessionRestoreState(savedInstanceState);
         if (mShouldRestore && savedInstanceState != null) {
@@ -1540,10 +1551,6 @@ public abstract class GeckoApp
         mContactService = new ContactService(EventDispatcher.getInstance(), this);
 
         mPromptService = new PromptService(this);
-
-        mTextSelection = new TextSelection((TextSelectionHandle) findViewById(R.id.anchor_handle),
-                                           (TextSelectionHandle) findViewById(R.id.caret_handle),
-                                           (TextSelectionHandle) findViewById(R.id.focus_handle));
 
         // Trigger the completion of the telemetry timer that wraps activity startup,
         // then grab the duration to give to FHR.
