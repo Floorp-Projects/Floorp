@@ -2630,16 +2630,6 @@ class MOZ_STACK_CLASS FunctionValidator
         hasAlreadyReturned_(false)
     {}
 
-    ~FunctionValidator() {
-        if (m_.hasAlreadyFailed())
-            return;
-        MOZ_ASSERT(!blockDepth_);
-        MOZ_ASSERT(breakableStack_.empty());
-        MOZ_ASSERT(continuableStack_.empty());
-        MOZ_ASSERT(breakLabels_.empty());
-        MOZ_ASSERT(continueLabels_.empty());
-    }
-
     ModuleValidator& m() const        { return m_; }
     ExclusiveContext* cx() const      { return m_.cx(); }
     ParseNode* fn() const             { return fn_; }
@@ -2656,6 +2646,11 @@ class MOZ_STACK_CLASS FunctionValidator
     }
 
     bool finish(uint32_t funcIndex, unsigned generateTime) {
+        MOZ_ASSERT(!blockDepth_);
+        MOZ_ASSERT(breakableStack_.empty());
+        MOZ_ASSERT(continuableStack_.empty());
+        MOZ_ASSERT(breakLabels_.empty());
+        MOZ_ASSERT(continueLabels_.empty());
         return m_.mg().finishFuncDef(funcIndex, generateTime, &fg_);
     }
 
