@@ -253,7 +253,9 @@ class TestNrSocket : public NrSocketBase {
         nr_transport_addr remote_address_;
 
       private:
-        ~PortMapping(){}
+        ~PortMapping() {
+          external_socket_->close();
+        }
 
         // If external_socket_ returns E_WOULDBLOCK, we don't want to propagate
         // that to the code using the TestNrSocket. We can also perhaps use this
