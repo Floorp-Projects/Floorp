@@ -187,6 +187,9 @@ public:
    */
   void FireDelayedEvent(AccEvent* aEvent);
   void FireDelayedEvent(uint32_t aEventType, Accessible* aTarget);
+  void FireEventsOnInsertion(Accessible* aContainer,
+                             AccReorderEvent* aReorderEvent,
+                             uint32_t aUpdateFlags);
 
   /**
    * Fire value change event on the given accessible if applicable.
