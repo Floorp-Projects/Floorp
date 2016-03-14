@@ -324,6 +324,14 @@ protected:
   // when the trackpoint hack is enabled.
   enum { eFakeTrackPointScrollableID = 0x46545053 };
 
+  // Used for displayport suppression during window resize
+  enum ResizeState {
+    NOT_RESIZING,
+    IN_SIZEMOVE,
+    RESIZING,
+    MOVING
+  };
+
   /**
    * Callbacks
    */
@@ -401,6 +409,7 @@ protected:
   int32_t                 ClientMarginHitTestPoint(int32_t mx, int32_t my);
   TimeStamp               GetMessageTimeStamp(LONG aEventTime);
   static void             UpdateFirstEventTime(DWORD aEventTime);
+  void                    FinishLiveResizing(ResizeState aNewState);
 
   /**
    * Event handlers
@@ -584,12 +593,6 @@ protected:
 
   LayoutDeviceIntRect   mLastPaintBounds;
 
-  // Used for displayport suppression during window resize
-  enum ResizeState {
-    NOT_RESIZING,
-    IN_SIZEMOVE,
-    RESIZING,
-  };
   ResizeState mResizeState;
 
   // Transparency
