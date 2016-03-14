@@ -329,6 +329,7 @@ def old_configure_options(*options):
     '--with-macos-private-frameworks',
     '--with-macos-sdk',
     '--with-mozilla-api-keyfile',
+    '--with-nspr-prefix',
     '--with-nspr-cflags',
     '--with-nspr-libs',
     '--with-pthreads',
