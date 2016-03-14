@@ -21,6 +21,7 @@
 #include "mozilla/CheckedInt.h"
 
 #include "jsnum.h"
+#include "jsprf.h"
 
 #include "asmjs/Wasm.h"
 #include "asmjs/WasmTypes.h"
