@@ -148,7 +148,7 @@
   details10.ontoggle = t10.step_func_done(function(evt) {
     assert_unreached("toggle event fired on closed details element");
   });
-  details10.open = false;
+  details10.open = false; // closes details10
   setTimeout(t10.step_func(function() {
     assert_false(details10.open);
     t10.done();
