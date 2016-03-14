@@ -976,6 +976,17 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
 }
 
 void
+MessageChannel::PeekMessages(msgid_t aMsgId, mozilla::function<void(const Message& aMsg)> aInvoke) {
+    for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); it++) {
+        Message &msg = *it;
+
+        if (msg.type() == aMsgId) {
+          aInvoke(msg);
+        }
+    }
+}
+
+void
 MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
 {
     IPC_LOG("ProcessPendingRequests for seqno=%d, xid=%d",
