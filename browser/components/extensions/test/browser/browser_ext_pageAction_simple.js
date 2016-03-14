@@ -5,7 +5,7 @@
 add_task(function* () {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "browser_action": {
+      "page_action": {
         "default_popup": "popup.html",
         "unrecognized_property": "with-a-random-value",
       },
@@ -29,26 +29,28 @@ add_task(function* () {
         browser.test.assertEq(msg, "from-popup", "correct message received");
         browser.test.sendMessage("popup");
       });
+      browser.tabs.query({active: true, currentWindow: true}, tabs => {
+        let tabId = tabs[0].id;
+
+        browser.pageAction.show(tabId);
+        browser.test.sendMessage("page-action-shown");
+      });
     },
   });
 
   SimpleTest.waitForExplicitFinish();
   let waitForConsole = new Promise(resolve => {
     SimpleTest.monitorConsole(resolve, [{
-      message: /Reading manifest: Error processing browser_action.unrecognized_property: An unexpected property was found/,
+      message: /Reading manifest: Error processing page_action.unrecognized_property: An unexpected property was found/,
     }]);
   });
 
   yield extension.startup();
+  yield extension.awaitMessage("page-action-shown");
 
-  // Do this a few times to make sure the pop-up is reloaded each time.
-  for (let i = 0; i < 3; i++) {
-    clickBrowserAction(extension);
+  clickPageAction(extension);
 
-    yield extension.awaitMessage("popup");
-
-    closeBrowserAction(extension);
-  }
+  yield extension.awaitMessage("popup");
 
   yield extension.unload();
 
