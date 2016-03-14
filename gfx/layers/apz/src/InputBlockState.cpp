@@ -87,11 +87,33 @@ InputBlockState::IsTargetConfirmed() const
   return mTargetConfirmed;
 }
 
+bool
+InputBlockState::IsAncestorOf(AsyncPanZoomController* aA, AsyncPanZoomController* aB)
+{
+  if (aA == aB) {
+    return true;
+  }
+
+  bool seenA = false;
+  for (size_t i = 0; i < mOverscrollHandoffChain->Length(); ++i) {
+    AsyncPanZoomController* apzc = mOverscrollHandoffChain->GetApzcAtIndex(i);
+    if (apzc == aB) {
+      return seenA;
+    }
+    if (apzc == aA) {
+      seenA = true;
+    }
+  }
+  return false;
+}
+
+
 void
 InputBlockState::SetScrolledApzc(AsyncPanZoomController* aApzc)
 {
-  // An input block should only have one scrolled APZC.
-  MOZ_ASSERT(!mScrolledApzc || mScrolledApzc == aApzc);
+  // With immediate handoff disabled, the scrolled APZC cannot move down the handoff chain
+  // but it can move up the handoff chain if we change scrolling directions.
+  MOZ_ASSERT(!mScrolledApzc || IsAncestorOf(aApzc, mScrolledApzc));
 
   mScrolledApzc = aApzc;
 }
