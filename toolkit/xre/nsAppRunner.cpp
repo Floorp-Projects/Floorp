@@ -1407,6 +1407,13 @@ nsXULAppInfo::SaveMemoryReport()
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::SetTelemetrySessionId(const nsACString& id)
+{
+  CrashReporter::SetTelemetrySessionId(id);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::Callback(nsISupports* aData)
 {
   nsCOMPtr<nsIFile> file = do_QueryInterface(aData);
