@@ -58,8 +58,20 @@ addMessageListener("Test:SynthesizeMouse", (message) => {
 
 addMessageListener("Test:SendChar", message => {
   let result = EventUtils.sendChar(message.data.char, content);
-  sendAsyncMessage("Test:SendCharDone", {
-    sendCharResult: result,
-    seq: message.data.seq
-  });
+  sendAsyncMessage("Test:SendCharDone", { result, seq: message.data.seq });
+});
+
+addMessageListener("Test:SynthesizeKey", message => {
+  EventUtils.synthesizeKey(message.data.key, message.data.event || {}, content);
+  sendAsyncMessage("Test:SynthesizeKeyDone", { seq: message.data.seq });
+});
+
+addMessageListener("Test:SynthesizeComposition", message => {
+  let result = EventUtils.synthesizeComposition(message.data.event, content);
+  sendAsyncMessage("Test:SynthesizeCompositionDone", { result, seq: message.data.seq });
+});
+
+addMessageListener("Test:SynthesizeCompositionChange", message => {
+  EventUtils.synthesizeCompositionChange(message.data.event, content);
+  sendAsyncMessage("Test:SynthesizeCompositionChangeDone", { seq: message.data.seq });
 });
