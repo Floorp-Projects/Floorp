@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <mozilla/UniquePtr.h>
+#include "gfxMatrix.h"
 
 namespace mozilla {
 
@@ -16,10 +17,12 @@ namespace gl { class GLContext; }
 
 namespace layers {
 
+
 namespace layerscope { class Packet; }
 
 struct EffectChain;
 class LayerComposite;
+class TextureHost;
 
 class LayerScope {
 public:

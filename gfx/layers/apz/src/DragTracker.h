@@ -7,6 +7,7 @@
 #define mozilla_layers_DragTracker_h
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 

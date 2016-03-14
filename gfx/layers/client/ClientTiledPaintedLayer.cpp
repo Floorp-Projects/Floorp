@@ -24,6 +24,10 @@
 namespace mozilla {
 namespace layers {
 
+using gfx::Rect;
+using gfx::IntRect;
+using gfx::IntSize;
+
 ClientTiledPaintedLayer::ClientTiledPaintedLayer(ClientLayerManager* const aManager,
                                                ClientLayerManager::PaintedLayerCreationHint aCreationHint)
   : PaintedLayer(aManager, static_cast<ClientLayer*>(this), aCreationHint)
