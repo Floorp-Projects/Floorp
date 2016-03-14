@@ -15,6 +15,7 @@
 class nsIContent;
 class nsIDocument;
 class nsIPresShell;
+class nsIScrollableFrame;
 class nsIWidget;
 template<class T> struct already_AddRefed;
 template<class T> class nsCOMPtr;
@@ -173,6 +174,17 @@ public:
                                     const nsCOMPtr<nsIPresShell>& aShell);
     static bool IsDisplayportSuppressed();
 
+    static void
+    AdjustDisplayPortForScrollDelta(mozilla::layers::FrameMetrics& aFrameMetrics,
+                                    const CSSPoint& aActualScrollOffset);
+
+    /*
+     * Check if the scrollable frame is currently in the middle of an async
+     * or smooth scroll. We want to discard certain scroll input if this is
+     * true to prevent clobbering higher priority origins.
+     */
+    static bool
+    IsScrollInProgress(nsIScrollableFrame* aFrame);
 private:
   static uint64_t sLastTargetAPZCNotificationInputBlock;
 };
