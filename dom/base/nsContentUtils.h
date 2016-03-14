@@ -2582,8 +2582,6 @@ public:
    */
   static bool IsSpecificAboutPage(JSObject* aGlobal, const char* aUri);
 
-  static void SetScrollbarsVisibility(nsIDocShell* aDocShell, bool aVisible);
-
 private:
   static bool InitializeEventTable();
 

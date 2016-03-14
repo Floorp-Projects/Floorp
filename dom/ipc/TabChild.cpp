@@ -841,9 +841,6 @@ TabChild::Init()
     do_QueryInterface(window->GetChromeEventHandler());
   docShell->SetChromeEventHandler(chromeHandler);
 
-  nsContentUtils::SetScrollbarsVisibility(window->GetDocShell(),
-    !!(mChromeFlags & nsIWebBrowserChrome::CHROME_SCROLLBARS));
-
   nsWeakPtr weakPtrThis = do_GetWeakReference(static_cast<nsITabChild*>(this));  // for capture by the lambda
   ContentReceivedInputBlockCallback callback(
       [weakPtrThis](const ScrollableLayerGuid& aGuid,
