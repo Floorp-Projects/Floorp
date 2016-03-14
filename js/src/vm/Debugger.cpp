@@ -25,8 +25,6 @@
 #include "gc/Policy.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineJIT.h"
-#include "jit/JSONSpewer.h"
-#include "jit/MIRGraph.h"
 #include "js/GCAPI.h"
 #include "js/UbiNodeBreadthFirst.h"
 #include "js/Vector.h"
@@ -1558,75 +1556,6 @@ Debugger::fireOnGarbageCollectionHook(JSContext* cx,
         handleUncaughtException(ac, true);
 }
 
-JSTrapStatus
-Debugger::fireOnIonCompilationHook(JSContext* cx, Handle<ScriptVector> scripts, LSprinter& graph)
-{
-    RootedObject hook(cx, getHook(OnIonCompilation));
-    MOZ_ASSERT(hook);
-    MOZ_ASSERT(hook->isCallable());
-
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, object);
-
-    // Copy the vector of scripts to a JS Array of Debugger.Script
-    RootedObject tmpObj(cx);
-    RootedValue tmpVal(cx);
-    AutoValueVector dbgScripts(cx);
-    for (size_t i = 0; i < scripts.length(); i++) {
-        tmpObj = wrapScript(cx, scripts[i]);
-        if (!tmpObj)
-            return handleUncaughtException(ac, false);
-
-        tmpVal.setObject(*tmpObj);
-        if (!dbgScripts.append(tmpVal))
-            return handleUncaughtException(ac, false);
-    }
-
-    RootedObject dbgScriptsArray(cx, JS_NewArrayObject(cx, dbgScripts));
-    if (!dbgScriptsArray)
-        return handleUncaughtException(ac, false);
-
-    // Copy the JSON compilation graph to a JS String which is allocated as part
-    // of the Debugger compartment.
-    Sprinter jsonPrinter(cx);
-    if (!jsonPrinter.init())
-        return handleUncaughtException(ac, false);
-
-    graph.exportInto(jsonPrinter);
-    if (jsonPrinter.hadOutOfMemory())
-        return handleUncaughtException(ac, false);
-
-    RootedString json(cx, JS_NewStringCopyZ(cx, jsonPrinter.string()));
-    if (!json)
-        return handleUncaughtException(ac, false);
-
-    // Create a JS Object which has the array of scripts, and the string of the
-    // JSON graph.
-    const char* names[] = { "scripts", "json" };
-    JS::AutoValueArray<2> values(cx);
-    values[0].setObject(*dbgScriptsArray);
-    values[1].setString(json);
-
-    RootedObject obj(cx, JS_NewObject(cx, nullptr));
-    if (!obj)
-        return handleUncaughtException(ac, false);
-
-    MOZ_ASSERT(mozilla::ArrayLength(names) == values.length());
-    for (size_t i = 0; i < mozilla::ArrayLength(names); i++) {
-        if (!JS_DefineProperty(cx, obj, names[i], values[i], JSPROP_ENUMERATE, nullptr, nullptr))
-            return handleUncaughtException(ac, false);
-    }
-
-    // Call Debugger.onIonCompilation hook.
-    JS::AutoValueArray<1> argv(cx);
-    argv[0].setObject(*obj);
-
-    RootedValue rv(cx);
-    if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv.begin(), &rv))
-        return handleUncaughtException(ac, true);
-    return JSTRAP_CONTINUE;
-}
-
 template <typename HookIsEnabledFun /* bool (Debugger*) */,
           typename FireHookFun /* JSTrapStatus (Debugger*) */>
 /* static */ JSTrapStatus
@@ -1995,25 +1924,6 @@ Debugger::slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSav
     }
 
     return true;
-}
-
-/* static */ void
-Debugger::slowPathOnIonCompilation(JSContext* cx, Handle<ScriptVector> scripts, LSprinter& graph)
-{
-    JSTrapStatus status = dispatchHook(
-        cx,
-        [](Debugger* dbg) -> bool { return dbg->getHook(OnIonCompilation); },
-        [&](Debugger* dbg) -> JSTrapStatus {
-            (void) dbg->fireOnIonCompilationHook(cx, scripts, graph);
-            return JSTRAP_CONTINUE;
-        });
-
-    if (status == JSTRAP_ERROR) {
-        cx->clearPendingException();
-        return;
-    }
-
-    MOZ_ASSERT(status == JSTRAP_CONTINUE);
 }
 
 bool
@@ -3317,20 +3227,6 @@ Debugger::getMemory(JSContext* cx, unsigned argc, Value* vp)
 
     args.rval().set(memoryValue);
     return true;
-}
-
-/* static */ bool
-Debugger::getOnIonCompilation(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGGER(cx, argc, vp, "(get onIonCompilation)", args, dbg);
-    return getHookImpl(cx, args, *dbg, OnIonCompilation);
-}
-
-/* static */ bool
-Debugger::setOnIonCompilation(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGGER(cx, argc, vp, "(set onIonCompilation)", args, dbg);
-    return setHookImpl(cx, args, *dbg, OnIonCompilation);
 }
 
 /*
@@ -4959,7 +4855,6 @@ const JSPropertySpec Debugger::properties[] = {
     JS_PSGS("collectCoverageInfo", Debugger::getCollectCoverageInfo,
             Debugger::setCollectCoverageInfo, 0),
     JS_PSG("memory", Debugger::getMemory, 0),
-    JS_PSGS("onIonCompilation", Debugger::getOnIonCompilation, Debugger::setOnIonCompilation, 0),
     JS_PS_END
 };
 const JSFunctionSpec Debugger::methods[] = {
