@@ -11,7 +11,6 @@
         "properties": {
           "page_action": {
             "type": "object",
-            "additionalProperties": { "$ref": "UnrecognizedProperty" },
             "properties": {
               "default_title": {
                 "type": "string",

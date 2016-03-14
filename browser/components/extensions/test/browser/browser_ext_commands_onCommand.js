@@ -21,7 +21,6 @@ add_task(function* () {
           "suggested_key": {
             "default": "Alt+Shift+Comma",
           },
-          "unrecognized_property": "with-a-random-value",
         },
       },
     },
@@ -32,14 +31,6 @@ add_task(function* () {
       });
       browser.test.sendMessage("ready");
     },
-  });
-
-
-  SimpleTest.waitForExplicitFinish();
-  let waitForConsole = new Promise(resolve => {
-    SimpleTest.monitorConsole(resolve, [{
-      message: /Reading manifest: Error processing commands.*.unrecognized_property: An unexpected property was found/,
-    }]);
   });
 
   yield extension.startup();
@@ -80,7 +71,4 @@ add_task(function* () {
 
   yield BrowserTestUtils.closeWindow(win1);
   yield BrowserTestUtils.closeWindow(win2);
-
-  SimpleTest.endMonitorConsole();
-  yield waitForConsole;
 });
