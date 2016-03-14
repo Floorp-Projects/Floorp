@@ -337,6 +337,16 @@ else
 INNER_ROBOCOP_PACKAGE=echo 'Testing is disabled - No Android Robocop for you'
 endif
 
+ifdef MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER
+UPLOAD_EXTRA_FILES += bouncer.apk
+
+# Package and release sign the install bouncer APK.
+INNER_INSTALL_BOUNCER_PACKAGE=\
+  $(call RELEASE_SIGN_ANDROID_APK,$(topobjdir)/mobile/android/bouncer/bouncer-unsigned-unaligned.apk,$(ABS_DIST)/bouncer.apk)
+else
+INNER_INSTALL_BOUNCER_PACKAGE=echo 'Install bouncer is disabled - No trampolines for you'
+endif # MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER
+
 # Create geckoview_library/geckoview_{assets,library}.zip for third-party GeckoView consumers.
 ifdef NIGHTLY_BUILD
 ifndef MOZ_DISABLE_GECKOVIEW
@@ -478,6 +488,7 @@ INNER_MAKE_PACKAGE	= \
     (echo "*** Error: The R.txt that was built and the R.txt that is being packaged are not the same. Rebuild mobile/android/base and re-package." && exit 1)) && \
   $(INNER_MAKE_APK) && \
   $(INNER_ROBOCOP_PACKAGE) && \
+  $(INNER_INSTALL_BOUNCER_PACKAGE) && \
   $(INNER_MAKE_GECKOLIBS_AAR) && \
   $(INNER_MAKE_GECKOVIEW_LIBRARY)
 endif
