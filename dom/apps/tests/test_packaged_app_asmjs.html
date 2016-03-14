@@ -125,7 +125,6 @@ function testNoPrecompile(aPrecompile, aCallback) {
 function runTest() {
   // Set up.
 
-  SpecialPowers.setAllAppsLaunchable(true);
   SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true]]},
                             continueTest);
   yield undefined;
