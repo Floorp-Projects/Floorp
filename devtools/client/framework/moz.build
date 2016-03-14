@@ -16,6 +16,7 @@ DevToolsModules(
     'gDevTools.jsm',
     'selection.js',
     'sidebar.js',
+    'source-location.js',
     'target.js',
     'toolbox-highlighter-utils.js',
     'toolbox-hosts.js',
