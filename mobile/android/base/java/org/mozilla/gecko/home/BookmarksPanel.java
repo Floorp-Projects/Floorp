@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -215,7 +216,7 @@ public class BookmarksPanel extends HomeFragment {
     /**
      * Loader callbacks for the LoaderManager of this fragment.
      */
-    private class CursorLoaderCallbacks extends TransitionAwareCursorLoaderCallbacks {
+    private class CursorLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             if (args == null) {
@@ -228,7 +229,7 @@ public class BookmarksPanel extends HomeFragment {
         }
 
         @Override
-        public void onLoadFinishedAfterTransitions(Loader<Cursor> loader, Cursor c) {
+        public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             BookmarksLoader bl = (BookmarksLoader) loader;
             mListAdapter.swapCursor(c, bl.getFolderInfo(), bl.getRefreshType());
             updateUiFromCursor(c);
@@ -236,8 +237,6 @@ public class BookmarksPanel extends HomeFragment {
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            super.onLoaderReset(loader);
-
             if (mList != null) {
                 mListAdapter.swapCursor(null);
             }
