@@ -115,8 +115,6 @@ function start()
   SpecialPowers.addPermission("embed-apps", true, document);
   SpecialPowers.addPermission("indexedDB", true, { manifestURL: manifestURL });
 
-  SpecialPowers.setAllAppsLaunchable(true);
-
   window.addEventListener("unload", function cleanup(event) {
     if (event.target == document) {
       window.removeEventListener("unload", cleanup, false);
