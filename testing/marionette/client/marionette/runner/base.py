@@ -32,6 +32,19 @@ import httpd
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+def update_mozinfo(path=None):
+    """walk up directories to find mozinfo.json and update the info"""
+
+    path = path or here
+    dirs = set()
+    while path != os.path.expanduser('~'):
+        if path in dirs:
+            break
+        dirs.add(path)
+        path = os.path.split(path)[0]
+
+    return mozinfo.find_and_update_from_json(*dirs)
+
 
 class MarionetteTest(TestResult):
 
@@ -1001,6 +1014,8 @@ setReq.onerror = function() {
             if self.test_tags:
                 filters.append(tags(self.test_tags))
             e10s = self.appinfo.get('browserTabsRemoteAutostart', False)
+            json_path = update_mozinfo(filepath)
+            self.logger.info("mozinfo updated with the following: {}".format(None))
             manifest_tests = manifest.active_tests(exists=False,
                                                    disabled=True,
                                                    filters=filters,
