@@ -73,7 +73,7 @@ function* testCookies(options) {
           changed.splice(evicted, 1);
         }
 
-        browser.test.assertEq("x:explicit,x:overwrite,x:explicit,foo:overwrite,bar:explicit,deleted:explicit",
+        browser.test.assertEq("x:explicit,x:overwrite,x:explicit,x:explicit,foo:overwrite,foo:explicit,bar:explicit,deleted:explicit",
                               changed.join(","), "expected changes");
       } else {
         browser.test.assertEq("", changed.join(","), "expected no changes");
