@@ -12,13 +12,8 @@
 #include "mozilla/WindowsVersion.h"
 #endif
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
-#include <stdlib.h>
-#endif
-
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
 #include "mozilla/Preferences.h"
-#include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #endif
@@ -38,21 +33,12 @@ IsSandboxTempDirRequired()
     (Preferences::GetInt("security.sandbox.content.level") >= 1));
 }
 
-static void
-SetTmpEnvironmentVariable(nsIFile* aValue)
+static const char*
+SandboxTempDirParent()
 {
-  // Save the TMP environment variable so that is is picked up by GetTempPath().
-  // Note that we specifically write to the TMP variable, as that is the first
-  // variable that is checked by GetTempPath() to determine its output.
-  nsAutoString fullTmpPath;
-  nsresult rv = aValue->GetPath(fullTmpPath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-  NS_WARN_IF(!SetEnvironmentVariableW(L"TMP", fullTmpPath.get()));
-  // We also set TEMP in case there is naughty third-party code that is
-  // referencing the environment variable directly.
-  NS_WARN_IF(!SetEnvironmentVariableW(L"TEMP", fullTmpPath.get()));
+  // On Windows, the sandbox-writable temp directory resides in the
+  // low integrity sandbox base directory.
+  return NS_WIN_LOW_INTEGRITY_TEMP_BASE;
 }
 #endif
 
@@ -64,15 +50,10 @@ IsSandboxTempDirRequired()
   return (Preferences::GetInt("security.sandbox.content.level") >= 1);
 }
 
-static void
-SetTmpEnvironmentVariable(nsIFile* aValue)
+static const char*
+SandboxTempDirParent()
 {
-  nsAutoCString fullTmpPath;
-  nsresult rv = aValue->GetNativePath(fullTmpPath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-  NS_WARN_IF(setenv("TMPDIR", fullTmpPath.get(), 1) != 0);
+  return NS_OS_TEMP_DIR;
 }
 #endif
 
@@ -87,11 +68,24 @@ SetUpSandboxEnvironment()
     return;
   }
 
-  nsCOMPtr<nsIFile> sandboxedContentTemp;
-  nsresult rv =
-    nsDirectoryService::gService->Get(NS_APP_CONTENT_PROCESS_TEMP_DIR,
-                                      NS_GET_IID(nsIFile),
-                                      getter_AddRefs(sandboxedContentTemp));
+  nsAdoptingString tempDirSuffix =
+    Preferences::GetString("security.sandbox.content.tempDirSuffix");
+  if (tempDirSuffix.IsEmpty()) {
+    NS_WARNING("Sandbox-writable temp directory suffix pref not set.");
+    return;
+  }
+
+  // Get the parent of our sandbox writable temp directory.
+  nsCOMPtr<nsIFile> lowIntegrityTemp;
+  nsresult rv = nsDirectoryService::gService->Get(SandboxTempDirParent(),
+                                                  NS_GET_IID(nsIFile),
+                                                  getter_AddRefs(lowIntegrityTemp));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  // Append our profile specific temp name.
+  rv = lowIntegrityTemp->Append(NS_LITERAL_STRING("Temp-") + tempDirSuffix);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -99,12 +93,10 @@ SetUpSandboxEnvironment()
   // Change the gecko defined temp directory to our sandbox-writable one.
   // Undefine returns a failure if the property is not already set.
   Unused << nsDirectoryService::gService->Undefine(NS_OS_TEMP_DIR);
-  rv = nsDirectoryService::gService->Set(NS_OS_TEMP_DIR, sandboxedContentTemp);
+  rv = nsDirectoryService::gService->Set(NS_OS_TEMP_DIR, lowIntegrityTemp);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
-
-  SetTmpEnvironmentVariable(sandboxedContentTemp);
 }
 #endif
 
