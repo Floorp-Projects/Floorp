@@ -92,6 +92,7 @@ public class ToolbarEditText extends CustomEditText
 
     @Override
     public void onAttachedToWindow() {
+        super.onAttachedToWindow();
         setOnKeyListener(new KeyListener());
         setOnKeyPreImeListener(new KeyPreImeListener());
         setOnSelectionChangedListener(new SelectionChangeListener());
