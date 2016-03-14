@@ -276,6 +276,7 @@ namespace jit {
     _(AsmJSVoidReturn)                                                      \
     _(AsmJSPassStackArg)                                                    \
     _(AsmJSCall)                                                            \
+    _(AsmSelect)                                                            \
     _(NewDerivedTypedObject)                                                \
     _(RecompileCheck)                                                       \
     _(MemoryBarrier)                                                        \

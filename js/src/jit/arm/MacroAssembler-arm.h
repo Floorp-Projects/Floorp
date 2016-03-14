@@ -1003,8 +1003,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         uint32_t scale = Imm32::ShiftOf(addr.scale).value;
         ma_vstr(src, addr.base, addr.index, scale, addr.offset);
     }
-    void moveDouble(FloatRegister src, FloatRegister dest) {
-        ma_vmov(src, dest);
+    void moveDouble(FloatRegister src, FloatRegister dest, Condition cc = Always) {
+        ma_vmov(src, dest, cc);
     }
 
     void storeFloat32(FloatRegister src, const Address& addr) {
@@ -1441,8 +1441,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         return as_cmp(bounded, Imm8(0));
     }
 
-    void moveFloat32(FloatRegister src, FloatRegister dest) {
-        as_vmov(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay());
+    void moveFloat32(FloatRegister src, FloatRegister dest, Condition cc = Always) {
+        as_vmov(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay(), cc);
     }
 
     void loadWasmActivation(Register dest) {

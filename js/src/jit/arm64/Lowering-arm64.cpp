@@ -202,6 +202,12 @@ LIRGeneratorARM64::visitAsmJSNeg(MAsmJSNeg* ins)
 }
 
 void
+LIRGeneratorARM64::visitAsmSelect(MAsmSelect* ins)
+{
+    MOZ_CRASH("visitAsmSelect");
+}
+
+void
 LIRGeneratorARM64::lowerUDiv(MDiv* div)
 {
     MOZ_CRASH("lowerUDiv");
