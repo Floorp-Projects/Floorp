@@ -987,8 +987,6 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen)
         if (!src)
             return nullptr;
 
-        bool exprBody = fun->isExprBody();
-
         // The source data for functions created by calling the Function
         // constructor is only the function's body.  This depends on the fact,
         // asserted below, that in Function("function f() {}"), the inner
@@ -1001,7 +999,7 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen)
         // Functions created with the constructor can't be arrow functions or
         // expression closures.
         MOZ_ASSERT_IF(funCon, !fun->isArrow());
-        MOZ_ASSERT_IF(funCon, !exprBody);
+        MOZ_ASSERT_IF(funCon, !fun->isExprBody());
         MOZ_ASSERT_IF(!funCon && !fun->isArrow(),
                       src->length() > 0 && src->latin1OrTwoByteChar(0) == '(');
 
