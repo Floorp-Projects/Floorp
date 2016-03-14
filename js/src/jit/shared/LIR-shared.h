@@ -7255,6 +7255,57 @@ class LHasClass : public LInstructionHelper<1, 1, 0>
     }
 };
 
+template<size_t Defs, size_t Ops>
+class LAsmSelectBase : public LInstructionHelper<Defs, Ops, 0>
+{
+    typedef LInstructionHelper<Defs, Ops, 0> Base;
+  public:
+    static const size_t TrueExprIndex = 0;
+
+    const LAllocation* trueExpr() {
+        static_assert(TrueExprIndex == 0, "trueExprIndex kept in sync");
+        return Base::getOperand(0);
+    }
+    const LAllocation* falseExpr() {
+        return Base::getOperand(1);
+    }
+    const LAllocation* condExpr() {
+        return Base::getOperand(2);
+    }
+
+    MAsmSelect* mir() const {
+        return Base::mir_->toAsmSelect();
+    }
+};
+
+class LAsmSelect : public LAsmSelectBase<1, 3>
+{
+  public:
+    LIR_HEADER(AsmSelect);
+
+    LAsmSelect(const LAllocation& trueExpr, const LAllocation& falseExpr, const LAllocation& cond) {
+        static_assert(TrueExprIndex == 0, "trueExprIndex kept in sync");
+        setOperand(0, trueExpr);
+        setOperand(1, falseExpr);
+        setOperand(2, cond);
+    }
+};
+
+class LAsmSelectI64 : public LAsmSelectBase<INT64_PIECES, 2 * INT64_PIECES + 1>
+{
+  public:
+    LIR_HEADER(AsmSelectI64);
+
+    LAsmSelectI64(const LInt64Allocation& trueExpr, const LInt64Allocation& falseExpr,
+                  const LAllocation& cond)
+    {
+        static_assert(TrueExprIndex == 0, "trueExprIndex kept in sync");
+        setInt64Operand(0, trueExpr);
+        setInt64Operand(1, falseExpr);
+        setOperand(2, cond);
+    }
+};
+
 class LAsmJSLoadHeap : public LInstructionHelper<1, 1, 0>
 {
   public:
