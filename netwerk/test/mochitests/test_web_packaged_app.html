@@ -91,7 +91,6 @@ function runTest() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   // Install the app
-  SpecialPowers.setAllAppsLaunchable(true);
   var manifestURL = "http://test/tests/dom/apps/tests/file_app.sjs?apptype=hosted&getmanifest=true";
 
   SpecialPowers.autoConfirmAppInstall(continueTest);

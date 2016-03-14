@@ -1071,7 +1071,6 @@ SimpleTest.finish = function() {
         }
 
         if (!parentRunner || parentRunner.showTestReport) {
-            SpecialPowers.flushAllAppsLaunchable();
             SpecialPowers.flushPermissions(function () {
               SpecialPowers.flushPrefEnv(function() {
                 SimpleTest.showReport();

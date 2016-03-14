@@ -128,7 +128,6 @@ function installApp(installOrigin, manifestURL) {
 
 PackagedTestHelper.setSteps([
   function() {
-    SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.addPermission("webapps-manage", true, document);
     SpecialPowers.addPermission("browser", true, document);
     SpecialPowers.autoConfirmAppInstall(() =>

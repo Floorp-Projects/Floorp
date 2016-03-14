@@ -103,8 +103,6 @@ SimpleTest.waitForExplicitFinish();
   * Install a web app from a manifest with application/manifest+json MIME type.
   */
 function runTest() {
-  SpecialPowers.setAllAppsLaunchable(true);
-
   var manifestURL = "http://test/tests/dom/apps/tests/file_manifest.json";
 
   SpecialPowers.autoConfirmAppInstall(continueTest);
