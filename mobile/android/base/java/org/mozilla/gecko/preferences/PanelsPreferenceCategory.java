@@ -170,6 +170,7 @@ public class PanelsPreferenceCategory extends CustomListCategory {
 
     @Override
     protected void onPrepareForRemoval() {
+        super.onPrepareForRemoval();
         if (mLoadTask != null) {
             mLoadTask.cancel();
         }
