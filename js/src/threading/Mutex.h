@@ -42,7 +42,7 @@ private:
 #elif defined(_WIN32)
   void* platformData_[6];
 #else
-#error "Mutex platform data size isn't known for this platform"
+  void* platformData_[64 / sizeof(void*)];
 #endif
 };
 
