@@ -219,6 +219,7 @@ static const JSFunctionSpec TypeDescriptorMethods[] = {
 // Shared TypedObject methods for all SIMD types.
 static const JSFunctionSpec SimdTypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toString", "SimdToString", 0, 0),
+    JS_SELF_HOSTED_FN("valueOf", "SimdValueOf", 0, 0),
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
 };
