@@ -16,6 +16,7 @@ var FontBuilder = {
   },
 
   _allFonts: null,
+  _langGroupSupported: false,
   buildFontList: function (aLanguage, aFontType, aMenuList)
   {
     // Reset the list
@@ -62,6 +63,7 @@ var FontBuilder = {
 
     // Build the UI for the remaining fonts.
     if (this._allFonts.length > fonts.length) {
+      this._langGroupSupported = true;
       // Both lists are sorted, and the Fonts-By-Type list is a subset of the
       // All-Fonts list, so walk both lists side-by-side, skipping values we've
       // already created menu items for.
@@ -102,7 +104,10 @@ var FontBuilder = {
         return undefined;
     }
 
-    let defaultValue = aElement.firstChild.firstChild.getAttribute("value");
+    // The first item will be a reasonable choice only if the font backend
+    // supports language-specific enumaration.
+    let defaultValue = this._langGroupSupported ?
+                       aElement.firstChild.firstChild.getAttribute("value") : "";
     let fontNameList = preference.name.replace(".name.", ".name-list.");
     let prefFontNameList = document.getElementById(fontNameList);
     if (!prefFontNameList || !prefFontNameList.value)
