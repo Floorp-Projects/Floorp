@@ -1749,9 +1749,18 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
     }
   }
 
-  cairo_surface_t* similar = cairo_surface_create_similar(mSurface,
-                                                          GfxFormatToCairoContent(aFormat),
-                                                          aSize.width, aSize.height);
+  cairo_surface_t* similar;
+#ifdef CAIRO_HAS_WIN32_SURFACE
+  if (cairo_surface_get_type(mSurface) == CAIRO_SURFACE_TYPE_WIN32) {
+    similar = cairo_win32_surface_create_with_dib(GfxFormatToCairoFormat(aFormat),
+                                                  aSize.width, aSize.height);
+  } else
+#endif
+  {
+    similar = cairo_surface_create_similar(mSurface,
+                                           GfxFormatToCairoContent(aFormat),
+                                           aSize.width, aSize.height);
+  }
 
   if (!cairo_surface_status(similar)) {
     RefPtr<DrawTargetCairo> target = new DrawTargetCairo();
