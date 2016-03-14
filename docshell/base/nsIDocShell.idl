@@ -26,6 +26,7 @@ interface nsIContentViewer;
 interface nsIDOMEventTarget;
 interface nsIDocShellLoadInfo;
 interface nsIEditor;
+interface nsIEditingSession;
 interface nsISimpleEnumerator;
 interface nsIInputStream;
 interface nsIRequest;
@@ -1091,4 +1092,9 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   [implicit_jscontext]
   void setOriginAttributes(in jsval aAttrs);
+
+  /**
+   * The editing session for this docshell.
+   */
+  readonly attribute nsIEditingSession editingSession;
 };

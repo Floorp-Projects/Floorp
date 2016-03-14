@@ -335,8 +335,13 @@ DocAccessible::GetEditor() const
       (!mContent || !mContent->HasFlag(NODE_IS_EDITABLE)))
     return nullptr;
 
-  nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
-  nsCOMPtr<nsIEditingSession> editingSession(do_GetInterface(container));
+  nsCOMPtr<nsIDocShell> docShell = mDocumentNode->GetDocShell();
+  if (!docShell) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIEditingSession> editingSession;
+  docShell->GetEditingSession(getter_AddRefs(editingSession));
   if (!editingSession)
     return nullptr; // No editing session interface
 

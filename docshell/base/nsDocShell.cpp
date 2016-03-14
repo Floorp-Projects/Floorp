@@ -1025,16 +1025,11 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
     *aSink = mFind;
     NS_ADDREF((nsISupports*)*aSink);
     return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsIEditingSession)) &&
-             NS_SUCCEEDED(EnsureEditorData())) {
-    nsCOMPtr<nsIEditingSession> editingSession;
-    mEditorData->GetEditingSession(getter_AddRefs(editingSession));
-    if (editingSession) {
-      editingSession.forget(aSink);
-      return NS_OK;
-    }
-
-    return NS_NOINTERFACE;
+  } else if (aIID.Equals(NS_GET_IID(nsIEditingSession))) {
+    nsCOMPtr<nsIEditingSession> es;
+    GetEditingSession(getter_AddRefs(es));
+    es.forget(aSink);
+    return *aSink ? NS_OK : NS_NOINTERFACE;
   } else if (aIID.Equals(NS_GET_IID(nsIClipboardDragDropHookList)) &&
              NS_SUCCEEDED(EnsureTransferableHookData())) {
     *aSink = mTransferableHookData;
@@ -14357,4 +14352,15 @@ nsDocShell::IssueWarning(uint32_t aWarning, bool aAsError)
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetEditingSession(nsIEditingSession** aEditSession)
+{
+  if (!NS_SUCCEEDED(EnsureEditorData())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mEditorData->GetEditingSession(aEditSession);
+  return *aEditSession ? NS_OK : NS_ERROR_FAILURE;
 }
