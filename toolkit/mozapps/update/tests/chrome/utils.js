@@ -1316,45 +1316,14 @@ function setupAddons(aCallback) {
     Services.prefs.setCharPref(PREF_DISABLEDADDONS, disabledAddons.join(" "));
 
     // Install the test add-ons.
-    let xpiFiles = getTestAddonXPIFiles();
-    let xpiCount = xpiFiles.length;
-    let installs = [];
-    xpiFiles.forEach(function(aFile) {
-      AddonManager.getInstallForFile(aFile, function(aInstall) {
-        if (!aInstall) {
-          throw "No AddonInstall created for " + aFile.path;
-        }
-
-        installs.push(aInstall);
-
-        if (--xpiCount == 0) {
-          let installCount = installs.length;
-          let installCompleted = function(aInstall) {
-            aInstall.removeListener(listener);
-
-            if (getAddonTestType(aInstall.addon.name) == "userdisabled") {
-              aInstall.addon.userDisabled = true;
-            }
-            if (--installCount == 0) {
-              setNoUpdateAddonsDisabledState();
-            }
-          };
-
-          let listener = {
-            onDownloadFailed: installCompleted,
-            onDownloadCancelled: installCompleted,
-            onInstallFailed: installCompleted,
-            onInstallCancelled: installCompleted,
-            onInstallEnded: installCompleted
-          };
-
-          installs.forEach(function(aInstall) {
-            aInstall.addListener(listener);
-            aInstall.install();
-          });
+    let promises = getTestAddonXPIFiles().map(function(aFile) {
+      return AddonManager.installTemporaryAddon(aFile).then(addon => {
+        if (getAddonTestType(addon.name) == "userdisabled") {
+          addon.userDisabled = true;
         }
       });
     });
+    return Promise.all(promises).then(setNoUpdateAddonsDisabledState);
   });
 }
 
