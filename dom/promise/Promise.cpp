@@ -1762,21 +1762,22 @@ public:
   {
     MOZ_ASSERT(mCountdown > 0);
 
-    ThreadsafeAutoSafeJSContext cx;
-    JSAutoCompartment ac(cx, mValues);
-    {
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(mValues)) {
+      // Now what?
+      return;
+    }
+    jsapi.TakeOwnershipOfErrorReporting();
+    JSContext* cx = jsapi.cx();
 
-      AutoDontReportUncaught silenceReporting(cx);
-      JS::Rooted<JS::Value> value(cx, aValue);
-      JS::Rooted<JSObject*> values(cx, mValues);
-      if (!JS_WrapValue(cx, &value) ||
-          !JS_DefineElement(cx, values, index, value, JSPROP_ENUMERATE)) {
-        MOZ_ASSERT(JS_IsExceptionPending(cx));
-        JS::Rooted<JS::Value> exn(cx);
-        JS_GetPendingException(cx, &exn);
-
-        mPromise->MaybeReject(cx, exn);
-      }
+    JS::Rooted<JS::Value> value(cx, aValue);
+    JS::Rooted<JSObject*> values(cx, mValues);
+    if (!JS_WrapValue(cx, &value) ||
+        !JS_DefineElement(cx, values, index, value, JSPROP_ENUMERATE)) {
+      MOZ_ASSERT(JS_IsExceptionPending(cx));
+      JS::Rooted<JS::Value> exn(cx);
+      jsapi.StealException(&exn);
+      mPromise->MaybeReject(cx, exn);
     }
 
     --mCountdown;
