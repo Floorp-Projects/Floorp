@@ -246,6 +246,7 @@ TabSources.prototype = {
     }
 
     throw new Error('getSourceByURL: could not find source for ' + url);
+    return null;
   },
 
   /**
@@ -557,6 +558,7 @@ TabSources.prototype = {
     // Forcefully set the sourcemap cache. This will be used even if
     // sourcemaps are disabled.
     this._sourceMapCache[url] = resolve(aMap);
+    this.emit("updatedSource", this.getSourceActor(aSource));
   },
 
   /**
