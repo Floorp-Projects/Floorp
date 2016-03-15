@@ -13491,6 +13491,11 @@ public:
   {
     nsAutoPopupStatePusher popupStatePusher(mPopupState);
 
+    // We need to set up an AutoJSAPI here for the following reason: When we do
+    // OnLinkClickSync we'll eventually end up in nsGlobalWindow::OpenInternal
+    // which only does popup blocking if !LegacyIsCallerChromeOrNativeCode().
+    // So we need to fake things so that we don't look like native code as far
+    // as LegacyIsCallerNativeCode() is concerned.
     AutoJSAPI jsapi;
     if (mIsTrusted || jsapi.Init(mContent->OwnerDoc()->GetScopeObject())) {
       mHandler->OnLinkClickSync(mContent, mURI,
