@@ -121,7 +121,7 @@ check_prog('ZIP', ('zip',))
 
 @depends(target)
 def mac_programs(target):
-    if target.os == 'Darwin':
+    if target.kernel == 'Darwin':
         check_prog('DSYMUTIL', ('dsymutil', 'llvm-dsymutil'), allow_missing=True)
         check_prog('GENISOIMAGE', ('genisoimage',), allow_missing=True)
 
