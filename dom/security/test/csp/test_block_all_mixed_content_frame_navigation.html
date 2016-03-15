@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1122236 - CSP: Implement block-all-mixed-content</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ *
+ * http://a.com embeds https://b.com.
+ * https://b.com has a CSP using 'block-all-mixed-content'.
+ *   | site | http://a.com
+ *   | embeds | https://b.com (uses block-all-mixed-content)
+ *
+ * The user navigates the embedded frame from
+ * https://b.com -> http://c.com.
+ * The test makes sure that such a navigation is not blocked
+ * by block-all-mixed-content.
+ */
+
+function checkResults(result) {
+  is(result, "frame-navigated", "frame should be allowed to be navigated");
+  window.removeEventListener("message", receiveMessage, false);
+  SimpleTest.finish();
+}
+
+window.addEventListener("message", receiveMessage, false);
+function receiveMessage(event) {
+  checkResults(event.data.result);
+}
+
+SimpleTest.waitForExplicitFinish();
+// http://a.com loads https://b.com
+document.getElementById("testframe").src =
+  "https://example.com/tests/dom/security/test/csp/file_block_all_mixed_content_frame_navigation1.html";
+
+</script>
+</body>
+</html>
