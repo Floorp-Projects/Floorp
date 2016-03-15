@@ -470,12 +470,6 @@ if test -z "$COMPILE_ENVIRONMENT"; then
 fi
 AC_SUBST(NSINSTALL_BIN)
 
-MOZ_PATH_PROG(DOXYGEN, doxygen, :)
-MOZ_PATH_PROG(XARGS, xargs)
-if test -z "$XARGS" -o "$XARGS" = ":"; then
-    AC_MSG_ERROR([xargs not found in \$PATH .])
-fi
-
 if test "$COMPILE_ENVIRONMENT"; then
 
 dnl ========================================================
@@ -1102,8 +1096,6 @@ case "$target" in
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
         PKG_SKIP_STRIP=1
-        XARGS=xargs
-        DOXYGEN=:
         OBJ_SUFFIX=obj
         LIB_SUFFIX=lib
         DLL_PREFIX=
