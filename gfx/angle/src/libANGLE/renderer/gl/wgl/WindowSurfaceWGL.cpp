@@ -20,7 +20,8 @@ WindowSurfaceWGL::WindowSurfaceWGL(RendererGL *renderer,
                                    EGLNativeWindowType window,
                                    int pixelFormat,
                                    HGLRC wglContext,
-                                   const FunctionsWGL *functions)
+                                   const FunctionsWGL *functions,
+                                   EGLint orientation)
     : SurfaceGL(renderer),
       mPixelFormat(pixelFormat),
       mWGLContext(wglContext),
@@ -29,6 +30,8 @@ WindowSurfaceWGL::WindowSurfaceWGL(RendererGL *renderer,
       mFunctionsWGL(functions),
       mSwapBehavior(0)
 {
+    // EGL_ANGLE_surface_orientation is not supported for regular WGL window surfaces
+    ASSERT(orientation == 0);
 }
 
 WindowSurfaceWGL::~WindowSurfaceWGL()

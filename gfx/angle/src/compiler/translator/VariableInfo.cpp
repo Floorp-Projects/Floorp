@@ -16,18 +16,6 @@ namespace sh
 namespace
 {
 
-TString InterfaceBlockFieldName(const TInterfaceBlock &interfaceBlock, const TField &field)
-{
-    if (interfaceBlock.hasInstanceName())
-    {
-        return interfaceBlock.name() + "." + field.name();
-    }
-    else
-    {
-        return field.name();
-    }
-}
-
 BlockLayoutType GetBlockLayoutType(TLayoutBlockStorage blockStorage)
 {
     switch (blockStorage)
@@ -559,16 +547,12 @@ void CollectVariables::visitVariable(const TIntermSymbol *variable,
     interfaceBlock.layout = GetBlockLayoutType(blockType->blockStorage());
 
     // Gather field information
-    const TFieldList &fieldList = blockType->fields();
-
-    for (size_t fieldIndex = 0; fieldIndex < fieldList.size(); ++fieldIndex)
+    for (const TField *field : blockType->fields())
     {
-        const TField &field = *fieldList[fieldIndex];
-        const TString &fullFieldName = InterfaceBlockFieldName(*blockType, field);
-        const TType &fieldType = *field.type();
+        const TType &fieldType = *field->type();
 
         NameHashingTraverser traverser(mHashFunction, mSymbolTable);
-        traverser.traverse(fieldType, fullFieldName, &interfaceBlock.fields);
+        traverser.traverse(fieldType, field->name(), &interfaceBlock.fields);
 
         interfaceBlock.fields.back().isRowMajorLayout = (fieldType.getLayoutQualifier().matrixPacking == EmpRowMajor);
     }

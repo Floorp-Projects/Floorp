@@ -18,7 +18,7 @@ namespace rx
 class CompilerD3D : public CompilerImpl
 {
   public:
-    CompilerD3D(RendererClass rendererClass);
+    CompilerD3D(ShShaderOutput translatorOutputType);
     ~CompilerD3D() override {}
 
     gl::Error release() override { return gl::Error(GL_NO_ERROR); }

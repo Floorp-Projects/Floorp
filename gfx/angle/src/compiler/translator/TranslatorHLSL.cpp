@@ -47,7 +47,7 @@ void TranslatorHLSL::translate(TIntermNode *root, int compileOptions)
 
     // Work around D3D9 bug that would manifest in vertex shaders with selection blocks which
     // use a vertex attribute as a condition, and some related computation in the else block.
-    if (getOutputType() == SH_HLSL9_OUTPUT && getShaderType() == GL_VERTEX_SHADER)
+    if (getOutputType() == SH_HLSL_3_0_OUTPUT && getShaderType() == GL_VERTEX_SHADER)
     {
         sh::RewriteElseBlocks(root, getTemporaryIndex());
     }

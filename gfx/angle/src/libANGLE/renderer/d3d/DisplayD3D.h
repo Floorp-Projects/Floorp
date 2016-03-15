@@ -41,8 +41,9 @@ class DisplayD3D : public DisplayImpl
                            egl::ImageSibling *buffer,
                            const egl::AttributeMap &attribs) override;
 
-    egl::Error createContext(const egl::Config *config, const gl::Context *shareContext, const egl::AttributeMap &attribs,
-                             gl::Context **outContext) override;
+    gl::Context *createContext(const egl::Config *config,
+                               const gl::Context *shareContext,
+                               const egl::AttributeMap &attribs) override;
 
     egl::Error makeCurrent(egl::Surface *drawSurface, egl::Surface *readSurface, gl::Context *context) override;
 
@@ -57,6 +58,11 @@ class DisplayD3D : public DisplayImpl
     egl::Error getDevice(DeviceImpl **device) override;
 
     std::string getVendorString() const override;
+
+    egl::Error waitClient() const override;
+    egl::Error waitNative(EGLint engine,
+                          egl::Surface *drawSurface,
+                          egl::Surface *readSurface) const override;
 
   private:
     void generateExtensions(egl::DisplayExtensions *outExtensions) const override;

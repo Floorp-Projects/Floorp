@@ -16,6 +16,11 @@
 namespace rx
 {
 
+static int IgnoreX11Errors(Display *, XErrorEvent *)
+{
+    return 0;
+}
+
 WindowSurfaceGLX::WindowSurfaceGLX(const FunctionsGLX &glx,
                                    DisplayGLX *glxDisplay,
                                    RendererGL *renderer,
@@ -23,7 +28,7 @@ WindowSurfaceGLX::WindowSurfaceGLX(const FunctionsGLX &glx,
                                    Display *display,
                                    glx::Context context,
                                    glx::FBConfig fbConfig)
-    : SurfaceGL(renderer),
+    : SurfaceGLX(renderer),
       mParent(window),
       mWindow(0),
       mDisplay(display),
@@ -44,7 +49,14 @@ WindowSurfaceGLX::~WindowSurfaceGLX()
 
     if (mWindow)
     {
+        // When destroying the window, it may happen that the window has already been
+        // destroyed by the application (this happens in Chromium). There is no way to
+        // atomically check that a window exists and to destroy it so instead we call
+        // XDestroyWindow, ignoring any errors.
+        auto oldErrorHandler = XSetErrorHandler(IgnoreX11Errors);
         XDestroyWindow(mDisplay, mWindow);
+        XSync(mDisplay, False);
+        XSetErrorHandler(oldErrorHandler);
     }
 
     mGLXDisplay->syncXCommands();
@@ -57,7 +69,7 @@ egl::Error WindowSurfaceGLX::initialize()
     {
         XWindowAttributes windowAttributes;
         XGetWindowAttributes(mDisplay, mParent, &windowAttributes);
-        int visualId = windowAttributes.visual->visualid;
+        unsigned long visualId = windowAttributes.visual->visualid;
 
         if (!mGLXDisplay->isValidWindowVisualId(visualId))
         {
@@ -130,26 +142,16 @@ egl::Error WindowSurfaceGLX::makeCurrent()
 
 egl::Error WindowSurfaceGLX::swap()
 {
-    //TODO(cwallez) set up our own error handler to see if the call failed
-    unsigned int newParentWidth, newParentHeight;
-    if (!getWindowDimensions(mParent, &newParentWidth, &newParentHeight))
-    {
-        // TODO(cwallez) What error type here?
-        return egl::Error(EGL_BAD_CURRENT_SURFACE, "Failed to retrieve the size of the parent window.");
-    }
-
-    if (mParentWidth != newParentWidth || mParentHeight != newParentHeight)
-    {
-        mParentWidth = newParentWidth;
-        mParentHeight = newParentHeight;
-
-        mGLX.waitGL();
-        XResizeWindow(mDisplay, mWindow, mParentWidth, mParentHeight);
-        mGLX.waitX();
-    }
-
+    // We need to swap before resizing as some drivers clobber the back buffer
+    // when the window is resized.
     mGLXDisplay->setSwapInterval(mGLXWindow, &mSwapControl);
     mGLX.swapBuffers(mGLXWindow);
+
+    egl::Error error = checkForResize();
+    if (error.isError())
+    {
+        return error;
+    }
 
     return egl::Error(EGL_SUCCESS);
 }
@@ -204,6 +206,30 @@ EGLint WindowSurfaceGLX::isPostSubBufferSupported() const
 EGLint WindowSurfaceGLX::getSwapBehavior() const
 {
     return EGL_BUFFER_PRESERVED;
+}
+
+egl::Error WindowSurfaceGLX::checkForResize()
+{
+    // TODO(cwallez) set up our own error handler to see if the call failed
+    unsigned int newParentWidth, newParentHeight;
+    if (!getWindowDimensions(mParent, &newParentWidth, &newParentHeight))
+    {
+        return egl::Error(EGL_BAD_CURRENT_SURFACE,
+                          "Failed to retrieve the size of the parent window.");
+    }
+
+    if (mParentWidth != newParentWidth || mParentHeight != newParentHeight)
+    {
+        mParentWidth  = newParentWidth;
+        mParentHeight = newParentHeight;
+
+        mGLX.waitGL();
+        XResizeWindow(mDisplay, mWindow, mParentWidth, mParentHeight);
+        mGLX.waitX();
+        XSync(mDisplay, False);
+    }
+
+    return egl::Error(EGL_SUCCESS);
 }
 
 bool WindowSurfaceGLX::getWindowDimensions(Window window, unsigned int *width, unsigned int *height) const

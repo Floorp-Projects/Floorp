@@ -10,8 +10,10 @@
 #define LIBANGLE_STATE_H_
 
 #include <bitset>
+#include <memory>
 
 #include "common/angleutils.h"
+#include "libANGLE/Debug.h"
 #include "libANGLE/Program.h"
 #include "libANGLE/RefCountObject.h"
 #include "libANGLE/Renderbuffer.h"
@@ -29,7 +31,7 @@ class Context;
 struct Caps;
 struct Data;
 
-typedef std::map< GLenum, BindingPointer<Texture> > TextureMap;
+typedef std::map<GLenum, BindingPointer<Texture>> TextureMap;
 
 class State : angle::NonCopyable
 {
@@ -37,7 +39,10 @@ class State : angle::NonCopyable
     State();
     ~State();
 
-    void initialize(const Caps& caps, GLuint clientVersion);
+    void initialize(const Caps &caps,
+                    const Extensions &extensions,
+                    GLuint clientVersion,
+                    bool debug);
     void reset();
 
     // State chunk getters
@@ -144,6 +149,7 @@ class State : angle::NonCopyable
     void setActiveSampler(unsigned int active);
     unsigned int getActiveSampler() const;
     void setSamplerTexture(GLenum type, Texture *texture);
+    Texture *getTargetTexture(GLenum target) const;
     Texture *getSamplerTexture(unsigned int sampler, GLenum type) const;
     GLuint getSamplerTextureId(unsigned int sampler, GLenum type) const;
     void detachTexture(const TextureMap &zeroTextures, GLuint texture);
@@ -190,6 +196,7 @@ class State : angle::NonCopyable
 
     // Query binding manipulation
     bool isQueryActive() const;
+    bool isQueryActive(Query *query) const;
     void setActiveQuery(GLenum target, Query *query);
     GLuint getActiveQueryId(GLenum target) const;
     Query *getActiveQuery(GLenum target) const;
@@ -258,10 +265,15 @@ class State : angle::NonCopyable
     const PixelUnpackState &getUnpackState() const;
     PixelUnpackState &getUnpackState();
 
+    // Debug state
+    const Debug &getDebug() const;
+    Debug &getDebug();
+
     // State query functions
     void getBooleanv(GLenum pname, GLboolean *params);
     void getFloatv(GLenum pname, GLfloat *params);
     void getIntegerv(const gl::Data &data, GLenum pname, GLint *params);
+    void getPointerv(GLenum pname, void **params) const;
     bool getIndexedIntegerv(GLenum target, GLuint index, GLint *data);
     bool getIndexedInteger64v(GLenum target, GLuint index, GLint64 *data);
 
@@ -317,18 +329,25 @@ class State : angle::NonCopyable
         DIRTY_BIT_GENERATE_MIPMAP_HINT,
         DIRTY_BIT_SHADER_DERIVATIVE_HINT,
         DIRTY_BIT_READ_FRAMEBUFFER_BINDING,
-        DIRTY_BIT_READ_FRAMEBUFFER_OBJECT,
         DIRTY_BIT_DRAW_FRAMEBUFFER_BINDING,
-        DIRTY_BIT_DRAW_FRAMEBUFFER_OBJECT,
         DIRTY_BIT_RENDERBUFFER_BINDING,
         DIRTY_BIT_VERTEX_ARRAY_BINDING,
-        DIRTY_BIT_VERTEX_ARRAY_OBJECT,
         DIRTY_BIT_PROGRAM_BINDING,
-        DIRTY_BIT_PROGRAM_OBJECT,
         DIRTY_BIT_CURRENT_VALUE_0,
         DIRTY_BIT_CURRENT_VALUE_MAX = DIRTY_BIT_CURRENT_VALUE_0 + MAX_VERTEX_ATTRIBS,
         DIRTY_BIT_INVALID           = DIRTY_BIT_CURRENT_VALUE_MAX,
         DIRTY_BIT_MAX               = DIRTY_BIT_INVALID,
+    };
+
+    // TODO(jmadill): Consider storing dirty objects in a list instead of by binding.
+    enum DirtyObjectType
+    {
+        DIRTY_OBJECT_READ_FRAMEBUFFER,
+        DIRTY_OBJECT_DRAW_FRAMEBUFFER,
+        DIRTY_OBJECT_VERTEX_ARRAY,
+        DIRTY_OBJECT_PROGRAM,
+        DIRTY_OBJECT_UNKNOWN,
+        DIRTY_OBJECT_MAX = DIRTY_OBJECT_UNKNOWN,
     };
 
     typedef std::bitset<DIRTY_BIT_MAX> DirtyBits;
@@ -336,6 +355,14 @@ class State : angle::NonCopyable
     void clearDirtyBits() { mDirtyBits.reset(); }
     void clearDirtyBits(const DirtyBits &bitset) { mDirtyBits &= ~bitset; }
     void setAllDirtyBits() { mDirtyBits.set(); }
+
+    typedef std::bitset<DIRTY_OBJECT_MAX> DirtyObjects;
+    void clearDirtyObjects() { mDirtyObjects.reset(); }
+    void setAllDirtyObjects() { mDirtyObjects.set(); }
+    void syncDirtyObjects();
+    void syncDirtyObjects(const DirtyObjects &bitset);
+    void syncDirtyObject(GLenum target);
+    void setObjectDirty(GLenum target);
 
     // Dirty bit masks
     const DirtyBits &unpackStateBitMask() const { return mUnpackStateBitMask; }
@@ -388,18 +415,18 @@ class State : angle::NonCopyable
     // Texture and sampler bindings
     size_t mActiveSampler;   // Active texture unit selector - GL_TEXTURE0
 
-    typedef std::vector< BindingPointer<Texture> > TextureBindingVector;
+    typedef std::vector<BindingPointer<Texture>> TextureBindingVector;
     typedef std::map<GLenum, TextureBindingVector> TextureBindingMap;
     TextureBindingMap mSamplerTextures;
 
-    typedef std::vector< BindingPointer<Sampler> > SamplerBindingVector;
+    typedef std::vector<BindingPointer<Sampler>> SamplerBindingVector;
     SamplerBindingVector mSamplers;
 
-    typedef std::map< GLenum, BindingPointer<Query> > ActiveQueryMap;
+    typedef std::map<GLenum, BindingPointer<Query>> ActiveQueryMap;
     ActiveQueryMap mActiveQueries;
 
     BindingPointer<Buffer> mGenericUniformBuffer;
-    typedef std::vector< OffsetBindingPointer<Buffer> > BufferVector;
+    typedef std::vector<OffsetBindingPointer<Buffer>> BufferVector;
     BufferVector mUniformBuffers;
 
     BindingPointer<TransformFeedback> mTransformFeedback;
@@ -412,11 +439,15 @@ class State : angle::NonCopyable
 
     bool mPrimitiveRestart;
 
+    Debug mDebug;
+
     DirtyBits mDirtyBits;
     DirtyBits mUnpackStateBitMask;
     DirtyBits mPackStateBitMask;
     DirtyBits mClearStateBitMask;
     DirtyBits mBlitStateBitMask;
+
+    DirtyObjects mDirtyObjects;
 };
 
 }

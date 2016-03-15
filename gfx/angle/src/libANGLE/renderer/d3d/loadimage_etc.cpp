@@ -15,6 +15,43 @@ namespace rx
 {
 namespace
 {
+// Table 3.17.2 sorted according to table 3.17.3
+// clang-format off
+static const int intensityModifierDefault[][4] =
+{
+    {  2,   8,  -2,   -8 },
+    {  5,  17,  -5,  -17 },
+    {  9,  29,  -9,  -29 },
+    { 13,  42, -13,  -42 },
+    { 18,  60, -18,  -60 },
+    { 24,  80, -24,  -80 },
+    { 33, 106, -33, -106 },
+    { 47, 183, -47, -183 },
+};
+// clang-format on
+
+// Table C.12, intensity modifier for non opaque punchthrough alpha
+// clang-format off
+static const int intensityModifierNonOpaque[][4] =
+{
+    { 0,   8, 0,   -8 },
+    { 0,  17, 0,  -17 },
+    { 0,  29, 0,  -29 },
+    { 0,  42, 0,  -42 },
+    { 0,  60, 0,  -60 },
+    { 0,  80, 0,  -80 },
+    { 0, 106, 0, -106 },
+    { 0, 183, 0, -183 },
+};
+// clang-format on
+
+// Table C.7, mapping from pixel index values to modifier value orders
+// clang-format off
+static const int valueMappingTable[] =
+{
+    2, 3, 1, 0
+};
+// clang-format on
 
 struct ETC2Block
 {
@@ -89,6 +126,49 @@ struct ETC2Block
         {
             decodeIndividualBlock(dest, x, y, w, h, destRowPitch, alphaValues,
                                   nonOpaquePunchThroughAlpha);
+        }
+    }
+
+    // Transcodes RGB block to BC1
+    void transcodeAsBC1(uint8_t *dest,
+                        size_t x,
+                        size_t y,
+                        size_t w,
+                        size_t h,
+                        const uint8_t alphaValues[4][4],
+                        bool punchThroughAlpha) const
+    {
+        bool opaqueBit                  = u.idht.mode.idm.diffbit;
+        bool nonOpaquePunchThroughAlpha = punchThroughAlpha && !opaqueBit;
+        // Select mode
+        if (u.idht.mode.idm.diffbit || punchThroughAlpha)
+        {
+            const auto &block = u.idht.mode.idm.colors.diff;
+            int r             = (block.R + block.dR);
+            int g             = (block.G + block.dG);
+            int b = (block.B + block.dB);
+            if (r < 0 || r > 31)
+            {
+                transcodeTBlockToBC1(dest, x, y, w, h, alphaValues, nonOpaquePunchThroughAlpha);
+            }
+            else if (g < 0 || g > 31)
+            {
+                transcodeHBlockToBC1(dest, x, y, w, h, alphaValues, nonOpaquePunchThroughAlpha);
+            }
+            else if (b < 0 || b > 31)
+            {
+                transcodePlanarBlockToBC1(dest, x, y, w, h, alphaValues);
+            }
+            else
+            {
+                transcodeDifferentialBlockToBC1(dest, x, y, w, h, alphaValues,
+                                                nonOpaquePunchThroughAlpha);
+            }
+        }
+        else
+        {
+            transcodeIndividualBlockToBC1(dest, x, y, w, h, alphaValues,
+                                          nonOpaquePunchThroughAlpha);
         }
     }
 
@@ -329,48 +409,18 @@ struct ETC2Block
                                              const uint8_t alphaValues[4][4],
                                              bool nonOpaquePunchThroughAlpha) const
     {
-        // Table 3.17.2 sorted according to table 3.17.3
-        // clang-format off
-        static const int intensityModifierDefault[8][4] =
-        {
-            {  2,   8,  -2,   -8 },
-            {  5,  17,  -5,  -17 },
-            {  9,  29,  -9,  -29 },
-            { 13,  42, -13,  -42 },
-            { 18,  60, -18,  -60 },
-            { 24,  80, -24,  -80 },
-            { 33, 106, -33, -106 },
-            { 47, 183, -47, -183 },
-        };
-        // clang-format on
-
-        // Table C.12, intensity modifier for non opaque punchthrough alpha
-        // clang-format off
-        static const int intensityModifierNonOpaque[8][4] =
-        {
-            { 0,   8, 0,   -8 },
-            { 0,  17, 0,  -17 },
-            { 0,  29, 0,  -29 },
-            { 0,  42, 0,  -42 },
-            { 0,  60, 0,  -60 },
-            { 0,  80, 0,  -80 },
-            { 0, 106, 0, -106 },
-            { 0, 183, 0, -183 },
-        };
-        // clang-format on
-
-        const int(&intensityModifier)[8][4] =
+        const auto intensityModifier =
             nonOpaquePunchThroughAlpha ? intensityModifierNonOpaque : intensityModifierDefault;
 
         R8G8B8A8 subblockColors0[4];
         R8G8B8A8 subblockColors1[4];
-        for (size_t blockIdx = 0; blockIdx < 4; blockIdx++)
+        for (size_t modifierIdx = 0; modifierIdx < 4; modifierIdx++)
         {
-            const int i1              = intensityModifier[u.idht.mode.idm.cw1][blockIdx];
-            subblockColors0[blockIdx] = createRGBA(r1 + i1, g1 + i1, b1 + i1);
+            const int i1                 = intensityModifier[u.idht.mode.idm.cw1][modifierIdx];
+            subblockColors0[modifierIdx] = createRGBA(r1 + i1, g1 + i1, b1 + i1);
 
-            const int i2              = intensityModifier[u.idht.mode.idm.cw2][blockIdx];
-            subblockColors1[blockIdx] = createRGBA(r2 + i2, g2 + i2, b2 + i2);
+            const int i2                 = intensityModifier[u.idht.mode.idm.cw2][modifierIdx];
+            subblockColors1[modifierIdx] = createRGBA(r2 + i2, g2 + i2, b2 + i2);
         }
 
         if (u.idht.mode.idm.flipbit)
@@ -583,6 +633,392 @@ struct ETC2Block
         }
     }
 
+    uint16_t RGB8ToRGB565(const R8G8B8A8 &rgba) const
+    {
+        return (static_cast<uint16_t>(rgba.R >> 3) << 11) |
+               (static_cast<uint16_t>(rgba.G >> 2) << 5) |
+               (static_cast<uint16_t>(rgba.B >> 3) << 0);
+    }
+
+    uint32_t matchBC1Bits(const R8G8B8A8 *rgba,
+                          const R8G8B8A8 &minColor,
+                          const R8G8B8A8 &maxColor,
+                          bool opaque) const
+    {
+        // Project each pixel on the (maxColor, minColor) line to decide which
+        // BC1 code to assign to it.
+
+        uint8_t decodedColors[2][3] = {{maxColor.R, maxColor.G, maxColor.B},
+                                       {minColor.R, minColor.G, minColor.B}};
+
+        int direction[3];
+        for (int ch = 0; ch < 3; ch++)
+        {
+            direction[ch] = decodedColors[0][ch] - decodedColors[1][ch];
+        }
+
+        int stops[2];
+        for (int i = 0; i < 2; i++)
+        {
+            stops[i] = decodedColors[i][0] * direction[0] + decodedColors[i][1] * direction[1] +
+                       decodedColors[i][2] * direction[2];
+        }
+
+        uint32_t bits = 0;
+        if (opaque)
+        {
+            for (int i = 15; i >= 0; i--)
+            {
+                // In opaque mode, the code is from 0 to 3.
+
+                bits <<= 2;
+                const int dot =
+                    rgba[i].R * direction[0] + rgba[i].G * direction[1] + rgba[i].B * direction[2];
+                const int factor = gl::clamp(
+                    static_cast<int>(
+                        (static_cast<float>(dot - stops[1]) / (stops[0] - stops[1])) * 3 + 0.5f),
+                    0, 3);
+                switch (factor)
+                {
+                    case 0:
+                        bits |= 1;
+                        break;
+                    case 1:
+                        bits |= 3;
+                        break;
+                    case 2:
+                        bits |= 2;
+                        break;
+                    case 3:
+                    default:
+                        bits |= 0;
+                        break;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 15; i >= 0; i--)
+            {
+                // In non-opaque mode, 3 is for tranparent pixels.
+
+                bits <<= 2;
+                if (0 == rgba[i].A)
+                {
+                    bits |= 3;
+                }
+                else
+                {
+                    const int dot = rgba[i].R * direction[0] + rgba[i].G * direction[1] +
+                                    rgba[i].B * direction[2];
+                    const int factor = gl::clamp(
+                        static_cast<int>(
+                            (static_cast<float>(dot - stops[1]) / (stops[0] - stops[1])) * 2 +
+                            0.5f),
+                        0, 2);
+                    switch (factor)
+                    {
+                        case 0:
+                            bits |= 0;
+                            break;
+                        case 1:
+                            bits |= 2;
+                            break;
+                        case 2:
+                        default:
+                            bits |= 1;
+                            break;
+                    }
+                }
+            }
+        }
+
+        return bits;
+    }
+
+    void packBC1(void *bc1,
+                 const R8G8B8A8 *rgba,
+                 R8G8B8A8 &minColor,
+                 R8G8B8A8 &maxColor,
+                 bool opaque) const
+    {
+        uint32_t bits;
+        uint16_t max16 = RGB8ToRGB565(maxColor);
+        uint16_t min16 = RGB8ToRGB565(minColor);
+        if (max16 != min16)
+        {
+            // Find the best BC1 code for each pixel
+            bits = matchBC1Bits(rgba, minColor, maxColor, opaque);
+        }
+        else
+        {
+            // Same colors, BC1 index 0 is the color in both opaque and transparent mode
+            bits = 0;
+            // BC1 index 3 is transparent
+            if (!opaque)
+            {
+                for (int i = 0; i < 16; i++)
+                {
+                    if (0 == rgba[i].A)
+                    {
+                        bits |= (3 << (i * 2));
+                    }
+                }
+            }
+        }
+
+        if (max16 < min16)
+        {
+            std::swap(max16, min16);
+
+            uint32_t xorMask = 0;
+            if (opaque)
+            {
+                // In opaque mode switching the two colors is doing the
+                // following code swaps: 0 <-> 1 and 2 <-> 3. This is
+                // equivalent to flipping the first bit of each code
+                // (5 = 0b0101)
+                xorMask = 0x55555555;
+            }
+            else
+            {
+                // In transparent mode switching the colors is doing the
+                // following code swap: 0 <-> 1. 0xA selects the second bit of
+                // each code, bits >> 1 selects the first bit of the code when
+                // the seconds bit is set (case 2 and 3). We invert all the
+                // non-selected bits, that is the first bit when the code is
+                // 0 or 1.
+                xorMask = ~((bits >> 1) | 0xAAAAAAAA);
+            }
+            bits ^= xorMask;
+        }
+
+        struct BC1Block
+        {
+            uint16_t color0;
+            uint16_t color1;
+            uint32_t bits;
+        };
+
+        // Encode the opaqueness in the order of the two BC1 colors
+        BC1Block *dest = reinterpret_cast<BC1Block *>(bc1);
+        if (opaque)
+        {
+            dest->color0 = max16;
+            dest->color1 = min16;
+        }
+        else
+        {
+            dest->color0 = min16;
+            dest->color1 = max16;
+        }
+        dest->bits = bits;
+    }
+
+    void transcodeIndividualBlockToBC1(uint8_t *dest,
+                                       size_t x,
+                                       size_t y,
+                                       size_t w,
+                                       size_t h,
+                                       const uint8_t alphaValues[4][4],
+                                       bool nonOpaquePunchThroughAlpha) const
+    {
+        const auto &block = u.idht.mode.idm.colors.indiv;
+        int r1            = extend_4to8bits(block.R1);
+        int g1            = extend_4to8bits(block.G1);
+        int b1            = extend_4to8bits(block.B1);
+        int r2            = extend_4to8bits(block.R2);
+        int g2            = extend_4to8bits(block.G2);
+        int b2 = extend_4to8bits(block.B2);
+        transcodeIndividualOrDifferentialBlockToBC1(dest, x, y, w, h, r1, g1, b1, r2, g2, b2,
+                                                    alphaValues, nonOpaquePunchThroughAlpha);
+    }
+
+    void transcodeDifferentialBlockToBC1(uint8_t *dest,
+                                         size_t x,
+                                         size_t y,
+                                         size_t w,
+                                         size_t h,
+                                         const uint8_t alphaValues[4][4],
+                                         bool nonOpaquePunchThroughAlpha) const
+    {
+        const auto &block = u.idht.mode.idm.colors.diff;
+        int b1            = extend_5to8bits(block.B);
+        int g1            = extend_5to8bits(block.G);
+        int r1            = extend_5to8bits(block.R);
+        int r2            = extend_5to8bits(block.R + block.dR);
+        int g2            = extend_5to8bits(block.G + block.dG);
+        int b2 = extend_5to8bits(block.B + block.dB);
+        transcodeIndividualOrDifferentialBlockToBC1(dest, x, y, w, h, r1, g1, b1, r2, g2, b2,
+                                                    alphaValues, nonOpaquePunchThroughAlpha);
+    }
+
+    void decodeSubblock(R8G8B8A8 *rgbaBlock,
+                        size_t pixelRange[2][2],
+                        size_t x,
+                        size_t y,
+                        size_t w,
+                        size_t h,
+                        const uint8_t alphaValues[4][4],
+                        bool flipbit,
+                        size_t subblockIdx,
+                        const R8G8B8A8 subblockColors[2][4]) const
+    {
+        size_t dxBegin = 0;
+        size_t dxEnd   = 4;
+        size_t dyBegin = subblockIdx * 2;
+        size_t dyEnd = dyBegin + 2;
+        if (!flipbit)
+        {
+            std::swap(dxBegin, dyBegin);
+            std::swap(dxEnd, dyEnd);
+        }
+
+        for (size_t j = dyBegin; j < dyEnd && (y + j) < h; j++)
+        {
+            R8G8B8A8 *row = &rgbaBlock[j * 4];
+            for (size_t i = dxBegin; i < dxEnd && (x + i) < w; i++)
+            {
+                const size_t pixelIndex = getIndex(i, j);
+                if (valueMappingTable[pixelIndex] < valueMappingTable[pixelRange[subblockIdx][0]])
+                {
+                    pixelRange[subblockIdx][0] = pixelIndex;
+                }
+                if (valueMappingTable[pixelIndex] > valueMappingTable[pixelRange[subblockIdx][1]])
+                {
+                    pixelRange[subblockIdx][1] = pixelIndex;
+                }
+
+                row[i]   = subblockColors[subblockIdx][pixelIndex];
+                row[i].A = alphaValues[j][i];
+            }
+        }
+    }
+
+    void transcodeIndividualOrDifferentialBlockToBC1(uint8_t *dest,
+                                                     size_t x,
+                                                     size_t y,
+                                                     size_t w,
+                                                     size_t h,
+                                                     int r1,
+                                                     int g1,
+                                                     int b1,
+                                                     int r2,
+                                                     int g2,
+                                                     int b2,
+                                                     const uint8_t alphaValues[4][4],
+                                                     bool nonOpaquePunchThroughAlpha) const
+    {
+        // A BC1 block has 2 endpoints, pixels is encoded as linear
+        // interpolations of them. A ETC1/ETC2 individual or differential block
+        // has 2 subblocks. Each subblock has one color and a modifier. We
+        // compute the max intensity and min intensity pixel values to use as
+        // our two BC1 endpoints and then map pixels to BC1 by projecting on the
+        // line between the two endpoints and choosing the right fraction.
+        //
+        // In the future, we have 2 potential improvements to this algorithm.
+        // 1. We don't actually need to decode ETC blocks to RGBs. Instead,
+        //    the subblock colors and pixel indices alreay contains enough
+        //    information for transcode. A direct mapping would be more
+        //    efficient here.
+        // 2. Currently the BC1 endpoints come from the max and min intensity
+        //    of ETC colors. A principal component analysis (PCA) on them might
+        //    give us better quality results, with limited costs
+
+        const auto intensityModifier =
+            nonOpaquePunchThroughAlpha ? intensityModifierNonOpaque : intensityModifierDefault;
+
+        // Compute the colors that pixels can have in each subblock both for
+        // the decoding of the RGBA data and BC1 encoding
+        R8G8B8A8 subblockColors[2][4];
+        for (size_t modifierIdx = 0; modifierIdx < 4; modifierIdx++)
+        {
+            const int i1                   = intensityModifier[u.idht.mode.idm.cw1][modifierIdx];
+            subblockColors[0][modifierIdx] = createRGBA(r1 + i1, g1 + i1, b1 + i1);
+
+            const int i2                   = intensityModifier[u.idht.mode.idm.cw2][modifierIdx];
+            subblockColors[1][modifierIdx] = createRGBA(r2 + i2, g2 + i2, b2 + i2);
+        }
+
+        // 1 and 3 are the argmax and argmin of valueMappingTable
+        size_t pixelRange[2][2] = {{1, 3}, {1, 3}};
+        R8G8B8A8 rgbaBlock[16];
+        // Decode the block in rgbaBlock and store the inverse valueTableMapping
+        // of {min(modifier index), max(modifier index)}
+        for (size_t blockIdx = 0; blockIdx < 2; blockIdx++)
+        {
+            decodeSubblock(rgbaBlock, pixelRange, x, y, w, h, alphaValues, u.idht.mode.idm.flipbit,
+                           blockIdx, subblockColors);
+        }
+        if (nonOpaquePunchThroughAlpha)
+        {
+            decodePunchThroughAlphaBlock(reinterpret_cast<uint8_t *>(rgbaBlock), x, y, w, h,
+                                         sizeof(R8G8B8A8) * 4);
+        }
+
+        // Get the "min" and "max" pixel colors that have been used.
+        R8G8B8A8 minColor;
+        const R8G8B8A8 &minColor0 = subblockColors[0][pixelRange[0][0]];
+        const R8G8B8A8 &minColor1 = subblockColors[1][pixelRange[1][0]];
+        if (minColor0.R + minColor0.G + minColor0.B < minColor1.R + minColor1.G + minColor1.B)
+        {
+            minColor = minColor0;
+        }
+        else
+        {
+            minColor = minColor1;
+        }
+
+        R8G8B8A8 maxColor;
+        const R8G8B8A8 &maxColor0 = subblockColors[0][pixelRange[0][1]];
+        const R8G8B8A8 &maxColor1 = subblockColors[1][pixelRange[1][1]];
+        if (maxColor0.R + maxColor0.G + maxColor0.B < maxColor1.R + maxColor1.G + maxColor1.B)
+        {
+            maxColor = maxColor1;
+        }
+        else
+        {
+            maxColor = maxColor0;
+        }
+
+        packBC1(dest, rgbaBlock, minColor, maxColor, !nonOpaquePunchThroughAlpha);
+    }
+
+    void transcodeTBlockToBC1(uint8_t *dest,
+                              size_t x,
+                              size_t y,
+                              size_t w,
+                              size_t h,
+                              const uint8_t alphaValues[4][4],
+                              bool nonOpaquePunchThroughAlpha) const
+    {
+        // TODO (mgong): Will be implemented soon
+        UNIMPLEMENTED();
+    }
+
+    void transcodeHBlockToBC1(uint8_t *dest,
+                              size_t x,
+                              size_t y,
+                              size_t w,
+                              size_t h,
+                              const uint8_t alphaValues[4][4],
+                              bool nonOpaquePunchThroughAlpha) const
+    {
+        // TODO (mgong): Will be implemented soon
+        UNIMPLEMENTED();
+    }
+
+    void transcodePlanarBlockToBC1(uint8_t *dest,
+                                   size_t x,
+                                   size_t y,
+                                   size_t w,
+                                   size_t h,
+                                   const uint8_t alphaValues[4][4]) const
+    {
+        // TODO (mgong): Will be implemented soon
+        UNIMPLEMENTED();
+    }
+
     // Single channel utility functions
     int getSingleChannel(size_t x, size_t y, bool isSigned) const
     {
@@ -756,6 +1192,38 @@ void LoadETC2RGB8ToRGBA8(size_t width,
     }
 }
 
+void LoadETC2RGB8ToBC1(size_t width,
+                       size_t height,
+                       size_t depth,
+                       const uint8_t *input,
+                       size_t inputRowPitch,
+                       size_t inputDepthPitch,
+                       uint8_t *output,
+                       size_t outputRowPitch,
+                       size_t outputDepthPitch,
+                       bool punchthroughAlpha)
+{
+    for (size_t z = 0; z < depth; z++)
+    {
+        for (size_t y = 0; y < height; y += 4)
+        {
+            const ETC2Block *sourceRow =
+                OffsetDataPointer<ETC2Block>(input, y / 4, z, inputRowPitch, inputDepthPitch);
+            uint8_t *destRow =
+                OffsetDataPointer<uint8_t>(output, y / 4, z, outputRowPitch, outputDepthPitch);
+
+            for (size_t x = 0; x < width; x += 4)
+            {
+                const ETC2Block *sourceBlock = sourceRow + (x / 4);
+                uint8_t *destPixels          = destRow + (x * 2);
+
+                sourceBlock->transcodeAsBC1(destPixels, x, y, width, height, DefaultETCAlphaValues,
+                                            punchthroughAlpha);
+            }
+        }
+    }
+}
+
 void LoadETC2RGBA8ToRGBA8(size_t width,
                           size_t height,
                           size_t depth,
@@ -808,6 +1276,20 @@ void LoadETC1RGB8ToRGBA8(size_t width,
 {
     LoadETC2RGB8ToRGBA8(width, height, depth, input, inputRowPitch, inputDepthPitch, output,
                         outputRowPitch, outputDepthPitch, false);
+}
+
+void LoadETC1RGB8ToBC1(size_t width,
+                       size_t height,
+                       size_t depth,
+                       const uint8_t *input,
+                       size_t inputRowPitch,
+                       size_t inputDepthPitch,
+                       uint8_t *output,
+                       size_t outputRowPitch,
+                       size_t outputDepthPitch)
+{
+    LoadETC2RGB8ToBC1(width, height, depth, input, inputRowPitch, inputDepthPitch, output,
+                      outputRowPitch, outputDepthPitch, false);
 }
 
 void LoadEACR11ToR8(size_t width,

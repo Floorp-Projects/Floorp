@@ -412,6 +412,9 @@ bool DynamicHLSL::generateShaderLinkHLSL(const gl::Data &data,
     const ShaderD3D *fragmentShader    = GetImplAs<ShaderD3D>(fragmentShaderGL);
     const int shaderModel              = mRenderer->getMajorShaderModel();
 
+    // usesViewScale() isn't supported in the D3D9 renderer
+    ASSERT(shaderModel >= 4 || !programMetadata.usesViewScale());
+
     bool useInstancedPointSpriteEmulation =
         programMetadata.usesPointSize() &&
         mRenderer->getWorkarounds().useInstancedPointSpriteEmulation;
@@ -464,18 +467,43 @@ bool DynamicHLSL::generateShaderLinkHLSL(const gl::Data &data,
     // On D3D9 or D3D11 Feature Level 9, we need to emulate large viewports using dx_ViewAdjust.
     if (shaderModel >= 4 && mRenderer->getShaderModelSuffix() == "")
     {
-        vertexStream << "    output.dx_Position.x = gl_Position.x;\n"
-                     << "    output.dx_Position.y = -gl_Position.y;\n"
-                     << "    output.dx_Position.z = (gl_Position.z + gl_Position.w) * 0.5;\n"
+        vertexStream << "    output.dx_Position.x = gl_Position.x;\n";
+
+        if (programMetadata.usesViewScale())
+        {
+            // This code assumes that dx_ViewScale.y = -1.0f when rendering to texture, and +1.0f
+            // when rendering to the default framebuffer. No other values are valid.
+            vertexStream << "    output.dx_Position.y = dx_ViewScale.y * gl_Position.y;\n";
+        }
+        else
+        {
+            vertexStream << "    output.dx_Position.y = - gl_Position.y;\n";
+        }
+
+        vertexStream << "    output.dx_Position.z = (gl_Position.z + gl_Position.w) * 0.5;\n"
                      << "    output.dx_Position.w = gl_Position.w;\n";
     }
     else
     {
         vertexStream << "    output.dx_Position.x = gl_Position.x * dx_ViewAdjust.z + "
-                        "dx_ViewAdjust.x * gl_Position.w;\n"
-                     << "    output.dx_Position.y = -(gl_Position.y * dx_ViewAdjust.w + "
-                        "dx_ViewAdjust.y * gl_Position.w);\n"
-                     << "    output.dx_Position.z = (gl_Position.z + gl_Position.w) * 0.5;\n"
+                        "dx_ViewAdjust.x * gl_Position.w;\n";
+
+        // If usesViewScale() is true and we're using the D3D11 renderer via Feature Level 9_*,
+        // then we need to multiply the gl_Position.y by the viewScale.
+        // usesViewScale() isn't supported when using the D3D9 renderer.
+        if (programMetadata.usesViewScale() &&
+            (shaderModel >= 4 && mRenderer->getShaderModelSuffix() != ""))
+        {
+            vertexStream << "    output.dx_Position.y = dx_ViewScale.y * (gl_Position.y * "
+                            "dx_ViewAdjust.w + dx_ViewAdjust.y * gl_Position.w);\n";
+        }
+        else
+        {
+            vertexStream << "    output.dx_Position.y = -(gl_Position.y * dx_ViewAdjust.w + "
+                            "dx_ViewAdjust.y * gl_Position.w);\n";
+        }
+
+        vertexStream << "    output.dx_Position.z = (gl_Position.z + gl_Position.w) * 0.5;\n"
                      << "    output.dx_Position.w = gl_Position.w;\n";
     }
 
@@ -523,11 +551,26 @@ bool DynamicHLSL::generateShaderLinkHLSL(const gl::Data &data,
     if (useInstancedPointSpriteEmulation)
     {
         vertexStream << "\n"
-                     << "    gl_PointSize = clamp(gl_PointSize, minPointSize, maxPointSize);\n"
-                     << "    output.dx_Position.xyz += float3(input.spriteVertexPos.x * "
-                        "gl_PointSize / (dx_ViewCoords.x*2), input.spriteVertexPos.y * "
-                        "gl_PointSize / (dx_ViewCoords.y*2), input.spriteVertexPos.z) * "
-                        "output.dx_Position.w;\n";
+                     << "    gl_PointSize = clamp(gl_PointSize, minPointSize, maxPointSize);\n";
+
+        vertexStream << "    output.dx_Position.x += (input.spriteVertexPos.x * gl_PointSize / "
+                        "(dx_ViewCoords.x*2)) * output.dx_Position.w;";
+
+        if (programMetadata.usesViewScale())
+        {
+            // Multiply by ViewScale to invert the rendering when appropriate
+            vertexStream << "    output.dx_Position.y += (-dx_ViewScale.y * "
+                            "input.spriteVertexPos.y * gl_PointSize / (dx_ViewCoords.y*2)) * "
+                            "output.dx_Position.w;";
+        }
+        else
+        {
+            vertexStream << "    output.dx_Position.y += (input.spriteVertexPos.y * gl_PointSize / "
+                            "(dx_ViewCoords.y*2)) * output.dx_Position.w;";
+        }
+
+        vertexStream
+            << "    output.dx_Position.z += input.spriteVertexPos.z * output.dx_Position.w;\n";
 
         if (programMetadata.usesPointCoord())
         {
@@ -604,6 +647,49 @@ bool DynamicHLSL::generateShaderLinkHLSL(const gl::Data &data,
                            "dx_ViewCoords.z;\n"
                         << "    gl_FragCoord.y = (input.gl_FragCoord.y * rhw) * dx_ViewCoords.y + "
                            "dx_ViewCoords.w;\n";
+        }
+
+        if (programMetadata.usesViewScale())
+        {
+            // For Feature Level 9_3 and below, we need to correct gl_FragCoord.y to account
+            // for dx_ViewScale. On Feature Level 10_0+, gl_FragCoord.y is calculated above using
+            // dx_ViewCoords and is always correct irrespective of dx_ViewScale's value.
+            // NOTE: usesViewScale() can only be true on D3D11 (i.e. Shader Model 4.0+).
+            if (shaderModel >= 4 && mRenderer->getShaderModelSuffix() == "")
+            {
+                // Some assumptions:
+                //  - dx_ViewScale.y = -1.0f when rendering to texture
+                //  - dx_ViewScale.y = +1.0f when rendering to the default framebuffer
+                //  - gl_FragCoord.y has been set correctly above.
+                //
+                // When rendering to the backbuffer, the code inverts gl_FragCoord's y coordinate.
+                // This involves subtracting the y coordinate from the height of the area being
+                // rendered to.
+                //
+                // First we calculate the height of the area being rendered to:
+                //    render_area_height = (2.0f / (1.0f - input.gl_FragCoord.y * rhw)) *
+                //    gl_FragCoord.y
+                //
+                // Note that when we're rendering to default FB, we want our output to be
+                // equivalent to:
+                //    "gl_FragCoord.y = render_area_height - gl_FragCoord.y"
+                //
+                // When we're rendering to a texture, we want our output to be equivalent to:
+                //    "gl_FragCoord.y = gl_FragCoord.y;"
+                //
+                // If we set scale_factor = ((1.0f + dx_ViewScale.y) / 2.0f), then notice that
+                //  - When rendering to default FB: scale_factor = 1.0f
+                //  - When rendering to texture:    scale_factor = 0.0f
+                //
+                // Therefore, we can get our desired output by setting:
+                //    "gl_FragCoord.y = scale_factor * render_area_height - dx_ViewScale.y *
+                //    gl_FragCoord.y"
+                //
+                // Simplifying, this becomes:
+                pixelStream
+                    << "    gl_FragCoord.y = (1.0f + dx_ViewScale.y) * gl_FragCoord.y /"
+                       "(1.0f - input.gl_FragCoord.y * rhw)  - dx_ViewScale.y * gl_FragCoord.y;\n";
+            }
         }
 
         pixelStream << "    gl_FragCoord.z = (input.gl_FragCoord.z * rhw) * dx_DepthFront.x + "
@@ -749,6 +835,7 @@ std::string DynamicHLSL::generateGeometryShaderPreamble(const VaryingPacking &va
 std::string DynamicHLSL::generateGeometryShaderHLSL(gl::PrimitiveType primitiveType,
                                                     const gl::Data &data,
                                                     const gl::Program::Data &programData,
+                                                    const bool useViewScale,
                                                     const std::string &preambleString) const
 {
     ASSERT(mRenderer->getMajorShaderModel() >= 4);
@@ -799,8 +886,14 @@ std::string DynamicHLSL::generateGeometryShaderHLSL(gl::PrimitiveType primitiveT
     {
         shaderStream << "#define ANGLE_POINT_SPRITE_SHADER\n"
                         "\n"
-                        "uniform float4 dx_ViewCoords : register(c1);\n"
-                        "\n"
+                        "uniform float4 dx_ViewCoords : register(c1);\n";
+
+        if (useViewScale)
+        {
+            shaderStream << "uniform float2 dx_ViewScale : register(c3);\n";
+        }
+
+        shaderStream << "\n"
                         "static float2 pointSpriteCorners[] = \n"
                         "{\n"
                         "    float2( 0.5f, -0.5f),\n"
@@ -870,9 +963,20 @@ std::string DynamicHLSL::generateGeometryShaderHLSL(gl::PrimitiveType primitiveT
 
         for (int corner = 0; corner < 4; corner++)
         {
-            shaderStream << "\n"
-                            "    output.dx_Position = dx_Position + float4(pointSpriteCorners["
-                         << corner << "] * viewportScale * gl_PointSize, 0.0f, 0.0f);\n";
+            if (useViewScale)
+            {
+                shaderStream << "    \n"
+                                "    output.dx_Position = dx_Position + float4(1.0f, "
+                                "-dx_ViewScale.y, 1.0f, 1.0f)"
+                                "        * float4(pointSpriteCorners["
+                             << corner << "] * viewportScale * gl_PointSize, 0.0f, 0.0f);\n";
+            }
+            else
+            {
+                shaderStream << "\n"
+                                "    output.dx_Position = dx_Position + float4(pointSpriteCorners["
+                             << corner << "] * viewportScale * gl_PointSize, 0.0f, 0.0f);\n";
+            }
 
             if (usesPointCoord)
             {
