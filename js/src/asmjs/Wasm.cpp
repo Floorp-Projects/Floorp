@@ -1056,10 +1056,14 @@ CheckTypeForJS(JSContext* cx, Decoder& d, const Sig& sig)
     for (ValType argType : sig.args()) {
         if (argType == ValType::I64)
             return Fail(cx, d, "cannot import/export i64 argument");
+        if (IsSimdType(argType))
+            return Fail(cx, d, "cannot import/export SIMD argument");
     }
 
     if (sig.ret() == ExprType::I64)
         return Fail(cx, d, "cannot import/export i64 return type");
+    if (IsSimdType(sig.ret()))
+        return Fail(cx, d, "cannot import/export SIMD return type");
 
     return true;
 }
