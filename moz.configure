@@ -114,12 +114,20 @@ perl_version_check('5.006')
 # Miscellaneous programs
 # ==============================================================
 check_prog('DOXYGEN', ('doxygen',), allow_missing=True)
-check_prog('DSYMUTIL', ('dsymutil', 'llvm-dsymutil'), allow_missing=True)
-check_prog('GENISOIMAGE', ('genisoimage',), allow_missing=True)
-check_prog('RPMBUILD', ('rpmbuild',), allow_missing=True)
 check_prog('UNZIP', ('unzip',))
 check_prog('XARGS', ('xargs',))
 check_prog('ZIP', ('zip',))
+
+@depends(target)
+def mac_programs(target):
+    if target.os == 'Darwin':
+        check_prog('DSYMUTIL', ('dsymutil', 'llvm-dsymutil'), allow_missing=True)
+        check_prog('GENISOIMAGE', ('genisoimage',), allow_missing=True)
+
+@depends(target)
+def linux_programs(target):
+    if target.os == 'GNU' and target.kernel == 'Linux':
+        check_prog('RPMBUILD', ('rpmbuild',), allow_missing=True)
 
 
 # Fallthrough to autoconf-based configure
