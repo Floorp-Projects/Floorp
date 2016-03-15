@@ -17,7 +17,6 @@ import android.animation.ObjectAnimator;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.animation.TransitionsTracker;
 import org.mozilla.gecko.util.Experiments;
 
 /**
@@ -79,8 +78,6 @@ public class FirstrunAnimationContainer extends LinearLayout {
                 FirstrunAnimationContainer.this.setVisibility(View.GONE);
             }
         });
-
-        TransitionsTracker.track(alphaAnimator);
 
         alphaAnimator.start();
     }
