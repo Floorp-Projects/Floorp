@@ -43,6 +43,40 @@ window.__defineGetter__('_EU_Cu', function() {
   return c.value && !c.writable ? Components.utils : SpecialPowers.Cu;
 });
 
+window.__defineGetter__("_EU_OS", function() {
+  delete this._EU_OS;
+  try {
+    this._EU_OS = this._EU_Cu.import("resource://gre/modules/AppConstants.jsm", {}).platform;
+  } catch (ex) {
+    this._EU_OS = null;
+  }
+  return this._EU_OS;
+});
+
+function _EU_isMac(aWindow = window) {
+  if (window._EU_OS) {
+    return window._EU_OS == "macosx";
+  }
+  if (aWindow) {
+    try {
+      return aWindow.navigator.platform.indexOf("Mac") > -1;
+    } catch (ex) {}
+  }
+  return navigator.platform.indexOf("Mac") > -1;
+}
+
+function _EU_isWin(aWindow = window) {
+  if (window._EU_OS) {
+    return window._EU_OS == "win";
+  }
+  if (aWindow) {
+    try {
+      return aWindow.navigator.platform.indexOf("Win") > -1;
+    } catch (ex) {}
+  }
+  return navigator.platform.indexOf("Win") > -1;
+}
+
 /**
  * Send a mouse event to the node aTarget (aTarget can be an id, or an
  * actual node) . The "event" passed in to aEvent is just a JavaScript
@@ -237,7 +271,7 @@ function _parseModifiers(aEvent, aWindow = window)
     mval |= nsIDOMWindowUtils.MODIFIER_META;
   }
   if (aEvent.accelKey) {
-    mval |= (navigator.platform.indexOf("Mac") >= 0) ?
+    mval |= _EU_isMac(aWindow) ?
       nsIDOMWindowUtils.MODIFIER_META : nsIDOMWindowUtils.MODIFIER_CONTROL;
   }
   if (aEvent.altGrKey) {
@@ -789,16 +823,13 @@ function _parseNativeModifiers(aModifiers, aWindow = window)
   }
 
   if (aModifiers.accelKey) {
-    modifiers |=
-      (navigator.platform.indexOf("Mac") == 0) ? 0x00004000 : 0x00000400;
+    modifiers |= _EU_isMac(aWindow) ? 0x00004000 : 0x00000400;
   }
   if (aModifiers.accelRightKey) {
-    modifiers |=
-      (navigator.platform.indexOf("Mac") == 0) ? 0x00008000 : 0x00000800;
+    modifiers |= _EU_isMac(aWindow) ? 0x00008000 : 0x00000800;
   }
   if (aModifiers.altGrKey) {
-    modifiers |=
-      (navigator.platform.indexOf("Win") == 0) ? 0x00002800 : 0x00001000;
+    modifiers |= _EU_isWin(aWindow) ? 0x00002800 : 0x00001000;
   }
   return modifiers;
 }
@@ -873,9 +904,9 @@ function synthesizeNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers,
   }
   var navigator = _getNavigator(aWindow);
   var nativeKeyboardLayout = null;
-  if (navigator.platform.indexOf("Mac") == 0) {
+  if (_EU_isMac(aWindow)) {
     nativeKeyboardLayout = aKeyboardLayout.Mac;
-  } else if (navigator.platform.indexOf("Win") == 0) {
+  } else if (_EU_isWin(aWindow)) {
     nativeKeyboardLayout = aKeyboardLayout.Win;
   }
   if (nativeKeyboardLayout === null) {
@@ -1063,7 +1094,15 @@ function _getTIP(aWindow, aCallback)
 function _getKeyboardEvent(aWindow = window)
 {
   if (typeof KeyboardEvent != "undefined") {
-    return KeyboardEvent;
+    try {
+      // See if the object can be instantiated; sometimes this yields
+      // 'TypeError: can't access dead object' or 'KeyboardEvent is not a constructor'.
+      new KeyboardEvent("", {});
+      return KeyboardEvent;
+    } catch (ex) {}
+  }
+  if (typeof content != "undefined" && ("KeyboardEvent" in content)) {
+    return content.KeyboardEvent;
   }
   return aWindow.KeyboardEvent;
 }
@@ -1282,7 +1321,7 @@ function _emulateToActivateModifiers(aTIP, aKeyEvent, aWindow = window)
       { key: "OS",         attr: "osKey" },
       { key: "Shift",      attr: "shiftKey" },
       { key: "Symbol",     attr: "symbolKey" },
-      { key: (navigator.platform.indexOf("Mac") >= 0) ? "Meta" : "Control",
+      { key: _EU_isMac(aWindow) ? "Meta" : "Control",
                            attr: "accelKey" },
     ],
     lockable: [
