@@ -260,6 +260,7 @@ def wanted_mozconfig_variables(help):
          'MOZ_BUILD_APP',
          'PERL',
          'RPMBUILD',
+         'TAR',
          'UNZIP',
          'XARGS',
          'ZIP',
