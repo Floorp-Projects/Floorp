@@ -699,26 +699,6 @@ if test -z "$COMPILE_ENVIRONMENT"; then
 fi
 AC_SUBST(NSINSTALL_BIN)
 
-MOZ_PATH_PROG(DOXYGEN, doxygen, :)
-MOZ_PATH_PROGS(UNZIP, unzip)
-if test -z "$UNZIP" -o "$UNZIP" = ":"; then
-    AC_MSG_ERROR([unzip not found in \$PATH])
-fi
-MOZ_PATH_PROGS(ZIP, zip)
-if test -z "$ZIP" -o "$ZIP" = ":"; then
-    AC_MSG_ERROR([zip not found in \$PATH])
-fi
-MOZ_PATH_PROG(XARGS, xargs)
-if test -z "$XARGS" -o "$XARGS" = ":"; then
-    AC_MSG_ERROR([xargs not found in \$PATH .])
-fi
-
-MOZ_PATH_PROG(RPMBUILD, rpmbuild, :)
-AC_SUBST(RPMBUILD)
-
-MOZ_PATH_PROG(GENISOIMAGE, genisoimage, :)
-MOZ_PATH_PROG(DSYMUTIL, dsymutil, llvm-dsymutil :)
-
 if test "$COMPILE_ENVIRONMENT"; then
 
 dnl ========================================================
@@ -1668,10 +1648,6 @@ case "$target" in
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
         PKG_SKIP_STRIP=1
-        XARGS=xargs
-        ZIP=zip
-        UNZIP=unzip
-        DOXYGEN=:
         OBJ_SUFFIX=obj
         LIB_SUFFIX=lib
         DLL_PREFIX=
