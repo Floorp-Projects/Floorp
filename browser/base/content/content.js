@@ -212,98 +212,10 @@ const TLS_ERROR_REPORT_TELEMETRY_EXPANDED = 1;
 const TLS_ERROR_REPORT_TELEMETRY_SUCCESS  = 6;
 const TLS_ERROR_REPORT_TELEMETRY_FAILURE  = 7;
 
-var AboutCertErrorListener = {
-  init(chromeGlobal) {
-    addMessageListener("AboutCertErrorDetails", this);
-    chromeGlobal.addEventListener("AboutCertErrorLoad", this, false, true);
-    chromeGlobal.addEventListener("AboutCertErrorSetAutomatic", this, false, true);
-  },
 
-  get isAboutCertError() {
-    return content.document.documentURI.startsWith("about:certerror");
-  },
-
-  handleEvent(event) {
-    if (!this.isAboutCertError) {
-      return;
-    }
-
-    switch (event.type) {
-      case "AboutCertErrorLoad":
-        this.onLoad(event);
-        break;
-      case "AboutCertErrorSetAutomatic":
-        this.onSetAutomatic(event);
-        break;
-    }
-  },
-
-  receiveMessage(msg) {
-    if (!this.isAboutCertError) {
-      return;
-    }
-
-    switch (msg.name) {
-      case "AboutCertErrorDetails":
-        this.onDetails(msg);
-        break;
-    }
-  },
-
-  onLoad(event) {
-    let originalTarget = event.originalTarget;
-    let ownerDoc = originalTarget.ownerDocument;
-    ClickEventHandler.onAboutCertError(originalTarget, ownerDoc);
-
-    // Set up the TLS Error Reporting UI - reports are sent automatically
-    // (from nsHttpChannel::OnStopRequest) if the user has previously enabled
-    // automatic sending of reports. The UI ensures that a report is sent
-    // for the certificate error currently displayed if the user enables it
-    // here.
-    let automatic = Services.prefs.getBoolPref("security.ssl.errorReporting.automatic");
-    content.dispatchEvent(new content.CustomEvent("AboutCertErrorOptions", {
-      detail: JSON.stringify({
-        enabled: Services.prefs.getBoolPref("security.ssl.errorReporting.enabled"),
-        automatic,
-      })
-    }));
-  },
-
-  onDetails(msg) {
-    let div = content.document.getElementById("certificateErrorText");
-    div.textContent = msg.data.info;
-  },
-
-  onSetAutomatic(event) {
-    sendAsyncMessage("Browser:SetSSLErrorReportAuto", {
-      automatic: event.detail
-    });
-
-    // if we're enabling reports, send a report for this failure
-    if (event.detail) {
-      let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
-          .getService(Ci.nsISerializationHelper);
-
-      let serializable =  docShell.failedChannel.securityInfo
-          .QueryInterface(Ci.nsITransportSecurityInfo)
-          .QueryInterface(Ci.nsISerializable);
-
-      let serializedSecurityInfo = serhelper.serializeToString(serializable);
-
-      let {host, port} = content.document.mozDocumentURIIfNotForErrorPages;
-      sendAsyncMessage("Browser:SendSSLErrorReport", {
-        uri: { host, port },
-        securityInfo: serializedSecurityInfo
-      });
-    }
-  },
-};
-
-AboutCertErrorListener.init(this);
-
-
-var AboutNetErrorListener = {
+var AboutNetAndCertErrorListener = {
   init: function(chromeGlobal) {
+    addMessageListener("CertErrorDetails", this);
     chromeGlobal.addEventListener('AboutNetErrorLoad', this, false, true);
     chromeGlobal.addEventListener('AboutNetErrorSetAutomatic', this, false, true);
     chromeGlobal.addEventListener('AboutNetErrorOverride', this, false, true);
@@ -313,8 +225,29 @@ var AboutNetErrorListener = {
     return content.document.documentURI.startsWith("about:neterror");
   },
 
+  get isAboutCertError() {
+    return content.document.documentURI.startsWith("about:certerror");
+  },
+
+  receiveMessage: function(msg) {
+    if (!this.isAboutCertError) {
+      return;
+    }
+
+    switch (msg.name) {
+      case "CertErrorDetails":
+        this.onCertErrorDetails(msg);
+        break;
+    }
+  },
+
+  onCertErrorDetails(msg) {
+    let div = content.document.getElementById("certificateErrorText");
+    div.textContent = msg.data.info;
+  },
+
   handleEvent: function(aEvent) {
-    if (!this.isAboutNetError) {
+    if (!this.isAboutNetError && !this.isAboutCertError) {
       return;
     }
 
@@ -332,6 +265,12 @@ var AboutNetErrorListener = {
   },
 
   onPageLoad: function(evt) {
+    if (this.isAboutCertError) {
+      let originalTarget = evt.originalTarget;
+      let ownerDoc = originalTarget.ownerDocument;
+      ClickEventHandler.onCertError(originalTarget, ownerDoc);
+    }
+
     let automatic = Services.prefs.getBoolPref("security.ssl.errorReporting.automatic");
     content.dispatchEvent(new content.CustomEvent("AboutNetErrorOptions", {
       detail: JSON.stringify({
@@ -375,7 +314,7 @@ var AboutNetErrorListener = {
   }
 }
 
-AboutNetErrorListener.init(this);
+AboutNetAndCertErrorListener.init(this);
 
 
 var ClickEventHandler = {
@@ -398,7 +337,7 @@ var ClickEventHandler = {
 
     // Handle click events from about pages
     if (ownerDoc.documentURI.startsWith("about:certerror")) {
-      this.onAboutCertError(originalTarget, ownerDoc);
+      this.onCertError(originalTarget, ownerDoc);
       return;
     } else if (ownerDoc.documentURI.startsWith("about:blocked")) {
       this.onAboutBlocked(originalTarget, ownerDoc);
@@ -458,7 +397,7 @@ var ClickEventHandler = {
     }
   },
 
-  onAboutCertError: function (targetElement, ownerDoc) {
+  onCertError: function (targetElement, ownerDoc) {
     let docshell = ownerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
                                        .getInterface(Ci.nsIWebNavigation)
                                        .QueryInterface(Ci.nsIDocShell);
