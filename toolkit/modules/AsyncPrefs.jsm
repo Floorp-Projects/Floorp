@@ -13,9 +13,18 @@ Cu.import("resource://gre/modules/Task.jsm");
 const kInChildProcess = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
 const kAllowedPrefs = new Set([
+  // NB: please leave the testing prefs at the top, and sort the rest alphabetically if you add
+  // anything.
   "testing.allowed-prefs.some-bool-pref",
   "testing.allowed-prefs.some-char-pref",
   "testing.allowed-prefs.some-int-pref",
+
+  "narrate.rate",
+  "narrate.voice",
+
+  "reader.font_size",
+  "reader.font_type",
+  "reader.color_scheme",
 ]);
 
 const kPrefTypeMap = new Map([
