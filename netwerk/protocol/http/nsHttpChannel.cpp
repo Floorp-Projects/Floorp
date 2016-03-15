@@ -1349,6 +1349,12 @@ nsHttpChannel::ProcessContentSignatureHeader(nsHttpResponseHead *aResponseHead)
     if (!mLoadInfo || !mLoadInfo->GetVerifySignedContent()) {
         return NS_OK;
     }
+
+    // check if we verify content signatures on this newtab channel
+    if (gHttpHandler->NewTabContentSignaturesDisabled()) {
+        return NS_OK;
+    }
+
     NS_ENSURE_TRUE(aResponseHead, NS_ERROR_ABORT);
     nsAutoCString contentSignatureHeader;
     nsHttpAtom atom = nsHttp::ResolveAtom("Content-Signature");
