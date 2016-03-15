@@ -36,9 +36,6 @@ class TreeMetadata(object):
     """Base class for all data being captured."""
     __slots__ = ()
 
-    def to_dict(self):
-        return {k.lower(): getattr(self, k) for k in self.DICT_ATTRS}
-
 
 class ContextDerived(TreeMetadata):
     """Build object derived from a single Context instance.
@@ -360,13 +357,6 @@ class BaseProgram(Linkable):
     """
     __slots__ = ('program')
 
-    DICT_ATTRS = {
-        'install_target',
-        'kind',
-        'program',
-        'relobjdir',
-    }
-
     def __init__(self, context, program, is_unit_test=False):
         Linkable.__init__(self, context)
 
@@ -375,9 +365,6 @@ class BaseProgram(Linkable):
             program += bin_suffix
         self.program = program
         self.is_unit_test = is_unit_test
-
-    def __repr__(self):
-        return '<%s: %s/%s>' % (type(self).__name__, self.relobjdir, self.program)
 
 
 class Program(BaseProgram):
@@ -428,9 +415,6 @@ class BaseLibrary(Linkable):
 
         self.refs = []
 
-    def __repr__(self):
-        return '<%s: %s/%s>' % (type(self).__name__, self.relobjdir, self.lib_name)
-
 
 class Library(BaseLibrary):
     """Context derived container object for a library"""
@@ -466,15 +450,6 @@ class SharedLibrary(Library):
         'variant',
         'symbols_file',
     )
-
-    DICT_ATTRS = {
-        'basename',
-        'import_name',
-        'install_target',
-        'lib_name',
-        'relobjdir',
-        'soname',
-    }
 
     FRAMEWORK = 1
     COMPONENT = 2
