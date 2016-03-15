@@ -118,7 +118,7 @@ static const opcode_t opcode_table[] =
     {{do2(band)},                                   0, "BITAND"},
     {{do2(bnot)},                                   0, "BITNOT"},   // 0x40
     {{do2(setbits)},                                4, "BITSET"},
-    {{do2(set_feat)},                               2, "SET_FEAT"},
+    {{do_(set_feat), NILOP},                        2, "SET_FEAT"},                 // featidx slot
     // private opcodes for internal use only, comes after all other on disk opcodes.
     {{do_(temp_copy), NILOP},                       0, "TEMP_COPY"}
 };
