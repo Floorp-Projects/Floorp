@@ -63,6 +63,9 @@ interface BluetoothAdapter : EventTarget {
   // Fired when handsfree connection status changed
            attribute EventHandler   onhfpstatuschanged;
 
+  // Fired when handsfree connection status changed
+           attribute EventHandler   onhidstatuschanged;
+
   // Fired when sco connection status changed
            attribute EventHandler   onscostatuschanged;
 

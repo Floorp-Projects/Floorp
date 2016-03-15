@@ -7,6 +7,7 @@
 TEST_DIRS += ['test']
 
 EXPORTS.mozilla.dom += [
+    'ContentVerifier.h',
     'nsContentSecurityManager.h',
     'nsCSPContext.h',
     'nsCSPService.h',
@@ -21,6 +22,7 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    'ContentVerifier.cpp',
     'nsContentSecurityManager.cpp',
     'nsCSPContext.cpp',
     'nsCSPParser.cpp',

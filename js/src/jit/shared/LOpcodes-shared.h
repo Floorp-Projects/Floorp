@@ -344,6 +344,7 @@
     _(CallInstanceOf)               \
     _(InterruptCheck)               \
     _(AsmJSInterruptCheck)          \
+    _(AsmThrowUnreachable)          \
     _(GetDOMProperty)               \
     _(GetDOMMemberV)                \
     _(GetDOMMemberT)                \

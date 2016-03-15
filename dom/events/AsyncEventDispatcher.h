@@ -19,13 +19,13 @@ class nsINode;
 namespace mozilla {
 
 /**
- * Use nsAsyncDOMEvent to fire a DOM event that requires safe a stable DOM.
+ * Use AsyncEventDispatcher to fire a DOM event that requires safe a stable DOM.
  * For example, you may need to fire an event from within layout, but
  * want to ensure that the event handler doesn't mutate the DOM at
  * the wrong time, in order to avoid resulting instability.
  */
- 
-class AsyncEventDispatcher : public nsRunnable
+
+class AsyncEventDispatcher : public nsCancelableRunnable
 {
 public:
   /**
@@ -48,29 +48,28 @@ public:
     : mTarget(aTarget)
     , mEventType(aEventType)
     , mBubbles(aBubbles)
-    , mOnlyChromeDispatch(false)
   {
   }
 
   AsyncEventDispatcher(dom::EventTarget* aTarget, nsIDOMEvent* aEvent)
     : mTarget(aTarget)
     , mEvent(aEvent)
-    , mBubbles(false)
-    , mOnlyChromeDispatch(false)
   {
   }
 
   AsyncEventDispatcher(dom::EventTarget* aTarget, WidgetEvent& aEvent);
 
   NS_IMETHOD Run() override;
+  NS_IMETHOD Cancel() override;
   nsresult PostDOMEvent();
   void RunDOMEventWhenSafe();
 
   nsCOMPtr<dom::EventTarget> mTarget;
   nsCOMPtr<nsIDOMEvent> mEvent;
   nsString              mEventType;
-  bool                  mBubbles;
-  bool                  mOnlyChromeDispatch;
+  bool                  mBubbles = false;
+  bool                  mOnlyChromeDispatch = false;
+  bool                  mCanceled = false;
 };
 
 class LoadBlockingAsyncEventDispatcher final : public AsyncEventDispatcher
@@ -96,7 +95,7 @@ public:
       mBlockedDoc->BlockOnload();
     }
   }
-  
+
   ~LoadBlockingAsyncEventDispatcher();
 
 private:
