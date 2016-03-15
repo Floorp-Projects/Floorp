@@ -150,6 +150,13 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         }
     }
 
+    public boolean containsHistory() {
+        if (historyCursor == null) {
+            return false;
+        }
+        return (historyCursor.getCount() > 0);
+    }
+
     @Override
     public void onBindViewHolder(CombinedHistoryItem viewHolder, int position) {
         final ItemType itemType = ItemType.viewTypeToItemType(getItemViewType(position));
