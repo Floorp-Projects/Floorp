@@ -222,8 +222,43 @@ def command_line_helper():
     return depends.__self__._helper
 
 
-@depends(mozconfig)
-def mozconfig_options(mozconfig):
+# All options defined above this point can't be injected in mozconfig_options
+# below, so collect them.
+@template
+@advanced
+def early_options():
+    @depends('--help')
+    def early_options(help):
+        return set(
+            option.env
+            for option in depends.__self__._options.itervalues()
+            if option.env
+        )
+    return early_options
+
+early_options = early_options()
+
+# At the moment, moz.configure doesn't have complete knowledge of all the
+# supported options in mozconfig because of all that is still in old.configure.
+# But we don't know all the options that moz.configure knows about until all
+# moz.configure files are executed, so we keep a manual list here, that is
+# checked in old.configure (we'll assume it's the last moz.configure file
+# processed). This is tedious but necessary for now.
+@depends('--help')
+def wanted_mozconfig_variables(help):
+     return set([
+         'AUTOCONF',
+         'DISABLE_EXPORT_JS',
+         'DISABLE_SHARED_JS',
+         'EXTERNAL_SOURCE_DIR',
+         'MOZILLABUILD',
+         'MOZ_ARTIFACT_BUILDS',
+         'MOZ_BUILD_APP',
+     ])
+
+
+@depends(mozconfig, wanted_mozconfig_variables)
+def mozconfig_options(mozconfig, wanted_mozconfig_variables):
     if mozconfig['path']:
         helper = command_line_helper()
         warn('Adding configure options from %s' % mozconfig['path'])
@@ -234,11 +269,22 @@ def mozconfig_options(mozconfig):
             # emulation that mozconfig provides.
             helper.add(arg, origin='mozconfig', args=helper._args)
 
-        # Ideally we'd handle mozconfig['env'] and mozconfig['vars'] here,
-        # but at the moment, moz.configure has no knowledge of the options
-        # that may appear there. We'll opt-in when we move things from
-        # old-configure.in, which will be tedious but necessary until we
-        # can discriminate what old-configure.in supports.
+        def add(key, value):
+            # See comment above wanted_mozconfig_variables
+            if key in wanted_mozconfig_variables:
+                arg = '%s=%s' % (key, value)
+                warn('  %s' % arg)
+                helper.add(arg, origin='mozconfig', args=helper._args)
+
+        for key, value in mozconfig['env']['added'].iteritems():
+            add(key, value)
+        for key, (_, value) in mozconfig['env']['modified'].iteritems():
+            add(key, value)
+        for key, value in mozconfig['vars']['added'].iteritems():
+            add(key, value)
+        for key, (_, value) in mozconfig['vars']['modified'].iteritems():
+            add(key, value)
+
 
 del command_line_helper
 
