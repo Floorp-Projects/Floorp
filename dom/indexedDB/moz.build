@@ -100,7 +100,7 @@ if CONFIG['GNU_CC']:
 
 if CONFIG['_MSC_VER']:
     # This is intended as a temporary hack to support building with VS2015.
-    SOURCES['Key.cpp'].flags += ['-wd4577']
+    CXXFLAGS += ['-wd4577']
 
 LOCAL_INCLUDES += [
     '/db/sqlite3/src',
