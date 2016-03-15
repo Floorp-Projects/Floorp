@@ -136,6 +136,8 @@ public:
         return mPluginName + mPluginVersion;
     }
 
+    void AccumulateModuleInitBlockedTime();
+
     virtual nsresult GetRunID(uint32_t* aRunID) override;
     virtual void SetHasLocalInstance() override {
         mHadLocalInstance = true;
