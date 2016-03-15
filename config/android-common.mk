@@ -24,8 +24,15 @@ endif
 # $(1) is the full path to input:  foo-debug-unsigned-unaligned.apk.
 # $(2) is the full path to output: foo.apk.
 # Use this like: $(call RELEASE_SIGN_ANDROID_APK,foo-debug-unsigned-unaligned.apk,foo.apk)
+#
+# The |zip -d| there to handle re-signing previously signed APKs.  Gradle
+# produces signed, unaligned APK files, but this expects unsigned, unaligned
+# APK files.  The |zip -d| discards any existing signature, turning a signed,
+# unaligned APK into an unsigned, unaligned APK.  Sadly |zip -q| doesn't
+# silence a warning about "nothing to do" so we pipe to /dev/null.
 RELEASE_SIGN_ANDROID_APK = \
   cp $(1) $(2)-unaligned.apk && \
+  ($(ZIP) -d $(2)-unaligned.apk 'META-INF/*' > /dev/null || true) && \
   $(RELEASE_JARSIGNER) $(2)-unaligned.apk && \
   $(ZIPALIGN) -f -v 4 $(2)-unaligned.apk $(2) && \
   $(RM) $(2)-unaligned.apk
