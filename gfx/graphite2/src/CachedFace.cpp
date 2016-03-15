@@ -69,10 +69,10 @@ bool CachedFace::runGraphite(Segment *seg, const Silf *pSilf) const
     Slot * subSegEndSlot = subSegStartSlot;
     uint16 cmapGlyphs[eMaxSpliceSize];
     int subSegStart = 0;
-    for (unsigned int i = 0; i < seg->charInfoCount(); ++i)
+    for (unsigned int i = 0; i < seg->charInfoCount() && subSegEndSlot; ++i)
     {
         const unsigned int length = i - subSegStart + 1;
-        if (length < eMaxSpliceSize)
+        if (length < eMaxSpliceSize && subSegEndSlot->gid() < m_cacheStore->maxCmapGid())
             cmapGlyphs[length-1] = subSegEndSlot->gid();
         else return false;
         const bool spaceOnly = m_cacheStore->isSpaceGlyph(subSegEndSlot->gid());
