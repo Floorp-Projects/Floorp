@@ -171,7 +171,7 @@
   <!-- Sony platform specific things -->
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="36e3286b400566d0cfe9ea9f54ca76039910bf92"/>
   <project name="device-qcom-sepolicy" path="device/qcom/sepolicy" remote="b2g" revision="e0a1cce6a8559ccc88e15da148531d36e18ae5f7"/>
-  <project name="device-sony-common" path="device/sony/common" remote="b2g" revision="8956834338d21b18718149575a6c0a1466446cda"/>
+  <project name="device-sony-common" path="device/sony/common" remote="b2g" revision="a425d08255d3d4135fed995fe6d28ea096747910"/>
   <project name="android_external_busybox" path="external/busybox" remote="b2g" revision="757a15c84e7bf9897b908058f2e529fcffea73b8"/>
   <project groups="device" name="init_sh" path="hardware/sony/init_sh" remote="b2g" revision="58d94ebe3a2e9a1af4bc8c003cd6837e53cc4867"/>
   <project groups="device" name="macaddrsetup" path="hardware/sony/macaddrsetup" remote="b2g" revision="1e31df0400fda7d80151bd4c5441027cd49749f8"/>
