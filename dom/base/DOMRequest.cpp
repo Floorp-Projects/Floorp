@@ -14,6 +14,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "jsfriendapi.h"
+#include "nsContentUtils.h"
 
 using mozilla::dom::AnyCallback;
 using mozilla::dom::DOMError;
@@ -297,11 +298,10 @@ DOMRequestService::FireDetailedError(nsIDOMDOMRequest* aRequest,
 class FireSuccessAsyncTask : public nsRunnable
 {
 
-  FireSuccessAsyncTask(JSContext* aCx,
-                       DOMRequest* aRequest,
+  FireSuccessAsyncTask(DOMRequest* aRequest,
                        const JS::Value& aResult) :
     mReq(aRequest),
-    mResult(aCx, aResult)
+    mResult(nsContentUtils::RootingCxForThread(), aResult)
   {
   }
 
@@ -314,8 +314,8 @@ public:
   Dispatch(DOMRequest* aRequest,
            const JS::Value& aResult)
   {
-    mozilla::ThreadsafeAutoSafeJSContext cx;
-    RefPtr<FireSuccessAsyncTask> asyncTask = new FireSuccessAsyncTask(cx, aRequest, aResult);
+    RefPtr<FireSuccessAsyncTask> asyncTask =
+      new FireSuccessAsyncTask(aRequest, aResult);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(asyncTask)));
     return NS_OK;
   }

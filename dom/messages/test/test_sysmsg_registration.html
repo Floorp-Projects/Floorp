@@ -140,7 +140,6 @@ function testBroadcastMessage(aMessage, aExpectedManifestURL, aMsg) {
  */
 let steps = [() => {
   Services.obs.notifyObservers(null, "webapps-registry-ready", null);
-  SpecialPowers.setAllAppsLaunchable(true);
   SpecialPowers.autoConfirmAppInstall(next);
 }, () => {
   SpecialPowers.autoConfirmAppUninstall(next);

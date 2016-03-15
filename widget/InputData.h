@@ -272,11 +272,12 @@ public:
     NONE
   };
 
-  MouseInput(MouseType aType, ButtonType aButtonType, int16_t aButtons, const ScreenPoint& aPoint,
+  MouseInput(MouseType aType, ButtonType aButtonType, uint16_t aInputSource, int16_t aButtons, const ScreenPoint& aPoint,
              uint32_t aTime, TimeStamp aTimeStamp, Modifiers aModifiers)
     : InputData(MOUSE_INPUT, aTime, aTimeStamp, aModifiers)
     , mType(aType)
     , mButtonType(aButtonType)
+    , mInputSource(aInputSource)
     , mButtons(aButtons)
     , mOrigin(aPoint)
   {}
@@ -285,6 +286,7 @@ public:
     : InputData(MOUSE_INPUT)
     , mType(MOUSE_NONE)
     , mButtonType(NONE)
+    , mInputSource(0)
     , mButtons(0)
   {}
 
@@ -297,6 +299,7 @@ public:
 
   MouseType mType;
   ButtonType mButtonType;
+  uint16_t mInputSource;
   int16_t mButtons;
   ScreenPoint mOrigin;
   ParentLayerPoint mLocalOrigin;

@@ -8,6 +8,7 @@
 #include "apz/src/AsyncPanZoomController.h"  // for AsyncPanZoomController
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "Units.h"                      // for LayerRect, LayerPixel, etc
+#include "CompositableHost.h"           // for CompositableHost
 #include "gfxEnv.h"                     // for gfxEnv
 #include "gfxPrefs.h"                   // for gfxPrefs
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
@@ -30,6 +31,7 @@
 #include "nsISupportsUtils.h"           // for NS_ADDREF, NS_RELEASE
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArray.h"                   // for AutoTArray
+#include <stack>
 #include "TextRenderer.h"               // for TextRenderer
 #include <vector>
 #include "VRManager.h"                  // for VRManager

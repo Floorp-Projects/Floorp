@@ -907,7 +907,7 @@ void
 WorkerDebuggerGlobalScope::ReportError(JSContext* aCx,
                                        const nsAString& aMessage)
 {
-  JS::UniqueChars chars;
+  JS::AutoFilename chars;
   uint32_t lineno = 0;
   JS::DescribeScriptedCaller(aCx, &chars, &lineno);
   nsString filename(NS_ConvertUTF8toUTF16(chars.get()));

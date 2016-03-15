@@ -1754,6 +1754,7 @@ class FrameIter
     inline bool hasCachedSavedFrame() const;
     inline void setHasCachedSavedFrame();
 
+    ScriptSource* scriptSource() const;
     const char* filename() const;
     const char16_t* displayURL() const;
     unsigned computeLine(uint32_t* column = nullptr) const;

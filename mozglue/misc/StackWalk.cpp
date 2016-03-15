@@ -247,7 +247,7 @@ CRITICAL_SECTION gDbgHelpCS;
 static void
 PrintError(const char* aPrefix)
 {
-  LPVOID lpMsgBuf;
+  LPSTR lpMsgBuf;
   DWORD lastErr = GetLastError();
   FormatMessageA(
     FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,

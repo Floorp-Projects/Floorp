@@ -13,6 +13,7 @@
 #include "mozilla/RefPtr.h"             // for already_AddRefed
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
+#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 
 namespace mozilla {
 namespace gfx {

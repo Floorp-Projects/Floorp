@@ -1768,6 +1768,13 @@ struct nsStyleTextReset
       FreeByObjectID(mozilla::eArenaObjectID_nsStyleTextReset, this);
   }
 
+  // Note the difference between this and
+  // nsStyleContext::HasTextDecorationLines.
+  bool HasTextDecorationLines() const {
+    return mTextDecorationLine != NS_STYLE_TEXT_DECORATION_LINE_NONE &&
+           mTextDecorationLine != NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL;
+  }
+
   uint8_t GetDecorationStyle() const
   {
     return (mTextDecorationStyle & BORDER_STYLE_MASK);

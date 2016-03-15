@@ -12,6 +12,7 @@
 #include "mozilla/layers/APZThreadUtils.h"              // for AssertOnCompositorThread
 #include "mozilla/layers/APZUtils.h"                    // for CompleteAsyncTransform
 #include "mozilla/layers/AsyncCompositionManager.h"     // for ViewTransform::operator Matrix4x4()
+#include "mozilla/layers/AsyncDragMetrics.h"            // for AsyncDragMetrics
 #include "nsPrintfCString.h"                            // for nsPrintfCString
 #include "UnitTransforms.h"                             // for ViewAs
 

@@ -880,6 +880,21 @@ FrameIter::functionDisplayAtom() const
     MOZ_CRASH("Unexpected state");
 }
 
+ScriptSource*
+FrameIter::scriptSource() const
+{
+    switch (data_.state_) {
+      case DONE:
+      case WASM:
+        break;
+      case INTERP:
+      case JIT:
+        return script()->scriptSource();
+    }
+
+    MOZ_CRASH("Unexpected state");
+}
+
 const char*
 FrameIter::filename() const
 {

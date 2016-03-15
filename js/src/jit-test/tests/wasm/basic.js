@@ -343,6 +343,8 @@ assertEq(wasmEvalText(code.replace('BODY', '(call_import 1)'), imports)(), 2);
 assertEq(wasmEvalText(code.replace('BODY', '(call 0)'), imports)(), 3);
 assertEq(wasmEvalText(code.replace('BODY', '(call 1)'), imports)(), 4);
 
+assertEq(wasmEvalText(`(module (import "evalcx" "" (param i32) (result i32)) (func (result i32) (call_import 0 (i32.const 0))) (export "" 0))`, {evalcx})(), 0);
+
 var {v2i, i2i, i2v} = wasmEvalText(`(module
     (type (func (result i32)))
     (type (func (param i32) (result i32)))

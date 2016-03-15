@@ -290,13 +290,8 @@ FTPChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
     return true;
   }
 
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new FTPDivertDataAvailableEvent(this, data, offset,
-                                                     count));
-    return true;
-  }
-
-  DivertOnDataAvailable(data, offset, count);
+  mEventQ->RunOrEnqueue(new FTPDivertDataAvailableEvent(this, data, offset,
+                                                        count));
   return true;
 }
 
@@ -372,12 +367,7 @@ FTPChannelParent::RecvDivertOnStopRequest(const nsresult& statusCode)
     return false;
   }
 
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new FTPDivertStopRequestEvent(this, statusCode));
-    return true;
-  }
-
-  DivertOnStopRequest(statusCode);
+  mEventQ->RunOrEnqueue(new FTPDivertStopRequestEvent(this, statusCode));
   return true;
 }
 
@@ -434,12 +424,7 @@ FTPChannelParent::RecvDivertComplete()
     return false;
   }
 
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new FTPDivertCompleteEvent(this));
-    return true;
-  }
-
-  DivertComplete();
+  mEventQ->RunOrEnqueue(new FTPDivertCompleteEvent(this));
   return true;
 }
 

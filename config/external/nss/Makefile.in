@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifndef MOZ_NATIVE_NSS
+ifndef MOZ_SYSTEM_NSS
 
 CC_WRAPPER =
 CXX_WRAPPER =
@@ -119,7 +119,7 @@ DEFAULT_GMAKE_FLAGS += NSS_ENABLE_ECC=1
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_1)
 DEFAULT_GMAKE_FLAGS += OS_DLLFLAGS='-static-libgcc' NSPR31_LIB_PREFIX=lib
 endif
-ifndef MOZ_NATIVE_SQLITE
+ifndef MOZ_SYSTEM_SQLITE
 ifdef MOZ_FOLD_LIBS
 DEFAULT_GMAKE_FLAGS += SQLITE_LIB_NAME=nss3
 else
