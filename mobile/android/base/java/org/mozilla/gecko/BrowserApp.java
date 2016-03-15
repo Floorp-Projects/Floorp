@@ -16,7 +16,6 @@ import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.Tabs.TabEvents;
 import org.mozilla.gecko.animation.PropertyAnimator;
-import org.mozilla.gecko.animation.TransitionsTracker;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Combined;
@@ -1485,7 +1484,6 @@ public class BrowserApp extends GeckoApp
 
         final Animator alphaAnimator = ObjectAnimator.ofFloat(mDoorhangerOverlay, "alpha", 1);
         alphaAnimator.setDuration(250);
-        TransitionsTracker.track(alphaAnimator);
 
         alphaAnimator.start();
     }
@@ -1498,8 +1496,6 @@ public class BrowserApp extends GeckoApp
 
         final Animator alphaAnimator = ObjectAnimator.ofFloat(mDoorhangerOverlay, "alpha", 0);
         alphaAnimator.setDuration(200);
-
-        TransitionsTracker.track(alphaAnimator);
 
         alphaAnimator.start();
     }
@@ -2318,8 +2314,6 @@ public class BrowserApp extends GeckoApp
 
         final PropertyAnimator animator = new PropertyAnimator(250);
         animator.setUseHardwareLayer(false);
-
-        TransitionsTracker.track(animator);
 
         mBrowserToolbar.startEditing(url, animator);
 
