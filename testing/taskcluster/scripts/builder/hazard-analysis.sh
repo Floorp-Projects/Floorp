@@ -8,6 +8,10 @@ HAZARD_SHELL_OBJDIR=$WORKSPACE/obj-haz-shell
 JS_SRCDIR=$GECKO_DIR/js/src
 ANALYSIS_SRCDIR=$JS_SRCDIR/devtools/rootAnalysis
 
+# Install the sixgill tool
+TOOLTOOL_MANIFEST=js/src/devtools/rootAnalysis/build/sixgill.manifest
+. install-packages.sh "$GECKO_DIR"
+
 PYTHON=python2.7
 if ! which $PYTHON; then
     PYTHON=python
