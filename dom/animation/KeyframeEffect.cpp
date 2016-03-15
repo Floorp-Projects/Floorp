@@ -1800,6 +1800,31 @@ KeyframeEffectReadOnly::GetTarget(
 }
 
 void
+KeyframeEffectReadOnly::GetPropertyState(
+    nsTArray<AnimationPropertyState>& aStates) const
+{
+  for (const AnimationProperty& property : mProperties) {
+    // Bug 1252730: We should also expose this winsInCascade as well.
+    if (!property.mWinsInCascade) {
+      continue;
+    }
+
+    AnimationPropertyState state;
+    state.mProperty.Construct(
+      NS_ConvertASCIItoUTF16(nsCSSProps::GetStringValue(property.mProperty)));
+    state.mRunningOnCompositor.Construct(property.mIsRunningOnCompositor);
+
+    nsXPIDLString localizedString;
+    if (property.mPerformanceWarning &&
+        property.mPerformanceWarning->ToLocalizedString(localizedString)) {
+      state.mWarning.Construct(localizedString);
+    }
+
+    aStates.AppendElement(state);
+  }
+}
+
+void
 KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
                                   nsTArray<JSObject*>& aResult,
                                   ErrorResult& aRv)
@@ -1894,32 +1919,6 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
     } while (entry->SameKeyframe(*previousEntry));
 
     aResult.AppendElement(keyframe);
-  }
-}
-
-
-void
-KeyframeEffectReadOnly::GetPropertyState(
-    nsTArray<AnimationPropertyState>& aStates) const
-{
-  for (const AnimationProperty& property : mProperties) {
-    // Bug 1252730: We should also expose this winsInCascade as well.
-    if (!property.mWinsInCascade) {
-      continue;
-    }
-
-    AnimationPropertyState state;
-    state.mProperty.Construct(
-      NS_ConvertASCIItoUTF16(nsCSSProps::GetStringValue(property.mProperty)));
-    state.mRunningOnCompositor.Construct(property.mIsRunningOnCompositor);
-
-    nsXPIDLString localizedString;
-    if (property.mPerformanceWarning &&
-        property.mPerformanceWarning->ToLocalizedString(localizedString)) {
-      state.mWarning.Construct(localizedString);
-    }
-
-    aStates.AppendElement(state);
   }
 }
 
