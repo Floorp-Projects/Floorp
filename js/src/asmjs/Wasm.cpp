@@ -791,8 +791,7 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
         return f.fail("NYI: reinterpret");
       case Expr::F32ConvertSI64:
       case Expr::F32ConvertUI64:
-        return f.fail("NYI: i64") &&
-               DecodeConversionOperator(f, ValType::F32, ValType::I64, type);
+        return DecodeConversionOperator(f, ValType::F32, ValType::I64, type);
       case Expr::F32DemoteF64:
         return DecodeConversionOperator(f, ValType::F32, ValType::F64, type);
       case Expr::F64ConvertSI32:
@@ -800,9 +799,9 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
         return DecodeConversionOperator(f, ValType::F64, ValType::I32, type);
       case Expr::F64ConvertSI64:
       case Expr::F64ConvertUI64:
+        return DecodeConversionOperator(f, ValType::F64, ValType::I64, type);
       case Expr::F64ReinterpretI64:
-        return f.fail("NYI: i64") &&
-               DecodeConversionOperator(f, ValType::F64, ValType::I64, type);
+        return f.fail("NYI: i64");
       case Expr::F64PromoteF32:
         return DecodeConversionOperator(f, ValType::F64, ValType::F32, type);
       case Expr::I32Load8S:

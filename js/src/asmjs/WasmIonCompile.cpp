@@ -467,6 +467,15 @@ class FunctionCompiler
         return ins;
     }
 
+    MDefinition* convertI64ToFloatingPoint(MDefinition* op, MIRType type, bool isUnsigned)
+    {
+        if (inDeadCode())
+            return nullptr;
+        MInt64ToFloatingPoint* ins = MInt64ToFloatingPoint::NewAsmJS(alloc(), op, type, isUnsigned);
+        curBlock_->add(ins);
+        return ins;
+    }
+
     template <class T>
     MDefinition* truncate(MDefinition* op, bool isUnsigned)
     {
@@ -2391,6 +2400,17 @@ EmitTruncate(FunctionCompiler& f, bool isUnsigned, MDefinition** def)
 }
 
 static bool
+EmitConvertI64ToFloatingPoint(FunctionCompiler& f, ValType type, bool isUnsigned,
+                              MDefinition** def)
+{
+    MDefinition* in;
+    if (!EmitExpr(f, &in))
+        return false;
+    *def = f.convertI64ToFloatingPoint(in, ToMIRType(type), isUnsigned);
+    return true;
+}
+
+static bool
 EmitSimdOp(FunctionCompiler& f, ValType type, SimdOperation op, SimdSign sign, MDefinition** def)
 {
     switch (op) {
@@ -2899,6 +2919,10 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
         return EmitUnary<MToFloat32>(f, def);
       case Expr::F32ConvertUI32:
         return EmitUnary<MAsmJSUnsignedToFloat32>(f, def);
+      case Expr::F32ConvertSI64:
+      case Expr::F32ConvertUI64:
+        return EmitConvertI64ToFloatingPoint(f, ValType::F32,
+                                             IsUnsigned(op == Expr::F32ConvertUI64), def);
       case Expr::F32Load:
         return EmitLoad(f, Scalar::Float32, def);
       case Expr::F32Store:
@@ -2948,6 +2972,10 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
         return EmitUnary<MToDouble>(f, def);
       case Expr::F64ConvertUI32:
         return EmitUnary<MAsmJSUnsignedToDouble>(f, def);
+      case Expr::F64ConvertSI64:
+      case Expr::F64ConvertUI64:
+        return EmitConvertI64ToFloatingPoint(f, ValType::F64,
+                                             IsUnsigned(op == Expr::F64ConvertUI64), def);
       case Expr::F64Load:
         return EmitLoad(f, Scalar::Float64, def);
       case Expr::F64Store:
@@ -3023,10 +3051,6 @@ EmitExpr(FunctionCompiler& f, MDefinition** def)
       case Expr::F64CopySign:
       case Expr::F64Nearest:
       case Expr::F64Trunc:
-      case Expr::F32ConvertSI64:
-      case Expr::F32ConvertUI64:
-      case Expr::F64ConvertSI64:
-      case Expr::F64ConvertUI64:
       case Expr::I64ReinterpretF64:
       case Expr::F64ReinterpretI64:
       case Expr::I32ReinterpretF32:
