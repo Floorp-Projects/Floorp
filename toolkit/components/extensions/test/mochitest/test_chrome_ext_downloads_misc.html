@@ -465,6 +465,45 @@ add_task(function* test_pausecancel() {
   is(msg.result[0].exists, false, "download.exists is correct");
 });
 
+// Test erase().  We don't do elaborate testing of the query handling
+// since it uses the exact same engine as search() which is tested
+// more thoroughly in test_chrome_ext_downloads_search.html
+add_task(function* test_erase() {
+  yield clearDownloads();
+
+  let ids = {};
+  let msg = yield runInExtension("download", {url: TXT_URL});
+  is(msg.status, "success", "download succeeded");
+  ids.dl1 = msg.result;
+
+  msg = yield runInExtension("download", {url: TXT_URL});
+  is(msg.status, "success", "download succeeded");
+  ids.dl2 = msg.result;
+
+  msg = yield runInExtension("download", {url: TXT_URL});
+  is(msg.status, "success", "download succeeded");
+  ids.dl3 = msg.result;
+
+  msg = yield runInExtension("search", {});
+  is(msg.status, "success", "search succeded");
+  is(msg.result.length, 3, "search found 3 downloads");
+
+  msg = yield runInExtension("erase", {id: ids.dl1});
+  if (msg.errmsg) { info(msg.errmsg); }
+  is(msg.status, "success", "erase by id succeeded");
+
+  msg = yield runInExtension("search", {});
+  is(msg.status, "success", "search succeded");
+  is(msg.result.length, 2, "search found 2 downloads");
+
+  msg = yield runInExtension("erase", {});
+  is(msg.status, "success", "erase everything succeeded");
+
+  msg = yield runInExtension("search", {});
+  is(msg.status, "success", "search succeded");
+  is(msg.result.length, 0, "search found 0 downloads");
+});
+
 add_task(function* cleanup() {
   yield extension.unload();
 });
