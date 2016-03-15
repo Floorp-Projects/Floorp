@@ -595,14 +595,14 @@ AppleVDADecoder::CreateDecoderSpecification()
 CFDictionaryRef
 AppleVDADecoder::CreateOutputConfiguration()
 {
-  // Output format type:
-  SInt32 PixelFormatTypeValue = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
-  AutoCFRelease<CFNumberRef> PixelFormatTypeNumber =
-    CFNumberCreate(kCFAllocatorDefault,
-                   kCFNumberSInt32Type,
-                   &PixelFormatTypeValue);
-
   if (mUseSoftwareImages) {
+    // Output format type:
+    SInt32 PixelFormatTypeValue =
+      kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+    AutoCFRelease<CFNumberRef> PixelFormatTypeNumber =
+      CFNumberCreate(kCFAllocatorDefault,
+                     kCFNumberSInt32Type,
+                     &PixelFormatTypeValue);
     const void* outputKeys[] = { kCVPixelBufferPixelFormatTypeKey };
     const void* outputValues[] = { PixelFormatTypeNumber };
     static_assert(ArrayLength(outputKeys) == ArrayLength(outputValues),
@@ -617,6 +617,12 @@ AppleVDADecoder::CreateOutputConfiguration()
   }
 
 #ifndef MOZ_WIDGET_UIKIT
+  // Output format type:
+  SInt32 PixelFormatTypeValue = kCVPixelFormatType_422YpCbCr8;
+  AutoCFRelease<CFNumberRef> PixelFormatTypeNumber =
+    CFNumberCreate(kCFAllocatorDefault,
+                   kCFNumberSInt32Type,
+                   &PixelFormatTypeValue);
   // Construct IOSurface Properties
   const void* IOSurfaceKeys[] = { MacIOSurfaceLib::kPropIsGlobal };
   const void* IOSurfaceValues[] = { kCFBooleanTrue };
