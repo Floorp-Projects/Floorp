@@ -44,7 +44,9 @@ class nsSVGAnimatedTransformList
   friend class DOMSVGTransformList;
 
 public:
-  nsSVGAnimatedTransformList() : mIsAttrSet(false) { }
+  nsSVGAnimatedTransformList()
+    : mIsAttrSet(false),
+      mHadTransformBeforeLastBaseValChange(false) { }
 
   /**
    * Because it's so important that mBaseVal and its DOMSVGTransformList wrapper
@@ -92,6 +94,21 @@ public:
     return !!mAnimVal;
   }
 
+  /**
+   * Returns true iff "HasTransform" returned true just before our most recent
+   * SetBaseValue/SetBaseValueString/ClearBaseValue change.
+   *
+   * (This is used as part of an optimization in
+   * SVGTransformableElement::GetAttributeChangeHint. That function reports an
+   * inexpensive nsChangeHint when a transform has just modified -- but this
+   * accessor lets it detect cases where the "modification" is actually adding
+   * a transform where we previously had none. These cases require a more
+   * thorough nsChangeHint.)
+   */
+  bool HadTransformBeforeLastBaseValChange() const {
+    return mHadTransformBeforeLastBaseValChange;
+  }
+
   /// Callers own the returned nsISMILAttr
   nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
 
@@ -105,6 +122,8 @@ private:
   SVGTransformList mBaseVal;
   nsAutoPtr<SVGTransformList> mAnimVal;
   bool mIsAttrSet;
+   // (See documentation for accessor, HadTransformBeforeLastBaseValChange.)
+  bool mHadTransformBeforeLastBaseValChange;
 
   struct SMILAnimatedTransformList : public nsISMILAttr
   {
