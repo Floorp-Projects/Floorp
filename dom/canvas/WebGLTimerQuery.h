@@ -24,6 +24,8 @@ public:
   void Delete();
 
   bool HasEverBeenBound() const { return mTarget != LOCAL_GL_NONE; }
+  bool CanBeAvailable() const { return mCanBeAvailable; }
+  void QueueAvailablity();
   GLenum Target() const { return mTarget; }
 
   WebGLContext* GetParentObject() const;
@@ -41,6 +43,7 @@ private:
   ~WebGLTimerQuery();
 
   GLenum mTarget;
+  bool mCanBeAvailable;
 
   friend class WebGLExtensionDisjointTimerQuery;
 };
