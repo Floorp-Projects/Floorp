@@ -60,6 +60,26 @@ def autoconf(mozconfig, autoconf):
     return autoconf
 
 
+# See comment in mozconfig_options() from build/moz.configure/init.configure
+@template
+@advanced
+def check_mozconfig_variables():
+    # This escapes the sandbox. Don't copy this. This is only here because it
+    # is a one off until old-configure is gone.
+    all_options = depends.__self__._options.itervalues()
+
+    @depends(early_options, wanted_mozconfig_variables)
+    def check_mozconfig_variables(early_options, wanted_mozconfig_variables):
+        for option in all_options:
+            if (option.env and option.env not in early_options and
+                    option.env not in wanted_mozconfig_variables):
+                error(
+                    'You need to add `%s` to the `wanted_mozconfig_variables` '
+                    'list in build/moz.configure/init.configure.' % option.env)
+
+check_mozconfig_variables()
+
+
 @depends('OLD_CONFIGURE', mozconfig, autoconf, check_build_environment, shell,
          old_configure_assignments)
 @advanced
