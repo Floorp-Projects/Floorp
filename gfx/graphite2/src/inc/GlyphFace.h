@@ -51,7 +51,7 @@ public:
     const Position    & theAdvance() const;
     const Rect        & theBBox() const { return m_bbox; }
     const sparse      & attrs() const { return m_attrs; }
-    uint16              getMetric(uint8 metric) const;
+    int32               getMetric(uint8 metric) const;
 
     CLASS_NEW_DELETE;
 private:
