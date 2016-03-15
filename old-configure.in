@@ -7049,14 +7049,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Misc. Options)
 
-dnl ========================================================
-dnl update xterm title
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(xterm-updates,
-[  --enable-xterm-updates  Update XTERM titles with current command.],
-    MOZ_UPDATE_XTERM=1,
-    MOZ_UPDATE_XTERM= )
-
 dnl =========================================================
 dnl = Chrome format
 dnl =========================================================
@@ -7820,7 +7812,6 @@ AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
 AC_SUBST(BIN_FLAGS)
 AC_SUBST(MOZ_WIDGET_TOOLKIT)
-AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_DEBUG)
