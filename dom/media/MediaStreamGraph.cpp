@@ -380,7 +380,9 @@ MediaStreamGraphImpl::AudioTrackPresent(bool& aNeedsAEC)
   if (!audioTrackPresent && mInputDeviceUsers.Count() != 0) {
     NS_WARNING("No audio tracks, but full-duplex audio is enabled!!!!!");
     audioTrackPresent = true;
+#ifdef MOZ_WEBRTC
     shouldAEC = true;
+#endif
   }
 
 #ifdef MOZ_WEBRTC
