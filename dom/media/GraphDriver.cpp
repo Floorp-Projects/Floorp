@@ -208,7 +208,8 @@ public:
       }
     } else {
       MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
-      MOZ_ASSERT(mDriver->mGraphImpl->MessagesQueued(), "Don't start a graph without messages queued.");
+      MOZ_ASSERT(mDriver->mGraphImpl->MessagesQueued() ||
+                 mDriver->mGraphImpl->mForceShutDown, "Don't start a graph without messages queued.");
       mDriver->mGraphImpl->SwapMessageQueues();
     }
     mDriver->RunThread();
