@@ -22,7 +22,7 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 from mozprocess import ProcessHandler
 
 from mozharness.base.log import FATAL
-from mozharness.base.script import BaseScript
+from mozharness.base.script import BaseScript, PreScriptAction
 from mozharness.base.vcs.vcsbase import VCSMixin
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.mozbase import MozbaseMixin
@@ -136,6 +136,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             abs_dirs['abs_work_dir'], 'blobber_upload_dir')
         dirs['abs_emulator_dir'] = os.path.join(
             abs_dirs['abs_work_dir'], 'emulator')
+        dirs['abs_mochitest_dir'] = os.path.join(
+            dirs['abs_test_install_dir'], 'mochitest')
 
         if self.config.get("developer_mode"):
             dirs['abs_avds_dir'] = os.path.join(
@@ -148,6 +150,19 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 abs_dirs[key] = dirs[key]
         self.abs_dirs = abs_dirs
         return self.abs_dirs
+
+    @PreScriptAction('create-virtualenv')
+    def _pre_create_virtualenv(self, action):
+        dirs = self.query_abs_dirs()
+
+        if os.path.isdir(dirs['abs_mochitest_dir']):
+            # mochitest is the only thing that needs this
+            requirements = os.path.join(dirs['abs_mochitest_dir'],
+                        'websocketprocessbridge',
+                        'websocketprocessbridge_requirements.txt')
+
+            self.register_virtualenv_module(requirements=[requirements],
+                                            two_pass=True)
 
     def _launch_emulator(self):
         env = self.query_env()
