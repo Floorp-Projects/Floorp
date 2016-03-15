@@ -573,15 +573,15 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
     // FIXME: Maybe cache the current segment?
     const AnimationPropertySegment *segment = prop.mSegments.Elements(),
                                 *segmentEnd = segment + prop.mSegments.Length();
-    while (segment->mToKey < computedTiming.mProgress.Value()) {
-      MOZ_ASSERT(segment->mFromKey < segment->mToKey, "incorrect keys");
+    while (segment->mToKey <= computedTiming.mProgress.Value()) {
+      MOZ_ASSERT(segment->mFromKey <= segment->mToKey, "incorrect keys");
       if ((segment+1) == segmentEnd) {
         break;
       }
       ++segment;
       MOZ_ASSERT(segment->mFromKey == (segment-1)->mToKey, "incorrect keys");
     }
-    MOZ_ASSERT(segment->mFromKey < segment->mToKey, "incorrect keys");
+    MOZ_ASSERT(segment->mFromKey <= segment->mToKey, "incorrect keys");
     MOZ_ASSERT(segment >= prop.mSegments.Elements() &&
                size_t(segment - prop.mSegments.Elements()) <
                  prop.mSegments.Length(),
@@ -592,14 +592,24 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
       aStyleRule = new AnimValuesStyleRule();
     }
 
+    StyleAnimationValue* val = aStyleRule->AddEmptyValue(prop.mProperty);
+
+    // Special handling for zero-length segments
+    if (segment->mToKey == segment->mFromKey) {
+      if (computedTiming.mProgress.Value() < 0) {
+        *val = segment->mFromValue;
+      } else {
+        *val = segment->mToValue;
+      }
+      continue;
+    }
+
     double positionInSegment =
       (computedTiming.mProgress.Value() - segment->mFromKey) /
       (segment->mToKey - segment->mFromKey);
     double valuePosition =
       ComputedTimingFunction::GetPortion(segment->mTimingFunction,
                                          positionInSegment);
-
-    StyleAnimationValue *val = aStyleRule->AddEmptyValue(prop.mProperty);
 
 #ifdef DEBUG
     bool result =
