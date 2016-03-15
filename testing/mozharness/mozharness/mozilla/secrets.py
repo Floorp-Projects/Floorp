@@ -16,6 +16,18 @@ from mozharness.base.log import ERROR
 
 class SecretsMixin(object):
 
+    def _fetch_secret(self, secret_name):
+        self.info("fetching secret {} from API".format(secret_name))
+        # fetch from http://taskcluster, which points to the taskcluster proxy
+        # within a taskcluster task.  Outside of that environment, do not
+        # use this action.
+        url = "http://taskcluster/secrets/v1/secret/" + secret_name
+        res = urllib2.urlopen(url)
+        if res.getcode() != 200:
+            self.fatal("Error fetching from secrets API:" + res.read())
+
+        return json.load(res)['secret']['content']
+
     def get_secrets(self):
         """
         Get the secrets specified by the `secret_files` configuration.  This is
@@ -29,26 +41,30 @@ class SecretsMixin(object):
 
         The `filename` key in the dictionary gives the filename to which the
         secret should be written.
+
+        The optional `min_scm_level` key gives a minimum SCM level at which this
+        secret is required.  For lower levels, the value of the 'default` key
+        is used, or no secret is written.
         """
         secret_files = self.config.get('secret_files', [])
 
+        scm_level = self.config.get('scm-level', 1)
         subst = {
-            'scm-level': self.config.get('scm-level', 1),
+            'scm-level': scm_level,
         }
 
         for sf in secret_files:
             filename = sf['filename']
             secret_name = sf['secret_name'] % subst
-            self.info("fetching {} from secret {}".format(filename, secret_name))
+            min_scm_level = sf.get('min_scm_level', 0)
+            if scm_level <= min_scm_level:
+                if 'default' in sf:
+                    self.info("Using default value for " + filename)
+                    secret = sf['default']
+                else:
+                    self.info("No default for secret; not writing " + filename)
+                    continue
+            else:
+                secret = self._fetch_secret(secret_name)
 
-            # fetch from http://taskcluster, which points to the taskcluster proxy
-            # within a taskcluster task.  Outside of that environment, do not
-            # use this action.
-            url = "http://taskcluster/secrets/v1/secret/" + secret_name
-            res = urllib2.urlopen(url)
-            if res.getcode() != 200:
-                self.fatal("Error fetching from secrets API:" + res.read())
-
-            secret = json.load(res)['secret']['content']
-
-            open(filename, "w").write(filename)
+            open(filename, "w").write(secret)
