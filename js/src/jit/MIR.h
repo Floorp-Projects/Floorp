@@ -7592,6 +7592,22 @@ class MAsmJSInterruptCheck
     }
 };
 
+// Directly jumps to the unreachable trap handler.
+class MAsmThrowUnreachable
+  : public MAryControlInstruction<0, 0>,
+    public NoTypePolicy::Data
+{
+  public:
+    INSTRUCTION_HEADER(AsmThrowUnreachable)
+    static MAsmThrowUnreachable* New(TempAllocator& alloc) {
+        return new(alloc) MAsmThrowUnreachable;
+    }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+};
+
 // Checks if a value is JS_UNINITIALIZED_LEXICAL, bailout out if so, leaving
 // it to baseline to throw at the correct pc.
 class MLexicalCheck
@@ -9282,6 +9298,7 @@ class MLoadUnboxedObjectOrNull
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::UnboxedElement);
     }
+    MDefinition* foldsTo(TempAllocator& alloc) override;
     bool mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MLoadUnboxedObjectOrNull)

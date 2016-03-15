@@ -174,6 +174,15 @@ nsresult
 Convert(int32_t aIn, BluetoothAttributeHandle& aOut);
 
 nsresult
+Convert(uint8_t aIn, BluetoothHidProtocolMode& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothHidConnectionState& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothHidStatus& aOut);
+
+nsresult
 Convert(int32_t aIn, BluetoothGattStatus& aOut);
 
 nsresult
@@ -256,6 +265,12 @@ Convert(BluetoothGattWriteType aIn, int32_t& aOut);
 
 nsresult
 Convert(nsresult aIn, BluetoothStatus& aOut);
+
+nsresult
+Convert(BluetoothHidProtocolMode aIn, uint8_t& aOut);
+
+nsresult
+Convert(BluetoothHidReportType aIn, uint8_t& aOut);
 
 //
 // Packing
@@ -370,6 +385,18 @@ PackPDU(BluetoothGattWriteType aIn, DaemonSocketPDU& aPDU);
 
 nsresult
 PackPDU(BluetoothTransport aIn, DaemonSocketPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothHidInfoParam& aIn, DaemonSocketPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothHidReport& aIn, DaemonSocketPDU& aPDU);
+
+nsresult
+PackPDU(BluetoothHidProtocolMode aIn, DaemonSocketPDU& aPDU);
+
+nsresult
+PackPDU(BluetoothHidReportType aIn, DaemonSocketPDU& aPDU);
 
 /* This implementation of |PackPDU| packs |BluetoothUuid| in reversed order.
  * (ex. reversed GATT UUID, see bug 1171866)
@@ -512,6 +539,21 @@ UnpackPDU(DaemonSocketPDU& aPDU, BluetoothGattWriteParam& aOut);
 
 nsresult
 UnpackPDU(DaemonSocketPDU& aPDU, BluetoothGattNotifyParam& aOut);
+
+nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, BluetoothHidInfoParam& aOut);
+
+nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, BluetoothHidReport& aOut);
+
+nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, BluetoothHidProtocolMode& aOut);
+
+nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, BluetoothHidConnectionState& aOut);
+
+nsresult
+UnpackPDU(DaemonSocketPDU& aPDU, BluetoothHidStatus& aOut);
 
 /* This implementation of |UnpackPDU| unpacks |BluetoothUuid| in reversed
  * order. (ex. reversed GATT UUID, see bug 1171866)
