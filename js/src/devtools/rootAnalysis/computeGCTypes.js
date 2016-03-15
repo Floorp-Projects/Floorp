@@ -207,8 +207,8 @@ function addGCPointer(typeName)
     markGCType(typeName, '<pointer-annotation>', '(annotation)', 1, 0, "");
 }
 
-//for (var type of listNonGCPointers())
-//    annotations.NonGCPointers[type] = true;
+for (var type of listNonGCPointers())
+    annotations.NonGCPointers[type] = true;
 
 function explain(csu, indent, seen) {
     if (!seen)
