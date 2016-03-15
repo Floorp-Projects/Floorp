@@ -81,6 +81,8 @@ stream.close();
 var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
 const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
+const PREF_KINTO_UPDATE_ENABLED = "services.kinto.update_enabled";
+const PREF_ONECRL_VIA_AMO = "security.onecrl.via.amo";
 registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
                           XULAPPINFO_CONTRACTID, XULAppInfoFactory);
 
@@ -257,6 +259,10 @@ function run_test() {
                  "YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy\n" +
                  " YW5vdGhlciBzZXJpYWwu\n" +
                  " c2VyaWFsMi4=";
+
+  // This test assumes OneCRL updates via AMO
+  Services.prefs.setBoolPref(PREF_KINTO_UPDATE_ENABLED, false);
+  Services.prefs.setBoolPref(PREF_ONECRL_VIA_AMO, true);
 
   add_test(function () {
     // check some existing items in revocations.txt are blocked. Since the

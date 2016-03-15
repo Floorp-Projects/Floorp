@@ -2046,6 +2046,13 @@ pref("security.cert_pinning.process_headers_from_non_builtin_roots", false);
 // their protocol with the inner URI of the view-source URI
 pref("security.view-source.reachable-from-inner-protocol", false);
 
+#ifdef RELEASE_BUILD
+pref("security.onecrl.via.amo", true);
+#else
+pref("security.onecrl.via.amo", false);
+#endif
+
+
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
 // Use 17 for Ctrl, 18 for Alt, 224 for Meta, 91 for Win, 0 for none. Mac settings in macprefs.js
