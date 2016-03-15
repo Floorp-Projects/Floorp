@@ -404,6 +404,7 @@ def split_triplet(triplet):
         kernel=canonical_kernel,
         os=canonical_os,
         raw_cpu=cpu,
+        raw_os=os,
     )
 
 
@@ -465,6 +466,9 @@ def target_variables(target):
 
     if target.cpu in ('x86', 'x86_64'):
         set_config('INTEL_ARCHITECTURE', '1')
+
+    set_config('TARGET_CPU', target.raw_cpu)
+    set_config('TARGET_OS', target.raw_os)
 
 @depends(host)
 def host_variables(host):
