@@ -713,7 +713,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             suggestedGridLimit = Integer.parseInt(gridLimitParam, 10);
         }
 
-        final String pinnedSitesFromClause = "FROM " + TABLE_BOOKMARKS + " WHERE " + Bookmarks.PARENT + " == " + Bookmarks.FIXED_PINNED_LIST_ID;
+        final String pinnedSitesFromClause = "FROM " + TABLE_BOOKMARKS + " WHERE " +
+                                             Bookmarks.PARENT + " == " + Bookmarks.FIXED_PINNED_LIST_ID +
+                                             " AND " + Bookmarks.IS_DELETED + " IS NOT 1";
 
         // Ideally we'd use a recursive CTE to generate our sequence, e.g. something like this worked at one point:
         // " WITH RECURSIVE" +
@@ -924,8 +926,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                         Bookmarks.POSITION + ", " +
                         "NULL AS " + Combined.HISTORY_ID + ", " +
                         TopSites.TYPE_PINNED + " as " + TopSites.TYPE +
-                        " FROM " + TABLE_BOOKMARKS +
-                        " WHERE " + Bookmarks.PARENT + " == " + Bookmarks.FIXED_PINNED_LIST_ID +
+                        " " + pinnedSitesFromClause +
 
                         " ORDER BY " + Bookmarks.POSITION,
 
