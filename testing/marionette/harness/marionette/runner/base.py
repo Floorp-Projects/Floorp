@@ -564,7 +564,7 @@ class BaseMarionetteTestRunner(object):
         self.mixin_run_tests = []
         self.manifest_skipped_tests = []
         self.tests = []
-        self.result_callbacks = result_callbacks if result_callbacks is not None else []
+        self.result_callbacks = result_callbacks or []
         self._adb_host = adb_host
         self._adb_port = adb_port
         self.prefs = prefs or {}
