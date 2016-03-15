@@ -20,14 +20,9 @@
               if (data && data.id) {
                 url = url + "?id="+data.id;
               }
-              navigator.mozSocial.openChatWindow(url, function(chatwin) {
-                // Note that the following .focus() call should *not* arrange
-                // to steal focus - see browser_social_chatwindowfocus.js
-                if (data && data.stealFocus && chatwin) {
-                  chatwin.focus();
-                }
+              navigator.mozSocial.openChatWindow(url, function(success) {
                 port.postMessage({topic: "chatbox-opened",
-                                  result: chatwin ? "ok" : "failed"});
+                                  result: success ? "ok" : "failed"});
               });
               break;
             case "test-isVisible":

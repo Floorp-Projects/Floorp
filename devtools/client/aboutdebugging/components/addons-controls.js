@@ -60,7 +60,7 @@ module.exports = createClass({
   loadAddonFromFile() {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window,
-      Strings.GetStringFromName("selectAddonFromFile"),
+      Strings.GetStringFromName("selectAddonFromFile2"),
       Ci.nsIFilePicker.modeOpen);
     let res = fp.show();
     if (res == Ci.nsIFilePicker.returnCancel || !fp.file) {
