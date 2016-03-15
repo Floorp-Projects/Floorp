@@ -808,12 +808,9 @@ setReq.onerror = function() {
         need_external_ip = True
         if not self.marionette:
             self.start_marionette()
-            # Retrieve capabilities for later use
-            if not self._capabilities:
-                self.capabilities
             # if we're working against a desktop version, we usually don't need
             # an external ip
-            if self._capabilities['device'] == "desktop":
+            if self.capabilities['device'] == "desktop":
                 need_external_ip = False
         self.logger.info('Initial Profile Destination is '
                          '"{}"'.format(self.marionette.profile_path))
