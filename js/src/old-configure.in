@@ -63,7 +63,6 @@ MSMANIFEST_TOOL=
 dnl Set various checks
 dnl ========================================================
 MISSING_X=
-AC_PROG_AWK
 
 dnl Initialize the Pthread test variables early so they can be
 dnl  overridden by each platform.

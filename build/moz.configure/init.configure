@@ -248,6 +248,7 @@ early_options = early_options()
 def wanted_mozconfig_variables(help):
      return set([
          'AUTOCONF',
+         'AWK',
          'DISABLE_EXPORT_JS',
          'DISABLE_SHARED_JS',
          'EXTERNAL_SOURCE_DIR',
