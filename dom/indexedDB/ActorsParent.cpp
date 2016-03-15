@@ -10678,7 +10678,7 @@ UpdateRefcountFunction::DidCommit()
                  js::ProfileEntry::Category::STORAGE);
 
   for (auto iter = mFileInfoEntries.ConstIter(); !iter.Done(); iter.Next()) {
-    auto value = iter.Data();
+    FileInfoEntry* value = iter.Data();
 
     MOZ_ASSERT(value);
 
@@ -10760,9 +10760,94 @@ UpdateRefcountFunction::Reset()
   MOZ_ASSERT(!mSavepointEntriesIndex.Count());
   MOZ_ASSERT(!mInSavepoint);
 
+  class MOZ_STACK_CLASS CustomCleanupCallback final
+    : public FileInfo::CustomCleanupCallback
+  {
+    nsCOMPtr<nsIFile> mDirectory;
+    nsCOMPtr<nsIFile> mJournalDirectory;
+
+  public:
+    virtual nsresult
+    Cleanup(FileManager* aFileManager, int64_t aId)
+    {
+      if (!mDirectory) {
+        MOZ_ASSERT(!mJournalDirectory);
+
+        mDirectory = aFileManager->GetDirectory();
+        if (NS_WARN_IF(!mDirectory)) {
+          return NS_ERROR_FAILURE;
+        }
+
+        mJournalDirectory = aFileManager->GetJournalDirectory();
+        if (NS_WARN_IF(!mJournalDirectory)) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+
+      nsCOMPtr<nsIFile> file = aFileManager->GetFileForId(mDirectory, aId);
+      if (NS_WARN_IF(!file)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      nsresult rv;
+      int64_t fileSize;
+
+      if (aFileManager->EnforcingQuota()) {
+        rv = file->GetFileSize(&fileSize);
+        if (NS_WARN_IF(!file)) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+
+      rv = file->Remove(false);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      if (aFileManager->EnforcingQuota()) {
+        QuotaManager* quotaManager = QuotaManager::Get();
+        MOZ_ASSERT(quotaManager);
+
+        quotaManager->DecreaseUsageForOrigin(aFileManager->Type(),
+                                             aFileManager->Group(),
+                                             aFileManager->Origin(),
+                                             fileSize);
+      }
+
+      file = aFileManager->GetFileForId(mJournalDirectory, aId);
+      if (NS_WARN_IF(!file)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      rv = file->Remove(false);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      return NS_OK;
+    }
+  };
+
   mJournalsToCreateBeforeCommit.Clear();
   mJournalsToRemoveAfterCommit.Clear();
   mJournalsToRemoveAfterAbort.Clear();
+
+  // FileInfo implementation automatically removes unreferenced files, but it's
+  // done asynchronously and with a delay. We want to remove them (and decrease
+  // quota usage) before we fire the commit event.
+  for (auto iter = mFileInfoEntries.ConstIter(); !iter.Done(); iter.Next()) {
+    FileInfoEntry* value = iter.Data();
+
+    MOZ_ASSERT(value);
+
+    FileInfo* fileInfo = value->mFileInfo.forget().take();
+
+    MOZ_ASSERT(fileInfo);
+
+    CustomCleanupCallback customCleanupCallback;
+    fileInfo->Release(&customCleanupCallback);
+  }
+
   mFileInfoEntries.Clear();
 }
 
@@ -24963,6 +25048,11 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
             }
 
             rv2 = diskFile->Remove(false);
+            if (NS_WARN_IF(NS_FAILED(rv2))) {
+              return rv;
+            }
+
+            rv2 = journalFile->Remove(false);
             if (NS_WARN_IF(NS_FAILED(rv2))) {
               return rv;
             }
