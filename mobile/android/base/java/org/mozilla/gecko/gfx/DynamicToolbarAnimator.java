@@ -438,6 +438,14 @@ public class DynamicToolbarAnimator {
             return false;
         }
 
+        if (mToolbarTranslation == mMaxTranslation) {
+            Log.v(LOGTAG, "Toolbar at maximum translation, calling shiftLayerView(" + mMaxTranslation + ")");
+            shiftLayerView(mMaxTranslation);
+        } else if (mToolbarTranslation == 0) {
+            Log.v(LOGTAG, "Toolbar at minimum translation, calling shiftLayerView(0)");
+            shiftLayerView(0);
+        }
+
         fireListeners();
         mTarget.getView().requestRender();
         return true;
