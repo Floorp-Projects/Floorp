@@ -1526,7 +1526,8 @@ var isDeeply = SimpleTest.isDeeply;
 var info = SimpleTest.info;
 
 var gOldOnError = window.onerror;
-window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
+window.onerror = function simpletestOnerror(errorMsg, url, lineNumber,
+                                            columnNumber, originalException) {
     // Log the message.
     // XXX Chrome mochitests sometimes trigger this window.onerror handler,
     // but there are a number of uncaught JS exceptions from those tests.
@@ -1535,7 +1536,13 @@ window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
     // a test failure.  See bug 652494.
     var isExpected = !!SimpleTest._expectingUncaughtException;
     var message = (isExpected ? "expected " : "") + "uncaught exception";
-    var error = errorMsg + " at " + url + ":" + lineNumber;
+    var error = errorMsg + " at ";
+    try {
+        error += originalException.stack;
+    } catch (e) {
+        // At least use the url+line+column we were given
+        error += url + ":" + lineNumber + ":" + columnNumber;
+    }
     if (!SimpleTest._ignoringAllUncaughtExceptions) {
         // Don't log if SimpleTest.finish() is already called, it would cause failures
         if (!SimpleTest._alreadyFinished)
