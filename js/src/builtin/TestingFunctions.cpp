@@ -1189,13 +1189,7 @@ SetupOOMFailure(JSContext* cx, bool failAlways, unsigned argc, Value* vp)
     }
 
     HelperThreadState().waitForAllThreads();
-    js::oom::targetThread = targetThread;
-    if (uint64_t(OOM_counter) + count >= UINT32_MAX) {
-        JS_ReportError(cx, "OOM cutoff out of range");
-        return false;
-    }
-    OOM_maxAllocations = OOM_counter + count;
-    OOM_failAlways = failAlways;
+    js::oom::SimulateOOMAfter(count, targetThread, failAlways);
     args.rval().setUndefined();
     return true;
 }
@@ -1216,10 +1210,9 @@ static bool
 ResetOOMFailure(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(OOM_counter >= OOM_maxAllocations);
+    args.rval().setBoolean(js::oom::HadSimulatedOOM());
     HelperThreadState().waitForAllThreads();
-    js::oom::targetThread = js::oom::THREAD_TYPE_NONE;
-    OOM_maxAllocations = UINT32_MAX;
+    js::oom::ResetSimulatedOOM();
     return true;
 }
 
@@ -1297,15 +1290,14 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
             MOZ_ASSERT(!cx->isExceptionPending());
             MOZ_ASSERT(!cx->runtime()->hadOutOfMemory);
 
-            OOM_maxAllocations = OOM_counter + allocation;
-            OOM_failAlways = false;
+            js::oom::SimulateOOMAfter(allocation, thread, false);
 
             RootedValue result(cx);
             bool ok = JS_CallFunction(cx, cx->global(), function,
                                       HandleValueArray::empty(), &result);
 
-            handledOOM = OOM_counter >= OOM_maxAllocations;
-            OOM_maxAllocations = UINT32_MAX;
+            handledOOM = js::oom::HadSimulatedOOM();
+            js::oom::ResetSimulatedOOM();
 
             MOZ_ASSERT_IF(ok, !cx->isExceptionPending());
 
@@ -1334,8 +1326,6 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
             fprintf(stderr, "  finished after %d allocations\n", allocation - 2);
         }
     }
-
-    js::oom::targetThread = js::oom::THREAD_TYPE_NONE;
 
     args.rval().setUndefined();
     return true;
