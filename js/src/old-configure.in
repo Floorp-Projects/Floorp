@@ -11,9 +11,6 @@ AC_PREREQ(2.13)
 AC_INIT(js/src/jsapi.h)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
-TARGET_CPU="${target_cpu}"
-TARGET_VENDOR="${target_vendor}"
-TARGET_OS="${target_os}"
 
 dnl ========================================================
 dnl =
@@ -2904,9 +2901,6 @@ AC_SUBST(HOST_LD)
 AC_SUBST(HOST_RANLIB)
 AC_SUBST(HOST_BIN_SUFFIX)
 
-AC_SUBST(TARGET_CPU)
-AC_SUBST(TARGET_VENDOR)
-AC_SUBST(TARGET_OS)
 AC_SUBST(TARGET_XPCOM_ABI)
 
 AC_SUBST(WRAP_LDFLAGS)
