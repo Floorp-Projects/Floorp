@@ -60,6 +60,7 @@ public:
   uint32_t Location();
 
   void GetCode(nsAString& aCode);
+  void GetInitDict(KeyboardEventInit& aParam);
 
   void InitKeyEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
                     nsGlobalWindow* aView, bool aCtrlKey, bool aAltKey,
