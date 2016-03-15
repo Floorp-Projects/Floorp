@@ -111,9 +111,22 @@ description > .text-link:focus {
   width: 0.5em;
 }
 
+#pairDeviceThrobber,
+#login-throbber {
+  -moz-box-align: center;
+}
+
 #pairDeviceThrobber > image,
 #login-throbber > image {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+  width: 16px;
+  list-style-image: url("chrome://global/skin/icons/loading.png");
+}
+
+@media (min-resolution: 2dppx) {
+  #pairDeviceThrobber > image,
+  #login-throbber > image {
+    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
+  }
 }
 
 #captchaFeedback {

@@ -7,13 +7,19 @@
 }
 
 .throbber {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+  list-style-image: url("chrome://global/skin/icons/loading.png");
   width: 16px;
   height: 16px;
   margin-top: 5px;
   margin-bottom: 5px;
   -moz-margin-start: 5px;
   -moz-margin-end: 2px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .throbber {
+    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
+  }
 }
 
 .alertBox {

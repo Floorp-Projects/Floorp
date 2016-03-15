@@ -30,7 +30,14 @@ wizardpage {
 }
 
 .remoteLoadingThrobber[state="loading"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+  list-style-image: url("chrome://global/skin/icons/loading.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  .remoteLoadingThrobber[state="loading"] {
+    width: 16px;
+    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
+  }
 }
 
 .remoteLoadingThrobber[state="error"] {
