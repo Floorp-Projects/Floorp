@@ -29,20 +29,20 @@ of the License or (at your option) any later version.
 
 using namespace graphite2;
 
-uint16 GlyphFace::getMetric(uint8 metric) const
+int32 GlyphFace::getMetric(uint8 metric) const
 {
     switch (metrics(metric))
     {
-        case kgmetLsb       : return static_cast<uint16>(m_bbox.bl.x);
-        case kgmetRsb       : return static_cast<uint16>(m_advance.x - m_bbox.tr.x);
-        case kgmetBbTop     : return static_cast<uint16>(m_bbox.tr.y);
-        case kgmetBbBottom  : return static_cast<uint16>(m_bbox.bl.y);
-        case kgmetBbLeft    : return static_cast<uint16>(m_bbox.bl.x);
-        case kgmetBbRight   : return static_cast<uint16>(m_bbox.tr.x);
-        case kgmetBbHeight  : return static_cast<uint16>(m_bbox.tr.y - m_bbox.bl.y);
-        case kgmetBbWidth   : return static_cast<uint16>(m_bbox.tr.x - m_bbox.bl.x);
-        case kgmetAdvWidth  : return static_cast<uint16>(m_advance.x);
-        case kgmetAdvHeight : return static_cast<uint16>(m_advance.y);
+        case kgmetLsb       : return m_bbox.bl.x;
+        case kgmetRsb       : return m_advance.x - m_bbox.tr.x;
+        case kgmetBbTop     : return m_bbox.tr.y;
+        case kgmetBbBottom  : return m_bbox.bl.y;
+        case kgmetBbLeft    : return m_bbox.bl.x;
+        case kgmetBbRight   : return m_bbox.tr.x;
+        case kgmetBbHeight  : return m_bbox.tr.y - m_bbox.bl.y;
+        case kgmetBbWidth   : return m_bbox.tr.x - m_bbox.bl.x;
+        case kgmetAdvWidth  : return m_advance.x;
+        case kgmetAdvHeight : return m_advance.y;
         default : return 0;
     }
 }

@@ -47,15 +47,16 @@ NameTable::NameTable(const void* data, size_t length, uint16 platformId, uint16 
          sizeof(TtfUtil::Sfnt::NameRecord) * ( be::swap<uint16>(m_table->count) - 1)))
     {
         uint16 offset = be::swap<uint16>(m_table->string_offset);
-        m_nameData = reinterpret_cast<const uint8*>(pdata) + offset;
-        setPlatformEncoding(platformId, encodingID);
-        m_nameDataLength = length - offset;
+        if (offset < length)
+        {
+            m_nameData = reinterpret_cast<const uint8*>(pdata) + offset;
+            setPlatformEncoding(platformId, encodingID);
+            m_nameDataLength = length - offset;
+            return;
+        }
     }
-    else
-    {
-        free(const_cast<TtfUtil::Sfnt::FontNames*>(m_table));
-        m_table = NULL;
-    }
+    free(const_cast<TtfUtil::Sfnt::FontNames*>(m_table));
+    m_table = NULL;
 }
 
 uint16 NameTable::setPlatformEncoding(uint16 platformId, uint16 encodingID)
@@ -144,7 +145,7 @@ void* NameTable::getName(uint16& languageId, uint16 nameId, gr_encform enc, uint
         return NULL;
     }
     utf16Length >>= 1; // in utf16 units
-    utf16::codeunit_t * utf16Name = gralloc<utf16::codeunit_t>(utf16Length);
+    utf16::codeunit_t * utf16Name = gralloc<utf16::codeunit_t>(utf16Length + 1);
     if (!utf16Name)
     {
         languageId = 0;
@@ -155,6 +156,14 @@ void* NameTable::getName(uint16& languageId, uint16 nameId, gr_encform enc, uint
     for (size_t i = 0; i < utf16Length; i++)
     {
         utf16Name[i] = be::read<uint16>(pName);
+    }
+    utf16Name[utf16Length] = 0;
+    if (!utf16::validate(utf16Name, utf16Name + utf16Length))
+    {
+        free(utf16Name);
+        languageId = 0;
+        length = 0;
+        return NULL;
     }
     switch (enc)
     {
