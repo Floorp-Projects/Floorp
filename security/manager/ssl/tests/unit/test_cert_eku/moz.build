@@ -4,27 +4,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-test_certificates = (
-    'ca.pem',
-    'ee-CA.pem',
-    'ee-SA-CA.pem',
-    'ee-SA-OCSP.pem',
-    'ee-SA-nsSGC.pem',
-    'ee-SA.pem',
-    'ee-int-CA.pem',
-    'ee-int-SA-CA.pem',
-    'ee-int-SA-OCSP.pem',
-    'ee-int-SA-nsSGC.pem',
-    'ee-int-SA.pem',
-    'ee-int-nsSGC.pem',
-    'ee-nsSGC.pem',
-    'int-CA.pem',
-    'int-SA-CA.pem',
-    'int-SA-OCSP.pem',
-    'int-SA-nsSGC.pem',
-    'int-SA.pem',
-    'int-nsSGC.pem',
-)
-
-for test_certificate in test_certificates:
-    GeneratedTestCertificate(test_certificate)
+# Temporarily disabled. See bug 1256495.
+#test_certificates = (
+#    'ca.pem',
+#    'ee-CA.pem',
+#    'ee-SA-CA.pem',
+#    'ee-SA-OCSP.pem',
+#    'ee-SA-nsSGC.pem',
+#    'ee-SA.pem',
+#    'ee-int-CA.pem',
+#    'ee-int-SA-CA.pem',
+#    'ee-int-SA-OCSP.pem',
+#    'ee-int-SA-nsSGC.pem',
+#    'ee-int-SA.pem',
+#    'ee-int-nsSGC.pem',
+#    'ee-nsSGC.pem',
+#    'int-CA.pem',
+#    'int-SA-CA.pem',
+#    'int-SA-OCSP.pem',
+#    'int-SA-nsSGC.pem',
+#    'int-SA.pem',
+#    'int-nsSGC.pem',
+#)
+#
+#for test_certificate in test_certificates:
+#    GeneratedTestCertificate(test_certificate)
