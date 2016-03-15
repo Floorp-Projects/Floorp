@@ -17,3 +17,6 @@ css-values-3/vh_not_refreshing_on_chrome_iframe.html
 # because of support files (in iframe subdir) not being copied (bug 1256580)
 css-values-3/vh-support-transform-origin.html
 css-values-3/vh-support-transform-translate.html
+
+# because the test fails on OS X 10.10 (and probably other platforms with certain font antialiasing)
+css-values-3/ch-unit-001.html
