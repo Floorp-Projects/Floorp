@@ -737,6 +737,8 @@
 
     <style name="TextAppearance.ShareOverlay.Header">
         <item name="android:textColor">@android:color/white</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textStyle">normal</item>
     </style>
 
     <style name="ShareOverlayRow">
