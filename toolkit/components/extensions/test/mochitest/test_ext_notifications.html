@@ -16,12 +16,17 @@ add_task(function* test_notifications() {
   function backgroundScript() {
     browser.test.log("running background script");
 
-    let opts = {title: "Testing Notification", message: "Carry on"};
+    let opts = {
+      type: "basic",
+      iconUrl: browser.runtime.getURL("data/a.png"),
+      title: "Testing Notification",
+      message: "Carry on",
+    };
 
     // Test an unimplemented listener.
     browser.notifications.onClicked.addListener(function() {});
 
-    browser.notifications.create("5", opts, function(id) {
+    browser.notifications.create("5", opts).then(id => {
       browser.test.sendMessage("running", id);
       browser.test.notifyPass("background test passed");
     });
@@ -50,7 +55,7 @@ add_task(function* test_notifications_empty_getAll() {
   function backgroundScript() {
     browser.test.log("running background script");
 
-    browser.notifications.getAll(notifications => {
+    browser.notifications.getAll().then(notifications => {
       browser.test.assertTrue(Array.isArray(notifications),
         "getAll() returned an array");
       browser.test.assertEq(notifications.length, 0, "the array was empty");
@@ -79,21 +84,27 @@ add_task(function* test_notifications_populated_getAll() {
   function backgroundScript() {
     browser.test.log("running background script");
 
-    let opts = {title: "Testing Notification", message: "Carry on"};
-    browser.notifications.create("p1", opts, () => {
-      browser.notifications.create("p2", opts, () => {
-        browser.notifications.getAll(notifications => {
-          browser.test.assertTrue(Array.isArray(notifications),
-            "getAll() returned an array");
-          browser.test.assertEq(notifications.length, 2,
-            "the array contained two notification ids");
-          browser.test.assertTrue(notifications.includes("p1"),
-            "the array contains the first notification");
-          browser.test.assertTrue(notifications.includes("p2"),
-            "the array contains the second notification");
-          browser.test.notifyPass("getAll populated");
-        });
-      });
+    let opts = {
+      type: "basic",
+      iconUrl: browser.runtime.getURL("data/a.png"),
+      title: "Testing Notification",
+      message: "Carry on",
+    };
+
+    browser.notifications.create("p1", opts).then(() => {
+      return browser.notifications.create("p2", opts);
+    }).then(() => {
+      return browser.notifications.getAll();
+    }).then(notifications => {
+      browser.test.assertTrue(Array.isArray(notifications),
+        "getAll() returned an array");
+      browser.test.assertEq(notifications.length, 2,
+        "the array contained two notification ids");
+      browser.test.assertTrue(notifications.includes("p1"),
+        "the array contains the first notification");
+      browser.test.assertTrue(notifications.includes("p2"),
+        "the array contains the second notification");
+      browser.test.notifyPass("getAll populated");
     });
   }
 
