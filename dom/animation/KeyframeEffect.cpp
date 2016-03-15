@@ -1799,6 +1799,29 @@ KeyframeEffectReadOnly::GetTarget(
   }
 }
 
+static void
+CreatePropertyValue(nsCSSProperty aProperty,
+                    float aOffset,
+                    const Maybe<ComputedTimingFunction>& aTimingFunction,
+                    const StyleAnimationValue& aValue,
+                    AnimationPropertyValueDetails& aResult)
+{
+  aResult.mOffset.Construct(aOffset);
+
+  nsString stringValue;
+  StyleAnimationValue::UncomputeValue(aProperty, aValue, stringValue);
+  aResult.mValue.Construct(stringValue);
+
+  if (aTimingFunction) {
+    aResult.mEasing.Construct();
+    aTimingFunction->AppendToString(aResult.mEasing.Value());
+  } else {
+    aResult.mEasing.Construct(NS_LITERAL_STRING("linear"));
+  }
+
+  aResult.mComposite.Construct(CompositeOperation::Replace);
+}
+
 void
 KeyframeEffectReadOnly::GetProperties(
     nsTArray<AnimationPropertyDetails>& aProperties) const
@@ -1814,6 +1837,51 @@ KeyframeEffectReadOnly::GetProperties(
     if (property.mPerformanceWarning &&
         property.mPerformanceWarning->ToLocalizedString(localizedString)) {
       propertyDetails.mWarning.Construct(localizedString);
+    }
+
+    propertyDetails.mValues.Construct();
+    if (!propertyDetails.mValues.Value().SetCapacity(
+          property.mSegments.Length(), mozilla::fallible)) {
+      MOZ_CRASH("Out of memory allocating values array");
+    }
+
+    for (size_t segmentIdx = 0, segmentLen = property.mSegments.Length();
+         segmentIdx < segmentLen;
+         segmentIdx++)
+    {
+      const AnimationPropertySegment& segment = property.mSegments[segmentIdx];
+
+      binding_detail::FastAnimationPropertyValueDetails fromValue;
+      CreatePropertyValue(property.mProperty, segment.mFromKey,
+                          segment.mTimingFunction, segment.mFromValue,
+                          fromValue);
+      // We don't apply timing functions for zero-length segments, so
+      // don't return one here.
+      if (segment.mFromKey == segment.mToKey) {
+        fromValue.mEasing.Reset();
+      }
+      // The following won't fail since we have already allocated the capacity
+      // above.
+      propertyDetails.mValues.Value().AppendElement(fromValue,
+                                                    mozilla::fallible);
+
+      // Normally we can ignore the to-value for this segment since it is
+      // identical to the from-value from the next segment. However, we need
+      // to add it if either:
+      // a) this is the last segment, or
+      // b) the next segment's from-value differs.
+      if (segmentIdx == segmentLen - 1 ||
+          property.mSegments[segmentIdx + 1].mFromValue != segment.mToValue) {
+        binding_detail::FastAnimationPropertyValueDetails toValue;
+        CreatePropertyValue(property.mProperty, segment.mToKey,
+                            Nothing(), segment.mToValue, toValue);
+        // It doesn't really make sense to have a timing function on the
+        // last property value or before a sudden jump so we just drop the
+        // easing property altogether.
+        toValue.mEasing.Reset();
+        propertyDetails.mValues.Value().AppendElement(toValue,
+                                                      mozilla::fallible);
+      }
     }
 
     aProperties.AppendElement(propertyDetails);
