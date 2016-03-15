@@ -69,3 +69,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     OS_LIBS += CONFIG['MOZ_QT_LIBS']
     OS_LIBS += CONFIG['XLDFLAGS']
     OS_LIBS += CONFIG['XLIBS']
+
+if CONFIG['_MSC_VER']:
+    # This is intended as a temporary hack to support building with VS2015.
+    # conversion from 'X' to 'Y' requires a narrowing conversion
+    CXXFLAGS += ['-wd4838']

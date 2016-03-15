@@ -151,7 +151,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     handlingSegFault(false),
     handlingJitInterrupt_(false),
     interruptCallback(nullptr),
-    exclusiveAccessLock(nullptr),
 #ifdef DEBUG
     exclusiveAccessOwner(nullptr),
     mainThreadHasExclusiveAccess(false),
@@ -286,10 +285,6 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     static_assert(sizeof(pthread_t) <= sizeof(ownerThreadNative_), "need bigger field");
     ownerThreadNative_ = (size_t)pthread_self();
 #endif
-
-    exclusiveAccessLock = PR_NewLock();
-    if (!exclusiveAccessLock)
-        return false;
 
     if (!mainThread.init())
         return false;
@@ -428,8 +423,6 @@ JSRuntime::~JSRuntime()
     finishSelfHosting();
 
     MOZ_ASSERT(!exclusiveAccessOwner);
-    if (exclusiveAccessLock)
-        PR_DestroyLock(exclusiveAccessLock);
 
     // Avoid bogus asserts during teardown.
     MOZ_ASSERT(!numExclusiveThreads);

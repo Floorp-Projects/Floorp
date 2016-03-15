@@ -135,8 +135,7 @@ class GlobalObject : public NativeObject
 
     enum WarnOnceFlag : int32_t {
         WARN_WATCH_DEPRECATED                   = 1 << 0,
-        WARN_PROTO_SETTING_SLOW                 = 1 << 1,
-        WARN_STRING_CONTAINS_DEPRECATED         = 1 << 2,
+        WARN_STRING_CONTAINS_DEPRECATED         = 1 << 1,
     };
 
     // Emit the specified warning if the given slot in |obj|'s global isn't
@@ -697,12 +696,6 @@ class GlobalObject : public NativeObject
         // debuggers like Firebug (bug 934669).
         //return warnOnceAbout(cx, obj, WARN_WATCH_DEPRECATED, JSMSG_OBJECT_WATCH_DEPRECATED);
         return true;
-    }
-
-    // Warn about use of the given __proto__ setter to attempt to mutate an
-    // object's [[Prototype]], if no prior warning was given.
-    static bool warnOnceAboutPrototypeMutation(JSContext* cx, HandleObject protoSetter) {
-        return warnOnceAbout(cx, protoSetter, WARN_PROTO_SETTING_SLOW, JSMSG_PROTO_SETTING_SLOW);
     }
 
     // Warn about use of the deprecated String.prototype.contains method

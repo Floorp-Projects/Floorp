@@ -2797,8 +2797,19 @@ var gCSSProperties = {
       "caption", "icon", "menu", "message-box", "small-caption", "status-bar",
       // Gecko-specific system fonts
       "-moz-window", "-moz-document", "-moz-desktop", "-moz-info", "-moz-dialog", "-moz-button", "-moz-pull-down-menu", "-moz-list", "-moz-field", "-moz-workspace",
+      // line-height with calc()
+      "condensed bold italic small-caps 24px/calc(2px) Times New Roman, serif",
+      "condensed bold italic small-caps 24px/calc(50%) Times New Roman, serif",
+      "condensed bold italic small-caps 24px/calc(3*25px) Times New Roman, serif",
+      "condensed bold italic small-caps 24px/calc(25px*3) Times New Roman, serif",
+      "condensed bold italic small-caps 24px/calc(3*25px + 50%) Times New Roman, serif",
+      "condensed bold italic small-caps 24px/calc(1 + 2*3/4) Times New Roman, serif",
     ],
-    invalid_values: [ "9 fantasy", "-2px fantasy" ]
+    invalid_values: [ "9 fantasy", "-2px fantasy",
+      // line-height with calc()
+      "condensed bold italic small-caps 24px/calc(1 + 2px) Times New Roman, serif",
+      "condensed bold italic small-caps 24px/calc(100% + 0.1) Times New Roman, serif",
+    ]
   },
   "font-family": {
     domProp: "fontFamily",
@@ -3060,8 +3071,8 @@ var gCSSProperties = {
      */
     prerequisites: { "font-size": "19px", "font-size-adjust": "none", "font-family": "serif", "font-weight": "normal", "font-style": "normal", "height": "18px", "display": "block"},
     initial_values: [ "normal" ],
-    other_values: [ "1.0", "1", "1em", "47px", "-moz-block-height" ],
-    invalid_values: []
+    other_values: [ "1.0", "1", "1em", "47px", "-moz-block-height", "calc(2px)", "calc(50%)", "calc(3*25px)", "calc(25px*3)", "calc(3*25px + 50%)", "calc(1 + 2*3/4)" ],
+    invalid_values: [ "calc(1 + 2px)", "calc(100% + 0.1)" ]
   },
   "list-style": {
     domProp: "listStyle",

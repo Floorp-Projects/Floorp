@@ -93,7 +93,6 @@ function installApp(manifestURL) {
 
 function runTest() {
   // Set up.
-  SpecialPowers.setAllAppsLaunchable(true);
   SpecialPowers.pushPrefEnv({'set': [
     ["dom.mozBrowserFramesEnabled", true],
     ["dom.apps.allow_unsigned_langpacks", true] ]},continueTest);

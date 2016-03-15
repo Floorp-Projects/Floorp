@@ -15,6 +15,7 @@
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
+#include "threading/Mutex.h"
 #include "vm/TraceLoggingGraph.h"
 #include "vm/TraceLoggingTypes.h"
 
@@ -311,7 +312,7 @@ class TraceLoggerThreadState
 
   public:
     uint64_t startupTime;
-    PRLock* lock;
+    Mutex lock;
 
     TraceLoggerThreadState()
       :
@@ -320,8 +321,7 @@ class TraceLoggerThreadState
 #endif
         mainThreadEnabled(false),
         offThreadEnabled(false),
-        graphSpewingEnabled(false),
-        lock(nullptr)
+        graphSpewingEnabled(false)
     { }
 
     bool init();

@@ -761,12 +761,8 @@ HttpChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
     return true;
   }
 
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new DivertDataAvailableEvent(this, data, offset, count));
-    return true;
-  }
-
-  DivertOnDataAvailable(data, offset, count);
+  mEventQ->RunOrEnqueue(new DivertDataAvailableEvent(this, data, offset,
+                                                     count));
   return true;
 }
 
@@ -846,12 +842,7 @@ HttpChannelParent::RecvDivertOnStopRequest(const nsresult& statusCode)
     return false;
   }
 
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new DivertStopRequestEvent(this, statusCode));
-    return true;
-  }
-
-  DivertOnStopRequest(statusCode);
+  mEventQ->RunOrEnqueue(new DivertStopRequestEvent(this, statusCode));
   return true;
 }
 
@@ -909,12 +900,7 @@ HttpChannelParent::RecvDivertComplete()
     return false;
   }
 
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new DivertCompleteEvent(this));
-    return true;
-  }
-
-  DivertComplete();
+  mEventQ->RunOrEnqueue(new DivertCompleteEvent(this));
   return true;
 }
 

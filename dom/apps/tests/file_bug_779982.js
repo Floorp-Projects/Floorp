@@ -1,5 +1,4 @@
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.setAllAppsLaunchable(true);
 
 var fileTestOnCurrentOrigin = 'http://example.org/tests/dom/apps/tests/file_bug_779982.html';
 
