@@ -424,6 +424,9 @@ Position Segment::positionSlots(const Font *font, Slot * iStart, Slot * iEnd, bo
     if (!iStart)    iStart = m_first;
     if (!iEnd)      iEnd   = m_last;
 
+    if (!iStart || !iEnd)   // only true for empty segments
+        return currpos;
+
     if (isRtl)
     {
         for (Slot * s = iEnd, * const end = iStart->prev(); s && s != end; s = s->prev())
@@ -531,6 +534,9 @@ bool Segment::initCollisions()
     if (!m_collisions) return false;
 
     for (Slot *p = m_first; p; p = p->next())
-        ::new (collisionInfo(p)) SlotCollision(this, p);
+        if (p->index() < slotCount())
+            ::new (collisionInfo(p)) SlotCollision(this, p);
+        else
+            return false;
     return true;
 }

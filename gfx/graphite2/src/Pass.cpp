@@ -101,7 +101,7 @@ bool Pass::readPass(const byte * const pass_start, size_t pass_length, size_t su
     // Read in basic values
     const byte flags = be::read<byte>(p);
     if (e.test((flags & 0x1f) && 
-            (pt < PASS_TYPE_POSITIONING || !m_silf->aCollision() || !face.glyphs().hasBoxes()),
+            (pt < PASS_TYPE_POSITIONING || !m_silf->aCollision() || !face.glyphs().hasBoxes() || !(m_silf->flags() & 0x20)),
             E_BADCOLLISIONPASS))
         return face.error(e);
     m_numCollRuns = flags & 0x7;
@@ -231,7 +231,11 @@ bool Pass::readRules(const byte * rule_map, const size_t num_entries,
     // Allocate pools
     m_rules = new Rule [m_numRules];
     m_codes = new Code [m_numRules*2];
-    const size_t prog_pool_sz = vm::Machine::Code::estimateCodeDataOut(ac_end - ac_data + rc_end - rc_data);
+    int totalSlots = 0;
+    const uint16 *tsort = sort_key;
+    for (int i = 0; i < m_numRules; ++i)
+        totalSlots += be::peek<uint16>(--tsort);
+    const size_t prog_pool_sz = vm::Machine::Code::estimateCodeDataOut(ac_end - ac_data + rc_end - rc_data, 2 * m_numRules, totalSlots);
     m_progs = gralloc<byte>(prog_pool_sz);
     byte * prog_pool_free = m_progs,
          * prog_pool_end  = m_progs + prog_pool_sz;
@@ -254,7 +258,7 @@ bool Pass::readRules(const byte * rule_map, const size_t num_entries,
 
         if (ac_begin > ac_end || ac_begin > ac_data_end || ac_end > ac_data_end
                 || rc_begin > rc_end || rc_begin > rc_data_end || rc_end > rc_data_end
-                || vm::Machine::Code::estimateCodeDataOut(ac_end - ac_begin + rc_end - rc_begin) > size_t(prog_pool_end - prog_pool_free))
+                || vm::Machine::Code::estimateCodeDataOut(ac_end - ac_begin + rc_end - rc_begin, 2, r->sort) > size_t(prog_pool_end - prog_pool_free))
             return false;
         r->action     = new (m_codes+n*2-2) vm::Machine::Code(false, ac_begin, ac_end, r->preContext, r->sort, *m_silf, face, pt, &prog_pool_free);
         r->constraint = new (m_codes+n*2-1) vm::Machine::Code(true,  rc_begin, rc_end, r->preContext, r->sort, *m_silf, face, pt, &prog_pool_free);
@@ -356,7 +360,8 @@ bool Pass::readStates(const byte * starts, const byte *states, const byte * o_ru
         s->rules = begin;
         s->rules_end = (end - begin <= FiniteStateMachine::MAX_RULES)? end :
             begin + FiniteStateMachine::MAX_RULES;
-        qsort(begin, end - begin, sizeof(RuleEntry), &cmpRuleEntry);
+        if (begin)      // keep UBSan happy can't call qsort with null begin
+            qsort(begin, end - begin, sizeof(RuleEntry), &cmpRuleEntry);
     }
 
     return true;
@@ -454,9 +459,9 @@ bool Pass::runFSM(FiniteStateMachine& fsm, Slot * slot) const
     do
     {
         fsm.slots.pushSlot(slot);
-        if (--free_slots == 0
-         || slot->gid() >= m_numGlyphs
+        if (slot->gid() >= m_numGlyphs
          || m_cols[slot->gid()] == 0xffffU
+         || --free_slots == 0
          || state >= m_numTransition)
             return free_slots != 0;
 
@@ -632,10 +637,13 @@ bool Pass::testConstraint(const Rule & r, Machine & m) const
     const uint16 curr_context = m.slotMap().context();
     if (unsigned(r.sort - r.preContext) > m.slotMap().size() - curr_context
         || curr_context - r.preContext < 0) return false;
-    if (!*r.constraint) return true;
-    assert(r.constraint->constraint());
 
     vm::slotref * map = m.slotMap().begin() + curr_context - r.preContext;
+    if (map[r.sort - 1] == 0)
+        return false;
+
+    if (!*r.constraint) return true;
+    assert(r.constraint->constraint());
     for (int n = r.sort; n && map; --n, ++map)
     {
         if (!*map) continue;
@@ -652,7 +660,7 @@ void SlotMap::collectGarbage(Slot * &aSlot)
 {
     for(Slot **s = begin(), *const *const se = end() - 1; s != se; ++s) {
         Slot *& slot = *s;
-        if(slot->isDeleted() || slot->isCopied())
+        if(slot && (slot->isDeleted() || slot->isCopied()))
         {
             if (slot == aSlot)
                 aSlot = slot->prev() ? slot->prev() : slot->next();
