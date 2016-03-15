@@ -4,17 +4,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-test_certificates = (
-    'NameConstraints.dcissallowed.pem',
-    'NameConstraints.dcissblocked.pem',
-    'ca-example-com-permitted.pem',
-    'int-example-org-permitted.pem',
-    'ee-example-com-and-org.pem',
-    'ee-example-com.pem',
-    'ee-example-org.pem',
-    'ee-example-test.pem',
-    'dciss.pem',
-)
-
-for test_certificate in test_certificates:
-    GeneratedTestCertificate(test_certificate)
+# Temporarily disabled. See bug 1256495.
+#test_certificates = (
+#    'NameConstraints.dcissallowed.pem',
+#    'NameConstraints.dcissblocked.pem',
+#    'ca-example-com-permitted.pem',
+#    'int-example-org-permitted.pem',
+#    'ee-example-com-and-org.pem',
+#    'ee-example-com.pem',
+#    'ee-example-org.pem',
+#    'ee-example-test.pem',
+#    'dciss.pem',
+#)
+#
+#for test_certificate in test_certificates:
+#    GeneratedTestCertificate(test_certificate)
