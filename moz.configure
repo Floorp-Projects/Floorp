@@ -67,5 +67,49 @@ def awk_for_old_configure(value):
     add_old_configure_assignment('AWK', value)
 
 
+# Perl detection
+# ==============================================================
+perl = check_prog('PERL', ('perl5', 'perl'))
+
+# Until the PERL variable is not necessary in old-configure
+@depends(perl)
+def perl_for_old_configure(value):
+    add_old_configure_assignment('PERL', value)
+
+@template
+def perl_version_check(min_version):
+    @depends(perl)
+    @checking('for minimum required perl version >= %s' % min_version)
+    @advanced
+    def get_perl_version(perl):
+        import subprocess
+        try:
+            return subprocess.check_output([perl, '-e', 'print $]'])
+        except subprocess.CalledProcessError as e:
+            error('Failed to get perl version: %s' % e.message)
+
+    @depends(get_perl_version)
+    def check_perl_version(version):
+        if version < min_version:
+            error('Perl %s or higher is required.' % min_version)
+
+    @depends(perl)
+    @checking('for full perl installation')
+    @advanced
+    def has_full_perl_installation(perl):
+        import subprocess
+        ret = subprocess.call(
+            [perl, '-e', 'use Config; exit(!-d $Config{archlib})'])
+        return ret == 0
+
+    @depends(has_full_perl_installation)
+    def require_full_perl_installation(has_full_perl_installation):
+        if not has_full_perl_installation:
+            error('Cannot find Config.pm or $Config{archlib}. '
+                  'A full perl installation is required.')
+
+perl_version_check('5.006')
+
+
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')
