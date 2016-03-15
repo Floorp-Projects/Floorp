@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script unrecognized property on manifest</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const BASE = "http://mochi.test:8888/chrome/toolkit/components/extensions/test/mochitest";
+
+add_task(function* test_contentscript() {
+  function backgroundScript() {
+    browser.runtime.onMessage.addListener((msg) => {
+      if (msg == "loaded") {
+        browser.tabs.query({active: true, currentWindow: true}).then((tabs) => {
+          // NOTE: we're removing the tab from here because doing a win.close()
+          // from the chrome test code is raising a "TypeError: can 't access
+          // dead object" exception.
+          browser.tabs.remove(tabs[0].id);
+
+          browser.test.notifyPass("content-script-loaded");
+        });
+      }
+    });
+  }
+
+  function contentScript() {
+    chrome.runtime.sendMessage("loaded");
+  }
+
+  let extensionData = {
+    manifest: {
+      content_scripts: [
+        {
+          "matches": ["http://mochi.test/*/file_sample.html"],
+          "js": ["content_script.js"],
+          "run_at": "document_idle",
+          "unrecognized_property": "with-a-random-value",
+        },
+      ],
+    },
+    background: "(" + backgroundScript.toString() + ")()",
+
+    files: {
+      "content_script.js": "(" + contentScript.toString() + ")()",
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  SimpleTest.waitForExplicitFinish();
+  let waitForConsole = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, [{
+      message: /Reading manifest: Error processing content_scripts.*.unrecognized_property: An unexpected property was found/,
+    }]);
+  });
+
+  yield extension.startup();
+
+  window.open(`${BASE}/file_sample.html`);
+
+  yield Promise.all([extension.awaitFinish("content-script-loaded")]);
+  info("test page loaded");
+
+  yield extension.unload();
+
+  SimpleTest.endMonitorConsole();
+  yield waitForConsole;
+});
+</script>
+
+</body>
+</html>
