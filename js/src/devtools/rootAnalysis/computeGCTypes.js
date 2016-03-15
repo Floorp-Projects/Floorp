@@ -5,30 +5,13 @@
 loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
 
-var annotations = {
-    'GCPointers': [],
-    'GCThings': [],
-    'NonGCTypes': {}, // unused
-    'NonGCPointers': {},
-    'RootedPointers': {},
-};
-
-var structureParents = {}; // Map from field => list of <parent, fieldName>
-var pointerParents = {}; // Map from field => list of <parent, fieldName>
-var baseClasses = {}; // Map from struct name => list of base class name strings
-
-var gcTypes = {}; // map from parent struct => Set of GC typed children
-var gcPointers = {}; // map from parent struct => Set of GC typed children
-var gcFields = new Map;
-
-var rootedPointers = {};
+var annotatedGCPointers = [];
 
 function processCSU(csu, body)
 {
-    for (let { 'Base': base } of (body.CSUBaseClass || []))
-        addBaseClass(csu, base);
-
-    for (let field of (body.DataField || [])) {
+    if (!("DataField" in body))
+        return;
+    for (var field of body.DataField) {
         var type = field.Field.Type;
         var fieldName = field.Field.Name[0];
         if (type.Kind == "Pointer") {
@@ -49,42 +32,18 @@ function processCSU(csu, body)
             addNestedStructure(csu, type.Name, fieldName);
         }
     }
-
-    for (let { 'Name': [ annType, tag ] } of (body.Annotation || [])) {
-        if (annType != 'Tag')
-            continue;
-
-        if (tag == 'GC Pointer')
-            annotations.GCPointers.push(csu);
-        else if (tag == 'Invalidated by GC')
-            annotations.GCPointers.push(csu);
-        else if (tag == 'GC Thing')
-            annotations.GCThings.push(csu);
-        else if (tag == 'Suppressed GC Pointer')
-            annotations.NonGCPointers[csu] = true;
-        else if (tag == 'Rooted Pointer')
-            annotations.RootedPointers[csu] = true;
-    }
+    if (isGCPointer(csu))
+        annotatedGCPointers.push(csu);
 }
 
-// csu.field is of type inner
+var structureParents = {}; // Map from field => list of <parent, fieldName>
+var pointerParents = {}; // Map from field => list of <parent, fieldName>
+
 function addNestedStructure(csu, inner, field)
 {
     if (!(inner in structureParents))
         structureParents[inner] = [];
-
-    if (field.match(/^field:\d+$/) && (csu in baseClasses) && (baseClasses[csu].indexOf(inner) != -1))
-        return;
-
     structureParents[inner].push([ csu, field ]);
-}
-
-function addBaseClass(csu, base) {
-    if (!(csu in baseClasses))
-        baseClasses[csu] = [];
-    baseClasses[csu].push(base);
-    var k = baseClasses[csu].length;
-    addNestedStructure(csu, base, `<base-${k}>`);
 }
 
 function addNestedPointer(csu, inner, field)
@@ -111,12 +70,11 @@ for (var csuIndex = minStream; csuIndex <= maxStream; csuIndex++) {
     xdb.free_string(data);
 }
 
-// Now that we have the whole hierarchy set up, add all the types and propagate
-// info.
-for (let csu of annotations.GCThings)
-    addGCType(csu);
-for (let csu of annotations.GCPointers)
-    addGCPointer(csu);
+var gcTypes = {}; // map from parent struct => Set of GC typed children
+var gcPointers = {}; // map from parent struct => Set of GC typed children
+var nonGCTypes = {}; // set of types that would ordinarily be GC types but we are suppressing
+var nonGCPointers = {}; // set of types that would ordinarily be GC pointers but we are suppressing
+var gcFields = new Map;
 
 function stars(n) { return n ? '*' + stars(n-1) : '' };
 
@@ -164,13 +122,13 @@ function markGCType(typeName, child, why, typePtrLevel, fieldPtrLevel, indent)
         return;
 
     if (ptrLevel == 0) {
-        if (typeName in annotations.NonGCTypes)
+        if (typeName in nonGCTypes)
             return;
         if (!(typeName in gcTypes))
             gcTypes[typeName] = new Set();
         gcTypes[typeName].add(why);
     } else if (ptrLevel == 1) {
-        if (typeName in annotations.NonGCPointers)
+        if (typeName in nonGCPointers)
             return;
         if (!(typeName in gcPointers))
             gcPointers[typeName] = new Set();
@@ -207,8 +165,17 @@ function addGCPointer(typeName)
     markGCType(typeName, '<pointer-annotation>', '(annotation)', 1, 0, "");
 }
 
-//for (var type of listNonGCPointers())
-//    annotations.NonGCPointers[type] = true;
+for (var type of listNonGCTypes())
+    nonGCTypes[type] = true;
+for (var type of listNonGCPointers())
+    nonGCPointers[type] = true;
+for (var type of listGCTypes())
+    addGCType(type);
+for (var type of listGCPointers())
+    addGCPointer(type);
+
+for (var typeName of annotatedGCPointers)
+    addGCPointer(typeName);
 
 function explain(csu, indent, seen) {
     if (!seen)
@@ -219,27 +186,25 @@ function explain(csu, indent, seen) {
     var fields = gcFields.get(csu);
 
     if (fields.has('<annotation>')) {
-        print(indent + "which is annotated as a GCThing");
+        print(indent + "which is a GCThing because I said so");
         return;
     }
     if (fields.has('<pointer-annotation>')) {
-        print(indent + "which is annotated as a GCPointer");
+        print(indent + "which is a GCPointer because I said so");
         return;
     }
     for (var [ field, [ child, ptrdness ] ] of fields) {
-        var msg = indent;
-        if (field[0] == '<')
-            msg += "inherits from ";
-        else {
-            msg += "contains field '" + field + "' ";
-            if (ptrdness == -1)
-                msg += "(with a pointer to unsafe storage) holding a ";
-            else if (ptrdness == 0)
-                msg += "of type ";
-            else
-                msg += "pointing to type ";
-        }
-        msg += child;
+        var inherit = "";
+        if (field == "field:0")
+            inherit = " (probably via inheritance)";
+        var msg = indent + "contains field '" + field + "' ";
+        if (ptrdness == -1)
+            msg += "(with a pointer to unsafe storage) holding a ";
+        else if (ptrdness == 0)
+            msg += "of type ";
+        else
+            msg += "pointing to type ";
+        msg += child + inherit;
         print(msg);
         if (!seen.has(child))
             explain(child, indent + "  ", seen);

@@ -32,7 +32,7 @@ struct jsid
     size_t asBits;
     bool operator==(jsid rhs) const { return asBits == rhs.asBits; }
     bool operator!=(jsid rhs) const { return asBits != rhs.asBits; }
-} JS_HAZ_GC_POINTER;
+};
 #define JSID_BITS(id) (id.asBits)
 
 #define JSID_TYPE_STRING                 0x0
