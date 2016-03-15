@@ -334,7 +334,9 @@ AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
-  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+#ifdef DEBUG
+  bool haveException = JS_IsExceptionPending(aCx);
+#endif // DEBUG
 
   mCx = aCx;
   mIsMainThread = aIsMainThread;
@@ -356,6 +358,72 @@ AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
   if (aIsMainThread) {
     JS_SetErrorReporter(rt, xpc::SystemErrorReporter);
   }
+
+#ifdef DEBUG
+  if (haveException) {
+    JS::Rooted<JS::Value> exn(aCx);
+    JS_GetPendingException(aCx, &exn);
+
+    JS_ClearPendingException(aCx);
+    if (exn.isObject()) {
+      JS::Rooted<JSObject*> exnObj(aCx, &exn.toObject());
+
+      nsAutoJSString stack, filename, name, message;
+      int32_t line;
+
+      JS::Rooted<JS::Value> tmp(aCx);
+      if (!JS_GetProperty(aCx, exnObj, "filename", &tmp)) {
+        JS_ClearPendingException(aCx);
+      }
+      if (tmp.isUndefined()) {
+        if (!JS_GetProperty(aCx, exnObj, "fileName", &tmp)) {
+          JS_ClearPendingException(aCx);
+        }
+      }
+
+      if (!filename.init(aCx, tmp)) {
+        JS_ClearPendingException(aCx);
+      }
+
+      if (!JS_GetProperty(aCx, exnObj, "stack", &tmp) ||
+          !stack.init(aCx, tmp)) {
+        JS_ClearPendingException(aCx);
+      }
+
+      if (!JS_GetProperty(aCx, exnObj, "name", &tmp) ||
+          !name.init(aCx, tmp)) {
+        JS_ClearPendingException(aCx);
+      }
+
+      if (!JS_GetProperty(aCx, exnObj, "message", &tmp) ||
+          !message.init(aCx, tmp)) {
+        JS_ClearPendingException(aCx);
+      }
+
+      if (!JS_GetProperty(aCx, exnObj, "lineNumber", &tmp) ||
+          !JS::ToInt32(aCx, tmp, &line)) {
+        JS_ClearPendingException(aCx);
+        line = 0;
+      }
+
+      printf_stderr("PREEXISTING EXCEPTION OBJECT: '%s: %s'\n%s:%d\n%s\n",
+                    NS_ConvertUTF16toUTF8(name).get(),
+                    NS_ConvertUTF16toUTF8(message).get(),
+                    NS_ConvertUTF16toUTF8(filename).get(), line,
+                    NS_ConvertUTF16toUTF8(stack).get());
+    } else {
+      // It's a primitive... not much we can do other than stringify it.
+      nsAutoJSString exnStr;
+      if (!exnStr.init(aCx, exn)) {
+        JS_ClearPendingException(aCx);
+      }
+
+      printf_stderr("PREEXISTING EXCEPTION PRIMITIVE: %s\n",
+                    NS_ConvertUTF16toUTF8(exnStr).get());
+    }
+    MOZ_ASSERT(false, "We had an exception; we should not have");
+  }
+#endif // DEBUG
 }
 
 AutoJSAPI::AutoJSAPI(nsIGlobalObject* aGlobalObject,
