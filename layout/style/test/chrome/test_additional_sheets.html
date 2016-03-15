@@ -17,6 +17,9 @@
 var gIOService = Components.classes["@mozilla.org/network/io-service;1"]
   .getService(Components.interfaces.nsIIOService)
 
+var gSSService = Components.classes["@mozilla.org/content/style-sheet-service;1"]
+    .getService(Components.interfaces.nsIStyleSheetService);
+
 function getUri(style)
 {
   return "data:text/css," + style;
@@ -106,24 +109,16 @@ function unregisterAuthorSheet(win, style)
 
 function loadAndRegisterSheet(win, style, type)
 {
-  var sss = Components.classes["@mozilla.org/content/style-sheet-service;1"]
-    .getService(Components.interfaces.nsIStyleSheetService);
-  var ios = Components.classes["@mozilla.org/network/io-service;1"]
-    .getService(Components.interfaces.nsIIOService);
-  uri = ios.newURI(getUri(style), null, null);
-  sss.loadAndRegisterSheet(uri, sss[type]);
-  is (sss.sheetRegistered(uri, sss[type]), true);
+  uri = gIOService.newURI(getUri(style), null, null);
+  gSSService.loadAndRegisterSheet(uri, gSSService[type]);
+  is(gSSService.sheetRegistered(uri, gSSService[type]), true);
 }
 
 function unregisterSheet(win, style, type)
 {
-  var sss = Components.classes["@mozilla.org/content/style-sheet-service;1"]
-    .getService(Components.interfaces.nsIStyleSheetService);
-  var ios = Components.classes["@mozilla.org/network/io-service;1"]
-    .getService(Components.interfaces.nsIIOService);
-  var uri = ios.newURI(getUri(style), null, null);
-  sss.unregisterSheet(uri, sss[type]);
-  is (sss.sheetRegistered(uri, sss[type]), false);
+  var uri = gIOService.newURI(getUri(style), null, null);
+  gSSService.unregisterSheet(uri, gSSService[type]);
+  is(gSSService.sheetRegistered(uri, gSSService[type]), false);
 }
 
 function setDocSheet(win, style)
