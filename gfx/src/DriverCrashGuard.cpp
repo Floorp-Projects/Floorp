@@ -491,6 +491,13 @@ GLContextCrashGuard::Initialize()
     return;
   }
 
+#if defined(MOZ_WIDGET_ANDROID)
+  // Disable the WebGL crash guard on Android - it doesn't use E10S, and
+  // its drivers will essentially never change, so the crash guard could
+  // permanently disable WebGL.
+  return;
+#endif
+
   DriverCrashGuard::Initialize();
 }
 
