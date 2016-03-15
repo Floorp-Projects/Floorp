@@ -5,6 +5,7 @@ import tarfile
 import urllib2
 
 import taskcluster_graph.transform.routes as routes_transform
+import taskcluster_graph.transform.treeherder as treeherder_transform
 from slugid import nice as slugid
 from taskcluster_graph.templates import Templates
 
@@ -202,6 +203,11 @@ def normalize_image_details(graph, task, seen_images, params, decision_task_id):
     templates = Templates(TASKCLUSTER_ROOT)
     image_task = templates.load(IMAGE_BUILD_TASK, image_parameters)
     if params['revision_hash']:
+        treeherder_transform.add_treeherder_revision_info(
+            image_task['task'],
+            params['head_rev'],
+            params['revision_hash']
+        )
         routes_transform.decorate_task_treeherder_routes(
             image_task['task'],
             "{}.{}".format(params['project'], params['revision_hash'])
