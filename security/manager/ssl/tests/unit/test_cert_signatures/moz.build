@@ -4,16 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-test_certificates = (
-    'ca-rsa.pem',
-    'ca-secp384r1.pem',
-    'ee-rsa-direct.pem',
-    'ee-rsa.pem',
-    'ee-secp384r1-direct.pem',
-    'ee-secp384r1.pem',
-    'int-rsa.pem',
-    'int-secp384r1.pem',
-)
-
-for test_certificate in test_certificates:
-    GeneratedTestCertificate(test_certificate)
+# Temporarily disabled. See bug 1256495.
+#test_certificates = (
+#    'ca-rsa.pem',
+#    'ca-secp384r1.pem',
+#    'ee-rsa-direct.pem',
+#    'ee-rsa.pem',
+#    'ee-secp384r1-direct.pem',
+#    'ee-secp384r1.pem',
+#    'int-rsa.pem',
+#    'int-secp384r1.pem',
+#)
+#
+#for test_certificate in test_certificates:
+#    GeneratedTestCertificate(test_certificate)
