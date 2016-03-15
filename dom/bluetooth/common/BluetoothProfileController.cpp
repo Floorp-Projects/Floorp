@@ -188,6 +188,7 @@ BluetoothProfileController::SetupProfiles(bool aAssignServiceClass)
     AddProfile(BluetoothHfpManager::Get());
     AddProfile(BluetoothA2dpManager::Get());
     AddProfile(BluetoothAvrcpManager::Get()); // register after A2DP
+    AddProfile(BluetoothHidManager::Get());
     return;
   }
 

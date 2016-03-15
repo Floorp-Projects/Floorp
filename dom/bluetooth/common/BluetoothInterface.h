@@ -277,6 +277,130 @@ protected:
 };
 
 //
+// HID Interface
+//
+
+class BluetoothHidNotificationHandler
+{
+public:
+  virtual void
+  ConnectionStateNotification(const BluetoothAddress& aBdAddr,
+                              BluetoothHidConnectionState aState);
+
+  virtual void
+  HidInfoNotification(
+    const BluetoothAddress& aBdAddr,
+    const BluetoothHidInfoParam& aHidInfoParam);
+
+  virtual void
+  ProtocolModeNotification(const BluetoothAddress& aBdAddr,
+                           BluetoothHidStatus aStatus,
+                           BluetoothHidProtocolMode aProtocolMode);
+
+  virtual void
+  IdleTimeNotification(const BluetoothAddress& aBdAddr,
+                       BluetoothHidStatus aStatus,
+                       uint16_t aIdleTime);
+
+  virtual void
+  GetReportNotification(const BluetoothAddress& aBdAddr,
+                        BluetoothHidStatus aStatus,
+                        const BluetoothHidReport& aReport);
+
+  virtual void
+  VirtualUnplugNotification(const BluetoothAddress& aBdAddr,
+                            BluetoothHidStatus aStatus);
+
+  virtual void
+  HandshakeNotification(const BluetoothAddress& aBdAddr,
+                        BluetoothHidStatus aStatus);
+
+protected:
+  BluetoothHidNotificationHandler();
+  virtual ~BluetoothHidNotificationHandler();
+};
+
+class BluetoothHidResultHandler
+  : public mozilla::ipc::DaemonSocketResultHandler
+{
+public:
+  virtual void OnError(BluetoothStatus aStatus);
+
+  virtual void Connect();
+  virtual void Disconnect();
+
+  virtual void VirtualUnplug();
+
+  virtual void SetInfo();
+
+  virtual void GetProtocol();
+  virtual void SetProtocol();
+
+  virtual void GetReport();
+  virtual void SetReport();
+
+  virtual void SendData();
+
+protected:
+  virtual ~BluetoothHidResultHandler() { }
+};
+
+class BluetoothHidInterface
+{
+public:
+  virtual void SetNotificationHandler(
+    BluetoothHidNotificationHandler* aNotificationHandler) = 0;
+
+  /* Connect / Disconnect */
+
+  virtual void Connect(const BluetoothAddress& aBdAddr,
+                       BluetoothHidResultHandler* aRes) = 0;
+  virtual void Disconnect(const BluetoothAddress& aBdAddr,
+                          BluetoothHidResultHandler* aRes) = 0;
+
+  /* Virtual Unplug */
+  virtual void VirtualUnplug(const BluetoothAddress& aBdAddr,
+                             BluetoothHidResultHandler* aRes) = 0;
+
+  /* Set Info */
+
+  virtual void SetInfo(const BluetoothAddress& aBdAddr,
+                       const BluetoothHidInfoParam& aHidInfoParam,
+                       BluetoothHidResultHandler* aRes) = 0;
+
+  /* Protocol */
+
+  virtual void GetProtocol(const BluetoothAddress& aBdAddr,
+                           BluetoothHidProtocolMode aHidProtoclMode,
+                           BluetoothHidResultHandler* aRes) = 0;
+  virtual void SetProtocol(const BluetoothAddress& aBdAddr,
+                           BluetoothHidProtocolMode aHidProtocolMode,
+                           BluetoothHidResultHandler* aRes) = 0;
+
+  /* Report */
+
+  virtual void GetReport(const BluetoothAddress& aBdAddr,
+                         BluetoothHidReportType aType,
+                         uint8_t aReportId,
+                         uint16_t aBuffSize,
+                         BluetoothHidResultHandler* aRes) = 0;
+  virtual void SetReport(const BluetoothAddress& aBdAddr,
+                         BluetoothHidReportType aType,
+                         const BluetoothHidReport& aReport,
+                         BluetoothHidResultHandler* aRes) = 0;
+
+  /* Send Data */
+
+  virtual void SendData(const BluetoothAddress& aBdAddr,
+                        uint16_t aDataLen, const uint8_t* aData,
+                        BluetoothHidResultHandler* aRes) = 0;
+
+protected:
+  BluetoothHidInterface();
+  virtual ~BluetoothHidInterface();
+};
+
+//
 // Handsfree Interface
 //
 
@@ -1154,6 +1278,7 @@ public:
   virtual BluetoothA2dpInterface* GetBluetoothA2dpInterface() = 0;
   virtual BluetoothAvrcpInterface* GetBluetoothAvrcpInterface() = 0;
   virtual BluetoothGattInterface* GetBluetoothGattInterface() = 0;
+  virtual BluetoothHidInterface* GetBluetoothHidInterface() = 0;
 
 protected:
   BluetoothInterface();

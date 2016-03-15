@@ -4724,6 +4724,29 @@ MLoadElement::foldsTo(TempAllocator& alloc)
     return foldsToStoredValue(alloc, store->value());
 }
 
+MDefinition*
+MLoadUnboxedObjectOrNull::foldsTo(TempAllocator& alloc)
+{
+    if (!dependency() || !dependency()->isStoreUnboxedObjectOrNull())
+        return this;
+
+    MStoreUnboxedObjectOrNull* store = dependency()->toStoreUnboxedObjectOrNull();
+    if (!store->block()->dominates(block()))
+        return this;
+
+    if (store->elements() != elements())
+        return this;
+
+    if (store->index() != index())
+        return this;
+
+    if (store->value()->type() == MIRType_ObjectOrNull)
+        return this;
+
+    MOZ_ASSERT(offsetAdjustment() == store->offsetAdjustment());
+    return foldsToStoredValue(alloc, store->value());
+}
+
 // Gets the MDefinition* representing the source/target object's storage.
 // Usually this is just an MElements*, but sometimes there are layers
 // of indirection or inlining, which are handled elsewhere.

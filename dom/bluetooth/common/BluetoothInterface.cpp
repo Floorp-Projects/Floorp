@@ -268,6 +268,111 @@ BluetoothSocketInterface::~BluetoothSocketInterface()
 { }
 
 //
+//Hid Interface
+//
+
+//Notification handling
+//
+
+BluetoothHidNotificationHandler::BluetoothHidNotificationHandler()
+{ }
+
+BluetoothHidNotificationHandler::~BluetoothHidNotificationHandler()
+{ }
+
+void
+BluetoothHidNotificationHandler::ConnectionStateNotification(
+  const BluetoothAddress& aBdAddr, BluetoothHidConnectionState aState)
+{ }
+
+void
+BluetoothHidNotificationHandler::HidInfoNotification(
+  const BluetoothAddress& aBdAddr,
+  const BluetoothHidInfoParam& aHidInfoParam)
+{ }
+
+void
+BluetoothHidNotificationHandler::ProtocolModeNotification(
+  const BluetoothAddress& aBdAddr, BluetoothHidStatus aStatus,
+  BluetoothHidProtocolMode aProtocolMode)
+{ }
+
+void
+BluetoothHidNotificationHandler::IdleTimeNotification(
+  const BluetoothAddress& aBdAddr,
+  BluetoothHidStatus aStatus, uint16_t aIdleTime)
+{ }
+
+void
+BluetoothHidNotificationHandler::GetReportNotification(
+  const BluetoothAddress& aBdAddr, BluetoothHidStatus aStatus,
+  const BluetoothHidReport& aReport)
+{ }
+
+void
+BluetoothHidNotificationHandler::VirtualUnplugNotification(
+  const BluetoothAddress& aBdAddr, BluetoothHidStatus aStatus)
+{ }
+
+void
+BluetoothHidNotificationHandler::HandshakeNotification(
+  const BluetoothAddress& aBdAddr, BluetoothHidStatus aStatus)
+{ }
+
+// Result handling
+//
+
+void BluetoothHidResultHandler::OnError(BluetoothStatus aStatus)
+{
+  BT_WARNING("Received error code %d", (int)aStatus);
+}
+
+void
+BluetoothHidResultHandler::Connect()
+{ }
+
+void
+BluetoothHidResultHandler::Disconnect()
+{ }
+
+void
+BluetoothHidResultHandler::VirtualUnplug()
+{ }
+
+void
+BluetoothHidResultHandler::SetInfo()
+{ }
+
+void
+BluetoothHidResultHandler::GetProtocol()
+{ }
+
+void
+BluetoothHidResultHandler::SetProtocol()
+{ }
+
+void
+BluetoothHidResultHandler::GetReport()
+{ }
+
+void
+BluetoothHidResultHandler::SetReport()
+{ }
+
+void
+BluetoothHidResultHandler::SendData()
+{ }
+
+// Interface
+//
+
+BluetoothHidInterface::BluetoothHidInterface()
+{ }
+
+BluetoothHidInterface::~BluetoothHidInterface()
+{ }
+
+//
 // Handsfree Interface
 //
 

@@ -207,6 +207,7 @@ extern bool gBluetoothDebugFlag;
  */
 #define A2DP_STATUS_CHANGED_ID               "a2dpstatuschanged"
 #define HFP_STATUS_CHANGED_ID                "hfpstatuschanged"
+#define HID_STATUS_CHANGED_ID                "hidstatuschanged"
 #define SCO_STATUS_CHANGED_ID                "scostatuschanged"
 
 /**
@@ -306,6 +307,13 @@ extern bool gBluetoothDebugFlag;
  * Currently use 600 here to conform to bluedroid's BTGATT_MAX_ATTR_LEN.
  */
 #define BLUETOOTH_GATT_MAX_ATTR_LEN 600
+
+/**
+ * The maximum descriptor length defined in BlueZ ipc spec.
+ * Please refer to http://git.kernel.org/cgit/bluetooth/bluez.git/tree/\
+ * android/hal-ipc-api.txt#n532
+ */
+#define BLUETOOTH_HID_MAX_DESC_LEN 884
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -874,6 +882,64 @@ enum BluetoothSocketType {
   SCO    = 2,
   L2CAP  = 3,
   EL2CAP = 4
+};
+
+struct BluetoothHidInfoParam {
+  uint16_t mAttributeMask;
+  uint8_t mSubclass;
+  uint8_t mApplicationId;
+  uint16_t mVendorId;
+  uint16_t mProductId;
+  uint16_t mVersion;
+  uint8_t mCountryCode;
+  uint16_t mDescriptorLength;
+  uint8_t mDescriptorValue[BLUETOOTH_HID_MAX_DESC_LEN];
+};
+
+struct BluetoothHidReport {
+  nsTArray<uint8_t> mReportData;
+};
+
+enum BluetoothHidProtocolMode {
+  HID_PROTOCOL_MODE_REPORT = 0x00,
+  HID_PROTOCOL_MODE_BOOT = 0x01,
+  HID_PROTOCOL_MODE_UNSUPPORTED = 0xff
+};
+
+enum BluetoothHidReportType {
+  HID_REPORT_TYPE_INPUT = 0x01,
+  HID_REPORT_TYPE_OUTPUT = 0x02,
+  HID_REPORT_TYPE_FEATURE = 0x03
+};
+
+enum BluetoothHidConnectionState {
+  HID_CONNECTION_STATE_CONNECTED,
+  HID_CONNECTION_STATE_CONNECTING,
+  HID_CONNECTION_STATE_DISCONNECTED,
+  HID_CONNECTION_STATE_DISCONNECTING,
+  HID_CONNECTION_STATE_FAILED_MOUSE_FROM_HOST,
+  HID_CONNECTION_STATE_FAILED_KEYBOARD_FROM_HOST,
+  HID_CONNECTION_STATE_FAILED_TOO_MANY_DEVICES,
+  HID_CONNECTION_STATE_FAILED_NO_HID_DRIVER,
+  HID_CONNECTION_STATE_FAILED_GENERIC,
+  HID_CONNECTION_STATE_UNKNOWN
+};
+
+enum BluetoothHidStatus {
+  HID_STATUS_OK,
+  HID_STATUS_HANDSHAKE_DEVICE_NOT_READY,
+  HID_STATUS_HANDSHAKE_INVALID_REPORT_ID,
+  HID_STATUS_HANDSHAKE_TRANSACTION_NOT_SPT,
+  HID_STATUS_HANDSHAKE_INVALID_PARAMETER,
+  HID_STATUS_HANDSHAKE_GENERIC_ERROR,
+  HID_STATUS_GENERAL_ERROR,
+  HID_STATUS_SDP_ERROR,
+  HID_STATUS_SET_PROTOCOL_ERROR,
+  HID_STATUS_DEVICE_DATABASE_FULL,
+  HID_STATUS_DEVICE_TYPE_NOT_SUPPORTED,
+  HID_STATUS_NO_RESOURCES,
+  HID_STATUS_AUTHENTICATION_FAILED,
+  HID_STATUS_HDL
 };
 
 enum BluetoothHandsfreeAtResponse {
