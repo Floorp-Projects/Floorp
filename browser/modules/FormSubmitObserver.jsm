@@ -118,6 +118,9 @@ FormSubmitObserver.prototype =
       return;
     }
 
+    // Update validation message before showing notification
+    this._validationMessage = element.validationMessage;
+
     // Don't connect up to the same element more than once.
     if (this._element == element) {
       this._showPopup(element);
@@ -126,8 +129,6 @@ FormSubmitObserver.prototype =
     this._element = element;
 
     element.focus();
-
-    this._validationMessage = element.validationMessage;
 
     // Watch for input changes which may change the validation message.
     element.addEventListener("input", this, false);

@@ -22,6 +22,9 @@
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 
+#include "threading/LockGuard.h"
+#include "threading/Mutex.h"
+
 #include "vm/HelperThreads.h"
 
 #ifndef JIT_SPEW_DIR
@@ -40,7 +43,7 @@ using namespace js::jit;
 class IonSpewer
 {
   private:
-    PRLock* outputLock_;
+    Mutex outputLock_;
     Fprinter c1Output_;
     Fprinter jsonOutput_;
     bool firstFunction_;
@@ -73,23 +76,6 @@ class IonSpewer
     void beginFunction();
     void spewPass(GraphSpewer* gs);
     void endFunction(GraphSpewer* gs);
-
-    // Lock used to sequentialized asynchronous compilation output.
-    void lockOutput() {
-        PR_Lock(outputLock_);
-    }
-    void unlockOutput() {
-        PR_Unlock(outputLock_);
-    }
-};
-
-class MOZ_RAII AutoLockIonSpewerOutput
-{
-  private:
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-  public:
-    explicit AutoLockIonSpewerOutput(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
-    ~AutoLockIonSpewerOutput();
 };
 
 // IonSpewer singleton.
@@ -168,9 +154,6 @@ IonSpewer::release()
         c1Output_.finish();
     if (jsonOutput_.isInitialized())
         jsonOutput_.finish();
-    if (outputLock_)
-        PR_DestroyLock(outputLock_);
-    outputLock_ = nullptr;
     inited_ = false;
 }
 
@@ -210,9 +193,7 @@ IonSpewer::init()
         c1Filename = c1Buffer;
     }
 
-    outputLock_ = PR_NewLock();
-    if (!outputLock_ ||
-        !c1Output_.init(c1Filename) ||
+    if (!c1Output_.init(c1Filename) ||
         !jsonOutput_.init(jsonFilename))
     {
         release();
@@ -226,17 +207,6 @@ IonSpewer::init()
     return true;
 }
 
-AutoLockIonSpewerOutput::AutoLockIonSpewerOutput(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
-{
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    ionspewer.lockOutput();
-}
-
-AutoLockIonSpewerOutput::~AutoLockIonSpewerOutput()
-{
-    ionspewer.unlockOutput();
-}
-
 void
 IonSpewer::beginFunction()
 {
@@ -244,7 +214,7 @@ IonSpewer::beginFunction()
     // as this is useful in case of failure during the compilation. On the other
     // hand, it is recommended to disabled off main thread compilation.
     if (!getAsyncLogging() && !firstFunction_) {
-        AutoLockIonSpewerOutput outputLock;
+        LockGuard<Mutex> guard(outputLock_);
         jsonOutput_.put(","); // separate functions
     }
 }
@@ -253,7 +223,7 @@ void
 IonSpewer::spewPass(GraphSpewer* gs)
 {
     if (!getAsyncLogging()) {
-        AutoLockIonSpewerOutput outputLock;
+        LockGuard<Mutex> guard(outputLock_);
         gs->dump(c1Output_, jsonOutput_);
     }
 }
@@ -261,7 +231,7 @@ IonSpewer::spewPass(GraphSpewer* gs)
 void
 IonSpewer::endFunction(GraphSpewer* gs)
 {
-    AutoLockIonSpewerOutput outputLock;
+    LockGuard<Mutex> guard(outputLock_);
     if (getAsyncLogging() && !firstFunction_)
         jsonOutput_.put(","); // separate functions
 

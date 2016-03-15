@@ -31,8 +31,6 @@ var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('test_per
 
 // Delay reporting a result until after finish() got called
 SimpleTest.waitForExplicitFinish();
-// Allow tests to disable the per platform app validity checks
-SpecialPowers.setAllAppsLaunchable(true);
 
 // Run tests in order
 function runTests() {

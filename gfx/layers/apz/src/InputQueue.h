@@ -13,6 +13,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
+#include "TouchCounter.h"
 
 namespace mozilla {
 

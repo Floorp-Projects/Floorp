@@ -101,6 +101,8 @@ class ValueNumberer
     bool visitBlock(MBasicBlock* block, const MBasicBlock* root);
     bool visitDominatorTree(MBasicBlock* root);
     bool visitGraph();
+
+    bool insertOSRFixups();
     bool cleanupOSRFixups();
 
   public:

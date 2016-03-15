@@ -7,7 +7,6 @@ from __future__ import absolute_import, unicode_literals
 import itertools
 import json
 import os
-import re
 
 import mozpack.path as mozpath
 import mozwebidlcodegen
@@ -21,6 +20,7 @@ from mozbuild.frontend.context import (
     VARIABLES,
 )
 from mozbuild.frontend.data import (
+    BaseProgram,
     ChromeManifestEntry,
     ConfigFileSubstitution,
     ExampleWebIDLInterface,
@@ -31,6 +31,7 @@ from mozbuild.frontend.data import (
     GeneratedWebIDLFile,
     PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
+    SharedLibrary,
     TestManifest,
     TestWebIDLFile,
     UnifiedSources,
@@ -193,6 +194,14 @@ class TestManager(object):
         self.tests_by_path[key].append(t)
 
 
+class BinariesCollection(object):
+    """Tracks state of binaries produced by the build."""
+
+    def __init__(self):
+        self.shared_libraries = []
+        self.programs = []
+
+
 class CommonBackend(BuildBackend):
     """Holds logic common to all build backends."""
 
@@ -200,6 +209,7 @@ class CommonBackend(BuildBackend):
         self._idl_manager = XPIDLManager(self.environment)
         self._test_manager = TestManager(self.environment)
         self._webidls = WebIDLCollection()
+        self._binaries = BinariesCollection()
         self._configs = set()
         self._ipdl_sources = set()
 
@@ -296,6 +306,15 @@ class CommonBackend(BuildBackend):
                 self._write_unified_files(obj.unified_source_mapping, obj.objdir)
             if hasattr(self, '_process_unified_sources'):
                 self._process_unified_sources(obj)
+
+        elif isinstance(obj, BaseProgram):
+            self._binaries.programs.append(obj)
+            return False
+
+        elif isinstance(obj, SharedLibrary):
+            self._binaries.shared_libraries.append(obj)
+            return False
+
         else:
             return False
 
@@ -336,10 +355,17 @@ class CommonBackend(BuildBackend):
             self.backend_input_files.add(config.source)
 
         # Write out a machine-readable file describing every test.
-        path = mozpath.join(self.environment.topobjdir, 'all-tests.json')
-        with self._write_file(path) as fh:
-            s = json.dumps(self._test_manager.tests_by_path)
-            fh.write(s)
+        topobjdir = self.environment.topobjdir
+        with self._write_file(mozpath.join(topobjdir, 'all-tests.json')) as fh:
+            json.dump(self._test_manager.tests_by_path, fh)
+
+        # Write out a machine-readable file describing binaries.
+        with self._write_file(mozpath.join(topobjdir, 'binaries.json')) as fh:
+            d = {
+                'shared_libraries': [s.to_dict() for s in self._binaries.shared_libraries],
+                'programs': [p.to_dict() for p in self._binaries.programs],
+            }
+            json.dump(d, fh, sort_keys=True, indent=4)
 
     def _handle_webidl_collection(self, webidls):
         if not webidls.all_stems():

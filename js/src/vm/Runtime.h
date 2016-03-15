@@ -919,7 +919,7 @@ struct JSRuntime : public JS::shadow::Runtime,
      * Locking this only occurs if there is actually a thread other than the
      * main thread with an ExclusiveContext which could access such data.
      */
-    PRLock* exclusiveAccessLock;
+    js::Mutex exclusiveAccessLock;
 #ifdef DEBUG
     PRThread* exclusiveAccessOwner;
     bool mainThreadHasExclusiveAccess;

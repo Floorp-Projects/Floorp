@@ -18,10 +18,7 @@ main(int argc, char* argv[])
       return -1;
     }
     // When NSS initializes, it attempts to get some localized strings.
-    // As a result, OS X and Windows flip out if this isn't set.
-    // (This isn't done automatically since this test doesn't have a
-    // lot of the other boilerplate components that would otherwise
-    // keep the certificate db alive longer than we want it to.)
+    // As a result, Android flips out if this isn't set.
     nsresult rv = prefs->SetBoolPref("intl.locale.matchOS", true);
     if (NS_FAILED(rv)) {
       return -1;

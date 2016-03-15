@@ -8,19 +8,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 function runAll(steps) {
   SimpleTest.waitForExplicitFinish();
 
-  /**
-   * On Mac, apps aren't considered launchable right after they've been
-   * installed because the OS takes some time to detect them (so
-   * nsIMacWebAppUtils::pathForAppWithIdentifier() returns null).
-   * That causes methods like mgmt.getAll() to exclude the app from their
-   * results, even though the app is installed and is in the registry.
-   * See the tests under toolkit/webapps for a viable solution.
-   *
-   * To work around this problem, set allAppsLaunchable to true, which makes
-   * all apps considered as launchable.
-   */
-  SpecialPowers.setAllAppsLaunchable(true);
-
   // Clone the array so we don't modify the original.
   steps = steps.concat();
   function next() {

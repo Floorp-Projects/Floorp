@@ -717,8 +717,8 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
     return NS_ERROR_FAILURE;
   }
   bool isBuiltIn = false;
-  SECStatus srv = IsCertBuiltInRoot(rootNode->cert, isBuiltIn);
-  if (srv != SECSuccess) {
+  mozilla::pkix::Result result = IsCertBuiltInRoot(rootNode->cert, isBuiltIn);
+  if (result != mozilla::pkix::Success) {
     return NS_ERROR_FAILURE;
   }
 

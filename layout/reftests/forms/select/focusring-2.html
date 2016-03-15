@@ -16,19 +16,28 @@
 </head>
 <body>
 
-<select><option>1<option>2</select>
+<select onfocus="continueTest1()" onblur="continueTest2()"><option>1<option>2</select>
 
 <script>
 
-function runTests(){
+function continueTest2(){
   var s = document.querySelector("select");
-  setTimeout(function(){ s.focus();                  }, 1);
-  setTimeout(function(){ s.style.display = 'none';   }, 2);
-  setTimeout(function(){ s.blur();                   }, 3);
-  setTimeout(function(){ s.style.display = 'inline'; }, 4);
-  setTimeout(function(){ document.body.offsetHeight; document.documentElement.removeAttribute("class"); }, 0);
+  setTimeout(function(){ s.style.display = 'inline'; document.body.offsetHeight; }, 4);
+  setTimeout(function(){ document.body.offsetHeight; document.documentElement.removeAttribute("class"); }, 100);
 }
 
+function continueTest1(){
+  var s = document.querySelector("select");
+  setTimeout(function(){ s.style.display = 'none';   }, 2);
+  setTimeout(function(){ s.blur();  document.body.offsetHeight; }, 3);
+}
+
+function runTests(){
+  var s = document.querySelector("select");
+  s.focus();
+}
+
+window.focus();
 window.addEventListener("MozReftestInvalidate", runTests, false);
 
 </script>

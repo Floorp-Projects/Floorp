@@ -7,9 +7,10 @@ if (typeof SIMD === 'undefined' || !isSimdAvailable()) {
     "use asm";
     var frd = global.Math.fround;
     var fx4 = global.SIMD.Float32x4;
+    var fc4 = fx4.check;
     var fsp = fx4.splat;
     function s(){}
-    function d(x){x=fx4(x);}
+    function d(x){x=fc4(x);}
     function e() {
         var x = frd(0);
         x = frd(x / x);
@@ -23,11 +24,12 @@ if (typeof SIMD === 'undefined' || !isSimdAvailable()) {
     "use asm"
     var k = m.SIMD.Bool32x4
     var g = m.SIMD.Int32x4
+    var gc = g.check;
     var h = g.select
     function f() {
         var x = k(0, 0, 0, 0)
         var y = g(1, 2, 3, 4)
-        return g(h(x, y, y))
+        return gc(h(x, y, y))
     }
     return f;
 })(this)();
@@ -36,6 +38,7 @@ t = (function(global) {
     "use asm"
     var toF = global.Math.fround
     var f4 = global.SIMD.Float32x4
+    var f4c = f4.check
     function p(x, y, width, value, max_iterations) {
         x = x | 0
         y = y | 0
@@ -50,7 +53,7 @@ t = (function(global) {
         max_iterations = max_iterations | 0
         var _ = f4(0, 0, 0, 0), c_im4 = f4(0, 0, 0, 0)
         c_im4 = f4(yf, yd, yd, yf)
-        return f4(c_im4);
+        return f4c(c_im4);
     }
     return {p:p,m:m};
 })(this)

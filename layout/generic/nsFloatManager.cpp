@@ -115,7 +115,7 @@ void nsFloatManager::Shutdown()
 }
 
 #define CHECK_BLOCK_DIR(aWM) \
-  NS_ASSERTION(aWM.GetBlockDir() == mWritingMode.GetBlockDir(), \
+  NS_ASSERTION((aWM).GetBlockDir() == mWritingMode.GetBlockDir(), \
   "incompatible writing modes")
 
 nsFlowAreaRect

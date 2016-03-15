@@ -10,11 +10,11 @@ DIRS += [
     'lgpllibs',
     'sqlite',
 ]
-if not CONFIG['MOZ_NATIVE_JPEG']:
+if not CONFIG['MOZ_SYSTEM_JPEG']:
     external_dirs += ['media/libjpeg']
 
 if CONFIG['MOZ_UPDATER']:
-    if not CONFIG['MOZ_NATIVE_BZ2']:
+    if not CONFIG['MOZ_SYSTEM_BZ2']:
         external_dirs += ['modules/libbz2']
 
 # There's no "native" brotli or woff2 yet, but probably in the future...
@@ -30,10 +30,10 @@ if CONFIG['MOZ_TREMOR']:
 if CONFIG['MOZ_WEBM_ENCODER']:
     external_dirs += ['media/libmkv']
 
-if not CONFIG['MOZ_NATIVE_LIBVPX']:
+if not CONFIG['MOZ_SYSTEM_LIBVPX']:
     external_dirs += ['media/libvpx']
 
-if not CONFIG['MOZ_NATIVE_PNG']:
+if not CONFIG['MOZ_SYSTEM_PNG']:
     external_dirs += ['media/libpng']
 
 if CONFIG['CPU_ARCH'] == 'arm':

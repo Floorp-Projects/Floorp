@@ -3625,24 +3625,6 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    struct HandleHoverEvent_t {
-        typedef NativePanZoomController Owner;
-        typedef bool ReturnType;
-        typedef bool SetterType;
-        typedef mozilla::jni::Args<
-                int32_t,
-                int64_t,
-                int32_t,
-                float,
-                float> Args;
-        static constexpr char name[] = "handleHoverEvent";
-        static constexpr char signature[] =
-                "(IJIFF)Z";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
     struct HandleMotionEvent_t {
         typedef NativePanZoomController Owner;
         typedef bool ReturnType;
@@ -3662,6 +3644,25 @@ public:
         static constexpr char name[] = "handleMotionEvent";
         static constexpr char signature[] =
                 "(IIJI[I[F[F[F[F[F[F)Z";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    struct HandleMouseEvent_t {
+        typedef NativePanZoomController Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int64_t,
+                int32_t,
+                float,
+                float,
+                int32_t> Args;
+        static constexpr char name[] = "handleMouseEvent";
+        static constexpr char signature[] =
+                "(IJIFFI)Z";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;

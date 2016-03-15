@@ -81,9 +81,6 @@ AndroidSurfaceTextureData::CreateTextureClient(AndroidSurfaceTexture* aSurfTex,
     return nullptr;
   }
 
-  // XXX - This is quite sad and slow.
-  aFlags |= TextureFlags::DEALLOCATE_CLIENT;
-
   if (aOriginPos == gl::OriginPos::BottomLeft) {
     aFlags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
   }

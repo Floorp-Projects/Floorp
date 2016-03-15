@@ -342,7 +342,6 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 
 webgl::LinkedProgramInfo::LinkedProgramInfo(WebGLProgram* prog)
     : prog(prog)
-    , fragDataMap(nullptr)
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -569,8 +568,9 @@ WebGLProgram::GetFragDataLocation(const nsAString& userName_wide) const
     const NS_LossyConvertUTF16toASCII userName(userName_wide);
 
     nsCString mappedName;
-    if (!LinkInfo()->FindFragData(userName, &mappedName))
-        return -1;
+    if (!FindActiveOutputMappedNameByUserName(userName, &mappedName)) {
+        mappedName = userName;
+    }
 
     gl::GLContext* gl = mContext->GL();
     gl->MakeCurrent();
@@ -1048,6 +1048,17 @@ WebGLProgram::LinkAndUpdate()
         mLinkLog.AssignLiteral("Failed to gather program info.");
 
     return mMostRecentLinkInfo;
+}
+
+bool
+WebGLProgram::FindActiveOutputMappedNameByUserName(const nsACString& userName,
+                                                   nsCString* const out_mappedName) const
+{
+    if (mFragShader->FindActiveOutputMappedNameByUserName(userName, out_mappedName)) {
+        return true;
+    }
+
+    return false;
 }
 
 bool
