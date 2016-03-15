@@ -688,9 +688,6 @@ AC_SUBST(MOZ_MSVC_STL_WRAP_RAISE)
 dnl ========================================================
 dnl Checks for programs.
 dnl ========================================================
-AC_PROG_INSTALL
-AC_PROG_LN_S
-
 if test -z "$COMPILE_ENVIRONMENT"; then
     NSINSTALL_BIN='$(PYTHON) $(MOZILLA_DIR)/config/nsinstall.py'
 fi
