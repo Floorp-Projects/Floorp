@@ -70,20 +70,31 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   }
 
   if (aLoadingContext) {
+    nsCOMPtr<nsPIDOMWindowOuter> contextOuter = aLoadingContext->OwnerDoc()->GetWindow();
+    if (contextOuter) {
+      ComputeIsThirdPartyContext(contextOuter);
+    }
+
     nsCOMPtr<nsPIDOMWindowOuter> outerWindow;
 
     // When the element being loaded is a frame, we choose the frame's window
     // for the window ID and the frame element's window as the parent
     // window. This is the behavior that Chrome exposes to add-ons.
-    nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(aLoadingContext);
-    if (frameLoaderOwner) {
-      nsCOMPtr<nsIFrameLoader> fl = frameLoaderOwner->GetFrameLoader();
+    // NB: If the frameLoaderOwner doesn't have a frame loader, then the load
+    // must be coming from an object (such as a plugin) that's loaded into it
+    // instead of a document being loaded. In that case, treat this object like
+    // any other non-document-loading element.
+    nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner =
+      do_QueryInterface(aLoadingContext);
+    nsCOMPtr<nsIFrameLoader> fl = frameLoaderOwner ?
+      frameLoaderOwner->GetFrameLoader() : nullptr;
+    if (fl) {
       nsCOMPtr<nsIDocShell> docShell;
-      if (fl && NS_SUCCEEDED(fl->GetDocShell(getter_AddRefs(docShell))) && docShell) {
+      if (NS_SUCCEEDED(fl->GetDocShell(getter_AddRefs(docShell))) && docShell) {
         outerWindow = do_GetInterface(docShell);
       }
     } else {
-      outerWindow = aLoadingContext->OwnerDoc()->GetWindow();
+      outerWindow = contextOuter.forget();
     }
 
     if (outerWindow) {
@@ -93,8 +104,6 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
 
       nsCOMPtr<nsPIDOMWindowOuter> parent = outerWindow->GetScriptableParent();
       mParentOuterWindowID = parent->WindowID();
-
-      ComputeIsThirdPartyContext(outerWindow);
     }
 
     // if the document forces all requests to be upgraded from http to https, then
@@ -235,22 +244,12 @@ LoadInfo::ComputeIsThirdPartyContext(nsPIDOMWindowOuter* aOuterWindow)
     return;
   }
 
-  nsPIDOMWindowOuter* win = aOuterWindow;
-  if (type == nsIContentPolicy::TYPE_SUBDOCUMENT) {
-    // If we're loading a subdocument, aOuterWindow points to the new window.
-    // Check if its parent is third-party (and then we can do the same check for
-    // it as we would do for other sub-resource loads.
-
-    win = aOuterWindow->GetScriptableParent();
-    MOZ_ASSERT(win);
-  }
-
   nsCOMPtr<mozIThirdPartyUtil> util(do_GetService(THIRDPARTYUTIL_CONTRACTID));
   if (NS_WARN_IF(!util)) {
     return;
   }
 
-  util->IsThirdPartyWindow(win, nullptr, &mIsThirdPartyContext);
+  util->IsThirdPartyWindow(aOuterWindow, nullptr, &mIsThirdPartyContext);
 }
 
 NS_IMPL_ISUPPORTS(LoadInfo, nsILoadInfo)
