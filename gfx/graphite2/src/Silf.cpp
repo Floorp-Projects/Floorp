@@ -355,10 +355,10 @@ uint16 Silf::getClassGlyph(uint16 cid, unsigned int index) const
 bool Silf::runGraphite(Segment *seg, uint8 firstPass, uint8 lastPass, int dobidi) const
 {
     assert(seg != 0);
-    SlotMap            map(*seg, m_dir);
+    unsigned int       maxSize = seg->slotCount() * MAX_SEG_GROWTH_FACTOR;
+    SlotMap            map(*seg, m_dir, maxSize);
     FiniteStateMachine fsm(map, seg->getFace()->logger());
     vm::Machine        m(map);
-    unsigned int       initSize = seg->slotCount();
     uint8              lbidi = m_bPass;
 #if !defined GRAPHITE2_NTRACING
     json * const dbgout = seg->getFace()->logger();
@@ -424,7 +424,7 @@ bool Silf::runGraphite(Segment *seg, uint8 firstPass, uint8 lastPass, int dobidi
             return false;
         // only subsitution passes can change segment length, cached subsegments are short for their text
         if (m.status() != vm::Machine::finished
-            || (seg->slotCount() && seg->slotCount() * MAX_SEG_GROWTH_FACTOR < initSize))
+            || (seg->slotCount() && seg->slotCount() > maxSize))
             return false;
     }
     return true;
