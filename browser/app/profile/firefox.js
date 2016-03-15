@@ -1380,6 +1380,12 @@ pref("browser.newtabpage.remote", false);
 // Toggles endpoints allowed for remote newtab communications
 pref("browser.newtabpage.remote.mode", "production");
 
+// content-signature tests for remote newtab
+pref("browser.newtabpage.remote.content-signing-test", false);
+
+// verification keys for remote-hosted newtab page
+pref("browser.newtabpage.remote.keys", "");
+
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
 

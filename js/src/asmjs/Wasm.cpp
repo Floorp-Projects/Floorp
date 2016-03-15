@@ -185,6 +185,13 @@ DecodeNop(FunctionDecoder& f, ExprType* type)
 }
 
 static bool
+DecodeUnreachable(FunctionDecoder& f, ExprType* type)
+{
+    *type = AnyType;
+    return true;
+}
+
+static bool
 DecodeCallWithSig(FunctionDecoder& f, const Sig& sig, ExprType* type)
 {
     for (ValType argType : sig.args()) {
@@ -843,6 +850,8 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
         return DecodeBrTable(f, type);
       case Expr::Return:
         return DecodeReturn(f, type);
+      case Expr::Unreachable:
+        return DecodeUnreachable(f, type);
       default:
         // Note: it's important not to remove this default since readExpr()
         // can return Expr values for which there is no enumerator.
