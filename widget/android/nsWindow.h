@@ -64,7 +64,6 @@ private:
 
 public:
     static void OnGlobalAndroidEvent(mozilla::AndroidGeckoEvent *ae);
-    static mozilla::gfx::IntSize GetAndroidScreenBounds();
     static nsWindow* TopWindow();
 
     bool OnContextmenuEvent(mozilla::AndroidGeckoEvent *ae);
