@@ -6124,7 +6124,7 @@ function CanCloseWindow()
 {
   // Avoid redundant calls to canClose from showing multiple
   // PermitUnload dialogs.
-  if (window.skipNextCanClose) {
+  if (Services.startup.shuttingDown || window.skipNextCanClose) {
     return true;
   }
 
