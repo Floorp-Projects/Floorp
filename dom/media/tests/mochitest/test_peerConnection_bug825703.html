@@ -11,6 +11,12 @@
     title: "RTCConfiguration valid/invalid permutations"
   });
 
+// ^^^ Don't insert data above this line without adjusting line number below!
+var lineNumberAndFunction = {
+// <--- 16 is the line this must be.
+  line: 17, func: () => new RTCPeerConnection().onaddstream = () => {}
+};
+
 var makePC = (config, expected_error) => {
   var exception;
   try {
@@ -97,21 +103,56 @@ runNetworkTest(() => {
      JSON.stringify(toComparable(config)), "getConfiguration");
   pc.close();
 
-  // Below tests are setting the about:config User preferences for default
-  // ice servers and checking the outputs when RTCPeerConnection() is
-  // invoked. See Bug 1167922 for more information.
-  // Note - We use promises here since the SpecialPowers API will be
-  // performed asynchronously.
   var push = prefs => new Promise(resolve =>
       SpecialPowers.pushPrefEnv(prefs, resolve));
 
-  push({ set: [['media.peerconnection.default_iceservers', ""]] })
-      .then(() => makePC())
-      .then(() => push({ set: [['media.peerconnection.default_iceservers', "k"]] }))
-      .then(() => makePC())
-      .then(() => push({ set: [['media.peerconnection.default_iceservers', "[{\"urls\": [\"stun:stun.services.mozilla.com\"]}]"]] }))
-      .then(() => makePC())
-      .then(networkTestFinished);
+  Promise.resolve()
+  // This set of tests are setting the about:config User preferences for default
+  // ice servers and checking the outputs when RTCPeerConnection() is
+  // invoked. See Bug 1167922 for more information.
+  .then(() => push({ set: [['media.peerconnection.default_iceservers', ""]] })
+    .then(() => makePC())
+    .then(() => push({ set: [['media.peerconnection.default_iceservers', "k"]] }))
+    .then(() => makePC())
+    .then(() => push({ set: [['media.peerconnection.default_iceservers', "[{\"urls\": [\"stun:stun.services.mozilla.com\"]}]"]] }))
+    .then(() => makePC()))
+  // This set of tests check that warnings work. See Bug 1254839 for more.
+  .then(() => {
+    var consoleService = SpecialPowers.Cc["@mozilla.org/consoleservice;1"]
+                         .getService(SpecialPowers.Ci.nsIConsoleService);
+    var warning = "";
+    var listener = SpecialPowers.wrapCallbackObject({
+      QueryInterface(iid) {
+        if (![SpecialPowers.Ci.nsIConsoleListener,
+              SpecialPowers.Ci.nsISupports].some(i => iid.equals(i))) {
+          throw SpecialPowers.Cr.NS_NOINTERFACE;
+        }
+        return this;
+      },
+
+      observe(msg) {
+        if (msg.message.includes("JavaScript Warning")) {
+          warning = msg.message;
+        }
+      }
+    });
+    consoleService.registerListener(listener);
+    lineNumberAndFunction.func();
+    // Console output is asynchronous, so we must queue a task.
+    return wait(0).then(() => {
+      is(warning.split('"')[1],
+         "onaddstream is deprecated! Use peerConnection.ontrack instead.",
+         "warning logged");
+      var remainder = warning.split('"').slice(2).join('"');
+      info(remainder);
+      ok(remainder.includes('file: "' + window.location + '"'),
+         "warning has this file");
+      ok(remainder.includes('line: ' + lineNumberAndFunction.line),
+         "warning has correct line number");
+      consoleService.unregisterListener(listener);
+    });
+  })
+  .then(networkTestFinished);
 });
 </script>
 </pre>
