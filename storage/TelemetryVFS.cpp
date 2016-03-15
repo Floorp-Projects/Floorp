@@ -888,5 +888,15 @@ sqlite3_vfs* ConstructTelemetryVFS()
   return tvfs;
 }
 
+already_AddRefed<QuotaObject>
+GetQuotaObjectForFile(sqlite3_file *pFile)
+{
+  MOZ_ASSERT(pFile);
+
+  telemetry_file *p = (telemetry_file *)pFile;
+  RefPtr<QuotaObject> result = p->quotaObject;
+  return result.forget();
+}
+
 } // namespace storage
 } // namespace mozilla
