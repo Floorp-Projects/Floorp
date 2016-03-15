@@ -1,0 +1,73 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Templates implementing some generic checks.
+
+# Helper to display "checking" messages
+#   @checking('for foo')
+#   def foo():
+#       return 'foo'
+# is equivalent to:
+#   def foo():
+#       sys.stdout.write('checking for foo... ')
+#       ret = foo
+#       sys.stdout.write(ret + '\n')
+#       return ret
+# This can be combined with e.g. @depends:
+#   @depends(some_option)
+#   @checking('for something')
+#   def check(value):
+#       ...
+@template
+def checking(what):
+    def decorator(func):
+        @advanced
+        def wrapped(*args, **kwargs):
+            import sys
+            print('checking', what, end='... ')
+            sys.stdout.flush()
+            ret = func(*args, **kwargs)
+            print(ret)
+            sys.stdout.flush()
+            return ret
+        return wrapped
+    return decorator
+
+
+# Template to check for programs in $PATH.
+#   check('PROG', ('a', 'b'))
+# will look for 'a' or 'b' in $PATH, and set_config PROG to the one
+# it can find. If PROG is already set from the environment or command line,
+# use that value instead.
+@template
+def check_prog(var, progs, allow_missing=False):
+    option(env=var, nargs=1, help=var)
+
+    not_found = 'not found'
+    progs = list(progs)
+
+    @depends(var)
+    @checking('for %s' % var.lower())
+    def check(value):
+        if value:
+            progs[:] = value
+        for prog in progs:
+            result = find_program(prog)
+            if result:
+                return result
+        return not_found
+
+    @depends(check)
+    @advanced
+    def postcheck(value):
+        if value is not not_found:
+            set_config(var, value)
+        elif not allow_missing:
+            from mozbuild.shellutil import quote
+            error('Cannot find %s (tried: %s)'
+                  % (var.lower(), ', '.join(quote(p) for p in progs)))
+
+    return check

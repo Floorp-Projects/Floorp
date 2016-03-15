@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include('build/moz.configure/init.configure')
+include('build/moz.configure/checks.configure')
 
 # Note:
 # - Gecko-specific options and rules should go in toolkit/moz.configure.
@@ -54,6 +55,16 @@ def build_backend(backends, artifact_builds):
         all_backends = ['RecursiveMake', 'FasterMake']
     all_backends.extend(backends)
     set_config('BUILD_BACKENDS', unique_list(all_backends))
+
+
+# Awk detection
+# ==============================================================
+awk = check_prog('AWK', ('gawk', 'mawk', 'nawk', 'awk'))
+
+# Until the AWK variable is not necessary in old-configure
+@depends(awk)
+def awk_for_old_configure(value):
+    add_old_configure_assignment('AWK', value)
 
 
 # Fallthrough to autoconf-based configure
