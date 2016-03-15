@@ -2619,14 +2619,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Misc. Options)
 
-dnl ========================================================
-dnl update xterm title
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(xterm-updates,
-[  --enable-xterm-updates  Update XTERM titles with current command.],
-    MOZ_UPDATE_XTERM=1,
-    MOZ_UPDATE_XTERM= )
-
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
 dnl =
