@@ -1,10 +1,15 @@
   SimpleTest.waitForExplicitFinish();
 
-  function frameLoaded() {
+  function frameLoaded(finishWhenCalled = true, lastObject = false) {
     var testframe = document.getElementById('testframe');
-    var embed = document.getElementsByTagName('embed')[0];
+    function getNode(list) {
+      if (list.length === 0)
+        return undefined;
+      return lastObject ? list[list.length - 1] : list[0];
+    }
+    var embed = getNode(document.getElementsByTagName('embed'));
     if (undefined === embed)
-      embed = document.getElementsByTagName('object')[0];
+      embed = getNode(document.getElementsByTagName('object'));
 
     // In the file:// URI case, this ends up being cross-origin.
     // Skip these checks in that case.
@@ -28,5 +33,7 @@
     }
 
     is(embed.getError(), "pass", "plugin reported error");
-    SimpleTest.finish();
+    if (finishWhenCalled) {
+      SimpleTest.finish();
+    }
   }
