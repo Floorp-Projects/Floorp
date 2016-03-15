@@ -67,21 +67,22 @@ function runTest() {
   file.append(FILE_UPDATE_ARCHIVE);
   ok(!file.exists(), file.path + " should not exist");
 
-  let addonPrepDir = Services.dirsvc.get(NS_APP_USER_PROFILE_50_DIR,
-                                         Ci.nsILocalFile);
-  addonPrepDir.append(ADDON_PREP_DIR);
-  // Not being able to remove the directory used to create the test add-ons
-  // will not adversely affect subsequent tests so wrap it in a try block and
-  // don't test whether its removal was successful.
-  try {
-    removeDirRecursive(addonPrepDir);
-  }
-  catch (e) {
-    logTestInfo("Unable to remove directory. Path: " + addonPrepDir.path +
-                ", Exception: " + e);
-  }
-
-  resetAddons(cleanupRestoreUpdaterBackup);
+  resetAddons(() => {
+    let addonPrepDir = Services.dirsvc.get(NS_APP_USER_PROFILE_50_DIR,
+                                           Ci.nsILocalFile);
+    addonPrepDir.append(ADDON_PREP_DIR);
+    // Not being able to remove the directory used to create the test add-ons
+    // will not adversely affect subsequent tests so wrap it in a try block and
+    // don't test whether its removal was successful.
+    try {
+      removeDirRecursive(addonPrepDir);
+    }
+    catch (e) {
+      logTestInfo("Unable to remove directory. Path: " + addonPrepDir.path +
+                  ", Exception: " + e);
+    }
+    cleanupRestoreUpdaterBackup();
+  });
 }
 
 /**
