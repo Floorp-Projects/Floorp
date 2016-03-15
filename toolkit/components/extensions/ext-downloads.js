@@ -26,10 +26,16 @@ const {
 
 const DOWNLOAD_ITEM_FIELDS = ["id", "url", "referrer", "filename", "incognito",
                               "danger", "mime", "startTime", "endTime",
-                              "estimatedEndTime", "state", "canResume",
-                              "error", "bytesReceived", "totalBytes",
+                              "estimatedEndTime", "state",
+                              "paused", "canResume", "error",
+                              "bytesReceived", "totalBytes",
                               "fileSize", "exists",
                               "byExtensionId", "byExtensionName"];
+
+// Fields that we generate onChanged events for.
+const DOWNLOAD_ITEM_CHANGE_FIELDS = ["endTime", "state", "paused", "canResume",
+                                     "error", "exists"];
+
 
 class DownloadItem {
   constructor(id, download, extension) {
@@ -52,13 +58,17 @@ class DownloadItem {
     if (this.download.succeeded) {
       return "complete";
     }
-    if (this.download.stopped) {
+    if (this.download.canceled) {
       return "interrupted";
     }
     return "in_progress";
   }
+  get paused() {
+    return this.download.canceled && this.download.hasPartialData && !this.download.error;
+  }
   get canResume() {
-    return this.download.stopped && this.download.hasPartialData;
+    return (this.download.stopped || this.download.canceled) &&
+      this.download.hasPartialData && !this.download.error;
   }
   get error() {
     if (!this.download.stopped || this.download.succeeded) {
@@ -114,7 +124,7 @@ class DownloadItem {
   // After all handlers have been invoked, this gets called to store the
   // current values of all fields ahead of the next event.
   _change() {
-    for (let field of DOWNLOAD_ITEM_FIELDS) {
+    for (let field of DOWNLOAD_ITEM_CHANGE_FIELDS) {
       this.prechange[field] = this[field];
     }
   }
@@ -158,7 +168,11 @@ const DownloadMap = {
             if (item == null) {
               Cu.reportError("Got onDownloadChanged for unknown download object");
             } else {
-              self.emit("change", item);
+              // We get the first one of these when the download is started.
+              // In this case, don't emit anything, just initialize prechange.
+              if (Object.keys(item.prechange).length > 0) {
+                self.emit("change", item);
+              }
               item._change();
             }
           },
@@ -303,8 +317,9 @@ function downloadQuery(query) {
       return false;
     }
 
-    // todo: include danger, paused, error
+    // todo: include danger
     const SIMPLE_ITEMS = ["id", "mime", "startTime", "endTime", "state",
+                          "paused", "error",
                           "bytesReceived", "totalBytes", "fileSize", "exists"];
     for (let field of SIMPLE_ITEMS) {
       if (query[field] != null && item[field] != query[field]) {
@@ -377,7 +392,10 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
           .then(downloadsDir => createTarget(downloadsDir))
           .then(target => Downloads.createDownload({
             source: options.url,
-            target: target,
+            target: {
+              path: target,
+              partFilePath: target + ".part",
+            },
           })).then(dl => {
             download = dl;
             return DownloadMap.getDownloadList();
@@ -446,6 +464,47 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
         });
       },
 
+      pause(id) {
+        return DownloadMap.lazyInit().then(() => {
+          let item = DownloadMap.fromId(id);
+          if (!item) {
+            return Promise.reject({message: `Invalid download id ${id}`});
+          }
+          if (item.state != "in_progress") {
+            return Promise.reject({message: `Download ${id} cannot be paused since it is in state ${item.state}`});
+          }
+
+          return item.download.cancel();
+        });
+      },
+
+      resume(id) {
+        return DownloadMap.lazyInit().then(() => {
+          let item = DownloadMap.fromId(id);
+          if (!item) {
+            return Promise.reject({message: `Invalid download id ${id}`});
+          }
+          if (!item.canResume) {
+            return Promise.reject({message: `Download ${id} cannot be resumed`});
+          }
+
+          return item.download.start();
+        });
+      },
+
+      cancel(id) {
+        return DownloadMap.lazyInit().then(() => {
+          let item = DownloadMap.fromId(id);
+          if (!item) {
+            return Promise.reject({message: `Invalid download id ${id}`});
+          }
+          if (item.download.succeeded) {
+            return Promise.reject({message: `Download ${id} is already complete`});
+          }
+          return item.download.finalize(true);
+        });
+      },
+
       showDefaultFolder() {
         Downloads.getPreferredDownloadsDirectory().then(dir => {
           let dirobj = new FileUtils.File(dir);
@@ -469,14 +528,19 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
 
       onChanged: new SingletonEventManager(context, "downloads.onChanged", fire => {
         const handler = (what, item) => {
-          if (item.state != item.prechange.state) {
-            runSafeSync(context, fire, {
-              id: item.id,
-              state: {
-                previous: item.prechange.state || null,
-                current: item.state,
-              },
-            });
+          let changes = {};
+          const noundef = val => (val === undefined) ? null : val;
+          DOWNLOAD_ITEM_CHANGE_FIELDS.forEach(fld => {
+            if (item[fld] != item.prechange[fld]) {
+              changes[fld] = {
+                previous: noundef(item.prechange[fld]),
+                current: noundef(item[fld]),
+              };
+            }
+          });
+          if (Object.keys(changes).length > 0) {
+            changes.id = item.id;
+            runSafeSync(context, fire, changes);
           }
         };
 
