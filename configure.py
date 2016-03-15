@@ -24,6 +24,10 @@ def main(argv):
     if sandbox._help:
         return 0
 
+    return config_status(config)
+
+
+def config_status(config):
     # Sanitize config data to feed config.status
     sanitized_config = {}
     sanitized_config['substs'] = {
@@ -68,6 +72,7 @@ if __name__ == '__main__':
         # config.status externally, with the virtualenv python.
         return subprocess.call([config['PYTHON'], 'config.status'])
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
