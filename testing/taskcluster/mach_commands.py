@@ -285,6 +285,7 @@ class Graph(object):
         from slugid import nice as slugid
 
         import taskcluster_graph.transform.routes as routes_transform
+        import taskcluster_graph.transform.treeherder as treeherder_transform
         from taskcluster_graph.commit_parser import parse_commit
         from taskcluster_graph.image_builder import (
             docker_image,
@@ -454,6 +455,9 @@ class Graph(object):
                 remove_caches_from_task(build_task)
 
             if params['revision_hash']:
+                treeherder_transform.add_treeherder_revision_info(build_task['task'],
+                                                                  params['head_rev'],
+                                                                  params['revision_hash'])
                 routes_transform.decorate_task_treeherder_routes(build_task['task'],
                                                                  treeherder_route)
                 routes_transform.decorate_task_json_routes(build_task['task'],
@@ -526,6 +530,9 @@ class Graph(object):
                                         build_parameters,
                                         os.environ.get('TASK_ID', None))
                 set_interactive_task(post_task, interactive)
+                treeherder_transform.add_treeherder_revision_info(post_task['task'],
+                                                                  params['head_rev'],
+                                                                  params['revision_hash'])
                 graph['tasks'].append(post_task)
 
             for test in build['dependents']:
@@ -572,6 +579,9 @@ class Graph(object):
                     set_interactive_task(test_task, interactive)
 
                     if params['revision_hash']:
+                        treeherder_transform.add_treeherder_revision_info(test_task['task'],
+                                                                          params['head_rev'],
+                                                                          params['revision_hash'])
                         routes_transform.decorate_task_treeherder_routes(
                             test_task['task'],
                             treeherder_route
