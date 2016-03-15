@@ -11,9 +11,9 @@
 #         css3-multicol/block-clip-001.xht
 
 # because of dynamic change
-css3-values/vh_not_refreshing_on_chrome.html
-css3-values/vh_not_refreshing_on_chrome_iframe.html
+css-values-3/vh_not_refreshing_on_chrome.html
+css-values-3/vh_not_refreshing_on_chrome_iframe.html
 
 # because of support files (in iframe subdir) not being copied (bug 1256580)
-css3-values/vh-support-transform-origin.html
-css3-values/vh-support-transform-translate.html
+css-values-3/vh-support-transform-origin.html
+css-values-3/vh-support-transform-translate.html
