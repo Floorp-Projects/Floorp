@@ -54,4 +54,5 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
             '-wd4275', # non dll-interface class exception used as base for dll-interface class
             '-wd4717', # recursive on all control paths, function will cause runtime stack overflow
             '-wd4996', # 'GetVersionExW': was declared deprecated
+            '-wd4302', # 'reinterpret_cast': truncation from 'LPCSTR' to 'WORD'
         ]
