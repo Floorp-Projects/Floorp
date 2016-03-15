@@ -103,8 +103,8 @@ PrefStore.prototype = {
     let values = {};
     for (let pref of this._getSyncPrefs()) {
       if (this._isSynced(pref)) {
-        // Missing prefs get the null value.
-        values[pref] = this._prefs.get(pref, null);
+        // Missing and default prefs get the null value.
+        values[pref] = this._prefs.isSet(pref) ? this._prefs.get(pref, null) : null;
       }
     }
     return values;
