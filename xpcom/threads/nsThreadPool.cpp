@@ -272,7 +272,8 @@ nsThreadPool::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
       NS_ProcessNextEvent(thread);
     }
   } else {
-    NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL, "unexpected dispatch flags");
+    NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL ||
+                 aFlags == NS_DISPATCH_TAIL, "unexpected dispatch flags");
     PutEvent(Move(aEvent), aFlags);
   }
   return NS_OK;
