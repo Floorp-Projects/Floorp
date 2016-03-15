@@ -558,7 +558,7 @@ if CONFIG['JS_HAS_CTYPES']:
         'ctypes/CTypes.cpp',
         'ctypes/Library.cpp',
     ]
-    if not CONFIG['MOZ_NATIVE_FFI']:
+    if not CONFIG['MOZ_SYSTEM_FFI']:
         LOCAL_INCLUDES += [
             '!ctypes/libffi/include',
         ]
@@ -611,7 +611,6 @@ if CONFIG['ENABLE_INTL_API']:
     ]
 
 USE_LIBS += [
-    'fdlibm',
     'nspr',
     'zlib',
 ]
@@ -661,6 +660,7 @@ if CONFIG['_MSC_VER']:
     CXXFLAGS += ['-wd4661']
     CXXFLAGS += ['-we4067', '-we4258', '-we4275']
     CXXFLAGS += ['-wd4146'] # FIXME: unary minus operator applied to unsigned type (bug 1229189)
+    CXXFLAGS += ['-wd4273'] # FIXME: inconsistent dll linkage (bug 1229666)
 
 if CONFIG['OS_ARCH'] not in ('WINNT', 'HP-UX'):
     OS_LIBS += [
@@ -726,7 +726,7 @@ selfhosted.inputs = [
 ]
 
 if CONFIG['JS_HAS_CTYPES']:
-    if CONFIG['MOZ_NATIVE_FFI']:
+    if CONFIG['MOZ_SYSTEM_FFI']:
         CXXFLAGS += CONFIG['MOZ_FFI_CFLAGS']
     else:
         # Windows needs this to be linked with a static library.

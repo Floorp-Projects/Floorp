@@ -9,9 +9,11 @@
 
 #include "InputData.h"                      // for MultiTouchInput
 #include "mozilla/gfx/Matrix.h"             // for Matrix4x4
+#include "mozilla/layers/APZUtils.h"        // for TouchBehaviorFlags
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "nsAutoPtr.h"                      // for nsRefPtr
 #include "nsTArray.h"                       // for nsTArray
+#include "TouchCounter.h"
 
 namespace mozilla {
 namespace layers {

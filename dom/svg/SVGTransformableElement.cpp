@@ -63,15 +63,26 @@ SVGTransformableElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
     if (!frame || (frame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
       return retval;
     }
+
+    bool isAdditionOrRemoval = false;
     if (aModType == nsIDOMMutationEvent::ADDITION ||
-        aModType == nsIDOMMutationEvent::REMOVAL ||
-        (aModType == nsIDOMMutationEvent::MODIFICATION &&
-         !(mTransforms && mTransforms->HasTransform()))) {
-      // Reconstruct the frame tree to handle stacking context changes:
-      NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
+        aModType == nsIDOMMutationEvent::REMOVAL) {
+      isAdditionOrRemoval = true;
     } else {
       MOZ_ASSERT(aModType == nsIDOMMutationEvent::MODIFICATION,
                  "Unknown modification type.");
+      if (!mTransforms ||
+          !mTransforms->HasTransform() ||
+          !mTransforms->HadTransformBeforeLastBaseValChange()) {
+        // New or old value is empty; this is effectively addition or removal.
+        isAdditionOrRemoval = true;
+      }
+    }
+
+    if (isAdditionOrRemoval) {
+      // Reconstruct the frame tree to handle stacking context changes:
+      NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
+    } else {
       // We just assume the old and new transforms are different.
       NS_UpdateHint(retval, NS_CombineHint(nsChangeHint_UpdatePostTransformOverflow,
                                            nsChangeHint_UpdateTransformLayer));

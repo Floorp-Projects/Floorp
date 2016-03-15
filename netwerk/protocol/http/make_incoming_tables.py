@@ -87,30 +87,47 @@ def output_table(table, name_suffix=''):
 
     tablename = 'HuffmanIncoming%s' % (name_suffix if name_suffix else 'Root',)
     entriestable = tablename.replace('HuffmanIncoming', 'HuffmanIncomingEntries')
-    sys.stdout.write('static HuffmanIncomingEntry %s[] = {\n' % (entriestable,))
+    nexttable = tablename.replace('HuffmanIncoming', 'HuffmanIncomingNextTables')
+    sys.stdout.write('static const HuffmanIncomingEntry %s[] = {\n' %
+                     (entriestable,))
     prefix_len = 0
     value = 0
-    ptr = 'nullptr'
-    for i in range(256):
+    i = 0
+    while i < 256:
         t = table[i]
         if isinstance(t, dict):
-            prefix_len = t['prefix_len']
             value = t['value']
-            ptr = 'nullptr'
+            prefix_len = t['prefix_len']
         elif t is not None:
-            prefix_len = 0
-            value = 0
+            break
+
+        sys.stdout.write('  { %s, %s }' %
+                         (value, prefix_len))
+        sys.stdout.write(',\n')
+        i += 1
+
+    indexOfFirstNextTable = i
+    if i < 256:
+        sys.stdout.write('};\n')
+        sys.stdout.write('\n')
+        sys.stdout.write('static const HuffmanIncomingTable* %s[] = {\n' %
+                         (nexttable,))
+        while i < 256:
             subtable = '%s_%s' % (name_suffix, i)
             ptr = '&HuffmanIncoming%s' % (subtable,)
-        sys.stdout.write('  { %s, %s, %s }' %
-                         (ptr, value, prefix_len))
-        if i < 255:
-            sys.stdout.write(',')
-        sys.stdout.write('\n')
+            sys.stdout.write('  %s' %
+                             (ptr))
+            sys.stdout.write(',\n')
+            i += 1
+    else:
+        nexttable = 'nullptr'
+
     sys.stdout.write('};\n')
     sys.stdout.write('\n')
-    sys.stdout.write('static HuffmanIncomingTable %s = {\n' % (tablename,))
+    sys.stdout.write('static const HuffmanIncomingTable %s = {\n' % (tablename,))
     sys.stdout.write('  %s,\n' % (entriestable,))
+    sys.stdout.write('  %s,\n' % (nexttable,))
+    sys.stdout.write('  %s,\n' % (indexOfFirstNextTable,))
     sys.stdout.write('  %s\n' % (max_prefix_len,))
     sys.stdout.write('};\n')
     sys.stdout.write('\n')
@@ -127,14 +144,43 @@ namespace net {
 struct HuffmanIncomingTable;
 
 struct HuffmanIncomingEntry {
-  HuffmanIncomingTable *mPtr;
-  uint16_t mValue;
-  uint8_t mPrefixLen;
+  const uint16_t mValue:9;      // 9 bits so it can hold 0..256
+  const uint16_t mPrefixLen:7;  // only holds 1..8
 };
 
+// The data members are public only so they can be statically constructed. All
+// accesses should be done through the functions.
 struct HuffmanIncomingTable {
-  HuffmanIncomingEntry *mEntries;
-  uint8_t mPrefixLen;
+  // The normal entries, for indices in the range 0..(mNumEntries-1).
+  const HuffmanIncomingEntry* const mEntries;
+
+  // The next tables, for indices in the range mNumEntries..255. Must be
+  // |nullptr| if mIndexOfFirstNextTable is 256.
+  const HuffmanIncomingTable** const mNextTables;
+
+  // The index of the first next table (equal to the number of entries in
+  // mEntries). This cannot be a uint8_t because it can have the value 256,
+  // in which case there are no next tables and mNextTables must be |nullptr|.
+  const uint16_t mIndexOfFirstNextTable;
+
+  const uint8_t mPrefixLen;
+
+  bool IndexHasANextTable(uint8_t aIndex) const
+  {
+    return aIndex >= mIndexOfFirstNextTable;
+  }
+
+  const HuffmanIncomingEntry* Entry(uint8_t aIndex) const
+  {
+    MOZ_ASSERT(aIndex < mIndexOfFirstNextTable);
+    return &mEntries[aIndex];
+  }
+
+  const HuffmanIncomingTable* NextTable(uint8_t aIndex) const
+  {
+    MOZ_ASSERT(aIndex >= mIndexOfFirstNextTable);
+    return mNextTables[aIndex - mIndexOfFirstNextTable];
+  }
 };
 
 ''')

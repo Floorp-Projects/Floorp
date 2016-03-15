@@ -22,8 +22,6 @@
 # include <unistd.h>
 #endif
 
-#include "fdlibm.h"
-
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
@@ -131,17 +129,27 @@ js::math_abs(JSContext* cx, unsigned argc, Value* vp)
     return math_abs_handle(cx, args[0], args.rval());
 }
 
+#if defined(SOLARIS) && defined(__GNUC__)
+#define ACOS_IF_OUT_OF_RANGE(x) if (x < -1 || 1 < x) return GenericNaN();
+#else
+#define ACOS_IF_OUT_OF_RANGE(x)
+#endif
+
 double
 js::math_acos_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::acos, x, MathCache::Acos);
+    ACOS_IF_OUT_OF_RANGE(x);
+    return cache->lookup(acos, x, MathCache::Acos);
 }
 
 double
 js::math_acos_uncached(double x)
 {
-    return fdlibm::acos(x);
+    ACOS_IF_OUT_OF_RANGE(x);
+    return acos(x);
 }
+
+#undef ACOS_IF_OUT_OF_RANGE
 
 bool
 js::math_acos(JSContext* cx, unsigned argc, Value* vp)
@@ -166,17 +174,27 @@ js::math_acos(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+#if defined(SOLARIS) && defined(__GNUC__)
+#define ASIN_IF_OUT_OF_RANGE(x) if (x < -1 || 1 < x) return GenericNaN();
+#else
+#define ASIN_IF_OUT_OF_RANGE(x)
+#endif
+
 double
 js::math_asin_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::asin, x, MathCache::Asin);
+    ASIN_IF_OUT_OF_RANGE(x);
+    return cache->lookup(asin, x, MathCache::Asin);
 }
 
 double
 js::math_asin_uncached(double x)
 {
-    return fdlibm::asin(x);
+    ASIN_IF_OUT_OF_RANGE(x);
+    return asin(x);
 }
+
+#undef ASIN_IF_OUT_OF_RANGE
 
 bool
 js::math_asin(JSContext* cx, unsigned argc, Value* vp)
@@ -204,13 +222,13 @@ js::math_asin(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_atan_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::atan, x, MathCache::Atan);
+    return cache->lookup(atan, x, MathCache::Atan);
 }
 
 double
 js::math_atan_uncached(double x)
 {
-    return fdlibm::atan(x);
+    return atan(x);
 }
 
 bool
@@ -239,7 +257,31 @@ js::math_atan(JSContext* cx, unsigned argc, Value* vp)
 double
 js::ecmaAtan2(double y, double x)
 {
-    return fdlibm::atan2(y, x);
+#if defined(_MSC_VER)
+    /*
+     * MSVC's atan2 does not yield the result demanded by ECMA when both x
+     * and y are infinite.
+     * - The result is a multiple of pi/4.
+     * - The sign of y determines the sign of the result.
+     * - The sign of x determines the multiplicator, 1 or 3.
+     */
+    if (IsInfinite(y) && IsInfinite(x)) {
+        double z = js_copysign(M_PI / 4, y);
+        if (x < 0)
+            z *= 3;
+        return z;
+    }
+#endif
+
+#if defined(SOLARIS) && defined(__GNUC__)
+    if (y == 0) {
+        if (IsNegativeZero(x))
+            return js_copysign(M_PI, y);
+        if (x == 0)
+            return y;
+    }
+#endif
+    return atan2(y, x);
 }
 
 bool
@@ -269,7 +311,11 @@ js::math_atan2(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_ceil_impl(double x)
 {
-    return fdlibm::ceil(x);
+#ifdef __APPLE__
+    if (x < 0 && x > -1.0)
+        return js_copysign(0, -1);
+#endif
+    return ceil(x);
 }
 
 bool
@@ -323,13 +369,13 @@ js::math_clz32(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_cos_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::cos, x, MathCache::Cos);
+    return cache->lookup(cos, x, MathCache::Cos);
 }
 
 double
 js::math_cos_uncached(double x)
 {
-    return fdlibm::cos(x);
+    return cos(x);
 }
 
 bool
@@ -355,17 +401,33 @@ js::math_cos(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+#ifdef _WIN32
+#define EXP_IF_OUT_OF_RANGE(x)                  \
+    if (!IsNaN(x)) {                            \
+        if (x == PositiveInfinity<double>())    \
+            return PositiveInfinity<double>();  \
+        if (x == NegativeInfinity<double>())    \
+            return 0.0;                         \
+    }
+#else
+#define EXP_IF_OUT_OF_RANGE(x)
+#endif
+
 double
 js::math_exp_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::exp, x, MathCache::Exp);
+    EXP_IF_OUT_OF_RANGE(x);
+    return cache->lookup(exp, x, MathCache::Exp);
 }
 
 double
 js::math_exp_uncached(double x)
 {
-    return fdlibm::exp(x);
+    EXP_IF_OUT_OF_RANGE(x);
+    return exp(x);
 }
+
+#undef EXP_IF_OUT_OF_RANGE
 
 bool
 js::math_exp(JSContext* cx, unsigned argc, Value* vp)
@@ -393,7 +455,7 @@ js::math_exp(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_floor_impl(double x)
 {
-    return fdlibm::floor(x);
+    return floor(x);
 }
 
 bool
@@ -480,17 +542,27 @@ js::math_fround(JSContext* cx, unsigned argc, Value* vp)
     return RoundFloat32(cx, args[0], args.rval());
 }
 
+#if defined(SOLARIS) && defined(__GNUC__)
+#define LOG_IF_OUT_OF_RANGE(x) if (x < 0) return GenericNaN();
+#else
+#define LOG_IF_OUT_OF_RANGE(x)
+#endif
+
 double
 js::math_log_impl(MathCache* cache, double x)
 {
+    LOG_IF_OUT_OF_RANGE(x);
     return cache->lookup(math_log_uncached, x, MathCache::Log);
 }
 
 double
 js::math_log_uncached(double x)
 {
-    return fdlibm::log(x);
+    LOG_IF_OUT_OF_RANGE(x);
+    return log(x);
 }
+
+#undef LOG_IF_OUT_OF_RANGE
 
 bool
 js::math_log_handle(JSContext* cx, HandleValue val, MutableHandleValue res)
@@ -607,7 +679,7 @@ js::powi(double x, int y)
 
                 double result = 1.0 / p;
                 return (result == 0 && IsInfinite(p))
-                       ? fdlibm::pow(x, static_cast<double>(y))  // Avoid pow(double, int).
+                       ? pow(x, static_cast<double>(y))  // Avoid pow(double, int).
                        : result;
             }
 
@@ -645,11 +717,11 @@ js::ecmaPow(double x, double y)
      */
     if (IsFinite(x) && x != 0.0) {
         if (y == 0.5)
-            return fdlibm::sqrt(x);
+            return sqrt(x);
         if (y == -0.5)
-            return 1.0 / fdlibm::sqrt(x);
+            return 1.0 / sqrt(x);
     }
-    return fdlibm::pow(x, y);
+    return pow(x, y);
 }
 
 bool
@@ -771,7 +843,7 @@ js::math_round_impl(double x)
         return x;
 
     double add = (x >= 0) ? GetBiggestNumberLessThan(0.5) : 0.5;
-    return js_copysign(fdlibm::floor(x + add), x);
+    return js_copysign(floor(x + add), x);
 }
 
 float
@@ -786,7 +858,7 @@ js::math_roundf_impl(float x)
         return x;
 
     float add = (x >= 0) ? GetBiggestNumberLessThan(0.5f) : 0.5f;
-    return js_copysign(fdlibm::floorf(x + add), x);
+    return js_copysign(floorf(x + add), x);
 }
 
 bool /* ES5 15.8.2.15. */
@@ -811,7 +883,13 @@ js::math_sin_impl(MathCache* cache, double x)
 double
 js::math_sin_uncached(double x)
 {
-    return fdlibm::sin(x);
+#ifdef _WIN64
+    // Workaround MSVC bug where sin(-0) is +0 instead of -0 on x64 on
+    // CPUs without FMA3 (pre-Haswell). See bug 1076670.
+    if (IsNegativeZero(x))
+        return -0.0;
+#endif
+    return sin(x);
 }
 
 bool
@@ -888,7 +966,7 @@ js::math_sqrt_handle(JSContext* cx, HandleValue number, MutableHandleValue resul
     if (!mathCache)
         return false;
 
-    double z = mathCache->lookup(fdlibm::sqrt, x, MathCache::Sqrt);
+    double z = mathCache->lookup(sqrt, x, MathCache::Sqrt);
     result.setDouble(z);
     return true;
 }
@@ -909,13 +987,13 @@ js::math_sqrt(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_tan_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::tan, x, MathCache::Tan);
+    return cache->lookup(tan, x, MathCache::Tan);
 }
 
 double
 js::math_tan_uncached(double x)
 {
-    return fdlibm::tan(x);
+    return tan(x);
 }
 
 bool
@@ -968,13 +1046,13 @@ static bool math_function(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_log10_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::log10, x, MathCache::Log10);
+    return cache->lookup(log10, x, MathCache::Log10);
 }
 
 double
 js::math_log10_uncached(double x)
 {
-    return fdlibm::log10(x);
+    return log10(x);
 }
 
 bool
@@ -983,16 +1061,23 @@ js::math_log10(JSContext* cx, unsigned argc, Value* vp)
     return math_function<math_log10_impl>(cx, argc, vp);
 }
 
+#if !HAVE_LOG2
+double log2(double x)
+{
+    return log(x) / M_LN2;
+}
+#endif
+
 double
 js::math_log2_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::log2, x, MathCache::Log2);
+    return cache->lookup(log2, x, MathCache::Log2);
 }
 
 double
 js::math_log2_uncached(double x)
 {
-    return fdlibm::log2(x);
+    return log2(x);
 }
 
 bool
@@ -1001,17 +1086,45 @@ js::math_log2(JSContext* cx, unsigned argc, Value* vp)
     return math_function<math_log2_impl>(cx, argc, vp);
 }
 
+#if !HAVE_LOG1P
+double log1p(double x)
+{
+    if (fabs(x) < 1e-4) {
+        /*
+         * Use Taylor approx. log(1 + x) = x - x^2 / 2 + x^3 / 3 - x^4 / 4 with error x^5 / 5
+         * Since |x| < 10^-4, |x|^5 < 10^-20, relative error less than 10^-16
+         */
+        double z = -(x * x * x * x) / 4 + (x * x * x) / 3 - (x * x) / 2 + x;
+        return z;
+    } else {
+        /* For other large enough values of x use direct computation */
+        return log(1.0 + x);
+    }
+}
+#endif
+
+#ifdef __APPLE__
+// Ensure that log1p(-0) is -0.
+#define LOG1P_IF_OUT_OF_RANGE(x) if (x == 0) return x;
+#else
+#define LOG1P_IF_OUT_OF_RANGE(x)
+#endif
+
 double
 js::math_log1p_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::log1p, x, MathCache::Log1p);
+    LOG1P_IF_OUT_OF_RANGE(x);
+    return cache->lookup(log1p, x, MathCache::Log1p);
 }
 
 double
 js::math_log1p_uncached(double x)
 {
-    return fdlibm::log1p(x);
+    LOG1P_IF_OUT_OF_RANGE(x);
+    return log1p(x);
 }
+
+#undef LOG1P_IF_OUT_OF_RANGE
 
 bool
 js::math_log1p(JSContext* cx, unsigned argc, Value* vp)
@@ -1019,16 +1132,37 @@ js::math_log1p(JSContext* cx, unsigned argc, Value* vp)
     return math_function<math_log1p_impl>(cx, argc, vp);
 }
 
+#if !HAVE_EXPM1
+double expm1(double x)
+{
+    /* Special handling for -0 */
+    if (x == 0.0)
+        return x;
+
+    if (fabs(x) < 1e-5) {
+        /*
+         * Use Taylor approx. exp(x) - 1 = x + x^2 / 2 + x^3 / 6 with error x^4 / 24
+         * Since |x| < 10^-5, |x|^4 < 10^-20, relative error less than 10^-15
+         */
+        double z = (x * x * x) / 6 + (x * x) / 2 + x;
+        return z;
+    } else {
+        /* For other large enough values of x use direct computation */
+        return exp(x) - 1.0;
+    }
+}
+#endif
+
 double
 js::math_expm1_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::expm1, x, MathCache::Expm1);
+    return cache->lookup(expm1, x, MathCache::Expm1);
 }
 
 double
 js::math_expm1_uncached(double x)
 {
-    return fdlibm::expm1(x);
+    return expm1(x);
 }
 
 bool
@@ -1037,16 +1171,27 @@ js::math_expm1(JSContext* cx, unsigned argc, Value* vp)
     return math_function<math_expm1_impl>(cx, argc, vp);
 }
 
+#if !HAVE_SQRT1PM1
+/* This algorithm computes sqrt(1+x)-1 for small x */
+double sqrt1pm1(double x)
+{
+    if (fabs(x) > 0.75)
+        return sqrt(1 + x) - 1;
+
+    return expm1(log1p(x) / 2);
+}
+#endif
+
 double
 js::math_cosh_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::cosh, x, MathCache::Cosh);
+    return cache->lookup(cosh, x, MathCache::Cosh);
 }
 
 double
 js::math_cosh_uncached(double x)
 {
-    return fdlibm::cosh(x);
+    return cosh(x);
 }
 
 bool
@@ -1058,13 +1203,13 @@ js::math_cosh(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_sinh_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::sinh, x, MathCache::Sinh);
+    return cache->lookup(sinh, x, MathCache::Sinh);
 }
 
 double
 js::math_sinh_uncached(double x)
 {
-    return fdlibm::sinh(x);
+    return sinh(x);
 }
 
 bool
@@ -1076,13 +1221,13 @@ js::math_sinh(JSContext* cx, unsigned argc, Value* vp)
 double
 js::math_tanh_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::tanh, x, MathCache::Tanh);
+    return cache->lookup(tanh, x, MathCache::Tanh);
 }
 
 double
 js::math_tanh_uncached(double x)
 {
-    return fdlibm::tanh(x);
+    return tanh(x);
 }
 
 bool
@@ -1091,16 +1236,47 @@ js::math_tanh(JSContext* cx, unsigned argc, Value* vp)
     return math_function<math_tanh_impl>(cx, argc, vp);
 }
 
+#if !HAVE_ACOSH
+double acosh(double x)
+{
+    const double SQUARE_ROOT_EPSILON = sqrt(std::numeric_limits<double>::epsilon());
+
+    if ((x - 1) >= SQUARE_ROOT_EPSILON) {
+        if (x > 1 / SQUARE_ROOT_EPSILON) {
+            /*
+             * http://functions.wolfram.com/ElementaryFunctions/ArcCosh/06/01/06/01/0001/
+             * approximation by laurent series in 1/x at 0+ order from -1 to 0
+             */
+            return log(x) + M_LN2;
+        } else if (x < 1.5) {
+            // This is just a rearrangement of the standard form below
+            // devised to minimize loss of precision when x ~ 1:
+            double y = x - 1;
+            return log1p(y + sqrt(y * y + 2 * y));
+        } else {
+            // http://functions.wolfram.com/ElementaryFunctions/ArcCosh/02/
+            return log(x + sqrt(x * x - 1));
+        }
+    } else {
+        // see http://functions.wolfram.com/ElementaryFunctions/ArcCosh/06/01/04/01/0001/
+        double y = x - 1;
+        // approximation by taylor series in y at 0 up to order 2.
+        // If x is less than 1, sqrt(2 * y) is NaN and the result is NaN.
+        return sqrt(2 * y) * (1 - y / 12 + 3 * y * y / 160);
+    }
+}
+#endif
+
 double
 js::math_acosh_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::acosh, x, MathCache::Acosh);
+    return cache->lookup(acosh, x, MathCache::Acosh);
 }
 
 double
 js::math_acosh_uncached(double x)
 {
-    return fdlibm::acosh(x);
+    return acosh(x);
 }
 
 bool
@@ -1109,16 +1285,59 @@ js::math_acosh(JSContext* cx, unsigned argc, Value* vp)
     return math_function<math_acosh_impl>(cx, argc, vp);
 }
 
+#if !HAVE_ASINH
+// Bug 899712 - gcc incorrectly rewrites -asinh(-x) to asinh(x) when overriding
+// asinh.
+static double my_asinh(double x)
+{
+    const double SQUARE_ROOT_EPSILON = sqrt(std::numeric_limits<double>::epsilon());
+    const double FOURTH_ROOT_EPSILON = sqrt(SQUARE_ROOT_EPSILON);
+
+    if (x >= FOURTH_ROOT_EPSILON) {
+        if (x > 1 / SQUARE_ROOT_EPSILON)
+            // http://functions.wolfram.com/ElementaryFunctions/ArcSinh/06/01/06/01/0001/
+            // approximation by laurent series in 1/x at 0+ order from -1 to 1
+            return M_LN2 + log(x) + 1 / (4 * x * x);
+        else if (x < 0.5)
+            return log1p(x + sqrt1pm1(x * x));
+        else
+            return log(x + sqrt(x * x + 1));
+    } else if (x <= -FOURTH_ROOT_EPSILON) {
+        return -my_asinh(-x);
+    } else {
+        // http://functions.wolfram.com/ElementaryFunctions/ArcSinh/06/01/03/01/0001/
+        // approximation by taylor series in x at 0 up to order 2
+        double result = x;
+
+        if (fabs(x) >= SQUARE_ROOT_EPSILON) {
+            double x3 = x * x * x;
+            // approximation by taylor series in x at 0 up to order 4
+            result -= x3 / 6;
+        }
+
+        return result;
+    }
+}
+#endif
+
 double
 js::math_asinh_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::asinh, x, MathCache::Asinh);
+#ifdef HAVE_ASINH
+    return cache->lookup(asinh, x, MathCache::Asinh);
+#else
+    return cache->lookup(my_asinh, x, MathCache::Asinh);
+#endif
 }
 
 double
 js::math_asinh_uncached(double x)
 {
-    return fdlibm::asinh(x);
+#ifdef HAVE_ASINH
+    return asinh(x);
+#else
+    return my_asinh(x);
+#endif
 }
 
 bool
@@ -1127,16 +1346,44 @@ js::math_asinh(JSContext* cx, unsigned argc, Value* vp)
     return math_function<math_asinh_impl>(cx, argc, vp);
 }
 
+#if !HAVE_ATANH
+double atanh(double x)
+{
+    const double EPSILON = std::numeric_limits<double>::epsilon();
+    const double SQUARE_ROOT_EPSILON = sqrt(EPSILON);
+    const double FOURTH_ROOT_EPSILON = sqrt(SQUARE_ROOT_EPSILON);
+
+    if (fabs(x) >= FOURTH_ROOT_EPSILON) {
+        // http://functions.wolfram.com/ElementaryFunctions/ArcTanh/02/
+        if (fabs(x) < 0.5)
+            return (log1p(x) - log1p(-x)) / 2;
+
+        return log((1 + x) / (1 - x)) / 2;
+    } else {
+        // http://functions.wolfram.com/ElementaryFunctions/ArcTanh/06/01/03/01/
+        // approximation by taylor series in x at 0 up to order 2
+        double result = x;
+
+        if (fabs(x) >= SQUARE_ROOT_EPSILON) {
+            double x3 = x * x * x;
+            result += x3 / 3;
+        }
+
+        return result;
+    }
+}
+#endif
+
 double
 js::math_atanh_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::atanh, x, MathCache::Atanh);
+    return cache->lookup(atanh, x, MathCache::Atanh);
 }
 
 double
 js::math_atanh_uncached(double x)
 {
-    return fdlibm::atanh(x);
+    return atanh(x);
 }
 
 bool
@@ -1149,7 +1396,16 @@ js::math_atanh(JSContext* cx, unsigned argc, Value* vp)
 double
 js::ecmaHypot(double x, double y)
 {
-    return fdlibm::hypot(x, y);
+#ifdef XP_WIN
+    /*
+     * Workaround MS hypot bug, where hypot(Infinity, NaN or Math.MIN_VALUE)
+     * is NaN, not Infinity.
+     */
+    if (mozilla::IsInfinite(x) || mozilla::IsInfinite(y)) {
+        return mozilla::PositiveInfinity<double>();
+    }
+#endif
+    return hypot(x, y);
 }
 
 static inline
@@ -1187,7 +1443,7 @@ js::hypot4(double x, double y, double z, double w)
     hypot_step(scale, sumsq, z);
     hypot_step(scale, sumsq, w);
 
-    return scale * fdlibm::sqrt(sumsq);
+    return scale * sqrt(sumsq);
 }
 
 double
@@ -1241,7 +1497,7 @@ js::math_hypot_handle(JSContext* cx, HandleValueArray args, MutableHandleValue r
 
     double result = isInfinite ? PositiveInfinity<double>() :
                     isNaN ? GenericNaN() :
-                    scale * fdlibm::sqrt(sumsq);
+                    scale * sqrt(sumsq);
     res.setNumber(result);
     return true;
 }
@@ -1249,13 +1505,13 @@ js::math_hypot_handle(JSContext* cx, HandleValueArray args, MutableHandleValue r
 double
 js::math_trunc_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::trunc, x, MathCache::Trunc);
+    return cache->lookup(trunc, x, MathCache::Trunc);
 }
 
 double
 js::math_trunc_uncached(double x)
 {
-    return fdlibm::trunc(x);
+    return trunc(x);
 }
 
 bool
@@ -1290,16 +1546,29 @@ js::math_sign(JSContext* cx, unsigned argc, Value* vp)
     return math_function<math_sign_impl>(cx, argc, vp);
 }
 
+#if !HAVE_CBRT
+double cbrt(double x)
+{
+    if (x > 0) {
+        return pow(x, 1.0 / 3.0);
+    } else if (x == 0) {
+        return x;
+    } else {
+        return -pow(-x, 1.0 / 3.0);
+    }
+}
+#endif
+
 double
 js::math_cbrt_impl(MathCache* cache, double x)
 {
-    return cache->lookup(fdlibm::cbrt, x, MathCache::Cbrt);
+    return cache->lookup(cbrt, x, MathCache::Cbrt);
 }
 
 double
 js::math_cbrt_uncached(double x)
 {
-    return fdlibm::cbrt(x);
+    return cbrt(x);
 }
 
 bool

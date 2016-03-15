@@ -630,6 +630,9 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
   bool isCallerChrome =
     nsContentUtils::LegacyIsCallerChromeOrNativeCode() && !openedFromRemoteTab;
 
+  // XXXbz Why is an AutoJSAPI good enough here?  Wouldn't AutoEntryScript (so
+  // we affect the entry global) make more sense?  Or do we just want to affect
+  // GetSubjectPrincipal()?
   dom::AutoJSAPI jsapiChromeGuard;
 
   bool windowTypeIsChrome =

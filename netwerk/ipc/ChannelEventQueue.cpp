@@ -12,6 +12,22 @@
 namespace mozilla {
 namespace net {
 
+ChannelEvent*
+ChannelEventQueue::TakeEvent()
+{
+  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(mFlushing);
+
+  if (mSuspended || mEventQueue.IsEmpty()) {
+    return nullptr;
+  }
+
+  UniquePtr<ChannelEvent> event(Move(mEventQueue[0]));
+  mEventQueue.RemoveElementAt(0);
+
+  return event.release();
+}
+
 void
 ChannelEventQueue::FlushQueue()
 {
@@ -21,30 +37,29 @@ ChannelEventQueue::FlushQueue()
   nsCOMPtr<nsISupports> kungFuDeathGrip(mOwner);
 
   // Prevent flushed events from flushing the queue recursively
-  mFlushing = true;
-
-  uint32_t i;
-  for (i = 0; i < mEventQueue.Length(); i++) {
-    mEventQueue[i]->Run();
-    if (mSuspended)
-      break;
+  {
+    MutexAutoLock lock(mMutex);
+    mFlushing = true;
   }
 
-  // We will always want to remove at least one finished callback.
-  if (i < mEventQueue.Length())
-    i++;
+  while (true) {
+    UniquePtr<ChannelEvent> event(TakeEvent());
+    if (!event) {
+      break;
+    }
 
-  // It is possible for new callbacks to be enqueued as we are
-  // flushing the queue, so the queue must not be cleared until
-  // all callbacks have run.
-  mEventQueue.RemoveElementsAt(0, i);
+    event->Run();
+  }
 
+  MutexAutoLock lock(mMutex);
   mFlushing = false;
 }
 
 void
 ChannelEventQueue::Resume()
 {
+  MutexAutoLock lock(mMutex);
+
   // Resuming w/o suspend: error in debug mode, ignore in build
   MOZ_ASSERT(mSuspendCount > 0);
   if (mSuspendCount <= 0) {
@@ -58,7 +73,7 @@ ChannelEventQueue::Resume()
       mTargetThread->Dispatch(event, NS_DISPATCH_NORMAL);
     } else {
       MOZ_RELEASE_ASSERT(NS_IsMainThread());
-      NS_DispatchToCurrentThread(event);
+      NS_WARN_IF(NS_FAILED(NS_DispatchToCurrentThread(event)));
     }
   }
 }

@@ -103,15 +103,18 @@ MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
              "Can only convert To WidgetTouchEvent on main thread");
 
   EventMessage msg = eVoidEvent;
+  uint32_t clickCount = 0;
   switch (mType) {
     case MOUSE_MOVE:
       msg = eMouseMove;
       break;
     case MOUSE_UP:
       msg = eMouseUp;
+      clickCount = 1;
       break;
     case MOUSE_DOWN:
       msg = eMouseDown;
+      clickCount = 1;
       break;
     case MOUSE_DRAG_START:
       msg = eDragStart;
@@ -158,6 +161,9 @@ MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   event.refPoint =
     RoundedToInt(ViewAs<LayoutDevicePixel>(mOrigin,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
+  event.clickCount = clickCount;
+  event.inputSource = mInputSource;
+  event.ignoreRootScrollFrame = true;
 
   return event;
 }

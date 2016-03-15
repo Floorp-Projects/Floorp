@@ -220,6 +220,22 @@ nsNSSCertificate::GetIsSelfSigned(bool* aIsSelfSigned)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNSSCertificate::GetIsBuiltInRoot(bool* aIsBuiltInRoot)
+{
+  NS_ENSURE_ARG(aIsBuiltInRoot);
+
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  Result rv = IsCertBuiltInRoot(mCert, *aIsBuiltInRoot);
+  if (rv != Success) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 nsresult
 nsNSSCertificate::MarkForPermDeletion()
 {

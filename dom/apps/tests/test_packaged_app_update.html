@@ -142,7 +142,6 @@ function validatePermissions(aList, aDontFail) {
 var steps = [
   function() {
     // Set up
-    SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.addPermission("webapps-manage", true, document);
     info("Set up");
     // Note that without useCurrentProfile the permissions just aren't added.

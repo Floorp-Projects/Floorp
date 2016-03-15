@@ -295,18 +295,43 @@ EnsurePhysicalProperty(nsCSSProperty aProperty, nsRuleData* aRuleData)
   }
 
   const nsCSSProperty* props = nsCSSProps::LogicalGroup(aProperty);
+  // Table-length is 1 for single prop, 2 for axis prop, 4 for block prop.
+  size_t len = isSingleProperty ? 1 : (isAxisProperty ? 2 : 4);
 #ifdef DEBUG
-  {
-    // Table-length is 1 for single prop, 2 for axis prop, 4 for block prop.
-    size_t len = isSingleProperty ? 1 : (isAxisProperty ? 2 : 4);
-    for (size_t i = 0; i < len; i++) {
-      MOZ_ASSERT(props[i] != eCSSProperty_UNKNOWN,
-                 "unexpected logical group length");
-    }
-    MOZ_ASSERT(props[len] == eCSSProperty_UNKNOWN,
+  for (size_t i = 0; i < len; i++) {
+    MOZ_ASSERT(props[i] != eCSSProperty_UNKNOWN,
                "unexpected logical group length");
   }
+  MOZ_ASSERT(props[len] == eCSSProperty_UNKNOWN,
+             "unexpected logical group length");
 #endif
+
+  for (size_t i = 0; i < len; i++) {
+    if (aRuleData->ValueFor(props[i])->GetUnit() == eCSSUnit_Null) {
+      // A declaration of one of the logical properties in this logical
+      // group (but maybe not aProperty) would be the winning
+      // declaration in the cascade.  This means that it's reasonably
+      // likely that this logical property could be the winning
+      // declaration in the cascade for some values of writing-mode,
+      // direction, and text-orientation.  (It doesn't mean that for
+      // sure, though.  For example, if this is a block-start logical
+      // property, and all but the bottom physical property were set.
+      // But the common case we want to hit here is logical declarations
+      // that are completely overridden by a shorthand.)
+      //
+      // If this logical property could be the winning declaration in
+      // the cascade for some values of writing-mode, direction, and
+      // text-orientation, then we have to fault the resulting style
+      // struct out of the rule tree.  We can't cache anything on the
+      // rule tree if it depends on data from the style context, since
+      // data cached in the rule tree could be used with a style context
+      // with a different value of the depended-upon data.
+      uint8_t wm = WritingMode(aRuleData->mStyleContext).GetBits();
+      aRuleData->mConditions.SetWritingModeDependency(wm);
+      break;
+    }
+  }
+
   return props[index];
 }
 
@@ -329,13 +354,6 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
         aRuleData->mSIDs) {
       nsCSSProperty physicalProp = EnsurePhysicalProperty(iProp,
                                                           aRuleData);
-      if (physicalProp != iProp) {
-        // We can't cache anything on the rule tree if we use any data from
-        // the style context, since data cached in the rule tree could be
-        // used with a style context with a different value.
-        uint8_t wm = WritingMode(aRuleData->mStyleContext).GetBits();
-        aRuleData->mConditions.SetWritingModeDependency(wm);
-      }
       nsCSSValue* target = aRuleData->ValueFor(physicalProp);
       if (target->GetUnit() == eCSSUnit_Null) {
         const nsCSSValue *val = ValueAtIndex(i);
@@ -792,10 +810,6 @@ nsCSSExpandedDataBlock::MapRuleInfoInto(nsCSSProperty aPropID,
   MOZ_ASSERT(src->GetUnit() != eCSSUnit_Null);
 
   nsCSSProperty physicalProp = EnsurePhysicalProperty(aPropID, aRuleData);
-  if (physicalProp != aPropID) {
-    uint8_t wm = WritingMode(aRuleData->mStyleContext).GetBits();
-    aRuleData->mConditions.SetWritingModeDependency(wm);
-  }
 
   nsCSSValue* dest = aRuleData->ValueFor(physicalProp);
   MOZ_ASSERT(dest->GetUnit() == eCSSUnit_TokenStream &&

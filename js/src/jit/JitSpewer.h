@@ -14,7 +14,10 @@
 
 #include "jit/C1Spewer.h"
 #include "jit/JSONSpewer.h"
+
 #include "js/RootingAPI.h"
+
+#include "vm/Printer.h"
 
 namespace js {
 namespace jit {
@@ -101,7 +104,10 @@ enum JitSpewChannel {
     JitSpew_Terminator
 };
 
+class BacktrackingAllocator;
+class MDefinition;
 class MIRGenerator;
+class MIRGraph;
 class TempAllocator;
 
 // The JitSpewer is only available on debug builds.

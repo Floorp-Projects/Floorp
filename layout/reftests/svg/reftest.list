@@ -62,6 +62,7 @@ fuzzy-if(skiaContent,1,320) == conditions-08.svg conditions-08-ref.svg
 == dynamic-attr-removal-1.svg pass.svg
 == dynamic-attr-removal-2.svg pass.svg
 == dynamic-attr-change-1.svg pass.svg
+== dynamic-attr-change-2.svg pass.svg
 == dynamic-class-01.svg pass.svg
 fuzzy-if(Android,4,87) == dynamic-clipPath-01.svg pass.svg
 == dynamic-clipPath-02.svg pass.svg

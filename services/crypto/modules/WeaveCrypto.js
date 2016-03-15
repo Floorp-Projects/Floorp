@@ -131,7 +131,7 @@ WeaveCrypto.prototype = {
 
         // XXX really want to be able to pass specific dlopen flags here.
         var nsslib;
-        if (AppConstants.MOZ_NATIVE_NSS) {
+        if (AppConstants.MOZ_SYSTEM_NSS) {
             // Search platform-dependent library paths for system NSS.
             this.log("Trying NSS library without path");
             nsslib = ctypes.open(path);

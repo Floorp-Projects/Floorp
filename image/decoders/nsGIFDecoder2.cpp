@@ -205,11 +205,9 @@ nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
   Maybe<SurfacePipe> pipe;
   if (mGIFStruct.images_decoded == 0) {
     // This is the first frame. We may be downscaling, so compute the target
-    // size and target frame rect.
+    // size.
     IntSize targetSize = mDownscaler ? mDownscaler->TargetSize()
                                      : GetSize();
-    IntRect targetFrameRect = mDownscaler ? IntRect(IntPoint(), targetSize)
-                                          : aFrameRect;
 
     // The first frame may be displayed progressively.
     pipeFlags |= SurfacePipeFlags::PROGRESSIVE_DISPLAY;
@@ -218,7 +216,7 @@ nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
     pipe =
       SurfacePipeFactory::CreateSurfacePipe(this, mGIFStruct.images_decoded,
                                             GetSize(), targetSize,
-                                            targetFrameRect, format, pipeFlags);
+                                            aFrameRect, format, pipeFlags);
   } else {
     // This is an animation frame (and not the first). To minimize the memory
     // usage of animations, the image data is stored in paletted form.
