@@ -622,6 +622,7 @@ protected:
   enum AsyncScrollEventType { BEGIN_DOM, BEGIN_APZ, END_DOM, END_APZ };
   void NotifyPluginFrames(AsyncScrollEventType aEvent);
   AsyncScrollEventType mAsyncScrollEvent;
+  bool HasPluginFrames();
 
   static void EnsureImageVisPrefsCached();
   static bool sImageVisPrefsCached;
