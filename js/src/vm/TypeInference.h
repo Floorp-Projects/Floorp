@@ -267,7 +267,7 @@ class TypeSet
         void ensureTrackedProperty(JSContext* cx, jsid id);
 
         ObjectGroup* maybeGroup();
-    } JS_HAZ_GC_POINTER;
+    };
 
     // Information about a single concrete type. We pack this into one word,
     // where small values are particular primitive or other singleton types and
@@ -356,7 +356,7 @@ class TypeSet
 
         bool operator == (Type o) const { return data == o.data; }
         bool operator != (Type o) const { return data != o.data; }
-    } JS_HAZ_GC_POINTER;
+    };
 
     static inline Type UndefinedType() { return Type(JSVAL_TYPE_UNDEFINED); }
     static inline Type NullType()      { return Type(JSVAL_TYPE_NULL); }
@@ -535,7 +535,7 @@ class TypeSet
     static bool IsTypeMarked(Type* v);
     static bool IsTypeAllocatedDuringIncremental(Type v);
     static bool IsTypeAboutToBeFinalized(Type* v);
-} JS_HAZ_GC_POINTER;
+};
 
 /*
  * A constraint which listens to additions to a type set and propagates those

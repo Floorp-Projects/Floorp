@@ -24,7 +24,6 @@
 
 #include <stdarg.h>
 
-#include "js/GCAnnotations.h"
 #include "js/Value.h"
 #include "nscore.h"
 #include "nsStringGlue.h"
