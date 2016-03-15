@@ -9,12 +9,12 @@
 #include "DOMError.h"
 #include "nsThreadUtils.h"
 #include "DOMCursor.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "jsfriendapi.h"
+#include "nsContentUtils.h"
 
 using mozilla::dom::AnyCallback;
 using mozilla::dom::DOMError;
@@ -301,7 +301,7 @@ class FireSuccessAsyncTask : public nsRunnable
   FireSuccessAsyncTask(DOMRequest* aRequest,
                        const JS::Value& aResult) :
     mReq(aRequest),
-    mResult(CycleCollectedJSRuntime::Get()->Runtime(), aResult)
+    mResult(nsContentUtils::RootingCxForThread(), aResult)
   {
   }
 

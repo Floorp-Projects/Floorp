@@ -1764,7 +1764,6 @@ public:
 
     AutoJSAPI jsapi;
     if (!jsapi.Init(mValues)) {
-      // Now what?
       return;
     }
     jsapi.TakeOwnershipOfErrorReporting();
