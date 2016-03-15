@@ -137,6 +137,10 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
                 for key in mozconfig[t]['removed'].keys():
                     print("unset %s" % key, file=out)
 
+        # Autoconf is special, because it might be passed from
+        # mozconfig['make_extra'], which we don't pass automatically above.
+        print('export AUTOCONF=%s' % quote(autoconf), file=out)
+
         for assignment in old_configure_assignments:
             print(assignment, file=out)
 
