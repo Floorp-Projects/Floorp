@@ -1055,6 +1055,10 @@ void nsXULWindow::OnChromeLoaded()
       positionSet = false;
 #endif
     if (positionSet) {
+      // We have to do this before sizing the window, because sizing depends
+      // on the resolution of the screen we're on. But positioning needs to
+      // know the size so that it can constrain to screen bounds.... as an
+      // initial guess here, we'll use the specified size (if any).
       positionSet = LoadPositionFromXUL(specWidth, specHeight);
     }
 
@@ -1076,6 +1080,11 @@ void nsXULWindow::OnChromeLoaded()
           int32_t width = 0, height = 0;
           if (NS_SUCCEEDED(cv->GetContentSize(&width, &height))) {
             treeOwner->SizeShellTo(docShellAsItem, width, height);
+            // Now that we know the window's final size, we can re-do its
+            // positioning so that it is properly constrained to the screen.
+            if (positionSet) {
+              LoadPositionFromXUL(width, height);
+            }
           }
         }
       }
