@@ -222,5 +222,5 @@ TEST_P(DrawElementsTest, DeletingAfterStreamingIndexes)
     ASSERT_GL_NO_ERROR();
 }
 
-ANGLE_INSTANTIATE_TEST(DrawElementsTest, ES3_OPENGL());
+ANGLE_INSTANTIATE_TEST(DrawElementsTest, ES3_OPENGL(), ES3_OPENGLES());
 }

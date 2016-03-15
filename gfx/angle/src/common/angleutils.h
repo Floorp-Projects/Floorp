@@ -33,6 +33,7 @@ class NonCopyable
     void operator=(const NonCopyable&) = delete;
 };
 
+extern const uintptr_t DirtyPointer;
 }
 
 template <typename T, size_t N>

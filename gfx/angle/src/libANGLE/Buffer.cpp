@@ -18,6 +18,7 @@ namespace gl
 Buffer::Buffer(rx::BufferImpl *impl, GLuint id)
     : RefCountObject(id),
       mBuffer(impl),
+      mLabel(),
       mUsage(GL_STATIC_DRAW),
       mSize(0),
       mAccessFlags(0),
@@ -32,6 +33,16 @@ Buffer::Buffer(rx::BufferImpl *impl, GLuint id)
 Buffer::~Buffer()
 {
     SafeDelete(mBuffer);
+}
+
+void Buffer::setLabel(const std::string &label)
+{
+    mLabel = label;
+}
+
+const std::string &Buffer::getLabel() const
+{
+    return mLabel;
 }
 
 Error Buffer::bufferData(const void *data, GLsizeiptr size, GLenum usage)

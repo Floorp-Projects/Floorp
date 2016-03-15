@@ -15,6 +15,7 @@
 
 #include "libANGLE/RefCountObject.h"
 #include "libANGLE/Constants.h"
+#include "libANGLE/Debug.h"
 #include "libANGLE/State.h"
 #include "libANGLE/VertexAttribute.h"
 
@@ -30,13 +31,16 @@ namespace gl
 {
 class Buffer;
 
-class VertexArray
+class VertexArray final : public LabeledObject
 {
   public:
     VertexArray(rx::ImplFactory *factory, GLuint id, size_t maxAttribs);
     ~VertexArray();
 
     GLuint id() const;
+
+    void setLabel(const std::string &label) override;
+    const std::string &getLabel() const override;
 
     const VertexAttribute &getVertexAttribute(size_t attributeIndex) const;
 
@@ -63,6 +67,8 @@ class VertexArray
         explicit Data(size_t maxAttribs);
         ~Data();
 
+        const std::string &getLabel() const { return mLabel; }
+
         const BindingPointer<Buffer> &getElementArrayBuffer() const { return mElementArrayBuffer; }
         size_t getMaxAttribs() const { return mVertexAttributes.size(); }
         size_t getMaxEnabledAttribute() const { return mMaxEnabledAttribute; }
@@ -74,6 +80,7 @@ class VertexArray
 
       private:
         friend class VertexArray;
+        std::string mLabel;
         std::vector<VertexAttribute> mVertexAttributes;
         BindingPointer<Buffer> mElementArrayBuffer;
         size_t mMaxEnabledAttribute;
@@ -102,6 +109,7 @@ class VertexArray
     typedef std::bitset<DIRTY_BIT_MAX> DirtyBits;
 
     void syncImplState();
+    bool hasAnyDirtyBit() const { return mDirtyBits.any(); }
 
   private:
     GLuint mId;

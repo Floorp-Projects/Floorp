@@ -11,7 +11,7 @@ using namespace angle;
 class FramebufferFormatsTest : public ANGLETest
 {
   protected:
-    FramebufferFormatsTest()
+    FramebufferFormatsTest() : mFramebuffer(0), mTexture(0), mRenderbuffer(0), mProgram(0)
     {
         setWindowWidth(128);
         setWindowHeight(128);
@@ -52,20 +52,13 @@ class FramebufferFormatsTest : public ANGLETest
     void testTextureFormat(GLenum internalFormat, GLint minRedBits, GLint minGreenBits, GLint minBlueBits,
                            GLint minAlphaBits)
     {
-        GLuint tex = 0;
-        glGenTextures(1, &tex);
-        glBindTexture(GL_TEXTURE_2D, tex);
+        glGenTextures(1, &mTexture);
+        glBindTexture(GL_TEXTURE_2D, mTexture);
         glTexStorage2DEXT(GL_TEXTURE_2D, 1, internalFormat, 1, 1);
 
-        GLuint fbo = 0;
-        glGenFramebuffers(1, &fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mTexture, 0);
 
-        testBitCounts(fbo, minRedBits, minGreenBits, minBlueBits, minAlphaBits, 0, 0);
-
-        glDeleteTextures(1, &tex);
-        glDeleteFramebuffers(1, &fbo);
+        testBitCounts(mFramebuffer, minRedBits, minGreenBits, minBlueBits, minAlphaBits, 0, 0);
     }
 
     void testRenderbufferMultisampleFormat(int minESVersion, GLenum attachmentType, GLenum internalFormat)
@@ -108,33 +101,57 @@ class FramebufferFormatsTest : public ANGLETest
             return;
         }
 
-        GLuint framebufferID;
-        glGenFramebuffers(1, &framebufferID);
-        glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
-
-        GLuint renderbufferID;
-        glGenRenderbuffers(1, &renderbufferID);
-        glBindRenderbuffer(GL_RENDERBUFFER, renderbufferID);
+        glGenRenderbuffers(1, &mRenderbuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, mRenderbuffer);
 
         EXPECT_GL_NO_ERROR();
         glRenderbufferStorageMultisampleANGLE(GL_RENDERBUFFER, 2, internalFormat, 128, 128);
         EXPECT_GL_NO_ERROR();
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachmentType, GL_RENDERBUFFER, renderbufferID);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachmentType, GL_RENDERBUFFER, mRenderbuffer);
         EXPECT_GL_NO_ERROR();
-
-        glDeleteRenderbuffers(1, &renderbufferID);
-        glDeleteFramebuffers(1, &framebufferID);
     }
 
-    virtual void SetUp()
+    void SetUp() override
     {
         ANGLETest::SetUp();
+
+        glGenFramebuffers(1, &mFramebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, mFramebuffer);
     }
 
-    virtual void TearDown()
+    void TearDown() override
     {
         ANGLETest::TearDown();
+
+        if (mTexture != 0)
+        {
+            glDeleteTextures(1, &mTexture);
+            mTexture = 0;
+        }
+
+        if (mRenderbuffer != 0)
+        {
+            glDeleteRenderbuffers(1, &mRenderbuffer);
+            mRenderbuffer = 0;
+        }
+
+        if (mFramebuffer != 0)
+        {
+            glDeleteFramebuffers(1, &mFramebuffer);
+            mFramebuffer = 0;
+        }
+
+        if (mProgram != 0)
+        {
+            glDeleteProgram(mProgram);
+            mProgram = 0;
+        }
     }
+
+    GLuint mFramebuffer;
+    GLuint mTexture;
+    GLuint mRenderbuffer;
+    GLuint mProgram;
 };
 
 TEST_P(FramebufferFormatsTest, RGBA4)
@@ -229,5 +246,56 @@ TEST_P(FramebufferFormatsTest, RenderbufferMultisample_STENCIL_INDEX8)
     testRenderbufferMultisampleFormat(2, GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX8);
 }
 
+// Test that binding an incomplete cube map is rejected by ANGLE.
+TEST_P(FramebufferFormatsTest, IncompleteCubeMap)
+{
+    // First make a complete CubeMap.
+    glGenTextures(1, &mTexture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, mTexture);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 nullptr);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 nullptr);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 nullptr);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 nullptr);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 nullptr);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 nullptr);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+                           mTexture, 0);
+
+    // Verify the framebuffer is complete.
+    ASSERT_GLENUM_EQ(GL_FRAMEBUFFER_COMPLETE, glCheckFramebufferStatus(GL_FRAMEBUFFER));
+
+    // Make the CubeMap cube-incomplete.
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, 16, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 nullptr);
+
+    // Verify the framebuffer is incomplete.
+    ASSERT_GLENUM_EQ(GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
+                     glCheckFramebufferStatus(GL_FRAMEBUFFER));
+
+    // Verify drawing with the incomplete framebuffer produces a GL error
+    const std::string &vs = "attribute vec4 position; void main() { gl_Position = position; }";
+    const std::string &ps = "void main() { gl_FragColor = vec4(1, 0, 0, 1); }";
+    mProgram = CompileProgram(vs, ps);
+    ASSERT_NE(0u, mProgram);
+    drawQuad(mProgram, "position", 0.5f);
+    ASSERT_GL_ERROR(GL_INVALID_FRAMEBUFFER_OPERATION);
+}
+
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
-ANGLE_INSTANTIATE_TEST(FramebufferFormatsTest, ES2_D3D9(), ES2_D3D11(), ES3_D3D11(), ES2_OPENGL(), ES3_OPENGL());
+ANGLE_INSTANTIATE_TEST(FramebufferFormatsTest,
+                       ES2_D3D9(),
+                       ES2_D3D11(),
+                       ES3_D3D11(),
+                       ES2_OPENGL(),
+                       ES3_OPENGL(),
+                       ES2_OPENGLES(),
+                       ES3_OPENGLES());

@@ -24,6 +24,7 @@
 
 #include "libANGLE/angletypes.h"
 #include "libANGLE/Constants.h"
+#include "libANGLE/Debug.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/RefCountObject.h"
 
@@ -143,7 +144,7 @@ struct VariableLocation
     unsigned int index;
 };
 
-class Program : angle::NonCopyable
+class Program final : angle::NonCopyable, public LabeledObject
 {
   public:
     class Data final : angle::NonCopyable
@@ -151,6 +152,8 @@ class Program : angle::NonCopyable
       public:
         Data();
         ~Data();
+
+        const std::string &getLabel();
 
         const Shader *getAttachedVertexShader() const { return mAttachedVertexShader; }
         const Shader *getAttachedFragmentShader() const { return mAttachedFragmentShader; }
@@ -191,6 +194,8 @@ class Program : angle::NonCopyable
       private:
         friend class Program;
 
+        std::string mLabel;
+
         Shader *mAttachedFragmentShader;
         Shader *mAttachedVertexShader;
 
@@ -223,6 +228,9 @@ class Program : angle::NonCopyable
     ~Program();
 
     GLuint id() const { return mHandle; }
+
+    void setLabel(const std::string &label) override;
+    const std::string &getLabel() const override;
 
     rx::ProgramImpl *getImplementation() { return mProgram; }
     const rx::ProgramImpl *getImplementation() const { return mProgram; }

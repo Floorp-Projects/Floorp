@@ -59,8 +59,11 @@ Error ValidateCreateDeviceANGLE(EGLint device_type,
 Error ValidateReleaseDeviceANGLE(Device *device);
 
 // Other validation
-Error ValidateCompatibleConfigs(const Config *config1, const Config *config2, EGLint surfaceType);
-
+Error ValidateCompatibleConfigs(const Display *display,
+                                const Config *config1,
+                                const Surface *surface,
+                                const Config *config2,
+                                EGLint surfaceType);
 }
 
 #endif // LIBANGLE_VALIDATIONEGL_H_

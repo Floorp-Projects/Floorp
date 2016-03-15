@@ -133,8 +133,6 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
     bool isDeviceLost() const override;
     std::string getVendorString() const override;
 
-    CompilerImpl *createCompiler() override;
-
     SamplerImpl *createSampler() override;
 
     virtual int getMinorShaderModel() const = 0;
@@ -143,7 +141,11 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
     // Direct3D Specific methods
     virtual DeviceIdentifier getAdapterIdentifier() const = 0;
 
-    virtual SwapChainD3D *createSwapChain(NativeWindow nativeWindow, HANDLE shareHandle, GLenum backBufferFormat, GLenum depthBufferFormat) = 0;
+    virtual SwapChainD3D *createSwapChain(NativeWindow nativeWindow,
+                                          HANDLE shareHandle,
+                                          GLenum backBufferFormat,
+                                          GLenum depthBufferFormat,
+                                          EGLint orientation) = 0;
 
     virtual gl::Error generateSwizzle(gl::Texture *texture) = 0;
     virtual gl::Error setSamplerState(gl::SamplerType type, int index, gl::Texture *texture, const gl::SamplerState &sampler) = 0;
@@ -160,17 +162,19 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
                                     GLenum drawMode,
                                     const std::vector<D3DUniform *> &uniformArray) = 0;
     virtual bool applyPrimitiveType(GLenum primitiveType, GLsizei elementCount, bool usesPointSize) = 0;
-    virtual gl::Error applyVertexBuffer(const gl::State &state, GLenum mode, GLint first, GLsizei count, GLsizei instances, SourceIndexData *sourceIndexInfo) = 0;
+    virtual gl::Error applyVertexBuffer(const gl::State &state,
+                                        GLenum mode,
+                                        GLint first,
+                                        GLsizei count,
+                                        GLsizei instances,
+                                        TranslatedIndexData *indexInfo) = 0;
     virtual gl::Error applyIndexBuffer(const gl::Data &data,
                                        const GLvoid *indices,
                                        GLsizei count,
                                        GLenum mode,
                                        GLenum type,
-                                       TranslatedIndexData *indexInfo,
-                                       SourceIndexData *sourceIndexInfo) = 0;
+                                       TranslatedIndexData *indexInfo) = 0;
     virtual void applyTransformFeedbackBuffers(const gl::State& state) = 0;
-
-    virtual void markAllStateDirty() = 0;
 
     virtual unsigned int getReservedVertexUniformVectors() const = 0;
     virtual unsigned int getReservedFragmentUniformVectors() const = 0;
@@ -241,10 +245,19 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
     void pushGroupMarker(GLsizei length, const char *marker) override;
     void popGroupMarker() override;
 
+    void setGPUDisjoint();
+
+    GLint getGPUDisjoint() override;
+    GLint64 getTimestamp() override;
+
+    void onMakeCurrent(const gl::Data &data) override;
+
     // In D3D11, faster than calling setTexture a jillion times
     virtual gl::Error clearTextures(gl::SamplerType samplerType, size_t rangeStart, size_t rangeEnd) = 0;
 
     virtual egl::Error getEGLDevice(DeviceImpl **device) = 0;
+
+    bool presentPathFastEnabled() const { return mPresentPathFastEnabled; }
 
   protected:
     virtual bool getLUID(LUID *adapterLuid) const = 0;
@@ -256,7 +269,6 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
 
     static unsigned int GetBlendSampleMask(const gl::Data &data, int samples);
     // dirtyPointer is a special value that will make the comparison with any valid pointer fail and force the renderer to re-apply the state.
-    static const uintptr_t DirtyPointer;
 
     egl::Display *mDisplay;
     bool mDeviceLost;
@@ -265,6 +277,8 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
     gl::DebugAnnotator *mAnnotator;
 
     std::vector<TranslatedAttribute> mTranslatedAttribCache;
+
+    bool mPresentPathFastEnabled;
 
   private:
     gl::Error genericDrawArrays(const gl::Data &data,
@@ -321,20 +335,8 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
 
     mutable bool mWorkaroundsInitialized;
     mutable WorkaroundsD3D mWorkarounds;
-};
 
-struct dx_VertexConstants
-{
-    float depthRange[4];
-    float viewAdjust[4];
-    float viewCoords[4];
-};
-
-struct dx_PixelConstants
-{
-    float depthRange[4];
-    float viewCoords[4];
-    float depthFront[4];
+    bool mDisjoint;
 };
 
 }

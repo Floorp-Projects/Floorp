@@ -150,7 +150,6 @@ gl::Error IndexDataManager::prepareIndexData(GLenum srcType,
                                              gl::Buffer *glBuffer,
                                              const GLvoid *indices,
                                              TranslatedIndexData *translated,
-                                             SourceIndexData *sourceData,
                                              bool primitiveRestartFixedIndexEnabled)
 {
     // Avoid D3D11's primitive restart index value
@@ -176,13 +175,10 @@ gl::Error IndexDataManager::prepareIndexData(GLenum srcType,
     BufferD3D *buffer = glBuffer ? GetImplAs<BufferD3D>(glBuffer) : nullptr;
 
     translated->indexType = dstType;
-    if (sourceData)
-    {
-        sourceData->srcBuffer = buffer;
-        sourceData->srcIndices = indices;
-        sourceData->srcIndexType = srcType;
-        sourceData->srcCount = count;
-    }
+    translated->srcIndexData.srcBuffer    = buffer;
+    translated->srcIndexData.srcIndices   = indices;
+    translated->srcIndexData.srcIndexType = srcType;
+    translated->srcIndexData.srcCount     = count;
 
     // Case 1: the indices are passed by pointer, which forces the streaming of index data
     if (glBuffer == nullptr)

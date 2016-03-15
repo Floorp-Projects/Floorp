@@ -475,16 +475,25 @@ template <class T> struct UseFallback { enum { type = T::fallback }; };
 // and the D3DDECLTYPE member needed for the vertex declaration in declflag.
 template <GLenum fromType, bool normalized, int size, template <class T> class PreferenceRule>
 struct Converter
-    : VertexDataConverter<typename GLToCType<fromType>::type,
-                          WidenRule<PreferenceRule< VertexTypeMapping<fromType, normalized> >::type, size>,
-                          ConversionRule<fromType,
-                                         normalized,
-                                         PreferenceRule< VertexTypeMapping<fromType, normalized> >::type>,
-                          DefaultVertexValues<typename D3DToCType<PreferenceRule< VertexTypeMapping<fromType, normalized> >::type>::type, normalized > >
+    : VertexDataConverter<
+          typename GLToCType<fromType>::type,
+          WidenRule<PreferenceRule<VertexTypeMapping<fromType, normalized>>::type, size>,
+          ConversionRule<fromType,
+                         normalized,
+                         PreferenceRule<VertexTypeMapping<fromType, normalized>>::type>,
+          DefaultVertexValues<typename D3DToCType<PreferenceRule<
+                                  VertexTypeMapping<fromType, normalized>>::type>::type,
+                              normalized>>
 {
 private:
-    enum { d3dtype = PreferenceRule< VertexTypeMapping<fromType, normalized> >::type };
-    enum { d3dsize = WidenRule<d3dtype, size>::finalWidth };
+  enum
+  {
+      d3dtype = PreferenceRule<VertexTypeMapping<fromType, normalized>>::type
+  };
+  enum
+  {
+      d3dsize = WidenRule<d3dtype, size>::finalWidth
+  };
 
 public:
     enum { capflag = VertexTypeFlags<d3dtype, d3dsize>::capflag };

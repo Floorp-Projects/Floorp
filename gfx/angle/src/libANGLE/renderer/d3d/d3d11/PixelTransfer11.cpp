@@ -224,11 +224,12 @@ gl::Error PixelTransfer11::copyBufferToTexture(const gl::PixelUnpackState &unpac
 
     // Are we doing a 2D or 3D copy?
     ID3D11GeometryShader *geometryShader = ((destSize.depth > 1) ? mBufferToTextureGS : NULL);
+    auto stateManager                    = mRenderer->getStateManager();
 
     deviceContext->VSSetShader(mBufferToTextureVS, NULL, 0);
     deviceContext->GSSetShader(geometryShader, NULL, 0);
     deviceContext->PSSetShader(pixelShader, NULL, 0);
-    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, bufferSRV);
+    stateManager->setShaderResource(gl::SAMPLER_PIXEL, 0, bufferSRV);
     deviceContext->IASetInputLayout(NULL);
     deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
@@ -261,7 +262,7 @@ gl::Error PixelTransfer11::copyBufferToTexture(const gl::PixelUnpackState &unpac
     deviceContext->Draw(numPixels, 0);
 
     // Unbind textures and render targets and vertex buffer
-    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, NULL);
+    stateManager->setShaderResource(gl::SAMPLER_PIXEL, 0, NULL);
     deviceContext->VSSetConstantBuffers(0, 1, &nullBuffer);
 
     mRenderer->markAllStateDirty();

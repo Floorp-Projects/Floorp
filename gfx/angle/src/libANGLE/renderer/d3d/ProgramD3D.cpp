@@ -401,11 +401,13 @@ D3DVarying::D3DVarying(const std::string &semanticNameIn,
 ProgramD3DMetadata::ProgramD3DMetadata(int rendererMajorShaderModel,
                                        const std::string &shaderModelSuffix,
                                        bool usesInstancedPointSpriteEmulation,
+                                       bool usesViewScale,
                                        const ShaderD3D *vertexShader,
                                        const ShaderD3D *fragmentShader)
     : mRendererMajorShaderModel(rendererMajorShaderModel),
       mShaderModelSuffix(shaderModelSuffix),
       mUsesInstancedPointSpriteEmulation(usesInstancedPointSpriteEmulation),
+      mUsesViewScale(usesViewScale),
       mVertexShader(vertexShader),
       mFragmentShader(fragmentShader)
 {
@@ -444,6 +446,11 @@ bool ProgramD3DMetadata::usesPointSize() const
 bool ProgramD3DMetadata::usesInsertedPointCoordValue() const
 {
     return !usesPointSize() && usesPointCoord() && mRendererMajorShaderModel >= 4;
+}
+
+bool ProgramD3DMetadata::usesViewScale() const
+{
+    return mUsesViewScale;
 }
 
 bool ProgramD3DMetadata::addsPointCoordToVertexShader() const
@@ -1114,8 +1121,7 @@ gl::Error ProgramD3D::getPixelExecutableForFramebuffer(const gl::Framebuffer *fb
     mPixelShaderOutputFormatCache.clear();
 
     const FramebufferD3D *fboD3D = GetImplAs<FramebufferD3D>(fbo);
-    const gl::AttachmentList &colorbuffers =
-        fboD3D->getColorAttachmentsForRender(mRenderer->getWorkarounds());
+    const gl::AttachmentList &colorbuffers = fboD3D->getColorAttachmentsForRender();
 
     for (size_t colorAttachment = 0; colorAttachment < colorbuffers.size(); ++colorAttachment)
     {
@@ -1242,9 +1248,8 @@ gl::Error ProgramD3D::getGeometryExecutableForPrimitiveType(const gl::Data &data
         *outExecutable = nullptr;
     }
 
-    // We only uses a geometry shader for point sprite emulation, or for fixing the provoking
-    // vertex problem. Otherwise, return a null shader.
-    if (drawMode != GL_POINTS && !mUsesFlatInterpolation)
+    // Return a null shader if the current rendering doesn't use a geometry shader
+    if (!usesGeometryShader(drawMode))
     {
         return gl::Error(GL_NO_ERROR);
     }
@@ -1261,7 +1266,8 @@ gl::Error ProgramD3D::getGeometryExecutableForPrimitiveType(const gl::Data &data
     }
 
     std::string geometryHLSL = mDynamicHLSL->generateGeometryShaderHLSL(
-        geometryShaderType, data, mData, mGeometryShaderPreamble);
+        geometryShaderType, data, mData, mRenderer->presentPathFastEnabled(),
+        mGeometryShaderPreamble);
 
     gl::InfoLog tempInfoLog;
     gl::InfoLog *currentInfoLog = infoLog ? infoLog : &tempInfoLog;
@@ -1389,7 +1395,8 @@ LinkResult ProgramD3D::link(const gl::Data &data, gl::InfoLog &infoLog)
     }
 
     ProgramD3DMetadata metadata(mRenderer->getMajorShaderModel(), mRenderer->getShaderModelSuffix(),
-                                usesInstancedPointSpriteEmulation(), vertexShaderD3D,
+                                usesInstancedPointSpriteEmulation(),
+                                mRenderer->presentPathFastEnabled(), vertexShaderD3D,
                                 fragmentShaderD3D);
 
     varyingPacking.enableBuiltins(SHADER_VERTEX, metadata);
@@ -1553,7 +1560,7 @@ void ProgramD3D::initializeUniformStorage()
 
 gl::Error ProgramD3D::applyUniforms(GLenum drawMode)
 {
-    updateSamplerMapping();
+    ASSERT(!mDirtySamplerMapping);
 
     gl::Error error = mRenderer->applyUniforms(*this, drawMode, mD3DUniforms);
     if (error.isError())
@@ -2056,8 +2063,8 @@ size_t ProgramD3D::getUniformBlockInfo(const sh::InterfaceBlock &interfaceBlock)
         encoder = &hlslEncoder;
     }
 
-    GetUniformBlockInfo(interfaceBlock.fields, "", encoder, interfaceBlock.isRowMajorLayout,
-                        &mBlockInfo);
+    GetUniformBlockInfo(interfaceBlock.fields, interfaceBlock.fieldPrefix(), encoder,
+                        interfaceBlock.isRowMajorLayout, &mBlockInfo);
 
     return encoder->getBlockSize();
 }
