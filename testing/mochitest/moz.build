@@ -153,3 +153,12 @@ TEST_HARNESS_FILES.testing.mochitest.tests.testing.mochitest.tests['MochiKit-1.4
     'tests/MochiKit-1.4.2/MochiKit/Test.js',
     'tests/MochiKit-1.4.2/MochiKit/Visual.js',
 ]
+
+TEST_HARNESS_FILES.testing.mochitest.iceserver += [
+    '/testing/tools/iceserver/iceserver.py',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.websocketprocessbridge += [
+    '/testing/tools/websocketprocessbridge/websocketprocessbridge.py',
+]
+
