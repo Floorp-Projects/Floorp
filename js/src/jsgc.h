@@ -789,12 +789,6 @@ const size_t MAX_EMPTY_CHUNK_AGE = 4;
 
 } /* namespace gc */
 
-extern bool
-InitGC(JSRuntime* rt, uint32_t maxbytes);
-
-extern void
-FinishGC(JSRuntime* rt);
-
 class InterpreterFrame;
 
 extern void
