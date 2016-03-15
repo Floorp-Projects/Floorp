@@ -215,6 +215,16 @@ const DownloadMap = {
     this.byDownload.set(download, item);
     return item;
   },
+
+  erase(item) {
+    // This will need to get more complicated for bug 1255507 but for now we
+    // only work with downloads in the DownloadList from getAll()
+    return this.getDownloadList().then(list => {
+      list.remove(item.download);
+      this.byId.delete(item.id);
+      this.byDownload.delete(item.download);
+    });
+  },
 };
 
 // Create a callable function that filters a DownloadItem based on a
@@ -331,6 +341,59 @@ function downloadQuery(query) {
   };
 }
 
+function queryHelper(query) {
+  let matchFn;
+  try {
+    matchFn = downloadQuery(query);
+  } catch (err) {
+    return Promise.reject({message: err.message});
+  }
+
+  let compareFn;
+  if (query.orderBy != null) {
+    const fields = query.orderBy.map(field => field[0] == "-"
+                                     ? {reverse: true, name: field.slice(1)}
+                                     : {reverse: false, name: field});
+
+    for (let field of fields) {
+      if (!DOWNLOAD_ITEM_FIELDS.includes(field.name)) {
+        return Promise.reject({message: `Invalid orderBy field ${field.name}`});
+      }
+    }
+
+    compareFn = (dl1, dl2) => {
+      for (let field of fields) {
+        const val1 = dl1[field.name];
+        const val2 = dl2[field.name];
+
+        if (val1 < val2) {
+          return field.reverse ? 1 : -1;
+        } else if (val1 > val2) {
+          return field.reverse ? -1 : 1;
+        }
+      }
+      return 0;
+    };
+  }
+
+  return DownloadMap.getAll().then(downloads => {
+    if (compareFn) {
+      downloads = Array.from(downloads);
+      downloads.sort(compareFn);
+    }
+    let results = [];
+    for (let download of downloads) {
+      if (query.limit && results.length >= query.limit) {
+        break;
+      }
+      if (matchFn(download)) {
+        results.push(download);
+      }
+    }
+    return results;
+  });
+}
+
 extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
   return {
     downloads: {
@@ -412,56 +475,8 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
       },
 
       search(query) {
-        let matchFn;
-        try {
-          matchFn = downloadQuery(query);
-        } catch (err) {
-          return Promise.reject({message: err.message});
-        }
-
-        let compareFn;
-        if (query.orderBy != null) {
-          const fields = query.orderBy.map(field => field[0] == "-"
-                                           ? {reverse: true, name: field.slice(1)}
-                                           : {reverse: false, name: field});
-
-          for (let field of fields) {
-            if (!DOWNLOAD_ITEM_FIELDS.includes(field.name)) {
-              return Promise.reject({message: `Invalid orderBy field ${field.name}`});
-            }
-          }
-
-          compareFn = (dl1, dl2) => {
-            for (let field of fields) {
-              const val1 = dl1[field.name];
-              const val2 = dl2[field.name];
-
-              if (val1 < val2) {
-                return field.reverse ? 1 : -1;
-              } else if (val1 > val2) {
-                return field.reverse ? -1 : 1;
-              }
-            }
-            return 0;
-          };
-        }
-
-        return DownloadMap.getAll().then(downloads => {
-          if (compareFn) {
-            downloads = Array.from(downloads);
-            downloads.sort(compareFn);
-          }
-          let results = [];
-          for (let download of downloads) {
-            if (query.limit && results.length >= query.limit) {
-              break;
-            }
-            if (matchFn(download)) {
-              results.push(download.serialize());
-            }
-          }
-          return results;
-        });
+        return queryHelper(query)
+          .then(items => items.map(item => item.serialize()));
       },
 
       pause(id) {
@@ -514,6 +529,18 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
             throw new Error(`Download directory ${dirobj.path} is not actually a directory`);
           }
         }).catch(Cu.reportError);
+      },
+
+      erase(query) {
+        return queryHelper(query).then(items => {
+          let results = [];
+          let promises = [];
+          for (let item of items) {
+            promises.push(DownloadMap.erase(item));
+            results.push(item.id);
+          }
+          return Promise.all(promises).then(() => results);
+        });
       },
 
       // When we do open(), check for additional downloads.open permission.
