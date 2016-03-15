@@ -30,6 +30,7 @@ class BluetoothDaemonHandsfreeInterface;
 class BluetoothDaemonProtocol;
 class BluetoothDaemonSetupInterface;
 class BluetoothDaemonSocketInterface;
+class BluetoothDaemonHidInterface;
 
 class BluetoothDaemonInterface final
   : public BluetoothInterface
@@ -58,6 +59,7 @@ public:
   BluetoothA2dpInterface* GetBluetoothA2dpInterface() override;
   BluetoothAvrcpInterface* GetBluetoothAvrcpInterface() override;
   BluetoothGattInterface* GetBluetoothGattInterface() override;
+  BluetoothHidInterface* GetBluetoothHidInterface() override;
 
 protected:
   enum Channel {
@@ -97,6 +99,7 @@ private:
   nsAutoPtr<BluetoothDaemonA2dpInterface> mA2dpInterface;
   nsAutoPtr<BluetoothDaemonAvrcpInterface> mAvrcpInterface;
   nsAutoPtr<BluetoothDaemonGattInterface> mGattInterface;
+  nsAutoPtr<BluetoothDaemonHidInterface> mHidInterface;
 };
 
 END_BLUETOOTH_NAMESPACE

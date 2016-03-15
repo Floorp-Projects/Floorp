@@ -15,6 +15,7 @@
 #include "jsgc.h"
 #include "jsprf.h"
 
+#include "asmjs/WasmModule.h"
 #include "builtin/ModuleObject.h"
 #include "gc/GCInternals.h"
 #include "gc/Policy.h"

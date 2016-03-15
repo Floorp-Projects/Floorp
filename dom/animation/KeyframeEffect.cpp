@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/KeyframeEffect.h"
 
+#include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/PropertyIndexedKeyframesBinding.h"
 #include "mozilla/AnimationUtils.h"
@@ -652,14 +653,27 @@ KeyframeEffectReadOnly::~KeyframeEffectReadOnly()
 {
 }
 
-template <class KeyframeEffectType>
+template <class KeyframeEffectType, class OptionsType>
 /* static */ already_AddRefed<KeyframeEffectType>
-KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
-                                                const Nullable<ElementOrCSSPseudoElement>& aTarget,
-                                                JS::Handle<JSObject*> aFrames,
-                                                const TimingParams& aTiming,
-                                                ErrorResult& aRv)
+KeyframeEffectReadOnly::ConstructKeyframeEffect(
+    const GlobalObject& aGlobal,
+    const Nullable<ElementOrCSSPseudoElement>& aTarget,
+    JS::Handle<JSObject*> aFrames,
+    const OptionsType& aOptions,
+    ErrorResult& aRv)
 {
+  nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
+  if (!doc) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  TimingParams timingParams =
+    TimingParams::FromOptionsUnion(aOptions, doc, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
   if (aTarget.IsNull()) {
     // We don't support null targets yet.
     aRv.Throw(NS_ERROR_DOM_ANIM_NO_TARGET_ERR);
@@ -694,28 +708,10 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
 
   RefPtr<KeyframeEffectType> effect =
     new KeyframeEffectType(targetElement->OwnerDoc(), targetElement,
-                           pseudoType, aTiming);
+                           pseudoType, timingParams);
   effect->mProperties = Move(animationProperties);
   return effect.forget();
 }
-
-// Explicit instantiations to avoid linker errors.
-
-template
-already_AddRefed<KeyframeEffectReadOnly>
-KeyframeEffectReadOnly::ConstructKeyframeEffect<>(const GlobalObject& aGlobal,
-                                                  const Nullable<ElementOrCSSPseudoElement>& aTarget,
-                                                  JS::Handle<JSObject*> aFrames,
-                                                  const TimingParams& aTiming,
-                                                  ErrorResult& aRv);
-
-template
-already_AddRefed<KeyframeEffect>
-KeyframeEffectReadOnly::ConstructKeyframeEffect<>(const GlobalObject& aGlobal,
-                                                  const Nullable<ElementOrCSSPseudoElement>& aTarget,
-                                                  JS::Handle<JSObject*> aFrames,
-                                                  const TimingParams& aTiming,
-                                                  ErrorResult& aRv);
 
 void
 KeyframeEffectReadOnly::ResetIsRunningOnCompositor()
@@ -1287,10 +1283,9 @@ GenerateValueEntries(Element* aTarget,
 
   for (OffsetIndexedKeyframe& keyframe : aKeyframes) {
     float offset = float(keyframe.mKeyframeDict.mOffset.Value());
-    // ParseEasing uses element's owner doc, so if it is a pseudo element,
-    // we use its parent element's owner doc.
     Maybe<ComputedTimingFunction> easing =
-      AnimationUtils::ParseEasing(aTarget, keyframe.mKeyframeDict.mEasing);
+      AnimationUtils::ParseEasing(keyframe.mKeyframeDict.mEasing,
+                                  aTarget->OwnerDoc());
     // We ignore keyframe.mKeyframeDict.mComposite since we don't support
     // composite modes on keyframes yet.
 
@@ -1554,10 +1549,8 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
     return;
   }
 
-  // ParseEasing uses element's owner doc, so if it is a pseudo element,
-  // we use its parent element's owner doc.
   Maybe<ComputedTimingFunction> easing =
-    AnimationUtils::ParseEasing(aTarget, keyframes.mEasing);
+    AnimationUtils::ParseEasing(keyframes.mEasing, aTarget->OwnerDoc());
 
   // We ignore easing.mComposite since we don't support composite modes on
   // keyframes yet.
@@ -1755,6 +1748,19 @@ KeyframeEffectReadOnly::BuildAnimationPropertyList(
                                                            objectValue, aResult,
                                                            aRv);
   }
+}
+
+/* static */ already_AddRefed<KeyframeEffectReadOnly>
+KeyframeEffectReadOnly::Constructor(
+    const GlobalObject& aGlobal,
+    const Nullable<ElementOrCSSPseudoElement>& aTarget,
+    JS::Handle<JSObject*> aFrames,
+    const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
+    ErrorResult& aRv)
+{
+  return ConstructKeyframeEffect<KeyframeEffectReadOnly>(aGlobal, aTarget,
+                                                         aFrames, aOptions,
+                                                         aRv);
 }
 
 void
@@ -2135,7 +2141,7 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
 }
 
 bool
-KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(
+KeyframeEffectReadOnly::ShouldBlockAsyncTransformAnimations(
   const nsIFrame* aFrame,
   AnimationPerformanceWarning::Type& aPerformanceWarning) const
 {
@@ -2155,7 +2161,7 @@ KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(
     // Check for geometric properties
     if (IsGeometricProperty(property.mProperty)) {
       aPerformanceWarning =
-        AnimationPerformanceWarning::Type::WithGeometricProperties;
+        AnimationPerformanceWarning::Type::TransformWithGeometricProperties;
       return true;
     }
 
@@ -2213,6 +2219,30 @@ KeyframeEffect::WrapObject(JSContext* aCx,
                            JS::Handle<JSObject*> aGivenProto)
 {
   return KeyframeEffectBinding::Wrap(aCx, this, aGivenProto);
+}
+
+/* static */ already_AddRefed<KeyframeEffect>
+KeyframeEffect::Constructor(
+    const GlobalObject& aGlobal,
+    const Nullable<ElementOrCSSPseudoElement>& aTarget,
+    JS::Handle<JSObject*> aFrames,
+    const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
+    ErrorResult& aRv)
+{
+  return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aTarget, aFrames,
+                                                 aOptions, aRv);
+}
+
+/* static */ already_AddRefed<KeyframeEffect>
+KeyframeEffect::Constructor(
+    const GlobalObject& aGlobal,
+    const Nullable<ElementOrCSSPseudoElement>& aTarget,
+    JS::Handle<JSObject*> aFrames,
+    const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
+    ErrorResult& aRv)
+{
+  return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aTarget, aFrames,
+                                                 aOptions, aRv);
 }
 
 void KeyframeEffect::NotifySpecifiedTimingUpdated()
