@@ -145,7 +145,15 @@ function attachToWindow(provider, targetWindow) {
       writable: true,
       value: function(toURL, callback) {
         let url = targetWindow.document.documentURIObject.resolve(toURL);
-        openChatWindow(targetWindow, provider, url, callback);
+        let dwu = getChromeWindow(targetWindow)
+          .QueryInterface(Ci.nsIInterfaceRequestor)
+          .getInterface(Ci.nsIDOMWindowUtils);
+        openChatWindow(targetWindow, provider, url, chatWin => {
+          if (chatWin && dwu.isHandlingUserInput)
+            chatWin.focus();
+          if (callback)
+            callback(!!chatWin);
+        });
       }
     },
     openPanel: {
