@@ -172,9 +172,6 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
   num = mozilla::camera::GetChildAndCall(
     &mozilla::camera::CamerasChild::NumberOfCaptureDevices,
     capEngine);
-  if (num <= 0) {
-    return;
-  }
 
   for (int i = 0; i < num; i++) {
     char deviceName[MediaEngineSource::kMaxDeviceNameLength];
