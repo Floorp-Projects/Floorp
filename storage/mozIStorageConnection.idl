@@ -6,6 +6,19 @@
 #include "nsISupports.idl"
 #include "mozIStorageAsyncConnection.idl"
 
+%{C++
+namespace mozilla {
+namespace dom {
+namespace quota {
+class QuotaObject;
+}
+}
+}
+
+%}
+
+[ptr] native QuotaObject(mozilla::dom::quota::QuotaObject);
+
 interface mozIStorageAggregateFunction;
 interface mozIStorageCompletionCallback;
 interface mozIStorageFunction;
@@ -238,4 +251,17 @@ interface mozIStorageConnection : mozIStorageAsyncConnection {
    *         For unknown module names.
    */
   [noscript] void enableModule(in ACString aModuleName);
+
+  /**
+   * Get quota objects.
+   *
+   * @param[out] aDatabaseQuotaObject
+   *             The QuotaObject associated with the database file.
+   * @param[out] aJournalQuotaObject
+   *             The QuotaObject associated with the journal file.
+   *
+   * @throws NS_ERROR_NOT_INITIALIZED.
+   */
+  [noscript] void getQuotaObjects(out QuotaObject aDatabaseQuotaObject,
+                                  out QuotaObject aJournalQuotaObject);
 };

@@ -13,6 +13,8 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
+using mozilla::dom::quota::QuotaObject;
+
 NS_IMPL_ISUPPORTS(cache::Connection, mozIStorageAsyncConnection,
                                      mozIStorageConnection);
 
@@ -270,6 +272,13 @@ NS_IMETHODIMP
 Connection::EnableModule(const nsACString& aModule)
 {
   return mBase->EnableModule(aModule);
+}
+
+NS_IMETHODIMP
+Connection::GetQuotaObjects(QuotaObject** aDatabaseQuotaObject,
+                            QuotaObject** aJournalQuotaObject)
+{
+  return mBase->GetQuotaObjects(aDatabaseQuotaObject, aJournalQuotaObject);
 }
 
 } // namespace cache
