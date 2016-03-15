@@ -125,11 +125,4 @@ interface nsICrashReporter : nsISupports
    * @throws NS_ERROR_NOT_INITIALIZED if crash reporting is disabled.
    */
   void saveMemoryReport();
-
-  /**
-   * Set the telemetry session ID which is recorded in crash metadata. This is
-   * saved in the crash manager and telemetry but is not submitted as a
-   * crash-stats annotation.
-   */
-  void setTelemetrySessionId(in AUTF8String id);
 };
