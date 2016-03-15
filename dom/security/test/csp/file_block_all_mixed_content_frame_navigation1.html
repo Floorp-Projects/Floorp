@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="block-all-mixed-content">
+  <title>Bug 1122236 - CSP: Implement block-all-mixed-content</title>
+</head>
+<body>
+<b>user clicks and navigates from https://b.com to http://c.com</b>
+
+<a id="navlink" href="http://example.com/tests/dom/security/test/csp/file_block_all_mixed_content_frame_navigation2.html">foo</a>
+
+<script class="testbody" type="text/javascript">
+  // click the link to start the frame navigation
+  document.getElementById("navlink").click();
+</script>
+
+</body>
+</html>
