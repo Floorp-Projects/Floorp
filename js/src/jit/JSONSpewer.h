@@ -7,6 +7,8 @@
 #ifndef jit_JSONSpewer_h
 #define jit_JSONSpewer_h
 
+#ifdef JS_JITSPEW
+
 #include <stdio.h>
 
 #include "js/TypeDecls.h"
@@ -60,11 +62,11 @@ class JSONSpewer
     void spewRanges(BacktrackingAllocator* regalloc);
     void endPass();
     void endFunction();
-
-    void spewDebuggerGraph(MIRGraph* mir);
 };
 
 } // namespace jit
 } // namespace js
+
+#endif /* JS_JITSPEW */
 
 #endif /* jit_JSONSpewer_h */

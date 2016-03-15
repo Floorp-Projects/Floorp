@@ -159,6 +159,8 @@ public:
 
   // Does this style context or any of its ancestors have text
   // decoration lines?
+  // Differs from nsStyleTextReset::HasTextDecorationLines, which tests
+  // only the data for a single context.
   bool HasTextDecorationLines() const
     { return !!(mBits & NS_STYLE_HAS_TEXT_DECORATION_LINES); }
 

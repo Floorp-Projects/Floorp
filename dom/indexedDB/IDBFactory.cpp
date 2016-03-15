@@ -724,25 +724,17 @@ IDBFactory::OpenInternal(nsIPrincipal* aPrincipal,
     }
   }
 
-  AutoJSAPI autoJS;
   RefPtr<IDBOpenDBRequest> request;
 
   if (mWindow) {
-    AutoJSContext cx;
-    if (NS_WARN_IF(!autoJS.Init(mWindow, cx))) {
-      IDB_REPORT_INTERNAL_ERR();
-      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-      return nullptr;
-    }
-
-    JS::Rooted<JSObject*> scriptOwner(cx,
-                                      static_cast<nsGlobalWindow*>(reinterpret_cast<nsPIDOMWindow<nsISupports>*>(mWindow.get()))->FastGetGlobalJSObject());
+    JS::Rooted<JSObject*> scriptOwner(nsContentUtils::RootingCxForThread(),
+                                      nsGlobalWindow::Cast(mWindow.get())->FastGetGlobalJSObject());
     MOZ_ASSERT(scriptOwner);
 
     request = IDBOpenDBRequest::CreateForWindow(this, mWindow, scriptOwner);
   } else {
-    autoJS.Init(mOwningObject.get());
-    JS::Rooted<JSObject*> scriptOwner(autoJS.cx(), mOwningObject);
+    JS::Rooted<JSObject*> scriptOwner(nsContentUtils::RootingCxForThread(),
+                                      mOwningObject);
 
     request = IDBOpenDBRequest::CreateForJS(this, scriptOwner);
     if (!request) {

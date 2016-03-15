@@ -100,3 +100,11 @@ def deprecated_option(*args, **kwargs):
         return deprecated
 
     return decorator
+
+
+# from mozbuild.util import ReadOnlyNamespace as namespace
+@template
+@advanced
+def namespace(**kwargs):
+    from mozbuild.util import ReadOnlyNamespace
+    return ReadOnlyNamespace(**kwargs)

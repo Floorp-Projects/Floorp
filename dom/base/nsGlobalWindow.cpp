@@ -10659,7 +10659,7 @@ nsGlobalWindow::ShowSlowScriptDialog()
   }
 
   // Check if we should offer the option to debug
-  JS::UniqueChars filename;
+  JS::AutoFilename filename;
   unsigned lineno;
   bool hasFrame = JS::DescribeScriptedCaller(cx, &filename, &lineno);
 
@@ -11442,6 +11442,10 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
               nsIPrincipal::APP_STATUS_INSTALLED;
   }
 
+  // XXXbz When this gets fixed to not use LegacyIsCallerNativeCode()
+  // (indirectly) maybe we can nix the AutoJSAPI usage OnLinkClickEvent::Run.
+  // But note that if you change this to GetEntryGlobal(), say, then
+  // OnLinkClickEvent::Run will need a full-blown AutoEntryScript.
   const bool checkForPopup = !nsContentUtils::LegacyIsCallerChromeOrNativeCode() &&
     !isApp && !aDialog && !WindowExists(aName, !aCalledNoScript);
 

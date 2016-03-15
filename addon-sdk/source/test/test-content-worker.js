@@ -941,7 +941,7 @@ exports["test:console method log functions properly"] = WorkerTest(
         assert.deepEqual(logs, [
           "function Function() { [native code] }",
           "(foo) => foo * foo",
-          "function foo(bar) { \"use strict\"; return bar + bar }"
+          "function foo(bar) { return bar + bar }"
         ]);
 
         done();

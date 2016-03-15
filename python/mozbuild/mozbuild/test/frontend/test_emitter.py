@@ -66,13 +66,16 @@ class TestEmitterBasic(unittest.TestCase):
         os.environ.clear()
         os.environ.update(self._old_env)
 
-    def reader(self, name, enable_tests=False):
-        config = MockConfig(mozpath.join(data_path, name), extra_substs=dict(
+    def reader(self, name, enable_tests=False, extra_substs=None):
+        substs = dict(
             ENABLE_TESTS='1' if enable_tests else '',
             BIN_SUFFIX='.prog',
             OS_TARGET='WINNT',
             COMPILE_ENVIRONMENT='1',
-        ))
+        )
+        if extra_substs:
+            substs.update(extra_substs)
+        config = MockConfig(mozpath.join(data_path, name), extra_substs=substs)
 
         return BuildReader(config)
 
@@ -195,6 +198,32 @@ class TestEmitterBasic(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(wanted, variables)
         self.maxDiff = maxDiff
+
+    def test_use_yasm(self):
+        # When yasm is not available, this should raise.
+        reader = self.reader('use-yasm')
+        with self.assertRaisesRegexp(SandboxValidationError,
+            'yasm is not available'):
+            objs = self.read_topsrcdir(reader)
+
+        # When yasm is available, this should work.
+        reader = self.reader('use-yasm',
+                             extra_substs=dict(
+                                 YASM='yasm',
+                                 YASM_ASFLAGS='-foo',
+                             ))
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 1)
+        self.assertIsInstance(objs[0], VariablePassthru)
+        maxDiff = self.maxDiff
+        self.maxDiff = None
+        self.assertEqual(objs[0].variables,
+                         {'AS': 'yasm',
+                          'ASFLAGS': '-foo',
+                          'AS_DASH_C_FLAG': ''})
+        self.maxDiff = maxDiff
+
 
     def test_generated_files(self):
         reader = self.reader('generated-files')

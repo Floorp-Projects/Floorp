@@ -377,7 +377,8 @@ public class DynamicToolbarAnimator {
 
         // we only care about single-finger drags here; any other kind of event
         // should reset and cause us to start over.
-        if (event.getActionMasked() != MotionEvent.ACTION_MOVE ||
+        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE ||
+            event.getActionMasked() != MotionEvent.ACTION_MOVE ||
             event.getPointerCount() != 1)
         {
             if (mTouchStart != null) {

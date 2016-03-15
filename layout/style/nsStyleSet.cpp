@@ -973,18 +973,12 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
         NS_NewStyleContext(parentIfVisited, aPseudoTag, aPseudoType,
                            aVisitedRuleNode,
                            aFlags & eSkipParentDisplayBasedStyleFixup);
-      if (!parentIfVisited) {
-        mRoots.AppendElement(resultIfVisited);
-      }
       resultIfVisited->SetIsStyleIfVisited();
       result->SetStyleIfVisited(resultIfVisited.forget());
 
       if (relevantLinkVisited) {
         result->AddStyleBit(NS_STYLE_RELEVANT_LINK_VISITED);
       }
-    }
-    if (!aParentContext) {
-      mRoots.AppendElement(result);
     }
   }
   else {
@@ -2223,6 +2217,16 @@ nsStyleSet::Shutdown()
 }
 
 static const uint32_t kGCInterval = 300;
+
+// Notification that a style context with a null parent has been created.
+void
+nsStyleSet::AddStyleContextRoot(nsStyleContext* aStyleContext)
+{
+  // aStyleContext has not been fully initialized, but its parent and
+  // rule node are correct.
+  MOZ_ASSERT(!aStyleContext->GetParent());
+  mRoots.AppendElement(aStyleContext);
+}
 
 void
 nsStyleSet::NotifyStyleContextDestroyed(nsStyleContext* aStyleContext)
