@@ -76,7 +76,7 @@ public:
   /**
    * Get the source's current CORSMode. If not applicable CORS_NONE is returned.
    * The sink will be notified of changes to our CORSMode through
-   * NotifyPrincipalChanged().
+   * PrincipalChanged().
    */
   virtual CORSMode GetCORSMode() const { return CORS_NONE; }
 
@@ -210,6 +210,8 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   friend class mozilla::PeerConnectionMedia;
   friend class mozilla::RemoteSourceStreamInfo;
 
+  class PrincipalHandleListener;
+
 public:
   /**
    * aTrackID is the MediaStreamGraph track ID for the track in the
@@ -250,7 +252,14 @@ public:
   /**
    * Get this track's principal.
    */
-  nsIPrincipal* GetPrincipal() const { return GetSource().GetPrincipal(); }
+  nsIPrincipal* GetPrincipal() const { return mPrincipal; }
+
+  /**
+   * Called by the PrincipalHandleListener when this track's PrincipalHandle changes on
+   * the MediaStreamGraph thread. When the PrincipalHandle matches the pending
+   * principal we know that the principal change has propagated to consumers.
+   */
+  void NotifyPrincipalHandleChanged(const PrincipalHandle& aPrincipalHandle);
 
   /**
    * Get this track's CORS mode.
@@ -331,6 +340,8 @@ public:
 protected:
   virtual ~MediaStreamTrack();
 
+  void Destroy();
+
   // Returns the original DOMMediaStream's underlying input stream.
   MediaStream* GetInputStream();
 
@@ -340,6 +351,11 @@ protected:
   // Returns the original DOMMediaStream. If this track is a clone,
   // the original track's owning DOMMediaStream is returned.
   DOMMediaStream* GetInputDOMStream();
+
+  /**
+   * Sets the principal and notifies PrincipalChangeObservers if it changes.
+   */
+  void SetPrincipal(nsIPrincipal* aPrincipal);
 
   /**
    * Creates a new MediaStreamTrack with the same type, input track ID and
@@ -356,6 +372,9 @@ protected:
   TrackID mInputTrackID;
   RefPtr<MediaStreamTrackSource> mSource;
   RefPtr<MediaStreamTrack> mOriginalTrack;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCOMPtr<nsIPrincipal> mPendingPrincipal;
+  RefPtr<PrincipalHandleListener> mPrincipalHandleListener;
   nsString mID;
   nsString mLabel;
   bool mEnded;
