@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1122236 - CSP: Implement block-all-mixed-content</title>
+</head>
+<body>
+<b>http://c.com loaded, let's tell the parent</b>
+
+<script class="testbody" type="text/javascript">
+  window.parent.postMessage({result: "frame-navigated"}, "*");
+</script>
+
+</body>
+</html>
