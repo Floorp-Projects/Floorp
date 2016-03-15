@@ -587,3 +587,9 @@ LIRGeneratorMIPSShared::visitTruncateToInt64(MTruncateToInt64* ins)
 {
     MOZ_CRASH("NY");
 }
+
+void
+LIRGeneratorMIPSShared::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
+{
+    MOZ_CRASH("NY");
+}
