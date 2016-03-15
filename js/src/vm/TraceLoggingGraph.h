@@ -10,6 +10,7 @@
 #include "jslock.h"
 
 #include "js/TypeDecls.h"
+#include "threading/Mutex.h"
 #include "vm/TraceLoggingTypes.h"
 
 /*
@@ -76,16 +77,15 @@ class TraceLoggerGraphState
 #endif
 
   public:
-    PRLock* lock;
+    js::Mutex lock;
 
   public:
     TraceLoggerGraphState()
-      : numLoggers(0),
-        out(nullptr),
+      : numLoggers(0)
+      , out(nullptr)
 #ifdef DEBUG
-        initialized(false),
+      , initialized(false)
 #endif
-        lock(nullptr)
     {}
 
     bool init();

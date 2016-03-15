@@ -394,6 +394,8 @@ public:
 
   void ReportAnyBadState();
 
+  void SetInImageVisibility(bool aState);
+
 protected:
   virtual ~PresShell();
 
@@ -888,6 +890,8 @@ protected:
 
   // Whether the widget has received a paint message yet.
   bool                      mHasReceivedPaintMessage : 1;
+
+  bool                      mInImageVisibility : 1;
 
   static bool               sDisableNonTestMouseEvents;
 };

@@ -8,6 +8,7 @@
 #include "media/stagefright/MediaSource.h"
 #include "media/stagefright/MetaData.h"
 #include "mozilla/Logging.h"
+#include "mozilla/SSE.h"
 #include "mozilla/Telemetry.h"
 #include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/MP4Metadata.h"
@@ -122,10 +123,20 @@ private:
 MP4Metadata::MP4Metadata(Stream* aSource)
  : mStagefright(MakeUnique<MP4MetadataStagefright>(aSource))
 #ifdef MOZ_RUST_MP4PARSE
- , mRust(MakeUnique<MP4MetadataRust>(aSource))
  , mReportedTelemetry(false)
 #endif
 {
+  // Rust's i686-pc-windows-msvc target assumes sse2 support.
+  // While we can pass -C target-feature=-sse2 to disable this
+  // in our own code, there's still the problem of the standard
+  // library. To work around this for the small number of users
+  // without SSE2 hardware, avoid calling into rust code.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1253202
+#if defined(MOZ_RUST_MP4PARSE)
+  if (mozilla::supports_sse2()) {
+    mRust = MakeUnique<MP4MetadataRust>(aSource);
+  }
+#endif
 }
 
 MP4Metadata::~MP4Metadata()

@@ -31,7 +31,7 @@ namespace js {
  *
  * (If you're wondering, 0xb973c0de is used because it looks like "bytecode".)
  */
-static const uint32_t XDR_BYTECODE_VERSION_SUBTRAHEND = 352;
+static const uint32_t XDR_BYTECODE_VERSION_SUBTRAHEND = 354;
 static const uint32_t XDR_BYTECODE_VERSION =
     uint32_t(0xb973c0de - XDR_BYTECODE_VERSION_SUBTRAHEND);
 

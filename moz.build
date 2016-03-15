@@ -51,7 +51,6 @@ if not CONFIG['JS_STANDALONE']:
     ]
 
 DIRS += [
-    'config/external/fdlibm',
     'config/external/zlib',
     'memory',
     'mfbt',

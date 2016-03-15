@@ -909,47 +909,47 @@ ClientMultiTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   long start = PR_IntervalNow();
 #endif
 
-  // If this region is empty XMost() - 1 will give us a negative value.
-  NS_ASSERTION(!aPaintRegion.GetBounds().IsEmpty(), "Empty paint region\n");
-
   if (!gfxPrefs::TiledDrawTargetEnabled()) {
-    RefPtr<gfxContext> ctxt;
+    if (!aPaintRegion.IsEmpty()) {
 
-    const IntRect bounds = aPaintRegion.GetBounds();
-    {
-      PROFILER_LABEL("ClientMultiTiledLayerBuffer", "PaintThebesSingleBufferAlloc",
+      RefPtr<gfxContext> ctxt;
+
+      const IntRect bounds = aPaintRegion.GetBounds();
+      {
+        PROFILER_LABEL("ClientMultiTiledLayerBuffer", "PaintThebesSingleBufferAlloc",
+          js::ProfileEntry::Category::GRAPHICS);
+
+        mSinglePaintDrawTarget =
+          gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+            gfx::IntSize(ceilf(bounds.width * mResolution),
+                         ceilf(bounds.height * mResolution)),
+            gfxPlatform::GetPlatform()->Optimal2DFormatForContent(
+              GetContentType()));
+
+        if (!mSinglePaintDrawTarget) {
+          return;
+        }
+
+        ctxt = new gfxContext(mSinglePaintDrawTarget);
+
+        mSinglePaintBufferOffset = nsIntPoint(bounds.x, bounds.y);
+      }
+      ctxt->NewPath();
+      ctxt->SetMatrix(
+        ctxt->CurrentMatrix().Scale(mResolution, mResolution).
+                              Translate(-bounds.x, -bounds.y));
+#ifdef GFX_TILEDLAYER_PREF_WARNINGS
+      if (PR_IntervalNow() - start > 3) {
+        printf_stderr("Slow alloc %i\n", PR_IntervalNow() - start);
+      }
+      start = PR_IntervalNow();
+#endif
+      PROFILER_LABEL("ClientMultiTiledLayerBuffer", "PaintThebesSingleBufferDraw",
         js::ProfileEntry::Category::GRAPHICS);
 
-      mSinglePaintDrawTarget =
-        gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-          gfx::IntSize(ceilf(bounds.width * mResolution),
-                       ceilf(bounds.height * mResolution)),
-          gfxPlatform::GetPlatform()->Optimal2DFormatForContent(
-            GetContentType()));
-
-      if (!mSinglePaintDrawTarget) {
-        return;
-      }
-
-      ctxt = new gfxContext(mSinglePaintDrawTarget);
-
-      mSinglePaintBufferOffset = nsIntPoint(bounds.x, bounds.y);
+      mCallback(mPaintedLayer, ctxt, aPaintRegion, aDirtyRegion,
+                DrawRegionClip::NONE, nsIntRegion(), mCallbackData);
     }
-    ctxt->NewPath();
-    ctxt->SetMatrix(
-      ctxt->CurrentMatrix().Scale(mResolution, mResolution).
-                            Translate(-bounds.x, -bounds.y));
-#ifdef GFX_TILEDLAYER_PREF_WARNINGS
-    if (PR_IntervalNow() - start > 3) {
-      printf_stderr("Slow alloc %i\n", PR_IntervalNow() - start);
-    }
-    start = PR_IntervalNow();
-#endif
-    PROFILER_LABEL("ClientMultiTiledLayerBuffer", "PaintThebesSingleBufferDraw",
-      js::ProfileEntry::Category::GRAPHICS);
-
-    mCallback(mPaintedLayer, ctxt, aPaintRegion, aDirtyRegion,
-              DrawRegionClip::NONE, nsIntRegion(), mCallbackData);
   }
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
@@ -1125,79 +1125,81 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
 
   oldRetainedTiles.Clear();
 
-  for (size_t i = 0; i < newTileCount; ++i) {
-    const TileIntPoint tilePosition = newTiles.TilePosition(i);
-
-    IntPoint tileOffset = GetTileOffset(tilePosition);
-    nsIntRegion tileDrawRegion = IntRect(tileOffset, scaledTileSize);
-    tileDrawRegion.AndWith(aPaintRegion);
-
-    if (tileDrawRegion.IsEmpty()) {
-      continue;
-    }
-
-    TileClient& tile = mRetainedTiles[i];
-    if (!ValidateTile(tile, GetTileOffset(tilePosition), tileDrawRegion)) {
-      gfxCriticalError() << "ValidateTile failed";
-    }
-  }
-
-  if (gfxPrefs::TiledDrawTargetEnabled() && mMoz2DTiles.size() > 0) {
-    gfx::TileSet tileset;
-    for (size_t i = 0; i < mMoz2DTiles.size(); ++i) {
-      mMoz2DTiles[i].mTileOrigin -= mTilingOrigin;
-    }
-    tileset.mTiles = &mMoz2DTiles[0];
-    tileset.mTileCount = mMoz2DTiles.size();
-    RefPtr<DrawTarget> drawTarget = gfx::Factory::CreateTiledDrawTarget(tileset);
-    drawTarget->SetTransform(Matrix());
-
-    RefPtr<gfxContext> ctx = new gfxContext(drawTarget);
-    ctx->SetMatrix(
-      ctx->CurrentMatrix().Scale(mResolution, mResolution).Translate(ThebesPoint(-mTilingOrigin)));
-
-    mCallback(mPaintedLayer, ctx, aPaintRegion, aDirtyRegion,
-              DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
-    mMoz2DTiles.clear();
-    // Reset:
-    mTilingOrigin = IntPoint(std::numeric_limits<int32_t>::max(),
-                             std::numeric_limits<int32_t>::max());
-  }
-
-  bool edgePaddingEnabled = gfxPrefs::TileEdgePaddingEnabled();
-
-  for (uint32_t i = 0; i < mRetainedTiles.Length(); ++i) {
-    TileClient& tile = mRetainedTiles[i];
-
-    // Only worry about padding when not doing low-res because it simplifies
-    // the math and the artifacts won't be noticable
-    // Edge padding prevents sampling artifacts when compositing.
-    if (edgePaddingEnabled && mResolution == 1 &&
-        tile.mFrontBuffer && tile.mFrontBuffer->IsLocked()) {
-
+  if (!aPaintRegion.IsEmpty()) {
+    for (size_t i = 0; i < newTileCount; ++i) {
       const TileIntPoint tilePosition = newTiles.TilePosition(i);
-      IntPoint tileOffset = GetTileOffset(tilePosition);
-      // Strictly speakig we want the unscaled rect here, but it doesn't matter
-      // because we only run this code when the resolution is equal to 1.
-      IntRect tileRect = IntRect(tileOffset.x, tileOffset.y,
-                                 GetTileSize().width, GetTileSize().height);
 
+      IntPoint tileOffset = GetTileOffset(tilePosition);
       nsIntRegion tileDrawRegion = IntRect(tileOffset, scaledTileSize);
       tileDrawRegion.AndWith(aPaintRegion);
 
-      nsIntRegion tileValidRegion = mValidRegion;
-      tileValidRegion.OrWith(tileDrawRegion);
+      if (tileDrawRegion.IsEmpty()) {
+        continue;
+      }
 
-      // We only need to pad out if the tile has area that's not valid
-      if (!tileValidRegion.Contains(tileRect)) {
-        tileValidRegion = tileValidRegion.Intersect(tileRect);
-        // translate the region into tile space and pad
-        tileValidRegion.MoveBy(-IntPoint(tileOffset.x, tileOffset.y));
-        RefPtr<DrawTarget> drawTarget = tile.mFrontBuffer->BorrowDrawTarget();
-        PadDrawTargetOutFromRegion(drawTarget, tileValidRegion);
+      TileClient& tile = mRetainedTiles[i];
+      if (!ValidateTile(tile, GetTileOffset(tilePosition), tileDrawRegion)) {
+        gfxCriticalError() << "ValidateTile failed";
       }
     }
-    UnlockTile(tile);
+
+    if (gfxPrefs::TiledDrawTargetEnabled() && mMoz2DTiles.size() > 0) {
+      gfx::TileSet tileset;
+      for (size_t i = 0; i < mMoz2DTiles.size(); ++i) {
+        mMoz2DTiles[i].mTileOrigin -= mTilingOrigin;
+      }
+      tileset.mTiles = &mMoz2DTiles[0];
+      tileset.mTileCount = mMoz2DTiles.size();
+      RefPtr<DrawTarget> drawTarget = gfx::Factory::CreateTiledDrawTarget(tileset);
+      drawTarget->SetTransform(Matrix());
+
+      RefPtr<gfxContext> ctx = new gfxContext(drawTarget);
+      ctx->SetMatrix(
+        ctx->CurrentMatrix().Scale(mResolution, mResolution).Translate(ThebesPoint(-mTilingOrigin)));
+
+      mCallback(mPaintedLayer, ctx, aPaintRegion, aDirtyRegion,
+                DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
+      mMoz2DTiles.clear();
+      // Reset:
+      mTilingOrigin = IntPoint(std::numeric_limits<int32_t>::max(),
+                               std::numeric_limits<int32_t>::max());
+    }
+
+    bool edgePaddingEnabled = gfxPrefs::TileEdgePaddingEnabled();
+
+    for (uint32_t i = 0; i < mRetainedTiles.Length(); ++i) {
+      TileClient& tile = mRetainedTiles[i];
+
+      // Only worry about padding when not doing low-res because it simplifies
+      // the math and the artifacts won't be noticable
+      // Edge padding prevents sampling artifacts when compositing.
+      if (edgePaddingEnabled && mResolution == 1 &&
+          tile.mFrontBuffer && tile.mFrontBuffer->IsLocked()) {
+
+        const TileIntPoint tilePosition = newTiles.TilePosition(i);
+        IntPoint tileOffset = GetTileOffset(tilePosition);
+        // Strictly speakig we want the unscaled rect here, but it doesn't matter
+        // because we only run this code when the resolution is equal to 1.
+        IntRect tileRect = IntRect(tileOffset.x, tileOffset.y,
+                                   GetTileSize().width, GetTileSize().height);
+
+        nsIntRegion tileDrawRegion = IntRect(tileOffset, scaledTileSize);
+        tileDrawRegion.AndWith(aPaintRegion);
+
+        nsIntRegion tileValidRegion = mValidRegion;
+        tileValidRegion.OrWith(tileDrawRegion);
+
+        // We only need to pad out if the tile has area that's not valid
+        if (!tileValidRegion.Contains(tileRect)) {
+          tileValidRegion = tileValidRegion.Intersect(tileRect);
+          // translate the region into tile space and pad
+          tileValidRegion.MoveBy(-IntPoint(tileOffset.x, tileOffset.y));
+          RefPtr<DrawTarget> drawTarget = tile.mFrontBuffer->BorrowDrawTarget();
+          PadDrawTargetOutFromRegion(drawTarget, tileValidRegion);
+        }
+      }
+      UnlockTile(tile);
+    }
   }
 
   mTiles = newTiles;

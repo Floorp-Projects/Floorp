@@ -468,22 +468,6 @@ private:
   JSAutoCompartment mAc;
 };
 
-/**
- * Like AutoSafeJSContext but can be used safely on worker threads.
- */
-class MOZ_RAII ThreadsafeAutoSafeJSContext {
-public:
-  explicit ThreadsafeAutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
-  operator JSContext*() const;
-
-private:
-  JSContext* mCx; // Used on workers.  Null means mainthread.
-  Maybe<JSAutoRequest> mRequest; // Used on workers.
-  Maybe<AutoSafeJSContext> mAutoSafeJSContext; // Used on main thread.
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-
 } // namespace mozilla
 
 #endif // mozilla_dom_ScriptSettings_h

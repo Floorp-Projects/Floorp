@@ -78,10 +78,6 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_MEMORY']:
     DEFINES['HAVE_MALLOC_USABLE_SIZE'] = True
     DEFINES['SQLITE_WITHOUT_MSIZE'] = True
 
-# disable PGO for Sun Studio
-if CONFIG['SOLARIS_SUNPRO_CC']:
-    NO_PGO = True
-
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:
     CFLAGS += [

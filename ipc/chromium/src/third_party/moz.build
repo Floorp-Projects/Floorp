@@ -10,7 +10,7 @@ include(libevent_path_prefix + '/libeventcommon.mozbuild')
 if os_win:
     error('should not reach here on Windows')
 
-if CONFIG['MOZ_NATIVE_LIBEVENT']:
+if CONFIG['MOZ_SYSTEM_LIBEVENT']:
     error('should not reach here if we are using a native libevent')
 
 UNIFIED_SOURCES += [

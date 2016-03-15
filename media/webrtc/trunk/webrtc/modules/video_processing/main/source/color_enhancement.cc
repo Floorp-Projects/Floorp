@@ -17,6 +17,11 @@ namespace webrtc {
 namespace VideoProcessing {
 
 int32_t ColorEnhancement(I420VideoFrame* frame) {
+  // MOZILLA: we don't use this function and by stubbing it out we can avoid
+  // storing colorTable[], which is 64 KiB of static data.
+  assert(false);
+  return VPM_GENERAL_ERROR;
+#if 0
   assert(frame);
   // Pointers to U and V color pixels.
   uint8_t* ptr_u;
@@ -44,6 +49,7 @@ int32_t ColorEnhancement(I420VideoFrame* frame) {
     ptr_v++;
   }
   return VPM_OK;
+#endif
 }
 
 }  // namespace VideoProcessing
