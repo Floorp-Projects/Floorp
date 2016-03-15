@@ -9,6 +9,7 @@
 #include "DOMError.h"
 #include "nsThreadUtils.h"
 #include "DOMCursor.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Promise.h"
@@ -297,11 +298,10 @@ DOMRequestService::FireDetailedError(nsIDOMDOMRequest* aRequest,
 class FireSuccessAsyncTask : public nsRunnable
 {
 
-  FireSuccessAsyncTask(JSContext* aCx,
-                       DOMRequest* aRequest,
+  FireSuccessAsyncTask(DOMRequest* aRequest,
                        const JS::Value& aResult) :
     mReq(aRequest),
-    mResult(aCx, aResult)
+    mResult(CycleCollectedJSRuntime::Get()->Runtime(), aResult)
   {
   }
 
@@ -314,8 +314,8 @@ public:
   Dispatch(DOMRequest* aRequest,
            const JS::Value& aResult)
   {
-    mozilla::ThreadsafeAutoSafeJSContext cx;
-    RefPtr<FireSuccessAsyncTask> asyncTask = new FireSuccessAsyncTask(cx, aRequest, aResult);
+    RefPtr<FireSuccessAsyncTask> asyncTask =
+      new FireSuccessAsyncTask(aRequest, aResult);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(asyncTask)));
     return NS_OK;
   }

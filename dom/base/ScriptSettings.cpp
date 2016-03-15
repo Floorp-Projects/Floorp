@@ -825,26 +825,4 @@ AutoSafeJSContext::AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMP
 {
 }
 
-ThreadsafeAutoSafeJSContext::ThreadsafeAutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
-{
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-
-  if (NS_IsMainThread()) {
-    mCx = nullptr;
-    mAutoSafeJSContext.emplace();
-  } else {
-    mCx = mozilla::dom::workers::GetCurrentThreadJSContext();
-    mRequest.emplace(mCx);
-  }
-}
-
-ThreadsafeAutoSafeJSContext::operator JSContext*() const
-{
-  if (mCx) {
-    return mCx;
-  } else {
-    return *mAutoSafeJSContext;
-  }
-}
-
 } // namespace mozilla
