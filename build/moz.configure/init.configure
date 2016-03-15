@@ -255,6 +255,7 @@ def wanted_mozconfig_variables(help):
          'MOZILLABUILD',
          'MOZ_ARTIFACT_BUILDS',
          'MOZ_BUILD_APP',
+         'PERL',
      ])
 
 

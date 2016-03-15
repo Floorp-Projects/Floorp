@@ -30,7 +30,12 @@ def checking(what):
             print('checking', what, end='... ')
             sys.stdout.flush()
             ret = func(*args, **kwargs)
-            print(ret)
+            if ret is True:
+                print('yes')
+            elif ret is False:
+                print('no')
+            else:
+                print(ret)
             sys.stdout.flush()
             return ret
         return wrapped
