@@ -672,7 +672,7 @@ function implicitlyWaitFor(func, timeout, interval = 100) {
     let startTime = new Date().getTime();
     let endTime = startTime + timeout;
 
-    let observer = function() {
+    let onTimer = function() {
       let res;
       try {
         res = func();
@@ -692,7 +692,11 @@ function implicitlyWaitFor(func, timeout, interval = 100) {
       }
     };
 
-    timer.init(observer, interval, Ci.nsITimer.TYPE_REPEATING_SLACK);
+    // Run a check immediately so we do not cause a delay in execution
+    // due to the set timer interval.
+    onTimer();
+
+    timer.init(onTimer, interval, Ci.nsITimer.TYPE_REPEATING_SLACK);
 
   // cancel timer and return result for yielding
   }).then(res => {
