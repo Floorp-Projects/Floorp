@@ -131,7 +131,7 @@
 }
 
 .tab-throbber[progress] {
-  list-style-image: url("chrome://browser/skin/tabbrowser/loading.png");
+  list-style-image: url("chrome://global/skin/icons/loading.png");
 }
 
 .tab-label {

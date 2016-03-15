@@ -156,5 +156,5 @@ findbar[noanim] {
 }
 
 .find-status-icon[status="pending"] {
-  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+  list-style-image: url("chrome://global/skin/icons/loading.png");
 }
