@@ -4682,7 +4682,13 @@ LIRGenerator::updateResumeState(MInstruction* ins)
 void
 LIRGenerator::updateResumeState(MBasicBlock* block)
 {
-    MOZ_ASSERT_IF(!mir()->compilingAsmJS(), block->entryResumePoint());
+    // As Value Numbering phase can remove edges from the entry basic block to a
+    // code paths reachable from the OSR entry point, we have to add fixup
+    // blocks to keep the dominator tree organized the same way. These fixup
+    // blocks are flaged as unreachable, and should only exist iff the graph has
+    // an OSR block.
+    MOZ_ASSERT_IF(!mir()->compilingAsmJS() && !block->unreachable(), block->entryResumePoint());
+    MOZ_ASSERT_IF(block->unreachable(), block->graph().osrBlock());
     lastResumePoint_ = block->entryResumePoint();
     if (JitSpewEnabled(JitSpew_IonSnapshots) && lastResumePoint_)
         SpewResumePoint(block, nullptr, lastResumePoint_);
@@ -4696,6 +4702,10 @@ LIRGenerator::visitBlock(MBasicBlock* block)
 
     definePhis();
 
+    // See fixup blocks added by Value Numbering, to keep the dominator relation
+    // modified by the presence of the OSR block.
+    MOZ_ASSERT_IF(block->unreachable(), *block->begin() == block->lastIns());
+    MOZ_ASSERT_IF(block->unreachable(), block->graph().osrBlock());
     for (MInstructionIterator iter = block->begin(); *iter != block->lastIns(); iter++) {
         if (!visitInstruction(*iter))
             return false;
