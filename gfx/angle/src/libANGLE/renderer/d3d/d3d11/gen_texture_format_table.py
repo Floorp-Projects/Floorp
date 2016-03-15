@@ -248,24 +248,25 @@ const TextureFormat &GetTextureFormatInfo(GLenum internalFormat,
 }}  // namespace rx
 """
 
-tex_format = "texFormat"
-srv_format = "srvFormat"
-rtv_format = "rtvFormat"
-dsv_format = "dsvFormat"
-
 def get_texture_format_item(idx, texture_format):
     table_data = '';
 
+    tex_format = texture_format["texFormat"] if "texFormat" in texture_format else "DXGI_FORMAT_UNKNOWN"
+    srv_format = texture_format["srvFormat"] if "srvFormat" in texture_format else "DXGI_FORMAT_UNKNOWN"
+    rtv_format = texture_format["rtvFormat"] if "rtvFormat" in texture_format else "DXGI_FORMAT_UNKNOWN"
+    dsv_format = texture_format["dsvFormat"] if "dsvFormat" in texture_format else "DXGI_FORMAT_UNKNOWN"
+    requirements_fn = texture_format["requirementsFcn"] if "requirementsFcn" in texture_format else "AnyDevice"
+
     if idx == 0:
-        table_data += '            if (' + texture_format["requirementsFcn"] + '(renderer11DeviceCaps))\n'
+        table_data += '            if (' + requirements_fn + '(renderer11DeviceCaps))\n'
     else:
-        table_data += '            else if (' + texture_format["requirementsFcn"] + '(renderer11DeviceCaps))\n'
+        table_data += '            else if (' + requirements_fn + '(renderer11DeviceCaps))\n'
     table_data += '            {\n'
     table_data += '                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,\n'
-    table_data += '                                                                              ' + texture_format[tex_format] + ',\n'
-    table_data += '                                                                              ' + texture_format[srv_format] + ',\n'
-    table_data += '                                                                              ' + texture_format[rtv_format] + ',\n'
-    table_data += '                                                                              ' + texture_format[dsv_format] + ');\n'
+    table_data += '                                                                              ' + tex_format + ',\n'
+    table_data += '                                                                              ' + srv_format + ',\n'
+    table_data += '                                                                              ' + rtv_format + ',\n'
+    table_data += '                                                                              ' + dsv_format + ');\n'
     table_data += '                return textureFormat;\n'
     table_data += '            }\n'
 

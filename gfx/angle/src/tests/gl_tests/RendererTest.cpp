@@ -127,13 +127,84 @@ TEST_P(RendererTest, SimpleOperation)
 // Select configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 
 ANGLE_INSTANTIATE_TEST(RendererTest,
-    ES2_D3D9(),            ES2_D3D9_REFERENCE(),
-    ES2_D3D11(),           ES2_D3D11_FL11_0(),           ES2_D3D11_FL10_1(),           ES2_D3D11_FL10_0(),           ES2_D3D11_FL9_3(),
-    ES2_D3D11_WARP(),      ES2_D3D11_FL11_0_WARP(),      ES2_D3D11_FL10_1_WARP(),      ES2_D3D11_FL10_0_WARP(),      ES2_D3D11_FL9_3_WARP(),
-    ES2_D3D11_REFERENCE(), ES2_D3D11_FL11_0_REFERENCE(), ES2_D3D11_FL10_1_REFERENCE(), ES2_D3D11_FL10_0_REFERENCE(), ES2_D3D11_FL9_3_REFERENCE(),
-    ES3_D3D11(),           ES3_D3D11_FL11_0(),           ES3_D3D11_FL10_1(),           ES3_D3D11_FL10_0(),
-    ES3_D3D11_WARP(),      ES3_D3D11_FL11_0_WARP(),      ES3_D3D11_FL10_1_WARP(),      ES3_D3D11_FL10_0_WARP(),
-    ES3_D3D11_REFERENCE(), ES3_D3D11_FL11_0_REFERENCE(), ES3_D3D11_FL10_1_REFERENCE(), ES3_D3D11_FL10_0_REFERENCE(),
-    ES2_OPENGL(),          ES3_OPENGL());
+                       // ES2 on top of D3D9
+                       ES2_D3D9(),
+                       ES2_D3D9_REFERENCE(),
 
+                       // ES2 on top of D3D11 feature level 9.3 to 11.0
+                       ES2_D3D11(),
+                       ES2_D3D11_FL11_0(),
+                       ES2_D3D11_FL10_1(),
+                       ES2_D3D11_FL10_0(),
+                       ES2_D3D11_FL9_3(),
+
+                       // ES2 on top of D3D11 WARP feature level 9.3 to 11.0
+                       ES2_D3D11_WARP(),
+                       ES2_D3D11_FL11_0_WARP(),
+                       ES2_D3D11_FL10_1_WARP(),
+                       ES2_D3D11_FL10_0_WARP(),
+                       ES2_D3D11_FL9_3_WARP(),
+
+                       // ES2 on top of D3D11 reference feature level 9.3 to 11.0
+                       ES2_D3D11_REFERENCE(),
+                       ES2_D3D11_FL11_0_REFERENCE(),
+                       ES2_D3D11_FL10_1_REFERENCE(),
+                       ES2_D3D11_FL10_0_REFERENCE(),
+                       ES2_D3D11_FL9_3_REFERENCE(),
+
+                       // ES3 on top of D3D11 feature level 9.3 to 11.0
+                       ES3_D3D11(),
+                       ES3_D3D11_FL11_0(),
+                       ES3_D3D11_FL10_1(),
+                       ES3_D3D11_FL10_0(),
+
+                       // ES3 on top of D3D11 WARP feature level 9.3 to 11.0
+                       ES3_D3D11_WARP(),
+                       ES3_D3D11_FL11_0_WARP(),
+                       ES3_D3D11_FL10_1_WARP(),
+                       ES3_D3D11_FL10_0_WARP(),
+
+                       // ES3 on top of D3D11 reference feature level 9.3 to 11.0
+                       ES3_D3D11_REFERENCE(),
+                       ES3_D3D11_FL11_0_REFERENCE(),
+                       ES3_D3D11_FL10_1_REFERENCE(),
+                       ES3_D3D11_FL10_0_REFERENCE(),
+
+                       // ES2 on top of desktop OpenGL versions 2.1 to 4.5
+                       ES2_OPENGL(),
+                       ES2_OPENGL(2, 1),
+                       ES2_OPENGL(3, 0),
+                       ES2_OPENGL(3, 1),
+                       ES2_OPENGL(3, 2),
+                       ES2_OPENGL(3, 3),
+                       ES2_OPENGL(4, 0),
+                       ES2_OPENGL(4, 1),
+                       ES2_OPENGL(4, 2),
+                       ES2_OPENGL(4, 3),
+                       ES2_OPENGL(4, 4),
+                       ES2_OPENGL(4, 5),
+
+                       // ES2 on top of desktop OpenGL versions 3.2 to 4.5
+                       ES3_OPENGL(),
+                       ES3_OPENGL(3, 2),
+                       ES3_OPENGL(3, 3),
+                       ES3_OPENGL(4, 0),
+                       ES3_OPENGL(4, 1),
+                       ES3_OPENGL(4, 2),
+                       ES3_OPENGL(4, 3),
+                       ES3_OPENGL(4, 4),
+                       ES3_OPENGL(4, 5),
+
+                       // ES2 on top of OpenGL ES 2.0 to 3.2
+                       ES2_OPENGLES(),
+                       ES2_OPENGLES(2, 0),
+                       ES2_OPENGLES(3, 0),
+                       ES2_OPENGLES(3, 1),
+                       ES2_OPENGLES(3, 2),
+
+                       // ES2 on top of OpenGL ES 3.0 to 3.2
+                       ES3_OPENGLES(),
+                       ES3_OPENGLES(3, 0),
+                       ES3_OPENGLES(3, 1),
+                       ES3_OPENGLES(3, 2));
 }

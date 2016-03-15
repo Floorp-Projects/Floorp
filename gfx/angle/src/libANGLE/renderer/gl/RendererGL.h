@@ -99,11 +99,15 @@ class RendererGL : public Renderer
     bool testDeviceLost() override;
     bool testDeviceResettable() override;
 
-    VendorID getVendorId() const override;
     std::string getVendorString() const override;
     std::string getRendererDescription() const override;
 
     void syncState(const gl::State &state, const gl::State::DirtyBits &dirtyBits) override;
+
+    GLint getGPUDisjoint() override;
+    GLint64 getTimestamp() override;
+
+    void onMakeCurrent(const gl::Data &data) override;
 
     const gl::Version &getMaxSupportedESVersion() const;
     const FunctionsGL *getFunctions() const { return mFunctions; }

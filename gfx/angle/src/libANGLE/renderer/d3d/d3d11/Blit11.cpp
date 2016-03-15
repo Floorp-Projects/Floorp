@@ -709,7 +709,8 @@ gl::Error Blit11::swizzleTexture(ID3D11ShaderResourceView *source,
     deviceContext->GSSetShader(support.geometryShader, nullptr, 0);
 
     // Unset the currently bound shader resource to avoid conflicts
-    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, nullptr);
+    auto stateManager = mRenderer->getStateManager();
+    stateManager->setShaderResource(gl::SAMPLER_PIXEL, 0, nullptr);
 
     // Apply render target
     mRenderer->setOneTimeRenderTarget(dest);
@@ -725,7 +726,7 @@ gl::Error Blit11::swizzleTexture(ID3D11ShaderResourceView *source,
     deviceContext->RSSetViewports(1, &viewport);
 
     // Apply textures
-    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, source);
+    stateManager->setShaderResource(gl::SAMPLER_PIXEL, 0, source);
 
     // Apply samplers
     deviceContext->PSSetSamplers(0, 1, &mPointSampler);
@@ -734,7 +735,7 @@ gl::Error Blit11::swizzleTexture(ID3D11ShaderResourceView *source,
     deviceContext->Draw(drawCount, 0);
 
     // Unbind textures and render targets and vertex buffer
-    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, nullptr);
+    stateManager->setShaderResource(gl::SAMPLER_PIXEL, 0, nullptr);
 
     mRenderer->unapplyRenderTargets();
 
@@ -846,7 +847,8 @@ gl::Error Blit11::copyTexture(ID3D11ShaderResourceView *source,
     deviceContext->GSSetShader(support.geometryShader, nullptr, 0);
 
     // Unset the currently bound shader resource to avoid conflicts
-    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, nullptr);
+    auto stateManager = mRenderer->getStateManager();
+    stateManager->setShaderResource(gl::SAMPLER_PIXEL, 0, nullptr);
 
     // Apply render target
     mRenderer->setOneTimeRenderTarget(dest);
@@ -862,7 +864,7 @@ gl::Error Blit11::copyTexture(ID3D11ShaderResourceView *source,
     deviceContext->RSSetViewports(1, &viewport);
 
     // Apply textures
-    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, source);
+    stateManager->setShaderResource(gl::SAMPLER_PIXEL, 0, source);
 
     // Apply samplers
     ID3D11SamplerState *sampler = nullptr;
@@ -881,7 +883,7 @@ gl::Error Blit11::copyTexture(ID3D11ShaderResourceView *source,
     deviceContext->Draw(drawCount, 0);
 
     // Unbind textures and render targets and vertex buffer
-    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, nullptr);
+    stateManager->setShaderResource(gl::SAMPLER_PIXEL, 0, nullptr);
 
     mRenderer->unapplyRenderTargets();
 
@@ -973,7 +975,8 @@ gl::Error Blit11::copyDepth(ID3D11ShaderResourceView *source, const gl::Box &sou
     deviceContext->GSSetShader(nullptr, nullptr, 0);
 
     // Unset the currently bound shader resource to avoid conflicts
-    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, nullptr);
+    auto stateManager = mRenderer->getStateManager();
+    stateManager->setShaderResource(gl::SAMPLER_PIXEL, 0, nullptr);
 
     // Apply render target
     deviceContext->OMSetRenderTargets(0, nullptr, dest);
@@ -989,7 +992,7 @@ gl::Error Blit11::copyDepth(ID3D11ShaderResourceView *source, const gl::Box &sou
     deviceContext->RSSetViewports(1, &viewport);
 
     // Apply textures
-    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, source);
+    stateManager->setShaderResource(gl::SAMPLER_PIXEL, 0, source);
 
     // Apply samplers
     deviceContext->PSSetSamplers(0, 1, &mPointSampler);
@@ -998,7 +1001,7 @@ gl::Error Blit11::copyDepth(ID3D11ShaderResourceView *source, const gl::Box &sou
     deviceContext->Draw(drawCount, 0);
 
     // Unbind textures and render targets and vertex buffer
-    mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, nullptr);
+    stateManager->setShaderResource(gl::SAMPLER_PIXEL, 0, nullptr);
 
     mRenderer->unapplyRenderTargets();
 

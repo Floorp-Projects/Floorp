@@ -146,7 +146,7 @@ class EXTBlendFuncExtendedTest
     {
         DestroyCompiler();
         mCompiler = ShConstructCompiler(GL_FRAGMENT_SHADER, testing::get<0>(GetParam()),
-                                        SH_GLSL_OUTPUT, &mResources);
+                                        SH_GLSL_COMPATIBILITY_OUTPUT, &mResources);
         ASSERT_TRUE(mCompiler != NULL) << "Compiler could not be constructed.";
     }
 

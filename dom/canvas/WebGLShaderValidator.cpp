@@ -118,7 +118,7 @@ ShaderOutput(gl::GLContext* gl)
         }
     }
 
-    return SH_GLSL_OUTPUT;
+    return SH_GLSL_COMPATIBILITY_OUTPUT;
 }
 
 webgl::ShaderValidator*
@@ -129,7 +129,7 @@ WebGLContext::CreateShaderValidator(GLenum shaderType) const
 
     ShShaderSpec spec = IsWebGL2() ? SH_WEBGL2_SPEC : SH_WEBGL_SPEC;
     ShShaderOutput outputLanguage = gl->IsGLES() ? SH_ESSL_OUTPUT
-                                                 : SH_GLSL_OUTPUT;
+                                                 : SH_GLSL_COMPATIBILITY_OUTPUT;
 
     // If we're using WebGL2 we want a more specific version of GLSL
     if (IsWebGL2())

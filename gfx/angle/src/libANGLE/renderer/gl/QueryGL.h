@@ -27,8 +27,12 @@ class QueryGL : public QueryImpl
 
     gl::Error begin() override;
     gl::Error end() override;
+    gl::Error queryCounter() override;
+    gl::Error getResult(GLint *params) override;
     gl::Error getResult(GLuint *params) override;
-    gl::Error isResultAvailable(GLuint *available) override;
+    gl::Error getResult(GLint64 *params) override;
+    gl::Error getResult(GLuint64 *params) override;
+    gl::Error isResultAvailable(bool *available) override;
 
     // OpenGL is only allowed to have one query of each type active at any given time. Since ANGLE
     // virtualizes contexts, queries need to be able to be paused and resumed.
@@ -42,6 +46,9 @@ class QueryGL : public QueryImpl
   private:
     gl::Error flush(bool force);
 
+    template <typename T>
+    gl::Error getResultBase(T *params);
+
     GLenum mType;
 
     const FunctionsGL *mFunctions;
@@ -49,7 +56,7 @@ class QueryGL : public QueryImpl
 
     GLuint mActiveQuery;
     std::deque<GLuint> mPendingQueries;
-    GLuint mResultSum;
+    GLuint64 mResultSum;
 };
 
 }

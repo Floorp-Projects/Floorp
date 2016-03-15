@@ -36,14 +36,6 @@ class FramebufferGL : public FramebufferImpl
                   StateManagerGL *stateManager);
     ~FramebufferGL() override;
 
-    void onUpdateColorAttachment(size_t index) override;
-    void onUpdateDepthAttachment() override;
-    void onUpdateStencilAttachment() override;
-    void onUpdateDepthStencilAttachment() override;
-
-    void setDrawBuffers(size_t count, const GLenum *buffers) override;
-    void setReadBuffer(GLenum buffer) override;
-
     gl::Error discard(size_t count, const GLenum *attachments) override;
     gl::Error invalidate(size_t count, const GLenum *attachments) override;
     gl::Error invalidateSub(size_t count, const GLenum *attachments, const gl::Rectangle &area) override;
@@ -75,6 +67,8 @@ class FramebufferGL : public FramebufferImpl
                    GLbitfield mask, GLenum filter, const gl::Framebuffer *sourceFramebuffer) override;
 
     bool checkStatus() const override;
+
+    void syncState(const gl::Framebuffer::DirtyBits &dirtyBits) override;
 
     void syncDrawState() const;
 
