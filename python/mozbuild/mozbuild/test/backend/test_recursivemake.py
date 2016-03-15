@@ -871,6 +871,32 @@ class TestRecursiveMakeBackend(BackendTester):
             'DSO_SONAME := bar\n',
         ])
 
+        self.assertTrue(os.path.exists(mozpath.join(env.topobjdir, 'binaries.json')))
+        with open(mozpath.join(env.topobjdir, 'binaries.json'), 'rb') as fh:
+            binaries = json.load(fh)
+
+        self.assertEqual(binaries, {
+            'programs': [],
+            'shared_libraries': [
+                {
+                    'basename': 'foo',
+                    'import_name': 'foo',
+                    'install_target': 'dist/bin',
+                    'lib_name': 'foo',
+                    'relobjdir': 'foo',
+                    'soname': 'foo',
+                },
+                {
+                    'basename': 'bar',
+                    'import_name': 'bar',
+                    'install_target': 'dist/bin',
+                    'lib_name': 'bar',
+                    'relobjdir': 'bar',
+                    'soname': 'bar',
+                }
+            ],
+        })
+
 
 if __name__ == '__main__':
     main()
