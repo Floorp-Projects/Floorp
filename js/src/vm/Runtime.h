@@ -447,10 +447,9 @@ namespace js {
  */
 struct WellKnownSymbols
 {
-    js::ImmutableSymbolPtr iterator;
-    js::ImmutableSymbolPtr match;
-    js::ImmutableSymbolPtr species;
-    js::ImmutableSymbolPtr toPrimitive;
+#define DECLARE_SYMBOL(name) js::ImmutableSymbolPtr name;
+    JS_FOR_EACH_WELL_KNOWN_SYMBOL(DECLARE_SYMBOL)
+#undef DECLARE_SYMBOL
 
     const ImmutableSymbolPtr& get(size_t u) const {
         MOZ_ASSERT(u < JS::WellKnownSymbolLimit);
