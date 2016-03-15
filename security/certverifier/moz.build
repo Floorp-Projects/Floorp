@@ -65,6 +65,12 @@ if CONFIG['_MSC_VER']:
       '-wd4987', # nonstandard extension used
   ]
 
+  # MSVC 2015 triggers these
+  CXXFLAGS += [
+      '-wd4456', # declaration of 'rv' hides previous local declaration
+      '-wd4458', # declaration of 'input' hides class member
+  ]
+
   # Gecko headers aren't warning-free enough for us to enable these warnings
   CXXFLAGS += [
     '-wd4100', # 'symbol' : unreferenced formal parameter
