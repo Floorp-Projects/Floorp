@@ -364,6 +364,7 @@ function checkItem(node, item) {
 function* testContextMenu(syncedTabsDeckComponent, contextSelector, triggerSelector, menuSelectors) {
   let contextMenu = document.querySelector(contextSelector);
   let triggerElement = syncedTabsDeckComponent._window.document.querySelector(triggerSelector);
+  let isClosed = triggerElement.classList.contains("closed");
 
   let promisePopupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
 
@@ -383,6 +384,8 @@ function* testContextMenu(syncedTabsDeckComponent, contextSelector, triggerSelec
     button: 2,
   }, chromeWindow);
   yield promisePopupShown;
+  is(triggerElement.classList.contains("closed"), isClosed,
+    "Showing the context menu shouldn't toggle the tab list");
   checkChildren(contextMenu, menuSelectors);
 
   let promisePopupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
