@@ -752,12 +752,6 @@ this.UITour = {
   handleEvent: function(aEvent) {
     log.debug("handleEvent: type =", aEvent.type, "event =", aEvent);
     switch (aEvent.type) {
-      case "pagehide": {
-        let window = this.getChromeWindow(aEvent.target);
-        this.teardownTourForWindow(window);
-        break;
-      }
-
       case "TabSelect": {
         let window = aEvent.target.ownerDocument.defaultView;
 
@@ -940,18 +934,6 @@ this.UITour = {
     }
 
     this.tourBrowsersByWindow.delete(aWindow);
-  },
-
-  getChromeWindow: function(aContentDocument) {
-    return aContentDocument.defaultView
-                           .window
-                           .QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIWebNavigation)
-                           .QueryInterface(Ci.nsIDocShellTreeItem)
-                           .rootTreeItem
-                           .QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindow)
-                           .wrappedJSObject;
   },
 
   // This function is copied to UITourListener.
