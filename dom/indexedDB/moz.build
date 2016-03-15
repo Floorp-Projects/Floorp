@@ -98,6 +98,10 @@ if CONFIG['GNU_CC']:
     # range of the data type
     SOURCES['Key.cpp'].flags += ['-Wno-error=type-limits']
 
+if CONFIG['_MSC_VER']:
+    # This is intended as a temporary hack to support building with VS2015.
+    SOURCES['Key.cpp'].flags += ['-wd4577']
+
 LOCAL_INCLUDES += [
     '/db/sqlite3/src',
     '/dom/base',
