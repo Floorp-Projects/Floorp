@@ -896,15 +896,17 @@ bool CheckCmapSubtable4(const void * pCmapSubtable4, const void * pCmapEnd /*, u
     const Sfnt::CmapSubTable * pTable = reinterpret_cast<const Sfnt::CmapSubTable *>(pCmapSubtable4);
     // Bob H say some freeware TT fonts have version 1 (eg, CALIGULA.TTF) 
     // so don't check subtable version. 21 Mar 2002 spec changes version to language.
-    if (be::swap(pTable->format) != 4) return false;
+    if (table_len < sizeof(*pTable) || be::swap(pTable->format) != 4) return false;
     const Sfnt::CmapSubTableFormat4 * pTable4 = reinterpret_cast<const Sfnt::CmapSubTableFormat4 *>(pCmapSubtable4);
+    if (table_len < sizeof(*pTable4))
+        return false;
     uint16 length = be::swap(pTable4->length);
     if (length > table_len)
         return false;
     if (length < sizeof(Sfnt::CmapSubTableFormat4))
         return false;
     uint16 nRanges = be::swap(pTable4->seg_count_x2) >> 1;
-    if (length < sizeof(Sfnt::CmapSubTableFormat4) + 4 * nRanges * sizeof(uint16))
+    if (!nRanges || length < sizeof(Sfnt::CmapSubTableFormat4) + 4 * nRanges * sizeof(uint16))
         return false;
     // check last range is properly terminated
     uint16 chEnd = be::peek<uint16>(pTable4->end_code + nRanges - 1);
@@ -1004,7 +1006,7 @@ gid16 CmapSubtable4Lookup(const void * pCmapSubtabel4, unsigned int nUnicodeId, 
         // Look up value in glyphIdArray
         const ptrdiff_t offset = (nUnicodeId - chStart) + (idRangeOffset >> 1) +
                 (pMid - reinterpret_cast<const uint16 *>(pTable));
-        if (offset * 2 >= be::swap<uint16>(pTable->length))
+        if (offset * 2 + 1 >= be::swap<uint16>(pTable->length))
             return 0;
         gid16 nGlyphId = be::peek<uint16>(reinterpret_cast<const uint16 *>(pTable)+offset);
         // If this value is 0, return 0. Else add the idDelta
@@ -1086,9 +1088,11 @@ bool CheckCmapSubtable12(const void *pCmapSubtable12, const void *pCmapEnd /*, u
     size_t table_len = (const byte *)pCmapEnd - (const byte *)pCmapSubtable12;
     if (!pCmapSubtable12)  return false;
     const Sfnt::CmapSubTable * pTable = reinterpret_cast<const Sfnt::CmapSubTable *>(pCmapSubtable12);
-    if (be::swap(pTable->format) != 12)
+    if (table_len < sizeof(*pTable) || be::swap(pTable->format) != 12)
         return false;
     const Sfnt::CmapSubTableFormat12 * pTable12 = reinterpret_cast<const Sfnt::CmapSubTableFormat12 *>(pCmapSubtable12);
+    if (table_len < sizeof(*pTable12))
+        return false;
     uint32 length = be::swap(pTable12->length);
     if (length > table_len)
         return false;
