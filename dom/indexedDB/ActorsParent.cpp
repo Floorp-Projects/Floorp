@@ -18005,18 +18005,12 @@ DatabaseMaintenance::CheckIntegrity(mozIStorageConnection* aConnection,
       }
     }
 
-    bool changedForeignKeys;
-    if (foreignKeysWereEnabled) {
-      changedForeignKeys = false;
-    } else {
+    if (!foreignKeysWereEnabled) {
       rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "PRAGMA foreign_keys = ON;"
-      ));
+        "PRAGMA foreign_keys = ON;"));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-
-      changedForeignKeys = true;
     }
 
     bool foreignKeyError;
@@ -18035,14 +18029,10 @@ DatabaseMaintenance::CheckIntegrity(mozIStorageConnection* aConnection,
       }
     }
 
-    if (changedForeignKeys) {
+    if (!foreignKeysWereEnabled) {
       nsAutoCString stmtSQL;
       stmtSQL.AssignLiteral("PRAGMA foreign_keys = ");
-      if (foreignKeysWereEnabled) {
-        stmtSQL.AppendLiteral("ON");
-      } else {
-        stmtSQL.AppendLiteral("OFF");
-      }
+      stmtSQL.AppendLiteral("OFF");
       stmtSQL.Append(';');
 
       rv = aConnection->ExecuteSimpleSQL(stmtSQL);
