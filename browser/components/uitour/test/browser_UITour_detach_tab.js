@@ -26,11 +26,7 @@ function test() {
  */
 var tests = [
   taskify(function* test_move_tab_to_new_window() {
-    let onVisibilityChange = (aEvent) => {
-      if (!document.hidden && window != UITour.getChromeWindow(aEvent.target)) {
-        gContentAPI.showHighlight("appMenu");
-      }
-    };
+    const myDocIdentifier = "Hello, I'm a unique expando to identify this document.";
 
     let highlight = document.getElementById("UITourHighlight");
     let windowDestroyedDeferred = Promise.defer();
@@ -47,27 +43,38 @@ var tests = [
       browserStartupDeferred.resolve(aWindow);
     }, "browser-delayed-startup-finished", false);
 
-    // NB: we're using this rather than gContentWindow.document because the latter wouldn't
-    // have an XRayWrapper, and we need to compare this to the doc we get using this method
-    // later on...
-    gContentDoc = gBrowser.selectedBrowser.contentDocument;
-    gContentDoc.addEventListener("visibilitychange", onVisibilityChange, false);
+    yield ContentTask.spawn(gBrowser.selectedBrowser, myDocIdentifier, myDocIdentifier => {
+      let onVisibilityChange = () => {
+        if (!content.document.hidden) {
+          let win = Cu.waiveXrays(content);
+          win.Mozilla.UITour.showHighlight("appMenu");
+        }
+      };
+      content.document.addEventListener("visibilitychange", onVisibilityChange);
+      content.document.myExpando = myDocIdentifier;
+    });
     gContentAPI.showHighlight("appMenu");
 
     yield elementVisiblePromise(highlight);
 
-    gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
-
-    gContentWindow = yield browserStartupDeferred.promise;
+    gContentWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
+    yield browserStartupDeferred.promise;
 
     // This highlight should be shown thanks to the visibilitychange listener.
     let newWindowHighlight = gContentWindow.document.getElementById("UITourHighlight");
     yield elementVisiblePromise(newWindowHighlight);
 
     let selectedTab = gContentWindow.gBrowser.selectedTab;
-    is(selectedTab.linkedBrowser && selectedTab.linkedBrowser.contentDocument, gContentDoc, "Document should be selected in new window");
+    yield ContentTask.spawn(selectedTab.linkedBrowser, myDocIdentifier, myDocIdentifier => {
+      is(content.document.myExpando, myDocIdentifier, "Document should be selected in new window");
+    });
     ok(UITour.tourBrowsersByWindow && UITour.tourBrowsersByWindow.has(gContentWindow), "Window should be known");
     ok(UITour.tourBrowsersByWindow.get(gContentWindow).has(selectedTab.linkedBrowser), "Selected browser should be known");
+
+    // Need this because gContentAPI in e10s land will try to use gTestTab to
+    // spawn a content task, which doesn't work if the tab is dead, for obvious
+    // reasons.
+    gTestTab = gContentWindow.gBrowser.selectedTab;
 
     let shownPromise = promisePanelShown(gContentWindow);
     gContentAPI.showMenu("appMenu");
