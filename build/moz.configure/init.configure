@@ -251,11 +251,18 @@ def wanted_mozconfig_variables(help):
          'AWK',
          'DISABLE_EXPORT_JS',
          'DISABLE_SHARED_JS',
+         'DOXYGEN',
+         'DSYMUTIL',
          'EXTERNAL_SOURCE_DIR',
+         'GENISOIMAGE',
          'MOZILLABUILD',
          'MOZ_ARTIFACT_BUILDS',
          'MOZ_BUILD_APP',
          'PERL',
+         'RPMBUILD',
+         'UNZIP',
+         'XARGS',
+         'ZIP',
      ])
 
 
