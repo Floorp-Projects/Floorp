@@ -179,6 +179,10 @@
    * a document with a calculated checksum that does not match the Content-MD5
    * http header. */
   ERROR(NS_ERROR_CORRUPTED_CONTENT,                   FAILURE(29)),
+  /* A content signature verification failed for some reason. This can be either
+   * an actual verification error, or any other error that led to the fact that
+   * a content signature that was expected couldn't be verified. */
+  ERROR(NS_ERROR_INVALID_SIGNATURE,                   FAILURE(58)),
   /* While parsing for the first component of a header field using syntax as in
    * Content-Disposition or Content-Type, the first component was found to be
    * empty, such as in: Content-Disposition: ; filename=foo */

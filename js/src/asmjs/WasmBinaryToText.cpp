@@ -21,6 +21,7 @@
 #include "mozilla/CheckedInt.h"
 
 #include "jsnum.h"
+#include "jsprf.h"
 
 #include "asmjs/Wasm.h"
 #include "asmjs/WasmTypes.h"
@@ -156,6 +157,12 @@ static bool
 RenderNop(WasmRenderContext& c)
 {
     return c.buffer.append("(nop)");
+}
+
+static bool
+RenderUnreachable(WasmRenderContext& c)
+{
+    return c.buffer.append("(trap)");
 }
 
 static bool
@@ -877,6 +884,8 @@ RenderExpr(WasmRenderContext& c)
     switch (expr) {
       case Expr::Nop:
         return RenderNop(c);
+      case Expr::Unreachable:
+        return RenderUnreachable(c);
       case Expr::Call:
         return RenderCall(c);
       case Expr::CallImport:

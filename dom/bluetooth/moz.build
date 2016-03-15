@@ -17,7 +17,6 @@ if CONFIG['MOZ_B2G_BT']:
 
     SOURCES += [
         'common/BluetoothGattReplyRunnable.cpp',
-        'common/BluetoothHidManager.cpp',
         'common/BluetoothInterface.cpp',
         'common/BluetoothProfileController.cpp',
         'common/BluetoothReplyRunnable.cpp',
@@ -65,6 +64,7 @@ if CONFIG['MOZ_B2G_BT']:
                 'bluez/BluetoothAvrcpManager.cpp',
                 'bluez/BluetoothDBusService.cpp',
                 'bluez/BluetoothHfpManager.cpp',
+                'bluez/BluetoothHidManager.cpp',
                 'bluez/BluetoothOppManager.cpp',
                 'bluez/BluetoothSocket.cpp',
                 'bluez/BluetoothUnixSocketConnector.cpp'
@@ -83,10 +83,12 @@ if CONFIG['MOZ_B2G_BT']:
                 'bluedroid/BluetoothDaemonGattInterface.cpp',
                 'bluedroid/BluetoothDaemonHandsfreeInterface.cpp',
                 'bluedroid/BluetoothDaemonHelpers.cpp',
+                'bluedroid/BluetoothDaemonHidInterface.cpp',
                 'bluedroid/BluetoothDaemonInterface.cpp',
                 'bluedroid/BluetoothDaemonSetupInterface.cpp',
                 'bluedroid/BluetoothDaemonSocketInterface.cpp',
                 'bluedroid/BluetoothGattManager.cpp',
+                'bluedroid/BluetoothHidManager.cpp',
                 'bluedroid/BluetoothMapBMessage.cpp',
                 'bluedroid/BluetoothMapFolder.cpp',
                 'bluedroid/BluetoothMapSmsManager.cpp',

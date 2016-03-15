@@ -728,6 +728,9 @@ protected:
                              nsIDocShellLoadInfo* aLoadInfo,
                              bool aFirstParty);
 
+  // Check if aURI is about:newtab.
+  bool IsAboutNewtab(nsIURI* aURI);
+
 protected:
   nsresult GetCurScrollPos(int32_t aScrollOrientation, int32_t* aCurPos);
   nsresult SetCurScrollPosEx(int32_t aCurHorizontalPos,
