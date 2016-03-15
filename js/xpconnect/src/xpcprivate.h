@@ -1344,7 +1344,7 @@ private:
     // creation of XPCNativeInterfaces which have more than 2^12 members.
     // If the width of this field changes, update GetMaxIndexInInterface.
     uint16_t mIndexInInterface : 12;
-} JS_HAZ_NON_GC_POINTER; // Only stores a pinned string
+};
 
 /***************************************************************************/
 // XPCNativeInterface represents a single idl declared interface. This is

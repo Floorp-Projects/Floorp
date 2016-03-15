@@ -196,48 +196,10 @@ function printOnce(line)
     }
 }
 
-// Returns a table mapping function name to lists of [annotation-name,
-// annotation-value] pairs: { function-name => [ [annotation-name, annotation-value] ] }
-function getAnnotations(body)
-{
-    var all_annotations = {};
-    for (var v of (body.DefineVariable || [])) {
-        if (v.Variable.Kind != 'Func')
-            continue;
-        var name = v.Variable.Name[0];
-        var annotations = all_annotations[name] = [];
-
-        for (var ann of (v.Type.Annotation || [])) {
-            annotations.push(ann.Name);
-        }
-    }
-
-    return all_annotations;
-}
-
-function getTags(functionName, body) {
-    var tags = new Set();
-    var annotations = getAnnotations(body);
-    print(functionName);
-    print(JSON.stringify(annotations));
-    if (functionName in annotations) {
-        print("crawling through");
-        for (var [ annName, annValue ] of annotations[functionName]) {
-            print(`  got ${annName}: ${annValue}`);
-            if (annName == 'Tag')
-                tags.add(annValue);
-        }
-    }
-    return tags;
-}
-
-function processBody(functionName, body)
+function processBody(caller, body)
 {
     if (!('PEdge' in body))
         return;
-
-    for (var tag of getTags(functionName, body).values())
-        print("T " + memo(functionName) + " " + tag);
 
     lastline = null;
     for (var edge of body.PEdge) {
@@ -251,7 +213,7 @@ function processBody(functionName, body)
         }
         for (var callee of getCallees(edge)) {
             var prologue = (edgeSuppressed || callee.suppressed) ? "SUPPRESS_GC " : "";
-            prologue += memo(functionName) + " ";
+            prologue += memo(caller) + " ";
             if (callee.kind == 'direct') {
                 if (!(callee.name in seen)) {
                     seen[callee.name] = true;
@@ -321,18 +283,21 @@ if (theFunctionNameToFind) {
     minStream = maxStream = index;
 }
 
-function process(functionName, functionBodies)
-{
+for (var nameIndex = minStream; nameIndex <= maxStream; nameIndex++) {
+    var name = xdb.read_key(nameIndex);
+    var data = xdb.read_entry(name);
+    functionBodies = JSON.parse(data.readString());
     for (var body of functionBodies)
         body.suppressed = [];
     for (var body of functionBodies) {
-        for (var [pbody, id] of allRAIIGuardedCallPoints(functionBodies, body, isSuppressConstructor))
+        for (var [pbody, id] of allRAIIGuardedCallPoints(body, isSuppressConstructor))
             pbody.suppressed[id] = true;
     }
 
     seenCallees = {};
     seenSuppressedCallees = {};
 
+    var functionName = name.readString();
     for (var body of functionBodies)
         processBody(functionName, body);
 
@@ -399,12 +364,7 @@ function process(functionName, functionBodies)
             print("D " + memo(C3) + " " + memo(mangled));
         }
     }
-}
 
-for (var nameIndex = minStream; nameIndex <= maxStream; nameIndex++) {
-    var name = xdb.read_key(nameIndex);
-    var data = xdb.read_entry(name);
-    process(name.readString(), JSON.parse(data.readString()));
     xdb.free_string(name);
     xdb.free_string(data);
 }
