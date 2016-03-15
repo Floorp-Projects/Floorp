@@ -7,7 +7,6 @@ package org.mozilla.gecko.trackingprotection;
 
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.animation.TransitionsTracker;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.HardwareUtils;
 
@@ -75,7 +74,6 @@ public class TrackingProtectionPrompt extends Locales.LocaleAwareActivity {
             final AnimatorSet set = new AnimatorSet();
             set.playTogether(alphaAnimator, translateAnimator);
             set.setStartDelay(400);
-            TransitionsTracker.track(set);
 
             set.start();
         }

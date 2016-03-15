@@ -26,7 +26,6 @@ import android.animation.ObjectAnimator;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mozilla.gecko.animation.TransitionsTracker;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -146,8 +145,6 @@ public class TabStripView extends TwoWayView {
                 animatorSet.setInterpolator(ANIM_INTERPOLATOR);
                 animatorSet.addListener(animatorListener);
 
-                TransitionsTracker.track(animatorSet);
-
                 animatorSet.start();
 
                 return true;
@@ -198,8 +195,6 @@ public class TabStripView extends TwoWayView {
                 animatorSet.setInterpolator(ANIM_INTERPOLATOR);
                 animatorSet.addListener(animatorListener);
 
-                TransitionsTracker.track(animatorSet);
-
                 animatorSet.start();
 
                 return true;
@@ -229,8 +224,6 @@ public class TabStripView extends TwoWayView {
                 animatorSet.setDuration(ANIM_TIME_MS);
                 animatorSet.setInterpolator(ANIM_INTERPOLATOR);
                 animatorSet.addListener(animatorListener);
-
-                TransitionsTracker.track(animatorSet);
 
                 animatorSet.start();
 
