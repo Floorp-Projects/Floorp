@@ -753,6 +753,125 @@ TISInputSourceWrapper::Clear()
   mOverrideKeyboard = false;
 }
 
+bool
+TISInputSourceWrapper::IsPrintableKeyEvent(NSEvent* aNativeKeyEvent) const
+{
+  UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
+
+  bool isPrintableKey = !TextInputHandler::IsSpecialGeckoKey(nativeKeyCode);
+  if (isPrintableKey &&
+      [aNativeKeyEvent type] != NSKeyDown &&
+      [aNativeKeyEvent type] != NSKeyUp) {
+    NS_WARNING("Why the printable key doesn't cause NSKeyDown or NSKeyUp?");
+    isPrintableKey = false;
+  }
+  return isPrintableKey;
+}
+
+UInt32
+TISInputSourceWrapper::GetKbdType() const
+{
+  // If a keyboard layout override is set, we also need to force the keyboard
+  // type to something ANSI to avoid test failures on machines with JIS
+  // keyboards (since the pair of keyboard layout and physical keyboard type
+  // form the actual key layout).  This assumes that the test setting the
+  // override was written assuming an ANSI keyboard.
+  return mOverrideKeyboard ? eKbdType_ANSI : ::LMGetKbdType();
+}
+
+void
+TISInputSourceWrapper::ComputeInsertStringForCharCode(
+                         NSEvent* aNativeKeyEvent,
+                         const WidgetKeyboardEvent& aKeyEvent,
+                         const nsAString* aInsertString,
+                         nsAString& aResult)
+{
+  if (aInsertString) {
+    // If the caller expects that the aInsertString will be input, we shouldn't
+    // change it.
+    aResult = *aInsertString;
+  } else if (IsPrintableKeyEvent(aNativeKeyEvent)) {
+    // If IME is open, [aNativeKeyEvent characters] may be a character
+    // which will be appended to the composition string.  However, especially,
+    // while IME is disabled, most users and developers expect the key event
+    // works as IME closed.  So, we should compute the aResult with
+    // the ASCII capable keyboard layout.
+    // NOTE: Such keyboard layouts typically change the layout to its ASCII
+    //       capable layout when Command key is pressed.  And we don't worry
+    //       when Control key is pressed too because it causes inputting
+    //       control characters.
+    UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
+    if (!aKeyEvent.IsMeta() && !aKeyEvent.IsControl() && IsOpenedIMEMode()) {
+      UInt32 state =
+        nsCocoaUtils::ConvertToCarbonModifier([aNativeKeyEvent modifierFlags]);
+      uint32_t ch = TranslateToChar(nativeKeyCode, state, GetKbdType());
+      if (ch) {
+        aResult = ch;
+      }
+    } else {
+      // If the caller isn't sure what string will be input, let's use
+      // characters of NSEvent.
+      nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters], aResult);
+    }
+
+    // If control key is pressed and the eventChars is a non-printable control
+    // character, we should convert it to ASCII alphabet.
+    if (aKeyEvent.IsControl() &&
+        !aResult.IsEmpty() && aResult[0] <= char16_t(26)) {
+      aResult = (aKeyEvent.IsShift() ^ aKeyEvent.IsCapsLocked()) ?
+        static_cast<char16_t>(aResult[0] + ('A' - 1)) :
+        static_cast<char16_t>(aResult[0] + ('a' - 1));
+    }
+    // If Meta key is pressed, it may cause to switch the keyboard layout like
+    // Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
+    else if (aKeyEvent.IsMeta() &&
+             !(aKeyEvent.IsControl() || aKeyEvent.IsAlt())) {
+      UInt32 kbType = GetKbdType();
+      UInt32 numLockState =
+        aKeyEvent.IsNumLocked() ? kEventKeyModifierNumLockMask : 0;
+      UInt32 capsLockState = aKeyEvent.IsCapsLocked() ? alphaLock : 0;
+      UInt32 shiftState = aKeyEvent.IsShift() ? shiftKey : 0;
+      uint32_t uncmdedChar =
+        TranslateToChar(nativeKeyCode, numLockState, kbType);
+      uint32_t cmdedChar =
+        TranslateToChar(nativeKeyCode, cmdKey | numLockState, kbType);
+      // If we can make a good guess at the characters that the user would
+      // expect this key combination to produce (with and without Shift) then
+      // use those characters.  This also corrects for CapsLock.
+      uint32_t ch = 0;
+      if (uncmdedChar == cmdedChar) {
+        // The characters produced with Command seem similar to those without
+        // Command.
+        ch = TranslateToChar(nativeKeyCode,
+                             shiftState | capsLockState | numLockState, kbType);
+      } else {
+        TISInputSourceWrapper USLayout("com.apple.keylayout.US");
+        uint32_t uncmdedUSChar =
+          USLayout.TranslateToChar(nativeKeyCode, numLockState, kbType);
+        // If it looks like characters from US keyboard layout when Command key
+        // is pressed, we should compute a character in the layout.
+        if (uncmdedUSChar == cmdedChar) {
+          ch = USLayout.TranslateToChar(nativeKeyCode,
+                          shiftState | capsLockState | numLockState, kbType);
+        }
+      }
+
+      // If there is a more preferred character for the commanded key event,
+      // we should use it.
+      if (ch) {
+        aResult = ch;
+      }
+    }
+  }
+
+  // Remove control characters which shouldn't be inputted on editor.
+  // XXX Currently, we don't find any cases inserting control characters with
+  //     printable character.  So, just checking first character is enough.
+  if (!aResult.IsEmpty() && IsControlChar(aResult[0])) {
+    aResult.Truncate();
+  }
+}
+
 void
 TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
                                     WidgetKeyboardEvent& aKeyEvent,
@@ -791,109 +910,10 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
   }
 
   aKeyEvent.refPoint = LayoutDeviceIntPoint(0, 0);
+  aKeyEvent.isChar = false; // XXX not used in XP level
 
-  // If a keyboard layout override is set, we also need to force the keyboard
-  // type to something ANSI to avoid test failures on machines with JIS
-  // keyboards (since the pair of keyboard layout and physical keyboard type
-  // form the actual key layout).  This assumes that the test setting the
-  // override was written assuming an ANSI keyboard.
-  UInt32 kbType = mOverrideKeyboard ? eKbdType_ANSI : ::LMGetKbdType();
-
+  UInt32 kbType = GetKbdType();
   UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
-
-  bool isPrintableKey = !TextInputHandler::IsSpecialGeckoKey(nativeKeyCode);
-  if (isPrintableKey &&
-      [aNativeKeyEvent type] != NSKeyDown &&
-      [aNativeKeyEvent type] != NSKeyUp) {
-    NS_WARNING("Why the printable key doesn't cause NSKeyDown or NSKeyUp?");
-    isPrintableKey = false;
-  }
-
-  // Decide what string will be input.
-  nsAutoString insertString;
-  if (aInsertString) {
-    // If the caller expects that the aInsertString will be input, we shouldn't
-    // change it.
-    insertString = *aInsertString;
-  } else if (isPrintableKey) {
-    // If IME is open, [aNativeKeyEvent characters] may be a character
-    // which will be appended to the composition string.  However, especially,
-    // while IME is disabled, most users and developers expect the key event
-    // works as IME closed.  So, we should compute the insertString with
-    // the ASCII capable keyboard layout.
-    // NOTE: Such keyboard layouts typically change the layout to its ASCII
-    //       capable layout when Command key is pressed.  And we don't worry
-    //       when Control key is pressed too because it causes inputting
-    //       control characters.
-    if (!aKeyEvent.IsMeta() && !aKeyEvent.IsControl() && IsOpenedIMEMode()) {
-      UInt32 state =
-        nsCocoaUtils::ConvertToCarbonModifier([aNativeKeyEvent modifierFlags]);
-      uint32_t ch = TranslateToChar(nativeKeyCode, state, kbType);
-      if (ch) {
-        insertString = ch;
-      }
-    } else {
-      // If the caller isn't sure what string will be input, let's use
-      // characters of NSEvent.
-      nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
-                                         insertString);
-    }
-
-    // If control key is pressed and the eventChars is a non-printable control
-    // character, we should convert it to ASCII alphabet.
-    if (aKeyEvent.IsControl() &&
-        !insertString.IsEmpty() && insertString[0] <= char16_t(26)) {
-      insertString = (aKeyEvent.IsShift() ^ aKeyEvent.IsCapsLocked()) ?
-        static_cast<char16_t>(insertString[0] + ('A' - 1)) :
-        static_cast<char16_t>(insertString[0] + ('a' - 1));
-    }
-    // If Meta key is pressed, it may cause to switch the keyboard layout like
-    // Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
-    else if (aKeyEvent.IsMeta() &&
-             !(aKeyEvent.IsControl() || aKeyEvent.IsAlt())) {
-      UInt32 numLockState =
-        aKeyEvent.IsNumLocked() ? kEventKeyModifierNumLockMask : 0;
-      UInt32 capsLockState = aKeyEvent.IsCapsLocked() ? alphaLock : 0;
-      UInt32 shiftState = aKeyEvent.IsShift() ? shiftKey : 0;
-      uint32_t uncmdedChar =
-        TranslateToChar(nativeKeyCode, numLockState, kbType);
-      uint32_t cmdedChar =
-        TranslateToChar(nativeKeyCode, cmdKey | numLockState, kbType);
-      // If we can make a good guess at the characters that the user would
-      // expect this key combination to produce (with and without Shift) then
-      // use those characters.  This also corrects for CapsLock.
-      uint32_t ch = 0;
-      if (uncmdedChar == cmdedChar) {
-        // The characters produced with Command seem similar to those without
-        // Command.
-        ch = TranslateToChar(nativeKeyCode,
-                             shiftState | capsLockState | numLockState, kbType);
-      } else {
-        TISInputSourceWrapper USLayout("com.apple.keylayout.US");
-        uint32_t uncmdedUSChar =
-          USLayout.TranslateToChar(nativeKeyCode, numLockState, kbType);
-        // If it looks like characters from US keyboard layout when Command key
-        // is pressed, we should compute a character in the layout.
-        if (uncmdedUSChar == cmdedChar) {
-          ch = USLayout.TranslateToChar(nativeKeyCode,
-                          shiftState | capsLockState | numLockState, kbType);
-        }
-      }
-
-      // If there is a more preferred character for the commanded key event,
-      // we should use it.
-      if (ch) {
-        insertString = ch;
-      }
-    }
-  }
-
-  // Remove control characters which shouldn't be inputted on editor.
-  // XXX Currently, we don't find any cases inserting control characters with
-  //     printable character.  So, just checking first character is enough.
-  if (!insertString.IsEmpty() && IsControlChar(insertString[0])) {
-    insertString.Truncate();
-  }
 
   aKeyEvent.keyCode =
     ComputeGeckoKeyCode(nativeKeyCode, kbType, aKeyEvent.IsMeta());
@@ -949,23 +969,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
      this, OnOrOff(aKeyEvent.IsShift()), OnOrOff(aKeyEvent.IsControl()),
      OnOrOff(aKeyEvent.IsAlt()), OnOrOff(aKeyEvent.IsMeta())));
 
-  if (aKeyEvent.mMessage == eKeyPress &&
-      (isPrintableKey || !insertString.IsEmpty())) {
-    InitKeyPressEvent(aNativeKeyEvent,
-                      insertString.IsEmpty() ? 0 : insertString[0],
-                      aKeyEvent, kbType);
-    MOZ_ASSERT(!aKeyEvent.charCode || !IsControlChar(aKeyEvent.charCode),
-               "charCode must not be a control character");
-  } else {
-    aKeyEvent.charCode = 0;
-    aKeyEvent.isChar = false; // XXX not used in XP level
-
-    MOZ_LOG(gLog, LogLevel::Info,
-      ("%p TISInputSourceWrapper::InitKeyEvent, keyCode=0x%X charCode=0x0",
-       this, aKeyEvent.keyCode));
-  }
-
-  if (isPrintableKey) {
+  if (IsPrintableKeyEvent(aNativeKeyEvent)) {
     aKeyEvent.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
     // If insertText calls this method, let's use the string.
     if (aInsertString && !aInsertString->IsEmpty() &&
@@ -1032,45 +1036,55 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
 }
 
 void
-TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
-                                         char16_t aInsertChar,
-                                         WidgetKeyboardEvent& aKeyEvent,
-                                         UInt32 aKbType)
+TISInputSourceWrapper::WillDispatchKeyboardEvent(
+                         NSEvent* aNativeKeyEvent,
+                         const nsAString* aInsertString,
+                         WidgetKeyboardEvent& aKeyEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NS_ASSERTION(aKeyEvent.mMessage == eKeyPress,
-               "aKeyEvent must be eKeyPress event");
+  UInt32 kbType = GetKbdType();
 
   if (MOZ_LOG_TEST(gLog, LogLevel::Info)) {
     nsAutoString chars;
     nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters], chars);
     NS_ConvertUTF16toUTF8 utf8Chars(chars);
-    char16_t expectedChar = static_cast<char16_t>(aInsertChar);
-    NS_ConvertUTF16toUTF8 utf8ExpectedChar(&expectedChar, 1);
+    char16_t uniChar = static_cast<char16_t>(aKeyEvent.charCode);
     MOZ_LOG(gLog, LogLevel::Info,
-      ("%p TISInputSourceWrapper::InitKeyPressEvent, aNativeKeyEvent=%p, "
-       "[aNativeKeyEvent characters]=\"%s\", aInsertChar=0x%X(%s), "
-       "aKeyEvent.mMessage=%s, aKbType=0x%X, IsOpenedIMEMode()=%s",
-       this, aNativeKeyEvent, utf8Chars.get(), aInsertChar,
-       utf8ExpectedChar.get(), GetGeckoKeyEventType(aKeyEvent), aKbType,
-       TrueOrFalse(IsOpenedIMEMode())));
+      ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
+       "aNativeKeyEvent=%p, [aNativeKeyEvent characters]=\"%s\", "
+       "aKeyEvent={ mMessage=%s, charCode=0x%X(%s) }, kbType=0x%X, "
+       "IsOpenedIMEMode()=%s",
+       this, aNativeKeyEvent, utf8Chars.get(),
+       GetGeckoKeyEventType(aKeyEvent), aKeyEvent.charCode,
+       uniChar ? NS_ConvertUTF16toUTF8(&uniChar, 1).get() : "",
+       kbType, TrueOrFalse(IsOpenedIMEMode())));
   }
 
-  aKeyEvent.isChar = true; // this is not a special key  XXX not used in XP
-  aKeyEvent.charCode = aInsertChar;
-  if (aKeyEvent.charCode != 0) {
-    aKeyEvent.keyCode = 0;
+  nsAutoString insertStringForCharCode;
+  ComputeInsertStringForCharCode(aNativeKeyEvent, aKeyEvent, aInsertString,
+                                 insertStringForCharCode);
+  uint32_t charCode =
+    insertStringForCharCode.IsEmpty() ? 0 : insertStringForCharCode[0];
+  if (aKeyEvent.mMessage == eKeyPress) {
+    aKeyEvent.charCode = charCode;
+    aKeyEvent.isChar = true; // this is not a special key  XXX not used in XP
+  } else if (charCode) {
+    // If it's not a keypress event, we need to set alternative char code
+    // to charCode value for shortcut key event handlers.
+    AlternativeCharCode altCharCodes(0, 0);
+    if (!aKeyEvent.IsShift()) {
+      altCharCodes.mUnshiftedCharCode = charCode;
+    } else {
+      altCharCodes.mShiftedCharCode = charCode;
+    }
+    aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
   }
 
   MOZ_LOG(gLog, LogLevel::Info,
-    ("%p TISInputSourceWrapper::InitKeyPressEvent, "
+    ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
      "aKeyEvent.keyCode=0x%X, aKeyEvent.charCode=0x%X",
      this, aKeyEvent.keyCode, aKeyEvent.charCode));
-
-  if (!aKeyEvent.IsControl() && !aKeyEvent.IsMeta() && !aKeyEvent.IsAlt()) {
-    return;
-  }
 
   TISInputSourceWrapper USLayout("com.apple.keylayout.US");
   bool isRomanKeyboardLayout = IsASCIICapable();
@@ -1087,30 +1101,30 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   }
 
   MOZ_LOG(gLog, LogLevel::Info,
-    ("%p TISInputSourceWrapper::InitKeyPressEvent, "
+    ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
      "isRomanKeyboardLayout=%s, key=0x%X",
-     this, TrueOrFalse(isRomanKeyboardLayout), aKbType, key));
+     this, TrueOrFalse(isRomanKeyboardLayout), kbType, key));
 
   nsString str;
 
   // normal chars
-  uint32_t unshiftedChar = TranslateToChar(key, lockState, aKbType);
+  uint32_t unshiftedChar = TranslateToChar(key, lockState, kbType);
   UInt32 shiftLockMod = shiftKey | lockState;
-  uint32_t shiftedChar = TranslateToChar(key, shiftLockMod, aKbType);
+  uint32_t shiftedChar = TranslateToChar(key, shiftLockMod, kbType);
 
   // characters generated with Cmd key
   // XXX we should remove CapsLock state, which changes characters from
   //     Latin to Cyrillic with Russian layout on 10.4 only when Cmd key
   //     is pressed.
   UInt32 numState = (lockState & ~alphaLock); // only num lock state
-  uint32_t uncmdedChar = TranslateToChar(key, numState, aKbType);
+  uint32_t uncmdedChar = TranslateToChar(key, numState, kbType);
   UInt32 shiftNumMod = numState | shiftKey;
-  uint32_t uncmdedShiftChar = TranslateToChar(key, shiftNumMod, aKbType);
-  uint32_t uncmdedUSChar = USLayout.TranslateToChar(key, numState, aKbType);
+  uint32_t uncmdedShiftChar = TranslateToChar(key, shiftNumMod, kbType);
+  uint32_t uncmdedUSChar = USLayout.TranslateToChar(key, numState, kbType);
   UInt32 cmdNumMod = cmdKey | numState;
-  uint32_t cmdedChar = TranslateToChar(key, cmdNumMod, aKbType);
+  uint32_t cmdedChar = TranslateToChar(key, cmdNumMod, kbType);
   UInt32 cmdShiftNumMod = shiftKey | cmdNumMod;
-  uint32_t cmdedShiftChar = TranslateToChar(key, cmdShiftNumMod, aKbType);
+  uint32_t cmdedShiftChar = TranslateToChar(key, cmdShiftNumMod, kbType);
 
   // Is the keyboard layout changed by Cmd key?
   // E.g., Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
@@ -1129,7 +1143,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
     aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
   }
   MOZ_LOG(gLog, LogLevel::Info,
-    ("%p TISInputSourceWrapper::InitKeyPressEvent, "
+    ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
      "aKeyEvent.isMeta=%s, isDvorakQWERTY=%s, "
      "unshiftedChar=U+%X, shiftedChar=U+%X",
      this, OnOrOff(aKeyEvent.IsMeta()), TrueOrFalse(isDvorakQWERTY),
@@ -1169,11 +1183,11 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   } else if (uncmdedUSChar == cmdedChar) {
     // It looks like characters from a US layout are provided when Command
     // is down.
-    uint32_t ch = USLayout.TranslateToChar(key, lockState, aKbType);
+    uint32_t ch = USLayout.TranslateToChar(key, lockState, kbType);
     if (ch) {
       cmdedChar = ch;
     }
-    ch = USLayout.TranslateToChar(key, shiftLockMod, aKbType);
+    ch = USLayout.TranslateToChar(key, shiftLockMod, kbType);
     if (ch) {
       cmdedShiftChar = ch;
     }
@@ -1191,7 +1205,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
     aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
   }
   MOZ_LOG(gLog, LogLevel::Info,
-    ("%p TISInputSourceWrapper::InitKeyPressEvent, "
+    ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
      "hasCmdShiftOnlyChar=%s, isCmdSwitchLayout=%s, isDvorakQWERTY=%s, "
      "cmdedChar=U+%X, cmdedShiftChar=U+%X",
      this, TrueOrFalse(hasCmdShiftOnlyChar), TrueOrFalse(isDvorakQWERTY),
@@ -1203,7 +1217,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
     aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
   }
   MOZ_LOG(gLog, LogLevel::Info,
-    ("%p TISInputSourceWrapper::InitKeyPressEvent, "
+    ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
      "hasCmdShiftOnlyChar=%s, originalCmdedShiftChar=U+%X",
      this, TrueOrFalse(hasCmdShiftOnlyChar), originalCmdedShiftChar));
 
@@ -2122,6 +2136,12 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
 
   nsAutoString str;
   nsCocoaUtils::GetStringForNSString([aAttrString string], str);
+
+  AutoInsertStringClearer clearer(currentKeyEvent);
+  if (currentKeyEvent) {
+    currentKeyEvent->mInsertString = &str;
+  }
+
   if (!IsIMEComposing() && str.IsEmpty()) {
     // nothing to do if there is no content which can be removed.
     if (!isEditable) {
@@ -2524,7 +2544,23 @@ IMEInputHandler::WillDispatchKeyboardEvent(
                    uint32_t aIndexOfKeypress,
                    void* aData)
 {
-  // TODO: Implement this later.
+  // If the keyboard event is not caused by a native key event, we can do
+  // nothing here.
+  if (!aData) {
+    return;
+  }
+
+  KeyEventState* currentKeyEvent = static_cast<KeyEventState*>(aData);
+  NSEvent* nativeEvent = currentKeyEvent->mKeyEvent;
+  nsAString* insertString = currentKeyEvent->mInsertString;
+  if (KeyboardLayoutOverrideRef().mOverrideEnabled) {
+    TISInputSourceWrapper tis;
+    tis.InitByLayoutID(KeyboardLayoutOverrideRef().mKeyboardLayout, true);
+    tis.WillDispatchKeyboardEvent(nativeEvent, insertString, aKeyboardEvent);
+    return;
+  }
+  TISInputSourceWrapper::CurrentInputSource().
+    WillDispatchKeyboardEvent(nativeEvent, insertString, aKeyboardEvent);
 }
 
 void
@@ -4260,16 +4296,11 @@ TextInputHandlerBase::IsNormalCharInputtingEvent(
                         const WidgetKeyboardEvent& aKeyEvent)
 {
   // this is not character inputting event, simply.
-  if (!aKeyEvent.isChar || !aKeyEvent.charCode || aKeyEvent.IsMeta()) {
+  if (aKeyEvent.mNativeCharacters.IsEmpty() ||
+      aKeyEvent.IsMeta()) {
     return false;
   }
-  // if this is unicode char inputting event, we don't need to check
-  // ctrl/alt/command keys
-  if (aKeyEvent.charCode > 0x7F) {
-    return true;
-  }
-  // ASCII chars should be inputted without ctrl/alt/command keys
-  return !aKeyEvent.IsControl() && !aKeyEvent.IsAlt();
+  return !IsControlChar(aKeyEvent.mNativeCharacters[0]);
 }
 
 /* static */ bool
