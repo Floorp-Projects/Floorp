@@ -412,9 +412,6 @@ protected:
     return widget.forget();
   }
 
-  virtual nsresult NotifyIMEInternal(
-                     const IMENotification& aIMENotification) override;
-
   nsIWidget*           mParent;         // if we're a popup, this is our parent [WEAK]
   nsIWidget*           mAncestorLink;   // link to traverse ancestors [WEAK]
   BaseWindow*          mWindow;         // our cocoa window [STRONG]

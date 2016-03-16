@@ -266,7 +266,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
   d3d9Device->SetVertexShaderConstantF(CBmLayerTransform, &aTransform._11, 4);
 
   IntPoint origin = mCurrentRT->GetOrigin();
-  float renderTargetOffset[] = { origin.x, origin.y, 0, 0 };
+  float renderTargetOffset[] = { float(origin.x), float(origin.y), 0, 0 };
   d3d9Device->SetVertexShaderConstantF(CBvRenderTargetOffset,
                                        renderTargetOffset,
                                        1);

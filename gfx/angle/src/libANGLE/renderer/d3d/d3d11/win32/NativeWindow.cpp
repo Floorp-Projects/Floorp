@@ -11,12 +11,44 @@
 
 #include "common/debug.h"
 
+#include <initguid.h>
+
+#ifdef HAS_DIRECT_COMPOSITION
+#include <dcomp.h>
+#endif // HAS_DIRECT_COMPOSITION
+
 namespace rx
 {
 
-NativeWindow::NativeWindow(EGLNativeWindowType window, const egl::Config *)
-    : mWindow(window)
+NativeWindow::NativeWindow(EGLNativeWindowType window,
+                           const egl::Config *config,
+                           bool directComposition)
+    : mWindow(window),
+      mDirectComposition(directComposition),
+
+#ifdef HAS_DIRECT_COMPOSITION
+
+      mDevice(nullptr),
+      mCompositionTarget(nullptr),
+      mVisual(nullptr),
+
+#endif // HAS_DIRECT_COMPOSITION
+
+      mConfig(config)
 {
+}
+
+NativeWindow::~NativeWindow()
+{
+
+#ifdef HAS_DIRECT_COMPOSITION
+
+    SafeRelease(mCompositionTarget);
+    SafeRelease(mDevice);
+    SafeRelease(mVisual);
+
+#endif // HAS_DIRECT_COMPOSITION
+
 }
 
 bool NativeWindow::initialize()
@@ -49,6 +81,88 @@ HRESULT NativeWindow::createSwapChain(ID3D11Device* device, DXGIFactory* factory
         return E_INVALIDARG;
     }
 
+    if (mDirectComposition)
+    {
+#ifdef HAS_DIRECT_COMPOSITION
+        HMODULE dcomp = ::GetModuleHandle(TEXT("dcomp.dll"));
+        if (!dcomp)
+        {
+            return E_INVALIDARG;
+        }
+
+        typedef HRESULT(WINAPI * PFN_DCOMPOSITION_CREATE_DEVICE)(
+            IDXGIDevice * dxgiDevice, REFIID iid, void **dcompositionDevice);
+        PFN_DCOMPOSITION_CREATE_DEVICE createDComp =
+            reinterpret_cast<PFN_DCOMPOSITION_CREATE_DEVICE>(
+                GetProcAddress(dcomp, "DCompositionCreateDevice"));
+        if (!createDComp)
+        {
+            return E_INVALIDARG;
+        }
+
+        if (!mDevice)
+        {
+            IDXGIDevice *dxgiDevice = d3d11::DynamicCastComObject<IDXGIDevice>(device);
+            HRESULT result = createDComp(dxgiDevice, __uuidof(IDCompositionDevice),
+                                         reinterpret_cast<void **>(&mDevice));
+            SafeRelease(dxgiDevice);
+
+            if (FAILED(result))
+            {
+                return result;
+            }
+        }
+
+        if (!mCompositionTarget)
+        {
+            HRESULT result = mDevice->CreateTargetForHwnd(mWindow, TRUE, &mCompositionTarget);
+            if (FAILED(result))
+            {
+                return result;
+            }
+        }
+
+        if (!mVisual)
+        {
+            HRESULT result = mDevice->CreateVisual(&mVisual);
+            if (FAILED(result))
+            {
+                return result;
+            }
+        }
+
+        IDXGIFactory2 *factory2             = d3d11::DynamicCastComObject<IDXGIFactory2>(factory);
+        DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {0};
+        swapChainDesc.Width                 = width;
+        swapChainDesc.Height                = height;
+        swapChainDesc.Format                = format;
+        swapChainDesc.Stereo                = FALSE;
+        swapChainDesc.SampleDesc.Count      = 1;
+        swapChainDesc.SampleDesc.Quality    = 0;
+        swapChainDesc.BufferUsage =
+            DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_SHADER_INPUT;
+        swapChainDesc.BufferCount           = 2;
+        swapChainDesc.Scaling               = DXGI_SCALING_STRETCH;
+        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+        swapChainDesc.AlphaMode =
+            mConfig->alphaSize == 0 ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
+        swapChainDesc.Flags         = 0;
+        IDXGISwapChain1 *swapChain1 = nullptr;
+        HRESULT result =
+            factory2->CreateSwapChainForComposition(device, &swapChainDesc, nullptr, &swapChain1);
+        if (SUCCEEDED(result))
+        {
+            *swapChain = static_cast<DXGISwapChain *>(swapChain1);
+        }
+        mVisual->SetContent(swapChain1);
+        mCompositionTarget->SetRoot(mVisual);
+        SafeRelease(factory2);
+        return result;
+#else // HAS_DIRECT_COMPOSITION
+        return E_INVALIDARG;
+#endif // HAS_DIRECT_COMPOSITION		
+    }
+
     // Use IDXGIFactory2::CreateSwapChainForHwnd if DXGI 1.2 is available to create a DXGI_SWAP_EFFECT_SEQUENTIAL swap chain.
     IDXGIFactory2 *factory2 = d3d11::DynamicCastComObject<IDXGIFactory2>(factory);
     if (factory2 != nullptr)
@@ -60,7 +174,8 @@ HRESULT NativeWindow::createSwapChain(ID3D11Device* device, DXGIFactory* factory
         swapChainDesc.Stereo = FALSE;
         swapChainDesc.SampleDesc.Count = 1;
         swapChainDesc.SampleDesc.Quality = 0;
-        swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_BACK_BUFFER;
+        swapChainDesc.BufferUsage =
+            DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT | DXGI_USAGE_BACK_BUFFER;
         swapChainDesc.BufferCount = 1;
         swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
         swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_SEQUENTIAL;
@@ -85,7 +200,8 @@ HRESULT NativeWindow::createSwapChain(ID3D11Device* device, DXGIFactory* factory
     swapChainDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
     swapChainDesc.BufferDesc.RefreshRate.Numerator = 0;
     swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
-    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_BACK_BUFFER;
+    swapChainDesc.BufferUsage =
+        DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT | DXGI_USAGE_BACK_BUFFER;
     swapChainDesc.Flags = 0;
     swapChainDesc.OutputWindow = mWindow;
     swapChainDesc.SampleDesc.Count = 1;
@@ -95,5 +211,20 @@ HRESULT NativeWindow::createSwapChain(ID3D11Device* device, DXGIFactory* factory
 
     return factory->CreateSwapChain(device, &swapChainDesc, swapChain);
 }
-#endif
+#endif // ANGLE_ENABLE_D3D11
+
+void NativeWindow::commitChange()
+{
+
+#ifdef HAS_DIRECT_COMPOSITION
+
+  if (mDevice)
+  {
+    mDevice->Commit();
+  }
+
+#endif // HAS_DIRECT_COMPOSITION
+
 }
+
+} // namespace rx

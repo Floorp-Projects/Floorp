@@ -52,6 +52,7 @@ interface nsIContentSecurityPolicy : nsISerializable
   const unsigned short WEB_MANIFEST_SRC_DIRECTIVE     = 16;
   const unsigned short UPGRADE_IF_INSECURE_DIRECTIVE  = 17;
   const unsigned short CHILD_SRC_DIRECTIVE            = 18;
+  const unsigned short BLOCK_ALL_MIXED_CONTENT        = 19;
 
   /**
    * Accessor method for a read-only string version of the policy at a given
@@ -71,6 +72,15 @@ interface nsIContentSecurityPolicy : nsISerializable
    * including document (context) makes use of the directive.
    */
   readonly attribute bool upgradeInsecureRequests;
+
+  /**
+   * Returns whether this policy uses the directive block-all-mixed-content.
+   * Please note that block-all-mixed-content takes presedence in case the
+   * directive upgrade-insecure-requests is defined in the same policy and
+   * will therefore block all mixed content without even trying to perform
+   * an upgrade.
+   */
+  readonly attribute bool blockAllMixedContent;
 
   /**
    * Obtains the referrer policy (as integer) for this browsing context as

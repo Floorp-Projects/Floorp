@@ -462,6 +462,24 @@ TEST_P(GLSLTest, NamelessScopedStructs)
 
 TEST_P(GLSLTest, ScopedStructsOrderBug)
 {
+#if defined(__APPLE__)
+    // TODO(geofflang): Find out why this doesn't compile on Apple OpenGL drivers
+    // (http://anglebug.com/1292)
+    if (getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        std::cout << "Test disabled on Apple OpenGL." << std::endl;
+        return;
+    }
+#endif
+
+    // TODO(geofflang): Find out why this doesn't compile on AMD OpenGL drivers
+    // (http://anglebug.com/1291)
+    if (isAMD() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        std::cout << "Test disabled on AMD OpenGL." << std::endl;
+        return;
+    }
+
     const std::string fragmentShaderSource = SHADER_SOURCE
     (
         precision mediump float;
@@ -616,6 +634,14 @@ TEST_P(GLSLTest, TwoElseIfRewriting)
 
 TEST_P(GLSLTest, InvariantVaryingOut)
 {
+    // TODO(geofflang): Some OpenGL drivers have compile errors when varyings do not have matching
+    // invariant attributes (http://anglebug.com/1293)
+    if (getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        std::cout << "Test disabled on OpenGL." << std::endl;
+        return;
+    }
+
     const std::string fragmentShaderSource = SHADER_SOURCE
     (
         precision mediump float;
@@ -687,6 +713,14 @@ TEST_P(GLSLTest, FrontFacingAndVarying)
 
 TEST_P(GLSLTest, InvariantVaryingIn)
 {
+    // TODO(geofflang): Some OpenGL drivers have compile errors when varyings do not have matching
+    // invariant attributes (http://anglebug.com/1293)
+    if (getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        std::cout << "Test disabled on OpenGL." << std::endl;
+        return;
+    }
+
     const std::string fragmentShaderSource = SHADER_SOURCE
     (
         precision mediump float;
@@ -748,6 +782,14 @@ TEST_P(GLSLTest, InvariantGLPosition)
 
 TEST_P(GLSLTest, InvariantAll)
 {
+    // TODO(geofflang): Some OpenGL drivers have compile errors when varyings do not have matching
+    // invariant attributes (http://anglebug.com/1293)
+    if (getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        std::cout << "Test disabled on OpenGL." << std::endl;
+        return;
+    }
+
     const std::string fragmentShaderSource = SHADER_SOURCE
     (
         precision mediump float;
@@ -767,6 +809,16 @@ TEST_P(GLSLTest, InvariantAll)
 
 TEST_P(GLSLTest, MaxVaryingVec4)
 {
+#if defined(__APPLE__)
+    // TODO(geofflang): Find out why this doesn't compile on Apple AND OpenGL drivers
+    // (http://anglebug.com/1291)
+    if (isAMD() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        std::cout << "Test disabled on Apple AMD OpenGL." << std::endl;
+        return;
+    }
+#endif
+
     GLint maxVaryings = 0;
     glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
 
@@ -784,6 +836,13 @@ TEST_P(GLSLTest, MaxMinusTwoVaryingVec4PlusTwoSpecialVariables)
 
 TEST_P(GLSLTest, MaxMinusTwoVaryingVec4PlusThreeSpecialVariables)
 {
+    // TODO(geofflang): Figure out why this fails on OpenGL AMD (http://anglebug.com/1291)
+    if (isAMD() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        std::cout << "Test disabled on OpenGL." << std::endl;
+        return;
+    }
+
     GLint maxVaryings = 0;
     glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
 
@@ -791,7 +850,9 @@ TEST_P(GLSLTest, MaxMinusTwoVaryingVec4PlusThreeSpecialVariables)
     VaryingTestBase(0, 0, 0, 0, 0, 0, maxVaryings - 2, 0, true, true, true, true);
 }
 
-TEST_P(GLSLTest, MaxVaryingVec4PlusFragCoord)
+// Disabled because drivers are allowed to successfully compile shaders that have more than the
+// maximum number of varyings. (http://anglebug.com/1296)
+TEST_P(GLSLTest, DISABLED_MaxVaryingVec4PlusFragCoord)
 {
     GLint maxVaryings = 0;
     glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
@@ -801,7 +862,9 @@ TEST_P(GLSLTest, MaxVaryingVec4PlusFragCoord)
     VaryingTestBase(0, 0, 0, 0, 0, 0, maxVaryings, 0, true, false, false, false);
 }
 
-TEST_P(GLSLTest, MaxVaryingVec4PlusPointCoord)
+// Disabled because drivers are allowed to successfully compile shaders that have more than the
+// maximum number of varyings. (http://anglebug.com/1296)
+TEST_P(GLSLTest, DISABLED_MaxVaryingVec4PlusPointCoord)
 {
     GLint maxVaryings = 0;
     glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
@@ -866,6 +929,23 @@ TEST_P(GLSLTest, TwiceMaxVaryingVec2)
         return;
     }
 
+    if (getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE)
+    {
+        // TODO(geofflang): Figure out why this fails on NVIDIA's GLES driver
+        std::cout << "Test disabled on OpenGL ES." << std::endl;
+        return;
+    }
+
+#if defined(__APPLE__)
+    // TODO(geofflang): Find out why this doesn't compile on Apple AND OpenGL drivers
+    // (http://anglebug.com/1291)
+    if (isAMD() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        std::cout << "Test disabled on Apple AMD OpenGL." << std::endl;
+        return;
+    }
+#endif
+
     GLint maxVaryings = 0;
     glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
 
@@ -881,13 +961,32 @@ TEST_P(GLSLTest, MaxVaryingVec2Arrays)
         return;
     }
 
+    if (getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE)
+    {
+        // TODO(geofflang): Figure out why this fails on NVIDIA's GLES driver
+        std::cout << "Test disabled on OpenGL ES." << std::endl;
+        return;
+    }
+
+#if defined(__APPLE__)
+    // TODO(geofflang): Find out why this doesn't compile on Apple AND OpenGL drivers
+    // (http://anglebug.com/1291)
+    if (isAMD() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        std::cout << "Test disabled on Apple AMD OpenGL." << std::endl;
+        return;
+    }
+#endif
+
     GLint maxVaryings = 0;
     glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
 
     VaryingTestBase(0, 0, 0, maxVaryings, 0, 0, 0, 0, false, false, false, true);
 }
 
-TEST_P(GLSLTest, MaxPlusOneVaryingVec3)
+// Disabled because drivers are allowed to successfully compile shaders that have more than the
+// maximum number of varyings. (http://anglebug.com/1296)
+TEST_P(GLSLTest, DISABLED_MaxPlusOneVaryingVec3)
 {
     GLint maxVaryings = 0;
     glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
@@ -895,7 +994,9 @@ TEST_P(GLSLTest, MaxPlusOneVaryingVec3)
     VaryingTestBase(0, 0, 0, 0, maxVaryings + 1, 0, 0, 0, false, false, false, false);
 }
 
-TEST_P(GLSLTest, MaxPlusOneVaryingVec3Array)
+// Disabled because drivers are allowed to successfully compile shaders that have more than the
+// maximum number of varyings. (http://anglebug.com/1296)
+TEST_P(GLSLTest, DISABLED_MaxPlusOneVaryingVec3Array)
 {
     GLint maxVaryings = 0;
     glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
@@ -903,7 +1004,9 @@ TEST_P(GLSLTest, MaxPlusOneVaryingVec3Array)
     VaryingTestBase(0, 0, 0, 0, 0, maxVaryings / 2 + 1, 0, 0, false, false, false, false);
 }
 
-TEST_P(GLSLTest, MaxVaryingVec3AndOneVec2)
+// Disabled because drivers are allowed to successfully compile shaders that have more than the
+// maximum number of varyings. (http://anglebug.com/1296)
+TEST_P(GLSLTest, DISABLED_MaxVaryingVec3AndOneVec2)
 {
     GLint maxVaryings = 0;
     glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
@@ -911,7 +1014,9 @@ TEST_P(GLSLTest, MaxVaryingVec3AndOneVec2)
     VaryingTestBase(0, 0, 1, 0, maxVaryings, 0, 0, 0, false, false, false, false);
 }
 
-TEST_P(GLSLTest, MaxPlusOneVaryingVec2)
+// Disabled because drivers are allowed to successfully compile shaders that have more than the
+// maximum number of varyings. (http://anglebug.com/1296)
+TEST_P(GLSLTest, DISABLED_MaxPlusOneVaryingVec2)
 {
     GLint maxVaryings = 0;
     glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
@@ -919,7 +1024,9 @@ TEST_P(GLSLTest, MaxPlusOneVaryingVec2)
     VaryingTestBase(0, 0, 2 * maxVaryings + 1, 0, 0, 0, 0, 0, false, false, false, false);
 }
 
-TEST_P(GLSLTest, MaxVaryingVec3ArrayAndMaxPlusOneFloatArray)
+// Disabled because drivers are allowed to successfully compile shaders that have more than the
+// maximum number of varyings. (http://anglebug.com/1296)
+TEST_P(GLSLTest, DISABLED_MaxVaryingVec3ArrayAndMaxPlusOneFloatArray)
 {
     GLint maxVaryings = 0;
     glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
@@ -1253,6 +1360,13 @@ TEST_P(GLSLTest, VerifyMaxVertexUniformVectors)
 // can actually be used along with the maximum number of texture samplers.
 TEST_P(GLSLTest, VerifyMaxVertexUniformVectorsWithSamplers)
 {
+    if (GetParam().eglParameters.renderer == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE ||
+        GetParam().eglParameters.renderer == EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE)
+    {
+        std::cout << "Test disabled on OpenGL." << std::endl;
+        return;
+    }
+
     int maxUniforms = 10000;
     glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxUniforms);
     EXPECT_GL_NO_ERROR();
@@ -1292,6 +1406,13 @@ TEST_P(GLSLTest, VerifyMaxFragmentUniformVectors)
 // can actually be used along with the maximum number of texture samplers.
 TEST_P(GLSLTest, VerifyMaxFragmentUniformVectorsWithSamplers)
 {
+    if (GetParam().eglParameters.renderer == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE ||
+        GetParam().eglParameters.renderer == EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE)
+    {
+        std::cout << "Test disabled on OpenGL." << std::endl;
+        return;
+    }
+
     int maxUniforms = 10000;
     glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &maxUniforms);
     EXPECT_GL_NO_ERROR();
@@ -1316,7 +1437,14 @@ TEST_P(GLSLTest, VerifyMaxFragmentUniformVectorsExceeded)
 }
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
-ANGLE_INSTANTIATE_TEST(GLSLTest, ES2_D3D9(), ES2_D3D11(), ES2_D3D11_FL9_3());
+ANGLE_INSTANTIATE_TEST(GLSLTest,
+                       ES2_D3D9(),
+                       ES2_D3D11(),
+                       ES2_D3D11_FL9_3(),
+                       ES2_OPENGL(),
+                       ES3_OPENGL(),
+                       ES2_OPENGLES(),
+                       ES3_OPENGLES());
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
-ANGLE_INSTANTIATE_TEST(GLSLTest_ES3, ES3_D3D11());
+ANGLE_INSTANTIATE_TEST(GLSLTest_ES3, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
