@@ -63,6 +63,7 @@ struct ImageBitmapCloneData final
   RefPtr<gfx::DataSourceSurface> mSurface;
   gfx::IntRect mPictureRect;
   bool mIsPremultipliedAlpha;
+  bool mIsCroppingAreaOutSideOfSourceImage;
 };
 
 /*
@@ -201,6 +202,9 @@ protected:
 
   void SetPictureRect(const gfx::IntRect& aRect, ErrorResult& aRv);
 
+  void SetIsCroppingAreaOutSideOfSourceImage(const gfx::IntSize& aSourceSize,
+                                             const Maybe<gfx::IntRect>& aCroppingRect);
+
   static already_AddRefed<ImageBitmap>
   CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl,
                  const Maybe<gfx::IntRect>& aCropRect, ErrorResult& aRv);
@@ -265,6 +269,16 @@ protected:
   gfx::IntRect mPictureRect;
 
   const bool mIsPremultipliedAlpha;
+
+  /*
+   * Set mIsCroppingAreaOutSideOfSourceImage if image bitmap was cropped to the
+   * source rectangle so that it contains any transparent black pixels (cropping
+   * area is outside of the source image).
+   * This is used in mapDataInto() to check if we should reject promise with
+   * IndexSizeError.
+   */
+  bool mIsCroppingAreaOutSideOfSourceImage;
+
 };
 
 } // namespace dom
