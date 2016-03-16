@@ -49,7 +49,7 @@ TEST_DIRS += ['tests']
 # multiple implementations of widget can be built on the same
 # source tree.
 #
-if CONFIG['MOZ_ENABLE_GTK']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     DIRS += ['gtk']
 
     if CONFIG['MOZ_X11']:

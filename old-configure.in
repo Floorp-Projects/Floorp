@@ -3431,7 +3431,6 @@ windows)
     ;;
 
 gtk3)
-    MOZ_ENABLE_GTK=1
     MOZ_ENABLE_XREMOTE=1
     MOZ_GL_DEFAULT_PROVIDER=GLX
 
@@ -3446,7 +3445,6 @@ gtk3)
     ;;
 
 gtk2)
-    MOZ_ENABLE_GTK=1
     MOZ_ENABLE_XREMOTE=1
     MOZ_GL_DEFAULT_PROVIDER=GLX
 
@@ -3531,6 +3529,14 @@ fi
 if test "$MOZ_INSTRUMENT_EVENT_LOOP"; then
    AC_DEFINE(MOZ_INSTRUMENT_EVENT_LOOP)
 fi
+
+dnl there are a lot of tests on MOZ_ENABLE_GTK below, that are more convenient
+dnl to keep that way than testing against MOZ_WIDGET_TOOLKIT
+case "$MOZ_WIDGET_TOOLKIT" in
+gtk*)
+    MOZ_ENABLE_GTK=1
+    ;;
+esac
 
 if test "$COMPILE_ENVIRONMENT"; then
   if test "$MOZ_WIDGET_TOOLKIT" = gtk3; then
@@ -3792,7 +3798,6 @@ AC_SUBST(GTK_CONFIG)
 AC_SUBST_LIST(TK_CFLAGS)
 AC_SUBST_LIST(TK_LIBS)
 
-AC_SUBST(MOZ_ENABLE_GTK)
 AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_QTNETWORK)
 AC_SUBST(MOZ_ENABLE_QMSYSTEM2)

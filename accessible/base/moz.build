@@ -73,10 +73,11 @@ LOCAL_INCLUDES += [
     '/layout/xul/tree/',
 ]
 
-if CONFIG['MOZ_ENABLE_GTK']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     LOCAL_INCLUDES += [
         '/accessible/atk',
     ]
+    CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
         '/accessible/windows/ia2',
@@ -92,8 +93,5 @@ else:
     ]
 
 FINAL_LIBRARY = 'xul'
-
-if CONFIG['MOZ_ENABLE_GTK']:
-    CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 
 include('/ipc/chromium/chromium-config.mozbuild')

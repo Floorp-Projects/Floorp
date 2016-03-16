@@ -33,7 +33,7 @@ LOCAL_INCLUDES += [
     '/accessible/generic',
 ]
 
-if CONFIG['MOZ_ENABLE_GTK']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     LOCAL_INCLUDES += [
         '/accessible/atk',
     ]
