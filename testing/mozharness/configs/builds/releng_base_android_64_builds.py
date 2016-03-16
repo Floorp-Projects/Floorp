@@ -39,11 +39,6 @@ config = {
         ('/builds/crash-stats-api.token', '/builds/crash-stats-api.token'),
         ('/usr/local/lib/hgext', '/usr/local/lib/hgext'),
     ],
-    'secret_files': [
-        {'filename': '/builds/mozilla-fennec-geoloc-api.key',
-         'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/mozilla-fennec-geoloc-api.key',
-         'min_scm_level': 2, 'default': 'try-build-has-no-secrets'},
-    ],
     'enable_ccache': True,
     'vcs_share_base': '/builds/hg-shared',
     'objdir': 'obj-firefox',

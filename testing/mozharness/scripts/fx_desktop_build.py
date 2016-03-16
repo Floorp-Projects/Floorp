@@ -28,7 +28,6 @@ class FxDesktopBuild(BuildScript, object):
         buildscript_kwargs = {
             'config_options': BUILD_BASE_CONFIG_OPTIONS,
             'all_actions': [
-                'get-secrets',
                 'clobber',
                 'clone-tools',
                 'checkout-sources',
