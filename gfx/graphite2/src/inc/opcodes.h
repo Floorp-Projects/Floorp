@@ -242,7 +242,7 @@ ENDOP
 STARTOP(put_copy)
     declare_params(1);
     const int  slot_ref = int8(*param);
-    if (is)
+    if (is && !is->isDeleted())
     {
         slotref ref = slotat(slot_ref);
         if (ref && ref != is)
@@ -267,6 +267,7 @@ STARTOP(put_copy)
 ENDOP
 
 STARTOP(insert)
+    if (smap.decMax() <= 0) DIE;
     Slot *newSlot = seg.newSlot();
     if (!newSlot) DIE;
     Slot *iss = is;
@@ -555,7 +556,7 @@ STARTOP(iattr_add)
     const          int  val  = int(pop());
     if ((slat == gr_slatPosX || slat == gr_slatPosY) && (flags & POSITIONED) == 0)
     {
-        seg.positionSlots(0, *smap.begin(), *(smap.end()-1), dir);
+        seg.positionSlots(0, *smap.begin(), *(smap.end()-1), seg.currdir());
         flags |= POSITIONED;
     }
     int res = is->getAttr(&seg, slat, idx);
@@ -569,7 +570,7 @@ STARTOP(iattr_sub)
     const          int  val  = int(pop());
     if ((slat == gr_slatPosX || slat == gr_slatPosY) && (flags & POSITIONED) == 0)
     {
-        seg.positionSlots(0, *smap.begin(), *(smap.end()-1), dir);
+        seg.positionSlots(0, *smap.begin(), *(smap.end()-1), seg.currdir());
         flags |= POSITIONED;
     }
     int res = is->getAttr(&seg, slat, idx);

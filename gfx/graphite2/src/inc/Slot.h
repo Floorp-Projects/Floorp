@@ -97,7 +97,7 @@ public:
     void after(int ind) { m_after = ind; }
     bool isBase() const { return (!m_parent); }
     void update(int numSlots, int numCharInfo, Position &relpos);
-    Position finalise(const Segment* seg, const Font* font, Position & base, Rect & bbox, uint8 attrLevel, float & clusterMin, bool rtl, bool isFinal);
+    Position finalise(const Segment* seg, const Font* font, Position & base, Rect & bbox, uint8 attrLevel, float & clusterMin, bool rtl, bool isFinal, int depth = 0);
     bool isDeleted() const { return (m_flags & DELETED) ? true : false; }
     void markDeleted(bool state) { if (state) m_flags |= DELETED; else m_flags &= ~DELETED; }
     bool isCopied() const { return (m_flags & COPIED) ? true : false; }
@@ -128,10 +128,9 @@ public:
     void nextSibling(Slot *ap) { m_sibling = ap; }
     bool sibling(Slot *ap);
     bool removeChild(Slot *ap);
-    bool removeSibling(Slot *ap);
     int32 clusterMetric(const Segment* seg, uint8 metric, uint8 attrLevel, bool rtl);
     void positionShift(Position a) { m_position += a; }
-    void floodShift(Position adj);
+    void floodShift(Position adj, int depth = 0);
     float just() const { return m_just; }
     void just(float j) { m_just = j; }
     Slot *nextInCluster(const Slot *s) const;

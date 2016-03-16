@@ -40,6 +40,7 @@ struct _utf_codec
 
     static void     put(codeunit_t * cp, const uchar_t , int8 & len) throw();
     static uchar_t  get(const codeunit_t * cp, int8 & len) throw();
+    static bool     validate(const codeunit_t * s, const codeunit_t * e) throw();
 };
 
 
@@ -62,6 +63,12 @@ public:
     {
         if (cp[0] < limit)  { l = 1;  return cp[0]; }
         else                { l = -1; return 0xFFFD; }
+    }
+
+    inline
+    static bool validate(codeunit_t * s, codeunit_t * e) throw()
+    {
+        return e > s;
     }
 };
 
@@ -93,11 +100,20 @@ public:
         const uint32    uh = cp[0];
         l = 1;
 
-        if (0xD800 > uh || uh > 0xDFFF) { return uh; }
+        if (uh < 0xD800|| uh > 0xDFFF) { return uh; }
         const uint32 ul = cp[1];
-        if (uh > 0xDBFF || 0xDC00 > ul || ul > 0xDFFF) { l = -1; return 0xFFFD; }
+        if (uh > 0xDBFF || ul < 0xDC00 || ul > 0xDFFF) { l = -1; return 0xFFFD; }
         ++l;
         return (uh<<10) + ul + surrogate_offset;
+    }
+
+    inline
+    static bool validate(codeunit_t * s, codeunit_t * e) throw()
+    {
+        const ptrdiff_t n = e-s;
+        if (n <= 0) return n == 0;
+        const uint32 u = *(s+(n-1)); // Get the last codepoint
+        return (u < 0xD800 || u > 0xDBFF);
     }
 };
 
@@ -148,6 +164,24 @@ public:
         }
         return u;
     }
+
+    inline
+    static bool validate(codeunit_t * s, codeunit_t * e) throw()
+    {
+        const ptrdiff_t n = e-s;
+        if (n <= 0) return n == 0;
+        s += (n-1);
+        if (*s < 0x80) return true;
+        if (*s >= 0xC0) return false;
+        if (n == 1) return true;
+        if (*--s < 0x80) return true;
+        if (*s >= 0xe0) return false;
+        if (n == 2 || *s >= 0xC0) return true;
+        if (*--s < 0x80) return true;
+        if (*s >= 0xF0) return false;
+        return true;
+    }
+
 };
 
 
@@ -200,6 +234,11 @@ struct utf
 
     typedef _utf_iterator<C>        iterator;
     typedef _utf_iterator<const C>  const_iterator;
+
+    inline
+    static bool validate(codeunit_t * s, codeunit_t * e) throw() {
+        return _utf_codec<sizeof(C)*8>::validate(s,e);
+    }
 };
 
 
