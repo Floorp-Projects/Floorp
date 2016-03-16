@@ -18,7 +18,7 @@ add_task(function* test_is_allowed_incognito_access() {
     browser.extension.isAllowedIncognitoAccess().then(isAllowedIncognitoAccess => {
       browser.test.assertEq(true, isAllowedIncognitoAccess, "isAllowedIncognitoAccess is true");
       browser.test.notifyPass("isAllowedIncognitoAccess");
-    })
+    });
   }
 
   let extension = ExtensionTestUtils.loadExtension({
