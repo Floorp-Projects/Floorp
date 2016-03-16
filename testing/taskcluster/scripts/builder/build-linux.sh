@@ -20,7 +20,6 @@ echo "running as" $(id)
 : MH_CUSTOM_BUILD_VARIANT_CFG   ${MH_CUSTOM_BUILD_VARIANT_CFG}
 : MH_BRANCH                     ${MH_BRANCH:=mozilla-central}
 : MH_BUILD_POOL                 ${MH_BUILD_POOL:=staging}
-: MOZ_SCM_LEVEL                 ${MOZ_SCM_LEVEL:=1}
 
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
 
@@ -119,18 +118,22 @@ for cfg in $MOZHARNESS_CONFIG; do
   config_cmds="${config_cmds} --config ${cfg}"
 done
 
-# Mozharness would ordinarily do a whole mess of buildbot-specific steps, but those
-# are overridden by this list of steps.  The get-secrets step is unique to TC tasks
-# and not run in Buildbot
-steps="--get-secrets --build --check-test"
+# Mozharness would ordinarily do the checkouts itself, but they are disabled
+# here (--no-checkout-sources, --no-clone-tools) as the checkout is performed above.
 
 python2.7 $WORKSPACE/build/src/testing/${MOZHARNESS_SCRIPT} ${config_cmds} \
   $debug_flag \
   $custom_build_variant_cfg_flag \
   --disable-mock \
-  $steps \
+  --no-setup-mock \
+  --no-checkout-sources \
+  --no-clone-tools \
+  --no-clobber \
+  --no-update \
+  --no-upload-files \
+  --no-sendchange \
   --log-level=debug \
-  --scm-level=$MOZ_SCM_LEVEL \
   --work-dir=$WORKSPACE/build \
+  --no-action=generate-build-stats \
   --branch=${MH_BRANCH} \
   --build-pool=${MH_BUILD_POOL}
