@@ -91,6 +91,7 @@ var hasI64 = getBuildConfiguration().x64;
 if (!hasI64) {
     assertErrorMessage(() => wasmEvalText('(module (func (param i64)))'), TypeError, /NYI/);
     assertErrorMessage(() => wasmEvalText('(module (func (result i64)))'), TypeError, /NYI/);
+    assertErrorMessage(() => wasmEvalText('(module (func (result i32) (i32.wrap/i64 (i64.add (i64.const 1) (i64.const 2)))))'), TypeError, /NYI/);
 }
 
 // ----------------------------------------------------------------------------
