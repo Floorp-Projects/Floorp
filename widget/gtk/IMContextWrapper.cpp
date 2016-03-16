@@ -8,6 +8,7 @@
 #include "prtime.h"
 
 #include "IMContextWrapper.h"
+#include "nsGtkKeyUtils.h"
 #include "nsWindow.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Likely.h"
@@ -327,7 +328,8 @@ IMContextWrapper::WillDispatchKeyboardEvent(
                       uint32_t aIndexOfKeypress,
                       void* aData)
 {
-    // TODO: Implement this in the following patch.
+    KeymapWrapper::WillDispatchKeyboardEvent(aKeyboardEvent,
+                                             static_cast<GdkEventKey*>(aData));
 }
 
 TextEventDispatcher*
