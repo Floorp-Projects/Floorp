@@ -74,21 +74,6 @@ NeckoParent::NeckoParent()
   nsCOMPtr<nsIProtocolHandler> proto =
     do_GetService("@mozilla.org/network/protocol;1?name=http");
 
-  if (UsingNeckoIPCSecurity()) {
-    // cache values for core/packaged apps basepaths
-    nsAutoString corePath, webPath;
-    nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-    if (appsService) {
-      appsService->GetCoreAppsBasePath(corePath);
-      appsService->GetWebAppsBasePath(webPath);
-    }
-    // corePath may be empty: we don't use it for all build types
-    MOZ_ASSERT(!webPath.IsEmpty());
-
-    LossyCopyUTF16toASCII(corePath, mCoreAppsBasePath);
-    LossyCopyUTF16toASCII(webPath, mWebAppsBasePath);
-  }
-
   mObserver = new OfflineObserver(this);
   gNeckoParent = this;
 }
@@ -616,98 +601,6 @@ NeckoParent::AllocPRemoteOpenFileParent(const SerializedLoadContext& aSerialized
         return parent;
       }
       return nullptr;
-    }
-
-    nsAutoCString requestedPath;
-    fileURL->GetPath(requestedPath);
-    NS_UnescapeURL(requestedPath);
-
-    // Check if we load the whitelisted app uri for the neterror page.
-    bool netErrorWhiteList = false;
-
-    if (appUri) {
-      nsAdoptingString netErrorURI;
-      netErrorURI = Preferences::GetString("b2g.neterror.url");
-      if (netErrorURI) {
-        nsAutoCString spec;
-        appUri->GetSpec(spec);
-        netErrorWhiteList = spec.Equals(NS_ConvertUTF16toUTF8(netErrorURI).get());
-      }
-    }
-
-    // Check if we load a resource from the shared theme url space.
-    // If we try to load the theme but have no permission, refuse to load.
-    bool themeWhitelist = false;
-    if (Preferences::GetBool("dom.mozApps.themable") && appUri) {
-      nsAutoCString origin;
-      nsPrincipal::GetOriginForURI(appUri, origin);
-      nsAutoCString themeOrigin;
-      themeOrigin = Preferences::GetCString("b2g.theme.origin");
-      themeWhitelist = origin.Equals(themeOrigin);
-      if (themeWhitelist) {
-        bool hasThemePerm = false;
-        mozApp->HasPermission("themeable", &hasThemePerm);
-        if (!hasThemePerm) {
-          return nullptr;
-        }
-      }
-    }
-
-    if (hasManage || netErrorWhiteList || themeWhitelist) {
-      // webapps-manage permission means allow reading any application.zip file
-      // in either the regular webapps directory, or the core apps directory (if
-      // we're using one).
-      NS_NAMED_LITERAL_CSTRING(appzip, "/application.zip");
-      nsAutoCString pathEnd;
-      requestedPath.Right(pathEnd, appzip.Length());
-      if (!pathEnd.Equals(appzip)) {
-        return nullptr;
-      }
-      nsAutoCString pathStart;
-      requestedPath.Left(pathStart, mWebAppsBasePath.Length());
-      if (!pathStart.Equals(mWebAppsBasePath)) {
-        if (mCoreAppsBasePath.IsEmpty()) {
-          return nullptr;
-        }
-        requestedPath.Left(pathStart, mCoreAppsBasePath.Length());
-        if (!pathStart.Equals(mCoreAppsBasePath)) {
-          return nullptr;
-        }
-      }
-      // Finally: make sure there are no "../" in URI.
-      // Note: not checking for symlinks (would cause I/O for each path
-      // component).  So it's up to us to avoid creating symlinks that could
-      // provide attack vectors.
-      if (PL_strnstr(requestedPath.BeginReading(), "/../",
-                     requestedPath.Length())) {
-        printf_stderr("NeckoParent::AllocPRemoteOpenFile: "
-                      "FATAL error: requested file URI '%s' contains '/../' "
-                      "KILLING CHILD PROCESS\n", requestedPath.get());
-        return nullptr;
-      }
-    } else {
-      // regular packaged apps can only access their own application.zip file
-      nsAutoString basePath;
-      nsresult rv = mozApp->GetBasePath(basePath);
-      if (NS_FAILED(rv)) {
-        return nullptr;
-      }
-      nsAutoString uuid;
-      rv = mozApp->GetId(uuid);
-      if (NS_FAILED(rv)) {
-        return nullptr;
-      }
-      nsPrintfCString mustMatch("%s/%s/application.zip",
-                                NS_LossyConvertUTF16toASCII(basePath).get(),
-                                NS_LossyConvertUTF16toASCII(uuid).get());
-      if (!requestedPath.Equals(mustMatch)) {
-        printf_stderr("NeckoParent::AllocPRemoteOpenFile: "
-                      "FATAL error: app without webapps-manage permission is "
-                      "requesting file '%s' but is only allowed to open its "
-                      "own application.zip at %s: KILLING CHILD PROCESS\n",
-                      requestedPath.get(), mustMatch.get());
-        return nullptr;
-      }
     }
   }
 
