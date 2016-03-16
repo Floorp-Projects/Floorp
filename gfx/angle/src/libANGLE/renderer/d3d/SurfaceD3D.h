@@ -25,8 +25,15 @@ class RendererD3D;
 class SurfaceD3D : public SurfaceImpl
 {
   public:
-    static SurfaceD3D *createFromWindow(RendererD3D *renderer, egl::Display *display, const egl::Config *config,
-                                        EGLNativeWindowType window, EGLint fixedSize, EGLint width, EGLint height);
+    static SurfaceD3D *createFromWindow(RendererD3D *renderer,
+                                        egl::Display *display,
+                                        const egl::Config *config,
+                                        EGLNativeWindowType window,
+                                        EGLint fixedSize,
+                                        EGLint directComposition,
+                                        EGLint width,
+                                        EGLint height,
+                                        EGLint orientation);
     static SurfaceD3D *createOffscreen(RendererD3D *renderer, egl::Display *display, const egl::Config *config,
                                        EGLClientBuffer shareHandle, EGLint width, EGLint height);
     ~SurfaceD3D() override;
@@ -60,8 +67,16 @@ class SurfaceD3D : public SurfaceImpl
                                         FramebufferAttachmentRenderTarget **rtOut) override;
 
   private:
-    SurfaceD3D(RendererD3D *renderer, egl::Display *display, const egl::Config *config, EGLint width, EGLint height,
-               EGLint fixedSize, EGLClientBuffer shareHandle, EGLNativeWindowType window);
+    SurfaceD3D(RendererD3D *renderer,
+               egl::Display *display,
+               const egl::Config *config,
+               EGLint width,
+               EGLint height,
+               EGLint fixedSize,
+               EGLint orientation,
+               EGLint directComposition,
+               EGLClientBuffer shareHandle,
+               EGLNativeWindowType window);
 
     egl::Error swapRect(EGLint x, EGLint y, EGLint width, EGLint height);
     egl::Error resetSwapChain(int backbufferWidth, int backbufferHeight);
@@ -71,6 +86,7 @@ class SurfaceD3D : public SurfaceImpl
     egl::Display *mDisplay;
 
     bool mFixedSize;
+    GLint mOrientation;
 
     GLenum mRenderTargetFormat;
     GLenum mDepthStencilFormat;
