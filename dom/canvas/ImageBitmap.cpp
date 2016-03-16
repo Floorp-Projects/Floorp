@@ -400,6 +400,7 @@ ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
   , mDataWrapper(new ImageUtils(mData))
   , mPictureRect(0, 0, aData->GetSize().width, aData->GetSize().height)
   , mIsPremultipliedAlpha(aIsPremultipliedAlpha)
+  , mIsCroppingAreaOutSideOfSourceImage(false)
 {
   MOZ_ASSERT(aData, "aData is null in ImageBitmap constructor.");
 }
@@ -426,6 +427,23 @@ void
 ImageBitmap::SetPictureRect(const IntRect& aRect, ErrorResult& aRv)
 {
   mPictureRect = FixUpNegativeDimension(aRect, aRv);
+}
+
+void
+ImageBitmap::SetIsCroppingAreaOutSideOfSourceImage(const IntSize& aSourceSize,
+                                                   const Maybe<IntRect>& aCroppingRect)
+{
+  // No cropping at all.
+  if (aCroppingRect.isNothing()) {
+    mIsCroppingAreaOutSideOfSourceImage = false;
+    return;
+  }
+
+  if (aCroppingRect->X() < 0 || aCroppingRect->Y() < 0 ||
+      aCroppingRect->Width() > aSourceSize.width ||
+      aCroppingRect->Height() > aSourceSize.height) {
+    mIsCroppingAreaOutSideOfSourceImage = true;
+  }
 }
 
 static already_AddRefed<SourceSurface>
@@ -671,6 +689,7 @@ ImageBitmap::ToCloneData()
   ImageBitmapCloneData* result = new ImageBitmapCloneData();
   result->mPictureRect = mPictureRect;
   result->mIsPremultipliedAlpha = mIsPremultipliedAlpha;
+  result->mIsCroppingAreaOutSideOfSourceImage = mIsCroppingAreaOutSideOfSourceImage;
   RefPtr<SourceSurface> surface = mData->GetAsSourceSurface();
   result->mSurface = surface->GetDataSurface();
   MOZ_ASSERT(result->mSurface);
@@ -682,11 +701,14 @@ ImageBitmap::ToCloneData()
 ImageBitmap::CreateFromCloneData(nsIGlobalObject* aGlobal,
                                  ImageBitmapCloneData* aData)
 {
-  RefPtr<layers::Image> data =
-    CreateImageFromSurface(aData->mSurface);
+  RefPtr<layers::Image> data = CreateImageFromSurface(aData->mSurface);
 
   RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data,
                                             aData->mIsPremultipliedAlpha);
+
+  ret->mIsCroppingAreaOutSideOfSourceImage =
+    aData->mIsCroppingAreaOutSideOfSourceImage;
+
   ErrorResult rv;
   ret->SetPictureRect(aData->mPictureRect, rv);
   return ret.forget();
@@ -760,6 +782,9 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl
     ret->SetPictureRect(aCropRect.ref(), aRv);
   }
 
+  // Set mIsCroppingAreaOutSideOfSourceImage.
+  ret->SetIsCroppingAreaOutSideOfSourceImage(surface->GetSize(), aCropRect);
+
   return ret.forget();
 }
 
@@ -804,6 +829,9 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl
   if (ret && aCropRect.isSome()) {
     ret->SetPictureRect(aCropRect.ref(), aRv);
   }
+
+  // Set mIsCroppingAreaOutSideOfSourceImage.
+  ret->SetIsCroppingAreaOutSideOfSourceImage(data->GetSize(), aCropRect);
 
   return ret.forget();
 }
@@ -865,6 +893,9 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvas
     ret->SetPictureRect(cropRect, aRv);
   }
 
+  // Set mIsCroppingAreaOutSideOfSourceImage.
+  ret->SetIsCroppingAreaOutSideOfSourceImage(surface->GetSize(), aCropRect);
+
   return ret.forget();
 }
 
@@ -923,6 +954,9 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
   // The cropping information has been handled in the CreateImageFromRawData()
   // function.
 
+  // Set mIsCroppingAreaOutSideOfSourceImage.
+  ret->SetIsCroppingAreaOutSideOfSourceImage(imageSize, aCropRect);
+
   return ret.forget();
 }
 
@@ -963,6 +997,9 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, CanvasRenderingContext2D& 
     ret->SetPictureRect(aCropRect.ref(), aRv);
   }
 
+  // Set mIsCroppingAreaOutSideOfSourceImage.
+  ret->SetIsCroppingAreaOutSideOfSourceImage(surface->GetSize(), aCropRect);
+
   return ret.forget();
 }
 
@@ -981,6 +1018,14 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageBitmap& aImageBitmap,
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {
     ret->SetPictureRect(aCropRect.ref(), aRv);
+  }
+
+  // Set mIsCroppingAreaOutSideOfSourceImage.
+  if (aImageBitmap.mIsCroppingAreaOutSideOfSourceImage == true) {
+    ret->mIsCroppingAreaOutSideOfSourceImage = true;
+  } else {
+    ret->SetIsCroppingAreaOutSideOfSourceImage(aImageBitmap.mPictureRect.Size(),
+                                               aCropRect);
   }
 
   return ret.forget();
@@ -1096,7 +1141,8 @@ DecodeBlob(Blob& aBlob)
 }
 
 static already_AddRefed<layers::Image>
-DecodeAndCropBlob(Blob& aBlob, Maybe<IntRect>& aCropRect)
+DecodeAndCropBlob(Blob& aBlob, Maybe<IntRect>& aCropRect,
+                  /*Output*/ IntSize& sourceSize)
 {
   // Decode the blob into a SourceSurface.
   RefPtr<SourceSurface> surface = DecodeBlob(aBlob);
@@ -1104,6 +1150,9 @@ DecodeAndCropBlob(Blob& aBlob, Maybe<IntRect>& aCropRect)
   if (NS_WARN_IF(!surface)) {
     return nullptr;
   }
+
+  // Set the _sourceSize_ output parameter.
+  sourceSize = surface->GetSize();
 
   // Crop the source surface if needed.
   RefPtr<SourceSurface> croppedSurface = surface;
@@ -1217,7 +1266,15 @@ public:
 private:
   already_AddRefed<ImageBitmap> CreateImageBitmap() override
   {
-    RefPtr<layers::Image> data = DecodeAndCropBlob(*mBlob, mCropRect);
+    // _sourceSize_ is used to get the original size of the source image,
+    // before being cropped.
+    IntSize sourceSize;
+
+    // Keep the orignal cropping rectangle because the mCropRect might be
+    // modified in DecodeAndCropBlob().
+    Maybe<IntRect> originalCropRect = mCropRect;
+
+    RefPtr<layers::Image> data = DecodeAndCropBlob(*mBlob, mCropRect, sourceSize);
 
     if (NS_WARN_IF(!data)) {
       mPromise->MaybeRejectWithNull();
@@ -1226,6 +1283,10 @@ private:
 
     // Create ImageBitmap object.
     RefPtr<ImageBitmap> imageBitmap = new ImageBitmap(mGlobalObject, data);
+
+    // Set mIsCroppingAreaOutSideOfSourceImage.
+    imageBitmap->SetIsCroppingAreaOutSideOfSourceImage(sourceSize, originalCropRect);
+
     return imageBitmap.forget();
   }
 };
@@ -1240,18 +1301,20 @@ class CreateImageBitmapFromBlobWorkerTask final : public WorkerSameThreadRunnabl
     DecodeBlobInMainThreadSyncTask(WorkerPrivate* aWorkerPrivate,
                                    Blob& aBlob,
                                    Maybe<IntRect>& aCropRect,
-                                   layers::Image** aImage)
+                                   layers::Image** aImage,
+                                   IntSize& aSourceSize)
     : WorkerMainThreadRunnable(aWorkerPrivate,
                                NS_LITERAL_CSTRING("ImageBitmap :: Create Image from Blob"))
     , mBlob(aBlob)
     , mCropRect(aCropRect)
     , mImage(aImage)
+    , mSourceSize(aSourceSize)
     {
     }
 
     bool MainThreadRun() override
     {
-      RefPtr<layers::Image> image = DecodeAndCropBlob(mBlob, mCropRect);
+      RefPtr<layers::Image> image = DecodeAndCropBlob(mBlob, mCropRect, mSourceSize);
 
       if (NS_WARN_IF(!image)) {
         return true;
@@ -1266,6 +1329,7 @@ class CreateImageBitmapFromBlobWorkerTask final : public WorkerSameThreadRunnabl
     Blob& mBlob;
     Maybe<IntRect>& mCropRect;
     layers::Image** mImage;
+    IntSize mSourceSize;
   };
 
 public:
@@ -1286,12 +1350,20 @@ public:
 private:
   already_AddRefed<ImageBitmap> CreateImageBitmap() override
   {
+    // _sourceSize_ is used to get the original size of the source image,
+    // before being cropped.
+    IntSize sourceSize;
+
+    // Keep the orignal cropping rectangle because the mCropRect might be
+    // modified in DecodeAndCropBlob().
+    Maybe<IntRect> originalCropRect = mCropRect;
+
     RefPtr<layers::Image> data;
 
     ErrorResult rv;
     RefPtr<DecodeBlobInMainThreadSyncTask> task =
       new DecodeBlobInMainThreadSyncTask(mWorkerPrivate, *mBlob, mCropRect,
-                                         getter_AddRefs(data));
+                                         getter_AddRefs(data), sourceSize);
     task->Dispatch(rv); // This is a synchronous call.
 
     if (NS_WARN_IF(rv.Failed())) {
@@ -1307,6 +1379,10 @@ private:
 
     // Create ImageBitmap object.
     RefPtr<ImageBitmap> imageBitmap = new ImageBitmap(mGlobalObject, data);
+
+    // Set mIsCroppingAreaOutSideOfSourceImage.
+    imageBitmap->SetIsCroppingAreaOutSideOfSourceImage(sourceSize, originalCropRect);
+
     return imageBitmap.forget();
   }
 
@@ -1396,11 +1472,12 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
   uint32_t picRectWidth_;
   uint32_t picRectHeight_;
   uint32_t isPremultipliedAlpha_;
-  uint32_t dummy_;
+  uint32_t isCroppingAreaOutSideOfSourceImage_;
 
   if (!JS_ReadUint32Pair(aReader, &picRectX_, &picRectY_) ||
       !JS_ReadUint32Pair(aReader, &picRectWidth_, &picRectHeight_) ||
-      !JS_ReadUint32Pair(aReader, &isPremultipliedAlpha_, &dummy_)) {
+      !JS_ReadUint32Pair(aReader, &isPremultipliedAlpha_,
+                                  &isCroppingAreaOutSideOfSourceImage_)) {
     return nullptr;
   }
 
@@ -1423,6 +1500,9 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
     RefPtr<layers::Image> img = CreateImageFromSurface(aClonedSurfaces[aIndex]);
     RefPtr<ImageBitmap> imageBitmap =
       new ImageBitmap(aParent, img, isPremultipliedAlpha_);
+
+    imageBitmap->mIsCroppingAreaOutSideOfSourceImage =
+      isCroppingAreaOutSideOfSourceImage_;
 
     ErrorResult error;
     imageBitmap->SetPictureRect(IntRect(picRectX, picRectY,
@@ -1453,6 +1533,7 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   const uint32_t picRectWidth = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.width);
   const uint32_t picRectHeight = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.height);
   const uint32_t isPremultipliedAlpha = aImageBitmap->mIsPremultipliedAlpha ? 1 : 0;
+  const uint32_t isCroppingAreaOutSideOfSourceImage = aImageBitmap->mIsCroppingAreaOutSideOfSourceImage ? 1 : 0;
 
   // Indexing the cloned surfaces and send the index to the receiver.
   uint32_t index = aClonedSurfaces.Length();
@@ -1460,7 +1541,8 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   if (NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_IMAGEBITMAP, index)) ||
       NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectX, picRectY)) ||
       NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectWidth, picRectHeight)) ||
-      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, isPremultipliedAlpha, 0))) {
+      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, isPremultipliedAlpha,
+                                              isCroppingAreaOutSideOfSourceImage))) {
     return false;
   }
 
@@ -1715,6 +1797,29 @@ ImageBitmap::MapDataInto(JSContext* aCx,
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
+  }
+
+  // Check for cases that should throws.
+  // Case 1:
+  // If image bitmap was cropped to the source rectangle so that it contains any
+  // transparent black pixels (cropping area is outside of the source image),
+  // then reject promise with IndexSizeError and abort these steps.
+  if (mIsCroppingAreaOutSideOfSourceImage) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return promise.forget();
+  }
+
+  // Case 2:
+  // If the image bitmap is going to be accessed in YUV422/YUV422 series with a
+  // cropping area starts at an odd x or y coordinate.
+  if (aFormat == ImageBitmapFormat::YUV422P ||
+      aFormat == ImageBitmapFormat::YUV420P ||
+      aFormat == ImageBitmapFormat::YUV420SP_NV12 ||
+      aFormat == ImageBitmapFormat::YUV420SP_NV21) {
+    if ((mPictureRect.x & 1) || (mPictureRect.y & 1)) {
+      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+      return promise.forget();
+    }
   }
 
   AsyncMapDataIntoBufferSource(aCx, promise, this, aBuffer, aOffset, aFormat);
@@ -2001,6 +2106,10 @@ ImageBitmap::Create(nsIGlobalObject* aGlobal,
   // We don't need to call SetPictureRect() here because there is no cropping
   // supported and the ImageBitmap's mPictureRect is the size of the source
   // image in default
+
+  // We don't need to set mIsCroppingAreaOutSideOfSourceImage here because there
+  // is no cropping supported and the mIsCroppingAreaOutSideOfSourceImage is
+  // false in default.
 
   AsyncFulfillImageBitmapPromise(promise, imageBitmap);
 
