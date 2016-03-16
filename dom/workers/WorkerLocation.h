@@ -4,14 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_location_h__
-#define mozilla_dom_workers_location_h__
+#ifndef mozilla_dom_location_h__
+#define mozilla_dom_location_h__
 
 #include "Workers.h"
 #include "WorkerPrivate.h"
 #include "nsWrapperCache.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 class WorkerLocation final : public nsWrapperCache
 {
@@ -58,7 +59,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WorkerLocation)
 
   static already_AddRefed<WorkerLocation>
-  Create(WorkerPrivate::LocationInfo& aInfo);
+  Create(workers::WorkerPrivate::LocationInfo& aInfo);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -109,6 +110,7 @@ public:
   }
 };
 
-END_WORKERS_NAMESPACE
+} // namespace dom
+} // namespace mozilla
 
-#endif // mozilla_dom_workers_location_h__
+#endif // mozilla_dom_location_h__
