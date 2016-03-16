@@ -183,8 +183,7 @@ bool Face::runGraphite(Segment *seg, const Silf *aSilf) const
         seg->associateChars(0, seg->charInfoCount());
         if (aSilf->flags() & 0x20)
             res &= seg->initCollisions();
-        if (res)
-            res &= aSilf->runGraphite(seg, aSilf->positionPass(), aSilf->numPasses(), false);
+        res &= aSilf->runGraphite(seg, aSilf->positionPass(), aSilf->numPasses(), false);
     }
 
 #if !defined GRAPHITE2_NTRACING
@@ -232,7 +231,7 @@ uint16 Face::findPseudo(uint32 uid) const
     return (m_numSilf) ? m_silfs[0].findPseudo(uid) : 0;
 }
 
-int32 Face::getGlyphMetric(uint16 gid, uint8 metric) const
+uint16 Face::getGlyphMetric(uint16 gid, uint8 metric) const
 {
     switch (metrics(metric))
     {
@@ -283,7 +282,7 @@ Face::Table::Table(const Face & face, const Tag n, uint32 version) throw()
 
     if (!TtfUtil::CheckTable(n, _p, _sz))
     {
-        releaseBuffers();     // Make sure we release the table buffer even if the table failed it's checks
+        this->~Table();     // Make sure we release the table buffer even if the table filed it's checks
         return;
     }
 
@@ -330,8 +329,7 @@ Error Face::Table::decompress()
     {
         uncompressed_size  = hdr & 0x07ffffff;
         uncompressed_table = gralloc<byte>(uncompressed_size);
-        if (!e.test(!uncompressed_table || uncompressed_size < 4, E_OUTOFMEM))
-            memset(uncompressed_table, 0, 4);   // make sure version number is initialised
+        if (!e.test(!uncompressed_table, E_OUTOFMEM))
             // coverity[forward_null : FALSE] - uncompressed_table has been checked so can't be null
             // coverity[checked_return : FALSE] - we test e later
             e.test(lz4::decompress(p, _sz - 2*sizeof(uint32), uncompressed_table, uncompressed_size) != signed(uncompressed_size), E_SHRINKERFAILED);
