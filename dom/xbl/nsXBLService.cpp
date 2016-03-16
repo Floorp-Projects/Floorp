@@ -564,6 +564,16 @@ nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget)
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
                                   TrustedEventsAtSystemGroupBubble());
 
+  // For marking each keyboard event as if it's reserved by chrome,
+  // nsXBLWindowKeyHandlers need to listen each keyboard events before
+  // web contents.
+  manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
+                                  TrustedEventsAtCapture());
+  manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
+                                  TrustedEventsAtCapture());
+  manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
+                                  TrustedEventsAtCapture());
+
   // The capturing listener is only used for XUL keysets to properly handle
   // shortcut keys in a multi-process environment.
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
@@ -617,6 +627,13 @@ nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget)
                                      TrustedEventsAtSystemGroupBubble());
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
                                      TrustedEventsAtSystemGroupBubble());
+
+  manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
+                                     TrustedEventsAtCapture());
+  manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
+                                     TrustedEventsAtCapture());
+  manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
+                                     TrustedEventsAtCapture());
 
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
                                      TrustedEventsAtSystemGroupCapture());
