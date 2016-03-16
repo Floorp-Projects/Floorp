@@ -16,8 +16,6 @@ TEST_HARNESS_FILES.testing.mochitest.tests.devtools.shared.apps.tests.data += [
     'tests/data/app.zip',
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
-
 DevToolsModules(
     'app-actor-front.js',
     'Devices.jsm',
