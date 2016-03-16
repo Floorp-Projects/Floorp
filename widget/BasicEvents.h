@@ -110,6 +110,9 @@ public:
   bool    mOnlyChromeDispatch : 1;
   // If mOnlySystemGroupDispatchInContent is true, event listeners added to
   // the default group for non-chrome EventTarget won't be called.
+  // Be aware, if this is true, EventDispatcher needs to check if each event
+  // listener is added to chrome node, so, don't set this to true for the
+  // events which are fired a lot of times like eMouseMove.
   bool    mOnlySystemGroupDispatchInContent : 1;
   // If mWantReplyFromContentProcess is true, the event will be redispatched
   // in the parent process after the content process has handled it. Useful
