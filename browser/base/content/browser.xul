@@ -472,6 +472,33 @@
                 accesskey="&syncSyncNowItem.accesskey;"
                 id="syncedTabsRefresh"/>
     </menupopup>
+    <menupopup id="SyncedTabsSidebarTabsFilterContext"
+               class="textbox-contextmenu">
+      <menuitem label="&undoCmd.label;"
+                accesskey="&undoCmd.accesskey;"
+                cmd="cmd_undo"/>
+      <menuseparator/>
+      <menuitem label="&cutCmd.label;"
+                accesskey="&cutCmd.accesskey;"
+                cmd="cmd_cut"/>
+      <menuitem label="&copyCmd.label;"
+                accesskey="&copyCmd.accesskey;"
+                cmd="cmd_copy"/>
+      <menuitem label="&pasteCmd.label;"
+                accesskey="&pasteCmd.accesskey;"
+                cmd="cmd_paste"/>
+      <menuitem label="&deleteCmd.label;"
+                accesskey="&deleteCmd.accesskey;"
+                cmd="cmd_delete"/>
+      <menuseparator/>
+      <menuitem label="&selectAllCmd.label;"
+                accesskey="&selectAllCmd.accesskey;"
+                cmd="cmd_selectAll"/>
+      <menuseparator/>
+      <menuitem label="&syncSyncNowItem.label;"
+                accesskey="&syncSyncNowItem.accesskey;"
+                id="syncedTabsRefreshFilter"/>
+    </menupopup>
   </popupset>
 
 #ifdef CAN_DRAW_IN_TITLEBAR

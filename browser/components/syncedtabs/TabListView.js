@@ -21,6 +21,10 @@ function getContextMenu(window) {
   return getChromeWindow(window).document.getElementById("SyncedTabsSidebarContext");
 }
 
+function getTabsFilterContextMenu(window) {
+  return getChromeWindow(window).document.getElementById("SyncedTabsSidebarTabsFilterContext");
+}
+
 /*
  * TabListView
  *
@@ -326,21 +330,71 @@ TabListView.prototype = {
 
   // Set up the custom context menu
   _setupContextMenu() {
-    this._handleContentContextMenu = event =>
-        this.handleContentContextMenu(event);
-    this._handleContentContextMenuCommand = event =>
-        this.handleContentContextMenuCommand(event);
-
-    Services.els.addSystemEventListener(this._window, "contextmenu", this._handleContentContextMenu, false);
-    let menu = getContextMenu(this._window);
-    menu.addEventListener("command", this._handleContentContextMenuCommand, true);
+    Services.els.addSystemEventListener(this._window, "contextmenu", this, false);
+    for (let getMenu of [getContextMenu, getTabsFilterContextMenu]) {
+      let menu = getMenu(this._window);
+      menu.addEventListener("popupshowing", this, true);
+      menu.addEventListener("command", this, true);
+    }
   },
 
   _teardownContextMenu() {
     // Tear down context menu
-    Services.els.removeSystemEventListener(this._window, "contextmenu", this._handleContentContextMenu, false);
-    let menu = getContextMenu(this._window);
-    menu.removeEventListener("command", this._handleContentContextMenuCommand, true);
+    Services.els.removeSystemEventListener(this._window, "contextmenu", this, false);
+    for (let getMenu of [getContextMenu, getTabsFilterContextMenu]) {
+      let menu = getMenu(this._window);
+      menu.removeEventListener("popupshowing", this, true);
+      menu.removeEventListener("command", this, true);
+    }
+  },
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "contextmenu":
+        this.handleContextMenu(event);
+        break;
+
+      case "popupshowing": {
+        if (event.target.getAttribute("id") == "SyncedTabsSidebarTabsFilterContext") {
+          this.handleTabsFilterContextMenuShown(event);
+        }
+        break;
+      }
+
+      case "command": {
+        let menu = event.target.closest("menupopup");
+        switch (menu.getAttribute("id")) {
+          case "SyncedTabsSidebarContext":
+            this.handleContentContextMenuCommand(event);
+            break;
+
+          case "SyncedTabsSidebarTabsFilterContext":
+            this.handleTabsFilterContextMenuCommand(event);
+            break;
+        }
+        break;
+      }
+    }
+  },
+
+  handleTabsFilterContextMenuShown(event) {
+    let document = event.target.ownerDocument;
+    let focusedElement = document.commandDispatcher.focusedElement;
+    if (focusedElement != this.tabsFilter) {
+      this.tabsFilter.focus();
+    }
+    for (let item of event.target.children) {
+      if (!item.hasAttribute("cmd")) {
+        continue;
+      }
+      let command = item.getAttribute("cmd");
+      let controller = document.commandDispatcher.getControllerForCommand(command);
+      if (controller.isCommandEnabled(command)) {
+        item.removeAttribute("disabled");
+      } else {
+        item.setAttribute("disabled", "true");
+      }
+    }
   },
 
   handleContentContextMenuCommand(event) {
@@ -353,19 +407,33 @@ TabListView.prototype = {
         this.onBookmarkTab();
         break;
       case "syncedTabsRefresh":
+      case "syncedTabsRefreshFilter":
         this.props.onSyncRefresh();
         break;
     }
   },
 
-  handleContentContextMenu(event) {
-    let itemNode = this._findParentItemNode(event.target);
-    if (itemNode) {
-      this._selectRow(itemNode);
+  handleTabsFilterContextMenuCommand(event) {
+    let command = event.target.getAttribute("cmd");
+    let dispatcher = getChromeWindow(this._window).document.commandDispatcher;
+    let controller = dispatcher.focusedElement.controllers.getControllerForCommand(command);
+    controller.doCommand(command);
+  },
+
+  handleContextMenu(event) {
+    let menu;
+
+    if (event.target == this.tabsFilter) {
+      menu = getTabsFilterContextMenu(this._window);
+    } else {
+      let itemNode = this._findParentItemNode(event.target);
+      if (itemNode) {
+        this._selectRow(itemNode);
+      }
+      menu = getContextMenu(this._window);
+      this.adjustContextMenu(menu);
     }
 
-    let menu = getContextMenu(this._window);
-    this.adjustContextMenu(menu);
     menu.openPopupAtScreen(event.screenX, event.screenY, true, event);
   },
 
