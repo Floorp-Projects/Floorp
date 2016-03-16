@@ -394,7 +394,7 @@ struct nsHostDBEnt : PLDHashEntryHdr
 };
 
 static PLDHashNumber
-HostDB_HashKey(PLDHashTable *table, const void *key)
+HostDB_HashKey(const void *key)
 {
     const nsHostKey *hk = static_cast<const nsHostKey *>(key);
     return AddToHash(HashString(hk->host), RES_KEY_FLAGS(hk->flags), hk->af,
@@ -402,8 +402,7 @@ HostDB_HashKey(PLDHashTable *table, const void *key)
 }
 
 static bool
-HostDB_MatchEntry(PLDHashTable *table,
-                  const PLDHashEntryHdr *entry,
+HostDB_MatchEntry(const PLDHashEntryHdr *entry,
                   const void *key)
 {
     const nsHostDBEnt *he = static_cast<const nsHostDBEnt *>(entry);
