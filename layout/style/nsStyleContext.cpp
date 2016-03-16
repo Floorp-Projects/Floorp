@@ -119,11 +119,8 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   if (!mParent) {
     // Add as a root before ApplyStyleFixups, since ApplyStyleFixups
     // can trigger rule tree GC.
-    nsStyleSet* styleSet =
-      mRuleNode->PresContext()->PresShell()->StyleSet()->GetAsGecko();
-    if (styleSet) {
-      styleSet->AddStyleContextRoot(this);
-    }
+    nsStyleSet* styleSet = mRuleNode->PresContext()->PresShell()->StyleSet();
+    styleSet->AddStyleContextRoot(this);
   }
 
   ApplyStyleFixups(aSkipParentDisplayBasedStyleFixup);
