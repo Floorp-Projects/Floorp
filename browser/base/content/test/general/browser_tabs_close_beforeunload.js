@@ -1,31 +1,35 @@
 "use strict";
 
+SimpleTest.requestCompleteLog();
+
 SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
 
 const FIRST_TAB = getRootDirectory(gTestPath) + "close_beforeunload_opens_second_tab.html";
 const SECOND_TAB = getRootDirectory(gTestPath) + "close_beforeunload.html";
 
 add_task(function*() {
+  info("Opening first tab");
   let firstTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, FIRST_TAB);
-  let newTabPromise = waitForNewTabEvent(gBrowser);
-  ContentTask.spawn(firstTab.linkedBrowser, "", function*() {
+  let secondTabLoadedPromise;
+  let secondTab;
+  let tabOpened = new Promise(resolve => {
+    info("Adding tabopen listener");
+    gBrowser.tabContainer.addEventListener("TabOpen", function tabOpenListener(e) {
+      info("Got tabopen, removing listener and waiting for load");
+      gBrowser.tabContainer.removeEventListener("TabOpen", tabOpenListener, false, false);
+      secondTab = e.target;
+      secondTabLoadedPromise = BrowserTestUtils.browserLoaded(secondTab.linkedBrowser, false, SECOND_TAB);
+      resolve();
+    }, false, false);
+  });
+  info("Opening second tab using a click");
+  yield ContentTask.spawn(firstTab.linkedBrowser, "", function*() {
     content.document.getElementsByTagName("a")[0].click();
   });
-  let tabOpenEvent = yield newTabPromise;
-  let secondTab = tabOpenEvent.target;
-  yield ContentTask.spawn(secondTab.linkedBrowser, SECOND_TAB, function*(expectedURL) {
-    if (content.window.location.href == expectedURL &&
-        content.document.readyState === "complete") {
-      return Promise.resolve();
-    }
-    return new Promise(function(resolve, reject) {
-      content.window.addEventListener("load", function() {
-        if (content.window.location.href == expectedURL) {
-          resolve();
-        }
-      }, false);
-    });
-  });
+  info("Waiting for the second tab to be opened");
+  yield tabOpened;
+  info("Waiting for the load in that tab to finish");
+  yield secondTabLoadedPromise;
 
   let closeBtn = document.getAnonymousElementByAttribute(secondTab, "anonid", "close-button");
   let closePromise = BrowserTestUtils.removeTab(secondTab, {dontRemove: true});
