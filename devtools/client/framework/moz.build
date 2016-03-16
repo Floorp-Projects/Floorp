@@ -10,6 +10,7 @@ TEST_HARNESS_FILES.xpcshell.devtools.client.framework.test += [
 ]
 
 DevToolsModules(
+    'about-devtools-toolbox.js',
     'attach-thread.js',
     'devtools-browser.js',
     'devtools.js',
