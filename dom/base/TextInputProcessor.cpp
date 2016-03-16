@@ -197,7 +197,8 @@ TextInputProcessor::BeginInputTransactionInternal(
   }
 
   if (aForTests) {
-    rv = dispatcher->BeginTestInputTransaction(this);
+    bool isAPZAware = gfxPrefs::TestEventsAsyncEnabled();
+    rv = dispatcher->BeginTestInputTransaction(this, isAPZAware);
   } else {
     rv = dispatcher->BeginInputTransaction(this);
   }
@@ -779,23 +780,6 @@ TextInputProcessor::Keydown(nsIDOMKeyEvent* aDOMKeyEvent,
   return KeydownInternal(*originalKeyEvent, aKeyFlags, true, *aConsumedFlags);
 }
 
-TextEventDispatcher::DispatchTo
-TextInputProcessor::GetDispatchTo() const
-{
-  // Support asynchronous tests.
-  if (mForTests) {
-    return gfxPrefs::TestEventsAsyncEnabled() ?
-             TextEventDispatcher::eDispatchToParentProcess :
-             TextEventDispatcher::eDispatchToCurrentProcess;
-  }
-
-  // Otherwise, TextInputProcessor supports only keyboard apps on B2G.
-  // Keyboard apps on B2G doesn't want to dispatch keyboard events to
-  // chrome process. Therefore, this should dispatch key events only in
-  // the current process.
-  return TextEventDispatcher::eDispatchToCurrentProcess;
-}
-
 nsresult
 TextInputProcessor::KeydownInternal(const WidgetKeyboardEvent& aKeyboardEvent,
                                     uint32_t aKeyFlags,
@@ -841,8 +825,7 @@ TextInputProcessor::KeydownInternal(const WidgetKeyboardEvent& aKeyboardEvent,
 
   nsEventStatus status = aConsumedFlags ? nsEventStatus_eConsumeNoDefault :
                                           nsEventStatus_eIgnore;
-  if (!mDispatcher->DispatchKeyboardEvent(eKeyDown, keyEvent, status,
-                                          GetDispatchTo())) {
+  if (!mDispatcher->DispatchKeyboardEvent(eKeyDown, keyEvent, status)) {
     // If keydown event isn't dispatched, we don't need to dispatch keypress
     // events.
     return NS_OK;
@@ -853,8 +836,7 @@ TextInputProcessor::KeydownInternal(const WidgetKeyboardEvent& aKeyboardEvent,
                                                   KEYEVENT_NOT_CONSUMED;
 
   if (aAllowToDispatchKeypress &&
-      mDispatcher->MaybeDispatchKeypressEvents(keyEvent, status, 
-                                               GetDispatchTo())) {
+      mDispatcher->MaybeDispatchKeypressEvents(keyEvent, status)) {
     aConsumedFlags |=
       (status == nsEventStatus_eConsumeNoDefault) ? KEYPRESS_IS_CONSUMED :
                                                     KEYEVENT_NOT_CONSUMED;
@@ -923,7 +905,7 @@ TextInputProcessor::KeyupInternal(const WidgetKeyboardEvent& aKeyboardEvent,
 
   nsEventStatus status = aDoDefault ? nsEventStatus_eIgnore :
                                       nsEventStatus_eConsumeNoDefault;
-  mDispatcher->DispatchKeyboardEvent(eKeyUp, keyEvent, status, GetDispatchTo());
+  mDispatcher->DispatchKeyboardEvent(eKeyUp, keyEvent, status);
   aDoDefault = (status != nsEventStatus_eConsumeNoDefault);
   return NS_OK;
 }

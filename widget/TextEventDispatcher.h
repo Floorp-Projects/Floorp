@@ -56,7 +56,8 @@ public:
    *                              definition below.
    */
   nsresult BeginInputTransaction(TextEventDispatcherListener* aListener);
-  nsresult BeginTestInputTransaction(TextEventDispatcherListener* aListener);
+  nsresult BeginTestInputTransaction(TextEventDispatcherListener* aListener,
+                                     bool aIsAPZAware);
   nsresult BeginNativeInputTransaction();
 
   /**
@@ -196,26 +197,6 @@ public:
    */
   nsresult NotifyIME(const IMENotification& aIMENotification);
 
-
-  /**
-   * DispatchTo indicates whether the event may be dispatched to its parent
-   * process first (if there is) or not.  If the event is dispatched to the
-   * parent process, APZ will handle it first.  Otherwise, the event won't be
-   * handled by APZ if it's in a child process.
-   */
-  enum DispatchTo
-  {
-    // The event may be dispatched to its parent process if there is a parent.
-    // In such case, the event will be handled asynchronously.  Additionally,
-    // the event may be sent to its child process if a child process (including
-    // the dispatching process) has focus.
-    eDispatchToParentProcess = 0,
-    // The event must be dispatched in the current process.  But of course,
-    // the event may be sent to a child process when it has focus.  If there is
-    // no child process, the event may be handled synchronously.
-    eDispatchToCurrentProcess = 1
-  };
-
   /**
    * DispatchKeyboardEvent() maybe dispatches aKeyboardEvent.
    *
@@ -228,13 +209,11 @@ public:
    *                        set nsEventStatus_eIgnore.  After dispatching
    *                        a event and it's consumed this returns
    *                        nsEventStatus_eConsumeNoDefault.
-   * @param aDispatchTo     See comments of DispatchTo.
    * @return                true if an event is dispatched.  Otherwise, false.
    */
   bool DispatchKeyboardEvent(EventMessage aMessage,
                              const WidgetKeyboardEvent& aKeyboardEvent,
-                             nsEventStatus& aStatus,
-                             DispatchTo aDispatchTo = eDispatchToParentProcess);
+                             nsEventStatus& aStatus);
 
   /**
    * MaybeDispatchKeypressEvents() maybe dispatches a keypress event which is
@@ -248,14 +227,11 @@ public:
    *                        When this method dispatches one or more keypress
    *                        events and one of them is consumed, this returns
    *                        nsEventStatus_eConsumeNoDefault.
-   * @param aDispatchTo     See comments of DispatchTo.
    * @return                true if one or more events are dispatched.
    *                        Otherwise, false.
    */
   bool MaybeDispatchKeypressEvents(const WidgetKeyboardEvent& aKeyboardEvent,
-                                   nsEventStatus& aStatus,
-                                   DispatchTo aDispatchTo =
-                                     eDispatchToParentProcess);
+                                   nsEventStatus& aStatus);
 
 private:
   // mWidget is owner of the instance.  When this is created, this is set.
@@ -300,15 +276,55 @@ private:
   {
     // No input transaction has been started.
     eNoInputTransaction,
-    // Input transaction for native IME or keyboard event handler.
+    // Input transaction for native IME or keyboard event handler.  Note that
+    // keyboard events may be dispatched via parent process if there is.
     eNativeInputTransaction,
-    // Input transaction for automated tests.
-    eTestInputTransaction,
-    // Input transaction for Others (must be IME on B2G).
-    eOtherInputTransaction
+    // Input transaction for automated tests which are APZ-aware.  Note that
+    // keyboard events may be dispatched via parent process if there is.
+    eAsyncTestInputTransaction,
+    // Input transaction for automated tests which assume events are fired
+    // synchronously.  I.e., keyboard events are always dispatched in the
+    // current process.
+    eSameProcessSyncTestInputTransaction,
+    // Input transaction for Others (must be IME on B2G).  Events are fired
+    // synchronously because TextInputProcessor which is the only user of
+    // this input transaction type supports only keyboard apps on B2G.
+    // Keyboard apps on B2G doesn't want to dispatch keyboard events to
+    // chrome process. Therefore, this should dispatch key events only in
+    // the current process.
+    eSameProcessSyncInputTransaction
   };
 
   InputTransactionType mInputTransactionType;
+
+  bool IsForTests() const
+  {
+    return mInputTransactionType == eAsyncTestInputTransaction ||
+           mInputTransactionType == eSameProcessSyncTestInputTransaction;
+  }
+
+  // ShouldSendInputEventToAPZ() returns true when WidgetInputEvent should
+  // be dispatched via its parent process (if there is) for APZ.  Otherwise,
+  // when the input transaction is for IME of B2G or automated tests which
+  // isn't APZ-aware, WidgetInputEvent should be dispatched form current
+  // process directly.
+  bool ShouldSendInputEventToAPZ() const
+  {
+    switch (mInputTransactionType) {
+      case eNativeInputTransaction:
+      case eAsyncTestInputTransaction:
+        return true;
+      case eSameProcessSyncTestInputTransaction:
+      case eSameProcessSyncInputTransaction:
+        return false;
+      case eNoInputTransaction:
+        NS_WARNING("Why does the caller need to dispatch an event when "
+                   "there is no input transaction?");
+        return true;
+      default:
+        MOZ_CRASH("Define the behavior of new InputTransactionType");
+    }
+  }
 
   // See IsComposing().
   bool mIsComposing;
@@ -337,13 +353,10 @@ private:
 
   /**
    * DispatchInputEvent() dispatches aEvent on aWidget.
-   *
-   * @param aDispatchTo     See comments of DispatchTo.
    */
   nsresult DispatchInputEvent(nsIWidget* aWidget,
                               WidgetInputEvent& aEvent,
-                              nsEventStatus& aStatus,
-                              DispatchTo aDispatchTo);
+                              nsEventStatus& aStatus);
 
   /**
    * StartCompositionAutomaticallyIfNecessary() starts composition if it hasn't
@@ -373,7 +386,6 @@ private:
    *                        set nsEventStatus_eIgnore.  After dispatching
    *                        a event and it's consumed this returns
    *                        nsEventStatus_eConsumeNoDefault.
-   * @param aDispatchTo     See comments of DispatchTo.
    * @param aIndexOfKeypress    This must be 0 if aMessage isn't eKeyPress or
    *                            aKeyboard.mKeyNameIndex isn't
    *                            KEY_NAME_INDEX_USE_STRING.  Otherwise, i.e.,
@@ -386,8 +398,6 @@ private:
   bool DispatchKeyboardEventInternal(EventMessage aMessage,
                                      const WidgetKeyboardEvent& aKeyboardEvent,
                                      nsEventStatus& aStatus,
-                                     DispatchTo aDispatchTo =
-                                       eDispatchToParentProcess,
                                      uint32_t aIndexOfKeypress = 0);
 };
 
