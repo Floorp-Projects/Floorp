@@ -4,7 +4,6 @@
 
 from marionette_driver import By, Wait
 
-from firefox_ui_harness.decorators import skip_under_xvfb
 from firefox_puppeteer.testcases import FirefoxTestCase
 
 
@@ -66,7 +65,6 @@ class TestMixedScriptContentBlocking(FirefoxTestCase):
     def expect_protection_disabled(self):
         self._expect_protection_status(False)
 
-    @skip_under_xvfb
     def test_mixed_content_page(self):
         with self.marionette.using_context('content'):
             self.marionette.navigate(self.url)
