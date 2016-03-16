@@ -1,13 +1,26 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests if the profiler correctly handles multiple recordings and can
  * successfully switch between them, even when one of them is in progress.
  */
 
-var test = Task.async(function*() {
-  let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
+const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
+const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+const { once } = require("devtools/client/performance/test/helpers/event-utils");
+
+add_task(function*() {
+  // This test seems to take a very long time to finish on Linux VMs.
+  requestLongerTimeout(4);
+
+  let { panel } = yield initPerformanceInNewTab({
+    url: SIMPLE_URL,
+    win: window
+  });
+
   let { EVENTS, PerformanceController, RecordingsView } = panel.panelWin;
 
   yield startRecording(panel);
@@ -20,18 +33,18 @@ var test = Task.async(function*() {
   is(RecordingsView.selectedIndex, 1,
     "The new recording item should be selected.");
 
-  let select = once(PerformanceController, EVENTS.RECORDING_SELECTED);
+  let selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   RecordingsView.selectedIndex = 0;
-  yield select;
+  yield selected;
 
   is(RecordingsView.itemCount, 2,
     "There should still be two recordings visible.");
   is(RecordingsView.selectedIndex, 0,
     "The first recording item should be selected now.");
 
-  select = once(PerformanceController, EVENTS.RECORDING_SELECTED);
+  selected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   RecordingsView.selectedIndex = 1;
-  yield select;
+  yield selected;
 
   is(RecordingsView.itemCount, 2,
     "There should still be two recordings visible.");
@@ -40,6 +53,6 @@ var test = Task.async(function*() {
 
   yield stopRecording(panel);
 
-  yield teardown(panel);
-  finish();
+  yield teardownToolboxAndRemoveTab(panel);
 });
+

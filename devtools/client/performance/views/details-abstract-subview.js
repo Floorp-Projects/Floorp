@@ -21,8 +21,18 @@ var DetailsSubview = {
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.PREF_CHANGED, this._onPrefChanged);
-    OverviewView.on(EVENTS.OVERVIEW_RANGE_SELECTED, this._onOverviewRangeChange);
-    DetailsView.on(EVENTS.DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
+    OverviewView.on(EVENTS.UI_OVERVIEW_RANGE_SELECTED, this._onOverviewRangeChange);
+    DetailsView.on(EVENTS.UI_DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
+
+    let self = this;
+    let originalRenderFn = this.render;
+    let afterRenderFn = () => this._wasRendered = true;
+
+    this.render = Task.async(function *(...args) {
+      let maybeRetval = yield originalRenderFn.apply(self, args);
+      afterRenderFn();
+      return maybeRetval;
+    });
   },
 
   /**
@@ -34,8 +44,15 @@ var DetailsSubview = {
     PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
-    OverviewView.off(EVENTS.OVERVIEW_RANGE_SELECTED, this._onOverviewRangeChange);
-    DetailsView.off(EVENTS.DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
+    OverviewView.off(EVENTS.UI_OVERVIEW_RANGE_SELECTED, this._onOverviewRangeChange);
+    DetailsView.off(EVENTS.UI_DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
+  },
+
+  /**
+   * Returns true if this view was rendered at least once.
+   */
+  get wasRenderedAtLeastOnce() {
+    return !!this._wasRendered;
   },
 
   /**

@@ -93,8 +93,8 @@ var test = Task.async(function*() {
 
   // Import recording.
 
-  let calltreeRendered = once(OverviewView, EVENTS.FRAMERATE_GRAPH_RENDERED);
-  let fpsRendered = once(JsCallTreeView, EVENTS.JS_CALL_TREE_RENDERED);
+  let calltreeRendered = once(OverviewView, EVENTS.UI_FRAMERATE_GRAPH_RENDERED);
+  let fpsRendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
   let imported = once(PerformanceController, EVENTS.RECORDING_IMPORTED);
   yield PerformanceController.importRecording("", file);
 
