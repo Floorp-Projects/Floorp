@@ -13,6 +13,9 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
 
+<commandset>
+  <command id="reserved_command" oncommand="this.activeCount++" reserved="true"/>
+</commandset>
 <keyset>
   <key id="unshiftedKey" key=";" modifiers="accel" oncommand="this.activeCount++"/>
   <key id="shiftedKey" key=":" modifiers="accel" oncommand="this.activeCount++"/>
@@ -21,6 +24,8 @@
   <key id="unshiftedX" key="x" modifiers="accel" oncommand="this.activeCount++"/>
   <key id="shiftedX" key="X" modifiers="accel,shift" oncommand="this.activeCount++"/>
   <key id="unshiftedPlus" key="+" modifiers="accel" oncommand="this.activeCount++"/>
+  <key id="reservedUnshiftedKey" key="'" modifiers="accel" command="reserved_command"/>
+  <key id="reservedShiftedKey" key='"' modifiers="accel" command="reserved_command"/>
 </keyset>
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
@@ -3050,6 +3055,37 @@ function* runXULKeyTests()
     });
   }
 
+  function testReservedCommand(aEvent, aKeyElementId)
+  {
+    var testName = "testReservedCommand: " + eventToString(aEvent) + " ";
+    var keyElement = document.getElementById(aKeyElementId);
+    var commandElement = document.getElementById(keyElement.getAttribute("command"));
+    commandElement.activeCount = 0;
+
+    function onKeypressInDefaultEventGroup(aDOMEvent)
+    {
+      ok(false, testName + "keypress event shouldn't be fired in the default event group");
+    }
+    function onKeypressInSystemEventGroup(aDOMEvent)
+    {
+      ok(true, testName + "keypress event should be fired in the system event group");
+    }
+    // XXX Cannot test with listeners of window since this is a chrome window
+    //     and nsXBLWindowKeyHandlers listens chrome document's events.
+    //     Therefore, window.addEventListener() wins against
+    //     nsXBLWindowKeyHandler's event listener...  Of course, content window
+    //     never wins, though.
+    document.addEventListener("keypress", onKeypressInDefaultEventGroup, true);
+    SpecialPowers.addSystemEventListener(document, "keypress", onKeypressInSystemEventGroup, true);
+
+    return synthesizeKey(aEvent, "button", function() {
+      document.removeEventListener("keypress", onKeypressInDefaultEventGroup, true);
+      SpecialPowers.removeSystemEventListener(document, "keypress", onKeypressInSystemEventGroup, true);
+      is(commandElement.activeCount, 1, testName + "the command element should be preformed");
+      continueTest();
+    });
+  }
+
   if (IS_MAC) {
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Semicolon,
                    modifiers:{metaKey:1}, chars:";", unmodifiedChars:";"},
@@ -3063,6 +3099,12 @@ function* runXULKeyTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Semicolon,
                    modifiers:{metaKey:1, shiftKey:1}, chars:";", unmodifiedChars:":"},
                   "unshiftedKey", false);
+    yield testReservedCommand({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Quote,
+                               modifiers:{metaKey:1}, chars:"'", unmodifiedChars:"'"},
+                              "reservedUnshiftedKey");
+    yield testReservedCommand({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_Quote,
+                               modifiers:{metaKey:1, shiftKey:1}, chars:"\"", unmodifiedChars:"'"},
+                              "reservedShiftedKey");
   }
   else if (IS_WIN) {
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
@@ -3077,6 +3119,12 @@ function* runXULKeyTests()
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
                    modifiers:{ctrlKey:1, shiftKey:1}, chars:";"},
                   "unshiftedKey", false);
+    yield testReservedCommand({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_7,
+                               modifiers:{ctrlKey:1}, chars:"'"},
+                              "reservedUnshiftedKey");
+    yield testReservedCommand({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_7,
+                               modifiers:{ctrlKey:1, shiftKey:1}, chars:"'"},
+                              "reservedShiftedKey");
   }
 
   keyElems = ["commandOptionF"];
