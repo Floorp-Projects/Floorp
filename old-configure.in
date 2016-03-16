@@ -4325,13 +4325,8 @@ fi
 dnl ========================================================
 dnl = Apple platform decoder support
 dnl ========================================================
-if test "$MOZ_WIDGET_TOOLKIT" = "cocoa" || test "$MOZ_WIDGET_TOOLKIT" = "uikit"; then
-  MOZ_APPLEMEDIA=1
-fi
-
 if test "$COMPILE_ENVIRONMENT"; then
 if test -n "$MOZ_APPLEMEDIA"; then
-  AC_DEFINE(MOZ_APPLEMEDIA)
   # hack in frameworks for fmp4 - see bug 1029974
   # We load VideoToolbox and CoreMedia dynamically, so they don't appear here.
   LDFLAGS="$LDFLAGS -framework AudioToolbox"
@@ -8024,7 +8019,6 @@ AC_SUBST(MOZ_FMP4)
 AC_SUBST(MOZ_EME)
 AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_ANDROID_OMX)
-AC_SUBST(MOZ_APPLEMEDIA)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE)
 AC_SUBST(MOZ_VPX_ERROR_CONCEALMENT)
