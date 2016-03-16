@@ -458,7 +458,7 @@
       {
         "name": "pause",
         "type": "function",
-        "unsupported": true,
+        "async": "callback",
         "description": "Pause the download. If the request was successful the download is in a paused state. Otherwise <a href='extension.html#property-lastError'>chrome.extension.lastError</a> contains an error message. The request will fail if the download is not active.",
         "parameters": [
           {
@@ -477,7 +477,7 @@
       {
         "name": "resume",
         "type": "function",
-        "unsupported": true,
+        "async": "callback",
         "description": "Resume a paused download. If the request was successful the download is in progress and unpaused. Otherwise <a href='extension.html#property-lastError'>chrome.extension.lastError</a> contains an error message. The request will fail if the download is not active.",
         "parameters": [
           {
@@ -496,7 +496,7 @@
       {
         "name": "cancel",
         "type": "function",
-        "unsupported": true,
+        "async": "callback",
         "description": "Cancel a download. When <code>callback</code> is run, the download is cancelled, completed, interrupted or doesn't exist anymore.",
         "parameters": [
           {

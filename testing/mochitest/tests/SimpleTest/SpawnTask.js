@@ -268,8 +268,18 @@ var add_task = (function () {
       // script finishes.
       setTimeout(function () {
         spawn_task(function* () {
-          for (var task of task_list) {
-            yield task();
+          // We stop the entire test file at the first exception because this
+          // may mean that the state of subsequent tests may be corrupt.
+          try {
+            for (var task of task_list) {
+              yield task();
+            }
+          } catch (ex) {
+            try {
+              ok(false, "" + ex);
+            } catch (ex2) {
+              ok(false, "(The exception cannot be converted to string.)");
+            }
           }
           // All tasks are finished.
           SimpleTest.finish();
