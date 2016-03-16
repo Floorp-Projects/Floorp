@@ -135,6 +135,9 @@
     // No trailing whitespace
     "no-trailing-spaces": 2,
 
+    // No using undeclared variables
+    "no-undef": 2,
+
     // Error on newline where a semicolon is needed
     "no-unexpected-multiline": 2,
 
@@ -179,5 +182,12 @@
 
     // Only check typeof against valid results
     "valid-typeof": 2
+  },
+  "env": {
+    "browser": true
+  },
+  "globals": {
+    "Components": false,
+    "dump": false
   }
 }
