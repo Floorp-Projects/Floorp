@@ -16,8 +16,6 @@
 #include "mozilla/dom/workers/bindings/ServiceWorker.h"
 
 #ifndef MOZ_SIMPLEPUSH
-#include "mozilla/dom/PushEventBinding.h"
-#include "mozilla/dom/PushMessageDataBinding.h"
 #include "mozilla/dom/File.h"
 #endif
 
@@ -31,6 +29,7 @@ namespace dom {
 class Blob;
 class MessagePort;
 class MessagePortList;
+class PushEventInit;
 class Request;
 class ResponseOrPromise;
 } // namespace dom
@@ -188,10 +187,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PushMessageData)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
-    return mozilla::dom::PushMessageDataBinding_workers::Wrap(aCx, this, aGivenProto);
-  }
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject() const {
     return mOwner;
@@ -228,10 +224,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PushEvent, ExtendableEvent)
   NS_FORWARD_TO_EVENT
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
-    return mozilla::dom::PushEventBinding_workers::Wrap(aCx, this, aGivenProto);
-  }
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<PushEvent>
   Constructor(mozilla::dom::EventTarget* aOwner,
