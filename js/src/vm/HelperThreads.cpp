@@ -1240,7 +1240,7 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSRuntime* rt, ParseTask* par
     // finished merging the contents of the parse task's compartment into the
     // destination compartment.  Finish any ongoing incremental GC first and
     // assert that no allocation can occur.
-    gc::AutoFinishGC finishGC(rt);
+    gc::FinishGC(rt);
     JS::AutoAssertNoAlloc noAlloc(rt);
 
     LeaveParseTaskZone(rt, parseTask);

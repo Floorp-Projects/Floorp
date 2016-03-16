@@ -59,6 +59,7 @@ public:
     READ_ONLY = 0,
     READ_WRITE,
     READ_WRITE_FLUSH,
+    CLEANUP,
     VERSION_CHANGE,
 
     // Only needed for IPC serialization helper, should never be used in code.
@@ -188,6 +189,7 @@ public:
     AssertIsOnOwningThread();
     return mMode == READ_WRITE ||
            mMode == READ_WRITE_FLUSH ||
+           mMode == CLEANUP ||
            mMode == VERSION_CHANGE;
   }
 

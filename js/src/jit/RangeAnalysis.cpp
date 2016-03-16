@@ -2275,13 +2275,16 @@ RangeAnalysis::analyze()
 
     for (ReversePostorderIterator iter(graph_.rpoBegin()); iter != graph_.rpoEnd(); iter++) {
         MBasicBlock* block = *iter;
-        MOZ_ASSERT(!block->unreachable());
+        // No blocks are supposed to be unreachable, except when we have an OSR
+        // block, in which case the Value Numbering phase add fixup blocks which
+        // are unreachable.
+        MOZ_ASSERT(!block->unreachable() || graph_.osrBlock());
 
         // If the block's immediate dominator is unreachable, the block is
         // unreachable. Iterating in RPO, we'll always see the immediate
         // dominator before the block.
         if (block->immediateDominator()->unreachable()) {
-            block->setUnreachable();
+            block->setUnreachableUnchecked();
             continue;
         }
 
@@ -3429,6 +3432,15 @@ RangeAnalysis::prepareForUCE(bool* shouldRemoveDeadCode)
 
         if (!block->unreachable())
             continue;
+
+        // Filter out unreachable fake entries.
+        if (block->numPredecessors() == 0) {
+            // Ignore fixup blocks added by the Value Numbering phase, in order
+            // to keep the dominator tree as-is when we have OSR Block which are
+            // no longer reachable from the main entry point of the graph.
+            MOZ_ASSERT(graph_.osrBlock());
+            continue;
+        }
 
         MControlInstruction* cond = block->getPredecessor(0)->lastIns();
         if (!cond->isTest())

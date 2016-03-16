@@ -18,7 +18,7 @@ MinimizeHeap(JSRuntime* rt)
     // sweeping that the first GC started to finish.
     JS_GC(rt);
     JS_GC(rt);
-    js::gc::AutoFinishGC finish(rt);
+    js::gc::FinishGC(rt);
 }
 
 BEGIN_TEST(testGCUID)

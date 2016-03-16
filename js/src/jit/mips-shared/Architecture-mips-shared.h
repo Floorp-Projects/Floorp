@@ -310,6 +310,7 @@ class FloatRegisterMIPSShared
 
 uint32_t GetMIPSFlags();
 bool hasFPU();
+bool isLoongson();
 
 // MIPS doesn't have double registers that can NOT be treated as float32.
 inline bool

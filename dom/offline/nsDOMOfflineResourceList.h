@@ -116,7 +116,7 @@ public:
   }
   uint32_t Length()
   {
-    ErrorResult rv;
+    mozilla::IgnoredErrorResult rv;
     uint32_t length = GetMozLength(rv);
     return rv.Failed() ? 0 : length;
   }

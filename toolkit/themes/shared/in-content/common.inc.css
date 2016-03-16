@@ -739,6 +739,10 @@ xul|treecols {
   padding: 0;
 }
 
+.autocomplete-tree > xul|treecols {
+  border-bottom: none !important;
+}
+
 xul|treecol:not([hideheader="true"]),
 xul|treecolpicker {
   -moz-appearance: none;

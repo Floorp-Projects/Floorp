@@ -16,6 +16,7 @@
 
 #include "jspubtd.h"
 
+#include "js/GCAnnotations.h"
 #include "js/GCAPI.h"
 #include "js/GCPolicyAPI.h"
 #include "js/HeapAPI.h"
@@ -707,7 +708,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
     MaybeWrapped ptr;
 
     Rooted(const Rooted&) = delete;
-};
+} JS_HAZ_ROOTED;
 
 } /* namespace JS */
 
@@ -1053,7 +1054,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
         T>::Type;
 
     MaybeWrapped ptr;
-};
+} JS_HAZ_ROOTED;
 
 class JS_PUBLIC_API(ObjectPtr)
 {

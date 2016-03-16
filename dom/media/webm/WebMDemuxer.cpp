@@ -582,7 +582,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     sample->mDuration = next_tstamp - tstamp;
     sample->mOffset = holder->Offset();
     sample->mKeyframe = isKeyframe;
-    if (discardPadding) {
+    if (discardPadding && i == count - 1) {
       uint8_t c[8];
       BigEndian::writeInt64(&c[0], discardPadding);
       sample->mExtraData = new MediaByteBuffer;
