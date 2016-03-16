@@ -28,7 +28,7 @@ var test = Task.async(function*() {
 
   yield PerformanceController.clearRecordings();
 
-  let rendered = once(WaterfallView, EVENTS.WATERFALL_RENDERED);
+  let rendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
   let imported = once(PerformanceController, EVENTS.RECORDING_IMPORTED);
   yield PerformanceController.importRecording("", file);
   yield imported;
