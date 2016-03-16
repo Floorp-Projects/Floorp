@@ -109,13 +109,6 @@
   ")" \
 )
 
-#define CREATE_MOZ_BOOKMARKS_ROOTS NS_LITERAL_CSTRING( \
-  "CREATE TABLE moz_bookmarks_roots (" \
-    "  root_name VARCHAR(16) UNIQUE" \
-    ", folder_id INTEGER" \
-  ")" \
-)
-
 #define CREATE_MOZ_KEYWORDS NS_LITERAL_CSTRING( \
   "CREATE TABLE moz_keywords (" \
     "  id INTEGER PRIMARY KEY AUTOINCREMENT" \

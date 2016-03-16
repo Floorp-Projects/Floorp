@@ -8,7 +8,8 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 const l10n = require("gcli/l10n");
-const { gDevTools } = require("devtools/client/framework/devtools");
+loader.lazyRequireGetter(this, "gDevTools",
+                         "devtools/client/framework/devtools", true);
 
 /**
  * The commands and converters that are exported to GCLI

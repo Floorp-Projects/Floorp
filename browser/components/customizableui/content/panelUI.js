@@ -183,6 +183,11 @@ const PanelUI = {
   },
 
   handleEvent: function(aEvent) {
+    // Ignore context menus and menu button menus showing and hiding:
+    if (aEvent.type.startsWith("popup") &&
+        aEvent.target != this.panel) {
+      return;
+    }
     switch (aEvent.type) {
       case "popupshowing":
         this._adjustLabelsForAutoHyphens();

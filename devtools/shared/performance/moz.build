@@ -7,7 +7,6 @@
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
 DevToolsModules(
-    'process-communication.js',
     'recording-common.js',
     'recording-utils.js',
 )

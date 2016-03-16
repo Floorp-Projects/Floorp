@@ -1,44 +1,51 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-requestLongerTimeout(2);
+"use strict";
 
 /**
- * Tests that disables the frontend when in private browsing mode.
+ * Tests that the frontend is disabled when in private browsing mode.
  */
 
-var gPanelWinTuples = [];
+const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
+const { addWindow } = require("devtools/client/performance/test/helpers/tab-utils");
+const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-function* spawnTest() {
+let gPanelWinTuples = [];
+
+add_task(function*() {
   yield testNormalWindow();
   yield testPrivateWindow();
   yield testRecordingFailingInWindow(0);
   yield testRecordingFailingInWindow(1);
-  yield teardownPerfInWindow(1);
+  yield teardownPerfInWindow(1, { shouldCloseWindow: true, dontWaitForTabClose: true });
   yield testRecordingSucceedingInWindow(0);
-  yield teardownPerfInWindow(0);
+  yield teardownPerfInWindow(0, { shouldCloseWindow: false });
 
   gPanelWinTuples = null;
-  finish();
+});
+
+function* createPanelInNewWindow(options) {
+  let win = yield addWindow(options);
+  return yield createPanelInWindow(options, win);
 }
 
-function* createPanelInWindow(options) {
-  let win = yield addWindow(options);
-  let tab = yield addTab(SIMPLE_URL, win);
-  let target = TargetFactory.forTab(tab);
-  yield target.makeRemote();
+function* createPanelInWindow(options, win = window) {
+  let { panel } = yield initPerformanceInNewTab({
+    url: SIMPLE_URL,
+    win: win
+  }, options);
 
-  let toolbox = yield gDevTools.showToolbox(target, "performance");
-  yield toolbox.initPerformance();
-
-  let panel = yield toolbox.getCurrentPanel().open();
   gPanelWinTuples.push({ panel, win });
-
   return { panel, win };
 }
 
 function* testNormalWindow() {
-  let { panel } = yield createPanelInWindow({ private: false });
+  let { panel } = yield createPanelInWindow({
+    private: false
+  });
+
   let { PerformanceView } = panel.panelWin;
 
   is(PerformanceView.getState(), "empty",
@@ -46,7 +53,13 @@ function* testNormalWindow() {
 }
 
 function* testPrivateWindow() {
-  let { panel } = yield createPanelInWindow({ private: true });
+  let { panel } = yield createPanelInNewWindow({
+    private: true,
+    // The add-on SDK can't seem to be able to listen to "ready" or "close"
+    // events for private tabs. Don't really absolutely need to though.
+    dontWaitForTabReady: true
+  });
+
   let { PerformanceView } = panel.panelWin;
 
   is(PerformanceView.getState(), "unavailable",
@@ -61,14 +74,14 @@ function* testRecordingFailingInWindow(index) {
     ok(false, "Recording should not start while a private window is present.");
   };
 
-  PerformanceController.on(EVENTS.RECORDING_STARTED, onRecordingStarted);
+  PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, onRecordingStarted);
 
-  let whenFailed = once(PerformanceController, EVENTS.NEW_RECORDING_FAILED);
+  let whenFailed = once(PerformanceController, EVENTS.BACKEND_FAILED_AFTER_RECORDING_START);
   PerformanceController.startRecording();
   yield whenFailed;
   ok(true, "Recording has failed.");
 
-  PerformanceController.off(EVENTS.RECORDING_STARTED, onRecordingStarted);
+  PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, onRecordingStarted);
 }
 
 function* testRecordingSucceedingInWindow(index) {
@@ -79,17 +92,20 @@ function* testRecordingSucceedingInWindow(index) {
     ok(false, "Recording should start while now private windows are present.");
   };
 
-  PerformanceController.on(EVENTS.NEW_RECORDING_FAILED, onRecordingFailed);
+  PerformanceController.on(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START, onRecordingFailed);
 
   yield startRecording(panel);
   yield stopRecording(panel);
   ok(true, "Recording has succeeded.");
 
-  PerformanceController.off(EVENTS.RECORDING_STARTED, onRecordingFailed);
+  PerformanceController.off(EVENTS.BACKEND_FAILED_AFTER_RECORDING_START, onRecordingFailed);
 }
 
-function* teardownPerfInWindow(index) {
+function* teardownPerfInWindow(index, options) {
   let { panel, win } = gPanelWinTuples[index];
-  yield teardown(panel, win);
-  win.close();
+  yield teardownToolboxAndRemoveTab(panel, options);
+
+  if (options.shouldCloseWindow) {
+    win.close();
+  }
 }

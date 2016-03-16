@@ -1,29 +1,39 @@
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests that all components can get rerendered for a profile when switching.
  */
 
-var test = Task.async(function*() {
-  let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
-  let { $, EVENTS, PerformanceController, DetailsView, DetailsSubview, RecordingsView } = panel.panelWin;
+const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
+const { UI_ENABLE_MEMORY_PREF, UI_ENABLE_ALLOCATIONS_PREF } = require("devtools/client/performance/test/helpers/prefs");
+const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const { startRecording, stopRecording, waitForAllWidgetsRendered } = require("devtools/client/performance/test/helpers/actions");
+
+add_task(function*() {
+  let { panel } = yield initPerformanceInNewTab({
+    url: SIMPLE_URL,
+    win: window
+  });
+
+  let { DetailsView, DetailsSubview, RecordingsView } = panel.panelWin;
+
+  // Enable memory to test the memory overview.
+  Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, true);
 
   // Enable allocations to test the memory-calltree and memory-flamegraph.
-  Services.prefs.setBoolPref(MEMORY_PREF, true);
-  Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
-
-  // Need to allow widgets to be updated while hidden, otherwise we can't use
-  // `waitForWidgetsRendered`.
-  DetailsSubview.canUpdateWhileHidden = true;
+  Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, true);
 
   yield startRecording(panel);
   yield stopRecording(panel);
 
-  // Cycle through all the views to initialize them, otherwise we can't use
-  // `waitForWidgetsRendered`. The waterfall is shown by default, but all the
-  // other views are created lazily, so won't emit any events.
+  // Ållow widgets to be updated while hidden, to make testing easier.
+  DetailsSubview.canUpdateWhileHidden = true;
+
+  // Cycle through all the views to initialize them. The waterfall is shown
+  // by default, but all the other views are created lazily, so won't emit
+  // any events.
   yield DetailsView.selectView("js-calltree");
   yield DetailsView.selectView("js-flamegraph");
   yield DetailsView.selectView("memory-calltree");
@@ -32,14 +42,17 @@ var test = Task.async(function*() {
   yield startRecording(panel);
   yield stopRecording(panel);
 
-  let rerender = waitForWidgetsRendered(panel);
+  let rerender = waitForAllWidgetsRendered(panel);
   RecordingsView.selectedIndex = 0;
   yield rerender;
 
-  rerender = waitForWidgetsRendered(panel);
+  ok(true, "All widgets were rendered when selecting the first recording.");
+
+  rerender = waitForAllWidgetsRendered(panel);
   RecordingsView.selectedIndex = 1;
   yield rerender;
 
-  yield teardown(panel);
-  finish();
+  ok(true, "All widgets were rendered when selecting the second recording.");
+
+  yield teardownToolboxAndRemoveTab(panel);
 });
