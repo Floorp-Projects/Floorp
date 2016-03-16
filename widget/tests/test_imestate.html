@@ -1232,6 +1232,9 @@ function runEditorFlagChangeTests()
 
   var container = document.getElementById("display");
 
+  // Reset selection from previous tests.
+  window.getSelection().collapse(container, 0);
+
   // the editor has focus directly.
   container.setAttribute("contenteditable", "true");
   container.focus();
@@ -1251,9 +1254,6 @@ function runEditorFlagChangeTests()
   var editorIMESupport =
     editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
   var flags = editor.flags;
-
-  // Reset selection from previous tests.
-  editor.selection.collapse(container, 0);
 
   // input characters
   synthesizeCompositionChange(
