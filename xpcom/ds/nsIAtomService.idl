@@ -38,10 +38,4 @@ interface nsIAtomService : nsISupports {
    * the XPCOM library.  See nsIAtom.idl.
    */
   nsIAtom getPermanentAtom(in AString value);
-
-  /**
-   * Get an atom with a utf8 string.
-   */
-  [noscript] nsIAtom getAtomUTF8(in string value);
-  [noscript] nsIAtom getPermanentAtomUTF8(in string value);
 };
