@@ -837,8 +837,6 @@ MOZ_FS_LAYOUT=unix
 
 USE_DEPENDENT_LIBS=1
 
-_PLATFORM_DEFAULT_TOOLKIT=cairo-gtk3
-
 dnl Configure platform-specific CPU architecture compiler options.
 dnl ==============================================================
 if test "$COMPILE_ENVIRONMENT"; then
@@ -1482,12 +1480,10 @@ case "$target" in
     if test -n "$MOZ_IOS"; then
         AC_DEFINE(XP_IOS)
         AC_DEFINE(XP_DARWIN)
-        _PLATFORM_DEFAULT_TOOLKIT='cairo-uikit'
         direct_nspr_config=1
     else
         AC_DEFINE(XP_MACOSX)
         AC_DEFINE(XP_DARWIN)
-        _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
         # The ExceptionHandling framework is needed for Objective-C exception
         # logging code in nsObjCExceptions.h. Currently we only use that in debug
         # builds.
@@ -1538,12 +1534,10 @@ case "$target" in
     AC_DEFINE(NO_PW_GECOS)
     no_x=yes
     if test -n "$gonkdir"; then
-        _PLATFORM_DEFAULT_TOOLKIT=cairo-gonk
         _PLATFORM_HAVE_RIL=1
         MOZ_B2G_FM=1
         MOZ_SYNTH_PICO=1
     else
-        _PLATFORM_DEFAULT_TOOLKIT=cairo-android
         if test "$COMPILE_ENVIRONMENT"; then
             MOZ_LINKER=1
         fi
@@ -1806,7 +1800,6 @@ case "$target" in
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
     dnl See http://support.microsoft.com/kb/143208 to use STL
     AC_DEFINE(NOMINMAX)
-    _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
     MOZ_USER_DIR="Mozilla"
 
@@ -3420,38 +3413,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Toolkit Options)
 
-    dnl ========================================================
-    dnl = Select the default toolkit
-    dnl ========================================================
-    MOZ_ARG_ENABLE_STRING(default-toolkit,
-    [  --enable-default-toolkit=TK
-                          Select default toolkit
-                          Platform specific defaults:
-                            Mac OS X - cairo-cocoa
-                            Win32 - cairo-windows
-                            * - cairo-gtk2
-                            * - cairo-gtk3
-                            * - cairo-qt],
-    [ _DEFAULT_TOOLKIT=$enableval ],
-    [ _DEFAULT_TOOLKIT=$_PLATFORM_DEFAULT_TOOLKIT])
-
-    if test "$_DEFAULT_TOOLKIT" = "cairo-windows" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-x11" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-gtk3" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-qt" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-uikit" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-android" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-gonk"
-    then
-        dnl nglayout only supports building with one toolkit,
-        dnl so ignore everything after the first comma (",").
-        MOZ_WIDGET_TOOLKIT=`echo "$_DEFAULT_TOOLKIT" | sed -e "s/,.*$//"`
-    else
-        AC_MSG_ERROR([You must specify a default toolkit (perhaps $_PLATFORM_DEFAULT_TOOLKIT).])
-    fi
-
 MOZ_ARG_WITHOUT_BOOL(x,
 [  --without-x              Build without X11],
     WITHOUT_X11=1)
@@ -3464,14 +3425,12 @@ MOZ_WIDGET_GTK=
 
 case "$MOZ_WIDGET_TOOLKIT" in
 
-cairo-windows)
-    MOZ_WIDGET_TOOLKIT=windows
+windows)
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
-cairo-gtk3)
-    MOZ_WIDGET_TOOLKIT=gtk3
+gtk3)
     MOZ_ENABLE_GTK=1
     MOZ_ENABLE_GTK3=1
     MOZ_ENABLE_XREMOTE=1
@@ -3487,8 +3446,7 @@ cairo-gtk3)
     MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
-cairo-gtk2|cairo-gtk2-x11)
-    MOZ_WIDGET_TOOLKIT=gtk2
+gtk2)
     MOZ_ENABLE_GTK=1
     MOZ_ENABLE_GTK2=1
     MOZ_ENABLE_XREMOTE=1
@@ -3505,8 +3463,7 @@ cairo-gtk2|cairo-gtk2-x11)
     MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
-cairo-qt)
-    MOZ_WIDGET_TOOLKIT=qt
+qt)
     MOZ_ENABLE_QT=1
     if test -z "$WITHOUT_X11"; then
       MOZ_ENABLE_XREMOTE=1
@@ -3522,8 +3479,7 @@ cairo-qt)
     AC_DEFINE(QT_NO_KEYWORDS)
     ;;
 
-cairo-cocoa)
-    MOZ_WIDGET_TOOLKIT=cocoa
+cocoa)
     AC_DEFINE(MOZ_WIDGET_COCOA)
     LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
     # Use -Wl as a trick to avoid -framework and framework names from
@@ -3537,8 +3493,7 @@ cairo-cocoa)
     MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
-cairo-uikit)
-    MOZ_WIDGET_TOOLKIT=uikit
+uikit)
     AC_DEFINE(MOZ_WIDGET_UIKIT)
     LDFLAGS="$LDFLAGS -framework UIKit -lobjc"
     TK_CFLAGS="-DNO_X11"
@@ -3549,17 +3504,15 @@ cairo-uikit)
     MOZ_FS_LAYOUT=bundle
     ;;
 
-cairo-android)
+android)
     AC_DEFINE(MOZ_WIDGET_ANDROID)
-    MOZ_WIDGET_TOOLKIT=android
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
-cairo-gonk)
+gonk)
     AC_DEFINE(MOZ_WIDGET_GONK)
     AC_DEFINE(MOZ_TOUCH)
-    MOZ_WIDGET_TOOLKIT=gonk
     MOZ_PDF_PRINTING=1
     MOZ_TOUCH=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
@@ -7746,7 +7699,6 @@ AC_SUBST(WINDRES)
 AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
 AC_SUBST(BIN_FLAGS)
-AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_DEBUG)

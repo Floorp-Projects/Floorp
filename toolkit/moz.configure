@@ -5,3 +5,60 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include('../js/moz.configure')
+
+
+# Default toolkit
+# ==============================================================
+# Normally, we'd want to use the `default` field on the option, but that
+# requires --target to be resolved at --help time, which requires to run
+# config.guess, which we want to avoid. Even better, we could actually set
+# `choices` depending on the target, but that doesn't pan out for the same
+# reason.
+option('--enable-default-toolkit', nargs=1,
+       choices=('cairo-windows', 'cairo-gtk2', 'cairo-gtk2-x11', 'cairo-gtk3',
+                'cairo-qt', 'cairo-cocoa', 'cairo-uikit', 'cairo-android',
+                'cairo-gonk'),
+       help='Select default toolkit')
+
+@depends('--enable-default-toolkit', target, gonkdir)
+def toolkit(value, target, gonkdir):
+    # Define possible choices for each platform. The default is the first one
+    # listed when there are several.
+    os = target.os
+    if target.os == 'WINNT':
+        platform_choices = ('cairo-windows',)
+    elif target.os == 'OSX':
+        platform_choices = ('cairo-cocoa',)
+    elif target.os == 'iOS':
+        platform_choices = ('cairo-uikit',)
+    elif target.os == 'Android':
+        if gonkdir:
+            platform_choices = ('cairo-gonk',)
+            os = 'B2G'
+        else:
+            platform_choices = ('cairo-android',)
+    else:
+        platform_choices = ('cairo-gtk3', 'cairo-gtk2', 'cairo-gtk2-x11',
+                            'cairo-qt')
+
+    if value:
+        if value[0] not in platform_choices:
+            error(
+                '`%s` is not a valid value for --enable-default-toolkit on %s\n'
+                'Valid values: %s'
+                % (value[0], os, ', '.join(platform_choices)))
+        return value[0]
+
+    return platform_choices[0]
+
+
+@depends(toolkit)
+def toolkit(toolkit):
+    if toolkit == 'cairo-gtk2-x11':
+        widget_toolkit = 'gtk2'
+    else:
+        widget_toolkit = toolkit.replace('cairo-', '')
+    set_config('MOZ_WIDGET_TOOLKIT', widget_toolkit)
+    add_old_configure_assignment('MOZ_WIDGET_TOOLKIT', widget_toolkit)
+
+    return widget_toolkit
