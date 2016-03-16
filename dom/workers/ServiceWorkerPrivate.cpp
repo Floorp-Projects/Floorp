@@ -26,6 +26,7 @@
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/NotificationEvent.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/PushEventBinding.h"
 #include "mozilla/dom/RequestBinding.h"
 
 using namespace mozilla;
