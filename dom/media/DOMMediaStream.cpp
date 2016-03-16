@@ -18,6 +18,7 @@
 #include "mozilla/dom/VideoTrack.h"
 #include "mozilla/dom/VideoTrackList.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/media/MediaUtils.h"
 #include "MediaStreamGraph.h"
 #include "AudioStreamTrack.h"
 #include "VideoStreamTrack.h"
@@ -37,6 +38,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
+using namespace mozilla::media;
 
 static LazyLogModule gMediaStreamLog("MediaStream");
 #define LOG(type, msg) MOZ_LOG(gMediaStreamLog, type, msg)
@@ -90,12 +92,15 @@ DOMMediaStream::TrackPort::GetSourceTrackId() const
   return mInputPort ? mInputPort->GetSourceTrackId() : TRACK_INVALID;
 }
 
-void
+already_AddRefed<Pledge<bool>>
 DOMMediaStream::TrackPort::BlockTrackId(TrackID aTrackId)
 {
   if (mInputPort) {
-    mInputPort->BlockTrackId(aTrackId);
+    return mInputPort->BlockTrackId(aTrackId);
   }
+  RefPtr<Pledge<bool>> rejected = new Pledge<bool>();
+  rejected->Reject(NS_ERROR_FAILURE);
+  return rejected.forget();
 }
 
 NS_IMPL_CYCLE_COLLECTION(DOMMediaStream::TrackPort, mTrack)
@@ -299,6 +304,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMMediaStream,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTracks)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsumersToKeepAlive)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTrackSourceGetter)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mVideoPrincipal)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMMediaStream,
@@ -308,6 +315,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMMediaStream,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTracks)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsumersToKeepAlive)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTrackSourceGetter)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVideoPrincipal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(DOMMediaStream, DOMEventTargetHelper)
@@ -337,8 +346,8 @@ DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow,
                                MediaStreamTrackSourceGetter* aTrackSourceGetter)
   : mLogicalStreamStartTime(0), mWindow(aWindow),
     mInputStream(nullptr), mOwnedStream(nullptr), mPlaybackStream(nullptr),
-    mTrackSourceGetter(aTrackSourceGetter), mTracksCreated(false),
-    mNotifiedOfMediaStreamGraphShutdown(false)
+    mTracksPendingRemoval(0), mTrackSourceGetter(aTrackSourceGetter),
+    mTracksCreated(false), mNotifiedOfMediaStreamGraphShutdown(false)
 {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -584,7 +593,7 @@ DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack)
   // to block it in the port. Doing this for a locked track is still OK as it
   // will first block the track, then destroy the port. Both cause the track to
   // end.
-  toRemove->BlockTrackId(aTrack.mTrackID);
+  BlockPlaybackTrack(toRemove);
 
   DebugOnly<bool> removed = mTracks.RemoveElement(toRemove);
   MOZ_ASSERT(removed);
@@ -884,10 +893,26 @@ DOMMediaStream::RecomputePrincipal()
 {
   nsCOMPtr<nsIPrincipal> previousPrincipal = mPrincipal.forget();
   nsCOMPtr<nsIPrincipal> previousVideoPrincipal = mVideoPrincipal.forget();
+
+  if (mTracksPendingRemoval > 0) {
+    LOG(LogLevel::Info, ("DOMMediaStream %p RecomputePrincipal() Cannot "
+                         "recompute stream principal with tracks pending "
+                         "removal.", this));
+    return;
+  }
+
+  LOG(LogLevel::Debug, ("DOMMediaStream %p Recomputing principal. "
+                        "Old principal was %p.", this, previousPrincipal.get()));
+
+  // mPrincipal is recomputed based on all current tracks, and tracks that have
+  // not ended in our playback stream.
   for (const RefPtr<TrackPort>& info : mTracks) {
     if (info->GetTrack()->Ended()) {
       continue;
     }
+    LOG(LogLevel::Debug, ("DOMMediaStream %p Taking live track %p with "
+                          "principal %p into account.", this,
+                          info->GetTrack(), info->GetTrack()->GetPrincipal()));
     nsContentUtils::CombineResourcePrincipals(&mPrincipal,
                                               info->GetTrack()->GetPrincipal());
     if (info->GetTrack()->AsVideoStreamTrack()) {
@@ -895,6 +920,9 @@ DOMMediaStream::RecomputePrincipal()
                                                 info->GetTrack()->GetPrincipal());
     }
   }
+
+  LOG(LogLevel::Debug, ("DOMMediaStream %p new principal is %p.",
+                        this, mPrincipal.get()));
 
   if (previousPrincipal != mPrincipal ||
       previousVideoPrincipal != mVideoPrincipal) {
@@ -1151,7 +1179,26 @@ DOMMediaStream::NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RecomputePrincipal();
+  if (mTracksPendingRemoval > 0) {
+    // If there are tracks pending removal we may not degrade the current
+    // principals until those tracks have been confirmed removed from the
+    // playback stream. Instead combine with the new track and the (potentially)
+    // degraded principal will be calculated when it's safe.
+    nsContentUtils::CombineResourcePrincipals(&mPrincipal,
+                                              aTrack->GetPrincipal());
+    LOG(LogLevel::Debug, ("DOMMediaStream %p saw a track get added. Combining "
+                          "its principal %p into our while waiting for pending "
+                          "tracks to be removed. New principal is %p.",
+                          this, aTrack->GetPrincipal(), mPrincipal.get()));
+    if (aTrack->AsVideoStreamTrack()) {
+      nsContentUtils::CombineResourcePrincipals(&mVideoPrincipal,
+                                                aTrack->GetPrincipal());
+    }
+  } else {
+    LOG(LogLevel::Debug, ("DOMMediaStream %p saw a track get added. "
+                          "Recomputing principal.", this));
+    RecomputePrincipal();
+  }
 
   aTrack->AddPrincipalChangeObserver(this);
 
@@ -1171,7 +1218,9 @@ DOMMediaStream::NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack)
     mTrackListeners[i]->NotifyTrackRemoved(aTrack);
   }
 
-  RecomputePrincipal();
+  // Don't call RecomputePrincipal here as the track may still exist in the
+  // playback stream in the MediaStreamGraph. It will instead be called when the
+  // track has been confirmed removed by the graph. See BlockPlaybackTrack().
 }
 
 void
@@ -1180,6 +1229,33 @@ DOMMediaStream::CreateAndAddPlaybackStreamListener(MediaStream* aStream)
   MOZ_ASSERT(GetCameraStream(), "I'm a hack. Only DOMCameraControl may use me.");
   mPlaybackListener = new PlaybackStreamListener(this);
   aStream->AddListener(mPlaybackListener);
+}
+
+void
+DOMMediaStream::BlockPlaybackTrack(TrackPort* aTrack)
+{
+  MOZ_ASSERT(aTrack);
+  ++mTracksPendingRemoval;
+  RefPtr<Pledge<bool>> p = aTrack->BlockTrackId(aTrack->GetTrack()->mTrackID);
+  RefPtr<DOMMediaStream> self = this;
+  p->Then([self] (const bool& aIgnore) { self->NotifyPlaybackTrackBlocked(); },
+          [] (const nsresult& aIgnore) { NS_ERROR("Could not remove track from MSG"); }
+  );
+}
+
+void
+DOMMediaStream::NotifyPlaybackTrackBlocked()
+{
+  MOZ_ASSERT(mTracksPendingRemoval > 0,
+             "A track reported finished blocking more times than we asked for");
+  if (--mTracksPendingRemoval == 0) {
+    // The MediaStreamGraph has reported a track was blocked and we are not
+    // waiting for any further tracks to get blocked. It is now safe to
+    // recompute the principal based on our main thread track set state.
+    LOG(LogLevel::Debug, ("DOMMediaStream %p saw all tracks pending removal "
+                          "finish. Recomputing principal.", this));
+    RecomputePrincipal();
+  }
 }
 
 DOMLocalMediaStream::~DOMLocalMediaStream()
