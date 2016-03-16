@@ -26,7 +26,6 @@ TEST(Atoms, Basic)
     nsCOMPtr<nsIAtom> atom = do_GetAtom(str16);
 
     EXPECT_TRUE(atom->Equals(str16));
-    EXPECT_TRUE(atom->EqualsUTF8(str8));
 
     nsString tmp16;
     nsCString tmp8;
@@ -74,7 +73,6 @@ TEST(Atoms, NUll)
 
   EXPECT_EQ(atom->GetLength(), str.Length());
   EXPECT_TRUE(atom->Equals(str));
-  EXPECT_TRUE(atom->EqualsUTF8(NS_ConvertUTF16toUTF8(str)));
   EXPECT_NE(atom, atomCut);
   EXPECT_TRUE(atomCut->Equals(strCut));
 }

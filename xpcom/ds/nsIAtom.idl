@@ -30,8 +30,6 @@ interface nsIAtom : nsISupports
    * Note that this will NEVER return/throw an error condition.
    */
   [binaryname(ScriptableEquals)] boolean equals(in AString aString);
-  
-  [noscript, notxpcom] boolean equalsUTF8(in AUTF8String aString);
 
   /**
    * Returns true if the atom is static and false otherwise.
