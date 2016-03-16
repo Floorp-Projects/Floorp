@@ -661,6 +661,7 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
                      const ModifierKeyState& aModKeyState,
                      nsTArray<FakeCharMsg>* aFakeCharMsgs)
   : mWidget(aWidget)
+  , mDispatcher(aWidget->GetTextEventDispatcher())
   , mMsg(aMessage)
   , mDOMKeyCode(0)
   , mKeyNameIndex(KEY_NAME_INDEX_Unidentified)
@@ -675,6 +676,7 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
                     aFakeCharMsgs : nullptr)
 {
   MOZ_ASSERT(aWidget);
+  MOZ_ASSERT(mDispatcher);
   KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
   mKeyboardLayout = keyboardLayout->GetLayout();
 
@@ -1130,16 +1132,22 @@ NativeKey::ComputeUnicharFromScanCode() const
                              MAPVK_VK_TO_CHAR, mKeyboardLayout));
 }
 
-void
-NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent) const
+nsEventStatus
+NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
+                        const MSG* aMsgSentToPlugin) const
 {
-  InitKeyEvent(aKeyEvent, mModKeyState);
+  return InitKeyEvent(aKeyEvent, mModKeyState, aMsgSentToPlugin);
 }
 
-void
+nsEventStatus
 NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
-                        const ModifierKeyState& aModKeyState) const
+                        const ModifierKeyState& aModKeyState,
+                        const MSG* aMsgSentToPlugin) const
 {
+  if (mWidget->Destroyed()) {
+    MOZ_CRASH("NativeKey tries to dispatch a key event on destroyed widget");
+  }
+
   LayoutDeviceIntPoint point(0, 0);
   mWidget->InitEvent(aKeyEvent, &point);
 
@@ -1176,17 +1184,6 @@ NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
   MOZ_ASSERT(mCodeNameIndex != CODE_NAME_INDEX_USE_STRING);
   aKeyEvent.location = GetKeyLocation();
   aModKeyState.InitInputEvent(aKeyEvent);
-}
-
-bool
-NativeKey::DispatchKeyEvent(WidgetKeyboardEvent& aKeyEvent,
-                            const MSG* aMsgSentToPlugin) const
-{
-  if (mWidget->Destroyed()) {
-    MOZ_CRASH("NativeKey tries to dispatch a key event on destroyed widget");
-  }
-
-  KeyboardLayout::NotifyIdleServiceOfUserActivity();
 
   NPEvent pluginEvent;
   if (aMsgSentToPlugin &&
@@ -1197,7 +1194,10 @@ NativeKey::DispatchKeyEvent(WidgetKeyboardEvent& aKeyEvent,
     aKeyEvent.mPluginEvent.Copy(pluginEvent);
   }
 
-  return (mWidget->DispatchKeyboardEvent(&aKeyEvent) || mWidget->Destroyed());
+  KeyboardLayout::NotifyIdleServiceOfUserActivity();
+
+  return aKeyEvent.mFlags.mDefaultPrevented ? nsEventStatus_eConsumeNoDefault :
+                                              nsEventStatus_eIgnore;
 }
 
 bool
@@ -1308,11 +1308,21 @@ NativeKey::HandleAppCommandMessage() const
   bool consumed = false;
 
   if (dispatchKeyEvent) {
+    nsresult rv = mDispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return true;
+    }
     WidgetKeyboardEvent keydownEvent(true, eKeyDown, mWidget);
-    InitKeyEvent(keydownEvent, mModKeyState);
+    nsEventStatus status = InitKeyEvent(keydownEvent, mModKeyState, &mMsg);
     // NOTE: If the keydown event is consumed by web contents, we shouldn't
     //       continue to handle the command.
-    consumed = DispatchKeyEvent(keydownEvent, &mMsg);
+    if (!mDispatcher->DispatchKeyboardEvent(eKeyDown, keydownEvent, status,
+                                            const_cast<NativeKey*>(this))) {
+      // If keyboard event wasn't fired, there must be composition.
+      // So, we don't need to dispatch a command event.
+      return true;
+    }
+    consumed = status == nsEventStatus_eConsumeNoDefault;
     sDispatchedKeyOfAppCommand = mVirtualKeyCode;
     if (mWidget->Destroyed()) {
       return true;
@@ -1385,11 +1395,16 @@ NativeKey::HandleAppCommandMessage() const
   // Dispatch a keyup event if the command is caused by pressing a key and
   // the key isn't mapped to a virtual keycode.
   if (dispatchKeyEvent && !mVirtualKeyCode) {
+    nsresult rv = mDispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return true;
+    }
     WidgetKeyboardEvent keyupEvent(true, eKeyUp, mWidget);
-    InitKeyEvent(keyupEvent, mModKeyState);
+    nsEventStatus status = InitKeyEvent(keyupEvent, mModKeyState, &mMsg);
     // NOTE: Ignore if the keyup event is consumed because keyup event
     //       represents just a physical key event state change.
-    DispatchKeyEvent(keyupEvent, &mMsg);
+    mDispatcher->DispatchKeyboardEvent(eKeyUp, keyupEvent, status,
+                                       const_cast<NativeKey*>(this));
     if (mWidget->Destroyed()) {
       return true;
     }
@@ -1424,13 +1439,26 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
       return false;
     }
 
+    nsresult rv = mDispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return true;
+    }
+
     bool isIMEEnabled = WinUtils::IsIMEEnabled(mWidget->GetInputContext());
     WidgetKeyboardEvent keydownEvent(true, eKeyDown, mWidget);
-    InitKeyEvent(keydownEvent, mModKeyState);
+    nsEventStatus status = InitKeyEvent(keydownEvent, mModKeyState, &mMsg);
+    bool dispatched =
+      mDispatcher->DispatchKeyboardEvent(eKeyDown, keydownEvent, status,
+                                         const_cast<NativeKey*>(this));
     if (aEventDispatched) {
-      *aEventDispatched = true;
+      *aEventDispatched = dispatched;
     }
-    defaultPrevented = DispatchKeyEvent(keydownEvent, &mMsg);
+    if (!dispatched) {
+      // If the keydown event wasn't fired, there must be composition.
+      // we don't need to do anything anymore.
+      return false;
+    }
+    defaultPrevented = status == nsEventStatus_eConsumeNoDefault;
 
     if (mWidget->Destroyed()) {
       return true;
@@ -1578,17 +1606,25 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
     } else {
       keypressEvent.keyCode = mDOMKeyCode;
     }
+    nsresult rv = mDispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return true;
+    }
+
     // When AltGr (Alt+Ctrl) is pressed, that causes normal text input.
     // At this time, if either alt or ctrl flag is set, nsEditor ignores the
     // keypress event.  For avoiding this issue, we should remove ctrl and alt
     // flags.
     ModifierKeyState modKeyState(mModKeyState);
     modKeyState.Unset(MODIFIER_ALT | MODIFIER_CONTROL);
-    InitKeyEvent(keypressEvent, modKeyState);
+    nsEventStatus status = InitKeyEvent(keypressEvent, modKeyState, &aCharMsg);
+    bool dispatched =
+      mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
+                                               const_cast<NativeKey*>(this));
     if (aEventDispatched) {
-      *aEventDispatched = true;
+      *aEventDispatched = dispatched;
     }
-    return DispatchKeyEvent(keypressEvent, &aCharMsg);
+    return status == nsEventStatus_eConsumeNoDefault;
   }
 
   // XXX It seems that following code was implemented for shortcut key
@@ -1636,16 +1672,24 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
     uniChar = towlower(uniChar);
   }
 
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
+  }
+
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
   keypressEvent.charCode = uniChar;
   if (!keypressEvent.charCode) {
     keypressEvent.keyCode = mDOMKeyCode;
   }
-  InitKeyEvent(keypressEvent, mModKeyState);
+  nsEventStatus status = InitKeyEvent(keypressEvent, mModKeyState, &aCharMsg);
+  bool dispatched =
+    mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
+                                             const_cast<NativeKey*>(this));
   if (aEventDispatched) {
-    *aEventDispatched = true;
+    *aEventDispatched = dispatched;
   }
-  return DispatchKeyEvent(keypressEvent, &aCharMsg);
+  return status == nsEventStatus_eConsumeNoDefault;
 }
 
 bool
@@ -1663,12 +1707,20 @@ NativeKey::HandleKeyUpMessage(bool* aEventDispatched) const
     return false;
   }
 
-  WidgetKeyboardEvent keyupEvent(true, eKeyUp, mWidget);
-  InitKeyEvent(keyupEvent, mModKeyState);
-  if (aEventDispatched) {
-    *aEventDispatched = true;
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
   }
-  return DispatchKeyEvent(keyupEvent, &mMsg);
+
+  WidgetKeyboardEvent keyupEvent(true, eKeyUp, mWidget);
+  nsEventStatus status = InitKeyEvent(keyupEvent, mModKeyState, &mMsg);
+  bool dispatched =
+    mDispatcher->DispatchKeyboardEvent(eKeyUp, keyupEvent, status,
+                                       const_cast<NativeKey*>(this));
+  if (aEventDispatched) {
+    *aEventDispatched = dispatched;
+  }
+  return status == nsEventStatus_eConsumeNoDefault;
 }
 
 bool
@@ -2106,10 +2158,17 @@ NativeKey::DispatchKeyPressEventsWithKeyboardLayout() const
 
   if (inputtingChars.IsEmpty() &&
       shiftedChars.IsEmpty() && unshiftedChars.IsEmpty()) {
+    nsresult rv = mDispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return true;
+    }
+
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
     keypressEvent.keyCode = mDOMKeyCode;
-    InitKeyEvent(keypressEvent, mModKeyState);
-    return DispatchKeyEvent(keypressEvent);
+    nsEventStatus status = InitKeyEvent(keypressEvent, mModKeyState);
+    mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
+                                             const_cast<NativeKey*>(this));
+    return status == nsEventStatus_eConsumeNoDefault;
   }
 
   uint32_t longestLength =
@@ -2176,11 +2235,22 @@ NativeKey::DispatchKeyPressEventsWithKeyboardLayout() const
       }
     }
 
+
+    nsresult rv = mDispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return true;
+    }
+
+    // We should optimize this with improving TextEventDispatcher later.
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
     keypressEvent.charCode = uniChar;
     keypressEvent.alternativeCharCodes.AppendElements(altArray);
-    InitKeyEvent(keypressEvent, modKeyState);
-    defaultPrevented = (DispatchKeyEvent(keypressEvent) || defaultPrevented);
+    nsEventStatus status = InitKeyEvent(keypressEvent, modKeyState);
+    mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
+                                             const_cast<NativeKey*>(this));
+    defaultPrevented =
+      (status == nsEventStatus_eConsumeNoDefault || defaultPrevented);
+
     if (mWidget->Destroyed()) {
       return true;
     }
