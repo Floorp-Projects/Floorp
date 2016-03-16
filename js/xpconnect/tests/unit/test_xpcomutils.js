@@ -123,23 +123,14 @@ add_test(function test_categoryRegistration()
   const XULAPPINFO_CID = Components.ID("{fc937916-656b-4fb3-a395-8c63569e27a8}");
 
   // Create a fake app entry for our category registration apps filter.
-  let XULAppInfo = {
-    vendor: "Mozilla",
+  let tmp = {};
+  Components.utils.import("resource://testing-common/AppInfo.jsm", tmp);
+  let XULAppInfo = tmp.newAppInfo({
     name: "catRegTest",
     ID: "{adb42a9a-0d19-4849-bf4d-627614ca19be}",
     version: "1",
-    appBuildID: "2007010101",
     platformVersion: "",
-    platformBuildID: "2007010101",
-    inSafeMode: false,
-    logConsoleErrors: true,
-    OS: "XPCShell",
-    XPCOMABI: "noarch-spidermonkey",
-    QueryInterface: XPCOMUtils.generateQI([
-      Ci.nsIXULAppInfo,
-      Ci.nsIXULRuntime,
-    ])
-  };
+  });
   let XULAppInfoFactory = {
     createInstance: function (outer, iid) {
       if (outer != null)

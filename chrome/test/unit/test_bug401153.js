@@ -9,39 +9,13 @@ var MANIFESTS = [
 
 registerManifests(MANIFESTS);
 
-var XULAppInfo = {
-  vendor: "Mozilla",
+Components.utils.import("resource://testing-common/AppInfo.jsm", this);
+updateAppInfo({
   name: "XPCShell",
   ID: "{39885e5f-f6b4-4e2a-87e5-6259ecf79011}",
   version: "5",
-  appBuildID: "2007010101",
   platformVersion: "1.9",
-  platformBuildID: "2007010101",
-  inSafeMode: false,
-  logConsoleErrors: true,
-  OS: "XPCShell",
-  XPCOMABI: "noarch-spidermonkey",
-  
-  QueryInterface: function QueryInterface(iid) {
-    if (iid.equals(Ci.nsIXULAppInfo)
-     || iid.equals(Ci.nsIXULRuntime)
-     || iid.equals(Ci.nsISupports))
-      return this;
-  
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  }
-};
-
-var XULAppInfoFactory = {
-  createInstance: function (outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return XULAppInfo.QueryInterface(iid);
-  }
-};
-var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
-                          XULAPPINFO_CONTRACTID, XULAppInfoFactory);
+});
 
 var gIOS = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService);

@@ -11,6 +11,7 @@
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsIChannelWithDivertableParentListener.h"
 #include "nsIFTPChannel.h"
 #include "nsIForcePendingChannel.h"
 #include "nsIUploadChannel.h"
@@ -19,19 +20,22 @@
 #include "nsIResumableChannel.h"
 
 class nsIURI;
+using mozilla::net::ADivertableParentChannel;
 
 class nsFtpChannel final : public nsBaseChannel,
                            public nsIFTPChannel,
                            public nsIUploadChannel,
                            public nsIResumableChannel,
                            public nsIProxiedChannel,
-                           public           nsIForcePendingChannel
+                           public nsIForcePendingChannel,
+                           public nsIChannelWithDivertableParentListener
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIUPLOADCHANNEL
     NS_DECL_NSIRESUMABLECHANNEL
     NS_DECL_NSIPROXIEDCHANNEL
+    NS_DECL_NSICHANNELWITHDIVERTABLEPARENTLISTENER
 
     nsFtpChannel(nsIURI *uri, nsIProxyInfo *pi)
         : mProxyInfo(pi)
@@ -90,6 +94,9 @@ public:
     // Helper function for getting the nsIFTPEventSink.
     void GetFTPEventSink(nsCOMPtr<nsIFTPEventSink> &aResult);
 
+    NS_IMETHOD Suspend() override;
+    NS_IMETHOD Resume() override;
+
 public:
     NS_IMETHOD ForcePending(bool aForcePending) override;
 
@@ -101,14 +108,15 @@ protected:
     virtual void OnCallbacksChanged() override;
 
 private:
-    nsCOMPtr<nsIProxyInfo>    mProxyInfo; 
-    nsCOMPtr<nsIFTPEventSink> mFTPEventSink;
-    nsCOMPtr<nsIInputStream>  mUploadStream;
-    uint64_t                  mStartPos;
-    nsCString                 mEntityID;
-    bool                      mResumeRequested;
-    PRTime                    mLastModifiedTime;
-    bool                      mForcePending;
+    nsCOMPtr<nsIProxyInfo>           mProxyInfo;
+    nsCOMPtr<nsIFTPEventSink>        mFTPEventSink;
+    nsCOMPtr<nsIInputStream>         mUploadStream;
+    uint64_t                         mStartPos;
+    nsCString                        mEntityID;
+    bool                             mResumeRequested;
+    PRTime                           mLastModifiedTime;
+    bool                             mForcePending;
+    RefPtr<ADivertableParentChannel> mParentChannel;
 };
 
 #endif /* nsFTPChannel_h___ */

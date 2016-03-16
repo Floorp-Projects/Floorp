@@ -1515,6 +1515,7 @@ RAssertRecoveredOnBailout::RAssertRecoveredOnBailout(CompactBufferReader& reader
 bool RAssertRecoveredOnBailout::recover(JSContext* cx, SnapshotIterator& iter) const
 {
     RootedValue result(cx);
+    iter.read(); // skip the unused operand.
     result.setUndefined();
     iter.storeInstructionResult(result);
     return true;

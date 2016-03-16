@@ -114,10 +114,9 @@ protected:
   HashEntry* GetOrMakeEntry(const char* aName, uint8_t aEntryType);
 
 protected:
-  static PLDHashNumber HashKey(PLDHashTable* aTable, const void* aKey);
+  static PLDHashNumber HashKey(const void* aKey);
 
-  static bool HashMatchEntry(PLDHashTable* aTable,
-                             const PLDHashEntryHdr* aEntry, const void* aKey);
+  static bool HashMatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey);
 
   static void HashMoveEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom,
                             PLDHashEntryHdr* aTo);

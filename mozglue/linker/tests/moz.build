@@ -13,7 +13,7 @@ LOCAL_INCLUDES += ['..']
 USE_LIBS += [
     'linker',
 ]
+OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
 DISABLE_STL_WRAPPING = True
 
-if CONFIG['MOZ_LINKER']:
-    OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
+PYTHON_UNIT_TESTS += ['run_test_zip.py']

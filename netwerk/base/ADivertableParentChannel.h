@@ -30,6 +30,13 @@ public:
 
   // Called to suspend parent channel in ChannelDiverterParent constructor.
   virtual nsresult SuspendForDiversion() = 0;
+
+  // While messages are diverted back from the child to the parent calls to
+  // suspend/resume the channel must also suspend/resume the message diversion.
+  // These two functions will be called by nsHttpChannel and nsFtpChannel
+  // Suspend()/Resume() functions.
+  virtual nsresult SuspendMessageDiversion() = 0;
+  virtual nsresult ResumeMessageDiversion() = 0;
 };
 
 } // namespace net

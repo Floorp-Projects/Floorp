@@ -599,9 +599,6 @@ ReinitTaskTracer(void* /*aUnused*/)
 
 ContentChild::ContentChild()
  : mID(uint64_t(-1))
-#ifdef ANDROID
- , mScreenSize(0, 0)
-#endif
  , mCanOverrideProcessName(true)
  , mIsAlive(true)
 {
@@ -2510,17 +2507,6 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
                                  nsPermissionManager::eNoDBOperation);
 #endif
 
-  return true;
-}
-
-bool
-ContentChild::RecvScreenSizeChanged(const gfx::IntSize& size)
-{
-#ifdef ANDROID
-  mScreenSize = size;
-#else
-  NS_RUNTIMEABORT("Message currently only expected on android");
-#endif
   return true;
 }
 
