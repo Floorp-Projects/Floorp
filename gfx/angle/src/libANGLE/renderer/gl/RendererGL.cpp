@@ -363,12 +363,6 @@ bool RendererGL::testDeviceResettable()
     return bool();
 }
 
-VendorID RendererGL::getVendorId() const
-{
-    UNIMPLEMENTED();
-    return VendorID();
-}
-
 std::string RendererGL::getVendorString() const
 {
     return std::string(reinterpret_cast<const char*>(mFunctions->getString(GL_VENDOR)));
@@ -421,5 +415,24 @@ void RendererGL::generateCaps(gl::Caps *outCaps, gl::TextureCapsMap* outTextureC
 void RendererGL::syncState(const gl::State &state, const gl::State::DirtyBits &dirtyBits)
 {
     mStateManager->syncState(state, dirtyBits);
+}
+
+GLint RendererGL::getGPUDisjoint()
+{
+    // TODO(ewell): On GLES backends we should find a way to reliably query disjoint events
+    return 0;
+}
+
+GLint64 RendererGL::getTimestamp()
+{
+    GLint64 result = 0;
+    mFunctions->getInteger64v(GL_TIMESTAMP, &result);
+    return result;
+}
+
+void RendererGL::onMakeCurrent(const gl::Data &data)
+{
+    // Queries need to be paused/resumed on context switches
+    mStateManager->onMakeCurrent(data);
 }
 }

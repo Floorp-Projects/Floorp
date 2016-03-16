@@ -291,5 +291,8 @@ TEST_P(MaxTextureSizeTest, RenderToTexture)
     glDeleteTextures(1, &textureId);
 }
 
+// TODO(geofflang): Fix the dependence on glBlitFramebufferANGLE without checks and assuming the
+// default framebuffer is BGRA to enable the GL and GLES backends. (http://anglebug.com/1289)
+
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 ANGLE_INSTANTIATE_TEST(MaxTextureSizeTest, ES2_D3D9(), ES2_D3D11(), ES2_D3D11_FL9_3());

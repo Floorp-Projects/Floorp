@@ -113,6 +113,7 @@ UNIFIED_SOURCES += [
     'Config.cpp',
     'Context.cpp',
     'Data.cpp',
+    'Debug.cpp',
     'Device.cpp',
     'Error.cpp',
     'Fence.cpp',
@@ -127,7 +128,6 @@ UNIFIED_SOURCES += [
     'Program.cpp',
     'Query.cpp',
     'queryconversions.cpp',
-    'RefCountObject.cpp',
     'Renderbuffer.cpp',
     'renderer/d3d/BufferD3D.cpp',
     'renderer/d3d/CompilerD3D.cpp',
@@ -145,6 +145,7 @@ UNIFIED_SOURCES += [
     'renderer/d3d/d3d9/renderer9_utils.cpp',
     'renderer/d3d/d3d9/RenderTarget9.cpp',
     'renderer/d3d/d3d9/ShaderExecutable9.cpp',
+    'renderer/d3d/d3d9/StateManager9.cpp',
     'renderer/d3d/d3d9/SwapChain9.cpp',
     'renderer/d3d/d3d9/TextureStorage9.cpp',
     'renderer/d3d/d3d9/VertexBuffer9.cpp',
@@ -196,6 +197,7 @@ UNIFIED_SOURCES += [
     'renderer/gl/TransformFeedbackGL.cpp',
     'renderer/gl/VertexArrayGL.cpp',
     'renderer/gl/wgl/DisplayWGL.cpp',
+    'renderer/gl/wgl/DXGISwapChainWindowSurfaceWGL.cpp',
     'renderer/gl/wgl/FunctionsWGL.cpp',
     'renderer/gl/wgl/PbufferSurfaceWGL.cpp',
     'renderer/gl/wgl/wgl_utils.cpp',
@@ -253,11 +255,11 @@ if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
         'renderer/d3d/d3d11/TextureStorage11.cpp',
         'renderer/d3d/d3d11/Trim11.cpp',
         'renderer/d3d/d3d11/VertexBuffer11.cpp',
-        'renderer/d3d/d3d11/win32/NativeWindow.cpp',
     ]
 if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
     SOURCES += [
         'renderer/d3d/d3d11/SwapChain11.cpp',
+        'renderer/d3d/d3d11/win32/NativeWindow.cpp',
     ]
 
 
@@ -307,6 +309,8 @@ LOCAL_INCLUDES += [ '../../include', '../../src', '../../src/third_party/khronos
 
 DEFINES['LIBANGLE_IMPLEMENTATION'] = "1"
 DEFINES['ANGLE_ENABLE_HLSL'] = "1"
+DEFINES['ANGLE_ENABLE_GLSL'] = "1"
+DEFINES['ANGLE_ENABLE_ESSL'] = "1"
 DEFINES['ANGLE_ENABLE_KEYEDMUTEX'] = "1"
 DEFINES['ANGLE_DEFAULT_D3D11'] = "0"
 

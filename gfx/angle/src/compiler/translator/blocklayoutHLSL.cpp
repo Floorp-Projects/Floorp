@@ -113,9 +113,14 @@ HLSLBlockEncoder::HLSLBlockEncoderStrategy HLSLBlockEncoder::GetStrategyFor(ShSh
 {
     switch (outputType)
     {
-      case SH_HLSL9_OUTPUT: return ENCODE_LOOSE;
-      case SH_HLSL11_OUTPUT: return ENCODE_PACKED;
-      default: UNREACHABLE(); return ENCODE_PACKED;
+        case SH_HLSL_3_0_OUTPUT:
+            return ENCODE_LOOSE;
+        case SH_HLSL_4_1_OUTPUT:
+        case SH_HLSL_4_0_FL9_3_OUTPUT:
+            return ENCODE_PACKED;
+        default:
+            UNREACHABLE();
+            return ENCODE_PACKED;
     }
 }
 

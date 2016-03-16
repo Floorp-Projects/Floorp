@@ -31,14 +31,6 @@ class FramebufferImpl : angle::NonCopyable
     explicit FramebufferImpl(const gl::Framebuffer::Data &data) : mData(data) { }
     virtual ~FramebufferImpl() { }
 
-    virtual void onUpdateColorAttachment(size_t index) = 0;
-    virtual void onUpdateDepthAttachment() = 0;
-    virtual void onUpdateStencilAttachment() = 0;
-    virtual void onUpdateDepthStencilAttachment() = 0;
-
-    virtual void setDrawBuffers(size_t count, const GLenum *buffers) = 0;
-    virtual void setReadBuffer(GLenum buffer) = 0;
-
     virtual gl::Error discard(size_t count, const GLenum *attachments) = 0;
     virtual gl::Error invalidate(size_t count, const GLenum *attachments) = 0;
     virtual gl::Error invalidateSub(size_t count, const GLenum *attachments, const gl::Rectangle &area) = 0;
@@ -70,6 +62,8 @@ class FramebufferImpl : angle::NonCopyable
                            GLbitfield mask, GLenum filter, const gl::Framebuffer *sourceFramebuffer) = 0;
 
     virtual bool checkStatus() const = 0;
+
+    virtual void syncState(const gl::Framebuffer::DirtyBits &dirtyBits) = 0;
 
     const gl::Framebuffer::Data &getData() const { return mData; }
 
