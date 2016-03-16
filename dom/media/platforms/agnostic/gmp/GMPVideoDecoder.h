@@ -119,7 +119,7 @@ private:
   };
   void GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost);
 
-  const VideoInfo& mConfig;
+  const VideoInfo mConfig;
   MediaDataDecoderCallbackProxy* mCallback;
   nsCOMPtr<mozIGeckoMediaPluginService> mMPS;
   GMPVideoDecoderProxy* mGMP;
