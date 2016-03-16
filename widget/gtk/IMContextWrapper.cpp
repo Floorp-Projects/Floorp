@@ -13,6 +13,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "WritingModes.h"
 
@@ -177,6 +178,10 @@ const static bool kUseSimpleContextDefault = MOZ_WIDGET_GTK == 2;
 IMContextWrapper* IMContextWrapper::sLastFocusedContext = nullptr;
 bool IMContextWrapper::sUseSimpleContext;
 
+NS_IMPL_ISUPPORTS(IMContextWrapper,
+                  TextEventDispatcherListener,
+                  nsISupportsWeakReference)
+
 IMContextWrapper::IMContextWrapper(nsWindow* aOwnerWindow)
     : mOwnerWindow(aOwnerWindow)
     , mLastFocusedWindow(nullptr)
@@ -273,6 +278,56 @@ IMContextWrapper::~IMContextWrapper()
     }
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("GTKIM: %p ~IMContextWrapper()", this));
+}
+
+NS_IMETHODIMP
+IMContextWrapper::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
+                            const IMENotification& aNotification)
+{
+    switch (aNotification.mMessage) {
+        case REQUEST_TO_COMMIT_COMPOSITION:
+        case REQUEST_TO_CANCEL_COMPOSITION: {
+            nsWindow* window =
+                static_cast<nsWindow*>(aTextEventDispatcher->GetWidget());
+            return EndIMEComposition(window);
+        }
+        case NOTIFY_IME_OF_FOCUS:
+            OnFocusChangeInGecko(true);
+            return NS_OK;
+        case NOTIFY_IME_OF_BLUR:
+            OnFocusChangeInGecko(false);
+            return NS_OK;
+        case NOTIFY_IME_OF_POSITION_CHANGE:
+            OnLayoutChange();
+            return NS_OK;
+        case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+            OnUpdateComposition();
+            return NS_OK;
+        case NOTIFY_IME_OF_SELECTION_CHANGE: {
+            nsWindow* window =
+                static_cast<nsWindow*>(aTextEventDispatcher->GetWidget());
+            OnSelectionChange(window, aNotification);
+            return NS_OK;
+        }
+        default:
+            return NS_ERROR_NOT_IMPLEMENTED;
+    }
+}
+
+NS_IMETHODIMP_(void)
+IMContextWrapper::OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher)
+{
+    // XXX When input transaction is being stolen by add-on, what should we do?
+}
+
+NS_IMETHODIMP_(void)
+IMContextWrapper::WillDispatchKeyboardEvent(
+                      TextEventDispatcher* aTextEventDispatcher,
+                      WidgetKeyboardEvent& aKeyboardEvent,
+                      uint32_t aIndexOfKeypress,
+                      void* aData)
+{
+    // TODO: Implement this in the following patch.
 }
 
 nsIMEUpdatePreference

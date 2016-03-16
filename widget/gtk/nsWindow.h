@@ -288,6 +288,8 @@ public:
                                       const InputContextAction& aAction) override;
     NS_IMETHOD_(InputContext) GetInputContext() override;
     virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
+    NS_IMETHOD_(TextEventDispatcherListener*)
+        GetNativeTextEventDispatcherListener() override;
     bool ExecuteNativeKeyBindingRemapped(
                         NativeKeyBindingsType aType,
                         const mozilla::WidgetKeyboardEvent& aEvent,
@@ -377,9 +379,6 @@ protected:
                                       GtkWidget* aNewContainer,
                                       GdkWindow* aNewParentWindow,
                                       GtkWidget* aOldContainer);
-
-    virtual nsresult NotifyIMEInternal(
-                         const IMENotification& aIMENotification) override;
 
     virtual void RegisterTouchWindow() override;
 

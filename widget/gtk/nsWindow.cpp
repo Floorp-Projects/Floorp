@@ -6307,36 +6307,6 @@ nsChildWindow::~nsChildWindow()
 {
 }
 
-nsresult
-nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
-{
-    if (MOZ_UNLIKELY(!mIMContext)) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-    switch (aIMENotification.mMessage) {
-        case REQUEST_TO_COMMIT_COMPOSITION:
-        case REQUEST_TO_CANCEL_COMPOSITION:
-            return mIMContext->EndIMEComposition(this);
-        case NOTIFY_IME_OF_FOCUS:
-            mIMContext->OnFocusChangeInGecko(true);
-            return NS_OK;
-        case NOTIFY_IME_OF_BLUR:
-            mIMContext->OnFocusChangeInGecko(false);
-            return NS_OK;
-        case NOTIFY_IME_OF_POSITION_CHANGE:
-            mIMContext->OnLayoutChange();
-            return NS_OK;
-        case NOTIFY_IME_OF_COMPOSITION_UPDATE:
-            mIMContext->OnUpdateComposition();
-            return NS_OK;
-        case NOTIFY_IME_OF_SELECTION_CHANGE:
-            mIMContext->OnSelectionChange(this, aIMENotification);
-            return NS_OK;
-        default:
-            return NS_ERROR_NOT_IMPLEMENTED;
-    }
-}
-
 NS_IMETHODIMP_(void)
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
@@ -6367,6 +6337,15 @@ nsWindow::GetIMEUpdatePreference()
         return nsIMEUpdatePreference();
     }
     return mIMContext->GetIMEUpdatePreference();
+}
+
+NS_IMETHODIMP_(TextEventDispatcherListener*)
+nsWindow::GetNativeTextEventDispatcherListener()
+{
+    if (NS_WARN_IF(!mIMContext)) {
+        return nullptr;
+    }
+    return mIMContext;
 }
 
 bool
