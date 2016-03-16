@@ -17,6 +17,7 @@
 #include "nsITimer.h"
 #include "nsTArray.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/TextEventDispatcherListener.h"
 #include "WritingModes.h"
 
 class nsChildView;
@@ -321,28 +322,14 @@ protected:
  * Utility methods should be implemented this level.
  */
 
-class TextInputHandlerBase
+class TextInputHandlerBase : public TextEventDispatcherListener
 {
 public:
-  nsrefcnt AddRef()
-  {
-    NS_PRECONDITION(int32_t(mRefCnt) >= 0, "mRefCnt is negative");
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "TextInputHandlerBase", sizeof(*this));
-    return mRefCnt;
-  }
-  nsrefcnt Release()
-  {
-    NS_PRECONDITION(mRefCnt != 0, "mRefCnt is alrady zero");
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "TextInputHandlerBase");
-    if (mRefCnt == 0) {
-        mRefCnt = 1; /* stabilize */
-        delete this;
-        return 0;
-    }
-    return mRefCnt;
-  }
+  /**
+   * Other TextEventDispatcherListener methods should be implemented in
+   * IMEInputHandler.
+   */
+  NS_DECL_ISUPPORTS
 
   /**
    * DispatchEvent() dispatches aEvent on mWidget.
@@ -440,9 +427,6 @@ public:
    * our call count becomes 0.
    */
   static void EnsureSecureEventInputDisabled();
-
-protected:
-  nsAutoRefCnt mRefCnt;
 
 public:
    /**
@@ -693,7 +677,19 @@ private:
 class IMEInputHandler : public TextInputHandlerBase
 {
 public:
-  virtual bool OnDestroyWidget(nsChildView* aDestroyingWidget);
+  // TextEventDispatcherListener methods
+  NS_IMETHOD NotifyIME(TextEventDispatcher* aTextEventDispatcher,
+                       const IMENotification& aNotification) override;
+  NS_IMETHOD_(void) OnRemovedFrom(
+                      TextEventDispatcher* aTextEventDispatcher) override;
+  NS_IMETHOD_(void) WillDispatchKeyboardEvent(
+                      TextEventDispatcher* aTextEventDispatcher,
+                      WidgetKeyboardEvent& aKeyboardEvent,
+                      uint32_t aIndexOfKeypress,
+                      void* aData) override;
+
+public:
+  virtual bool OnDestroyWidget(nsChildView* aDestroyingWidget) override;
 
   virtual void OnFocusChangeInGecko(bool aFocus);
 

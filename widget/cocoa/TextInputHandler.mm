@@ -12,6 +12,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 
 #include "nsChildView.h"
@@ -2398,6 +2399,55 @@ IMEInputHandler::GetCurrentTSMDocumentID()
  *
  ******************************************************************************/
 
+NS_IMETHODIMP
+IMEInputHandler::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
+                           const IMENotification& aNotification)
+{
+  switch (aNotification.mMessage) {
+    case REQUEST_TO_COMMIT_COMPOSITION:
+      CommitIMEComposition();
+      return NS_OK;
+    case REQUEST_TO_CANCEL_COMPOSITION:
+      CancelIMEComposition();
+      return NS_OK;
+    case NOTIFY_IME_OF_FOCUS:
+      if (IsFocused()) {
+        nsIWidget* widget = aTextEventDispatcher->GetWidget();
+        if (widget && widget->GetInputContext().IsPasswordEditor()) {
+          EnableSecureEventInput();
+        } else {
+          EnsureSecureEventInputDisabled();
+        }
+      }
+      OnFocusChangeInGecko(true);
+      return NS_OK;
+    case NOTIFY_IME_OF_BLUR:
+      OnFocusChangeInGecko(false);
+      return NS_OK;
+    case NOTIFY_IME_OF_SELECTION_CHANGE:
+      OnSelectionChange(aNotification);
+      return NS_OK;
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+}
+
+NS_IMETHODIMP_(void)
+IMEInputHandler::OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher)
+{
+  // XXX When input transaction is being stolen by add-on, what should we do?
+}
+
+NS_IMETHODIMP_(void)
+IMEInputHandler::WillDispatchKeyboardEvent(
+                   TextEventDispatcher* aTextEventDispatcher,
+                   WidgetKeyboardEvent& aKeyboardEvent,
+                   uint32_t aIndexOfKeypress,
+                   void* aData)
+{
+  // TODO: Implement this later.
+}
+
 void
 IMEInputHandler::NotifyIMEOfFocusChangeInGecko()
 {
@@ -3769,6 +3819,10 @@ IMEInputHandler::OnSelectionChange(const IMENotification& aIMENotification)
  ******************************************************************************/
 
 int32_t TextInputHandlerBase::sSecureEventInputCount = 0;
+
+NS_IMPL_ISUPPORTS(TextInputHandlerBase,
+                  TextEventDispatcherListener,
+                  nsISupportsWeakReference)
 
 TextInputHandlerBase::TextInputHandlerBase(nsChildView* aWidget,
                                            NSView<mozView> *aNativeView) :
