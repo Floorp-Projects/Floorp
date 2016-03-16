@@ -49,7 +49,7 @@ def checking(what):
 # use that value instead.
 @template
 def check_prog(var, progs, allow_missing=False):
-    option(env=var, nargs=1, help=var)
+    option(env=var, nargs=1, help='Path to the %s program' % var.lower())
 
     not_found = 'not found'
     progs = list(progs)

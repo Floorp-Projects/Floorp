@@ -27,6 +27,7 @@ const POLICY_REPORT_ONLY = "report-only"
 
 // special handling of directives
 const DIR_UPGRADE_INSECURE = "upgrade-insecure-requests";
+const DIR_BLOCK_ALL_MIXED_CONTENT = "block-all-mixed-content";
 
 // special handling of sources
 const SRC_UNSAFE_INLINE = "'unsafe-inline'";
@@ -89,13 +90,15 @@ exports.items = [
           // loop over all the directive-sources within that directive
           var outSrcs = [];
 
-          // special case handling for upgrade-insecure-requests
-          // which does not have any srcs
-          if (dir === DIR_UPGRADE_INSECURE) {
+          // special case handling for the directives
+          // upgrade-insecure-requests and block-all-mixed-content
+          // which do not include any srcs
+          if (dir === DIR_UPGRADE_INSECURE ||
+              dir === DIR_BLOCK_ALL_MIXED_CONTENT) {
             outSrcs.push({
               icon: GOOD_IMG_SRC,
-              src: "", // no src for upgrade-insecure-requests
-              desc: "" // no description for upgrade-insecure-requests
+              src: "", // no src
+              desc: "" // no description
             });
           }
 

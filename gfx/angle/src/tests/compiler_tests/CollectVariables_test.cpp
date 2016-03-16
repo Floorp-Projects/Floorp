@@ -7,6 +7,8 @@
 //   Some tests for shader inspection
 //
 
+#include <memory>
+
 #include "angle_gl.h"
 #include "gtest/gtest.h"
 #include "GLSLANG/ShaderLang.h"
@@ -18,14 +20,10 @@
 class CollectVariablesTest : public testing::Test
 {
   public:
-    CollectVariablesTest(GLenum shaderType)
-        : mShaderType(shaderType),
-          mTranslator(nullptr)
-    {
-    }
+    CollectVariablesTest(GLenum shaderType) : mShaderType(shaderType) {}
 
   protected:
-    virtual void SetUp()
+    void SetUp() override
     {
         ShBuiltInResources resources;
         ShInitBuiltInResources(&resources);
@@ -34,16 +32,10 @@ class CollectVariablesTest : public testing::Test
         initTranslator(resources);
     }
 
-    virtual void TearDown()
-    {
-        SafeDelete(mTranslator);
-    }
-
     void initTranslator(const ShBuiltInResources &resources)
     {
-        SafeDelete(mTranslator);
-        mTranslator = new TranslatorGLSL(
-            mShaderType, SH_GLES3_SPEC, SH_GLSL_COMPATIBILITY_OUTPUT);
+        mTranslator.reset(
+            new TranslatorGLSL(mShaderType, SH_GLES3_SPEC, SH_GLSL_COMPATIBILITY_OUTPUT));
         ASSERT_TRUE(mTranslator->Init(resources));
     }
 
@@ -113,8 +105,14 @@ class CollectVariablesTest : public testing::Test
         *outResult = &outputVariable;
     }
 
+    void compile(const std::string &shaderString)
+    {
+        const char *shaderStrings[] = {shaderString.c_str()};
+        ASSERT_TRUE(mTranslator->compile(shaderStrings, 1, SH_VARIABLES));
+    }
+
     GLenum mShaderType;
-    TranslatorGLSL *mTranslator;
+    std::unique_ptr<TranslatorGLSL> mTranslator;
 };
 
 class CollectVertexVariablesTest : public CollectVariablesTest
@@ -139,8 +137,7 @@ TEST_F(CollectFragmentVariablesTest, SimpleOutputVar)
         "   out_fragColor = vec4(1.0);\n"
         "}\n";
 
-    const char *shaderStrings[] = { shaderString.c_str() };
-    ASSERT_TRUE(mTranslator->compile(shaderStrings, 1, SH_VARIABLES));
+    compile(shaderString);
 
     const auto &outputVariables = mTranslator->getOutputVariables();
     ASSERT_EQ(1u, outputVariables.size());
@@ -165,8 +162,7 @@ TEST_F(CollectFragmentVariablesTest, LocationOutputVar)
         "   out_fragColor = vec4(1.0);\n"
         "}\n";
 
-    const char *shaderStrings[] = { shaderString.c_str() };
-    ASSERT_TRUE(mTranslator->compile(shaderStrings, 1, SH_VARIABLES));
+    compile(shaderString);
 
     const auto &outputVariables = mTranslator->getOutputVariables();
     ASSERT_EQ(1u, outputVariables.size());
@@ -190,8 +186,7 @@ TEST_F(CollectVertexVariablesTest, LocationAttribute)
         "   gl_Position = in_Position;\n"
         "}\n";
 
-    const char *shaderStrings[] = { shaderString.c_str() };
-    ASSERT_TRUE(mTranslator->compile(shaderStrings, 1, SH_VARIABLES));
+    compile(shaderString);
 
     const std::vector<sh::Attribute> &attributes = mTranslator->getAttributes();
     ASSERT_EQ(1u, attributes.size());
@@ -217,8 +212,7 @@ TEST_F(CollectVertexVariablesTest, SimpleInterfaceBlock)
         "   gl_Position = vec4(f, 0.0, 0.0, 1.0);\n"
         "}\n";
 
-    const char *shaderStrings[] = { shaderString.c_str() };
-    ASSERT_TRUE(mTranslator->compile(shaderStrings, 1, SH_VARIABLES));
+    compile(shaderString);
 
     const std::vector<sh::InterfaceBlock> &interfaceBlocks = mTranslator->getInterfaceBlocks();
     ASSERT_EQ(1u, interfaceBlocks.size());
@@ -254,8 +248,7 @@ TEST_F(CollectVertexVariablesTest, SimpleInstancedInterfaceBlock)
         "   gl_Position = vec4(blockInstance.f, 0.0, 0.0, 1.0);\n"
         "}\n";
 
-    const char *shaderStrings[] = { shaderString.c_str() };
-    ASSERT_TRUE(mTranslator->compile(shaderStrings, 1, SH_VARIABLES));
+    compile(shaderString);
 
     const std::vector<sh::InterfaceBlock> &interfaceBlocks = mTranslator->getInterfaceBlocks();
     ASSERT_EQ(1u, interfaceBlocks.size());
@@ -266,6 +259,7 @@ TEST_F(CollectVertexVariablesTest, SimpleInstancedInterfaceBlock)
     EXPECT_FALSE(interfaceBlock.isRowMajorLayout);
     EXPECT_EQ(sh::BLOCKLAYOUT_SHARED, interfaceBlock.layout);
     EXPECT_EQ("b", interfaceBlock.name);
+    EXPECT_EQ("blockInstance", interfaceBlock.instanceName);
     EXPECT_TRUE(interfaceBlock.staticUse);
 
     ASSERT_EQ(1u, interfaceBlock.fields.size());
@@ -275,7 +269,7 @@ TEST_F(CollectVertexVariablesTest, SimpleInstancedInterfaceBlock)
     EXPECT_GLENUM_EQ(GL_HIGH_FLOAT, field.precision);
     EXPECT_TRUE(field.staticUse);
     EXPECT_GLENUM_EQ(GL_FLOAT, field.type);
-    EXPECT_EQ("b.f", field.name);
+    EXPECT_EQ("f", field.name);
     EXPECT_FALSE(field.isRowMajorLayout);
     EXPECT_TRUE(field.fields.empty());
 }
@@ -292,8 +286,7 @@ TEST_F(CollectVertexVariablesTest, StructInterfaceBlock)
         "   gl_Position = vec4(s.f, 0.0, 0.0, 1.0);\n"
         "}\n";
 
-    const char *shaderStrings[] = { shaderString.c_str() };
-    ASSERT_TRUE(mTranslator->compile(shaderStrings, 1, SH_VARIABLES));
+    compile(shaderString);
 
     const std::vector<sh::InterfaceBlock> &interfaceBlocks = mTranslator->getInterfaceBlocks();
     ASSERT_EQ(1u, interfaceBlocks.size());
@@ -336,8 +329,7 @@ TEST_F(CollectVertexVariablesTest, StructInstancedInterfaceBlock)
         "   gl_Position = vec4(instanceName.s.f, 0.0, 0.0, 1.0);\n"
         "}\n";
 
-    const char *shaderStrings[] = { shaderString.c_str() };
-    ASSERT_TRUE(mTranslator->compile(shaderStrings, 1, SH_VARIABLES));
+    compile(shaderString);
 
     const std::vector<sh::InterfaceBlock> &interfaceBlocks = mTranslator->getInterfaceBlocks();
     ASSERT_EQ(1u, interfaceBlocks.size());
@@ -348,6 +340,7 @@ TEST_F(CollectVertexVariablesTest, StructInstancedInterfaceBlock)
     EXPECT_FALSE(interfaceBlock.isRowMajorLayout);
     EXPECT_EQ(sh::BLOCKLAYOUT_SHARED, interfaceBlock.layout);
     EXPECT_EQ("b", interfaceBlock.name);
+    EXPECT_EQ("instanceName", interfaceBlock.instanceName);
     EXPECT_TRUE(interfaceBlock.staticUse);
 
     ASSERT_EQ(1u, interfaceBlock.fields.size());
@@ -356,7 +349,7 @@ TEST_F(CollectVertexVariablesTest, StructInstancedInterfaceBlock)
 
     EXPECT_TRUE(field.isStruct());
     EXPECT_TRUE(field.staticUse);
-    EXPECT_EQ("b.s", field.name);
+    EXPECT_EQ("s", field.name);
     EXPECT_FALSE(field.isRowMajorLayout);
 
     const sh::ShaderVariable &member = field.fields[0];
@@ -380,8 +373,7 @@ TEST_F(CollectVertexVariablesTest, NestedStructRowMajorInterfaceBlock)
         "   gl_Position = vec4(s.m);\n"
         "}\n";
 
-    const char *shaderStrings[] = { shaderString.c_str() };
-    ASSERT_TRUE(mTranslator->compile(shaderStrings, 1, SH_VARIABLES));
+    compile(shaderString);
 
     const std::vector<sh::InterfaceBlock> &interfaceBlocks = mTranslator->getInterfaceBlocks();
     ASSERT_EQ(1u, interfaceBlocks.size());
@@ -423,8 +415,7 @@ TEST_F(CollectVertexVariablesTest, VaryingInterpolation)
         "   vary = 1.0;\n"
         "}\n";
 
-    const char *shaderStrings[] = { shaderString.c_str() };
-    ASSERT_TRUE(mTranslator->compile(shaderStrings, 1, SH_VARIABLES));
+    compile(shaderString);
 
     const std::vector<sh::Varying> &varyings = mTranslator->getVaryings();
     ASSERT_EQ(2u, varyings.size());
@@ -653,4 +644,97 @@ TEST_F(CollectFragmentVariablesTest, OutputVarESSL1EXTBlendFuncExtendedSecondary
     EXPECT_EQ(kMaxDrawBuffers, outputVariable->arraySize);
     EXPECT_GLENUM_EQ(GL_FLOAT_VEC4, outputVariable->type);
     EXPECT_GLENUM_EQ(GL_MEDIUM_FLOAT, outputVariable->precision);
+}
+
+static khronos_uint64_t SimpleTestHash(const char *str, size_t len)
+{
+    return static_cast<uint64_t>(len);
+}
+
+class CollectHashedVertexVariablesTest : public CollectVertexVariablesTest
+{
+  protected:
+    void SetUp() override
+    {
+        // Initialize the translate with a hash function
+        ShBuiltInResources resources;
+        ShInitBuiltInResources(&resources);
+        resources.HashFunction = SimpleTestHash;
+        initTranslator(resources);
+    }
+};
+
+TEST_F(CollectHashedVertexVariablesTest, InstancedInterfaceBlock)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "uniform blockName {\n"
+        "  float field;\n"
+        "} blockInstance;"
+        "void main() {\n"
+        "   gl_Position = vec4(blockInstance.field, 0.0, 0.0, 1.0);\n"
+        "}\n";
+
+    compile(shaderString);
+
+    const std::vector<sh::InterfaceBlock> &interfaceBlocks = mTranslator->getInterfaceBlocks();
+    ASSERT_EQ(1u, interfaceBlocks.size());
+
+    const sh::InterfaceBlock &interfaceBlock = interfaceBlocks[0];
+
+    EXPECT_EQ(0u, interfaceBlock.arraySize);
+    EXPECT_FALSE(interfaceBlock.isRowMajorLayout);
+    EXPECT_EQ(sh::BLOCKLAYOUT_SHARED, interfaceBlock.layout);
+    EXPECT_EQ("blockName", interfaceBlock.name);
+    EXPECT_EQ("blockInstance", interfaceBlock.instanceName);
+    EXPECT_EQ("webgl_9", interfaceBlock.mappedName);
+    EXPECT_TRUE(interfaceBlock.staticUse);
+
+    ASSERT_EQ(1u, interfaceBlock.fields.size());
+
+    const sh::InterfaceBlockField &field = interfaceBlock.fields[0];
+
+    EXPECT_GLENUM_EQ(GL_HIGH_FLOAT, field.precision);
+    EXPECT_TRUE(field.staticUse);
+    EXPECT_GLENUM_EQ(GL_FLOAT, field.type);
+    EXPECT_EQ("field", field.name);
+    EXPECT_EQ("webgl_5", field.mappedName);
+    EXPECT_FALSE(field.isRowMajorLayout);
+    EXPECT_TRUE(field.fields.empty());
+}
+
+TEST_F(CollectHashedVertexVariablesTest, StructUniform)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "struct sType {\n"
+        "  float field;\n"
+        "};"
+        "uniform sType u;"
+        "void main() {\n"
+        "   gl_Position = vec4(u.field, 0.0, 0.0, 1.0);\n"
+        "}\n";
+
+    compile(shaderString);
+
+    const auto &uniforms = mTranslator->getUniforms();
+    ASSERT_EQ(1u, uniforms.size());
+
+    const sh::Uniform &uniform = uniforms[0];
+
+    EXPECT_EQ(0u, uniform.arraySize);
+    EXPECT_EQ("u", uniform.name);
+    EXPECT_EQ("webgl_1", uniform.mappedName);
+    EXPECT_TRUE(uniform.staticUse);
+
+    ASSERT_EQ(1u, uniform.fields.size());
+
+    const sh::ShaderVariable &field = uniform.fields[0];
+
+    EXPECT_GLENUM_EQ(GL_HIGH_FLOAT, field.precision);
+    // EXPECT_TRUE(field.staticUse); // we don't yet support struct static use
+    EXPECT_GLENUM_EQ(GL_FLOAT, field.type);
+    EXPECT_EQ("field", field.name);
+    EXPECT_EQ("webgl_5", field.mappedName);
+    EXPECT_TRUE(field.fields.empty());
 }

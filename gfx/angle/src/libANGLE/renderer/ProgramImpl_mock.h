@@ -60,6 +60,16 @@ class MockProgramImpl : public rx::ProgramImpl
     MOCK_METHOD0(destroy, void());
 };
 
+inline ::testing::NiceMock<MockProgramImpl> *MakeProgramMock()
+{
+    ::testing::NiceMock<MockProgramImpl> *programImpl = new ::testing::NiceMock<MockProgramImpl>();
+    // TODO(jmadill): add ON_CALLS for returning methods
+    // We must mock the destructor since NiceMock doesn't work for destructors.
+    EXPECT_CALL(*programImpl, destroy()).Times(1).RetiresOnSaturation();
+
+    return programImpl;
+}
+
 }  // namespace rx
 
 #endif  // LIBANGLE_RENDERER_PROGRAMIMPLMOCK_H_

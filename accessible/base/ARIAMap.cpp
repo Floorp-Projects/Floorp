@@ -35,7 +35,7 @@ static const uint32_t kGenericAccType = 0;
  *  via the object attribute "xml-roles".
  */
 
-static nsRoleMapEntry sWAIRoleMaps[] =
+static const nsRoleMapEntry sWAIRoleMaps[] =
 {
   { // alert
     &nsGkAtoms::alert,
@@ -760,7 +760,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
   }
 };
 
-static nsRoleMapEntry sLandmarkRoleMap = {
+static const nsRoleMapEntry sLandmarkRoleMap = {
   &nsGkAtoms::_empty,
   roles::NOTHING,
   kUseNativeRole,
@@ -861,7 +861,7 @@ struct RoleComparator
 
 }
 
-nsRoleMapEntry*
+const nsRoleMapEntry*
 aria::GetRoleMap(dom::Element* aEl)
 {
   nsAutoString roles;

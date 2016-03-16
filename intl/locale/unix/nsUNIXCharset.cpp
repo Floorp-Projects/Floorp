@@ -29,7 +29,7 @@
 using mozilla::dom::EncodingUtils;
 using namespace mozilla;
 
-static const char* kUnixCharsets[][3] = {
+static const char* const kUnixCharsets[][3] = {
 #include "unixcharset.properties.h"
 };
 

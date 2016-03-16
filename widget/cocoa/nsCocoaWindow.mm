@@ -596,6 +596,10 @@ void* nsCocoaWindow::GetNativeData(uint32_t aDataType)
       NS_ERROR("Requesting NS_NATIVE_GRAPHIC on a top-level window!");
       break;
     case NS_RAW_NATIVE_IME_CONTEXT: {
+      retVal = GetPseudoIMEContext();
+      if (retVal) {
+        break;
+      }
       NSView* view = mWindow ? [mWindow contentView] : nil;
       if (view) {
         retVal = [view inputContext];
@@ -2309,19 +2313,6 @@ void nsCocoaWindow::SetPopupWindowLevel()
     // appear just above their parent and essentially ignore the level.
     [mWindow setLevel:NSPopUpMenuWindowLevel];
     [mWindow setHidesOnDeactivate:NO];
-  }
-}
-
-nsresult
-nsCocoaWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
-{
-  switch (aIMENotification.mMessage) {
-    case NOTIFY_IME_OF_FOCUS:
-      return NS_OK;
-    case NOTIFY_IME_OF_BLUR:
-      return NS_OK;
-    default:
-      return NS_ERROR_NOT_IMPLEMENTED;
   }
 }
 
