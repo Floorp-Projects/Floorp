@@ -451,12 +451,10 @@ private:
   };
 
   static PLDHashNumber
-  ChildrenHashHashKey(PLDHashTable *aTable, const void *aKey);
+  ChildrenHashHashKey(const void *aKey);
 
   static bool
-  ChildrenHashMatchEntry(PLDHashTable *aTable,
-                         const PLDHashEntryHdr *aHdr,
-                         const void *aKey);
+  ChildrenHashMatchEntry(const PLDHashEntryHdr *aHdr, const void *aKey);
 
   void SweepChildren(nsTArray<nsRuleNode*>& aSweepQueue);
   bool DestroyIfNotMarked();

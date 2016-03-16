@@ -37,14 +37,13 @@ SpanningCellSorter::HashTableOps = {
 };
 
 /* static */ PLDHashNumber
-SpanningCellSorter::HashTableHashKey(PLDHashTable *table, const void *key)
+SpanningCellSorter::HashTableHashKey(const void *key)
 {
     return NS_PTR_TO_INT32(key);
 }
 
 /* static */ bool
-SpanningCellSorter::HashTableMatchEntry(PLDHashTable *table,
-                                        const PLDHashEntryHdr *hdr,
+SpanningCellSorter::HashTableMatchEntry(const PLDHashEntryHdr *hdr,
                                         const void *key)
 {
     const HashTableEntry *entry = static_cast<const HashTableEntry*>(hdr);

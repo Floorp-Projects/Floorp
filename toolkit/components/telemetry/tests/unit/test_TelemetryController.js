@@ -55,7 +55,7 @@ function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
   ];
 
   const APPLICATION_TEST_DATA = {
-    buildId: "2007010101",
+    buildId: gAppInfo.appBuildID,
     name: APP_NAME,
     version: APP_VERSION,
     displayVersion: AppConstants.MOZ_APP_VERSION_DISPLAY,

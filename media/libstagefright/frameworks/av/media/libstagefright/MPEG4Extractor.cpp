@@ -37,7 +37,6 @@
 #include <media/stagefright/MediaDefs.h>
 #include <media/stagefright/MediaSource.h>
 #include <media/stagefright/MetaData.h>
-#include <utils/String8.h>
 
 static const uint32_t kMAX_ALLOCATION =
     (SIZE_MAX < INT32_MAX ? SIZE_MAX : INT32_MAX) - 128;
@@ -621,24 +620,6 @@ static bool underMetaDataPath(const nsTArray<uint32_t> &path) {
         && path[1] == FOURCC('u', 'd', 't', 'a')
         && path[2] == FOURCC('m', 'e', 't', 'a')
         && path[3] == FOURCC('i', 'l', 's', 't');
-}
-
-// Given a time in seconds since Jan 1 1904, produce a human-readable string.
-static bool convertTimeToDate(int64_t time_1904, String8 *s) {
-    if (!s) {
-        return false;
-    }
-
-    time_t time_1970 = time_1904 - (((66 * 365 + 17) * 24) * 3600);
-    if (time_1970 < 0) {
-        return false;
-    }
-
-    char tmp[32];
-    strftime(tmp, sizeof(tmp), "%Y%m%dT%H%M%S.000Z", gmtime(&time_1970));
-
-    s->setTo(tmp);
-    return true;
 }
 
 static bool ValidInputSize(int32_t size) {
@@ -1770,20 +1751,12 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                 return ERROR_IO;
             }
 
-            uint64_t creationTime;
             if (header[0] == 1) {
-                creationTime = U64_AT(&header[4]);
                 mHeaderTimescale = U32_AT(&header[20]);
             } else if (header[0] != 0) {
                 return ERROR_MALFORMED;
             } else {
-                creationTime = U32_AT(&header[4]);
                 mHeaderTimescale = U32_AT(&header[12]);
-            }
-
-            String8 s;
-            if (convertTimeToDate(creationTime, &s)) {
-                mFileMetaData->setCString(kKeyDate, s.string());
             }
 
             *offset += chunk_size;

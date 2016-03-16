@@ -171,16 +171,14 @@ struct ContentListHashEntry : public PLDHashEntryHdr
 };
 
 static PLDHashNumber
-ContentListHashtableHashKey(PLDHashTable *table, const void *key)
+ContentListHashtableHashKey(const void *key)
 {
   const nsContentListKey* list = static_cast<const nsContentListKey *>(key);
   return list->GetHash();
 }
 
 static bool
-ContentListHashtableMatchEntry(PLDHashTable *table,
-                               const PLDHashEntryHdr *entry,
-                               const void *key)
+ContentListHashtableMatchEntry(const PLDHashEntryHdr *entry, const void *key)
 {
   const ContentListHashEntry *e =
     static_cast<const ContentListHashEntry *>(entry);
@@ -278,7 +276,7 @@ struct FuncStringContentListHashEntry : public PLDHashEntryHdr
 };
 
 static PLDHashNumber
-FuncStringContentListHashtableHashKey(PLDHashTable *table, const void *key)
+FuncStringContentListHashtableHashKey(const void *key)
 {
   const nsFuncStringCacheKey* funcStringKey =
     static_cast<const nsFuncStringCacheKey *>(key);
@@ -286,9 +284,8 @@ FuncStringContentListHashtableHashKey(PLDHashTable *table, const void *key)
 }
 
 static bool
-FuncStringContentListHashtableMatchEntry(PLDHashTable *table,
-                               const PLDHashEntryHdr *entry,
-                               const void *key)
+FuncStringContentListHashtableMatchEntry(const PLDHashEntryHdr *entry,
+                                         const void *key)
 {
   const FuncStringContentListHashEntry *e =
     static_cast<const FuncStringContentListHashEntry *>(entry);

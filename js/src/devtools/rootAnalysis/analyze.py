@@ -106,6 +106,10 @@ JOBS = { 'dbs':
                '.'),
               ()),
 
+         'list-dbs':
+             (('ls', '-l'),
+              ()),
+
          'callgraph':
              (('%(js)s', '%(analysis_scriptdir)s/computeCallgraph.js'),
               'callgraph.txt'),

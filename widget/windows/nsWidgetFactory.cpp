@@ -190,7 +190,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_WIN_JUMPLISTSHORTCUT_CID, false, nullptr, JumpListShortcutConstructor },
   { &kNS_WINDOWS_UIUTILS_CID, false, nullptr, WindowsUIUtilsConstructor },
   { &kNS_DRAGSERVICE_CID, false, nullptr, nsDragServiceConstructor, Module::MAIN_PROCESS_ONLY },
-  { &kNS_BIDIKEYBOARD_CID, false, nullptr, nsBidiKeyboardConstructor },
+  { &kNS_BIDIKEYBOARD_CID, false, nullptr, nsBidiKeyboardConstructor, Module::MAIN_PROCESS_ONLY },
   { &kNS_TASKBARPREVIEWCALLBACK_CID, false, nullptr, TaskbarPreviewCallbackConstructor },
 #ifdef NS_PRINTING
   { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintOptionsWinConstructor },
@@ -224,7 +224,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/windows-jumplistshortcut;1", &kNS_WIN_JUMPLISTSHORTCUT_CID },
   { "@mozilla.org/windows-ui-utils;1", &kNS_WINDOWS_UIUTILS_CID },
   { "@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID, Module::MAIN_PROCESS_ONLY },
-  { "@mozilla.org/widget/bidikeyboard;1", &kNS_BIDIKEYBOARD_CID },
+  { "@mozilla.org/widget/bidikeyboard;1", &kNS_BIDIKEYBOARD_CID, Module::MAIN_PROCESS_ONLY },
   { "@mozilla.org/widget/taskbar-preview-callback;1", &kNS_TASKBARPREVIEWCALLBACK_CID },
 #ifdef NS_PRINTING
   { "@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID },

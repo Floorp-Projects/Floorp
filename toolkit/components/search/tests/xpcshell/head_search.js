@@ -27,40 +27,20 @@ const CACHE_FILENAME = "search.json.mozlz4";
 var XULRuntime = Components.classesByID["{95d89e3e-a169-41a3-8e56-719978e15b12}"]
                            .getService(Ci.nsIXULRuntime);
 
-var XULAppInfo = {
-  vendor: "Mozilla",
+var isChild = XULRuntime.processType == XULRuntime.PROCESS_TYPE_CONTENT;
+
+updateAppInfo({
   name: "XPCShell",
   ID: "xpcshell@test.mozilla.org",
   version: "5",
-  appBuildID: "2007010101",
   platformVersion: "1.9",
-  platformBuildID: "2007010101",
-  inSafeMode: false,
-  logConsoleErrors: true,
   // mirror OS from the base impl as some of the "location" tests rely on it
   OS: XULRuntime.OS,
-  XPCOMABI: "noarch-spidermonkey",
   // mirror processType from the base implementation
-  processType: XULRuntime.processType,
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo, Ci.nsIXULRuntime,
-                                         Ci.nsISupports])
-};
-
-var XULAppInfoFactory = {
-  createInstance: function (outer, iid) {
-    if (outer != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    return XULAppInfo.QueryInterface(iid);
-  }
-};
-
-var isChild = XULRuntime.processType == XULRuntime.PROCESS_TYPE_CONTENT;
-
-Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
-          .registerFactory(Components.ID("{ecff8849-cee8-40a7-bd4a-3f4fdfeddb5c}"),
-                           "XULAppInfo", "@mozilla.org/xre/app-info;1",
-                           XULAppInfoFactory);
+  extraProps: {
+    processType: XULRuntime.processType,
+  },
+});
 
 var gProfD;
 if (!isChild) {
