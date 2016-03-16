@@ -77,6 +77,11 @@ public:
   static nsIMEUpdatePreference GetUpdatePreference();
 
   /**
+   * Returns native text event dispatcher listener.
+   */
+  static TextEventDispatcherListener* GetNativeTextEventDispatcherListener();
+
+  /**
    * Returns IME open state on the window.
    */
   static bool GetOpenState(nsWindow* aWindow);

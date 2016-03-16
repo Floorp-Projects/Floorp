@@ -54,6 +54,7 @@ UNIFIED_SOURCES += [
     'WindowHook.cpp',
     'WinIMEHandler.cpp',
     'WinTaskbar.cpp',
+    'WinTextEventDispatcherListener.cpp',
     'WinUtils.cpp',
 ]
 
