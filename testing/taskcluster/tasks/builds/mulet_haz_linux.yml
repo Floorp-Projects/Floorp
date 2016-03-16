@@ -29,7 +29,7 @@ task:
 
     env:
       MOZCONFIG: 'b2g/dev/config/mozconfigs/linux64/mulet-hazards'
-      TOOLTOOL_MANIFEST: 'b2g/dev/config/tooltool-manifests/linux64/releng.manifest'
+      TOOLTOOL_MANIFEST: 'gecko/b2g/dev/config/tooltool-manifests/linux64/hazard.manifest'
 
     maxRunTime: 36000
 

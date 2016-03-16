@@ -142,8 +142,16 @@ GMPAudioDecoder::GetNodeId()
 void
 GMPAudioDecoder::GMPInitDone(GMPAudioDecoderProxy* aGMP)
 {
+  MOZ_ASSERT(IsOnGMPThread());
+
   if (!aGMP) {
-    mInitPromise.Reject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
+    mInitPromise.RejectIfExists(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
+    return;
+  }
+  if (mInitPromise.IsEmpty()) {
+    // GMP must have been shutdown while we were waiting for Init operation
+    // to complete.
+    aGMP->Close();
     return;
   }
   nsTArray<uint8_t> codecSpecific;
@@ -241,6 +249,7 @@ GMPAudioDecoder::Shutdown()
   if (!mGMP) {
     return NS_ERROR_FAILURE;
   }
+  // Note this unblocks flush and drain operations waiting for callbacks.
   mGMP->Close();
   mGMP = nullptr;
 

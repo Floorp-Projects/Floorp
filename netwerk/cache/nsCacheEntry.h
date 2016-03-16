@@ -278,11 +278,10 @@ public:
 
 private:
     // PLDHashTable operation callbacks
-    static PLDHashNumber  HashKey( PLDHashTable *table, const void *key);
+    static PLDHashNumber  HashKey(const void *key);
 
-    static bool           MatchEntry( PLDHashTable *           table,
-                                      const PLDHashEntryHdr *  entry,
-                                      const void *             key);
+    static bool           MatchEntry(const PLDHashEntryHdr *  entry,
+                                     const void *             key);
 
     static void           MoveEntry( PLDHashTable *table,
                                      const PLDHashEntryHdr *from,

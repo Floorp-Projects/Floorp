@@ -310,7 +310,7 @@ function checkBuildSection(data) {
   const expectedInfo = {
     applicationId: APP_ID,
     applicationName: APP_NAME,
-    buildId: "2007010101",
+    buildId: gAppInfo.appBuildID,
     version: APP_VERSION,
     vendor: "Mozilla",
     platformVersion: PLATFORM_VERSION,
