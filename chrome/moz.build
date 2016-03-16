@@ -36,5 +36,5 @@ LOCAL_INCLUDES += [
     '/xpcom/components'
 ]
 
-if CONFIG['MOZ_ENABLE_GTK']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     CXXFLAGS += CONFIG['TK_CFLAGS']
