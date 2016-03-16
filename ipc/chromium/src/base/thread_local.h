@@ -107,7 +107,8 @@ class ThreadLocalBoolean {
   }
 
   void Set(bool val) {
-    tlp_.Set(reinterpret_cast<void*>(val ? 1 : 0));
+    uintptr_t intVal = val ? 1 : 0;
+    tlp_.Set(reinterpret_cast<void*>(intVal));
   }
 
  private:
