@@ -1475,7 +1475,8 @@ public:
 
     MOZ_ASSERT(!mUpdateAndInstallInfo);
     mUpdateAndInstallInfo =
-      new ServiceWorkerInfo(mRegistration, mScriptSpec, aNewCacheName);
+      new ServiceWorkerInfo(mRegistration->mPrincipal, mRegistration->mScope,
+                            mScriptSpec, aNewCacheName);
 
     RefPtr<ServiceWorkerJob> upcasted = this;
     nsMainThreadPtrHandle<nsISupports> handle(
@@ -3006,8 +3007,8 @@ ServiceWorkerManager::LoadRegistration(
   const nsCString& currentWorkerURL = aRegistration.currentWorkerURL();
   if (!currentWorkerURL.IsEmpty()) {
     registration->mActiveWorker =
-      new ServiceWorkerInfo(registration, currentWorkerURL,
-                            aRegistration.cacheName());
+      new ServiceWorkerInfo(registration->mPrincipal, registration->mScope,
+                            currentWorkerURL, aRegistration.cacheName());
     registration->mActiveWorker->SetActivateStateUncheckedWithoutEvent(ServiceWorkerState::Activated);
   }
 }
@@ -5236,10 +5237,12 @@ ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r.forget())));
 }
 
-ServiceWorkerInfo::ServiceWorkerInfo(ServiceWorkerRegistrationInfo* aReg,
+ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
+                                     const nsACString& aScope,
                                      const nsACString& aScriptSpec,
                                      const nsAString& aCacheName)
-  : mRegistration(aReg)
+  : mPrincipal(aPrincipal)
+  , mScope(aScope)
   , mScriptSpec(aScriptSpec)
   , mCacheName(aCacheName)
   , mState(ServiceWorkerState::EndGuard_)
@@ -5247,8 +5250,10 @@ ServiceWorkerInfo::ServiceWorkerInfo(ServiceWorkerRegistrationInfo* aReg,
   , mServiceWorkerPrivate(new ServiceWorkerPrivate(this))
   , mSkipWaitingFlag(false)
 {
-  MOZ_ASSERT(mRegistration);
-  MOZ_ASSERT(!aCacheName.IsEmpty());
+  MOZ_ASSERT(mPrincipal);
+  MOZ_ASSERT(!mScope.IsEmpty());
+  MOZ_ASSERT(!mScriptSpec.IsEmpty());
+  MOZ_ASSERT(!mCacheName.IsEmpty());
 }
 
 ServiceWorkerInfo::~ServiceWorkerInfo()

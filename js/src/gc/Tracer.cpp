@@ -127,54 +127,48 @@ js::TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind)
 }
 
 JS_PUBLIC_API(void)
-JS_TraceIncomingCCWs(JSTracer* trc, const JS::ZoneSet& zones)
+JS::TraceIncomingCCWs(JSTracer* trc, const JS::CompartmentSet& compartments)
 {
-    for (js::ZonesIter z(trc->runtime(), SkipAtoms); !z.done(); z.next()) {
-        Zone* zone = z.get();
-        if (!zone || zones.has(zone))
+    for (js::CompartmentsIter comp(trc->runtime(), SkipAtoms); !comp.done(); comp.next()) {
+        if (compartments.has(comp))
             continue;
 
-        for (js::CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
-            JSCompartment* comp = c.get();
-            if (!comp)
+        for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
+            const CrossCompartmentKey& key = e.front().key();
+            JSObject* obj;
+            JSScript* script;
+
+            switch (key.kind) {
+              case CrossCompartmentKey::StringWrapper:
+                // StringWrappers are just used to avoid copying strings
+                // across zones multiple times, and don't hold a strong
+                // reference.
                 continue;
 
-            for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
-                const CrossCompartmentKey& key = e.front().key();
-                JSObject* obj;
-                JSScript* script;
-
-                switch (key.kind) {
-                  case CrossCompartmentKey::StringWrapper:
-                    // StringWrappers are just used to avoid copying strings
-                    // across zones multiple times, and don't hold a strong
-                    // reference.
+              case CrossCompartmentKey::ObjectWrapper:
+              case CrossCompartmentKey::DebuggerObject:
+              case CrossCompartmentKey::DebuggerSource:
+              case CrossCompartmentKey::DebuggerEnvironment:
+                obj = static_cast<JSObject*>(key.wrapped);
+                // Ignore CCWs whose wrapped value doesn't live in our given
+                // set of zones.
+                if (!compartments.has(obj->compartment()))
                     continue;
 
-                  case CrossCompartmentKey::ObjectWrapper:
-                  case CrossCompartmentKey::DebuggerObject:
-                  case CrossCompartmentKey::DebuggerSource:
-                  case CrossCompartmentKey::DebuggerEnvironment:
-                    obj = static_cast<JSObject*>(key.wrapped);
-                    // Ignore CCWs whose wrapped value doesn't live in our given
-                    // set of zones.
-                    if (!zones.has(obj->zone()))
-                        continue;
+                TraceManuallyBarrieredEdge(trc, &obj, "cross-compartment wrapper");
+                MOZ_ASSERT(obj == key.wrapped);
+                break;
 
-                    TraceManuallyBarrieredEdge(trc, &obj, "cross-compartment wrapper");
-                    MOZ_ASSERT(obj == key.wrapped);
-                    break;
+              case CrossCompartmentKey::DebuggerScript:
+                script = static_cast<JSScript*>(key.wrapped);
+                // Ignore CCWs whose wrapped value doesn't live in our given
+                // set of compartments.
+                if (!compartments.has(script->compartment()))
+                    continue;
 
-                  case CrossCompartmentKey::DebuggerScript:
-                    script = static_cast<JSScript*>(key.wrapped);
-                    // Ignore CCWs whose wrapped value doesn't live in our given
-                    // set of zones.
-                    if (!zones.has(script->zone()))
-                        continue;
-                    TraceManuallyBarrieredEdge(trc, &script, "cross-compartment wrapper");
-                    MOZ_ASSERT(script == key.wrapped);
-                    break;
-                }
+                TraceManuallyBarrieredEdge(trc, &script, "cross-compartment wrapper");
+                MOZ_ASSERT(script == key.wrapped);
+                break;
             }
         }
     }

@@ -1431,12 +1431,22 @@ WasmTokenStream::next()
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F32Ceil, begin, cur_);
                 if (consume(MOZ_UTF16("const")))
                     return WasmToken(WasmToken::Const, ValType::F32, begin, cur_);
-                if (consume(MOZ_UTF16("convert_s/i32")))
+                if (consume(MOZ_UTF16("convert_s/i32"))) {
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertSI32,
                                      begin, cur_);
-                if (consume(MOZ_UTF16("convert_u/i32")))
+                }
+                if (consume(MOZ_UTF16("convert_u/i32"))) {
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertUI32,
                                      begin, cur_);
+                }
+                if (consume(MOZ_UTF16("convert_s/i64"))) {
+                    return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertSI64,
+                                     begin, cur_);
+                }
+                if (consume(MOZ_UTF16("convert_u/i64"))) {
+                    return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertUI64,
+                                     begin, cur_);
+                }
                 if (consume(MOZ_UTF16("copysign")))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F32CopySign, begin, cur_);
                 break;
@@ -1521,12 +1531,22 @@ WasmTokenStream::next()
                     return WasmToken(WasmToken::UnaryOpcode, Expr::F64Ceil, begin, cur_);
                 if (consume(MOZ_UTF16("const")))
                     return WasmToken(WasmToken::Const, ValType::F64, begin, cur_);
-                if (consume(MOZ_UTF16("convert_s/i32")))
+                if (consume(MOZ_UTF16("convert_s/i32"))) {
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertSI32,
                                      begin, cur_);
-                if (consume(MOZ_UTF16("convert_u/i32")))
+                }
+                if (consume(MOZ_UTF16("convert_u/i32"))) {
                     return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertUI32,
                                      begin, cur_);
+                }
+                if (consume(MOZ_UTF16("convert_s/i64"))) {
+                    return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertSI64,
+                                     begin, cur_);
+                }
+                if (consume(MOZ_UTF16("convert_u/i64"))) {
+                    return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertUI64,
+                                     begin, cur_);
+                }
                 if (consume(MOZ_UTF16("copysign")))
                     return WasmToken(WasmToken::BinaryOpcode, Expr::F64CopySign, begin, cur_);
                 break;

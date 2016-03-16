@@ -609,7 +609,8 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
 
   aRv.MightThrowJSException();
 
-  if (aMode == IDBTransactionMode::Readwriteflush &&
+  if ((aMode == IDBTransactionMode::Readwriteflush ||
+       aMode == IDBTransactionMode::Cleanup) &&
       !IndexedDatabaseManager::ExperimentalFeaturesEnabled()) {
     // Pretend that this mode doesn't exist. We don't have a way to annotate
     // certain enum values as depending on preferences so we just duplicate the
@@ -651,7 +652,8 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
 {
   AssertIsOnOwningThread();
 
-  if (NS_WARN_IF(aMode == IDBTransactionMode::Readwriteflush &&
+  if (NS_WARN_IF((aMode == IDBTransactionMode::Readwriteflush ||
+                  aMode == IDBTransactionMode::Cleanup) &&
                  !IndexedDatabaseManager::ExperimentalFeaturesEnabled())) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -729,6 +731,9 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
     case IDBTransactionMode::Readwriteflush:
       mode = IDBTransaction::READ_WRITE_FLUSH;
       break;
+    case IDBTransactionMode::Cleanup:
+      mode = IDBTransaction::CLEANUP;
+      break;
     case IDBTransactionMode::Versionchange:
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
 
@@ -760,6 +765,10 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
                                                                mode));
 
   transaction->SetBackgroundActor(actor);
+
+  if (aMode == IDBTransactionMode::Cleanup) {
+    ExpireFileActors(/* aExpireAll */ true);
+  }
 
   transaction.forget(aTransaction);
   return NS_OK;
@@ -906,6 +915,7 @@ IDBDatabase::AbortTransactions(bool aShouldWarn)
             // We warn for any transactions that could have written data.
             case IDBTransaction::READ_WRITE:
             case IDBTransaction::READ_WRITE_FLUSH:
+            case IDBTransaction::CLEANUP:
             case IDBTransaction::VERSION_CHANGE:
               transactionsThatNeedWarning.AppendElement(transaction);
               break;

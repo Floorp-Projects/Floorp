@@ -44,7 +44,7 @@ from mozbuild.util import (
 from mozbuild.testing import (
     TEST_MANIFESTS,
     REFTEST_FLAVORS,
-    WEB_PATFORM_TESTS_FLAVORS,
+    WEB_PLATFORM_TESTS_FLAVORS,
 )
 
 from mozbuild.backend.configenvironment import ConfigEnvironment
@@ -1382,7 +1382,7 @@ class BuildReader(object):
         test_manifest_contexts = set(
             ['%s_MANIFESTS' % key for key in TEST_MANIFESTS] +
             ['%s_MANIFESTS' % flavor.upper() for flavor in REFTEST_FLAVORS] +
-            ['%s_MANIFESTS' % flavor.upper().replace('-', '_') for flavor in WEB_PATFORM_TESTS_FLAVORS]
+            ['%s_MANIFESTS' % flavor.upper().replace('-', '_') for flavor in WEB_PLATFORM_TESTS_FLAVORS]
         )
 
         result_context = Files(Context())

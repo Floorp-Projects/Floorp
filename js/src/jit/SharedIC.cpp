@@ -931,6 +931,7 @@ SharedStubInfo::outerScript(JSContext* cx)
         ++it;
         MOZ_ASSERT(it.isIonJS());
         outerScript_ = it.script();
+        MOZ_ASSERT(!it.ionScript()->invalidated());
     }
     return outerScript_;
 }
@@ -3056,7 +3057,7 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
     // After the Genericstub was added, we should never reach the Fallbackstub again.
     MOZ_ASSERT(!stub->hasStub(ICStub::GetProp_Generic));
 
-    if (stub->numOptimizedStubs() >= ICGetProp_Fallback::MAX_OPTIMIZED_STUBS) {
+    if (stub->numOptimizedStubs() >= ICGetProp_Fallback::MAX_OPTIMIZED_STUBS && !stub.invalid()) {
         // Discard all stubs in this IC and replace with generic getprop stub.
         for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++)
             iter.unlink(cx);
@@ -3069,8 +3070,9 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
         attached = true;
     }
 
-    if (!attached && !TryAttachNativeGetAccessorPropStub(cx, &info, stub, name, val, res, &attached,
-                                                         &isTemporarilyUnoptimizable))
+    if (!attached && !stub.invalid() &&
+        !TryAttachNativeGetAccessorPropStub(cx, &info, stub, name, val, res, &attached,
+                                            &isTemporarilyUnoptimizable))
     {
         return false;
     }
@@ -4777,7 +4779,7 @@ DoTypeMonitorFallback(JSContext* cx, void* payload, ICTypeMonitor_Fallback* stub
             TypeScript::Monitor(cx, script, pc, value);
     }
 
-    if (!stub->addMonitorStubForValue(cx, &info, value))
+    if (!stub->invalid() && !stub->addMonitorStubForValue(cx, &info, value))
         return false;
 
     // Copy input value to res.
