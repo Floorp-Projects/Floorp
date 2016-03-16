@@ -15,6 +15,7 @@ enum IDBTransactionMode {
     // |IndexedDatabaseManager::ExperimentalFeaturesEnabled()| function returns
     // true. This mode is not yet part of the standard.
     "readwriteflush",
+    "cleanup",
     "versionchange"
 };
 

@@ -287,17 +287,6 @@ ifdef HOST_SIMPLE_PROGRAMS
 GARBAGE			+= $(HOST_SIMPLE_PROGRAMS:%=%.$(OBJ_SUFFIX))
 endif
 
-ifdef MOZ_UPDATE_XTERM
-# Its good not to have a newline at the end of the titlebar string because it
-# makes the make -s output easier to read.  Echo -n does not work on all
-# platforms, but we can trick printf into doing it.
-ifeq (.,$(relativesrcdir))
-UPDATE_TITLE = printf '\033]0;%s in %s\007' $(1) $(2) ;
-else
-UPDATE_TITLE = printf '\033]0;%s in %s\007' $(1) $(relativesrcdir)/$(2) ;
-endif
-endif
-
 ifdef MACH
 ifndef NO_BUILDSTATUS_MESSAGES
 define BUILDSTATUS
@@ -308,7 +297,6 @@ endif
 endif
 
 define SUBMAKE # $(call SUBMAKE,target,directory,static)
-+@$(UPDATE_TITLE)
 +@$(MAKE) $(if $(2),-C $(2)) $(1)
 
 endef # The extra line is important here! don't delete it

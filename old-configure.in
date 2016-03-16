@@ -63,7 +63,6 @@ GLIB_VERSION=2.22
 # The macro won't be used when compiling with earlier versions anyway.
 GLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_26
 GIO_VERSION=2.22
-PERL_VERSION=5.006
 CAIRO_VERSION=1.10
 PANGO_VERSION=1.22.0
 GTK2_VERSION=2.18.0
@@ -83,7 +82,6 @@ MSMANIFEST_TOOL=
 dnl Set various checks
 dnl ========================================================
 MISSING_X=
-AC_PROG_AWK
 
 dnl Initialize the Pthread test variables early so they can be
 dnl  overridden by each platform.
@@ -114,12 +112,6 @@ if test -n "$L10NBASEDIR"; then
     fi
 fi
 AC_SUBST(L10NBASEDIR)
-
-dnl Check for Perl first -- needed for win32 SDK checks
-MOZ_PATH_PROGS(PERL, $PERL perl5 perl )
-if test -z "$PERL" -o "$PERL" = ":"; then
-    AC_MSG_ERROR([perl not found in \$PATH])
-fi
 
 if test -n "$MOZTTDIR" -a ! -d "$MOZTTDIR" ; then
     AC_MSG_ERROR([MOZTTDIR '$MOZTTDIR' isn't a valid directory])
@@ -702,49 +694,10 @@ dnl ========================================================
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
-AC_MSG_CHECKING([for minimum required perl version >= $PERL_VERSION])
-_perl_version=`PERL_VERSION=$PERL_VERSION $PERL -e 'print "$]"; if ($] >= $ENV{PERL_VERSION}) { exit(0); } else { exit(1); }' 2>&5`
-_perl_res=$?
-AC_MSG_RESULT([$_perl_version])
-
-if test "$_perl_res" != 0; then
-    AC_MSG_ERROR([Perl $PERL_VERSION or higher is required.])
-fi
-
-AC_MSG_CHECKING([for full perl installation])
-_perl_archlib=`$PERL -e 'use Config; if ( -d $Config{archlib} ) { exit(0); } else { exit(1); }' 2>&5`
-_perl_res=$?
-if test "$_perl_res" != 0; then
-    AC_MSG_RESULT([no])
-    AC_MSG_ERROR([Cannot find Config.pm or \$Config{archlib}.  A full perl installation is required.])
-else
-    AC_MSG_RESULT([yes])
-fi
-
 if test -z "$COMPILE_ENVIRONMENT"; then
     NSINSTALL_BIN='$(PYTHON) $(MOZILLA_DIR)/config/nsinstall.py'
 fi
 AC_SUBST(NSINSTALL_BIN)
-
-MOZ_PATH_PROG(DOXYGEN, doxygen, :)
-MOZ_PATH_PROGS(UNZIP, unzip)
-if test -z "$UNZIP" -o "$UNZIP" = ":"; then
-    AC_MSG_ERROR([unzip not found in \$PATH])
-fi
-MOZ_PATH_PROGS(ZIP, zip)
-if test -z "$ZIP" -o "$ZIP" = ":"; then
-    AC_MSG_ERROR([zip not found in \$PATH])
-fi
-MOZ_PATH_PROG(XARGS, xargs)
-if test -z "$XARGS" -o "$XARGS" = ":"; then
-    AC_MSG_ERROR([xargs not found in \$PATH .])
-fi
-
-MOZ_PATH_PROG(RPMBUILD, rpmbuild, :)
-AC_SUBST(RPMBUILD)
-
-MOZ_PATH_PROG(GENISOIMAGE, genisoimage, :)
-MOZ_PATH_PROG(DSYMUTIL, dsymutil, llvm-dsymutil :)
 
 if test "$COMPILE_ENVIRONMENT"; then
 
@@ -1695,10 +1648,6 @@ case "$target" in
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
         PKG_SKIP_STRIP=1
-        XARGS=xargs
-        ZIP=zip
-        UNZIP=unzip
-        DOXYGEN=:
         OBJ_SUFFIX=obj
         LIB_SUFFIX=lib
         DLL_PREFIX=
@@ -7049,14 +6998,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Misc. Options)
 
-dnl ========================================================
-dnl update xterm title
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(xterm-updates,
-[  --enable-xterm-updates  Update XTERM titles with current command.],
-    MOZ_UPDATE_XTERM=1,
-    MOZ_UPDATE_XTERM= )
-
 dnl =========================================================
 dnl = Chrome format
 dnl =========================================================
@@ -7820,7 +7761,6 @@ AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
 AC_SUBST(BIN_FLAGS)
 AC_SUBST(MOZ_WIDGET_TOOLKIT)
-AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_DEBUG)

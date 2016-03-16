@@ -464,3 +464,9 @@ LIRGeneratorX86::visitTruncateToInt64(MTruncateToInt64* ins)
 {
     MOZ_CRASH("NY");
 }
+
+void
+LIRGeneratorX86::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
+{
+    MOZ_CRASH("NY");
+}

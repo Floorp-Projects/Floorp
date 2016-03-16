@@ -40,8 +40,8 @@ DOMCI_CLASS(ContentProcessMessageManager)
 DOMCI_CLASS(ChromeMessageBroadcaster)
 DOMCI_CLASS(ChromeMessageSender)
 
-DOMCI_CLASS(MozCSSKeyframeRule)
-DOMCI_CLASS(MozCSSKeyframesRule)
+DOMCI_CLASS(CSSKeyframeRule)
+DOMCI_CLASS(CSSKeyframesRule)
 
 // @counter-style in CSS
 DOMCI_CLASS(CSSCounterStyleRule)

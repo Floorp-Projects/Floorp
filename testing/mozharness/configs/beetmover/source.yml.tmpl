@@ -7,8 +7,8 @@ metadata:
 mapping:
   all:
     source_bundle:
-      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.bundle
+      artifact: {{ artifact_base_url }}/firefox-{{ version }}.bundle
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/source/firefox-{{ version }}.bundle
     source_tar:
-      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.source.tar.xz
+      artifact: {{ artifact_base_url }}/firefox-{{ version }}.source.tar.xz
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/source/firefox-{{ version }}.source.tar.xz
