@@ -55,10 +55,17 @@ TextEventDispatcher::BeginTestInputTransaction(
 }
 
 nsresult
-TextEventDispatcher::BeginNativeInputTransaction(
-                       TextEventDispatcherListener* aListener)
+TextEventDispatcher::BeginNativeInputTransaction()
 {
-  return BeginInputTransactionInternal(aListener, eNativeInputTransaction);
+  if (NS_WARN_IF(!mWidget)) {
+    return NS_ERROR_FAILURE;
+  }
+  RefPtr<TextEventDispatcherListener> listener =
+    mWidget->GetNativeTextEventDispatcherListener();
+  if (NS_WARN_IF(!listener)) {
+    return NS_ERROR_FAILURE;
+  }
+  return BeginInputTransactionInternal(listener, eNativeInputTransaction);
 }
 
 nsresult
@@ -308,18 +315,50 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
 nsresult
 TextEventDispatcher::NotifyIME(const IMENotification& aIMENotification)
 {
+  nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
+
+  // First, send the notification to current input transaction's listener.
   nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
-  if (!listener) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (listener) {
+    rv = listener->NotifyIME(this, aIMENotification);
   }
-  nsresult rv = listener->NotifyIME(this, aIMENotification);
-  // If the listener isn't available, it means that it cannot handle the
-  // notification or request for now.  In this case, we should return
-  // NS_ERROR_NOT_IMPLEMENTED because it's not implemented at such moment.
-  if (rv == NS_ERROR_NOT_AVAILABLE) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+
+  if (mInputTransactionType == eNativeInputTransaction || !mWidget) {
+    return rv;
   }
-  return rv;
+
+  // If current input transaction isn't for native event handler, we should
+  // send the notification to the native text event dispatcher listener
+  // since native event handler may need to do something from
+  // TextEventDispatcherListener::NotifyIME() even before there is no
+  // input transaction yet.  For example, native IME handler may need to
+  // create new context at receiving NOTIFY_IME_OF_FOCUS.  In this case,
+  // mListener may not be initialized since input transaction should be
+  // initialized immediately before dispatching every WidgetKeyboardEvent
+  // and WidgetCompositionEvent (dispatching events always occurs after
+  // focus move).
+  nsCOMPtr<TextEventDispatcherListener> nativeListener =
+    mWidget->GetNativeTextEventDispatcherListener();
+  if (!nativeListener) {
+    return rv;
+  }
+  switch (aIMENotification.mMessage) {
+    case REQUEST_TO_COMMIT_COMPOSITION:
+    case REQUEST_TO_CANCEL_COMPOSITION:
+      // It's not necessary to notify native IME of requests.
+      return rv;
+    default: {
+      // Even if current input transaction's listener returns NS_OK or
+      // something, we need to notify native IME of notifications because
+      // when user typing after TIP does something, the changed information
+      // is necessary for them.
+      nsresult rv2 =
+        nativeListener->NotifyIME(this, aIMENotification);
+      // But return the result from current listener except when the
+      // notification isn't handled.
+      return rv == NS_ERROR_NOT_IMPLEMENTED ? rv2 : rv;
+    }
+  }
 }
 
 bool
