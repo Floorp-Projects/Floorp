@@ -444,7 +444,6 @@ let SourceActor = ActorClass({
    * Handler for the "prettyPrint" packet.
    */
   prettyPrint: method(function (indent) {
-    dump("EN IS HET EEN KEER NIET KUT " + JSON.stringify(indent) + "\n");
     this.threadActor.sources.prettyPrint(this.url, indent);
     return this._getSourceText()
       .then(this._sendToPrettyPrintWorker(indent))

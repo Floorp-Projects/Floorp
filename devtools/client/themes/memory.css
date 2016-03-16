@@ -469,7 +469,6 @@ html, body, #app, #memory-tool {
 .heap-tree-percent,
 .heap-tree-item-name {
   white-space: nowrap;
-  overflow: hidden;
 }
 
 .heap-tree-number {

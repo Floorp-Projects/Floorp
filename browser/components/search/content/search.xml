@@ -1152,6 +1152,9 @@
           event.preventDefault();
           return;
         }
+        document.getAnonymousElementByAttribute(this, "anonid", "search-one-offs-context-set-default")
+                .setAttribute("disabled", target.engine == Services.search.currentEngine);
+
         this._contextEngine = target.engine;
       ]]></handler>
 
