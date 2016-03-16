@@ -108,7 +108,14 @@ public:
   // This is normally performed automatically by ProcessPendingRestyles
   // but it is also called when we have out-of-band changes to animations
   // such as changes made through the Web Animations API.
-  void IncrementAnimationGeneration() { ++mAnimationGeneration; }
+  void IncrementAnimationGeneration() {
+    // We update the animation generation at start of each call to
+    // ProcessPendingRestyles so we should ignore any subsequent (redundant)
+    // calls that occur while we are still processing restyles.
+    if (!mIsProcessingRestyles) {
+      ++mAnimationGeneration;
+    }
+  }
 
   // Whether rule matching should skip styles associated with animation
   bool SkipAnimationRules() const { return mSkipAnimationRules; }
@@ -565,9 +572,11 @@ private:
 
   RestyleTracker mPendingRestyles;
 
-#ifdef DEBUG
+  // Are we currently in the middle of a call to ProcessRestyles?
+  // This flag is used both as a debugging aid to assert that we are not
+  // performing nested calls to ProcessPendingRestyles, as well as to ignore
+  // redundant calls to IncrementAnimationGeneration.
   bool mIsProcessingRestyles;
-#endif
 
 #ifdef RESTYLE_LOGGING
   int32_t mLoggingDepth;
