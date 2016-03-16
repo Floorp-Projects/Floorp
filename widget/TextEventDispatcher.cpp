@@ -44,14 +44,18 @@ nsresult
 TextEventDispatcher::BeginInputTransaction(
                        TextEventDispatcherListener* aListener)
 {
-  return BeginInputTransactionInternal(aListener, eOtherInputTransaction);
+  return BeginInputTransactionInternal(aListener,
+                                       eSameProcessSyncInputTransaction);
 }
 
 nsresult
 TextEventDispatcher::BeginTestInputTransaction(
-                       TextEventDispatcherListener* aListener)
+                       TextEventDispatcherListener* aListener,
+                       bool aIsAPZAware)
 {
-  return BeginInputTransactionInternal(aListener, eTestInputTransaction);
+  return BeginInputTransactionInternal(aListener,
+           aIsAPZAware ? eAsyncTestInputTransaction :
+                         eSameProcessSyncTestInputTransaction);
 }
 
 nsresult
@@ -150,8 +154,7 @@ TextEventDispatcher::InitEvent(WidgetGUIEvent& aEvent) const
 {
   aEvent.time = PR_IntervalNow();
   aEvent.refPoint = LayoutDeviceIntPoint(0, 0);
-  aEvent.mFlags.mIsSynthesizedForTests =
-    mInputTransactionType == eTestInputTransaction;
+  aEvent.mFlags.mIsSynthesizedForTests = IsForTests();
   if (aEvent.mClass != eCompositionEventClass) {
     return;
   }
@@ -188,8 +191,7 @@ TextEventDispatcher::DispatchEvent(nsIWidget* aWidget,
 nsresult
 TextEventDispatcher::DispatchInputEvent(nsIWidget* aWidget,
                                         WidgetInputEvent& aEvent,
-                                        nsEventStatus& aStatus,
-                                        DispatchTo aDispatchTo)
+                                        nsEventStatus& aStatus)
 {
   RefPtr<TextEventDispatcher> kungFuDeathGrip(this);
   nsCOMPtr<nsIWidget> widget(aWidget);
@@ -200,7 +202,7 @@ TextEventDispatcher::DispatchInputEvent(nsIWidget* aWidget,
   // first.  However, some callers (e.g., keyboard apps on B2G and tests
   // expecting synchronous dispatch) don't want this to do that.
   nsresult rv = NS_OK;
-  if (aDispatchTo == eDispatchToParentProcess) {
+  if (ShouldSendInputEventToAPZ()) {
     aStatus = widget->DispatchInputEvent(&aEvent);
   } else {
     rv = widget->DispatchEvent(&aEvent, aStatus);
@@ -370,11 +372,9 @@ bool
 TextEventDispatcher::DispatchKeyboardEvent(
                        EventMessage aMessage,
                        const WidgetKeyboardEvent& aKeyboardEvent,
-                       nsEventStatus& aStatus,
-                       DispatchTo aDispatchTo)
+                       nsEventStatus& aStatus)
 {
-  return DispatchKeyboardEventInternal(aMessage, aKeyboardEvent, aStatus,
-                                       aDispatchTo);
+  return DispatchKeyboardEventInternal(aMessage, aKeyboardEvent, aStatus);
 }
 
 bool
@@ -382,7 +382,6 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
                        EventMessage aMessage,
                        const WidgetKeyboardEvent& aKeyboardEvent,
                        nsEventStatus& aStatus,
-                       DispatchTo aDispatchTo,
                        uint32_t aIndexOfKeypress)
 {
   MOZ_ASSERT(aMessage == eKeyDown || aMessage == eKeyUp ||
@@ -461,15 +460,14 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
   keyEvent.mPluginEvent.Clear();
   // TODO: Manage mUniqueId here.
 
-  DispatchInputEvent(mWidget, keyEvent, aStatus, aDispatchTo);
+  DispatchInputEvent(mWidget, keyEvent, aStatus);
   return true;
 }
 
 bool
 TextEventDispatcher::MaybeDispatchKeypressEvents(
                        const WidgetKeyboardEvent& aKeyboardEvent,
-                       nsEventStatus& aStatus,
-                       DispatchTo aDispatchTo)
+                       nsEventStatus& aStatus)
 {
   // If the key event was consumed, keypress event shouldn't be fired.
   if (aStatus == nsEventStatus_eConsumeNoDefault) {
@@ -489,7 +487,7 @@ TextEventDispatcher::MaybeDispatchKeypressEvents(
   for (size_t i = 0; i < keypressCount; i++) {
     aStatus = nsEventStatus_eIgnore;
     if (!DispatchKeyboardEventInternal(eKeyPress, aKeyboardEvent,
-                                       aStatus, aDispatchTo, i)) {
+                                       aStatus, i)) {
       // The widget must have been gone.
       break;
     }
