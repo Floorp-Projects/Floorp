@@ -204,7 +204,7 @@ static void LoadExtraSharedLibs()
         }
     }
 }
-#endif //MOZ_WIDGET_GTK2
+#endif //MOZ_WIDGET_GTK == 2
 
 /* nsPluginsDir implementation */
 
@@ -302,7 +302,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
 #else
     *outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
     pLibrary = *outLibrary;
-#endif  // MOZ_WIDGET_GTK2
+#endif  // MOZ_WIDGET_GTK == 2
 
 #ifdef DEBUG
     printf("LoadPlugin() %s returned %lx\n", 
