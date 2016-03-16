@@ -880,7 +880,6 @@ WebappsApplicationMgmt.prototype = {
                                         "Webapps:Uninstall:Broadcast:Return:OK",
                                         "Webapps:Uninstall:Return:KO",
                                         "Webapps:Install:Return:OK",
-                                        "Webapps:GetNotInstalled:Return:OK",
                                         "Webapps:GetIcon:Return",
                                         "Webapps:Import:Return",
                                         "Webapps:ExtractManifest:Return",
@@ -895,7 +894,6 @@ WebappsApplicationMgmt.prototype = {
                          );
 
     if (!aHasFullMgmtPrivilege) {
-      this.getNotInstalled = null;
       this.applyDownload = null;
     }
   },
@@ -959,19 +957,6 @@ WebappsApplicationMgmt.prototype = {
         requestID: aResolverId
       });
     });
-  },
-
-  getNotInstalled: function() {
-    let request = this.createRequest();
-    let principal = this._window.document.nodePrincipal;
-
-    cpmm.sendAsyncMessage("Webapps:GetNotInstalled", {
-      oid: this._id,
-      topId: this._topId,
-      requestID: this.getRequestId(request)
-    }, null, principal);
-
-    return request;
   },
 
   import: function(aBlob) {
@@ -1054,9 +1039,6 @@ WebappsApplicationMgmt.prototype = {
     }
 
     switch (aMessage.name) {
-      case "Webapps:GetNotInstalled:Return:OK":
-        Services.DOMRequest.fireSuccess(req, convertAppsArray(msg.apps, this._window));
-        break;
       case "Webapps:Install:Return:OK":
         {
           let app = createContentApplicationObject(this._window, msg.app);

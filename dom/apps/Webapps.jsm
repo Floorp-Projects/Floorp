@@ -208,7 +208,6 @@ this.DOMApplicationRegistry = {
                      "Webapps:GetSelf",
                      "Webapps:CheckInstalled",
                      "Webapps:GetInstalled",
-                     "Webapps:GetNotInstalled",
                      "Webapps:Launch",
                      "Webapps:LocationChange",
                      "Webapps:InstallPackage",
@@ -1304,7 +1303,6 @@ this.DOMApplicationRegistry = {
                   (checkPermission("homescreen-webapps-manage") && isCurrentHomescreen);
         break;
 
-      case "Webapps:GetNotInstalled":
       case "Webapps:ApplyDownload":
       case "Webapps:Import":
       case "Webapps:ExtractManifest":
@@ -1395,9 +1393,6 @@ this.DOMApplicationRegistry = {
           break;
         case "Webapps:GetInstalled":
           this.getInstalled(msg, mm);
-          break;
-        case "Webapps:GetNotInstalled":
-          this.getNotInstalled(msg, mm);
           break;
         case "Webapps:InstallPackage": {
           if (AppConstants.platform == "android" && !AppConstants.MOZ_B2GDROID) {
@@ -4336,11 +4331,6 @@ this.DOMApplicationRegistry = {
         aData.apps[i].manifest = aResult[i].manifest;
       aMm.sendAsyncMessage("Webapps:GetInstalled:Return:OK", this.formatMessage(aData));
     });
-  },
-
-  getNotInstalled: function(aData, aMm) {
-    aData.apps = [];
-    aMm.sendAsyncMessage("Webapps:GetNotInstalled:Return:OK", this.formatMessage(aData));
   },
 
   getIcon: function(aData, aMm) {
