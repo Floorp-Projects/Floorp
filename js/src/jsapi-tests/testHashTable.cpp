@@ -376,13 +376,17 @@ LookupWithDefaultUntilResize() {
 
 BEGIN_TEST(testHashMapLookupWithDefaultOOM)
 {
+    js::oom::targetThread = js::oom::THREAD_TYPE_MAIN;
     uint32_t timeToFail;
     for (timeToFail = 1; timeToFail < 1000; timeToFail++) {
-        js::oom::SimulateOOMAfter(timeToFail, js::oom::THREAD_TYPE_MAIN, false);
+        OOM_maxAllocations = OOM_counter + timeToFail;
+        OOM_failAlways = false;
+
         LookupWithDefaultUntilResize();
     }
 
-    js::oom::ResetSimulatedOOM();
+    js::oom::targetThread = js::oom::THREAD_TYPE_NONE;
+
     return true;
 }
 
