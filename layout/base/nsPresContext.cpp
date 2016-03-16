@@ -1203,9 +1203,14 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     }
 
     if (IsRoot()) {
+      nsRootPresContext* thisRoot = static_cast<nsRootPresContext*>(this);
+
       // Have to cancel our plugin geometry timer, because the
       // callback for that depends on a non-null presshell.
-      static_cast<nsRootPresContext*>(this)->CancelApplyPluginGeometryTimer();
+      thisRoot->CancelApplyPluginGeometryTimer();
+
+      // The did-paint timer also depends on a non-null pres shell.
+      thisRoot->CancelDidPaintTimer();
     }
   }
 }
