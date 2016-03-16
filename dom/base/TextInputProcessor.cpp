@@ -705,6 +705,16 @@ TextInputProcessor::OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher)
   UnlinkFromTextEventDispatcher();
 }
 
+NS_IMETHODIMP_(void)
+TextInputProcessor::WillDispatchKeyboardEvent(
+                      TextEventDispatcher* aTextEventDispatcher,
+                      WidgetKeyboardEvent& aKeyboardEvent,
+                      uint32_t aIndexOfKeypress,
+                      void* aData)
+{
+  // TextInputProcessor doesn't set alternative char code.
+}
+
 nsresult
 TextInputProcessor::PrepareKeyboardEventToDispatch(
                       WidgetKeyboardEvent& aKeyboardEvent,

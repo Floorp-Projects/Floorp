@@ -372,9 +372,11 @@ bool
 TextEventDispatcher::DispatchKeyboardEvent(
                        EventMessage aMessage,
                        const WidgetKeyboardEvent& aKeyboardEvent,
-                       nsEventStatus& aStatus)
+                       nsEventStatus& aStatus,
+                       void* aData)
 {
-  return DispatchKeyboardEventInternal(aMessage, aKeyboardEvent, aStatus);
+  return DispatchKeyboardEventInternal(aMessage, aKeyboardEvent, aStatus,
+                                       aData);
 }
 
 bool
@@ -382,6 +384,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
                        EventMessage aMessage,
                        const WidgetKeyboardEvent& aKeyboardEvent,
                        nsEventStatus& aStatus,
+                       void* aData,
                        uint32_t aIndexOfKeypress)
 {
   MOZ_ASSERT(aMessage == eKeyDown || aMessage == eKeyUp ||
@@ -464,6 +467,20 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
   }
   // TODO: Manage mUniqueId here.
 
+  // Request the alternative char codes for the key event.
+  // XXX Currently, they are necessary only when the event is eKeyPress.
+  keyEvent.alternativeCharCodes.Clear();
+  if (aMessage == eKeyPress &&
+      (keyEvent.IsControl() || keyEvent.IsAlt() ||
+       keyEvent.IsMeta() || keyEvent.IsOS())) {
+    nsCOMPtr<TextEventDispatcherListener> listener =
+      do_QueryReferent(mListener);
+    if (listener) {
+      listener->WillDispatchKeyboardEvent(this, keyEvent, aIndexOfKeypress,
+                                          aData);
+    }
+  }
+
   DispatchInputEvent(mWidget, keyEvent, aStatus);
   return true;
 }
@@ -471,7 +488,8 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
 bool
 TextEventDispatcher::MaybeDispatchKeypressEvents(
                        const WidgetKeyboardEvent& aKeyboardEvent,
-                       nsEventStatus& aStatus)
+                       nsEventStatus& aStatus,
+                       void* aData)
 {
   // If the key event was consumed, keypress event shouldn't be fired.
   if (aStatus == nsEventStatus_eConsumeNoDefault) {
@@ -491,7 +509,7 @@ TextEventDispatcher::MaybeDispatchKeypressEvents(
   for (size_t i = 0; i < keypressCount; i++) {
     aStatus = nsEventStatus_eIgnore;
     if (!DispatchKeyboardEventInternal(eKeyPress, aKeyboardEvent,
-                                       aStatus, i)) {
+                                       aStatus, aData, i)) {
       // The widget must have been gone.
       break;
     }
