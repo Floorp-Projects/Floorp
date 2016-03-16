@@ -73,7 +73,7 @@ if CONFIG['ACCESSIBILITY']:
         'maiRedundantObjectFactory.c',
     ]
 
-if CONFIG['MOZ_ENABLE_GTK2']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
     UNIFIED_SOURCES += [
         'gtk2drawing.c',
     ]
