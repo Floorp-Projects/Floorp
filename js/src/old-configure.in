@@ -2927,17 +2927,6 @@ if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF_DSP)
 fi
 
-if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK" ; then
-    AC_DEFINE(MOZ_ACCESSIBILITY_ATK)
-    ATK_FULL_VERSION=`$PKG_CONFIG --modversion atk`
-    ATK_MAJOR_VERSION=`echo ${ATK_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
-    ATK_MINOR_VERSION=`echo ${ATK_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
-    ATK_REV_VERSION=`echo ${ATK_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
-    AC_DEFINE_UNQUOTED(ATK_MAJOR_VERSION, $ATK_MAJOR_VERSION)
-    AC_DEFINE_UNQUOTED(ATK_MINOR_VERSION, $ATK_MINOR_VERSION)
-    AC_DEFINE_UNQUOTED(ATK_REV_VERSION, $ATK_REV_VERSION)
-fi
-
 dnl ========================================================
 dnl Determine options to use for running the preprocessor.
 dnl ========================================================
