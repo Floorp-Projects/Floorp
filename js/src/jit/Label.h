@@ -89,7 +89,7 @@ class Label : public LabelBase
 #ifdef DEBUG
         // The assertion below doesn't hold if an error occurred.
         JitContext* context = MaybeGetJitContext();
-        bool hadError = OOM_counter >= OOM_maxAllocations ||
+        bool hadError = js::oom::HadSimulatedOOM() ||
                         (context && context->runtime->hadOutOfMemory());
         MOZ_ASSERT_IF(!hadError, !used());
 #endif
