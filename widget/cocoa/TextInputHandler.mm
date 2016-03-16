@@ -1014,12 +1014,23 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     } else {
       nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
                                          aKeyEvent.mKeyValue);
+      // If the key value is empty, the event may be a dead key event.
+      // If TranslateToChar() returns non-zero value, that means that
+      // the key may input a character with different dead key state.
+      if (aKeyEvent.mKeyValue.IsEmpty()) {
+        NSUInteger cocoaState = [aNativeKeyEvent modifierFlags];
+        UInt32 carbonState = nsCocoaUtils::ConvertToCarbonModifier(cocoaState);
+        if (TranslateToChar(nativeKeyCode, carbonState, kbType)) {
+          aKeyEvent.mKeyNameIndex = KEY_NAME_INDEX_Dead;
+        }
+      }
     }
 
     // Last resort.  If .key value becomes empty string, we should use
     // charactersIgnoringModifiers, if it's available.
-    if (aKeyEvent.mKeyValue.IsEmpty() ||
-        IsControlChar(aKeyEvent.mKeyValue[0])) {
+    if (aKeyEvent.mKeyNameIndex == KEY_NAME_INDEX_USE_STRING &&
+        (aKeyEvent.mKeyValue.IsEmpty() ||
+         IsControlChar(aKeyEvent.mKeyValue[0]))) {
       nsCocoaUtils::GetStringForNSString(
         [aNativeKeyEvent charactersIgnoringModifiers], aKeyEvent.mKeyValue);
       // But don't expose it if it's a control character.
