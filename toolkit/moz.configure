@@ -145,3 +145,15 @@ def fc_freetype(value, toolkit):
     if value or (toolkit in ('gtk2', 'gtk3', 'qt') and
                  value.origin == 'default'):
         add_old_configure_assignment('USE_FC_FREETYPE', '1')
+
+
+# Apple platform decoder support
+# ==============================================================
+@depends(toolkit)
+def applemedia(toolkit):
+    if toolkit in ('cocoa', 'uikit'):
+        set_config('MOZ_APPLEMEDIA', '1')
+        set_define('MOZ_APPLEMEDIA', '1')
+        add_old_configure_assignment('MOZ_APPLEMEDIA', '1')
+        return True
+    return False
