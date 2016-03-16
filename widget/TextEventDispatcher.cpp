@@ -25,7 +25,7 @@ bool TextEventDispatcher::sDispatchKeyEventsDuringComposition = false;
 TextEventDispatcher::TextEventDispatcher(nsIWidget* aWidget)
   : mWidget(aWidget)
   , mDispatchingEvent(0)
-  , mForTests(false)
+  , mInputTransactionType(eNoInputTransaction)
   , mIsComposing(false)
 {
   MOZ_RELEASE_ASSERT(mWidget, "aWidget must not be nullptr");
@@ -44,27 +44,34 @@ nsresult
 TextEventDispatcher::BeginInputTransaction(
                        TextEventDispatcherListener* aListener)
 {
-  return BeginInputTransactionInternal(aListener, false);
+  return BeginInputTransactionInternal(aListener, eOtherInputTransaction);
 }
 
 nsresult
-TextEventDispatcher::BeginInputTransactionForTests(
+TextEventDispatcher::BeginTestInputTransaction(
                        TextEventDispatcherListener* aListener)
 {
-  return BeginInputTransactionInternal(aListener, true);
+  return BeginInputTransactionInternal(aListener, eTestInputTransaction);
+}
+
+nsresult
+TextEventDispatcher::BeginNativeInputTransaction(
+                       TextEventDispatcherListener* aListener)
+{
+  return BeginInputTransactionInternal(aListener, eNativeInputTransaction);
 }
 
 nsresult
 TextEventDispatcher::BeginInputTransactionInternal(
                        TextEventDispatcherListener* aListener,
-                       bool aForTests)
+                       InputTransactionType aType)
 {
   if (NS_WARN_IF(!aListener)) {
     return NS_ERROR_INVALID_ARG;
   }
   nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
   if (listener) {
-    if (listener == aListener && mForTests == aForTests) {
+    if (listener == aListener && mInputTransactionType == aType) {
       return NS_OK;
     }
     // If this has composition or is dispatching an event, any other listener
@@ -76,7 +83,7 @@ TextEventDispatcher::BeginInputTransactionInternal(
     }
   }
   mListener = do_GetWeakReference(aListener);
-  mForTests = aForTests;
+  mInputTransactionType = aType;
   if (listener && listener != aListener) {
     listener->OnRemovedFrom(this);
   }
@@ -89,6 +96,8 @@ TextEventDispatcher::EndInputTransaction(TextEventDispatcherListener* aListener)
   if (NS_WARN_IF(IsComposing()) || NS_WARN_IF(IsDispatchingEvent())) {
     return;
   }
+
+  mInputTransactionType = eNoInputTransaction;
 
   nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
   if (NS_WARN_IF(!listener)) {
@@ -110,6 +119,7 @@ TextEventDispatcher::OnDestroyWidget()
   mPendingComposition.Clear();
   nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
   mListener = nullptr;
+  mInputTransactionType = eNoInputTransaction;
   if (listener) {
     listener->OnRemovedFrom(this);
   }
@@ -133,7 +143,8 @@ TextEventDispatcher::InitEvent(WidgetGUIEvent& aEvent) const
 {
   aEvent.time = PR_IntervalNow();
   aEvent.refPoint = LayoutDeviceIntPoint(0, 0);
-  aEvent.mFlags.mIsSynthesizedForTests = mForTests;
+  aEvent.mFlags.mIsSynthesizedForTests =
+    mInputTransactionType == eTestInputTransaction;
   if (aEvent.mClass != eCompositionEventClass) {
     return;
   }

@@ -56,8 +56,8 @@ public:
    *                              definition below.
    */
   nsresult BeginInputTransaction(TextEventDispatcherListener* aListener);
-  nsresult BeginInputTransactionForTests(
-             TextEventDispatcherListener* aListener);
+  nsresult BeginTestInputTransaction(TextEventDispatcherListener* aListener);
+  nsresult BeginNativeInputTransaction(TextEventDispatcherListener* aListener);
 
   /**
    * EndInputTransaction() should be called when the listener stops using
@@ -280,7 +280,20 @@ private:
   // While dispatching an event, this is incremented.
   uint16_t mDispatchingEvent;
 
-  bool mForTests;
+  enum InputTransactionType : uint8_t
+  {
+    // No input transaction has been started.
+    eNoInputTransaction,
+    // Input transaction for native IME or keyboard event handler.
+    eNativeInputTransaction,
+    // Input transaction for automated tests.
+    eTestInputTransaction,
+    // Input transaction for Others (must be IME on B2G).
+    eOtherInputTransaction
+  };
+
+  InputTransactionType mInputTransactionType;
+
   // See IsComposing().
   bool mIsComposing;
 
@@ -290,7 +303,7 @@ private:
 
   nsresult BeginInputTransactionInternal(
              TextEventDispatcherListener* aListener,
-             bool aForTests);
+             InputTransactionType aType);
 
   /**
    * InitEvent() initializes aEvent.  This must be called before dispatching
