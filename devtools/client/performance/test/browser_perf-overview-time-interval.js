@@ -1,13 +1,24 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests that the `setTimeInterval` and `getTimeInterval` functions
  * work properly.
  */
-function* spawnTest() {
-  let { panel } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
+
+const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
+const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+const { once } = require("devtools/client/performance/test/helpers/event-utils");
+
+add_task(function*() {
+  let { panel } = yield initPerformanceInNewTab({
+    url: SIMPLE_URL,
+    win: window
+  });
+
+  let { EVENTS, OverviewView } = panel.panelWin;
 
   try {
     OverviewView.setTimeInterval({ starTime: 0, endTime: 1 });
@@ -24,20 +35,13 @@ function* spawnTest() {
   }
 
   yield startRecording(panel);
-
-  yield Promise.all([
-    once(OverviewView, EVENTS.FRAMERATE_GRAPH_RENDERED),
-    once(OverviewView, EVENTS.MARKERS_GRAPH_RENDERED),
-    once(OverviewView, EVENTS.OVERVIEW_RENDERED)
-  ]);
-
   yield stopRecording(panel);
 
   // Get/set the time interval and wait for the event propagation.
 
-  let notified = once(OverviewView, EVENTS.OVERVIEW_RANGE_SELECTED);
+  let rangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED);
   OverviewView.setTimeInterval({ startTime: 10, endTime: 20 });
-  yield notified;
+  yield rangeSelected;
 
   let firstInterval = OverviewView.getTimeInterval();
   info("First interval start time: " + firstInterval.startTime);
@@ -53,9 +57,9 @@ function* spawnTest() {
     ok(false, "The selection event should not have propagated.");
   }
 
-  OverviewView.on(EVENTS.OVERVIEW_RANGE_SELECTED, fail);
+  OverviewView.on(EVENTS.UI_OVERVIEW_RANGE_SELECTED, fail);
   OverviewView.setTimeInterval({ startTime: 30, endTime: 40 }, { stopPropagation: true });
-  OverviewView.off(EVENTS.OVERVIEW_RANGE_SELECTED, fail);
+  OverviewView.off(EVENTS.UI_OVERVIEW_RANGE_SELECTED, fail);
 
   let secondInterval = OverviewView.getTimeInterval();
   info("Second interval start time: " + secondInterval.startTime);
@@ -65,6 +69,5 @@ function* spawnTest() {
   is(Math.round(secondInterval.endTime), 40,
     "The interval's end time was properly set again.");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardownToolboxAndRemoveTab(panel);
+});

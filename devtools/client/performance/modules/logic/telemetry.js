@@ -22,15 +22,15 @@ function PerformanceTelemetry (emitter) {
   this._emitter = emitter;
   this._telemetry = new Telemetry();
   this.onFlagEvent = this.onFlagEvent.bind(this);
-  this.onRecordingStopped = this.onRecordingStopped.bind(this);
+  this.onRecordingStateChange = this.onRecordingStateChange.bind(this);
   this.onViewSelected = this.onViewSelected.bind(this);
 
   for (let [event] of EVENT_MAP_FLAGS) {
     this._emitter.on(event, this.onFlagEvent);
   }
 
-  this._emitter.on(EVENTS.RECORDING_STOPPED, this.onRecordingStopped);
-  this._emitter.on(EVENTS.DETAILS_VIEW_SELECTED, this.onViewSelected);
+  this._emitter.on(EVENTS.RECORDING_STATE_CHANGE, this.onRecordingStateChange);
+  this._emitter.on(EVENTS.UI_DETAILS_VIEW_SELECTED, this.onViewSelected);
 
   if (DevToolsUtils.testing) {
     this.recordLogs();
@@ -46,8 +46,8 @@ PerformanceTelemetry.prototype.destroy = function () {
   for (let [event] of EVENT_MAP_FLAGS) {
     this._emitter.off(event, this.onFlagEvent);
   }
-  this._emitter.off(EVENTS.RECORDING_STOPPED, this.onRecordingStopped);
-  this._emitter.off(EVENTS.DETAILS_VIEW_SELECTED, this.onViewSelected);
+  this._emitter.off(EVENTS.RECORDING_STATE_CHANGE, this.onRecordingStateChange);
+  this._emitter.off(EVENTS.UI_DETAILS_VIEW_SELECTED, this.onViewSelected);
   this._emitter = null;
 };
 
@@ -55,7 +55,11 @@ PerformanceTelemetry.prototype.onFlagEvent = function (eventName, ...data) {
   this._telemetry.log(EVENT_MAP_FLAGS.get(eventName), true);
 };
 
-PerformanceTelemetry.prototype.onRecordingStopped = function (_, model) {
+PerformanceTelemetry.prototype.onRecordingStateChange = function (_, status, model) {
+  if (status != "recording-stopped") {
+    return;
+  }
+
   if (model.isConsole()) {
     this._telemetry.log("DEVTOOLS_PERFTOOLS_CONSOLE_RECORDING_COUNT", true);
   } else {
