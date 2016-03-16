@@ -64,6 +64,8 @@ var WaterfallView = Heritage.extend(DetailsSubview, {
   destroy: function () {
     DetailsSubview.destroy.call(this);
 
+    clearNamedTimeout("waterfall-resize");
+
     this._cache = null;
 
     this.details.off("resize", this._onResize);
@@ -86,7 +88,7 @@ var WaterfallView = Heritage.extend(DetailsSubview, {
     let rootMarkerNode = this._prepareWaterfallTree(markers);
 
     this._populateWaterfallTree(rootMarkerNode, { startTime, endTime });
-    this.emit(EVENTS.WATERFALL_RENDERED);
+    this.emit(EVENTS.UI_WATERFALL_RENDERED);
   },
 
   /**

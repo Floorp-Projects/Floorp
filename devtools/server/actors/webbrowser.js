@@ -361,15 +361,9 @@ BrowserTabList.prototype._getActorForBrowser = function(browser) {
 
 BrowserTabList.prototype.getTab = function({ outerWindowID, tabId }) {
   if (typeof(outerWindowID) == "number") {
-    // Tabs in parent process
     for (let browser of this._getBrowsers()) {
-      if (browser.contentWindow) {
-        let windowUtils = browser.contentWindow
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils);
-        if (windowUtils.outerWindowID === outerWindowID) {
-          return this._getActorForBrowser(browser);
-        }
+      if (browser.outerWindowID == outerWindowID) {
+        return this._getActorForBrowser(browser);
       }
     }
     return promise.reject({

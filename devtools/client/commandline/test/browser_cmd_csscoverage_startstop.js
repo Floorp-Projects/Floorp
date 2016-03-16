@@ -49,9 +49,13 @@ function* navigate(usage, options) {
   yield helpers.listenOnce(options.browser, "load", true);
   is(options.window.location.href, PAGE_3, "page 3 loaded");
 
+  let toolboxReady = gDevTools.once("toolbox-ready");
+
   yield usage.stop();
 
   ok(!usage.isRunning(), "csscoverage not is running");
+
+  yield toolboxReady;
 }
 
 /**

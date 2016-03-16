@@ -56,14 +56,14 @@ function* spawnTest() {
   ok(!isHidden, "opts view should be visible when selecting a frame with opts");
 
   let select = once(PerformanceController, EVENTS.RECORDING_SELECTED);
-  rendered = once(JsCallTreeView, EVENTS.JS_CALL_TREE_RENDERED);
+  rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
   RecordingsView.selectedIndex = 0;
   yield Promise.all([select, rendered]);
 
   isHidden = $("#jit-optimizations-view").classList.contains("hidden");
   ok(isHidden, "opts view is hidden when switching recordings");
 
-  rendered = once(JsCallTreeView, EVENTS.JS_CALL_TREE_RENDERED);
+  rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
   RecordingsView.selectedIndex = 1;
   yield rendered;
 
@@ -73,7 +73,7 @@ function* spawnTest() {
   isHidden = $("#jit-optimizations-view").classList.contains("hidden");
   ok(!isHidden, "opts view should be visible when selecting a frame with opts");
 
-  rendered = once(JsCallTreeView, EVENTS.JS_CALL_TREE_RENDERED);
+  rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
   Services.prefs.setBoolPref(JIT_PREF, false);
   yield rendered;
   ok(true, "call tree rerendered when JIT pref changes");
@@ -96,7 +96,7 @@ function* spawnTest() {
     recording._profile = profilerData;
 
     // Force a rerender
-    let rendered = once(JsCallTreeView, EVENTS.JS_CALL_TREE_RENDERED);
+    let rendered = once(JsCallTreeView, EVENTS.UI_JS_CALL_TREE_RENDERED);
     JsCallTreeView.render(OverviewView.getTimeInterval());
     yield rendered;
   }

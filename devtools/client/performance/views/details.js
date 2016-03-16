@@ -162,7 +162,7 @@ var DetailsView = {
     // recording's features.
     this._initialized = true;
 
-    this.emit(EVENTS.DETAILS_VIEW_SELECTED, viewName);
+    this.emit(EVENTS.UI_DETAILS_VIEW_SELECTED, viewName);
   }),
 
   /**
@@ -206,21 +206,6 @@ var DetailsView = {
 
     return false;
   },
-
-  /**
-   * Resolves when the provided view is selected. If already selected,
-   * the returned promise resolves immediately.
-   *
-   * @param object viewObject
-   * @return object
-   */
-  whenViewSelected: Task.async(function*(viewObject) {
-    if (this.isViewSelected(viewObject)) {
-      return promise.resolve();
-    }
-    yield this.once(EVENTS.DETAILS_VIEW_SELECTED);
-    return this.whenViewSelected(viewObject);
-  }),
 
   /**
    * Initializes a subview if it wasn't already set up, and makes sure
