@@ -17,7 +17,6 @@ function setup() {
 
 function cleanup() {
   NewTabMessages.uninit();
-  NewTabWebChannel.tearDownState();
   Preferences.set("browser.newtabpage.remote", false);
   Preferences.set("browser.newtabpage.remote.mode", "production");
 }

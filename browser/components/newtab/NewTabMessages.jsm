@@ -68,6 +68,9 @@ let NewTabMessages = {
   },
 
   init() {
+    NewTabPrefsProvider.prefs.init();
+    NewTabWebChannel.init();
+
     this._prefs.enabled = Preferences.get(PREF_ENABLED, false);
 
     if (this._prefs.enabled) {
@@ -91,5 +94,8 @@ let NewTabMessages = {
         NewTabPrefsProvider.prefs.off(pref, this.handlePrefChange);
       }
     }
+
+    NewTabPrefsProvider.prefs.uninit();
+    NewTabWebChannel.uninit();
   }
 };
