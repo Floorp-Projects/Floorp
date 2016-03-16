@@ -63,8 +63,12 @@ function run_test() {
   // Forbidden=1        Rej Rej Rej Rej Rej
   // Before2016=2       Acc Acc Rej Rej Rej
   //
-  // The pref setting of ImportedRoot (3) accepts everything because the
-  // testing root is an imported one. This will be addressed in bug 1240118.
+  // The pref setting of ImportedRoot (3) accepts usage of SHA-1 for
+  // certificates valid before 2016 issued by built-in roots or SHA-1 for
+  // certificates issued any time by non-built-in roots. By default, the testing
+  // certificates are all considered issued by a non-built-in root. However, we
+  // now have the ability to treat a given non-built-in root as built-in. We
+  // test both of these situations below.
 
   // SHA-1 allowed
   Services.prefs.setIntPref("security.pki.sha1_enforcement_level", 0);
@@ -90,9 +94,31 @@ function run_test() {
   checkIntermediate(certFromFile("int-post"), SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
   checkEndEntity(certFromFile("ee-post_int-post"), SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
 
-  // SHA-1 allowed only before 2016 or when issued by an imported root (which
-  // happens to be all of our test certificates).
+  // SHA-1 allowed only before 2016 or when issued by an imported root. First
+  // test with the test root considered a built-in (on debug only - this
+  // functionality is disabled on non-debug builds).
   Services.prefs.setIntPref("security.pki.sha1_enforcement_level", 3);
+  if (isDebugBuild) {
+    let root = certFromFile("ca");
+    Services.prefs.setCharPref("security.test.built_in_root_hash", root.sha256Fingerprint);
+    checkIntermediate(certFromFile("int-pre"), PRErrorCodeSuccess);
+    checkEndEntity(certFromFile("ee-pre_int-pre"), PRErrorCodeSuccess);
+    checkEndEntity(certFromFile("ee-post_int-pre"), SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
+    // This should fail but it doesn't, because the implementation makes no
+    // effort to enforce that when verifying a certificate for the capability
+    // of issuing TLS server auth certificates (i.e. the
+    // "certificateUsageSSLCA" usage), if SHA-1 was necessary, then the root of
+    // trust is an imported certificate. We don't really care, though, because
+    // the platform doesn't actually make trust decisions in this way and the
+    // ability to even verify a certificate for this purpose is intended to go
+    // away in bug 1257362.
+    // checkIntermediate(certFromFile("int-post"), SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
+    checkEndEntity(certFromFile("ee-post_int-post"), SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
+    Services.prefs.clearUserPref("security.test.built_in_root_hash");
+  }
+
+  // SHA-1 still allowed only before 2016 or when issued by an imported root.
+  // Now test with the test root considered a non-built-in.
   checkIntermediate(certFromFile("int-pre"), PRErrorCodeSuccess);
   checkEndEntity(certFromFile("ee-pre_int-pre"), PRErrorCodeSuccess);
   checkEndEntity(certFromFile("ee-post_int-pre"), PRErrorCodeSuccess);

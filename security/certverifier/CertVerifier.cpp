@@ -82,8 +82,18 @@ IsCertBuiltInRoot(CERTCertificate* cert, bool& result)
   if (!component) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
+  nsresult rv;
+#ifdef DEBUG
+  rv = component->IsCertTestBuiltInRoot(cert, result);
+  if (NS_FAILED(rv)) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+  if (result) {
+    return Success;
+  }
+#endif // DEBUG
   nsAutoString modName;
-  nsresult rv = component->GetPIPNSSBundleString("RootCertModuleName", modName);
+  rv = component->GetPIPNSSBundleString("RootCertModuleName", modName);
   if (NS_FAILED(rv)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
