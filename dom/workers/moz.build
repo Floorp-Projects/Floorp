@@ -6,6 +6,7 @@
 
 # Public stuff.
 EXPORTS.mozilla.dom += [
+    'FileReaderSync.h',
     'ServiceWorkerCommon.h',
     'ServiceWorkerContainer.h',
     'ServiceWorkerEvents.h',
@@ -29,7 +30,6 @@ EXPORTS.mozilla.dom.workers += [
 EXPORTS.mozilla.dom.workers.bindings += [
     'DataStore.h',
     'DataStoreCursor.h',
-    'FileReaderSync.h',
     'Navigator.h',
     'Performance.h',
     'ServiceWorker.h',
