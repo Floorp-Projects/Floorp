@@ -319,6 +319,9 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
   }
   if (message == eCompositionCommit) {
     compositionCommitEvent.mData = *aCommitString;
+    // Don't send CRLF, replace it with LF here.
+    compositionCommitEvent.mData.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                                                  NS_LITERAL_STRING("\n"));
   }
   rv = DispatchEvent(widget, compositionCommitEvent, aStatus);
   if (NS_WARN_IF(NS_FAILED(rv))) {
