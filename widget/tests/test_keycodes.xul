@@ -1162,7 +1162,7 @@ function* runKeyEventTests()
                    modifiers:{}, chars:"7", unmodifiedChars:"7"},
                   nsIDOMKeyEvent.DOM_VK_7, "7", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_7,
-                   modifiers:{shiftKey:1}, chars:"\u0026;", unmodifiedChars:"\u0026;"},
+                   modifiers:{shiftKey:1}, chars:"\u0026", unmodifiedChars:"\u0026"},
                   nsIDOMKeyEvent.DOM_VK_7, "\u0026", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:MAC_VK_ANSI_7,
                    modifiers:{ctrlKey:1}, chars:"7", unmodifiedChars:"7"},
