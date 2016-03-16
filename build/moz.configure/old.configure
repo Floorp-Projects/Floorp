@@ -298,7 +298,6 @@ def old_configure_options(*options):
     '--enable-websms-backend',
     '--enable-webspeech',
     '--enable-webspeechtestbackend',
-    '--enable-wmf',
     '--enable-xul',
     '--enable-zipwriter',
     '--no-create',

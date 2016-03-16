@@ -3066,7 +3066,6 @@ MOZ_TREMOR=
 MOZ_SAMPLE_TYPE_FLOAT32=
 MOZ_SAMPLE_TYPE_S16=
 MOZ_DIRECTSHOW=
-MOZ_WMF=
 if test -n "$MOZ_FMP4"; then
   MOZ_FMP4=1
 else
@@ -4351,25 +4350,6 @@ MOZ_ARG_DISABLE_BOOL(directshow,
 
 if test -n "$MOZ_DIRECTSHOW"; then
     AC_DEFINE(MOZ_DIRECTSHOW)
-fi;
-
-dnl ========================================================
-dnl = Windows Media Foundation support
-dnl ========================================================
-if test "$OS_ARCH" = "WINNT"; then
-    dnl Enable Windows Media Foundation support by default.
-    dnl Note our minimum SDK version is Windows 7 SDK, so we are (currently)
-    dnl guaranteed to have a recent-enough SDK to build WMF.
-    MOZ_WMF=1
-fi
-
-MOZ_ARG_DISABLE_BOOL(wmf,
-[  --disable-wmf  Disable support for Windows Media Foundation],
-    MOZ_WMF=,
-    MOZ_WMF=1)
-
-if test -n "$MOZ_WMF"; then
-    AC_DEFINE(MOZ_WMF)
 fi;
 
 dnl ========================================================
@@ -8011,7 +7991,6 @@ AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 
 AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
-AC_SUBST(MOZ_WMF)
 AC_SUBST(MOZ_FFMPEG)
 AC_SUBST(MOZ_FFVPX)
 AC_SUBST_LIST(FFVPX_ASFLAGS)

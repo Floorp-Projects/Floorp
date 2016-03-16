@@ -157,3 +157,26 @@ def applemedia(toolkit):
         add_old_configure_assignment('MOZ_APPLEMEDIA', '1')
         return True
     return False
+
+
+# Windows Media Foundation support
+# ==============================================================
+option('--disable-wmf',
+       help='Disable support for Windows Media Foundation')
+
+@depends('--disable-wmf', target)
+def wmf(value, target):
+    enabled = bool(value)
+    if value.origin == 'default':
+        # Enable Windows Media Foundation support by default.
+        # Note our minimum SDK version is Windows 7 SDK, so we are (currently)
+        # guaranteed to have a recent-enough SDK to build WMF.
+        enabled = target.os == 'WINNT'
+    if enabled and target.os != 'WINNT':
+        error('Cannot enable Windows Media Foundation support on %s'
+              % target.os)
+    if enabled:
+        set_config('MOZ_WMF', '1')
+        set_define('MOZ_WMF', '1')
+        add_old_configure_assignment('MOZ_WMF', '1')
+    return enabled
