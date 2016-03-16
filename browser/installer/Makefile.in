@@ -26,7 +26,7 @@ endif
 
 ifdef MOZ_WIDGET_GTK
 DEFINES += -DMOZ_GTK=1
-ifdef MOZ_ENABLE_GTK3
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk3)
 DEFINES += -DMOZ_GTK3=1
 endif
 endif
