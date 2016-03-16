@@ -69,7 +69,7 @@ OpenFile(const string& dir, const string& filename, const string& mode)
   return file.release();
 }
 
-} // unnamed namespace
+} // namespace
 
 bool
 InputEqualsByteString(Input input, const ByteString& bs)

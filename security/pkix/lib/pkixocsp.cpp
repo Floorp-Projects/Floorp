@@ -32,7 +32,7 @@ namespace {
 
 const size_t SHA1_DIGEST_LENGTH = 160 / 8;
 
-} // unnamed namespace
+} // namespace
 
 namespace mozilla { namespace pkix {
 

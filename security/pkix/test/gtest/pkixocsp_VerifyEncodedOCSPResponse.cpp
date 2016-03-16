@@ -48,7 +48,7 @@ public:
 namespace {
 char const* const rootName = "Test CA 1";
 void deleteCertID(CertID* certID) { delete certID; }
-} // unnamed namespace
+} // namespace
 
 class pkixocsp_VerifyEncodedResponse : public ::testing::Test
 {
