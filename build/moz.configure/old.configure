@@ -333,7 +333,6 @@ def old_configure_options(*options):
     '--with-float-abi',
     '--with-fpu',
     '--with-gl-provider',
-    '--with-gonk',
     '--with-gonk-toolchain-prefix',
     '--with-google-api-keyfile',
     '--with-google-oauth-api-keyfile',

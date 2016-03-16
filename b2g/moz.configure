@@ -4,4 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+option('--with-gonk', nargs=1, help='Path to the gonk base directory')
+
+@depends('--with-gonk')
+def gonkdir(value):
+    return value[0] if value else ''
+
+
 include('../toolkit/moz.configure')
