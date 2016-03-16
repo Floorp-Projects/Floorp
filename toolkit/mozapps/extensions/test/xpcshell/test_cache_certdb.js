@@ -60,7 +60,7 @@ function overrideCertDB() {
   let certDBFactory = {
     createInstance: function(outer, iid) {
       if (outer != null) {
-        throw Cr.NS_ERROR_NO_AGGREGATION;
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
       }
       return fakeCertDB.QueryInterface(iid);
     }
