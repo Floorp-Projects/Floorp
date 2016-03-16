@@ -93,6 +93,9 @@ function getUserSample() {
 
 function setCohort(cohortName) {
   Preferences.set(PREF_COHORT_NAME, cohortName);
+  try {
+    Services.appinfo.annotateCrashReport("E10SCohort", cohortName);
+  } catch (e) {}
 }
 
 function optedIn() {
