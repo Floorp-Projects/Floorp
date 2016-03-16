@@ -165,7 +165,6 @@ if test -n "$gonkdir" ; then
         MOZ_OMX_DECODER=1
         AC_SUBST(MOZ_OMX_DECODER)
         MOZ_RTSP=1
-        MOZ_FMP4=1
         MOZ_SECUREELEMENT=1
         ;;
     17|18)
@@ -187,7 +186,6 @@ if test -n "$gonkdir" ; then
         MOZ_OMX_ENCODER=1
         AC_SUBST(MOZ_OMX_ENCODER)
         AC_DEFINE(MOZ_OMX_ENCODER)
-        MOZ_FMP4=1
         MOZ_SECUREELEMENT=1
         ;;
     19)
@@ -206,7 +204,6 @@ if test -n "$gonkdir" ; then
         MOZ_SECUREELEMENT=1
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
-        MOZ_FMP4=1
         ;;
     21|22)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include -I$gonkdir/external/mdnsresponder/mDNSShared"
@@ -216,7 +213,6 @@ if test -n "$gonkdir" ; then
         AC_DEFINE(MOZ_OMX_ENCODER)
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
-        MOZ_FMP4=1
         MOZ_B2G_CAMERA=1
         if test -d "$gonkdir/system/bluetoothd"; then
             MOZ_B2G_BT=1
@@ -3066,11 +3062,6 @@ MOZ_TREMOR=
 MOZ_SAMPLE_TYPE_FLOAT32=
 MOZ_SAMPLE_TYPE_S16=
 MOZ_DIRECTSHOW=
-if test -n "$MOZ_FMP4"; then
-  MOZ_FMP4=1
-else
-  MOZ_FMP4=
-fi
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
 MOZ_SRTP=
@@ -4354,31 +4345,6 @@ fi;
 dnl ========================================================
 dnl = Built-in fragmented MP4 support.
 dnl ========================================================
-
-if test "$OS_TARGET" = Android -a -z "$gonkdir"; then
-    MOZ_FMP4=1
-fi
-
-if test -n "$MOZ_WMF" -o -n "$MOZ_FFMPEG" -o -n "$MOZ_APPLEMEDIA"; then
-    dnl Enable fragmented MP4 parser on Windows by default.
-    dnl We will also need to enable it on other platforms as we implement
-    dnl platform decoder support there too.
-    MOZ_FMP4=1
-fi
-
-MOZ_ARG_DISABLE_BOOL(fmp4,
-[  --disable-fmp4  Disable support for in built Fragmented MP4 parsing],
-    MOZ_FMP4=,
-    MOZ_FMP4=1)
-
-if test -n "$MOZ_FFMPEG" -a -z "$MOZ_FMP4"; then
-    AC_MSG_ERROR([Fragmented MP4 support must be enabled if using FFMPEG])
-fi
-
-if test -n "$MOZ_FMP4"; then
-    AC_DEFINE(MOZ_FMP4)
-    MOZ_EME=1
-fi;
 
 if test x"$MOZ_WIDGET_TOOLKIT" = x"gonk" -a -n "$MOZ_FMP4" -a -n "$ANDROID_VERSION"; then
     # we now know for sure that $ANDROID_VERSION is not an empty string!
@@ -7971,7 +7937,6 @@ AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_FFVPX)
 AC_SUBST_LIST(FFVPX_ASFLAGS)
-AC_SUBST(MOZ_FMP4)
 AC_SUBST(MOZ_EME)
 AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_ANDROID_OMX)
