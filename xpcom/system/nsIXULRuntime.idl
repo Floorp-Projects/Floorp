@@ -23,7 +23,7 @@ bool BrowserTabsRemoteAutostart();
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(a1b2e167-b748-42bf-ba85-996ec39062b9)]
+[scriptable, uuid(979fe481-363f-456f-aae6-d2f5ee1b2a71)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -90,6 +90,13 @@ interface nsIXULRuntime : nsISupports
    * from the main browser UI.
    */
   readonly attribute boolean browserTabsRemoteAutostart;
+
+  /**
+   * A numeric value indicating whether multiprocess might be blocked.
+   * Possible values can be found at nsAppRunner.cpp. A value of 0
+   * represents not blocking.
+   */
+   readonly attribute unsigned long multiprocessBlockPolicy;
 
   /**
    * If true, the accessibility service is running.
