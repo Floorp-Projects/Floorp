@@ -3413,18 +3413,9 @@ dnl ========================================================
 
 case "$MOZ_WIDGET_TOOLKIT" in
 
-gtk3)
-    USE_FC_FREETYPE=1
-    ;;
-
-gtk2)
-    USE_FC_FREETYPE=1
-    ;;
-
 qt)
     MOZ_ENABLE_QT=1
 
-    USE_FC_FREETYPE=1
     AC_DEFINE(QT_NO_KEYWORDS)
     ;;
 
