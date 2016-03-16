@@ -11,7 +11,6 @@
 #include "nsIIOService.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIServiceManager.h"
-#include "nsIAtomService.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsITreeBoxObject.h"

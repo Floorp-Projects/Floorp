@@ -541,11 +541,6 @@
                   .getService(Components.interfaces.nsIPrefBranch);
       </field>
 
-      <field name="mAtomService" readonly="true">
-        Components.classes['@mozilla.org/atom-service;1']
-                  .getService(Components.interfaces.nsIAtomService);
-      </field>
-
       <field name="_mStrBundle">null</field>
 
       <property name="mStrBundle">
