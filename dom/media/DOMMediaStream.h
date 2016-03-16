@@ -59,6 +59,10 @@ class ImageContainer;
 class OverlayImage;
 } // namespace layers
 
+namespace media {
+template<typename V, typename E> class Pledge;
+} // namespace media
+
 #define NS_DOMMEDIASTREAM_IID \
 { 0x8cb65468, 0x66c0, 0x444e, \
   { 0x89, 0x9f, 0x89, 0x1d, 0x9e, 0xd2, 0xbe, 0x7c } }
@@ -302,9 +306,10 @@ public:
 
     /**
      * Blocks aTrackId from going into mInputPort unless the port has been
-     * destroyed.
+     * destroyed. Returns a pledge that gets resolved when the MediaStreamGraph
+     * has applied the block in the playback stream.
      */
-    void BlockTrackId(TrackID aTrackId);
+    already_AddRefed<media::Pledge<bool, nsresult>> BlockTrackId(TrackID aTrackId);
 
   private:
     RefPtr<MediaInputPort> mInputPort;
@@ -605,6 +610,19 @@ protected:
   // XXX Bug 1124630. Remove with CameraPreviewMediaStream.
   void CreateAndAddPlaybackStreamListener(MediaStream*);
 
+  /**
+   * Block a track in our playback stream. Calls NotifyPlaybackTrackBlocked()
+   * after the MediaStreamGraph has applied the block and the track is no longer
+   * live.
+   */
+  void BlockPlaybackTrack(TrackPort* aTrack);
+
+  /**
+   * Called on main thread after MediaStreamGraph has applied a track block in
+   * our playback stream.
+   */
+  void NotifyPlaybackTrackBlocked();
+
   // Recomputes the current principal of this stream based on the set of tracks
   // it currently contains. PrincipalChangeObservers will be notified only if
   // the principal changes.
@@ -644,6 +662,10 @@ protected:
 
   // MediaStreamTracks corresponding to tracks in our mPlaybackStream.
   AutoTArray<RefPtr<TrackPort>, 2> mTracks;
+
+  // Number of MediaStreamTracks that have been removed on main thread but are
+  // waiting to be removed on MediaStreamGraph thread.
+  size_t mTracksPendingRemoval;
 
   // The interface through which we can query the stream producer for
   // track sources.

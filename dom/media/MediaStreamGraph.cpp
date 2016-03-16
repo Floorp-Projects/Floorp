@@ -28,6 +28,7 @@
 #include "DOMMediaStream.h"
 #include "GeckoProfiler.h"
 #include "mozilla/unused.h"
+#include "mozilla/media/MediaUtils.h"
 #ifdef MOZ_WEBRTC
 #include "AudioOutputObserver.h"
 #endif
@@ -38,6 +39,7 @@
 using namespace mozilla::layers;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
+using namespace mozilla::media;
 
 namespace mozilla {
 
@@ -3052,17 +3054,22 @@ MediaInputPort::BlockTrackIdImpl(TrackID aTrackId)
   mBlockedTracks.AppendElement(aTrackId);
 }
 
-void
+already_AddRefed<Pledge<bool>>
 MediaInputPort::BlockTrackId(TrackID aTrackId)
 {
   class Message : public ControlMessage {
   public:
-    explicit Message(MediaInputPort* aPort, TrackID aTrackId)
+    explicit Message(MediaInputPort* aPort,
+                     TrackID aTrackId,
+                     already_AddRefed<nsIRunnable> aRunnable)
       : ControlMessage(aPort->GetDestination()),
-        mPort(aPort), mTrackId(aTrackId) {}
+        mPort(aPort), mTrackId(aTrackId), mRunnable(aRunnable) {}
     void Run() override
     {
       mPort->BlockTrackIdImpl(mTrackId);
+      if (mRunnable) {
+        mStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(mRunnable.forget());
+      }
     }
     void RunDuringShutdown() override
     {
@@ -3070,11 +3077,20 @@ MediaInputPort::BlockTrackId(TrackID aTrackId)
     }
     RefPtr<MediaInputPort> mPort;
     TrackID mTrackId;
+    nsCOMPtr<nsIRunnable> mRunnable;
   };
 
   MOZ_ASSERT(IsTrackIDExplicit(aTrackId),
              "Only explicit TrackID is allowed");
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackId));
+
+  RefPtr<Pledge<bool>> pledge = new Pledge<bool>();
+  nsCOMPtr<nsIRunnable> runnable = NewRunnableFrom([pledge]() {
+    MOZ_ASSERT(NS_IsMainThread());
+    pledge->Resolve(true);
+    return NS_OK;
+  });
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackId, runnable.forget()));
+  return pledge.forget();
 }
 
 already_AddRefed<MediaInputPort>
