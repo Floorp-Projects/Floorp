@@ -426,23 +426,37 @@ RootList::init()
 }
 
 bool
-RootList::init(ZoneSet& debuggees)
+RootList::init(CompartmentSet& debuggees)
 {
     EdgeVector allRootEdges;
     EdgeVectorTracer tracer(rt, &allRootEdges, wantNames);
 
+    ZoneSet debuggeeZones;
+    if (!debuggeeZones.init())
+        return false;
+    for (auto range = debuggees.all(); !range.empty(); range.popFront()) {
+        if (!debuggeeZones.put(range.front()->zone()))
+            return false;
+    }
+
     js::TraceRuntime(&tracer);
     if (!tracer.okay)
         return false;
-    JS_TraceIncomingCCWs(&tracer, debuggees);
+    TraceIncomingCCWs(&tracer, debuggees);
     if (!tracer.okay)
         return false;
 
     for (EdgeVector::Range r = allRootEdges.all(); !r.empty(); r.popFront()) {
         Edge& edge = r.front();
-        Zone* zone = edge.referent.zone();
-        if (zone && !debuggees.has(zone))
+
+        JSCompartment* compartment = edge.referent.compartment();
+        if (compartment && !debuggees.has(compartment))
             continue;
+
+        Zone* zone = edge.referent.zone();
+        if (zone && !debuggeeZones.has(zone))
+            continue;
+
         if (!edges.append(mozilla::Move(edge)))
             return false;
     }
@@ -457,16 +471,16 @@ RootList::init(HandleObject debuggees)
     MOZ_ASSERT(debuggees && JS::dbg::IsDebugger(*debuggees));
     js::Debugger* dbg = js::Debugger::fromJSObject(debuggees.get());
 
-    ZoneSet debuggeeZones;
-    if (!debuggeeZones.init())
+    CompartmentSet debuggeeCompartments;
+    if (!debuggeeCompartments.init())
         return false;
 
     for (js::WeakGlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty(); r.popFront()) {
-        if (!debuggeeZones.put(r.front()->zone()))
+        if (!debuggeeCompartments.put(r.front()->compartment()))
             return false;
     }
 
-    if (!init(debuggeeZones))
+    if (!init(debuggeeCompartments))
         return false;
 
     // Ensure that each of our debuggee globals are in the root list.

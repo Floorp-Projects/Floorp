@@ -966,9 +966,10 @@ class MOZ_STACK_CLASS RootList {
 
     // Find all GC roots.
     bool init();
-    // Find only GC roots in the provided set of |Zone|s.
-    bool init(ZoneSet& debuggees);
-    // Find only GC roots in the given Debugger object's set of debuggee zones.
+    // Find only GC roots in the provided set of |JSCompartment|s.
+    bool init(CompartmentSet& debuggees);
+    // Find only GC roots in the given Debugger object's set of debuggee
+    // compartments.
     bool init(HandleObject debuggees);
 
     // Returns true if the RootList has been initialized successfully, false

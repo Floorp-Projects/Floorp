@@ -4916,6 +4916,8 @@ private:
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
     mCachedStatements;
   RefPtr<UpdateRefcountFunction> mUpdateRefcountFunction;
+  RefPtr<QuotaObject> mQuotaObject;
+  RefPtr<QuotaObject> mJournalQuotaObject;
   bool mInReadTransaction;
   bool mInWriteTransaction;
 
@@ -4992,6 +4994,12 @@ public:
   void
   Close();
 
+  nsresult
+  DisableQuotaChecks();
+
+  void
+  EnableQuotaChecks();
+
 private:
   DatabaseConnection(mozIStorageConnection* aStorageConnection,
                      FileManager* aFileManager);
@@ -5013,6 +5021,9 @@ private:
                             uint32_t aFreelistCount,
                             bool aNeedsCheckpoint,
                             bool* aFreedSomePages);
+
+  nsresult
+  GetFileSize(const nsAString& aPath, int64_t* aResult);
 };
 
 class MOZ_STACK_CLASS DatabaseConnection::AutoSavepoint final
@@ -10467,6 +10478,106 @@ DatabaseConnection::Close()
   mFileManager = nullptr;
 }
 
+nsresult
+DatabaseConnection::DisableQuotaChecks()
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(mStorageConnection);
+
+  if (!mQuotaObject) {
+    MOZ_ASSERT(!mJournalQuotaObject);
+
+    nsresult rv = mStorageConnection->GetQuotaObjects(
+                                           getter_AddRefs(mQuotaObject),
+                                           getter_AddRefs(mJournalQuotaObject));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(mQuotaObject);
+    MOZ_ASSERT(mJournalQuotaObject);
+  }
+
+  mQuotaObject->DisableQuotaCheck();
+  mJournalQuotaObject->DisableQuotaCheck();
+
+  return NS_OK;
+}
+
+void
+DatabaseConnection::EnableQuotaChecks()
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(mQuotaObject);
+  MOZ_ASSERT(mJournalQuotaObject);
+
+  RefPtr<QuotaObject> quotaObject;
+  RefPtr<QuotaObject> journalQuotaObject;
+
+  mQuotaObject.swap(quotaObject);
+  mJournalQuotaObject.swap(journalQuotaObject);
+
+  quotaObject->EnableQuotaCheck();
+  journalQuotaObject->EnableQuotaCheck();
+
+  int64_t fileSize;
+  nsresult rv = GetFileSize(quotaObject->Path(), &fileSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  int64_t journalFileSize;
+  rv = GetFileSize(journalQuotaObject->Path(), &journalFileSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  DebugOnly<bool> result =
+    journalQuotaObject->MaybeUpdateSize(journalFileSize, /* aTruncate */ true);
+  MOZ_ASSERT(result);
+
+  result = quotaObject->MaybeUpdateSize(fileSize, /* aTruncate */ true);
+  MOZ_ASSERT(result);
+}
+
+nsresult
+DatabaseConnection::GetFileSize(const nsAString& aPath, int64_t* aResult)
+{
+  MOZ_ASSERT(!aPath.IsEmpty());
+  MOZ_ASSERT(aResult);
+
+  nsresult rv;
+  nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = file->InitWithPath(aPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  int64_t fileSize;
+
+  bool exists;
+  rv = file->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (exists) {
+    rv = file->GetFileSize(&fileSize);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    fileSize = 0;
+  }
+
+  *aResult = fileSize;
+  return NS_OK;
+}
+
 DatabaseConnection::
 CachedStatement::CachedStatement()
 #ifdef DEBUG
@@ -10561,6 +10672,7 @@ AutoSavepoint::~AutoSavepoint()
     MOZ_ASSERT(mDEBUGTransaction->GetMode() == IDBTransaction::READ_WRITE ||
                mDEBUGTransaction->GetMode() ==
                  IDBTransaction::READ_WRITE_FLUSH ||
+               mDEBUGTransaction->GetMode() == IDBTransaction::CLEANUP ||
                mDEBUGTransaction->GetMode() == IDBTransaction::VERSION_CHANGE);
 
     if (NS_FAILED(mConnection->RollbackSavepoint())) {
@@ -10576,6 +10688,7 @@ AutoSavepoint::Start(const TransactionBase* aTransaction)
   MOZ_ASSERT(aTransaction);
   MOZ_ASSERT(aTransaction->GetMode() == IDBTransaction::READ_WRITE ||
              aTransaction->GetMode() == IDBTransaction::READ_WRITE_FLUSH ||
+             aTransaction->GetMode() == IDBTransaction::CLEANUP ||
              aTransaction->GetMode() == IDBTransaction::VERSION_CHANGE);
 
   DatabaseConnection* connection = aTransaction->GetDatabase()->GetConnection();
@@ -10678,7 +10791,7 @@ UpdateRefcountFunction::DidCommit()
                  js::ProfileEntry::Category::STORAGE);
 
   for (auto iter = mFileInfoEntries.ConstIter(); !iter.Done(); iter.Next()) {
-    auto value = iter.Data();
+    FileInfoEntry* value = iter.Data();
 
     MOZ_ASSERT(value);
 
@@ -10760,9 +10873,94 @@ UpdateRefcountFunction::Reset()
   MOZ_ASSERT(!mSavepointEntriesIndex.Count());
   MOZ_ASSERT(!mInSavepoint);
 
+  class MOZ_STACK_CLASS CustomCleanupCallback final
+    : public FileInfo::CustomCleanupCallback
+  {
+    nsCOMPtr<nsIFile> mDirectory;
+    nsCOMPtr<nsIFile> mJournalDirectory;
+
+  public:
+    virtual nsresult
+    Cleanup(FileManager* aFileManager, int64_t aId)
+    {
+      if (!mDirectory) {
+        MOZ_ASSERT(!mJournalDirectory);
+
+        mDirectory = aFileManager->GetDirectory();
+        if (NS_WARN_IF(!mDirectory)) {
+          return NS_ERROR_FAILURE;
+        }
+
+        mJournalDirectory = aFileManager->GetJournalDirectory();
+        if (NS_WARN_IF(!mJournalDirectory)) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+
+      nsCOMPtr<nsIFile> file = aFileManager->GetFileForId(mDirectory, aId);
+      if (NS_WARN_IF(!file)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      nsresult rv;
+      int64_t fileSize;
+
+      if (aFileManager->EnforcingQuota()) {
+        rv = file->GetFileSize(&fileSize);
+        if (NS_WARN_IF(!file)) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+
+      rv = file->Remove(false);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      if (aFileManager->EnforcingQuota()) {
+        QuotaManager* quotaManager = QuotaManager::Get();
+        MOZ_ASSERT(quotaManager);
+
+        quotaManager->DecreaseUsageForOrigin(aFileManager->Type(),
+                                             aFileManager->Group(),
+                                             aFileManager->Origin(),
+                                             fileSize);
+      }
+
+      file = aFileManager->GetFileForId(mJournalDirectory, aId);
+      if (NS_WARN_IF(!file)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      rv = file->Remove(false);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      return NS_OK;
+    }
+  };
+
   mJournalsToCreateBeforeCommit.Clear();
   mJournalsToRemoveAfterCommit.Clear();
   mJournalsToRemoveAfterAbort.Clear();
+
+  // FileInfo implementation automatically removes unreferenced files, but it's
+  // done asynchronously and with a delay. We want to remove them (and decrease
+  // quota usage) before we fire the commit event.
+  for (auto iter = mFileInfoEntries.ConstIter(); !iter.Done(); iter.Next()) {
+    FileInfoEntry* value = iter.Data();
+
+    MOZ_ASSERT(value);
+
+    FileInfo* fileInfo = value->mFileInfo.forget().take();
+
+    MOZ_ASSERT(fileInfo);
+
+    CustomCleanupCallback customCleanupCallback;
+    fileInfo->Release(&customCleanupCallback);
+  }
+
   mFileInfoEntries.Clear();
 }
 
@@ -13694,7 +13892,8 @@ Database::AllocPBackgroundIDBTransactionParent(
 
   if (NS_WARN_IF(aMode != IDBTransaction::READ_ONLY &&
                  aMode != IDBTransaction::READ_WRITE &&
-                 aMode != IDBTransaction::READ_WRITE_FLUSH)) {
+                 aMode != IDBTransaction::READ_WRITE_FLUSH &&
+                 aMode != IDBTransaction::CLEANUP)) {
     ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
@@ -13702,7 +13901,8 @@ Database::AllocPBackgroundIDBTransactionParent(
   // If this is a readwrite transaction to a chrome database make sure the child
   // has write access.
   if (NS_WARN_IF((aMode == IDBTransaction::READ_WRITE ||
-                  aMode == IDBTransaction::READ_WRITE_FLUSH) &&
+                  aMode == IDBTransaction::READ_WRITE_FLUSH ||
+                  aMode == IDBTransaction::CLEANUP) &&
                  mPrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo &&
                  !mChromeWriteAccessAllowed)) {
     return nullptr;
@@ -13767,7 +13967,8 @@ Database::RecvPBackgroundIDBTransactionConstructor(
   MOZ_ASSERT(!aObjectStoreNames.IsEmpty());
   MOZ_ASSERT(aMode == IDBTransaction::READ_ONLY ||
              aMode == IDBTransaction::READ_WRITE ||
-             aMode == IDBTransaction::READ_WRITE_FLUSH);
+             aMode == IDBTransaction::READ_WRITE_FLUSH ||
+             aMode == IDBTransaction::CLEANUP);
   MOZ_ASSERT(!mClosed);
 
   if (IsInvalidated()) {
@@ -13926,6 +14127,13 @@ StartTransactionOp::DoDatabaseWork(DatabaseConnection* aConnection)
   aConnection->AssertIsOnConnectionThread();
 
   Transaction()->SetActiveOnConnectionThread();
+
+  if (Transaction()->GetMode() == IDBTransaction::CLEANUP) {
+    nsresult rv = aConnection->DisableQuotaChecks();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
 
   if (Transaction()->GetMode() != IDBTransaction::READ_ONLY) {
     nsresult rv = aConnection->BeginWriteTransaction();
@@ -14223,6 +14431,7 @@ TransactionBase::VerifyRequestParams(const RequestParams& aParams) const
     case RequestParams::TObjectStoreDeleteParams: {
       if (NS_WARN_IF(mMode != IDBTransaction::READ_WRITE &&
                      mMode != IDBTransaction::READ_WRITE_FLUSH &&
+                     mMode != IDBTransaction::CLEANUP &&
                      mMode != IDBTransaction::VERSION_CHANGE)) {
         ASSERT_UNLESS_FUZZING();
         return false;
@@ -14246,6 +14455,7 @@ TransactionBase::VerifyRequestParams(const RequestParams& aParams) const
     case RequestParams::TObjectStoreClearParams: {
       if (NS_WARN_IF(mMode != IDBTransaction::READ_WRITE &&
                      mMode != IDBTransaction::READ_WRITE_FLUSH &&
+                     mMode != IDBTransaction::CLEANUP &&
                      mMode != IDBTransaction::VERSION_CHANGE)) {
         ASSERT_UNLESS_FUZZING();
         return false;
@@ -22435,6 +22645,7 @@ CommitOp::WriteAutoIncrementCounts()
   mTransaction->AssertIsOnConnectionThread();
   MOZ_ASSERT(mTransaction->GetMode() == IDBTransaction::READ_WRITE ||
              mTransaction->GetMode() == IDBTransaction::READ_WRITE_FLUSH ||
+             mTransaction->GetMode() == IDBTransaction::CLEANUP ||
              mTransaction->GetMode() == IDBTransaction::VERSION_CHANGE);
 
   const nsTArray<RefPtr<FullObjectStoreMetadata>>& metadataArray =
@@ -22502,6 +22713,7 @@ CommitOp::CommitOrRollbackAutoIncrementCounts()
   mTransaction->AssertIsOnConnectionThread();
   MOZ_ASSERT(mTransaction->GetMode() == IDBTransaction::READ_WRITE ||
              mTransaction->GetMode() == IDBTransaction::READ_WRITE_FLUSH ||
+             mTransaction->GetMode() == IDBTransaction::CLEANUP ||
              mTransaction->GetMode() == IDBTransaction::VERSION_CHANGE);
 
   nsTArray<RefPtr<FullObjectStoreMetadata>>& metadataArray =
@@ -22633,6 +22845,12 @@ CommitOp::Run()
       CommitOrRollbackAutoIncrementCounts();
 
       connection->FinishWriteTransaction();
+
+      if (mTransaction->GetMode() == IDBTransaction::CLEANUP) {
+        connection->DoIdleProcessing(/* aNeedsCheckpoint */ true);
+
+        connection->EnableQuotaChecks();
+      }
     }
   }
 
@@ -24963,6 +25181,11 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
             }
 
             rv2 = diskFile->Remove(false);
+            if (NS_WARN_IF(NS_FAILED(rv2))) {
+              return rv;
+            }
+
+            rv2 = journalFile->Remove(false);
             if (NS_WARN_IF(NS_FAILED(rv2))) {
               return rv;
             }

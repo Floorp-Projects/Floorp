@@ -7,8 +7,8 @@ metadata:
 mapping:
   all:
     source_checksum:
-      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.source.checksums
+      artifact: {{ artifact_base_url }}/firefox-{{ version }}.source.checksums
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/source/firefox-{{ version }}.source.checksums
     source_checksum_asc:
-      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.source.checksums.asc
+      artifact: {{ artifact_base_url }}/firefox-{{ version }}.source.checksums.asc
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/source/firefox-{{ version }}.source.checksums.asc

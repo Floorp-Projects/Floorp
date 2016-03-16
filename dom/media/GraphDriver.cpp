@@ -9,7 +9,9 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "CubebUtils.h"
 
+#ifdef MOZ_WEBRTC
 #include "webrtc/MediaEngineWebRTC.h"
+#endif
 
 #ifdef XP_MACOSX
 #include <sys/sysctl.h>
@@ -210,7 +212,8 @@ public:
       }
     } else {
       MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
-      MOZ_ASSERT(mDriver->mGraphImpl->MessagesQueued(), "Don't start a graph without messages queued.");
+      MOZ_ASSERT(mDriver->mGraphImpl->MessagesQueued() ||
+                 mDriver->mGraphImpl->mForceShutDown, "Don't start a graph without messages queued.");
       mDriver->mGraphImpl->SwapMessageQueues();
     }
     mDriver->RunThread();
@@ -612,10 +615,18 @@ AudioCallbackDriver::Init()
   CubebUtils::AudioDeviceID input_id = nullptr, output_id = nullptr;
   // We have to translate the deviceID values to cubeb devid's since those can be
   // freed whenever enumerate is called.
-  if ((!mGraphImpl->mInputWanted ||
-       AudioInputCubeb::GetDeviceID(mGraphImpl->mInputDeviceID, input_id)) &&
-      (mGraphImpl->mOutputDeviceID == -1 || // pass nullptr for ID for default output
-       AudioInputCubeb::GetDeviceID(mGraphImpl->mOutputDeviceID, output_id)) &&
+  if ((!mGraphImpl->mInputWanted
+#ifdef MOZ_WEBRTC
+       || AudioInputCubeb::GetDeviceID(mGraphImpl->mInputDeviceID, input_id)
+#endif
+       ) &&
+      (mGraphImpl->mOutputDeviceID == -1 // pass nullptr for ID for default output
+#ifdef MOZ_WEBRTC
+       // XXX we should figure out how we would use a deviceID for output without webrtc.
+       // Currently we don't set this though, so it's ok
+       || AudioInputCubeb::GetDeviceID(mGraphImpl->mOutputDeviceID, output_id)
+#endif
+       ) &&
       // XXX Only pass input input if we have an input listener.  Always
       // set up output because it's easier, and it will just get silence.
       // XXX Add support for adding/removing an input listener later.
