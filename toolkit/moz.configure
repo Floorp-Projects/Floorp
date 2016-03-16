@@ -180,3 +180,20 @@ def wmf(value, target):
         set_define('MOZ_WMF', '1')
         add_old_configure_assignment('MOZ_WMF', '1')
     return enabled
+
+
+# FFmpeg H264/AAC Decoding Support
+# ==============================================================
+option('--disable-ffmpeg',
+       help='Disable FFmpeg for fragmented H264/AAC decoding')
+
+@depends('--disable-ffmpeg', target)
+def ffmpeg(value, target):
+    enabled = bool(value)
+    if value.origin == 'default':
+        enabled = target.os not in ('Android', 'WINNT')
+    if enabled:
+        set_define('MOZ_FFMPEG', '1')
+        set_config('MOZ_FFMPEG', '1')
+        add_old_configure_assignment('MOZ_FFMPEG', '1')
+    return enabled
