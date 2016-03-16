@@ -72,5 +72,11 @@ const key = (id, win = window) => {
     DevToolsUtils.testing = false;
     PrefUtils.rollbackPrefsToDefault();
     stopObservingPrefs();
+
+    // Forces GC, CC and shrinking GC to get rid of disconnected docshells
+    // and windows.
+    Cu.forceGC();
+    Cu.forceCC();
+    Cu.forceShrinkingGC();
   });
 })();
