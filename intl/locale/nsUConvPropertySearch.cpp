@@ -13,7 +13,7 @@ struct PropertyComparator
 {
   const nsCString& mKey;
   explicit PropertyComparator(const nsCString& aKey) : mKey(aKey) {}
-  int operator()(const char* (&aProperty)[3]) const {
+  int operator()(const char* const (&aProperty)[3]) const {
     return mKey.Compare(aProperty[0]);
   }
 };
@@ -22,7 +22,7 @@ struct PropertyComparator
 
 // static
 nsresult
-nsUConvPropertySearch::SearchPropertyValue(const char* aProperties[][3],
+nsUConvPropertySearch::SearchPropertyValue(const char* const aProperties[][3],
                                            int32_t aNumberOfProperties,
                                            const nsACString& aKey,
                                            nsACString& aValue)

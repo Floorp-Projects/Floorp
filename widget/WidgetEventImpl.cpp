@@ -404,14 +404,14 @@ WidgetWheelEvent::OverriddenDeltaY() const
  ******************************************************************************/
 
 #define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName) MOZ_UTF16(aDOMKeyName),
-const char16_t* WidgetKeyboardEvent::kKeyNames[] = {
+const char16_t* const WidgetKeyboardEvent::kKeyNames[] = {
 #include "mozilla/KeyNameList.h"
 };
 #undef NS_DEFINE_KEYNAME
 
 #define NS_DEFINE_PHYSICAL_KEY_CODE_NAME(aCPPName, aDOMCodeName) \
     MOZ_UTF16(aDOMCodeName),
-const char16_t* WidgetKeyboardEvent::kCodeNames[] = {
+const char16_t* const WidgetKeyboardEvent::kCodeNames[] = {
 #include "mozilla/PhysicalKeyCodeNameList.h"
 };
 #undef NS_DEFINE_PHYSICAL_KEY_CODE_NAME
@@ -424,7 +424,8 @@ WidgetKeyboardEvent::CodeNameIndexHashtable*
 bool
 WidgetKeyboardEvent::ShouldCauseKeypressEvents() const
 {
-  // Currently, we don't dispatch keypress events of modifier keys.
+  // Currently, we don't dispatch keypress events of modifier keys and
+  // dead keys.
   switch (mKeyNameIndex) {
     case KEY_NAME_INDEX_Alt:
     case KEY_NAME_INDEX_AltGraph:
@@ -441,6 +442,7 @@ WidgetKeyboardEvent::ShouldCauseKeypressEvents() const
     // case KEY_NAME_INDEX_Super:
     case KEY_NAME_INDEX_Symbol:
     case KEY_NAME_INDEX_SymbolLock:
+    case KEY_NAME_INDEX_Dead:
       return false;
     default:
       return true;
@@ -522,7 +524,7 @@ WidgetKeyboardEvent::GetCodeNameIndex(const nsAString& aCodeValue)
 WidgetKeyboardEvent::GetCommandStr(Command aCommand)
 {
 #define NS_DEFINE_COMMAND(aName, aCommandStr) , #aCommandStr
-  static const char* kCommands[] = {
+  static const char* const kCommands[] = {
     "" // CommandDoNothing
 #include "mozilla/CommandList.h"
   };

@@ -1925,6 +1925,84 @@ void TParseContext::parseGlobalLayoutQualifier(const TPublicType &typeQualifier)
     }
 }
 
+TIntermAggregate *TParseContext::addFunctionPrototypeDeclaration(const TFunction &function,
+                                                                 const TSourceLoc &location)
+{
+    // Note: symbolTableFunction could be the same as function if this is the first declaration.
+    // Either way the instance in the symbol table is used to track whether the function is declared
+    // multiple times.
+    TFunction *symbolTableFunction =
+        static_cast<TFunction *>(symbolTable.find(function.getMangledName(), getShaderVersion()));
+    if (symbolTableFunction->hasPrototypeDeclaration() && mShaderVersion == 100)
+    {
+        // ESSL 1.00.17 section 4.2.7.
+        // Doesn't apply to ESSL 3.00.4: see section 4.2.3.
+        error(location, "duplicate function prototype declarations are not allowed", "function");
+        recover();
+    }
+    symbolTableFunction->setHasPrototypeDeclaration();
+
+    TIntermAggregate *prototype = new TIntermAggregate;
+    prototype->setType(function.getReturnType());
+    prototype->setName(function.getMangledName());
+    prototype->setFunctionId(function.getUniqueId());
+
+    for (size_t i = 0; i < function.getParamCount(); i++)
+    {
+        const TConstParameter &param = function.getParam(i);
+        if (param.name != 0)
+        {
+            TVariable variable(param.name, *param.type);
+
+            TIntermSymbol *paramSymbol = intermediate.addSymbol(
+                variable.getUniqueId(), variable.getName(), variable.getType(), location);
+            prototype = intermediate.growAggregate(prototype, paramSymbol, location);
+        }
+        else
+        {
+            TIntermSymbol *paramSymbol = intermediate.addSymbol(0, "", *param.type, location);
+            prototype                  = intermediate.growAggregate(prototype, paramSymbol, location);
+        }
+    }
+
+    prototype->setOp(EOpPrototype);
+
+    symbolTable.pop();
+
+    if (!symbolTable.atGlobalLevel())
+    {
+        // ESSL 3.00.4 section 4.2.4.
+        error(location, "local function prototype declarations are not allowed", "function");
+        recover();
+    }
+
+    return prototype;
+}
+
+TIntermAggregate *TParseContext::addFunctionDefinition(const TFunction &function,
+                                                       TIntermAggregate *functionPrototype,
+                                                       TIntermAggregate *functionBody,
+                                                       const TSourceLoc &location)
+{
+    //?? Check that all paths return a value if return type != void ?
+    //   May be best done as post process phase on intermediate code
+    if (mCurrentFunctionType->getBasicType() != EbtVoid && !mFunctionReturnsValue)
+    {
+        error(location, "function does not return a value:", "", function.getName().c_str());
+        recover();
+    }
+
+    TIntermAggregate *aggregate =
+        intermediate.growAggregate(functionPrototype, functionBody, location);
+    intermediate.setAggregateOperator(aggregate, EOpFunction, location);
+    aggregate->setName(function.getMangledName().c_str());
+    aggregate->setType(function.getReturnType());
+    aggregate->setFunctionId(function.getUniqueId());
+
+    symbolTable.pop();
+    return aggregate;
+}
+
 void TParseContext::parseFunctionPrototype(const TSourceLoc &location,
                                            TFunction *function,
                                            TIntermAggregate **aggregateOut)
@@ -1978,8 +2056,8 @@ void TParseContext::parseFunctionPrototype(const TSourceLoc &location,
     //
     // Remember the return type for later checking for RETURN statements.
     //
-    setCurrentFunctionType(&(prevDec->getReturnType()));
-    setFunctionReturnsValue(false);
+    mCurrentFunctionType  = &(prevDec->getReturnType());
+    mFunctionReturnsValue = false;
 
     //
     // Insert parameters into the symbol table.
@@ -2030,12 +2108,12 @@ void TParseContext::parseFunctionPrototype(const TSourceLoc &location,
 TFunction *TParseContext::parseFunctionDeclarator(const TSourceLoc &location, TFunction *function)
 {
     //
-    // Multiple declarations of the same function are allowed.
+    // We don't know at this point whether this is a function definition or a prototype.
+    // The definition production code will check for redefinitions.
+    // In the case of ESSL 1.00 the prototype production code will also check for redeclarations.
     //
-    // If this is a definition, the definition production code will check for redefinitions
-    // (we don't know at this point if it's a definition or not).
-    //
-    // Redeclarations are allowed.  But, return types and parameter qualifiers must match.
+    // Return types and parameter qualifiers must match in all redeclarations, so those are checked
+    // here.
     //
     TFunction *prevDec =
         static_cast<TFunction *>(symbolTable.find(function->getMangledName(), getShaderVersion()));

@@ -26,8 +26,9 @@ class UnrollFlattenTest : public testing::Test
     void compile(const std::string &shaderString)
     {
         std::string infoLog;
-        bool compilationSuccess = compileTestShader(GL_FRAGMENT_SHADER, SH_GLES2_SPEC, SH_HLSL11_OUTPUT,
-                                                    shaderString, SH_VARIABLES, &mTranslatedSource, &infoLog);
+        bool compilationSuccess =
+            compileTestShader(GL_FRAGMENT_SHADER, SH_GLES2_SPEC, SH_HLSL_4_1_OUTPUT, shaderString,
+                              SH_VARIABLES, &mTranslatedSource, &infoLog);
         if (!compilationSuccess)
         {
             FAIL() << "Shader compilation failed " << infoLog;

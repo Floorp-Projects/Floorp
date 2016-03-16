@@ -571,7 +571,7 @@ class TreeMetadataEmitter(LoggingMixin):
                         defines = lib.defines.get_defines()
                     yield GeneratedFile(context, script,
                         'generate_symbols_file', lib.symbols_file,
-                        [symbols_file.full_path], defines)
+                        [symbols_file], defines)
             if static_lib:
                 lib = StaticLibrary(context, libname, **static_args)
                 self._libs[libname].append(lib)
@@ -989,7 +989,7 @@ class TreeMetadataEmitter(LoggingMixin):
                                   'action', 'process_define_files.py')
             yield GeneratedFile(context, script, 'process_define_file',
                                 unicode(path),
-                                [mozpath.join(context.srcdir, path + '.in')])
+                                [Path(context, path + '.in')])
 
         generated_files = context.get('GENERATED_FILES')
         if not generated_files:
@@ -1024,7 +1024,7 @@ class TreeMetadataEmitter(LoggingMixin):
                         raise SandboxValidationError(
                             'Input for generating %s does not exist: %s'
                             % (f, p.full_path), context)
-                    inputs.append(p.full_path)
+                    inputs.append(p)
             else:
                 script = None
                 method = None

@@ -200,6 +200,9 @@ struct COMPILER_EXPORT InterfaceBlock
     InterfaceBlock(const InterfaceBlock &other);
     InterfaceBlock &operator=(const InterfaceBlock &other);
 
+    // Fields from blocks with non-empty instance names are prefixed with the block name.
+    std::string fieldPrefix() const;
+
     std::string name;
     std::string mappedName;
     std::string instanceName;
@@ -210,6 +213,6 @@ struct COMPILER_EXPORT InterfaceBlock
     std::vector<InterfaceBlockField> fields;
 };
 
-}
+}  // namespace sh
 
 #endif // GLSLANG_SHADERVARS_H_

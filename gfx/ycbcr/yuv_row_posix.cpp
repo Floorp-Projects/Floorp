@@ -571,7 +571,7 @@ void PICConvertYUVToRGB32Row_SSE(const uint8* y_buf,
                                  const uint8* v_buf,
                                  uint8* rgb_buf,
                                  int width,
-                                 int16 *kCoefficientsRgbY);
+                                 const int16 *kCoefficientsRgbY);
 
   asm(
   ".text\n"
@@ -654,7 +654,7 @@ void PICScaleYUVToRGB32Row_SSE(const uint8* y_buf,
                                uint8* rgb_buf,
                                int width,
                                int source_dx,
-                               int16 *kCoefficientsRgbY);
+                               const int16 *kCoefficientsRgbY);
 
   asm(
   ".text\n"
@@ -752,7 +752,7 @@ void PICLinearScaleYUVToRGB32Row_SSE(const uint8* y_buf,
                                      uint8* rgb_buf,
                                      int width,
                                      int source_dx,
-                                     int16 *kCoefficientsRgbY);
+                                     const int16 *kCoefficientsRgbY);
 
   asm(
   ".text\n"

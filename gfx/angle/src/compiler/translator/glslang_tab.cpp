@@ -702,26 +702,26 @@ static const yytype_uint16 yyrline[] =
      440,   443,   446,   449,   455,   456,   459,   465,   466,   473,
      474,   481,   482,   489,   490,   496,   497,   503,   504,   510,
      511,   517,   518,   526,   527,   528,   529,   533,   534,   535,
-     539,   543,   547,   551,   558,   561,   567,   575,   583,   611,
-     617,   628,   632,   636,   640,   647,   653,   656,   663,   671,
-     692,   719,   729,   757,   762,   772,   777,   787,   790,   793,
-     796,   802,   809,   812,   816,   820,   825,   830,   837,   841,
-     845,   849,   854,   859,   863,   870,   880,   886,   889,   895,
-     901,   908,   917,   927,   935,   938,   945,   949,   953,   958,
-     966,   969,   973,   977,   986,   995,  1003,  1013,  1025,  1028,
-    1031,  1037,  1044,  1047,  1053,  1056,  1059,  1065,  1068,  1073,
-    1088,  1092,  1096,  1100,  1104,  1108,  1113,  1118,  1123,  1128,
-    1133,  1138,  1143,  1148,  1153,  1158,  1163,  1168,  1173,  1178,
-    1183,  1188,  1193,  1198,  1203,  1208,  1213,  1217,  1221,  1225,
-    1229,  1233,  1237,  1241,  1245,  1249,  1253,  1257,  1261,  1265,
-    1269,  1273,  1281,  1289,  1293,  1306,  1306,  1309,  1309,  1315,
-    1318,  1334,  1337,  1346,  1350,  1356,  1363,  1378,  1382,  1386,
-    1387,  1393,  1394,  1395,  1396,  1397,  1398,  1399,  1403,  1404,
-    1404,  1404,  1414,  1415,  1419,  1419,  1420,  1420,  1425,  1428,
-    1438,  1441,  1447,  1448,  1452,  1460,  1464,  1471,  1471,  1478,
-    1481,  1488,  1493,  1508,  1508,  1513,  1513,  1520,  1520,  1528,
-    1531,  1537,  1540,  1546,  1550,  1557,  1560,  1563,  1566,  1569,
-    1578,  1582,  1589,  1592,  1598,  1598
+     539,   543,   547,   551,   558,   561,   567,   575,   583,   586,
+     592,   603,   607,   611,   615,   622,   628,   631,   638,   646,
+     667,   694,   704,   732,   737,   747,   752,   762,   765,   768,
+     771,   777,   784,   787,   791,   795,   800,   805,   812,   816,
+     820,   824,   829,   834,   838,   845,   855,   861,   864,   870,
+     876,   883,   892,   902,   910,   913,   920,   924,   928,   933,
+     941,   944,   948,   952,   961,   970,   978,   988,  1000,  1003,
+    1006,  1012,  1019,  1022,  1028,  1031,  1034,  1040,  1043,  1048,
+    1063,  1067,  1071,  1075,  1079,  1083,  1088,  1093,  1098,  1103,
+    1108,  1113,  1118,  1123,  1128,  1133,  1138,  1143,  1148,  1153,
+    1158,  1163,  1168,  1173,  1178,  1183,  1188,  1192,  1196,  1200,
+    1204,  1208,  1212,  1216,  1220,  1224,  1228,  1232,  1236,  1240,
+    1244,  1248,  1256,  1264,  1268,  1281,  1281,  1284,  1284,  1290,
+    1293,  1309,  1312,  1321,  1325,  1331,  1338,  1353,  1357,  1361,
+    1362,  1368,  1369,  1370,  1371,  1372,  1373,  1374,  1378,  1379,
+    1379,  1379,  1389,  1390,  1394,  1394,  1395,  1395,  1400,  1403,
+    1413,  1416,  1422,  1423,  1427,  1435,  1439,  1446,  1446,  1453,
+    1456,  1463,  1468,  1483,  1483,  1488,  1488,  1495,  1495,  1503,
+    1506,  1512,  1515,  1521,  1525,  1532,  1535,  1538,  1541,  1544,
+    1553,  1557,  1564,  1567,  1573,  1573
 };
 #endif
 
@@ -3048,32 +3048,7 @@ yyreduce:
   case 88:
 
     {
-        TFunction &function = *((yyvsp[-1].interm).function);
-        
-        TIntermAggregate *prototype = new TIntermAggregate;
-        prototype->setType(function.getReturnType());
-        prototype->setName(function.getMangledName());
-        prototype->setFunctionId(function.getUniqueId());
-        
-        for (size_t i = 0; i < function.getParamCount(); i++)
-        {
-            const TConstParameter &param = function.getParam(i);
-            if (param.name != 0)
-            {
-                TVariable variable(param.name, *param.type);
-                
-                prototype = context->intermediate.growAggregate(prototype, context->intermediate.addSymbol(variable.getUniqueId(), variable.getName(), variable.getType(), (yylsp[-1])), (yylsp[-1]));
-            }
-            else
-            {
-                prototype = context->intermediate.growAggregate(prototype, context->intermediate.addSymbol(0, "", *param.type, (yylsp[-1])), (yylsp[-1]));
-            }
-        }
-        
-        prototype->setOp(EOpPrototype);
-        (yyval.interm.intermNode) = prototype;
-
-        context->symbolTable.pop();
+        (yyval.interm.intermNode) = context->addFunctionPrototypeDeclaration(*((yyvsp[-1].interm).function), (yylsp[-1]));
     }
 
     break;
@@ -4488,7 +4463,7 @@ yyreduce:
 
   case 232:
 
-    { (yyval.interm.intermNode) = (yyvsp[0].interm.intermNode); }
+    { (yyval.interm.intermNode) = (yyvsp[0].interm.intermAggregate); }
 
     break;
 
@@ -4506,7 +4481,7 @@ yyreduce:
 
   case 235:
 
-    { context->symbolTable.pop(); (yyval.interm.intermNode) = (yyvsp[0].interm.intermNode); }
+    { context->symbolTable.pop(); (yyval.interm.intermNode) = (yyvsp[0].interm.intermAggregate); }
 
     break;
 
@@ -4525,7 +4500,7 @@ yyreduce:
   case 238:
 
     {
-        (yyval.interm.intermNode) = 0;
+        (yyval.interm.intermAggregate) = 0;
     }
 
     break;
@@ -4537,7 +4512,7 @@ yyreduce:
             (yyvsp[-1].interm.intermAggregate)->setOp(EOpSequence);
             (yyvsp[-1].interm.intermAggregate)->setLine((yyloc));
         }
-        (yyval.interm.intermNode) = (yyvsp[-1].interm.intermAggregate);
+        (yyval.interm.intermAggregate) = (yyvsp[-1].interm.intermAggregate);
     }
 
     break;
@@ -4842,20 +4817,7 @@ yyreduce:
   case 275:
 
     {
-        //?? Check that all paths return a value if return type != void ?
-        //   May be best done as post process phase on intermediate code
-        if (context->getCurrentFunctionType()->getBasicType() != EbtVoid && !context->getFunctionReturnsValue()) {
-            context->error((yylsp[-2]), "function does not return a value:", "", (yyvsp[-2].interm).function->getName().c_str());
-            context->recover();
-        }
-        
-        (yyval.interm.intermNode) = context->intermediate.growAggregate((yyvsp[-2].interm).intermAggregate, (yyvsp[0].interm.intermNode), (yyloc));
-        context->intermediate.setAggregateOperator((yyval.interm.intermNode), EOpFunction, (yylsp[-2]));
-        (yyval.interm.intermNode)->getAsAggregate()->setName((yyvsp[-2].interm).function->getMangledName().c_str());
-        (yyval.interm.intermNode)->getAsAggregate()->setType((yyvsp[-2].interm).function->getReturnType());
-        (yyval.interm.intermNode)->getAsAggregate()->setFunctionId((yyvsp[-2].interm).function->getUniqueId());
-
-        context->symbolTable.pop();
+        (yyval.interm.intermNode) = context->addFunctionDefinition(*((yyvsp[-2].interm).function), (yyvsp[-2].interm).intermAggregate, (yyvsp[0].interm.intermAggregate), (yylsp[-2]));
     }
 
     break;

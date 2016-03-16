@@ -67,6 +67,11 @@ class DisplayGLX : public DisplayGL
 
     std::string getVendorString() const override;
 
+    egl::Error waitClient() const override;
+    egl::Error waitNative(EGLint engine,
+                          egl::Surface *drawSurface,
+                          egl::Surface *readSurface) const override;
+
     // Synchronizes with the X server, if the display has been opened by ANGLE.
     // Calling this is required at the end of every functions that does buffered
     // X calls (not for glX calls) otherwise there might be race conditions
@@ -79,18 +84,23 @@ class DisplayGLX : public DisplayGL
     // acts as expected.
     void setSwapInterval(glx::Drawable drawable, SwapControlData *data);
 
-    bool isValidWindowVisualId(int visualId) const;
+    bool isValidWindowVisualId(unsigned long visualId) const;
 
   private:
     const FunctionsGL *getFunctionsGL() const override;
 
-    glx::Context initializeContext(glx::FBConfig config, const egl::AttributeMap &eglAttributes);
+    egl::Error initializeContext(glx::FBConfig config,
+                                 const egl::AttributeMap &eglAttributes,
+                                 glx::Context *context);
 
     void generateExtensions(egl::DisplayExtensions *outExtensions) const override;
     void generateCaps(egl::Caps *outCaps) const override;
 
     int getGLXFBConfigAttrib(glx::FBConfig config, int attrib) const;
-    glx::Context createContextAttribs(glx::FBConfig, const std::vector<int> &attribs) const;
+    egl::Error createContextAttribs(glx::FBConfig,
+                                    gl::Version version,
+                                    int profileMask,
+                                    glx::Context *context) const;
 
     FunctionsGL *mFunctionsGL;
 
@@ -107,6 +117,8 @@ class DisplayGLX : public DisplayGL
     bool mIsMesa;
     bool mHasMultisample;
     bool mHasARBCreateContext;
+    bool mHasARBCreateContextProfile;
+    bool mHasEXTCreateContextES2Profile;
 
     enum class SwapControl
     {
