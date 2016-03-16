@@ -18,6 +18,7 @@ DevToolsModules(
     'selection.js',
     'sidebar.js',
     'source-location.js',
+    'target-from-url.js',
     'target.js',
     'toolbox-highlighter-utils.js',
     'toolbox-hosts.js',
