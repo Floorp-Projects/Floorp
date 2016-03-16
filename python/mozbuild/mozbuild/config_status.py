@@ -63,8 +63,7 @@ following:
 
 
 def config_status(topobjdir='.', topsrcdir='.', defines=None,
-                  non_global_defines=None, substs=None, source=None,
-                  args=sys.argv[1:]):
+                  non_global_defines=None, substs=None, source=None):
     '''Main function, providing config.status functionality.
 
     Contrary to config.status, it doesn't use CONFIG_FILES or CONFIG_HEADERS
@@ -113,7 +112,7 @@ def config_status(topobjdir='.', topsrcdir='.', defines=None,
                         ' '.join(default_backends))
     parser.add_argument('--dry-run', action='store_true',
                         help='do everything except writing files out.')
-    options = parser.parse_args(args)
+    options = parser.parse_args()
 
     # Without -n, the current directory is meant to be the top object directory
     if not options.not_topobjdir:
