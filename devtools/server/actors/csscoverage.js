@@ -12,17 +12,13 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const events = require("sdk/event/core");
 const protocol = require("devtools/server/protocol");
 const { method, custom, RetVal, Arg } = protocol;
-const {gDevTools} = require("devtools/client/framework/devtools");
 
 loader.lazyGetter(this, "DOMUtils", () => {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils)
 });
-loader.lazyGetter(this, "stylesheets", () => {
-  return require("devtools/server/actors/stylesheets");
-});
-loader.lazyGetter(this, "CssLogic", () => {
-  return require("devtools/shared/inspector/css-logic").CssLogic;
-});
+loader.lazyRequireGetter(this, "stylesheets", "devtools/server/actors/stylesheets");
+loader.lazyRequireGetter(this, "CssLogic", "devtools/shared/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 
 const CSSRule = Ci.nsIDOMCSSRule;
 

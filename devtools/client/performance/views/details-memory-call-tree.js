@@ -48,7 +48,7 @@ var MemoryCallTreeView = Heritage.extend(DetailsSubview, {
     let allocations = recording.getAllocations();
     let threadNode = this._prepareCallTree(allocations, interval, options);
     this._populateCallTree(threadNode, options);
-    this.emit(EVENTS.MEMORY_CALL_TREE_RENDERED);
+    this.emit(EVENTS.UI_MEMORY_CALL_TREE_RENDERED);
   },
 
   /**

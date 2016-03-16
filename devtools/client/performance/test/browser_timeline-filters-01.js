@@ -37,7 +37,7 @@ function* spawnTest() {
   WaterfallView._cache.delete(markers);
 
   // Select everything
-  let waterfallRendered = WaterfallView.once(EVENTS.WATERFALL_RENDERED);
+  let waterfallRendered = WaterfallView.once(EVENTS.UI_WATERFALL_RENDERED);
   OverviewView.setTimeInterval({ startTime: 0, endTime: Number.MAX_VALUE });
 
   $("#filter-button").click();
