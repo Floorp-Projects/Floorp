@@ -25,9 +25,9 @@ addMessageListener("devtools:test:reload", function ({ data }) {
   content.location.reload(data.forceget);
 });
 
-addMessageListener("devtools:test:console", function ({ data }) {
-  let method = data.shift();
-  content.console[method].apply(content.console, data);
+addMessageListener("devtools:test:console", function ({ data: { method, args, id } }) {
+  content.console[method].apply(content.console, args)
+  sendAsyncMessage("devtools:test:console:response", { id });
 });
 
 /**

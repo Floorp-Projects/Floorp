@@ -144,7 +144,7 @@ var ToolbarView = {
       this._toggleExperimentalUI(value);
     }
 
-    this.emit(EVENTS.PREF_CHANGED, prefName, value);
+    this.emit(EVENTS.UI_PREF_CHANGED, prefName, value);
   },
 
   toString: () => "[object ToolbarView]"
