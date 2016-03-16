@@ -196,14 +196,14 @@ class ServoRefTestExecutor(ProcessTestExecutor):
         os.rmdir(self.tempdir)
         ProcessTestExecutor.teardown(self)
 
-    def screenshot(self, test):
+    def screenshot(self, test, viewport_size, dpi):
         full_url = self.test_url(test)
 
         with TempFilename(self.tempdir) as output_path:
             debug_args, command = browser_command(
                 self.binary,
                 [render_arg(self.browser.render_backend), "--hard-fail", "--exit",
-                 "-u", "Servo/wptrunner", "-Z", "disable-text-aa",
+                 "-u", "Servo/wptrunner", "-Z", "disable-text-aa,load-webfonts-synchronously",
                  "--output=%s" % output_path, full_url],
                 self.debug_info)
 
@@ -212,6 +212,12 @@ class ServoRefTestExecutor(ProcessTestExecutor):
 
             for pref in test.environment.get('prefs', {}):
                 command += ["--pref", pref]
+
+            if viewport_size:
+                command += ["--resolution", viewport_size]
+
+            if dpi:
+                command += ["--device-pixel-ratio", dpi]
 
             self.command = debug_args + command
 
