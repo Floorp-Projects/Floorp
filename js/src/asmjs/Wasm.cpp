@@ -107,6 +107,13 @@ class FunctionDecoder
     bool fail(const char* str) {
         return Fail(cx_, d_, str);
     }
+    bool checkI64Support() {
+#ifdef JS_CPU_X64
+        return true;
+#else
+        return fail("i64 NYI on this platform");
+#endif
+    }
 
     MOZ_WARN_UNUSED_RESULT bool pushBlock() {
         return blocks_.append(AnyType);
@@ -627,7 +634,7 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::I32Const:
         return DecodeConstI32(f, type);
       case Expr::I64Const:
-        return DecodeConstI64(f, type);
+        return f.checkI64Support() && DecodeConstI64(f, type);
       case Expr::F32Const:
         return DecodeConstF32(f, type);
       case Expr::F64Const:
@@ -705,7 +712,7 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::I64Shl:
       case Expr::I64ShrS:
       case Expr::I64ShrU:
-        return DecodeBinaryOperator(f, ValType::I64, type);
+        return f.checkI64Support() && DecodeBinaryOperator(f, ValType::I64, type);
       case Expr::I64Rotl:
       case Expr::I64Rotr:
         return f.fail("NYI: rotate");
@@ -748,7 +755,7 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::I64GtU:
       case Expr::I64GeS:
       case Expr::I64GeU:
-        return DecodeComparisonOperator(f, ValType::I64, type);
+        return f.checkI64Support() && DecodeComparisonOperator(f, ValType::I64, type);
       case Expr::F32Eq:
       case Expr::F32Ne:
       case Expr::F32Lt:
@@ -764,7 +771,8 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
       case Expr::F64Ge:
         return DecodeComparisonOperator(f, ValType::F64, type);
       case Expr::I32WrapI64:
-        return DecodeConversionOperator(f, ValType::I32, ValType::I64, type);
+        return f.checkI64Support() &&
+               DecodeConversionOperator(f, ValType::I32, ValType::I64, type);
       case Expr::I32TruncSF32:
       case Expr::I32TruncUF32:
         return DecodeConversionOperator(f, ValType::I32, ValType::F32, type);
@@ -775,13 +783,16 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
         return DecodeConversionOperator(f, ValType::I32, ValType::F64, type);
       case Expr::I64ExtendSI32:
       case Expr::I64ExtendUI32:
-        return DecodeConversionOperator(f, ValType::I64, ValType::I32, type);
+        return f.checkI64Support() &&
+               DecodeConversionOperator(f, ValType::I64, ValType::I32, type);
       case Expr::I64TruncSF32:
       case Expr::I64TruncUF32:
-        return DecodeConversionOperator(f, ValType::I64, ValType::F32, type);
+        return f.checkI64Support() &&
+               DecodeConversionOperator(f, ValType::I64, ValType::F32, type);
       case Expr::I64TruncSF64:
       case Expr::I64TruncUF64:
-        return DecodeConversionOperator(f, ValType::I64, ValType::F64, type);
+        return f.checkI64Support() &&
+               DecodeConversionOperator(f, ValType::I64, ValType::F64, type);
       case Expr::I64ReinterpretF64:
         return f.fail("NYI: i64");
       case Expr::F32ConvertSI32:
@@ -791,7 +802,8 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
         return f.fail("NYI: reinterpret");
       case Expr::F32ConvertSI64:
       case Expr::F32ConvertUI64:
-        return DecodeConversionOperator(f, ValType::F32, ValType::I64, type);
+        return f.checkI64Support() &&
+               DecodeConversionOperator(f, ValType::F32, ValType::I64, type);
       case Expr::F32DemoteF64:
         return DecodeConversionOperator(f, ValType::F32, ValType::F64, type);
       case Expr::F64ConvertSI32:
@@ -799,7 +811,8 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
         return DecodeConversionOperator(f, ValType::F64, ValType::I32, type);
       case Expr::F64ConvertSI64:
       case Expr::F64ConvertUI64:
-        return DecodeConversionOperator(f, ValType::F64, ValType::I64, type);
+        return f.checkI64Support() &&
+               DecodeConversionOperator(f, ValType::F64, ValType::I64, type);
       case Expr::F64ReinterpretI64:
         return f.fail("NYI: i64");
       case Expr::F64PromoteF32:
