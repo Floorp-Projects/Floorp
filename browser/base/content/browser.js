@@ -2376,25 +2376,36 @@ function URLBarSetURI(aURI) {
 }
 
 function losslessDecodeURI(aURI) {
-  if (aURI.schemeIs("moz-action"))
+  let scheme = aURI.scheme;
+  if (scheme == "moz-action")
     throw new Error("losslessDecodeURI should never get a moz-action URI");
 
   var value = aURI.spec;
 
+  let decodeASCIIOnly = !["https", "http", "file", "ftp"].includes(scheme);
   // Try to decode as UTF-8 if there's no encoding sequence that we would break.
-  if (!/%25(?:3B|2F|3F|3A|40|26|3D|2B|24|2C|23)/i.test(value))
-    try {
-      value = decodeURI(value)
-                // 1. decodeURI decodes %25 to %, which creates unintended
-                //    encoding sequences. Re-encode it, unless it's part of
-                //    a sequence that survived decodeURI, i.e. one for:
-                //    ';', '/', '?', ':', '@', '&', '=', '+', '$', ',', '#'
-                //    (RFC 3987 section 3.2)
-                // 2. Re-encode whitespace so that it doesn't get eaten away
-                //    by the location bar (bug 410726).
-                .replace(/%(?!3B|2F|3F|3A|40|26|3D|2B|24|2C|23)|[\r\n\t]/ig,
-                         encodeURIComponent);
-    } catch (e) {}
+  if (!/%25(?:3B|2F|3F|3A|40|26|3D|2B|24|2C|23)/i.test(value)) {
+    if (decodeASCIIOnly) {
+      // This only decodes ascii characters (hex) 20-7e, except 25 (%).
+      // This avoids both cases stipulated below (%-related issues, and \r, \n
+      // and \t, which would be %0d, %0a and %09, respectively) as well as any
+      // non-US-ascii characters.
+      value = value.replace(/%(2[0-4]|2[6-9a-f]|[3-6][0-9a-f]|7[0-9a-e])/g, decodeURI);
+    } else {
+      try {
+        value = decodeURI(value)
+                  // 1. decodeURI decodes %25 to %, which creates unintended
+                  //    encoding sequences. Re-encode it, unless it's part of
+                  //    a sequence that survived decodeURI, i.e. one for:
+                  //    ';', '/', '?', ':', '@', '&', '=', '+', '$', ',', '#'
+                  //    (RFC 3987 section 3.2)
+                  // 2. Re-encode whitespace so that it doesn't get eaten away
+                  //    by the location bar (bug 410726).
+                  .replace(/%(?!3B|2F|3F|3A|40|26|3D|2B|24|2C|23)|[\r\n\t]/ig,
+                           encodeURIComponent);
+      } catch (e) {}
+    }
+  }
 
   // Encode invisible characters (C0/C1 control characters, U+007F [DEL],
   // U+00A0 [no-break space], line and paragraph separator,
