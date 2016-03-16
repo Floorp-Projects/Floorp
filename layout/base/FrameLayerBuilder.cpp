@@ -3274,6 +3274,7 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
         containingPaintedLayerData->mReferenceFrame);
       containingPaintedLayerData->mMaybeHitRegion.Or(
         containingPaintedLayerData->mMaybeHitRegion, rect);
+      containingPaintedLayerData->mMaybeHitRegion.SimplifyOutward(8);
     }
     nsLayoutUtils::TransformToAncestorAndCombineRegions(
       data->mHitRegion.GetBounds(),
