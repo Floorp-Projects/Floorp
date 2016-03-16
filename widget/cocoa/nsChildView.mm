@@ -1651,43 +1651,6 @@ bool nsChildView::HasPendingInputEvent()
 
 #pragma mark -
 
-nsresult
-nsChildView::NotifyIMEInternal(const IMENotification& aIMENotification)
-{
-  switch (aIMENotification.mMessage) {
-    case REQUEST_TO_COMMIT_COMPOSITION:
-      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-      mTextInputHandler->CommitIMEComposition();
-      return NS_OK;
-    case REQUEST_TO_CANCEL_COMPOSITION:
-      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-      mTextInputHandler->CancelIMEComposition();
-      return NS_OK;
-    case NOTIFY_IME_OF_FOCUS:
-      if (mTextInputHandler->IsFocused()) {
-        if (mInputContext.IsPasswordEditor()) {
-          TextInputHandler::EnableSecureEventInput();
-        } else {
-          TextInputHandler::EnsureSecureEventInputDisabled();
-        }
-      }
-
-      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-      mTextInputHandler->OnFocusChangeInGecko(true);
-      return NS_OK;
-    case NOTIFY_IME_OF_BLUR:
-      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-      mTextInputHandler->OnFocusChangeInGecko(false);
-      return NS_OK;
-    case NOTIFY_IME_OF_SELECTION_CHANGE:
-      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-      mTextInputHandler->OnSelectionChange(aIMENotification);
-      return NS_OK;
-    default:
-      return NS_ERROR_NOT_IMPLEMENTED;
-  }
-}
-
 NS_IMETHODIMP
 nsChildView::StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
                             int32_t aPanelX, int32_t aPanelY,
@@ -1786,6 +1749,15 @@ nsChildView::GetInputContext()
       break;
   }
   return mInputContext;
+}
+
+NS_IMETHODIMP_(TextEventDispatcherListener*)
+nsChildView::GetNativeTextEventDispatcherListener()
+{
+  if (NS_WARN_IF(!mTextInputHandler)) {
+    return nullptr;
+  }
+  return mTextInputHandler;
 }
 
 NS_IMETHODIMP

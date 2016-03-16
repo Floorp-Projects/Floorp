@@ -2316,19 +2316,6 @@ void nsCocoaWindow::SetPopupWindowLevel()
   }
 }
 
-nsresult
-nsCocoaWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
-{
-  switch (aIMENotification.mMessage) {
-    case NOTIFY_IME_OF_FOCUS:
-      return NS_OK;
-    case NOTIFY_IME_OF_BLUR:
-      return NS_OK;
-    default:
-      return NS_ERROR_NOT_IMPLEMENTED;
-  }
-}
-
 NS_IMETHODIMP_(void)
 nsCocoaWindow::SetInputContext(const InputContext& aContext,
                                const InputContextAction& aAction)
