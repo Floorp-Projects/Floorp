@@ -92,6 +92,13 @@ interface nsIXULRuntime : nsISupports
   readonly attribute boolean browserTabsRemoteAutostart;
 
   /**
+   * A numeric value indicating whether multiprocess might be blocked.
+   * Possible values can be found at nsAppRunner.cpp. A value of 0
+   * represents not blocking.
+   */
+   readonly attribute unsigned long multiprocessBlockPolicy;
+
+  /**
    * If true, the accessibility service is running.
    */
   readonly attribute boolean accessibilityEnabled;
