@@ -7,7 +7,7 @@
  */
 
 const { PerformanceFront } = require("devtools/server/actors/performance");
-const { sendProfilerCommand, PMM_isProfilerActive, PMM_stopProfiler, PMM_loadFrameScripts } = require("devtools/shared/performance/process-communication");
+const { PMM_isProfilerActive, PMM_stopProfiler, PMM_loadFrameScripts } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 
 add_task(function*() {
   yield addTab(MAIN_DOMAIN + "doc_perf.html");

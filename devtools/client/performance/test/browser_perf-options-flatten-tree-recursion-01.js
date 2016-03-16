@@ -1,20 +1,31 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
- * Tests that the js flamegraphs get rerendered when toggling `flatten-tree-recursion`
+ * Tests that the js flamegraphs get rerendered when toggling `flatten-tree-recursion`.
  */
-function* spawnTest() {
-  let { panel } = yield initPerformance(SIMPLE_URL);
+
+const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
+const { UI_FLATTEN_RECURSION_PREF } = require("devtools/client/performance/test/helpers/prefs");
+const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+const { once } = require("devtools/client/performance/test/helpers/event-utils");
+
+add_task(function*() {
+  let { panel } = yield initPerformanceInNewTab({
+    url: SIMPLE_URL,
+    win: window
+  });
+
   let { EVENTS, PerformanceController, DetailsView, JsFlameGraphView, FlameGraphUtils } = panel.panelWin;
 
-  Services.prefs.setBoolPref(FLATTEN_PREF, true);
+  Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, true);
 
   yield startRecording(panel);
-  yield busyWait(100);
-
   yield stopRecording(panel);
-  let rendered = once(JsFlameGraphView, EVENTS.JS_FLAMEGRAPH_RENDERED);
+
+  let rendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
   yield DetailsView.selectView("js-flamegraph");
   yield rendered;
 
@@ -26,10 +37,9 @@ function* spawnTest() {
   ok(rendering1,
     "The rendering data was cached.");
 
-  rendered = once(JsFlameGraphView, EVENTS.JS_FLAMEGRAPH_RENDERED);
-  Services.prefs.setBoolPref(FLATTEN_PREF, false);
+  rendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
+  Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, false);
   yield rendered;
-
   ok(true, "JsFlameGraphView rerendered when toggling flatten-tree-recursion.");
 
   let thread2 = PerformanceController.getCurrentRecording().getProfile().threads[0];
@@ -40,10 +50,9 @@ function* spawnTest() {
   isnot(rendering1, rendering2,
     "The rendering data should be different because other options were used (1).");
 
-  rendered = once(JsFlameGraphView, EVENTS.JS_FLAMEGRAPH_RENDERED);
-  Services.prefs.setBoolPref(FLATTEN_PREF, true);
+  rendered = once(JsFlameGraphView, EVENTS.UI_JS_FLAMEGRAPH_RENDERED);
+  Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, true);
   yield rendered;
-
   ok(true, "JsFlameGraphView rerendered when toggling back flatten-tree-recursion.");
 
   let thread3 = PerformanceController.getCurrentRecording().getProfile().threads[0];
@@ -54,6 +63,5 @@ function* spawnTest() {
   isnot(rendering2, rendering3,
     "The rendering data should be different because other options were used (2).");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardownToolboxAndRemoveTab(panel);
+});

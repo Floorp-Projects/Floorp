@@ -1,72 +1,69 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-requestLongerTimeout(2);
+"use strict";
 
 /**
- * Tests that events are fired from OverviewView from selection manipulation.
+ * Tests that events are fired from selection manipulation.
  */
-function* spawnTest() {
-  let { panel } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
-  let params, _;
 
-  yield startRecording(panel);
+const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
+const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+const { once } = require("devtools/client/performance/test/helpers/event-utils");
+const { idleWait } = require("devtools/client/performance/test/helpers/wait-utils");
+const { dragStartCanvasGraph, dragStopCanvasGraph, clickCanvasGraph } = require("devtools/client/performance/test/helpers/input-utils");
 
-  yield Promise.all([
-    once(OverviewView, EVENTS.FRAMERATE_GRAPH_RENDERED),
-    once(OverviewView, EVENTS.MARKERS_GRAPH_RENDERED),
-    once(OverviewView, EVENTS.OVERVIEW_RENDERED)
-  ]);
-
-  yield stopRecording(panel);
-
-  let graph = OverviewView.graphs.get("timeline");
-  let MAX = graph.width;
-  let duration = PerformanceController.getCurrentRecording().getDuration();
-  let selection = null;
-
-  // Throw out events that select everything, as this will occur on the
-  // first click
-  OverviewView.on(EVENTS.OVERVIEW_RANGE_SELECTED, function handler (_, interval) {
-    if (interval.endTime !== duration) {
-      selection = interval;
-      OverviewView.off(handler);
-    }
+add_task(function*() {
+  let { panel } = yield initPerformanceInNewTab({
+    url: SIMPLE_URL,
+    win: window
   });
 
-  let results = onceSpread(OverviewView, EVENTS.OVERVIEW_RANGE_SELECTED);
-  // Select the first half of the graph
-  dragStart(graph, 0);
-  dragStop(graph, MAX / 2);
-  yield waitUntil(() => selection);
-  let { startTime, endTime } = selection;
+  let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
-  let mapStart = () => 0;
-  let mapEnd = () => duration;
-  let actual = graph.getMappedSelection({ mapStart, mapEnd });
-  is(actual.min, 0, "graph selection starts at 0");
-  is(actual.max, duration/2, `graph selection ends at ${duration/2}`);
+  yield startRecording(panel);
+  yield stopRecording(panel);
+
+  let duration = PerformanceController.getCurrentRecording().getDuration();
+  let graph = OverviewView.graphs.get("timeline");
+
+  // Select the first half of the graph.
+
+  let rangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED, { spreadArgs: true });
+  dragStartCanvasGraph(graph, { x: 0 });
+  let [_, { startTime, endTime }] = yield rangeSelected;
+  is(endTime, duration, "The selected range is the entire graph, for now.");
+
+  rangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED, { spreadArgs: true });
+  dragStopCanvasGraph(graph, { x: graph.width / 2 });
+  [_, { startTime, endTime }] = yield rangeSelected;
+  is(endTime, duration / 2, "The selected range is half of the graph.");
 
   is(graph.hasSelection(), true,
     "A selection exists on the graph.");
   is(startTime, 0,
-    "OVERVIEW_RANGE_SELECTED fired with startTime value on click.");
+    "The UI_OVERVIEW_RANGE_SELECTED event fired with 0 as a `startTime`.");
   is(endTime, duration / 2,
-    "OVERVIEW_RANGE_SELECTED fired with endTime value on click.");
+    `The UI_OVERVIEW_RANGE_SELECTED event fired with ${duration / 2} as \`endTime\`.`);
 
-  // Listen to deselection
-  results = onceSpread(OverviewView, EVENTS.OVERVIEW_RANGE_SELECTED);
-  dropSelection(graph);
-  [_, params] = yield results;
+  let mapStart = () => 0;
+  let mapEnd = () => duration;
+  let actual = graph.getMappedSelection({ mapStart, mapEnd });
+  is(actual.min, 0, "Graph selection starts at 0.");
+  is(actual.max, duration / 2, `Graph selection ends at ${duration / 2}.`);
+
+  // Listen to deselection.
+
+  rangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED, { spreadArgs: true });
+  clickCanvasGraph(graph, { x: 3 * graph.width / 4 });
+  [_, { startTime, endTime }] = yield rangeSelected;
 
   is(graph.hasSelection(), false,
     "A selection no longer on the graph.");
-  is(params.startTime, 0,
-    "OVERVIEW_RANGE_SELECTED fired with 0 as a startTime.");
-  is(params.endTime, duration,
-    "OVERVIEW_RANGE_SELECTED fired with max duration as endTime");
+  is(startTime, 0,
+    "The UI_OVERVIEW_RANGE_SELECTED event fired with 0 as a `startTime`.");
+  is(endTime, duration,
+    "The UI_OVERVIEW_RANGE_SELECTED event fired with duration as `endTime`.");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardownToolboxAndRemoveTab(panel);
+});
