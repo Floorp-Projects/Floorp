@@ -61,4 +61,11 @@ def toolkit(toolkit):
     set_config('MOZ_WIDGET_TOOLKIT', widget_toolkit)
     add_old_configure_assignment('MOZ_WIDGET_TOOLKIT', widget_toolkit)
 
+    if widget_toolkit == 'gtk2':
+        set_define('MOZ_WIDGET_GTK', '2')
+    elif widget_toolkit == 'gtk3':
+        set_define('MOZ_WIDGET_GTK', '3')
+    elif widget_toolkit != 'windows':
+        set_define('MOZ_WIDGET_%s' % widget_toolkit.upper(), '1')
+
     return widget_toolkit
