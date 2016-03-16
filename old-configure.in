@@ -1384,7 +1384,7 @@ case "$host" in
     else
         HOST_CFLAGS="$HOST_CFLAGS -mwindows"
     fi
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11 -D_CRT_SECURE_NO_WARNINGS"
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     HOST_BIN_SUFFIX=.exe
 
@@ -1404,7 +1404,7 @@ case "$host" in
     ;;
 
 *-darwin*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX -DNO_X11"
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
@@ -1803,9 +1803,7 @@ case "$target" in
     BIN_SUFFIX='.exe'
     MOZ_USER_DIR="Mozilla"
 
-    dnl set NO_X11 defines here as the general check is skipped on win32
     no_x=yes
-    AC_DEFINE(NO_X11)
 
     case "$host" in
     *-mingw*)
@@ -2114,9 +2112,7 @@ dnl Checks for X libraries.
 dnl Ordering is important.
 dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
-if test "$no_x" = "yes"; then
-    AC_DEFINE(NO_X11)
-else
+if test "$no_x" != "yes"; then
     AC_DEFINE_UNQUOTED(FUNCPROTO,15)
     XLIBS="-lX11 $XLIBS"
     _SAVE_LDFLAGS="$LDFLAGS"
@@ -3472,7 +3468,7 @@ cocoa)
     # Use -Wl as a trick to avoid -framework and framework names from
     # being separated by AC_SUBST_LIST.
     TK_LIBS='-Wl,-framework,CoreLocation -Wl,-framework,QuartzCore -Wl,-framework,Carbon -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit -Wl,-framework,AddressBook -Wl,-framework,OpenGL'
-    TK_CFLAGS="-DNO_X11"
+    TK_CFLAGS=""
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     MOZ_USER_DIR="Mozilla"
@@ -3482,7 +3478,7 @@ cocoa)
 
 uikit)
     LDFLAGS="$LDFLAGS -framework UIKit -lobjc"
-    TK_CFLAGS="-DNO_X11"
+    TK_CFLAGS=""
     TK_LIBS='-Wl,-framework,Foundation -Wl,-framework,CoreFoundation -Wl,-framework,CoreGraphics -Wl,-framework,CoreText -Wl,-framework,AVFoundation -Wl,-framework,AudioToolbox -Wl,-framework,CoreMedia -Wl,-framework,CoreVideo -Wl,-framework,OpenGLES -Wl,-framework,QuartzCore'
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
