@@ -197,7 +197,7 @@ TextInputProcessor::BeginInputTransactionInternal(
   }
 
   if (aForTests) {
-    rv = dispatcher->BeginInputTransactionForTests(this);
+    rv = dispatcher->BeginTestInputTransaction(this);
   } else {
     rv = dispatcher->BeginInputTransaction(this);
   }
