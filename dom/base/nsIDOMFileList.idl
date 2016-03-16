@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-[uuid(57128a85-34de-42db-a252-84dd57724a59)]
+[builtinclass, uuid(57128a85-34de-42db-a252-84dd57724a59)]
 interface nsIDOMFileList : nsISupports
 {
   readonly attribute unsigned long length;

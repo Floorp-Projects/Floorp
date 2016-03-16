@@ -537,8 +537,9 @@
         <parameter name="tipElement"/>
         <body>
         <![CDATA[
-          // Don't show the tooltip if the tooltip node is a document or disconnected.
+          // Don't show the tooltip if the tooltip node is a document, browser, or disconnected.
           if (!tipElement || !tipElement.ownerDocument ||
+              tipElement.localName == "browser" ||
               (tipElement.ownerDocument.compareDocumentPosition(tipElement) & document.DOCUMENT_POSITION_DISCONNECTED)) {
             return false;
           }
