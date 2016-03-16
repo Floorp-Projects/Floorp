@@ -480,4 +480,15 @@ DoubleTapAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[3]);
 }
 
+template<class InputReceiver>
+nsEventStatus
+Wheel(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
+      const ScreenPoint& aDelta, TimeStamp aTime, uint64_t* aOutInputBlockId = nullptr)
+{
+  ScrollWheelInput input(MillisecondsSinceStartup(aTime), aTime, 0,
+      ScrollWheelInput::SCROLLMODE_INSTANT, ScrollWheelInput::SCROLLDELTA_PIXEL,
+      aPoint, aDelta.x, aDelta.y, false);
+  return aTarget->ReceiveInputEvent(input, nullptr, aOutInputBlockId);
+}
+
 #endif // mozilla_layers_InputUtils_h
