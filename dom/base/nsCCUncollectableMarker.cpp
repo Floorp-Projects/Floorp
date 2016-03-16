@@ -303,7 +303,8 @@ MarkWindowList(nsISimpleEnumerator* aWindowList, bool aCleanupJS,
 
       MarkDocShell(rootDocShell, aCleanupJS, aPrepareForCC);
 
-      nsCOMPtr<nsITabChild> tabChild = do_GetInterface(rootDocShell);
+      nsCOMPtr<nsITabChild> tabChild =
+        rootDocShell ? rootDocShell->GetTabChild() : nullptr;
       if (tabChild) {
         nsCOMPtr<nsIContentFrameMessageManager> mm;
         tabChild->GetMessageManager(getter_AddRefs(mm));
