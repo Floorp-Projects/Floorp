@@ -134,7 +134,7 @@ static const uint8_t DSS_G_RAW[] =
   0x62,0xF6,0x35,0x76,
 };
 
-} // unnamed namespace
+} // namespace
 
 TestSignatureAlgorithm::TestSignatureAlgorithm(
   const TestPublicKeyAlgorithm& publicKeyAlg,
