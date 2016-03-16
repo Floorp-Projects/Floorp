@@ -485,8 +485,27 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
     nsCOMPtr<TextEventDispatcherListener> listener =
       do_QueryReferent(mListener);
     if (listener) {
+      DebugOnly<WidgetKeyboardEvent> original(keyEvent);
       listener->WillDispatchKeyboardEvent(this, keyEvent, aIndexOfKeypress,
                                           aData);
+      MOZ_ASSERT(keyEvent.mMessage ==
+                   static_cast<WidgetKeyboardEvent&>(original).mMessage);
+      MOZ_ASSERT(keyEvent.keyCode ==
+                   static_cast<WidgetKeyboardEvent&>(original).keyCode);
+      MOZ_ASSERT(keyEvent.location ==
+                   static_cast<WidgetKeyboardEvent&>(original).location);
+      MOZ_ASSERT(keyEvent.mIsRepeat ==
+                   static_cast<WidgetKeyboardEvent&>(original).mIsRepeat);
+      MOZ_ASSERT(keyEvent.mIsComposing ==
+                   static_cast<WidgetKeyboardEvent&>(original).mIsComposing);
+      MOZ_ASSERT(keyEvent.mKeyNameIndex ==
+                   static_cast<WidgetKeyboardEvent&>(original).mKeyNameIndex);
+      MOZ_ASSERT(keyEvent.mCodeNameIndex ==
+                   static_cast<WidgetKeyboardEvent&>(original).mCodeNameIndex);
+      MOZ_ASSERT(keyEvent.mKeyValue ==
+                   static_cast<WidgetKeyboardEvent&>(original).mKeyValue);
+      MOZ_ASSERT(keyEvent.mCodeValue ==
+                   static_cast<WidgetKeyboardEvent&>(original).mCodeValue);
     }
   }
 
