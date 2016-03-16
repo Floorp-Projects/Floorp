@@ -76,7 +76,8 @@ function check_mp4(v, enabled) {
   check("audio/mp4; codecs=mp4a.40.5", "probably");
   check("audio/x-m4a; codecs=\"mp4a.40.5\"", "probably");
   check("audio/x-m4a; codecs=mp4a.40.5", "probably");
-
+  // HE-AAC v2
+  check("audio/mp4; codecs=\"mp4a.40.29\"", "probably");
 }
 
 function check_mp3(v, enabled) {
