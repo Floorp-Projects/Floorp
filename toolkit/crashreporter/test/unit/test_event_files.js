@@ -49,5 +49,8 @@ add_task(function* test_main_process_crash() {
   Assert.equal(crash.id + ".dmp", basename, "ID recorded properly");
   Assert.equal(crash.metadata.ShutdownProgress, "event-test");
   Assert.ok("TelemetrySessionId" in crash.metadata);
+  Assert.ok("UptimeTS" in crash.metadata);
   Assert.ok(/^[0-9a-f]{8}\-([0-9a-f]{4}\-){3}[0-9a-f]{12}$/.test(crash.metadata.TelemetrySessionId));
+  Assert.ok("CrashTime" in crash.metadata);
+  Assert.ok(/^\d+$/.test(crash.metadata.CrashTime));
 });
