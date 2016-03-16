@@ -12,7 +12,7 @@ extern crate webdriver;
 
 use std::borrow::ToOwned;
 use std::process::exit;
-use std::net::{SocketAddr, SocketAddrV4, Ipv4Addr};
+use std::net::{SocketAddr, IpAddr};
 use std::str::FromStr;
 use std::path::Path;
 
@@ -89,8 +89,8 @@ fn main() {
 
     let host = &opts.webdriver_host[..];
     let port = opts.webdriver_port;
-    let addr = Ipv4Addr::from_str(host).map(
-        |x| SocketAddr::V4(SocketAddrV4::new(x, port))).unwrap_or_else(
+    let addr = IpAddr::from_str(host).map(
+        |x| SocketAddr::new(x, port)).unwrap_or_else(
         |_| {
             println!("Invalid host address");
             exit(1);
