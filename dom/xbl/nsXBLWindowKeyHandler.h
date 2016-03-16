@@ -17,6 +17,7 @@ class nsXBLSpecialDocInfo;
 class nsXBLPrototypeHandler;
 
 namespace mozilla {
+class EventListenerManager;
 namespace dom {
 class Element;
 class EventTarget;
@@ -27,9 +28,15 @@ struct IgnoreModifierState;
 class nsXBLWindowKeyHandler : public nsIDOMEventListener
 {
   typedef mozilla::dom::IgnoreModifierState IgnoreModifierState;
+  typedef mozilla::EventListenerManager EventListenerManager;
 
 public:
   nsXBLWindowKeyHandler(nsIDOMElement* aElement, mozilla::dom::EventTarget* aTarget);
+
+  void InstallKeyboardEventListenersTo(
+         EventListenerManager* aEventListenerManager);
+  void RemoveKeyboardEventListenersFrom(
+         EventListenerManager* aEventListenerManager);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER

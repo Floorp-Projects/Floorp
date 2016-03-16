@@ -23,6 +23,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIPresShell.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "nsISelectionController.h"
 #include "mozilla/Preferences.h"
@@ -295,6 +296,82 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
   WalkHandlersInternal(aKeyEvent, aEventType, mHandler, true);
 
   return NS_OK;
+}
+
+void
+nsXBLWindowKeyHandler::InstallKeyboardEventListenersTo(
+                         EventListenerManager* aEventListenerManager)
+{
+  // For marking each keyboard event as if it's reserved by chrome,
+  // nsXBLWindowKeyHandlers need to listen each keyboard events before
+  // web contents.
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keydown"),
+                           TrustedEventsAtCapture());
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keyup"),
+                           TrustedEventsAtCapture());
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keypress"),
+                           TrustedEventsAtCapture());
+
+  // For reducing the IPC cost, preventing to dispatch reserved keyboard
+  // events into the content process.
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keydown"),
+                           TrustedEventsAtSystemGroupCapture());
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keyup"),
+                           TrustedEventsAtSystemGroupCapture());
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keypress"),
+                           TrustedEventsAtSystemGroupCapture());
+
+  // Handle keyboard events in bubbling phase of the system event group.
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keydown"),
+                           TrustedEventsAtSystemGroupBubble());
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keyup"),
+                           TrustedEventsAtSystemGroupBubble());
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keypress"),
+                           TrustedEventsAtSystemGroupBubble());
+}
+
+void
+nsXBLWindowKeyHandler::RemoveKeyboardEventListenersFrom(
+                         EventListenerManager* aEventListenerManager)
+{
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keydown"),
+                           TrustedEventsAtCapture());
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keyup"),
+                           TrustedEventsAtCapture());
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keypress"),
+                           TrustedEventsAtCapture());
+
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keydown"),
+                           TrustedEventsAtSystemGroupCapture());
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keyup"),
+                           TrustedEventsAtSystemGroupCapture());
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keypress"),
+                           TrustedEventsAtSystemGroupCapture());
+
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keydown"),
+                           TrustedEventsAtSystemGroupBubble());
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keyup"),
+                           TrustedEventsAtSystemGroupBubble());
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keypress"),
+                           TrustedEventsAtSystemGroupBubble());
 }
 
 NS_IMETHODIMP
