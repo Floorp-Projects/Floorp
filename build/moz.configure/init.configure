@@ -263,6 +263,7 @@ def wanted_mozconfig_variables(help):
          'RPMBUILD',
          'TAR',
          'UNZIP',
+         'USE_FC_FREETYPE',
          'WITHOUT_X',
          'XARGS',
          'ZIP',
