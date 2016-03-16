@@ -125,3 +125,27 @@ add_task(function* testWindowUpdate() {
   yield extension.awaitFinish("window-update");
   yield extension.unload();
 });
+
+add_task(function* () {
+  let window1 = window;
+  let window2 = yield BrowserTestUtils.openNewBrowserWindow();
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: function() {
+      browser.windows.getAll(undefined, function(wins) {
+        browser.test.assertEq(wins.length, 2, "should have two windows");
+
+        let unfocused = wins.find(win => !win.focused);
+        browser.windows.update(unfocused.id, {drawAttention: true}, function() {
+          browser.test.sendMessage("check");
+        });
+      });
+    },
+  });
+
+  yield Promise.all([extension.startup(), extension.awaitMessage("check")]);
+
+  yield extension.unload();
+
+  yield BrowserTestUtils.closeWindow(window2);
+});
