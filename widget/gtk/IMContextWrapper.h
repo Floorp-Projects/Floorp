@@ -84,6 +84,8 @@ public:
     void OnUpdateComposition();
     void OnLayoutChange();
 
+    TextEventDispatcher* GetTextEventDispatcher();
+
 protected:
     ~IMContextWrapper();
 
