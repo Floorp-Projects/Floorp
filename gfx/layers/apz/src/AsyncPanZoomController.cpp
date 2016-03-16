@@ -2040,7 +2040,12 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
   if (controller) {
     CSSPoint geckoScreenPoint;
     if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
-      if (CurrentTouchBlock()->IsDuringFastFling()) {
+      CancelableBlockState* block = CurrentInputBlock();
+      if (!block->AsTouchBlock()) {
+        APZC_LOG("%p dropping long-press because some non-touch block interrupted it\n", this);
+        return nsEventStatus_eIgnore;
+      }
+      if (block->AsTouchBlock()->IsDuringFastFling()) {
         APZC_LOG("%p dropping long-press because of fast fling\n", this);
         return nsEventStatus_eIgnore;
       }
