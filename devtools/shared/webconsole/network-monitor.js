@@ -947,8 +947,6 @@ NetworkMonitor.prototype = {
    * This is a HAR-like object. Conformance to the spec is not guaranteed at
    * this point.
    *
-   * TODO: Bug 708717 - Add support for network log export to HAR
-   *
    * @see http://www.softwareishard.com/blog/har-12-spec
    * @param nsIHttpChannel channel
    *        The HTTP channel for which the HTTP activity object is created.
