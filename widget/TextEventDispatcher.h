@@ -225,6 +225,15 @@ public:
   }
 
   /**
+   * GetPendingCompositionClauses() returns text ranges which was appended by
+   * AppendClauseToPendingComposition() or SetPendingComposition().
+   */
+  const TextRangeArray* GetPendingCompositionClauses() const
+  {
+    return mPendingComposition.GetClauses();
+  }
+
+  /**
    * @see nsIWidget::NotifyIME()
    */
   nsresult NotifyIME(const IMENotification& aIMENotification);
@@ -301,6 +310,7 @@ private:
     nsresult Flush(TextEventDispatcher* aDispatcher,
                    nsEventStatus& aStatus,
                    const WidgetEventTime* aEventTime);
+    const TextRangeArray* GetClauses() const { return mClauses; }
     void Clear();
 
   private:
