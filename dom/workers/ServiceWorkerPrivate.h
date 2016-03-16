@@ -11,11 +11,14 @@
 
 #include "WorkerPrivate.h"
 
+class nsIInterceptedChannel;
+
 namespace mozilla {
 namespace dom {
 namespace workers {
 
 class ServiceWorkerInfo;
+class ServiceWorkerRegistrationInfo;
 class KeepAliveToken;
 
 class LifeCycleEventCallback : public nsRunnable

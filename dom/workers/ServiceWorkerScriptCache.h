@@ -16,6 +16,8 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
+class ServiceWorkerRegistrationInfo;
+
 namespace serviceWorkerScriptCache {
 
 nsresult
