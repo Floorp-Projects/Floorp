@@ -113,6 +113,7 @@ devtools.jar:
     content/framework/toolbox-options.xul (framework/toolbox-options.xul)
     content/framework/toolbox-options.js (framework/toolbox-options.js)
     content/framework/toolbox.xul (framework/toolbox.xul)
+    content/framework/toolbox-init.js (framework/toolbox-init.js)
     content/framework/options-panel.css (framework/options-panel.css)
     content/framework/toolbox-process-window.xul (framework/toolbox-process-window.xul)
 *   content/framework/toolbox-process-window.js (framework/toolbox-process-window.js)
