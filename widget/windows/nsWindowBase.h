@@ -20,6 +20,8 @@
 class nsWindowBase : public nsBaseWidget
 {
 public:
+  typedef mozilla::WidgetEventTime WidgetEventTime;
+
   /*
    * Return the HWND or null for this widget.
    */
@@ -44,6 +46,12 @@ public:
    */
   virtual void InitEvent(mozilla::WidgetGUIEvent& aEvent,
                          LayoutDeviceIntPoint* aPoint = nullptr) = 0;
+
+  /*
+   * Returns WidgetEventTime instance which is initialized with current message
+   * time.
+   */
+  virtual WidgetEventTime CurrentMessageWidgetEventTime() const = 0;
 
   /*
    * Dispatch a gecko event for this widget.
