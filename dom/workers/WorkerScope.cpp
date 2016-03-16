@@ -21,6 +21,7 @@
 #include "mozilla/dom/SharedWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerGlobalScopeBinding.h"
+#include "mozilla/dom/WorkerLocation.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/Services.h"
 #include "nsServiceManagerUtils.h"
@@ -32,7 +33,6 @@
 #include <android/log.h>
 #endif
 
-#include "Location.h"
 #include "Navigator.h"
 #include "Principal.h"
 #include "RuntimeService.h"

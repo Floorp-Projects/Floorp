@@ -23,6 +23,7 @@ class IDBFactory;
 class Promise;
 class RequestOrUSVString;
 class ServiceWorkerRegistrationWorkerThread;
+class WorkerLocation;
 
 namespace cache {
 
@@ -36,7 +37,6 @@ BEGIN_WORKERS_NAMESPACE
 
 class ServiceWorkerClients;
 class WorkerPrivate;
-class WorkerLocation;
 class WorkerNavigator;
 class Performance;
 
