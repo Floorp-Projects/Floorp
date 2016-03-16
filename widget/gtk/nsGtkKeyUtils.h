@@ -124,12 +124,6 @@ public:
                              GdkEventKey* aGdkKeyEvent);
 
     /**
-     * IsKeyPressEventNecessary() returns TRUE when aGdkKeyEvent should cause
-     * a DOM keypress event.  Otherwise, FALSE.
-     */
-    static bool IsKeyPressEventNecessary(GdkEventKey* aGdkKeyEvent);
-
-    /**
      * Destroys the singleton KeymapWrapper instance, if it exists.
      */
     static void Shutdown();
