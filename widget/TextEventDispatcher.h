@@ -227,11 +227,15 @@ public:
    *                        set nsEventStatus_eIgnore.  After dispatching
    *                        a event and it's consumed this returns
    *                        nsEventStatus_eConsumeNoDefault.
+   * @param aData           Calling this method may cause calling
+   *                        WillDispatchKeyboardEvent() of the listener.
+   *                        aData will be set to its argument.
    * @return                true if an event is dispatched.  Otherwise, false.
    */
   bool DispatchKeyboardEvent(EventMessage aMessage,
                              const WidgetKeyboardEvent& aKeyboardEvent,
-                             nsEventStatus& aStatus);
+                             nsEventStatus& aStatus,
+                             void* aData = nullptr);
 
   /**
    * MaybeDispatchKeypressEvents() maybe dispatches a keypress event which is
@@ -245,11 +249,15 @@ public:
    *                        When this method dispatches one or more keypress
    *                        events and one of them is consumed, this returns
    *                        nsEventStatus_eConsumeNoDefault.
+   * @param aData           Calling this method may cause calling
+   *                        WillDispatchKeyboardEvent() of the listener.
+   *                        aData will be set to its argument.
    * @return                true if one or more events are dispatched.
    *                        Otherwise, false.
    */
   bool MaybeDispatchKeypressEvents(const WidgetKeyboardEvent& aKeyboardEvent,
-                                   nsEventStatus& aStatus);
+                                   nsEventStatus& aStatus,
+                                   void* aData = nullptr);
 
 private:
   // mWidget is owner of the instance.  When this is created, this is set.
@@ -405,6 +413,9 @@ private:
    *                        set nsEventStatus_eIgnore.  After dispatching
    *                        a event and it's consumed this returns
    *                        nsEventStatus_eConsumeNoDefault.
+   * @param aData           Calling this method may cause calling
+   *                        WillDispatchKeyboardEvent() of the listener.
+   *                        aData will be set to its argument.
    * @param aIndexOfKeypress    This must be 0 if aMessage isn't eKeyPress or
    *                            aKeyboard.mKeyNameIndex isn't
    *                            KEY_NAME_INDEX_USE_STRING.  Otherwise, i.e.,
@@ -417,6 +428,7 @@ private:
   bool DispatchKeyboardEventInternal(EventMessage aMessage,
                                      const WidgetKeyboardEvent& aKeyboardEvent,
                                      nsEventStatus& aStatus,
+                                     void* aData,
                                      uint32_t aIndexOfKeypress = 0);
 };
 

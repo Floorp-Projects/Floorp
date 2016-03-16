@@ -36,6 +36,12 @@ public:
   NS_IMETHOD_(void)
     OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher) override;
 
+  NS_IMETHOD_(void) WillDispatchKeyboardEvent(
+                      TextEventDispatcher* aTextEventDispatcher,
+                      WidgetKeyboardEvent& aKeyboardEvent,
+                      uint32_t aIndexOfKeypress,
+                      void* aData) override;
+
 protected:
   virtual ~TextInputProcessor();
 
