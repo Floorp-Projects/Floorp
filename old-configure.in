@@ -2689,10 +2689,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(External Packages)
 
-MOZ_ARG_WITH_STRING(libxul-sdk,
-[  --with-libxul-sdk=PFX   Use the libXUL SDK at <PFX>],
-  AC_MSG_ERROR([--with-libxul-sdk is not supported anymore.]))
-
 case "$OS_TARGET" in
 WINNT|Darwin|Android)
   MOZ_FOLD_LIBS=1

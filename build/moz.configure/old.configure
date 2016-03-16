@@ -336,7 +336,6 @@ def old_configure_options(*options):
     '--with-java-bin-path',
     '--with-jitreport-granularity',
     '--with-l10n-base',
-    '--with-libxul-sdk',
     '--with-linux-headers',
     '--with-macbundlename-prefix',
     '--with-macos-private-frameworks',
