@@ -4,7 +4,6 @@
 
 from marionette_driver import Wait
 
-from firefox_ui_harness.decorators import skip_under_xvfb
 from firefox_puppeteer.testcases import FirefoxTestCase
 
 
@@ -35,7 +34,6 @@ class TestFaviconInAutocomplete(FirefoxTestCase):
         finally:
             FirefoxTestCase.tearDown(self)
 
-    @skip_under_xvfb
     def test_favicon_in_autocomplete(self):
         # Open the test page
         def load_urls():

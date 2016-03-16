@@ -4,7 +4,6 @@
 
 from marionette_driver import Wait
 
-from firefox_ui_harness.decorators import skip_under_xvfb
 from firefox_puppeteer.testcases import FirefoxTestCase
 
 
@@ -32,7 +31,6 @@ class TestEscapeAutocomplete(FirefoxTestCase):
         self.autocomplete_results.close(force=True)
         FirefoxTestCase.tearDown(self)
 
-    @skip_under_xvfb
     def test_escape_autocomplete(self):
         # Open some local pages
         def load_urls():

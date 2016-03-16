@@ -5,7 +5,6 @@
 from marionette_driver import expected, By, Wait
 from marionette_driver.errors import NoSuchElementException
 
-from firefox_ui_harness.decorators import skip_under_xvfb
 from firefox_puppeteer.testcases import FirefoxTestCase
 
 
@@ -152,7 +151,6 @@ class TestAutoCompleteResults(FirefoxTestCase):
         finally:
             FirefoxTestCase.tearDown(self)
 
-    @skip_under_xvfb
     def test_popup_elements(self):
         # TODO: This test is not very robust because it relies on the history
         # in the default profile.
@@ -165,7 +163,6 @@ class TestAutoCompleteResults(FirefoxTestCase):
         self.assertEqual(visible_result_count,
                          int(results.get_attribute('itemCount')))
 
-    @skip_under_xvfb
     def test_close(self):
         self.browser.navbar.locationbar.urlbar.send_keys('a')
         Wait(self.marionette).until(lambda _: self.autocomplete_results.is_open)
@@ -173,7 +170,6 @@ class TestAutoCompleteResults(FirefoxTestCase):
         # end up closing.
         self.autocomplete_results.close()
 
-    @skip_under_xvfb
     def test_force_close(self):
         self.browser.navbar.locationbar.urlbar.send_keys('a')
         Wait(self.marionette).until(lambda _: self.autocomplete_results.is_open)
@@ -181,7 +177,6 @@ class TestAutoCompleteResults(FirefoxTestCase):
         # end up closing.
         self.autocomplete_results.close(force=True)
 
-    @skip_under_xvfb
     def test_matching_text(self):
         # The default profile always has links to mozilla.org. So multiple results
         # will be found with 'moz'.
@@ -222,7 +217,6 @@ class TestIdentityPopup(FirefoxTestCase):
         finally:
             FirefoxTestCase.tearDown(self)
 
-    @skip_under_xvfb
     def test_elements(self):
         self.locationbar.open_identity_popup()
 
@@ -262,7 +256,6 @@ class TestIdentityPopup(FirefoxTestCase):
 
         self.assertEqual(security.more_info_button.get_attribute('localName'), 'button')
 
-    @skip_under_xvfb
     def test_open_close(self):
         with self.marionette.using_context('content'):
             self.marionette.navigate(self.url)
@@ -274,7 +267,6 @@ class TestIdentityPopup(FirefoxTestCase):
         self.identity_popup.close()
         self.assertFalse(self.identity_popup.is_open)
 
-    @skip_under_xvfb
     def test_force_close(self):
         with self.marionette.using_context('content'):
             self.marionette.navigate(self.url)
