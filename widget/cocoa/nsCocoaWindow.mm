@@ -596,6 +596,10 @@ void* nsCocoaWindow::GetNativeData(uint32_t aDataType)
       NS_ERROR("Requesting NS_NATIVE_GRAPHIC on a top-level window!");
       break;
     case NS_RAW_NATIVE_IME_CONTEXT: {
+      retVal = GetPseudoIMEContext();
+      if (retVal) {
+        break;
+      }
       NSView* view = mWindow ? [mWindow contentView] : nil;
       if (view) {
         retVal = [view inputContext];

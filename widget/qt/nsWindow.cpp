@@ -660,10 +660,15 @@ nsWindow::GetNativeData(uint32_t aDataType)
     case NS_NATIVE_SHELLWIDGET: {
         break;
     }
-    case NS_RAW_NATIVE_IME_CONTEXT:
+    case NS_RAW_NATIVE_IME_CONTEXT: {
+        void* pseudoIMEContext = GetPseudoIMEContext();
+        if (pseudoIMEContext) {
+            return pseudoIMEContext;
+        }
         // Our qt widget looks like using only one context per process.
         // However, it's better to set the context's pointer.
         return qApp->inputMethod();
+    }
     default:
         NS_WARNING("nsWindow::GetNativeData called with bad value");
         return nullptr;

@@ -98,6 +98,20 @@ public:
   bool IsDispatchingEvent() const { return mDispatchingEvent > 0; }
 
   /**
+   * GetPseudoIMEContext() returns pseudo native IME context if there is an
+   * input transaction whose type is not for native event handler.
+   * Otherwise, returns nullptr.
+   */
+  void* GetPseudoIMEContext() const
+  {
+    if (mInputTransactionType == eNoInputTransaction ||
+        mInputTransactionType == eNativeInputTransaction) {
+      return nullptr;
+    }
+    return const_cast<TextEventDispatcher*>(this);
+  }
+
+  /**
    * StartComposition() starts composition explicitly.
    */
   nsresult StartComposition(nsEventStatus& aStatus);

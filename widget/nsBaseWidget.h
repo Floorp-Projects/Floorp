@@ -431,6 +431,12 @@ protected:
   virtual nsresult NotifyIMEInternal(const IMENotification& aIMENotification)
   { return NS_ERROR_NOT_IMPLEMENTED; }
 
+  /**
+   * GetPseudoIMEContext() returns pseudo IME context when TextEventDispatcher
+   * has non-native input transaction.  Otherwise, returns nullptr.
+   */
+  void* GetPseudoIMEContext();
+
 protected:
   // Utility to check if an array of clip rects is equal to our
   // internally stored clip rect array mClipRects.

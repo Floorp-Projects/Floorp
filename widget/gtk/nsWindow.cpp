@@ -1740,15 +1740,18 @@ nsWindow::GetNativeData(uint32_t aDataType)
         return (void *) GDK_WINDOW_XID(gdk_window_get_toplevel(mGdkWindow));
     case NS_NATIVE_PLUGIN_OBJECT_PTR:
         return (void *) mPluginNativeWindow;
-    case NS_RAW_NATIVE_IME_CONTEXT:
+    case NS_RAW_NATIVE_IME_CONTEXT: {
+        void* pseudoIMEContext = GetPseudoIMEContext();
+        if (pseudoIMEContext) {
+            return pseudoIMEContext;
+        }
         // If IME context isn't available on this widget, we should set |this|
-        // instead of nullptr since if we return nullptr, IMEStateManager
-        // cannot manage composition with TextComposition instance.  Although,
-        // this case shouldn't occur.
-        if (NS_WARN_IF(!mIMContext)) {
+        // instead of nullptr.
+        if (!mIMContext) {
             return this;
         }
         return mIMContext.get();
+    }
     default:
         NS_WARNING("nsWindow::GetNativeData called with bad value");
         return nullptr;
