@@ -869,9 +869,11 @@ nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus)
     }
   }
 
-  if (nsCOMPtr<nsITabChild> child = do_GetInterface(window->GetDocShell())) {
-    bool active = static_cast<TabChild*>(child.get())->ParentIsActive();
-    ActivateOrDeactivate(window, active);
+  if (nsIDocShell* docShell = window->GetDocShell()) {
+    if (nsCOMPtr<nsITabChild> child = docShell->GetTabChild()) {
+      bool active = static_cast<TabChild*>(child.get())->ParentIsActive();
+      ActivateOrDeactivate(window, active);
+    }
   }
 
   if (mFocusedWindow != window)
@@ -1632,7 +1634,7 @@ nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
       if (aAdjustWidgets && objectFrame && !sTestMode) {
         if (XRE_IsContentProcess()) {
           // set focus to the top level window via the chrome process.
-          nsCOMPtr<nsITabChild> tabChild = do_GetInterface(docShell);
+          nsCOMPtr<nsITabChild> tabChild = docShell->GetTabChild();
           if (tabChild) {
             static_cast<TabChild*>(tabChild.get())->SendDispatchFocusToTopLevelWindow();
           }

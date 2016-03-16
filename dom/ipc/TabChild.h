@@ -512,7 +512,11 @@ public:
   static inline TabChild*
   GetFrom(nsIDocShell* aDocShell)
   {
-    nsCOMPtr<nsITabChild> tc = do_GetInterface(aDocShell);
+    if (!aDocShell) {
+      return nullptr;
+    }
+
+    nsCOMPtr<nsITabChild> tc = aDocShell->GetTabChild();
     return static_cast<TabChild*>(tc.get());
   }
 

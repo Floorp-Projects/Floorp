@@ -41,6 +41,8 @@ interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
 interface nsIScrollObserver;
 interface nsITabParent;
+interface nsITabChild;
+native TabChildRef(already_AddRefed<nsITabChild>);
 
 typedef unsigned long nsLoadFlags;
 
@@ -1097,4 +1099,10 @@ interface nsIDocShell : nsIDocShellTreeItem
    * The editing session for this docshell.
    */
   readonly attribute nsIEditingSession editingSession;
+
+  /**
+   * The tab child for this docshell.
+   */
+  [binaryname(ScriptableTabChild)] readonly attribute nsITabChild tabChild;
+  [noscript,notxpcom,nostdcall] TabChildRef GetTabChild();
 };

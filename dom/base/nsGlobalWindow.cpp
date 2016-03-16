@@ -9061,9 +9061,12 @@ nsresult
 nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason)
 {
   // If this is a child process, redirect to the parent process.
-  if (nsCOMPtr<nsITabChild> child = do_GetInterface(GetDocShell())) {
-    nsContentUtils::AddScriptRunner(new ChildCommandDispatcher(this, child, anAction));
-    return NS_OK;
+  if (nsIDocShell* docShell = GetDocShell()) {
+    if (nsCOMPtr<nsITabChild> child = docShell->GetTabChild()) {
+      nsContentUtils::AddScriptRunner(new ChildCommandDispatcher(this, child,
+                                                                 anAction));
+      return NS_OK;
+    }
   }
 
   nsPIDOMWindowOuter *rootWindow = nsGlobalWindow::GetPrivateRoot();
@@ -10685,7 +10688,8 @@ nsGlobalWindow::ShowSlowScriptDialog()
       ProcessHangMonitor::Get()) {
     ProcessHangMonitor::SlowScriptAction action;
     RefPtr<ProcessHangMonitor> monitor = ProcessHangMonitor::Get();
-    nsCOMPtr<nsITabChild> child = do_GetInterface(GetDocShell());
+    nsIDocShell* docShell = GetDocShell();
+    nsCOMPtr<nsITabChild> child = docShell ? docShell->GetTabChild() : nullptr;
     action = monitor->NotifySlowScript(child,
                                        filename.get(),
                                        lineno);
