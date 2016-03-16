@@ -399,4 +399,13 @@ WorkerNavigator::GetUserAgent(nsString& aUserAgent, ErrorResult& aRv) const
   runnable->Dispatch(aRv);
 }
 
+uint64_t
+WorkerNavigator::HardwareConcurrency() const
+{
+  RuntimeService* rts = RuntimeService::GetService();
+  MOZ_ASSERT(rts);
+
+  return rts->ClampedHardwareConcurrency();
+}
+
 END_WORKERS_NAMESPACE
