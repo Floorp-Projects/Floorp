@@ -29,6 +29,20 @@
   padding: 2px 0px;
 }
 
+.dbg-wasm-item .icon {
+  display: block;
+  background-image: url(chrome://devtools/skin/images/webconsole.svg);
+  background-repeat: no-repeat;
+  background-size: 72px 60px;
+  /* show warning icon */
+  background-position: -24px -24px;
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  margin-inline-start: -15px;
+  margin-top: 3px;
+}
+
 .dbg-breakpoint-line {
   font-weight: 600;
 }
