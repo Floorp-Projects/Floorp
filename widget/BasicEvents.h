@@ -103,9 +103,14 @@ public:
   // window and document object sets it true.  Therefore, web applications
   // can handle the event if they add event listeners to the window or the
   // document.
+  // XXX This is an ancient and broken feature, don't use this for new bug
+  //     as far as possible.
   bool    mNoContentDispatch : 1;
   // If mOnlyChromeDispatch is true, the event is dispatched to only chrome.
   bool    mOnlyChromeDispatch : 1;
+  // If mOnlySystemGroupDispatchInContent is true, event listeners added to
+  // the default group for non-chrome EventTarget won't be called.
+  bool    mOnlySystemGroupDispatchInContent : 1;
   // If mWantReplyFromContentProcess is true, the event will be redispatched
   // in the parent process after the content process has handled it. Useful
   // for when the parent process need the know first how the event was used
