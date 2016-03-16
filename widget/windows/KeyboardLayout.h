@@ -296,25 +296,22 @@ private:
   // Following strings are computed by
   // ComputeInputtingStringWithKeyboardLayout() which is typically called
   // before dispatching keydown event.
-  // TODO: following new member names are temporary name for making the changes
-  //       in KeyboardLayout.cpp easier to read.  They will be renamed following
-  //       patch.
   // mInputtingStringAndModifiers's string is the string to be
   // inputted into the focused editor and its modifier state is proper
   // modifier state for inputting the string into the editor.
-  UniCharsAndModifiers inputtingChars;
+  UniCharsAndModifiers mInputtingStringAndModifiers;
   // mShiftedString is the string to be inputted into the editor with
   // current modifier state with active shift state.
-  UniCharsAndModifiers shiftedChars;
+  UniCharsAndModifiers mShiftedString;
   // mUnshiftedString is the string to be inputted into the editor with
   // current modifier state without shift state.
-  UniCharsAndModifiers unshiftedChars;
+  UniCharsAndModifiers mUnshiftedString;
   // Following integers are computed by
   // ComputeInputtingStringWithKeyboardLayout() which is typically called
   // before dispatching keydown event.  The meaning of these values is same
   // as charCode.
-  uint32_t shiftedLatinChar;
-  uint32_t unshiftedLatinChar;
+  uint32_t mShiftedLatinChar;
+  uint32_t mUnshiftedLatinChar;
 
   WORD    mScanCode;
   bool    mIsExtended;
