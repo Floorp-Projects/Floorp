@@ -3139,15 +3139,14 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
         // TODO: Investigate other browser's behavior in this case because
         //       this hack is odd for UI Events.
         nsEventStatus status = nsEventStatus_eIgnore;
-        if (IS_IN_BMP(keypressEvent.charCode)) {
+        if (keypressEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING ||
+            keypressEvent.mKeyValue.Length() == 1) {
             dispatcher->MaybeDispatchKeypressEvents(keypressEvent,
                                                     status, aEvent);
         } else {
-            nsAutoString str;
-            str.Append(H_SURROGATE(keypressEvent.charCode));
-            str.Append(L_SURROGATE(keypressEvent.charCode));
             WidgetEventTime eventTime = GetWidgetEventTime(aEvent->time);
-            dispatcher->CommitComposition(status, &str, &eventTime);
+            dispatcher->CommitComposition(status, &keypressEvent.mKeyValue,
+                                          &eventTime);
         }
     }
 
