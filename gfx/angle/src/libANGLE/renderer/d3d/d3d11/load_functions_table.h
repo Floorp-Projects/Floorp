@@ -13,7 +13,6 @@
 #include <map>
 
 #include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
-#include "libANGLE/renderer/d3d/d3d11/texture_format_table.h"
 
 namespace rx
 {
@@ -21,8 +20,8 @@ namespace rx
 namespace d3d11
 {
 
-const std::map<GLenum, LoadImageFunctionInfo> &GetLoadFunctionsMap(GLenum internalFormat,
-                                                                   DXGI_FORMAT dxgiFormat);
+const std::map<GLenum, LoadImageFunction> &GetLoadFunctionsMap(GLenum internalFormat,
+                                                               DXGI_FORMAT dxgiFormat);
 
 }  // namespace d3d11
 

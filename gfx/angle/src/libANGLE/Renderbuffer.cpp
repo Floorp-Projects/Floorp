@@ -22,7 +22,6 @@ namespace gl
 Renderbuffer::Renderbuffer(rx::RenderbufferImpl *impl, GLuint id)
     : egl::ImageSibling(id),
       mRenderbuffer(impl),
-      mLabel(),
       mWidth(0),
       mHeight(0),
       mInternalFormat(GL_RGBA4),
@@ -33,16 +32,6 @@ Renderbuffer::Renderbuffer(rx::RenderbufferImpl *impl, GLuint id)
 Renderbuffer::~Renderbuffer()
 {
     SafeDelete(mRenderbuffer);
-}
-
-void Renderbuffer::setLabel(const std::string &label)
-{
-    mLabel = label;
-}
-
-const std::string &Renderbuffer::getLabel() const
-{
-    return mLabel;
 }
 
 Error Renderbuffer::setStorage(GLenum internalformat, size_t width, size_t height)

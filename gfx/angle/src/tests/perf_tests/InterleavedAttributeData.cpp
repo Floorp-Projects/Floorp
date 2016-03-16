@@ -54,6 +54,7 @@ class InterleavedAttributeDataBenchmark
 
     void initializeBenchmark() override;
     void destroyBenchmark() override;
+    void beginDrawBenchmark() override;
     void drawBenchmark() override;
 
   private:
@@ -94,7 +95,7 @@ void InterleavedAttributeDataBenchmark::initializeBenchmark()
         "}";
 
     mPointSpriteProgram = CompileProgram(vs, fs);
-    ASSERT_NE(0u, mPointSpriteProgram);
+    ASSERT_TRUE(mPointSpriteProgram != 0);
 
     glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 
@@ -148,11 +149,15 @@ void InterleavedAttributeDataBenchmark::destroyBenchmark()
     }
 }
 
+void InterleavedAttributeDataBenchmark::beginDrawBenchmark()
+{
+    // Clear the color buffer
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
 void InterleavedAttributeDataBenchmark::drawBenchmark()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    for (size_t k = 0; k < 20; k++)
+    for (size_t k = 0; k < 4; k++)
     {
         for (size_t i = 0; i < ArraySize(mPositionColorBuffer); i++)
         {

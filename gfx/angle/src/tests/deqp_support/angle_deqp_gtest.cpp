@@ -41,15 +41,7 @@ const char *g_TestExpectationsFiles[] =
     "deqp_egl_test_expectations.txt",
 };
 
-// During the CaseList initialization we cannot use the GTEST FAIL macro to quit the program because
-// the initialization is called outside of tests the first time.
-void Die()
-{
-    exit(EXIT_FAILURE);
-}
-
-Optional<std::string> FindTestExpectationsPath(const std::string &exeDir,
-                                                      size_t testModuleIndex)
+Optional<std::string> FindTestExpectationsPath(const std::string &exeDir, size_t testModuleIndex)
 {
     for (const char *testPath : g_TestExpectationsSearchPaths)
     {
@@ -136,8 +128,7 @@ void dEQPCaseList::initialize()
     Optional<std::string> testExpectationsPath = FindTestExpectationsPath(exeDir, mTestModuleIndex);
     if (!testExpectationsPath.valid())
     {
-        std::cerr << "Failed to find test expectations file." << std::endl;
-        Die();
+        FAIL() << "Failed to find test expectations file.";
     }
 
     if (!mTestExpectationsParser.LoadTestExpectationsFromFile(testExpectationsPath.value()))
@@ -148,22 +139,15 @@ void dEQPCaseList::initialize()
             errorMsgStream << std::endl << " " << message;
         }
 
-        std::cerr << "Failed to load test expectations." << errorMsgStream.str() << std::endl;
-        Die();
+        FAIL() << "Failed to load test expectations." << errorMsgStream.str();
     }
 
     if (!mTestConfig.LoadCurrentConfig(nullptr))
     {
-        std::cerr << "Failed to load test configuration." << std::endl;
-        Die();
+        FAIL() << "Failed to load test configuration.";
     }
 
     std::ifstream caseListStream(caseListPath);
-    if (caseListStream.fail())
-    {
-        std::cerr << "Failed to load the case list." << std::endl;
-        Die();
-    }
 
     while (!caseListStream.eof())
     {

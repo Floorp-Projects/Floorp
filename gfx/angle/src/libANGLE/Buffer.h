@@ -12,7 +12,6 @@
 #define LIBANGLE_BUFFER_H_
 
 #include "common/angleutils.h"
-#include "libANGLE/Debug.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/IndexRangeCache.h"
 #include "libANGLE/RefCountObject.h"
@@ -25,14 +24,12 @@ class BufferImpl;
 namespace gl
 {
 
-class Buffer final : public RefCountObject, public LabeledObject
+class Buffer : public RefCountObject
 {
   public:
     Buffer(rx::BufferImpl *impl, GLuint id);
-    virtual ~Buffer();
 
-    void setLabel(const std::string &label) override;
-    const std::string &getLabel() const override;
+    virtual ~Buffer();
 
     Error bufferData(const void *data, GLsizeiptr size, GLenum usage);
     Error bufferSubData(const void *data, GLsizeiptr size, GLintptr offset);
@@ -63,8 +60,6 @@ class Buffer final : public RefCountObject, public LabeledObject
 
   private:
     rx::BufferImpl *mBuffer;
-
-    std::string mLabel;
 
     GLenum mUsage;
     GLint64 mSize;

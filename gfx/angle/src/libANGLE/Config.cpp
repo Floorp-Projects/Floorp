@@ -57,8 +57,7 @@ Config::Config()
       transparentType(EGL_NONE),
       transparentRedValue(0),
       transparentGreenValue(0),
-      transparentBlueValue(0),
-      optimalOrientation(0)
+      transparentBlueValue(0)
 {
 }
 
@@ -252,9 +251,6 @@ std::vector<const Config*> ConfigSet::filter(const AttributeMap &attributeMap) c
               case EGL_MAX_PBUFFER_WIDTH:         match = config.maxPBufferWidth >= attributeValue;                   break;
               case EGL_MAX_PBUFFER_HEIGHT:        match = config.maxPBufferHeight >= attributeValue;                  break;
               case EGL_MAX_PBUFFER_PIXELS:        match = config.maxPBufferPixels >= attributeValue;                  break;
-              case EGL_OPTIMAL_SURFACE_ORIENTATION_ANGLE:
-                  match = config.optimalOrientation == attributeValue;
-                  break;
               default: UNREACHABLE();
             }
 

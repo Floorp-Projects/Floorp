@@ -22,18 +22,6 @@ namespace rx
 namespace d3d11
 {
 
-struct LoadImageFunctionInfo
-{
-    LoadImageFunctionInfo() : loadFunction(nullptr), requiresConversion(false) {}
-    LoadImageFunctionInfo(LoadImageFunction loadFunction, bool requiresConversion)
-        : loadFunction(loadFunction), requiresConversion(requiresConversion)
-    {
-    }
-
-    LoadImageFunction loadFunction;
-    bool requiresConversion;
-};
-
 struct TextureFormat
 {
     TextureFormat();
@@ -49,7 +37,7 @@ struct TextureFormat
     DXGI_FORMAT swizzleRTVFormat;
 
     InitializeTextureDataFunction dataInitializerFunction;
-    typedef std::map<GLenum, LoadImageFunctionInfo> LoadFunctionMap;
+    typedef std::map<GLenum, LoadImageFunction> LoadFunctionMap;
 
     LoadFunctionMap loadFunctions;
 };

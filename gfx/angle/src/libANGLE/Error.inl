@@ -15,15 +15,15 @@ namespace gl
 
 Error::Error(GLenum errorCode)
     : mCode(errorCode),
-      mID(errorCode)
+      mMessage(nullptr)
 {
 }
 
 Error::Error(const Error &other)
     : mCode(other.mCode),
-      mID(other.mID)
+      mMessage(nullptr)
 {
-    if (other.mMessage)
+    if (other.mMessage != nullptr)
     {
         createMessageString();
         *mMessage = *(other.mMessage);
@@ -32,24 +32,28 @@ Error::Error(const Error &other)
 
 Error::Error(Error &&other)
     : mCode(other.mCode),
-      mID(other.mID),
-      mMessage(std::move(other.mMessage))
+      mMessage(other.mMessage)
 {
+    other.mMessage = nullptr;
+}
+
+Error::~Error()
+{
+    SafeDelete(mMessage);
 }
 
 Error &Error::operator=(const Error &other)
 {
     mCode = other.mCode;
-    mID = other.mID;
 
-    if (other.mMessage)
+    if (other.mMessage != nullptr)
     {
         createMessageString();
         *mMessage = *(other.mMessage);
     }
     else
     {
-        mMessage.release();
+        SafeDelete(mMessage);
     }
 
     return *this;
@@ -57,12 +61,10 @@ Error &Error::operator=(const Error &other)
 
 Error &Error::operator=(Error &&other)
 {
-    if (this != &other)
-    {
-        mCode = other.mCode;
-        mID = other.mID;
-        mMessage = std::move(other.mMessage);
-    }
+    mCode = other.mCode;
+    mMessage = other.mMessage;
+
+    other.mMessage = nullptr;
 
     return *this;
 }
@@ -70,11 +72,6 @@ Error &Error::operator=(Error &&other)
 GLenum Error::getCode() const
 {
     return mCode;
-}
-
-GLuint Error::getID() const
-{
-    return mID;
 }
 
 bool Error::isError() const
@@ -89,15 +86,17 @@ namespace egl
 
 Error::Error(EGLint errorCode)
     : mCode(errorCode),
-      mID(0)
+      mID(0),
+      mMessage(nullptr)
 {
 }
 
 Error::Error(const Error &other)
     : mCode(other.mCode),
-      mID(other.mID)
+      mID(other.mID),
+      mMessage(nullptr)
 {
-    if (other.mMessage)
+    if (other.mMessage != nullptr)
     {
         createMessageString();
         *mMessage = *(other.mMessage);
@@ -107,8 +106,14 @@ Error::Error(const Error &other)
 Error::Error(Error &&other)
     : mCode(other.mCode),
       mID(other.mID),
-      mMessage(std::move(other.mMessage))
+      mMessage(other.mMessage)
 {
+    other.mMessage = nullptr;
+}
+
+Error::~Error()
+{
+    SafeDelete(mMessage);
 }
 
 Error &Error::operator=(const Error &other)
@@ -116,14 +121,14 @@ Error &Error::operator=(const Error &other)
     mCode = other.mCode;
     mID = other.mID;
 
-    if (other.mMessage)
+    if (other.mMessage != nullptr)
     {
         createMessageString();
         *mMessage = *(other.mMessage);
     }
     else
     {
-        mMessage.release();
+        SafeDelete(mMessage);
     }
 
     return *this;
@@ -131,12 +136,11 @@ Error &Error::operator=(const Error &other)
 
 Error &Error::operator=(Error &&other)
 {
-    if (this != &other)
-    {
-        mCode = other.mCode;
-        mID = other.mID;
-        mMessage = std::move(other.mMessage);
-    }
+    mCode = other.mCode;
+    mID = other.mID;
+    mMessage = other.mMessage;
+
+    other.mMessage = nullptr;
 
     return *this;
 }

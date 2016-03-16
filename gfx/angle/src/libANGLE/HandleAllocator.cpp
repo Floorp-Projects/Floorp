@@ -126,9 +126,8 @@ void HandleAllocator::reserve(GLuint handle)
     }
     if (begin != handle)
     {
-        ASSERT(begin < handle);
         mUnallocatedList.insert(placementIt, HandleRange(begin, handle));
     }
 }
 
-}  // namespace gl
+}

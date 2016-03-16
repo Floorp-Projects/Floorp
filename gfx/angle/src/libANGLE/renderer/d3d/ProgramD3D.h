@@ -103,7 +103,6 @@ class ProgramD3DMetadata : angle::NonCopyable
     ProgramD3DMetadata(int rendererMajorShaderModel,
                        const std::string &shaderModelSuffix,
                        bool usesInstancedPointSpriteEmulation,
-                       bool usesViewScale,
                        const ShaderD3D *vertexShader,
                        const ShaderD3D *fragmentShader);
 
@@ -114,7 +113,6 @@ class ProgramD3DMetadata : angle::NonCopyable
     bool usesFragCoord() const;
     bool usesPointSize() const;
     bool usesInsertedPointCoordValue() const;
-    bool usesViewScale() const;
     bool addsPointCoordToVertexShader() const;
     bool usesTransformFeedbackGLPosition() const;
     bool usesSystemValuePointSize() const;
@@ -126,7 +124,6 @@ class ProgramD3DMetadata : angle::NonCopyable
     const int mRendererMajorShaderModel;
     const std::string mShaderModelSuffix;
     const bool mUsesInstancedPointSpriteEmulation;
-    const bool mUsesViewScale;
     const ShaderD3D *mVertexShader;
     const ShaderD3D *mFragmentShader;
 };
@@ -247,8 +244,6 @@ class ProgramD3D : public ProgramImpl
 
     void updateCachedInputLayout(const gl::State &state);
     const gl::InputLayout &getCachedInputLayout() const { return mCachedInputLayout; }
-
-    bool isSamplerMappingDirty() { return mDirtySamplerMapping; }
 
   private:
     class VertexExecutable

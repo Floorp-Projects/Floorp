@@ -28,7 +28,7 @@ struct BufferSubDataParams final : public RenderTestParams
         windowHeight = 512;
         updateSize = 3000;
         bufferSize = 40000000;
-        iterations   = 4;
+        iterations = 2;
         updateRate = 1;
     }
 
@@ -59,6 +59,7 @@ class BufferSubDataBenchmark : public ANGLERenderTest,
 
     void initializeBenchmark() override;
     void destroyBenchmark() override;
+    void beginDrawBenchmark() override;
     void drawBenchmark() override;
 
   private:
@@ -93,14 +94,10 @@ GLfloat *GetFloatData(GLint componentCount)
 
     switch (componentCount)
     {
-        case 2:
-            return vertices2;
-        case 3:
-            return vertices3;
-        case 4:
-            return vertices4;
-        default:
-            return nullptr;
+      case 2: return vertices2;
+      case 3: return vertices3;
+      case 4: return vertices4;
+      default: return NULL;
     }
 }
 
@@ -154,26 +151,13 @@ GLsizeiptr GetVertexData(GLenum type, GLint componentCount, GLboolean normalized
 
         switch (type)
         {
-            case GL_BYTE:
-                triDataSize = GetNormalizedData<GLbyte>(numElements, floatData, data);
-                break;
-            case GL_SHORT:
-                triDataSize = GetNormalizedData<GLshort>(numElements, floatData, data);
-                break;
-            case GL_INT:
-                triDataSize = GetNormalizedData<GLint>(numElements, floatData, data);
-                break;
-            case GL_UNSIGNED_BYTE:
-                triDataSize = GetNormalizedData<GLubyte>(numElements, floatData, data);
-                break;
-            case GL_UNSIGNED_SHORT:
-                triDataSize = GetNormalizedData<GLushort>(numElements, floatData, data);
-                break;
-            case GL_UNSIGNED_INT:
-                triDataSize = GetNormalizedData<GLuint>(numElements, floatData, data);
-                break;
-            default:
-                assert(0);
+          case GL_BYTE:           triDataSize = GetNormalizedData<GLbyte>(numElements, floatData, data); break;
+          case GL_SHORT:          triDataSize = GetNormalizedData<GLshort>(numElements, floatData, data); break;
+          case GL_INT:            triDataSize = GetNormalizedData<GLint>(numElements, floatData, data); break;
+          case GL_UNSIGNED_BYTE:  triDataSize = GetNormalizedData<GLubyte>(numElements, floatData, data); break;
+          case GL_UNSIGNED_SHORT: triDataSize = GetNormalizedData<GLushort>(numElements, floatData, data); break;
+          case GL_UNSIGNED_INT:   triDataSize = GetNormalizedData<GLuint>(numElements, floatData, data); break;
+          default: assert(0);
         }
     }
     else
@@ -182,26 +166,13 @@ GLsizeiptr GetVertexData(GLenum type, GLint componentCount, GLboolean normalized
 
         switch (type)
         {
-            case GL_BYTE:
-                triDataSize = GetIntData<GLbyte>(numElements, floatData, data);
-                break;
-            case GL_SHORT:
-                triDataSize = GetIntData<GLshort>(numElements, floatData, data);
-                break;
-            case GL_INT:
-                triDataSize = GetIntData<GLint>(numElements, floatData, data);
-                break;
-            case GL_UNSIGNED_BYTE:
-                triDataSize = GetIntData<GLubyte>(numElements, floatData, data);
-                break;
-            case GL_UNSIGNED_SHORT:
-                triDataSize = GetIntData<GLushort>(numElements, floatData, data);
-                break;
-            case GL_UNSIGNED_INT:
-                triDataSize = GetIntData<GLuint>(numElements, floatData, data);
-                break;
-            default:
-                assert(0);
+          case GL_BYTE:           triDataSize = GetIntData<GLbyte>(numElements, floatData, data); break;
+          case GL_SHORT:          triDataSize = GetIntData<GLshort>(numElements, floatData, data); break;
+          case GL_INT:            triDataSize = GetIntData<GLint>(numElements, floatData, data); break;
+          case GL_UNSIGNED_BYTE:  triDataSize = GetIntData<GLubyte>(numElements, floatData, data); break;
+          case GL_UNSIGNED_SHORT: triDataSize = GetIntData<GLushort>(numElements, floatData, data); break;
+          case GL_UNSIGNED_INT:   triDataSize = GetIntData<GLuint>(numElements, floatData, data); break;
+          default: assert(0);
         }
     }
 
@@ -221,30 +192,14 @@ std::string BufferSubDataParams::suffix() const
 
     switch (vertexType)
     {
-        case GL_FLOAT:
-            strstr << "_float";
-            break;
-        case GL_INT:
-            strstr << "_int";
-            break;
-        case GL_BYTE:
-            strstr << "_byte";
-            break;
-        case GL_SHORT:
-            strstr << "_short";
-            break;
-        case GL_UNSIGNED_INT:
-            strstr << "_uint";
-            break;
-        case GL_UNSIGNED_BYTE:
-            strstr << "_ubyte";
-            break;
-        case GL_UNSIGNED_SHORT:
-            strstr << "_ushort";
-            break;
-        default:
-            strstr << "_vunk_" << vertexType << "_";
-            break;
+      case GL_FLOAT: strstr << "_float"; break;
+      case GL_INT: strstr << "_int"; break;
+      case GL_BYTE: strstr << "_byte"; break;
+      case GL_SHORT: strstr << "_short"; break;
+      case GL_UNSIGNED_INT: strstr << "_uint"; break;
+      case GL_UNSIGNED_BYTE: strstr << "_ubyte"; break;
+      case GL_UNSIGNED_SHORT: strstr << "_ushort"; break;
+      default: strstr << "_vunk_" << vertexType << "_"; break;
     }
 
     strstr << vertexComponentCount;
@@ -257,7 +212,7 @@ BufferSubDataBenchmark::BufferSubDataBenchmark()
     : ANGLERenderTest("BufferSubData", GetParam()),
       mProgram(0),
       mBuffer(0),
-      mUpdateData(nullptr),
+      mUpdateData(NULL),
       mNumTris(0)
 {
 }
@@ -266,8 +221,9 @@ void BufferSubDataBenchmark::initializeBenchmark()
 {
     const auto &params = GetParam();
 
-    ASSERT_LT(1, params.vertexComponentCount);
-    ASSERT_LT(0u, params.iterations);
+    ASSERT_TRUE(params.vertexComponentCount > 1);
+    ASSERT_TRUE(params.iterations > 0);
+    mDrawIterations = params.iterations;
 
     const std::string vs = SHADER_SOURCE
     (
@@ -290,7 +246,7 @@ void BufferSubDataBenchmark::initializeBenchmark()
     );
 
     mProgram = CompileProgram(vs, fs);
-    ASSERT_NE(0u, mProgram);
+    ASSERT_TRUE(mProgram != 0);
 
     // Use the program object
     glUseProgram(mProgram);
@@ -357,15 +313,19 @@ void BufferSubDataBenchmark::destroyBenchmark()
     SafeDeleteArray(mUpdateData);
 }
 
+void BufferSubDataBenchmark::beginDrawBenchmark()
+{
+    // Clear the color buffer
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
 void BufferSubDataBenchmark::drawBenchmark()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
-
     const auto &params = GetParam();
 
     for (unsigned int it = 0; it < params.iterations; it++)
     {
-        if (params.updateSize > 0 && ((getNumStepsPerformed() % params.updateRate) == 0))
+        if (params.updateSize > 0 && ((mNumFrames % params.updateRate) == 0))
         {
             glBufferSubData(GL_ARRAY_BUFFER, 0, params.updateSize, mUpdateData);
         }

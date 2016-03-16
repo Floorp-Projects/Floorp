@@ -6,15 +6,15 @@
 
 // DisplayCGL.mm: CGL implementation of egl::Display
 
-#include "libANGLE/renderer/gl/cgl/DisplayCGL.h"
+#include "libANGLE/renderer/gl/CGL/DisplayCGL.h"
 
 #import <Cocoa/Cocoa.h>
 #include <dlfcn.h>
 #include <EGL/eglext.h>
 
 #include "common/debug.h"
-#include "libANGLE/renderer/gl/cgl/PbufferSurfaceCGL.h"
-#include "libANGLE/renderer/gl/cgl/WindowSurfaceCGL.h"
+#include "libANGLE/renderer/gl/CGL/PbufferSurfaceCGL.h"
+#include "libANGLE/renderer/gl/CGL/WindowSurfaceCGL.h"
 
 namespace
 {
@@ -33,7 +33,7 @@ class FunctionsGLCGL : public FunctionsGL
   public:
     FunctionsGLCGL(void *dylibHandle) : mDylibHandle(dylibHandle) {}
 
-    ~FunctionsGLCGL() override { dlclose(mDylibHandle); }
+    virtual ~FunctionsGLCGL() { dlclose(mDylibHandle); }
 
   private:
     void *loadProcAddress(const std::string &function) override
@@ -248,7 +248,6 @@ const FunctionsGL *DisplayCGL::getFunctionsGL() const
 void DisplayCGL::generateExtensions(egl::DisplayExtensions *outExtensions) const
 {
     outExtensions->createContext = true;
-    outExtensions->createContextNoError = true;
 }
 
 void DisplayCGL::generateCaps(egl::Caps *outCaps) const
@@ -256,17 +255,4 @@ void DisplayCGL::generateCaps(egl::Caps *outCaps) const
     outCaps->textureNPOT = true;
 }
 
-egl::Error DisplayCGL::waitClient() const
-{
-    // TODO(cwallez) UNIMPLEMENTED()
-    return egl::Error(EGL_SUCCESS);
-}
-
-egl::Error DisplayCGL::waitNative(EGLint engine,
-                                  egl::Surface *drawSurface,
-                                  egl::Surface *readSurface) const
-{
-    // TODO(cwallez) UNIMPLEMENTED()
-    return egl::Error(EGL_SUCCESS);
-}
 }

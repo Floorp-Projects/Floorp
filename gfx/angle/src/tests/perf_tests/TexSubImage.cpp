@@ -31,7 +31,7 @@ struct TexSubImageParams final : public RenderTestParams
         imageHeight = 1024;
         subImageWidth = 64;
         subImageHeight = 64;
-        iterations     = 9;
+        iterations = 3;
     }
 
     std::string suffix() const override;
@@ -58,6 +58,7 @@ class TexSubImageBenchmark : public ANGLERenderTest,
 
     void initializeBenchmark() override;
     void destroyBenchmark() override;
+    void beginDrawBenchmark() override;
     void drawBenchmark() override;
 
   private:
@@ -98,7 +99,7 @@ TexSubImageBenchmark::TexSubImageBenchmark()
       mTexture(0),
       mVertexBuffer(0),
       mIndexBuffer(0),
-      mPixels(nullptr)
+      mPixels(NULL)
 {
 }
 
@@ -107,6 +108,7 @@ GLuint TexSubImageBenchmark::createTexture()
     const auto &params = GetParam();
 
     assert(params.iterations > 0);
+    mDrawIterations = params.iterations;
 
     // Use tightly packed data
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -155,7 +157,7 @@ void TexSubImageBenchmark::initializeBenchmark()
     );
 
     mProgram = CompileProgram(vs, fs);
-    ASSERT_NE(0u, mProgram);
+    ASSERT_TRUE(mProgram != 0);
 
     // Get the attribute locations
     mPositionLoc = glGetAttribLocation(mProgram, "a_position");
@@ -218,7 +220,7 @@ void TexSubImageBenchmark::destroyBenchmark()
     delete[] mPixels;
 }
 
-void TexSubImageBenchmark::drawBenchmark()
+void TexSubImageBenchmark::beginDrawBenchmark()
 {
     // Set the viewport
     glViewport(0, 0, getWindow()->getWidth(), getWindow()->getHeight());
@@ -249,7 +251,10 @@ void TexSubImageBenchmark::drawBenchmark()
     glUniform1i(mSamplerLoc, 0);
 
     ASSERT_GL_NO_ERROR();
+}
 
+void TexSubImageBenchmark::drawBenchmark()
+{
     const auto &params = GetParam();
 
     for (unsigned int iteration = 0; iteration < params.iterations; ++iteration)
