@@ -118,6 +118,7 @@ struct HttpChannelOpenArgs
   bool                        blockAuthPrompt;
   bool                        suspendAfterSynthesizeResponse;
   bool                        allowStaleCacheContent;
+  nsCString                   contentTypeHint;
 };
 
 struct HttpChannelConnectArgs
