@@ -173,21 +173,54 @@ struct EventFlags : public BaseEventFlags
 };
 
 /******************************************************************************
+ * mozilla::WidgetEventTime
+ ******************************************************************************/
+
+class WidgetEventTime
+{
+public:
+  // Elapsed time, in milliseconds, from a platform-specific zero time
+  // to the time the message was created
+  uint64_t time;
+  // Timestamp when the message was created. Set in parallel to 'time' until we
+  // determine if it is safe to drop 'time' (see bug 77992).
+  TimeStamp timeStamp;
+
+  WidgetEventTime()
+    : time(0)
+    , timeStamp(TimeStamp::Now())
+  {
+  }
+
+  WidgetEventTime(uint64_t aTime,
+                  TimeStamp aTimeStamp)
+    : time(aTime)
+    , timeStamp(aTimeStamp)
+  {
+  }
+
+  void AssignEventTime(const WidgetEventTime& aOther)
+  {
+    time = aOther.time;
+    timeStamp = aOther.timeStamp;
+  }
+};
+
+/******************************************************************************
  * mozilla::WidgetEvent
  ******************************************************************************/
 
-class WidgetEvent
+class WidgetEvent : public WidgetEventTime
 {
 protected:
   WidgetEvent(bool aIsTrusted,
               EventMessage aMessage,
               EventClassID aEventClassID)
-    : mClass(aEventClassID)
+    : WidgetEventTime()
+    , mClass(aEventClassID)
     , mMessage(aMessage)
     , refPoint(0, 0)
     , lastRefPoint(0, 0)
-    , time(0)
-    , timeStamp(TimeStamp::Now())
     , userType(nullptr)
   {
     MOZ_COUNT_CTOR(WidgetEvent);
@@ -198,19 +231,18 @@ protected:
   }
 
   WidgetEvent()
-    : time(0)
+    : WidgetEventTime()
   {
     MOZ_COUNT_CTOR(WidgetEvent);
   }
 
 public:
   WidgetEvent(bool aIsTrusted, EventMessage aMessage)
-    : mClass(eBasicEventClass)
+    : WidgetEventTime()
+    , mClass(eBasicEventClass)
     , mMessage(aMessage)
     , refPoint(0, 0)
     , lastRefPoint(0, 0)
-    , time(0)
-    , timeStamp(TimeStamp::Now())
     , userType(nullptr)
   {
     MOZ_COUNT_CTOR(WidgetEvent);
@@ -248,12 +280,6 @@ public:
   LayoutDeviceIntPoint refPoint;
   // The previous refPoint, if known, used to calculate mouse movement deltas.
   LayoutDeviceIntPoint lastRefPoint;
-  // Elapsed time, in milliseconds, from a platform-specific zero time
-  // to the time the message was created
-  uint64_t time;
-  // Timestamp when the message was created. Set in parallel to 'time' until we
-  // determine if it is safe to drop 'time' (see bug 77992).
-  mozilla::TimeStamp timeStamp;
   // See BaseEventFlags definition for the detail.
   BaseEventFlags mFlags;
 
@@ -273,8 +299,7 @@ public:
     // mMessage should be initialized with the constructor.
     refPoint = aEvent.refPoint;
     // lastRefPoint doesn't need to be copied.
-    time = aEvent.time;
-    timeStamp = aEvent.timeStamp;
+    AssignEventTime(aEvent);
     // mFlags should be copied manually if it's necessary.
     userType = aEvent.userType;
     // typeString should be copied manually if it's necessary.
