@@ -11,5 +11,5 @@ interface nsIURI;
 [scriptable, builtinclass, uuid(94f4a92b-752e-4fd9-8345-11b069ca19f3)]
 interface nsIRemoteWindowContext : nsISupports
 {
-  void openURI(in nsIURI aURI, in uint32_t aFlags);
+  void openURI(in nsIURI aURI);
 };

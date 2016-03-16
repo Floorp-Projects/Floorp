@@ -86,7 +86,7 @@ nsWebHandlerApp.prototype = {
         // If aWindowContext refers to a remote docshell, send the load
         // request to the correct process.
         aWindowContext.getInterface(Ci.nsIRemoteWindowContext)
-                      .openURI(uriToSend, Ci.nsIURILoader.IS_CONTENT_PREFERRED);
+                      .openURI(uriToSend);
         return;
       } catch (e) {
         if (e.result != Cr.NS_NOINTERFACE) {
