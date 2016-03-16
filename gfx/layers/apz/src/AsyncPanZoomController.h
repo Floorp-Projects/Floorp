@@ -622,11 +622,6 @@ protected:
   APZCTreeManager* GetApzcTreeManager() const;
 
   /**
-   * Gets a ref to the input queue that is shared across the entire tree manager.
-   */
-  const RefPtr<InputQueue>& GetInputQueue() const;
-
-  /**
    * Convert ScreenPoint relative to the screen to CSSPoint relative
    * to the parent document. This excludes the transient compositor transform.
    * NOTE: This must be converted to CSSPoint relative to the child
@@ -819,6 +814,11 @@ public:
    * Clear internal state relating to touch input handling.
    */
   void ResetTouchInputState();
+
+  /**
+   * Gets a ref to the input queue that is shared across the entire tree manager.
+   */
+  const RefPtr<InputQueue>& GetInputQueue() const;
 
 private:
   void CancelAnimationAndGestureState();

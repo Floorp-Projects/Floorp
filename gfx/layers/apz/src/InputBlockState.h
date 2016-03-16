@@ -416,10 +416,8 @@ public:
   /**
    * Set the single-tap-occurred flag that indicates that this touch block
    * triggered a single tap event.
-   * @return true if the flag was set. This may not happen if, for example,
-   *         SetDuringFastFling was previously called.
    */
-  bool SetSingleTapOccurred();
+  void SetSingleTapOccurred();
   /**
    * @return true iff the single-tap-occurred flag is set on this block.
    */
