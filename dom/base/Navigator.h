@@ -219,6 +219,7 @@ public:
   }
   PowerManager* GetMozPower(ErrorResult& aRv);
   bool JavaEnabled(ErrorResult& aRv);
+  uint64_t HardwareConcurrency();
   bool TaintEnabled()
   {
     return false;
