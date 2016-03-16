@@ -875,6 +875,10 @@ void* nsWindow::GetNativeData(uint32_t aDataType)
         break;
 
     case NS_RAW_NATIVE_IME_CONTEXT:
+      retVal = GetPseudoIMEContext();
+      if (retVal) {
+        break;
+      }
       retVal = NS_ONLY_ONE_NATIVE_IME_CONTEXT;
       break;
   }

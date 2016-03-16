@@ -112,6 +112,9 @@
         if ([self frame].size.width != texture.width || [self frame].size.height != texture.height)
         {
             [self setFrame:CGRectMake(0, 0, texture.width, texture.height)];
+
+            // Without this, the OSX compositor / window system doesn't see the resize.
+            [self setNeedsDisplay];
         }
 
         // TODO(cwallez) support 2.1 contexts too that don't have blitFramebuffer nor the
@@ -174,6 +177,7 @@ WindowSurfaceCGL::~WindowSurfaceCGL()
 
     if (mSwapLayer != nil)
     {
+        [mSwapLayer removeFromSuperlayer];
         [mSwapLayer release];
         mSwapLayer = nil;
     }
@@ -251,6 +255,10 @@ egl::Error WindowSurfaceCGL::swap()
         mStateManager->bindTexture(GL_TEXTURE_2D, texture.texture);
         mFunctions->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
                                GL_UNSIGNED_BYTE, nullptr);
+
+        mStateManager->bindRenderbuffer(GL_RENDERBUFFER, mDSRenderbuffer);
+        mFunctions->renderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+
         texture.width  = width;
         texture.height = height;
     }

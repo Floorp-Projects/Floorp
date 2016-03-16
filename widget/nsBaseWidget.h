@@ -249,6 +249,8 @@ public:
   virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener() override;
   virtual void               SetPreviouslyAttachedWidgetListener(nsIWidgetListener* aListener) override;
   NS_IMETHOD_(TextEventDispatcher*) GetTextEventDispatcher() override final;
+  NS_IMETHOD_(TextEventDispatcherListener*)
+    GetNativeTextEventDispatcherListener() override;
   virtual void ZoomToRect(const uint32_t& aPresShellId,
                           const FrameMetrics::ViewID& aViewId,
                           const CSSRect& aRect,
@@ -429,6 +431,12 @@ protected:
   virtual nsresult NotifyIMEInternal(const IMENotification& aIMENotification)
   { return NS_ERROR_NOT_IMPLEMENTED; }
 
+  /**
+   * GetPseudoIMEContext() returns pseudo IME context when TextEventDispatcher
+   * has non-native input transaction.  Otherwise, returns nullptr.
+   */
+  void* GetPseudoIMEContext();
+
 protected:
   // Utility to check if an array of clip rects is equal to our
   // internally stored clip rect array mClipRects.
@@ -482,6 +490,8 @@ protected:
   virtual void RegisterTouchWindow() {}
 
   nsIDocument* GetDocument() const;
+
+ void EnsureTextEventDispatcher();
 
   // Notify the compositor that a device reset has occurred.
   void OnRenderingDeviceReset();

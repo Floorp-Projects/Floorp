@@ -280,8 +280,8 @@ public:
   }
 
 private:
-  static const char16_t* kKeyNames[];
-  static const char16_t* kCodeNames[];
+  static const char16_t* const kKeyNames[];
+  static const char16_t* const kCodeNames[];
   typedef nsDataHashtable<nsStringHashKey,
                           KeyNameIndex> KeyNameIndexHashtable;
   typedef nsDataHashtable<nsStringHashKey,

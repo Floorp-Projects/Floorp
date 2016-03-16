@@ -399,7 +399,7 @@ aes_icm_encrypt_ismacryp(aes_icm_ctx_t *c,
     *b++ ^= c->keystream_buffer.v32[3];
     buf = (uint8_t *)b;
 #else    
-    if ((((unsigned long) buf) & 0x03) != 0) {
+    if ((((uintptr_t) buf) & 0x03) != 0) {
       *buf++ ^= c->keystream_buffer.v8[0];
       *buf++ ^= c->keystream_buffer.v8[1];
       *buf++ ^= c->keystream_buffer.v8[2];

@@ -3642,7 +3642,7 @@ void SplitByChar(const nsACString& str, const char delim,
 
 template<size_t N>
 bool
-MarkBitfieldByString(const nsACString& str, const char* (&markStrList)[N],
+MarkBitfieldByString(const nsACString& str, const char* const (&markStrList)[N],
                      std::bitset<N>* const out_markList)
 {
     for (size_t i = 0; i < N; i++) {
@@ -3657,7 +3657,7 @@ MarkBitfieldByString(const nsACString& str, const char* (&markStrList)[N],
 template<size_t N>
 void
 MarkBitfieldByStrings(const std::vector<nsCString>& strList,
-                      bool dumpStrings, const char* (&markStrList)[N],
+                      bool dumpStrings, const char* const (&markStrList)[N],
                       std::bitset<N>* const out_markList)
 {
     for (auto itr = strList.begin(); itr != strList.end(); ++itr) {

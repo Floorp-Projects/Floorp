@@ -47,6 +47,7 @@
             '<(angle_path)/src/tests/compiler_tests/ExpressionLimit_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/EXT_blend_func_extended_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/FragDepth_test.cpp',
+            '<(angle_path)/src/tests/compiler_tests/GLSLCompatibilityOutput_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/IntermNode_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/MalformedShader_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/NV_draw_buffers_test.cpp',
