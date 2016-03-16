@@ -3441,11 +3441,6 @@ uikit)
     MOZ_FS_LAYOUT=bundle
     ;;
 
-gonk)
-    AC_DEFINE(MOZ_TOUCH)
-    MOZ_TOUCH=1
-    ;;
-
 esac
 
 dnl there are a lot of tests on MOZ_ENABLE_GTK below, that are more convenient
