@@ -3448,7 +3448,6 @@ gtk3)
 
 gtk2)
     MOZ_ENABLE_GTK=1
-    MOZ_ENABLE_GTK2=1
     MOZ_ENABLE_XREMOTE=1
     MOZ_GL_DEFAULT_PROVIDER=GLX
 
@@ -3544,7 +3543,7 @@ if test "$COMPILE_ENVIRONMENT"; then
     AC_DEFINE_UNQUOTED(GDK_VERSION_MAX_ALLOWED,$GDK_VERSION_MIN_REQUIRED)
     GLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_32
   fi
-  if test "$MOZ_ENABLE_GTK2"; then
+  if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
     GLIB_VERSION_MAX_ALLOWED=$GLIB_VERSION_MIN_REQUIRED
   fi
   if test "$MOZ_ENABLE_GTK"; then
@@ -3557,7 +3556,7 @@ if test "$COMPILE_ENVIRONMENT"; then
     PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 glib-2.0 >= $GLIB_VERSION gobject-2.0 $GDK_PACKAGES)
     MOZ_GTK2_CFLAGS="-I${_topsrcdir}/widget/gtk/compat $MOZ_GTK2_CFLAGS"
   fi
-  if test "$MOZ_ENABLE_GTK2"; then
+  if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
     TK_CFLAGS=$MOZ_GTK2_CFLAGS
     TK_LIBS=$MOZ_GTK2_LIBS
   fi
@@ -3794,7 +3793,6 @@ AC_SUBST(GTK_CONFIG)
 AC_SUBST_LIST(TK_CFLAGS)
 AC_SUBST_LIST(TK_LIBS)
 
-AC_SUBST(MOZ_ENABLE_GTK2)
 AC_SUBST(MOZ_ENABLE_GTK3)
 AC_SUBST(MOZ_ENABLE_GTK)
 AC_SUBST(MOZ_ENABLE_QT)
@@ -3915,7 +3913,7 @@ then
 
     if test "$MOZ_ENABLE_GIO" -a "$MOZ_ENABLE_GTK"
     then
-        if test "$MOZ_ENABLE_GTK2"
+        if test "$MOZ_WIDGET_TOOLKIT" = gtk2
         then
             PKG_CHECK_MODULES(_GTKCHECK, gtk+-2.0 >= 2.14, ,
                               [AC_MSG_ERROR([* * * Could not find gtk+-2.0 > 2.14. Required for build with gio.])])
