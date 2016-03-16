@@ -894,7 +894,7 @@ case "$host" in
     else
         HOST_CFLAGS="$HOST_CFLAGS -mwindows"
     fi
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11 -D_CRT_SECURE_NO_WARNINGS"
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     HOST_BIN_SUFFIX=.exe
 
@@ -914,7 +914,7 @@ case "$host" in
     ;;
 
 *-darwin*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX -DNO_X11"
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
@@ -988,8 +988,6 @@ case "$target" in
 
 *-android*|*-linuxandroid*)
     AC_DEFINE(NO_PW_GECOS)
-    no_x=yes
-
     MOZ_GFX_OPTIMIZE_MOBILE=1
     MOZ_OPTIMIZE_FLAGS="-O3 -fno-reorder-functions"
     if test -z "$CLANG_CC"; then
@@ -1215,10 +1213,6 @@ case "$target" in
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
     BIN_SUFFIX='.exe'
     MOZ_USER_DIR="Mozilla"
-
-    dnl set NO_X11 defines here as the general check is skipped on win32
-    no_x=yes
-    AC_DEFINE(NO_X11)
 
     case "$host_os" in
     cygwin*|msvc*|mks*)
