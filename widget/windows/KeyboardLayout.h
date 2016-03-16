@@ -269,6 +269,13 @@ public:
    */
   bool HandleAppCommandMessage() const;
 
+  /**
+   * Callback of TextEventDispatcherListener::WillDispatchKeyboardEvent().
+   * This method sets alternative char codes of aKeyboardEvent.
+   */
+  void WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
+                                 uint32_t aIndex);
+
 private:
   RefPtr<nsWindowBase> mWidget;
   RefPtr<TextEventDispatcher> mDispatcher;
@@ -476,10 +483,11 @@ private:
   bool DispatchCommandEvent(uint32_t aEventCommand) const;
 
   /**
-   * DispatchKeyPressEventsWithKeyboardLayout() dispatches keypress event(s)
-   * with the information provided by KeyboardLayout class.
+   * DispatchKeyPressEventsWithoutCharMessage() dispatches keypress event(s)
+   * without char messages.  So, this should be used only when there are no
+   * following char messages.
    */
-  bool DispatchKeyPressEventsWithKeyboardLayout() const;
+  bool DispatchKeyPressEventsWithoutCharMessage() const;
 
   /**
    * Remove all following WM_CHAR, WM_SYSCHAR and WM_DEADCHAR messages for the
