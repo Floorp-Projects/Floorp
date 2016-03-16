@@ -57,7 +57,7 @@ public:
    */
   nsresult BeginInputTransaction(TextEventDispatcherListener* aListener);
   nsresult BeginTestInputTransaction(TextEventDispatcherListener* aListener);
-  nsresult BeginNativeInputTransaction(TextEventDispatcherListener* aListener);
+  nsresult BeginNativeInputTransaction();
 
   /**
    * EndInputTransaction() should be called when the listener stops using
@@ -71,6 +71,8 @@ public:
    * OnDestroyWidget() is called when mWidget is being destroyed.
    */
   void OnDestroyWidget();
+
+  nsIWidget* GetWidget() const { return mWidget; }
 
   /**
    * GetState() returns current state of this class.

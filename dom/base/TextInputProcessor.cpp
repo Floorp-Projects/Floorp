@@ -631,8 +631,11 @@ TextInputProcessor::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
                               const IMENotification& aNotification)
 {
   // If This is called while this is being initialized, ignore the call.
+  // In such case, this method should return NS_ERROR_NOT_IMPLEMENTED because
+  // we can say, TextInputProcessor doesn't implement any handlers of the
+  // requests and notifications.
   if (!mDispatcher) {
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
   MOZ_ASSERT(aTextEventDispatcher == mDispatcher,
              "Wrong TextEventDispatcher notifies this");
