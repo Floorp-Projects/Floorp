@@ -7,6 +7,21 @@
 include('../js/moz.configure')
 
 
+# L10N
+# ==============================================================
+option('--with-l10n-base', nargs=1, env='L10NBASEDIR',
+       help='Path to l10n repositories')
+
+@depends('--with-l10n-base')
+def l10n_base(value):
+    if value:
+        path = value[0]
+        if not os.path.isdir(path):
+            error("Invalid value --with-l10n-base, %s doesn't exist" % path)
+
+        set_config('L10NBASEDIR', os.path.realpath(os.path.abspath(path)))
+
+
 # Default toolkit
 # ==============================================================
 # Normally, we'd want to use the `default` field on the option, but that
