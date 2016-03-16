@@ -175,6 +175,7 @@ class SpidermonkeyBuild(MockMixin,
                                   partial_env=self.config['partial_env'],
                                   purge_env=nuisance_env_vars)
         self.env['MOZ_UPLOAD_DIR'] = dirs['abs_blob_upload_dir']
+        self.env['TOOLTOOL_DIR'] = dirs['abs_work_dir']
 
     def query_abs_dirs(self):
         if self.abs_dirs:
