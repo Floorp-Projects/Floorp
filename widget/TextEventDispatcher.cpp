@@ -213,7 +213,8 @@ TextEventDispatcher::DispatchInputEvent(nsIWidget* aWidget,
 }
 
 nsresult
-TextEventDispatcher::StartComposition(nsEventStatus& aStatus)
+TextEventDispatcher::StartComposition(nsEventStatus& aStatus,
+                                      const WidgetEventTime* aEventTime)
 {
   aStatus = nsEventStatus_eIgnore;
 
@@ -230,6 +231,9 @@ TextEventDispatcher::StartComposition(nsEventStatus& aStatus)
   WidgetCompositionEvent compositionStartEvent(true, eCompositionStart,
                                                mWidget);
   InitEvent(compositionStartEvent);
+  if (aEventTime) {
+    compositionStartEvent.AssignEventTime(*aEventTime);
+  }
   rv = DispatchEvent(mWidget, compositionStartEvent, aStatus);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -240,13 +244,14 @@ TextEventDispatcher::StartComposition(nsEventStatus& aStatus)
 
 nsresult
 TextEventDispatcher::StartCompositionAutomaticallyIfNecessary(
-                       nsEventStatus& aStatus)
+                       nsEventStatus& aStatus,
+                       const WidgetEventTime* aEventTime)
 {
   if (IsComposing()) {
     return NS_OK;
   }
 
-  nsresult rv = StartComposition(aStatus);
+  nsresult rv = StartComposition(aStatus, aEventTime);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -275,7 +280,8 @@ TextEventDispatcher::StartCompositionAutomaticallyIfNecessary(
 
 nsresult
 TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
-                                       const nsAString* aCommitString)
+                                       const nsAString* aCommitString,
+                                       const WidgetEventTime* aEventTime)
 {
   aStatus = nsEventStatus_eIgnore;
 
@@ -293,7 +299,7 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
   }
 
   nsCOMPtr<nsIWidget> widget(mWidget);
-  rv = StartCompositionAutomaticallyIfNecessary(aStatus);
+  rv = StartCompositionAutomaticallyIfNecessary(aStatus, aEventTime);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -308,6 +314,9 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
                                          eCompositionCommitAsIs;
   WidgetCompositionEvent compositionCommitEvent(true, message, widget);
   InitEvent(compositionCommitEvent);
+  if (aEventTime) {
+    compositionCommitEvent.AssignEventTime(*aEventTime);
+  }
   if (message == eCompositionCommit) {
     compositionCommitEvent.mData = *aCommitString;
   }
@@ -655,8 +664,10 @@ TextEventDispatcher::PendingComposition::Set(const nsAString& aString,
 }
 
 nsresult
-TextEventDispatcher::PendingComposition::Flush(TextEventDispatcher* aDispatcher,
-                                               nsEventStatus& aStatus)
+TextEventDispatcher::PendingComposition::Flush(
+                                           TextEventDispatcher* aDispatcher,
+                                           nsEventStatus& aStatus,
+                                           const WidgetEventTime* aEventTime)
 {
   aStatus = nsEventStatus_eIgnore;
 
@@ -686,6 +697,9 @@ TextEventDispatcher::PendingComposition::Flush(TextEventDispatcher* aDispatcher,
   nsCOMPtr<nsIWidget> widget(aDispatcher->mWidget);
   WidgetCompositionEvent compChangeEvent(true, eCompositionChange, widget);
   aDispatcher->InitEvent(compChangeEvent);
+  if (aEventTime) {
+    compChangeEvent.AssignEventTime(*aEventTime);
+  }
   compChangeEvent.mData = mString;
   if (mClauses) {
     MOZ_ASSERT(!mClauses->IsEmpty(),
@@ -698,7 +712,8 @@ TextEventDispatcher::PendingComposition::Flush(TextEventDispatcher* aDispatcher,
   // before dispatching the event.
   Clear();
 
-  rv = aDispatcher->StartCompositionAutomaticallyIfNecessary(aStatus);
+  rv = aDispatcher->StartCompositionAutomaticallyIfNecessary(aStatus,
+                                                             aEventTime);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
