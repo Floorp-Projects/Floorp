@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "KeyboardLayout.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/widget/IMEData.h"
 #include "nsWindow.h"
@@ -68,7 +69,8 @@ WinTextEventDispatcherListener::WillDispatchKeyboardEvent(
                                   uint32_t aIndexOfKeypress,
                                   void* aData)
 {
-  // TODO: Implement this method later.
+  static_cast<NativeKey*>(aData)->
+    WillDispatchKeyboardEvent(aKeyboardEvent, aIndexOfKeypress);
 }
 
 } // namespace widget
