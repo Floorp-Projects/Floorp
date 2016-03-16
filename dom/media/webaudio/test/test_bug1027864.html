@@ -2,14 +2,13 @@
 <html>
 <head>
   <title>Test bug 1027864</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-Components.utils.import('resource://gre/modules/Services.jsm');
 SimpleTest.waitForExplicitFinish();
 
 function observer(subject, topic, data) {
@@ -26,10 +25,14 @@ function observer(subject, topic, data) {
   }
 }
 
-Services.obs.addObserver(observer, "webaudio-node-demise", false);
+function id(node) {
+  return SpecialPowers.getPrivilegedProps(node, "id");
+}
+
+SpecialPowers.addObserver(observer, "webaudio-node-demise", false);
 
 SimpleTest.registerCleanupFunction(function() {
-  Services.obs.removeObserver(observer, "webaudio-node-demise");
+  SpecialPowers.removeObserver(observer, "webaudio-node-demise");
 });
 
 var ac = new AudioContext();
@@ -53,7 +56,7 @@ var ids;
   source.start(ac.currentTime);
   source.stop(ac.currentTime + 0.1);
 
-  ids = [ delay.id, gain.id, source.id ];
+  ids = [ id(delay), id(gain), id(source) ];
 })();
 
 setInterval(function() {
