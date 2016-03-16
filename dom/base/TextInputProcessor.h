@@ -61,7 +61,6 @@ private:
   nsresult KeyupInternal(const WidgetKeyboardEvent& aKeyboardEvent,
                          uint32_t aKeyFlags,
                          bool& aDoDefault);
-  TextEventDispatcher::DispatchTo GetDispatchTo() const;
   nsresult IsValidStateForComposition();
   void UnlinkFromTextEventDispatcher();
   nsresult PrepareKeyboardEventToDispatch(WidgetKeyboardEvent& aKeyboardEvent,
