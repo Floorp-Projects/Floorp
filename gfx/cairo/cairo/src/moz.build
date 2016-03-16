@@ -74,7 +74,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'beos':
     SOURCES += [
         'cairo-beos-surface.cpp',
     ]
-elif CONFIG['MOZ_WIDGET_GTK']:
+elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     EXPORTS.cairo += [
         'cairo-ps.h',
     ]
