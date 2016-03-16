@@ -366,11 +366,6 @@
     list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16@2x.png);
   }
 
-  .webapps-notification-icon,
-  #webapps-notification-icon {
-    list-style-image: url(chrome://global/skin/icons/webapps-16@2x.png);
-  }
-
   #plugins-notification-icon {
     list-style-image: url(chrome://browser/skin/notification-pluginNormal@2x.png);
   }
