@@ -705,3 +705,11 @@ function add_prevented_cert_override_test(aHost, aExpectedBits, aExpectedError) 
                       attempt_adding_cert_override.bind(this, aHost, aExpectedBits));
   add_connection_test(aHost, aExpectedError);
 }
+
+function loginToDBWithDefaultPassword() {
+  let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
+                  .getService(Ci.nsIPK11TokenDB);
+  let token = tokenDB.getInternalKeyToken();
+  token.initPassword("");
+  token.login(/*force*/ false);
+}
