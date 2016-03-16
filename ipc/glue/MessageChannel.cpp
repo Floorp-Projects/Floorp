@@ -976,7 +976,10 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
 }
 
 void
-MessageChannel::PeekMessages(msgid_t aMsgId, mozilla::function<void(const Message& aMsg)> aInvoke) {
+MessageChannel::PeekMessages(msgid_t aMsgId, mozilla::function<void(const Message& aMsg)> aInvoke)
+{
+    MonitorAutoLock lock(*mMonitor);
+
     for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); it++) {
         Message &msg = *it;
 
