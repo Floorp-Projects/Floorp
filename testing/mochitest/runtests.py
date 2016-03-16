@@ -815,6 +815,7 @@ class MochitestBase(object):
         command = [sys.executable,
                    os.path.join("websocketprocessbridge",
                                 "websocketprocessbridge.py")]
+        os.environ['PYTHONPATH'] = os.pathsep.join(p for p in sys.path)
         self.websocketprocessbridge = mozprocess.ProcessHandler(command,
                                                                 cwd=SCRIPT_DIR)
         self.websocketprocessbridge.run()

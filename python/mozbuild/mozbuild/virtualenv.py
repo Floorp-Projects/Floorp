@@ -462,6 +462,17 @@ class VirtualenvManager(object):
         if isinstance(os.environ['PATH'], unicode):
             os.environ['PATH'] = os.environ['PATH'].encode('utf-8')
 
+    def install_pip_requirements_file(self, requirements_filename):
+        """Installs packages in |requirements_filename| via pip."""
+
+        args = [
+            'install',
+            '-r',
+            requirements_filename
+        ]
+
+        return self._run_pip(args)
+
     def install_pip_package(self, package):
         """Install a package via pip.
 
