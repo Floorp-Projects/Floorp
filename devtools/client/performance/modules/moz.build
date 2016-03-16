@@ -9,6 +9,7 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'constants.js',
     'global.js',
     'io.js',
     'markers.js',

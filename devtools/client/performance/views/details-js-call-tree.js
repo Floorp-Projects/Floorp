@@ -68,7 +68,7 @@ var JsCallTreeView = Heritage.extend(DetailsSubview, {
     // so we should always hide opts on rerender
     this.hideOptimizations();
 
-    this.emit(EVENTS.JS_CALL_TREE_RENDERED);
+    this.emit(EVENTS.UI_JS_CALL_TREE_RENDERED);
   },
 
   showOptimizations: function () {

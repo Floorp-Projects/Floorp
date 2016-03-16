@@ -1,42 +1,41 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests if the profiler is populated by console recordings that have finished
  * before it was opened.
  */
 
-var WAIT_TIME = 10;
+const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
+const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
+const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-function* spawnTest() {
-  let { target, toolbox, console } = yield initConsole(SIMPLE_URL);
-  let front = toolbox.performance;
+add_task(function*() {
+  let { target, toolbox, console } = yield initConsoleInNewTab({
+    url: SIMPLE_URL,
+    win: window
+  });
 
-  let profileStart = once(front, "recording-started");
-  console.profile("rust");
-  yield profileStart;
+  yield console.profile("rust");
+  yield console.profileEnd("rust");
 
-  busyWait(WAIT_TIME);
-  let profileEnd = once(front, "recording-stopped");
-  console.profileEnd("rust");
-  yield profileEnd;
+  let { panel } = yield initPerformanceInTab({ tab: target.tab });
+  let { PerformanceController, RecordingsView, WaterfallView } = panel.panelWin;
 
-  yield gDevTools.showToolbox(target, "performance");
-  let panel = yield toolbox.getCurrentPanel().open();
-  let { panelWin: { PerformanceController, RecordingsView }} = panel;
+  yield waitUntil(() => PerformanceController.getRecordings().length == 1);
+  yield waitUntil(() => WaterfallView.wasRenderedAtLeastOnce);
 
   let recordings = PerformanceController.getRecordings();
-  yield waitUntil(() => PerformanceController.getRecordings().length === 1);
-  is(recordings.length, 1, "one recording found in the performance panel.");
-  is(recordings[0].isConsole(), true, "recording came from console.profile.");
-  is(recordings[0].getLabel(), "rust", "correct label in the recording model.");
+  is(recordings.length, 1, "One recording found in the performance panel.");
+  is(recordings[0].isConsole(), true, "Recording came from console.profile.");
+  is(recordings[0].getLabel(), "rust", "Correct label in the recording model.");
 
   is(RecordingsView.selectedItem.attachment, recordings[0],
-    "The profile from console should be selected as its the only one in the RecordingsView.");
-
+    "The profile from console should be selected as it's the only one.");
   is(RecordingsView.selectedItem.attachment.getLabel(), "rust",
     "The profile label for the first recording is correct.");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardownToolboxAndRemoveTab(panel);
+});
