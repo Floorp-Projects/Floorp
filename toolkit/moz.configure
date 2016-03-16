@@ -133,3 +133,15 @@ def instrument_event_loop(value, toolkit):
                              'gonk') and value.origin == 'default'):
         set_config('MOZ_INSTRUMENT_EVENT_LOOP', '1')
         set_define('MOZ_INSTRUMENT_EVENT_LOOP', '1')
+
+
+# Fontconfig Freetype
+# ==============================================================
+option(env='USE_FC_FREETYPE',
+       help='Force-enable the use of fontconfig freetype')
+
+@depends('USE_FC_FREETYPE', toolkit)
+def fc_freetype(value, toolkit):
+    if value or (toolkit in ('gtk2', 'gtk3', 'qt') and
+                 value.origin == 'default'):
+        add_old_configure_assignment('USE_FC_FREETYPE', '1')
