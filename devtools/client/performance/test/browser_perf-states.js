@@ -1,12 +1,23 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests that view states and lazy component intialization works.
  */
-function* spawnTest() {
-  let { panel } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, PerformanceView, OverviewView, DetailsView } = panel.panelWin;
+
+const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
+const { UI_ENABLE_MEMORY_PREF, UI_ENABLE_ALLOCATIONS_PREF } = require("devtools/client/performance/test/helpers/prefs");
+const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+
+add_task(function*() {
+  let { panel } = yield initPerformanceInNewTab({
+    url: SIMPLE_URL,
+    win: window
+  });
+
+  let { PerformanceView, OverviewView, DetailsView } = panel.panelWin;
 
   is(PerformanceView.getState(), "empty",
     "The intial state of the performance panel view is correct.");
@@ -29,8 +40,8 @@ function* spawnTest() {
   ok(!DetailsView.components["memory-flamegraph"].initialized,
     "The memory-flamegraph detail view should not have been created yet.");
 
-  Services.prefs.setBoolPref(MEMORY_PREF, true);
-  Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
+  Services.prefs.setBoolPref(UI_ENABLE_MEMORY_PREF, true);
+  Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, true);
 
   ok(!(OverviewView.graphs.get("timeline")),
     "The markers graph should still not have been created yet.");
@@ -39,9 +50,7 @@ function* spawnTest() {
   ok(!(OverviewView.graphs.get("framerate")),
     "The framerate graph should still not have been created yet.");
 
-  let stateChanged = once(PerformanceView, EVENTS.UI_STATE_CHANGED);
   yield startRecording(panel);
-  yield stateChanged;
 
   is(PerformanceView.getState(), "recording",
     "The current state of the performance panel view is 'recording'.");
@@ -50,9 +59,7 @@ function* spawnTest() {
   ok(OverviewView.graphs.get("framerate"),
     "The framerate graph should have been created now.");
 
-  stateChanged = once(PerformanceView, EVENTS.UI_STATE_CHANGED);
   yield stopRecording(panel);
-  yield stateChanged;
 
   is(PerformanceView.getState(), "recorded",
     "The current state of the performance panel view is 'recorded'.");
@@ -91,6 +98,5 @@ function* spawnTest() {
   ok(!DetailsView.components["memory-flamegraph"].initialized,
     "The memory-flamegraph detail view should still not have been created yet.");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardownToolboxAndRemoveTab(panel);
+});
