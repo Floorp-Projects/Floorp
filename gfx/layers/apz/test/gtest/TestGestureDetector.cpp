@@ -592,3 +592,19 @@ TEST_F(APZCGestureDetectorTester, TapFollowedByMultipleTouches) {
   apzc->AssertStateIsReset();
 }
 
+TEST_F(APZCGestureDetectorTester, LongPressInterruptedByWheel) {
+  // Since the wheel block interrupted the long-press, we don't expect
+  // any long-press notifications. However, this also shouldn't crash, which
+  // is what it used to do.
+  EXPECT_CALL(*mcc, HandleLongTap(_, _, _, _)).Times(0);
+
+  uint64_t touchBlockId = 0;
+  uint64_t wheelBlockId = 0;
+  TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time(), &touchBlockId);
+  mcc->AdvanceByMillis(10);
+  Wheel(apzc, ScreenIntPoint(10, 10), ScreenPoint(0, -10), mcc->Time(), &wheelBlockId);
+  EXPECT_NE(touchBlockId, wheelBlockId);
+  mcc->AdvanceByMillis(1000);
+
+
+}
