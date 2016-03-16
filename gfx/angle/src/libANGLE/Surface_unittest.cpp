@@ -51,10 +51,6 @@ TEST(SurfaceTest, DestructionDeletesImpl)
     EXPECT_CALL(*impl, getSwapBehavior());
     EXPECT_CALL(*impl, createDefaultFramebuffer(testing::_)).WillOnce(testing::Return(framebuffer));
 
-    EXPECT_CALL(*framebuffer, setDrawBuffers(1, testing::_));
-    EXPECT_CALL(*framebuffer, setReadBuffer(GL_BACK));
-    EXPECT_CALL(*framebuffer, onUpdateColorAttachment(0));
-
     egl::Config config;
     egl::Surface *surface = new egl::Surface(impl, EGL_WINDOW_BIT, &config, egl::AttributeMap());
 

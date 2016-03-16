@@ -230,7 +230,8 @@ TEST(ShaderVariableTest, InvariantDoubleDeleteBug)
     ShBuiltInResources resources;
     ShInitBuiltInResources(&resources);
 
-    ShHandle compiler = ShConstructCompiler(GL_VERTEX_SHADER, SH_GLES2_SPEC, SH_GLSL_OUTPUT, &resources);
+    ShHandle compiler = ShConstructCompiler(GL_VERTEX_SHADER, SH_GLES2_SPEC,
+                                            SH_GLSL_COMPATIBILITY_OUTPUT, &resources);
     EXPECT_NE(static_cast<ShHandle>(0), compiler);
 
     const char *program[] =

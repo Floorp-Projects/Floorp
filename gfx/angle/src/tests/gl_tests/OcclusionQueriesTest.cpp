@@ -13,7 +13,7 @@ using namespace angle;
 class OcclusionQueriesTest : public ANGLETest
 {
   protected:
-    OcclusionQueriesTest()
+    OcclusionQueriesTest() : mProgram(0), mRNG(1)
     {
         setWindowWidth(128);
         setWindowHeight(128);
@@ -22,11 +22,9 @@ class OcclusionQueriesTest : public ANGLETest
         setConfigBlueBits(8);
         setConfigAlphaBits(8);
         setConfigDepthBits(24);
-
-        mProgram = 0;
     }
 
-    virtual void SetUp()
+    void SetUp() override
     {
         ANGLETest::SetUp();
 
@@ -49,13 +47,10 @@ class OcclusionQueriesTest : public ANGLETest
         );
 
         mProgram = CompileProgram(passthroughVS, passthroughPS);
-        if (mProgram == 0)
-        {
-            FAIL() << "shader compilation failed.";
-        }
+        ASSERT_NE(0u, mProgram);
     }
 
-    virtual void TearDown()
+    void TearDown() override
     {
         glDeleteProgram(mProgram);
 
@@ -63,6 +58,7 @@ class OcclusionQueriesTest : public ANGLETest
     }
 
     GLuint mProgram;
+    RNG mRNG;
 };
 
 TEST_P(OcclusionQueriesTest, IsOccluded)
@@ -328,8 +324,8 @@ TEST_P(OcclusionQueriesTest, MultiContext)
         {
             eglMakeCurrent(display, surface, surface, context.context);
 
-            float depth =
-                context.visiblePasses[pass] ? RandomBetween(0.0f, 0.4f) : RandomBetween(0.6f, 1.0f);
+            float depth = context.visiblePasses[pass] ? mRNG.randomFloatBetween(0.0f, 0.4f)
+                                                      : mRNG.randomFloatBetween(0.6f, 1.0f);
             drawQuad(context.program, "position", depth);
 
             EXPECT_GL_NO_ERROR();
@@ -365,4 +361,6 @@ ANGLE_INSTANTIATE_TEST(OcclusionQueriesTest,
                        ES2_D3D11(),
                        ES3_D3D11(),
                        ES2_OPENGL(),
-                       ES3_OPENGL());
+                       ES3_OPENGL(),
+                       ES2_OPENGLES(),
+                       ES3_OPENGLES());

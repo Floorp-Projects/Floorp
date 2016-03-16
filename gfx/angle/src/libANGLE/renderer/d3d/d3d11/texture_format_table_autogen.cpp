@@ -593,20 +593,20 @@ const TextureFormat &GetTextureFormatInfo(GLenum internalFormat,
         }
         case GL_DEPTH24_STENCIL8:
         {
-            if (OnlyFL10Plus(renderer11DeviceCaps))
-            {
-                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
-                                                                              DXGI_FORMAT_R24G8_TYPELESS,
-                                                                              DXGI_FORMAT_R24_UNORM_X8_TYPELESS,
-                                                                              DXGI_FORMAT_UNKNOWN,
-                                                                              DXGI_FORMAT_D24_UNORM_S8_UINT);
-                return textureFormat;
-            }
-            else if (OnlyFL9_3(renderer11DeviceCaps))
+            if (OnlyFL9_3(renderer11DeviceCaps))
             {
                 static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
                                                                               DXGI_FORMAT_D24_UNORM_S8_UINT,
                                                                               DXGI_FORMAT_UNKNOWN,
+                                                                              DXGI_FORMAT_UNKNOWN,
+                                                                              DXGI_FORMAT_D24_UNORM_S8_UINT);
+                return textureFormat;
+            }
+            else if (OnlyFL10Plus(renderer11DeviceCaps))
+            {
+                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
+                                                                              DXGI_FORMAT_R24G8_TYPELESS,
+                                                                              DXGI_FORMAT_R24_UNORM_X8_TYPELESS,
                                                                               DXGI_FORMAT_UNKNOWN,
                                                                               DXGI_FORMAT_D24_UNORM_S8_UINT);
                 return textureFormat;
@@ -618,22 +618,22 @@ const TextureFormat &GetTextureFormatInfo(GLenum internalFormat,
         }
         case GL_DEPTH32F_STENCIL8:
         {
-            if (OnlyFL10Plus(renderer11DeviceCaps))
-            {
-                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
-                                                                              DXGI_FORMAT_R32G8X24_TYPELESS,
-                                                                              DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS,
-                                                                              DXGI_FORMAT_UNKNOWN,
-                                                                              DXGI_FORMAT_D32_FLOAT_S8X24_UINT);
-                return textureFormat;
-            }
-            else if (OnlyFL9_3(renderer11DeviceCaps))
+            if (OnlyFL9_3(renderer11DeviceCaps))
             {
                 static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
                                                                               DXGI_FORMAT_UNKNOWN,
                                                                               DXGI_FORMAT_UNKNOWN,
                                                                               DXGI_FORMAT_UNKNOWN,
                                                                               DXGI_FORMAT_UNKNOWN);
+                return textureFormat;
+            }
+            else if (OnlyFL10Plus(renderer11DeviceCaps))
+            {
+                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
+                                                                              DXGI_FORMAT_R32G8X24_TYPELESS,
+                                                                              DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS,
+                                                                              DXGI_FORMAT_UNKNOWN,
+                                                                              DXGI_FORMAT_D32_FLOAT_S8X24_UINT);
                 return textureFormat;
             }
             else
@@ -643,20 +643,20 @@ const TextureFormat &GetTextureFormatInfo(GLenum internalFormat,
         }
         case GL_DEPTH_COMPONENT16:
         {
-            if (OnlyFL10Plus(renderer11DeviceCaps))
-            {
-                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
-                                                                              DXGI_FORMAT_R16_TYPELESS,
-                                                                              DXGI_FORMAT_R16_UNORM,
-                                                                              DXGI_FORMAT_UNKNOWN,
-                                                                              DXGI_FORMAT_D16_UNORM);
-                return textureFormat;
-            }
-            else if (OnlyFL9_3(renderer11DeviceCaps))
+            if (OnlyFL9_3(renderer11DeviceCaps))
             {
                 static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
                                                                               DXGI_FORMAT_D16_UNORM,
                                                                               DXGI_FORMAT_UNKNOWN,
+                                                                              DXGI_FORMAT_UNKNOWN,
+                                                                              DXGI_FORMAT_D16_UNORM);
+                return textureFormat;
+            }
+            else if (OnlyFL10Plus(renderer11DeviceCaps))
+            {
+                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
+                                                                              DXGI_FORMAT_R16_TYPELESS,
+                                                                              DXGI_FORMAT_R16_UNORM,
                                                                               DXGI_FORMAT_UNKNOWN,
                                                                               DXGI_FORMAT_D16_UNORM);
                 return textureFormat;
@@ -668,20 +668,20 @@ const TextureFormat &GetTextureFormatInfo(GLenum internalFormat,
         }
         case GL_DEPTH_COMPONENT24:
         {
-            if (OnlyFL10Plus(renderer11DeviceCaps))
-            {
-                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
-                                                                              DXGI_FORMAT_R24G8_TYPELESS,
-                                                                              DXGI_FORMAT_R24_UNORM_X8_TYPELESS,
-                                                                              DXGI_FORMAT_UNKNOWN,
-                                                                              DXGI_FORMAT_D24_UNORM_S8_UINT);
-                return textureFormat;
-            }
-            else if (OnlyFL9_3(renderer11DeviceCaps))
+            if (OnlyFL9_3(renderer11DeviceCaps))
             {
                 static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
                                                                               DXGI_FORMAT_D24_UNORM_S8_UINT,
                                                                               DXGI_FORMAT_UNKNOWN,
+                                                                              DXGI_FORMAT_UNKNOWN,
+                                                                              DXGI_FORMAT_D24_UNORM_S8_UINT);
+                return textureFormat;
+            }
+            else if (OnlyFL10Plus(renderer11DeviceCaps))
+            {
+                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
+                                                                              DXGI_FORMAT_R24G8_TYPELESS,
+                                                                              DXGI_FORMAT_R24_UNORM_X8_TYPELESS,
                                                                               DXGI_FORMAT_UNKNOWN,
                                                                               DXGI_FORMAT_D24_UNORM_S8_UINT);
                 return textureFormat;
@@ -693,22 +693,22 @@ const TextureFormat &GetTextureFormatInfo(GLenum internalFormat,
         }
         case GL_DEPTH_COMPONENT32F:
         {
-            if (OnlyFL10Plus(renderer11DeviceCaps))
-            {
-                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
-                                                                              DXGI_FORMAT_R32_TYPELESS,
-                                                                              DXGI_FORMAT_R32_FLOAT,
-                                                                              DXGI_FORMAT_UNKNOWN,
-                                                                              DXGI_FORMAT_D32_FLOAT);
-                return textureFormat;
-            }
-            else if (OnlyFL9_3(renderer11DeviceCaps))
+            if (OnlyFL9_3(renderer11DeviceCaps))
             {
                 static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
                                                                               DXGI_FORMAT_UNKNOWN,
                                                                               DXGI_FORMAT_UNKNOWN,
                                                                               DXGI_FORMAT_UNKNOWN,
                                                                               DXGI_FORMAT_UNKNOWN);
+                return textureFormat;
+            }
+            else if (OnlyFL10Plus(renderer11DeviceCaps))
+            {
+                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
+                                                                              DXGI_FORMAT_R32_TYPELESS,
+                                                                              DXGI_FORMAT_R32_FLOAT,
+                                                                              DXGI_FORMAT_UNKNOWN,
+                                                                              DXGI_FORMAT_D32_FLOAT);
                 return textureFormat;
             }
             else
@@ -725,6 +725,22 @@ const TextureFormat &GetTextureFormatInfo(GLenum internalFormat,
                                                                               DXGI_FORMAT_R24_UNORM_X8_TYPELESS,
                                                                               DXGI_FORMAT_UNKNOWN,
                                                                               DXGI_FORMAT_D24_UNORM_S8_UINT);
+                return textureFormat;
+            }
+            else
+            {
+                break;
+            }
+        }
+        case GL_ETC1_RGB8_LOSSY_DECODE_ANGLE:
+        {
+            if (AnyDevice(renderer11DeviceCaps))
+            {
+                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
+                                                                              DXGI_FORMAT_BC1_UNORM,
+                                                                              DXGI_FORMAT_BC1_UNORM,
+                                                                              DXGI_FORMAT_UNKNOWN,
+                                                                              DXGI_FORMAT_UNKNOWN);
                 return textureFormat;
             }
             else
@@ -1737,20 +1753,20 @@ const TextureFormat &GetTextureFormatInfo(GLenum internalFormat,
         }
         case GL_STENCIL_INDEX8:
         {
-            if (OnlyFL10Plus(renderer11DeviceCaps))
-            {
-                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
-                                                                              DXGI_FORMAT_R24G8_TYPELESS,
-                                                                              DXGI_FORMAT_X24_TYPELESS_G8_UINT,
-                                                                              DXGI_FORMAT_UNKNOWN,
-                                                                              DXGI_FORMAT_D24_UNORM_S8_UINT);
-                return textureFormat;
-            }
-            else if (OnlyFL9_3(renderer11DeviceCaps))
+            if (OnlyFL9_3(renderer11DeviceCaps))
             {
                 static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
                                                                               DXGI_FORMAT_D24_UNORM_S8_UINT,
                                                                               DXGI_FORMAT_UNKNOWN,
+                                                                              DXGI_FORMAT_UNKNOWN,
+                                                                              DXGI_FORMAT_D24_UNORM_S8_UINT);
+                return textureFormat;
+            }
+            else if (OnlyFL10Plus(renderer11DeviceCaps))
+            {
+                static const TextureFormat textureFormat = GetD3D11FormatInfo(internalFormat,
+                                                                              DXGI_FORMAT_R24G8_TYPELESS,
+                                                                              DXGI_FORMAT_X24_TYPELESS_G8_UINT,
                                                                               DXGI_FORMAT_UNKNOWN,
                                                                               DXGI_FORMAT_D24_UNORM_S8_UINT);
                 return textureFormat;
