@@ -593,6 +593,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mIPCOpen(true)
   , mParentIsActive(false)
   , mDidSetRealShowInfo(false)
+  , mDidLoadURLInit(false)
   , mAPZChild(nullptr)
 {
   // In the general case having the TabParent tell us if APZ is enabled or not
@@ -1275,6 +1276,8 @@ TabChild::RecvLoadURL(const nsCString& aURI,
                       const BrowserConfiguration& aConfiguration,
                       const ShowInfo& aInfo)
 {
+  if (!mDidLoadURLInit) {
+    mDidLoadURLInit = true;
     if (!InitTabChildGlobal()) {
       return false;
     }
@@ -1286,44 +1289,21 @@ TabChild::RecvLoadURL(const nsCString& aURI,
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     MOZ_ASSERT(swm);
     swm->LoadRegistrations(aConfiguration.serviceWorkerRegistrations());
+  }
 
-    nsresult rv = WebNavigation()->LoadURI(NS_ConvertUTF8toUTF16(aURI).get(),
-                                           nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
-                                           nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_OWNER,
-                                           nullptr, nullptr, nullptr);
-    if (NS_FAILED(rv)) {
-        NS_WARNING("WebNavigation()->LoadURI failed. Eating exception, what else can I do?");
-    }
+  nsresult rv =
+    WebNavigation()->LoadURI(NS_ConvertUTF8toUTF16(aURI).get(),
+                             nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
+                             nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_OWNER,
+                             nullptr, nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+      NS_WARNING("WebNavigation()->LoadURI failed. Eating exception, what else can I do?");
+  }
 
 #ifdef MOZ_CRASHREPORTER
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("URL"), aURI);
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("URL"), aURI);
 #endif
 
-    return true;
-}
-
-bool
-TabChild::RecvOpenURI(const URIParams& aURI, const uint32_t& aFlags)
-{
-  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
-  nsCOMPtr<nsIChannel> channel;
-  nsresult rv =
-    NS_NewChannel(getter_AddRefs(channel),
-                  uri,
-                  nsContentUtils::GetSystemPrincipal(),
-                  nsILoadInfo::SEC_NORMAL,
-                  nsIContentPolicy::TYPE_DOCUMENT);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return true;
-  }
-
-  nsCOMPtr<nsIURILoader> loader = do_GetService("@mozilla.org/uriloader;1");
-  if (NS_WARN_IF(!loader)) {
-    return true;
-  }
-
-  nsCOMPtr<nsIInterfaceRequestor> context(do_QueryInterface(WebNavigation()));
-  loader->OpenURI(channel, aFlags, context);
   return true;
 }
 
