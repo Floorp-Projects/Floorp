@@ -6,6 +6,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
  // The amount of people to be part of e10s, in %
@@ -54,12 +55,15 @@ function defineCohort() {
 
   let userOptedOut = optedOut();
   let userOptedIn = optedIn();
+  let disqualified = (Services.appinfo.multiprocessBlockPolicy != 0);
   let testGroup = (getUserSample() < TEST_THRESHOLD[updateChannel]);
 
   if (userOptedOut) {
     setCohort("optedOut");
   } else if (userOptedIn) {
     setCohort("optedIn");
+  } else if (disqualified) {
+    setCohort("disqualified");
   } else if (testGroup) {
     setCohort("test");
     Preferences.set(PREF_TOGGLE_E10S, true);
