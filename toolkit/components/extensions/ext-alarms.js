@@ -49,11 +49,12 @@ Alarm.prototype = {
   },
 
   observe(subject, topic, data) {
-    for (let callback of alarmCallbacksMap.get(this.extension)) {
-      callback(this);
-    }
     if (this.canceled) {
       return;
+    }
+
+    for (let callback of alarmCallbacksMap.get(this.extension)) {
+      callback(this);
     }
 
     if (!this.periodInMinutes) {
