@@ -22,7 +22,6 @@ LOCAL_INCLUDES += [
     '/netwerk/dns',
     '/netwerk/mime',
     '/netwerk/protocol/about',
-    '/netwerk/protocol/app',
     '/netwerk/socket',
     '/netwerk/streamconv',
     '/netwerk/streamconv/converters',

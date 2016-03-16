@@ -396,7 +396,7 @@ exports.testLocalURLwithInvalidURL = function(assert) {
 exports.testFileName = function(assert) {
   let urls = [
     ['https://foo/bar.js', 'bar.js'],
-    ['app://myfxosapp/file.js', 'file.js'],
+    ['chrome://gaia/content/myfxosapp/file.js', 'file.js'],
     ['http://localhost:8888/file.js', 'file.js'],
     ['http://foo/bar.js#hash', 'bar.js'],
     ['http://foo/bar.js?q=go&query=yeah', 'bar.js'],
