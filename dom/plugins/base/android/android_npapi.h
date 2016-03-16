@@ -89,15 +89,6 @@ struct ANPPaint;
 struct ANPPath;
 struct ANPTypeface;
 
-enum ANPMatrixFlags {
-    kIdentity_ANPMatrixFlag     = 0,
-    kTranslate_ANPMatrixFlag    = 0x01,
-    kScale_ANPMatrixFlag        = 0x02,
-    kAffine_ANPMatrixFlag       = 0x04,
-    kPerspective_ANPMatrixFlag  = 0x08,
-};
-typedef uint32_t ANPMatrixFlag;
-
 ///////////////////////////////////////////////////////////////////////////////
 // NPN_GetValue
 
@@ -250,113 +241,6 @@ struct ANPLogInterfaceV0 : ANPInterface {
         e.g. interface->log(instance, kWarning_ANPLogType, "value is %d", value);
      */
     void (*log)(ANPLogType, const char format[], ...);
-};
-
-struct ANPBitmapInterfaceV0 : ANPInterface {
-    /** Returns true if the specified bitmap format is supported, and if packing
-        is non-null, sets it to the packing info for that format.
-     */
-    bool (*getPixelPacking)(ANPBitmapFormat, ANPPixelPacking* packing);
-};
-
-struct ANPMatrixInterfaceV0 : ANPInterface {
-    /** Return a new identity matrix
-     */
-    ANPMatrix*  (*newMatrix)();
-    /** Delete a matrix previously allocated by newMatrix()
-     */
-    void        (*deleteMatrix)(ANPMatrix*);
-
-    ANPMatrixFlag (*getFlags)(const ANPMatrix*);
-
-    void        (*copy)(ANPMatrix* dst, const ANPMatrix* src);
-
-    /** Return the matrix values in a float array (allcoated by the caller),
-        where the values are treated as follows:
-        w  = x * [6] + y * [7] + [8];
-        x' = (x * [0] + y * [1] + [2]) / w;
-        y' = (x * [3] + y * [4] + [5]) / w;
-     */
-    void        (*get3x3)(const ANPMatrix*, float[9]);
-    /** Initialize the matrix from values in a float array,
-        where the values are treated as follows:
-         w  = x * [6] + y * [7] + [8];
-         x' = (x * [0] + y * [1] + [2]) / w;
-         y' = (x * [3] + y * [4] + [5]) / w;
-     */
-    void        (*set3x3)(ANPMatrix*, const float[9]);
-
-    void        (*setIdentity)(ANPMatrix*);
-    void        (*preTranslate)(ANPMatrix*, float tx, float ty);
-    void        (*postTranslate)(ANPMatrix*, float tx, float ty);
-    void        (*preScale)(ANPMatrix*, float sx, float sy);
-    void        (*postScale)(ANPMatrix*, float sx, float sy);
-    void        (*preSkew)(ANPMatrix*, float kx, float ky);
-    void        (*postSkew)(ANPMatrix*, float kx, float ky);
-    void        (*preRotate)(ANPMatrix*, float degrees);
-    void        (*postRotate)(ANPMatrix*, float degrees);
-    void        (*preConcat)(ANPMatrix*, const ANPMatrix*);
-    void        (*postConcat)(ANPMatrix*, const ANPMatrix*);
-
-    /** Return true if src is invertible, and if so, return its inverse in dst.
-        If src is not invertible, return false and ignore dst.
-     */
-    bool        (*invert)(ANPMatrix* dst, const ANPMatrix* src);
-
-    /** Transform the x,y pairs in src[] by this matrix, and store the results
-        in dst[]. The count parameter is treated as the number of pairs in the
-        array. It is legal for src and dst to point to the same memory, but
-        illegal for the two arrays to partially overlap.
-     */
-    void        (*mapPoints)(ANPMatrix*, float dst[], const float src[],
-                             int32_t count);
-};
-
-struct ANPPathInterfaceV0 : ANPInterface {
-    /** Return a new path */
-    ANPPath* (*newPath)();
-
-    /** Delete a path previously allocated by ANPPath() */
-    void (*deletePath)(ANPPath*);
-
-    /** Make a deep copy of the src path, into the dst path (already allocated
-        by the caller).
-     */
-    void (*copy)(ANPPath* dst, const ANPPath* src);
-
-    /** Returns true if the two paths are the same (i.e. have the same points)
-     */
-    bool (*equal)(const ANPPath* path0, const ANPPath* path1);
-
-    /** Remove any previous points, initializing the path back to empty. */
-    void (*reset)(ANPPath*);
-
-    /** Return true if the path is empty (has no lines, quads or cubics). */
-    bool (*isEmpty)(const ANPPath*);
-
-    /** Return the path's bounds in bounds. */
-    void (*getBounds)(const ANPPath*, ANPRectF* bounds);
-
-    void (*moveTo)(ANPPath*, float x, float y);
-    void (*lineTo)(ANPPath*, float x, float y);
-    void (*quadTo)(ANPPath*, float x0, float y0, float x1, float y1);
-    void (*cubicTo)(ANPPath*, float x0, float y0, float x1, float y1,
-                    float x2, float y2);
-    void (*close)(ANPPath*);
-
-    /** Offset the src path by [dx, dy]. If dst is null, apply the
-        change directly to the src path. If dst is not null, write the
-        changed path into dst, and leave the src path unchanged. In that case
-        dst must have been previously allocated by the caller.
-     */
-    void (*offset)(ANPPath* src, float dx, float dy, ANPPath* dst);
-
-    /** Transform the path by the matrix. If dst is null, apply the
-        change directly to the src path. If dst is not null, write the
-        changed path into dst, and leave the src path unchanged. In that case
-        dst must have been previously allocated by the caller.
-     */
-    void (*transform)(ANPPath* src, const ANPMatrix*, ANPPath* dst);
 };
 
 /** ANPColor is always defined to have the same packing on all platforms, and
@@ -689,14 +573,6 @@ struct ANPWindowInterfaceV0 : ANPInterface {
     void    (*requestCenterFitZoom)(NPP instance);
 };
 
-struct ANPWindowInterfaceV1 : ANPWindowInterfaceV0 {
-    /** Returns a rectangle representing the visible area of the plugin on
-        screen. The coordinates are relative to the size of the plugin in the
-        document and therefore will never be negative or exceed the plugin's size.
-     */
-    ANPRectI (*visibleRect)(NPP instance);
-};
-
 enum ANPScreenOrientations {
     /** No preference specified: let the system decide the best orientation.
      */
@@ -721,7 +597,13 @@ enum ANPScreenOrientations {
 
 typedef int32_t ANPScreenOrientation;
 
-struct ANPWindowInterfaceV2 : ANPWindowInterfaceV1 {
+struct ANPWindowInterfaceV2 : ANPWindowInterfaceV0 {
+    /** Returns a rectangle representing the visible area of the plugin on
+        screen. The coordinates are relative to the size of the plugin in the
+        document and therefore will never be negative or exceed the plugin's size.
+     */
+    ANPRectI (*visibleRect)(NPP instance);
+
     /** Called when the plugin wants to specify a particular screen orientation
         when entering into full screen mode. The orientation must be set prior
         to entering into full screen.  After entering full screen any subsequent
@@ -999,24 +881,6 @@ struct ANPEventInterfaceV0 : ANPInterface {
     void (*postEvent)(NPP inst, const ANPEvent* event);
 };
 
-struct ANPSystemInterfaceV0 : ANPInterface {
-    /** Return the path name for the current Application's plugin data directory,
-        or NULL if not supported
-     */
-    const char* (*getApplicationDataDirectory)();
-
-    /** A helper function to load java classes from the plugin's apk.  The
-        function looks for a class given the fully qualified and null terminated
-        string representing the className. For example,
-
-        const char* className = "com.android.mypackage.MyClass";
-
-        If the class cannot be found or there is a problem loading the class
-        NULL will be returned.
-     */
-    jclass (*loadJavaClass)(NPP instance, const char* className);
-};
-
 struct ANPSurfaceInterfaceV0 : ANPInterface {
   /** Locks the surface from manipulation by other threads and provides a bitmap
         to be written to.  The dirtyRect param specifies which portion of the
@@ -1065,7 +929,23 @@ enum ANPPowerStates {
 };
 typedef int32_t ANPPowerState;
 
-struct ANPSystemInterfaceV1 : ANPSystemInterfaceV0 {
+struct ANPSystemInterfaceV1 : ANPInterface {
+    /** Return the path name for the current Application's plugin data directory,
+        or NULL if not supported
+     */
+    const char* (*getApplicationDataDirectory)();
+
+    /** A helper function to load java classes from the plugin's apk.  The
+        function looks for a class given the fully qualified and null terminated
+        string representing the className. For example,
+
+        const char* className = "com.android.mypackage.MyClass";
+
+        If the class cannot be found or there is a problem loading the class
+        NULL will be returned.
+     */
+    jclass (*loadJavaClass)(NPP instance, const char* className);
+
     void (*setPowerState)(NPP instance, ANPPowerState powerState);
 };
 
@@ -1083,7 +963,15 @@ struct ANPSystemInterfaceV2 : ANPInterface {
 
 typedef void* ANPNativeWindow;
 
-struct ANPVideoInterfaceV0 : ANPInterface {
+/** Called to notify the plugin that a video frame has been composited by the
+*  browser for display.  This will be called in a separate thread and as such
+*  you cannot call releaseNativeWindow from the callback.
+*
+*  The timestamp is in nanoseconds, and is monotonically increasing.
+*/
+typedef void (*ANPVideoFrameCallbackProc)(ANPNativeWindow* window, int64_t timestamp);
+
+struct ANPVideoInterfaceV1 : ANPInterface {
 
     /**
      * Constructs a new native window to be used for rendering video content.
@@ -1110,17 +998,7 @@ struct ANPVideoInterfaceV0 : ANPInterface {
     /**
      */
     void (*releaseNativeWindow)(NPP instance, ANPNativeWindow window);
-};
 
-/** Called to notify the plugin that a video frame has been composited by the
-*  browser for display.  This will be called in a separate thread and as such
-*  you cannot call releaseNativeWindow from the callback.
-*
-*  The timestamp is in nanoseconds, and is monotonically increasing.
-*/
-typedef void (*ANPVideoFrameCallbackProc)(ANPNativeWindow* window, int64_t timestamp);
-
-struct ANPVideoInterfaceV1 : ANPVideoInterfaceV0 {
     /** Set a callback to be notified when an ANPNativeWindow is composited by
      *  the browser.
      */

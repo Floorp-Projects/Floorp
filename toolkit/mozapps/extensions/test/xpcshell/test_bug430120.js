@@ -67,7 +67,8 @@ function pathHandler(metadata, response) {
       ABI += "-u-" + macutils.architecturesInBinary;
   }
   do_check_eq(metadata.queryString,
-              "xpcshell@tests.mozilla.org&1&XPCShell&1&2007010101&" +
+              "xpcshell@tests.mozilla.org&1&XPCShell&1&" +
+              gAppInfo.appBuildID + "&" +
               "XPCShell_" + ABI + "&locale&updatechannel&" +
               gOSVersion + "&1.9&distribution&distribution-version");
   gBlocklist.observe(null, "quit-application", "");

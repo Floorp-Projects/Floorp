@@ -230,14 +230,13 @@ nsCommandParams::GetOrMakeEntry(const char* aName, uint8_t aEntryType)
 }
 
 PLDHashNumber
-nsCommandParams::HashKey(PLDHashTable* aTable, const void* aKey)
+nsCommandParams::HashKey(const void* aKey)
 {
   return HashString((const char*)aKey);
 }
 
 bool
-nsCommandParams::HashMatchEntry(PLDHashTable* aTable,
-                                const PLDHashEntryHdr* aEntry, const void* aKey)
+nsCommandParams::HashMatchEntry(const PLDHashEntryHdr* aEntry, const void* aKey)
 {
   const char* keyString = (const char*)aKey;
   const HashEntry* thisEntry = static_cast<const HashEntry*>(aEntry);

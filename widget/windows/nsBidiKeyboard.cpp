@@ -7,6 +7,10 @@
 #include <stdio.h>
 #include "nsBidiKeyboard.h"
 #include "prmem.h"
+#include "nsServiceManagerUtils.h"
+#include "nsTArray.h"
+#include "nsContentUtils.h"
+#include "mozilla/dom/ContentParent.h"
 #include <tchar.h>
 
 NS_IMPL_ISUPPORTS(nsBidiKeyboard, nsIBidiKeyboard)
@@ -176,4 +180,25 @@ bool nsBidiKeyboard::IsRTLLanguage(HKL aLocale)
                            (LPWSTR)&localesig,
                            (sizeof(localesig)/sizeof(WCHAR))) &&
           (localesig.lsUsb[3] & 0x08000000));
+}
+
+//static
+void
+nsBidiKeyboard::OnLayoutChange()
+{
+  nsCOMPtr<nsIBidiKeyboard> bidiKeyboard = nsContentUtils::GetBidiKeyboard();
+  if (!bidiKeyboard) {
+    return;
+  }
+
+  bool rtl;
+  if (NS_FAILED(bidiKeyboard->IsLangRTL(&rtl))) {
+    return;
+  }
+
+  nsTArray<mozilla::dom::ContentParent*> children;
+  mozilla::dom::ContentParent::GetAll(children);
+  for (uint32_t i = 0; i < children.Length(); i++) {
+    children[i]->SendBidiKeyboardNotify(rtl);
+  }
 }

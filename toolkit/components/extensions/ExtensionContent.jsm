@@ -29,6 +29,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector",
                                   "resource:///modules/translation/LanguageDetector.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MatchGlobs",
+                                  "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
@@ -152,8 +154,8 @@ function Script(options, deferred = PromiseUtils.defer()) {
   // TODO: MatchPattern should pre-mangle host-only patterns so that we
   // don't need to call a separate match function.
   this.matches_host_ = new MatchPattern(this.options.matchesHost || null);
-
-  // TODO: Support glob patterns.
+  this.include_globs_ = new MatchGlobs(this.options.include_globs);
+  this.exclude_globs_ = new MatchGlobs(this.options.exclude_globs);
 }
 
 Script.prototype = {
@@ -164,6 +166,16 @@ Script.prototype = {
     }
 
     if (this.exclude_matches_.matches(uri)) {
+      return false;
+    }
+
+    if (this.options.include_globs != null) {
+      if (!this.include_globs_.matches(uri)) {
+        return false;
+      }
+    }
+
+    if (this.exclude_globs_.matches(uri)) {
       return false;
     }
 

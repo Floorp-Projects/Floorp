@@ -63,21 +63,19 @@ public:
 #endif
 
 /* static */ PLDHashNumber
-PLDHashTable::HashStringKey(PLDHashTable* aTable, const void* aKey)
+PLDHashTable::HashStringKey(const void* aKey)
 {
   return HashString(static_cast<const char*>(aKey));
 }
 
 /* static */ PLDHashNumber
-PLDHashTable::HashVoidPtrKeyStub(PLDHashTable* aTable, const void* aKey)
+PLDHashTable::HashVoidPtrKeyStub(const void* aKey)
 {
   return (PLDHashNumber)(ptrdiff_t)aKey >> 2;
 }
 
 /* static */ bool
-PLDHashTable::MatchEntryStub(PLDHashTable* aTable,
-                             const PLDHashEntryHdr* aEntry,
-                             const void* aKey)
+PLDHashTable::MatchEntryStub(const PLDHashEntryHdr* aEntry, const void* aKey)
 {
   const PLDHashEntryStub* stub = (const PLDHashEntryStub*)aEntry;
 
@@ -85,9 +83,7 @@ PLDHashTable::MatchEntryStub(PLDHashTable* aTable,
 }
 
 /* static */ bool
-PLDHashTable::MatchStringKey(PLDHashTable* aTable,
-                             const PLDHashEntryHdr* aEntry,
-                             const void* aKey)
+PLDHashTable::MatchStringKey(const PLDHashEntryHdr* aEntry, const void* aKey)
 {
   const PLDHashEntryStub* stub = (const PLDHashEntryStub*)aEntry;
 
@@ -355,7 +351,7 @@ PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash)
   // Hit: return entry.
   PLDHashMatchEntry matchEntry = mOps->matchEntry;
   if (MatchEntryKeyhash(entry, aKeyHash) &&
-      matchEntry(this, entry, aKey)) {
+      matchEntry(entry, aKey)) {
     return entry;
   }
 
@@ -389,7 +385,7 @@ PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash)
     }
 
     if (MatchEntryKeyhash(entry, aKeyHash) &&
-        matchEntry(this, entry, aKey)) {
+        matchEntry(entry, aKey)) {
       return entry;
     }
   }
@@ -501,7 +497,7 @@ PLDHashTable::ComputeKeyHash(const void* aKey)
 {
   MOZ_ASSERT(mEntryStore.Get());
 
-  PLDHashNumber keyHash = mOps->hashKey(this, aKey);
+  PLDHashNumber keyHash = mOps->hashKey(aKey);
   keyHash *= kGoldenRatio;
 
   // Avoid 0 and 1 hash codes, they indicate free and removed entries.

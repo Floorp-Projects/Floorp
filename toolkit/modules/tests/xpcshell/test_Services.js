@@ -77,34 +77,16 @@ function run_test()
 
   // In xpcshell tests, the "@mozilla.org/xre/app-info;1" component implements
   // only the nsIXULRuntime interface, but not nsIXULAppInfo.  To test the
-  // service getter for the latter interface, we define a minimal mock factory
-  // that returns an object defining both interfaces.
-  let contractID = "@mozilla.org/xre/app-info;1";
-  let mockFactory = {
-    createInstance: function (aOuter, aIid) {
-      return {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULRuntime,
-                                               Ci.nsIXULAppInfo]),
-      }.QueryInterface(aIid);
-    }
-  };
-
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  let cid = registrar.contractIDToCID(contractID);
-  let oldFactory = Components.manager.getClassObject(Cc[contractID],
-                                                     Ci.nsIFactory);
-  registrar.unregisterFactory(cid, oldFactory);
-  registrar.registerFactory(cid, "", contractID, mockFactory);
+  // service getter for the latter interface, load mock app-info.
+  let tmp = {};
+  Cu.import("resource://testing-common/AppInfo.jsm", tmp);
+  tmp.updateAppInfo();
 
   // We need to reload the module to update the lazy getter.
   Cu.unload("resource://gre/modules/Services.jsm");
   Cu.import("resource://gre/modules/Services.jsm");
 
   checkService("appinfo", Ci.nsIXULAppInfo);
-
-  // Clean up.
-  registrar.unregisterFactory(cid, mockFactory);
-  registrar.registerFactory(cid, "", contractID, oldFactory);
 
   Cu.unload("resource://gre/modules/Services.jsm");
 }

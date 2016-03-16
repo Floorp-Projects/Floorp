@@ -103,7 +103,7 @@ private:
   };
   void GMPInitDone(GMPAudioDecoderProxy* aGMP);
 
-  const AudioInfo& mConfig;
+  const AudioInfo mConfig;
   MediaDataDecoderCallbackProxy* mCallback;
   nsCOMPtr<mozIGeckoMediaPluginService> mMPS;
   GMPAudioDecoderProxy* mGMP;
