@@ -370,7 +370,6 @@ def old_configure_options(*options):
     '--with-unify-dist',
     '--with-user-appdir',
     '--with-windows-version',
-    '--with-x',
     '--with-xulrunner-stub-name',
     '--x-includes',
     '--x-libraries',
