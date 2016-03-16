@@ -191,7 +191,6 @@ def old_configure_options(*options):
     '--enable-debug',
     '--enable-debug-js-modules',
     '--enable-debug-symbols',
-    '--enable-default-toolkit',
     '--enable-directshow',
     '--enable-dmd',
     '--enable-dtrace',
