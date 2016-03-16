@@ -527,6 +527,11 @@ TextEventDispatcher::MaybeDispatchKeypressEvents(
     return false;
   }
 
+  // If the key shouldn't cause keypress events, don't fire them.
+  if (!aKeyboardEvent.ShouldCauseKeypressEvents()) {
+    return false;
+  }
+
   // If the key isn't a printable key or just inputting one character or
   // no character, we should dispatch only one keypress.  Otherwise, i.e.,
   // if the key is a printable key and inputs multiple characters, keypress
