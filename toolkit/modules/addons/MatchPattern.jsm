@@ -191,5 +191,5 @@ MatchGlobs.prototype = {
       }
     }
     return false;
-  }
-}
+  },
+};
