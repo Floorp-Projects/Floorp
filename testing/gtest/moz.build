@@ -20,6 +20,7 @@ if CONFIG['ENABLE_TESTS']:
         'gtest/include/gtest/gtest.h',
         'gtest/include/gtest/gtest_pred_impl.h',
         'gtest/include/gtest/gtest_prod.h',
+        'mozilla/MozGTestBench.h',
     ]
 
     # GTest internal are exposed in gtest.h. See comment in gtest.h
@@ -60,6 +61,7 @@ if CONFIG['ENABLE_TESTS']:
         'gmock/src/gmock-all.cc',
         'gtest/src/gtest-all.cc',
         'mozilla/GTestRunner.cpp',
+        'mozilla/MozGTestBench.cpp',
     ]
 
     Library('gtest')
