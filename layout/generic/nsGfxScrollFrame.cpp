@@ -2017,8 +2017,13 @@ ScrollFrameHelper::CompleteAsyncScroll(const nsRect &aRange, nsIAtom* aOrigin)
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 struct PluginSearchCtx {
+  enum PluginAction {
+    UPDATE, // Update the scroll visibility of any plugin frames using |value|
+    QUERY   // Set |value| to true if plugin frames were found
+  };
+  PluginAction action;
   nsIFrame* outer;
-  bool begin;
+  bool value;
 };
 static void
 NotifyPluginFramesCallback(nsISupports* aSupports, void* aCtx)
@@ -2033,7 +2038,11 @@ NotifyPluginFramesCallback(nsISupports* aSupports, void* aCtx)
         // Check to be sure this plugin is contained within a subframe of
         // the nsGfxScrollFrame that initiated this callback.
         if (nsLayoutUtils::IsAncestorFrameCrossDoc(pCtx->outer, plugin, nullptr)) {
-          plugin->SetScrollVisibility(pCtx->begin);
+          if (pCtx->action == PluginSearchCtx::UPDATE) {
+            plugin->SetScrollVisibility(pCtx->value);
+          } else if (pCtx->action == PluginSearchCtx::QUERY) {
+            pCtx->value = true;
+          }
         }
       }
     }
@@ -2063,7 +2072,7 @@ ScrollFrameHelper::NotifyPluginFrames(AsyncScrollEventType aEvent)
     }
     if (aEvent != mAsyncScrollEvent) {
       nsPresContext* presContext = mOuter->PresContext();
-      PluginSearchCtx ctx = { mOuter, (aEvent == BEGIN_APZ || aEvent == BEGIN_DOM) };
+      PluginSearchCtx ctx = { PluginSearchCtx::UPDATE, mOuter, (aEvent == BEGIN_APZ || aEvent == BEGIN_DOM) };
       presContext->Document()->EnumerateActivityObservers(NotifyPluginFramesCallback,
                                                           (void*)&ctx);
       presContext->Document()->EnumerateSubDocuments(NotifyPluginSubframesCallback,
@@ -2073,6 +2082,28 @@ ScrollFrameHelper::NotifyPluginFrames(AsyncScrollEventType aEvent)
     }
   }
 #endif
+}
+
+bool
+ScrollFrameHelper::HasPluginFrames()
+{
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  if (XRE_IsContentProcess()) {
+    nsPresContext* presContext = mOuter->PresContext();
+    PluginSearchCtx ctx = { PluginSearchCtx::QUERY, mOuter, false };
+    presContext->Document()->EnumerateActivityObservers(NotifyPluginFramesCallback,
+                                                        (void*)&ctx);
+    if (ctx.value) {
+      return true;
+    }
+    presContext->Document()->EnumerateSubDocuments(NotifyPluginSubframesCallback,
+                                                   (void*)&ctx);
+    if (ctx.value) {
+      return true;
+    }
+  }
+#endif
+  return false;
 }
 
 void
@@ -2700,15 +2731,15 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
       nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
     displayPort.MoveBy(-mScrolledFrame->GetPosition());
 
-    PAINT_SKIP_LOG("New scrollpos %s usingDP %d dpEqual %d scrollableByApz %d\n",
+    PAINT_SKIP_LOG("New scrollpos %s usingDP %d dpEqual %d scrollableByApz %d plugins %d\n",
         Stringify(CSSPoint::FromAppUnits(GetScrollPosition())).c_str(),
         usingDisplayPort, displayPort.IsEqualEdges(oldDisplayPort),
-        mScrollableByAPZ);
+        mScrollableByAPZ, HasPluginFrames());
     if (usingDisplayPort && displayPort.IsEqualEdges(oldDisplayPort)) {
       if (LastScrollOrigin() == nsGkAtoms::apz) {
         schedulePaint = false;
         PAINT_SKIP_LOG("Skipping due to APZ scroll\n");
-      } else if (mScrollableByAPZ) {
+      } else if (mScrollableByAPZ && !HasPluginFrames()) {
         nsIWidget* widget = presContext->GetNearestWidget();
         LayerManager* manager = widget ? widget->GetLayerManager() : nullptr;
         ShadowLayerForwarder* forwarder = manager ? manager->AsShadowForwarder() : nullptr;

@@ -56,8 +56,9 @@ public:
    *                              definition below.
    */
   nsresult BeginInputTransaction(TextEventDispatcherListener* aListener);
-  nsresult BeginInputTransactionForTests(
-             TextEventDispatcherListener* aListener);
+  nsresult BeginTestInputTransaction(TextEventDispatcherListener* aListener,
+                                     bool aIsAPZAware);
+  nsresult BeginNativeInputTransaction();
 
   /**
    * EndInputTransaction() should be called when the listener stops using
@@ -71,6 +72,8 @@ public:
    * OnDestroyWidget() is called when mWidget is being destroyed.
    */
   void OnDestroyWidget();
+
+  nsIWidget* GetWidget() const { return mWidget; }
 
   /**
    * GetState() returns current state of this class.
@@ -96,9 +99,28 @@ public:
   bool IsDispatchingEvent() const { return mDispatchingEvent > 0; }
 
   /**
-   * StartComposition() starts composition explicitly.
+   * GetPseudoIMEContext() returns pseudo native IME context if there is an
+   * input transaction whose type is not for native event handler.
+   * Otherwise, returns nullptr.
    */
-  nsresult StartComposition(nsEventStatus& aStatus);
+  void* GetPseudoIMEContext() const
+  {
+    if (mInputTransactionType == eNoInputTransaction ||
+        mInputTransactionType == eNativeInputTransaction) {
+      return nullptr;
+    }
+    return const_cast<TextEventDispatcher*>(this);
+  }
+
+  /**
+   * StartComposition() starts composition explicitly.
+   *
+   * @param aEventTime  If this is not nullptr, WidgetCompositionEvent will
+   *                    be initialized with this.  Otherwise, initialized
+   *                    with the time at initializing.
+   */
+  nsresult StartComposition(nsEventStatus& aStatus,
+                            const WidgetEventTime* aEventTime = nullptr);
 
   /**
    * CommitComposition() commits composition.
@@ -106,9 +128,13 @@ public:
    * @param aCommitString   If this is null, commits with the last composition
    *                        string.  Otherwise, commits the composition with
    *                        this value.
+   * @param aEventTime      If this is not nullptr, WidgetCompositionEvent will
+   *                        be initialized with this.  Otherwise, initialized
+   *                        with the time at initializing.
    */
    nsresult CommitComposition(nsEventStatus& aStatus,
-                              const nsAString* aCommitString = nullptr);
+                              const nsAString* aCommitString = nullptr,
+                              const WidgetEventTime* aEventTime = nullptr);
 
   /**
    * SetPendingCompositionString() sets new composition string which will be
@@ -156,15 +182,38 @@ public:
   }
 
   /**
+   * SetPendingComposition() is useful if native IME handler already creates
+   * array of clauses and/or caret information.
+   *
+   * @param aString         Composition string.  This may include native line
+   *                        breakers since they will be replaced with XP line
+   *                        breakers automatically.
+   * @param aRanges         This should include the ranges of clauses and/or
+   *                        a range of caret.  Note that this method allows
+   *                        some ranges overlap each other and the range order
+   *                        is not from start to end.
+   */
+  nsresult SetPendingComposition(const nsAString& aString,
+                                 const TextRangeArray* aRanges)
+  {
+    return mPendingComposition.Set(aString, aRanges);
+  }
+
+  /**
    * FlushPendingComposition() sends the pending composition string
    * to the widget of the store DOM window.  Before calling this, IME needs to
    * set pending composition string with SetPendingCompositionString(),
    * AppendClauseToPendingComposition() and/or
    * SetCaretInPendingComposition().
+   *
+   * @param aEventTime      If this is not nullptr, WidgetCompositionEvent will
+   *                        be initialized with this.  Otherwise, initialized
+   *                        with the time at initializing.
    */
-  nsresult FlushPendingComposition(nsEventStatus& aStatus)
+  nsresult FlushPendingComposition(nsEventStatus& aStatus,
+                                   const WidgetEventTime* aEventTime = nullptr)
   {
-    return mPendingComposition.Flush(this, aStatus);
+    return mPendingComposition.Flush(this, aStatus, aEventTime);
   }
 
   /**
@@ -176,29 +225,18 @@ public:
   }
 
   /**
+   * GetPendingCompositionClauses() returns text ranges which was appended by
+   * AppendClauseToPendingComposition() or SetPendingComposition().
+   */
+  const TextRangeArray* GetPendingCompositionClauses() const
+  {
+    return mPendingComposition.GetClauses();
+  }
+
+  /**
    * @see nsIWidget::NotifyIME()
    */
   nsresult NotifyIME(const IMENotification& aIMENotification);
-
-
-  /**
-   * DispatchTo indicates whether the event may be dispatched to its parent
-   * process first (if there is) or not.  If the event is dispatched to the
-   * parent process, APZ will handle it first.  Otherwise, the event won't be
-   * handled by APZ if it's in a child process.
-   */
-  enum DispatchTo
-  {
-    // The event may be dispatched to its parent process if there is a parent.
-    // In such case, the event will be handled asynchronously.  Additionally,
-    // the event may be sent to its child process if a child process (including
-    // the dispatching process) has focus.
-    eDispatchToParentProcess = 0,
-    // The event must be dispatched in the current process.  But of course,
-    // the event may be sent to a child process when it has focus.  If there is
-    // no child process, the event may be handled synchronously.
-    eDispatchToCurrentProcess = 1
-  };
 
   /**
    * DispatchKeyboardEvent() maybe dispatches aKeyboardEvent.
@@ -212,13 +250,15 @@ public:
    *                        set nsEventStatus_eIgnore.  After dispatching
    *                        a event and it's consumed this returns
    *                        nsEventStatus_eConsumeNoDefault.
-   * @param aDispatchTo     See comments of DispatchTo.
+   * @param aData           Calling this method may cause calling
+   *                        WillDispatchKeyboardEvent() of the listener.
+   *                        aData will be set to its argument.
    * @return                true if an event is dispatched.  Otherwise, false.
    */
   bool DispatchKeyboardEvent(EventMessage aMessage,
                              const WidgetKeyboardEvent& aKeyboardEvent,
                              nsEventStatus& aStatus,
-                             DispatchTo aDispatchTo = eDispatchToParentProcess);
+                             void* aData = nullptr);
 
   /**
    * MaybeDispatchKeypressEvents() maybe dispatches a keypress event which is
@@ -232,14 +272,15 @@ public:
    *                        When this method dispatches one or more keypress
    *                        events and one of them is consumed, this returns
    *                        nsEventStatus_eConsumeNoDefault.
-   * @param aDispatchTo     See comments of DispatchTo.
+   * @param aData           Calling this method may cause calling
+   *                        WillDispatchKeyboardEvent() of the listener.
+   *                        aData will be set to its argument.
    * @return                true if one or more events are dispatched.
    *                        Otherwise, false.
    */
   bool MaybeDispatchKeypressEvents(const WidgetKeyboardEvent& aKeyboardEvent,
                                    nsEventStatus& aStatus,
-                                   DispatchTo aDispatchTo =
-                                     eDispatchToParentProcess);
+                                   void* aData = nullptr);
 
 private:
   // mWidget is owner of the instance.  When this is created, this is set.
@@ -265,7 +306,11 @@ private:
     nsresult SetString(const nsAString& aString);
     nsresult AppendClause(uint32_t aLength, uint32_t aAttribute);
     nsresult SetCaret(uint32_t aOffset, uint32_t aLength);
-    nsresult Flush(TextEventDispatcher* aDispatcher, nsEventStatus& aStatus);
+    nsresult Set(const nsAString& aString, const TextRangeArray* aRanges);
+    nsresult Flush(TextEventDispatcher* aDispatcher,
+                   nsEventStatus& aStatus,
+                   const WidgetEventTime* aEventTime);
+    const TextRangeArray* GetClauses() const { return mClauses; }
     void Clear();
 
   private:
@@ -280,7 +325,60 @@ private:
   // While dispatching an event, this is incremented.
   uint16_t mDispatchingEvent;
 
-  bool mForTests;
+  enum InputTransactionType : uint8_t
+  {
+    // No input transaction has been started.
+    eNoInputTransaction,
+    // Input transaction for native IME or keyboard event handler.  Note that
+    // keyboard events may be dispatched via parent process if there is.
+    eNativeInputTransaction,
+    // Input transaction for automated tests which are APZ-aware.  Note that
+    // keyboard events may be dispatched via parent process if there is.
+    eAsyncTestInputTransaction,
+    // Input transaction for automated tests which assume events are fired
+    // synchronously.  I.e., keyboard events are always dispatched in the
+    // current process.
+    eSameProcessSyncTestInputTransaction,
+    // Input transaction for Others (must be IME on B2G).  Events are fired
+    // synchronously because TextInputProcessor which is the only user of
+    // this input transaction type supports only keyboard apps on B2G.
+    // Keyboard apps on B2G doesn't want to dispatch keyboard events to
+    // chrome process. Therefore, this should dispatch key events only in
+    // the current process.
+    eSameProcessSyncInputTransaction
+  };
+
+  InputTransactionType mInputTransactionType;
+
+  bool IsForTests() const
+  {
+    return mInputTransactionType == eAsyncTestInputTransaction ||
+           mInputTransactionType == eSameProcessSyncTestInputTransaction;
+  }
+
+  // ShouldSendInputEventToAPZ() returns true when WidgetInputEvent should
+  // be dispatched via its parent process (if there is) for APZ.  Otherwise,
+  // when the input transaction is for IME of B2G or automated tests which
+  // isn't APZ-aware, WidgetInputEvent should be dispatched form current
+  // process directly.
+  bool ShouldSendInputEventToAPZ() const
+  {
+    switch (mInputTransactionType) {
+      case eNativeInputTransaction:
+      case eAsyncTestInputTransaction:
+        return true;
+      case eSameProcessSyncTestInputTransaction:
+      case eSameProcessSyncInputTransaction:
+        return false;
+      case eNoInputTransaction:
+        NS_WARNING("Why does the caller need to dispatch an event when "
+                   "there is no input transaction?");
+        return true;
+      default:
+        MOZ_CRASH("Define the behavior of new InputTransactionType");
+    }
+  }
+
   // See IsComposing().
   bool mIsComposing;
 
@@ -290,7 +388,7 @@ private:
 
   nsresult BeginInputTransactionInternal(
              TextEventDispatcherListener* aListener,
-             bool aForTests);
+             InputTransactionType aType);
 
   /**
    * InitEvent() initializes aEvent.  This must be called before dispatching
@@ -308,13 +406,10 @@ private:
 
   /**
    * DispatchInputEvent() dispatches aEvent on aWidget.
-   *
-   * @param aDispatchTo     See comments of DispatchTo.
    */
   nsresult DispatchInputEvent(nsIWidget* aWidget,
                               WidgetInputEvent& aEvent,
-                              nsEventStatus& aStatus,
-                              DispatchTo aDispatchTo);
+                              nsEventStatus& aStatus);
 
   /**
    * StartCompositionAutomaticallyIfNecessary() starts composition if it hasn't
@@ -326,11 +421,16 @@ private:
    *                        compositionstart event, this returns
    *                        nsEventStatus_eConsumeNoDefault.  In this case,
    *                        the caller shouldn't keep doing its job.
+   * @param aEventTime      If this is not nullptr, WidgetCompositionEvent will
+   *                        be initialized with this.  Otherwise, initialized
+   *                        with the time at initializing.
    * @return                Only when something unexpected occurs, this returns
    *                        an error.  Otherwise, returns NS_OK even if aStatus
    *                        is nsEventStatus_eConsumeNoDefault.
    */
-  nsresult StartCompositionAutomaticallyIfNecessary(nsEventStatus& aStatus);
+  nsresult StartCompositionAutomaticallyIfNecessary(
+             nsEventStatus& aStatus,
+             const WidgetEventTime* aEventTime);
 
   /**
    * DispatchKeyboardEventInternal() maybe dispatches aKeyboardEvent.
@@ -344,7 +444,9 @@ private:
    *                        set nsEventStatus_eIgnore.  After dispatching
    *                        a event and it's consumed this returns
    *                        nsEventStatus_eConsumeNoDefault.
-   * @param aDispatchTo     See comments of DispatchTo.
+   * @param aData           Calling this method may cause calling
+   *                        WillDispatchKeyboardEvent() of the listener.
+   *                        aData will be set to its argument.
    * @param aIndexOfKeypress    This must be 0 if aMessage isn't eKeyPress or
    *                            aKeyboard.mKeyNameIndex isn't
    *                            KEY_NAME_INDEX_USE_STRING.  Otherwise, i.e.,
@@ -357,8 +459,7 @@ private:
   bool DispatchKeyboardEventInternal(EventMessage aMessage,
                                      const WidgetKeyboardEvent& aKeyboardEvent,
                                      nsEventStatus& aStatus,
-                                     DispatchTo aDispatchTo =
-                                       eDispatchToParentProcess,
+                                     void* aData,
                                      uint32_t aIndexOfKeypress = 0);
 };
 

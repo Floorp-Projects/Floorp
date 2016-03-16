@@ -96,7 +96,7 @@ gl::Error RenderStateCache::getBlendState(const gl::Framebuffer *framebuffer, co
     bool mrt = false;
 
     const FramebufferD3D *framebufferD3D = GetImplAs<FramebufferD3D>(framebuffer);
-    const gl::AttachmentList &colorbuffers = framebufferD3D->getColorAttachmentsForRender(mRenderer->getWorkarounds());
+    const gl::AttachmentList &colorbuffers = framebufferD3D->getColorAttachmentsForRender();
 
     BlendStateKey key = {};
     key.blendState = blendState;

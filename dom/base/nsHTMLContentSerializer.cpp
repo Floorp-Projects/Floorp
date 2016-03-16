@@ -401,50 +401,66 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
 }
 
 static const uint16_t kValNBSP = 160;
-static const char* kEntities[] = {
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, "&amp;", nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  "&lt;", nullptr, "&gt;", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  "&nbsp;"
+
+#define _ 0
+
+// This table indexes into kEntityStrings[].
+static const uint8_t kEntities[] = {
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, 2, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  3, _, 4, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  5
 };
 
-static const char* kAttrEntities[] = {
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, "&quot;", nullptr, nullptr, nullptr, "&amp;", nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  "&lt;", nullptr, "&gt;", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-  "&nbsp;"
+// This table indexes into kEntityStrings[].
+static const uint8_t kAttrEntities[] = {
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, 1, _, _, _, 2, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  3, _, 4, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, _, _,
+  5
+};
+
+#undef _
+
+static const char* const kEntityStrings[] = {
+  /* 0 */ nullptr,
+  /* 1 */ "&quot;",
+  /* 2 */ "&amp;",
+  /* 3 */ "&lt;",
+  /* 4 */ "&gt;",
+  /* 5 */ "&nbsp;"
 };
 
 uint32_t FindNextBasicEntity(const nsAString& aStr,
                              const uint32_t aLen,
                              uint32_t aIndex,
-                             const char** aEntityTable,
+                             const uint8_t* aEntityTable,
                              const char** aEntity)
 {
   for (; aIndex < aLen; ++aIndex) {
@@ -452,7 +468,7 @@ uint32_t FindNextBasicEntity(const nsAString& aStr,
     // needs to be replaced
     char16_t val = aStr[aIndex];
     if (val <= kValNBSP && aEntityTable[val]) {
-      *aEntity = aEntityTable[val];
+      *aEntity = kEntityStrings[aEntityTable[val]];
       return aIndex;
     }
   }
@@ -478,7 +494,7 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
 
   if (!nonBasicEntities &&
       (mFlags & (nsIDocumentEncoder::OutputEncodeBasicEntities))) {
-    const char **entityTable = mInAttribute ? kAttrEntities : kEntities;
+    const uint8_t* entityTable = mInAttribute ? kAttrEntities : kEntities;
     uint32_t start = 0;
     const uint32_t len = aStr.Length();
     for (uint32_t i = 0; i < len; ++i) {
@@ -510,7 +526,7 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
     uint32_t advanceLength = 0;
     nsReadingIterator<char16_t> iter;
 
-    const char **entityTable = mInAttribute ? kAttrEntities : kEntities;
+    const uint8_t* entityTable = mInAttribute ? kAttrEntities : kEntities;
     nsAutoCString entityReplacement;
 
     for (aStr.BeginReading(iter);
@@ -532,7 +548,7 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
       for (; c < fragmentEnd; c++, advanceLength++) {
         char16_t val = *c;
         if (val <= kValNBSP && entityTable[val]) {
-          fullConstEntityText = entityTable[val];
+          fullConstEntityText = kEntityStrings[entityTable[val]];
           break;
         } else if (val > 127 &&
                   ((val < 256 &&

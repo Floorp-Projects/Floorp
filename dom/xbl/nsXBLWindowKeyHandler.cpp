@@ -23,6 +23,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIPresShell.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "nsISelectionController.h"
 #include "mozilla/Preferences.h"
@@ -297,6 +298,82 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
   return NS_OK;
 }
 
+void
+nsXBLWindowKeyHandler::InstallKeyboardEventListenersTo(
+                         EventListenerManager* aEventListenerManager)
+{
+  // For marking each keyboard event as if it's reserved by chrome,
+  // nsXBLWindowKeyHandlers need to listen each keyboard events before
+  // web contents.
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keydown"),
+                           TrustedEventsAtCapture());
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keyup"),
+                           TrustedEventsAtCapture());
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keypress"),
+                           TrustedEventsAtCapture());
+
+  // For reducing the IPC cost, preventing to dispatch reserved keyboard
+  // events into the content process.
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keydown"),
+                           TrustedEventsAtSystemGroupCapture());
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keyup"),
+                           TrustedEventsAtSystemGroupCapture());
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keypress"),
+                           TrustedEventsAtSystemGroupCapture());
+
+  // Handle keyboard events in bubbling phase of the system event group.
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keydown"),
+                           TrustedEventsAtSystemGroupBubble());
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keyup"),
+                           TrustedEventsAtSystemGroupBubble());
+  aEventListenerManager->AddEventListenerByType(
+                           this, NS_LITERAL_STRING("keypress"),
+                           TrustedEventsAtSystemGroupBubble());
+}
+
+void
+nsXBLWindowKeyHandler::RemoveKeyboardEventListenersFrom(
+                         EventListenerManager* aEventListenerManager)
+{
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keydown"),
+                           TrustedEventsAtCapture());
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keyup"),
+                           TrustedEventsAtCapture());
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keypress"),
+                           TrustedEventsAtCapture());
+
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keydown"),
+                           TrustedEventsAtSystemGroupCapture());
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keyup"),
+                           TrustedEventsAtSystemGroupCapture());
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keypress"),
+                           TrustedEventsAtSystemGroupCapture());
+
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keydown"),
+                           TrustedEventsAtSystemGroupBubble());
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keyup"),
+                           TrustedEventsAtSystemGroupBubble());
+  aEventListenerManager->RemoveEventListenerByType(
+                           this, NS_LITERAL_STRING("keypress"),
+                           TrustedEventsAtSystemGroupBubble());
+}
+
 NS_IMETHODIMP
 nsXBLWindowKeyHandler::HandleEvent(nsIDOMEvent* aEvent)
 {
@@ -306,7 +383,11 @@ nsXBLWindowKeyHandler::HandleEvent(nsIDOMEvent* aEvent)
   uint16_t eventPhase;
   aEvent->GetEventPhase(&eventPhase);
   if (eventPhase == nsIDOMEvent::CAPTURING_PHASE) {
-    HandleEventOnCapture(keyEvent);
+    if (aEvent->WidgetEventPtr()->mFlags.mInSystemGroup) {
+      HandleEventOnCaptureInSystemEventGroup(keyEvent);
+    } else {
+      HandleEventOnCaptureInDefaultEventGroup(keyEvent);
+    }
     return NS_OK;
   }
 
@@ -319,12 +400,41 @@ nsXBLWindowKeyHandler::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 void
-nsXBLWindowKeyHandler::HandleEventOnCapture(nsIDOMKeyEvent* aEvent)
+nsXBLWindowKeyHandler::HandleEventOnCaptureInDefaultEventGroup(
+                         nsIDOMKeyEvent* aEvent)
+{
+  WidgetKeyboardEvent* widgetKeyboardEvent =
+    aEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
+
+  if (widgetKeyboardEvent->mFlags.mOnlySystemGroupDispatchInContent) {
+    MOZ_RELEASE_ASSERT(
+      widgetKeyboardEvent->mFlags.mNoCrossProcessBoundaryForwarding);
+    return;
+  }
+
+  bool isReserved = false;
+  if (HasHandlerForEvent(aEvent, &isReserved) && isReserved) {
+    // For reserved commands (such as Open New Tab), we don't to wait for
+    // the content to answer (so mWantReplyFromContentProcess remains false),
+    // neither to give a chance for content to override its behavior.
+    widgetKeyboardEvent->mFlags.mNoCrossProcessBoundaryForwarding = true;
+    // If the key combination is reserved by chrome, we shouldn't expose the
+    // keyboard event to web contents because such keyboard events shouldn't be
+    // cancelable.  So, it's not good behavior to fire keyboard events but
+    // to ignore the defaultPrevented attribute value in chrome.
+    widgetKeyboardEvent->mFlags.mOnlySystemGroupDispatchInContent = true;
+  }
+}
+
+void
+nsXBLWindowKeyHandler::HandleEventOnCaptureInSystemEventGroup(
+                         nsIDOMKeyEvent* aEvent)
 {
   WidgetKeyboardEvent* widgetEvent =
     aEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
 
-  if (widgetEvent->mFlags.mNoCrossProcessBoundaryForwarding) {
+  if (widgetEvent->mFlags.mNoCrossProcessBoundaryForwarding ||
+      widgetEvent->mFlags.mOnlySystemGroupDispatchInContent) {
     return;
   }
 
@@ -334,27 +444,19 @@ nsXBLWindowKeyHandler::HandleEventOnCapture(nsIDOMKeyEvent* aEvent)
     return;
   }
 
-  bool aReservedForChrome = false;
-  if (!HasHandlerForEvent(aEvent, &aReservedForChrome)) {
+  if (!HasHandlerForEvent(aEvent)) {
     return;
   }
 
-  if (aReservedForChrome) {
-    // For reserved commands (such as Open New Tab), we don't to wait for
-    // the content to answer (so mWantReplyFromContentProcess remains false),
-    // neither to give a chance for content to override its behavior.
-    widgetEvent->mFlags.mNoCrossProcessBoundaryForwarding = true;
-  } else {
-    // Inform the child process that this is a event that we want a reply
-    // from.
-    widgetEvent->mFlags.mWantReplyFromContentProcess = true;
-
-    // If this event hadn't been marked as mNoCrossProcessBoundaryForwarding
-    // yet, it means it wasn't processed by content. We'll not call any
-    // of the handlers at this moment, and will wait for the event to be
-    // redispatched with mNoCrossProcessBoundaryForwarding = 1 to process it.
-    aEvent->AsEvent()->StopPropagation();
-  }
+  // Inform the child process that this is a event that we want a reply
+  // from.
+  widgetEvent->mFlags.mWantReplyFromContentProcess = true;
+  // If this event hadn't been marked as mNoCrossProcessBoundaryForwarding
+  // yet, it means it wasn't processed by content. We'll not call any
+  // of the handlers at this moment, and will wait for the event to be
+  // redispatched with mNoCrossProcessBoundaryForwarding = 1 to process it.
+  // XXX Why not StopImmediatePropagation()?
+  aEvent->AsEvent()->StopPropagation();
 }
 
 //
