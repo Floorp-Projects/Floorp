@@ -278,19 +278,20 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
 
         if options.reftestExtensionPath is None:
             if self.build_obj is not None:
-                options.reftestExtensionPath = os.path.join(self.build_obj.topobjdir, "_tests",
-                                                            "reftest", "reftest")
+                reftestExtensionPath = os.path.join(self.build_obj.topobjdir, "_tests",
+                                                    "reftest", "reftest")
             else:
-                options.reftestExtensionPath = os.path.join(here, "reftest")
+                reftestExtensionPath = os.path.join(here, "reftest")
+            options.reftestExtensionPath = os.path.normpath(reftestExtensionPath)
 
         if (options.specialPowersExtensionPath is None and
             options.suite in ["crashtest", "jstestbrowser"]):
             if self.build_obj is not None:
-                options.specialPowersExtensionPath = os.path.join(self.build_obj.topobjdir, "_tests",
-                                                                  "reftest", "specialpowers")
+                specialPowersExtensionPath = os.path.join(self.build_obj.topobjdir, "_tests",
+                                                          "reftest", "specialpowers")
             else:
-                options.specialPowersExtensionPath = os.path.join(
-                    here, "specialpowers")
+                specialPowersExtensionPath = os.path.join(here, "specialpowers")
+            options.specialPowersExtensionPath = os.path.normpath(specialPowersExtensionPath)
 
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,
