@@ -7,9 +7,9 @@
 const { Cc, Ci, Cu } = require("chrome");
 const l10n = require("gcli/l10n");
 const gcli = require("gcli/index");
-const { gDevTools } = require("devtools/client/framework/devtools");
 const Debugger = require("Debugger");
 
+loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 
 var debuggers = [];
