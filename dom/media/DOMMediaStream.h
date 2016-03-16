@@ -47,7 +47,6 @@ class MediaStreamTrack;
 class MediaStreamTrackSource;
 class AudioStreamTrack;
 class VideoStreamTrack;
-class MediaStreamTrackSource;
 class AudioTrack;
 class VideoTrack;
 class AudioTrackList;
@@ -207,7 +206,8 @@ protected:
  *                    ----> t2 ------------> t2     <- MediaStreamTrack Z'
  *                                                     (pointing to t2 in A')
  */
-class DOMMediaStream : public DOMEventTargetHelper
+class DOMMediaStream : public DOMEventTargetHelper,
+                       public dom::PrincipalChangeObserver<dom::MediaStreamTrack>
 {
   friend class DOMLocalMediaStream;
   typedef dom::MediaStreamTrack MediaStreamTrack;
@@ -457,7 +457,24 @@ public:
    */
   void SetPrincipal(nsIPrincipal* aPrincipal);
 
+  // From PrincipalChangeObserver<MediaStreamTrack>.
+  void PrincipalChanged(MediaStreamTrack* aTrack) override;
+
+  /**
+   * Add a PrincipalChangeObserver to this stream.
+   *
+   * Returns true if it was successfully added.
+   *
+   * Ownership of the PrincipalChangeObserver remains with the caller, and it's
+   * the caller's responsibility to remove the observer before it dies.
+   */
   bool AddPrincipalChangeObserver(dom::PrincipalChangeObserver<DOMMediaStream>* aObserver);
+
+  /**
+   * Remove an added PrincipalChangeObserver from this stream.
+   *
+   * Returns true if it was successfully removed.
+   */
   bool RemovePrincipalChangeObserver(dom::PrincipalChangeObserver<DOMMediaStream>* aObserver);
 
   /**
@@ -581,6 +598,11 @@ protected:
   // XXX Bug 1124630. Remove with CameraPreviewMediaStream.
   void CreateAndAddPlaybackStreamListener(MediaStream*);
 
+  // Recomputes the current principal of this stream based on the set of tracks
+  // it currently contains. PrincipalChangeObservers will be notified only if
+  // the principal changes.
+  void RecomputePrincipal();
+
   // StreamTime at which the currentTime attribute would return 0.
   StreamTime mLogicalStreamStartTime;
 
@@ -640,8 +662,7 @@ protected:
 
 private:
   void NotifyPrincipalChanged();
-
-  // Principal identifying who may access the contents of this stream.
+  // Principal identifying who may access the collected contents of this stream.
   // If null, this stream can be used by anyone because it has no content yet.
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsTArray<dom::PrincipalChangeObserver<DOMMediaStream>*> mPrincipalChangeObservers;

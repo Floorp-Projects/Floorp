@@ -148,6 +148,12 @@ MediaStreamTrack::Graph()
 void
 MediaStreamTrack::PrincipalChanged()
 {
+  LOG(LogLevel::Info, ("MediaStreamTrack %p Principal changed. Now: "
+                       "null=%d, codebase=%d, expanded=%d, system=%d", this,
+                       GetPrincipal()->GetIsNullPrincipal(),
+                       GetPrincipal()->GetIsCodebasePrincipal(),
+                       GetPrincipal()->GetIsExpandedPrincipal(),
+                       GetPrincipal()->GetIsSystemPrincipal()));
   for (PrincipalChangeObserver<MediaStreamTrack>* observer
       : mPrincipalChangeObservers) {
     observer->PrincipalChanged(this);

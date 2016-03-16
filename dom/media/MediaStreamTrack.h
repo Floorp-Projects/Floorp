@@ -163,6 +163,10 @@ protected:
 class MediaStreamTrack : public DOMEventTargetHelper,
                          public MediaStreamTrackSource::Sink
 {
+  // DOMMediaStream owns MediaStreamTrack instances, and requires access to
+  // some internal state, e.g., GetInputStream(), GetOwnedStream().
+  friend class mozilla::DOMMediaStream;
+
 public:
   /**
    * aTrackID is the MediaStreamGraph track ID for the track in the
