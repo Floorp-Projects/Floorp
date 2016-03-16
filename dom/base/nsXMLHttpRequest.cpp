@@ -689,7 +689,7 @@ nsXMLHttpRequest::GetResponseText(nsString& aResponseText, ErrorResult& aRv)
   }
 
   mResponseBodyDecodedPos = mResponseBody.Length();
-  
+
   if (mState & XML_HTTP_REQUEST_DONE) {
     // Free memory buffer which we no longer need
     mResponseBody.Truncate();
@@ -1214,7 +1214,7 @@ nsXMLHttpRequest::IsSafeHeader(const nsACString& header, nsIHttpChannel* httpCha
     if (NS_FAILED(status)) {
       return false;
     }
-  }  
+  }
   const char* kCrossOriginSafeHeaders[] = {
     "cache-control", "content-language", "content-type", "expires",
     "last-modified", "pragma"
@@ -1370,7 +1370,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
 already_AddRefed<nsILoadGroup>
 nsXMLHttpRequest::GetLoadGroup() const
 {
-  if (mState & XML_HTTP_REQUEST_BACKGROUND) {                 
+  if (mState & XML_HTTP_REQUEST_BACKGROUND) {
     return nullptr;
   }
 
@@ -1443,7 +1443,7 @@ nsXMLHttpRequest::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
                           aLengthComputable, aLoaded, aTotal);
   }
 }
-                                          
+
 already_AddRefed<nsIHttpChannel>
 nsXMLHttpRequest::GetCurrentHttpChannel()
 {
@@ -1554,7 +1554,7 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDocument> doc =
     nsContentUtils::GetDocumentFromScriptContext(sc);
-  
+
   nsCOMPtr<nsIURI> baseURI;
   if (mBaseURI) {
     baseURI = mBaseURI;
@@ -1828,7 +1828,7 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request,
   mDataAvailable += totalRead;
 
   ChangeState(XML_HTTP_REQUEST_LOADING);
-  
+
   MaybeDispatchProgressEvents(false);
 
   return NS_OK;
@@ -1988,7 +1988,12 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
       } else {
         mIsHtml = true;
       }
-    } else if (type.Find("xml") == kNotFound) {
+    } else if (!(type.EqualsLiteral("text/xml") ||
+                 type.EqualsLiteral("application/xml") ||
+                 type.RFind("+xml", true, -1, 4) != kNotFound)) {
+      // Follow https://xhr.spec.whatwg.org/
+      // If final MIME type is not null, text/html, text/xml, application/xml,
+      // or does not end in +xml, return null.
       mState &= ~XML_HTTP_REQUEST_PARSEBODY;
     }
   } else {
@@ -2685,7 +2690,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
       if (!NS_InputStreamIsBuffered(postDataStream)) {
         nsCOMPtr<nsIInputStream> bufferedStream;
         rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                       postDataStream, 
+                                       postDataStream,
                                        4096);
         NS_ENSURE_SUCCESS(rv, rv);
 

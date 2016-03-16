@@ -1930,6 +1930,8 @@ HttpChannelChild::ContinueAsyncOpen()
 
   openArgs.allowStaleCacheContent() = mAllowStaleCacheContent;
 
+  openArgs.contentTypeHint() = mContentTypeHint;
+
   nsresult rv = mozilla::ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &openArgs.loadInfo());
   NS_ENSURE_SUCCESS(rv, rv);
 
