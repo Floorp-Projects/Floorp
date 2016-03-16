@@ -3436,7 +3436,6 @@ gtk3)
     MOZ_X11=1
     USE_FC_FREETYPE=1
 
-    AC_DEFINE_UNQUOTED(MOZ_WIDGET_GTK,3)
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
@@ -3449,7 +3448,6 @@ gtk2)
     MOZ_X11=1
     USE_FC_FREETYPE=1
 
-    AC_DEFINE_UNQUOTED(MOZ_WIDGET_GTK,2)
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
@@ -3465,13 +3463,11 @@ qt)
     fi
 
     USE_FC_FREETYPE=1
-    AC_DEFINE(MOZ_WIDGET_QT)
     MOZ_PDF_PRINTING=1
     AC_DEFINE(QT_NO_KEYWORDS)
     ;;
 
 cocoa)
-    AC_DEFINE(MOZ_WIDGET_COCOA)
     LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
     # Use -Wl as a trick to avoid -framework and framework names from
     # being separated by AC_SUBST_LIST.
@@ -3485,7 +3481,6 @@ cocoa)
     ;;
 
 uikit)
-    AC_DEFINE(MOZ_WIDGET_UIKIT)
     LDFLAGS="$LDFLAGS -framework UIKit -lobjc"
     TK_CFLAGS="-DNO_X11"
     TK_LIBS='-Wl,-framework,Foundation -Wl,-framework,CoreFoundation -Wl,-framework,CoreGraphics -Wl,-framework,CoreText -Wl,-framework,AVFoundation -Wl,-framework,AudioToolbox -Wl,-framework,CoreMedia -Wl,-framework,CoreVideo -Wl,-framework,OpenGLES -Wl,-framework,QuartzCore'
@@ -3496,13 +3491,11 @@ uikit)
     ;;
 
 android)
-    AC_DEFINE(MOZ_WIDGET_ANDROID)
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
 gonk)
-    AC_DEFINE(MOZ_WIDGET_GONK)
     AC_DEFINE(MOZ_TOUCH)
     MOZ_PDF_PRINTING=1
     MOZ_TOUCH=1
