@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-requestLongerTimeout(2);
+"use strict";
 
 /**
  * Tests that the details view is locked after recording has stopped and before
@@ -10,68 +9,73 @@ requestLongerTimeout(2);
  * stopped isn't the active one.
  */
 
-var test = Task.async(function*() {
-  // This test seems to take a long time to cleanup.
-  requestLongerTimeout(2);
+const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
+const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-  let { panel } = yield initPerformance(SIMPLE_URL);
-  let { PerformanceController, PerformanceView, RecordingsView,
-        EVENTS, $ } = panel.panelWin;
+add_task(function*() {
+  let { panel } = yield initPerformanceInNewTab({
+    url: SIMPLE_URL,
+    win: window
+  });
 
+  let { EVENTS, $, PerformanceController, RecordingsView } = panel.panelWin;
   let detailsContainer = $("#details-pane-container");
   let recordingNotice = $("#recording-notice");
   let loadingNotice = $("#loading-notice");
   let detailsPane = $("#details-pane");
 
-  info("Start to record");
   yield startRecording(panel);
 
   is(detailsContainer.selectedPanel, recordingNotice,
-    "The recording-notice is shown while recording");
+    "The recording-notice is shown while recording.");
 
-  info("Stop the recording and wait for the WILL_STOP and STOPPED events");
-  let willStop = PerformanceController.once(EVENTS.RECORDING_WILL_STOP);
-  let hasStopped = PerformanceController.once(EVENTS.RECORDING_STOPPED);
-  let stoppingRecording = PerformanceController.stopRecording();
+  let recordingStopping = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
+    expectedArgs: { "1": "recording-stopping" }
+  });
+  let recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
+    expectedArgs: { "1": "recording-stopped" }
+  });
+  let everythingStopped = stopRecording(panel);
 
-  yield willStop;
-
+  yield recordingStopping;
   is(detailsContainer.selectedPanel, loadingNotice,
-    "The loading-notice is shown while the record is stopping");
+    "The loading-notice is shown while the record is stopping.");
 
-  yield hasStopped;
-  yield stoppingRecording;
-
+  yield recordingStopped;
   is(detailsContainer.selectedPanel, detailsPane,
-    "The details panel is shown after the record has stopped");
+    "The details panel is shown after the record has stopped.");
 
-  info("Start to record again");
+  yield everythingStopped;
   yield startRecording(panel);
 
-  info("While the 2nd record is still going, switch to the first one");
-  let select = once(PerformanceController, EVENTS.RECORDING_SELECTED);
+  info("While the 2nd record is still going, switch to the first one.");
+  let recordingSelected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   RecordingsView.selectedIndex = 0;
-  yield select;
+  yield recordingSelected;
 
-  info("Stop the 2nd recording and wait for the WILL_STOP and STOPPED events");
-  willStop = PerformanceController.once(EVENTS.RECORDING_WILL_STOP);
-  hasStopped = PerformanceController.once(EVENTS.RECORDING_STOPPED);
-  stoppingRecording = PerformanceController.stopRecording();
+  recordingStopping = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
+    expectedArgs: { "1": "recording-stopping" }
+  });
+  recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
+    expectedArgs: { "1": "recording-stopped" }
+  });
+  everythingStopped = stopRecording(panel);
 
-  yield willStop;
+  yield recordingStopping;
+  is(detailsContainer.selectedPanel, detailsPane,
+    "The details panel is still shown while the 2nd record is being stopped.");
+  is(RecordingsView.selectedIndex, 0,
+    "The first record is still selected.");
+
+  yield recordingStopped;
 
   is(detailsContainer.selectedPanel, detailsPane,
-    "The details panel is still shown while the 2nd record is being stopped");
-  is(RecordingsView.selectedIndex, 0, "The first record is still selected");
+    "The details panel is still shown after the 2nd record has stopped.");
+  is(RecordingsView.selectedIndex, 1,
+    "The second record is now selected.");
 
-  yield hasStopped;
-  yield stoppingRecording;
-
-  is(detailsContainer.selectedPanel, detailsPane,
-    "The details panel is still shown after the 2nd record has stopped");
-  is(RecordingsView.selectedIndex, 1, "The second record is now selected");
-
-  yield PerformanceController.clearRecordings();
-  yield teardown(panel);
-  finish();
+  yield everythingStopped;
+  yield teardownToolboxAndRemoveTab(panel);
 });

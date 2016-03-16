@@ -1,39 +1,33 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests if the waterfall is properly built after finishing a recording.
  */
 
-function* spawnTest() {
-  // This test seems to take a long time to cleanup on Ubuntu VMs.
-  requestLongerTimeout(2);
+const { WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS } = require("devtools/client/performance/modules/widgets/marker-view");
+const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
+const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const { startRecording, stopRecording, waitForOverviewRenderedWithMarkers } = require("devtools/client/performance/test/helpers/actions");
+const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-  let { target, panel } = yield initPerformance(SIMPLE_URL);
-  let { $, $$, EVENTS, PerformanceController, OverviewView, WaterfallView, DetailsView } = panel.panelWin;
-  let { WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS } = require("devtools/client/performance/modules/widgets/marker-view");
+add_task(function*() {
+  let { panel } = yield initPerformanceInNewTab({
+    url: SIMPLE_URL,
+    win: window
+  });
+
+  let { $, $$, EVENTS, WaterfallView } = panel.panelWin;
 
   yield startRecording(panel);
   ok(true, "Recording has started.");
 
-  let updated = 0;
-  OverviewView.on(EVENTS.OVERVIEW_RENDERED, () => updated++);
-
-  ok((yield waitUntil(() => updated > 0)),
-    "The overview graphs were updated a bunch of times.");
-  ok((yield waitUntil(() => PerformanceController.getCurrentRecording().getMarkers().length > 0)),
-    "There are some markers available.");
-
-  let rendered = Promise.all([
-    DetailsView.selectView("waterfall"),
-    once(WaterfallView, EVENTS.WATERFALL_RENDERED)
-  ]);
+  // Ensure overview is rendering and some markers were received.
+  yield waitForOverviewRenderedWithMarkers(panel);
 
   yield stopRecording(panel);
   ok(true, "Recording has ended.");
-
-  yield rendered;
-  ok(true, "Recording has rendered.");
 
   // Test the header container.
 
@@ -70,10 +64,11 @@ function* spawnTest() {
   ok($$(".waterfall-tree-item > .waterfall-marker > .waterfall-marker-bar").length,
     "Some marker color bars should have been created inside the waterfall.");
 
-  // Test the sidebar
+  // Test the sidebar.
 
   let detailsView = WaterfallView.details;
   let markersRoot = WaterfallView._markersRoot;
+  markersRoot.recalculateBounds(); // Make sure the bounds are up to date.
 
   let parentWidthBefore = $("#waterfall-view").getBoundingClientRect().width;
   let sidebarWidthBefore = $(".waterfall-sidebar").getBoundingClientRect().width;
@@ -84,10 +79,10 @@ function* spawnTest() {
   is(detailsWidthBefore, 0,
     "The details view width should be 0 when hidden.");
   is(markersRoot._waterfallWidth, parentWidthBefore - sidebarWidthBefore - WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS,
-    "The waterfall width is correct.")
+    "The waterfall width is correct (1).");
 
-  let receivedFocusEvent = markersRoot.once("focus");
-  let waterfallRerendered = once(WaterfallView, EVENTS.WATERFALL_RENDERED);
+  let receivedFocusEvent = once(markersRoot, "focus");
+  let waterfallRerendered = once(WaterfallView, EVENTS.UI_WATERFALL_RENDERED);
   WaterfallView._markersRoot.getChild(0).focus();
   yield receivedFocusEvent;
   yield waterfallRerendered;
@@ -105,8 +100,7 @@ function* spawnTest() {
   isnot(detailsWidthAfter, 0,
     "The details view width should not be 0 when visible.");
   is(markersRoot._waterfallWidth, parentWidthAfter - sidebarWidthAfter - detailsWidthAfter - WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS,
-    "The waterfall width is correct (2).")
+    "The waterfall width is correct (2).");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardownToolboxAndRemoveTab(panel);
+});
