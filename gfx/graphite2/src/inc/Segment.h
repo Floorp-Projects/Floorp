@@ -40,7 +40,7 @@ of the License or (at your option) any later version.
 #include "inc/List.h"
 #include "inc/Collider.h"
 
-#define MAX_SEG_GROWTH_FACTOR  256
+#define MAX_SEG_GROWTH_FACTOR  64
 
 namespace graphite2 {
 
@@ -159,7 +159,7 @@ public:
     void reverseSlots();
 
     bool isWhitespace(const int cid) const;
-    bool hasCollisionInfo() const { return (m_flags & SEG_HASCOLLISIONS); }
+    bool hasCollisionInfo() const { return (m_flags & SEG_HASCOLLISIONS) && m_collisions; }
     SlotCollision *collisionInfo(const Slot *s) const { return m_collisions ? m_collisions + s->index() : 0; }
     CLASS_NEW_DELETE
 
