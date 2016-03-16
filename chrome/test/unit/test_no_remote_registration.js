@@ -11,29 +11,19 @@ registerManifests(manifests);
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var XULAppInfo = {
-  vendor: "Mozilla",
+Components.utils.import("resource://testing-common/AppInfo.jsm", this);
+var XULAppInfo = newAppInfo({
   name: "XPCShell",
   ID: "{39885e5f-f6b4-4e2a-87e5-6259ecf79011}",
   version: "5",
-  appBuildID: "2007010101",
   platformVersion: "1.9",
-  platformBuildID: "2007010101",
-  inSafeMode: false,
-  logConsoleErrors: true,
-  OS: "XPCShell",
-  XPCOMABI: "noarch-spidermonkey",
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIXULAppInfo,
-    Ci.nsIXULRuntime,
-  ])
-};
+});
 
 var XULAppInfoFactory = {
   // These two are used when we register all our factories (and unregister)
-  CID: XULAPPINFO_CID,
+  CID: Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}"),
   scheme: "XULAppInfo",
-  contractID: XULAPPINFO_CONTRACTID,
+  contractID: "@mozilla.org/xre/app-info;1",
   createInstance: function (outer, iid) {
     if (outer != null)
       throw Cr.NS_ERROR_NO_AGGREGATION;
