@@ -119,17 +119,15 @@ if test -n "$MOZTTDIR" ; then
     AC_DEFINE(PACKAGE_MOZTT)
 fi
 
-MOZ_ARG_WITH_STRING(gonk,
-[  --with-gonk=DIR
-               location of gonk dir],
-    gonkdir=$withval)
-
 MOZ_ARG_WITH_STRING(gonk-toolchain-prefix,
 [  --with-gonk-toolchain-prefix=DIR
                           prefix to gonk toolchain commands],
     gonk_toolchain_prefix=$withval)
 
 if test -n "$gonkdir" ; then
+    dnl export for js/src/configure. We can't pass the option down normally,
+    dnl because it's a `--enable-project=b2g`-only option.
+    export gonkdir
     kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
     android_source="$gonkdir"
     ANDROID_SOURCE="$android_source"

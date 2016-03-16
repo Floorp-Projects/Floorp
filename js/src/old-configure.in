@@ -89,11 +89,6 @@ BUILDING_JS=1
 AC_SUBST(BUILDING_JS)
 AC_SUBST(autoconfmk)
 
-MOZ_ARG_WITH_STRING(gonk,
-[  --with-gonk=DIR
-               location of gonk dir],
-    gonkdir=$withval)
-
 MOZ_ARG_WITH_STRING(gonk-toolchain-prefix,
 [  --with-gonk-toolchain-prefix=DIR
                           prefix to gonk toolchain commands],
