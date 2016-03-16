@@ -210,7 +210,8 @@ Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
   // and update
   getData(filter) {
     let updateType;
-    if (typeof filter !== "undefined") {
+    let hasFilter = typeof filter !== "undefined";
+    if (hasFilter) {
       this.filter = filter;
       this._selectedRow = [-1, -1];
 
@@ -223,6 +224,10 @@ Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
     // return promise for tests
     return this._SyncedTabs.getTabClients(this.filter)
       .then(result => {
+        if (!hasFilter) {
+          // Only sort clients and tabs if we're rendering the whole list.
+          this._SyncedTabs.sortTabClientsByLastUsed(result);
+        }
         this.data = result;
         this._change(updateType);
       })

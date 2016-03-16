@@ -86,6 +86,7 @@
 
     <!-- Group/heading page row on about:home -->
     <dimen name="page_group_height">56dp</dimen>
+    <dimen name="home_header_item_height">56dp</dimen>
 
     <!-- Reading list row on about:home -->
     <dimen name="reading_list_row_height">128dp</dimen>
