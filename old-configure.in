@@ -3071,7 +3071,6 @@ if test -n "$MOZ_FMP4"; then
 else
   MOZ_FMP4=
 fi
-MOZ_FFMPEG=
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
 MOZ_SRTP=
@@ -4350,27 +4349,6 @@ MOZ_ARG_DISABLE_BOOL(directshow,
 
 if test -n "$MOZ_DIRECTSHOW"; then
     AC_DEFINE(MOZ_DIRECTSHOW)
-fi;
-
-dnl ========================================================
-dnl FFmpeg H264/AAC Decoding Support
-dnl ========================================================
-case "$OS_TARGET" in
-WINNT|Android)
-    ;;
-*)
-    MOZ_FFMPEG=1
-    ;;
-esac
-
-MOZ_ARG_DISABLE_BOOL(ffmpeg,
-[  --disable-ffmpeg         Disable FFmpeg for fragmented H264/AAC decoding],
-    MOZ_FFMPEG=,
-    MOZ_FFMPEG=1
-)
-
-if test -n "$MOZ_FFMPEG"; then
-    AC_DEFINE(MOZ_FFMPEG)
 fi;
 
 dnl ========================================================
@@ -7991,7 +7969,6 @@ AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 
 AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
-AC_SUBST(MOZ_FFMPEG)
 AC_SUBST(MOZ_FFVPX)
 AC_SUBST_LIST(FFVPX_ASFLAGS)
 AC_SUBST(MOZ_FMP4)
