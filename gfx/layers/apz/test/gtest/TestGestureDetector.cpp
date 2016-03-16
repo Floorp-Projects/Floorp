@@ -605,6 +605,25 @@ TEST_F(APZCGestureDetectorTester, LongPressInterruptedByWheel) {
   Wheel(apzc, ScreenIntPoint(10, 10), ScreenPoint(0, -10), mcc->Time(), &wheelBlockId);
   EXPECT_NE(touchBlockId, wheelBlockId);
   mcc->AdvanceByMillis(1000);
+}
 
+TEST_F(APZCGestureDetectorTester, TapTimeoutInterruptedByWheel) {
+  // In this test, even though the wheel block comes right after the tap, the
+  // tap should still be dispatched because it completes fully before the wheel
+  // block arrived.
+  EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
 
+  // We make the APZC zoomable so the gesture detector needs to wait to
+  // distinguish between tap and double-tap. During that timeout is when we
+  // insert the wheel event.
+  MakeApzcZoomable();
+
+  uint64_t touchBlockId = 0;
+  uint64_t wheelBlockId = 0;
+  Tap(apzc, ScreenIntPoint(10, 10), mcc, TimeDuration::FromMilliseconds(100),
+      nullptr, &touchBlockId);
+  mcc->AdvanceByMillis(10);
+  Wheel(apzc, ScreenIntPoint(10, 10), ScreenPoint(0, -10), mcc->Time(), &wheelBlockId);
+  EXPECT_NE(touchBlockId, wheelBlockId);
+  while (mcc->RunThroughDelayedTasks());
 }
