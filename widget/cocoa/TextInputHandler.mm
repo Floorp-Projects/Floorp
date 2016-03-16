@@ -800,8 +800,12 @@ TISInputSourceWrapper::ComputeInsertStringForCharCode(
     //       capable layout when Command key is pressed.  And we don't worry
     //       when Control key is pressed too because it causes inputting
     //       control characters.
+    // Additionally, if the key event doesn't input any text, the event may be
+    // dead key event.  In this case, the charCode value should be the dead
+    // character.
     UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
-    if (!aKeyEvent.IsMeta() && !aKeyEvent.IsControl() && IsOpenedIMEMode()) {
+    if ((!aKeyEvent.IsMeta() && !aKeyEvent.IsControl() && IsOpenedIMEMode()) ||
+        ![[aNativeKeyEvent characters] length]) {
       UInt32 state =
         nsCocoaUtils::ConvertToCarbonModifier([aNativeKeyEvent modifierFlags]);
       uint32_t ch = TranslateToChar(nativeKeyCode, state, GetKbdType());
