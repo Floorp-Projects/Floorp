@@ -72,7 +72,7 @@ else:
     UNIFIED_SOURCES += [
         'nsPluginsDirUnix.cpp',
     ]
-    if CONFIG['MOZ_ENABLE_GTK']:
+    if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
         # This file cannot be built in unified mode because of name clashes in X11 headers.
         SOURCES += [
             'nsPluginNativeWindowGtk.cpp',
