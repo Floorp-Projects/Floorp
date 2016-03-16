@@ -26,6 +26,7 @@ var NONCE_INFO = UTF8.encode('Content-Encoding: nonce');
 var AUTH_INFO = UTF8.encode('Content-Encoding: auth\0'); // note nul-terminus
 var P256DH_INFO = UTF8.encode('P-256\0');
 var ECDH_KEY = { name: 'ECDH', namedCurve: 'P-256' };
+var ECDSA_KEY =  { name: 'ECDSA', namedCurve: 'P-256' };
 // A default keyid with a name that won't conflict with a real keyid.
 var DEFAULT_KEYID = '';
 
@@ -172,6 +173,12 @@ this.PushCrypto = {
 
   generateAuthenticationSecret() {
     return crypto.getRandomValues(new Uint8Array(16));
+  },
+
+  validateAppServerKey(key) {
+    return crypto.subtle.importKey('raw', key, ECDSA_KEY,
+                                   true, ['verify'])
+      .then(_ => key);
   },
 
   generateKeys() {

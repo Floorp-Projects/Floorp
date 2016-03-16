@@ -94,6 +94,17 @@ const STOPPING_SERVICE_EVENT = 2;
 const UNINIT_EVENT = 3;
 
 /**
+ * Annotates an error with an XPCOM result code. We use this helper
+ * instead of `Components.Exception` because the latter can assert in
+ * `nsXPCComponents_Exception::HasInstance` when inspected at shutdown.
+ */
+function errorWithResult(message, result = Cr.NS_ERROR_FAILURE) {
+  let error = new Error(message);
+  error.result = result;
+  return error;
+}
+
+/**
  * The implementation of the push system. It uses WebSockets
  * (PushServiceWebSocket) to communicate with the server and PushDB (IndexedDB)
  * for persistence.
@@ -1094,23 +1105,45 @@ this.PushService = {
   register: function(aPageRecord) {
     console.debug("register()", aPageRecord);
 
-    return this._getByPageRecord(aPageRecord)
-      .then(record => {
-        if (!record) {
-          return this._lookupOrPutPendingRequest(aPageRecord);
-        }
-        if (record.isExpired()) {
-          return record.quotaChanged().then(isChanged => {
-            if (isChanged) {
-              // If the user revisited the site, drop the expired push
-              // registration and re-register.
-              return this.dropRegistrationAndNotifyApp(record.keyID);
-            }
-            throw new Error("Push subscription expired");
-          }).then(_ => this._lookupOrPutPendingRequest(aPageRecord));
-        }
-        return record.toSubscription();
-      });
+    let keyPromise;
+    if (aPageRecord.appServerKey) {
+      let keyView = new Uint8Array(aPageRecord.appServerKey);
+      keyPromise = PushCrypto.validateAppServerKey(keyView)
+        .catch(error => {
+          // Normalize Web Crypto exceptions. `nsIPushService` will forward the
+          // error result to the DOM API implementation in `PushManager.cpp` or
+          // `Push.js`, which will convert it to the correct `DOMException`.
+          throw errorWithResult("Invalid app server key",
+                                Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR);
+        });
+    } else {
+      keyPromise = Promise.resolve(null);
+    }
+
+    return Promise.all([
+      keyPromise,
+      this._getByPageRecord(aPageRecord),
+    ]).then(([appServerKey, record]) => {
+      aPageRecord.appServerKey = appServerKey;
+      if (!record) {
+        return this._lookupOrPutPendingRequest(aPageRecord);
+      }
+      if (!record.matchesAppServerKey(appServerKey)) {
+        throw errorWithResult("Mismatched app server key",
+                              Cr.NS_ERROR_DOM_PUSH_MISMATCHED_KEY_ERR);
+      }
+      if (record.isExpired()) {
+        return record.quotaChanged().then(isChanged => {
+          if (isChanged) {
+            // If the user revisited the site, drop the expired push
+            // registration and re-register.
+            return this.dropRegistrationAndNotifyApp(record.keyID);
+          }
+          throw new Error("Push subscription expired");
+        }).then(_ => this._lookupOrPutPendingRequest(aPageRecord));
+      }
+      return record.toSubscription();
+    });
   },
 
   /**
