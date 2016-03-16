@@ -2,9 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* globals gDevTools */
+
 "use strict";
 
 const l10n = require("gcli/l10n");
+loader.lazyRequireGetter(this, "gDevTools",
+                         "devtools/client/framework/devtools", true);
 
 /**
  * The `edit` command opens the toolbox to the style editor, with a given
@@ -58,7 +62,6 @@ exports.items = [{
   to: "dom",
   exec: function(args, context) {
     let target = context.environment.target;
-    let {gDevTools} = require("devtools/client/framework/devtools");
     return gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
       let styleEditor = toolbox.getCurrentPanel();
       styleEditor.selectStyleSheet(args.href, args.line);
