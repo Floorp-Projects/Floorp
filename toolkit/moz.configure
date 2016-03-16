@@ -120,3 +120,16 @@ def pdf_printing(toolkit):
     else:
         # CONFIGURE_SUBST_FILES need explicit empty values.
         set_config('PDF_SURFACE_FEATURE', '')
+
+
+# Event loop instrumentation
+# ==============================================================
+option(env='MOZ_INSTRUMENT_EVENT_LOOP',
+       help='Force-enable event loop instrumentation')
+
+@depends('MOZ_INSTRUMENT_EVENT_LOOP', toolkit)
+def instrument_event_loop(value, toolkit):
+    if value or (toolkit in ('windows', 'gtk2', 'gtk3', 'cocoa', 'android',
+                             'gonk') and value.origin == 'default'):
+        set_config('MOZ_INSTRUMENT_EVENT_LOOP', '1')
+        set_define('MOZ_INSTRUMENT_EVENT_LOOP', '1')

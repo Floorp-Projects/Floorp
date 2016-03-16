@@ -3413,20 +3413,12 @@ dnl ========================================================
 
 case "$MOZ_WIDGET_TOOLKIT" in
 
-windows)
-    MOZ_INSTRUMENT_EVENT_LOOP=1
-    ;;
-
 gtk3)
     USE_FC_FREETYPE=1
-
-    MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
 gtk2)
     USE_FC_FREETYPE=1
-
-    MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
 qt)
@@ -3446,7 +3438,6 @@ cocoa)
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     MOZ_USER_DIR="Mozilla"
     MOZ_FS_LAYOUT=bundle
-    MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
 uikit)
@@ -3459,21 +3450,12 @@ uikit)
     MOZ_FS_LAYOUT=bundle
     ;;
 
-android)
-    MOZ_INSTRUMENT_EVENT_LOOP=1
-    ;;
-
 gonk)
     AC_DEFINE(MOZ_TOUCH)
     MOZ_TOUCH=1
-    MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
 esac
-
-if test "$MOZ_INSTRUMENT_EVENT_LOOP"; then
-   AC_DEFINE(MOZ_INSTRUMENT_EVENT_LOOP)
-fi
 
 dnl there are a lot of tests on MOZ_ENABLE_GTK below, that are more convenient
 dnl to keep that way than testing against MOZ_WIDGET_TOOLKIT
@@ -8066,7 +8048,6 @@ AC_SUBST(VPX_AS_CONVERSION)
 AC_SUBST(VPX_X86_ASM)
 AC_SUBST(VPX_ARM_ASM)
 AC_SUBST(VPX_NEED_OBJ_INT_EXTRACT)
-AC_SUBST(MOZ_INSTRUMENT_EVENT_LOOP)
 AC_SUBST(MOZ_CODE_COVERAGE)
 AC_SUBST(LIBJPEG_TURBO_USE_YASM)
 AC_SUBST_LIST(LIBJPEG_TURBO_ASFLAGS)
