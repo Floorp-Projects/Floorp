@@ -6064,24 +6064,6 @@ MOZ_ARG_DISABLE_BOOL(zipwriter,
 AC_SUBST(MOZ_ZIPWRITER)
 
 dnl ========================================================
-dnl GL provider
-dnl ========================================================
-MOZ_GL_PROVIDER=
-MOZ_ARG_WITH_STRING(gl-provider,
-[  --with-gl-provider=ID
-                          Set GL provider backend type],
-[ val=`echo $withval`
-    MOZ_GL_PROVIDER="$val"])
-
-if test -n "$MOZ_GL_PROVIDER"; then
-MOZ_GL_DEFAULT_PROVIDER=$MOZ_GL_PROVIDER
-AC_SUBST(MOZ_GL_PROVIDER)
-AC_DEFINE_UNQUOTED(MOZ_GL_PROVIDER, GLContextProvider$MOZ_GL_PROVIDER)
-fi
-AC_SUBST(MOZ_GL_DEFAULT_PROVIDER)
-AC_DEFINE_UNQUOTED(GL_PROVIDER_$MOZ_GL_DEFAULT_PROVIDER)
-
-dnl ========================================================
 dnl = faststripe theme
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(faststripe,
