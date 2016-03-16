@@ -452,12 +452,16 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
   }
   // mIsComposing should be initialized later.
   keyEvent.mIsComposing = false;
-  // XXX Currently, we don't support to dispatch key event with native key
-  //     event information.
-  keyEvent.mNativeKeyEvent = nullptr;
-  // XXX Currently, we don't support to dispatch key events with data for
-  // plugins.
-  keyEvent.mPluginEvent.Clear();
+  if (mInputTransactionType == eNativeInputTransaction) {
+    // Copy mNativeKeyEvent here because for safety for other users of
+    // AssignKeyEventData(), it doesn't copy this.
+    keyEvent.mNativeKeyEvent = aKeyboardEvent.mNativeKeyEvent;
+  } else {
+    // If it's not a keyboard event for native key event, we should ensure that
+    // mNativeKeyEvent and mPluginEvent are null/empty.
+    keyEvent.mNativeKeyEvent = nullptr;
+    keyEvent.mPluginEvent.Clear();
+  }
   // TODO: Manage mUniqueId here.
 
   DispatchInputEvent(mWidget, keyEvent, aStatus);
