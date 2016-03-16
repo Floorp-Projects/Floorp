@@ -108,3 +108,15 @@ def gl_provider(value, x11):
     elif x11:
         set_config('MOZ_GL_DEFAULT_PROVIDER', 'GLX')
         set_define('GL_PROVIDER_GLX', '1')
+
+
+# PDF printing
+# ==============================================================
+@depends(toolkit)
+def pdf_printing(toolkit):
+    if toolkit in ('windows', 'gtk2', 'gtk3', 'qt', 'android', 'gonk'):
+        set_config('MOZ_PDF_PRINTING', '1')
+        set_config('PDF_SURFACE_FEATURE', '#define CAIRO_HAS_PDF_SURFACE 1')
+    else:
+        # CONFIGURE_SUBST_FILES need explicit empty values.
+        set_config('PDF_SURFACE_FEATURE', '')
