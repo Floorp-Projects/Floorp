@@ -741,16 +741,11 @@ TouchBlockState::IsDuringFastFling() const
   return mDuringFastFling;
 }
 
-bool
+void
 TouchBlockState::SetSingleTapOccurred()
 {
-  TBS_LOG("%p attempting to set single-tap occurred; disallowed=%d\n",
-    this, mDuringFastFling);
-  if (!mDuringFastFling) {
-    mSingleTapOccurred = true;
-    return true;
-  }
-  return false;
+  TBS_LOG("%p setting single-tap-occurred flag\n", this);
+  mSingleTapOccurred = true;
 }
 
 bool

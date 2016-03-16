@@ -137,7 +137,7 @@ private:
   nsEventStatus HandleInputTouchMove();
   nsEventStatus HandleInputTouchCancel();
   void HandleInputTimeoutLongTap();
-  void HandleInputTimeoutMaxTap();
+  void HandleInputTimeoutMaxTap(bool aDuringFastFling);
 
   void TriggerSingleTapConfirmedEvent();
 
