@@ -121,8 +121,6 @@ interface DOMApplicationsManager : EventTarget {
   DOMRequest getAll();
 
   [CheckAnyPermissions="webapps-manage"]
-  DOMRequest getNotInstalled();
-  [CheckAnyPermissions="webapps-manage"]
   void applyDownload(DOMApplication app);
   DOMRequest uninstall(DOMApplication app);
 
