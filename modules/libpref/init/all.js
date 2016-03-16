@@ -723,13 +723,6 @@ pref("gfx.content.azure.backends", "cairo");
 #endif
 #endif
 
-#ifdef MOZ_WIDGET_GTK2
-pref("gfx.content.azure.backends", "cairo");
-#endif
-#ifdef ANDROID
-pref("gfx.content.azure.backends", "cairo");
-#endif
-
 pref("gfx.work-around-driver-bugs", true);
 pref("gfx.prefer-mesa-llvmpipe", false);
 
