@@ -69,3 +69,26 @@ def toolkit(toolkit):
         set_define('MOZ_WIDGET_%s' % widget_toolkit.upper(), '1')
 
     return widget_toolkit
+
+
+option('--without-x', env='WITHOUT_X', help='Disable X11 support')
+
+@depends('--without-x', toolkit)
+def x11(value, toolkit):
+    if not value and toolkit != 'qt':
+        error('--without-x is only valid with --enable-default-toolkit=qt')
+
+    x11_toolkits = ('gtk2', 'gtk3', 'qt')
+    if value and value.origin != 'default' and toolkit not in x11_toolkits:
+        error('--with-x is only valid with --enable-default-toolkit={%s}'
+              % ','.join(x11_toolkits))
+
+    if value and toolkit in x11_toolkits:
+        set_config('MOZ_ENABLE_XREMOTE', '1')
+        set_define('MOZ_ENABLE_XREMOTE', '1')
+        set_config('MOZ_X11', '1')
+        set_define('MOZ_X11', '1')
+        add_old_configure_assignment('MOZ_X11', '1')
+        add_old_configure_assignment('MOZ_GL_DEFAULT_PROVIDER', 'GLX')
+
+    return value and toolkit in x11_toolkits

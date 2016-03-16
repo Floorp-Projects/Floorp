@@ -1532,7 +1532,6 @@ case "$target" in
 
 *-android*|*-linuxandroid*)
     AC_DEFINE(NO_PW_GECOS)
-    no_x=yes
     if test -n "$gonkdir"; then
         _PLATFORM_HAVE_RIL=1
         MOZ_B2G_FM=1
@@ -1802,8 +1801,6 @@ case "$target" in
     AC_DEFINE(NOMINMAX)
     BIN_SUFFIX='.exe'
     MOZ_USER_DIR="Mozilla"
-
-    no_x=yes
 
     case "$host" in
     *-mingw*)
@@ -2112,7 +2109,7 @@ dnl Checks for X libraries.
 dnl Ordering is important.
 dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
-if test "$no_x" != "yes"; then
+if test -n "$MOZ_X11"; then
     AC_DEFINE_UNQUOTED(FUNCPROTO,15)
     XLIBS="-lX11 $XLIBS"
     _SAVE_LDFLAGS="$LDFLAGS"
@@ -2147,7 +2144,7 @@ if test "$no_x" != "yes"; then
              AC_DEFINE(HAVE_LIBXSS)],, $XEXT_LIBS $XLIBS))
 
     LDFLAGS="$_SAVE_LDFLAGS"
-fi # $no_x
+fi # $MOZ_X11
 
 AC_SUBST_LIST(XCFLAGS)
 AC_SUBST_LIST(XLDFLAGS)
@@ -3411,10 +3408,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Toolkit Options)
 
-MOZ_ARG_WITHOUT_BOOL(x,
-[  --without-x              Build without X11],
-    WITHOUT_X11=1)
-
 dnl ========================================================
 dnl = Enable the toolkit as needed                         =
 dnl ========================================================
@@ -3427,11 +3420,6 @@ windows)
     ;;
 
 gtk3)
-    MOZ_ENABLE_XREMOTE=1
-    MOZ_GL_DEFAULT_PROVIDER=GLX
-
-    AC_DEFINE(MOZ_X11)
-    MOZ_X11=1
     USE_FC_FREETYPE=1
 
     MOZ_PDF_PRINTING=1
@@ -3439,11 +3427,6 @@ gtk3)
     ;;
 
 gtk2)
-    MOZ_ENABLE_XREMOTE=1
-    MOZ_GL_DEFAULT_PROVIDER=GLX
-
-    AC_DEFINE(MOZ_X11)
-    MOZ_X11=1
     USE_FC_FREETYPE=1
 
     MOZ_PDF_PRINTING=1
@@ -3452,12 +3435,6 @@ gtk2)
 
 qt)
     MOZ_ENABLE_QT=1
-    if test -z "$WITHOUT_X11"; then
-      MOZ_ENABLE_XREMOTE=1
-      MOZ_GL_DEFAULT_PROVIDER=GLX
-      MOZ_X11=1
-      AC_DEFINE(MOZ_X11)
-    fi
 
     USE_FC_FREETYPE=1
     MOZ_PDF_PRINTING=1
@@ -3505,10 +3482,6 @@ AC_SUBST(MOZ_PDF_PRINTING)
 if test "$MOZ_PDF_PRINTING"; then
    PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
    AC_DEFINE(MOZ_PDF_PRINTING)
-fi
-
-if test "$MOZ_ENABLE_XREMOTE"; then
-    AC_DEFINE(MOZ_ENABLE_XREMOTE)
 fi
 
 if test "$MOZ_INSTRUMENT_EVENT_LOOP"; then
@@ -3787,14 +3760,11 @@ AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_QTNETWORK)
 AC_SUBST(MOZ_ENABLE_QMSYSTEM2)
 AC_SUBST(MOZ_ENABLE_QTMOBILITY)
-AC_SUBST(MOZ_ENABLE_XREMOTE)
 AC_SUBST_LIST(MOZ_QT_CFLAGS)
 AC_SUBST_LIST(MOZ_QT_LIBS)
 
 AC_SUBST(MOC)
 AC_SUBST(RCC)
-
-AC_SUBST(MOZ_X11)
 
 dnl ========================================================
 dnl =
@@ -8156,9 +8126,6 @@ AC_CHECK_FUNCS(posix_fadvise posix_fallocate)
 
 dnl Check for missing components
 if test "$MOZ_X11"; then
-    if test "$WITHOUT_X11"; then
-        AC_MSG_ERROR([--without-x specified and MOZ_X11 still defined])
-    fi
     dnl ====================================================
     dnl = Check if X headers exist
     dnl ====================================================
