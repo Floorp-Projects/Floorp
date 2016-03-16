@@ -5,8 +5,6 @@
 {
     'variables':
     {
-        'angle_standalone%': 0,
-
         # These file lists are shared with the GN build.
         'libangle_common_sources':
         [
@@ -70,8 +68,6 @@
             'libANGLE/Context.h',
             'libANGLE/Data.cpp',
             'libANGLE/Data.h',
-            'libANGLE/Debug.cpp',
-            'libANGLE/Debug.h',
             'libANGLE/Device.cpp',
             'libANGLE/Device.h',
             'libANGLE/Display.cpp',
@@ -98,6 +94,7 @@
             'libANGLE/Program.h',
             'libANGLE/Query.cpp',
             'libANGLE/Query.h',
+            'libANGLE/RefCountObject.cpp',
             'libANGLE/RefCountObject.h',
             'libANGLE/Renderbuffer.cpp',
             'libANGLE/Renderbuffer.h',
@@ -268,8 +265,6 @@
             'libANGLE/renderer/d3d/d3d9/shaders/compiled/luminanceps.h',
             'libANGLE/renderer/d3d/d3d9/shaders/compiled/passthroughps.h',
             'libANGLE/renderer/d3d/d3d9/shaders/compiled/standardvs.h',
-            'libANGLE/renderer/d3d/d3d9/StateManager9.cpp',
-            'libANGLE/renderer/d3d/d3d9/StateManager9.h',
             'libANGLE/renderer/d3d/d3d9/SwapChain9.cpp',
             'libANGLE/renderer/d3d/d3d9/SwapChain9.h',
             'libANGLE/renderer/d3d/d3d9/TextureStorage9.cpp',
@@ -461,8 +456,6 @@
         [
             'libANGLE/renderer/gl/wgl/DisplayWGL.cpp',
             'libANGLE/renderer/gl/wgl/DisplayWGL.h',
-            'libANGLE/renderer/gl/wgl/DXGISwapChainWindowSurfaceWGL.cpp',
-            'libANGLE/renderer/gl/wgl/DXGISwapChainWindowSurfaceWGL.h',
             'libANGLE/renderer/gl/wgl/FunctionsWGL.cpp',
             'libANGLE/renderer/gl/wgl/FunctionsWGL.h',
             'libANGLE/renderer/gl/wgl/PbufferSurfaceWGL.cpp',
@@ -482,7 +475,6 @@
             'libANGLE/renderer/gl/glx/FunctionsGLX.h',
             'libANGLE/renderer/gl/glx/PbufferSurfaceGLX.cpp',
             'libANGLE/renderer/gl/glx/PbufferSurfaceGLX.h',
-            'libANGLE/renderer/gl/glx/SurfaceGLX.h',
             'libANGLE/renderer/gl/glx/WindowSurfaceGLX.cpp',
             'libANGLE/renderer/gl/glx/WindowSurfaceGLX.h',
             'libANGLE/renderer/gl/glx/functionsglx_typedefs.h',
@@ -741,10 +733,10 @@
                             ],
                             'link_settings': {
                                 'ldflags': [
-                                    '<!@(<(pkg-config) --libs-only-L --libs-only-other x11 xi)',
+                                    '<!@(pkg-config --libs-only-L --libs-only-other x11 xi)',
                                 ],
                                 'libraries': [
-                                    '<!@(<(pkg-config) --libs-only-l x11 xi) -ldl',
+                                    '<!@(pkg-config --libs-only-l x11 xi) -ldl',
                                 ],
                             },
                         }],

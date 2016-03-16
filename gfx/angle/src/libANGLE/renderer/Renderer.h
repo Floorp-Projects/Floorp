@@ -82,6 +82,7 @@ class Renderer : public ImplFactory
     virtual bool testDeviceLost() = 0;
     virtual bool testDeviceResettable() = 0;
 
+    virtual VendorID getVendorId() const = 0;
     virtual std::string getVendorString() const = 0;
     virtual std::string getRendererDescription() const = 0;
 
@@ -90,13 +91,6 @@ class Renderer : public ImplFactory
     virtual void popGroupMarker() = 0;
 
     virtual void syncState(const gl::State &state, const gl::State::DirtyBits &dirtyBits) = 0;
-
-    // Disjoint timer queries
-    virtual GLint getGPUDisjoint() = 0;
-    virtual GLint64 getTimestamp() = 0;
-
-    // Context switching
-    virtual void onMakeCurrent(const gl::Data &data) = 0;
 
     // Renderer capabilities
     const gl::Caps &getRendererCaps() const;

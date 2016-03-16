@@ -493,10 +493,9 @@ inline unsigned int average(unsigned int a, unsigned int b)
     return ((a ^ b) >> 1) + (a & b);
 }
 
-inline int average(int a, int b)
+inline signed int average(signed int a, signed int b)
 {
-    long long average = (static_cast<long long>(a) + static_cast<long long>(b)) / 2ll;
-    return static_cast<int>(average);
+    return ((long long)a + (long long)b) / 2;
 }
 
 inline float average(float a, float b)
@@ -585,10 +584,9 @@ struct IndexRange
 // packSnorm2x16 : round(clamp(c, -1, +1) * 32767.0)
 inline uint32_t packSnorm2x16(float f1, float f2)
 {
-    int16_t leastSignificantBits = static_cast<int16_t>(roundf(clamp(f1, -1.0f, 1.0f) * 32767.0f));
-    int16_t mostSignificantBits = static_cast<int16_t>(roundf(clamp(f2, -1.0f, 1.0f) * 32767.0f));
-    return static_cast<uint32_t>(mostSignificantBits) << 16 |
-           (static_cast<uint32_t>(leastSignificantBits) & 0xFFFF);
+    uint16_t leastSignificantBits = static_cast<uint16_t>(roundf(clamp(f1, -1.0f, 1.0f) * 32767.0f));
+    uint16_t mostSignificantBits = static_cast<uint16_t>(roundf(clamp(f2, -1.0f, 1.0f) * 32767.0f));
+    return static_cast<uint32_t>(mostSignificantBits) << 16 | static_cast<uint32_t>(leastSignificantBits);
 }
 
 // First, unpacks a single 32-bit unsigned integer u into a pair of 16-bit unsigned integers. Then, each

@@ -54,8 +54,11 @@ void RestrictFragmentShaderTiming::enforceRestrictions(const TDependencyGraph& g
 
     // Starting from each sampler, traverse the dependency graph and generate an error each time we
     // hit a node where sampler dependent values are not allowed.
-    for (auto samplerSymbol : graph.samplerSymbols())
+    for (TGraphSymbolVector::const_iterator iter = graph.beginSamplerSymbols();
+         iter != graph.endSamplerSymbols();
+         ++iter)
     {
+        TGraphSymbol* samplerSymbol = *iter;
         clearVisited();
         samplerSymbol->traverse(this);
     }
@@ -63,8 +66,11 @@ void RestrictFragmentShaderTiming::enforceRestrictions(const TDependencyGraph& g
 
 void RestrictFragmentShaderTiming::validateUserDefinedFunctionCallUsage(const TDependencyGraph& graph)
 {
-    for (const auto* functionCall : graph.userDefinedFunctionCalls())
+    for (TFunctionCallVector::const_iterator iter = graph.beginUserDefinedFunctionCalls();
+         iter != graph.endUserDefinedFunctionCalls();
+         ++iter)
     {
+        TGraphFunctionCall* functionCall = *iter;
         beginError(functionCall->getIntermFunctionCall());
         mSink << "A call to a user defined function is not permitted.\n";
     }

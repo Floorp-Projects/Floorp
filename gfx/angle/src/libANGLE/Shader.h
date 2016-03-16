@@ -21,7 +21,6 @@
 
 #include "common/angleutils.h"
 #include "libANGLE/angletypes.h"
-#include "libANGLE/Debug.h"
 
 namespace rx
 {
@@ -37,7 +36,7 @@ struct Limitations;
 class ResourceManager;
 struct Data;
 
-class Shader final : angle::NonCopyable, public LabeledObject
+class Shader : angle::NonCopyable
 {
   public:
     class Data final : angle::NonCopyable
@@ -45,8 +44,6 @@ class Shader final : angle::NonCopyable, public LabeledObject
       public:
         Data(GLenum shaderType);
         ~Data();
-
-        const std::string &getLabel() const { return mLabel; }
 
         const std::string &getSource() const { return mSource; }
         const std::string &getTranslatedSource() const { return mTranslatedSource; }
@@ -69,8 +66,6 @@ class Shader final : angle::NonCopyable, public LabeledObject
       private:
         friend class Shader;
 
-        std::string mLabel;
-
         GLenum mShaderType;
         int mShaderVersion;
         std::string mTranslatedSource;
@@ -90,9 +85,6 @@ class Shader final : angle::NonCopyable, public LabeledObject
            GLuint handle);
 
     virtual ~Shader();
-
-    void setLabel(const std::string &label) override;
-    const std::string &getLabel() const override;
 
     GLenum getType() const { return mType; }
     GLuint getHandle() const;

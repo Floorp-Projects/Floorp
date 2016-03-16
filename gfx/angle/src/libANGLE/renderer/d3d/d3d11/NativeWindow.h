@@ -46,21 +46,14 @@ typedef IDXGIFactory DXGIFactory;
 #endif
 #endif
 
-typedef interface IDCompositionDevice IDCompositionDevice;
-typedef interface IDCompositionTarget IDCompositionTarget;
-typedef interface IDCompositionVisual IDCompositionVisual;
-
 namespace rx
 {
 
 class NativeWindow
 {
   public:
-    explicit NativeWindow(EGLNativeWindowType window,
-                          const egl::Config *config,
-                          bool directComposition);
+    explicit NativeWindow(EGLNativeWindowType window, const egl::Config *config);
 
-    ~NativeWindow();
     bool initialize();
     bool getClientRect(LPRECT rect);
     bool isIconic();
@@ -74,23 +67,11 @@ class NativeWindow
 
     inline EGLNativeWindowType getNativeWindow() const { return mWindow; }
 
-    void commitChange();
-
   private:
     EGLNativeWindowType mWindow;
 
-    bool mDirectComposition;
-
-#ifdef HAS_DIRECT_COMPOSITION
-
-    IDCompositionDevice *mDevice;
-    IDCompositionTarget *mCompositionTarget;
-    IDCompositionVisual *mVisual;
-
-#endif // HAS_DIRECT_COMPOSITION
-
-    const egl::Config *mConfig;
 #if defined(ANGLE_ENABLE_WINDOWS_STORE)
+    const egl::Config *mConfig;
     std::shared_ptr<InspectableNativeWindow> mImpl;
 #endif
 

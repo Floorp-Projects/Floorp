@@ -8,10 +8,8 @@
 
 #include "libANGLE/State.h"
 
-#include "common/BitSetIterator.h"
 #include "libANGLE/Context.h"
 #include "libANGLE/Caps.h"
-#include "libANGLE/Debug.h"
 #include "libANGLE/Framebuffer.h"
 #include "libANGLE/FramebufferAttachment.h"
 #include "libANGLE/Query.h"
@@ -80,10 +78,7 @@ State::~State()
     reset();
 }
 
-void State::initialize(const Caps &caps,
-                       const Extensions &extensions,
-                       GLuint clientVersion,
-                       bool debug)
+void State::initialize(const Caps &caps, GLuint clientVersion)
 {
     mMaxDrawBuffers = caps.maxDrawBuffers;
     mMaxCombinedTextureImageUnits = caps.maxCombinedTextureImageUnits;
@@ -180,20 +175,16 @@ void State::initialize(const Caps &caps,
 
     mSamplers.resize(caps.maxCombinedTextureImageUnits);
 
-    mActiveQueries[GL_ANY_SAMPLES_PASSED].set(nullptr);
-    mActiveQueries[GL_ANY_SAMPLES_PASSED_CONSERVATIVE].set(nullptr);
-    mActiveQueries[GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN].set(nullptr);
-    mActiveQueries[GL_TIME_ELAPSED_EXT].set(nullptr);
+    mActiveQueries[GL_ANY_SAMPLES_PASSED].set(NULL);
+    mActiveQueries[GL_ANY_SAMPLES_PASSED_CONSERVATIVE].set(NULL);
+    mActiveQueries[GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN].set(NULL);
 
-    mProgram = nullptr;
+    mProgram = NULL;
 
-    mReadFramebuffer = nullptr;
-    mDrawFramebuffer = nullptr;
+    mReadFramebuffer = NULL;
+    mDrawFramebuffer = NULL;
 
     mPrimitiveRestart = false;
-
-    mDebug.setOutputEnabled(debug);
-    mDebug.setMaxLoggedMessages(extensions.maxDebugLoggedMessages);
 }
 
 void State::reset()
@@ -590,12 +581,6 @@ void State::setEnableFeature(GLenum feature, bool enabled)
       case GL_DITHER:                        setDither(enabled);                break;
       case GL_PRIMITIVE_RESTART_FIXED_INDEX: setPrimitiveRestart(enabled);      break;
       case GL_RASTERIZER_DISCARD:            setRasterizerDiscard(enabled);     break;
-      case GL_DEBUG_OUTPUT_SYNCHRONOUS:
-          mDebug.setOutputSynchronous(enabled);
-          break;
-      case GL_DEBUG_OUTPUT:
-          mDebug.setOutputEnabled(enabled);
-          break;
       default:                               UNREACHABLE();
     }
 }
@@ -615,10 +600,6 @@ bool State::getEnableFeature(GLenum feature)
       case GL_DITHER:                        return isDitherEnabled();
       case GL_PRIMITIVE_RESTART_FIXED_INDEX: return isPrimitiveRestartEnabled();
       case GL_RASTERIZER_DISCARD:            return isRasterizerDiscardEnabled();
-      case GL_DEBUG_OUTPUT_SYNCHRONOUS:
-          return mDebug.isOutputSynchronous();
-      case GL_DEBUG_OUTPUT:
-          return mDebug.isOutputEnabled();
       default:                               UNREACHABLE(); return false;
     }
 }
@@ -676,11 +657,6 @@ unsigned int State::getActiveSampler() const
 void State::setSamplerTexture(GLenum type, Texture *texture)
 {
     mSamplerTextures[type][mActiveSampler].set(texture);
-}
-
-Texture *State::getTargetTexture(GLenum target) const
-{
-    return getSamplerTexture(static_cast<unsigned int>(mActiveSampler), target);
 }
 
 Texture *State::getSamplerTexture(unsigned int sampler, GLenum type) const
@@ -836,44 +812,22 @@ void State::detachRenderbuffer(GLuint renderbuffer)
 
 void State::setReadFramebufferBinding(Framebuffer *framebuffer)
 {
-    if (mReadFramebuffer == framebuffer)
-        return;
-
     mReadFramebuffer = framebuffer;
-    mDirtyBits.set(DIRTY_BIT_READ_FRAMEBUFFER_BINDING);
-
-    if (mReadFramebuffer && mReadFramebuffer->hasAnyDirtyBit())
-    {
-        mDirtyObjects.set(DIRTY_OBJECT_READ_FRAMEBUFFER);
-    }
 }
 
 void State::setDrawFramebufferBinding(Framebuffer *framebuffer)
 {
-    if (mDrawFramebuffer == framebuffer)
-        return;
-
     mDrawFramebuffer = framebuffer;
-    mDirtyBits.set(DIRTY_BIT_DRAW_FRAMEBUFFER_BINDING);
-
-    if (mDrawFramebuffer && mDrawFramebuffer->hasAnyDirtyBit())
-    {
-        mDirtyObjects.set(DIRTY_OBJECT_DRAW_FRAMEBUFFER);
-    }
 }
 
 Framebuffer *State::getTargetFramebuffer(GLenum target) const
 {
     switch (target)
     {
-        case GL_READ_FRAMEBUFFER_ANGLE:
-            return mReadFramebuffer;
-        case GL_DRAW_FRAMEBUFFER_ANGLE:
-        case GL_FRAMEBUFFER:
-            return mDrawFramebuffer;
-        default:
-            UNREACHABLE();
-            return NULL;
+    case GL_READ_FRAMEBUFFER_ANGLE:  return mReadFramebuffer;
+    case GL_DRAW_FRAMEBUFFER_ANGLE:
+    case GL_FRAMEBUFFER:             return mDrawFramebuffer;
+    default:                         UNREACHABLE(); return NULL;
     }
 }
 
@@ -902,7 +856,7 @@ bool State::removeReadFramebufferBinding(GLuint framebuffer)
     if (mReadFramebuffer != nullptr &&
         mReadFramebuffer->id() == framebuffer)
     {
-        setReadFramebufferBinding(nullptr);
+        mReadFramebuffer = NULL;
         return true;
     }
 
@@ -914,7 +868,7 @@ bool State::removeDrawFramebufferBinding(GLuint framebuffer)
     if (mReadFramebuffer != nullptr &&
         mDrawFramebuffer->id() == framebuffer)
     {
-        setDrawFramebufferBinding(nullptr);
+        mDrawFramebuffer = NULL;
         return true;
     }
 
@@ -925,11 +879,7 @@ void State::setVertexArrayBinding(VertexArray *vertexArray)
 {
     mVertexArray = vertexArray;
     mDirtyBits.set(DIRTY_BIT_VERTEX_ARRAY_BINDING);
-
-    if (mVertexArray && mVertexArray->hasAnyDirtyBit())
-    {
-        mDirtyObjects.set(DIRTY_OBJECT_VERTEX_ARRAY);
-    }
+    mDirtyBits.set(DIRTY_BIT_VERTEX_ARRAY_OBJECT);
 }
 
 GLuint State::getVertexArrayId() const
@@ -950,7 +900,7 @@ bool State::removeVertexArrayBinding(GLuint vertexArray)
     {
         mVertexArray = NULL;
         mDirtyBits.set(DIRTY_BIT_VERTEX_ARRAY_BINDING);
-        mDirtyObjects.set(DIRTY_OBJECT_VERTEX_ARRAY);
+        mDirtyBits.set(DIRTY_BIT_VERTEX_ARRAY_OBJECT);
         return true;
     }
 
@@ -1006,22 +956,10 @@ void State::detachTransformFeedback(GLuint transformFeedback)
 
 bool State::isQueryActive() const
 {
-    for (auto &iter : mActiveQueries)
+    for (State::ActiveQueryMap::const_iterator i = mActiveQueries.begin();
+        i != mActiveQueries.end(); i++)
     {
-        if (iter.second.get() != NULL)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool State::isQueryActive(Query *query) const
-{
-    for (auto &iter : mActiveQueries)
-    {
-        if (iter.second.get() == query)
+        if (i->second.get() != NULL)
         {
             return true;
         }
@@ -1138,7 +1076,7 @@ void State::detachBuffer(GLuint bufferName)
 void State::setEnableVertexAttribArray(unsigned int attribNum, bool enabled)
 {
     getVertexArray()->enableAttribute(attribNum, enabled);
-    mDirtyObjects.set(DIRTY_OBJECT_VERTEX_ARRAY);
+    mDirtyBits.set(DIRTY_BIT_VERTEX_ARRAY_OBJECT);
 }
 
 void State::setVertexAttribf(GLuint index, const GLfloat values[4])
@@ -1172,13 +1110,13 @@ void State::setVertexAttribState(unsigned int attribNum,
                                  const void *pointer)
 {
     getVertexArray()->setAttributeState(attribNum, boundBuffer, size, type, normalized, pureInteger, stride, pointer);
-    mDirtyObjects.set(DIRTY_OBJECT_VERTEX_ARRAY);
+    mDirtyBits.set(DIRTY_BIT_VERTEX_ARRAY_OBJECT);
 }
 
 void State::setVertexAttribDivisor(GLuint index, GLuint divisor)
 {
     getVertexArray()->setVertexAttribDivisor(index, divisor);
-    mDirtyObjects.set(DIRTY_OBJECT_VERTEX_ARRAY);
+    mDirtyBits.set(DIRTY_BIT_VERTEX_ARRAY_OBJECT);
 }
 
 const VertexAttribCurrentValueData &State::getVertexAttribCurrentValue(unsigned int attribNum) const
@@ -1333,16 +1271,6 @@ PixelUnpackState &State::getUnpackState()
     return mUnpack;
 }
 
-const Debug &State::getDebug() const
-{
-    return mDebug;
-}
-
-Debug &State::getDebug()
-{
-    return mDebug;
-}
-
 void State::getBooleanv(GLenum pname, GLboolean *params)
 {
     switch (pname)
@@ -1371,12 +1299,6 @@ void State::getBooleanv(GLenum pname, GLboolean *params)
           break;
       case GL_RASTERIZER_DISCARD:
           *params = isRasterizerDiscardEnabled() ? GL_TRUE : GL_FALSE;
-          break;
-      case GL_DEBUG_OUTPUT_SYNCHRONOUS:
-          *params = mDebug.isOutputSynchronous() ? GL_TRUE : GL_FALSE;
-          break;
-      case GL_DEBUG_OUTPUT:
-          *params = mDebug.isOutputEnabled() ? GL_TRUE : GL_FALSE;
           break;
       default:
         UNREACHABLE();
@@ -1635,34 +1557,9 @@ void State::getIntegerv(const gl::Data &data, GLenum pname, GLint *params)
       case GL_PIXEL_UNPACK_BUFFER_BINDING:
         *params = mUnpack.pixelBuffer.id();
         break;
-      case GL_DEBUG_LOGGED_MESSAGES:
-          *params = static_cast<GLint>(mDebug.getMessageCount());
-          break;
-      case GL_DEBUG_NEXT_LOGGED_MESSAGE_LENGTH:
-          *params = static_cast<GLint>(mDebug.getNextMessageLength());
-          break;
-      case GL_DEBUG_GROUP_STACK_DEPTH:
-          *params = static_cast<GLint>(mDebug.getGroupStackDepth());
-          break;
       default:
         UNREACHABLE();
         break;
-    }
-}
-
-void State::getPointerv(GLenum pname, void **params) const
-{
-    switch (pname)
-    {
-        case GL_DEBUG_CALLBACK_FUNCTION:
-            *params = reinterpret_cast<void *>(mDebug.getCallback());
-            break;
-        case GL_DEBUG_CALLBACK_USER_PARAM:
-            *params = const_cast<void *>(mDebug.getUserParam());
-            break;
-        default:
-            UNREACHABLE();
-            break;
     }
 }
 
@@ -1750,92 +1647,4 @@ bool State::hasMappedBuffer(GLenum target) const
     }
 }
 
-void State::syncDirtyObjects()
-{
-    if (!mDirtyObjects.any())
-        return;
-
-    syncDirtyObjects(mDirtyObjects);
 }
-
-void State::syncDirtyObjects(const DirtyObjects &bitset)
-{
-    for (auto dirtyObject : angle::IterateBitSet(bitset))
-    {
-        switch (dirtyObject)
-        {
-            case DIRTY_OBJECT_READ_FRAMEBUFFER:
-                ASSERT(mReadFramebuffer);
-                mReadFramebuffer->syncState();
-                break;
-            case DIRTY_OBJECT_DRAW_FRAMEBUFFER:
-                ASSERT(mDrawFramebuffer);
-                mDrawFramebuffer->syncState();
-                break;
-            case DIRTY_OBJECT_VERTEX_ARRAY:
-                ASSERT(mVertexArray);
-                mVertexArray->syncImplState();
-                break;
-            case DIRTY_OBJECT_PROGRAM:
-                // TODO(jmadill): implement this
-                break;
-            default:
-                UNREACHABLE();
-                break;
-        }
-    }
-
-    mDirtyObjects &= ~bitset;
-}
-
-void State::syncDirtyObject(GLenum target)
-{
-    DirtyObjects localSet;
-
-    switch (target)
-    {
-        case GL_READ_FRAMEBUFFER:
-            localSet.set(DIRTY_OBJECT_READ_FRAMEBUFFER);
-            break;
-        case GL_DRAW_FRAMEBUFFER:
-            localSet.set(DIRTY_OBJECT_DRAW_FRAMEBUFFER);
-            break;
-        case GL_FRAMEBUFFER:
-            localSet.set(DIRTY_OBJECT_READ_FRAMEBUFFER);
-            localSet.set(DIRTY_OBJECT_DRAW_FRAMEBUFFER);
-            break;
-        case GL_VERTEX_ARRAY:
-            localSet.set(DIRTY_OBJECT_VERTEX_ARRAY);
-            break;
-        case GL_PROGRAM:
-            localSet.set(DIRTY_OBJECT_PROGRAM);
-            break;
-    }
-
-    syncDirtyObjects(localSet);
-}
-
-void State::setObjectDirty(GLenum target)
-{
-    switch (target)
-    {
-        case GL_READ_FRAMEBUFFER:
-            mDirtyObjects.set(DIRTY_OBJECT_READ_FRAMEBUFFER);
-            break;
-        case GL_DRAW_FRAMEBUFFER:
-            mDirtyObjects.set(DIRTY_OBJECT_DRAW_FRAMEBUFFER);
-            break;
-        case GL_FRAMEBUFFER:
-            mDirtyObjects.set(DIRTY_OBJECT_READ_FRAMEBUFFER);
-            mDirtyObjects.set(DIRTY_OBJECT_DRAW_FRAMEBUFFER);
-            break;
-        case GL_VERTEX_ARRAY:
-            mDirtyObjects.set(DIRTY_OBJECT_VERTEX_ARRAY);
-            break;
-        case GL_PROGRAM:
-            mDirtyObjects.set(DIRTY_OBJECT_PROGRAM);
-            break;
-    }
-}
-
-}  // namespace gl

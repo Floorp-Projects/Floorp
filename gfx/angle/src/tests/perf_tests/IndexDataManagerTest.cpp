@@ -116,7 +116,7 @@ class IndexDataManagerPerfTest : public ANGLEPerfTest
   public:
     IndexDataManagerPerfTest();
 
-    void step() override;
+    void step(float dt, double totalTime) override;
 
     rx::IndexDataManager mIndexDataManager;
     GLsizei mIndexCount;
@@ -151,15 +151,21 @@ IndexDataManagerPerfTest::IndexDataManagerPerfTest()
     mIndexBuffer.bufferData(&indexData[0], indexData.size() * sizeof(GLushort), GL_STATIC_DRAW);
 }
 
-void IndexDataManagerPerfTest::step()
+void IndexDataManagerPerfTest::step(float dt, double totalTime)
 {
     rx::TranslatedIndexData translatedIndexData;
+    rx::SourceIndexData sourceIndexData;
     for (unsigned int iteration = 0; iteration < 100; ++iteration)
     {
         mIndexBuffer.getIndexRange(GL_UNSIGNED_SHORT, 0, mIndexCount, false,
                                    &translatedIndexData.indexRange);
         mIndexDataManager.prepareIndexData(GL_UNSIGNED_SHORT, mIndexCount, &mIndexBuffer, nullptr,
-                                           &translatedIndexData, false);
+                                           &translatedIndexData, &sourceIndexData, false);
+    }
+
+    if (mTimer->getElapsedTime() >= 5.0)
+    {
+        mRunning = false;
     }
 }
 

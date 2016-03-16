@@ -20,7 +20,6 @@
 using namespace gl;
 using namespace rx;
 using testing::_;
-using testing::NiceMock;
 using testing::Return;
 
 namespace
@@ -43,8 +42,7 @@ class MockValidationContext : public ValidationContext
                           const TextureCapsMap &textureCaps,
                           const Extensions &extensions,
                           const ResourceManager *resourceManager,
-                          const Limitations &limitations,
-                          bool skipValidation);
+                          const Limitations &limitations);
 
     MOCK_METHOD1(recordError, void(const Error &));
 };
@@ -55,16 +53,14 @@ MockValidationContext::MockValidationContext(GLint clientVersion,
                                              const TextureCapsMap &textureCaps,
                                              const Extensions &extensions,
                                              const ResourceManager *resourceManager,
-                                             const Limitations &limitations,
-                                             bool skipValidation)
+                                             const Limitations &limitations)
     : ValidationContext(clientVersion,
                         state,
                         caps,
                         textureCaps,
                         extensions,
                         resourceManager,
-                        limitations,
-                        skipValidation)
+                        limitations)
 {
 }
 
@@ -73,11 +69,19 @@ MockValidationContext::MockValidationContext(GLint clientVersion,
 // but we want a test to ensure we maintain this behaviour.
 TEST(ValidationESTest, DrawElementsWithMaxIndexGivesError)
 {
-    auto framebufferImpl = MakeFramebufferMock();
-    auto programImpl     = MakeProgramMock();
-
     // TODO(jmadill): Generalize some of this code so we can re-use it for other tests.
-    NiceMock<MockFactory> mockFactory;
+    MockFramebufferImpl *framebufferImpl = new MockFramebufferImpl();
+    EXPECT_CALL(*framebufferImpl, onUpdateColorAttachment(_)).Times(1).RetiresOnSaturation();
+    EXPECT_CALL(*framebufferImpl, checkStatus())
+        .Times(2)
+        .WillOnce(Return(true))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*framebufferImpl, destroy()).Times(1).RetiresOnSaturation();
+
+    MockProgramImpl *programImpl = new MockProgramImpl();
+    EXPECT_CALL(*programImpl, destroy());
+
+    MockFactory mockFactory;
     EXPECT_CALL(mockFactory, createFramebuffer(_)).WillOnce(Return(framebufferImpl));
     EXPECT_CALL(mockFactory, createProgram(_)).WillOnce(Return(programImpl));
     EXPECT_CALL(mockFactory, createVertexArray(_)).WillOnce(Return(nullptr));
@@ -92,12 +96,11 @@ TEST(ValidationESTest, DrawElementsWithMaxIndexGivesError)
     caps.maxElementIndex     = 100;
     caps.maxDrawBuffers      = 1;
     caps.maxColorAttachments = 1;
-    state.initialize(caps, extensions, 3, false);
+    state.initialize(caps, 3);
 
-    NiceMock<MockTextureImpl> *textureImpl = new NiceMock<MockTextureImpl>();
+    MockTextureImpl *textureImpl = new MockTextureImpl();
     EXPECT_CALL(*textureImpl, setStorage(_, _, _, _)).WillOnce(Return(Error(GL_NO_ERROR)));
     EXPECT_CALL(*textureImpl, destructor()).Times(1).RetiresOnSaturation();
-
     Texture *texture = new Texture(textureImpl, 0, GL_TEXTURE_2D);
     texture->addRef();
     texture->setStorage(GL_TEXTURE_2D, 1, GL_RGBA8, Extents(1, 1, 0));
@@ -112,8 +115,8 @@ TEST(ValidationESTest, DrawElementsWithMaxIndexGivesError)
     state.setDrawFramebufferBinding(framebuffer);
     state.setProgram(program);
 
-    NiceMock<MockValidationContext> testContext(3, state, caps, textureCaps, extensions, nullptr,
-                                                limitations, false);
+    MockValidationContext testContext(3, state, caps, textureCaps, extensions, nullptr,
+                                      limitations);
 
     // Set the expectation for the validation error here.
     Error expectedError(GL_INVALID_OPERATION, g_ExceedsMaxElementErrorMessage);

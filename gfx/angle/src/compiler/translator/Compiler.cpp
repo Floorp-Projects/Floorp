@@ -322,10 +322,7 @@ TIntermNode *TCompiler::compileTreeImpl(const char *const shaderStrings[],
         if (success && (compileOptions & SH_CLAMP_INDIRECT_ARRAY_BOUNDS))
             arrayBoundsClamper.MarkIndirectArrayBoundsForClamping(root);
 
-        // gl_Position is always written in compatibility output mode
-        if (success && shaderType == GL_VERTEX_SHADER &&
-            ((compileOptions & SH_INIT_GL_POSITION) ||
-             (outputType == SH_GLSL_COMPATIBILITY_OUTPUT)))
+        if (success && shaderType == GL_VERTEX_SHADER && (compileOptions & SH_INIT_GL_POSITION))
             initializeGLPosition(root);
 
         // This pass might emit short circuits so keep it before the short circuit unfolding
@@ -610,7 +607,7 @@ bool TCompiler::tagUsedFunctions()
     }
 
     infoSink.info.prefix(EPrefixError);
-    infoSink.info << "Missing main()\n";
+    infoSink.info << "Missing main()";
     return false;
 }
 
@@ -745,6 +742,17 @@ bool TCompiler::limitExpressionComplexity(TIntermNode* root)
     {
         infoSink.info << "Expression too complex.";
         return false;
+    }
+
+    TDependencyGraph graph(root);
+
+    for (TFunctionCallVector::const_iterator iter = graph.beginUserDefinedFunctionCalls();
+         iter != graph.endUserDefinedFunctionCalls();
+         ++iter)
+    {
+        TGraphFunctionCall* samplerSymbol = *iter;
+        TDependencyGraphTraverser graphTraverser;
+        samplerSymbol->traverse(&graphTraverser);
     }
 
     return true;

@@ -8,7 +8,6 @@
 
 #include "libANGLE/renderer/d3d/FramebufferD3D.h"
 
-#include "common/BitSetIterator.h"
 #include "libANGLE/formatutils.h"
 #include "libANGLE/Framebuffer.h"
 #include "libANGLE/FramebufferAttachment.h"
@@ -54,7 +53,7 @@ ClearParameters GetClearParameters(const gl::State &state, GLbitfield mask)
     const gl::Framebuffer *framebufferObject = state.getDrawFramebuffer();
     if (mask & GL_COLOR_BUFFER_BIT)
     {
-        if (framebufferObject->hasEnabledDrawBuffer())
+        if (framebufferObject->hasEnabledColorAttachment())
         {
             for (unsigned int i = 0; i < ArraySize(clearParams.clearColor); i++)
             {
@@ -85,12 +84,40 @@ ClearParameters GetClearParameters(const gl::State &state, GLbitfield mask)
 
 }
 
-FramebufferD3D::FramebufferD3D(const gl::Framebuffer::Data &data, RendererD3D *renderer)
-    : FramebufferImpl(data), mRenderer(renderer)
+FramebufferD3D::FramebufferD3D(const gl::Framebuffer::Data &data)
+    : FramebufferImpl(data),
+      mColorAttachmentsForRender(mData.getColorAttachments().size(), nullptr),
+      mInvalidateColorAttachmentCache(true)
 {
 }
 
 FramebufferD3D::~FramebufferD3D()
+{
+}
+
+void FramebufferD3D::onUpdateColorAttachment(size_t /*index*/)
+{
+    mInvalidateColorAttachmentCache = true;
+}
+
+void FramebufferD3D::onUpdateDepthAttachment()
+{
+}
+
+void FramebufferD3D::onUpdateStencilAttachment()
+{
+}
+
+void FramebufferD3D::onUpdateDepthStencilAttachment()
+{
+}
+
+void FramebufferD3D::setDrawBuffers(size_t, const GLenum *)
+{
+    mInvalidateColorAttachmentCache = true;
+}
+
+void FramebufferD3D::setReadBuffer(GLenum)
 {
 }
 
@@ -327,36 +354,19 @@ bool FramebufferD3D::checkStatus() const
     return true;
 }
 
-void FramebufferD3D::syncState(const gl::Framebuffer::DirtyBits &dirtyBits)
+const gl::AttachmentList &FramebufferD3D::getColorAttachmentsForRender(
+    const WorkaroundsD3D &workarounds) const
 {
-    bool invalidateColorAttachmentCache = false;
-
-    if (!mColorAttachmentsForRender.valid())
+    if (!mInvalidateColorAttachmentCache)
     {
-        invalidateColorAttachmentCache = true;
-    }
-
-    for (auto dirtyBit : angle::IterateBitSet(dirtyBits))
-    {
-        if ((dirtyBit >= gl::Framebuffer::DIRTY_BIT_COLOR_ATTACHMENT_0 &&
-             dirtyBit < gl::Framebuffer::DIRTY_BIT_COLOR_ATTACHMENT_MAX) ||
-            dirtyBit == gl::Framebuffer::DIRTY_BIT_DRAW_BUFFERS)
-        {
-            invalidateColorAttachmentCache = true;
-        }
-    }
-
-    if (!invalidateColorAttachmentCache)
-    {
-        return;
+        return mColorAttachmentsForRender;
     }
 
     // Does not actually free memory
-    gl::AttachmentList colorAttachmentsForRender;
+    mColorAttachmentsForRender.clear();
 
     const auto &colorAttachments = mData.getColorAttachments();
     const auto &drawBufferStates = mData.getDrawBufferStates();
-    const auto &workarounds      = mRenderer->getWorkarounds();
 
     for (size_t attachmentIndex = 0; attachmentIndex < colorAttachments.size(); ++attachmentIndex)
     {
@@ -366,21 +376,16 @@ void FramebufferD3D::syncState(const gl::Framebuffer::DirtyBits &dirtyBits)
         if (colorAttachment.isAttached() && drawBufferState != GL_NONE)
         {
             ASSERT(drawBufferState == GL_BACK || drawBufferState == (GL_COLOR_ATTACHMENT0_EXT + attachmentIndex));
-            colorAttachmentsForRender.push_back(&colorAttachment);
+            mColorAttachmentsForRender.push_back(&colorAttachment);
         }
         else if (!workarounds.mrtPerfWorkaround)
         {
-            colorAttachmentsForRender.push_back(nullptr);
+            mColorAttachmentsForRender.push_back(nullptr);
         }
     }
 
-    mColorAttachmentsForRender = std::move(colorAttachmentsForRender);
+    mInvalidateColorAttachmentCache = false;
+    return mColorAttachmentsForRender;
 }
 
-const gl::AttachmentList &FramebufferD3D::getColorAttachmentsForRender() const
-{
-    ASSERT(mColorAttachmentsForRender.valid());
-    return mColorAttachmentsForRender.value();
 }
-
-}  // namespace rx

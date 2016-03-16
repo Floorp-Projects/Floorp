@@ -73,8 +73,7 @@ class ShaderExtensionTest : public testing::Test
     void InitializeCompiler()
     {
         DestroyCompiler();
-        mCompiler = ShConstructCompiler(GL_FRAGMENT_SHADER, SH_WEBGL_SPEC,
-                                        SH_GLSL_COMPATIBILITY_OUTPUT, &mResources);
+        mCompiler = ShConstructCompiler(GL_FRAGMENT_SHADER, SH_WEBGL_SPEC, SH_GLSL_OUTPUT, &mResources);
         ASSERT_TRUE(mCompiler != NULL) << "Compiler could not be constructed.";
     }
 

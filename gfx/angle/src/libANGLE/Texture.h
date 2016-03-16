@@ -15,7 +15,6 @@
 #include "angle_gl.h"
 #include "common/debug.h"
 #include "libANGLE/Caps.h"
-#include "libANGLE/Debug.h"
 #include "libANGLE/Constants.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/FramebufferAttachment.h"
@@ -34,18 +33,13 @@ class Context;
 class Framebuffer;
 struct Data;
 
-bool IsMipmapFiltered(const SamplerState &samplerState);
+bool IsMipmapFiltered(const gl::SamplerState &samplerState);
 
-class Texture final : public egl::ImageSibling,
-                      public FramebufferAttachmentObject,
-                      public LabeledObject
+class Texture final : public egl::ImageSibling, public gl::FramebufferAttachmentObject
 {
   public:
     Texture(rx::TextureImpl *impl, GLuint id, GLenum target);
     ~Texture() override;
-
-    void setLabel(const std::string &label) override;
-    const std::string &getLabel() const override;
 
     GLenum getTarget() const;
 
@@ -189,8 +183,6 @@ class Texture final : public egl::ImageSibling,
     void releaseTexImageFromSurface();
 
     rx::TextureImpl *mTexture;
-
-    std::string mLabel;
 
     TextureState mTextureState;
 

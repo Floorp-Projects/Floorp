@@ -15,26 +15,21 @@
 namespace rx
 {
 
-SwapChain9::SwapChain9(Renderer9 *renderer,
-                       NativeWindow nativeWindow,
-                       HANDLE shareHandle,
-                       GLenum backBufferFormat,
-                       GLenum depthBufferFormat,
-                       EGLint orientation)
+SwapChain9::SwapChain9(Renderer9 *renderer, NativeWindow nativeWindow, HANDLE shareHandle,
+                       GLenum backBufferFormat, GLenum depthBufferFormat)
     : SwapChainD3D(nativeWindow, shareHandle, backBufferFormat, depthBufferFormat),
       mRenderer(renderer),
-      mWidth(-1),
-      mHeight(-1),
-      mSwapInterval(-1),
-      mSwapChain(nullptr),
-      mBackBuffer(nullptr),
-      mRenderTarget(nullptr),
-      mDepthStencil(nullptr),
-      mOffscreenTexture(nullptr),
       mColorRenderTarget(this, false),
       mDepthStencilRenderTarget(this, true)
 {
-    ASSERT(orientation == 0);
+    mSwapChain = NULL;
+    mBackBuffer = NULL;
+    mDepthStencil = NULL;
+    mRenderTarget = NULL;
+    mOffscreenTexture = NULL;
+    mWidth = -1;
+    mHeight = -1;
+    mSwapInterval = -1;
 }
 
 SwapChain9::~SwapChain9()

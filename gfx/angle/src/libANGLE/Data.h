@@ -47,8 +47,7 @@ class ValidationContext : angle::NonCopyable
                       const TextureCapsMap &textureCaps,
                       const Extensions &extensions,
                       const ResourceManager *resourceManager,
-                      const Limitations &limitations,
-                      bool skipValidation);
+                      const Limitations &limitations);
     virtual ~ValidationContext() {}
 
     virtual void recordError(const Error &error) = 0;
@@ -60,11 +59,9 @@ class ValidationContext : angle::NonCopyable
     const TextureCapsMap &getTextureCaps() const { return *mData.textureCaps; }
     const Extensions &getExtensions() const { return *mData.extensions; }
     const Limitations &getLimitations() const { return *mData.limitations; }
-    bool skipValidation() const { return mSkipValidation; }
 
   protected:
     Data mData;
-    bool mSkipValidation;
 };
 
 }

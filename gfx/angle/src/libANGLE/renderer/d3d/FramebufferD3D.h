@@ -12,7 +12,6 @@
 #include <vector>
 #include <cstdint>
 
-#include "common/Optional.h"
 #include "libANGLE/angletypes.h"
 #include "libANGLE/renderer/FramebufferImpl.h"
 
@@ -27,7 +26,6 @@ typedef std::vector<const FramebufferAttachment *> AttachmentList;
 
 namespace rx
 {
-class RendererD3D;
 class RenderTargetD3D;
 struct WorkaroundsD3D;
 
@@ -57,8 +55,16 @@ struct ClearParameters
 class FramebufferD3D : public FramebufferImpl
 {
   public:
-    FramebufferD3D(const gl::Framebuffer::Data &data, RendererD3D *renderer);
+    FramebufferD3D(const gl::Framebuffer::Data &data);
     virtual ~FramebufferD3D();
+
+    void onUpdateColorAttachment(size_t index) override;
+    void onUpdateDepthAttachment() override;
+    void onUpdateStencilAttachment() override;
+    void onUpdateDepthStencilAttachment() override;
+
+    void setDrawBuffers(size_t count, const GLenum *buffers) override;
+    void setReadBuffer(GLenum buffer) override;
 
     gl::Error clear(const gl::Data &data, GLbitfield mask) override;
     gl::Error clearBufferfv(const gl::Data &data,
@@ -88,9 +94,12 @@ class FramebufferD3D : public FramebufferImpl
 
     bool checkStatus() const override;
 
-    void syncState(const gl::Framebuffer::DirtyBits &dirtyBits) override;
+    const gl::AttachmentList &getColorAttachmentsForRender(const WorkaroundsD3D &workarounds) const;
 
-    const gl::AttachmentList &getColorAttachmentsForRender() const;
+  protected:
+    // Cache variable
+    mutable gl::AttachmentList mColorAttachmentsForRender;
+    mutable bool mInvalidateColorAttachmentCache;
 
   private:
     virtual gl::Error clear(const gl::Data &data, const ClearParameters &clearParams) = 0;
@@ -107,9 +116,6 @@ class FramebufferD3D : public FramebufferImpl
                            const gl::Framebuffer *sourceFramebuffer) = 0;
 
     virtual GLenum getRenderTargetImplementationFormat(RenderTargetD3D *renderTarget) const = 0;
-
-    RendererD3D *mRenderer;
-    Optional<gl::AttachmentList> mColorAttachmentsForRender;
 };
 
 }

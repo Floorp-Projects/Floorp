@@ -450,7 +450,9 @@ gl::Error TextureD3D::generateMipmapsUsingImages()
                 gl::ImageIndex srcIndex = getImageIndex(0, layer);
 
                 ImageD3D *image = getImage(srcIndex);
-                gl::Error error = image->copyFromTexStorage(srcIndex, mTexStorage);
+                gl::Box area(0, 0, 0, image->getWidth(), image->getHeight(), image->getDepth());
+                gl::Offset offset(0, 0, 0);
+                gl::Error error = image->copy(offset, area, srcIndex, mTexStorage);
                 if (error.isError())
                 {
                     return error;
@@ -825,7 +827,7 @@ gl::Error TextureD3D_2D::copyImage(GLenum target,
     // so we should use the non-rendering copy path.
     if (!canCreateRenderTargetForImage(index) || mRenderer->getWorkarounds().zeroMaxLodWorkaround)
     {
-        gl::Error error = mImageArray[level]->copyFromFramebuffer(destOffset, sourceArea, source);
+        gl::Error error = mImageArray[level]->copy(destOffset, sourceArea, source);
         if (error.isError())
         {
             return error;
@@ -874,7 +876,7 @@ gl::Error TextureD3D_2D::copySubImage(GLenum target,
     // so we should use the non-rendering copy path.
     if (!canCreateRenderTargetForImage(index) || mRenderer->getWorkarounds().zeroMaxLodWorkaround)
     {
-        gl::Error error = mImageArray[level]->copyFromFramebuffer(destOffset, sourceArea, source);
+        gl::Error error = mImageArray[level]->copy(destOffset, sourceArea, source);
         if (error.isError())
         {
             return error;
@@ -1252,8 +1254,16 @@ void TextureD3D_2D::redefineImage(size_t level,
         // while orphaning
         if (level != 0 && mEGLImageTarget)
         {
-            // TODO(jmadill): Don't discard error.
-            mImageArray[0]->copyFromTexStorage(gl::ImageIndex::Make2D(0), mTexStorage);
+            gl::Offset offset(0, 0, 0);
+            gl::Rectangle sourceArea(0, 0, mImageArray[0]->getWidth(), mImageArray[0]->getHeight());
+
+            RenderTargetD3D *storageRendertarget = nullptr;
+            gl::Error error =
+                mTexStorage->getRenderTarget(gl::ImageIndex::Make2D(0), &storageRendertarget);
+            if (!error.isError())
+            {
+                mImageArray[0]->copy(offset, sourceArea, storageRendertarget);
+            }
         }
 
         if ((level >= storageLevels && storageLevels != 0) ||
@@ -1432,8 +1442,7 @@ gl::Error TextureD3D_Cube::copyImage(GLenum target,
     // so we should use the non-rendering copy path.
     if (!canCreateRenderTargetForImage(index) || mRenderer->getWorkarounds().zeroMaxLodWorkaround)
     {
-        gl::Error error =
-            mImageArray[faceIndex][level]->copyFromFramebuffer(destOffset, sourceArea, source);
+        gl::Error error = mImageArray[faceIndex][level]->copy(destOffset, sourceArea, source);
         if (error.isError())
         {
             return error;
@@ -1481,8 +1490,7 @@ gl::Error TextureD3D_Cube::copySubImage(GLenum target,
     // so we should use the non-rendering copy path.
     if (!canCreateRenderTargetForImage(index) || mRenderer->getWorkarounds().zeroMaxLodWorkaround)
     {
-        gl::Error error =
-            mImageArray[faceIndex][level]->copyFromFramebuffer(destOffset, sourceArea, source);
+        gl::Error error = mImageArray[faceIndex][level]->copy(destOffset, sourceArea, source);
         if (error.isError())
         {
             return error;
@@ -2104,7 +2112,7 @@ gl::Error TextureD3D_3D::copySubImage(GLenum target,
 
     if (canCreateRenderTargetForImage(index))
     {
-        gl::Error error = mImageArray[level]->copyFromFramebuffer(destOffset, sourceArea, source);
+        gl::Error error = mImageArray[level]->copy(destOffset, sourceArea, source);
         if (error.isError())
         {
             return error;
@@ -2674,8 +2682,7 @@ gl::Error TextureD3D_2DArray::copySubImage(GLenum target,
     if (canCreateRenderTargetForImage(index))
     {
         gl::Offset destLayerOffset(destOffset.x, destOffset.y, 0);
-        gl::Error error = mImageArray[level][destOffset.z]->copyFromFramebuffer(destLayerOffset,
-                                                                                sourceArea, source);
+        gl::Error error = mImageArray[level][destOffset.z]->copy(destLayerOffset, sourceArea, source);
         if (error.isError())
         {
             return error;

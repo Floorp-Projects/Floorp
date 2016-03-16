@@ -38,8 +38,7 @@ class DrawBuffersTest : public ANGLETest
         for (size_t texIndex = 0; texIndex < ArraySize(mTextures); texIndex++)
         {
             glBindTexture(GL_TEXTURE_2D, mTextures[texIndex]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWindowWidth(), getWindowHeight(), 0, GL_RGBA,
-                         GL_UNSIGNED_BYTE, nullptr);
+            glTexStorage2DEXT(GL_TEXTURE_2D, 1, GL_RGBA8, getWindowWidth(), getWindowHeight());
         }
 
         GLfloat data[] =
@@ -232,13 +231,6 @@ TEST_P(DrawBuffersTest, VerifyD3DLimits)
 
 TEST_P(DrawBuffersTest, Gaps)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_EXT_draw_buffers"))
-    {
-        std::cout << "Test skipped because ES3 or GL_EXT_draw_buffers is not available."
-                  << std::endl;
-        return;
-    }
-
     glBindTexture(GL_TEXTURE_2D, mTextures[0]);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, mTextures[0], 0);
 
@@ -263,13 +255,6 @@ TEST_P(DrawBuffersTest, Gaps)
 
 TEST_P(DrawBuffersTest, FirstAndLast)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_EXT_draw_buffers"))
-    {
-        std::cout << "Test skipped because ES3 or GL_EXT_draw_buffers is not available."
-                  << std::endl;
-        return;
-    }
-
     glBindTexture(GL_TEXTURE_2D, mTextures[0]);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mTextures[0], 0);
 
@@ -303,13 +288,6 @@ TEST_P(DrawBuffersTest, FirstAndLast)
 
 TEST_P(DrawBuffersTest, FirstHalfNULL)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_EXT_draw_buffers"))
-    {
-        std::cout << "Test skipped because ES3 or GL_EXT_draw_buffers is not available."
-                  << std::endl;
-        return;
-    }
-
     bool flags[8] = { false };
     GLenum bufs[8] = { GL_NONE };
 
@@ -342,13 +320,6 @@ TEST_P(DrawBuffersTest, FirstHalfNULL)
 
 TEST_P(DrawBuffersTest, UnwrittenOutputVariablesShouldNotCrash)
 {
-    if (getClientVersion() < 3 && !extensionEnabled("GL_EXT_draw_buffers"))
-    {
-        std::cout << "Test skipped because ES3 or GL_EXT_draw_buffers is not available."
-                  << std::endl;
-        return;
-    }
-
     // Bind two render targets but use a shader which writes only to the first one.
     glBindTexture(GL_TEXTURE_2D, mTextures[0]);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mTextures[0], 0);
@@ -383,11 +354,4 @@ TEST_P(DrawBuffersTest, UnwrittenOutputVariablesShouldNotCrash)
 }
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
-ANGLE_INSTANTIATE_TEST(DrawBuffersTest,
-                       ES2_D3D11(),
-                       ES3_D3D11(),
-                       ES2_D3D11_FL9_3(),
-                       ES2_OPENGL(),
-                       ES3_OPENGL(),
-                       ES2_OPENGLES(),
-                       ES3_OPENGLES());
+ANGLE_INSTANTIATE_TEST(DrawBuffersTest, ES2_D3D11(), ES3_D3D11(), ES2_D3D11_FL9_3());

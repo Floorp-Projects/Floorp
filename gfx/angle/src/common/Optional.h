@@ -42,13 +42,6 @@ struct Optional
         return *this;
     }
 
-    Optional &operator=(T &&value)
-    {
-        mValue = std::move(value);
-        mValid = true;
-        return *this;
-    }
-
     void reset()
     {
         mValid = false;
