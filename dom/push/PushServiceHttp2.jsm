@@ -219,6 +219,7 @@ var SubscriptionListener = function(aSubInfo, aResolve, aReject,
   this._serverURI = aServerURI;
   this._service = aPushServiceHttp2;
   this._ctime = Date.now();
+  this._retryTimeoutID = null;
 };
 
 SubscriptionListener.prototype = {
@@ -261,12 +262,17 @@ SubscriptionListener.prototype = {
       if (this._subInfo.retries < prefs.get("http2.maxRetries")) {
         this._subInfo.retries++;
         var retryAfter = retryAfterParser(aRequest);
-        setTimeout(_ => this._reject(
+        this._retryTimeoutID = setTimeout(_ =>
           {
-            retry: true,
-            subInfo: this._subInfo
-          }),
-          retryAfter);
+            this._reject(
+              {
+                retry: true,
+                subInfo: this._subInfo
+              });
+            this._service.removeListenerPendingRetry(this);
+            this._retryTimeoutID = null;
+          }, retryAfter);
+        this._service.addListenerPendingRetry(this);
       } else {
         this._reject(new Error("Unexpected server response: " + statusCode));
       }
@@ -328,6 +334,15 @@ SubscriptionListener.prototype = {
 
     Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_HTTP2_TIME").add(Date.now() - this._ctime);
     this._resolve(reply);
+  },
+
+  abortRetry: function() {
+    if (this._retryTimeoutID != null) {
+      clearTimeout(this._retryTimeoutID);
+      this._retryTimeoutID = null;
+    } else {
+      console.debug("SubscriptionListener.abortRetry: aborting non-existent retry?");
+    }
   },
 };
 
@@ -401,6 +416,9 @@ this.PushServiceHttp2 = {
   // Keep information about all connections, e.g. the channel, listener...
   _conns: {},
   _started: false,
+
+  // Set of SubscriptionListeners that are pending a subscription retry attempt.
+  _listenersPendingRetry: new Set(),
 
   newPushDB: function() {
     return new PushDB(kPUSHHTTP2DB_DB_NAME,
@@ -678,10 +696,15 @@ this.PushServiceHttp2 = {
 
   uninit: function() {
     console.debug("uninit()");
+    this._abortPendingSubscriptionRetries();
     this._shutdownConnections(true);
     this._mainPushService = null;
   },
 
+  _abortPendingSubscriptionRetries: function() {
+    this._listenersPendingRetry.forEach((listener) => listener.abortRetry());
+    this._listenersPendingRetry.clear();
+  },
 
   request: function(action, aRecord) {
     switch (action) {
@@ -749,6 +772,16 @@ this.PushServiceHttp2 = {
       setTimeout(_ => this._listenForMsgs(aSubscriptionUri), 0);
     } else {
       this._retryAfterBackoff(aSubscriptionUri, -1);
+    }
+  },
+
+  addListenerPendingRetry: function(aListener) {
+    this._listenersPendingRetry.add(aListener);
+  },
+
+  removeListenerPendingRetry: function(aListener) {
+    if (!this._listenersPendingRetry.remove(aListener)) {
+      console.debug("removeListenerPendingRetry: listener not in list?");
     }
   },
 
