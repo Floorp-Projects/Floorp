@@ -196,7 +196,6 @@ def old_configure_options(*options):
     '--enable-dtrace',
     '--enable-dump-painting',
     '--enable-elf-hack',
-    '--enable-eme',
     '--enable-extensions',
     '--enable-faststripe',
     '--enable-feeds',
