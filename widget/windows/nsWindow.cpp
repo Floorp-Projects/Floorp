@@ -5993,10 +5993,6 @@ LRESULT nsWindow::ProcessCharMessage(const MSG &aMsg, bool *aEventDispatched)
 
 LRESULT nsWindow::ProcessKeyUpMessage(const MSG &aMsg, bool *aEventDispatched)
 {
-  if (IMEHandler::IsComposingOn(this)) {
-    return 0;
-  }
-
   ModifierKeyState modKeyState;
   NativeKey nativeKey(this, aMsg, modKeyState);
   return static_cast<LRESULT>(nativeKey.HandleKeyUpMessage(aEventDispatched));
@@ -6014,15 +6010,12 @@ LRESULT nsWindow::ProcessKeyDownMessage(const MSG &aMsg,
 
   ModifierKeyState modKeyState;
 
-  LRESULT result = 0;
-  if (!IMEHandler::IsComposingOn(this)) {
-    NativeKey nativeKey(this, aMsg, modKeyState);
-    result =
-      static_cast<LRESULT>(nativeKey.HandleKeyDownMessage(aEventDispatched));
-    // HandleKeyDownMessage cleaned up the redirected message information
-    // itself, so, we should do nothing.
-    redirectedMsgFlusher.Cancel();
-  }
+  NativeKey nativeKey(this, aMsg, modKeyState);
+  LRESULT result =
+    static_cast<LRESULT>(nativeKey.HandleKeyDownMessage(aEventDispatched));
+  // HandleKeyDownMessage cleaned up the redirected message information
+  // itself, so, we should do nothing.
+  redirectedMsgFlusher.Cancel();
 
   if (aMsg.wParam == VK_MENU ||
       (aMsg.wParam == VK_F10 && !modKeyState.IsShift())) {
