@@ -6,22 +6,11 @@
   </head>
   <body>
     <p>Input: <input id="input" type="text"></p>
-    <p>Text area: <textarea id="text-area"></textarea></p>
-    <p>Content editable: <div id="content-editable" contentEditable="true"></div></p>
-    <p>Design mode: <iframe id="design-mode" src="data:text/html;charset=utf-8,<html><body></body></html>"></iframe></p>
     <p>Resetting input: <input id="resetting-input" type="text"></p>
     <p>Hiding input: <input id="hiding-input" type="text"></p>
     <script type="application/javascript;version=1.8" src="robocop_head.js"></script>
     <script type="application/javascript;version=1.8">
       let input = document.getElementById("input");
-      let textArea = document.getElementById("text-area");
-      let contentEditable = document.getElementById("content-editable");
-
-      let designMode = document.getElementById("design-mode");
-      designMode.contentDocument.designMode = "on";
-
-      // Spatial navigation interferes with design-mode key event tests.
-      SpecialPowers.setBoolPref("snav.enabled", false);
 
       // An input that resets the editor on every input by resetting the value property.
       let resetting_input = document.getElementById("resetting-input");
@@ -38,92 +27,30 @@
         }
       });
 
-      let getEditor, setValue, setSelection;
-
       let test = {
         focus_input: function(val) {
-          getEditor = function() {
-            return SpecialPowers.wrap(input).QueryInterface(
-                SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
-          };
-          setValue = function(val) {
-            input.value = val;
-          };
-          setSelection = function(pos) {
-            input.setSelectionRange(pos, pos);
-          };
-          setValue(val);
+          input.value = val;
           input.focus();
         },
 
-        focus_textArea: function(val) {
-          getEditor = function() {
-            return SpecialPowers.wrap(textArea).QueryInterface(
-                SpecialPowers.Ci.nsIDOMNSEditableElement).editor;
-          };
-          setValue = function(val) {
-            textArea.value = val;
-          };
-          setSelection = function(pos) {
-            textArea.setSelectionRange(pos, pos);
-          };
-          setValue(val);
-          textArea.focus();
-        },
-
-        focus_contentEditable: function(val) {
-          getEditor = function() {
-            return SpecialPowers.wrap(window).QueryInterface(
-                SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(
-                SpecialPowers.Ci.nsIWebNavigation).QueryInterface(
-                SpecialPowers.Ci.nsIDocShell).editor;
-          };
-          setValue = function(val) {
-            contentEditable.innerHTML = val;
-          };
-          setSelection = function(pos) {
-            window.getSelection().collapse(contentEditable.firstChild, pos);
-          };
-          setValue(val);
-          contentEditable.focus();
-        },
-
-        focus_designMode: function(val) {
-          getEditor = function() {
-            return SpecialPowers.wrap(designMode.contentWindow).QueryInterface(
-                SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(
-                SpecialPowers.Ci.nsIWebNavigation).QueryInterface(
-                SpecialPowers.Ci.nsIDocShell).editor;
-          };
-          setValue = function(val) {
-            designMode.contentDocument.body.innerHTML = val;
-          };
-          setSelection = function(pos) {
-            designMode.contentWindow.getSelection().collapse(
-                designMode.contentDocument.body.firstChild, pos);
-          };
-          setValue(val);
-          designMode.contentWindow.focus();
-          designMode.contentDocument.body.focus();
-        },
-
         test_reflush_changes: function() {
-          let inputIme = getEditor().QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport);
+          let inputEditable = SpecialPowers.wrap(input).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
+          let inputIme = inputEditable.editor.QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport);
           do_check_true(inputIme.composing);
 
           // Ending the composition then setting the input value triggers the bug.
           inputIme.forceCompositionEnd();
-          setValue("good"); // Value that testInputConnection.java expects.
-          setSelection(4);
+          input.value = "good"; // Value that testInputConnection.java expects.
         },
 
         test_set_selection: function() {
-          let inputIme = getEditor().QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport);
+          let inputEditable = SpecialPowers.wrap(input).QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement);
+          let inputIme = inputEditable.editor.QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport);
           do_check_true(inputIme.composing);
 
           // Ending the composition then setting the selection triggers the bug.
           inputIme.forceCompositionEnd();
-          setSelection(3); // Offsets that testInputConnection.java expects.
+          input.setSelectionRange(3, 3); // Offsets that testInputConnection.java expects.
         },
 
         focus_resetting_input: function(val) {
