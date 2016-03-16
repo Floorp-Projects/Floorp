@@ -126,11 +126,11 @@ MIRGenerator::needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const
 size_t
 MIRGenerator::foldableOffsetRange(const MAsmJSHeapAccess* access) const
 {
-    return foldableOffsetRange(access->needsBoundsCheck());
+    return foldableOffsetRange(access->needsBoundsCheck(), access->isAtomicAccess());
 }
 
 size_t
-MIRGenerator::foldableOffsetRange(bool accessNeedsBoundsCheck) const
+MIRGenerator::foldableOffsetRange(bool accessNeedsBoundsCheck, bool atomic) const
 {
     // This determines whether it's ok to fold up to WasmImmediateSize
     // offsets, instead of just WasmCheckedImmediateSize.
@@ -147,7 +147,8 @@ MIRGenerator::foldableOffsetRange(bool accessNeedsBoundsCheck) const
                   "spill over, so ensure a space at the end.");
 
     // Signal-handling can be dynamically disabled by OS bugs or flags.
-    if (usesSignalHandlersForAsmJSOOB_)
+    // Bug 1254935: Atomic accesses can't be handled with signal handlers yet.
+    if (usesSignalHandlersForAsmJSOOB_ && !atomic)
         return WasmImmediateRange;
 #endif
 
@@ -333,13 +334,76 @@ MBasicBlock::NewPendingLoopHeader(MIRGraph& graph, const CompileInfo& info,
 }
 
 MBasicBlock*
-MBasicBlock::NewSplitEdge(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pred)
+MBasicBlock::NewSplitEdge(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pred, size_t predEdgeIdx, MBasicBlock* succ)
 {
-    return pred->pc()
-           ? MBasicBlock::New(graph, nullptr, info, pred,
-                              new(graph.alloc()) BytecodeSite(pred->trackedTree(), pred->pc()),
-                              SPLIT_EDGE)
-           : MBasicBlock::NewAsmJS(graph, info, pred, SPLIT_EDGE);
+    MBasicBlock* split = nullptr;
+    if (!pred->pc()) {
+        // The predecessor does not have a PC, this is an AsmJS compilation.
+        split = MBasicBlock::NewAsmJS(graph, info, pred, SPLIT_EDGE);
+        if (!split)
+            return nullptr;
+    } else {
+        // The predecessor has a PC, this is an IonBuilder compilation.
+        MResumePoint* succEntry = succ->entryResumePoint();
+
+        BytecodeSite* site = new(graph.alloc()) BytecodeSite(succ->trackedTree(), succEntry->pc());
+        split = new(graph.alloc()) MBasicBlock(graph, info, site, SPLIT_EDGE);
+
+        if (!split->init())
+            return nullptr;
+
+        // A split edge is used to simplify the graph to avoid having a
+        // predecessor with multiple successors as well as a successor with
+        // multiple predecessors.  As instructions can be moved in this
+        // split-edge block, we need to give this block a resume point. To do
+        // so, we copy the entry resume points of the successor and filter the
+        // phis to keep inputs from the current edge.
+
+        // Propagate the caller resume point from the inherited block.
+        split->callerResumePoint_ = succ->callerResumePoint();
+
+        // Split-edge are created after the interpreter stack emulation. Thus,
+        // there is no need for creating slots.
+        split->stackPosition_ = succEntry->stackDepth();
+
+        // Create a resume point using our initial stack position.
+        MResumePoint* splitEntry = new(graph.alloc()) MResumePoint(split, succEntry->pc(),
+                                                                   MResumePoint::ResumeAt);
+        if (!splitEntry->init(graph.alloc()))
+            return nullptr;
+        split->entryResumePoint_ = splitEntry;
+
+        // The target entry resume point might have phi operands, keep the
+        // operands of the phi coming from our edge.
+        size_t succEdgeIdx = succ->indexForPredecessor(pred);
+
+        for (size_t i = 0, e = splitEntry->numOperands(); i < e; i++) {
+            MDefinition* def = succEntry->getOperand(i);
+            // This early in the pipeline, we have no recover instructions in
+            // any entry resume point.
+            MOZ_ASSERT_IF(def->block() == succ, def->isPhi());
+            if (def->block() == succ)
+                def = def->toPhi()->getOperand(succEdgeIdx);
+
+            splitEntry->initOperand(i, def);
+        }
+
+        // This is done in the NewAsmJS, so we cannot keep this line below,
+        // where the rest of the graph is modified.
+        if (!split->predecessors_.append(pred))
+            return nullptr;
+    }
+
+    split->setLoopDepth(succ->loopDepth());
+
+    // Insert the split edge block in-between.
+    split->end(MGoto::New(graph.alloc(), succ));
+
+    graph.insertBlockAfter(pred, split);
+
+    pred->replaceSuccessor(predEdgeIdx, split);
+    succ->replacePredecessor(pred, split);
+    return split;
 }
 
 MBasicBlock*

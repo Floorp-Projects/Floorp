@@ -440,6 +440,7 @@ ValueNumberer::fixupOSROnlyLoop(MBasicBlock* block, MBasicBlock* backedge)
     fake->setImmediateDominator(fake);
     fake->addNumDominated(1);
     fake->setDomIndex(fake->id());
+    fake->setUnreachable();
 
     // Create zero-input phis to use as inputs for any phis in |block|.
     // Again, this is a little odd, but it's the least-odd thing we can do

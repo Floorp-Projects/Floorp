@@ -96,6 +96,10 @@ TEST_SUITES = {
         'mach_command': 'luciddream',
         'kwargs': {'test_paths': None},
     },
+    'python': {
+        'mach_command': 'python-test',
+        'kwargs': {'tests': None},
+    },
     'reftest': {
         'aliases': ('RR', 'rr', 'Rr'),
         'mach_command': 'reftest',
@@ -145,6 +149,10 @@ TEST_FLAVORS = {
     'mochitest': {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'mochitest', 'test_paths': []},
+    },
+    'python': {
+        'mach_command': 'python-test',
+        'kwargs': {},
     },
     'reftest': {
         'mach_command': 'reftest',

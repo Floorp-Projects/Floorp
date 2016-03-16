@@ -204,6 +204,9 @@ public:
   //nsIStatefulFrame
   NS_IMETHOD SaveState(nsPresState** aState) override;
   NS_IMETHOD RestoreState(nsPresState* aState) override;
+  NS_IMETHOD GenerateStateKey(nsIContent* aContent,
+                              nsIDocument* aDocument,
+                              nsACString& aKey) override;
 
   static bool ToolkitHasNativePopup();
 

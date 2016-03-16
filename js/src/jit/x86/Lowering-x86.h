@@ -64,6 +64,7 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     void visitSubstr(MSubstr* ins);
     void visitRandom(MRandom* ins);
     void visitTruncateToInt64(MTruncateToInt64* ins);
+    void visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins);
     void lowerPhi(MPhi* phi);
 
     static bool allowTypedElementHoleCheck() {

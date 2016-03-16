@@ -9,6 +9,7 @@
 
 #include "mozilla/Vector.h"
 
+#include "js/GCAnnotations.h"
 #include "js/HeapAPI.h"
 #include "js/UniquePtr.h"
 
@@ -581,7 +582,7 @@ class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoAssertOnGC
   public:
     AutoCheckCannotGC() : AutoAssertOnGC() {}
     explicit AutoCheckCannotGC(JSRuntime* rt) : AutoAssertOnGC(rt) {}
-};
+} JS_HAZ_GC_INVALIDATED;
 
 /**
  * Unsets the gray bit for anything reachable from |thing|. |kind| should not be

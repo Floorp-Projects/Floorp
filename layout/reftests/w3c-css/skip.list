@@ -1,0 +1,22 @@
+# LIST OF REFTEST NEED TO SKIP FROM IMPORTS
+#
+# Always consider adding tests to failures.list first if it doesn't
+# pass. This list should only be used if we are not able to make the
+# test itself work, e.g. some dynamic tests.
+#
+# The syntax of this file is as follows:
+#    1) All lines marked with a '#' are comments.
+#    2) A failure is denoted by a path, starting
+#       with module. E.g.:
+#         css3-multicol/block-clip-001.xht
+
+# because of dynamic change
+css-values-3/vh_not_refreshing_on_chrome.html
+css-values-3/vh_not_refreshing_on_chrome_iframe.html
+
+# because of support files (in iframe subdir) not being copied (bug 1256580)
+css-values-3/vh-support-transform-origin.html
+css-values-3/vh-support-transform-translate.html
+
+# because the test fails on OS X 10.10 (and probably other platforms with certain font antialiasing)
+css-values-3/ch-unit-001.html

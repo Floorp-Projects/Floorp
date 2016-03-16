@@ -150,6 +150,8 @@ function run_test() {
     // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
     Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 108000);
     // set the blocklist-background-update-timer value to the recent past
+    Services.prefs.setIntPref("services.kinto.onecrl.checked",
+                              Math.floor(Date.now() / 1000) - 1);
     Services.prefs.setIntPref("app.update.lastUpdateTime.blocklist-background-update-timer",
                               Math.floor(Date.now() / 1000) - 1);
     clearOCSPCache();
@@ -176,6 +178,8 @@ function run_test() {
     // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
     Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 108000);
     // set the blocklist-background-update-timer value to the more distant past
+    Services.prefs.setIntPref("services.kinto.onecrl.checked",
+                              Math.floor(Date.now() / 1000) - 108080);
     Services.prefs.setIntPref("app.update.lastUpdateTime.blocklist-background-update-timer",
                               Math.floor(Date.now() / 1000) - 108080);
     clearOCSPCache();

@@ -4,12 +4,17 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 #
 
-from __future__ import with_statement
-import sys, os, unittest, tempfile, shutil, re, pprint
 import mozinfo
+import mozunit
+import os
+import pprint
+import re
+import shutil
+import sys
+import tempfile
+import unittest
 
 from StringIO import StringIO
-
 from mozlog import structured
 from mozbuild.base import MozbuildObject
 os.environ.pop('MOZ_OBJDIR', None)
@@ -1341,4 +1346,4 @@ add_test({
         self.assertNotInLog(TEST_FAIL_STRING)
 
 if __name__ == "__main__":
-    unittest.main(verbosity=3)
+    mozunit.main()
