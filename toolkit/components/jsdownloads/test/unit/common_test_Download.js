@@ -1711,12 +1711,15 @@ add_task(function* test_getSha256Hash()
 var promiseBlockedDownload = Task.async(function* (options) {
   function cleanup() {
     DownloadIntegration.shouldBlockInTestForApplicationReputation = false;
+    DownloadIntegration.verdictInTestForApplicationReputation = "";
     DownloadIntegration.shouldKeepBlockedDataInTest = false;
   }
   do_register_cleanup(cleanup);
 
   let {keepPartialData, keepBlockedData} = options;
   DownloadIntegration.shouldBlockInTestForApplicationReputation = true;
+  DownloadIntegration.verdictInTestForApplicationReputation =
+                                        Downloads.Error.BLOCK_VERDICT_UNCOMMON;
   DownloadIntegration.shouldKeepBlockedDataInTest = keepBlockedData;
 
   let download;
@@ -1740,7 +1743,11 @@ var promiseBlockedDownload = Task.async(function* (options) {
       throw ex;
     }
     do_check_true(ex.becauseBlockedByReputationCheck);
+    do_check_eq(ex.reputationCheckVerdict,
+                Downloads.Error.BLOCK_VERDICT_UNCOMMON);
     do_check_true(download.error.becauseBlockedByReputationCheck);
+    do_check_eq(download.error.reputationCheckVerdict,
+                Downloads.Error.BLOCK_VERDICT_UNCOMMON);
   }
 
   do_check_true(download.stopped);
