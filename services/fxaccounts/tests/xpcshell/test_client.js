@@ -384,6 +384,7 @@ add_task(function* test_recoveryEmailStatus() {
   let server = httpd_setup({
     "/recovery_email/status": function(request, response) {
       do_check_true(request.hasHeader("Authorization"));
+      do_check_eq("", request._queryString);
 
       if (tries === 0) {
         tries += 1;
@@ -411,6 +412,28 @@ add_task(function* test_recoveryEmailStatus() {
     do_check_eq(102, expectedError.errno);
   }
 
+  yield deferredStop(server);
+});
+
+add_task(function* test_recoveryEmailStatusWithReason() {
+  let emailStatus = JSON.stringify({verified: true});
+  let server = httpd_setup({
+    "/recovery_email/status": function(request, response) {
+      do_check_true(request.hasHeader("Authorization"));
+      // if there is a query string then it will have a reason
+      do_check_eq("reason=push", request._queryString);
+
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.bodyOutputStream.write(emailStatus, emailStatus.length);
+      return;
+    },
+  });
+
+  let client = new FxAccountsClient(server.baseURI);
+  let result = yield client.recoveryEmailStatus(FAKE_SESSION_TOKEN, {
+    reason: "push",
+  });
+  do_check_eq(result.verified, true);
   yield deferredStop(server);
 });
 
