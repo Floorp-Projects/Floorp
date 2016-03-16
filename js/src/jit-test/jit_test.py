@@ -232,8 +232,6 @@ def main(argv):
         test_list = test_list[start:end]
 
     # The full test list is ready. Now create copies for each JIT configuration.
-    job_list = []
-    test_flags = []
     if options.tbpl:
         # Running all bits would take forever. Instead, we test a few
         # interesting combinations.
@@ -243,8 +241,13 @@ def main(argv):
     else:
         test_flags = get_jitflags(options.jitflags)
 
-    job_list = [_ for test in test_list
-                for _ in test.copy_variants(test_flags)]
+    job_list = (_ for test in test_list
+                for _ in test.copy_variants(test_flags))
+    job_count = len(test_list) * len(test_flags)
+
+    if options.repeat:
+        job_list = (test for test in job_list for i in range(options.repeat))
+        job_count *= options.repeat
 
     if options.ignore_timeouts:
         read_all = False
@@ -270,14 +273,14 @@ def main(argv):
     os.mkdir(jittests.JS_CACHE_DIR)
 
     if options.debugger:
-        if len(job_list) > 1:
+        if job_count > 1:
             print('Multiple tests match command line'
                   ' arguments, debugger can only run one')
             for tc in job_list:
                 print('    {}'.format(tc.path))
             sys.exit(1)
 
-        tc = job_list[0]
+        tc = job_list.next()
         if options.debugger == 'gdb':
             debug_cmd = ['gdb', '--args']
         elif options.debugger == 'lldb':
@@ -296,10 +299,10 @@ def main(argv):
     try:
         ok = None
         if options.remote:
-            ok = jittests.run_tests_remote(job_list, prefix, options)
+            ok = jittests.run_tests_remote(job_list, job_count, prefix, options)
         else:
             with change_env(test_environment):
-                ok = jittests.run_tests(job_list, prefix, options)
+                ok = jittests.run_tests(job_list, job_count, prefix, options)
         if not ok:
             sys.exit(2)
     except OSError:

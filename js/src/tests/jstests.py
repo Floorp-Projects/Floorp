@@ -318,11 +318,7 @@ def load_tests(options, requested_paths, excluded_paths):
         test_gen = (_ for _ in test_gen if not _.slow)
 
     if options.repeat:
-        def repeat_gen(tests):
-            for test in tests:
-                for i in range(options.repeat):
-                    yield test
-        test_gen = repeat_gen(test_gen)
+        test_gen = (test for test in test_gen for i in range(options.repeat))
         test_count *= options.repeat
 
     return test_count, test_gen
@@ -349,15 +345,14 @@ def main():
     test_dir = dirname(abspath(__file__))
 
     if options.debug:
-        tests = list(test_gen)
-        if len(tests) > 1:
+        if test_count > 1:
             print('Multiple tests match command line arguments,'
                   ' debugger can only run one')
-            for tc in tests:
+            for tc in test_gen:
                 print('    {}'.format(tc.path))
             return 2
 
-        cmd = tests[0].get_command(prefix)
+        cmd = test_gen.next().get_command(prefix)
         if options.show_cmd:
             print(list2cmdline(cmd))
         with changedir(test_dir), change_env(test_environment):
