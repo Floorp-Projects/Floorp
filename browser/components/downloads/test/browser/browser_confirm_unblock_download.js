@@ -33,14 +33,14 @@ function addDialogOpenObserver(buttonAction) {
 
 add_task(function* test_confirm_unblock_dialog_unblock() {
   addDialogOpenObserver("accept");
-  let result = yield DownloadsCommon.confirmUnblockDownload(DownloadsCommon.BLOCK_VERDICT_MALWARE,
+  let result = yield DownloadsCommon.confirmUnblockDownload(Downloads.Error.BLOCK_VERDICT_MALWARE,
                                                             window);
   ok(result, "Should return true when the user clicks on `Unblock` button.");
 });
 
 add_task(function* test_confirm_unblock_dialog_keep_safe() {
   addDialogOpenObserver("cancel");
-  let result = yield DownloadsCommon.confirmUnblockDownload(DownloadsCommon.BLOCK_VERDICT_MALWARE,
+  let result = yield DownloadsCommon.confirmUnblockDownload(Downloads.Error.BLOCK_VERDICT_MALWARE,
                                                             window);
   ok(!result, "Should return false when the user clicks on `Keep me safe` button.");
 });
