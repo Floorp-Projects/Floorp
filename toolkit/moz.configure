@@ -89,6 +89,22 @@ def x11(value, toolkit):
         set_config('MOZ_X11', '1')
         set_define('MOZ_X11', '1')
         add_old_configure_assignment('MOZ_X11', '1')
-        add_old_configure_assignment('MOZ_GL_DEFAULT_PROVIDER', 'GLX')
 
     return value and toolkit in x11_toolkits
+
+
+# GL Provider
+# ==============================================================
+option('--with-gl-provider', nargs=1, help='Set GL provider backend type')
+
+@depends('--with-gl-provider', x11)
+def gl_provider(value, x11):
+    if value:
+        provider = value[0]
+        set_config('MOZ_GL_PROVIDER', provider)
+        set_define('MOZ_GL_PROVIDER', 'GLContextProvider%s' % provider)
+        set_config('MOZ_GL_DEFAULT_PROVIDER', provider)
+        set_define('GL_PROVIDER_%s' % provider, '1')
+    elif x11:
+        set_config('MOZ_GL_DEFAULT_PROVIDER', 'GLX')
+        set_define('GL_PROVIDER_GLX', '1')
