@@ -2756,14 +2756,27 @@ IMEInputHandler::DispatchCompositionStartEvent()
      TrueOrFalse(Destroyed()), mView, mWidget,
      mView ? [mView inputContext] : nullptr, TrueOrFalse(mIsIMEComposing)));
 
-  WidgetCompositionEvent compositionStartEvent(true, eCompositionStart,
-                                               mWidget);
-  InitCompositionEvent(compositionStartEvent);
+  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
+
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(gLog, LogLevel::Error,
+      ("%p IMEInputHandler::DispatchCompositionStartEvent, "
+       "FAILED, due to BeginNativeInputTransaction() failure", this));
+    return false;
+  }
 
   NS_ASSERTION(!mIsIMEComposing, "There is a composition already");
   mIsIMEComposing = true;
 
-  DispatchEvent(compositionStartEvent);
+  nsEventStatus status;
+  rv = mDispatcher->StartComposition(status);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(gLog, LogLevel::Error,
+      ("%p IMEInputHandler::DispatchCompositionStartEvent, "
+       "FAILED, due to StartComposition() failure", this));
+    return false;
+  }
 
   if (Destroyed()) {
     MOZ_LOG(gLog, LogLevel::Info,
@@ -2807,12 +2820,24 @@ IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
 
   RefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  WidgetCompositionEvent compositionChangeEvent(true, eCompositionChange,
-                                                mWidget);
-  compositionChangeEvent.time = PR_IntervalNow();
-  compositionChangeEvent.mData = aText;
-  compositionChangeEvent.mRanges =
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(gLog, LogLevel::Error,
+      ("%p IMEInputHandler::DispatchCompositionChangeEvent, "
+       "FAILED, due to BeginNativeInputTransaction() failure", this));
+    return false;
+  }
+
+  RefPtr<TextRangeArray> rangeArray =
     CreateTextRangeArray(aAttrString, aSelectedRange);
+
+  rv = mDispatcher->SetPendingComposition(aText, rangeArray);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(gLog, LogLevel::Error,
+      ("%p IMEInputHandler::DispatchCompositionChangeEvent, "
+       "FAILED, due to SetPendingComposition() failure", this));
+    return false;
+  }
 
   mSelectedRange.location = mIMECompositionStart + aSelectedRange.location;
   mSelectedRange.length = aSelectedRange.length;
@@ -2822,7 +2847,14 @@ IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
   }
   mIMECompositionString = [[aAttrString string] retain];
 
-  DispatchEvent(compositionChangeEvent);
+  nsEventStatus status;
+  rv = mDispatcher->FlushPendingComposition(status);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(gLog, LogLevel::Error,
+      ("%p IMEInputHandler::DispatchCompositionChangeEvent, "
+       "FAILED, due to FlushPendingComposition() failure", this));
+    return false;
+  }
 
   if (Destroyed()) {
     MOZ_LOG(gLog, LogLevel::Info,
@@ -2856,20 +2888,12 @@ IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
   RefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   if (!Destroyed()) {
-    EventMessage message =
-      aCommitString ? eCompositionCommit : eCompositionCommitAsIs;
-    WidgetCompositionEvent compositionCommitEvent(true, message, mWidget);
-    compositionCommitEvent.time = PR_IntervalNow();
-    if (aCommitString) {
-      compositionCommitEvent.mData = *aCommitString;
-    }
-
     // IME may query selection immediately after this, however, in e10s mode,
     // OnSelectionChange() will be called asynchronously.  Until then, we
     // should emulate expected selection range if the webapp does nothing.
     mSelectedRange.location = mIMECompositionStart;
-    if (message == eCompositionCommit) {
-      mSelectedRange.location += compositionCommitEvent.mData.Length();
+    if (aCommitString) {
+      mSelectedRange.location += aCommitString->Length();
     } else if (mIMECompositionString) {
       nsAutoString commitString;
       nsCocoaUtils::GetStringForNSString(mIMECompositionString, commitString);
@@ -2877,7 +2901,20 @@ IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
     }
     mSelectedRange.length = 0;
 
-    DispatchEvent(compositionCommitEvent);
+    nsresult rv = mDispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_LOG(gLog, LogLevel::Error,
+        ("%p IMEInputHandler::DispatchCompositionCommitEvent, "
+         "FAILED, due to BeginNativeInputTransaction() failure", this));
+    } else {
+      nsEventStatus status;
+      rv = mDispatcher->CommitComposition(status, aCommitString);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gLog, LogLevel::Error,
+          ("%p IMEInputHandler::DispatchCompositionCommitEvent, "
+           "FAILED, due to BeginNativeInputTransaction() failure", this));
+      }
+    }
   }
 
   mIsIMEComposing = false;
@@ -2897,12 +2934,6 @@ IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
   return true;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
-}
-
-void
-IMEInputHandler::InitCompositionEvent(WidgetCompositionEvent& aCompositionEvent)
-{
-  aCompositionEvent.time = PR_IntervalNow();
 }
 
 void
@@ -3825,8 +3856,9 @@ NS_IMPL_ISUPPORTS(TextInputHandlerBase,
                   nsISupportsWeakReference)
 
 TextInputHandlerBase::TextInputHandlerBase(nsChildView* aWidget,
-                                           NSView<mozView> *aNativeView) :
-  mWidget(aWidget)
+                                           NSView<mozView> *aNativeView)
+  : mWidget(aWidget)
+  , mDispatcher(aWidget->GetTextEventDispatcher())
 {
   gHandlerInstanceCount++;
   mView = [aNativeView retain];
@@ -3853,6 +3885,7 @@ TextInputHandlerBase::OnDestroyWidget(nsChildView* aDestroyingWidget)
   }
 
   mWidget = nullptr;
+  mDispatcher = nullptr;
   return true;
 }
 
