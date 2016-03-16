@@ -1201,7 +1201,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   clear: function() {
     NetMonitorController.NetworkEventsHandler.clearMarkers();
     NetMonitorView.Sidebar.toggle(false);
+
     $("#details-pane-toggle").disabled = true;
+    $("#requests-menu-empty-notice").hidden = false;
 
     this.empty();
     this.refreshSummary();

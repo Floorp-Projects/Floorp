@@ -1,10 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
- * Tests if requests are handled correctly.
+ * Test whether the UI state properly reflects existence of requests
+ * displayed in the Net panel. The following parts of the UI are
+ * tested:
+ * 1) Side panel visibility
+ * 2) Side panel toggle button
+ * 3) Empty user message visibility
+ * 4) Number of requests displayed
  */
-
 function test() {
   initNetMonitor(SIMPLE_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
@@ -48,6 +54,19 @@ function test() {
           "The requests menu should not be empty after a reload.");
         is(NetMonitorView.detailsPaneHidden, true,
           "The details pane should still be hidden after a reload.");
+
+        RequestsMenu.clear();
+
+        is(document.querySelector("#details-pane-toggle")
+          .hasAttribute("disabled"), true,
+          "The pane toggle button should be disabled when after clear.");
+        is(document.querySelector("#requests-menu-empty-notice")
+          .hasAttribute("hidden"), false,
+          "An empty notice should be displayed again after clear.");
+        is(RequestsMenu.itemCount, 0,
+          "The requests menu should be empty after clear.");
+        is(NetMonitorView.detailsPaneHidden, true,
+          "The details pane should be hidden after clear.");
 
         teardown(aMonitor).then(finish);
       });
