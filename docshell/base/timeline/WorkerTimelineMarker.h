@@ -15,7 +15,7 @@ namespace mozilla {
 class WorkerTimelineMarker : public TimelineMarker
 {
 public:
-  WorkerTimelineMarker(ProfileTimelineWorkerOperationType aOperationType,
+  WorkerTimelineMarker(dom::ProfileTimelineWorkerOperationType aOperationType,
                        MarkerTracingType aTracingType)
     : TimelineMarker("Worker", aTracingType, MarkerStackRequest::NO_STACK)
     , mOperationType(aOperationType)
@@ -38,7 +38,7 @@ public:
   }
 
 private:
-  ProfileTimelineWorkerOperationType mOperationType;
+  dom::ProfileTimelineWorkerOperationType mOperationType;
 };
 
 } // namespace mozilla

@@ -4,18 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ServiceWorkerClients.h"
+
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 
 #include "ServiceWorkerClient.h"
-#include "ServiceWorkerClients.h"
 #include "ServiceWorkerManager.h"
+#include "ServiceWorkerPrivate.h"
 #include "ServiceWorkerWindowClient.h"
 
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 
+#include "nsContentUtils.h"
+#include "nsIBrowserDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMWindow.h"
@@ -24,6 +28,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
+#include "nsNetUtil.h"
 #include "nsPIWindowWatcher.h"
 #include "nsWindowWatcher.h"
 #include "nsWeakReference.h"

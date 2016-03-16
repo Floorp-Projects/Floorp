@@ -14,6 +14,7 @@
 
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
+#include "nsThreadUtils.h"
 
 #define WORKERDEBUGGERMANAGER_CID \
   { 0x62ec8731, 0x55ad, 0x4246, \
