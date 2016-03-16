@@ -1,22 +1,33 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
- * Tests that the memory flamegraphs get rerendered when toggling `flatten-tree-recursion`
+ * Tests that the memory flamegraphs get rerendered when toggling `flatten-tree-recursion`.
  */
-function* spawnTest() {
-  let { panel } = yield initPerformance(SIMPLE_URL);
+
+const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
+const { UI_FLATTEN_RECURSION_PREF, UI_ENABLE_ALLOCATIONS_PREF } = require("devtools/client/performance/test/helpers/prefs");
+const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
+const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
+const { once } = require("devtools/client/performance/test/helpers/event-utils");
+
+add_task(function*() {
+  let { panel } = yield initPerformanceInNewTab({
+    url: SIMPLE_URL,
+    win: window
+  });
+
   let { EVENTS, PerformanceController, DetailsView, MemoryFlameGraphView, RecordingUtils, FlameGraphUtils } = panel.panelWin;
 
   // Enable memory to test
-  Services.prefs.setBoolPref(ALLOCATIONS_PREF, true);
-  Services.prefs.setBoolPref(FLATTEN_PREF, true);
+  Services.prefs.setBoolPref(UI_ENABLE_ALLOCATIONS_PREF, true);
+  Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, true);
 
   yield startRecording(panel);
-  yield busyWait(100);
-
-  let rendered = once(MemoryFlameGraphView, EVENTS.MEMORY_FLAMEGRAPH_RENDERED);
   yield stopRecording(panel);
+
+  let rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
   yield DetailsView.selectView("memory-flamegraph");
   yield rendered;
 
@@ -31,10 +42,9 @@ function* spawnTest() {
   ok(rendering1,
     "The rendering data was cached.");
 
-  rendered = once(MemoryFlameGraphView, EVENTS.MEMORY_FLAMEGRAPH_RENDERED);
-  Services.prefs.setBoolPref(FLATTEN_PREF, false);
+  rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
+  Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, false);
   yield rendered;
-
   ok(true, "MemoryFlameGraphView rerendered when toggling flatten-tree-recursion.");
 
   let allocations2 = PerformanceController.getCurrentRecording().getAllocations();
@@ -48,10 +58,9 @@ function* spawnTest() {
   isnot(rendering1, rendering2,
     "The rendering data should be different because other options were used (1).");
 
-  rendered = once(MemoryFlameGraphView, EVENTS.MEMORY_FLAMEGRAPH_RENDERED);
-  Services.prefs.setBoolPref(FLATTEN_PREF, true);
+  rendered = once(MemoryFlameGraphView, EVENTS.UI_MEMORY_FLAMEGRAPH_RENDERED);
+  Services.prefs.setBoolPref(UI_FLATTEN_RECURSION_PREF, true);
   yield rendered;
-
   ok(true, "MemoryFlameGraphView rerendered when toggling back flatten-tree-recursion.");
 
   let allocations3 = PerformanceController.getCurrentRecording().getAllocations();
@@ -65,6 +74,5 @@ function* spawnTest() {
   isnot(rendering2, rendering3,
     "The rendering data should be different because other options were used (2).");
 
-  yield teardown(panel);
-  finish();
-}
+  yield teardownToolboxAndRemoveTab(panel);
+});

@@ -3,107 +3,106 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-module.exports = {
-  // Fired by the PerformanceController and OptionsView when a pref changes.
+const ControllerEvents = {
+  // Fired when a performance pref changes (either because the user changed it
+  // via the tool's UI, by changing something about:config or programatically).
   PREF_CHANGED: "Performance:PrefChanged",
 
-  // Fired by the PerformanceController when the devtools theme changes.
+  // Fired when the devtools theme changes.
   THEME_CHANGED: "Performance:ThemeChanged",
 
-  // Emitted by the PerformanceView when the state (display mode) changes,
-  // for example when switching between "empty", "recording" or "recorded".
-  // This causes certain panels to be hidden or visible.
-  UI_STATE_CHANGED: "Performance:UI:StateChanged",
+  // When a new recording model is received by the controller.
+  RECORDING_ADDED: "Performance:RecordingAdded",
 
-  // Emitted by the PerformanceView on clear button click
-  UI_CLEAR_RECORDINGS: "Performance:UI:ClearRecordings",
+  // When a recording model gets removed from the controller.
+  RECORDING_DELETED: "Performance:RecordingDeleted",
 
-  // Emitted by the PerformanceView on record button click
-  UI_START_RECORDING: "Performance:UI:StartRecording",
-  UI_STOP_RECORDING: "Performance:UI:StopRecording",
-
-  // Emitted by the PerformanceView on import button click
-  UI_IMPORT_RECORDING: "Performance:UI:ImportRecording",
-  // Emitted by the RecordingsView on export button click
-  UI_EXPORT_RECORDING: "Performance:UI:ExportRecording",
-
-  // When a new recording is being tracked in the panel.
-  NEW_RECORDING: "Performance:NewRecording",
-
-  // When a new recording can't be successfully created when started.
-  NEW_RECORDING_FAILED: "Performance:NewRecordingFailed",
-
-  // When a recording is started or stopped or stopping via the PerformanceController
+  // When a recording model becomes "started", "stopping" or "stopped".
   RECORDING_STATE_CHANGE: "Performance:RecordingStateChange",
 
-  // Emitted by the PerformanceController or RecordingView
-  // when a recording model is selected
+  // When a recording is offering information on the profiler's circular buffer.
+  RECORDING_PROFILER_STATUS_UPDATE: "Performance:RecordingProfilerStatusUpdate",
+
+  // When a recording model becomes marked as selected.
   RECORDING_SELECTED: "Performance:RecordingSelected",
 
-  // When recordings have been cleared out
-  RECORDINGS_CLEARED: "Performance:RecordingsCleared",
+  // When starting a recording is attempted and fails because the backend
+  // does not permit it at this time.
+  BACKEND_FAILED_AFTER_RECORDING_START: "Performance:BackendFailedRecordingStart",
 
-  // When a recording is exported via the PerformanceController
+  // When a recording is started and the backend has started working.
+  BACKEND_READY_AFTER_RECORDING_START: "Performance:BackendReadyRecordingStart",
+
+  // When a recording is stopped and the backend has finished cleaning up.
+  BACKEND_READY_AFTER_RECORDING_STOP: "Performance:BackendReadyRecordingStop",
+
+  // When a recording is exported.
   RECORDING_EXPORTED: "Performance:RecordingExported",
 
-  // Emitted by the PerformanceController when a recording is imported.
-  // Unless you're interested in specifically imported recordings, like in tests
-  // or telemetry, you should probably use the normal RECORDING_STATE_CHANGE in the UI.
+  // When a recording is imported.
   RECORDING_IMPORTED: "Performance:RecordingImported",
-
-  // When the front has updated information on the profiler's circular buffer
-  PROFILER_STATUS_UPDATED: "Performance:BufferUpdated",
-
-  // When the PerformanceView updates the display of the buffer status
-  UI_BUFFER_STATUS_UPDATED: "Performance:UI:BufferUpdated",
-
-  // Emitted by the OptimizationsListView when it renders new optimization
-  // data and clears the optimization data
-  OPTIMIZATIONS_RESET: "Performance:UI:OptimizationsReset",
-  OPTIMIZATIONS_RENDERED: "Performance:UI:OptimizationsRendered",
-
-  // Emitted by the OverviewView when more data has been rendered
-  OVERVIEW_RENDERED: "Performance:UI:OverviewRendered",
-  FRAMERATE_GRAPH_RENDERED: "Performance:UI:OverviewFramerateRendered",
-  MARKERS_GRAPH_RENDERED: "Performance:UI:OverviewMarkersRendered",
-  MEMORY_GRAPH_RENDERED: "Performance:UI:OverviewMemoryRendered",
-
-  // Emitted by the OverviewView when a range has been selected in the graphs
-  OVERVIEW_RANGE_SELECTED: "Performance:UI:OverviewRangeSelected",
-
-  // Emitted by the DetailsView when a subview is selected
-  DETAILS_VIEW_SELECTED: "Performance:UI:DetailsViewSelected",
-
-  // Emitted by the WaterfallView when it has been rendered
-  WATERFALL_RENDERED: "Performance:UI:WaterfallRendered",
-
-  // Emitted by the JsCallTreeView when a call tree has been rendered
-  JS_CALL_TREE_RENDERED: "Performance:UI:JsCallTreeRendered",
-
-  // Emitted by the JsFlameGraphView when it has been rendered
-  JS_FLAMEGRAPH_RENDERED: "Performance:UI:JsFlameGraphRendered",
-
-  // Emitted by the MemoryCallTreeView when a call tree has been rendered
-  MEMORY_CALL_TREE_RENDERED: "Performance:UI:MemoryCallTreeRendered",
-
-  // Emitted by the MemoryFlameGraphView when it has been rendered
-  MEMORY_FLAMEGRAPH_RENDERED: "Performance:UI:MemoryFlameGraphRendered",
 
   // When a source is shown in the JavaScript Debugger at a specific location.
   SOURCE_SHOWN_IN_JS_DEBUGGER: "Performance:UI:SourceShownInJsDebugger",
   SOURCE_NOT_FOUND_IN_JS_DEBUGGER: "Performance:UI:SourceNotFoundInJsDebugger",
 
-  // These are short hands for the RECORDING_STATE_CHANGE event to make refactoring
-  // tests easier and in rare cases (telemetry). UI components should use
-  // RECORDING_STATE_CHANGE in almost all cases,
-  RECORDING_STARTED: "Performance:RecordingStarted",
-  RECORDING_WILL_STOP: "Performance:RecordingWillStop",
-  RECORDING_STOPPED: "Performance:RecordingStopped",
-
   // Fired by the PerformanceController when `populateWithRecordings` is finished.
   RECORDINGS_SEEDED: "Performance:RecordingsSeeded",
-
-  // Emitted by the PerformanceController when `PerformanceController.stopRecording()`
-  // is completed; used in tests, to know when a manual UI click is finished.
-  CONTROLLER_STOPPED_RECORDING: "Performance:Controller:StoppedRecording",
 };
+
+const ViewEvents = {
+  // Emitted by the `ToolbarView` when a preference changes.
+  UI_PREF_CHANGED: "Performance:UI:PrefChanged",
+
+  // When the state (display mode) changes, for example when switching between
+  // "empty", "recording" or "recorded". This causes certain parts of the UI
+  // to be hidden or visible.
+  UI_STATE_CHANGED: "Performance:UI:StateChanged",
+
+  // Emitted by the `PerformanceView` on clear button click.
+  UI_CLEAR_RECORDINGS: "Performance:UI:ClearRecordings",
+
+  // Emitted by the `PerformanceView` on record button click.
+  UI_START_RECORDING: "Performance:UI:StartRecording",
+  UI_STOP_RECORDING: "Performance:UI:StopRecording",
+
+  // Emitted by the `PerformanceView` on import/export button click.
+  UI_IMPORT_RECORDING: "Performance:UI:ImportRecording",
+  UI_EXPORT_RECORDING: "Performance:UI:ExportRecording",
+
+  // Emitted by the `PerformanceView` when the profiler's circular buffer
+  // status has been rendered.
+  UI_RECORDING_PROFILER_STATUS_RENDERED: "Performance:UI:RecordingProfilerStatusRendered",
+
+  // When a recording is selected in the UI.
+  UI_RECORDING_SELECTED: "Performance:UI:RecordingSelected",
+
+  // Emitted by the `DetailsView` when a subview is selected
+  UI_DETAILS_VIEW_SELECTED: "Performance:UI:DetailsViewSelected",
+
+  // Emitted by the `OverviewView` after something has been rendered.
+  UI_OVERVIEW_RENDERED: "Performance:UI:OverviewRendered",
+  UI_MARKERS_GRAPH_RENDERED: "Performance:UI:OverviewMarkersRendered",
+  UI_MEMORY_GRAPH_RENDERED: "Performance:UI:OverviewMemoryRendered",
+  UI_FRAMERATE_GRAPH_RENDERED: "Performance:UI:OverviewFramerateRendered",
+
+  // Emitted by the `OverviewView` when a range has been selected in the graphs.
+  UI_OVERVIEW_RANGE_SELECTED: "Performance:UI:OverviewRangeSelected",
+
+  // Emitted by the `WaterfallView` when it has been rendered.
+  UI_WATERFALL_RENDERED: "Performance:UI:WaterfallRendered",
+
+  // Emitted by the `JsCallTreeView` when it has been rendered.
+  UI_JS_CALL_TREE_RENDERED: "Performance:UI:JsCallTreeRendered",
+
+  // Emitted by the `JsFlameGraphView` when it has been rendered.
+  UI_JS_FLAMEGRAPH_RENDERED: "Performance:UI:JsFlameGraphRendered",
+
+  // Emitted by the `MemoryCallTreeView` when it has been rendered.
+  UI_MEMORY_CALL_TREE_RENDERED: "Performance:UI:MemoryCallTreeRendered",
+
+  // Emitted by the `MemoryFlameGraphView` when it has been rendered.
+  UI_MEMORY_FLAMEGRAPH_RENDERED: "Performance:UI:MemoryFlameGraphRendered",
+};
+
+module.exports = Object.assign({}, ControllerEvents, ViewEvents);
