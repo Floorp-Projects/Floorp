@@ -632,8 +632,8 @@ nsXBLPrototypeHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
 
 struct keyCodeData {
   const char* str;
-  size_t strlength;
-  uint32_t keycode;
+  uint16_t strlength;
+  uint16_t keycode;
 };
 
 // All of these must be uppercase, since the function below does
