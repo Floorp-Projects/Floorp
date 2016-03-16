@@ -214,3 +214,27 @@ def fmp4(value, target, wmf, applemedia):
         set_define('MOZ_FMP4', '1')
         add_old_configure_assignment('MOZ_FMP4', '1')
     return enabled
+
+
+# EME Support
+# ==============================================================
+option('--enable-eme', nargs='*', choices=('adobe',),
+       help='Enable support for Encrypted Media Extensions')
+
+@depends('--enable-eme', fmp4)
+def eme(value, fmp4):
+    enabled = bool(value)
+    if value.origin == 'default':
+        enabled = enabled or fmp4
+    if enabled and not fmp4:
+        error('Encrypted Media Extension support requires '
+              'Fragmented MP4 support')
+    if enabled:
+        set_config('MOZ_EME', '1')
+        set_define('MOZ_EME', '1')
+    # Theoretically, we could pass `value` directly when it is a
+    # PositiveOptionValue, but somehow, the JSON serialization in configure.py
+    # outputs inconsistent data in some cases when we do (a closing bracket
+    # without an opening one).
+    set_config('MOZ_EME_MODULES', list(value) if value else [])
+    return enabled
