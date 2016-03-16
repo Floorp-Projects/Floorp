@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const Immutable = require("devtools/client/shared/vendor/immutable");
 const { immutableUpdate, assert } = require("devtools/shared/DevToolsUtils");
 const { actions, diffingState, viewState } = require("../constants");
 const { snapshotIsDiffable } = require("../utils");
@@ -82,7 +83,7 @@ handlers[actions.TAKE_CENSUS_DIFF_END] = function (diffing, action) {
     census: {
       report: action.report,
       parentMap: action.parentMap,
-      expanded: new Set(),
+      expanded: Immutable.Set(),
       inverted: action.inverted,
       filter: action.filter,
       display: action.display,
@@ -105,11 +106,7 @@ handlers[actions.EXPAND_DIFFING_CENSUS_NODE] = function (diffing, { node }) {
   assert(diffing.census.report, "Should have a census report");
   assert(diffing.census.expanded, "Should have a census's expanded set");
 
-  // Warning: mutable operations couched in an immutable update ahead :'( This
-  // at least lets us use referential equality on the census model itself,
-  // even though the expanded set is mutated in place.
-  const expanded = diffing.census.expanded;
-  expanded.add(node.id);
+  const expanded = diffing.census.expanded.add(node.id);
   const census = immutableUpdate(diffing.census, { expanded });
   return immutableUpdate(diffing, { census });
 };
@@ -122,10 +119,7 @@ handlers[actions.COLLAPSE_DIFFING_CENSUS_NODE] = function (diffing, { node }) {
   assert(diffing.census.report, "Should have a census report");
   assert(diffing.census.expanded, "Should have a census's expanded set");
 
-  // Warning: mutable operations couched in an immutable update ahead :'( See
-  // above comment in the EXPAND_DIFFING_CENSUS_NODE handler.
-  const expanded = diffing.census.expanded;
-  expanded.delete(node.id);
+  const expanded = diffing.census.expanded.delete(node.id);
   const census = immutableUpdate(diffing.census, { expanded });
   return immutableUpdate(diffing, { census });
 };
