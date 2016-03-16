@@ -62,10 +62,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in {
     'android',
     'cocoa',
+    'gtk2',
+    'gtk3',
     'uikit',
     'gonk',
     'qt',
-  } or CONFIG['MOZ_WIDGET_GTK']:
+  }:
     DEFINES['SK_FONTHOST_DOES_NOT_USE_FONTMGR'] = 1
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
@@ -381,7 +383,7 @@ def write_mozbuild(sources):
   f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] in {'cocoa', 'uikit'}:\n")
   write_sources(f, sources['mac'], 4)
 
-  f.write("if CONFIG['MOZ_WIDGET_GTK']:\n")
+  f.write("if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:\n")
   write_sources(f, sources['linux'], 4)
 
   f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':\n")
