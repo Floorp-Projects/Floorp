@@ -173,7 +173,7 @@ private:
 class Moof : public Atom
 {
 public:
-  Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf, bool aIsAudio);
+  Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf, uint64_t* aDecoderTime, bool aIsAudio);
   bool GetAuxInfo(AtomType aType, nsTArray<MediaByteRange>* aByteRanges);
   void FixRounding(const Moof& aMoof);
 
@@ -186,7 +186,8 @@ public:
   nsTArray<Saio> mSaios;
 
 private:
-  void ParseTraf(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf, bool aIsAudio);
+    // aDecodeTime is updated to the end of the parsed TRAF on return.
+  void ParseTraf(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf, uint64_t* aDecodeTime, bool aIsAudio);
   // aDecodeTime is updated to the end of the parsed TRUN on return.
   bool ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, uint64_t* aDecodeTime, bool aIsAudio);
   void ParseSaiz(Box& aBox);
@@ -203,6 +204,7 @@ public:
     , mOffset(0)
     , mTrex(aTrackId)
     , mIsAudio(aIsAudio)
+    , mLastDecodeTime(0)
   {
     // Setting the mTrex.mTrackId to 0 is a nasty work around for calculating
     // the composition range for MSE. We need an array of tracks.
@@ -247,6 +249,7 @@ private:
   nsTArray<Moof> mMoofs;
   nsTArray<MediaByteRange> mMediaRanges;
   bool mIsAudio;
+  uint64_t mLastDecodeTime;
 };
 }
 
