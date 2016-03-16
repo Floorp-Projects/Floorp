@@ -216,7 +216,8 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
   MOZ_ASSERT(!aObjectStoreNames.IsEmpty());
   MOZ_ASSERT(aMode == READ_ONLY ||
              aMode == READ_WRITE ||
-             aMode == READ_WRITE_FLUSH);
+             aMode == READ_WRITE_FLUSH ||
+             aMode == CLEANUP);
 
   RefPtr<IDBTransaction> transaction =
     new IDBTransaction(aDatabase, aObjectStoreNames, aMode);
@@ -837,6 +838,9 @@ IDBTransaction::GetMode(ErrorResult& aRv) const
 
     case READ_WRITE_FLUSH:
       return IDBTransactionMode::Readwriteflush;
+
+    case CLEANUP:
+      return IDBTransactionMode::Cleanup;
 
     case VERSION_CHANGE:
       return IDBTransactionMode::Versionchange;

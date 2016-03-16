@@ -1475,6 +1475,7 @@ JS_UpdateWeakPointerAfterGCUnbarriered(JSObject** objp)
 JS_PUBLIC_API(void)
 JS_SetGCParameter(JSRuntime* rt, JSGCParamKey key, uint32_t value)
 {
+    rt->gc.waitBackgroundSweepEnd();
     AutoLockGC lock(rt);
     MOZ_ALWAYS_TRUE(rt->gc.setParameter(key, value, lock));
 }

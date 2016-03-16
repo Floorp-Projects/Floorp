@@ -60,6 +60,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioContext)
   if (!tmp->mIsStarted) {
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mActiveNodes)
   }
+  // Remove weak reference on the global window as the context is not usable
+  // without mDestination.
+  tmp->DisconnectFromWindow();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioContext,
@@ -137,13 +140,18 @@ AudioContext::Init()
   return NS_OK;
 }
 
-AudioContext::~AudioContext()
+void
+AudioContext::DisconnectFromWindow()
 {
   nsPIDOMWindowInner* window = GetOwner();
   if (window) {
     window->RemoveAudioContext(this);
   }
+}
 
+AudioContext::~AudioContext()
+{
+  DisconnectFromWindow();
   UnregisterWeakMemoryReporter(this);
 }
 

@@ -27,6 +27,8 @@ class FileInfo
   RefPtr<FileManager> mFileManager;
 
 public:
+  class CustomCleanupCallback;
+
   static
   FileInfo* Create(FileManager* aFileManager, int64_t aId);
 
@@ -39,9 +41,9 @@ public:
   }
 
   void
-  Release()
+  Release(CustomCleanupCallback* aCustomCleanupCallback = nullptr)
   {
-    UpdateReferences(mRefCnt, -1);
+    UpdateReferences(mRefCnt, -1, aCustomCleanupCallback);
   }
 
   void
@@ -74,13 +76,25 @@ protected:
 private:
   void
   UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
-                   int32_t aDelta);
+                   int32_t aDelta,
+                   CustomCleanupCallback* aCustomCleanupCallback = nullptr);
 
   bool
   LockedClearDBRefs();
 
   void
   Cleanup();
+};
+
+class NS_NO_VTABLE FileInfo::CustomCleanupCallback
+{
+public:
+  virtual nsresult
+  Cleanup(FileManager* aFileManager, int64_t aId) = 0;
+
+protected:
+  CustomCleanupCallback()
+  { }
 };
 
 } // namespace indexedDB

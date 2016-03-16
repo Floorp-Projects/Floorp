@@ -74,13 +74,13 @@
 #include "nsMemory.h"
 
 // includes needed for the prototype chain interfaces
+#include "nsIDOMCSSKeyframeRule.h"
+#include "nsIDOMCSSKeyframesRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSFontFaceRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
 #include "nsIDOMCSSSupportsRule.h"
-#include "nsIDOMMozCSSKeyframeRule.h"
-#include "nsIDOMMozCSSKeyframesRule.h"
 #include "nsIDOMCSSCounterStyleRule.h"
 #include "nsIDOMCSSPageRule.h"
 #include "nsIDOMCSSStyleRule.h"
@@ -248,9 +248,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                                        DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
 
-  NS_DEFINE_CLASSINFO_DATA(MozCSSKeyframeRule, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CSSKeyframeRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MozCSSKeyframesRule, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CSSKeyframesRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(CSSCounterStyleRule, nsDOMGenericSH,
@@ -602,12 +602,12 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageSender)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(MozCSSKeyframeRule, nsIDOMMozCSSKeyframeRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozCSSKeyframeRule)
+  DOM_CLASSINFO_MAP_BEGIN(CSSKeyframeRule, nsIDOMCSSKeyframeRule)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSKeyframeRule)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(MozCSSKeyframesRule, nsIDOMMozCSSKeyframesRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozCSSKeyframesRule)
+  DOM_CLASSINFO_MAP_BEGIN(CSSKeyframesRule, nsIDOMCSSKeyframesRule)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSKeyframesRule)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSCounterStyleRule, nsIDOMCSSCounterStyleRule)

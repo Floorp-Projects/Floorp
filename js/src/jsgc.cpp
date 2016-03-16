@@ -1919,12 +1919,13 @@ void
 ZoneHeapThreshold::updateForRemovedArena(const GCSchedulingTunables& tunables)
 {
     size_t amount = ArenaSize * gcHeapGrowthFactor_;
-
     MOZ_ASSERT(amount > 0);
-    MOZ_ASSERT(gcTriggerBytes_ >= amount);
 
-    if (gcTriggerBytes_ - amount < tunables.gcZoneAllocThresholdBase() * gcHeapGrowthFactor_)
+    if ((gcTriggerBytes_ < amount) ||
+        (gcTriggerBytes_ - amount < tunables.gcZoneAllocThresholdBase() * gcHeapGrowthFactor_))
+    {
         return;
+    }
 
     gcTriggerBytes_ -= amount;
 }
@@ -2006,7 +2007,7 @@ AutoDisableCompactingGC::AutoDisableCompactingGC(JSRuntime* rt)
 {
     gc.disableCompactingGC();
     if (gc.isIncrementalGCInProgress() && gc.isCompactingGc())
-        AutoFinishGC finishGC(rt);
+        FinishGC(rt);
 }
 
 AutoDisableCompactingGC::~AutoDisableCompactingGC()
@@ -6725,21 +6726,20 @@ GCRuntime::gcIfRequested(JSContext* cx /* = nullptr */)
     return false;
 }
 
-AutoFinishGC::AutoFinishGC(JSRuntime* rt)
+void js::gc::FinishGC(JSRuntime* rt)
 {
     if (JS::IsIncrementalGCInProgress(rt)) {
         JS::PrepareForIncrementalGC(rt);
         JS::FinishIncrementalGC(rt, JS::gcreason::API);
     }
 
-    rt->gc.waitBackgroundSweepEnd();
     rt->gc.nursery.waitBackgroundFreeEnd();
 }
 
 AutoPrepareForTracing::AutoPrepareForTracing(JSRuntime* rt, ZoneSelector selector)
-  : finish(rt),
-    session(rt)
 {
+    js::gc::FinishGC(rt);
+    session.emplace(rt);
 }
 
 JSCompartment*

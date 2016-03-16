@@ -50,12 +50,13 @@ BEGIN_TEST(testTracingIncomingCCWs)
     JS::RootedObject global2(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
                                                     JS::FireOnNewGlobalHook, options));
     CHECK(global2);
-    CHECK(global1->zone() != global2->zone());
+    CHECK(global1->compartment() != global2->compartment());
 
-    // Define an object in one zone, that is wrapped by a CCW in another zone.
+    // Define an object in one compartment, that is wrapped by a CCW in another
+    // compartment.
 
     JS::RootedObject obj(cx, JS_NewPlainObject(cx));
-    CHECK(obj->zone() == global1->zone());
+    CHECK(obj->compartment() == global1->compartment());
 
     JSAutoCompartment ac(cx, global2);
     JS::RootedObject wrapper(cx, obj);
@@ -63,15 +64,15 @@ BEGIN_TEST(testTracingIncomingCCWs)
     JS::RootedValue v(cx, JS::ObjectValue(*wrapper));
     CHECK(JS_SetProperty(cx, global2, "ccw", v));
 
-    // Ensure that |JS_TraceIncomingCCWs| finds the object wrapped by the CCW.
+    // Ensure that |TraceIncomingCCWs| finds the object wrapped by the CCW.
 
-    JS::ZoneSet zones;
-    CHECK(zones.init());
-    CHECK(zones.put(global1->zone()));
+    JS::CompartmentSet compartments;
+    CHECK(compartments.init());
+    CHECK(compartments.put(global1->compartment()));
 
     void* thing = obj.get();
     CCWTestTracer trc(cx, &thing, JS::TraceKind::Object);
-    JS_TraceIncomingCCWs(&trc, zones);
+    JS::TraceIncomingCCWs(&trc, compartments);
     CHECK(trc.numberOfThingsTraced == 1);
     CHECK(trc.okay);
 
