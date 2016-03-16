@@ -1529,6 +1529,7 @@ this.DownloadError = function (aProperties)
   } else if (aProperties.becauseBlockedByReputationCheck) {
     this.becauseBlocked = true;
     this.becauseBlockedByReputationCheck = true;
+    this.reputationCheckVerdict = aProperties.reputationCheckVerdict || "";
   } else if (aProperties.becauseBlockedByRuntimePermissions) {
     this.becauseBlocked = true;
     this.becauseBlockedByRuntimePermissions = true;
@@ -1542,6 +1543,16 @@ this.DownloadError = function (aProperties)
 
   this.stack = new Error().stack;
 }
+
+/**
+ * These constants are used by the reputationCheckVerdict property and indicate
+ * the detailed reason why a download is blocked.
+ *
+ * @note These values should not be changed because they can be serialized.
+ */
+this.DownloadError.BLOCK_VERDICT_MALWARE = "Malware";
+this.DownloadError.BLOCK_VERDICT_POTENTIALLY_UNWANTED = "PotentiallyUnwanted";
+this.DownloadError.BLOCK_VERDICT_UNCOMMON = "Uncommon";
 
 this.DownloadError.prototype = {
   __proto__: Error.prototype,
@@ -1589,6 +1600,15 @@ this.DownloadError.prototype = {
   becauseBlockedByRuntimePermissions: false,
 
   /**
+   * If becauseBlockedByReputationCheck is true, indicates the detailed reason
+   * why the download was blocked, according to the "BLOCK_VERDICT_" constants.
+   *
+   * If the download was not blocked or the reason for the block is unknown,
+   * this will be an empty string.
+   */
+  reputationCheckVerdict: "",
+
+  /**
    * If this DownloadError was caused by an exception this property will
    * contain the original exception. This will not be serialized when saving
    * to the store.
@@ -1611,6 +1631,7 @@ this.DownloadError.prototype = {
       becauseBlockedByParentalControls: this.becauseBlockedByParentalControls,
       becauseBlockedByReputationCheck: this.becauseBlockedByReputationCheck,
       becauseBlockedByRuntimePermissions: this.becauseBlockedByRuntimePermissions,
+      reputationCheckVerdict: this.reputationCheckVerdict,
     };
 
     serializeUnknownProperties(this, serializable);
@@ -1636,7 +1657,8 @@ this.DownloadError.fromSerializable = function (aSerializable) {
     property != "becauseBlocked" &&
     property != "becauseBlockedByParentalControls" &&
     property != "becauseBlockedByReputationCheck" &&
-    property != "becauseBlockedByRuntimePermissions");
+    property != "becauseBlockedByRuntimePermissions" &&
+    property != "reputationCheckVerdict");
 
   return e;
 };
@@ -2148,7 +2170,9 @@ this.DownloadCopySaver.prototype = {
     let targetPath = this.download.target.path;
     let partFilePath = this.download.target.partFilePath;
 
-    if (yield DownloadIntegration.shouldBlockForReputationCheck(download)) {
+    let { shouldBlock, verdict } =
+        yield DownloadIntegration.shouldBlockForReputationCheck(download);
+    if (shouldBlock) {
       download.progress = 100;
       download.hasPartialData = false;
 
@@ -2166,7 +2190,10 @@ this.DownloadCopySaver.prototype = {
         download.hasBlockedData = true;
       }
 
-      throw new DownloadError({ becauseBlockedByReputationCheck: true });
+      throw new DownloadError({
+        becauseBlockedByReputationCheck: true,
+        reputationCheckVerdict: verdict,
+      });
     }
 
     if (partFilePath) {

@@ -372,8 +372,8 @@ HistoryDownloadElementShell.prototype = {
   },
 
   downloadsCmd_unblock() {
-    DownloadsCommon.confirmUnblockDownload(DownloadsCommon.BLOCK_VERDICT_MALWARE,
-                                           window).then((confirmed) => {
+    let verdict = this.download.error.reputationCheckVerdict;
+    DownloadsCommon.confirmUnblockDownload(verdict, window).then(confirmed => {
       if (confirmed) {
         return this.download.unblock();
       }
