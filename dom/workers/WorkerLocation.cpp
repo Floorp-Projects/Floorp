@@ -4,11 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Location.h"
+#include "mozilla/dom/WorkerLocation.h"
 
 #include "mozilla/dom/WorkerLocationBinding.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WorkerLocation)
 
@@ -16,7 +17,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WorkerLocation, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WorkerLocation, Release)
 
 /* static */ already_AddRefed<WorkerLocation>
-WorkerLocation::Create(WorkerPrivate::LocationInfo& aInfo)
+WorkerLocation::Create(workers::WorkerPrivate::LocationInfo& aInfo)
 {
   RefPtr<WorkerLocation> location =
     new WorkerLocation(NS_ConvertUTF8toUTF16(aInfo.mHref),
@@ -35,7 +36,8 @@ WorkerLocation::Create(WorkerPrivate::LocationInfo& aInfo)
 JSObject*
 WorkerLocation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return WorkerLocationBinding_workers::Wrap(aCx, this, aGivenProto);
+  return WorkerLocationBinding::Wrap(aCx, this, aGivenProto);
 }
 
-END_WORKERS_NAMESPACE
+} // namespace dom
+} // namespace mozilla
