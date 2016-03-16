@@ -373,6 +373,13 @@ DOMMediaStream::Destroy()
     mPlaybackListener->Forget();
     mPlaybackListener = nullptr;
   }
+  for (const RefPtr<TrackPort>& info : mTracks) {
+    // We must remove ourselves from each track's principal change observer list
+    // before we die. CC may have cleared info->mTrack so guard against it.
+    if (info->GetTrack()) {
+      info->GetTrack()->RemovePrincipalChangeObserver(this);
+    }
+  }
   if (mPlaybackPort) {
     mPlaybackPort->Destroy();
     mPlaybackPort = nullptr;
@@ -549,17 +556,11 @@ DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
     return;
   }
 
-  RefPtr<DOMMediaStream> addedDOMStream = aTrack.GetStream();
-  MOZ_RELEASE_ASSERT(addedDOMStream);
-
-  RefPtr<MediaStream> owningStream = addedDOMStream->GetOwnedStream();
-  MOZ_RELEASE_ASSERT(owningStream);
-
-  CombineWithPrincipal(addedDOMStream->mPrincipal);
 
   // Hook up the underlying track with our underlying playback stream.
   RefPtr<MediaInputPort> inputPort =
-    GetPlaybackStream()->AllocateInputPort(owningStream, aTrack.GetTrackID());
+    GetPlaybackStream()->AllocateInputPort(aTrack.GetOwnedStream(),
+                                           aTrack.GetTrackID());
   RefPtr<TrackPort> trackPort =
     new TrackPort(inputPort, &aTrack, TrackPort::InputPortOwnership::OWNED);
   mTracks.AppendElement(trackPort.forget());
@@ -588,6 +589,9 @@ DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack)
 
   DebugOnly<bool> removed = mTracks.RemoveElement(toRemove);
   MOZ_ASSERT(removed);
+
+  NotifyTrackRemoved(&aTrack);
+
   LOG(LogLevel::Debug, ("DOMMediaStream %p Removed track %p", this, &aTrack));
 }
 
@@ -777,6 +781,29 @@ DOMMediaStream::SetPrincipal(nsIPrincipal* aPrincipal)
 }
 
 void
+DOMMediaStream::PrincipalChanged(MediaStreamTrack* aTrack)
+{
+  MOZ_ASSERT(aTrack);
+  NS_ASSERTION(HasTrack(*aTrack), "Principal changed for an unknown track");
+  LOG(LogLevel::Info, ("DOMMediaStream %p Principal changed for track %p",
+                       this, aTrack));
+  RecomputePrincipal();
+}
+
+void
+DOMMediaStream::RecomputePrincipal()
+{
+  nsCOMPtr<nsIPrincipal> previousPrincipal = mPrincipal.forget();
+  for (const RefPtr<TrackPort>& info : mTracks) {
+    nsContentUtils::CombineResourcePrincipals(&mPrincipal,
+                                              info->GetTrack()->GetPrincipal());
+  }
+  if (previousPrincipal != mPrincipal) {
+    NotifyPrincipalChanged();
+  }
+}
+
+void
 DOMMediaStream::SetCORSMode(CORSMode aCORSMode)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -793,6 +820,19 @@ DOMMediaStream::GetCORSMode()
 void
 DOMMediaStream::NotifyPrincipalChanged()
 {
+  if (!mPrincipal) {
+    // When all tracks are removed, mPrincipal will change to nullptr.
+    LOG(LogLevel::Info, ("DOMMediaStream %p Principal changed to nothing.",
+                         this));
+  } else {
+    LOG(LogLevel::Info, ("DOMMediaStream %p Principal changed. Now: "
+                         "null=%d, codebase=%d, expanded=%d, system=%d", this,
+                          mPrincipal->GetIsNullPrincipal(),
+                          mPrincipal->GetIsCodebasePrincipal(),
+                          mPrincipal->GetIsExpandedPrincipal(),
+                          mPrincipal->GetIsSystemPrincipal()));
+  }
+
   for (uint32_t i = 0; i < mPrincipalChangeObservers.Length(); ++i) {
     mPrincipalChangeObservers[i]->PrincipalChanged(this);
   }
@@ -976,6 +1016,10 @@ DOMMediaStream::NotifyTrackAdded(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  RecomputePrincipal();
+
+  aTrack->AddPrincipalChangeObserver(this);
+
   for (int32_t i = mTrackListeners.Length() - 1; i >= 0; --i) {
     const RefPtr<TrackListener>& listener = mTrackListeners[i];
     listener->NotifyTrackAdded(aTrack);
@@ -988,10 +1032,14 @@ DOMMediaStream::NotifyTrackRemoved(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  aTrack->RemovePrincipalChangeObserver(this);
+
   for (int32_t i = mTrackListeners.Length() - 1; i >= 0; --i) {
     const RefPtr<TrackListener>& listener = mTrackListeners[i];
     listener->NotifyTrackRemoved(aTrack);
   }
+
+  RecomputePrincipal();
 }
 
 void
