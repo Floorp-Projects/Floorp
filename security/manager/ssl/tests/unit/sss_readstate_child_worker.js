@@ -1,3 +1,5 @@
+/* import-globals-from head_psm.js */
+
 function run_test() {
   var SSService = Cc["@mozilla.org/ssservice;1"]
                     .getService(Ci.nsISiteSecurityService);
