@@ -4,6 +4,8 @@
 # Ensure all the scripts in this dir are on the path....
 DIRNAME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 PATH=$DIRNAME:$PATH
+WORKSPACE=$( cd "$1" && pwd )
+export TOOLTOOL_DIR="$WORKSPACE"
 
 . desktop-setup.sh
 . hazard-analysis.sh
