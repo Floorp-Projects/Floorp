@@ -19,10 +19,10 @@
 #include "shader_utils.h"
 
 #define EXPECT_GL_ERROR(err) EXPECT_EQ(static_cast<GLenum>(err), glGetError())
-#define EXPECT_GL_NO_ERROR() EXPECT_GL_ERROR(GL_NO_ERROR)
+#define EXPECT_GL_NO_ERROR() EXPECT_EQ(static_cast<GLenum>(GL_NO_ERROR), glGetError())
 
 #define ASSERT_GL_ERROR(err) ASSERT_EQ(static_cast<GLenum>(err), glGetError())
-#define ASSERT_GL_NO_ERROR() ASSERT_GL_ERROR(GL_NO_ERROR)
+#define ASSERT_GL_NO_ERROR() ASSERT_EQ(static_cast<GLenum>(GL_NO_ERROR), glGetError())
 
 #define EXPECT_EGL_ERROR(err) EXPECT_EQ((err), eglGetError())
 #define EXPECT_EGL_SUCCESS() EXPECT_EGL_ERROR(EGL_SUCCESS)
@@ -39,17 +39,37 @@
 #define ASSERT_GLENUM_EQ(expected, actual) ASSERT_EQ(static_cast<GLenum>(expected), static_cast<GLenum>(actual))
 #define EXPECT_GLENUM_EQ(expected, actual) EXPECT_EQ(static_cast<GLenum>(expected), static_cast<GLenum>(actual))
 
-#define EXPECT_PIXEL_EQ(x, y, r, g, b, a) \
-{ \
-    GLubyte pixel[4]; \
-    glReadPixels((x), (y), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel); \
-    EXPECT_GL_NO_ERROR(); \
-    EXPECT_EQ((r), pixel[0]); \
-    EXPECT_EQ((g), pixel[1]); \
-    EXPECT_EQ((b), pixel[2]); \
-    EXPECT_EQ((a), pixel[3]); \
+namespace angle
+{
+struct GLColor
+{
+    GLColor();
+    GLColor(GLubyte r, GLubyte g, GLubyte b, GLubyte a);
+    GLColor(GLuint colorValue);
+
+    GLubyte R, G, B, A;
+};
+
+// Useful to cast any type to GLubyte.
+template <typename TR, typename TG, typename TB, typename TA>
+GLColor MakeGLColor(TR r, TG g, TB b, TA a)
+{
+    return GLColor(static_cast<GLubyte>(r), static_cast<GLubyte>(g), static_cast<GLubyte>(b),
+                   static_cast<GLubyte>(a));
 }
 
+bool operator==(const GLColor &a, const GLColor &b);
+std::ostream &operator<<(std::ostream &ostream, const GLColor &color);
+GLColor ReadColor(GLint x, GLint y);
+
+}  // namespace angle
+
+#define EXPECT_PIXEL_EQ(x, y, r, g, b, a) \
+    EXPECT_EQ(angle::MakeGLColor(r, g, b, a), angle::ReadColor(x, y))
+
+#define EXPECT_PIXEL_COLOR_EQ(x, y, angleColor) EXPECT_EQ(angleColor, angle::ReadColor(x, y))
+
+// TODO(jmadill): Figure out how we can use GLColor's nice printing with EXPECT_NEAR.
 #define EXPECT_PIXEL_NEAR(x, y, r, g, b, a, abs_error) \
 { \
     GLubyte pixel[4]; \
@@ -82,7 +102,13 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
 
     virtual void swapBuffers();
 
-    static void drawQuad(GLuint program, const std::string& positionAttribName, GLfloat quadDepth, GLfloat quadScale = 1.0f);
+    static void drawQuad(GLuint program,
+                         const std::string &positionAttribName,
+                         GLfloat positionAttribZ);
+    static void drawQuad(GLuint program,
+                         const std::string &positionAttribName,
+                         GLfloat positionAttribZ,
+                         GLfloat positionAttribXYScale);
     static GLuint compileShader(GLenum type, const std::string &source);
     static bool extensionEnabled(const std::string &extName);
     static bool eglClientExtensionEnabled(const std::string &extName);
@@ -96,6 +122,8 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
     void setConfigDepthBits(int bits);
     void setConfigStencilBits(int bits);
     void setMultisampleEnabled(bool enabled);
+    void setDebugEnabled(bool enabled);
+    void setNoErrorEnabled(bool enabled);
 
     int getClientVersion() const;
 
@@ -114,15 +142,22 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
     bool isD3D9() const;
     // Is D3D9 or SM9_3 renderer.
     bool isD3DSM3() const;
+    bool isOSX() const;
     EGLint getPlatformRenderer() const;
+
+    void ignoreD3D11SDKLayersWarnings();
 
   private:
     bool createEGLContext();
     bool destroyEGLContext();
 
+    void checkD3D11SDKLayersMessages();
+
     EGLWindow *mEGLWindow;
     int mWidth;
     int mHeight;
+
+    bool mIgnoreD3D11SDKLayersWarnings;
 
     static OSWindow *mOSWindow;
 };

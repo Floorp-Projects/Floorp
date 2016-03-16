@@ -17,6 +17,7 @@ class nsXBLSpecialDocInfo;
 class nsXBLPrototypeHandler;
 
 namespace mozilla {
+class EventListenerManager;
 namespace dom {
 class Element;
 class EventTarget;
@@ -27,9 +28,15 @@ struct IgnoreModifierState;
 class nsXBLWindowKeyHandler : public nsIDOMEventListener
 {
   typedef mozilla::dom::IgnoreModifierState IgnoreModifierState;
+  typedef mozilla::EventListenerManager EventListenerManager;
 
 public:
   nsXBLWindowKeyHandler(nsIDOMElement* aElement, mozilla::dom::EventTarget* aTarget);
+
+  void InstallKeyboardEventListenersTo(
+         EventListenerManager* aEventListenerManager);
+  void RemoveKeyboardEventListenersFrom(
+         EventListenerManager* aEventListenerManager);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
@@ -55,8 +62,10 @@ protected:
                               bool aExecute,
                               bool* aOutReservedForChrome = nullptr);
 
-  // HandleEvent function for the capturing phase.
-  void HandleEventOnCapture(nsIDOMKeyEvent* aEvent);
+  // HandleEvent function for the capturing phase in the default event group.
+  void HandleEventOnCaptureInDefaultEventGroup(nsIDOMKeyEvent* aEvent);
+  // HandleEvent function for the capturing phase in the system event group.
+  void HandleEventOnCaptureInSystemEventGroup(nsIDOMKeyEvent* aEvent);
 
   // Check if any handler would handle the given event. Optionally returns
   // whether the command handler for the event is marked with the "reserved"

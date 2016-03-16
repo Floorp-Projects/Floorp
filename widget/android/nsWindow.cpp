@@ -1988,9 +1988,14 @@ nsWindow::GetNativeData(uint32_t aDataType)
         case NS_NATIVE_WIDGET:
             return (void *) this;
 
-        case NS_RAW_NATIVE_IME_CONTEXT:
+        case NS_RAW_NATIVE_IME_CONTEXT: {
+            void* pseudoIMEContext = GetPseudoIMEContext();
+            if (pseudoIMEContext) {
+                return pseudoIMEContext;
+            }
             // We assume that there is only one context per process on Android
             return NS_ONLY_ONE_NATIVE_IME_CONTEXT;
+        }
 
         case NS_NATIVE_NEW_EGL_SURFACE:
             if (!mGLControllerSupport) {

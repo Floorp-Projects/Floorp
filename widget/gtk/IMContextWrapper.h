@@ -18,6 +18,7 @@
 #include "nsIWidget.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/TextEventDispatcherListener.h"
 #include "WritingModes.h"
 
 class nsWindow;
@@ -25,15 +26,27 @@ class nsWindow;
 namespace mozilla {
 namespace widget {
 
-class IMContextWrapper final
+class IMContextWrapper final : public TextEventDispatcherListener
 {
+public:
+    // TextEventDispatcherListener implementation
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD NotifyIME(TextEventDispatcher* aTextEventDispatcher,
+                         const IMENotification& aNotification) override;
+    NS_IMETHOD_(void) OnRemovedFrom(
+                          TextEventDispatcher* aTextEventDispatcher) override;
+    NS_IMETHOD_(void) WillDispatchKeyboardEvent(
+                          TextEventDispatcher* aTextEventDispatcher,
+                          WidgetKeyboardEvent& aKeyboardEvent,
+                          uint32_t aIndexOfKeypress,
+                          void* aData) override;
+
 public:
     // aOwnerWindow is a pointer of the owner window.  When aOwnerWindow is
     // destroyed, the related IME contexts are released (i.e., IME cannot be
     // used with the instance after that).
     explicit IMContextWrapper(nsWindow* aOwnerWindow);
-
-    NS_INLINE_DECL_REFCOUNTING(IMContextWrapper)
 
     // "Enabled" means the users can use all IMEs.
     // I.e., the focus is in the normal editors.
@@ -70,6 +83,8 @@ public:
     InputContext GetInputContext();
     void OnUpdateComposition();
     void OnLayoutChange();
+
+    TextEventDispatcher* GetTextEventDispatcher();
 
 protected:
     ~IMContextWrapper();

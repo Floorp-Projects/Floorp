@@ -915,16 +915,24 @@ TEST_P(MipmapTestES3, MipmapsForTexture3D)
     glUniform1f(mTexture3DLODUniformLocation, 1.);
     drawQuad(m3DProgram, "position", 0.5f);
     EXPECT_GL_NO_ERROR();
-    EXPECT_PIXEL_EQ(px, py, 127, 127, 0, 255);
+    EXPECT_PIXEL_NEAR(px, py, 127, 127, 0, 255, 1.0);
 
     glUseProgram(m3DProgram);
     glUniform1f(mTexture3DSliceUniformLocation, 0.75f);
     drawQuad(m3DProgram, "position", 0.5f);
     EXPECT_GL_NO_ERROR();
-    EXPECT_PIXEL_EQ(px, py, 127, 127, 0, 255);
+    EXPECT_PIXEL_NEAR(px, py, 127, 127, 0, 255, 1.0);
 }
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 // Note: we run these tests against 9_3 on WARP due to hardware driver issues on Win7
-ANGLE_INSTANTIATE_TEST(MipmapTest, ES2_D3D9(), ES2_D3D11(), ES2_D3D11_FL9_3_WARP(), ES2_OPENGL(), ES3_OPENGL());
-ANGLE_INSTANTIATE_TEST(MipmapTestES3, ES3_D3D11());
+ANGLE_INSTANTIATE_TEST(MipmapTest,
+                       ES2_D3D9(),
+                       ES2_D3D11(EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE),
+                       ES2_D3D11(EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE),
+                       ES2_D3D11_FL9_3_WARP(),
+                       ES2_OPENGL(),
+                       ES3_OPENGL(),
+                       ES2_OPENGLES(),
+                       ES3_OPENGLES());
+ANGLE_INSTANTIATE_TEST(MipmapTestES3, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());

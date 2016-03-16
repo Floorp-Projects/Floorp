@@ -24,6 +24,10 @@ def main(argv):
     if sandbox._help:
         return 0
 
+    return config_status(config)
+
+
+def config_status(config):
     # Sanitize config data to feed config.status
     sanitized_config = {}
     sanitized_config['substs'] = {
@@ -43,6 +47,10 @@ def main(argv):
     with codecs.open('config.status', 'w', encoding) as fh:
         fh.write('#!%s\n' % config['PYTHON'])
         fh.write('# coding=%s\n' % encoding)
+        # Because we're serializing as JSON but reading as python, the values
+        # for True, False and None are true, false and null, which don't exist.
+        # Define them.
+        fh.write('true, false, null = True, False, None\n')
         for k, v in sanitized_config.iteritems():
             fh.write('%s = ' % k)
             json.dump(v, fh, sort_keys=True, indent=4, ensure_ascii=False)
@@ -68,6 +76,7 @@ if __name__ == '__main__':
         # config.status externally, with the virtualenv python.
         return subprocess.call([config['PYTHON'], 'config.status'])
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

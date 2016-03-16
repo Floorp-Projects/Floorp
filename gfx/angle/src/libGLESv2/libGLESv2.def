@@ -187,6 +187,21 @@ EXPORTS
     glDeleteVertexArraysOES         @300
     glGenVertexArraysOES            @301
     glIsVertexArrayOES              @302
+    glDebugMessageControlKHR        @303
+    glDebugMessageInsertKHR         @304
+    glDebugMessageCallbackKHR       @305
+    glGetDebugMessageLogKHR         @306
+    glPushDebugGroupKHR             @307
+    glPopDebugGroupKHR              @308
+    glObjectLabelKHR                @309
+    glGetObjectLabelKHR             @310
+    glObjectPtrLabelKHR             @311
+    glGetObjectPtrLabelKHR          @312
+    glGetPointervKHR                @313
+    glQueryCounterEXT               @314
+    glGetQueryObjectivEXT           @315
+    glGetQueryObjecti64vEXT         @316
+    glGetQueryObjectui64vEXT        @317
 
     ; GLES 3.0 Functions
     glReadBuffer                    @180

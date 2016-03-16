@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1122236 - CSP: Implement block-all-mixed-content</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the tests:
+ * Test 1:
+ * We load mixed display content in a frame using the CSP
+ * directive 'block-all-mixed-content' and observe that the image is blocked.
+ *
+ * Test 2:
+ * We load mixed display content in a frame using a CSP that allows the load
+ * and observe that the image is loaded.
+ *
+ * Test 3:
+ * We load mixed display content in a frame not using a CSP at all
+ * and observe that the image is loaded.
+ *
+ * Test 4:
+ * We load mixed display content in a frame using the CSP
+ * directive 'block-all-mixed-content' and observe that the image is blocked.
+ * Please note that Test 3 loads the image we are about to load in Test 4 into
+ * the img cache. Let's make sure the cached (mixed display content) image is
+ * not allowed to be loaded.
+ */
+
+const BASE_URI = "https://example.com/tests/dom/security/test/csp/";
+
+const tests = [
+  { // Test 1
+    query: "csp-block",
+    expected: "img-blocked",
+    description: "(csp-block) block-all-mixed content should block mixed display content"
+  },
+  { // Test 2
+    query: "csp-allow",
+    expected: "img-loaded",
+    description: "(csp-allow) mixed display content should be loaded"
+  },
+  { // Test 3
+    query: "no-csp",
+    expected: "img-loaded",
+    description: "(no-csp) mixed display content should be loaded"
+  },
+  { // Test 4
+    query: "csp-block",
+    expected: "img-blocked",
+    description: "(csp-block) block-all-mixed content should block insecure cache loads"
+  },
+];
+
+var curTest;
+var counter = -1;
+
+function checkResults(result) {
+  is(result, curTest.expected, curTest.description);
+  loadNextTest();
+}
+
+window.addEventListener("message", receiveMessage, false);
+function receiveMessage(event) {
+  checkResults(event.data.result);
+}
+
+function loadNextTest() {
+  counter++;
+  if (counter == tests.length) {
+    window.removeEventListener("message", receiveMessage, false);
+    SimpleTest.finish();
+    return;
+  }
+  curTest = tests[counter];
+  testframe.src =   BASE_URI + "file_block_all_mcb.sjs?" + curTest.query;
+}
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  { 'set': [["security.mixed_content.block_display_content", false]] },
+  function() { loadNextTest(); }
+);
+
+</script>
+</body>
+</html>
