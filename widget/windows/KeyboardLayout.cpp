@@ -1514,18 +1514,6 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
     return defaultPrevented;
   }
 
-  // Don't dispatch keypress event for modifier keys.
-  switch (mDOMKeyCode) {
-    case NS_VK_SHIFT:
-    case NS_VK_CONTROL:
-    case NS_VK_ALT:
-    case NS_VK_CAPS_LOCK:
-    case NS_VK_NUM_LOCK:
-    case NS_VK_SCROLL_LOCK:
-    case NS_VK_WIN:
-      return defaultPrevented;
-  }
-
   if (defaultPrevented) {
     DispatchPluginEventsAndDiscardsCharMessages();
     return true;
