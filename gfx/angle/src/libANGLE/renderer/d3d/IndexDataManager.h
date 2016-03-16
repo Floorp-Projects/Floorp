@@ -36,15 +36,6 @@ class IndexBuffer;
 class BufferD3D;
 class RendererD3D;
 
-struct SourceIndexData
-{
-    BufferD3D *srcBuffer;
-    const GLvoid *srcIndices;
-    unsigned int srcCount;
-    GLenum srcIndexType;
-    bool srcIndicesChanged;
-};
-
 struct TranslatedIndexData
 {
     gl::IndexRange indexRange;
@@ -55,8 +46,15 @@ struct TranslatedIndexData
     BufferD3D *storage;
     GLenum indexType;
     unsigned int serial;
+};
 
-    SourceIndexData srcIndexData;
+struct SourceIndexData
+{
+    BufferD3D *srcBuffer;
+    const GLvoid *srcIndices;
+    unsigned int srcCount;
+    GLenum srcIndexType;
+    bool srcIndicesChanged;
 };
 
 class IndexDataManager : angle::NonCopyable
@@ -70,6 +68,7 @@ class IndexDataManager : angle::NonCopyable
                                gl::Buffer *glBuffer,
                                const GLvoid *indices,
                                TranslatedIndexData *translated,
+                               SourceIndexData *sourceData,
                                bool primitiveRestartFixedIndexEnabled);
 
   private:

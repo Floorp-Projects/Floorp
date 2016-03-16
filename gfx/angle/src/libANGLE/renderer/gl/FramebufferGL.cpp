@@ -8,7 +8,6 @@
 
 #include "libANGLE/renderer/gl/FramebufferGL.h"
 
-#include "common/BitSetIterator.h"
 #include "common/debug.h"
 #include "libANGLE/Data.h"
 #include "libANGLE/State.h"
@@ -22,12 +21,10 @@
 #include "libANGLE/renderer/gl/WorkaroundsGL.h"
 #include "platform/Platform.h"
 
-using namespace gl;
-
 namespace rx
 {
 
-FramebufferGL::FramebufferGL(const Framebuffer::Data &data,
+FramebufferGL::FramebufferGL(const gl::Framebuffer::Data &data,
                              const FunctionsGL *functions,
                              StateManagerGL *stateManager,
                              const WorkaroundsGL &workarounds,
@@ -46,7 +43,7 @@ FramebufferGL::FramebufferGL(const Framebuffer::Data &data,
 }
 
 FramebufferGL::FramebufferGL(GLuint id,
-                             const Framebuffer::Data &data,
+                             const gl::Framebuffer::Data &data,
                              const FunctionsGL *functions,
                              const WorkaroundsGL &workarounds,
                              StateManagerGL *stateManager)
@@ -65,15 +62,14 @@ FramebufferGL::~FramebufferGL()
     mFramebufferID = 0;
 }
 
-static void BindFramebufferAttachment(const FunctionsGL *functions,
-                                      GLenum attachmentPoint,
-                                      const FramebufferAttachment *attachment)
+static void BindFramebufferAttachment(const FunctionsGL *functions, GLenum attachmentPoint,
+                                      const gl::FramebufferAttachment *attachment)
 {
     if (attachment)
     {
         if (attachment->type() == GL_TEXTURE)
         {
-            const Texture *texture     = attachment->getTexture();
+            const gl::Texture *texture = attachment->getTexture();
             const TextureGL *textureGL = GetImplAs<TextureGL>(texture);
 
             if (texture->getTarget() == GL_TEXTURE_2D)
@@ -98,7 +94,7 @@ static void BindFramebufferAttachment(const FunctionsGL *functions,
         }
         else if (attachment->type() == GL_RENDERBUFFER)
         {
-            const Renderbuffer *renderbuffer     = attachment->getRenderbuffer();
+            const gl::Renderbuffer *renderbuffer = attachment->getRenderbuffer();
             const RenderbufferGL *renderbufferGL = GetImplAs<RenderbufferGL>(renderbuffer);
 
             functions->framebufferRenderbuffer(GL_FRAMEBUFFER, attachmentPoint, GL_RENDERBUFFER,
@@ -116,13 +112,74 @@ static void BindFramebufferAttachment(const FunctionsGL *functions,
     }
 }
 
-Error FramebufferGL::discard(size_t count, const GLenum *attachments)
+void FramebufferGL::onUpdateColorAttachment(size_t index)
 {
-    UNIMPLEMENTED();
-    return Error(GL_INVALID_OPERATION);
+    if (!mIsDefault)
+    {
+        mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
+        BindFramebufferAttachment(mFunctions, GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(index),
+                                  mData.getColorAttachment(static_cast<unsigned int>(index)));
+    }
 }
 
-Error FramebufferGL::invalidate(size_t count, const GLenum *attachments)
+void FramebufferGL::onUpdateDepthAttachment()
+{
+    if (!mIsDefault)
+    {
+        mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
+        BindFramebufferAttachment(mFunctions,
+                                  GL_DEPTH_ATTACHMENT,
+                                  mData.getDepthAttachment());
+    }
+}
+
+void FramebufferGL::onUpdateStencilAttachment()
+{
+    if (!mIsDefault)
+    {
+        mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
+        BindFramebufferAttachment(mFunctions,
+                                  GL_STENCIL_ATTACHMENT,
+                                  mData.getStencilAttachment());
+    }
+}
+
+void FramebufferGL::onUpdateDepthStencilAttachment()
+{
+    if (!mIsDefault)
+    {
+        mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
+        BindFramebufferAttachment(mFunctions,
+                                  GL_DEPTH_STENCIL_ATTACHMENT,
+                                  mData.getDepthStencilAttachment());
+    }
+}
+
+void FramebufferGL::setDrawBuffers(size_t count, const GLenum *buffers)
+{
+    if (!mIsDefault)
+    {
+        mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
+        mFunctions->drawBuffers(static_cast<GLsizei>(count), buffers);
+    }
+}
+
+void FramebufferGL::setReadBuffer(GLenum buffer)
+{
+    if (!mIsDefault)
+    {
+        mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
+        mFunctions->readBuffer(buffer);
+    }
+}
+
+gl::Error FramebufferGL::discard(size_t count, const GLenum *attachments)
+{
+    UNIMPLEMENTED();
+    return gl::Error(GL_INVALID_OPERATION);
+}
+
+gl::Error FramebufferGL::invalidate(size_t count, const GLenum *attachments)
 {
     // Since this function is just a hint and not available until OpenGL 4.3, only call it if it is available.
     if (mFunctions->invalidateFramebuffer)
@@ -131,12 +188,10 @@ Error FramebufferGL::invalidate(size_t count, const GLenum *attachments)
         mFunctions->invalidateFramebuffer(GL_FRAMEBUFFER, static_cast<GLsizei>(count), attachments);
     }
 
-    return Error(GL_NO_ERROR);
+    return gl::Error(GL_NO_ERROR);
 }
 
-Error FramebufferGL::invalidateSub(size_t count,
-                                   const GLenum *attachments,
-                                   const gl::Rectangle &area)
+gl::Error FramebufferGL::invalidateSub(size_t count, const GLenum *attachments, const gl::Rectangle &area)
 {
     // Since this function is just a hint and not available until OpenGL 4.3, only call it if it is available.
     if (mFunctions->invalidateSubFramebuffer)
@@ -146,106 +201,98 @@ Error FramebufferGL::invalidateSub(size_t count,
                                              attachments, area.x, area.y, area.width, area.height);
     }
 
-    return Error(GL_NO_ERROR);
+    return gl::Error(GL_NO_ERROR);
 }
 
-Error FramebufferGL::clear(const Data &data, GLbitfield mask)
+gl::Error FramebufferGL::clear(const gl::Data &data, GLbitfield mask)
 {
     syncClearState(mask);
     mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
     mFunctions->clear(mask);
 
-    return Error(GL_NO_ERROR);
+    return gl::Error(GL_NO_ERROR);
 }
 
-Error FramebufferGL::clearBufferfv(const Data &data,
-                                   GLenum buffer,
-                                   GLint drawbuffer,
-                                   const GLfloat *values)
+gl::Error FramebufferGL::clearBufferfv(const gl::Data &data,
+                                       GLenum buffer,
+                                       GLint drawbuffer,
+                                       const GLfloat *values)
 {
     syncClearBufferState(buffer, drawbuffer);
     mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
     mFunctions->clearBufferfv(buffer, drawbuffer, values);
 
-    return Error(GL_NO_ERROR);
+    return gl::Error(GL_NO_ERROR);
 }
 
-Error FramebufferGL::clearBufferuiv(const Data &data,
-                                    GLenum buffer,
-                                    GLint drawbuffer,
-                                    const GLuint *values)
+gl::Error FramebufferGL::clearBufferuiv(const gl::Data &data,
+                                        GLenum buffer,
+                                        GLint drawbuffer,
+                                        const GLuint *values)
 {
     syncClearBufferState(buffer, drawbuffer);
     mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
     mFunctions->clearBufferuiv(buffer, drawbuffer, values);
 
-    return Error(GL_NO_ERROR);
+    return gl::Error(GL_NO_ERROR);
 }
 
-Error FramebufferGL::clearBufferiv(const Data &data,
-                                   GLenum buffer,
-                                   GLint drawbuffer,
-                                   const GLint *values)
+gl::Error FramebufferGL::clearBufferiv(const gl::Data &data,
+                                       GLenum buffer,
+                                       GLint drawbuffer,
+                                       const GLint *values)
 {
     syncClearBufferState(buffer, drawbuffer);
     mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
     mFunctions->clearBufferiv(buffer, drawbuffer, values);
 
-    return Error(GL_NO_ERROR);
+    return gl::Error(GL_NO_ERROR);
 }
 
-Error FramebufferGL::clearBufferfi(const Data &data,
-                                   GLenum buffer,
-                                   GLint drawbuffer,
-                                   GLfloat depth,
-                                   GLint stencil)
+gl::Error FramebufferGL::clearBufferfi(const gl::Data &data,
+                                       GLenum buffer,
+                                       GLint drawbuffer,
+                                       GLfloat depth,
+                                       GLint stencil)
 {
     syncClearBufferState(buffer, drawbuffer);
     mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
     mFunctions->clearBufferfi(buffer, drawbuffer, depth, stencil);
 
-    return Error(GL_NO_ERROR);
+    return gl::Error(GL_NO_ERROR);
 }
 
 GLenum FramebufferGL::getImplementationColorReadFormat() const
 {
-    const FramebufferAttachment *readAttachment = getData().getReadAttachment();
+    const gl::FramebufferAttachment *readAttachment = getData().getReadAttachment();
     GLenum internalFormat = readAttachment->getInternalFormat();
-    const InternalFormat &internalFormatInfo    = GetInternalFormatInfo(internalFormat);
+    const gl::InternalFormat &internalFormatInfo = gl::GetInternalFormatInfo(internalFormat);
     return internalFormatInfo.format;
 }
 
 GLenum FramebufferGL::getImplementationColorReadType() const
 {
-    const FramebufferAttachment *readAttachment = getData().getReadAttachment();
+    const gl::FramebufferAttachment *readAttachment = getData().getReadAttachment();
     GLenum internalFormat = readAttachment->getInternalFormat();
-    const InternalFormat &internalFormatInfo    = GetInternalFormatInfo(internalFormat);
+    const gl::InternalFormat &internalFormatInfo = gl::GetInternalFormatInfo(internalFormat);
     return internalFormatInfo.type;
 }
 
-Error FramebufferGL::readPixels(const State &state,
-                                const gl::Rectangle &area,
-                                GLenum format,
-                                GLenum type,
-                                GLvoid *pixels) const
+gl::Error FramebufferGL::readPixels(const gl::State &state, const gl::Rectangle &area, GLenum format, GLenum type, GLvoid *pixels) const
 {
     // TODO: don't sync the pixel pack state here once the dirty bits contain the pixel pack buffer
     // binding
-    const PixelPackState &packState = state.getPackState();
+    const gl::PixelPackState &packState = state.getPackState();
     mStateManager->setPixelPackState(packState);
 
     mStateManager->bindFramebuffer(GL_READ_FRAMEBUFFER, mFramebufferID);
     mFunctions->readPixels(area.x, area.y, area.width, area.height, format, type, pixels);
 
-    return Error(GL_NO_ERROR);
+    return gl::Error(GL_NO_ERROR);
 }
 
-Error FramebufferGL::blit(const State &state,
-                          const gl::Rectangle &sourceArea,
-                          const gl::Rectangle &destArea,
-                          GLbitfield mask,
-                          GLenum filter,
-                          const Framebuffer *sourceFramebuffer)
+gl::Error FramebufferGL::blit(const gl::State &state, const gl::Rectangle &sourceArea, const gl::Rectangle &destArea,
+                              GLbitfield mask, GLenum filter, const gl::Framebuffer *sourceFramebuffer)
 {
     const FramebufferGL *sourceFramebufferGL = GetImplAs<FramebufferGL>(sourceFramebuffer);
 
@@ -255,7 +302,7 @@ Error FramebufferGL::blit(const State &state,
     mFunctions->blitFramebuffer(sourceArea.x, sourceArea.y, sourceArea.x1(), sourceArea.y1(),
                                 destArea.x, destArea.y, destArea.x1(), destArea.y1(), mask, filter);
 
-    return Error(GL_NO_ERROR);
+    return gl::Error(GL_NO_ERROR);
 }
 
 bool FramebufferGL::checkStatus() const
@@ -267,53 +314,6 @@ bool FramebufferGL::checkStatus() const
         ANGLEPlatformCurrent()->logWarning("GL framebuffer returned incomplete.");
     }
     return (status == GL_FRAMEBUFFER_COMPLETE);
-}
-
-void FramebufferGL::syncState(const Framebuffer::DirtyBits &dirtyBits)
-{
-    // Don't need to sync state for the default FBO.
-    if (mIsDefault)
-    {
-        return;
-    }
-
-    mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
-
-    for (auto dirtyBit : angle::IterateBitSet(dirtyBits))
-    {
-        switch (dirtyBit)
-        {
-            case Framebuffer::DIRTY_BIT_DEPTH_ATTACHMENT:
-                BindFramebufferAttachment(mFunctions, GL_DEPTH_ATTACHMENT,
-                                          mData.getDepthAttachment());
-                break;
-            case Framebuffer::DIRTY_BIT_STENCIL_ATTACHMENT:
-                BindFramebufferAttachment(mFunctions, GL_STENCIL_ATTACHMENT,
-                                          mData.getStencilAttachment());
-                break;
-            case Framebuffer::DIRTY_BIT_DRAW_BUFFERS:
-            {
-                const auto &drawBuffers = mData.getDrawBufferStates();
-                mFunctions->drawBuffers(static_cast<GLsizei>(drawBuffers.size()),
-                                        drawBuffers.data());
-                break;
-            }
-            case Framebuffer::DIRTY_BIT_READ_BUFFER:
-                mFunctions->readBuffer(mData.getReadBufferState());
-                break;
-            default:
-            {
-                ASSERT(Framebuffer::DIRTY_BIT_COLOR_ATTACHMENT_0 == 0 &&
-                       dirtyBit < Framebuffer::DIRTY_BIT_COLOR_ATTACHMENT_MAX);
-                size_t index =
-                    static_cast<size_t>(dirtyBit - Framebuffer::DIRTY_BIT_COLOR_ATTACHMENT_0);
-                BindFramebufferAttachment(mFunctions,
-                                          static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + index),
-                                          mData.getColorAttachment(index));
-                break;
-            }
-        }
-    }
 }
 
 GLuint FramebufferGL::getFramebufferID() const
@@ -369,7 +369,7 @@ void FramebufferGL::syncClearBufferState(GLenum buffer, GLint drawBuffer)
             const auto &drawbufferState  = mData.getDrawBufferStates();
             const auto &colorAttachments = mData.getColorAttachments();
 
-            const FramebufferAttachment *attachment = nullptr;
+            const gl::FramebufferAttachment *attachment = nullptr;
             if (drawbufferState[drawBuffer] >= GL_COLOR_ATTACHMENT0 &&
                 drawbufferState[drawBuffer] < GL_COLOR_ATTACHMENT0 + colorAttachments.size())
             {
@@ -389,4 +389,4 @@ void FramebufferGL::syncClearBufferState(GLenum buffer, GLint drawBuffer)
         }
     }
 }
-}  // namespace rx
+}

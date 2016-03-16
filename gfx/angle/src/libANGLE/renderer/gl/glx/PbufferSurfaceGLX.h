@@ -9,15 +9,16 @@
 #ifndef LIBANGLE_RENDERER_GL_GLX_PBUFFERSURFACEGLX_H_
 #define LIBANGLE_RENDERER_GL_GLX_PBUFFERSURFACEGLX_H_
 
+#include "libANGLE/renderer/gl/SurfaceGL.h"
 #include "libANGLE/renderer/gl/glx/platform_glx.h"
-#include "libANGLE/renderer/gl/glx/SurfaceGLX.h"
 
 namespace rx
 {
 
+class DisplayGLX;
 class FunctionsGLX;
 
-class PbufferSurfaceGLX : public SurfaceGLX
+class PbufferSurfaceGLX : public SurfaceGL
 {
   public:
     PbufferSurfaceGLX(RendererGL *renderer,
@@ -44,8 +45,6 @@ class PbufferSurfaceGLX : public SurfaceGLX
 
     EGLint isPostSubBufferSupported() const override;
     EGLint getSwapBehavior() const override;
-
-    egl::Error checkForResize() override;
 
   private:
     unsigned mWidth;

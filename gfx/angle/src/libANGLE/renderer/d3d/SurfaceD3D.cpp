@@ -24,22 +24,13 @@ namespace rx
 SurfaceD3D *SurfaceD3D::createOffscreen(RendererD3D *renderer, egl::Display *display, const egl::Config *config, EGLClientBuffer shareHandle,
                                         EGLint width, EGLint height)
 {
-    return new SurfaceD3D(renderer, display, config, width, height, EGL_TRUE, 0, EGL_FALSE,
-                          shareHandle, NULL);
+    return new SurfaceD3D(renderer, display, config, width, height, EGL_TRUE, shareHandle, NULL);
 }
 
-SurfaceD3D *SurfaceD3D::createFromWindow(RendererD3D *renderer,
-                                         egl::Display *display,
-                                         const egl::Config *config,
-                                         EGLNativeWindowType window,
-                                         EGLint fixedSize,
-                                         EGLint directComposition,
-                                         EGLint width,
-                                         EGLint height,
-                                         EGLint orientation)
+SurfaceD3D *SurfaceD3D::createFromWindow(RendererD3D *renderer, egl::Display *display, const egl::Config *config, EGLNativeWindowType window,
+                                         EGLint fixedSize, EGLint width, EGLint height)
 {
-    return new SurfaceD3D(renderer, display, config, width, height, fixedSize, orientation,
-                          directComposition, static_cast<EGLClientBuffer>(0), window);
+    return new SurfaceD3D(renderer, display, config, width, height, fixedSize, static_cast<EGLClientBuffer>(0), window);
 }
 
 SurfaceD3D::SurfaceD3D(RendererD3D *renderer,
@@ -48,20 +39,17 @@ SurfaceD3D::SurfaceD3D(RendererD3D *renderer,
                        EGLint width,
                        EGLint height,
                        EGLint fixedSize,
-                       EGLint orientation,
-                       EGLint directComposition,
                        EGLClientBuffer shareHandle,
                        EGLNativeWindowType window)
     : SurfaceImpl(),
       mRenderer(renderer),
       mDisplay(display),
       mFixedSize(fixedSize == EGL_TRUE),
-      mOrientation(orientation),
       mRenderTargetFormat(config->renderTargetFormat),
       mDepthStencilFormat(config->depthStencilFormat),
       mSwapChain(nullptr),
       mSwapIntervalDirty(true),
-      mNativeWindow(window, config, directComposition == EGL_TRUE),
+      mNativeWindow(window, config),
       mWidth(width),
       mHeight(height),
       mSwapInterval(1),
@@ -140,8 +128,7 @@ egl::Error SurfaceD3D::resetSwapChain()
         height = mHeight;
     }
 
-    mSwapChain = mRenderer->createSwapChain(mNativeWindow, mShareHandle, mRenderTargetFormat,
-                                            mDepthStencilFormat, mOrientation);
+    mSwapChain = mRenderer->createSwapChain(mNativeWindow, mShareHandle, mRenderTargetFormat, mDepthStencilFormat);
     if (!mSwapChain)
     {
         return egl::Error(EGL_BAD_ALLOC);

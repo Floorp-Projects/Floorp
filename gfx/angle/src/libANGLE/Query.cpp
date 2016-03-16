@@ -11,23 +11,15 @@
 
 namespace gl
 {
-Query::Query(rx::QueryImpl *impl, GLuint id) : RefCountObject(id), mQuery(impl), mLabel()
+Query::Query(rx::QueryImpl *impl, GLuint id)
+    : RefCountObject(id),
+      mQuery(impl)
 {
 }
 
 Query::~Query()
 {
     SafeDelete(mQuery);
-}
-
-void Query::setLabel(const std::string &label)
-{
-    mLabel = label;
-}
-
-const std::string &Query::getLabel() const
-{
-    return mLabel;
 }
 
 Error Query::begin()
@@ -40,32 +32,12 @@ Error Query::end()
     return mQuery->end();
 }
 
-Error Query::queryCounter()
-{
-    return mQuery->queryCounter();
-}
-
-Error Query::getResult(GLint *params)
-{
-    return mQuery->getResult(params);
-}
-
 Error Query::getResult(GLuint *params)
 {
     return mQuery->getResult(params);
 }
 
-Error Query::getResult(GLint64 *params)
-{
-    return mQuery->getResult(params);
-}
-
-Error Query::getResult(GLuint64 *params)
-{
-    return mQuery->getResult(params);
-}
-
-Error Query::isResultAvailable(bool *available)
+Error Query::isResultAvailable(GLuint *available)
 {
     return mQuery->isResultAvailable(available);
 }

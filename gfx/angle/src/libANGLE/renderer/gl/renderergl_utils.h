@@ -10,7 +10,6 @@
 #ifndef LIBANGLE_RENDERER_GL_RENDERERGLUTILS_H_
 #define LIBANGLE_RENDERER_GL_RENDERERGLUTILS_H_
 
-#include "libANGLE/angletypes.h"
 #include "libANGLE/renderer/gl/functionsgl_typedefs.h"
 
 #include <string>
@@ -28,8 +27,6 @@ namespace rx
 {
 class FunctionsGL;
 struct WorkaroundsGL;
-
-VendorID GetVendorID(const FunctionsGL *functions);
 
 namespace nativegl_gl
 {

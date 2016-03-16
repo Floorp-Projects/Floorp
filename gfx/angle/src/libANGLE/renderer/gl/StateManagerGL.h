@@ -59,7 +59,6 @@ class StateManagerGL final : angle::NonCopyable
     void bindTransformFeedback(GLenum type, GLuint transformFeedback);
     void beginQuery(GLenum type, GLuint query);
     void endQuery(GLenum type, GLuint query);
-    void onBeginQuery(QueryGL *query);
 
     void setAttributeCurrentData(size_t index, const gl::VertexAttribCurrentValueData &data);
 
@@ -136,9 +135,7 @@ class StateManagerGL final : angle::NonCopyable
                                    GLsizei instanceCount,
                                    const GLvoid **outIndices);
 
-    gl::Error onMakeCurrent(const gl::Data &data);
-
-    void syncState(const gl::State &state, const gl::State::DirtyBits &glDirtyBits);
+    void syncState(const gl::State &state, const gl::State::DirtyBits &dirtyBits);
 
   private:
     gl::Error setGenericDrawState(const gl::Data &data);
@@ -173,7 +170,7 @@ class StateManagerGL final : angle::NonCopyable
     std::map<GLenum, GLuint> mQueries;
 
     TransformFeedbackGL *mPrevDrawTransformFeedback;
-    std::set<QueryGL *> mCurrentQueries;
+    std::set<QueryGL *> mPrevDrawQueries;
     uintptr_t mPrevDrawContext;
 
     GLint mUnpackAlignment;

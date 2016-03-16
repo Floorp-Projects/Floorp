@@ -8,13 +8,10 @@
 
 #include "libANGLE/renderer/d3d/d3d11/Buffer11.h"
 
-#include <memory>
-
 #include "common/MemoryBuffer.h"
 #include "libANGLE/renderer/d3d/IndexDataManager.h"
 #include "libANGLE/renderer/d3d/VertexDataManager.h"
 #include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
-#include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
 #include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
 #include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
 
@@ -202,15 +199,18 @@ class Buffer11::PackStorage : public Buffer11::BufferStorage
     uint8_t *map(size_t offset, size_t length, GLbitfield access) override;
     void unmap() override;
 
-    gl::Error packPixels(const gl::FramebufferAttachment &readAttachment,
+    gl::Error packPixels(ID3D11Texture2D *srcTexure,
+                         UINT srcSubresource,
                          const PackPixelsParams &params);
 
   private:
     gl::Error flushQueuedPackCommand();
 
-    TextureHelper11 mStagingTexture;
+    ID3D11Texture2D *mStagingTexture;
+    DXGI_FORMAT mTextureFormat;
+    gl::Extents mTextureSize;
     MemoryBuffer mMemoryBuffer;
-    std::unique_ptr<PackPixelsParams> mQueuedPackCommand;
+    PackPixelsParams *mQueuedPackCommand;
     PackPixelsParams mPackParams;
     bool mDataModified;
 };
@@ -624,7 +624,8 @@ ID3D11ShaderResourceView *Buffer11::getSRV(DXGI_FORMAT srvFormat)
     return bufferSRV;
 }
 
-gl::Error Buffer11::packPixels(const gl::FramebufferAttachment &readAttachment,
+gl::Error Buffer11::packPixels(ID3D11Texture2D *srcTexture,
+                               UINT srcSubresource,
                                const PackPixelsParams &params)
 {
     PackStorage *packStorage     = getPackStorage();
@@ -632,7 +633,7 @@ gl::Error Buffer11::packPixels(const gl::FramebufferAttachment &readAttachment,
 
     if (packStorage)
     {
-        gl::Error error = packStorage->packPixels(readAttachment, params);
+        gl::Error error = packStorage->packPixels(srcTexture, srcSubresource, params);
         if (error.isError())
         {
             return error;
@@ -1244,12 +1245,18 @@ void Buffer11::EmulatedIndexedStorage::unmap()
 }
 
 Buffer11::PackStorage::PackStorage(Renderer11 *renderer)
-    : BufferStorage(renderer, BUFFER_USAGE_PIXEL_PACK), mStagingTexture(), mDataModified(false)
+    : BufferStorage(renderer, BUFFER_USAGE_PIXEL_PACK),
+      mStagingTexture(nullptr),
+      mTextureFormat(DXGI_FORMAT_UNKNOWN),
+      mQueuedPackCommand(nullptr),
+      mDataModified(false)
 {
 }
 
 Buffer11::PackStorage::~PackStorage()
 {
+    SafeRelease(mStagingTexture);
+    SafeDelete(mQueuedPackCommand);
 }
 
 bool Buffer11::PackStorage::copyFromStorage(BufferStorage *source,
@@ -1301,7 +1308,8 @@ void Buffer11::PackStorage::unmap()
     // No-op
 }
 
-gl::Error Buffer11::PackStorage::packPixels(const gl::FramebufferAttachment &readAttachment,
+gl::Error Buffer11::PackStorage::packPixels(ID3D11Texture2D *srcTexure,
+                                            UINT srcSubresource,
                                             const PackPixelsParams &params)
 {
     gl::Error error = flushQueuedPackCommand();
@@ -1310,37 +1318,53 @@ gl::Error Buffer11::PackStorage::packPixels(const gl::FramebufferAttachment &rea
         return error;
     }
 
-    RenderTarget11 *renderTarget = nullptr;
-    error = readAttachment.getRenderTarget(&renderTarget);
-    if (error.isError())
+    mQueuedPackCommand = new PackPixelsParams(params);
+
+    D3D11_TEXTURE2D_DESC textureDesc;
+    srcTexure->GetDesc(&textureDesc);
+
+    if (mStagingTexture != nullptr &&
+        (mTextureFormat != textureDesc.Format || mTextureSize.width != params.area.width ||
+         mTextureSize.height != params.area.height))
     {
-        return error;
+        SafeRelease(mStagingTexture);
+        mTextureSize.width  = 0;
+        mTextureSize.height = 0;
+        mTextureFormat      = DXGI_FORMAT_UNKNOWN;
     }
 
-    ID3D11Resource *renderTargetResource = renderTarget->getTexture();
-    ASSERT(renderTargetResource);
-
-    unsigned int srcSubresource = renderTarget->getSubresourceIndex();
-    TextureHelper11 srcTexture  = TextureHelper11::MakeAndReference(renderTargetResource);
-
-    mQueuedPackCommand.reset(new PackPixelsParams(params));
-
-    gl::Extents srcTextureSize(params.area.width, params.area.height, 1);
-    if (!mStagingTexture.getResource() || mStagingTexture.getFormat() != srcTexture.getFormat() ||
-        mStagingTexture.getExtents() != srcTextureSize)
+    if (mStagingTexture == nullptr)
     {
-        auto textureOrError =
-            CreateStagingTexture(srcTexture.getTextureType(), srcTexture.getFormat(),
-                                 srcTextureSize, mRenderer->getDevice());
-        if (textureOrError.isError())
+        ID3D11Device *device = mRenderer->getDevice();
+        HRESULT hr;
+
+        mTextureSize.width  = params.area.width;
+        mTextureSize.height = params.area.height;
+        mTextureFormat      = textureDesc.Format;
+
+        D3D11_TEXTURE2D_DESC stagingDesc;
+        stagingDesc.Width              = params.area.width;
+        stagingDesc.Height             = params.area.height;
+        stagingDesc.MipLevels          = 1;
+        stagingDesc.ArraySize          = 1;
+        stagingDesc.Format             = mTextureFormat;
+        stagingDesc.SampleDesc.Count   = 1;
+        stagingDesc.SampleDesc.Quality = 0;
+        stagingDesc.Usage              = D3D11_USAGE_STAGING;
+        stagingDesc.BindFlags          = 0;
+        stagingDesc.CPUAccessFlags     = D3D11_CPU_ACCESS_READ;
+        stagingDesc.MiscFlags          = 0;
+
+        hr = device->CreateTexture2D(&stagingDesc, nullptr, &mStagingTexture);
+        if (FAILED(hr))
         {
-            return textureOrError.getError();
+            ASSERT(hr == E_OUTOFMEMORY);
+            return gl::Error(GL_OUT_OF_MEMORY, "Failed to allocate internal staging texture.");
         }
-        mStagingTexture = std::move(textureOrError.getResult());
     }
 
     // ReadPixels from multisampled FBOs isn't supported in current GL
-    ASSERT(srcTexture.getSampleCount() <= 1);
+    ASSERT(textureDesc.SampleDesc.Count <= 1);
 
     ID3D11DeviceContext *immediateContext = mRenderer->getDeviceContext();
     D3D11_BOX srcBox;
@@ -1348,18 +1372,12 @@ gl::Error Buffer11::PackStorage::packPixels(const gl::FramebufferAttachment &rea
     srcBox.right  = params.area.x + params.area.width;
     srcBox.top    = params.area.y;
     srcBox.bottom = params.area.y + params.area.height;
-
-    // Select the correct layer from a 3D attachment
-    srcBox.front = 0;
-    if (mStagingTexture.getTextureType() == GL_TEXTURE_3D)
-    {
-        srcBox.front = static_cast<UINT>(readAttachment.layer());
-    }
-    srcBox.back = srcBox.front + 1;
+    srcBox.front  = 0;
+    srcBox.back   = 1;
 
     // Asynchronous copy
-    immediateContext->CopySubresourceRegion(mStagingTexture.getResource(), 0, 0, 0, 0,
-                                            srcTexture.getResource(), srcSubresource, &srcBox);
+    immediateContext->CopySubresourceRegion(mStagingTexture, 0, 0, 0, 0, srcTexure, srcSubresource,
+                                            &srcBox);
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -1372,7 +1390,7 @@ gl::Error Buffer11::PackStorage::flushQueuedPackCommand()
     {
         gl::Error error =
             mRenderer->packPixels(mStagingTexture, *mQueuedPackCommand, mMemoryBuffer.data());
-        mQueuedPackCommand.reset(nullptr);
+        SafeDelete(mQueuedPackCommand);
         if (error.isError())
         {
             return error;

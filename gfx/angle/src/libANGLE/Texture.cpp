@@ -50,7 +50,6 @@ static size_t GetImageDescIndex(GLenum target, size_t level)
 Texture::Texture(rx::TextureImpl *impl, GLuint id, GLenum target)
     : egl::ImageSibling(id),
       mTexture(impl),
-      mLabel(),
       mTextureState(),
       mTarget(target),
       mImageDescs(IMPLEMENTATION_MAX_TEXTURE_LEVELS * (target == GL_TEXTURE_CUBE_MAP ? 6 : 1)),
@@ -67,16 +66,6 @@ Texture::~Texture()
         mBoundSurface = NULL;
     }
     SafeDelete(mTexture);
-}
-
-void Texture::setLabel(const std::string &label)
-{
-    mLabel = label;
-}
-
-const std::string &Texture::getLabel() const
-{
-    return mLabel;
 }
 
 GLenum Texture::getTarget() const
@@ -812,21 +801,19 @@ bool Texture::computeLevelCompleteness(GLenum target, size_t level) const
         return false;
     }
 
-    ASSERT(level >= mTextureState.baseLevel);
-    const size_t relativeLevel = level - mTextureState.baseLevel;
-    if (levelImageDesc.size.width != std::max(1, baseImageDesc.size.width >> relativeLevel))
+    if (levelImageDesc.size.width != std::max(1, baseImageDesc.size.width >> level))
     {
         return false;
     }
 
-    if (levelImageDesc.size.height != std::max(1, baseImageDesc.size.height >> relativeLevel))
+    if (levelImageDesc.size.height != std::max(1, baseImageDesc.size.height >> level))
     {
         return false;
     }
 
     if (mTarget == GL_TEXTURE_3D)
     {
-        if (levelImageDesc.size.depth != std::max(1, baseImageDesc.size.depth >> relativeLevel))
+        if (levelImageDesc.size.depth != std::max(1, baseImageDesc.size.depth >> level))
         {
             return false;
         }

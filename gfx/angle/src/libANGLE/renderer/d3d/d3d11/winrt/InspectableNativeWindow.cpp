@@ -11,20 +11,10 @@
 
 namespace rx
 {
-NativeWindow::NativeWindow(EGLNativeWindowType window,
-                           const egl::Config *config,
-                           bool directComposition)
+NativeWindow::NativeWindow(EGLNativeWindowType window, const egl::Config *config)
 {
     mWindow = window;
     mConfig = config;
-}
-
-NativeWindow::~NativeWindow()
-{
-}
-
-void NativeWindow::commitChange()
-{
 }
 
 bool NativeWindow::initialize()

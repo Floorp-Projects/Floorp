@@ -223,8 +223,7 @@ VariableLocation::VariableLocation(const std::string &name, unsigned int element
 }
 
 Program::Data::Data()
-    : mLabel(),
-      mAttachedFragmentShader(nullptr),
+    : mAttachedFragmentShader(nullptr),
       mAttachedVertexShader(nullptr),
       mTransformFeedbackBufferMode(GL_INTERLEAVED_ATTRIBS),
       mBinaryRetrieveableHint(false)
@@ -242,11 +241,6 @@ Program::Data::~Data()
     {
         mAttachedFragmentShader->release();
     }
-}
-
-const std::string &Program::Data::getLabel()
-{
-    return mLabel;
 }
 
 const LinkedUniform *Program::Data::getUniformByName(const std::string &name) const
@@ -332,16 +326,6 @@ Program::~Program()
     unlink(true);
 
     SafeDelete(mProgram);
-}
-
-void Program::setLabel(const std::string &label)
-{
-    mData.mLabel = label;
-}
-
-const std::string &Program::getLabel() const
-{
-    return mData.mLabel;
 }
 
 bool Program::attachShader(Shader *shader)
@@ -2377,7 +2361,7 @@ void Program::defineUniformBlock(const sh::InterfaceBlock &interfaceBlock, GLenu
     // Track the first and last uniform index to determine the range of active uniforms in the
     // block.
     size_t firstBlockUniformIndex = mData.mUniforms.size();
-    defineUniformBlockMembers(interfaceBlock.fields, interfaceBlock.fieldPrefix(), blockIndex);
+    defineUniformBlockMembers(interfaceBlock.fields, "", blockIndex);
     size_t lastBlockUniformIndex = mData.mUniforms.size();
 
     std::vector<unsigned int> blockUniformIndexes;

@@ -69,7 +69,7 @@ std::ostream &operator<<(std::ostream& stream, const PlatformParameters &pp)
         stream << "OPENGL";
         break;
       case EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE:
-          stream << "OPENGLES";
+        stream << "GLES";
         break;
       case EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE:
         stream << "DEFAULT";
@@ -111,25 +111,6 @@ std::ostream &operator<<(std::ostream& stream, const PlatformParameters &pp)
       default:
         UNREACHABLE();
         break;
-    }
-
-    switch (pp.eglParameters.presentPath)
-    {
-        case EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE:
-            stream << "_PRESENT_PATH_COPY";
-            break;
-
-        case EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE:
-            stream << "_PRESENT_PATH_FAST";
-            break;
-
-        case EGL_DONT_CARE:
-            // default
-            break;
-
-        default:
-            UNREACHABLE();
-            break;
     }
 
     return stream;
@@ -182,12 +163,6 @@ EGLPlatformParameters D3D11()
         EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
         EGL_DONT_CARE, EGL_DONT_CARE,
         EGL_PLATFORM_ANGLE_DEVICE_TYPE_HARDWARE_ANGLE);
-}
-
-EGLPlatformParameters D3D11(EGLenum presentPath)
-{
-    return EGLPlatformParameters(EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE, EGL_DONT_CARE, EGL_DONT_CARE,
-                                 EGL_PLATFORM_ANGLE_DEVICE_TYPE_HARDWARE_ANGLE, presentPath);
 }
 
 EGLPlatformParameters D3D11_FL11_1()
@@ -361,12 +336,6 @@ EGLPlatformParameters OPENGLES()
     return EGLPlatformParameters(EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE);
 }
 
-EGLPlatformParameters OPENGLES(EGLint major, EGLint minor)
-{
-    return EGLPlatformParameters(EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE, major, minor,
-                                 EGL_DONT_CARE);
-}
-
 } // namespace egl_platform
 
 // ANGLE tests platforms
@@ -383,11 +352,6 @@ PlatformParameters ES2_D3D9_REFERENCE()
 PlatformParameters ES2_D3D11()
 {
     return PlatformParameters(2, 0, egl_platform::D3D11());
-}
-
-PlatformParameters ES2_D3D11(EGLenum presentPath)
-{
-    return PlatformParameters(2, 0, egl_platform::D3D11(presentPath));
 }
 
 PlatformParameters ES2_D3D11_FL11_0()
@@ -540,19 +504,9 @@ PlatformParameters ES2_OPENGLES()
     return PlatformParameters(2, 0, egl_platform::OPENGLES());
 }
 
-PlatformParameters ES2_OPENGLES(EGLint major, EGLint minor)
-{
-    return PlatformParameters(2, 0, egl_platform::OPENGLES(major, minor));
-}
-
 PlatformParameters ES3_OPENGLES()
 {
     return PlatformParameters(3, 0, egl_platform::OPENGLES());
-}
-
-PlatformParameters ES3_OPENGLES(EGLint major, EGLint minor)
-{
-    return PlatformParameters(3, 0, egl_platform::OPENGLES(major, minor));
 }
 
 PlatformParameters ES2_OPENGL()

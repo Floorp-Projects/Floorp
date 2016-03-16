@@ -77,7 +77,7 @@ class EGLInitializePerfTest : public ANGLEPerfTest,
     EGLInitializePerfTest();
     ~EGLInitializePerfTest();
 
-    void step() override;
+    void step(float dt, double totalTime) override;
     void TearDown() override;
 
   private:
@@ -121,7 +121,7 @@ EGLInitializePerfTest::EGLInitializePerfTest()
     }
 
     mDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE,
-                                        reinterpret_cast<void *>(mOSWindow->getNativeDisplay()),
+                                        mOSWindow->getNativeDisplay(),
                                         &displayAttributes[0]);
 
     ANGLEPlatformInitialize(&mCapturePlatform);
@@ -132,13 +132,18 @@ EGLInitializePerfTest::~EGLInitializePerfTest()
     SafeDelete(mOSWindow);
 }
 
-void EGLInitializePerfTest::step()
+void EGLInitializePerfTest::step(float dt, double totalTime)
 {
-    ASSERT_NE(EGL_NO_DISPLAY, mDisplay);
+    ASSERT_TRUE(mDisplay != EGL_NO_DISPLAY);
 
     EGLint majorVersion, minorVersion;
-    ASSERT_EQ(static_cast<EGLBoolean>(EGL_TRUE), eglInitialize(mDisplay, &majorVersion, &minorVersion));
-    ASSERT_EQ(static_cast<EGLBoolean>(EGL_TRUE), eglTerminate(mDisplay));
+    ASSERT_TRUE(eglInitialize(mDisplay, &majorVersion, &minorVersion) == EGL_TRUE);
+    ASSERT_TRUE(eglTerminate(mDisplay) == EGL_TRUE);
+
+    if (mTimer->getElapsedTime() >= 5.0)
+    {
+        mRunning = false;
+    }
 }
 
 void EGLInitializePerfTest::TearDown()

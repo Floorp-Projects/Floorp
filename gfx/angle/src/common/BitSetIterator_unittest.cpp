@@ -55,7 +55,7 @@ TEST_F(BitSetIteratorTest, EmptySet)
     for (unsigned long bit : IterateBitSet(mStateBits))
     {
         sawBit = true;
-        UNUSED_VARIABLE(bit);
+        UNUSED_TRACE_VARIABLE(bit);
     }
     EXPECT_FALSE(sawBit);
 }

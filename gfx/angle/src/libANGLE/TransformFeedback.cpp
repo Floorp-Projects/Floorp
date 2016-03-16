@@ -13,10 +13,9 @@
 namespace gl
 {
 
-TransformFeedback::TransformFeedback(rx::TransformFeedbackImpl *impl, GLuint id, const Caps &caps)
+TransformFeedback::TransformFeedback(rx::TransformFeedbackImpl* impl, GLuint id, const Caps &caps)
     : RefCountObject(id),
       mImplementation(impl),
-      mLabel(),
       mActive(false),
       mPrimitiveMode(GL_NONE),
       mPaused(false),
@@ -35,16 +34,6 @@ TransformFeedback::~TransformFeedback()
     }
 
     SafeDelete(mImplementation);
-}
-
-void TransformFeedback::setLabel(const std::string &label)
-{
-    mLabel = label;
-}
-
-const std::string &TransformFeedback::getLabel() const
-{
-    return mLabel;
 }
 
 void TransformFeedback::begin(GLenum primitiveMode)

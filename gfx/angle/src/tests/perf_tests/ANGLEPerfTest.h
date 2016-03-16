@@ -10,25 +10,24 @@
 #ifndef PERF_TESTS_ANGLE_PERF_TEST_H_
 #define PERF_TESTS_ANGLE_PERF_TEST_H_
 
+#include <gtest/gtest.h>
 #include <string>
 #include <vector>
-
-#include <gtest/gtest.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
-#include "common/angleutils.h"
-#include "common/debug.h"
 #include "EGLWindow.h"
 #include "OSWindow.h"
+#include "Timer.h"
+#include "common/angleutils.h"
+#include "common/debug.h"
 #include "test_utils/angle_test_configs.h"
 #include "test_utils/angle_test_instantiate.h"
-#include "Timer.h"
 
 class Event;
 
 #ifndef ASSERT_GL_NO_ERROR
-#define ASSERT_GL_NO_ERROR() ASSERT_EQ(static_cast<GLenum>(GL_NO_ERROR), glGetError())
+#define ASSERT_GL_NO_ERROR() ASSERT_TRUE(glGetError() == GL_NO_ERROR)
 #endif
 
 class ANGLEPerfTest : public testing::Test, angle::NonCopyable
@@ -37,10 +36,7 @@ class ANGLEPerfTest : public testing::Test, angle::NonCopyable
     ANGLEPerfTest(const std::string &name, const std::string &suffix);
     virtual ~ANGLEPerfTest();
 
-    virtual void step() = 0;
-
-    // Called right before timer is stopped to let the test wait for asynchronous operations.
-    virtual void finishTest() {}
+    virtual void step(float dt, double totalTime) = 0;
 
   protected:
     void run();
@@ -52,19 +48,12 @@ class ANGLEPerfTest : public testing::Test, angle::NonCopyable
     // Normalize a time value according to the number of test loop iterations (mFrameCount)
     double normalizedTime(size_t value) const;
 
-    // Call if the test step was aborted and the test should stop running.
-    void abortTest() { mRunning = false; }
-
-    int getNumStepsPerformed() const { return mNumStepsPerformed; }
-
     std::string mName;
     std::string mSuffix;
-    Timer *mTimer;
-    double mRunTimeSeconds;
 
-  private:
-    int mNumStepsPerformed;
     bool mRunning;
+    Timer *mTimer;
+    int mNumFrames;
 };
 
 struct RenderTestParams : public angle::PlatformParameters
@@ -84,7 +73,11 @@ class ANGLERenderTest : public ANGLEPerfTest
     virtual void initializeBenchmark() { }
     virtual void destroyBenchmark() { }
 
+    virtual void stepBenchmark(float dt, double totalTime) { }
+
+    virtual void beginDrawBenchmark() { }
     virtual void drawBenchmark() = 0;
+    virtual void endDrawBenchmark() { }
 
     bool popEvent(Event *event);
 
@@ -92,13 +85,15 @@ class ANGLERenderTest : public ANGLEPerfTest
 
   protected:
     const RenderTestParams &mTestParams;
+    unsigned int mDrawIterations;
+    double mRunTimeSeconds;
 
   private:
     void SetUp() override;
     void TearDown() override;
 
-    void step() override;
-    void finishTest() override;
+    void step(float dt, double totalTime) override;
+    void draw();
 
     EGLWindow *mEGLWindow;
     OSWindow *mOSWindow;

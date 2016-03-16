@@ -66,14 +66,7 @@ gl::Error Query9::end()
     return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error Query9::queryCounter()
-{
-    UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION, "Unimplemented");
-}
-
-template <typename T>
-gl::Error Query9::getResultBase(T *params)
+gl::Error Query9::getResult(GLuint *params)
 {
     while (!mQueryFinished)
     {
@@ -90,31 +83,12 @@ gl::Error Query9::getResultBase(T *params)
     }
 
     ASSERT(mQueryFinished);
-    *params = static_cast<T>(mResult);
+    *params = mResult;
+
     return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error Query9::getResult(GLint *params)
-{
-    return getResultBase(params);
-}
-
-gl::Error Query9::getResult(GLuint *params)
-{
-    return getResultBase(params);
-}
-
-gl::Error Query9::getResult(GLint64 *params)
-{
-    return getResultBase(params);
-}
-
-gl::Error Query9::getResult(GLuint64 *params)
-{
-    return getResultBase(params);
-}
-
-gl::Error Query9::isResultAvailable(bool *available)
+gl::Error Query9::isResultAvailable(GLuint *available)
 {
     gl::Error error = testQuery();
     if (error.isError())
@@ -122,7 +96,7 @@ gl::Error Query9::isResultAvailable(bool *available)
         return error;
     }
 
-    *available = mQueryFinished;
+    *available = (mQueryFinished ? GL_TRUE : GL_FALSE);
 
     return gl::Error(GL_NO_ERROR);
 }
