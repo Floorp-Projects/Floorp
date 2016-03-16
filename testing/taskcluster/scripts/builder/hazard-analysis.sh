@@ -8,8 +8,8 @@ ANALYSIS_SRCDIR=$JS_SRCDIR/devtools/rootAnalysis
 TOOLTOOL_MANIFEST=js/src/devtools/rootAnalysis/build/sixgill.manifest
 . install-packages.sh "$GECKO_DIR"
 
-export CC="$GECKO_DIR/gcc/bin/gcc"
-export CXX="$GECKO_DIR/gcc/bin/g++"
+export CC="$TOOLTOOL_DIR/gcc/bin/gcc"
+export CXX="$TOOLTOOL_DIR/gcc/bin/g++"
 
 function build_js_shell () {
     ( cd $JS_SRCDIR; autoconf-2.13 )
@@ -31,8 +31,8 @@ js = "$HAZARD_SHELL_OBJDIR/dist/bin/js"
 analysis_scriptdir = "$ANALYSIS_SRCDIR"
 objdir = "$MOZ_OBJDIR"
 source = "$GECKO_DIR"
-sixgill = "$GECKO_DIR/sixgill/usr/libexec/sixgill"
-sixgill_bin = "$GECKO_DIR/sixgill/usr/bin"
+sixgill = "$TOOLTOOL_DIR/sixgill/usr/libexec/sixgill"
+sixgill_bin = "$TOOLTOOL_DIR/sixgill/usr/bin"
 EOF
     )
 }
