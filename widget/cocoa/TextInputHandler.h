@@ -442,9 +442,11 @@ public:
   virtual bool OnDestroyWidget(nsChildView* aDestroyingWidget);
 
 protected:
-  // The creater of this instance and client.
-  // This must not be null after initialized until OnDestroyWidget() is called.
+  // The creator of this instance, client and its text event dispatcher.
+  // These members must not be nullptr after initialized until
+  // OnDestroyWidget() is called.
   nsChildView* mWidget; // [WEAK]
+  RefPtr<TextEventDispatcher> mDispatcher;
 
   // The native view for mWidget.
   // This view handles the actual text inputting.
@@ -937,14 +939,6 @@ private:
   already_AddRefed<mozilla::TextRangeArray>
     CreateTextRangeArray(NSAttributedString *aAttrString,
                          NSRange& aSelectedRange);
-
-  /**
-   * InitCompositionEvent() initializes aCompositionEvent.
-   *
-   * @param aCompositionEvent     A composition event which you want to
-   *                              initialize.
-   */
-  void InitCompositionEvent(WidgetCompositionEvent& aCompositionEvent);
 
   /**
    * DispatchCompositionStartEvent() dispatches a compositionstart event and
