@@ -926,7 +926,10 @@ bool MinidumpCallback(
       apiData.WriteBuffer(crashReporterAPIData->get(), crashReporterAPIData->Length());
     }
     WriteAnnotation(apiData, "CrashTime", crashTimeString);
+    WriteAnnotation(eventFile, "CrashTime", crashTimeString);
+
     WriteAnnotation(apiData, "UptimeTS", uptimeTSString);
+    WriteAnnotation(eventFile, "UptimeTS", uptimeTSString);
 
     if (timeSinceLastCrash != 0) {
       WriteAnnotation(apiData, "SecondsSinceLastCrash",
