@@ -218,12 +218,9 @@ function getAnnotations(body)
 function getTags(functionName, body) {
     var tags = new Set();
     var annotations = getAnnotations(body);
-    print(functionName);
-    print(JSON.stringify(annotations));
     if (functionName in annotations) {
         print("crawling through");
         for (var [ annName, annValue ] of annotations[functionName]) {
-            print(`  got ${annName}: ${annValue}`);
             if (annName == 'Tag')
                 tags.add(annValue);
         }

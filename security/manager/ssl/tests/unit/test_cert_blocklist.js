@@ -16,47 +16,14 @@ var id = "xpcshell@tests.mozilla.org";
 var appName = "XPCShell";
 var version = "1";
 var platformVersion = "1.9.2";
-var appInfo = {
-  // nsIXULAppInfo
-  vendor: "Mozilla",
+Cu.import("resource://testing-common/AppInfo.jsm", this);
+updateAppInfo({
   name: appName,
   ID: id,
   version: version,
-  appBuildID: "2007010101",
   platformVersion: platformVersion ? platformVersion : "1.0",
-  platformBuildID: "2007010101",
-
-  // nsIXULRuntime
-  inSafeMode: false,
-  logConsoleErrors: true,
-  OS: "XPCShell",
-  XPCOMABI: "noarch-spidermonkey",
-  invalidateCachesOnRestart: function invalidateCachesOnRestart() {
-    // Do nothing
-  },
-
-  // nsICrashReporter
-  annotations: {},
-
-  annotateCrashReport: function(key, data) {
-    this.annotations[key] = data;
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo,
-                                         Ci.nsIXULRuntime,
-                                         Ci.nsICrashReporter,
-                                         Ci.nsISupports])
-};
-
-var XULAppInfoFactory = {
-  createInstance: function (outer, iid) {
-    appInfo.QueryInterface(iid);
-    if (outer != null) {
-      throw new Error(Cr.NS_ERROR_NO_AGGREGATION);
-    }
-    return appInfo.QueryInterface(iid);
-  }
-};
+  crashReporter: true,
+});
 
 // we need to ensure we setup revocation data before certDB, or we'll start with
 // no revocation.txt in the profile
@@ -78,13 +45,8 @@ var data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
 stream.write(data, data.length);
 stream.close();
 
-var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
-const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
 const PREF_KINTO_UPDATE_ENABLED = "services.kinto.update_enabled";
 const PREF_ONECRL_VIA_AMO = "security.onecrl.via.amo";
-registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
-                          XULAPPINFO_CONTRACTID, XULAppInfoFactory);
 
 var revocations = profile.clone();
 revocations.append("revocations.txt");

@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_contentscript() {
+  function backgroundScript() {
+    browser.runtime.onMessage.addListener(([script], sender) => {
+      browser.test.sendMessage("run", {script});
+      browser.test.sendMessage("run-" + script);
+    });
+    browser.test.sendMessage("running");
+  }
+
+  function contentScriptAll() {
+    browser.runtime.sendMessage(["all"]);
+  }
+  function contentScriptIncludesTest1() {
+    browser.runtime.sendMessage(["includes-test1"]);
+  }
+  function contentScriptExcludesTest1() {
+    browser.runtime.sendMessage(["excludes-test1"]);
+  }
+
+  let extensionData = {
+    manifest: {
+      content_scripts: [
+        {
+          "matches": ["http://example.org/", "http://*.example.org/"],
+          "exclude_globs": [],
+          "include_globs": ["*"],
+          "js": ["content_script_all.js"],
+        },
+        {
+          "matches": ["http://example.org/", "http://*.example.org/"],
+          "include_globs": ["*test1*"],
+          "js": ["content_script_includes_test1.js"],
+        },
+        {
+          "matches": ["http://example.org/", "http://*.example.org/"],
+          "exclude_globs": ["*test1*"],
+          "js": ["content_script_excludes_test1.js"],
+        },
+      ],
+    },
+    background: "(" + backgroundScript.toString() + ")()",
+
+    files: {
+      "content_script_all.js": "(" + contentScriptAll.toString() + ")()",
+      "content_script_includes_test1.js": "(" + contentScriptIncludesTest1.toString() + ")()",
+      "content_script_excludes_test1.js": "(" + contentScriptExcludesTest1.toString() + ")()",
+    },
+
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  let ran = 0;
+  extension.onMessage("run", ({script}) => {
+    ran++;
+  });
+
+  yield Promise.all([extension.startup(), extension.awaitMessage("running")]);
+  info("extension loaded");
+
+  let win = window.open("http://example.org/");
+  yield Promise.all([extension.awaitMessage("run-all"), extension.awaitMessage("run-excludes-test1")]);
+  win.close();
+  is(ran, 2);
+
+  win = window.open("http://test1.example.org/");
+  yield Promise.all([extension.awaitMessage("run-all"), extension.awaitMessage("run-includes-test1")]);
+  win.close();
+  is(ran, 4);
+
+  yield extension.unload();
+  info("extension unloaded");
+});
+</script>
+
+</body>
+</html>

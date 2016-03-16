@@ -20,34 +20,14 @@ else if (mozinfo.os == "mac")
 else
   OS = "Linux";
 
-var XULAppInfo = {
-  vendor: "Mozilla",
+Cu.import("resource://testing-common/AppInfo.jsm", this);
+updateAppInfo({
   name: "XPCShell",
   ID: "{3e3ba16c-1675-4e88-b9c8-afef81b3d2ef}",
   version: "1",
-  appBuildID: "20100621",
   platformVersion: "",
-  platformBuildID: "20100621",
-  inSafeMode: false,
-  logConsoleErrors: true,
   OS: OS,
-  XPCOMABI: "noarch-spidermonkey",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo, Ci.nsIXULRuntime])
-};
-
-var XULAppInfoFactory = {
-  createInstance: function (outer, iid) {
-    if (outer != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    return XULAppInfo.QueryInterface(iid);
-  }
-};
-
-var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"),
-                          "XULAppInfo", "@mozilla.org/xre/app-info;1",
-                          XULAppInfoFactory);
-
+});
 }
 
 // Register resource alias. Normally done in SyncComponents.manifest.

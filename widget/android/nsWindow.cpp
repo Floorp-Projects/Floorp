@@ -89,54 +89,12 @@ using namespace mozilla::layers;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
-static gfx::IntSize gAndroidScreenBounds;
-
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/LayerTransactionParent.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
-
-class ContentCreationNotifier;
-static StaticRefPtr<ContentCreationNotifier> gContentCreationNotifier;
-
-// A helper class to send updates when content processes
-// are created. Currently an update for the screen size is sent.
-class ContentCreationNotifier final : public nsIObserver
-{
-private:
-    ~ContentCreationNotifier() {}
-
-public:
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD Observe(nsISupports* aSubject,
-                       const char* aTopic,
-                       const char16_t* aData) override
-    {
-        if (!strcmp(aTopic, "ipc:content-created")) {
-            nsCOMPtr<nsIObserver> cpo = do_QueryInterface(aSubject);
-            ContentParent* cp = static_cast<ContentParent*>(cpo.get());
-            Unused << cp->SendScreenSizeChanged(gAndroidScreenBounds);
-        } else if (!strcmp(aTopic, "xpcom-shutdown")) {
-            nsCOMPtr<nsIObserverService> obs =
-                mozilla::services::GetObserverService();
-            if (obs) {
-                obs->RemoveObserver(static_cast<nsIObserver*>(this),
-                                    "xpcom-shutdown");
-                obs->RemoveObserver(static_cast<nsIObserver*>(this),
-                                    "ipc:content-created");
-            }
-            gContentCreationNotifier = nullptr;
-        }
-
-        return NS_OK;
-    }
-};
-
-NS_IMPL_ISUPPORTS(ContentCreationNotifier,
-                  nsIObserver)
 
 // All the toplevel windows that have been created; these are in
 // stacking order, so the window at gTopLevelWindows[0] is the topmost
@@ -1073,48 +1031,6 @@ public:
 
             window.Resize(aWindowWidth, aWindowHeight, /* repaint */ false);
         }
-
-        if (aScreenWidth == gAndroidScreenBounds.width &&
-            aScreenHeight == gAndroidScreenBounds.height) {
-
-            return;
-        }
-
-        gAndroidScreenBounds.width = aScreenWidth;
-        gAndroidScreenBounds.height = aScreenHeight;
-
-        if (!XRE_IsParentProcess() &&
-            !Preferences::GetBool("browser.tabs.remote.desktopbehavior",
-                                  false)) {
-            return;
-        }
-
-        // Tell the content process the new screen size.
-        nsTArray<ContentParent*> cplist;
-        ContentParent::GetAll(cplist);
-        for (uint32_t i = 0; i < cplist.Length(); ++i) {
-            Unused << cplist[i]->SendScreenSizeChanged(gAndroidScreenBounds);
-        }
-
-        if (gContentCreationNotifier) {
-            return;
-        }
-
-        // If the content process is not created yet, wait until it's
-        // created and then tell it the screen size.
-        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-        if (!obs) {
-            return;
-        }
-
-        RefPtr<ContentCreationNotifier> notifier = new ContentCreationNotifier;
-        if (NS_FAILED(obs->AddObserver(notifier, "xpcom-shutdown", false)) ||
-            NS_FAILED(obs->AddObserver(
-                notifier, "ipc:content-created", false))) {
-            return;
-        }
-
-        gContentCreationNotifier = notifier;
     }
 
     void CreateCompositor(int32_t aWidth, int32_t aHeight)
@@ -1966,15 +1882,6 @@ nsWindow::SetSelectionDragState(bool aState)
     if (mNPZCSupport) {
         mNPZCSupport->SetSelectionDragState(aState);
     }
-}
-
-gfx::IntSize
-nsWindow::GetAndroidScreenBounds()
-{
-    if (XRE_IsContentProcess()) {
-        return ContentChild::GetSingleton()->GetScreenSize();
-    }
-    return gAndroidScreenBounds;
 }
 
 void *

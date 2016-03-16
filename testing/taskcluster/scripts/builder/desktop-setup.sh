@@ -17,7 +17,7 @@ export MOZBUILD_STATE_PATH=$WORKSPACE/mozbuild/
 mkdir -p $MOZBUILD_STATE_PATH
 
 ### Install package dependencies
-install-packages.sh $GECKO_DIR
+install-packages.sh ${TOOLTOOL_DIR:-$GECKO_DIR}
 
 # Ensure object-folder exists
 export MOZ_OBJDIR=$WORKSPACE/object-folder/

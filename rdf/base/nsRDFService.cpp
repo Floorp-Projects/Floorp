@@ -121,14 +121,13 @@ struct ResourceHashEntry : public PLDHashEntryHdr {
     nsIRDFResource *mResource;
 
     static PLDHashNumber
-    HashKey(PLDHashTable *table, const void *key)
+    HashKey(const void *key)
     {
         return HashString(static_cast<const char *>(key));
     }
 
     static bool
-    MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
-               const void *key)
+    MatchEntry(const PLDHashEntryHdr *hdr, const void *key)
     {
         const ResourceHashEntry *entry =
             static_cast<const ResourceHashEntry *>(hdr);
@@ -156,14 +155,13 @@ struct LiteralHashEntry : public PLDHashEntryHdr {
     const char16_t *mKey;
 
     static PLDHashNumber
-    HashKey(PLDHashTable *table, const void *key)
+    HashKey(const void *key)
     {
         return HashString(static_cast<const char16_t *>(key));
     }
 
     static bool
-    MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
-               const void *key)
+    MatchEntry(const PLDHashEntryHdr *hdr, const void *key)
     {
         const LiteralHashEntry *entry =
             static_cast<const LiteralHashEntry *>(hdr);
@@ -191,14 +189,13 @@ struct IntHashEntry : public PLDHashEntryHdr {
     int32_t    mKey;
 
     static PLDHashNumber
-    HashKey(PLDHashTable *table, const void *key)
+    HashKey(const void *key)
     {
         return PLDHashNumber(*static_cast<const int32_t *>(key));
     }
 
     static bool
-    MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
-               const void *key)
+    MatchEntry(const PLDHashEntryHdr *hdr, const void *key)
     {
         const IntHashEntry *entry =
             static_cast<const IntHashEntry *>(hdr);
@@ -225,7 +222,7 @@ struct DateHashEntry : public PLDHashEntryHdr {
     PRTime      mKey;
 
     static PLDHashNumber
-    HashKey(PLDHashTable *table, const void *key)
+    HashKey(const void *key)
     {
         // xor the low 32 bits with the high 32 bits.
         PRTime t = *static_cast<const PRTime *>(key);
@@ -235,8 +232,7 @@ struct DateHashEntry : public PLDHashEntryHdr {
     }
 
     static bool
-    MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
-               const void *key)
+    MatchEntry(const PLDHashEntryHdr *hdr, const void *key)
     {
         const DateHashEntry *entry =
             static_cast<const DateHashEntry *>(hdr);
@@ -338,7 +334,7 @@ struct BlobHashEntry : public PLDHashEntryHdr {
     BlobImpl *mBlob;
 
     static PLDHashNumber
-    HashKey(PLDHashTable *table, const void *key)
+    HashKey(const void *key)
     {
         const BlobImpl::Data *data =
             static_cast<const BlobImpl::Data *>(key);
@@ -346,8 +342,7 @@ struct BlobHashEntry : public PLDHashEntryHdr {
     }
 
     static bool
-    MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
-               const void *key)
+    MatchEntry(const PLDHashEntryHdr *hdr, const void *key)
     {
         const BlobHashEntry *entry =
             static_cast<const BlobHashEntry *>(hdr);

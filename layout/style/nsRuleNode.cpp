@@ -128,18 +128,17 @@ struct ChildrenHashEntry : public PLDHashEntryHdr {
 };
 
 /* static */ PLDHashNumber
-nsRuleNode::ChildrenHashHashKey(PLDHashTable *aTable, const void *aKey)
+nsRuleNode::ChildrenHashHashKey(const void *aKey)
 {
   const nsRuleNode::Key *key =
     static_cast<const nsRuleNode::Key*>(aKey);
   // Disagreement on importance and level for the same rule is extremely
   // rare, so hash just on the rule.
-  return PLDHashTable::HashVoidPtrKeyStub(aTable, key->mRule);
+  return PLDHashTable::HashVoidPtrKeyStub(key->mRule);
 }
 
 /* static */ bool
-nsRuleNode::ChildrenHashMatchEntry(PLDHashTable *aTable,
-                                   const PLDHashEntryHdr *aHdr,
+nsRuleNode::ChildrenHashMatchEntry(const PLDHashEntryHdr *aHdr,
                                    const void *aKey)
 {
   const ChildrenHashEntry *entry =

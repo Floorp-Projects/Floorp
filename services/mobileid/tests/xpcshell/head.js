@@ -430,38 +430,10 @@ var MobileIdentityUIGlue = {
 
 // The tests rely on having an app registered. Otherwise, it will throw.
 // Override XULAppInfo.
-const XUL_APP_INFO_UUID = Components.ID("{84fdc459-d96d-421c-9bff-a8193233ae75}");
-const XUL_APP_INFO_CONTRACT_ID = "@mozilla.org/xre/app-info;1";
-
-var XULAppInfo = {
-  vendor: "Mozilla",
+Cu.import("resource://testing-common/AppInfo.jsm", this);
+updateAppInfo({
   name: "MobileIdTest",
   ID: "{230de50e-4cd1-11dc-8314-0800200b9a66}",
   version: "1",
-  appBuildID: "2007010101",
   platformVersion: "",
-  platformBuildID: "2007010101",
-  inSafeMode: false,
-  logConsoleErrors: true,
-  OS: "XPCShell",
-  XPCOMABI: "noarch-spidermonkey",
-
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIXULAppInfo,
-    Ci.nsIXULRuntime,
-  ])
-};
-
-var XULAppInfoFactory = {
-  createInstance: function (outer, iid) {
-    if (outer != null) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    }
-    return XULAppInfo.QueryInterface(iid);
-  }
-};
-Cm.QueryInterface(Ci.nsIComponentRegistrar)
-  .registerFactory(XUL_APP_INFO_UUID,
-                   "XULAppInfo",
-                   XUL_APP_INFO_CONTRACT_ID,
-                   XULAppInfoFactory);
+});

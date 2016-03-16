@@ -54,8 +54,7 @@ clearPrefEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 }
 
 static bool
-matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
-               const void* key)
+matchPrefEntry(const PLDHashEntryHdr* entry, const void* key)
 {
     const PrefHashEntry *prefEntry =
         static_cast<const PrefHashEntry*>(entry);

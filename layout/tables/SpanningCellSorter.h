@@ -70,11 +70,9 @@ private:
 
     static const PLDHashTableOps HashTableOps;
 
-    static PLDHashNumber
-        HashTableHashKey(PLDHashTable *table, const void *key);
+    static PLDHashNumber HashTableHashKey(const void *key);
     static bool
-        HashTableMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
-                            const void *key);
+        HashTableMatchEntry(const PLDHashEntryHdr *hdr, const void *key);
 
     static int SortArray(const void *a, const void *b, void *closure);
 

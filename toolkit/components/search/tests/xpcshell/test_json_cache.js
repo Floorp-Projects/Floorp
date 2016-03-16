@@ -42,6 +42,7 @@ function run_test() {
 
   let cacheTemplateFile = do_get_file("data/search.json");
   cacheTemplate = readJSONFile(cacheTemplateFile);
+  cacheTemplate.buildID = getAppInfo().platformBuildID;
 
   let engineFile = gProfD.clone();
   engineFile.append("searchplugins");
