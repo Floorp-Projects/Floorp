@@ -6,6 +6,7 @@
 
 #include "ServiceWorkerContainer.h"
 
+#include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsIURL.h"
