@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Protocol handler</title>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+  </head>
+  <body>
+    <script type="text/javascript">
+      navigator.registerProtocolHandler("testprotocol",
+          "https://example.com/foobar?uri=%s",
+          "Test Protocol");
+    </script>
+    <a id="link" href="testprotocol:test">testprotocol link</a>
+  </body>
+</html>

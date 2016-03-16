@@ -69,9 +69,16 @@ td:last-child {
 }
 
 .submitting {
-  background-image: url(chrome://global/skin/icons/loading_16.png);
+  background-image: url(chrome://global/skin/icons/loading.png);
   background-repeat: no-repeat;
   background-position: right;
+  background-size: 16px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .submitting {
+    background-image: url(chrome://global/skin/icons/loading@2x.png);
+  }
 }
 </style>
 <link rel="stylesheet" media="screen, projection" type="text/css"

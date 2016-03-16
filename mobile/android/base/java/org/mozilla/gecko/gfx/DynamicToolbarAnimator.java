@@ -401,7 +401,6 @@ public class DynamicToolbarAnimator {
             float prevDir = mLastTouch - mTouchStart.y;
             float newDir = event.getRawY() - mLastTouch;
             if (prevDir != 0 && newDir != 0 && ((prevDir < 0) != (newDir < 0))) {
-                Log.v(LOGTAG, "Direction changed: " + mTouchStart.y + " -> " + mLastTouch + " -> " + event.getRawY());
                 // If the direction of movement changed, reset the travel
                 // distance properties.
                 mTouchStart = null;
@@ -428,7 +427,6 @@ public class DynamicToolbarAnimator {
         }
 
         float translation = decideTranslation(deltaY, metrics, travelDistance);
-        Log.v(LOGTAG, "Got vertical translation " + translation);
 
         float oldToolbarTranslation = mToolbarTranslation;
         float oldLayerViewTranslation = mLayerViewTranslation;

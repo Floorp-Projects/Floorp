@@ -125,23 +125,6 @@ function checkForSave(name, value, message) {
   checkObserver.verifyStack.push({ name : name, value: value, message: message });
 }
 
-function NonE10SgetAutocompletePopup() {
-  var Ci = SpecialPowers.Ci;
-  chromeWin = SpecialPowers.wrap(window)
-                .QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIWebNavigation)
-                .QueryInterface(Ci.nsIDocShellTreeItem)
-                .rootTreeItem
-                .QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIDOMWindow)
-                .QueryInterface(Ci.nsIDOMChromeWindow);
-  autocompleteMenu = chromeWin.document.getElementById("PopupAutoComplete");
-  ok(autocompleteMenu, "Got autocomplete popup");
-
-  return autocompleteMenu;
-}
-
-
 function getFormSubmitButton(formNum) {
   var form = $("form" + formNum); // by id, not name
   ok(form != null, "getting form " + formNum);
@@ -194,6 +177,22 @@ function notifyMenuChanged(expectedCount, expectedFirstValue, then) {
     script.removeMessageListener("gotMenuChange", changed);
     gLastAutoCompleteResults = results;
     then();
+  });
+}
+
+function notifySelectedIndex(expectedIndex, then) {
+  script.sendAsyncMessage("waitForSelectedIndex", { expectedIndex });
+  script.addMessageListener("gotSelectedIndex", function changed() {
+    script.removeMessageListener("gotSelectedIndex", changed);
+    then();
+  });
+}
+
+function getPopupState(then) {
+  script.sendAsyncMessage("getPopupState");
+  script.addMessageListener("gotPopupState", function listener(state) {
+    script.removeMessageListener("gotPopupState", listener);
+    then(state);
   });
 }
 

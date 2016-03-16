@@ -472,13 +472,11 @@ this.ContentSearch = {
     let pref = Services.prefs.getCharPref("browser.search.hiddenOneOffs");
     let hiddenList = pref ? pref.split(",") : [];
     for (let engine of Services.search.getVisibleEngines()) {
-      if (hiddenList.indexOf(engine.name) != -1) {
-        continue;
-      }
       let uri = engine.getIconURLBySize(16, 16);
       state.engines.push({
         name: engine.name,
         iconBuffer: yield this._arrayBufferFromDataURI(uri),
+        hidden: hiddenList.indexOf(engine.name) != -1,
       });
     }
     return state;

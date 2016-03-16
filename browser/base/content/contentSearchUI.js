@@ -452,14 +452,12 @@ ContentSearchUIController.prototype = {
 
   _currentEngineIndex: -1,
   _cycleCurrentEngine: function (aReverse) {
-    if ((this._currentEngineIndex == this._oneOffButtons.length - 1 && !aReverse) ||
-        (this._currentEngineIndex < 0 && aReverse)) {
+    if ((this._currentEngineIndex == this._engines.length - 1 && !aReverse) ||
+        (this._currentEngineIndex == 0 && aReverse)) {
       return;
     }
     this._currentEngineIndex += aReverse ? -1 : 1;
-    let engineName = this._currentEngineIndex > -1 ?
-                     this._oneOffButtons[this._currentEngineIndex].engineName :
-                     this._originalDefaultEngine.name;
+    let engineName = this._engines[this._currentEngineIndex].name;
     this._sendMsg("SetCurrentEngine", engineName);
   },
 
@@ -572,6 +570,8 @@ ContentSearchUIController.prototype = {
         this._setUpOneOffButtons();
         delete this._pendingOneOffRefresh;
       }
+      this._currentEngineIndex =
+        this._engines.findIndex(aEngine => aEngine.name == this.defaultEngine.name);
       this._table.hidden = false;
       this.input.setAttribute("aria-expanded", "true");
       this._originalDefaultEngine = {
@@ -829,7 +829,8 @@ ContentSearchUIController.prototype = {
 
     this._oneOffButtons = [];
 
-    let engines = this._engines.filter(aEngine => aEngine.name != this.defaultEngine.name);
+    let engines = this._engines.filter(aEngine => aEngine.name != this.defaultEngine.name)
+                               .filter(aEngine => !aEngine.hidden);
     if (!engines.length) {
       this._oneOffsTable.hidden = true;
       return;

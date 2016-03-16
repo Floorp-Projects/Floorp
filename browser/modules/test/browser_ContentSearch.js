@@ -366,6 +366,7 @@ var currentStateObj = Task.async(function* () {
     state.engines.push({
       name: engine.name,
       iconBuffer: yield arrayBufferFromDataURI(uri),
+      hidden: false,
     });
   }
   return state;
