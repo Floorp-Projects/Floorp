@@ -1522,44 +1522,67 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     nsAutoString committed;
     ctiPanel->InterpretKeyEvent(aNativeEvent, committed);
     if (!committed.IsEmpty()) {
+      nsresult rv = mDispatcher->BeginNativeInputTransaction();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gLog, LogLevel::Error,
+          ("%p IMEInputHandler::HandleKeyDownEvent, "
+           "FAILED, due to BeginNativeInputTransaction() failure "
+           "at dispatching keydown for ComplexTextInputPanel", this));
+        return false;
+      }
+
       WidgetKeyboardEvent imeEvent(true, eKeyDown, mWidget);
       InitKeyEvent(aNativeEvent, imeEvent);
       imeEvent.mPluginTextEventString.Assign(committed);
-      DispatchEvent(imeEvent);
+      nsEventStatus status = nsEventStatus_eIgnore;
+      mDispatcher->DispatchKeyboardEvent(eKeyDown, imeEvent, status,
+                                         currentKeyEvent);
     }
     return true;
   }
 
-  if (mWidget->IsPluginFocused() || !IsIMEComposing()) {
-    NSResponder* firstResponder = [[mView window] firstResponder];
+  NSResponder* firstResponder = [[mView window] firstResponder];
 
-    WidgetKeyboardEvent keydownEvent(true, eKeyDown, mWidget);
-    InitKeyEvent(aNativeEvent, keydownEvent);
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_LOG(gLog, LogLevel::Error,
+        ("%p IMEInputHandler::HandleKeyDownEvent, "
+         "FAILED, due to BeginNativeInputTransaction() failure "
+         "at dispatching keydown for ordinal cases", this));
+    return false;
+  }
 
-    currentKeyEvent->mKeyDownHandled = DispatchEvent(keydownEvent);
-    if (Destroyed()) {
-      MOZ_LOG(gLog, LogLevel::Info,
-        ("%p TextInputHandler::HandleKeyDownEvent, "
-         "widget was destroyed by keydown event", this));
-      return currentKeyEvent->IsDefaultPrevented();
-    }
+  WidgetKeyboardEvent keydownEvent(true, eKeyDown, mWidget);
+  InitKeyEvent(aNativeEvent, keydownEvent);
 
-    // The key down event may have shifted the focus, in which
-    // case we should not fire the key press.
-    // XXX This is a special code only on Cocoa widget, why is this needed?
-    if (firstResponder != [[mView window] firstResponder]) {
-      MOZ_LOG(gLog, LogLevel::Info,
-        ("%p TextInputHandler::HandleKeyDownEvent, "
-         "view lost focus by keydown event", this));
-      return currentKeyEvent->IsDefaultPrevented();
-    }
+  nsEventStatus status = nsEventStatus_eIgnore;
+  mDispatcher->DispatchKeyboardEvent(eKeyDown, keydownEvent, status,
+                                     currentKeyEvent);
+  currentKeyEvent->mKeyDownHandled =
+    (status == nsEventStatus_eConsumeNoDefault);
 
-    if (currentKeyEvent->IsDefaultPrevented()) {
-      MOZ_LOG(gLog, LogLevel::Info,
-        ("%p TextInputHandler::HandleKeyDownEvent, "
-         "keydown event's default is prevented", this));
-      return true;
-    }
+  if (Destroyed()) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p TextInputHandler::HandleKeyDownEvent, "
+       "widget was destroyed by keydown event", this));
+    return currentKeyEvent->IsDefaultPrevented();
+  }
+
+  // The key down event may have shifted the focus, in which
+  // case we should not fire the key press.
+  // XXX This is a special code only on Cocoa widget, why is this needed?
+  if (firstResponder != [[mView window] firstResponder]) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p TextInputHandler::HandleKeyDownEvent, "
+       "view lost focus by keydown event", this));
+    return currentKeyEvent->IsDefaultPrevented();
+  }
+
+  if (currentKeyEvent->IsDefaultPrevented()) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p TextInputHandler::HandleKeyDownEvent, "
+       "keydown event's default is prevented", this));
+    return true;
   }
 
   // None of what follows is needed for plugin keyboard input.  In fact it
@@ -1598,6 +1621,15 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
 
   if (currentKeyEvent->CanDispatchKeyPressEvent() &&
       !wasComposing && !IsIMEComposing()) {
+    rv = mDispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gLog, LogLevel::Error,
+          ("%p IMEInputHandler::HandleKeyDownEvent, "
+           "FAILED, due to BeginNativeInputTransaction() failure "
+           "at dispatching keypress", this));
+      return false;
+    }
+
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
     InitKeyEvent(aNativeEvent, keypressEvent);
 
@@ -1614,7 +1646,11 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     //    our default action for this key.
     if (!(interpretKeyEventsCalled &&
           IsNormalCharInputtingEvent(keypressEvent))) {
-      currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
+      currentKeyEvent->mKeyPressDispatched =
+        mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
+                                                 currentKeyEvent);
+      currentKeyEvent->mKeyPressHandled =
+        (status == nsEventStatus_eConsumeNoDefault);
       currentKeyEvent->mKeyPressDispatched = true;
       MOZ_LOG(gLog, LogLevel::Info,
         ("%p TextInputHandler::HandleKeyDownEvent, keypress event dispatched",
@@ -1658,15 +1694,21 @@ TextInputHandler::HandleKeyUpEvent(NSEvent* aNativeEvent)
     return;
   }
 
-  // if we don't have any characters we can't generate a keyUp event
-  if (IsIMEComposing()) {
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_LOG(gLog, LogLevel::Error,
+        ("%p IMEInputHandler::HandleKeyUpEvent, "
+         "FAILED, due to BeginNativeInputTransaction() failure", this));
     return;
   }
 
   WidgetKeyboardEvent keyupEvent(true, eKeyUp, mWidget);
   InitKeyEvent(aNativeEvent, keyupEvent);
 
-  DispatchEvent(keyupEvent);
+  KeyEventState currentKeyEvent(aNativeEvent);
+  nsEventStatus status = nsEventStatus_eIgnore;
+  mDispatcher->DispatchKeyboardEvent(eKeyUp, keyupEvent, status,
+                                     &currentKeyEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2007,6 +2049,14 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
     return;
   }
 
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_LOG(gLog, LogLevel::Error,
+        ("%p IMEInputHandler::DispatchKeyEventForFlagsChanged, "
+         "FAILED, due to BeginNativeInputTransaction() failure", this));
+    return;
+  }
+
   EventMessage message = aDispatchKeyDown ? eKeyDown : eKeyUp;
 
   // Fire a key event.
@@ -2023,7 +2073,10 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
   cocoaEvent.type = NPCocoaEventFlagsChanged;
   keyEvent.mPluginEvent.Copy(cocoaEvent);
 
-  DispatchEvent(keyEvent);
+  KeyEventState currentKeyEvent(aNativeEvent);
+  nsEventStatus status = nsEventStatus_eIgnore;
+  mDispatcher->DispatchKeyboardEvent(message, keyEvent, status,
+                                     &currentKeyEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2129,6 +2182,14 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     NS_ENSURE_TRUE_VOID(SetSelection(*aReplacementRange));
   }
 
+  nsresult rv = mDispatcher->BeginNativeInputTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_LOG(gLog, LogLevel::Error,
+        ("%p IMEInputHandler::HandleKeyUpEvent, "
+         "FAILED, due to BeginNativeInputTransaction() failure", this));
+    return;
+  }
+
   // Dispatch keypress event with char instead of compositionchange event
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
   keypressEvent.isChar = IsPrintableChar(str.CharAt(0));
@@ -2159,15 +2220,19 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
                                MODIFIER_META);
 
   // TODO:
-  // If mCurrentKeyEvent.mKeyEvent is null and when we implement textInput
-  // event of DOM3 Events, we should dispatch it instead of keypress event.
-  bool keyPressHandled = DispatchEvent(keypressEvent);
+  // If mCurrentKeyEvent.mKeyEvent is null, the text should be inputted as
+  // composition events.
+  nsEventStatus status = nsEventStatus_eIgnore;
+  bool keyPressDispatched =
+    mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
+                                             currentKeyEvent);
+  bool keyPressHandled = (status == nsEventStatus_eConsumeNoDefault);
 
   // Note: mWidget might have become null here. Don't count on it from here on.
 
   if (currentKeyEvent) {
     currentKeyEvent->mKeyPressHandled = keyPressHandled;
-    currentKeyEvent->mKeyPressDispatched = true;
+    currentKeyEvent->mKeyPressDispatched = keyPressDispatched;
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -2193,10 +2258,24 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
        TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A"));
 
   if (currentKeyEvent && currentKeyEvent->CanDispatchKeyPressEvent()) {
+    nsresult rv = mDispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        MOZ_LOG(gLog, LogLevel::Error,
+          ("%p IMEInputHandler::DoCommandBySelector, "
+           "FAILED, due to BeginNativeInputTransaction() failure "
+           "at dispatching keypress", this));
+      return false;
+    }
+
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
     InitKeyEvent(currentKeyEvent->mKeyEvent, keypressEvent);
-    currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
-    currentKeyEvent->mKeyPressDispatched = true;
+
+    nsEventStatus status = nsEventStatus_eIgnore;
+    currentKeyEvent->mKeyPressDispatched =
+      mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
+                                               currentKeyEvent);
+    currentKeyEvent->mKeyPressHandled =
+      (status == nsEventStatus_eConsumeNoDefault);
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p TextInputHandler::DoCommandBySelector, keypress event "
        "dispatched, Destroyed()=%s, keypressHandled=%s",
