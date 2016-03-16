@@ -981,7 +981,9 @@ EventStateManager::ExecuteAccessKey(nsTArray<uint32_t>& aAccessCharCodes,
         if (focusChanged && aIsTrustedEvent) {
           // If this is a child process, inform the parent that we want the focus, but
           // pass false since we don't want to change the window order.
-          nsCOMPtr<nsITabChild> child = do_GetInterface(mPresContext->GetDocShell());
+          nsIDocShell* docShell = mPresContext->GetDocShell();
+          nsCOMPtr<nsITabChild> child =
+            docShell ? docShell->GetTabChild() : nullptr;
           if (child) {
             child->SendRequestFocus(false);
           }
