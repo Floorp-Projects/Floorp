@@ -464,13 +464,6 @@ AtomImpl::ToUTF8String(nsACString& aBuf)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(bool)
-AtomImpl::EqualsUTF8(const nsACString& aString)
-{
-  return CompareUTF8toUTF16(aString,
-                            nsDependentString(mString, mLength)) == 0;
-}
-
 NS_IMETHODIMP
 AtomImpl::ScriptableEquals(const nsAString& aString, bool* aResult)
 {
