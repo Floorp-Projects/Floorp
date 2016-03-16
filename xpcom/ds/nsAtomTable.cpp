@@ -236,15 +236,14 @@ struct AtomTableKey
 };
 
 static PLDHashNumber
-AtomTableGetHash(PLDHashTable* aTable, const void* aKey)
+AtomTableGetHash(const void* aKey)
 {
   const AtomTableKey* k = static_cast<const AtomTableKey*>(aKey);
   return k->mHash;
 }
 
 static bool
-AtomTableMatchKey(PLDHashTable* aTable, const PLDHashEntryHdr* aEntry,
-                  const void* aKey)
+AtomTableMatchKey(const PLDHashEntryHdr* aEntry, const void* aKey)
 {
   const AtomTableEntry* he = static_cast<const AtomTableEntry*>(aEntry);
   const AtomTableKey* k = static_cast<const AtomTableKey*>(aKey);
