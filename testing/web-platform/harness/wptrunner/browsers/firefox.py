@@ -82,6 +82,7 @@ def update_properties():
 
 class FirefoxBrowser(Browser):
     used_ports = set()
+    init_timeout = 60
 
     def __init__(self, logger, binary, prefs_root, debug_info=None,
                  symbols_path=None, stackwalk_binary=None, certutil_binary=None,
