@@ -114,8 +114,13 @@ public:
 
   /**
    * StartComposition() starts composition explicitly.
+   *
+   * @param aEventTime  If this is not nullptr, WidgetCompositionEvent will
+   *                    be initialized with this.  Otherwise, initialized
+   *                    with the time at initializing.
    */
-  nsresult StartComposition(nsEventStatus& aStatus);
+  nsresult StartComposition(nsEventStatus& aStatus,
+                            const WidgetEventTime* aEventTime = nullptr);
 
   /**
    * CommitComposition() commits composition.
@@ -123,9 +128,13 @@ public:
    * @param aCommitString   If this is null, commits with the last composition
    *                        string.  Otherwise, commits the composition with
    *                        this value.
+   * @param aEventTime      If this is not nullptr, WidgetCompositionEvent will
+   *                        be initialized with this.  Otherwise, initialized
+   *                        with the time at initializing.
    */
    nsresult CommitComposition(nsEventStatus& aStatus,
-                              const nsAString* aCommitString = nullptr);
+                              const nsAString* aCommitString = nullptr,
+                              const WidgetEventTime* aEventTime = nullptr);
 
   /**
    * SetPendingCompositionString() sets new composition string which will be
@@ -196,10 +205,15 @@ public:
    * set pending composition string with SetPendingCompositionString(),
    * AppendClauseToPendingComposition() and/or
    * SetCaretInPendingComposition().
+   *
+   * @param aEventTime      If this is not nullptr, WidgetCompositionEvent will
+   *                        be initialized with this.  Otherwise, initialized
+   *                        with the time at initializing.
    */
-  nsresult FlushPendingComposition(nsEventStatus& aStatus)
+  nsresult FlushPendingComposition(nsEventStatus& aStatus,
+                                   const WidgetEventTime* aEventTime = nullptr)
   {
-    return mPendingComposition.Flush(this, aStatus);
+    return mPendingComposition.Flush(this, aStatus, aEventTime);
   }
 
   /**
@@ -284,7 +298,9 @@ private:
     nsresult AppendClause(uint32_t aLength, uint32_t aAttribute);
     nsresult SetCaret(uint32_t aOffset, uint32_t aLength);
     nsresult Set(const nsAString& aString, const TextRangeArray* aRanges);
-    nsresult Flush(TextEventDispatcher* aDispatcher, nsEventStatus& aStatus);
+    nsresult Flush(TextEventDispatcher* aDispatcher,
+                   nsEventStatus& aStatus,
+                   const WidgetEventTime* aEventTime);
     void Clear();
 
   private:
@@ -395,11 +411,16 @@ private:
    *                        compositionstart event, this returns
    *                        nsEventStatus_eConsumeNoDefault.  In this case,
    *                        the caller shouldn't keep doing its job.
+   * @param aEventTime      If this is not nullptr, WidgetCompositionEvent will
+   *                        be initialized with this.  Otherwise, initialized
+   *                        with the time at initializing.
    * @return                Only when something unexpected occurs, this returns
    *                        an error.  Otherwise, returns NS_OK even if aStatus
    *                        is nsEventStatus_eConsumeNoDefault.
    */
-  nsresult StartCompositionAutomaticallyIfNecessary(nsEventStatus& aStatus);
+  nsresult StartCompositionAutomaticallyIfNecessary(
+             nsEventStatus& aStatus,
+             const WidgetEventTime* aEventTime);
 
   /**
    * DispatchKeyboardEventInternal() maybe dispatches aKeyboardEvent.
