@@ -759,13 +759,12 @@ private:
         bool      mFileExists;
     } FNCMapEntry;
 
-    static PLDHashNumber StringHash(PLDHashTable *table, const void *key)
+    static PLDHashNumber StringHash(const void *key)
     {
         return HashString(reinterpret_cast<const char*>(key));
     }
 
-    static bool HashMatchEntry(PLDHashTable *table,
-                                 const PLDHashEntryHdr *aHdr, const void *key)
+    static bool HashMatchEntry(const PLDHashEntryHdr *aHdr, const void *key)
     {
         const FNCMapEntry* entry =
             static_cast<const FNCMapEntry*>(aHdr);

@@ -476,14 +476,13 @@ nsCacheEntryHashTable::Iter()
  */
 
 PLDHashNumber
-nsCacheEntryHashTable::HashKey( PLDHashTable *table, const void *key)
+nsCacheEntryHashTable::HashKey(const void *key)
 {
     return HashString(*static_cast<const nsCString *>(key));
 }
 
 bool
-nsCacheEntryHashTable::MatchEntry(PLDHashTable *       /* table */,
-                                  const PLDHashEntryHdr * hashEntry,
+nsCacheEntryHashTable::MatchEntry(const PLDHashEntryHdr * hashEntry,
                                   const void *            key)
 {
     NS_ASSERTION(key !=  nullptr, "### nsCacheEntryHashTable::MatchEntry : null key");

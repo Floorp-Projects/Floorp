@@ -51,3 +51,7 @@ pref(dom.image.picture.enabled,true) pref(dom.image.srcset.enabled,true) == bug1
 == table-border-1.html table-border-1-ref.html
 == table-border-2.html table-border-2-ref.html
 != table-border-2.html table-border-2-notref.html
+
+# Test imageset is using permissions.default.image
+pref(permissions.default.image,1) HTTP == bug1196784-with-srcset.html bug1196784-no-srcset.html
+pref(permissions.default.image,2) HTTP == bug1196784-with-srcset.html bug1196784-no-srcset.html

@@ -157,7 +157,7 @@ TEST(PLDHashTableTest, LazyStorage)
 // GrowToMaxCapacity test because we insert the integers 0.., which means it's
 // collision-free.
 static PLDHashNumber
-TrivialHash(PLDHashTable *table, const void *key)
+TrivialHash(const void *key)
 {
   return (PLDHashNumber)(size_t)key;
 }

@@ -608,8 +608,6 @@ child:
     // nsIPermissionManager messages
     async AddPermission(Permission permission);
 
-    async ScreenSizeChanged(IntSize size);
-
     async Volumes(VolumeInfo[] volumes);
 
     async FlushMemory(nsString reason);

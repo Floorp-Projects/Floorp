@@ -56,8 +56,7 @@ public:
 };
 
 static bool
-RequestHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
-                      const void *key)
+RequestHashMatchEntry(const PLDHashEntryHdr *entry, const void *key)
 {
     const RequestMapEntry *e =
         static_cast<const RequestMapEntry *>(entry);

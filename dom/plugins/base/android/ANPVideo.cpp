@@ -48,12 +48,6 @@ static void anp_video_setFramerateCallback(NPP instance, const ANPNativeWindow w
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void InitVideoInterfaceV0(ANPVideoInterfaceV0* i) {
-    ASSIGN(i, acquireNativeWindow);
-    ASSIGN(i, setWindowDimensions);
-    ASSIGN(i, releaseNativeWindow);
-}
-
 void InitVideoInterfaceV1(ANPVideoInterfaceV1* i) {
     ASSIGN(i, acquireNativeWindow);
     ASSIGN(i, setWindowDimensions);

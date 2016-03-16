@@ -56,8 +56,7 @@ struct RequestHashEntry : PLDHashEntryHdr {
 };
 
 static bool
-RequestMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
-                         const void *key)
+RequestMapMatchEntry(const PLDHashEntryHdr *hdr, const void *key)
 {
   const RequestHashEntry *entry = static_cast<const RequestHashEntry*>(hdr);
   return entry->r == key;

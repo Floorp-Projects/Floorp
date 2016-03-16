@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
 // The @mozilla/xre/app-info;1 XPCOM object provided by the xpcshell test harness doesn't
-// implement the nsIAppInfo interface, which is needed by Services.jsm and
+// implement the nsIXULAppInfo interface, which is needed by Services.jsm and
 // TelemetrySession.jsm. updateAppInfo() creates and registers a minimal mock app-info.
 Cu.import("resource://testing-common/AppInfo.jsm");
 updateAppInfo();
