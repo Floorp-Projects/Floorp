@@ -1326,6 +1326,11 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                prefName.EqualsLiteral("security.pki.sha1_enforcement_level")) {
       MutexAutoLock lock(mutex);
       setValidationOptions(false, lock);
+#ifdef DEBUG
+    } else if (prefName.EqualsLiteral("security.test.built_in_root_hash")) {
+      MutexAutoLock lock(mutex);
+      mTestBuiltInRootHash = Preferences::GetString("security.test.built_in_root_hash");
+#endif // DEBUG
     } else {
       clearSessionCache = false;
     }
@@ -1449,6 +1454,34 @@ nsNSSComponent::IsNSSInitialized(bool* initialized)
   *initialized = mNSSInitialized;
   return NS_OK;
 }
+
+#ifdef DEBUG
+NS_IMETHODIMP
+nsNSSComponent::IsCertTestBuiltInRoot(CERTCertificate* cert, bool& result)
+{
+  MutexAutoLock lock(mutex);
+  MOZ_ASSERT(mNSSInitialized);
+
+  result = false;
+
+  if (mTestBuiltInRootHash.IsEmpty()) {
+    return NS_OK;
+  }
+
+  RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert);
+  if (!nsc) {
+    return NS_ERROR_FAILURE;
+  }
+  nsAutoString certHash;
+  nsresult rv = nsc->GetSha256Fingerprint(certHash);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  result = mTestBuiltInRootHash.Equals(certHash);
+  return NS_OK;
+}
+#endif // DEBUG
 
 SharedCertVerifier::~SharedCertVerifier() { }
 
