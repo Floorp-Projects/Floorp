@@ -5,6 +5,7 @@ config = {
     #########################################################################
     ######## MACOSX CROSS GENERIC CONFIG KEYS/VAlUES
 
+    # note: overridden by MOZHARNESS_ACTIONS in TaskCluster tasks
     'default_actions': [
         'clobber',
         'clone-tools',

@@ -8,6 +8,7 @@ config = {
     # code block and also make sure this is synced with
     # releng_base_linux_64_builds.py
 
+    # note: overridden by MOZHARNESS_ACTIONS in TaskCluster tasks
     'default_actions': [
         'clobber',
         'clone-tools',

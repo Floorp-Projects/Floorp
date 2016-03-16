@@ -12,6 +12,7 @@ echo "running as" $(id)
 
 : MOZHARNESS_SCRIPT             ${MOZHARNESS_SCRIPT}
 : MOZHARNESS_CONFIG             ${MOZHARNESS_CONFIG}
+: MOZHARNESS_ACTIONS            ${MOZHARNESS_ACTIONS}
 
 : TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/home/worker/tooltool-cache}
 
@@ -119,16 +120,20 @@ for cfg in $MOZHARNESS_CONFIG; do
   config_cmds="${config_cmds} --config ${cfg}"
 done
 
-# Mozharness would ordinarily do a whole mess of buildbot-specific steps, but those
-# are overridden by this list of steps.  The get-secrets step is unique to TC tasks
-# and not run in Buildbot
-steps="--get-secrets --build --check-test"
+# if MOZHARNESS_ACTIONS is given, only run those actions (completely overriding default_actions
+# in the mozharness configuration)
+if [ -n "$MOZHARNESS_ACTIONS" ]; then
+    actions=""
+    for action in $MOZHARNESS_ACTIONS; do
+        actions="$actions --$action"
+    done
+fi
 
 python2.7 $WORKSPACE/build/src/testing/${MOZHARNESS_SCRIPT} ${config_cmds} \
   $debug_flag \
   $custom_build_variant_cfg_flag \
   --disable-mock \
-  $steps \
+  $actions \
   --log-level=debug \
   --scm-level=$MOZ_SCM_LEVEL \
   --work-dir=$WORKSPACE/build \
