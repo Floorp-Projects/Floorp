@@ -73,6 +73,8 @@ class CurrentX11TimeGetter;
 class nsWindow : public nsBaseWidget
 {
 public:
+    typedef mozilla::WidgetEventTime WidgetEventTime;
+
     nsWindow();
 
     static void ReleaseGlobals();
@@ -281,6 +283,7 @@ public:
     // otherwise, FALSE.
     bool               DispatchKeyDownEvent(GdkEventKey *aEvent,
                                             bool *aIsCancelled);
+    WidgetEventTime    GetWidgetEventTime(guint32 aEventTime);
     mozilla::TimeStamp GetEventTimeStamp(guint32 aEventTime);
     mozilla::CurrentX11TimeGetter* GetCurrentTimeGetter();
 
