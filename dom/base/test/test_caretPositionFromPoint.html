@@ -95,6 +95,16 @@
     todo(false, "test5Rect: (" + test5Rect.top + ", " + test5Rect.left + ", " + test5Rect.width + ", " + test5Rect.height + ")");
     checkOffsetsFromPoint(test5x, test5y, 0, 'test5');
 
+    // Check the first and last characters of the numeric input.
+    var test6Element = document.getElementById("test6");
+    var test6Rect = test6Element.getBoundingClientRect();
+    checkOffsetsFromPoint(Math.round(test6Rect.left + 5),
+                          Math.round(test6Rect.top + (test6Rect.height / 2)),
+                          0, "test6");
+    checkOffsetsFromPoint(Math.round(test6Rect.left + test6Rect.width - 30),
+                          Math.round(test6Rect.top + (test6Rect.height / 2)),
+                          5, "test6");
+
     SimpleTest.finish();
   }
 
@@ -108,5 +118,6 @@
 <marquee>marquee</marquee>
 </div>
 <input id="test5" value="The rabbit-hole went straight on like a tunnel for some way, and then dipped suddenly down, so suddenly that Alice had not a moment to think about stopping herself before she found herself falling down a very deep well. Either the well was very deep, or she fell very slowly, for she had plenty of time as she went down to look about her and to wonder what was going to happen next. First, she tried to look down and make out what she was coming to, but it was too dark to see anything; then she looked at the sides of the well, and noticed that they were filled with cupboards and book-shelves; here and there she saw maps and pictures hung upon pegs. She took down a jar from one of the shelves as she passed; it was labelled `ORANGE MARMALADE', but to her great disappointment it was empty: she did not like to drop the jar for fear of killing somebody, so managed to put it into one of the cupboards as she fell past it." type="text">
+<input id="test6" type="number" style="width:150px; height:57px;" value="31415"><br>
 </body>
 </html>
