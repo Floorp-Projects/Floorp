@@ -173,6 +173,24 @@ public:
   }
 
   /**
+   * SetPendingComposition() is useful if native IME handler already creates
+   * array of clauses and/or caret information.
+   *
+   * @param aString         Composition string.  This may include native line
+   *                        breakers since they will be replaced with XP line
+   *                        breakers automatically.
+   * @param aRanges         This should include the ranges of clauses and/or
+   *                        a range of caret.  Note that this method allows
+   *                        some ranges overlap each other and the range order
+   *                        is not from start to end.
+   */
+  nsresult SetPendingComposition(const nsAString& aString,
+                                 const TextRangeArray* aRanges)
+  {
+    return mPendingComposition.Set(aString, aRanges);
+  }
+
+  /**
    * FlushPendingComposition() sends the pending composition string
    * to the widget of the store DOM window.  Before calling this, IME needs to
    * set pending composition string with SetPendingCompositionString(),
@@ -257,6 +275,7 @@ private:
     nsresult SetString(const nsAString& aString);
     nsresult AppendClause(uint32_t aLength, uint32_t aAttribute);
     nsresult SetCaret(uint32_t aOffset, uint32_t aLength);
+    nsresult Set(const nsAString& aString, const TextRangeArray* aRanges);
     nsresult Flush(TextEventDispatcher* aDispatcher, nsEventStatus& aStatus);
     void Clear();
 

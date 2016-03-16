@@ -576,6 +576,63 @@ TextEventDispatcher::PendingComposition::SetCaret(uint32_t aOffset,
 }
 
 nsresult
+TextEventDispatcher::PendingComposition::Set(const nsAString& aString,
+                                             const TextRangeArray* aRanges)
+{
+  Clear();
+
+  nsAutoString str(aString);
+  // Don't expose CRLF to web contents, instead, use LF.
+  str.ReplaceSubstring(NS_LITERAL_STRING("\r\n"), NS_LITERAL_STRING("\n"));
+  nsresult rv = SetString(str);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!aRanges || aRanges->IsEmpty()) {
+    // Create dummy range if aString isn't empty.
+    if (!aString.IsEmpty()) {
+      rv = AppendClause(str.Length(), NS_TEXTRANGE_RAWINPUT);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+    return NS_OK;
+  }
+
+  // Adjust offsets in the ranges for XP linefeed character (only \n).
+  // XXX Following code is the safest approach.  However, it wastes performance.
+  //     For ensuring the clauses do not overlap each other, we should redesign
+  //     TextRange later.
+  for (uint32_t i = 0; i < aRanges->Length(); ++i) {
+    TextRange range = aRanges->ElementAt(i);
+    TextRange nativeRange = range;
+    if (nativeRange.mStartOffset > 0) {
+      nsAutoString preText(Substring(aString, 0, nativeRange.mStartOffset));
+      preText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                               NS_LITERAL_STRING("\n"));
+      range.mStartOffset = preText.Length();
+    }
+    if (nativeRange.Length() == 0) {
+      range.mEndOffset = range.mStartOffset;
+    } else {
+      nsAutoString clause(
+        Substring(aString, nativeRange.mStartOffset, nativeRange.Length()));
+      clause.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                              NS_LITERAL_STRING("\n"));
+      range.mEndOffset = range.mStartOffset + clause.Length();
+    }
+    if (range.mRangeType == NS_TEXTRANGE_CARETPOSITION) {
+      mCaret = range;
+    } else {
+      EnsureClauseArray();
+      mClauses->AppendElement(range);
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
 TextEventDispatcher::PendingComposition::Flush(TextEventDispatcher* aDispatcher,
                                                nsEventStatus& aStatus)
 {
