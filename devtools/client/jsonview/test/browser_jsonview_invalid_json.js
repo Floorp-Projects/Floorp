@@ -12,7 +12,7 @@ add_task(function* () {
 
   yield addJsonViewTab(TEST_JSON_URL);
 
-  let count = yield getElementCount(".jsonPanelBox .domTable .memberRow");
+  let count = yield getElementCount(".jsonPanelBox .treeTable .treeRow");
   ok(count == 0, "There must be no row");
 
   let text = yield getElementText(".jsonPanelBox .jsonParseError");
