@@ -209,7 +209,8 @@ public:
   void GetFrames(JSContext*& aCx,
                  nsTArray<JSObject*>& aResult,
                  ErrorResult& aRv);
-  void GetProperties(nsTArray<AnimationPropertyDetails>& aProperties) const;
+  void GetProperties(nsTArray<AnimationPropertyDetails>& aProperties,
+                     ErrorResult& aRv) const;
 
   // Temporary workaround to return both the target element and pseudo-type
   // until we implement PseudoElement (bug 1174575).
