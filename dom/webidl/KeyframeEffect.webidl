@@ -61,7 +61,7 @@ dictionary AnimationPropertyDetails {
 };
 
 partial interface KeyframeEffectReadOnly {
-  [ChromeOnly] sequence<AnimationPropertyDetails> getProperties();
+  [ChromeOnly, Throws] sequence<AnimationPropertyDetails> getProperties();
 };
 
 [Func="nsDocument::IsWebAnimationsEnabled",
