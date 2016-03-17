@@ -1284,7 +1284,7 @@ StorageActors.createActor({
     for (let name of names) {
       let metadata = yield this.getDBMetaData(host, name);
 
-      indexedDBHelpers.patchMetadataMapsAndProtos(metadata);
+      metadata = indexedDBHelpers.patchMetadataMapsAndProtos(metadata);
       storeMap.set(name, metadata);
     }
 
@@ -1557,7 +1557,7 @@ var indexedDBHelpers = {
       let dbs = [];
       if (hostVsStores.has(host)) {
         for (let [, db] of hostVsStores.get(host)) {
-          indexedDBHelpers.patchMetadataMapsAndProtos(db);
+          db = indexedDBHelpers.patchMetadataMapsAndProtos(db);
           dbs.push(db.toObject());
         }
       }
@@ -1572,7 +1572,7 @@ var indexedDBHelpers = {
       if (hostVsStores.has(host) && hostVsStores.get(host).has(db2)) {
         let db = hostVsStores.get(host).get(db2);
 
-        indexedDBHelpers.patchMetadataMapsAndProtos(db);
+        db = indexedDBHelpers.patchMetadataMapsAndProtos(db);
 
         let objectStores2 = db.objectStores;
 
@@ -1677,21 +1677,36 @@ var indexedDBHelpers = {
     return success.promise;
   },
 
+  /**
+   * When indexedDB metadata is parsed to and from JSON then the object's
+   * prototype is dropped and any Maps are changed to arrays of arrays. This
+   * method is used to repair the prototypes and fix any broken Maps.
+   */
   patchMetadataMapsAndProtos: function(metadata) {
-    for (let [, store] of metadata._objectStores) {
-      store.__proto__ = ObjectStoreMetadata.prototype;
+    let md = Object.create(DatabaseMetadata.prototype);
+    Object.assign(md, metadata);
+
+    md._objectStores = new Map(metadata._objectStores);
+
+    for (let [name, store] of md._objectStores) {
+      let obj = Object.create(ObjectStoreMetadata.prototype);
+      Object.assign(obj, store);
+
+      md._objectStores.set(name, obj);
 
       if (typeof store._indexes.length !== "undefined") {
-        store._indexes = new Map(store._indexes);
+        obj._indexes = new Map(store._indexes);
       }
 
-      for (let [, value] of store._indexes) {
-        value.__proto__ = IndexMetadata.prototype;
+      for (let [name2, value] of obj._indexes) {
+        let obj2 = Object.create(IndexMetadata.prototype);
+        Object.assign(obj2, value);
+
+        obj._indexes.set(name2, obj2);
       }
     }
 
-    metadata._objectStores = new Map(metadata._objectStores);
-    metadata.__proto__ = DatabaseMetadata.prototype;
+    return md;
   },
 
   handleChildRequest: function(msg) {
