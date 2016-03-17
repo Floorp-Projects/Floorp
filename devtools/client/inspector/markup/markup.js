@@ -209,6 +209,8 @@ MarkupView.prototype = {
       }
     }
     this._showContainerAsHovered(container.node);
+
+    this.emit("node-hover");
   },
 
   /**
@@ -341,6 +343,8 @@ MarkupView.prototype = {
       this.getContainer(this._hoveredNode).hovered = false;
     }
     this._hoveredNode = null;
+
+    this.emit("leave");
   },
 
   /**

@@ -7,6 +7,7 @@
 const { Cc, Ci, Cu } = require("chrome");
 const { getCurrentZoom,
   getRootBindingParent } = require("devtools/shared/layout/utils");
+const { on, emit } = require("sdk/event/core");
 
 const lazyContainer = {};
 
@@ -36,6 +37,58 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const STYLESHEET_URI = "resource://devtools/server/actors/" +
                        "highlighters.css";
+
+const _tokens = Symbol("classList/tokens");
+
+/**
+ * Shims the element's `classList` for anonymous content elements; used
+ * internally by `CanvasFrameAnonymousContentHelper.getElement()` method.
+ */
+function ClassList(className) {
+  let trimmed = (className || "").trim();
+  this[_tokens] = trimmed ? trimmed.split(/\s+/) : [];
+}
+
+ClassList.prototype = {
+  item(index) {
+    return this[_tokens][index];
+  },
+  contains(token) {
+    return this[_tokens].includes(token);
+  },
+  add(token) {
+    if (!this.contains(token)) {
+      this[_tokens].push(token);
+    }
+    emit(this, "update");
+  },
+  remove(token) {
+    let index = this[_tokens].indexOf(token);
+
+    if (index > -1) {
+      this[_tokens].splice(index, 1);
+    }
+    emit(this, "update");
+  },
+  toggle(token) {
+    if (this.contains(token)) {
+      this.remove(token);
+    } else {
+      this.add(token);
+    }
+  },
+  get length() {
+    return this[_tokens].length;
+  },
+  [Symbol.iterator]: function* () {
+    for (let i = 0; i < this.tokens.length; i++) {
+      yield this[_tokens][i];
+    }
+  },
+  toString() {
+    return this[_tokens].join(" ");
+  }
+};
 
 /**
  * Is this content window a XUL window?
@@ -276,6 +329,10 @@ CanvasFrameAnonymousContentHelper.prototype = {
     }
   },
 
+  hasAttributeForElement: function(id, name) {
+    return typeof this.getAttributeForElement(id, name) === "string";
+  },
+
   /**
    * Add an event listener to one of the elements inserted in the canvasFrame
    * native anonymous container.
@@ -398,19 +455,26 @@ CanvasFrameAnonymousContentHelper.prototype = {
   },
 
   getElement: function(id) {
-    let self = this;
+    let classList = new ClassList(this.getAttributeForElement(id, "class"));
+
+    on(classList, "update", () => {
+      this.setAttributeForElement(id, "class", classList.toString());
+    });
+
     return {
-      getTextContent: () => self.getTextContentForElement(id),
-      setTextContent: text => self.setTextContentForElement(id, text),
-      setAttribute: (name, value) => self.setAttributeForElement(id, name, value),
-      getAttribute: name => self.getAttributeForElement(id, name),
-      removeAttribute: name => self.removeAttributeForElement(id, name),
+      getTextContent: () => this.getTextContentForElement(id),
+      setTextContent: text => this.setTextContentForElement(id, text),
+      setAttribute: (name, val) => this.setAttributeForElement(id, name, val),
+      getAttribute: name => this.getAttributeForElement(id, name),
+      removeAttribute: name => this.removeAttributeForElement(id, name),
+      hasAttribute: name => this.hasAttributeForElement(id, name),
       addEventListener: (type, handler) => {
-        return self.addEventListenerForElement(id, type, handler);
+        return this.addEventListenerForElement(id, type, handler);
       },
       removeEventListener: (type, handler) => {
-        return self.removeEventListenerForElement(id, type, handler);
-      }
+        return this.removeEventListenerForElement(id, type, handler);
+      },
+      classList
     };
   },
 
