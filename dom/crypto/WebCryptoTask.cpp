@@ -314,27 +314,6 @@ MapHashAlgorithmNameToMgfMechanism(const nsString& aName) {
   return mech;
 }
 
-// Helper function to clone data from an ArrayBuffer or ArrayBufferView object
-inline bool
-CloneData(JSContext* aCx, CryptoBuffer& aDst, JS::Handle<JSObject*> aSrc)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Try ArrayBuffer
-  RootedTypedArray<ArrayBuffer> ab(aCx);
-  if (ab.Init(aSrc)) {
-    return !!aDst.Assign(ab);
-  }
-
-  // Try ArrayBufferView
-  RootedTypedArray<ArrayBufferView> abv(aCx);
-  if (abv.Init(aSrc)) {
-    return !!aDst.Assign(abv);
-  }
-
-  return false;
-}
-
 // Implementation of WebCryptoTask methods
 
 void
@@ -1379,27 +1358,40 @@ public:
     return true;
   }
 
-  void SetKeyData(JSContext* aCx, JS::Handle<JSObject*> aKeyData) {
-    // First try to treat as ArrayBuffer/ABV,
-    // and if that fails, try to initialize a JWK
-    if (CloneData(aCx, mKeyData, aKeyData)) {
-      mDataIsJwk = false;
+  void SetKeyData(JSContext* aCx, JS::Handle<JSObject*> aKeyData)
+  {
+    mDataIsJwk = false;
 
-      if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
-        SetJwkFromKeyData();
+    // Try ArrayBuffer
+    RootedTypedArray<ArrayBuffer> ab(aCx);
+    if (ab.Init(aKeyData)) {
+      if (!mKeyData.Assign(ab)) {
+        mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
       }
-    } else {
-      ClearException ce(aCx);
-      JS::RootedValue value(aCx, JS::ObjectValue(*aKeyData));
-      if (!mJwk.Init(aCx, value)) {
-        mEarlyRv = NS_ERROR_DOM_DATA_ERR;
-        return;
-      }
-      mDataIsJwk = true;
+      return;
     }
+
+    // Try ArrayBufferView
+    RootedTypedArray<ArrayBufferView> abv(aCx);
+    if (abv.Init(aKeyData)) {
+      if (!mKeyData.Assign(abv)) {
+        mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
+      }
+      return;
+    }
+
+    // Try JWK
+    ClearException ce(aCx);
+    JS::RootedValue value(aCx, JS::ObjectValue(*aKeyData));
+    if (!mJwk.Init(aCx, value)) {
+      mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+      return;
+    }
+
+    mDataIsJwk = true;
   }
 
-  void SetKeyData(const CryptoBuffer& aKeyData)
+  void SetKeyDataMaybeParseJWK(const CryptoBuffer& aKeyData)
   {
     if (!mKeyData.Assign(aKeyData)) {
       mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
@@ -1409,26 +1401,37 @@ public:
     mDataIsJwk = false;
 
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
-      SetJwkFromKeyData();
+      nsDependentCSubstring utf8((const char*) mKeyData.Elements(),
+                                 (const char*) (mKeyData.Elements() +
+                                                mKeyData.Length()));
+      if (!IsUTF8(utf8)) {
+        mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+        return;
+      }
+
+      nsString json = NS_ConvertUTF8toUTF16(utf8);
+      if (!mJwk.Init(json)) {
+        mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+        return;
+      }
+
+      mDataIsJwk = true;
     }
   }
 
-  void SetJwkFromKeyData()
+  void SetRawKeyData(const CryptoBuffer& aKeyData)
   {
-    nsDependentCSubstring utf8((const char*) mKeyData.Elements(),
-                               (const char*) (mKeyData.Elements() +
-                                              mKeyData.Length()));
-    if (!IsUTF8(utf8)) {
-      mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+    if (!mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
+      mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
       return;
     }
 
-    nsString json = NS_ConvertUTF8toUTF16(utf8);
-    if (!mJwk.Init(json)) {
-      mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+    if (!mKeyData.Assign(aKeyData)) {
+      mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
       return;
     }
-    mDataIsJwk = true;
+
+    mDataIsJwk = false;
   }
 
 protected:
@@ -2846,7 +2849,7 @@ protected:
 
 private:
   virtual void Resolve() override {
-    mTask->SetKeyData(this->mResult);
+    mTask->SetRawKeyData(this->mResult);
     mTask->DispatchWithPromise(this->mResultPromise);
     mResolved = true;
   }
@@ -3141,7 +3144,7 @@ private:
 
   virtual void Resolve() override
   {
-    mTask->SetKeyData(KeyEncryptTask::mResult);
+    mTask->SetKeyDataMaybeParseJWK(KeyEncryptTask::mResult);
     mTask->DispatchWithPromise(KeyEncryptTask::mResultPromise);
     mResolved = true;
   }
