@@ -96,40 +96,15 @@ DIST="$MOZ_BUILD_ROOT/dist"
 
 MOZ_DEFAULT_COMPILER
 
-MOZ_ARG_WITH_STRING(l10n-base,
-[  --with-l10n-base=DIR    path to l10n repositories],
-    L10NBASEDIR=$withval)
-if test -n "$L10NBASEDIR"; then
-    if test "$L10NBASEDIR" = "yes" -o "$L10NBASEDIR" = "no"; then
-        AC_MSG_ERROR([--with-l10n-base must specify a path])
-    elif test -d "$L10NBASEDIR"; then
-        L10NBASEDIR=`cd "$L10NBASEDIR" && pwd -P`
-    else
-        AC_MSG_ERROR([Invalid value --with-l10n-base, $L10NBASEDIR doesn't exist])
-    fi
-fi
-AC_SUBST(L10NBASEDIR)
-
-if test -n "$MOZTTDIR" -a ! -d "$MOZTTDIR" ; then
-    AC_MSG_ERROR([MOZTTDIR '$MOZTTDIR' isn't a valid directory])
-fi
-
-AC_SUBST(MOZTTDIR)
-if test -n "$MOZTTDIR" ; then
-    AC_DEFINE(PACKAGE_MOZTT)
-fi
-
-MOZ_ARG_WITH_STRING(gonk,
-[  --with-gonk=DIR
-               location of gonk dir],
-    gonkdir=$withval)
-
 MOZ_ARG_WITH_STRING(gonk-toolchain-prefix,
 [  --with-gonk-toolchain-prefix=DIR
                           prefix to gonk toolchain commands],
     gonk_toolchain_prefix=$withval)
 
 if test -n "$gonkdir" ; then
+    dnl export for js/src/configure. We can't pass the option down normally,
+    dnl because it's a `--enable-project=b2g`-only option.
+    export gonkdir
     kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
     android_source="$gonkdir"
     ANDROID_SOURCE="$android_source"
@@ -167,7 +142,6 @@ if test -n "$gonkdir" ; then
         MOZ_OMX_DECODER=1
         AC_SUBST(MOZ_OMX_DECODER)
         MOZ_RTSP=1
-        MOZ_FMP4=1
         MOZ_SECUREELEMENT=1
         ;;
     17|18)
@@ -189,7 +163,6 @@ if test -n "$gonkdir" ; then
         MOZ_OMX_ENCODER=1
         AC_SUBST(MOZ_OMX_ENCODER)
         AC_DEFINE(MOZ_OMX_ENCODER)
-        MOZ_FMP4=1
         MOZ_SECUREELEMENT=1
         ;;
     19)
@@ -208,7 +181,6 @@ if test -n "$gonkdir" ; then
         MOZ_SECUREELEMENT=1
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
-        MOZ_FMP4=1
         ;;
     21|22)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include -I$gonkdir/external/mdnsresponder/mDNSShared"
@@ -218,7 +190,6 @@ if test -n "$gonkdir" ; then
         AC_DEFINE(MOZ_OMX_ENCODER)
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
-        MOZ_FMP4=1
         MOZ_B2G_CAMERA=1
         if test -d "$gonkdir/system/bluetoothd"; then
             MOZ_B2G_BT=1
@@ -837,10 +808,6 @@ MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
 
 MOZ_FS_LAYOUT=unix
 
-USE_DEPENDENT_LIBS=1
-
-_PLATFORM_DEFAULT_TOOLKIT=cairo-gtk3
-
 dnl Configure platform-specific CPU architecture compiler options.
 dnl ==============================================================
 if test "$COMPILE_ENVIRONMENT"; then
@@ -1388,7 +1355,7 @@ case "$host" in
     else
         HOST_CFLAGS="$HOST_CFLAGS -mwindows"
     fi
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11 -D_CRT_SECURE_NO_WARNINGS"
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     HOST_BIN_SUFFIX=.exe
 
@@ -1408,7 +1375,7 @@ case "$host" in
     ;;
 
 *-darwin*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX -DNO_X11"
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
@@ -1484,12 +1451,10 @@ case "$target" in
     if test -n "$MOZ_IOS"; then
         AC_DEFINE(XP_IOS)
         AC_DEFINE(XP_DARWIN)
-        _PLATFORM_DEFAULT_TOOLKIT='cairo-uikit'
         direct_nspr_config=1
     else
         AC_DEFINE(XP_MACOSX)
         AC_DEFINE(XP_DARWIN)
-        _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
         # The ExceptionHandling framework is needed for Objective-C exception
         # logging code in nsObjCExceptions.h. Currently we only use that in debug
         # builds.
@@ -1538,14 +1503,11 @@ case "$target" in
 
 *-android*|*-linuxandroid*)
     AC_DEFINE(NO_PW_GECOS)
-    no_x=yes
     if test -n "$gonkdir"; then
-        _PLATFORM_DEFAULT_TOOLKIT=cairo-gonk
         _PLATFORM_HAVE_RIL=1
         MOZ_B2G_FM=1
         MOZ_SYNTH_PICO=1
     else
-        _PLATFORM_DEFAULT_TOOLKIT=cairo-android
         if test "$COMPILE_ENVIRONMENT"; then
             MOZ_LINKER=1
         fi
@@ -1808,21 +1770,8 @@ case "$target" in
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
     dnl See http://support.microsoft.com/kb/143208 to use STL
     AC_DEFINE(NOMINMAX)
-    _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
     MOZ_USER_DIR="Mozilla"
-
-    dnl set NO_X11 defines here as the general check is skipped on win32
-    no_x=yes
-    AC_DEFINE(NO_X11)
-
-    case "$host" in
-    *-mingw*)
-        if test -n "$L10NBASEDIR"; then
-            L10NBASEDIR=`cd $L10NBASEDIR && pwd -W`
-        fi
-        ;;
-    esac
 
     case "$host_os" in
     cygwin*|msvc*|mks*)
@@ -2123,9 +2072,7 @@ dnl Checks for X libraries.
 dnl Ordering is important.
 dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
-if test "$no_x" = "yes"; then
-    AC_DEFINE(NO_X11)
-else
+if test -n "$MOZ_X11"; then
     AC_DEFINE_UNQUOTED(FUNCPROTO,15)
     XLIBS="-lX11 $XLIBS"
     _SAVE_LDFLAGS="$LDFLAGS"
@@ -2135,6 +2082,7 @@ else
     AC_CHECK_LIB(Xext, XextAddDisplay, [XEXT_LIBS="-lXext"],
         [MISSING_X="$MISSING_X -lXext"], $XLIBS)
 
+    if test "$MOZ_WIDGET_TOOLKIT" != qt; then
     AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"], [
         unset ac_cv_lib_Xt_XtFree
         AC_CHECK_LIB(ICE, IceFlush, [XT_LIBS="-lICE $XT_LIBS"],, $XT_LIBS $XLIBS)
@@ -2142,6 +2090,7 @@ else
         AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt $XT_LIBS"],
             [MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XT_LIBS $XLIBS)
         ])
+    fi
 
     dnl ========================================================
     dnl = Check for XShm
@@ -2158,7 +2107,7 @@ else
              AC_DEFINE(HAVE_LIBXSS)],, $XEXT_LIBS $XLIBS))
 
     LDFLAGS="$_SAVE_LDFLAGS"
-fi # $no_x
+fi # $MOZ_X11
 
 AC_SUBST_LIST(XCFLAGS)
 AC_SUBST_LIST(XLDFLAGS)
@@ -2707,10 +2656,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(External Packages)
 
-MOZ_ARG_WITH_STRING(libxul-sdk,
-[  --with-libxul-sdk=PFX   Use the libXUL SDK at <PFX>],
-  AC_MSG_ERROR([--with-libxul-sdk is not supported anymore.]))
-
 case "$OS_TARGET" in
 WINNT|Darwin|Android)
   MOZ_FOLD_LIBS=1
@@ -3080,13 +3025,6 @@ MOZ_TREMOR=
 MOZ_SAMPLE_TYPE_FLOAT32=
 MOZ_SAMPLE_TYPE_S16=
 MOZ_DIRECTSHOW=
-MOZ_WMF=
-if test -n "$MOZ_FMP4"; then
-  MOZ_FMP4=1
-else
-  MOZ_FMP4=
-fi
-MOZ_FFMPEG=
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
 MOZ_SRTP=
@@ -3130,7 +3068,6 @@ NS_PRINTING=1
 if test "$MOZ_IOS"; then
    NS_PRINTING=
 fi
-MOZ_PDF_PRINTING=
 MOZ_NO_SMART_CARDS=
 NSS_DISABLE_DBM=
 NECKO_COOKIES=1
@@ -3422,128 +3359,33 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Toolkit Options)
 
-    dnl ========================================================
-    dnl = Select the default toolkit
-    dnl ========================================================
-    MOZ_ARG_ENABLE_STRING(default-toolkit,
-    [  --enable-default-toolkit=TK
-                          Select default toolkit
-                          Platform specific defaults:
-                            Mac OS X - cairo-cocoa
-                            Win32 - cairo-windows
-                            * - cairo-gtk2
-                            * - cairo-gtk3
-                            * - cairo-qt],
-    [ _DEFAULT_TOOLKIT=$enableval ],
-    [ _DEFAULT_TOOLKIT=$_PLATFORM_DEFAULT_TOOLKIT])
-
-    if test "$_DEFAULT_TOOLKIT" = "cairo-windows" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-x11" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-gtk3" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-qt" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-uikit" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-android" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-gonk"
-    then
-        dnl nglayout only supports building with one toolkit,
-        dnl so ignore everything after the first comma (",").
-        MOZ_WIDGET_TOOLKIT=`echo "$_DEFAULT_TOOLKIT" | sed -e "s/,.*$//"`
-    else
-        AC_MSG_ERROR([You must specify a default toolkit (perhaps $_PLATFORM_DEFAULT_TOOLKIT).])
-    fi
-
-MOZ_ARG_WITHOUT_BOOL(x,
-[  --without-x              Build without X11],
-    WITHOUT_X11=1)
-
 dnl ========================================================
 dnl = Enable the toolkit as needed                         =
 dnl ========================================================
 
-MOZ_WIDGET_GTK=
-
 case "$MOZ_WIDGET_TOOLKIT" in
 
-cairo-windows)
-    MOZ_WIDGET_TOOLKIT=windows
-    MOZ_PDF_PRINTING=1
-    MOZ_INSTRUMENT_EVENT_LOOP=1
-    ;;
-
-cairo-gtk3)
-    MOZ_WIDGET_TOOLKIT=gtk3
-    MOZ_ENABLE_GTK=1
-    MOZ_ENABLE_GTK3=1
-    MOZ_ENABLE_XREMOTE=1
-    MOZ_GL_DEFAULT_PROVIDER=GLX
-
-    AC_DEFINE(MOZ_X11)
-    MOZ_X11=1
-    USE_FC_FREETYPE=1
-
-    MOZ_WIDGET_GTK=3
-    AC_DEFINE_UNQUOTED(MOZ_WIDGET_GTK,$MOZ_WIDGET_GTK)
-    MOZ_PDF_PRINTING=1
-    MOZ_INSTRUMENT_EVENT_LOOP=1
-    ;;
-
-cairo-gtk2|cairo-gtk2-x11)
-    MOZ_WIDGET_TOOLKIT=gtk2
-    MOZ_ENABLE_GTK=1
-    MOZ_ENABLE_GTK2=1
-    MOZ_ENABLE_XREMOTE=1
-    MOZ_GL_DEFAULT_PROVIDER=GLX
-
-    AC_DEFINE(MOZ_X11)
-    MOZ_X11=1
-    USE_FC_FREETYPE=1
-
-    AC_DEFINE(MOZ_WIDGET_GTK2)
-    MOZ_WIDGET_GTK=2
-    AC_DEFINE_UNQUOTED(MOZ_WIDGET_GTK,$MOZ_WIDGET_GTK)
-    MOZ_PDF_PRINTING=1
-    MOZ_INSTRUMENT_EVENT_LOOP=1
-    ;;
-
-cairo-qt)
-    MOZ_WIDGET_TOOLKIT=qt
+qt)
     MOZ_ENABLE_QT=1
-    if test -z "$WITHOUT_X11"; then
-      MOZ_ENABLE_XREMOTE=1
-      MOZ_GL_DEFAULT_PROVIDER=GLX
-      MOZ_X11=1
-      AC_DEFINE(MOZ_X11)
-      XT_LIBS=
-    fi
 
-    USE_FC_FREETYPE=1
-    AC_DEFINE(MOZ_WIDGET_QT)
-    MOZ_PDF_PRINTING=1
     AC_DEFINE(QT_NO_KEYWORDS)
     ;;
 
-cairo-cocoa)
-    MOZ_WIDGET_TOOLKIT=cocoa
-    AC_DEFINE(MOZ_WIDGET_COCOA)
+cocoa)
     LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
     # Use -Wl as a trick to avoid -framework and framework names from
     # being separated by AC_SUBST_LIST.
     TK_LIBS='-Wl,-framework,CoreLocation -Wl,-framework,QuartzCore -Wl,-framework,Carbon -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-framework,AudioUnit -Wl,-framework,AddressBook -Wl,-framework,OpenGL'
-    TK_CFLAGS="-DNO_X11"
+    TK_CFLAGS=""
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     MOZ_USER_DIR="Mozilla"
     MOZ_FS_LAYOUT=bundle
-    MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
-cairo-uikit)
-    MOZ_WIDGET_TOOLKIT=uikit
-    AC_DEFINE(MOZ_WIDGET_UIKIT)
+uikit)
     LDFLAGS="$LDFLAGS -framework UIKit -lobjc"
-    TK_CFLAGS="-DNO_X11"
+    TK_CFLAGS=""
     TK_LIBS='-Wl,-framework,Foundation -Wl,-framework,CoreFoundation -Wl,-framework,CoreGraphics -Wl,-framework,CoreText -Wl,-framework,AVFoundation -Wl,-framework,AudioToolbox -Wl,-framework,CoreMedia -Wl,-framework,CoreVideo -Wl,-framework,OpenGLES -Wl,-framework,QuartzCore'
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
@@ -3551,40 +3393,18 @@ cairo-uikit)
     MOZ_FS_LAYOUT=bundle
     ;;
 
-cairo-android)
-    AC_DEFINE(MOZ_WIDGET_ANDROID)
-    MOZ_WIDGET_TOOLKIT=android
-    MOZ_PDF_PRINTING=1
-    MOZ_INSTRUMENT_EVENT_LOOP=1
-    ;;
-
-cairo-gonk)
-    AC_DEFINE(MOZ_WIDGET_GONK)
-    AC_DEFINE(MOZ_TOUCH)
-    MOZ_WIDGET_TOOLKIT=gonk
-    MOZ_PDF_PRINTING=1
-    MOZ_TOUCH=1
-    MOZ_INSTRUMENT_EVENT_LOOP=1
-    ;;
-
 esac
 
-AC_SUBST(MOZ_PDF_PRINTING)
-if test "$MOZ_PDF_PRINTING"; then
-   PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
-   AC_DEFINE(MOZ_PDF_PRINTING)
-fi
-
-if test "$MOZ_ENABLE_XREMOTE"; then
-    AC_DEFINE(MOZ_ENABLE_XREMOTE)
-fi
-
-if test "$MOZ_INSTRUMENT_EVENT_LOOP"; then
-   AC_DEFINE(MOZ_INSTRUMENT_EVENT_LOOP)
-fi
+dnl there are a lot of tests on MOZ_ENABLE_GTK below, that are more convenient
+dnl to keep that way than testing against MOZ_WIDGET_TOOLKIT
+case "$MOZ_WIDGET_TOOLKIT" in
+gtk*)
+    MOZ_ENABLE_GTK=1
+    ;;
+esac
 
 if test "$COMPILE_ENVIRONMENT"; then
-  if test "$MOZ_ENABLE_GTK3"; then
+  if test "$MOZ_WIDGET_TOOLKIT" = gtk3; then
     PKG_CHECK_MODULES(MOZ_GTK3, gtk+-3.0 >= $GTK3_VERSION gtk+-unix-print-3.0 glib-2.0 gobject-2.0 $GDK_PACKAGES)
     MOZ_GTK3_CFLAGS="-I${_topsrcdir}/widget/gtk/compat-gtk3 $MOZ_GTK3_CFLAGS"
     TK_CFLAGS=$MOZ_GTK3_CFLAGS
@@ -3593,7 +3413,7 @@ if test "$COMPILE_ENVIRONMENT"; then
     AC_DEFINE_UNQUOTED(GDK_VERSION_MAX_ALLOWED,$GDK_VERSION_MIN_REQUIRED)
     GLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_32
   fi
-  if test "$MOZ_ENABLE_GTK2"; then
+  if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
     GLIB_VERSION_MAX_ALLOWED=$GLIB_VERSION_MIN_REQUIRED
   fi
   if test "$MOZ_ENABLE_GTK"; then
@@ -3606,7 +3426,7 @@ if test "$COMPILE_ENVIRONMENT"; then
     PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 glib-2.0 >= $GLIB_VERSION gobject-2.0 $GDK_PACKAGES)
     MOZ_GTK2_CFLAGS="-I${_topsrcdir}/widget/gtk/compat $MOZ_GTK2_CFLAGS"
   fi
-  if test "$MOZ_ENABLE_GTK2"; then
+  if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
     TK_CFLAGS=$MOZ_GTK2_CFLAGS
     TK_LIBS=$MOZ_GTK2_LIBS
   fi
@@ -3843,22 +3663,15 @@ AC_SUBST(GTK_CONFIG)
 AC_SUBST_LIST(TK_CFLAGS)
 AC_SUBST_LIST(TK_LIBS)
 
-AC_SUBST(MOZ_ENABLE_GTK2)
-AC_SUBST(MOZ_ENABLE_GTK3)
-AC_SUBST(MOZ_ENABLE_GTK)
 AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_QTNETWORK)
 AC_SUBST(MOZ_ENABLE_QMSYSTEM2)
 AC_SUBST(MOZ_ENABLE_QTMOBILITY)
-AC_SUBST(MOZ_ENABLE_XREMOTE)
-AC_SUBST(MOZ_WIDGET_GTK)
 AC_SUBST_LIST(MOZ_QT_CFLAGS)
 AC_SUBST_LIST(MOZ_QT_LIBS)
 
 AC_SUBST(MOC)
 AC_SUBST(RCC)
-
-AC_SUBST(MOZ_X11)
 
 dnl ========================================================
 dnl =
@@ -3964,7 +3777,7 @@ then
 
     if test "$MOZ_ENABLE_GIO" -a "$MOZ_ENABLE_GTK"
     then
-        if test "$MOZ_ENABLE_GTK2"
+        if test "$MOZ_WIDGET_TOOLKIT" = gtk2
         then
             PKG_CHECK_MODULES(_GTKCHECK, gtk+-2.0 >= 2.14, ,
                               [AC_MSG_ERROR([* * * Could not find gtk+-2.0 > 2.14. Required for build with gio.])])
@@ -4464,13 +4277,8 @@ fi
 dnl ========================================================
 dnl = Apple platform decoder support
 dnl ========================================================
-if test "$MOZ_WIDGET_TOOLKIT" = "cocoa" || test "$MOZ_WIDGET_TOOLKIT" = "uikit"; then
-  MOZ_APPLEMEDIA=1
-fi
-
 if test "$COMPILE_ENVIRONMENT"; then
 if test -n "$MOZ_APPLEMEDIA"; then
-  AC_DEFINE(MOZ_APPLEMEDIA)
   # hack in frameworks for fmp4 - see bug 1029974
   # We load VideoToolbox and CoreMedia dynamically, so they don't appear here.
   LDFLAGS="$LDFLAGS -framework AudioToolbox"
@@ -4498,73 +4306,8 @@ if test -n "$MOZ_DIRECTSHOW"; then
 fi;
 
 dnl ========================================================
-dnl = Windows Media Foundation support
-dnl ========================================================
-if test "$OS_ARCH" = "WINNT"; then
-    dnl Enable Windows Media Foundation support by default.
-    dnl Note our minimum SDK version is Windows 7 SDK, so we are (currently)
-    dnl guaranteed to have a recent-enough SDK to build WMF.
-    MOZ_WMF=1
-fi
-
-MOZ_ARG_DISABLE_BOOL(wmf,
-[  --disable-wmf  Disable support for Windows Media Foundation],
-    MOZ_WMF=,
-    MOZ_WMF=1)
-
-if test -n "$MOZ_WMF"; then
-    AC_DEFINE(MOZ_WMF)
-fi;
-
-dnl ========================================================
-dnl FFmpeg H264/AAC Decoding Support
-dnl ========================================================
-case "$OS_TARGET" in
-WINNT|Android)
-    ;;
-*)
-    MOZ_FFMPEG=1
-    ;;
-esac
-
-MOZ_ARG_DISABLE_BOOL(ffmpeg,
-[  --disable-ffmpeg         Disable FFmpeg for fragmented H264/AAC decoding],
-    MOZ_FFMPEG=,
-    MOZ_FFMPEG=1
-)
-
-if test -n "$MOZ_FFMPEG"; then
-    AC_DEFINE(MOZ_FFMPEG)
-fi;
-
-dnl ========================================================
 dnl = Built-in fragmented MP4 support.
 dnl ========================================================
-
-if test "$OS_TARGET" = Android -a -z "$gonkdir"; then
-    MOZ_FMP4=1
-fi
-
-if test -n "$MOZ_WMF" -o -n "$MOZ_FFMPEG" -o -n "$MOZ_APPLEMEDIA"; then
-    dnl Enable fragmented MP4 parser on Windows by default.
-    dnl We will also need to enable it on other platforms as we implement
-    dnl platform decoder support there too.
-    MOZ_FMP4=1
-fi
-
-MOZ_ARG_DISABLE_BOOL(fmp4,
-[  --disable-fmp4  Disable support for in built Fragmented MP4 parsing],
-    MOZ_FMP4=,
-    MOZ_FMP4=1)
-
-if test -n "$MOZ_FFMPEG" -a -z "$MOZ_FMP4"; then
-    AC_MSG_ERROR([Fragmented MP4 support must be enabled if using FFMPEG])
-fi
-
-if test -n "$MOZ_FMP4"; then
-    AC_DEFINE(MOZ_FMP4)
-    MOZ_EME=1
-fi;
 
 if test x"$MOZ_WIDGET_TOOLKIT" = x"gonk" -a -n "$MOZ_FMP4" -a -n "$ANDROID_VERSION"; then
     # we now know for sure that $ANDROID_VERSION is not an empty string!
@@ -4574,36 +4317,6 @@ if test x"$MOZ_WIDGET_TOOLKIT" = x"gonk" -a -n "$MOZ_FMP4" -a -n "$ANDROID_VERSI
     fi
 fi
 
-
-dnl ========================================================
-dnl = EME support
-dnl ========================================================
-
-MOZ_ARG_ENABLE_STRING(eme,
-[  --enable-eme[=adobe]  Enable support for Encrypted Media Extensions  ],
-    MOZ_EME_ARGS=$enableval)
-
-if test "$MOZ_EME_ARGS"; then
-    if test "$MOZ_EME_ARGS" = "no"; then
-        dnl EME explicitly disabled with --disable-eme
-        MOZ_EME=
-    elif test "$MOZ_EME_ARGS" = "yes"; then
-        dnl EME explicitly enabled with --enable-eme
-        MOZ_EME=1
-    else
-        dnl EME explicitly enabled with --enable-eme=<args>
-        MOZ_EME=1
-        MOZ_EME_MODULES=`echo $MOZ_EME_ARGS | sed -e 's/,/ /g'`
-    fi
-fi
-
-AC_SUBST_SET(MOZ_EME_MODULES)
-if test -n "$MOZ_EME"; then
-    if test -z "$MOZ_FMP4"; then
-        AC_MSG_ERROR([Encrypted Media Extension support requires Fragmented MP4 support])
-    fi
-    AC_DEFINE(MOZ_EME)
-fi
 
 dnl ========================================================
 dnl = Enable media plugin support
@@ -6158,24 +5871,6 @@ MOZ_ARG_DISABLE_BOOL(zipwriter,
 AC_SUBST(MOZ_ZIPWRITER)
 
 dnl ========================================================
-dnl GL provider
-dnl ========================================================
-MOZ_GL_PROVIDER=
-MOZ_ARG_WITH_STRING(gl-provider,
-[  --with-gl-provider=ID
-                          Set GL provider backend type],
-[ val=`echo $withval`
-    MOZ_GL_PROVIDER="$val"])
-
-if test -n "$MOZ_GL_PROVIDER"; then
-MOZ_GL_DEFAULT_PROVIDER=$MOZ_GL_PROVIDER
-AC_SUBST(MOZ_GL_PROVIDER)
-AC_DEFINE_UNQUOTED(MOZ_GL_PROVIDER, GLContextProvider$MOZ_GL_PROVIDER)
-fi
-AC_SUBST(MOZ_GL_DEFAULT_PROVIDER)
-AC_DEFINE_UNQUOTED(GL_PROVIDER_$MOZ_GL_DEFAULT_PROVIDER)
-
-dnl ========================================================
 dnl = faststripe theme
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(faststripe,
@@ -7465,7 +7160,6 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
 
     AC_SUBST(PS_SURFACE_FEATURE)
-    AC_SUBST(PDF_SURFACE_FEATURE)
     AC_SUBST(SVG_SURFACE_FEATURE)
     AC_SUBST(XLIB_SURFACE_FEATURE)
     AC_SUBST(XLIB_XRENDER_SURFACE_FEATURE)
@@ -7746,7 +7440,6 @@ AC_SUBST(WINDRES)
 AC_SUBST(IMPLIB)
 AC_SUBST(FILTER)
 AC_SUBST(BIN_FLAGS)
-AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_DEBUG)
@@ -7830,8 +7523,6 @@ AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
-
-AC_SUBST(USE_DEPENDENT_LIBS)
 
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_LINKER_EXTRACT)
@@ -8173,15 +7864,10 @@ AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 
 AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
-AC_SUBST(MOZ_WMF)
-AC_SUBST(MOZ_FFMPEG)
 AC_SUBST(MOZ_FFVPX)
 AC_SUBST_LIST(FFVPX_ASFLAGS)
-AC_SUBST(MOZ_FMP4)
-AC_SUBST(MOZ_EME)
 AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_ANDROID_OMX)
-AC_SUBST(MOZ_APPLEMEDIA)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE)
 AC_SUBST(MOZ_VPX_ERROR_CONCEALMENT)
@@ -8191,7 +7877,6 @@ AC_SUBST(VPX_AS_CONVERSION)
 AC_SUBST(VPX_X86_ASM)
 AC_SUBST(VPX_ARM_ASM)
 AC_SUBST(VPX_NEED_OBJ_INT_EXTRACT)
-AC_SUBST(MOZ_INSTRUMENT_EVENT_LOOP)
 AC_SUBST(MOZ_CODE_COVERAGE)
 AC_SUBST(LIBJPEG_TURBO_USE_YASM)
 AC_SUBST_LIST(LIBJPEG_TURBO_ASFLAGS)
@@ -8219,9 +7904,6 @@ AC_CHECK_FUNCS(posix_fadvise posix_fallocate)
 
 dnl Check for missing components
 if test "$MOZ_X11"; then
-    if test "$WITHOUT_X11"; then
-        AC_MSG_ERROR([--without-x specified and MOZ_X11 still defined])
-    fi
     dnl ====================================================
     dnl = Check if X headers exist
     dnl ====================================================

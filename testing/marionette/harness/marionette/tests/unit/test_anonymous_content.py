@@ -8,6 +8,8 @@ from marionette_driver.errors import NoSuchElementException
 from marionette_driver.expected import element_present
 from marionette_driver.marionette import HTMLElement
 from marionette_driver.wait import Wait
+from marionette_driver.by import By
+
 
 class TestAnonymousContent(MarionetteTestCase):
     def setUp(self):
@@ -25,39 +27,39 @@ class TestAnonymousContent(MarionetteTestCase):
         MarionetteTestCase.tearDown(self)
 
     def test_switch_to_anonymous_frame(self):
-        self.marionette.find_element("id", "testAnonymousContentBox")
-        anon_browser_el = self.marionette.find_element("id", "browser")
+        self.marionette.find_element(By.ID, "testAnonymousContentBox")
+        anon_browser_el = self.marionette.find_element(By.ID, "browser")
         self.assertTrue("test_anonymous_content.xul" in self.marionette.get_url())
         self.marionette.switch_to_frame(anon_browser_el)
         self.assertTrue("test.xul" in self.marionette.get_url())
-        self.marionette.find_element("id", "testXulBox")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, "id", "testAnonymousContentBox")
+        self.marionette.find_element(By.ID, "testXulBox")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "testAnonymousContentBox")
 
     def test_switch_to_anonymous_iframe(self):
-        self.marionette.find_element("id", "testAnonymousContentBox")
-        el = self.marionette.find_element("id", "container2")
-        anon_iframe_el = el.find_element("anon attribute", {"anonid": "iframe"})
+        self.marionette.find_element(By.ID, "testAnonymousContentBox")
+        el = self.marionette.find_element(By.ID, "container2")
+        anon_iframe_el = el.find_element(By.ANON_ATTRIBUTE, {"anonid": "iframe"})
         self.marionette.switch_to_frame(anon_iframe_el)
         self.assertTrue("test.xul" in self.marionette.get_url())
-        self.marionette.find_element("id", "testXulBox")
-        self.assertRaises(NoSuchElementException, self.marionette.find_element, "id",
+        self.marionette.find_element(By.ID, "testXulBox")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID,
                           "testAnonymousContentBox")
 
     def test_find_anonymous_element_by_attribute(self):
-        el = Wait(self.marionette).until(element_present("id", "dia"))
-        self.assertEquals(HTMLElement, type(el.find_element("anon attribute", {"anonid": "buttons"})))
-        self.assertEquals(1, len(el.find_elements("anon attribute", {"anonid": "buttons"})))
+        el = Wait(self.marionette).until(element_present(By.ID, "dia"))
+        self.assertEquals(HTMLElement, type(el.find_element(By.ANON_ATTRIBUTE, {"anonid": "buttons"})))
+        self.assertEquals(1, len(el.find_elements(By.ANON_ATTRIBUTE, {"anonid": "buttons"})))
 
         with self.assertRaises(NoSuchElementException):
-            el.find_element("anon attribute", {"anonid": "nonexistent"})
-        self.assertEquals([], el.find_elements("anon attribute", {"anonid": "nonexistent"}))
+            el.find_element(By.ANON_ATTRIBUTE, {"anonid": "nonexistent"})
+        self.assertEquals([], el.find_elements(By.ANON_ATTRIBUTE, {"anonid": "nonexistent"}))
 
     def test_find_anonymous_children(self):
-        el = Wait(self.marionette).until(element_present("id", "dia"))
-        self.assertEquals(HTMLElement, type(el.find_element("anon", None)))
-        self.assertEquals(2, len(el.find_elements("anon", None)))
+        el = Wait(self.marionette).until(element_present(By.ID, "dia"))
+        self.assertEquals(HTMLElement, type(el.find_element(By.ANON, None)))
+        self.assertEquals(2, len(el.find_elements(By.ANON, None)))
 
-        el = self.marionette.find_element("id", "framebox")
+        el = self.marionette.find_element(By.ID, "framebox")
         with self.assertRaises(NoSuchElementException):
-            el.find_element("anon", None)
-        self.assertEquals([], el.find_elements("anon", None))
+            el.find_element(By.ANON, None)
+        self.assertEquals([], el.find_elements(By.ANON, None))

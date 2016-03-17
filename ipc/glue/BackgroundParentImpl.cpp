@@ -58,12 +58,6 @@ using mozilla::dom::UDPSocketParent;
 namespace {
 
 void
-AssertIsInMainProcess()
-{
-  MOZ_ASSERT(XRE_IsParentProcess());
-}
-
-void
 AssertIsOnMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -752,6 +746,6 @@ BackgroundParentImpl::DeallocPQuotaParent(PQuotaParent* aActor)
 void
 TestParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  AssertIsInMainProcess();
+  mozilla::ipc::AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 }

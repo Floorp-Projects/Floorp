@@ -41,6 +41,7 @@ from mozpack.manifests import (
 )
 
 from mozbuild.backend import backends
+from mozbuild.shellutil import quote as shell_quote
 
 
 BUILD_WHAT_HELP = '''
@@ -551,13 +552,17 @@ class Build(MachCommandBase):
 
     @Command('configure', category='build',
         description='Configure the tree (run configure and config.status).')
-    def configure(self):
+    @CommandArgument('options', default=None, nargs=argparse.REMAINDER,
+                     help='Configure options')
+    def configure(self, options=None):
         def on_line(line):
             self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
 
+        options = ' '.join(shell_quote(o) for o in options or ())
         status = self._run_make(srcdir=True, filename='client.mk',
             target='configure', line_handler=on_line, log=False,
-            print_directory=False, allow_parallel=False, ensure_exit_code=False)
+            print_directory=False, allow_parallel=False, ensure_exit_code=False,
+            append_env={b'CONFIGURE_ARGS': options.encode('utf-8')})
 
         if not status:
             print('Configure complete!')

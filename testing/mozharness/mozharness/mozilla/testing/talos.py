@@ -170,7 +170,12 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         if self.buildbot_config:
             # this is inside automation
             # now let's see if we added spsProfile specs in the commit message
-            junk, junk, opts = self.buildbot_config['sourcestamp']['changes'][-1]['comments'].partition('mozharness:')
+            try:
+                junk, junk, opts = self.buildbot_config['sourcestamp']['changes'][-1]['comments'].partition('mozharness:')
+            except IndexError:
+                # when we don't have comments on changes (bug 1255187)
+                opts = None
+
             if opts:
               opts = re.sub(r'\w+:.*', '', opts).strip().split(' ')
               if "--spsProfile" in opts:
@@ -237,6 +242,8 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
             kw_options['suite'] = self.config['suite']
         if self.config.get('title'):
             kw_options['title'] = self.config['title']
+            if kw_options['title'].startswith('tst-linux64-spot'):
+                kw_options['framework'] = 'talos-aws'
         if self.config.get('branch'):
             kw_options['branchName'] = self.config['branch']
         if self.symbols_path:

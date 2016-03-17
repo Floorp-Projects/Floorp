@@ -25,12 +25,6 @@ namespace {
 
 uint64_t sServiceWorkerManagerParentID = 0;
 
-void
-AssertIsInMainProcess()
-{
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
-}
-
 class RegisterServiceWorkerCallback final : public nsRunnable
 {
 public:

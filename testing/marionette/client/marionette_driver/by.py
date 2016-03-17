@@ -24,3 +24,4 @@ class By(object):
     CLASS_NAME = "class name"
     CSS_SELECTOR = "css selector"
     ANON_ATTRIBUTE = "anon attribute"
+    ANON = "anon"

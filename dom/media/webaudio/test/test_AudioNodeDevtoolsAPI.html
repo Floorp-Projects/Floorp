@@ -2,16 +2,18 @@
 <html>
 <head>
   <title>Test the devtool AudioNode API</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-  Components.utils.import('resource://gre/modules/Services.jsm');
-
   SimpleTest.waitForExplicitFinish();
+
+  function id(node) {
+    return SpecialPowers.getPrivilegedProps(node, "id");
+  }
 
   var ac = new AudioContext();
   var ids;
@@ -19,11 +21,11 @@
   (function() {
     var src1 = ac.createBufferSource();
     var src2 = ac.createBufferSource();
-    ok(src2.id > src1.id, "The ID should be monotonic");
-    ok(src1.id > ac.destination.id, "The ID of the destination node should be the lowest");
-    ids = [src1.id, src2.id];
-    weak = Components.utils.getWeakReference(src1);
-    is(weak.get(), src1, "The node should support a weak reference");
+    ok(id(src2) > id(src1), "The ID should be monotonic");
+    ok(id(src1) > id(ac.destination), "The ID of the destination node should be the lowest");
+    ids = [id(src1), id(src2)];
+    weak = SpecialPowers.Cu.getWeakReference(src1);
+    is(SpecialPowers.unwrap(weak.get()), src1, "The node should support a weak reference");
   })();
   function observer(subject, topic, data) {
     var id = parseInt(data);
@@ -34,13 +36,13 @@
       if (ids.length == 0) {
         SimpleTest.executeSoon(function() {
           is(weak.get(), null, "The weak reference must be dropped now");
-          Services.obs.removeObserver(observer, "webaudio-node-demise");
+          SpecialPowers.removeObserver(observer, "webaudio-node-demise");
           SimpleTest.finish();
         });
       }
     }
   }
-  Services.obs.addObserver(observer, "webaudio-node-demise", false);
+  SpecialPowers.addObserver(observer, "webaudio-node-demise", false);
 
   forceCC();
   forceCC();

@@ -1086,7 +1086,7 @@ typedef Vector<ImportName, 0, SystemAllocPolicy> ImportNameVector;
 static bool
 DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
-    const DeclaredSig* sig;
+    const DeclaredSig* sig = nullptr;
     if (!DecodeSignatureIndex(cx, d, *init, &sig))
         return false;
 

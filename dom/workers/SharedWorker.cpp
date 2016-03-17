@@ -21,6 +21,7 @@
 
 using mozilla::dom::Optional;
 using mozilla::dom::Sequence;
+using mozilla::dom::MessagePort;
 using namespace mozilla;
 
 USING_WORKERS_NAMESPACE

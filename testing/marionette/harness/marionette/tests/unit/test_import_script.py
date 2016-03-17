@@ -6,6 +6,8 @@ import os
 
 from marionette.marionette_test import MarionetteTestCase, skip_if_chrome
 from marionette_driver.errors import JavascriptException
+from marionette_driver.by import By
+
 
 class TestImportScriptContent(MarionetteTestCase):
     contexts = set(["chrome", "content"])
@@ -105,7 +107,7 @@ class TestImportScriptContent(MarionetteTestCase):
         self.marionette.navigate(
             self.marionette.absolute_url("test_windows.html"))
         original_window = self.marionette.current_window_handle
-        self.marionette.find_element("link text", "Open new window").click()
+        self.marionette.find_element(By.LINK_TEXT, "Open new window").click()
 
         windows = set(self.marionette.window_handles)
         print "windows=%s" % windows

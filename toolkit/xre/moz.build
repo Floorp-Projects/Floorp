@@ -52,7 +52,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
         'nsNativeAppSupportQt.cpp',
         'nsQAppInstance.cpp',
     ]
-elif CONFIG['MOZ_ENABLE_GTK']:
+elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     UNIFIED_SOURCES += [
         'nsNativeAppSupportUnix.cpp',
     ]
@@ -177,7 +177,7 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 CXXFLAGS += CONFIG['MOZ_DBUS_CFLAGS']
 CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
 
-if CONFIG['MOZ_WIDGET_GTK']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 
 DEFINES['TOPOBJDIR'] = TOPOBJDIR
