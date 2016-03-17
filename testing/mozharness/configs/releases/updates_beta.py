@@ -24,9 +24,7 @@ config = {
             "requires_mirrors": True,
             "patcher_config": "mozBeta-branch-patcher2.cfg",
             "update_verify_channel": "beta-localtest",
-            "mar_channel_ids": [
-                "firefox-mozilla-beta", "firefox-mozilla-release",
-            ],
+            "mar_channel_ids": [],
             "channel_names": ["beta", "beta-localtest", "beta-cdntest"],
             "rules_to_update": ["firefox-beta-cdntest", "firefox-beta-localtest"],
         },
