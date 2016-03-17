@@ -97,7 +97,7 @@ private:
   };
 
 public:
-  explicit gfxShmSharedReadLock(ISurfaceAllocator* aAllocator);
+  explicit gfxShmSharedReadLock(ClientIPCAllocator* aAllocator);
 
 protected:
   ~gfxShmSharedReadLock();

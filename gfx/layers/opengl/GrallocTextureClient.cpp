@@ -110,7 +110,7 @@ GrallocTextureData::~GrallocTextureData()
 }
 
 void
-GrallocTextureData::Deallocate(ISurfaceAllocator* aAllocator)
+GrallocTextureData::Deallocate(ClientIPCAllocator* aAllocator)
 {
   MOZ_ASSERT(aAllocator);
   if (aAllocator && aAllocator->IPCOpen()) {
@@ -122,7 +122,7 @@ GrallocTextureData::Deallocate(ISurfaceAllocator* aAllocator)
 }
 
 void
-GrallocTextureData::Forget(ISurfaceAllocator* aAllocator)
+GrallocTextureData::Forget(ClientIPCAllocator* aAllocator)
 {
   MOZ_ASSERT(aAllocator);
   if (aAllocator && aAllocator->IPCOpen()) {
@@ -279,7 +279,7 @@ GrallocTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
 GrallocTextureData*
 GrallocTextureData::Create(gfx::IntSize aSize, AndroidFormat aAndroidFormat,
                            gfx::BackendType aMoz2dBackend, uint32_t aUsage,
-                           ISurfaceAllocator* aAllocator)
+                           ClientIPCAllocator* aAllocator)
 {
   if (!aAllocator || !aAllocator->IPCOpen()) {
     return nullptr;
@@ -334,7 +334,7 @@ GrallocTextureData::Create(gfx::IntSize aSize, AndroidFormat aAndroidFormat,
 GrallocTextureData*
 GrallocTextureData::CreateForDrawing(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                      gfx::BackendType aMoz2dBackend,
-                                     ISurfaceAllocator* aAllocator)
+                                     ClientIPCAllocator* aAllocator)
 {
   if (DisableGralloc(aFormat, aSize)) {
     return nullptr;
@@ -386,7 +386,7 @@ GrallocTextureData::GetTextureFlags() const
 // static
 GrallocTextureData*
 GrallocTextureData::CreateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbCrSize,
-                                   ISurfaceAllocator* aAllocator)
+                                   ClientIPCAllocator* aAllocator)
 {
   MOZ_ASSERT(aYSize.width == aCbCrSize.width * 2);
   MOZ_ASSERT(aYSize.height == aCbCrSize.height * 2);
@@ -399,7 +399,7 @@ GrallocTextureData::CreateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbCrSize,
 // static
 GrallocTextureData*
 GrallocTextureData::CreateForGLRendering(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                         ISurfaceAllocator* aAllocator)
+                                         ClientIPCAllocator* aAllocator)
 {
   if (aFormat == gfx::SurfaceFormat::YUV) {
     return nullptr;
@@ -435,7 +435,7 @@ GrallocTextureData::TextureClientFromSharedSurface(gl::SharedSurface* abstractSu
 }
 
 TextureData*
-GrallocTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
+GrallocTextureData::CreateSimilar(ClientIPCAllocator* aAllocator,
                                   TextureFlags aFlags,
                                   TextureAllocationFlags aAllocFlags) const
 {
