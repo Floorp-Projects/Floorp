@@ -723,7 +723,7 @@ tv = {
       kty: "EC",
       crv: "P-384",
       d: "RT8f0pRw4CL1Tgk4rwuNnNbFoQBNTTBkr7WVLLm4fDA3boYZpNB_t-rbMVLx0CRp",
-      x: "_XwhXRnOzEfCsWIRCz3QLClaDkigQFvXmqYNdh/7vJdADykPbfGi1VgAu3XJdXoD",
+      x: "_XwhXRnOzEfCsWIRCz3QLClaDkigQFvXmqYNdh_7vJdADykPbfGi1VgAu3XJdXoD",
       y: "S1P_FBCXYGE-5VPvTCRnFT7bPIPmUPV9qKTM24TQFYEUgIDfzCLsyGCWK-rhP6jU"
     },
 
