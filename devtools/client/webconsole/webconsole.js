@@ -15,7 +15,6 @@ const BrowserLoaderModule = {};
 Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
 
 const promise = require("promise");
-const Debugger = require("Debugger");
 const Services = require("Services");
 
 loader.lazyServiceGetter(this, "clipboardHelper",
@@ -662,7 +661,7 @@ WebConsoleFrame.prototype = {
    */
   _updateServerLoggingListener: function(callback) {
     if (!this.webConsoleClient) {
-      return;
+      return null;
     }
 
     let startListener = false;
@@ -2532,13 +2531,19 @@ WebConsoleFrame.prototype = {
     // Make the location clickable.
     let onClick = () => {
       let category = locationNode.parentNode.category;
-      let target = category === CATEGORY_CSS ? "styleeditor" :
-                   category === CATEGORY_JS ? "jsdebugger" :
-                   category === CATEGORY_WEBDEV ? "jsdebugger" :
-                   /^Scratchpad\/\d+$/.test(url) ? "scratchpad" :
-                   // If it ends in .js, let's attempt to open in debugger
-                   // anyway, as this falls back to normal view-source.
-                   /\.js$/.test(fullURL) ? "jsdebugger" : null;
+      let target = null;
+
+      if (category === CATEGORY_CSS) {
+        target = "styleeditor";
+      } else if (category === CATEGORY_JS || category === CATEGORY_WEBDEV) {
+        target = "jsdebugger";
+      } else if (/^Scratchpad\/\d+$/.test(url)) {
+        target = "scratchpad";
+      } else if (/\.js$/.test(fullURL)) {
+        // If it ends in .js, let's attempt to open in debugger
+        // anyway, as this falls back to normal view-source.
+        target = "jsdebugger";
+      }
 
       switch (target) {
         case "scratchpad":
