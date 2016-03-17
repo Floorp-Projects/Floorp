@@ -1806,11 +1806,11 @@ CreatePropertyValue(nsCSSProperty aProperty,
                     const StyleAnimationValue& aValue,
                     AnimationPropertyValueDetails& aResult)
 {
-  aResult.mOffset.Construct(aOffset);
+  aResult.mOffset = aOffset;
 
   nsString stringValue;
   StyleAnimationValue::UncomputeValue(aProperty, aValue, stringValue);
-  aResult.mValue.Construct(stringValue);
+  aResult.mValue = stringValue;
 
   if (aTimingFunction) {
     aResult.mEasing.Construct();
@@ -1819,7 +1819,7 @@ CreatePropertyValue(nsCSSProperty aProperty,
     aResult.mEasing.Construct(NS_LITERAL_STRING("linear"));
   }
 
-  aResult.mComposite.Construct(CompositeOperation::Replace);
+  aResult.mComposite = CompositeOperation::Replace;
 }
 
 void
@@ -1828,10 +1828,9 @@ KeyframeEffectReadOnly::GetProperties(
 {
   for (const AnimationProperty& property : mProperties) {
     AnimationPropertyDetails propertyDetails;
-    propertyDetails.mProperty.Construct(
-      NS_ConvertASCIItoUTF16(nsCSSProps::GetStringValue(property.mProperty)));
-    propertyDetails.mRunningOnCompositor.Construct(
-      property.mIsRunningOnCompositor);
+    propertyDetails.mProperty =
+      NS_ConvertASCIItoUTF16(nsCSSProps::GetStringValue(property.mProperty));
+    propertyDetails.mRunningOnCompositor = property.mIsRunningOnCompositor;
 
     nsXPIDLString localizedString;
     if (property.mPerformanceWarning &&
@@ -1839,8 +1838,7 @@ KeyframeEffectReadOnly::GetProperties(
       propertyDetails.mWarning.Construct(localizedString);
     }
 
-    propertyDetails.mValues.Construct();
-    if (!propertyDetails.mValues.Value().SetCapacity(
+    if (!propertyDetails.mValues.SetCapacity(
           property.mSegments.Length(), mozilla::fallible)) {
       MOZ_CRASH("Out of memory allocating values array");
     }
@@ -1862,8 +1860,7 @@ KeyframeEffectReadOnly::GetProperties(
       }
       // The following won't fail since we have already allocated the capacity
       // above.
-      propertyDetails.mValues.Value().AppendElement(fromValue,
-                                                    mozilla::fallible);
+      propertyDetails.mValues.AppendElement(fromValue, mozilla::fallible);
 
       // Normally we can ignore the to-value for this segment since it is
       // identical to the from-value from the next segment. However, we need
@@ -1879,8 +1876,7 @@ KeyframeEffectReadOnly::GetProperties(
         // last property value or before a sudden jump so we just drop the
         // easing property altogether.
         toValue.mEasing.Reset();
-        propertyDetails.mValues.Value().AppendElement(toValue,
-                                                      mozilla::fallible);
+        propertyDetails.mValues.AppendElement(toValue, mozilla::fallible);
       }
     }
 
