@@ -261,6 +261,7 @@ def wanted_mozconfig_variables(help):
          'MOZ_BUILD_APP',
          'MOZ_FMP4',
          'MOZ_INSTRUMENT_EVENT_LOOP',
+         'MOZ_JPROF',
          'MOZ_USE_SYSTRACE',
          'MOZTTDIR',
          'PERL',
