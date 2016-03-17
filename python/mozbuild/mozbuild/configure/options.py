@@ -219,10 +219,6 @@ class Option(object):
             maxargs = self.maxargs
             if len(choices) < maxargs and maxargs != sys.maxint:
                 raise InvalidOptionError('Not enough `choices` for `nargs`')
-            if self.minargs == 0:
-                raise InvalidOptionError(
-                    '%s is not a valid `nargs` when `choices` are given'
-                    % str(nargs))
         self.choices = choices
         self.help = help
 

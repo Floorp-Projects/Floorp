@@ -326,9 +326,15 @@ struct name##DeletePolicy \
 }; \
 typedef UniquePtr<Type, name##DeletePolicy> name;
 
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertificate,
+                                      CERTCertificate,
+                                      CERT_DestroyCertificate)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertificatePolicies,
                                       CERTCertificatePolicies,
                                       CERT_DestroyCertificatePoliciesExtension)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertList,
+                                      CERTCertList,
+                                      CERT_DestroyCertList)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertNicknames,
                                       CERTCertNicknames,
                                       CERT_FreeNicknames)
@@ -366,6 +372,7 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECKEYPublicKey,
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSECMODModule,
                                       SECMODModule,
                                       SECMOD_DestroyModule)
+
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueVFYContext,
                                       VFYContext,
                                       internal::VFY_DestroyContext_true)

@@ -414,6 +414,7 @@ def get_browser_config(config):
                 'develop': False,
                 'e10s': False,
                 'process': '',
+                'framework': 'talos',
                 'repository': None,
                 'sourcestamp': None,
                 'symbols_path': None,

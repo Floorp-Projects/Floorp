@@ -1679,4 +1679,4 @@ ApplyGdkScreenFontOptions(FcPattern *aPattern)
     cairo_ft_font_options_substitute(options, aPattern);
 }
 
-#endif // MOZ_WIDGET_GTK2
+#endif // MOZ_WIDGET_GTK

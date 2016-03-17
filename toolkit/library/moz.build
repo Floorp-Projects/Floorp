@@ -121,7 +121,7 @@ if CONFIG['USE_ICU']:
         'icu',
     ]
 
-if CONFIG['MOZ_WIDGET_GTK'] and CONFIG['MOZ_ENABLE_GTK3']:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
     USE_LIBS += [
         'mozgtk_stub',
     ]
@@ -131,7 +131,7 @@ if CONFIG['MOZ_JPROF']:
         'jprof',
     ]
 
-if CONFIG['MOZ_WIDGET_GTK'] or CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt' or \
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT'] or CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt' or \
         CONFIG['MOZ_TREE_FREETYPE']:
     USE_LIBS += [
         'freetype',
@@ -290,8 +290,8 @@ if CONFIG['OS_ARCH'] == 'OpenBSD':
 if CONFIG['MOZ_ENABLE_DBUS']:
     OS_LIBS += CONFIG['MOZ_DBUS_GLIB_LIBS']
 
-if CONFIG['MOZ_WIDGET_GTK']:
-    if CONFIG['MOZ_ENABLE_GTK3']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
         OS_LIBS += [l for l in CONFIG['TK_LIBS']
             if l not in ('-lgtk-3', '-lgdk-3')]
     else:

@@ -2301,6 +2301,8 @@ template <typename Float>
 static bool
 ParseFloatLiteral(WasmParseContext& c, WasmToken token, Float* result)
 {
+    *result = 0;
+
     switch (token.kind()) {
       case WasmToken::Index:
         *result = token.index();

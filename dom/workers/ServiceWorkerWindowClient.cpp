@@ -12,9 +12,12 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/UniquePtr.h"
+#include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "WorkerPrivate.h"
+#include "WorkerScope.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::workers;
 

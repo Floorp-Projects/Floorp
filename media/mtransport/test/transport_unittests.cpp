@@ -962,8 +962,19 @@ TEST_F(TransportTest, TestNoDtlsVerificationSettings) {
   ConnectSocketExpectFail();
 }
 
+static void DisableChaCha(TransportTestPeer* peer) {
+  // On ARM, ChaCha20Poly1305 might be preferred; disable it for the tests that
+  // want to check the cipher suite.  It doesn't matter which peer disables the
+  // suite, disabling on either side has the same effect.
+  std::vector<uint16_t> chachaSuites;
+  chachaSuites.push_back(TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256);
+  chachaSuites.push_back(TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
+  peer->SetCipherSuiteChanges(std::vector<uint16_t>(), chachaSuites);
+}
+
 TEST_F(TransportTest, TestConnect) {
   SetDtlsPeer();
+  DisableChaCha(p1_);
   ConnectSocket();
 
   // check that we got the right suite
@@ -976,6 +987,7 @@ TEST_F(TransportTest, TestConnect) {
 TEST_F(TransportTest, TestConnectSrtp) {
   SetupSrtp();
   SetDtlsPeer();
+  DisableChaCha(p2_);
   ConnectSocket();
 
   ASSERT_EQ(TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, p1_->cipherSuite());

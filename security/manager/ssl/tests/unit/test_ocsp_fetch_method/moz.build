@@ -4,18 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-test_certificates = (
-    'a.pem',
-    'ca.pem',
-    'int.pem',
-)
-
-for test_certificate in test_certificates:
-    GeneratedTestCertificate(test_certificate)
-
-test_keys = (
-    'int.key',
-)
-
-for test_key in test_keys:
-    GeneratedTestKey(test_key)
+# Temporarily disabled. See bug 1256495.
+#test_certificates = (
+#    'a.pem',
+#    'ca.pem',
+#    'int.pem',
+#)
+#
+#for test_certificate in test_certificates:
+#    GeneratedTestCertificate(test_certificate)
+#
+#test_keys = (
+#    'int.key',
+#)
+#
+#for test_key in test_keys:
+#    GeneratedTestKey(test_key)

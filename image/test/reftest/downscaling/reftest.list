@@ -97,6 +97,15 @@ fuzzy(1,1) == downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.png
 # Upside-down (negative height) BMP
 == downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?bmp-size-16x16-24bpp.png
 
+# Test downscaling from all supported formats from 256 to 32.
+== downscale-32px.html?.bmp downscale-32px-ref.html
+== downscale-32px.html?.gif downscale-32px-ref.html
+fuzzy(1,1024) == downscale-32px.html?.jpg downscale-32px-ref.html
+== downscale-32px.html?.png downscale-32px-ref.html
+== downscale-32px.html?.svg downscale-32px-ref.html
+== downscale-32px.html?-bmp-in.ico downscale-32px-ref.html
+== downscale-32px.html?-png-in.ico downscale-32px-ref.html
+
 # RUN TESTS WITH DOWNSCALE-DURING-DECODE ENABLED:
 # ===============================================
 default-preferences pref(image.downscale-during-decode.enabled,true)
@@ -169,3 +178,11 @@ fuzzy(3,32) == downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.png
 # Upside-down (negative height) BMP
 == downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?bmp-size-16x16-24bpp.png
 
+# Test downscaling from all supported formats from 256 to 32.
+fuzzy(18,128) == downscale-32px.html?.bmp downscale-32px-ref.html
+fuzzy(18,128) == downscale-32px.html?.gif downscale-32px-ref.html
+fuzzy(19,992) == downscale-32px.html?.jpg downscale-32px-ref.html
+fuzzy(18,128) == downscale-32px.html?.png downscale-32px-ref.html
+== downscale-32px.html?.svg downscale-32px-ref.html
+fuzzy(18,128) == downscale-32px.html?-bmp-in.ico downscale-32px-ref.html
+fuzzy(18,128) == downscale-32px.html?-png-in.ico downscale-32px-ref.html

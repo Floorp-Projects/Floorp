@@ -961,6 +961,9 @@ static bool gBrowserTabsRemoteAutostart = false;
 static uint64_t gBrowserTabsRemoteStatus = 0;
 static bool gBrowserTabsRemoteAutostartInitialized = false;
 
+static bool gMultiprocessBlockPolicyInitialized = false;
+static uint32_t gMultiprocessBlockPolicy = 0;
+
 NS_IMETHODIMP
 nsXULAppInfo::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) {
   if (!nsCRT::strcmp(aTopic, "getE10SBlocked")) {
@@ -979,6 +982,13 @@ NS_IMETHODIMP
 nsXULAppInfo::GetBrowserTabsRemoteAutostart(bool* aResult)
 {
   *aResult = BrowserTabsRemoteAutostart();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetMultiprocessBlockPolicy(uint32_t* aResult)
+{
+  *aResult = MultiprocessBlockPolicy();
   return NS_OK;
 }
 
@@ -1359,6 +1369,13 @@ nsXULAppInfo::SaveMemoryReport()
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::SetTelemetrySessionId(const nsACString& id)
+{
+  CrashReporter::SetTelemetrySessionId(id);
   return NS_OK;
 }
 
@@ -4636,13 +4653,29 @@ PRTimeToSeconds(PRTime t_usec)
 }
 #endif // XP_WIN
 
-bool
-mozilla::BrowserTabsRemoteAutostart()
-{
-  if (gBrowserTabsRemoteAutostartInitialized) {
-    return gBrowserTabsRemoteAutostart;
+uint32_t
+MultiprocessBlockPolicy() {
+  if (gMultiprocessBlockPolicyInitialized) {
+    return gMultiprocessBlockPolicy;
   }
-  gBrowserTabsRemoteAutostartInitialized = true;
+  gMultiprocessBlockPolicyInitialized = true;
+
+  /**
+   * Avoids enabling e10s if there are add-ons installed.
+   */
+  bool addonsCanDisable = Preferences::GetBool("extensions.e10sBlocksEnabling", false);
+  bool disabledByAddons = Preferences::GetBool("extensions.e10sBlockedByAddons", false);
+
+#ifdef MOZ_CRASHREPORTER
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AddonsShouldHaveBlockedE10s"),
+                                     disabledByAddons ? NS_LITERAL_CSTRING("1")
+                                                      : NS_LITERAL_CSTRING("0"));
+#endif
+
+  if (addonsCanDisable && disabledByAddons) {
+    gMultiprocessBlockPolicy = kE10sDisabledForAddons;
+    return gMultiprocessBlockPolicy;
+  }
 
   bool disabledForA11y = false;
 #ifdef XP_WIN
@@ -4674,30 +4707,81 @@ mozilla::BrowserTabsRemoteAutostart()
   }
 #endif // XP_WIN
 
+  if (disabledForA11y) {
+    gMultiprocessBlockPolicy = kE10sDisabledForAccessibility;
+    return gMultiprocessBlockPolicy;
+  }
+
   /**
    * Avoids enabling e10s for certain locales that require bidi selection,
    * which currently doesn't work well with e10s.
    */
   bool disabledForBidi = false;
 
-  nsAutoCString locale;
   nsCOMPtr<nsIXULChromeRegistry> registry =
    mozilla::services::GetXULChromeRegistryService();
   if (registry) {
-     registry->GetSelectedLocale(NS_LITERAL_CSTRING("global"), locale);
+     registry->IsLocaleRTL(NS_LITERAL_CSTRING("global"), &disabledForBidi);
   }
 
-  int32_t index = locale.FindChar('-');
-  if (index >= 0) {
-    locale.Truncate(index);
+  if (disabledForBidi) {
+    gMultiprocessBlockPolicy = kE10sDisabledForBidi;
+    return gMultiprocessBlockPolicy;
   }
 
-  if (locale.EqualsLiteral("ar") ||
-      locale.EqualsLiteral("fa") ||
-      locale.EqualsLiteral("he") ||
-      locale.EqualsLiteral("ur")) {
-    disabledForBidi = true;
+
+#if defined(XP_MACOSX)
+  // If for any reason we suspect acceleration will be disabled, disable
+  // e10s auto start on mac.
+
+  // Check prefs
+  bool accelDisabled = gfxPrefs::GetSingleton().LayersAccelerationDisabled() &&
+                       !gfxPrefs::LayersAccelerationForceEnabled();
+
+  accelDisabled = accelDisabled || !nsCocoaFeatures::AccelerateByDefault();
+
+  // Check for blocked drivers
+  if (!accelDisabled) {
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+    if (gfxInfo) {
+      int32_t status;
+      if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status)) &&
+          status != nsIGfxInfo::FEATURE_STATUS_OK) {
+        accelDisabled = true;
+      }
+    }
   }
+
+  // Check env flags
+  if (accelDisabled) {
+    const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
+    if (acceleratedEnv && (*acceleratedEnv != '0')) {
+      accelDisabled = false;
+    }
+  }
+
+  if (accelDisabled) {
+    gMultiprocessBlockPolicy = kE10sDisabledForMacGfx;
+    return gMultiprocessBlockPolicy;
+  }
+#endif // defined(XP_MACOSX)
+
+  /*
+   * None of the blocking policies matched, so e10s is allowed to run.
+   * Cache the information and return 0, indicating success.
+   */
+  gMultiprocessBlockPolicy = 0;
+  return 0;
+}
+
+bool
+mozilla::BrowserTabsRemoteAutostart()
+{
+  if (gBrowserTabsRemoteAutostartInitialized) {
+    return gBrowserTabsRemoteAutostart;
+  }
+  gBrowserTabsRemoteAutostartInitialized = true;
+
 
   bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", false);
   bool trialPref = Preferences::GetBool("browser.tabs.remote.autostart.2", false);
@@ -4711,63 +4795,14 @@ mozilla::BrowserTabsRemoteAutostart()
     status = kE10sDisabledByUser;
   }
 
-  bool addonsCanDisable = Preferences::GetBool("extensions.e10sBlocksEnabling", false);
-  bool disabledByAddons = Preferences::GetBool("extensions.e10sBlockedByAddons", false);
-
-#ifdef MOZ_CRASHREPORTER
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AddonsShouldHaveBlockedE10s"),
-                                     disabledByAddons ? NS_LITERAL_CSTRING("1")
-                                                      : NS_LITERAL_CSTRING("0"));
-#endif
-
   if (prefEnabled) {
-    if (disabledForA11y) {
-      status = kE10sDisabledForAccessibility;
-    } else if (disabledForBidi) {
-      status = kE10sDisabledForBidi;
-    } else if (addonsCanDisable && disabledByAddons) {
-      status = kE10sDisabledForAddons;
+    uint32_t blockPolicy = MultiprocessBlockPolicy();
+    if (blockPolicy != 0) {
+      status = blockPolicy;
     } else {
       gBrowserTabsRemoteAutostart = true;
     }
   }
-
-#if defined(XP_MACOSX)
-  // If for any reason we suspect acceleration will be disabled, disabled
-  // e10s auto start on mac.
-  if (gBrowserTabsRemoteAutostart) {
-    // Check prefs
-    bool accelDisabled = gfxPrefs::GetSingleton().LayersAccelerationDisabled() &&
-                         !gfxPrefs::LayersAccelerationForceEnabled();
-
-    accelDisabled = accelDisabled || !nsCocoaFeatures::AccelerateByDefault();
-
-    // Check for blocked drivers
-    if (!accelDisabled) {
-      nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-      if (gfxInfo) {
-        int32_t status;
-        if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status)) &&
-            status != nsIGfxInfo::FEATURE_STATUS_OK) {
-          accelDisabled = true;
-        }
-      }
-    }
-
-    // Check env flags
-    if (accelDisabled) {
-      const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
-      if (acceleratedEnv && (*acceleratedEnv != '0')) {
-        accelDisabled = false;
-      }
-    }
-
-    if (accelDisabled) {
-      gBrowserTabsRemoteAutostart = false;
-      status = kE10sDisabledForMacGfx;
-    }
-  }
-#endif // defined(XP_MACOSX)
 
   // Uber override pref for manual testing purposes
   if (Preferences::GetBool(kForceEnableE10sPref, false)) {

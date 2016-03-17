@@ -917,4 +917,4 @@ TEST_F(pkixder_input_tests, MatchRest2Mismatch)
   ASSERT_TRUE(input.MatchRest(der));
 }
 
-} // unnamed namespace
+} // namespace

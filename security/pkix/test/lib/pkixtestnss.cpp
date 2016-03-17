@@ -148,7 +148,7 @@ private:
   ScopedSECKEYPrivateKey privateKey;
 };
 
-} // unnamed namespace
+} // namespace
 
 // This private function is also used by Gecko's PSM test framework
 // (OCSPCommon.cpp).
@@ -216,7 +216,7 @@ GenerateKeyPairInner()
   abort();
 }
 
-} // unnamed namespace
+} // namespace
 
 TestKeyPair*
 GenerateKeyPair()
