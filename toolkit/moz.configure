@@ -32,6 +32,21 @@ def jprof(value):
         add_old_configure_assignment('MOZ_JPROF', '1')
 
 
+@depends(target)
+def sps_profiler(target):
+    if target.os == 'Android':
+        return target.cpu in ('arm', 'x86')
+    elif target.kernel == 'Linux':
+        return target.cpu in ('x86', 'x86_64')
+    return target.os in ('OSX', 'WINNT')
+
+@depends(sps_profiler)
+def sps_profiler_define(value):
+    if value:
+        set_config('MOZ_ENABLE_PROFILER_SPS', '1')
+        set_define('MOZ_ENABLE_PROFILER_SPS', '1')
+
+
 # Javascript engine
 # ==============================================================
 include('../js/moz.configure')
