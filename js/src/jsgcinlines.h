@@ -250,23 +250,27 @@ class ZoneCellIter : public ZoneCellIterImpl
     ZoneCellIter(JS::Zone* zone, AllocKind kind) {
         JSRuntime* rt = zone->runtimeFromMainThread();
 
-        /*
-         * We have a single-threaded runtime, so there's no need to protect
-         * against other threads iterating or allocating. However, we do have
-         * background finalization; we have to wait for this to finish if it's
-         * currently active.
-         */
-        if (IsBackgroundFinalized(kind) &&
-            zone->arenas.needBackgroundFinalizeWait(kind))
-        {
-            rt->gc.waitBackgroundSweepEnd();
+        if (zone->runtimeFromAnyThread()->isHeapBusy()) {
+            MOZ_ASSERT(zone->runtimeFromAnyThread()->gc.nursery.isEmpty());
+        } else {
+            /*
+             * We have a single-threaded runtime, so there's no need to protect
+             * against other threads iterating or allocating. However, we do have
+             * background finalization; we have to wait for this to finish if it's
+             * currently active.
+             */
+            if (IsBackgroundFinalized(kind) &&
+                zone->arenas.needBackgroundFinalizeWait(kind))
+            {
+                rt->gc.waitBackgroundSweepEnd();
+            }
+
+            /* Evict the nursery before iterating so we can see all things. */
+            rt->gc.evictNursery();
+
+            /* Assert that no GCs can occur while a ZoneCellIter is live. */
+            noAlloc.disallowAlloc(rt);
         }
-
-        /* Evict the nursery before iterating so we can see all things. */
-        rt->gc.evictNursery();
-
-        /* Assert that no GCs can occur while a ZoneCellIter is live. */
-        noAlloc.disallowAlloc(rt);
 
         init(zone, kind);
     }
