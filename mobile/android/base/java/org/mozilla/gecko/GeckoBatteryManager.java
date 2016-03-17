@@ -128,7 +128,6 @@ public class GeckoBatteryManager extends BroadcastReceiver {
 
                     if (sCharging) {
                         if (dLevel < 0) {
-                            Log.w(LOGTAG, "When charging, level should increase!");
                             sRemainingTime = kUnknownRemainingTime;
                         } else {
                             sRemainingTime = Math.round(dt / dLevel * (1.0 - sLevel));
