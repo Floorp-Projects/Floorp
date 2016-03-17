@@ -18,7 +18,6 @@ var manifestUpgrade = { // used for testing install
   name: "provider 3",
   origin: "https://test2.example.com",
   sidebarURL: "https://test2.example.com/browser/browser/base/content/test/social/social_sidebar.html",
-  workerURL: "https://test2.example.com/browser/browser/base/content/test/social/social_worker.js",
   iconURL: "https://test2.example.com/browser/browser/base/content/test/general/moz.png",
   version: "1.0"
 };
@@ -209,73 +208,6 @@ var tests = {
       Services.prefs.clearUserPref("social.directories");
       SocialService.enableProvider(addonManifest.origin, function(provider) {
         Social.uninstallProvider(addonManifest.origin);
-      });
-    });
-  },
-  testUpgradeProviderFromWorker: function(next) {
-    // add the provider, change the pref, add it again. The provider at that
-    // point should be upgraded
-    let activationURL = manifestUpgrade.origin + "/browser/browser/base/content/test/social/social_activate.html"
-    ensureEventFired(PopupNotifications.panel, "popupshown").then(() => {
-      let panel = document.getElementById("servicesInstall-notification");
-      info("servicesInstall-notification panel opened");
-      panel.button.click();
-    });
-
-    addTab(activationURL, function(tab) {
-      let doc = tab.linkedBrowser.contentDocument;
-      let installFrom = doc.nodePrincipal.origin;
-      Services.prefs.setCharPref("social.whitelist", installFrom);
-      let data = {
-        origin: installFrom,
-        url: doc.location.href,
-        manifest: manifestUpgrade,
-        window: window
-      }
-      Social.installProvider(data, function(addonManifest) {
-        SocialService.enableProvider(addonManifest.origin, function(provider) {
-          is(provider.manifest.version, 1, "manifest version is 1");
-
-          // watch for the provider-update and test the new version
-          SocialService.registerProviderListener(function providerListener(topic, origin, providers) {
-            if (topic != "provider-update")
-              return;
-            // The worker will have reloaded and the current provider instance
-            // disabled, removed from the provider list. We have a reference
-            // here, check it is is disabled.
-            is(provider.enabled, false, "old provider instance is disabled")
-            is(origin, addonManifest.origin, "provider manifest updated")
-            SocialService.unregisterProviderListener(providerListener);
-
-            // Get the new provider instance, fetch the manifest via workerapi
-            // and validate that data as well.
-            let p = Social._getProviderFromOrigin(origin);
-            is(p.manifest.version, 2, "manifest version is 2");
-            let port = p.getWorkerPort();
-            ok(port, "got a new port");
-            port.onmessage = function (e) {
-              let topic = e.data.topic;
-              switch (topic) {
-                case "social.manifest":
-                  let manifest = e.data.data;
-                  is(manifest.version, 2, "manifest version is 2");
-                  port.close();
-                  Social.uninstallProvider(origin, function() {
-                    Services.prefs.clearUserPref("social.whitelist");
-                    ensureBrowserTabClosed(tab).then(next);
-                  });
-                  break;
-              }
-            }
-            port.postMessage({topic: "test-init"});
-            port.postMessage({topic: "manifest-get"});
-
-          });
-
-          let port = provider.getWorkerPort();
-          port.postMessage({topic: "worker.update", data: true});
-
-        });
       });
     });
   }
