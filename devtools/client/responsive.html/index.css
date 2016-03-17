@@ -46,23 +46,17 @@ body {
  */
 
 .toolbar-button {
-  border: none;
-  display: block;
   margin: 1px 3px;
-  padding: 0;
   width: 16px;
   height: 16px;
-  opacity: 0.8;
-  background-color: var(--theme-body-color);
+  /* Reset styles from .devtools-button */
+  min-width: initial;
+  min-height: initial;
+  align-self: center;
 }
 
-.toolbar-button:hover {
-  opacity: 1;
-}
-
-.toolbar-button:active {
-  background-color: var(--theme-selection-background);
-  opacity: 1;
+.toolbar-button:active::before {
+  filter: url("chrome://devtools/skin/images/filters.svg#checked-icon-state");
 }
 
 /**
@@ -76,7 +70,7 @@ body {
   color: var(--theme-body-color-alt);
   box-shadow: var(--box-shadow);
   margin: 30px 0;
-  padding: 4px 8px;
+  padding: 4px 5px;
   display: inline-flex;
   -moz-user-select: none;
 }
@@ -87,11 +81,18 @@ body {
 }
 
 #global-toolbar .toolbar-button {
-  margin: 0 0 0 4px;
+  margin: 0 0 0 5px;
 }
 
-#global-exit-button {
-  mask: url("./images/close.svg");
+#global-exit-button,
+#global-exit-button::before {
+  width: 12px;
+  height: 12px;
+}
+
+#global-exit-button::before {
+  background-image: url("./images/close.svg");
+  margin: -6px 0 0 -6px;
 }
 
 #viewports {
@@ -138,8 +139,8 @@ body {
   height: 18px;
 }
 
-.viewport-rotate-button {
-  mask: url("./images/rotate-viewport.svg");
+.viewport-rotate-button::before {
+  background-image: url("./images/rotate-viewport.svg");
 }
 
 /**

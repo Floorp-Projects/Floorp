@@ -47,7 +47,10 @@ this.BrowserTestUtils = {
    * Loads a page in a new tab, executes a Task and closes the tab.
    *
    * @param options
-   *        An object with the following properties:
+   *        An object  or string.
+   *        If this is a string it is the url to open and will be opened in the
+   *        currently active browser window.
+   *        If an object it should have the following properties:
    *        {
    *          gBrowser:
    *            Reference to the "tabbrowser" element where the new tab should
@@ -65,6 +68,12 @@ this.BrowserTestUtils = {
    * @rejects Any exception from taskFn is propagated.
    */
   withNewTab: Task.async(function* (options, taskFn) {
+    if (typeof(options) == "string") {
+      options = {
+        gBrowser: Services.wm.getMostRecentWindow("navigator:browser").gBrowser,
+        url: options
+      }
+    }
     let tab = yield BrowserTestUtils.openNewForegroundTab(options.gBrowser, options.url);
     let result = yield taskFn(tab.linkedBrowser);
     options.gBrowser.removeTab(tab);

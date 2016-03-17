@@ -241,6 +241,18 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     contents.setAttribute("flex", "1");
     contents.setAttribute("tooltiptext", unicodeUrl);
 
+    if (aSource.introductionType === "wasm") {
+      const wasm = document.createElement("box");
+      wasm.className = "dbg-wasm-item";
+      const icon = document.createElement("box");
+      icon.setAttribute("tooltiptext", L10N.getStr("experimental"));
+      icon.className = "icon";
+      wasm.appendChild(icon);
+      wasm.appendChild(contents);
+
+      contents = wasm;
+    }
+
     // If the source is blackboxed, apply the appropriate style.
     if (gThreadClient.source(aSource).isBlackBoxed) {
       contents.classList.add("black-boxed");
