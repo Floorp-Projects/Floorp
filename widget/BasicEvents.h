@@ -177,6 +177,10 @@ public:
   {
     return mIsTrusted;
   }
+  inline bool PropagationStopped() const
+  {
+    return mPropagationStopped;
+  }
 
   inline void Clear()
   {
@@ -373,6 +377,7 @@ public:
     return mFlags.DefaultPreventedByContent();
   }
   bool IsTrusted() const { return mFlags.IsTrusted(); }
+  bool PropagationStopped() const { return mFlags.PropagationStopped(); }
 
   /**
    * Utils for checking event types

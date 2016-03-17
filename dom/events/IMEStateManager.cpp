@@ -1165,7 +1165,7 @@ IMEStateManager::DispatchCompositionEvent(
      GetBoolName(aIsSynthesized), tabParent.get()));
 
   if (!aCompositionEvent->IsTrusted() ||
-      aCompositionEvent->mFlags.mPropagationStopped) {
+      aCompositionEvent->PropagationStopped()) {
     return;
   }
 
