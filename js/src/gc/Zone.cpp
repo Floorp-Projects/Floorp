@@ -146,7 +146,7 @@ Zone::sweepBreakpoints(FreeOp* fop)
      */
 
     MOZ_ASSERT(isGCSweepingOrCompacting());
-    for (ZoneCellIterUnderGC i(this, AllocKind::SCRIPT); !i.done(); i.next()) {
+    for (ZoneCellIter i(this, AllocKind::SCRIPT); !i.done(); i.next()) {
         JSScript* script = i.get<JSScript>();
         if (!script->hasAnyBreakpointsOrStepMode())
             continue;
