@@ -259,7 +259,7 @@ nsProgressFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   RefPtr<nsFontMetrics> fontMet;
   NS_ENSURE_SUCCESS(
-      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet)), 0);
+      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet), 1.0f), 0);
 
   nscoord minISize = fontMet->Font().size; // 1em
 

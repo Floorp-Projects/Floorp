@@ -8493,8 +8493,7 @@ nsLayoutUtils::SetBSizeFromFontMetrics(const nsIFrame* aFrame,
                                        WritingMode aFrameWM)
 {
   RefPtr<nsFontMetrics> fm;
-  float inflation = nsLayoutUtils::FontSizeInflationFor(aFrame);
-  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm), inflation);
+  nsLayoutUtils::GetInflatedFontMetricsForFrame(aFrame, getter_AddRefs(fm));
 
   if (fm) {
     // Compute final height of the frame.

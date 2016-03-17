@@ -1454,10 +1454,9 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
   rect.y = posInFrame.y;
 
   nscoord fontHeight = 0;
-  float inflation = nsLayoutUtils::FontSizeInflationFor(frame);
   RefPtr<nsFontMetrics> fontMetrics;
-  rv = nsLayoutUtils::GetFontMetricsForFrame(frame, getter_AddRefs(fontMetrics),
-                                             inflation);
+  rv = nsLayoutUtils::
+    GetInflatedFontMetricsForFrame(frame, getter_AddRefs(fontMetrics));
   if (NS_WARN_IF(!fontMetrics)) {
     // If we cannot get font height, use frame size instead.
     fontHeight = isVertical ? frame->GetSize().width : frame->GetSize().height;

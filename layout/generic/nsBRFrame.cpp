@@ -122,8 +122,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
       // normal inline frame.  That line-height is used is important
       // here for cases where the line-height is less than 1.
       RefPtr<nsFontMetrics> fm;
-      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-        nsLayoutUtils::FontSizeInflationFor(this));
+      nsLayoutUtils::GetInflatedFontMetricsForFrame(this, getter_AddRefs(fm));
       if (fm) {
         nscoord logicalHeight = aReflowState.CalcLineHeight();
         finalSize.BSize(wm) = logicalHeight;
