@@ -174,9 +174,7 @@ nsMathMLTokenFrame::Place(DrawTarget*          aDrawTarget,
   }
 
   RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-                                        nsLayoutUtils::
-                                        FontSizeInflationFor(this));
+  nsLayoutUtils::GetInflatedFontMetricsForFrame(this, getter_AddRefs(fm));
   nscoord ascent = fm->MaxAscent();
   nscoord descent = fm->MaxDescent();
 
