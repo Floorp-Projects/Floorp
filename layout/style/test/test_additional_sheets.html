@@ -2,23 +2,20 @@
 <html>
 <head>
   <title>Test for additional sheets</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body onload="run()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=737003">Mozilla Bug 737003</a>
-<iframe id="iframe" src="http://mochi.test:8888/tests/layout/style/test/chrome/additional_sheets_helper.html"></iframe>
+<iframe id="iframe" src="additional_sheets_helper.html"></iframe>
 <pre id="test">
 <script type="application/javascript; version=1.8">
 
+var gIOService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+  .getService(SpecialPowers.Ci.nsIIOService)
 
-
-var gIOService = Components.classes["@mozilla.org/network/io-service;1"]
-  .getService(Components.interfaces.nsIIOService)
-
-var gSSService = Components.classes["@mozilla.org/content/style-sheet-service;1"]
-    .getService(Components.interfaces.nsIStyleSheetService);
+var gSSService = SpecialPowers.Cc["@mozilla.org/content/style-sheet-service;1"]
+  .getService(SpecialPowers.Ci.nsIStyleSheetService);
 
 function getUri(style)
 {
@@ -64,16 +61,18 @@ function removeAuthorSheet(win, style)
 function loadSheet(win, style, type)
 {
   var uri = gIOService.newURI(getUri(style), null, null);
-  var windowUtils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var windowUtils = SpecialPowers.wrap(win)
+    .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+    .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
   windowUtils.loadSheet(uri, windowUtils[type]);
 }
 
 function removeSheet(win, style, type)
 {
   var uri = gIOService.newURI(getUri(style), null, null);
-  var windowUtils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var windowUtils = SpecialPowers.wrap(win)
+    .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+    .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
   windowUtils.removeSheet(uri, windowUtils[type]);
 }
 
