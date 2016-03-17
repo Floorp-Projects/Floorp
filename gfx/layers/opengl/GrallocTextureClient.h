@@ -8,6 +8,7 @@
 #ifdef MOZ_WIDGET_GONK
 
 #include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/ISurfaceAllocator.h" // For IsSurfaceDescriptorValid
 #include "mozilla/layers/FenceUtils.h" // for FenceHandle
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
 #include <ui/GraphicBuffer.h>
@@ -61,30 +62,30 @@ public:
 
   virtual bool HasSynchronization() const override { return true; }
 
-  virtual void Deallocate(ClientIPCAllocator*) override;
+  virtual void Deallocate(ISurfaceAllocator*) override;
 
-  virtual void Forget(ClientIPCAllocator*) override;
+  virtual void Forget(ISurfaceAllocator*) override;
 
   static GrallocTextureData* CreateForDrawing(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                               gfx::BackendType aMoz2dBackend,
-                                              ClientIPCAllocator* aAllocator);
+                                              ISurfaceAllocator* aAllocator);
 
   static GrallocTextureData* CreateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbCrSize,
-                                            ClientIPCAllocator* aAllocator);
+                                            ISurfaceAllocator* aAllocator);
 
   static GrallocTextureData* CreateForGLRendering(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                                  ClientIPCAllocator* aAllocator);
+                                                  ISurfaceAllocator* aAllocator);
 
   static GrallocTextureData* Create(gfx::IntSize aSize, AndroidFormat aFormat,
                                     gfx::BackendType aMoz2DBackend, uint32_t aUsage,
-                                    ClientIPCAllocator* aAllocator);
+                                    ISurfaceAllocator* aAllocator);
 
 
   static already_AddRefed<TextureClient>
   TextureClientFromSharedSurface(gl::SharedSurface* abstractSurf, TextureFlags flags);
 
   virtual TextureData*
-  CreateSimilar(ClientIPCAllocator* aAllocator,
+  CreateSimilar(ISurfaceAllocator* aAllocator,
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
