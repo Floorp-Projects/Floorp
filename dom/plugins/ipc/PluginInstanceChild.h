@@ -89,6 +89,8 @@ protected:
     AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value, NPError* result) override;
     virtual bool
     AnswerNPP_SetValue_NPNVmuteAudioBool(const bool& value, NPError* result) override;
+    virtual bool
+    AnswerNPP_SetValue_NPNVCSSZoomFactor(const double& value, NPError* result) override;
 
     virtual bool
     AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled) override;
@@ -403,6 +405,7 @@ private:
 #if defined(XP_DARWIN)
     double mContentsScaleFactor;
 #endif
+    double mCSSZoomFactor;
     int16_t               mDrawingModel;
 
     NPAsyncSurface* mCurrentDirectSurface;
