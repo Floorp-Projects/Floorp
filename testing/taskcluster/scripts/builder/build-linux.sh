@@ -25,9 +25,6 @@ echo "running as" $(id)
 
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
 
-# some linux variants, e.g. b2gdroid, require gaia
-: CHECKOUT_GAIA                      ${CHECKOUT_GAIA:=false}
-
 set -v
 
 fail() {
@@ -97,16 +94,6 @@ fi
 custom_build_variant_cfg_flag=""
 if [ -n "${MH_CUSTOM_BUILD_VARIANT_CFG}" ]; then
     custom_build_variant_cfg_flag="--custom-build-variant-cfg=${MH_CUSTOM_BUILD_VARIANT_CFG}"
-fi
-
-if [ "$CHECKOUT_GAIA" = true ]; then
-    pull_gaia=$GECKO_DIR/testing/taskcluster/scripts/builder/pull-gaia.sh
-    gaia_props=$GECKO_DIR/testing/taskcluster/scripts/builder/gaia_props.py
-    gaia_dir=$WORKSPACE/build/gaia
-
-    $pull_gaia $GECKO_DIR $gaia_dir $gaia_props
-    rm -f $GECKO_DIR/gaia
-    ln -s $gaia_dir $GECKO_DIR/gaia
 fi
 
 # $TOOLTOOL_CACHE bypasses mozharness completely and is read by tooltool_wrapper.sh to set the
