@@ -23,6 +23,7 @@ const { curry, flip } = require("../../lang/functional");
 const { patch, diff } = require("diffpatcher/index");
 const prefs = require("../../preferences/service");
 const { getByOuterId } = require("../../window/utils");
+const { ignoreWindow } = require('../../private-browsing/utils');
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const PREF_ROOT = "extensions.sdk-toolbar-collapsed.";
@@ -85,7 +86,10 @@ const attributesChanged = mutations => {
 // Utility function creates `toolbar` with a "close" button and returns
 // it back. In addition it set's up a listener and observer to communicate
 // state changes.
-const addView = curry((options, {document}) => {
+const addView = curry((options, {document, window}) => {
+  if (ignoreWindow(window))
+    return;
+
   let view = document.createElementNS(XUL_NS, "toolbar");
   view.setAttribute("id", options.id);
   view.setAttribute("collapsed", options.collapsed);
