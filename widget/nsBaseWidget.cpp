@@ -2120,7 +2120,7 @@ nsIWidget::SnapshotWidgetOnScreen()
   RefPtr<gfx::DrawTarget> dt =
     gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(size, gfx::SurfaceFormat::B8G8R8A8);
   if (!snapshot || !dt) {
-    forwarder->DestroySurfaceDescriptor(&surface);
+    forwarder->DestroySharedSurface(&surface);
     return nullptr;
   }
 
@@ -2129,7 +2129,7 @@ nsIWidget::SnapshotWidgetOnScreen()
                   gfx::Rect(gfx::Point(), gfx::Size(size)),
                   gfx::DrawSurfaceOptions(gfx::Filter::POINT));
 
-  forwarder->DestroySurfaceDescriptor(&surface);
+  forwarder->DestroySharedSurface(&surface);
   return dt->Snapshot();
 }
 

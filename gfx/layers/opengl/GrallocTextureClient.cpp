@@ -11,7 +11,6 @@
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
-#include "mozilla/layers/SharedBufferManagerChild.h"
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h" // for gfxPrefs
 #include "SharedSurfaceGralloc.h"
@@ -113,8 +112,8 @@ void
 GrallocTextureData::Deallocate(ISurfaceAllocator* aAllocator)
 {
   MOZ_ASSERT(aAllocator);
-  if (aAllocator && aAllocator->IPCOpen()) {
-    SharedBufferManagerChild::GetSingleton()->DeallocGrallocBuffer(mGrallocHandle);
+  if (aAllocator) {
+    aAllocator->DeallocGrallocBuffer(&mGrallocHandle);
   }
 
   mGrallocHandle = null_t();
@@ -125,8 +124,8 @@ void
 GrallocTextureData::Forget(ISurfaceAllocator* aAllocator)
 {
   MOZ_ASSERT(aAllocator);
-  if (aAllocator && aAllocator->IPCOpen()) {
-    SharedBufferManagerChild::GetSingleton()->DropGrallocBuffer(mGrallocHandle);
+  if (aAllocator) {
+    aAllocator->DropGrallocBuffer(&mGrallocHandle);
   }
 
   mGrallocHandle = null_t();
@@ -281,10 +280,10 @@ GrallocTextureData::Create(gfx::IntSize aSize, AndroidFormat aAndroidFormat,
                            gfx::BackendType aMoz2dBackend, uint32_t aUsage,
                            ISurfaceAllocator* aAllocator)
 {
-  if (!aAllocator || !aAllocator->IPCOpen()) {
+  if (!aAllocator) {
     return nullptr;
   }
-  int32_t maxSize = aAllocator->AsClientAllocator()->GetMaxTextureSize();
+  int32_t maxSize = aAllocator->GetMaxTextureSize();
   if (aSize.width > maxSize || aSize.height > maxSize) {
     return nullptr;
   }
@@ -314,7 +313,7 @@ GrallocTextureData::Create(gfx::IntSize aSize, AndroidFormat aAndroidFormat,
   }
 
   MaybeMagicGrallocBufferHandle handle;
-  if (!SharedBufferManagerChild::GetSingleton()->AllocGrallocBuffer(aSize, aAndroidFormat, aUsage, &handle)) {
+  if (!aAllocator->AllocGrallocBuffer(aSize, aAndroidFormat, aUsage, &handle)) {
     return nullptr;
   }
 

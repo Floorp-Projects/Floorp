@@ -941,10 +941,9 @@ ImageBridgeChild::AllocShmem(size_t aSize,
 {
   MOZ_ASSERT(!mShuttingDown);
   if (InImageBridgeChildThread()) {
-    return PImageBridgeChild::AllocUnsafeShmem(aSize, aType,
-                                               aShmem);
+    return PImageBridgeChild::AllocShmem(aSize, aType, aShmem);
   } else {
-    return DispatchAllocShmemInternal(aSize, aType, aShmem, true); // true: unsafe
+    return DispatchAllocShmemInternal(aSize, aType, aShmem, false); // false: unsafe
   }
 }
 
@@ -967,15 +966,14 @@ static void ProxyAllocShmemNow(AllocShmemParams* aParams,
   MOZ_ASSERT(aDone);
   MOZ_ASSERT(aBarrier);
 
-  auto shmAllocator = aParams->mAllocator->AsShmemAllocator();
   if (aParams->mUnsafe) {
-    aParams->mSuccess = shmAllocator->AllocUnsafeShmem(aParams->mSize,
-                                                       aParams->mType,
-                                                       aParams->mShmem);
+    aParams->mSuccess = aParams->mAllocator->AllocUnsafeShmem(aParams->mSize,
+                                                              aParams->mType,
+                                                              aParams->mShmem);
   } else {
-    aParams->mSuccess = shmAllocator->AllocShmem(aParams->mSize,
-                                                 aParams->mType,
-                                                 aParams->mShmem);
+    aParams->mSuccess = aParams->mAllocator->AllocShmem(aParams->mSize,
+                                                        aParams->mType,
+                                                        aParams->mShmem);
   }
 
   ReentrantMonitorAutoEnter autoMon(*aBarrier);
@@ -1017,7 +1015,7 @@ static void ProxyDeallocShmemNow(ISurfaceAllocator* aAllocator,
   MOZ_ASSERT(aDone);
   MOZ_ASSERT(aBarrier);
 
-  aAllocator->AsShmemAllocator()->DeallocShmem(*aShmem);
+  aAllocator->DeallocShmem(*aShmem);
 
   ReentrantMonitorAutoEnter autoMon(*aBarrier);
   *aDone = true;

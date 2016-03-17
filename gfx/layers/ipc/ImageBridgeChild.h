@@ -105,13 +105,10 @@ bool InImageBridgeChildThread();
 class ImageBridgeChild final : public PImageBridgeChild
                              , public CompositableForwarder
                              , public AsyncTransactionTrackersHolder
-                             , public ShmemAllocator
 {
   friend class ImageContainer;
   typedef InfallibleTArray<AsyncParentMessageData> AsyncParentMessageArray;
 public:
-
-  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
 
   /**
    * Creates the image bridge with a dedicated thread for ImageBridgeChild.
@@ -249,7 +246,7 @@ public:
   virtual void Connect(CompositableClient* aCompositable,
                        ImageContainer* aImageContainer) override;
 
-  virtual bool UsesImageBridge() const override { return true; }
+  virtual bool IsImageBridgeChild() const override { return true; }
 
   /**
    * See CompositableForwarder::UseTextures
@@ -296,12 +293,17 @@ public:
    * call on the ImageBridgeChild thread.
    */
   virtual bool AllocUnsafeShmem(size_t aSize,
-                                mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
+                                mozilla::ipc::SharedMemory::SharedMemoryType aType,
                                 mozilla::ipc::Shmem* aShmem) override;
+  /**
+   * See ISurfaceAllocator.h
+   * Can be used from any thread.
+   * If used outside the ImageBridgeChild thread, it will proxy a synchronous
+   * call on the ImageBridgeChild thread.
+   */
   virtual bool AllocShmem(size_t aSize,
-                          mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
+                          mozilla::ipc::SharedMemory::SharedMemoryType aType,
                           mozilla::ipc::Shmem* aShmem) override;
-
   /**
    * See ISurfaceAllocator.h
    * Can be used from any thread.

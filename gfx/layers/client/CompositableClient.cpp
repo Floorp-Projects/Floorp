@@ -62,12 +62,12 @@ RemoveTextureFromCompositableTracker::ReleaseTextureClient()
 {
   if (mTextureClient &&
       mTextureClient->GetAllocator() &&
-      !mTextureClient->GetAllocator()->UsesImageBridge())
+      !mTextureClient->GetAllocator()->IsImageBridgeChild())
   {
     TextureClientReleaseTask* task = new TextureClientReleaseTask(mTextureClient);
     RefPtr<ISurfaceAllocator> allocator = mTextureClient->GetAllocator();
     mTextureClient = nullptr;
-    allocator->AsClientAllocator()->GetMessageLoop()->PostTask(FROM_HERE, task);
+    allocator->GetMessageLoop()->PostTask(FROM_HERE, task);
   } else {
     mTextureClient = nullptr;
   }

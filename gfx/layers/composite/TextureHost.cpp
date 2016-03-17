@@ -791,7 +791,7 @@ ShmemTextureHost::DeallocateSharedData()
   if (mShmem) {
     MOZ_ASSERT(mDeallocator,
                "Shared memory would leak without a ISurfaceAllocator");
-    mDeallocator->AsShmemAllocator()->DeallocShmem(*mShmem);
+    mDeallocator->DeallocShmem(*mShmem);
     mShmem = nullptr;
   }
 }

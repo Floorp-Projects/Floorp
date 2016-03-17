@@ -36,8 +36,7 @@ class CompositableParent;
 class ShadowLayersManager;
 
 class LayerTransactionParent final : public PLayerTransactionParent,
-                                     public CompositableParentManager,
-                                     public ShmemAllocator
+                                     public CompositableParentManager
 {
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
   typedef InfallibleTArray<Edit> EditArray;
@@ -62,8 +61,7 @@ public:
   uint64_t GetId() const { return mId; }
   Layer* GetRoot() const { return mRoot; }
 
-  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
-
+  // ISurfaceAllocator
   virtual bool AllocShmem(size_t aSize,
                           ipc::SharedMemory::SharedMemoryType aType,
                           ipc::Shmem* aShmem) override;
