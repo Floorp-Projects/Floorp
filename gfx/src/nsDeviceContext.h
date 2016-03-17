@@ -113,12 +113,9 @@ public:
      * Get the nsFontMetrics that describe the properties of
      * an nsFont.
      * @param aFont font description to obtain metrics for
-     * @param aMetrics out parameter for font metrics
-     * @return error status
      */
-    nsresult GetMetricsFor(const nsFont& aFont,
-                           const nsFontMetrics::Params& aParams,
-                           nsFontMetrics*& aMetrics);
+    already_AddRefed<nsFontMetrics> GetMetricsFor(
+        const nsFont& aFont, const nsFontMetrics::Params& aParams);
 
     /**
      * Notification when a font metrics instance created for this device is

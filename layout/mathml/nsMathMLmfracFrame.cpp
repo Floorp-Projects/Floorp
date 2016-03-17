@@ -218,9 +218,8 @@ nsMathMLmfracFrame::PlaceInternal(DrawTarget*          aDrawTarget,
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-                                        fontSizeInflation);
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetFontMetricsForFrame(this, fontSizeInflation);
 
   nscoord defaultRuleThickness, axisHeight;
   nscoord oneDevPixel = fm->AppUnitsPerDevPixel();
