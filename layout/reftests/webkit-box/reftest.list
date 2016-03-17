@@ -2,6 +2,9 @@
 # CSS properties. These tests require webkit prefix support to be enabled.
 default-preferences pref(layout.css.prefixes.webkit,true)
 
+# Tests for "-webkit-box" & "-webkit-inline-box" as display values:
+== webkit-display-values-1.html webkit-display-values-1-ref.html
+
 # Tests for "-webkit-box-align" (cross-axis alignment):
 == webkit-box-align-horiz-1a.html webkit-box-align-horiz-1-ref.html
 == webkit-box-align-horiz-1b.html webkit-box-align-horiz-1-ref.html
