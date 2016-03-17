@@ -473,8 +473,7 @@ Event::StopPropagation()
 NS_IMETHODIMP
 Event::StopImmediatePropagation()
 {
-  mEvent->StopPropagation();
-  mEvent->mFlags.mImmediatePropagationStopped = true;
+  mEvent->StopImmediatePropagation();
   return NS_OK;
 }
 
