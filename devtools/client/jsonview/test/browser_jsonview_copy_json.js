@@ -12,10 +12,10 @@ add_task(function* () {
 
   yield addJsonViewTab(TEST_JSON_URL);
 
-  let countBefore = yield getElementCount(".jsonPanelBox .domTable .memberRow");
+  let countBefore = yield getElementCount(".jsonPanelBox .treeTable .treeRow");
   ok(countBefore == 1, "There must be one row");
 
-  let text = yield getElementText(".jsonPanelBox .domTable .memberRow");
+  let text = yield getElementText(".jsonPanelBox .treeTable .treeRow");
   is(text, "name\"value\"", "There must be proper JSON displayed");
 
   // Verify JSON copy into the clipboard.
