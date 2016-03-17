@@ -55,11 +55,15 @@ def android_version_code_v1(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
 
     The bit labelled 'p' is a placeholder that is always 0 (for now).
 
-    The bit labelled 'g' is 1 if the build is an ARM build targeting API 15+
-    and 0 otherwise, which means the build targets Android API 9-10 (Gingerbread).
+    Firefox no longer supports API 14 or earlier.
 
-    Fennec no longer supports Android API 8 or earlier. After Bug 1155801 it
-    no longer supports API 11-14. API 9 is still supported due to significant usage.
+    This version code computation allows for a split on API levels that allowed
+    us to ship builds specifically for Gingerbread (API 9-10); we preserve
+    that functionality for sanity's sake, and to allow us to reintroduce a
+    split in the future.
+
+    At present, the bit labelled 'g' is 1 if the build is an ARM build
+    targeting API 15+, which will always be the case.
 
     We throw an explanatory exception when we are within one calendar year of
     running out of build events.  This gives lots of time to update the version
