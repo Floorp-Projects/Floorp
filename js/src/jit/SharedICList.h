@@ -39,9 +39,6 @@ namespace jit {
     _(GetProp_UnboxedArrayLength)                \
     _(GetProp_Primitive)                         \
     _(GetProp_StringLength)                      \
-    _(GetProp_Native)                            \
-    _(GetProp_NativeDoesNotExist)                \
-    _(GetProp_NativePrototype)                   \
     _(GetProp_Unboxed)                           \
     _(GetProp_TypedObject)                       \
     _(GetProp_CallScripted)                      \
@@ -54,6 +51,8 @@ namespace jit {
     _(GetProp_ArgumentsCallee)                   \
     _(GetProp_ModuleNamespace)                   \
     _(GetProp_Generic)                           \
+                                                 \
+    _(CacheIR_Monitored)                         \
                                                  \
 
 } // namespace jit
