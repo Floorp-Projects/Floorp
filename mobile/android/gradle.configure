@@ -1,0 +1,49 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# If --with-gradle is specified, build mobile/android with Gradle.  If no
+# Gradle binary is specified, or if --without-gradle is specified, use the in
+# tree Gradle wrapper.  The wrapper downloads and installs Gradle, which is
+# good for local developers but not good in automation.
+option('--with-gradle', nargs='?',
+       help='Enable building mobile/android with Gradle '
+            '(argument: location of binary or wrapper (gradle/gradlew))')
+
+@depends('--with-gradle', check_build_environment)
+def gradle(value, build_env):
+    if value:
+        set_config('MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE', '1')
+
+    gradle = value[0] if len(value) else \
+        os.path.join(build_env['TOPSRCDIR'], 'gradlew')
+
+    # TODO: verify that $GRADLE is executable.
+    if not os.path.isfile(gradle):
+        error('GRADLE must be executable: %s' % gradle)
+
+    set_config('GRADLE', gradle)
+
+    return gradle
+
+
+# Automation uses this to change log levels, not use the daemon, and use
+# offline mode.
+option(env='GRADLE_FLAGS', default='', help='Flags to pass to Gradle.')
+
+@depends('GRADLE_FLAGS')
+def gradle_flags(value):
+    set_config('GRADLE_FLAGS', value[0] if value else '')
+
+
+# Automation will set this to file:///path/to/local via the mozconfig.
+# Local developer default is jcenter.
+option(env='GRADLE_MAVEN_REPOSITORY', default='https://jcenter.bintray.com/',
+       help='Path to Maven repository containing Gradle dependencies.')
+
+@depends('GRADLE_MAVEN_REPOSITORY')
+def gradle_maven_repository(value):
+    if value:
+        set_config('GRADLE_MAVEN_REPOSITORY', value[0])

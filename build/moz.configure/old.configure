@@ -323,7 +323,6 @@ def old_configure_options(*options):
     '--with-gonk-toolchain-prefix',
     '--with-google-api-keyfile',
     '--with-google-oauth-api-keyfile',
-    '--with-gradle',
     '--with-intl-api',
     '--with-ios-sdk',
     '--with-java-bin-path',
