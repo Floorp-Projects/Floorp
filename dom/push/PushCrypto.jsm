@@ -183,7 +183,7 @@ function generateNonce(base, index) {
 this.PushCrypto = {
 
   generateAuthenticationSecret() {
-    return crypto.getRandomValues(new Uint8Array(12));
+    return crypto.getRandomValues(new Uint8Array(16));
   },
 
   generateKeys() {
