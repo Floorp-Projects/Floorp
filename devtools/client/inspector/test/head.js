@@ -475,14 +475,36 @@ const getHighlighterHelperFor = (type) => Task.async(
 
     let prefix = "";
 
+    // Internals for mouse events
+    let prevX, prevY;
+
+    // Highlighted node
+    let  highlightedNode = null;
+
     return {
       set prefix(value) {
         prefix = value;
       },
+      get highlightedNode() {
+        if (!highlightedNode) {
+          return null;
+        }
+
+        return {
+          getComputedStyle: function*(options = {}) {
+            return yield inspector.pageStyle.getComputed(
+              highlightedNode, options);
+          }
+        };
+      },
 
       show: function*(selector = ":root") {
-        let node = yield getNodeFront(selector, inspector);
-        yield highlighter.show(node);
+        highlightedNode = yield getNodeFront(selector, inspector);
+        return yield highlighter.show(highlightedNode);
+      },
+
+      hide: function*() {
+        yield highlighter.hide();
       },
 
       isElementHidden: function*(id) {
@@ -501,10 +523,35 @@ const getHighlighterHelperFor = (type) => Task.async(
       },
 
       synthesizeMouse: function*(options) {
+        options = Object.assign({selector: ":root"}, options);
         yield testActor.synthesizeMouse(options);
       },
 
+      // This object will synthesize any "mouse" prefixed event to the
+      // `testActor`, using the name of method called as suffix for the
+      // event's name.
+      // If no x, y coords are given, the previous ones are used.
+      //
+      // For example:
+      //   mouse.down(10, 20); // synthesize "mousedown" at 10,20
+      //   mouse.move(20, 30); // synthesize "mousemove" at 20,30
+      //   mouse.up();         // synthesize "mouseup" at 20,30
+      mouse: new Proxy({}, {
+        get: (target, name) =>
+          function*(x = prevX, y = prevY) {
+            prevX = x;
+            prevY = y;
+            yield testActor.synthesizeMouse({
+              selector: ":root", x, y, options: {type: "mouse" + name}});
+          }
+      }),
+
+      reflow: function*() {
+        yield testActor.reflow();
+      },
+
       finalize: function*() {
+        highlightedNode = null;
         yield highlighter.finalize();
       }
     };

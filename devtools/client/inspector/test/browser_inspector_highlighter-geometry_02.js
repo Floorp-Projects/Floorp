@@ -2,18 +2,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Globals defined in: devtools/client/inspector/test/head.js */
+
 "use strict";
 
 // Test that the geometry highlighter labels are correct.
 
-const TEST_URL = "data:text/html;charset=utf-8," +
-                 "<div id='positioned' style='background:yellow;position:absolute;left:5rem;top:30px;right:300px;bottom:10em;'></div>" +
-                 "<div id='positioned2' style='background:blue;position:absolute;right:10%;top:5vmin;'>test element</div>" +
-                 "<div id='relative' style='background:green;position:relative;top:10px;left:20px;bottom:30px;right:40px;width:100px;height:100px;'></div>" +
-                 "<div id='relative2' style='background:grey;position:relative;top:0;bottom:-50px;height:3em;'>relative</div>" +
-                 "<div id='sized' style='background:red;width:5em;height:50%;'></div>" +
-                 "<div id='sized2' style='background:orange;width:40px;position:absolute;right:0;bottom:0'>wow</div>";
+const TEST_URL = `data:text/html;charset=utf-8,
+                  <div id='positioned' style='
+                    background:yellow;
+                    position:absolute;
+                    left:5rem;
+                    top:30px;
+                    right:300px;
+                    bottom:10em;'></div>
+                  <div id='positioned2' style='
+                    background:blue;
+                    position:absolute;
+                    right:10%;
+                    top:5vmin;'>test element</div>
+                 <div id='relative' style='
+                    background:green;
+                    position:relative;
+                    top:10px;
+                    left:20px;
+                    bottom:30px;
+                    right:40px;
+                    width:100px;
+                    height:100px;'></div>
+                 <div id='relative2' style='
+                    background:grey;
+                    position:relative;
+                    top:0;bottom:-50px;
+                    height:3em;'>relative</div>`;
+
 const ID = "geometry-editor-";
+const HIGHLIGHTER_TYPE = "GeometryEditorHighlighter";
 
 const POSITIONED_ELEMENT_TESTS = [{
   selector: "#positioned",
@@ -29,14 +53,6 @@ const POSITIONED_ELEMENT_TESTS = [{
     {side: "left", visible: false},
     {side: "top", visible: true, label: "5vmin"},
     {side: "right", visible: true, label: "10%"},
-    {side: "bottom", visible: false}
-  ]
-}, {
-  selector: "#sized",
-  expectedLabels: [
-    {side: "left", visible: false},
-    {side: "top", visible: false},
-    {side: "right", visible: false},
     {side: "bottom", visible: false}
   ]
 }, {
@@ -57,86 +73,44 @@ const POSITIONED_ELEMENT_TESTS = [{
   ]
 }];
 
-const SIZED_ELEMENT_TESTS = [{
-  selector: "#positioned",
-  visible: false
-}, {
-  selector: "#sized",
-  visible: true,
-  expected: "\u2194 5em \u2195 50%"
-}, {
-  selector: "#relative",
-  visible: true,
-  expected: "\u2194 100px \u2195 100px"
-}, {
-  selector: "#relative2",
-  visible: true,
-  expected: "\u2195 3em"
-}, {
-  selector: "#sized2",
-  visible: true,
-  expected: "\u2194 40px"
-}];
+add_task(function* () {
+  let helper = yield openInspectorForURL(TEST_URL)
+                       .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
 
-add_task(function*() {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
-  let front = inspector.inspector;
+  helper.prefix = ID;
 
-  let highlighter = yield front.getHighlighterByType("GeometryEditorHighlighter");
+  let { finalize } = helper;
 
-  yield positionLabelsAreCorrect(highlighter, inspector, testActor);
-  yield sizeLabelIsCorrect(highlighter, inspector, testActor);
+  yield positionLabelsAreCorrect(helper);
 
-  yield highlighter.finalize();
+  yield finalize();
 });
 
-function* positionLabelsAreCorrect(highlighterFront, inspector, testActor) {
+function* positionLabelsAreCorrect(
+  {show, hide, isElementHidden, getElementTextContent}
+) {
   info("Highlight nodes and check position labels");
 
   for (let {selector, expectedLabels} of POSITIONED_ELEMENT_TESTS) {
     info("Testing node " + selector);
-    let node = yield getNodeFront(selector, inspector);
-    yield highlighterFront.show(node);
+
+    yield show(selector);
 
     for (let {side, visible, label} of expectedLabels) {
-      let id = ID + "label-" + side;
+      let id = "label-" + side;
 
-      let hidden = yield testActor.getHighlighterNodeAttribute(id, "hidden", highlighterFront);
+      let hidden = yield isElementHidden(id);
       if (visible) {
         ok(!hidden, "The " + side + " label is visible");
 
-        let value = yield testActor.getHighlighterNodeTextContent(id, highlighterFront);
+        let value = yield getElementTextContent(id);
         is(value, label, "The " + side + " label textcontent is correct");
       } else {
-        is(hidden, "true", "The " + side + " label is hidden");
+        ok(hidden, "The " + side + " label is hidden");
       }
     }
 
     info("Hiding the highlighter");
-    yield highlighterFront.hide();
-  }
-}
-
-function* sizeLabelIsCorrect(highlighterFront, inspector, testActor) {
-  info("Highlight nodes and check size labels");
-
-  let id = ID + "label-size";
-  for (let {selector, visible, expected} of SIZED_ELEMENT_TESTS) {
-    info("Testing node " + selector);
-    let node = yield getNodeFront(selector, inspector);
-    yield highlighterFront.show(node);
-
-    let hidden = yield testActor.getHighlighterNodeAttribute(id, "hidden", highlighterFront);
-    if (!visible) {
-      is(hidden, "true", "The size label is hidden");
-    } else {
-      ok(!hidden, "The size label is visible");
-
-      let label = yield testActor.getHighlighterNodeTextContent(id, highlighterFront);
-      is(label, expected, "The size label textcontent is correct");
-    }
-
-    info("Hiding the highlighter");
-    yield highlighterFront.hide();
+    yield hide();
   }
 }
