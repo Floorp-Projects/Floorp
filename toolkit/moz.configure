@@ -29,7 +29,7 @@ def jprof(value):
     if value:
         set_config('MOZ_JPROF', '1')
         set_define('MOZ_JPROF', '1')
-        add_old_configure_assignment('MOZ_JPROF', '1')
+        imply_option('--enable-profiling')
 
 
 @depends(target)
@@ -57,6 +57,7 @@ def dmd(value):
         set_config('MOZ_DMD', '1')
         set_define('MOZ_DMD', '1')
         add_old_configure_assignment('MOZ_DMD', '1')
+        imply_option('--enable-profiling')
 
 
 # Javascript engine
