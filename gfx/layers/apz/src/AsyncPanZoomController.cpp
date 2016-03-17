@@ -709,7 +709,6 @@ private:
 class SmoothScrollAnimation : public AsyncPanZoomAnimation {
 public:
   SmoothScrollAnimation(AsyncPanZoomController& aApzc,
-                        ScrollSource aSource,
                         const nsPoint &aInitialPosition,
                         const nsPoint &aInitialVelocity,
                         const nsPoint& aDestination, double aSpringConstant,
@@ -2607,7 +2606,7 @@ void AsyncPanZoomController::HandleSmoothScrollOverscroll(const ParentLayerPoint
   HandleFlingOverscroll(aVelocity, BuildOverscrollHandoffChain(), nullptr);
 }
 
-void AsyncPanZoomController::StartSmoothScroll(ScrollSource aSource) {
+void AsyncPanZoomController::StartSmoothScroll() {
   SetState(SMOOTH_SCROLL);
   nsPoint initialPosition = CSSPoint::ToAppUnits(mFrameMetrics.GetScrollOffset());
   // Cast velocity from ParentLayerPoints/ms to CSSPoints/ms then convert to
@@ -2617,7 +2616,6 @@ void AsyncPanZoomController::StartSmoothScroll(ScrollSource aSource) {
   nsPoint destination = CSSPoint::ToAppUnits(mFrameMetrics.GetSmoothScrollOffset());
 
   StartAnimation(new SmoothScrollAnimation(*this,
-                                           aSource,
                                            initialPosition, initialVelocity,
                                            destination,
                                            gfxPrefs::ScrollBehaviorSpringConstant(),
@@ -3512,7 +3510,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
         CSSPoint::ToAppUnits(aLayerMetrics.GetSmoothScrollOffset()));
     } else {
       CancelAnimation();
-      StartSmoothScroll(ScrollSource::DOM);
+      StartSmoothScroll();
     }
   }
 
