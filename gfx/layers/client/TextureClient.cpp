@@ -249,7 +249,7 @@ DeallocateTextureClient(TextureDeallocParams params)
   MessageLoop* ipdlMsgLoop = nullptr;
 
   if (params.allocator) {
-    ipdlMsgLoop = params.allocator->GetMessageLoop();
+    ipdlMsgLoop = params.allocator->AsClientAllocator()->GetMessageLoop();
     if (!ipdlMsgLoop) {
       // An allocator with no message loop means we are too late in the shutdown
       // sequence.
@@ -697,7 +697,7 @@ TextureClient::SetRecycleAllocator(ITextureClientRecycleAllocator* aAllocator)
 bool
 TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
 {
-  MOZ_ASSERT(aForwarder && aForwarder->GetMessageLoop() == mAllocator->GetMessageLoop());
+  MOZ_ASSERT(aForwarder && aForwarder->GetMessageLoop() == mAllocator->AsClientAllocator()->GetMessageLoop());
   if (mActor && !mActor->mDestroyed && mActor->GetForwarder() == aForwarder) {
     return true;
   }

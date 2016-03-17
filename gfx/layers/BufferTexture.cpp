@@ -115,10 +115,11 @@ BufferTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   if (!aAllocator || aAllocator->IsSameProcess()) {
     return MemoryTextureData::Create(aSize, aFormat, aMoz2DBackend, aFlags,
                                      aAllocFlags, aAllocator);
-  } else {
+  } else if (aAllocator->AsShmemAllocator()) {
     return ShmemTextureData::Create(aSize, aFormat, aMoz2DBackend, aFlags,
                                     aAllocFlags, aAllocator);
   }
+  return nullptr;
 }
 
 BufferTextureData*
@@ -137,14 +138,15 @@ BufferTextureData::CreateInternal(ISurfaceAllocator* aAllocator,
     GfxMemoryImageReporter::DidAlloc(buffer);
 
     return new MemoryTextureData(aDesc, aMoz2DBackend, buffer, aBufferSize);
-  } else {
+  } else if (aAllocator->AsShmemAllocator()) {
     ipc::Shmem shm;
-    if (!aAllocator->AllocUnsafeShmem(aBufferSize, OptimalShmemType(), &shm)) {
+    if (!aAllocator->AsShmemAllocator()->AllocUnsafeShmem(aBufferSize, OptimalShmemType(), &shm)) {
       return nullptr;
     }
 
     return new ShmemTextureData(aDesc, aMoz2DBackend, shm);
   }
+  return nullptr;
 }
 
 BufferTextureData*
@@ -493,7 +495,7 @@ ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   // Should have used CreateForYCbCr.
   MOZ_ASSERT(aFormat != gfx::SurfaceFormat::YUV);
 
-  if (!aAllocator) {
+  if (!aAllocator || !aAllocator->AsShmemAllocator()) {
     return nullptr;
   }
 
@@ -508,7 +510,7 @@ ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   }
 
   mozilla::ipc::Shmem shm;
-  if (!aAllocator->AllocUnsafeShmem(bufSize, OptimalShmemType(), &shm)) {
+  if (!aAllocator->AsShmemAllocator()->AllocUnsafeShmem(bufSize, OptimalShmemType(), &shm)) {
     return nullptr;
   }
 
@@ -541,7 +543,7 @@ ShmemTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
 void
 ShmemTextureData::Deallocate(ISurfaceAllocator* aAllocator)
 {
-  aAllocator->DeallocShmem(mShmem);
+  aAllocator->AsShmemAllocator()->DeallocShmem(mShmem);
 }
 
 } // namespace
