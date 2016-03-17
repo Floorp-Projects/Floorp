@@ -449,10 +449,13 @@ TestRunner.runNextTest = function() {
 
         SpecialPowers.unregisterProcessCrashObservers();
 
+        let e10sMode = SpecialPowers.isMainProcess() ? "non-e10s" : "e10s";
+
         TestRunner.structuredLogger.info("TEST-START | Shutdown");
         TestRunner.structuredLogger.info("Passed:  " + passCount);
         TestRunner.structuredLogger.info("Failed:  " + failCount);
         TestRunner.structuredLogger.info("Todo:    " + todoCount);
+        TestRunner.structuredLogger.info("Mode:    " + e10sMode);
         TestRunner.structuredLogger.info("Slowest: " + TestRunner.slowestTestTime + 'ms - ' + TestRunner.slowestTestURL);
 
         // If we are looping, don't send this cause it closes the log file
