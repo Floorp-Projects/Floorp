@@ -388,6 +388,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/HistoryHeaderListCursorAdapter.java',
     'home/HistoryItemAdapter.java',
     'home/HistoryPanel.java',
+    'home/HistorySectionsHelper.java',
     'home/HomeAdapter.java',
     'home/HomeBanner.java',
     'home/HomeConfig.java',
