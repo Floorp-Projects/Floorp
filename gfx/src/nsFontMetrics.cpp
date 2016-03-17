@@ -108,30 +108,17 @@ public:
 
 } // namespace
 
-nsFontMetrics::nsFontMetrics()
-    : mDeviceContext(nullptr), mP2A(0), mTextRunRTL(false)
-    , mVertical(false), mTextOrientation(0)
+nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
+                             nsDeviceContext *aContext)
+    : mFont(aFont)
+    , mLanguage(aParams.language)
+    , mDeviceContext(aContext)
+    , mP2A(aContext->AppUnitsPerDevPixel())
+    , mOrientation(aParams.orientation)
+    , mTextRunRTL(false)
+    , mVertical(false)
+    , mTextOrientation(0)
 {
-}
-
-nsFontMetrics::~nsFontMetrics()
-{
-    if (mDeviceContext)
-        mDeviceContext->FontMetricsDeleted(this);
-}
-
-nsresult
-nsFontMetrics::Init(const nsFont& aFont, const Params& aParams,
-                    nsDeviceContext *aContext)
-{
-    MOZ_ASSERT(mP2A == 0, "already initialized");
-
-    mFont = aFont;
-    mLanguage = aParams.language;
-    mOrientation = aParams.orientation;
-    mDeviceContext = aContext;
-    mP2A = mDeviceContext->AppUnitsPerDevPixel();
-
     gfxFontStyle style(aFont.style,
                        aFont.weight,
                        aFont.stretch,
@@ -152,7 +139,13 @@ nsFontMetrics::Init(const nsFont& aFont, const Params& aParams,
     mFontGroup = gfxPlatform::GetPlatform()->
         CreateFontGroup(aFont.fontlist, &style, aParams.textPerf,
                         aParams.userFontSet, devToCssSize);
-    return NS_OK;
+}
+
+nsFontMetrics::~nsFontMetrics()
+{
+    if (mDeviceContext) {
+        mDeviceContext->FontMetricsDeleted(this);
+    }
 }
 
 void
