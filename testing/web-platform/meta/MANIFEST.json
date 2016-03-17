@@ -33327,8 +33327,18 @@
     ]
   },
   "local_changes": {
-    "deleted": [],
+    "deleted": [
+      "html/browsers/history/the-location-interface/non-automated/manual_click_replace_during_load.html"
+    ],
     "items": {
+      "manual": {
+        "html/browsers/history/the-location-interface/non-automated/manual_click_replace_during_load-manual.html": [
+          {
+            "path": "html/browsers/history/the-location-interface/non-automated/manual_click_replace_during_load-manual.html",
+            "url": "/html/browsers/history/the-location-interface/non-automated/manual_click_replace_during_load-manual.html"
+          }
+        ]
+      },
       "testharness": {
         "html/semantics/embedded-content/the-embed-element/embed-document.html": [
           {
