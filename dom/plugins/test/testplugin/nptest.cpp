@@ -168,6 +168,8 @@ static bool getLastKeyText(NPObject* npobj, const NPVariant* args, uint32_t argC
 static bool getNPNVdocumentOrigin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getMouseUpEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool queryContentsScaleFactor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool queryCSSZoomFactorGetValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool queryCSSZoomFactorSetValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool echoString(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool startAudioPlayback(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool stopAudioPlayback(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -240,6 +242,8 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getNPNVdocumentOrigin",
   "getMouseUpEventCount",
   "queryContentsScaleFactor",
+  "queryCSSZoomFactorSetValue",
+  "queryCSSZoomFactorGetValue",
   "echoString",
   "startAudioPlayback",
   "stopAudioPlayback",
@@ -313,6 +317,8 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   getNPNVdocumentOrigin,
   getMouseUpEventCount,
   queryContentsScaleFactor,
+  queryCSSZoomFactorGetValue,
+  queryCSSZoomFactorSetValue,
   echoString,
   startAudioPlayback,
   stopAudioPlayback,
@@ -855,6 +861,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->frontBuffer = nullptr;
   instanceData->backBuffer = nullptr;
   instanceData->placeholderWnd = nullptr;
+  instanceData->cssZoomFactor = 1.0;
   instance->pdata = instanceData;
 
   TestNPObject* scriptableObject = (TestNPObject*)NPN_CreateObject(instance, &sNPClass);
@@ -1594,6 +1601,11 @@ NPP_SetValue(NPP instance, NPNVariable variable, void* value)
   if (variable == NPNVmuteAudioBool) {
     InstanceData* instanceData = (InstanceData*)(instance->pdata);
     instanceData->audioMuted = bool(*static_cast<NPBool*>(value));
+    return NPERR_NO_ERROR;
+  }
+  if (variable == NPNVCSSZoomFactor) {
+    InstanceData* instanceData = (InstanceData*)(instance->pdata);
+    instanceData->cssZoomFactor = *static_cast<double*>(value);
     return NPERR_NO_ERROR;
   }
   return NPERR_GENERIC_ERROR;
@@ -3917,6 +3929,38 @@ bool queryContentsScaleFactor(NPObject* npobj, const NPVariant* args, uint32_t a
   }
 #endif
   DOUBLE_TO_NPVARIANT(scaleFactor, *result);
+  return true;
+}
+
+bool queryCSSZoomFactorSetValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  if (!npp) {
+    return false;
+  }
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  if (!id) {
+    return false;
+  }
+  DOUBLE_TO_NPVARIANT(id->cssZoomFactor, *result);
+  return true;
+}
+
+bool queryCSSZoomFactorGetValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  double zoomFactor = 1.0;
+  NPError err = NPN_GetValue(static_cast<TestNPObject*>(npobj)->npp,
+                             NPNVCSSZoomFactor, &zoomFactor);
+  if (err != NPERR_NO_ERROR) {
+    return false;
+  }
+  DOUBLE_TO_NPVARIANT(zoomFactor, *result);
   return true;
 }
 
