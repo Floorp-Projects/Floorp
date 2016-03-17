@@ -23,7 +23,7 @@ add_task(function* test_is_allowed_incognito_access() {
 
   let extension = ExtensionTestUtils.loadExtension({
     background: `(${backgroundScript})()`,
-    manifest: {}
+    manifest: {},
   });
 
   yield extension.startup();
