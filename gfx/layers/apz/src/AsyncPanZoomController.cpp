@@ -2606,20 +2606,28 @@ void AsyncPanZoomController::HandleSmoothScrollOverscroll(const ParentLayerPoint
   HandleFlingOverscroll(aVelocity, BuildOverscrollHandoffChain(), nullptr);
 }
 
-void AsyncPanZoomController::StartSmoothScroll() {
-  SetState(SMOOTH_SCROLL);
-  nsPoint initialPosition = CSSPoint::ToAppUnits(mFrameMetrics.GetScrollOffset());
-  // Cast velocity from ParentLayerPoints/ms to CSSPoints/ms then convert to
-  // appunits/second
-  nsPoint initialVelocity = CSSPoint::ToAppUnits(CSSPoint(mX.GetVelocity(),
-                                                          mY.GetVelocity())) * 1000.0f;
-  nsPoint destination = CSSPoint::ToAppUnits(mFrameMetrics.GetSmoothScrollOffset());
+void AsyncPanZoomController::SmoothScrollTo(const CSSPoint& aDestination) {
+  if (mState == SMOOTH_SCROLL && mAnimation) {
+    APZC_LOG("%p updating destination on existing animation\n", this);
+    RefPtr<SmoothScrollAnimation> animation(
+      static_cast<SmoothScrollAnimation*>(mAnimation.get()));
+    animation->SetDestination(CSSPoint::ToAppUnits(aDestination));
+  } else {
+    CancelAnimation();
+    SetState(SMOOTH_SCROLL);
+    nsPoint initialPosition = CSSPoint::ToAppUnits(mFrameMetrics.GetScrollOffset());
+    // Cast velocity from ParentLayerPoints/ms to CSSPoints/ms then convert to
+    // appunits/second
+    nsPoint initialVelocity = CSSPoint::ToAppUnits(CSSPoint(mX.GetVelocity(),
+                                                            mY.GetVelocity())) * 1000.0f;
+    nsPoint destination = CSSPoint::ToAppUnits(aDestination);
 
-  StartAnimation(new SmoothScrollAnimation(*this,
-                                           initialPosition, initialVelocity,
-                                           destination,
-                                           gfxPrefs::ScrollBehaviorSpringConstant(),
-                                           gfxPrefs::ScrollBehaviorDampingRatio()));
+    StartAnimation(new SmoothScrollAnimation(*this,
+                                             initialPosition, initialVelocity,
+                                             destination,
+                                             gfxPrefs::ScrollBehaviorSpringConstant(),
+                                             gfxPrefs::ScrollBehaviorDampingRatio()));
+  }
 }
 
 void AsyncPanZoomController::StartOverscrollAnimation(const ParentLayerPoint& aVelocity) {
@@ -3502,16 +3510,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     AcknowledgeScrollUpdate();
     mExpectedGeckoMetrics = aLayerMetrics;
 
-    if (mState == SMOOTH_SCROLL && mAnimation) {
-      APZC_LOG("%p updating destination on existing animation\n", this);
-      RefPtr<SmoothScrollAnimation> animation(
-        static_cast<SmoothScrollAnimation*>(mAnimation.get()));
-      animation->SetDestination(
-        CSSPoint::ToAppUnits(aLayerMetrics.GetSmoothScrollOffset()));
-    } else {
-      CancelAnimation();
-      StartSmoothScroll();
-    }
+    SmoothScrollTo(mFrameMetrics.GetSmoothScrollOffset());
   }
 
   if (needContentRepaint) {
