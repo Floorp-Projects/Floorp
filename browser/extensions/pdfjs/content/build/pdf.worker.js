@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdfWorker = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.4.121';
-var pdfjsBuild = '51f6aba';
+var pdfjsVersion = '1.4.137';
+var pdfjsBuild = '122d473';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -15658,6 +15658,36 @@ exports.isStream = isStream;
     return code;
   }
 
+  function getUnicodeForGlyph(name, glyphsUnicodeMap) {
+    var unicode = glyphsUnicodeMap[name];
+    if (unicode !== undefined) {
+      return unicode;
+    }
+    if (!name) {
+      return -1;
+    }
+    // Try to recover valid Unicode values from 'uniXXXX'/'uXXXX{XX}' glyphs.
+    if (name[0] === 'u') {
+      var nameLen = name.length, hexStr;
+
+      if (nameLen === 7 && name[1] === 'n' && name[2] === 'i') { // 'uniXXXX'
+        hexStr = name.substr(3);
+      } else if (nameLen >= 5 && nameLen <= 7) { // 'uXXXX{XX}'
+        hexStr = name.substr(1);
+      } else {
+        return -1;
+      }
+      // Check for upper-case hexadecimal characters, to avoid false positives.
+      if (hexStr === hexStr.toUpperCase()) {
+        unicode = parseInt(hexStr, 16);
+        if (unicode >= 0) {
+          return unicode;
+        }
+      }
+    }
+    return -1;
+  }
+
   var UnicodeRanges = [
     { 'begin': 0x0000, 'end': 0x007F }, // Basic Latin
     { 'begin': 0x0080, 'end': 0x00FF }, // Latin-1 Supplement
@@ -17205,6 +17235,7 @@ exports.isStream = isStream;
   exports.reverseIfRtl = reverseIfRtl;
   exports.getUnicodeRangeFor = getUnicodeRangeFor;
   exports.getNormalizedUnicodes = getNormalizedUnicodes;
+  exports.getUnicodeForGlyph = getUnicodeForGlyph;
 }));
 
 
@@ -24895,6 +24926,7 @@ var getSupplementalGlyphMapForArialBlack =
   coreStandardFonts.getSupplementalGlyphMapForArialBlack;
 var getUnicodeRangeFor = coreUnicode.getUnicodeRangeFor;
 var mapSpecialUnicodeValues = coreUnicode.mapSpecialUnicodeValues;
+var getUnicodeForGlyph = coreUnicode.getUnicodeForGlyph;
 
 // Unicode Private Use Area
 var PRIVATE_USE_OFFSET_START = 0xE000;
@@ -25280,7 +25312,7 @@ var ProblematicCharRanges = new Int32Array([
  */
 var Font = (function FontClosure() {
   function Font(name, file, properties) {
-    var charCode, glyphName, fontChar;
+    var charCode, glyphName, unicode, fontChar;
 
     this.name = name;
     this.loadedName = properties.loadedName;
@@ -25424,21 +25456,25 @@ var Font = (function FontClosure() {
           this.toFontChar[charCode] = fontChar;
         }
       } else if (isStandardFont) {
-        this.toFontChar = [];
         glyphsUnicodeMap = getGlyphsUnicode();
         for (charCode in properties.defaultEncoding) {
           glyphName = (properties.differences[charCode] ||
                        properties.defaultEncoding[charCode]);
-          this.toFontChar[charCode] = glyphsUnicodeMap[glyphName];
+          unicode = getUnicodeForGlyph(glyphName, glyphsUnicodeMap);
+          if (unicode !== -1) {
+            this.toFontChar[charCode] = unicode;
+          }
         }
       } else {
-        var unicodeCharCode, notCidFont = (type.indexOf('CIDFontType') === -1);
         glyphsUnicodeMap = getGlyphsUnicode();
         this.toUnicode.forEach(function(charCode, unicodeCharCode) {
-          if (notCidFont) {
+          if (!this.composite) {
             glyphName = (properties.differences[charCode] ||
                          properties.defaultEncoding[charCode]);
-            unicodeCharCode = (glyphsUnicodeMap[glyphName] || unicodeCharCode);
+            unicode = getUnicodeForGlyph(glyphName, glyphsUnicodeMap);
+            if (unicode !== -1) {
+              unicodeCharCode = unicode;
+            }
           }
           this.toFontChar[charCode] = unicodeCharCode;
         }.bind(this));
@@ -25536,6 +25572,11 @@ var Font = (function FontClosure() {
 
   function int16(b0, b1) {
     return (b0 << 8) + b1;
+  }
+
+  function signedInt16(b0, b1) {
+    var value = (b0 << 8) + b1;
+    return value & (1 << 15) ? value - 0x10000 : value;
   }
 
   function int32(b0, b1, b2, b3) {
@@ -27055,9 +27096,9 @@ var Font = (function FontClosure() {
       var metricsOverride = {
         unitsPerEm: int16(tables['head'].data[18], tables['head'].data[19]),
         yMax: int16(tables['head'].data[42], tables['head'].data[43]),
-        yMin: int16(tables['head'].data[38], tables['head'].data[39]) - 0x10000,
+        yMin: signedInt16(tables['head'].data[38], tables['head'].data[39]),
         ascent: int16(tables['hhea'].data[4], tables['hhea'].data[5]),
-        descent: int16(tables['hhea'].data[6], tables['hhea'].data[7]) - 0x10000
+        descent: signedInt16(tables['hhea'].data[6], tables['hhea'].data[7])
       };
 
       // PDF FontDescriptor metrics lie -- using data from actual font.
@@ -27092,6 +27133,26 @@ var Font = (function FontClosure() {
         }
         return false;
       }
+
+      // Some bad PDF generators, e.g. Scribus PDF, include glyph names
+      // in a 'uniXXXX' format -- attempting to recover proper ones.
+      function recoverGlyphName(name, glyphsUnicodeMap) {
+        if (glyphsUnicodeMap[name] !== undefined) {
+          return name;
+        }
+        // The glyph name is non-standard, trying to recover.
+        var unicode = getUnicodeForGlyph(name, glyphsUnicodeMap);
+        if (unicode !== -1) {
+          for (var key in glyphsUnicodeMap) {
+            if (glyphsUnicodeMap[key] === unicode) {
+              return key;
+            }
+          }
+        }
+        warn('Unable to recover a standard glyph name for: ' + name);
+        return name;
+      }
+
 
       if (properties.type === 'CIDFontType2') {
         var cidToGidMap = properties.cidToGidMap || [];
@@ -27147,7 +27208,7 @@ var Font = (function FontClosure() {
           }
           var glyphsUnicodeMap = getGlyphsUnicode();
           for (charCode = 0; charCode < 256; charCode++) {
-            var glyphName;
+            var glyphName, standardGlyphName;
             if (this.differences && charCode in this.differences) {
               glyphName = this.differences[charCode];
             } else if (charCode in baseEncoding &&
@@ -27159,13 +27220,16 @@ var Font = (function FontClosure() {
             if (!glyphName) {
               continue;
             }
+            // Ensure that non-standard glyph names are resolved to valid ones.
+            standardGlyphName = recoverGlyphName(glyphName, glyphsUnicodeMap);
+
             var unicodeOrCharCode, isUnicode = false;
             if (cmapPlatformId === 3 && cmapEncodingId === 1) {
-              unicodeOrCharCode = glyphsUnicodeMap[glyphName];
+              unicodeOrCharCode = glyphsUnicodeMap[standardGlyphName];
               isUnicode = true;
             } else if (cmapPlatformId === 1 && cmapEncodingId === 0) {
               // TODO: the encoding needs to be updated with mac os table.
-              unicodeOrCharCode = MacRomanEncoding.indexOf(glyphName);
+              unicodeOrCharCode = MacRomanEncoding.indexOf(standardGlyphName);
             }
 
             var found = false;
@@ -27183,6 +27247,11 @@ var Font = (function FontClosure() {
             if (!found && properties.glyphNames) {
               // Try to map using the post table.
               var glyphId = properties.glyphNames.indexOf(glyphName);
+              // The post table ought to use the same kind of glyph names as the
+              // `differences` array, but check the standard ones as a fallback.
+              if (glyphId === -1 && standardGlyphName !== glyphName) {
+                glyphId = properties.glyphNames.indexOf(standardGlyphName);
+              }
               if (glyphId > 0 && hasGlyph(glyphId, -1, -1)) {
                 charCodeToGlyphId[charCode] = glyphId;
                 found = true;
@@ -27496,6 +27565,12 @@ var Font = (function FontClosure() {
                   code = +glyphName.substr(1);
                 }
                 break;
+              default:
+                // 'uniXXXX'/'uXXXX{XX}' glyphs
+                var unicode = getUnicodeForGlyph(glyphName, glyphsUnicodeMap);
+                if (unicode !== -1) {
+                  code = unicode;
+                }
             }
             if (code) {
               // If |baseEncodingName| is one the predefined encodings,
