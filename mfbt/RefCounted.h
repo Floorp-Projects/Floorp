@@ -26,6 +26,15 @@
 #define MOZ_REFCOUNTED_LEAK_CHECKING
 #endif
 
+#if defined(MOZILLA_INTERNAL_API) && \
+    defined(DEBUG)
+#define MOZ_REFCOUNTED_THREAD_CHECKING
+#endif
+
+#ifdef MOZ_REFCOUNTED_THREAD_CHECKING
+#include "nsISupports.h"
+#endif
+
 namespace mozilla {
 
 /**
@@ -97,6 +106,10 @@ public:
   // Compatibility with nsRefPtr.
   void AddRef() const
   {
+#ifdef MOZ_REFCOUNTED_THREAD_CHECKING
+    RefCountThreadCheck(IntegralConstant<RefCountAtomicity, Atomicity>());
+#endif
+
     // Note: this method must be thread safe for AtomicRefCounted.
     MOZ_ASSERT(int32_t(mRefCnt) >= 0);
 #ifndef MOZ_REFCOUNTED_LEAK_CHECKING
@@ -112,6 +125,10 @@ public:
 
   void Release() const
   {
+#ifdef MOZ_REFCOUNTED_THREAD_CHECKING
+    RefCountThreadCheck(IntegralConstant<RefCountAtomicity, Atomicity>());
+#endif
+
     // Note: this method must be thread safe for AtomicRefCounted.
     MOZ_ASSERT(int32_t(mRefCnt) > 0);
 #ifndef MOZ_REFCOUNTED_LEAK_CHECKING
@@ -150,6 +167,20 @@ private:
   mutable typename Conditional<Atomicity == AtomicRefCount,
                                Atomic<MozRefCountType>,
                                MozRefCountType>::Type mRefCnt;
+
+#ifdef MOZ_REFCOUNTED_THREAD_CHECKING
+  void RefCountThreadCheck(IntegralConstant<RefCountAtomicity, AtomicRefCount>) const
+  {
+    // no need to check the thread if we use AtomicRefCount.
+  }
+
+  void RefCountThreadCheck(IntegralConstant<RefCountAtomicity, NonAtomicRefCount>) const
+  {
+    NS_ASSERT_OWNINGTHREAD(RefCounted);
+  }
+
+  NS_DECL_OWNINGTHREAD;
+#endif
 };
 
 #ifdef MOZ_REFCOUNTED_LEAK_CHECKING
