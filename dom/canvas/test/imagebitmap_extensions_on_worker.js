@@ -42,5 +42,6 @@ function runTests() {
                                          testCreateFromArrayBffer_randomTest("PNG", gPNGBlob, 0),
                                          testCreateFromArrayBffer_randomTest("JPEG", gJPEGBlob, 10) // JPEG loses information
                                         ]); }).
+  then(function() { return testInvalidAccess([gImageData, gImageBitmap, gPNGBlob, gJPEGBlob]); } ).
   then(function() {postMessage({"type": "finish"});}, function(ev) { failed(ev); postMessage({"type": "finish"}); });
 }
