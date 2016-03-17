@@ -32,9 +32,9 @@ public:
 
   virtual bool HasIntermediateBuffer() const override { return false; }
 
-  virtual void Deallocate(ISurfaceAllocator* aAllocator) override { mSurface = nullptr; }
+  virtual void Deallocate(ClientIPCAllocator*) override { mSurface = nullptr; }
 
-  virtual void Forget(ISurfaceAllocator* aAllocator) override { mSurface = nullptr; }
+  virtual void Forget(ClientIPCAllocator*) override { mSurface = nullptr; }
 
   // For debugging purposes only.
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface();
