@@ -2647,8 +2647,8 @@ GeckoDriver.prototype.getWindowSize = function(cmd, resp) {
  * in the window being in the maximized state.
  */
 GeckoDriver.prototype.setWindowSize = function(cmd, resp) {
-  if (this.appName !== "Firefox") {
-    throw new UnsupportedOperationError("Not supported on mobile");
+  if (this.appName != "Firefox") {
+    throw new UnsupportedOperationError();
   }
 
   let width = parseInt(cmd.parameters.width);
@@ -2670,7 +2670,7 @@ GeckoDriver.prototype.setWindowSize = function(cmd, resp) {
  */
 GeckoDriver.prototype.maximizeWindow = function(cmd, resp) {
   if (this.appName != "Firefox") {
-    throw new UnsupportedOperationError("Not supported for mobile");
+    throw new UnsupportedOperationError();
   }
 
   let win = this.getCurrentWindow();
