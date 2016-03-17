@@ -633,9 +633,8 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
   nsFontMetrics::Params params;
   params.userFontSet = pc->GetUserFontSet();
   params.textPerf = pc->GetTextPerfMetrics();
-  RefPtr<nsFontMetrics> fontMet;
-  pc->DeviceContext()->GetMetricsFor(mPD->mHeadFootFont, params,
-                                     *getter_AddRefs(fontMet));
+  RefPtr<nsFontMetrics> fontMet =
+    pc->DeviceContext()->GetMetricsFor(mPD->mHeadFootFont, params);
 
   nscoord ascent = 0;
   nscoord visibleHeight = 0;

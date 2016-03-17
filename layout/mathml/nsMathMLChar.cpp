@@ -996,9 +996,8 @@ nsMathMLChar::SetFontFamily(nsPresContext*          aPresContext,
     params.explicitLanguage = styleFont->mExplicitLanguage;
     params.userFontSet = aPresContext->GetUserFontSet();
     params.textPerf = aPresContext->GetTextPerfMetrics();
-    RefPtr<nsFontMetrics> fm;
-    aPresContext->DeviceContext()->
-      GetMetricsFor(font, params, *getter_AddRefs(fm));
+    RefPtr<nsFontMetrics> fm =
+      aPresContext->DeviceContext()->GetMetricsFor(font, params);
     // Set the font if it is an unicode table
     // or if the same family name has been found
     gfxFont *firstFont = fm->GetThebesFontGroup()->GetFirstValidFont();
@@ -1537,9 +1536,8 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   params.explicitLanguage = styleFont->mExplicitLanguage;
   params.userFontSet = aPresContext->GetUserFontSet();
   params.textPerf = aPresContext->GetTextPerfMetrics();
-  RefPtr<nsFontMetrics> fm;
-  aPresContext->DeviceContext()->
-    GetMetricsFor(font, params, *getter_AddRefs(fm));
+  RefPtr<nsFontMetrics> fm =
+    aPresContext->DeviceContext()->GetMetricsFor(font, params);
   uint32_t len = uint32_t(mData.Length());
   nsAutoPtr<gfxTextRun> textRun;
   textRun = fm->GetThebesFontGroup()->

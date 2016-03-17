@@ -64,9 +64,8 @@ public:
     void Init(nsDeviceContext* aContext);
     void Destroy();
 
-    nsresult GetMetricsFor(const nsFont& aFont,
-                           const nsFontMetrics::Params& aParams,
-                           nsFontMetrics*& aMetrics);
+    already_AddRefed<nsFontMetrics> GetMetricsFor(
+        const nsFont& aFont, const nsFontMetrics::Params& aParams);
 
     void FontMetricsDeleted(const nsFontMetrics* aFontMetrics);
     void Compact();
@@ -122,10 +121,9 @@ nsFontCache::Observe(nsISupports*, const char* aTopic, const char16_t*)
     return NS_OK;
 }
 
-nsresult
+already_AddRefed<nsFontMetrics>
 nsFontCache::GetMetricsFor(const nsFont& aFont,
-                           const nsFontMetrics::Params& aParams,
-                           nsFontMetrics*& aMetrics)
+                           const nsFontMetrics::Params& aParams)
 {
     nsIAtom* language = aParams.language ? aParams.language
                                          : mLocaleLanguage.get();
@@ -133,10 +131,9 @@ nsFontCache::GetMetricsFor(const nsFont& aFont,
     // First check our cache
     // start from the end, which is where we put the most-recent-used element
 
-    nsFontMetrics* fm;
     int32_t n = mFontMetrics.Length() - 1;
     for (int32_t i = n; i >= 0; --i) {
-        fm = mFontMetrics[i];
+        nsFontMetrics* fm = mFontMetrics[i];
         if (fm->Font().Equals(aFont) &&
             fm->GetUserFontSet() == aParams.userFontSet &&
             fm->Language() == language &&
@@ -147,8 +144,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont,
                 mFontMetrics.AppendElement(fm);
             }
             fm->GetThebesFontGroup()->UpdateUserFonts();
-            NS_ADDREF(aMetrics = fm);
-            return NS_OK;
+            return do_AddRef(Move(fm));
         }
     }
 
@@ -156,14 +152,11 @@ nsFontCache::GetMetricsFor(const nsFont& aFont,
 
     nsFontMetrics::Params params = aParams;
     params.language = language;
-    fm = new nsFontMetrics(aFont, params, mContext);
-    NS_ADDREF(fm);
+    RefPtr<nsFontMetrics> fm = new nsFontMetrics(aFont, params, mContext);
     // the mFontMetrics list has the "head" at the end, because append
     // is cheaper than insert
-    mFontMetrics.AppendElement(fm);
-    aMetrics = fm;
-    NS_ADDREF(aMetrics);
-    return NS_OK;
+    mFontMetrics.AppendElement(do_AddRef(fm.get()).take());
+    return fm.forget();
 }
 
 void
@@ -227,10 +220,9 @@ nsDeviceContext::~nsDeviceContext()
     }
 }
 
-nsresult
+already_AddRefed<nsFontMetrics>
 nsDeviceContext::GetMetricsFor(const nsFont& aFont,
-                               const nsFontMetrics::Params& aParams,
-                               nsFontMetrics*& aMetrics)
+                               const nsFontMetrics::Params& aParams)
 {
     if (!mFontCache) {
         mFontCache = new nsFontCache();
@@ -238,7 +230,7 @@ nsDeviceContext::GetMetricsFor(const nsFont& aFont,
         mFontCache->Init(this);
     }
 
-    return mFontCache->GetMetricsFor(aFont, aParams, aMetrics);
+    return mFontCache->GetMetricsFor(aFont, aParams);
 }
 
 nsresult
