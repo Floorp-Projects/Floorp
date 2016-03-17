@@ -88,6 +88,32 @@ function testExceptions() {
   ]);
 }
 
+function testInvalidAccess(sources) {
+
+  function callMapDataIntoWithImageBitmapCroppedOutSideOfTheSourceImage(source) {
+    return new Promise(function(resolve, reject) {
+      var p = createImageBitmap(source, -1, -1, 2, 2);
+      p.then(
+        function(bitmap) {
+          var format = bitmap.findOptimalFormat();
+          var length = bitmap.mappedDataLength(format);
+          var buffer = new ArrayBuffer(length);
+          bitmap.mapDataInto(format, buffer, 0).then(
+            function(layout) { resolve(); },
+            function(error) { reject(error); }
+          );
+        },
+        function() { resolve(); });
+    });
+  };
+
+  var testCases = sources.map( function(source) {
+    return promiseThrows(callMapDataIntoWithImageBitmapCroppedOutSideOfTheSourceImage(source),
+                         "[Exception] mapDataInto() should throw with transparent black."); });
+
+  return Promise.all(testCases);
+}
+
 function testColorConversions() {
   return Promise.all([// From RGBA32
                       testColorConversion("RGBA32", "RGBA32"),
