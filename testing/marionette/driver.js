@@ -394,19 +394,6 @@ GeckoDriver.prototype.getVisibleText = function(el, lines) {
 };
 
 /**
-  * Given a file name, this will delete the file from the temp directory
-  * if it exists.
-  *
-  * @param {string} filename
-  */
-GeckoDriver.prototype.deleteFile = function(filename) {
-  let file = FileUtils.getFile("TmpD", [filename.toString()]);
-  if (file.exists()) {
-    file.remove(true);
-  }
-};
-
-/**
  * Handles registration of new content listener browsers.  Depending on
  * their type they are either accepted or ignored.
  */
@@ -2467,8 +2454,6 @@ GeckoDriver.prototype.sessionTearDown = function(cmd, resp) {
   }
 
   this.sessionId = null;
-  this.deleteFile("marionetteChromeScripts");
-  this.deleteFile("marionetteContentScripts");
 
   if (this.observing !== null) {
     for (let topic in this.observing) {
