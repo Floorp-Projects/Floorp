@@ -318,8 +318,9 @@
       },
       {
         "name": "getAllInWindow",
-        "type": "function",
         "deprecated": "Please use $(ref:tabs.query) <code>{windowId: windowId}</code>.",
+        "unsupported": true,
+        "type": "function",
         "description": "Gets details about all tabs in the specified window.",
         "async": "callback",
         "parameters": [
