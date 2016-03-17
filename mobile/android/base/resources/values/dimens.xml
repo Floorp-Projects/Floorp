@@ -89,10 +89,6 @@
     <dimen name="home_header_item_height">56dp</dimen>
     <dimen name="page_row_divider_height">1dp</dimen>
 
-    <!-- Reading list row on about:home -->
-    <dimen name="reading_list_row_height">128dp</dimen>
-    <dimen name="reading_list_row_padding_right">10dp</dimen>
-
     <!-- Remote Tabs static view top padding. Less in landscape on phones. -->
     <dimen name="home_remote_tabs_top_padding">48dp</dimen>
 
