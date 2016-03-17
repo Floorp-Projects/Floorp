@@ -1,26 +1,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <script>
-      function pingWorker() {
-        var port = navigator.mozSocial.getWorker().port;
-        port.postMessage({topic: "chatbox-message", result: "ok"});
-      }
-      window.addEventListener("socialFrameShow", function(e) {
-        var port = navigator.mozSocial.getWorker().port;
-        port.postMessage({topic: "chatbox-visibility", result: "shown"});
-      }, false);
-      window.addEventListener("socialFrameHide", function(e) {
-        var port = navigator.mozSocial.getWorker().port;
-        port.postMessage({topic: "chatbox-visibility", result: "hidden"});
-      }, false);
-      window.addEventListener("socialTest-CloseSelf", function(e) {
-        window.close();
-      }, false);
-    </script>
     <title>test chat window</title>
   </head>
-  <body onload="pingWorker();">
+  <body>
     <p>This is a test social chat window.</p>
     <!-- a couple of input fields to help with focus testing -->
     <input id="input1"/>
