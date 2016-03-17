@@ -78,7 +78,8 @@ void
 ImageClient::RemoveTextureWithWaiter(TextureClient* aTexture,
                                      AsyncTransactionWaiter* aAsyncTransactionWaiter)
 {
-  if ((aAsyncTransactionWaiter || GetForwarder()->UsesImageBridge())
+  if ((aAsyncTransactionWaiter ||
+      GetForwarder()->IsImageBridgeChild())
 #ifndef MOZ_WIDGET_GONK
       // If the texture client is taking part in recycling then we should make sure
       // the host has finished with it before dropping the ref and triggering

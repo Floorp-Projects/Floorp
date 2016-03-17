@@ -40,7 +40,7 @@ class PTextureChild;
  * additionally forward modifications of the Layer tree).
  * ImageBridgeChild is another CompositableForwarder.
  */
-class CompositableForwarder : public ClientIPCAllocator
+class CompositableForwarder : public ISurfaceAllocator
 {
 public:
 
@@ -140,6 +140,8 @@ public:
   {
     return mTextureFactoryIdentifier.mMaxTextureSize;
   }
+
+  bool IsOnCompositorSide() const override { return false; }
 
   /**
    * Returns the type of backend that is used off the main thread.
