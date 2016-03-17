@@ -13,6 +13,8 @@ var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
 loader.loadSubScript("chrome://marionette/content/simpletest.js");
 loader.loadSubScript("chrome://marionette/content/common.js");
 
+Cu.import("resource://gre/modules/Task.jsm");
+
 Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/action.js");
 Cu.import("chrome://marionette/content/atom.js");
@@ -24,10 +26,6 @@ Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/interaction.js");
 Cu.import("chrome://marionette/content/proxy.js");
-
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var marionetteLogObj = new MarionetteLogObj();
 
