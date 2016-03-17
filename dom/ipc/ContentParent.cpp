@@ -269,6 +269,9 @@ using namespace mozilla::system;
 
 #include "VRManagerParent.h"            // for VRManagerParent
 
+// For VP9Benchmark::sBenchmarkFpsPref
+#include "Benchmark.h"
+
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
 #if defined(XP_WIN)
@@ -5712,6 +5715,17 @@ ContentParent::RecvGetAndroidSystemInfo(AndroidSystemInfo* aInfo)
   MOZ_CRASH("wrong platform!");
   return false;
 #endif
+}
+
+bool
+ContentParent::RecvNotifyBenchmarkResult(const nsString& aCodecName,
+                                         const uint32_t& aDecodeFPS)
+
+{
+  if (aCodecName.EqualsLiteral("VP9")) {
+    Preferences::SetUint(VP9Benchmark::sBenchmarkFpsPref, aDecodeFPS);
+  }
+  return true;
 }
 
 void

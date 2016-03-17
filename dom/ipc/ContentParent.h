@@ -1092,6 +1092,9 @@ private:
 
   virtual bool RecvGetAndroidSystemInfo(AndroidSystemInfo* aInfo) override;
 
+  virtual bool RecvNotifyBenchmarkResult(const nsString& aCodecName,
+                                         const uint32_t& aDecodeFPS) override;
+
   // If you add strong pointers to cycle collected objects here, be sure to
   // release these objects in ShutDownProcess.  See the comment there for more
   // details.
