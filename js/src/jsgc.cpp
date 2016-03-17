@@ -2381,12 +2381,12 @@ GCRuntime::sweepTypesAfterCompacting(Zone* zone)
 
     AutoClearTypeInferenceStateOnOOM oom(zone);
 
-    for (ZoneCellIterUnderGC i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
+    for (ZoneCellIter i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
         JSScript* script = i.get<JSScript>();
         script->maybeSweepTypes(&oom);
     }
 
-    for (ZoneCellIterUnderGC i(zone, AllocKind::OBJECT_GROUP); !i.done(); i.next()) {
+    for (ZoneCellIter i(zone, AllocKind::OBJECT_GROUP); !i.done(); i.next()) {
         ObjectGroup* group = i.get<ObjectGroup>();
         group->maybeSweep(&oom);
     }
@@ -3912,7 +3912,7 @@ GCRuntime::checkForCompartmentMismatches()
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         trc.zone = zone;
         for (auto thingKind : AllAllocKinds()) {
-            for (ZoneCellIterUnderGC i(zone, thingKind); !i.done(); i.next()) {
+            for (ZoneCellIter i(zone, thingKind); !i.done(); i.next()) {
                 trc.src = i.getCell();
                 trc.srcKind = MapAllocToTraceKind(thingKind);
                 trc.compartment = DispatchTraceKindTyped(MaybeCompartmentFunctor(),
@@ -3932,7 +3932,7 @@ RelazifyFunctions(Zone* zone, AllocKind kind)
 
     JSRuntime* rt = zone->runtimeFromMainThread();
 
-    for (ZoneCellIterUnderGC i(zone, kind); !i.done(); i.next()) {
+    for (ZoneCellIter i(zone, kind); !i.done(); i.next()) {
         JSFunction* fun = &i.get<JSObject>()->as<JSFunction>();
         if (fun->hasScript())
             fun->maybeRelazify(rt);
@@ -7054,7 +7054,7 @@ js::ReleaseAllJITCode(FreeOp* fop)
 void
 js::PurgeJITCaches(Zone* zone)
 {
-    for (ZoneCellIterUnderGC i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
+    for (ZoneCellIter i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
         JSScript* script = i.get<JSScript>();
 
         /* Discard Ion caches. */
