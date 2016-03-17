@@ -6,7 +6,7 @@
 @import url(variables.css);
 @import url(common.css);
 @import url(toolbars.css);
-@import url(theme-light.css);
+@import url(light-theme.css);
 
 .theme-body {
   font-size: 11px;
