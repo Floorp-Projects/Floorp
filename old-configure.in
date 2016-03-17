@@ -1331,12 +1331,8 @@ case "$target" in
        AC_MSG_ERROR([targeting iOS but not using an iOS SDK?])
     fi
     if test -n "$MOZ_IOS"; then
-        AC_DEFINE(XP_IOS)
-        AC_DEFINE(XP_DARWIN)
         direct_nspr_config=1
     else
-        AC_DEFINE(XP_MACOSX)
-        AC_DEFINE(XP_DARWIN)
         # The ExceptionHandling framework is needed for Objective-C exception
         # logging code in nsObjCExceptions.h. Currently we only use that in debug
         # builds.
@@ -1643,10 +1639,6 @@ case "$target" in
         MOZ_MEMORY=1
     fi
     AC_DEFINE(HAVE_SNPRINTF)
-    AC_DEFINE(_WINDOWS)
-    AC_DEFINE(WIN32)
-    AC_DEFINE(XP_WIN)
-    AC_DEFINE(XP_WIN32)
     AC_DEFINE(HW_THREADS)
     AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
@@ -1738,13 +1730,6 @@ esac
 AC_SUBST_LIST(MMX_FLAGS)
 AC_SUBST_LIST(SSE_FLAGS)
 AC_SUBST_LIST(SSE2_FLAGS)
-
-case "$target" in
-*-*linux*)
-    # Includes linux-android
-    AC_DEFINE(XP_LINUX)
-    ;;
-esac
 
 AC_SUBST(MOZ_LINKER)
 if test -n "$MOZ_LINKER"; then
@@ -7723,10 +7708,6 @@ fi # COMPILE_ENVIRONMENT
 
 dnl Set various defines and substitutions
 dnl ========================================================
-
-if test "$OS_ARCH" != "WINNT"; then
-  AC_DEFINE(XP_UNIX)
-fi
 
 if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF)
