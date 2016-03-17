@@ -12,6 +12,7 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.squareup.leakcanary.LeakCanary;
+import com.squareup.leakcanary.RefWatcher;
 
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
@@ -38,6 +39,8 @@ public class GeckoApplication extends Application
 
     private LightweightTheme mLightweightTheme;
 
+    private RefWatcher mRefWatcher;
+
     public GeckoApplication() {
         super();
         instance = this;
@@ -45,6 +48,11 @@ public class GeckoApplication extends Application
 
     public static GeckoApplication get() {
         return instance;
+    }
+
+    public static RefWatcher getRefWatcher(Context context) {
+        GeckoApplication app = (GeckoApplication) context.getApplicationContext();
+        return app.mRefWatcher;
     }
 
     @Override
@@ -128,7 +136,7 @@ public class GeckoApplication extends Application
     public void onCreate() {
         Log.i(LOG_TAG, "zerdatime " + SystemClock.uptimeMillis() + " - Fennec application start");
 
-        LeakCanary.install(this);
+        mRefWatcher = LeakCanary.install(this);
 
         final Context context = getApplicationContext();
         HardwareUtils.init(context);
