@@ -466,14 +466,14 @@ Event::GetTimeStamp(uint64_t* aTimeStamp)
 NS_IMETHODIMP
 Event::StopPropagation()
 {
-  mEvent->mFlags.mPropagationStopped = true;
+  mEvent->StopPropagation();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Event::StopImmediatePropagation()
 {
-  mEvent->mFlags.mPropagationStopped = true;
+  mEvent->StopPropagation();
   mEvent->mFlags.mImmediatePropagationStopped = true;
   return NS_OK;
 }
