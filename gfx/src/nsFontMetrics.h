@@ -58,16 +58,10 @@ public:
       gfxTextPerfMetrics* textPerf = nullptr;
     };
 
-    nsFontMetrics();
+    nsFontMetrics(const nsFont& aFont, const Params& aParams,
+                  nsDeviceContext *aContext);
 
     NS_INLINE_DECL_REFCOUNTING(nsFontMetrics)
-
-    /**
-     * Initialize the font metrics. Call this after creating the font metrics.
-     * Font metrics you get from the font cache do NOT need to be initialized
-     */
-    nsresult Init(const nsFont& aFont, const Params& aParams,
-                  nsDeviceContext *aContext);
 
     /**
      * Destroy this font metrics. This breaks the association between
@@ -250,7 +244,7 @@ private:
     nsFont mFont;
     RefPtr<gfxFontGroup> mFontGroup;
     nsCOMPtr<nsIAtom> mLanguage;
-    nsDeviceContext *mDeviceContext;
+    nsDeviceContext* mDeviceContext;
     int32_t mP2A;
 
     // The font orientation (horizontal or vertical) for which these metrics
