@@ -1222,8 +1222,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
         hasListenerForCurrentGroup = hasListenerForCurrentGroup ||
           listener->mFlags.mInSystemGroup == aEvent->mFlags.mInSystemGroup;
         if (listener->IsListening(aEvent) &&
-            (aEvent->mFlags.mIsTrusted ||
-             listener->mFlags.mAllowUntrustedEvents)) {
+            (aEvent->IsTrusted() || listener->mFlags.mAllowUntrustedEvents)) {
           if (!*aDOMEvent) {
             // This is tiny bit slow, but happens only once per event.
             nsCOMPtr<EventTarget> et =

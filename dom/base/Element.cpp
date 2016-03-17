@@ -2083,7 +2083,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
   NS_PRECONDITION(aSourceEvent, "Must have source event");
   NS_PRECONDITION(aStatus, "Null out param?");
 
-  WidgetMouseEvent event(aSourceEvent->mFlags.mIsTrusted, eMouseClick,
+  WidgetMouseEvent event(aSourceEvent->IsTrusted(), eMouseClick,
                          aSourceEvent->widget, WidgetMouseEvent::eReal);
   event.refPoint = aSourceEvent->refPoint;
   uint32_t clickCount = 1;
@@ -2878,7 +2878,7 @@ Element::CheckHandleEventForLinksPrecondition(EventChainVisitor& aVisitor,
                                               nsIURI** aURI) const
 {
   if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
-      (!aVisitor.mEvent->mFlags.mIsTrusted &&
+      (!aVisitor.mEvent->IsTrusted() &&
        (aVisitor.mEvent->mMessage != eMouseClick) &&
        (aVisitor.mEvent->mMessage != eKeyPress) &&
        (aVisitor.mEvent->mMessage != eLegacyDOMActivate)) ||

@@ -1687,7 +1687,7 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 
   WidgetEvent* theEvent = aFocusEvent->WidgetEventPtr();
   if (theEvent) {
-    WidgetGUIEvent focusEvent(theEvent->mFlags.mIsTrusted, theEvent->mMessage,
+    WidgetGUIEvent focusEvent(theEvent->IsTrusted(), theEvent->mMessage,
                               nullptr);
     nsEventStatus rv = ProcessEvent(focusEvent);
     if (nsEventStatus_eConsumeNoDefault == rv) {
@@ -2046,7 +2046,7 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aEvent));
   if (dragEvent && mInstance) {
     WidgetEvent* ievent = aEvent->WidgetEventPtr();
-    if (ievent && ievent->mFlags.mIsTrusted &&
+    if (ievent && ievent->IsTrusted() &&
         ievent->mMessage != eDragEnter && ievent->mMessage != eDragOver) {
       aEvent->PreventDefault();
     }

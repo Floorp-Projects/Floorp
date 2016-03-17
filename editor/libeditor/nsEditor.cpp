@@ -5102,7 +5102,7 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
   }
 
   // Accept all trusted events.
-  if (widgetEvent->mFlags.mIsTrusted) {
+  if (widgetEvent->IsTrusted()) {
     return true;
   }
 
