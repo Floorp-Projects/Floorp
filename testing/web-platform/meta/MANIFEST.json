@@ -34723,8 +34723,34 @@
     ]
   },
   "local_changes": {
-    "deleted": [],
-    "items": {},
+    "deleted": [
+      "html/browsers/history/the-location-interface/non-automated/manual_click_replace_during_load.html"
+    ],
+    "items": {
+      "manual": {
+        "html/browsers/history/the-location-interface/non-automated/manual_click_replace_during_load-manual.html": [
+          {
+            "path": "html/browsers/history/the-location-interface/non-automated/manual_click_replace_during_load-manual.html",
+            "url": "/html/browsers/history/the-location-interface/non-automated/manual_click_replace_during_load-manual.html"
+          }
+        ]
+      },
+      "testharness": {
+        "dom/collections/HTMLCollection-supported-property-indices.html": [
+          {
+            "path": "dom/collections/HTMLCollection-supported-property-indices.html",
+            "url": "/dom/collections/HTMLCollection-supported-property-indices.html"
+          }
+        ],
+        "fetch/api/request/request-cache.html": [
+          {
+            "path": "fetch/api/request/request-cache.html",
+            "timeout": "long",
+            "url": "/fetch/api/request/request-cache.html"
+          }
+        ]
+      }
+    },
     "reftest_nodes": {}
   },
   "reftest_nodes": {
