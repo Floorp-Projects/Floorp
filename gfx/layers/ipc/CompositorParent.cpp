@@ -1280,7 +1280,7 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRe
 #ifdef MOZ_DUMP_PAINTING
   if (gfxPrefs::DumpHostLayers()) {
     printf_stderr("Painting --- compositing layer tree:\n");
-    mLayerManager->Dump();
+    mLayerManager->Dump(/* aSorted = */ true);
   }
 #endif
   mLayerManager->SetDebugOverlayWantsNextFrame(false);
