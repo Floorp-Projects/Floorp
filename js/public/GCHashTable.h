@@ -25,25 +25,27 @@ struct DefaultMapSweepPolicy {
 // A GCHashMap is a GC-aware HashMap, meaning that it has additional trace and
 // sweep methods that know how to visit all keys and values in the table.
 // HashMaps that contain GC pointers will generally want to use this GCHashMap
-// specialization in lieu of HashMap, either because those pointers must be
-// traced to be kept alive -- in which case, KeyPolicy and/or ValuePolicy
-// should do the appropriate tracing -- or because those pointers are weak and
-// must be swept during a GC -- in which case needsSweep should be set
-// appropriately.
+// specialization instead of HashMap, because this conveniently supports tracing
+// keys and values, and cleaning up weak entries.
 //
-// Most types of GC pointers as keys and values can be traced with no extra
-// infrastructure. For structs, the GCPolicy<T> will call a trace() method on
-// the struct. For other structs and non-gc-pointer members, ensure that there
-// is a specialization of GCPolicy<T> with an appropriate trace() static method
-// available to handle the custom type. Generic helpers can be found in
-// js/public/TracingAPI.h.
+// GCHashMap::trace applies GCPolicy<T>::trace to each entry's key and value.
+// Most types of GC pointers already have appropriate specializations of
+// GCPolicy, so they should just work as keys and values. Any struct type with a
+// default constructor and trace and sweep functions should work as well. If you
+// need to define your own GCPolicy specialization, generic helpers can be found
+// in js/public/TracingAPI.h.
 //
-// Note that this HashMap only knows *how* to trace and sweep (and the tracing
-// can handle keys that move), but it does not itself cause tracing or sweeping
-// to be invoked. For tracing, it must be used with Rooted or PersistentRooted,
-// or barriered and traced manually. For sweeping, currently it requires an
-// explicit call to <map>.sweep().
+// The MapSweepPolicy template parameter controls how the table drops entries
+// when swept. GCHashMap::sweep applies MapSweepPolicy::needsSweep to each table
+// entry; if it returns true, the entry is dropped. The default MapSweepPolicy
+// drops the entry if either the key or value is about to be finalized,
+// according to its GCPolicy<T>::needsSweep method. (This default is almost
+// always fine: it's hard to imagine keeping such an entry around anyway.)
 //
+// Note that this HashMap only knows *how* to trace and sweep, but it does not
+// itself cause tracing or sweeping to be invoked. For tracing, it must be used
+// with Rooted or PersistentRooted, or barriered and traced manually. For
+// sweeping, currently it requires an explicit call to <map>.sweep().
 template <typename Key,
           typename Value,
           typename HashPolicy = DefaultHasher<Key>,
@@ -90,6 +92,10 @@ class GCHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>
 };
 
 // HashMap that supports rekeying.
+//
+// If your keys are pointers to something like JSObject that can be tenured or
+// compacted, prefer to use GCHashMap with MovableCellHasher, which takes
+// advantage of the Zone's stable id table to make rekeying unnecessary.
 template <typename Key,
           typename Value,
           typename HashPolicy = DefaultHasher<Key>,
