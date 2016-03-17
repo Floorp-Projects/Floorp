@@ -746,11 +746,9 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     params.explicitLanguage = styles[0]->mExplicitLanguage;
     params.userFontSet = pc->GetUserFontSet();
     params.textPerf = pc->GetTextPerfMetrics();
-    RefPtr<nsFontMetrics> metrics;
-    pc->DeviceContext()->GetMetricsFor(font, params, *getter_AddRefs(metrics));
-    if (metrics) {
-      newFontGroup = metrics->GetThebesFontGroup();
-    }
+    RefPtr<nsFontMetrics> metrics =
+      pc->DeviceContext()->GetMetricsFor(font, params);
+    newFontGroup = metrics->GetThebesFontGroup();
   }
 
   if (!newFontGroup) {

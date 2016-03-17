@@ -335,10 +335,7 @@ GetMetricsFor(nsPresContext* aPresContext,
   params.userFontSet =
     aUseUserFontSet ? aPresContext->GetUserFontSet() : nullptr;
   params.textPerf = aPresContext->GetTextPerfMetrics();
-  RefPtr<nsFontMetrics> fm;
-  aPresContext->DeviceContext()->
-    GetMetricsFor(font, params, *getter_AddRefs(fm));
-  return fm.forget();
+  return aPresContext->DeviceContext()->GetMetricsFor(font, params);
 }
 
 

@@ -10344,9 +10344,8 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       nsFontMetrics::Params params;
       params.language = nsGkAtoms::x_western;
       params.textPerf = aPresContext->GetTextPerfMetrics();
-      RefPtr<nsFontMetrics> fm;
-      aPresContext->DeviceContext()->
-        GetMetricsFor(font, params, *getter_AddRefs(fm));
+      RefPtr<nsFontMetrics> fm =
+        aPresContext->DeviceContext()->GetMetricsFor(font, params);
 
       char buf[16];
       int len = snprintf_literal(buf, "%d", counter->mCount);

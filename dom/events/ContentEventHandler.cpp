@@ -1453,22 +1453,14 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
   rect.x = posInFrame.x;
   rect.y = posInFrame.y;
 
-  nscoord fontHeight = 0;
-  RefPtr<nsFontMetrics> fontMetrics;
-  rv = nsLayoutUtils::
-    GetInflatedFontMetricsForFrame(frame, getter_AddRefs(fontMetrics));
-  if (NS_WARN_IF(!fontMetrics)) {
-    // If we cannot get font height, use frame size instead.
-    fontHeight = isVertical ? frame->GetSize().width : frame->GetSize().height;
-  } else {
-    fontHeight = fontMetrics->MaxAscent() + fontMetrics->MaxDescent();
-  }
+  RefPtr<nsFontMetrics> fontMetrics =
+    nsLayoutUtils::GetInflatedFontMetricsForFrame(frame);
   if (isVertical) {
-    rect.width = fontHeight;
+    rect.width = fontMetrics->MaxHeight();
     rect.height = caretRect.height;
   } else {
     rect.width = caretRect.width;
-    rect.height = fontHeight;
+    rect.height = fontMetrics->MaxHeight();
   }
 
   rv = ConvertToRootRelativeOffset(frame, rect);

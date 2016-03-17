@@ -2693,10 +2693,8 @@ ComputeLineHeight(nsStyleContext* aStyleContext,
     }
   }
 
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext,
-                                               getter_AddRefs(fm),
-                                               aFontSizeInflation);
+  RefPtr<nsFontMetrics> fm = nsLayoutUtils::
+    GetFontMetricsForStyleContext(aStyleContext, aFontSizeInflation);
   return GetNormalLineHeight(fm);
 }
 
