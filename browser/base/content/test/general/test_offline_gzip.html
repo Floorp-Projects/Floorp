@@ -9,107 +9,13 @@ cache, it can be fetched from the cache successfully.
 -->
 <head>
   <title>Test gzipped offline resources</title>
-  <script type="text/javascript" 
-          src="/MochiKit/MochiKit.js"></script>
-  <script type="text/javascript"
-          src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="offlineByDefault.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta charset="utf-8">
 </head>
-<body onload="loaded()">
+<body>
 <p id="display">
 <iframe name="testFrame" src="gZipOfflineChild.html"></iframe>
 
 <div id="content" style="display: none">
 </div>
-<pre id="test">
-<script class="testbody" type="text/javascript">
-
-var cacheCount = 0;
-var intervalID = 0;
-
-window.addEventListener("message", handleMessageEvents, false);
-SimpleTest.waitForExplicitFinish();
-
-function finishTest() {
-  // Clean up after ourselves.
-  var Cc = SpecialPowers.Cc;
-  var pm = Cc["@mozilla.org/permissionmanager;1"].
-           getService(SpecialPowers.Ci.nsIPermissionManager);
-
-  var uri = Cc["@mozilla.org/network/io-service;1"].getService(SpecialPowers.Ci.nsIIOService)
-              .newURI(window.frames[0].location, null, null);
-  var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-              .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
-  var principal = ssm.createCodebasePrincipal(uri, {});
-
-  pm.removeFromPrincipal(principal, "offline-app");
-
-  window.removeEventListener("message", handleMessageEvents, false);
-
-  offlineByDefault.reset();
-  SimpleTest.finish();  
-}
-
-////
-// Handle "message" events which are posted from the iframe upon
-// offline cache events.
-//
-function handleMessageEvents(event) {
-  cacheCount++;
-  switch (cacheCount) {
-    case 1:
-      // This is the initial caching off offline data.  
-      is(event.data, "oncache", "Child was successfully cached.");
-      // Reload the frame; this will generate an error message
-      // in the case of bug 501422.
-      frames.testFrame.window.location.reload();
-      // Use setInterval to repeatedly call a function which
-      // checks that one of two things has occurred:  either
-      // the offline cache is udpated (which means our iframe
-      // successfully reloaded), or the string "error" appears
-      // in the iframe, as in the case of bug 501422.
-      intervalID = setInterval(function() {
-        // Sometimes document.body may not exist, and trying to access
-        // it will throw an exception, so handle this case.
-        try {
-          var bodyInnerHTML = frames.testFrame.document.body.innerHTML;
-        }
-        catch (e) {
-          var bodyInnerHTML = "";
-        }
-        if (cacheCount == 2 || bodyInnerHTML.includes("error")) {
-          clearInterval(intervalID);
-          is(cacheCount, 2, "frame not reloaded successfully");
-          if (cacheCount != 2) {
-            finishTest();
-          }
-        }
-      }, 100);
-      break;
-    case 2:    
-      is(event.data, "onupdate", "Child was successfully updated.");
-      clearInterval(intervalID);
-      finishTest();
-      break;
-    default:
-      // how'd we get here?
-      ok(false, "cacheCount not 1 or 2");
-  }
-}
-
-function loaded() {
-  // Click the notification panel's "Allow" button.  This should kick
-  // off updates, which will eventually lead to getting messages from
-  // the iframe.
-  var wm = SpecialPowers.Cc["@mozilla.org/appshell/window-mediator;1"].
-           getService(SpecialPowers.Ci.nsIWindowMediator);
-  var win = wm.getMostRecentWindow("navigator:browser");
-  var panel = win.PopupNotifications.panel;
-  panel.firstElementChild.button.click();
-}
-
-</script>
-</pre>
 </body>
 </html>
