@@ -127,7 +127,6 @@ add_task(function* testWindowUpdate() {
 });
 
 add_task(function* () {
-  let window1 = window;
   let window2 = yield BrowserTestUtils.openNewBrowserWindow();
 
   let extension = ExtensionTestUtils.loadExtension({
