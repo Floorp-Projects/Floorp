@@ -1,0 +1,48 @@
+<html>
+  <head>
+    <title>NPAPI NPNVcontentsScaleFactor Test</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="plugin-utils.js"></script>
+  </head>
+
+  <body onload="runTests()">
+    <script class="testbody" type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+     setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+     function checkZoomFactor(zoomFactor, expectedValue) {
+       // Done as if/ok instead of is() so we don't spam test results
+       if (isNaN(zoomFactor)) {
+         ok(false, "Return should be valid when getting CSS zoom factor");
+       }
+       return (expectedValue - zoomFactor) < 0.00001;
+     }
+
+     function testZoom() {
+       var pluginElement = document.getElementById("plugin");
+       // setTimeout loop on value checks, as zoom value updates can take some
+       // time and we don't have a good event to listen for.
+       if (!checkZoomFactor(pluginElement.queryCSSZoomFactorGetValue(), 2.0) ||
+           !checkZoomFactor(pluginElement.queryCSSZoomFactorSetValue(), 2.0)) {
+         setTimeout(testZoom, 0);
+         return;
+       }
+       ok(true, "Zoom values set to 2.0 as expected");
+       // set back to 1 when we're done otherwise later tests can fail
+       SpecialPowers.setFullZoom(window, 1.0);
+       SimpleTest.finish();
+     }
+
+     function runTests() {
+       var pluginElement = document.getElementById("plugin");
+       // Don't check SetValue yet, needs to happen after zoom has been explicitly set.
+       ok(checkZoomFactor(pluginElement.queryCSSZoomFactorGetValue(), 1.0), "Zoom values set to 1.0 as expected");
+       SpecialPowers.setFullZoom(window, 2.0);
+       // Check for new zoom value sometime after we've spun event loop to repaint.
+       setTimeout(testZoom, 0);
+     }
+    </script>
+
+    <embed id="plugin" type="application/x-test" width="400" height="400"></embed>
+  </body>
+</html>
