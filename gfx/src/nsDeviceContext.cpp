@@ -203,20 +203,15 @@ nsDeviceContext::nsDeviceContext()
     : mWidth(0), mHeight(0), mDepth(0),
       mAppUnitsPerDevPixel(-1), mAppUnitsPerDevPixelAtUnitFullZoom(-1),
       mAppUnitsPerPhysicalInch(-1),
-      mFullZoom(1.0f), mPrintingScale(1.0f),
-      mFontCache(nullptr)
+      mFullZoom(1.0f), mPrintingScale(1.0f)
 {
     MOZ_ASSERT(NS_IsMainThread(), "nsDeviceContext created off main thread");
 }
 
-// Note: we use a bare pointer for mFontCache so that nsFontCache
-// can be an incomplete type in nsDeviceContext.h.
-// Therefore we have to do all the refcounting by hand.
 nsDeviceContext::~nsDeviceContext()
 {
     if (mFontCache) {
         mFontCache->Destroy();
-        NS_RELEASE(mFontCache);
     }
 }
 
@@ -226,7 +221,6 @@ nsDeviceContext::GetMetricsFor(const nsFont& aFont,
 {
     if (!mFontCache) {
         mFontCache = new nsFontCache();
-        NS_ADDREF(mFontCache);
         mFontCache->Init(this);
     }
 
