@@ -21,6 +21,17 @@ def systrace(value, target):
         set_define('MOZ_USE_SYSTRACE', '1')
 
 
+option('--enable-jprof', env='MOZ_JPROF',
+       help='Enable jprof profiling tool (needs mozilla/tools/jprof)')
+
+@depends('--enable-jprof')
+def jprof(value):
+    if value:
+        set_config('MOZ_JPROF', '1')
+        set_define('MOZ_JPROF', '1')
+        add_old_configure_assignment('MOZ_JPROF', '1')
+
+
 # Javascript engine
 # ==============================================================
 include('../js/moz.configure')
