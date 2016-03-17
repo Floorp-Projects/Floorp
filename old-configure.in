@@ -2813,7 +2813,6 @@ MOZ_SCTP=
 MOZ_ANDROID_OMX=
 MOZ_MEDIA_NAVIGATOR=
 MOZ_OMX_PLUGIN=
-MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE=
 MOZ_VPX_ERROR_CONCEALMENT=
 MOZ_WEBSPEECH=1
 MOZ_WEBSPEECH_MODELS=
@@ -4137,68 +4136,6 @@ if test -n "$MOZ_OMX_PLUGIN"; then
     else
         dnl fail if we're not building on Gonk or Android
         AC_MSG_ERROR([OMX media plugin can only be built on B2G or Android])
-    fi
-fi
-
-dnl ========================================================
-dnl Gradle support
-dnl
-dnl If --with-gradle is specified, build mobile/android with Gradle.
-dnl
-dnl If no Gradle binary is specified, use the in tree Gradle wrapper.
-dnl The wrapper downloads and installs Gradle, which is good for local
-dnl developers but not good in automation.
-dnl ========================================================
-
-GRADLE=
-MOZ_ARG_WITH_STRING(gradle,
-[  --with-gradle=/path/to/bin/gradle
-                          Enable building mobile/android with Gradle (argument: location of binary or wrapper (gradle/gradlew))],
-    if test "$withval" = "no" ; then
-        dnl --without-gradle => use the wrapper in |mach gradle|, don't build
-        dnl with Gradle by default.
-        GRADLE=$srcdir/gradlew
-        MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE=
-    elif test "$withval" = "yes" ; then
-        dnl --with-gradle => use the wrapper in |mach gradle|, build with
-        dnl Gradle by default.
-        GRADLE=$srcdir/gradlew
-        MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE=1
-    else
-        dnl --with-gradle=/path/to/gradle => use the given binary in |mach
-        dnl gradle|, build with Gradle by default.
-        GRADLE=$withval
-        MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE=1
-    fi
-    ,
-    dnl No --with{out}-gradle => use the wrapper in |mach gradle|, don't build
-    dnl with Gradle by default.
-    GRADLE=$srcdir/gradlew
-    MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE=
-    )
-
-if test "$OS_TARGET" = Android -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk" ; then
-    if test -z "$GRADLE" -o ! -x "$GRADLE" ; then
-        AC_MSG_ERROR([The program gradlew/gradle was not found.  Use --with-gradle=/path/to/bin/gradle}])
-    fi
-fi
-AC_SUBST(GRADLE)
-
-dnl Path to Maven repository containing Gradle dependencies.  Automation will
-dnl set this to file:///path/to/local via the mozconfig.  Local developer
-dnl default is jcenter.
-if test -z "$GRADLE_MAVEN_REPOSITORY" ; then
-    GRADLE_MAVEN_REPOSITORY=https://jcenter.bintray.com/
-fi
-AC_SUBST(GRADLE_MAVEN_REPOSITORY)
-
-if test -n "$MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE"; then
-    if test "$OS_TARGET" = "Android" -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
-        dnl Only allow building mobile/android with Gradle.
-        AC_DEFINE(MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE)
-    else
-        dnl fail if we're not building mobile/android.
-        AC_MSG_ERROR([Can only build mobile/android with Gradle])
     fi
 fi
 
@@ -7629,7 +7566,6 @@ AC_SUBST_LIST(FFVPX_ASFLAGS)
 AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_ANDROID_OMX)
 AC_SUBST(MOZ_OMX_PLUGIN)
-AC_SUBST(MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE)
 AC_SUBST(MOZ_VPX_ERROR_CONCEALMENT)
 AC_SUBST(VPX_USE_YASM)
 AC_SUBST_LIST(VPX_ASFLAGS)
