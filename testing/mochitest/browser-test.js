@@ -382,10 +382,12 @@ Tester.prototype = {
       this.structuredLogger.info("TEST-START | Shutdown");
 
       if (this.tests.length) {
+        let e10sMode = gMultiProcessBrowser ? "e10s" : "non-e10s";
         this.structuredLogger.info("Browser Chrome Test Summary");
         this.structuredLogger.info("Passed:  " + passCount);
         this.structuredLogger.info("Failed:  " + failCount);
         this.structuredLogger.info("Todo:    " + todoCount);
+        this.structuredLogger.info("Mode:    " + e10sMode);
       } else {
         this.structuredLogger.testEnd("browser-test.js",
                                       "FAIL",
