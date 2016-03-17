@@ -41,6 +41,7 @@ function runTests() {
     then(testDraw()).
     then(testExceptions).
     then(testColorConversions()).
+    then(function() { return testInvalidAccess([gVideo, gImage, gCanvas, gCtx, gImageData, gImageBitmap, gPNGBlob, gJPEGBlob]); } ).
     then(function() {window.parent.postMessage({"type": "finish"}, "*");}, function(ev) { failed(ev); window.parent.postMessage({"type": "finish"}, "*"); });
 }
 
