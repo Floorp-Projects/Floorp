@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head>
+<style>
+    .first {
+        background-color: green;
+        top: 48px;
+    }
+    .second {
+        top: 88px;
+    }
+    .third {
+        background-color: blue;
+        opacity: 0.5;
+    }
+    .group {
+        opacity: 0.5;
+    }
+    .leaf {
+        width: 100px;
+        height: 100px;
+        position:absolute;
+    }
+</style>
+</head><body>
+
+<div class="group">
+  <div class="leaf first"></div>
+  <canvas class="leaf second" width="100px" height="100px" id="canvas"></canvas>
+</div>
+<div class="leaf third"></div>
+<script>
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext("2d");
+    ctx.fillStyle = "red";
+    ctx.fillRect(0, 0, 100, 100);
+</script>
+</body>
+</html>
+
