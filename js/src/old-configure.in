@@ -872,14 +872,6 @@ AC_LANG_RESTORE
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
-dnl = Use profiling compile flags
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(profiling,
-[  --enable-profiling      Set compile flags necessary for using sampling profilers (e.g. shark, perf)],
-    MOZ_PROFILING=1,
-    MOZ_PROFILING= )
-
-dnl ========================================================
 dnl System overrides of the defaults for host
 dnl ========================================================
 case "$host" in
@@ -2337,34 +2329,11 @@ AC_SUBST(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 AC_SUBST(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_UNALIGNED)
 
 dnl ========================================================
-dnl jprof
-dnl ========================================================
-if test -n "$MOZ_JPROF"; then
-    MOZ_PROFILING=1
-fi
-
-dnl ========================================================
 dnl instruments
 dnl ========================================================
 if test -n "$MOZ_INSTRUMENTS"; then
-    MOZ_PROFILING=1
     LIBS="$LIBS -framework CoreFoundation"
 fi
-
-dnl ========================================================
-dnl callgrind
-dnl ========================================================
-if test -n "$MOZ_CALLGRIND"; then
-    MOZ_PROFILING=1
-fi
-
-dnl ========================================================
-dnl vtune
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(vtune,
-[  --enable-vtune          Enable vtune profiling. Implies --enable-profiling.],
-    MOZ_VTUNE=1,
-    MOZ_VTUNE= )
 
 dnl ========================================================
 dnl JitSpew.  Enabled by default in debug builds.
@@ -2385,22 +2354,6 @@ dnl Debug (see Bug 939505)
 dnl ========================================================
 if test -n "$MOZ_DEBUG"; then
     AC_DEFINE(JS_DEBUG)
-fi
-
-dnl ========================================================
-dnl Profiling
-dnl ========================================================
-if test -n "$MOZ_PROFILING"; then
-    AC_DEFINE(MOZ_PROFILING)
-
-    case "$OS_TARGET" in
-        Linux) MOZ_VTUNE=1 ;;
-        WINNT) MOZ_VTUNE=1 ;;
-    esac
-fi
-
-if test -n "$MOZ_VTUNE"; then
-    AC_DEFINE(MOZ_VTUNE)
 fi
 
 dnl ========================================================
@@ -2772,8 +2725,6 @@ AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
-AC_SUBST(MOZ_VTUNE)
-AC_SUBST(MOZ_PROFILING)
 AC_SUBST(LIBICONV)
 
 AC_SUBST(ENABLE_TESTS)
