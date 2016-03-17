@@ -1255,14 +1255,7 @@ dnl ========================================================
 dnl = Enable DMD
 dnl ========================================================
 
-MOZ_ARG_ENABLE_BOOL(dmd,
-[  --enable-dmd            Enable DMD; also enables jemalloc, replace-malloc and profiling],
-    MOZ_DMD=1,
-    MOZ_DMD= )
-
 if test "$MOZ_DMD"; then
-    AC_DEFINE(MOZ_DMD)
-
     if test "${CPU_ARCH}" = "arm"; then
         CFLAGS="$CFLAGS -funwind-tables"
         CXXFLAGS="$CXXFLAGS -funwind-tables"
@@ -1272,7 +1265,6 @@ if test "$MOZ_DMD"; then
     MOZ_REPLACE_MALLOC=1                # DMD enables replace-malloc
     MOZ_PROFILING=1                     # DMD enables profiling
 fi
-AC_SUBST(MOZ_DMD)
 
 dnl ========================================================
 dnl Profiling
