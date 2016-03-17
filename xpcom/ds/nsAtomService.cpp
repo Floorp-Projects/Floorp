@@ -23,14 +23,3 @@ nsAtomService::GetAtom(const nsAString& aString, nsIAtom** aResult)
 
   return NS_OK;
 }
-
-nsresult
-nsAtomService::GetPermanentAtom(const nsAString& aString, nsIAtom** aResult)
-{
-  *aResult = NS_NewPermanentAtom(aString);
-  if (!*aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}

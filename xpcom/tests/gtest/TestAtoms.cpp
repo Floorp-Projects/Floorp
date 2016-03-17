@@ -175,36 +175,4 @@ TEST(Atoms, Table)
   EXPECT_EQ(thirdNonPerm, sAtom3);
 }
 
-#define FIRST_PERM_ATOM_STR "first permanent atom. Hello!"
-#define SECOND_PERM_ATOM_STR "second permanent atom. @World!"
-
-TEST(Atoms, Permanent)
-{
-  nsrefcnt count = NS_GetNumberOfAtoms();
-
-  {
-    nsCOMPtr<nsIAtom> first = do_GetAtom(FIRST_PERM_ATOM_STR);
-    EXPECT_TRUE(first->Equals(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR)));
-    EXPECT_FALSE(isStaticAtom(first));
-
-    nsCOMPtr<nsIAtom> first_p =
-      NS_NewPermanentAtom(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR));
-    EXPECT_TRUE(first_p->Equals(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR)));
-    EXPECT_TRUE(isStaticAtom(first_p));
-    EXPECT_EQ(first, first_p);
-
-    nsCOMPtr<nsIAtom> second_p =
-      NS_NewPermanentAtom(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR));
-    EXPECT_TRUE(second_p->Equals(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR)));
-    EXPECT_TRUE(isStaticAtom(second_p));
-
-    nsCOMPtr<nsIAtom> second = do_GetAtom(SECOND_PERM_ATOM_STR);
-    EXPECT_TRUE(second->Equals(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR)));
-    EXPECT_TRUE(isStaticAtom(second));
-    EXPECT_EQ(second, second_p);
-  }
-
-  EXPECT_EQ(NS_GetNumberOfAtoms(), count + 2);
-}
-
 }
