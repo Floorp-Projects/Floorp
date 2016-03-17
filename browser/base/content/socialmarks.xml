@@ -246,7 +246,7 @@
         <body><![CDATA[
         // we always set the src on click if it has not been set for this tab,
         // but we only want to open the panel if it was previously annotated.
-        let openPanel = this.isMarked || aOpenPanel || !this.provider.haveLoggedInUser();
+        let openPanel = this.isMarked || aOpenPanel;
         let src = this.content.getAttribute("src");
         if (!src || src == "about:blank") {
           this.loadPanel();

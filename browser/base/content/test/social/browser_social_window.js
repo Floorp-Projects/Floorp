@@ -55,13 +55,11 @@ var manifest = { // normal provider
   name: "provider 1",
   origin: "https://example.com",
   sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
-  workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
   iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
 var manifest2 = { // used for testing install
   name: "provider test1",
   origin: "https://test1.example.com",
-  workerURL: "https://test1.example.com/browser/browser/base/content/test/social/social_worker.js",
   sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar.html",
   iconURL: "https://test1.example.com/browser/browser/base/content/test/general/moz.png",
 };

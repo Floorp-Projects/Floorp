@@ -7,17 +7,10 @@
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 
 if CONFIG['MOZ_SOCIAL']:
-    BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
-
     # social is turned off for android
     EXTRA_JS_MODULES += [
-        'FrameWorker.jsm',
-        'FrameWorkerContent.js',
-        'MessagePortBase.jsm',
-        'MessagePortWorker.js',
         'MozSocialAPI.jsm',
         'SocialService.jsm',
-        'WorkerAPI.jsm',
     ]
 
 with Files('**'):
