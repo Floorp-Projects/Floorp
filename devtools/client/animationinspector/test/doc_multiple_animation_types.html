@@ -48,13 +48,13 @@
       document.querySelector(".css-transition").style.backgroundColor = "yellow";
     }, 0);
 
-    document.querySelector(".script-animation").animate([
-      {opacity: 1, offset: 0},
-      {opacity: .1, offset: 1}
-    ], {
-      duration: 10000,
-      fill: "forwards"
-    });
+    // Element.animate() is disabled in Firefox 47, so do it the long way.
+    let effect = new KeyframeEffect(document.querySelector(".script-animation"),
+                                    [ { opacity: 1, offset: 0 },
+                                      { opacity: .1, offset: 1 } ],
+                                      { duration: 10000, fill: "forwards" });
+    let animation = new Animation(effect, document.timeline);
+    animation.play();
   </script>
 </body>
 </html>
