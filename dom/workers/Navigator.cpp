@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/WorkerNavigator.h"
+#include "DataStore.h"
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DataStore.h"
@@ -13,7 +13,7 @@
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/WorkerNavigatorBinding.h"
 
-#include "DataStore.h"
+#include "Navigator.h"
 #include "nsProxyRelease.h"
 #include "RuntimeService.h"
 
@@ -23,8 +23,7 @@
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 
-namespace mozilla {
-namespace dom {
+BEGIN_WORKERS_NAMESPACE
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WorkerNavigator)
 
@@ -49,7 +48,7 @@ WorkerNavigator::Create(bool aOnLine)
 JSObject*
 WorkerNavigator::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return WorkerNavigatorBinding::Wrap(aCx, this, aGivenProto);
+  return WorkerNavigatorBinding_workers::Wrap(aCx, this, aGivenProto);
 }
 
 // A WorkerMainThreadRunnable to synchronously add DataStoreChangeEventProxy on
@@ -301,7 +300,7 @@ WorkerNavigator::GetDataStores(JSContext* aCx,
 void
 WorkerNavigator::SetLanguages(const nsTArray<nsString>& aLanguages)
 {
-  WorkerNavigatorBinding::ClearCachedLanguagesValue(this);
+  WorkerNavigatorBinding_workers::ClearCachedLanguagesValue(this);
   mProperties.mLanguages = aLanguages;
 }
 
@@ -400,5 +399,4 @@ WorkerNavigator::GetUserAgent(nsString& aUserAgent, ErrorResult& aRv) const
   runnable->Dispatch(aRv);
 }
 
-} // namespace dom
-} // namespace mozilla
+END_WORKERS_NAMESPACE
