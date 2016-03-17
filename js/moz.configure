@@ -84,3 +84,12 @@ def instruments(value, target):
         set_config('MOZ_INSTRUMENTS', '1')
         set_define('MOZ_INSTRUMENTS', '1')
         add_old_configure_assignment('MOZ_INSTRUMENTS', '1')
+
+
+js_option('--enable-callgrind', env='MOZ_CALLGRIND',
+          help='Enable callgrind profiling')
+
+@depends('--enable-callgrind')
+def callgrind(value):
+    if value:
+        set_define('MOZ_CALLGRIND', '1')
