@@ -267,7 +267,7 @@ private:
     float    mFullZoom;
     float    mPrintingScale;
 
-    nsFontCache*                   mFontCache;
+    RefPtr<nsFontCache>            mFontCache;
     nsCOMPtr<nsIWidget>            mWidget;
     nsCOMPtr<nsIScreenManager>     mScreenManager;
     nsCOMPtr<nsIDeviceContextSpec> mDeviceContextSpec;
