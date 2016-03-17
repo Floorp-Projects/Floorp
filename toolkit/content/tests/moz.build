@@ -13,7 +13,4 @@ MOCHITEST_CHROME_MANIFESTS += [
     'widgets/chrome.ini',
 ]
 
-MOCHITEST_MANIFESTS += [
-    'mochitest/mochitest.ini',
-    'widgets/mochitest.ini',
-]
+MOCHITEST_MANIFESTS += ['widgets/mochitest.ini']
