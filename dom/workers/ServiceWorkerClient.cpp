@@ -13,7 +13,10 @@
 #include "mozilla/dom/ServiceWorkerMessageEvent.h"
 #include "mozilla/dom/ServiceWorkerMessageEventBinding.h"
 #include "nsGlobalWindow.h"
+#include "nsIBrowserDOMWindow.h"
 #include "nsIDocument.h"
+#include "ServiceWorker.h"
+#include "ServiceWorkerPrivate.h"
 #include "WorkerPrivate.h"
 
 using namespace mozilla;

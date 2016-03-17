@@ -134,6 +134,10 @@ def create_parser(mach_interface=False):
             help='Specify the url for the repository we are testing. '
                  'This will use the value found in application.ini if'
                  ' it is not specified.')
+    add_arg('--framework',
+            help='Will post to the specified framework for Perfherder. '
+                 'Default "talos".  Used primarily for experiments on '
+                 'new platforms')
     add_arg('--print-tests', action=_ListTests,
             help="print available tests")
     add_arg('--print-suites', action=_ListSuite,

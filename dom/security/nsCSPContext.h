@@ -81,6 +81,10 @@ class nsCSPContext : public nsIContentSecurityPolicy
       mLoadingPrincipal = nullptr;
     }
 
+    nsWeakPtr GetLoadingContext(){
+      return mLoadingContext;
+    }
+
   private:
     bool permitsInternal(CSPDirective aDir,
                          nsIURI* aContentLocation,

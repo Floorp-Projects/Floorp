@@ -5,7 +5,7 @@
 */
 
 /* globals XPCOMUtils, NewTabPrefsProvider, Services,
-  Locale, UpdateUtils, MODE_CHANNEL_MAP
+  Locale, UpdateUtils, NewTabRemoteResources
 */
 "use strict";
 
@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
                                   "resource:///modules/NewTabPrefsProvider.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MODE_CHANNEL_MAP",
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabRemoteResources",
                                   "resource:///modules/NewTabRemoteResources.jsm");
 
 const LOCAL_NEWTAB_URL = "chrome://browser/content/newtab/newTab.xhtml";
@@ -168,10 +168,10 @@ AboutNewTabService.prototype = {
       .replace("%LOCALE%", Locale.getLocale())
       .replace("%CHANNEL%", releaseName);
     let mode = Services.prefs.getCharPref(PREF_REMOTE_MODE, "production");
-    if (!(mode in MODE_CHANNEL_MAP)) {
+    if (!(mode in NewTabRemoteResources.MODE_CHANNEL_MAP)) {
       mode = "production";
     }
-    return MODE_CHANNEL_MAP[mode].origin + path;
+    return NewTabRemoteResources.MODE_CHANNEL_MAP[mode].origin + path;
   },
 
   /*

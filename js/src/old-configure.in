@@ -89,11 +89,6 @@ BUILDING_JS=1
 AC_SUBST(BUILDING_JS)
 AC_SUBST(autoconfmk)
 
-MOZ_ARG_WITH_STRING(gonk,
-[  --with-gonk=DIR
-               location of gonk dir],
-    gonkdir=$withval)
-
 MOZ_ARG_WITH_STRING(gonk-toolchain-prefix,
 [  --with-gonk-toolchain-prefix=DIR
                           prefix to gonk toolchain commands],
@@ -640,10 +635,6 @@ MOZ_USER_DIR=".mozilla"
 
 MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
 
-USE_DEPENDENT_LIBS=1
-
-_PLATFORM_DEFAULT_TOOLKIT=cairo-gtk2
-
 dnl Configure platform-specific CPU architecture compiler options.
 dnl ==============================================================
 MOZ_ARCH_OPTS
@@ -901,7 +892,7 @@ case "$host" in
     else
         HOST_CFLAGS="$HOST_CFLAGS -mwindows"
     fi
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11 -D_CRT_SECURE_NO_WARNINGS"
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     HOST_BIN_SUFFIX=.exe
 
@@ -921,7 +912,7 @@ case "$host" in
     ;;
 
 *-darwin*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX -DNO_X11"
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX"
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
@@ -953,7 +944,6 @@ case "$target" in
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
-    _PLATFORM_DEFAULT_TOOLKIT='cairo-cocoa'
     LDFLAGS="$LDFLAGS -lobjc"
     # The ExceptionHandling framework is needed for Objective-C exception
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
@@ -996,9 +986,6 @@ case "$target" in
 
 *-android*|*-linuxandroid*)
     AC_DEFINE(NO_PW_GECOS)
-    no_x=yes
-    _PLATFORM_DEFAULT_TOOLKIT=cairo-android
-
     MOZ_GFX_OPTIMIZE_MOBILE=1
     MOZ_OPTIMIZE_FLAGS="-O3 -fno-reorder-functions"
     if test -z "$CLANG_CC"; then
@@ -1222,13 +1209,8 @@ case "$target" in
     AC_DEFINE(HW_THREADS)
     AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
-    _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
     BIN_SUFFIX='.exe'
     MOZ_USER_DIR="Mozilla"
-
-    dnl set NO_X11 defines here as the general check is skipped on win32
-    no_x=yes
-    AC_DEFINE(NO_X11)
 
     case "$host_os" in
     cygwin*|msvc*|mks*)
@@ -2821,8 +2803,6 @@ AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
 
-AC_SUBST(USE_DEPENDENT_LIBS)
-
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 
 AC_SUBST(MOZ_APP_NAME)
@@ -2935,17 +2915,6 @@ fi
 if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF)
     AC_DEFINE(MOZ_REFLOW_PERF_DSP)
-fi
-
-if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK" ; then
-    AC_DEFINE(MOZ_ACCESSIBILITY_ATK)
-    ATK_FULL_VERSION=`$PKG_CONFIG --modversion atk`
-    ATK_MAJOR_VERSION=`echo ${ATK_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
-    ATK_MINOR_VERSION=`echo ${ATK_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
-    ATK_REV_VERSION=`echo ${ATK_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
-    AC_DEFINE_UNQUOTED(ATK_MAJOR_VERSION, $ATK_MAJOR_VERSION)
-    AC_DEFINE_UNQUOTED(ATK_MINOR_VERSION, $ATK_MINOR_VERSION)
-    AC_DEFINE_UNQUOTED(ATK_REV_VERSION, $ATK_REV_VERSION)
 fi
 
 dnl ========================================================

@@ -5,7 +5,6 @@
 from marionette_driver import Wait
 from marionette.marionette_test import skip_if_e10s
 
-from firefox_ui_harness.decorators import skip_under_xvfb
 from firefox_puppeteer.testcases import FirefoxTestCase
 
 
@@ -48,7 +47,6 @@ class TestSSLStatusAfterRestart(FirefoxTestCase):
             FirefoxTestCase.tearDown(self)
 
     @skip_if_e10s
-    @skip_under_xvfb
     def test_ssl_status_after_restart(self):
         for item in self.test_data:
             with self.marionette.using_context('content'):

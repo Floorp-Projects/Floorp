@@ -120,4 +120,11 @@ extern GeckoProcessType sChildProcessType;
  */
 void SetupErrorHandling(const char* progname);
 
+/**
+ * A numeric value indicating whether multiprocess might be blocked.
+ * Possible values can be found at nsAppRunner.cpp. A value of 0
+ * represents not blocking.
+ */
+uint32_t MultiprocessBlockPolicy();
+
 #endif // nsAppRunner_h__

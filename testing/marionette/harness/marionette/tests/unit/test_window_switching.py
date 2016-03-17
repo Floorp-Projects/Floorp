@@ -15,7 +15,7 @@ class TestWindowSwitching(MarionetteTestCase):
         self.marionette.navigate(test_html)
 
         self.current_window = self.marionette.current_window_handle
-        link = self.marionette.find_element("link text", "Open new window")
+        link = self.marionette.find_element(By.LINK_TEXT, "Open new window")
         link.click()
 
         windows = self.marionette.window_handles

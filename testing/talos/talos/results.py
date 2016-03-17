@@ -84,13 +84,13 @@ class TalosResults(object):
 class TestResults(object):
     """container object for all test results across cycles"""
 
-    def __init__(self, test_config, global_counters=None, extensions=None):
+    def __init__(self, test_config, global_counters=None, framework=None):
         self.results = []
         self.test_config = test_config
         self.format = None
         self.global_counters = global_counters or {}
         self.all_counter_results = []
-        self.extensions = extensions
+        self.framework = framework
         self.using_xperf = False
 
     def name(self):

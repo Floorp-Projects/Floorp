@@ -4,7 +4,6 @@
 
 from marionette_driver import Wait
 
-from firefox_ui_harness.decorators import skip_under_xvfb
 from firefox_puppeteer.testcases import FirefoxTestCase
 
 
@@ -28,7 +27,6 @@ class TestAccessLocationBar(FirefoxTestCase):
         self.autocomplete_results = self.locationbar.autocomplete_results
         self.urlbar = self.locationbar.urlbar
 
-    @skip_under_xvfb
     def test_access_locationbar_history(self):
 
         # Open some local pages, then about:blank

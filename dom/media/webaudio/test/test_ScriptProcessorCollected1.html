@@ -2,13 +2,12 @@
 <html>
 <head>
   <title>Test ScriptProcessorNode in cycle with no listener is collected</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <script class="testbody" type="text/javascript">
 
-Components.utils.import('resource://gre/modules/Services.jsm');
 SimpleTest.waitForExplicitFinish();
 
 var observer = function(subject, topic, data) {
@@ -20,11 +19,11 @@ var observer = function(subject, topic, data) {
   }
 }
 
-Services.obs.addObserver(observer, "webaudio-node-demise", false);
+SpecialPowers.addObserver(observer, "webaudio-node-demise", false);
 
 SimpleTest.registerCleanupFunction(function() {
   if (observer) {
-    Services.obs.removeObserver(observer, "webaudio-node-demise");
+    SpecialPowers.removeObserver(observer, "webaudio-node-demise");
   }
 });
 
@@ -59,7 +58,7 @@ testProcessor.onaudioprocess = function(event) {
     // Expect that webaudio-demise has been queued.
     // Queue another event to check.
     SimpleTest.executeSoon(function() {
-      Services.obs.removeObserver(observer, "webaudio-node-demise");
+      SpecialPowers.removeObserver(observer, "webaudio-node-demise");
       observer = null;
       event.target.onaudioprocess = null;
       ok(ids.length == 0, "All expected nodes should be collected");
@@ -69,8 +68,12 @@ testProcessor.onaudioprocess = function(event) {
   }
 };
 
+function id(node) {
+  return SpecialPowers.getPrivilegedProps(node, "id");
+}
+
 // Nodes with these ids should be collected.
-var ids = [ testProcessor.id, delay.id, gain.id ];
+var ids = [ id(testProcessor), id(delay), id(gain) ];
 testProcessor = null;
 delay = null;
 gain = null;

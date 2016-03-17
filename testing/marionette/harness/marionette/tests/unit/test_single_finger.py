@@ -5,6 +5,7 @@
 from marionette import MarionetteTestCase
 from marionette_driver.marionette import Actions
 from marionette_driver.errors import MarionetteException
+from marionette_driver.by import By
 #add this directory to the path
 import os
 import sys
@@ -60,7 +61,7 @@ class testSingleFinger(MarionetteTestCase):
     def test_long_press_fail(self):
         testAction = self.marionette.absolute_url("testAction.html")
         self.marionette.navigate(testAction)
-        button = self.marionette.find_element("id", "button1Copy")
+        button = self.marionette.find_element(By.ID, "button1Copy")
         action = Actions(self.marionette)
         action.press(button).long_press(button, 5)
         self.assertRaises(MarionetteException, action.perform)
@@ -80,7 +81,7 @@ class testSingleFinger(MarionetteTestCase):
     def test_touchcancel_chain(self):
         testAction = self.marionette.absolute_url("testAction.html")
         self.marionette.navigate(testAction)
-        button = self.marionette.find_element("id", "button1")
+        button = self.marionette.find_element(By.ID, "button1")
         action = Actions(self.marionette)
         action.press(button).wait(5).cancel()
         action.perform()

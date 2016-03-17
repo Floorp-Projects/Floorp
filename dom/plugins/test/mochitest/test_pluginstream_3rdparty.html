@@ -1,0 +1,76 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>NPAPI NPN_GetURL NPStream Test</title>
+  <meta charset=UTF-8>
+  <script type="text/javascript"
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript"
+          src="pluginstream.js"></script>
+  <script type="text/javascript" src="plugin-utils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript">
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+  </script>
+  <link rel="stylesheet" type="text/css"
+        href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+
+  <iframe id="testframe" name="testframe"></iframe>
+
+  <script>
+    /**
+     * Tests that we still properly do or don't send cookies for requests from
+     * plugins when the user has disabled 3rd-party cookies. See
+     * pluginstream.js where we verify that we get the same content as for XHR
+     * requests.
+     */
+    SimpleTest.waitForExplicitFinish();
+    function get_embed_elt() {
+      var e = document.createElement("embed");
+      e.setAttribute("streammode", "normal");
+      e.setAttribute("streamchunksize", "1024");
+      e.setAttribute("frame", "testframe");
+      e.setAttribute("id", "embedtest");
+      e.setAttribute("style", "width: 400px; height: 100px;");
+      e.setAttribute("type", "application/x-test");
+      return e;
+    }
+
+    function* test_runner() {
+      function create_embed(host) {
+        var e = get_embed_elt();
+
+        const url =
+          `http://${host}/tests/dom/plugins/test/mochitest/file_checkcookie.sjs`;
+        e.setAttribute('geturl', url);
+        document.body.appendChild(e);
+
+        return new Promise(resolve => {
+          $('testframe').addEventListener("load", function loaded() {
+            $('testframe').removeEventListener("load", loaded);
+            resolve();
+          });
+        });
+      }
+
+      // Same origin
+      yield create_embed("mochi.test:8888");
+      yield create_embed("example.org");
+    }
+
+    document.cookie = "found=a_cookie";
+    var example_iframe = document.createElement("iframe");
+    example_iframe.src = "http://example.org/tests/dom/plugins/test/mochitest/file_setcookie.html";
+    example_iframe.addEventListener("load", () => {
+      $('testframe').addEventListener("load", () => frameLoaded(false, true));
+      SpecialPowers.pushPrefEnv({ set: [[ 'network.cookie.cookieBehavior', 1 ]] },
+                                () => (spawn_task(test_runner).then(SimpleTest.finish)));
+    });
+    document.body.appendChild(example_iframe);
+  </script>
+ </body>
+ </html>
