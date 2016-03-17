@@ -301,7 +301,7 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
         if (sscanf(str, "%u", &port) != 1)
             ABORT(R_BAD_DATA);
 
-        if (port < 1 || port > 0x0FFFF)
+        if (port > 0x0FFFF)
             ABORT(R_BAD_DATA);
 
         if ((r=nr_str_port_to_transport_addr(rel_addr,port,transport,&cand->base)))
