@@ -134,7 +134,7 @@ SpeechSynthesisUtterance::Rate() const
 void
 SpeechSynthesisUtterance::SetRate(float aRate)
 {
-  mRate = std::max<float>(std::min<float>(aRate, 10), 0.1);
+  mRate = std::max<float>(std::min<float>(aRate, 10), 0.1f);
 }
 
 float
