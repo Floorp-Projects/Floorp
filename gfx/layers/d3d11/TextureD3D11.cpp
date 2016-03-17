@@ -380,7 +380,7 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, TextureAllocation
 }
 
 void
-D3D11TextureData::Deallocate(ISurfaceAllocator* aAllocator)
+D3D11TextureData::Deallocate(ClientIPCAllocator* aAllocator)
 {
   mTexture = nullptr;
 }
@@ -389,7 +389,7 @@ already_AddRefed<TextureClient>
 CreateD3D11TextureClientWithDevice(IntSize aSize, SurfaceFormat aFormat,
                                    TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags,
                                    ID3D11Device* aDevice,
-                                   ISurfaceAllocator* aAllocator)
+                                   ClientIPCAllocator* aAllocator)
 {
   TextureData* data = D3D11TextureData::Create(aSize, aFormat, aAllocFlags, aDevice);
   if (!data) {
@@ -399,7 +399,7 @@ CreateD3D11TextureClientWithDevice(IntSize aSize, SurfaceFormat aFormat,
 }
 
 TextureData*
-D3D11TextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
+D3D11TextureData::CreateSimilar(ClientIPCAllocator* aAllocator,
                                 TextureFlags aFlags,
                                 TextureAllocationFlags aAllocFlags) const
 {
@@ -413,7 +413,7 @@ D3D11TextureData::GetDXGIResource(IDXGIResource** aOutResource)
 }
 
 DXGIYCbCrTextureData*
-DXGIYCbCrTextureData::Create(ISurfaceAllocator* aAllocator,
+DXGIYCbCrTextureData::Create(ClientIPCAllocator* aAllocator,
                              TextureFlags aFlags,
                              IUnknown* aTextureY,
                              IUnknown* aTextureCb,
@@ -445,7 +445,7 @@ DXGIYCbCrTextureData::Create(ISurfaceAllocator* aAllocator,
 }
 
 DXGIYCbCrTextureData*
-DXGIYCbCrTextureData::Create(ISurfaceAllocator* aAllocator,
+DXGIYCbCrTextureData::Create(ClientIPCAllocator* aAllocator,
                              TextureFlags aFlags,
                              ID3D11Texture2D* aTextureY,
                              ID3D11Texture2D* aTextureCb,
@@ -507,7 +507,7 @@ DXGIYCbCrTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 }
 
 void
-DXGIYCbCrTextureData::Deallocate(ISurfaceAllocator*)
+DXGIYCbCrTextureData::Deallocate(ClientIPCAllocator*)
 {
   mHoldRefs[0] = nullptr;
   mHoldRefs[1] = nullptr;

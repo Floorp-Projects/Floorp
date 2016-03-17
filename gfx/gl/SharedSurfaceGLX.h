@@ -49,14 +49,14 @@ class SurfaceFactory_GLXDrawable
 public:
     static UniquePtr<SurfaceFactory_GLXDrawable> Create(GLContext* prodGL,
                                                         const SurfaceCaps& caps,
-                                                        const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                                        const RefPtr<layers::ClientIPCAllocator>& allocator,
                                                         const layers::TextureFlags& flags);
 
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override;
 
 private:
     SurfaceFactory_GLXDrawable(GLContext* prodGL, const SurfaceCaps& caps,
-                               const RefPtr<layers::ISurfaceAllocator>& allocator,
+                               const RefPtr<layers::ClientIPCAllocator>& allocator,
                                const layers::TextureFlags& flags)
         : SurfaceFactory(SharedSurfaceType::GLXDrawable, prodGL, caps, allocator, flags)
     { }

@@ -29,7 +29,7 @@ EGLImageTextureData::EGLImageTextureData(EGLImageImage* aImage, gfx::IntSize aSi
 
 already_AddRefed<TextureClient>
 EGLImageTextureData::CreateTextureClient(EGLImageImage* aImage, gfx::IntSize aSize,
-                                         ISurfaceAllocator* aAllocator, TextureFlags aFlags)
+                                         ClientIPCAllocator* aAllocator, TextureFlags aFlags)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Can't pass an `EGLImage` between processes.");
@@ -71,7 +71,7 @@ already_AddRefed<TextureClient>
 AndroidSurfaceTextureData::CreateTextureClient(AndroidSurfaceTexture* aSurfTex,
                                                gfx::IntSize aSize,
                                                gl::OriginPos aOriginPos,
-                                               ISurfaceAllocator* aAllocator,
+                                               ClientIPCAllocator* aAllocator,
                                                TextureFlags aFlags)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
