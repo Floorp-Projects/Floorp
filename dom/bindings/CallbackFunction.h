@@ -32,6 +32,14 @@ public:
   {
   }
 
+  // See CallbackObject for an explanation of the arguments.
+  explicit CallbackFunction(JS::Handle<JSObject*> aCallable,
+                            JS::Handle<JSObject*> aAsyncStack,
+                            nsIGlobalObject* aIncumbentGlobal)
+    : CallbackObject(aCallable, aAsyncStack, aIncumbentGlobal)
+  {
+  }
+
   JS::Handle<JSObject*> Callable() const
   {
     return Callback();
