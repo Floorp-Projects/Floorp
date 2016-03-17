@@ -635,6 +635,8 @@ MOZ_USER_DIR=".mozilla"
 
 MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
 
+USE_DEPENDENT_LIBS=1
+
 dnl Configure platform-specific CPU architecture compiler options.
 dnl ==============================================================
 MOZ_ARCH_OPTS
@@ -2802,6 +2804,8 @@ AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
+
+AC_SUBST(USE_DEPENDENT_LIBS)
 
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 
