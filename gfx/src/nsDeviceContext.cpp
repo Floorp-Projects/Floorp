@@ -156,49 +156,14 @@ nsFontCache::GetMetricsFor(const nsFont& aFont,
 
     nsFontMetrics::Params params = aParams;
     params.language = language;
-    fm = new nsFontMetrics();
+    fm = new nsFontMetrics(aFont, params, mContext);
     NS_ADDREF(fm);
-    nsresult rv = fm->Init(aFont, params, mContext);
-    if (NS_SUCCEEDED(rv)) {
-        // the mFontMetrics list has the "head" at the end, because append
-        // is cheaper than insert
-        mFontMetrics.AppendElement(fm);
-        aMetrics = fm;
-        NS_ADDREF(aMetrics);
-        return NS_OK;
-    }
-    fm->Destroy();
-    NS_RELEASE(fm);
-
-    // One reason why Init() fails is because the system is running out of
-    // resources. e.g., on Win95/98 only a very limited number of GDI
-    // objects are available. Compact the cache and try again.
-
-    Compact();
-    fm = new nsFontMetrics();
-    NS_ADDREF(fm);
-    rv = fm->Init(aFont, params, mContext);
-    if (NS_SUCCEEDED(rv)) {
-        mFontMetrics.AppendElement(fm);
-        aMetrics = fm;
-        return NS_OK;
-    }
-    fm->Destroy();
-    NS_RELEASE(fm);
-
-    // could not setup a new one, send an old one (XXX search a "best
-    // match"?)
-
-    n = mFontMetrics.Length() - 1; // could have changed in Compact()
-    if (n >= 0) {
-        aMetrics = mFontMetrics[n];
-        NS_ADDREF(aMetrics);
-        return NS_OK;
-    }
-
-    NS_POSTCONDITION(NS_SUCCEEDED(rv),
-                     "font metrics should not be null - bug 136248");
-    return rv;
+    // the mFontMetrics list has the "head" at the end, because append
+    // is cheaper than insert
+    mFontMetrics.AppendElement(fm);
+    aMetrics = fm;
+    NS_ADDREF(aMetrics);
+    return NS_OK;
 }
 
 void
