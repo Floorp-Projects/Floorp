@@ -1199,6 +1199,13 @@ parent:
     sync UngrabPointer(uint32_t time);
 
     sync RemovePermission(Principal principal, nsCString permissionType) returns (nsresult rv);
+
+    /**
+     * Tell the parent that a decoder's' benchmark has been completed.
+     * The result can then be stored in permanent storage.
+     */
+    async NotifyBenchmarkResult(nsString aCodecName, uint32_t aDecodeFPS);
+
 both:
      async AsyncMessage(nsString aMessage, ClonedMessageData aData,
                         CpowEntry[] aCpows, Principal aPrincipal);
