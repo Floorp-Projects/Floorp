@@ -2514,8 +2514,7 @@ EventStateManager::GetScrollAmount(nsPresContext* aPresContext,
     return nsSize(0, 0);
   }
   RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(rootFrame, getter_AddRefs(fm),
-    nsLayoutUtils::FontSizeInflationFor(rootFrame));
+  nsLayoutUtils::GetInflatedFontMetricsForFrame(rootFrame, getter_AddRefs(fm));
   NS_ENSURE_TRUE(fm, nsSize(0, 0));
   return nsSize(fm->AveCharWidth(), fm->MaxHeight());
 }

@@ -3905,8 +3905,7 @@ nsSize
 ScrollFrameHelper::GetLineScrollAmount() const
 {
   RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(mOuter, getter_AddRefs(fm),
-    nsLayoutUtils::FontSizeInflationFor(mOuter));
+  nsLayoutUtils::GetInflatedFontMetricsForFrame(mOuter, getter_AddRefs(fm));
   NS_ASSERTION(fm, "FontMetrics is null, assuming fontHeight == 1 appunit");
   static nscoord sMinLineScrollAmountInPixels = -1;
   if (sMinLineScrollAmountInPixels < 0) {

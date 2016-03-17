@@ -198,7 +198,7 @@ nsListBoxBodyFrame::Init(nsIContent*       aContent,
     }
   }
   RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm), 1.0f);
   mRowHeight = fm->MaxHeight();
 }
 

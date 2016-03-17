@@ -1228,7 +1228,14 @@ public:
    */
   static nsresult GetFontMetricsForFrame(const nsIFrame* aFrame,
                                          nsFontMetrics** aFontMetrics,
-                                         float aSizeInflation = 1.0f);
+                                         float aSizeInflation);
+
+  static nsresult GetInflatedFontMetricsForFrame(const nsIFrame* aFrame,
+                                                 nsFontMetrics** aFontMetrics)
+  {
+    return GetFontMetricsForFrame(aFrame, aFontMetrics,
+                                  FontSizeInflationFor(aFrame));
+  }
 
   /**
    * Get the font metrics corresponding to the given style data.
