@@ -2,6 +2,7 @@
 <meta charset='utf-8'>
 <script language="JavaScript" type="text/javascript" src="../scripts/MozillaFileLogger.js"></script>
 <script language="JavaScript" type="text/javascript" src="../scripts/Profiler.js"></script>
+<script language="JavaScript" type="text/javascript" src="chrome://talos-powers-content/content/TalosPowersContent.js"></script>
 <script language="JavaScript" type="text/javascript" src="../tests/quit.js"></script>
 <script>
 var OPENER_DELAY = 1000; // ms delay between tests
@@ -35,6 +36,8 @@ function scheduleNextWindow() {
     window.setTimeout(reportTimes, 0);
     return;
   }
+
+  TalosPowersContent.forceCCAndGC();
   window.setTimeout(openWindow, OPENER_DELAY);
 }
 
