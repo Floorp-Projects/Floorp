@@ -387,7 +387,7 @@ gfxMemorySharedReadLock::GetReadCount()
   return mReadCount;
 }
 
-gfxShmSharedReadLock::gfxShmSharedReadLock(ClientIPCAllocator* aAllocator)
+gfxShmSharedReadLock::gfxShmSharedReadLock(ISurfaceAllocator* aAllocator)
   : mAllocator(aAllocator)
   , mAllocSuccess(false)
 {

@@ -184,7 +184,7 @@ static inline void SwapRB_R8G8B8A8(uint8_t* pixel) {
 
 class TexClientFactory
 {
-  ClientIPCAllocator* const mAllocator;
+  ISurfaceAllocator* const mAllocator;
   const bool mHasAlpha;
   const gfx::IntSize mSize;
   const gfx::BackendType mBackendType;
@@ -192,7 +192,7 @@ class TexClientFactory
   const LayersBackend mLayersBackend;
 
 public:
-  TexClientFactory(ClientIPCAllocator* allocator, bool hasAlpha,
+  TexClientFactory(ISurfaceAllocator* allocator, bool hasAlpha,
                    const gfx::IntSize& size, gfx::BackendType backendType,
                    TextureFlags baseTexFlags, LayersBackend layersBackend)
     : mAllocator(allocator)
@@ -240,7 +240,7 @@ public:
 };
 
 static already_AddRefed<TextureClient>
-TexClientFromReadback(SharedSurface* src, ClientIPCAllocator* allocator,
+TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
                       TextureFlags baseFlags, LayersBackend layersBackend)
 {
   auto backendType = gfx::BackendType::CAIRO;
