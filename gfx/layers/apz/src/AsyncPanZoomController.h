@@ -879,7 +879,7 @@ private:
   // Start an overscroll animation with the given initial velocity.
   void StartOverscrollAnimation(const ParentLayerPoint& aVelocity);
 
-  void StartSmoothScroll(ScrollSource aSource);
+  void StartSmoothScroll();
 
   // Returns whether overscroll is allowed during an event.
   bool AllowScrollHandoffInCurrentBlock() const;
