@@ -70,8 +70,16 @@ const key = (id, win = window) => {
   registerCleanupFunction(() => {
     info(`finish() was called, cleaning up...`);
     DevToolsUtils.testing = false;
+
     PrefUtils.rollbackPrefsToDefault();
     stopObservingPrefs();
+
+    // Manually stop the profiler module at the end of all tests, to hopefully
+    // avoid at least some leaks on OSX. Theoretically the module should never
+    // be active at this point. We shouldn't have to do this, but rather
+    // find and fix the leak in the module itself. Bug 1257439.
+    let nsIProfilerModule = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
+    nsIProfilerModule.StopProfiler();
 
     // Forces GC, CC and shrinking GC to get rid of disconnected docshells
     // and windows.
