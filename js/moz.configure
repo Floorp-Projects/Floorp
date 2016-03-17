@@ -68,3 +68,19 @@ def disable_export_js(value):
 
     error('Setting %s is deprecated, use %s instead.'
           % (value.format('DISABLE_EXPORT_JS'), suggestion))
+
+
+# Profiling
+# =======================================================
+js_option('--enable-instruments', env='MOZ_INSTRUMENTS',
+          help='Enable instruments remote profiling')
+
+@depends('--enable-instruments', target)
+def instruments(value, target):
+    if value and target.os != 'OSX':
+        error('--enable-instruments cannot be used when targeting %s'
+              % target.os)
+    if value:
+        set_config('MOZ_INSTRUMENTS', '1')
+        set_define('MOZ_INSTRUMENTS', '1')
+        add_old_configure_assignment('MOZ_INSTRUMENTS', '1')
