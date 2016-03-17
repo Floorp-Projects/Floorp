@@ -419,6 +419,15 @@ def split_triplet(triplet):
     )
 
 
+@template
+@advanced
+def config_sub(shell, triplet):
+    import subprocess
+    config_sub = os.path.join(os.path.dirname(__file__), '..',
+                              'autoconf', 'config.sub')
+    return subprocess.check_output([shell, config_sub, triplet]).strip()
+
+
 @depends('--host', shell)
 @advanced
 def host(value, shell):
@@ -430,14 +439,14 @@ def host(value, shell):
     else:
         host = value[0]
 
-    return split_triplet(host)
+    return split_triplet(config_sub(shell, host))
 
 
-@depends('--target', host)
-def target(value, host):
+@depends('--target', host, shell)
+def target(value, host, shell):
     if not value:
         return host
-    return split_triplet(value[0])
+    return split_triplet(config_sub(shell, value[0]))
 
 
 @depends(host, target)
