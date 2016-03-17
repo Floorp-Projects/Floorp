@@ -35,6 +35,8 @@ var TabsInTitlebar = {
     };
     CustomizableUI.addListener(this);
 
+    addEventListener("resolutionchange", this, false);
+
     this._initialized = true;
   },
 
@@ -63,6 +65,12 @@ var TabsInTitlebar = {
   observe: function (subject, topic, data) {
     if (topic == "nsPref:changed")
       this._readPref();
+  },
+
+  handleEvent: function (aEvent) {
+    if (aEvent.type == "resolutionchange" && aEvent.target == window) {
+      this._update(true);
+    }
   },
 
   _onMenuMutate: function (aMutations) {
@@ -241,6 +249,7 @@ var TabsInTitlebar = {
 
   uninit: function () {
     this._initialized = false;
+    removeEventListener("resolutionchange", this);
     Services.prefs.removeObserver(this._prefName, this);
     this._menuObserver.disconnect();
     CustomizableUI.removeListener(this);
