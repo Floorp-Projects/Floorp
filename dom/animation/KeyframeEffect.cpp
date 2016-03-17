@@ -1824,7 +1824,8 @@ CreatePropertyValue(nsCSSProperty aProperty,
 
 void
 KeyframeEffectReadOnly::GetProperties(
-    nsTArray<AnimationPropertyDetails>& aProperties) const
+    nsTArray<AnimationPropertyDetails>& aProperties,
+    ErrorResult& aRv) const
 {
   for (const AnimationProperty& property : mProperties) {
     AnimationPropertyDetails propertyDetails;
@@ -1838,9 +1839,10 @@ KeyframeEffectReadOnly::GetProperties(
       propertyDetails.mWarning.Construct(localizedString);
     }
 
-    if (!propertyDetails.mValues.SetCapacity(
-          property.mSegments.Length(), mozilla::fallible)) {
-      MOZ_CRASH("Out of memory allocating values array");
+    if (!propertyDetails.mValues.SetCapacity(property.mSegments.Length(),
+                                             mozilla::fallible)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
     }
 
     for (size_t segmentIdx = 0, segmentLen = property.mSegments.Length();
