@@ -1087,6 +1087,19 @@ VARIABLES = {
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
         """),
 
+    'OBJDIR_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
+        """List of files to be installed anywhere in the objdir. Use sparingly.
+
+        ``OBJDIR_FILES`` is similar to FINAL_TARGET_FILES, but it allows copying
+        anywhere in the object directory. This is intended for various one-off
+        cases, not for general use. If you wish to add entries to OBJDIR_FILES,
+        please consult a build peer.
+        """),
+
+    'OBJDIR_PP_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
+        """Like ``OBJDIR_FILES``, with preprocessing. Use sparingly.
+        """),
+
     'FINAL_LIBRARY': (unicode, unicode,
         """Library in which the objects of the current directory will be linked.
 
