@@ -276,6 +276,7 @@ def wanted_mozconfig_variables(help):
          'USE_FC_FREETYPE',
          'WITHOUT_X',
          'XARGS',
+         'YASM',
          'ZIP',
      ])
 
