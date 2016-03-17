@@ -296,10 +296,12 @@ function run()
                    {AB:{rr:0, ii:1, ri:1, ir:0}, BA:{rr:0, ii:1, ri:1, ir:0}});
 
   // Bug 1228542
-  loadAndRegisterAuthorSheet(win, getStyle('rgb(255, 0, 0)'));
+  var url = getStyle('rgb(255, 0, 0)');
+  loadAndRegisterAuthorSheet(win, url);
   // Avoiding security exception...
   (new win.Function("document.open()"))();
   (new win.Function("document.close()"))();
+  unregisterAuthorSheet(win, url);
 
   SimpleTest.finish();
 }
