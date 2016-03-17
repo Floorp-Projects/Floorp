@@ -97,7 +97,7 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(
   for (uint32_t i = 0; i < mProtoHandlers.Length(); ++i) {
     nsXBLPrototypeHandler* handler = mProtoHandlers[i];
     bool hasAllowUntrustedAttr = handler->HasAllowUntrustedAttr();
-    if ((event->mFlags.mIsTrusted ||
+    if ((event->IsTrusted() ||
         (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||
         (!hasAllowUntrustedAttr && !mIsBoundToChrome && !mUsingContentXBLScope)) &&
         handler->KeyEventMatched(aKeyEvent, aCharCode, aIgnoreModifierState)) {

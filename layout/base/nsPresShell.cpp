@@ -6831,7 +6831,8 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
         continue;
       }
 
-      WidgetPointerEvent event(touchEvent->mFlags.mIsTrusted, pointerMessage, touchEvent->widget);
+      WidgetPointerEvent event(touchEvent->IsTrusted(), pointerMessage,
+                               touchEvent->widget);
       event.isPrimary = i == 0;
       event.pointerId = touch->Identifier();
       event.refPoint = touch->mRefPoint;
@@ -6966,7 +6967,7 @@ PresShell::DispatchBeforeKeyboardEventInternal(const nsTArray<nsCOMPtr<Element> 
     }
 
     aChainIndex = i;
-    InternalBeforeAfterKeyboardEvent beforeEvent(aEvent.mFlags.mIsTrusted,
+    InternalBeforeAfterKeyboardEvent beforeEvent(aEvent.IsTrusted(),
                                                  message, aEvent.widget);
     beforeEvent.AssignBeforeAfterKeyEventData(aEvent, false);
     EventDispatcher::Dispatch(eventTarget, mPresContext, &beforeEvent);
@@ -7000,7 +7001,7 @@ PresShell::DispatchAfterKeyboardEventInternal(const nsTArray<nsCOMPtr<Element> >
       return;
     }
 
-    InternalBeforeAfterKeyboardEvent afterEvent(aEvent.mFlags.mIsTrusted,
+    InternalBeforeAfterKeyboardEvent afterEvent(aEvent.IsTrusted(),
                                                 message, aEvent.widget);
     afterEvent.AssignBeforeAfterKeyEventData(aEvent, false);
     afterEvent.mEmbeddedCancelled.SetValue(embeddedCancelled);
@@ -7917,7 +7918,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
     bool isHandlingUserInput = false;
 
     // XXX How about IME events and input events for plugins?
-    if (aEvent->mFlags.mIsTrusted) {
+    if (aEvent->IsTrusted()) {
       switch (aEvent->mMessage) {
       case eKeyPress:
       case eKeyDown:
@@ -8017,7 +8018,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
     AutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
                                                         aEvent, mDocument);
 
-    if (aEvent->mFlags.mIsTrusted && aEvent->mMessage == eMouseMove) {
+    if (aEvent->IsTrusted() && aEvent->mMessage == eMouseMove) {
       nsIPresShell::AllowMouseCapture(
         EventStateManager::GetActiveEventStateManager() == manager);
     }
@@ -8216,7 +8217,7 @@ PresShell::DispatchTouchEventToDOM(WidgetEvent* aEvent,
       content = capturingContent;
     }
     // copy the event
-    WidgetTouchEvent newEvent(touchEvent->mFlags.mIsTrusted,
+    WidgetTouchEvent newEvent(touchEvent->IsTrusted(),
                               touchEvent->mMessage, touchEvent->widget);
     newEvent.AssignTouchEventData(*touchEvent, false);
     newEvent.target = targetPtr;
@@ -9673,7 +9674,7 @@ PresShell::DelayedMouseEvent::DelayedMouseEvent(WidgetMouseEvent* aEvent) :
   DelayedInputEvent()
 {
   WidgetMouseEvent* mouseEvent =
-    new WidgetMouseEvent(aEvent->mFlags.mIsTrusted,
+    new WidgetMouseEvent(aEvent->IsTrusted(),
                          aEvent->mMessage,
                          aEvent->widget,
                          aEvent->reason,
@@ -9686,7 +9687,7 @@ PresShell::DelayedKeyEvent::DelayedKeyEvent(WidgetKeyboardEvent* aEvent) :
   DelayedInputEvent()
 {
   WidgetKeyboardEvent* keyEvent =
-    new WidgetKeyboardEvent(aEvent->mFlags.mIsTrusted,
+    new WidgetKeyboardEvent(aEvent->IsTrusted(),
                             aEvent->mMessage,
                             aEvent->widget);
   keyEvent->AssignKeyEventData(*aEvent, false);

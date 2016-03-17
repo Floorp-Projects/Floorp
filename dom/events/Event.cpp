@@ -743,7 +743,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
     }
     break;
   case eKeyboardEventClass:
-    if (aEvent->mFlags.mIsTrusted) {
+    if (aEvent->IsTrusted()) {
       uint32_t key = aEvent->AsKeyboardEvent()->keyCode;
       switch(aEvent->mMessage) {
       case eKeyPress:
@@ -773,7 +773,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
     }
     break;
   case eTouchEventClass:
-    if (aEvent->mFlags.mIsTrusted) {
+    if (aEvent->IsTrusted()) {
       switch (aEvent->mMessage) {
       case eTouchStart:
         if (PopupAllowedForEvent("touchstart")) {
@@ -791,7 +791,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
     }
     break;
   case eMouseEventClass:
-    if (aEvent->mFlags.mIsTrusted &&
+    if (aEvent->IsTrusted() &&
         aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
       switch(aEvent->mMessage) {
       case eMouseUp:
