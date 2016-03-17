@@ -2273,6 +2273,7 @@ InitTypeClasses(JSContext* cx, HandleObject ctypesObj)
   // Attach objects representing ABI constants.
   if (!DefineABIConstant(cx, ctypesObj, "default_abi", ABI_DEFAULT, ABIProto) ||
       !DefineABIConstant(cx, ctypesObj, "stdcall_abi", ABI_STDCALL, ABIProto) ||
+      !DefineABIConstant(cx, ctypesObj, "thiscall_abi", ABI_THISCALL, ABIProto) ||
       !DefineABIConstant(cx, ctypesObj, "winapi_abi", ABI_WINAPI, ABIProto))
     return false;
 
@@ -3917,6 +3918,8 @@ BuildTypeName(JSContext* cx, JSObject* typeObj_)
       ABICode abi = GetABICode(fninfo->mABI);
       if (abi == ABI_STDCALL)
         PrependString(result, "__stdcall");
+      else if (abi == ABI_THISCALL)
+        PrependString(result, "__thiscall");
       else if (abi == ABI_WINAPI)
         PrependString(result, "WINAPI");
 
@@ -4021,6 +4024,9 @@ BuildTypeSource(JSContext* cx,
       break;
     case ABI_STDCALL:
       AppendString(result, "ctypes.stdcall_abi, ");
+      break;
+    case ABI_THISCALL:
+      AppendString(result, "ctypes.thiscall_abi, ");
       break;
     case ABI_WINAPI:
       AppendString(result, "ctypes.winapi_abi, ");
@@ -5011,6 +5017,9 @@ ABI::ToSource(JSContext* cx, unsigned argc, Value* vp)
       break;
     case ABI_STDCALL:
       result = JS_NewStringCopyZ(cx, "ctypes.stdcall_abi");
+      break;
+    case ABI_THISCALL:
+      result = JS_NewStringCopyZ(cx, "ctypes.thiscall_abi");
       break;
     case ABI_WINAPI:
       result = JS_NewStringCopyZ(cx, "ctypes.winapi_abi");
@@ -6547,6 +6556,16 @@ GetABI(JSContext* cx, Value abiType, ffi_abi* result)
   case ABI_DEFAULT:
     *result = FFI_DEFAULT_ABI;
     return true;
+  case ABI_THISCALL:
+#if defined(_WIN64)
+    *result = FFI_WIN64;
+    return true;
+#elif defined(_WIN32)
+    *result = FFI_THISCALL;
+    return true;
+#else
+    break;
+#endif
   case ABI_STDCALL:
   case ABI_WINAPI:
 #if (defined(_WIN32) && !defined(_WIN64)) || defined(_OS2)
@@ -6692,6 +6711,7 @@ FunctionType::BuildSymbolName(JSString* name,
 
   switch (GetABICode(fninfo->mABI)) {
   case ABI_DEFAULT:
+  case ABI_THISCALL:
   case ABI_WINAPI:
     // For cdecl or WINAPI functions, no mangling is necessary.
     AppendString(result, name);
