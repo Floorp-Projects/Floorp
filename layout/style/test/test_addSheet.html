@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for addSheet</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1024707">Mozilla Bug 1024707</a>
+
+<iframe id="iframe1" src="additional_sheets_helper.html"></iframe>
+<iframe id="iframe2" src="additional_sheets_helper.html"></iframe>
+
+<pre id="test">
+<script type="application/javascript; version=1.8">
+
+let gIOService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+  .getService(SpecialPowers.Ci.nsIIOService);
+
+let gSSService = SpecialPowers.Cc["@mozilla.org/content/style-sheet-service;1"]
+  .getService(SpecialPowers.Ci.nsIStyleSheetService);
+
+function test(win, sheet) {
+    let cs = win.getComputedStyle(win.document.body, null);
+    is(cs.getPropertyValue('color'), "rgb(0, 0, 0)", "should have default color");
+    var windowUtils = SpecialPowers.wrap(win)
+      .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+      .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+    windowUtils.addSheet(sheet, SpecialPowers.Ci.nsIDOMWindowUtils.USER_SHEET);
+    is(cs.getPropertyValue('color'), "rgb(255, 0, 0)", "should have changed color to red");
+}
+
+function run() {
+    var uri = gIOService.newURI("data:text/css,body{color:red;}", null, null);
+    let sheet = gSSService.preloadSheet(uri, SpecialPowers.Ci.nsIStyleSheetService.USER_SHEET);
+
+    test(document.getElementById("iframe1").contentWindow, sheet);
+    test(document.getElementById("iframe2").contentWindow, sheet);
+
+    SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>

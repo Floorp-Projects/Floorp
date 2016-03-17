@@ -33,7 +33,6 @@ BROWSER_CHROME_MANIFESTS += ['browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
 
 TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test.chrome += [
-    'chrome/additional_sheets_helper.html',
     'chrome/moz_document_helper.html',
 ]
 
