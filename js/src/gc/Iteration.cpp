@@ -98,14 +98,14 @@ js::IterateScripts(JSRuntime* rt, JSCompartment* compartment,
     AutoPrepareForTracing prep(rt, SkipAtoms);
 
     if (compartment) {
-        for (ZoneCellIterUnderGC i(compartment->zone(), gc::AllocKind::SCRIPT); !i.done(); i.next()) {
+        for (ZoneCellIter i(compartment->zone(), gc::AllocKind::SCRIPT); !i.done(); i.next()) {
             JSScript* script = i.get<JSScript>();
             if (script->compartment() == compartment)
                 scriptCallback(rt, data, script);
         }
     } else {
         for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-            for (ZoneCellIterUnderGC i(zone, gc::AllocKind::SCRIPT); !i.done(); i.next())
+            for (ZoneCellIter i(zone, gc::AllocKind::SCRIPT); !i.done(); i.next())
                 scriptCallback(rt, data, i.get<JSScript>());
         }
     }
@@ -118,7 +118,7 @@ js::IterateGrayObjects(Zone* zone, GCThingCallback cellCallback, void* data)
     AutoPrepareForTracing prep(zone->runtimeFromMainThread(), SkipAtoms);
 
     for (auto thingKind : ObjectAllocKinds()) {
-        for (ZoneCellIterUnderGC i(zone, thingKind); !i.done(); i.next()) {
+        for (ZoneCellIter i(zone, thingKind); !i.done(); i.next()) {
             JSObject* obj = i.get<JSObject>();
             if (obj->asTenured().isMarked(GRAY))
                 cellCallback(data, JS::GCCellPtr(obj));
