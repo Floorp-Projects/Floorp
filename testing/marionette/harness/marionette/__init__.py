@@ -11,6 +11,7 @@ from .marionette_test import (
     MarionetteTestCase,
     skip,
     skip_if_b2g,
+    skip_if_desktop,
     SkipTest,
     skip_unless_protocol,
 )
