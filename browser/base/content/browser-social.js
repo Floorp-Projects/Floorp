@@ -361,6 +361,7 @@ SocialFlyout = {
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("message", "true");
     iframe.setAttribute("messagemanagergroup", "social");
+    iframe.setAttribute("disablehistory", "true");
     iframe.setAttribute("tooltip", "aHTMLTooltip");
     iframe.setAttribute("context", "contentAreaContextMenu");
     iframe.setAttribute("origin", SocialSidebar.provider.origin);
@@ -504,6 +505,7 @@ SocialShare = {
     iframe.setAttribute("class", "social-share-frame");
     iframe.setAttribute("context", "contentAreaContextMenu");
     iframe.setAttribute("tooltip", "aHTMLTooltip");
+    iframe.setAttribute("disablehistory", "true");
     iframe.setAttribute("disableglobalhistory", "true");
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("message", "true");
@@ -595,11 +597,7 @@ SocialShare = {
     this.iframe.docShell.createAboutBlankContentViewer(null);
     this.currentShare = null;
     // share panel use is over, purge any history
-    if (this.iframe.sessionHistory) {
-      let purge = this.iframe.sessionHistory.count;
-      if (purge > 0)
-        this.iframe.sessionHistory.PurgeHistory(purge);
-    }
+    this.iframe.purgeSessionHistory();
   },
 
   sharePage: function(providerOrigin, graphData, target, anchor) {
@@ -708,11 +706,7 @@ SocialShare = {
     }
     // if the user switched between share providers we do not want that history
     // available.
-    if (iframe.sessionHistory) {
-      let purge = iframe.sessionHistory.count;
-      if (purge > 0)
-        iframe.sessionHistory.PurgeHistory(purge);
-    }
+    iframe.purgeSessionHistory();
 
     // always ensure that origin belongs to the endpoint
     let uri = Services.io.newURI(shareEndpoint, null, null);
