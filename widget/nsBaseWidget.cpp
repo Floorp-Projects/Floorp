@@ -1360,6 +1360,15 @@ already_AddRefed<mozilla::gfx::DrawTarget> nsBaseWidget::StartRemoteDrawing()
   return nullptr;
 }
 
+already_AddRefed<mozilla::gfx::DrawTarget>
+nsBaseWidget::CreateBackBufferDrawTarget(mozilla::gfx::DrawTarget* aScreenTarget,
+                                         const LayoutDeviceIntRect& aRect)
+{
+  MOZ_ASSERT(aScreenTarget);
+  gfx::SurfaceFormat format = aScreenTarget->GetFormat() == gfx::SurfaceFormat::B8G8R8X8 ? gfx::SurfaceFormat::B8G8R8X8 : gfx::SurfaceFormat::B8G8R8A8;
+  return aScreenTarget->CreateSimilarDrawTarget(aRect.ToUnknownRect().Size(), format);
+}
+
 //-------------------------------------------------------------------------
 //
 // Destroy the window
