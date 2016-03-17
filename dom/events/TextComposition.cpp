@@ -118,7 +118,7 @@ TextComposition::CloneAndDispatchAs(
   MOZ_ASSERT(IsValidStateForComposition(aCompositionEvent->widget),
              "Should be called only when it's safe to dispatch an event");
 
-  WidgetCompositionEvent compositionEvent(aCompositionEvent->mFlags.mIsTrusted,
+  WidgetCompositionEvent compositionEvent(aCompositionEvent->IsTrusted(),
                                           aMessage, aCompositionEvent->widget);
   compositionEvent.time = aCompositionEvent->time;
   compositionEvent.timeStamp = aCompositionEvent->timeStamp;
@@ -159,7 +159,7 @@ TextComposition::OnCompositionEventDiscarded(
   // Note that this method is never called for synthesized events for emulating
   // commit or cancel composition.
 
-  MOZ_ASSERT(aCompositionEvent->mFlags.mIsTrusted,
+  MOZ_ASSERT(aCompositionEvent->IsTrusted(),
              "Shouldn't be called with untrusted event");
 
   if (mTabParent) {

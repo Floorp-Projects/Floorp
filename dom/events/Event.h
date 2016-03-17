@@ -197,7 +197,7 @@ public:
 
   bool IsTrusted() const
   {
-    return mEvent->mFlags.mIsTrusted;
+    return mEvent->IsTrusted();
   }
 
   bool IsSynthesized() const

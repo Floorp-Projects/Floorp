@@ -173,6 +173,10 @@ public:
     MOZ_ASSERT(!mDefaultPreventedByContent || DefaultPrevented());
     return mDefaultPreventedByContent;
   }
+  inline bool IsTrusted() const
+  {
+    return mIsTrusted;
+  }
 
   inline void Clear()
   {
@@ -368,6 +372,7 @@ public:
   {
     return mFlags.DefaultPreventedByContent();
   }
+  bool IsTrusted() const { return mFlags.IsTrusted(); }
 
   /**
    * Utils for checking event types
@@ -849,7 +854,7 @@ public:
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eUIEventClass)
     , detail(0)
     , mCausedByUntrustedEvent(
-        aEventCausesThisEvent && !aEventCausesThisEvent->mFlags.mIsTrusted)
+        aEventCausesThisEvent && !aEventCausesThisEvent->IsTrusted())
   {
   }
 
@@ -871,7 +876,7 @@ public:
   // event, IsTrustable() returns what you expected.
   bool IsTrustable() const
   {
-    return mFlags.mIsTrusted && !mCausedByUntrustedEvent;
+    return IsTrusted() && !mCausedByUntrustedEvent;
   }
 
   void AssignUIEventData(const InternalUIEvent& aEvent, bool aCopyTargets)

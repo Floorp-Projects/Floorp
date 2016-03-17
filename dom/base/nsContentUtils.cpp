@@ -5227,8 +5227,9 @@ nsContentUtils::GetDragSession()
 nsresult
 nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
 {
-  if (aDragEvent->dataTransfer || !aDragEvent->mFlags.mIsTrusted)
+  if (aDragEvent->dataTransfer || !aDragEvent->IsTrusted()) {
     return NS_OK;
+  }
 
   // For draggesture and dragstart events, the data transfer object is
   // created before the event fires, so it should already be set. For other
