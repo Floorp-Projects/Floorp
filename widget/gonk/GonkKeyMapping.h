@@ -47,7 +47,7 @@ static const unsigned long kKeyMapping[] = {
     NS_VK_DOWN,
     NS_VK_LEFT,
     NS_VK_RIGHT,
-    NS_VK_SELECT,
+    NS_VK_RETURN,
     NS_VK_VOLUME_UP,
     NS_VK_VOLUME_DOWN,
     NS_VK_SLEEP,     // POWER
