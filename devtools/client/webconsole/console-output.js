@@ -2981,7 +2981,7 @@ Widgets.ObjectRenderers.add({
 
     if (!this.options.concise) {
       this._text(" ");
-      this.element.appendChild(this.el("span.console-string",
+      this.element.appendChild(this.el("span.theme-fg-color6",
                                        VariablesView.getString(preview.text)));
     }
   },
