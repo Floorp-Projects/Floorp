@@ -185,29 +185,44 @@ class ArenaCellIterUnderFinalize : public ArenaCellIterImpl
     explicit ArenaCellIterUnderFinalize(Arena* arena) : ArenaCellIterImpl(arena) {}
 };
 
-class ZoneCellIterImpl
+class ZoneCellIter
 {
     ArenaIter arenaIter;
     ArenaCellIterImpl cellIter;
-    mozilla::DebugOnly<bool> initialized;
+    JS::AutoAssertNoAlloc noAlloc;
 
-  protected:
-    ZoneCellIterImpl() : initialized(false) {}
-
-    ZoneCellIterImpl(JS::Zone* zone, AllocKind kind) : initialized(false) { init(zone, kind); }
-
-    void init(JS::Zone* zone, AllocKind kind) {
-        MOZ_ASSERT(!initialized);
+  public:
+    ZoneCellIter(JS::Zone* zone, AllocKind kind) {
         MOZ_ASSERT(zone);
-        initialized = true;
+
+        // If called from outside a GC, ensure that the heap is in a state
+        // allows us to iterate.
+        JSRuntime* rt = zone->runtimeFromMainThread();
+        MOZ_ASSERT_IF(rt->isHeapBusy(), rt->gc.nursery.isEmpty());
+        if (!rt->isHeapBusy()) {
+            // We have a single-threaded runtime, so there's no need to protect
+            // against other threads iterating or allocating. However, we do
+            // have background finalization; we have to wait for this to finish
+            // if it's currently active.
+            if (IsBackgroundFinalized(kind) &&
+                zone->arenas.needBackgroundFinalizeWait(kind))
+            {
+                rt->gc.waitBackgroundSweepEnd();
+            }
+
+            // Evict the nursery before iterating so we can see all things.
+            rt->gc.evictNursery();
+
+            // Assert that no GCs can occur while a ZoneCellIter is live.
+            noAlloc.disallowAlloc(rt);
+        }
+
         arenaIter.init(zone, kind);
         if (!arenaIter.done())
             cellIter.init(arenaIter.get());
     }
 
-  public:
     bool done() const {
-        MOZ_ASSERT(initialized);
         return arenaIter.done();
     }
 
@@ -230,49 +245,6 @@ class ZoneCellIterImpl
             if (!arenaIter.done())
                 cellIter.reset(arenaIter.get());
         }
-    }
-};
-
-class ZoneCellIterUnderGC : public ZoneCellIterImpl
-{
-  public:
-    ZoneCellIterUnderGC(JS::Zone* zone, AllocKind kind) : ZoneCellIterImpl(zone, kind) {
-        MOZ_ASSERT(zone->runtimeFromAnyThread()->gc.nursery.isEmpty());
-        MOZ_ASSERT(zone->runtimeFromAnyThread()->isHeapBusy());
-    }
-};
-
-class ZoneCellIter : public ZoneCellIterImpl
-{
-    JS::AutoAssertNoAlloc noAlloc;
-
-  public:
-    ZoneCellIter(JS::Zone* zone, AllocKind kind) {
-        JSRuntime* rt = zone->runtimeFromMainThread();
-
-        if (zone->runtimeFromAnyThread()->isHeapBusy()) {
-            MOZ_ASSERT(zone->runtimeFromAnyThread()->gc.nursery.isEmpty());
-        } else {
-            /*
-             * We have a single-threaded runtime, so there's no need to protect
-             * against other threads iterating or allocating. However, we do have
-             * background finalization; we have to wait for this to finish if it's
-             * currently active.
-             */
-            if (IsBackgroundFinalized(kind) &&
-                zone->arenas.needBackgroundFinalizeWait(kind))
-            {
-                rt->gc.waitBackgroundSweepEnd();
-            }
-
-            /* Evict the nursery before iterating so we can see all things. */
-            rt->gc.evictNursery();
-
-            /* Assert that no GCs can occur while a ZoneCellIter is live. */
-            noAlloc.disallowAlloc(rt);
-        }
-
-        init(zone, kind);
     }
 };
 
