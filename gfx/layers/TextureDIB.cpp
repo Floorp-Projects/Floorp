@@ -270,7 +270,7 @@ DIBTextureData*
 ShmemDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                             ISurfaceAllocator* aAllocator)
 {
-  MOZ_ASSERT(aAllocator->ParentPid() != base::ProcessId());
+  MOZ_ASSERT(aAllocator->AsLayerForwarder()->GetParentPid() != base::ProcessId());
 
   DWORD mapSize = aSize.width * aSize.height * BytesPerPixel(aFormat);
   HANDLE fileMapping = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, mapSize, NULL);
@@ -332,7 +332,7 @@ ShmemDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 
   HANDLE hostHandle = NULL;
 
-  if (!ipc::DuplicateHandle(fileMapping, aAllocator->ParentPid(),
+  if (!ipc::DuplicateHandle(fileMapping, aAllocator->AsLayerForwarder()->GetParentPid(),
                             &hostHandle, 0, DUPLICATE_SAME_ACCESS)) {
     gfxCriticalError() << "Failed to duplicate handle to parent process for surface.";
     ::DeleteObject(bitmap);
