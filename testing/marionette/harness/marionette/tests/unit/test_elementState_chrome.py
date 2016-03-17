@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette import MarionetteTestCase
+from marionette_driver.by import By
 
 
 class TestStateChrome(MarionetteTestCase):
@@ -21,21 +22,21 @@ class TestStateChrome(MarionetteTestCase):
         MarionetteTestCase.tearDown(self)
 
     def test_isEnabled(self):
-        l = self.marionette.find_element("id", "textInput")
+        l = self.marionette.find_element(By.ID, "textInput")
         self.assertTrue(l.is_enabled())
         self.marionette.execute_script("arguments[0].disabled = true;", [l])
         self.assertFalse(l.is_enabled())
         self.marionette.execute_script("arguments[0].disabled = false;", [l])
 
     def test_can_get_element_rect(self):
-        l = self.marionette.find_element("id", "textInput")
+        l = self.marionette.find_element(By.ID, "textInput")
         rect = l.rect
         self.assertTrue(rect['x'] > 0)
         self.assertTrue(rect['y'] > 0)
 
     ''' Switched on in Bug 896043 to be turned on in Bug 896046
     def test_isDisplayed(self):
-        l = self.marionette.find_element("id", "textInput")
+        l = self.marionette.find_element(By.ID, "textInput")
         self.assertTrue(l.is_displayed())
         self.marionette.execute_script("arguments[0].hidden = true;", [l])
         self.assertFalse(l.is_displayed())

@@ -74,18 +74,23 @@ function getNewY(aWindow)
  * If times < 0, the event loop will be hitten as long as the condition isn't
  * true or the test doesn't time out.
  */
-function hitEventLoop(condition, test, times, next) {
-  if (condition() || times == 0) {
-    test();
-    next();
-    return;
-  }
+function hitEventLoop(condition, test, times) {
+  return new Promise(function(resolve, reject) {
+    function doMagic() {
+      if (condition() || times == 0) {
+        test();
+        resolve();
+        return;
+      }
 
-  setTimeout(hitEventLoop, 0, condition, test, times - 1, next);
+      setTimeout(doMagic, 0, condition, test, times - 1);
+    }
+
+    doMagic();
+  });
 }
 
-function checkChangeIsDisabled(aWindow, aNext)
-{
+function checkChangeIsDisabled(aWindow) {
   // We want to check that nothing has changed. Having a high value would take
   // too much time. Worse thing that could happen is random green.
   var hits = 5;
@@ -165,7 +170,7 @@ function checkChangeIsDisabled(aWindow, aNext)
   // happens.
   // NOTE: if this happens to fail, you will have to check manually which
   // operation has been accepted.
-  hitEventLoop(changeCondition, changeTest, hits, aNext);
+  return hitEventLoop(changeCondition, changeTest, hits);
 }
 
 function checkChangeIsEnabled(aWindow, aNext)
@@ -246,59 +251,74 @@ function checkChangeIsEnabled(aWindow, aNext)
   aWindow.innerWidth = getNewWidth(aWindow);
   aWindow.innerHeight = getNewHeight(aWindow);
 
-  hitEventLoop(sizeChangeCondition, sizeChangeTest, hits, function () {
+  hitEventLoop(sizeChangeCondition, sizeChangeTest, hits)
+  .then(function() {
     aWindow.resizeTo(getNewWidth(aWindow), getNewHeight(aWindow));
-
-  hitEventLoop(sizeChangeCondition, sizeChangeTest, hits, function () {
+  })
+  .then(function() {
+    return hitEventLoop(sizeChangeCondition, sizeChangeTest, hits);
+  })
+  .then(function () {
     aWindow.resizeBy(getNewWidth(aWindow) - aWindow.innerWidth,
                      getNewHeight(aWindow) - aWindow.innerHeight);
-
-  hitEventLoop(sizeChangeCondition, sizeChangeTest, hits, function () {
+  })
+  .then(function() {
+    return hitEventLoop(sizeChangeCondition, sizeChangeTest, hits);
+  })
+  .then(function () {
     prevWidth = aWindow.innerWidth = getNewWidth(aWindow);
     prevHeight = aWindow.innerHeight = getNewHeight(aWindow);
     aWindow.sizeToContent();
-
-  hitEventLoop(sizeChangeCondition, sizeChangeTest, hits, function () {
-  /**
-   * Position checks.
-   */
+  })
+  .then(function() {
+    hitEventLoop(sizeChangeCondition, sizeChangeTest, hits);
+  })
+  .then(function() {
+    /**
+     * Position checks.
+     */
     prevX = aWindow.screenX;
     prevY = aWindow.screenY;
 
     aWindow.screenX = getNewX(aWindow);
     aWindow.screenY = getNewY(aWindow);
-
-  hitEventLoop(posChangeCondition, posChangeTest, hits, function () {
+  })
+  .then(function() {
+    return hitEventLoop(posChangeCondition, posChangeTest, hits);
+  })
+  .then(function() {
     prevX = aWindow.screenX;
     prevY = aWindow.screenY;
 
     aWindow.moveTo(getNewX(aWindow), getNewY(aWindow));
-
-  hitEventLoop(posChangeCondition, posChangeTest, hits, function () {
+  })
+  .then(function() {
+    return hitEventLoop(posChangeCondition, posChangeTest, hits);
+  })
+  .then(function() {
     prevX = aWindow.screenX;
     prevY = aWindow.screenY;
 
     aWindow.moveBy(getNewX(aWindow) - aWindow.screenX,
                    getNewY(aWindow) - aWindow.screenY);
-
-  hitEventLoop(posChangeCondition, posChangeTest, hits, function () {
-  /**
-   * Outer width/height checks.
-   */
+  })
+  .then(function() {
+    return hitEventLoop(posChangeCondition, posChangeTest, hits);
+  })
+  .then(function() {
+    /**
+     * Outer width/height checks.
+     */
     oWidth = aWindow.outerWidth;
     oHeight = aWindow.outerHeight;
 
     aWindow.outerWidth = oWidth * 2;
     aWindow.outerHeight = oHeight * 2;
-
-  hitEventLoop(outerChangeCondition, outerChangeTest, hits, aNext);
-  });
-  });
-  });
-  });
-  });
-  });
-  });
+  })
+  .then(function() {
+    return hitEventLoop(outerChangeCondition, outerChangeTest, hits);
+  })
+  .then(aNext);
 }
 
 SpecialPowers.pushPrefEnv({"set": [["dom.disable_window_move_resize", false]]}, function() {
@@ -312,7 +332,7 @@ SimpleTest.waitForFocus(function() {
   backValues();
 
   // The current window can't change it's own size and position.
-  checkChangeIsDisabled(window, function() {
+  checkChangeIsDisabled(window).then(function() {
     // We create a window and check that it can change its own size and position.
     // However, passing size/position parameters to window.open should work.
     var w = window.open("data:text/html,<script>" +
@@ -339,14 +359,14 @@ SimpleTest.waitForFocus(function() {
           // In that case, we shouldn't allow the caller to change the size/position.
           w = window.open("data:text/html,<script>" +
             "function check(next) {" +
-            "  window.opener.checkChangeIsDisabled(window, next);" +
+            "  window.opener.checkChangeIsDisabled(window).then(next);" +
             "} <\/script>", '', '');
 
           SimpleTest.waitForFocus(function() {
             w.check(function() {
 
               // The current window can't change the size and position of the new tab.
-              checkChangeIsDisabled(w, function() {
+              checkChangeIsDisabled(w).then(function() {
                 w.close();
 
                 restoreValues();

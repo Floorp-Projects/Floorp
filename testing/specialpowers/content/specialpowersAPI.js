@@ -1937,6 +1937,10 @@ SpecialPowersAPI.prototype = {
   invalidateExtensionStorageCache: function() {
     this.notifyObserversInParentProcess(null, "extension-invalidate-storage-cache", "");
   },
+
+  allowMedia: function(window, enable) {
+    this._getDocShell(window).allowMedia = enable;
+  },
 };
 
 this.SpecialPowersAPI = SpecialPowersAPI;

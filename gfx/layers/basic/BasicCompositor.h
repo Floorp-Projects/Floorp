@@ -63,7 +63,7 @@ public:
                                const gfx::IntPoint &aSourcePoint) override;
 
   virtual already_AddRefed<CompositingRenderTarget>
-  CreateRenderTargetForWindow(const gfx::IntRect& aRect,
+  CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect,
                               SurfaceInitMode aInit,
                               BufferMode aBufferMode);
 

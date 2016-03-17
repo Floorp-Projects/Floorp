@@ -39,6 +39,8 @@ using mozilla::NumberIsInt32;
 
 static_assert(unsigned(SimdType::Count) == 12, "sync with TypedObjectConstants.h");
 
+static bool ArgumentToLaneIndex(JSContext* cx, JS::HandleValue v, unsigned limit, unsigned* lane);
+
 static bool
 CheckVectorObject(HandleValue v, SimdType expectedType)
 {
@@ -140,6 +142,13 @@ ErrorWrongTypeArg(JSContext* cx, size_t argIndex, Handle<TypeDescr*> typeDescr)
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR,
                          typeNameStr, charArgIndex);
     JS_free(cx, typeNameStr);
+    return false;
+}
+
+static inline bool
+ErrorBadIndex(JSContext* cx)
+{
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
     return false;
 }
 
@@ -854,14 +863,12 @@ ExtractLane(JSContext* cx, unsigned argc, Value* vp)
     typedef typename V::Elem Elem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 2 || !IsVectorObject<V>(args[0]) || !args[1].isNumber())
+    if (args.length() < 2 || !IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
 
-    int32_t lane;
-    if (!NumberIsInt32(args[1].toNumber(), &lane))
-        return ErrorBadArgs(cx);
-    if (lane < 0 || uint32_t(lane) >= V::lanes)
-        return ErrorBadArgs(cx);
+    unsigned lane;
+    if (!ArgumentToLaneIndex(cx, args[1], V::lanes, &lane))
+        return false;
 
     Elem* vec = TypedObjectMemory<Elem*>(args[0]);
     Elem val = vec[lane];
@@ -921,12 +928,9 @@ ReplaceLane(JSContext* cx, unsigned argc, Value* vp)
     Elem* vec = TypedObjectMemory<Elem*>(args[0]);
     Elem result[V::lanes];
 
-    int32_t lanearg;
-    if (!args[1].isNumber() || !NumberIsInt32(args[1].toNumber(), &lanearg))
-        return ErrorBadArgs(cx);
-    if (lanearg < 0 || uint32_t(lanearg) >= V::lanes)
-        return ErrorBadArgs(cx);
-    uint32_t lane = uint32_t(lanearg);
+    unsigned lane;
+    if (!ArgumentToLaneIndex(cx, args[1], V::lanes, &lane))
+        return false;
 
     Elem value;
     if (!V::Cast(cx, args.get(2), &value))
@@ -947,14 +951,10 @@ Swizzle(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() != (V::lanes + 1) || !IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
 
-    uint32_t lanes[V::lanes];
+    unsigned lanes[V::lanes];
     for (unsigned i = 0; i < V::lanes; i++) {
-        int32_t lane;
-        if (!args[i + 1].isNumber() || !NumberIsInt32(args[i + 1].toNumber(), &lane))
-            return ErrorBadArgs(cx);
-        if (lane < 0 || uint32_t(lane) >= V::lanes)
-            return ErrorBadArgs(cx);
-        lanes[i] = uint32_t(lane);
+        if (!ArgumentToLaneIndex(cx, args[i + 1], V::lanes, &lanes[i]))
+            return false;
     }
 
     Elem* val = TypedObjectMemory<Elem*>(args[0]);
@@ -976,14 +976,10 @@ Shuffle(JSContext* cx, unsigned argc, Value* vp)
     if (args.length() != (V::lanes + 2) || !IsVectorObject<V>(args[0]) || !IsVectorObject<V>(args[1]))
         return ErrorBadArgs(cx);
 
-    uint32_t lanes[V::lanes];
+    unsigned lanes[V::lanes];
     for (unsigned i = 0; i < V::lanes; i++) {
-        int32_t lane;
-        if (!args[i + 2].isNumber() || !NumberIsInt32(args[i + 2].toNumber(), &lane))
-            return ErrorBadArgs(cx);
-        if (lane < 0 || uint32_t(lane) >= (2 * V::lanes))
-            return ErrorBadArgs(cx);
-        lanes[i] = uint32_t(lane);
+        if (!ArgumentToLaneIndex(cx, args[i + 2], 2 * V::lanes, &lanes[i]))
+            return false;
     }
 
     Elem* lhs = TypedObjectMemory<Elem*>(args[0]);
@@ -1308,21 +1304,33 @@ ArgumentToIntegerIndex(JSContext* cx, JS::HandleValue v, uint64_t* index)
     // with a RangeError.
 
     // Write relation so NaNs throw a RangeError.
-    if (!(0 <= d && d <= (uint64_t(1) << 53))) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
-        return false;
-    }
+    if (!(0 <= d && d <= (uint64_t(1) << 53)))
+        return ErrorBadIndex(cx);
 
     // Check that d is an integer, throw a RangeError if not.
     // Note that this conversion could invoke undefined behaviour without the
     // range check above.
     uint64_t i(d);
-    if (d != double(i)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
-        return false;
-    }
+    if (d != double(i))
+        return ErrorBadIndex(cx);
 
     *index = i;
+    return true;
+}
+
+// Extract an integer lane index from a function argument.
+//
+// Register an exception and return false if the argument is not suitable.
+static bool
+ArgumentToLaneIndex(JSContext* cx, JS::HandleValue v, unsigned limit, unsigned* lane)
+{
+    uint64_t arg;
+    if (!ArgumentToIntegerIndex(cx, v, &arg))
+        return false;
+    if (arg >= limit)
+        return ErrorBadIndex(cx);
+
+    *lane = unsigned(arg);
     return true;
 }
 
@@ -1350,11 +1358,10 @@ TypedArrayFromArgs(JSContext* cx, const CallArgs& args, uint32_t accessBytes,
     // Do the range check in 64 bits even when size_t is 32 bits.
     // This can't overflow because index <= 2^53.
     uint64_t bytes = index * typedArray->as<TypedArrayObject>().bytesPerElement();
-    if ((bytes + accessBytes) > typedArray->as<TypedArrayObject>().byteLength()) {
-        // Keep in sync with AsmJS OnOutOfBounds function.
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
-        return false;
-    }
+    // Keep in sync with AsmJS OnOutOfBounds function.
+    if ((bytes + accessBytes) > typedArray->as<TypedArrayObject>().byteLength())
+        return ErrorBadIndex(cx);
+
     *byteStart = bytes;
 
     return true;
