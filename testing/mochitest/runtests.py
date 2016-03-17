@@ -2175,6 +2175,8 @@ class MochitestDesktop(MochitestBase):
             if result == -1:
                 break
 
+        e10s_mode = "e10s" if options.e10s else "non-e10s"
+
         # printing total number of tests
         if options.browserChrome:
             print "TEST-INFO | checking window state"
@@ -2182,13 +2184,15 @@ class MochitestDesktop(MochitestBase):
             print "\tPassed: %s" % self.countpass
             print "\tFailed: %s" % self.countfail
             print "\tTodo: %s" % self.counttodo
+            print "\tMode: %s" % e10s_mode
             print "*** End BrowserChrome Test Results ***"
         else:
             print "0 INFO TEST-START | Shutdown"
             print "1 INFO Passed:  %s" % self.countpass
             print "2 INFO Failed:  %s" % self.countfail
             print "3 INFO Todo:    %s" % self.counttodo
-            print "4 INFO SimpleTest FINISHED"
+            print "4 INFO Mode:    %s" % e10s_mode
+            print "5 INFO SimpleTest FINISHED"
 
         return result
 
