@@ -90,8 +90,13 @@
               {
                 "type": "object",
                 "properties": {
-                  "page": { "$ref": "ExtensionURL" }
-                }
+                  "page": { "$ref": "ExtensionURL" },
+                  "persistent": {
+                    "optional": true,
+                    "$ref": "PersistentBackgroundProperty"
+                  }
+                },
+                "additionalProperties": { "$ref": "UnrecognizedProperty" }
               },
               {
                 "type": "object",
@@ -99,8 +104,13 @@
                   "scripts": {
                     "type": "array",
                     "items": { "$ref": "ExtensionURL" }
+                  },
+                  "persistent": {
+                    "optional": true,
+                    "$ref": "PersistentBackgroundProperty"
                   }
-                }
+                },
+                "additionalProperties": { "$ref": "UnrecognizedProperty" }
               }
             ],
             "optional": true
@@ -160,10 +170,7 @@
           }
         },
 
-        "additionalProperties": {
-          "type": "any",
-          "deprecated": "An unexpected property was found in the WebExtension manifest"
-        }
+        "additionalProperties": { "$ref": "UnrecognizedProperty" }
       },
       {
         "id": "Permission",
@@ -219,6 +226,7 @@
         "id": "ContentScript",
         "type": "object",
         "description": "Details of the script or CSS to inject. Either the code or the file property must be set, but both may not be set at the same time. Based on InjectDetails, but using underscore rather than camel case naming conventions.",
+        "additionalProperties": { "$ref": "UnrecognizedProperty" },
         "properties": {
           "matches": {
             "type": "array",
@@ -294,6 +302,16 @@
             "isInstanceOf": "ImageData"
           }
         ]
+      },
+      {
+        "id": "UnrecognizedProperty",
+        "type": "any",
+        "deprecated": "An unexpected property was found in the WebExtension manifest."
+      },
+      {
+        "id": "PersistentBackgroundProperty",
+        "type": "boolean",
+        "deprecated": "Event pages are not currently supported. This will run as a persistent background page."
       }
     ]
   }
