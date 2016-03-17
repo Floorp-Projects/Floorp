@@ -84,7 +84,7 @@ def perl_version_check(min_version):
     def get_perl_version(perl):
         import subprocess
         try:
-            return subprocess.check_output([perl, '-e', 'print $]'])
+            return Version(subprocess.check_output([perl, '-e', 'print $]']))
         except subprocess.CalledProcessError as e:
             error('Failed to get perl version: %s' % e.message)
 
