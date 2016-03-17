@@ -31,6 +31,7 @@
 #include "nsNetUtil.h"
 #include "nsIPipe.h"
 #include "nsIOutputStream.h"
+#include "nsPrintfCString.h"
 #include "nsScriptLoader.h"
 #include "nsString.h"
 #include "nsStreamUtils.h"
@@ -41,6 +42,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/LoadContext.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/cache/CacheTypes.h"
@@ -52,6 +54,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Response.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/UniquePtr.h"
 #include "Principal.h"
 #include "WorkerFeature.h"
@@ -63,13 +66,11 @@
 
 USING_WORKERS_NAMESPACE
 
+using namespace mozilla;
+using namespace mozilla::dom;
 using mozilla::dom::cache::Cache;
 using mozilla::dom::cache::CacheStorage;
-using mozilla::dom::Promise;
-using mozilla::dom::PromiseNativeHandler;
-using mozilla::ErrorResult;
 using mozilla::ipc::PrincipalInfo;
-using mozilla::UniquePtr;
 
 namespace {
 

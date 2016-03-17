@@ -155,7 +155,7 @@ DIRS += [
     '/toolkit/library',
 ]
 
-if CONFIG['MOZ_ENABLE_GTK']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     DIRS += ['/toolkit/system/gnome']
 
 DIRS += ['/addon-sdk']

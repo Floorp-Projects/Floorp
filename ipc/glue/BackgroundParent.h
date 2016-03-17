@@ -91,6 +91,12 @@ AssertIsOnBackgroundThread()
 
 #endif // DEBUG
 
+inline void
+AssertIsInMainProcess()
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+}
+
 } // namespace ipc
 } // namespace mozilla
 

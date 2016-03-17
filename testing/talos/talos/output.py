@@ -161,7 +161,7 @@ class PerfherderOutput(Output):
         suites = []
         test_results = {
             'framework': {
-                'name': 'talos',
+                'name': self.results.results[0].framework,
             },
             'suites': suites,
         }

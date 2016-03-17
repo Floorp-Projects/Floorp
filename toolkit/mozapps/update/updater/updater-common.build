@@ -67,7 +67,7 @@ else:
         'bz2',
     ]
 
-if CONFIG['MOZ_ENABLE_GTK']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     have_progressui = 1
     srcs += [
         'progressui_gtk.cpp',
@@ -124,6 +124,6 @@ if CONFIG['_MSC_VER']:
 elif CONFIG['OS_ARCH'] == 'WINNT':
     WIN32_EXE_LDFLAGS += ['-municode']
 
-if CONFIG['MOZ_WIDGET_GTK']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     CXXFLAGS += CONFIG['TK_CFLAGS']
     OS_LIBS += CONFIG['TK_LIBS']

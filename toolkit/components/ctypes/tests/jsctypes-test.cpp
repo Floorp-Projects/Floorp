@@ -384,3 +384,15 @@ test_vector_add_va_cdecl(uint8_t num_vecs,
 }
 
 myRECT data_rect = { -1, -2, 3, 4 };
+
+TestClass::TestClass(int32_t a)
+{
+  mInt =a;
+}
+
+int32_t
+TestClass::Add(int32_t aOther)
+{
+  mInt += aOther;
+  return mInt;
+}

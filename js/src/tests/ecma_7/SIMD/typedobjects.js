@@ -32,10 +32,10 @@ function testFloat32x4Getters() {
   assertEq(Float32x4.extractLane(f, 2), 33);
   assertEq(Float32x4.extractLane(f, 3), 44);
 
-  assertThrowsInstanceOf(() => Float32x4.extractLane(f, 4), TypeError);
-  assertThrowsInstanceOf(() => Float32x4.extractLane(f, -1), TypeError);
-  assertThrowsInstanceOf(() => Float32x4.extractLane(f, 0.5), TypeError);
-  assertThrowsInstanceOf(() => Float32x4.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Float32x4.extractLane(f, 4), RangeError);
+  assertThrowsInstanceOf(() => Float32x4.extractLane(f, -1), RangeError);
+  assertThrowsInstanceOf(() => Float32x4.extractLane(f, 0.5), RangeError);
+  assertThrowsInstanceOf(() => Float32x4.extractLane(f, {}), RangeError);
   assertThrowsInstanceOf(() => Float32x4.extractLane(Int32x4(1,2,3,4), 0), TypeError);
   assertThrowsInstanceOf(() => Float32x4.extractLane(1, 0), TypeError);
   assertThrowsInstanceOf(() => Float32x4.extractLane(f, f), TypeError);
@@ -118,10 +118,10 @@ function testFloat64x2Getters() {
   assertEq(Float64x2.extractLane(f, 0), 11);
   assertEq(Float64x2.extractLane(f, 1), 22);
 
-  assertThrowsInstanceOf(() => Float64x2.extractLane(f, 2), TypeError);
-  assertThrowsInstanceOf(() => Float64x2.extractLane(f, -1), TypeError);
-  assertThrowsInstanceOf(() => Float64x2.extractLane(f, 0.5), TypeError);
-  assertThrowsInstanceOf(() => Float64x2.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Float64x2.extractLane(f, 2), RangeError);
+  assertThrowsInstanceOf(() => Float64x2.extractLane(f, -1), RangeError);
+  assertThrowsInstanceOf(() => Float64x2.extractLane(f, 0.5), RangeError);
+  assertThrowsInstanceOf(() => Float64x2.extractLane(f, {}), RangeError);
   assertThrowsInstanceOf(() => Float64x2.extractLane(Float32x4(1,2,3,4), 0), TypeError);
   assertThrowsInstanceOf(() => Float64x2.extractLane(1, 0), TypeError);
   assertThrowsInstanceOf(() => Float64x2.extractLane(f, f), TypeError);
@@ -218,10 +218,10 @@ function testInt8x16Getters() {
   assertEq(Int8x16.extractLane(f, 14), 60);
   assertEq(Int8x16.extractLane(f, 15), 70);
 
-  assertThrowsInstanceOf(() => Int8x16.extractLane(f, 16), TypeError);
-  assertThrowsInstanceOf(() => Int8x16.extractLane(f, -1), TypeError);
-  assertThrowsInstanceOf(() => Int8x16.extractLane(f, 0.5), TypeError);
-  assertThrowsInstanceOf(() => Int8x16.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Int8x16.extractLane(f, 16), RangeError);
+  assertThrowsInstanceOf(() => Int8x16.extractLane(f, -1), RangeError);
+  assertThrowsInstanceOf(() => Int8x16.extractLane(f, 0.5), RangeError);
+  assertThrowsInstanceOf(() => Int8x16.extractLane(f, {}), RangeError);
   assertThrowsInstanceOf(() => Int8x16.extractLane(Int32x4(1,2,3,4), 0), TypeError);
   assertThrowsInstanceOf(() => Int8x16.extractLane(1, 0), TypeError);
   assertThrowsInstanceOf(() => Int8x16.extractLane(f, f), TypeError);
@@ -314,10 +314,10 @@ function testInt16x8Getters() {
   assertEq(Int16x8.extractLane(f, 6), 77);
   assertEq(Int16x8.extractLane(f, 7), 88);
 
-  assertThrowsInstanceOf(() => Int16x8.extractLane(f, 8), TypeError);
-  assertThrowsInstanceOf(() => Int16x8.extractLane(f, -1), TypeError);
-  assertThrowsInstanceOf(() => Int16x8.extractLane(f, 0.5), TypeError);
-  assertThrowsInstanceOf(() => Int16x8.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Int16x8.extractLane(f, 8), RangeError);
+  assertThrowsInstanceOf(() => Int16x8.extractLane(f, -1), RangeError);
+  assertThrowsInstanceOf(() => Int16x8.extractLane(f, 0.5), RangeError);
+  assertThrowsInstanceOf(() => Int16x8.extractLane(f, {}), RangeError);
   assertThrowsInstanceOf(() => Int16x8.extractLane(Int32x4(1,2,3,4), 0), TypeError);
   assertThrowsInstanceOf(() => Int16x8.extractLane(1, 0), TypeError);
   assertThrowsInstanceOf(() => Int16x8.extractLane(f, f), TypeError);
@@ -402,10 +402,10 @@ function testInt32x4Getters() {
   assertEq(Int32x4.extractLane(f, 2), 33);
   assertEq(Int32x4.extractLane(f, 3), 44);
 
-  assertThrowsInstanceOf(() => Int32x4.extractLane(f, 4), TypeError);
-  assertThrowsInstanceOf(() => Int32x4.extractLane(f, -1), TypeError);
-  assertThrowsInstanceOf(() => Int32x4.extractLane(f, 0.5), TypeError);
-  assertThrowsInstanceOf(() => Int32x4.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Int32x4.extractLane(f, 4), RangeError);
+  assertThrowsInstanceOf(() => Int32x4.extractLane(f, -1), RangeError);
+  assertThrowsInstanceOf(() => Int32x4.extractLane(f, 0.5), RangeError);
+  assertThrowsInstanceOf(() => Int32x4.extractLane(f, {}), RangeError);
   assertThrowsInstanceOf(() => Int32x4.extractLane(Float32x4(1,2,3,4), 0), TypeError);
   assertThrowsInstanceOf(() => Int32x4.extractLane(1, 0), TypeError);
   assertThrowsInstanceOf(() => Int32x4.extractLane(f, f), TypeError);
@@ -501,10 +501,10 @@ function testUint8x16Getters() {
   assertEq(Uint8x16.extractLane(f, 14), 60);
   assertEq(Uint8x16.extractLane(f, 15), 70);
 
-  assertThrowsInstanceOf(() => Uint8x16.extractLane(f, 16), TypeError);
-  assertThrowsInstanceOf(() => Uint8x16.extractLane(f, -1), TypeError);
-  assertThrowsInstanceOf(() => Uint8x16.extractLane(f, 0.5), TypeError);
-  assertThrowsInstanceOf(() => Uint8x16.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Uint8x16.extractLane(f, 16), RangeError);
+  assertThrowsInstanceOf(() => Uint8x16.extractLane(f, -1), RangeError);
+  assertThrowsInstanceOf(() => Uint8x16.extractLane(f, 0.5), RangeError);
+  assertThrowsInstanceOf(() => Uint8x16.extractLane(f, {}), RangeError);
   assertThrowsInstanceOf(() => Uint8x16.extractLane(Uint32x4(1,2,3,4), 0), TypeError);
   assertThrowsInstanceOf(() => Uint8x16.extractLane(1, 0), TypeError);
   assertThrowsInstanceOf(() => Uint8x16.extractLane(f, f), TypeError);
@@ -597,10 +597,10 @@ function testUint16x8Getters() {
   assertEq(Uint16x8.extractLane(f, 6), 77);
   assertEq(Uint16x8.extractLane(f, 7), 88);
 
-  assertThrowsInstanceOf(() => Uint16x8.extractLane(f, 8), TypeError);
-  assertThrowsInstanceOf(() => Uint16x8.extractLane(f, -1), TypeError);
-  assertThrowsInstanceOf(() => Uint16x8.extractLane(f, 0.5), TypeError);
-  assertThrowsInstanceOf(() => Uint16x8.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Uint16x8.extractLane(f, 8), RangeError);
+  assertThrowsInstanceOf(() => Uint16x8.extractLane(f, -1), RangeError);
+  assertThrowsInstanceOf(() => Uint16x8.extractLane(f, 0.5), RangeError);
+  assertThrowsInstanceOf(() => Uint16x8.extractLane(f, {}), RangeError);
   assertThrowsInstanceOf(() => Uint16x8.extractLane(Uint32x4(1,2,3,4), 0), TypeError);
   assertThrowsInstanceOf(() => Uint16x8.extractLane(1, 0), TypeError);
   assertThrowsInstanceOf(() => Uint16x8.extractLane(f, f), TypeError);
@@ -685,10 +685,10 @@ function testUint32x4Getters() {
   assertEq(Uint32x4.extractLane(f, 2), 33);
   assertEq(Uint32x4.extractLane(f, 3), 44);
 
-  assertThrowsInstanceOf(() => Uint32x4.extractLane(f, 4), TypeError);
-  assertThrowsInstanceOf(() => Uint32x4.extractLane(f, -1), TypeError);
-  assertThrowsInstanceOf(() => Uint32x4.extractLane(f, 0.5), TypeError);
-  assertThrowsInstanceOf(() => Uint32x4.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Uint32x4.extractLane(f, 4), RangeError);
+  assertThrowsInstanceOf(() => Uint32x4.extractLane(f, -1), RangeError);
+  assertThrowsInstanceOf(() => Uint32x4.extractLane(f, 0.5), RangeError);
+  assertThrowsInstanceOf(() => Uint32x4.extractLane(f, {}), RangeError);
   assertThrowsInstanceOf(() => Uint32x4.extractLane(Float32x4(1,2,3,4), 0), TypeError);
   assertThrowsInstanceOf(() => Uint32x4.extractLane(1, 0), TypeError);
   assertThrowsInstanceOf(() => Uint32x4.extractLane(f, f), TypeError);
@@ -774,10 +774,10 @@ function testBool8x16Getters() {
   assertEq(Bool8x16.extractLane(f, 14), false);
   assertEq(Bool8x16.extractLane(f, 15), false);
 
-  assertThrowsInstanceOf(() => Bool8x16.extractLane(f, 16), TypeError);
-  assertThrowsInstanceOf(() => Bool8x16.extractLane(f, -1), TypeError);
-  assertThrowsInstanceOf(() => Bool8x16.extractLane(f, 0.5), TypeError);
-  assertThrowsInstanceOf(() => Bool8x16.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Bool8x16.extractLane(f, 16), RangeError);
+  assertThrowsInstanceOf(() => Bool8x16.extractLane(f, -1), RangeError);
+  assertThrowsInstanceOf(() => Bool8x16.extractLane(f, 0.5), RangeError);
+  assertThrowsInstanceOf(() => Bool8x16.extractLane(f, {}), RangeError);
   assertThrowsInstanceOf(() => Bool8x16.extractLane(Float32x4(1, 2, 3, 4), 0), TypeError);
   assertThrowsInstanceOf(() => Bool8x16.extractLane(1, 0), TypeError);
   assertThrowsInstanceOf(() => Bool8x16.extractLane(f, f), TypeError);
@@ -837,10 +837,10 @@ function testBool16x8Getters() {
   assertEq(Bool16x8.extractLane(f, 6), false);
   assertEq(Bool16x8.extractLane(f, 7), false);
 
-  assertThrowsInstanceOf(() => Bool16x8.extractLane(f, 8), TypeError);
-  assertThrowsInstanceOf(() => Bool16x8.extractLane(f, -1), TypeError);
-  assertThrowsInstanceOf(() => Bool16x8.extractLane(f, 0.5), TypeError);
-  assertThrowsInstanceOf(() => Bool16x8.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Bool16x8.extractLane(f, 8), RangeError);
+  assertThrowsInstanceOf(() => Bool16x8.extractLane(f, -1), RangeError);
+  assertThrowsInstanceOf(() => Bool16x8.extractLane(f, 0.5), RangeError);
+  assertThrowsInstanceOf(() => Bool16x8.extractLane(f, {}), RangeError);
   assertThrowsInstanceOf(() => Bool16x8.extractLane(Float32x4(1, 2, 3, 4), 0), TypeError);
   assertThrowsInstanceOf(() => Bool16x8.extractLane(1, 0), TypeError);
   assertThrowsInstanceOf(() => Bool16x8.extractLane(f, f), TypeError);
@@ -893,10 +893,10 @@ function testBool32x4Getters() {
   assertEq(Bool32x4.extractLane(f, 1), false);
   assertEq(Bool32x4.extractLane(f, 2), false);
   assertEq(Bool32x4.extractLane(f, 3), true);
-  assertThrowsInstanceOf(() => Bool32x4.extractLane(f, 4), TypeError);
-  assertThrowsInstanceOf(() => Bool32x4.extractLane(f, -1), TypeError);
-  assertThrowsInstanceOf(() => Bool32x4.extractLane(f, 0.5), TypeError);
-  assertThrowsInstanceOf(() => Bool32x4.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Bool32x4.extractLane(f, 4), RangeError);
+  assertThrowsInstanceOf(() => Bool32x4.extractLane(f, -1), RangeError);
+  assertThrowsInstanceOf(() => Bool32x4.extractLane(f, 0.5), RangeError);
+  assertThrowsInstanceOf(() => Bool32x4.extractLane(f, {}), RangeError);
   assertThrowsInstanceOf(() => Bool32x4.extractLane(Float32x4(1, 2, 3, 4), 0), TypeError);
   assertThrowsInstanceOf(() => Bool32x4.extractLane(1, 0), TypeError);
   assertThrowsInstanceOf(() => Bool32x4.extractLane(f, f), TypeError);
@@ -950,10 +950,10 @@ function testBool64x2Getters() {
   assertEq(Bool64x2.extractLane(f, 0), true);
   assertEq(Bool64x2.extractLane(f, 1), false);
 
-  assertThrowsInstanceOf(() => Bool64x2.extractLane(f, 2), TypeError);
-  assertThrowsInstanceOf(() => Bool64x2.extractLane(f, -1), TypeError);
-  assertThrowsInstanceOf(() => Bool64x2.extractLane(f, 0.5), TypeError);
-  assertThrowsInstanceOf(() => Bool64x2.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Bool64x2.extractLane(f, 2), RangeError);
+  assertThrowsInstanceOf(() => Bool64x2.extractLane(f, -1), RangeError);
+  assertThrowsInstanceOf(() => Bool64x2.extractLane(f, 0.5), RangeError);
+  assertThrowsInstanceOf(() => Bool64x2.extractLane(f, {}), RangeError);
   assertThrowsInstanceOf(() => Bool64x2.extractLane(Bool32x4(1,2,3,4), 0), TypeError);
   assertThrowsInstanceOf(() => Bool64x2.extractLane(1, 0), TypeError);
   assertThrowsInstanceOf(() => Bool64x2.extractLane(f, f), TypeError);

@@ -24,10 +24,11 @@ UNIFIED_SOURCES += [
     'nsSemanticUnitScanner.cpp',
 ]
 
-if CONFIG['MOZ_WIDGET_GTK']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     SOURCES += [
         'nsPangoBreaker.cpp',
     ]
+    CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
         'nsUniscribeBreaker.cpp',
@@ -45,9 +46,6 @@ else:
     ]
 
 FINAL_LIBRARY = 'xul'
-
-if CONFIG['MOZ_WIDGET_GTK']:
-    CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wshadow']

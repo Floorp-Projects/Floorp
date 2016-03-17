@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette import MarionetteTestCase
+from marionette_driver.by import By
 
 
 class TestSelectedChrome(MarionetteTestCase):
@@ -22,7 +23,7 @@ class TestSelectedChrome(MarionetteTestCase):
         wins.remove(self.win)
         newWin = wins.pop()
         self.marionette.switch_to_window(newWin)
-        box = self.marionette.find_element("id", "testBox")
+        box = self.marionette.find_element(By.ID, "testBox")
         self.assertFalse(box.is_selected())
         self.assertFalse(self.marionette.execute_script("arguments[0].checked = true;", [box]))
         self.assertTrue(box.is_selected())
