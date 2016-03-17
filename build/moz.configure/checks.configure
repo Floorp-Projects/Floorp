@@ -69,7 +69,7 @@ def check_prog(var, progs, allow_missing=False):
     @advanced
     def postcheck(value):
         set_config(var, ':' if value is not_found else value)
-        if not value and not allow_missing:
+        if value is not_found and not allow_missing:
             from mozbuild.shellutil import quote
             error('Cannot find %s (tried: %s)'
                   % (var.lower(), ', '.join(quote(p) for p in progs)))
