@@ -330,18 +330,20 @@ EOF
 
 # Git
 cd $BUILD
+# NOTE: rc builds are in https://www.kernel.org/pub/software/scm/git/testing/
 tooltool_fetch <<'EOF'
 [
 {
-    "size": 3740620,
-    "digest": "ef7538c9f5ba5b2ac08962401c30e5fd51323b54b9fb5315d259adccec346e8fae9362815832dc2b5ce63a259b315c40e419bb2385dde04d84b992e62f6789b6",
+    "size": 3938976,
+    "visibility": "public",
+    "digest": "f31cedb6d7c813d5cc9f40daa54ec6b34b046b8ec1b7a09a37598637f747449147a22736e95e4388d1a29fd01d7974b82342114b91d63b9d5df163ea3659fe72",
     "algorithm": "sha512",
-    "unpack": true,
-    "filename": "git-2.5.0.tar.xz"
+    "filename": "git-2.8.0.rc3.tar.xz",
+    "unpack": true
 }
 ]
 EOF
-cd git-2.5.0
+cd git-2.8.0.rc3
 make configure
 ./configure --prefix=/usr --without-tcltk
 make all install
