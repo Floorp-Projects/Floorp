@@ -193,6 +193,11 @@ extensions.registerSchemaAPI("windows", null, (extension, context) => {
           WindowManager.setState(window, updateInfo.state);
         }
 
+        if (updateInfo.drawAttention) {
+          // Bug 1257497 - Firefox can't cancel attention actions.
+          window.getAttention();
+        }
+
         // TODO: All the other properties, focused=false...
 
         return Promise.resolve(WindowManager.convert(extension, window));
