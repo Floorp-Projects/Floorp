@@ -17,7 +17,7 @@ class X11TextureData : public TextureData
 {
 public:
   static X11TextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                TextureFlags aFlags, ClientIPCAllocator* aAllocator);
+                                TextureFlags aFlags, ISurfaceAllocator* aAllocator);
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
@@ -35,10 +35,10 @@ public:
 
   virtual bool HasIntermediateBuffer() const override { return false; }
 
-  virtual void Deallocate(ClientIPCAllocator*) override;
+  virtual void Deallocate(ISurfaceAllocator*) override;
 
   virtual TextureData*
-  CreateSimilar(ClientIPCAllocator* aAllocator,
+  CreateSimilar(ISurfaceAllocator* aAllocator,
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
