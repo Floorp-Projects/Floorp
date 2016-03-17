@@ -24,7 +24,6 @@ class Promise;
 class RequestOrUSVString;
 class ServiceWorkerRegistrationWorkerThread;
 class WorkerLocation;
-class WorkerNavigator;
 
 namespace cache {
 
@@ -38,6 +37,7 @@ BEGIN_WORKERS_NAMESPACE
 
 class ServiceWorkerClients;
 class WorkerPrivate;
+class WorkerNavigator;
 class Performance;
 
 class WorkerGlobalScope : public DOMEventTargetHelper,
