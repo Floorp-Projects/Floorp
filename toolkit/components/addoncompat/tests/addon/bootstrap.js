@@ -61,6 +61,7 @@ function testContentWindow()
       ok(browser.contentWindow, "contentWindow is defined");
       ok(browser.contentDocument, "contentWindow is defined");
       is(gWin.content, browser.contentWindow, "content === contentWindow");
+      ok(browser.webNavigation.sessionHistory, "sessionHistory is defined");
 
       ok(browser.contentDocument.getElementById("link"), "link present in document");
 

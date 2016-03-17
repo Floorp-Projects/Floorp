@@ -24,6 +24,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAutoPtr.h"
+#include "nsContentUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"

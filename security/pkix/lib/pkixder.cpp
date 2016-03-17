@@ -104,7 +104,7 @@ AlgorithmIdentifierValue(Reader& input, /*out*/ Reader& algorithmOIDValue)
   return OptionalNull(input);
 }
 
-} // unnamed namespace
+} // namespace
 
 Result
 SignatureAlgorithmIdentifierValue(Reader& input,

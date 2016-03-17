@@ -1,0 +1,32 @@
+<html>
+    <head>
+        <meta charset="utf8">
+        <title>Newtab WebChannel test</title>
+    </head>
+    <body>
+        <script>
+            window.addEventListener("WebChannelMessageToContent", function(e) {
+                if (e.detail.message && e.detail.message.type === "RECEIVE_PREFS") {
+                    let reply = new window.CustomEvent("WebChannelMessageToChrome", {
+                        detail: {
+                            id: "newtab",
+                            message: JSON.stringify({type: "responseAck"}),
+                        }
+                    });
+                    window.dispatchEvent(reply);
+                }
+            }, true);
+
+            document.onreadystatechange = function () {
+                let msg = new window.CustomEvent("WebChannelMessageToChrome", {
+                    detail: {
+                        id: "newtab",
+                        message: JSON.stringify({type: "REQUEST_PREFS"}),
+                    }
+                });
+                window.dispatchEvent(msg);
+            };
+
+        </script>
+    </body>
+</html>

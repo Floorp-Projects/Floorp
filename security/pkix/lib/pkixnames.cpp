@@ -195,7 +195,7 @@ Result MatchPresentedRFC822NameWithReferenceRFC822Name(
          Input presentedRFC822Name, IDRole referenceRFC822NameRole,
          Input referenceRFC822Name, /*out*/ bool& matches);
 
-} // unnamed namespace
+} // namespace
 
 bool IsValidReferenceDNSID(Input hostname);
 bool IsValidPresentedDNSID(Input hostname);
@@ -1650,7 +1650,7 @@ ReadIPv4AddressComponent(Reader& input, bool lastComponent,
   return true;
 }
 
-} // unnamed namespace
+} // namespace
 
 // On Windows and maybe other platforms, OS-provided IP address parsing
 // functions might fail if the protocol (IPv4 or IPv6) has been disabled, so we
@@ -1706,7 +1706,7 @@ FinishIPv6Address(/*in/out*/ uint8_t (&address)[16], int numComponents,
   return true;
 }
 
-} // unnamed namespace
+} // namespace
 
 // On Windows and maybe other platforms, OS-provided IP address parsing
 // functions might fail if the protocol (IPv4 or IPv6) has been disabled, so we
@@ -2034,6 +2034,6 @@ IsValidDNSID(Input hostname, IDRole idRole, AllowWildcards allowWildcards)
   return true;
 }
 
-} // unnamed namespace
+} // namespace
 
 } } // namespace mozilla::pkix

@@ -1,0 +1,314 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for additional sheets</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=737003">Mozilla Bug 737003</a>
+<iframe id="iframe" src="additional_sheets_helper.html"></iframe>
+<pre id="test">
+<script type="application/javascript; version=1.8">
+
+var gIOService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+  .getService(SpecialPowers.Ci.nsIIOService)
+
+var gSSService = SpecialPowers.Cc["@mozilla.org/content/style-sheet-service;1"]
+  .getService(SpecialPowers.Ci.nsIStyleSheetService);
+
+function getUri(style)
+{
+  return "data:text/css," + style;
+}
+
+function getStyle(color, swapped)
+{
+  return "body {color: " + color +  (swapped ? " !important" : "") +
+    "; background-color: " + color + (swapped ? "" : " !important;") + ";}";
+}
+
+function loadUserSheet(win, style)
+{
+  loadSheet(win, style, "USER_SHEET");
+}
+
+function loadAgentSheet(win, style)
+{
+  loadSheet(win, style, "AGENT_SHEET");
+}
+
+function loadAuthorSheet(win, style)
+{
+  loadSheet(win, style, "AUTHOR_SHEET");
+}
+
+function removeUserSheet(win, style)
+{
+  removeSheet(win, style, "USER_SHEET");
+}
+
+function removeAgentSheet(win, style)
+{
+  removeSheet(win, style, "AGENT_SHEET");
+}
+
+function removeAuthorSheet(win, style)
+{
+  removeSheet(win, style, "AUTHOR_SHEET");
+}
+
+function loadSheet(win, style, type)
+{
+  var uri = gIOService.newURI(getUri(style), null, null);
+  var windowUtils = SpecialPowers.wrap(win)
+    .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+    .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+  windowUtils.loadSheet(uri, windowUtils[type]);
+}
+
+function removeSheet(win, style, type)
+{
+  var uri = gIOService.newURI(getUri(style), null, null);
+  var windowUtils = SpecialPowers.wrap(win)
+    .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+    .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+  windowUtils.removeSheet(uri, windowUtils[type]);
+}
+
+function loadAndRegisterUserSheet(win, style)
+{
+  loadAndRegisterSheet(win, style, "USER_SHEET");
+}
+
+function loadAndRegisterAgentSheet(win, style)
+{
+  loadAndRegisterSheet(win, style, "AGENT_SHEET");
+}
+
+function loadAndRegisterAuthorSheet(win, style)
+{
+  loadAndRegisterSheet(win, style, "AUTHOR_SHEET");
+}
+
+function unregisterUserSheet(win, style)
+{
+  unregisterSheet(win, style, "USER_SHEET");
+}
+
+function unregisterAgentSheet(win, style)
+{
+  unregisterSheet(win, style, "AGENT_SHEET");
+}
+
+function unregisterAuthorSheet(win, style)
+{
+  unregisterSheet(win, style, "AUTHOR_SHEET");
+}
+
+function loadAndRegisterSheet(win, style, type)
+{
+  uri = gIOService.newURI(getUri(style), null, null);
+  gSSService.loadAndRegisterSheet(uri, gSSService[type]);
+  is(gSSService.sheetRegistered(uri, gSSService[type]), true);
+}
+
+function unregisterSheet(win, style, type)
+{
+  var uri = gIOService.newURI(getUri(style), null, null);
+  gSSService.unregisterSheet(uri, gSSService[type]);
+  is(gSSService.sheetRegistered(uri, gSSService[type]), false);
+}
+
+function setDocSheet(win, style)
+{
+  var subdoc = win.document;
+  var headID = subdoc.getElementsByTagName("head")[0];
+  var cssNode = subdoc.createElement('style');
+  cssNode.type = 'text/css';
+  cssNode.innerHTML = style;
+  cssNode.id = 'docsheet';
+  headID.appendChild(cssNode);
+}
+
+function removeDocSheet(win)
+{
+  var subdoc = win.document;
+  var node = subdoc.getElementById('docsheet');
+  node.parentNode.removeChild(node);
+}
+
+var agent = {
+  type: 'agent',
+  color: 'rgb(255, 0, 0)',
+  addRules: loadAndRegisterAgentSheet,
+  removeRules: unregisterAgentSheet
+};
+
+var user = {
+  type: 'user',
+  color: 'rgb(0, 255, 0)',
+  addRules: loadAndRegisterUserSheet,
+  removeRules: unregisterUserSheet
+};
+
+var additionalAgent = {
+  type: 'additionalAgent',
+  color: 'rgb(0, 0, 255)',
+  addRules: loadAgentSheet,
+  removeRules: removeAgentSheet
+};
+
+var additionalUser = {
+  type: 'additionalUser',
+  color: 'rgb(255, 255, 0)',
+  addRules: loadUserSheet,
+  removeRules: removeUserSheet
+};
+
+var additionalAuthor = {
+  type: 'additionalAuthor',
+  color: 'rgb(255, 255, 0)',
+  addRules: loadAuthorSheet,
+  removeRules: removeAuthorSheet
+};
+
+var doc = {
+  type: 'doc',
+  color: 'rgb(0, 255, 255)',
+  addRules: setDocSheet,
+  removeRules: removeDocSheet
+};
+
+var author = {
+  type: 'author',
+  color: 'rgb(255, 0, 255)',
+  addRules: loadAndRegisterAuthorSheet,
+  removeRules: unregisterAuthorSheet
+};
+
+function loadAndCheck(win, firstType, secondType, swap, result1, result2)
+{
+  var firstStyle = getStyle(firstType.color, false);
+  var secondStyle = getStyle(secondType.color, swap);
+
+  firstType.addRules(win, firstStyle);
+  secondType.addRules(win, secondStyle);
+
+  var cs = win.getComputedStyle(win.document.body, null);
+  is(cs.getPropertyValue('color'), result1,
+    firstType.type + "(normal)" + " vs " + secondType.type + (swap ? "(important)" : "(normal)" ) + " 1");
+  is(cs.getPropertyValue('background-color'), result2,
+    firstType.type + "(important)" + " vs " + secondType.type + (swap ? "(normal)" : "(important)" ) + " 2");
+
+  firstType.removeRules(win, firstStyle);
+  secondType.removeRules(win, secondStyle);
+
+  is(cs.getPropertyValue('color'), 'rgb(0, 0, 0)', firstType.type + " vs " + secondType.type + " 3");
+  is(cs.getPropertyValue('background-color'), 'transparent', firstType.type + " vs " + secondType.type + " 4");
+}
+
+// There are 8 cases. Regular against regular, regular against important, important
+// against regular, important against important. We can load style from typeA first
+// then typeB or the other way around so that's 4*2=8 cases.
+
+function testStyleVsStyle(win, typeA, typeB, results)
+{
+  function color(res)
+  {
+    return res ? typeB.color : typeA.color;
+  }
+
+  loadAndCheck(win, typeA, typeB, false, color(results.AB.rr), color(results.AB.ii));
+  loadAndCheck(win, typeB, typeA, false, color(results.BA.rr), color(results.BA.ii));
+
+  loadAndCheck(win, typeA, typeB, true, color(results.AB.ri), color(results.AB.ir));
+  loadAndCheck(win, typeB, typeA, true, color(results.BA.ir), color(results.BA.ri));
+}
+
+// 5 user agent normal declarations
+// 4 user normal declarations
+// 3 author normal declarations
+// 2 author important declarations
+// 1 user important declarations
+// 0 user agent important declarations
+
+function run()
+{
+  var iframe = document.getElementById("iframe");
+  var win = iframe.contentWindow;
+
+// Some explanation how to interpret this result table...
+// in case of loading the agent style first and the user style later (AB)
+// if there is an important rule in both for let's say color (ii)
+// the rule specified in the agent style will lead (AB.ii == 0)
+// If both rules would be just regular rules the one specified in the user style
+// would lead. (AB.rr == 1). If we would load/add the rules in reverse order that
+// would not change that (BA.rr == 1)
+  testStyleVsStyle(win, agent, user,
+                   {AB:{rr:1, ii:0, ri:1, ir:0}, BA:{rr:1, ii:0, ri:1, ir:0}});
+
+  testStyleVsStyle(win, agent, doc,
+                   {AB:{rr:1, ii:0, ri:1, ir:0}, BA:{rr:1, ii:0, ri:1, ir:0}});
+
+
+  testStyleVsStyle(win, additionalUser, agent,
+                   {AB:{rr:0, ii:1, ri:1, ir:0}, BA:{rr:0, ii:1, ri:1, ir:0}});
+
+  testStyleVsStyle(win, additionalUser, doc,
+                   {AB:{rr:1, ii:0, ri:1, ir:0}, BA:{rr:1, ii:0, ri:1, ir:0}});
+
+  testStyleVsStyle(win, additionalAgent, user,
+                   {AB:{rr:1, ii:0, ri:1, ir:0}, BA:{rr:1, ii:0, ri:1, ir:0}});
+
+  testStyleVsStyle(win, additionalAgent, doc,
+                   {AB:{rr:1, ii:0, ri:1, ir:0}, BA:{rr:1, ii:0, ri:1, ir:0}});
+
+
+  testStyleVsStyle(win, additionalAgent, additionalUser,
+                   {AB:{rr:1, ii:0, ri:1, ir:0}, BA:{rr:1, ii:0, ri:1, ir:0}});
+
+  testStyleVsStyle(win, author, doc,
+                   {AB:{rr:0, ii:0, ri:1, ir:0}, BA:{rr:0, ii:0, ri:1, ir:0}});
+
+  testStyleVsStyle(win, author, user,
+                   {AB:{rr:0, ii:1, ri:1, ir:0}, BA:{rr:0, ii:1, ri:1, ir:0}});
+
+  testStyleVsStyle(win, author, agent,
+                   {AB:{rr:0, ii:1, ri:1, ir:0}, BA:{rr:0, ii:1, ri:1, ir:0}});
+
+  testStyleVsStyle(win, author, additionalUser,
+                   {AB:{rr:0, ii:1, ri:1, ir:0}, BA:{rr:0, ii:1, ri:1, ir:0}});
+
+  testStyleVsStyle(win, additionalAuthor, doc,
+                   {AB:{rr:0, ii:0, ri:1, ir:0}, BA:{rr:0, ii:0, ri:1, ir:0}});
+
+  testStyleVsStyle(win, additionalAuthor, author,
+                   {AB:{rr:0, ii:0, ri:1, ir:0}, BA:{rr:0, ii:0, ri:1, ir:0}});
+
+  testStyleVsStyle(win, additionalAuthor, user,
+                     {AB:{rr:0, ii:1, ri:1, ir:0}, BA:{rr:0, ii:1, ri:1, ir:0}});
+
+  testStyleVsStyle(win, additionalAuthor, agent,
+                     {AB:{rr:0, ii:1, ri:1, ir:0}, BA:{rr:0, ii:1, ri:1, ir:0}});
+
+  testStyleVsStyle(win, additionalAuthor, additionalUser,
+                   {AB:{rr:0, ii:1, ri:1, ir:0}, BA:{rr:0, ii:1, ri:1, ir:0}});
+
+  // Bug 1228542
+  var url = getStyle('rgb(255, 0, 0)');
+  loadAndRegisterAuthorSheet(win, url);
+  // Avoiding security exception...
+  (new win.Function("document.open()"))();
+  (new win.Function("document.close()"))();
+  unregisterAuthorSheet(win, url);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

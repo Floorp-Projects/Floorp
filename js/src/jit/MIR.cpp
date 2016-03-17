@@ -3207,6 +3207,7 @@ MustBeUInt32(MDefinition* def, MDefinition** pwrapped)
         return defConst->type() == MIRType_Int32 && defConst->toInt32() >= 0;
     }
 
+    *pwrapped = nullptr;  // silence GCC warning
     return false;
 }
 

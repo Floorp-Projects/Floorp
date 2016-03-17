@@ -1266,7 +1266,7 @@ TextEventDispatcher*
 IMMHandler::GetTextEventDispatcherFor(nsWindow* aWindow)
 {
   return aWindow == mComposingWindow && mDispatcher ?
-    mDispatcher : aWindow->GetTextEventDispatcher();
+    mDispatcher.get() : aWindow->GetTextEventDispatcher();
 }
 
 void

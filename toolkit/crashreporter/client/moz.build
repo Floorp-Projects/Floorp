@@ -49,7 +49,7 @@ elif CONFIG['OS_ARCH'] == 'SunOS':
         'breakpad_solaris_common_s',
     ]
 
-if CONFIG['MOZ_ENABLE_GTK']:
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     UNIFIED_SOURCES += [
         'crashreporter_gtk_common.cpp',
         'crashreporter_linux.cpp',

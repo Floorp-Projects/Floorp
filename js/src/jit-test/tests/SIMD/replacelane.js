@@ -61,7 +61,7 @@ function e() {
         try {
             let x = SIMD.Int32x4.replaceLane(i4, i < 149 ? 0 : 4, 42);
         } catch(e) {
-            assertEq(e instanceof TypeError, true);
+            assertEq(e instanceof RangeError, true);
             assertEq(i, 149);
             caught = true;
         }
@@ -73,7 +73,7 @@ function e() {
         try {
             let x = SIMD.Int32x4.replaceLane(i4, i < 149 ? 0 : 1.1, 42);
         } catch(e) {
-            assertEq(e instanceof TypeError, true);
+            assertEq(e instanceof RangeError, true);
             assertEq(i, 149);
             caught = true;
         }
@@ -109,7 +109,7 @@ function e() {
         try {
             let x = SIMD.Float32x4.replaceLane(f4, i < 149 ? 0 : 4, 42);
         } catch(e) {
-            assertEq(e instanceof TypeError, true);
+            assertEq(e instanceof RangeError, true);
             assertEq(i, 149);
             caught = true;
         }
@@ -121,7 +121,7 @@ function e() {
         try {
             let x = SIMD.Float32x4.replaceLane(f4, i < 149 ? 0 : 1.1, 42);
         } catch(e) {
-            assertEq(e instanceof TypeError, true);
+            assertEq(e instanceof RangeError, true);
             assertEq(i, 149);
             caught = true;
         }
@@ -157,7 +157,7 @@ function e() {
         try {
             let x = SIMD.Bool32x4.replaceLane(b4, i < 149 ? 0 : 4, true);
         } catch(e) {
-            assertEq(e instanceof TypeError, true);
+            assertEq(e instanceof RangeError, true);
             assertEq(i, 149);
             caught = true;
         }
@@ -169,7 +169,7 @@ function e() {
         try {
             let x = SIMD.Bool32x4.replaceLane(b4, i < 149 ? 0 : 1.1, true);
         } catch(e) {
-            assertEq(e instanceof TypeError, true);
+            assertEq(e instanceof RangeError, true);
             assertEq(i, 149);
             caught = true;
         }

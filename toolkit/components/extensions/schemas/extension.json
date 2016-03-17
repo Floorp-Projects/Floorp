@@ -98,7 +98,6 @@
       },
       {
         "name": "isAllowedIncognitoAccess",
-        "unsupported": true,
         "type": "function",
         "description": "Retrieves the state of the extension's access to Incognito-mode (as determined by the user-controlled 'Allowed in Incognito' checkbox.",
         "async": "callback",

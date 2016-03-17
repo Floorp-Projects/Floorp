@@ -1630,6 +1630,7 @@ class MOZ_STACK_CLASS ModuleValidator
         return standardLibrarySimdOpNames_.putNew(atom->asPropertyName(), op);
     }
     bool newSig(Sig&& sig, uint32_t* sigIndex) {
+        *sigIndex = 0;
         if (mg_.numSigs() >= MaxSigs)
             return failCurrentOffset("too many signatures");
 
@@ -2907,6 +2908,7 @@ CheckFunctionHead(ModuleValidator& m, ParseNode* fn)
 static bool
 CheckArgument(ModuleValidator& m, ParseNode* arg, PropertyName** name)
 {
+    *name = nullptr;
     if (!IsDefinition(arg))
         return m.fail(arg, "duplicate argument name not allowed");
 
@@ -3621,6 +3623,8 @@ static bool
 CheckArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr,
                  bool isSimd, Scalar::Type* viewType, int32_t* mask)
 {
+    *mask = 0;
+
     if (!viewName->isKind(PNK_NAME))
         return f.fail(viewName, "base of array access must be a typed array view name");
 
