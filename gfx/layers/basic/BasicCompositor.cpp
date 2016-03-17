@@ -166,29 +166,34 @@ BasicCompositor::CreateRenderTargetFromSource(const IntRect &aRect,
 }
 
 already_AddRefed<CompositingRenderTarget>
-BasicCompositor::CreateRenderTargetForWindow(const IntRect& aRect, SurfaceInitMode aInit, BufferMode aBufferMode)
+BasicCompositor::CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect, SurfaceInitMode aInit, BufferMode aBufferMode)
 {
-  if (aBufferMode != BufferMode::BUFFER_NONE) {
-    return CreateRenderTarget(aRect, aInit);
-  }
-
+  MOZ_ASSERT(mDrawTarget);
   MOZ_ASSERT(aRect.width != 0 && aRect.height != 0, "Trying to create a render target of invalid size");
 
   if (aRect.width * aRect.height == 0) {
     return nullptr;
   }
 
-  MOZ_ASSERT(mDrawTarget);
+  RefPtr<BasicCompositingRenderTarget> rt;
+  IntRect rect = aRect.ToUnknownRect();
 
-  // Adjust bounds rect to account for new origin at (0, 0).
-  IntRect windowRect = aRect;
-  if (aRect.Size() != mDrawTarget->GetSize()) {
-    windowRect.ExpandToEnclose(IntPoint(0, 0));
-  }
-  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(mDrawTarget, windowRect);
-
-  if (aInit == INIT_MODE_CLEAR) {
-    mDrawTarget->ClearRect(Rect(aRect - rt->GetOrigin()));
+  if (aBufferMode != BufferMode::BUFFER_NONE) {
+    RefPtr<DrawTarget> target = mWidget->CreateBackBufferDrawTarget(mDrawTarget, aRect);
+    if (!target) {
+      return nullptr;
+    }
+    rt = new BasicCompositingRenderTarget(target, rect);
+  } else {
+    IntRect windowRect = rect;
+    // Adjust bounds rect to account for new origin at (0, 0).
+    if (windowRect.Size() != mDrawTarget->GetSize()) {
+      windowRect.ExpandToEnclose(IntPoint(0, 0));
+    }
+    rt = new BasicCompositingRenderTarget(mDrawTarget, windowRect);
+    if (aInit == INIT_MODE_CLEAR) {
+      mDrawTarget->ClearRect(Rect(rect - rt->GetOrigin()));
+    }
   }
 
   return rt.forget();
@@ -631,7 +636,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   // Setup an intermediate render target to buffer all compositing. We will
   // copy this into mDrawTarget (the widget), and/or mTarget in EndFrame()
   RefPtr<CompositingRenderTarget> target =
-    CreateRenderTargetForWindow(mInvalidRect.ToUnknownRect(),
+    CreateRenderTargetForWindow(mInvalidRect,
                                 aOpaque ? INIT_MODE_NONE : INIT_MODE_CLEAR,
                                 bufferMode);
   if (!target) {
