@@ -67,7 +67,8 @@ struct TimingParams
                                      ErrorResult& aRv)
   {
     if (aIterationStart < 0) {
-      aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+      aRv.ThrowTypeError<dom::MSG_ENFORCE_RANGE_OUT_OF_RANGE>(
+        NS_LITERAL_STRING("iterationStart"));
     }
   }
 
