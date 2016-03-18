@@ -382,12 +382,36 @@ class JitZone
     }
 };
 
+enum class CacheKind;
+class CacheIRStubInfo;
+
+struct CacheIRStubKey : public DefaultHasher<CacheIRStubKey> {
+    struct Lookup {
+        CacheKind kind;
+        const uint8_t* code;
+        uint32_t length;
+
+        Lookup(CacheKind kind, const uint8_t* code, uint32_t length)
+          : kind(kind), code(code), length(length)
+        {}
+    };
+
+    static HashNumber hash(const Lookup& l);
+    static bool match(const CacheIRStubKey& entry, const Lookup& l);
+
+    UniquePtr<CacheIRStubInfo, JS::FreePolicy> stubInfo;
+
+    explicit CacheIRStubKey(CacheIRStubInfo* info) : stubInfo(info) {}
+    CacheIRStubKey(CacheIRStubKey&& other) : stubInfo(Move(other.stubInfo)) { }
+};
+
 class JitCompartment
 {
     friend class JitActivation;
 
+    template<typename Key>
     struct IcStubCodeMapGCPolicy {
-        static bool needsSweep(uint32_t* key, ReadBarrieredJitCode* value) {
+        static bool needsSweep(Key*, ReadBarrieredJitCode* value) {
             return IsAboutToBeFinalized(value);
         }
     };
@@ -397,8 +421,16 @@ class JitCompartment
                                     ReadBarrieredJitCode,
                                     DefaultHasher<uint32_t>,
                                     RuntimeAllocPolicy,
-                                    IcStubCodeMapGCPolicy>;
+                                    IcStubCodeMapGCPolicy<uint32_t>>;
     ICStubCodeMap* stubCodes_;
+
+    // Map ICStub keys to ICStub shared code objects.
+    using CacheIRStubCodeMap = GCHashMap<CacheIRStubKey,
+                                         ReadBarrieredJitCode,
+                                         CacheIRStubKey,
+                                         RuntimeAllocPolicy,
+                                         IcStubCodeMapGCPolicy<CacheIRStubKey>>;
+    CacheIRStubCodeMap* cacheIRStubCodes_;
 
     // Keep track of offset into various baseline stubs' code at return
     // point from called script.
@@ -460,6 +492,22 @@ class JitCompartment
             return false;
         }
         return true;
+    }
+    JitCode* getCacheIRStubCode(const CacheIRStubKey::Lookup& key, CacheIRStubInfo** stubInfo) {
+        CacheIRStubCodeMap::Ptr p = cacheIRStubCodes_->lookup(key);
+        if (p) {
+            *stubInfo = p->key().stubInfo.get();
+            return p->value();
+        }
+        *stubInfo = nullptr;
+        return nullptr;
+    }
+    bool putCacheIRStubCode(const CacheIRStubKey::Lookup& lookup, CacheIRStubKey& key,
+                            JitCode* stubCode)
+    {
+        CacheIRStubCodeMap::AddPtr p = cacheIRStubCodes_->lookupForAdd(lookup);
+        MOZ_ASSERT(!p);
+        return cacheIRStubCodes_->add(p, Move(key), stubCode);
     }
     void initBaselineCallReturnAddr(void* addr, bool constructing) {
         MOZ_ASSERT(baselineCallReturnAddrs_[constructing] == nullptr);

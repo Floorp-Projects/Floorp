@@ -9,7 +9,6 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Ci.mozIJSSubScriptLoader);
 
-Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -390,19 +389,6 @@ GeckoDriver.prototype.getVisibleText = function(el, lines) {
     if (el.nodeName == "#text") {
       lines.push(el.textContent);
     }
-  }
-};
-
-/**
-  * Given a file name, this will delete the file from the temp directory
-  * if it exists.
-  *
-  * @param {string} filename
-  */
-GeckoDriver.prototype.deleteFile = function(filename) {
-  let file = FileUtils.getFile("TmpD", [filename.toString()]);
-  if (file.exists()) {
-    file.remove(true);
   }
 };
 
@@ -2467,8 +2453,6 @@ GeckoDriver.prototype.sessionTearDown = function(cmd, resp) {
   }
 
   this.sessionId = null;
-  this.deleteFile("marionetteChromeScripts");
-  this.deleteFile("marionetteContentScripts");
 
   if (this.observing !== null) {
     for (let topic in this.observing) {

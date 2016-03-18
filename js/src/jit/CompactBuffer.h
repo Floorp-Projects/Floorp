@@ -189,6 +189,9 @@ class CompactBufferWriter
     bool oom() const {
         return !enoughMemory_;
     }
+    void propagateOOM(bool success) {
+        enoughMemory_ &= success;
+    }
 };
 
 CompactBufferReader::CompactBufferReader(const CompactBufferWriter& writer)

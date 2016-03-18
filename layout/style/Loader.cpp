@@ -956,15 +956,29 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
 
   SRIMetadata sriMetadata;
   mSheet->GetIntegrity(sriMetadata);
-  if (!sriMetadata.IsEmpty() &&
-      NS_FAILED(SRICheck::VerifyIntegrity(sriMetadata, aLoader,
-                                          mSheet->GetCORSMode(), aBuffer,
-                                          mLoader->mDocument))) {
-    LOG(("  Load was blocked by SRI"));
-    MOZ_LOG(gSriPRLog, mozilla::LogLevel::Debug,
-            ("css::Loader::OnStreamComplete, bad metadata"));
-    mLoader->SheetComplete(this, NS_ERROR_SRI_CORRUPT);
-    return NS_OK;
+
+  if (sriMetadata.IsEmpty()) {
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+    bool enforceSRI = false;
+    loadInfo->GetEnforceSRI(&enforceSRI);
+    if (enforceSRI) {
+      LOG(("  Load was blocked by SRI"));
+      MOZ_LOG(gSriPRLog, mozilla::LogLevel::Debug,
+              ("css::Loader::OnStreamComplete, required SRI not found"));
+      mLoader->SheetComplete(this, NS_ERROR_SRI_CORRUPT);
+      return NS_OK;
+    }
+  } else {
+    nsresult rv = SRICheck::VerifyIntegrity(sriMetadata, aLoader,
+                                            mSheet->GetCORSMode(), aBuffer,
+                                            mLoader->mDocument);
+    if (NS_FAILED(rv)) {
+      LOG(("  Load was blocked by SRI"));
+      MOZ_LOG(gSriPRLog, mozilla::LogLevel::Debug,
+              ("css::Loader::OnStreamComplete, bad metadata"));
+      mLoader->SheetComplete(this, NS_ERROR_SRI_CORRUPT);
+      return NS_OK;
+    }
   }
 
   // Enough to set the URIs on mSheet, since any sibling datas we have share

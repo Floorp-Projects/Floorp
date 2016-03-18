@@ -270,10 +270,10 @@ MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsIGlobalObject* 
                result.AssignLiteral("Yes");
              } else {
                result.AssignLiteral("No");
-               if (failureReason.Length()) {
-                 result.AppendLiteral("; ");
-                 AppendUTF8toUTF16(failureReason, result);
-               }
+             }
+             if (failureReason.Length()) {
+               result.AppendLiteral("; ");
+               AppendUTF8toUTF16(failureReason, result);
              }
              decoder->Shutdown();
              taskQueue->BeginShutdown();

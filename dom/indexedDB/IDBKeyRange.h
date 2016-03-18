@@ -57,6 +57,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBKeyRange)
 
+  // aCx is allowed to be null, but only if aVal.isUndefined().
   static nsresult
   FromJSVal(JSContext* aCx,
             JS::Handle<JS::Value> aVal,

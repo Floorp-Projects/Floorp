@@ -1413,18 +1413,27 @@ nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
   NS_ASSERTION(request, "null request in stream complete handler");
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
+  nsCOMPtr<nsIRequest> channelRequest;
+  aLoader->GetRequest(getter_AddRefs(channelRequest));
+  nsCOMPtr<nsIChannel> channel;
+  channel = do_QueryInterface(channelRequest);
+
   nsresult rv = NS_OK;
   if (!request->mIntegrity.IsEmpty() &&
       NS_SUCCEEDED((rv = aSRIStatus))) {
     MOZ_ASSERT(aSRIDataVerifier);
-
-    nsCOMPtr<nsIRequest> channelRequest;
-    aLoader->GetRequest(getter_AddRefs(channelRequest));
-    nsCOMPtr<nsIChannel> channel;
-    channel = do_QueryInterface(channelRequest);
-
     if (NS_FAILED(aSRIDataVerifier->Verify(request->mIntegrity, channel,
                                            request->mCORSMode, mDocument))) {
+      rv = NS_ERROR_SRI_CORRUPT;
+    }
+  } else {
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+
+    bool enforceSRI = false;
+    loadInfo->GetEnforceSRI(&enforceSRI);
+    if (enforceSRI) {
+      MOZ_LOG(GetSriLog(), mozilla::LogLevel::Debug,
+             ("nsScriptLoader::OnStreamComplete, required SRI not found"));
       rv = NS_ERROR_SRI_CORRUPT;
     }
   }

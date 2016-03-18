@@ -410,9 +410,7 @@ public:
         return;
       }
 
-      AutoSafeJSContext cx;
-      mRequest = store->OpenCursor(cx, JS::UndefinedHandleValue,
-                                   IDBCursorDirection::Prev, error);
+      mRequest = store->OpenCursor(IDBCursorDirection::Prev, error);
       if (NS_WARN_IF(error.Failed())) {
         return;
       }
@@ -492,11 +490,9 @@ public:
     MOZ_ASSERT(type.EqualsASCII("success"));
 #endif
 
-    AutoSafeJSContext cx;
-
     ErrorResult error;
-    JS::Rooted<JS::Value> result(cx);
-    request->GetResult(cx, &result, error);
+    JS::Rooted<JS::Value> result(nsContentUtils::RootingCx());
+    request->GetResult(&result, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }

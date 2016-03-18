@@ -11,4 +11,4 @@ def gonkdir(value):
     return value[0] if value else ''
 
 
-include('../toolkit/moz.configure')
+include('common.configure')

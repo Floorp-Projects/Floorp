@@ -29,7 +29,7 @@ assertEq(gcstate(), "none");
 //   1) mark roots
 //   2) mark and sweep
 //   *) finalize.
-gczeal(8);
+gczeal(8, 0);
 gcslice(1);
 assertEq(gcstate(), "mark");
 gcslice(1);
@@ -40,7 +40,7 @@ assertEq(gcstate(), "none");
 //   1) mark roots and marking
 //   2) new marking and sweeping
 //   *) finalize.
-gczeal(9);
+gczeal(9, 0);
 gcslice(1);
 assertEq(gcstate(), "mark");
 gcslice(1);
@@ -50,7 +50,7 @@ assertEq(gcstate(), "none");
 // Zeal mode 10: Incremental GC in multiple slices (always yeilds before
 // sweeping). This test uses long slices to prove that this zeal mode yields
 // in sweeping, where normal IGC (above) does not.
-gczeal(10);
+gczeal(10, 0);
 gcslice(1000000);
 assertEq(gcstate(), "sweep");
 gcslice(1000000);

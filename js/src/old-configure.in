@@ -635,8 +635,6 @@ MOZ_USER_DIR=".mozilla"
 
 MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
 
-USE_DEPENDENT_LIBS=1
-
 dnl Configure platform-specific CPU architecture compiler options.
 dnl ==============================================================
 MOZ_ARCH_OPTS
@@ -872,14 +870,6 @@ fi
 AC_SUBST(HAVE_64BIT_BUILD)
 AC_LANG_RESTORE
 fi # COMPILE_ENVIRONMENT
-
-dnl ========================================================
-dnl = Use profiling compile flags
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(profiling,
-[  --enable-profiling      Set compile flags necessary for using sampling profilers (e.g. shark, perf)],
-    MOZ_PROFILING=1,
-    MOZ_PROFILING= )
 
 dnl ========================================================
 dnl System overrides of the defaults for host
@@ -1286,23 +1276,6 @@ esac
 dnl Only one oddball right now (QNX), but this gives us flexibility
 dnl if any other platforms need to override this in the future.
 AC_DEFINE_UNQUOTED(D_INO,$DIRENT_INO)
-
-dnl ========================================================
-dnl = Flags to strip unused symbols from .so components
-dnl ========================================================
-case "$target" in
-    *-linux*|*-kfreebsd*-gnu|*-gnu*)
-        MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
-        ;;
-    *-darwin*)
-        MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-exported_symbols_list -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-export-list'
-        ;;
-    *-mingw*)
-        if test -n "$GNU_CC"; then
-           MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
-        fi
-        ;;
-esac
 
 if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_COMPILER_CHECKS=1
@@ -2339,49 +2312,11 @@ AC_SUBST(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 AC_SUBST(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_UNALIGNED)
 
 dnl ========================================================
-dnl jprof
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(jprof,
-[  --enable-jprof          Enable jprof profiling tool (needs mozilla/tools/jprof). Implies --enable-profiling.],
-    MOZ_JPROF=1,
-    MOZ_JPROF= )
-if test -n "$MOZ_JPROF"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_JPROF)
-fi
-
-dnl ========================================================
 dnl instruments
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(instruments,
-[  --enable-instruments    Enable instruments remote profiling. Implies --enable-profiling.],
-    MOZ_INSTRUMENTS=1,
-    MOZ_INSTRUMENTS= )
 if test -n "$MOZ_INSTRUMENTS"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_INSTRUMENTS)
     LIBS="$LIBS -framework CoreFoundation"
 fi
-
-dnl ========================================================
-dnl callgrind
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(callgrind,
-[  --enable-callgrind      Enable callgrind profiling. Implies --enable-profiling.],
-    MOZ_CALLGRIND=1,
-    MOZ_CALLGRIND= )
-if test -n "$MOZ_CALLGRIND"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_CALLGRIND)
-fi
-
-dnl ========================================================
-dnl vtune
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(vtune,
-[  --enable-vtune          Enable vtune profiling. Implies --enable-profiling.],
-    MOZ_VTUNE=1,
-    MOZ_VTUNE= )
 
 dnl ========================================================
 dnl JitSpew.  Enabled by default in debug builds.
@@ -2402,22 +2337,6 @@ dnl Debug (see Bug 939505)
 dnl ========================================================
 if test -n "$MOZ_DEBUG"; then
     AC_DEFINE(JS_DEBUG)
-fi
-
-dnl ========================================================
-dnl Profiling
-dnl ========================================================
-if test -n "$MOZ_PROFILING"; then
-    AC_DEFINE(MOZ_PROFILING)
-
-    case "$OS_TARGET" in
-        Linux) MOZ_VTUNE=1 ;;
-        WINNT) MOZ_VTUNE=1 ;;
-    esac
-fi
-
-if test -n "$MOZ_VTUNE"; then
-    AC_DEFINE(MOZ_VTUNE)
 fi
 
 dnl ========================================================
@@ -2522,14 +2441,6 @@ if test -z "$SKIP_LIBRARY_CHECKS"; then
     AC_CHECK_FUNCS(__cxa_demangle, HAVE_DEMANGLE=1, HAVE_DEMANGLE=)
     AC_LANG_RESTORE
 fi
-
-# Demangle only for debug or DMD builds
-MOZ_DEMANGLE_SYMBOLS=
-if test "$HAVE_DEMANGLE" && test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
-    MOZ_DEMANGLE_SYMBOLS=1
-    AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
-fi
-AC_SUBST(MOZ_DEMANGLE_SYMBOLS)
 
 dnl ========================================================
 dnl JIT observers
@@ -2744,10 +2655,6 @@ if test "$JS_HAS_CTYPES"; then
   AC_DEFINE(JS_HAS_CTYPES)
 fi
 
-if test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
-    MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
-fi
-
 dnl ========================================================
 dnl =
 dnl = Options for generating the shell as a script
@@ -2789,11 +2696,6 @@ AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
-AC_SUBST(MOZ_JPROF)
-AC_SUBST(MOZ_INSTRUMENTS)
-AC_SUBST(MOZ_CALLGRIND)
-AC_SUBST(MOZ_VTUNE)
-AC_SUBST(MOZ_PROFILING)
 AC_SUBST(LIBICONV)
 
 AC_SUBST(ENABLE_TESTS)
@@ -2801,11 +2703,8 @@ AC_SUBST(ENABLE_TESTS)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(INCREMENTAL_LINKER)
-AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
-
-AC_SUBST(USE_DEPENDENT_LIBS)
 
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 
