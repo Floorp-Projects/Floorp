@@ -46,10 +46,7 @@ function test() {
   let frameScript = "data:,(" + function frame_script() {
     addMessageListener("socialTest-CloseSelf", function(e) {
       content.close();
-    });
-    addEventListener("visibilitychange", function() {
-      sendAsyncMessage("chatbox-visibility", content.document.hidden ? "hidden" : "shown");
-    });
+    }, true);
   }.toString() + ")();";
   let mm = getGroupMessageManager("social");
   mm.loadFrameScript(frameScript, true);
@@ -77,25 +74,25 @@ function test() {
 var tests = {
   testOpenCloseChat: function(next) {
     openChat(SocialSidebar.provider).then((cb) => {
-      let smm = getGroupMessageManager("social");
-      // Sometimes we'll get the initial shown visibility from opening the chat
-      // box, so we ensure that we get hidden first.
-      let minimized = false;
-      smm.addMessageListener("chatbox-visibility", function handler(msg) {
-        if (minimized && msg.data == "shown") {
-          ok(true, "chatbox got shown");
-          smm.removeMessageListener("chatbox-visibility", handler);
-          // test the chatbox content closing itself
+      waitForCondition(function() {
+        return cb.minimized;
+      }, function() {
+        ok(cb.minimized, "chat is minimized after toggle");
+        waitForCondition(function() {
+          return !cb.minimized;
+        }, function() {
+          ok(!cb.minimized, "chat is not minimized after toggle");
           promiseNodeRemoved(cb).then(next);
           let mm = cb.content.messageManager;
           mm.sendAsyncMessage("socialTest-CloseSelf", {});
-        } else if (!minimized && msg.data == "hidden") {
-          minimized = true;
-          ok(true, "chatbox got minimized");
-          // toggle to maximize chat
-          cb.toggle();
-        }
-      });
+          info("close chat window requested");
+        },
+        "chatbox is not minimized");
+        cb.toggle();
+      },
+      "chatbox is minimized");
+
+      ok(!cb.minimized, "chat is not minimized on open");
       // toggle to minimize chat
       cb.toggle();
     });
