@@ -2722,11 +2722,12 @@ nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse,
   }
 
   int32_t tabIndex = TabIndex();
+  bool disabled = false;
+  bool disallowOverridingFocusability = true;
 
-  bool override, disabled = false;
   if (IsEditableRoot()) {
     // Editable roots should always be focusable.
-    override = true;
+    disallowOverridingFocusability = true;
 
     // Ignore the disabled attribute in editable contentEditable/designMode
     // roots.
@@ -2737,7 +2738,7 @@ nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse,
     }
   }
   else {
-    override = false;
+    disallowOverridingFocusability = false;
 
     // Just check for disabled attribute on form controls
     disabled = IsDisabled();
@@ -2751,10 +2752,10 @@ nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse,
   }
 
   // If a tabindex is specified at all, or the default tabindex is 0, we're focusable
-  *aIsFocusable = 
+  *aIsFocusable =
     (tabIndex >= 0 || (!disabled && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)));
 
-  return override;
+  return disallowOverridingFocusability;
 }
 
 void
