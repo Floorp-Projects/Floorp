@@ -56,7 +56,7 @@ public:
 
   EvictDataResult
   EvictData(media::TimeUnit aPlaybackTime,
-            uint32_t aThreshold,
+            int64_t aThresholdReduct,
             media::TimeUnit* aBufferStartTime) override;
 
   void EvictBefore(media::TimeUnit aTime) override;
@@ -200,7 +200,7 @@ private:
     OnDemuxFailed(TrackType::kAudioTrack, aFailure);
   }
 
-  void DoEvictData(const media::TimeUnit& aPlaybackTime, uint32_t aThreshold);
+  void DoEvictData(const media::TimeUnit& aPlaybackTime, int64_t aThreshold);
 
   struct TrackData {
     TrackData()
