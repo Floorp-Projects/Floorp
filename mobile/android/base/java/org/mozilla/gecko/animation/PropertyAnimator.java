@@ -228,10 +228,6 @@ public class PropertyAnimator implements Runnable {
     }
 
     private boolean shouldEnableHardwareLayer(ElementHolder element) {
-        if (Versions.preHC) {
-            return false;
-        }
-
         if (!mUseHardwareLayer) {
             return false;
         }

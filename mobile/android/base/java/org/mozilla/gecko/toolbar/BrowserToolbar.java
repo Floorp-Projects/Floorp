@@ -162,8 +162,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         final BrowserToolbar toolbar;
         if (HardwareUtils.isTablet()) {
             toolbar = new BrowserToolbarTablet(context, attrs);
-        } else if (Versions.preHC) {
-            toolbar = new BrowserToolbarPreHC(context, attrs);
         } else {
             toolbar = new BrowserToolbarPhone(context, attrs);
         }
