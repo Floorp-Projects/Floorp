@@ -53,12 +53,13 @@ struct TimingParams
       double durationInMs = aDuration.GetAsUnrestrictedDouble();
       if (durationInMs >= 0) {
         result.emplace(StickyTimeDuration::FromMilliseconds(durationInMs));
-        return result;
+      } else {
+        aRv.ThrowTypeError<dom::MSG_ENFORCE_RANGE_OUT_OF_RANGE>(
+          NS_LITERAL_STRING("duration"));
       }
-    } else if (aDuration.GetAsString().EqualsLiteral("auto")) {
-      return result;
+    } else if (!aDuration.GetAsString().EqualsLiteral("auto")) {
+      aRv.ThrowTypeError<dom::MSG_INVALID_DURATION_ERROR>();
     }
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return result;
   }
 
