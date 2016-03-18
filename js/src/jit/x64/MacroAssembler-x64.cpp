@@ -446,8 +446,23 @@ MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register t
 }
 
 void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, const Address& address, Register temp,
+                                           Label* label)
+{
+    branchValueIsNurseryObjectImpl(cond, address, temp, label);
+}
+
+void
 MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
                                            Label* label)
+{
+    branchValueIsNurseryObjectImpl(cond, value.valueReg(), temp, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchValueIsNurseryObjectImpl(Condition cond, const T& value, Register temp,
+                                               Label* label)
 {
     MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
@@ -462,7 +477,7 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, R
 
     ScratchRegisterScope scratch(*this);
     movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), scratch);
-    addPtr(value.valueReg(), scratch);
+    addPtr(value, scratch);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               scratch, Imm32(nursery.nurserySize()), label);
 }

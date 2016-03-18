@@ -459,6 +459,22 @@ class OrderedHashTable
                 *ep = &entry;
             }
         }
+
+        static size_t offsetOfHashTable() {
+            return offsetof(Range, ht);
+        }
+        static size_t offsetOfI() {
+            return offsetof(Range, i);
+        }
+        static size_t offsetOfCount() {
+            return offsetof(Range, count);
+        }
+        static size_t offsetOfPrevP() {
+            return offsetof(Range, prevp);
+        }
+        static size_t offsetOfNext() {
+            return offsetof(Range, next);
+        }
     };
 
     Range all() { return Range(this); }
@@ -505,6 +521,18 @@ class OrderedHashTable
         entry->chain = *ep;
         *ep = entry;
     }
+
+    static size_t offsetOfDataLength() {
+        return offsetof(OrderedHashTable, dataLength);
+    }
+    static size_t offsetOfData() {
+        return offsetof(OrderedHashTable, data);
+    }
+#ifdef DEBUG
+    static size_t sizeofData() {
+        return sizeof(Data);
+    }
+#endif
 
   private:
     /* Logarithm base 2 of the number of buckets in the hash table initially. */
@@ -680,6 +708,13 @@ class OrderedHashMap
 
         const Key key;
         Value value;
+
+        static size_t offsetOfKey() {
+            return offsetof(Entry, key);
+        }
+        static size_t offsetOfValue() {
+            return offsetof(Entry, value);
+        }
     };
 
   private:
@@ -724,6 +759,18 @@ class OrderedHashMap
             return;
         return impl.rekeyOneEntry(current, newKey, Entry(newKey, e->value));
     }
+
+    static size_t offsetOfImplDataLength() {
+        return Impl::offsetOfDataLength();
+    }
+    static size_t offsetOfImplData() {
+        return Impl::offsetOfData();
+    }
+#ifdef DEBUG
+    static size_t sizeofImplData() {
+        return Impl::sizeofData();
+    }
+#endif
 };
 
 template <class T, class OrderedHashPolicy, class AllocPolicy>
