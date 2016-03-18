@@ -46,7 +46,6 @@ static decltype(NotifyIpInterfaceChange)* sNotifyIpInterfaceChange;
 static decltype(CancelMibChangeNotify2)* sCancelMibChangeNotify2;
 
 #define NETWORK_NOTIFY_CHANGED_PREF "network.notify.changed"
-#define NETWORK_NOTIFY_IPV6_PREF "network.notify.IPv6"
 
 // period during which to absorb subsequent network change events, in
 // milliseconds
@@ -107,7 +106,6 @@ nsNotifyAddrListener::nsNotifyAddrListener()
     , mShutdown(false)
     , mIPInterfaceChecksum(0)
     , mAllowChangedEvent(true)
-    , mIPv6Changes(false)
     , mCoalescingActive(false)
 {
     InitIphlpapi();
@@ -182,7 +180,7 @@ nsNotifyAddrListener::Run()
 
     DWORD waitTime = INFINITE;
 
-    if (!sNotifyIpInterfaceChange || !sCancelMibChangeNotify2 || !mIPv6Changes) {
+    if (!sNotifyIpInterfaceChange || !sCancelMibChangeNotify2) {
         // For Windows versions which are older than Vista which lack
         // NotifyIpInterfaceChange. Note this means no IPv6 support.
         HANDLE ev = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -266,8 +264,6 @@ nsNotifyAddrListener::Init(void)
 
     Preferences::AddBoolVarCache(&mAllowChangedEvent,
                                  NETWORK_NOTIFY_CHANGED_PREF, true);
-    Preferences::AddBoolVarCache(&mIPv6Changes,
-                                 NETWORK_NOTIFY_IPV6_PREF, false);
 
     mCheckEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     NS_ENSURE_TRUE(mCheckEvent, NS_ERROR_OUT_OF_MEMORY);
