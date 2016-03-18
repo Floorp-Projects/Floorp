@@ -17,7 +17,7 @@ default::
 
 ifndef TEST_MOZBUILD
 ifdef MOZ_BUILD_APP
-include $(topsrcdir)/$(MOZ_BUILD_APP)/build.mk
+include $(wildcard $(topsrcdir)/$(MOZ_BUILD_APP)/build.mk)
 endif
 endif
 
