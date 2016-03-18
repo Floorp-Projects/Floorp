@@ -131,7 +131,8 @@ MIRGenerator::foldableOffsetRange(const MAsmJSHeapAccess* access) const
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     // With signal-handler OOB handling, we reserve guard space for the full
     // immediate size.
-    if (usesSignalHandlersForAsmJSOOB_)
+    // Bug 1254935: Atomic accesses can't be handled with signal handlers yet.
+    if (usesSignalHandlersForAsmJSOOB_ && !access->isAtomicAccess())
         return AsmJSImmediateRange;
 #endif
 
