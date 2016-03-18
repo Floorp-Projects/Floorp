@@ -62,13 +62,8 @@ test(function(t) {
 
 // [specified easing value, expected easing value]
 var gEasingValueTests = [
-  ["unrecognised", "linear"],
   ["linear", "linear"],
   ["ease-in-out", "ease-in-out"],
-  ["initial", "linear"],
-  ["inherit", "linear"],
-  ["var(--x)", "linear"],
-  ["ease-in-out, ease-out", "linear"],
   ["Ease\\2d in-out", "ease-in-out"],
   ["ease /**/", "ease"],
 ];
@@ -449,6 +444,29 @@ gKeyframeSequenceTests.forEach(function(subtest) {
      " roundtrips");
 });
 
+var gInvalidEasingInKeyframeSequenceTests = [
+  { desc:   "a blank easing",
+    input:  [{ easing: "" }] },
+  { desc:   "an unrecognized easing",
+    input:  [{ easing: "unrecognized" }] },
+  { desc:   "an 'initial' easing",
+    input:  [{ easing: "initial" }] },
+  { desc:   "an 'inherit' easing",
+    input:  [{ easing: "inherit" }] },
+  { desc:   "a variable easing",
+    input:  [{ easing: "var(--x)" }] },
+  { desc:   "a multi-value easing",
+    input:  [{ easing: "ease-in-out, ease-out" }] }
+];
+
+gInvalidEasingInKeyframeSequenceTests.forEach(function(subtest) {
+  test(function(t) {
+    assert_throws(new TypeError, function() {
+      new KeyframeEffectReadOnly(target, subtest.input);
+    });
+  }, "Invalid easing [" + subtest.desc + "] in KeyframeSequence " +
+     "should be thrown");
+});
 
 test(function(t) {
   var effect = new KeyframeEffectReadOnly(target,
@@ -567,6 +585,24 @@ var gInvalidKeyframeEffectOptionTests = [
     expected: { name: "TypeError" } },
   { desc:     "a negative iterations",
     input:    { iterations: -1 },
+    expected: { name: "TypeError" } },
+  { desc:     "a blank easing",
+    input:    { easing: "" },
+    expected: { name: "TypeError" } },
+  { desc:     "an unrecognized easing",
+    input:    { easing: "unrecognised" },
+    expected: { name: "TypeError" } },
+  { desc:     "an 'initial' easing",
+    input:    { easing: "initial" },
+    expected: { name: "TypeError" } },
+  { desc:     "an 'inherit' easing",
+    input:    { easing: "inherit" },
+    expected: { name: "TypeError" } },
+  { desc:     "a variable easing",
+    input:    { easing: "var(--x)" },
+    expected: { name: "TypeError" } },
+  { desc:     "a multi-value easing",
+    input:    { easing: "ease-in-out, ease-out" },
     expected: { name: "TypeError" } }
 ];
 
@@ -574,7 +610,7 @@ gInvalidKeyframeEffectOptionTests.forEach(function(stest) {
   test(function(t) {
     assert_throws(stest.expected, function() {
       new KeyframeEffectReadOnly(target,
-                                 {left: ["10px", "20px"]},
+                                 { left: ["10px", "20px"] },
                                  stest.input);
     });
   }, "Invalid KeyframeEffectReadOnly option by " + stest.desc);
