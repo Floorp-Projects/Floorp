@@ -21,7 +21,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla.dom.workers += [
-    'RuntimeService.h',
     'ServiceWorkerManager.h',
     'WorkerDebuggerManager.h',
     'Workers.h',
