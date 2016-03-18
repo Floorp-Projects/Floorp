@@ -4281,14 +4281,11 @@ LazyScript::resetScript()
 }
 
 void
-LazyScript::setEnclosingScopeAndSource(JSObject* enclosingScope, ScriptSourceObject* sourceObject)
+LazyScript::setParent(JSObject* enclosingScope, ScriptSourceObject* sourceObject)
 {
+    MOZ_ASSERT(!sourceObject_ && !enclosingScope_);
     MOZ_ASSERT_IF(enclosingScope, function_->compartment() == enclosingScope->compartment());
     MOZ_ASSERT(function_->compartment() == sourceObject->compartment());
-    // This method may be called to update the enclosing scope. See comment
-    // above the callsite in BytecodeEmitter::emitFunction.
-    MOZ_ASSERT_IF(sourceObject_, sourceObject_ == sourceObject && enclosingScope_);
-    MOZ_ASSERT_IF(!sourceObject_, !enclosingScope_);
 
     enclosingScope_ = enclosingScope;
     sourceObject_ = sourceObject;
@@ -4399,7 +4396,7 @@ LazyScript::Create(ExclusiveContext* cx, HandleFunction fun,
     // Set the enclosing scope of the lazy function, this would later be
     // used to define the environment when the function would be used.
     MOZ_ASSERT(!res->sourceObject());
-    res->setEnclosingScopeAndSource(enclosingScope, &sourceObjectScript->scriptSourceUnwrap());
+    res->setParent(enclosingScope, &sourceObjectScript->scriptSourceUnwrap());
 
     MOZ_ASSERT(!res->hasScript());
     if (script)
