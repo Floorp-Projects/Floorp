@@ -3995,6 +3995,7 @@ Parser<ParseHandler>::PossibleError::transferErrorTo(PossibleError* other)
     if (other) {
         MOZ_ASSERT(this != other);
         MOZ_ASSERT(!other->hasError());
+
         // We should never allow fields to be copied between instances
         // that point to different underlying parsers.
         MOZ_ASSERT(&parser_ == &other->parser_);
@@ -4497,8 +4498,13 @@ Parser<ParseHandler>::destructuringExpr(YieldHandling yieldHandling, BindData<Pa
     MOZ_ASSERT(tokenStream.isCurrentTokenType(tt));
 
     pc->inDeclDestructuring = true;
+    PossibleError possibleError(*this);
     Node pn = primaryExpr(yieldHandling, TripledotProhibited,
-                          nullptr /* possibleError */, tt);
+                          &possibleError, tt);
+
+    // Resolve asap instead of checking since we already know that we are
+    // destructuring.
+    possibleError.setResolved();
     pc->inDeclDestructuring = false;
     if (!pn)
         return null();
@@ -4671,10 +4677,13 @@ Parser<ParseHandler>::declarationPattern(Node decl, TokenKind tt, BindData<Parse
     {
         pc->inDeclDestructuring = true;
 
-        // No possible error is required because we already know we're
-        // destructuring.
+        PossibleError possibleError(*this);
         pattern = primaryExpr(yieldHandling, TripledotProhibited,
-                              nullptr /* possibleError */ , tt);
+                              &possibleError, tt);
+
+        // Resolve asap instead of checking since we already know that we are
+        // destructuring.
+        possibleError.setResolved();
         pc->inDeclDestructuring = false;
     }
     if (!pattern)
@@ -7701,7 +7710,6 @@ Parser<ParseHandler>::orExpr1(InHandling inHandling, YieldHandling yieldHandling
     Node nodeStack[PRECEDENCE_CLASSES];
     ParseNodeKind kindStack[PRECEDENCE_CLASSES];
     int depth = 0;
-
     Node pn;
     for (;;) {
         pn = unaryExpr(yieldHandling, tripledotHandling, possibleError, invoked);
@@ -7716,11 +7724,17 @@ Parser<ParseHandler>::orExpr1(InHandling inHandling, YieldHandling yieldHandling
 
         ParseNodeKind pnk;
         if (tok == TOK_IN ? inHandling == InAllowed : TokenKindIsBinaryOp(tok)) {
+            // Destructuring defaults are an error in this context
+            if (possibleError && !possibleError->checkForExprErrors())
+                return null();
             pnk = BinaryOpTokenKindToParseNodeKind(tok);
         } else {
             tok = TOK_EOF;
             pnk = PNK_LIMIT;
         }
+
+        // From this point on, destructuring defaults are definitely an error.
+        possibleError = nullptr;
 
         // If pnk has precedence less than or equal to another operator on the
         // stack, reduce. This combines nodes on the stack until we form the
@@ -7759,17 +7773,19 @@ Parser<ParseHandler>::condExpr1(InHandling inHandling, YieldHandling yieldHandli
                                 InvokedPrediction invoked)
 {
     Node condition = orExpr1(inHandling, yieldHandling, tripledotHandling, possibleError, invoked);
+
     if (!condition || !tokenStream.isCurrentTokenType(TOK_HOOK))
         return condition;
+
     Node thenExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
-                               possibleError);
+                               nullptr /* possibleError */);
     if (!thenExpr)
         return null();
 
     MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
 
     Node elseExpr = assignExpr(inHandling, yieldHandling, TripledotProhibited,
-                               possibleError);
+                               nullptr /* possibleError */);
     if (!elseExpr)
         return null();
 
@@ -7970,7 +7986,12 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
 
       default:
         MOZ_ASSERT(!tokenStream.isCurrentTokenAssignment());
-        possibleErrorInner.transferErrorTo(possibleError);
+        if (!possibleError) {
+            if (!possibleErrorInner.checkForExprErrors())
+                return null();
+        } else {
+            possibleErrorInner.transferErrorTo(possibleError);
+        }
         tokenStream.ungetToken();
         return lhs;
     }
@@ -8172,7 +8193,7 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
         //   // Evaluates expression, triggering a runtime ReferenceError for
         //   // the undefined name.
         //   typeof (1, nonExistentName);
-        Node kid = unaryExpr(yieldHandling, TripledotProhibited, possibleError);
+        Node kid = unaryExpr(yieldHandling, TripledotProhibited, nullptr /* possibleError */);
         if (!kid)
             return null();
 
@@ -8185,7 +8206,7 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
         TokenKind tt2;
         if (!tokenStream.getToken(&tt2, TokenStream::Operand))
             return null();
-        Node pn2 = memberExpr(yieldHandling, TripledotProhibited, possibleError, tt2, true);
+        Node pn2 = memberExpr(yieldHandling, TripledotProhibited, nullptr /* possibleError */, tt2, true);
         if (!pn2)
             return null();
         AssignmentFlavor flavor = (tt == TOK_INC) ? IncrementAssignment : DecrementAssignment;
@@ -8198,7 +8219,7 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
       }
 
       case TOK_DELETE: {
-        Node expr = unaryExpr(yieldHandling, TripledotProhibited, possibleError);
+        Node expr = unaryExpr(yieldHandling, TripledotProhibited, nullptr /* possibleError */);
         if (!expr)
             return null();
 
@@ -8661,7 +8682,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
             // Gotten by tryNewTarget
             tt = tokenStream.currentToken().type;
             Node ctorExpr = memberExpr(yieldHandling, TripledotProhibited,
-                                       possibleError, tt, false, PredictInvoked);
+                                       nullptr /* possibleError */, tt, false, PredictInvoked);
             if (!ctorExpr)
                 return null();
 
@@ -8717,7 +8738,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
                 return null();
             }
         } else if (tt == TOK_LB) {
-            Node propExpr = expr(InAllowed, yieldHandling, TripledotProhibited, possibleError);
+            Node propExpr = expr(InAllowed, yieldHandling, TripledotProhibited, nullptr /* possibleError */);
             if (!propExpr)
                 return null();
 
@@ -9310,13 +9331,23 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
                 return null();
 
             if (!seenCoverInitializedName) {
-                seenCoverInitializedName = true;
+
                 // "shorthand default" or "CoverInitializedName" syntax is only
-                // valid in the case of destructuring. Here we set a pending error so
-                // that later in the parse, once we've determined whether or not we're
-                // destructuring, the error can be reported or ignored appropriately.
-                if (possibleError &&
-                    !possibleError->setPending(ParseError, JSMSG_BAD_PROP_ID, false)) {
+                // valid in the case of destructuring.
+                seenCoverInitializedName = true;
+
+                if (!possibleError) {
+                    // Destructuring defaults are definitely not allowed in this object literal,
+                    // because of something the caller knows about the preceding code.
+                    // For example, maybe the preceding token is an operator: `x + {y=z}`.
+                    report(ParseError, false, null(), JSMSG_COLON_AFTER_ID);
+                    return null();
+                }
+
+                // Here we set a pending error so that later in the parse, once we've
+                // determined whether or not we're destructuring, the error can be
+                // reported or ignored appropriately.
+                if (!possibleError->setPending(ParseError, JSMSG_COLON_AFTER_ID, false)) {
 
                     // Report any previously pending error.
                     possibleError->checkForExprErrors();
