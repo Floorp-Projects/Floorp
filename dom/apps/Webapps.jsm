@@ -254,11 +254,6 @@ this.DOMApplicationRegistry = {
                                         this.getFullAppByManifestURL.bind(this));
 
     MessageBroadcaster.init(this.getAppByManifestURL);
-
-    if (AppConstants.MOZ_B2GDROID) {
-      Cu.import("resource://gre/modules/AndroidUtils.jsm");
-      AndroidUtils.init(this);
-    }
   },
 
   // loads the current registry, that could be empty on first run.
@@ -528,7 +523,7 @@ this.DOMApplicationRegistry = {
 
   // Installs a 3rd party app.
   installPreinstalledApp: function installPreinstalledApp(aId) {
-    if (!AppConstants.MOZ_B2GDROID && AppConstants.platform !== "gonk") {
+    if (AppConstants.platform !== "gonk") {
       return false;
     }
 
@@ -797,12 +792,8 @@ this.DOMApplicationRegistry = {
           }
         }
 
-        if (AppConstants.MOZ_B2GDROID || AppConstants.MOZ_B2G) {
+        if (AppConstants.MOZ_B2G) {
           yield this.installSystemApps();
-        }
-
-        if (AppConstants.MOZ_B2GDROID) {
-          yield AndroidUtils.installAndroidApps();
         }
 
         // At first run, install preloaded apps and set up their permissions.
@@ -1209,9 +1200,6 @@ this.DOMApplicationRegistry = {
       Services.obs.removeObserver(this, "memory-pressure");
       cpmm = null;
       ppmm = null;
-      if (AppConstants.MOZ_B2GDROID) {
-        AndroidUtils.uninit();
-      }
     } else if (aTopic == "memory-pressure") {
       // Clear the manifest cache on memory pressure.
       this._manifestCache = {};
@@ -1365,7 +1353,7 @@ this.DOMApplicationRegistry = {
     this.registryReady.then( () => {
       switch (aMessage.name) {
         case "Webapps:Install": {
-          if (AppConstants.platform == "android" && !AppConstants.MOZ_B2GDROID) {
+          if (AppConstants.platform == "android") {
             Services.obs.notifyObservers(mm, "webapps-runtime-install", JSON.stringify(msg));
           } else {
             this.doInstall(msg, mm);
@@ -1376,7 +1364,7 @@ this.DOMApplicationRegistry = {
           this.getSelf(msg, mm);
           break;
         case "Webapps:Uninstall":
-          if (AppConstants.platform == "android" && !AppConstants.MOZ_B2GDROID) {
+          if (AppConstants.platform == "android") {
             Services.obs.notifyObservers(mm, "webapps-runtime-uninstall", JSON.stringify(msg));
           } else {
             this.doUninstall(msg, mm);
@@ -1395,7 +1383,7 @@ this.DOMApplicationRegistry = {
           this.getInstalled(msg, mm);
           break;
         case "Webapps:InstallPackage": {
-          if (AppConstants.platform == "android" && !AppConstants.MOZ_B2GDROID) {
+          if (AppConstants.platform == "android") {
             Services.obs.notifyObservers(mm, "webapps-runtime-install-package", JSON.stringify(msg));
           } else {
             this.doInstallPackage(msg, mm);
