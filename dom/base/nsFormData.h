@@ -41,8 +41,11 @@ private:
 
   struct FormDataTuple
   {
+    FormDataTuple() : wasNullBlob(false) {}
+
     nsString name;
     OwningFileOrUSVString value;
+    bool wasNullBlob;
   };
 
   // Returns the FormDataTuple to modify. This may be null, in which case
