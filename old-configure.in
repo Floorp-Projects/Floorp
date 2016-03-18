@@ -7939,7 +7939,7 @@ export RUSTC
 export MOZILLA_CENTRAL_PATH=$_topsrcdir
 export STLPORT_CPPFLAGS
 export STLPORT_LIBS
-export JS_STANDALONE=no
+export JS_STANDALONE=
 unset MOZ_BUILD_APP
 export DIST
 export MOZ_LINKER

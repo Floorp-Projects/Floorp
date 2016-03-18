@@ -255,6 +255,7 @@ def wanted_mozconfig_variables(help):
          'DSYMUTIL',
          'EXTERNAL_SOURCE_DIR',
          'GENISOIMAGE',
+         'JS_STANDALONE',
          'L10NBASEDIR',
          'MOZILLABUILD',
          'MOZ_ARTIFACT_BUILDS',
