@@ -262,6 +262,16 @@ public:
   }
 
   already_AddRefed<IDBRequest>
+  OpenCursor(IDBCursorDirection aDirection,
+             ErrorResult& aRv)
+  {
+    AssertIsOnOwningThread();
+
+    return OpenCursorInternal(/* aKeysOnly */ false, nullptr,
+                              JS::UndefinedHandleValue, aDirection, aRv);
+  }
+
+  already_AddRefed<IDBRequest>
   OpenKeyCursor(JSContext* aCx,
                 JS::Handle<JS::Value> aRange,
                 IDBCursorDirection aDirection,
@@ -337,6 +347,8 @@ private:
                       const IDBIndexParameters& aOptionalParameters,
                       ErrorResult& aRv);
 
+  // aCx is allowed to be null but only if aRange.isUndefined().  In that case,
+  // we don't actually use aCx for anything, so it's OK.
   already_AddRefed<IDBRequest>
   OpenCursorInternal(bool aKeysOnly,
                      JSContext* aCx,
