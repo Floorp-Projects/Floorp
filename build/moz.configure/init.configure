@@ -280,8 +280,8 @@ def wanted_mozconfig_variables(help):
      ])
 
 
-@depends(mozconfig, wanted_mozconfig_variables)
-def mozconfig_options(mozconfig, wanted_mozconfig_variables):
+@depends(mozconfig, wanted_mozconfig_variables, '--help')
+def mozconfig_options(mozconfig, wanted_mozconfig_variables, help):
     if mozconfig['path']:
         helper = command_line_helper()
         warn('Adding configure options from %s' % mozconfig['path'])
