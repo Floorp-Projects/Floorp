@@ -47,6 +47,8 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
                                                            bool* const out_error)
     : mWebGL(webgl)
 {
+    MOZ_ASSERT(webgl->gl->IsCurrent());
+
     typedef decltype(WebGLContext::mBound2DTextures) TexturesT;
 
     const auto fnResolveAll = [this, funcName](const TexturesT& textures)
@@ -220,7 +222,7 @@ WebGLContext::DrawArrays_check(GLint first, GLsizei count, GLsizei primcount,
         return false;
     }
 
-    MakeContextCurrent();
+    MOZ_ASSERT(gl->IsCurrent());
 
     if (mBoundDrawFramebuffer) {
         if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(info))
@@ -245,6 +247,8 @@ WebGLContext::DrawArrays(GLenum mode, GLint first, GLsizei count)
 
     if (!ValidateDrawModeEnum(mode, funcName))
         return;
+
+    MakeContextCurrent();
 
     bool error;
     ScopedResolveTexturesForDraw scopedResolve(this, funcName, &error);
@@ -273,6 +277,8 @@ WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsiz
 
     if (!ValidateDrawModeEnum(mode, funcName))
         return;
+
+    MakeContextCurrent();
 
     bool error;
     ScopedResolveTexturesForDraw scopedResolve(this, funcName, &error);
@@ -409,7 +415,7 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type,
                         WebGLContext::EnumName(type));
     }
 
-    MakeContextCurrent();
+    MOZ_ASSERT(gl->IsCurrent());
 
     if (mBoundDrawFramebuffer) {
         if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(info))
@@ -435,6 +441,8 @@ WebGLContext::DrawElements(GLenum mode, GLsizei count, GLenum type,
 
     if (!ValidateDrawModeEnum(mode, funcName))
         return;
+
+    MakeContextCurrent();
 
     bool error;
     ScopedResolveTexturesForDraw scopedResolve(this, funcName, &error);
@@ -472,6 +480,8 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
 
     if (!ValidateDrawModeEnum(mode, funcName))
         return;
+
+    MakeContextCurrent();
 
     bool error;
     ScopedResolveTexturesForDraw scopedResolve(this, funcName, &error);
