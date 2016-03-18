@@ -246,6 +246,17 @@ Object.assign(PushServiceParent.prototype, {
     let name = requestName.slice("Push:".length);
     return "PushService:" + name + ":" + suffix;
   },
+
+  // Methods used for mocking in tests.
+
+  replaceServiceBackend(options) {
+    this._service.changeTestServer(options.serverURI, options);
+  },
+
+  restoreServiceBackend() {
+    var defaultServerURL = Services.prefs.getCharPref("dom.push.serverURL");
+    this._service.changeTestServer(defaultServerURL);
+  },
 });
 
 /**

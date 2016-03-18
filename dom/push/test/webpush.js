@@ -161,15 +161,7 @@
       }).then(bsConcat);
   }
 
-  /*
-   * Request push for a message.  This returns a promise that resolves when the
-   * push has been delivered to the push service.
-   *
-   * @param subscription A PushSubscription that contains endpoint and p256dh
-   *                     parameters.
-   * @param data         The message to send.
-   */
-  function webpush(subscription, data, ttl) {
+  function webPushEncrypt(subscription, data) {
     data = ensureView(data);
 
     var salt = g.crypto.getRandomValues(new Uint8Array(16));
@@ -181,27 +173,14 @@
           webCrypto.exportKey('raw', localKey.publicKey),
         ]);
       }).then(([payload, pubkey]) => {
-        var options = {
-          method: 'PUT',
-          headers: {
-            'X-Push-Server': subscription.endpoint,
-            // Web Push requires POST requests.
-            'X-Push-Method': 'POST',
-            'Encryption-Key': 'keyid=p256dh;dh=' + base64url.encode(pubkey),
-            Encryption: 'keyid=p256dh;salt=' + base64url.encode(salt),
-            'Content-Encoding': 'aesgcm128',
-            'TTL': ttl,
-          },
-          body: payload,
+        return {
+          data: base64url.encode(payload),
+          encryption: 'keyid=p256dh;salt=' + base64url.encode(salt),
+          encryption_key: 'keyid=p256dh;dh=' + base64url.encode(pubkey),
+          encoding: 'aesgcm128'
         };
-        return fetch('http://mochi.test:8888/tests/dom/push/test/push-server.sjs', options);
-      }).then(response => {
-        if (Math.floor(response.status / 100) !== 2) {
-          throw new Error('Unable to deliver message');
-        }
-        return response;
       });
   }
 
-  g.webpush = webpush;
+  g.webPushEncrypt = webPushEncrypt;
 }(this));
