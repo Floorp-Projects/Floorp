@@ -44,6 +44,7 @@
 #include "libyuv/convert.h"
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
 #include "mozilla/PeerIdentity.h"
+#include "mozilla/TaskQueue.h"
 #endif
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Types.h"
@@ -69,6 +70,410 @@ using namespace mozilla::layers;
 MOZ_MTLOG_MODULE("mediapipeline")
 
 namespace mozilla {
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+class VideoConverterListener
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoConverterListener)
+
+  virtual void OnVideoFrameConverted(unsigned char* aVideoFrame,
+                                     unsigned int aVideoFrameLength,
+                                     unsigned short aWidth,
+                                     unsigned short aHeight,
+                                     VideoType aVideoType,
+                                     uint64_t aCaptureTime) = 0;
+
+  virtual void OnVideoFrameConverted(webrtc::I420VideoFrame& aVideoFrame) = 0;
+
+protected:
+  virtual ~VideoConverterListener() {}
+};
+
+// I420 buffer size macros
+#define YSIZE(x,y) ((x)*(y))
+#define CRSIZE(x,y) ((((x)+1) >> 1) * (((y)+1) >> 1))
+#define I420SIZE(x,y) (YSIZE((x),(y)) + 2 * CRSIZE((x),(y)))
+
+// An async video frame format converter.
+//
+// Input is typically a MediaStream(Track)Listener driven by MediaStreamGraph.
+//
+// We keep track of the size of the TaskQueue so we can drop frames if
+// conversion is taking too long.
+//
+// Output is passed through to all added VideoConverterListeners on a TaskQueue
+// thread whenever a frame is converted.
+class VideoFrameConverter
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoFrameConverter)
+
+  VideoFrameConverter()
+    : mLength(0)
+    , last_img_(-1) // -1 is not a guaranteed invalid serial. See bug 1262134.
+    , disabled_frame_sent_(false)
+#ifdef DEBUG
+    , mThrottleCount(0)
+    , mThrottleRecord(0)
+#endif
+    , mMutex("VideoFrameConverter")
+  {
+    MOZ_COUNT_CTOR(VideoFrameConverter);
+
+    RefPtr<SharedThreadPool> pool =
+      SharedThreadPool::Get(NS_LITERAL_CSTRING("VideoFrameConverter"));
+
+    mTaskQueue = MakeAndAddRef<TaskQueue>(pool.forget());
+  }
+
+  void QueueVideoChunk(VideoChunk& aChunk, bool aForceBlack)
+  {
+    // A throttling limit of 1 allows us to convert 2 frames concurrently.
+    // It's short enough to not build up too significant a delay, while
+    // giving us a margin to not cause some machines to drop every other frame.
+    const int32_t queueThrottlingLimit = 1;
+    if (mLength > queueThrottlingLimit) {
+      MOZ_MTLOG(ML_DEBUG, "VideoFrameConverter " << this << " queue is full." <<
+                          " Throttling by throwing away a frame.");
+#ifdef DEBUG
+      ++mThrottleCount;
+      mThrottleRecord = std::max(mThrottleCount, mThrottleRecord);
+#endif
+      return;
+    }
+
+#ifdef DEBUG
+    if (mThrottleCount > 0) {
+      auto level = ML_DEBUG;
+      if (mThrottleCount > 5) {
+        // Log at a higher level when we have large drops.
+        level = ML_INFO;
+      }
+      MOZ_MTLOG(level, "VideoFrameConverter " << this << " stopped" <<
+                       " throttling after throwing away " << mThrottleCount <<
+                       " frames. Longest throttle so far was " <<
+                       mThrottleRecord << " frames.");
+      mThrottleCount = 0;
+    }
+#endif
+
+    if (aChunk.IsNull()) {
+      return;
+    }
+
+    bool forceBlack = aForceBlack || aChunk.mFrame.GetForceBlack();
+
+    if (forceBlack) {
+      // Reset the last-img check.
+      // -1 is not a guaranteed invalid serial. See bug 1262134.
+      last_img_ = -1;
+
+      if (disabled_frame_sent_) {
+        // After disabling we just pass one black frame to the encoder.
+        // Allocating and setting it to black steals some performance
+        // that can be avoided. We don't handle resolution changes while
+        // disabled for now.
+        return;
+      }
+
+      disabled_frame_sent_ = true;
+    } else {
+      disabled_frame_sent_ = false;
+
+      // We get passed duplicate frames every ~10ms even with no frame change.
+      int32_t serial = aChunk.mFrame.GetImage()->GetSerial();
+      if (serial == last_img_) {
+        return;
+      }
+      last_img_ = serial;
+    }
+
+    ++mLength; // Atomic
+
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethodWithArgs<StorensRefPtrPassByPtr<Image>, bool>(
+        this, &VideoFrameConverter::ProcessVideoFrame,
+        aChunk.mFrame.GetImage(), forceBlack);
+    mTaskQueue->Dispatch(runnable.forget());
+  }
+
+  void AddListener(VideoConverterListener* aListener)
+  {
+    MutexAutoLock lock(mMutex);
+
+    MOZ_ASSERT(!mListeners.Contains(aListener));
+    mListeners.AppendElement(aListener);
+  }
+
+  bool RemoveListener(VideoConverterListener* aListener)
+  {
+    MutexAutoLock lock(mMutex);
+
+    return mListeners.RemoveElement(aListener);
+  }
+
+protected:
+  virtual ~VideoFrameConverter()
+  {
+    MOZ_COUNT_DTOR(VideoFrameConverter);
+
+    mTaskQueue->BeginShutdown();
+    mTaskQueue->AwaitShutdownAndIdle();
+  }
+
+  void VideoFrameConverted(unsigned char* aVideoFrame,
+                           unsigned int aVideoFrameLength,
+                           unsigned short aWidth,
+                           unsigned short aHeight,
+                           VideoType aVideoType,
+                           uint64_t aCaptureTime)
+  {
+    MutexAutoLock lock(mMutex);
+
+    for (RefPtr<VideoConverterListener>& listener : mListeners) {
+      listener->OnVideoFrameConverted(aVideoFrame, aVideoFrameLength,
+                                      aWidth, aHeight, aVideoType, aCaptureTime);
+    }
+  }
+
+  void VideoFrameConverted(webrtc::I420VideoFrame& aVideoFrame)
+  {
+    MutexAutoLock lock(mMutex);
+
+    for (RefPtr<VideoConverterListener>& listener : mListeners) {
+      listener->OnVideoFrameConverted(aVideoFrame);
+    }
+  }
+
+  void ProcessVideoFrame(Image* aImage, bool aForceBlack)
+  {
+    --mLength; // Atomic
+    MOZ_ASSERT(mLength >= 0);
+
+    if (aForceBlack) {
+      IntSize size = aImage->GetSize();
+      uint32_t yPlaneLen = YSIZE(size.width, size.height);
+      uint32_t cbcrPlaneLen = 2 * CRSIZE(size.width, size.height);
+      uint32_t length = yPlaneLen + cbcrPlaneLen;
+
+      // Send a black image.
+      auto pixelData = MakeUniqueFallible<uint8_t[]>(length);
+      if (pixelData) {
+        // YCrCb black = 0x10 0x80 0x80
+        memset(pixelData.get(), 0x10, yPlaneLen);
+        // Fill Cb/Cr planes
+        memset(pixelData.get() + yPlaneLen, 0x80, cbcrPlaneLen);
+
+        MOZ_MTLOG(ML_DEBUG, "Sending a black video frame");
+        VideoFrameConverted(pixelData.get(), length, size.width, size.height,
+                            mozilla::kVideoI420, 0);
+      }
+      return;
+    }
+
+    ImageFormat format = aImage->GetFormat();
+#ifdef WEBRTC_GONK
+    GrallocImage* nativeImage = aImage->AsGrallocImage();
+    if (nativeImage) {
+      android::sp<android::GraphicBuffer> graphicBuffer = nativeImage->GetGraphicBuffer();
+      int pixelFormat = graphicBuffer->getPixelFormat(); /* PixelFormat is an enum == int */
+      mozilla::VideoType destFormat;
+      switch (pixelFormat) {
+        case HAL_PIXEL_FORMAT_YV12:
+          // all android must support this
+          destFormat = mozilla::kVideoYV12;
+          break;
+        case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP:
+          destFormat = mozilla::kVideoNV21;
+          break;
+        case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_P:
+          destFormat = mozilla::kVideoI420;
+          break;
+        default:
+          // XXX Bug NNNNNNN
+          // use http://mxr.mozilla.org/mozilla-central/source/content/media/omx/I420ColorConverterHelper.cpp
+          // to convert unknown types (OEM-specific) to I420
+          MOZ_MTLOG(ML_ERROR, "Un-handled GRALLOC buffer type:" << pixelFormat);
+          MOZ_CRASH();
+      }
+      void *basePtr;
+      graphicBuffer->lock(android::GraphicBuffer::USAGE_SW_READ_MASK, &basePtr);
+      uint32_t width = graphicBuffer->getWidth();
+      uint32_t height = graphicBuffer->getHeight();
+      // XXX gralloc buffer's width and stride could be different depends on implementations.
+
+      if (destFormat != mozilla::kVideoI420) {
+        unsigned char *video_frame = static_cast<unsigned char*>(basePtr);
+        webrtc::I420VideoFrame i420_frame;
+        int stride_y = width;
+        int stride_uv = (width + 1) / 2;
+        int target_width = width;
+        int target_height = height;
+        if (i420_frame.CreateEmptyFrame(target_width,
+                                        abs(target_height),
+                                        stride_y,
+                                        stride_uv, stride_uv) < 0) {
+          MOZ_ASSERT(false, "Can't allocate empty i420frame");
+          return;
+        }
+        webrtc::VideoType commonVideoType =
+          webrtc::RawVideoTypeToCommonVideoVideoType(
+            static_cast<webrtc::RawVideoType>((int)destFormat));
+        if (ConvertToI420(commonVideoType, video_frame, 0, 0, width, height,
+                          I420SIZE(width, height), webrtc::kVideoRotation_0,
+                          &i420_frame)) {
+          MOZ_ASSERT(false, "Can't convert video type for sending to I420");
+          return;
+        }
+        i420_frame.set_ntp_time_ms(0);
+        VideoFrameConverted(i420_frame);
+      } else {
+        VideoFrameConverted(static_cast<unsigned char*>(basePtr),
+                            I420SIZE(width, height),
+                            width,
+                            height,
+                            destFormat, 0);
+      }
+      graphicBuffer->unlock();
+      return;
+    } else
+#endif
+    if (format == ImageFormat::PLANAR_YCBCR) {
+      // Cast away constness b/c some of the accessors are non-const
+      PlanarYCbCrImage* yuv = const_cast<PlanarYCbCrImage *>(
+          static_cast<const PlanarYCbCrImage *>(aImage));
+
+      const PlanarYCbCrData *data = yuv->GetData();
+      if (data) {
+        uint8_t *y = data->mYChannel;
+        uint8_t *cb = data->mCbChannel;
+        uint8_t *cr = data->mCrChannel;
+        uint32_t width = yuv->GetSize().width;
+        uint32_t height = yuv->GetSize().height;
+        uint32_t length = yuv->GetDataSize();
+        // NOTE: length may be rounded up or include 'other' data (see
+        // YCbCrImageDataDeserializerBase::ComputeMinBufferSize())
+
+        // XXX Consider modifying these checks if we ever implement
+        // any subclasses of PlanarYCbCrImage that allow disjoint buffers such
+        // that y+3(width*height)/2 might go outside the allocation or there are
+        // pads between y, cr and cb.
+        // GrallocImage can have wider strides, and so in some cases
+        // would encode as garbage.  If we need to encode it we'll either want to
+        // modify SendVideoFrame or copy/move the data in the buffer.
+        if (cb == (y + YSIZE(width, height)) &&
+            cr == (cb + CRSIZE(width, height)) &&
+            length >= I420SIZE(width, height)) {
+          MOZ_MTLOG(ML_DEBUG, "Sending an I420 video frame");
+          VideoFrameConverted(y, I420SIZE(width, height), width, height, mozilla::kVideoI420, 0);
+          return;
+        } else {
+          MOZ_MTLOG(ML_ERROR, "Unsupported PlanarYCbCrImage format: "
+                              "width=" << width << ", height=" << height << ", y=" << y
+                              << "\n  Expected: cb=y+" << YSIZE(width, height)
+                                          << ", cr=y+" << YSIZE(width, height)
+                                                        + CRSIZE(width, height)
+                              << "\n  Observed: cb=y+" << cb - y
+                                          << ", cr=y+" << cr - y
+                              << "\n            ystride=" << data->mYStride
+                                          << ", yskip=" << data->mYSkip
+                              << "\n            cbcrstride=" << data->mCbCrStride
+                                          << ", cbskip=" << data->mCbSkip
+                                          << ", crskip=" << data->mCrSkip
+                              << "\n            ywidth=" << data->mYSize.width
+                                          << ", yheight=" << data->mYSize.height
+                              << "\n            cbcrwidth=" << data->mCbCrSize.width
+                                          << ", cbcrheight=" << data->mCbCrSize.height);
+          NS_ASSERTION(false, "Unsupported PlanarYCbCrImage format");
+        }
+      }
+    }
+
+    RefPtr<SourceSurface> surf = aImage->GetAsSourceSurface();
+    if (!surf) {
+      MOZ_MTLOG(ML_ERROR, "Getting surface from " << Stringify(format) << " image failed");
+      return;
+    }
+
+    RefPtr<DataSourceSurface> data = surf->GetDataSurface();
+    if (!data) {
+      MOZ_MTLOG(ML_ERROR, "Getting data surface from " << Stringify(format)
+                          << " image with " << Stringify(surf->GetType()) << "("
+                          << Stringify(surf->GetFormat()) << ") surface failed");
+      return;
+    }
+
+    IntSize size = aImage->GetSize();
+    int half_width = (size.width + 1) >> 1;
+    int half_height = (size.height + 1) >> 1;
+    int c_size = half_width * half_height;
+    int buffer_size = YSIZE(size.width, size.height) + 2 * c_size;
+    auto yuv_scoped = MakeUniqueFallible<uint8[]>(buffer_size);
+    if (!yuv_scoped) {
+      return;
+    }
+    uint8* yuv = yuv_scoped.get();
+
+    DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
+    if (!map.IsMapped()) {
+      MOZ_MTLOG(ML_ERROR, "Reading DataSourceSurface from " << Stringify(format)
+                          << " image with " << Stringify(surf->GetType()) << "("
+                          << Stringify(surf->GetFormat()) << ") surface failed");
+      return;
+    }
+
+    int rv;
+    int cb_offset = YSIZE(size.width, size.height);
+    int cr_offset = cb_offset + c_size;
+    switch (surf->GetFormat()) {
+      case SurfaceFormat::B8G8R8A8:
+      case SurfaceFormat::B8G8R8X8:
+        rv = libyuv::ARGBToI420(static_cast<uint8*>(map.GetData()),
+                                map.GetStride(),
+                                yuv, size.width,
+                                yuv + cb_offset, half_width,
+                                yuv + cr_offset, half_width,
+                                size.width, size.height);
+        break;
+      case SurfaceFormat::R5G6B5_UINT16:
+        rv = libyuv::RGB565ToI420(static_cast<uint8*>(map.GetData()),
+                                  map.GetStride(),
+                                  yuv, size.width,
+                                  yuv + cb_offset, half_width,
+                                  yuv + cr_offset, half_width,
+                                  size.width, size.height);
+        break;
+      default:
+        MOZ_MTLOG(ML_ERROR, "Unsupported RGB video format" << Stringify(surf->GetFormat()));
+        MOZ_ASSERT(PR_FALSE);
+        return;
+    }
+    if (rv != 0) {
+      MOZ_MTLOG(ML_ERROR, Stringify(surf->GetFormat()) << " to I420 conversion failed");
+      return;
+    }
+    MOZ_MTLOG(ML_DEBUG, "Sending an I420 video frame converted from " <<
+                        Stringify(surf->GetFormat()));
+    VideoFrameConverted(yuv, buffer_size, size.width, size.height, mozilla::kVideoI420, 0);
+  }
+
+  Atomic<int32_t, Relaxed> mLength;
+  RefPtr<TaskQueue> mTaskQueue;
+
+  // Written and read from the queueing thread (normally MSG).
+  int32_t last_img_; // serial number of last Image
+  bool disabled_frame_sent_; // If a black frame has been sent after disabling.
+#ifdef DEBUG
+  uint32_t mThrottleCount;
+  uint32_t mThrottleRecord;
+#endif
+
+  // mMutex guards the below variables.
+  Mutex mMutex;
+  nsTArray<RefPtr<VideoConverterListener>> mListeners;
+};
+#endif
 
 static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
 
@@ -694,14 +1099,8 @@ public:
       track_id_external_(TRACK_INVALID),
       active_(false),
       enabled_(false),
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-      disabled_frame_sent_(false),
-#endif
       direct_connect_(false),
       packetizer_(nullptr)
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-    , last_img_(-1)
-#endif // MOZILLA_EXTERNAL_LINKAGE
   {
   }
 
@@ -729,6 +1128,31 @@ public:
   void SetActive(bool active) { active_ = active; }
   void SetEnabled(bool enabled) { enabled_ = enabled; }
 
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  void SetVideoFrameConverter(const RefPtr<VideoFrameConverter>& converter)
+  {
+    converter_ = converter;
+  }
+
+  void OnVideoFrameConverted(unsigned char* aVideoFrame,
+                             unsigned int aVideoFrameLength,
+                             unsigned short aWidth,
+                             unsigned short aHeight,
+                             VideoType aVideoType,
+                             uint64_t aCaptureTime)
+  {
+    MOZ_ASSERT(conduit_->type() == MediaSessionConduit::VIDEO);
+    static_cast<VideoSessionConduit*>(conduit_.get())->SendVideoFrame(
+      aVideoFrame, aVideoFrameLength, aWidth, aHeight, aVideoType, aCaptureTime);
+  }
+
+  void OnVideoFrameConverted(webrtc::I420VideoFrame& aVideoFrame)
+  {
+    MOZ_ASSERT(conduit_->type() == MediaSessionConduit::VIDEO);
+    static_cast<VideoSessionConduit*>(conduit_.get())->SendVideoFrame(aVideoFrame);
+  }
+#endif
+
   // Implement MediaStreamTrackListener
   void NotifyQueuedChanges(MediaStreamGraph* aGraph,
                            StreamTime aTrackOffset,
@@ -753,11 +1177,11 @@ private:
 
   virtual void ProcessAudioChunk(AudioSessionConduit *conduit,
                                  TrackRate rate, AudioChunk& chunk);
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  virtual void ProcessVideoChunk(VideoSessionConduit *conduit,
-                                 VideoChunk& chunk);
-#endif // MOZILLA_EXTERNAL_LINKAGE
+
   RefPtr<MediaSessionConduit> conduit_;
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  RefPtr<VideoFrameConverter> converter_;
+#endif
 
   // May be TRACK_INVALID until we see data from the track
   TrackID track_id_; // this is the current TrackID this listener is attached to
@@ -773,16 +1197,74 @@ private:
   mozilla::Atomic<bool> enabled_;
 
   // Written and read on the MediaStreamGraph thread
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  bool disabled_frame_sent_;
-#endif
   bool direct_connect_;
 
   nsAutoPtr<AudioPacketizer<int16_t, int16_t>> packetizer_;
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  int32_t last_img_; // serial number of last Image
-#endif // MOZILLA_EXTERNAL_LINKAGE
 };
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+// Implements VideoConverterListener for MediaPipeline.
+//
+// We pass converted frames on to MediaPipelineTransmit::PipelineListener
+// where they are further forwarded to VideoConduit.
+// MediaPipelineTransmit calls Detach() during shutdown to ensure there is
+// no cyclic dependencies between us and PipelineListener.
+class MediaPipelineTransmit::VideoFrameFeeder
+  : public VideoConverterListener
+{
+public:
+  explicit VideoFrameFeeder(const RefPtr<PipelineListener>& listener)
+    : listener_(listener),
+      mutex_("VideoFrameFeeder")
+  {
+    MOZ_COUNT_CTOR(VideoFrameFeeder);
+  }
+
+  void Detach()
+  {
+    MutexAutoLock lock(mutex_);
+
+    listener_ = nullptr;
+  }
+
+  void OnVideoFrameConverted(unsigned char* aVideoFrame,
+                             unsigned int aVideoFrameLength,
+                             unsigned short aWidth,
+                             unsigned short aHeight,
+                             VideoType aVideoType,
+                             uint64_t aCaptureTime) override
+  {
+    MutexAutoLock lock(mutex_);
+
+    if (!listener_) {
+      return;
+    }
+
+    listener_->OnVideoFrameConverted(aVideoFrame, aVideoFrameLength,
+                                     aWidth, aHeight, aVideoType, aCaptureTime);
+  }
+
+  void OnVideoFrameConverted(webrtc::I420VideoFrame& aVideoFrame) override
+  {
+    MutexAutoLock lock(mutex_);
+
+    if (!listener_) {
+      return;
+    }
+
+    listener_->OnVideoFrameConverted(aVideoFrame);
+  }
+
+protected:
+  virtual ~VideoFrameFeeder()
+  {
+    MOZ_COUNT_DTOR(VideoFrameFeeder);
+  }
+
+  RefPtr<PipelineListener> listener_;
+  Mutex mutex_;
+};
+#endif
 
 MediaPipelineTransmit::MediaPipelineTransmit(
     const std::string& pc,
@@ -799,7 +1281,30 @@ MediaPipelineTransmit::MediaPipelineTransmit(
                 conduit, rtp_transport, rtcp_transport, filter),
   listener_(new PipelineListener(conduit)),
   domtrack_(domtrack)
-{}
+{
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  if (IsVideo()) {
+    // For video we send frames to an async VideoFrameConverter that calls
+    // back to a VideoFrameFeeder that feeds I420 frames to VideoConduit.
+
+    feeder_ = MakeAndAddRef<VideoFrameFeeder>(listener_);
+
+    converter_ = MakeAndAddRef<VideoFrameConverter>();
+    converter_->AddListener(feeder_);
+
+    listener_->SetVideoFrameConverter(converter_);
+  }
+#endif
+}
+
+MediaPipelineTransmit::~MediaPipelineTransmit()
+{
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  if (feeder_) {
+    feeder_->Detach();
+  }
+#endif
+}
 
 nsresult MediaPipelineTransmit::Init() {
   AttachToTrack(track_id_);
@@ -1110,11 +1615,6 @@ NotifyDirectListenerUninstalled() {
   direct_connect_ = false;
 }
 
-// I420 buffer size macros
-#define YSIZE(x,y) ((x)*(y))
-#define CRSIZE(x,y) ((((x)+1) >> 1) * (((y)+1) >> 1))
-#define I420SIZE(x,y) (YSIZE((x),(y)) + 2 * CRSIZE((x),(y)))
-
 void MediaPipelineTransmit::PipelineListener::
 NewData(MediaStreamGraph* graph,
         StreamTime offset,
@@ -1158,8 +1658,7 @@ NewData(MediaStreamGraph* graph,
 
     VideoSegment::ChunkIterator iter(*video);
     while(!iter.IsEnded()) {
-      ProcessVideoChunk(static_cast<VideoSessionConduit*>(conduit_.get()),
-                        *iter);
+      converter_->QueueVideoChunk(*iter, !enabled_);
       iter.Next();
     }
 #endif
@@ -1238,243 +1737,6 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
                             rate, 0);
   }
 }
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
-    VideoSessionConduit* conduit,
-    VideoChunk& chunk) {
-  Image *img = chunk.mFrame.GetImage();
-
-  // We now need to send the video frame to the other side
-  if (!img) {
-    // segment.AppendFrame() allows null images, which show up here as null
-    return;
-  }
-
-  if (!enabled_ || chunk.mFrame.GetForceBlack()) {
-    if (disabled_frame_sent_) {
-      // After disabling we just pass one black frame to the encoder.
-      // Allocating and setting it to black takes time so in some conditions
-      // that might affect MSG performance.
-      return;
-    }
-
-    IntSize size = img->GetSize();
-    uint32_t yPlaneLen = YSIZE(size.width, size.height);
-    uint32_t cbcrPlaneLen = 2 * CRSIZE(size.width, size.height);
-    uint32_t length = yPlaneLen + cbcrPlaneLen;
-
-    // Send a black image.
-    auto pixelData = MakeUniqueFallible<uint8_t[]>(length);
-    if (pixelData) {
-      // YCrCb black = 0x10 0x80 0x80
-      memset(pixelData.get(), 0x10, yPlaneLen);
-      // Fill Cb/Cr planes
-      memset(pixelData.get() + yPlaneLen, 0x80, cbcrPlaneLen);
-
-      MOZ_MTLOG(ML_DEBUG, "Sending a black video frame");
-      conduit->SendVideoFrame(pixelData.get(), length, size.width, size.height,
-                              mozilla::kVideoI420, 0);
-
-      disabled_frame_sent_ = true;
-    }
-    return;
-  }
-
-  disabled_frame_sent_ = false;
-
-  // We get passed duplicate frames every ~10ms even if there's no frame change!
-  int32_t serial = img->GetSerial();
-  if (serial == last_img_) {
-    return;
-  }
-  last_img_ = serial;
-
-  ImageFormat format = img->GetFormat();
-#ifdef WEBRTC_GONK
-  GrallocImage* nativeImage = img->AsGrallocImage();
-  if (nativeImage) {
-    android::sp<android::GraphicBuffer> graphicBuffer = nativeImage->GetGraphicBuffer();
-    int pixelFormat = graphicBuffer->getPixelFormat(); /* PixelFormat is an enum == int */
-    mozilla::VideoType destFormat;
-    switch (pixelFormat) {
-      case HAL_PIXEL_FORMAT_YV12:
-        // all android must support this
-        destFormat = mozilla::kVideoYV12;
-        break;
-      case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP:
-        destFormat = mozilla::kVideoNV21;
-        break;
-      case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_P:
-        destFormat = mozilla::kVideoI420;
-        break;
-      default:
-        // XXX Bug NNNNNNN
-        // use http://mxr.mozilla.org/mozilla-central/source/content/media/omx/I420ColorConverterHelper.cpp
-        // to convert unknown types (OEM-specific) to I420
-        MOZ_MTLOG(ML_ERROR, "Un-handled GRALLOC buffer type:" << pixelFormat);
-        MOZ_CRASH();
-    }
-    void *basePtr;
-    graphicBuffer->lock(android::GraphicBuffer::USAGE_SW_READ_MASK, &basePtr);
-    uint32_t width = graphicBuffer->getWidth();
-    uint32_t height = graphicBuffer->getHeight();
-    // XXX gralloc buffer's width and stride could be different depends on implementations.
-
-    if (destFormat != mozilla::kVideoI420) {
-      unsigned char *video_frame = static_cast<unsigned char*>(basePtr);
-      webrtc::I420VideoFrame i420_frame;
-      int stride_y = width;
-      int stride_uv = (width + 1) / 2;
-      int target_width = width;
-      int target_height = height;
-      if (i420_frame.CreateEmptyFrame(target_width,
-                                      abs(target_height),
-                                      stride_y,
-                                      stride_uv, stride_uv) < 0) {
-        MOZ_ASSERT(false, "Can't allocate empty i420frame");
-        return;
-      }
-      webrtc::VideoType commonVideoType =
-        webrtc::RawVideoTypeToCommonVideoVideoType(
-          static_cast<webrtc::RawVideoType>((int)destFormat));
-      if (ConvertToI420(commonVideoType, video_frame, 0, 0, width, height,
-                        I420SIZE(width, height), webrtc::kVideoRotation_0,
-                        &i420_frame)) {
-        MOZ_ASSERT(false, "Can't convert video type for sending to I420");
-        return;
-      }
-      i420_frame.set_ntp_time_ms(0);
-      conduit->SendVideoFrame(i420_frame);
-    } else {
-      conduit->SendVideoFrame(static_cast<unsigned char*>(basePtr),
-                              I420SIZE(width, height),
-                              width,
-                              height,
-                              destFormat, 0);
-    }
-    graphicBuffer->unlock();
-    return;
-  } else
-#endif
-  if (format == ImageFormat::PLANAR_YCBCR) {
-    // Cast away constness b/c some of the accessors are non-const
-    PlanarYCbCrImage* yuv = const_cast<PlanarYCbCrImage *>(
-        static_cast<const PlanarYCbCrImage *>(img));
-
-    const PlanarYCbCrData *data = yuv->GetData();
-    if (data) {
-      uint8_t *y = data->mYChannel;
-      uint8_t *cb = data->mCbChannel;
-      uint8_t *cr = data->mCrChannel;
-      uint32_t width = yuv->GetSize().width;
-      uint32_t height = yuv->GetSize().height;
-      uint32_t length = yuv->GetDataSize();
-      // NOTE: length may be rounded up or include 'other' data (see
-      // YCbCrImageDataDeserializerBase::ComputeMinBufferSize())
-
-      // XXX Consider modifying these checks if we ever implement
-      // any subclasses of PlanarYCbCrImage that allow disjoint buffers such
-      // that y+3(width*height)/2 might go outside the allocation or there are
-      // pads between y, cr and cb.
-      // GrallocImage can have wider strides, and so in some cases
-      // would encode as garbage.  If we need to encode it we'll either want to
-      // modify SendVideoFrame or copy/move the data in the buffer.
-      if (cb == (y + YSIZE(width, height)) &&
-          cr == (cb + CRSIZE(width, height)) &&
-          length >= I420SIZE(width, height)) {
-        MOZ_MTLOG(ML_DEBUG, "Sending an I420 video frame");
-        conduit->SendVideoFrame(y, I420SIZE(width, height), width, height, mozilla::kVideoI420, 0);
-        return;
-      } else {
-        MOZ_MTLOG(ML_ERROR, "Unsupported PlanarYCbCrImage format: "
-                            "width=" << width << ", height=" << height << ", y=" << y
-                            << "\n  Expected: cb=y+" << YSIZE(width, height)
-                                        << ", cr=y+" << YSIZE(width, height)
-                                                      + CRSIZE(width, height)
-                            << "\n  Observed: cb=y+" << cb - y
-                                        << ", cr=y+" << cr - y
-                            << "\n            ystride=" << data->mYStride
-                                        << ", yskip=" << data->mYSkip
-                            << "\n            cbcrstride=" << data->mCbCrStride
-                                        << ", cbskip=" << data->mCbSkip
-                                        << ", crskip=" << data->mCrSkip
-                            << "\n            ywidth=" << data->mYSize.width
-                                        << ", yheight=" << data->mYSize.height
-                            << "\n            cbcrwidth=" << data->mCbCrSize.width
-                                        << ", cbcrheight=" << data->mCbCrSize.height);
-        NS_ASSERTION(false, "Unsupported PlanarYCbCrImage format");
-      }
-    }
-  }
-
-  RefPtr<SourceSurface> surf = img->GetAsSourceSurface();
-  if (!surf) {
-    MOZ_MTLOG(ML_ERROR, "Getting surface from " << Stringify(format) << " image failed");
-    return;
-  }
-
-  RefPtr<DataSourceSurface> data = surf->GetDataSurface();
-  if (!data) {
-    MOZ_MTLOG(ML_ERROR, "Getting data surface from " << Stringify(format)
-                        << " image with " << Stringify(surf->GetType()) << "("
-                        << Stringify(surf->GetFormat()) << ") surface failed");
-    return;
-  }
-
-  IntSize size = img->GetSize();
-  int half_width = (size.width + 1) >> 1;
-  int half_height = (size.height + 1) >> 1;
-  int c_size = half_width * half_height;
-  int buffer_size = YSIZE(size.width, size.height) + 2 * c_size;
-  auto yuv_scoped = MakeUniqueFallible<uint8[]>(buffer_size);
-  if (!yuv_scoped)
-    return;
-  uint8* yuv = yuv_scoped.get();
-
-  DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
-  if (!map.IsMapped()) {
-    MOZ_MTLOG(ML_ERROR, "Reading DataSourceSurface from " << Stringify(format)
-                        << " image with " << Stringify(surf->GetType()) << "("
-                        << Stringify(surf->GetFormat()) << ") surface failed");
-    return;
-  }
-
-  int rv;
-  int cb_offset = YSIZE(size.width, size.height);
-  int cr_offset = cb_offset + c_size;
-  switch (surf->GetFormat()) {
-    case SurfaceFormat::B8G8R8A8:
-    case SurfaceFormat::B8G8R8X8:
-      rv = libyuv::ARGBToI420(static_cast<uint8*>(map.GetData()),
-                              map.GetStride(),
-                              yuv, size.width,
-                              yuv + cb_offset, half_width,
-                              yuv + cr_offset, half_width,
-                              size.width, size.height);
-      break;
-    case SurfaceFormat::R5G6B5_UINT16:
-      rv = libyuv::RGB565ToI420(static_cast<uint8*>(map.GetData()),
-                                map.GetStride(),
-                                yuv, size.width,
-                                yuv + cb_offset, half_width,
-                                yuv + cr_offset, half_width,
-                                size.width, size.height);
-      break;
-    default:
-      MOZ_MTLOG(ML_ERROR, "Unsupported RGB video format" << Stringify(surf->GetFormat()));
-      MOZ_ASSERT(PR_FALSE);
-      return;
-  }
-  if (rv != 0) {
-    MOZ_MTLOG(ML_ERROR, Stringify(surf->GetFormat()) << " to I420 conversion failed");
-    return;
-  }
-  MOZ_MTLOG(ML_DEBUG, "Sending an I420 video frame converted from " <<
-                      Stringify(surf->GetFormat()));
-  conduit->SendVideoFrame(yuv, buffer_size, size.width, size.height, mozilla::kVideoI420, 0);
-}
-#endif
 
 class TrackAddedCallback {
  public:

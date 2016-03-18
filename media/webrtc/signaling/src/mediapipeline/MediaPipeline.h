@@ -30,6 +30,9 @@ class nsIPrincipal;
 namespace mozilla {
 class MediaPipelineFilter;
 class PeerIdentity;
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+class VideoFrameConverter;
+#endif
 
 #ifndef USE_FAKE_MEDIA_STREAMS
 namespace dom {
@@ -332,11 +335,19 @@ public:
   // multiple tracks of a type in a stream yet).  bug 1056650
   virtual nsresult ReplaceTrack(dom::MediaStreamTrack& domtrack);
 
-  // Separate class to allow ref counting
+  // Separate classes to allow ref counting
   class PipelineListener;
+  class VideoFrameFeeder;
+
+ protected:
+  ~MediaPipelineTransmit();
 
  private:
   RefPtr<PipelineListener> listener_;
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  RefPtr<VideoFrameFeeder> feeder_;
+  RefPtr<VideoFrameConverter> converter_;
+#endif
   dom::MediaStreamTrack* domtrack_;
 };
 
