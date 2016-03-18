@@ -125,7 +125,7 @@ class DeviceManagerSUT(DeviceManager):
             try:
                 self._doCmds(cmdlist, outputfile, timeout)
                 return
-            except DMError, err:
+            except DMError as err:
                 # re-raise error if it's fatal (i.e. the device got the command but
                 # couldn't execute it). retry otherwise
                 if err.fatal:
@@ -164,7 +164,7 @@ class DeviceManagerSUT(DeviceManager):
                 if self._everConnected:
                     self._logger.info("reconnecting socket")
                 self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            except socket.error, msg:
+            except socket.error as msg:
                 self._sock = None
                 raise DMError("Automation Error: unable to create socket: "+str(msg))
 
@@ -172,14 +172,14 @@ class DeviceManagerSUT(DeviceManager):
                 self._sock.settimeout(float(timeout))
                 self._sock.connect((self.host, int(self.port)))
                 self._everConnected = True
-            except socket.error, msg:
+            except socket.error as msg:
                 self._sock = None
                 raise DMError("Remote Device Error: Unable to connect socket: "+str(msg))
 
             # consume prompt
             try:
                 self._sock.recv(1024)
-            except socket.error, msg:
+            except socket.error as msg:
                 self._sock.close()
                 self._sock = None
                 raise DMError("Remote Device Error: Did not get prompt after connecting: " + str(msg), fatal=True)
@@ -205,7 +205,7 @@ class DeviceManagerSUT(DeviceManager):
                         totalsent += sent
 
                 self._logger.debug("sent cmd: %s" % cmd['cmd'])
-            except socket.error, msg:
+            except socket.error as msg:
                 self._sock.close()
                 self._sock = None
                 self._logger.error("Remote Device Error: Error sending data"\
@@ -244,7 +244,7 @@ class DeviceManagerSUT(DeviceManager):
                             self._sock.close()
                             self._sock = None
                             raise DMError("Automation Error: Timeout in command %s" % cmd['cmd'], fatal=True)
-                    except socket.error, err:
+                    except socket.error as err:
                         socketClosed = True
                         errStr = str(err)
                         # This error shows up with we have our tegra rebooted.
@@ -546,7 +546,7 @@ class DeviceManagerSUT(DeviceManager):
                 try:
                     self.shellCheckOutput(['kill', '-%d' % sig, str(pid)],
                            root=True)
-                except DMError, err:
+                except DMError as err:
                     self._logger.warning("unable to kill -%d %s (pid %s)" %
                            (sig, appname, str(pid)))
                     self._logger.debug(err)
@@ -561,7 +561,7 @@ class DeviceManagerSUT(DeviceManager):
                     if self.processExist(appname):
                         self._runCmds([{ 'cmd': 'kill ' + appname }])
                     return
-                except DMError, err:
+                except DMError as err:
                     retries += 1
                     self._logger.warning("try %d of %d failed to kill %s" %
                            (retries, self.retryLimit, appname))
@@ -759,7 +759,7 @@ class DeviceManagerSUT(DeviceManager):
                 conn.close()
             except socket.timeout:
                 pass
-            except socket.error, e:
+            except socket.error as e:
                 if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
                     raise
 
