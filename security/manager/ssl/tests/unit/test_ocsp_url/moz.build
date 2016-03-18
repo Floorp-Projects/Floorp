@@ -8,6 +8,7 @@
 #test_certificates = (
 #    'bad-scheme.pem',
 #    'ca.pem',
+#    'empty-port.pem',
 #    'empty-scheme-url.pem',
 #    'ftp-url.pem',
 #    'hTTp-url.pem',
@@ -19,7 +20,6 @@
 #    'no-scheme-host-port.pem',
 #    'no-scheme-url.pem',
 #    'unknown-scheme.pem',
-#    'user-pass.pem',
 #)
 #
 #for test_certificate in test_certificates:

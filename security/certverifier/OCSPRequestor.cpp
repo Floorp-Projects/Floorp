@@ -70,23 +70,25 @@ AppendEscapedBase64Item(const SECItem* encodedRequest, nsACString& path)
   return NS_OK;
 }
 
-Result
+SECItem*
 DoOCSPRequest(PLArenaPool* arena, const char* url,
               const SECItem* encodedRequest, PRIntervalTime timeout,
-              bool useGET,
-      /*out*/ SECItem*& encodedResponse)
+              bool useGET)
 {
   if (!arena || !url || !encodedRequest || !encodedRequest->data) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
+    return nullptr;
   }
   uint32_t urlLen = PL_strlen(url);
   if (urlLen > static_cast<uint32_t>(std::numeric_limits<int32_t>::max())) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
+    return nullptr;
   }
 
   nsCOMPtr<nsIURLParser> urlParser = do_GetService(NS_STDURLPARSER_CONTRACTID);
   if (!urlParser) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return nullptr;
   }
 
   uint32_t schemePos;
@@ -95,52 +97,58 @@ DoOCSPRequest(PLArenaPool* arena, const char* url,
   int32_t authorityLen;
   uint32_t pathPos;
   int32_t pathLen;
-  nsresult nsrv = urlParser->ParseURL(url, static_cast<int32_t>(urlLen),
-                                      &schemePos, &schemeLen,
-                                      &authorityPos, &authorityLen,
-                                      &pathPos, &pathLen);
-  if (NS_FAILED(nsrv)) {
-    return Result::ERROR_CERT_BAD_ACCESS_LOCATION;
+  nsresult rv = urlParser->ParseURL(url, static_cast<int32_t>(urlLen),
+                                    &schemePos, &schemeLen,
+                                    &authorityPos, &authorityLen,
+                                    &pathPos, &pathLen);
+  if (NS_FAILED(rv)) {
+    PR_SetError(SEC_ERROR_CERT_BAD_ACCESS_LOCATION, 0);
+    return nullptr;
   }
   if (schemeLen < 0 || authorityLen < 0) {
-    return Result::ERROR_CERT_BAD_ACCESS_LOCATION;
+    PR_SetError(SEC_ERROR_CERT_BAD_ACCESS_LOCATION, 0);
+    return nullptr;
   }
   nsAutoCString scheme(url + schemePos,
                        static_cast<nsAutoCString::size_type>(schemeLen));
   if (!scheme.LowerCaseEqualsLiteral("http")) {
-    // We don't support HTTPS to avoid loops. See Bug 92923.
-    // We also in general only support HTTP.
-    return Result::ERROR_CERT_BAD_ACCESS_LOCATION;
+    // We dont support https:// to avoid loops see Bug 92923
+    PR_SetError(SEC_ERROR_CERT_BAD_ACCESS_LOCATION, 0);
+    return nullptr;
   }
 
   uint32_t hostnamePos;
   int32_t hostnameLen;
   int32_t port;
-  // We ignore user:password sections: if one is present, we send an OCSP
-  // request to the URL as normal without sending the username or password.
-  nsrv = urlParser->ParseAuthority(url + authorityPos, authorityLen,
-                                   nullptr, nullptr, nullptr, nullptr,
-                                   &hostnamePos, &hostnameLen, &port);
-  if (NS_FAILED(nsrv)) {
-    return Result::ERROR_CERT_BAD_ACCESS_LOCATION;
+  // We do not support urls with user@pass sections in the URL,
+  // In cas we find them we will ignore and try to connect with
+  rv = urlParser->ParseAuthority(url + authorityPos, authorityLen,
+                                 nullptr, nullptr, nullptr, nullptr,
+                                 &hostnamePos, &hostnameLen, &port);
+  if (NS_FAILED(rv)) {
+    PR_SetError(SEC_ERROR_CERT_BAD_ACCESS_LOCATION, 0);
+    return nullptr;
   }
   if (hostnameLen < 0) {
-    return Result::ERROR_CERT_BAD_ACCESS_LOCATION;
+    PR_SetError(SEC_ERROR_CERT_BAD_ACCESS_LOCATION, 0);
+    return nullptr;
   }
   if (port == -1) {
     port = 80;
   } else if (port < 0 || port > 0xffff) {
-    return Result::ERROR_CERT_BAD_ACCESS_LOCATION;
+    PR_SetError(SEC_ERROR_CERT_BAD_ACCESS_LOCATION, 0);
+    return nullptr;
   }
   nsAutoCString
     hostname(url + authorityPos + hostnamePos,
              static_cast<nsACString_internal::size_type>(hostnameLen));
 
   SEC_HTTP_SERVER_SESSION serverSessionPtr = nullptr;
-  Result rv = nsNSSHttpInterface::createSessionFcn(
-    hostname.BeginReading(), static_cast<uint16_t>(port), &serverSessionPtr);
-  if (rv != Success) {
-    return rv;
+  if (nsNSSHttpInterface::createSessionFcn(hostname.BeginReading(),
+                                           static_cast<uint16_t>(port),
+                                           &serverSessionPtr) != SECSuccess) {
+    PR_SetError(SEC_ERROR_NO_MEMORY, 0);
+    return nullptr;
   }
   ScopedHTTPServerSession serverSession(
     reinterpret_cast<nsNSSHttpServerSession*>(serverSessionPtr));
@@ -160,53 +168,59 @@ DoOCSPRequest(PLArenaPool* arena, const char* url,
     if (!StringEndsWith(path, NS_LITERAL_CSTRING("/"))) {
       path.Append("/");
     }
-    nsresult nsrv = AppendEscapedBase64Item(encodedRequest, path);
-    if (NS_WARN_IF(NS_FAILED(nsrv))) {
-      return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    nsresult rv = AppendEscapedBase64Item(encodedRequest, path);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
     }
   }
 
   SEC_HTTP_REQUEST_SESSION requestSessionPtr;
-  rv = nsNSSHttpInterface::createFcn(serverSession.get(), "http", path.get(),
-                                     method.get(), timeout, &requestSessionPtr);
-  if (rv != Success) {
-    return rv;
+  if (nsNSSHttpInterface::createFcn(serverSession.get(), "http",
+                                    path.get(), method.get(),
+                                    timeout, &requestSessionPtr)
+        != SECSuccess) {
+    PR_SetError(SEC_ERROR_NO_MEMORY, 0);
+    return nullptr;
   }
 
   ScopedHTTPRequestSession requestSession(
     reinterpret_cast<nsNSSHttpRequestSession*>(requestSessionPtr));
 
   if (!useGET) {
-    rv = nsNSSHttpInterface::setPostDataFcn(
-      requestSession.get(), reinterpret_cast<char*>(encodedRequest->data),
-      encodedRequest->len, "application/ocsp-request");
-    if (rv != Success) {
-      return rv;
+    if (nsNSSHttpInterface::setPostDataFcn(requestSession.get(),
+          reinterpret_cast<char*>(encodedRequest->data), encodedRequest->len,
+          "application/ocsp-request") != SECSuccess) {
+      PR_SetError(SEC_ERROR_NO_MEMORY, 0);
+      return nullptr;
     }
   }
 
   uint16_t httpResponseCode;
   const char* httpResponseData;
   uint32_t httpResponseDataLen = 0; // 0 means any response size is acceptable
-  rv = nsNSSHttpInterface::trySendAndReceiveFcn(requestSession.get(), nullptr,
-                                                &httpResponseCode, nullptr,
-                                                nullptr, &httpResponseData,
-                                                &httpResponseDataLen);
-  if (rv != Success) {
-    return rv;
+  if (nsNSSHttpInterface::trySendAndReceiveFcn(requestSession.get(), nullptr,
+                                               &httpResponseCode, nullptr,
+                                               nullptr, &httpResponseData,
+                                               &httpResponseDataLen)
+        != SECSuccess) {
+    PR_SetError(SEC_ERROR_OCSP_SERVER_ERROR, 0);
+    return nullptr;
   }
 
   if (httpResponseCode != 200) {
-    return Result::ERROR_OCSP_SERVER_ERROR;
+    PR_SetError(SEC_ERROR_OCSP_SERVER_ERROR, 0);
+    return nullptr;
   }
 
-  encodedResponse = SECITEM_AllocItem(arena, nullptr, httpResponseDataLen);
+  SECItem* encodedResponse = SECITEM_AllocItem(arena, nullptr,
+                                               httpResponseDataLen);
   if (!encodedResponse) {
-    return Result::FATAL_ERROR_NO_MEMORY;
+    PR_SetError(SEC_ERROR_NO_MEMORY, 0);
+    return nullptr;
   }
 
   memcpy(encodedResponse->data, httpResponseData, httpResponseDataLen);
-  return Success;
+  return encodedResponse;
 }
 
 } } // namespace mozilla::psm

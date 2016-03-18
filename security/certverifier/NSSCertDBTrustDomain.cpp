@@ -549,15 +549,12 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
       static_cast<unsigned int>(ocspRequestLength)
     };
     // Owned by arena
-    SECItem* responseSECItem = nullptr;
-    Result tempRV =
+    const SECItem* responseSECItem =
       DoOCSPRequest(arena.get(), url, &ocspRequestItem,
                     OCSPFetchingTypeToTimeoutTime(mOCSPFetching),
-                    mOCSPGetConfig == CertVerifier::ocspGetEnabled,
-                    responseSECItem);
-    MOZ_ASSERT((tempRV != Success) || responseSECItem);
-    if (tempRV != Success) {
-      rv = tempRV;
+                    mOCSPGetConfig == CertVerifier::ocspGetEnabled);
+    if (!responseSECItem) {
+      rv = MapPRErrorCodeToResult(PR_GetError());
     } else if (response.Init(responseSECItem->data, responseSECItem->len)
                  != Success) {
       rv = Result::ERROR_OCSP_MALFORMED_RESPONSE; // too big
