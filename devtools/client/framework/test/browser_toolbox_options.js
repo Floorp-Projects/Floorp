@@ -3,13 +3,17 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from shared-head.js */
+"use strict";
+
 // Tests that changing preferences in the options panel updates the prefs
 // and toggles appropriate things in the toolbox.
 
 var doc = null, toolbox = null, panelWin = null, modifiedPrefs = [];
 
 add_task(function*() {
-  const URL = "data:text/html;charset=utf8,test for dynamically registering and unregistering tools";
+  const URL = "data:text/html;charset=utf8,test for dynamically registering " +
+              "and unregistering tools";
   registerNewTool();
   let tab = yield addTab(URL);
   let target = TargetFactory.forTab(tab);
@@ -41,7 +45,7 @@ function registerNewTool() {
 }
 
 function* testSelectTool() {
-  info ("Checking to make sure that the options panel can be selected.");
+  info("Checking to make sure that the options panel can be selected.");
 
   let onceSelected = toolbox.once("options-selected");
   toolbox.selectTool("options");
@@ -50,7 +54,7 @@ function* testSelectTool() {
 }
 
 function* testOptionsShortcut() {
-  info ("Selecting another tool, then reselecting options panel with keyboard.");
+  info("Selecting another tool, then reselecting options panel with keyboard.");
 
   yield toolbox.selectTool("webconsole");
   is(toolbox.currentToolId, "webconsole", "webconsole is selected");
@@ -72,7 +76,8 @@ function* testOptionsShortcut() {
 function* testOptions() {
   let tool = toolbox.getPanel("options");
   panelWin = tool.panelWin;
-  let prefNodes = tool.panelDoc.querySelectorAll("checkbox[data-pref]");
+  let prefNodes = tool.panelDoc.querySelectorAll(
+    "input[type=checkbox][data-pref]");
 
   // Store modified pref names so that they can be cleared on error.
   for (let node of tool.panelDoc.querySelectorAll("[data-pref]")) {
@@ -90,21 +95,22 @@ function* testOptions() {
     yield testMouseClick(node, !prefValue);
   }
 
-  let prefDropdowns = tool.panelDoc.querySelectorAll("menulist[data-pref]");
-  for (let node of prefDropdowns) {
-    yield testMenuList(node);
+  let prefSelects = tool.panelDoc.querySelectorAll("select[data-pref]");
+  for (let node of prefSelects) {
+    yield testSelect(node);
   }
 }
 
-function* testMenuList(menulist) {
-  let pref = menulist.getAttribute("data-pref");
-  let menuitems = menulist.querySelectorAll("menuitem");
-  info ("Checking menu list for: " + pref);
+function* testSelect(select) {
+  let pref = select.getAttribute("data-pref");
+  let options = Array.from(select.options);
+  info("Checking select for: " + pref);
 
-  is (menulist.selectedItem.value, GetPref(pref), "Menu starts out selected");
+  is(select.options[select.selectedIndex].value, GetPref(pref),
+    "select starts out selected");
 
-  for (let menuitem of menuitems) {
-    if (menuitem === menulist.selectedItem) {
+  for (let option of options) {
+    if (options.indexOf(option) === select.selectedIndex) {
       continue;
     }
 
@@ -112,18 +118,16 @@ function* testMenuList(menulist) {
     gDevTools.once("pref-changed", (event, data) => {
       if (data.pref == pref) {
         ok(true, "Correct pref was changed");
-        is (GetPref(pref), menuitem.value, "Preference been switched for " + pref);
+        is(GetPref(pref), option.value, "Preference been switched for " + pref);
       } else {
         ok(false, "Pref " + pref + " was not changed correctly");
       }
       deferred.resolve();
     });
 
-    menulist.selectedItem = menuitem;
-    let commandEvent = menulist.ownerDocument.createEvent("XULCommandEvent");
-    commandEvent.initCommandEvent("command", true, true, window, 0, false, false,
-                                  false, false, null);
-    menulist.dispatchEvent(commandEvent);
+    select.selectedIndex = options.indexOf(option);
+    let changeEvent = new Event("change");
+    select.dispatchEvent(changeEvent);
 
     yield deferred.promise;
   }
@@ -157,7 +161,9 @@ function* testMouseClick(node, prefValue) {
 }
 
 function* testToggleTools() {
-  let toolNodes = panelWin.document.querySelectorAll("#default-tools-box > checkbox:not([unsupported]), #additional-tools-box > checkbox:not([unsupported])");
+  let toolNodes = panelWin.document.querySelectorAll(
+    "#default-tools-box input[type=checkbox]:not([data-unsupported])," +
+    "#additional-tools-box input[type=checkbox]:not([data-unsupported])");
   let enabledTools = [...toolNodes].filter(node => node.checked);
 
   let toggleableTools = gDevTools.getDefaultTools().filter(tool => {
@@ -166,7 +172,7 @@ function* testToggleTools() {
 
   for (let node of toolNodes) {
     let id = node.getAttribute("id");
-    ok (toggleableTools.some(tool => tool.id === id),
+    ok(toggleableTools.some(tool => tool.id === id),
       "There should be a toggle checkbox for: " + id);
   }
 
@@ -197,9 +203,9 @@ function* testToggleTools() {
 
   // Toggle first, middle, and last tools to ensure that toolbox tabs are
   // inserted in order
-  let firstTool  = toolNodes[0],
-      middleTool = toolNodes[(toolNodes.length / 2) | 0],
-      lastTool   = toolNodes[toolNodes.length - 1];
+  let firstTool = toolNodes[0];
+  let middleTool = toolNodes[(toolNodes.length / 2) | 0];
+  let lastTool = toolNodes[toolNodes.length - 1];
 
   yield toggleTool(firstTool);
   yield toggleTool(firstTool);
@@ -213,11 +219,12 @@ function* toggleTool(node) {
   let deferred = promise.defer();
 
   let toolId = node.getAttribute("id");
-  let onRegistrationChange;
   if (node.checked) {
-    gDevTools.once("tool-unregistered", checkUnregistered.bind(null, toolId, deferred));
+    gDevTools.once("tool-unregistered",
+      checkUnregistered.bind(null, toolId, deferred));
   } else {
-    gDevTools.once("tool-registered", checkRegistered.bind(null, toolId, deferred));
+    gDevTools.once("tool-registered",
+      checkRegistered.bind(null, toolId, deferred));
   }
   node.scrollIntoView();
   EventUtils.synthesizeMouseAtCenter(node, {}, panelWin);
@@ -229,7 +236,8 @@ function checkUnregistered(toolId, deferred, event, data) {
   if (data.id == toolId) {
     ok(true, "Correct tool removed");
     // checking tab on the toolbox
-    ok(!doc.getElementById("toolbox-tab-" + toolId), "Tab removed for " + toolId);
+    ok(!doc.getElementById("toolbox-tab-" + toolId),
+      "Tab removed for " + toolId);
   } else {
     ok(false, "Something went wrong, " + toolId + " was not unregistered");
   }

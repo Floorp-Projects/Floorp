@@ -12,7 +12,6 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
-import com.nineoldandroids.view.ViewHelper;
 import org.mozilla.gecko.widget.themed.ThemedImageView;
 
 /**
@@ -54,8 +53,8 @@ public abstract class CropImageView extends ThemedImageView {
         // Setting the pivots means that the image will be drawn from the top left hand corner.  There are
         // issues in Android 4.1 (16) which mean setting these values to 0 may not work.
         // http://stackoverflow.com/questions/26658124/setpivotx-doesnt-work-on-android-4-1-1-nineoldandroids
-        ViewHelper.setPivotX(this, 1);
-        ViewHelper.setPivotY(this, 1);
+        setPivotX(1);
+        setPivotY(1);
     }
 
     /**

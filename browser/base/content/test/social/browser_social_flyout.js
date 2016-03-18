@@ -4,23 +4,41 @@
 
 function test() {
   waitForExplicitFinish();
+  let frameScript = "data:,(" + function frame_script() {
+    addMessageListener("socialTest-CloseSelf", function(e) {
+      content.close();
+    });
+    addEventListener("visibilitychange", function() {
+      sendAsyncMessage("social-visibility", content.document.hidden ? "hidden" : "shown");
+    });
+    addMessageListener("socialTest-sendEvent", function(msg) {
+      let data = msg.data;
+      let evt = content.document.createEvent("CustomEvent");
+      evt.initCustomEvent(data.name, true, true, JSON.stringify(data.data));
+      content.document.documentElement.dispatchEvent(evt);
+    });
+
+  }.toString() + ")();";
+  let mm = getGroupMessageManager("social");
+  mm.loadFrameScript(frameScript, true);
 
   let manifest = { // normal provider
     name: "provider 1",
     origin: "https://example.com",
     sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
-    workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
     iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
   };
   runSocialTestWithProvider(manifest, function (finishcb) {
     SocialSidebar.show();
-    // disable transitions for the test
-    let panel = document.getElementById("social-flyout-panel");
-    registerCleanupFunction(function () {
-      panel.removeAttribute("animate");
+    ensureFrameLoaded(document.getElementById("social-sidebar-browser")).then(() => {
+      // disable transitions for the test
+      let panel = document.getElementById("social-flyout-panel");
+      registerCleanupFunction(function () {
+        panel.removeAttribute("animate");
+      });
+      panel.setAttribute("animate", "false");
+      runSocialTests(tests, undefined, undefined, finishcb);
     });
-    panel.setAttribute("animate", "false");
-    runSocialTests(tests, undefined, undefined, finishcb);
   });
 }
 
@@ -30,109 +48,61 @@ var tests = {
     ensureEventFired(panel, "popupshown").then(() => {
       is(panel.firstChild.contentDocument.readyState, "complete", "panel is loaded prior to showing");
     });
-    let port = SocialSidebar.provider.getWorkerPort();
-    ok(port, "provider has a port");
-    port.onmessage = function (e) {
-      let topic = e.data.topic;
-      switch (topic) {
-        case "got-sidebar-message":
-          port.postMessage({topic: "test-flyout-open"});
-          break;
-        case "got-flyout-visibility":
-          if (e.data.result == "hidden") {
-            ok(true, "flyout visibility is 'hidden'");
-            is(panel.state, "closed", "panel really is closed");
-            port.close();
-            next();
-          } else if (e.data.result == "shown") {
-            ok(true, "flyout visibility is 'shown");
-            port.postMessage({topic: "test-flyout-close"});
-          }
-          break;
-        case "got-flyout-message":
-          ok(e.data.result == "ok", "got flyout message");
-          break;
+    let sidebar = document.getElementById("social-sidebar-browser")
+    let mm = getGroupMessageManager("social");
+    mm.addMessageListener("social-visibility", function handler(msg) {
+      if (msg.data == "shown") {
+        sidebar.messageManager.sendAsyncMessage("socialTest-sendEvent", { name: "test-flyout-close", data: {} });
+      } else if (msg.data == "hidden") {
+        mm.removeMessageListener("social-visibility", handler);
+        next();
       }
-    }
-    port.postMessage({topic: "test-init"});
+    });
+    sidebar.messageManager.sendAsyncMessage("socialTest-sendEvent", { name: "test-flyout-open", data: {} });
   },
 
   testResizeFlyout: function(next) {
     let panel = document.getElementById("social-flyout-panel");
-    let port = SocialSidebar.provider.getWorkerPort();
-    ok(port, "provider has a port");
-    port.onmessage = function (e) {
-      let topic = e.data.topic;
-      switch (topic) {
-        case "test-init-done":
-          port.postMessage({topic: "test-flyout-open"});
-          break;
-        case "got-flyout-visibility":
-          if (e.data.result != "shown")
-            return;
-          // The width of the flyout should be 400px initially
-          let iframe = panel.firstChild;
-          let body = iframe.contentDocument.body;
-          let cs = iframe.contentWindow.getComputedStyle(body);
 
-          is(cs.width, "400px", "should be 400px wide");
-          is(iframe.boxObject.width, 400, "iframe should now be 400px wide");
-          is(cs.height, "400px", "should be 400px high");
-          is(iframe.boxObject.height, 400, "iframe should now be 400px high");
+    ensureEventFired(panel, "popupshown").then(() => {
+      is(panel.firstChild.contentDocument.readyState, "complete", "panel is loaded prior to showing");
+      // The width of the flyout should be 400px initially
+      let iframe = panel.firstChild;
+      let body = iframe.contentDocument.body;
+      let cs = iframe.contentWindow.getComputedStyle(body);
 
-          ensureEventFired(iframe.contentWindow, "resize").then(() => {
-            cs = iframe.contentWindow.getComputedStyle(body);
+      is(cs.width, "400px", "should be 400px wide");
+      is(iframe.boxObject.width, 400, "iframe should now be 400px wide");
+      is(cs.height, "400px", "should be 400px high");
+      is(iframe.boxObject.height, 400, "iframe should now be 400px high");
 
-            is(cs.width, "500px", "should now be 500px wide");
-            is(iframe.boxObject.width, 500, "iframe should now be 500px wide");
-            is(cs.height, "500px", "should now be 500px high");
-            is(iframe.boxObject.height, 500, "iframe should now be 500px high");
-            panel.hidePopup();
-            port.close();
-            next();
-          });
-          SocialFlyout.dispatchPanelEvent("socialTest-MakeWider");
-          break;
-      }
-    }
-    port.postMessage({topic: "test-init"});
+      ensureEventFired(iframe.contentWindow, "resize").then(() => {
+        cs = iframe.contentWindow.getComputedStyle(body);
+
+        is(cs.width, "500px", "should now be 500px wide");
+        is(iframe.boxObject.width, 500, "iframe should now be 500px wide");
+        is(cs.height, "500px", "should now be 500px high");
+        is(iframe.boxObject.height, 500, "iframe should now be 500px high");
+        ensureEventFired(panel, "popuphidden").then(next);
+        panel.hidePopup();
+      });
+      SocialFlyout.dispatchPanelEvent("socialTest-MakeWider");
+    });
+
+    let sidebar = document.getElementById("social-sidebar-browser");
+    sidebar.messageManager.sendAsyncMessage("socialTest-sendEvent", { name: "test-flyout-open", data: {} });
   },
 
   testCloseSelf: function(next) {
-    // window.close is affected by the pref dom.allow_scripts_to_close_windows,
-    // which defaults to false, but is set to true by the test harness.
-    // so temporarily set it back.
-    const ALLOW_SCRIPTS_TO_CLOSE_PREF = "dom.allow_scripts_to_close_windows";
-    // note clearUserPref doesn't do what we expect, as the test harness itself
-    // changes the pref value - so clearUserPref resets it to false rather than
-    // the true setup by the test harness.
-    let oldAllowScriptsToClose = Services.prefs.getBoolPref(ALLOW_SCRIPTS_TO_CLOSE_PREF);
-    Services.prefs.setBoolPref(ALLOW_SCRIPTS_TO_CLOSE_PREF, false);
     let panel = document.getElementById("social-flyout-panel");
-    let port = SocialSidebar.provider.getWorkerPort();
-    ok(port, "provider has a port");
-    port.onmessage = function (e) {
-      let topic = e.data.topic;
-      switch (topic) {
-        case "test-init-done":
-          port.postMessage({topic: "test-flyout-open"});
-          break;
-        case "got-flyout-visibility":
-          if (e.data.result != "shown")
-            return;
-          let iframe = panel.firstChild;
-          ensureEventFired(iframe.contentDocument, "SocialTest-DoneCloseSelf").then(() => {
-            port.close();
-            is(panel.state, "closed", "flyout should have closed itself");
-            Services.prefs.setBoolPref(ALLOW_SCRIPTS_TO_CLOSE_PREF, oldAllowScriptsToClose);
-            next();
-          });
-          is(panel.state, "open", "flyout should be open");
-          SocialFlyout.dispatchPanelEvent("socialTest-CloseSelf");
-          break;
-      }
-    }
-    port.postMessage({topic: "test-init"});
+    ensureEventFired(panel, "popupshown").then(() => {
+      is(panel.firstChild.contentDocument.readyState, "complete", "panel is loaded prior to showing");
+      ensureEventFired(panel, "popuphidden").then(next);
+      let mm = panel.firstChild.messageManager;
+      mm.sendAsyncMessage("socialTest-CloseSelf", {});
+    });
+    let sidebar = document.getElementById("social-sidebar-browser");
+    sidebar.messageManager.sendAsyncMessage("socialTest-sendEvent", { name: "test-flyout-open", data: {} });
   },
 
   testCloseOnLinkTraversal: function(next) {
@@ -146,25 +116,14 @@ var tests = {
     }
 
     let panel = document.getElementById("social-flyout-panel");
-    let port = SocialSidebar.provider.getWorkerPort();
-    ok(port, "provider has a port");
-    port.onmessage = function (e) {
-      let topic = e.data.topic;
-      switch (topic) {
-        case "test-init-done":
-          port.postMessage({topic: "test-flyout-open"});
-          break;
-        case "got-flyout-visibility":
-          if (e.data.result == "shown") {
-            // click on our test link
-            is(panel.state, "open", "flyout should be open");
-            gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true);
-            let iframe = panel.firstChild;
-            iframe.contentDocument.getElementById('traversal').click();
-          }
-          break;
-      }
-    }
-    port.postMessage({topic: "test-init"});
+    ensureEventFired(panel, "popupshown").then(() => {
+      is(panel.firstChild.contentDocument.readyState, "complete", "panel is loaded prior to showing");
+      is(panel.state, "open", "flyout should be open");
+      gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true);
+      let iframe = panel.firstChild;
+      iframe.contentDocument.getElementById('traversal').click();
+    });
+    let sidebar = document.getElementById("social-sidebar-browser");
+    sidebar.messageManager.sendAsyncMessage("socialTest-sendEvent", { name: "test-flyout-open", data: {} });
   }
 }

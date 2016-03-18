@@ -571,7 +571,7 @@ class CheckStaticAtomSizes
   }
 };
 
-nsresult
+void
 RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
 {
   if (!gStaticAtomTable && !gStaticAtomTableSealed) {
@@ -609,7 +609,6 @@ RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
       entry->mAtom = atom;
     }
   }
-  return NS_OK;
 }
 
 already_AddRefed<nsIAtom>

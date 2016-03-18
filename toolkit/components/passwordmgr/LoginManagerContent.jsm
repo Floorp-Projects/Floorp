@@ -1306,6 +1306,9 @@ var FormLikeFactory = {
    * shouldn't be relied upon as the heuristics may change to detect multiple
    * "forms" (e.g. registration and login) on one page with a <form>.
    *
+   * Note that two FormLikes created from the same field won't return the same FormLike object.
+   * Use the `rootElement` property on the FormLike as a key instead.
+   *
    * @param {HTMLInputElement} aField - a password or username field in a document
    * @return {FormLike}
    * @throws Error if aField isn't a password or username field in a document

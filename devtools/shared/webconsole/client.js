@@ -6,7 +6,6 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
@@ -16,18 +15,17 @@ const {LongStringClient} = require("devtools/shared/client/main");
  * A WebConsoleClient is used as a front end for the WebConsoleActor that is
  * created on the server, hiding implementation details.
  *
- * @param object aDebuggerClient
+ * @param object debuggerClient
  *        The DebuggerClient instance we live for.
- * @param object aResponse
+ * @param object response
  *        The response packet received from the "startListeners" request sent to
  *        the WebConsoleActor.
  */
-function WebConsoleClient(aDebuggerClient, aResponse)
-{
-  this._actor = aResponse.from;
-  this._client = aDebuggerClient;
+function WebConsoleClient(debuggerClient, response) {
+  this._actor = response.from;
+  this._client = debuggerClient;
   this._longStrings = {};
-  this.traits = aResponse.traits || {};
+  this.traits = response.traits || {};
   this.events = [];
   this._networkRequests = new Map();
 
@@ -72,7 +70,9 @@ WebConsoleClient.prototype = {
     return this._networkRequests.values();
   },
 
-  get actor() { return this._actor; },
+  get actor() {
+    return this._actor;
+  },
 
   /**
    * The "networkEvent" message type handler. We redirect any message to
@@ -84,8 +84,7 @@ WebConsoleClient.prototype = {
    * @param object packet
    *        The message received from the server.
    */
-  _onNetworkEvent: function (type, packet)
-  {
+  _onNetworkEvent: function(type, packet) {
     if (packet.from == this._actor) {
       let actor = packet.eventActor;
       let networkInfo = {
@@ -103,7 +102,8 @@ WebConsoleClient.prototype = {
         isXHR: actor.isXHR,
         response: {},
         timings: {},
-        updates: [], // track the list of network event updates
+        // track the list of network event updates
+        updates: [],
         private: actor.private,
         fromCache: actor.fromCache,
         fromServiceWorker: actor.fromServiceWorker
@@ -124,8 +124,7 @@ WebConsoleClient.prototype = {
    * @param object packet
    *        The message received from the server.
    */
-  _onNetworkEventUpdate: function (type, packet)
-  {
+  _onNetworkEventUpdate: function(type, packet) {
     let networkInfo = this.getNetworkRequest(packet.from);
     if (!networkInfo) {
       return;
@@ -179,45 +178,42 @@ WebConsoleClient.prototype = {
    * @param array types
    *        The array of message types you want from the server. See
    *        this.CACHED_MESSAGES for known types.
-   * @param function aOnResponse
+   * @param function onResponse
    *        The function invoked when the response is received.
    */
-  getCachedMessages: function WCC_getCachedMessages(types, aOnResponse)
-  {
+  getCachedMessages: function(types, onResponse) {
     let packet = {
       to: this._actor,
       type: "getCachedMessages",
       messageTypes: types,
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Inspect the properties of an object.
    *
-   * @param string aActor
+   * @param string actor
    *        The WebConsoleObjectActor ID to send the request to.
-   * @param function aOnResponse
+   * @param function onResponse
    *        The function invoked when the response is received.
    */
-  inspectObjectProperties:
-  function WCC_inspectObjectProperties(aActor, aOnResponse)
-  {
+  inspectObjectProperties: function(actor, onResponse) {
     let packet = {
-      to: aActor,
+      to: actor,
       type: "inspectProperties",
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Evaluate a JavaScript expression.
    *
-   * @param string aString
+   * @param string string
    *        The code you want to evaluate.
-   * @param function aOnResponse
+   * @param function onResponse
    *        The function invoked when the response is received.
-   * @param object [aOptions={}]
+   * @param object [options={}]
    *        Options for evaluation:
    *
    *        - bindObjectActor: an ObjectActor ID. The OA holds a reference to
@@ -241,54 +237,53 @@ WebConsoleClient.prototype = {
    *        - url: the url to evaluate the script as. Defaults to
    *        "debugger eval code".
    *
-   *        - selectedNodeActor: the NodeActor ID of the current selection in the
-   *        Inspector, if such a selection exists. This is used by helper functions
-   *        that can reference the currently selected node in the Inspector, like
-   *        $0.
+   *        - selectedNodeActor: the NodeActor ID of the current
+   *        selection in the Inspector, if such a selection
+   *        exists. This is used by helper functions that can
+   *        reference the currently selected node in the Inspector,
+   *        like $0.
    */
-  evaluateJS: function WCC_evaluateJS(aString, aOnResponse, aOptions = {})
-  {
+  evaluateJS: function(string, onResponse, options = {}) {
     let packet = {
       to: this._actor,
       type: "evaluateJS",
-      text: aString,
-      bindObjectActor: aOptions.bindObjectActor,
-      frameActor: aOptions.frameActor,
-      url: aOptions.url,
-      selectedNodeActor: aOptions.selectedNodeActor,
-      selectedObjectActor: aOptions.selectedObjectActor,
+      text: string,
+      bindObjectActor: options.bindObjectActor,
+      frameActor: options.frameActor,
+      url: options.url,
+      selectedNodeActor: options.selectedNodeActor,
+      selectedObjectActor: options.selectedObjectActor,
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Evaluate a JavaScript expression asynchronously.
    * See evaluateJS for parameter and response information.
    */
-  evaluateJSAsync: function(aString, aOnResponse, aOptions = {})
-  {
+  evaluateJSAsync: function(string, onResponse, options = {}) {
     // Pre-37 servers don't support async evaluation.
     if (!this.traits.evaluateJSAsync) {
-      this.evaluateJS(aString, aOnResponse, aOptions);
+      this.evaluateJS(string, onResponse, options);
       return;
     }
 
     let packet = {
       to: this._actor,
       type: "evaluateJSAsync",
-      text: aString,
-      bindObjectActor: aOptions.bindObjectActor,
-      frameActor: aOptions.frameActor,
-      url: aOptions.url,
-      selectedNodeActor: aOptions.selectedNodeActor,
-      selectedObjectActor: aOptions.selectedObjectActor,
+      text: string,
+      bindObjectActor: options.bindObjectActor,
+      frameActor: options.frameActor,
+      url: options.url,
+      selectedNodeActor: options.selectedNodeActor,
+      selectedObjectActor: options.selectedObjectActor,
     };
 
     this._client.request(packet, response => {
       // Null check this in case the client has been detached while waiting
       // for a response.
       if (this.pendingEvaluationResults) {
-        this.pendingEvaluationResults.set(response.resultID, aOnResponse);
+        this.pendingEvaluationResults.set(response.resultID, onResponse);
       }
     });
   },
@@ -296,56 +291,55 @@ WebConsoleClient.prototype = {
   /**
    * Handler for the actors's unsolicited evaluationResult packet.
    */
-  onEvaluationResult: function(aNotification, aPacket) {
+  onEvaluationResult: function(notification, packet) {
     // The client on the main thread can receive notification packets from
     // multiple webconsole actors: the one on the main thread and the ones
     // on worker threads.  So make sure we should be handling this request.
-    if (aPacket.from !== this._actor) {
+    if (packet.from !== this._actor) {
       return;
     }
 
     // Find the associated callback based on this ID, and fire it.
     // In a sync evaluation, this would have already been called in
     // direct response to the client.request function.
-    let onResponse = this.pendingEvaluationResults.get(aPacket.resultID);
+    let onResponse = this.pendingEvaluationResults.get(packet.resultID);
     if (onResponse) {
-      onResponse(aPacket);
-      this.pendingEvaluationResults.delete(aPacket.resultID);
+      onResponse(packet);
+      this.pendingEvaluationResults.delete(packet.resultID);
     } else {
       DevToolsUtils.reportException("onEvaluationResult",
-        "No response handler for an evaluateJSAsync result (resultID: " + aPacket.resultID + ")");
+        "No response handler for an evaluateJSAsync result (resultID: " +
+                                    packet.resultID + ")");
     }
   },
 
   /**
    * Autocomplete a JavaScript expression.
    *
-   * @param string aString
+   * @param string string
    *        The code you want to autocomplete.
-   * @param number aCursor
+   * @param number cursor
    *        Cursor location inside the string. Index starts from 0.
-   * @param function aOnResponse
+   * @param function onResponse
    *        The function invoked when the response is received.
-   * @param string aFrameActor
+   * @param string frameActor
    *        The id of the frame actor that made the call.
    */
-  autocomplete: function WCC_autocomplete(aString, aCursor, aOnResponse, aFrameActor)
-  {
+  autocomplete: function(string, cursor, onResponse, frameActor) {
     let packet = {
       to: this._actor,
       type: "autocomplete",
-      text: aString,
-      cursor: aCursor,
-      frameActor: aFrameActor,
+      text: string,
+      cursor: cursor,
+      frameActor: frameActor,
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Clear the cache of messages (page errors and console API calls).
    */
-  clearMessagesCache: function WCC_clearMessagesCache()
-  {
+  clearMessagesCache: function() {
     let packet = {
       to: this._actor,
       type: "clearMessagesCache",
@@ -356,248 +350,235 @@ WebConsoleClient.prototype = {
   /**
    * Get Web Console-related preferences on the server.
    *
-   * @param array aPreferences
+   * @param array preferences
    *        An array with the preferences you want to retrieve.
-   * @param function [aOnResponse]
+   * @param function [onResponse]
    *        Optional function to invoke when the response is received.
    */
-  getPreferences: function WCC_getPreferences(aPreferences, aOnResponse)
-  {
+  getPreferences: function(preferences, onResponse) {
     let packet = {
       to: this._actor,
       type: "getPreferences",
-      preferences: aPreferences,
+      preferences: preferences,
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Set Web Console-related preferences on the server.
    *
-   * @param object aPreferences
+   * @param object preferences
    *        An object with the preferences you want to change.
-   * @param function [aOnResponse]
+   * @param function [onResponse]
    *        Optional function to invoke when the response is received.
    */
-  setPreferences: function WCC_setPreferences(aPreferences, aOnResponse)
-  {
+  setPreferences: function(preferences, onResponse) {
     let packet = {
       to: this._actor,
       type: "setPreferences",
-      preferences: aPreferences,
+      preferences: preferences,
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Retrieve the request headers from the given NetworkEventActor.
    *
-   * @param string aActor
+   * @param string actor
    *        The NetworkEventActor ID.
-   * @param function aOnResponse
+   * @param function onResponse
    *        The function invoked when the response is received.
    */
-  getRequestHeaders: function WCC_getRequestHeaders(aActor, aOnResponse)
-  {
+  getRequestHeaders: function(actor, onResponse) {
     let packet = {
-      to: aActor,
+      to: actor,
       type: "getRequestHeaders",
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Retrieve the request cookies from the given NetworkEventActor.
    *
-   * @param string aActor
+   * @param string actor
    *        The NetworkEventActor ID.
-   * @param function aOnResponse
+   * @param function onResponse
    *        The function invoked when the response is received.
    */
-  getRequestCookies: function WCC_getRequestCookies(aActor, aOnResponse)
-  {
+  getRequestCookies: function(actor, onResponse) {
     let packet = {
-      to: aActor,
+      to: actor,
       type: "getRequestCookies",
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Retrieve the request post data from the given NetworkEventActor.
    *
-   * @param string aActor
+   * @param string actor
    *        The NetworkEventActor ID.
-   * @param function aOnResponse
+   * @param function onResponse
    *        The function invoked when the response is received.
    */
-  getRequestPostData: function WCC_getRequestPostData(aActor, aOnResponse)
-  {
+  getRequestPostData: function(actor, onResponse) {
     let packet = {
-      to: aActor,
+      to: actor,
       type: "getRequestPostData",
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Retrieve the response headers from the given NetworkEventActor.
    *
-   * @param string aActor
+   * @param string actor
    *        The NetworkEventActor ID.
-   * @param function aOnResponse
+   * @param function onResponse
    *        The function invoked when the response is received.
    */
-  getResponseHeaders: function WCC_getResponseHeaders(aActor, aOnResponse)
-  {
+  getResponseHeaders: function(actor, onResponse) {
     let packet = {
-      to: aActor,
+      to: actor,
       type: "getResponseHeaders",
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Retrieve the response cookies from the given NetworkEventActor.
    *
-   * @param string aActor
+   * @param string actor
    *        The NetworkEventActor ID.
-   * @param function aOnResponse
+   * @param function onResponse
    *        The function invoked when the response is received.
    */
-  getResponseCookies: function WCC_getResponseCookies(aActor, aOnResponse)
-  {
+  getResponseCookies: function(actor, onResponse) {
     let packet = {
-      to: aActor,
+      to: actor,
       type: "getResponseCookies",
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Retrieve the response content from the given NetworkEventActor.
    *
-   * @param string aActor
+   * @param string actor
    *        The NetworkEventActor ID.
-   * @param function aOnResponse
+   * @param function onResponse
    *        The function invoked when the response is received.
    */
-  getResponseContent: function WCC_getResponseContent(aActor, aOnResponse)
-  {
+  getResponseContent: function(actor, onResponse) {
     let packet = {
-      to: aActor,
+      to: actor,
       type: "getResponseContent",
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Retrieve the timing information for the given NetworkEventActor.
    *
-   * @param string aActor
+   * @param string actor
    *        The NetworkEventActor ID.
-   * @param function aOnResponse
+   * @param function onResponse
    *        The function invoked when the response is received.
    */
-  getEventTimings: function WCC_getEventTimings(aActor, aOnResponse)
-  {
+  getEventTimings: function(actor, onResponse) {
     let packet = {
-      to: aActor,
+      to: actor,
       type: "getEventTimings",
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Retrieve the security information for the given NetworkEventActor.
    *
-   * @param string aActor
+   * @param string actor
    *        The NetworkEventActor ID.
-   * @param function aOnResponse
+   * @param function onResponse
    *        The function invoked when the response is received.
    */
-  getSecurityInfo: function WCC_getSecurityInfo(aActor, aOnResponse)
-  {
+  getSecurityInfo: function(actor, onResponse) {
     let packet = {
-      to: aActor,
+      to: actor,
       type: "getSecurityInfo",
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Send a HTTP request with the given data.
    *
-   * @param string aData
+   * @param string data
    *        The details of the HTTP request.
-   * @param function aOnResponse
+   * @param function onResponse
    *        The function invoked when the response is received.
    */
-  sendHTTPRequest: function WCC_sendHTTPRequest(aData, aOnResponse) {
+  sendHTTPRequest: function(data, onResponse) {
     let packet = {
       to: this._actor,
       type: "sendHTTPRequest",
-      request: aData
+      request: data
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Start the given Web Console listeners.
    *
    * @see this.LISTENERS
-   * @param array aListeners
+   * @param array listeners
    *        Array of listeners you want to start. See this.LISTENERS for
    *        known listeners.
-   * @param function aOnResponse
+   * @param function onResponse
    *        Function to invoke when the server response is received.
    */
-  startListeners: function WCC_startListeners(aListeners, aOnResponse)
-  {
+  startListeners: function(listeners, onResponse) {
     let packet = {
       to: this._actor,
       type: "startListeners",
-      listeners: aListeners,
+      listeners: listeners,
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Stop the given Web Console listeners.
    *
    * @see this.LISTENERS
-   * @param array aListeners
+   * @param array listeners
    *        Array of listeners you want to stop. See this.LISTENERS for
    *        known listeners.
-   * @param function aOnResponse
+   * @param function onResponse
    *        Function to invoke when the server response is received.
    */
-  stopListeners: function WCC_stopListeners(aListeners, aOnResponse)
-  {
+  stopListeners: function(listeners, onResponse) {
     let packet = {
       to: this._actor,
       type: "stopListeners",
-      listeners: aListeners,
+      listeners: listeners,
     };
-    this._client.request(packet, aOnResponse);
+    this._client.request(packet, onResponse);
   },
 
   /**
    * Return an instance of LongStringClient for the given long string grip.
    *
-   * @param object aGrip
+   * @param object grip
    *        The long string grip returned by the protocol.
    * @return object
    *         The LongStringClient for the given long string grip.
    */
-  longString: function WCC_longString(aGrip)
-  {
-    if (aGrip.actor in this._longStrings) {
-      return this._longStrings[aGrip.actor];
+  longString: function(grip) {
+    if (grip.actor in this._longStrings) {
+      return this._longStrings[grip.actor];
     }
 
-    let client = new LongStringClient(this._client, aGrip);
-    this._longStrings[aGrip.actor] = client;
+    let client = new LongStringClient(this._client, grip);
+    this._longStrings[grip.actor] = client;
     return client;
   },
 
@@ -605,15 +586,15 @@ WebConsoleClient.prototype = {
    * Close the WebConsoleClient. This stops all the listeners on the server and
    * detaches from the console actor.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Function to invoke when the server response is received.
    */
-  detach: function WCC_detach(aOnResponse)
-  {
+  detach: function(onResponse) {
     this._client.removeListener("evaluationResult", this.onEvaluationResult);
     this._client.removeListener("networkEvent", this.onNetworkEvent);
-    this._client.removeListener("networkEventUpdate", this.onNetworkEventUpdate);
-    this.stopListeners(null, aOnResponse);
+    this._client.removeListener("networkEventUpdate",
+                                this.onNetworkEventUpdate);
+    this.stopListeners(null, onResponse);
     this._longStrings = null;
     this._client = null;
     this.pendingEvaluationResults.clear();
@@ -622,7 +603,7 @@ WebConsoleClient.prototype = {
     this._networkRequests = null;
   },
 
-  clearNetworkRequests: function () {
+  clearNetworkRequests: function() {
     this._networkRequests.clear();
   },
 
@@ -640,7 +621,8 @@ WebConsoleClient.prototype = {
   getString: function(stringGrip) {
     // Make sure this is a long string.
     if (typeof stringGrip != "object" || stringGrip.type != "longString") {
-      return promise.resolve(stringGrip); // Go home string, you're drunk.
+      // Go home string, you're drunk.
+      return promise.resolve(stringGrip);
     }
 
     // Fetch the long string only once.
@@ -649,18 +631,18 @@ WebConsoleClient.prototype = {
     }
 
     let deferred = stringGrip._fullText = promise.defer();
-    let { actor, initial, length } = stringGrip;
+    let { initial, length } = stringGrip;
     let longStringClient = this.longString(stringGrip);
 
-    longStringClient.substring(initial.length, length, aResponse => {
-      if (aResponse.error) {
+    longStringClient.substring(initial.length, length, response => {
+      if (response.error) {
         DevToolsUtils.reportException("getString",
-            aResponse.error + ": " + aResponse.message);
+            response.error + ": " + response.message);
 
-        deferred.reject(aResponse);
+        deferred.reject(response);
         return;
       }
-      deferred.resolve(initial + aResponse.substring);
+      deferred.resolve(initial + response.substring);
     });
 
     return deferred.promise;

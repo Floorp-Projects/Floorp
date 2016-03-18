@@ -1,6 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+:root{
+  -moz-user-select: none;
+}
 
 #options-panel-container {
   overflow: auto;
@@ -15,20 +18,12 @@
   float: left;
 }
 
-.options-vertical-pane > label {
-  display: block;
-}
-
 .options-vertical-pane {
   margin: 5px;
-  width: calc(100%/3 - 30px);
+  width: calc(100%/3 - 10px);
   min-width: 320px;
-  -moz-padding-start: 5px;
-}
-
-#devtools-theme-box {
-  margin-left: 0px;
-  padding-left: 0px;
+  padding-inline-start: 5px;
+  box-sizing: border-box;
 }
 
 /* Snap to 50% width once there is not room for 3 columns anymore.
@@ -36,18 +31,53 @@
    only ~66% of the available space. */
 @media (max-width: 1000px) {
   .options-vertical-pane {
-    width: calc(100%/2 - 30px);
+    width: calc(100%/2 - 10px);
   }
 }
 
-.options-vertical-pane > label {
-  padding: 2px 0;
+.options-vertical-pane fieldset {
+  border: none;
+}
+
+.options-vertical-pane fieldset legend {
   font-size: 1.4rem;
+  margin-inline-start: -15px;
+  margin-bottom: 3px;
+  cursor: default;
+}
+
+.options-vertical-pane fieldset + fieldset {
+  margin-top: 1rem;
 }
 
 .options-groupbox {
-  -moz-margin-start: 15px;
+  margin-inline-start: 15px;
   padding: 2px;
+}
+
+.options-groupbox label {
+  display: flex;
+  padding: 4px 0;
+  align-items: center;
+}
+
+/* Add padding for label of select inputs in order to
+   align it with surrounding checkboxes */
+.options-groupbox label span:first-child {
+  padding-inline-start: 5px;
+}
+
+.options-groupbox label span + select {
+  margin-inline-start: 4px;
+}
+
+.options-groupbox.horizontal-options-groupbox label {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.options-groupbox.horizontal-options-groupbox label + label {
+  margin-inline-start: 4px;
 }
 
 .options-groupbox > *,
@@ -60,21 +90,18 @@
 }
 
 .options-citation-label {
-  font-size: 1rem !important;
-  /* !important is required otherwise font-size will still be 1.4rem */
+  display: inline-block;
+  font-size: 1rem;
   font-style: italic;
-  padding: 4px 0 0; /* To align it with the checkbox */
+   /* To align it with the checkbox */
+  padding: 4px 0 0;
+  padding-inline-end: 4px;
 }
 
-.hidden-labels-box:not(.visible) > label,
-.hidden-labels-box.visible ~ .hidden-labels-box > label:last-child {
-  display: none;
+#devtools-sourceeditor-keybinding-select {
+  min-width: 130px;
 }
 
-#devtools-sourceeditor-keybinding-menulist {
-  min-width: 100px;
-}
-
-#devtools-sourceeditor-tabsize-menulist {
-  min-width: 50px;
+#devtools-sourceeditor-tabsize-select {
+  min-width: 80px;
 }

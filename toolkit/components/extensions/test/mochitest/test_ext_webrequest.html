@@ -248,10 +248,25 @@ function backgroundScript() {
     }
   }
 
+  let lastRequestId = -1;
+  let lastRequestUrl = null;
+  function validateRequestIdType(currentId) {
+    browser.test.assertTrue(typeof lastRequestId === "string");
+    browser.test.assertTrue(typeof currentId === "string");
+    browser.test.assertTrue(typeof parseInt(currentId, 10) === "number");
+    browser.test.assertTrue(parseInt(lastRequestId, 10) !== parseInt(currentId, 10));
+  }
+
   function onBeforeRequest(details) {
     browser.test.log(`onBeforeRequest ${details.requestId} ${details.url}`);
 
-    browser.test.assertTrue(details.requestId > 0, `valid requestId ${details.requestId}`);
+    if (!lastRequestUrl) {
+      lastRequestUrl = details.url;
+      lastRequestId = details.requestId;
+    } else if (lastRequestUrl != details.url) {
+      validateRequestIdType(details.requestId);
+    }
+
     let ids = requestIDs.get(details.url);
     if (ids) {
       ids.add(details.requestId);

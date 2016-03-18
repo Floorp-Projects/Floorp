@@ -164,7 +164,7 @@ class ADBCommand(object):
             subprocess.Popen([adb, 'help'],
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE).communicate()
-        except Exception, exc:
+        except Exception as exc:
             raise ADBError('%s: %s is not executable.' % (exc, adb))
 
     def _get_logger(self, logger_name):
@@ -1344,7 +1344,7 @@ class ADBDevice(ADBCommand):
                         self.shell_output("chmod %s %s" % (mask, entry),
                                           timeout=timeout, root=root)
                         self._logger.debug('chmod: file entry=%s' % entry)
-                    except ADBError, e:
+                    except ADBError as e:
                         if e.message.find('No such file or directory'):
                             # some kind of race condition is causing files
                             # to disappear. Catch and report the error here.
@@ -1573,7 +1573,7 @@ class ADBDevice(ADBCommand):
             self.shell_output("%s %s" % (cmd, path), timeout=timeout, root=root)
             if self.is_file(path, timeout=timeout, root=root):
                 raise ADBError('rm("%s") failed to remove file.' % path)
-        except ADBError, e:
+        except ADBError as e:
             if not force and 'No such file or directory' in e.message:
                 raise
 
@@ -1688,7 +1688,7 @@ class ADBDevice(ADBCommand):
             args.extend(pid_list)
             try:
                 self.shell_output(' '.join(args), timeout=timeout, root=root)
-            except ADBError, e:
+            except ADBError as e:
                 if 'No such process' not in e.message:
                     raise
             pid_set = set(pid_list)
@@ -1740,7 +1740,7 @@ class ADBDevice(ADBCommand):
         try:
             self.kill(pids, sig, attempts=attempts, wait=wait,
                       timeout=timeout, root=root)
-        except ADBError, e:
+        except ADBError as e:
             if self.process_exist(appname, timeout=timeout):
                 raise e
 
