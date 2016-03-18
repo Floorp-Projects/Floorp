@@ -619,3 +619,4 @@ load text-overflow-bug713610.html
 load text-overflow-form-elements.html
 load text-overflow-iframe.html
 asserts-if(Android,2-4) asserts-if(!Android,4) load 1225005.html # bug 682647 and bug 448083
+load 1233191.html
