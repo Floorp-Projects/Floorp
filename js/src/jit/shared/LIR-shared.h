@@ -4730,6 +4730,39 @@ class LSetArrayLength : public LInstructionHelper<0, 2, 0>
     }
 };
 
+class LGetNextMapEntryForIterator : public LInstructionHelper<1, 2, 3>
+{
+  public:
+    LIR_HEADER(GetNextMapEntryForIterator)
+
+    explicit LGetNextMapEntryForIterator(const LAllocation& iter, const LAllocation& result,
+                                         const LDefinition& temp0, const LDefinition& temp1,
+                                         const LDefinition& temp2)
+    {
+        setOperand(0, iter);
+        setOperand(1, result);
+        setTemp(0, temp0);
+        setTemp(1, temp1);
+        setTemp(2, temp2);
+    }
+
+    const LAllocation* iter() {
+        return getOperand(0);
+    }
+    const LAllocation* result() {
+        return getOperand(1);
+    }
+    const LDefinition* temp0() {
+        return getTemp(0);
+    }
+    const LDefinition* temp1() {
+        return getTemp(1);
+    }
+    const LDefinition* temp2() {
+        return getTemp(2);
+    }
+};
+
 // Read the length of a typed array.
 class LTypedArrayLength : public LInstructionHelper<1, 1, 0>
 {

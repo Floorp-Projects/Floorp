@@ -164,6 +164,8 @@ class MapIteratorObject : public NativeObject
     static bool next(JSContext* cx, Handle<MapIteratorObject*> mapIterator,
                      HandleArrayObject resultPairObj);
 
+    static JSObject* createResultPair(JSContext* cx);
+
   private:
     inline MapObject::IteratorKind kind() const;
 };

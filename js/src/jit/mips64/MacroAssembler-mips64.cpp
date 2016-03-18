@@ -2305,8 +2305,23 @@ MacroAssembler::callWithABINoProfiler(const Address& fun, MoveOp::Type result)
 // Branch functions
 
 void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, const Address& address, Register temp,
+                                           Label* label)
+{
+    branchValueIsNurseryObject(cond, address, temp, label);
+}
+
+void
 MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
                                            Register temp, Label* label)
+{
+    branchValueIsNurseryObject(cond, value.valueReg(), temp, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchValueIsNurseryObjectImpl(Condition cond, const T& value, Register temp,
+                                               Label* label)
 {
     MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
@@ -2315,7 +2330,7 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
     Value start = ObjectValue(*reinterpret_cast<JSObject *>(nursery.start()));
 
     movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), SecondScratchReg);
-    addPtr(value.valueReg(), SecondScratchReg);
+    addPtr(value, SecondScratchReg);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }

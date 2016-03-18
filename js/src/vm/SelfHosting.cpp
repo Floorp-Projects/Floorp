@@ -700,6 +700,20 @@ intrinsic_GetNextMapEntryForIterator(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_CreateMapIterationResultPair(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 0);
+
+    RootedObject result(cx, MapIteratorObject::createResultPair(cx));
+    if (!result)
+        return false;
+
+    args.rval().setObject(*result);
+    return true;
+}
+
+static bool
 intrinsic_NewStringIterator(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1955,7 +1969,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     intrinsic_IsInstanceOfBuiltin<ListIteratorObject>,  1,0,
                     IntrinsicIsListIterator),
 
-    JS_FN("_GetNextMapEntryForIterator", intrinsic_GetNextMapEntryForIterator, 3,0),
+    JS_FN("_CreateMapIterationResultPair", intrinsic_CreateMapIterationResultPair, 0, 0),
+    JS_INLINABLE_FN("_GetNextMapEntryForIterator", intrinsic_GetNextMapEntryForIterator, 2,0,
+                    IntrinsicGetNextMapEntryForIterator),
     JS_FN("CallMapIteratorMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<MapIteratorObject>>,        2,0),
 
