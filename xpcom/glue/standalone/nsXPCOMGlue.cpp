@@ -55,7 +55,7 @@ GetLibHandle(pathstr_t aDependentLib)
 #ifdef DEBUG
   if (!libHandle) {
     DWORD err = GetLastError();
-    LPVOID lpMsgBuf;
+    LPWSTR lpMsgBuf;
     FormatMessageW(
       FORMAT_MESSAGE_ALLOCATE_BUFFER |
       FORMAT_MESSAGE_FROM_SYSTEM |
