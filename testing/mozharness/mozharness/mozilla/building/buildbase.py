@@ -43,6 +43,7 @@ from mozharness.mozilla.buildbot import (
 )
 from mozharness.mozilla.purge import PurgeMixin
 from mozharness.mozilla.mock import MockMixin
+from mozharness.mozilla.secrets import SecretsMixin
 from mozharness.mozilla.signing import SigningMixin
 from mozharness.mozilla.mock import ERROR_MSGS as MOCK_ERROR_MSGS
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
@@ -366,8 +367,6 @@ class BuildOptionParser(object):
         'x86': 'builds/releng_sub_%s_configs/%s_x86.py',
         'api-11-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_11_partner_sample1.py',
         'api-15-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_15_partner_sample1.py',
-        'api-11-b2gdroid': 'builds/releng_sub_%s_configs/%s_api_11_b2gdroid.py',
-        'api-15-b2gdroid': 'builds/releng_sub_%s_configs/%s_api_15_b2gdroid.py',
     }
     build_pool_cfg_file = 'builds/build_pool_specifics.py'
     branch_cfg_file = 'builds/branch_specifics.py'
@@ -545,6 +544,14 @@ BUILD_BASE_CONFIG_OPTIONS = [
                 " %s for possibilites" % (
                     BuildOptionParser.branch_cfg_file,
                 )}],
+    [['--scm-level'], {
+        "action": "store",
+        "type": "int",
+        "dest": "scm_level",
+        "default": 1,
+        "help": "This sets the SCM level for the branch being built."
+                " See https://www.mozilla.org/en-US/about/"
+                "governance/policies/commit/access-policy/"}],
     [['--enable-pgo'], {
         "action": "store_true",
         "dest": "pgo_build",
@@ -578,7 +585,7 @@ def generate_build_UID():
 
 class BuildScript(BuildbotMixin, PurgeMixin, MockMixin, BalrogMixin,
                   SigningMixin, VirtualenvMixin, MercurialScript,
-                  InfluxRecordingMixin):
+                  InfluxRecordingMixin, SecretsMixin):
     def __init__(self, **kwargs):
         # objdir is referenced in _query_abs_dirs() so let's make sure we
         # have that attribute before calling BaseScript.__init__

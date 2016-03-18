@@ -58,5 +58,5 @@ fuzzy-if(gtkWidget,1,19) fuzzy-if(Android||B2G,17,726) fuzzy-if(asyncPan&&!layer
 == button-1.html button-1-ref.html
 == button-2.html button-2-ref.html
 == relative-row-animation-1.html relative-row-animation-1-ref.html
-fuzzy-if(Android&&AndroidVersion>=15,12,50) == fixed-pos-auto-offset-1a.html fixed-pos-auto-offset-1-ref.html
-fuzzy-if(Android&&AndroidVersion>=15,12,50) == fixed-pos-auto-offset-1b.html fixed-pos-auto-offset-1-ref.html
+fuzzy-if(Android,12,50) == fixed-pos-auto-offset-1a.html fixed-pos-auto-offset-1-ref.html
+fuzzy-if(Android,12,50) == fixed-pos-auto-offset-1b.html fixed-pos-auto-offset-1-ref.html

@@ -3375,9 +3375,14 @@ public:
 
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) override;
 
+  void SetParticipatesInPreserve3D(bool aParticipatesInPreserve3D)
+  {
+    mParticipatesInPreserve3D = aParticipatesInPreserve3D;
+  }
 private:
   float mOpacity;
   bool mForEventsOnly;
+  bool mParticipatesInPreserve3D;
 };
 
 class nsDisplayBlendMode : public nsDisplayWrapList {

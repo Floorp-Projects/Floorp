@@ -43,22 +43,40 @@ const GOOD_ABOUT_STRING = "Just a fully good testpage for Bug 1226928";
 const BAD_ABOUT_STRING = "Just a bad testpage for Bug 1226928";
 const ABOUT_BLANK = "<head></head><body></body>";
 
+const URI_CLEANUP = BASE + "cleanup=true";
+const CLEANUP_DONE = "Done";
+
+const URI_SRI = BASE + "sig=sri&key=good&file=sri&header=good";
+const STYLESHEET_WITHOUT_SRI_BLOCKED = "Stylesheet without SRI blocked";
+const STYLESHEET_WITH_SRI_BLOCKED = "Stylesheet with SRI blocked";
+const STYLESHEET_WITH_SRI_LOADED = "Stylesheet with SRI loaded";
+const SCRIPT_WITHOUT_SRI_BLOCKED = "Script without SRI blocked";
+const SCRIPT_WITH_SRI_BLOCKED = "Script with SRI blocked";
+const SCRIPT_WITH_SRI_LOADED = "Script with SRI loaded";
+
 const TESTS = [
   // { newtab (aboutURI) or regular load (url) : url,
-  //   testString : expected string in the loaded page }
-  { "aboutURI" : URI_GOOD, "testString" : GOOD_ABOUT_STRING },
-  { "aboutURI" : URI_ERROR_HEADER, "testString" : ABOUT_BLANK },
-  { "aboutURI" : URI_KEYERROR_HEADER, "testString" : ABOUT_BLANK },
-  { "aboutURI" : URI_SIGERROR_HEADER, "testString" : ABOUT_BLANK },
-  { "aboutURI" : URI_NO_HEADER, "testString" : ABOUT_BLANK },
-  { "aboutURI" : URI_BAD_SIG, "testString" : ABOUT_BLANK },
-  { "aboutURI" : URI_BROKEN_SIG, "testString" : ABOUT_BLANK },
-  { "aboutURI" : URI_BAD_KEY, "testString" : ABOUT_BLANK },
-  { "aboutURI" : URI_BAD_FILE, "testString" : ABOUT_BLANK },
-  { "aboutURI" : URI_BAD_ALL, "testString" : ABOUT_BLANK },
-  { "url" : URI_BAD_FILE_CACHED, "testString" : BAD_ABOUT_STRING },
-  { "aboutURI" : URI_BAD_FILE_CACHED, "testString" : ABOUT_BLANK },
-  { "aboutURI" : URI_GOOD, "testString" : GOOD_ABOUT_STRING }
+  //   testStrings : expected strings in the loaded page }
+  { "aboutURI" : URI_GOOD, "testStrings" : [GOOD_ABOUT_STRING] },
+  { "aboutURI" : URI_ERROR_HEADER, "testStrings" : [ABOUT_BLANK] },
+  { "aboutURI" : URI_KEYERROR_HEADER, "testStrings" : [ABOUT_BLANK] },
+  { "aboutURI" : URI_SIGERROR_HEADER, "testStrings" : [ABOUT_BLANK] },
+  { "aboutURI" : URI_NO_HEADER, "testStrings" : [ABOUT_BLANK] },
+  { "aboutURI" : URI_BAD_SIG, "testStrings" : [ABOUT_BLANK] },
+  { "aboutURI" : URI_BROKEN_SIG, "testStrings" : [ABOUT_BLANK] },
+  { "aboutURI" : URI_BAD_KEY, "testStrings" : [ABOUT_BLANK] },
+  { "aboutURI" : URI_BAD_FILE, "testStrings" : [ABOUT_BLANK] },
+  { "aboutURI" : URI_BAD_ALL, "testStrings" : [ABOUT_BLANK] },
+  { "url" : URI_BAD_FILE_CACHED, "testStrings" : [BAD_ABOUT_STRING] },
+  { "aboutURI" : URI_BAD_FILE_CACHED, "testStrings" : [ABOUT_BLANK] },
+  { "aboutURI" : URI_GOOD, "testStrings" : [GOOD_ABOUT_STRING] },
+  { "aboutURI" : URI_SRI, "testStrings" : [
+    STYLESHEET_WITHOUT_SRI_BLOCKED,
+    STYLESHEET_WITH_SRI_LOADED,
+    SCRIPT_WITHOUT_SRI_BLOCKED,
+    SCRIPT_WITH_SRI_LOADED,
+    ]},
+  { "url" : URI_CLEANUP, "testStrings" : [CLEANUP_DONE] },
 ];
 
 var browser = null;
@@ -74,7 +92,7 @@ function pushPrefs(...aPrefs) {
 /*
  * run tests with input from TESTS
  */
-function doTest(aExpectedString, reload, aUrl, aNewTabPref) {
+function doTest(aExpectedStrings, reload, aUrl, aNewTabPref) {
   // set about:newtab location for this test if it's a newtab test
   if (aNewTabPref) {
     aboutNewTabService.newTabURL = aNewTabPref;
@@ -115,10 +133,12 @@ function doTest(aExpectedString, reload, aUrl, aNewTabPref) {
             "sanity check: default URL for about:newtab should return the new URL");
       }
       yield ContentTask.spawn(
-          browser, aExpectedString, function * (aExpectedString) {
-            ok(content.document.documentElement.innerHTML.includes(aExpectedString),
-               "Expect the following value in the result\n" + aExpectedString +
-               "\nand got " + content.document.documentElement.innerHTML);
+          browser, aExpectedStrings, function * (aExpectedStrings) {
+            for (let expectedString of aExpectedStrings) {
+              ok(content.document.documentElement.innerHTML.includes(expectedString),
+                 "Expect the following value in the result\n" + expectedString +
+                 "\nand got " + content.document.documentElement.innerHTML);
+            }
           });
 
       // for good test cases we check if a reload fails if the remote page
@@ -140,12 +160,22 @@ function doTest(aExpectedString, reload, aUrl, aNewTabPref) {
         browser.reload();
         yield BrowserTestUtils.browserLoaded(browser);
 
-        aExpectedString = ABOUT_BLANK;
-        yield ContentTask.spawn(browser, aExpectedString,
-          function * (aExpectedString) {
-            ok(content.document.documentElement.innerHTML.includes(aExpectedString),
-               "Expect the following value in the result\n" + aExpectedString +
-               "\nand got " + content.document.documentElement.innerHTML);
+        let expectedStrings = [ABOUT_BLANK];
+        if (aNewTabPref == URI_SRI) {
+          expectedStrings = [
+            STYLESHEET_WITHOUT_SRI_BLOCKED,
+            STYLESHEET_WITH_SRI_BLOCKED,
+            SCRIPT_WITHOUT_SRI_BLOCKED,
+            SCRIPT_WITH_SRI_BLOCKED
+          ];
+        }
+        yield ContentTask.spawn(browser, expectedStrings,
+          function * (expectedStrings) {
+            for (let expectedString of expectedStrings) {
+              ok(content.document.documentElement.innerHTML.includes(expectedString),
+                 "Expect the following value in the result\n" + expectedString +
+                 "\nand got " + content.document.documentElement.innerHTML);
+            }
           }
         );
 
@@ -172,17 +202,17 @@ add_task(function * test() {
     let testCase = TESTS[i];
     let url = "", aNewTabPref = "";
     let reload = false;
-    let aExpectedString = testCase.testString;
+    var aExpectedStrings = testCase.testStrings;
     if (testCase.aboutURI) {
       url = ABOUT_NEWTAB_URI;
       aNewTabPref = testCase.aboutURI;
-      if (aExpectedString == GOOD_ABOUT_STRING) {
+      if (aNewTabPref == URI_GOOD || aNewTabPref == URI_SRI) {
         reload = true;
       }
     } else {
       url = testCase.url;
     }
 
-    yield doTest(aExpectedString, reload, url, aNewTabPref);
+    yield doTest(aExpectedStrings, reload, url, aNewTabPref);
   }
 });

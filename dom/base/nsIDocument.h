@@ -2724,6 +2724,10 @@ public:
   }
 
   void ReportHasScrollLinkedEffect();
+  bool HasScrollLinkedEffect() const
+  {
+    return mHasScrollLinkedEffect;
+  }
 
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)

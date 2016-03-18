@@ -182,10 +182,8 @@ js::Debug_CheckSelfHosted(JSContext* cx, HandleValue fun)
     MOZ_CRASH("self-hosted checks should only be done in Debug builds");
 #endif
 
-    MOZ_ASSERT(fun.isObject());
-
-    MOZ_ASSERT(fun.toObject().is<JSFunction>());
-    MOZ_ASSERT(fun.toObject().as<JSFunction>().isSelfHostedOrIntrinsic());
+    RootedObject funObj(cx, UncheckedUnwrap(&fun.toObject()));
+    MOZ_ASSERT(funObj->as<JSFunction>().isSelfHostedOrIntrinsic());
 
     // This is purely to police self-hosted code. There is no actual operation.
     return true;

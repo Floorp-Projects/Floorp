@@ -12,6 +12,7 @@ echo "running as" $(id)
 
 : MOZHARNESS_SCRIPT             ${MOZHARNESS_SCRIPT}
 : MOZHARNESS_CONFIG             ${MOZHARNESS_CONFIG}
+: MOZHARNESS_ACTIONS            ${MOZHARNESS_ACTIONS}
 
 : TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/home/worker/tooltool-cache}
 
@@ -20,11 +21,9 @@ echo "running as" $(id)
 : MH_CUSTOM_BUILD_VARIANT_CFG   ${MH_CUSTOM_BUILD_VARIANT_CFG}
 : MH_BRANCH                     ${MH_BRANCH:=mozilla-central}
 : MH_BUILD_POOL                 ${MH_BUILD_POOL:=staging}
+: MOZ_SCM_LEVEL                 ${MOZ_SCM_LEVEL:=1}
 
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
-
-# some linux variants, e.g. b2gdroid, require gaia
-: CHECKOUT_GAIA                      ${CHECKOUT_GAIA:=false}
 
 set -v
 
@@ -97,16 +96,6 @@ if [ -n "${MH_CUSTOM_BUILD_VARIANT_CFG}" ]; then
     custom_build_variant_cfg_flag="--custom-build-variant-cfg=${MH_CUSTOM_BUILD_VARIANT_CFG}"
 fi
 
-if [ "$CHECKOUT_GAIA" = true ]; then
-    pull_gaia=$GECKO_DIR/testing/taskcluster/scripts/builder/pull-gaia.sh
-    gaia_props=$GECKO_DIR/testing/taskcluster/scripts/builder/gaia_props.py
-    gaia_dir=$WORKSPACE/build/gaia
-
-    $pull_gaia $GECKO_DIR $gaia_dir $gaia_props
-    rm -f $GECKO_DIR/gaia
-    ln -s $gaia_dir $GECKO_DIR/gaia
-fi
-
 # $TOOLTOOL_CACHE bypasses mozharness completely and is read by tooltool_wrapper.sh to set the
 # cache.  However, only some mozharness scripts use tooltool_wrapper.sh, so this may not be
 # entirely effective.
@@ -118,22 +107,22 @@ for cfg in $MOZHARNESS_CONFIG; do
   config_cmds="${config_cmds} --config ${cfg}"
 done
 
-# Mozharness would ordinarily do the checkouts itself, but they are disabled
-# here (--no-checkout-sources, --no-clone-tools) as the checkout is performed above.
+# if MOZHARNESS_ACTIONS is given, only run those actions (completely overriding default_actions
+# in the mozharness configuration)
+if [ -n "$MOZHARNESS_ACTIONS" ]; then
+    actions=""
+    for action in $MOZHARNESS_ACTIONS; do
+        actions="$actions --$action"
+    done
+fi
 
 python2.7 $WORKSPACE/build/src/testing/${MOZHARNESS_SCRIPT} ${config_cmds} \
   $debug_flag \
   $custom_build_variant_cfg_flag \
   --disable-mock \
-  --no-setup-mock \
-  --no-checkout-sources \
-  --no-clone-tools \
-  --no-clobber \
-  --no-update \
-  --no-upload-files \
-  --no-sendchange \
+  $actions \
   --log-level=debug \
+  --scm-level=$MOZ_SCM_LEVEL \
   --work-dir=$WORKSPACE/build \
-  --no-action=generate-build-stats \
   --branch=${MH_BRANCH} \
   --build-pool=${MH_BUILD_POOL}

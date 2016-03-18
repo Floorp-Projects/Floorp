@@ -11,9 +11,6 @@ from decorators import use_class_as_property
 
 __version__ = '3.2.0'
 
-root = os.path.abspath(os.path.dirname(__file__))
-manifest = os.path.join(root, 'tests', 'manifest.ini')
-
 
 class Puppeteer(object):
     """The puppeteer class is used to expose libraries to test cases.

@@ -4431,7 +4431,7 @@ TypeZone::endSweep(JSRuntime* rt)
 void
 TypeZone::clearAllNewScriptsOnOOM()
 {
-    for (gc::ZoneCellIterUnderGC iter(zone(), gc::AllocKind::OBJECT_GROUP);
+    for (gc::ZoneCellIter iter(zone(), gc::AllocKind::OBJECT_GROUP);
          !iter.done(); iter.next())
     {
         ObjectGroup* group = iter.get<ObjectGroup>();

@@ -220,4 +220,38 @@ TEST(MozPromise, PromiseAllReject)
   });
 }
 
+// Test we don't hit the assertions in MozPromise when exercising promise
+// chaining upon task queue shutdown.
+TEST(MozPromise, Chaining)
+{
+  AutoTaskQueue atq;
+  RefPtr<TaskQueue> queue = atq.Queue();
+  MozPromiseRequestHolder<TestPromise> holder;
+
+  RunOnTaskQueue(queue, [queue, &holder] () {
+    auto p = TestPromise::CreateAndResolve(42, __func__);
+    const size_t kIterations = 100;
+    for (size_t i = 0; i < kIterations; ++i) {
+      p = p->Then(queue, __func__,
+        [] (int aVal) {
+          EXPECT_EQ(aVal, 42);
+        },
+        [] () {}
+      )->CompletionPromise();
+
+      if (i == kIterations / 2) {
+        p->Then(queue, __func__,
+          [queue, &holder] () {
+            holder.Disconnect();
+            queue->BeginShutdown();
+          },
+          DO_FAIL);
+      }
+    }
+    // We will hit the assertion if we don't disconnect the leaf Request
+    // in the promise chain.
+    holder.Begin(p->Then(queue, __func__, [] () {}, [] () {}));
+  });
+}
+
 #undef DO_FAIL

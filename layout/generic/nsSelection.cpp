@@ -4936,6 +4936,16 @@ Selection::Collapse(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   // Turn off signal for table selection
   mFrameSelection->ClearTableCellSelection();
 
+  // Hack to display the caret on the right line (bug 1237236).
+  if (aParentNode.IsContent()) {
+    nsTextFrame* f = do_QueryFrame(aParentNode.AsContent()->GetPrimaryFrame());
+    if (f && f->IsAtEndOfLine() && f->HasSignificantTerminalNewline()) {
+      if (f->GetContentEnd() == int32_t(aOffset)) {
+        mFrameSelection->SetHint(CARET_ASSOCIATE_AFTER);
+      }
+    }
+  }
+
   RefPtr<nsRange> range = new nsRange(&aParentNode);
   result = range->SetEnd(&aParentNode, aOffset);
   if (NS_FAILED(result)) {

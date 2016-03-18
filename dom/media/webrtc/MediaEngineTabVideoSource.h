@@ -89,6 +89,8 @@ private:
     UniquePtr<unsigned char[]> mData;
     size_t mDataSize;
     nsCOMPtr<nsPIDOMWindowOuter> mWindow;
+    // If this is set, we will run despite mWindow == nullptr.
+    bool mBlackedoutWindow;
     RefPtr<layers::SourceSurfaceImage> mImage;
     nsCOMPtr<nsITimer> mTimer;
     Monitor mMonitor;

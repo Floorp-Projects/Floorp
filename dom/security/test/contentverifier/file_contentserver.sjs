@@ -14,21 +14,30 @@ goodFile.append(goodFileName);
 const goodSignature = path + "file_about_newtab_good_signature";
 const goodKeyId = "RemoteNewTab";
 
+const scriptFileName = "script.js";
+const cssFileName = "style.css";
 const badFile = path + "file_about_newtab_bad.html";
 const brokenSignature = path + "file_about_newtab_broken_signature";
 const badSignature = path + "file_about_newtab_bad_signature";
 const badKeyId = "OldRemoteNewTabKey";
 
+const sriFile = path + "file_about_newtab_sri.html";
+const sriSignature = path + "file_about_newtab_sri_signature";
+
+const tempFileNames = [goodFileName, scriptFileName, cssFileName];
+
 // we copy the file to serve as newtab to a temp directory because
 // we modify it during tests.
-setupTestFile();
+setupTestFiles();
 
-function setupTestFile() {
-  let tempFile = FileUtils.getDir("TmpD", [], true);
-  tempFile.append(goodFileName);
-  if (!tempFile.exists()) {
-    let fileIn = getFileName(goodFileBase, "CurWorkD");
-    fileIn.copyTo(FileUtils.getDir("TmpD", [], true), "");
+function setupTestFiles() {
+  for (let fileName of tempFileNames) {
+    let tempFile = FileUtils.getDir("TmpD", [], true);
+    tempFile.append(fileName);
+    if (!tempFile.exists()) {
+      let fileIn = getFileName(path + fileName, "CurWorkD");
+      fileIn.copyTo(FileUtils.getDir("TmpD", [], true), "");
+    }
   }
 }
 
@@ -85,6 +94,14 @@ function truncateFile(aFile, length) {
   return "Done";
 }
 
+function cleanupTestFiles() {
+  for (let fileName of tempFileNames) {
+    let tempFile = FileUtils.getDir("TmpD", [], true);
+    tempFile.append(fileName);
+    tempFile.remove(true);
+  }
+}
+
 /*
  * handle requests of the following form:
  * sig=good&key=good&file=good&header=good&cached=no to serve pages with
@@ -102,13 +119,37 @@ function handleRequest(request, response) {
   let cached = params.get("cached");
   let invalidateFile = params.get("invalidateFile");
   let validateFile = params.get("validateFile");
+  let resource = params.get("resource");
+
+  if (params.get("cleanup")) {
+    cleanupTestFiles();
+    response.setHeader("Content-Type", "text/html", false);
+    response.write("Done");
+    return;
+  }
+
+  if (resource) {
+    if (resource == "script") {
+      response.setHeader("Content-Type", "application/javascript", false);
+      response.write(loadFile(getFileName(scriptFileName, "TmpD")));
+    } else { // resource == "css1" || resource == "css2"
+      response.setHeader("Content-Type", "text/css", false);
+      response.write(loadFile(getFileName(cssFileName, "TmpD")));
+    }
+    return;
+  }
 
   // if invalidateFile is set, this doesn't actually return a newtab page
   // but changes the served file to invalidate the signature
   // NOTE: make sure to make the file valid again afterwards!
   if (invalidateFile) {
+    let r = "Done";
+    for (let fileName of tempFileNames) {
+      if (appendToFile(getFileName(fileName, "TmpD"), "!") != "Done") {
+        r = "Error";
+      }
+    }
     response.setHeader("Content-Type", "text/html", false);
-    let r = appendToFile(goodFile, "!");
     response.write(r);
     return;
   }
@@ -116,8 +157,13 @@ function handleRequest(request, response) {
   // if validateFile is set, this doesn't actually return a newtab page
   // but changes the served file to make the signature valid again
   if (validateFile) {
+    let r = "Done";
+    for (let fileName of tempFileNames) {
+      if (truncateFile(getFileName(fileName, "TmpD"), 1) != "Done") {
+        r = "Error";
+      }
+    }
     response.setHeader("Content-Type", "text/html", false);
-    let r = truncateFile(goodFile, 1);
     response.write(r);
     return;
   }
@@ -147,9 +193,13 @@ function handleRequest(request, response) {
     signature = badSignature;
   } else if (signatureType == "broken") {
     signature = brokenSignature;
+  } else if (signatureType == "sri") {
+    signature = sriSignature;
   }
   if (fileType == "bad") {
     file = getFileName(badFile, "CurWorkD");
+  } else if (fileType == "sri") {
+    file = getFileName(sriFile, "CurWorkD");
   }
 
   if (headerType == "good") {
