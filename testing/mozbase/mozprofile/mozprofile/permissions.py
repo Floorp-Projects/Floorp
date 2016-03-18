@@ -188,7 +188,7 @@ class ServerLocations(object):
             try:
                 location = Location(scheme, host, port, options)
                 self.add(location, suppress_callback=True)
-            except LocationError, e:
+            except LocationError as e:
                 raise LocationsSyntaxError(lineno, e)
 
             new_locations.append(location)
