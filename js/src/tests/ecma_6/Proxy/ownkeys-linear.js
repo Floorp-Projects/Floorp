@@ -1,0 +1,67 @@
+/*
+ * Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/licenses/publicdomain/
+ */
+
+var gTestfile = 'ownkeys-linear.js';
+var BUGNUMBER = 1257779;
+var summary =
+  "Scripted proxies' [[OwnPropertyKeys]] should have linear complexity";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
+
+const HALF_COUNT = 5e4;
+
+var configurables = [];
+for (var i = 0; i < HALF_COUNT; i++)
+  configurables.push("conf" + i);
+
+var nonconfigurables = [];
+for (var i = 0; i < HALF_COUNT; i++)
+  nonconfigurables.push("nonconf" + i);
+
+var target = {};
+for (var name of configurables)
+  Object.defineProperty(target, name, { configurable: false, value: 0 });
+for (var name of nonconfigurables)
+  Object.defineProperty(target, name, { configurable: true, value:  0 });
+
+var handler = {
+  ownKeys(t) {
+    assertEq(t, target, "target mismatch!");
+
+    var trapResult = [];
+
+    // Append all nonconfigurables in reverse order of presence.
+    for (var i = nonconfigurables.length; i > 0; i--)
+      trapResult.push(nonconfigurables[i - 1]);
+
+    // Then the same for all configurables.
+    for (var i = configurables.length; i > 0; i--)
+      trapResult.push(configurables[i - 1]);
+
+    // The end consequence is that this ordering is exactly opposite the
+    // ordering they'll have on the target, and so worst-case performance will
+    // occur if the spec's |uncheckedResultKeys| structure is a vector having
+    // the same order as |trapResult|, searched from beginning to end in the
+    // presence-checks in the last few steps of the [[OwnPropertyKeys]]
+    // algorithm.
+    return trapResult;
+  }
+};
+
+var p = new Proxy(target, handler);
+
+// The test passes if it doesn't time out.
+assertEq(Object.getOwnPropertyNames(p).length, HALF_COUNT * 2);
+
+/******************************************************************************/
+
+if (typeof reportCompare === "function")
+  reportCompare(true, true);
+
+print("Tests complete");
