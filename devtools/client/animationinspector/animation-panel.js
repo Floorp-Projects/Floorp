@@ -62,7 +62,8 @@ var AnimationsPanel = {
     let hUtils = gToolbox.highlighterUtils;
     this.togglePicker = hUtils.togglePicker.bind(hUtils);
 
-    this.animationsTimelineComponent = new AnimationsTimeline(gInspector);
+    this.animationsTimelineComponent = new AnimationsTimeline(gInspector,
+      AnimationsController.traits);
     this.animationsTimelineComponent.init(this.playersEl);
 
     if (AnimationsController.traits.hasSetPlaybackRate) {
