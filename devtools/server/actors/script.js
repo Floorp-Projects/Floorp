@@ -1264,20 +1264,22 @@ ThreadActor.prototype = {
     for (; frame && (!count || i < (start + count)); i++, frame=frame.older) {
       let form = this._createFrameActor(frame).form();
       form.depth = i;
-      frames.push(form);
 
       let promise = this.sources.getOriginalLocation(new GeneratedLocation(
         this.sources.createNonSourceMappedActor(frame.script.source),
         form.where.line,
         form.where.column
       )).then((originalLocation) => {
-        let sourceForm = originalLocation.originalSourceActor.form();
-        form.where = {
-          source: sourceForm,
-          line: originalLocation.originalLine,
-          column: originalLocation.originalColumn
-        };
-        form.source = sourceForm;
+        if (originalLocation.originalSourceActor) {
+          let sourceForm = originalLocation.originalSourceActor.form();
+          form.where = {
+            source: sourceForm,
+            line: originalLocation.originalLine,
+            column: originalLocation.originalColumn
+          };
+          form.source = sourceForm;
+          frames.push(form);
+        }
       });
       promises.push(promise);
     }
@@ -1936,7 +1938,7 @@ ThreadActor.prototype = {
     let sourceActor = this.sources.createNonSourceMappedActor(aSource);
 
     // Set any stored breakpoints.
-    let bpActors = this.breakpointActorMap.findActors();
+    let bpActors = [...this.breakpointActorMap.findActors()];
     let promises = [];
 
     // Go ahead and establish the source actors for this script, which
