@@ -23,7 +23,7 @@ AC_SUBST(MOZ_SYSTEM_FFI)
 ])
 
 AC_DEFUN([MOZ_SUBCONFIGURE_FFI], [
-if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
+if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
 
   if test "$BUILD_CTYPES" -a -z "$MOZ_SYSTEM_FFI"; then
     # Run the libffi 'configure' script.
