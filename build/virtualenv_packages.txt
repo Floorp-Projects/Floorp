@@ -7,6 +7,7 @@ configobj.pth:python/configobj
 jsmin.pth:python/jsmin
 mach.pth:python/mach
 mozbuild.pth:python/mozbuild
+mozlint.pth:python/mozlint
 pymake.pth:build/pymake
 optional:setup.py:python/psutil:build_ext:--inplace
 optional:psutil.pth:python/psutil
