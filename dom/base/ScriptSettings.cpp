@@ -832,27 +832,13 @@ danger::AutoCxPusher::IsStackTop() const
 AutoJSContext::AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
   : mCx(nullptr)
 {
-  Init(false MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT);
-}
-
-AutoJSContext::AutoJSContext(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : mCx(nullptr)
-{
-  Init(aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT);
-}
-
-void
-AutoJSContext::Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-{
   JS::AutoSuppressGCAnalysis nogc;
   MOZ_ASSERT(!mCx, "mCx should not be initialized!");
 
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
   nsXPConnect *xpc = nsXPConnect::XPConnect();
-  if (!aSafe) {
-    mCx = xpc->GetCurrentJSContext();
-  }
+  mCx = xpc->GetCurrentJSContext();
 
   if (!mCx) {
     mJSAPI.Init();
@@ -888,9 +874,17 @@ ThreadsafeAutoJSContext::operator JSContext*() const
 }
 
 AutoSafeJSContext::AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
-  : AutoJSContext(true MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
-  , mAc(mCx, xpc::UnprivilegedJunkScope())
+  : AutoJSAPI()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+  DebugOnly<bool> ok = Init(xpc::UnprivilegedJunkScope());
+  MOZ_ASSERT(ok,
+             "This is quite odd.  We should have crashed in the "
+             "xpc::NativeGlobal() call if xpc::UnprivilegedJunkScope() "
+             "returned null, and inited correctly otherwise!");
 }
 
 } // namespace mozilla

@@ -99,6 +99,8 @@ IDBKeyRange::FromJSVal(JSContext* aCx,
                        JS::Handle<JS::Value> aVal,
                        IDBKeyRange** aKeyRange)
 {
+  MOZ_ASSERT_IF(!aCx, aVal.isUndefined());
+
   RefPtr<IDBKeyRange> keyRange;
 
   if (aVal.isNullOrUndefined()) {

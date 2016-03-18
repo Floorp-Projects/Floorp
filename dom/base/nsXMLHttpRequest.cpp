@@ -1489,7 +1489,9 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
                        bool async, const Optional<nsAString>& user,
                        const Optional<nsAString>& password)
 {
-  NS_ENSURE_ARG(!inMethod.IsEmpty());
+  if (inMethod.IsEmpty()) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
+  }
 
   if (!async && !DontWarnAboutSyncXHR() && GetOwner() &&
       GetOwner()->GetExtantDoc()) {

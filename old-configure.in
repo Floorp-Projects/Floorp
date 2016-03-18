@@ -96,29 +96,6 @@ DIST="$MOZ_BUILD_ROOT/dist"
 
 MOZ_DEFAULT_COMPILER
 
-MOZ_ARG_WITH_STRING(l10n-base,
-[  --with-l10n-base=DIR    path to l10n repositories],
-    L10NBASEDIR=$withval)
-if test -n "$L10NBASEDIR"; then
-    if test "$L10NBASEDIR" = "yes" -o "$L10NBASEDIR" = "no"; then
-        AC_MSG_ERROR([--with-l10n-base must specify a path])
-    elif test -d "$L10NBASEDIR"; then
-        L10NBASEDIR=`cd "$L10NBASEDIR" && pwd -P`
-    else
-        AC_MSG_ERROR([Invalid value --with-l10n-base, $L10NBASEDIR doesn't exist])
-    fi
-fi
-AC_SUBST(L10NBASEDIR)
-
-if test -n "$MOZTTDIR" -a ! -d "$MOZTTDIR" ; then
-    AC_MSG_ERROR([MOZTTDIR '$MOZTTDIR' isn't a valid directory])
-fi
-
-AC_SUBST(MOZTTDIR)
-if test -n "$MOZTTDIR" ; then
-    AC_DEFINE(PACKAGE_MOZTT)
-fi
-
 MOZ_ARG_WITH_STRING(gonk-toolchain-prefix,
 [  --with-gonk-toolchain-prefix=DIR
                           prefix to gonk toolchain commands],
@@ -831,8 +808,6 @@ MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
 
 MOZ_FS_LAYOUT=unix
 
-USE_DEPENDENT_LIBS=1
-
 dnl Configure platform-specific CPU architecture compiler options.
 dnl ==============================================================
 if test "$COMPILE_ENVIRONMENT"; then
@@ -1212,25 +1187,6 @@ EOF
 fi
 
 dnl ========================================================
-dnl = Use profiling compile flags
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(profiling,
-[  --enable-profiling      Set compile flags necessary for using sampling profilers (e.g. shark, perf)],
-    MOZ_PROFILING=1,
-    MOZ_PROFILING= )
-
-dnl ========================================================
-dnl = Turn on systrace for android/b2g.
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(systrace,
-[  --enable-systrace       Set compile flags necessary for using sampling profilers (e.g. shark, perf)],
-    MOZ_USE_SYSTRACE=1,
-    MOZ_USE_SYSTRACE= )
-if test -n "$MOZ_USE_SYSTRACE"; then
-    AC_DEFINE(MOZ_USE_SYSTRACE)
-fi
-
-dnl ========================================================
 dnl = Use Valgrind
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(valgrind,
@@ -1245,89 +1201,6 @@ if test -n "$MOZ_VALGRIND"; then
 fi
 AC_SUBST(MOZ_VALGRIND)
 
-dnl ========================================================
-dnl jprof
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(jprof,
-[  --enable-jprof          Enable jprof profiling tool (needs mozilla/tools/jprof). Implies --enable-profiling.],
-    MOZ_JPROF=1,
-    MOZ_JPROF= )
-if test -n "$MOZ_JPROF"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_JPROF)
-fi
-
-dnl ========================================================
-dnl SPS Profiler
-dnl ========================================================
-MOZ_ENABLE_PROFILER_SPS=1
-
-case "${OS_TARGET}" in
-Android)
-    case "${CPU_ARCH}" in
-    x86 | arm) ;;
-    *)
-        MOZ_ENABLE_PROFILER_SPS=
-    esac
-    ;;
-Linux)
-    case "${CPU_ARCH}" in
-    x86 | x86_64) ;;
-    *)
-        MOZ_ENABLE_PROFILER_SPS=
-    esac
-    ;;
-WINNT) ;;
-Darwin)
-    if test -n "$MOZ_IOS"; then
-        MOZ_ENABLE_PROFILER_SPS=
-    fi
-    ;;
-*)
-    MOZ_ENABLE_PROFILER_SPS=
-    ;;
-esac
-
-if test -n "$MOZ_ENABLE_PROFILER_SPS"; then
-    AC_DEFINE(MOZ_ENABLE_PROFILER_SPS)
-fi
-
-dnl ========================================================
-dnl instruments
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(instruments,
-[  --enable-instruments    Enable instruments remote profiling. Implies --enable-profiling.],
-    MOZ_INSTRUMENTS=1,
-    MOZ_INSTRUMENTS= )
-if test -n "$MOZ_INSTRUMENTS"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_INSTRUMENTS)
-fi
-
-dnl ========================================================
-dnl callgrind
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(callgrind,
-[  --enable-callgrind      Enable callgrind profiling. Implies --enable-profiling.],
-    MOZ_CALLGRIND=1,
-    MOZ_CALLGRIND= )
-if test -n "$MOZ_CALLGRIND"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_CALLGRIND)
-fi
-
-dnl ========================================================
-dnl vtune
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(vtune,
-[  --enable-vtune          Enable vtune profiling. Implies --enable-profiling.],
-    MOZ_VTUNE=1,
-    MOZ_VTUNE= )
-if test -n "$MOZ_VTUNE"; then
-    MOZ_PROFILING=1
-    AC_DEFINE(MOZ_VTUNE)
-fi
-
 # For profiling builds keep the symbol information
 if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
     case "$OS_TARGET" in
@@ -1341,14 +1214,7 @@ dnl ========================================================
 dnl = Enable DMD
 dnl ========================================================
 
-MOZ_ARG_ENABLE_BOOL(dmd,
-[  --enable-dmd            Enable DMD; also enables jemalloc, replace-malloc and profiling],
-    MOZ_DMD=1,
-    MOZ_DMD= )
-
 if test "$MOZ_DMD"; then
-    AC_DEFINE(MOZ_DMD)
-
     if test "${CPU_ARCH}" = "arm"; then
         CFLAGS="$CFLAGS -funwind-tables"
         CXXFLAGS="$CXXFLAGS -funwind-tables"
@@ -1356,15 +1222,6 @@ if test "$MOZ_DMD"; then
 
     MOZ_MEMORY=1                        # DMD enables jemalloc
     MOZ_REPLACE_MALLOC=1                # DMD enables replace-malloc
-    MOZ_PROFILING=1                     # DMD enables profiling
-fi
-AC_SUBST(MOZ_DMD)
-
-dnl ========================================================
-dnl Profiling
-dnl ========================================================
-if test -n "$MOZ_PROFILING"; then
-    AC_DEFINE(MOZ_PROFILING)
 fi
 
 dnl ========================================================
@@ -1797,14 +1654,6 @@ case "$target" in
     AC_DEFINE(NOMINMAX)
     BIN_SUFFIX='.exe'
     MOZ_USER_DIR="Mozilla"
-
-    case "$host" in
-    *-mingw*)
-        if test -n "$L10NBASEDIR"; then
-            L10NBASEDIR=`cd $L10NBASEDIR && pwd -W`
-        fi
-        ;;
-    esac
 
     case "$host_os" in
     cygwin*|msvc*|mks*)
@@ -7480,12 +7329,6 @@ AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST_SET(MOZ_EXTENSIONS)
-AC_SUBST(MOZ_ENABLE_PROFILER_SPS)
-AC_SUBST(MOZ_JPROF)
-AC_SUBST(MOZ_INSTRUMENTS)
-AC_SUBST(MOZ_CALLGRIND)
-AC_SUBST(MOZ_VTUNE)
-AC_SUBST(MOZ_PROFILING)
 AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_PLACES)
 AC_SUBST(MOZ_SOCIAL)
@@ -7556,8 +7399,6 @@ AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 
 AC_SUBST(MOZ_FIX_LINK_PATHS)
-
-AC_SUBST(USE_DEPENDENT_LIBS)
 
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_LINKER_EXTRACT)

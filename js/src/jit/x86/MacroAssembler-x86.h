@@ -159,6 +159,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         Register baseReg = Register::FromCode(src.base());
         Register indexReg = (src.kind() == Operand::MEM_SCALE) ? Register::FromCode(src.index()) : InvalidReg;
 
+        // If we have a BaseIndex that uses both result registers, first compute
+        // the address and then load the Value from there.
+        if ((baseReg == val.payloadReg() && indexReg == val.typeReg()) ||
+            (baseReg == val.typeReg() && indexReg == val.payloadReg()))
+        {
+            computeEffectiveAddress(src, val.scratchReg());
+            loadValue(Address(val.scratchReg(), 0), val);
+            return;
+        }
+
         if (baseReg == val.payloadReg() || indexReg == val.payloadReg()) {
             MOZ_ASSERT(baseReg != val.typeReg());
             MOZ_ASSERT(indexReg != val.typeReg());

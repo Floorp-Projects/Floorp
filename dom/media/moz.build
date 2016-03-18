@@ -68,7 +68,6 @@ TEST_DIRS += [
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',
     'tests/mochitest/identity/mochitest.ini',
-    'tests/mochitest/ipc/mochitest.ini',
 ]
 
 if CONFIG['MOZ_WEBRTC']:

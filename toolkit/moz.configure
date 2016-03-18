@@ -4,7 +4,80 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
+# Profiling
+# ==============================================================
+# Some of the options here imply an option from js/moz.configure,
+# so, need to be declared before the include.
+option('--enable-systrace', env='MOZ_USE_SYSTRACE',
+       help='Turn on systrace for the Gecko profiler on android/b2g')
+
+@depends('--enable-systrace', target)
+def systrace(value, target):
+    if value and target.os != 'Android':
+        error('--enable-systrace cannot be used when targetting %s'
+              % target.os)
+    if value:
+        set_define('MOZ_USE_SYSTRACE', '1')
+
+
+option('--enable-jprof', env='MOZ_JPROF',
+       help='Enable jprof profiling tool (needs mozilla/tools/jprof)')
+
+@depends('--enable-jprof')
+def jprof(value):
+    if value:
+        set_config('MOZ_JPROF', '1')
+        set_define('MOZ_JPROF', '1')
+        imply_option('--enable-profiling')
+
+
+@depends(target)
+def sps_profiler(target):
+    if target.os == 'Android':
+        return target.cpu in ('arm', 'x86')
+    elif target.kernel == 'Linux':
+        return target.cpu in ('x86', 'x86_64')
+    return target.os in ('OSX', 'WINNT')
+
+@depends(sps_profiler)
+def sps_profiler_define(value):
+    if value:
+        set_config('MOZ_ENABLE_PROFILER_SPS', '1')
+        set_define('MOZ_ENABLE_PROFILER_SPS', '1')
+
+
+option('--enable-dmd', env='MOZ_DMD',
+       help='Enable Dark Matter Detector (heap profiler). '
+            'Also enables jemalloc, replace-malloc and profiling')
+
+@depends('--enable-dmd')
+def dmd(value):
+    if value:
+        set_config('MOZ_DMD', '1')
+        set_define('MOZ_DMD', '1')
+        add_old_configure_assignment('MOZ_DMD', '1')
+        imply_option('--enable-profiling')
+
+
+# Javascript engine
+# ==============================================================
 include('../js/moz.configure')
+
+
+# L10N
+# ==============================================================
+option('--with-l10n-base', nargs=1, env='L10NBASEDIR',
+       help='Path to l10n repositories')
+
+@depends('--with-l10n-base')
+def l10n_base(value):
+    if value:
+        path = value[0]
+        if not os.path.isdir(path):
+            error("Invalid value --with-l10n-base, %s doesn't exist" % path)
+
+        set_config('L10NBASEDIR', os.path.realpath(os.path.abspath(path)))
 
 
 # Default toolkit

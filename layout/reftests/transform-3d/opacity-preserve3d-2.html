@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head>
+<style>
+    .first {
+        transform: translateZ(10px);
+        background-color: blue;
+        top: 50px;
+    }
+    .second {
+        transform: translateZ(5px);
+        background-color: green;
+    }
+    .preserve {
+        transform-style: preserve-3d;
+    }
+    .leaf {
+        width: 100px;
+        height: 100px;
+        position:absolute;
+    }
+</style>
+</head><body>
+
+<div class="preserve" style="opacity:0.5">
+    <div class="leaf first"></div>
+    <div class="leaf second"></div>
+</div>
+
+</body>
+</html>
+

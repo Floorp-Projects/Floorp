@@ -13,6 +13,8 @@
 #include "SpeechSynthesisUtterance.h"
 #include "SpeechSynthesisVoice.h"
 
+#include <stdlib.h>
+
 namespace mozilla {
 namespace dom {
 
@@ -120,7 +122,7 @@ SpeechSynthesisUtterance::Volume() const
 void
 SpeechSynthesisUtterance::SetVolume(float aVolume)
 {
-  mVolume = aVolume;
+  mVolume = std::max<float>(std::min<float>(aVolume, 1), 0);
 }
 
 float
@@ -132,7 +134,7 @@ SpeechSynthesisUtterance::Rate() const
 void
 SpeechSynthesisUtterance::SetRate(float aRate)
 {
-  mRate = aRate;
+  mRate = std::max<float>(std::min<float>(aRate, 10), 0.1f);
 }
 
 float
@@ -144,7 +146,7 @@ SpeechSynthesisUtterance::Pitch() const
 void
 SpeechSynthesisUtterance::SetPitch(float aPitch)
 {
-  mPitch = aPitch;
+  mPitch = std::max<float>(std::min<float>(aPitch, 2), 0);
 }
 
 void

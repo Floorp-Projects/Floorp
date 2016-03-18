@@ -614,6 +614,34 @@ intrinsic_UnsafeGetBooleanFromReservedSlot(JSContext* cx, unsigned argc, Value* 
     return true;
 }
 
+/**
+ * Intrinsic for creating an empty array in the compartment of the object
+ * passed as the first argument.
+ *
+ * Returns the array, wrapped in the default wrapper to use between the two
+ * compartments.
+ */
+static bool
+intrinsic_NewArrayInCompartment(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    RootedObject wrapped(cx, &args[0].toObject());
+    MOZ_ASSERT(IsWrapper(wrapped));
+    RootedObject obj(cx, UncheckedUnwrap(wrapped));
+
+    RootedArrayObject arr(cx);
+    {
+        AutoCompartment ac(cx, obj);
+        arr = NewDenseEmptyArray(cx);
+        if (!arr)
+            return false;
+    }
+
+    args.rval().setObject(*arr);
+    return wrapped->compartment()->wrap(cx, args.rval());
+}
+
 static bool
 intrinsic_IsPackedArray(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -1897,6 +1925,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IntrinsicUnsafeGetBooleanFromReservedSlot),
 
     JS_FN("UnsafeCallWrappedFunction", intrinsic_UnsafeCallWrappedFunction,2,0),
+    JS_FN("NewArrayInCompartment",   intrinsic_NewArrayInCompartment,   1,0),
 
     JS_FN("IsPackedArray",           intrinsic_IsPackedArray,           1,0),
 

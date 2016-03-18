@@ -2350,7 +2350,18 @@ bool AsyncPanZoomController::AttemptScroll(ParentLayerPoint& aStartPoint,
   ParentLayerPoint displacement = aStartPoint - aEndPoint;
 
   ParentLayerPoint overscroll;  // will be used outside monitor block
-  {
+
+  // If the direction of panning is reversed within the same input block,
+  // a later event in the block could potentially scroll an APZC earlier
+  // in the handoff chain, than an earlier event in the block (because
+  // the earlier APZC was scrolled to its extent in the original direction).
+  // If immediate handoff is disallowed, we want to disallow this (to
+  // preserve the property that a single input block only scrolls one APZC),
+  // so we skip the earlier APZC.
+  bool scrollThisApzc = gfxPrefs::APZAllowImmediateHandoff() ||
+      (CurrentInputBlock() && (!CurrentInputBlock()->GetScrolledApzc() || this == CurrentInputBlock()->GetScrolledApzc()));
+
+  if (scrollThisApzc) {
     ReentrantMonitorAutoEnter lock(mMonitor);
 
     ParentLayerPoint adjustedDisplacement;
@@ -2375,6 +2386,8 @@ bool AsyncPanZoomController::AttemptScroll(ParentLayerPoint& aStartPoint,
       ScheduleCompositeAndMaybeRepaint();
       UpdateSharedCompositorFrameMetrics();
     }
+  } else {
+    overscroll = displacement;
   }
 
   // Adjust the start point to reflect the consumed portion of the scroll.
