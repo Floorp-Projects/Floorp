@@ -845,6 +845,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_alu(dest.base, lsl(dest.index, dest.scale), scratch, OpAdd);
         storeValue(val, Address(scratch, dest.offset));
     }
+    void storeValue(const Address& src, const Address& dest, Register temp) {
+        load32(ToType(src), temp);
+        store32(temp, ToType(dest));
+
+        load32(ToPayload(src), temp);
+        store32(temp, ToPayload(dest));
+    }
 
     void loadValue(Address src, ValueOperand val);
     void loadValue(Operand dest, ValueOperand val) {

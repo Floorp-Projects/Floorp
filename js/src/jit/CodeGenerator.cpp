@@ -3104,13 +3104,23 @@ class OutOfLineCallPostWriteBarrier : public OutOfLineCodeBase<CodeGenerator>
     }
 };
 
-void
-CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier* ool)
+static void
+EmitPostWriteBarrier(MacroAssembler& masm, Register objreg, bool isGlobal,
+                     AllocatableGeneralRegisterSet regs)
 {
-    saveLiveVolatile(ool->lir());
+    Register runtimereg = regs.takeAny();
+    masm.mov(ImmPtr(GetJitContext()->runtime), runtimereg);
 
-    const LAllocation* obj = ool->object();
+    void (*fun)(JSRuntime*, JSObject*) = isGlobal ? PostGlobalWriteBarrier : PostWriteBarrier;
+    masm.setupUnalignedABICall(regs.takeAny());
+    masm.passABIArg(runtimereg);
+    masm.passABIArg(objreg);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
+}
 
+void
+CodeGenerator::emitPostWriteBarrier(const LAllocation* obj)
+{
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
 
     Register objreg;
@@ -3125,15 +3135,23 @@ CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier*
         regs.takeUnchecked(objreg);
     }
 
-    Register runtimereg = regs.takeAny();
-    masm.mov(ImmPtr(GetJitContext()->runtime), runtimereg);
+    EmitPostWriteBarrier(masm, objreg, isGlobal, regs);
+}
 
-    void (*fun)(JSRuntime*, JSObject*) = isGlobal ? PostGlobalWriteBarrier : PostWriteBarrier;
-    masm.setupUnalignedABICall(regs.takeAny());
-    masm.passABIArg(runtimereg);
-    masm.passABIArg(objreg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
+void
+CodeGenerator::emitPostWriteBarrier(Register objreg)
+{
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
+    regs.takeUnchecked(objreg);
+    EmitPostWriteBarrier(masm, objreg, false, regs);
+}
 
+void
+CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier* ool)
+{
+    saveLiveVolatile(ool->lir());
+    const LAllocation* obj = ool->object();
+    emitPostWriteBarrier(obj);
     restoreLiveVolatile(ool->lir());
 
     masm.jump(ool->rejoin());
@@ -5653,6 +5671,134 @@ CodeGenerator::visitSetArrayLength(LSetArrayLength* lir)
     masm.store32(newLength, length);
     // Restore register value if it is used/captured after.
     masm.dec32(&newLength);
+}
+
+static inline void
+ValueMapRangeFront(MacroAssembler& masm, Register range, Register i, Register front)
+{
+    masm.loadPtr(Address(range, ValueMap::Range::offsetOfHashTable()), front);
+    masm.loadPtr(Address(front, ValueMap::offsetOfImplData()), front);
+
+    MOZ_ASSERT(ValueMap::sizeofImplData() == 24);
+    masm.mulBy3(i, i);
+    masm.lshiftPtr(Imm32(3), i);
+    masm.addPtr(i, front);
+}
+
+static inline void
+ValueMapRangePopFront(MacroAssembler& masm, Register range, Register front, Register dataLength,
+                      Register temp)
+{
+    Register i = temp;
+
+    masm.add32(Imm32(1), Address(range, ValueMap::Range::offsetOfCount()));
+
+    masm.load32(Address(range, ValueMap::Range::offsetOfI()), i);
+    masm.add32(Imm32(1), i);
+
+    Label done, seek;
+    masm.bind(&seek);
+    masm.branch32(Assembler::AboveOrEqual, i, dataLength, &done);
+
+    MOZ_ASSERT(ValueMap::sizeofImplData() == 24);
+    masm.addPtr(Imm32(24), front);
+
+    masm.branchTestMagic(Assembler::NotEqual, Address(front, ValueMap::Entry::offsetOfKey()),
+                         JS_HASH_KEY_EMPTY, &done);
+
+    masm.add32(Imm32(1), i);
+    masm.jump(&seek);
+
+    masm.bind(&done);
+    masm.store32(i, Address(range, ValueMap::Range::offsetOfI()));
+}
+
+static inline void
+ValueMapRangeDestruct(MacroAssembler& masm, Register range, Register temp0, Register temp1)
+{
+    Register next = temp0;
+    Register prevp = temp1;
+
+    masm.loadPtr(Address(range, ValueMap::Range::offsetOfNext()), next);
+    masm.loadPtr(Address(range, ValueMap::Range::offsetOfPrevP()), prevp);
+    masm.storePtr(next, Address(prevp, 0));
+
+    Label hasNoNext;
+    masm.branchTestPtr(Assembler::Zero, next, next, &hasNoNext);
+
+    masm.storePtr(prevp, Address(next, ValueMap::Range::offsetOfPrevP()));
+
+    masm.bind(&hasNoNext);
+
+    masm.callFreeStub(range);
+}
+
+void
+CodeGenerator::visitGetNextMapEntryForIterator(LGetNextMapEntryForIterator* lir)
+{
+    Register iter = ToRegister(lir->iter());
+    Register result = ToRegister(lir->result());
+    Register temp = ToRegister(lir->temp0());
+    Register dataLength = ToRegister(lir->temp1());
+    Register range = ToRegister(lir->temp2());
+    Register output = ToRegister(lir->output());
+
+    masm.loadPrivate(Address(iter, NativeObject::getFixedSlotOffset(MapIteratorObject::RangeSlot)),
+                     range);
+
+    Label iterDone, done;
+    masm.branchTestPtr(Assembler::Zero, range, range, &iterDone);
+
+    masm.load32(Address(range, ValueMap::Range::offsetOfI()), temp);
+    masm.loadPtr(Address(range, ValueMap::Range::offsetOfHashTable()), dataLength);
+    masm.load32(Address(dataLength, ValueMap::offsetOfImplDataLength()), dataLength);
+    masm.branch32(Assembler::AboveOrEqual, temp, dataLength, &iterDone);
+    {
+        masm.push(iter);
+
+        Register front = iter;
+        ValueMapRangeFront(masm, range, temp, front);
+
+        size_t elementsOffset = NativeObject::offsetOfFixedElements();
+
+        Address keyAddress(front, ValueMap::Entry::offsetOfKey());
+        Address valueAddress(front, ValueMap::Entry::offsetOfValue());
+        masm.storeValue(keyAddress, Address(result, elementsOffset), temp);
+        masm.storeValue(valueAddress, Address(result, elementsOffset + sizeof(Value)), temp);
+
+        Label keyIsNotObject, valueIsNotNurseryObject, emitBarrier;
+        masm.branchTestObject(Assembler::NotEqual, keyAddress, &keyIsNotObject);
+        masm.branchValueIsNurseryObject(Assembler::Equal, keyAddress, temp,
+                                        &emitBarrier);
+        masm.bind(&keyIsNotObject);
+        masm.branchTestObject(Assembler::NotEqual, valueAddress, &valueIsNotNurseryObject);
+        masm.branchValueIsNurseryObject(Assembler::NotEqual, valueAddress, temp,
+                                        &valueIsNotNurseryObject);
+        {
+            masm.bind(&emitBarrier);
+            saveVolatile(temp);
+            emitPostWriteBarrier(result);
+            restoreVolatile(temp);
+        }
+        masm.bind(&valueIsNotNurseryObject);
+
+        ValueMapRangePopFront(masm, range, front, dataLength, temp);
+
+        masm.pop(iter);
+        masm.move32(Imm32(0), output);
+    }
+    masm.jump(&done);
+    {
+        masm.bind(&iterDone);
+
+        ValueMapRangeDestruct(masm, range, temp, dataLength);
+
+        masm.storeValue(PrivateValue(nullptr),
+                        Address(iter, NativeObject::getFixedSlotOffset(MapIteratorObject::RangeSlot)));
+
+        masm.move32(Imm32(1), output);
+    }
+    masm.bind(&done);
 }
 
 void

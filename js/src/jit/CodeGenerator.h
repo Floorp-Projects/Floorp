@@ -139,6 +139,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitTypeBarrierV(LTypeBarrierV* lir);
     void visitTypeBarrierO(LTypeBarrierO* lir);
     void visitMonitorTypes(LMonitorTypes* lir);
+    void emitPostWriteBarrier(const LAllocation* obj);
+    void emitPostWriteBarrier(Register objreg);
     template <class LPostBarrierType>
     void visitPostWriteBarrierCommonO(LPostBarrierType* lir, OutOfLineCode* ool);
     template <class LPostBarrierType>
@@ -207,6 +209,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitComputeThis(LComputeThis* lir);
     void visitArrayLength(LArrayLength* lir);
     void visitSetArrayLength(LSetArrayLength* lir);
+    void visitGetNextMapEntryForIterator(LGetNextMapEntryForIterator* lir);
     void visitTypedArrayLength(LTypedArrayLength* lir);
     void visitTypedArrayElements(LTypedArrayElements* lir);
     void visitSetDisjointTypedElements(LSetDisjointTypedElements* lir);
