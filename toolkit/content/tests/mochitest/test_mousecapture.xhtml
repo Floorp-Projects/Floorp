@@ -1,15 +1,18 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!DOCTYPE HTML>
+<html xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Mouse Capture Tests</title>
+  <link rel="stylesheet" href="chrome://global/skin/" type="text/css"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script> 
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script> 
+</head>
+<body id="body" xmlns="http://www.w3.org/1999/xhtml">
+  <p id="display"/><div id="content" style="display: none"/><pre id="test"/>
 
-<window title="Mouse Capture Tests" align="start"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-
-<script>
-<![CDATA[
+<script><![CDATA[
 
 SimpleTest.expectAssertions(6, 12);
 
@@ -266,30 +269,31 @@ SimpleTest.waitForFocus(runTests);
 ]]>
 </script>
 
-<tooltip id="tooltip">
-  <label value="Test"/>
-</tooltip>
+<xul:vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" align="start">
+  <tooltip id="tooltip">
+    <label value="Test"/>
+  </tooltip>
 
-<hbox id="splitterbox" style="margin-top: 5px;" onmousedown="this.setCapture()">
-  <hbox id="leftbox" width="100" flex="1"/>
-  <splitter id="splitter" height="5"/>
-  <hbox id="rightbox" width="100" flex="1"/>
-</hbox>
+  <hbox id="splitterbox" style="margin-top: 5px;" onmousedown="this.setCapture()">
+    <hbox id="leftbox" width="100" flex="1"/>
+    <splitter id="splitter" height="5"/>
+    <hbox id="rightbox" width="100" flex="1"/>
+  </hbox>
 
-<vbox id="custom" width="10" height="10" onmousedown="this.setCapture(); cachedMouseDown = event;"/>
-<vbox id="custom2" width="10" height="10" onmousedown="this.setCapture(); document.releaseCapture();"/>
-<vbox id="custom3" width="10" height="10" onmousedown="this.setCapture(); this.releaseCapture();"/>
-<vbox id="custom4" width="10" height="10" onmousedown="this.setCapture();"
-                                          onmousemove="this.releaseCapture();"/>
-<hbox id="custom5" width="40" height="40"
-      onmousedown="this.setCapture(captureRetargetMode);">
-  <spacer id="custom5spacer" width="5"/>
-  <hbox id="custom5inner" width="35" height="35"/>
-</hbox>
-<vbox id="custom6" width="10" height="10"
-      onmousedown="document.createElement('hbox').setCapture();"/>
+  <vbox id="custom" width="10" height="10" onmousedown="this.setCapture(); cachedMouseDown = event;"/>
+  <vbox id="custom2" width="10" height="10" onmousedown="this.setCapture(); document.releaseCapture();"/>
+  <vbox id="custom3" width="10" height="10" onmousedown="this.setCapture(); this.releaseCapture();"/>
+  <vbox id="custom4" width="10" height="10" onmousedown="this.setCapture();"
+                                            onmousemove="this.releaseCapture();"/>
+  <hbox id="custom5" width="40" height="40"
+        onmousedown="this.setCapture(captureRetargetMode);">
+    <spacer id="custom5spacer" width="5"/>
+    <hbox id="custom5inner" width="35" height="35"/>
+  </hbox>
+  <vbox id="custom6" width="10" height="10"
+        onmousedown="document.createElement('hbox').setCapture();"/>
+</xul:vbox>
 
-<hbox>
   <iframe width="100" height="100"
           src="data:text/html,%3Cbody style%3D'font-size%3A 40pt%3B'%3E.%3Cb id%3D'b'%3EThis%3C/b%3E is some text%3Cdiv id='fixed' style='position: fixed; left: 55px; top: 5px; width: 10px; height: 10px'%3E.%3C/div%3E%3C/body%3E"/>
 
@@ -311,17 +315,13 @@ SimpleTest.waitForFocus(runTests);
     <option id="option9">Nine</option>
     <option id="option10">Ten</option>
   </select>
-</hbox>
 
-<hbox>
   <img id="image" xmlns="http://www.w3.org/1999/xhtml"
        onmousedown="this.setCapture();" onmouseup="this.releaseCapture();"
        ondragstart="ok(false, 'should not get a drag when a setCapture is active');"
        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAG0lEQVR42mP8z0A%2BYKJA76jmUc2jmkc1U0EzACKcASfOgGoMAAAAAElFTkSuQmCC"/>
-</hbox>
 
-<body id="body" xmlns="http://www.w3.org/1999/xhtml">
-  <p id="display"/><div id="content" style="display: none"/><pre id="test"/>
 </body>
 
-</window>
+</html>
+
