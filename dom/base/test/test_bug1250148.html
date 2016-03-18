@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+       https://bugzilla.mozilla.org/show_bug.cgi?id=1250148
+     -->
+  <head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1250148 - FormData and HTML submission compatibility</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <form id="form" enctype="multipart/form-data"><input type="file" name="test" /></form>
+    <script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var f = document.getElementById('form');
+var fd = new FormData(f);
+is(fd.get("test"), "", "We want an empty string.");
+
+var getAll = fd.getAll("test");
+ok(Array.isArray(getAll), "We want an array with 1 empty string.");
+is(getAll.length, 1, "We want an array with 1 empty string.");
+is(getAll[0], "", "We want an array with 1 empty string.");
+
+var xhr = new XMLHttpRequest();
+xhr.open("POST", "file_bug1250148.sjs", true);
+xhr.onload = function() {
+  var obj = JSON.parse(xhr.responseText);
+
+  ok(Array.isArray(obj), "XHR response is an array.");
+  is(obj.length, 1, "XHR response array contains 1 result.");
+
+  ok("headers" in obj[0], "XHR response has an header value");
+
+  ok("Content-Disposition" in obj[0].headers, "XHR response.headers array has a Content-Desposition value");
+  is(obj[0].headers["Content-Disposition"], "form-data; name=\"test\"; filename=\"\"", "Correct Content-Disposition");
+
+  ok("Content-Type" in obj[0].headers, "XHR response.headers array has a Content-Type value");
+  is(obj[0].headers["Content-Type"], "application/octet-stream", "Correct Content-Type");
+
+  ok("body" in obj[0], "XHR response has a body value");
+  is(obj[0].body, "", "Correct body value");
+
+  SimpleTest.finish();
+}
+xhr.send(fd);
+
+    </script>
+  </body>
+</html>
