@@ -223,6 +223,7 @@ TableWidget.prototype = {
     }
 
     let change = {
+      host: this.host,
       key: uniqueId,
       field: colName,
       oldValue: data.change.oldValue,
