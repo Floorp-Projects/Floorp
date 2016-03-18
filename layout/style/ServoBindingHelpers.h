@@ -17,10 +17,21 @@ template<>
 struct RefPtrTraits<RawServoStyleSheet>
 {
   static void AddRef(RawServoStyleSheet* aPtr) {
-    MOZ_CRASH("stylo: not implemented");
+    Servo_AddRefStyleSheet(aPtr);
   }
   static void Release(RawServoStyleSheet* aPtr) {
-    Servo_ReleaseStylesheet(aPtr);
+    Servo_ReleaseStyleSheet(aPtr);
+  }
+};
+
+template<>
+struct RefPtrTraits<ServoComputedValues>
+{
+  static void AddRef(ServoComputedValues* aPtr) {
+    Servo_AddRefComputedValues(aPtr);
+  }
+  static void Release(ServoComputedValues* aPtr) {
+    Servo_ReleaseComputedValues(aPtr);
   }
 };
 
