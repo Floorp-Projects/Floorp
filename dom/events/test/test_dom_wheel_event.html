@@ -226,7 +226,7 @@ function* testDeltaMultiplierPrefs()
     is(aEvent.deltaY, expectedDeltaY, description + "deltaY (" + currentEvent.deltaY + ") was invalid");
     is(aEvent.deltaZ, expectedDeltaZ, description + "deltaZ (" + currentEvent.deltaZ + ") was invalid");
 
-    if (--expectedAsyncHandlerCalls == 0) {
+    if (expectedAsyncHandlerCalls > 0 && --expectedAsyncHandlerCalls == 0) {
       setTimeout(continueTest, 0);
     }
   }
@@ -288,7 +288,7 @@ function* testDeltaMultiplierPrefs()
 
     aEvent.preventDefault();
 
-    if (--expectedAsyncHandlerCalls == 0) {
+    if (expectedAsyncHandlerCalls > 0 && --expectedAsyncHandlerCalls == 0) {
       setTimeout(continueTest, 0);
     }
   }
