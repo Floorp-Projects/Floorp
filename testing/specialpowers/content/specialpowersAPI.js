@@ -1941,6 +1941,11 @@ SpecialPowersAPI.prototype = {
   allowMedia: function(window, enable) {
     this._getDocShell(window).allowMedia = enable;
   },
+
+  createChromeCache: function(name, url) {
+    let principal = this._getPrincipalFromArg(url);
+    return wrapIfUnwrapped(new content.window.CacheStorage(name, principal));
+  },
 };
 
 this.SpecialPowersAPI = SpecialPowersAPI;

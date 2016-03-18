@@ -46,7 +46,7 @@ class UnrestrictedDoubleOrKeyframeAnimationOptions;
 class UnrestrictedDoubleOrKeyframeEffectOptions;
 enum class IterationCompositeOperation : uint32_t;
 enum class CompositeOperation : uint32_t;
-struct AnimationPropertyState;
+struct AnimationPropertyDetails;
 }
 
 /**
@@ -209,6 +209,8 @@ public:
   void GetFrames(JSContext*& aCx,
                  nsTArray<JSObject*>& aResult,
                  ErrorResult& aRv);
+  void GetProperties(nsTArray<AnimationPropertyDetails>& aProperties,
+                     ErrorResult& aRv) const;
 
   // Temporary workaround to return both the target element and pseudo-type
   // until we implement PseudoElement (bug 1174575).
@@ -303,8 +305,6 @@ public:
   // Returns true if at least one property is being animated on compositor.
   bool IsRunningOnCompositor() const;
   void SetIsRunningOnCompositor(nsCSSProperty aProperty, bool aIsRunning);
-
-  void GetPropertyState(nsTArray<AnimationPropertyState>& aStates) const;
 
   // Returns true if this effect, applied to |aFrame|, contains properties
   // that mean we shouldn't run transform compositor animations on this element.

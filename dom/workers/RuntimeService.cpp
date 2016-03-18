@@ -1934,11 +1934,8 @@ RuntimeService::Shutdown()
       {
         MutexAutoUnlock unlock(mMutex);
 
-        AutoSafeJSContext cx;
-        JSAutoRequest ar(cx);
-
         for (uint32_t index = 0; index < workers.Length(); index++) {
-          if (!workers[index]->Kill(cx)) {
+          if (!workers[index]->Kill()) {
             NS_WARNING("Failed to cancel worker!");
           }
         }

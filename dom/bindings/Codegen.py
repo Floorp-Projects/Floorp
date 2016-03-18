@@ -14687,17 +14687,29 @@ class CGCallback(CGClass):
             # Not much we can assert about it, other than not being null, and
             # CallbackObject does that already.
             body = ""
-        return [ClassConstructor(
-            [Argument("JSContext*", "aCx"),
-             Argument("JS::Handle<JSObject*>", "aCallback"),
-             Argument("nsIGlobalObject*", "aIncumbentGlobal")],
-            bodyInHeader=True,
-            visibility="public",
-            explicit=True,
-            baseConstructors=[
-                "%s(aCx, aCallback, aIncumbentGlobal)" % self.baseName,
-            ],
-            body=body)]
+        return [
+            ClassConstructor(
+                [Argument("JSContext*", "aCx"),
+                 Argument("JS::Handle<JSObject*>", "aCallback"),
+                 Argument("nsIGlobalObject*", "aIncumbentGlobal")],
+                bodyInHeader=True,
+                visibility="public",
+                explicit=True,
+                baseConstructors=[
+                    "%s(aCx, aCallback, aIncumbentGlobal)" % self.baseName,
+                ],
+                body=body),
+            ClassConstructor(
+                [Argument("JS::Handle<JSObject*>", "aCallback"),
+                 Argument("JS::Handle<JSObject*>", "aAsyncStack"),
+                 Argument("nsIGlobalObject*", "aIncumbentGlobal")],
+                bodyInHeader=True,
+                visibility="public",
+                explicit=True,
+                baseConstructors=[
+                    "%s(aCallback, aAsyncStack, aIncumbentGlobal)" % self.baseName,
+                ],
+                body=body)]
 
     def getMethodImpls(self, method):
         assert method.needThisHandling

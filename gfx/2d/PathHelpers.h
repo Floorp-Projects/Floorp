@@ -34,7 +34,8 @@ inline void PartialArcToBezier(T* aSink,
                                const Size& aRadius,
                                const Point& aStartPoint, const Point& aEndPoint,
                                const Point& aStartOffset, const Point& aEndOffset,
-                               Float aKappaFactor = kKappaFactor)
+                               Float aKappaFactor = kKappaFactor,
+                               const Matrix& aTransform = Matrix())
 {
   Float kappaX = aKappaFactor * aRadius.width;
   Float kappaY = aKappaFactor * aRadius.height;
@@ -45,7 +46,7 @@ inline void PartialArcToBezier(T* aSink,
   Point cp2 =
     aEndPoint + Point(aEndOffset.y * kappaX, -aEndOffset.x * kappaY);
 
-  aSink->BezierTo(cp1, cp2, aEndPoint);
+  aSink->BezierTo(aTransform * cp1, aTransform * cp2, aTransform * aEndPoint);
 }
 
 /**
@@ -90,7 +91,8 @@ inline void AcuteArcToBezier(T* aSink,
 
 template <typename T>
 void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
-                 float aStartAngle, float aEndAngle, bool aAntiClockwise)
+                 float aStartAngle, float aEndAngle, bool aAntiClockwise,
+                 float aRotation = 0.0f)
 {
   Float sweepDirection = aAntiClockwise ? -1.0f : 1.0f;
 
@@ -111,23 +113,24 @@ void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
 
   Float currentStartAngle = aStartAngle;
   Point currentStartOffset(cosf(aStartAngle), sinf(aStartAngle));
-  Point currentStartPoint(aOrigin.x + currentStartOffset.x * aRadius.width,
-                          aOrigin.y + currentStartOffset.y * aRadius.height);
-
-  aSink->LineTo(currentStartPoint);
+  Point currentStartPoint(currentStartOffset.x * aRadius.width,
+                          currentStartOffset.y * aRadius.height);
+  Matrix transform(cosf(aRotation), sinf(aRotation), -sinf(aRotation), cosf(aRotation), aOrigin.x, aOrigin.y);
+  aSink->LineTo(transform * currentStartPoint);
 
   while (arcSweepLeft > 0) {
     Float currentEndAngle =
       currentStartAngle + std::min(arcSweepLeft, Float(M_PI / 2.0f)) * sweepDirection;
 
     Point currentEndOffset(cosf(currentEndAngle), sinf(currentEndAngle));
-    Point currentEndPoint(aOrigin.x + currentEndOffset.x * aRadius.width,
-                          aOrigin.y + currentEndOffset.y * aRadius.height);
+    Point currentEndPoint(currentEndOffset.x * aRadius.width,
+                          currentEndOffset.y * aRadius.height);
 
     PartialArcToBezier(aSink, aRadius,
                        currentStartPoint, currentEndPoint,
                        currentStartOffset, currentEndOffset,
-                       ComputeKappaFactor(currentEndAngle - currentStartAngle));
+                       ComputeKappaFactor(currentEndAngle - currentStartAngle),
+                       transform);
 
     // We guarantee here the current point is the start point of the next
     // curve segment.

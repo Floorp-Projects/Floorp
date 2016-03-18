@@ -34,6 +34,7 @@ struct LoadInfoArgs
   uint32_t         tainting;
   bool             upgradeInsecureRequests;
   bool             verifySignedContent;
+  bool             enforceSRI;
   uint64_t         innerWindowID;
   uint64_t         outerWindowID;
   uint64_t         parentOuterWindowID;

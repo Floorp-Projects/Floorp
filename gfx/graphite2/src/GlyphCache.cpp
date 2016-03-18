@@ -116,8 +116,10 @@ private:
 
 GlyphCache::GlyphCache(const Face & face, const uint32 face_options)
 : _glyph_loader(new Loader(face, bool(face_options & gr_face_dumbRendering))),
-  _glyphs(_glyph_loader && *_glyph_loader ? grzeroalloc<const GlyphFace *>(_glyph_loader->num_glyphs()) : 0),
-  _boxes(_glyph_loader && _glyph_loader->has_boxes() ? grzeroalloc<GlyphBox *>(_glyph_loader->num_glyphs()) : 0),
+  _glyphs(_glyph_loader && *_glyph_loader && _glyph_loader->num_glyphs()
+        ? grzeroalloc<const GlyphFace *>(_glyph_loader->num_glyphs()) : 0),
+  _boxes(_glyph_loader && _glyph_loader->has_boxes() && _glyph_loader->num_glyphs()
+        ? grzeroalloc<GlyphBox *>(_glyph_loader->num_glyphs()) : 0),
   _num_glyphs(_glyphs ? _glyph_loader->num_glyphs() : 0),
   _num_attrs(_glyphs ? _glyph_loader->num_attrs() : 0),
   _upem(_glyphs ? _glyph_loader->units_per_em() : 0)
@@ -144,7 +146,7 @@ GlyphCache::GlyphCache(const Face & face, const uint32 face_options)
             _glyphs[0] = 0;
             delete [] glyphs;
         }
-        else if (numsubs > 0)
+        else if (numsubs > 0 && _boxes)
         {
             GlyphBox * boxes = (GlyphBox *)gralloc<char>(_num_glyphs * sizeof(GlyphBox) + numsubs * 8 * sizeof(float));
             GlyphBox * currbox = boxes;
@@ -285,7 +287,8 @@ GlyphCache::Loader::Loader(const Face & face, const bool dumb_font)
 
         if (version >= 0x00020000 || tmpnumgattrs < 0 || tmpnumgattrs > 65535
             || _num_attrs == 0 || _num_attrs > 0x3000  // is this hard limit appropriate?
-            || _num_glyphs_graphics > tmpnumgattrs)
+            || _num_glyphs_graphics > tmpnumgattrs
+            || m_pGlat.size() < 4)
         {
             _head = Face::Table();
             return;
@@ -294,7 +297,7 @@ GlyphCache::Loader::Loader(const Face & face, const bool dumb_font)
         _num_glyphs_attributes = static_cast<unsigned short>(tmpnumgattrs);
         p = m_pGlat;
         version = be::read<uint32>(p);
-        if (version >= 0x00040000)       // reject Glat tables that are too new
+        if (version >= 0x00040000 || (version >= 0x00030000 && m_pGlat.size() < 8))       // reject Glat tables that are too new
         {
             _head = Face::Table();
             return;
@@ -386,11 +389,11 @@ const GlyphFace * GlyphCache::Loader::read_glyph(unsigned short glyphid, GlyphFa
             gloce = be::peek<uint16>(gloc);
         }
 
-        if (glocs >= m_pGlat.size() || gloce > m_pGlat.size())
+        if (glocs + 1 >= m_pGlat.size() || gloce > m_pGlat.size())
             return 0;
 
         const uint32 glat_version = be::peek<uint32>(m_pGlat);
-        if (glat_version == 0x00030000)
+        if (glat_version >= 0x00030000)
         {
             const byte * p = m_pGlat + glocs;
             uint16 bmap = be::read<uint16>(p);
@@ -454,7 +457,7 @@ GlyphBox * GlyphCache::Loader::read_box(uint16 gid, GlyphBox *curr, const GlyphF
         gloce = be::peek<uint16>(gloc);
     }
 
-    if (glocs >= m_pGlat.size() || gloce > m_pGlat.size())
+    if (gloce > m_pGlat.size() || glocs + 6 >= gloce)
         return 0;
 
     const byte * p = m_pGlat + glocs;
@@ -467,6 +470,8 @@ GlyphBox * GlyphCache::Loader::read_box(uint16 gid, GlyphBox *curr, const GlyphF
     Rect diabound = readbox(diamax, p[0], p[2], p[1], p[3]);
     ::new (curr) GlyphBox(num, bmap, &diabound);
     be::skip<uint8>(p, 4);
+    if (glocs + 6 + num * 8 >= gloce)
+        return 0;
 
     for (int i = 0; i < num * 2; ++i)
     {

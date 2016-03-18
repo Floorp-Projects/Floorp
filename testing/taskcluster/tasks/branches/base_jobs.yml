@@ -164,12 +164,6 @@ builds:
     types:
       opt:
         task: tasks/builds/android_api_15_frontend.yml
-  android-b2gdroid:
-    platforms:
-      - Android
-    types:
-      opt:
-        task: tasks/builds/android_api_15_b2gdroid.yml
   linux64-mulet-haz:
     platforms:
       - Mulet Linux

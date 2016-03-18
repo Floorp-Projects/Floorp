@@ -34,9 +34,13 @@ window.onload = function onLoad() {
   if (location.search == "?runtest") {
     try {
       if (history.length == 1) {
-        runTest();
+        // Each test that includes this helper file is supposed to define
+        // runTest(). See the top level comment.
+        runTest(); // eslint-disable-line no-undef
       } else {
-        afterNavigationTest();
+        // Each test that includes this helper file is supposed to define
+        // afterNavigationTest(). See the top level comment.
+        afterNavigationTest(); // eslint-disable-line no-undef
       }
     } catch (ex) {
       ok(false, "Exception thrown during test: " + ex);
@@ -49,7 +53,7 @@ window.onload = function onLoad() {
                                             : "https://example.com";
     secureTestLocation += location.pathname;
     if (testPage != "") {
-      array = secureTestLocation.split("/");
+      let array = secureTestLocation.split("/");
       array.pop();
       array.push(testPage);
       secureTestLocation = array.join("/");

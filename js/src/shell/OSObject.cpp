@@ -447,7 +447,8 @@ static bool
 Redirect(JSContext* cx, const CallArgs& args, RCFile** outFile)
 {
     if (args.length() > 1) {
-        JS_ReportErrorNumber(cx, js::shell::my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "redirect");
+        JS_ReportErrorNumber(cx, js::shell::my_GetErrorMessage, nullptr,
+                             JSSMSG_INVALID_ARGS, "redirect");
         return false;
     }
 
@@ -478,9 +479,12 @@ Redirect(JSContext* cx, const CallArgs& args, RCFile** outFile)
         }
     }
 
-    RootedString filename(cx, JS::ToString(cx, args[0]));
-    if (!filename)
-        return false;
+    RootedString filename(cx);
+    if (!args[0].isNull()) {
+        filename = JS::ToString(cx, args[0]);
+        if (!filename)
+            return false;
+    }
 
     if (!redirect(cx, filename, outFile))
         return false;

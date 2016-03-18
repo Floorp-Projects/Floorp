@@ -111,9 +111,8 @@ InputBlockState::IsAncestorOf(AsyncPanZoomController* aA, AsyncPanZoomController
 void
 InputBlockState::SetScrolledApzc(AsyncPanZoomController* aApzc)
 {
-  // With immediate handoff disabled, the scrolled APZC cannot move down the handoff chain
-  // but it can move up the handoff chain if we change scrolling directions.
-  MOZ_ASSERT(!mScrolledApzc || IsAncestorOf(aApzc, mScrolledApzc));
+  // An input block should only have one scrolled APZC.
+  MOZ_ASSERT(!mScrolledApzc || mScrolledApzc == aApzc);
 
   mScrolledApzc = aApzc;
 }
