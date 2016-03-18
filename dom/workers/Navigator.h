@@ -112,8 +112,6 @@ public:
                                           const nsAString& aName,
                                           const nsAString& aOwner,
                                           ErrorResult& aRv);
-
-  uint64_t HardwareConcurrency() const;
 };
 
 END_WORKERS_NAMESPACE
