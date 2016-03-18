@@ -111,7 +111,7 @@ public:
   virtual void *GetNativeSurface(NativeSurfaceType aType) override;
 
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
-  void Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat);
+  void Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat, bool aUninitialized = false);
 
 #ifdef USE_SKIA_GPU
   bool InitWithGrContext(GrContext* aGrContext,
