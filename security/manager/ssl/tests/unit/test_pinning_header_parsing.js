@@ -24,7 +24,7 @@ function loadCert(cert_name, trust_string) {
 
 function checkFailParseInvalidPin(pinValue) {
   let sslStatus = new FakeSSLStatus(
-                        certFromFile('cn-a.pinning2.example.com-pinningroot'));
+                        certFromFile('a.pinning2.example.com-pinningroot'));
   let uri = Services.io.newURI("https://a.pinning2.example.com", null, null);
   throws(() => {
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
@@ -34,7 +34,7 @@ function checkFailParseInvalidPin(pinValue) {
 
 function checkPassValidPin(pinValue, settingPin) {
   let sslStatus = new FakeSSLStatus(
-                        certFromFile('cn-a.pinning2.example.com-pinningroot'));
+                        certFromFile('a.pinning2.example.com-pinningroot'));
   let uri = Services.io.newURI("https://a.pinning2.example.com", null, null);
 
   // setup preconditions for the test, if setting ensure there is no previous
