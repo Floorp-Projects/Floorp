@@ -92,15 +92,38 @@ function* openTabAndSetupStorage(url) {
   gWindow = content.wrappedJSObject;
 
   // Setup the async storages in main window and for all its iframes
-  let callSetup = function*(win) {
-    if (typeof (win.setup) == "function") {
-      yield win.setup();
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+    /**
+     * Get all windows including frames recursively.
+     *
+     * @param {Window} [baseWindow]
+     *        The base window at which to start looking for child windows
+     *        (optional).
+     * @return {Set}
+     *         A set of windows.
+     */
+    function getAllWindows(baseWindow) {
+      let windows = new Set();
+
+      let _getAllWindows = function(win) {
+        windows.add(win.wrappedJSObject);
+
+        for (let i = 0; i < win.length; i++) {
+          _getAllWindows(win[i]);
+        }
+      };
+      _getAllWindows(baseWindow);
+
+      return windows;
     }
-    for (let i = 0; i < win.frames.length; i++) {
-      yield callSetup(win.frames[i]);
+
+    let windows = getAllWindows(content);
+    for (let win of windows) {
+      if (win.setup) {
+        yield win.setup();
+      }
     }
-  };
-  yield callSetup(gWindow);
+  });
 
   // open storage inspector
   return yield openStoragePanel();
@@ -213,7 +236,7 @@ function* finishTests() {
       let windows = new Set();
 
       let _getAllWindows = function(win) {
-        windows.add(win);
+        windows.add(win.wrappedJSObject);
 
         for (let i = 0; i < win.length; i++) {
           _getAllWindows(win[i]);
@@ -224,10 +247,10 @@ function* finishTests() {
       return windows;
     }
 
-    let windows = getAllWindows(content.wrappedJSObject);
+    let windows = getAllWindows(content);
     for (let win of windows) {
       if (win.clear) {
-        yield Task.spawn(win.clear);
+        yield win.clear();
       }
     }
   });
