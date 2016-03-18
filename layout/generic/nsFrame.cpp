@@ -2164,7 +2164,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                              containerItemScrollClip));
   }
 
-  if (!isTransformed) {
+  if (!isTransformed && !useStickyPosition) {
     // Restore saved clip state now so that any display items we create below
     // are clipped properly.
     clipState.Restore();
@@ -2246,7 +2246,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     }
 
     // Restore clip state now so nsDisplayTransform is clipped properly.
-    if (!HasPerspective()) {
+    if (!HasPerspective() && !useStickyPosition) {
       clipState.Restore();
       if (didResetClip) {
         containerItemScrollClip = aBuilder->ClipState().GetCurrentInnermostScrollClip();
@@ -2271,9 +2271,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     resultList.AppendNewToTop(transformItem);
 
     if (HasPerspective()) {
-      clipState.Restore();
-      if (didResetClip) {
-        containerItemScrollClip = aBuilder->ClipState().GetCurrentInnermostScrollClip();
+      if (!useStickyPosition) {
+        clipState.Restore();
+        if (didResetClip) {
+          containerItemScrollClip = aBuilder->ClipState().GetCurrentInnermostScrollClip();
+        }
       }
       resultList.AppendNewToTop(
         new (aBuilder) nsDisplayPerspective(
@@ -2287,6 +2289,13 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     if (useOpacity && !usingSVGEffects) {
       CreateOpacityItem(aBuilder, this, resultList, opacityItemForEventsOnly,
                         containerItemScrollClip);
+    }
+  }
+
+  if (useStickyPosition) {
+    clipState.Restore();
+    if (didResetClip) {
+      containerItemScrollClip = aBuilder->ClipState().GetCurrentInnermostScrollClip();
     }
   }
 
