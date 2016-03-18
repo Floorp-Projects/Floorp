@@ -227,8 +227,7 @@ nsSVGClipPathFrame::GetClipMask(gfxContext& aReferenceContext,
                            devSpaceClipExtents.height));
     maskDT->MaskSurface(SurfacePattern(currentMask, ExtendMode::CLAMP),
                         aExtraMask,
-                        Point(aExtraMasksTransform._31 - devSpaceClipExtents.x,
-                              aExtraMasksTransform._32 - devSpaceClipExtents.y));
+                        Point(aExtraMasksTransform._31, aExtraMasksTransform._32));
   }
 
   *aMaskTransform = ToMatrix(mat);
