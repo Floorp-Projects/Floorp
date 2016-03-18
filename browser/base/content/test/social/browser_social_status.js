@@ -39,12 +39,6 @@ function test() {
   waitForExplicitFinish();
 
   let frameScript = "data:,(" + function frame_script() {
-    addEventListener("socialFrameShow", function(e) {
-      sendAsyncMessage("visibility", "shown");
-    }, false);
-    addEventListener("socialFrameHide", function(e) {
-      sendAsyncMessage("visibility", "hidden");
-    }, false);
     addMessageListener("socialTest-sendEvent", function(msg) {
       let data = msg.data;
       let evt = content.document.createEvent("CustomEvent");

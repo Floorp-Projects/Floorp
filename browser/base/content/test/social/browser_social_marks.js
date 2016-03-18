@@ -26,12 +26,9 @@ function test() {
   waitForExplicitFinish();
 
   let frameScript = "data:,(" + function frame_script() {
-    addEventListener("socialFrameShow", function(e) {
-      sendAsyncMessage("visibility", "shown");
-    }, false);
-    addEventListener("socialFrameHide", function(e) {
-      sendAsyncMessage("visibility", "hidden");
-    }, false);
+    addEventListener("visibilitychange", function() {
+      sendAsyncMessage("visibility", content.document.hidden ? "hidden" : "shown");
+    });
   }.toString() + ")();";
   let mm = getGroupMessageManager("social");
   mm.loadFrameScript(frameScript, true);
