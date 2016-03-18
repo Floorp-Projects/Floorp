@@ -17,6 +17,7 @@
  * Functions beginning with Servo_ are implemented in Servo and invoked from Gecko.
  */
 
+class nsIAtom;
 class nsINode;
 typedef nsINode RawGeckoNode;
 namespace mozilla { namespace dom { class Element; } }
@@ -75,6 +76,9 @@ RawServoStyleSet* Servo_InitStyleSet();
 void Servo_DropStyleSet(RawServoStyleSet* set);
 
 // Computed style data.
+ServoComputedValues* Servo_GetComputedValues(RawGeckoElement* element);
+ServoComputedValues* Servo_GetComputedValuesForAnonymousBox(ServoComputedValues* parentStyleOrNull,
+                                                            nsIAtom* pseudoTag);
 void Servo_AddRefComputedValues(ServoComputedValues*);
 void Servo_ReleaseComputedValues(ServoComputedValues*);
 
