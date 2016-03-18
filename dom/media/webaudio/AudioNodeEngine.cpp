@@ -9,6 +9,9 @@
 #include "mozilla/arm.h"
 #include "AudioNodeEngineNEON.h"
 #endif
+#ifdef USE_SSE2
+#include "AudioNodeEngineSSE2.h"
+#endif
 
 namespace mozilla {
 
@@ -71,6 +74,14 @@ void AudioBufferAddWithScale(const float* aInput,
     return;
   }
 #endif
+
+#ifdef USE_SSE2
+  if (mozilla::supports_sse2()) {
+    AudioBufferAddWithScale_SSE(aInput, aScale, aOutput, aSize);
+    return;
+  }
+#endif
+
   if (aScale == 1.0f) {
     for (uint32_t i = 0; i < aSize; ++i) {
       aOutput[i] += aInput[i];
@@ -104,6 +115,14 @@ AudioBlockCopyChannelWithScale(const float* aInput,
       return;
     }
 #endif
+
+#ifdef USE_SSE2
+  if (mozilla::supports_sse2()) {
+    AudioBlockCopyChannelWithScale_SSE(aInput, aScale, aOutput);
+    return;
+  }
+#endif
+
     for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
       aOutput[i] = aInput[i]*aScale;
     }
@@ -152,6 +171,14 @@ AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
     return;
   }
 #endif
+
+#ifdef USE_SSE2
+  if (mozilla::supports_sse2()) {
+    AudioBlockCopyChannelWithScale_SSE(aInput, aScale, aOutput);
+    return;
+  }
+#endif
+
   for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
     aOutput[i] = aInput[i]*aScale[i];
   }
@@ -178,6 +205,14 @@ AudioBufferInPlaceScale(float* aBlock,
     return;
   }
 #endif
+
+#ifdef USE_SSE2
+  if (mozilla::supports_sse2()) {
+    AudioBufferInPlaceScale_SSE(aBlock, aScale, aSize);
+    return;
+  }
+#endif
+
   for (uint32_t i = 0; i < aSize; ++i) {
     *aBlock++ *= aScale;
   }
@@ -216,6 +251,15 @@ AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
     AudioBlockPanStereoToStereo_NEON(aInputL, aInputR,
                                      aGainL, aGainR, aIsOnTheLeft,
                                      aOutputL, aOutputR);
+    return;
+  }
+#endif
+
+#ifdef USE_SSE2
+  if (mozilla::supports_sse2()) {
+    AudioBlockPanStereoToStereo_SSE(aInputL, aInputR,
+                                    aGainL, aGainR, aIsOnTheLeft,
+                                    aOutputL, aOutputR);
     return;
   }
 #endif
