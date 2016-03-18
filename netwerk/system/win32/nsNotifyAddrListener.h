@@ -82,6 +82,9 @@ private:
     // Network changed events are enabled
     bool mAllowChangedEvent;
 
+    // Check for IPv6 network changes
+    bool mIPv6Changes;
+
     // Flag set while coalescing change events
     bool mCoalescingActive;
 
