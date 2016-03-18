@@ -150,7 +150,8 @@ StorageUI.prototype = {
   makeFieldsEditable: function() {
     let actor = this.getCurrentActor();
 
-    if (typeof actor.getEditableFields !== "undefined") {
+    if (typeof actor.getEditableFields !== "undefined" &&
+        this.table.datatype !== "sessionStorage") {
       actor.getEditableFields().then(fields => {
         this.table.makeFieldsEditable(fields);
       });
@@ -375,6 +376,7 @@ StorageUI.prototype = {
       if (this.shouldResetColumns) {
         this.resetColumns(data[0], type);
       }
+      this.table.host = host;
       this.populateTable(data, reason);
       this.emit("store-objects-updated");
 
