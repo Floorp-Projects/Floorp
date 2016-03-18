@@ -292,7 +292,7 @@ public:
   }
 
   bool
-  Kill(JSContext* aCx)
+  Kill()
   {
     return Notify(Killing);
   }
