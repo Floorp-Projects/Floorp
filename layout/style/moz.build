@@ -97,6 +97,7 @@ EXPORTS.mozilla += [
     'SheetType.h',
     'StyleAnimationValue.h',
     'StyleBackendType.h',
+    'StyleContextSource.h',
     'StyleSetHandle.h',
     'StyleSetHandleInlines.h',
     'StyleSheet.h',
