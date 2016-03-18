@@ -7,186 +7,185 @@
 "use strict";
 
 define(function(require, exports, module) {
+  const React = require("devtools/client/shared/vendor/react");
+  const DOM = React.DOM;
 
-const React = require("devtools/client/shared/vendor/react");
-const DOM = React.DOM;
+  /**
+   * Renders simple 'tab' widget.
+   *
+   * Based on ReactSimpleTabs component
+   * https://github.com/pedronauck/react-simpletabs
+   *
+   * Component markup (+CSS) example:
+   *
+   * <div class='tabs'>
+   *  <nav class='tabs-navigation'>
+   *    <ul class='tabs-menu'>
+   *      <li class='tabs-menu-item is-active'>Tab #1</li>
+   *      <li class='tabs-menu-item'>Tab #2</li>
+   *    </ul>
+   *  </nav>
+   *  <article class='tab-panel'>
+   *    The content of active panel here
+   *  </article>
+   * <div>
+   */
+  let Tabs = React.createClass({
+    propTypes: {
+      className: React.PropTypes.oneOfType([
+        React.PropTypes.array,
+        React.PropTypes.string,
+        React.PropTypes.object
+      ]),
+      tabActive: React.PropTypes.number,
+      onMount: React.PropTypes.func,
+      onBeforeChange: React.PropTypes.func,
+      onAfterChange: React.PropTypes.func,
+      children: React.PropTypes.oneOfType([
+        React.PropTypes.array,
+        React.PropTypes.element
+      ]).isRequired
+    },
 
-/**
- * Renders simple 'tab' widget.
- *
- * Based on ReactSimpleTabs component
- * https://github.com/pedronauck/react-simpletabs
- *
- * Component markup (+CSS) example:
- *
- * <div class='tabs'>
- *  <nav class='tabs-navigation'>
- *    <ul class='tabs-menu'>
- *      <li class='tabs-menu-item is-active'>Tab #1</li>
- *      <li class='tabs-menu-item'>Tab #2</li>
- *    </ul>
- *  </nav>
- *  <article class='tab-panel'>
- *    The content of active panel here
- *  </article>
- * <div>
- */
-var Tabs = React.createClass({
-  displayName: "Tabs",
+    displayName: "Tabs",
 
-  propTypes: {
-    className: React.PropTypes.oneOfType([
-      React.PropTypes.array,
-      React.PropTypes.string,
-      React.PropTypes.object
-    ]),
-    tabActive: React.PropTypes.number,
-    onMount: React.PropTypes.func,
-    onBeforeChange: React.PropTypes.func,
-    onAfterChange: React.PropTypes.func,
-    children: React.PropTypes.oneOfType([
-      React.PropTypes.array,
-      React.PropTypes.element
-    ]).isRequired
-  },
+    getDefaultProps: function() {
+      return {
+        tabActive: 1
+      };
+    },
 
-  getDefaultProps: function () {
-    return {
-      tabActive: 1
-    };
-  },
+    getInitialState: function() {
+      return {
+        tabActive: this.props.tabActive
+      };
+    },
 
-  getInitialState: function () {
-    return {
-      tabActive: this.props.tabActive
-    };
-  },
-
-  componentDidMount: function() {
-    var index = this.state.tabActive;
-    if (this.props.onMount) {
-      this.props.onMount(index);
-    }
-  },
-
-  componentWillReceiveProps: function(newProps){
-    if (newProps.tabActive) {
-      this.setState({tabActive: newProps.tabActive})
-    }
-  },
-
-  render: function () {
-    var classNames = ["tabs", this.props.className].join(" ");
-
-    return (
-      DOM.div({className: classNames},
-        this.getMenuItems(),
-        this.getSelectedPanel()
-      )
-    );
-  },
-
-  setActive: function(index, e) {
-    var onAfterChange = this.props.onAfterChange;
-    var onBeforeChange = this.props.onBeforeChange;
-
-    if (onBeforeChange) {
-      var cancel = onBeforeChange(index);
-      if (cancel) {
-        return;
+    componentDidMount: function() {
+      let index = this.state.tabActive;
+      if (this.props.onMount) {
+        this.props.onMount(index);
       }
-    }
+    },
 
-    var newState = {
-      tabActive: index
-    };
-
-    this.setState(newState, () => {
-      if (onAfterChange) {
-        onAfterChange(index);
+    componentWillReceiveProps: function(newProps) {
+      if (newProps.tabActive) {
+        this.setState({tabActive: newProps.tabActive});
       }
-    });
+    },
 
-    e.preventDefault();
-  },
+    setActive: function(index, e) {
+      let onAfterChange = this.props.onAfterChange;
+      let onBeforeChange = this.props.onBeforeChange;
 
-  getMenuItems: function () {
-    if (!this.props.children) {
-      throw new Error("Tabs must contain at least one Panel");
-    }
+      if (onBeforeChange) {
+        let cancel = onBeforeChange(index);
+        if (cancel) {
+          return;
+        }
+      }
 
-    if (!Array.isArray(this.props.children)) {
-      this.props.children = [this.props.children];
-    }
+      let newState = {
+        tabActive: index
+      };
 
-    var menuItems = this.props.children
-      .map(function(panel) {
-        return typeof panel === "function" ? panel() : panel;
-      }).filter(function(panel) {
-        return panel;
-      }).map(function(panel, index) {
-        var ref = ("tab-menu-" + (index + 1));
-        var title = panel.props.title;
-        var tabClassName = panel.props.className;
+      this.setState(newState, () => {
+        if (onAfterChange) {
+          onAfterChange(index);
+        }
+      });
 
-        var classes = [
-          "tabs-menu-item",
-          tabClassName,
-          this.state.tabActive === (index + 1) && "is-active"
-        ].join(" ");
+      e.preventDefault();
+    },
 
-        return (
-          DOM.li({ref: ref, key: index, className: classes},
-            DOM.a({href: "#", onClick: this.setActive.bind(this, index + 1)},
-              title
+    getMenuItems: function() {
+      if (!this.props.children) {
+        throw new Error("Tabs must contain at least one Panel");
+      }
+
+      if (!Array.isArray(this.props.children)) {
+        this.props.children = [this.props.children];
+      }
+
+      let menuItems = this.props.children
+        .map(function(panel) {
+          return typeof panel === "function" ? panel() : panel;
+        }).filter(function(panel) {
+          return panel;
+        }).map(function(panel, index) {
+          let ref = ("tab-menu-" + (index + 1));
+          let title = panel.props.title;
+          let tabClassName = panel.props.className;
+
+          let classes = [
+            "tabs-menu-item",
+            tabClassName,
+            this.state.tabActive === (index + 1) && "is-active"
+          ].join(" ");
+
+          return (
+            DOM.li({ref: ref, key: index, className: classes},
+              DOM.a({href: "#", onClick: this.setActive.bind(this, index + 1)},
+                title
+              )
             )
+          );
+        }.bind(this));
+
+      return (
+        DOM.nav({className: "tabs-navigation"},
+          DOM.ul({className: "tabs-menu"},
+            menuItems
           )
-        );
-      }.bind(this));
-
-    return (
-      DOM.nav({className: "tabs-navigation"},
-        DOM.ul({className: "tabs-menu"},
-          menuItems
         )
-      )
-    );
-  },
+      );
+    },
 
-  getSelectedPanel: function () {
-    var index = this.state.tabActive - 1;
-    var panel = this.props.children[index];
+    getSelectedPanel: function() {
+      let index = this.state.tabActive - 1;
+      let panel = this.props.children[index];
 
-    return (
-      DOM.article({ref: "tab-panel", className: "tab-panel"},
-        panel
-      )
-    );
-  }
-});
+      return (
+        DOM.article({ref: "tab-panel", className: "tab-panel"},
+          panel
+        )
+      );
+    },
 
-/**
- * Renders simple tab 'panel'.
- */
-var Panel = React.createClass({
-  displayName: "Panel",
+    render: function() {
+      let classNames = ["tabs", this.props.className].join(" ");
 
-  propTypes: {
-    title: React.PropTypes.string.isRequired,
-    children: React.PropTypes.oneOfType([
-      React.PropTypes.array,
-      React.PropTypes.element
-    ]).isRequired
-  },
+      return (
+        DOM.div({className: classNames},
+          this.getMenuItems(),
+          this.getSelectedPanel()
+        )
+      );
+    },
+  });
 
-  render: function () {
-    return DOM.div({},
-      this.props.children
-    );
-  }
-});
+  /**
+   * Renders simple tab 'panel'.
+   */
+  let Panel = React.createClass({
+    propTypes: {
+      title: React.PropTypes.string.isRequired,
+      children: React.PropTypes.oneOfType([
+        React.PropTypes.array,
+        React.PropTypes.element
+      ]).isRequired
+    },
 
-// Exports from this module
-exports.TabPanel = Panel;
-exports.Tabs = Tabs;
+    displayName: "Panel",
+
+    render: function() {
+      return DOM.div({},
+        this.props.children
+      );
+    }
+  });
+
+  // Exports from this module
+  exports.TabPanel = Panel;
+  exports.Tabs = Tabs;
 });

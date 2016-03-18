@@ -7,45 +7,52 @@
 "use strict";
 
 define(function(require, exports, module) {
+  const React = require("devtools/client/shared/vendor/react");
+  const DOM = React.DOM;
 
-const React = require("devtools/client/shared/vendor/react");
-const DOM = React.DOM;
+  /**
+   * Renders a simple toolbar.
+   */
+  let Toolbar = React.createClass({
+    propTypes: {
+      children: React.PropTypes.oneOfType([
+        React.PropTypes.array,
+        React.PropTypes.element
+      ])
+    },
 
-/**
- * Renders a simple toolbar.
- */
-var Toolbar = React.createClass({
-  displayName: "Toolbar",
+    displayName: "Toolbar",
 
-  render: function() {
-    return (
-      DOM.div({className: "toolbar"},
-        this.props.children
-      )
-    );
-  }
-});
+    render: function() {
+      return (
+        DOM.div({className: "toolbar"},
+          this.props.children
+        )
+      );
+    }
+  });
 
-/**
- * Renders a simple toolbar button.
- */
-var ToolbarButton = React.createClass({
-  displayName: "ToolbarButton",
+  /**
+   * Renders a simple toolbar button.
+   */
+  let ToolbarButton = React.createClass({
+    propTypes: {
+      active: React.PropTypes.bool,
+      disabled: React.PropTypes.bool,
+      children: React.PropTypes.string,
+    },
 
-  propTypes: {
-    active: React.PropTypes.bool,
-    disabled: React.PropTypes.bool,
-  },
+    displayName: "ToolbarButton",
 
-  render: function() {
-    var props = Object.assign({className: "btn"}, this.props);
-    return (
-      DOM.button(props, this.props.children)
-    );
-  },
-});
+    render: function() {
+      let props = Object.assign({className: "btn"}, this.props);
+      return (
+        DOM.button(props, this.props.children)
+      );
+    },
+  });
 
-// Exports from this module
-exports.Toolbar = Toolbar;
-exports.ToolbarButton = ToolbarButton;
+  // Exports from this module
+  exports.Toolbar = Toolbar;
+  exports.ToolbarButton = ToolbarButton;
 });

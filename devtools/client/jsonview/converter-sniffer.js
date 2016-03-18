@@ -11,10 +11,11 @@ const xpcom = require("sdk/platform/xpcom");
 const {Unknown} = require("sdk/platform/xpcom");
 const {Class} = require("sdk/core/heritage");
 
-const categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+const categoryManager = Cc["@mozilla.org/categorymanager;1"]
+  .getService(Ci.nsICategoryManager);
 
 loader.lazyRequireGetter(this, "NetworkHelper",
-                               "devtools/shared/webconsole/network-helper");
+  "devtools/shared/webconsole/network-helper");
 
 // Constants
 const JSON_TYPE = "application/json";
@@ -43,15 +44,16 @@ var Sniffer = Class({
     return this;
   },
 
-  getMIMETypeFromContent: function(aRequest, aData, aLength) {
+  getMIMETypeFromContent: function(request, data, length) {
     // JSON View is enabled only for top level loads only.
-    if (!NetworkHelper.isTopLevelLoad(aRequest)) {
+    if (!NetworkHelper.isTopLevelLoad(request)) {
       return "";
     }
 
-    if (aRequest instanceof Ci.nsIChannel) {
+    if (request instanceof Ci.nsIChannel) {
       try {
-        if (aRequest.contentDisposition == Ci.nsIChannel.DISPOSITION_ATTACHMENT) {
+        if (request.contentDisposition ==
+          Ci.nsIChannel.DISPOSITION_ATTACHMENT) {
           return "";
         }
       } catch (e) {
@@ -60,7 +62,7 @@ var Sniffer = Class({
 
       // Check the response content type and if it's application/json
       // change it to new internal type consumed by JSON View.
-      if (aRequest.contentType == JSON_TYPE) {
+      if (request.contentType == JSON_TYPE) {
         return JSON_VIEW_MIME_TYPE;
       }
     }
@@ -91,7 +93,7 @@ function register() {
 function unregister() {
   if (xpcom.isRegistered(service)) {
     categoryManager.deleteCategoryEntry(CONTENT_SNIFFER_CATEGORY,
-      JSON_VIEW_TYPE, false)
+      JSON_VIEW_TYPE, false);
     xpcom.unregister(service);
     return true;
   }
@@ -101,4 +103,4 @@ function unregister() {
 exports.JsonViewSniffer = {
   register: register,
   unregister: unregister
-}
+};
