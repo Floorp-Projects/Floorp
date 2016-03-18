@@ -8,13 +8,9 @@ function test() {
     addMessageListener("socialTest-CloseSelf", function(e) {
       content.close();
     });
-    addEventListener("socialFrameShow", function(e) {
-      sendAsyncMessage("social-visibility", "shown");
-    }, false);
-    addEventListener("socialFrameHide", function(e) {
-      sendAsyncMessage("social-visibility", "hidden");
-    }, false);
-
+    addEventListener("visibilitychange", function() {
+      sendAsyncMessage("social-visibility", content.document.hidden ? "hidden" : "shown");
+    });
     addMessageListener("socialTest-sendEvent", function(msg) {
       let data = msg.data;
       let evt = content.document.createEvent("CustomEvent");

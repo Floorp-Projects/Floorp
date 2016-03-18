@@ -14,6 +14,18 @@ var manifest = { // normal provider
 function test() {
   waitForExplicitFinish();
 
+  let frameScript = "data:,(" + function frame_script() {
+    addEventListener("visibilitychange", function() {
+      sendAsyncMessage("visibility", content.document.hidden ? "hidden" : "shown");
+    });
+  }.toString() + ")();";
+  let mm = getGroupMessageManager("social");
+  mm.loadFrameScript(frameScript, true);
+
+  registerCleanupFunction(function () {
+    mm.removeDelayedFrameScript(frameScript);
+  });
+
   SocialService.addProvider(manifest, function() {
     // the test will remove the provider
     doTest();
@@ -27,12 +39,16 @@ function doTest() {
   let command = document.getElementById("Social:ToggleSidebar");
   let sidebar = document.getElementById("social-sidebar-box");
   let browser = sidebar.lastChild;
+  ok(!browser.docShellIsActive, "sidebar is not active");
+  is(sidebar.hidden, true, "sidebar should be hidden");
+  is(command.getAttribute("checked"), "false", "toggle command should be unchecked");
 
   function checkShown(shouldBeShown) {
     is(command.getAttribute("checked"), shouldBeShown ? "true" : "false",
        "toggle command should be " + (shouldBeShown ? "checked" : "unchecked"));
     is(sidebar.hidden, !shouldBeShown,
        "sidebar should be " + (shouldBeShown ? "visible" : "hidden"));
+    is(browser.docShellIsActive, shouldBeShown, "sidebar isActive in correct state");
     if (shouldBeShown) {
       is(browser.getAttribute('src'), SocialSidebar.provider.sidebarURL, "sidebar url should be set");
       // We don't currently check docShellIsActive as this is only set
@@ -52,31 +68,31 @@ function doTest() {
       }
     }
   }
-
-  // First check the the sidebar is initially visible, and loaded
-  ok(!command.hidden, "toggle command should be visible");
-
-  ensureEventFired(browser, "socialFrameShow").then(function sidebarhide() {
-
-    checkShown(true);
-
-    ensureEventFired(browser, "socialFrameHide").then(function sidebarshow() {
-
-      checkShown(false);
-
-      // disable social.
-      SocialService.disableProvider(SocialSidebar.provider.origin, function() {
-        checkShown(false);
-        is(Social.providers.length, 0, "no providers left");
-        defaultFinishChecks();
-        // Finish the test
-        executeSoon(finish);
-      });
+  ensureEventFired(browser, "load").then(() => {
+    // First check the the sidebar is initially visible, and loaded
+    ok(!command.hidden, "toggle command should be visible");
+    let mm = getGroupMessageManager("social");
+    mm.addMessageListener("visibility", function shown(msg) {
+      if (msg.data == "shown") {
+        mm.removeMessageListener("visibility", shown);
+        checkShown(true);
+        info("Toggling sidebar to closed");
+        SocialSidebar.toggleSidebar();
+      }
     });
-
-    // Toggle it back on
-    info("Toggling sidebar back on");
-    SocialSidebar.toggleSidebar();
+    mm.addMessageListener("visibility", function handler(msg) {
+      if (msg.data == "hidden") {
+        mm.removeMessageListener("visibility", handler);
+        // disable social.
+        SocialService.disableProvider(SocialSidebar.provider.origin, function() {
+          checkShown(false);
+          is(Social.providers.length, 0, "no providers left");
+          defaultFinishChecks();
+          // Finish the test
+          executeSoon(finish);
+        });
+      }
+    });
   });
   SocialSidebar.show();
 }
