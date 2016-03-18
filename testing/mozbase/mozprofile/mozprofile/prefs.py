@@ -96,16 +96,16 @@ class Preferences(object):
                 return cls.read_ini(path, section)
             except PreferencesReadError:
                 raise
-            except Exception, e:
+            except Exception as e:
                 raise PreferencesReadError(str(e))
 
         # try both JSON and .ini format
         try:
             return cls.read_json(path)
-        except Exception, e:
+        except Exception as e:
             try:
                 return cls.read_ini(path)
-            except Exception, f:
+            except Exception as f:
                 for exception in e, f:
                     if isinstance(exception, PreferencesReadError):
                         raise exception

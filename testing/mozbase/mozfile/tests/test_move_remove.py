@@ -194,7 +194,7 @@ class MozfileRemoveTestCase(unittest.TestCase):
         not_existing_path = os.path.join(self.tempdir, 'I_do_not_not_exists')
         try:
             mozfile.remove(not_existing_path)
-        except OSError, exc:
+        except OSError as exc:
             if exc.errno == errno.ENOENT:
                 self.fail("removing non existing path must not raise error")
             raise
