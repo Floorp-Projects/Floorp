@@ -10398,6 +10398,49 @@ void nsCSSFrameConstructor::CreateNeededPseudoSiblings(
   iter.InsertItem(newItem);
 }
 
+#ifdef DEBUG
+static bool
+FrameWantsToBeInAnonymousItem(const nsIAtom* aParentType, const nsIFrame* aFrame)
+{
+  // Note: This needs to match the logic in
+  // nsCSSFrameConstructor::FrameConstructionItem::NeedsAnonFlexOrGridItem()
+  if (aParentType == nsGkAtoms::gridContainerFrame) {
+    return aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
+  }
+  MOZ_ASSERT(aParentType == nsGkAtoms::flexContainerFrame);
+  return aFrame->IsFrameOfType(nsIFrame::eLineParticipant) ||
+         aFrame->GetType() == nsGkAtoms::placeholderFrame;
+}
+#endif
+
+static void
+VerifyGridFlexContainerChildren(nsIFrame* aParentFrame,
+                                const nsFrameList& aChildren)
+{
+#ifdef DEBUG
+  auto parentType = aParentFrame->GetType();
+  if (parentType != nsGkAtoms::flexContainerFrame &&
+      parentType != nsGkAtoms::gridContainerFrame) {
+    return;
+  }
+
+  bool prevChildWasAnonItem = false;
+  for (const nsIFrame* child : aChildren) {
+    MOZ_ASSERT(!FrameWantsToBeInAnonymousItem(parentType, child),
+               "frame wants to be inside an anonymous item, but it isn't");
+    if (IsAnonymousFlexOrGridItem(child)) {
+      AssertAnonymousFlexOrGridItemParent(child, aParentFrame);
+      MOZ_ASSERT(!prevChildWasAnonItem, "two anon items in a row");
+      nsIFrame* firstWrappedChild = child->PrincipalChildList().FirstChild();
+      MOZ_ASSERT(firstWrappedChild, "anonymous item shouldn't be empty");
+      prevChildWasAnonItem = true;
+    } else {
+      prevChildWasAnonItem = false;
+    }
+  }
+#endif
+}
+
 inline void
 nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aState,
                                                    FrameConstructionItemList& aItems,
@@ -10416,6 +10459,7 @@ nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aSta
     ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
   }
 
+  VerifyGridFlexContainerChildren(aParentFrame, aFrameItems);
   NS_ASSERTION(!aState.mHavePendingPopupgroup,
                "Should have proccessed it by now");
 }

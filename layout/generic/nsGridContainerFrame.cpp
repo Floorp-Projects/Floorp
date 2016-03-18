@@ -5343,45 +5343,12 @@ nsGridContainerFrame::MergeSortedExcessOverflowContainers(nsFrameList& aList)
 }
 
 #ifdef DEBUG
-static bool
-FrameWantsToBeInAnonymousGridItem(nsIFrame* aFrame)
-{
-  // Note: This needs to match the logic in
-  // nsCSSFrameConstructor::FrameConstructionItem::NeedsAnonFlexOrGridItem()
-  return aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
-}
-
-// Debug-only override, to let us assert that our anonymous grid items are
-// set up correctly by the frame constructor -- in particular, we assert:
-//  (1) we don't have any inline non-replaced children
-//  (2) we don't have any consecutive anonymous grid items
-//  (3) we don't have any empty anonymous grid items
-//  (4) all children are on the expected child lists
 void
 nsGridContainerFrame::SetInitialChildList(ChildListID  aListID,
                                           nsFrameList& aChildList)
 {
   ChildListIDs supportedLists = kAbsoluteList | kFixedList | kPrincipalList;
   MOZ_ASSERT(supportedLists.Contains(aListID), "unexpected child list");
-
-  if (aListID == kPrincipalList) {
-    bool prevChildWasAnonGridItem = false;
-    for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
-      nsIFrame* child = e.get();
-      MOZ_ASSERT(!FrameWantsToBeInAnonymousGridItem(child),
-                 "frame wants to be inside an anonymous grid item, but it isn't");
-      if (child->StyleContext()->GetPseudo() ==
-            nsCSSAnonBoxes::anonymousGridItem) {
-        MOZ_ASSERT(!prevChildWasAnonGridItem, "two anon grid items in a row");
-        nsIFrame* firstWrappedChild = child->PrincipalChildList().FirstChild();
-        MOZ_ASSERT(firstWrappedChild,
-                   "anonymous grid item is empty (shouldn't happen)");
-        prevChildWasAnonGridItem = true;
-      } else {
-        prevChildWasAnonGridItem = false;
-      }
-    }
-  }
 
   return nsContainerFrame::SetInitialChildList(aListID, aChildList);
 }
