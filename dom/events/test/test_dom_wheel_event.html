@@ -196,7 +196,7 @@ function* testDeltaMultiplierPrefs()
   ];
 
   var currentTest, currentModifiers, currentEvent, currentPref, currentMultiplier, testingExpected;
-  var expectedHandlerCalls;
+  var expectedAsyncHandlerCalls;
   var description;
   var calledHandlers = { wheel: false,
                          DOMMouseScroll: { horizontal: false, vertical: false },
@@ -226,7 +226,7 @@ function* testDeltaMultiplierPrefs()
     is(aEvent.deltaY, expectedDeltaY, description + "deltaY (" + currentEvent.deltaY + ") was invalid");
     is(aEvent.deltaZ, expectedDeltaZ, description + "deltaZ (" + currentEvent.deltaZ + ") was invalid");
 
-    if (--expectedHandlerCalls == 0) {
+    if (--expectedAsyncHandlerCalls == 0) {
       setTimeout(continueTest, 0);
     }
   }
@@ -288,7 +288,7 @@ function* testDeltaMultiplierPrefs()
 
     aEvent.preventDefault();
 
-    if (--expectedHandlerCalls == 0) {
+    if (--expectedAsyncHandlerCalls == 0) {
       setTimeout(continueTest, 0);
     }
   }
@@ -348,12 +348,12 @@ function* testDeltaMultiplierPrefs()
           var expectedMozMouseX = expectedProps.deltaX >= 1 || expectedProps.deltaX <= -1;
           var expectedMozMouseY = expectedProps.deltaY >= 1 || expectedProps.deltaY <= -1;
 
-          expectedHandlerCalls = 0;
-          if (expectedWheel) ++expectedHandlerCalls;
-          if (expectedDOMMouseX) ++expectedHandlerCalls;
-          if (expectedDOMMouseY) ++expectedHandlerCalls;
-          if (expectedMozMouseX) ++expectedHandlerCalls;
-          if (expectedMozMouseY) ++expectedHandlerCalls;
+          expectedAsyncHandlerCalls = 0;
+          if (expectedWheel) ++expectedAsyncHandlerCalls;
+          if (expectedDOMMouseX) ++expectedAsyncHandlerCalls;
+          if (expectedDOMMouseY) ++expectedAsyncHandlerCalls;
+          if (expectedMozMouseX) ++expectedAsyncHandlerCalls;
+          if (expectedMozMouseY) ++expectedAsyncHandlerCalls;
 
           description = "testDeltaMultiplierPrefs, pref: " + currentPref + "=" + kPrefValues[j] +
             ", deltaMode: " + currentEvent.deltaMode + ", modifiers: \"" + modifierList + "\", (trusted event): ";
