@@ -56,7 +56,7 @@ function framesetCallback(adjustment)
   else if (expectedWidth >= 4000)
     expectedWidth = originalWidth * 2 - 2;
 
-  is(newWidth, expectedWidth, "frameset after drag (" + adjustment + ")");
+  ok(Math.abs(newWidth - expectedWidth) <= 1, "frameset after drag (" + adjustment + "), new width " + newWidth + ", expected " + expectedWidth);
 }
 
 var otherWindow = null;
@@ -95,7 +95,7 @@ function selectionScrollCheck()
 
       // check to ensure that selection dragging scrolls the right scrollable area
       otherWindow = window.open("data:text/html,<html><p>One</p><p style='margin-top: 200px;'>Two</p><p style='margin-top: 4000px'>This is some text</p></html>", "_blank", "width=200,height=200,scrollbars=yes");
-      otherWindow.addEventListener("load", function() { SimpleTest.waitForFocus(selectionScrollCheck, otherWindow); }, false);
+      SimpleTest.waitForFocus(selectionScrollCheck, otherWindow);
     }
   }
 
@@ -154,10 +154,13 @@ function runTests()
   // test that mousedown on an image with setCapture followed by a big enough
   // mouse move does not start a drag (bug 517737)
   var image = document.getElementById("image");
+  image.scrollIntoView();
   synthesizeMouse(image, 2, 2, { type: "mousedown" });
   synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
                              image, "mousemove", "setCapture works on images");
   synthesizeMouse(image, 2, 2, { type: "mouseup" });
+
+  window.scroll(0,0);
 
   // save scroll
   var scrollX = parent ? parent.scrollX : 0;
@@ -189,11 +192,14 @@ function runTests()
   synthesizeMouse(frames[2].document.getElementById("input"), 8, 8, { type: "mousedown" }, frames[2]);
   synthesizeMouse(frames[2].document.getElementById("input"), 8, 8, { type: "mouseup" }, frames[2]);
 
+  var select = document.getElementById("select");
+  select.scrollIntoView();
+
   synthesizeMouse(document.getElementById("option3"), 2, 2, { type: "mousedown" });
   synthesizeMouse(document.getElementById("option3"), 2, 1000, { type: "mousemove" });
-  var select = document.getElementById("select");
   is(select.selectedIndex, 2, "scroll select");
   synthesizeMouse(document.getElementById("select"), 2, 2, { type: "mouseup" });
+  window.scroll(0, 0);
 
   synthesizeMouse(custom, 2, 2, { type: "mousedown" });
 
@@ -202,7 +208,7 @@ function runTests()
 
   var topPos = window.innerHeight;
   otherWindow = window.open("data:text/html,<html><p>One</p><p style='margin-top: " + topPos + "'>Two</p><p style='margin-top: 4000px'>This is some text</p></html>", "_blank");
-  otherWindow.addEventListener("load", function() { SimpleTest.waitForFocus(selectionScrollCheck, otherWindow); }, false);
+  SimpleTest.waitForFocus(selectionScrollCheck, otherWindow);
 }
 
 function runCaptureTest(element, callback)
