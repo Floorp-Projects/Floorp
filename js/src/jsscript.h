@@ -228,8 +228,8 @@ class Bindings
     uint16_t numArgs_;
     uint16_t numBlockScoped_;
     uint16_t numBodyLevelLexicals_;
-    uint16_t aliasedBodyLevelLexicalBegin_;
     uint16_t numUnaliasedBodyLevelLexicals_;
+    uint32_t aliasedBodyLevelLexicalBegin_;
     uint32_t numVars_;
     uint32_t numUnaliasedVars_;
 
@@ -356,6 +356,10 @@ class Bindings
     void trace(JSTracer* trc);
 };
 
+// If this fails, add/remove padding within Bindings.
+static_assert(sizeof(Bindings) % js::gc::CellSize == 0,
+              "Size of Bindings must be an integral multiple of js::gc::CellSize");
+
 template <class Outer>
 class BindingsOperations
 {
@@ -438,7 +442,7 @@ class MutableBindingsOperations : public BindingsOperations<Outer>
     void setNumUnaliasedBodyLevelLexicals(uint16_t num) {
         bindings().numUnaliasedBodyLevelLexicals_ = num;
     }
-    void setAliasedBodyLevelLexicalBegin(uint16_t offset) {
+    void setAliasedBodyLevelLexicalBegin(uint32_t offset) {
         bindings().aliasedBodyLevelLexicalBegin_ = offset;
     }
     uint8_t* switchToScriptStorage(Binding* permanentStorage) {
