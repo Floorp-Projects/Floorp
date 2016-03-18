@@ -4,7 +4,7 @@ dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 AC_DEFUN([MOZ_SUBCONFIGURE_JEMALLOC], [
 
-if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
+if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
 
   # Run jemalloc configure script
 

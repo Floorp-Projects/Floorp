@@ -128,7 +128,7 @@ fi
 
 AC_DEFUN([MOZ_SUBCONFIGURE_ICU], [
 
-if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
+if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
 
     if test -n "$USE_ICU" -a -z "$MOZ_SYSTEM_ICU"; then
         # Set ICU compile options
