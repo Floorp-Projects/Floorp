@@ -4146,6 +4146,8 @@ GCRuntime::markCompartments()
               case CrossCompartmentKey::DebuggerObject:
               case CrossCompartmentKey::DebuggerSource:
               case CrossCompartmentKey::DebuggerEnvironment:
+              case CrossCompartmentKey::DebuggerWasmScript:
+              case CrossCompartmentKey::DebuggerWasmSource:
                 dest = static_cast<JSObject*>(key.wrapped)->compartment();
                 break;
               case CrossCompartmentKey::DebuggerScript:
@@ -4589,7 +4591,9 @@ JSCompartment::findOutgoingEdges(ComponentFinder<JS::Zone>& finder)
             MOZ_ASSERT(kind == CrossCompartmentKey::DebuggerScript ||
                        kind == CrossCompartmentKey::DebuggerSource ||
                        kind == CrossCompartmentKey::DebuggerObject ||
-                       kind == CrossCompartmentKey::DebuggerEnvironment);
+                       kind == CrossCompartmentKey::DebuggerEnvironment ||
+                       kind == CrossCompartmentKey::DebuggerWasmScript ||
+                       kind == CrossCompartmentKey::DebuggerWasmSource);
             /*
              * Add edge for debugger object wrappers, to ensure (in conjuction
              * with call to Debugger::findCompartmentEdges below) that debugger
