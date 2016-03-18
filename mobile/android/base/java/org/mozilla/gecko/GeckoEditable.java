@@ -297,9 +297,7 @@ final class GeckoEditable extends JNIObject
         private KeyEvent [] synthesizeKeyEvents(CharSequence cs) {
             try {
                 if (mKeyMap == null) {
-                    mKeyMap = KeyCharacterMap.load(
-                        Versions.preHC ? KeyCharacterMap.ALPHA :
-                                         KeyCharacterMap.VIRTUAL_KEYBOARD);
+                    mKeyMap = KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD);
                 }
             } catch (Exception e) {
                 // KeyCharacterMap.UnavailableException is not found on Gingerbread;
@@ -1004,14 +1002,7 @@ final class GeckoEditable extends JNIObject
     }
 
     private void geckoReplaceText(int start, int oldEnd, CharSequence newText) {
-        if (AppConstants.Versions.preHC) {
-            // Don't use replace() because Gingerbread has a bug where if the replaced text
-            // has the same spans as the original text, the spans will end up being deleted
-            mText.delete(start, oldEnd);
-            mText.insert(start, newText);
-        } else {
-            mText.replace(start, oldEnd, newText);
-        }
+        mText.replace(start, oldEnd, newText);
     }
 
     private boolean geckoIsSameText(int start, int oldEnd, CharSequence newText) {

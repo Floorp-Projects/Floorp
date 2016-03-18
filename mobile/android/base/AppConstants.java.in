@@ -71,7 +71,6 @@ public class AppConstants {
         public static final boolean preICS = MAX_SDK_VERSION < 14 || (MIN_SDK_VERSION < 14 && Build.VERSION.SDK_INT < 14);
         public static final boolean preHCMR2 = MAX_SDK_VERSION < 13 || (MIN_SDK_VERSION < 13 && Build.VERSION.SDK_INT < 13);
         public static final boolean preHCMR1 = MAX_SDK_VERSION < 12 || (MIN_SDK_VERSION < 12 && Build.VERSION.SDK_INT < 12);
-        public static final boolean preHC = MAX_SDK_VERSION < 11 || (MIN_SDK_VERSION < 11 && Build.VERSION.SDK_INT < 11);
     }
 
     /**

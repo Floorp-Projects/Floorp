@@ -216,9 +216,9 @@ public class AppMenuComponent extends BaseComponent {
     private void openAppMenu() {
         assertMenuIsNotOpen();
 
-        // This is a hack needed for tablets & GB where the OverflowMenuButton is always in the GONE state,
+        // This is a hack needed for tablets where the OverflowMenuButton is always in the GONE state,
         // so we press the menu key instead.
-        if (DeviceHelper.isTablet() || AppConstants.Versions.preHC) {
+        if (DeviceHelper.isTablet()) {
             mSolo.sendKey(Solo.MENU);
         } else {
             pressOverflowMenuButton();

@@ -77,27 +77,6 @@ public class ToolbarProgressView extends ThemedImageView {
     }
 
     @Override
-    public void setVisibility(int visibility) {
-        // On GB/Froyo, setting the visibility to GONE/HIDDEN alone does not
-        // work with translations. Calling clearAnimation acts as a workaround.
-        if (Versions.preHC && visibility != VISIBLE) {
-            clearAnimation();
-        }
-
-        super.setVisibility(visibility);
-    }
-
-    @Override
-    public void setAnimation(Animation animation) {
-        // On GB/Froyo, setting the animation after hiding the view causes it
-        // to reappear. As a workaround, disallow setAnimation from being
-        // called if the view is not shown.
-        if (Versions.preHC && isShown()) {
-            super.setAnimation(animation);
-        }
-    }
-
-    @Override
     public void onLayout(boolean f, int l, int t, int r, int b) {
         mBounds.left = 0;
         mBounds.right = (r - l) * mCurrentProgress / MAX_PROGRESS;
