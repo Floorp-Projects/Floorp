@@ -696,9 +696,15 @@ WorkerDebuggerGlobalScope::WrapGlobalObject(JSContext* aCx,
 
 void
 WorkerDebuggerGlobalScope::GetGlobal(JSContext* aCx,
-                                     JS::MutableHandle<JSObject*> aGlobal)
+                                     JS::MutableHandle<JSObject*> aGlobal,
+                                     ErrorResult& aRv)
 {
-  aGlobal.set(mWorkerPrivate->GetOrCreateGlobalScope(aCx)->GetWrapper());
+  WorkerGlobalScope* scope = mWorkerPrivate->GetOrCreateGlobalScope(aCx);
+  if (!scope) {
+    aRv.Throw(NS_ERROR_FAILURE);
+  }
+
+  aGlobal.set(scope->GetWrapper());
 }
 
 class WorkerDebuggerSandboxPrivate : public nsIGlobalObject,
@@ -931,7 +937,10 @@ void
 WorkerDebuggerGlobalScope::Dump(JSContext* aCx,
                                 const Optional<nsAString>& aString) const
 {
-  return mWorkerPrivate->GetOrCreateGlobalScope(aCx)->Dump(aString);
+  WorkerGlobalScope* scope = mWorkerPrivate->GetOrCreateGlobalScope(aCx);
+  if (scope) {
+    scope->Dump(aString);
+  }
 }
 
 nsIGlobalObject*

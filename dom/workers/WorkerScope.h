@@ -297,7 +297,8 @@ public:
   }
 
   void
-  GetGlobal(JSContext* aCx, JS::MutableHandle<JSObject*> aGlobal);
+  GetGlobal(JSContext* aCx, JS::MutableHandle<JSObject*> aGlobal,
+            ErrorResult& aRv);
 
   void
   CreateSandbox(JSContext* aCx, const nsAString& aName,
