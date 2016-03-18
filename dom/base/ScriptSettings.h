@@ -221,12 +221,20 @@ public:
   // This uses the SafeJSContext (or worker equivalent), and enters a null
   // compartment, so that the consumer is forced to select a compartment to
   // enter before manipulating objects.
+  //
+  // This variant will ensure that any errors reported by this AutoJSAPI as it
+  // comes off the stack will not fire error events or be associated with any
+  // particular web-visible global.
   void Init();
 
   // This uses the SafeJSContext (or worker equivalent), and enters the
   // compartment of aGlobalObject.
   // If aGlobalObject or its associated JS global are null then it returns
   // false and use of cx() will cause an assertion.
+  //
+  // If aGlobalObject represents a web-visible global, errors reported by this
+  // AutoJSAPI as it comes off the stack will fire the relevant error events and
+  // show up in the corresponding web console.
   bool Init(nsIGlobalObject* aGlobalObject);
 
   // This is a helper that grabs the native global associated with aObject and
@@ -237,6 +245,10 @@ public:
   // If aGlobalObject or its associated JS global are null then it returns
   // false and use of cx() will cause an assertion.
   // If aCx is null it will cause an assertion.
+  //
+  // If aGlobalObject represents a web-visible global, errors reported by this
+  // AutoJSAPI as it comes off the stack will fire the relevant error events and
+  // show up in the corresponding web console.
   bool Init(nsIGlobalObject* aGlobalObject, JSContext* aCx);
 
   // Convenience functions to take an nsPIDOMWindow* or nsGlobalWindow*,

@@ -209,8 +209,8 @@ public:
     settingsService->CreateLock(nullptr, getter_AddRefs(lock));
     // lock may be null if this gets called during shutdown.
     if (lock) {
-      mozilla::AutoSafeJSContext cx;
-      JS::Rooted<JS::Value> value(cx, JS::Int32Value(mStatus));
+      JS::Rooted<JS::Value> value(nsContentUtils::RootingCx(),
+				  JS::Int32Value(mStatus));
       lock->Set(UMS_STATUS, value, nullptr, nullptr);
     }
     return NS_OK;

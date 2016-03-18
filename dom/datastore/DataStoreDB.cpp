@@ -112,7 +112,9 @@ DataStoreDB::CreateFactoryIfNeeded()
     nsIXPConnect* xpc = nsContentUtils::XPConnect();
     MOZ_ASSERT(xpc);
 
-    AutoSafeJSContext cx;
+    AutoJSAPI jsapi;
+    jsapi.Init();
+    JSContext* cx = jsapi.cx();
     JS::Rooted<JSObject*> global(cx);
     rv = xpc->CreateSandbox(cx, principal, global.address());
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -222,10 +224,8 @@ DataStoreDB::UpgradeSchema(nsIDOMEvent* aEvent)
   MOZ_ASSERT(version.Value() == DATASTOREDB_VERSION);
 #endif
 
-  AutoSafeJSContext cx;
-
   ErrorResult error;
-  JS::Rooted<JS::Value> result(cx);
+  JS::Rooted<JS::Value> result(nsContentUtils::RootingCx());
   mRequest->GetResult(&result, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
@@ -284,10 +284,8 @@ DataStoreDB::DatabaseOpened()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  AutoSafeJSContext cx;
-
   ErrorResult error;
-  JS::Rooted<JS::Value> result(cx);
+  JS::Rooted<JS::Value> result(nsContentUtils::RootingCx());
   mRequest->GetResult(&result, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
