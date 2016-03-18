@@ -127,6 +127,7 @@ add_task(function* test_notification_ack_data() {
         headers: {
           encryption_key: 'keyid="notification1"; dh="BO_tgGm-yvYAGLeRe16AvhzaUcpYRiqgsGOlXpt0DRWDRGGdzVLGlEVJMygqAUECarLnxCiAOHTP_znkedrlWoU"',
           encryption: 'keyid="notification1";salt="uAZaiXpOSfOLJxtOCZ09dA"',
+          encoding: 'aesgcm128',
         },
         data: 'NwrrOWPxLE8Sv5Rr0Kep7n0-r_j3rsYrUw_CXPo',
         version: 'v1',
@@ -143,6 +144,7 @@ add_task(function* test_notification_ack_data() {
         headers: {
           encryption_key: 'keyid="notification2"; dh="BKVdQcgfncpNyNWsGrbecX0zq3eHIlHu5XbCGmVcxPnRSbhjrA6GyBIeGdqsUL69j5Z2CvbZd-9z1UBH0akUnGQ"',
           encryption: 'keyid="notification2";salt="vFn3t3M_k42zHBdpch3VRw"',
+          encoding: 'aesgcm128',
         },
         data: 'Zt9dEdqgHlyAL_l83385aEtb98ZBilz5tgnGgmwEsl5AOCNgesUUJ4p9qUU',
       },
@@ -158,6 +160,7 @@ add_task(function* test_notification_ack_data() {
         headers: {
           encryption_key: 'keyid="notification3";dh="BD3xV_ACT8r6hdIYES3BJj1qhz9wyv7MBrG9vM2UCnjPzwE_YFVpkD-SGqE-BR2--0M-Yf31wctwNsO1qjBUeMg"',
           encryption: 'keyid="notification3"; salt="DFq188piWU7osPBgqn4Nlg"; rs=24',
+          encoding: 'aesgcm128',
         },
         data: 'LKru3ZzxBZuAxYtsaCfaj_fehkrIvqbVd1iSwnwAUgnL-cTeDD-83blxHXTq7r0z9ydTdMtC3UjAcWi8LMnfY-BFzi0qJAjGYIikDA',
       },
@@ -175,12 +178,30 @@ add_task(function* test_notification_ack_data() {
         headers: {
           crypto_key: 'keyid=v4;dh="BHqG01j7rOfp12BEDzxWXxlCaU4cdOx2DZAwCt3QuzEsnXN9lCna9QmZCkVpXsx7sAlaEmtl_VfF1lHlFS7XWcA"',
           encryption: 'keyid="v4";salt="X5-iy5rzhm4naNmMHdSYJw"',
+          encoding: 'aesgcm128',
         },
         data: '7YlxyNlZsNX4UNknHxzTqFrcrzz58W95uXBa0iY',
       },
       receive: {
         scope: 'https://example.com/page/1',
         data: 'Some message'
+      }
+    },
+    // A message encoded with `aesgcm` (2 bytes of padding).
+    {
+      channelID: 'subscription1',
+      version: 'v5',
+      send: {
+        headers: {
+          crypto_key: 'dh="BMh_vsnqu79ZZkMTYkxl4gWDLdPSGE72Lr4w2hksSFW398xCMJszjzdblAWXyhSwakRNEU_GopAm4UGzyMVR83w"',
+          encryption: 'salt="C14Wb7rQTlXzrgcPHtaUzw"',
+          encoding: 'aesgcm',
+        },
+        data: 'pus4kUaBWzraH34M-d_oN8e0LPpF_X6acx695AMXovDe',
+      },
+      receive: {
+        scope: 'https://example.com/page/1',
+        data: 'Another message'
       }
     },
     // A message with 17 bytes of padding and rs of 24
@@ -191,6 +212,7 @@ add_task(function* test_notification_ack_data() {
         headers: {
           crypto_key: 'keyid="v5"; dh="BJhyKIH5P30YUKn1bolj_LMnael1-KZT_aGXgD2CRspBfv9gcUhVAmpxToZrw7QQEKl9K83b3zcqNY6G_dFhEsI"',
           encryption: 'keyid=v5;salt="bLmqCy550eK1Ao41tD7orA";rs=24',
+          encoding: 'aesgcm128',
         },
         data: 'SQDlDg1ftLkM_ruZlmyB2bk9L78HYtkcbA-y4-uAxwL-G4KtOA-J-A_rJ007Vi6NUkQe9K4kSZeIBrIUpmGv',
       },
@@ -207,6 +229,7 @@ add_task(function* test_notification_ack_data() {
         headers: {
           crypto_key: 'dh="BEgnDmVw9Gcn1fWA5t53Jtpsgfewk_pzsjSc_PBPpPmROWGQA2v8ESrSsQgosNXx0o-uMMhi9tDAUeks3380kd8"',
           encryption: 'salt=T9DM8bNxuMHRVTn4LzkJDQ',
+          encoding: 'aesgcm128',
         },
         data: '7KUCi0dBBJbWmsYTqEqhFrgTv4ZOo_BmQRQ_2kY',
       },
