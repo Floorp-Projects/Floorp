@@ -13,7 +13,7 @@ let prettyJson = "{\n  \"name\": \"value\"\n}";
 add_task(function* () {
   info("Test copy raw data started");
 
-  let tab = yield addJsonViewTab(TEST_JSON_URL);
+  yield addJsonViewTab(TEST_JSON_URL);
 
   // Select the RawData tab
   yield selectJsonViewContentTab("rawdata");
@@ -22,7 +22,7 @@ add_task(function* () {
   let text = yield getElementText(".textPanelBox .data");
   is(text, jsonText, "Proper JSON must be displayed in DOM");
 
-  let browser = gBrowser.selectedBrowser
+  let browser = gBrowser.selectedBrowser;
 
   // Verify JSON copy into the clipboard.
   yield waitForClipboardPromise(function setup() {
@@ -38,7 +38,8 @@ add_task(function* () {
 
   let prettyText = yield getElementText(".textPanelBox .data");
   prettyText = normalizeNewLines(prettyText);
-  ok(prettyText.startsWith(prettyJson), "Pretty printed JSON must be displayed");
+  ok(prettyText.startsWith(prettyJson),
+    "Pretty printed JSON must be displayed");
 
   // Verify JSON copy into the clipboard.
   yield waitForClipboardPromise(function setup() {
