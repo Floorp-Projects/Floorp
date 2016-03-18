@@ -146,7 +146,6 @@ public:
 
   // Enumeration for the valid decoding states
   enum State {
-    DECODER_STATE_DECODING_NONE,
     DECODER_STATE_DECODING_METADATA,
     DECODER_STATE_WAIT_FOR_CDM,
     DECODER_STATE_DORMANT,
@@ -267,6 +266,8 @@ private:
 
   void SetAudioCaptured(bool aCaptured);
 
+  void ReadMetadata();
+
   RefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget);
 
   RefPtr<ShutdownPromise> Shutdown();
@@ -322,17 +323,7 @@ private:
   TaskQueue* OwnerThread() const { return mTaskQueue; }
 
   // Schedules the shared state machine thread to run the state machine.
-  //
-  // The first variant coalesces multiple calls into a single state machine
-  // cycle, the second variant does not. The second variant must be used when
-  // not already on the state machine task queue.
   void ScheduleStateMachine();
-  void ScheduleStateMachineCrossThread()
-  {
-    nsCOMPtr<nsIRunnable> task =
-      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::RunStateMachine);
-    OwnerThread()->Dispatch(task.forget());
-  }
 
   // Invokes ScheduleStateMachine to run in |aMicroseconds| microseconds,
   // unless it's already scheduled to run earlier, in which case the
