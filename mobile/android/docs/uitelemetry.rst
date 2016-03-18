@@ -197,6 +197,9 @@ Methods
 ``dialog``
   Action triggered from a dialog.
 
+``doorhanger``
+  Action triggered from a doorhanger popup prompt.
+
 ``griditem``
   Action triggered from a griditem, such as those used in Top Sites panel.
 

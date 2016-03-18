@@ -11,6 +11,8 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.prompts.PromptInput;
 import org.mozilla.gecko.util.ColorUtils;
 
@@ -127,10 +129,13 @@ public class DefaultDoorHanger extends DoorHanger {
     }
 
     @Override
-    protected OnClickListener makeOnButtonClickListener(final int id) {
+    protected OnClickListener makeOnButtonClickListener(final int id, final String telemetryExtra) {
         return new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
+                final String expandedExtra = mType.toString().toLowerCase() + "-" + telemetryExtra;
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.DOORHANGER, expandedExtra);
+
                 final JSONObject response = new JSONObject();
                 try {
                     response.put("callback", id);
