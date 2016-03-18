@@ -265,6 +265,9 @@ class JSObject : public js::gc::Cell
     // hasUncacheableProto flag.
     inline bool hasUncacheableProto() const;
     bool setUncacheableProto(js::ExclusiveContext* cx) {
+        MOZ_ASSERT(hasStaticPrototype(),
+                   "uncacheability as a concept is only applicable to static "
+                   "(not dynamically-computed) prototypes");
         return setFlags(cx, js::BaseShape::UNCACHEABLE_PROTO, GENERATE_SHAPE);
     }
 
@@ -355,20 +358,26 @@ class JSObject : public js::gc::Cell
     }
 
     /*
-     * We allow the prototype of an object to be lazily computed if the object
-     * is a proxy. In the lazy case, we store (JSObject*)0x1 in the proto field
-     * of the object's group. We offer three ways of getting the prototype:
+     * We permit proxies to dynamically compute their prototype if desired.
+     * (Not all proxies will so desire: in particular, most DOM proxies can
+     * track their prototype with a single, nullable JSObject*.)  If a proxy
+     * so desires, we store (JSObject*)0x1 in the proto field of the object's
+     * group.
      *
-     * 1. obj->getProto() returns the prototype, but asserts if obj is a proxy
-     *    with a relevant getPrototype() handler.
-     * 2. obj->getTaggedProto() returns a TaggedProto, which can be tested to
+     * We offer three ways to get an object's prototype:
+     *
+     * 1. obj->staticPrototype() returns the prototype, but it asserts if obj
+     *    is a proxy, and the proxy has opted to dynamically compute its
+     *    prototype using a getPrototype() handler.
+     * 2. obj->taggedProto() returns a TaggedProto, which can be tested to
      *    check if the proto is an object, nullptr, or lazily computed.
      * 3. js::GetPrototype(cx, obj, &proto) computes the proto of an object.
-     *    If obj is a proxy and the proto is lazy, this code may allocate or
-     *    GC in order to compute the proto. Currently, it will not run JS code.
+     *    If obj is a proxy with dynamically-computed prototype, this code may
+     *    perform arbitrary behavior (allocation, GC, run JS) while computing
+     *    the proto.
      */
 
-    js::TaggedProto getTaggedProto() const {
+    js::TaggedProto taggedProto() const {
         return group_->proto();
     }
 
@@ -376,37 +385,34 @@ class JSObject : public js::gc::Cell
 
     bool uninlinedIsProxy() const;
 
-    JSObject* getProto() const {
-        MOZ_ASSERT(!hasLazyPrototype());
-        return getTaggedProto().toObjectOrNull();
+    JSObject* staticPrototype() const {
+        MOZ_ASSERT(hasStaticPrototype());
+        return taggedProto().toObjectOrNull();
     }
 
-    // Normal objects and a subset of proxies have uninteresting [[Prototype]].
-    // For such objects the [[Prototype]] is just a value returned when needed
-    // for accesses, or modified in response to requests.  These objects store
-    // the [[Prototype]] directly within |obj->type_|.
-    //
-    // Proxies that don't have such a simple [[Prototype]] instead have a
-    // "lazy" [[Prototype]].  Accessing the [[Prototype]] of such an object
-    // requires going through the proxy handler {get,set}Prototype and
-    // setImmutablePrototype methods.  This is most commonly useful for proxies
-    // that are wrappers around other objects.  If the [[Prototype]] of the
-    // underlying object changes, the [[Prototype]] of the wrapper must also
-    // simultaneously change.  We implement this by having the handler methods
-    // simply delegate to the wrapped object, forwarding its response to the
-    // caller.
-    //
-    // This method returns true if this object has a non-simple [[Prototype]]
-    // as described above, or false otherwise.
-    bool hasLazyPrototype() const {
-        bool lazy = getTaggedProto().isLazy();
-        MOZ_ASSERT_IF(lazy, uninlinedIsProxy());
-        return lazy;
+    // Normal objects and a subset of proxies have an uninteresting, static
+    // (albeit perhaps mutable) [[Prototype]].  For such objects the
+    // [[Prototype]] is just a value returned when needed for accesses, or
+    // modified in response to requests.  These objects store the
+    // [[Prototype]] directly within |obj->group_|.
+    bool hasStaticPrototype() const {
+        return !hasDynamicPrototype();
     }
 
-    // True iff this object's [[Prototype]] is immutable.  Must not be called
-    // on proxies with lazy [[Prototype]]!
-    inline bool nonLazyPrototypeIsImmutable() const;
+    // The remaining proxies have a [[Prototype]] requiring dynamic computation
+    // for every access, going through the proxy handler {get,set}Prototype and
+    // setImmutablePrototype methods.  (Wrappers particularly use this to keep
+    // the wrapper/wrappee [[Prototype]]s consistent.)
+    bool hasDynamicPrototype() const {
+        bool dynamic = taggedProto().isDynamic();
+        MOZ_ASSERT_IF(dynamic, uninlinedIsProxy());
+        MOZ_ASSERT_IF(dynamic, !isNative());
+        return dynamic;
+    }
+
+    // True iff this object's [[Prototype]] is immutable.  Must be called only
+    // on objects with a static [[Prototype]]!
+    inline bool staticPrototypeIsImmutable() const;
 
     inline void setGroup(js::ObjectGroup* group);
 
