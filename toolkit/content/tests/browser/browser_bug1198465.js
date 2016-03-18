@@ -68,5 +68,5 @@ add_task(function* () {
   EventUtils.sendChar("c", window);
   is(findBar._findField.value, "abc", "c is appended after ab");
 
-  gBrowser.removeTab(aTab);
+  yield BrowserTestUtils.removeTab(aTab);
 });
