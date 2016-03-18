@@ -731,6 +731,10 @@ gfxFontUtils::MapUVSToGlyphFormat14(const uint8_t *aBuf, uint32_t aCh, uint32_t 
     }
 
     const uint32_t nonDefUVSOffset = cmap14->varSelectorRecords[index].nonDefaultUVSOffset;
+    if (!nonDefUVSOffset) {
+        return 0;
+    }
+
     const NonDefUVSTable *table = reinterpret_cast<const NonDefUVSTable*>
                                       (aBuf + nonDefUVSOffset);
 
