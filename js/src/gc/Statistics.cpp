@@ -336,13 +336,15 @@ Statistics::formatCompactSliceMessage() const
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
 
     const char* format =
-        "GC Slice %u - Pause: %.3fms of %s budget (@ %.3fms); Reason: %s; Reset: %s%s; Times: ";
+        "GC Slice %u - Pause: %.3fms of %s budget (@ %.3fms); Reason: %s; Reset: %s%s; Cycles: %u "
+        "Times: ";
     char buffer[1024];
     memset(buffer, 0, sizeof(buffer));
     JS_snprintf(buffer, sizeof(buffer), format, index,
                 t(slice.duration()), budgetDescription, t(slice.start - slices[0].start),
                 ExplainReason(slice.reason),
-                slice.resetReason ? "yes - " : "no", slice.resetReason ? slice.resetReason : "");
+                slice.resetReason ? "yes - " : "no", slice.resetReason ? slice.resetReason : "",
+                slice.cycleCount);
 
     FragmentVector fragments;
     if (!fragments.append(DuplicateString(buffer)) ||
@@ -517,16 +519,20 @@ Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice)
   ---- Slice %u ----\n\
     Reason: %s\n\
     Reset: %s%s\n\
+    State: %s -> %s\n\
     Page Faults: %ld\n\
     Pause: %.3fms of %s budget (@ %.3fms)\n\
+    Cycles: %u\n\
 ";
     char buffer[1024];
     memset(buffer, 0, sizeof(buffer));
     JS_snprintf(buffer, sizeof(buffer), format, i,
                 ExplainReason(slice.reason),
                 slice.resetReason ? "yes - " : "no", slice.resetReason ? slice.resetReason : "",
+                gc::StateName(slice.initialState), gc::StateName(slice.finalState),
                 uint64_t(slice.endFaults - slice.startFaults),
-                t(slice.duration()), budgetDescription, t(slice.start - slices[0].start));
+                t(slice.duration()), budgetDescription, t(slice.start - slices[0].start),
+                slice.cycleCount);
     return DuplicateString(buffer);
 }
 
@@ -673,32 +679,38 @@ Statistics::formatJsonDescription(uint64_t timestamp)
 UniqueChars
 Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice)
 {
-    int64_t duration = slices[i].duration();
-    int64_t when = slices[i].start - slices[0].start;
+    int64_t duration = slice.duration();
+    int64_t when = slice.start - slices[0].start;
     char budgetDescription[200];
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
-    int64_t pageFaults = slices[i].endFaults - slices[i].startFaults;
+    int64_t pageFaults = slice.endFaults - slice.startFaults;
 
     const char* format =
         "\"slice\":%d,"
         "\"pause\":%llu.%03llu,"
         "\"when\":%llu.%03llu,"
         "\"reason\":\"%s\","
+        "\"initial_state\":\"%s\","
+        "\"final_state\":\"%s\","
         "\"budget\":\"%s\","
         "\"page_faults\":%llu,"
         "\"start_timestamp\":%llu,"
-        "\"end_timestamp\":%llu,";
+        "\"end_timestamp\":%llu,"
+        "\"cycle_count\":%u,";
     char buffer[1024];
     memset(buffer, 0, sizeof(buffer));
     JS_snprintf(buffer, sizeof(buffer), format,
                 i,
                 duration / 1000, duration % 1000,
                 when / 1000, when % 1000,
-                ExplainReason(slices[i].reason),
+                ExplainReason(slice.reason),
+                gc::StateName(slice.initialState),
+                gc::StateName(slice.finalState),
                 budgetDescription,
                 pageFaults,
-                slices[i].start,
-                slices[i].end);
+                slice.start,
+                slice.end,
+                slice.cycleCount);
     return DuplicateString(buffer);
 }
 
@@ -974,7 +986,8 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
     if (first)
         beginGC(gckind);
 
-    SliceData data(budget, reason, PRMJ_Now(), JS_GetCurrentEmbedderTime(), GetPageFaultCount());
+    SliceData data(budget, reason, PRMJ_Now(), JS_GetCurrentEmbedderTime(), GetPageFaultCount(),
+                   runtime->gc.state());
     if (!slices.append(data)) {
         // If we are OOM, set a flag to indicate we have missing slice data.
         aborted = true;
@@ -999,6 +1012,7 @@ Statistics::endSlice()
         slices.back().end = PRMJ_Now();
         slices.back().endTimestamp = JS_GetCurrentEmbedderTime();
         slices.back().endFaults = GetPageFaultCount();
+        slices.back().finalState = runtime->gc.state();
 
         int64_t sliceTime = slices.back().end - slices.back().start;
         runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(sliceTime));
@@ -1036,6 +1050,13 @@ Statistics::endSlice()
 
     gcDepth--;
     MOZ_ASSERT(gcDepth >= 0);
+}
+
+void
+Statistics::setSliceCycleCount(unsigned cycleCount)
+{
+    if (!aborted)
+        slices.back().cycleCount = cycleCount;
 }
 
 bool
