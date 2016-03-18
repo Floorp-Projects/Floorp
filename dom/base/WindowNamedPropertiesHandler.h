@@ -37,9 +37,8 @@ public:
   delete_(JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
           JS::ObjectOpResult &aResult) const override;
 
-  // No need for getPrototypeIfOrdinary here: this object shouldn't have a
-  // lazy prototype, so this trap would never be called (and the inherited
-  // version, from BaseProxyHandler, just crashes).
+  // No need for getPrototypeIfOrdinary here: window named-properties objects
+  // have static prototypes, so this trap is never called.
 
   virtual bool
   preventExtensions(JSContext* aCx, JS::Handle<JSObject*> aProxy,
