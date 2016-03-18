@@ -97,14 +97,6 @@ class WeakReference : public ::mozilla::RefCounted<WeakReference<T> >
 {
 public:
   explicit WeakReference(T* p) : mPtr(p) {}
-  ~WeakReference()
-  {
-    if (mPtr) {
-      // When this WeakReference is going to release, clear the WeakReference
-      // reference to this object in its referent |mPtr|.
-      mPtr->NoticeSelfReferencingDestruction();
-    }
-  }
 
   T* get() const { return mPtr; }
 
@@ -132,49 +124,34 @@ template <typename T>
 class SupportsWeakPtr
 {
 protected:
-  SupportsWeakPtr()
-    : mSelfReferencingWeakPtr(nullptr)
-  {
-  }
-
   ~SupportsWeakPtr()
   {
     static_assert(IsBaseOf<SupportsWeakPtr<T>, T>::value,
                   "T must derive from SupportsWeakPtr<T>");
     if (mSelfReferencingWeakPtr) {
-      // When this SupportsWeakPtr is going to release, remove the referent
-      // reference to this object in WeakReference |mSelfReferencingWeakPtr|.
-      mSelfReferencingWeakPtr->detach();
-      mSelfReferencingWeakPtr = nullptr;
+      mSelfReferencingWeakPtr.mRef->detach();
     }
   }
 
 private:
-  detail::WeakReference<T>* SelfReferencingWeakPtr()
+  const WeakPtr<T>& SelfReferencingWeakPtr()
   {
     if (!mSelfReferencingWeakPtr) {
-      mSelfReferencingWeakPtr = new detail::WeakReference<T>(static_cast<T*>(this));
+      mSelfReferencingWeakPtr.mRef = new detail::WeakReference<T>(static_cast<T*>(this));
     }
     return mSelfReferencingWeakPtr;
   }
 
-  detail::WeakReference<const T>* SelfReferencingWeakPtr() const
+  const WeakPtr<const T>& SelfReferencingWeakPtr() const
   {
-    detail::WeakReference<T>* p = const_cast<SupportsWeakPtr*>(this)->SelfReferencingWeakPtr();
-    return reinterpret_cast<detail::WeakReference<const T>*>(p);
-  }
-
-  void NoticeSelfReferencingDestruction() const
-  {
-    mSelfReferencingWeakPtr = nullptr;
+    const WeakPtr<T>& p = const_cast<SupportsWeakPtr*>(this)->SelfReferencingWeakPtr();
+    return reinterpret_cast<const WeakPtr<const T>&>(p);
   }
 
   friend class WeakPtr<T>;
   friend class WeakPtr<const T>;
-  friend class detail::WeakReference<T>;
-  friend class detail::WeakReference<const T>;
 
-  mutable detail::WeakReference<T>* mSelfReferencingWeakPtr;
+  WeakPtr<T> mSelfReferencingWeakPtr;
 };
 
 template <typename T>
@@ -197,7 +174,7 @@ public:
   WeakPtr& operator=(T* aOther)
   {
     if (aOther) {
-      mRef = aOther->SelfReferencingWeakPtr();
+      *this = aOther->SelfReferencingWeakPtr();
     } else if (!mRef || mRef->get()) {
       // Ensure that mRef is dereferenceable in the uninitialized state.
       mRef = new WeakReference(nullptr);
@@ -221,6 +198,10 @@ public:
   T* get() const { return mRef->get(); }
 
 private:
+  friend class SupportsWeakPtr<T>;
+
+  explicit WeakPtr(const RefPtr<WeakReference>& aOther) : mRef(aOther) {}
+
   RefPtr<WeakReference> mRef;
 };
 
