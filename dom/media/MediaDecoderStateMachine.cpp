@@ -214,7 +214,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mRealTime(aRealTime),
   mDispatchedStateMachine(false),
   mDelayedScheduler(mTaskQueue),
-  mState(DECODER_STATE_DECODING_NONE, "MediaDecoderStateMachine::mState"),
+  mState(DECODER_STATE_DECODING_METADATA, "MediaDecoderStateMachine::mState"),
   mCurrentFrameID(0),
   mObservedDuration(TimeUnit(), "MediaDecoderStateMachine::mObservedDuration"),
   mFragmentEndTime(-1),
@@ -1066,7 +1066,11 @@ nsresult MediaDecoderStateMachine::Init()
   MOZ_ASSERT(NS_IsMainThread());
   nsresult rv = mReader->Init();
   NS_ENSURE_SUCCESS(rv, rv);
-  ScheduleStateMachineCrossThread();
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
+    this, &MediaDecoderStateMachine::ReadMetadata);
+  OwnerThread()->Dispatch(r.forget());
+
   return NS_OK;
 }
 
@@ -1171,7 +1175,6 @@ void MediaDecoderStateMachine::UpdatePlaybackPosition(int64_t aTime)
 }
 
 static const char* const gMachineStateStr[] = {
-  "NONE",
   "DECODING_METADATA",
   "WAIT_FOR_CDM",
   "DORMANT",
@@ -1311,9 +1314,9 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources);
     DecodeTaskQueue()->Dispatch(r.forget());
   } else if ((aDormant != true) && (mState == DECODER_STATE_DORMANT)) {
-    ScheduleStateMachine();
     mDecodingFirstFrame = true;
-    SetState(DECODER_STATE_DECODING_NONE);
+    SetState(DECODER_STATE_DECODING_METADATA);
+    ReadMetadata();
   }
 }
 
@@ -1472,6 +1475,24 @@ void MediaDecoderStateMachine::BufferedRangeUpdated()
       mObservedDuration = std::max(mObservedDuration.Ref(), end);
     }
   }
+}
+
+void
+MediaDecoderStateMachine::ReadMetadata()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(!IsShutdown());
+  MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
+  MOZ_ASSERT(!mMetadataRequest.Exists());
+
+  DECODER_LOG("Dispatching AsyncReadMetadata");
+  // Set mode to METADATA since we are about to read metadata.
+  mResource->SetReadMode(MediaCacheStream::MODE_METADATA);
+  mMetadataRequest.Begin(InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__,
+                                     &MediaDecoderReader::AsyncReadMetadata)
+    ->Then(OwnerThread(), __func__, this,
+           &MediaDecoderStateMachine::OnMetadataRead,
+           &MediaDecoderStateMachine::OnMetadataNotRead));
 }
 
 RefPtr<MediaDecoder::SeekPromise>
@@ -2233,28 +2254,8 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
     case DECODER_STATE_SHUTDOWN:
     case DECODER_STATE_DORMANT:
     case DECODER_STATE_WAIT_FOR_CDM:
+    case DECODER_STATE_DECODING_METADATA:
       return NS_OK;
-
-    case DECODER_STATE_DECODING_NONE: {
-      SetState(DECODER_STATE_DECODING_METADATA);
-      ScheduleStateMachine();
-      return NS_OK;
-    }
-
-    case DECODER_STATE_DECODING_METADATA: {
-      if (!mMetadataRequest.Exists()) {
-        DECODER_LOG("Dispatching AsyncReadMetadata");
-        // Set mode to METADATA since we are about to read metadata.
-        mResource->SetReadMode(MediaCacheStream::MODE_METADATA);
-        mMetadataRequest.Begin(InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__,
-                                           &MediaDecoderReader::AsyncReadMetadata)
-          ->Then(OwnerThread(), __func__, this,
-                 &MediaDecoderStateMachine::OnMetadataRead,
-                 &MediaDecoderStateMachine::OnMetadataNotRead));
-
-      }
-      return NS_OK;
-    }
 
     case DECODER_STATE_DECODING: {
       if (IsDecodingFirstFrame()) {
@@ -2387,8 +2388,7 @@ MediaDecoderStateMachine::Reset()
   // hence the DECODING_NONE case below.
   MOZ_ASSERT(IsShutdown() ||
              mState == DECODER_STATE_SEEKING ||
-             mState == DECODER_STATE_DORMANT ||
-             mState == DECODER_STATE_DECODING_NONE);
+             mState == DECODER_STATE_DORMANT);
 
   // Stop the audio thread. Otherwise, MediaSink might be accessing AudioQueue
   // outside of the decoder monitor while we are clearing the queue and causes
