@@ -99,6 +99,10 @@ class ObjectGroup : public gc::TenuredCell
         clasp_ = clasp;
     }
 
+    bool hasDynamicPrototype() const {
+        return proto_.isDynamic();
+    }
+
     const HeapPtr<TaggedProto>& proto() const {
         return proto_;
     }

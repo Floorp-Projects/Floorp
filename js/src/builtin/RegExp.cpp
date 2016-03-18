@@ -1609,12 +1609,12 @@ js::RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* rx, JSObject* proto, u
         return true;
     }
 
-    if (rx->hasLazyPrototype()) {
+    if (!rx->hasStaticPrototype()) {
         *result = false;
         return true;
     }
 
-    if (rx->getTaggedProto().toObjectOrNull() != proto) {
+    if (rx->staticPrototype() != proto) {
         *result = false;
         return true;
     }
