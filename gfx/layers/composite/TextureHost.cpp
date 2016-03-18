@@ -516,6 +516,16 @@ BufferTextureHost::EnsureWrappingTextureSource()
   }
 
   mFirstSource = mCompositor->CreateDataTextureSourceAround(surf);
+  if (!mFirstSource) {
+    // BasicCompositor::CreateDataTextureSourceAround never returns null
+    // and we don't expect to take this branch if we are using another backend.
+    // Returning false is fine but if we get into this situation it probably
+    // means something fishy is going on, like a texture being used with
+    // several compositor backends.
+    NS_WARNING("Failed to use a BufferTextureHost without intermediate buffer");
+    return false;
+  }
+
   mFirstSource->SetUpdateSerial(mUpdateSerial);
   mFirstSource->SetOwner(this);
 
