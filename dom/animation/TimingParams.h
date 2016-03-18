@@ -72,6 +72,14 @@ struct TimingParams
     }
   }
 
+  static void ValidateIterations(double aIterations, ErrorResult& aRv)
+  {
+    if (IsNaN(aIterations) || aIterations < 0) {
+      aRv.ThrowTypeError<dom::MSG_ENFORCE_RANGE_OUT_OF_RANGE>(
+        NS_LITERAL_STRING("iterations"));
+    }
+  }
+
   // mDuration.isNothing() represents the "auto" value
   Maybe<StickyTimeDuration> mDuration;
   TimeDuration mDelay;      // Initializes to zero
