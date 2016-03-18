@@ -60,6 +60,10 @@ TimingParamsFromOptionsUnion(const OptionsType& aOptions,
     if (aRv.Failed()) {
       return result;
     }
+    TimingParams::ValidateIterations(timing.mIterations, aRv);
+    if (aRv.Failed()) {
+      return result;
+    }
 
     result.mDuration = duration;
     result.mDelay = TimeDuration::FromMilliseconds(timing.mDelay);
