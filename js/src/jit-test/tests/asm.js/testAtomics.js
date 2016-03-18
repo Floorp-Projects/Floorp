@@ -1843,6 +1843,21 @@ test_int32(heap);
 test_uint32(heap);
 test_misc(heap);
 
+// Bug 1254167: Effective Address Analysis should be void on atomics accesses,
+var code = `
+    "use asm";
+    var HEAP32 = new stdlib.Int32Array(heap);
+    var load = stdlib.Atomics.load;
+    function f() {
+        var i2 = 0;
+        i2 = 305002 | 0;
+        return load(HEAP32, i2 >> 2) | 0;
+    }
+    return f;
+`;
+var f = asmLink(asmCompile('stdlib', 'ffi', 'heap', code), this, {}, new SharedArrayBuffer(0x10000));
+assertErrorMessage(f, RangeError, /out-of-range index/);
+
 // Test that ARM callouts compile.
 setARMHwCapFlags('vfp');
 
@@ -1859,3 +1874,4 @@ asmCompile('stdlib', 'ffi', 'heap',
 
     return { xchg: do_xchg }
 `);
+
