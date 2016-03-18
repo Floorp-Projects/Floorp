@@ -1333,11 +1333,13 @@ Console::ProcessCallData(ConsoleCallData* aData, JS::Handle<JSObject*> aGlobal,
     frame = *aData->mTopStackFrame;
   }
 
-  AutoSafeJSContext cx;
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(aGlobal)) {
+    return;
+  }
+  JSContext* cx = jsapi.cx();
   ClearException ce(cx);
   RootedDictionary<ConsoleEvent> event(cx);
-
-  JSAutoCompartment ac(cx, aGlobal);
 
   event.mID.Construct();
   event.mInnerID.Construct();
