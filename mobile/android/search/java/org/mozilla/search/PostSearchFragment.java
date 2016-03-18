@@ -10,6 +10,7 @@ import java.net.URL;
 
 import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -72,6 +73,13 @@ public class PostSearchFragment extends Fragment {
         webview.setWebViewClient(null);
         webview = null;
         progressBar = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        GeckoApplication.watchReference(getActivity(), this);
     }
 
     public void startSearch(SearchEngine engine, String query) {
