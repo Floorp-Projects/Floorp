@@ -16,8 +16,6 @@ const ADDON_TYPE_SERVICE     = "service";
 const ID_SUFFIX              = "@services.mozilla.org";
 const STRING_TYPE_NAME       = "type.%ID%.name";
 
-XPCOMUtils.defineLazyModuleGetter(this, "getFrameWorkerHandle", "resource://gre/modules/FrameWorker.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "WorkerAPI", "resource://gre/modules/WorkerAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MozSocialAPI", "resource://gre/modules/MozSocialAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "closeAllChatWindows", "resource://gre/modules/MozSocialAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
@@ -505,7 +503,7 @@ this.SocialService = {
   },
 
   _manifestFromData: function(type, data, installOrigin) {
-    let featureURLs = ['workerURL', 'sidebarURL', 'shareURL', 'statusURL', 'markURL'];
+    let featureURLs = ['sidebarURL', 'shareURL', 'statusURL', 'markURL'];
     let resolveURLs = featureURLs.concat(['postActivationURL']);
 
     if (type == 'directory' || type == 'internal') {
@@ -665,8 +663,6 @@ this.SocialService = {
     // overwrite the existing provider then notify the front end so it can
     // handle any reload that might be necessary.
     if (ActiveProviders.has(manifest.origin)) {
-      // unload the worker prior to replacing the provider instance, also
-      // ensures the workerapi instance is terminated.
       let provider = SocialServiceInternal.providers[manifest.origin];
       provider.enabled = false;
       provider = new SocialProvider(manifest);
@@ -687,8 +683,7 @@ this.SocialService = {
 };
 
 /**
- * The SocialProvider object represents a social provider, and allows
- * access to its FrameWorker (if it has one).
+ * The SocialProvider object represents a social provider.
  *
  * @constructor
  * @param {jsobj} object representing the manifest file describing this provider
@@ -709,7 +704,6 @@ function SocialProvider(input) {
   this.iconURL = input.iconURL;
   this.icon32URL = input.icon32URL;
   this.icon64URL = input.icon64URL;
-  this.workerURL = input.workerURL;
   this.sidebarURL = input.sidebarURL;
   this.shareURL = input.shareURL;
   this.statusURL = input.statusURL;
@@ -723,11 +717,6 @@ function SocialProvider(input) {
   this.ambientNotificationIcons = {};
   this.errorState = null;
   this.frecency = 0;
-
-  // this provider has localStorage access in the worker if listed in the
-  // whitelist
-  let whitelist = Services.prefs.getCharPref("social.whitelist").split(',');
-  this.blessed = whitelist.indexOf(this.origin) >= 0;
 
   try {
     this.domain = etld.getBaseDomainFromHost(originUri.host);
@@ -745,8 +734,7 @@ SocialProvider.prototype = {
     Services.obs.notifyObservers(null, "social:provider-reload", this.origin);
   },
 
-  // Provider enabled/disabled state. Disabled providers do not have active
-  // connections to their FrameWorkers.
+  // Provider enabled/disabled state.
   _enabled: false,
   get enabled() {
     return this._enabled;
@@ -776,81 +764,14 @@ SocialProvider.prototype = {
     return undefined;
   },
 
-  // Reference to a workerAPI object for this provider. Null if the provider has
-  // no FrameWorker, or is disabled.
-  workerAPI: null,
-
-  // Contains information related to the user's profile. Populated by the
-  // workerAPI via updateUserProfile.
-  // Properties:
-  //   iconURL, portrait, userName, displayName, profileURL
-  // See https://github.com/mozilla/socialapi-dev/blob/develop/docs/socialAPI.md
-  // A value of null or an empty object means 'user not logged in'.
-  // A value of undefined means the service has not yet told us the status of
-  // the profile (ie, the service is still loading/initing, or the provider has
-  // no FrameWorker)
-  // This distinction might be used to cache certain data between runs - eg,
-  // browser-social.js caches the notification icons so they can be displayed
-  // quickly at startup without waiting for the provider to initialize -
-  // 'undefined' means 'ok to use cached values' versus 'null' meaning 'cached
-  // values aren't to be used as the user is logged out'.
-  profile: undefined,
-
   // Map of objects describing the provider's notification icons, whose
   // properties include:
   //   name, iconURL, counter, contentPanel
   // See https://developer.mozilla.org/en-US/docs/Social_API
   ambientNotificationIcons: null,
 
-  // Called by the workerAPI to update our profile information.
-  updateUserProfile: function(profile) {
-    if (!profile)
-      profile = {};
-    let accountChanged = !this.profile || this.profile.userName != profile.userName;
-    this.profile = profile;
-
-    // Sanitize the portrait from any potential script-injection.
-    if (profile.portrait) {
-      try {
-        let portraitUri = Services.io.newURI(profile.portrait, null, null);
-
-        let scheme = portraitUri ? portraitUri.scheme : "";
-        if (scheme != "data" && scheme != "http" && scheme != "https") {
-          profile.portrait = "";
-        }
-      } catch (ex) {
-        profile.portrait = "";
-      }
-    }
-
-    if (profile.iconURL)
-      this.iconURL = profile.iconURL;
-
-    if (!profile.displayName)
-      profile.displayName = profile.userName;
-
-    // if no userName, consider this a logged out state, emtpy the
-    // users ambient notifications.  notify both profile and ambient
-    // changes to clear everything
-    if (!profile.userName) {
-      this.profile = {};
-      this.ambientNotificationIcons = {};
-      Services.obs.notifyObservers(null, "social:ambient-notification-changed", this.origin);
-    }
-
-    Services.obs.notifyObservers(null, "social:profile-changed", this.origin);
-    if (accountChanged)
-      closeAllChatWindows(this);
-  },
-
-  haveLoggedInUser: function () {
-    return !!(this.profile && this.profile.userName);
-  },
-
   // Called by the workerAPI to add/update a notification icon.
   setAmbientNotification: function(notification) {
-    if (!this.profile.userName)
-      throw new Error("unable to set notifications while logged out");
     if (!this.ambientNotificationIcons[notification.name] &&
         Object.keys(this.ambientNotificationIcons).length >= 3) {
       throw new Error("ambient notification limit reached");
@@ -862,47 +783,11 @@ SocialProvider.prototype = {
 
   // Internal helper methods
   _activate: function _activate() {
-    // Initialize the workerAPI and its port first, so that its initialization
-    // occurs before any other messages are processed by other ports.
-    let workerAPIPort = this.getWorkerPort();
-    if (workerAPIPort)
-      this.workerAPI = new WorkerAPI(this, workerAPIPort);
   },
 
   _terminate: function _terminate() {
     closeAllChatWindows(this);
-    if (this.workerURL) {
-      try {
-        getFrameWorkerHandle(this.workerURL).terminate();
-      } catch (e) {
-        Cu.reportError("SocialProvider FrameWorker termination failed: " + e);
-      }
-    }
-    if (this.workerAPI) {
-      this.workerAPI.terminate();
-    }
     this.errorState = null;
-    this.workerAPI = null;
-    this.profile = undefined;
-  },
-
-  /**
-   * Instantiates a FrameWorker for the provider if one doesn't exist, and
-   * returns a reference to a new port to that FrameWorker.
-   *
-   * Returns null if this provider has no workerURL, or is disabled.
-   *
-   * @param {DOMWindow} window (optional)
-   */
-  getWorkerPort: function getWorkerPort(window) {
-    if (!this.workerURL || !this.enabled)
-      return null;
-    // Only allow localStorage in the frameworker for blessed providers
-    let allowLocalStorage = this.blessed;
-    let handle = getFrameWorkerHandle(this.workerURL, window,
-                                      "SocialProvider:" + this.origin, this.origin,
-                                      allowLocalStorage);
-    return handle.port;
   },
 
   /**

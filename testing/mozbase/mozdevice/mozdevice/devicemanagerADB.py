@@ -658,7 +658,7 @@ class DeviceManagerADB(DeviceManager):
 
         try:
             self._checkCmd(["version"], timeout=self.short_timeout)
-        except os.error, err:
+        except os.error as err:
             raise DMError("unable to execute ADB (%s): ensure Android SDK is installed and adb is in your $PATH" % err)
 
     def _verifyDevice(self):

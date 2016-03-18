@@ -8,13 +8,11 @@ var manifest = { // builtin provider
   name: "provider example.com",
   origin: "https://example.com",
   sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
-  workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
   iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
 var manifest2 = { // used for testing install
   name: "provider test1",
   origin: "https://test1.example.com",
-  workerURL: "https://test1.example.com/browser/browser/base/content/test/social/social_worker.js",
   statusURL: "https://test1.example.com/browser/browser/base/content/test/social/social_panel.html",
   iconURL: "https://test1.example.com/browser/browser/base/content/test/general/moz.png",
   version: "1.0"
@@ -39,6 +37,21 @@ function openWindowAndWaitForInit(callback) {
 
 function test() {
   waitForExplicitFinish();
+
+  let frameScript = "data:,(" + function frame_script() {
+    addMessageListener("socialTest-sendEvent", function(msg) {
+      let data = msg.data;
+      let evt = content.document.createEvent("CustomEvent");
+      evt.initCustomEvent(data.name, true, true, JSON.stringify(data.data));
+      content.document.documentElement.dispatchEvent(evt);
+    });
+  }.toString() + ")();";
+  let mm = getGroupMessageManager("social");
+  mm.loadFrameScript(frameScript, true);
+
+  registerCleanupFunction(function () {
+    mm.removeDelayedFrameScript(frameScript);
+  });
 
   runSocialTestWithProvider(manifest, function (finishcb) {
     runSocialTests(tests, undefined, undefined, function () {
@@ -123,44 +136,31 @@ var tests = {
       counter: 1
     };
 
-    // Disable the transition
-    let panel = document.getElementById("social-notification-panel");
-    panel.setAttribute("animate", "false");
-
     // click on panel to open and wait for visibility
     let provider = Social._getProviderFromOrigin(manifest2.origin);
     let id = SocialStatus._toolbarHelper.idFromOrigin(manifest2.origin);
     let widget = CustomizableUI.getWidget(id);
     let btn = widget.forWindow(window).node;
-    ok(btn, "got a status button");
-    let port = provider.getWorkerPort();
 
-    port.onmessage = function (e) {
-      let topic = e.data.topic;
-      switch (topic) {
-        case "test-init-done":
-          ok(true, "test-init-done received");
-          ok(provider.profile.userName, "profile was set by test worker");
-          btn.click();
-          break;
-        case "got-social-panel-visibility":
-          ok(true, "got the panel message " + e.data.result);
-          if (e.data.result == "shown") {
-            panel.hidePopup();
-            panel.removeAttribute("animate");
-          } else {
-            port.postMessage({topic: "test-ambient-notification", data: icon});
-            port.close();
-            waitForCondition(function() { return btn.getAttribute("badge"); },
-                       function() {
-                         is(btn.style.listStyleImage, "url(\"" + icon.iconURL + "\")", "notification icon updated");
-                         next();
-                       }, "button updated by notification");
-          }
-          break;
-      }
-    };
-    port.postMessage({topic: "test-init"});
+    // Disable the transition
+    let panel = document.getElementById("social-notification-panel");
+    panel.setAttribute("animate", "false");
+    ensureEventFired(panel, "popupshown").then(() => {
+      ensureFrameLoaded(panel.firstChild).then(() => {
+        let mm = panel.firstChild.messageManager;
+        mm.sendAsyncMessage("socialTest-sendEvent", { name: "Social:Notification", data: icon });
+        waitForCondition(function() { return btn.getAttribute("badge"); },
+                   function() {
+                     is(btn.style.listStyleImage, "url(\"" + icon.iconURL + "\")", "notification icon updated");
+                     panel.hidePopup();
+                   }, "button updated by notification");
+        });
+    });
+    ensureEventFired(panel, "popuphidden").then(() => {
+      panel.removeAttribute("animate");
+      next();
+    });
+    btn.click(); // open the panel
   },
 
   testPanelOffline: function(next) {
@@ -173,8 +173,6 @@ var tests = {
     ok(btn, "got a status button");
     let frameId = btn.getAttribute("notificationFrameId");
     let frame = document.getElementById(frameId);
-    let port = provider.getWorkerPort();
-    port.postMessage({topic: "test-init"});
 
     goOffline().then(function() {
       info("testing offline error page");
@@ -183,8 +181,16 @@ var tests = {
       ensureEventFired(panel, "popupshown").then(() => {
         ensureFrameLoaded(frame).then(() => {
           is(frame.contentDocument.documentURI.indexOf("about:socialerror?mode=tryAgainOnly"), 0, "social error page is showing "+frame.contentDocument.documentURI);
-          panel.hidePopup();
-          goOnline().then(next);
+          // We got our error page, reset to avoid test leak.
+          ensureEventFired(frame, "load").then(() => {
+            is(frame.contentDocument.documentURI, "about:blank", "closing error panel");
+            ensureEventFired(panel, "popuphidden").then(next);
+            panel.hidePopup();
+          });
+          goOnline().then(() => {
+            info("resetting error panel");
+            frame.setAttribute("src", "about:blank");
+          });
         });
       });
       // reload after going offline, wait for unload to open panel

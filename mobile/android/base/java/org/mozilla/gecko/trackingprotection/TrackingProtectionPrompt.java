@@ -15,11 +15,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
-import com.nineoldandroids.animation.Animator;
-import com.nineoldandroids.animation.AnimatorListenerAdapter;
-import com.nineoldandroids.animation.AnimatorSet;
-import com.nineoldandroids.animation.ObjectAnimator;
-import com.nineoldandroids.view.ViewHelper;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 
 public class TrackingProtectionPrompt extends Locales.LocaleAwareActivity {
         public static final String LOGTAG = "Gecko" + TrackingProtectionPrompt.class.getSimpleName();
@@ -63,8 +62,8 @@ public class TrackingProtectionPrompt extends Locales.LocaleAwareActivity {
 
             containerView = findViewById(R.id.tracking_protection_inner_container);
 
-            ViewHelper.setTranslationY(containerView, 500);
-            ViewHelper.setAlpha(containerView, 0);
+            containerView.setTranslationY(500);
+            containerView.setAlpha(0);
 
             final Animator translateAnimator = ObjectAnimator.ofFloat(containerView, "translationY", 0);
             translateAnimator.setDuration(400);

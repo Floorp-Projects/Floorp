@@ -9,7 +9,7 @@ import java.lang.ref.WeakReference;
 
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.ReaderModeUtils;
+import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Combined;

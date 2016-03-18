@@ -18,7 +18,8 @@ const NAME2TOPIC = {
   'Firefox': 'sessionstore-windows-restored',
   'Fennec': 'sessionstore-windows-restored',
   'SeaMonkey': 'sessionstore-windows-restored',
-  'Thunderbird': 'mail-startup-done'
+  'Thunderbird': 'mail-startup-done',
+  'Instantbird': 'xul-window-visible'
 };
 
 var Startup = {

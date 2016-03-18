@@ -13,7 +13,7 @@ import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.ReaderModeUtils;
+import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.SiteIdentity.MixedMode;
 import org.mozilla.gecko.SiteIdentity.SecurityMode;

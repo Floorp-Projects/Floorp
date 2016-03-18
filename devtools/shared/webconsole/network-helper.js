@@ -5,8 +5,9 @@
  * Copyright (c) 2007, Parakey Inc.
  * All rights reserved.
  *
- * Redistribution and use of this software in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use of this software in source and binary forms,
+ * with or without modification, are permitted provided that the
+ * following conditions are met:
  *
  * * Redistributions of source code must retain the above
  *   copyright notice, this list of conditions and the
@@ -22,14 +23,18 @@
  *   derived from this software without specific prior
  *   written permission of Parakey Inc.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
- * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
- * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -54,7 +59,7 @@
 
 "use strict";
 
-const {components, Cc, Ci, Cu} = require("chrome");
+const {components, Cc, Ci} = require("chrome");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
@@ -70,62 +75,57 @@ const gNSURLStore = new Map();
  */
 var NetworkHelper = {
   /**
-   * Converts aText with a given aCharset to unicode.
+   * Converts text with a given charset to unicode.
    *
-   * @param string aText
+   * @param string text
    *        Text to convert.
-   * @param string aCharset
+   * @param string charset
    *        Charset to convert the text to.
    * @returns string
    *          Converted text.
    */
-  convertToUnicode: function NH_convertToUnicode(aText, aCharset)
-  {
-    let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-               createInstance(Ci.nsIScriptableUnicodeConverter);
+  convertToUnicode: function(text, charset) {
+    let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+        .createInstance(Ci.nsIScriptableUnicodeConverter);
     try {
-      conv.charset = aCharset || "UTF-8";
-      return conv.ConvertToUnicode(aText);
-    }
-    catch (ex) {
-      return aText;
+      conv.charset = charset || "UTF-8";
+      return conv.ConvertToUnicode(text);
+    } catch (ex) {
+      return text;
     }
   },
 
   /**
-   * Reads all available bytes from aStream and converts them to aCharset.
+   * Reads all available bytes from stream and converts them to charset.
    *
-   * @param nsIInputStream aStream
-   * @param string aCharset
+   * @param nsIInputStream stream
+   * @param string charset
    * @returns string
-   *          UTF-16 encoded string based on the content of aStream and aCharset.
+   *          UTF-16 encoded string based on the content of stream and charset.
    */
-  readAndConvertFromStream: function NH_readAndConvertFromStream(aStream, aCharset)
-  {
+  readAndConvertFromStream: function(stream, charset) {
     let text = null;
     try {
-      text = NetUtil.readInputStreamToString(aStream, aStream.available())
-      return this.convertToUnicode(text, aCharset);
-    }
-    catch (err) {
+      text = NetUtil.readInputStreamToString(stream, stream.available());
+      return this.convertToUnicode(text, charset);
+    } catch (err) {
       return text;
     }
   },
 
    /**
-   * Reads the posted text from aRequest.
+   * Reads the posted text from request.
    *
-   * @param nsIHttpChannel aRequest
-   * @param string aCharset
+   * @param nsIHttpChannel request
+   * @param string charset
    *        The content document charset, used when reading the POSTed data.
    * @returns string or null
-   *          Returns the posted string if it was possible to read from aRequest
+   *          Returns the posted string if it was possible to read from request
    *          otherwise null.
    */
-  readPostTextFromRequest: function NH_readPostTextFromRequest(aRequest, aCharset)
-  {
-    if (aRequest instanceof Ci.nsIUploadChannel) {
-      let iStream = aRequest.uploadStream;
+  readPostTextFromRequest: function(request, charset) {
+    if (request instanceof Ci.nsIUploadChannel) {
+      let iStream = request.uploadStream;
 
       let isSeekableStream = false;
       if (iStream instanceof Ci.nsISeekableStream) {
@@ -139,7 +139,7 @@ var NetworkHelper = {
       }
 
       // Read data from the stream.
-      let text = this.readAndConvertFromStream(iStream, aCharset);
+      let text = this.readAndConvertFromStream(iStream, charset);
 
       // Seek locks the file, so seek to the beginning only if necko hasn't
       // read it yet, since necko doesn't seek to 0 before reading (at lest
@@ -155,55 +155,51 @@ var NetworkHelper = {
   /**
    * Reads the posted text from the page's cache.
    *
-   * @param nsIDocShell aDocShell
-   * @param string aCharset
+   * @param nsIDocShell docShell
+   * @param string charset
    * @returns string or null
    *          Returns the posted string if it was possible to read from
-   *          aDocShell otherwise null.
+   *          docShell otherwise null.
    */
-  readPostTextFromPage: function NH_readPostTextFromPage(aDocShell, aCharset)
-  {
-    let webNav = aDocShell.QueryInterface(Ci.nsIWebNavigation);
-    return this.readPostTextFromPageViaWebNav(webNav, aCharset);
+  readPostTextFromPage: function(docShell, charset) {
+    let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+    return this.readPostTextFromPageViaWebNav(webNav, charset);
   },
 
   /**
    * Reads the posted text from the page's cache, given an nsIWebNavigation
    * object.
    *
-   * @param nsIWebNavigation aWebNav
-   * @param string aCharset
+   * @param nsIWebNavigation webNav
+   * @param string charset
    * @returns string or null
    *          Returns the posted string if it was possible to read from
-   *          aWebNav, otherwise null.
+   *          webNav, otherwise null.
    */
-  readPostTextFromPageViaWebNav:
-  function NH_readPostTextFromPageViaWebNav(aWebNav, aCharset)
-  {
-    if (aWebNav instanceof Ci.nsIWebPageDescriptor) {
-      let descriptor = aWebNav.currentDescriptor;
+  readPostTextFromPageViaWebNav: function(webNav, charset) {
+    if (webNav instanceof Ci.nsIWebPageDescriptor) {
+      let descriptor = webNav.currentDescriptor;
 
       if (descriptor instanceof Ci.nsISHEntry && descriptor.postData &&
           descriptor instanceof Ci.nsISeekableStream) {
-        descriptor.seek(NS_SEEK_SET, 0);
+        descriptor.seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
 
-        return this.readAndConvertFromStream(descriptor, aCharset);
+        return this.readAndConvertFromStream(descriptor, charset);
       }
     }
     return null;
   },
 
   /**
-   * Gets the web appId that is associated with aRequest.
+   * Gets the web appId that is associated with request.
    *
-   * @param nsIHttpChannel aRequest
+   * @param nsIHttpChannel request
    * @returns number|null
    *          The appId for the given request, if available.
    */
-  getAppIdForRequest: function NH_getAppIdForRequest(aRequest)
-  {
+  getAppIdForRequest: function(request) {
     try {
-      return this.getRequestLoadContext(aRequest).appId;
+      return this.getRequestLoadContext(request).appId;
     } catch (ex) {
       // request loadContent is not always available.
     }
@@ -211,18 +207,17 @@ var NetworkHelper = {
   },
 
   /**
-   * Gets the topFrameElement that is associated with aRequest. This
+   * Gets the topFrameElement that is associated with request. This
    * works in single-process and multiprocess contexts. It may cross
    * the content/chrome boundary.
    *
-   * @param nsIHttpChannel aRequest
+   * @param nsIHttpChannel request
    * @returns nsIDOMElement|null
    *          The top frame element for the given request.
    */
-  getTopFrameForRequest: function NH_getTopFrameForRequest(aRequest)
-  {
+  getTopFrameForRequest: function(request) {
     try {
-      return this.getRequestLoadContext(aRequest).topFrameElement;
+      return this.getRequestLoadContext(request).topFrameElement;
     } catch (ex) {
       // request loadContent is not always available.
     }
@@ -230,15 +225,14 @@ var NetworkHelper = {
   },
 
   /**
-   * Gets the nsIDOMWindow that is associated with aRequest.
+   * Gets the nsIDOMWindow that is associated with request.
    *
-   * @param nsIHttpChannel aRequest
+   * @param nsIHttpChannel request
    * @returns nsIDOMWindow or null
    */
-  getWindowForRequest: function NH_getWindowForRequest(aRequest)
-  {
+  getWindowForRequest: function(request) {
     try {
-      return this.getRequestLoadContext(aRequest).associatedWindow;
+      return this.getRequestLoadContext(request).associatedWindow;
     } catch (ex) {
       // TODO: bug 802246 - getWindowForRequest() throws on b2g: there is no
       // associatedWindow property.
@@ -247,20 +241,24 @@ var NetworkHelper = {
   },
 
   /**
-   * Gets the nsILoadContext that is associated with aRequest.
+   * Gets the nsILoadContext that is associated with request.
    *
-   * @param nsIHttpChannel aRequest
+   * @param nsIHttpChannel request
    * @returns nsILoadContext or null
    */
-  getRequestLoadContext: function NH_getRequestLoadContext(aRequest)
-  {
+  getRequestLoadContext: function(request) {
     try {
-      return aRequest.notificationCallbacks.getInterface(Ci.nsILoadContext);
-    } catch (ex) { }
+      return request.notificationCallbacks.getInterface(Ci.nsILoadContext);
+    } catch (ex) {
+      // Ignore.
+    }
 
     try {
-      return aRequest.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
-    } catch (ex) { }
+      return request.loadGroup.notificationCallbacks
+        .getInterface(Ci.nsILoadContext);
+    } catch (ex) {
+      // Ignore.
+    }
 
     return null;
   },
@@ -268,15 +266,14 @@ var NetworkHelper = {
   /**
    * Determines whether the request has been made for the top level document.
    *
-   * @param nsIHttpChannel aRequest
+   * @param nsIHttpChannel request
    * @returns Boolean True if the request represents the top level document.
    */
-  isTopLevelLoad: function(aRequest)
-  {
-    if (aRequest instanceof Ci.nsIChannel) {
-      let loadInfo = aRequest.loadInfo;
+  isTopLevelLoad: function(request) {
+    if (request instanceof Ci.nsIChannel) {
+      let loadInfo = request.loadInfo;
       if (loadInfo && loadInfo.parentOuterWindowID == loadInfo.outerWindowID) {
-        return (aRequest.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI);
+        return (request.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI);
       }
     }
 
@@ -284,20 +281,20 @@ var NetworkHelper = {
   },
 
   /**
-   * Loads the content of aUrl from the cache.
+   * Loads the content of url from the cache.
    *
-   * @param string aUrl
+   * @param string url
    *        URL to load the cached content for.
-   * @param string aCharset
+   * @param string charset
    *        Assumed charset of the cached content. Used if there is no charset
    *        on the channel directly.
-   * @param function aCallback
+   * @param function callback
    *        Callback that is called with the loaded cached content if available
    *        or null if something failed while getting the cached content.
    */
-  loadFromCache: function NH_loadFromCache(aUrl, aCharset, aCallback)
-  {
-    let channel = NetUtil.newChannel({uri: aUrl, loadUsingSystemPrincipal: true});
+  loadFromCache: function(url, charset, callback) {
+    let channel = NetUtil.newChannel({uri: url,
+                                      loadUsingSystemPrincipal: true});
 
     // Ensure that we only read from the cache and not the server.
     channel.loadFlags = Ci.nsIRequest.LOAD_FROM_CACHE |
@@ -306,40 +303,39 @@ var NetworkHelper = {
 
     NetUtil.asyncFetch(
       channel,
-      (aInputStream, aStatusCode, aRequest) => {
-        if (!components.isSuccessCode(aStatusCode)) {
-          aCallback(null);
+      (inputStream, statusCode, request) => {
+        if (!components.isSuccessCode(statusCode)) {
+          callback(null);
           return;
         }
 
         // Try to get the encoding from the channel. If there is none, then use
-        // the passed assumed aCharset.
-        let aChannel = aRequest.QueryInterface(Ci.nsIChannel);
-        let contentCharset = aChannel.contentCharset || aCharset;
+        // the passed assumed charset.
+        let requestChannel = request.QueryInterface(Ci.nsIChannel);
+        let contentCharset = requestChannel.contentCharset || charset;
 
         // Read the content of the stream using contentCharset as encoding.
-        aCallback(this.readAndConvertFromStream(aInputStream, contentCharset));
+        callback(this.readAndConvertFromStream(inputStream, contentCharset));
       });
   },
 
   /**
    * Parse a raw Cookie header value.
    *
-   * @param string aHeader
+   * @param string header
    *        The raw Cookie header value.
    * @return array
    *         Array holding an object for each cookie. Each object holds the
    *         following properties: name and value.
    */
-  parseCookieHeader: function NH_parseCookieHeader(aHeader)
-  {
-    let cookies = aHeader.split(";");
+  parseCookieHeader: function(header) {
+    let cookies = header.split(";");
     let result = [];
 
-    cookies.forEach(function(aCookie) {
-      let equal = aCookie.indexOf("=");
-      let name = aCookie.substr(0, equal);
-      let value = aCookie.substr(equal + 1);
+    cookies.forEach(function(cookie) {
+      let equal = cookie.indexOf("=");
+      let name = cookie.substr(0, equal);
+      let value = cookie.substr(equal + 1);
       result.push({name: unescape(name.trim()),
                    value: unescape(value.trim())});
     });
@@ -350,46 +346,43 @@ var NetworkHelper = {
   /**
    * Parse a raw Set-Cookie header value.
    *
-   * @param string aHeader
+   * @param string header
    *        The raw Set-Cookie header value.
    * @return array
    *         Array holding an object for each cookie. Each object holds the
    *         following properties: name, value, secure (boolean), httpOnly
    *         (boolean), path, domain and expires (ISO date string).
    */
-  parseSetCookieHeader: function NH_parseSetCookieHeader(aHeader)
-  {
-    let rawCookies = aHeader.split(/\r\n|\n|\r/);
+  parseSetCookieHeader: function(header) {
+    let rawCookies = header.split(/\r\n|\n|\r/);
     let cookies = [];
 
-    rawCookies.forEach(function(aCookie) {
-      let equal = aCookie.indexOf("=");
-      let name = unescape(aCookie.substr(0, equal).trim());
-      let parts = aCookie.substr(equal + 1).split(";");
+    rawCookies.forEach(function(cookie) {
+      let equal = cookie.indexOf("=");
+      let name = unescape(cookie.substr(0, equal).trim());
+      let parts = cookie.substr(equal + 1).split(";");
       let value = unescape(parts.shift().trim());
 
-      let cookie = {name: name, value: value};
+      cookie = {name: name, value: value};
 
-      parts.forEach(function(aPart) {
-        let part = aPart.trim();
+      parts.forEach(function(part) {
+        part = part.trim();
         if (part.toLowerCase() == "secure") {
           cookie.secure = true;
-        }
-        else if (part.toLowerCase() == "httponly") {
+        } else if (part.toLowerCase() == "httponly") {
           cookie.httpOnly = true;
-        }
-        else if (part.indexOf("=") > -1) {
+        } else if (part.indexOf("=") > -1) {
           let pair = part.split("=");
           pair[0] = pair[0].toLowerCase();
           if (pair[0] == "path" || pair[0] == "domain") {
             cookie[pair[0]] = pair[1];
-          }
-          else if (pair[0] == "expires") {
+          } else if (pair[0] == "expires") {
             try {
-              pair[1] = pair[1].replace(/-/g, ' ');
+              pair[1] = pair[1].replace(/-/g, " ");
               cookie.expires = new Date(pair[1]).toISOString();
+            } catch (ex) {
+              // Ignore.
             }
-            catch (ex) { }
           }
         }
       });
@@ -478,12 +471,11 @@ var NetworkHelper = {
   /**
    * Check if the given MIME type is a text-only MIME type.
    *
-   * @param string aMimeType
+   * @param string mimeType
    * @return boolean
    */
-  isTextMimeType: function NH_isTextMimeType(aMimeType)
-  {
-    if (aMimeType.indexOf("text/") == 0) {
+  isTextMimeType: function(mimeType) {
+    if (mimeType.indexOf("text/") == 0) {
       return true;
     }
 
@@ -491,11 +483,11 @@ var NetworkHelper = {
     // standard "application/xml" and "application/json", we also look for
     // variants like "application/x-bigcorp+xml". For JSON we allow "+json" and
     // "-json" as suffixes.
-    if (/^application\/\w+(?:[\.-]\w+)*(?:\+xml|[-+]json)$/.test(aMimeType)) {
+    if (/^application\/\w+(?:[\.-]\w+)*(?:\+xml|[-+]json)$/.test(mimeType)) {
       return true;
     }
 
-    let category = this.mimeCategoryMap[aMimeType] || null;
+    let category = this.mimeCategoryMap[mimeType] || null;
     switch (category) {
       case "txt":
       case "js":
@@ -531,19 +523,21 @@ var NetworkHelper = {
    *                    * "broken": secure connection failed (e.g. expired cert)
    *                    * "secure": the connection was properly secured.
    *          If state == broken:
-   *            - errorMessage: full error message from nsITransportSecurityInfo.
+   *            - errorMessage: full error message from
+   *                            nsITransportSecurityInfo.
    *          If state == secure:
    *            - protocolVersion: one of TLSv1, TLSv1.1, TLSv1.2.
    *            - cipherSuite: the cipher suite used in this connection.
    *            - cert: information about certificate used in this connection.
    *                    See parseCertificateInfo for the contents.
-   *            - hsts: true if host uses Strict Transport Security, false otherwise
+   *            - hsts: true if host uses Strict Transport Security,
+   *                    false otherwise
    *            - hpkp: true if host uses Public Key Pinning, false otherwise
    *          If state == weak: Same as state == secure and
    *            - weaknessReasons: list of reasons that cause the request to be
    *                               considered weak. See getReasonsForWeakness.
    */
-  parseSecurityInfo: function NH_parseSecurityInfo(securityInfo, httpActivity) {
+  parseSecurityInfo: function(securityInfo, httpActivity) {
     const info = {
       state: "insecure",
     };
@@ -589,7 +583,7 @@ var NetworkHelper = {
     securityInfo.QueryInterface(Ci.nsISSLStatusProvider);
 
     const wpl = Ci.nsIWebProgressListener;
-    const NSSErrorsService = Cc['@mozilla.org/nss_errors_service;1']
+    const NSSErrorsService = Cc["@mozilla.org/nss_errors_service;1"]
                                .getService(Ci.nsINSSErrorsService);
     const SSLStatus = securityInfo.SSLStatus;
     if (!NSSErrorsService.isNSSErrorCode(securityInfo.errorCode)) {
@@ -600,9 +594,10 @@ var NetworkHelper = {
         uri = httpActivity.channel.URI;
       }
       if (uri && !uri.schemeIs("https") && !uri.schemeIs("wss")) {
-        // it is not enough to look at the transport security info - schemes other than
-        // https and wss are subject to downgrade/etc at the scheme level and should
-        // always be considered insecure
+        // it is not enough to look at the transport security info -
+        // schemes other than https and wss are subject to
+        // downgrade/etc at the scheme level and should always be
+        // considered insecure
         info.state = "insecure";
       } else if (state & wpl.STATE_IS_SECURE) {
         // The connection is secure if the scheme is sufficient
@@ -626,7 +621,8 @@ var NetworkHelper = {
       info.cipherSuite = SSLStatus.cipherName;
 
       // Protocol version.
-      info.protocolVersion = this.formatSecurityProtocol(SSLStatus.protocolVersion);
+      info.protocolVersion =
+        this.formatSecurityProtocol(SSLStatus.protocolVersion);
 
       // Certificate.
       info.cert = this.parseCertificateInfo(SSLStatus.serverCert);
@@ -635,7 +631,6 @@ var NetworkHelper = {
       if (httpActivity.hostname) {
         const sss = Cc["@mozilla.org/ssservice;1"]
                       .getService(Ci.nsISiteSecurityService);
-
 
         // SiteSecurityService uses different storage if the channel is
         // private. Thus we must give isSecureHost correct flags or we
@@ -653,7 +648,6 @@ var NetworkHelper = {
         info.hsts = false;
         info.hpkp = false;
       }
-
     } else {
       // The connection failed.
       info.state = "broken";
@@ -677,7 +671,7 @@ var NetworkHelper = {
    *             fingerprint: { sha1, sha256 }
    *           }
    */
-  parseCertificateInfo: function NH_parseCertifificateInfo(cert) {
+  parseCertificateInfo: function(cert) {
     let info = {};
     if (cert) {
       info.subject = {
@@ -719,7 +713,7 @@ var NetworkHelper = {
    *         One of TLSv1, TLSv1.1, TLSv1.2 if @param version is valid,
    *         Unknown otherwise.
    */
-  formatSecurityProtocol: function NH_formatSecurityProtocol(version) {
+  formatSecurityProtocol: function(version) {
     switch (version) {
       case Ci.nsISSLStatus.TLS_VERSION_1:
         return "TLSv1";
@@ -745,7 +739,7 @@ var NetworkHelper = {
    *         List of weakness reasons. A subset of { cipher } where
    *         * cipher: The cipher suite is consireded to be weak (RC4).
    */
-  getReasonsForWeakness: function NH_getReasonsForWeakness(state) {
+  getReasonsForWeakness: function(state) {
     const wpl = Ci.nsIWebProgressListener;
 
     // If there's non-fatal security issues the request has STATE_IS_BROKEN
@@ -772,26 +766,29 @@ var NetworkHelper = {
   /**
    * Parse a url's query string into its components
    *
-   * @param string aQueryString
+   * @param string queryString
    *        The query part of a url
    * @return array
    *         Array of query params {name, value}
    */
-  parseQueryString: function(aQueryString) {
+  parseQueryString: function(queryString) {
     // Make sure there's at least one param available.
     // Be careful here, params don't necessarily need to have values, so
     // no need to verify the existence of a "=".
-    if (!aQueryString) {
-      return;
+    if (!queryString) {
+      return null;
     }
 
     // Turn the params string into an array containing { name: value } tuples.
-    let paramsArray = aQueryString.replace(/^[?&]/, "").split("&").map(e => {
+    let paramsArray = queryString.replace(/^[?&]/, "").split("&").map(e => {
       let param = e.split("=");
       return {
-        name: param[0] ? NetworkHelper.convertToUnicode(unescape(param[0])) : "",
-        value: param[1] ? NetworkHelper.convertToUnicode(unescape(param[1])) : ""
-      }});
+        name: param[0] ?
+          NetworkHelper.convertToUnicode(unescape(param[0])) : "",
+        value: param[1] ?
+          NetworkHelper.convertToUnicode(unescape(param[1])) : ""
+      };
+    });
 
     return paramsArray;
   },
@@ -799,13 +796,13 @@ var NetworkHelper = {
   /**
    * Helper for getting an nsIURL instance out of a string.
    */
-  nsIURL: function(aUrl, aStore = gNSURLStore) {
-    if (aStore.has(aUrl)) {
-      return aStore.get(aUrl);
+  nsIURL: function(url, store = gNSURLStore) {
+    if (store.has(url)) {
+      return store.get(url);
     }
 
-    let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
-    aStore.set(aUrl, uri);
+    let uri = Services.io.newURI(url, null, null).QueryInterface(Ci.nsIURL);
+    store.set(url, uri);
     return uri;
   }
 };

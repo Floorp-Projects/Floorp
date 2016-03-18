@@ -152,6 +152,8 @@
         <setter>
           this.content.docShellIsActive = !!val;
 
+          // Bug 1256431 to remove socialFrameShow/Hide from hello, keep this
+          // until that is complete.
           // let the chat frame know if it is being shown or hidden
           this.content.messageManager.sendAsyncMessage("Social:CustomEvent", {
             name: val ? "socialFrameShow" : "socialFrameHide"
