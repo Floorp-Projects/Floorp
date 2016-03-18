@@ -77,6 +77,7 @@ public:
   void SetGroupStartTimestamp(const media::TimeUnit& aGroupStartTimestamp) override;
   void RestartGroupStartTimestamp() override;
   media::TimeUnit GroupEndTimestamp() override;
+  int64_t EvictionThreshold() const override;
 
   // Interface for MediaSourceDemuxer
   MediaInfo GetMetadata();
@@ -344,7 +345,8 @@ private:
 
   // Global size of this source buffer content.
   Atomic<int64_t> mSizeSourceBuffer;
-  uint32_t mEvictionThreshold;
+  int64_t mVideoEvictionThreshold;
+  int64_t mAudioEvictionThreshold;
   Atomic<bool> mEvictionOccurred;
 
   // Monitor to protect following objects accessed across multipple threads.

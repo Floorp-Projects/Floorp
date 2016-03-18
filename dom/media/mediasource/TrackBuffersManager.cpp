@@ -99,8 +99,10 @@ TrackBuffersManager::TrackBuffersManager(dom::SourceBufferAttributes* aAttribute
   , mTaskQueue(aParentDecoder->GetDemuxer()->GetTaskQueue())
   , mSourceBufferAttributes(aAttributes)
   , mParentDecoder(new nsMainThreadPtrHolder<MediaSourceDecoder>(aParentDecoder, false /* strict */))
-  , mEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold",
-                                            100 * (1 << 20)))
+  , mVideoEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold.video",
+                                                 100 * 1024 * 1024))
+  , mAudioEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold.audio",
+                                                 15 * 1024 * 1024))
   , mEvictionOccurred(false)
   , mMonitor("TrackBuffersManager")
   , mAppendRunning(false)
@@ -202,9 +204,13 @@ TrackBuffersManager::EvictData(TimeUnit aPlaybackTime,
                                TimeUnit* aBufferStartTime)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_DEBUG("");
 
-  int64_t toEvict = GetSize() - aThreshold;
+  const int64_t toEvict = GetSize() -
+    std::max(EvictionThreshold() - aThresholdReduct, aThresholdReduct);
+
+  MSE_DEBUG("buffered=%lldkb, eviction threshold=%ukb, evict=%lldkb",
+            GetSize() / 1024, EvictionThreshold() / 1024, toEvict / 1024);
+
   if (toEvict <= 0) {
     return EvictDataResult::NO_DATA_EVICTED;
   }
@@ -349,6 +355,15 @@ TrackBuffersManager::CompleteResetParserState()
 
   // Reject our promise immediately.
   mAppendPromise.RejectIfExists(NS_ERROR_ABORT, __func__);
+}
+
+int64_t
+TrackBuffersManager::EvictionThreshold() const
+{
+  if (HasVideo()) {
+    return mVideoEvictionThreshold;
+  }
+  return mAudioEvictionThreshold;
 }
 
 void
@@ -501,7 +516,7 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
   mSizeSourceBuffer = mVideoTracks.mSizeBuffer + mAudioTracks.mSizeBuffer;
 
   // 4. If buffer full flag equals true and this object is ready to accept more bytes, then set the buffer full flag to false.
-  if (mBufferFull && mSizeSourceBuffer < mEvictionThreshold) {
+  if (mBufferFull && mSizeSourceBuffer < EvictionThreshold()) {
     mBufferFull = false;
   }
   mEvictionOccurred = true;
@@ -1237,7 +1252,7 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
 
   // Return to step 6.4 of Segment Parser Loop algorithm
   // 4. If this SourceBuffer is full and cannot accept more media data, then set the buffer full flag to true.
-  if (mSizeSourceBuffer >= mEvictionThreshold) {
+  if (mSizeSourceBuffer >= EvictionThreshold()) {
     mBufferFull = true;
     mEvictionOccurred = false;
   }
