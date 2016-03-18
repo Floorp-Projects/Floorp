@@ -733,7 +733,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           (modifierMask == Prefs::ChromeAccessModifierMask() ||
            modifierMask == Prefs::ContentAccessModifierMask())) {
         AutoTArray<uint32_t, 10> accessCharCodes;
-        nsContentUtils::GetAccessKeyCandidates(keyEvent, accessCharCodes);
+        keyEvent->GetAccessKeyCandidates(accessCharCodes);
 
         if (HandleAccessKey(aPresContext, accessCharCodes,
                             keyEvent->mFlags.mIsTrusted, modifierMask)) {
