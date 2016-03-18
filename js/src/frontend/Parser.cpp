@@ -4122,7 +4122,8 @@ Parser<ParseHandler>::bindVar(BindData<ParseHandler>* data,
 
         // Synthesize a new 'var' binding if one does not exist.
         DefinitionNode last = pc->decls().lookupLast(name);
-        if (last && parser->handler.getDefinitionKind(last) != Definition::VAR) {
+        Definition::Kind lastKind = parser->handler.getDefinitionKind(last);
+        if (last && lastKind != Definition::VAR && lastKind != Definition::ARG) {
             parser->handler.setFlag(parser->handler.getDefinitionNode(last), PND_CLOSED);
 
             Node synthesizedVarName = parser->newName(name);
