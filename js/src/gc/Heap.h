@@ -648,20 +648,6 @@ class Arena
         auxNextLink = 0;
     }
 
-    Arena* getNextArenaToUpdateAndUnlink() {
-        MOZ_ASSERT(!hasDelayedMarking && !allocatedDuringIncremental && !markOverflow);
-        Arena* next = reinterpret_cast<Arena*>(auxNextLink << ArenaShift);
-        auxNextLink = 0;
-        return next;
-    }
-
-    void setNextArenaToUpdate(Arena* arena) {
-        MOZ_ASSERT(!(uintptr_t(arena) & ArenaMask));
-        MOZ_ASSERT(!hasDelayedMarking && !allocatedDuringIncremental && !markOverflow);
-        MOZ_ASSERT(!auxNextLink);
-        auxNextLink = arena->address() >> ArenaShift;
-    }
-
     template <typename T>
     size_t finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize);
 
