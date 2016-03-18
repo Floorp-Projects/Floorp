@@ -20,7 +20,26 @@ const SYNTAX_ERROR_STMTS = [
     "({x = ({y=1}) => y})",
     "(({x=1})) => x",
     "({e=[]}==(;",
+    "({x=1}[-1]);",
+    "({x=y}[-9])",
+    "({x=y}.x.z[-9])",
+    "({x=y}`${-9}`)",
+    "(new {x=y}(-9))",
+    "new {x=1}",
+    "new {x=1}={}",
+    "typeof {x=1}",
+    "typeof ({x=1})",
+    "({x=y, [-9]:0})",
+    "((({w = x} >(-9)",
+    "++({x=1})",
+    "--{x=1}",
+    "!{x=1}={}",
+    "delete {x=1}",
+    "delete ({x=1})",
+    "delete {x=1} = {}",
+    "({x=1}.abc)",
     // declarations
+    "var x = 0 + {a=1} = {}",
     "let o = {x=1};",
     "var j = {x=1};",
     "var j = {x={y=1}}={};",
@@ -54,7 +73,11 @@ const SYNTAX_ERROR_STMTS = [
     // with
     "with ({x=1}) {};",
     "with ({x={y=3}={}}) {};",
-    "with (Math) { ({x=1}) };"
+    "with (Math) { ({x=1}) };",
+    // ternary
+    "true ? {x=1} : 1;",
+    "false ? 1 : {x=1};",
+    "{x=1} ? 2 : 3;",
 ]
 
 for (var stmt of SYNTAX_ERROR_STMTS) {
