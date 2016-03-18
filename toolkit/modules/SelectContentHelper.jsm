@@ -111,6 +111,7 @@ function buildOptionListForChildren(node) {
       }
 
       let info = {
+        index: child.index,
         tagName: tagName,
         textContent: textContent,
         disabled: child.disabled,
