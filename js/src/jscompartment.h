@@ -73,9 +73,7 @@ struct CrossCompartmentKey
         DebuggerScript,
         DebuggerSource,
         DebuggerObject,
-        DebuggerEnvironment,
-        DebuggerWasmScript,
-        DebuggerWasmSource
+        DebuggerEnvironment
     };
 
     Kind kind;
