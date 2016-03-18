@@ -12,11 +12,10 @@
 
 namespace mozilla { namespace psm {
 
-// The memory returned via |encodedResponse| is owned by the given arena.
-Result DoOCSPRequest(PLArenaPool* arena, const char* url,
-                     const SECItem* encodedRequest, PRIntervalTime timeout,
-                     bool useGET,
-             /*out*/ SECItem*& encodedResponse);
+// The memory returned is owned by the given arena.
+SECItem* DoOCSPRequest(PLArenaPool* arena, const char* url,
+                       const SECItem* encodedRequest, PRIntervalTime timeout,
+                       bool useGET);
 
 } } // namespace mozilla::psm
 
