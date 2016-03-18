@@ -817,7 +817,7 @@ nsWebBrowserFind::GetFrameSelection(nsPIDOMWindowOuter* aWindow)
       int32_t count = -1;
       sel->GetRangeCount(&count);
       if (count > 0) {
-        return nullptr;
+        return sel.forget();
       }
     }
   }
