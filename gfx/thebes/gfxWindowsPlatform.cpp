@@ -2632,14 +2632,19 @@ gfxWindowsPlatform::InitializeD2D()
     return;
   }
 
-  // Using Direct2D depends on DWrite support.
+  // Initialize D2D 1.1.
+  InitializeD2D1();
+
+  if (mD2DStatus == FeatureStatus::Failed) {
+    // Do not init dwrite if d2d failed.
+    return;
+  }
+
+    // Using Direct2D depends on DWrite support.
   if (!mDWriteFactory && !InitDWriteSupport()) {
     mD2DStatus = FeatureStatus::Failed;
     return;
   }
-
-  // Initialize D2D 1.1.
-  InitializeD2D1();
 
   // Initialize D2D 1.0.
   VerifyD2DDevice(gfxPrefs::Direct2DForceEnabled());
