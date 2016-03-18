@@ -128,6 +128,38 @@ GetDirectProxyHandlerObject(JSObject* proxy)
     return proxy->as<ProxyObject>().extra(ScriptedDirectProxyHandler::HANDLER_EXTRA).toObjectOrNull();
 }
 
+// ES7 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 7.3.9 GetMethod,
+// reimplemented for proxy handler trap-getting to produce better error
+// messages.
+static bool
+GetProxyTrap(JSContext* cx, HandleObject handler, HandlePropertyName name, MutableHandleValue func)
+{
+    // Steps 2, 5.
+    if (!GetProperty(cx, handler, handler, name, func))
+        return false;
+
+    // Step 3.
+    if (func.isUndefined())
+        return true;
+
+    if (func.isNull()) {
+        func.setUndefined();
+        return true;
+    }
+
+    // Step 4.
+    if (!IsCallable(func)) {
+        JSAutoByteString bytes(cx, name);
+        if (!bytes)
+            return false;
+
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_TRAP, bytes.ptr());
+        return false;
+    }
+
+    return true;
+}
+
 // ES6 implements both getPrototype and setPrototype traps. We don't have them yet (see bug
 // 888969). For now, use these, to account for proxy revocation.
 bool
@@ -189,7 +221,7 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext* cx, HandleObject proxy,
 
     // Steps 5-6.
     RootedValue trap(cx);
-    if (!GetProperty(cx, handler, handler, cx->names().preventExtensions, &trap))
+    if (!GetProxyTrap(cx, handler, cx->names().preventExtensions, &trap))
         return false;
 
     // Step 7.
@@ -237,7 +269,7 @@ ScriptedDirectProxyHandler::isExtensible(JSContext* cx, HandleObject proxy, bool
 
     // step 4-5
     RootedValue trap(cx);
-    if (!GetProperty(cx, handler, handler, cx->names().isExtensible, &trap))
+    if (!GetProxyTrap(cx, handler, cx->names().isExtensible, &trap))
         return false;
 
     // step 6
@@ -290,7 +322,7 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext* cx, HandleObject
 
     // step 5-6
     RootedValue trap(cx);
-    if (!GetProperty(cx, handler, handler, cx->names().getOwnPropertyDescriptor, &trap))
+    if (!GetProxyTrap(cx, handler, cx->names().getOwnPropertyDescriptor, &trap))
         return false;
 
     // step 7
@@ -410,7 +442,7 @@ ScriptedDirectProxyHandler::defineProperty(JSContext* cx, HandleObject proxy, Ha
 
     // steps 6-7
     RootedValue trap(cx);
-    if (!GetProperty(cx, handler, handler, cx->names().defineProperty, &trap))
+    if (!GetProxyTrap(cx, handler, cx->names().defineProperty, &trap))
         return false;
 
     // step 8
@@ -537,7 +569,7 @@ ScriptedDirectProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
 
     // Steps 5-6.
     RootedValue trap(cx);
-    if (!GetProperty(cx, handler, handler, cx->names().ownKeys, &trap))
+    if (!GetProxyTrap(cx, handler, cx->names().ownKeys, &trap))
         return false;
 
     // Step 7.
@@ -674,7 +706,7 @@ ScriptedDirectProxyHandler::delete_(JSContext* cx, HandleObject proxy, HandleId 
 
     // steps 6-7
     RootedValue trap(cx);
-    if (!GetProperty(cx, handler, handler, cx->names().deleteProperty, &trap))
+    if (!GetProxyTrap(cx, handler, cx->names().deleteProperty, &trap))
         return false;
 
     // step 8
@@ -731,7 +763,7 @@ ScriptedDirectProxyHandler::has(JSContext* cx, HandleObject proxy, HandleId id, 
 
     // step 5-6
     RootedValue trap(cx);
-    if (!GetProperty(cx, handler, handler, cx->names().has, &trap))
+    if (!GetProxyTrap(cx, handler, cx->names().has, &trap))
         return false;
 
     // step 7
@@ -799,7 +831,7 @@ ScriptedDirectProxyHandler::get(JSContext* cx, HandleObject proxy, HandleValue r
 
     // step 5-6
     RootedValue trap(cx);
-    if (!GetProperty(cx, handler, handler, cx->names().get, &trap))
+    if (!GetProxyTrap(cx, handler, cx->names().get, &trap))
         return false;
 
     // step 7
@@ -864,7 +896,7 @@ ScriptedDirectProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id, 
     // step 5-7
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     RootedValue trap(cx);
-    if (!GetProperty(cx, handler, handler, cx->names().set, &trap))
+    if (!GetProxyTrap(cx, handler, cx->names().set, &trap))
         return false;
 
     // step 8
@@ -940,7 +972,7 @@ ScriptedDirectProxyHandler::call(JSContext* cx, HandleObject proxy, const CallAr
 
     // step 4-5
     RootedValue trap(cx);
-    if (!GetProperty(cx, handler, handler, cx->names().apply, &trap))
+    if (!GetProxyTrap(cx, handler, cx->names().apply, &trap))
         return false;
 
     // step 6
@@ -983,7 +1015,7 @@ ScriptedDirectProxyHandler::construct(JSContext* cx, HandleObject proxy, const C
 
     // step 4-5
     RootedValue trap(cx);
-    if (!GetProperty(cx, handler, handler, cx->names().construct, &trap))
+    if (!GetProxyTrap(cx, handler, cx->names().construct, &trap))
         return false;
 
     // step 6

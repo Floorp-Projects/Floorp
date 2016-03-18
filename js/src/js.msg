@@ -381,6 +381,7 @@ MSG_DEF(JSMSG_PROXY_EXTENSIBILITY,     0, JSEXN_TYPEERR, "proxy must report same
 MSG_DEF(JSMSG_PROXY_GETOWN_OBJORUNDEF, 0, JSEXN_TYPEERR, "proxy [[GetOwnProperty]] must return an object or undefined")
 MSG_DEF(JSMSG_PROXY_REVOKED,           0, JSEXN_TYPEERR, "illegal operation attempted on a revoked proxy")
 MSG_DEF(JSMSG_PROXY_ARG_REVOKED,       1, JSEXN_TYPEERR, "argument {0} cannot be a revoked proxy")
+MSG_DEF(JSMSG_BAD_TRAP,                1, JSEXN_TYPEERR, "proxy handler's {0} trap wasn't undefined, null, or callable")
 
 // Structured cloning
 MSG_DEF(JSMSG_SC_BAD_CLONE_VERSION,    0, JSEXN_ERR, "unsupported structured clone version")
