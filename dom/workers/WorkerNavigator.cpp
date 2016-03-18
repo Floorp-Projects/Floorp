@@ -11,9 +11,9 @@
 #include "mozilla/dom/DataStoreBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
+#include "mozilla/dom/WorkerNavigator.h"
 #include "mozilla/dom/WorkerNavigatorBinding.h"
 
-#include "Navigator.h"
 #include "nsProxyRelease.h"
 #include "RuntimeService.h"
 
@@ -23,7 +23,8 @@
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WorkerNavigator)
 
@@ -48,7 +49,7 @@ WorkerNavigator::Create(bool aOnLine)
 JSObject*
 WorkerNavigator::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return WorkerNavigatorBinding_workers::Wrap(aCx, this, aGivenProto);
+  return WorkerNavigatorBinding::Wrap(aCx, this, aGivenProto);
 }
 
 // A WorkerMainThreadRunnable to synchronously add DataStoreChangeEventProxy on
@@ -300,7 +301,7 @@ WorkerNavigator::GetDataStores(JSContext* aCx,
 void
 WorkerNavigator::SetLanguages(const nsTArray<nsString>& aLanguages)
 {
-  WorkerNavigatorBinding_workers::ClearCachedLanguagesValue(this);
+  WorkerNavigatorBinding::ClearCachedLanguagesValue(this);
   mProperties.mLanguages = aLanguages;
 }
 
@@ -408,4 +409,5 @@ WorkerNavigator::HardwareConcurrency() const
   return rts->ClampedHardwareConcurrency();
 }
 
-END_WORKERS_NAMESPACE
+} // namespace dom
+} // namespace mozilla
