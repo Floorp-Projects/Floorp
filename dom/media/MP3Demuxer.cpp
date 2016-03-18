@@ -1055,7 +1055,7 @@ FrameParser::VBRHeader::ParseVBRI(ByteReader* aReader) {
   MOZ_ASSERT(aReader);
   // ParseVBRI assumes that the ByteReader offset points to the beginning of a frame,
   // therefore as a simple check, we look for the presence of a frame sync at that position.
-  MOZ_ASSERT(aReader->PeekU16() & 0xFFE0);
+  MOZ_ASSERT((aReader->PeekU16() & 0xFFE0) == 0xFFE0);
   const size_t prevReaderOffset = aReader->Offset();
 
   // VBRI have a fixed relative position, so let's check for it there.
