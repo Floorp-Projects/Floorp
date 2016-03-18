@@ -5,6 +5,7 @@
 
 [Global=(WorkerDebugger), Exposed=WorkerDebugger]
 interface WorkerDebuggerGlobalScope : EventTarget {
+  [Throws]
   readonly attribute object global;
 
   object createSandbox(DOMString name, object prototype);
