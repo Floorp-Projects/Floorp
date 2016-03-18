@@ -43,11 +43,11 @@ struct nsFakeStringBuffer
 
 // Register an array of static atoms with the atom table
 template<uint32_t N>
-nsresult
+void
 NS_RegisterStaticAtoms(const nsStaticAtom (&aAtoms)[N])
 {
-  extern nsresult RegisterStaticAtoms(const nsStaticAtom*, uint32_t aAtomCount);
-  return RegisterStaticAtoms(aAtoms, N);
+  extern void RegisterStaticAtoms(const nsStaticAtom*, uint32_t aAtomCount);
+  RegisterStaticAtoms(aAtoms, N);
 }
 
 #endif
