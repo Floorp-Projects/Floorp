@@ -32,7 +32,6 @@ public:
   }
   void Notify(const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo)
   {
-    mozilla::AutoSafeJSContext cx;
     JS::ResetTimeZone();
   }
 
