@@ -120,6 +120,8 @@ public class DoorHangerPopup extends AnchoredPopup
             doorhangerType = DoorHanger.Type.GEOLOCATION;
         } else if (DoorHanger.Type.DESKTOPNOTIFICATION2.toString().equals(typeString)) {
             doorhangerType = DoorHanger.Type.DESKTOPNOTIFICATION2;
+        } else if (DoorHanger.Type.WEBRTC.toString().equals(typeString)) {
+            doorhangerType = DoorHanger.Type.WEBRTC;
         }
 
         final DoorhangerConfig config = new DoorhangerConfig(tabId, id, doorhangerType, this);
