@@ -856,7 +856,8 @@ this.PushService = {
           cryptoParams.dh,
           cryptoParams.salt,
           cryptoParams.rs,
-          cryptoParams.auth ? record.authenticationSecret : null
+          cryptoParams.auth ? record.authenticationSecret : null,
+          cryptoParams.padSize
         );
       } else {
         decodedPromise = Promise.resolve(null);
