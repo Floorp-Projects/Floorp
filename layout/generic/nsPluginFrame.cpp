@@ -1866,7 +1866,9 @@ nsPluginFrame::EndSwapDocShells(nsISupports* aSupports, void*)
     }
   }
 
-  objectFrame->RegisterPluginForGeometryUpdates();
+  if (objectFrame->mInstanceOwner) {
+    objectFrame->RegisterPluginForGeometryUpdates();
+  }
 }
 
 nsIFrame*
