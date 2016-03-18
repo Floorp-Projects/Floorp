@@ -449,6 +449,175 @@ WidgetKeyboardEvent::ShouldCauseKeypressEvents() const
   }
 }
 
+static bool
+HasASCIIDigit(const ShortcutKeyCandidateArray& aCandidates)
+{
+  for (uint32_t i = 0; i < aCandidates.Length(); ++i) {
+    uint32_t ch = aCandidates[i].mCharCode;
+    if (ch >= '0' && ch <= '9')
+      return true;
+  }
+  return false;
+}
+
+static bool
+CharsCaseInsensitiveEqual(uint32_t aChar1, uint32_t aChar2)
+{
+  return aChar1 == aChar2 ||
+         (IS_IN_BMP(aChar1) && IS_IN_BMP(aChar2) &&
+          ToLowerCase(static_cast<char16_t>(aChar1)) ==
+            ToLowerCase(static_cast<char16_t>(aChar2)));
+}
+
+static bool
+IsCaseChangeableChar(uint32_t aChar)
+{
+  return IS_IN_BMP(aChar) &&
+         ToLowerCase(static_cast<char16_t>(aChar)) !=
+           ToUpperCase(static_cast<char16_t>(aChar));
+}
+
+void
+WidgetKeyboardEvent::GetShortcutKeyCandidates(
+                       ShortcutKeyCandidateArray& aCandidates)
+{
+  MOZ_ASSERT(aCandidates.IsEmpty(), "aCandidates must be empty");
+
+  if (mMessage != eKeyPress) {
+    return;
+  }
+
+  // ShortcutKeyCandidate::mCharCode is a candidate charCode.
+  // ShortcutKeyCandidate::mIgnoreShift means the mCharCode should be tried to
+  // execute a command with/without shift key state. If this is TRUE, the
+  // shifted key state should be ignored. Otherwise, don't ignore the state.
+  // the priority of the charCodes are (shift key is not pressed):
+  //   0: charCode/false,
+  //   1: unshiftedCharCodes[0]/false, 2: unshiftedCharCodes[1]/false...
+  // the priority of the charCodes are (shift key is pressed):
+  //   0: charCode/false,
+  //   1: shiftedCharCodes[0]/false, 2: shiftedCharCodes[0]/true,
+  //   3: shiftedCharCodes[1]/false, 4: shiftedCharCodes[1]/true...
+  if (charCode) {
+    ShortcutKeyCandidate key(charCode, false);
+    aCandidates.AppendElement(key);
+  }
+
+  uint32_t len = alternativeCharCodes.Length();
+  if (!IsShift()) {
+    for (uint32_t i = 0; i < len; ++i) {
+      uint32_t ch = alternativeCharCodes[i].mUnshiftedCharCode;
+      if (!ch || ch == charCode) {
+        continue;
+      }
+      ShortcutKeyCandidate key(ch, false);
+      aCandidates.AppendElement(key);
+    }
+    // If unshiftedCharCodes doesn't have numeric but shiftedCharCode has it,
+    // this keyboard layout is AZERTY or similar layout, probably.
+    // In this case, Accel+[0-9] should be accessible without shift key.
+    // However, the priority should be lowest.
+    if (!HasASCIIDigit(aCandidates)) {
+      for (uint32_t i = 0; i < len; ++i) {
+        uint32_t ch = alternativeCharCodes[i].mShiftedCharCode;
+        if (ch >= '0' && ch <= '9') {
+          ShortcutKeyCandidate key(ch, false);
+          aCandidates.AppendElement(key);
+          break;
+        }
+      }
+    }
+  } else {
+    for (uint32_t i = 0; i < len; ++i) {
+      uint32_t ch = alternativeCharCodes[i].mShiftedCharCode;
+      if (!ch) {
+        continue;
+      }
+
+      if (ch != charCode) {
+        ShortcutKeyCandidate key(ch, false);
+        aCandidates.AppendElement(key);
+      }
+
+      // If the char is an alphabet, the shift key state should not be
+      // ignored. E.g., Ctrl+Shift+C should not execute Ctrl+C.
+
+      // And checking the charCode is same as unshiftedCharCode too.
+      // E.g., for Ctrl+Shift+(Plus of Numpad) should not run Ctrl+Plus.
+      uint32_t unshiftCh = alternativeCharCodes[i].mUnshiftedCharCode;
+      if (CharsCaseInsensitiveEqual(ch, unshiftCh)) {
+        continue;
+      }
+
+      // On the Hebrew keyboard layout on Windows, the unshifted char is a
+      // localized character but the shifted char is a Latin alphabet,
+      // then, we should not execute without the shift state. See bug 433192.
+      if (IsCaseChangeableChar(ch)) {
+        continue;
+      }
+
+      // Setting the alternative charCode candidates for retry without shift
+      // key state only when the shift key is pressed.
+      ShortcutKeyCandidate key(ch, true);
+      aCandidates.AppendElement(key);
+    }
+  }
+
+  // Special case for "Space" key.  With some keyboard layouts, "Space" with
+  // or without Shift key causes non-ASCII space.  For such keyboard layouts,
+  // we should guarantee that the key press works as an ASCII white space key
+  // press.
+  if (mCodeNameIndex == CODE_NAME_INDEX_Space &&
+      charCode != static_cast<uint32_t>(' ')) {
+    ShortcutKeyCandidate spaceKey(static_cast<uint32_t>(' '), false);
+    aCandidates.AppendElement(spaceKey);
+  }
+}
+
+void
+WidgetKeyboardEvent::GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates)
+{
+  MOZ_ASSERT(aCandidates.IsEmpty(), "aCandidates must be empty");
+
+  // return the lower cased charCode candidates for access keys.
+  // the priority of the charCodes are:
+  //   0: charCode, 1: unshiftedCharCodes[0], 2: shiftedCharCodes[0]
+  //   3: unshiftedCharCodes[1], 4: shiftedCharCodes[1],...
+  if (charCode) {
+    uint32_t ch = charCode;
+    if (IS_IN_BMP(ch)) {
+      ch = ToLowerCase(static_cast<char16_t>(ch));
+    }
+    aCandidates.AppendElement(ch);
+  }
+  for (uint32_t i = 0; i < alternativeCharCodes.Length(); ++i) {
+    uint32_t ch[2] =
+      { alternativeCharCodes[i].mUnshiftedCharCode,
+        alternativeCharCodes[i].mShiftedCharCode };
+    for (uint32_t j = 0; j < 2; ++j) {
+      if (!ch[j]) {
+        continue;
+      }
+      if (IS_IN_BMP(ch[j])) {
+        ch[j] = ToLowerCase(static_cast<char16_t>(ch[j]));
+      }
+      // Don't append the charCode that was already appended.
+      if (aCandidates.IndexOf(ch[j]) == aCandidates.NoIndex) {
+        aCandidates.AppendElement(ch[j]);
+      }
+    }
+  }
+  // Special case for "Space" key.  With some keyboard layouts, "Space" with
+  // or without Shift key causes non-ASCII space.  For such keyboard layouts,
+  // we should guarantee that the key press works as an ASCII white space key
+  // press.
+  if (mCodeNameIndex == CODE_NAME_INDEX_Space &&
+      charCode != static_cast<uint32_t>(' ')) {
+    aCandidates.AppendElement(static_cast<uint32_t>(' '));
+  }
+  return;
+}
+
 /* static */ void
 WidgetKeyboardEvent::Shutdown()
 {

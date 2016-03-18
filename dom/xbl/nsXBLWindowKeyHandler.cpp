@@ -543,17 +543,21 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
                                             bool aExecute,
                                             bool* aOutReservedForChrome)
 {
-  AutoTArray<nsShortcutCandidate, 10> accessKeys;
-  nsContentUtils::GetAccelKeyCandidates(aKeyEvent, accessKeys);
+  WidgetKeyboardEvent* nativeKeyboardEvent =
+    aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
+  MOZ_ASSERT(nativeKeyboardEvent);
 
-  if (accessKeys.IsEmpty()) {
+  AutoShortcutKeyCandidateArray shortcutKeys;
+  nativeKeyboardEvent->GetShortcutKeyCandidates(shortcutKeys);
+
+  if (shortcutKeys.IsEmpty()) {
     return WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler,
                                   0, IgnoreModifierState(),
                                   aExecute, aOutReservedForChrome);
   }
 
-  for (uint32_t i = 0; i < accessKeys.Length(); ++i) {
-    nsShortcutCandidate &key = accessKeys[i];
+  for (uint32_t i = 0; i < shortcutKeys.Length(); ++i) {
+    ShortcutKeyCandidate& key = shortcutKeys[i];
     IgnoreModifierState ignoreModifierState;
     ignoreModifierState.mShift = key.mIgnoreShift;
     if (WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler,
