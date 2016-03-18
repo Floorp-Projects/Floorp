@@ -7,6 +7,7 @@
 #ifndef mozilla_TimingParams_h
 #define mozilla_TimingParams_h
 
+#include "nsStringFwd.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/UnionTypes.h" // For OwningUnrestrictedDoubleOrString
 #include "mozilla/ComputedTimingFunction.h"
@@ -79,6 +80,10 @@ struct TimingParams
         NS_LITERAL_STRING("iterations"));
     }
   }
+
+  static Maybe<ComputedTimingFunction> ParseEasing(const nsAString& aEasing,
+                                                   nsIDocument* aDocument,
+                                                   ErrorResult& aRv);
 
   // mDuration.isNothing() represents the "auto" value
   Maybe<StickyTimeDuration> mDuration;
