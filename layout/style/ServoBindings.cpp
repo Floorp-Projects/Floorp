@@ -218,6 +218,21 @@ Servo_DropStyleSet(RawServoStyleSet* set)
             "non-MOZ_STYLO build");
 }
 
+ServoComputedValues*
+Servo_GetComputedValues(RawGeckoElement* element)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_GetComputedValues in a "
+            "non-MOZ_STYLO build");
+}
+
+ServoComputedValues*
+Servo_GetComputedValuesForAnonymousBox(ServoComputedValues* parentStyleOrNull,
+                                       nsIAtom* pseudoTag)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_GetComputedValuesForAnonymousBox in a "
+            "non-MOZ_STYLO build");
+}
+
 void
 Servo_AddRefComputedValues(ServoComputedValues*)
 {

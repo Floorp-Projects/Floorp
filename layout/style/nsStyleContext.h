@@ -475,6 +475,8 @@ public:
     return cachedData;
   }
 
+  mozilla::NonOwningStyleContextSource StyleSource() const { return mSource.AsRaw(); }
+
 private:
   // Private destructor, to discourage deletion outside of Release():
   ~nsStyleContext();
