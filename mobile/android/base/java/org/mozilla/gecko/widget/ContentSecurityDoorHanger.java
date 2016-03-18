@@ -15,6 +15,9 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.view.View;
+
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.toolbar.SiteIdentityPopup;
 import org.mozilla.gecko.util.ColorUtils;
 
@@ -94,10 +97,13 @@ public class ContentSecurityDoorHanger extends DoorHanger {
     }
 
     @Override
-    protected OnClickListener makeOnButtonClickListener(final int id) {
+    protected OnClickListener makeOnButtonClickListener(final int id, final String telemetryExtra) {
         return new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
+                final String expandedExtra = mType.toString().toLowerCase() + "-" + telemetryExtra;
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.DOORHANGER, expandedExtra);
+
                 final JSONObject response = new JSONObject();
                 try {
                     switch (mType) {
