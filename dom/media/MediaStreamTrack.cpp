@@ -171,6 +171,12 @@ MediaStreamTrack::Graph()
   return GetOwnedStream()->Graph();
 }
 
+MediaStreamGraphImpl*
+MediaStreamTrack::GraphImpl()
+{
+  return GetOwnedStream()->GraphImpl();
+}
+
 void
 MediaStreamTrack::PrincipalChanged()
 {

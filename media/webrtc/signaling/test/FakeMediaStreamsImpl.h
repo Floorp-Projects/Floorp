@@ -58,12 +58,22 @@ void Fake_SourceMediaStream::Periodic() {
   if (mPullEnabled && !mStop) {
     // 100 ms matches timer interval and AUDIO_BUFFER_SIZE @ 16000 Hz
     mDesiredTime += 100;
-    for (std::set<Fake_MediaStreamListener *>::iterator it =
+    for (std::set<RefPtr<Fake_MediaStreamListener>>::iterator it =
              mListeners.begin(); it != mListeners.end(); ++it) {
       (*it)->NotifyPull(nullptr, TicksToTimeRoundDown(1000 /* ms per s */,
                                                       mDesiredTime));
     }
   }
+}
+
+// Fake_MediaStreamTrack
+void Fake_MediaStreamTrack::AddListener(Fake_MediaStreamTrackListener *aListener)
+{
+  mOwningStream->GetInputStream()->AddTrackListener(aListener, mTrackID);
+}
+void Fake_MediaStreamTrack::RemoveListener(Fake_MediaStreamTrackListener *aListener)
+{
+  mOwningStream->GetInputStream()->RemoveTrackListener(aListener, mTrackID);
 }
 
 // Fake_MediaStreamBase
@@ -110,7 +120,7 @@ void Fake_AudioStreamSource::Periodic() {
   channels.AppendElement(data);
   segment.AppendFrames(samples.forget(), channels, AUDIO_BUFFER_SIZE);
 
-  for(std::set<Fake_MediaStreamListener *>::iterator it = mListeners.begin();
+  for(std::set<RefPtr<Fake_MediaStreamListener>>::iterator it = mListeners.begin();
        it != mListeners.end(); ++it) {
     (*it)->NotifyQueuedTrackChanges(nullptr, // Graph
                                     0, // TrackID
@@ -119,6 +129,12 @@ void Fake_AudioStreamSource::Periodic() {
                                     segment,
                                     nullptr, // Input stream
                                     -1);     // Input track id
+  }
+  for(std::vector<BoundTrackListener>::iterator it = mTrackListeners.begin();
+       it != mTrackListeners.end(); ++it) {
+    it->mListener->NotifyQueuedChanges(nullptr, // Graph
+                                       0, // Offset TODO(ekr@rtfm.com) fix
+                                       segment);
   }
 }
 

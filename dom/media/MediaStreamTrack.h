@@ -21,9 +21,11 @@ class MediaEnginePhotoCallback;
 class MediaInputPort;
 class MediaStream;
 class MediaStreamGraph;
+class MediaStreamGraphImpl;
 class MediaStreamTrackListener;
 class MediaStreamTrackDirectListener;
 class PeerConnectionImpl;
+class PeerConnectionMedia;
 class PeerIdentity;
 class ProcessedMediaStream;
 class RemoteSourceStreamInfo;
@@ -204,6 +206,7 @@ class MediaStreamTrack : public DOMEventTargetHelper,
 
   // PeerConnection and friends need to know our owning DOMStream and track id.
   friend class mozilla::PeerConnectionImpl;
+  friend class mozilla::PeerConnectionMedia;
   friend class mozilla::RemoteSourceStreamInfo;
 
 public:
@@ -259,6 +262,7 @@ public:
   const PeerIdentity* GetPeerIdentity() const { return GetSource().GetPeerIdentity(); }
 
   MediaStreamGraph* Graph();
+  MediaStreamGraphImpl* GraphImpl();
 
   MediaStreamTrackSource& GetSource() const
   {

@@ -2669,7 +2669,7 @@ SourceMediaStream::NotifyDirectConsumers(TrackData *aTrack,
       continue;
     }
     StreamTime offset = 0; // FIX! need a separate StreamTime.... or the end of the internal buffer
-    source.mListener->NotifyRealtimeTrackData(Graph(), offset, *aSegment);
+    source.mListener->NotifyRealtimeTrackDataAndApplyTrackDisabling(Graph(), offset, *aSegment);
   }
 }
 
@@ -2832,6 +2832,29 @@ SourceMediaStream::FinishWithLockHeld()
   if (auto graph = GraphImpl()) {
     graph->EnsureNextIteration();
   }
+}
+
+void
+SourceMediaStream::SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled)
+{
+  MutexAutoLock lock(mMutex);
+  for (TrackBound<MediaStreamTrackDirectListener>& l: mDirectTrackListeners) {
+    if (l.mTrackID == aTrackID) {
+      bool oldEnabled = !mDisabledTrackIDs.Contains(aTrackID);
+      if (!oldEnabled && aEnabled) {
+        STREAM_LOG(LogLevel::Debug, ("SourceMediaStream %p track %d setting "
+                                     "direct listener enabled",
+                                     this, aTrackID));
+        l.mListener->DecreaseDisabled();
+      } else if (oldEnabled && !aEnabled) {
+        STREAM_LOG(LogLevel::Debug, ("SourceMediaStream %p track %d setting "
+                                     "direct listener disabled",
+                                     this, aTrackID));
+        l.mListener->IncreaseDisabled();
+      }
+    }
+  }
+  MediaStream::SetTrackEnabledImpl(aTrackID, aEnabled);
 }
 
 void
