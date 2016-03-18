@@ -5623,7 +5623,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
         if (key->isSingleton())
             obj = key->singleton();
         else
-            obj = key->proto().isLazy() ? nullptr : key->proto().toObjectOrNull();
+            obj = key->proto().isDynamic() ? nullptr : key->proto().toObjectOrNull();
 
         while (obj) {
             if (!obj->getClass()->isNative())
@@ -5647,7 +5647,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
                 }
             }
 
-            obj = obj->getProto();
+            obj = obj->staticPrototype();
         }
     }
 
@@ -5835,7 +5835,7 @@ PrototypeHasIndexedProperty(IonBuilder* builder, JSObject* obj)
         HeapTypeSetKey index = key->property(JSID_VOID);
         if (index.nonData(builder->constraints()) || index.isOwnProperty(builder->constraints()))
             return true;
-        obj = obj->getProto();
+        obj = obj->staticPrototype();
     } while (obj);
 
     return false;
