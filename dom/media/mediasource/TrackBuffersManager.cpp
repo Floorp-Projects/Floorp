@@ -198,7 +198,7 @@ TrackBuffersManager::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
 
 TrackBuffersManager::EvictDataResult
 TrackBuffersManager::EvictData(TimeUnit aPlaybackTime,
-                               uint32_t aThreshold,
+                               int64_t aThresholdReduct,
                                TimeUnit* aBufferStartTime)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -353,7 +353,7 @@ TrackBuffersManager::CompleteResetParserState()
 
 void
 TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
-                                 uint32_t aSizeToEvict)
+                                 int64_t aSizeToEvict)
 {
   MOZ_ASSERT(OnTaskQueue());
 
@@ -365,7 +365,7 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
   TimeUnit lowerLimit = std::min(track.mNextSampleTime, aPlaybackTime);
   uint32_t lastKeyFrameIndex = 0;
   int64_t toEvict = aSizeToEvict;
-  uint32_t partialEvict = 0;
+  int64_t partialEvict = 0;
   for (uint32_t i = 0; i < buffer.Length(); i++) {
     const auto& frame = buffer[i];
     if (frame->mKeyframe) {
@@ -382,17 +382,16 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
     partialEvict += frame->ComputedSizeOfIncludingThis();
   }
 
-  int64_t finalSize = mSizeSourceBuffer - aSizeToEvict;
-
   if (lastKeyFrameIndex > 0) {
-    MSE_DEBUG("Step1. Evicting %u bytes prior currentTime",
+    MSE_DEBUG("Step1. Evicting %lld bytes prior currentTime",
               aSizeToEvict - toEvict);
     CodedFrameRemoval(
       TimeInterval(TimeUnit::FromMicroseconds(0),
                    TimeUnit::FromMicroseconds(buffer[lastKeyFrameIndex]->mTime - 1)));
   }
 
-  if (mSizeSourceBuffer <= finalSize) {
+  const int64_t finalSize = mSizeSourceBuffer - aSizeToEvict;
+  if (mSizeSourceBuffer <= finalSize || !buffer.Length()) {
     return;
   }
 
@@ -415,8 +414,8 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
     toEvict -= frame->ComputedSizeOfIncludingThis();
   }
   if (evictedFramesStartIndex < buffer.Length()) {
-    MSE_DEBUG("Step2. Evicting %u bytes from trailing data",
-              mSizeSourceBuffer - finalSize);
+    MSE_DEBUG("Step2. Evicting %lld bytes from trailing data",
+              mSizeSourceBuffer - finalSize - toEvict);
     CodedFrameRemoval(
       TimeInterval(TimeUnit::FromMicroseconds(buffer[evictedFramesStartIndex]->mTime),
                    TimeUnit::FromInfinity()));
@@ -1630,7 +1629,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
 {
   TrackBuffer& data = aTrackData.mBuffers.LastElement();
   Maybe<uint32_t> firstRemovedIndex;
-  uint32_t lastRemovedIndex;
+  uint32_t lastRemovedIndex = 0;
 
   // We loop from aStartIndex to avoid removing frames that we inserted earlier
   // and part of the current coded frame group. This is allows to handle step
