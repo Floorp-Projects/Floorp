@@ -2,6 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root {
+  --markup-outline: var(--theme-splitter-color);
+}
+
+.theme-dark:root {
+  --markup-outline: var(--theme-highlight-pink);
+}
+
 * {
   padding: 0;
   margin: 0;
@@ -21,6 +29,11 @@ body {
 #root {
   float: left;
   min-width: 100%;
+}
+
+/* Don't display a parent-child outline for the root elements */
+#root > ul > li > .children::before {
+  display: none;
 }
 
 body.dragging .tag-line {
@@ -66,6 +79,7 @@ body.dragging .tag-line {
   list-style: none;
   padding: 0;
   margin: 0;
+  position: relative;
 }
 
 /* Tags are organized in a UL/LI tree and indented thanks to a left padding.
@@ -118,6 +132,24 @@ ul.children + .tag-line::before {
   min-height: 1.4em;
   line-height: 1.4em;
   position: relative;
+  cursor: default;
+  padding-left: 2px;
+}
+
+.tag-line[selected] + .children::before {
+  content: "";
+  background: var(--markup-outline);
+  width: 1.5px;
+  height: calc(100% - 4px);
+  left: -6px;
+  top: 2px;
+  border-radius: 2px;
+  position: absolute;
+  display: block;
+}
+
+.tag-line:hover:not([selected]) + .children::before {
+  opacity: 0.5;
 }
 
 .html-editor-container {
@@ -189,10 +221,6 @@ ul.children + .tag-line::before {
   transition: background .5s;
 }
 
-.tag-line {
-  cursor: default;
-}
-
 .markupview-events {
   display: none;
   cursor: pointer;
@@ -253,10 +281,6 @@ ul.children + .tag-line::before {
 .not-displayed .open,
 .not-displayed .close {
   opacity: .7;
-}
-
-.tag-line {
-  padding-left: 2px;
 }
 
 /* Events */
