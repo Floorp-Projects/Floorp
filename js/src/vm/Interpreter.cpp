@@ -533,7 +533,7 @@ js::Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, 
 }
 
 static bool
-InternalConstruct(JSContext* cx, const CallArgs& args)
+InternalConstruct(JSContext* cx, const AnyConstructArgs& args)
 {
     MOZ_ASSERT(args.array() + args.length() + 1 == args.end(),
                "must pass constructing arguments to a construction attempt");
@@ -542,7 +542,7 @@ InternalConstruct(JSContext* cx, const CallArgs& args)
     // Callers are responsible for enforcing these preconditions.
     MOZ_ASSERT(IsConstructor(args.calleev()),
                "trying to construct a value that isn't a constructor");
-    MOZ_ASSERT(IsConstructor(args.newTarget()),
+    MOZ_ASSERT(IsConstructor(args.CallArgs::newTarget()),
                "provided new.target value must be a constructor");
 
     JSObject& callee = args.callee();
@@ -555,7 +555,7 @@ InternalConstruct(JSContext* cx, const CallArgs& args)
         if (!Invoke(cx, args, CONSTRUCT))
             return false;
 
-        MOZ_ASSERT(args.rval().isObject());
+        MOZ_ASSERT(args.CallArgs::rval().isObject());
         return true;
     }
 
@@ -589,40 +589,42 @@ ConstructFromStack(JSContext* cx, const CallArgs& args)
         return false;
 
     args.setThis(MagicValue(JS_IS_CONSTRUCTING));
-    return InternalConstruct(cx, args);
+    return InternalConstruct(cx, static_cast<const AnyConstructArgs&>(args));
 }
 
 bool
-js::Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, HandleValue newTarget,
+js::Construct(JSContext* cx, HandleValue fval, const AnyConstructArgs& args, HandleValue newTarget,
               MutableHandleObject objp)
 {
-    args.setCallee(fval);
-    args.setThis(MagicValue(JS_IS_CONSTRUCTING));
-    args.newTarget().set(newTarget);
+    // Explicitly qualify to bypass AnyConstructArgs's deliberate shadowing.
+    args.CallArgs::setCallee(fval);
+    args.CallArgs::setThis(MagicValue(JS_IS_CONSTRUCTING));
+    args.CallArgs::newTarget().set(newTarget);
+
     if (!InternalConstruct(cx, args))
         return false;
 
-    MOZ_ASSERT(args.rval().isObject());
-    objp.set(&args.rval().toObject());
+    MOZ_ASSERT(args.CallArgs::rval().isObject());
+    objp.set(&args.CallArgs::rval().toObject());
     return true;
 }
 
 bool
 js::InternalConstructWithProvidedThis(JSContext* cx, HandleValue fval, HandleValue thisv,
-                                      const ConstructArgs& args, HandleValue newTarget,
+                                      const AnyConstructArgs& args, HandleValue newTarget,
                                       MutableHandleValue rval)
 {
-    args.setCallee(fval);
+    args.CallArgs::setCallee(fval);
 
     MOZ_ASSERT(thisv.isObject());
-    args.setThis(thisv);
+    args.CallArgs::setThis(thisv);
 
-    args.newTarget().set(newTarget);
+    args.CallArgs::newTarget().set(newTarget);
 
     if (!InternalConstruct(cx, args))
         return false;
 
-    rval.set(args.rval());
+    rval.set(args.CallArgs::rval());
     return true;
 }
 
