@@ -303,6 +303,7 @@ class MutableGCHashSetOperations
     bool init(uint32_t len = 16) { return set().init(len); }
     void clear()                 { set().clear(); }
     void finish()                { set().finish(); }
+    void remove(Ptr p)           { set().remove(p); }
     void remove(const Lookup& l) { set().remove(l); }
 
     template<typename TInput>
