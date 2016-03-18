@@ -95,7 +95,9 @@ function getUserSample() {
 function setCohort(cohortName) {
   Preferences.set(PREF_COHORT_NAME, cohortName);
   try {
-    Services.appinfo.QueryInterface(Ci.nsICrashReporter).annotateCrashReport("E10SCohort", cohortName);
+    if (Ci.nsICrashReporter) {
+      Services.appinfo.QueryInterface(Ci.nsICrashReporter).annotateCrashReport("E10SCohort", cohortName);
+    }
   } catch (e) {}
 }
 
