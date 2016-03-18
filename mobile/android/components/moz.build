@@ -18,24 +18,20 @@ EXTRA_COMPONENTS += [
     'BrowserCLH.js',
     'ColorPicker.js',
     'ContentDispatchChooser.js',
+    'ContentPermissionPrompt.js',
     'DirectoryProvider.js',
+    'FilePicker.js',
+    'HelperAppDialog.js',
     'ImageBlockingPolicy.js',
     'LoginManagerPrompter.js',
     'NSSDialogService.js',
+    'PromptService.js',
+    'SessionStore.js',
+    'SiteSpecificUserAgent.js',
     'Snippets.js',
     'TabSource.js',
     'XPIDialogService.js',
 ]
-
-if not CONFIG['MOZ_B2GDROID']:
-    EXTRA_COMPONENTS += [
-        'ContentPermissionPrompt.js',
-        'FilePicker.js',
-        'HelperAppDialog.js',
-        'PromptService.js',
-        'SessionStore.js',
-        'SiteSpecificUserAgent.js',
-    ]
 
 # Keep it this way if at all possible.  If you need preprocessing,
 # consider adding fields to AppConstants.jsm.
