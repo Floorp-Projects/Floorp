@@ -15,7 +15,6 @@ var supportedProps = [
   "onLine",
   "language",
   "languages",
-  "hardwareConcurrency",
 ];
 
 self.onmessage = function(event) {
