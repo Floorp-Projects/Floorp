@@ -80,8 +80,10 @@ this.SelectContentHelper.prototype = {
   handleEvent: function(event) {
     switch (event.type) {
       case "pagehide":
-        this.global.sendAsyncMessage("Forms:HideDropDown", {});
-        this.uninit();
+        if (this.element.ownerDocument === event.target) {
+          this.global.sendAsyncMessage("Forms:HideDropDown", {});
+          this.uninit();
+        }
         break;
     }
   }

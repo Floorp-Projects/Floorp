@@ -15,10 +15,14 @@ FetchUtil::GetValidRequestMethod(const nsACString& aMethod, nsCString& outMethod
 {
   nsAutoCString upperCaseMethod(aMethod);
   ToUpperCase(upperCaseMethod);
+  if (!NS_IsValidHTTPToken(aMethod)) {
+    outMethod.SetIsVoid(true);
+    return NS_ERROR_DOM_SYNTAX_ERR;
+  }
+
   if (upperCaseMethod.EqualsLiteral("CONNECT") ||
       upperCaseMethod.EqualsLiteral("TRACE") ||
-      upperCaseMethod.EqualsLiteral("TRACK") ||
-      !NS_IsValidHTTPToken(aMethod)) {
+      upperCaseMethod.EqualsLiteral("TRACK")) {
     outMethod.SetIsVoid(true);
     return NS_ERROR_DOM_SECURITY_ERR;
   }

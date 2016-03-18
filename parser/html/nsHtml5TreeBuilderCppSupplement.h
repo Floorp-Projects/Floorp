@@ -1003,7 +1003,7 @@ nsHtml5TreeBuilder::AllocateContentHandle()
     mHandlesUsed = 0;
   }
 #ifdef DEBUG
-  mHandles[mHandlesUsed] = (nsIContent*)0xC0DEDBAD;
+  mHandles[mHandlesUsed] = reinterpret_cast<nsIContent*>(uintptr_t(0xC0DEDBAD));
 #endif
   return &mHandles[mHandlesUsed++];
 }

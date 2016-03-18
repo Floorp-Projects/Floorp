@@ -348,6 +348,11 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean verifySignedContent;
 
   /**
+   * If true, this load will fail if it has no SRI integrity
+   */
+  [infallible] attribute boolean enforceSRI;
+
+  /**
    * Typically these are the window IDs of the window in which the element being
    * loaded lives. However, if the element being loaded is <frame
    * src="foo.html"> (or, more generally, if the element QIs to

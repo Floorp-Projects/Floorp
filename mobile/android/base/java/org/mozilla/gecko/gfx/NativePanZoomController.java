@@ -21,6 +21,7 @@ import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.InputDevice;
 
 class NativePanZoomController extends JNIObject implements PanZoomController {
     private final PanZoomTarget mTarget;
@@ -171,8 +172,12 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     @Override
     public boolean onMotionEvent(MotionEvent event) {
         final int action = event.getActionMasked();
-        if (action == MotionEvent.ACTION_SCROLL && event.getDownTime() >= mLastDownTime) {
-            mLastDownTime = event.getDownTime();
+        if (action == MotionEvent.ACTION_SCROLL) {
+            if (event.getDownTime() >= mLastDownTime) {
+                mLastDownTime = event.getDownTime();
+            } else if ((InputDevice.getDevice(event.getDeviceId()).getSources() & InputDevice.SOURCE_TOUCHPAD) == InputDevice.SOURCE_TOUCHPAD) {
+                return false;
+            }
             return handleScrollEvent(event);
         } else if ((action == MotionEvent.ACTION_HOVER_MOVE) ||
                    (action == MotionEvent.ACTION_HOVER_ENTER) ||

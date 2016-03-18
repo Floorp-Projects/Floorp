@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1235572 -->
+<head>
+  <meta charset="utf-8">
+  <title>Testpage for bug 1235572</title>
+  <script>
+    function loaded(resource) {
+      document.getElementById("result").innerHTML += resource + " loaded\n";
+    }
+    function blocked(resource) {
+      document.getElementById("result").innerHTML += resource + " blocked\n";
+    }
+  </script>
+</head>
+<body>
+  Testing script loading without SRI for Bug 1235572<br/>
+  <div id="result"></div>
+
+  <!-- use css1 and css2 to make urls different to avoid the resource being cached-->
+  <link rel="stylesheet" href="https://example.com/browser/dom/security/test/contentverifier/file_contentserver.sjs?resource=css1"
+        onload="loaded('Stylesheet without SRI')"
+        onerror="blocked('Stylesheet without SRI')">
+  <link rel="stylesheet" href="https://example.com/browser/dom/security/test/contentverifier/file_contentserver.sjs?resource=css2"
+        integrity="sha384-/6Tvxh7SX39y62qePcvYoi5Vrf0lK8Ix3wJFLCYKI5KNJ5wIlCR8UsFC1OXwmwgd"
+        onload="loaded('Stylesheet with SRI')"
+        onerror="blocked('Stylesheet with SRI')">
+  <script src="https://example.com/browser/dom/security/test/contentverifier/file_contentserver.sjs?resource=script"
+          onload="loaded('Script without SRI')"
+          onerror="blocked('Script without SRI')"></script>
+  <script src="https://example.com/browser/dom/security/test/contentverifier/file_contentserver.sjs?resource=script"
+          integrity="sha384-zDCkvKOHXk8mM6Nk07oOGXGME17PA4+ydFw+hq0r9kgF6ZDYFWK3fLGPEy7FoOAo"
+          onload="loaded('Script with SRI')"
+          onerror="blocked('Script with SRI')"></script>
+</body>
+</html>

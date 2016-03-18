@@ -409,7 +409,6 @@
                 "description": "If true, brings the window to the front. If false, brings the next window in the z-order to the front."
               },
               "drawAttention": {
-                "unsupported": true,
                 "type": "boolean",
                 "optional": true,
                 "description": "If true, causes the window to be displayed in a manner that draws the user's attention to the window, without changing the focused window. The effect lasts until the user changes focus to the window. This option has no effect if the window already has focus. Set to false to cancel a previous draw attention request."

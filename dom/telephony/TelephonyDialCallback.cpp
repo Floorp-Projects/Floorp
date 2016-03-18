@@ -75,7 +75,7 @@ TelephonyDialCallback::NotifyDialMMISuccess(const nsAString& aStatusMessage)
 
   JSContext* cx = jsapi.cx();
 
-  MozMMIResult result;
+  RootedDictionary<MozMMIResult> result(cx);
   result.mSuccess = true;
   result.mServiceCode.Assign(mServiceCode);
   result.mStatusMessage.Assign(aStatusMessage);
@@ -94,7 +94,7 @@ TelephonyDialCallback::NotifyDialMMISuccessWithInteger(const nsAString& aStatusM
 
   JSContext* cx = jsapi.cx();
 
-  MozMMIResult result;
+  RootedDictionary<MozMMIResult> result(cx);
   result.mSuccess = true;
   result.mServiceCode.Assign(mServiceCode);
   result.mStatusMessage.Assign(aStatusMessage);
@@ -217,7 +217,7 @@ TelephonyDialCallback::NotifyDialMMIError(const nsAString& aError)
 
   JSContext* cx = jsapi.cx();
 
-  MozMMIResult result;
+  RootedDictionary<MozMMIResult> result(cx);
   result.mSuccess = false;
   result.mServiceCode.Assign(mServiceCode);
   result.mStatusMessage.Assign(aError);
@@ -236,7 +236,7 @@ TelephonyDialCallback::NotifyDialMMIErrorWithInfo(const nsAString& aError,
 
   JSContext* cx = jsapi.cx();
 
-  MozMMIResult result;
+  RootedDictionary<MozMMIResult> result(cx);
   result.mSuccess = false;
   result.mServiceCode.Assign(mServiceCode);
   result.mStatusMessage.Assign(aError);

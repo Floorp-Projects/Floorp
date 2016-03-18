@@ -1,5 +1,5 @@
 == default-size.html default-size-ref.html
-skip-if(B2G||Mulet) fuzzy-if(Android&&AndroidVersion>=15,8,1000) == size-1.html size-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,8,1000) == size-1.html size-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
 == empty-transaction-1.html empty-transaction-1-ref.html
 
@@ -8,7 +8,7 @@ skip-if(B2G||Mulet) fuzzy-if(Android&&AndroidVersion>=15,8,1000) == size-1.html 
 
 skip-if(B2G||Mulet) asserts-if(cocoaWidget,0-2) == size-change-1.html size-change-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
-random-if(cocoaWidget||(Android&&AndroidVersion==15)) == subpixel-1.html about:blank # see bug 1192616, re-enable once we're off the pandaboards
+random-if(cocoaWidget) == subpixel-1.html about:blank # see bug 1192616, re-enable once we're off the pandaboards
 
 != text-ltr-left.html text-blank.html
 != text-ltr-right.html text-blank.html
@@ -69,7 +69,7 @@ random-if(cocoaWidget&&azureSkia) random-if(!cocoaWidget||OSX==1006||OSX==1007) 
 fails-if(azureSkia||azureSkiaGL||azureQuartz) == linear-gradient-1a.html linear-gradient-1-ref.html
 
 # this passes with cairo on 10.7 and 10.8 but not with azure for reasons unknown
-fails-if(!(Android&&AndroidVersion>=15)&&(OSX==1006||(azureQuartz&&OSX>=1007))||azureSkiaGL||azureSkia) == linear-gradient-1b.html linear-gradient-1-ref.html
+fails-if(!(Android)&&(OSX==1006||(azureQuartz&&OSX>=1007))||azureSkiaGL||azureSkia) == linear-gradient-1b.html linear-gradient-1-ref.html
 
 == zero-dimensions.html zero-dimensions-ref.html
 
