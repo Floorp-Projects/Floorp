@@ -43,6 +43,9 @@ enum class SurfaceFormat : int8_t {
   A8R8G8B8,     // [AA, RR, GG, BB]     0xBBGGRRAA        0xAARRGGBB
   X8R8G8B8,     // [00, RR, GG, BB]     0xBBGGRR00        0x00RRGGBB
 
+  R8G8B8,
+  B8G8R8,
+
   // The _UINT16 suffix here indicates that the name reflects the layout when
   // viewed as a uint16_t value. In memory these values are stored using native
   // endianness.
@@ -55,6 +58,9 @@ enum class SurfaceFormat : int8_t {
   YUV,
   NV12,
   YUV422,
+  HSV,
+  Lab,
+  Depth,
 
   // This represents the unknown format.
   UNKNOWN,
