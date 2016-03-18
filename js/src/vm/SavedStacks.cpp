@@ -1385,11 +1385,11 @@ SavedStacks::chooseSamplingProbability(JSCompartment* compartment)
     if (!dbgs || dbgs->empty())
         return;
 
-    mozilla::DebugOnly<Debugger**> begin = dbgs->begin();
+    mozilla::DebugOnly<ReadBarriered<Debugger*>*> begin = dbgs->begin();
     mozilla::DebugOnly<bool> foundAnyDebuggers = false;
 
     double probability = 0;
-    for (Debugger** dbgp = dbgs->begin(); dbgp < dbgs->end(); dbgp++) {
+    for (auto dbgp = dbgs->begin(); dbgp < dbgs->end(); dbgp++) {
         // The set of debuggers had better not change while we're iterating,
         // such that the vector gets reallocated.
         MOZ_ASSERT(dbgs->begin() == begin);
