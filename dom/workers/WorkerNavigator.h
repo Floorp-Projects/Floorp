@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_navigator_h__
-#define mozilla_dom_workers_navigator_h__
+#ifndef mozilla_dom_workernavigator_h__
+#define mozilla_dom_workernavigator_h__
 
 #include "Workers.h"
 #include "RuntimeService.h"
@@ -19,14 +19,10 @@
 namespace mozilla {
 namespace dom {
 class Promise;
-} // namespace dom
-} // namespace mozilla
-
-BEGIN_WORKERS_NAMESPACE
 
 class WorkerNavigator final : public nsWrapperCache
 {
-  typedef struct RuntimeService::NavigatorProperties NavigatorProperties;
+  typedef struct workers::RuntimeService::NavigatorProperties NavigatorProperties;
 
   NavigatorProperties mProperties;
   bool mOnline;
@@ -116,6 +112,7 @@ public:
   uint64_t HardwareConcurrency() const;
 };
 
-END_WORKERS_NAMESPACE
+} // namespace dom
+} // namespace mozilla
 
-#endif // mozilla_dom_workers_navigator_h__
+#endif // mozilla_dom_workernavigator_h__

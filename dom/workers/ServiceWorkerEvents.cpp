@@ -56,6 +56,47 @@
 using namespace mozilla::dom;
 using namespace mozilla::dom::workers;
 
+namespace {
+
+void
+AsyncLog(nsIInterceptedChannel *aInterceptedChannel,
+         const nsACString& aRespondWithScriptSpec,
+         uint32_t aRespondWithLineNumber, uint32_t aRespondWithColumnNumber,
+         const nsACString& aMessageName, const nsTArray<nsString>& aParams)
+{
+  MOZ_ASSERT(aInterceptedChannel);
+  nsCOMPtr<nsIConsoleReportCollector> reporter =
+    aInterceptedChannel->GetConsoleReportCollector();
+  if (reporter) {
+    reporter->AddConsoleReport(nsIScriptError::errorFlag,
+                               NS_LITERAL_CSTRING("Service Worker Interception"),
+                               nsContentUtils::eDOM_PROPERTIES,
+                               aRespondWithScriptSpec,
+                               aRespondWithLineNumber,
+                               aRespondWithColumnNumber,
+                               aMessageName, aParams);
+  }
+}
+
+template<typename... Params>
+void
+AsyncLog(nsIInterceptedChannel* aInterceptedChannel,
+         const nsACString& aRespondWithScriptSpec,
+         uint32_t aRespondWithLineNumber, uint32_t aRespondWithColumnNumber,
+         // We have to list one explicit string so that calls with an
+         // nsTArray of params won't end up in here.
+         const nsACString& aMessageName, const nsAString& aFirstParam,
+         Params&&... aParams)
+{
+  nsTArray<nsString> paramsList(sizeof...(Params) + 1);
+  StringArrayAppender::Append(paramsList, sizeof...(Params) + 1,
+                              aFirstParam, Forward<Params>(aParams)...);
+  AsyncLog(aInterceptedChannel, aRespondWithScriptSpec, aRespondWithLineNumber,
+           aRespondWithColumnNumber, aMessageName, paramsList);
+}
+
+} // anonymous namespace
+
 BEGIN_WORKERS_NAMESPACE
 
 CancelChannelRunnable::CancelChannelRunnable(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
@@ -114,43 +155,6 @@ FetchEvent::Constructor(const GlobalObject& aGlobal,
 }
 
 namespace {
-
-void
-AsyncLog(nsIInterceptedChannel *aInterceptedChannel,
-         const nsACString& aRespondWithScriptSpec,
-         uint32_t aRespondWithLineNumber, uint32_t aRespondWithColumnNumber,
-         const nsACString& aMessageName, const nsTArray<nsString>& aParams)
-{
-  MOZ_ASSERT(aInterceptedChannel);
-  nsCOMPtr<nsIConsoleReportCollector> reporter =
-    aInterceptedChannel->GetConsoleReportCollector();
-  if (reporter) {
-    reporter->AddConsoleReport(nsIScriptError::errorFlag,
-                               NS_LITERAL_CSTRING("Service Worker Interception"),
-                               nsContentUtils::eDOM_PROPERTIES,
-                               aRespondWithScriptSpec,
-                               aRespondWithLineNumber,
-                               aRespondWithColumnNumber,
-                               aMessageName, aParams);
-  }
-}
-
-template<typename... Params>
-void
-AsyncLog(nsIInterceptedChannel* aInterceptedChannel,
-         const nsACString& aRespondWithScriptSpec,
-         uint32_t aRespondWithLineNumber, uint32_t aRespondWithColumnNumber,
-         // We have to list one explicit string so that calls with an
-         // nsTArray of params won't end up in here.
-         const nsACString& aMessageName, const nsAString& aFirstParam,
-         Params&&... aParams)
-{
-  nsTArray<nsString> paramsList(sizeof...(Params) + 1);
-  StringArrayAppender::Append(paramsList, sizeof...(Params) + 1,
-                              aFirstParam, Forward<Params>(aParams)...);
-  AsyncLog(aInterceptedChannel, aRespondWithScriptSpec, aRespondWithLineNumber,
-           aRespondWithColumnNumber, aMessageName, paramsList);
-}
 
 class FinishResponse final : public nsRunnable
 {
