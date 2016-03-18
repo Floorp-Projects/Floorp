@@ -67,6 +67,12 @@
         ]]></getter>
       </property>
 
+      <property name="messageManager">
+        <getter>
+          return this.content.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.messageManager;
+        </getter>
+      </property>
+
       <property name="contentWindow">
         <getter>
           return this.content.contentWindow;
@@ -180,13 +186,10 @@
         this.pageData = pageData;
 
         let endpoint = OpenGraphBuilder.generateEndpointURL(URLTemplate, this.pageData);
-
         // setup listeners
         let DOMContentLoaded = (event) => {
-          if (event.target != this.contentDocument)
-            return;
           this._loading = false;
-          this.content.removeEventListener("DOMContentLoaded", DOMContentLoaded, true);
+          this.messageManager.removeMessageListener("DOMContentLoaded", DOMContentLoaded);
           // add our resizer after the dom is ready
           if (this._useDynamicResizer) {
             let DynamicResizeWatcher = Cu.import("resource:///modules/Social.jsm", {}).DynamicResizeWatcher;
@@ -196,10 +199,6 @@
             this._dynamicResizer.stop();
             this._dynamicResizer = null;
           }
-          // send the opengraph data
-          let evt = this.contentDocument.createEvent("CustomEvent");
-          evt.initCustomEvent("OpenGraphData", true, true, JSON.stringify(this.pageData));
-          this.contentDocument.documentElement.dispatchEvent(evt);
 
           let contentWindow = this.contentWindow;
           let markUpdate = function(event) {
@@ -220,8 +219,11 @@
           }
           contentWindow.addEventListener("socialMarkUpdate", markUpdate);
           contentWindow.addEventListener("unload", unload);
+
+          // send the opengraph data
+          this.messageManager.sendAsyncMessage("Social:OpenGraphData", pageData);
         }
-        this.content.addEventListener("DOMContentLoaded", DOMContentLoaded, true);
+        this.messageManager.addMessageListener("DOMContentLoaded", DOMContentLoaded);
         this._loading = true;
         this.content.setAttribute("src", endpoint);
         ]]></body>
@@ -288,18 +290,21 @@
         <body><![CDATA[
         // because the panel may be preloaded, we need to size the panel when
         // showing as well as after load
+        if (!this._useDynamicResizer) {
+          return;
+        }
         let sizeSocialPanelToContent = Cu.import("resource:///modules/Social.jsm", {}).sizeSocialPanelToContent;
         if (!this._loading && this.contentDocument &&
             this.contentDocument.readyState == "complete") {
-          if (this._useDynamicResizer)
-            sizeSocialPanelToContent(this.panel, this.content);
+          sizeSocialPanelToContent(this.panel, this.content);
         } else {
-          let panelBrowserOnload = (e) => {
-            this.content.removeEventListener("load", panelBrowserOnload, true);
-            if (this._useDynamicResizer)
-              sizeSocialPanelToContent(this.panel, this.content);
+          let panelBrowserOnload = (message) => {
+            if (message.target != this.content)
+              return;
+            this.messageManager.removeMessageListener("PageVisibility:Show", panelBrowserOnload, true);
+            sizeSocialPanelToContent(this.panel, this.content);
           };
-          this.content.addEventListener("load", panelBrowserOnload, true);
+          this.messageManager.addMessageListener("PageVisibility:Show", panelBrowserOnload);
         }
         ]]></body>
       </method>
