@@ -940,10 +940,10 @@ VerifyRGBXFormat(uint8_t* aData, const IntSize &aSize, const int32_t aStride, Su
 #endif
 
 void
-DrawTargetSkia::Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat)
+DrawTargetSkia::Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat, bool aUninitialized)
 {
   MOZ_ASSERT((aFormat != SurfaceFormat::B8G8R8X8) ||
-              VerifyRGBXFormat(aData, aSize, aStride, aFormat));
+              aUninitialized || VerifyRGBXFormat(aData, aSize, aStride, aFormat));
 
   SkBitmap bitmap;
   bitmap.setInfo(MakeSkiaImageInfo(aSize, aFormat), aStride);
