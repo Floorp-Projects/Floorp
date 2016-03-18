@@ -925,6 +925,9 @@ js::CloneRegExpObject(JSContext* cx, JSObject* obj_)
     if (!currentStatics)
         return nullptr;
 
+    if (!EmptyShape::ensureInitialCustomShape<RegExpObject>(cx, clone))
+        return nullptr;
+
     Rooted<JSAtom*> source(cx, regex->getSource());
 
     RegExpFlag origFlags = regex->getFlags();
