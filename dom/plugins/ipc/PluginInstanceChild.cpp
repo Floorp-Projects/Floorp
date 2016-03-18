@@ -1566,30 +1566,35 @@ PluginInstanceChild::PluginWindowProcInternal(HWND hWnd,
     NS_ASSERTION(self->mPluginWindowHWND == hWnd, "Wrong window!");
     NS_ASSERTION(self->mPluginWndProc != PluginWindowProc, "Self-referential windowproc. Infinite recursion will happen soon.");
 
-    // Adobe's shockwave positions the plugin window relative to the browser
-    // frame when it initializes. With oopp disabled, this wouldn't have an
-    // effect. With oopp, GeckoPluginWindow is a child of the parent plugin
-    // window, so the move offsets the child within the parent. Generally
-    // we don't want plugins moving or sizing our window, so we prevent these
-    // changes here.
-    if (message == WM_WINDOWPOSCHANGING) {
-      WINDOWPOS* pos = reinterpret_cast<WINDOWPOS*>(lParam);
-      if (pos && (!(pos->flags & SWP_NOMOVE) || !(pos->flags & SWP_NOSIZE))) {
-        pos->x = pos->y = 0;
-        pos->cx = self->mPluginSize.x;
-        pos->cy = self->mPluginSize.y;
-        LRESULT res = CallWindowProc(self->mPluginWndProc, hWnd, message, wParam,
-                                     lParam);
-        pos->x = pos->y = 0;
-        pos->cx = self->mPluginSize.x;
-        pos->cy = self->mPluginSize.y;
-        return res;
-      }
-    }
+    switch (message) {
+        // Adobe's shockwave positions the plugin window relative to the browser
+        // frame when it initializes. With oopp disabled, this wouldn't have an
+        // effect. With oopp, GeckoPluginWindow is a child of the parent plugin
+        // window, so the move offsets the child within the parent. Generally
+        // we don't want plugins moving or sizing our window, so we prevent
+        // these changes here.
+        case WM_WINDOWPOSCHANGING: {
+            WINDOWPOS* pos = reinterpret_cast<WINDOWPOS*>(lParam);
+            if (pos &&
+                (!(pos->flags & SWP_NOMOVE) || !(pos->flags & SWP_NOSIZE))) {
+                pos->x = pos->y = 0;
+                pos->cx = self->mPluginSize.x;
+                pos->cy = self->mPluginSize.y;
+                LRESULT res = CallWindowProc(self->mPluginWndProc,
+                                             hWnd, message, wParam, lParam);
+                pos->x = pos->y = 0;
+                pos->cx = self->mPluginSize.x;
+                pos->cy = self->mPluginSize.y;
+                return res;
+            }
+            break;
+        }
 
-    // The plugin received keyboard focus, let the parent know so the dom is up to date.
-    if (message == WM_MOUSEACTIVATE) {
-      self->CallPluginFocusChange(true);
+        // The plugin received keyboard focus, let the parent know so the dom
+        // is up to date.
+        case WM_MOUSEACTIVATE:
+            self->CallPluginFocusChange(true);
+            break;
     }
 
     // Prevent lockups due to plugins making rpc calls when the parent
