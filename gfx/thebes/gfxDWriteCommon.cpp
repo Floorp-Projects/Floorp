@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "mozilla/Atomics.h"
+#include "mozilla/gfx/Logging.h"
 
 static mozilla::Atomic<uint64_t> sNextFontFileKey;
 static std::unordered_map<uint64_t, IDWriteFontFileStream*> sFontFileStreams;
@@ -158,6 +159,10 @@ gfxDWriteFontFileLoader::CreateCustomFontFile(FallibleTArray<uint8_t>& aFontData
   MOZ_ASSERT(aFontFileStream);
 
   IDWriteFactory *factory = gfxWindowsPlatform::GetPlatform()->GetDWriteFactory();
+  if (!factory) {
+    gfxCriticalError() << "Failed to get DWrite Factory in CreateCustomFontFile.";
+    return E_FAIL;
+  }
 
   uint64_t fontFileKey = sNextFontFileKey++;
   RefPtr<IDWriteFontFileStream> ffsRef = new gfxDWriteFontFileStream(&aFontData, fontFileKey);
