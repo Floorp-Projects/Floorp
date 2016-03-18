@@ -36,6 +36,7 @@ task:
           builds/releng_base_android_64_builds.py
           disable_signing.py
           platform_supports_post_upload_to_latest.py
+      MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
       MH_CUSTOM_BUILD_VARIANT_CFG: api-15
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster

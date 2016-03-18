@@ -1387,10 +1387,17 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
     useIntermediateSurface = true;
 #endif
   } else {
+    /* Don't use an intermediate surface for opacity when it's within a 3d
+     * context, since we'd rather keep the 3d effects. This matches the
+     * WebKit/blink behaviour, but is changing in the latest spec.
+     */
     float opacity = GetEffectiveOpacity();
     CompositionOp blendMode = GetEffectiveMixBlendMode();
-    if (((opacity != 1.0f || blendMode != CompositionOp::OP_OVER) && (HasMultipleChildren() || Creates3DContextWithExtendingChildren())) ||
-        (!idealTransform.Is2D() && Creates3DContextWithExtendingChildren())) {
+    if ((HasMultipleChildren() || Creates3DContextWithExtendingChildren()) &&
+        ((opacity != 1.0f && !Extend3DContext()) ||
+         (blendMode != CompositionOp::OP_OVER))) {
+      useIntermediateSurface = true;
+    } else if (!idealTransform.Is2D() && Creates3DContextWithExtendingChildren()) {
       useIntermediateSurface = true;
     } else {
       useIntermediateSurface = false;
@@ -1703,7 +1710,8 @@ void WriteSnapshotToDumpFile(Compositor* aCompositor, DrawTarget* aTarget)
 #endif
 
 void
-Layer::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
+Layer::Dump(std::stringstream& aStream, const char* aPrefix,
+            bool aDumpHtml, bool aSorted)
 {
 #ifdef MOZ_DUMP_PAINTING
   bool dumpCompositorTexture = gfxEnv::DumpCompositorTextures() && AsLayerComposite() &&
@@ -1770,13 +1778,25 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
   }
 #endif
 
-  if (Layer* kid = GetFirstChild()) {
+  if (ContainerLayer* container = AsContainerLayer()) {
+    AutoTArray<Layer*, 12> children;
+    if (aSorted) {
+      container->SortChildrenBy3DZOrder(children);
+    } else {
+      for (Layer* l = container->GetFirstChild(); l; l = l->GetNextSibling()) {
+        children.AppendElement(l);
+      }
+    }
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
     if (aDumpHtml) {
       aStream << "<ul>";
     }
-    kid->Dump(aStream, pfx.get(), aDumpHtml);
+
+    for (Layer* child : children) {
+      child->Dump(aStream, pfx.get(), aDumpHtml, aSorted);
+    }
+
     if (aDumpHtml) {
       aStream << "</ul>";
     }
@@ -1785,8 +1805,6 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
   if (aDumpHtml) {
     aStream << "</li>";
   }
-  if (Layer* next = GetNextSibling())
-    next->Dump(aStream, aPrefix, aDumpHtml);
 }
 
 void
@@ -1919,6 +1937,15 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
   if (GetContentFlags() & CONTENT_BACKFACE_HIDDEN) {
     aStream << " [backfaceHidden]";
+  }
+  if (Extend3DContext()) {
+    aStream << " [extend3DContext]";
+  }
+  if (Combines3DTransformWithAncestors()) {
+    aStream << " [combines3DTransformWithAncestors]";
+  }
+  if (Is3DContextLeaf()) {
+    aStream << " [is3DContextLeaf]";
   }
   if (GetScrollbarDirection() == VERTICAL) {
     aStream << nsPrintfCString(" [vscrollbar=%lld]", GetScrollbarTargetContainerId()).get();
@@ -2310,14 +2337,15 @@ ReadbackLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent
 // LayerManager
 
 void
-LayerManager::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
+LayerManager::Dump(std::stringstream& aStream, const char* aPrefix,
+                   bool aDumpHtml, bool aSorted)
 {
 #ifdef MOZ_DUMP_PAINTING
   if (aDumpHtml) {
     aStream << "<ul><li>";
   }
 #endif
-  DumpSelf(aStream, aPrefix);
+  DumpSelf(aStream, aPrefix, aSorted);
 
   nsAutoCString pfx(aPrefix);
   pfx += "  ";
@@ -2340,17 +2368,18 @@ LayerManager::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHt
 }
 
 void
-LayerManager::DumpSelf(std::stringstream& aStream, const char* aPrefix)
+LayerManager::DumpSelf(std::stringstream& aStream, const char* aPrefix, bool aSorted)
 {
   PrintInfo(aStream, aPrefix);
+  aStream << " --- in " << (aSorted ? "3D-sorted rendering order" : "content order");
   aStream << "\n";
 }
 
 void
-LayerManager::Dump()
+LayerManager::Dump(bool aSorted)
 {
   std::stringstream ss;
-  Dump(ss);
+  Dump(ss, "", false, aSorted);
   print_stderr(ss);
 }
 

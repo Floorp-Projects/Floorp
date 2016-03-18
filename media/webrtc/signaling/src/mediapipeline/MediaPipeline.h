@@ -463,12 +463,16 @@ public:
 
     ~PipelineListener()
     {
-      // release conduit on mainthread.  Must use forget()!
-      nsresult rv = NS_DispatchToMainThread(new
-        ConduitDeleteEvent(conduit_.forget()));
-      MOZ_ASSERT(!NS_FAILED(rv),"Could not dispatch conduit shutdown to main");
-      if (NS_FAILED(rv)) {
-        MOZ_CRASH();
+      if (!NS_IsMainThread()) {
+        // release conduit on mainthread.  Must use forget()!
+        nsresult rv = NS_DispatchToMainThread(new
+                                              ConduitDeleteEvent(conduit_.forget()));
+        MOZ_ASSERT(!NS_FAILED(rv),"Could not dispatch conduit shutdown to main");
+        if (NS_FAILED(rv)) {
+          MOZ_CRASH();
+        }
+      } else {
+        conduit_ = nullptr;
       }
     }
 
@@ -625,12 +629,16 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
 
     ~PipelineListener()
     {
-      // release conduit on mainthread.  Must use forget()!
-      nsresult rv = NS_DispatchToMainThread(new
-        ConduitDeleteEvent(conduit_.forget()));
-      MOZ_ASSERT(!NS_FAILED(rv),"Could not dispatch conduit shutdown to main");
-      if (NS_FAILED(rv)) {
-        MOZ_CRASH();
+      if (!NS_IsMainThread()) {
+        // release conduit on mainthread.  Must use forget()!
+        nsresult rv = NS_DispatchToMainThread(new
+                                              ConduitDeleteEvent(conduit_.forget()));
+        MOZ_ASSERT(!NS_FAILED(rv),"Could not dispatch conduit shutdown to main");
+        if (NS_FAILED(rv)) {
+          MOZ_CRASH();
+        }
+      } else {
+        conduit_ = nullptr;
       }
     }
 

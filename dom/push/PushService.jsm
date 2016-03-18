@@ -235,6 +235,20 @@ this.PushService = {
     }
   },
 
+  // Used for testing.
+  changeTestServer(url, options = {}) {
+    console.debug("changeTestServer()");
+
+    this._stateChangeProcessEnqueue(_ => {
+      if (this._state < PUSH_SERVICE_ACTIVATING) {
+        console.debug("changeTestServer: PushService not activated?");
+        return Promise.resolve();
+      }
+
+      return this._changeServerURL(url, CHANGING_SERVICE_EVENT, options);
+    });
+  },
+
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       /*
@@ -367,7 +381,7 @@ this.PushService = {
     return [service, uri];
   },
 
-  _changeServerURL: function(serverURI, event) {
+  _changeServerURL: function(serverURI, event, options = {}) {
     console.debug("changeServerURL()");
 
     switch(event) {
@@ -392,7 +406,7 @@ this.PushService = {
           if (this._state == PUSH_SERVICE_INIT) {
             this._setState(PUSH_SERVICE_ACTIVATING);
             // The service has not been running - start it.
-            return this._startService(service, uri)
+            return this._startService(service, uri, options)
               .then(_ => this._stateChangeProcessEnqueue(_ =>
                 this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled")))
               );
@@ -404,7 +418,7 @@ this.PushService = {
             // check is called in changeStateConnectionEnabledEvent function)
             return this._stopService(CHANGING_SERVICE_EVENT)
               .then(_ =>
-                 this._startService(service, uri)
+                 this._startService(service, uri, options)
               )
               .then(_ => this._stateChangeProcessEnqueue(_ =>
                 this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled")))
@@ -610,9 +624,10 @@ this.PushService = {
 
     this._stateChangeProcessEnqueue(_ =>
       {
-        this._changeServerURL("", UNINIT_EVENT);
+        var p = this._changeServerURL("", UNINIT_EVENT);
         this._setState(PUSH_SERVICE_UNINIT);
         console.debug("uninit: shutdown complete!");
+        return p;
       });
   },
 

@@ -83,7 +83,7 @@ BasicContainerLayer::ComputeEffectiveTransforms(const Matrix4x4& aTransformToSur
     GetMaskLayer() ||
     GetForceIsolatedGroup() ||
     (GetMixBlendMode() != CompositionOp::OP_OVER && HasMultipleChildren()) ||
-    (GetEffectiveOpacity() != 1.0 && (HasMultipleChildren() || hasSingleBlendingChild));
+    (GetEffectiveOpacity() != 1.0 && ((HasMultipleChildren() && !Extend3DContext()) || hasSingleBlendingChild));
 
   if (!Extend3DContext()) {
     idealTransform.ProjectTo2D();

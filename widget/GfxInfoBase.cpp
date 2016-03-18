@@ -1151,10 +1151,11 @@ nsresult GfxInfoBase::GetInfo(JSContext* aCx, JS::MutableHandle<JS::Value> aResu
   return NS_OK;
 }
 
+nsAutoCString gBaseAppVersion;
+
 const nsCString&
 GfxInfoBase::GetApplicationVersion()
 {
-  static nsCString version;
   static bool versionInitialized = false;
   if (!versionInitialized) {
     // If we fail to get the version, we will not try again.
@@ -1163,10 +1164,10 @@ GfxInfoBase::GetApplicationVersion()
     // Get the version from xpcom/system/nsIXULAppInfo.idl
     nsCOMPtr<nsIXULAppInfo> app = do_GetService("@mozilla.org/xre/app-info;1");
     if (app) {
-      app->GetVersion(version);
+      app->GetVersion(gBaseAppVersion);
     }
   }
-  return version;
+  return gBaseAppVersion;
 }
 
 void
