@@ -5004,7 +5004,7 @@ Debugger::wrapVariantReferent(JSContext* cx, Handle<DebuggerScriptReferent> refe
             cx, scripts, CrossCompartmentKey::DebuggerScript, referent);
     } else {
         obj = wrapVariantReferent<DebuggerScriptReferent, WasmModuleObject*, WasmModuleWeakMap>(
-            cx, wasmModuleScripts, CrossCompartmentKey::DebuggerObject, referent);
+            cx, wasmModuleScripts, CrossCompartmentKey::DebuggerWasmScript, referent);
     }
     MOZ_ASSERT_IF(obj, GetScriptReferent(obj) == referent);
     return obj;
@@ -6247,7 +6247,7 @@ Debugger::wrapVariantReferent(JSContext* cx, Handle<DebuggerSourceReferent> refe
             cx, sources, CrossCompartmentKey::DebuggerSource, referent);
     } else {
         obj = wrapVariantReferent<DebuggerSourceReferent, WasmModuleObject*, WasmModuleWeakMap>(
-            cx, wasmModuleSources, CrossCompartmentKey::DebuggerObject, referent);
+            cx, wasmModuleSources, CrossCompartmentKey::DebuggerWasmSource, referent);
     }
     MOZ_ASSERT_IF(obj, GetSourceReferent(obj) == referent);
     return obj;
