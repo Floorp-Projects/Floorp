@@ -277,6 +277,7 @@ nsFormData::SetNameFilePair(FormDataTuple* aData,
     aData->value.SetAsFile() = aFile;
   } else {
     aData->value.SetAsUSVString() = EmptyString();
+    aData->wasNullBlob = true;
   }
 }
 
@@ -358,7 +359,10 @@ nsFormData::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
   nsFSMultipartFormData fs(NS_LITERAL_CSTRING("UTF-8"), nullptr);
 
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
-    if (mFormData[i].value.IsFile()) {
+    if (mFormData[i].wasNullBlob) {
+      MOZ_ASSERT(mFormData[i].value.IsUSVString());
+      fs.AddNameFilePair(mFormData[i].name, nullptr);
+    } else if (mFormData[i].value.IsFile()) {
       fs.AddNameFilePair(mFormData[i].name, mFormData[i].value.GetAsFile());
     } else if (mFormData[i].value.IsUSVString()) {
       fs.AddNameValuePair(mFormData[i].name,
