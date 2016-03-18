@@ -597,35 +597,9 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
     // Before executing this handler, check that it's not disabled,
     // and that it has something to do (oncommand of the <key> or its
     // <command> is non-empty).
-    nsCOMPtr<nsIContent> keyContent = handler->GetHandlerElement();
     nsCOMPtr<Element> commandElement;
-
-    // See if we're in a XUL doc.
-    nsCOMPtr<Element> chromeHandlerElement = GetElement();
-    if (chromeHandlerElement && keyContent) {
-      // We are.  Obtain our command attribute.
-      nsAutoString command;
-      keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
-      if (!command.IsEmpty()) {
-        // Locate the command element in question.  Note that we
-        // know "keyContent" is in a doc if we're dealing with it here.
-        NS_ASSERTION(keyContent->IsInDoc(),
-                     "the key element must be in document");
-        nsIDocument* doc = keyContent->GetCurrentDoc();
-        if (doc) {
-          commandElement = do_QueryInterface(doc->GetElementById(command));
-        }
-
-        if (!commandElement) {
-          NS_ERROR("A XUL <key> is observing a command that doesn't exist. "
-                   "Unable to execute key binding!");
-          continue;
-        }
-      }
-    }
-
-    if (!commandElement) {
-      commandElement = do_QueryInterface(keyContent);
+    if (!GetElementForHandler(handler, getter_AddRefs(commandElement))) {
+      continue;
     }
 
     if (commandElement) {
@@ -653,6 +627,7 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
     }
 
     nsCOMPtr<EventTarget> target;
+    nsCOMPtr<Element> chromeHandlerElement = GetElement();
     if (chromeHandlerElement) {
       target = commandElement;
     } else {
@@ -720,6 +695,49 @@ nsXBLWindowKeyHandler::GetElement(bool* aIsDisabled)
                                         nsGkAtoms::_true, eCaseMatters);
   }
   return element.forget();
+}
+
+bool
+nsXBLWindowKeyHandler::GetElementForHandler(nsXBLPrototypeHandler* aHandler,
+                                            Element** aElementForHandler)
+{
+  MOZ_ASSERT(aElementForHandler);
+  *aElementForHandler = nullptr;
+
+  nsCOMPtr<nsIContent> keyContent = aHandler->GetHandlerElement();
+
+  // See if we're in a XUL doc.
+  nsCOMPtr<Element> chromeHandlerElement = GetElement();
+  if (chromeHandlerElement && keyContent) {
+    // We are.  Obtain our command attribute.
+    nsAutoString command;
+    keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
+    if (!command.IsEmpty()) {
+      // Locate the command element in question.  Note that we
+      // know "keyContent" is in a doc if we're dealing with it here.
+      NS_ASSERTION(keyContent->IsInDoc(),
+                   "the key element must be in document");
+      nsIDocument* doc = keyContent->GetCurrentDoc();
+      if (NS_WARN_IF(!doc)) {
+        return false;
+      }
+      nsCOMPtr<Element> commandElement =
+        do_QueryInterface(doc->GetElementById(command));
+      if (!commandElement) {
+        NS_ERROR("A XUL <key> is observing a command that doesn't exist. "
+                 "Unable to execute key binding!");
+        return false;
+      }
+      commandElement.swap(*aElementForHandler);
+    }
+  }
+
+  if (!*aElementForHandler) {
+    nsCOMPtr<Element> keyElement = do_QueryInterface(keyContent);
+    keyElement.swap(*aElementForHandler);
+  }
+
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
