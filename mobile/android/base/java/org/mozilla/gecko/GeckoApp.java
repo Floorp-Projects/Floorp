@@ -138,15 +138,6 @@ public abstract class GeckoApp
     private static final String LOGTAG = "GeckoApp";
     private static final int ONE_DAY_MS = 1000*60*60*24;
 
-    public enum StartupAction {
-        NORMAL,     /* normal application start */
-        URL,        /* launched with a passed URL */
-        PREFETCH,   /* launched with a passed URL that we prefetch */
-        GUEST,      /* launched in guest browsing */
-        RESTRICTED, /* launched with restricted profile */
-        SHORTCUT    /* launched from a homescreen shortcut */
-    }
-
     public static final String ACTION_ALERT_CALLBACK       = "org.mozilla.gecko.ACTION_ALERT_CALLBACK";
     public static final String ACTION_HOMESCREEN_SHORTCUT  = "org.mozilla.gecko.BOOKMARK";
     public static final String ACTION_DEBUG                = "org.mozilla.gecko.DEBUG";
@@ -1585,8 +1576,7 @@ public abstract class GeckoApp
             getProfile().moveSessionFile();
         }
 
-        final StartupAction startupAction = getStartupAction(passedUri, action);
-        Telemetry.addToHistogram("FENNEC_GECKOAPP_STARTUP_ACTION", startupAction.ordinal());
+        recordStartupActionTelemetry(passedUri, action);
 
         // Check if launched from data reporting notification.
         if (ACTION_LAUNCH_SETTINGS.equals(action)) {
@@ -1939,8 +1929,7 @@ public abstract class GeckoApp
             startActivity(settingsIntent);
         }
 
-        final StartupAction startupAction = getStartupAction(passedUri, action);
-        Telemetry.addToHistogram("FENNEC_GECKOAPP_STARTUP_ACTION", startupAction.ordinal());
+        recordStartupActionTelemetry(passedUri, action);
     }
 
     /**
@@ -2754,8 +2743,6 @@ public abstract class GeckoApp
         return new StubbedHealthRecorder();
     }
 
-    protected StartupAction getStartupAction(final String passedURL, final String action) {
-        // Default to NORMAL here. Subclasses can handle the other types.
-        return StartupAction.NORMAL;
+    protected void recordStartupActionTelemetry(final String passedURL, final String action) {
     }
 }
