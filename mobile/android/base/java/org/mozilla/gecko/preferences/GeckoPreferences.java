@@ -1388,19 +1388,9 @@ OnSharedPreferenceChangeListener
                        .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                JSONObject jsonPref = new JSONObject();
-                                try {
-                                    jsonPref.put("name", PREFS_MP_ENABLED);
-                                    jsonPref.put("flush", true);
-                                    jsonPref.put("type", "string");
-                                    jsonPref.put("value", input1.getText().toString());
-
-                                    GeckoEvent event = GeckoEvent.createBroadcastEvent("Preferences:Set", jsonPref.toString());
-                                    GeckoAppShell.sendEventToGecko(event);
-                                } catch(Exception ex) {
-                                    Log.e(LOGTAG, "Error setting master password", ex);
-                                }
-                                return;
+                                PrefsHelper.setPref(PREFS_MP_ENABLED,
+                                                    input1.getText().toString(),
+                                                    /* flush */ true);
                             }
                         })
                         .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
