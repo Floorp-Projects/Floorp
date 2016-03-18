@@ -18,7 +18,7 @@ loader.lazyGetter(this, "NetworkHelper", () => require("devtools/shared/webconso
 const trace = {
   log: function(...args) {
   }
-}
+};
 
 const acceptableHeaders = ["x-chromelogger-data"];
 
@@ -28,9 +28,10 @@ const acceptableHeaders = ["x-chromelogger-data"];
  *
  * Since child processes can't register HTTP event observer they use
  * this module to do the observing in the parent process. This monitor
- * is loaded through DebuggerServerConnection.setupInParent() that is executed
- * from within the child process. The execution is done by {@ServerLoggingListener}.
- * The monitor listens to HTTP events and forwards it into the right child process.
+ * is loaded through DebuggerServerConnection.setupInParent() that is
+ * executed from within the child process. The execution is done by
+ * {@ServerLoggingListener}.  The monitor listens to HTTP events and
+ * forwards it into the right child process.
  *
  * Read more about the architecture:
  * https://github.com/mozilla/gecko-dev/blob/fx-team/devtools/server/docs/actor-e10s-handling.md
@@ -159,7 +160,8 @@ var ServerLoggerMonitor = {
     // content.
     if (!httpChannel.loadInfo &&
         httpChannel.loadInfo.loadingDocument === null &&
-        httpChannel.loadInfo.loadingPrincipal === Services.scriptSecurityManager.getSystemPrincipal()) {
+        httpChannel.loadInfo.loadingPrincipal ===
+        Services.scriptSecurityManager.getSystemPrincipal()) {
       return;
     }
 

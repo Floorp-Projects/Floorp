@@ -65,8 +65,6 @@ SocialUI = {
     mm.loadFrameScript("chrome://browser/content/social-content.js", true);
 
     Services.obs.addObserver(this, "social:ambient-notification-changed", false);
-    Services.obs.addObserver(this, "social:profile-changed", false);
-    Services.obs.addObserver(this, "social:frameworker-error", false);
     Services.obs.addObserver(this, "social:providers-changed", false);
     Services.obs.addObserver(this, "social:provider-reload", false);
     Services.obs.addObserver(this, "social:provider-enabled", false);
@@ -76,6 +74,7 @@ SocialUI = {
 
     CustomizableUI.addListener(this);
     SocialActivationListener.init();
+    messageManager.addMessageListener("Social:Notification", this);
 
     // menupopups that list social providers. we only populate them when shown,
     // and if it has not been done already.
@@ -100,8 +99,6 @@ SocialUI = {
     SocialSidebar.saveWindowState();
 
     Services.obs.removeObserver(this, "social:ambient-notification-changed");
-    Services.obs.removeObserver(this, "social:profile-changed");
-    Services.obs.removeObserver(this, "social:frameworker-error");
     Services.obs.removeObserver(this, "social:providers-changed");
     Services.obs.removeObserver(this, "social:provider-reload");
     Services.obs.removeObserver(this, "social:provider-enabled");
@@ -110,11 +107,21 @@ SocialUI = {
     Services.prefs.removeObserver("social.toast-notifications.enabled", this);
     CustomizableUI.removeListener(this);
     SocialActivationListener.uninit();
+    messageManager.removeMessageListener("Social:Notification", this);
 
     document.getElementById("viewSidebarMenu").removeEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
     document.getElementById("social-statusarea-popup").removeEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
 
     this._initialized = false;
+  },
+
+  receiveMessage: function(aMessage) {
+    if (aMessage.name == "Social:Notification") {
+      let provider = Social._getProviderFromOrigin(aMessage.data.origin);
+      if (provider) {
+        provider.setAmbientNotification(aMessage.data.detail);
+      }
+    }
   },
 
   observe: function SocialUI_observe(subject, topic, data) {
@@ -148,17 +155,6 @@ SocialUI = {
       // Provider-specific notifications
       case "social:ambient-notification-changed":
         SocialStatus.updateButton(data);
-        break;
-      case "social:profile-changed":
-        // make sure anything that happens here only affects the provider for
-        // which the profile is changing, and that anything we call actually
-        // needs to change based on profile data.
-        SocialStatus.updateButton(data);
-        break;
-      case "social:frameworker-error":
-        if (this.enabled && SocialSidebar.provider && SocialSidebar.provider.origin == data) {
-          SocialSidebar.loadFrameworkerFailure();
-        }
         break;
       case "nsPref:changed":
         if (data == "social.toast-notifications.enabled") {
@@ -218,17 +214,12 @@ SocialUI = {
 
   get enabled() {
     // Returns whether social is enabled *for this window*.
-    if (this._chromeless || PrivateBrowsingUtils.isWindowPrivate(window))
+    if (this._chromeless)
       return false;
     return Social.providers.length > 0;
   },
 
   canShareOrMarkPage: function(aURI) {
-    // Bug 898706 we do not enable social in private sessions since frameworker
-    // would be shared between private and non-private windows
-    if (PrivateBrowsingUtils.isWindowPrivate(window))
-      return false;
-
     return (aURI && (aURI.schemeIs('http') || aURI.schemeIs('https')));
   },
 
@@ -287,10 +278,6 @@ SocialActivationListener = {
       options = { bypassContentCheck: true, bypassInstallPanel: true };
     }
 
-    // If we are in PB mode, we silently do nothing (bug 829404 exists to
-    // do something sensible here...)
-    if (PrivateBrowsingUtils.isWindowPrivate(window))
-      return;
     Social.installProvider(data, function(manifest) {
       Social.activateFromOrigin(manifest.origin, function(provider) {
         if (provider.sidebarURL) {
@@ -361,6 +348,7 @@ SocialFlyout = {
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("message", "true");
     iframe.setAttribute("messagemanagergroup", "social");
+    iframe.setAttribute("disablehistory", "true");
     iframe.setAttribute("tooltip", "aHTMLTooltip");
     iframe.setAttribute("context", "contentAreaContextMenu");
     iframe.setAttribute("origin", SocialSidebar.provider.origin);
@@ -388,7 +376,6 @@ SocialFlyout = {
     iframe.docShellIsActive = true;
     if (iframe.contentDocument.readyState == "complete") {
       this._dynamicResizer.start(panel, iframe);
-      this.dispatchPanelEvent("socialFrameShow");
     } else {
       // first time load, wait for load and dispatch after load
       iframe.addEventListener("load", function panelBrowserOnload(e) {
@@ -396,7 +383,6 @@ SocialFlyout = {
         setTimeout(function() {
           if (SocialFlyout._dynamicResizer) { // may go null if hidden quickly
             SocialFlyout._dynamicResizer.start(panel, iframe);
-            SocialFlyout.dispatchPanelEvent("socialFrameShow");
           }
         }, 0);
       }, true);
@@ -407,7 +393,6 @@ SocialFlyout = {
     this._dynamicResizer.stop();
     this._dynamicResizer = null;
     this.iframe.docShellIsActive = false;
-    this.dispatchPanelEvent("socialFrameHide");
   },
 
   load: function(aURL, cb) {
@@ -504,6 +489,7 @@ SocialShare = {
     iframe.setAttribute("class", "social-share-frame");
     iframe.setAttribute("context", "contentAreaContextMenu");
     iframe.setAttribute("tooltip", "aHTMLTooltip");
+    iframe.setAttribute("disablehistory", "true");
     iframe.setAttribute("disableglobalhistory", "true");
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("message", "true");
@@ -595,11 +581,7 @@ SocialShare = {
     this.iframe.docShell.createAboutBlankContentViewer(null);
     this.currentShare = null;
     // share panel use is over, purge any history
-    if (this.iframe.sessionHistory) {
-      let purge = this.iframe.sessionHistory.count;
-      if (purge > 0)
-        this.iframe.sessionHistory.PurgeHistory(purge);
-    }
+    this.iframe.purgeSessionHistory();
   },
 
   sharePage: function(providerOrigin, graphData, target, anchor) {
@@ -708,11 +690,7 @@ SocialShare = {
     }
     // if the user switched between share providers we do not want that history
     // available.
-    if (iframe.sessionHistory) {
-      let purge = iframe.sessionHistory.count;
-      if (purge > 0)
-        iframe.sessionHistory.PurgeHistory(purge);
-    }
+    iframe.purgeSessionHistory();
 
     // always ensure that origin belongs to the endpoint
     let uri = Services.io.newURI(shareEndpoint, null, null);
@@ -857,9 +835,6 @@ SocialSidebar = {
     if (aEnabled == sbrowser.docShellIsActive)
       return;
     sbrowser.docShellIsActive = aEnabled;
-    let evt = sbrowser.contentDocument.createEvent("CustomEvent");
-    evt.initCustomEvent(aEnabled ? "socialFrameShow" : "socialFrameHide", true, true, {});
-    sbrowser.contentDocument.documentElement.dispatchEvent(evt);
   },
 
   updateToggleNotifications: function() {
@@ -955,16 +930,6 @@ SocialSidebar = {
   },
 
   _unloadTimeoutId: 0,
-
-  loadFrameworkerFailure: function() {
-    if (this.provider && this.provider.errorState == "frameworker-error") {
-      // we have to explicitly load this error page since it is not being
-      // handled via the normal error page paths.
-      let sbrowser = document.getElementById("social-sidebar-browser");
-      sbrowser.setAttribute("src", "about:socialerror?mode=workerFailure&origin=" +
-                            encodeURIComponent(this.provider.origin));
-    }
-  },
 
   _provider: null,
   ensureProvider: function() {
@@ -1247,8 +1212,8 @@ SocialStatus = {
       let iconNames = Object.keys(icons);
       let notif = icons[iconNames[0]];
 
-      // The image and tooltip need to be updated for both
-      // ambient notification and profile changes.
+      // The image and tooltip need to be updated for
+      // ambient notification changes.
       let iconURL = provider.icon32URL || provider.iconURL;
       let tooltiptext;
       if (!notif || !widget.areaType) {

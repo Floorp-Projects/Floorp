@@ -246,7 +246,7 @@
         <body><![CDATA[
         // we always set the src on click if it has not been set for this tab,
         // but we only want to open the panel if it was previously annotated.
-        let openPanel = this.isMarked || aOpenPanel || !this.provider.haveLoggedInUser();
+        let openPanel = this.isMarked || aOpenPanel;
         let src = this.content.getAttribute("src");
         if (!src || src == "about:blank") {
           this.loadPanel();
@@ -291,13 +291,11 @@
         let sizeSocialPanelToContent = Cu.import("resource:///modules/Social.jsm", {}).sizeSocialPanelToContent;
         if (!this._loading && this.contentDocument &&
             this.contentDocument.readyState == "complete") {
-          this.dispatchPanelEvent("socialFrameShow");
           if (this._useDynamicResizer)
             sizeSocialPanelToContent(this.panel, this.content);
         } else {
           let panelBrowserOnload = (e) => {
             this.content.removeEventListener("load", panelBrowserOnload, true);
-            this.dispatchPanelEvent("socialFrameShow");
             if (this._useDynamicResizer)
               sizeSocialPanelToContent(this.panel, this.content);
           };
@@ -350,7 +348,6 @@
         this.onShown();
       ]]></handler>
       <handler event="popuphidden"><![CDATA[
-        this.dispatchPanelEvent("socialFrameHide");
         this._anchor.removeAttribute("open");
         this.update();
         this.content.removeEventListener("click", this);

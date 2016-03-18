@@ -45,7 +45,8 @@ var ids = exports.ids = {
   Mozilla: "{86c18b42-e466-45a9-ae7a-9b95ba6f5640}",
   SeaMonkey: "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}",
   Fennec: "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
-  Thunderbird: "{3550f703-e582-4d05-9a08-453d09bdfdc6}"
+  Thunderbird: "{3550f703-e582-4d05-9a08-453d09bdfdc6}",
+  Instantbird: "{33cb9019-c295-46dd-be21-8c4936574bee}"
 };
 
 function is(name) {

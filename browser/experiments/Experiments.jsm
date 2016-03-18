@@ -323,11 +323,10 @@ Experiments.Experiments = function (policy=new Experiments.Policy()) {
   // crashes. For forensics purposes, keep the last few log
   // messages in memory and upload them in case of crash.
   this._forensicsLogs = [];
-  this._forensicsLogs.length = 20;
+  this._forensicsLogs.length = 30;
   this._log = Object.create(log);
   this._log.log = (level, string, params) => {
-    this._forensicsLogs.shift();
-    this._forensicsLogs.push(level + ": " + string);
+    this._addToForensicsLog("Experiments", string);
     log.log(level, string, params);
   };
 
@@ -464,6 +463,7 @@ Experiments.Experiments.prototype = {
         yield this._mainTask;
       } catch (e) {
         // We error out of tasks after shutdown via this exception.
+        this._log.trace(`uninit: caught error - ${e}`);
         if (!(e instanceof AlreadyShutdownError)) {
           this._latestError = e;
           throw e;
@@ -476,6 +476,7 @@ Experiments.Experiments.prototype = {
 
   // Return state information, for debugging purposes.
   _getState: function() {
+    let activeExperiment = this._getActiveExperiment();
     let state = {
       isShutdown: this._shutdown,
       isEnabled: gExperimentsEnabled,
@@ -487,8 +488,9 @@ Experiments.Experiments.prototype = {
       hasTimer: !!this._hasTimer,
       hasAddonProvider: !!gAddonProvider,
       latestLogs: this._forensicsLogs,
-      experiments: this._experiments ? this._experiments.keys() : null,
+      experiments: this._experiments ? [...this._experiments.keys()] : null,
       terminateReason: this._terminateReason,
+      activeExperiment: !!activeExperiment ? activeExperiment.id : null,
     };
     if (this._latestError) {
       if (typeof this._latestError == "object") {
@@ -501,6 +503,12 @@ Experiments.Experiments.prototype = {
       }
     }
     return state;
+  },
+
+  _addToForensicsLog: function (what, string) {
+    this._forensicsLogs.shift();
+    let timeInSec = Math.floor(Services.telemetry.msSinceProcessStart() / 1000);
+    this._forensicsLogs.push(`${timeInSec}: ${what} - ${string}`);
   },
 
   _registerWithAddonManager: function (previousExperimentsProvider) {
@@ -1364,9 +1372,16 @@ Experiments.Experiments.prototype = {
 
 Experiments.ExperimentEntry = function (policy) {
   this._policy = policy || new Experiments.Policy();
-  this._log = Log.repository.getLoggerWithMessagePrefix(
+  let log = Log.repository.getLoggerWithMessagePrefix(
     "Browser.Experiments.Experiments",
     "ExperimentEntry #" + gExperimentEntryCounter++ + "::");
+  this._log = Object.create(log);
+  this._log.log = (level, string, params) => {
+    if (gExperiments) {
+      gExperiments._addToForensicsLog("ExperimentEntry", string);
+    }
+    log.log(level, string, params);
+  };
 
   // Is the experiment supposed to be running.
   this._enabled = false;
@@ -1635,8 +1650,7 @@ Experiments.ExperimentEntry.prototype = {
     let startSec = (this.startDate || 0) / 1000;
 
     this._log.trace("isApplicable() - now=" + now
-                    + ", randomValue=" + this._randomValue
-                    + ", data=" + JSON.stringify(this._manifestData));
+                    + ", randomValue=" + this._randomValue);
 
     // Not applicable if it already ran.
 

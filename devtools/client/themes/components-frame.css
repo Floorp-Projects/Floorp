@@ -13,7 +13,19 @@
   display: flex;
 }
 
+.frame-link .frame-link-source {
+  display: flex;
+}
+.frame-link a.frame-link-source {
+  cursor: pointer;
+  text-decoration: none;
+}
+.frame-link a.frame-link-source:hover {
+  text-decoration: underline;
+}
+
 .frame-link .frame-link-filename {
+  color: var(--theme-highlight-blue);
   text-overflow: ellipsis;
   overflow: hidden;
   flex: 1;
@@ -21,13 +33,6 @@
   /* overrides styling some tools have with anchors */
   text-decoration: none;
   font-style: normal;
-}
-.frame-link a.frame-link-filename {
-  cursor: pointer;
-  color: var(--theme-highlight-blue);
-}
-.frame-link a.frame-link-filename:hover {
-  text-decoration: underline;
 }
 
 .frame-link .frame-link-host {
@@ -47,11 +52,10 @@
   display: block;
 }
 
-.focused a.frame-link-filename,
-.focused span.frame-link-filename,
-.focused .frame-link-column,
-.focused .frame-link-line,
-.focused .frame-link-host,
-.focused .frame-link-colon {
+.focused .frame-link .frame-link-filename,
+.focused .frame-link .frame-link-column,
+.focused .frame-link .frame-link-line,
+.focused .frame-link .frame-link-host,
+.focused .frame-link .frame-link-colon {
   color: var(--theme-selection-color);
 }

@@ -3,6 +3,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from shared-head.js */
+"use strict";
+
 var doc = null, toolbox = null, panelWin = null, modifiedPrefs = [];
 
 function test() {
@@ -18,20 +21,21 @@ function test() {
       .then(cleanup, errorHandler);
   }, true);
 
-  content.location = "data:text/html;charset=utf8,test for dynamically registering and unregistering tools";
+  content.location = "data:text/html;charset=utf8,test for dynamically " +
+                     "registering and unregistering tools";
 }
 
 function testPrefsAreRespectedWhenReopeningToolbox() {
   let deferred = promise.defer();
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
-  info ("Closing toolbox to test after reopening");
+  info("Closing toolbox to test after reopening");
   gDevTools.closeToolbox(target).then(() => {
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.showToolbox(target)
+    let tabTarget = TargetFactory.forTab(gBrowser.selectedTab);
+    gDevTools.showToolbox(tabTarget)
       .then(testSelectTool)
       .then(() => {
-        info ("Toolbox has been reopened.  Checking UI state.");
+        info("Toolbox has been reopened.  Checking UI state.");
         testPreferenceAndUIStateIsConsistent();
         deferred.resolve();
       });
@@ -40,11 +44,11 @@ function testPrefsAreRespectedWhenReopeningToolbox() {
   return deferred.promise;
 }
 
-function testSelectTool(aToolbox) {
+function testSelectTool(devtoolsToolbox) {
   let deferred = promise.defer();
-  info ("Selecting the options panel");
+  info("Selecting the options panel");
 
-  toolbox = aToolbox;
+  toolbox = devtoolsToolbox;
   doc = toolbox.doc;
   toolbox.once("options-selected", (event, tool) => {
     ok(true, "Options panel selected via selectTool method");
@@ -57,51 +61,61 @@ function testSelectTool(aToolbox) {
 }
 
 function testPreferenceAndUIStateIsConsistent() {
-  let checkNodes = [...panelWin.document.querySelectorAll("#enabled-toolbox-buttons-box > checkbox")];
+  let checkNodes = [...panelWin.document.querySelectorAll(
+    "#enabled-toolbox-buttons-box input[type=checkbox]")];
   let toolboxButtonNodes = [...doc.querySelectorAll(".command-button")];
   toolboxButtonNodes.push(doc.getElementById("command-button-frames"));
   let toggleableTools = toolbox.toolboxButtons;
 
   // The noautohide button is only displayed in the browser toolbox
-  toggleableTools = toggleableTools.filter(tool => tool.id != "command-button-noautohide");
+  toggleableTools = toggleableTools.filter(
+    tool => tool.id != "command-button-noautohide");
 
   for (let tool of toggleableTools) {
     let isVisible = getBoolPref(tool.visibilityswitch);
 
-    let button = toolboxButtonNodes.filter(button => button.id === tool.id)[0];
-    is (!button.hasAttribute("hidden"), isVisible, "Button visibility matches pref for " + tool.id);
+    let button = toolboxButtonNodes.filter(
+      toolboxButton => toolboxButton.id === tool.id)[0];
+    is(!button.hasAttribute("hidden"), isVisible,
+      "Button visibility matches pref for " + tool.id);
 
-    let check = checkNodes.filter(node=>node.id === tool.id)[0];
-    is (check.checked, isVisible, "Checkbox should be selected based on current pref for " + tool.id);
+    let check = checkNodes.filter(node => node.id === tool.id)[0];
+    is(check.checked, isVisible,
+      "Checkbox should be selected based on current pref for " + tool.id);
   }
 }
 
 function testToggleToolboxButtons() {
-  let checkNodes = [...panelWin.document.querySelectorAll("#enabled-toolbox-buttons-box > checkbox")];
+  let checkNodes = [...panelWin.document.querySelectorAll(
+    "#enabled-toolbox-buttons-box input[type=checkbox]")];
   let toolboxButtonNodes = [...doc.querySelectorAll(".command-button")];
   let toggleableTools = toolbox.toolboxButtons;
 
   // The noautohide button is only displayed in the browser toolbox
-  toggleableTools = toggleableTools.filter(tool => tool.id != "command-button-noautohide");
-  toolboxButtonNodes = toolboxButtonNodes.filter(btn => btn.id != "command-button-noautohide");
+  toggleableTools = toggleableTools.filter(
+    tool => tool.id != "command-button-noautohide");
+  toolboxButtonNodes = toolboxButtonNodes.filter(
+    btn => btn.id != "command-button-noautohide");
 
-  is (checkNodes.length, toggleableTools.length, "All of the buttons are toggleable." );
-  is (checkNodes.length, toolboxButtonNodes.length, "All of the DOM buttons are toggleable." );
+  is(checkNodes.length, toggleableTools.length,
+    "All of the buttons are toggleable.");
+  is(checkNodes.length, toolboxButtonNodes.length,
+    "All of the DOM buttons are toggleable.");
 
   for (let tool of toggleableTools) {
     let id = tool.id;
-    let matchedCheckboxes = checkNodes.filter(node=>node.id === id);
-    let matchedButtons = toolboxButtonNodes.filter(button=>button.id === id);
-    is (matchedCheckboxes.length, 1,
+    let matchedCheckboxes = checkNodes.filter(node => node.id === id);
+    let matchedButtons = toolboxButtonNodes.filter(button => button.id === id);
+    is(matchedCheckboxes.length, 1,
       "There should be a single toggle checkbox for: " + id);
-    is (matchedButtons.length, 1,
+    is(matchedButtons.length, 1,
       "There should be a DOM button for: " + id);
-    is (matchedButtons[0], tool.button,
+    is(matchedButtons[0], tool.button,
       "DOM buttons should match for: " + id);
 
-    is (matchedCheckboxes[0].getAttribute("label"), tool.label,
+    is(matchedCheckboxes[0].nextSibling.textContent, tool.label,
       "The label for checkbox matches the tool definition.");
-    is (matchedButtons[0].getAttribute("tooltiptext"), tool.label,
+    is(matchedButtons[0].getAttribute("tooltiptext"), tool.label,
       "The tooltip for button matches the tool definition.");
   }
 
@@ -113,17 +127,19 @@ function testToggleToolboxButtons() {
 
   // Try checking each checkbox, making sure that it changes the preference
   for (let node of checkNodes) {
-    let tool = toggleableTools.filter(tool=>tool.id === node.id)[0];
+    let tool = toggleableTools.filter(
+      toggleableTool => toggleableTool.id === node.id)[0];
     let isVisible = getBoolPref(tool.visibilityswitch);
 
     testPreferenceAndUIStateIsConsistent();
-    toggleButton(node);
+    node.click();
     testPreferenceAndUIStateIsConsistent();
 
     let isVisibleAfterClick = getBoolPref(tool.visibilityswitch);
 
-    is (isVisible, !isVisibleAfterClick,
-      "Clicking on the node should have toggled visibility preference for " + tool.visibilityswitch);
+    is(isVisible, !isVisibleAfterClick,
+      "Clicking on the node should have toggled visibility preference for " +
+      tool.visibilityswitch);
   }
 
   return promise.resolve();
@@ -131,11 +147,6 @@ function testToggleToolboxButtons() {
 
 function getBoolPref(key) {
   return Services.prefs.getBoolPref(key);
-}
-
-function toggleButton(node) {
-  node.scrollIntoView();
-  EventUtils.synthesizeMouseAtCenter(node, {}, panelWin);
 }
 
 function cleanup() {

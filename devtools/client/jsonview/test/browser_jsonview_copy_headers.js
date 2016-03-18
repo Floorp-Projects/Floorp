@@ -10,7 +10,7 @@ const TEST_JSON_URL = URL_ROOT + "valid_json.json";
 add_task(function* () {
   info("Test valid JSON started");
 
-  let tab = yield addJsonViewTab(TEST_JSON_URL);
+  yield addJsonViewTab(TEST_JSON_URL);
 
   // Select the RawData tab
   yield selectJsonViewContentTab("headers");
@@ -22,7 +22,7 @@ add_task(function* () {
   let text = yield getElementText(".headersPanelBox .netInfoHeadersTable");
   isnot(text, "", "Headers text must not be empty");
 
-  let browser = gBrowser.selectedBrowser
+  let browser = gBrowser.selectedBrowser;
 
   // Verify JSON copy into the clipboard.
   yield waitForClipboardPromise(function setup() {

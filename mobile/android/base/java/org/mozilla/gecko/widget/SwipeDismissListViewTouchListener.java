@@ -26,11 +26,10 @@ import android.widget.AbsListView;
 import android.widget.AbsListView.RecyclerListener;
 import android.widget.ListView;
 
-import com.nineoldandroids.animation.Animator;
-import com.nineoldandroids.animation.AnimatorListenerAdapter;
-import com.nineoldandroids.animation.ValueAnimator;
-import com.nineoldandroids.view.ViewHelper;
-import com.nineoldandroids.view.ViewPropertyAnimator;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
+import android.view.ViewPropertyAnimator;
 
 import org.mozilla.gecko.R;
 
@@ -173,8 +172,8 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener {
                 // To reset the view to the correct height after its animation, the view's height
                 // is stored in its tag. Reset the view here.
                 if (tag instanceof Integer) {
-                    ViewHelper.setAlpha(view, 1f);
-                    ViewHelper.setTranslationX(view, 0);
+                    view.setAlpha(1f);
+                    view.setTranslationX(0);
                     final ViewGroup.LayoutParams lp = view.getLayoutParams();
                     lp.height = (int) tag;
                     view.setLayoutParams(lp);
@@ -255,7 +254,7 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener {
                     mDismissing = true;
                     final View downView = mDownView; // mDownView gets null'd before animation ends
                     final int downPosition = mDownPosition;
-                    ViewPropertyAnimator.animate(mDownView)
+                    mDownView.animate()
                             .translationX(dismissRight ? mViewWidth : -mViewWidth)
                             .alpha(0)
                             .setDuration(mAnimationTime)
@@ -267,7 +266,7 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener {
                             });
                 } else {
                     // cancel
-                    ViewPropertyAnimator.animate(mDownView)
+                    mDownView.animate()
                             .translationX(0)
                             .alpha(1)
                             .setDuration(mAnimationTime)
@@ -307,9 +306,8 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener {
                 }
 
                 if (mSwiping) {
-                    ViewHelper.setTranslationX(mDownView, deltaX);
-                    ViewHelper.setAlpha(mDownView, Math.max(0f, Math.min(1f,
-                            1f - 2f * Math.abs(deltaX) / mViewWidth)));
+                    mDownView.setTranslationX(deltaX);
+                    mDownView.setAlpha(Math.max(0f, Math.min(1f, 1f - 2f * Math.abs(deltaX) / mViewWidth)));
                     return true;
                 }
                 break;
