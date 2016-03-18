@@ -86,7 +86,7 @@ InvokeSetter(JSContext* cx, const Value& thisv, Value fval, HandleValue v);
 // NOTE: As with the ES6 spec operation, it's the caller's responsibility to
 //       ensure |fval| and |newTarget| are both |IsConstructor|.
 extern bool
-Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, HandleValue newTarget,
+Construct(JSContext* cx, HandleValue fval, const AnyConstructArgs& args, HandleValue newTarget,
           MutableHandleObject objp);
 
 // Call Construct(fval, args, newTarget), but use the given |thisv| as |this|
@@ -97,7 +97,7 @@ Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, HandleValu
 // |CreateThis|.  If that's not you, use Construct()!
 extern bool
 InternalConstructWithProvidedThis(JSContext* cx, HandleValue fval, HandleValue thisv,
-                                  const ConstructArgs& args, HandleValue newTarget,
+                                  const AnyConstructArgs& args, HandleValue newTarget,
                                   MutableHandleValue rval);
 
 /*
