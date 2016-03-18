@@ -55,6 +55,14 @@ public class GeckoApplication extends Application
         return app.mRefWatcher;
     }
 
+    public static void watchReference(Context context, Object object) {
+        if (context == null) {
+            return;
+        }
+
+        getRefWatcher(context).watch(object);
+    }
+
     @Override
     public Context getContext() {
         return this;
