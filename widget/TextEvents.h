@@ -71,6 +71,26 @@ struct AlternativeCharCode
 };
 
 /******************************************************************************
+ * mozilla::ShortcutKeyCandidate
+ *
+ * This stores a candidate of shortcut key combination.
+ ******************************************************************************/
+
+struct ShortcutKeyCandidate
+{
+  ShortcutKeyCandidate(uint32_t aCharCode, bool aIgnoreShift)
+    : mCharCode(aCharCode)
+    , mIgnoreShift(aIgnoreShift)
+  {
+  }
+  // The charCode value which must match keyboard shortcut definition.
+  uint32_t mCharCode;
+  // true if Shift state can be ignored.  Otherwise, Shift key state must
+  // match keyboard shortcut definition.
+  bool mIgnoreShift;
+};
+
+/******************************************************************************
  * mozilla::WidgetKeyboardEvent
  ******************************************************************************/
 
@@ -210,6 +230,22 @@ public:
   {
     return GetModifierForKeyName(mKeyNameIndex) != MODIFIER_NONE;
   }
+
+  /**
+   * Get the candidates for shortcut key.
+   *
+   * @param aCandidates [out] the candidate shortcut key combination list.
+   *                          the first item is most preferred.
+   */
+  void GetShortcutKeyCandidates(ShortcutKeyCandidateArray& aCandidates);
+
+  /**
+   * Get the candidates for access key.
+   *
+   * @param aCandidates [out] the candidate access key list.
+   *                          the first item is most preferred.
+   */
+  void GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates);
 
   static void Shutdown();
 
