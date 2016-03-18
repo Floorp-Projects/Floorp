@@ -155,6 +155,7 @@ PushChannelListener.prototype = {
         encryption_key: getHeaderField(aRequest, "Encryption-Key"),
         crypto_key: getHeaderField(aRequest, "Crypto-Key"),
         encryption: getHeaderField(aRequest, "Encryption"),
+        encoding: getHeaderField(aRequest, "Content-Encoding"),
       };
       let cryptoParams = getCryptoParams(headers);
       let msg = concatArray(this._message);
