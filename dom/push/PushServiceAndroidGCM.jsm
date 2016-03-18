@@ -114,6 +114,7 @@ this.PushServiceAndroidGCM = {
           encryption_key: data.enckey,
           crypto_key: data.cryptokey,
           encryption: data.enc,
+          encoding: data.con,
         };
         cryptoParams = getCryptoParams(headers);
         // Ciphertext is (urlsafe) Base 64 encoded.
