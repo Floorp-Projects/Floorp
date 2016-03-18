@@ -563,6 +563,39 @@ def build_project(include_project_configure, build_env, help):
     return ret
 
 
+# set RELEASE_BUILD and NIGHTLY_BUILD variables depending on the cycle we're in
+# The logic works like this:
+# - if we have "a1" in GRE_MILESTONE, we're building Nightly (define NIGHTLY_BUILD)
+# - otherwise, if we have "a" in GRE_MILESTONE, we're building Nightly or Aurora
+# - otherwise, we're building Release/Beta (define RELEASE_BUILD)
+@depends(check_build_environment)
+@advanced
+def milestone(build_env):
+    milestone_path = os.path.join(build_env['TOPSRCDIR'],
+                                  'config',
+                                  'milestone.txt')
+    with open(milestone_path, 'r') as fh:
+        milestone = fh.read().splitlines()[-1]
+
+    set_config('GRE_MILESTONE', milestone)
+
+    is_nightly = is_release = False
+
+    if 'a1' in milestone:
+        set_config('NIGHTLY_BUILD', '1')
+        set_define('NIGHTLY_BUILD', '1')
+        add_old_configure_assignment('NIGHTLY_BUILD', '1')
+        is_nightly = True
+    elif 'a' not in milestone:
+        set_config('RELEASE_BUILD', '1')
+        set_define('RELEASE_BUILD', '1')
+        add_old_configure_assignment('RELEASE_BUILD', '1')
+        is_release = True
+
+    return namespace(version=milestone,
+                     is_nightly=is_nightly,
+                     is_release=is_release)
+
 # This is temporary until js/src/configure and configure are merged.
 # Use instead of option() in js/moz.configure
 @template
