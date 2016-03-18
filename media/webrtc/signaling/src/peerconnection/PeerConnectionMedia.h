@@ -17,13 +17,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIProtocolProxyCallback.h"
 
-#ifdef USE_FAKE_MEDIA_STREAMS
-#include "FakeMediaStreams.h"
-#else
-#include "DOMMediaStream.h"
-#include "MediaSegment.h"
-#endif
-
 #include "signaling/src/jsep/JsepSession.h"
 #include "AudioSegment.h"
 
@@ -87,7 +80,11 @@ public:
   nsresult StorePipeline(const std::string& trackId,
                          const RefPtr<MediaPipeline>& aPipeline);
 
-  virtual void AddTrack(const std::string& trackId) { mTracks.insert(trackId); }
+  virtual void AddTrack(const std::string& trackId,
+                        const RefPtr<dom::MediaStreamTrack>& aTrack)
+  {
+    mTracks.insert(std::make_pair(trackId, aTrack));
+  }
   void RemoveTrack(const std::string& trackId);
   bool HasTrack(const std::string& trackId) const
   {
@@ -100,6 +97,15 @@ public:
   const std::map<std::string, RefPtr<MediaPipeline>>&
   GetPipelines() const { return mPipelines; }
   RefPtr<MediaPipeline> GetPipelineByTrackId_m(const std::string& trackId);
+  dom::MediaStreamTrack* GetTrackById(const std::string& trackId)
+  {
+    auto it = mTracks.find(trackId);
+    if (it == mTracks.end()) {
+      return nullptr;
+    }
+
+    return it->second;
+  }
   const std::string& GetId() const { return mId; }
 
   void DetachTransport_s();
@@ -114,7 +120,7 @@ protected:
   const std::string mId;
   // These get set up before we generate our local description, the pipelines
   // and conduits are set up once offer/answer completes.
-  std::set<std::string> mTracks;
+  std::map<std::string, RefPtr<dom::MediaStreamTrack>> mTracks;
   std::map<std::string, RefPtr<MediaPipeline>> mPipelines;
 };
 
@@ -132,6 +138,7 @@ public:
 
   nsresult TakePipelineFrom(RefPtr<LocalSourceStreamInfo>& info,
                             const std::string& oldTrackId,
+                            dom::MediaStreamTrack& aNewTrack,
                             const std::string& newTrackId);
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
@@ -195,26 +202,21 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   void UpdatePrincipal_m(nsIPrincipal* aPrincipal);
-
-  // Track sources may only be set in the same order as tracks were added.
-  // Returns true if the source was added, false otherwise.
-  bool SetTrackSource(const std::string& track, RemoteTrackSource* source)
-  {
-    size_t nextIndex = mTrackSources.size();
-    if (mTrackIdMap.size() < nextIndex || mTrackIdMap[nextIndex] != track) {
-      return false;
-    }
-    mTrackSources.push_back(source);
-    return true;
-  }
 #endif
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteSourceStreamInfo)
 
-  virtual void AddTrack(const std::string& track) override
+  void AddTrack(const std::string& trackId,
+                const RefPtr<dom::MediaStreamTrack>& aTrack) override
   {
-    mTrackIdMap.push_back(track);
-    SourceStreamInfo::AddTrack(track);
+    mTrackIdMap.push_back(trackId);
+    MOZ_RELEASE_ASSERT(GetNumericTrackId(trackId) == aTrack->mTrackID);
+    SourceStreamInfo::AddTrack(trackId, aTrack);
+  }
+
+  TrackID GetNextAvailableNumericTrackId() const
+  {
+    return mTrackIdMap.size() + 1;
   }
 
   TrackID GetNumericTrackId(const std::string& trackId) const
@@ -316,8 +318,9 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   nsresult UpdateMediaPipelines(const JsepSession& session);
 
   // Add a track (main thread only)
-  nsresult AddTrack(DOMMediaStream* aMediaStream,
+  nsresult AddTrack(DOMMediaStream& aMediaStream,
                     const std::string& streamId,
+                    dom::MediaStreamTrack& aTrack,
                     const std::string& trackId);
 
   nsresult RemoveLocalTrack(const std::string& streamId,
@@ -351,11 +354,11 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // Add a remote stream.
   nsresult AddRemoteStream(RefPtr<RemoteSourceStreamInfo> aInfo);
 
-  nsresult ReplaceTrack(const std::string& oldStreamId,
-                        const std::string& oldTrackId,
-                        DOMMediaStream* aNewStream,
-                        const std::string& newStreamId,
-                        const std::string& aNewTrack);
+  nsresult ReplaceTrack(const std::string& aOldStreamId,
+                        const std::string& aOldTrackId,
+                        dom::MediaStreamTrack& aNewTrack,
+                        const std::string& aNewStreamId,
+                        const std::string& aNewTrackId);
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // In cases where the peer isn't yet identified, we disable the pipeline (not

@@ -21,6 +21,8 @@ public:
   void RemoveInput(MediaInputPort* aPort) override;
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
+  void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) override;
+
 protected:
   // Only non-ended tracks are allowed to persist in this map.
   struct TrackMapEntry {
@@ -44,6 +46,10 @@ protected:
     TrackID mInputTrackID;
     TrackID mOutputTrackID;
     nsAutoPtr<MediaSegment> mSegment;
+    // These are direct track listeners that have been added to this
+    // TrackUnionStream-track and forwarded to the input track. We will update
+    // these when this track's disabled status changes.
+    nsTArray<RefPtr<MediaStreamTrackDirectListener>> mOwnedDirectListeners;
   };
 
   // Add the track to this stream, retaining its TrackID if it has never
