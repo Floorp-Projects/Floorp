@@ -1466,7 +1466,11 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
     ComputeEffectiveTransformsForChildren(idealTransform);
   }
 
-  ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
+  if (idealTransform.CanDraw2D()) {
+    ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
+  } else {
+    ComputeEffectiveTransformForMaskLayers(Matrix4x4());
+  }
 }
 
 void
