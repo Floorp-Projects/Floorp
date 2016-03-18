@@ -345,6 +345,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         }
     };
 
+    // Barrier methods so we can have ReadBarriered<Debugger*>.
+    static void readBarrier(Debugger* dbg) {
+        InternalBarrierMethods<JSObject*>::readBarrier(dbg->object);
+    }
+    static void writeBarrierPost(Debugger** vp, Debugger* prev, Debugger* next) {}
+
   private:
     HeapPtrNativeObject object;         /* The Debugger object. Strong reference. */
     WeakGlobalObjectSet debuggees;      /* Debuggee globals. Cross-compartment weak references. */
@@ -353,7 +359,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     bool enabled;
     bool allowUnobservedAsmJS;
 
-    // Wether to enable code coverage on the Debuggee.
+    // Whether to enable code coverage on the Debuggee.
     bool collectCoverageInfo;
 
     JSCList breakpoints;                /* Circular list of all js::Breakpoints in this debugger */

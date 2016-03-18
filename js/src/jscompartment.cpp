@@ -1015,7 +1015,7 @@ JSCompartment::updateDebuggerObservesFlag(unsigned flag)
                            ? unsafeUnbarrieredMaybeGlobal()
                            : maybeGlobal();
     const GlobalObject::DebuggerVector* v = global->getDebuggers();
-    for (Debugger * const* p = v->begin(); p != v->end(); p++) {
+    for (auto p = v->begin(); p != v->end(); p++) {
         Debugger* dbg = *p;
         if (flag == DebuggerObservesAllExecution ? dbg->observesAllExecution() :
             flag == DebuggerObservesCoverage ? dbg->observesCoverage() :

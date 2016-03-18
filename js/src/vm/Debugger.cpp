@@ -646,7 +646,7 @@ Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr frame,
 Debugger::hasLiveHook(GlobalObject* global, Hook which)
 {
     if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
-        for (Debugger** p = debuggers->begin(); p != debuggers->end(); p++) {
+        for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
             Debugger* dbg = *p;
             if (dbg->enabled && dbg->getHook(which))
                 return true;
@@ -1572,7 +1572,7 @@ Debugger::dispatchHook(JSContext* cx, HookIsEnabledFun hookIsEnabled, FireHookFu
     AutoValueVector triggered(cx);
     Handle<GlobalObject*> global = cx->global();
     if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
-        for (Debugger** p = debuggers->begin(); p != debuggers->end(); p++) {
+        for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
             Debugger* dbg = *p;
             if (dbg->enabled && hookIsEnabled(dbg)) {
                 if (!triggered.append(ObjectValue(*dbg->toJSObject())))
@@ -1753,7 +1753,7 @@ Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp)
         JSScript* trappingScript = iter.script();
         GlobalObject* global = cx->global();
         if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
-            for (Debugger** p = debuggers->begin(); p != debuggers->end(); p++) {
+            for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
                 Debugger* dbg = *p;
                 for (FrameMap::Range r = dbg->frames.all(); !r.empty(); r.popFront()) {
                     AbstractFramePtr frame = r.front().key();
@@ -1890,7 +1890,7 @@ Debugger::slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSav
                                       double when, GlobalObject::DebuggerVector& dbgs)
 {
     MOZ_ASSERT(!dbgs.empty());
-    mozilla::DebugOnly<Debugger**> begin = dbgs.begin();
+    mozilla::DebugOnly<ReadBarriered<Debugger*>*> begin = dbgs.begin();
 
     // Root all the Debuggers while we're iterating over them;
     // appendAllocationSite calls JSCompartment::wrap, and thus can GC.
@@ -1900,17 +1900,12 @@ Debugger::slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSav
     // Handle), but in this case, we're iterating over a global's list of
     // Debuggers, and globals only hold their Debuggers weakly.
     Rooted<GCVector<JSObject*>> activeDebuggers(cx, GCVector<JSObject*>(cx));
-    for (Debugger** dbgp = dbgs.begin(); dbgp < dbgs.end(); dbgp++) {
-        // Since we're pulling these Debugger objects out of the GlobalObject's
-        // debugger array, which holds them only weakly, we need to let the
-        // incremental GC know that a possibly previously unreachable Debugger
-        // object just became reachable.
-        InternalBarrierMethods<JSObject*>::readBarrier((*dbgp)->object);
+    for (auto dbgp = dbgs.begin(); dbgp < dbgs.end(); dbgp++) {
         if (!activeDebuggers.append((*dbgp)->object))
             return false;
     }
 
-    for (Debugger** dbgp = dbgs.begin(); dbgp < dbgs.end(); dbgp++) {
+    for (auto dbgp = dbgs.begin(); dbgp < dbgs.end(); dbgp++) {
         // The set of debuggers had better not change while we're iterating,
         // such that the vector gets reallocated.
         MOZ_ASSERT(dbgs.begin() == begin);
@@ -2517,8 +2512,7 @@ Debugger::cannotTrackAllocations(const GlobalObject& global)
 Debugger::isObservedByDebuggerTrackingAllocations(const GlobalObject& debuggee)
 {
     if (auto* v = debuggee.getDebuggers()) {
-        Debugger** p;
-        for (p = v->begin(); p != v->end(); p++) {
+        for (auto p = v->begin(); p != v->end(); p++) {
             if ((*p)->trackingAllocationSites && (*p)->enabled) {
                 return true;
             }
@@ -2686,7 +2680,7 @@ Debugger::markAllIteratively(GCMarker* trc)
              */
             const GlobalObject::DebuggerVector* debuggers = global->getDebuggers();
             MOZ_ASSERT(debuggers);
-            for (Debugger * const* p = debuggers->begin(); p != debuggers->end(); p++) {
+            for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
                 Debugger* dbg = *p;
 
                 /*
@@ -3551,7 +3545,7 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
          */
         if (c->isDebuggee()) {
             GlobalObject::DebuggerVector* v = c->maybeGlobal()->getDebuggers();
-            for (Debugger** p = v->begin(); p != v->end(); p++) {
+            for (auto p = v->begin(); p != v->end(); p++) {
                 JSCompartment* next = (*p)->object->compartment();
                 if (Find(visited, next) == visited.end() && !visited.append(next))
                     return false;
@@ -3659,11 +3653,11 @@ Debugger::recomputeDebuggeeZoneSet()
     }
 }
 
-template<typename V>
-static Debugger**
-findDebuggerInVector(Debugger* dbg, V* vec)
+template <typename T>
+static T*
+findDebuggerInVector(Debugger* dbg, Vector<T, 0, js::SystemAllocPolicy>* vec)
 {
-    Debugger** p;
+    T* p;
     for (p = vec->begin(); p != vec->end(); p++) {
         if (*p == dbg)
             break;

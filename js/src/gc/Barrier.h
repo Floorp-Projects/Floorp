@@ -173,6 +173,11 @@
  * Barriers designed to be used externally are provided in js/RootingAPI.h.
  * These external barriers call into the same post-barrier implementations at
  * InternalBarrierMethods<T>::post via an indirect call to Heap(.+)Barrier.
+ *
+ * These clases are designed to be used to wrap GC thing pointers or values that
+ * act like them (i.e. JS::Value and jsid).  It is possible to use them for
+ * other types by supplying the necessary barrier implementations but this
+ * is not usually necessary and should be done with caution.
  */
 
 class JSAtom;
@@ -322,11 +327,7 @@ class BarrieredBase : public BarrieredBaseMixins<T>
 {
   protected:
     // BarrieredBase is not directly instantiable.
-    explicit BarrieredBase(T v) : value(v) {
-#ifdef DEBUG
-        assertTypeConstraints();
-#endif
-    }
+    explicit BarrieredBase(T v) : value(v) {}
 
     // Storage for all barrier classes. |value| must be a GC thing reference
     // type: either a direct pointer to a GC thing or a supported tagged
@@ -339,13 +340,6 @@ class BarrieredBase : public BarrieredBaseMixins<T>
     // Friending to the generic template leads to a number of unintended consequences, including
     // template resolution ambiguity and a circular dependency with Tracing.h.
     T* unsafeUnbarrieredForTracing() { return &value; }
-
-  private:
-#ifdef DEBUG
-    // Static type assertions about T must be moved out of line to avoid
-    // circular dependencies between Barrier classes and GC memory definitions.
-    void assertTypeConstraints() const;
-#endif
 };
 
 // Base class for barriered pointer types that intercept only writes.
