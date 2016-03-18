@@ -263,17 +263,16 @@ function waitForProviderLoad(cb) {
     Services.obs.removeObserver(providerSet, "social:provider-enabled");
     info("social:provider-enabled observer was notified");
     waitForCondition(function() {
-      let sbrowser = document.getElementById("social-sidebar-browser");
       let provider = SocialSidebar.provider;
       let postActivation = provider && gBrowser.contentDocument.location.href == provider.origin + "/browser/browser/base/content/test/social/social_postActivation.html";
 
       return provider &&
              postActivation &&
-             sbrowser.docShellIsActive;
+             SocialSidebar.browser.docShellIsActive;
     }, function() {
       // executeSoon to let the browser UI observers run first
       executeSoon(cb);
     },
-    "waitForProviderLoad: provider profile was not set");
+    "waitForProviderLoad: provider sidebar was not set, "+SocialSidebar.provider+", "+SocialSidebar.browser.docShellIsActive);
   }, "social:provider-enabled", false);
 }
