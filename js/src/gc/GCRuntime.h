@@ -962,8 +962,7 @@ class GCRuntime
     void sweepZoneAfterCompacting(Zone* zone);
     bool relocateArenas(Zone* zone, JS::gcreason::Reason reason, Arena*& relocatedListOut,
                         SliceBudget& sliceBudget);
-    void updateAllCellPointersParallel(MovingTracer* trc, Zone* zone);
-    void updateAllCellPointersSerial(MovingTracer* trc, Zone* zone);
+    void updateAllCellPointers(MovingTracer* trc, Zone* zone);
     void updatePointersToRelocatedCells(Zone* zone);
     void protectAndHoldArenas(Arena* arenaList);
     void unprotectHeldRelocatedArenas();
