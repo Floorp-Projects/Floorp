@@ -209,6 +209,7 @@ let Converter = Class({
     let clientBaseUrl = "resource://devtools/client/";
     let baseUrl = clientBaseUrl + "jsonview/";
     let themeVarsUrl = clientBaseUrl + "themes/variables.css";
+    let commonUrl = clientBaseUrl + "themes/common.css";
 
     return "<!DOCTYPE html>\n" +
       "<html class=\"" + themeClassName + "\">" +
@@ -216,6 +217,8 @@ let Converter = Class({
       "<base href=\"" + this.htmlEncode(baseUrl) + "\">" +
       "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
         themeVarsUrl + "\">" +
+      "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
+        commonUrl + "\">" +
       "<link rel=\"stylesheet\" type=\"text/css\" href=\"css/main.css\">" +
       "<script data-main=\"viewer-config\" src=\"lib/require.js\"></script>" +
       "</head><body>" +
