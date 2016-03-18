@@ -17,6 +17,10 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 // WeakMap[Extension -> BrowserAction]
 var browserActionMap = new WeakMap();
 
+function browserActionOf(extension) {
+  return browserActionMap.get(extension);
+}
+
 // Responsible for the browser_action section of the manifest as well
 // as the associated popup.
 function BrowserAction(options, extension) {
@@ -199,12 +203,6 @@ BrowserAction.prototype = {
   },
 };
 
-BrowserAction.for = (extension) => {
-  return browserActionMap.get(extension);
-};
-
-global.browserActionFor = BrowserAction.for;
-
 /* eslint-disable mozilla/balanced-listeners */
 extensions.on("manifest_browser_action", (type, directive, extension, manifest) => {
   let browserAction = new BrowserAction(manifest.browser_action, extension);
@@ -228,20 +226,20 @@ extensions.registerSchemaAPI("browserAction", null, (extension, context) => {
           let tab = TabManager.activeTab;
           fire(TabManager.convert(extension, tab));
         };
-        BrowserAction.for(extension).on("click", listener);
+        browserActionOf(extension).on("click", listener);
         return () => {
-          BrowserAction.for(extension).off("click", listener);
+          browserActionOf(extension).off("click", listener);
         };
       }).api(),
 
       enable: function(tabId) {
         let tab = tabId !== null ? TabManager.getTab(tabId) : null;
-        BrowserAction.for(extension).setProperty(tab, "enabled", true);
+        browserActionOf(extension).setProperty(tab, "enabled", true);
       },
 
       disable: function(tabId) {
         let tab = tabId !== null ? TabManager.getTab(tabId) : null;
-        BrowserAction.for(extension).setProperty(tab, "enabled", false);
+        browserActionOf(extension).setProperty(tab, "enabled", false);
       },
 
       setTitle: function(details) {
@@ -252,30 +250,30 @@ extensions.registerSchemaAPI("browserAction", null, (extension, context) => {
         if (tab && title == "") {
           title = null;
         }
-        BrowserAction.for(extension).setProperty(tab, "title", title);
+        browserActionOf(extension).setProperty(tab, "title", title);
       },
 
       getTitle: function(details) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
-        let title = BrowserAction.for(extension).getProperty(tab, "title");
+        let title = browserActionOf(extension).getProperty(tab, "title");
         return Promise.resolve(title);
       },
 
       setIcon: function(details) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         let icon = IconDetails.normalize(details, extension, context);
-        BrowserAction.for(extension).setProperty(tab, "icon", icon);
+        browserActionOf(extension).setProperty(tab, "icon", icon);
         return Promise.resolve();
       },
 
       setBadgeText: function(details) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
-        BrowserAction.for(extension).setProperty(tab, "badgeText", details.text);
+        browserActionOf(extension).setProperty(tab, "badgeText", details.text);
       },
 
       getBadgeText: function(details) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
-        let text = BrowserAction.for(extension).getProperty(tab, "badgeText");
+        let text = browserActionOf(extension).getProperty(tab, "badgeText");
         return Promise.resolve(text);
       },
 
@@ -287,23 +285,23 @@ extensions.registerSchemaAPI("browserAction", null, (extension, context) => {
         // For internal consistency, we currently resolve both relative to the
         // calling context.
         let url = details.popup && context.uri.resolve(details.popup);
-        BrowserAction.for(extension).setProperty(tab, "popup", url);
+        browserActionOf(extension).setProperty(tab, "popup", url);
       },
 
       getPopup: function(details) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
-        let popup = BrowserAction.for(extension).getProperty(tab, "popup");
+        let popup = browserActionOf(extension).getProperty(tab, "popup");
         return Promise.resolve(popup);
       },
 
       setBadgeBackgroundColor: function(details) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
-        BrowserAction.for(extension).setProperty(tab, "badgeBackgroundColor", details.color);
+        browserActionOf(extension).setProperty(tab, "badgeBackgroundColor", details.color);
       },
 
       getBadgeBackgroundColor: function(details, callback) {
         let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
-        let color = BrowserAction.for(extension).getProperty(tab, "badgeBackgroundColor");
+        let color = browserActionOf(extension).getProperty(tab, "badgeBackgroundColor");
         return Promise.resolve(color);
       },
     },
