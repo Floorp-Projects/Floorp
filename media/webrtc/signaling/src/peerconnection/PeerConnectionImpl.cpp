@@ -1806,26 +1806,27 @@ PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
           MOZ_ASSERT(false);
           continue;
         }
-        info->AddTrack(track->GetTrackId());
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
         RefPtr<RemoteTrackSource> source = new RemoteTrackSource(principal);
-        DebugOnly<bool> sourceSet =
-          info->SetTrackSource(track->GetTrackId(), source);
-        NS_ASSERTION(sourceSet, "TrackSource was added in the wrong order. "
-                                "Did someone add a track from elsewhere?");
-        TrackID trackID = info->GetNumericTrackId(track->GetTrackId());
-        if (track->GetMediaType() == SdpMediaSection::kAudio) {
-          info->GetMediaStream()->CreateDOMTrack(trackID,
-                                                 MediaSegment::AUDIO,
-                                                 nsString(),
-                                                 source);
-        } else {
-          info->GetMediaStream()->CreateDOMTrack(trackID,
-                                                 MediaSegment::VIDEO,
-                                                 nsString(),
-                                                 source);
-        }
+#else
+        RefPtr<MediaStreamTrackSource> source = new MediaStreamTrackSource();
 #endif
+        TrackID trackID = info->GetNextAvailableNumericTrackId();
+        RefPtr<MediaStreamTrack> domTrack;
+        if (track->GetMediaType() == SdpMediaSection::kAudio) {
+          domTrack =
+            info->GetMediaStream()->CreateDOMTrack(trackID,
+                                                   MediaSegment::AUDIO,
+                                                   nsString(),
+                                                   source);
+        } else {
+          domTrack =
+            info->GetMediaStream()->CreateDOMTrack(trackID,
+                                                   MediaSegment::VIDEO,
+                                                   nsString(),
+                                                   source);
+        }
+        info->AddTrack(track->GetTrackId(), domTrack);
         CSFLogDebug(logTag, "Added remote track %s/%s",
                     info->GetId().c_str(), track->GetTrackId().c_str());
       } else {
@@ -2257,7 +2258,7 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
 
   std::string streamId = PeerConnectionImpl::GetStreamId(aMediaStream);
   std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
-  nsresult res = mMedia->AddTrack(&aMediaStream, streamId, trackId);
+  nsresult res = mMedia->AddTrack(aMediaStream, streamId, aTrack, trackId);
   if (NS_FAILED(res)) {
     return res;
   }
@@ -2412,7 +2413,7 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
 
   rv = media()->ReplaceTrack(origStreamId,
                              origTrackId,
-                             aWithTrack.mOwningStream,
+                             aWithTrack,
                              newStreamId,
                              newTrackId);
 

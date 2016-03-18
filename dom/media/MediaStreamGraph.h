@@ -292,12 +292,19 @@ public:
  */
 class MediaStreamTrackDirectListener : public MediaStreamTrackListener
 {
+  friend class SourceMediaStream;
+  friend class TrackUnionStream;
+
 public:
   /*
    * This will be called on any MediaStreamTrackDirectListener added to a
    * SourceMediaStream when AppendToTrack() is called for the listener's bound
    * track. The MediaSegment will be the RawSegment (unresampled) if available
-   * in AppendToTrack(). Note that NotifyQueuedTrackChanges() calls will also
+   * in AppendToTrack().
+   * If the track is enabled at the source but has been disabled in one of the
+   * streams in between the source and where it was originally added, aMedia
+   * will be a disabled version of the one passed to AppendToTrack() as well.
+   * Note that NotifyQueuedTrackChanges() calls will also
    * still occur.
    */
   virtual void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
@@ -332,6 +339,50 @@ public:
 
 protected:
   virtual ~MediaStreamTrackDirectListener() {}
+
+  void MirrorAndDisableSegment(AudioSegment& aFrom, AudioSegment& aTo)
+  {
+    aTo.Clear();
+    aTo.AppendNullData(aFrom.GetDuration());
+  }
+
+  void NotifyRealtimeTrackDataAndApplyTrackDisabling(MediaStreamGraph* aGraph,
+                                                     StreamTime aTrackOffset,
+                                                     MediaSegment& aMedia)
+  {
+    if (mDisabledCount == 0) {
+      NotifyRealtimeTrackData(aGraph, aTrackOffset, aMedia);
+      return;
+    }
+
+    if (!mMedia) {
+      mMedia = aMedia.CreateEmptyClone();
+    }
+    if (aMedia.GetType() == MediaSegment::AUDIO) {
+      MirrorAndDisableSegment(static_cast<AudioSegment&>(aMedia),
+                              static_cast<AudioSegment&>(*mMedia));
+    } else {
+      MOZ_CRASH("Unsupported media type");
+    }
+    NotifyRealtimeTrackData(aGraph, aTrackOffset, *mMedia);
+  }
+
+  void IncreaseDisabled()
+  {
+    ++mDisabledCount;
+  }
+  void DecreaseDisabled()
+  {
+    --mDisabledCount;
+    MOZ_ASSERT(mDisabledCount >= 0, "Double decrease");
+  }
+
+  // Matches the number of disabled streams to which this listener is attached.
+  // The number of streams are those between the stream the listener was added
+  // and the SourceMediaStream that is the input of the data.
+  Atomic<int32_t> mDisabledCount;
+
+  nsAutoPtr<MediaSegment> mMedia;
 };
 
 /**
@@ -992,11 +1043,7 @@ public:
   }
 
   // Overriding allows us to hold the mMutex lock while changing the track enable status
-  void
-  SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) override {
-    MutexAutoLock lock(mMutex);
-    MediaStream::SetTrackEnabledImpl(aTrackID, aEnabled);
-  }
+  void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) override;
 
   // Overriding allows us to ensure mMutex is locked while changing the track enable status
   void

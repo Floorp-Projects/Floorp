@@ -438,11 +438,15 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
                           " has moved from level " << pipeline->level() <<
                           " to level " << level <<
                           ". This requires re-creating the MediaPipeline.");
+    RefPtr<dom::MediaStreamTrack> domTrack =
+      stream->GetTrackById(aTrack.GetTrackId());
+    MOZ_ASSERT(domTrack, "MediaPipeline existed for a track, but no MediaStreamTrack");
+
     // Since we do not support changing the conduit on a pre-existing
     // MediaPipeline
     pipeline = nullptr;
     stream->RemoveTrack(aTrack.GetTrackId());
-    stream->AddTrack(aTrack.GetTrackId());
+    stream->AddTrack(aTrack.GetTrackId(), domTrack);
   }
 
   if (pipeline) {
@@ -502,7 +506,7 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
         mPC->GetHandle(),
         mPC->GetMainThread().get(),
         mPC->GetSTSThread(),
-        stream->GetMediaStream()->GetInputStream(),
+        stream->GetMediaStream()->GetInputStream()->AsSourceStream(),
         aTrack.GetTrackId(),
         numericTrackId,
         aLevel,
@@ -516,7 +520,7 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
         mPC->GetHandle(),
         mPC->GetMainThread().get(),
         mPC->GetSTSThread(),
-        stream->GetMediaStream()->GetInputStream(),
+        stream->GetMediaStream()->GetInputStream()->AsSourceStream(),
         aTrack.GetTrackId(),
         numericTrackId,
         aLevel,
@@ -566,15 +570,18 @@ MediaPipelineFactory::CreateMediaPipelineSending(
   RefPtr<LocalSourceStreamInfo> stream =
       mPCMedia->GetLocalStreamById(aTrack.GetStreamId());
 
+  dom::MediaStreamTrack* track =
+    stream->GetTrackById(aTrack.GetTrackId());
+  MOZ_ASSERT(track);
+
   // Now we have all the pieces, create the pipeline
   RefPtr<MediaPipelineTransmit> pipeline = new MediaPipelineTransmit(
       mPC->GetHandle(),
       mPC->GetMainThread().get(),
       mPC->GetSTSThread(),
-      stream->GetMediaStream(),
+      track,
       aTrack.GetTrackId(),
       aLevel,
-      aTrack.GetMediaType() == SdpMediaSection::kVideo,
       aConduit,
       aRtpFlow,
       aRtcpFlow,
