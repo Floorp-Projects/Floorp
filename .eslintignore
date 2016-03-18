@@ -90,7 +90,7 @@ devtools/client/inspector/fonts/**
 devtools/client/inspector/shared/test/**
 devtools/client/inspector/test/**
 devtools/client/inspector/*.js
-devtools/client/jsonview/**
+devtools/client/jsonview/lib/**
 devtools/client/memory/**
 devtools/client/netmonitor/test/**
 devtools/client/netmonitor/har/test/**
