@@ -662,6 +662,7 @@ void
 AudioCallbackDriver::Destroy()
 {
   STREAM_LOG(LogLevel::Debug, ("AudioCallbackDriver destroyed."));
+  mAudioInput = nullptr;
   mAudioStream.reset();
 }
 
