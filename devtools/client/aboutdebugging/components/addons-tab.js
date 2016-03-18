@@ -5,18 +5,19 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-const Services = require("Services");
-
 const { createFactory, createClass, DOM: dom } =
   require("devtools/client/shared/vendor/react");
+const Services = require("Services");
+
 const AddonsControls = createFactory(require("./addons-controls"));
+const AddonTarget = createFactory(require("./addon-target"));
 const TabHeader = createFactory(require("./tab-header"));
 const TargetList = createFactory(require("./target-list"));
 
-const ExtensionIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 
+const ExtensionIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 const CHROME_ENABLED_PREF = "devtools.chrome.enabled";
 const REMOTE_ENABLED_PREF = "devtools.debugger.remote-enabled";
 
@@ -54,18 +55,22 @@ module.exports = createClass({
     let { client } = this.props;
     let { debugDisabled, extensions: targets } = this.state;
     let name = Strings.GetStringFromName("extensions");
+    let targetClass = AddonTarget;
 
     return dom.div({
       id: "tab-addons",
       className: "tab",
       role: "tabpanel",
-      "aria-labelledby": "tab-addons-header-name" },
+      "aria-labelledby": "tab-addons-header-name"
+    },
     TabHeader({
       id: "tab-addons-header-name",
-      name: Strings.GetStringFromName("addons") }),
+      name: Strings.GetStringFromName("addons")
+    }),
     AddonsControls({ debugDisabled }),
     dom.div({ id: "addons" },
-      TargetList({ name, targets, client, debugDisabled })));
+      TargetList({ name, targets, client, debugDisabled, targetClass })
+    ));
   },
 
   updateDebugStatus() {
@@ -82,10 +87,10 @@ module.exports = createClass({
         return {
           name: addon.name,
           icon: addon.iconURL || ExtensionIcon,
-          type: addon.type,
           addonID: addon.id
         };
       });
+
       this.setState({ extensions });
     });
   },

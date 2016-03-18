@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-env browser */
+/* globals AddonManager */
 
 "use strict";
 
@@ -10,9 +11,9 @@ loader.lazyImporter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 
 const { Cc, Ci } = require("chrome");
+const { createClass, DOM: dom } =
+  require("devtools/client/shared/vendor/react");
 const Services = require("Services");
-
-const { createClass, DOM: dom } = require("devtools/client/shared/vendor/react");
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
