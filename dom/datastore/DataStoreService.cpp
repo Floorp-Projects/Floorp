@@ -410,9 +410,7 @@ public:
         return;
       }
 
-      AutoSafeJSContext cx;
-      mRequest = store->OpenCursor(cx, JS::UndefinedHandleValue,
-                                   IDBCursorDirection::Prev, error);
+      mRequest = store->OpenCursor(IDBCursorDirection::Prev, error);
       if (NS_WARN_IF(error.Failed())) {
         return;
       }

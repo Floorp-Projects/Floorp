@@ -2089,6 +2089,7 @@ IDBObjectStore::OpenCursorInternal(bool aKeysOnly,
                                    ErrorResult& aRv)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT_IF(!aCx, aRange.isUndefined());
 
   if (mDeletedSpec) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
