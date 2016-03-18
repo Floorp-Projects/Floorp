@@ -23,21 +23,6 @@ namespace js {
 
 #ifdef DEBUG
 
-template <typename T>
-void
-BarrieredBase<T>::assertTypeConstraints() const
-{
-    static_assert(mozilla::IsBaseOf<gc::Cell, typename mozilla::RemovePointer<T>::Type>::value ||
-                  mozilla::IsSame<JS::Value, T>::value ||
-                  mozilla::IsSame<jsid, T>::value ||
-                  mozilla::IsSame<TaggedProto, T>::value,
-                  "ensure only supported types are instantiated with barriers");
-}
-#define INSTANTIATE_ALL_VALID_TYPES(type) \
-    template void BarrieredBase<type>::assertTypeConstraints() const;
-FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TYPES)
-#undef INSTANTIATE_ALL_VALID_TYPES
-
 bool
 HeapSlot::preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot)
 {
