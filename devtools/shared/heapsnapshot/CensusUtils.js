@@ -382,3 +382,35 @@ const createParentMap = exports.createParentMap = function (node,
 
   return aggregator;
 };
+
+const BUCKET = Object.freeze({ by: "bucket" });
+
+/**
+ * Convert a breakdown whose leaves are { by: "count" } to an identical
+ * breakdown, except with { by: "bucket" } leaves.
+ *
+ * @param {Object} breakdown
+ * @returns {Object}
+ */
+exports.countToBucketBreakdown = function(breakdown) {
+  if (typeof breakdown !== "object" || !breakdown) {
+    return breakdown;
+  }
+
+  if (breakdown.by === "count") {
+    return BUCKET;
+  }
+
+  const keys = Object.keys(breakdown);
+  const vals = keys.reduce((vs, k) => {
+    vs.push(exports.countToBucketBreakdown(breakdown[k]));
+    return vs;
+  }, []);
+
+  const result = {};
+  for (let i = 0, length = keys.length; i < length; i++) {
+    result[keys[i]] = vals[i];
+  }
+
+  return Object.freeze(result);
+};
