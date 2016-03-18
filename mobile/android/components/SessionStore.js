@@ -213,6 +213,16 @@ SessionStore.prototype = {
         this.onTabRemove(window, browser);
         break;
       }
+      case "TabPreZombify": {
+        let browser = aEvent.target;
+        this.onTabRemove(window, browser, true);
+        break;
+      }
+      case "TabPostZombify": {
+        let browser = aEvent.target;
+        this.onTabAdd(window, browser, true);
+        break;
+      }
       case "TabSelect": {
         let browser = aEvent.target;
         this.onTabSelect(window, browser);
@@ -277,11 +287,13 @@ SessionStore.prototype = {
     for (let i = 0; i < tabs.length; i++)
       this.onTabAdd(aWindow, tabs[i].browser, true);
 
-    // Notification of tab add/remove/selection
+    // Notification of tab add/remove/selection/zombification
     let browsers = aWindow.document.getElementById("browsers");
     browsers.addEventListener("TabOpen", this, true);
     browsers.addEventListener("TabClose", this, true);
     browsers.addEventListener("TabSelect", this, true);
+    browsers.addEventListener("TabPreZombify", this, true);
+    browsers.addEventListener("TabPostZombify", this, true);
   },
 
   onWindowClose: function ss_onWindowClose(aWindow) {
@@ -293,6 +305,8 @@ SessionStore.prototype = {
     browsers.removeEventListener("TabOpen", this, true);
     browsers.removeEventListener("TabClose", this, true);
     browsers.removeEventListener("TabSelect", this, true);
+    browsers.removeEventListener("TabPreZombify", this, true);
+    browsers.removeEventListener("TabPostZombify", this, true);
 
     if (this._loadState == STATE_RUNNING) {
       // Update all window data for a last time
