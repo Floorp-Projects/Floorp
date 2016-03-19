@@ -20,12 +20,20 @@ Object.defineProperty(Array.prototype, "remove", {
 function devicestorage_setup(callback) {
   SimpleTest.waitForExplicitFinish();
 
+  const Cc = SpecialPowers.Cc;
+  const Ci = SpecialPowers.Ci;
+  var directoryService = Cc["@mozilla.org/file/directory_service;1"]
+                           .getService(Ci.nsIProperties);
+  var f = directoryService.get("TmpD", Ci.nsIFile);
+  f.appendRelativePath("device-storage-testing");
+
   let script = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('remove_testing_directory.js'));
 
   script.addMessageListener('directory-removed', function listener () {
     script.removeMessageListener('directory-removed', listener);
     var prefs = [["device.storage.enabled", true],
                  ["device.storage.testing", true],
+                 ["device.storage.overrideRootDir", f.path],
                  ["device.storage.prompt.testing", true]];
     SpecialPowers.pushPrefEnv({"set": prefs}, callback);
   });
