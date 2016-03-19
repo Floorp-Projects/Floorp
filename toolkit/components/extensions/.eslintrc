@@ -70,7 +70,7 @@
     "consistent-return": 0,
 
     // Require braces around blocks that start a new line
-    "curly": [2, "multi-line"],
+    "curly": [2, "all"],
 
     // Always require a trailing EOL
     "eol-last": 2,
