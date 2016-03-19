@@ -220,6 +220,20 @@ public:
     mInvalidRegion.Or(mInvalidRegion, aRegion);
   }
 
+  void UpdateApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
+                                        const CSSIntRegion& aRegion)
+  {
+    CSSIntRegion* regionForScrollFrame = mVisibleRegions.LookupOrAdd(aGuid);
+    MOZ_ASSERT(regionForScrollFrame);
+
+    *regionForScrollFrame = aRegion;
+  }
+
+  CSSIntRegion* GetApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid)
+  {
+    return mVisibleRegions.Get(aGuid);
+  }
+
   Compositor* GetCompositor() const
   {
     return mCompositor;
@@ -355,6 +369,11 @@ private:
   gfx::IntRect mTargetBounds;
 
   nsIntRegion mInvalidRegion;
+
+  typedef nsClassHashtable<nsGenericHashKey<ScrollableLayerGuid>,
+                           CSSIntRegion> VisibleRegions;
+  VisibleRegions mVisibleRegions;
+
   UniquePtr<FPSState> mFPS;
 
   bool mInTransaction;

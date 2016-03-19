@@ -251,6 +251,9 @@ public:
   // @see CrossProcessCompositorParent::RecvRequestNotifyAfterRemotePaint
   virtual bool RecvRequestNotifyAfterRemotePaint() override { return true; };
 
+  virtual bool RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
+                                                    const CSSIntRegion& aRegion) override;
+
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
