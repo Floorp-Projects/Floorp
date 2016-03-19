@@ -568,12 +568,23 @@
       {
         "name": "show",
         "type": "function",
-        "unsupported": true,
         "description": "Show the downloaded file in its folder in a file manager.",
+        "async": "callback",
         "parameters": [
           {
             "name": "downloadId",
             "type": "integer"
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "optional": true,
+            "parameters": [
+              {
+                "name": "success",
+                "type": "boolean"
+              }
+            ]
           }
         ]
       },

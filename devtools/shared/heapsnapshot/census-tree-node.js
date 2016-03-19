@@ -19,7 +19,7 @@ const {
 } = require("resource://devtools/shared/heapsnapshot/CensusUtils.js");
 
 // Monotonically increasing integer for CensusTreeNode `id`s.
-let INC = 0;
+let censusTreeNodeIdCounter = 0;
 
 /**
  * Return true if the given object is a SavedFrame stack object, false otherwise.
@@ -403,7 +403,7 @@ function CensusTreeNode(name) {
   this.count = 0;
   this.totalCount = 0;
   this.children = undefined;
-  this.id = ++INC;
+  this.id = ++censusTreeNodeIdCounter;
   this.parent = undefined;
 }
 
@@ -645,6 +645,10 @@ exports.censusReportToCensusTreeNode = function (breakdown, report,
                                                    invert: false,
                                                    filter: null
                                                  }) {
+  // Reset the counter so that turning the same census report into a
+  // CensusTreeNode tree repeatedly is idempotent.
+  censusTreeNodeIdCounter = 0;
+
   const visitor = new CensusTreeNodeVisitor();
   walk(breakdown, report, visitor);
   let result = visitor.root();

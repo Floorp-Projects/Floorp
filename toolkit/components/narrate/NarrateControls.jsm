@@ -9,6 +9,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/narrate/VoiceSelect.jsm");
 Cu.import("resource://gre/modules/narrate/Narrator.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AsyncPrefs.jsm");
 
 this.EXPORTED_SYMBOLS = ["NarrateControls"];
 
@@ -119,16 +120,14 @@ NarrateControls.prototype = {
 
   _onRateInput: function(evt) {
     if (!this._rateMousedown) {
-      this._mm.sendAsyncMessage("Reader:SetIntPref",
-        { name: "narrate.rate", value: evt.target.value });
+      AsyncPrefs.set("narrate.rate", parseInt(evt.target.value, 10));
       this.narrator.setRate(this._convertRate(evt.target.value));
     }
   },
 
   _onVoiceChange: function() {
     let voice = this.voice;
-    this._mm.sendAsyncMessage("Reader:SetCharPref",
-      { name: "narrate.voice", value: voice });
+    AsyncPrefs.set("narrate.voice", voice);
     this.narrator.setVoice(voice);
   },
 
@@ -149,7 +148,7 @@ NarrateControls.prototype = {
           this.narrator.start(options).then(() => {
             this._updateSpeechControls(false);
           }, err => {
-            Cu.reportError(`Narrate failed: ${err}.`)
+            Cu.reportError(`Narrate failed: ${err}.`);
             this._updateSpeechControls(false);
           });
         }

@@ -302,6 +302,6 @@ var WebrtcUI = {
 
     let buttons = this.getDeviceButtons(audioDevices, videoDevices, aCallID, uri);
 
-    NativeWindow.doorhanger.show(message, "webrtc-request", buttons, BrowserApp.selectedTab.id, options);
+    NativeWindow.doorhanger.show(message, "webrtc-request", buttons, BrowserApp.selectedTab.id, options, "WEBRTC");
   }
 }

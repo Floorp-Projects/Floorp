@@ -853,7 +853,7 @@ pref("toolkit.identity.enabled", false);
 pref("toolkit.identity.debug", false);
 
 // AsyncShutdown delay before crashing in case of shutdown freeze
-pref("toolkit.asyncshutdown.timeout.crash", 60000);
+pref("toolkit.asyncshutdown.crash_timeout", 60000);
 // Extra logging for AsyncShutdown barriers and phases
 pref("toolkit.asyncshutdown.log", false);
 
