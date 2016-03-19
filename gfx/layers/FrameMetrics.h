@@ -16,6 +16,7 @@
 #include "mozilla/gfx/Logging.h"        // for Log
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "nsString.h"
+#include "nsStyleCoord.h"               // for nsStyleCoord
 
 namespace IPC {
 template <typename T> struct ParamTraits;
@@ -751,6 +752,29 @@ private:
   }
 };
 
+struct ScrollSnapInfo {
+  ScrollSnapInfo()
+    : mScrollSnapTypeX(NS_STYLE_SCROLL_SNAP_TYPE_NONE)
+    , mScrollSnapTypeY(NS_STYLE_SCROLL_SNAP_TYPE_NONE)
+  {}
+
+  // The scroll frame's scroll-snap-type.
+  // One of NS_STYLE_SCROLL_SNAP_{NONE, MANDATORY, PROXIMITY}.
+  uint8_t mScrollSnapTypeX;
+  uint8_t mScrollSnapTypeY;
+
+  // The intervals derived from the scroll frame's scroll-snap-points.
+  Maybe<nscoord> mScrollSnapIntervalX;
+  Maybe<nscoord> mScrollSnapIntervalY;
+
+  // The scroll frame's scroll-snap-destination, in cooked form (to avoid
+  // shipping the raw nsStyleCoord::CalcValue over IPC).
+  nsPoint mScrollSnapDestination;
+
+  // The scroll-snap-coordinates of any descendant frames of the scroll frame,
+  // relative to the origin of the scrolled frame.
+  nsTArray<nsPoint> mScrollSnapCoordinates;
+};
 
 /**
  * Metadata about a scroll frame that's stored in the layer tree for use by

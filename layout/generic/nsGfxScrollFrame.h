@@ -49,6 +49,7 @@ public:
   typedef mozilla::CSSIntPoint CSSIntPoint;
   typedef mozilla::layout::ScrollbarActivity ScrollbarActivity;
   typedef mozilla::layers::FrameMetrics FrameMetrics;
+  typedef mozilla::layers::ScrollSnapInfo ScrollSnapInfo;
   typedef mozilla::layers::Layer Layer;
 
   class AsyncScroll;
@@ -389,6 +390,8 @@ public:
   void SetZoomableByAPZ(bool aZoomable);
 
   bool UsesContainerScrolling() const;
+
+  ScrollSnapInfo GetScrollSnapInfo() const;
 
   bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
                              nsRect* aDirtyRect,
