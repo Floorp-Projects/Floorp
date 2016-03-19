@@ -99,20 +99,5 @@ FileSystemBase::IsSafeDirectory(Directory* aDir) const
   return false;
 }
 
-bool
-FileSystemBase::LocalPathToRealPath(const nsAString& aLocalPath,
-                                    nsAString& aRealPath) const
-{
-  nsAutoString path;
-  FileSystemUtils::LocalPathToNormalizedPath(aLocalPath, path);
-  if (!FileSystemUtils::IsDescendantPath(mNormalizedLocalRootPath, path)) {
-    aRealPath.Truncate();
-    return false;
-  }
-
-  aRealPath = Substring(path, mNormalizedLocalRootPath.Length());
-  return true;
-}
-
 } // namespace dom
 } // namespace mozilla

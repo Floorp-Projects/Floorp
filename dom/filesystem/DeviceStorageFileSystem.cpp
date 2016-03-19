@@ -21,9 +21,8 @@
 namespace mozilla {
 namespace dom {
 
-DeviceStorageFileSystem::DeviceStorageFileSystem(
-  const nsAString& aStorageType,
-  const nsAString& aStorageName)
+DeviceStorageFileSystem::DeviceStorageFileSystem(const nsAString& aStorageType,
+                                                 const nsAString& aStorageName)
   : mWindowId(0)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
@@ -50,9 +49,6 @@ DeviceStorageFileSystem::DeviceStorageFileSystem(
   if (!XRE_IsParentProcess()) {
     return;
   }
-
-  FileSystemUtils::LocalPathToNormalizedPath(mLocalRootPath,
-    mNormalizedLocalRootPath);
 
   // DeviceStorageTypeChecker is a singleton object and must be initialized on
   // the main thread. We initialize it here so that we can use it on the worker
@@ -105,12 +101,15 @@ DeviceStorageFileSystem::IsSafeFile(nsIFile* aFile) const
              "Should be on parent process!");
   MOZ_ASSERT(aFile);
 
-  // Check if this file belongs to this storage.
-  nsAutoString path;
-  if (NS_FAILED(aFile->GetPath(path))) {
+  nsCOMPtr<nsIFile> rootPath;
+  nsresult rv = NS_NewLocalFile(GetLocalRootPath(), false,
+                                getter_AddRefs(rootPath));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
-  if (!LocalPathToRealPath(path, path)) {
+
+  // Check if this file belongs to this storage.
+  if (NS_WARN_IF(!FileSystemUtils::IsDescendantPath(rootPath, aFile))) {
     return false;
   }
 

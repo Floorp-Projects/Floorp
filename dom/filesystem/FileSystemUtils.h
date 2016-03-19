@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_FileSystemUtils_h
 #define mozilla_dom_FileSystemUtils_h
 
-#include "nsString.h"
+class nsIFile;
 
 namespace mozilla {
 namespace dom {
@@ -23,30 +23,10 @@ class FileSystemUtils
 {
 public:
   /*
-   * Convert the path separator to "/".
-   */
-  static void
-  LocalPathToNormalizedPath(const nsAString& aLocal, nsAString& aNorm);
-
-  /*
-   * Convert the normalized path separator "/" to the system dependent path
-   * separator, which is "/" on Mac and Linux, and "\" on Windows.
-   */
-  static void
-  NormalizedPathToLocalPath(const nsAString& aNorm, nsAString& aLocal);
-
-  /*
    * Return true if aDescendantPath is a descendant of aPath.
    */
   static bool
   IsDescendantPath(nsIFile* aPath, nsIFile* aDescendantPath);
-
-  /*
-   * Return true if aDescendantPath is a descendant of aPath. Both aPath and
-   * aDescendantPath are absolute DOM path.
-   */
-  static bool
-  IsDescendantPath(const nsAString& aPath, const nsAString& aDescendantPath);
 };
 
 } // namespace dom

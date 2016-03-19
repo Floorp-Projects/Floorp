@@ -20,8 +20,6 @@ namespace dom {
 OSFileSystem::OSFileSystem(const nsAString& aRootDir)
 {
   mLocalRootPath = aRootDir;
-  FileSystemUtils::LocalPathToNormalizedPath(mLocalRootPath,
-                                             mNormalizedLocalRootPath);
 
   // Non-mobile devices don't have the concept of separate permissions to
   // access different parts of devices storage like Pictures, or Videos, etc.

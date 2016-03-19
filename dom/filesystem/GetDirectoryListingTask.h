@@ -70,10 +70,6 @@ private:
   virtual void
   HandlerCallback() override;
 
-  void
-  CreateNormalizedRelativePath(const nsAString& aPath,
-                               nsAString& aRelativePath) const;
-
   RefPtr<Promise> mPromise;
   nsCOMPtr<nsIFile> mTargetPath;
   nsString mFilters;
