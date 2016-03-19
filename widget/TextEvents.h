@@ -104,6 +104,7 @@ protected:
   WidgetKeyboardEvent()
     : keyCode(0)
     , charCode(0)
+    , mPseudoCharCode(0)
     , location(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
     , isChar(false)
     , mIsRepeat(false)
@@ -128,6 +129,7 @@ public:
     : WidgetInputEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
     , keyCode(0)
     , charCode(0)
+    , mPseudoCharCode(0)
     , location(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
     , isChar(false)
     , mIsRepeat(false)
@@ -163,6 +165,10 @@ public:
   // character when some modifiers are active.  Then, this value should be an
   // unmodified value except Shift and AltGr.
   uint32_t charCode;
+  // mPseudoCharCode is valid only when mMessage is an eKeyDown event.
+  // This stores charCode value of keypress event which is fired with same
+  // key value and same modifier state.
+  uint32_t mPseudoCharCode;
   // One of nsIDOMKeyEvent::DOM_KEY_LOCATION_*
   uint32_t location;
   // OS translated Unicode chars which are used for accesskey and accelkey
@@ -208,6 +214,24 @@ public:
   // If the key should cause keypress events, this returns true.
   // Otherwise, false.
   bool ShouldCauseKeypressEvents() const;
+
+  // charCode value of non-eKeyPress events is always 0.  However, if
+  // non-eKeyPress event has one or more alternative char code values,
+  // its first item should be the charCode value of following eKeyPress event.
+  // PseudoCharCode() returns charCode value for eKeyPress event,
+  // the first alternative char code value of non-eKeyPress event or 0.
+  uint32_t PseudoCharCode() const
+  {
+    return mMessage == eKeyPress ? charCode : mPseudoCharCode;
+  }
+  void SetCharCode(uint32_t aCharCode)
+  {
+    if (mMessage == eKeyPress) {
+      charCode = aCharCode;
+    } else {
+      mPseudoCharCode = aCharCode;
+    }
+  }
 
   void GetDOMKeyName(nsAString& aKeyName)
   {
@@ -292,6 +316,7 @@ public:
 
     keyCode = aEvent.keyCode;
     charCode = aEvent.charCode;
+    mPseudoCharCode = aEvent.mPseudoCharCode;
     location = aEvent.location;
     alternativeCharCodes = aEvent.alternativeCharCodes;
     isChar = aEvent.isChar;
