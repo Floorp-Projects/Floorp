@@ -147,9 +147,6 @@ private:
             FileSystemBase* aFileSystem = nullptr);
   ~Directory();
 
-  static bool
-  IsValidRelativePath(const nsString& aPath);
-
   /*
    * Convert relative DOM path to the absolute real path.
    */

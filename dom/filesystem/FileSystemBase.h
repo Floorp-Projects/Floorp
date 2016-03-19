@@ -39,12 +39,6 @@ public:
   virtual nsPIDOMWindowInner*
   GetWindow() const;
 
-  /**
-   * Create nsIFile object from the given real path (absolute DOM path).
-   */
-  already_AddRefed<nsIFile>
-  GetLocalFile(const nsAString& aRealPath) const;
-
   /*
    * Get the virtual name of the root directory. This name will be exposed to
    * the content page.
