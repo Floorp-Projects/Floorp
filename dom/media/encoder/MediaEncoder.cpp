@@ -37,6 +37,34 @@ mozilla::LazyLogModule gMediaEncoderLog("MediaEncoder");
 namespace mozilla {
 
 void
+MediaEncoder::SetDirectConnect(bool aConnected)
+{
+  fprintf(stderr, "****** direct connect: %s\n", aConnected ? "true" : "false");
+  mDirectConnected = aConnected;
+}
+
+void
+MediaEncoder::NotifyRealtimeData(MediaStreamGraph* aGraph,
+                                 TrackID aID,
+                                 StreamTime aTrackOffset,
+                                 uint32_t aTrackEvents,
+                                 const MediaSegment& aRealtimeMedia)
+{
+  // Process the incoming raw track data from MediaStreamGraph, called on the
+  // thread of MediaStreamGraph.
+  if (mAudioEncoder && aRealtimeMedia.GetType() == MediaSegment::AUDIO) {
+    mAudioEncoder->NotifyQueuedTrackChanges(aGraph, aID,
+                                            aTrackOffset, aTrackEvents,
+                                            aRealtimeMedia);
+
+  } else if (mVideoEncoder && aRealtimeMedia.GetType() == MediaSegment::VIDEO) {
+    mVideoEncoder->NotifyQueuedTrackChanges(aGraph, aID,
+                                            aTrackOffset, aTrackEvents,
+                                            aRealtimeMedia);
+  }
+}
+
+void
 MediaEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                        TrackID aID,
                                        StreamTime aTrackOffset,
@@ -45,17 +73,8 @@ MediaEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                        MediaStream* aInputStream,
                                        TrackID aInputTrackID)
 {
-  // Process the incoming raw track data from MediaStreamGraph, called on the
-  // thread of MediaStreamGraph.
-  if (mAudioEncoder && aQueuedMedia.GetType() == MediaSegment::AUDIO) {
-    mAudioEncoder->NotifyQueuedTrackChanges(aGraph, aID,
-                                            aTrackOffset, aTrackEvents,
-                                            aQueuedMedia);
-
-  } else if (mVideoEncoder && aQueuedMedia.GetType() == MediaSegment::VIDEO) {
-      mVideoEncoder->NotifyQueuedTrackChanges(aGraph, aID,
-                                              aTrackOffset, aTrackEvents,
-                                              aQueuedMedia);
+  if (!mDirectConnected) {
+    NotifyRealtimeData(aGraph, aID, aTrackOffset, aTrackEvents, aQueuedMedia);
   }
 }
 
