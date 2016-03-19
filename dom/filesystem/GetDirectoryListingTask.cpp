@@ -343,41 +343,6 @@ GetDirectoryListingTask::HandlerCallback()
 
   for (unsigned i = 0; i < count; i++) {
     if (mTargetData[i].mType == Directory::BlobImplOrDirectoryPath::eDirectoryPath) {
-#ifdef DEBUG
-      if (XRE_IsParentProcess()) {
-        nsCOMPtr<nsIFile> file;
-        nsresult rv = NS_NewLocalFile(mTargetData[i].mDirectoryPath, false,
-                                      getter_AddRefs(file));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          mPromise->MaybeReject(rv);
-          mPromise = nullptr;
-          return;
-        }
-
-        bool exist;
-        rv = file->Exists(&exist);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          mPromise->MaybeReject(rv);
-          mPromise = nullptr;
-          return;
-        }
-
-        // We cannot assert here because the file can be done in the meantime.
-        NS_ASSERTION(exist, "The file doesn't exist anymore?!?");
-
-        nsAutoString normalizedLocalRootPath;
-        FileSystemUtils::NormalizedPathToLocalPath(mFileSystem->GetLocalRootPath(),
-                                                   normalizedLocalRootPath);
-
-        nsAutoString directoryPath;
-        FileSystemUtils::NormalizedPathToLocalPath(mTargetData[i].mDirectoryPath,
-                                                   directoryPath);
-
-        MOZ_ASSERT(FileSystemUtils::IsDescendantPath(normalizedLocalRootPath,
-                                                     directoryPath));
-      }
-#endif
-
       nsCOMPtr<nsIFile> directoryPath;
       NS_ConvertUTF16toUTF8 path(mTargetData[i].mDirectoryPath);
       nsresult rv = NS_NewNativeLocalFile(path, true,
@@ -387,6 +352,19 @@ GetDirectoryListingTask::HandlerCallback()
         mPromise = nullptr;
         return;
       }
+
+#ifdef DEBUG
+      nsCOMPtr<nsIFile> rootPath;
+      rv = NS_NewLocalFile(mFileSystem->GetLocalRootPath(), false,
+                           getter_AddRefs(rootPath));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        mPromise->MaybeReject(rv);
+        mPromise = nullptr;
+        return;
+      }
+
+      MOZ_ASSERT(FileSystemUtils::IsDescendantPath(rootPath, directoryPath));
+#endif
 
       RefPtr<Directory> directory = Directory::Create(mFileSystem->GetWindow(),
                                                       directoryPath,
