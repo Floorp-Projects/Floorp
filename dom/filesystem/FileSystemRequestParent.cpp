@@ -29,7 +29,10 @@ FileSystemRequestParent::~FileSystemRequestParent()
     case FileSystemParams::TFileSystem##name##Params: {                        \
       const FileSystem##name##Params& p = aParams;                             \
       mFileSystem = FileSystemBase::FromString(p.filesystem());                \
-      task = new name##Task(mFileSystem, p, this);                             \
+      task = name##Task::Create(mFileSystem, p, this, rv);                     \
+      if (NS_WARN_IF(rv.Failed())) {                                           \
+        return false;                                                          \
+      }                                                                        \
       break;                                                                   \
     }
 
@@ -39,6 +42,8 @@ FileSystemRequestParent::Dispatch(ContentParent* aParent,
 {
   MOZ_ASSERT(aParent, "aParent should not be null.");
   RefPtr<FileSystemTaskBase> task;
+  ErrorResult rv;
+
   switch (aParams.type()) {
 
     FILESYSTEM_REQUEST_PARENT_DISPATCH_ENTRY(CreateDirectory)
