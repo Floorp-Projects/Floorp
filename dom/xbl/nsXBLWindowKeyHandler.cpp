@@ -705,38 +705,44 @@ nsXBLWindowKeyHandler::GetElementForHandler(nsXBLPrototypeHandler* aHandler,
   *aElementForHandler = nullptr;
 
   nsCOMPtr<nsIContent> keyContent = aHandler->GetHandlerElement();
-
-  // See if we're in a XUL doc.
-  nsCOMPtr<Element> chromeHandlerElement = GetElement();
-  if (chromeHandlerElement && keyContent) {
-    // We are.  Obtain our command attribute.
-    nsAutoString command;
-    keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
-    if (!command.IsEmpty()) {
-      // Locate the command element in question.  Note that we
-      // know "keyContent" is in a doc if we're dealing with it here.
-      NS_ASSERTION(keyContent->IsInDoc(),
-                   "the key element must be in document");
-      nsIDocument* doc = keyContent->GetCurrentDoc();
-      if (NS_WARN_IF(!doc)) {
-        return false;
-      }
-      nsCOMPtr<Element> commandElement =
-        do_QueryInterface(doc->GetElementById(command));
-      if (!commandElement) {
-        NS_ERROR("A XUL <key> is observing a command that doesn't exist. "
-                 "Unable to execute key binding!");
-        return false;
-      }
-      commandElement.swap(*aElementForHandler);
-    }
+  if (!keyContent) {
+    return true; // XXX Even though no key element?
   }
 
-  if (!*aElementForHandler) {
+  nsCOMPtr<Element> chromeHandlerElement = GetElement();
+  if (!chromeHandlerElement) {
+    NS_WARN_IF(!keyContent->IsInDoc());
     nsCOMPtr<Element> keyElement = do_QueryInterface(keyContent);
     keyElement.swap(*aElementForHandler);
+    return true;
   }
 
+  // We are in a XUL doc.  Obtain our command attribute.
+  nsAutoString command;
+  keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
+  if (command.IsEmpty()) {
+    // There is no command element associated with the key element.
+    NS_WARN_IF(!keyContent->IsInDoc());
+    nsCOMPtr<Element> keyElement = do_QueryInterface(keyContent);
+    keyElement.swap(*aElementForHandler);
+    return true;
+  }
+
+  // XXX Shouldn't we check this earlier?
+  nsIDocument* doc = keyContent->GetCurrentDoc();
+  if (NS_WARN_IF(!doc)) {
+    return false;
+  }
+
+  nsCOMPtr<Element> commandElement =
+    do_QueryInterface(doc->GetElementById(command));
+  if (!commandElement) {
+    NS_ERROR("A XUL <key> is observing a command that doesn't exist. "
+             "Unable to execute key binding!");
+    return false;
+  }
+
+  commandElement.swap(*aElementForHandler);
   return true;
 }
 
