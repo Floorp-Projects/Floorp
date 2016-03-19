@@ -82,7 +82,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Directory)
     tmp->mFileSystem->Unlink();
     tmp->mFileSystem = nullptr;
   }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -90,7 +90,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Directory)
   if (tmp->mFileSystem) {
     tmp->mFileSystem->Traverse(cb);
   }
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -127,11 +127,11 @@ Directory::GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv)
 }
 
 /* static */ already_AddRefed<Directory>
-Directory::Create(nsPIDOMWindowInner* aWindow, nsIFile* aFile,
+Directory::Create(nsISupports* aParent, nsIFile* aFile,
                   DirectoryType aType, FileSystemBase* aFileSystem)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aParent);
   MOZ_ASSERT(aFile);
 
 #ifdef DEBUG
@@ -141,15 +141,15 @@ Directory::Create(nsPIDOMWindowInner* aWindow, nsIFile* aFile,
 #endif
 
   RefPtr<Directory> directory =
-    new Directory(aWindow, aFile, aType, aFileSystem);
+    new Directory(aParent, aFile, aType, aFileSystem);
   return directory.forget();
 }
 
-Directory::Directory(nsPIDOMWindowInner* aWindow,
+Directory::Directory(nsISupports* aParent,
                      nsIFile* aFile,
                      DirectoryType aType,
                      FileSystemBase* aFileSystem)
-  : mWindow(aWindow)
+  : mParent(aParent)
   , mFileSystem(aFileSystem)
   , mFile(aFile)
   , mType(aType)
@@ -164,10 +164,10 @@ Directory::~Directory()
 {
 }
 
-nsPIDOMWindowInner*
+nsISupports*
 Directory::GetParentObject() const
 {
-  return mWindow;
+  return mParent;
 }
 
 JSObject*
@@ -406,7 +406,7 @@ Directory::GetFileSystem(ErrorResult& aRv)
     }
 
     RefPtr<OSFileSystem> fs = new OSFileSystem(path);
-    fs->Init(mWindow);
+    fs->Init(mParent);
 
     mFileSystem = fs;
   }

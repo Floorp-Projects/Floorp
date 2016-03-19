@@ -83,8 +83,8 @@ DeviceStorageFileSystem::Shutdown()
   mShutdown = true;
 }
 
-nsPIDOMWindowInner*
-DeviceStorageFileSystem::GetWindow() const
+nsISupports*
+DeviceStorageFileSystem::GetParentObject() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowId);

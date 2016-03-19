@@ -30,8 +30,8 @@ public:
   virtual void
   Shutdown() override;
 
-  virtual nsPIDOMWindowInner*
-  GetWindow() const override;
+  virtual nsISupports*
+  GetParentObject() const override;
 
   virtual void
   GetRootName(nsAString& aRetval) const override;
