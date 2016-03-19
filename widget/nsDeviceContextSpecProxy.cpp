@@ -69,8 +69,8 @@ nsDeviceContextSpecProxy::GetSurfaceForPrinter(gfxASurface** aSurface)
 
   double width, height;
   nsresult rv = mPrintSettings->GetEffectivePageSize(&width, &height);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (NS_WARN_IF(NS_FAILED(rv)) || width <= 0 || height <= 0) {
+    return NS_ERROR_FAILURE;
   }
 
   // convert twips to points
