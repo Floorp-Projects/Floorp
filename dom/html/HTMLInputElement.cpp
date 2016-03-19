@@ -3824,15 +3824,8 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
               case NS_FORM_INPUT_IMAGE: // Bug 34418
               case NS_FORM_INPUT_COLOR:
               {
-                WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
-                                       eMouseClick, nullptr,
-                                       WidgetMouseEvent::eReal);
-                event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
-                nsEventStatus status = nsEventStatus_eIgnore;
-
-                EventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                                          aVisitor.mPresContext, &event,
-                                          nullptr, &status);
+                DispatchSimulatedClick(this, aVisitor.mEvent->mFlags.mIsTrusted,
+                                       aVisitor.mPresContext);
                 aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
               } // case
             } // switch
@@ -3859,15 +3852,9 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
                 if (selectedRadioButton) {
                   rv = selectedRadioButton->Focus();
                   if (NS_SUCCEEDED(rv)) {
-                    nsEventStatus status = nsEventStatus_eIgnore;
-                    WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
-                                           eMouseClick, nullptr,
-                                           WidgetMouseEvent::eReal);
-                    event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
-                    rv =
-                      EventDispatcher::Dispatch(ToSupports(selectedRadioButton),
-                                                aVisitor.mPresContext,
-                                                &event, nullptr, &status);
+                    rv = DispatchSimulatedClick(selectedRadioButton,
+                                                aVisitor.mEvent->mFlags.mIsTrusted,
+                                                aVisitor.mPresContext);
                     if (NS_SUCCEEDED(rv)) {
                       aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
                     }

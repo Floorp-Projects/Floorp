@@ -1028,6 +1028,13 @@ protected:
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const override;
 
   /**
+   * Dispatch a simulated mouse click by keyboard to the given element.
+   */
+  nsresult DispatchSimulatedClick(nsGenericHTMLElement* aElement,
+                                  bool aIsTrusted,
+                                  nsPresContext* aPresContext);
+
+  /**
    * Create a URI for the given aURISpec string.
    * Returns INVALID_STATE_ERR and nulls *aURI if aURISpec is empty
    * and the document's URI matches the element's base URI.
