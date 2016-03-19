@@ -84,7 +84,7 @@ function create_fileList() {
     var domFile = fileList.files[0];
     is(domFile.name, "prefs.js", "fileName should be prefs.js");
 
-    clonableObjects.push({ crossThreads: false, data: fileList.files });
+    clonableObjects.push({ crossThreads: true, data: fileList.files });
     script.destroy();
     next();
   }
