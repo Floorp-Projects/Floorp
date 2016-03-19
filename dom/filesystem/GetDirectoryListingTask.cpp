@@ -36,7 +36,7 @@ GetDirectoryListingTask::Create(FileSystemBase* aFileSystem,
   // aTargetPath can be null. In this case SetError will be called.
 
   nsCOMPtr<nsIGlobalObject> globalObject =
-    do_QueryInterface(aFileSystem->GetWindow());
+    do_QueryInterface(aFileSystem->GetParentObject());
   if (NS_WARN_IF(!globalObject)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -366,7 +366,7 @@ GetDirectoryListingTask::HandlerCallback()
       MOZ_ASSERT(FileSystemUtils::IsDescendantPath(rootPath, directoryPath));
 #endif
 
-      RefPtr<Directory> directory = Directory::Create(mFileSystem->GetWindow(),
+      RefPtr<Directory> directory = Directory::Create(mFileSystem->GetParentObject(),
                                                       directoryPath,
                                                       Directory::eNotDOMRootDirectory,
                                                       mFileSystem);
@@ -378,7 +378,7 @@ GetDirectoryListingTask::HandlerCallback()
     } else {
       MOZ_ASSERT(mTargetData[i].mType == Directory::BlobImplOrDirectoryPath::eBlobImpl);
       listing[i].SetAsFile() =
-        File::Create(mFileSystem->GetWindow(), mTargetData[i].mBlobImpl);
+        File::Create(mFileSystem->GetParentObject(), mTargetData[i].mBlobImpl);
     }
   }
 
