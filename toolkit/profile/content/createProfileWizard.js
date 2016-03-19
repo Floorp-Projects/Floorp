@@ -134,7 +134,7 @@ function checkCurrentInput(currentInput)
   finishButton.disabled = !canAdvance;
 
   updateProfileDisplay();
-  
+
   return canAdvance;
 }
 
