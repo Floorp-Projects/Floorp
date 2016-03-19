@@ -2590,6 +2590,51 @@
     "n_buckets": 1000,
     "description": "Time spent blocked in PR_Connect when the offline state has changed in the last 60s (ms)."
   },
+  "PRCONNECT_FAIL_BLOCKING_TIME_NORMAL": {
+    "bug_numbers": [1257809],
+    "alert_emails": ["ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Time spent blocked in a failed PR_Connect when we are not shutting down and there has been niether a network nor an offline state change in the last 60s (ms)."
+  },
+  "PRCONNECT_FAIL_BLOCKING_TIME_SHUTDOWN": {
+    "bug_numbers": [1257809],
+    "alert_emails": ["ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Time spent blocked in a failed PR_Connect during a shutdown (ms)."
+  },
+  "PRCONNECT_FAIL_BLOCKING_TIME_CONNECTIVITY_CHANGE": {
+    "bug_numbers": [1257809],
+    "alert_emails": ["ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Time spent blocked in a failed PR_Connect when there has been the connectiviy change in the last 60s (ms)."
+  },
+  "PRCONNECT_FAIL_BLOCKING_TIME_LINK_CHANGE": {
+    "bug_numbers": [1257809],
+    "alert_emails": ["ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Time spent blocked in a failed PR_Connect when there has been a link change in the last 60s (ms)."
+  },
+  "PRCONNECT_FAIL_BLOCKING_TIME_OFFLINE": {
+    "bug_numbers": [1257809],
+    "alert_emails": ["ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Time spent blocked in a failed PR_Connect when the offline state has changed in the last 60s (ms)."
+  },
   "PRCONNECTCONTINUE_BLOCKING_TIME_NORMAL": {
     "expires_in_version": "never",
     "kind": "exponential",
