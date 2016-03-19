@@ -54,7 +54,7 @@ FileSystemUtils::IsDescendantPath(const nsAString& aPath,
 {
   // The descendant path should begin with its ancestor path.
   nsAutoString prefix;
-  prefix = aPath + NS_LITERAL_STRING(FILESYSTEM_DOM_PATH_SEPARATOR);
+  prefix = aPath + NS_LITERAL_STRING(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
 
   // Check the sub-directory path to see if it has the parent path as prefix.
   if (aDescendantPath.Length() < prefix.Length() ||
