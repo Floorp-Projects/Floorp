@@ -539,6 +539,8 @@ public:
   static TabChild* GetFrom(nsIPresShell* aPresShell);
   static TabChild* GetFrom(uint64_t aLayersId);
 
+  uint64_t LayersId() { return mLayersId; }
+
   void DidComposite(uint64_t aTransactionId,
                     const TimeStamp& aCompositeStart,
                     const TimeStamp& aCompositeEnd);

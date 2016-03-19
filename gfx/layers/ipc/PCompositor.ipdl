@@ -17,10 +17,12 @@ using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/Comp
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
+using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
+using mozilla::CSSIntRegion from "Units.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDeviceIntRegion from "Units.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
@@ -177,6 +179,11 @@ parent:
    * @see RemotePaintIsReady
    */
   async RequestNotifyAfterRemotePaint();
+
+  // The child sends a region containing rects associated with the provided
+  // scrollable layer GUID that the child considers 'approximately visible'.
+  // We visualize this information in the APZ minimap.
+  async NotifyApproximatelyVisibleRegion(ScrollableLayerGuid guid, CSSIntRegion region);
 
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can
