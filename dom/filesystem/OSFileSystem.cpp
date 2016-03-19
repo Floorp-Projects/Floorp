@@ -27,8 +27,6 @@ OSFileSystem::OSFileSystem(const nsAString& aRootDir)
   // access different parts of devices storage like Pictures, or Videos, etc.
   mRequiresPermissionChecks = false;
 
-  mString = mLocalRootPath;
-
 #ifdef DEBUG
   mPermission.AssignLiteral("never-used");
 #endif
@@ -87,6 +85,12 @@ OSFileSystem::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
   OSFileSystem* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow);
+}
+
+void
+OSFileSystem::SerializeDOMPath(nsAString& aOutput) const
+{
+  aOutput = mLocalRootPath;
 }
 
 } // namespace dom
