@@ -26,8 +26,6 @@ var ReaderParent = {
     "Reader:ArticleGet",
     "Reader:FaviconRequest",
     "Reader:UpdateReaderButton",
-    "Reader:SetIntPref",
-    "Reader:SetCharPref",
   ],
 
   init: function() {
@@ -74,18 +72,6 @@ var ReaderParent = {
           browser.isArticle = message.data.isArticle;
         }
         this.updateReaderButton(browser);
-        break;
-      }
-      case "Reader:SetIntPref": {
-        if (message.data && message.data.name !== undefined) {
-          Services.prefs.setIntPref(message.data.name, message.data.value);
-        }
-        break;
-      }
-      case "Reader:SetCharPref": {
-        if (message.data && message.data.name !== undefined) {
-          Services.prefs.setCharPref(message.data.name, message.data.value);
-        }
         break;
       }
     }

@@ -23,6 +23,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.content.AsyncTaskLoader;
 
+import org.mozilla.gecko.GeckoApplication;
+
 /**
  * A copy of the framework's {@link android.content.CursorLoader} that
  * instead allows the caller to load the Cursor themselves via the abstract
@@ -88,6 +90,10 @@ abstract class SimpleCursorLoader extends AsyncTaskLoader<Cursor> {
 
         if (oldCursor != null && oldCursor != cursor && !oldCursor.isClosed()) {
             oldCursor.close();
+
+            // Trying to read from the closed cursor will cause crashes, hence we should make
+            // sure that no adapters/LoaderCallbacks are holding onto this cursor.
+            GeckoApplication.getRefWatcher(getContext()).watch(oldCursor);
         }
     }
 
