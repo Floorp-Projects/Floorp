@@ -2472,7 +2472,6 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
       }
       AddPaddingRect(aResult, CAPTIONBUTTON_RESTORE);
       *aIsOverridable = false;
-      ScaleForFrameDPI(aResult, aFrame);
       return rv;
 
     case NS_THEME_WINDOW_BUTTON_MINIMIZE:
@@ -2484,7 +2483,6 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
       }
       AddPaddingRect(aResult, CAPTIONBUTTON_MINIMIZE);
       *aIsOverridable = false;
-      ScaleForFrameDPI(aResult, aFrame);
       return rv;
 
     case NS_THEME_WINDOW_BUTTON_CLOSE:
@@ -2496,7 +2494,6 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
       }
       AddPaddingRect(aResult, CAPTIONBUTTON_CLOSE);
       *aIsOverridable = false;
-      ScaleForFrameDPI(aResult, aFrame);
       return rv;
 
     case NS_THEME_WINDOW_TITLEBAR:
@@ -2519,7 +2516,6 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
           aResult->height -= 2;
         }
         *aIsOverridable = false;
-        ScaleForFrameDPI(aResult, aFrame);
         return rv;
       }
       break;
@@ -2530,7 +2526,6 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
       aResult->width = GetSystemMetrics(SM_CXFRAME);
       aResult->height = GetSystemMetrics(SM_CYFRAME);
       *aIsOverridable = false;
-      ScaleForFrameDPI(aResult, aFrame);
       return rv;
   }
 

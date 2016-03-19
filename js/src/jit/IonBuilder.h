@@ -841,6 +841,9 @@ class IonBuilder
     InliningStatus inlineUnsafeGetReservedSlot(CallInfo& callInfo,
                                                MIRType knownValueType);
 
+    // Map intrinsics.
+    InliningStatus inlineGetNextMapEntryForIterator(CallInfo& callInfo);
+
     // TypedArray intrinsics.
     enum WrappingBehavior { AllowWrappedTypedArrays, RejectWrappedTypedArrays };
     InliningStatus inlineIsTypedArrayHelper(CallInfo& callInfo, WrappingBehavior wrappingBehavior);

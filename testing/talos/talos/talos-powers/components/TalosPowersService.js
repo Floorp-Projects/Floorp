@@ -39,6 +39,7 @@ TalosPowersService.prototype = {
     Services.mm.loadFrameScript(FRAME_SCRIPT, true);
     Services.mm.addMessageListener("Talos:ForceQuit", this);
     Services.mm.addMessageListener("TalosContentProfiler:Command", this);
+    Services.mm.addMessageListener("TalosPowersContent:ForceCCAndGC", this);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
@@ -54,6 +55,11 @@ TalosPowersService.prototype = {
       }
       case "TalosContentProfiler:Command": {
         this.receiveProfileCommand(message);
+        break;
+      }
+      case "TalosPowersContent:ForceCCAndGC": {
+        Cu.forceCC();
+        Cu.forceGC();
         break;
       }
     }

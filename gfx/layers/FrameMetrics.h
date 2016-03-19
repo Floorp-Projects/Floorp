@@ -8,6 +8,7 @@
 
 #include <stdint.h>                     // for uint32_t, uint64_t
 #include "Units.h"                      // for CSSRect, CSSPixel, etc
+#include "mozilla/HashFunctions.h"      // for HashGeneric
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
@@ -865,6 +866,11 @@ struct ScrollableLayerGuid {
       }
     }
     return false;
+  }
+
+  uint32_t Hash() const
+  {
+    return HashGeneric(mLayersId, mPresShellId, mScrollId);
   }
 };
 

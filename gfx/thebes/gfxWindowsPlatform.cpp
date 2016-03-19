@@ -650,24 +650,6 @@ gfxWindowsPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
     return Factory::CreateScaledFontForNativeFont(nativeFont, aFont->GetAdjustedSize());
 }
 
-nsresult
-gfxWindowsPlatform::GetFontList(nsIAtom *aLangGroup,
-                                const nsACString& aGenericFamily,
-                                nsTArray<nsString>& aListOfFonts)
-{
-    gfxPlatformFontList::PlatformFontList()->GetFontList(aLangGroup, aGenericFamily, aListOfFonts);
-
-    return NS_OK;
-}
-
-nsresult
-gfxWindowsPlatform::UpdateFontList()
-{
-    gfxPlatformFontList::PlatformFontList()->UpdateFontList();
-
-    return NS_OK;
-}
-
 static const char kFontAparajita[] = "Aparajita";
 static const char kFontArabicTypesetting[] = "Arabic Typesetting";
 static const char kFontArial[] = "Arial";
@@ -900,13 +882,6 @@ gfxWindowsPlatform::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
     aFontList.AppendElement(kFontArialUnicodeMS);
 }
 
-nsresult
-gfxWindowsPlatform::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
-{
-    gfxPlatformFontList::PlatformFontList()->GetStandardFamilyName(aFontName, aFamilyName);
-    return NS_OK;
-}
-
 gfxFontGroup *
 gfxWindowsPlatform::CreateFontGroup(const FontFamilyList& aFontFamilyList,
                                     const gfxFontStyle *aStyle,
@@ -916,34 +891,6 @@ gfxWindowsPlatform::CreateFontGroup(const FontFamilyList& aFontFamilyList,
 {
     return new gfxFontGroup(aFontFamilyList, aStyle, aTextPerf,
                             aUserFontSet, aDevToCssSize);
-}
-
-gfxFontEntry* 
-gfxWindowsPlatform::LookupLocalFont(const nsAString& aFontName,
-                                    uint16_t aWeight,
-                                    int16_t aStretch,
-                                    uint8_t aStyle)
-{
-    return gfxPlatformFontList::PlatformFontList()->LookupLocalFont(aFontName,
-                                                                    aWeight,
-                                                                    aStretch,
-                                                                    aStyle);
-}
-
-gfxFontEntry* 
-gfxWindowsPlatform::MakePlatformFont(const nsAString& aFontName,
-                                     uint16_t aWeight,
-                                     int16_t aStretch,
-                                     uint8_t aStyle,
-                                     const uint8_t* aFontData,
-                                     uint32_t aLength)
-{
-    return gfxPlatformFontList::PlatformFontList()->MakePlatformFont(aFontName,
-                                                                     aWeight,
-                                                                     aStretch,
-                                                                     aStyle,
-                                                                     aFontData,
-                                                                     aLength);
 }
 
 bool

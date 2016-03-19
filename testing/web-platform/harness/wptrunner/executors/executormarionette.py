@@ -107,12 +107,6 @@ class MarionetteProtocol(Protocol):
         return True
 
     def after_connect(self):
-        # Turn off debug-level logging by default since this is so verbose
-        with self.marionette.using_context("chrome"):
-            self.marionette.execute_script("""
-              Components.utils.import("resource://gre/modules/Log.jsm");
-              Log.repository.getLogger("Marionette").level = Log.Level.Info;
-            """)
         self.load_runner("http")
 
     def load_runner(self, protocol):
@@ -385,7 +379,11 @@ class MarionetteRefTestExecutor(RefTestExecutor):
 
         return self.convert_result(test, result)
 
-    def screenshot(self, test):
+    def screenshot(self, test, viewport_size, dpi):
+        # https://github.com/w3c/wptrunner/issues/166
+        assert viewport_size is None
+        assert dpi is None
+
         timeout =  self.timeout_multiplier * test.timeout if self.debug_info is None else None
 
         test_url = self.test_url(test)

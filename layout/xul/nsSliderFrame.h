@@ -195,6 +195,10 @@ private:
   // causing the scroll position to jump.
   bool mScrollingWithAPZ;
 
+  // true if displayport suppression is active, for more performant
+  // scrollbar-dragging behaviour.
+  bool mSuppressionActive;
+
   static bool gMiddlePref;
   static int32_t gSnapMultiplier;
 }; // class nsSliderFrame

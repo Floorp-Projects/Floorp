@@ -881,9 +881,12 @@ nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
     mInterfaceTable.Put(iid, mBinding);
   }
 
-  AutoSafeJSContext cx;
-  JS::Rooted<JSObject*> compilationGlobal(cx, xpc::CompilationScope());
-  JSAutoCompartment ac(cx, compilationGlobal);
+  // We're not directly using this AutoJSAPI here, but callees use it via
+  // AutoJSContext.
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(xpc::CompilationScope())) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   bool isFirstBinding = aFlags & XBLBinding_Serialize_IsFirstBinding;
   rv = Init(id, aDocInfo, nullptr, isFirstBinding);
@@ -1024,9 +1027,12 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
   // mKeyHandlersRegistered and mKeyHandlers are not serialized as they are
   // computed on demand.
 
-  AutoSafeJSContext cx;
-  JS::Rooted<JSObject*> compilationGlobal(cx, xpc::CompilationScope());
-  JSAutoCompartment ac(cx, compilationGlobal);
+  // We're not directly using this AutoJSAPI here, but callees use it via
+  // AutoJSContext.
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(xpc::CompilationScope())) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   uint8_t flags = mInheritStyle ? XBLBinding_Serialize_InheritStyle : 0;
 

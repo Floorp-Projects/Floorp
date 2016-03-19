@@ -1134,8 +1134,7 @@ AudioManager::MaybeUpdateVolumeSettingToDatabase(bool aForce)
   }
 
   // Send events to update the Gaia volumes
-  mozilla::AutoSafeJSContext cx;
-  JS::Rooted<JS::Value> value(cx);
+  JS::Rooted<JS::Value> value(nsContentUtils::RootingCx());
   uint32_t volume = 0;
   for (uint32_t idx = 0; idx < MOZ_ARRAY_LENGTH(gVolumeData); ++idx) {
     int32_t streamType = gVolumeData[idx].mStreamType;

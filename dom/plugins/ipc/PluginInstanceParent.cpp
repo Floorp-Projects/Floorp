@@ -1735,6 +1735,13 @@ PluginInstanceParent::NPP_SetValue(NPNVariable variable, void* value)
 
         return result;
 
+    case NPNVCSSZoomFactor:
+        if (!CallNPP_SetValue_NPNVCSSZoomFactor(*static_cast<double*>(value),
+                                                &result))
+            return NPERR_GENERIC_ERROR;
+
+        return result;
+
     default:
         NS_ERROR("Unhandled NPNVariable in NPP_SetValue");
         MOZ_LOG(GetPluginLog(), LogLevel::Warning,

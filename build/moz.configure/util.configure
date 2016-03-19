@@ -7,6 +7,7 @@
 @template
 @advanced
 def warn(*args):
+    'Print a warning.'
     import sys
     print(*args, file=sys.stderr)
     sys.stderr.flush()
@@ -15,10 +16,21 @@ def warn(*args):
 @template
 @advanced
 def error(*args):
+    'Print an error and terminate configure.'
     import sys
     print(*args, file=sys.stderr)
     sys.stderr.flush()
     sys.exit(1)
+
+
+@template
+@advanced
+def configure_error(message):
+    '''Raise a programming error and terminate configure.
+    Primarily for use in moz.configure templates to sanity check
+    their inputs from moz.configure usage.'''
+    from mozbuild.configure import ConfigureError
+    raise ConfigureError(message)
 
 
 @template
@@ -77,6 +89,12 @@ def unique_list(l):
             result.append(i)
     return result
 
+@template
+@advanced
+def Version(v):
+    'A version number that can be compared usefully.'
+    from mozbuild.configure.util import Version as _Version
+    return _Version(v)
 
 # Denotes a deprecated option. Combines option() and @depends:
 # @deprecated_option('--option')

@@ -48,6 +48,7 @@
 #include "mozilla/dom/Voicemail.h"
 #include "mozilla/dom/TVManager.h"
 #include "mozilla/dom/VRDevice.h"
+#include "mozilla/dom/workers/RuntimeService.h"
 #include "mozilla/Hal.h"
 #include "nsISiteSpecificUserAgent.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -748,6 +749,17 @@ Navigator::JavaEnabled(ErrorResult& aRv)
   nsMimeType *mimeType = mMimeTypes->NamedItem(javaMIME);
 
   return mimeType && mimeType->GetEnabledPlugin();
+}
+
+uint64_t
+Navigator::HardwareConcurrency()
+{
+  workers::RuntimeService* rts = workers::RuntimeService::GetOrCreateService();
+  if (!rts) {
+    return 1;
+  }
+
+  return rts->ClampedHardwareConcurrency();
 }
 
 void

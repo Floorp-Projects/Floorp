@@ -1164,6 +1164,13 @@ MacroAssembler::branchTestMagicImpl(Condition cond, const T& t, L label)
     ma_b(label, cond);
 }
 
+void
+MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMagic why, Label* label)
+{
+    branchTestMagic(cond, valaddr, label);
+    branch32(cond, ToPayload(valaddr), Imm32(why), label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

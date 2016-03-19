@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<!--
+user_pref("browser.send_pings", true);
+-->
+<script>
+
+function boom() {
+  var aLink = document.createElement('a');
+  document.body.appendChild(aLink);
+  aLink.ping = "ping";
+  aLink.href = "href";
+  aLink.click();
+
+  var baseElement = document.createElement('base');
+  baseElement.setAttribute("href", "javascript:void 0");
+  document.head.appendChild(baseElement);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

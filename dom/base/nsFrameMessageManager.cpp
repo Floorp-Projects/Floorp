@@ -1646,7 +1646,6 @@ void
 nsMessageManagerScriptExecutor::Shutdown()
 {
   if (sCachedScripts) {
-    AutoSafeJSContext cx;
     NS_ASSERTION(sCachedScripts != nullptr, "Need cached scripts");
     for (auto iter = sCachedScripts->Iter(); !iter.Done(); iter.Next()) {
       delete iter.Data();
@@ -1761,12 +1760,13 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
                                 JS::SourceBufferHolder::GiveOwnership);
 
   if (dataStringBuf && dataStringLength > 0) {
-    AutoSafeJSContext cx;
     // Compile the script in the compilation scope instead of the current global
     // to avoid keeping the current compartment alive.
-    JS::Rooted<JSObject*> global(cx, xpc::CompilationScope());
-
-    JSAutoCompartment ac(cx, global);
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(xpc::CompilationScope())) {
+      return;
+    }
+    JSContext* cx = jsapi.cx();
     JS::CompileOptions options(cx, JSVERSION_LATEST);
     options.setFileAndLine(url.get(), 1);
     options.setNoScriptRval(true);
@@ -1801,8 +1801,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   const nsAString& aURL,
   bool aRunInGlobalScope)
 {
-  AutoSafeJSContext cx;
-  JS::Rooted<JSScript*> script(cx);
+  JS::Rooted<JSScript*> script(nsContentUtils::RootingCx());
   TryCacheLoadAndCompileScript(aURL, aRunInGlobalScope, true, &script);
 }
 

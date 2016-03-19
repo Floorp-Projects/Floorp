@@ -181,10 +181,11 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
     PR_PL(("***** nsDeviceContextSpecWin::Init - aPrintSettingswas NULL!\n"));
   }
 
-  // Get the Print Name to be used
+  // Get the Printer Name to be used and output format.
   char16_t * printerName = nullptr;
   if (mPrintSettings) {
     mPrintSettings->GetPrinterName(&printerName);
+    mPrintSettings->GetOutputFormat(&mOutputFormat);
   }
 
   // If there is no name then use the default printer
@@ -225,12 +226,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
   *surface = nullptr;
   RefPtr<gfxASurface> newSurface;
 
-  int16_t outputFormat = 0;
-  if (mPrintSettings) {
-    mPrintSettings->GetOutputFormat(&outputFormat);
-  }
-
-  if (outputFormat == nsIPrintSettings::kOutputFormatPDF) {
+  if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
     nsXPIDLString filename;
     mPrintSettings->GetToFileName(getter_Copies(filename));
 
@@ -278,10 +274,24 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
 }
 
 float
+nsDeviceContextSpecWin::GetDPI()
+{
+  // To match the previous printing code we need to return 72 when printing to
+  // PDF and 144 when printing to a Windows surface.
+  return mOutputFormat == nsIPrintSettings::kOutputFormatPDF ? 72.0f : 144.0f;
+}
+
+float
 nsDeviceContextSpecWin::GetPrintingScale()
 {
   MOZ_ASSERT(mPrintSettings);
 
+  // To match the previous printing code there is no scaling for PDF.
+  if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
+    return 1.0f;
+  }
+
+  // The print settings will have the resolution stored from the real device.
   int32_t resolution;
   mPrintSettings->GetResolution(&resolution);
   return float(resolution) / GetDPI();

@@ -405,6 +405,14 @@ MacroAssembler::branchTestBooleanTruthy(bool truthy, const ValueOperand& value, 
     j(truthy ? NonZero : Zero, label);
 }
 
+void
+MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMagic why, Label* label)
+{
+    uint64_t magic = MagicValue(why).asRawBits();
+    cmpPtr(valaddr, ImmWord(magic));
+    j(cond, label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

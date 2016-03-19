@@ -8,6 +8,7 @@
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothUtils.h"
 #include "DOMRequest.h"
+#include "nsContentUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/Promise.h"
@@ -92,8 +93,7 @@ BluetoothReplyRunnable::Run()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mReply);
 
-  AutoSafeJSContext cx;
-  JS::Rooted<JS::Value> v(cx, JS::UndefinedValue());
+  JS::Rooted<JS::Value> v(nsContentUtils::RootingCx(), JS::UndefinedValue());
 
   nsresult rv;
   if (mReply->type() != BluetoothReply::TBluetoothReplySuccess) {
