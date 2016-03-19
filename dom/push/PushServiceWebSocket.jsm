@@ -170,11 +170,6 @@ this.PushServiceWebSocket = {
 
     if (timer == this._backoffTimer) {
       console.debug("onTimerFired: Reconnecting after backoff");
-      if (this._reconnectTestCallback) {
-        // Notify the test callback once the client reconnects.
-        let actualRetryTimeout = Date.now() - this._lastDisconnect;
-        this._reconnectTestCallback(actualRetryTimeout);
-      }
       this._beginWSSetup();
       return;
     }
@@ -331,9 +326,6 @@ this.PushServiceWebSocket = {
    */
   _lastPingTime: 0,
 
-  /** The last time the connection was closed. */
-  _lastDisconnect: 0,
-
   /**
    * A one-shot timer used to ping the server, to avoid timing out idle
    * connections. Reset to the ping interval on each incoming message.
@@ -342,15 +334,6 @@ this.PushServiceWebSocket = {
 
   /** A one-shot timer fired after the reconnect backoff period. */
   _backoffTimer: null,
-
-  /**
-   * A function called when the client reconnects after backing off.
-   *
-   * @param {Number} actualRetryTimeout The time elapsed between the last
-   *  disconnect and reconnect time. This should be >= the backoff delay for
-   *  that attempt.
-   */
-  _reconnectTestCallback: null,
 
   /**
    * Sends a message to the Push Server through an open websocket.
@@ -434,8 +417,6 @@ this.PushServiceWebSocket = {
       this._notifyRequestQueue();
       this._notifyRequestQueue = null;
     }
-
-    this._lastDisconnect = Date.now();
   },
 
   uninit: function() {
