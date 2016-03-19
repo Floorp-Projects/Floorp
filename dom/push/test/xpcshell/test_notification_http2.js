@@ -156,8 +156,7 @@ add_task(function* test_pushNotifications() {
     db
   });
 
-  yield waitForPromise(notifyPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for notifications');
+  yield notifyPromise;
 });
 
 add_task(function* test_complete() {
