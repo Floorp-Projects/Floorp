@@ -340,10 +340,7 @@ DataTransfer::GetFileListInternal(ErrorResult& aRv,
         MOZ_ASSERT(domFile);
       }
 
-      if (!mFileList->Append(domFile)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return nullptr;
-      }
+      mFileList->Append(domFile);
     }
   }
 
@@ -864,16 +861,9 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
   }
 
   Sequence<OwningFileOrDirectory> filesAndDirsSeq;
-
-  if (mFileList && mFileList->Length()) {
-    if (!filesAndDirsSeq.SetLength(mFileList->Length(), mozilla::fallible_t())) {
-      p->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-      return p.forget();
-    }
-
-    for (uint32_t i = 0; i < mFileList->Length(); ++i) {
-      filesAndDirsSeq[i].SetAsFile() = mFileList->Item(i);
-    }
+  mFileList->ToSequence(filesAndDirsSeq, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
   }
 
   p->MaybeResolve(filesAndDirsSeq);
