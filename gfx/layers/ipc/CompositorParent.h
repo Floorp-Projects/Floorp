@@ -251,6 +251,10 @@ public:
   // @see CrossProcessCompositorParent::RecvRequestNotifyAfterRemotePaint
   virtual bool RecvRequestNotifyAfterRemotePaint() override { return true; };
 
+  virtual bool RecvClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
+                                                    const uint32_t& aPresShellId) override;
+  void ClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
+                                        const Maybe<uint32_t>& aPresShellId);
   virtual bool RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
                                                     const CSSIntRegion& aRegion) override;
 

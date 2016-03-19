@@ -939,6 +939,26 @@ CompositorParent::RecvStopFrameTimeRecording(const uint32_t& aStartIndex,
 }
 
 bool
+CompositorParent::RecvClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
+                                                       const uint32_t& aPresShellId)
+{
+  ClearApproximatelyVisibleRegions(aLayersId, Some(aPresShellId));
+  return true;
+}
+
+void
+CompositorParent::ClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
+                                                   const Maybe<uint32_t>& aPresShellId)
+{
+  if (mLayerManager) {
+    mLayerManager->ClearApproximatelyVisibleRegions(aLayersId, aPresShellId);
+
+    // We need to recomposite to update the minimap.
+    ScheduleComposition();
+  }
+}
+
+bool
 CompositorParent::RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
                                                        const CSSIntRegion& aRegion)
 {
@@ -1764,7 +1784,16 @@ static void
 EraseLayerState(uint64_t aId)
 {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  sIndirectLayerTrees.erase(aId);
+
+  auto iter = sIndirectLayerTrees.find(aId);
+  if (iter != sIndirectLayerTrees.end()) {
+    CompositorParent* parent = iter->second.mParent;
+    if (parent) {
+      parent->ClearApproximatelyVisibleRegions(aId, Nothing());
+    }
+
+    sIndirectLayerTrees.erase(iter);
+  }
 }
 
 /*static*/ void
@@ -1944,6 +1973,20 @@ public:
   virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) override { return true; }
   virtual bool RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) override { return true; }
   virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) override  { return true; }
+
+  virtual bool RecvClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
+                                                    const uint32_t& aPresShellId) override
+  {
+    CompositorParent* parent;
+    { // scope lock
+      MonitorAutoLock lock(*sIndirectLayerTreesLock);
+      parent = sIndirectLayerTrees[aLayersId].mParent;
+    }
+    if (parent) {
+      parent->ClearApproximatelyVisibleRegions(aLayersId, Some(aPresShellId));
+    }
+    return true;
+  }
 
   virtual bool RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
                                                     const CSSIntRegion& aRegion) override

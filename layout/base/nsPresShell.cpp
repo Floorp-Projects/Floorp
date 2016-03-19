@@ -5701,7 +5701,10 @@ NotifyCompositorOfVisibleRegionsChange(PresShell* aPresShell,
     return;
   }
 
-  // Send the approximately visible regions to the compositor.
+  // Clear the old approximately visible regions associated with this document.
+  compositorChild->SendClearApproximatelyVisibleRegions(layersId, presShellId);
+
+  // Send the new approximately visible regions to the compositor.
   for (auto iter = aRegions->ConstIter(); !iter.Done(); iter.Next()) {
     const ViewID viewId = iter.Key();
     const CSSIntRegion* region = iter.UserData();
