@@ -1130,15 +1130,3 @@ var ViewSelectionSource = {
 };
 
 ViewSelectionSource.init();
-
-addEventListener("MozApplicationManifest", function(e) {
-  let doc = e.target;
-  let info = {
-    uri: doc.documentURI,
-    characterSet: doc.characterSet,
-    manifest: doc.documentElement.getAttribute("manifest"),
-    principal: doc.nodePrincipal,
-  };
-  sendAsyncMessage("MozApplicationManifest", info);
-}, false);
-
