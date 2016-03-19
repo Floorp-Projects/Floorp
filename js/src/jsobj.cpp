@@ -2788,16 +2788,6 @@ js::GetObjectClassName(JSContext* cx, HandleObject obj)
     return obj->getClass()->name;
 }
 
-bool
-JSObject::callMethod(JSContext* cx, HandleId id, unsigned argc, Value* argv, MutableHandleValue vp)
-{
-    RootedValue fval(cx);
-    RootedObject obj(cx, this);
-    if (!GetProperty(cx, obj, obj, id, &fval))
-        return false;
-    return Invoke(cx, ObjectValue(*obj), fval, argc, argv, vp);
-}
-
 
 /* * */
 
