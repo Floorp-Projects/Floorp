@@ -444,8 +444,7 @@ ResolveMysteryFile(BlobImpl* aImpl,
   BlobChild* actor = ActorFromRemoteBlobImpl(aImpl);
   if (actor) {
     return actor->SetMysteryBlobInfo(aName, aContentType,
-                                     aSize, aLastModifiedDate,
-                                     BlobDirState::eUnknownIfDir);
+                                     aSize, aLastModifiedDate);
   }
   return true;
 }
