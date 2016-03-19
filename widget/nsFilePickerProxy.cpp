@@ -7,7 +7,6 @@
 #include "nsFilePickerProxy.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIFile.h"
-#include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
@@ -143,11 +142,11 @@ nsFilePickerProxy::Open(nsIFilePickerShownCallback* aCallback)
 }
 
 bool
-nsFilePickerProxy::Recv__delete__(const MaybeInputData& aData,
+nsFilePickerProxy::Recv__delete__(const MaybeInputFiles& aFiles,
                                   const int16_t& aResult)
 {
-  if (aData.type() == MaybeInputData::TInputBlobs) {
-    const InfallibleTArray<PBlobChild*>& blobs = aData.get_InputBlobs().blobsChild();
+  if (aFiles.type() == MaybeInputFiles::TInputFiles) {
+    const InfallibleTArray<PBlobChild*>& blobs = aFiles.get_InputFiles().blobsChild();
     for (uint32_t i = 0; i < blobs.Length(); ++i) {
       BlobChild* actor = static_cast<BlobChild*>(blobs[i]);
       RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
@@ -162,24 +161,8 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputData& aData,
       RefPtr<File> file = File::Create(inner, blobImpl);
       MOZ_ASSERT(file);
 
-      OwningFileOrDirectory* element = mFilesOrDirectories.AppendElement();
-      element->SetAsFile() = file;
+      mFilesOrDirectories.AppendElement(file);
     }
-  } else if (aData.type() == MaybeInputData::TInputDirectory) {
-    nsCOMPtr<nsIFile> file;
-    NS_ConvertUTF16toUTF8 path(aData.get_InputDirectory().directoryPath());
-    nsresult rv = NS_NewNativeLocalFile(path, true, getter_AddRefs(file));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return true;
-    }
-
-    RefPtr<Directory> directory =
-      Directory::Create(mParent->GetCurrentInnerWindow(), file,
-                        Directory::eDOMRootDirectory);
-    MOZ_ASSERT(directory);
-
-    OwningFileOrDirectory* element = mFilesOrDirectories.AppendElement();
-    element->SetAsDirectory() = directory;
   }
 
   if (mCallback) {
@@ -199,16 +182,8 @@ nsFilePickerProxy::GetDomFileOrDirectory(nsISupports** aValue)
   }
 
   MOZ_ASSERT(mFilesOrDirectories.Length() == 1);
-
-  if (mFilesOrDirectories[0].IsFile()) {
-    nsCOMPtr<nsIDOMBlob> blob = mFilesOrDirectories[0].GetAsFile().get();
-    blob.forget(aValue);
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(mFilesOrDirectories[0].IsDirectory());
-  RefPtr<Directory> directory = mFilesOrDirectories[0].GetAsDirectory();
-  directory.forget(aValue);
+  nsCOMPtr<nsIDOMBlob> blob = mFilesOrDirectories[0].get();
+  blob.forget(aValue);
   return NS_OK;
 }
 
@@ -219,9 +194,8 @@ class SimpleEnumerator final : public nsISimpleEnumerator
 public:
   NS_DECL_ISUPPORTS
 
-  explicit
-  SimpleEnumerator(const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories)
-    : mFilesOrDirectories(aFilesOrDirectories)
+  explicit SimpleEnumerator(const nsTArray<RefPtr<File>>& aFiles)
+    : mFiles(aFiles)
     , mIndex(0)
   {}
 
@@ -229,26 +203,17 @@ public:
   HasMoreElements(bool* aRetvalue) override
   {
     MOZ_ASSERT(aRetvalue);
-    *aRetvalue = mIndex < mFilesOrDirectories.Length();
+    *aRetvalue = mIndex < mFiles.Length();
     return NS_OK;
   }
 
   NS_IMETHOD
-  GetNext(nsISupports** aValue) override
+  GetNext(nsISupports** aSupports) override
   {
-    NS_ENSURE_TRUE(mIndex < mFilesOrDirectories.Length(), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(mIndex < mFiles.Length(), NS_ERROR_FAILURE);
 
-    uint32_t index = mIndex++;
-
-    if (mFilesOrDirectories[index].IsFile()) {
-      nsCOMPtr<nsIDOMBlob> blob = mFilesOrDirectories[index].GetAsFile().get();
-      blob.forget(aValue);
-      return NS_OK;
-    }
-
-    MOZ_ASSERT(mFilesOrDirectories[index].IsDirectory());
-    RefPtr<Directory> directory = mFilesOrDirectories[index].GetAsDirectory();
-    directory.forget(aValue);
+    nsCOMPtr<nsIDOMBlob> blob = mFiles[mIndex++].get();
+    blob.forget(aSupports);
     return NS_OK;
   }
 
@@ -256,7 +221,7 @@ private:
   ~SimpleEnumerator()
   {}
 
-  nsTArray<mozilla::dom::OwningFileOrDirectory> mFilesOrDirectories;
+  nsTArray<RefPtr<File>> mFiles;
   uint32_t mIndex;
 };
 
@@ -267,8 +232,7 @@ NS_IMPL_ISUPPORTS(SimpleEnumerator, nsISimpleEnumerator)
 NS_IMETHODIMP
 nsFilePickerProxy::GetDomFileOrDirectoryEnumerator(nsISimpleEnumerator** aDomfiles)
 {
-  RefPtr<SimpleEnumerator> enumerator =
-    new SimpleEnumerator(mFilesOrDirectories);
+  RefPtr<SimpleEnumerator> enumerator = new SimpleEnumerator(mFilesOrDirectories);
   enumerator.forget(aDomfiles);
   return NS_OK;
 }

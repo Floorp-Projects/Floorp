@@ -318,7 +318,8 @@ ConvertActorToFile(FileHandleBase* aFileHandle,
   actor->SetMysteryBlobInfo(mutableFile->Name(),
                             mutableFile->Type(),
                             size.get_uint64_t(),
-                            lastModified.get_int64_t());
+                            lastModified.get_int64_t(),
+                            BlobDirState::eUnknownIfDir);
 
   RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
   MOZ_ASSERT(blobImpl);

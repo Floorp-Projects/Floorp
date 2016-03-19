@@ -8,7 +8,6 @@
 #define mozilla_dom_FileList_h
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/UnionTypes.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMFileList.h"
 #include "nsWrapperCache.h"
@@ -40,13 +39,15 @@ public:
     return mParent;
   }
 
-  void Append(File* aFile);
-  void Append(Directory* aDirectory);
+  bool Append(File* aFile)
+  {
+    return mFiles.AppendElement(aFile);
+  }
 
   bool Remove(uint32_t aIndex)
   {
-    if (aIndex < mFilesOrDirectories.Length()) {
-      mFilesOrDirectories.RemoveElementAt(aIndex);
+    if (aIndex < mFiles.Length()) {
+      mFiles.RemoveElementAt(aIndex);
       return true;
     }
 
@@ -55,7 +56,7 @@ public:
 
   void Clear()
   {
-    return mFilesOrDirectories.Clear();
+    return mFiles.Clear();
   }
 
   static FileList* FromSupports(nsISupports* aSupports)
@@ -75,34 +76,29 @@ public:
     return static_cast<FileList*>(aSupports);
   }
 
-  const OwningFileOrDirectory& UnsafeItem(uint32_t aIndex) const
+  File* Item(uint32_t aIndex)
   {
-    MOZ_ASSERT(aIndex < Length());
-    return mFilesOrDirectories[aIndex];
+    return mFiles.SafeElementAt(aIndex);
   }
 
-  void Item(uint32_t aIndex,
-            Nullable<OwningFileOrDirectory>& aFileOrDirectory,
-            ErrorResult& aRv) const;
-
-  void IndexedGetter(uint32_t aIndex, bool& aFound,
-                     Nullable<OwningFileOrDirectory>& aFileOrDirectory,
-                     ErrorResult& aRv) const;
-
-  uint32_t Length() const
+  File* IndexedGetter(uint32_t aIndex, bool& aFound)
   {
-    return mFilesOrDirectories.Length();
+    aFound = aIndex < mFiles.Length();
+    if (!aFound) {
+      return nullptr;
+    }
+    return mFiles.ElementAt(aIndex);
   }
 
-  void ToSequence(Sequence<OwningFileOrDirectory>& aSequence,
-                  ErrorResult& aRv) const;
-
-  bool ClonableToDifferentThreadOrProcess() const;
+  uint32_t Length()
+  {
+    return mFiles.Length();
+  }
 
 private:
   ~FileList() {}
 
-  nsTArray<OwningFileOrDirectory> mFilesOrDirectories;
+  nsTArray<RefPtr<File>> mFiles;
   nsCOMPtr<nsISupports> mParent;
 };
 

@@ -30,8 +30,8 @@ public:
   virtual void
   Shutdown() override;
 
-  virtual nsISupports*
-  GetParentObject() const override;
+  virtual nsPIDOMWindowInner*
+  GetWindow() const override;
 
   virtual void
   GetRootName(nsAString& aRetval) const override;
@@ -41,10 +41,6 @@ public:
 
   virtual bool
   IsSafeDirectory(Directory* aDir) const override;
-
-  virtual void
-  SerializeDOMPath(nsAString& aSerializedString) const override;
-
 private:
   virtual
   ~DeviceStorageFileSystem();
