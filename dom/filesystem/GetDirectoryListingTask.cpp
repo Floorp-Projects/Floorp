@@ -128,15 +128,6 @@ GetDirectoryListingTask::GetRequestParams(const nsString& aSerializedDOMPath,
                                              mFilters);
 }
 
-void
-GetDirectoryListingTask::CreateNormalizedRelativePath(const nsAString& aPath,
-                                                      nsAString& aRelativePath) const
-{
-  uint32_t rootPathLen = mFileSystem->GetLocalRootPath().Length();
-  FileSystemUtils::LocalPathToNormalizedPath(
-    Substring(aPath, rootPathLen, aPath.Length() - rootPathLen), aRelativePath);
-}
-
 FileSystemResponseValue
 GetDirectoryListingTask::GetSuccessRequestResult(ErrorResult& aRv) const
 {
@@ -366,10 +357,11 @@ GetDirectoryListingTask::HandlerCallback()
       MOZ_ASSERT(FileSystemUtils::IsDescendantPath(rootPath, directoryPath));
 #endif
 
-      RefPtr<Directory> directory = Directory::Create(mFileSystem->GetParentObject(),
-                                                      directoryPath,
-                                                      Directory::eNotDOMRootDirectory,
-                                                      mFileSystem);
+      RefPtr<Directory> directory =
+        Directory::Create(mFileSystem->GetParentObject(),
+                          directoryPath,
+                          Directory::eNotDOMRootDirectory,
+                          mFileSystem);
       MOZ_ASSERT(directory);
 
       // Propogate mFilter onto sub-Directory object:
