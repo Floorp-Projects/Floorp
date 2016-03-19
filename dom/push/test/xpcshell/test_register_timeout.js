@@ -83,10 +83,6 @@ add_task(function* test_register_timeout() {
   let record = yield db.getByKeyID(channelID);
   ok(!record, 'Should not store records for timed-out responses');
 
-  yield waitForPromise(
-    timeoutPromise,
-    DEFAULT_TIMEOUT,
-    'Reconnect timed out'
-  );
+  yield timeoutPromise;
   equal(registers, 1, 'Should not handle timed-out register requests');
 });

@@ -68,7 +68,7 @@ add_task(function* test_reconnect_retry() {
     originAttributes: ChromeUtils.originAttributesToSuffix(
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
   });
-  notEqual(registration.endpoint, retryEndpoint, 'Wrong endpoint for new request')
+  notEqual(registration.endpoint, retryEndpoint, 'Wrong endpoint for new request');
 
   equal(registers, 3, 'Wrong registration count');
 });
