@@ -97,6 +97,8 @@ public:
   void ToSequence(Sequence<OwningFileOrDirectory>& aSequence,
                   ErrorResult& aRv) const;
 
+  bool ClonableToDifferentThreadOrProcess() const;
+
 private:
   ~FileList() {}
 
