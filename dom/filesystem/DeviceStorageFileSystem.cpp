@@ -62,6 +62,17 @@ DeviceStorageFileSystem::~DeviceStorageFileSystem()
 {
 }
 
+already_AddRefed<FileSystemBase>
+DeviceStorageFileSystem::Clone()
+{
+  RefPtr<DeviceStorageFileSystem> fs =
+    new DeviceStorageFileSystem(mStorageType, mStorageName);
+
+  fs->mWindowId = mWindowId;
+
+  return fs.forget();
+}
+
 void
 DeviceStorageFileSystem::Init(nsDOMDeviceStorage* aDeviceStorage)
 {
