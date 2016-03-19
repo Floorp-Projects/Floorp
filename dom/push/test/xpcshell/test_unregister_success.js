@@ -60,6 +60,5 @@ add_task(function* test_unregister_success() {
   let record = yield db.getByKeyID(channelID);
   ok(!record, 'Unregister did not remove record');
 
-  yield waitForPromise(unregisterPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for unregister');
+  yield unregisterPromise;
 });

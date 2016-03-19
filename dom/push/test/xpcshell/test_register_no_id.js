@@ -58,7 +58,6 @@ add_task(function* test_register_no_id() {
     'Expected error for incomplete register response'
   );
 
-  yield waitForPromise(helloPromise, DEFAULT_TIMEOUT,
-    'Reconnect after incomplete register response timed out');
+  yield helloPromise;
   equal(registers, 1, 'Wrong register count');
 });
