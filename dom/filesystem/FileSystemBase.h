@@ -25,19 +25,16 @@ public:
 
   // Create file system object from its string representation.
   static already_AddRefed<FileSystemBase>
-  FromString(const nsAString& aString);
+  DeserializeDOMPath(const nsAString& aString);
 
   FileSystemBase();
 
   virtual void
   Shutdown();
 
-  // Get the string representation of the file system.
-  const nsString&
-  ToString() const
-  {
-    return mString;
-  }
+  // SerializeDOMPath the FileSystem to string.
+  virtual void
+  SerializeDOMPath(nsAString& aOutput) const = 0;
 
   virtual nsPIDOMWindowInner*
   GetWindow() const;
@@ -109,9 +106,6 @@ protected:
 
   // The same, but with path separators normalized to "/".
   nsString mNormalizedLocalRootPath;
-
-  // The string representation of the file system.
-  nsString mString;
 
   bool mShutdown;
 
