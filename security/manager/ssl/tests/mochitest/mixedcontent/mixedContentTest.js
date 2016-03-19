@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Helper script for mixed content testing. It opens a new top-level window
  * from a secure origin and '?runtest' query. That tells us to run the test
