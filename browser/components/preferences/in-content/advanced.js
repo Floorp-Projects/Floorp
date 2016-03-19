@@ -503,22 +503,18 @@ var gAdvancedPane = {
   },
 
   // XXX: duplicated in browser.js
-  _getOfflineAppUsage(perm, groups) {
-    let cacheService = Cc["@mozilla.org/network/application-cache-service;1"].
-                       getService(Ci.nsIApplicationCacheService);
-    if (!groups) {
-      try {
-        groups = cacheService.getGroups();
-      } catch (ex) {
-        return 0;
-      }
-    }
+  _getOfflineAppUsage: function (perm, groups)
+  {
+    var cacheService = Components.classes["@mozilla.org/network/application-cache-service;1"].
+                       getService(Components.interfaces.nsIApplicationCacheService);
+    var ios = Components.classes["@mozilla.org/network/io-service;1"].
+              getService(Components.interfaces.nsIIOService);
 
-    let usage = 0;
-    for (let group of groups) {
-      let uri = Services.io.newURI(group, null, null);
+    var usage = 0;
+    for (var i = 0; i < groups.length; i++) {
+      var uri = ios.newURI(groups[i], null, null);
       if (perm.matchesURI(uri, true)) {
-        let cache = cacheService.getActiveCache(groups);
+        var cache = cacheService.getActiveCache(groups[i]);
         usage += cache.usage;
       }
     }
