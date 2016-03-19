@@ -4,6 +4,7 @@
   <title>Test for D3E WheelEvent</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -55,6 +56,11 @@ var gHorizontalLine = 0;
 var gPageHeight = 0;
 var gPageWidth  = 0;
 
+function sendWheelAndWait(aX, aY, aEvent)
+{
+  sendWheelAndPaint(gScrollableElement, aX, aY, aEvent, continueTest);
+}
+
 function* prepareScrollUnits()
 {
   var result = -1;
@@ -62,36 +68,35 @@ function* prepareScrollUnits()
   {
     result = aEvent.detail;
     aEvent.preventDefault();
-    setTimeout(continueTest, 0);
   }
   window.addEventListener("MozMousePixelScroll", handler, true);
 
-  yield synthesizeWheel(gScrollableElement, 10, 10,
-                        { deltaMode: WheelEvent.DOM_DELTA_LINE,
-                          deltaY: 1.0, lineOrPageDeltaY: 1 });
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                           deltaY: 1.0, lineOrPageDeltaY: 1 });
   gLineHeight = result;
   ok(gLineHeight > 10 && gLineHeight < 25, "prepareScrollUnits: gLineHeight may be illegal value, got " + gLineHeight);
 
   result = -1;
-  yield synthesizeWheel(gScrollableElement, 10, 10,
-                        { deltaMode: WheelEvent.DOM_DELTA_LINE,
-                          deltaX: 1.0, lineOrPageDeltaX: 1 });
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                           deltaX: 1.0, lineOrPageDeltaX: 1 });
   gHorizontalLine = result;
   ok(gHorizontalLine > 5 && gHorizontalLine < 16, "prepareScrollUnits: gHorizontalLine may be illegal value, got " + gHorizontalLine);
 
   result = -1;
-  yield synthesizeWheel(gScrollableElement, 10, 10,
-                        { deltaMode: WheelEvent.DOM_DELTA_PAGE,
-                          deltaY: 1.0, lineOrPageDeltaY: 1 });
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                           deltaY: 1.0, lineOrPageDeltaY: 1 });
   gPageHeight = result;
   // XXX Cannot we know the actual scroll port size?
   ok(gPageHeight >= 150 && gPageHeight <= 200,
      "prepareScrollUnits: gPageHeight is strange value, got " + gPageHeight);
 
   result = -1;
-  yield synthesizeWheel(gScrollableElement, 10, 10,
-                        { deltaMode: WheelEvent.DOM_DELTA_PAGE,
-                          deltaX: 1.0, lineOrPageDeltaX: 1 });
+  yield sendWheelAndWait(10, 10,
+                         { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                           deltaX: 1.0, lineOrPageDeltaX: 1 });
   gPageWidth = result;
   ok(gPageWidth >= 150 && gPageWidth <= 200,
      "prepareScrollUnits: gPageWidth is strange value, got " + gPageWidth);
@@ -191,7 +196,7 @@ function* testDeltaMultiplierPrefs()
   ];
 
   var currentTest, currentModifiers, currentEvent, currentPref, currentMultiplier, testingExpected;
-  var expectedHandlerCalls;
+  var expectedAsyncHandlerCalls;
   var description;
   var calledHandlers = { wheel: false,
                          DOMMouseScroll: { horizontal: false, vertical: false },
@@ -221,7 +226,7 @@ function* testDeltaMultiplierPrefs()
     is(aEvent.deltaY, expectedDeltaY, description + "deltaY (" + currentEvent.deltaY + ") was invalid");
     is(aEvent.deltaZ, expectedDeltaZ, description + "deltaZ (" + currentEvent.deltaZ + ") was invalid");
 
-    if (--expectedHandlerCalls == 0) {
+    if (expectedAsyncHandlerCalls > 0 && --expectedAsyncHandlerCalls == 0) {
       setTimeout(continueTest, 0);
     }
   }
@@ -283,7 +288,7 @@ function* testDeltaMultiplierPrefs()
 
     aEvent.preventDefault();
 
-    if (--expectedHandlerCalls == 0) {
+    if (expectedAsyncHandlerCalls > 0 && --expectedAsyncHandlerCalls == 0) {
       setTimeout(continueTest, 0);
     }
   }
@@ -343,12 +348,12 @@ function* testDeltaMultiplierPrefs()
           var expectedMozMouseX = expectedProps.deltaX >= 1 || expectedProps.deltaX <= -1;
           var expectedMozMouseY = expectedProps.deltaY >= 1 || expectedProps.deltaY <= -1;
 
-          expectedHandlerCalls = 0;
-          if (expectedWheel) ++expectedHandlerCalls;
-          if (expectedDOMMouseX) ++expectedHandlerCalls;
-          if (expectedDOMMouseY) ++expectedHandlerCalls;
-          if (expectedMozMouseX) ++expectedHandlerCalls;
-          if (expectedMozMouseY) ++expectedHandlerCalls;
+          expectedAsyncHandlerCalls = 0;
+          if (expectedWheel) ++expectedAsyncHandlerCalls;
+          if (expectedDOMMouseX) ++expectedAsyncHandlerCalls;
+          if (expectedDOMMouseY) ++expectedAsyncHandlerCalls;
+          if (expectedMozMouseX) ++expectedAsyncHandlerCalls;
+          if (expectedMozMouseY) ++expectedAsyncHandlerCalls;
 
           description = "testDeltaMultiplierPrefs, pref: " + currentPref + "=" + kPrefValues[j] +
             ", deltaMode: " + currentEvent.deltaMode + ", modifiers: \"" + modifierList + "\", (trusted event): ";

@@ -543,6 +543,10 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     }
 #endif /* XP_MACOSX */
 
+    case NPNVCSSZoomFactor: {
+        *static_cast<double*>(aValue) = mCSSZoomFactor;
+        return NPERR_NO_ERROR;
+    }
 #ifdef DEBUG
     case NPNVjavascriptEnabledBool:
     case NPNVasdEnabledBool:
@@ -814,6 +818,21 @@ PluginInstanceChild::AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value,
 
     NPBool v = value;
     *result = mPluginIface->setvalue(GetNPP(), NPNVprivateModeBool, &v);
+    return true;
+}
+
+bool
+PluginInstanceChild::AnswerNPP_SetValue_NPNVCSSZoomFactor(const double& value,
+                                                          NPError* result)
+{
+    if (!mPluginIface->setvalue) {
+        *result = NPERR_GENERIC_ERROR;
+        return true;
+    }
+
+    mCSSZoomFactor = value;
+    double v = value;
+    *result = mPluginIface->setvalue(GetNPP(), NPNVCSSZoomFactor, &v);
     return true;
 }
 

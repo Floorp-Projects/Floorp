@@ -267,12 +267,48 @@ this.NetUtil = {
      *            The contentPolicyType of the channel.
      *            Any of the content types defined in nsIContentPolicy.idl.
      *        }
+     * @param aOriginCharset [deprecated]
+     *        The character set for the URI.  Only used if aWhatToLoad is a
+     *        string, which is a deprecated API.  Must be undefined otherwise.
+     *        Use NetUtil.newURI if you need to use this option.
+     * @param aBaseURI [deprecated]
+     *        The base URI for the spec.  Only used if aWhatToLoad is a string,
+     *        which is a deprecated API.  Must be undefined otherwise.  Use
+     *        NetUtil.newURI if you need to use this option.
      * @return an nsIChannel object.
      */
-    newChannel: function NetUtil_newChannel(aWhatToLoad)
+    newChannel: function NetUtil_newChannel(aWhatToLoad, aOriginCharset, aBaseURI)
     {
-        // Make sure the API is called using only the options object.
-        if (typeof aWhatToLoad != "object" || arguments.length != 1) {
+        // Check for the deprecated API first.
+        if (typeof aWhatToLoad == "string" ||
+            (aWhatToLoad instanceof Ci.nsIFile) ||
+            (aWhatToLoad instanceof Ci.nsIURI)) {
+
+            let uri = (aWhatToLoad instanceof Ci.nsIURI)
+                      ? aWhatToLoad
+                      : this.newURI(aWhatToLoad, aOriginCharset, aBaseURI);
+
+            // log deprecation warning for developers.
+            Services.console.logStringMessage(
+              "Warning: NetUtil.newChannel(uri) deprecated, please provide argument 'aWhatToLoad'");
+
+            // Provide default loadinfo arguments and call the new API.
+            let systemPrincipal =
+              Services.scriptSecurityManager.getSystemPrincipal();
+
+            return this.ioService.newChannelFromURI2(
+                     uri,
+                     null, // loadingNode
+                     systemPrincipal, // loadingPrincipal
+                     null, // triggeringPrincipal
+                     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     Ci.nsIContentPolicy.TYPE_OTHER);
+        }
+
+        // We are using the updated API, that requires only the options object.
+        if (typeof aWhatToLoad != "object" ||
+             aOriginCharset !== undefined ||
+             aBaseURI !== undefined) {
             throw new Components.Exception(
                 "newChannel requires a single object argument",
                 Cr.NS_ERROR_INVALID_ARG,

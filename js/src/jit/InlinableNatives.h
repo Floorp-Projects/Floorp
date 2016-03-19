@@ -109,6 +109,8 @@
     _(IntrinsicIsStringIterator)    \
     _(IntrinsicIsListIterator)      \
                                     \
+    _(IntrinsicGetNextMapEntryForIterator) \
+                                    \
     _(IntrinsicIsTypedArray)        \
     _(IntrinsicIsPossiblyWrappedTypedArray) \
     _(IntrinsicTypedArrayLength)    \

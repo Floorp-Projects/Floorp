@@ -47,8 +47,10 @@ function MapIteratorNext() {
     // Steps 8-9 (omitted).
 
     var mapIterationResultPair = iteratorTemp.mapIterationResultPair;
-    if (!mapIterationResultPair)
-        mapIterationResultPair = iteratorTemp.mapIterationResultPair = [null, null];
+    if (!mapIterationResultPair) {
+        mapIterationResultPair = iteratorTemp.mapIterationResultPair =
+            _CreateMapIterationResultPair();
+    }
 
     var retVal = {value: undefined, done: true};
 

@@ -43,9 +43,9 @@ class MochiRemote(MochitestDesktop):
         self._automation.deleteANRs()
         self._automation.deleteTombstones()
         self.certdbNew = True
-        self.remoteNSPR = os.path.join(options.remoteTestRoot, "nspr")
-        self._dm.removeDir(self.remoteNSPR)
-        self._dm.mkDir(self.remoteNSPR)
+        self.remoteMozLog = os.path.join(options.remoteTestRoot, "mozlog")
+        self._dm.removeDir(self.remoteMozLog)
+        self._dm.mkDir(self.remoteMozLog)
         self.remoteChromeTestDir = os.path.join(
             options.remoteTestRoot,
             "chrome")
@@ -64,7 +64,7 @@ class MochiRemote(MochitestDesktop):
         self._dm.removeDir(self.remoteChromeTestDir)
         blobberUploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
         if blobberUploadDir:
-            self._dm.getDirectory(self.remoteNSPR, blobberUploadDir)
+            self._dm.getDirectory(self.remoteMozLog, blobberUploadDir)
         MochitestDesktop.cleanup(self, options)
 
     def findPath(self, paths, filename=None):
@@ -280,11 +280,11 @@ class MochiRemote(MochitestDesktop):
             del browserEnv["MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA"]
         if "XPCOM_MEM_BLOAT_LOG" in browserEnv:
             del browserEnv["XPCOM_MEM_BLOAT_LOG"]
-        # override nsprLogs to avoid processing in MochitestDesktop base class
-        self.nsprLogs = None
-        browserEnv["NSPR_LOG_FILE"] = os.path.join(
-            self.remoteNSPR,
-            self.nsprLogName)
+        # override mozLogs to avoid processing in MochitestDesktop base class
+        self.mozLogs = None
+        browserEnv["MOZ_LOG_FILE"] = os.path.join(
+            self.remoteMozLog,
+            self.mozLogName)
         return browserEnv
 
     def runApp(self, *args, **kwargs):
@@ -367,7 +367,7 @@ def run_test_harness(options):
     procName = options.app.split('/')[-1]
     dm.killProcess(procName)
 
-    mochitest.nsprLogName = "nspr.log"
+    mochitest.mozLogName = "moz.log"
     try:
         dm.recordLogcat()
         retVal = mochitest.runTests(options)

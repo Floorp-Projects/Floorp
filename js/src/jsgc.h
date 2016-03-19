@@ -48,7 +48,9 @@ enum State {
     MARK,
     SWEEP,
     FINALIZE,
-    COMPACT
+    COMPACT,
+
+    NUM_STATES
 };
 
 /* Map from C++ type to alloc kind. JSObject does not have a 1:1 mapping, so must use Arena::thingSize. */
@@ -1288,6 +1290,9 @@ struct MOZ_RAII AutoAssertNoNurseryAlloc
     explicit AutoAssertNoNurseryAlloc(JSRuntime* rt) {}
 #endif
 };
+
+const char*
+StateName(State state);
 
 } /* namespace gc */
 

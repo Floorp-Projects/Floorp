@@ -59,8 +59,8 @@ private:
   SystemWorkerManager();
   ~SystemWorkerManager();
 
-  nsresult InitWifi(JSContext *cx);
-  nsresult InitKeyStore(JSContext *cx);
+  nsresult InitWifi();
+  nsresult InitKeyStore();
 
   nsCOMPtr<nsIWorkerHolder> mWifiWorker;
 

@@ -375,7 +375,10 @@ ForEachPing(nsIContent* aContent, ForEachPingCallback aCallback, void* aClosure)
     ios->NewURI(NS_ConvertUTF16toUTF8(tokenizer.nextToken()),
                 doc->GetDocumentCharacterSet().get(),
                 baseURI, getter_AddRefs(uri));
-
+    // if we can't generate a valid URI, then there is nothing to do
+    if (!uri) {
+      continue;
+    }
     // Explicitly not allow loading data: URIs
     bool isDataScheme =
       (NS_SUCCEEDED(uri->SchemeIs("data", &isDataScheme)) && isDataScheme);
@@ -1025,16 +1028,11 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
     *aSink = mFind;
     NS_ADDREF((nsISupports*)*aSink);
     return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsIEditingSession)) &&
-             NS_SUCCEEDED(EnsureEditorData())) {
-    nsCOMPtr<nsIEditingSession> editingSession;
-    mEditorData->GetEditingSession(getter_AddRefs(editingSession));
-    if (editingSession) {
-      editingSession.forget(aSink);
-      return NS_OK;
-    }
-
-    return NS_NOINTERFACE;
+  } else if (aIID.Equals(NS_GET_IID(nsIEditingSession))) {
+    nsCOMPtr<nsIEditingSession> es;
+    GetEditingSession(getter_AddRefs(es));
+    es.forget(aSink);
+    return *aSink ? NS_OK : NS_NOINTERFACE;
   } else if (aIID.Equals(NS_GET_IID(nsIClipboardDragDropHookList)) &&
              NS_SUCCEEDED(EnsureTransferableHookData())) {
     *aSink = mTransferableHookData;
@@ -1052,14 +1050,8 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
       return treeOwner->QueryInterface(aIID, aSink);
     }
   } else if (aIID.Equals(NS_GET_IID(nsITabChild))) {
-    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-    nsresult rv = GetTreeOwner(getter_AddRefs(treeOwner));
-    if (NS_SUCCEEDED(rv) && treeOwner) {
-      nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(treeOwner);
-      if (ir) {
-        return ir->GetInterface(aIID, aSink);
-      }
-    }
+    *aSink = GetTabChild().take();
+    return *aSink ? NS_OK : NS_ERROR_FAILURE;
   } else if (aIID.Equals(NS_GET_IID(nsIContentFrameMessageManager))) {
     nsCOMPtr<nsITabChild> tabChild =
       do_GetInterface(static_cast<nsIDocShell*>(this));
@@ -14357,4 +14349,30 @@ nsDocShell::IssueWarning(uint32_t aWarning, bool aAsError)
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetEditingSession(nsIEditingSession** aEditSession)
+{
+  if (!NS_SUCCEEDED(EnsureEditorData())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mEditorData->GetEditingSession(aEditSession);
+  return *aEditSession ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetScriptableTabChild(nsITabChild** aTabChild)
+{
+  *aTabChild = GetTabChild().take();
+  return *aTabChild ? NS_OK : NS_ERROR_FAILURE;
+}
+
+already_AddRefed<nsITabChild>
+nsDocShell::GetTabChild()
+{
+  nsCOMPtr<nsIDocShellTreeOwner> owner(mTreeOwner);
+  nsCOMPtr<nsITabChild> tc = do_GetInterface(owner);
+  return tc.forget();
 }

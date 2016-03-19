@@ -476,6 +476,10 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void storeValue(JSValueType type, Register reg, Address dest);
     void storeValue(const Value& val, Address dest);
     void storeValue(const Value& val, BaseIndex dest);
+    void storeValue(const Address& src, const Address& dest, Register temp) {
+        loadPtr(src, temp);
+        storePtr(temp, dest);
+    }
 
     void loadValue(Address src, ValueOperand val);
     void loadValue(Operand dest, ValueOperand val) {

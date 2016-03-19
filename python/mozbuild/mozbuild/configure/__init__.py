@@ -93,7 +93,7 @@ class ConfigureSandbox(dict):
     BUILTINS = ReadOnlyDict({
         b: __builtins__[b]
         for b in ('None', 'False', 'True', 'int', 'bool', 'any', 'all', 'len',
-                  'list', 'set', 'dict')
+                  'list', 'tuple', 'set', 'dict', 'isinstance')
     }, __import__=forbidden_import)
 
     # Expose a limited set of functions from os.path

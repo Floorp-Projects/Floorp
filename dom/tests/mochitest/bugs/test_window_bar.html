@@ -48,7 +48,8 @@ function testWindow(w)
     }
     else {
       // w.location.search == '?true' if we expect the bars to be on, and
-      // '?false' otherwise.
+      // '?false' otherwise.  By default, no bars are enabled, so '?default'
+      // can be handled the same way as '?false'.
       var enabled = w.location.search == '?true';
       is(w[feature].visible, enabled, feature + ' should follow window.open settings.');
     }
@@ -64,7 +65,7 @@ function testWindow(w)
   w.close();
 
   numWindows++;
-  if (numWindows == 2) {
+  if (numWindows == 3) {
     // We're done!
     SimpleTest.finish();
   }
@@ -86,6 +87,10 @@ var noBarsWindow =
               'menubar=no,toolbar=no,location=no,' +
               'personalbar=no,status=no,scrollbars=no',
               false);
+
+var defaultWindow =
+  window.open('file_window_bar.html?default', 'default-bars',
+              'width=500,height=500', false);
 
 </script>
 </pre>

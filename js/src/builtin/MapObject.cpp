@@ -186,7 +186,27 @@ bool
 MapIteratorObject::next(JSContext* cx, Handle<MapIteratorObject*> mapIterator,
                         HandleArrayObject resultPairObj)
 {
+    // Check invariants for inlined _GetNextMapEntryForIterator.
+
+    // The array should be tenured, so that post-barrier can be done simply.
+    MOZ_ASSERT(resultPairObj->isTenured());
+
+    // The array elements should be fixed.
+    MOZ_ASSERT(resultPairObj->hasFixedElements());
     MOZ_ASSERT(resultPairObj->getDenseInitializedLength() == 2);
+    MOZ_ASSERT(resultPairObj->getDenseCapacity() >= 2);
+
+#ifdef DEBUG
+    // The array elements should be null, so that inlined
+    // _GetNextMapEntryForIterator doesn't have to perform pre-barrier.
+    RootedValue val(cx);
+    if (!GetElement(cx, resultPairObj, resultPairObj, 0, &val))
+        return false;
+    MOZ_ASSERT(val.isNull());
+    if (!GetElement(cx, resultPairObj, resultPairObj, 1, &val))
+        return false;
+    MOZ_ASSERT(val.isNull());
+#endif
 
     ValueMap::Range* range = MapIteratorObjectRange(mapIterator);
     if (!range || range->empty()) {
@@ -211,6 +231,29 @@ MapIteratorObject::next(JSContext* cx, Handle<MapIteratorObject*> mapIterator,
     }
     range->popFront();
     return false;
+}
+
+/* static */ JSObject*
+MapIteratorObject::createResultPair(JSContext* cx)
+{
+    RootedArrayObject resultPairObj(cx, NewDenseFullyAllocatedArray(cx, 2, nullptr, TenuredObject));
+    if (!resultPairObj)
+        return nullptr;
+
+    Rooted<TaggedProto> proto(cx, resultPairObj->getTaggedProto());
+    ObjectGroup* group = ObjectGroupCompartment::makeGroup(cx, resultPairObj->getClass(), proto);
+    if (!group)
+        return nullptr;
+    resultPairObj->setGroup(group);
+
+    resultPairObj->setDenseInitializedLength(2);
+    resultPairObj->initDenseElement(0, NullValue());
+    resultPairObj->initDenseElement(1, NullValue());
+
+    // See comments in MapIteratorObject::next.
+    AddTypePropertyId(cx, resultPairObj, JSID_VOID, TypeSet::UnknownType());
+
+    return resultPairObj;
 }
 
 

@@ -150,6 +150,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void storeValue(ValueOperand val, BaseIndex dest) {
         storeValue(val, Operand(dest));
     }
+    void storeValue(const Address& src, const Address& dest, Register temp) {
+        MOZ_ASSERT(src.base != temp);
+        MOZ_ASSERT(dest.base != temp);
+
+        load32(ToType(src), temp);
+        store32(temp, ToType(dest));
+
+        load32(ToPayload(src), temp);
+        store32(temp, ToPayload(dest));
+    }
     void loadValue(Operand src, ValueOperand val) {
         Operand payload = ToPayload(src);
         Operand type = ToType(src);

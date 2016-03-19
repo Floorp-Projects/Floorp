@@ -226,7 +226,9 @@ class WrapperMapRef : public BufferableRef
         if (key.kind == CrossCompartmentKey::ObjectWrapper ||
             key.kind == CrossCompartmentKey::DebuggerObject ||
             key.kind == CrossCompartmentKey::DebuggerEnvironment ||
-            key.kind == CrossCompartmentKey::DebuggerSource)
+            key.kind == CrossCompartmentKey::DebuggerSource ||
+            key.kind == CrossCompartmentKey::DebuggerWasmScript ||
+            key.kind == CrossCompartmentKey::DebuggerWasmSource)
         {
             MOZ_ASSERT(IsInsideNursery(key.wrapped) ||
                        key.wrapped->asTenured().getTraceKind() == JS::TraceKind::Object);
@@ -767,6 +769,8 @@ CrossCompartmentKey::needsSweep()
       case CrossCompartmentKey::DebuggerObject:
       case CrossCompartmentKey::DebuggerEnvironment:
       case CrossCompartmentKey::DebuggerSource:
+      case CrossCompartmentKey::DebuggerWasmScript:
+      case CrossCompartmentKey::DebuggerWasmSource:
           MOZ_ASSERT(IsInsideNursery(wrapped) ||
                      wrapped->asTenured().getTraceKind() == JS::TraceKind::Object);
           keyDying = IsAboutToBeFinalizedUnbarriered(reinterpret_cast<JSObject**>(&wrapped));
@@ -1015,7 +1019,7 @@ JSCompartment::updateDebuggerObservesFlag(unsigned flag)
                            ? unsafeUnbarrieredMaybeGlobal()
                            : maybeGlobal();
     const GlobalObject::DebuggerVector* v = global->getDebuggers();
-    for (Debugger * const* p = v->begin(); p != v->end(); p++) {
+    for (auto p = v->begin(); p != v->end(); p++) {
         Debugger* dbg = *p;
         if (flag == DebuggerObservesAllExecution ? dbg->observesAllExecution() :
             flag == DebuggerObservesCoverage ? dbg->observesCoverage() :

@@ -25,6 +25,13 @@
 #include "VideoStreamTrack.h"
 #include "Layers.h"
 
+// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
+// GetTickCount() and conflicts with NS_DECL_NSIDOMMEDIASTREAM, containing
+// currentTime getter.
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+
 #ifdef LOG
 #undef LOG
 #endif

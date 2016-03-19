@@ -88,6 +88,9 @@ class WebPlatformTestsUpdater(MozbuildObject):
 
         if kwargs["config"] is None:
             kwargs["config"] = os.path.join(self.topsrcdir, 'testing', 'web-platform', 'wptrunner.ini')
+        if kwargs["product"] is None:
+            kwargs["product"] = "firefox"
+
         updatecommandline.check_args(kwargs)
         logger = update.setup_logging(kwargs, {"mach": sys.stdout})
 

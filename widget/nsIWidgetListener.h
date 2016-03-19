@@ -80,6 +80,12 @@ public:
   virtual void SizeModeChanged(nsSizeMode aSizeMode);
 
   /**
+   * Called when the DPI (device resolution scaling factor) is changed,
+   * such that UI elements may need to be rescaled.
+   */
+  virtual void UIResolutionChanged();
+
+  /**
    * Called when the z-order of the window is changed. Returns true if the
    * notification was handled. aPlacement indicates the new z order. If
    * placement is nsWindowZRelative, then aRequestBelow should be the

@@ -849,6 +849,9 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    void branchPtrInNurseryRange(Condition cond, const Address& address, Register temp, Label* label)
+        DEFINED_ON(x86);
+    void branchValueIsNurseryObject(Condition cond, const Address& address, Register temp, Label* label) PER_ARCH;
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label) PER_ARCH;
 
     // This function compares a Value (lhs) which is having a private pointer
@@ -1006,6 +1009,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchTestMagic(Condition cond, const ValueOperand& value, L label)
         DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
+    inline void branchTestMagic(Condition cond, const Address& valaddr, JSWhyMagic why, Label* label) PER_ARCH;
+
     inline void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
                                      Label* label);
 
@@ -1031,6 +1036,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename T, typename S>
     inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, Label* label)
         DEFINED_ON(x86_shared);
+
+    template <typename T>
+    void branchPtrInNurseryRangeImpl(Condition cond, const T& ptr, Register temp, Label* label)
+        DEFINED_ON(x86);
+    template <typename T>
+    void branchValueIsNurseryObjectImpl(Condition cond, const T& value, Register temp, Label* label)
+        DEFINED_ON(arm64, mips64, x64);
 
     template <typename T>
     inline void branchTestUndefinedImpl(Condition cond, const T& t, Label* label)

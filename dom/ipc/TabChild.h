@@ -512,7 +512,11 @@ public:
   static inline TabChild*
   GetFrom(nsIDocShell* aDocShell)
   {
-    nsCOMPtr<nsITabChild> tc = do_GetInterface(aDocShell);
+    if (!aDocShell) {
+      return nullptr;
+    }
+
+    nsCOMPtr<nsITabChild> tc = aDocShell->GetTabChild();
     return static_cast<TabChild*>(tc.get());
   }
 
@@ -534,6 +538,8 @@ public:
 
   static TabChild* GetFrom(nsIPresShell* aPresShell);
   static TabChild* GetFrom(uint64_t aLayersId);
+
+  uint64_t LayersId() { return mLayersId; }
 
   void DidComposite(uint64_t aTransactionId,
                     const TimeStamp& aCompositeStart,

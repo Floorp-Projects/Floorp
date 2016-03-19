@@ -585,6 +585,7 @@ pref("apz.max_velocity_inches_per_ms", "-1.0");
 pref("apz.max_velocity_queue_size", 5);
 pref("apz.min_skate_speed", "1.0");
 pref("apz.minimap.enabled", false);
+pref("apz.minimap.visibility.enabled", false);
 pref("apz.overscroll.enabled", false);
 pref("apz.overscroll.min_pan_distance_ratio", "1.0");
 pref("apz.overscroll.spring_friction", "0.015");
@@ -1026,7 +1027,7 @@ pref("print.print_edge_right", 0);
 pref("print.print_edge_bottom", 0);
 
 // Print via the parent process. This is only used when e10s is enabled.
-#if defined(XP_WIN)
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
 pref("print.print_via_parent", true);
 #else
 pref("print.print_via_parent", false);
@@ -3058,7 +3059,7 @@ pref("font.name-list.sans-serif.x-devanagari", "Nirmala UI, Mangal");
 pref("font.name-list.monospace.x-devanagari", "Mangal, Nirmala UI");
 
 pref("font.name.serif.x-tamil", "Latha");
-pref("font.name.sans-serif.x-tamil", "Arial");
+pref("font.name.sans-serif.x-tamil", "");
 pref("font.name.monospace.x-tamil", "Latha");
 pref("font.name-list.serif.x-tamil", "Latha");
 pref("font.name-list.monospace.x-tamil", "Latha");
@@ -3104,7 +3105,7 @@ pref("font.name-list.serif.x-gujr", "Shruti");
 pref("font.name-list.monospace.x-gujr", "Shruti");
 
 pref("font.name.serif.x-guru", "Raavi");
-pref("font.name.sans-serif.x-guru", "Arial");
+pref("font.name.sans-serif.x-guru", "");
 pref("font.name.monospace.x-guru", "Raavi");
 pref("font.name-list.serif.x-guru", "Raavi, Saab");
 pref("font.name-list.monospace.x-guru", "Raavi, Saab");

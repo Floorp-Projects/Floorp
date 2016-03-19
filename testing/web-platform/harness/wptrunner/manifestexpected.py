@@ -29,10 +29,10 @@ def data_cls_getter(output_node, visited_node):
     raise ValueError
 
 
-def bool_prop(name, node):
-    """Boolean property"""
+def disabled(node):
+    """Boolean indicating whether the test is disabled"""
     try:
-        return node.get(name)
+        return node.get("disabled")
     except KeyError:
         return None
 
@@ -109,11 +109,7 @@ class ExpectedManifest(ManifestItem):
 
     @property
     def disabled(self):
-        return bool_prop("disabled", self)
-
-    @property
-    def restart_after(self):
-        return bool_prop("restart-after", self)
+        return disabled(self)
 
     @property
     def tags(self):
@@ -127,11 +123,7 @@ class ExpectedManifest(ManifestItem):
 class DirectoryManifest(ManifestItem):
     @property
     def disabled(self):
-        return bool_prop("disabled", self)
-
-    @property
-    def restart_after(self):
-        return bool_prop("restart-after", self)
+        return disabled(self)
 
     @property
     def tags(self):
@@ -172,11 +164,7 @@ class TestNode(ManifestItem):
 
     @property
     def disabled(self):
-        return bool_prop("disabled", self)
-
-    @property
-    def restart_after(self):
-        return bool_prop("restart-after", self)
+        return disabled(self)
 
     @property
     def tags(self):

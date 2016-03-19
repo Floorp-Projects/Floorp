@@ -412,6 +412,8 @@ typedef enum {
 
   NPNVdocumentOrigin = 22,
 
+  NPNVCSSZoomFactor = 23,
+
   NPNVpluginDrawingModel = 1000 /* Get the current drawing model (NPDrawingModel) */
 #if defined(XP_MACOSX)
   , NPNVcontentsScaleFactor = 1001

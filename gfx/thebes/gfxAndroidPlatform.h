@@ -45,29 +45,10 @@ public:
     // platform implementations of font functions
     virtual bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags);
     virtual gfxPlatformFontList* CreatePlatformFontList();
-    virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
-                                          uint16_t aWeight,
-                                          int16_t aStretch,
-                                          uint8_t aStyle);
-    virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
-                                           uint16_t aWeight,
-                                           int16_t aStretch,
-                                           uint8_t aStyle,
-                                           const uint8_t* aFontData,
-                                           uint32_t aLength);
 
     virtual void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
                                         int32_t aRunScript,
                                         nsTArray<const char*>& aFontList);
-
-    virtual nsresult GetFontList(nsIAtom *aLangGroup,
-                                 const nsACString& aGenericFamily,
-                                 nsTArray<nsString>& aListOfFonts);
-
-    virtual nsresult UpdateFontList();
-
-    virtual nsresult GetStandardFamilyName(const nsAString& aFontName,
-                                           nsAString& aFamilyName);
 
     gfxFontGroup*
     CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,

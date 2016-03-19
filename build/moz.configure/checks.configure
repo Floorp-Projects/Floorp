@@ -52,6 +52,8 @@ def check_prog(var, progs, allow_missing=False):
     option(env=var, nargs=1, help='Path to the %s program' % var.lower())
 
     not_found = 'not found'
+    if not (isinstance(progs, tuple) or isinstance(progs, list)):
+        configure_error('progs should be a list or tuple!')
     progs = list(progs)
 
     @depends(var)

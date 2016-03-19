@@ -198,7 +198,8 @@ class MovePatches(Step):
     provides = ["commits_loaded"]
 
     def create(self, state):
-        state.commits_loaded = 0
+        if not hasattr(state, "commits_loaded"):
+            state.commits_loaded = 0
 
         strip_path = os.path.relpath(state.tests_path,
                                      state.local_tree.root)
@@ -218,6 +219,8 @@ class MovePatches(Step):
                 with open(filename) as f:
                     stripped_patch.diff = f.read()
                 state.patch = None
+            if not stripped_patch.diff:
+                continue
             try:
                 state.sync_tree.import_patch(stripped_patch)
             except:
