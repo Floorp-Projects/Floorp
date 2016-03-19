@@ -58,11 +58,7 @@ add_task(function* test_ws_retry() {
     },
   });
 
-  yield waitForPromise(
-    handshakePromise,
-    45000,
-    'Timed out waiting for successful handshake'
-  );
+  yield handshakePromise;
   [25, 50, 100, 200, 400, 800, 1600, 3200, 6400, 10000].forEach(function(minDelay, index) {
     ok(alarmDelays[index] >= minDelay, `Should wait at least ${
       minDelay}ms before attempt ${index + 1}`);

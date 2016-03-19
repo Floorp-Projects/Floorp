@@ -108,8 +108,7 @@ add_task(function* test_notification_incomplete() {
     }
   });
 
-  yield waitForPromise(notificationPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for incomplete notifications');
+  yield notificationPromise;
 
   let storeRecords = yield db.getAllKeyIDs();
   storeRecords.sort(({pushEndpoint: a}, {pushEndpoint: b}) =>

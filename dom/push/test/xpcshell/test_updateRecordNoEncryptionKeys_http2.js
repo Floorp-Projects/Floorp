@@ -67,8 +67,7 @@ add_task(function* test1() {
     db
   });
 
-  yield waitForPromise(notifyPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for notifications');
+  yield notifyPromise;
 
   let aRecord = yield db.getByKeyID(serverURL + '/subscriptionNoKey');
   ok(aRecord, 'The record should still be there');

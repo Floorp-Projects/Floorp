@@ -81,8 +81,7 @@ add_task(function* test_register_rollback() {
   );
 
   // Should send an out-of-band unregister request.
-  yield waitForPromise(unregisterPromise, DEFAULT_TIMEOUT,
-    'Unregister request timed out');
+  yield unregisterPromise;
   equal(handshakes, 1, 'Wrong handshake count');
   equal(registers, 1, 'Wrong register count');
 });

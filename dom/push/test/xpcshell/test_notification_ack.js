@@ -118,8 +118,6 @@ add_task(function* test_notification_ack() {
     }
   });
 
-  yield waitForPromise(notifyPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for notifications');
-  yield waitForPromise(ackPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for multiple acknowledgements');
+  yield notifyPromise;
+  yield ackPromise;
 });
