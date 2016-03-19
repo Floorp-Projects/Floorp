@@ -51,7 +51,7 @@ OSFileSystem::GetWindow() const
 void
 OSFileSystem::GetRootName(nsAString& aRetval) const
 {
-  return aRetval.AssignLiteral("/");
+  aRetval.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
 }
 
 bool
