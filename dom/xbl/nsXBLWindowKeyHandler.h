@@ -103,6 +103,12 @@ protected:
   bool GetElementForHandler(nsXBLPrototypeHandler* aHandler,
                             mozilla::dom::Element** aElementForHandler);
 
+  /**
+   * IsExecutableElement() returns true if aElement is executable.
+   * Otherwise, false. aElement should be a command element or a key element.
+   */
+  bool IsExecutableElement(mozilla::dom::Element* aElement) const;
+
   // Using weak pointer to the DOM Element.
   nsWeakPtr              mWeakPtrForElement;
   mozilla::dom::EventTarget* mTarget; // weak ref
