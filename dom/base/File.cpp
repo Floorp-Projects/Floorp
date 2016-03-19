@@ -227,12 +227,6 @@ Blob::IsFile() const
   return mImpl->IsFile();
 }
 
-bool
-Blob::IsDirectory() const
-{
-  return mImpl->IsDirectory();
-}
-
 const nsTArray<RefPtr<BlobImpl>>*
 Blob::GetSubBlobImpls() const
 {
@@ -420,11 +414,10 @@ File::Create(nsISupports* aParent, BlobImpl* aImpl)
 /* static */ already_AddRefed<File>
 File::Create(nsISupports* aParent, const nsAString& aName,
              const nsAString& aContentType, uint64_t aLength,
-             int64_t aLastModifiedDate, BlobDirState aDirState)
+             int64_t aLastModifiedDate)
 {
   RefPtr<File> file = new File(aParent,
-    new BlobImplBase(aName, aContentType, aLength, aLastModifiedDate,
-                     aDirState));
+    new BlobImplBase(aName, aContentType, aLength, aLastModifiedDate));
   return file.forget();
 }
 
@@ -944,17 +937,6 @@ BlobImplFile::SetPath(const nsAString& aPath)
              aPath[aPath.Length() - 1] == char16_t('/'),
              "Path must end with a path separator");
   mPath = aPath;
-}
-
-void
-BlobImplFile::LookupAndCacheIsDirectory()
-{
-  MOZ_ASSERT(mIsFile,
-             "This should only be called when this object has been created "
-             "from an nsIFile to note that the nsIFile is a directory");
-  bool isDir;
-  mFile->IsDirectory(&isDir);
-  mDirState = isDir ? BlobDirState::eIsDir : BlobDirState::eIsNotDir;
 }
 
 ////////////////////////////////////////////////////////////////////////////

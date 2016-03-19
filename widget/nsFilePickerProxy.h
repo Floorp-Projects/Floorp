@@ -13,16 +13,11 @@
 #include "nsCOMArray.h"
 
 #include "mozilla/dom/PFilePickerChild.h"
+#include "mozilla/dom/UnionTypes.h"
 
 class nsIWidget;
 class nsIFile;
 class nsPIDOMWindowInner;
-
-namespace mozilla {
-namespace dom {
-class File;
-} // namespace dom
-} // namespace mozilla
 
 /**
   This class creates a proxy file picker to be used in content processes.
@@ -59,13 +54,13 @@ public:
 
     // PFilePickerChild
     virtual bool
-    Recv__delete__(const MaybeInputFiles& aFiles, const int16_t& aResult) override;
+    Recv__delete__(const MaybeInputData& aData, const int16_t& aResult) override;
 
 private:
     ~nsFilePickerProxy();
     void InitNative(nsIWidget*, const nsAString&) override;
 
-    nsTArray<RefPtr<mozilla::dom::File>> mFilesOrDirectories;
+    nsTArray<mozilla::dom::OwningFileOrDirectory> mFilesOrDirectories;
     nsCOMPtr<nsIFilePickerShownCallback> mCallback;
 
     int16_t   mSelectedType;
