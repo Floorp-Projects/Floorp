@@ -86,7 +86,11 @@ void DownConvertToCodecFormat(const int16_t* src_data,
 
   // Never upsample the capture signal here. This should be done at the
   // end of the send chain.
-  int destination_rate = std::min(codec_rate_hz, sample_rate_hz);
+  // XXX bug 1247574 temporary hack until we switch to full-duplex
+  // We need to know the final audio rate before starting the audio channels,
+  // and this means we can get called back in Process() with the input
+  // rate if it's less than the codec rate.
+  int destination_rate = codec_rate_hz;
 
   // If no stereo codecs are in use, we downmix a stereo stream from the
   // device early in the chain, before resampling.
