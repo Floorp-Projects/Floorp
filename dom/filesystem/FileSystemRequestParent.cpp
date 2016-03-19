@@ -28,7 +28,7 @@ FileSystemRequestParent::~FileSystemRequestParent()
 #define FILESYSTEM_REQUEST_PARENT_DISPATCH_ENTRY(name)                         \
     case FileSystemParams::TFileSystem##name##Params: {                        \
       const FileSystem##name##Params& p = aParams;                             \
-      mFileSystem = FileSystemBase::FromString(p.filesystem());                \
+      mFileSystem = FileSystemBase::DeserializeDOMPath(p.filesystem());        \
       task = name##Task::Create(mFileSystem, p, this, rv);                     \
       if (NS_WARN_IF(rv.Failed())) {                                           \
         return false;                                                          \

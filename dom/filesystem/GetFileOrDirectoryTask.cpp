@@ -69,7 +69,7 @@ GetFileOrDirectoryTask::Create(FileSystemBase* aFileSystem,
   }
 
   task->mType = aParam.isRoot()
-                  ? Directory::eDOMRootDirectory : Directory::eNotRootDirectory;
+                  ? Directory::eDOMRootDirectory : Directory::eNotDOMRootDirectory;
   return task.forget();
 }
 
@@ -200,7 +200,7 @@ GetFileOrDirectoryTask::Work()
   }
 
   if (!exists) {
-    if (mType == Directory::eNotRootDirectory) {
+    if (mType == Directory::eNotDOMRootDirectory) {
       return NS_ERROR_DOM_FILE_NOT_FOUND_ERR;
     }
 
