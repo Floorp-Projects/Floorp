@@ -36,7 +36,7 @@ RemoveTask::Create(FileSystemBase* aFileSystem,
   // aTargetPath can be null. In this case SetError will be called.
 
   nsCOMPtr<nsIGlobalObject> globalObject =
-    do_QueryInterface(aFileSystem->GetWindow());
+    do_QueryInterface(aFileSystem->GetParentObject());
   if (NS_WARN_IF(!globalObject)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -148,7 +148,7 @@ RemoveTask::GetRequestParams(const nsString& aSerializedDOMPath,
 
   param.recursive() = mRecursive;
   if (mTargetBlobImpl) {
-    RefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(),
+    RefPtr<Blob> blob = Blob::Create(mFileSystem->GetParentObject(),
                                      mTargetBlobImpl);
     BlobChild* actor
       = ContentChild::GetSingleton()->GetOrCreateActorForBlob(blob);

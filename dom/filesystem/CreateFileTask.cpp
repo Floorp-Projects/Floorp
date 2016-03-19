@@ -57,7 +57,7 @@ CreateFileTask::Create(FileSystemBase* aFileSystem,
   task->mArrayData.SwapElements(aArrayData);
 
   nsCOMPtr<nsIGlobalObject> globalObject =
-    do_QueryInterface(aFileSystem->GetWindow());
+    do_QueryInterface(aFileSystem->GetParentObject());
   if (NS_WARN_IF(!globalObject)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -351,7 +351,8 @@ CreateFileTask::HandlerCallback()
     return;
   }
 
-  RefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(), mTargetBlobImpl);
+  RefPtr<Blob> blob = Blob::Create(mFileSystem->GetParentObject(),
+                                   mTargetBlobImpl);
   mPromise->MaybeResolve(blob);
   mPromise = nullptr;
   mBlobData = nullptr;
