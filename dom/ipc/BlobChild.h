@@ -31,6 +31,8 @@ class ContentChild;
 class nsIContentChild;
 class PBlobStreamChild;
 
+enum BlobDirState : uint32_t;
+
 class BlobChild final
   : public PBlobChild
 {
@@ -115,7 +117,8 @@ public:
   SetMysteryBlobInfo(const nsString& aName,
                      const nsString& aContentType,
                      uint64_t aLength,
-                     int64_t aLastModifiedDate);
+                     int64_t aLastModifiedDate,
+                     BlobDirState aDirState);
 
   // Use this for non-file blobs.
   bool

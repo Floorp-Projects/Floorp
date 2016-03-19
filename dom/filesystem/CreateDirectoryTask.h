@@ -16,19 +16,16 @@ namespace dom {
 
 class Promise;
 
-class CreateDirectoryTask final : public FileSystemTaskBase
+class CreateDirectoryTask final
+  : public FileSystemTaskBase
 {
 public:
-  static already_AddRefed<CreateDirectoryTask>
-  Create(FileSystemBase* aFileSystem,
-         nsIFile* aTargetPath,
-         ErrorResult& aRv);
-
-  static already_AddRefed<CreateDirectoryTask>
-  Create(FileSystemBase* aFileSystem,
-         const FileSystemCreateDirectoryParams& aParam,
-         FileSystemRequestParent* aParent,
-         ErrorResult& aRv);
+  CreateDirectoryTask(FileSystemBase* aFileSystem,
+                      const nsAString& aPath,
+                      ErrorResult& aRv);
+  CreateDirectoryTask(FileSystemBase* aFileSystem,
+                      const FileSystemCreateDirectoryParams& aParam,
+                      FileSystemRequestParent* aParent);
 
   virtual
   ~CreateDirectoryTask();
@@ -41,15 +38,13 @@ public:
 
 protected:
   virtual FileSystemParams
-  GetRequestParams(const nsString& aSerializedDOMPath,
-                   ErrorResult& aRv) const override;
+  GetRequestParams(const nsString& aFileSystem) const override;
 
   virtual FileSystemResponseValue
-  GetSuccessRequestResult(ErrorResult& aRv) const override;
+  GetSuccessRequestResult() const override;
 
   virtual void
-  SetSuccessRequestResult(const FileSystemResponseValue& aValue,
-                          ErrorResult& aRv) override;
+  SetSuccessRequestResult(const FileSystemResponseValue& aValue) override;
 
   virtual nsresult
   Work() override;
@@ -58,15 +53,8 @@ protected:
   HandlerCallback() override;
 
 private:
-  CreateDirectoryTask(FileSystemBase* aFileSystem,
-                      nsIFile* aTargetPath);
-
-  CreateDirectoryTask(FileSystemBase* aFileSystem,
-                      const FileSystemCreateDirectoryParams& aParam,
-                      FileSystemRequestParent* aParent);
-
   RefPtr<Promise> mPromise;
-  nsCOMPtr<nsIFile> mTargetPath;
+  nsString mTargetRealPath;
 };
 
 } // namespace dom

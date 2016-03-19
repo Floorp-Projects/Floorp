@@ -11,6 +11,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/Directory.h"
+#include "mozilla/dom/FileSystemUtils.h"
+#include "mozilla/dom/OSFileSystem.h"
 #include "nsAttrValueInlines.h"
 #include "nsCRTGlue.h"
 
@@ -249,63 +251,16 @@ class HTMLInputElementState final : public nsISupports
       mValue = aValue;
     }
 
-    void
-    GetFilesOrDirectories(nsPIDOMWindowInner* aWindow,
-                          nsTArray<OwningFileOrDirectory>& aResult) const
+    const nsTArray<RefPtr<BlobImpl>>& GetBlobImpls()
     {
-      for (uint32_t i = 0; i < mBlobImplsOrDirectoryPaths.Length(); ++i) {
-        if (mBlobImplsOrDirectoryPaths[i].mType == Directory::BlobImplOrDirectoryPath::eBlobImpl) {
-          RefPtr<File> file =
-            File::Create(aWindow,
-                         mBlobImplsOrDirectoryPaths[i].mBlobImpl);
-          MOZ_ASSERT(file);
-
-          OwningFileOrDirectory* element = aResult.AppendElement();
-          element->SetAsFile() = file;
-        } else {
-          MOZ_ASSERT(mBlobImplsOrDirectoryPaths[i].mType == Directory::BlobImplOrDirectoryPath::eDirectoryPath);
-
-          nsCOMPtr<nsIFile> file;
-          NS_ConvertUTF16toUTF8 path(mBlobImplsOrDirectoryPaths[i].mDirectoryPath);
-          nsresult rv = NS_NewNativeLocalFile(path, true, getter_AddRefs(file));
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            continue;
-          }
-
-          RefPtr<Directory> directory = Directory::Create(aWindow, file,
-                                                          Directory::eDOMRootDirectory);
-          MOZ_ASSERT(directory);
-
-          OwningFileOrDirectory* element = aResult.AppendElement();
-          element->SetAsDirectory() = directory;
-        }
-      }
+      return mBlobImpls;
     }
 
-    void SetFilesOrDirectories(const nsTArray<OwningFileOrDirectory>& aArray)
+    void SetBlobImpls(const nsTArray<RefPtr<File>>& aFile)
     {
-      mBlobImplsOrDirectoryPaths.Clear();
-      for (uint32_t i = 0; i < aArray.Length(); ++i) {
-        if (aArray[i].IsFile()) {
-          Directory::BlobImplOrDirectoryPath* data =
-            mBlobImplsOrDirectoryPaths.AppendElement();
-
-          data->mBlobImpl = aArray[i].GetAsFile()->Impl();
-          data->mType = Directory::BlobImplOrDirectoryPath::eBlobImpl;
-        } else {
-          MOZ_ASSERT(aArray[i].IsDirectory());
-          nsAutoString fullPath;
-          nsresult rv = aArray[i].GetAsDirectory()->GetFullRealPath(fullPath);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            continue;
-          }
-
-          Directory::BlobImplOrDirectoryPath* data =
-            mBlobImplsOrDirectoryPaths.AppendElement();
-
-          data->mDirectoryPath = fullPath;
-          data->mType = Directory::BlobImplOrDirectoryPath::eDirectoryPath;
-        }
+      mBlobImpls.Clear();
+      for (uint32_t i = 0, len = aFile.Length(); i < len; ++i) {
+        mBlobImpls.AppendElement(aFile[i]->Impl());
       }
     }
 
@@ -319,9 +274,7 @@ class HTMLInputElementState final : public nsISupports
     ~HTMLInputElementState() {}
 
     nsString mValue;
-
-    nsTArray<Directory::BlobImplOrDirectoryPath> mBlobImplsOrDirectoryPaths;
-
+    nsTArray<RefPtr<BlobImpl>> mBlobImpls;
     bool mChecked;
     bool mCheckedSet;
 };
@@ -387,63 +340,31 @@ UploadLastDir::ContentPrefCallback::HandleError(nsresult error)
 namespace {
 
 /**
- * This may return nullptr if the DOM File's implementation of
+ * This may return nullptr if aDomFile's implementation of
  * File::mozFullPathInternal does not successfully return a non-empty
  * string that is a valid path. This can happen on Firefox OS, for example,
  * where the file picker can create Blobs.
  */
 static already_AddRefed<nsIFile>
-DOMFileOrDirectoryToLocalFile(const OwningFileOrDirectory& aData)
+DOMFileToLocalFile(File* aDomFile)
 {
   nsString path;
-
-  if (aData.IsFile()) {
-    ErrorResult rv;
-    aData.GetAsFile()->GetMozFullPathInternal(path, rv);
-    if (rv.Failed() || path.IsEmpty()) {
-      rv.SuppressException();
-      return nullptr;
-    }
-  } else {
-    MOZ_ASSERT(aData.IsDirectory());
-    aData.GetAsDirectory()->GetFullRealPath(path);
+  ErrorResult rv;
+  aDomFile->GetMozFullPathInternal(path, rv);
+  if (rv.Failed() || path.IsEmpty()) {
+    rv.SuppressException();
+    return nullptr;
   }
 
   nsCOMPtr<nsIFile> localFile;
-  nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(path), true,
-                                      getter_AddRefs(localFile));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(path), true,
+                             getter_AddRefs(localFile));
+  if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
     return nullptr;
   }
 
   return localFile.forget();
-}
-
-void
-GetDOMFileOrDirectoryName(const OwningFileOrDirectory& aData,
-                          nsAString& aName)
-{
-  if (aData.IsFile()) {
-    aData.GetAsFile()->GetName(aName);
-  } else {
-    MOZ_ASSERT(aData.IsDirectory());
-    ErrorResult rv;
-    aData.GetAsDirectory()->GetName(aName, rv);
-    NS_WARN_IF(rv.Failed());
-  }
-}
-
-void
-GetDOMFileOrDirectoryPath(const OwningFileOrDirectory& aData,
-                          nsAString& aPath,
-                          ErrorResult& aRv)
-{
-  if (aData.IsFile()) {
-    aData.GetAsFile()->GetMozFullPathInternal(aPath, aRv);
-  } else {
-    MOZ_ASSERT(aData.IsDirectory());
-    aData.GetAsDirectory()->GetFullRealPath(aPath);
-  }
 }
 
 } // namespace
@@ -462,7 +383,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
   mFilePicker->GetMode(&mode);
 
   // Collect new selected filenames
-  nsTArray<OwningFileOrDirectory> newFilesOrDirectories;
+  nsTArray<RefPtr<File>> newFiles;
   if (mode == static_cast<int16_t>(nsIFilePicker::modeOpenMultiple)) {
     nsCOMPtr<nsISimpleEnumerator> iter;
     nsresult rv =
@@ -481,12 +402,9 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
       nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(tmp);
       MOZ_ASSERT(domBlob,
                  "Null file object from FilePicker's file enumerator?");
-      if (!domBlob) {
-        continue;
+      if (domBlob) {
+        newFiles.AppendElement(static_cast<File*>(domBlob.get()));
       }
-
-      OwningFileOrDirectory* element = newFilesOrDirectories.AppendElement();
-      element->SetAsFile() = static_cast<File*>(domBlob.get());
     }
   } else {
     MOZ_ASSERT(mode == static_cast<int16_t>(nsIFilePicker::modeOpen) ||
@@ -498,25 +416,16 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
     nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(tmp);
     if (blob) {
       RefPtr<File> file = static_cast<Blob*>(blob.get())->ToFile();
-      MOZ_ASSERT(file);
-
-      OwningFileOrDirectory* element = newFilesOrDirectories.AppendElement();
-      element->SetAsFile() = file;
-    } else if (tmp) {
-      RefPtr<Directory> directory = static_cast<Directory*>(tmp.get());
-      OwningFileOrDirectory* element = newFilesOrDirectories.AppendElement();
-      element->SetAsDirectory() = directory;
+      newFiles.AppendElement(file);
     }
   }
 
-  if (newFilesOrDirectories.IsEmpty()) {
+  if (newFiles.IsEmpty()) {
     return NS_OK;
   }
 
   // Store the last used directory using the content pref service:
-  nsCOMPtr<nsIFile> file =
-    DOMFileOrDirectoryToLocalFile(newFilesOrDirectories[0]);
-
+  nsCOMPtr<nsIFile> file = DOMFileToLocalFile(newFiles[0]);
   if (file) {
     nsCOMPtr<nsIFile> lastUsedDir;
     file->GetParent(getter_AddRefs(lastUsedDir));
@@ -527,7 +436,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
   // The text control frame (if there is one) isn't going to send a change
   // event because it will think this is done by a script.
   // So, we can safely send one by ourself.
-  mInput->SetFilesOrDirectories(newFilesOrDirectories, true);
+  mInput->SetFiles(newFiles, true);
   return nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
                                               static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
                                               NS_LITERAL_STRING("change"), true,
@@ -763,8 +672,7 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
   // Set default directry and filename
   nsAutoString defaultName;
 
-  const nsTArray<OwningFileOrDirectory>& oldFiles =
-    GetFilesOrDirectoriesInternal();
+  const nsTArray<RefPtr<File>>& oldFiles = GetFilesInternal();
 
   nsCOMPtr<nsIFilePickerShownCallback> callback =
     new HTMLInputElement::nsFilePickerShownCallback(this, filePicker);
@@ -773,10 +681,18 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
       aType != FILE_PICKER_DIRECTORY) {
     nsString path;
 
-    nsCOMPtr<nsIFile> localFile = DOMFileOrDirectoryToLocalFile(oldFiles[0]);
-    if (localFile) {
+    ErrorResult error;
+    oldFiles[0]->GetMozFullPathInternal(path, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+
+    nsCOMPtr<nsIFile> localFile;
+    rv = NS_NewLocalFile(path, false, getter_AddRefs(localFile));
+
+    if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIFile> parentFile;
-      nsresult rv = localFile->GetParent(getter_AddRefs(parentFile));
+      rv = localFile->GetParent(getter_AddRefs(parentFile));
       if (NS_SUCCEEDED(rv)) {
         filePicker->SetDisplayDirectory(parentFile);
       }
@@ -787,8 +703,7 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
     // one file was selected before.
     if (oldFiles.Length() == 1) {
       nsAutoString leafName;
-      GetDOMFileOrDirectoryName(oldFiles[0], leafName);
-
+      oldFiles[0]->GetName(leafName);
       if (!leafName.IsEmpty()) {
         filePicker->SetDefaultString(leafName);
       }
@@ -841,7 +756,7 @@ UploadLastDir::FetchDirectoryAndDisplayPicker(nsIDocument* aDoc,
   NS_PRECONDITION(docURI, "docURI is null");
 
   nsCOMPtr<nsILoadContext> loadContext = aDoc->GetLoadContext();
-  nsCOMPtr<nsIContentPrefCallback2> prefCallback =
+  nsCOMPtr<nsIContentPrefCallback2> prefCallback = 
     new UploadLastDir::ContentPrefCallback(aFilePicker, aFpCallback);
 
 #ifdef MOZ_B2G
@@ -1020,7 +935,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLInputElement,
   if (tmp->IsSingleLineTextControl(false)) {
     tmp->mInputData.mState->Traverse(cb);
   }
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFilesOrDirectories)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFiles)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFileList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFilesAndDirectoriesPromise)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -1029,7 +944,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLInputElement,
                                                 nsGenericHTMLFormElementWithState)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mControllers)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFilesOrDirectories)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFiles)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFileList)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFilesAndDirectoriesPromise)
   if (tmp->IsSingleLineTextControl(false)) {
@@ -1088,8 +1003,8 @@ HTMLInputElement::Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) co
         // we can just grab the pretty string and use it as wallpaper
         GetDisplayFileName(it->mStaticDocFileList);
       } else {
-        it->mFilesOrDirectories.Clear();
-        it->mFilesOrDirectories.AppendElements(mFilesOrDirectories);
+        it->mFiles.Clear();
+        it->mFiles.AppendElements(mFiles);
       }
       break;
     case VALUE_MODE_DEFAULT_ON:
@@ -1527,9 +1442,9 @@ HTMLInputElement::GetValueInternal(nsAString& aValue) const
 #else
         // XXX We'd love to assert that this can't happen, but some mochitests
         // use SpecialPowers to circumvent our more sane security model.
-        if (!mFilesOrDirectories.IsEmpty()) {
+        if (!mFiles.IsEmpty()) {
           ErrorResult rv;
-          GetDOMFileOrDirectoryPath(mFilesOrDirectories[0], aValue, rv);
+          mFiles[0]->GetMozFullPath(aValue, rv);
           if (NS_WARN_IF(rv.Failed())) {
             return rv.StealNSResult();
           }
@@ -1541,10 +1456,10 @@ HTMLInputElement::GetValueInternal(nsAString& aValue) const
 #endif
       } else {
         // Just return the leaf name
-        if (mFilesOrDirectories.IsEmpty()) {
+        if (mFiles.IsEmpty()) {
           aValue.Truncate();
         } else {
-          GetDOMFileOrDirectoryName(mFilesOrDirectories[0], aValue);
+          mFiles[0]->GetName(aValue);
         }
       }
 
@@ -1579,8 +1494,8 @@ HTMLInputElement::IsValueEmpty() const
 void
 HTMLInputElement::ClearFiles(bool aSetValueChanged)
 {
-  nsTArray<OwningFileOrDirectory> data;
-  SetFilesOrDirectories(data, aSetValueChanged);
+  nsTArray<RefPtr<File>> files;
+  SetFiles(files, aSetValueChanged);
 }
 
 /* static */ Decimal
@@ -2150,9 +2065,9 @@ void
 HTMLInputElement::MozGetFileNameArray(nsTArray<nsString>& aArray,
                                       ErrorResult& aRv)
 {
-  for (uint32_t i = 0; i < mFilesOrDirectories.Length(); i++) {
-    nsAutoString str;
-    GetDOMFileOrDirectoryPath(mFilesOrDirectories[i], str, aRv);
+  for (uint32_t i = 0; i < mFiles.Length(); i++) {
+    nsString str;
+    mFiles[i]->GetMozFullPathInternal(str, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
@@ -2202,29 +2117,25 @@ HTMLInputElement::MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles)
   if (!global) {
     return;
   }
-
-  nsTArray<OwningFileOrDirectory> files;
+  nsTArray<RefPtr<File>> files;
   for (uint32_t i = 0; i < aFiles.Length(); ++i) {
     RefPtr<File> file = File::Create(global, aFiles[i].get()->Impl());
     MOZ_ASSERT(file);
 
-    OwningFileOrDirectory* element = files.AppendElement();
-    element->SetAsFile() = file;
+    files.AppendElement(file);
   }
-
-  SetFilesOrDirectories(files, true);
+  SetFiles(files, true);
 }
 
 void
-HTMLInputElement::MozSetFileNameArray(const Sequence<nsString>& aFileNames,
-                                      ErrorResult& aRv)
+HTMLInputElement::MozSetFileNameArray(const Sequence< nsString >& aFileNames, ErrorResult& aRv)
 {
   if (XRE_IsContentProcess()) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
   }
 
-  nsTArray<OwningFileOrDirectory> files;
+  nsTArray<RefPtr<File>> files;
   for (uint32_t i = 0; i < aFileNames.Length(); ++i) {
     nsCOMPtr<nsIFile> file;
 
@@ -2241,28 +2152,21 @@ HTMLInputElement::MozSetFileNameArray(const Sequence<nsString>& aFileNames,
       NS_NewLocalFile(aFileNames[i], false, getter_AddRefs(file));
     }
 
-    if (!file) {
+    if (file) {
+      nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
+      RefPtr<File> domFile = File::CreateFromFile(global, file);
+      files.AppendElement(domFile);
+    } else {
       continue; // Not much we can do if the file doesn't exist
     }
 
-    nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
-    if (!global) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    RefPtr<File> domFile = File::CreateFromFile(global, file);
-
-    OwningFileOrDirectory* element = files.AppendElement();
-    element->SetAsFile() = domFile;
   }
 
-  SetFilesOrDirectories(files, true);
+  SetFiles(files, true);
 }
 
 NS_IMETHODIMP
-HTMLInputElement::MozSetFileNameArray(const char16_t** aFileNames,
-                                      uint32_t aLength)
+HTMLInputElement::MozSetFileNameArray(const char16_t** aFileNames, uint32_t aLength)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     // setting the value of a "FILE" input widget requires chrome privilege
@@ -2282,34 +2186,6 @@ HTMLInputElement::MozSetFileNameArray(const char16_t** aFileNames,
   ErrorResult rv;
   MozSetFileNameArray(list, rv);
   return rv.StealNSResult();
-}
-
-void
-HTMLInputElement::MozSetDirectory(const nsAString& aDirectoryPath,
-                                  ErrorResult& aRv)
-{
-  nsCOMPtr<nsIFile> file;
-  NS_ConvertUTF16toUTF8 path(aDirectoryPath);
-  aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(file));
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
-  if (NS_WARN_IF(!window)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  RefPtr<Directory> directory = Directory::Create(window, file,
-                                                  Directory::eDOMRootDirectory);
-  MOZ_ASSERT(directory);
-
-  nsTArray<OwningFileOrDirectory> array;
-  OwningFileOrDirectory* element = array.AppendElement();
-  element->SetAsDirectory() = directory;
-
-  SetFilesOrDirectories(array, true);
 }
 
 bool
@@ -2503,14 +2379,14 @@ HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
     return;
   }
 
-  if (mFilesOrDirectories.Length() == 1) {
-    GetDOMFileOrDirectoryName(mFilesOrDirectories[0], aValue);
+  if (mFiles.Length() == 1) {
+    mFiles[0]->GetName(aValue);
     return;
   }
 
   nsXPIDLString value;
 
-  if (mFilesOrDirectories.IsEmpty()) {
+  if (mFiles.IsEmpty()) {
     if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
       nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                          "NoFilesSelected", value);
@@ -2520,7 +2396,7 @@ HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
     }
   } else {
     nsString count;
-    count.AppendInt(int(mFilesOrDirectories.Length()));
+    count.AppendInt(int(mFiles.Length()));
 
     const char16_t* params[] = { count.get() };
     nsContentUtils::FormatLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
@@ -2531,13 +2407,13 @@ HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
 }
 
 void
-HTMLInputElement::SetFilesOrDirectories(const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories,
-                                        bool aSetValueChanged)
+HTMLInputElement::SetFiles(const nsTArray<RefPtr<File>>& aFiles,
+                           bool aSetValueChanged)
 {
-  mFilesOrDirectories.Clear();
-  mFilesOrDirectories.AppendElements(aFilesOrDirectories);
+  mFiles.Clear();
+  mFiles.AppendElements(aFiles);
 
-  AfterSetFilesOrDirectories(aSetValueChanged);
+  AfterSetFiles(aSetValueChanged);
 }
 
 void
@@ -2545,22 +2421,22 @@ HTMLInputElement::SetFiles(nsIDOMFileList* aFiles,
                            bool aSetValueChanged)
 {
   RefPtr<FileList> files = static_cast<FileList*>(aFiles);
-  mFilesOrDirectories.Clear();
+  mFiles.Clear();
 
   if (aFiles) {
     uint32_t listLength;
     aFiles->GetLength(&listLength);
     for (uint32_t i = 0; i < listLength; i++) {
-      OwningFileOrDirectory* element = mFilesOrDirectories.AppendElement();
-      *element = files->UnsafeItem(i);
+      RefPtr<File> file = files->Item(i);
+      mFiles.AppendElement(file);
     }
   }
 
-  AfterSetFilesOrDirectories(aSetValueChanged);
+  AfterSetFiles(aSetValueChanged);
 }
 
 void
-HTMLInputElement::AfterSetFilesOrDirectories(bool aSetValueChanged)
+HTMLInputElement::AfterSetFiles(bool aSetValueChanged)
 {
   // No need to flush here, if there's no frame at this point we
   // don't need to force creation of one just to tell it about this
@@ -2578,11 +2454,11 @@ HTMLInputElement::AfterSetFilesOrDirectories(bool aSetValueChanged)
   // call under GetMozFullPath won't be rejected for not being urgent.
   // XXX Protected by the ifndef because the blob code doesn't allow us to send
   // this message in b2g.
-  if (mFilesOrDirectories.IsEmpty()) {
+  if (mFiles.IsEmpty()) {
     mFirstFilePath.Truncate();
   } else {
     ErrorResult rv;
-    GetDOMFileOrDirectoryPath(mFilesOrDirectories[0], mFirstFilePath, rv);
+    mFiles[0]->GetMozFullPath(mFirstFilePath, rv);
     if (NS_WARN_IF(rv.Failed())) {
       rv.SuppressException();
     }
@@ -2656,27 +2532,24 @@ HTMLInputElement::HandleNumberControlSpin(void* aData)
   }
 }
 
-void
+nsresult
 HTMLInputElement::UpdateFileList()
 {
   if (mFileList) {
     mFileList->Clear();
 
-    const nsTArray<OwningFileOrDirectory>& array =
-      GetFilesOrDirectoriesInternal();
-
-    for (uint32_t i = 0; i < array.Length(); ++i) {
-      if (array[i].IsFile()) {
-        mFileList->Append(array[i].GetAsFile());
-      } else {
-        MOZ_ASSERT(array[i].IsDirectory());
-        mFileList->Append(array[i].GetAsDirectory());
+    const nsTArray<RefPtr<File>>& files = GetFilesInternal();
+    for (uint32_t i = 0; i < files.Length(); ++i) {
+      if (!mFileList->Append(files[i])) {
+        return NS_ERROR_FAILURE;
       }
     }
   }
 
   // Make sure we (lazily) create a new Promise for GetFilesAndDirectories:
   mFilesAndDirectoriesPromise = nullptr;
+
+  return NS_OK;
 }
 
 nsresult
@@ -4115,7 +3988,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
               nsNumberControlFrame* numberControlFrame =
                 do_QueryFrame(GetPrimaryFrame());
               if (numberControlFrame) {
-                if (aVisitor.mEvent->mMessage == eMouseDown &&
+                if (aVisitor.mEvent->mMessage == eMouseDown && 
                     IsMutable()) {
                   switch (numberControlFrame->GetSpinButtonForPointerEvent(
                             aVisitor.mEvent->AsMouseEvent())) {
@@ -4666,7 +4539,7 @@ HTMLInputElement::GetValueAsDate(const nsAString& aValue,
   }
 
   uint32_t endOfYearOffset = aValue.Length() - 6;
-
+  
   if (aValue[endOfYearOffset]     != '-' ||
       aValue[endOfYearOffset + 3] != '-') {
     return false;
@@ -5034,38 +4907,45 @@ HTMLInputElement::GetFilesAndDirectories(ErrorResult& aRv)
     return nullptr;
   }
 
-  const nsTArray<OwningFileOrDirectory>& filesAndDirs =
-    GetFilesOrDirectoriesInternal();
+  const nsTArray<RefPtr<File>>& filesAndDirs = GetFilesInternal();
 
   Sequence<OwningFileOrDirectory> filesAndDirsSeq;
 
-  if (!filesAndDirsSeq.SetLength(filesAndDirs.Length(),
-                                 mozilla::fallible_t())) {
+  if (!filesAndDirsSeq.SetLength(filesAndDirs.Length(), mozilla::fallible_t())) {
     p->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
     return p.forget();
   }
 
   for (uint32_t i = 0; i < filesAndDirs.Length(); ++i) {
-    if (filesAndDirs[i].IsDirectory()) {
+    if (filesAndDirs[i]->IsDirectory()) {
 #if defined(ANDROID) || defined(MOZ_B2G)
       MOZ_ASSERT(false,
                  "Directory picking should have been redirected to normal "
                  "file picking for platforms that don't have a directory "
                  "picker");
 #endif
+      nsAutoString path;
+      filesAndDirs[i]->GetMozFullPathInternal(path, aRv);
+      if (aRv.Failed()) {
+        return nullptr;
+      }
+      int32_t leafSeparatorIndex = path.RFind(FILE_PATH_SEPARATOR);
+      nsDependentSubstring dirname = Substring(path, 0, leafSeparatorIndex);
 
-      RefPtr<Directory> directory = filesAndDirs[i].GetAsDirectory();
+      RefPtr<OSFileSystem> fs = new OSFileSystem(dirname);
+      fs->Init(OwnerDoc()->GetInnerWindow());
 
+      nsAutoString dompath(NS_LITERAL_STRING(FILESYSTEM_DOM_PATH_SEPARATOR));
+      dompath.Append(Substring(path, leafSeparatorIndex + 1));
+      RefPtr<Directory> directory = new Directory(fs, dompath);
       // In future we could refactor SetFilePickerFiltersFromAccept to return a
       // semicolon separated list of file extensions and include that in the
       // filter string passed here.
       directory->SetContentFilters(NS_LITERAL_STRING("filter-out-sensitive"));
       filesAndDirsSeq[i].SetAsDirectory() = directory;
     } else {
-      MOZ_ASSERT(filesAndDirs[i].IsFile());
-
       // This file was directly selected by the user, so don't filter it.
-      filesAndDirsSeq[i].SetAsFile() = filesAndDirs[i].GetAsFile();
+      filesAndDirsSeq[i].SetAsFile() = filesAndDirs[i];
     }
   }
 
@@ -5699,18 +5579,13 @@ HTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
   if (mType == NS_FORM_INPUT_FILE) {
     // Submit files
 
-    const nsTArray<OwningFileOrDirectory>& files =
-      GetFilesOrDirectoriesInternal();
+    const nsTArray<RefPtr<File>>& files = GetFilesInternal();
 
-    bool hasBlobs = false;
     for (uint32_t i = 0; i < files.Length(); ++i) {
-      if (files[i].IsFile()) {
-        hasBlobs = true;
-        aFormSubmission->AddNameBlobOrNullPair(name, files[i].GetAsFile());
-      }
+      aFormSubmission->AddNameBlobOrNullPair(name, files[i]);
     }
 
-    if (!hasBlobs) {
+    if (files.IsEmpty()) {
       aFormSubmission->AddNameBlobOrNullPair(name, nullptr);
     }
 
@@ -5744,9 +5619,9 @@ HTMLInputElement::SaveState()
       }
       break;
     case VALUE_MODE_FILENAME:
-      if (!mFilesOrDirectories.IsEmpty()) {
+      if (!mFiles.IsEmpty()) {
         inputState = new HTMLInputElementState();
-        inputState->SetFilesOrDirectories(mFilesOrDirectories);
+        inputState->SetBlobImpls(mFiles);
       }
       break;
     case VALUE_MODE_VALUE:
@@ -5915,7 +5790,7 @@ HTMLInputElement::AddStates(EventStates aStates)
       }
     }
   }
-  nsGenericHTMLFormElementWithState::AddStates(aStates);
+  nsGenericHTMLFormElementWithState::AddStates(aStates);                          
 }
 
 void
@@ -5952,13 +5827,20 @@ HTMLInputElement::RestoreState(nsPresState* aState)
         break;
       case VALUE_MODE_FILENAME:
         {
-          nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
-          if (window) {
-            nsTArray<OwningFileOrDirectory> array;
-            inputState->GetFilesOrDirectories(window, array);
+          const nsTArray<RefPtr<BlobImpl>>& blobImpls = inputState->GetBlobImpls();
 
-            SetFilesOrDirectories(array, true);
+          nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
+          MOZ_ASSERT(global);
+
+          nsTArray<RefPtr<File>> files;
+          for (uint32_t i = 0, len = blobImpls.Length(); i < len; ++i) {
+            RefPtr<File> file = File::Create(global, blobImpls[i]);
+            MOZ_ASSERT(file);
+
+            files.AppendElement(file);
           }
+
+          SetFiles(files, true);
         }
         break;
       case VALUE_MODE_VALUE:
@@ -6468,15 +6350,15 @@ HTMLInputElement::IsValueMissing() const
   switch (GetValueMode()) {
     case VALUE_MODE_VALUE:
       return IsValueEmpty();
-
     case VALUE_MODE_FILENAME:
-      return GetFilesOrDirectoriesInternal().IsEmpty();
-
+    {
+      const nsTArray<RefPtr<File>>& files = GetFilesInternal();
+      return files.IsEmpty();
+    }
     case VALUE_MODE_DEFAULT_ON:
       // This should not be used for type radio.
       // See the MOZ_ASSERT at the beginning of the method.
       return !mChecked;
-
     case VALUE_MODE_DEFAULT:
     default:
       return false;

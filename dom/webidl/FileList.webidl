@@ -11,8 +11,6 @@
  */
 
 interface FileList {
-  [Throws]
-  getter (File or Directory)? item(unsigned long index);
-
+  getter File? item(unsigned long index);
   readonly attribute unsigned long length;
 };

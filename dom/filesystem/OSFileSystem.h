@@ -18,12 +18,12 @@ public:
   explicit OSFileSystem(const nsAString& aRootDir);
 
   void
-  Init(nsISupports* aParent);
+  Init(nsPIDOMWindowInner* aWindow);
 
   // Overrides FileSystemBase
 
-  virtual nsISupports*
-  GetParentObject() const override;
+  virtual nsPIDOMWindowInner*
+  GetWindow() const override;
 
   virtual void
   GetRootName(nsAString& aRetval) const override;
@@ -34,9 +34,6 @@ public:
   virtual bool
   IsSafeDirectory(Directory* aDir) const override;
 
-  virtual void
-  SerializeDOMPath(nsAString& aOutput) const override;
-
   // CC methods
   virtual void Unlink() override;
   virtual void Traverse(nsCycleCollectionTraversalCallback &cb) override;
@@ -44,7 +41,7 @@ public:
 private:
   virtual ~OSFileSystem() {}
 
-   nsCOMPtr<nsISupports> mParent;
+   nsCOMPtr<nsPIDOMWindowInner> mWindow;
 };
 
 } // namespace dom
