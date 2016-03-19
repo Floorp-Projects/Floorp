@@ -603,19 +603,11 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
     }
 
     if (commandElement) {
-      nsAutoString value;
-      commandElement->GetAttribute(NS_LITERAL_STRING("disabled"), value);
-      if (value.EqualsLiteral("true")) {
-        continue;  // this handler is disabled, try the next one
+      if (!IsExecutableElement(commandElement)) {
+        continue;
       }
-
-      // Check that there is an oncommand handler
-      commandElement->GetAttribute(NS_LITERAL_STRING("oncommand"), value);
-      if (value.IsEmpty()) {
-        continue;  // nothing to do
-      }
-
       if (aOutReservedForChrome) {
+        nsAutoString value;
         // The caller wants to know if this is a reserved command
         commandElement->GetAttribute(NS_LITERAL_STRING("reserved"), value);
         *aOutReservedForChrome = value.EqualsLiteral("true");
@@ -629,6 +621,7 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
     nsCOMPtr<EventTarget> target;
     nsCOMPtr<Element> chromeHandlerElement = GetElement();
     if (chromeHandlerElement) {
+      // XXX commandElement may be nullptr...
       target = commandElement;
     } else {
       target = mTarget;
@@ -743,6 +736,27 @@ nsXBLWindowKeyHandler::GetElementForHandler(nsXBLPrototypeHandler* aHandler,
   }
 
   commandElement.swap(*aElementForHandler);
+  return true;
+}
+
+bool
+nsXBLWindowKeyHandler::IsExecutableElement(Element* aElement) const
+{
+  if (!aElement) {
+    return false;
+  }
+
+  nsAutoString value;
+  aElement->GetAttribute(NS_LITERAL_STRING("disabled"), value);
+  if (value.EqualsLiteral("true")) {
+    return false;
+  }
+
+  aElement->GetAttribute(NS_LITERAL_STRING("oncommand"), value);
+  if (value.IsEmpty()) {
+    return false;
+  }
+
   return true;
 }
 
