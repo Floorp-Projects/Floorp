@@ -80,12 +80,10 @@ add_task(function* test_register_flush() {
   equal(newRecord.endpoint, 'https://example.org/update/2',
     'Wrong push endpoint in record');
 
-  let {data: scope} = yield waitForPromise(notifyPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for notification');
+  let {data: scope} = yield notifyPromise;
   equal(scope, 'https://example.com/page/1', 'Wrong notification scope');
 
-  yield waitForPromise(ackPromise, DEFAULT_TIMEOUT,
-     'Timed out waiting for acknowledgements');
+  yield ackPromise;
 
   let prevRecord = yield db.getByKeyID(
     '9bcc7efb-86c7-4457-93ea-e24e6eb59b74');

@@ -64,7 +64,6 @@ add_task(function* test_register_wrong_id() {
     'Expected error for mismatched register reply'
   );
 
-  yield waitForPromise(helloPromise, DEFAULT_TIMEOUT,
-    'Reconnect after mismatched register reply timed out');
+  yield helloPromise;
   equal(registers, 1, 'Wrong register count');
 });
