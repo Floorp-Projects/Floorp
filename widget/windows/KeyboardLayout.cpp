@@ -2227,24 +2227,12 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
     }
     uint16_t uniChar =
       mInputtingStringAndModifiers.mChars[aIndex - skipUniChars];
-    if (aKeyboardEvent.mMessage == eKeyPress) {
-      // charCode is set from mKeyValue but e.g., when Ctrl key is pressed,
-      // the value should indicate an ASCII character for backward
-      // compatibility instead of inputting character without the modifiers.
-      aKeyboardEvent.charCode = uniChar;
-      MOZ_ASSERT(!aKeyboardEvent.keyCode);
-    } else if (uniChar) {
-      // If the event is not keypress event, we should set charCode as
-      // first alternative char code since the char code value is necessary
-      // for shortcut key handlers at looking for a proper handler.
-      AlternativeCharCode chars(0, 0);
-      if (!aKeyboardEvent.IsShift()) {
-        chars.mUnshiftedCharCode = uniChar;
-      } else {
-        chars.mShiftedCharCode = uniChar;
-      }
-      altArray.AppendElement(chars);
-    }
+
+    // The charCode was set from mKeyValue. However, for example, when Ctrl key
+    // is pressed, its value should indicate an ASCII character for backward
+    // compatibility rather than inputting character without the modifiers.
+    // Therefore, we need to modify charCode value here.
+    aKeyboardEvent.SetCharCode(uniChar);
   }
 
   if (skipShiftedChars <= aIndex) {
