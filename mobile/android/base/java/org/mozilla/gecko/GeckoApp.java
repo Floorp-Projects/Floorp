@@ -10,6 +10,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.URLMetadataTable;
 import org.mozilla.gecko.favicons.Favicons;
@@ -2759,5 +2760,34 @@ public abstract class GeckoApp
     protected StartupAction getStartupAction(final String passedURL, final String action) {
         // Default to NORMAL here. Subclasses can handle the other types.
         return StartupAction.NORMAL;
+    }
+
+    @Override
+    public void checkUriVisited(String uri) {
+        GlobalHistory.getInstance().checkUriVisited(uri);
+    }
+
+    @Override
+    public void markUriVisited(final String uri) {
+        final Context context = getApplicationContext();
+        final BrowserDB db = GeckoProfile.get(context).getDB();
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                GlobalHistory.getInstance().add(context, db, uri);
+            }
+        });
+    }
+
+    @Override
+    public void setUriTitle(final String uri, final String title) {
+        final Context context = getApplicationContext();
+        final BrowserDB db = GeckoProfile.get(context).getDB();
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                GlobalHistory.getInstance().update(context.getContentResolver(), db, uri, title);
+            }
+        });
     }
 }
