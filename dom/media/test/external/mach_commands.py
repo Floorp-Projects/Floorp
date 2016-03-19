@@ -50,7 +50,7 @@ def run_external_media_test(tests, testtype=None, topsrcdir=None, **kwargs):
                                             args,
                                             {"mach": sys.stdout})
     failed = mn_cli(MediaTestRunner, MediaTestArguments, FirefoxMediaHarness,
-                    args=args)
+                    args=vars(args))
 
     if failed > 0:
         return 1
