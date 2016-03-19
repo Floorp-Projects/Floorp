@@ -49,7 +49,7 @@ namespace mozilla {
  * 4) To stop encoding, remove this component from its source stream.
  *    => sourceStream->RemoveListener(encoder);
  */
-class MediaEncoder : public MediaStreamListener
+class MediaEncoder : public MediaStreamDirectListener
 {
 public :
   enum {
@@ -74,9 +74,24 @@ public :
     , mSizeOfBuffer(0)
     , mState(MediaEncoder::ENCODE_METADDATA)
     , mShutdown(false)
+    , mDirectConnected(false)
   {}
 
   ~MediaEncoder() {};
+
+  /**
+   * Tells us which Notify to pay attention to for media
+   */
+  void SetDirectConnect(bool aConnected);
+
+  /**
+   * Notified by the AppendToTrack in MediaStreamGraph; aRealtimeMedia is the raw
+   * track data in form of MediaSegment.
+   */
+  void NotifyRealtimeData(MediaStreamGraph* aGraph, TrackID aID,
+                          StreamTime aTrackOffset,
+                          uint32_t aTrackEvents,
+                          const MediaSegment& aRealtimeMedia) override;
 
   /**
    * Notified by the control loop of MediaStreamGraph; aQueueMedia is the raw
@@ -169,6 +184,7 @@ private:
   int64_t mSizeOfBuffer;
   int mState;
   bool mShutdown;
+  bool mDirectConnected;
   // Get duration from create encoder, for logging purpose
   double GetEncodeTimeStamp()
   {
