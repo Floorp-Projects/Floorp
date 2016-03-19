@@ -220,6 +220,17 @@ public:
     mInvalidRegion.Or(mInvalidRegion, aRegion);
   }
 
+  void ClearApproximatelyVisibleRegions(uint64_t aLayersId,
+                                        const Maybe<uint32_t>& aPresShellId)
+  {
+    for (auto iter = mVisibleRegions.Iter(); !iter.Done(); iter.Next()) {
+      if (iter.Key().mLayersId == aLayersId &&
+          (!aPresShellId || iter.Key().mPresShellId == *aPresShellId)) {
+        iter.Remove();
+      }
+    }
+  }
+
   void UpdateApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
                                         const CSSIntRegion& aRegion)
   {
