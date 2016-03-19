@@ -98,7 +98,7 @@ config = {
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--screenshot-on-fail",
-                "--total-chunks=4",
+                "--total-chunks=10",
                 "--subsuite=webgl",
             ],
         },
@@ -452,6 +452,30 @@ config = {
         "mochitest-gl-4": {
             "category": "mochitest-gl",
             "extra_args": ["--this-chunk=4"],
+        },
+        "mochitest-gl-5": {
+            "category": "mochitest-gl",
+            "extra_args": ["--this-chunk=5"],
+        },
+        "mochitest-gl-6": {
+            "category": "mochitest-gl",
+            "extra_args": ["--this-chunk=6"],
+        },
+        "mochitest-gl-7": {
+            "category": "mochitest-gl",
+            "extra_args": ["--this-chunk=7"],
+        },
+        "mochitest-gl-8": {
+            "category": "mochitest-gl",
+            "extra_args": ["--this-chunk=8"],
+        },
+        "mochitest-gl-9": {
+            "category": "mochitest-gl",
+            "extra_args": ["--this-chunk=9"],
+        },
+        "mochitest-gl-10": {
+            "category": "mochitest-gl",
+            "extra_args": ["--this-chunk=10"],
         },
         "reftest-1": {
             "category": "reftest",
