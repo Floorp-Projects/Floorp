@@ -2284,6 +2284,34 @@ HTMLInputElement::MozSetFileNameArray(const char16_t** aFileNames,
   return rv.StealNSResult();
 }
 
+void
+HTMLInputElement::MozSetDirectory(const nsAString& aDirectoryPath,
+                                  ErrorResult& aRv)
+{
+  nsCOMPtr<nsIFile> file;
+  NS_ConvertUTF16toUTF8 path(aDirectoryPath);
+  aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(file));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
+  if (NS_WARN_IF(!window)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  RefPtr<Directory> directory = Directory::Create(window, file,
+                                                  Directory::eDOMRootDirectory);
+  MOZ_ASSERT(directory);
+
+  nsTArray<OwningFileOrDirectory> array;
+  OwningFileOrDirectory* element = array.AppendElement();
+  element->SetAsDirectory() = directory;
+
+  SetFilesOrDirectories(array, true);
+}
+
 bool
 HTMLInputElement::MozIsTextField(bool aExcludePassword)
 {

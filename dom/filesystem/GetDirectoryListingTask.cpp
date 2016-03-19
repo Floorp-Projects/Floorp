@@ -327,7 +327,7 @@ GetDirectoryListingTask::HandlerCallback()
   Sequence<OwningFileOrDirectory> listing;
 
   if (!listing.SetLength(count, mozilla::fallible_t())) {
-    mPromise->MaybeReject(NS_ERROR_FAILURE);
+    mPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
     mPromise = nullptr;
     return;
   }

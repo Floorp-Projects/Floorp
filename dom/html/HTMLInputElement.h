@@ -724,6 +724,7 @@ public:
 
   void MozSetFileNameArray(const Sequence< nsString >& aFileNames, ErrorResult& aRv);
   void MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles);
+  void MozSetDirectory(const nsAString& aDirectoryPath, ErrorResult& aRv);
 
   HTMLInputElement* GetOwnerNumberControl();
 
