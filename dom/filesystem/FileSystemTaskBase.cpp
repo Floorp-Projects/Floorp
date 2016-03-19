@@ -106,8 +106,11 @@ FileSystemTaskBase::Start()
     return;
   }
 
+  nsAutoString serialization;
+  mFileSystem->SerializeDOMPath(serialization);
+
   ErrorResult rv;
-  FileSystemParams params = GetRequestParams(mFileSystem->ToString(), rv);
+  FileSystemParams params = GetRequestParams(serialization, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return;
   }
