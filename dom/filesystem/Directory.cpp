@@ -158,7 +158,6 @@ Directory::Directory(nsISupports* aParent,
                      DirectoryType aType,
                      FileSystemBase* aFileSystem)
   : mParent(aParent)
-  , mFileSystem(aFileSystem)
   , mFile(aFile)
   , mType(aType)
 {
@@ -166,6 +165,13 @@ Directory::Directory(nsISupports* aParent,
   MOZ_ASSERT(aFile);
 
   // aFileSystem can be null. In this case we create a OSFileSystem when needed.
+  if (aFileSystem) {
+    // More likely, this is a OSFileSystem. This object keeps a reference of
+    // mParent but it's not cycle collectable and to avoid manual
+    // addref/release, it's better to have 1 object per directory. For this
+    // reason we clone it here.
+    mFileSystem = aFileSystem->Clone();
+  }
 }
 
 Directory::~Directory()

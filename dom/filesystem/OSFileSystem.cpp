@@ -30,6 +30,17 @@ OSFileSystem::OSFileSystem(const nsAString& aRootDir)
 #endif
 }
 
+already_AddRefed<FileSystemBase>
+OSFileSystem::Clone()
+{
+  RefPtr<OSFileSystem> fs = new OSFileSystem(mLocalRootPath);
+  if (mParent) {
+    fs->Init(mParent);
+  }
+
+  return fs.forget();
+}
+
 void
 OSFileSystem::Init(nsISupports* aParent)
 {
