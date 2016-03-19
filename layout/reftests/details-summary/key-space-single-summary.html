@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html class="reftest-wait">
+  <script>
+  function runTest() {
+    var summary = document.getElementById("summary");
+    // Dispatch 'space' keys to the summary element.
+    summary.dispatchEvent(new KeyboardEvent("keydown", {"keyCode": 32}));
+    summary.dispatchEvent(new KeyboardEvent("keyup", {"keyCode": 32}));
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+  <body onload="runTest();">
+    <details>
+      <summary id="summary">Summary</summary>
+      <p>This is the details.</p>
+    </details>
+  </body>
+</html>

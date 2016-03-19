@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html class="reftest-wait">
+  <script>
+  function runTest() {
+    var summary = document.getElementById("summary");
+    summary.addEventListener('click', function(e) {
+      // Prevent the details from toggling by key events.
+      e.preventDefault();
+    });
+    // Dispatch 'return' key to the summary element.
+    summary.dispatchEvent(new KeyboardEvent("keypress", {"keyCode": 13}));
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+  <body onload="runTest();">
+    <details>
+      <summary id="summary">Summary</summary>
+      <p>This is the details.</p>
+    </details>
+  </body>
+</html>

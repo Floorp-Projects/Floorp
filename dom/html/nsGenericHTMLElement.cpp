@@ -2805,18 +2805,23 @@ nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
 
   if (aKeyCausesActivation) {
     // Click on it if the users prefs indicate to do so.
-    WidgetMouseEvent event(aIsTrustedEvent, eMouseClick, nullptr,
-                           WidgetMouseEvent::eReal);
-    event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
-
     nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
                                             openAllowed : openAbused);
-
-    EventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                              presContext, &event);
+    DispatchSimulatedClick(this, aIsTrustedEvent, presContext);
   }
 
   return focused;
+}
+
+nsresult
+nsGenericHTMLElement::DispatchSimulatedClick(nsGenericHTMLElement* aElement,
+                                             bool aIsTrusted,
+                                             nsPresContext* aPresContext)
+{
+  WidgetMouseEvent event(aIsTrusted, eMouseClick, nullptr,
+                         WidgetMouseEvent::eReal);
+  event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
+  return EventDispatcher::Dispatch(ToSupports(aElement), aPresContext, &event);
 }
 
 const nsAttrName*
