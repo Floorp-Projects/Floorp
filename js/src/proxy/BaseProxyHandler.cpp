@@ -26,10 +26,32 @@ bool
 BaseProxyHandler::has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const
 {
     assertEnteredPolicy(cx, proxy, id, GET);
-    Rooted<PropertyDescriptor> desc(cx);
-    if (!getPropertyDescriptor(cx, proxy, id, &desc))
+
+    // This method is not covered by any spec, but we follow ES 2016
+    // (February 11, 2016) 9.1.7.1 fairly closely.
+
+    // Step 2. (Step 1 is a superfluous assertion.)
+    // Non-standard: Use our faster hasOwn trap.
+    if (!hasOwn(cx, proxy, id, bp))
         return false;
-    *bp = !!desc.object();
+
+    // Step 3.
+    if (*bp)
+        return true;
+
+    // The spec calls this variable "parent", but that word has weird
+    // connotations in SpiderMonkey, so let's go with "proto".
+    // Step 4.
+    RootedObject proto(cx);
+    if (!GetPrototype(cx, proxy, &proto))
+        return false;
+
+    // Step 5.,5.a.
+    if (proto)
+        return HasProperty(cx, proto, id, bp);
+
+    // Step 6.
+    *bp = false;
     return true;
 }
 
