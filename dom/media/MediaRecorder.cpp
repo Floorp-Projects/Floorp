@@ -412,6 +412,9 @@ public:
 
     NS_ENSURE_TRUE(mTrackUnionStream, NS_ERROR_FAILURE);
     mTrackUnionStream->Suspend();
+    if (mEncoder) {
+      mEncoder->Suspend();
+    }
 
     return NS_OK;
   }
@@ -422,6 +425,9 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     NS_ENSURE_TRUE(mTrackUnionStream, NS_ERROR_FAILURE);
+    if (mEncoder) {
+      mEncoder->Resume();
+    }
     mTrackUnionStream->Resume();
 
     return NS_OK;
