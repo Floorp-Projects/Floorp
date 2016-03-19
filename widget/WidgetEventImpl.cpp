@@ -483,23 +483,20 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
 {
   MOZ_ASSERT(aCandidates.IsEmpty(), "aCandidates must be empty");
 
-  if (mMessage != eKeyPress) {
-    return;
-  }
-
   // ShortcutKeyCandidate::mCharCode is a candidate charCode.
   // ShortcutKeyCandidate::mIgnoreShift means the mCharCode should be tried to
   // execute a command with/without shift key state. If this is TRUE, the
   // shifted key state should be ignored. Otherwise, don't ignore the state.
   // the priority of the charCodes are (shift key is not pressed):
-  //   0: charCode/false,
+  //   0: PseudoCharCode()/false,
   //   1: unshiftedCharCodes[0]/false, 2: unshiftedCharCodes[1]/false...
   // the priority of the charCodes are (shift key is pressed):
-  //   0: charCode/false,
+  //   0: PseudoCharCode()/false,
   //   1: shiftedCharCodes[0]/false, 2: shiftedCharCodes[0]/true,
   //   3: shiftedCharCodes[1]/false, 4: shiftedCharCodes[1]/true...
-  if (charCode) {
-    ShortcutKeyCandidate key(charCode, false);
+  uint32_t pseudoCharCode = PseudoCharCode();
+  if (pseudoCharCode) {
+    ShortcutKeyCandidate key(pseudoCharCode, false);
     aCandidates.AppendElement(key);
   }
 
@@ -507,7 +504,7 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
   if (!IsShift()) {
     for (uint32_t i = 0; i < len; ++i) {
       uint32_t ch = alternativeCharCodes[i].mUnshiftedCharCode;
-      if (!ch || ch == charCode) {
+      if (!ch || ch == pseudoCharCode) {
         continue;
       }
       ShortcutKeyCandidate key(ch, false);
@@ -534,7 +531,7 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
         continue;
       }
 
-      if (ch != charCode) {
+      if (ch != pseudoCharCode) {
         ShortcutKeyCandidate key(ch, false);
         aCandidates.AppendElement(key);
       }
@@ -568,7 +565,7 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
   // we should guarantee that the key press works as an ASCII white space key
   // press.
   if (mCodeNameIndex == CODE_NAME_INDEX_Space &&
-      charCode != static_cast<uint32_t>(' ')) {
+      pseudoCharCode != static_cast<uint32_t>(' ')) {
     ShortcutKeyCandidate spaceKey(static_cast<uint32_t>(' '), false);
     aCandidates.AppendElement(spaceKey);
   }

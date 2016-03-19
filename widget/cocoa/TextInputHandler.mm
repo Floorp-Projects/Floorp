@@ -1058,6 +1058,14 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  // Nothing to do here if the native key event is neither NSKeyDown nor
+  // NSKeyUp because accessing [aNativeKeyEvent characters] causes throwing
+  // an exception.
+  if ([aNativeKeyEvent type] != NSKeyDown &&
+      [aNativeKeyEvent type] != NSKeyUp) {
+    return;
+  }
+
   UInt32 kbType = GetKbdType();
 
   if (MOZ_LOG_TEST(gLog, LogLevel::Info)) {
@@ -1079,22 +1087,16 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
   nsAutoString insertStringForCharCode;
   ComputeInsertStringForCharCode(aNativeKeyEvent, aKeyEvent, aInsertString,
                                  insertStringForCharCode);
+
+  // The charCode was set from mKeyValue. However, for example, when Ctrl key
+  // is pressed, its value should indicate an ASCII character for backward
+  // compatibility rather than inputting character without the modifiers.
+  // Therefore, we need to modify charCode value here.
   uint32_t charCode =
     insertStringForCharCode.IsEmpty() ? 0 : insertStringForCharCode[0];
-  if (aKeyEvent.mMessage == eKeyPress) {
-    aKeyEvent.charCode = charCode;
-    aKeyEvent.isChar = true; // this is not a special key  XXX not used in XP
-  } else if (charCode) {
-    // If it's not a keypress event, we need to set alternative char code
-    // to charCode value for shortcut key event handlers.
-    AlternativeCharCode altCharCodes(0, 0);
-    if (!aKeyEvent.IsShift()) {
-      altCharCodes.mUnshiftedCharCode = charCode;
-    } else {
-      altCharCodes.mShiftedCharCode = charCode;
-    }
-    aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
-  }
+  aKeyEvent.SetCharCode(charCode);
+  // this is not a special key  XXX not used in XP
+  aKeyEvent.isChar = (aKeyEvent.mMessage == eKeyPress);
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "

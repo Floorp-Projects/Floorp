@@ -436,29 +436,34 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
   }
 
   // Corrects each member for the specific key event type.
-  if (aMessage == eKeyDown || aMessage == eKeyUp) {
+  if (keyEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING) {
     MOZ_ASSERT(!aIndexOfKeypress,
-      "aIndexOfKeypress must be 0 for either eKeyDown or eKeyUp");
-    // charCode of keydown and keyup should be 0.
-    keyEvent.charCode = 0;
-  } else if (keyEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING) {
-    MOZ_ASSERT(!aIndexOfKeypress,
-      "aIndexOfKeypress must be 0 for eKeyPress of non-printable key");
-    // If keypress event isn't caused by printable key, its charCode should
+      "aIndexOfKeypress must be 0 for non-printable key");
+    // If the keyboard event isn't caused by printable key, its charCode should
     // be 0.
-    keyEvent.charCode = 0;
+    keyEvent.SetCharCode(0);
   } else {
-    MOZ_RELEASE_ASSERT(
-      !aIndexOfKeypress || aIndexOfKeypress < keyEvent.mKeyValue.Length(),
-      "aIndexOfKeypress must be 0 - mKeyValue.Length() - 1");
-    keyEvent.keyCode = 0;
+    if (aMessage == eKeyDown || aMessage == eKeyUp) {
+      MOZ_RELEASE_ASSERT(!aIndexOfKeypress,
+        "aIndexOfKeypress must be 0 for either eKeyDown or eKeyUp");
+    } else {
+      MOZ_RELEASE_ASSERT(
+        !aIndexOfKeypress || aIndexOfKeypress < keyEvent.mKeyValue.Length(),
+        "aIndexOfKeypress must be 0 - mKeyValue.Length() - 1");
+    }
     wchar_t ch =
       keyEvent.mKeyValue.IsEmpty() ? 0 : keyEvent.mKeyValue[aIndexOfKeypress];
-    keyEvent.charCode = static_cast<uint32_t>(ch);
-    if (ch) {
-      keyEvent.mKeyValue.Assign(ch);
-    } else {
-      keyEvent.mKeyValue.Truncate();
+    keyEvent.SetCharCode(static_cast<uint32_t>(ch));
+    if (aMessage == eKeyPress) {
+      // keyCode of eKeyPress events of printable keys should be always 0.
+      keyEvent.keyCode = 0;
+      // eKeyPress events are dispatched for every character.
+      // So, each key value of eKeyPress events should be a character.
+      if (ch) {
+        keyEvent.mKeyValue.Assign(ch);
+      } else {
+        keyEvent.mKeyValue.Truncate();
+      }
     }
   }
   if (aMessage == eKeyUp) {
@@ -480,9 +485,11 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
   // TODO: Manage mUniqueId here.
 
   // Request the alternative char codes for the key event.
-  // XXX Currently, they are necessary only when the event is eKeyPress.
+  // eKeyDown also needs alternative char codes because nsXBLWindowKeyHandler
+  // needs to check if a following keypress event is reserved by chrome for
+  // stopping propagation of its preceding keydown event.
   keyEvent.alternativeCharCodes.Clear();
-  if (aMessage == eKeyPress &&
+  if ((aMessage == eKeyDown || aMessage == eKeyPress) &&
       (keyEvent.IsControl() || keyEvent.IsAlt() ||
        keyEvent.IsMeta() || keyEvent.IsOS())) {
     nsCOMPtr<TextEventDispatcherListener> listener =
