@@ -1,4 +1,4 @@
-const DSV = Ci.nsIDataSignatureVerifier;
+"use strict";
 
 var keys = [
 // RSA key
