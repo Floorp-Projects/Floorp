@@ -103,11 +103,9 @@ add_task(function* test_expiration_origin_threshold() {
     },
   });
 
-  yield waitForPromise(notifyPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for notifications');
+  yield notifyPromise;
 
-  yield waitForPromise(updateQuotaPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for quota to be updated');
+  yield updateQuotaPromise;
 
   let expiredRecord = yield db.getByKeyID('f56645a9-1f32-4655-92ad-ddc37f6d54fb');
   notStrictEqual(expiredRecord.quota, 0, 'Expired record not updated');

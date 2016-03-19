@@ -137,6 +137,5 @@ add_task(function* test_webapps_cleardata() {
   yield clearForPattern(testRecords, { inIsolatedMozBrowser: true });
 
   equal(testRecords.length, 0, 'Should remove all test records');
-  yield waitForPromise(unregisterPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for unregister');
+  yield unregisterPromise;
 });
