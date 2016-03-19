@@ -418,6 +418,17 @@ function assertDeduplicatedPaths({ target, paths, expectedNodes, expectedEdges }
   }
 }
 
+function assertCountToBucketBreakdown(breakdown, expected) {
+  dumpn("count => bucket breakdown");
+  dumpn("Initial breakdown = ", JSON.stringify(breakdown, null, 2));
+  dumpn("Expected results = ", JSON.stringify(expected, null, 2));
+
+  const actual = CensusUtils.countToBucketBreakdown(breakdown);
+  dumpn("Actual results = ", JSON.stringify(actual, null, 2));
+
+  assertStructurallyEquivalent(actual, expected);
+}
+
 /**
  * Create a mock path entry for the given predecessor and edge.
  */

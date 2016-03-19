@@ -148,6 +148,9 @@ public interface TelemetryContract {
         // Action triggered from a dialog.
         DIALOG("dialog"),
 
+        // Action triggered from a doorhanger popup prompt.
+        DOORHANGER("doorhanger"),
+
         // Action triggered from a view grid item, like a thumbnail.
         GRID_ITEM("griditem"),
 
