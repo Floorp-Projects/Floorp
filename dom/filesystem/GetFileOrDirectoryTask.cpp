@@ -35,7 +35,7 @@ GetFileOrDirectoryTask::Create(FileSystemBase* aFileSystem,
   // aTargetPath can be null. In this case SetError will be called.
 
   nsCOMPtr<nsIGlobalObject> globalObject =
-    do_QueryInterface(aFileSystem->GetWindow());
+    do_QueryInterface(aFileSystem->GetParentObject());
   if (NS_WARN_IF(!globalObject)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -263,7 +263,7 @@ GetFileOrDirectoryTask::HandlerCallback()
   }
 
   if (mIsDirectory) {
-    RefPtr<Directory> dir = Directory::Create(mFileSystem->GetWindow(),
+    RefPtr<Directory> dir = Directory::Create(mFileSystem->GetParentObject(),
                                               mTargetPath,
                                               mType,
                                               mFileSystem);
@@ -274,7 +274,8 @@ GetFileOrDirectoryTask::HandlerCallback()
     return;
   }
 
-  RefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(), mTargetBlobImpl);
+  RefPtr<Blob> blob = Blob::Create(mFileSystem->GetParentObject(),
+                                   mTargetBlobImpl);
   mPromise->MaybeResolve(blob);
   mPromise = nullptr;
 }
