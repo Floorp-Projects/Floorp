@@ -65,5 +65,31 @@ FileSystemUtils::IsDescendantPath(const nsAString& aPath,
   return true;
 }
 
+// static
+bool
+FileSystemUtils::IsDescendantPath(nsIFile* aFile,
+                                  nsIFile* aDescendantFile)
+{
+  nsAutoString path;
+  nsresult rv = aFile->GetPath(path);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  nsAutoString descendantPath;
+  rv = aDescendantFile->GetPath(descendantPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  // Check the sub-directory path to see if it has the parent path as prefix.
+  if (descendantPath.Length() <= path.Length() ||
+      !StringBeginsWith(descendantPath, path)) {
+    return false;
+  }
+
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla
