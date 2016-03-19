@@ -255,22 +255,6 @@ SECStatus nsNSSHttpRequestSession::setPostDataFcn(const char *http_data,
   return SECSuccess;
 }
 
-SECStatus nsNSSHttpRequestSession::addHeaderFcn(const char *http_header_name, 
-                                                const char *http_header_value)
-{
-  return SECFailure; // not yet implemented
-
-  // All http code needs to be postponed to the UI thread.
-  // Once this gets implemented, we need to add a string list member to
-  // nsNSSHttpRequestSession and queue up the headers,
-  // so they can be added in HandleHTTPDownloadPLEvent.
-  //
-  // The header will need to be set using 
-  //   mHttpChannel->SetRequestHeader(nsDependentCString(http_header_name), 
-  //                                  nsDependentCString(http_header_value), 
-  //                                  false)));
-}
-
 SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
                                                         uint16_t *http_response_code, 
                                                         const char **http_response_content_type, 
@@ -547,20 +531,6 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
   return SECSuccess;
 }
 
-SECStatus nsNSSHttpRequestSession::cancelFcn()
-{
-  // As of today, only the blocking variant of the http interface
-  // has been implemented. Implementing cancelFcn will be necessary
-  // as soon as we implement the nonblocking variant.
-  return SECSuccess;
-}
-
-SECStatus nsNSSHttpRequestSession::freeFcn()
-{
-  Release();
-  return SECSuccess;
-}
-
 nsNSSHttpRequestSession::nsNSSHttpRequestSession()
 : mRefCount(1),
   mHasPostData(false),
@@ -571,23 +541,6 @@ nsNSSHttpRequestSession::nsNSSHttpRequestSession()
 
 nsNSSHttpRequestSession::~nsNSSHttpRequestSession()
 {
-}
-
-SEC_HttpClientFcn nsNSSHttpInterface::sNSSInterfaceTable;
-
-void nsNSSHttpInterface::initTable()
-{
-  sNSSInterfaceTable.version = 1;
-  SEC_HttpClientFcnV1 &v1 = sNSSInterfaceTable.fcnTable.ftable1;
-  v1.createSessionFcn = createSessionFcn;
-  v1.keepAliveSessionFcn = keepAliveFcn;
-  v1.freeSessionFcn = freeSessionFcn;
-  v1.createFcn = createFcn;
-  v1.setPostDataFcn = setPostDataFcn;
-  v1.addHeaderFcn = addHeaderFcn;
-  v1.trySendAndReceiveFcn = trySendAndReceiveFcn;
-  v1.cancelFcn = cancelFcn;
-  v1.freeFcn = freeFcn;
 }
 
 nsHTTPListener::nsHTTPListener()
