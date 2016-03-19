@@ -30,7 +30,6 @@
 
 #include "nsArrayUtils.h"
 #include "nsAutoPtr.h"
-#include "nsCharSeparatedTokenizer.h"
 #include "nsGlobalWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIFile.h"
@@ -77,34 +76,9 @@ using namespace mozilla::dom;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::ipc;
 
-namespace mozilla
-{
+namespace mozilla {
   MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc, PRFileDesc, PR_Close);
 } // namespace mozilla
-
-namespace {
-
-void
-NormalizeFilePath(nsAString& aPath)
-{
-#if defined(XP_WIN)
-  char16_t* cur = aPath.BeginWriting();
-  char16_t* end = aPath.EndWriting();
-  for (; cur < end; ++cur) {
-    if (char16_t('\\') == *cur) {
-      *cur = FILESYSTEM_DOM_PATH_SEPARATOR_CHAR;
-    }
-  }
-#endif
-}
-
-bool
-TokenizerIgnoreNothing(char16_t /* aChar */)
-{
-  return false;
-}
-
-} // anonymous namespace
 
 StaticAutoPtr<DeviceStorageUsedSpaceCache>
   DeviceStorageUsedSpaceCache::sDeviceStorageUsedSpaceCache;
@@ -536,8 +510,7 @@ DeviceStorageFile::DeviceStorageFile(const nsAString& aStorageType,
   if (!mPath.EqualsLiteral("")) {
     AppendRelativePath(mPath);
   }
-
-  NormalizeFilePath(mPath);
+  NormalizeFilePath();
 }
 
 DeviceStorageFile::DeviceStorageFile(const nsAString& aStorageType,
@@ -552,7 +525,7 @@ DeviceStorageFile::DeviceStorageFile(const nsAString& aStorageType,
 {
   Init();
   AppendRelativePath(aPath);
-  NormalizeFilePath(mPath);
+  NormalizeFilePath();
 }
 
 DeviceStorageFile::DeviceStorageFile(const nsAString& aStorageType,
@@ -761,7 +734,7 @@ DeviceStorageFile::CreateUnique(const nsAString& aStorageType,
 void
 DeviceStorageFile::SetPath(const nsAString& aPath) {
   mPath.Assign(aPath);
-  NormalizeFilePath(mPath);
+  NormalizeFilePath();
 }
 
 void
@@ -772,14 +745,13 @@ DeviceStorageFile::SetEditable(bool aEditable) {
 // we want to make sure that the names of file can't reach
 // outside of the type of storage the user asked for.
 bool
-DeviceStorageFile::IsSafePath() const
+DeviceStorageFile::IsSafePath()
 {
-  return ValidateAndSplitPath(mRootDir) && ValidateAndSplitPath(mPath);
+  return IsSafePath(mRootDir) && IsSafePath(mPath);
 }
 
 bool
-DeviceStorageFile::ValidateAndSplitPath(const nsAString& aPath,
-                                        nsTArray<nsString>* aParts) const
+DeviceStorageFile::IsSafePath(const nsAString& aPath)
 {
   nsAString::const_iterator start, end;
   aPath.BeginReading(start);
@@ -792,43 +764,33 @@ DeviceStorageFile::ValidateAndSplitPath(const nsAString& aPath,
       StringBeginsWith(aPath, tildeSlash)) {
     NS_WARNING("Path name starts with tilde!");
     return false;
-  }
+   }
+  // split on /.  if any token is "", ., or .., return false.
+  NS_ConvertUTF16toUTF8 cname(aPath);
+  char* buffer = cname.BeginWriting();
+  const char* token;
 
-  NS_NAMED_LITERAL_STRING(kCurrentDir, ".");
-  NS_NAMED_LITERAL_STRING(kParentDir, "..");
-
-  // Split path and check each path component.
-  nsCharSeparatedTokenizerTemplate<TokenizerIgnoreNothing>
-    tokenizer(aPath, FILESYSTEM_DOM_PATH_SEPARATOR_CHAR);
-
-  while (tokenizer.hasMoreTokens()) {
-    nsDependentSubstring pathComponent = tokenizer.nextToken();
-    // The path containing empty components, such as "foo//bar", is invalid.
-    // We don't allow paths, such as "../foo", "foo/./bar" and "foo/../bar",
-    // to walk up the directory.
-    if (pathComponent.IsEmpty() ||
-        pathComponent.Equals(kCurrentDir) ||
-        pathComponent.Equals(kParentDir)) {
+  while ((token = nsCRT::strtok(buffer, "/", &buffer))) {
+    if (PL_strcmp(token, "") == 0 ||
+        PL_strcmp(token, ".") == 0 ||
+        PL_strcmp(token, "..") == 0 ) {
       return false;
-    }
-
-    if (aParts) {
-      aParts->AppendElement(pathComponent);
     }
   }
   return true;
 }
 
 void
-DeviceStorageFile::AppendRelativePath(const nsAString& aPath)
-{
+DeviceStorageFile::NormalizeFilePath() {
+  FileSystemUtils::LocalPathToNormalizedPath(mPath, mPath);
+}
+
+void
+DeviceStorageFile::AppendRelativePath(const nsAString& aPath) {
   if (!mFile) {
     return;
   }
-
-  nsTArray<nsString> parts;
-
-  if (!ValidateAndSplitPath(aPath, &parts)) {
+  if (!IsSafePath(aPath)) {
     // All of the APIs (in the child) do checks to verify that the path is
     // valid and return PERMISSION_DENIED if a non-safe path is entered.
     // This check is done in the parent and prevents a compromised
@@ -838,13 +800,9 @@ DeviceStorageFile::AppendRelativePath(const nsAString& aPath)
     NS_WARNING(NS_LossyConvertUTF16toASCII(aPath).get());
     return;
   }
-
-  for (uint32_t i = 0; i < parts.Length(); ++i) {
-    nsresult rv = mFile->AppendRelativePath(parts[i]);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-  }
+  nsString localPath;
+  FileSystemUtils::NormalizedPathToLocalPath(aPath, localPath);
+  mFile->AppendRelativePath(localPath);
 }
 
 nsresult

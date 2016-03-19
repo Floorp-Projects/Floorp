@@ -18,94 +18,27 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ already_AddRefed<RemoveTask>
-RemoveTask::Create(FileSystemBase* aFileSystem,
-                   nsIFile* aDirPath,
-                   BlobImpl* aTargetBlob,
-                   nsIFile* aTargetPath,
-                   bool aRecursive,
-                   ErrorResult& aRv)
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  MOZ_ASSERT(aFileSystem);
-  MOZ_ASSERT(aDirPath);
-
-  RefPtr<RemoveTask> task =
-    new RemoveTask(aFileSystem, aDirPath, aTargetBlob, aTargetPath, aRecursive);
-
-  // aTargetPath can be null. In this case SetError will be called.
-
-  nsCOMPtr<nsIGlobalObject> globalObject =
-    do_QueryInterface(aFileSystem->GetParentObject());
-  if (NS_WARN_IF(!globalObject)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  task->mPromise = Promise::Create(globalObject, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  return task.forget();
-}
-
-/* static */ already_AddRefed<RemoveTask>
-RemoveTask::Create(FileSystemBase* aFileSystem,
-                   const FileSystemRemoveParams& aParam,
-                   FileSystemRequestParent* aParent,
-                   ErrorResult& aRv)
-{
-  MOZ_ASSERT(XRE_IsParentProcess(), "Only call from parent process!");
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  MOZ_ASSERT(aFileSystem);
-
-  RefPtr<RemoveTask> task =
-    new RemoveTask(aFileSystem, aParam, aParent);
-
-  NS_ConvertUTF16toUTF8 directoryPath(aParam.directory());
-  aRv = NS_NewNativeLocalFile(directoryPath, true,
-                              getter_AddRefs(task->mDirPath));
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  task->mRecursive = aParam.recursive();
-
-  const FileSystemPathOrFileValue& target = aParam.target();
-
-  if (target.type() == FileSystemPathOrFileValue::TnsString) {
-    NS_ConvertUTF16toUTF8 path(target);
-    aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(task->mTargetPath));
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-
-    return task.forget();
-  }
-
-  BlobParent* bp = static_cast<BlobParent*>(static_cast<PBlobParent*>(target));
-  task->mTargetBlobImpl = bp->GetBlobImpl();
-  MOZ_ASSERT(task->mTargetBlobImpl);
-
-  return task.forget();
-}
-
 RemoveTask::RemoveTask(FileSystemBase* aFileSystem,
-                       nsIFile* aDirPath,
+                       const nsAString& aDirPath,
                        BlobImpl* aTargetBlob,
-                       nsIFile* aTargetPath,
-                       bool aRecursive)
+                       const nsAString& aTargetPath,
+                       bool aRecursive,
+                       ErrorResult& aRv)
   : FileSystemTaskBase(aFileSystem)
-  , mDirPath(aDirPath)
+  , mDirRealPath(aDirPath)
   , mTargetBlobImpl(aTargetBlob)
-  , mTargetPath(aTargetPath)
+  , mTargetRealPath(aTargetPath)
   , mRecursive(aRecursive)
   , mReturnValue(false)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
-  MOZ_ASSERT(aDirPath);
+  nsCOMPtr<nsIGlobalObject> globalObject =
+    do_QueryInterface(aFileSystem->GetWindow());
+  if (!globalObject) {
+    return;
+  }
+  mPromise = Promise::Create(globalObject, aRv);
 }
 
 RemoveTask::RemoveTask(FileSystemBase* aFileSystem,
@@ -115,9 +48,25 @@ RemoveTask::RemoveTask(FileSystemBase* aFileSystem,
   , mRecursive(false)
   , mReturnValue(false)
 {
-  MOZ_ASSERT(XRE_IsParentProcess(), "Only call from parent process!");
+  MOZ_ASSERT(XRE_IsParentProcess(),
+             "Only call from parent process!");
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
+
+  mDirRealPath = aParam.directory();
+
+  mRecursive = aParam.recursive();
+
+  const FileSystemPathOrFileValue& target = aParam.target();
+
+  if (target.type() == FileSystemPathOrFileValue::TnsString) {
+    mTargetRealPath = target;
+    return;
+  }
+
+  BlobParent* bp = static_cast<BlobParent*>(static_cast<PBlobParent*>(target));
+  mTargetBlobImpl = bp->GetBlobImpl();
+  MOZ_ASSERT(mTargetBlobImpl);
 }
 
 RemoveTask::~RemoveTask()
@@ -134,49 +83,36 @@ RemoveTask::GetPromise()
 }
 
 FileSystemParams
-RemoveTask::GetRequestParams(const nsString& aSerializedDOMPath,
-                             ErrorResult& aRv) const
+RemoveTask::GetRequestParams(const nsString& aFileSystem) const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   FileSystemRemoveParams param;
-  param.filesystem() = aSerializedDOMPath;
-
-  aRv = mDirPath->GetPath(param.directory());
-  if (NS_WARN_IF(aRv.Failed())) {
-    return param;
-  }
-
+  param.filesystem() = aFileSystem;
+  param.directory() = mDirRealPath;
   param.recursive() = mRecursive;
   if (mTargetBlobImpl) {
-    RefPtr<Blob> blob = Blob::Create(mFileSystem->GetParentObject(),
-                                     mTargetBlobImpl);
+    RefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(),
+                                       mTargetBlobImpl);
     BlobChild* actor
       = ContentChild::GetSingleton()->GetOrCreateActorForBlob(blob);
     if (actor) {
       param.target() = actor;
     }
   } else {
-    nsAutoString path;
-    aRv = mTargetPath->GetPath(path);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return param;
-    }
-
-    param.target() = path;
+    param.target() = mTargetRealPath;
   }
   return param;
 }
 
 FileSystemResponseValue
-RemoveTask::GetSuccessRequestResult(ErrorResult& aRv) const
+RemoveTask::GetSuccessRequestResult() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   return FileSystemBooleanResponse(mReturnValue);
 }
 
 void
-RemoveTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
-                                    ErrorResult& aRv)
+RemoveTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   FileSystemBooleanResponse r = aValue;
@@ -194,19 +130,23 @@ RemoveTask::Work()
     return NS_ERROR_FAILURE;
   }
 
-  // Get the path if a File is passed as the target.
+  // Get the DOM path if a File is passed as the target.
   if (mTargetBlobImpl) {
-    if (!mFileSystem->GetRealPath(mTargetBlobImpl,
-                                  getter_AddRefs(mTargetPath))) {
+    if (!mFileSystem->GetRealPath(mTargetBlobImpl, mTargetRealPath)) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
-    if (!FileSystemUtils::IsDescendantPath(mDirPath, mTargetPath)) {
+    if (!FileSystemUtils::IsDescendantPath(mDirRealPath, mTargetRealPath)) {
       return NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR;
     }
   }
 
+  nsCOMPtr<nsIFile> file = mFileSystem->GetLocalFile(mTargetRealPath);
+  if (!file) {
+    return NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
+  }
+
   bool exists = false;
-  nsresult rv = mTargetPath->Exists(&exists);
+  nsresult rv = file->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -217,16 +157,16 @@ RemoveTask::Work()
   }
 
   bool isFile = false;
-  rv = mTargetPath->IsFile(&isFile);
+  rv = file->IsFile(&isFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  if (isFile && !mFileSystem->IsSafeFile(mTargetPath)) {
+  if (isFile && !mFileSystem->IsSafeFile(file)) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  rv = mTargetPath->Remove(mRecursive);
+  rv = file->Remove(mRecursive);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

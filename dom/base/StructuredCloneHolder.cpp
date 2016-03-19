@@ -10,7 +10,6 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/CryptoKey.h"
-#include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/FileListBinding.h"
@@ -724,59 +723,36 @@ ReadFileList(JSContext* aCx,
   {
     RefPtr<FileList> fileList = new FileList(aHolder->ParentDuringRead());
 
-    // |aCount| is the number of Files or Directory for this FileList.
+    uint32_t tag, offset;
+    // Offset is the index of the blobImpl from which we can find the blobImpl
+    // for this FileList.
+    if (!JS_ReadUint32Pair(aReader, &tag, &offset)) {
+      return nullptr;
+    }
+
+    MOZ_ASSERT(tag == 0);
+
+    // |aCount| is the number of BlobImpls to use from the |offset|.
     for (uint32_t i = 0; i < aCount; ++i) {
-      uint32_t tagOrDirectoryType, indexOrLengthOfString;
-      if (!JS_ReadUint32Pair(aReader, &tagOrDirectoryType,
-                             &indexOrLengthOfString)) {
+      uint32_t index = offset + i;
+      MOZ_ASSERT(index < aHolder->BlobImpls().Length());
+
+      RefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[index];
+      MOZ_ASSERT(blobImpl->IsFile());
+
+      ErrorResult rv;
+      blobImpl = EnsureBlobForBackgroundManager(blobImpl, nullptr, rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        rv.SuppressException();
         return nullptr;
       }
 
-      MOZ_ASSERT(tagOrDirectoryType == SCTAG_DOM_BLOB ||
-                 tagOrDirectoryType == Directory::eDOMRootDirectory ||
-                 tagOrDirectoryType == Directory::eNotDOMRootDirectory);
+      MOZ_ASSERT(blobImpl);
 
-      if (tagOrDirectoryType == SCTAG_DOM_BLOB) {
-        MOZ_ASSERT(indexOrLengthOfString < aHolder->BlobImpls().Length());
-
-        RefPtr<BlobImpl> blobImpl =
-          aHolder->BlobImpls()[indexOrLengthOfString];
-        MOZ_ASSERT(blobImpl->IsFile());
-
-        ErrorResult rv;
-        blobImpl = EnsureBlobForBackgroundManager(blobImpl, nullptr, rv);
-        if (NS_WARN_IF(rv.Failed())) {
-          rv.SuppressException();
-          return nullptr;
-        }
-
-        RefPtr<File> file =
-          File::Create(aHolder->ParentDuringRead(), blobImpl);
-        MOZ_ASSERT(file);
-
-        fileList->Append(file);
-        continue;
-      }
-
-      nsAutoString path;
-      path.SetLength(indexOrLengthOfString);
-      size_t charSize = sizeof(nsString::char_type);
-      if (!JS_ReadBytes(aReader, (void*) path.BeginWriting(),
-                        indexOrLengthOfString * charSize)) {
+      RefPtr<File> file = File::Create(aHolder->ParentDuringRead(), blobImpl);
+      if (!fileList->Append(file)) {
         return nullptr;
       }
-
-      nsCOMPtr<nsIFile> file;
-      nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(path), true,
-                                          getter_AddRefs(file));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return nullptr;
-      }
-
-      RefPtr<Directory> directory =
-        Directory::Create(aHolder->ParentDuringRead(), file,
-                          (Directory::DirectoryType) tagOrDirectoryType);
-      fileList->Append(directory);
     }
 
     if (!ToJSValue(aCx, fileList, &val)) {
@@ -789,13 +765,7 @@ ReadFileList(JSContext* aCx,
 
 // The format of the FileList serialization is:
 // - pair of ints: SCTAG_DOM_FILELIST, Length of the FileList
-// - for each element of the FileList:
-//   - if it's a blob:
-//    - pair of ints: SCTAG_DOM_BLOB, index of the BlobImpl in the array
-//       mBlobImplArray.
-//   - else:
-//     - pair of ints: 0/1 is root, string length
-//     - value string
+// - pair of ints: 0, The offset of the BlobImpl array
 bool
 WriteFileList(JSStructuredCloneWriter* aWriter,
               FileList* aFileList,
@@ -805,8 +775,13 @@ WriteFileList(JSStructuredCloneWriter* aWriter,
   MOZ_ASSERT(aFileList);
   MOZ_ASSERT(aHolder);
 
+  // A FileList is serialized writing the X number of elements and the offset
+  // from mBlobImplArray. The Read will take X elements from mBlobImplArray
+  // starting from the offset.
   if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_FILELIST,
-                          aFileList->Length())) {
+                          aFileList->Length()) ||
+      !JS_WriteUint32Pair(aWriter, 0,
+                          aHolder->BlobImpls().Length())) {
     return false;
   }
 
@@ -814,39 +789,18 @@ WriteFileList(JSStructuredCloneWriter* aWriter,
   nsTArray<RefPtr<BlobImpl>> blobImpls;
 
   for (uint32_t i = 0; i < aFileList->Length(); ++i) {
-    const OwningFileOrDirectory& data = aFileList->UnsafeItem(i);
-
-    if (data.IsFile()) {
-      RefPtr<BlobImpl> blobImpl =
-        EnsureBlobForBackgroundManager(data.GetAsFile()->Impl(), nullptr, rv);
-      if (NS_WARN_IF(rv.Failed())) {
-        rv.SuppressException();
-        return false;
-      }
-
-      if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_BLOB,
-                              aHolder->BlobImpls().Length())) {
-        return false;
-      }
-
-      aHolder->BlobImpls().AppendElement(blobImpl);
-      continue;
-    }
-
-    MOZ_ASSERT(data.IsDirectory());
-
-    nsAutoString path;
-    data.GetAsDirectory()->GetFullRealPath(path);
-
-    size_t charSize = sizeof(nsString::char_type);
-    if (!JS_WriteUint32Pair(aWriter,
-                            (uint32_t)data.GetAsDirectory()->Type(),
-                            path.Length()) ||
-        !JS_WriteBytes(aWriter, path.get(), path.Length() * charSize)) {
+    RefPtr<BlobImpl> blobImpl =
+      EnsureBlobForBackgroundManager(aFileList->Item(i)->Impl(), nullptr, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
       return false;
     }
+
+    MOZ_ASSERT(blobImpl);
+    blobImpls.AppendElement(blobImpl);
   }
 
+  aHolder->BlobImpls().AppendElements(blobImpls);
   return true;
 }
 
@@ -1050,9 +1004,7 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   // See if this is a FileList object.
   {
     FileList* fileList = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(FileList, aObj, fileList)) &&
-        (mSupportedContext == SameProcessSameThread ||
-         fileList->ClonableToDifferentThreadOrProcess())) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(FileList, aObj, fileList))) {
       return WriteFileList(aWriter, fileList, this);
     }
   }
