@@ -12,6 +12,7 @@
 #include "WebMSample.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/ContentChild.h"
 
 namespace mozilla {
 
@@ -45,7 +46,15 @@ VP9Benchmark::IsVP9DecodeFast()
     estimiser->Run()->Then(
       AbstractThread::MainThread(), __func__,
       [](uint32_t aDecodeFps) {
-        Preferences::SetUint(sBenchmarkFpsPref, aDecodeFps);
+        if (XRE_IsContentProcess()) {
+          dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+          if (contentChild) {
+            contentChild->SendNotifyBenchmarkResult(NS_LITERAL_STRING("VP9"),
+                                                    aDecodeFps);
+          }
+        } else {
+          Preferences::SetUint(sBenchmarkFpsPref, aDecodeFps);
+        }
         Telemetry::Accumulate(Telemetry::ID::VIDEO_VP9_BENCHMARK_FPS, aDecodeFps);
       },
       []() { });

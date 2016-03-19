@@ -386,6 +386,13 @@ MacroAssembler::branchTestBooleanTruthy(bool truthy, const ValueOperand& value, 
     j(truthy ? NonZero : Zero, label);
 }
 
+void
+MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMagic why, Label* label)
+{
+    branchTestMagic(cond, valaddr, label);
+    branch32(cond, ToPayload(valaddr), Imm32(why), label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

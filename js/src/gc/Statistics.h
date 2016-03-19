@@ -172,6 +172,7 @@ struct Statistics
     void beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
                     SliceBudget budget, JS::gcreason::Reason reason);
     void endSlice();
+    void setSliceCycleCount(unsigned cycleCount);
 
     bool startTimingMutator();
     bool stopTimingMutator(double& mutator_ms, double& gc_ms);
@@ -235,11 +236,14 @@ struct Statistics
 
     struct SliceData {
         SliceData(SliceBudget budget, JS::gcreason::Reason reason, int64_t start,
-                  double startTimestamp, size_t startFaults)
+                  double startTimestamp, size_t startFaults, gc::State initialState)
           : budget(budget), reason(reason),
+            initialState(initialState),
+            finalState(gc::NO_INCREMENTAL),
             resetReason(nullptr),
             start(start), startTimestamp(startTimestamp),
-            startFaults(startFaults)
+            startFaults(startFaults),
+            cycleCount(0)
         {
             for (auto i : mozilla::MakeRange(NumTimingArrays))
                 mozilla::PodArrayZero(phaseTimes[i]);
@@ -247,11 +251,13 @@ struct Statistics
 
         SliceBudget budget;
         JS::gcreason::Reason reason;
+        gc::State initialState, finalState;
         const char* resetReason;
         int64_t start, end;
         double startTimestamp, endTimestamp;
         size_t startFaults, endFaults;
         PhaseTimeTable phaseTimes;
+        unsigned cycleCount;
 
         int64_t duration() const { return end - start; }
     };
@@ -364,6 +370,10 @@ struct MOZ_RAII AutoGCSlice
         stats.beginSlice(zoneStats, gckind, budget, reason);
     }
     ~AutoGCSlice() { stats.endSlice(); }
+
+    void setCycleCount(unsigned cycleCount) {
+        stats.setSliceCycleCount(cycleCount);
+    }
 
     Statistics& stats;
 };

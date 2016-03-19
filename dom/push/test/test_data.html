@@ -103,14 +103,14 @@ http://creativecommons.org/licenses/publicdomain/
   add_task(function* comparePublicKey() {
     var data = yield sendRequestToWorker({ type: "publicKey" });
     var p256dhKey = new Uint8Array(pushSubscription.getKey("p256dh"));
-    ok(p256dhKey.length > 0, "Missing key share");
+    is(p256dhKey.length, 65, "Key share should be 65 octets");
     isDeeply(
       p256dhKey,
       new Uint8Array(data.p256dh),
       "Mismatched key share"
     );
     var authSecret = new Uint8Array(pushSubscription.getKey("auth"));
-    ok(authSecret.length > 0, "Missing auth secret");
+    ok(authSecret.length, 16, "Auth secret should be 16 octets");
     isDeeply(
       authSecret,
       new Uint8Array(data.auth),

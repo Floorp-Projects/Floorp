@@ -37,9 +37,7 @@ function setTestPluginEnabledState(newEnabledState, plugin) {
   });
 }
 
-function test() {
-  waitForExplicitFinish();
-
+add_task(function* setup() {
   var tags = pluginHost.getPluginTags();
 
   // Find the test plugin
@@ -55,64 +53,34 @@ function test() {
     finish();
   }
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, pluginTag);
+});
 
-  executeSoon(do_test);
-}
-
-function setFinishedCallback(callback)
-{
-  let testPage = gBrowser.selectedBrowser.contentWindow.wrappedJSObject;
-  testPage.testFinishedCallback = function() {
-    setTimeout(function() {
-      info("got finished callback");
-      callback();
-    }, 0);
-  }
-}
-
-function do_test()
-{
+add_task(function* () {
   // Load page to set data for the plugin.
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function () {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, testURL);
+  ok(stored(["192.168.1.1","foo.com","nonexistent.foo.com","bar.com","localhost"]),
+    "Data stored for sites");
 
-    setFinishedCallback(function() {
-      ok(stored(["192.168.1.1","foo.com","nonexistent.foo.com","bar.com","localhost"]),
-        "Data stored for sites");
+  // Clear data for "foo.com" and its subdomains.
+  yield ForgetAboutSite.removeDataFromDomain("foo.com");
 
-      // Clear data for "foo.com" and its subdomains.
-      ForgetAboutSite.removeDataFromDomain("foo.com").then(test1);
-    });
-    function test1() {
-      dump("test1\n");
-      ok(stored(["bar.com","192.168.1.1","localhost"]), "Data stored for sites");
-      ok(!stored(["foo.com"]), "Data cleared for foo.com");
-      ok(!stored(["bar.foo.com"]), "Data cleared for subdomains of foo.com");
+  ok(stored(["bar.com","192.168.1.1","localhost"]), "Data stored for sites");
+  ok(!stored(["foo.com"]), "Data cleared for foo.com");
+  ok(!stored(["bar.foo.com"]), "Data cleared for subdomains of foo.com");
 
-      // Clear data for "bar.com" using a subdomain.
-      ForgetAboutSite.removeDataFromDomain("foo.bar.com").then(test2);
-    }
-    function test2() {
-      ok(!stored(["bar.com"]), "Data cleared for bar.com");
+    // Clear data for "bar.com" using a subdomain.
+  yield ForgetAboutSite.removeDataFromDomain("foo.bar.com");
+  ok(!stored(["bar.com"]), "Data cleared for bar.com");
 
-      // Clear data for "192.168.1.1".
-      ForgetAboutSite.removeDataFromDomain("192.168.1.1").then(test3);
-    }
-    function test3() {
-      ok(!stored(["192.168.1.1"]), "Data cleared for 192.168.1.1");
+  // Clear data for "192.168.1.1".
+  yield ForgetAboutSite.removeDataFromDomain("192.168.1.1");
+  ok(!stored(["192.168.1.1"]), "Data cleared for 192.168.1.1");
 
-      // Clear data for "localhost".
-      ForgetAboutSite.removeDataFromDomain("localhost").then(test4);
-    }
-    function test4() {
-      ok(!stored(null), "All data cleared");
+  // Clear data for "localhost".
+  yield ForgetAboutSite.removeDataFromDomain("localhost");
+  ok(!stored(null), "All data cleared");
 
-      gBrowser.removeCurrentTab();
+  gBrowser.removeCurrentTab();
+});
 
-      executeSoon(finish);
-    }
-  }, true);
-  content.location = testURL;
-}
 

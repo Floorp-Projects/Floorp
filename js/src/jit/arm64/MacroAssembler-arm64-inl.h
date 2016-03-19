@@ -1263,6 +1263,14 @@ MacroAssembler::branchTestMagicImpl(Condition cond, const T& t, L label)
     B(label, c);
 }
 
+void
+MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMagic why, Label* label)
+{
+    uint64_t magic = MagicValue(why).asRawBits();
+    cmpPtr(valaddr, ImmWord(magic));
+    B(label, cond);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

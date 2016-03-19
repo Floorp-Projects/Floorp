@@ -325,9 +325,13 @@ nsDOMClassInfo::GetNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj)
 }
 
 nsresult
-nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
+nsDOMClassInfo::DefineStaticJSVals()
 {
-#define SET_JSID_TO_STRING(_id, _cx, _str)                                    \
+  AutoJSAPI jsapi;
+  jsapi.Init(xpc::UnprivilegedJunkScope());
+  JSContext* cx = jsapi.cx();
+
+#define SET_JSID_TO_STRING(_id, _cx, _str)                              \
   if (JSString *str = ::JS_AtomizeAndPinString(_cx, _str))                             \
       _id = INTERNED_STRING_TO_JSID(_cx, str);                                \
   else                                                                        \
@@ -500,8 +504,6 @@ nsDOMClassInfo::Init()
   nsCOMPtr<nsIXPCFunctionThisTranslator> elt = new nsEventListenerThisTranslator();
   sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsIDOMEventListener), elt);
 
-  AutoSafeJSContext cx;
-
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DOMPrototype, nsIDOMDOMConstructor)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
   DOM_CLASSINFO_MAP_END
@@ -665,7 +667,7 @@ nsDOMClassInfo::Init()
 #endif
 
   // Initialize static JSString's
-  DefineStaticJSVals(cx);
+  DefineStaticJSVals();
 
   int32_t i;
 

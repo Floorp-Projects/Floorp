@@ -2698,6 +2698,18 @@ LIRGenerator::visitSetArrayLength(MSetArrayLength* ins)
 }
 
 void
+LIRGenerator::visitGetNextMapEntryForIterator(MGetNextMapEntryForIterator* ins)
+{
+    MOZ_ASSERT(ins->iter()->type() == MIRType_Object);
+    MOZ_ASSERT(ins->result()->type() == MIRType_Object);
+    auto lir = new(alloc()) LGetNextMapEntryForIterator(useRegister(ins->iter()),
+                                                        useRegister(ins->result()),
+                                                        temp(), temp(), temp());
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitTypedArrayLength(MTypedArrayLength* ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType_Object);

@@ -10,6 +10,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/fallible.h"
+#include <algorithm>
 
 #ifdef MOZ_WIDGET_GTK
 #include "gfxPlatformGtk.h"
@@ -245,7 +246,7 @@ BufferTextureData::BorrowDrawTarget()
   uint32_t stride = ImageDataSerializer::GetRGBStride(rgb);
   mDrawTarget = gfx::Factory::CreateDrawTargetForData(mMoz2DBackend,
                                                       GetBuffer(), rgb.size(),
-                                                      stride, rgb.format());
+                                                      stride, rgb.format(), true);
 
   if (mDrawTarget) {
     RefPtr<gfx::DrawTarget> dt = mDrawTarget;
@@ -257,7 +258,7 @@ BufferTextureData::BorrowDrawTarget()
   if (mMoz2DBackend != gfx::BackendType::CAIRO) {
     mDrawTarget = gfx::Factory::CreateDrawTargetForData(gfx::BackendType::CAIRO,
                                                         GetBuffer(), rgb.size(),
-                                                        stride, rgb.format());
+                                                        stride, rgb.format(), true);
   }
 
   if (!mDrawTarget) {
@@ -397,7 +398,7 @@ MemoryTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
   return true;
 }
 
-static bool InitBuffer(uint8_t* buf, size_t bufSize, TextureAllocationFlags aAllocFlags)
+static bool InitBuffer(uint8_t* buf, size_t bufSize, gfx::SurfaceFormat aFormat, TextureAllocationFlags aAllocFlags)
 {
   if (!buf) {
     gfxDebug() << "BufferTextureData: Failed to allocate " << bufSize << " bytes";
@@ -406,7 +407,13 @@ static bool InitBuffer(uint8_t* buf, size_t bufSize, TextureAllocationFlags aAll
 
   if ((aAllocFlags & ALLOC_CLEAR_BUFFER) ||
       (aAllocFlags & ALLOC_CLEAR_BUFFER_BLACK)) {
-    memset(buf, 0, bufSize);
+    if (aFormat == gfx::SurfaceFormat::B8G8R8X8) {
+      // Even though BGRX was requested, XRGB_UINT32 is what is meant,
+      // so use 0xFF000000 to put alpha in the right place.
+      std::fill_n(reinterpret_cast<uint32_t*>(buf), bufSize / sizeof(uint32_t), 0xFF000000);
+    } else {
+      memset(buf, 0, bufSize);
+    }
   }
 
   if (aAllocFlags & ALLOC_CLEAR_BUFFER_WHITE) {
@@ -436,7 +443,7 @@ MemoryTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   }
 
   uint8_t* buf = new (fallible) uint8_t[bufSize];
-  if (!InitBuffer(buf, bufSize, aAllocFlags)) {
+  if (!InitBuffer(buf, bufSize, aFormat, aAllocFlags)) {
     return nullptr;
   }
 
@@ -513,7 +520,7 @@ ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   }
 
   uint8_t* buf = shm.get<uint8_t>();
-  if (!InitBuffer(buf, bufSize, aAllocFlags)) {
+  if (!InitBuffer(buf, bufSize, aFormat, aAllocFlags)) {
     return nullptr;
   }
 

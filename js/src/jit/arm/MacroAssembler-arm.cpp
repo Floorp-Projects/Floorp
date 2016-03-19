@@ -5023,6 +5023,21 @@ MacroAssembler::branchPtrInNurseryRange(Condition cond, Register ptr, Register t
 }
 
 void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, const Address& address,
+                                           Register temp, Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+    Label done;
+
+    branchTestObject(Assembler::NotEqual, address, cond == Assembler::Equal ? &done : label);
+    loadPtr(address, temp);
+    branchPtrInNurseryRange(cond, temp, InvalidReg, label);
+
+    bind(&done);
+}
+
+void
 MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
                                            Register temp, Label* label)
 {

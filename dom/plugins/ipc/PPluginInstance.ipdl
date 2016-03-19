@@ -97,6 +97,8 @@ child:
   intr NPP_GetValue_NPPVpluginNativeAccessibleAtkPlugId()
     returns (nsCString plug_id, NPError result);
 
+  intr NPP_SetValue_NPNVCSSZoomFactor(double value) returns (NPError result);
+
   intr NPP_SetValue_NPNVmuteAudioBool(bool muted) returns (NPError result);
 
   intr NPP_HandleEvent(NPRemoteEvent event)

@@ -260,6 +260,10 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
       case InlinableNative::IntrinsicDefineDataProperty:
         return inlineDefineDataProperty(callInfo);
 
+      // Map intrinsics.
+      case InlinableNative::IntrinsicGetNextMapEntryForIterator:
+        return inlineGetNextMapEntryForIterator(callInfo);
+
       // TypedArray intrinsics.
       case InlinableNative::IntrinsicIsTypedArray:
         return inlineIsTypedArray(callInfo);
@@ -2187,6 +2191,46 @@ IonBuilder::inlineHasClass(CallInfo& callInfo,
     }
 
     callInfo.setImplicitlyUsedUnchecked();
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineGetNextMapEntryForIterator(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 2 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    MDefinition* iterArg = callInfo.getArg(0);
+    MDefinition* resultArg = callInfo.getArg(1);
+
+    if (iterArg->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    TemporaryTypeSet* iterTypes = iterArg->resultTypeSet();
+    const Class* iterClasp = iterTypes ? iterTypes->getKnownClass(constraints()) : nullptr;
+    if (iterClasp != &MapIteratorObject::class_)
+        return InliningStatus_NotInlined;
+
+    if (resultArg->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    TemporaryTypeSet* resultTypes = resultArg->resultTypeSet();
+    const Class* resultClasp = resultTypes ? resultTypes->getKnownClass(constraints()) : nullptr;
+    if (resultClasp != &ArrayObject::class_)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MInstruction* next = MGetNextMapEntryForIterator::New(alloc(), iterArg,
+                                                          resultArg);
+    current->add(next);
+    current->push(next);
+
+    if (!resumeAfter(next))
+        return InliningStatus_Error;
+
     return InliningStatus_Inlined;
 }
 

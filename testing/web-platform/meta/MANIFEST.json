@@ -3246,6 +3246,10 @@
         "url": "/uievents/order-of-events/mouse-events/mouseevents-mousemove-manual.htm"
       },
       {
+        "path": "uievents/order-of-events/mouse-events/mouseover-out-manual.html",
+        "url": "/uievents/order-of-events/mouse-events/mouseover-out-manual.html"
+      },
+      {
         "path": "vibration/cancel-when-hidden-manual.html",
         "url": "/vibration/cancel-when-hidden-manual.html"
       },
@@ -4906,6 +4910,16 @@
         "url": "/html/rendering/non-replaced-elements/tables/table-border-2.html"
       },
       {
+        "path": "html/rendering/non-replaced-elements/tables/table-cell-width-s.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/tables/table-cell-width-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/tables/table-cell-width-s.html"
+      },
+      {
         "path": "html/rendering/non-replaced-elements/tables/table-cell-width.html",
         "references": [
           [
@@ -4934,6 +4948,16 @@
           ]
         ],
         "url": "/html/rendering/non-replaced-elements/tables/table-width-150percent.html"
+      },
+      {
+        "path": "html/rendering/non-replaced-elements/tables/table-width-s.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/tables/table-width-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/tables/table-width-s.html"
       },
       {
         "path": "html/rendering/non-replaced-elements/tables/table-width.html",
@@ -13922,6 +13946,10 @@
         "url": "/dom/collections/HTMLCollection-empty-name.html"
       },
       {
+        "path": "dom/collections/HTMLCollection-supported-property-indices.html",
+        "url": "/dom/collections/HTMLCollection-supported-property-indices.html"
+      },
+      {
         "path": "dom/collections/HTMLCollection-supported-property-names.html",
         "url": "/dom/collections/HTMLCollection-supported-property-names.html"
       },
@@ -14028,6 +14056,10 @@
       {
         "path": "dom/lists/DOMTokenList-stringifier.html",
         "url": "/dom/lists/DOMTokenList-stringifier.html"
+      },
+      {
+        "path": "dom/lists/DOMTokenList-value.html",
+        "url": "/dom/lists/DOMTokenList-value.html"
       },
       {
         "path": "dom/nodes/CharacterData-appendData.html",
@@ -14726,12 +14758,20 @@
         "url": "/dom/nodes/prepend-on-Document.html"
       },
       {
+        "path": "dom/nodes/rootNode.html",
+        "url": "/dom/nodes/rootNode.html"
+      },
+      {
         "path": "dom/ranges/Range-commonAncestorContainer-2.html",
         "url": "/dom/ranges/Range-commonAncestorContainer-2.html"
       },
       {
         "path": "dom/ranges/Range-constructor.html",
         "url": "/dom/ranges/Range-constructor.html"
+      },
+      {
+        "path": "dom/ranges/Range-stringifier.html",
+        "url": "/dom/ranges/Range-stringifier.html"
       },
       {
         "path": "dom/traversal/NodeFilter-constants.html",
@@ -15530,12 +15570,12 @@
         "url": "/fetch/api/redirect/redirect-mode.html"
       },
       {
-        "path": "fetch/api/request/request-cache.html",
-        "url": "/fetch/api/request/request-cache.html"
-      },
-      {
         "path": "fetch/api/request/request-clone.sub.html",
         "url": "/fetch/api/request/request-clone.sub.html"
+      },
+      {
+        "path": "fetch/api/request/request-consume-empty.html",
+        "url": "/fetch/api/request/request-consume-empty.html"
       },
       {
         "path": "fetch/api/request/request-consume.html",
@@ -15576,6 +15616,10 @@
       {
         "path": "fetch/api/response/response-clone.html",
         "url": "/fetch/api/response/response-clone.html"
+      },
+      {
+        "path": "fetch/api/response/response-consume-empty.html",
+        "url": "/fetch/api/response/response-consume-empty.html"
       },
       {
         "path": "fetch/api/response/response-consume.html",
@@ -16320,6 +16364,10 @@
       {
         "path": "html/browsers/the-window-object/accessing-other-browsing-contexts/indexed-browsing-contexts-03.html",
         "url": "/html/browsers/the-window-object/accessing-other-browsing-contexts/indexed-browsing-contexts-03.html"
+      },
+      {
+        "path": "html/browsers/the-window-object/accessing-other-browsing-contexts/iterator.html",
+        "url": "/html/browsers/the-window-object/accessing-other-browsing-contexts/iterator.html"
       },
       {
         "path": "html/browsers/the-window-object/accessing-other-browsing-contexts/window_length.html",
@@ -18758,6 +18806,10 @@
         "url": "/html/semantics/forms/form-control-infrastructure/form.html"
       },
       {
+        "path": "html/semantics/forms/form-submission-0/getactionurl.html",
+        "url": "/html/semantics/forms/form-submission-0/getactionurl.html"
+      },
+      {
         "path": "html/semantics/forms/form-submission-0/url-encoded.html",
         "url": "/html/semantics/forms/form-submission-0/url-encoded.html"
       },
@@ -18886,10 +18938,6 @@
         "url": "/html/semantics/forms/the-input-element/hidden.html"
       },
       {
-        "path": "html/semantics/forms/the-input-element/input-textselection-01.html",
-        "url": "/html/semantics/forms/the-input-element/input-textselection-01.html"
-      },
-      {
         "path": "html/semantics/forms/the-input-element/input-type-button.html",
         "url": "/html/semantics/forms/the-input-element/input-type-button.html"
       },
@@ -18944,6 +18992,10 @@
       {
         "path": "html/semantics/forms/the-input-element/search_input.html",
         "url": "/html/semantics/forms/the-input-element/search_input.html"
+      },
+      {
+        "path": "html/semantics/forms/the-input-element/selection.html",
+        "url": "/html/semantics/forms/the-input-element/selection.html"
       },
       {
         "path": "html/semantics/forms/the-input-element/telephone.html",
@@ -19334,6 +19386,10 @@
         "url": "/html/semantics/selectors/pseudo-classes/enabled.html"
       },
       {
+        "path": "html/semantics/selectors/pseudo-classes/focus-autofocus.html",
+        "url": "/html/semantics/selectors/pseudo-classes/focus-autofocus.html"
+      },
+      {
         "path": "html/semantics/selectors/pseudo-classes/focus.html",
         "url": "/html/semantics/selectors/pseudo-classes/focus.html"
       },
@@ -19676,6 +19732,10 @@
       {
         "path": "html/webappapis/scripting/events/event-handler-onresize.html",
         "url": "/html/webappapis/scripting/events/event-handler-onresize.html"
+      },
+      {
+        "path": "html/webappapis/scripting/events/event-handler-processing-algorithm.html",
+        "url": "/html/webappapis/scripting/events/event-handler-processing-algorithm.html"
       },
       {
         "path": "html/webappapis/scripting/events/event-handler-spec-example.html",
@@ -20176,10 +20236,6 @@
       {
         "path": "mediacapture-streams/stream-api/mediastream/mediastream-removetrack.html",
         "url": "/mediacapture-streams/stream-api/mediastream/mediastream-removetrack.html"
-      },
-      {
-        "path": "mediacapture-streams/stream-api/mediastream/stream-ended.html",
-        "url": "/mediacapture-streams/stream-api/mediastream/stream-ended.html"
       },
       {
         "path": "mediacapture-streams/stream-api/mediastream/video.html",
@@ -31218,6 +31274,10 @@
         "url": "/webmessaging/Channel_postMessage_target_source.htm"
       },
       {
+        "path": "webmessaging/MessageEvent.html",
+        "url": "/webmessaging/MessageEvent.html"
+      },
+      {
         "path": "webmessaging/MessageEvent_properties.htm",
         "url": "/webmessaging/MessageEvent_properties.htm"
       },
@@ -32296,6 +32356,10 @@
       {
         "path": "websockets/opening-handshake/001.html",
         "url": "/websockets/opening-handshake/001.html"
+      },
+      {
+        "path": "websockets/opening-handshake/003-sets-origin.worker.js",
+        "url": "/websockets/opening-handshake/003-sets-origin.worker"
       },
       {
         "path": "websockets/opening-handshake/003.html",
@@ -33479,6 +33543,11 @@
         "path": "eventsource/shared-worker/eventsource-constructor-non-same-origin.htm",
         "timeout": "long",
         "url": "/eventsource/shared-worker/eventsource-constructor-non-same-origin.htm"
+      },
+      {
+        "path": "fetch/api/request/request-cache.html",
+        "timeout": "long",
+        "url": "/fetch/api/request/request-cache.html"
       },
       {
         "path": "html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/scroll-restoration-fragment-scrolling-cross-origin.html",
@@ -34739,8 +34808,18 @@
     ]
   },
   "local_changes": {
-    "deleted": [],
+    "deleted": [
+      "html/browsers/history/the-location-interface/non-automated/manual_click_replace_during_load.html"
+    ],
     "items": {
+      "manual": {
+        "html/browsers/history/the-location-interface/non-automated/manual_click_replace_during_load-manual.html": [
+          {
+            "path": "html/browsers/history/the-location-interface/non-automated/manual_click_replace_during_load-manual.html",
+            "url": "/html/browsers/history/the-location-interface/non-automated/manual_click_replace_during_load-manual.html"
+          }
+        ]
+      },
       "testharness": {
         "dom/collections/HTMLCollection-supported-property-indices.html": [
           {
@@ -37244,6 +37323,18 @@
         "url": "/html/rendering/non-replaced-elements/tables/table-border-2.html"
       }
     ],
+    "html/rendering/non-replaced-elements/tables/table-cell-width-s.html": [
+      {
+        "path": "html/rendering/non-replaced-elements/tables/table-cell-width-s.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/tables/table-cell-width-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/tables/table-cell-width-s.html"
+      }
+    ],
     "html/rendering/non-replaced-elements/tables/table-cell-width.html": [
       {
         "path": "html/rendering/non-replaced-elements/tables/table-cell-width.html",
@@ -37278,6 +37369,18 @@
           ]
         ],
         "url": "/html/rendering/non-replaced-elements/tables/table-width-150percent.html"
+      }
+    ],
+    "html/rendering/non-replaced-elements/tables/table-width-s.html": [
+      {
+        "path": "html/rendering/non-replaced-elements/tables/table-width-s.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/tables/table-width-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/tables/table-width-s.html"
       }
     ],
     "html/rendering/non-replaced-elements/tables/table-width.html": [
@@ -40881,7 +40984,7 @@
       }
     ]
   },
-  "rev": "833a6d13372424758a6e3a770ecc6e8d1ffaae67",
+  "rev": "dccaa413ec1107e87b72245aa5ce837ee37ddff7",
   "url_base": "/",
   "version": 2
 }

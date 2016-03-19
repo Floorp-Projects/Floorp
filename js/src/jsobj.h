@@ -453,7 +453,7 @@ class JSObject : public js::gc::Cell
      * this will just be the global (the name "enclosing scope" still applies
      * in this situation because non-scope objects can be on the scope chain).
      */
-    inline JSObject* enclosingScope();
+    inline JSObject* enclosingScope() const;
 
     inline js::GlobalObject& global() const;
     inline bool isOwnGlobal() const;

@@ -85,13 +85,17 @@ var mockWebSocket;
 
 addMessageListener("setup", function () {
   mockWebSocket = new Promise((resolve, reject) => {
+    var mockSocket = null;
     pushService.replaceServiceBackend({
       serverURI: "wss://push.example.org/",
       networkInfo: new MockNetworkInfo(),
       makeWebSocket(uri) {
-        var socket = new MockWebSocketParent(uri);
-        resolve(socket);
-        return socket;
+        if (!mockSocket) {
+          mockSocket = new MockWebSocketParent(uri);
+          resolve(mockSocket);
+        }
+
+        return mockSocket;
       }
     });
   });

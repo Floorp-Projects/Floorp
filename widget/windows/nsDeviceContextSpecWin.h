@@ -35,7 +35,7 @@ public:
 
   NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, bool aIsPrintPreview) override;
 
-  float GetDPI() final  { return 144.0f; }
+  float GetDPI() final;
 
   float GetPrintingScale() final;
 
@@ -64,6 +64,7 @@ protected:
   LPDEVMODEW mDevMode;
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
+  int16_t mOutputFormat = nsIPrintSettings::kOutputFormatNative;
 };
 
 

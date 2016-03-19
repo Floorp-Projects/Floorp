@@ -191,6 +191,8 @@ private:
 
   static void GetPathToBinary(FilePath& exePath);
 
+  void SetChildLogName(const char* varName, const char* origLogName);
+
   // In between launching the subprocess and handing off its IPC
   // channel, there's a small window of time in which *we* might still
   // be the channel listener, and receive messages.  That's bad

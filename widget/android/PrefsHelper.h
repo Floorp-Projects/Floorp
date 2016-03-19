@@ -27,7 +27,7 @@ class PrefsHelper
     static bool GetVariantPref(nsIObserverService* aObsServ,
                                nsIWritableVariant* aVariant,
                                jni::Object::Param aPrefHandler,
-                               jni::String::LocalRef& aPrefName)
+                               const jni::String::LocalRef& aPrefName)
     {
         if (NS_FAILED(aObsServ->NotifyObservers(aVariant, "android-get-pref",
                                                 aPrefName->ToString().get()))) {
@@ -71,8 +71,13 @@ class PrefsHelper
                 jni::StringParam(strVal, aPrefName.Env()) :
                 jni::StringParam(nullptr);
 
-        widget::PrefsHelper::CallPrefHandler(
-                aPrefHandler, type, aPrefName, boolVal, intVal, jstrVal);
+        if (aPrefHandler) {
+            widget::PrefsHelper::CallPrefHandler(
+                    aPrefHandler, type, aPrefName, boolVal, intVal, jstrVal);
+        } else {
+            widget::PrefsHelper::OnPrefChange(
+                    aPrefName, type, boolVal, intVal, jstrVal);
+        }
         return true;
     }
 
@@ -213,6 +218,9 @@ public:
             nsCOMPtr<nsIWritableVariant> value = new nsVariant();
             if (obsServ && SetVariantPref(obsServ, value, aPrefName, aFlush,
                                           aType, aBoolVal, aIntVal, aStrVal)) {
+                // The "pref" has changed; send a notification.
+                GetVariantPref(obsServ, value, nullptr,
+                               jni::String::LocalRef(aPrefName));
                 return;
             }
         }

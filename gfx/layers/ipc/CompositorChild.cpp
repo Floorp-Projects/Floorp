@@ -704,6 +704,29 @@ CompositorChild::SendRequestNotifyAfterRemotePaint()
   return PCompositorChild::SendRequestNotifyAfterRemotePaint();
 }
 
+bool
+CompositorChild::SendClearApproximatelyVisibleRegions(uint64_t aLayersId,
+                                                      uint32_t aPresShellId)
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendClearApproximatelyVisibleRegions(aLayersId,
+                                                                aPresShellId);
+}
+
+bool
+CompositorChild::SendNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
+                                                      const CSSIntRegion& aRegion)
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendNotifyApproximatelyVisibleRegion(aGuid, aRegion);
+}
+
 
 } // namespace layers
 } // namespace mozilla

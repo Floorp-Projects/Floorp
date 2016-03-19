@@ -387,6 +387,13 @@ MacroAssembler::branchTestMagic(Condition cond, const ValueOperand& value, L lab
     ma_b(value.typeReg(), ImmTag(JSVAL_TAG_MAGIC), label, cond);
 }
 
+void
+MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMagic why, Label* label)
+{
+    branchTestMagic(cond, valaddr, label);
+    branch32(cond, ToPayload(valaddr), Imm32(why), label);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
