@@ -938,6 +938,19 @@ CompositorParent::RecvStopFrameTimeRecording(const uint32_t& aStartIndex,
   return true;
 }
 
+bool
+CompositorParent::RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
+                                                       const CSSIntRegion& aRegion)
+{
+  if (mLayerManager) {
+    mLayerManager->UpdateApproximatelyVisibleRegion(aGuid, aRegion);
+
+    // We need to recomposite to update the minimap.
+    ScheduleComposition();
+  }
+  return true;
+}
+
 void
 CompositorParent::ActorDestroy(ActorDestroyReason why)
 {
@@ -1931,6 +1944,21 @@ public:
   virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) override { return true; }
   virtual bool RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) override { return true; }
   virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) override  { return true; }
+
+  virtual bool RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
+                                                    const CSSIntRegion& aRegion) override
+  {
+    CompositorParent* parent;
+    { // scope lock
+      MonitorAutoLock lock(*sIndirectLayerTreesLock);
+      parent = sIndirectLayerTrees[aGuid.mLayersId].mParent;
+    }
+    if (parent) {
+      return parent->RecvNotifyApproximatelyVisibleRegion(aGuid, aRegion);
+    }
+    return true;
+  }
+
   virtual bool RecvGetTileSize(int32_t* aWidth, int32_t* aHeight) override
   {
     *aWidth = gfxPlatform::GetPlatform()->GetTileWidth();
