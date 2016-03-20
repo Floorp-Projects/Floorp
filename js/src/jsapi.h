@@ -4715,25 +4715,17 @@ JS_PUBLIC_API(JSString*)
 GetSymbolDescription(HandleSymbol symbol);
 
 /* Well-known symbols. */
-#define JS_FOR_EACH_WELL_KNOWN_SYMBOL(macro) \
-    macro(iterator) \
-    macro(match) \
-    macro(species) \
-    macro(toPrimitive) \
-    macro(unscopables)
-
 enum class SymbolCode : uint32_t {
-    // There is one SymbolCode for each well-known symbol.
-#define JS_DEFINE_SYMBOL_ENUM(name) name,
-    JS_FOR_EACH_WELL_KNOWN_SYMBOL(JS_DEFINE_SYMBOL_ENUM)  // SymbolCode::iterator, etc.
-#undef JS_DEFINE_SYMBOL_ENUM
-    Limit,
+    iterator,                       // well-known symbols
+    match,
+    species,
+    toPrimitive,
     InSymbolRegistry = 0xfffffffe,  // created by Symbol.for() or JS::GetSymbolFor()
     UniqueSymbol = 0xffffffff       // created by Symbol() or JS::NewSymbol()
 };
 
 /* For use in loops that iterate over the well-known symbols. */
-const size_t WellKnownSymbolLimit = size_t(SymbolCode::Limit);
+const size_t WellKnownSymbolLimit = 4;
 
 /**
  * Return the SymbolCode telling what sort of symbol `symbol` is.
