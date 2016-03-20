@@ -23,7 +23,7 @@ namespace dom {
 
 namespace {
 
-class FileSystemReleaseRunnable : public nsRunnable
+class FileSystemReleaseRunnable final : public nsRunnable
 {
 public:
   explicit FileSystemReleaseRunnable(RefPtr<FileSystemBase>& aDoomed)

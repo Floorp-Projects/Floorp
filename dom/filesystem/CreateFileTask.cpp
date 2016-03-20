@@ -168,8 +168,8 @@ CreateFileTask::GetRequestParams(const nsString& aSerializedDOMPath,
 
   param.replace() = mReplace;
   if (mBlobData) {
-    BlobChild* actor
-      = ContentChild::GetSingleton()->GetOrCreateActorForBlob(mBlobData);
+    BlobChild* actor =
+      ContentChild::GetSingleton()->GetOrCreateActorForBlob(mBlobData);
     if (actor) {
       param.data() = actor;
     }
@@ -205,7 +205,7 @@ CreateFileTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
 nsresult
 CreateFileTask::Work()
 {
-  class AutoClose
+  class MOZ_RAII AutoClose final
   {
   public:
     explicit AutoClose(nsIOutputStream* aStream)
@@ -218,6 +218,7 @@ CreateFileTask::Work()
     {
       mStream->Close();
     }
+
   private:
     nsCOMPtr<nsIOutputStream> mStream;
   };
