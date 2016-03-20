@@ -38,6 +38,12 @@ namespace dom {
 namespace {
 
 bool
+TokenizerIgnoreNothing(char16_t /* aChar */)
+{
+  return false;
+}
+
+bool
 IsValidRelativeDOMPath(const nsString& aPath, nsTArray<nsString>& aParts)
 {
   // We don't allow empty relative path to access the root.
@@ -55,7 +61,9 @@ IsValidRelativeDOMPath(const nsString& aPath, nsTArray<nsString>& aParts)
   NS_NAMED_LITERAL_STRING(kParentDir, "..");
 
   // Split path and check each path component.
-  nsCharSeparatedTokenizer tokenizer(aPath, FILESYSTEM_DOM_PATH_SEPARATOR_CHAR);
+  nsCharSeparatedTokenizerTemplate<TokenizerIgnoreNothing>
+    tokenizer(aPath, FILESYSTEM_DOM_PATH_SEPARATOR_CHAR);
+
   while (tokenizer.hasMoreTokens()) {
     nsDependentSubstring pathComponent = tokenizer.nextToken();
     // The path containing empty components, such as "foo//bar", is invalid.
