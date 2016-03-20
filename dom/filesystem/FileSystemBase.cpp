@@ -68,25 +68,40 @@ FileSystemBase::GetLocalFile(const nsAString& aRealPath) const
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be on parent process!");
+
+  // Let's convert the input path to /path
   nsAutoString localPath;
-  FileSystemUtils::NormalizedPathToLocalPath(aRealPath, localPath);
-  localPath = mLocalRootPath + localPath;
+  if (!aRealPath.IsEmpty() &&
+      !StringBeginsWith(aRealPath,
+                        NS_LITERAL_STRING(FILESYSTEM_DOM_PATH_SEPARATOR))) {
+    localPath.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR);
+  }
+  localPath.Append(aRealPath);
+
+  // We have to normalize the path string in order to follow the separator
+  // schema of this OS.
+  nsAutoString normalizedPath;
+  FileSystemUtils::NormalizedPathToLocalPath(localPath, normalizedPath);
+
+  // The full path is mLocalRootPath + normalizedPath.
+  nsAutoString path(mLocalRootPath);
+  path.Append(normalizedPath);
+
   nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_NewLocalFile(localPath, false, getter_AddRefs(file));
+  nsresult rv = NS_NewLocalFile(path, false, getter_AddRefs(file));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
+
   return file.forget();
 }
 
 bool
-FileSystemBase::GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const
+FileSystemBase::GetRealPath(BlobImpl* aFile, nsIFile** aPath) const
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be on parent process!");
   MOZ_ASSERT(aFile, "aFile Should not be null.");
-
-  aRealPath.Truncate();
 
   nsAutoString filePath;
   ErrorResult rv;
@@ -95,7 +110,13 @@ FileSystemBase::GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const
     return false;
   }
 
-  return LocalPathToRealPath(filePath, aRealPath);
+  rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(filePath),
+                             true, aPath);
+  if (NS_WARN_IF(rv.Failed())) {
+    return false;
+  }
+
+  return true;
 }
 
 bool
@@ -120,6 +141,7 @@ FileSystemBase::LocalPathToRealPath(const nsAString& aLocalPath,
     aRealPath.Truncate();
     return false;
   }
+
   aRealPath = Substring(path, mNormalizedLocalRootPath.Length());
   return true;
 }

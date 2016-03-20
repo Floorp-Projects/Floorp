@@ -670,8 +670,7 @@ public:
   EmptyBlobImpl(const nsAString& aName,
                 const nsAString& aContentType,
                 int64_t aLastModifiedDate)
-    : BlobImplBase(aName, aContentType, 0, aLastModifiedDate,
-                   BlobDirState::eIsNotDir)
+    : BlobImplBase(aName, aContentType, 0, aLastModifiedDate)
   {
     mImmutable = true;
   }
@@ -716,14 +715,12 @@ struct MOZ_STACK_CLASS CreateBlobImplMetadata final
   nsString mName;
   uint64_t mLength;
   int64_t mLastModifiedDate;
-  BlobDirState mDirState;
   bool mHasRecursed;
   const bool mIsSameProcessActor;
 
   explicit CreateBlobImplMetadata(bool aIsSameProcessActor)
     : mLength(0)
     , mLastModifiedDate(0)
-    , mDirState(BlobDirState::eUnknownIfDir)
     , mHasRecursed(false)
     , mIsSameProcessActor(aIsSameProcessActor)
   {
@@ -965,7 +962,6 @@ CreateBlobImpl(const ParentBlobConstructorParams& aParams,
     metadata.mName = params.name();
     metadata.mLength = params.length();
     metadata.mLastModifiedDate = params.modDate();
-    metadata.mDirState = BlobDirState(params.dirState());
   }
 
   RefPtr<BlobImpl> blobImpl =
@@ -1775,7 +1771,6 @@ public:
                  const nsAString& aContentType,
                  uint64_t aLength,
                  int64_t aModDate,
-                 BlobDirState aDirState,
                  bool aIsSameProcessBlob);
 
   // For Blob.
@@ -2053,18 +2048,6 @@ public:
   virtual bool
   IsFile() const override;
 
-  virtual void
-  LookupAndCacheIsDirectory() override;
-
-  virtual void
-  SetIsDirectory(bool aIsDir) override;
-
-  virtual bool
-  IsDirectory() const override;
-
-  virtual BlobDirState
-  GetDirState() const override;
-
   virtual bool
   MayBeClonedToOtherThreads() const override;
 
@@ -2096,9 +2079,8 @@ RemoteBlobImpl::RemoteBlobImpl(BlobChild* aActor,
                                const nsAString& aContentType,
                                uint64_t aLength,
                                int64_t aModDate,
-                               BlobDirState aDirState,
                                bool aIsSameProcessBlob)
-  : BlobImplBase(aName, aContentType, aLength, aModDate, aDirState)
+  : BlobImplBase(aName, aContentType, aLength, aModDate)
   , mIsSlice(false)
 {
   if (aIsSameProcessBlob) {
@@ -2814,34 +2796,6 @@ RemoteBlobImpl::IsFile() const
   return mBlobImpl->IsFile();
 }
 
-void
-BlobParent::
-RemoteBlobImpl::LookupAndCacheIsDirectory()
-{
-  return mBlobImpl->LookupAndCacheIsDirectory();
-}
-
-void
-BlobParent::
-RemoteBlobImpl::SetIsDirectory(bool aIsDir)
-{
-  return mBlobImpl->SetIsDirectory(aIsDir);
-}
-
-bool
-BlobParent::
-RemoteBlobImpl::IsDirectory() const
-{
-  return mBlobImpl->IsDirectory();
-}
-
-BlobDirState
-BlobParent::
-RemoteBlobImpl::GetDirState() const
-{
-  return mBlobImpl->GetDirState();
-}
-
 bool
 BlobParent::
 RemoteBlobImpl::MayBeClonedToOtherThreads() const
@@ -3033,8 +2987,7 @@ BlobChild::CommonInit(BlobChild* aOther, BlobImpl* aBlobImpl)
     MOZ_ASSERT(!rv.Failed());
 
     remoteBlob = new RemoteBlobImpl(this, otherImpl, name, contentType, length,
-                                    modDate, otherImpl->GetDirState(),
-                                    false /* SameProcessBlobImpl */);
+                                    modDate, false /* SameProcessBlobImpl */);
   } else {
     remoteBlob = new RemoteBlobImpl(this, otherImpl, contentType, length,
                                     false /* SameProcessBlobImpl */);
@@ -3086,7 +3039,6 @@ BlobChild::CommonInit(const ChildBlobConstructorParams& aParams)
                                       params.contentType(),
                                       params.length(),
                                       params.modDate(),
-                                      BlobDirState(params.dirState()),
                                       false /* SameProcessBlobImpl */);
       break;
     }
@@ -3122,7 +3074,6 @@ BlobChild::CommonInit(const ChildBlobConstructorParams& aParams)
                              contentType,
                              size,
                              lastModifiedDate,
-                             blobImpl->GetDirState(),
                              true /* SameProcessBlobImpl */);
       } else {
         remoteBlob = new RemoteBlobImpl(this, blobImpl, contentType, size,
@@ -3303,8 +3254,7 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
       MOZ_ASSERT(!rv.Failed());
 
       blobParams =
-        FileBlobConstructorParams(name, contentType, length, modDate,
-                                  aBlobImpl->GetDirState(), blobData);
+        FileBlobConstructorParams(name, contentType, length, modDate, blobData);
     } else {
       blobParams = NormalBlobConstructorParams(contentType, length, blobData);
     }
@@ -3477,8 +3427,7 @@ bool
 BlobChild::SetMysteryBlobInfo(const nsString& aName,
                               const nsString& aContentType,
                               uint64_t aLength,
-                              int64_t aLastModifiedDate,
-                              BlobDirState aDirState)
+                              int64_t aLastModifiedDate)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mBlobImpl);
@@ -3491,7 +3440,6 @@ BlobChild::SetMysteryBlobInfo(const nsString& aName,
                                    aContentType,
                                    aLength,
                                    aLastModifiedDate,
-                                   aDirState,
                                    void_t() /* optionalBlobData */);
   return SendResolveMystery(params);
 }
@@ -3854,7 +3802,7 @@ BlobParent::GetOrCreateFromImpl(ParentManagerType* aManager,
 
         blobParams =
           FileBlobConstructorParams(name, contentType, length, modDate,
-                                    aBlobImpl->GetDirState(), void_t());
+                                    void_t());
       } else {
         blobParams = NormalBlobConstructorParams(contentType, length, void_t());
       }
