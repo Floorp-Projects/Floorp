@@ -58,8 +58,9 @@ TalosPowersService.prototype = {
         break;
       }
       case "TalosPowersContent:ForceCCAndGC": {
-        Cu.forceCC();
         Cu.forceGC();
+        Cu.forceCC();
+        Cu.forceShrinkingGC();
         break;
       }
     }
