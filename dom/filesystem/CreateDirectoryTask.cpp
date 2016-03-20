@@ -30,7 +30,7 @@ CreateDirectoryTask::Create(FileSystemBase* aFileSystem,
   // aTargetPath can be null. In this case SetError will be called.
 
   nsCOMPtr<nsIGlobalObject> globalObject =
-    do_QueryInterface(aFileSystem->GetWindow());
+    do_QueryInterface(aFileSystem->GetParentObject());
   if (NS_WARN_IF(!globalObject)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -182,7 +182,7 @@ CreateDirectoryTask::HandlerCallback()
     mPromise = nullptr;
     return;
   }
-  RefPtr<Directory> dir = Directory::Create(mFileSystem->GetWindow(),
+  RefPtr<Directory> dir = Directory::Create(mFileSystem->GetParentObject(),
                                             mTargetPath,
                                             Directory::eNotDOMRootDirectory,
                                             mFileSystem);

@@ -44,8 +44,8 @@ FileSystemPermissionRequest::FileSystemPermissionRequest(
 
   mPermissionType = filesystem->GetPermission();
 
-  mWindow = filesystem->GetWindow();
-  if (!mWindow) {
+  mWindow = do_QueryInterface(filesystem->GetParentObject());
+  if (NS_WARN_IF(!mWindow)) {
     return;
   }
 
