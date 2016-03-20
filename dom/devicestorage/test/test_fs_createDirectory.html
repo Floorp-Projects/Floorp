@@ -34,14 +34,14 @@ function testCreateDirectory(rootDir, path) {
 }
 
 function createDirectorySuccess(d) {
-  ok(d.name === gName, "Failed to create directory: name mismatch.");
+  is(d.name, gName, "Failed to create directory: name mismatch.");
 
   // Get the new created directory from the root.
   gRoot.get(gPath).then(getSuccess, cbError);
 }
 
 function getSuccess(d) {
-  ok(d.name === gName, "Should get directory - " + (gPath || "[root]") + ".");
+  is(d.name, gName, "Should get directory - " + (gPath || "[root]") + ".");
   switch (gTestCount) {
     case 0:
       gRoot = d;
