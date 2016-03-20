@@ -11,8 +11,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/Directory.h"
-#include "mozilla/dom/FileSystemUtils.h"
-#include "mozilla/dom/OSFileSystem.h"
 #include "nsAttrValueInlines.h"
 #include "nsCRTGlue.h"
 
@@ -2525,10 +2523,8 @@ HTMLInputElement::SetFiles(nsIDOMFileList* aFiles,
     uint32_t listLength;
     aFiles->GetLength(&listLength);
     for (uint32_t i = 0; i < listLength; i++) {
-      RefPtr<File> file = files->Item(i);
-
       OwningFileOrDirectory* element = mFilesOrDirectories.AppendElement();
-      element->SetAsFile() = file;
+      *element = files->UnsafeItem(i);
     }
   }
 
@@ -2632,7 +2628,7 @@ HTMLInputElement::HandleNumberControlSpin(void* aData)
   }
 }
 
-nsresult
+void
 HTMLInputElement::UpdateFileList()
 {
   if (mFileList) {
@@ -2642,16 +2638,17 @@ HTMLInputElement::UpdateFileList()
       GetFilesOrDirectoriesInternal();
 
     for (uint32_t i = 0; i < array.Length(); ++i) {
-      if (array[i].IsFile() && !mFileList->Append(array[i].GetAsFile())) {
-        return NS_ERROR_FAILURE;
+      if (array[i].IsFile()) {
+        mFileList->Append(array[i].GetAsFile());
+      } else {
+        MOZ_ASSERT(array[i].IsDirectory());
+        mFileList->Append(array[i].GetAsDirectory());
       }
     }
   }
 
   // Make sure we (lazily) create a new Promise for GetFilesAndDirectories:
   mFilesAndDirectoriesPromise = nullptr;
-
-  return NS_OK;
 }
 
 nsresult

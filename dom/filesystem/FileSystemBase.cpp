@@ -58,8 +58,8 @@ FileSystemBase::Shutdown()
   mShutdown = true;
 }
 
-nsPIDOMWindowInner*
-FileSystemBase::GetWindow() const
+nsISupports*
+FileSystemBase::GetParentObject() const
 {
   return nullptr;
 }

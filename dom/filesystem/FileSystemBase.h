@@ -10,8 +10,6 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
-class nsPIDOMWindowInner;
-
 namespace mozilla {
 namespace dom {
 
@@ -36,8 +34,8 @@ public:
   virtual void
   SerializeDOMPath(nsAString& aOutput) const = 0;
 
-  virtual nsPIDOMWindowInner*
-  GetWindow() const;
+  virtual nsISupports*
+  GetParentObject() const;
 
   /*
    * Get the virtual name of the root directory. This name will be exposed to
