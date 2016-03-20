@@ -9089,6 +9089,9 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
   bool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant() ||
                                    (GetStateBits() & TEXT_IS_IN_TOKEN_MATHML);
+  // allow whitespace to overflow the container
+  bool whitespaceCanHang = textStyle->WhiteSpaceCanWrapStyle() &&
+                           textStyle->WhiteSpaceIsSignificant();
   gfxBreakPriority breakPriority = aLineLayout.LastOptionalBreakPriority();
   gfxTextRun::SuppressBreak suppressBreak = gfxTextRun::eNoSuppressBreak;
   bool shouldSuppressLineBreak = ShouldSuppressLineBreak();
@@ -9103,6 +9106,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
                                   availWidth,
                                   &provider, suppressBreak,
                                   canTrimTrailingWhitespace ? &trimmedWidth : nullptr,
+                                  whitespaceCanHang,
                                   &textMetrics, boundingBoxType,
                                   aDrawTarget,
                                   &usedHyphenation, &transformedLastBreak,
