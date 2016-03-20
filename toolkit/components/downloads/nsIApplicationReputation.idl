@@ -18,6 +18,15 @@ interface nsIURI;
 [scriptable, uuid(c9f03479-fd68-4393-acb2-c88d4f563174)]
 interface nsIApplicationReputationService : nsISupports {
   /**
+   * Indicates the reason for the application reputation block.
+   */
+  const unsigned long VERDICT_SAFE = 0;
+  const unsigned long VERDICT_DANGEROUS = 1;
+  const unsigned long VERDICT_UNCOMMON = 2;
+  const unsigned long VERDICT_POTENTIALLY_UNWANTED = 3;
+  const unsigned long VERDICT_DANGEROUS_HOST = 4;
+
+  /**
    * Start querying the application reputation service.
    *
    * @param aQuery
@@ -101,7 +110,13 @@ interface nsIApplicationReputationCallback : nsISupports {
    *        reachable.
    * @param aShouldBlock
    *        Whether or not the download should be blocked.
+   * @param aVerdict
+   *        Indicates the result of the lookup that determines whether the
+   *        download should be blocked, according to the "VERDICT_" constants.
+   *        This may be set to a value different than "VERDICT_SAFE" even if
+   *        aShouldBlock is false, so you should always check aShouldBlock.
    */
   void onComplete(in bool aShouldBlock,
-                  in nsresult aStatus);
+                  in nsresult aStatus,
+                  in unsigned long aVerdict);
 };
