@@ -72,7 +72,7 @@ var clonableObjects = [
   { crossThreads: true, data: new ImageData(2, 2) },
 ];
 
-function create_fileList() {
+function create_fileList_forFile() {
   var url = SimpleTest.getTestFileURL("script_postmessages_fileList.js");
   var script = SpecialPowers.loadChromeScript(url);
 
@@ -91,6 +91,27 @@ function create_fileList() {
 
   script.addMessageListener("file.opened", onOpened);
   script.sendAsyncMessage("file.open");
+}
+
+function create_fileList_forDir() {
+  var url = SimpleTest.getTestFileURL("script_postmessages_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    var fileList = document.getElementById('fileList');
+    SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
+
+    // Just a simple test
+    is(fileList.files.length, 1, "Filelist has 1 element");
+    ok(fileList.files[0] instanceof Directory, "We have a directory.");
+
+    clonableObjects.push({ crossThreads: false, data: fileList.files });
+    script.destroy();
+    next();
+  }
+
+  script.addMessageListener("dir.opened", onOpened);
+  script.sendAsyncMessage("dir.open");
 }
 
 function runTests(obj) {
@@ -513,7 +534,8 @@ function test_messagePort_inWorkers() {
 }
 
 var tests = [
-  create_fileList,
+  create_fileList_forFile,
+  create_fileList_forDir,
 
   test_windowToWindow,
   test_windowToIframe,
