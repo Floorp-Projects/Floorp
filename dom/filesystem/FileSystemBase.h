@@ -87,17 +87,11 @@ public:
 protected:
   virtual ~FileSystemBase();
 
-  bool
-  LocalPathToRealPath(const nsAString& aLocalPath, nsAString& aRealPath) const;
-
   // The local path of the root (i.e. the OS path, with OS path separators, of
   // the OS directory that acts as the root of this OSFileSystem).
   // Only available in the parent process.
   // In the child process, we don't use it and its value should be empty.
   nsString mLocalRootPath;
-
-  // The same, but with path separators normalized to "/".
-  nsString mNormalizedLocalRootPath;
 
   bool mShutdown;
 
