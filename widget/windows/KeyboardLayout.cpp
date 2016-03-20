@@ -2421,6 +2421,21 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     LoadLayout(::GetKeyboardLayout(0));
   }
 
+  // If the aNativeKey is initialized with WM_CHAR, the key information
+  // should be discarded because mKeyValue should have the string to be
+  // inputted.
+  if (aNativeKey.mMsg.message == WM_CHAR) {
+    aNativeKey.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
+    if (aNativeKey.mMsg.wParam) {
+      aNativeKey.mCommittedCharsAndModifiers.Append(
+        static_cast<char16_t>(aNativeKey.mMsg.wParam),
+        aModKeyState.GetModifiers());
+    } else {
+      aNativeKey.mCommittedCharsAndModifiers.Clear();
+    }
+    return;
+  }
+
   uint8_t virtualKey = aNativeKey.mOriginalVirtualKeyCode;
   int32_t virtualKeyIndex = GetKeyIndex(virtualKey);
 
