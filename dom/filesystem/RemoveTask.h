@@ -17,22 +17,19 @@ namespace dom {
 class BlobImpl;
 class Promise;
 
-class RemoveTask final : public FileSystemTaskBase
+class RemoveTask final
+  : public FileSystemTaskBase
 {
 public:
-  static already_AddRefed<RemoveTask>
-  Create(FileSystemBase* aFileSystem,
-         nsIFile* aDirPath,
-         BlobImpl* aTargetBlob,
-         nsIFile* aTargetPath,
-         bool aRecursive,
-         ErrorResult& aRv);
-
-  static already_AddRefed<RemoveTask>
-  Create(FileSystemBase* aFileSystem,
-         const FileSystemRemoveParams& aParam,
-         FileSystemRequestParent* aParent,
-         ErrorResult& aRv);
+  RemoveTask(FileSystemBase* aFileSystem,
+             const nsAString& aDirPath,
+             BlobImpl* aTargetBlob,
+             const nsAString& aTargetPath,
+             bool aRecursive,
+             ErrorResult& aRv);
+  RemoveTask(FileSystemBase* aFileSystem,
+             const FileSystemRemoveParams& aParam,
+             FileSystemRequestParent* aParent);
 
   virtual
   ~RemoveTask();
@@ -45,15 +42,13 @@ public:
 
 protected:
   virtual FileSystemParams
-  GetRequestParams(const nsString& aSerializedDOMPath,
-                   ErrorResult& aRv) const override;
+  GetRequestParams(const nsString& aFileSystem) const override;
 
   virtual FileSystemResponseValue
-  GetSuccessRequestResult(ErrorResult& aRv) const override;
+  GetSuccessRequestResult() const override;
 
   virtual void
-  SetSuccessRequestResult(const FileSystemResponseValue& aValue,
-                          ErrorResult& aRv) override;
+  SetSuccessRequestResult(const FileSystemResponseValue& aValue) override;
 
   virtual nsresult
   Work() override;
@@ -62,23 +57,12 @@ protected:
   HandlerCallback() override;
 
 private:
-  RemoveTask(FileSystemBase* aFileSystem,
-             nsIFile* aDirPath,
-             BlobImpl* aTargetBlob,
-             nsIFile* aTargetPath,
-             bool aRecursive);
-
-  RemoveTask(FileSystemBase* aFileSystem,
-             const FileSystemRemoveParams& aParam,
-             FileSystemRequestParent* aParent);
-
   RefPtr<Promise> mPromise;
-  nsCOMPtr<nsIFile> mDirPath;
-
+  nsString mDirRealPath;
   // This cannot be a File because this object will be used on a different
   // thread and File is not thread-safe. Let's use the BlobImpl instead.
   RefPtr<BlobImpl> mTargetBlobImpl;
-  nsCOMPtr<nsIFile> mTargetPath;
+  nsString mTargetRealPath;
   bool mRecursive;
   bool mReturnValue;
 };
