@@ -624,6 +624,12 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum attachment, TexImageTarget texImag
         return;
 
     if (tex) {
+        if (!tex->HasEveryBeenBound()) {
+            mContext->ErrorInvalidOperation("framebufferTexture2D: the texture"
+                                            " is not the name of a texture.");
+            return;
+        }
+
         bool isTexture2D = tex->Target() == LOCAL_GL_TEXTURE_2D;
         bool isTexTarget2D = texImageTarget == LOCAL_GL_TEXTURE_2D;
         if (isTexture2D != isTexTarget2D) {
