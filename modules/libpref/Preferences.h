@@ -274,6 +274,10 @@ public:
   static nsresult AddUintVarCache(uint32_t* aVariable,
                                   const char* aPref,
                                   uint32_t aDefault = 0);
+  template <MemoryOrdering Order>
+  static nsresult AddAtomicUintVarCache(Atomic<uint32_t, Order>* aVariable,
+                                        const char* aPref,
+                                        uint32_t aDefault = 0);
   static nsresult AddFloatVarCache(float* aVariable,
                                    const char* aPref,
                                    float aDefault = 0.0f);
