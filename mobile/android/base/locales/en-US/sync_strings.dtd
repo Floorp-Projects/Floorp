@@ -83,8 +83,8 @@
      external web pages.  Compare fxaccount_policy_{linktos,linkprivacy}:
      these strings are separated to accommodate languages that decline
      the two uses differently. -->
-<!ENTITY fxaccount_status_linktos 'Terms of Service'>
-<!ENTITY fxaccount_status_linkprivacy 'Privacy Notice'>
+<!ENTITY fxaccount_status_linktos2 'Terms of service'>
+<!ENTITY fxaccount_status_linkprivacy2 'Privacy notice'>
 <!ENTITY fxaccount_status_more 'More&ellipsis;'>
 <!ENTITY fxaccount_remove_account 'Disconnect&ellipsis;'>
 
