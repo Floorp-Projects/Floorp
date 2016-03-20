@@ -755,26 +755,6 @@ DynamicWithObject::create(JSContext* cx, HandleObject object, HandleObject enclo
     return obj;
 }
 
-/* Implements ES6 8.1.1.2.1 HasBinding steps 7-9. */
-static bool
-CheckUnscopables(JSContext *cx, HandleObject obj, HandleId id, bool *scopable)
-{
-    RootedId unscopablesId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols()
-                                                .get(JS::SymbolCode::unscopables)));
-    RootedValue v(cx);
-    if (!GetProperty(cx, obj, obj, unscopablesId, &v))
-        return false;
-    if (v.isObject()) {
-        RootedObject unscopablesObj(cx, &v.toObject());
-        if (!GetProperty(cx, unscopablesObj, unscopablesObj, id, &v))
-            return false;
-        *scopable = !ToBoolean(v);
-    } else {
-        *scopable = true;
-    }
-    return true;
-}
-
 static bool
 with_LookupProperty(JSContext* cx, HandleObject obj, HandleId id,
                     MutableHandleObject objp, MutableHandleShape propp)
@@ -785,19 +765,7 @@ with_LookupProperty(JSContext* cx, HandleObject obj, HandleId id,
         return true;
     }
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    if (!LookupProperty(cx, actual, id, objp, propp))
-        return false;
-
-    if (propp) {
-        bool scopable;
-        if (!CheckUnscopables(cx, actual, id, &scopable))
-            return false;
-        if (!scopable) {
-            objp.set(nullptr);
-            propp.set(nullptr);
-        }
-    }
-    return true;
+    return LookupProperty(cx, actual, id, objp, propp);
 }
 
 static bool
@@ -814,15 +782,7 @@ with_HasProperty(JSContext* cx, HandleObject obj, HandleId id, bool* foundp)
 {
     MOZ_ASSERT(!JSID_IS_ATOM(id, cx->names().dotThis));
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-
-    // ES 8.1.1.2.1 step 3-5.
-    if (!HasProperty(cx, actual, id, foundp))
-        return false;
-    if (!*foundp)
-        return true;
-
-    // Steps 7-10. (Step 6 is a no-op.)
-    return CheckUnscopables(cx, actual, id, foundp);
+    return HasProperty(cx, actual, id, foundp);
 }
 
 static bool
@@ -2315,24 +2275,11 @@ class DebugScopeProxy : public BaseProxyHandler
         // target object, the object would indicate that native enumeration is
         // the thing to do, but native enumeration over the DynamicWithObject
         // wrapper yields no properties.  So instead here we hack around the
-        // issue: punch a hole through to the with object target, then manually
-        // examine @@unscopables.
-        bool isWith = scope->is<DynamicWithObject>();
-        Rooted<JSObject*> target(cx, (isWith ? &scope->as<DynamicWithObject>().object() : scope));
+        // issue, and punch a hole through to the with object target.
+        Rooted<JSObject*> target(cx, (scope->is<DynamicWithObject>()
+                                      ? &scope->as<DynamicWithObject>().object() : scope));
         if (!GetPropertyKeys(cx, target, JSITER_OWNONLY, &props))
             return false;
-
-        if (isWith) {
-            size_t j = 0;
-            for (size_t i = 0; i < props.length(); i++) {
-                bool inScope;
-                if (!CheckUnscopables(cx, scope, props[i], &inScope))
-                    return false;
-                if (inScope)
-                    props[j++].set(props[i]);
-            }
-            props.resize(j);
-        }
 
         /*
          * Function scopes are optimized to not contain unaliased variables so
