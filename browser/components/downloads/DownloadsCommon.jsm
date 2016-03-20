@@ -728,7 +728,11 @@ DownloadsDataCtor.prototype = {
             if (download.succeeded) {
               downloadMetaData.fileSize = download.target.size;
             }
-  
+            if (download.error && download.error.reputationCheckVerdict) {
+              downloadMetaData.reputationCheckVerdict =
+                download.error.reputationCheckVerdict;
+            }
+
             PlacesUtils.annotations.setPageAnnotation(
                           NetUtil.newURI(download.source.url),
                           "downloads/metaData",

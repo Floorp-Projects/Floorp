@@ -349,21 +349,25 @@ this.DownloadIntegration = {
    */
   shouldPersistDownload: function (aDownload)
   {
-    // In the default implementation, we save all the downloads currently in
-    // progress, as well as stopped downloads for which we retained partially
-    // downloaded data.  Stopped downloads for which we don't need to track the
-    // presence of a ".part" file are only retained in the browser history.
-    // On b2g, we keep a few days of history. On Android we store all history.
+    // On all platforms, we save all the downloads currently in progress, as
+    // well as stopped downloads for which we retained partially downloaded
+    // data or we have blocked data.
+    if (!aDownload.stopped || aDownload.hasPartialData ||
+        aDownload.hasBlockedData) {
+      return true;
+    }
 #ifdef MOZ_B2G
+    // On B2G we keep a few days of history.
     let maxTime = Date.now() -
       Services.prefs.getIntPref("dom.downloads.max_retention_days") * 24 * 60 * 60 * 1000;
-    return (aDownload.startTime > maxTime) ||
-           aDownload.hasPartialData ||
-           !aDownload.stopped;
+    return aDownload.startTime > maxTime;
 #elif defined(MOZ_WIDGET_ANDROID)
+    // On Android we store all history.
     return true;
 #else
-    return aDownload.hasPartialData || !aDownload.stopped;
+    // On Desktop, stopped downloads for which we don't need to track the
+    // presence of a ".part" file are only retained in the browser history.
+    return false;
 #endif
   },
 
