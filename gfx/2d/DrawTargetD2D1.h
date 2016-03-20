@@ -164,6 +164,7 @@ private:
   // This function will mark the surface as changing, and make sure any
   // copy-on-write snapshots are notified.
   void MarkChanged();
+  bool ShouldClipTemporarySurfaceDrawing(CompositionOp aOp, const Pattern& aPattern, bool aClipIsComplex);
   void PrepareForDrawing(CompositionOp aOp, const Pattern &aPattern);
   void FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern);
   void FlushTransformToDC() {
