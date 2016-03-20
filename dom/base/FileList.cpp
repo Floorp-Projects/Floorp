@@ -111,5 +111,17 @@ FileList::ToSequence(Sequence<OwningFileOrDirectory>& aSequence,
   }
 }
 
+bool
+FileList::ClonableToDifferentThreadOrProcess() const
+{
+  for (uint32_t i = 0; i < mFilesOrDirectories.Length(); ++i) {
+    if (mFilesOrDirectories[i].IsDirectory()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla

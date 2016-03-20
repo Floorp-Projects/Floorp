@@ -1008,7 +1008,6 @@ StructuredCloneHolder::CustomReadHandler(JSContext* aCx,
   }
 
   if (aTag == SCTAG_DOM_FILELIST) {
-    MOZ_ASSERT(mSupportedContext == SameProcessSameThread);
     return ReadFileList(aCx, aReader, aIndex, this);
   }
 
@@ -1049,9 +1048,11 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   }
 
   // See if this is a FileList object.
-  if (mSupportedContext == SameProcessSameThread) {
+  {
     FileList* fileList = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(FileList, aObj, fileList))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(FileList, aObj, fileList)) &&
+        (mSupportedContext == SameProcessSameThread ||
+         fileList->ClonableToDifferentThreadOrProcess())) {
       return WriteFileList(aWriter, fileList, this);
     }
   }
