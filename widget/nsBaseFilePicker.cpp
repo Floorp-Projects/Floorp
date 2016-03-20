@@ -17,6 +17,7 @@
 #include "nsCOMArray.h"
 #include "nsIFile.h"
 #include "nsEnumeratorUtils.h"
+#include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/Services.h"
 #include "WidgetUtils.h"
@@ -29,6 +30,36 @@ using namespace mozilla::dom;
 
 #define FILEPICKER_TITLES "chrome://global/locale/filepicker.properties"
 #define FILEPICKER_FILTERS "chrome://global/content/filepicker.properties"
+
+namespace {
+
+nsresult
+LocalFileToDirectoryOrBlob(nsPIDOMWindowInner* aWindow,
+                           bool aIsDirectory,
+                           nsIFile* aFile,
+                           nsISupports** aResult)
+{
+  if (aIsDirectory) {
+#ifdef DEBUG
+    bool isDir;
+    aFile->IsDirectory(&isDir);
+    MOZ_ASSERT(isDir);
+#endif
+
+    RefPtr<Directory> directory =
+      Directory::Create(aWindow, aFile, Directory::eDOMRootDirectory);
+    MOZ_ASSERT(directory);
+
+    directory.forget(aResult);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMBlob> blob = File::CreateFromFile(aWindow, aFile);
+  blob.forget(aResult);
+  return NS_OK;
+}
+
+} // anonymous namespace
 
 /**
  * A runnable to dispatch from the main thread to the main thread to display
@@ -74,9 +105,9 @@ class nsBaseFilePickerEnumerator : public nsISimpleEnumerator
 public:
   NS_DECL_ISUPPORTS
 
-  explicit nsBaseFilePickerEnumerator(nsPIDOMWindowOuter* aParent,
-                                      nsISimpleEnumerator* iterator,
-                                      int16_t aMode)
+  nsBaseFilePickerEnumerator(nsPIDOMWindowOuter* aParent,
+                             nsISimpleEnumerator* iterator,
+                             int16_t aMode)
     : mIterator(iterator)
     , mParent(aParent->GetCurrentInnerWindow())
     , mMode(aMode)
@@ -98,32 +129,10 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<File> domFile = File::CreateFromFile(mParent, localFile);
-
-    // Right now we're on the main thread of the chrome process. We need
-    // to call SetIsDirectory on the BlobImpl, but it's preferable not to
-    // call nsIFile::IsDirectory to determine what argument to pass since
-    // IsDirectory does synchronous I/O. It's true that since we've just
-    // been called synchronously directly after nsIFilePicker::Show blocked
-    // the main thread while the picker was being shown and the OS did file
-    // system access, doing more I/O to stat the selected files probably
-    // wouldn't be the end of the world. However, we can simply check
-    // mMode and avoid calling IsDirectory.
-    //
-    // In future we may take advantage of OS X's ability to allow both
-    // files and directories to be picked at the same time, so we do assert
-    // in debug builds that the mMode trick produces the correct results.
-    // If we do add that support maybe it's better to use IsDirectory
-    // directly, but in an nsRunnable punted off to a background thread.
-#ifdef DEBUG
-    bool isDir;
-    localFile->IsDirectory(&isDir);
-    MOZ_ASSERT(isDir == (mMode == nsIFilePicker::modeGetFolder));
-#endif
-    domFile->Impl()->SetIsDirectory(mMode == nsIFilePicker::modeGetFolder);
-
-    nsCOMPtr<nsIDOMBlob>(domFile).forget(aResult);
-    return NS_OK;
+    return LocalFileToDirectoryOrBlob(mParent,
+                                      mMode == nsIFilePicker::modeGetFolder,
+                                      localFile,
+                                      aResult);
   }
 
   NS_IMETHOD
@@ -349,10 +358,10 @@ nsBaseFilePicker::GetDomFileOrDirectory(nsISupports** aValue)
 
   auto* innerParent = mParent ? mParent->GetCurrentInnerWindow() : nullptr;
 
-  RefPtr<File> domFile = File::CreateFromFile(innerParent, localFile);
-  domFile->Impl()->SetIsDirectory(mMode == nsIFilePicker::modeGetFolder);
-  nsCOMPtr<nsIDOMBlob>(domFile).forget(aValue);
-  return NS_OK;
+  return LocalFileToDirectoryOrBlob(innerParent,
+                                    mMode == nsIFilePicker::modeGetFolder,
+                                    localFile,
+                                    aValue);
 }
 
 NS_IMETHODIMP

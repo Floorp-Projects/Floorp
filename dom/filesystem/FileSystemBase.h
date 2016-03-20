@@ -73,13 +73,8 @@ public:
   virtual bool
   IsSafeDirectory(Directory* aDir) const;
 
-  /*
-   * Get the real path (absolute DOM path) of the DOM file in the file system.
-   * If succeeded, returns true. Otherwise, returns false and set aRealPath to
-   * empty string.
-   */
   bool
-  GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const;
+  GetRealPath(BlobImpl* aFile, nsIFile** aPath) const;
 
   /*
    * Get the permission name required to access this file system.
