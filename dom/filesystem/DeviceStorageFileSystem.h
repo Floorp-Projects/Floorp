@@ -27,9 +27,6 @@ public:
 
   // Overrides FileSystemBase
 
-  virtual already_AddRefed<FileSystemBase>
-  Clone() override;
-
   virtual void
   Shutdown() override;
 
