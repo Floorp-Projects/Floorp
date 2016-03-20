@@ -14,6 +14,8 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/PFilePickerParent.h"
 
+class nsIFile;
+
 namespace mozilla {
 namespace dom {
 
@@ -29,7 +31,19 @@ class FilePickerParent : public PFilePickerParent
   virtual ~FilePickerParent();
 
   void Done(int16_t aResult);
-  void SendFiles(const nsTArray<RefPtr<BlobImpl>>& aDomBlobs);
+
+  struct BlobImplOrString
+  {
+    RefPtr<BlobImpl> mBlobImpl;
+    nsString mDirectoryPath;
+
+    enum {
+      eBlobImpl,
+      eDirectoryPath
+    } mType;
+  };
+
+  void SendFilesOrDirectories(const nsTArray<BlobImplOrString>& aData);
 
   virtual bool RecvOpen(const int16_t& aSelectedType,
                         const bool& aAddToRecentDocs,
@@ -61,21 +75,26 @@ class FilePickerParent : public PFilePickerParent
  private:
   bool CreateFilePicker();
 
-  class FileSizeAndDateRunnable : public nsRunnable
+  // This runnable is used to do some I/O operation on a separate thread.
+  class IORunnable : public nsRunnable
   {
     FilePickerParent* mFilePickerParent;
-    nsTArray<RefPtr<BlobImpl>> mBlobs;
+    nsTArray<nsCOMPtr<nsIFile>> mFiles;
+    nsTArray<BlobImplOrString> mResults;
     nsCOMPtr<nsIEventTarget> mEventTarget;
+    bool mIsDirectory;
 
   public:
-    FileSizeAndDateRunnable(FilePickerParent *aFPParent,
-                            nsTArray<RefPtr<BlobImpl>>& aBlobs);
+    IORunnable(FilePickerParent *aFPParent,
+               nsTArray<nsCOMPtr<nsIFile>>& aFiles,
+               bool aIsDirectory);
+
     bool Dispatch();
     NS_IMETHOD Run();
     void Destroy();
   };
 
-  RefPtr<FileSizeAndDateRunnable> mRunnable;
+  RefPtr<IORunnable> mRunnable;
   RefPtr<FilePickerShownCallback> mCallback;
   nsCOMPtr<nsIFilePicker> mFilePicker;
 

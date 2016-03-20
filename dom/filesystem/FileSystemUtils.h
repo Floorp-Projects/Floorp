@@ -35,6 +35,12 @@ public:
   NormalizedPathToLocalPath(const nsAString& aNorm, nsAString& aLocal);
 
   /*
+   * Return true if aDescendantPath is a descendant of aPath.
+   */
+  static bool
+  IsDescendantPath(nsIFile* aPath, nsIFile* aDescendantPath);
+
+  /*
    * Return true if aDescendantPath is a descendant of aPath. Both aPath and
    * aDescendantPath are absolute DOM path.
    */
