@@ -20,22 +20,19 @@ class Blob;
 class BlobImpl;
 class Promise;
 
-class CreateFileTask final : public FileSystemTaskBase
+class CreateFileTask final
+  : public FileSystemTaskBase
 {
 public:
-  static already_AddRefed<CreateFileTask>
-  Create(FileSystemBase* aFileSystem,
-         nsIFile* aFile,
-         Blob* aBlobData,
-         InfallibleTArray<uint8_t>& aArrayData,
-         bool replace,
-         ErrorResult& aRv);
-
-  static already_AddRefed<CreateFileTask>
-  Create(FileSystemBase* aFileSystem,
-         const FileSystemCreateFileParams& aParam,
-         FileSystemRequestParent* aParent,
-         ErrorResult& aRv);
+  CreateFileTask(FileSystemBase* aFileSystem,
+                 const nsAString& aPath,
+                 Blob* aBlobData,
+                 InfallibleTArray<uint8_t>& aArrayData,
+                 bool replace,
+                 ErrorResult& aRv);
+  CreateFileTask(FileSystemBase* aFileSystem,
+                 const FileSystemCreateFileParams& aParam,
+                 FileSystemRequestParent* aParent);
 
   virtual
   ~CreateFileTask();
@@ -48,15 +45,13 @@ public:
 
 protected:
   virtual FileSystemParams
-  GetRequestParams(const nsString& aSerializedDOMPath,
-                   ErrorResult& aRv) const override;
+  GetRequestParams(const nsString& aFileSystem) const override;
 
   virtual FileSystemResponseValue
-  GetSuccessRequestResult(ErrorResult& aRv) const override;
+  GetSuccessRequestResult() const override;
 
   virtual void
-  SetSuccessRequestResult(const FileSystemResponseValue& aValue,
-                          ErrorResult& aRv) override;
+  SetSuccessRequestResult(const FileSystemResponseValue& aValue) override;
 
   virtual nsresult
   Work() override;
@@ -65,20 +60,12 @@ protected:
   HandlerCallback() override;
 
 private:
-  CreateFileTask(FileSystemBase* aFileSystem,
-                 nsIFile* aFile,
-                 bool aReplace);
-
-  CreateFileTask(FileSystemBase* aFileSystem,
-                 const FileSystemCreateFileParams& aParam,
-                 FileSystemRequestParent* aParent);
-
   void
   GetOutputBufferSize() const;
 
   static uint32_t sOutputBufferSize;
   RefPtr<Promise> mPromise;
-  nsCOMPtr<nsIFile> mTargetPath;
+  nsString mTargetRealPath;
 
   // Not thread-safe and should be released on main thread.
   RefPtr<Blob> mBlobData;

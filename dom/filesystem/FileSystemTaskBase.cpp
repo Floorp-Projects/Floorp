@@ -23,7 +23,7 @@ namespace dom {
 
 namespace {
 
-class FileSystemReleaseRunnable final : public nsRunnable
+class FileSystemReleaseRunnable : public nsRunnable
 {
 public:
   explicit FileSystemReleaseRunnable(RefPtr<FileSystemBase>& aDoomed)
@@ -106,22 +106,12 @@ FileSystemTaskBase::Start()
     return;
   }
 
-  nsAutoString serialization;
-  mFileSystem->SerializeDOMPath(serialization);
-
-  ErrorResult rv;
-  FileSystemParams params = GetRequestParams(serialization, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return;
-  }
-
   // Retain a reference so the task object isn't deleted without IPDL's
   // knowledge. The reference will be released by
   // mozilla::dom::ContentChild::DeallocPFileSystemRequestChild.
   NS_ADDREF_THIS();
-
   ContentChild::GetSingleton()->SendPFileSystemRequestConstructor(this,
-                                                                  params);
+    GetRequestParams(mFileSystem->ToString()));
 }
 
 NS_IMETHODIMP
@@ -164,17 +154,11 @@ FileSystemTaskBase::GetRequestResult() const
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Only call from parent process!");
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  if (!HasError()) {
-    ErrorResult rv;
-    FileSystemResponseValue value = GetSuccessRequestResult(rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      return FileSystemErrorResponse(rv.StealNSResult());
-    }
-
-    return value;
+  if (HasError()) {
+    return FileSystemErrorResponse(mErrorValue);
+  } else {
+    return GetSuccessRequestResult();
   }
-
-  return FileSystemErrorResponse(mErrorValue);
 }
 
 void
@@ -187,9 +171,7 @@ FileSystemTaskBase::SetRequestResult(const FileSystemResponseValue& aValue)
     FileSystemErrorResponse r = aValue;
     mErrorValue = r.error();
   } else {
-    ErrorResult rv;
-    SetSuccessRequestResult(aValue, rv);
-    mErrorValue = rv.StealNSResult();
+    SetSuccessRequestResult(aValue);
   }
 }
 

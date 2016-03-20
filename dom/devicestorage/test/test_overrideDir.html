@@ -149,7 +149,8 @@ try {
     // The remove will fail if the directory doesn't exist, which is fine.
     f.remove(true);
   } catch (e) {}
-  SpecialPowers.pushPrefEnv({'set': [["device.storage.overrideRootDir", f.path]]},
+  SpecialPowers.pushPrefEnv({'set': [["device.storage.overrideRootDir", f.path],
+                                     ["device.storage.testing", false]]},
     function() {
       startTest();
     });
