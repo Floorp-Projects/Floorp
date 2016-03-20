@@ -31,12 +31,6 @@ DeviceStorageFileSystem::DeviceStorageFileSystem(
   mStorageType = aStorageType;
   mStorageName = aStorageName;
 
-  // Generate the string representation of the file system.
-  mString.AppendLiteral("devicestorage-");
-  mString.Append(mStorageType);
-  mString.Append('-');
-  mString.Append(mStorageName);
-
   mRequiresPermissionChecks =
     !mozilla::Preferences::GetBool("device.storage.prompt.testing", false);
 
@@ -140,8 +134,24 @@ DeviceStorageFileSystem::IsSafeDirectory(Directory* aDir) const
     return false;
   }
 
+  nsAutoString fsSerialization;
+  fs->SerializeDOMPath(fsSerialization);
+
+  nsAutoString thisSerialization;
+  SerializeDOMPath(thisSerialization);
+
   // Check if the given directory is from this storage.
-  return fs->ToString() == mString;
+  return fsSerialization == thisSerialization;
+}
+
+void
+DeviceStorageFileSystem::SerializeDOMPath(nsAString& aString) const
+{
+  // Generate the string representation of the file system.
+  aString.AssignLiteral("devicestorage-");
+  aString.Append(mStorageType);
+  aString.Append('-');
+  aString.Append(mStorageName);
 }
 
 } // namespace dom
