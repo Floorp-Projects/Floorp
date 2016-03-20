@@ -766,7 +766,8 @@ PendingLookup::DoLookupInternal()
 nsresult
 PendingLookup::OnComplete(bool shouldBlock, nsresult rv, uint32_t verdict)
 {
-  MOZ_ASSERT(!shouldBlock || verdict != VERDICT_SAFE);
+  MOZ_ASSERT(!shouldBlock ||
+             verdict != nsIApplicationReputationService::VERDICT_SAFE);
 
   if (NS_FAILED(rv)) {
     nsAutoCString errorName;
