@@ -395,14 +395,21 @@ function backgroundScript() {
       createdBookmarks.add(corporationBookmark.id);
     });
   }).then(() => {
-    return browser.bookmarks.getRecent(5);
+    return browser.bookmarks.getRecent(4);
   }).then(results => {
-    browser.test.assertEq(5, results.length, "Expected number of results returned by getRecent");
-    browser.test.assertEq("About Mozilla", results[0].title, "Bookmark has the expected title");
-    browser.test.assertEq("Firefox", results[1].title, "Bookmark has the expected title");
-    browser.test.assertEq("Mozilla Corporation", results[2].title, "Bookmark has the expected title");
-    browser.test.assertEq("Mozilla", results[3].title, "Bookmark has the expected title");
-    browser.test.assertEq("Toolbar Item", results[4].title, "Bookmark has the expected title");
+    browser.test.assertEq(4, results.length, "Expected number of results returned by getRecent");
+    let prevDate = results[0].dateAdded;
+    for (let bookmark of results) {
+      browser.test.assertTrue(bookmark.dateAdded <= prevDate, "The recent bookmarks are sorted by dateAdded");
+      prevDate = bookmark.dateAdded;
+    }
+    let bookmarksByTitle = results.sort((a, b) => {
+      return a.title.localeCompare(b.title);
+    });
+    browser.test.assertEq("About Mozilla", bookmarksByTitle[0].title, "Bookmark has the expected title");
+    browser.test.assertEq("Firefox", bookmarksByTitle[1].title, "Bookmark has the expected title");
+    browser.test.assertEq("Mozilla", bookmarksByTitle[2].title, "Bookmark has the expected title");
+    browser.test.assertEq("Mozilla Corporation", bookmarksByTitle[3].title, "Bookmark has the expected title");
 
     return browser.bookmarks.search({});
   }).then(results => {

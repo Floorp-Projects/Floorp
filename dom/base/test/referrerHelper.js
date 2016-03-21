@@ -63,7 +63,7 @@ function checkIndividualResults(testname, expected) {
 
           expected.forEach(function (ref) {
             ok(results['img'].referrers.indexOf(ref) >= 0,
-                testname + " Test: Expected " + ref + " referrer policy in test, results were " + 
+                testname + " Test: Expected " + ref + " referrer policy in test, results were " +
                 JSON.stringify(results['img'].referrers) +".");
             });
           advance();
@@ -119,8 +119,8 @@ var EXPECTED_RESULTS = {
     'http-to-https': {
       'no-referrer': '',
       'unsafe-url': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=http&scheme-to=https&policy=unsafe-url',
-      'origin': 'http://example.com',
-      'origin-when-cross-origin': 'http://example.com',
+      'origin': 'http://example.com/',
+      'origin-when-cross-origin': 'http://example.com/',
       'no-referrer-when-downgrade': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=http&scheme-to=https&policy=no-referrer-when-downgrade'
     },
     // Encrypted and not same-origin
@@ -145,28 +145,28 @@ var EXPECTED_RESULTS = {
     'http-to-http': {
       'no-referrer': '',
       'unsafe-url': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=http&scheme-to=http&policy=unsafe-url&type=form',
-      'origin': 'http://example.com',
+      'origin': 'http://example.com/',
       'origin-when-cross-origin': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=http&scheme-to=http&policy=origin-when-cross-origin&type=form',
       'no-referrer-when-downgrade': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=http&scheme-to=http&policy=no-referrer-when-downgrade&type=form'
     },
     'http-to-https': {
       'no-referrer': '',
       'unsafe-url': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=http&scheme-to=https&policy=unsafe-url&type=form',
-      'origin': 'http://example.com',
-      'origin-when-cross-origin': 'http://example.com',
+      'origin': 'http://example.com/',
+      'origin-when-cross-origin': 'http://example.com/',
       'no-referrer-when-downgrade': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=http&scheme-to=https&policy=no-referrer-when-downgrade&type=form'
     },
     'https-to-http': {
       'no-referrer': '',
       'unsafe-url': 'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=https&scheme-to=http&policy=unsafe-url&type=form',
-      'origin': 'https://example.com',
-      'origin-when-cross-origin': 'https://example.com',
+      'origin': 'https://example.com/',
+      'origin-when-cross-origin': 'https://example.com/',
       'no-referrer-when-downgrade': ''
     },
     'https-to-https': {
       'no-referrer': '',
       'unsafe-url': 'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=https&scheme-to=https&policy=unsafe-url&type=form',
-      'origin': 'https://example.com',
+      'origin': 'https://example.com/',
      'origin-when-cross-origin': 'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=https&scheme-to=https&policy=origin-when-cross-origin&type=form',
       'no-referrer-when-downgrade': 'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=https&scheme-to=https&policy=no-referrer-when-downgrade&type=form'
     }
@@ -176,28 +176,28 @@ var EXPECTED_RESULTS = {
     'http-to-http': {
       'no-referrer': '',
       'unsafe-url': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=http&scheme-to=http&policy=unsafe-url&type=window.location',
-     'origin': 'http://example.com',
+     'origin': 'http://example.com/',
       'origin-when-cross-origin': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=http&scheme-to=http&policy=origin-when-cross-origin&type=window.location',
       'no-referrer-when-downgrade': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=http&scheme-to=http&policy=no-referrer-when-downgrade&type=window.location'
     },
     'http-to-https': {
       'no-referrer': '',
       'unsafe-url': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=http&scheme-to=https&policy=unsafe-url&type=window.location',
-      'origin': 'http://example.com',
-      'origin-when-cross-origin': 'http://example.com',
+      'origin': 'http://example.com/',
+      'origin-when-cross-origin': 'http://example.com/',
       'no-referrer-when-downgrade': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=http&scheme-to=https&policy=no-referrer-when-downgrade&type=window.location'
     },
     'https-to-http': {
       'no-referrer': '',
       'unsafe-url': 'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=https&scheme-to=http&policy=unsafe-url&type=window.location',
-      'origin': 'https://example.com',
-      'origin-when-cross-origin': 'https://example.com',
+      'origin': 'https://example.com/',
+      'origin-when-cross-origin': 'https://example.com/',
       'no-referrer-when-downgrade': ''
     },
     'https-to-https': {
       'no-referrer': '',
       'unsafe-url': 'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=https&scheme-to=https&policy=unsafe-url&type=window.location',
-      'origin': 'https://example.com',
+      'origin': 'https://example.com/',
       'origin-when-cross-origin': 'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=https&scheme-to=https&policy=origin-when-cross-origin&type=window.location',
       'no-referrer-when-downgrade': 'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-2nd-level-iframe&scheme-from=https&scheme-to=https&policy=no-referrer-when-downgrade&type=window.location'
     }
@@ -206,28 +206,28 @@ var EXPECTED_RESULTS = {
     'http-to-http': {
       'no-referrer': '',
       'unsafe-url': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=http&scheme-to=http&policy=unsafe-url',
-      'origin': 'http://example.com',
+      'origin': 'http://example.com/',
       'origin-when-cross-origin': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=http&scheme-to=http&policy=origin-when-cross-origin',
       'no-referrer-when-downgrade': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=http&scheme-to=http&policy=no-referrer-when-downgrade'
     },
     'http-to-https': {
       'no-referrer': '',
       'unsafe-url': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=http&scheme-to=https&policy=unsafe-url',
-      'origin': 'http://example.com',
-      'origin-when-cross-origin': 'http://example.com',
+      'origin': 'http://example.com/',
+      'origin-when-cross-origin': 'http://example.com/',
       'no-referrer-when-downgrade': 'http://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=http&scheme-to=https&policy=no-referrer-when-downgrade'
     },
     'https-to-http': {
       'no-referrer': '',
       'unsafe-url': 'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=https&scheme-to=http&policy=unsafe-url',
-      'origin': 'https://example.com',
-      'origin-when-cross-origin': 'https://example.com',
+      'origin': 'https://example.com/',
+      'origin-when-cross-origin': 'https://example.com/',
       'no-referrer-when-downgrade': ''
     },
     'https-to-https': {
       'no-referrer': '',
       'unsafe-url': 'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=https&scheme-to=https&policy=unsafe-url',
-      'origin': 'https://example.com',
+      'origin': 'https://example.com/',
       'origin-when-cross-origin': 'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=https&scheme-to=https&policy=origin-when-cross-origin',
       'no-referrer-when-downgrade': 'https://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=https&scheme-to=https&policy=no-referrer-when-downgrade'
     }
