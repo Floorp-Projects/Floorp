@@ -83,11 +83,7 @@ InternalInvoke(JSContext* cx, const CallArgs& args)
     return InternalCallOrConstruct(cx, args, NO_CONSTRUCT);
 }
 
-/*
- * Attempt to call a value with the provided |this| and arguments.  This
- * function places no requirements on the caller: it may be called at any time,
- * and it takes care of copying |fval|, |thisv|, and arguments onto the stack.
- */
+// DEPRECATED.  TO BE REMOVED.  DO NOT ADD NEW USES.
 extern bool
 Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, const Value* argv,
        MutableHandleValue rval);
@@ -102,9 +98,24 @@ CallGetter(JSContext* cx, HandleValue thisv, HandleValue getter, MutableHandleVa
 extern bool
 CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter, HandleValue rval);
 
+// ES7 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 7.3.12 Call(F, V, argumentsList).
+// All parameters are required, hopefully forcing callers to be careful not to
+// (say) blindly pass callee as |newTarget| when a different value should have
+// been passed.  Behavior is unspecified if any element of |args| isn't initialized.
+//
+// |rval| is written to *only* after |fval| and |thisv| have been consumed, so
+// |rval| *may* alias either argument.
+extern bool
+Call(JSContext* cx, HandleValue fval, HandleValue thisv, const AnyInvokeArgs& args,
+     MutableHandleValue rval);
+
 // ES6 7.3.13 Construct(F, argumentsList, newTarget).  All parameters are
 // required, hopefully forcing callers to be careful not to (say) blindly pass
 // callee as |newTarget| when a different value should have been passed.
+// Behavior is unspecified if any element of |args| isn't initialized.
+//
+// |rval| is written to *only* after |fval| and |newTarget| have been consumed,
+// so |rval| *may* alias either argument.
 //
 // NOTE: As with the ES6 spec operation, it's the caller's responsibility to
 //       ensure |fval| and |newTarget| are both |IsConstructor|.
@@ -126,6 +137,9 @@ ConstructFromStack(JSContext* cx, const CallArgs& args);
 
 // Call Construct(fval, args, newTarget), but use the given |thisv| as |this|
 // during construction of |fval|.
+//
+// |rval| is written to *only* after |fval|, |thisv|, and |newTarget| have been
+// consumed, so |rval| *may* alias any of these arguments.
 //
 // This method exists only for very rare cases where a |this| was created
 // caller-side for construction of |fval|: basically only for JITs using
