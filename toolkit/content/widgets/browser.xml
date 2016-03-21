@@ -498,6 +498,13 @@
                        return val;"
                 onget="return this.getAttribute('showresizer') == 'true';"/>
 
+      <property name="manifestURI"
+                readonly="true">
+        <getter><![CDATA[
+          return this.contentDocument.documentElement &&
+                 this.contentDocument.documentElement.getAttribute("manifest");
+        ]]></getter>
+      </property>
 
       <property name="fullZoom">
         <getter><![CDATA[
@@ -1219,6 +1226,7 @@
               "_textZoom",
               "_isSyntheticDocument",
               "_innerWindowID",
+              "_manifestURI",
             ]);
           }
 
