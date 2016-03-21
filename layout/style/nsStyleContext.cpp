@@ -777,11 +777,18 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
    *     to inline-block. [CSS21]
    *   ...etc.
    */
-  if (disp->mDisplay == NS_STYLE_DISPLAY_INLINE && mParent) {
+  if (disp->mDisplay == NS_STYLE_DISPLAY_INLINE &&
+      mPseudoTag != nsCSSAnonBoxes::mozNonElement &&
+      mParent) {
+    auto cbContext = mParent;
+    while (cbContext->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_CONTENTS) {
+      cbContext = cbContext->mParent;
+    }
+    MOZ_ASSERT(cbContext, "the root context can't have display:contents");
     // We don't need the full mozilla::WritingMode value (incorporating dir
     // and text-orientation) here; just the writing-mode property is enough.
     if (StyleVisibility()->mWritingMode !=
-        mParent->StyleVisibility()->mWritingMode) {
+          cbContext->StyleVisibility()->mWritingMode) {
       nsStyleDisplay* mutable_display =
         static_cast<nsStyleDisplay*>(GetUniqueStyleData(eStyleStruct_Display));
       disp = mutable_display;
