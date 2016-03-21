@@ -52,6 +52,7 @@ var RecordingsView = Heritage.extend(WidgetMethods, {
   addEmptyRecording: function (recording) {
     let titleNode = document.createElement("label");
     titleNode.className = "plain recording-item-title";
+    titleNode.setAttribute("crop", "end");
     titleNode.setAttribute("value", recording.getLabel() ||
       L10N.getFormatStr("recordingsList.itemLabel", this.itemCount + 1));
 

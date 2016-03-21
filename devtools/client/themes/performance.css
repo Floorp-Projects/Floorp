@@ -106,6 +106,7 @@
 /* Sidebar & recording items */
 
 #recordings-list {
+  max-width: 300px;
   border-inline-end: 1px solid var(--theme-splitter-color);
 }
 
