@@ -2849,7 +2849,12 @@ JS_CallFunctionValue(JSContext* cx, HandleObject obj, HandleValue fval, const Ha
     assertSameCompartment(cx, obj, fval, args);
     AutoLastFrameCheck lfc(cx);
 
-    return Invoke(cx, ObjectOrNullValue(obj), fval, args.length(), args.begin(), rval);
+    InvokeArgs iargs(cx);
+    if (!FillArgumentsFromArraylike(cx, iargs, args))
+        return false;
+
+    RootedValue thisv(cx, ObjectOrNullValue(obj));
+    return Call(cx, fval, thisv, iargs, rval);
 }
 
 JS_PUBLIC_API(bool)
@@ -2862,7 +2867,13 @@ JS_CallFunction(JSContext* cx, HandleObject obj, HandleFunction fun, const Handl
     assertSameCompartment(cx, obj, fun, args);
     AutoLastFrameCheck lfc(cx);
 
-    return Invoke(cx, ObjectOrNullValue(obj), ObjectValue(*fun), args.length(), args.begin(), rval);
+    InvokeArgs iargs(cx);
+    if (!FillArgumentsFromArraylike(cx, iargs, args))
+        return false;
+
+    RootedValue fval(cx, ObjectValue(*fun));
+    RootedValue thisv(cx, ObjectOrNullValue(obj));
+    return Call(cx, fval, thisv, iargs, rval);
 }
 
 JS_PUBLIC_API(bool)
@@ -2879,12 +2890,17 @@ JS_CallFunctionName(JSContext* cx, HandleObject obj, const char* name, const Han
     if (!atom)
         return false;
 
-    RootedValue v(cx);
+    RootedValue fval(cx);
     RootedId id(cx, AtomToId(atom));
-    if (!GetProperty(cx, obj, obj, id, &v))
+    if (!GetProperty(cx, obj, obj, id, &fval))
         return false;
 
-    return Invoke(cx, ObjectOrNullValue(obj), v, args.length(), args.begin(), rval);
+    InvokeArgs iargs(cx);
+    if (!FillArgumentsFromArraylike(cx, iargs, args))
+        return false;
+
+    RootedValue thisv(cx, ObjectOrNullValue(obj));
+    return Call(cx, fval, thisv, iargs, rval);
 }
 
 JS_PUBLIC_API(bool)
@@ -2896,7 +2912,11 @@ JS::Call(JSContext* cx, HandleValue thisv, HandleValue fval, const JS::HandleVal
     assertSameCompartment(cx, thisv, fval, args);
     AutoLastFrameCheck lfc(cx);
 
-    return Invoke(cx, thisv, fval, args.length(), args.begin(), rval);
+    InvokeArgs iargs(cx);
+    if (!FillArgumentsFromArraylike(cx, iargs, args))
+        return false;
+
+    return Call(cx, fval, thisv, iargs, rval);
 }
 
 JS_PUBLIC_API(bool)
