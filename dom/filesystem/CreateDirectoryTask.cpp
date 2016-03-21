@@ -16,33 +16,73 @@
 namespace mozilla {
 namespace dom {
 
-CreateDirectoryTask::CreateDirectoryTask(FileSystemBase* aFileSystem,
-                                         const nsAString& aPath,
-                                         ErrorResult& aRv)
-  : FileSystemTaskBase(aFileSystem)
-  , mTargetRealPath(aPath)
+/* static */ already_AddRefed<CreateDirectoryTask>
+CreateDirectoryTask::Create(FileSystemBase* aFileSystem,
+                            nsIFile* aTargetPath,
+                            ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
+
+  RefPtr<CreateDirectoryTask> task =
+    new CreateDirectoryTask(aFileSystem, aTargetPath);
+
+  // aTargetPath can be null. In this case SetError will be called.
+
   nsCOMPtr<nsIGlobalObject> globalObject =
-    do_QueryInterface(aFileSystem->GetWindow());
-  if (!globalObject) {
-    return;
+    do_QueryInterface(aFileSystem->GetParentObject());
+  if (NS_WARN_IF(!globalObject)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
-  mPromise = Promise::Create(globalObject, aRv);
+
+  task->mPromise = Promise::Create(globalObject, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return task.forget();
 }
 
-CreateDirectoryTask::CreateDirectoryTask(
-  FileSystemBase* aFileSystem,
-  const FileSystemCreateDirectoryParams& aParam,
-  FileSystemRequestParent* aParent)
-  : FileSystemTaskBase(aFileSystem, aParam, aParent)
+/* static */ already_AddRefed<CreateDirectoryTask>
+CreateDirectoryTask::Create(FileSystemBase* aFileSystem,
+                            const FileSystemCreateDirectoryParams& aParam,
+                            FileSystemRequestParent* aParent,
+                            ErrorResult& aRv)
 {
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Only call from parent process!");
+  MOZ_ASSERT(XRE_IsParentProcess(), "Only call from parent process!");
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
-  mTargetRealPath = aParam.realPath();
+
+  RefPtr<CreateDirectoryTask> task =
+    new CreateDirectoryTask(aFileSystem, aParam, aParent);
+
+  NS_ConvertUTF16toUTF8 path(aParam.realPath());
+  aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(task->mTargetPath));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return task.forget();
+}
+
+CreateDirectoryTask::CreateDirectoryTask(FileSystemBase* aFileSystem,
+                                         nsIFile* aTargetPath)
+  : FileSystemTaskBase(aFileSystem)
+  , mTargetPath(aTargetPath)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+  MOZ_ASSERT(aFileSystem);
+}
+
+CreateDirectoryTask::CreateDirectoryTask(FileSystemBase* aFileSystem,
+                                         const FileSystemCreateDirectoryParams& aParam,
+                                         FileSystemRequestParent* aParent)
+  : FileSystemTaskBase(aFileSystem, aParam, aParent)
+{
+  MOZ_ASSERT(XRE_IsParentProcess(), "Only call from parent process!");
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+  MOZ_ASSERT(aFileSystem);
 }
 
 CreateDirectoryTask::~CreateDirectoryTask()
@@ -59,25 +99,44 @@ CreateDirectoryTask::GetPromise()
 }
 
 FileSystemParams
-CreateDirectoryTask::GetRequestParams(const nsString& aFileSystem) const
+CreateDirectoryTask::GetRequestParams(const nsString& aSerializedDOMPath,
+                                      ErrorResult& aRv) const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  return FileSystemCreateDirectoryParams(aFileSystem, mTargetRealPath);
+
+  nsAutoString path;
+  aRv = mTargetPath->GetPath(path);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return FileSystemCreateDirectoryParams();
+  }
+
+  return FileSystemCreateDirectoryParams(aSerializedDOMPath, path);
 }
 
 FileSystemResponseValue
-CreateDirectoryTask::GetSuccessRequestResult() const
+CreateDirectoryTask::GetSuccessRequestResult(ErrorResult& aRv) const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  return FileSystemDirectoryResponse(mTargetRealPath);
+
+  nsAutoString path;
+  aRv = mTargetPath->GetPath(path);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return FileSystemDirectoryResponse();
+  }
+
+  return FileSystemDirectoryResponse(path);
 }
 
 void
-CreateDirectoryTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue)
+CreateDirectoryTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue,
+                                             ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   FileSystemDirectoryResponse r = aValue;
-  mTargetRealPath = r.realPath();
+
+  NS_ConvertUTF16toUTF8 path(r.realPath());
+  aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(mTargetPath));
+  NS_WARN_IF(aRv.Failed());
 }
 
 nsresult
@@ -91,13 +150,8 @@ CreateDirectoryTask::Work()
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIFile> file = mFileSystem->GetLocalFile(mTargetRealPath);
-  if (!file) {
-    return NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
-  }
-
   bool fileExists;
-  nsresult rv = file->Exists(&fileExists);
+  nsresult rv = mTargetPath->Exists(&fileExists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -106,8 +160,12 @@ CreateDirectoryTask::Work()
     return NS_ERROR_DOM_FILESYSTEM_PATH_EXISTS_ERR;
   }
 
-  rv = file->Create(nsIFile::DIRECTORY_TYPE, 0770);
-  return rv;
+  rv = mTargetPath->Create(nsIFile::DIRECTORY_TYPE, 0770);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 void
@@ -124,7 +182,12 @@ CreateDirectoryTask::HandlerCallback()
     mPromise = nullptr;
     return;
   }
-  RefPtr<Directory> dir = new Directory(mFileSystem, mTargetRealPath);
+  RefPtr<Directory> dir = Directory::Create(mFileSystem->GetParentObject(),
+                                            mTargetPath,
+                                            Directory::eNotDOMRootDirectory,
+                                            mFileSystem);
+  MOZ_ASSERT(dir);
+
   mPromise->MaybeResolve(dir);
   mPromise = nullptr;
 }

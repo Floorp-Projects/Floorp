@@ -1,6 +1,4 @@
 exclude MANIFEST.in
-include external-media-tests-requirements.txt
+include requirements.txt
 recursive-include external_media_harness *
 recursive-include external_media_tests *
-
-
