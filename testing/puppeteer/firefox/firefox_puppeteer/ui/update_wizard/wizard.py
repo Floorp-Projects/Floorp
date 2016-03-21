@@ -13,7 +13,9 @@ class Wizard(UIBaseLib):
     def __init__(self, *args, **kwargs):
         UIBaseLib.__init__(self, *args, **kwargs)
 
-        Wait(self.marionette).until(lambda _: self.selected_panel)
+        Wait(self.marionette).until(
+            lambda _: self.selected_panel,
+            message='No panel has been selected by default.')
 
     def _create_panel_for_id(self, panel_id):
         """Creates an instance of :class:`Panel` for the specified panel id.
