@@ -3,29 +3,37 @@ $inherits:
     from: 'tasks/lint.yml'
     variables:
       build_product: 'lint'
-      build_name: 'eslint-gecko'
+      build_name: 'mozharness-tox'
       build_type: 'opt'
 
 task:
   metadata:
-    name: '[TC] - ESLint'
-    description: 'ESLint test'
+    name: '[TC] - Mozharness Tox'
+    description: 'Mozharness integration tests'
+
+  scopes:
+    - 'docker-worker:cache:level-{{level}}-{{project}}-dotcache'
 
   payload:
     image:
       type: 'task-image'
       path: 'public/image.tar'
-      taskId: '{{#task_id_for_image}}lint{{/task_id_for_image}}'
+      taskId: '{{#task_id_for_image}}desktop-test{{/task_id_for_image}}'
+
+    cache:
+      level-{{level}}-{{project}}-dotcache: '/home/worker/.cache'
 
     command:
       - bash
       - -cx
       - >
           tc-vcs checkout ./gecko {{base_repository}} {{head_repository}} {{head_rev}} {{head_ref}} &&
-          cd gecko &&
-          npm link testing/eslint-plugin-mozilla &&
-          eslint --plugin html --ext [.js,.jsm,.jsx,.xml,.html] -f tools/lint/eslint-formatter .
+          cd gecko/testing/mozharness &&
+          pip install tox &&
+          tox -e py27-hg2.6 -e py27-hg3.2
   extra:
+    extra:
+        build_product: '{{build_product}}'
     locations:
         build: null
         tests: null
@@ -33,7 +41,7 @@ task:
         machine:
             platform: lint
         groupSymbol: tc
-        symbol: ES
+        symbol: MH
     treeherderEnv:
         - production
         - staging

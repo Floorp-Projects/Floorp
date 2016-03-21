@@ -362,3 +362,9 @@ tasks:
       file_patterns:
         - 'testing/docker/android-gradle-build/**'
         - '**/*.gradle'
+  mozharness:
+    task: tasks/tests/mozharness-gecko.yml
+    root: true
+    when:
+      file_patterns:
+        - 'testing/mozharness/**'
