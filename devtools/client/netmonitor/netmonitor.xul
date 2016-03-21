@@ -143,6 +143,11 @@
                   data-key="flash"
                   label="&netmonitorUI.footer.filterFlash;">
           </button>
+          <button id="requests-menu-filter-ws-button"
+                  class="requests-menu-filter-button"
+                  data-key="ws"
+                  label="&netmonitorUI.footer.filterWS;">
+          </button>
           <button id="requests-menu-filter-other-button"
                   class="requests-menu-filter-button"
                   data-key="other"

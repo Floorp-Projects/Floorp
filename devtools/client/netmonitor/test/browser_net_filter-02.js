@@ -21,6 +21,11 @@ const REQUESTS_WITH_MEDIA_AND_FLASH = REQUESTS_WITH_MEDIA.concat([
   { url: "sjs_content-type-test-server.sjs?fmt=flash" },
 ]);
 
+const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.concat([
+  /* "Upgrade" is a reserved header and can not be set on XMLHttpRequest */
+  { url: "sjs_content-type-test-server.sjs?fmt=ws" },
+]);
+
 function test() {
   initNetMonitor(FILTERING_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
@@ -33,7 +38,7 @@ function test() {
 
     RequestsMenu.lazyUpdate = false;
 
-    waitForNetworkEvents(aMonitor, 8).then(() => {
+    waitForNetworkEvents(aMonitor, 9).then(() => {
       EventUtils.sendMouseEvent({ type: "mousedown" }, $("#details-pane-toggle"));
 
       isnot(RequestsMenu.selectedItem, null,
@@ -44,38 +49,38 @@ function test() {
         "The details pane should not be hidden after toggle button was pressed.");
 
       testFilterButtons(aMonitor, "all");
-      testContents([1, 1, 1, 1, 1, 1, 1, 1])
+      testContents([1, 1, 1, 1, 1, 1, 1, 1, 1])
         .then(() => {
           info("Testing html filtering.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-html-button"));
           testFilterButtons(aMonitor, "html");
-          return testContents([1, 0, 0, 0, 0, 0, 0, 0]);
+          return testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
           info("Performing more requests.");
-          performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH);
-          return waitForNetworkEvents(aMonitor, 8);
+          performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
+          return waitForNetworkEvents(aMonitor, 9);
         })
         .then(() => {
           info("Testing html filtering again.");
           testFilterButtons(aMonitor, "html");
-          return testContents([1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]);
+          return testContents([1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
           info("Performing more requests.");
-          performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH);
-          return waitForNetworkEvents(aMonitor, 8);
+          performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
+          return waitForNetworkEvents(aMonitor, 9);
         })
         .then(() => {
           info("Testing html filtering again.");
           testFilterButtons(aMonitor, "html");
-          return testContents([1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]);
+          return testContents([1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
           info("Resetting filters.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           testFilterButtons(aMonitor, "all");
-          return testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+          return testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
         })
         .then(() => {
           return teardown(aMonitor);
@@ -101,7 +106,7 @@ function test() {
           "The item at index " + i + " doesn't have the correct hidden state.");
       }
 
-      for (let i = 0; i < aVisibility.length; i += 8) {
+      for (let i = 0; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
           "GET", CONTENT_TYPE_SJS + "?fmt=html", {
             fuzzyUrl: true,
@@ -111,7 +116,7 @@ function test() {
             fullMimeType: "text/html; charset=utf-8"
         });
       }
-      for (let i = 1; i < aVisibility.length; i += 8) {
+      for (let i = 1; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
           "GET", CONTENT_TYPE_SJS + "?fmt=css", {
             fuzzyUrl: true,
@@ -121,7 +126,7 @@ function test() {
             fullMimeType: "text/css; charset=utf-8"
         });
       }
-      for (let i = 2; i < aVisibility.length; i += 8) {
+      for (let i = 2; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
           "GET", CONTENT_TYPE_SJS + "?fmt=js", {
             fuzzyUrl: true,
@@ -131,7 +136,7 @@ function test() {
             fullMimeType: "application/javascript; charset=utf-8"
         });
       }
-      for (let i = 3; i < aVisibility.length; i += 8) {
+      for (let i = 3; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
           "GET", CONTENT_TYPE_SJS + "?fmt=font", {
             fuzzyUrl: true,
@@ -141,7 +146,7 @@ function test() {
             fullMimeType: "font/woff"
         });
       }
-      for (let i = 4; i < aVisibility.length; i += 8) {
+      for (let i = 4; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
           "GET", CONTENT_TYPE_SJS + "?fmt=image", {
             fuzzyUrl: true,
@@ -151,7 +156,7 @@ function test() {
             fullMimeType: "image/png"
         });
       }
-      for (let i = 5; i < aVisibility.length; i += 8) {
+      for (let i = 5; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
           "GET", CONTENT_TYPE_SJS + "?fmt=audio", {
             fuzzyUrl: true,
@@ -161,7 +166,7 @@ function test() {
             fullMimeType: "audio/ogg"
         });
       }
-      for (let i = 6; i < aVisibility.length; i += 8) {
+      for (let i = 6; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
           "GET", CONTENT_TYPE_SJS + "?fmt=video", {
             fuzzyUrl: true,
@@ -171,7 +176,7 @@ function test() {
             fullMimeType: "video/webm"
         });
       }
-      for (let i = 7; i < aVisibility.length; i += 8) {
+      for (let i = 7; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
           "GET", CONTENT_TYPE_SJS + "?fmt=flash", {
             fuzzyUrl: true,
@@ -181,11 +186,19 @@ function test() {
             fullMimeType: "application/x-shockwave-flash"
         });
       }
+      for (let i = 8; i < aVisibility.length; i += 9) {
+        verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
+          "GET", CONTENT_TYPE_SJS + "?fmt=ws", {
+            fuzzyUrl: true,
+            status: 101,
+            statusText: "Switching Protocols"
+        });
+      }
 
       return promise.resolve(null);
     }
 
     loadCommonFrameScript();
-    performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH);
+    performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   });
 }
