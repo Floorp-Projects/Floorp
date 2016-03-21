@@ -81,11 +81,11 @@ nsScriptableInputStream::ReadBytes(uint32_t aCount, nsACString& aResult)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  aResult.SetLength(aCount);
-  if (aResult.Length() != aCount) {
+  if (!aResult.SetLength(aCount, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  MOZ_ASSERT(aResult.Length() == aCount);
   char* ptr = aResult.BeginWriting();
   nsresult rv = ReadHelper(ptr, aCount);
   if (NS_FAILED(rv)) {
