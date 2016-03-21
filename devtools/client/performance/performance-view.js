@@ -20,31 +20,25 @@ var PerformanceView = {
   states: {
     "unavailable": [
       { sel: "#performance-view", opt: "selectedPanel", val: () => $("#unavailable-notice") },
-      { sel: "#performance-view-content", opt: "hidden", val: () => true },
     ],
     "empty": [
-      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#empty-notice") },
-      { sel: "#performance-view-content", opt: "hidden", val: () => true },
+      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#empty-notice") }
     ],
     "recording": [
       { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
-      { sel: "#performance-view-content", opt: "hidden", val: () => false },
-      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#recording-notice") },
+      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#recording-notice") }
     ],
     "console-recording": [
       { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
-      { sel: "#performance-view-content", opt: "hidden", val: () => false },
-      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#console-recording-notice") },
+      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#console-recording-notice") }
     ],
     "recorded": [
       { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
-      { sel: "#performance-view-content", opt: "hidden", val: () => false },
-      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#details-pane") },
+      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#details-pane") }
     ],
     "loading": [
       { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
-      { sel: "#performance-view-content", opt: "hidden", val: () => false },
-      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#loading-notice") },
+      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#loading-notice") }
     ]
   },
 
