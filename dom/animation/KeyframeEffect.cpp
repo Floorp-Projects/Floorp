@@ -2318,15 +2318,8 @@ KeyframeEffect::Constructor(
 
 void KeyframeEffect::NotifySpecifiedTimingUpdated()
 {
-  nsIDocument* doc = nullptr;
-  // Bug 1249219:
-  // We don't support animation mutation observers on pseudo-elements yet.
-  if (mTarget &&
-      mPseudoType == CSSPseudoElementType::NotPseudo) {
-    doc = mTarget->OwnerDoc();
-  }
-
-  nsAutoAnimationMutationBatch mb(doc);
+  // Use the same document for a pseudo element and its parent element.
+  nsAutoAnimationMutationBatch mb(mTarget->OwnerDoc());
 
   if (mAnimation) {
     mAnimation->NotifyEffectTimingUpdated();
