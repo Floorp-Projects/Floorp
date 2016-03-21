@@ -624,7 +624,7 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum attachment, TexImageTarget texImag
         return;
 
     if (tex) {
-        if (!tex->HasEveryBeenBound()) {
+        if (!tex->HasEverBeenBound()) {
             mContext->ErrorInvalidOperation("framebufferTexture2D: the texture"
                                             " is not the name of a texture.");
             return;
