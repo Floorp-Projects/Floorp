@@ -7,21 +7,21 @@
 "use strict";
 
 define(function(require, exports, module) {
-  const React = require("devtools/client/shared/vendor/react");
+  const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
   const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
   const { Headers } = createFactories(require("./headers"));
   const { Toolbar, ToolbarButton } = createFactories(require("./reps/toolbar"));
 
-  const DOM = React.DOM;
+  const { div } = dom;
 
   /**
    * This template represents the 'Headers' panel
    * s responsible for rendering its content.
    */
-  let HeadersPanel = React.createClass({
+  let HeadersPanel = createClass({
     propTypes: {
-      actions: React.PropTypes.object,
-      data: React.PropTypes.object,
+      actions: PropTypes.object,
+      data: PropTypes.object,
     },
 
     displayName: "HeadersPanel",
@@ -36,9 +36,9 @@ define(function(require, exports, module) {
       let data = this.props.data;
 
       return (
-        DOM.div({className: "headersPanelBox"},
+        div({className: "headersPanelBox"},
           HeadersToolbar({actions: this.props.actions}),
-          DOM.div({className: "panelContent"},
+          div({className: "panelContent"},
             Headers({data: data})
           )
         )
@@ -50,9 +50,9 @@ define(function(require, exports, module) {
    * This template is responsible for rendering a toolbar
    * within the 'Headers' panel.
    */
-  let HeadersToolbar = React.createFactory(React.createClass({
+  let HeadersToolbar = createFactory(createClass({
     propTypes: {
-      actions: React.PropTypes.object,
+      actions: PropTypes.object,
     },
 
     displayName: "HeadersToolbar",

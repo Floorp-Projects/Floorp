@@ -7,7 +7,7 @@
 "use strict";
 
 define(function(require, exports, module) {
-  const React = require("devtools/client/shared/vendor/react");
+  const { createClass, PropTypes } = require("devtools/client/shared/vendor/react");
   const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
   const { JsonPanel } = createFactories(require("./json-panel"));
   const { TextPanel } = createFactories(require("./text-panel"));
@@ -18,17 +18,17 @@ define(function(require, exports, module) {
    * This object represents the root application template
    * responsible for rendering the basic tab layout.
    */
-  let MainTabbedArea = React.createClass({
+  let MainTabbedArea = createClass({
     propTypes: {
-      jsonText: React.PropTypes.string,
-      tabActive: React.PropTypes.number,
-      actions: React.PropTypes.object,
-      headers: React.PropTypes.object,
-      searchFilter: React.PropTypes.string,
-      json: React.PropTypes.oneOfType([
-        React.PropTypes.string,
-        React.PropTypes.object,
-        React.PropTypes.array
+      jsonText: PropTypes.string,
+      tabActive: PropTypes.number,
+      actions: PropTypes.object,
+      headers: PropTypes.object,
+      searchFilter: PropTypes.string,
+      json: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.object,
+        PropTypes.array
       ])
     },
 

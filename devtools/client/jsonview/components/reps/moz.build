@@ -7,5 +7,4 @@
 DevToolsModules(
     'tabs.js',
     'toolbar.js',
-    'tree-view.js',
 )
