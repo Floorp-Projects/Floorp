@@ -277,6 +277,11 @@ bool
 MediaSourceDecoder::CanPlayThrough()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (NextFrameBufferedStatus() == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE) {
+    return false;
+  }
+
   if (IsNaN(mMediaSource->Duration())) {
     // Don't have any data yet.
     return false;
