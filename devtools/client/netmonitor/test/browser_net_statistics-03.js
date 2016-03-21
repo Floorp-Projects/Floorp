@@ -16,6 +16,7 @@ function test() {
     EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-html-button"));
     EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-css-button"));
     EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-js-button"));
+    EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-ws-button"));
     EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-other-button"));
     testFilterButtonsCustom(aMonitor, [0, 1, 1, 1, 0, 0, 0, 0, 0, 1]);
     ok(true, "The correct filtering predicates are used before entering perf. analysis mode.");
