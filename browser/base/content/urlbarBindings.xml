@@ -612,6 +612,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               return selectedVal;
           }
 
+          // Avoid copying 'about:reader?url=', and always provide the original URI:
+          let readerOriginalURL = ReaderMode.getOriginalUrl(uri.spec);
+          if (readerOriginalURL) {
+            uri = uriFixup.createFixupURI(readerOriginalURL, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
+          }
+
           // Only copy exposable URIs
           try {
             uri = uriFixup.createExposableURI(uri);
