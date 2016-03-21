@@ -4961,6 +4961,10 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
   EnsureTarget();
   if (drawDT) {
     RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
+    if (NS_WARN_IF(!snapshot)) {
+      aError.Throw(NS_ERROR_FAILURE);
+      return;
+    }
     RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
 
     DataSourceSurface::MappedSurface rawData;
