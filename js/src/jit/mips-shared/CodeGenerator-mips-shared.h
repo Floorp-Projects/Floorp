@@ -147,6 +147,7 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
 
     virtual void visitClzI(LClzI* ins);
     virtual void visitCtzI(LCtzI* ins);
+    virtual void visitPopcntI(LPopcntI* ins);
 
     virtual void visitTestIAndBranch(LTestIAndBranch* test);
     virtual void visitCompare(LCompare* comp);
