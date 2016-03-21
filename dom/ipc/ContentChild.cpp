@@ -874,8 +874,14 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     auto* opener = nsPIDOMWindowOuter::From(aParent);
     nsIDocShell* openerShell;
     RefPtr<nsDocShell> openerDocShell;
+    float fullZoom = 1.0f;
     if (opener && (openerShell = opener->GetDocShell())) {
       openerDocShell = static_cast<nsDocShell*>(openerShell);
+      nsCOMPtr<nsIContentViewer> cv;
+      openerDocShell->GetContentViewer(getter_AddRefs(cv));
+      if (cv) {
+        cv->GetFullZoom(&fullZoom);
+      }
     }
 
     nsresult rv;
@@ -887,6 +893,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                           openerDocShell
                             ? openerDocShell->GetOriginAttributes()
                             : DocShellOriginAttributes(),
+                          fullZoom,
                           &rv,
                           aWindowIsNew,
                           &frameScripts,
