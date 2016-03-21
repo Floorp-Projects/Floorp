@@ -1421,8 +1421,16 @@ Module::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const Val
 
     const Import& import = imports()[importIndex];
 
+    InvokeArgs args(cx);
+    if (!args.init(argc))
+        return false;
+
+    for (size_t i = 0; i < argc; i++)
+        args[i].set(argv[i]);
+
     RootedValue fval(cx, ObjectValue(*importToExit(import).fun));
-    if (!Invoke(cx, UndefinedValue(), fval, argc, argv, rval))
+    RootedValue thisv(cx, UndefinedValue());
+    if (!Call(cx, fval, thisv, args, rval))
         return false;
 
     ImportExit& exit = importToExit(import);
