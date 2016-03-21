@@ -506,6 +506,7 @@ public:
                                 const nsCString& aFeatures,
                                 const nsCString& aBaseURI,
                                 const DocShellOriginAttributes& aOpenerOriginAttributes,
+                                const float& aFullZoom,
                                 nsresult* aResult,
                                 bool* aWindowIsNew,
                                 InfallibleTArray<FrameScriptInfo>* aFrameScripts,
