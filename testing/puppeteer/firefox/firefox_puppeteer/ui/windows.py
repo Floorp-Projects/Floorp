@@ -101,36 +101,36 @@ class Windows(BaseLib):
         current_handle = self.marionette.current_chrome_window_handle
         window = None
 
-        try:
-            # Bug 1169180 - Workaround for handling newly opened chrome windows
-            # Once fixed revert back to make use of self.loaded
-            Wait(self.marionette).until(lambda mn: self.marionette.execute_script("""
-              Components.utils.import("resource://gre/modules/Services.jsm");
-              let win = Services.wm.getOuterWindowWithId(Number(arguments[0]));
-              return win.document.readyState == 'complete';
-            """, script_args=[handle]))
+        with self.marionette.using_context('chrome'):
+            try:
+                # Retrieve window type to determine the type of chrome window
+                if handle != self.marionette.current_chrome_window_handle:
+                    self.switch_to(handle)
 
-            # Retrieve window type to determine the type of chrome window
-            if handle != self.marionette.current_chrome_window_handle:
-                self.switch_to(handle)
+                window_type = Wait(self.marionette).until(
+                    lambda mn: mn.get_window_type(),
+                    message='Cannot get window type for chrome window handle "%s"' % handle
+                )
 
-            Wait(self.marionette).until(lambda mn: mn.get_window_type() is not None)
-            window_type = self.marionette.get_window_type()
-        finally:
-            # Ensure to switch back to the original window
-            if handle != current_handle:
-                self.marionette.switch_to_window(current_handle)
+            finally:
+                # Ensure to switch back to the original window
+                if handle != current_handle:
+                    self.switch_to(current_handle)
 
-        if window_type in self.windows_map:
-            window = self.windows_map[window_type](
-                lambda: self.marionette, handle)
-        else:
-            raise errors.UnknownWindowError('Unknown window type "%s" for handle: "%s"' %
-                                            (window_type, handle))
+            if window_type in self.windows_map:
+                window = self.windows_map[window_type](lambda: self.marionette, handle)
+            else:
+                raise errors.UnknownWindowError('Unknown window type "%s" for handle: "%s"' %
+                                                (window_type, handle))
 
-        if expected_class is not None and type(window) is not expected_class:
-            raise errors.UnexpectedWindowTypeError('Expected window "%s" but got "%s"' %
-                                                   (expected_class, type(window)))
+            if expected_class is not None and type(window) is not expected_class:
+                raise errors.UnexpectedWindowTypeError('Expected window "%s" but got "%s"' %
+                                                       (expected_class, type(window)))
+
+            # Before continuing ensure the chrome window has been completed loading
+            Wait(self.marionette).until(
+                lambda _: self.loaded(handle),
+                message='Chrome window with handle "%s" did not finish loading.' % handle)
 
         return window
 
@@ -144,7 +144,24 @@ class Windows(BaseLib):
         with self.marionette.using_context('chrome'):
             self.marionette.execute_script(""" window.focus(); """)
 
-        Wait(self.marionette).until(lambda _: handle == self.focused_chrome_window_handle)
+        Wait(self.marionette).until(
+            lambda _: handle == self.focused_chrome_window_handle,
+            message='Focus has not been set to chrome window handle "%s".' % handle)
+
+    def loaded(self, handle):
+        """Check if the chrome window with the given handle has been completed loading.
+
+        :param handle: The handle of the chrome window.
+
+        :returns: True, if the chrome window has been loaded.
+        """
+        with self.marionette.using_context('chrome'):
+            return self.marionette.execute_script("""
+              Components.utils.import("resource://gre/modules/Services.jsm");
+
+              let win = Services.wm.getOuterWindowWithId(Number(arguments[0]));
+              return win.document.readyState == 'complete';
+            """, script_args=[handle])
 
     def switch_to(self, target):
         """Switches context to the specified chrome window.
@@ -248,11 +265,7 @@ class BaseWindow(BaseLib):
 
         :returns: True, if the window is loaded.
         """
-        self.switch_to()
-
-        return self.marionette.execute_script("""
-          return arguments[0].ownerDocument.readyState === "complete";
-        """, script_args=[self.window_element])
+        self._windows.loaded(self.handle)
 
     @use_class_as_property('ui.menu.MenuBar')
     def menubar(self):
@@ -289,15 +302,17 @@ class BaseWindow(BaseLib):
         # For more stable tests register an observer topic first
         prev_win_count = len(self.marionette.chrome_window_handles)
 
+        handle = self.handle
         if force or callback is None:
-            self._windows.close(self.handle)
+            self._windows.close(handle)
         else:
             callback(self)
 
         # Bug 1121698
         # Observer code should let us ditch this wait code
-        wait = Wait(self.marionette)
-        wait.until(lambda m: len(m.chrome_window_handles) == prev_win_count - 1)
+        Wait(self.marionette).until(
+            lambda m: len(m.chrome_window_handles) == prev_win_count - 1,
+            message='Chrome window with handle "%s" has not been closed.' % handle)
 
     def focus(self):
         """Sets the focus to the current chrome window."""
@@ -349,7 +364,9 @@ class BaseWindow(BaseLib):
         # TODO: Needs to be replaced with observer handling code (bug 1121698)
         def window_opened(mn):
             return len(mn.chrome_window_handles) == len(start_handles) + 1
-        Wait(self.marionette).until(window_opened)
+        Wait(self.marionette).until(
+            window_opened,
+            message='No new chrome window has been opened.')
 
         handles = self.marionette.chrome_window_handles
         [new_handle] = list(set(handles) - set(start_handles))
