@@ -518,7 +518,7 @@ var gAdvancedPane = {
     for (let group of groups) {
       let uri = Services.io.newURI(group, null, null);
       if (perm.matchesURI(uri, true)) {
-        let cache = cacheService.getActiveCache(groups);
+        let cache = cacheService.getActiveCache(group);
         usage += cache.usage;
       }
     }
