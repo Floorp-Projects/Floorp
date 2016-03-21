@@ -170,7 +170,11 @@ interface imgIContainer : nsISupports
    *
    * FLAG_HIGH_QUALITY_SCALING: A hint as to whether this image should be
    * scaled using the high quality scaler. Do not set this if not drawing to
-   * a window or not listening to invalidations.
+   * a window or not listening to invalidations. Passing this flag will do two
+   * things: 1) request a decode of the image at the size asked for by the
+   * caller if one isn't already started or complete, and 2) allows a decoded
+   * frame of any size (it could be neither the requested size, nor the
+   * intrinsic size) to be substituted.
    *
    * FLAG_WANT_DATA_SURFACE: Can be passed to GetFrame when the caller wants a
    * DataSourceSurface instead of a hardware accelerated surface. This can be
