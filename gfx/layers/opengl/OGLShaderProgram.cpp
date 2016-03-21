@@ -139,15 +139,9 @@ ShaderConfigOGL::SetBlur(bool aEnabled)
 }
 
 void
-ShaderConfigOGL::SetMask2D(bool aEnabled)
+ShaderConfigOGL::SetMask(bool aEnabled)
 {
-  SetFeature(ENABLE_MASK_2D, aEnabled);
-}
-
-void
-ShaderConfigOGL::SetMask3D(bool aEnabled)
-{
-  SetFeature(ENABLE_MASK_3D, aEnabled);
+  SetFeature(ENABLE_MASK, aEnabled);
 }
 
 void
@@ -206,8 +200,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
     vs << "varying vec2 vBackdropCoord;" << endl;
   }
 
-  if (aConfig.mFeatures & ENABLE_MASK_2D ||
-      aConfig.mFeatures & ENABLE_MASK_3D) {
+  if (aConfig.mFeatures & ENABLE_MASK) {
     vs << "uniform mat4 uMaskTransform;" << endl;
     vs << "varying vec3 vMaskCoord;" << endl;
   }
@@ -232,8 +225,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
     vs << "  ssPos = uMatrixProj * ssPos;" << endl;
     vs << "  ssPos.xy = ((ssPos.xy/ssPos.w)*0.5+0.5)*uViewportSize;" << endl;
 
-    if (aConfig.mFeatures & ENABLE_MASK_2D ||
-        aConfig.mFeatures & ENABLE_MASK_3D ||
+    if (aConfig.mFeatures & ENABLE_MASK ||
         !(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
       vs << "  vec4 coordAdjusted;" << endl;
       vs << "  coordAdjusted.xy = aCoord.xy;" << endl;
@@ -278,14 +270,11 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
     vs << "  vec2 texCoord = aCoord.xy * textureRect.zw + textureRect.xy;" << endl;
     vs << "  vTexCoord = (uTextureTransform * vec4(texCoord, 0.0, 1.0)).xy;" << endl;
   }
-  if (aConfig.mFeatures & ENABLE_MASK_2D ||
-      aConfig.mFeatures & ENABLE_MASK_3D) {
+  if (aConfig.mFeatures & ENABLE_MASK) {
     vs << "  vMaskCoord.xy = (uMaskTransform * (finalPosition / finalPosition.w)).xy;" << endl;
-    if (aConfig.mFeatures & ENABLE_MASK_3D) {
-      // correct for perspective correct interpolation, see comment in D3D10 shader
-      vs << "  vMaskCoord.z = 1.0;" << endl;
-      vs << "  vMaskCoord *= finalPosition.w;" << endl;
-    }
+    // correct for perspective correct interpolation, see comment in D3D11 shader
+    vs << "  vMaskCoord.z = 1.0;" << endl;
+    vs << "  vMaskCoord *= finalPosition.w;" << endl;
   }
   vs << "  finalPosition.xy -= uRenderTargetOffset * finalPosition.w;" << endl;
   vs << "  finalPosition = uMatrixProj * finalPosition;" << endl;
@@ -376,8 +365,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
     fs << "uniform sampler2D uBackdropTexture;" << endl;
   }
 
-  if (aConfig.mFeatures & ENABLE_MASK_2D ||
-      aConfig.mFeatures & ENABLE_MASK_3D) {
+  if (aConfig.mFeatures & ENABLE_MASK) {
     fs << "varying vec3 vMaskCoord;" << endl;
     fs << "uniform sampler2D uMaskTexture;" << endl;
   }
@@ -512,12 +500,9 @@ For [0,1] instead of [0,255], and to 5 places:
     fs << "  vec4 backdrop = texture2D(uBackdropTexture, vBackdropCoord);" << endl;
     fs << "  color = mixAndBlend(backdrop, color);" << endl;
   }
-  if (aConfig.mFeatures & ENABLE_MASK_3D) {
+  if (aConfig.mFeatures & ENABLE_MASK) {
     fs << "  vec2 maskCoords = vMaskCoord.xy / vMaskCoord.z;" << endl;
     fs << "  COLOR_PRECISION float mask = texture2D(uMaskTexture, maskCoords).r;" << endl;
-    fs << "  color *= mask;" << endl;
-  } else if (aConfig.mFeatures & ENABLE_MASK_2D) {
-    fs << "  COLOR_PRECISION float mask = texture2D(uMaskTexture, vMaskCoord.xy).r;" << endl;
     fs << "  color *= mask;" << endl;
   } else {
     fs << "  COLOR_PRECISION float mask = 1.0;" << endl;
@@ -542,8 +527,7 @@ For [0,1] instead of [0,255], and to 5 places:
       result.mTextureCount = 1;
     }
   }
-  if (aConfig.mFeatures & ENABLE_MASK_2D ||
-      aConfig.mFeatures & ENABLE_MASK_3D) {
+  if (aConfig.mFeatures & ENABLE_MASK) {
     result.mTextureCount = 1;
   }
   if (BlendOpIsMixBlendMode(blendOp)) {

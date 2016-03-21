@@ -292,11 +292,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
   MaskType maskType = MaskType::MaskNone;
 
   if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
-    if (aTransform.Is2D()) {
-      maskType = MaskType::Mask2d;
-    } else {
-      maskType = MaskType::Mask3d;
-    }
+    maskType = MaskType::Mask;
   }
 
   gfx::Rect backdropDest;

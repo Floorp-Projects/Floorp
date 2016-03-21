@@ -121,8 +121,7 @@ public:
    * @return true if the effect was added, false otherwise.
    */
   bool AddMaskEffect(EffectChain& aEffects,
-                     const gfx::Matrix4x4& aTransform,
-                     bool aIs3D = false);
+                     const gfx::Matrix4x4& aTransform);
 
   void RemoveMaskEffect();
 
