@@ -10,8 +10,6 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
-class nsPIDOMWindowInner;
-
 namespace mozilla {
 namespace dom {
 
@@ -25,28 +23,22 @@ public:
 
   // Create file system object from its string representation.
   static already_AddRefed<FileSystemBase>
-  FromString(const nsAString& aString);
+  DeserializeDOMPath(const nsAString& aString);
 
   FileSystemBase();
 
   virtual void
   Shutdown();
 
-  // Get the string representation of the file system.
-  const nsString&
-  ToString() const
-  {
-    return mString;
-  }
+  // SerializeDOMPath the FileSystem to string.
+  virtual void
+  SerializeDOMPath(nsAString& aOutput) const = 0;
 
-  virtual nsPIDOMWindowInner*
-  GetWindow() const;
+  virtual already_AddRefed<FileSystemBase>
+  Clone() = 0;
 
-  /**
-   * Create nsIFile object from the given real path (absolute DOM path).
-   */
-  already_AddRefed<nsIFile>
-  GetLocalFile(const nsAString& aRealPath) const;
+  virtual nsISupports*
+  GetParentObject() const;
 
   /*
    * Get the virtual name of the root directory. This name will be exposed to
@@ -73,13 +65,8 @@ public:
   virtual bool
   IsSafeDirectory(Directory* aDir) const;
 
-  /*
-   * Get the real path (absolute DOM path) of the DOM file in the file system.
-   * If succeeded, returns true. Otherwise, returns false and set aRealPath to
-   * empty string.
-   */
   bool
-  GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const;
+  GetRealPath(BlobImpl* aFile, nsIFile** aPath) const;
 
   /*
    * Get the permission name required to access this file system.
@@ -103,20 +90,11 @@ public:
 protected:
   virtual ~FileSystemBase();
 
-  bool
-  LocalPathToRealPath(const nsAString& aLocalPath, nsAString& aRealPath) const;
-
   // The local path of the root (i.e. the OS path, with OS path separators, of
   // the OS directory that acts as the root of this OSFileSystem).
   // Only available in the parent process.
   // In the child process, we don't use it and its value should be empty.
   nsString mLocalRootPath;
-
-  // The same, but with path separators normalized to "/".
-  nsString mNormalizedLocalRootPath;
-
-  // The string representation of the file system.
-  nsString mString;
 
   bool mShutdown;
 

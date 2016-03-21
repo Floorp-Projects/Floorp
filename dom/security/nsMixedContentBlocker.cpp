@@ -434,7 +434,7 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // content websockets within the websockets implementation, so we don't need
   // to do any blocking here, nor do we need to provide a way to undo or
   // override the blocking. Websockets without TLS are very flaky anyway in the
-  // face of many HTTP-aware proxies. Compared to psasive content, there is
+  // face of many HTTP-aware proxies. Compared to passive content, there is
   // additional risk that the script using WebSockets will disclose sensitive
   // information from the HTTPS page and/or eval (directly or indirectly)
   // received data.

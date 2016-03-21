@@ -72,3 +72,9 @@ pref(dom.details_element.enabled,true) == mouse-click-fixed-summary.html open-fi
 pref(dom.details_element.enabled,true) == mouse-click-twice-fixed-summary.html fixed-summary.html
 pref(dom.details_element.enabled,true) == mouse-click-float-details.html open-float-details.html
 pref(dom.details_element.enabled,true) == mouse-click-twice-float-details.html float-details.html
+
+# Dispatch keyboard event to summary
+pref(dom.details_element.enabled,true) == key-enter-single-summary.html open-single-summary.html
+pref(dom.details_element.enabled,true) == key-enter-open-second-summary.html open-multiple-summary.html
+pref(dom.details_element.enabled,true) == key-enter-prevent-default.html single-summary.html
+pref(dom.details_element.enabled,true) == key-space-single-summary.html open-single-summary.html

@@ -20,6 +20,7 @@
 #include "mozilla/dom/HTMLFormElement.h" // for HasEverTriedInvalidSubmit()
 #include "mozilla/dom/HTMLInputElementBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "nsIFilePicker.h"
 #include "nsIContentPrefService2.h"
 #include "mozilla/Decimal.h"
@@ -220,12 +221,13 @@ public:
 
   void GetDisplayFileName(nsAString& aFileName) const;
 
-  const nsTArray<RefPtr<File>>& GetFilesInternal() const
+  const nsTArray<OwningFileOrDirectory>& GetFilesOrDirectoriesInternal() const
   {
-    return mFiles;
+    return mFilesOrDirectories;
   }
 
-  void SetFiles(const nsTArray<RefPtr<File>>& aFiles, bool aSetValueChanged);
+  void SetFilesOrDirectories(const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories,
+                             bool aSetValueChanged);
   void SetFiles(nsIDOMFileList* aFiles, bool aSetValueChanged);
 
   // Called when a nsIFilePicker or a nsIColorPicker terminate.
@@ -722,6 +724,7 @@ public:
 
   void MozSetFileNameArray(const Sequence< nsString >& aFileNames, ErrorResult& aRv);
   void MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles);
+  void MozSetDirectory(const nsAString& aDirectoryPath, ErrorResult& aRv);
 
   HTMLInputElement* GetOwnerNumberControl();
 
@@ -922,12 +925,12 @@ protected:
   /**
    * Update mFileList with the currently selected file.
    */
-  nsresult UpdateFileList();
+  void UpdateFileList();
 
   /**
-   * Called after calling one of the SetFiles() functions.
+   * Called after calling one of the SetFilesOrDirectories() functions.
    */
-  void AfterSetFiles(bool aSetValueChanged);
+  void AfterSetFilesOrDirectories(bool aSetValueChanged);
 
   /**
    * Determine whether the editor needs to be initialized explicitly for
@@ -1266,16 +1269,16 @@ protected:
   } mInputData;
 
   /**
-   * The value of the input if it is a file input. This is the list of filenames
-   * used when uploading a file. It is vital that this is kept separate from
-   * mValue so that it won't be possible to 'leak' the value from a text-input
-   * to a file-input. Additionally, the logic for this value is kept as simple
-   * as possible to avoid accidental errors where the wrong filename is used.
-   * Therefor the list of filenames is always owned by this member, never by
-   * the frame. Whenever the frame wants to change the filename it has to call
-   * SetFileNames to update this member.
+   * The value of the input if it is a file input. This is the list of files or
+   * directories DOM objects used when uploading a file. It is vital that this
+   * is kept separate from mValue so that it won't be possible to 'leak' the
+   * value from a text-input to a file-input. Additionally, the logic for this
+   * value is kept as simple as possible to avoid accidental errors where the
+   * wrong filename is used.  Therefor the list of filenames is always owned by
+   * this member, never by the frame. Whenever the frame wants to change the
+   * filename it has to call SetFilesOrDirectories to update this member.
    */
-  nsTArray<RefPtr<File>> mFiles;
+  nsTArray<OwningFileOrDirectory> mFilesOrDirectories;
 
 #ifndef MOZ_CHILD_PERMISSIONS
   /**

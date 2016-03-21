@@ -252,7 +252,7 @@ protected:
   void FillInExternalData(TransferItem& aItem, uint32_t aIndex);
 
 
-  FileList* GetFilesInternal(ErrorResult& aRv, nsIPrincipal* aSubjectPrincipal);
+  FileList* GetFileListInternal(ErrorResult& aRv, nsIPrincipal* aSubjectPrincipal);
   nsresult GetDataAtInternal(const nsAString& aFormat, uint32_t aIndex,
                              nsIPrincipal* aSubjectPrincipal, nsIVariant** aData);
   nsresult SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData, uint32_t aIndex,
@@ -300,8 +300,9 @@ protected:
   // array of items, each containing an array of format->data pairs
   nsTArray<nsTArray<TransferItem> > mItems;
 
-  // array of files, containing only the files present in the dataTransfer
-  RefPtr<FileList> mFiles;
+  // array of files and directories, containing only the files present in the
+  // dataTransfer
+  RefPtr<FileList> mFileList;
 
   // the target of the drag. The drag and dragend events will fire at this.
   nsCOMPtr<mozilla::dom::Element> mDragTarget;

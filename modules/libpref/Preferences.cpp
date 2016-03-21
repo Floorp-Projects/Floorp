@@ -1788,6 +1788,40 @@ Preferences::AddUintVarCache(uint32_t* aCache,
   return RegisterCallback(UintVarChanged, aPref, data);
 }
 
+template <MemoryOrdering Order>
+static void AtomicUintVarChanged(const char* aPref, void* aClosure)
+{
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *((Atomic<uint32_t, Order>*)cache->cacheLocation) =
+    Preferences::GetUint(aPref, cache->defaultValueUint);
+}
+
+template <MemoryOrdering Order>
+// static
+nsresult
+Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
+                                   const char* aPref,
+                                   uint32_t aDefault)
+{
+  NS_ASSERTION(aCache, "aCache must not be NULL");
+#ifdef DEBUG
+  AssertNotAlreadyCached("uint", aPref, aCache);
+#endif
+  *aCache = Preferences::GetUint(aPref, aDefault);
+  CacheData* data = new CacheData();
+  data->cacheLocation = aCache;
+  data->defaultValueUint = aDefault;
+  gCacheData->AppendElement(data);
+  return RegisterCallback(AtomicUintVarChanged<Order>, aPref, data);
+}
+
+// Since the definition of this template function is not in a header file,
+// we need to explicitly specify the instantiations that are required.
+// Currently only the order=Relaxed variant is needed.
+template
+nsresult Preferences::AddAtomicUintVarCache(Atomic<uint32_t,Relaxed>*,
+                                            const char*, uint32_t);
+
 static void FloatVarChanged(const char* aPref, void* aClosure)
 {
   CacheData* cache = static_cast<CacheData*>(aClosure);

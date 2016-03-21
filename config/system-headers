@@ -245,6 +245,7 @@ cairo-atsui.h
 cairo-beos.h
 cairo-ft.h
 cairo-glitz.h
+cairo-gobject.h
 cairo-pdf.h
 cairo-ps.h
 cairo-tee.h

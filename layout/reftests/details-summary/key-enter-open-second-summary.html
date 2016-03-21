@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html class="reftest-wait">
+  <script>
+  function runTest() {
+    // Dispatch 'return' key on second summary should not collapse details.
+    var summary = document.getElementById("summary");
+    summary.dispatchEvent(new KeyboardEvent("keypress", {"keyCode": 13}));
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+  <body onload="runTest();">
+    <details open>
+      <summary>Summary</summary>
+      <summary id="summary">Second Summary</summary>
+      <p>This is the details.</p>
+    </details>
+  </body>
+</html>

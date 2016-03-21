@@ -15,7 +15,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS(FileSystemPermissionRequest, nsIRunnable, nsIContentPermissionRequest)
+NS_IMPL_ISUPPORTS(FileSystemPermissionRequest, nsIRunnable,
+                  nsIContentPermissionRequest)
 
 // static
 void
@@ -28,8 +29,7 @@ FileSystemPermissionRequest::RequestForTask(FileSystemTaskBase* aTask)
   NS_DispatchToCurrentThread(request);
 }
 
-FileSystemPermissionRequest::FileSystemPermissionRequest(
-  FileSystemTaskBase* aTask)
+FileSystemPermissionRequest::FileSystemPermissionRequest(FileSystemTaskBase* aTask)
   : mTask(aTask)
 {
   MOZ_ASSERT(mTask, "aTask should not be null!");
@@ -44,8 +44,8 @@ FileSystemPermissionRequest::FileSystemPermissionRequest(
 
   mPermissionType = filesystem->GetPermission();
 
-  mWindow = filesystem->GetWindow();
-  if (!mWindow) {
+  mWindow = do_QueryInterface(filesystem->GetParentObject());
+  if (NS_WARN_IF(!mWindow)) {
     return;
   }
 
