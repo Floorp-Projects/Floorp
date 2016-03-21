@@ -2340,9 +2340,6 @@ pref("layout.css.scroll-snap.prediction-sensitivity", "0.750");
 // Is support for basic shapes in clip-path enabled?
 pref("layout.css.clip-path-shapes.enabled", false);
 
-// Is support for CSS sticky positioning enabled?
-pref("layout.css.sticky.enabled", true);
-
 // Is support for DOMPoint enabled?
 pref("layout.css.DOMPoint.enabled", true);
 
