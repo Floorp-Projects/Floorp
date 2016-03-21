@@ -72,17 +72,6 @@ Invoke(JSContext* cx, const AnyInvokeArgs& args)
     return InternalCallOrConstruct(cx, args, NO_CONSTRUCT);
 }
 
-/*
- * Similar to InternalCallOrConstruct, but for use in places that really
- * shouldn't use such an internal method directly (and won't, later in this
- * patch stack).
- */
-inline bool
-InternalInvoke(JSContext* cx, const CallArgs& args)
-{
-    return InternalCallOrConstruct(cx, args, NO_CONSTRUCT);
-}
-
 // DEPRECATED.  TO BE REMOVED.  DO NOT ADD NEW USES.
 extern bool
 Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, const Value* argv,

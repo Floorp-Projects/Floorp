@@ -3826,15 +3826,13 @@ CallIsStringOptimizable(JSContext* cx, const char* name, bool* result)
     if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), propName, propName, 0, &funcVal))
         return false;
 
-    InvokeArgs args(cx);
-    if (!args.init(0))
-        return false;
-    args.setCallee(funcVal);
-    args.setThis(UndefinedValue());
-    if (!Invoke(cx, args))
+    FixedInvokeArgs<0> args(cx);
+
+    RootedValue rval(cx);
+    if (!Call(cx, funcVal, UndefinedHandleValue, args, &rval))
         return false;
 
-    *result = args.rval().toBoolean();
+    *result = rval.toBoolean();
     return true;
 }
 #endif

@@ -3949,14 +3949,13 @@ js::SpeciesConstructor(JSContext* cx, HandleObject obj, HandleValue defaultCtor,
     RootedValue func(cx);
     if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, shName, 2, &func))
         return false;
-    InvokeArgs args(cx);
-    if (!args.init(2))
-        return false;
-    args.setCallee(func);
-    args.setThis(UndefinedValue());
+
+    FixedInvokeArgs<2> args(cx);
+
     args[0].setObject(*obj);
     args[1].set(defaultCtor);
-    if (!Invoke(cx, args))
+
+    if (!Call(cx, func, UndefinedHandleValue, args, pctor))
         return false;
 
     pctor.set(args.rval());

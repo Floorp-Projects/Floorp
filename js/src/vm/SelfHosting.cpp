@@ -1712,17 +1712,10 @@ CallSelfHostedNonGenericMethod(JSContext* cx, const CallArgs& args)
     if (!args2.init(args.length() - 1))
         return false;
 
-    args2.setCallee(selfHostedFun);
-    args2.setThis(args.thisv());
-
     for (size_t i = 0; i < args.length() - 1; i++)
         args2[i].set(args[i]);
 
-    if (!Invoke(cx, args2))
-        return false;
-
-    args.rval().set(args2.rval());
-    return true;
+    return js::Call(cx, selfHostedFun, args.thisv(), args2, args.rval());
 }
 
 bool
