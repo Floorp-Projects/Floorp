@@ -209,7 +209,11 @@ public:
             }
         }
 
-        ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
+        RefPtr<ID3D11Device> device;
+        if (!gfxWindowsPlatform::GetPlatform()->GetD3D11Device(&device)) {
+            return;
+        }
+
         device->GetImmediateContext(getter_AddRefs(mDeviceContext));
 
         mTexture->GetDesc(&mDesc);
@@ -260,8 +264,13 @@ bool
 SharedSurface_ANGLEShareHandle::ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface)
 {
     MOZ_ASSERT(out_surface);
+
+    RefPtr<ID3D11Device> device;
+    if (!gfxWindowsPlatform::GetPlatform()->GetD3D11Device(&device)) {
+        return false;
+    }
+
     RefPtr<ID3D11Texture2D> tex;
-    ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
     HRESULT hr = device->OpenSharedResource(mShareHandle,
                                             __uuidof(ID3D11Texture2D),
                                             (void**)(ID3D11Texture2D**)getter_AddRefs(tex));
