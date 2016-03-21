@@ -1287,13 +1287,15 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     // If no header found on request, check response - mainly to get
     // something we can unit test, as it is impossible to set
     // the Upgrade header on outgoing XHR as per the spec.
-    if (!upgradeHeader && responseHeaders && Array.isArray(responseHeaders.headers)) {
+    if (!upgradeHeader && responseHeaders &&
+        Array.isArray(responseHeaders.headers)) {
       upgradeHeader = responseHeaders.headers.find(header => {
         return (header.name == "Upgrade");
       });
     }
 
-    // Return false if there is no such header or if its value isn't 'websocket'.
+    // Return false if there is no such header or if its value isn't
+    // 'websocket'.
     if (!upgradeHeader || upgradeHeader.value != "websocket") {
       return false;
     }
