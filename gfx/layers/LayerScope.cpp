@@ -1202,7 +1202,6 @@ SenderHelper::SendMaskEffect(GLContext* aGLContext,
     // Expose packet creation here, so we could dump secondary mask effect attributes.
     auto packet = MakeUnique<layerscope::Packet>();
     TexturePacket::EffectMask* mask = packet->mutable_texture()->mutable_mask();
-    mask->set_mis3d(aEffect->mIs3D);
     mask->mutable_msize()->set_w(aEffect->mSize.width);
     mask->mutable_msize()->set_h(aEffect->mSize.height);
     auto element = reinterpret_cast<const Float *>(&(aEffect->mMaskTransform));
