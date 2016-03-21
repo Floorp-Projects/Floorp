@@ -41,7 +41,9 @@ class UpdateWizardDialog(BaseWindow):
         current_panel = self.wizard.selected_panel
 
         self.wizard.next_button.click()
-        Wait(self.marionette).until(lambda _: self.wizard.selected_panel != current_panel)
+        Wait(self.marionette).until(
+            lambda _: self.wizard.selected_panel != current_panel,
+            message='Next panel has not been selected.')
 
 
 Windows.register_window(UpdateWizardDialog.window_type, UpdateWizardDialog)
