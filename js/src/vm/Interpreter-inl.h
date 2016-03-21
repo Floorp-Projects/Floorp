@@ -843,7 +843,7 @@ class FastInvokeGuard
             }
         }
 
-        return Invoke(cx, args_);
+        return InternalCallOrConstruct(cx, args_, NO_CONSTRUCT);
     }
 
   private:

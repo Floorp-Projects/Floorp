@@ -441,9 +441,13 @@ struct AutoGCIfRequested
  * under argc arguments on cx's stack, and call the function.  Push missing
  * required arguments, allocate declared local variables, and pop everything
  * when done.  Then push the return value.
+ *
+ * Note: This function DOES NOT call GetThisValue to munge |args.thisv()| if
+ *       necessary.  The caller (usually the interpreter) must have performed
+ *       this step already!
  */
 bool
-js::Invoke(JSContext* cx, const CallArgs& args, MaybeConstruct construct)
+js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args, MaybeConstruct construct)
 {
     MOZ_ASSERT(args.length() <= ARGS_LENGTH_MAX);
     MOZ_ASSERT(!cx->zone()->types.activeAnalysis);
@@ -525,7 +529,7 @@ js::Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, 
         }
     }
 
-    if (!Invoke(cx, args))
+    if (!InternalCallOrConstruct(cx, args, NO_CONSTRUCT))
         return false;
 
     rval.set(args.rval());
@@ -552,7 +556,7 @@ InternalConstruct(JSContext* cx, const AnyConstructArgs& args)
         if (fun->isNative())
             return CallJSNativeConstructor(cx, fun->native(), args);
 
-        if (!Invoke(cx, args, CONSTRUCT))
+        if (!InternalCallOrConstruct(cx, args, CONSTRUCT))
             return false;
 
         MOZ_ASSERT(args.CallArgs::rval().isObject());
@@ -2724,7 +2728,7 @@ CASE(JSOP_STRICTEVAL)
         if (!DirectEval(cx, args.get(0), args.rval()))
             goto error;
     } else {
-        if (!Invoke(cx, args))
+        if (!InternalInvoke(cx, args))
             goto error;
     }
 
@@ -2806,7 +2810,7 @@ CASE(JSOP_FUNCALL)
                 ReportValueError(cx, JSMSG_NOT_ITERABLE, -1, args.thisv(), nullptr);
                 goto error;
             }
-            if (!Invoke(cx, args))
+            if (!InternalInvoke(cx, args))
                 goto error;
         }
         Value* newsp = args.spAfterCall();

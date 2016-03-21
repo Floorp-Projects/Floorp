@@ -6113,7 +6113,7 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
             return false;
         }
 
-        if (!Invoke(cx, callArgs))
+        if (!InternalInvoke(cx, callArgs))
             return false;
 
         res.set(callArgs.rval());
