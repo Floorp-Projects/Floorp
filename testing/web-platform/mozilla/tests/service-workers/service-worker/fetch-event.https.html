@@ -120,7 +120,7 @@ function run_referrer_policy_tests(frame, referrer, href, origin) {
       .then(function(response_text) {
           assert_equals(
             response_text,
-            'Referrer: ' + origin + '\n' +
+            'Referrer: ' + origin + '/' + '\n' +
             'ReferrerPolicy: origin-only',
             'Service Worker should respond to fetch with the referrer origin with "origin-only" and a same origin request');
           var http_url = get_host_info()['HTTP_ORIGIN'] + base_path() +
@@ -132,7 +132,7 @@ function run_referrer_policy_tests(frame, referrer, href, origin) {
       .then(function(response_text) {
           assert_equals(
             response_text,
-            'Referrer: ' + origin + '\n' +
+            'Referrer: ' + origin + '/' + '\n' +
             'ReferrerPolicy: origin-only',
             'Service Worker should respond to fetch with the referrer origin with "origin-only" and a cross origin request');
           return frame.contentWindow.fetch('resources/simple.html?referrerFull',
@@ -154,7 +154,7 @@ function run_referrer_policy_tests(frame, referrer, href, origin) {
       .then(function(response_text) {
           assert_equals(
             response_text,
-            'Referrer: ' + origin + '\n' +
+            'Referrer: ' + origin + '/' + '\n' +
             'ReferrerPolicy: origin-when-cross-origin',
             'Service Worker should respond to fetch with the referrer origin with "origin-when-cross-origin" and a cross origin request');
           return frame.contentWindow.fetch('resources/simple.html?referrerFull',
