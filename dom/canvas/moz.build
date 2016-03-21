@@ -63,6 +63,10 @@ UNIFIED_SOURCES += [
     'OffscreenCanvas.cpp',
 ]
 
+SOURCES += [
+    'ImageUtils.cpp',
+]
+
 # WebGL Sources
 UNIFIED_SOURCES += [
     'TexUnpackBlob.cpp',
