@@ -934,16 +934,16 @@ ArraySpeciesCreate(JSContext* cx, HandleObject origArray, uint32_t length, Mutab
 
     FixedInvokeArgs<2> args(cx);
 
-    args.setCallee(ObjectValue(*create));
-    args.setThis(UndefinedValue());
     args[0].setObject(*origArray);
     args[1].set(NumberValue(length));
 
-    if (!Invoke(cx, args))
+    RootedValue callee(cx, ObjectValue(*create));
+    RootedValue rval(cx);
+    if (!Call(cx, callee, UndefinedHandleValue, args, &rval))
         return false;
 
-    MOZ_ASSERT(args.rval().isObject());
-    arr.set(&args.rval().toObject());
+    MOZ_ASSERT(rval.isObject());
+    arr.set(&rval.toObject());
     return true;
 }
 
