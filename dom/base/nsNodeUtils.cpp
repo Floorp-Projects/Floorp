@@ -246,7 +246,8 @@ nsNodeUtils::GetTargetForAnimation(const Animation* aAnimation)
 }
 
 void
-nsNodeUtils::AnimationAdded(Animation* aAnimation)
+nsNodeUtils::AnimationMutated(Animation* aAnimation,
+                              AnimationMutationType aMutatedType)
 {
   Maybe<NonOwningAnimationTarget> target = GetTargetForAnimation(aAnimation);
   if (!target) {
@@ -255,38 +256,39 @@ nsNodeUtils::AnimationAdded(Animation* aAnimation)
   nsIDocument* doc = target->mElement->OwnerDoc();
 
   if (doc->MayHaveAnimationObservers()) {
-    IMPL_ANIMATION_NOTIFICATION(AnimationAdded, target->mElement, (aAnimation));
+    Element* elem = target->mElement;
+    switch (aMutatedType) {
+      case AnimationMutationType::Added:
+        IMPL_ANIMATION_NOTIFICATION(AnimationAdded, elem, (aAnimation));
+        break;
+      case AnimationMutationType::Changed:
+        IMPL_ANIMATION_NOTIFICATION(AnimationChanged, elem, (aAnimation));
+        break;
+      case AnimationMutationType::Removed:
+        IMPL_ANIMATION_NOTIFICATION(AnimationRemoved, elem, (aAnimation));
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("unexpected mutation type");
+    }
   }
+}
+
+void
+nsNodeUtils::AnimationAdded(Animation* aAnimation)
+{
+  AnimationMutated(aAnimation, AnimationMutationType::Added);
 }
 
 void
 nsNodeUtils::AnimationChanged(Animation* aAnimation)
 {
-  Maybe<NonOwningAnimationTarget> target = GetTargetForAnimation(aAnimation);
-  if (!target) {
-    return;
-  }
-  nsIDocument* doc = target->mElement->OwnerDoc();
-
-  if (doc->MayHaveAnimationObservers()) {
-    IMPL_ANIMATION_NOTIFICATION(AnimationChanged, target->mElement,
-                                (aAnimation));
-  }
+  AnimationMutated(aAnimation, AnimationMutationType::Changed);
 }
 
 void
 nsNodeUtils::AnimationRemoved(Animation* aAnimation)
 {
-  Maybe<NonOwningAnimationTarget> target = GetTargetForAnimation(aAnimation);
-  if (!target) {
-    return;
-  }
-  nsIDocument* doc = target->mElement->OwnerDoc();
-
-  if (doc->MayHaveAnimationObservers()) {
-    IMPL_ANIMATION_NOTIFICATION(AnimationRemoved, target->mElement,
-                                (aAnimation));
-  }
+  AnimationMutated(aAnimation, AnimationMutationType::Removed);
 }
 
 void
