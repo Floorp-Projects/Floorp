@@ -48,13 +48,6 @@ def spawn_test(test, prefix, passthrough, run_skipped, show_cmd):
 
     os.execvp(cmd[0], cmd)
 
-def total_seconds(td):
-    """
-    Return the total number of seconds contained in the duration as a float
-    """
-    return (float(td.microseconds) \
-            + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
-
 def get_max_wait(tasks, timeout):
     """
     Return the maximum time we can wait before any task should time out.
@@ -73,18 +66,8 @@ def get_max_wait(tasks, timeout):
             if remaining < wait:
                 wait = remaining
 
-    if wait > ProgressBar.update_granularity():
-        print >> sys.stderr, "Inconsistent return value in get_max_wait:"
-        for task in tasks:
-            print >> sys.stderr, "\tstart={} elapsed={} remaining={}".format(\
-                    task.start, total_seconds(now - task.start), \
-                    total_seconds(task.start + timeout_delta - now))
-        print >> sys.stderr, "wait={} total_seconds(wait)={} timeout={} \
-        update_granularity={} now={}".format(wait, total_seconds(wait), \
-                timeout, total_seconds(ProgressBar.update_granularity()), now)
-
-    # Return the wait time in seconds, clamped to zero.
-    return max(total_seconds(wait), 0)
+    # Return the wait time in seconds, clamped between zero and max_wait.
+    return max(wait.total_seconds(), 0)
 
 def flush_input(fd, frags):
     """
@@ -192,7 +175,7 @@ def reap_zombies(tasks, timeout):
                 ''.join(ended.out),
                 ''.join(ended.err),
                 returncode,
-                total_seconds(datetime.now() - ended.start),
+                (datetime.now() - ended.start).total_seconds(),
                 timed_out(ended, timeout)))
     return tasks, finished
 
