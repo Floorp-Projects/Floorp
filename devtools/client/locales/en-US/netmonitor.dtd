@@ -120,6 +120,10 @@
   -  in the network details footer for the "Flash" filtering button. -->
 <!ENTITY netmonitorUI.footer.filterFlash  "Flash">
 
+<!-- LOCALIZATION NOTE (netmonitorUI.footer.filterWS): This is the label displayed
+  -  in the network details footer for the "WS" filtering button. -->
+<!ENTITY netmonitorUI.footer.filterWS  "WS">
+
 <!-- LOCALIZATION NOTE (netmonitorUI.footer.filterOther): This is the label displayed
   -  in the network details footer for the "Other" filtering button. -->
 <!ENTITY netmonitorUI.footer.filterOther  "Other">
