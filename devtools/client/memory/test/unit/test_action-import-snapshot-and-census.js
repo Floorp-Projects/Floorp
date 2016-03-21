@@ -51,9 +51,9 @@ add_task(function *() {
   let unsubscribe = subscribe(expectStates);
   dispatch(importSnapshotAndCensus(heapWorker, destPath));
 
-  yield waitUntilState(store, () => i === 5);
+  yield waitUntilState(store, () => i === expected.length);
   unsubscribe();
-  equal(i, 5, "importSnapshotAndCensus() produces the correct sequence of states in a snapshot");
+  equal(i, expected.length, "importSnapshotAndCensus() produces the correct sequence of states in a snapshot");
   equal(getState().snapshots[1].state, states.SAVED_CENSUS, "imported snapshot is in SAVED_CENSUS state");
   ok(getState().snapshots[1].selected, "imported snapshot is selected");
 
@@ -61,7 +61,7 @@ add_task(function *() {
   let snapshot1 = getState().snapshots[0];
   let snapshot2 = getState().snapshots[1];
 
-  equal(snapshot1.display, snapshot2.display,
+  equal(snapshot1.census.display, snapshot2.census.display,
         "imported snapshot has correct display");
 
   // Clone the census data so we can destructively remove the ID/parents to compare
