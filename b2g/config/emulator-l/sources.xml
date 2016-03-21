@@ -141,7 +141,7 @@
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="1d080491f26dfdfd76d5bbc3e6b40c660e8565af"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="61a10cbd19d6b7fc052a8cb92dfa1b37b93754f3"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="9e892a67a01671f312c76b0880dedaa6ba478148"/>
-  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="25f74a952b58b245df4214006bd27c9d80bfcc68"/>
+  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="6c9cebe5892c69e8b4bb2ea4e202f36ad095a4f0"/>
   <project name="platform/system/extras" path="system/extras" revision="47fa016e2248b80aebd5928402c7409f8e0ca64e"/>
   <project name="platform/system/media" path="system/media" revision="70bfebc66d9c6a4c614a8c7efde90e8e7e1d8641"/>
   <project name="platform/system/netd" path="system/netd" revision="d113f0ceefa9ce29eb3c86e2d23c7417a70b4048"/>
