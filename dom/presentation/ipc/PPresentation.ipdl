@@ -23,17 +23,20 @@ struct StartSessionRequest
 struct SendSessionMessageRequest
 {
   nsString sessionId;
+  uint8_t role;
   InputStreamParams data;
 };
 
 struct CloseSessionRequest
 {
   nsString sessionId;
+  uint8_t role;
 };
 
 struct TerminateSessionRequest
 {
   nsString sessionId;
+  uint8_t role;
 };
 
 union PresentationIPCRequest
@@ -61,8 +64,8 @@ parent:
   async RegisterAvailabilityHandler();
   async UnregisterAvailabilityHandler();
 
-  async RegisterSessionHandler(nsString aSessionId);
-  async UnregisterSessionHandler(nsString aSessionId);
+  async RegisterSessionHandler(nsString aSessionId, uint8_t aRole);
+  async UnregisterSessionHandler(nsString aSessionId, uint8_t aRole);
 
   async RegisterRespondingHandler(uint64_t aWindowId);
   async UnregisterRespondingHandler(uint64_t aWindowId);

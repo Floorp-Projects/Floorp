@@ -1700,7 +1700,7 @@ ContentChild::RecvNotifyPresentationReceiverCleanUp(const nsString& aSessionId)
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   NS_WARN_IF(!service);
 
-  NS_WARN_IF(NS_FAILED(service->UntrackSessionInfo(aSessionId)));
+  NS_WARN_IF(NS_FAILED(service->UntrackSessionInfo(aSessionId, nsIPresentationService::ROLE_RECEIVER)));
 
   return true;
 }
