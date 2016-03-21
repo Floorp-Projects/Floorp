@@ -919,6 +919,15 @@ CodeGeneratorMIPSShared::visitClzI(LClzI* ins)
 }
 
 void
+CodeGeneratorMIPSShared::visitCtzI(LCtzI* ins)
+{
+    Register input = ToRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    masm.ma_ctz(output, input);
+}
+
+void
 CodeGeneratorMIPSShared::visitPowHalfD(LPowHalfD* ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
