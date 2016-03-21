@@ -388,31 +388,27 @@ nsAnimationReceiver::RecordAnimationMutation(Animation* aAnimation,
     return;
   }
 
-  mozilla::dom::Element* animationTarget;
-  CSSPseudoElementType pseudoType;
-  effect->GetTarget(animationTarget, pseudoType);
+  Maybe<NonOwningAnimationTarget> animationTarget = effect->GetTarget();
   if (!animationTarget) {
     return;
   }
 
-  if (!Animations() || !(Subtree() || animationTarget == Target()) ||
-      animationTarget->ChromeOnlyAccess()) {
+  dom::Element* elem = animationTarget->mElement;
+  if (!Animations() || !(Subtree() || elem == Target()) ||
+      elem->ChromeOnlyAccess()) {
     return;
   }
 
   if (nsAutoAnimationMutationBatch::IsBatching()) {
     switch (aMutationType) {
       case eAnimationMutation_Added:
-        nsAutoAnimationMutationBatch::AnimationAdded(aAnimation,
-                                                     animationTarget);
+        nsAutoAnimationMutationBatch::AnimationAdded(aAnimation, elem);
         break;
       case eAnimationMutation_Changed:
-        nsAutoAnimationMutationBatch::AnimationChanged(aAnimation,
-                                                       animationTarget);
+        nsAutoAnimationMutationBatch::AnimationChanged(aAnimation, elem);
         break;
       case eAnimationMutation_Removed:
-        nsAutoAnimationMutationBatch::AnimationRemoved(aAnimation,
-                                                       animationTarget);
+        nsAutoAnimationMutationBatch::AnimationRemoved(aAnimation, elem);
         break;
     }
 
@@ -425,7 +421,7 @@ nsAnimationReceiver::RecordAnimationMutation(Animation* aAnimation,
 
   NS_ASSERTION(!m->mTarget, "Wrong target!");
 
-  m->mTarget = animationTarget;
+  m->mTarget = elem;
 
   switch (aMutationType) {
     case eAnimationMutation_Added:
