@@ -19,7 +19,6 @@
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
 #include "nsCSSPropertySet.h"
 #include "nsCSSProps.h"
-#include "nsCSSPseudoElements.h"
 #include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
 #include "nsRuleNode.h" // For nsRuleNode::ComputePropertiesOverridingAnimation
@@ -83,11 +82,11 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
   // Those cases are probably not important but just to be safe, let's make
   // sure the cascade is up to date since if it *is* up to date, this is
   // basically a no-op.
-  Maybe<Pair<dom::Element*, CSSPseudoElementType>> pseudoElement =
+  Maybe<NonOwningAnimationTarget> pseudoElement =
     EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
   if (pseudoElement) {
-    EffectCompositor::MaybeUpdateCascadeResults(pseudoElement->first(),
-                                                pseudoElement->second(),
+    EffectCompositor::MaybeUpdateCascadeResults(pseudoElement->mElement,
+                                                pseudoElement->mPseudoType,
                                                 aFrame->StyleContext());
   }
 
@@ -498,11 +497,11 @@ EffectCompositor::UpdateCascadeResults(Element* aElement,
   UpdateCascadeResults(*effects, aElement, aPseudoType, aStyleContext);
 }
 
-/* static */ Maybe<Pair<Element*, CSSPseudoElementType>>
+/* static */ Maybe<NonOwningAnimationTarget>
 EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
 {
   // Always return the same object to benefit from return-value optimization.
-  Maybe<Pair<Element*, CSSPseudoElementType>> result;
+  Maybe<NonOwningAnimationTarget> result;
 
   nsIContent* content = aFrame->GetContent();
   if (!content) {
@@ -539,7 +538,7 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
     return result;
   }
 
-  result = Some(MakePair(content->AsElement(), pseudoType));
+  result.emplace(content->AsElement(), pseudoType);
 
   return result;
 }
