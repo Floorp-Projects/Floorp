@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head><meta charset="UTF-8">
+  <title>CSS Test: display:contents with orthogonal writing-mode</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1258147">
+  <link rel="help" href="http://dev.w3.org/csswg/css-display">
+  <link rel="match" href="display-contents-writing-mode-2-ref.html">
+  <style type="text/css">
+
+body {
+  writing-mode: horizontal-tb;
+}
+
+div {
+  display: contents;
+  writing-mode: vertical-lr;
+}
+
+span {
+  width: 0;
+  border: 1px solid;
+}
+
+  </style>
+</head>
+<body>
+<div><span>a b c</span></div>
+</body>
+</html>
