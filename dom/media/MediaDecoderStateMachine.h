@@ -84,7 +84,6 @@ hardware (via AudioStream).
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "mozilla/RollingMean.h"
 #include "mozilla/StateMirroring.h"
 
 #include "nsThreadUtils.h"
@@ -463,10 +462,6 @@ protected:
   // media element -- use UpdatePlaybackPosition for that.  Called on the state
   // machine thread, caller must hold the decoder lock.
   void UpdatePlaybackPositionInternal(int64_t aTime);
-
-  // Decode monitor must be held. To determine if MDSM needs to turn off HW
-  // acceleration.
-  void CheckFrameValidity(VideoData* aData);
 
   // Update playback position and trigger next update by default time period.
   // Called on the state machine thread.
@@ -1139,8 +1134,6 @@ private:
   nsAutoPtr<MetadataTags> mMetadataTags;
 
   mozilla::MediaMetadataManager mMetadataManager;
-
-  mozilla::RollingMean<uint32_t, uint32_t> mCorruptFrames;
 
   // True if we need to call FinishDecodeFirstFrame() upon frame decoding
   // successeeding.
