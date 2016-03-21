@@ -147,6 +147,15 @@
   padding-bottom: 20vh;
 }
 
+.tool-disabled-message {
+  text-align: center;
+}
+
+.console-profile-recording-notice,
+.console-profile-stop-notice {
+  overflow: hidden;
+}
+
 .console-profile-command {
   font-family: monospace;
   margin: 3px 2px;
