@@ -5299,9 +5299,10 @@ public:
   Finish(uint64_t aTransactionId, FinishCallback* aCallback);
 
   void
-  CloseDatabaseWhenIdle(const nsACString& aDatabaseId)
+  CloseDatabaseWhenIdle(const nsACString& aDatabaseId,
+                        uintptr_t aCallsite)
   {
-    Unused << CloseDatabaseWhenIdleInternal(aDatabaseId);
+    Unused << CloseDatabaseWhenIdleInternal(aDatabaseId, aCallsite);
   }
 
   void
@@ -5363,7 +5364,8 @@ private:
   CloseDatabase(DatabaseInfo* aDatabaseInfo, uintptr_t aCallsite);
 
   bool
-  CloseDatabaseWhenIdleInternal(const nsACString& aDatabaseId);
+  CloseDatabaseWhenIdleInternal(const nsACString& aDatabaseId,
+                                uintptr_t aCallsite);
 };
 
 class ConnectionPool::ConnectionRunnable
@@ -11645,7 +11647,7 @@ ConnectionPool::WaitForDatabasesToComplete(nsTArray<nsCString>&& aDatabaseIds,
     const nsCString& databaseId = aDatabaseIds[index];
     MOZ_ASSERT(!databaseId.IsEmpty());
 
-    if (CloseDatabaseWhenIdleInternal(databaseId)) {
+    if (CloseDatabaseWhenIdleInternal(databaseId, 0x6)) {
       mayRunCallbackImmediately = false;
     }
   }
@@ -12149,7 +12151,7 @@ ConnectionPool::NoteIdleDatabase(DatabaseInfo* aDatabaseInfo)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabaseInfo);
-  MOZ_ASSERT(!aDatabaseInfo->TotalTransactionCount());
+  MOZ_RELEASE_ASSERT(!aDatabaseInfo->TotalTransactionCount());
   MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mThread);
   MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mRunnable);
   MOZ_ASSERT(!mIdleDatabases.Contains(aDatabaseInfo));
@@ -12323,7 +12325,7 @@ ConnectionPool::PerformIdleDatabaseMaintenance(DatabaseInfo* aDatabaseInfo)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabaseInfo);
-  MOZ_ASSERT(!aDatabaseInfo->TotalTransactionCount());
+  MOZ_RELEASE_ASSERT(!aDatabaseInfo->TotalTransactionCount());
   MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mThread);
   MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mRunnable);
   MOZ_ASSERT(aDatabaseInfo->mIdle);
@@ -12369,7 +12371,8 @@ ConnectionPool::CloseDatabase(DatabaseInfo* aDatabaseInfo,
 }
 
 bool
-ConnectionPool::CloseDatabaseWhenIdleInternal(const nsACString& aDatabaseId)
+ConnectionPool::CloseDatabaseWhenIdleInternal(const nsACString& aDatabaseId,
+                                              uintptr_t aCallsite)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!aDatabaseId.IsEmpty());
@@ -12381,7 +12384,7 @@ ConnectionPool::CloseDatabaseWhenIdleInternal(const nsACString& aDatabaseId)
   if (DatabaseInfo* dbInfo = mDatabases.Get(aDatabaseId)) {
     if (mIdleDatabases.RemoveElement(dbInfo) ||
         mDatabasesPerformingIdleMaintenance.RemoveElement(dbInfo)) {
-      CloseDatabase(dbInfo, 5);
+      CloseDatabase(dbInfo, aCallsite);
       AdjustIdleTimer();
     } else {
       dbInfo->mCloseOnIdle = true;
@@ -13656,7 +13659,7 @@ Database::CloseInternal()
   mClosed = true;
 
   if (gConnectionPool) {
-    gConnectionPool->CloseDatabaseWhenIdle(Id());
+    gConnectionPool->CloseDatabaseWhenIdle(Id(), 0x7);
   }
 
   DatabaseActorInfo* info;
