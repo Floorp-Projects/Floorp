@@ -53,12 +53,8 @@ CheckProgressConsistency(Progress aOldProgress, Progress aNewProgress)
     // GIFs may fool us.
   }
   if (aNewProgress & FLAG_HAS_TRANSPARENCY) {
-    // We should never discover this after FLAG_SIZE_AVAILABLE except in the
-    // case of animated images, which may have an opaque first frame but
-    // transparent frames later on in the animation.
-    MOZ_ASSERT((aNewProgress & FLAG_IS_ANIMATED) ||
-               (aOldProgress & FLAG_HAS_TRANSPARENCY) ||
-               !(aOldProgress & FLAG_SIZE_AVAILABLE));
+    // XXX We'd like to assert that transparency is only set during metadata
+    // decode but we don't have any way to assert that until bug 1254892 is fixed.
   }
   if (aNewProgress & FLAG_LAST_PART_COMPLETE) {
     MOZ_ASSERT(aNewProgress & FLAG_LOAD_COMPLETE);
