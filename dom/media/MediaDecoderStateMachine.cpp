@@ -460,12 +460,13 @@ void MediaDecoderStateMachine::DiscardStreamData()
   }
 }
 
-bool MediaDecoderStateMachine::HaveEnoughDecodedAudio(int64_t aAmpleAudioUSecs)
+bool MediaDecoderStateMachine::HaveEnoughDecodedAudio()
 {
   MOZ_ASSERT(OnTaskQueue());
 
+  int64_t ampleAudioUSecs = mAmpleAudioThresholdUsecs * mPlaybackRate;
   if (AudioQueue().GetSize() == 0 ||
-      GetDecodedAudioDuration() < aAmpleAudioUSecs) {
+      GetDecodedAudioDuration() < ampleAudioUSecs) {
     return false;
   }
 
@@ -562,14 +563,12 @@ MediaDecoderStateMachine::NeedToDecodeAudio()
 {
   MOZ_ASSERT(OnTaskQueue());
   SAMPLE_LOG("NeedToDecodeAudio() isDec=%d minPrl=%d enufAud=%d",
-             IsAudioDecoding(), mMinimizePreroll,
-             HaveEnoughDecodedAudio(mAmpleAudioThresholdUsecs * mPlaybackRate));
+             IsAudioDecoding(), mMinimizePreroll, HaveEnoughDecodedAudio());
 
   return IsAudioDecoding() &&
          mState != DECODER_STATE_SEEKING &&
          ((IsDecodingFirstFrame() && AudioQueue().GetSize() == 0) ||
-          (!mMinimizePreroll &&
-           !HaveEnoughDecodedAudio(mAmpleAudioThresholdUsecs * mPlaybackRate)));
+          (!mMinimizePreroll && !HaveEnoughDecodedAudio()));
 }
 
 bool
