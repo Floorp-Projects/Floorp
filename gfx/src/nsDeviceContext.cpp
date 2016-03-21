@@ -65,10 +65,7 @@ public:
     void Destroy();
 
     nsresult GetMetricsFor(const nsFont& aFont,
-                           nsIAtom* aLanguage, bool aExplicitLanguage,
-                           gfxFont::Orientation aOrientation,
-                           gfxUserFontSet* aUserFontSet,
-                           gfxTextPerfMetrics* aTextPerf,
+                           const nsFontMetrics::Params& aParams,
                            nsFontMetrics*& aMetrics);
 
     void FontMetricsDeleted(const nsFontMetrics* aFontMetrics);
@@ -127,14 +124,11 @@ nsFontCache::Observe(nsISupports*, const char* aTopic, const char16_t*)
 
 nsresult
 nsFontCache::GetMetricsFor(const nsFont& aFont,
-                           nsIAtom* aLanguage, bool aExplicitLanguage,
-                           gfxFont::Orientation aOrientation,
-                           gfxUserFontSet* aUserFontSet,
-                           gfxTextPerfMetrics* aTextPerf,
+                           const nsFontMetrics::Params& aParams,
                            nsFontMetrics*& aMetrics)
 {
-    if (!aLanguage)
-        aLanguage = mLocaleLanguage;
+    nsIAtom* language = aParams.language ? aParams.language
+                                         : mLocaleLanguage.get();
 
     // First check our cache
     // start from the end, which is where we put the most-recent-used element
@@ -143,8 +137,10 @@ nsFontCache::GetMetricsFor(const nsFont& aFont,
     int32_t n = mFontMetrics.Length() - 1;
     for (int32_t i = n; i >= 0; --i) {
         fm = mFontMetrics[i];
-        if (fm->Font().Equals(aFont) && fm->GetUserFontSet() == aUserFontSet &&
-            fm->Language() == aLanguage && fm->Orientation() == aOrientation) {
+        if (fm->Font().Equals(aFont) &&
+            fm->GetUserFontSet() == aParams.userFontSet &&
+            fm->Language() == language &&
+            fm->Orientation() == aParams.orientation) {
             if (i != n) {
                 // promote it to the end of the cache
                 mFontMetrics.RemoveElementAt(i);
@@ -158,10 +154,11 @@ nsFontCache::GetMetricsFor(const nsFont& aFont,
 
     // It's not in the cache. Get font metrics and then cache them.
 
+    nsFontMetrics::Params params = aParams;
+    params.language = language;
     fm = new nsFontMetrics();
     NS_ADDREF(fm);
-    nsresult rv = fm->Init(aFont, aLanguage, aExplicitLanguage, aOrientation,
-                           mContext, aUserFontSet, aTextPerf);
+    nsresult rv = fm->Init(aFont, params, mContext);
     if (NS_SUCCEEDED(rv)) {
         // the mFontMetrics list has the "head" at the end, because append
         // is cheaper than insert
@@ -180,8 +177,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont,
     Compact();
     fm = new nsFontMetrics();
     NS_ADDREF(fm);
-    rv = fm->Init(aFont, aLanguage, aExplicitLanguage, aOrientation, mContext,
-                  aUserFontSet, aTextPerf);
+    rv = fm->Init(aFont, params, mContext);
     if (NS_SUCCEEDED(rv)) {
         mFontMetrics.AppendElement(fm);
         aMetrics = fm;
@@ -268,11 +264,7 @@ nsDeviceContext::~nsDeviceContext()
 
 nsresult
 nsDeviceContext::GetMetricsFor(const nsFont& aFont,
-                               nsIAtom* aLanguage,
-                               bool aExplicitLanguage,
-                               gfxFont::Orientation aOrientation,
-                               gfxUserFontSet* aUserFontSet,
-                               gfxTextPerfMetrics* aTextPerf,
+                               const nsFontMetrics::Params& aParams,
                                nsFontMetrics*& aMetrics)
 {
     if (!mFontCache) {
@@ -281,9 +273,7 @@ nsDeviceContext::GetMetricsFor(const nsFont& aFont,
         mFontCache->Init(this);
     }
 
-    return mFontCache->GetMetricsFor(aFont, aLanguage, aExplicitLanguage,
-                                     aOrientation, aUserFontSet, aTextPerf,
-                                     aMetrics);
+    return mFontCache->GetMetricsFor(aFont, aParams, aMetrics);
 }
 
 nsresult

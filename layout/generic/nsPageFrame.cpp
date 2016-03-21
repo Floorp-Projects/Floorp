@@ -630,11 +630,11 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
     disable(aRenderingContext.GetDrawTarget(), aDisableSubpixelAA);
 
   // Get the FontMetrics to determine width.height of strings
+  nsFontMetrics::Params params;
+  params.userFontSet = pc->GetUserFontSet();
+  params.textPerf = pc->GetTextPerfMetrics();
   RefPtr<nsFontMetrics> fontMet;
-  pc->DeviceContext()->GetMetricsFor(mPD->mHeadFootFont, nullptr, false,
-                                     gfxFont::eHorizontal,
-                                     pc->GetUserFontSet(),
-                                     pc->GetTextPerfMetrics(),
+  pc->DeviceContext()->GetMetricsFor(mPD->mHeadFootFont, params,
                                      *getter_AddRefs(fontMet));
 
   nscoord ascent = 0;

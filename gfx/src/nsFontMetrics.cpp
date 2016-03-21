@@ -121,18 +121,14 @@ nsFontMetrics::~nsFontMetrics()
 }
 
 nsresult
-nsFontMetrics::Init(const nsFont& aFont,
-                    nsIAtom* aLanguage, bool aExplicitLanguage,
-                    gfxFont::Orientation aOrientation,
-                    nsDeviceContext *aContext,
-                    gfxUserFontSet *aUserFontSet,
-                    gfxTextPerfMetrics *aTextPerf)
+nsFontMetrics::Init(const nsFont& aFont, const Params& aParams,
+                    nsDeviceContext *aContext)
 {
     MOZ_ASSERT(mP2A == 0, "already initialized");
 
     mFont = aFont;
-    mLanguage = aLanguage;
-    mOrientation = aOrientation;
+    mLanguage = aParams.language;
+    mOrientation = aParams.orientation;
     mDeviceContext = aContext;
     mP2A = mDeviceContext->AppUnitsPerDevPixel();
 
@@ -140,8 +136,8 @@ nsFontMetrics::Init(const nsFont& aFont,
                        aFont.weight,
                        aFont.stretch,
                        gfxFloat(aFont.size) / mP2A,
-                       aLanguage,
-                       aExplicitLanguage,
+                       aParams.language,
+                       aParams.explicitLanguage,
                        aFont.sizeAdjust,
                        aFont.systemFont,
                        mDeviceContext->IsPrinterSurface(),
@@ -154,8 +150,8 @@ nsFontMetrics::Init(const nsFont& aFont,
     gfxFloat devToCssSize = gfxFloat(mP2A) /
         gfxFloat(mDeviceContext->AppUnitsPerCSSPixel());
     mFontGroup = gfxPlatform::GetPlatform()->
-        CreateFontGroup(aFont.fontlist, &style, aTextPerf,
-                        aUserFontSet, devToCssSize);
+        CreateFontGroup(aFont.fontlist, &style, aParams.textPerf,
+                        aParams.userFontSet, devToCssSize);
     return NS_OK;
 }
 

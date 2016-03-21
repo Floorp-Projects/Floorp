@@ -2468,12 +2468,13 @@ public:
 
   virtual float GetExLength() const override
   {
-    gfxTextPerfMetrics* tp = mPresContext->GetTextPerfMetrics();
     RefPtr<nsFontMetrics> fontMetrics;
     nsDeviceContext* dc = mPresContext->DeviceContext();
-    dc->GetMetricsFor(mFont, mFontLanguage, mExplicitLanguage,
-                      gfxFont::eHorizontal, nullptr, tp,
-                      *getter_AddRefs(fontMetrics));
+    nsFontMetrics::Params params;
+    params.language = mFontLanguage;
+    params.explicitLanguage = mExplicitLanguage;
+    params.textPerf = mPresContext->GetTextPerfMetrics();
+    dc->GetMetricsFor(mFont, params, *getter_AddRefs(fontMetrics));
     return NSAppUnitsToFloatPixels(fontMetrics->XHeight(),
                                    nsPresContext::AppUnitsPerCSSPixel());
   }
@@ -3230,13 +3231,13 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
   resizedFont.size =
     (fontStyle->mSize * c->AppUnitsPerDevPixel()) / c->AppUnitsPerCSSPixel();
 
+  nsFontMetrics::Params params;
+  params.language = fontStyle->mLanguage;
+  params.explicitLanguage = fontStyle->mExplicitLanguage;
+  params.userFontSet = c->GetUserFontSet();
+  params.textPerf = c->GetTextPerfMetrics();
   RefPtr<nsFontMetrics> metrics;
-  c->DeviceContext()->GetMetricsFor(resizedFont,
-                                    fontStyle->mLanguage,
-                                    fontStyle->mExplicitLanguage,
-                                    gfxFont::eHorizontal,
-                                    c->GetUserFontSet(),
-                                    c->GetTextPerfMetrics(),
+  c->DeviceContext()->GetMetricsFor(resizedFont, params,
                                     *getter_AddRefs(metrics));
 
   gfxFontGroup* newFontGroup = metrics->GetThebesFontGroup();
