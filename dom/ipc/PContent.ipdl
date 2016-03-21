@@ -1175,7 +1175,8 @@ parent:
                       nsString aName,
                       nsCString aFeatures,
                       nsCString aBaseURI,
-                      DocShellOriginAttributes aOpenerOriginAttributes)
+                      DocShellOriginAttributes aOpenerOriginAttributes,
+                      float aFullZoom)
       returns (nsresult rv,
                bool windowOpened,
                FrameScriptInfo[] frameScripts,
