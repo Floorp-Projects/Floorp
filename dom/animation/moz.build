@@ -26,6 +26,7 @@ EXPORTS.mozilla += [
     'ComputedTimingFunction.h',
     'EffectCompositor.h',
     'EffectSet.h',
+    'NonOwningAnimationTarget.h',
     'PendingAnimationTracker.h',
     'PseudoElementHashEntry.h',
     'TimingParams.h',
