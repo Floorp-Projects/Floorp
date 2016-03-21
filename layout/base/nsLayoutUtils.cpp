@@ -142,7 +142,6 @@ using namespace mozilla::gfx;
 
 #define GRID_ENABLED_PREF_NAME "layout.css.grid.enabled"
 #define GRID_TEMPLATE_SUBGRID_ENABLED_PREF_NAME "layout.css.grid-template-subgrid-value.enabled"
-#define STICKY_ENABLED_PREF_NAME "layout.css.sticky.enabled"
 #define DISPLAY_CONTENTS_ENABLED_PREF_NAME "layout.css.display-contents.enabled"
 #define TEXT_ALIGN_UNSAFE_ENABLED_PREF_NAME "layout.css.text-align-unsafe-value.enabled"
 #define FLOAT_LOGICAL_VALUES_ENABLED_PREF_NAME "layout.css.float-logical-values.enabled"
@@ -221,39 +220,6 @@ GridEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
     nsCSSProps::kDisplayKTable[sIndexOfInlineGridInDisplayTable].mKeyword =
       isGridEnabled ? eCSSKeyword_inline_grid : eCSSKeyword_UNKNOWN;
   }
-}
-
-// When the pref "layout.css.sticky.enabled" changes, this function is invoked
-// to let us update kPositionKTable, to selectively disable or restore the
-// entry for "sticky" in that table.
-static void
-StickyEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
-{
-  MOZ_ASSERT(strncmp(aPrefName, STICKY_ENABLED_PREF_NAME,
-                     ArrayLength(STICKY_ENABLED_PREF_NAME)) == 0,
-             "We only registered this callback for a single pref, so it "
-             "should only be called for that pref");
-
-  static int32_t sIndexOfStickyInPositionTable;
-  static bool sIsStickyKeywordIndexInitialized; // initialized to false
-
-  bool isStickyEnabled =
-    Preferences::GetBool(STICKY_ENABLED_PREF_NAME, false);
-
-  if (!sIsStickyKeywordIndexInitialized) {
-    // First run: find the position of "sticky" in kPositionKTable.
-    sIndexOfStickyInPositionTable =
-      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_sticky,
-                                     nsCSSProps::kPositionKTable);
-    MOZ_ASSERT(sIndexOfStickyInPositionTable >= 0,
-               "Couldn't find sticky in kPositionKTable");
-    sIsStickyKeywordIndexInitialized = true;
-  }
-
-  // OK -- now, stomp on or restore the "sticky" entry in kPositionKTable,
-  // depending on whether the sticky pref is enabled vs. disabled.
-  nsCSSProps::kPositionKTable[sIndexOfStickyInPositionTable].mKeyword =
-    isStickyEnabled ? eCSSKeyword_sticky : eCSSKeyword_UNKNOWN;
 }
 
 // When the pref "layout.css.display-contents.enabled" changes, this function is
@@ -7599,9 +7565,6 @@ nsLayoutUtils::Initialize()
   Preferences::RegisterCallback(GridEnabledPrefChangeCallback,
                                 GRID_ENABLED_PREF_NAME);
   GridEnabledPrefChangeCallback(GRID_ENABLED_PREF_NAME, nullptr);
-  Preferences::RegisterCallback(StickyEnabledPrefChangeCallback,
-                                STICKY_ENABLED_PREF_NAME);
-  StickyEnabledPrefChangeCallback(STICKY_ENABLED_PREF_NAME, nullptr);
   Preferences::RegisterCallback(TextAlignUnsafeEnabledPrefChangeCallback,
                                 TEXT_ALIGN_UNSAFE_ENABLED_PREF_NAME);
   Preferences::RegisterCallback(DisplayContentsEnabledPrefChangeCallback,
@@ -7629,9 +7592,6 @@ nsLayoutUtils::Shutdown()
 
   Preferences::UnregisterCallback(GridEnabledPrefChangeCallback,
                                   GRID_ENABLED_PREF_NAME);
-  Preferences::UnregisterCallback(StickyEnabledPrefChangeCallback,
-                                  STICKY_ENABLED_PREF_NAME);
-
   nsComputedDOMStyle::UnregisterPrefChangeCallbacks();
 }
 
