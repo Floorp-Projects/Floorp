@@ -152,15 +152,14 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
     init: function init(nfc) {
       this.nfc = nfc;
-
-      if (!NFC.DEBUG_NFC) {
-        let lock = gSettingsService.createLock();
-        lock.get(NFC.SETTING_NFC_DEBUG, this.nfc);
-        Services.obs.addObserver(this, NFC.TOPIC_MOZSETTINGS_CHANGED, false);
-      }
-
       Services.obs.addObserver(this, NFC.TOPIC_XPCOM_SHUTDOWN, false);
       this._registerMessageListeners();
+    },
+
+    listenDebugEvent: function listenDebugEvent() {
+      let lock = gSettingsService.createLock();
+      lock.get(NFC.SETTING_NFC_DEBUG, this.nfc);
+      Services.obs.addObserver(this, NFC.TOPIC_MOZSETTINGS_CHANGED, false);
     },
 
     _shutdown: function _shutdown() {
@@ -509,8 +508,15 @@ var SessionHelper = {
   }
 };
 
-function Nfc() {
+function Nfc(isXPCShell) {
+  // TODO: Bug 1239954: xpcshell test timed out with
+  // SettingsSevice.createlock().get()
+  // gSettingsService.createLock will cause timeout while running xpshell-test,
+  // so we try to prevent to run gSettingsService under xpcshell-test here.
   gMessageManager.init(this);
+  if (!isXPCShell && !NFC.DEBUG_NFC) {
+    gMessageManager.listenDebugEvent();
+  }
 
   this.targetsByRequestId = {};
 }
