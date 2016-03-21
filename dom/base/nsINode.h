@@ -943,11 +943,6 @@ public:
    */
   nsINode* SubtreeRoot() const;
 
-  nsINode* RootNode() const
-  {
-    return SubtreeRoot();
-  }
-
   /**
    * See nsIDOMEventTarget
    */
