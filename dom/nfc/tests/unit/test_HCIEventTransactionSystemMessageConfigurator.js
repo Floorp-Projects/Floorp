@@ -3,13 +3,7 @@
 
 "use strict";
 
-/* globals run_next_test, add_test, ok, equal, Components, XPCOMUtils */
-/* exported run_test */
-
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const MANIFEST_URL = "app://system.gaiamobile.org/manifest.webapp";
 // secure element access rule format: <secure element name>/<hex string aid>

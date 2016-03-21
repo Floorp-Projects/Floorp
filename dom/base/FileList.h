@@ -8,6 +8,7 @@
 #define mozilla_dom_FileList_h
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMFileList.h"
 #include "nsWrapperCache.h"
@@ -39,15 +40,13 @@ public:
     return mParent;
   }
 
-  bool Append(File* aFile)
-  {
-    return mFiles.AppendElement(aFile);
-  }
+  void Append(File* aFile);
+  void Append(Directory* aDirectory);
 
   bool Remove(uint32_t aIndex)
   {
-    if (aIndex < mFiles.Length()) {
-      mFiles.RemoveElementAt(aIndex);
+    if (aIndex < mFilesOrDirectories.Length()) {
+      mFilesOrDirectories.RemoveElementAt(aIndex);
       return true;
     }
 
@@ -56,7 +55,7 @@ public:
 
   void Clear()
   {
-    return mFiles.Clear();
+    return mFilesOrDirectories.Clear();
   }
 
   static FileList* FromSupports(nsISupports* aSupports)
@@ -76,29 +75,34 @@ public:
     return static_cast<FileList*>(aSupports);
   }
 
-  File* Item(uint32_t aIndex)
+  const OwningFileOrDirectory& UnsafeItem(uint32_t aIndex) const
   {
-    return mFiles.SafeElementAt(aIndex);
+    MOZ_ASSERT(aIndex < Length());
+    return mFilesOrDirectories[aIndex];
   }
 
-  File* IndexedGetter(uint32_t aIndex, bool& aFound)
+  void Item(uint32_t aIndex,
+            Nullable<OwningFileOrDirectory>& aFileOrDirectory,
+            ErrorResult& aRv) const;
+
+  void IndexedGetter(uint32_t aIndex, bool& aFound,
+                     Nullable<OwningFileOrDirectory>& aFileOrDirectory,
+                     ErrorResult& aRv) const;
+
+  uint32_t Length() const
   {
-    aFound = aIndex < mFiles.Length();
-    if (!aFound) {
-      return nullptr;
-    }
-    return mFiles.ElementAt(aIndex);
+    return mFilesOrDirectories.Length();
   }
 
-  uint32_t Length()
-  {
-    return mFiles.Length();
-  }
+  void ToSequence(Sequence<OwningFileOrDirectory>& aSequence,
+                  ErrorResult& aRv) const;
+
+  bool ClonableToDifferentThreadOrProcess() const;
 
 private:
   ~FileList() {}
 
-  nsTArray<RefPtr<File>> mFiles;
+  nsTArray<OwningFileOrDirectory> mFilesOrDirectories;
   nsCOMPtr<nsISupports> mParent;
 };
 
