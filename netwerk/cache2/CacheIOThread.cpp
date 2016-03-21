@@ -155,8 +155,9 @@ already_AddRefed<nsIEventTarget> CacheIOThread::Target()
   if (!target && mThread)
   {
     MonitorAutoLock lock(mMonitor);
-    if (!mXPCOMThread)
+    while (!mXPCOMThread) {
       lock.Wait();
+    }
 
     target = mXPCOMThread;
   }
