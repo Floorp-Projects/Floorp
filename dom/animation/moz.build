@@ -23,6 +23,7 @@ EXPORTS.mozilla += [
     'AnimationPerformanceWarning.h',
     'AnimationUtils.h',
     'AnimValuesStyleRule.h',
+    'ComputedTiming.h',
     'ComputedTimingFunction.h',
     'EffectCompositor.h',
     'EffectSet.h',
