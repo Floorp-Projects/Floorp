@@ -231,18 +231,7 @@ Maybe<NonOwningAnimationTarget>
 nsNodeUtils::GetTargetForAnimation(const Animation* aAnimation)
 {
   KeyframeEffectReadOnly* effect = aAnimation->GetEffect();
-  if (!effect) {
-    return Nothing();
-  }
-
-  Maybe<NonOwningAnimationTarget> target = effect->GetTarget();
-
-  // TODO: remove this part later
-  if (target->mPseudoType != CSSPseudoElementType::NotPseudo) {
-    return Nothing();
-  }
-
-  return target;
+  return effect ? effect->GetTarget() : Nothing();
 }
 
 void
@@ -253,9 +242,11 @@ nsNodeUtils::AnimationMutated(Animation* aAnimation,
   if (!target) {
     return;
   }
-  nsIDocument* doc = target->mElement->OwnerDoc();
 
+  // A pseudo element and its parent element use the same owner doc.
+  nsIDocument* doc = target->mElement->OwnerDoc();
   if (doc->MayHaveAnimationObservers()) {
+    // we use the its parent element as the subject in DOM Mutation Observer.
     Element* elem = target->mElement;
     switch (aMutatedType) {
       case AnimationMutationType::Added:
