@@ -6094,10 +6094,11 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
     if (op == JSOP_NEW) {
         if (!ConstructFromStack(cx, callArgs))
             return false;
+        res.set(callArgs.rval());
     } else if ((op == JSOP_EVAL || op == JSOP_STRICTEVAL) &&
                frame->scopeChain()->global().valueIsEval(callee))
     {
-        if (!DirectEval(cx, callArgs))
+        if (!DirectEval(cx, callArgs.get(0), res))
             return false;
     } else {
         MOZ_ASSERT(op == JSOP_CALL ||
@@ -6114,9 +6115,10 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
 
         if (!Invoke(cx, callArgs))
             return false;
+
+        res.set(callArgs.rval());
     }
 
-    res.set(callArgs.rval());
     TypeScript::Monitor(cx, script, pc, res);
 
     // Check if debug mode toggling made the stub invalid.
