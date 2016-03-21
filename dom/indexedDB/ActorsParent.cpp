@@ -10915,8 +10915,8 @@ UpdateRefcountFunction::Reset()
 
       if (aFileManager->EnforcingQuota()) {
         rv = file->GetFileSize(&fileSize);
-        if (NS_WARN_IF(!file)) {
-          return NS_ERROR_FAILURE;
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
         }
       }
 
