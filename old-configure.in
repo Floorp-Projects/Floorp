@@ -3097,12 +3097,15 @@ if test -n "$MOZ_RUST"; then
     fi
 fi
 
+AC_SUBST(MOZ_BUILD_APP)
 AC_SUBST(MOZ_PHOENIX)
 AC_SUBST(MOZ_XULRUNNER)
 AC_SUBST(MOZ_B2G)
 AC_SUBST(MOZ_MULET)
 AC_SUBST(MOZ_B2G_VERSION)
 AC_SUBST(MOZ_B2GDROID)
+
+AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
 
 dnl ========================================================
 dnl Ensure Android SDK and build-tools versions depending on
@@ -7939,7 +7942,7 @@ export RUSTC
 export MOZILLA_CENTRAL_PATH=$_topsrcdir
 export STLPORT_CPPFLAGS
 export STLPORT_LIBS
-export JS_STANDALONE=
+export JS_STANDALONE=no
 export DIST
 export MOZ_LINKER
 export ZLIB_IN_MOZGLUE
