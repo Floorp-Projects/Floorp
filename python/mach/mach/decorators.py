@@ -7,10 +7,10 @@ from __future__ import absolute_import, unicode_literals
 import argparse
 import collections
 import inspect
+import os
 import types
 
 from .base import MachError
-from .config import ConfigProvider
 from .registrar import Registrar
 
 
@@ -336,14 +336,18 @@ def SettingsProvider(cls):
     When this decorator is encountered, the underlying class will automatically
     be registered with the Mach registrar and will (likely) be hooked up to the
     mach driver.
-
-    This decorator is only allowed on mach.config.ConfigProvider classes.
     """
-    if not issubclass(cls, ConfigProvider):
-        raise MachError('@SettingsProvider encountered on class that does ' +
-                        'not derived from mach.config.ConfigProvider.')
+    if not hasattr(cls, 'config_settings'):
+        raise MachError('@SettingsProvider must contain a config_settings attribute. It '
+                        'may either be a list of tuples, or a callable that returns a list '
+                        'of tuples. Each tuple must be of the form:\n'
+                        '(<section>.<option>, <type_cls>, <default>, <choices>)\n'
+                        'as specified by ConfigSettings._format_metadata.')
+
+    if not hasattr(cls, 'config_settings_locale_directory'):
+        cls_dir = os.path.dirname(inspect.getfile(cls))
+        cls.config_settings_locale_directory = os.path.join(cls_dir, 'locale')
 
     Registrar.register_settings_provider(cls)
-
     return cls
 
