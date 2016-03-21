@@ -25,6 +25,7 @@
 #include "BasicLayers.h"
 #include "mozilla/gfx/Point.h"
 #include "nsCSSRendering.h"
+#include "mozilla/unused.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -578,14 +579,15 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
       uint32_t flags = aBuilder->GetBackgroundPaintFlags() |
                        nsCSSRendering::PAINTBG_MASK_IMAGE;
       nsRenderingContext rc(target);
-      nsCSSRendering::PaintBackgroundWithSC(aFrame->PresContext(),
-                                            rc,
-                                            aFrame,
-                                            aDirtyRect,
-                                            aBorderArea,
-                                            firstFrame->StyleContext(),
-                                            *aFrame->StyleBorder(),
-                                            flags);
+      // FIXME We should use the return value, see bug 1258510.
+      Unused << nsCSSRendering::PaintBackgroundWithSC(aFrame->PresContext(),
+                                                      rc,
+                                                      aFrame,
+                                                      aDirtyRect,
+                                                      aBorderArea,
+                                                      firstFrame->StyleContext(),
+                                                      *aFrame->StyleBorder(),
+                                                      flags);
       maskSurface = targetDT->Snapshot();
 
       // Compute mask transform.
