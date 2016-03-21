@@ -1,8 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
-Cu.import("resource://testing-common/LoginTestUtils.jsm", this);
-
 /**
  * All these tests require the experimental login fill UI to be enabled. We also
  * disable autofill for login forms for easier testing of manual fill.
