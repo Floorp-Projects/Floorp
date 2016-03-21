@@ -29,9 +29,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=886646
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv({"set":[["layout.css.sticky.enabled", true]]}, function() {
-  document.getElementById("iframe").src = "file_position_sticky.html";
-});
+// XXXdholbert I'll merge the iframe contents into this file in a later patch.
+document.getElementById("iframe").src = "file_position_sticky.html";
 
 function finish() {
   SimpleTest.finish();

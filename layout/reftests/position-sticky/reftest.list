@@ -1,7 +1,3 @@
-test-pref(layout.css.sticky.enabled,false) fuzzy-if(Android,6,406) == pref-1.html pref-1-disabled-ref.html
-test-pref(layout.css.sticky.enabled,true) fuzzy-if(Android,6,406) fuzzy-if(winWidget&&!layersGPUAccelerated,102,257) == pref-1.html pref-1-enabled-ref.html
-default-preferences pref(layout.css.sticky.enabled,true)
-
 == top-1.html top-1-ref.html
 fuzzy-if(Android,6,1568) == top-2.html top-2-ref.html
 fuzzy-if(Android,6,2729) == top-3.html top-3-ref.html
