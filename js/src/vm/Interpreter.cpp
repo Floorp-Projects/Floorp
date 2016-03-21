@@ -2718,14 +2718,16 @@ CASE(JSOP_STRICTEVAL)
 {
     static_assert(JSOP_EVAL_LENGTH == JSOP_STRICTEVAL_LENGTH,
                   "eval and stricteval must be the same size");
+
     CallArgs args = CallArgsFromSp(GET_ARGC(REGS.pc), REGS.sp);
     if (REGS.fp()->scopeChain()->global().valueIsEval(args.calleev())) {
-        if (!DirectEval(cx, args))
+        if (!DirectEval(cx, args.get(0), args.rval()))
             goto error;
     } else {
         if (!Invoke(cx, args))
             goto error;
     }
+
     REGS.sp = args.spAfterCall();
     TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 }
@@ -4624,22 +4626,22 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
           case JSOP_SPREADCALL:
             if (!Invoke(cx, args))
                 return false;
+            res.set(args.rval());
             break;
           case JSOP_SPREADEVAL:
           case JSOP_STRICTSPREADEVAL:
-            if (cx->global()->valueIsEval(args.calleev())) {
-                if (!DirectEval(cx, args))
+            if (cx->global()->valueIsEval(callee)) {
+                if (!DirectEval(cx, args.get(0), res))
                     return false;
             } else {
                 if (!Invoke(cx, args))
                     return false;
+                res.set(args.rval());
             }
             break;
           default:
             MOZ_CRASH("bad spread opcode");
         }
-
-        res.set(args.rval());
     }
 
     TypeScript::Monitor(cx, script, pc, res);
