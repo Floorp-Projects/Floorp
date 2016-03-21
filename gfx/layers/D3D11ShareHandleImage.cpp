@@ -55,17 +55,6 @@ D3D11ShareHandleImage::GetAsSourceSurface()
   RefPtr<ID3D11Device> device;
   texture->GetDevice(getter_AddRefs(device));
 
-  RefPtr<IDXGIKeyedMutex> keyedMutex;
-  if (FAILED(texture->QueryInterface(static_cast<IDXGIKeyedMutex**>(getter_AddRefs(keyedMutex))))) {
-    NS_WARNING("Failed to QueryInterface for IDXGIKeyedMutex, strange.");
-    return nullptr;
-  }
-
-  if (FAILED(keyedMutex->AcquireSync(0, 0))) {
-    NS_WARNING("Failed to acquire sync for keyedMutex, plugin failed to release?");
-    return nullptr;
-  }
-
   D3D11_TEXTURE2D_DESC desc;
   texture->GetDesc(&desc);
 
@@ -83,19 +72,16 @@ D3D11ShareHandleImage::GetAsSourceSurface()
 
   if (FAILED(hr)) {
     NS_WARNING("Failed to create 2D staging texture.");
-    keyedMutex->ReleaseSync(0);
     return nullptr;
   }
 
   RefPtr<ID3D11DeviceContext> context;
   device->GetImmediateContext(getter_AddRefs(context));
   if (!context) {
-    keyedMutex->ReleaseSync(0);
     return nullptr;
   }
 
   context->CopyResource(softTexture, texture);
-  keyedMutex->ReleaseSync(0);
 
   RefPtr<gfx::DataSourceSurface> surface =
     gfx::Factory::CreateDataSourceSurface(mSize, gfx::SurfaceFormat::B8G8R8X8);
@@ -152,7 +138,8 @@ D3D11RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
     CreateOrRecycle(aFormat,
                     aSize,
                     BackendSelector::Content,
-                    layers::TextureFlags::DEFAULT);
+                    layers::TextureFlags::DEFAULT,
+                    TextureAllocationFlags::ALLOC_MANUAL_SYNCHRONIZATION);
   return textureClient.forget();
 }
 
