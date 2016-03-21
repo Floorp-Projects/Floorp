@@ -61,18 +61,18 @@ function compare(a, b) {
 }
 
 var clonableObjects = [
-  'hello world',
-  123,
-  null,
-  true,
-  new Date(),
-  [ 1, 'test', true, new Date() ],
-  { a: true, b:  null, c: new Date(), d: [ true, false, {} ] },
-  new Blob([123], { type: 'plain/text' }),
-  new ImageData(2, 2),
+  { crossThreads: true, data: 'hello world' },
+  { crossThreads: true, data: 123 },
+  { crossThreads: true, data: null },
+  { crossThreads: true, data: true },
+  { crossThreads: true, data: new Date() },
+  { crossThreads: true, data: [ 1, 'test', true, new Date() ] },
+  { crossThreads: true, data: { a: true, b:  null, c: new Date(), d: [ true, false, {} ] } },
+  { crossThreads: true, data: new Blob([123], { type: 'plain/text' }) },
+  { crossThreads: true, data: new ImageData(2, 2) },
 ];
 
-function create_fileList() {
+function create_fileList_forFile() {
   var url = SimpleTest.getTestFileURL("script_postmessages_fileList.js");
   var script = SpecialPowers.loadChromeScript(url);
 
@@ -84,13 +84,34 @@ function create_fileList() {
     var domFile = fileList.files[0];
     is(domFile.name, "prefs.js", "fileName should be prefs.js");
 
-    clonableObjects.push(fileList.files);
+    clonableObjects.push({ crossThreads: true, data: fileList.files });
     script.destroy();
     next();
   }
 
   script.addMessageListener("file.opened", onOpened);
   script.sendAsyncMessage("file.open");
+}
+
+function create_fileList_forDir() {
+  var url = SimpleTest.getTestFileURL("script_postmessages_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    var fileList = document.getElementById('fileList');
+    SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
+
+    // Just a simple test
+    is(fileList.files.length, 1, "Filelist has 1 element");
+    ok(fileList.files[0] instanceof Directory, "We have a directory.");
+
+    clonableObjects.push({ crossThreads: false, data: fileList.files });
+    script.destroy();
+    next();
+  }
+
+  script.addMessageListener("dir.opened", onOpened);
+  script.sendAsyncMessage("dir.open");
 }
 
 function runTests(obj) {
@@ -113,8 +134,16 @@ function runTests(obj) {
       }
 
       var object = clonableObjects[clonableObjectsId++];
-      obj.send(object, []).then(function(received) {
-        compare(received.data, object);
+
+      // If this test requires a cross-thread structured clone algorithm, maybe
+      // we have to skip it.
+      if (!object.crossThread && obj.crossThread) {
+        runClonableTest();
+        return;
+      }
+
+      obj.send(object.data, []).then(function(received) {
+        compare(received.data, object.data);
         runClonableTest();
       });
     }
@@ -203,6 +232,7 @@ function test_windowToWindow() {
   runTests({
     clonableObjects: true,
     transferableObjects: true,
+    crossThread: false,
     send: function(what, ports) {
       return new Promise(function(r, rr) {
         resolve = r;
@@ -256,6 +286,7 @@ function test_windowToIframeURL(url) {
     runTests({
       clonableObjects: true,
       transferableObjects: true,
+      crossThread: false,
       send: function(what, ports) {
         return new Promise(function(r, rr) {
           resolve = r;
@@ -303,6 +334,7 @@ function test_workers() {
     runTests({
       clonableObjects: true,
       transferableObjects: true,
+      crossThread: true,
       send: function(what, ports) {
         return new Promise(function(r, rr) {
           resolve = r;
@@ -346,6 +378,7 @@ function test_broadcastChannel() {
   runTests({
     clonableObjects: true,
     transferableObjects: false,
+    crossThread: true,
     send: function(what, ports) {
       return new Promise(function(r, rr) {
         if (ports.length) {
@@ -391,6 +424,7 @@ function test_broadcastChannel_inWorkers() {
     runTests({
       clonableObjects: true,
       transferableObjects: false,
+      crossThread: true,
       send: function(what, ports) {
         return new Promise(function(r, rr) {
           if (ports.length) {
@@ -432,6 +466,7 @@ function test_messagePort() {
   runTests({
     clonableObjects: true,
     transferableObjects: true,
+    crossThread: true,
     send: function(what, ports) {
       return new Promise(function(r, rr) {
         resolve = r;
@@ -477,6 +512,7 @@ function test_messagePort_inWorkers() {
     runTests({
       clonableObjects: true,
       transferableObjects: true,
+      crossThread: true,
       send: function(what, ports) {
         return new Promise(function(r, rr) {
           resolve = r;
@@ -498,7 +534,8 @@ function test_messagePort_inWorkers() {
 }
 
 var tests = [
-  create_fileList,
+  create_fileList_forFile,
+  create_fileList_forDir,
 
   test_windowToWindow,
   test_windowToIframe,
