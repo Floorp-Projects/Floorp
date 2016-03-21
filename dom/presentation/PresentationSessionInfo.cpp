@@ -327,7 +327,7 @@ PresentationSessionInfo::UntrackFromService()
   if (NS_WARN_IF(!service)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  static_cast<PresentationService*>(service.get())->UntrackSessionInfo(mSessionId);
+  static_cast<PresentationService*>(service.get())->UntrackSessionInfo(mSessionId, mRole);
 
   return NS_OK;
 }
@@ -804,7 +804,7 @@ PresentationPresentingInfo::UntrackFromService()
   if (NS_WARN_IF(!service)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  static_cast<PresentationService*>(service.get())->UntrackSessionInfo(mSessionId);
+  static_cast<PresentationService*>(service.get())->UntrackSessionInfo(mSessionId, mRole);
 
   return NS_OK;
 }

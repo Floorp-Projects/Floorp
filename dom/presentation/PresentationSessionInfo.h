@@ -35,6 +35,7 @@ public:
 
   PresentationSessionInfo(const nsAString& aUrl,
                           const nsAString& aSessionId,
+                          const uint8_t aRole,
                           nsIPresentationServiceCallback* aCallback)
     : mUrl(aUrl)
     , mSessionId(aSessionId)
@@ -45,6 +46,9 @@ public:
   {
     MOZ_ASSERT(!mUrl.IsEmpty());
     MOZ_ASSERT(!mSessionId.IsEmpty());
+    MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
+               aRole == nsIPresentationService::ROLE_RECEIVER);
+    mRole = aRole;
   }
 
   virtual nsresult Init(nsIPresentationControlChannel* aControlChannel);
@@ -57,6 +61,11 @@ public:
   const nsAString& GetSessionId() const
   {
     return mSessionId;
+  }
+
+  uint8_t GetRole() const
+  {
+    return mRole;
   }
 
   void SetCallback(nsIPresentationServiceCallback* aCallback)
@@ -132,6 +141,9 @@ protected:
 
   nsString mUrl;
   nsString mSessionId;
+  // mRole should be nsIPresentationService::ROLE_CONTROLLER
+  //              or nsIPresentationService::ROLE_RECEIVER.
+  uint8_t mRole;
   bool mIsResponderReady;
   bool mIsTransportReady;
   uint32_t mState; // CONNECTED, CLOSED, TERMINATED
@@ -154,7 +166,10 @@ public:
   PresentationControllingInfo(const nsAString& aUrl,
                               const nsAString& aSessionId,
                               nsIPresentationServiceCallback* aCallback)
-    : PresentationSessionInfo(aUrl, aSessionId, aCallback)
+    : PresentationSessionInfo(aUrl,
+                              aSessionId,
+                              nsIPresentationService::ROLE_CONTROLLER,
+                              aCallback)
   {
     MOZ_ASSERT(mCallback);
   }
@@ -189,10 +204,12 @@ public:
   PresentationPresentingInfo(const nsAString& aUrl,
                              const nsAString& aSessionId,
                              nsIPresentationDevice* aDevice)
-    : PresentationSessionInfo(aUrl, aSessionId, nullptr)
+    : PresentationSessionInfo(aUrl,
+                              aSessionId,
+                              nsIPresentationService::ROLE_RECEIVER,
+                              nullptr)
   {
     MOZ_ASSERT(aDevice);
-
     SetDevice(aDevice);
   }
 
