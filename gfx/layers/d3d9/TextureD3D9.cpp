@@ -576,7 +576,7 @@ D3D9TextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 }
 
 TextureData*
-D3D9TextureData::CreateSimilar(ISurfaceAllocator*, TextureFlags aFlags, TextureAllocationFlags aAllocFlags) const
+D3D9TextureData::CreateSimilar(ClientIPCAllocator*, TextureFlags aFlags, TextureAllocationFlags aAllocFlags) const
 {
   return D3D9TextureData::Create(mSize, mFormat, aAllocFlags);
 }

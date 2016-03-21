@@ -25,16 +25,16 @@ public:
   static MemoryTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                    gfx::BackendType aMoz2DBackend,TextureFlags aFlags,
                                    TextureAllocationFlags aAllocFlags,
-                                   ISurfaceAllocator* aAllocator);
+                                   ClientIPCAllocator* aAllocator);
 
   virtual TextureData*
-  CreateSimilar(ISurfaceAllocator* aAllocator,
+  CreateSimilar(ClientIPCAllocator* aAllocator,
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual void Deallocate(ISurfaceAllocator*) override;
+  virtual void Deallocate(ClientIPCAllocator*) override;
 
   MemoryTextureData(const BufferDescriptor& aDesc,
                     gfx::BackendType aMoz2DBackend,
@@ -62,16 +62,16 @@ public:
   static ShmemTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                   gfx::BackendType aMoz2DBackend, TextureFlags aFlags,
                                   TextureAllocationFlags aAllocFlags,
-                                  ISurfaceAllocator* aAllocator);
+                                  ClientIPCAllocator* aAllocator);
 
   virtual TextureData*
-  CreateSimilar(ISurfaceAllocator* aAllocator,
+  CreateSimilar(ClientIPCAllocator* aAllocator,
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual void Deallocate(ISurfaceAllocator* aAllocator) override;
+  virtual void Deallocate(ClientIPCAllocator* aAllocator) override;
 
   ShmemTextureData(const BufferDescriptor& aDesc,
                    gfx::BackendType aMoz2DBackend, mozilla::ipc::Shmem aShmem)
@@ -111,7 +111,7 @@ BufferTextureData*
 BufferTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                           gfx::BackendType aMoz2DBackend, TextureFlags aFlags,
                           TextureAllocationFlags aAllocFlags,
-                          ISurfaceAllocator* aAllocator)
+                          ClientIPCAllocator* aAllocator)
 {
   if (!aAllocator || aAllocator->IsSameProcess()) {
     return MemoryTextureData::Create(aSize, aFormat, aMoz2DBackend, aFlags,
@@ -124,7 +124,7 @@ BufferTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 }
 
 BufferTextureData*
-BufferTextureData::CreateInternal(ISurfaceAllocator* aAllocator,
+BufferTextureData::CreateInternal(ClientIPCAllocator* aAllocator,
                                   const BufferDescriptor& aDesc,
                                   gfx::BackendType aMoz2DBackend,
                                   int32_t aBufferSize,
@@ -151,7 +151,7 @@ BufferTextureData::CreateInternal(ISurfaceAllocator* aAllocator,
 }
 
 BufferTextureData*
-BufferTextureData::CreateForYCbCrWithBufferSize(ISurfaceAllocator* aAllocator,
+BufferTextureData::CreateForYCbCrWithBufferSize(ClientIPCAllocator* aAllocator,
                                                 gfx::SurfaceFormat aFormat,
                                                 int32_t aBufferSize,
                                                 TextureFlags aTextureFlags)
@@ -170,7 +170,7 @@ BufferTextureData::CreateForYCbCrWithBufferSize(ISurfaceAllocator* aAllocator,
 }
 
 BufferTextureData*
-BufferTextureData::CreateForYCbCr(ISurfaceAllocator* aAllocator,
+BufferTextureData::CreateForYCbCr(ClientIPCAllocator* aAllocator,
                                   gfx::IntSize aYSize,
                                   gfx::IntSize aCbCrSize,
                                   StereoMode aStereoMode,
@@ -429,7 +429,7 @@ MemoryTextureData*
 MemoryTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                           gfx::BackendType aMoz2DBackend, TextureFlags aFlags,
                           TextureAllocationFlags aAllocFlags,
-                          ISurfaceAllocator* aAllocator)
+                          ClientIPCAllocator* aAllocator)
 {
   // Should have used CreateForYCbCr.
   MOZ_ASSERT(aFormat != gfx::SurfaceFormat::YUV);
@@ -462,7 +462,7 @@ MemoryTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 }
 
 void
-MemoryTextureData::Deallocate(ISurfaceAllocator*)
+MemoryTextureData::Deallocate(ClientIPCAllocator*)
 {
   MOZ_ASSERT(mBuffer);
   GfxMemoryImageReporter::WillFree(mBuffer);
@@ -471,7 +471,7 @@ MemoryTextureData::Deallocate(ISurfaceAllocator*)
 }
 
 TextureData*
-MemoryTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
+MemoryTextureData::CreateSimilar(ClientIPCAllocator* aAllocator,
                                  TextureFlags aFlags,
                                  TextureAllocationFlags aAllocFlags) const
 {
@@ -496,7 +496,7 @@ ShmemTextureData*
 ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                          gfx::BackendType aMoz2DBackend, TextureFlags aFlags,
                          TextureAllocationFlags aAllocFlags,
-                         ISurfaceAllocator* aAllocator)
+                         ClientIPCAllocator* aAllocator)
 {
   MOZ_ASSERT(aAllocator);
   // Should have used CreateForYCbCr.
@@ -539,7 +539,7 @@ ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 }
 
 TextureData*
-ShmemTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
+ShmemTextureData::CreateSimilar(ClientIPCAllocator* aAllocator,
                                 TextureFlags aFlags,
                                 TextureAllocationFlags aAllocFlags) const
 {
@@ -548,7 +548,7 @@ ShmemTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
 }
 
 void
-ShmemTextureData::Deallocate(ISurfaceAllocator* aAllocator)
+ShmemTextureData::Deallocate(ClientIPCAllocator* aAllocator)
 {
   aAllocator->AsShmemAllocator()->DeallocShmem(mShmem);
 }
