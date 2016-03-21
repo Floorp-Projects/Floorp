@@ -23,6 +23,15 @@ XPCOMUtils.defineLazyGetter(this, "appsService", function() {
   return Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
 });
 
+XPCOMUtils.defineLazyGetter(this, "hardwareKeyHandler", function() {
+#ifdef MOZ_B2G
+  return Cc["@mozilla.org/HardwareKeyHandler;1"]
+         .getService(Ci.nsIHardwareKeyHandler);
+#else
+  return null;
+#endif
+});
+
 var Utils = {
   getMMFromMessage: function u_getMMFromMessage(msg) {
     let mm;
@@ -41,6 +50,18 @@ var Utils = {
 };
 
 this.Keyboard = {
+#ifdef MOZ_B2G
+  // For receving keyboard event fired from hardware before it's dispatched,
+  // |this| object is used to be the listener to get the forwarded event.
+  // As the listener, |this| object must implement nsIHardwareKeyEventListener
+  // and nsSupportsWeakReference.
+  // Please see nsIHardwareKeyHandler.idl to get more information.
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIHardwareKeyEventListener,
+    Ci.nsISupportsWeakReference
+  ]),
+#endif
+  _isConnectedToHardwareKeyHandler: false,
   _formMM: null,      // The current web page message manager.
   _keyboardMM: null,  // The keyboard app message manager.
   _keyboardID: -1,    // The keyboard app's ID number. -1 = invalid
@@ -59,7 +80,8 @@ this.Keyboard = {
     'SwitchToNextInputMethod', 'HideInputMethod',
     'SendKey', 'GetContext',
     'SetComposition', 'EndComposition',
-    'RegisterSync', 'Unregister'
+    'RegisterSync', 'Unregister',
+    'ReplyHardwareKeyEvent'
   ],
 
   get formMM() {
@@ -88,7 +110,10 @@ this.Keyboard = {
   sendToKeyboard: function(name, data) {
     try {
       this._keyboardMM.sendAsyncMessage(name, data);
-    } catch(e) { }
+    } catch(e) {
+      return false;
+    }
+    return true;
   },
 
   sendToSystem: function(name, data) {
@@ -111,6 +136,11 @@ this.Keyboard = {
     Services.obs.addObserver(this, 'oop-frameloader-crashed', false);
     Services.obs.addObserver(this, 'message-manager-close', false);
 
+    // For receiving the native hardware keyboard event
+    if (hardwareKeyHandler) {
+      hardwareKeyHandler.registerListener(this);
+    }
+
     for (let name of this._messageNames) {
       ppmm.addMessageListener('Keyboard:' + name, this);
     }
@@ -120,6 +150,16 @@ this.Keyboard = {
     }
 
     this.inputRegistryGlue = new InputRegistryGlue();
+  },
+
+  // This method will be registered into nsIHardwareKeyHandler:
+  // Send the initialized dictionary retrieved from the native keyboard event
+  // to input-method-app for generating a new event.
+  onHardwareKey: function onHardwareKeyReceived(evt) {
+    return this.sendToKeyboard('Keyboard:ReceiveHardwareKeyEvent', {
+      type: evt.type,
+      keyDict: evt.initDict
+    });
   },
 
   observe: function keyboardObserve(subject, topic, data) {
@@ -315,6 +355,13 @@ this.Keyboard = {
         this._keyboardMM = null;
         this._keyboardID = -1;
         break;
+      case 'Keyboard:ReplyHardwareKeyEvent':
+        if (hardwareKeyHandler) {
+          let reply = msg.data;
+          hardwareKeyHandler.onHandledByInputMethodApp(reply.type,
+                                                       reply.defaultPrevented);
+        }
+        break;
     }
   },
 
@@ -323,6 +370,12 @@ this.Keyboard = {
     let mm = msg.target.QueryInterface(Ci.nsIFrameLoaderOwner)
                 .frameLoader.messageManager;
     this.formMM = mm;
+
+    // Notify the nsIHardwareKeyHandler that the input-method-app is active now.
+    if (hardwareKeyHandler && !this._isConnectedToHardwareKeyHandler) {
+      this._isConnectedToHardwareKeyHandler = true;
+      hardwareKeyHandler.onInputMethodAppConnected();
+    }
 
     // Notify the current active input app to gain focus.
     this.forwardEvent('Keyboard:Focus', msg);
@@ -355,6 +408,13 @@ this.Keyboard = {
 
     // unset formMM
     this.formMM = null;
+
+    // Notify the nsIHardwareKeyHandler that
+    // the input-method-app is disabled now.
+    if (hardwareKeyHandler && this._isConnectedToHardwareKeyHandler) {
+      this._isConnectedToHardwareKeyHandler = false;
+      hardwareKeyHandler.onInputMethodAppDisconnected();
+    }
 
     this.forwardEvent('Keyboard:Blur', msg);
     this.sendToSystem('System:Blur', {});
