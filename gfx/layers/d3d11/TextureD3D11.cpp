@@ -347,11 +347,10 @@ DXGITextureData*
 D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, TextureAllocationFlags aFlags,
                          ID3D11Device* aDevice)
 {
-  RefPtr<ID3D11Texture2D> texture11;
-  ID3D11Device* d3d11device = aDevice ? aDevice
-                            : gfxWindowsPlatform::GetPlatform()->GetD3D11DeviceForCurrentThread();
-  MOZ_ASSERT(d3d11device != nullptr);
-  if (!d3d11device) {
+  RefPtr<ID3D11Device> device = aDevice;
+  if (!device &&
+      !gfxWindowsPlatform::GetPlatform()->GetD3D11DeviceForCurrentThread(&device))
+  {
     return nullptr;
   }
 
@@ -367,7 +366,8 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, TextureAllocation
     }
   }
 
-  HRESULT hr = d3d11device->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(texture11));
+  RefPtr<ID3D11Texture2D> texture11;
+  HRESULT hr = device->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(texture11));
   if (FAILED(hr)) {
     gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(aSize)))
       << "[D3D11] 2 CreateTexture2D failure " << aSize << " Code: " << gfx::hexa(hr);
@@ -626,10 +626,12 @@ DXGITextureHostD3D11::OpenSharedHandle()
   return true;
 }
 
-ID3D11Device*
+RefPtr<ID3D11Device>
 DXGITextureHostD3D11::GetDevice()
 {
-  return gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
+  RefPtr<ID3D11Device> device;
+  gfxWindowsPlatform::GetPlatform()->GetD3D11Device(&device);
+  return device;
 }
 
 void
@@ -693,31 +695,32 @@ DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(TextureFlags aFlags,
 bool
 DXGIYCbCrTextureHostD3D11::OpenSharedHandle()
 {
-  if (!GetDevice()) {
+  RefPtr<ID3D11Device> device = GetDevice();
+  if (!device) {
     return false;
   }
 
   RefPtr<ID3D11Texture2D> textures[3];
 
-  HRESULT hr = GetDevice()->OpenSharedResource((HANDLE)mHandles[0],
-                                               __uuidof(ID3D11Texture2D),
-                                               (void**)(ID3D11Texture2D**)getter_AddRefs(textures[0]));
+  HRESULT hr = device->OpenSharedResource((HANDLE)mHandles[0],
+                                          __uuidof(ID3D11Texture2D),
+                                          (void**)(ID3D11Texture2D**)getter_AddRefs(textures[0]));
   if (FAILED(hr)) {
     NS_WARNING("Failed to open shared texture for Y Plane");
     return false;
   }
 
-  hr = GetDevice()->OpenSharedResource((HANDLE)mHandles[1],
-                                       __uuidof(ID3D11Texture2D),
-                                       (void**)(ID3D11Texture2D**)getter_AddRefs(textures[1]));
+  hr = device->OpenSharedResource((HANDLE)mHandles[1],
+                                  __uuidof(ID3D11Texture2D),
+                                  (void**)(ID3D11Texture2D**)getter_AddRefs(textures[1]));
   if (FAILED(hr)) {
     NS_WARNING("Failed to open shared texture for Cb Plane");
     return false;
   }
 
-  hr = GetDevice()->OpenSharedResource((HANDLE)mHandles[2],
-                                       __uuidof(ID3D11Texture2D),
-                                       (void**)(ID3D11Texture2D**)getter_AddRefs(textures[2]));
+  hr = device->OpenSharedResource((HANDLE)mHandles[2],
+                                  __uuidof(ID3D11Texture2D),
+                                  (void**)(ID3D11Texture2D**)getter_AddRefs(textures[2]));
   if (FAILED(hr)) {
     NS_WARNING("Failed to open shared texture for Cr Plane");
     return false;
@@ -730,10 +733,12 @@ DXGIYCbCrTextureHostD3D11::OpenSharedHandle()
   return true;
 }
 
-ID3D11Device*
+RefPtr<ID3D11Device>
 DXGIYCbCrTextureHostD3D11::GetDevice()
 {
-  return gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
+  RefPtr<ID3D11Device> device;
+  gfxWindowsPlatform::GetPlatform()->GetD3D11Device(&device);
+  return device;
 }
 
 void
