@@ -27,15 +27,17 @@ class MediaTestArgumentsBase(object):
 
     def verify_usage_handler(self, args):
         if args.urls:
-           if not os.path.isfile(args.urls):
-               raise ValueError('--urls must provide a path to an ini file')
-           else:
-               path = os.path.abspath(args.urls)
-               args.video_urls = MediaTestArgumentsBase.get_urls(path)
+            if not os.path.isfile(args.urls):
+                raise ValueError('--urls must provide a path to an ini file')
+            else:
+                path = os.path.abspath(args.urls)
+                args.video_urls = MediaTestArgumentsBase.get_urls(path)
+                if not args.video_urls:
+                    raise ValueError('list of video URLs cannot be empty')
 
     def parse_args_handler(self, args):
         if not args.tests:
-           args.tests = [external_media_tests.manifest]
+            args.tests = [external_media_tests.manifest]
 
 
     @staticmethod
