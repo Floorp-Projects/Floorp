@@ -6,6 +6,7 @@
 
 const {
   ADD_VIEWPORT,
+  CHANGE_DEVICE,
   RESIZE_VIEWPORT,
   ROTATE_VIEWPORT
 } = require("./index");
@@ -18,6 +19,17 @@ module.exports = {
   addViewport() {
     return {
       type: ADD_VIEWPORT,
+    };
+  },
+
+  /**
+   * Change the viewport device.
+   */
+  changeDevice(id, device) {
+    return {
+      type: CHANGE_DEVICE,
+      id,
+      device,
     };
   },
 

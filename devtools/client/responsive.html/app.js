@@ -8,7 +8,11 @@ const { createClass, createFactory, PropTypes, DOM: dom } =
   require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const { resizeViewport, rotateViewport } = require("./actions/viewports");
+const {
+  changeDevice,
+  resizeViewport,
+  rotateViewport
+} = require("./actions/viewports");
 const Types = require("./types");
 const Viewports = createFactory(require("./components/viewports"));
 const GlobalToolbar = createFactory(require("./components/global-toolbar"));
@@ -18,29 +22,36 @@ let App = createClass({
   displayName: "App",
 
   propTypes: {
+    devices: PropTypes.shape(Types.devices).isRequired,
     location: Types.location.isRequired,
     viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
     onExit: PropTypes.func.isRequired,
   },
 
-  onRotateViewport(id) {
-    this.props.dispatch(rotateViewport(id));
+  onChangeViewportDevice(id, device) {
+    this.props.dispatch(changeDevice(id, device));
   },
 
   onResizeViewport(id, width, height) {
     this.props.dispatch(resizeViewport(id, width, height));
   },
 
+  onRotateViewport(id) {
+    this.props.dispatch(rotateViewport(id));
+  },
+
   render() {
     let {
+      devices,
       location,
       viewports,
       onExit,
     } = this.props;
 
     let {
-      onRotateViewport,
+      onChangeViewportDevice,
       onResizeViewport,
+      onRotateViewport,
     } = this;
 
     return dom.div(
@@ -51,8 +62,10 @@ let App = createClass({
         onExit,
       }),
       Viewports({
+        devices,
         location,
         viewports,
+        onChangeViewportDevice,
         onRotateViewport,
         onResizeViewport,
       })
