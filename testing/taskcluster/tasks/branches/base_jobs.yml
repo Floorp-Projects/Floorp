@@ -56,8 +56,6 @@ builds:
     platforms:
       - b2g
     types:
-      opt:
-        task: tasks/builds/b2g_aries_spark_opt.yml
       debug:
         task: tasks/builds/b2g_aries_spark_debug.yml
   aries-eng:
@@ -66,50 +64,6 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_aries_eng.yml
-  aries-noril:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_aries_spark_noril_opt.yml
-  flame-kk:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_flame_kk_opt.yml
-      debug:
-        task: tasks/builds/b2g_flame_kk_debug.yml
-  flame-kk-eng:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_flame_kk_eng.yml
-  flame-kk-spark-eng:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_flame_kk_spark_eng.yml
-  nexus-4-kk:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_nexus_4_kk_user.yml
-  nexus-4-kk-eng:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_nexus_4_kk_eng.yml
-  nexus-5l:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_nexus_5l_user.yml
   nexus-5l-eng:
     platforms:
       - b2g
