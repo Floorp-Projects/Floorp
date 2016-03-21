@@ -515,26 +515,6 @@ def host_variables(host):
     set_config('HOST_OS_ARCH', os_arch)
 
 
-@depends(target)
-def target_platform_defines(target):
-    if target.kernel == 'WINNT':
-        set_define('_WINDOWS', '1')
-        set_define('WIN32', '1')
-        set_define('XP_WIN', '1')
-        set_define('XP_WIN32', '1')
-    else:
-        set_define('XP_UNIX', '1')
-
-    if target.kernel == 'Darwin':
-        set_define('XP_DARWIN', '1')
-        if target.os == 'iOS':
-            set_define('XP_IOS', '1')
-        elif target.os == 'OSX':
-            set_define('XP_MACOSX', '1')
-    elif target.kernel == 'Linux':
-        set_define('XP_LINUX', '1')
-
-
 # The application/project to build
 # ==============================================================
 option('--enable-application', nargs=1, env='MOZ_BUILD_APP',
