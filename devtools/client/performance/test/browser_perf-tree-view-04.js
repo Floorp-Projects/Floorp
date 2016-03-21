@@ -59,7 +59,7 @@ add_task(function() {
 
   let functionCell = D.target.childNodes[5];
 
-  is(functionCell.childNodes.length, 8,
+  is(functionCell.childNodes.length, 7,
     "The number of columns displayed for function cells is correct.");
   is(functionCell.childNodes[0].className, "arrow theme-twisty",
     "The first node displayed for function cells is correct.");
@@ -73,8 +73,6 @@ add_task(function() {
     "The fifth node displayed for function cells is correct.");
   is(functionCell.childNodes[5].className, "plain call-tree-host",
     "The sixth node displayed for function cells is correct.");
-  is(functionCell.childNodes[6].tagName, "spacer",
+  is(functionCell.childNodes[6].className, "plain call-tree-category",
     "The seventh node displayed for function cells is correct.");
-  is(functionCell.childNodes[7].className, "plain call-tree-category",
-    "The eight node displayed for function cells is correct.");
 });
