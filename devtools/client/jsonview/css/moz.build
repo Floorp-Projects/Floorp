@@ -8,7 +8,6 @@
 DevToolsModules(
     'controls.png',
     'controls@2x.png',
-    'dom-tree.css',
     'general.css',
     'headers-panel.css',
     'json-panel.css',

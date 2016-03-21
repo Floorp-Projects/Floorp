@@ -30,10 +30,12 @@ define(function(require, exports, module) {
     displayName: "TreeCell",
 
     /**
-     * Optimize cell rendering. If value is the same do not render.
+     * Optimize cell rendering. Rerender cell content only if
+     * the value or expanded state changes.
      */
     shouldComponentUpdate: function(nextProps) {
-      return (this.props.value != nextProps.value);
+      return (this.props.value != nextProps.value) ||
+        (this.props.member.open != nextProps.member.open);
     },
 
     getCellClass: function(object, id) {
