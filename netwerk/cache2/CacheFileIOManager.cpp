@@ -533,9 +533,9 @@ CacheFileHandles::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 
 class ShutdownEvent : public nsRunnable {
 public:
-  ShutdownEvent(mozilla::Mutex *aLock, mozilla::CondVar *aCondVar)
-    : mLock(aLock)
-    , mCondVar(aCondVar)
+  ShutdownEvent()
+    : mMonitor("ShutdownEvent.mMonitor")
+    , mNotified(false)
     , mPrepare(true)
   {
     MOZ_COUNT_CTOR(ShutdownEvent);
@@ -565,18 +565,35 @@ public:
       return NS_OK;
     }
 
-    MutexAutoLock lock(*mLock);
+    MonitorAutoLock mon(mMonitor);
 
     CacheFileIOManager::gInstance->ShutdownInternal();
 
-    mCondVar->Notify();
+    mNotified = true;
+    mon.Notify();
+
     return NS_OK;
   }
 
+  void PostAndWait()
+  {
+    MonitorAutoLock mon(mMonitor);
+
+    DebugOnly<nsresult> rv;
+    nsCOMPtr<nsIEventTarget> ioTarget =
+      CacheFileIOManager::gInstance->mIOThread->Target();
+    MOZ_ASSERT(ioTarget);
+    rv = ioTarget->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    while (!mNotified) {
+      mon.Wait();
+    }
+  }
+
 protected:
-  mozilla::Mutex   *mLock;
-  mozilla::CondVar *mCondVar;
-  bool              mPrepare;
+  mozilla::Monitor mMonitor;
+  bool             mNotified;
+  bool             mPrepare;
 };
 
 class OpenFileEvent : public nsRunnable {
@@ -1166,19 +1183,8 @@ CacheFileIOManager::Shutdown()
 
   ShutdownMetadataWriteScheduling();
 
-  {
-    mozilla::Mutex lock("CacheFileIOManager::Shutdown() lock");
-    mozilla::CondVar condVar(lock, "CacheFileIOManager::Shutdown() condVar");
-
-    MutexAutoLock autoLock(lock);
-    RefPtr<ShutdownEvent> ev = new ShutdownEvent(&lock, &condVar);
-    DebugOnly<nsresult> rv;
-    nsCOMPtr<nsIEventTarget> ioTarget = gInstance->mIOThread->Target();
-    MOZ_ASSERT(ioTarget);
-    rv = ioTarget->Dispatch(ev, nsIEventTarget::DISPATCH_NORMAL);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    condVar.Wait();
-  }
+  RefPtr<ShutdownEvent> ev = new ShutdownEvent();
+  ev->PostAndWait();
 
   MOZ_ASSERT(gInstance->mHandles.HandleCount() == 0);
   MOZ_ASSERT(gInstance->mHandlesByLastUsed.Length() == 0);
@@ -4088,13 +4094,16 @@ public:
     }
 
     mozilla::MonitorAutoLock mon(mMonitor);
+    mMonitorNotified = false;
     nsresult rv = target->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
     if (NS_FAILED(rv)) {
       NS_ERROR("Dispatch failed, cannot do memory report of CacheFileHandles");
       return 0;
     }
 
-    mon.Wait();
+    while (!mMonitorNotified) {
+      mon.Wait();
+    }
     return mSize;
   }
 
@@ -4108,12 +4117,14 @@ public:
       mSize += mSpecialHandles[i]->SizeOfIncludingThis(mMallocSizeOf);
     }
 
+    mMonitorNotified = true;
     mon.Notify();
     return NS_OK;
   }
 
 private:
   mozilla::Monitor mMonitor;
+  bool mMonitorNotified;
   mozilla::MallocSizeOf mMallocSizeOf;
   CacheFileHandles const &mHandles;
   nsTArray<CacheFileHandle *> const &mSpecialHandles;
