@@ -32,12 +32,27 @@ const takeSnapshotAndCensus = exports.takeSnapshotAndCensus = function (front, h
     }
 
     yield dispatch(readSnapshot(heapWorker, id));
-    if (getSnapshot(getState(), id).state === states.READ) {
-      yield dispatch(takeCensus(heapWorker, id));
+    yield dispatch(computeSnapshotData(heapWorker, id));
+  };
+};
 
-      if (getState().view === viewState.DOMINATOR_TREE) {
-        yield dispatch(computeAndFetchDominatorTree(heapWorker, id));
-      }
+/**
+ * Create the census for the snapshot with the provided snapshot id. If the
+ * current view is the DOMINATOR_TREE view, create the dominator tree for this
+ * snapshot as well.
+ *
+ * @param {HeapAnalysesClient} heapWorker
+ * @param {snapshotId} id
+ */
+const computeSnapshotData = exports.computeSnapshotData = function(heapWorker, id) {
+  return function* (dispatch, getState) {
+    if (getSnapshot(getState(), id).state !== states.READ) {
+      return;
+    }
+
+    yield dispatch(takeCensus(heapWorker, id));
+    if (getState().view === viewState.DOMINATOR_TREE) {
+      yield dispatch(computeAndFetchDominatorTree(heapWorker, id));
     }
   };
 };
