@@ -2308,14 +2308,14 @@ void
 MacroAssembler::branchValueIsNurseryObject(Condition cond, const Address& address, Register temp,
                                            Label* label)
 {
-    branchValueIsNurseryObject(cond, address, temp, label);
+    branchValueIsNurseryObjectImpl(cond, address, temp, label);
 }
 
 void
 MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
                                            Register temp, Label* label)
 {
-    branchValueIsNurseryObject(cond, value.valueReg(), temp, label);
+    branchValueIsNurseryObjectImpl(cond, value.valueReg(), temp, label);
 }
 
 template <typename T>
