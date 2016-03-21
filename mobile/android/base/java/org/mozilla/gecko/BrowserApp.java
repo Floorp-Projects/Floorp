@@ -1374,6 +1374,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void setAccessibilityEnabled(boolean enabled) {
+        super.setAccessibilityEnabled(enabled);
         mDynamicToolbar.setAccessibilityEnabled(enabled);
     }
 
