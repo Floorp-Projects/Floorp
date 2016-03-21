@@ -269,8 +269,6 @@ public:
   // decoding.
   virtual bool VideoIsHardwareAccelerated() const { return false; }
 
-  virtual void DisableHardwareAcceleration() {}
-
   TimedMetadataEventSource& TimedMetadataEvent()
   {
     return mTimedMetadataEvent;
