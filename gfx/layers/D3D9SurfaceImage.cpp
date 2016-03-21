@@ -77,6 +77,13 @@ D3D9SurfaceImage::AllocateAndCopy(D3D9RecycleAllocator* aAllocator,
   return S_OK;
 }
 
+already_AddRefed<IDirect3DSurface9>
+D3D9SurfaceImage::GetD3D9Surface()
+{
+  return static_cast<DXGID3D9TextureData*>(
+    mTextureClient->GetInternalData())->GetD3D9Surface();
+}
+
 const D3DSURFACE_DESC&
 D3D9SurfaceImage::GetDesc() const
 {
