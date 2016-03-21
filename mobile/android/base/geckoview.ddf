@@ -7,16 +7,22 @@
 show allResults
 
 [lib] = \
+  org.mozilla.gecko.annotation.* \
   org.mozilla.gecko.gfx.* \
   org.mozilla.gecko.mozglue.* \
+  org.mozilla.gecko.permissions.* \
   org.mozilla.gecko.sqlite.* \
   org.mozilla.gecko.util.* \
+  org.mozilla.gecko.ActivityHandlerHelper \
+  org.mozilla.gecko.AlarmReceiver \
   org.mozilla.gecko.AndroidGamepadManager \
   org.mozilla.gecko.AppConstants \
   org.mozilla.gecko.BaseGeckoInterface \
   org.mozilla.gecko.ContextGetter \
   org.mozilla.gecko.CrashHandler \
+  org.mozilla.gecko.DebugGeckoInputConnection \
   org.mozilla.gecko.EventDispatcher \
+  org.mozilla.gecko.FormAssistPopup \
   org.mozilla.gecko.GeckoAccessibility \
   org.mozilla.gecko.GeckoAppShell \
   org.mozilla.gecko.GeckoBatteryManager \
@@ -28,12 +34,13 @@ show allResults
   org.mozilla.gecko.GeckoJavaSampler \
   org.mozilla.gecko.GeckoNetworkManager \
   org.mozilla.gecko.GeckoProfile \
+  org.mozilla.gecko.GeckoProfileDirectories \
   org.mozilla.gecko.GeckoScreenOrientation \
   org.mozilla.gecko.GeckoSharedPrefs \
   org.mozilla.gecko.GeckoThread \
   org.mozilla.gecko.GeckoView \
-  org.mozilla.gecko.GlobalHistory \
   org.mozilla.gecko.InputMethods \
+  org.mozilla.gecko.InputConnectionListener \
   org.mozilla.gecko.NSSBridge \
   org.mozilla.gecko.NotificationClient \
   org.mozilla.gecko.NotificationHandler \
@@ -42,37 +49,16 @@ show allResults
   org.mozilla.gecko.SurfaceBits \
   org.mozilla.gecko.SysInfo \
   org.mozilla.gecko.TouchEventInterceptor \
-  org.mozilla.gecko.ZoomConstraints
+  org.mozilla.gecko.ZoomConstraints \
+  org.mozilla.gecko.widget.SwipeDismissListViewTouchListener
 
-[middle] = \
-  org.mozilla.gecko.prompts.* \
-  org.mozilla.gecko.FormAssistPopup \
-  org.mozilla.gecko.GeckoActivity \
-  org.mozilla.gecko.GeckoApp \
-  org.mozilla.gecko.GeckoProfileDirectories \
-  org.mozilla.gecko.GuestSession \
-  org.mozilla.gecko.R \
-  org.mozilla.gecko.Tab \
-  org.mozilla.gecko.Tabs \
-  org.mozilla.gecko.Telemetry \
-  org.mozilla.gecko.TelemetryContract \
-  org.mozilla.gecko.ThumbnailHelper \
-  org.mozilla.gecko.db.BrowserDB \
-  org.mozilla.gecko.db.LocalBrowserDB \
-  org.mozilla.gecko.distribution.Distribution \
-  org.mozilla.gecko.favicons.Favicons \
-  org.mozilla.gecko.favicons.OnFaviconLoadedListener
+[app] = org.mozilla.gecko.* excluding [lib]
 
-[main] = org.mozilla.gecko.* excluding [lib] [middle]
-
-check sets [lib] [middle] [main]
+check sets [lib] [app]
 
 # Bug 1107134: it appears that Classycle can be fooled if the Java
-# compiler inlines a constant from [main] into [lib].  That is, [main]
+# compiler inlines a constant from [app] into [lib].  That is, [app]
 # really does depend on [lib] but Classycle only sees the dependency
-# with some javac versions.  For now, disable the check.  Yes, this
-# processing is useless without this check.
-# check [lib] directlyIndependentOf [main]
-
+# with some javac versions.
 # This fails; if this passed, GeckoView would be ready to extract from Fennec.
-# check [lib] independentOf [middle]
+# check [lib] independentOf [app]
