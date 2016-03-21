@@ -1163,7 +1163,7 @@ js::fun_call(JSContext* cx, unsigned argc, Value* vp)
         args = CallArgsFromVp(args.length() - 1, vp);
     }
 
-    return Invoke(cx, args);
+    return InternalInvoke(cx, args);
 }
 
 // ES5 15.3.4.3

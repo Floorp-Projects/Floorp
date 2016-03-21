@@ -54,16 +54,39 @@ ValueToCallable(JSContext* cx, HandleValue v, int numToSkip = -1,
                 MaybeConstruct construct = NO_CONSTRUCT);
 
 /*
- * Invoke assumes that the given args have been pushed on the top of the
- * VM stack.
+ * Call or construct arguments that are stored in rooted memory.
+ *
+ * NOTE: Any necessary |GetThisValue| computation must have been performed on
+ *       |args.thisv()|, likely by the interpreter when pushing |this| onto the
+ *       stack.  If you're not sure whether |GetThisValue| processing has been
+ *       performed, use |Invoke|.
  */
 extern bool
-Invoke(JSContext* cx, const CallArgs& args, MaybeConstruct construct = NO_CONSTRUCT);
+InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
+                        MaybeConstruct construct);
+
+/* A call operation that'll be rewritten later in this patch stack. */
+inline bool
+Invoke(JSContext* cx, const AnyInvokeArgs& args)
+{
+    return InternalCallOrConstruct(cx, args, NO_CONSTRUCT);
+}
 
 /*
- * This Invoke overload places the least requirements on the caller: it may be
- * called at any time and it takes care of copying the given callee, this, and
- * arguments onto the stack.
+ * Similar to InternalCallOrConstruct, but for use in places that really
+ * shouldn't use such an internal method directly (and won't, later in this
+ * patch stack).
+ */
+inline bool
+InternalInvoke(JSContext* cx, const CallArgs& args)
+{
+    return InternalCallOrConstruct(cx, args, NO_CONSTRUCT);
+}
+
+/*
+ * Attempt to call a value with the provided |this| and arguments.  This
+ * function places no requirements on the caller: it may be called at any time,
+ * and it takes care of copying |fval|, |thisv|, and arguments onto the stack.
  */
 extern bool
 Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, const Value* argv,
