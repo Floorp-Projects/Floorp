@@ -5,7 +5,7 @@
 
 /**
  * Make sure that conditional breakpoints with blank expressions
- * are stored as plain breakpoints when re-enabling them.
+ * maintain their conditions after enabling them.
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_conditional-breakpoints.html";
@@ -35,7 +35,7 @@ function test() {
       yield actions.addBreakpoint(location);
 
       const bp = queries.getBreakpoint(getState(), location);
-      is(bp.condition, undefined, "The conditional expression is correct.");
+      is(bp.condition, "", "The conditional expression is correct.");
 
       // Reset traits back to default value
       client.mainRoot.traits.conditionalBreakpoints = true;
