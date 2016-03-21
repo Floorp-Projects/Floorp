@@ -7,6 +7,8 @@
 #ifndef nsNodeUtils_h___
 #define nsNodeUtils_h___
 
+#include "mozilla/Maybe.h"
+#include "mozilla/NonOwningAnimationTarget.h"
 #include "nsIContent.h"          // for use in inline function (ParentChainChanged)
 #include "nsIMutationObserver.h" // for use in inline function (ParentChainChanged)
 #include "js/TypeDecls.h"
@@ -142,7 +144,12 @@ public:
     }
   }
 
-  static mozilla::dom::Element*
+  /**
+   * Utility function to get the target (pseudo-)element associated with an
+   * animation.
+   * @param aAnimation The animation whose target is what we want.
+   */
+  static mozilla::Maybe<mozilla::NonOwningAnimationTarget>
     GetTargetForAnimation(const mozilla::dom::Animation* aAnimation);
   static void AnimationAdded(mozilla::dom::Animation* aAnimation);
   static void AnimationChanged(mozilla::dom::Animation* aAnimation);
