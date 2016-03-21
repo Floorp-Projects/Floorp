@@ -19,6 +19,7 @@
 #include "nsMathUtils.h"                // for NS_round
 #include "nscore.h"                     // for char16_t, nsAString
 #include "mozilla/AppUnits.h"           // for AppUnits
+#include "nsFontMetrics.h"              // for nsFontMetrics::Params
 
 class gfxASurface;
 class gfxContext;
@@ -26,7 +27,6 @@ class gfxTextPerfMetrics;
 class gfxUserFontSet;
 struct nsFont;
 class nsFontCache;
-class nsFontMetrics;
 class nsIAtom;
 class nsIDeviceContextSpec;
 class nsIScreen;
@@ -113,16 +113,11 @@ public:
      * Get the nsFontMetrics that describe the properties of
      * an nsFont.
      * @param aFont font description to obtain metrics for
-     * @param aLanguage the language of the document
      * @param aMetrics out parameter for font metrics
-     * @param aUserFontSet user font set
      * @return error status
      */
     nsresult GetMetricsFor(const nsFont& aFont,
-                           nsIAtom* aLanguage, bool aExplicitLanguage,
-                           gfxFont::Orientation aOrientation,
-                           gfxUserFontSet* aUserFontSet,
-                           gfxTextPerfMetrics* aTextPerf,
+                           const nsFontMetrics::Params& aParams,
                            nsFontMetrics*& aMetrics);
 
     /**

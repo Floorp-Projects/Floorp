@@ -741,14 +741,13 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   if (length) {
     font.size = NSToCoordRound(font.size * mFontInflation);
     nsPresContext* pc = styles[0]->mPresContext;
+    nsFontMetrics::Params params;
+    params.language = styles[0]->mLanguage;
+    params.explicitLanguage = styles[0]->mExplicitLanguage;
+    params.userFontSet = pc->GetUserFontSet();
+    params.textPerf = pc->GetTextPerfMetrics();
     RefPtr<nsFontMetrics> metrics;
-    pc->DeviceContext()->GetMetricsFor(font,
-                                       styles[0]->mLanguage,
-                                       styles[0]->mExplicitLanguage,
-                                       gfxFont::eHorizontal,
-                                       pc->GetUserFontSet(),
-                                       pc->GetTextPerfMetrics(),
-                                       *getter_AddRefs(metrics));
+    pc->DeviceContext()->GetMetricsFor(font, params, *getter_AddRefs(metrics));
     if (metrics) {
       newFontGroup = metrics->GetThebesFontGroup();
     }
