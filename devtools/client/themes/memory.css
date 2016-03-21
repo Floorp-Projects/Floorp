@@ -265,7 +265,7 @@ html, body, #app, #memory-tool {
    * is the sidebar. @see #memory-tool-container.
    */
   flex: 1;
-  background-color: var(--theme-toolbar-background);
+  background-color: var(--theme-body-background);
 
   /**
    * By default, flex items have min-width: auto;
