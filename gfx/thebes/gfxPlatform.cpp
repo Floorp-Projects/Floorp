@@ -113,6 +113,8 @@
 # ifdef __GNUC__
 #  pragma GCC diagnostic pop // -Wshadow
 # endif
+static const uint32_t kDefaultGlyphCacheSize = -1;
+
 #endif
 
 #if !defined(USE_SKIA) || !defined(USE_SKIA_GPU)
@@ -545,6 +547,28 @@ void RecordingPrefChanged(const char *aPrefName, void *aClosure)
   }
 }
 
+#if defined(USE_SKIA)
+static uint32_t GetSkiaGlyphCacheSize()
+{
+    // Only increase font cache size on non-android to save memory.
+#if !defined(MOZ_WIDGET_ANDROID)
+    // 10mb as the default cache size on desktop due to talos perf tweaking.
+    // Chromium uses 20mb and skia default uses 2mb.
+    // We don't need to change the font cache count since we usually
+    // cache thrash due to asian character sets in talos.
+    // Only increase memory on the content proces
+    uint32_t cacheSize = 10 * 1024 * 1024;
+    if (mozilla::BrowserTabsRemoteAutostart()) {
+      return XRE_IsContentProcess() ? cacheSize : kDefaultGlyphCacheSize;
+    }
+
+    return cacheSize;
+#else
+    return kDefaultGlyphCacheSize;
+#endif // MOZ_WIDGET_ANDROID
+}
+#endif
+
 void
 gfxPlatform::Init()
 {
@@ -725,6 +749,13 @@ gfxPlatform::Init()
         gPlatform->mVsyncSource = gPlatform->CreateHardwareVsyncSource();
       }
     }
+
+#ifdef USE_SKIA
+    uint32_t skiaCacheSize = GetSkiaGlyphCacheSize();
+    if (skiaCacheSize != kDefaultGlyphCacheSize) {
+      SkGraphics::SetFontCacheLimit(skiaCacheSize);
+    }
+#endif
 }
 
 static bool sLayersIPCIsUp = false;
