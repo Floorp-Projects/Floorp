@@ -15,7 +15,7 @@ namespace dom {
 
 // static
 already_AddRefed<FileSystemBase>
-FileSystemBase::FromString(const nsAString& aString)
+FileSystemBase::DeserializeDOMPath(const nsAString& aString)
 {
   if (StringBeginsWith(aString, NS_LITERAL_STRING("devicestorage-"))) {
     // The string representation of devicestorage file system is of the format:
@@ -38,6 +38,7 @@ FileSystemBase::FromString(const nsAString& aString)
       new DeviceStorageFileSystem(storageType, storageName);
     return f.forget();
   }
+
   return RefPtr<OSFileSystem>(new OSFileSystem(aString)).forget();
 }
 
@@ -57,36 +58,18 @@ FileSystemBase::Shutdown()
   mShutdown = true;
 }
 
-nsPIDOMWindowInner*
-FileSystemBase::GetWindow() const
+nsISupports*
+FileSystemBase::GetParentObject() const
 {
   return nullptr;
 }
 
-already_AddRefed<nsIFile>
-FileSystemBase::GetLocalFile(const nsAString& aRealPath) const
-{
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Should be on parent process!");
-  nsAutoString localPath;
-  FileSystemUtils::NormalizedPathToLocalPath(aRealPath, localPath);
-  localPath = mLocalRootPath + localPath;
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_NewLocalFile(localPath, false, getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-  return file.forget();
-}
-
 bool
-FileSystemBase::GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const
+FileSystemBase::GetRealPath(BlobImpl* aFile, nsIFile** aPath) const
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be on parent process!");
   MOZ_ASSERT(aFile, "aFile Should not be null.");
-
-  aRealPath.Truncate();
 
   nsAutoString filePath;
   ErrorResult rv;
@@ -95,7 +78,13 @@ FileSystemBase::GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const
     return false;
   }
 
-  return LocalPathToRealPath(filePath, aRealPath);
+  rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(filePath),
+                             true, aPath);
+  if (NS_WARN_IF(rv.Failed())) {
+    return false;
+  }
+
+  return true;
 }
 
 bool
@@ -108,20 +97,6 @@ bool
 FileSystemBase::IsSafeDirectory(Directory* aDir) const
 {
   return false;
-}
-
-bool
-FileSystemBase::LocalPathToRealPath(const nsAString& aLocalPath,
-                                    nsAString& aRealPath) const
-{
-  nsAutoString path;
-  FileSystemUtils::LocalPathToNormalizedPath(aLocalPath, path);
-  if (!FileSystemUtils::IsDescendantPath(mNormalizedLocalRootPath, path)) {
-    aRealPath.Truncate();
-    return false;
-  }
-  aRealPath = Substring(path, mNormalizedLocalRootPath.Length());
-  return true;
 }
 
 } // namespace dom

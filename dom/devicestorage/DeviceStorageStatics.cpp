@@ -582,7 +582,16 @@ DeviceStorageStatics::ResetOverrideRootDir()
   nsCOMPtr<nsIFile> f;
   DS_LOG_INFO("");
 
-  if (Preferences::GetBool(kPrefTesting, false)) {
+  // For users running on desktop, it's convenient to be able to override
+  // all of the directories to point to a single tree, much like what happens
+  // on a real device.
+  const nsAdoptingString& overrideRootDir =
+    mozilla::Preferences::GetString(kPrefOverrideRootDir);
+  if (overrideRootDir && !overrideRootDir.IsEmpty()) {
+    NS_NewLocalFile(overrideRootDir, false, getter_AddRefs(f));
+  }
+
+  if (!f && Preferences::GetBool(kPrefTesting, false)) {
     DS_LOG_INFO("temp");
     nsCOMPtr<nsIProperties> dirService
       = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
@@ -591,15 +600,6 @@ DeviceStorageStatics::ResetOverrideRootDir()
     if (f) {
       f->AppendRelativeNativePath(
         NS_LITERAL_CSTRING("device-storage-testing"));
-    }
-  } else {
-    // For users running on desktop, it's convenient to be able to override
-    // all of the directories to point to a single tree, much like what happens
-    // on a real device.
-    const nsAdoptingString& overrideRootDir =
-      mozilla::Preferences::GetString(kPrefOverrideRootDir);
-    if (overrideRootDir && !overrideRootDir.IsEmpty()) {
-      NS_NewLocalFile(overrideRootDir, false, getter_AddRefs(f));
     }
   }
 

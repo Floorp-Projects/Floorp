@@ -187,30 +187,6 @@ private:
     return mBlobImpl->IsFile();
   }
 
-  virtual void
-  LookupAndCacheIsDirectory() override
-  {
-    mBlobImpl->LookupAndCacheIsDirectory();
-  }
-
-  virtual void
-  SetIsDirectory(bool aIsDir) override
-  {
-    return mBlobImpl->SetIsDirectory(aIsDir);
-  }
-
-  virtual bool
-  IsDirectory() const override
-  {
-    return mBlobImpl->IsDirectory();
-  }
-
-  virtual BlobDirState
-  GetDirState() const override
-  {
-    return mBlobImpl->GetDirState();
-  }
-
   virtual bool
   MayBeClonedToOtherThreads() const override
   {
