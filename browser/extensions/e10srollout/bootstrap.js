@@ -115,5 +115,5 @@ function optedOut() {
 
 function isThereAnActiveExperiment() {
   let { Experiments } = Cu.import("resource:///modules/experiments/Experiments.jsm", {});
-  return (Experiments.instance().getActiveExperiment() !== null);
+  return (Experiments.instance().getActiveExperimentID() !== null);
 }
