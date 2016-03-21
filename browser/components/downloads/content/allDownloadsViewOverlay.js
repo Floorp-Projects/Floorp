@@ -72,16 +72,23 @@ HistoryDownload.prototype = {
 
     if ("state" in metaData) {
       this.succeeded = metaData.state == nsIDM.DOWNLOAD_FINISHED;
-      this.error = metaData.state == nsIDM.DOWNLOAD_FAILED
-                   ? { message: "History download failed." }
-                   : metaData.state == nsIDM.DOWNLOAD_BLOCKED_PARENTAL
-                   ? { becauseBlockedByParentalControls: true }
-                   : metaData.state == nsIDM.DOWNLOAD_DIRTY
-                   ? { becauseBlockedByReputationCheck: true }
-                   : null;
       this.canceled = metaData.state == nsIDM.DOWNLOAD_CANCELED ||
                       metaData.state == nsIDM.DOWNLOAD_PAUSED;
       this.endTime = metaData.endTime;
+
+      // Recreate partial error information from the state saved in history.
+      if (metaData.state == nsIDM.DOWNLOAD_FAILED) {
+        this.error = { message: "History download failed." };
+      } else if (metaData.state == nsIDM.DOWNLOAD_BLOCKED_PARENTAL) {
+        this.error = { becauseBlockedByParentalControls: true };
+      } else if (metaData.state == nsIDM.DOWNLOAD_DIRTY) {
+        this.error = {
+          becauseBlockedByReputationCheck: true,
+          reputationCheckVerdict: metaData.reputationCheckVerdict || "",
+        };
+      } else {
+        this.error = null;
+      }
 
       // Normal history downloads are assumed to exist until the user interface
       // is refreshed, at which point these values may be updated.
@@ -372,8 +379,8 @@ HistoryDownloadElementShell.prototype = {
   },
 
   downloadsCmd_unblock() {
-    DownloadsCommon.confirmUnblockDownload(DownloadsCommon.BLOCK_VERDICT_MALWARE,
-                                           window).then((confirmed) => {
+    let verdict = this.download.error.reputationCheckVerdict;
+    DownloadsCommon.confirmUnblockDownload(verdict, window).then(confirmed => {
       if (confirmed) {
         return this.download.unblock();
       }
