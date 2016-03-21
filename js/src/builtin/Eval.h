@@ -20,11 +20,11 @@ namespace js {
 extern bool
 IndirectEval(JSContext* cx, unsigned argc, Value* vp);
 
-// Performs a direct eval for the given arguments, which must correspond to the
-// currently-executing stack frame, which must be a script frame. On completion
-// the result is returned in args.rval.
+// Performs a direct eval of |v| (a string containing code, or another value
+// that will be vacuously returned), which must correspond to the currently-
+// executing stack frame, which must be a script frame.
 extern bool
-DirectEval(JSContext* cx, const CallArgs& args);
+DirectEval(JSContext* cx, HandleValue v, MutableHandleValue vp);
 
 // Performs a direct eval called from Ion code.
 extern bool
