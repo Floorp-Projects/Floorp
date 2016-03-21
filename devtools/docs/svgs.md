@@ -24,10 +24,10 @@ You can download a sample Illustrator file [here](https://www.dropbox.com/home/M
 When you're designing your icons in a graphics editor like Adobe Illustrator, there are a lot of things you can do that will bring down the size of the file and make your SVGs easier for the developers to work with. Here are some of them:
 
 - **Expand paths**: Instead of having multiple shapes overlapping each other, expand shapes using the pathfinder.
-![Use pathfinder to expand shapes](./pathfinder.gif)
+![Use pathfinder to expand shapes](./svgs/pathfinder.gif)
 - Simplify paths (```Object``` > ```Path``` > ```Simplify```)
 - Expand objects so that strokes become objects. This has the added benefit of keeping the stroke size intact as the SVG is resized.
-![Expand strokes to make them objects](./expand-strokes.gif)
+![Expand strokes to make them objects](./svgs/expand-strokes.gif)
 
 ## Sketch
 Sketch vector work is a little different but the fundamentals (keeping your SVG small, expanding all paths) is the same. Here's what we've found helps to build clean icons:
@@ -35,7 +35,7 @@ Sketch vector work is a little different but the fundamentals (keeping your SVG 
 - **Build your icon at 16x16 with the Pixel Grid turned on.** You can turn the pixel grid on at ```View > Canvas > Show Pixels```
 
 - **Make sure that all x/y coordinates are full pixels for lines/rectangles.** Sub-pixels = not on pixel grid.
-![Position in the upper right hand corner of Sketch](./sketch-position.png)
+![Position in the upper right hand corner of Sketch](./svgs/sketch-position.png)
 
 - **Expand all your paths so strokes expand properly as the SVG gets resized.** You can do this at ```Layer > Paths > Vectorize Stroke```.
 

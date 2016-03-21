@@ -1,0 +1,13 @@
+
+.book .book-summary ul.summary li {
+    cursor: pointer;
+}
+
+.book .book-body .page-wrapper .page-inner section.normal p,
+.book .book-body .page-wrapper .page-inner section.normal pre {
+    margin: .85em 0;
+}
+
+.book .book-body .page-wrapper .page-inner section.normal pre {
+    line-height: 1.25em;
+}
