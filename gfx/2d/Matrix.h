@@ -1251,24 +1251,6 @@ public:
     return *this;
   }
 
-  // Nudge the 3D components to integer so that this matrix will become 2D if
-  // it's very close to already being 2D.
-  // This doesn't change the _41 and _42 components.
-  Matrix4x4Typed &NudgeTo2D()
-  {
-    NudgeToInteger(&_13);
-    NudgeToInteger(&_14);
-    NudgeToInteger(&_23);
-    NudgeToInteger(&_24);
-    NudgeToInteger(&_31);
-    NudgeToInteger(&_32);
-    NudgeToInteger(&_33);
-    NudgeToInteger(&_34);
-    NudgeToInteger(&_43);
-    NudgeToInteger(&_44);
-    return *this;
-  }
-
   Point4D TransposedVector(int aIndex) const
   {
       MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
