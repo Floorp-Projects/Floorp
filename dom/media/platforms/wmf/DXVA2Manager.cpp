@@ -66,6 +66,11 @@ static const DWORD sAMDPreUVD4[] = {
   0x999c, 0x999d, 0x99a0, 0x99a2, 0x99a4
 };
 
+// The size we use for our synchronization surface.
+// 16x16 is the size recommended by Microsoft (in the D3D9ExDXGISharedSurf sample) that works
+// best to avoid driver bugs.
+static const uint32_t kSyncSurfaceSize = 16;
+
 namespace mozilla {
 
 using layers::Image;
@@ -100,6 +105,7 @@ private:
   RefPtr<IDirect3DDeviceManager9> mDeviceManager;
   RefPtr<D3D9RecycleAllocator> mTextureClientAllocator;
   RefPtr<IDirectXVideoDecoderService> mDecoderService;
+  RefPtr<IDirect3DSurface9> mSyncSurface;
   GUID mDecoderGUID;
   UINT32 mResetToken;
   bool mFirstFrame;
@@ -392,12 +398,19 @@ D3D9DXVA2Manager::Init(nsACString& aFailureReason)
     }
   }
 
+  RefPtr<IDirect3DSurface9> syncSurf;
+  hr = device->CreateRenderTarget(kSyncSurfaceSize, kSyncSurfaceSize,
+                                  D3DFMT_X8R8G8B8, D3DMULTISAMPLE_NONE,
+                                  0, TRUE, getter_AddRefs(syncSurf), NULL);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
   mDecoderService = decoderService;
 
   mResetToken = resetToken;
   mD3D9 = d3d9Ex;
   mDevice = device;
   mDeviceManager = deviceManager;
+  mSyncSurface = syncSurf;
 
   mTextureClientAllocator = new D3D9RecycleAllocator(layers::ImageBridgeChild::GetSingleton(),
                                                      mDevice);
@@ -427,35 +440,20 @@ D3D9DXVA2Manager::CopyToImage(IMFSample* aSample,
   hr = image->AllocateAndCopy(mTextureClientAllocator, surface, aRegion);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  // Flush the draw command now, so that by the time we come to draw this
-  // image, we're less likely to need to wait for the draw operation to
-  // complete.
-  RefPtr<IDirect3DQuery9> query;
-  hr = mDevice->CreateQuery(D3DQUERYTYPE_EVENT, getter_AddRefs(query));
+  RefPtr<IDirect3DSurface9> sourceSurf = image->GetD3D9Surface();
+
+  // Copy a small rect into our sync surface, and then map it
+  // to block until decoding/color conversion completes.
+  RECT copyRect = { 0, 0, kSyncSurfaceSize, kSyncSurfaceSize };
+  hr = mDevice->StretchRect(sourceSurf, &copyRect, mSyncSurface, &copyRect, D3DTEXF_NONE);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  hr = query->Issue(D3DISSUE_END);
+
+  D3DLOCKED_RECT lockedRect;
+  hr = mSyncSurface->LockRect(&lockedRect, NULL, D3DLOCK_READONLY);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  bool valid = false;
-  int iterations = 0;
-  while (iterations < (mFirstFrame ? 100 : 10)) {
-    hr = query->GetData(nullptr, 0, D3DGETDATA_FLUSH);
-    if (hr == S_FALSE) {
-      Sleep(1);
-      iterations++;
-      continue;
-    }
-    if (hr == S_OK) {
-      valid = true;
-    }
-    break;
-  }
-
-  mFirstFrame = false;
-
-  if (!valid) {
-    image->Invalidate();
-  }
+  hr = mSyncSurface->UnlockRect();
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   image.forget(aOutImage);
   return S_OK;
