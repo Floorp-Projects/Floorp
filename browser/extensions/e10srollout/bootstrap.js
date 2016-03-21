@@ -55,7 +55,8 @@ function defineCohort() {
 
   let userOptedOut = optedOut();
   let userOptedIn = optedIn();
-  let disqualified = (Services.appinfo.multiprocessBlockPolicy != 0);
+  let disqualified = (Services.appinfo.multiprocessBlockPolicy != 0) ||
+                     isThereAnActiveExperiment();
   let testGroup = (getUserSample() < TEST_THRESHOLD[updateChannel]);
 
   if (userOptedOut) {
@@ -108,3 +109,7 @@ function optedOut() {
           Preferences.get(PREF_TOGGLE_E10S) == false);
 }
 
+function isThereAnActiveExperiment() {
+  let { Experiments } = Cu.import("resource:///modules/experiments/Experiments.jsm", {});
+  return (Experiments.instance().getActiveExperimentID() !== null);
+}
