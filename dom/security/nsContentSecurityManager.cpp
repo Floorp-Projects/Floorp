@@ -288,6 +288,12 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
       break;
     }
 
+    case nsIContentPolicy::TYPE_WEB_MANIFEST: {
+      mimeTypeGuess = EmptyCString();
+      requestingContext = aLoadInfo->LoadingNode();
+      break;
+    }
+
     default:
       // nsIContentPolicy::TYPE_INVALID
       MOZ_ASSERT(false, "can not perform security check without a valid contentType");
