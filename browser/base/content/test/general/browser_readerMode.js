@@ -60,6 +60,15 @@ add_task(function* test_reader_button() {
   is(gURLBar.value, readerUrl, "gURLBar value is about:reader URL");
   is(gURLBar.textValue, url.substring("http://".length), "gURLBar is displaying original article URL");
 
+  // Check selected value for URL bar
+  yield new Promise((resolve, reject) => {
+    waitForClipboard(url, function () {
+      gURLBar.focus();
+      gURLBar.select();
+      goDoCommand("cmd_copy");
+    }, resolve, reject);
+  });
+
   // Switch page back out of reader mode.
   readerButton.click();
   yield promiseTabLoadEvent(tab);
