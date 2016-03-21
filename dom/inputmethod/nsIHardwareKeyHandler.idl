@@ -1,0 +1,142 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMKeyEvent;
+
+%{C++
+#define NS_HARDWARE_KEY_HANDLER_CID \
+  { 0xfb45921b, 0xe0a5, 0x45c6, \
+    { 0x90, 0xd0, 0xa6, 0x97, 0xa7, 0x72, 0xc4, 0x2a } }
+#define NS_HARDWARE_KEY_HANDLER_CONTRACTID \
+  "@mozilla.org/HardwareKeyHandler;1"
+
+#include "mozilla/EventForwards.h" /* For nsEventStatus */
+
+namespace mozilla {
+class WidgetKeyboardEvent;
+}
+
+using mozilla::WidgetKeyboardEvent;
+
+class nsINode;
+%}
+
+/**
+ * This interface is used to be registered to the nsIHardwareKeyHandler through
+ * |nsIHardwareKeyHandler.registerListener|.
+ */
+[scriptable, function, uuid(cd5aeee3-b4b9-459d-85e7-c0671c7a8a2e)]
+interface nsIHardwareKeyEventListener : nsISupports
+{
+  /**
+   * This method will be invoked by nsIHardwareKeyHandler to forward the native
+   * keyboard event to the active input method
+   */
+  bool onHardwareKey(in nsIDOMKeyEvent aEvent);
+};
+
+/**
+ * This interface has two main roles. One is to send a hardware keyboard event
+ * to the active input method app and the other is to receive its reply result.
+ * If a keyboard event is triggered from a hardware keyboard when an editor has
+ * focus, the event target should be the editor. However, the text input
+ * processor algorithm is implemented in an input method app and it should
+ * handle the event earlier than the real event target to do the mapping such
+ * as character conversion according to the language setting or the type of a
+ * hardware keyboard.
+ */
+[scriptable, builtinclass, uuid(25b34270-caad-4d18-a910-860351690639)]
+interface nsIHardwareKeyHandler : nsISupports
+{
+  /**
+   * Flags used to set the defaultPrevented's result. The default result
+   * from input-method-app should be set to NO_DEFAULT_PREVENTED.
+   * (It means the forwarded event isn't consumed by input-method-app.)
+   * If the input-method-app consumes the forwarded event,
+   * then the result should be set by DEFAULT_PREVENTED* before reply.
+   */
+  const unsigned short NO_DEFAULT_PREVENTED           = 0x0000;
+  const unsigned short DEFAULT_PREVENTED              = 0x0001;
+  const unsigned short DEFAULT_PREVENTED_BY_CHROME    = 0x0002;
+  const unsigned short DEFAULT_PREVENTED_BY_CONTENT   = 0x0004;
+
+  /**
+   * Registers a listener in input-method-app to receive
+   * the forwarded hardware keyboard events
+   *
+   * @param aListener             Listener object to be notified for receiving
+   *                              the keyboard event fired from hardware
+   * @note                        A listener object must implement
+   *                              nsIHardwareKeyEventListener and
+   *                              nsSupportsWeakReference
+   * @see nsIHardwareKeyEventListener
+   * @see nsSupportsWeakReference
+   */
+  void registerListener(in nsIHardwareKeyEventListener aListener);
+
+  /**
+   * Unregisters the current listener from input-method-app
+   */
+  void unregisterListener();
+
+  /**
+   * Notifies nsIHardwareKeyHandler that input-method-app is active.
+   */
+  void onInputMethodAppConnected();
+
+  /**
+   * Notifies nsIHardwareKeyHandler that input-method-app is disabled.
+   */
+  void onInputMethodAppDisconnected();
+
+  /**
+   * Input-method-app will pass the processing result that the forwarded
+   * event is handled or not through this method, and the nsIHardwareKeyHandler
+   * can use this to receive the reply of |forwardKeyToInputMethodApp|
+   * from the active input method.
+   *
+   * The result should contain the original event type and the info whether
+   * the default is prevented, also, it is prevented by chrome or content.
+   *
+   * @param aEventType            The type of an original event.
+   * @param aDefaultPrevented     State that |evt.preventDefault|
+   *                              is called by content, chrome or not.
+   */
+  void onHandledByInputMethodApp(in DOMString aType,
+                                 in unsigned short aDefaultPrevented);
+
+  /**
+   * Sends the native keyboard events triggered from hardware to the
+   * active input method before dispatching to its event target.
+   * This method only forwards keydown and keyup events.
+   * If the event isn't allowed to be forwarded, we should continue the
+   * normal event processing. For those forwarded keydown and keyup events
+   * We will pause the further event processing to wait for the completion
+   * of the event handling in the active input method app.
+   * Once |onHandledByInputMethodApp| is called by the input method app,
+   * the pending event processing can be resumed according to its reply.
+   * On the other hand, the keypress will never be sent to the input-method-app.
+   * Depending on whether the keydown's reply arrives before the keypress event
+   * comes, the keypress event will be handled directly or pushed into
+   * the event queue to wait for its heading keydown's reply.
+   *
+   * This implementation will call |nsIHardwareKeyEventListener.onHardwareKey|,
+   * which is registered through |nsIHardwareKeyEventListener.registerListener|,
+   * to forward the events.
+   *
+   * Returns true, if the event is handled in this module.
+   * Returns false, otherwise.
+   *
+   * If it returns false, we should continue the normal event processing.
+   */
+  %{C++
+  virtual bool ForwardKeyToInputMethodApp(nsINode* aTarget,
+                                          WidgetKeyboardEvent* aEvent,
+                                          nsEventStatus* aEventStatus) = 0;
+  %}
+};
