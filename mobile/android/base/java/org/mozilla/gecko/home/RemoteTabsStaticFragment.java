@@ -11,12 +11,10 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
 import java.util.EnumSet;
-import java.util.Locale;
 
 /**
  * A <code>HomeFragment</code> which displays one of a small set of static views
@@ -85,7 +83,6 @@ public class RemoteTabsStaticFragment extends HomeFragment implements OnClickLis
     public void onViewCreated(View view, Bundle savedInstanceState) {
         for (int resourceId : new int[] {
                 R.id.remote_tabs_setup_get_started,
-                R.id.remote_tabs_setup_old_sync_link,
                 R.id.remote_tabs_needs_verification_resend_email,
                 R.id.remote_tabs_needs_verification_help,
                 R.id.remote_tabs_needs_password_sign_in,
@@ -101,11 +98,6 @@ public class RemoteTabsStaticFragment extends HomeFragment implements OnClickLis
             // This Activity will redirect to the correct Activity as needed.
             final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
             startActivity(intent);
-        } else if (id == R.id.remote_tabs_setup_old_sync_link) {
-            final String url = FirefoxAccounts.getOldSyncUpgradeURL(getResources(), Locale.getDefault());
-            // Don't allow switch-to-tab.
-            final EnumSet<OnUrlOpenListener.Flags> flags = EnumSet.noneOf(OnUrlOpenListener.Flags.class);
-            mUrlOpenListener.onUrlOpen(url, flags);
         } else if (id == R.id.remote_tabs_needs_verification_resend_email) {
             final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_CONFIRM_ACCOUNT);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
