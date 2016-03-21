@@ -68,7 +68,6 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mInitDone(false)
   , mIsEncrypted(false)
   , mTrackDemuxersMayBlock(false)
-  , mHardwareAccelerationDisabled(false)
   , mDemuxOnly(false)
   , mVideoFrameContainer(aVideoFrameContainer)
 {
@@ -404,7 +403,6 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
                                    mInfo.mVideo,
                                  decoder.mTaskQueue,
                                  decoder.mCallback,
-                                 mHardwareAccelerationDisabled ? LayersBackend::LAYERS_NONE :
                                  mLayersBackendType,
                                  GetImageContainer());
       break;
@@ -467,23 +465,6 @@ MediaFormatReader::GetDecoderData(TrackType aTrack)
     return mAudio;
   }
   return mVideo;
-}
-
-void
-MediaFormatReader::DisableHardwareAcceleration()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  if (HasVideo() && !mHardwareAccelerationDisabled) {
-    mHardwareAccelerationDisabled = true;
-    Flush(TrackInfo::kVideoTrack);
-    mVideo.ShutdownDecoder();
-    if (!EnsureDecoderCreated(TrackType::kVideoTrack)) {
-      LOG("Unable to re-create decoder, aborting");
-      NotifyError(TrackInfo::kVideoTrack);
-      return;
-    }
-    ScheduleUpdate(TrackInfo::kVideoTrack);
-  }
 }
 
 bool
