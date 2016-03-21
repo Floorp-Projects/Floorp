@@ -80,6 +80,10 @@ enum TextureAllocationFlags {
   // TextureClientD3D11, which may otherwise choose D3D10 or non-KeyedMutex
   // surfaces when used on the main thread.
   ALLOC_FOR_OUT_OF_BAND_CONTENT = 1 << 5,
+
+  // Disable any cross-device synchronization. This is also for TextureClientD3D11,
+  // and creates a texture without KeyedMutex.
+  ALLOC_MANUAL_SYNCHRONIZATION = 1 << 6,
 };
 
 #ifdef XP_WIN
