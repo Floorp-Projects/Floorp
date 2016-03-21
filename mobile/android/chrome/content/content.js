@@ -105,6 +105,39 @@ var AboutReaderListener = {
         content.document.mozSyntheticDocument) {
       return;
     }
+
+    this.scheduleReadabilityCheckPostPaint(forceNonArticle);
+  },
+
+  cancelPotentialPendingReadabilityCheck: function() {
+    if (this._pendingReadabilityCheck) {
+      removeEventListener("MozAfterPaint", this._pendingReadabilityCheck);
+      delete this._pendingReadabilityCheck;
+    }
+  },
+
+  scheduleReadabilityCheckPostPaint: function(forceNonArticle) {
+    if (this._pendingReadabilityCheck) {
+      // We need to stop this check before we re-add one because we don't know
+      // if forceNonArticle was true or false last time.
+      this.cancelPotentialPendingReadabilityCheck();
+    }
+    this._pendingReadabilityCheck = this.onPaintWhenWaitedFor.bind(this, forceNonArticle);
+    addEventListener("MozAfterPaint", this._pendingReadabilityCheck);
+  },
+
+  onPaintWhenWaitedFor: function(forceNonArticle, event) {
+    // In non-e10s, we'll get called for paints other than ours, and so it's
+    // possible that this page hasn't been laid out yet, in which case we
+    // should wait until we get an event that does relate to our layout. We
+    // determine whether any of our content got painted by checking if there
+    // are any painted rects.
+    if (!event.clientRects.length) {
+      return;
+    }
+
+    this.cancelPotentialPendingReadabilityCheck();
+
     // Only send updates when there are articles; there's no point updating with
     // |false| all the time.
     if (ReaderMode.isProbablyReaderable(content.document)) {
