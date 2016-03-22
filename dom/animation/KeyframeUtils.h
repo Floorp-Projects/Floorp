@@ -34,25 +34,6 @@ class KeyframeUtils
 {
 public:
   /**
-  * Converts a JS value to a property-indexed keyframe or a sequence of
-  * regular keyframes and builds an array of AnimationProperty objects for the
-  * keyframe animation that it specifies.
-  *
-  * @param aTarget The target of the animation, used to resolve style
-  *   for a property's underlying value if needed.
-  * @param aFrames The JS value, provided as an optional IDL |object?| value,
-  *   that is the keyframe list specification.
-  * @param aResult The array into which the resulting AnimationProperty
-  *   objects will be appended.
-  */
-  static void
-  BuildAnimationPropertyList(JSContext* aCx, Element* aTarget,
-                             CSSPseudoElementType aPseudoType,
-                             JS::Handle<JSObject*> aFrames,
-                             InfallibleTArray<AnimationProperty>& aResult,
-                             ErrorResult& aRv);
-
-  /**
    * Converts a JS value representing a property-indexed keyframe or a sequence
    * of keyframes to an array of Keyframe objects.
    *
