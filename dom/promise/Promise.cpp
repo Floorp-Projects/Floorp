@@ -940,6 +940,35 @@ Promise::MaybeRejectWithNull()
   MaybeSomething(JS::NullHandleValue, &Promise::MaybeReject);
 }
 
+
+#ifdef SPIDERMONKEY_PROMISE
+void
+Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise)
+{
+  MOZ_ASSERT(!js::IsWrapper(aPromise));
+
+  MOZ_ASSERT(JS::GetPromiseState(aPromise) == JS::PromiseState::Rejected);
+
+  JS::Rooted<JS::Value> result(aCx, JS::GetPromiseResult(aPromise));
+
+  js::ErrorReport report(aCx);
+  if (!report.init(aCx, result, js::ErrorReport::NoSideEffects)) {
+    JS_ClearPendingException(aCx);
+    return;
+  }
+
+  RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
+  bool isMainThread = MOZ_LIKELY(NS_IsMainThread());
+  bool isChrome = isMainThread ? nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(aPromise))
+                               : GetCurrentThreadWorkerPrivate()->IsChromeWorker();
+  nsGlobalWindow* win = isMainThread ? xpc::WindowGlobalOrNull(aPromise) : nullptr;
+  xpcReport->Init(report.report(), report.message(), isChrome, win ? win->AsInner()->WindowID() : 0);
+
+  // Now post an event to do the real reporting async
+  NS_DispatchToMainThread(new AsyncErrorReporter(xpcReport));
+}
+#endif // defined(SPIDERMONKEY_PROMISE)
+
 bool
 Promise::PerformMicroTaskCheckpoint()
 {
