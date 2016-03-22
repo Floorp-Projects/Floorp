@@ -54,18 +54,18 @@ On Windows, it should be through **DwmGetCompositionTimingInfo**.
 #Compositor
 When the **CompositorVsyncDispatcher** is notified of the vsync event, the **CompositorVsyncObserver** associated with the **CompositorVsyncDispatcher** begins execution.
 Since the **CompositorVsyncDispatcher** executes on the *Hardware Vsync Thread* and the **Compositor** composites on the *CompositorThread*, the **CompositorVsyncObserver** posts a task to the *CompositorThread*.
-The **CompositorParent** then composites.
+The **CompositorBridgeParent** then composites.
 The model where the **CompositorVsyncDispatcher** notifies components on the *Hardware Vsync Thread*, and the component schedules the task on the appropriate thread is used everywhere.
 
 The **CompositorVsyncObserver** listens to vsync events as needed and stops listening to vsync when composites are no longer scheduled or required.
-Every **CompositorParent** is associated and tied to one **CompositorVsyncObserver**, which is associated with the **CompositorVsyncDispatcher**.
-Each **CompositorParent** is associated with one widget and is created when a new platform window or **nsBaseWidget** is created.
-The **CompositorParent**, **CompositorVsyncDispatcher**, **CompositorVsyncObserver**, and **nsBaseWidget** all have the same lifetimes, which are created and destroyed together.
+Every **CompositorBridgeParent** is associated and tied to one **CompositorVsyncObserver**, which is associated with the **CompositorVsyncDispatcher**.
+Each **CompositorBridgeParent** is associated with one widget and is created when a new platform window or **nsBaseWidget** is created.
+The **CompositorBridgeParent**, **CompositorVsyncDispatcher**, **CompositorVsyncObserver**, and **nsBaseWidget** all have the same lifetimes, which are created and destroyed together.
 
 ###CompositorVsyncDispatcher
 The **CompositorVsyncDispatcher** executes on the *Hardware Vsync Thread*.
 It contains references to the **nsBaseWidget** it is associated with and has a lifetime equal to the **nsBaseWidget**.
-The **CompositorVsyncDispatcher** is responsible for notifying the **CompositorParent** that a vsync event has occured.
+The **CompositorVsyncDispatcher** is responsible for notifying the **CompositorBridgeParent** that a vsync event has occured.
 There can be multiple **CompositorVsyncDispatchers** per **Display**, one **CompositorVsyncDispatcher** per window.
 The only responsibility of the **CompositorVsyncDispatcher** is to notify components when a vsync event has occured, and to stop listening to vsync when no components require vsync events.
 We require one **CompositorVsyncDispatcher** per window so that we can handle multiple **Displays**.
@@ -112,29 +112,29 @@ The **GeckoTouchDispatcher** handles this case by always forcing the **Composito
 
 ###Widget, Compositor, CompositorVsyncDispatcher, GeckoTouchDispatcher Shutdown Procedure
 When the [nsBaseWidget shuts down](http://hg.mozilla.org/mozilla-central/file/0df249a0e4d3/widget/nsBaseWidget.cpp#l182) - It calls nsBaseWidget::DestroyCompositor on the *Gecko Main Thread*.
-During nsBaseWidget::DestroyCompositor, it first destroys the CompositorChild.
-CompositorChild sends a sync IPC call to CompositorParent::RecvStop, which calls [CompositorParent::Destroy](http://hg.mozilla.org/mozilla-central/file/ab0490972e1e/gfx/layers/ipc/CompositorParent.cpp#l509).
+During nsBaseWidget::DestroyCompositor, it first destroys the CompositorBridgeChild.
+CompositorBridgeChild sends a sync IPC call to CompositorBridgeParent::RecvStop, which calls [CompositorBridgeParent::Destroy](http://hg.mozilla.org/mozilla-central/file/ab0490972e1e/gfx/layers/ipc/CompositorBridgeParent.cpp#l509).
 During this time, the *main thread* is blocked on the parent process.
-CompositorParent::RecvStop runs on the *Compositor thread* and cleans up some resources, including setting the **CompositorVsyncObserver** to nullptr.
-CompositorParent::RecvStop also explicitly keeps the CompositorParent alive and posts another task to run CompositorParent::DeferredDestroy on the Compositor loop so that all ipdl code can finish executing.
+CompositorBridgeParent::RecvStop runs on the *Compositor thread* and cleans up some resources, including setting the **CompositorVsyncObserver** to nullptr.
+CompositorBridgeParent::RecvStop also explicitly keeps the CompositorBridgeParent alive and posts another task to run CompositorBridgeParent::DeferredDestroy on the Compositor loop so that all ipdl code can finish executing.
 The **CompositorVsyncObserver** also unobserves from vsync and cancels any pending composite tasks.
-Once CompositorParent::RecvStop finishes, the *main thread* in the parent process continues shutting down the nsBaseWidget.
+Once CompositorBridgeParent::RecvStop finishes, the *main thread* in the parent process continues shutting down the nsBaseWidget.
 
-At the same time, the *Compositor thread* is executing tasks until CompositorParent::DeferredDestroy runs, which flushes the compositor message loop.
-Now we have two tasks as both the nsBaseWidget releases a reference to the Compositor on the *main thread* during destruction and the CompositorParent::DeferredDestroy releases a reference to the CompositorParent on the *Compositor Thread*.
-Finally, the CompositorParent itself is destroyed on the *main thread* once both references are gone due to explicit [main thread destruction](http://hg.mozilla.org/mozilla-central/file/50b95032152c/gfx/layers/ipc/CompositorParent.h#l148).
+At the same time, the *Compositor thread* is executing tasks until CompositorBridgeParent::DeferredDestroy runs, which flushes the compositor message loop.
+Now we have two tasks as both the nsBaseWidget releases a reference to the Compositor on the *main thread* during destruction and the CompositorBridgeParent::DeferredDestroy releases a reference to the CompositorBridgeParent on the *Compositor Thread*.
+Finally, the CompositorBridgeParent itself is destroyed on the *main thread* once both references are gone due to explicit [main thread destruction](http://hg.mozilla.org/mozilla-central/file/50b95032152c/gfx/layers/ipc/CompositorBridgeParent.h#l148).
 
 With the **CompositorVsyncObserver**, any accesses to the widget after nsBaseWidget::DestroyCompositor executes are invalid.
 Any accesses to the compositor between the time the nsBaseWidget::DestroyCompositor runs and the CompositorVsyncObserver's destructor runs aren't safe yet a hardware vsync event could occur between these times.
-Since any tasks posted on the Compositor loop after CompositorParent::DeferredDestroy is posted are invalid, we make sure that no vsync tasks can be posted once CompositorParent::RecvStop executes and DeferredDestroy is posted on the Compositor thread.
-When the sync call to CompositorParent::RecvStop executes, we explicitly set the CompositorVsyncObserver to null to prevent vsync notifications from occurring.
-If vsync notifications were allowed to occur, since the **CompositorVsyncObserver**'s vsync notification executes on the *hardware vsync thread*, it would post a task to the Compositor loop and may execute after CompositorParent::DeferredDestroy.
-Thus, we explicitly shut down vsync events in the **CompositorVsyncDispatcher** and **CompositorVsyncObserver** during nsBaseWidget::Shutdown to prevent any vsync tasks from executing after CompositorParent::DeferredDestroy.
+Since any tasks posted on the Compositor loop after CompositorBridgeParent::DeferredDestroy is posted are invalid, we make sure that no vsync tasks can be posted once CompositorBridgeParent::RecvStop executes and DeferredDestroy is posted on the Compositor thread.
+When the sync call to CompositorBridgeParent::RecvStop executes, we explicitly set the CompositorVsyncObserver to null to prevent vsync notifications from occurring.
+If vsync notifications were allowed to occur, since the **CompositorVsyncObserver**'s vsync notification executes on the *hardware vsync thread*, it would post a task to the Compositor loop and may execute after CompositorBridgeParent::DeferredDestroy.
+Thus, we explicitly shut down vsync events in the **CompositorVsyncDispatcher** and **CompositorVsyncObserver** during nsBaseWidget::Shutdown to prevent any vsync tasks from executing after CompositorBridgeParent::DeferredDestroy.
 
 The **CompositorVsyncDispatcher** may be destroyed on either the *main thread* or *Compositor Thread*, since both the nsBaseWidget and **CompositorVsyncObserver** race to destroy on different threads.
 nsBaseWidget is destroyed on the *main thread* and releases a reference to the **CompositorVsyncDispatcher** during destruction.
-The **CompositorVsyncObserver** has a race to be destroyed either during CompositorParent shutdown or from the **GeckoTouchDispatcher** which is destroyed on the main thread with [ClearOnShutdown](http://hg.mozilla.org/mozilla-central/file/21567e9a6e40/xpcom/base/ClearOnShutdown.h#l15).
-Whichever object, the CompositorParent or the **GeckoTouchDispatcher** is destroyed last will hold the last reference to the **CompositorVsyncDispatcher**, which destroys the object.
+The **CompositorVsyncObserver** has a race to be destroyed either during CompositorBridgeParent shutdown or from the **GeckoTouchDispatcher** which is destroyed on the main thread with [ClearOnShutdown](http://hg.mozilla.org/mozilla-central/file/21567e9a6e40/xpcom/base/ClearOnShutdown.h#l15).
+Whichever object, the CompositorBridgeParent or the **GeckoTouchDispatcher** is destroyed last will hold the last reference to the **CompositorVsyncDispatcher**, which destroys the object.
 
 #Refresh Driver
 The Refresh Driver is ticked from a [single active timer](http://hg.mozilla.org/mozilla-central/file/ab0490972e1e/layout/base/nsRefreshDriver.cpp#l11).
@@ -212,7 +212,7 @@ There is still only one **VsyncParent/VsyncChild** pair, just each vsync notific
 
 #Object Lifetime
 1. CompositorVsyncDispatcher - Lives as long as the nsBaseWidget associated with the VsyncDispatcher
-2. CompositorVsyncObserver - Lives and dies the same time as the CompositorParent.
+2. CompositorVsyncObserver - Lives and dies the same time as the CompositorBridgeParent.
 3. RefreshTimerVsyncDispatcher - As long as the associated display object, which is the lifetime of Firefox.
 4. VsyncSource - Lives as long as the gfxPlatform on the chrome process, which is the lifetime of Firefox.
 5. VsyncParent/VsyncChild - Lives as long as the content process

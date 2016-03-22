@@ -8,8 +8,8 @@
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEventDispatcherListener.h"
 
-#include "mozilla/layers/CompositorChild.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "nsBaseWidget.h"
 #include "nsDeviceContext.h"
@@ -270,12 +270,12 @@ nsBaseWidget::Shutdown()
 
 void nsBaseWidget::DestroyCompositor()
 {
-  if (mCompositorChild) {
-    // XXX CompositorChild and CompositorParent might be re-created in
+  if (mCompositorBridgeChild) {
+    // XXX CompositorBridgeChild and CompositorBridgeParent might be re-created in
     // ClientLayerManager destructor. See bug 1133426.
-    RefPtr<CompositorChild> compositorChild = mCompositorChild;
-    RefPtr<CompositorParent> compositorParent = mCompositorParent;
-    mCompositorChild->Destroy();
+    RefPtr<CompositorBridgeChild> compositorChild = mCompositorBridgeChild;
+    RefPtr<CompositorBridgeParent> compositorParent = mCompositorBridgeParent;
+    mCompositorBridgeChild->Destroy();
   }
 
   // Can have base widgets that are things like tooltips
@@ -297,7 +297,7 @@ void nsBaseWidget::DestroyLayerManager()
 void
 nsBaseWidget::OnRenderingDeviceReset()
 {
-  if (!mLayerManager || !mCompositorParent) {
+  if (!mLayerManager || !mCompositorBridgeParent) {
     return;
   }
 
@@ -319,7 +319,7 @@ nsBaseWidget::OnRenderingDeviceReset()
 
   // Recreate the compositor.
   TextureFactoryIdentifier identifier;
-  if (!mCompositorParent->ResetCompositor(backendHints, &identifier)) {
+  if (!mCompositorBridgeParent->ResetCompositor(backendHints, &identifier)) {
     // No action was taken, so we don't have to do anything.
     return;
   }
@@ -931,10 +931,10 @@ nsBaseWidget::ComputeShouldAccelerate()
   return gfxPlatform::GetPlatform()->ShouldUseLayersAcceleration();
 }
 
-CompositorParent* nsBaseWidget::NewCompositorParent(int aSurfaceWidth,
+CompositorBridgeParent* nsBaseWidget::NewCompositorBridgeParent(int aSurfaceWidth,
                                                     int aSurfaceHeight)
 {
-  return new CompositorParent(this, false, aSurfaceWidth, aSurfaceHeight);
+  return new CompositorBridgeParent(this, false, aSurfaceWidth, aSurfaceHeight);
 }
 
 void nsBaseWidget::CreateCompositor()
@@ -984,8 +984,8 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
 
   RefPtr<GeckoContentController> controller = CreateRootContentController();
   if (controller) {
-    uint64_t rootLayerTreeId = mCompositorParent->RootLayerTreeId();
-    CompositorParent::SetControllerForLayerTree(rootLayerTreeId, controller);
+    uint64_t rootLayerTreeId = mCompositorBridgeParent->RootLayerTreeId();
+    CompositorBridgeParent::SetControllerForLayerTree(rootLayerTreeId, controller);
   }
 
   // When APZ is enabled, we can actually enable raw touch events because we
@@ -1019,7 +1019,7 @@ nsBaseWidget::UpdateZoomConstraints(const uint32_t& aPresShellId,
                                     const FrameMetrics::ViewID& aViewId,
                                     const Maybe<ZoomConstraints>& aConstraints)
 {
-  if (!mCompositorParent || !mAPZC) {
+  if (!mCompositorBridgeParent || !mAPZC) {
     if (mInitialZoomConstraints) {
       MOZ_ASSERT(mInitialZoomConstraints->mPresShellID == aPresShellId);
       MOZ_ASSERT(mInitialZoomConstraints->mViewID == aViewId);
@@ -1035,7 +1035,7 @@ nsBaseWidget::UpdateZoomConstraints(const uint32_t& aPresShellId,
     }
     return;
   }
-  uint64_t layersId = mCompositorParent->RootLayerTreeId();
+  uint64_t layersId = mCompositorBridgeParent->RootLayerTreeId();
   mAPZC->UpdateZoomConstraints(ScrollableLayerGuid(layersId, aPresShellId, aViewId),
                                aConstraints);
 }
@@ -1060,7 +1060,7 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
   // event. If the event is instead targeted to an APZC in the child process,
   // the transform will be applied in the child process before dispatching
   // the event there (see e.g. TabChild::RecvRealTouchEvent()).
-  if (aGuid.mLayersId == mCompositorParent->RootLayerTreeId()) {
+  if (aGuid.mLayersId == mCompositorBridgeParent->RootLayerTreeId()) {
     APZCCallbackHelper::ApplyCallbackTransform(*aEvent, aGuid,
         GetDefaultScale());
   }
@@ -1236,11 +1236,11 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   MOZ_ASSERT(gfxPlatform::UsesOffMainThreadCompositing(),
              "This function assumes OMTC");
 
-  MOZ_ASSERT(!mCompositorParent && !mCompositorChild,
+  MOZ_ASSERT(!mCompositorBridgeParent && !mCompositorBridgeChild,
     "Should have properly cleaned up the previous PCompositor pair beforehand");
 
-  if (mCompositorChild) {
-    mCompositorChild->Destroy();
+  if (mCompositorBridgeChild) {
+    mCompositorBridgeChild->Destroy();
   }
 
   // Recreating this is tricky, as we may still have an old and we need
@@ -1253,16 +1253,16 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   }
 
   CreateCompositorVsyncDispatcher();
-  mCompositorParent = NewCompositorParent(aWidth, aHeight);
+  mCompositorBridgeParent = NewCompositorBridgeParent(aWidth, aHeight);
   RefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
-  mCompositorChild = new CompositorChild(lm);
-  mCompositorChild->OpenSameProcess(mCompositorParent);
+  mCompositorBridgeChild = new CompositorBridgeChild(lm);
+  mCompositorBridgeChild->OpenSameProcess(mCompositorBridgeParent);
 
   // Make sure the parent knows it is same process.
-  mCompositorParent->SetOtherProcessId(base::GetCurrentProcId());
+  mCompositorBridgeParent->SetOtherProcessId(base::GetCurrentProcId());
 
-  uint64_t rootLayerTreeId = mCompositorParent->RootLayerTreeId();
-  mAPZC = CompositorParent::GetAPZCTreeManager(rootLayerTreeId);
+  uint64_t rootLayerTreeId = mCompositorBridgeParent->RootLayerTreeId();
+  mAPZC = CompositorBridgeParent::GetAPZCTreeManager(rootLayerTreeId);
   if (mAPZC) {
     ConfigureAPZCTreeManager();
   }
@@ -1282,7 +1282,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   bool success = false;
   if (!backendHints.IsEmpty()) {
-    shadowManager = mCompositorChild->SendPLayerTransactionConstructor(
+    shadowManager = mCompositorBridgeChild->SendPLayerTransactionConstructor(
       backendHints, 0, &textureFactoryIdentifier, &success);
   }
 
@@ -1292,8 +1292,8 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     NS_WARNING("Failed to create an OMT compositor.");
     DestroyCompositor();
     mLayerManager = nullptr;
-    mCompositorChild = nullptr;
-    mCompositorParent = nullptr;
+    mCompositorBridgeChild = nullptr;
+    mCompositorBridgeParent = nullptr;
     mCompositorVsyncDispatcher = nullptr;
     return;
   }
@@ -1350,9 +1350,9 @@ LayerManager* nsBaseWidget::CreateBasicLayerManager()
   return new BasicLayerManager(this);
 }
 
-CompositorChild* nsBaseWidget::GetRemoteRenderer()
+CompositorBridgeChild* nsBaseWidget::GetRemoteRenderer()
 {
-  return mCompositorChild;
+  return mCompositorBridgeChild;
 }
 
 already_AddRefed<mozilla::gfx::DrawTarget> nsBaseWidget::StartRemoteDrawing()
@@ -1821,10 +1821,10 @@ nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
                          const CSSRect& aRect,
                          const uint32_t& aFlags)
 {
-  if (!mCompositorParent || !mAPZC) {
+  if (!mCompositorBridgeParent || !mAPZC) {
     return;
   }
-  uint64_t layerId = mCompositorParent->RootLayerTreeId();
+  uint64_t layerId = mCompositorBridgeParent->RootLayerTreeId();
   mAPZC->ZoomToRect(ScrollableLayerGuid(layerId, aPresShellId, aViewId), aRect, aFlags);
 }
 
@@ -1866,9 +1866,9 @@ nsBaseWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
     return;
   }
 
-  MOZ_ASSERT(XRE_IsParentProcess() && mCompositorParent);
+  MOZ_ASSERT(XRE_IsParentProcess() && mCompositorBridgeParent);
 
-  int layersId = mCompositorParent->RootLayerTreeId();;
+  int layersId = mCompositorBridgeParent->RootLayerTreeId();;
   ScrollableLayerGuid guid(layersId, aDragMetrics.mPresShellId, aDragMetrics.mViewId);
 
   APZThreadUtils::RunOnControllerThread(
@@ -2093,7 +2093,7 @@ nsIWidget::SnapshotWidgetOnScreen()
     return nullptr;
   }
 
-  CompositorChild* cc = lm->GetRemoteRenderer();
+  CompositorBridgeChild* cc = lm->GetRemoteRenderer();
   if (!cc) {
     return nullptr;
   }

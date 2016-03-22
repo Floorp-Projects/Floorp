@@ -42,7 +42,7 @@ namespace layers {
 
 class AsyncDragMetrics;
 struct ScrollableLayerGuid;
-class CompositorParent;
+class CompositorBridgeParent;
 class GestureEventListener;
 class PCompositorBridgeParent;
 struct AsyncTransform;
@@ -198,7 +198,7 @@ public:
    * The platform implementation must set the compositor parent so that we can
    * request composites.
    */
-  void SetCompositorParent(CompositorParent* aCompositorParent);
+  void SetCompositorBridgeParent(CompositorBridgeParent* aCompositorBridgeParent);
 
   /**
    * Inform this APZC that it will be sharing its FrameMetrics with a cross-process
@@ -515,7 +515,7 @@ protected:
 
   /**
    * Schedules a composite on the compositor thread. Wrapper for
-   * CompositorParent::ScheduleRenderOnCompositorThread().
+   * CompositorBridgeParent::ScheduleRenderOnCompositorThread().
    */
   void ScheduleComposite();
 
@@ -652,7 +652,7 @@ protected:
   void RequestSnapToDestination();
 
   uint64_t mLayersId;
-  RefPtr<CompositorParent> mCompositorParent;
+  RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
      since they are accessed on the UI thread but can be cleared on the

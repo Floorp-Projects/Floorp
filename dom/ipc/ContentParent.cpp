@@ -85,7 +85,7 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/PAPZParent.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
 #include "mozilla/LookAndFeel.h"
@@ -1921,7 +1921,7 @@ ContentParent::AllocateLayerTreeId(ContentParent* aContent,
                                    TabParent* aTopLevel, const TabId& aTabId,
                                    uint64_t* aId)
 {
-  *aId = CompositorParent::AllocateLayerTreeId();
+  *aId = CompositorBridgeParent::AllocateLayerTreeId();
 
   if (!gfxPlatform::AsyncPanZoomEnabled()) {
     return true;
@@ -1931,7 +1931,7 @@ ContentParent::AllocateLayerTreeId(ContentParent* aContent,
     return false;
   }
 
-  return CompositorParent::UpdateRemoteContentController(*aId, aContent,
+  return CompositorBridgeParent::UpdateRemoteContentController(*aId, aContent,
                                                          aTabId, aTopLevel);
 }
 
@@ -1979,7 +1979,7 @@ ContentParent::RecvDeallocateLayerTreeId(const uint64_t& aId)
   auto iter = NestedBrowserLayerIds().find(this);
   if (iter != NestedBrowserLayerIds().end() &&
     iter->second.find(aId) != iter->second.end()) {
-    CompositorParent::DeallocateLayerTreeId(aId);
+    CompositorBridgeParent::DeallocateLayerTreeId(aId);
   } else {
     // You can't deallocate layer tree ids that you didn't allocate
     KillHard("DeallocateLayerTreeId");
@@ -2543,14 +2543,14 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
 
   if (aSetupOffMainThreadCompositing) {
     // NB: internally, this will send an IPC message to the child
-    // process to get it to create the CompositorChild.  This
+    // process to get it to create the CompositorBridgeChild.  This
     // message goes through the regular IPC queue for this
     // channel, so delivery will happen-before any other messages
-    // we send.  The CompositorChild must be created before any
+    // we send.  The CompositorBridgeChild must be created before any
     // PBrowsers are created, because they rely on the Compositor
     // already being around.  (Creation is async, so can't happen
     // on demand.)
-    bool useOffMainThreadCompositing = !!CompositorParent::CompositorLoop();
+    bool useOffMainThreadCompositing = !!CompositorBridgeParent::CompositorLoop();
     if (useOffMainThreadCompositing) {
       DebugOnly<bool> opened = PCompositorBridge::Open(this);
       MOZ_ASSERT(opened);
@@ -3337,7 +3337,7 @@ PCompositorBridgeParent*
 ContentParent::AllocPCompositorBridgeParent(mozilla::ipc::Transport* aTransport,
                                             base::ProcessId aOtherProcess)
 {
-  return CompositorParent::Create(aTransport, aOtherProcess);
+  return CompositorBridgeParent::Create(aTransport, aOtherProcess);
 }
 
 gfx::PVRManagerParent*
