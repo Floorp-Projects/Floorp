@@ -10,7 +10,7 @@ import mozfile
 import mozinfo
 from marionette import BaseMarionetteTestRunner
 
-from firefox_puppeteer.testcases import FirefoxTestCase
+from firefox_ui_harness.testcases import FirefoxTestCase
 
 
 class FirefoxUITestRunner(BaseMarionetteTestRunner):

@@ -5,12 +5,18 @@
 import pprint
 from datetime import datetime
 
+from marionette import MarionetteTestCase
 from marionette_driver import Wait
 
 from firefox_puppeteer.api.prefs import Preferences
 from firefox_puppeteer.api.software_update import SoftwareUpdate
-from firefox_puppeteer.testcases import FirefoxTestCase
+from firefox_puppeteer.testcases import BaseFirefoxTestCase
 from firefox_puppeteer.ui.update_wizard import UpdateWizardDialog
+
+
+class FirefoxTestCase(BaseFirefoxTestCase, MarionetteTestCase):
+    """ Integrate MarionetteTestCase with BaseFirefoxTestCase by reordering MRO """
+    pass
 
 
 class UpdateTestCase(FirefoxTestCase):
@@ -29,7 +35,7 @@ class UpdateTestCase(FirefoxTestCase):
     PREF_APP_UPDATE_ALTWINDOWTYPE = 'app.update.altwindowtype'
 
     def __init__(self, *args, **kwargs):
-        FirefoxTestCase.__init__(self, *args, **kwargs)
+        super(UpdateTestCase, self).__init__(*args, **kwargs)
 
         self.target_buildid = kwargs.pop('update_target_buildid')
         self.target_version = kwargs.pop('update_target_version')
@@ -43,7 +49,7 @@ class UpdateTestCase(FirefoxTestCase):
         self.updates = []
 
     def setUp(self, is_fallback=False):
-        FirefoxTestCase.setUp(self)
+        super(UpdateTestCase, self).setUp()
 
         self.software_update = SoftwareUpdate(lambda: self.marionette)
         self.download_duration = None
@@ -110,7 +116,7 @@ class UpdateTestCase(FirefoxTestCase):
             self.logger.info('Update test results: \n{}'.format(output))
 
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(UpdateTestCase, self).tearDown()
 
             self.restore_config_files()
 

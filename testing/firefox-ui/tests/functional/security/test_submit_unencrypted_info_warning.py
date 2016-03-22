@@ -7,7 +7,7 @@ from marionette_driver import By, expected, Wait
 from marionette_driver.errors import NoAlertPresentException
 from marionette_driver.marionette import Alert
 
-from firefox_puppeteer.testcases import FirefoxTestCase
+from firefox_ui_harness.testcases import FirefoxTestCase
 
 
 class TestSubmitUnencryptedInfoWarning(FirefoxTestCase):
