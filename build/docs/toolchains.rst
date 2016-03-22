@@ -51,3 +51,58 @@ Once Visual Studio 2015 Community has been installed, from a checkout
 of mozilla-central, run the following to produce a ZIP archive::
 
    $ ./mach python build/windows_toolchain.py create-zip vs2015.zip
+
+Firefox for Android with Gradle
+===============================
+
+To build Firefox for Android with Gradle in automation, archives
+containing both the Gradle executable and a Maven repository
+comprising the exact build dependencies are produced and uploaded to
+an internal Mozilla server.  The build automation will download,
+verify, and extract these archive before building.  These archives
+provide a self-contained Gradle and Maven repository so that machines
+don't need to fetch additional Maven dependencies at build time.
+(Gradle and the downloaded Maven dependencies can be both
+redistributed publicly.)
+
+Archiving the Gradle executable is straight-forward, but archiving a
+local Maven repository is not.  Therefore a special Task Cluster
+Docker image and job exist for producing the required archives.  The
+Docker image definition is rooted in
+``taskcluster/docker/android-gradle-build``.  The Task Cluster job
+definition is in
+``testing/taskcluster/tasks/builds/android_api_15_gradle_dependencies.yml``.
+The job runs in a container based on the custom Docker image and
+spawns a Sonatype Nexus proxying Maven repository process in the
+background.  The job builds Firefox for Android using Gradle and the
+in-tree Gradle configuration rooted at ``build.gradle``.  The spawned
+proxying Maven repository downloads external dependencies and collects
+them.  After the Gradle build completes, the job archives the Gradle
+version used to build, and the downloaded Maven repository, and
+exposes them as Task Cluster artifacts.
+
+Here is `an example try job fetching these dependencies
+<https://treeherder.mozilla.org/#/jobs?repo=try&revision=75bc98935147&selectedJob=17793653>`_.
+The resulting task produced a `Gradle archive
+<https://queue.taskcluster.net/v1/task/CeYMgAP3Q-KF8h37nMhJjg/runs/0/artifacts/public%2Fbuild%2Fgradle.tar.xz>`_
+and a `Maven repository archive
+<https://queue.taskcluster.net/v1/task/CeYMgAP3Q-KF8h37nMhJjg/runs/0/artifacts/public%2Fbuild%2Fjcentral.tar.xz>`_.
+These archives were then uploaded (manually) to Mozilla automation
+using tooltool for consumption in Gradle builds.
+
+To update the version of Gradle in the archive produced, update
+``gradle/wrapper/gradle-wrapper.properties``.  Be sure to also update
+the SHA256 checksum to prevent poisoning the build machines!
+
+To update the versions of Gradle dependencies used, update
+``dependencies`` sections in the in-tree Gradle configuration rooted
+at ``build.gradle``.  Once you are confident your changes build
+locally, push a fresh try build with an invocation like::
+
+   $ hg push-to-try -m "try: -b o -p android-api-15-gradle-dependencies"
+
+Then `upload your archives to tooltool
+<https://wiki.mozilla.org/ReleaseEngineering/Applications/Tooltool#How_To_Upload_To_Tooltool>`_,
+update the in-tree manifests in
+``mobile/android/config/tooltool-manifests``, and push a fresh try
+build.
