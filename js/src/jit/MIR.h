@@ -6574,6 +6574,11 @@ class MDiv : public MBinaryArithInstruction
         return specialization_ < MIRType_Object;
     }
 
+    bool congruentTo(const MDefinition* ins) const override {
+        return MBinaryArithInstruction::congruentTo(ins) &&
+               unsigned_ == ins->toDiv()->isUnsigned();
+    }
+
     ALLOW_CLONE(MDiv)
 };
 
@@ -6651,6 +6656,11 @@ class MMod : public MBinaryArithInstruction
     void truncate() override;
     void collectRangeInfoPreTrunc() override;
     TruncateKind operandTruncateKind(size_t index) const override;
+
+    bool congruentTo(const MDefinition* ins) const override {
+        return MBinaryArithInstruction::congruentTo(ins) &&
+               unsigned_ == ins->toMod()->isUnsigned();
+    }
 
     ALLOW_CLONE(MMod)
 };
