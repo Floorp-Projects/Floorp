@@ -656,8 +656,13 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
 
     RootedFunction function(cx);
     RootedScript script(cx);
-    if (cache && !options.ignoreCache)
+    if (cache && !options.ignoreCache) {
         rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
+        if (NS_FAILED(rv)) {
+            // ReadCachedScript may have set a pending exception.
+            JS_ClearPendingException(cx);
+        }
+    }
 
     // If we are doing an async load, trigger it and bail out.
     if (!script && options.async) {
