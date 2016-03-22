@@ -228,6 +228,7 @@ config = {
     # When build promotion goes live the mozconfig changes are probably better
     # expressed once in files like configs/builds/releng_base_windows_32_builds.py
     'date': {
+        'update_channel': 'beta-dev',
         'enable_release_promotion': 1,
         'platform_overrides': {
             'linux': {
