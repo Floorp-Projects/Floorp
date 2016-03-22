@@ -34,7 +34,7 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="3b7e9c03126ad3b87a3d5c61ed7f939c8b0545d3"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="e8d4f67ef63851ddd0e1fcb238557197baf760b0"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="5f931350fbc87c3df9db8b0ceb37734b8b471593"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="48d8c7c950745f1b166b42125e6f0d3293d71636"/>
   <!-- Stock Android things -->
