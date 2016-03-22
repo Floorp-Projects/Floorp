@@ -7745,7 +7745,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 4,
-    "description": "Accumulates type of content (mixed, mixed passive, unmixed) per page load"
+    "description": "Accumulates type of content per page load (0=no mixed or non-secure page, 1=mixed passive, 2=mixed active, 3=mixed passive and mixed active)"
   },
   "MIXED_CONTENT_UNBLOCK_COUNTER": {
     "expires_in_version": "never",
