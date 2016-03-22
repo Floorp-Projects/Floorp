@@ -13,5 +13,6 @@ DevToolsModules(
     'constants.js',
     'global.js',
     'io.js',
+    'marker-formatters.js',
     'markers.js',
 )
