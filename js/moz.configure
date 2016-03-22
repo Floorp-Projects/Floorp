@@ -22,7 +22,7 @@ option(env='JS_STANDALONE', default=building_js,
 def js_standalone(value):
     if value:
         set_config('JS_STANDALONE', True)
-        add_old_configure_assignment('JS_STANDALONE', '1')
+        add_old_configure_assignment('JS_STANDALONE', True)
 
 
 js_option('--disable-js-shell', default=building_js,
@@ -59,7 +59,7 @@ def static_js(shared_js, export_js):
         if not export_js:
             error('Must export JS symbols when building a shared library.')
         set_config('JS_SHARED_LIBRARY', True)
-        add_old_configure_assignment('JS_SHARED_LIBRARY', '1')
+        add_old_configure_assignment('JS_SHARED_LIBRARY', True)
     else:
         if export_js:
             set_define('STATIC_EXPORTABLE_JS_API', True)
@@ -104,7 +104,7 @@ def instruments(value, target):
     if value:
         set_config('MOZ_INSTRUMENTS', True)
         set_define('MOZ_INSTRUMENTS', True)
-        add_old_configure_assignment('MOZ_INSTRUMENTS', '1')
+        add_old_configure_assignment('MOZ_INSTRUMENTS', True)
         imply_option('--enable-profiling', reason='--enable-instruments')
 
 
@@ -127,7 +127,7 @@ def profiling(value, target):
     if value:
         set_config('MOZ_PROFILING', True)
         set_define('MOZ_PROFILING', True)
-        add_old_configure_assignment('MOZ_PROFILING', '1')
+        add_old_configure_assignment('MOZ_PROFILING', True)
 
         if target.kernel == 'WINNT' or (target.kernel == 'Linux' and
                                         target.os == 'GNU'):

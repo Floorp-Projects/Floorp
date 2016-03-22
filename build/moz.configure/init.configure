@@ -626,12 +626,12 @@ def milestone(build_env):
     if 'a1' in milestone:
         set_config('NIGHTLY_BUILD', True)
         set_define('NIGHTLY_BUILD', True)
-        add_old_configure_assignment('NIGHTLY_BUILD', '1')
+        add_old_configure_assignment('NIGHTLY_BUILD', True)
         is_nightly = True
     elif 'a' not in milestone:
         set_config('RELEASE_BUILD', True)
         set_define('RELEASE_BUILD', True)
-        add_old_configure_assignment('RELEASE_BUILD', '1')
+        add_old_configure_assignment('RELEASE_BUILD', True)
         is_release = True
 
     return namespace(version=milestone,
