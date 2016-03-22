@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(ab6650cf-0806-4aea-b8f2-40fdae74f1cc)]
+interface nsIPlatformInfo : nsISupports
+{
+  /**
+   * The version of the XULRunner platform.
+   */
+  readonly attribute ACString platformVersion;
+
+  /**
+   * The build ID/date of gecko and the XULRunner platform.
+   */
+  readonly attribute ACString platformBuildID;
+};

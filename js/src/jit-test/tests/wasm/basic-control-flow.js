@@ -415,4 +415,3 @@ assertErrorMessage(wasmEvalText(`(module (func (if (trap) (i32.const 0))) (expor
 assertErrorMessage(wasmEvalText(`(module (func (block (br_if 0 (trap)))) (export "" 0))`), Error, UNREACHABLE);
 assertErrorMessage(wasmEvalText(`(module (func (block (br_table 0 (trap)))) (export "" 0))`), Error, UNREACHABLE);
 assertErrorMessage(wasmEvalText(`(module (func (result i32) (i32.add (i32.const 0) (trap))) (export "" 0))`), Error, UNREACHABLE);
-

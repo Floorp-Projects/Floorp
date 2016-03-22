@@ -1239,6 +1239,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Optional error reporter. */
     JSErrorReporter     errorReporter;
 
+    JS::BuildIdOp buildIdOp;
+
     /* AsmJSCache callbacks are runtime-wide. */
     JS::AsmJSCacheOps   asmJSCacheOps;
 

@@ -478,6 +478,21 @@ CodeGeneratorX64::visitUDivOrMod64(LUDivOrMod64* lir)
 }
 
 void
+CodeGeneratorX64::visitAsmSelectI64(LAsmSelectI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType_Int64);
+
+    Register cond = ToRegister(lir->condExpr());
+    Operand falseExpr = ToOperand(lir->falseExpr());
+
+    Register out = ToRegister(lir->output());
+    MOZ_ASSERT(ToRegister(lir->trueExpr()) == out, "true expr is reused for input");
+
+    masm.test32(cond, cond);
+    masm.cmovzq(falseExpr, out);
+}
+
+void
 CodeGeneratorX64::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));

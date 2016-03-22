@@ -33,9 +33,6 @@ namespace js {
  *
  * NB: the js_SrcNoteSpec array in BytecodeEmitter.cpp is indexed by this
  * enum, so its initializers need to match the order here.
- *
- * Don't forget to update XDR_BYTECODE_VERSION in vm/Xdr.h for all such
- * incompatible source note or other bytecode changes.
  */
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
     M(SRC_NULL,         "null",        0)  /* Terminates a note vector. */                         \
