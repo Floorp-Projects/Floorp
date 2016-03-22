@@ -9,8 +9,10 @@ requestLongerTimeout(2);
 // Test that when animations displayed in the timeline are running on the
 // compositor, they get a special icon and information in the tooltip.
 
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
+
 const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
-const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const L10N = new LocalizationHelper(STRINGS_URI);
 
 add_task(function*() {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
