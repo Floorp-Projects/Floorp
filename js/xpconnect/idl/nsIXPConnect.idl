@@ -412,6 +412,7 @@ interface nsIXPConnect : nsISupports
     [noscript,notxpcom,nostdcall] JSContextPtr getCurrentJSContext();
     [noscript,notxpcom,nostdcall] JSContextPtr getSafeJSContext();
 
+    // Will return null if there is no JS stack right now.
     readonly attribute nsIStackFrame                CurrentJSStack;
     readonly attribute nsAXPCNativeCallContextPtr   CurrentNativeCallContext;
 
