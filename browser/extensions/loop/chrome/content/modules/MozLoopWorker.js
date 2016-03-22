@@ -129,10 +129,13 @@ function anonymizeIPv4(text) {
  *   - (id=35 url=about:loopconversation#incoming/1403134352854)
  *   + (id=35 url=about:loopconversation#incoming/xxxx)
  *
+ *   - (id=35 url=about:loopconversation#1403134352854)
+ *   + (id=35 url=about:loopconversation#/xxxx)
+ *
  * @param {DOMString} text The text.
  */
 function sanitizeUrls(text) {
-  let trimUrl = url => url.replace(/(#call|#incoming).*/g,
+  let trimUrl = url => url.replace(/(#call|#incoming|#).*/g,
                                    (match, type) => type + "/xxxx");
   return text.replace(/\(id=(\d+) url=([^\)]+)\)/g,
                       (match, id, url) =>
