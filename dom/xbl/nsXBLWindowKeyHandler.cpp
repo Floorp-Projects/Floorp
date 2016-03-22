@@ -417,7 +417,7 @@ nsXBLWindowKeyHandler::HandleEventOnCaptureInDefaultEventGroup(
     // For reserved commands (such as Open New Tab), we don't to wait for
     // the content to answer (so mWantReplyFromContentProcess remains false),
     // neither to give a chance for content to override its behavior.
-    widgetKeyboardEvent->mFlags.mNoCrossProcessBoundaryForwarding = true;
+    widgetKeyboardEvent->StopCrossProcessForwarding();
     // If the key combination is reserved by chrome, we shouldn't expose the
     // keyboard event to web contents because such keyboard events shouldn't be
     // cancelable.  So, it's not good behavior to fire keyboard events but

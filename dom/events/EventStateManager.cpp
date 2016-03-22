@@ -642,7 +642,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     // from ESM::DispatchMouseOrPointerEvent (sending is permanent)).
     // Flag mNoCrossProcessBoundaryForwarding helps to
     // suppress sending accidental event from widget code.
-    aEvent->mFlags.mNoCrossProcessBoundaryForwarding = true;
+    aEvent->StopCrossProcessForwarding();
     break;
   case eMouseExitFromWidget:
     // If this is a remote frame, we receive eMouseExitFromWidget from the
@@ -659,7 +659,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
     // Flag helps to suppress double event sending into process of content.
     // For more information see comment above, at eMouseEnterIntoWidget case.
-    aEvent->mFlags.mNoCrossProcessBoundaryForwarding = true;
+    aEvent->StopCrossProcessForwarding();
 
     // If the event is not a top-level window exit, then it's not
     // really an exit --- we may have traversed widget boundaries but
