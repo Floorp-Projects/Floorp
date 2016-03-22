@@ -203,7 +203,7 @@ const kMessageHandlers = {
    * Creates a layout for the remote cursor on the browser chrome,
    * and positions it on the received coordinates.
    *
-   * @param {Object}  message Message meant for the handler function, containing
+   * @param {Object}  message Message meant for the handler function, contains
    *                          the following parameters in its 'data' property:
    *                          {
    *                            ratioX: cursor's X position (between 0-1)
@@ -218,6 +218,25 @@ const kMessageHandlers = {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     if (win) {
       win.LoopUI.addRemoteCursor(message.data[0]);
+    }
+
+    reply();
+  },
+
+  /**
+   * Shows the click event on the remote cursor.
+   *
+   * @param {Object}  message Message meant for the handler function, contains
+   *                          a boolean for the click event in its 'data' prop.
+   *
+   * @param {Function} reply  Callback function, invoked with the result of the
+   *                          message handler. The result will be sent back to
+   *                          the senders' channel.
+   */
+  ClickRemoteCursor: function(message, reply) {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    if (win) {
+      win.LoopUI.clickRemoteCursor(message.data[0]);
     }
 
     reply();
@@ -540,20 +559,6 @@ const kMessageHandlers = {
   },
 
   /**
-   * Returns TRUE if Firefox Accounts are enabled and can be used.
-   *
-   * @param {Object}   message Message meant for the handler function, containing
-   *                           the following parameters in its `data` property:
-   *                           [ ]
-   * @param {Function} reply   Callback function, invoked with the result of this
-   *                           message handler. The result will be sent back to
-   *                           the senders' channel.
-   */
-  GetFxAEnabled: function(message, reply) {
-    reply(MozLoopService.fxAEnabled);
-  },
-
-  /**
    * Returns true if this profile has an encryption key.
    *
    * @param {Object}   message Message meant for the handler function, containing
@@ -728,6 +733,7 @@ const kMessageHandlers = {
       windowId = sessionToken;
     }
 
+    LoopRooms.logDomains(roomToken);
     LoopRooms.leave(roomToken);
     MozLoopService.setScreenShareState(windowId, false);
     LoopAPI.sendMessageToHandler({
@@ -1055,7 +1061,7 @@ const kMessageHandlers = {
   TelemetryAddValue: function(message, reply) {
     let [histogramId, value] = message.data;
 
-    if (histogramId === "LOOP_MAU") {
+    if (histogramId === "LOOP_ACTIVITY_COUNTER") {
       let pref = "mau." + kMauPrefMap.get(value);
       let prefDate = MozLoopService.getLoopPref(pref) * 1000;
       let delta = Date.now() - prefDate;
