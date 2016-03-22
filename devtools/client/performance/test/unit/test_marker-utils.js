@@ -11,7 +11,10 @@ function run_test() {
 
 add_task(function () {
   let { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
+  let { PREFS } = require("devtools/client/performance/modules/global");
   let Utils = require("devtools/client/performance/modules/logic/marker-utils");
+
+  PREFS.registerObserver();
 
   Services.prefs.setBoolPref(PLATFORM_DATA_PREF, false);
 
@@ -93,4 +96,6 @@ add_task(function () {
     "Utils.getBlueprintFor() should return marker def for passed in marker.");
   equal(Utils.getBlueprintFor({ name: "Not sure!" }).label(), "Unknown",
     "Utils.getBlueprintFor() should return a default marker def if the marker is undefined.");
+
+  PREFS.unregisterObserver();
 });
