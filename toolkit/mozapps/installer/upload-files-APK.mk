@@ -272,14 +272,6 @@ INNER_MAKE_PACKAGE = \
   $(INNER_MAKE_GECKOVIEW_LIBRARY)
 endif
 
-ifeq ($(MOZ_BUILD_APP),mobile/android/b2gdroid)
-INNER_MAKE_PACKAGE = \
-  $(INNER_SZIP_LIBRARIES) && \
-  cp $(topobjdir)/mobile/android/b2gdroid/app/classes.dex $(ABS_DIST)/classes.dex && \
-  cp $(topobjdir)/mobile/android/b2gdroid/app/b2gdroid-unsigned-unaligned.apk $(ABS_DIST)/gecko.ap_ && \
-  $(INNER_MAKE_APK)
-endif
-
 # Language repacks root the resources contained in assets/omni.ja
 # under assets/, but the repacks expect them to be rooted at /.
 # Therefore, we we move the omnijar back to / so the resources are

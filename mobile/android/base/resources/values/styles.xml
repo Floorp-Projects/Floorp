@@ -299,11 +299,7 @@
         We are overriding the snackbar message style to guarantee a consistent style across Android versions (bug 1217416).
     -->
     <style name="TextAppearance.Design.Snackbar.Message" parent="android:TextAppearance" tools:override="true">
-        <!--
-            This is the value of "design_snackbar_text_size". As long as B2Gdroid does not include the
-            Android Design Support Library we cannot reference it here directly.
-        -->
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">@dimen/design_snackbar_text_size</item>
         <item name="android:textColor">@android:color/white</item>
     </style>
 

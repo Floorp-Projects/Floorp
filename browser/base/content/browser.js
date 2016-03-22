@@ -1049,16 +1049,9 @@ var gBrowserInit = {
 
     this._cancelDelayedStartup();
 
-    // We need to set the MozApplicationManifest event listeners up
-    // before we start loading the home pages in case a document has
-    // a "manifest" attribute, in which the MozApplicationManifest event
-    // will be fired.
-    gBrowser.addEventListener("MozApplicationManifest",
-                              OfflineApps, false);
-    // listen for offline apps on social
-    let socialBrowser = document.getElementById("social-sidebar-browser");
-    socialBrowser.addEventListener("MozApplicationManifest",
-                              OfflineApps, false);
+    // We need to set the OfflineApps message listeners up before we
+    // load homepages, which might need them.
+    OfflineApps.init();
 
     // This pageshow listener needs to be registered before we may call
     // swapBrowsersAndCloseOther() to receive pageshow events fired by that.
@@ -1176,7 +1169,6 @@ var gBrowserInit = {
     window.messageManager.addMessageListener("Browser:URIFixup", gKeywordURIFixup);
 
     BrowserOffline.init();
-    OfflineApps.init();
     IndexedDBPromptHelper.init();
 
     if (AppConstants.E10S_TESTING_ONLY)
@@ -1498,7 +1490,6 @@ var gBrowserInit = {
       }
 
       BrowserOffline.uninit();
-      OfflineApps.uninit();
       IndexedDBPromptHelper.uninit();
       LightweightThemeListener.uninit();
       PanelUI.uninit();
@@ -5745,141 +5736,49 @@ var BrowserOffline = {
 };
 
 var OfflineApps = {
-  /////////////////////////////////////////////////////////////////////////////
-  // OfflineApps Public Methods
-  init: function ()
-  {
-    Services.obs.addObserver(this, "offline-cache-update-completed", false);
-  },
-
-  uninit: function ()
-  {
-    Services.obs.removeObserver(this, "offline-cache-update-completed");
-  },
-
-  handleEvent: function(event) {
-    if (event.type == "MozApplicationManifest") {
-      this.offlineAppRequested(event.originalTarget.defaultView);
-    }
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // OfflineApps Implementation Methods
-
-  // XXX: _getBrowserWindowForContentWindow and _getBrowserForContentWindow
-  // were taken from browser/components/feeds/WebContentConverter.
-  _getBrowserWindowForContentWindow: function(aContentWindow) {
-    return aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShellTreeItem)
-                         .rootTreeItem
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindow)
-                         .wrappedJSObject;
-  },
-
-  _getBrowserForContentWindow: function(aBrowserWindow, aContentWindow) {
-    // This depends on pseudo APIs of browser.js and tabbrowser.xml
-    aContentWindow = aContentWindow.top;
-    var browsers = aBrowserWindow.gBrowser.browsers;
-    for (let browser of browsers) {
-      if (browser.contentWindow == aContentWindow)
-        return browser;
-    }
-    // handle other browser/iframe elements that may need popupnotifications
-    let browser = aContentWindow
-                          .QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsIDocShell)
-                          .chromeEventHandler;
-    if (browser.getAttribute("popupnotificationanchor"))
-      return browser;
-    return null;
-  },
-
-  _getManifestURI: function(aWindow) {
-    if (!aWindow.document.documentElement)
-      return null;
-
-    var attr = aWindow.document.documentElement.getAttribute("manifest");
-    if (!attr)
-      return null;
-
-    try {
-      var contentURI = makeURI(aWindow.location.href, null, null);
-      return makeURI(attr, aWindow.document.characterSet, contentURI);
-    } catch (e) {
-      return null;
-    }
-  },
-
-  // A cache update isn't tied to a specific window.  Try to find
-  // the best browser in which to warn the user about space usage
-  _getBrowserForCacheUpdate: function(aCacheUpdate) {
-    // Prefer the current browser
-    var uri = this._getManifestURI(content);
-    if (uri && uri.equals(aCacheUpdate.manifestURI)) {
-      return gBrowser.selectedBrowser;
-    }
-
-    var browsers = gBrowser.browsers;
-    for (let browser of browsers) {
-      uri = this._getManifestURI(browser.contentWindow);
-      if (uri && uri.equals(aCacheUpdate.manifestURI)) {
-        return browser;
-      }
-    }
-
-    // is this from a non-tab browser/iframe?
-    browsers = document.querySelectorAll("iframe[popupnotificationanchor] | browser[popupnotificationanchor]");
-    for (let browser of browsers) {
-      uri = this._getManifestURI(browser.contentWindow);
-      if (uri && uri.equals(aCacheUpdate.manifestURI)) {
-        return browser;
-      }
-    }
-
-    return null;
-  },
-
-  _warnUsage: function(aBrowser, aURI) {
-    if (!aBrowser)
+  warnUsage(browser, uri) {
+    if (!browser)
       return;
 
     let mainAction = {
       label: gNavigatorBundle.getString("offlineApps.manageUsage"),
       accessKey: gNavigatorBundle.getString("offlineApps.manageUsageAccessKey"),
-      callback: OfflineApps.manage
+      callback: this.manage
     };
 
-    let warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
+    let warnQuotaKB = Services.prefs.getIntPref("offline-apps.quota.warn");
+    // This message shows the quota in MB, and so we divide the quota (in kb) by 1024.
     let message = gNavigatorBundle.getFormattedString("offlineApps.usage",
-                                                      [ aURI.host,
-                                                        warnQuota / 1024 ]);
+                                                      [ uri.host,
+                                                        warnQuotaKB / 1024 ]);
 
     let anchorID = "indexedDB-notification-icon";
-    PopupNotifications.show(aBrowser, "offline-app-usage", message,
+    PopupNotifications.show(browser, "offline-app-usage", message,
                             anchorID, mainAction);
 
     // Now that we've warned once, prevent the warning from showing up
     // again.
-    Services.perms.add(aURI, "offline-app",
+    Services.perms.add(uri, "offline-app",
                        Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
   },
 
   // XXX: duplicated in preferences/advanced.js
-  _getOfflineAppUsage: function (host, groups)
-  {
-    var cacheService = Cc["@mozilla.org/network/application-cache-service;1"].
+  _getOfflineAppUsage(host, groups) {
+    let cacheService = Cc["@mozilla.org/network/application-cache-service;1"].
                        getService(Ci.nsIApplicationCacheService);
-    if (!groups)
-      groups = cacheService.getGroups();
+    if (!groups) {
+      try {
+        groups = cacheService.getGroups();
+      } catch (ex) {
+        return 0;
+      }
+    }
 
-    var usage = 0;
+    let usage = 0;
     for (let group of groups) {
-      var uri = Services.io.newURI(group, null, null);
+      let uri = Services.io.newURI(group, null, null);
       if (uri.asciiHost == host) {
-        var cache = cacheService.getActiveCache(group);
+        let cache = cacheService.getActiveCache(group);
         usage += cache.usage;
       }
     }
@@ -5887,13 +5786,15 @@ var OfflineApps = {
     return usage;
   },
 
-  _checkUsage: function(aURI) {
+  _usedMoreThanWarnQuota(uri) {
     // if the user has already allowed excessive usage, don't bother checking
-    if (Services.perms.testExactPermission(aURI, "offline-app") !=
+    if (Services.perms.testExactPermission(uri, "offline-app") !=
         Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN) {
-      var usage = this._getOfflineAppUsage(aURI.asciiHost);
-      var warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
-      if (usage >= warnQuota * 1024) {
+      let usageBytes = this._getOfflineAppUsage(uri.asciiHost);
+      let warnQuotaKB = Services.prefs.getIntPref("offline-apps.quota.warn");
+      // The pref is in kb, the usage we get is in bytes, so multiply the quota
+      // to compare correctly:
+      if (usageBytes >= warnQuotaKB * 1024) {
         return true;
       }
     }
@@ -5901,43 +5802,22 @@ var OfflineApps = {
     return false;
   },
 
-  offlineAppRequested: function(aContentWindow) {
-    if (!gPrefService.getBoolPref("browser.offline-apps.notify")) {
-      return;
-    }
-
-    let browserWindow = this._getBrowserWindowForContentWindow(aContentWindow);
-    let browser = this._getBrowserForContentWindow(browserWindow,
-                                                   aContentWindow);
-
-    let currentURI = aContentWindow.document.documentURIObject;
-
-    // don't bother showing UI if the user has already made a decision
-    if (Services.perms.testExactPermission(currentURI, "offline-app") != Services.perms.UNKNOWN_ACTION)
-      return;
-
-    try {
-      if (gPrefService.getBoolPref("offline-apps.allow_by_default")) {
-        // all pages can use offline capabilities, no need to ask the user
-        return;
-      }
-    } catch(e) {
-      // this pref isn't set by default, ignore failures
-    }
-
-    let host = currentURI.asciiHost;
+  requestPermission(browser, docId, uri) {
+    let host = uri.asciiHost;
     let notificationID = "offline-app-requested-" + host;
     let notification = PopupNotifications.getNotification(notificationID, browser);
 
     if (notification) {
-      notification.options.documents.push(aContentWindow.document);
+      notification.options.controlledItems.push([
+        Cu.getWeakReference(browser), docId, uri
+      ]);
     } else {
       let mainAction = {
         label: gNavigatorBundle.getString("offlineApps.allow"),
         accessKey: gNavigatorBundle.getString("offlineApps.allowAccessKey"),
         callback: function() {
-          for (let document of notification.options.documents) {
-            OfflineApps.allowSite(document);
+          for (let [browser, docId, uri] of notification.options.controlledItems) {
+            OfflineApps.allowSite(browser, docId, uri);
           }
         }
       };
@@ -5945,16 +5825,16 @@ var OfflineApps = {
         label: gNavigatorBundle.getString("offlineApps.never"),
         accessKey: gNavigatorBundle.getString("offlineApps.neverAccessKey"),
         callback: function() {
-          for (let document of notification.options.documents) {
-            OfflineApps.disallowSite(document);
+          for (let [, , uri] of notification.options.controlledItems) {
+            OfflineApps.disallowSite(uri);
           }
         }
       }];
       let message = gNavigatorBundle.getFormattedString("offlineApps.available",
-                                                        [ host ]);
+                                                        [host]);
       let anchorID = "indexedDB-notification-icon";
-      let options= {
-        documents : [ aContentWindow.document ]
+      let options = {
+        controlledItems : [[Cu.getWeakReference(browser), docId, uri]]
       };
       notification = PopupNotifications.show(browser, notificationID, message,
                                              anchorID, mainAction,
@@ -5962,56 +5842,47 @@ var OfflineApps = {
     }
   },
 
-  allowSite: function(aDocument) {
-    Services.perms.add(aDocument.documentURIObject, "offline-app", Services.perms.ALLOW_ACTION);
+  disallowSite(uri) {
+    Services.perms.add(uri, "offline-app", Services.perms.DENY_ACTION);
+  },
+
+  allowSite(browserRef, docId, uri) {
+    Services.perms.add(uri, "offline-app", Services.perms.ALLOW_ACTION);
 
     // When a site is enabled while loading, manifest resources will
     // start fetching immediately.  This one time we need to do it
     // ourselves.
-    this._startFetching(aDocument);
+    let browser = browserRef.get();
+    if (browser && browser.messageManager) {
+      browser.messageManager.sendAsyncMessage("OfflineApps:StartFetching", {
+        docId,
+      });
+    }
   },
 
-  disallowSite: function(aDocument) {
-    Services.perms.add(aDocument.documentURIObject, "offline-app", Services.perms.DENY_ACTION);
-  },
-
-  manage: function() {
+  manage() {
     openAdvancedPreferences("networkTab");
   },
 
-  _startFetching: function(aDocument) {
-    if (!aDocument.documentElement)
-      return;
-
-    var manifest = aDocument.documentElement.getAttribute("manifest");
-    if (!manifest)
-      return;
-
-    var manifestURI = makeURI(manifest, aDocument.characterSet,
-                              aDocument.documentURIObject);
-
-    var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
-                        getService(Ci.nsIOfflineCacheUpdateService);
-    updateService.scheduleUpdate(manifestURI, aDocument.documentURIObject,
-                                 aDocument.nodePrincipal, window);
+  receiveMessage(msg) {
+    switch (msg.name) {
+      case "OfflineApps:CheckUsage":
+        let uri = makeURI(msg.data.uri);
+        if (this._usedMoreThanWarnQuota(uri)) {
+          this.warnUsage(msg.target, uri);
+        }
+        break;
+      case "OfflineApps:RequestPermission":
+        this.requestPermission(msg.target, msg.data.docId, makeURI(msg.data.uri));
+        break;
+    }
   },
 
-  /////////////////////////////////////////////////////////////////////////////
-  // nsIObserver
-  observe: function (aSubject, aTopic, aState)
-  {
-    if (aTopic == "offline-cache-update-completed") {
-      var cacheUpdate = aSubject.QueryInterface(Ci.nsIOfflineCacheUpdate);
-
-      var uri = cacheUpdate.manifestURI;
-      if (OfflineApps._checkUsage(uri)) {
-        var browser = this._getBrowserForCacheUpdate(cacheUpdate);
-        if (browser) {
-          OfflineApps._warnUsage(browser, cacheUpdate.manifestURI);
-        }
-      }
-    }
-  }
+  init() {
+    let mm = window.messageManager;
+    mm.addMessageListener("OfflineApps:CheckUsage", this);
+    mm.addMessageListener("OfflineApps:RequestPermission", this);
+  },
 };
 
 var IndexedDBPromptHelper = {

@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* eslint-env browser */
+/* globals BrowserToolboxProcess */
+
+"use strict";
+
+loader.lazyImporter(this, "BrowserToolboxProcess",
+  "resource://devtools/client/framework/ToolboxProcess.jsm");
+
+const { createClass, DOM: dom } =
+  require("devtools/client/shared/vendor/react");
+const Services = require("Services");
+
+const Strings = Services.strings.createBundle(
+  "chrome://devtools/locale/aboutdebugging.properties");
+
+module.exports = createClass({
+  displayName: "AddonTarget",
+
+  render() {
+    let { target, debugDisabled } = this.props;
+
+    return dom.div({ className: "target" },
+      dom.img({
+        className: "target-icon",
+        role: "presentation",
+        src: target.icon
+      }),
+      dom.div({ className: "target-details" },
+        dom.div({ className: "target-name" }, target.name)
+      ),
+      dom.button({
+        className: "debug-button",
+        onClick: this.debug,
+        disabled: debugDisabled,
+      }, Strings.GetStringFromName("debug"))
+    );
+  },
+
+  debug() {
+    let { target } = this.props;
+    BrowserToolboxProcess.init({ addonID: target.addonID });
+  },
+});

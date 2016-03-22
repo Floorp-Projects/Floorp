@@ -7,27 +7,29 @@
 "use strict";
 
 define(function(require, exports, module) {
-  const React = require("devtools/client/shared/vendor/react");
+  const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
   const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
-  const { TreeView } = createFactories(require("./reps/tree-view"));
+  const TreeView = createFactory(require("devtools/client/shared/components/tree/tree-view"));
+  const { Rep } = createFactories(require("devtools/client/shared/components/reps/rep"));
   const { SearchBox } = createFactories(require("./search-box"));
   const { Toolbar, ToolbarButton } = createFactories(require("./reps/toolbar"));
-  const DOM = React.DOM;
+
+  const { div } = dom;
 
   /**
    * This template represents the 'JSON' panel. The panel is
    * responsible for rendering an expandable tree that allows simple
    * inspection of JSON structure.
    */
-  let JsonPanel = React.createClass({
+  let JsonPanel = createClass({
     propTypes: {
-      data: React.PropTypes.oneOfType([
-        React.PropTypes.string,
-        React.PropTypes.array,
-        React.PropTypes.object
+      data: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.array,
+        PropTypes.object
       ]),
-      searchFilter: React.PropTypes.string,
-      actions: React.PropTypes.object,
+      searchFilter: PropTypes.string,
+      actions: PropTypes.object,
     },
 
     displayName: "JsonPanel",
@@ -48,32 +50,53 @@ define(function(require, exports, module) {
       // XXX shortcut for focusing the Filter field (see Bug 1178771).
     },
 
+    onFilter: function(object) {
+      if (!this.props.searchFilter) {
+        return true;
+      }
+
+      let json = JSON.stringify(object).toLowerCase();
+      return json.indexOf(this.props.searchFilter) >= 0;
+    },
+
     render: function() {
       let content;
       let data = this.props.data;
 
+      // Append custom column for displaying values. This column
+      // Take all available horizontal space.
+      let columns = [{
+        id: "value",
+        width: "100%"
+      }];
+
       try {
         if (typeof data == "object") {
+          // Render tree component. Use Reps to render JSON values.
           content = TreeView({
-            data: this.props.data,
+            object: this.props.data,
             mode: "tiny",
-            searchFilter: this.props.searchFilter
+            onFilter: this.onFilter.bind(this),
+            columns: columns,
+            renderValue: props => {
+              return Rep(props);
+            }
           });
         } else {
-          content = DOM.div({className: "jsonParseError"},
+          content = div({className: "jsonParseError"},
             data + ""
           );
         }
       } catch (err) {
-        content = DOM.div({className: "jsonParseError"},
+        content = div({className: "jsonParseError"},
           err + ""
         );
       }
 
       return (
-        DOM.div({className: "jsonPanelBox"},
+        div({className: "jsonPanelBox"},
           JsonToolbar({actions: this.props.actions}),
-          DOM.div({className: "panelContent"},
+          div({className: "panelContent"},
             content
           )
         )
@@ -84,9 +107,9 @@ define(function(require, exports, module) {
   /**
    * This template represents a toolbar within the 'JSON' panel.
    */
-  let JsonToolbar = React.createFactory(React.createClass({
+  let JsonToolbar = createFactory(createClass({
     propTypes: {
-      actions: React.PropTypes.object,
+      actions: PropTypes.object,
     },
 
     displayName: "JsonToolbar",

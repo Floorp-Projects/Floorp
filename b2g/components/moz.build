@@ -43,7 +43,7 @@ EXTRA_PP_COMPONENTS += [
     'B2GComponents.manifest',
 ]
 
-if CONFIG['MOZ_B2G'] and not CONFIG['MOZ_B2GDROID']:
+if CONFIG['MOZ_B2G']:
     EXTRA_COMPONENTS += [
         'DirectoryProvider.js',
         'RecoveryService.js',

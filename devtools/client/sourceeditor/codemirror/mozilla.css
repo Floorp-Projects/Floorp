@@ -5,14 +5,14 @@
 :root {
   --breakpoint-background: url("chrome://devtools/skin/images/breakpoint.svg#light");
   --breakpoint-hover-background: url("chrome://devtools/skin/images/breakpoint.svg#light-hover");
-  --breakpoint-active-background: url("chrome://devtools/skin/images/breakpoint.svg#light-active");
+  --breakpoint-active-color: rgba(44,187,15,.2);
   --breakpoint-conditional-background: url("chrome://devtools/skin/images/breakpoint.svg#light-conditional");
 }
 
 .theme-dark:root {
   --breakpoint-background: url("chrome://devtools/skin/images/breakpoint.svg#dark");
   --breakpoint-hover-background: url("chrome://devtools/skin/images/breakpoint.svg#dark-hover");
-  --breakpoint-active-background: url("chrome://devtools/skin/images/breakpoint.svg#dark-active");
+  --breakpoint-active-color: rgba(112,191,83,.4);
   --breakpoint-conditional-background: url("chrome://devtools/skin/images/breakpoint.svg#dark-conditional");
 }
 
@@ -50,36 +50,49 @@
   opacity: 0.75;
 }
 
-.CodeMirror-linenumber {
+.CodeMirror-linenumber:before {
+  content: " ";
+  display: block;
+  width: calc(100% - 3px);
+  position: absolute;
+  top: 1px;
+  left: 0;
+  height: 12px;
+  z-index: -1;
   background-size: calc(100% - 2px) 12px;
   background-repeat: no-repeat;
   background-position: right center;
-}
-
-.breakpoint .CodeMirror-linenumber,
-.debug-line .CodeMirror-linenumber {
   padding-inline-end: 9px;
-  color: var(--theme-body-background);
 }
 
 .breakpoint .CodeMirror-linenumber {
+  color: var(--theme-body-background);
+}
+
+.breakpoint .CodeMirror-linenumber:before {
   background-image: var(--breakpoint-background) !important;
 }
 
-.conditional .CodeMirror-linenumber {
+.conditional .CodeMirror-linenumber:before {
   background-image: var(--breakpoint-conditional-background) !important;
 }
 
-.conditional .CodeMirror-line {
-  background-color: rgba(217,126,0,.15);
+.debug-line .CodeMirror-linenumber {
+  background-color: var(--breakpoint-active-color);
 }
 
-.debug-line .CodeMirror-linenumber {
-  background-image: var(--breakpoint-active-background) !important;
+.theme-dark .debug-line .CodeMirror-linenumber {
+  color: #c0c0c0;
 }
 
 .debug-line .CodeMirror-line {
-  background-color: rgba(44,187,15,.1);
+  background-color: var(--breakpoint-active-color) !important;
+}
+
+/* Don't display the highlight color since the debug line
+   is already highlighted */
+.debug-line .CodeMirror-activeline-background {
+  display: none;
 }
 
 .CodeMirror {

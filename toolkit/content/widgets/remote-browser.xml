@@ -259,6 +259,11 @@
         ]]></body>
       </method>
 
+      <field name="_manifestURI"/>
+      <property name="manifestURI"
+                onget="return this._manifestURI"
+                readonly="true"/>
+
       <field name="mDestroyed">false</field>
 
       <field name="_permitUnloadId">0</field>
@@ -363,6 +368,7 @@
           this.messageManager.addMessageListener("ZoomChangeUsingMouseWheel", this);
           this.messageManager.addMessageListener("DOMFullscreen:RequestExit", this);
           this.messageManager.addMessageListener("DOMFullscreen:RequestRollback", this);
+          this.messageManager.addMessageListener("MozApplicationManifest", this);
           this.messageManager.loadFrameScript("chrome://global/content/browser-child.js", true);
 
           if (this.hasAttribute("selectmenulist")) {
@@ -496,6 +502,10 @@
               windowUtils.remoteFrameFullscreenReverted();
               break;
             }
+
+            case "MozApplicationManifest":
+              this._manifestURI = aMessage.data.manifest;
+              break;
 
             default:
               // Delegate to browser.xml.

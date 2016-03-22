@@ -3,15 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-env browser */
+/* globals AddonsTab, WorkersTab */
 
 "use strict";
 
-const Services = require("Services");
-
 const { createFactory, createClass, DOM: dom } =
   require("devtools/client/shared/vendor/react");
+const Services = require("Services");
 
 const TabMenu = createFactory(require("./tab-menu"));
+
 loader.lazyGetter(this, "AddonsTab",
   () => createFactory(require("./addons-tab")));
 loader.lazyGetter(this, "WorkersTab",
@@ -65,8 +66,9 @@ module.exports = createClass({
     return dom.div({ className: "app" },
       TabMenu({ tabs, selectedTabId, selectTab }),
       dom.div({ className: "main-content" },
-        selectedTab.component({ client }))
-      );
+        selectedTab.component({ client })
+      )
+    );
   },
 
   onHashChange() {

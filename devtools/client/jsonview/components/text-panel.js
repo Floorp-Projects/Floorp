@@ -7,19 +7,19 @@
 "use strict";
 
 define(function(require, exports, module) {
-  const React = require("devtools/client/shared/vendor/react");
+  const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
   const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
   const { Toolbar, ToolbarButton } = createFactories(require("./reps/toolbar"));
-  const DOM = React.DOM;
+  const { div, pre } = dom;
 
   /**
    * This template represents the 'Raw Data' panel displaying
    * JSON as a text received from the server.
    */
-  let TextPanel = React.createClass({
+  let TextPanel = createClass({
     propTypes: {
-      actions: React.PropTypes.object,
-      data: React.PropTypes.string
+      actions: PropTypes.object,
+      data: PropTypes.string
     },
 
     displayName: "TextPanel",
@@ -30,10 +30,10 @@ define(function(require, exports, module) {
 
     render: function() {
       return (
-        DOM.div({className: "textPanelBox"},
+        div({className: "textPanelBox"},
           TextToolbar({actions: this.props.actions}),
-          DOM.div({className: "panelContent"},
-            DOM.pre({className: "data"},
+          div({className: "panelContent"},
+            pre({className: "data"},
               this.props.data
             )
           )
@@ -46,9 +46,9 @@ define(function(require, exports, module) {
    * This object represents a toolbar displayed within the
    * 'Raw Data' panel.
    */
-  let TextToolbar = React.createFactory(React.createClass({
+  let TextToolbar = createFactory(createClass({
     propTypes: {
-      actions: React.PropTypes.object,
+      actions: PropTypes.object,
     },
 
     displayName: "TextToolbar",

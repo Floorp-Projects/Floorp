@@ -713,7 +713,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             suggestedGridLimit = Integer.parseInt(gridLimitParam, 10);
         }
 
-        final String pinnedSitesFromClause = "FROM " + TABLE_BOOKMARKS + " WHERE " + Bookmarks.PARENT + " == " + Bookmarks.FIXED_PINNED_LIST_ID;
+        final String pinnedSitesFromClause = "FROM " + TABLE_BOOKMARKS + " WHERE " +
+                                             Bookmarks.PARENT + " == " + Bookmarks.FIXED_PINNED_LIST_ID +
+                                             " AND " + Bookmarks.IS_DELETED + " IS NOT 1";
 
         // Ideally we'd use a recursive CTE to generate our sequence, e.g. something like this worked at one point:
         // " WITH RECURSIVE" +
@@ -761,7 +763,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         String[] suggestedSiteArgs = new String[0];
 
-        boolean hasProcessedAnySuggestedSites = true;
+        boolean hasProcessedAnySuggestedSites = false;
 
         final int idColumnIndex = suggestedSitesCursor.getColumnIndexOrThrow(Bookmarks._ID);
         final int urlColumnIndex = suggestedSitesCursor.getColumnIndexOrThrow(Bookmarks.URL);
@@ -769,10 +771,10 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         while (suggestedSitesCursor.moveToNext()) {
             // We'll be using this as a subquery, hence we need to avoid the preceding UNION ALL
-            if (!hasProcessedAnySuggestedSites) {
+            if (hasProcessedAnySuggestedSites) {
                 suggestedSitesBuilder.append(" UNION ALL");
             } else {
-                hasProcessedAnySuggestedSites = false;
+                hasProcessedAnySuggestedSites = true;
             }
             suggestedSitesBuilder.append(" SELECT" +
                                          " ? AS " + Bookmarks._ID + "," +
@@ -788,10 +790,45 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         }
         suggestedSitesCursor.close();
 
+        boolean hasPreparedBlankTiles = false;
+
+        // We can somewhat reduce the number of blanks we produce by eliminating suggested sites.
+        // We do the actual limit calculation in SQL (since we need to take into account the number
+        // of pinned sites too), but this might avoid producing 5 or so additional blank tiles
+        // that would then need to be filtered out.
+        final int maxBlanksNeeded = suggestedGridLimit - suggestedSitesCursor.getCount();
+
+        final StringBuilder blanksBuilder = new StringBuilder();
+        for (int i = 0; i < maxBlanksNeeded; i++) {
+            if (hasPreparedBlankTiles) {
+                blanksBuilder.append(" UNION ALL");
+            } else {
+                hasPreparedBlankTiles = true;
+            }
+
+            blanksBuilder.append(" SELECT" +
+                                 " -1 AS " + Bookmarks._ID + "," +
+                                 " '' AS " + Bookmarks.URL + "," +
+                                 " '' AS " + Bookmarks.TITLE);
+        }
+
+
+
         // To restrict suggested sites to the grid, we simply subtract the number of topsites (which have already had
         // the pinned sites filtered out), and the number of pinned sites.
         // SQLite completely ignores negative limits, hence we need to manually limit to 0 in this case.
         final String suggestedLimitClause = " LIMIT MAX(0, (" + suggestedGridLimit + " - (SELECT COUNT(*) FROM " + TABLE_TOPSITES + ") - (SELECT COUNT(*) " + pinnedSitesFromClause + "))) ";
+
+        // Pinned site positions are zero indexed, but we need to get the maximum 1-indexed position.
+        // Hence to correctly calculate the largest pinned position (which should be 0 if there are
+        // no sites, or 1-6 if we have at least one pinned site), we coalesce the DB position (0-5)
+        // with -1 to represent no-sites, which allows us to directly add 1 to obtain the expected value
+        // regardless of whether a position was actually retrieved.
+        final String blanksLimitClause = " LIMIT MAX(0, " +
+                                         "COALESCE((SELECT " + Bookmarks.POSITION + " " + pinnedSitesFromClause + "), -1) + 1" +
+                                         " - (SELECT COUNT(*) " + pinnedSitesFromClause + ")" +
+                                         " - (SELECT COUNT(*) FROM " + TABLE_TOPSITES + ")" +
+                                         ")";
 
         db.beginTransaction();
         try {
@@ -813,7 +850,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
                        ignoreForTopSitesArgs);
 
-            if (!hasProcessedAnySuggestedSites) {
+            if (hasProcessedAnySuggestedSites) {
                 db.execSQL("INSERT INTO " + TABLE_TOPSITES +
                            // We need to LIMIT _after_ selecting the relevant suggested sites, which requires us to
                            // use an additional internal subquery, since we cannot LIMIT a subquery that is part of UNION ALL.
@@ -834,6 +871,23 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                            suggestedLimitClause + " )",
 
                            suggestedSiteArgs);
+            }
+
+            if (hasPreparedBlankTiles) {
+                db.execSQL("INSERT INTO " + TABLE_TOPSITES +
+                           // We need to LIMIT _after_ selecting the relevant suggested sites, which requires us to
+                           // use an additional internal subquery, since we cannot LIMIT a subquery that is part of UNION ALL.
+                           // Hence the weird SELECT * FROM (SELECT ...relevant suggested sites... LIMIT ?)
+                           " SELECT * FROM (SELECT " +
+                           Bookmarks._ID + ", " +
+                           Bookmarks._ID + " AS " + Combined.BOOKMARK_ID + ", " +
+                           " -1 AS " + Combined.HISTORY_ID + ", " +
+                           Bookmarks.URL + ", " +
+                           Bookmarks.TITLE + ", " +
+                           "NULL AS " + Combined.HISTORY_ID + ", " +
+                           TopSites.TYPE_BLANK + " as " + TopSites.TYPE +
+                           " FROM ( " + blanksBuilder.toString() + " )" +
+                           blanksLimitClause + " )");
             }
 
             // If we retrieve more topsites than we have free positions for in the freeIdSubquery,
@@ -873,8 +927,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                         Bookmarks.POSITION + ", " +
                         "NULL AS " + Combined.HISTORY_ID + ", " +
                         TopSites.TYPE_PINNED + " as " + TopSites.TYPE +
-                        " FROM " + TABLE_BOOKMARKS +
-                        " WHERE " + Bookmarks.PARENT + " == " + Bookmarks.FIXED_PINNED_LIST_ID +
+                        " " + pinnedSitesFromClause +
 
                         " ORDER BY " + Bookmarks.POSITION,
 

@@ -15,6 +15,8 @@ registerCleanupFunction(function() {
   Services.perms.removeFromPrincipal(principal, "offline-app");
   Services.prefs.clearUserPref("offline-apps.quota.warn");
   Services.prefs.clearUserPref("offline-apps.allow_by_default");
+  let {OfflineAppCacheHelper} = Components.utils.import("resource:///modules/offlineAppCache.jsm", {});
+  OfflineAppCacheHelper.clear();
 });
 
 // Same as the other one, but for in-content preferences
@@ -44,30 +46,42 @@ function test() {
     // Wait for a notification that asks whether to allow offline storage.
     promiseNotification(),
     // Wait for the tab to load.
-    BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser)
+    BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser),
   ]).then(() => {
-    gBrowser.selectedBrowser.contentWindow.applicationCache.oncached = function() {
-      executeSoon(function() {
-        // We got cached - now we should have provoked the quota warning.
-        let notification = PopupNotifications.getNotification('offline-app-usage');
-        ok(notification, "have offline-app-usage notification");
-        // select the default action - this should cause the preferences
-        // tab to open - which we track via an "Initialized" event.
-        PopupNotifications.panel.firstElementChild.button.click();
-        let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-        newTabBrowser.addEventListener("Initialized", function PrefInit() {
-          newTabBrowser.removeEventListener("Initialized", PrefInit, true);
-          executeSoon(function() {
-            checkInContentPreferences(newTabBrowser.contentWindow);
-          })
-        }, true);
+    info("Loaded page, adding onCached handler");
+    // Need a promise to keep track of when we've added our handler.
+    let mm = gBrowser.selectedBrowser.messageManager;
+    let onCachedAttached = BrowserTestUtils.waitForMessage(mm, "Test:OnCachedAttached");
+    let gotCached = ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+      return new Promise(resolve => {
+        content.window.applicationCache.oncached = function() {
+          setTimeout(resolve, 0);
+        };
+        sendAsyncMessage("Test:OnCachedAttached");
       });
-    };
-    Services.prefs.setIntPref("offline-apps.quota.warn", 1);
+    });
+    gotCached.then(function() {
+      // We got cached - now we should have provoked the quota warning.
+      let notification = PopupNotifications.getNotification('offline-app-usage');
+      ok(notification, "have offline-app-usage notification");
+      // select the default action - this should cause the preferences
+      // tab to open - which we track via an "Initialized" event.
+      PopupNotifications.panel.firstElementChild.button.click();
+      let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
+      newTabBrowser.addEventListener("Initialized", function PrefInit() {
+        newTabBrowser.removeEventListener("Initialized", PrefInit, true);
+        executeSoon(function() {
+          checkInContentPreferences(newTabBrowser.contentWindow);
+        })
+      }, true);
+    });
+    onCachedAttached.then(function() {
+      Services.prefs.setIntPref("offline-apps.quota.warn", 1);
 
-    // Click the notification panel's "Allow" button.  This should kick
-    // off updates which will call our oncached handler above.
-    PopupNotifications.panel.firstElementChild.button.click();
+      // Click the notification panel's "Allow" button.  This should kick
+      // off updates which will call our oncached handler above.
+      PopupNotifications.panel.firstElementChild.button.click();
+    });
   });
 }
 

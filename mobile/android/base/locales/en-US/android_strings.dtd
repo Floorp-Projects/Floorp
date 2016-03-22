@@ -216,7 +216,7 @@
 
 <!ENTITY pref_show_web_fonts "Show web fonts">
 
-<!ENTITY pref_tracking_protection_title "Tracking protection">
+<!ENTITY pref_tracking_protection_title2 "Tracking Protection">
 <!ENTITY pref_tracking_protection_summary3 "Enabled in Private Browsing">
 <!ENTITY pref_donottrack_title "Do not track">
 <!ENTITY pref_donottrack_summary "&brandShortName; will tell sites that you do not want to be tracked">
@@ -260,7 +260,7 @@
 <!ENTITY pref_char_encoding "Character encoding">
 <!ENTITY pref_char_encoding_on "Show menu">
 <!ENTITY pref_char_encoding_off "Don\'t show menu">
-<!ENTITY pref_clear_private_data "Clear Private Data">
+<!ENTITY pref_clear_private_data2 "Clear private data">
 <!-- Localization note (pref_clear_private_data_now_tablet): This action to clear private data is only shown on tablets.
      The action is shown below a header saying "Clear private data"; See pref_clear_private_data -->
 <!ENTITY pref_clear_private_data_now_tablet "Clear now">
@@ -591,7 +591,7 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY mixed_content_protection_disabled1 "You have disabled protection from insecure content.">
 
 <!-- Tracking content notifications in site identity popup -->
-<!ENTITY doorhanger_tracking_title "Tracking protection">
+<!ENTITY doorhanger_tracking_title2 "Tracking Protection">
 <!ENTITY doorhanger_tracking_state_enabled "Enabled">
 <!ENTITY doorhanger_tracking_state_disabled "Disabled">
 <!ENTITY doorhanger_tracking_message_enabled1 "Attempts to track your online behavior have been blocked.">

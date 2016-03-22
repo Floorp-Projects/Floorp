@@ -72,7 +72,7 @@ addMessageListener("Test:JsonView:SendString", function(msg) {
 
 addMessageListener("Test:JsonView:WaitForFilter", function(msg) {
   let firstRow = content.document.querySelector(
-    ".jsonPanelBox .domTable .memberRow");
+    ".jsonPanelBox .treeTable .treeRow");
 
   // Check if the filter is already set.
   if (firstRow.classList.contains("hidden")) {
