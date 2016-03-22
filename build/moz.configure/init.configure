@@ -239,9 +239,9 @@ def command_line_helper():
 # All options defined above this point can't be injected in mozconfig_options
 # below, so collect them.
 @template
-@advanced
 def early_options():
     @depends('--help')
+    @advanced
     def early_options(help):
         return set(
             option.env
