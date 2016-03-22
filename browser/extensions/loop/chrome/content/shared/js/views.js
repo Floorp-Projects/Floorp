@@ -572,8 +572,6 @@ loop.shared.views = function (_, mozL10n) {
    *                                        shown.
    * @property {String}  url                The url to be displayed. If not present or invalid,
    *                                        then this view won't be displayed.
-   * @property {Boolean} useDesktopPaths    Whether or not to use the desktop paths for for the
-   *                                        fallback url.
    */
   var ContextUrlView = React.createClass({
     displayName: "ContextUrlView",
@@ -585,8 +583,7 @@ loop.shared.views = function (_, mozL10n) {
       description: React.PropTypes.string.isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher),
       thumbnail: React.PropTypes.string,
-      url: React.PropTypes.string,
-      useDesktopPaths: React.PropTypes.bool.isRequired
+      url: React.PropTypes.string
     },
 
     /**
@@ -619,7 +616,7 @@ loop.shared.views = function (_, mozL10n) {
       var thumbnail = this.props.thumbnail;
 
       if (!thumbnail) {
-        thumbnail = this.props.useDesktopPaths ? "shared/img/icons-16x16.svg#globe" : "shared/img/icons-16x16.svg#globe";
+        thumbnail = "shared/img/icons-16x16.svg#globe";
       }
 
       var wrapperClasses = classNames({
@@ -703,6 +700,7 @@ loop.shared.views = function (_, mozL10n) {
       window.removeEventListener("resize", this.handleVideoDimensions);
       videoElement.removeEventListener("loadeddata", this.handleVideoDimensions);
       videoElement.removeEventListener("mousemove", this.handleMousemove);
+      videoElement.removeEventListener("click", this.handleMouseClick);
     },
 
     componentDidUpdate: function () {
@@ -765,6 +763,12 @@ loop.shared.views = function (_, mozL10n) {
       }));
     },
 
+    handleMouseClick: function () {
+      this.props.dispatcher.dispatch(new sharedActions.SendCursorData({
+        type: loop.shared.utils.CURSOR_MESSAGE_TYPES.CLICK
+      }));
+    },
+
     /**
      * Attaches a video stream from a donor video element to this component's
      * video element if the component is displaying one.
@@ -790,6 +794,7 @@ loop.shared.views = function (_, mozL10n) {
       if (this.props.shareCursor && !this.props.screenSharingPaused) {
         videoElement.addEventListener("loadeddata", this.handleVideoDimensions);
         videoElement.addEventListener("mousemove", this.handleMouseMove);
+        videoElement.addEventListener("click", this.handleMouseClick);
       }
 
       // Set the src of our video element
@@ -880,7 +885,7 @@ loop.shared.views = function (_, mozL10n) {
       screenSharePosterUrl: React.PropTypes.string,
       screenSharingPaused: React.PropTypes.bool,
       showInitialContext: React.PropTypes.bool.isRequired,
-      useDesktopPaths: React.PropTypes.bool.isRequired
+      showTile: React.PropTypes.bool.isRequired
     },
 
     isLocalMediaAbsolutelyPositioned: function (matchMedia) {
@@ -997,7 +1002,7 @@ loop.shared.views = function (_, mozL10n) {
           React.createElement(loop.shared.views.chat.TextChatView, {
             dispatcher: this.props.dispatcher,
             showInitialContext: this.props.showInitialContext,
-            useDesktopPaths: this.props.useDesktopPaths }),
+            showTile: this.props.showTile }),
           this.state.localMediaAboslutelyPositioned ? null : this.renderLocalVideo()
         )
       );
@@ -1006,6 +1011,10 @@ loop.shared.views = function (_, mozL10n) {
 
   var RemoteCursorView = React.createClass({
     displayName: "RemoteCursorView",
+
+    statics: {
+      TRIGGERED_RESET_DELAY: 1000
+    },
 
     mixins: [React.addons.PureRenderMixin, loop.store.StoreMixin("remoteCursorStore")],
 
@@ -1098,16 +1107,99 @@ loop.shared.views = function (_, mozL10n) {
       };
     },
 
+    resetClickState: function () {
+      this.getStore().setStoreState({
+        remoteCursorClick: false
+      });
+    },
+
     render: function () {
       if (!this.state.remoteCursorPosition || !this.state.videoLetterboxing) {
         return null;
       }
 
-      return React.createElement("div", { className: "remote-cursor", style: this.calculateCursorPosition() });
+      var cx = classNames;
+      var cursorClasses = cx({
+        "remote-cursor-container": true,
+        "remote-cursor-clicked": this.state.remoteCursorClick
+      });
+
+      if (this.state.remoteCursorClick) {
+        setTimeout(this.resetClickState, this.constructor.TRIGGERED_RESET_DELAY);
+      }
+
+      return React.createElement(
+        "div",
+        { className: cursorClasses, style: this.calculateCursorPosition() },
+        React.createElement("div", { className: "remote-cursor" })
+      );
+    }
+  });
+
+  var AdsTileView = React.createClass({
+    displayName: "AdsTileView",
+
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      showTile: React.PropTypes.bool.isRequired
+    },
+
+    componentDidMount: function () {
+      // Watch for messages from the waiting-tile iframe
+      window.addEventListener("message", this.recordTileClick);
+    },
+
+    componentWillUnmount: function () {
+      window.removeEventListener("message", this.recordTileClick);
+    },
+
+    recordTileClick: function (event) {
+      if (event.data === "tile-click") {
+        this.props.dispatcher.dispatch(new sharedActions.RecordClick({
+          linkInfo: "Tiles iframe click"
+        }));
+      }
+    },
+
+    recordTilesSupport: function () {
+      this.props.dispatcher.dispatch(new sharedActions.RecordClick({
+        linkInfo: "Tiles support link click"
+      }));
+    },
+
+    render: function () {
+      if (!this.props.showTile) {
+        window.removeEventListener("message", this.recordTileClick);
+        return null;
+      }
+
+      return React.createElement(
+        "div",
+        { className: "ads-tile" },
+        React.createElement(
+          "div",
+          { className: "ads-wrapper" },
+          React.createElement(
+            "p",
+            null,
+            mozL10n.get("rooms_read_while_wait_offer2")
+          ),
+          React.createElement(
+            "a",
+            { href: loop.config.tilesSupportUrl,
+              onClick: this.recordTilesSupport,
+              rel: "noreferrer",
+              target: "_blank" },
+            React.createElement("i", { className: "room-waiting-help" })
+          ),
+          React.createElement("iframe", { className: "room-waiting-tile", src: loop.config.tilesIframeUrl })
+        )
+      );
     }
   });
 
   return {
+    AdsTileView: AdsTileView,
     AudioMuteButton: AudioMuteButton,
     AvatarView: AvatarView,
     Button: Button,

@@ -35,6 +35,11 @@ describe("loop.shared.views", function() {
     sandbox.stub(loop.shared.utils, "getOSVersion", function() {
       return OSVersion;
     });
+
+    loop.config = {
+      tilesIframeUrl: "",
+      tilesSupportUrl: ""
+    };
   });
 
   afterEach(function() {
@@ -147,7 +152,7 @@ describe("loop.shared.views", function() {
       });
   });
 
-describe("VideoMuteButton", function() {
+  describe("VideoMuteButton", function() {
     it("should set the muted class when not enabled", function() {
       var comp = TestUtils.renderIntoDocument(
         React.createElement(sharedViews.VideoMuteButton, {
@@ -457,8 +462,7 @@ describe("VideoMuteButton", function() {
         allowClick: false,
         description: "test",
         dispatcher: dispatcher,
-        showContextTitle: false,
-        useDesktopPaths: false
+        showContextTitle: false
       }, extraProps);
       return TestUtils.renderIntoDocument(
         React.createElement(sharedViews.ContextUrlView, props));
@@ -494,6 +498,24 @@ describe("VideoMuteButton", function() {
       expect(view.getDOMNode()).eql(null);
     });
 
+    it("should display nothing if it is an about url", function() {
+      view = mountTestComponent({
+        url: "about:config"
+      });
+
+      expect(view.getDOMNode()).eql(null);
+    });
+
+    it("should display nothing if it is a javascript url", function() {
+      /* eslint-disable no-script-url */
+      view = mountTestComponent({
+        url: "javascript:alert('hello')"
+      });
+
+      expect(view.getDOMNode()).eql(null);
+      /* eslint-enable no-script-url */
+    });
+
     it("should use a default thumbnail if one is not supplied", function() {
       view = mountTestComponent({
         url: "http://wonderful.invalid"
@@ -505,7 +527,6 @@ describe("VideoMuteButton", function() {
 
     it("should use a default thumbnail for desktop if one is not supplied", function() {
       view = mountTestComponent({
-        useDesktopPaths: true,
         url: "http://wonderful.invalid"
       });
 
@@ -703,9 +724,10 @@ describe("VideoMuteButton", function() {
           src: { fake: 1 }
         });
 
-        sinon.assert.calledTwice(fakeVideoElement.addEventListener);
+        sinon.assert.calledThrice(fakeVideoElement.addEventListener);
         sinon.assert.calledWith(fakeVideoElement.addEventListener, "loadeddata");
         sinon.assert.calledWith(fakeVideoElement.addEventListener, "mousemove");
+        sinon.assert.calledWith(fakeVideoElement.addEventListener, "click");
       });
 
       it("should attach a video object for Firefox", function() {
@@ -772,6 +794,24 @@ describe("VideoMuteButton", function() {
         });
       });
     });
+
+    describe("handleMouseClick", function() {
+      beforeEach(function() {
+        view = mountTestComponent({
+          dispatcher: dispatcher,
+          displayAvatar: false,
+          mediaType: "local",
+          srcMediaElement: {
+            fake: 1
+          }
+        });
+      });
+
+      it("should dispatch cursor click event when video element is clicked", function() {
+        view.handleMouseClick();
+        sinon.assert.calledOnce(dispatcher.dispatch);
+      });
+    });
   });
 
   describe("MediaLayoutView", function() {
@@ -791,7 +831,7 @@ describe("VideoMuteButton", function() {
         matchMedia: window.matchMedia,
         renderRemoteVideo: false,
         showInitialContext: false,
-        useDesktopPaths: false
+        showTile: false
       };
 
       return TestUtils.renderIntoDocument(
@@ -800,6 +840,10 @@ describe("VideoMuteButton", function() {
     }
 
     beforeEach(function() {
+      loop.config = {
+        tilesIframeUrl: "",
+        tilesSupportUrl: ""
+      };
       textChatStore = new loop.store.TextChatStore(dispatcher, {
         sdkDriver: {}
       });
@@ -808,6 +852,11 @@ describe("VideoMuteButton", function() {
       });
 
       loop.store.StoreMixin.register({ textChatStore: textChatStore });
+
+      // Need to stub these methods because when mounting the AdsTileView we are
+      // attaching listeners to the window object and "AdsTileView" tests will failed
+      sandbox.stub(window, "addEventListener");
+      sandbox.stub(window, "removeEventListener");
     });
 
     it("should mark the remote stream as the focus stream when not displaying screen share", function() {
@@ -1047,6 +1096,83 @@ describe("VideoMuteButton", function() {
           top: cursorPositionY + view.state.videoLetterboxing.top
         });
       });
+    });
+
+    describe("resetClickState", function() {
+      beforeEach(function() {
+        remoteCursorStore.setStoreState({ remoteCursorClick: true });
+        view = mountTestComponent({
+          videoElementSize: fakeVideoElementSize
+        });
+      });
+
+      it("should restore the state to its default value", function() {
+        view.resetClickState();
+
+        expect(view.getStore().getStoreState().remoteCursorClick).eql(false);
+      });
+    });
+
+    describe("#render", function() {
+      beforeEach(function() {
+        remoteCursorStore.setStoreState({ remoteCursorClick: true });
+        view = mountTestComponent({
+          videoElementSize: fakeVideoElementSize
+        });
+      });
+
+      it("should add click class to the remote cursor", function() {
+        expect(view.getDOMNode().classList.contains("remote-cursor-clicked")).eql(true);
+      });
+
+      it("should remove the click class when the animation is completed", function() {
+        clock.tick(sharedViews.RemoteCursorView.TRIGGERED_RESET_DELAY);
+        expect(view.getDOMNode().classList.contains("remote-cursor-clicked")).eql(false);
+      });
+    });
+  });
+
+  describe("AdsTileView", function() {
+    it("should dispatch a RecordClick action when the tile is clicked", function(done) {
+      // Point the iframe to a page that will auto-"click"
+      loop.config.tilesIframeUrl = "data:text/html,<script>parent.postMessage('tile-click', '*');</script>";
+
+      // Render the iframe into the fixture to cause it to load
+      React.render(React.createElement(
+        sharedViews.AdsTileView, {
+          dispatcher: dispatcher,
+          showTile: true
+        }), document.querySelector("#fixtures"));
+
+      // Wait for the iframe to load and trigger a message that should also
+      // cause the RecordClick action
+      window.addEventListener("message", function onMessage() {
+        window.removeEventListener("message", onMessage);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.RecordClick({
+            linkInfo: "Tiles iframe click"
+          }));
+
+        done();
+      });
+    });
+
+    it("should dispatch a RecordClick action when the support button is clicked", function() {
+      var view = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.AdsTileView, {
+          dispatcher: dispatcher,
+          showTile: true
+        }));
+
+      var node = view.getDOMNode().querySelector("a");
+      TestUtils.Simulate.click(node);
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.RecordClick({
+          linkInfo: "Tiles support link click"
+        }));
     });
   });
 });
