@@ -561,6 +561,8 @@ ProcLoaderServiceRun(pid_t aPeerPid, int aFd,
       MOZ_CRASH();
     }
 
+    mozilla::LogModule::Init();
+
     TransportDescriptor fd;
     fd.mFd = base::FileDescriptor(aFd, /*auto_close =*/false);
 
