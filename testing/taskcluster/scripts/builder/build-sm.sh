@@ -50,12 +50,17 @@ tc-vcs checkout $WORK/tooltool $TOOLTOOL_REPO $TOOLTOOL_REPO $TOOLTOOL_REV
 
 # Point to the appropriate compiler, assuming taskcluster will one day run on non-Linux OSes.
 case "$PLATFORM_OS" in
-    linux) export PATH="$WORK/gcc/bin":$PATH ;;
-    macosx) export PATH="$WORK/clang/bin":$PATH ;;
+    linux)
+        export PATH="$WORK/gcc/bin":$PATH
+        export GCCDIR="$WORK/gcc"
+        ;;
+    macosx)
+        export PATH="$WORK/clang/bin":$PATH
+        ;;
 esac
 
 # Run the script
-$SRCDIR/js/src/devtools/automation/autospider.sh $SPIDERMONKEY_VARIANT
+AUTOMATION=1 $SRCDIR/js/src/devtools/automation/autospider.sh $SPIDERMONKEY_VARIANT
 BUILD_STATUS=$?
 
 # Ensure upload dir exists
