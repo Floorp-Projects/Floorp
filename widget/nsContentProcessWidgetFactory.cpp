@@ -55,6 +55,8 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID, Module::CONTENT_PROCESS_ONLY },
     { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID, Module::CONTENT_PROCESS_ONLY },
     { "@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID, Module::CONTENT_PROCESS_ONLY },
+    { "@mozilla.org/widget/bidikeyboard;1", &kPUPPETBIDIKEYBOARD_CID,
+      Module::CONTENT_PROCESS_ONLY },
     { nullptr }
 };
 

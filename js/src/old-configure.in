@@ -75,18 +75,12 @@ MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd -P`
 
 MOZ_DEFAULT_COMPILER
 
-if test "$JS_STANDALONE" = no; then
+if test -z "$JS_STANDALONE"; then
   autoconfmk=autoconf-js.mk
-  JS_STANDALONE=
   #DIST is exported from top-level configure
 else
-  JS_STANDALONE=1
-  AC_DEFINE(JS_STANDALONE)
   DIST="$MOZ_BUILD_ROOT/dist"
 fi
-AC_SUBST(JS_STANDALONE)
-BUILDING_JS=1
-AC_SUBST(BUILDING_JS)
 AC_SUBST(autoconfmk)
 
 MOZ_ARG_WITH_STRING(gonk-toolchain-prefix,
@@ -927,7 +921,6 @@ dnl ========================================================
 
 case "$target" in
 *-darwin*)
-    AC_DEFINE(XP_DARWIN)
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MOZ_OPTIMIZE_FLAGS="-O3 -fno-stack-protector"
@@ -1194,10 +1187,6 @@ case "$target" in
     fi
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(HAVE__MSIZE)
-    AC_DEFINE(_WINDOWS)
-    AC_DEFINE(WIN32)
-    AC_DEFINE(XP_WIN)
-    AC_DEFINE(XP_WIN32)
     AC_DEFINE(HW_THREADS)
     AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
@@ -2776,18 +2765,6 @@ AC_CHECK_FUNCS(posix_fadvise posix_fallocate)
 
 dnl Set various defines and substitutions
 dnl ========================================================
-
-if test "$OS_ARCH" = "Darwin"; then
-  if test -n "$MOZ_IOS"; then
-    AC_DEFINE(XP_IOS)
-  else
-    AC_DEFINE(XP_MACOSX)
-  fi
-  AC_DEFINE(XP_DARWIN)
-  AC_DEFINE(XP_UNIX)
-elif test "$OS_ARCH" != "WINNT"; then
-  AC_DEFINE(XP_UNIX)
-fi
 
 if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF)

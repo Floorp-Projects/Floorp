@@ -352,7 +352,7 @@ MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMag
     uint64_t magic = MagicValue(why).asRawBits();
     ScratchRegisterScope scratch(*this);
     loadPtr(valaddr, scratch);
-    ma_b(scratch, ImmWord(magic), cond, label);
+    ma_b(scratch, ImmWord(magic), label, cond);
 }
 
 //}}} check_macroassembler_style

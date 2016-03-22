@@ -49,9 +49,8 @@ private:
 static gfxTextRun*
 GetEllipsisTextRun(nsIFrame* aFrame)
 {
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
-    nsLayoutUtils::FontSizeInflationFor(aFrame));
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetInflatedFontMetricsForFrame(aFrame);
   LazyReferenceRenderingDrawTargetGetterFromFrame lazyRefDrawTargetGetter(aFrame);
   return fm->GetThebesFontGroup()->GetEllipsisTextRun(
     aFrame->PresContext()->AppUnitsPerDevPixel(),
@@ -256,9 +255,8 @@ nsDisplayTextOverflowMarker::PaintTextToContext(nsRenderingContext* aCtx,
                     gfxTextRun::DrawParams(aCtx->ThebesContext()));
     }
   } else {
-    RefPtr<nsFontMetrics> fm;
-    nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm),
-      nsLayoutUtils::FontSizeInflationFor(mFrame));
+    RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetInflatedFontMetricsForFrame(mFrame);
     nsLayoutUtils::DrawString(mFrame, *fm, aCtx, mStyle->mString.get(),
                               mStyle->mString.Length(), pt);
   }
@@ -810,9 +808,8 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
   } else {
     nsRenderingContext rc(
       aFrame->PresContext()->PresShell()->CreateReferenceRenderingContext());
-    RefPtr<nsFontMetrics> fm;
-    nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
-      nsLayoutUtils::FontSizeInflationFor(aFrame));
+    RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetInflatedFontMetricsForFrame(aFrame);
     mISize = nsLayoutUtils::AppUnitWidthOfStringBidi(mStyle->mString, aFrame,
                                                      *fm, rc);
   }

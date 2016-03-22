@@ -627,8 +627,8 @@
       },
       {
         "name": "removeFile",
+        "async": "callback",
         "type": "function",
-        "unsupported": true,
         "parameters": [
           {
             "name": "downloadId",

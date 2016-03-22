@@ -474,6 +474,23 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
           });
       },
 
+      removeFile(id) {
+        return DownloadMap.lazyInit().then(() => {
+          let item;
+          try {
+            item = DownloadMap.fromId(id);
+          } catch (err) {
+            return Promise.reject({message: `Invalid download id ${id}`});
+          }
+          if (item.state !== "complete") {
+            return Promise.reject({message: `Cannot remove incomplete download id ${id}`});
+          }
+          return OS.File.remove(item.filename, {ignoreAbsent: false}).catch((err) => {
+            return Promise.reject({message: `Could not remove download id ${item.id} because the file doesn't exist`});
+          });
+        });
+      },
+
       search(query) {
         return queryHelper(query)
           .then(items => items.map(item => item.serialize()));

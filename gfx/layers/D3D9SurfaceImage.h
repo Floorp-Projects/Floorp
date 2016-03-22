@@ -63,6 +63,8 @@ public:
 
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) override;
 
+  already_AddRefed<IDirect3DSurface9> GetD3D9Surface();
+
   virtual bool IsValid() override { return mValid; }
 
   void Invalidate() { mValid = false; }

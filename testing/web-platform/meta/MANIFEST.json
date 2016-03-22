@@ -34833,6 +34833,13 @@
             "timeout": "long",
             "url": "/fetch/api/request/request-cache.html"
           }
+        ],
+        "selection/extend.html": [
+          {
+            "path": "selection/extend.html",
+            "timeout": "long",
+            "url": "/selection/extend.html"
+          }
         ]
       }
     },

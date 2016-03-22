@@ -14,6 +14,10 @@
   background-color: yellow;
   line-height: 16px;
 }
+.init::before {
+  content: "";
+  animation: anim 100s;
+}
 </style>
 <div id=container><div id=target></div></div>
 <script>
@@ -27,6 +31,10 @@ var gObserver = new MutationObserver(function(newRecords) {
   gRecordPromiseResolvers = [];
   resolvers.forEach(fn => fn());
 });
+// Get the pseudo element target.
+div.classList.add("init");
+var pseudoTarget = document.getAnimations()[0].effect.target;
+div.classList.remove("init");
 
 // Asynchronous testing framework based on layout/style/test/animation_utils.js.
 
@@ -161,8 +169,8 @@ function assert_records(expected, desc) {
 
 // -- Tests ------------------------------------------------------------------
 
-// We run all tests first targetting the div and observing the div, then again
-// targetting the div and observing its parent while using the subtree:true
+// We run all tests first targeting the div and observing the div, then again
+// targeting the div and observing its parent while using the subtree:true
 // MutationObserver option.
 
 [
@@ -1391,12 +1399,24 @@ function assert_records(expected, desc) {
 });
 
 addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
+  // Add style for pseudo elements
+  var extraStyle = document.createElement('style');
+  document.head.appendChild(extraStyle);
+  var sheet = extraStyle.sheet;
+  var rules = { ".before::before": "animation: anim 100s;",
+                ".after::after"  : "animation: anim 100s, anim 100s;" };
+  for (var selector in rules) {
+    sheet.insertRule(selector + '{' + rules[selector] + '}',
+                     sheet.cssRules.length);
+  }
 
   // Create a tree with two children:
   //
-  //         div
-  //        /  \
-  //   childA  childB
+  //          div
+  //       (::before)
+  //       (::after)
+  //        /     \
+  //   childA      childB(::before)
   var childA = document.createElement("div");
   var childB = document.createElement("div");
 
@@ -1411,9 +1431,26 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   div.style    = "animation: anim 100s, anim 100s, anim 100s";
   childA.style = "animation: anim 100s, anim 100s";
 
+  // Start animations targeting to pseudo element of div and childB.
+  childB.classList.add("before");
+  div.classList.add("after");
+  div.classList.add("before");
+
+  // Check all animations we have in this document
+  var docAnims = document.getAnimations();
+  is(docAnims.length, 10, "total animations");
+
   var divAnimations = div.getAnimations();
   var childAAnimations = childA.getAnimations();
   var childBAnimations = childB.getAnimations();
+  var divBeforeAnimations =
+    [ for (x of docAnims) if (x.effect.target.parentElement == div &&
+                              x.effect.target.type == "::before") x ];
+  var divAfterAnimations =
+    [ for (x of docAnims) if (x.effect.target.parentElement == div &&
+                              x.effect.target.type == "::after") x ];
+  var childBPseudoAnimations =
+    [ for (x of docAnims) if (x.effect.target.parentElement == childB) x ];
 
   // The order in which we get the corresponding records is currently
   // based on the order we visit these nodes when updating styles.
@@ -1423,11 +1460,15 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   // future but for now all we are interested in testing here is that the order
   // these records are dispatched is consistent between runs.
   //
-  // We currently expect to get records in order childA, childB, div
+  // We currently expect to get records in order div::after, childA, childB,
+  // childB::before, div, div::before
   yield await_frame();
-  assert_records([{ added: childAAnimations, changed: [], removed: [] },
+  assert_records([{ added: divAfterAnimations, changed: [], removed: [] },
+                  { added: childAAnimations, changed: [], removed: [] },
                   { added: childBAnimations, changed: [], removed: [] },
-                  { added: divAnimations, changed: [], removed: [] }],
+                  { added: childBPseudoAnimations, changed: [], removed: [] },
+                  { added: divAnimations, changed: [], removed: [] },
+                  { added: divBeforeAnimations, changed: [], removed: [] }],
                  "records after simultaneous animation start");
 
   // The one case where we *do* currently perform document-level (or actually
@@ -1435,14 +1476,15 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   // driver tick. In particular, this means that when animations finish
   // naturally the removed records should be dispatched according to the
   // position of the elements in the tree.
-  //
 
-  // First, flatten the set of animations.
-  var animations = [ divAnimations,
-                     childAAnimations,
-                     childBAnimations ].reduce(
-    (a, b) => a.concat(b), []
-  );
+  // First, flatten the set of animations. we put the animations targeting to
+  // pseudo elements last. (Actually, we don't care the order in the list.)
+  var animations = [ ...divAnimations,
+                     ...childAAnimations,
+                     ...childBAnimations,
+                     ...divBeforeAnimations,
+                     ...divAfterAnimations,
+                     ...childBPseudoAnimations ];
 
   // Fast-forward to *just* before the end of the animation.
   animations.forEach(animation => animation.currentTime = 99999);
@@ -1457,7 +1499,13 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
 
   // After the changed notifications, which will be dispatched in the order that
   // the animations were seeked, we should get removal MutationRecords in order
-  // div, childA, childB
+  // (div, div::before, div::after), childA, (childB, childB::before).
+  // Note: The animations targeting to the pseudo element are appended after
+  //       the animations of its parent element.
+  divAnimations = [ ...divAnimations,
+                    ...divBeforeAnimations,
+                    ...divAfterAnimations ];
+  childBAnimations = [ ...childBAnimations, ...childBPseudoAnimations ];
   assert_records(seekRecords.concat(
                    { added: [], changed: [], removed: divAnimations },
                    { added: [], changed: [], removed: childAAnimations },
@@ -1465,55 +1513,60 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
                  "records after finishing");
 
   // Clean up
+  div.classList.remove("before");
+  div.classList.remove("after");
   div.style = "";
   childA.remove();
   childB.remove();
+  extraStyle.remove();
 });
 
+[ div, pseudoTarget ].forEach(function(target) {
+  addAsyncAnimTest("change_duration_and_currenttime",
+                   { observe: div, subtree: true }, function*() {
+    var anim = target.animate({ opacity: [ 0, 1 ] }, 100000);
 
-addAsyncAnimTest("change_duration_and_currenttime",
-                 { observe: div, subtree: true }, function*() {
-  var anim = div.animate({ opacity: [ 0, 1 ] }, 100000);
-  yield await_frame();
-  assert_records([{ added: [anim], changed: [], removed: [] }],
-                 "records after animation is added");
+    yield await_frame();
+    assert_records([{ added: [anim], changed: [], removed: [] }],
+                   "records after animation is added");
 
-  anim.effect.timing.duration = 10000;
-  yield await_frame();
+    anim.effect.timing.duration = 10000;
+    yield await_frame();
+    assert_records([{ added: [], changed: [anim], removed: [] }],
+                   "records after duration is changed");
 
-  assert_records([{ added: [], changed: [anim], removed: [] }],
-                 "records after duration is changed");
+    anim.effect.timing.duration = 10000;
+    yield await_frame();
+    assert_records([], "records after assigning same value");
 
-  anim.effect.timing.duration = 10000;
-  yield await_frame();
-  assert_records([], "records after assigning same value");
+    anim.currentTime = 50000;
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: [anim] }],
+                   "records after animation end");
 
-  anim.currentTime = 50000;
-  yield await_frame();
-  assert_records([{ added: [], changed: [], removed: [anim] }],
-                 "records after animation end");
+    anim.effect.timing.duration = 100000;
+    yield await_frame();
+    assert_records([{ added: [anim], changed: [], removed: [] }],
+                   "records after animation restarted");
 
-  anim.effect.timing.duration = 100000;
-  yield await_frame();
-  assert_records([{ added: [anim], changed: [], removed: [] }],
-                 "records after animation restarted");
+    anim.effect.timing.duration = "auto";
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: [anim] }],
+                   "records after duration set \"auto\"");
 
-  anim.effect.timing.duration = "auto";
-  yield await_frame();
-  assert_records([{ added: [], changed: [], removed: [anim] }],
-                 "records after duration set \"auto\"");
+    anim.effect.timing.duration = "auto";
+    yield await_frame();
+    assert_records([], "records after assigning same value \"auto\"");
 
-  anim.effect.timing.duration = "auto";
-  yield await_frame();
-  assert_records([], "records after assigning same value \"auto\"");
-
-  anim.cancel();
-  yield await_frame();
+    anim.cancel();
+    yield await_frame();
+  });
 });
 
 addAsyncAnimTest("change_enddelay_and_currenttime",
                  { observe: div, subtree: true }, function*() {
   var anim = div.animate({ opacity: [ 0, 1 ] }, { duration: 100000 });
+
   yield await_frame();
   assert_records([{ added: [anim], changed: [], removed: [] }],
                  "records after animation is added");
@@ -1546,6 +1599,22 @@ addAsyncAnimTest("change_enddelay_and_currenttime",
                          { duration: 100, endDelay: -100 });
   yield await_frame();
   assert_records([], "records after animation is added");
+});
+
+addAsyncAnimTest("exclude_animations_targeting_pseudo_elements",
+                 { observe: div, subtree: false }, function*() {
+  var anim = div.animate({ opacity: [ 0, 1 ] }, { duration: 100000 });
+  var pAnim = pseudoTarget.animate({ opacity: [ 0, 1 ] }, { duration: 100000 });
+
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation is added");
+
+  anim.finish();
+  pAnim.finish();
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after animation is finished");
 });
 
 // Run the tests.

@@ -120,6 +120,52 @@ def perl_version_check(min_version):
 perl_version_check('5.006')
 
 
+# yasm detection
+# ==============================================================
+yasm = check_prog('YASM', ['yasm'], allow_missing=True)
+
+@depends(yasm)
+@checking('yasm version')
+@advanced
+def yasm_version(yasm):
+    if yasm:
+        import subprocess
+        try:
+            version = Version(subprocess.check_output(
+                [yasm, '--version']
+            ).splitlines()[0].split()[1])
+            # Until we move all the yasm consumers out of old-configure.
+            # bug 1257904
+            add_old_configure_assignment('_YASM_MAJOR_VERSION', version.major)
+            add_old_configure_assignment('_YASM_MINOR_VERSION', version.minor)
+            return version
+        except subprocess.CalledProcessError as e:
+            error('Failed to get yasm version: %s' % e.message)
+
+@depends(yasm, target)
+def yasm_asflags(yasm, target):
+    if yasm:
+        asflags = {
+            ('OSX', 'x86'): '-f macho32',
+            ('OSX', 'x86_64'): '-f macho64',
+            ('WINNT', 'x86'): '-f win32',
+            ('WINNT', 'x86_64'): '-f x64',
+        }.get((target.os, target.cpu), None)
+        if asflags is None:
+            # We're assuming every x86 platform we support that's
+            # not Windows or Mac is ELF.
+            if target.cpu == 'x86':
+                asflags = '-f elf32'
+            elif target.cpu == 'x86_64':
+                asflags = '-f elf64'
+        if asflags:
+            asflags += ' -rnasm -pnasm'
+            set_config('YASM_ASFLAGS', asflags)
+            set_config('HAVE_YASM', '1')
+            # Until the YASM variable is not necessary in old-configure.
+            add_old_configure_assignment('YASM', '1')
+        return asflags
+
 # Miscellaneous programs
 # ==============================================================
 check_prog('DOXYGEN', ('doxygen',), allow_missing=True)

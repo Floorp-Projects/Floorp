@@ -85,7 +85,6 @@ struct EffectMask : public Effect
              const gfx::Matrix4x4 &aMaskTransform)
     : Effect(EffectTypes::MASK)
     , mMaskTexture(aMaskTexture)
-    , mIs3D(false)
     , mSize(aSize)
     , mMaskTransform(aMaskTransform)
   {}
@@ -93,7 +92,6 @@ struct EffectMask : public Effect
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   TextureSource* mMaskTexture;
-  bool mIs3D;
   gfx::IntSize mSize;
   gfx::Matrix4x4 mMaskTransform;
 };

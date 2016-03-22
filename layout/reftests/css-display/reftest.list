@@ -24,3 +24,5 @@ skip pref(layout.css.display-contents.enabled,true) == display-contents-xbl-4.xu
 asserts(0-1) fuzzy-if(Android,8,3216) pref(layout.css.display-contents.enabled,true) == display-contents-fieldset.html display-contents-fieldset-ref.html # bug 1089223
 skip-if(B2G||Mulet) asserts(1) pref(layout.css.display-contents.enabled,true) == display-contents-xbl-5.xul display-contents-xbl-3-ref.xul # bug 1089223 # Initial mulet triage: parity with B2G/B2G Desktop
 pref(layout.css.display-contents.enabled,true) == display-contents-list-item-child.html display-contents-list-item-child-ref.html
+pref(layout.css.display-contents.enabled,true) == display-contents-writing-mode-1.html display-contents-writing-mode-1-ref.html
+pref(layout.css.display-contents.enabled,true) == display-contents-writing-mode-2.html display-contents-writing-mode-2-ref.html

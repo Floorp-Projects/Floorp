@@ -3548,7 +3548,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "static" ],
-    other_values: [ "relative", "absolute", "fixed" ],
+    other_values: [ "relative", "absolute", "fixed", "sticky" ],
     invalid_values: []
   },
   "quotes": {
@@ -6516,10 +6516,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.osx-font-smoothing.enabled")) {
     other_values: [ "grayscale" ],
     invalid_values: [ "none", "subpixel-antialiased", "antialiased" ]
   };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.sticky.enabled")) {
-  gCSSProperties["position"].other_values.push("sticky");
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.mix-blend-mode.enabled")) {

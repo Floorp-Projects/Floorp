@@ -224,9 +224,10 @@ IMFYCbCrImage::GetTextureClient(CompositableClient* aClient)
     return mTextureClient;
   }
 
-  LayersBackend backend = aClient->GetForwarder()->GetCompositorBackendType();
-  ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11ImageBridgeDevice();
+  RefPtr<ID3D11Device> device;
+  gfxWindowsPlatform::GetPlatform()->GetD3D11ImageBridgeDevice(&device);
 
+  LayersBackend backend = aClient->GetForwarder()->GetCompositorBackendType();
   if (!device || backend != LayersBackend::LAYERS_D3D11) {
     if (backend == LayersBackend::LAYERS_D3D9 ||
         backend == LayersBackend::LAYERS_D3D11) {
