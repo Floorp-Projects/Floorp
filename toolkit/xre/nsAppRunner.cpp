@@ -91,7 +91,6 @@
 #include "nsIDocShell.h"
 #include "nsAppShellCID.h"
 #include "mozilla/scache/StartupCache.h"
-#include "nsIGfxInfo.h"
 #include "gfxPrefs.h"
 
 #include "base/histogram.h"
@@ -4634,7 +4633,7 @@ enum {
   kE10sDisabledByUser = 2,
   // kE10sDisabledInSafeMode = 3, was removed in bug 1172491.
   kE10sDisabledForAccessibility = 4,
-  kE10sDisabledForMacGfx = 5,
+  // kE10sDisabledForMacGfx = 5, was removed in bug 1068674.
   kE10sDisabledForBidi = 6,
   kE10sDisabledForAddons = 7,
   kE10sForceDisabled = 8,
@@ -4733,41 +4732,6 @@ MultiprocessBlockPolicy() {
   }
 
 
-#if defined(XP_MACOSX)
-  // If for any reason we suspect acceleration will be disabled, disable
-  // e10s auto start on mac.
-
-  // Check prefs
-  bool accelDisabled = gfxPrefs::GetSingleton().LayersAccelerationDisabled() &&
-                       !gfxPrefs::LayersAccelerationForceEnabled();
-
-  accelDisabled = accelDisabled || !nsCocoaFeatures::AccelerateByDefault();
-
-  // Check for blocked drivers
-  if (!accelDisabled) {
-    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-    if (gfxInfo) {
-      int32_t status;
-      if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status)) &&
-          status != nsIGfxInfo::FEATURE_STATUS_OK) {
-        accelDisabled = true;
-      }
-    }
-  }
-
-  // Check env flags
-  if (accelDisabled) {
-    const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
-    if (acceleratedEnv && (*acceleratedEnv != '0')) {
-      accelDisabled = false;
-    }
-  }
-
-  if (accelDisabled) {
-    gMultiprocessBlockPolicy = kE10sDisabledForMacGfx;
-    return gMultiprocessBlockPolicy;
-  }
-#endif // defined(XP_MACOSX)
 
   /*
    * None of the blocking policies matched, so e10s is allowed to run.
