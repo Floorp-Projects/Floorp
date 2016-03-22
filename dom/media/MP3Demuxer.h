@@ -309,8 +309,12 @@ public:
   // Returns the parsed VBR header info. Note: check for validity by type.
   const VBRHeader& VBRInfo() const;
 
-  // Resets the parser. Don't use between frames as first frame data is reset.
+  // Resets the parser.
   void Reset();
+
+  // Resets all frame data, but not the ID3Header.
+  // Don't use between frames as first frame data is reset.
+  void ResetFrameData();
 
   // Clear the last parsed frame to allow for next frame parsing, i.e.:
   // - sets PrevFrame to CurrentFrame
@@ -394,7 +398,12 @@ private:
   // Seeks by scanning the stream up to the given time for more accurate results.
   media::TimeUnit ScanUntil(const media::TimeUnit& aTime);
 
-  // Finds the next valid frame and returns its byte range.
+  // Finds the first valid frame and returns its byte range if found
+  // or a null-byte range otherwise.
+  MediaByteRange FindFirstFrame();
+
+  // Finds the next valid frame and returns its byte range if found
+  // or a null-byte range otherwise.
   MediaByteRange FindNextFrame();
 
   // Skips the next frame given the provided byte range.
