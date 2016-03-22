@@ -548,24 +548,6 @@ js::Call(JSContext* cx, HandleValue fval, HandleValue thisv, const AnyInvokeArgs
     return true;
 }
 
-// DEPRECATED.  TO BE REMOVED.  DO NOT ADD NEW USES.
-bool
-js::Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, const Value* argv,
-           MutableHandleValue rval)
-{
-    RootedValue fv(cx, fval);
-    RootedValue tv(cx, thisv);
-
-    InvokeArgs args(cx);
-    if (!args.init(argc))
-        return false;
-
-    for (unsigned i = 0; i < argc; i++)
-        args[i].set(argv[i]);
-
-    return Call(cx, fv, tv, args, rval);
-}
-
 static bool
 InternalConstruct(JSContext* cx, const AnyConstructArgs& args)
 {

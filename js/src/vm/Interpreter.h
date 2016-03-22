@@ -72,11 +72,6 @@ Invoke(JSContext* cx, const AnyInvokeArgs& args)
     return InternalCallOrConstruct(cx, args, NO_CONSTRUCT);
 }
 
-// DEPRECATED.  TO BE REMOVED.  DO NOT ADD NEW USES.
-extern bool
-Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, const Value* argv,
-       MutableHandleValue rval);
-
 /*
  * These helpers take care of the infinite-recursion check necessary for
  * getter/setter calls.
