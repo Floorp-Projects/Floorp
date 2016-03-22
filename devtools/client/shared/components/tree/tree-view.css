@@ -19,7 +19,7 @@
 
 .treeTable .treeLabelCell {
   padding: 2px 0 2px 0px;
-  vertical-align: middle;
+  vertical-align: top;
   white-space: nowrap;
 }
 
