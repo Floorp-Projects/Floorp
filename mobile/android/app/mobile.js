@@ -864,8 +864,9 @@ pref("browser.snippets.updateUrl", "https://snippets.cdn.mozilla.net/json/%SNIPP
 // How frequently we check for new snippets, in seconds (1 day)
 pref("browser.snippets.updateInterval", 86400);
 
-// URL used to check for user's country code
-pref("browser.snippets.geoUrl", "https://geo.mozilla.org/country.json");
+// URL used to check for user's country code. Please do not directly use this code or Snippets key.
+// Contact MLS team for your own credentials. https://location.services.mozilla.com/contact
+pref("browser.snippets.geoUrl", "https://location.services.mozilla.com/v1/country?key=fff72d56-b040-4205-9a11-82feda9d83a3");
 
 // URL used to ping metrics with stats about which snippets have been shown
 pref("browser.snippets.statsUrl", "https://snippets-stats.mozilla.org/mobile");
