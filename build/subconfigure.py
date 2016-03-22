@@ -314,6 +314,7 @@ def run(objdir):
             command = [
                 sys.executable,
                 os.path.join(os.path.dirname(__file__), '..', 'configure.py'),
+                '--enable-project=js',
             ]
             data['env']['OLD_CONFIGURE'] = os.path.join(
                 os.path.dirname(configure), 'old-configure')
