@@ -2,15 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
+#include "nsIPlatformInfo.idl"
 
 /**
  * A scriptable interface to the nsXULAppAPI structure. See nsXULAppAPI.h for
  * a detailed description of each attribute.
  */
 
-[scriptable, uuid(1518e7d2-022a-4dae-b02e-bbe7ffcf2145)]
-interface nsIXULAppInfo : nsISupports
+[scriptable, uuid(ddea4f31-3c5e-4769-ac68-21ab4b3d7845)]
+interface nsIXULAppInfo : nsIPlatformInfo
 {
   /**
    * @see nsXREAppData.vendor
@@ -45,16 +45,6 @@ interface nsIXULAppInfo : nsISupports
    */
   readonly attribute ACString appBuildID;
 
-  /**
-   * The version of the XULRunner platform.
-   */
-  readonly attribute ACString platformVersion;
-
-  /**
-   * The build ID/date of gecko and the XULRunner platform.
-   */
-  readonly attribute ACString platformBuildID;
-  
   /**
    * @see nsXREAppData.UAName
    * @returns an empty string if nsXREAppData.UAName is not set.

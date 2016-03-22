@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=599295
+-->
+<head>
+  <title>Test for Bug 599295</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"  src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=599295">Mozilla Bug 599295</a>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 599295 **/
+
+/* Do not allow a response to a CONNECT method, used to establish an
+   SSL tunnel over an HTTP proxy, to contain a redirect */
+
+function runTest() {
+  /* Previously, necko would allow a 302 as part of a CONNECT response
+     if the LOAD_DOCUMENT_URI flag was set and the original document
+     URI had not yet been changed. */
+
+  SpecialPowers.loadChannelAndReturnStatus("https://redirproxy.example.com/test",
+                                           true)
+    .then(function({status, httpStatus}) {
+      /* testing here that the redirect was not followed. If it was followed
+         we would see a http status of 200 and status of NS_OK */
+
+      is(httpStatus, 302, "http status 302");
+      is(status, SpecialPowers.Cr.NS_ERROR_CONNECTION_REFUSED,
+         "raised refused");
+      SimpleTest.finish();
+    });
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTest);
+
+</script>
+</pre>
+</body>
+</html>
+

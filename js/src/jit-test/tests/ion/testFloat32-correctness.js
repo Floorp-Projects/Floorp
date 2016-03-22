@@ -162,7 +162,7 @@ function setupNot() {
     f32[3] = NaN;
     f32[4] = Infinity;
     f32[5] = 42;
-    f32[5] = -23;
+    f32[6] = -23;
 }
 function not() {
     assertEq( !f32[0], true );

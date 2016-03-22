@@ -248,19 +248,20 @@ Shape::fixupDictionaryShapeAfterMovingGC()
     // alignment.
     Cell* cell = reinterpret_cast<Cell*>(uintptr_t(listp) & ~CellMask);
     AllocKind kind = TenuredCell::fromPointer(cell)->getAllocKind();
-    MOZ_ASSERT_IF(listpPointsIntoShape,
-                  kind == AllocKind::SHAPE || kind == AllocKind::ACCESSOR_SHAPE);
+    MOZ_ASSERT_IF(listpPointsIntoShape, IsShapeAllocKind(kind));
     MOZ_ASSERT_IF(!listpPointsIntoShape, IsObjectAllocKind(kind));
 #endif
 
     if (listpPointsIntoShape) {
         // listp points to the parent field of the next shape.
         Shape* next = reinterpret_cast<Shape*>(uintptr_t(listp) - offsetof(Shape, parent));
-        listp = &gc::MaybeForwarded(next)->parent;
+        if (gc::IsForwarded(next))
+            listp = &gc::Forwarded(next)->parent;
     } else {
         // listp points to the shape_ field of an object.
         JSObject* last = reinterpret_cast<JSObject*>(uintptr_t(listp) - JSObject::offsetOfShape());
-        listp = &gc::MaybeForwarded(last)->as<NativeObject>().shape_;
+        if (gc::IsForwarded(last))
+            listp = &gc::Forwarded(last)->as<NativeObject>().shape_;
     }
 }
 
@@ -316,6 +317,14 @@ Shape::fixupAfterMovingGC()
     else
         fixupShapeTreeAfterMovingGC();
 }
+
+void
+BaseShape::fixupAfterMovingGC()
+{
+    if (hasTable())
+        table().fixupAfterMovingGC();
+}
+
 
 void
 Shape::fixupGetterSetterForBarrier(JSTracer* trc)

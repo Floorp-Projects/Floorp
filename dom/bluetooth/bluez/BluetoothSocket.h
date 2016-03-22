@@ -10,7 +10,7 @@
 #include "BluetoothCommon.h"
 #include "mozilla/ipc/DataSocket.h"
 #include "mozilla/ipc/UnixSocketWatcher.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsString.h"
 
 class MessageLoop;
@@ -44,7 +44,7 @@ public:
    *
    * @param aBuffer Data received from the socket.
    */
-  void ReceiveSocketData(nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer);
+  void ReceiveSocketData(UniquePtr<mozilla::ipc::UnixSocketBuffer>& aBuffer);
 
   /**
    * Convenience function for sending strings to the socket (common in bluetooth

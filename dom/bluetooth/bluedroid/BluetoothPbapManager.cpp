@@ -19,7 +19,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
-#include "nsAutoPtr.h"
 #include "nsIInputStream.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
@@ -258,7 +257,7 @@ BluetoothPbapManager::Listen()
 // Virtual function of class SocketConsumer
 void
 BluetoothPbapManager::ReceiveSocketData(BluetoothSocket* aSocket,
-                                        nsAutoPtr<UnixSocketBuffer>& aMessage)
+                                        UniquePtr<UnixSocketBuffer>& aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
 

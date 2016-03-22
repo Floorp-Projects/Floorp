@@ -146,6 +146,7 @@ enum TwoByteOpcodeID {
     OP2_CVTSI2SD_VsdEd  = 0x2A,
     OP2_CVTTSD2SI_GdWsd = 0x2C,
     OP2_UCOMISD_VsdWsd  = 0x2E,
+    OP2_CMOVZ_GvqpEvqp  = 0x44,
     OP2_MOVMSKPD_EdVd   = 0x50,
     OP2_ANDPS_VpsWps    = 0x54,
     OP2_ANDNPS_VpsWps   = 0x55,
