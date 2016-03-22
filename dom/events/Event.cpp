@@ -1050,14 +1050,14 @@ Event::DefaultPrevented(JSContext* aCx) const
   NS_ENSURE_TRUE(mEvent, false);
 
   // If preventDefault() has never been called, just return false.
-  if (!mEvent->mFlags.mDefaultPrevented) {
+  if (!mEvent->DefaultPrevented()) {
     return false;
   }
 
   // If preventDefault() has been called by content, return true.  Otherwise,
   // i.e., preventDefault() has been called by chrome, return true only when
   // this is called by chrome.
-  return mEvent->mFlags.mDefaultPreventedByContent || IsChrome(aCx);
+  return mEvent->DefaultPreventedByContent() || IsChrome(aCx);
 }
 
 double

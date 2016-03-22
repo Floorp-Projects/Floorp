@@ -757,7 +757,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
     return false;
   }
   if (!aMouseEvent->mFlags.mIsTrusted ||
-      aMouseEvent->mFlags.mDefaultPrevented ||
+      aMouseEvent->DefaultPrevented() ||
       !aMouseEvent->widget) {
     return false;
   }
