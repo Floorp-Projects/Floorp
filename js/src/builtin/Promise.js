@@ -226,64 +226,22 @@ function TriggerPromiseReactions(reactions, argument) {
 
 // ES6, 25.4.2.1.
 function EnqueuePromiseReactionJob(reaction, argument) {
-    _EnqueuePromiseJob(reaction.capabilities.promise, function PromiseReactionJob() {
-        // Step 1.
-        assert(IsPromiseReaction(reaction), "Invalid promise reaction record");
-
-        // Step 2.
-        let promiseCapability = reaction.capabilities;
-
-        // Step 3.
-        let handler = reaction.handler;
-        let handlerResult = argument;
-        let shouldReject = false;
-
-        // Steps 4-6.
-        if (handler === PROMISE_HANDLER_IDENTITY) {
-            // handlerResult = argument; (implicit)
-        } else if (handler === PROMISE_HANDLER_THROWER) {
-            // handlerResult = argument; (implicit)
-            shouldReject = true;
-        } else {
-            try {
-                handlerResult = callContentFunction(handler, undefined, argument);
-            } catch (e) {
-                handlerResult = e;
-                shouldReject = true;
-            }
-        }
-
-        // Step 7.
-        if (shouldReject) {
-            // Step 7.a.
-            callContentFunction(promiseCapability.reject, undefined, handlerResult);
-
-            // Step 7.b.
-            return;
-        }
-
-        // Steps 8-9.
-        return callContentFunction(promiseCapability.resolve, undefined, handlerResult);
-    });
+    let capabilities = reaction.capabilities;
+    _EnqueuePromiseReactionJob([reaction.handler,
+                                argument,
+                                capabilities.resolve,
+                                capabilities.reject
+                               ],
+                               capabilities.promise);
 }
 
 // ES6, 25.4.2.2.
 function EnqueuePromiseResolveThenableJob(promiseToResolve, thenable, then) {
-    _EnqueuePromiseJob(promiseToResolve, function PromiseResolveThenableJob() {
-        // Step 1.
-        let {0: resolve, 1: reject} = CreateResolvingFunctions(promiseToResolve);
-
-        // Steps 2-3.
-        try {
-            // Step 2.
-            callContentFunction(then, thenable, resolve, reject);
-        } catch (thenCallResult) {
-            // Steps 3.a-b.
-            callFunction(reject, undefined, thenCallResult);
-        }
-
-        // Step 4 (implicit, no need to return anything).
-    });
+    _EnqueuePromiseResolveThenableJob([then,
+                                       thenable,
+                                       promiseToResolve
+                                      ],
+                                      promiseToResolve);
 }
 
 // ES6, 25.4.3.1. (Implemented in C++).
