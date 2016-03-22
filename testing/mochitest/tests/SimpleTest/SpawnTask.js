@@ -272,7 +272,10 @@ var add_task = (function () {
           // may mean that the state of subsequent tests may be corrupt.
           try {
             for (var task of task_list) {
+              var name = task.name || "";
+              info("SpawnTask.js | Entering test " + name);
               yield task();
+              info("SpawnTask.js | Leaving test " + name);
             }
           } catch (ex) {
             try {
