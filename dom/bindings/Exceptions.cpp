@@ -175,7 +175,7 @@ CreateException(JSContext* aCx, nsresult aRv, const nsACString& aMessage)
 }
 
 already_AddRefed<nsIStackFrame>
-GetCurrentJSStack()
+GetCurrentJSStack(int32_t aMaxDepth)
 {
   // is there a current context available?
   JSContext* cx = nullptr;
@@ -191,13 +191,7 @@ GetCurrentJSStack()
     return nullptr;
   }
 
-  nsCOMPtr<nsIStackFrame> stack = exceptions::CreateStack(cx);
-  if (!stack) {
-    return nullptr;
-  }
-
-  // Note that CreateStack only returns JS frames, so we're done here.
-  return stack.forget();
+  return exceptions::CreateStack(cx, aMaxDepth);
 }
 
 AutoForceSetExceptionOnContext::AutoForceSetExceptionOnContext(JSContext* aCx)
@@ -795,8 +789,8 @@ NS_IMETHODIMP StackFrame::ToString(JSContext* aCx, nsACString& _retval)
   return NS_OK;
 }
 
-/* static */ already_AddRefed<nsIStackFrame>
-JSStackFrame::CreateStack(JSContext* aCx, int32_t aMaxDepth)
+already_AddRefed<nsIStackFrame>
+CreateStack(JSContext* aCx, int32_t aMaxDepth)
 {
   static const unsigned MAX_FRAMES = 100;
   if (aMaxDepth < 0) {
@@ -808,19 +802,12 @@ JSStackFrame::CreateStack(JSContext* aCx, int32_t aMaxDepth)
     return nullptr;
   }
 
-  nsCOMPtr<nsIStackFrame> first;
   if (!stack) {
-    first = new StackFrame();
-  } else {
-    first = new JSStackFrame(stack);
+    return nullptr;
   }
-  return first.forget();
-}
 
-already_AddRefed<nsIStackFrame>
-CreateStack(JSContext* aCx, int32_t aMaxDepth)
-{
-  return JSStackFrame::CreateStack(aCx, aMaxDepth);
+  nsCOMPtr<nsIStackFrame> frame = new JSStackFrame(stack);
+  return frame.forget();
 }
 
 } // namespace exceptions

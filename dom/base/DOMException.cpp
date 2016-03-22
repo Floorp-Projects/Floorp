@@ -218,37 +218,7 @@ Exception::Exception(const nsACString& aMessage,
     sEverMadeOneFromFactory = true;
   }
 
-  nsCOMPtr<nsIStackFrame> location;
-  if (aLocation) {
-    location = aLocation;
-  } else {
-    location = GetCurrentJSStack();
-    // it is legal for there to be no active JS stack, if C++ code
-    // is operating on a JS-implemented interface pointer without
-    // having been called in turn by JS.  This happens in the JS
-    // component loader, and will become more common as additional
-    // components are implemented in JS.
-  }
-  // We want to trim off any leading native 'dataless' frames
-  if (location) {
-    while (1) {
-      uint32_t language;
-      int32_t lineNumber;
-      if (NS_FAILED(location->GetLanguage(&language)) ||
-          language == nsIProgrammingLanguage::JAVASCRIPT ||
-          NS_FAILED(location->GetLineNumber(&lineNumber)) ||
-          lineNumber) {
-        break;
-      }
-      nsCOMPtr<nsIStackFrame> caller;
-      if (NS_FAILED(location->GetCaller(getter_AddRefs(caller))) || !caller) {
-        break;
-      }
-      location = caller;
-    }
-  }
-
-  Initialize(aMessage, aResult, aName, location, aData);
+  Initialize(aMessage, aResult, aName, aLocation, aData);
 }
 
 Exception::Exception()
@@ -454,12 +424,11 @@ Exception::Initialize(const nsACString& aMessage, nsresult aResult,
   if (aLocation) {
     mLocation = aLocation;
   } else {
-    nsresult rv;
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
-    rv = xpc->GetCurrentJSStack(getter_AddRefs(mLocation));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    mLocation = GetCurrentJSStack();
+    // it is legal for there to be no active JS stack, if C++ code
+    // is operating on a JS-implemented interface pointer without
+    // having been called in turn by JS.  This happens in the JS
+    // component loader.
   }
 
   mData = aData;
