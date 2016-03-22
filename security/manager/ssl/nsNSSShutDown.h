@@ -9,12 +9,12 @@
 #include "nspr.h"
 #include "PLDHashTable.h"
 #include "mozilla/CondVar.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/StaticMutex.h"
 
 class nsNSSShutDownObject;
 class nsOnPK11LogoutCancelObject;
 
-// Singleton, owner by nsNSSShutDownList
+// Singleton, owned by nsNSSShutDownList
 class nsNSSActivityState
 {
 public:
@@ -62,9 +62,7 @@ public:
 class nsNSSShutDownList
 {
 public:
-  ~nsNSSShutDownList();
-
-  static nsNSSShutDownList *construct();
+  static void shutdown();
   
   // track instances that support early cleanup
   static void remember(nsNSSShutDownObject *o);
@@ -76,22 +74,24 @@ public:
   static void forget(nsOnPK11LogoutCancelObject *o);
 
   // Do the "early cleanup", if possible.
-  nsresult evaporateAllNSSResources();
+  static nsresult evaporateAllNSSResources();
 
   // PSM has been asked to log out of a token.
   // Notify all registered instances that want to react to that event.
-  nsresult doPK11Logout();
-  
-  static nsNSSActivityState *getActivityState()
-  {
-    return singleton ? &singleton->mActivityState : nullptr;
-  }
+  static nsresult doPK11Logout();
+
+  // Signal entering/leaving a scope where shutting down NSS is prohibited.
+  static void enterActivityState();
+  static void leaveActivityState();
   
 private:
   nsNSSShutDownList();
+  ~nsNSSShutDownList();
+
+  static void construct(const mozilla::StaticMutexAutoLock& /*proofOfLock*/);
 
 protected:
-  mozilla::Mutex mListLock;
+  static mozilla::StaticMutex sListLock;
   static nsNSSShutDownList *singleton;
   PLDHashTable mObjects;
   PLDHashTable mPK11LogoutCancelObjects;
