@@ -2,7 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-requestLongerTimeout(2);
+// This test needs to be split up. See bug 1258717.
+requestLongerTimeout(4);
 ignoreAllUncaughtExceptions();
 
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHomeUtils",
@@ -70,6 +71,7 @@ add_task(function* () {
   info("Check that performing a search fires a search event and records to Telemetry.");
 
   yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
+    let currEngine = Services.search.currentEngine;
     let engine = yield promiseNewEngine("searchSuggestionEngine.xml");
     // Make this actually work in healthreport by giving it an ID:
     Object.defineProperty(engine.wrappedJSObject, "identifier",
@@ -118,6 +120,7 @@ add_task(function* () {
     Assert.equal(hs[histogramKey].sum, numSearchesBefore + 1,
                  "histogram sum should be incremented");
 
+    Services.search.currentEngine = currEngine;
     try {
       Services.search.removeEngine(engine);
     } catch (ex) {}
@@ -162,7 +165,7 @@ add_task(function* () {
 });
 
 add_task(function* () {
-  info("Check if the 'Know Your Rights default snippet is shown when " +
+  info("Check if the 'Know Your Rights' default snippet is shown when " +
     "'browser.rights.override' pref is set");
 
   Services.prefs.setBoolPref("browser.rights.override", false);
@@ -181,7 +184,7 @@ add_task(function* () {
 });
 
 add_task(function* () {
-  info("Check if the 'Know Your Rights default snippet is NOT shown when " +
+  info("Check if the 'Know Your Rights' default snippet is NOT shown when " +
     "'browser.rights.override' pref is NOT set");
 
   Services.prefs.setBoolPref("browser.rights.override", true);
@@ -205,8 +208,8 @@ add_task(function* () {
 
   yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
     return new Promise(resolve => {
-      let currEngine = Services.search.defaultEngine;
       let searchObserver = Task.async(function* search_observer(subject, topic, data) {
+        let currEngine = Services.search.defaultEngine;
         let engine = subject.QueryInterface(Ci.nsISearchEngine);
         info("Observer: " + data + " for " + engine.name);
 
@@ -216,17 +219,14 @@ add_task(function* () {
         if (engine.name != "POST Search")
           return;
 
+        Services.obs.removeObserver(searchObserver, "browser-search-engine-modified");
+
         // Ready to execute the tests!
         let needle = "Search for something awesome.";
 
         let p = promiseContentSearchChange(browser, engine.name);
         Services.search.defaultEngine = engine;
         yield p;
-
-        registerCleanupFunction(function() {
-          Services.search.removeEngine(engine);
-          Services.search.defaultEngine = currEngine;
-        });
 
         let promise = BrowserTestUtils.browserLoaded(browser);
 
@@ -246,12 +246,13 @@ add_task(function* () {
              "Search text should arrive correctly");
         });
 
+        Services.search.defaultEngine = currEngine;
+        try {
+          Services.search.removeEngine(engine);
+        } catch (ex) {}
         resolve();
       });
       Services.obs.addObserver(searchObserver, "browser-search-engine-modified", false);
-      registerCleanupFunction(function () {
-        Services.obs.removeObserver(searchObserver, "browser-search-engine-modified");
-      });
       Services.search.addEngine("http://test:80/browser/browser/base/content/test/general/POSTSearchEngine.xml",
                                 null, null, false);
     });
@@ -300,6 +301,7 @@ add_task(function* () {
 
   yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
     // Add a test engine that provides suggestions and switch to it.
+    let currEngine = Services.search.currentEngine;
     let engine = yield promiseNewEngine("searchSuggestionEngine.xml");
     let p = promiseContentSearchChange(browser, engine.name);
     Services.search.currentEngine = engine;
@@ -346,6 +348,7 @@ add_task(function* () {
         "Search suggestion table hidden");
     });
 
+    Services.search.currentEngine = currEngine;
     try {
       Services.search.removeEngine(engine);
     } catch (ex) { }
@@ -357,6 +360,7 @@ add_task(function* () {
 
   yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, function* (browser) {
     // Add a test engine that provides suggestions and switch to it.
+    let currEngine = Services.search.currentEngine;
     let engine = yield promiseNewEngine("searchSuggestionEngine.xml");
     let p = promiseContentSearchChange(browser, engine.name);
     Services.search.currentEngine = engine;
@@ -431,6 +435,11 @@ add_task(function* () {
         row.removeAttribute("id");
       }
     });
+
+    Services.search.currentEngine = currEngine;
+    try {
+      Services.search.removeEngine(engine);
+    } catch (ex) { }
   });
 });
 
@@ -564,14 +573,12 @@ function* withSnippetsMap(setupFn, testFn, testArgs = null) {
   }
 
   yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* (browser) {
-    // The snippets should already be ready by this point. Here we're
-    // just obtaining a reference to the snippets map.
-    yield ContentTask.spawn(browser, {
-      setupFnSource,
-      version: AboutHomeUtils.snippetsVersion,
-    }, function* (args) {
-      yield new Promise(resolve => {
-        let onAfterLocationChange = () => {
+    let promiseAfterLocationChange = () => {
+      return ContentTask.spawn(browser, {
+        setupFnSource,
+        version: AboutHomeUtils.snippetsVersion,
+      }, function* (args) {
+        return new Promise(resolve => {
           let document = content.document;
           // We're not using Promise-based listeners, because they resolve asynchronously.
           // The snippets test setup code relies on synchronous behaviour here.
@@ -605,34 +612,31 @@ function* withSnippetsMap(setupFn, testFn, testArgs = null) {
               resolve();
             });
           });
-        };
-
-        // We'd like to listen to the 'AboutHomeLoadSnippets' event on a fresh
-        // document as soon as technically possible, so we use webProgress.
-        let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebProgress);
-        let wpl = {
-          onLocationChange: () => {
-            onAfterLocationChange();
-            webProgress.removeProgressListener(wpl);
-          },
-          onProgressChange: () => {},
-          onStatusChange: () => {},
-          onSecurityChange: () => {},
-          QueryInterface: XPCOMUtils.generateQI([
-            Ci.nsIWebProgressListener,
-            Ci.nsISupportsWeakReference,
-            Ci.nsISupports
-          ])
-        };
-        webProgress.addProgressListener(wpl, Ci.nsIWebProgress.NOTIFY_STATE_REQUEST |
-          Ci.nsIWebProgress.NOTIFY_LOCATION);
-
-        // Set the URL to 'about:home' here to allow capturing the 'AboutHomeLoadSnippets'
-        // event.
-        content.document.location.href = "about:home";
+        });
       });
+    };
+
+    // We'd like to listen to the 'AboutHomeLoadSnippets' event on a fresh
+    // document as soon as technically possible, so we use webProgress.
+    let promise = new Promise(resolve => {
+      let wpl = {
+        onLocationChange() {
+          gBrowser.removeProgressListener(wpl);
+          // Phase 2: retrieving the snippets map is the next promise on our agenda.
+          promiseAfterLocationChange().then(resolve);
+        },
+        onProgressChange() {},
+        onStatusChange() {},
+        onSecurityChange() {}
+      };
+      gBrowser.addProgressListener(wpl);
     });
+
+    // Set the URL to 'about:home' here to allow capturing the 'AboutHomeLoadSnippets'
+    // event.
+    browser.loadURI("about:home");
+    // Wait for LocationChange.
+    yield promise;
 
     yield ContentTask.spawn(browser, testArgs, testFn);
   });
