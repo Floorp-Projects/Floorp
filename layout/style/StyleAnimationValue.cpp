@@ -2552,36 +2552,16 @@ BuildStyleRule(nsCSSProperty aProperty,
   return rule.forget();
 }
 
-inline
-already_AddRefed<nsStyleContext>
-LookupStyleContext(dom::Element* aElement,
-                   CSSPseudoElementType aPseudoType)
-{
-  nsIDocument* doc = aElement->GetCurrentDoc();
-  nsIPresShell* shell = doc->GetShell();
-  if (!shell) {
-    return nullptr;
-  }
-
-  nsIAtom* pseudo =
-    aPseudoType < CSSPseudoElementType::Count ?
-    nsCSSPseudoElements::GetPseudoAtom(aPseudoType) : nullptr;
-  return nsComputedDOMStyle::GetStyleContextForElement(aElement, pseudo, shell);
-}
-
 /* static */ bool
 StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
                                   dom::Element* aTargetElement,
-                                  CSSPseudoElementType aPseudoType,
+                                  nsStyleContext* aStyleContext,
                                   const nsAString& aSpecifiedValue,
                                   bool aUseSVGMode,
                                   StyleAnimationValue& aComputedValue,
                                   bool* aIsContextSensitive)
 {
   MOZ_ASSERT(aTargetElement, "null target element");
-  MOZ_ASSERT(aTargetElement->GetCurrentDoc(),
-             "we should only be able to actively animate nodes that "
-             "are in a document");
 
   // Parse specified value into a temporary css::StyleRule
   // Note: BuildStyleRule needs an element's OwnerDoc, BaseURI, and Principal.
@@ -2607,8 +2587,8 @@ StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
 
   AutoTArray<PropertyStyleAnimationValuePair,1> values;
   bool ok = ComputeValues(aProperty, nsCSSProps::eIgnoreEnabledState,
-                          aTargetElement, aPseudoType, styleRule, values,
-                          aIsContextSensitive);
+                          aTargetElement, aStyleContext, styleRule,
+                          values, aIsContextSensitive);
   if (!ok) {
     return false;
   }
@@ -2624,15 +2604,12 @@ StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
 StyleAnimationValue::ComputeValues(nsCSSProperty aProperty,
                                    nsCSSProps::EnabledState aEnabledState,
                                    dom::Element* aTargetElement,
-                                   CSSPseudoElementType aPseudoType,
+                                   nsStyleContext* aStyleContext,
                                    const nsAString& aSpecifiedValue,
                                    bool aUseSVGMode,
                                    nsTArray<PropertyStyleAnimationValuePair>& aResult)
 {
   MOZ_ASSERT(aTargetElement, "null target element");
-  MOZ_ASSERT(aTargetElement->GetCurrentDoc(),
-             "we should only be able to actively animate nodes that "
-             "are in a document");
 
   // Parse specified value into a temporary css::StyleRule
   // Note: BuildStyleRule needs an element's OwnerDoc, BaseURI, and Principal.
@@ -2645,8 +2622,9 @@ StyleAnimationValue::ComputeValues(nsCSSProperty aProperty,
   }
 
   aResult.Clear();
-  return ComputeValues(aProperty, aEnabledState, aTargetElement, aPseudoType,
-                       styleRule, aResult, /* aIsContextSensitive */ nullptr);
+  return ComputeValues(aProperty, aEnabledState, aTargetElement,
+                       aStyleContext, styleRule, aResult,
+                       /* aIsContextSensitive */ nullptr);
 }
 
 /* static */ bool
@@ -2654,24 +2632,19 @@ StyleAnimationValue::ComputeValues(
     nsCSSProperty aProperty,
     nsCSSProps::EnabledState aEnabledState,
     dom::Element* aTargetElement,
-    CSSPseudoElementType aPseudoType,
+    nsStyleContext* aStyleContext,
     css::StyleRule* aStyleRule,
     nsTArray<PropertyStyleAnimationValuePair>& aValues,
     bool* aIsContextSensitive)
 {
+  MOZ_ASSERT(aStyleContext);
   if (!nsCSSProps::IsEnabled(aProperty, aEnabledState)) {
     return false;
   }
 
-  // Look up style context for our target, element:psuedo pair
-  RefPtr<nsStyleContext> styleContext = LookupStyleContext(aTargetElement,
-                                                           aPseudoType);
-  if (!styleContext) {
-    return false;
-  }
-  MOZ_ASSERT(styleContext->PresContext()->StyleSet()->IsGecko(),
+  MOZ_ASSERT(aStyleContext->PresContext()->StyleSet()->IsGecko(),
              "ServoStyleSet should not use StyleAnimationValue for animations");
-  nsStyleSet* styleSet = styleContext->PresContext()->StyleSet()->AsGecko();
+  nsStyleSet* styleSet = aStyleContext->PresContext()->StyleSet()->AsGecko();
 
   RefPtr<nsStyleContext> tmpStyleContext;
   if (aIsContextSensitive) {
@@ -2685,7 +2658,7 @@ StyleAnimationValue::ComputeValues(
     ruleArray.AppendObject(declaration);
     declaration->SetImmutable();
     tmpStyleContext =
-      styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
+      styleSet->ResolveStyleByAddingRules(aStyleContext, ruleArray);
     if (!tmpStyleContext) {
       return false;
     }
@@ -2713,7 +2686,7 @@ StyleAnimationValue::ComputeValues(
     ruleArray.AppendObject(declaration);
     declaration->SetImmutable();
     tmpStyleContext =
-      styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
+      styleSet->ResolveStyleByAddingRules(aStyleContext, ruleArray);
     if (!tmpStyleContext) {
       return false;
     }
