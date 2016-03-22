@@ -369,16 +369,17 @@ NS_IMETHODIMP JSStackFrame::GetFilename(JSContext* aCx, nsAString& aFilename)
   return NS_OK;
 }
 
-NS_IMETHODIMP JSStackFrame::GetName(JSContext* aCx, nsAString& aFunction)
+NS_IMETHODIMP JSStackFrame::GetName(nsAString& aFunction)
 {
   if (!mStack) {
     aFunction.Truncate();
     return NS_OK;
   }
 
-  JS::Rooted<JSString*> name(aCx);
+  ThreadsafeAutoJSContext cx;
+  JS::Rooted<JSString*> name(cx);
   bool canCache = false, useCachedValue = false;
-  GetValueIfNotCached(aCx, mStack, JS::GetSavedFrameFunctionDisplayName,
+  GetValueIfNotCached(cx, mStack, JS::GetSavedFrameFunctionDisplayName,
                       mFunnameInitialized, &canCache, &useCachedValue,
                       &name);
 
@@ -389,8 +390,8 @@ NS_IMETHODIMP JSStackFrame::GetName(JSContext* aCx, nsAString& aFunction)
 
   if (name) {
     nsAutoJSString str;
-    if (!str.init(aCx, name)) {
-      JS_ClearPendingException(aCx);
+    if (!str.init(cx, name)) {
+      JS_ClearPendingException(cx);
       aFunction.Truncate();
       return NS_OK;
     }
@@ -643,7 +644,7 @@ NS_IMETHODIMP JSStackFrame::ToString(JSContext* aCx, nsACString& _retval)
   }
 
   nsString funname;
-  rv = GetName(aCx, funname);
+  rv = GetName(funname);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (funname.IsEmpty()) {

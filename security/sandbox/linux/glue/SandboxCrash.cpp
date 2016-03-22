@@ -59,7 +59,7 @@ SandboxLogJSStack(void)
     lineNumber = 0;
     Unused << frame->GetLineNumber(&lineNumber);
     funName.SetIsVoid(true);
-    Unused << frame->GetName(cx, funName);
+    Unused << frame->GetName(funName);
 
     if (!funName.IsVoid() || !fileName.IsVoid()) {
       SANDBOX_LOG_ERROR("JS frame %d: %s %s line %d", i,
