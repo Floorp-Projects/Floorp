@@ -348,14 +348,6 @@ protected:
   // owning Animation's timing.
   void UpdateTargetRegistration();
 
-  static void BuildAnimationPropertyList(
-    JSContext* aCx,
-    Element* aTarget,
-    CSSPseudoElementType aPseudoType,
-    JS::Handle<JSObject*> aFrames,
-    InfallibleTArray<AnimationProperty>& aResult,
-    ErrorResult& aRv);
-
   nsCOMPtr<Element> mTarget;
   RefPtr<Animation> mAnimation;
 
