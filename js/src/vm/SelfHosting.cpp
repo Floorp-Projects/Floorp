@@ -1788,12 +1788,13 @@ static bool
 intrinsic_EnqueuePromiseJob(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isObject());
-    MOZ_ASSERT(args[0].toObject().is<JSFunction>());
+    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(args[0].toObject().is<PromiseObject>());
+    MOZ_ASSERT(args[1].toObject().is<JSFunction>());
 
-    RootedFunction job(cx, &args[0].toObject().as<JSFunction>());
-    if (!cx->runtime()->enqueuePromiseJob(cx, job))
+    RootedObject promise(cx, &args[0].toObject());
+    RootedFunction job(cx, &args[1].toObject().as<JSFunction>());
+    if (!cx->runtime()->enqueuePromiseJob(cx, job, promise))
         return false;
     args.rval().setUndefined();
     return true;
