@@ -55,6 +55,28 @@ interface ThreadSafeChromeUtils {
    */
   [Throws, NewObject]
   static any nondeterministicGetWeakSetKeys(any aSet);
+
+  /**
+   * Converts a buffer to a Base64 URL-encoded string per RFC 4648.
+   *
+   * @param source The buffer to encode.
+   * @param options Additional encoding options.
+   * @returns The encoded string.
+   */
+  [Throws]
+  static ByteString base64URLEncode(BufferSource source,
+                                    Base64URLEncodeOptions options);
+
+  /**
+   * Decodes a Base64 URL-encoded string per RFC 4648.
+   *
+   * @param string The string to decode.
+   * @param options Additional decoding options.
+   * @returns The decoded buffer.
+   */
+  [Throws, NewObject]
+  static ArrayBuffer base64URLDecode(ByteString string,
+                                     Base64URLDecodeOptions options);
 };
 
 /**
@@ -87,4 +109,32 @@ dictionary HeapSnapshotBoundaries {
   sequence<object> globals;
   object           debugger;
   boolean          runtime;
+};
+
+dictionary Base64URLEncodeOptions {
+  /** Specifies whether the output should be padded with "=" characters. */
+  required boolean pad;
+};
+
+enum Base64URLDecodePadding {
+  /**
+   * Fails decoding if the input is unpadded. RFC 4648, section 3.2 requires
+   * padding, unless the referring specification prohibits it.
+   */
+  "require",
+
+  /** Tolerates padded and unpadded input. */
+  "ignore",
+
+  /**
+   * Fails decoding if the input is padded. This follows the strict base64url
+   * variant used in JWS (RFC 7515, Appendix C) and HTTP Encrypted
+   * Content-Encoding (draft-ietf-httpbis-encryption-encoding-01).
+   */
+  "reject"
+};
+
+dictionary Base64URLDecodeOptions {
+  /** Specifies the padding mode for decoding the input. */
+  required Base64URLDecodePadding padding;
 };
