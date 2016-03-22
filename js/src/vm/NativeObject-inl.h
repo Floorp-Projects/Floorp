@@ -286,6 +286,14 @@ NativeObject::setSlotWithType(ExclusiveContext* cx, Shape* shape,
     AddTypePropertyId(cx, this, shape->propid(), value);
 }
 
+inline void
+NativeObject::updateShapeAfterMovingGC()
+{
+    Shape* shape = shape_.unbarrieredGet();
+    if (IsForwarded(shape))
+        shape_.unsafeSet(Forwarded(shape));
+}
+
 /* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
 static inline PlainObject*
 CopyInitializerObject(JSContext* cx, HandlePlainObject baseobj, NewObjectKind newKind = GenericObject)

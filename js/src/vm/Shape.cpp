@@ -328,6 +328,32 @@ ShapeTable::grow(ExclusiveContext* cx)
     return true;
 }
 
+void
+ShapeTable::fixupAfterMovingGC()
+{
+    for (size_t i = 0; i < capacity(); i++) {
+        Entry& entry = getEntry(i);
+        Shape* shape = entry.shape();
+        if (shape && IsForwarded(shape))
+            entry.setPreservingCollision(Forwarded(shape));
+    }
+}
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+
+void
+ShapeTable::checkAfterMovingGC()
+{
+    for (size_t i = 0; i < capacity(); i++) {
+        Entry& entry = getEntry(i);
+        Shape* shape = entry.shape();
+        if (shape)
+            CheckGCThingAfterMovingGC(shape);
+    }
+}
+
+#endif
+
 /* static */ Shape*
 Shape::replaceLastProperty(ExclusiveContext* cx, StackBaseShape& base,
                            TaggedProto proto, HandleShape shape)
@@ -1403,6 +1429,7 @@ JSCompartment::checkInitialShapesTableAfterMovingGC()
         TaggedProto proto = entry.proto.unbarrieredGet();
         Shape* shape = entry.shape.unbarrieredGet();
 
+        CheckGCThingAfterMovingGC(shape);
         if (proto.isObject())
             CheckGCThingAfterMovingGC(proto.toObject());
 
@@ -1556,21 +1583,21 @@ JSCompartment::fixupInitialShapeTable()
         return;
 
     for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
-        InitialShapeEntry entry = e.front();
-        bool needRekey = false;
-        if (IsForwarded(entry.shape.unbarrieredGet())) {
-            entry.shape.set(Forwarded(entry.shape.unbarrieredGet()));
-            needRekey = true;
+        // The shape may have been moved, but we can update that in place.
+        Shape* shape = e.front().shape.unbarrieredGet();
+        if (IsForwarded(shape)) {
+            shape = Forwarded(shape);
+            e.mutableFront().shape.set(shape);
         }
+
+        // If the prototype has moved we have to rekey the entry.
+        InitialShapeEntry entry = e.front();
         if (entry.proto.isObject() && IsForwarded(entry.proto.toObject())) {
             entry.proto = TaggedProto(Forwarded(entry.proto.toObject()));
-            needRekey = true;
-        }
-        if (needRekey) {
-            InitialShapeEntry::Lookup relookup(entry.shape.unbarrieredGet()->getObjectClass(),
+            InitialShapeEntry::Lookup relookup(shape->getObjectClass(),
                                                entry.proto,
-                                               entry.shape.unbarrieredGet()->numFixedSlots(),
-                                               entry.shape.unbarrieredGet()->getObjectFlags());
+                                               shape->numFixedSlots(),
+                                               shape->getObjectFlags());
             e.rekeyFront(relookup, entry);
         }
     }
