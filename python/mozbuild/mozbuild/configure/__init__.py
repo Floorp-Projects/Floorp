@@ -133,6 +133,9 @@ class ConfigureSandbox(dict):
         # infered.
         self._implied_options = {}
 
+        # Store all results from _prepare_function
+        self._prepared_functions = set()
+
         self._helper = CommandLineHelper(environ, argv)
 
         self._config, self._stdout, self._stderr = config, stdout, stderr
@@ -425,7 +428,7 @@ class ConfigureSandbox(dict):
         '''
         if not inspect.isfunction(func):
             raise TypeError("Unexpected type: '%s'" % type(func))
-        if isinstance(func.func_globals, SandboxedGlobal):
+        if func in self._prepared_functions:
             return func, func.func_globals
 
         glob = SandboxedGlobal(func.func_globals)
@@ -441,4 +444,5 @@ class ConfigureSandbox(dict):
             func.func_defaults,
             func.func_closure
         ))
+        self._prepared_functions.add(func)
         return func, glob
