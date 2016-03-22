@@ -44,7 +44,7 @@ static const JSPropertySpec promise_static_properties[] = {
 PromiseObject*
 PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /* = nullptr */)
 {
-    MOZ_ASSERT(IsCallable(executor));
+    MOZ_ASSERT(executor->isCallable());
 
     RootedObject usedProto(cx, proto);
     bool wrappedProto = false;
