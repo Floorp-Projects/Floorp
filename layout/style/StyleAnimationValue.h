@@ -183,6 +183,18 @@ public:
                             nsTArray<PropertyStyleAnimationValuePair>& aResult);
 
   /**
+   * A variant on ComputeValues that takes an nsCSSValue as the specified
+   * value. Only longhand properties are supported.
+   */
+  static bool ComputeValues(nsCSSProperty aProperty,
+                            nsCSSProps::EnabledState aEnabledState,
+                            mozilla::dom::Element* aTargetElement,
+                            nsStyleContext* aStyleContext,
+                            const nsCSSValue& aSpecifiedValue,
+                            bool aUseSVGMode,
+                            nsTArray<PropertyStyleAnimationValuePair>& aResult);
+
+  /**
    * Creates a specified value for the given computed value.
    *
    * The first overload fills in an nsCSSValue object; the second
@@ -402,14 +414,6 @@ public:
     { return !(*this == aOther); }
 
 private:
-  static bool ComputeValues(nsCSSProperty aProperty,
-                            nsCSSProps::EnabledState aEnabledState,
-                            mozilla::dom::Element* aTargetElement,
-                            nsStyleContext* aStyleContext,
-                            mozilla::css::StyleRule* aStyleRule,
-                            nsTArray<PropertyStyleAnimationValuePair>& aValues,
-                            bool* aIsContextSensitive);
-
   void FreeValue();
 
   static const char16_t* GetBufferValue(nsStringBuffer* aBuffer) {
