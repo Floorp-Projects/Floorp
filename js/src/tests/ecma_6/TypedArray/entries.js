@@ -37,8 +37,10 @@ for (var constructor of constructors) {
 
     // Called from other globals.
     if (typeof newGlobal === "function" && !isSharedConstructor(constructor)) {
-        var entries = newGlobal()[constructor.name].prototype.entries;
-        assertDeepEq([...entries.call(new constructor(2))], [[0, 0], [1, 0]]);
+        var otherGlobal = newGlobal();
+        var entries = otherGlobal[constructor.name].prototype.entries;
+        assertDeepEq([...entries.call(new constructor(2))],
+                     [new otherGlobal.Array(0, 0), new otherGlobal.Array(1, 0)]);
         arr = new (newGlobal()[constructor.name])(2);
         assertEq([...constructor.prototype.entries.call(arr)].toString(), "0,0,1,0");
     }
