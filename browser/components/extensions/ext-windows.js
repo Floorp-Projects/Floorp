@@ -65,11 +65,14 @@ extensions.registerSchemaAPI("windows", null, (extension, context) => {
       },
 
       create: function(createData) {
-        if (createData.state !== null && createData.state != "normal") {
-          if (createData.left !== null || createData.top !== null ||
-              createData.width !== null || createData.height !== null) {
+        let needResize = (createData.left !== null || createData.top !== null ||
+                          createData.width !== null || createData.height !== null);
+
+        if (needResize) {
+          if (createData.state !== null && createData.state != "normal") {
             return Promise.reject({message: `"state": "${createData.state}" may not be combined with "left", "top", "width", or "height"`});
           }
+          createData.state = "normal";
         }
 
         function mkstr(s) {
@@ -133,16 +136,7 @@ extensions.registerSchemaAPI("windows", null, (extension, context) => {
         let window = Services.ww.openWindow(null, "chrome://browser/content/browser.xul", "_blank",
                                             features.join(","), args);
 
-        if (createData.left !== null || createData.top !== null) {
-          let left = createData.left !== null ? createData.left : window.screenX;
-          let top = createData.top !== null ? createData.top : window.screenY;
-          window.moveTo(left, top);
-        }
-        if (createData.width !== null || createData.height !== null) {
-          let width = createData.width !== null ? createData.width : window.outerWidth;
-          let height = createData.height !== null ? createData.height : window.outerHeight;
-          window.resizeTo(width, height);
-        }
+        WindowManager.updateGeometry(window, createData);
 
         // TODO: focused, type
 
@@ -176,13 +170,12 @@ extensions.registerSchemaAPI("windows", null, (extension, context) => {
       },
 
       update: function(windowId, updateInfo) {
-        // TODO: When we support size/position updates:
-        // if (updateInfo.state !== null && updateInfo.state != "normal") {
-        //   if (updateInfo.left !== null || updateInfo.top !== null ||
-        //       updateInfo.width !== null || updateInfo.height !== null) {
-        //     return Promise.reject({message: `"state": "${updateInfo.state}" may not be combined with "left", "top", "width", or "height"`});
-        //   }
-        // }
+        if (updateInfo.state !== null && updateInfo.state != "normal") {
+          if (updateInfo.left !== null || updateInfo.top !== null ||
+              updateInfo.width !== null || updateInfo.height !== null) {
+            return Promise.reject({message: `"state": "${updateInfo.state}" may not be combined with "left", "top", "width", or "height"`});
+          }
+        }
 
         let window = WindowManager.getWindow(windowId, context);
         if (updateInfo.focused) {
@@ -197,6 +190,8 @@ extensions.registerSchemaAPI("windows", null, (extension, context) => {
           // Bug 1257497 - Firefox can't cancel attention actions.
           window.getAttention();
         }
+
+        WindowManager.updateGeometry(window, updateInfo);
 
         // TODO: All the other properties, focused=false...
 

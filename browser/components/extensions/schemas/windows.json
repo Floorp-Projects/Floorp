@@ -377,26 +377,22 @@
             "name": "updateInfo",
             "properties": {
               "left": {
-                "unsupported": true,
                 "type": "integer",
                 "optional": true,
                 "description": "The offset from the left edge of the screen to move the window to in pixels. This value is ignored for panels."
               },
               "top": {
-                "unsupported": true,
                 "type": "integer",
                 "optional": true,
                 "description": "The offset from the top edge of the screen to move the window to in pixels. This value is ignored for panels."
               },
               "width": {
-                "unsupported": true,
                 "type": "integer",
                 "minimum": 0,
                 "optional": true,
                 "description": "The width to resize the window to in pixels. This value is ignored for panels."
               },
               "height": {
-                "unsupported": true,
                 "type": "integer",
                 "minimum": 0,
                 "optional": true,
