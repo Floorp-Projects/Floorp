@@ -42,7 +42,7 @@ js_option('--enable-sm-promise', help='Enable SpiderMonkey promises')
 def sm_promise(value):
     if value:
         set_config('SPIDERMONKEY_PROMISE', True)
-        set_define('SPIDERMONKEY_PROMISE', '1')
+        set_define('SPIDERMONKEY_PROMISE', True)
 
 
 # SpiderMonkey as a shared library, and how its symbols are exported
@@ -62,10 +62,10 @@ def static_js(shared_js, export_js):
         add_old_configure_assignment('JS_SHARED_LIBRARY', '1')
     else:
         if export_js:
-            set_define('STATIC_EXPORTABLE_JS_API', '1')
+            set_define('STATIC_EXPORTABLE_JS_API', True)
         else:
-            set_define('STATIC_JS_API', '1')
-        set_define('MOZ_STATIC_JS', '1')
+            set_define('STATIC_JS_API', True)
+        set_define('MOZ_STATIC_JS', True)
 
 
 @deprecated_option(env='DISABLE_SHARED_JS', nargs='?')
@@ -103,7 +103,7 @@ def instruments(value, target):
               % target.os)
     if value:
         set_config('MOZ_INSTRUMENTS', True)
-        set_define('MOZ_INSTRUMENTS', '1')
+        set_define('MOZ_INSTRUMENTS', True)
         add_old_configure_assignment('MOZ_INSTRUMENTS', '1')
         imply_option('--enable-profiling', reason='--enable-instruments')
 
@@ -114,7 +114,7 @@ js_option('--enable-callgrind', env='MOZ_CALLGRIND',
 @depends('--enable-callgrind')
 def callgrind(value):
     if value:
-        set_define('MOZ_CALLGRIND', '1')
+        set_define('MOZ_CALLGRIND', True)
         imply_option('--enable-profiling')
 
 
@@ -126,7 +126,7 @@ js_option('--enable-profiling', env='MOZ_PROFILING',
 def profiling(value, target):
     if value:
         set_config('MOZ_PROFILING', True)
-        set_define('MOZ_PROFILING', '1')
+        set_define('MOZ_PROFILING', True)
         add_old_configure_assignment('MOZ_PROFILING', '1')
 
         if target.kernel == 'WINNT' or (target.kernel == 'Linux' and
@@ -140,4 +140,4 @@ js_option('--enable-vtune', env='MOZ_VTUNE', help='Enable vtune profiling')
 def vtune(value):
     if value:
         set_config('MOZ_VTUNE', True)
-        set_define('MOZ_VTUNE', '1')
+        set_define('MOZ_VTUNE', True)

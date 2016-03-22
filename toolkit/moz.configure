@@ -18,7 +18,7 @@ def systrace(value, target):
         error('--enable-systrace cannot be used when targetting %s'
               % target.os)
     if value:
-        set_define('MOZ_USE_SYSTRACE', '1')
+        set_define('MOZ_USE_SYSTRACE', True)
 
 
 option('--enable-jprof', env='MOZ_JPROF',
@@ -28,7 +28,7 @@ option('--enable-jprof', env='MOZ_JPROF',
 def jprof(value):
     if value:
         set_config('MOZ_JPROF', True)
-        set_define('MOZ_JPROF', '1')
+        set_define('MOZ_JPROF', True)
         imply_option('--enable-profiling')
 
 
@@ -44,7 +44,7 @@ def sps_profiler(target):
 def sps_profiler_define(value):
     if value:
         set_config('MOZ_ENABLE_PROFILER_SPS', True)
-        set_define('MOZ_ENABLE_PROFILER_SPS', '1')
+        set_define('MOZ_ENABLE_PROFILER_SPS', True)
 
 
 option('--enable-dmd', env='MOZ_DMD',
@@ -55,7 +55,7 @@ option('--enable-dmd', env='MOZ_DMD',
 def dmd(value):
     if value:
         set_config('MOZ_DMD', True)
-        set_define('MOZ_DMD', '1')
+        set_define('MOZ_DMD', True)
         add_old_configure_assignment('MOZ_DMD', '1')
         imply_option('--enable-profiling')
 
@@ -139,7 +139,7 @@ def toolkit(toolkit):
     elif widget_toolkit == 'gtk3':
         set_define('MOZ_WIDGET_GTK', '3')
     elif widget_toolkit != 'windows':
-        set_define('MOZ_WIDGET_%s' % widget_toolkit.upper(), '1')
+        set_define('MOZ_WIDGET_%s' % widget_toolkit.upper(), True)
 
     return widget_toolkit
 
@@ -158,9 +158,9 @@ def x11(value, toolkit):
 
     if value and toolkit in x11_toolkits:
         set_config('MOZ_ENABLE_XREMOTE', True)
-        set_define('MOZ_ENABLE_XREMOTE', '1')
+        set_define('MOZ_ENABLE_XREMOTE', True)
         set_config('MOZ_X11', True)
-        set_define('MOZ_X11', '1')
+        set_define('MOZ_X11', True)
         add_old_configure_assignment('MOZ_X11', '1')
 
     return value and toolkit in x11_toolkits
@@ -177,10 +177,10 @@ def gl_provider(value, x11):
         set_config('MOZ_GL_PROVIDER', provider)
         set_define('MOZ_GL_PROVIDER', 'GLContextProvider%s' % provider)
         set_config('MOZ_GL_DEFAULT_PROVIDER', provider)
-        set_define('GL_PROVIDER_%s' % provider, '1')
+        set_define('GL_PROVIDER_%s' % provider, True)
     elif x11:
         set_config('MOZ_GL_DEFAULT_PROVIDER', 'GLX')
-        set_define('GL_PROVIDER_GLX', '1')
+        set_define('GL_PROVIDER_GLX', True)
 
 
 # PDF printing
@@ -205,7 +205,7 @@ def instrument_event_loop(value, toolkit):
     if value or (toolkit in ('windows', 'gtk2', 'gtk3', 'cocoa', 'android',
                              'gonk') and value.origin == 'default'):
         set_config('MOZ_INSTRUMENT_EVENT_LOOP', True)
-        set_define('MOZ_INSTRUMENT_EVENT_LOOP', '1')
+        set_define('MOZ_INSTRUMENT_EVENT_LOOP', True)
 
 
 # Fontconfig Freetype
@@ -226,7 +226,7 @@ def fc_freetype(value, toolkit):
 def applemedia(toolkit):
     if toolkit in ('cocoa', 'uikit'):
         set_config('MOZ_APPLEMEDIA', True)
-        set_define('MOZ_APPLEMEDIA', '1')
+        set_define('MOZ_APPLEMEDIA', True)
         add_old_configure_assignment('MOZ_APPLEMEDIA', '1')
         return True
     return False
@@ -250,7 +250,7 @@ def wmf(value, target):
               % target.os)
     if enabled:
         set_config('MOZ_WMF', True)
-        set_define('MOZ_WMF', '1')
+        set_define('MOZ_WMF', True)
     return enabled
 
 
@@ -265,7 +265,7 @@ def ffmpeg(value, target):
     if value.origin == 'default':
         enabled = target.os not in ('Android', 'WINNT')
     if enabled:
-        set_define('MOZ_FFMPEG', '1')
+        set_define('MOZ_FFMPEG', True)
         set_config('MOZ_FFMPEG', True)
         imply_option('--enable-fmp4', '--enable-ffmpeg')
     return enabled
@@ -284,7 +284,7 @@ def fmp4(value, target, wmf, applemedia):
         enabled = wmf or applemedia or target.os == 'Android'
     if enabled:
         set_config('MOZ_FMP4', True)
-        set_define('MOZ_FMP4', '1')
+        set_define('MOZ_FMP4', True)
         add_old_configure_assignment('MOZ_FMP4', '1')
     return enabled
 
@@ -304,7 +304,7 @@ def eme(value, fmp4):
               'Fragmented MP4 support')
     if enabled:
         set_config('MOZ_EME', True)
-        set_define('MOZ_EME', '1')
+        set_define('MOZ_EME', True)
     # Theoretically, we could pass `value` directly when it is a
     # PositiveOptionValue, but somehow, the JSON serialization in configure.py
     # outputs inconsistent data in some cases when we do (a closing bracket
