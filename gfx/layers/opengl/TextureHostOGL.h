@@ -521,6 +521,8 @@ protected:
   RefPtr<EGLImageTextureSource> mTextureSource;
 };
 
+bool AssertGLCompositor(Compositor* aCompositor);
+
 } // namespace layers
 } // namespace mozilla
 
