@@ -10,7 +10,7 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/OwningNonNull.h"
-#include "mozilla/Pair.h"
+#include "mozilla/NonOwningAnimationTarget.h"
 #include "mozilla/PseudoElementHashEntry.h"
 #include "mozilla/RefPtr.h"
 #include "nsCSSProperty.h"
@@ -29,7 +29,6 @@ namespace mozilla {
 
 class EffectSet;
 class RestyleTracker;
-enum class CSSPseudoElementType : uint8_t;
 struct AnimationPerformanceWarning;
 
 namespace dom {
@@ -185,7 +184,7 @@ public:
   // Returns an empty result when a suitable element cannot be found including
   // when the frame represents a pseudo-element on which we do not support
   // animations.
-  static Maybe<Pair<dom::Element*, CSSPseudoElementType>>
+  static Maybe<NonOwningAnimationTarget>
   GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame);
 
   // Associates a performance warning with effects on |aFrame| that animates

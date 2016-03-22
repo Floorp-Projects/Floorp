@@ -85,12 +85,12 @@ public:
 
     static UniquePtr<SurfaceFactory_D3D11Interop> Create(GLContext* gl,
                                                          const SurfaceCaps& caps,
-                                                         const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                                         const RefPtr<layers::ClientIPCAllocator>& allocator,
                                                          const layers::TextureFlags& flags);
 
 protected:
     SurfaceFactory_D3D11Interop(GLContext* gl, const SurfaceCaps& caps,
-                                const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                const RefPtr<layers::ClientIPCAllocator>& allocator,
                                 const layers::TextureFlags& flags,
                                 const RefPtr<DXGLDevice>& dxgl);
 

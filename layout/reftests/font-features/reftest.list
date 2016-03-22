@@ -109,7 +109,7 @@ HTTP(..) == caps-fallback-allsmallcaps.html caps-fallback-smcpc2sc.html
 HTTP(..) == caps-fallback-allpetitecaps.html caps-fallback-smcpc2sc.html
 
 # font-variant-position fallback
-random-if(cocoaWidget) HTTP(..) == subsuper-fallback.html subsuper-fallback-ref.html # bug 1139269
+random-if(cocoaWidget||Android) HTTP(..) == subsuper-fallback.html subsuper-fallback-ref.html # bug 1139269
 HTTP(..) != subsuper-fallback.html subsuper-fallback-notref1.html
 HTTP(..) != subsuper-fallback.html subsuper-fallback-notref2.html
 HTTP(..) != subsuper-fallback.html subsuper-fallback-notref3.html

@@ -48,14 +48,6 @@ protected:
   bool ReceiveCompositableUpdate(const CompositableOperation& aEdit,
                                  EditReplyVector& replyv);
 
-  bool IsOnCompositorSide() const override { return true; }
-
-  /**
-   * Return true if this protocol is asynchronous with respect to the content
-   * thread (ImageBridge for instance).
-   */
-  virtual bool IsAsync() const { return false; }
-
   virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) {}
 
   std::vector<AsyncParentMessageData> mPendingAsyncMessage;

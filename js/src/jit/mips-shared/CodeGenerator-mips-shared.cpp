@@ -919,6 +919,42 @@ CodeGeneratorMIPSShared::visitClzI(LClzI* ins)
 }
 
 void
+CodeGeneratorMIPSShared::visitCtzI(LCtzI* ins)
+{
+    Register input = ToRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    masm.ma_ctz(output, input);
+}
+
+void
+CodeGeneratorMIPSShared::visitPopcntI(LPopcntI* ins)
+{
+    Register input = ToRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    // Equivalent to GCC output of mozilla::CountPopulation32()
+    Register tmp = ToRegister(ins->temp());
+
+    masm.ma_move(output, input);
+    masm.ma_sra(tmp, input, Imm32(1));
+    masm.ma_and(tmp, Imm32(0x55555555));
+    masm.ma_subu(output, tmp);
+    masm.ma_sra(tmp, output, Imm32(2));
+    masm.ma_and(output, Imm32(0x33333333));
+    masm.ma_and(tmp, Imm32(0x33333333));
+    masm.ma_addu(output, tmp);
+    masm.ma_srl(tmp, output, Imm32(4));
+    masm.ma_addu(output, tmp);
+    masm.ma_and(output, Imm32(0xF0F0F0F));
+    masm.ma_sll(tmp, output, Imm32(8));
+    masm.ma_addu(output, tmp);
+    masm.ma_sll(tmp, output, Imm32(16));
+    masm.ma_addu(output, tmp);
+    masm.ma_sra(output, output, Imm32(24));
+}
+
+void
 CodeGeneratorMIPSShared::visitPowHalfD(LPowHalfD* ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
@@ -1445,17 +1481,8 @@ CodeGeneratorMIPSShared::visitNotD(LNotD* ins)
     FloatRegister in = ToFloatRegister(ins->input());
     Register dest = ToRegister(ins->output());
 
-    Label falsey, done;
     masm.loadConstantDouble(0.0, ScratchDoubleReg);
-    masm.ma_bc1d(in, ScratchDoubleReg, &falsey, Assembler::DoubleEqualOrUnordered, ShortJump);
-
-    masm.move32(Imm32(0), dest);
-    masm.ma_b(&done, ShortJump);
-
-    masm.bind(&falsey);
-    masm.move32(Imm32(1), dest);
-
-    masm.bind(&done);
+    masm.ma_cmp_set_double(dest, in, ScratchDoubleReg, Assembler::DoubleEqualOrUnordered);
 }
 
 void
@@ -1466,17 +1493,8 @@ CodeGeneratorMIPSShared::visitNotF(LNotF* ins)
     FloatRegister in = ToFloatRegister(ins->input());
     Register dest = ToRegister(ins->output());
 
-    Label falsey, done;
     masm.loadConstantFloat32(0.0f, ScratchFloat32Reg);
-    masm.ma_bc1s(in, ScratchFloat32Reg, &falsey, Assembler::DoubleEqualOrUnordered, ShortJump);
-
-    masm.move32(Imm32(0), dest);
-    masm.ma_b(&done, ShortJump);
-
-    masm.bind(&falsey);
-    masm.move32(Imm32(1), dest);
-
-    masm.bind(&done);
+    masm.ma_cmp_set_float32(dest, in, ScratchFloat32Reg, Assembler::DoubleEqualOrUnordered);
 }
 
 void

@@ -572,6 +572,9 @@ AudioDeviceWindowsCore::~AudioDeviceWindowsCore()
 
     Terminate();
 
+    // Recording thread should be shut down before this!
+    assert(_hRecThread == NULL);
+
     // The IMMDeviceEnumerator is created during construction. Must release
     // it here and not in Terminate() since we don't recreate it in Init().
     SAFE_RELEASE(_ptrEnumerator);

@@ -38,7 +38,7 @@ gfxReusableSharedImageSurfaceWrapper::ReadUnlock()
   MOZ_ASSERT(readCount >= 0, "Read count should not be negative");
 
   if (readCount == 0) {
-    mAllocator->DeallocShmem(mSurface->GetShmem());
+    mAllocator->AsShmemAllocator()->DeallocShmem(mSurface->GetShmem());
   }
 }
 
@@ -56,7 +56,7 @@ gfxReusableSharedImageSurfaceWrapper::GetWritable(gfxImageSurface** aSurface)
 
   // Something else is reading the surface, copy it
   RefPtr<gfxSharedImageSurface> copySurface =
-    gfxSharedImageSurface::CreateUnsafe(mAllocator.get(), mSurface->GetSize(), mSurface->Format());
+    gfxSharedImageSurface::CreateUnsafe(mAllocator->AsShmemAllocator(), mSurface->GetSize(), mSurface->Format());
   copySurface->CopyFrom(mSurface);
   *aSurface = copySurface;
 

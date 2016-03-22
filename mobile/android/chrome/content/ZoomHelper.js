@@ -58,18 +58,7 @@ var ZoomHelper = {
     // if the rect is already taking up most of the visible area and is stretching the
     // width of the page, then we want to zoom out instead.
     if (aElement) {
-      if (BrowserEventHandler.mReflozPref) {
-        let zoomFactor = BrowserApp.selectedTab.getZoomToMinFontSize(aElement);
-
-        rect.width = zoomFactor <= 1.0 ? rect.width : gScreenWidth / zoomFactor;
-        rect.height = zoomFactor <= 1.0 ? rect.height : rect.height / zoomFactor;
-        if (zoomFactor == 1.0 || ZoomHelper.isRectZoomedIn(rect, viewport)) {
-          if (aCanZoomOut) {
-            ZoomHelper.zoomOut();
-          }
-          return;
-        }
-      } else if (ZoomHelper.isRectZoomedIn(rect, viewport)) {
+      if (ZoomHelper.isRectZoomedIn(rect, viewport)) {
         if (aCanZoomOut) {
           ZoomHelper.zoomOut();
         }

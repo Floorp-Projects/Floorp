@@ -532,7 +532,8 @@ bool ExceptionHandler::GenerateDump(CrashContext *context) {
   }
 
   if (child != 0) {
-    char *clonedMsg = "ExceptionHandler::GenerateDump cloned child ";
+    static const char clonedMsg[] =
+      "ExceptionHandler::GenerateDump cloned child ";
     char pidMsg[32];
 
     unsigned int pidLen = my_uint_len(child);
@@ -542,7 +543,8 @@ bool ExceptionHandler::GenerateDump(CrashContext *context) {
     logger::write(pidMsg, pidLen);
     logger::write("\n", 1);
   } else {
-    char *childMsg = "ExceptionHandler::GenerateDump I'm the child\n";
+    static const char childMsg[] =
+      "ExceptionHandler::GenerateDump I'm the child\n";
     logger::write(childMsg, my_strlen(childMsg));
   }
 

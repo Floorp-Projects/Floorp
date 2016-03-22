@@ -144,7 +144,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       MOZ_ASSERT(tex.get());
       compositable->RemoveTextureHost(tex);
 
-      if (!IsAsync() && ImageBridgeParent::GetInstance(GetChildProcessId())) {
+      if (!UsesImageBridge() && ImageBridgeParent::GetInstance(GetChildProcessId())) {
         // send FenceHandle if present via ImageBridge.
         ImageBridgeParent::AppendDeliverFenceMessage(
                              GetChildProcessId(),
@@ -194,7 +194,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       }
       compositable->UseTextureHost(textures);
 
-      if (IsAsync() && compositable->GetLayer()) {
+      if (UsesImageBridge() && compositable->GetLayer()) {
         ScheduleComposition(op);
       }
       break;
@@ -208,7 +208,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       MOZ_ASSERT(texOnBlack && texOnWhite);
       compositable->UseComponentAlphaTextures(texOnBlack, texOnWhite);
 
-      if (IsAsync()) {
+      if (UsesImageBridge()) {
         ScheduleComposition(op);
       }
       break;

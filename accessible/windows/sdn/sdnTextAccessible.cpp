@@ -179,8 +179,8 @@ sdnTextAccessible::get_fontFamily(BSTR __RPC_FAR* aFontFamily)
   if (!frame)
     return E_FAIL;
 
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(frame, getter_AddRefs(fm));
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetFontMetricsForFrame(frame, 1.0f);
 
   const nsString& name =
     fm->GetThebesFontGroup()->GetFirstValidFont()->GetName();

@@ -622,6 +622,15 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
         if (player.playState !== "idle") {
           continue;
         }
+        // FIXME: In bug 1249219, we support the animation mutation for pseudo
+        // elements. However, the timeline may not be ready yet to
+        // display those correctly. Therefore, we add this check to bails out if
+        // the mutation target is a pseudo-element.
+        // Note. Only CSSPseudoElement object has |type| attribute, so if type
+        // exists, it is a CSSPseudoElement object.
+        if (player.effect.target.type) {
+          continue;
+        }
         let index = this.actors.findIndex(a => a.player === player);
         if (index !== -1) {
           eventData.push({
@@ -636,6 +645,15 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
         // If the added player already exists, it means we previously filtered
         // it out when it was reported as removed. So filter it out here too.
         if (this.actors.find(a => a.player === player)) {
+          continue;
+        }
+        // FIXME: In bug 1249219, we support the animation mutation for pseudo
+        // elements. However, the timeline may not be ready yet to
+        // display those correctly. Therefore, we add this check to bails out if
+        // the mutation target is a pseudo-element.
+        // Note. Only CSSPseudoElement object has |type| attribute, so if type
+        // exists, it is a CSSPseudoElement object.
+        if (player.effect.target.type) {
           continue;
         }
         // If the added player has the same name and target node as a player we

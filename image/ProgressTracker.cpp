@@ -23,39 +23,43 @@ namespace mozilla {
 namespace image {
 
 static void
-CheckProgressConsistency(Progress aProgress)
+CheckProgressConsistency(Progress aOldProgress, Progress aNewProgress)
 {
   // Check preconditions for every progress bit.
 
-  if (aProgress & FLAG_SIZE_AVAILABLE) {
+  if (aNewProgress & FLAG_SIZE_AVAILABLE) {
     // No preconditions.
   }
-  if (aProgress & FLAG_DECODE_COMPLETE) {
+  if (aNewProgress & FLAG_DECODE_COMPLETE) {
+    MOZ_ASSERT(aNewProgress & FLAG_SIZE_AVAILABLE);
+    MOZ_ASSERT(aNewProgress & (FLAG_FRAME_COMPLETE | FLAG_HAS_ERROR));
+  }
+  if (aNewProgress & FLAG_FRAME_COMPLETE) {
+    MOZ_ASSERT(aNewProgress & FLAG_SIZE_AVAILABLE);
+  }
+  if (aNewProgress & FLAG_LOAD_COMPLETE) {
+    MOZ_ASSERT(aNewProgress & (FLAG_SIZE_AVAILABLE | FLAG_HAS_ERROR));
+  }
+  if (aNewProgress & FLAG_ONLOAD_BLOCKED) {
     // No preconditions.
   }
-  if (aProgress & FLAG_FRAME_COMPLETE) {
-    // No preconditions.
+  if (aNewProgress & FLAG_ONLOAD_UNBLOCKED) {
+    MOZ_ASSERT(aNewProgress & FLAG_ONLOAD_BLOCKED);
+    MOZ_ASSERT(aNewProgress & (FLAG_SIZE_AVAILABLE | FLAG_HAS_ERROR));
   }
-  if (aProgress & FLAG_LOAD_COMPLETE) {
-    // No preconditions.
+  if (aNewProgress & FLAG_IS_ANIMATED) {
+    // No preconditions; like FLAG_HAS_TRANSPARENCY, we should normally never
+    // discover this *after* FLAG_SIZE_AVAILABLE, but unfortunately some corrupt
+    // GIFs may fool us.
   }
-  if (aProgress & FLAG_ONLOAD_BLOCKED) {
-    // No preconditions.
+  if (aNewProgress & FLAG_HAS_TRANSPARENCY) {
+    // XXX We'd like to assert that transparency is only set during metadata
+    // decode but we don't have any way to assert that until bug 1254892 is fixed.
   }
-  if (aProgress & FLAG_ONLOAD_UNBLOCKED) {
-    MOZ_ASSERT(aProgress & FLAG_ONLOAD_BLOCKED);
-    MOZ_ASSERT(aProgress & (FLAG_SIZE_AVAILABLE | FLAG_HAS_ERROR));
+  if (aNewProgress & FLAG_LAST_PART_COMPLETE) {
+    MOZ_ASSERT(aNewProgress & FLAG_LOAD_COMPLETE);
   }
-  if (aProgress & FLAG_IS_ANIMATED) {
-    MOZ_ASSERT(aProgress & FLAG_SIZE_AVAILABLE);
-  }
-  if (aProgress & FLAG_HAS_TRANSPARENCY) {
-    MOZ_ASSERT(aProgress & FLAG_SIZE_AVAILABLE);
-  }
-  if (aProgress & FLAG_LAST_PART_COMPLETE) {
-    MOZ_ASSERT(aProgress & FLAG_LOAD_COMPLETE);
-  }
-  if (aProgress & FLAG_HAS_ERROR) {
+  if (aNewProgress & FLAG_HAS_ERROR) {
     // No preconditions.
   }
 }
@@ -371,6 +375,8 @@ ProgressTracker::SyncNotifyProgress(Progress aProgress,
     progress &= ~FLAG_ONLOAD_UNBLOCKED;
   }
 
+  CheckProgressConsistency(mProgress, mProgress | progress);
+
   // XXX(seth): Hack to work around the fact that some observers have bugs and
   // need to get onload blocking notifications multiple times. We should fix
   // those observers and remove this.
@@ -382,8 +388,6 @@ ProgressTracker::SyncNotifyProgress(Progress aProgress,
 
   // Apply the changes.
   mProgress |= progress;
-
-  CheckProgressConsistency(mProgress);
 
   // Send notifications.
   mObservers.Read([&](const ObserverTable* aTable) {
@@ -510,7 +514,6 @@ ProgressTracker::ResetForNewRequest()
 {
   MOZ_ASSERT(NS_IsMainThread());
   mProgress = NoProgress;
-  CheckProgressConsistency(mProgress);
 }
 
 void

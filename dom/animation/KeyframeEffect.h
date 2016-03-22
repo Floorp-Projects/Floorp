@@ -15,6 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ComputedTimingFunction.h" // ComputedTimingFunction
 #include "mozilla/LayerAnimationInfo.h"     // LayerAnimations::kRecords
+#include "mozilla/NonOwningAnimationTarget.h"
 #include "mozilla/OwningNonNull.h"          // OwningNonNull<...>
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/StyleAnimationValue.h"
@@ -206,19 +207,19 @@ public:
               ErrorResult& aRv);
 
   void GetTarget(Nullable<OwningElementOrCSSPseudoElement>& aRv) const;
+  Maybe<NonOwningAnimationTarget> GetTarget() const
+  {
+    Maybe<NonOwningAnimationTarget> result;
+    if (mTarget) {
+      result.emplace(mTarget, mPseudoType);
+    }
+    return result;
+  }
   void GetFrames(JSContext*& aCx,
                  nsTArray<JSObject*>& aResult,
                  ErrorResult& aRv);
   void GetProperties(nsTArray<AnimationPropertyDetails>& aProperties,
                      ErrorResult& aRv) const;
-
-  // Temporary workaround to return both the target element and pseudo-type
-  // until we implement PseudoElement (bug 1174575).
-  void GetTarget(Element*& aTarget,
-                 CSSPseudoElementType& aPseudoType) const {
-    aTarget = mTarget;
-    aPseudoType = mPseudoType;
-  }
 
   IterationCompositeOperation IterationComposite() const;
   CompositeOperation Composite() const;
