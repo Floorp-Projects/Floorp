@@ -79,7 +79,8 @@ class MachCommands(MachCommandBase):
         help='Stop running tests after the first error or failure.')
     @CommandArgument('tests', nargs='*',
         metavar='TEST',
-        help='Tests to run. Each test can be a single file or a directory.')
+        help=('Tests to run. Each test can be a single file or a directory. '
+              'Tests must be part of PYTHON_UNIT_TESTS.'))
     def python_test(self,
                     tests=[],
                     test_objects=None,
@@ -94,6 +95,7 @@ class MachCommands(MachCommandBase):
         # launching Python multiple times. This also runs tests via mozunit,
         # which produces output in the format Mozilla infrastructure expects.
         return_code = 0
+        found_tests = False
         if test_objects is None:
             # If we're not being called from `mach test`, do our own
             # test resolution.
@@ -108,6 +110,7 @@ class MachCommands(MachCommandBase):
                 test_objects = resolver.resolve_tests(flavor='python')
 
         for test in test_objects:
+            found_tests = True
             f = test['path']
             file_displayed_test = []  # Used as a boolean.
 
@@ -137,6 +140,13 @@ class MachCommands(MachCommandBase):
                              'Test passed: {file}')
             if stop and return_code > 0:
                 return 1
+
+        if not found_tests:
+            self.log(logging.WARN, 'python-test', {},
+                     'TEST-UNEXPECTED-FAIL | No tests collected '
+                     '(not in PYTHON_UNIT_TESTS?)')
+
+            return 1
 
         return 0 if return_code == 0 else 1
 
