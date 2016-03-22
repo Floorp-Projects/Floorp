@@ -11,8 +11,8 @@
 
 #include "jit/RegisterSets.h"
 
-#define HWCAP_MIPS (1 << 31)
-#define HWCAP_LOONGSON (1 << 30)
+#define HWCAP_MIPS (1 << 28)
+#define HWCAP_LOONGSON (1 << 27)
 #define HWCAP_FPU (1 << 0)
 
 namespace js {
