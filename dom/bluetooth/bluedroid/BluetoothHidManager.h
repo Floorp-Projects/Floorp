@@ -35,6 +35,13 @@ public:
   static void DeinitHidInterface(BluetoothProfileResultHandler* aRes);
 
   void HandleBackendError();
+  void GetReport(const BluetoothHidReportType& aReportType,
+                 const uint8_t aReportId,
+                 const uint16_t aBufSize);
+  void SendData(const uint16_t aDataLen, const uint8_t* aData);
+  void SetReport(const BluetoothHidReportType& aReportType,
+                 const BluetoothHidReport& aReport);
+  void VirtualUnplug();
 
 protected:
   virtual ~BluetoothHidManager();
@@ -47,6 +54,10 @@ private:
 
   class ConnectResultHandler;
   class DisconnectResultHandler;
+  class GetReportResultHandler;
+  class SendDataResultHandler;
+  class SetReportResultHandler;
+  class VirtualUnplugResultHandler;
 
   BluetoothHidManager();
   void Uninit();

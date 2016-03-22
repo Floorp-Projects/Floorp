@@ -435,6 +435,22 @@ class BaseAssemblerX64 : public BaseAssembler
 
     // Various move ops:
 
+    void cmovzq_rr(RegisterID src, RegisterID dst)
+    {
+        spew("cmovz     %s, %s", GPReg16Name(src), GPReg32Name(dst));
+        m_formatter.twoByteOp64(OP2_CMOVZ_GvqpEvqp, src, dst);
+    }
+    void cmovzq_mr(int32_t offset, RegisterID base, RegisterID dst)
+    {
+        spew("cmovz     " MEM_ob ", %s", ADDR_ob(offset, base), GPReg32Name(dst));
+        m_formatter.twoByteOp64(OP2_CMOVZ_GvqpEvqp, offset, base, dst);
+    }
+    void cmovzq_mr(int32_t offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        spew("cmovz     " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), GPReg32Name(dst));
+        m_formatter.twoByteOp64(OP2_CMOVZ_GvqpEvqp, offset, base, index, scale, dst);
+    }
+
     void xchgq_rr(RegisterID src, RegisterID dst)
     {
         spew("xchgq      %s, %s", GPReg64Name(src), GPReg64Name(dst));

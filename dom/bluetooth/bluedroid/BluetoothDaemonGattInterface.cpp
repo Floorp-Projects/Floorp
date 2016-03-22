@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothDaemonGattInterface.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -54,20 +55,20 @@ BluetoothDaemonGattModule::ClientRegisterCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_REGISTER,
-                        16)); // Service UUID
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_REGISTER,
+                                16); // Service UUID
 
   nsresult rv = PackPDU(aUuid, *pdu);
 
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -77,19 +78,19 @@ BluetoothDaemonGattModule::ClientUnregisterCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_UNREGISTER,
-                        4)); // Client Interface
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_UNREGISTER,
+                                4); // Client Interface
 
   nsresult rv = PackPDU(aClientIf, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -99,21 +100,21 @@ BluetoothDaemonGattModule::ClientScanCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_SCAN,
-                        4 + // Client Interface
-                        1)); // Start
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_SCAN,
+                                4 + // Client Interface
+                                1); // Start
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aClientIf),
                         PackConversion<bool, uint8_t>(aStart), *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -124,12 +125,12 @@ BluetoothDaemonGattModule::ClientConnectCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_CONNECT,
-                        4 + // Client Interface
-                        6 + // Remote Address
-                        1 + // Is Direct
-                        4)); // Transport
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_CONNECT,
+                                4 + // Client Interface
+                                6 + // Remote Address
+                                1 + // Is Direct
+                                4); // Transport
 
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aClientIf),
@@ -139,11 +140,11 @@ BluetoothDaemonGattModule::ClientConnectCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -154,11 +155,11 @@ BluetoothDaemonGattModule::ClientDisconnectCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_DISCONNECT,
-                        4 + // Client Interface
-                        6 + // Remote Address
-                        4)); // Connection ID
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_DISCONNECT,
+                                4 + // Client Interface
+                                6 + // Remote Address
+                                4); // Connection ID
 
   nsresult rv;
   rv = PackPDU(PackConversion<int, int32_t>(aClientIf),
@@ -167,11 +168,11 @@ BluetoothDaemonGattModule::ClientDisconnectCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -181,10 +182,10 @@ BluetoothDaemonGattModule::ClientListenCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_LISTEN,
-                        4 + // Client Interface
-                        1)); // Start
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_LISTEN,
+                                4 + // Client Interface
+                                1); // Start
 
   nsresult rv;
   rv = PackPDU(PackConversion<int, int32_t>(aClientIf),
@@ -192,11 +193,11 @@ BluetoothDaemonGattModule::ClientListenCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -207,10 +208,10 @@ BluetoothDaemonGattModule::ClientRefreshCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_REFRESH,
-                        4 + // Client Interface
-                        6)); // Remote Address
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_REFRESH,
+                                4 + // Client Interface
+                                6); // Remote Address
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aClientIf),
                         aBdAddr,
@@ -218,11 +219,11 @@ BluetoothDaemonGattModule::ClientRefreshCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -233,11 +234,11 @@ BluetoothDaemonGattModule::ClientSearchServiceCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_SEARCH_SERVICE,
-                        4 + // Connection ID
-                        1 + // Filtered
-                        16)); // UUID
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_SEARCH_SERVICE,
+                                4 + // Connection ID
+                                1 + // Filtered
+                                16); // UUID
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aConnId),
                         PackConversion<bool, uint8_t>(aFiltered),
@@ -246,11 +247,11 @@ BluetoothDaemonGattModule::ClientSearchServiceCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -262,12 +263,12 @@ BluetoothDaemonGattModule::ClientGetIncludedServiceCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_GET_INCLUDED_SERVICE,
-                        4 + // Connection ID
-                        18 + // Service ID
-                        1 + // Continuation
-                        18)); // Start Service ID
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_GET_INCLUDED_SERVICE,
+                                4 + // Connection ID
+                                18 + // Service ID
+                                1 + // Continuation
+                                18); // Start Service ID
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aConnId), aServiceId,
                         PackConversion<bool, uint8_t>(aContinuation),
@@ -275,11 +276,11 @@ BluetoothDaemonGattModule::ClientGetIncludedServiceCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -291,12 +292,12 @@ BluetoothDaemonGattModule::ClientGetCharacteristicCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_GET_CHARACTERISTIC,
-                        4 + // Connection ID
-                        18 + // Service ID
-                        1 + // Continuation
-                        17)); // Start Characteristic ID
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_GET_CHARACTERISTIC,
+                                4 + // Connection ID
+                                18 + // Service ID
+                                1 + // Continuation
+                                17); // Start Characteristic ID
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aConnId), aServiceId,
                         PackConversion<bool, uint8_t>(aContinuation),
@@ -305,11 +306,11 @@ BluetoothDaemonGattModule::ClientGetCharacteristicCmd(
     return rv;
   }
 
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -322,13 +323,13 @@ BluetoothDaemonGattModule::ClientGetDescriptorCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_GET_DESCRIPTOR,
-                        4 + // Connection ID
-                        18 + // Service ID
-                        17 + // Characteristic ID
-                        1 + // Continuation
-                        17)); // Start Descriptor ID
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_GET_DESCRIPTOR,
+                                4 + // Connection ID
+                                18 + // Service ID
+                                17 + // Characteristic ID
+                                1 + // Continuation
+                                17); // Start Descriptor ID
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aConnId),
                         aServiceId, aCharId,
@@ -337,11 +338,11 @@ BluetoothDaemonGattModule::ClientGetDescriptorCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -353,23 +354,23 @@ BluetoothDaemonGattModule::ClientReadCharacteristicCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_READ_CHARACTERISTIC,
-                        4 + // Connection ID
-                        18 + // Service ID
-                        17 + // Characteristic ID
-                        4)); // Authorization
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_READ_CHARACTERISTIC,
+                                4 + // Connection ID
+                                18 + // Service ID
+                                17 + // Characteristic ID
+                                4); // Authorization
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aConnId), aServiceId,
                         aCharId, aAuthReq, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -382,8 +383,9 @@ BluetoothDaemonGattModule::ClientWriteCharacteristicCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_WRITE_CHARACTERISTIC, 0));
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_WRITE_CHARACTERISTIC,
+                                0);
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aConnId), aServiceId,
                         aCharId, aWriteType,
@@ -392,11 +394,11 @@ BluetoothDaemonGattModule::ClientWriteCharacteristicCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -408,24 +410,24 @@ BluetoothDaemonGattModule::ClientReadDescriptorCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_READ_DESCRIPTOR,
-                        4 + // Connection ID
-                        18 + // Service ID
-                        17 + // Characteristic ID
-                        17 + // Descriptor ID
-                        4)); // Authorization
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_READ_DESCRIPTOR,
+                                4 + // Connection ID
+                                18 + // Service ID
+                                17 + // Characteristic ID
+                                17 + // Descriptor ID
+                                4); // Authorization
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aConnId), aServiceId,
                         aCharId, aDescriptorId, aAuthReq, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -439,8 +441,9 @@ BluetoothDaemonGattModule::ClientWriteDescriptorCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_WRITE_DESCRIPTOR, 0));
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_WRITE_DESCRIPTOR,
+                                0);
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aConnId), aServiceId,
                         aCharId, aDescriptorId, aWriteType,
@@ -449,11 +452,11 @@ BluetoothDaemonGattModule::ClientWriteDescriptorCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -463,21 +466,21 @@ BluetoothDaemonGattModule::ClientExecuteWriteCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_EXECUTE_WRITE,
-                        4 + // Connection ID
-                        4)); // Execute
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_EXECUTE_WRITE,
+                                4 + // Connection ID
+                                4); // Execute
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aConnId),
                         PackConversion<int, int32_t>(aIsExecute), *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -489,23 +492,23 @@ BluetoothDaemonGattModule::ClientRegisterNotificationCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_REGISTER_NOTIFICATION,
-                        4 + // Client Interface
-                        6 + // Remote Address
-                        18 + // Service ID
-                        17)); // Characteristic ID
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_REGISTER_NOTIFICATION,
+                                4 + // Client Interface
+                                6 + // Remote Address
+                                18 + // Service ID
+                                17); // Characteristic ID
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aClientIf),
                         aBdAddr, aServiceId, aCharId, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -517,23 +520,23 @@ BluetoothDaemonGattModule::ClientDeregisterNotificationCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_DEREGISTER_NOTIFICATION,
-                        4 + // Client Interface
-                        6 + // Remote Address
-                        18 + // Service ID
-                        17)); // Characteristic ID
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_DEREGISTER_NOTIFICATION,
+                                4 + // Client Interface
+                                6 + // Remote Address
+                                18 + // Service ID
+                                17); // Characteristic ID
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aClientIf),
                         aBdAddr, aServiceId, aCharId, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -544,21 +547,21 @@ BluetoothDaemonGattModule::ClientReadRemoteRssiCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_READ_REMOTE_RSSI,
-                        4 + // Client Interface
-                        6)); // Remote Address
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_READ_REMOTE_RSSI,
+                                4 + // Client Interface
+                                6); // Remote Address
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aClientIf),
                         aBdAddr, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -568,19 +571,19 @@ BluetoothDaemonGattModule::ClientGetDeviceTypeCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_GET_DEVICE_TYPE,
-                        6)); // Remote Address
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_GET_DEVICE_TYPE,
+                                6); // Remote Address
 
   nsresult rv = PackPDU(aBdAddr, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -595,8 +598,9 @@ BluetoothDaemonGattModule::ClientSetAdvDataCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_SET_ADV_DATA, 0));
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_SET_ADV_DATA,
+                                0);
 
   uint16_t manufacturerDataByteLen =
     aManufacturerData.Length() * sizeof(uint8_t);
@@ -626,11 +630,11 @@ BluetoothDaemonGattModule::ClientSetAdvDataCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -641,16 +645,16 @@ BluetoothDaemonGattModule::ClientTestCommandCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_TEST_COMMAND,
-                        4 + // Command
-                        6 + // Address
-                        16 + // UUID
-                        2 + // U1
-                        2 + // U2
-                        2 + // U3
-                        2 + // U4
-                        2)); // U5
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLIENT_TEST_COMMAND,
+                                4 + // Command
+                                6 + // Address
+                                16 + // UUID
+                                2 + // U1
+                                2 + // U2
+                                2 + // U3
+                                2 + // U4
+                                2); // U5
 
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aCommand),
@@ -660,11 +664,11 @@ BluetoothDaemonGattModule::ClientTestCommandCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -674,19 +678,19 @@ BluetoothDaemonGattModule::ServerRegisterCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SERVER_REGISTER,
-                        16)); // Uuid
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SERVER_REGISTER,
+                                16); // Uuid
 
   nsresult rv = PackPDU(aUuid, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -696,19 +700,19 @@ BluetoothDaemonGattModule::ServerUnregisterCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SERVER_UNREGISTER,
-                        4)); // Server Interface
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SERVER_UNREGISTER,
+                                4); // Server Interface
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aServerIf), *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -719,12 +723,12 @@ BluetoothDaemonGattModule::ServerConnectPeripheralCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SERVER_CONNECT_PERIPHERAL,
-                        4 + // Server Interface
-                        6 + // Remote Address
-                        1 + // Is Direct
-                        4)); // Transport
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SERVER_CONNECT_PERIPHERAL,
+                                4 + // Server Interface
+                                6 + // Remote Address
+                                1 + // Is Direct
+                                4); // Transport
 
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aServerIf),
@@ -734,11 +738,11 @@ BluetoothDaemonGattModule::ServerConnectPeripheralCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -749,11 +753,11 @@ BluetoothDaemonGattModule::ServerDisconnectPeripheralCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SERVER_DISCONNECT_PERIPHERAL,
-                        4 + // Server Interface
-                        6 + // Remote Address
-                        4)); // Connection Id
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SERVER_DISCONNECT_PERIPHERAL,
+                                4 + // Server Interface
+                                6 + // Remote Address
+                                4); // Connection Id
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aServerIf),
                         aBdAddr,
@@ -761,11 +765,11 @@ BluetoothDaemonGattModule::ServerDisconnectPeripheralCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -776,22 +780,22 @@ BluetoothDaemonGattModule::ServerAddServiceCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SERVER_ADD_SERVICE,
-                        4 + // Server Interface
-                        18 + // Service ID
-                        4)); // Number of Handles
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SERVER_ADD_SERVICE,
+                                4 + // Server Interface
+                                18 + // Service ID
+                                4); // Number of Handles
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aServerIf), aServiceId,
                         PackConversion<uint16_t, int32_t>(aNumHandles), *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -803,22 +807,22 @@ BluetoothDaemonGattModule::ServerAddIncludedServiceCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SERVER_ADD_INCLUDED_SERVICE,
-                        4 + // Server Interface
-                        4 + // Service Handle
-                        4)); // Included Service Handle
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SERVER_ADD_INCLUDED_SERVICE,
+                                4 + // Server Interface
+                                4 + // Service Handle
+                                4); // Included Service Handle
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aServerIf),
                         aServiceHandle, aIncludedServiceHandle, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -830,13 +834,13 @@ BluetoothDaemonGattModule::ServerAddCharacteristicCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SERVER_ADD_CHARACTERISTIC,
-                        4 + // Server Interface
-                        4 + // Service Handle
-                        16 + // UUID
-                        4 + // Properties
-                        4)); // Permissions
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SERVER_ADD_CHARACTERISTIC,
+                                4 + // Server Interface
+                                4 + // Service Handle
+                                16 + // UUID
+                                4 + // Properties
+                                4); // Permissions
 
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aServerIf), aServiceHandle,
@@ -846,11 +850,11 @@ BluetoothDaemonGattModule::ServerAddCharacteristicCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -862,12 +866,12 @@ BluetoothDaemonGattModule::ServerAddDescriptorCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SERVER_ADD_DESCRIPTOR,
-                        4 + // Server Interface
-                        4 + // Service Handle
-                        16 + // UUID
-                        4)); // Permissions
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SERVER_ADD_DESCRIPTOR,
+                                4 + // Server Interface
+                                4 + // Service Handle
+                                16 + // UUID
+                                4); // Permissions
 
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aServerIf), aServiceHandle,
@@ -876,11 +880,11 @@ BluetoothDaemonGattModule::ServerAddDescriptorCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -891,11 +895,11 @@ BluetoothDaemonGattModule::ServerStartServiceCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SERVER_START_SERVICE,
-                        4 + // Server Interface
-                        4 + // Service Handle
-                        4)); // Transport
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SERVER_START_SERVICE,
+                                4 + // Server Interface
+                                4 + // Service Handle
+                                4); // Transport
 
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aServerIf), aServiceHandle,
@@ -903,11 +907,11 @@ BluetoothDaemonGattModule::ServerStartServiceCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -918,21 +922,21 @@ BluetoothDaemonGattModule::ServerStopServiceCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SERVER_STOP_SERVICE,
-                        4 + // Server Interface
-                        4)); // Service Handle
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SERVER_STOP_SERVICE,
+                                4 + // Server Interface
+                                4); // Service Handle
 
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aServerIf), aServiceHandle, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -943,21 +947,21 @@ BluetoothDaemonGattModule::ServerDeleteServiceCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SERVER_DELETE_SERVICE,
-                        4 + // Server Interface
-                        4)); // Service Handle
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SERVER_DELETE_SERVICE,
+                                4 + // Server Interface
+                                4); // Service Handle
 
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aServerIf), aServiceHandle, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -969,9 +973,9 @@ BluetoothDaemonGattModule::ServerSendIndicationCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SERVER_SEND_INDICATION,
-                        0));
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SERVER_SEND_INDICATION,
+                                0);
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aServerIf),
                         aCharacteristicHandle,
@@ -982,11 +986,11 @@ BluetoothDaemonGattModule::ServerSendIndicationCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -998,9 +1002,9 @@ BluetoothDaemonGattModule::ServerSendResponseCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_SERVER_SEND_RESPONSE,
-                        0));
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_SERVER_SEND_RESPONSE,
+                                0);
 
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aConnId),
@@ -1015,11 +1019,11 @@ BluetoothDaemonGattModule::ServerSendResponseCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 

@@ -15,6 +15,9 @@ const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+let origPlatformInfo = Cc["@mozilla.org/xre/app-info;1"]
+    .getService(Ci.nsIPlatformInfo);
+
 /**
  * Create new XULAppInfo instance with specified options.
  *
@@ -44,8 +47,10 @@ this.newAppInfo = function (options={}) {
     ID: ID,
     version: version,
     appBuildID: "20160315",
+
+    // nsIPlatformInfo
     platformVersion: platformVersion,
-    platformBuildID: "20160316",
+    platformBuildID: origPlatformInfo.platformBuildID,
 
     // nsIXULRuntime
     inSafeMode: false,
@@ -61,6 +66,7 @@ this.newAppInfo = function (options={}) {
   };
 
   let interfaces = [Ci.nsIXULAppInfo,
+                    Ci.nsIPlatformInfo,
                     Ci.nsIXULRuntime];
   if ("nsIWinAppHelper" in Ci) {
     interfaces.push(Ci.nsIWinAppHelper);

@@ -965,9 +965,6 @@ JS_FRIEND_API(bool)
 IsObjectInContextCompartment(JSObject* obj, const JSContext* cx);
 
 /*
- * NB: these flag bits are encoded into the bytecode stream in the immediate
- * operand of JSOP_ITER, so don't change them without advancing vm/Xdr.h's
- * XDR_BYTECODE_VERSION.
  * NB: keep these in sync with the copy in builtin/SelfHostingDefines.h.
  * The first three are omitted because they shouldn't be used in new code.
  */

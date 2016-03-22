@@ -8,9 +8,6 @@
 #define mozilla_dom_bluetooth_BluetoothRilListener_h
 
 #include "BluetoothCommon.h"
-
-#include "nsAutoPtr.h"
-
 #include "nsIIccService.h"
 #include "nsIMobileConnectionService.h"
 #include "nsITelephonyCallInfo.h"

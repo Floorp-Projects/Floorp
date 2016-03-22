@@ -125,6 +125,12 @@ IsObjectAllocKind(AllocKind kind)
 }
 
 inline bool
+IsShapeAllocKind(AllocKind kind)
+{
+    return kind == AllocKind::SHAPE || kind == AllocKind::ACCESSOR_SHAPE;
+}
+
+inline bool
 IsValidAllocKind(AllocKind kind)
 {
     return kind >= AllocKind::FIRST && kind <= AllocKind::LAST;

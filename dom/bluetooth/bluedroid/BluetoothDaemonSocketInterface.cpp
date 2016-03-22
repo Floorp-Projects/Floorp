@@ -6,8 +6,9 @@
 
 #include "BluetoothDaemonSocketInterface.h"
 #include "BluetoothSocketMessageWatcher.h"
-#include "nsXULAppAPI.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
+#include "nsXULAppAPI.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -32,9 +33,9 @@ BluetoothDaemonSocketModule::ListenCmd(BluetoothSocketType aType,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_LISTEN,
-                        0));
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_LISTEN,
+                                0);
 
   nsresult rv = PackPDU(
     aType,
@@ -45,11 +46,11 @@ BluetoothDaemonSocketModule::ListenCmd(BluetoothSocketType aType,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return rv;
 }
 
@@ -63,9 +64,9 @@ BluetoothDaemonSocketModule::ConnectCmd(const BluetoothAddress& aBdAddr,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CONNECT,
-                        0));
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CONNECT,
+                                0);
 
   nsresult rv = PackPDU(
     aBdAddr,
@@ -76,11 +77,11 @@ BluetoothDaemonSocketModule::ConnectCmd(const BluetoothAddress& aBdAddr,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return rv;
 }
 
@@ -100,7 +101,7 @@ public:
   }
 
 private:
-  nsAutoPtr<T> mPtr;
+  UniquePtr<T> mPtr;
 };
 
 /* |AcceptWatcher| specializes SocketMessageWatcher for Accept

@@ -14,6 +14,7 @@ XPIDL_SOURCES += [
     'nsIGSettingsService.idl',
     'nsIHapticFeedback.idl',
     'nsIPackageKitService.idl',
+    'nsIPlatformInfo.idl',
     'nsIXULAppInfo.idl',
     'nsIXULRuntime.idl',
 ]
