@@ -1629,11 +1629,9 @@ intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
     MOZ_ASSERT(args[0].isObject());
+    MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
 
     RootedObject object(cx, &args[0].toObject());
-    object = CheckedUnwrap(object);
-    MOZ_ASSERT(object->is<TypedArrayObject>());
-
     JSProtoKey protoKey = StandardProtoKeyOrNull(object);
     MOZ_ASSERT(protoKey);
 
