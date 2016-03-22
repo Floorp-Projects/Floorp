@@ -39,12 +39,17 @@ xpcAccessible::GetNextSibling(nsIAccessible** aNextSibling)
   NS_ENSURE_ARG_POINTER(aNextSibling);
   *aNextSibling = nullptr;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (IntlGeneric().IsAccessible()) {
+    nsresult rv = NS_OK;
+    NS_IF_ADDREF(*aNextSibling = ToXPC(Intl()->GetSiblingAtOffset(1, &rv)));
+    return rv;
+  }
 
-  nsresult rv = NS_OK;
-  NS_IF_ADDREF(*aNextSibling = ToXPC(Intl()->GetSiblingAtOffset(1, &rv)));
-  return rv;
+  ProxyAccessible* proxy = IntlGeneric().AsProxy();
+  NS_ENSURE_STATE(proxy);
+
+  NS_IF_ADDREF(*aNextSibling = ToXPC(proxy->NextSibling()));
+  return *aNextSibling ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -53,12 +58,17 @@ xpcAccessible::GetPreviousSibling(nsIAccessible** aPreviousSibling)
   NS_ENSURE_ARG_POINTER(aPreviousSibling);
   *aPreviousSibling = nullptr;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (IntlGeneric().IsAccessible()) {
+    nsresult rv = NS_OK;
+    NS_IF_ADDREF(*aPreviousSibling = ToXPC(Intl()->GetSiblingAtOffset(-1, &rv)));
+    return rv;
+  }
 
-  nsresult rv = NS_OK;
-  NS_IF_ADDREF(*aPreviousSibling = ToXPC(Intl()->GetSiblingAtOffset(-1, &rv)));
-  return rv;
+  ProxyAccessible* proxy = IntlGeneric().AsProxy();
+  NS_ENSURE_STATE(proxy);
+
+  NS_IF_ADDREF(*aPreviousSibling = ToXPC(proxy->PrevSibling()));
+  return *aPreviousSibling ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
