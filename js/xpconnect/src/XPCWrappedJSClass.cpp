@@ -920,7 +920,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                     location->GetLineNumber(&lineNumber);
 
                                     // get a filename.
-                                    rv = location->GetFilename(sourceName);
+                                    rv = location->GetFilename(cx, sourceName);
                                 }
 
                                 rv = scriptError->InitWithWindowID(NS_ConvertUTF8toUTF16(newMessage),
