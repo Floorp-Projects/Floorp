@@ -151,10 +151,12 @@ xpcAccessible::GetIndexInParent(int32_t* aIndexInParent)
   NS_ENSURE_ARG_POINTER(aIndexInParent);
   *aIndexInParent = -1;
 
-  if (!Intl())
-    return NS_ERROR_FAILURE;
+  if (IntlGeneric().IsAccessible()) {
+    *aIndexInParent = Intl()->IndexInParent();
+  } else if (IntlGeneric().IsProxy()) {
+    *aIndexInParent = IntlGeneric().AsProxy()->IndexInParent();
+  }
 
-  *aIndexInParent = Intl()->IndexInParent();
   return *aIndexInParent != -1 ? NS_OK : NS_ERROR_FAILURE;
 }
 
