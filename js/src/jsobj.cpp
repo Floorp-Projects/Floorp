@@ -3790,9 +3790,6 @@ JSObject::traceChildren(JSTracer* trc)
     TraceEdge(trc, &group_, "group");
 
     const Class* clasp = group_->clasp();
-    if (clasp->trace)
-        clasp->trace(trc, this);
-
     if (clasp->isNative()) {
         NativeObject* nobj = &as<NativeObject>();
 
@@ -3828,6 +3825,11 @@ JSObject::traceChildren(JSTracer* trc)
                        "objectElements");
         } while (false);
     }
+
+    // Call the trace hook at the end so that during a moving GC the trace hook
+    // will see updated fields and slots.
+    if (clasp->trace)
+        clasp->trace(trc, this);
 }
 
 static JSAtom*
