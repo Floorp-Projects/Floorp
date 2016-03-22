@@ -27,6 +27,7 @@
   <script src="/shared/vendor/react.js"></script>
   <script src="/shared/vendor/classnames.js"></script>
   <script src="/shared/vendor/backbone.js"></script>
+  <script src="/add-on/panels/vendor/simpleSlideshow.js"></script>
 
   <!-- test dependencies -->
   <script src="/test/vendor/mocha.js"></script>
@@ -61,23 +62,28 @@
   <!-- Views -->
   <script src="/add-on/shared/js/views.js"></script>
   <script src="/add-on/shared/js/textChatView.js"></script>
+  <script src="/add-on/panels/js/desktopViews.js"></script>
   <script src="/add-on/panels/js/roomViews.js"></script>
   <script src="/add-on/panels/js/feedbackViews.js"></script>
   <script src="/add-on/panels/js/conversation.js"></script>
   <script src="/add-on/panels/js/panel.js"></script>
+  <script src="/add-on/panels/js/slideshow.js"></script>
 
   <!-- Test scripts -->
   <script src="conversationAppStore_test.js"></script>
   <script src="conversation_test.js"></script>
   <script src="feedbackViews_test.js"></script>
   <script src="panel_test.js"></script>
+  <script src="desktopViews_test.js"></script>
   <script src="roomViews_test.js"></script>
   <script src="l10n_test.js"></script>
   <script src="roomStore_test.js"></script>
+  <script src="slideshow_test.js"></script>
   <script>
     // Stop the default init functions running to avoid conflicts in tests
     document.removeEventListener('DOMContentLoaded', loop.panel.init);
     document.removeEventListener('DOMContentLoaded', loop.conversation.init);
+    document.removeEventListener("DOMContentLoaded", loop.slideshow.init);
 
     LoopMochaUtils.addErrorCheckingTests();
     LoopMochaUtils.runTests();

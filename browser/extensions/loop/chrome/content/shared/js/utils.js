@@ -118,11 +118,13 @@ if (inChrome) {
     CONTEXT: "chat-context",
     TEXT: "chat-text",
     ROOM_NAME: "room-name",
-    CONTEXT_TILE: "context-tile"
+    CONTEXT_TILE: "context-tile",
+    NOTIFICATION: "chat-notification"
   };
 
   var CURSOR_MESSAGE_TYPES = {
-    POSITION: "cursor-position"
+    POSITION: "cursor-position",
+    CLICK: "cursor-click"
   };
 
   /**

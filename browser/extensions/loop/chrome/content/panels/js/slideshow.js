@@ -49,8 +49,10 @@ loop.slideshow = function (mozL10n) {
       }, {
         id: "slide2",
         imageClass: "slide2-image",
-        title: mozL10n.get("fte_slide_2_title"),
-        text: mozL10n.get("fte_slide_2_copy")
+        title: mozL10n.get("fte_slide_2_title2"),
+        text: mozL10n.get("fte_slide_2_copy2", {
+          clientShortname2: mozL10n.get("clientShortname2")
+        })
       }, {
         id: "slide3",
         imageClass: "slide3-image",

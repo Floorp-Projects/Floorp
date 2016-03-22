@@ -6,10 +6,11 @@ var loop = loop || {};
 loop.panel = function (_, mozL10n) {
   "use strict";
 
-  var sharedViews = loop.shared.views;
-  var sharedModels = loop.shared.models;
-  var sharedMixins = loop.shared.mixins;
   var sharedActions = loop.shared.actions;
+  var sharedMixins = loop.shared.mixins;
+  var sharedModels = loop.shared.models;
+  var sharedDesktopViews = loop.shared.desktopViews;
+  var sharedViews = loop.shared.views;
   var Button = sharedViews.Button;
 
   // XXX This must be kept in sync with the number in MozLoopService.jsm.
@@ -21,15 +22,41 @@ loop.panel = function (_, mozL10n) {
 
     mixins: [sharedMixins.WindowCloseMixin],
 
+    propTypes: {
+      displayRoomListContent: React.PropTypes.bool
+    },
+
+    getDefaultProps: function () {
+      return { displayRoomListContent: false };
+    },
+
     handleButtonClick: function () {
       loop.request("OpenGettingStartedTour");
       this.closeWindow();
     },
 
+    renderGettingStartedButton: function () {
+      if (!this.props.displayRoomListContent) {
+        return React.createElement(
+          "div",
+          { className: "fte-button-container" },
+          React.createElement(Button, { additionalClass: "fte-get-started-button",
+            caption: mozL10n.get("first_time_experience_button_label2"),
+            htmlId: "fte-button",
+            onClick: this.handleButtonClick })
+        );
+      }
+    },
+
     render: function () {
+      var fteClasses = classNames({
+        "fte-get-started-content": true,
+        "fte-get-started-content-borders": this.props.displayRoomListContent
+      });
+
       return React.createElement(
         "div",
-        { className: "fte-get-started-content" },
+        { className: fteClasses },
         React.createElement(
           "div",
           { className: "fte-title" },
@@ -37,24 +64,17 @@ loop.panel = function (_, mozL10n) {
           React.createElement(
             "div",
             { className: "fte-subheader" },
-            mozL10n.get("first_time_experience_subheading2")
+            this.props.displayRoomListContent ? mozL10n.get("first_time_experience_subheading_button_above") : mozL10n.get("first_time_experience_subheading2")
           ),
-          React.createElement("hr", { className: "fte-separator" }),
+          this.props.displayRoomListContent ? null : React.createElement("hr", { className: "fte-separator" }),
           React.createElement(
             "div",
             { className: "fte-content" },
-            mozL10n.get("first_time_experience_content")
+            this.props.displayRoomListContent ? mozL10n.get("first_time_experience_content2") : mozL10n.get("first_time_experience_content")
           ),
           React.createElement("img", { className: "fte-hello-web-share", src: "shared/img/hello-web-share.svg" })
         ),
-        React.createElement(
-          "div",
-          { className: "fte-button-container" },
-          React.createElement(Button, { additionalClass: "fte-get-started-button",
-            caption: mozL10n.get("first_time_experience_button_label2"),
-            htmlId: "fte-button",
-            onClick: this.handleButtonClick })
-        )
+        this.renderGettingStartedButton()
       );
     }
   });
@@ -226,17 +246,15 @@ loop.panel = function (_, mozL10n) {
     getInitialState: function () {
       return {
         signedIn: !!loop.getStoredRequest(["GetUserProfile"]),
-        fxAEnabled: loop.getStoredRequest(["GetFxAEnabled"]),
         doNotDisturb: loop.getStoredRequest(["GetDoNotDisturb"])
       };
     },
 
     componentWillUpdate: function (nextProps, nextState) {
       if (nextState.showMenu !== this.state.showMenu) {
-        loop.requestMulti(["GetUserProfile"], ["GetFxAEnabled"], ["GetDoNotDisturb"]).then(function (results) {
+        loop.requestMulti(["GetUserProfile"], ["GetDoNotDisturb"]).then(function (results) {
           this.setState({
             signedIn: !!results[0],
-            fxAEnabled: results[1],
             doNotDisturb: results[2]
           });
         }.bind(this));
@@ -315,7 +333,7 @@ loop.panel = function (_, mozL10n) {
             label: mozL10n.get(notificationsLabel),
             onClick: this.handleToggleNotifications }),
           React.createElement(SettingsDropdownEntry, {
-            displayed: this.state.signedIn && this.state.fxAEnabled,
+            displayed: this.state.signedIn,
             extraCSSClass: "entry-settings-account",
             label: mozL10n.get("settings_menu_item_account"),
             onClick: this.handleClickAccountEntry }),
@@ -327,8 +345,7 @@ loop.panel = function (_, mozL10n) {
           React.createElement(SettingsDropdownEntry, { extraCSSClass: "entry-settings-feedback",
             label: mozL10n.get("settings_menu_item_feedback"),
             onClick: this.handleSubmitFeedback }),
-          React.createElement(SettingsDropdownEntry, { displayed: this.state.fxAEnabled,
-            extraCSSClass: accountEntryCSSClass,
+          React.createElement(SettingsDropdownEntry, { extraCSSClass: accountEntryCSSClass,
             label: this.state.signedIn ? mozL10n.get("settings_menu_item_signout") : mozL10n.get("settings_menu_item_signin"),
             onClick: this.handleClickAuthEntry }),
           React.createElement(SettingsDropdownEntry, { extraCSSClass: "entry-settings-help",
@@ -348,7 +365,6 @@ loop.panel = function (_, mozL10n) {
     mixins: [sharedMixins.WindowCloseMixin],
 
     propTypes: {
-      fxAEnabled: React.PropTypes.bool.isRequired,
       userProfile: userProfileValidator
     },
 
@@ -358,10 +374,6 @@ loop.panel = function (_, mozL10n) {
     },
 
     render: function () {
-      if (!this.props.fxAEnabled) {
-        return null;
-      }
-
       if (this.props.userProfile && this.props.userProfile.email) {
         return React.createElement(
           "div",
@@ -451,16 +463,33 @@ loop.panel = function (_, mozL10n) {
 
     getInitialState: function () {
       return {
-        eventPosY: 0
+        editMode: false,
+        eventPosY: 0,
+        newRoomName: this._getRoomTitle()
       };
+    },
+
+    _getRoomTitle: function () {
+      var urlData = (this.props.room.decryptedContext.urls || [])[0] || {};
+      return this.props.room.decryptedContext.roomName || urlData.description || urlData.location || mozL10n.get("room_name_untitled_page");
     },
 
     _isActive: function () {
       return this.props.room.participants.length > 0;
     },
 
+    componentDidUpdate: function () {
+      if (this.state.editMode) {
+        this.getDOMNode().querySelector(".edit-room-input").focus();
+      }
+    },
+
     handleClickEntry: function (event) {
       event.preventDefault();
+
+      if (this.state.editMode) {
+        return;
+      }
 
       this.props.dispatcher.dispatch(new sharedActions.OpenRoom({
         roomToken: this.props.room.roomToken
@@ -490,6 +519,37 @@ loop.panel = function (_, mozL10n) {
       this.toggleDropdownMenu();
     },
 
+    handleEditButtonClick: function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Enter Edit mode
+      this.setState({ editMode: true });
+      this.toggleDropdownMenu();
+    },
+
+    /**
+     * Handles a key being pressed - looking for the return key for saving
+     * the new room name.
+     */
+    handleKeyDown: function (event) {
+      if (event.which === 13) {
+        this.exitEditMode();
+      }
+    },
+
+    exitEditMode: function () {
+      this.props.dispatcher.dispatch(new sharedActions.UpdateRoomContext({
+        roomToken: this.props.room.roomToken,
+        newRoomName: this.state.newRoomName
+      }));
+      this.setState({ editMode: false });
+    },
+
+    handleEditInputChange: function (event) {
+      this.setState({ newRoomName: event.target.value });
+    },
+
     /**
      * Callback called when moving cursor away from the conversation entry.
      * Will close the dropdown menu.
@@ -506,8 +566,7 @@ loop.panel = function (_, mozL10n) {
         "room-active": this._isActive(),
         "room-opened": this.props.isOpenedRoom
       });
-      var urlData = (this.props.room.decryptedContext.urls || [])[0] || {};
-      var roomTitle = this.props.room.decryptedContext.roomName || urlData.description || urlData.location || mozL10n.get("room_name_untitled_page");
+      var roomTitle = this._getRoomTitle();
 
       return React.createElement(
         "div",
@@ -517,15 +576,22 @@ loop.panel = function (_, mozL10n) {
           ref: "roomEntry" },
         React.createElement(RoomEntryContextItem, {
           roomUrls: this.props.room.decryptedContext.urls }),
-        React.createElement(
+        !this.state.editMode ? React.createElement(
           "h2",
           null,
           roomTitle
-        ),
-        this.props.isOpenedRoom ? null : React.createElement(RoomEntryContextButtons, {
+        ) : React.createElement("input", {
+          className: "edit-room-input",
+          onBlur: this.exitEditMode,
+          onChange: this.handleEditInputChange,
+          onKeyDown: this.handleKeyDown,
+          type: "text",
+          value: this.state.newRoomName }),
+        this.props.isOpenedRoom || this.state.editMode ? null : React.createElement(RoomEntryContextButtons, {
           dispatcher: this.props.dispatcher,
           eventPosY: this.state.eventPosY,
           handleClick: this.handleClick,
+          handleEditButtonClick: this.handleEditButtonClick,
           ref: "contextActions",
           room: this.props.room,
           showMenu: this.state.showMenu,
@@ -546,6 +612,7 @@ loop.panel = function (_, mozL10n) {
       dispatcher: React.PropTypes.object.isRequired,
       eventPosY: React.PropTypes.number.isRequired,
       handleClick: React.PropTypes.func.isRequired,
+      handleEditButtonClick: React.PropTypes.func.isRequired,
       room: React.PropTypes.object.isRequired,
       showMenu: React.PropTypes.bool.isRequired,
       toggleDropdownMenu: React.PropTypes.func.isRequired
@@ -598,11 +665,39 @@ loop.panel = function (_, mozL10n) {
           eventPosY: this.props.eventPosY,
           handleCopyButtonClick: this.handleCopyButtonClick,
           handleDeleteButtonClick: this.handleDeleteButtonClick,
+          handleEditButtonClick: this.props.handleEditButtonClick,
           handleEmailButtonClick: this.handleEmailButtonClick,
           ref: "menu" }) : null
       );
     }
   });
+
+  /**
+   * Compute Adjusted Top Position for Menu Dropdown
+   * Extracted from react component so we could run unit test against it
+   * takes clickYPos, menuNodeHeight, listTop, listHeight, clickOffset
+   * parameters, determines whether menu should be above or below click
+   * position and calculates where the top of the dropdown menu
+   * should reside. If less than 0, which will result in the top of the dropdown
+   * being cutoff, will set top position to 0
+   */
+  function computeAdjustedTopPosition(clickYPos, menuNodeHeight, listTop, listHeight, clickOffset) {
+    var topPos = 0;
+
+    if (clickYPos + menuNodeHeight >= listTop + listHeight) {
+      // Position above click area.
+      topPos = clickYPos - menuNodeHeight - listTop - clickOffset;
+    } else {
+      // Position below click area.
+      topPos = clickYPos - listTop + clickOffset;
+    }
+    // Ensure menu is not cut off at top
+    if (topPos < 0) {
+      topPos = 0;
+    }
+
+    return topPos;
+  }
 
   /**
    * Dropdown menu for each conversation entry.
@@ -618,6 +713,7 @@ loop.panel = function (_, mozL10n) {
       eventPosY: React.PropTypes.number.isRequired,
       handleCopyButtonClick: React.PropTypes.func.isRequired,
       handleDeleteButtonClick: React.PropTypes.func.isRequired,
+      handleEditButtonClick: React.PropTypes.func.isRequired,
       handleEmailButtonClick: React.PropTypes.func.isRequired
     },
 
@@ -637,15 +733,9 @@ loop.panel = function (_, mozL10n) {
       var listNodeRect = listNode.getBoundingClientRect();
 
       // Click offset to not display the menu right next to the area clicked.
-      var offset = 10;
+      var topPos = computeAdjustedTopPosition(this.props.eventPosY, menuNodeRect.height, listNodeRect.top, listNodeRect.height, 10);
 
-      if (this.props.eventPosY + menuNodeRect.height >= listNodeRect.top + listNodeRect.height) {
-        // Position above click area.
-        menuNode.style.top = this.props.eventPosY - menuNodeRect.height - listNodeRect.top - offset + "px";
-      } else {
-        // Position below click area.
-        menuNode.style.top = this.props.eventPosY - listNodeRect.top + offset + "px";
-      }
+      menuNode.style.top = topPos + "px";
     },
 
     render: function () {
@@ -672,6 +762,14 @@ loop.panel = function (_, mozL10n) {
             onClick: this.props.handleEmailButtonClick,
             ref: "emailButton" },
           mozL10n.get("email_link_menuitem")
+        ),
+        React.createElement(
+          "li",
+          {
+            className: "dropdown-menu-item",
+            onClick: this.props.handleEditButtonClick,
+            ref: "editButton" },
+          mozL10n.get("edit_name_menuitem")
         ),
         React.createElement(
           "li",
@@ -723,14 +821,6 @@ loop.panel = function (_, mozL10n) {
 
     componentWillUnmount: function () {
       this.stopListening(this.props.store);
-    },
-
-    componentWillUpdate: function (nextProps, nextState) {
-      // If we've just created a room, close the panel - the store will open
-      // the room.
-      if (this.state.pendingCreation && !nextState.pendingCreation && !nextState.error) {
-        this.closeWindow();
-      }
     },
 
     _onStoreStateChanged: function () {
@@ -798,7 +888,7 @@ loop.panel = function (_, mozL10n) {
           null,
           mozL10n.get(this.state.openedRoom === null ? "rooms_list_recently_browsed2" : "rooms_list_currently_browsing2")
         ),
-        !this.state.rooms.length ? React.createElement("div", { className: "room-list-empty" }) : React.createElement(
+        !this.state.rooms.length ? React.createElement(GettingStartedView, { displayRoomListContent: true }) : React.createElement(
           "div",
           { className: roomListClasses },
           this.state.rooms.map(function (room) {
@@ -936,6 +1026,118 @@ loop.panel = function (_, mozL10n) {
     }
   });
 
+  var SharePanelView = React.createClass({
+    displayName: "SharePanelView",
+
+    statics: {
+      SHOW_PANEL_DELAY: 300
+    },
+
+    mixins: [Backbone.Events, sharedMixins.DocumentVisibilityMixin, sharedMixins.WindowCloseMixin],
+
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      // Force render for testing purpose
+      forceRender: React.PropTypes.bool,
+      onSharePanelDisplayChange: React.PropTypes.func.isRequired,
+      store: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
+    },
+
+    getInitialState: function () {
+      return this.props.store.getStoreState();
+    },
+
+    componentWillMount: function () {
+      loop.request("GetLoopPref", "facebook.enabled").then(result => {
+        this.setState({
+          facebookEnabled: result
+        });
+      });
+    },
+
+    componentDidMount: function () {
+      this.listenTo(this.props.store, "change", this._onStoreStateChanged);
+    },
+
+    componentDidUpdate: function () {
+      if (this.state.showPanel) {
+        setTimeout(() => {
+          this.getDOMNode().classList.add("share-panel-open");
+        }, this.constructor.SHOW_PANEL_DELAY);
+      }
+    },
+
+    componentWillUnmount: function () {
+      this.stopListening(this.props.store);
+    },
+
+    _onStoreStateChanged: function () {
+      this.setState(this.props.store.getStoreState());
+    },
+
+    onDocumentHidden: function () {
+      this.state.showPanel && this.handleClosePanel();
+    },
+
+    componentWillUpdate: function (nextProps, nextState) {
+      // If we've just created a room, open the panel
+      if (this.state.pendingCreation && !nextState.pendingCreation && !nextState.error) {
+        this.props.onSharePanelDisplayChange();
+        this.setState({
+          showPanel: true
+        });
+      }
+    },
+
+    handleClosePanel: function () {
+      this.props.onSharePanelDisplayChange();
+      this.setState({
+        showPanel: false
+      });
+
+      this.openRoom();
+      this.closeWindow();
+    },
+
+    openRoom: function () {
+      var activeRoom = this.state.activeRoom;
+      this.props.dispatcher.dispatch(new sharedActions.OpenRoom({
+        roomToken: activeRoom.roomToken
+      }));
+    },
+
+    render: function () {
+      if (!this.state.showPanel && !this.props.forceRender) {
+        return null;
+      }
+
+      var sharePanelClasses = classNames({
+        "share-panel-container": true,
+        "share-panel-open": this.props.forceRender
+      });
+      var activeRoom = this.state.activeRoom;
+      var roomData = {
+        roomUrl: activeRoom.roomUrl,
+        roomContextUrls: activeRoom.decryptedContext && activeRoom.decryptedContext.urls || []
+      };
+
+      return React.createElement(
+        "div",
+        { className: sharePanelClasses },
+        React.createElement("div", { className: "share-panel-overlay", onClick: this.handleClosePanel }),
+        React.createElement(sharedDesktopViews.SharePanelView, {
+          callback: this.handleClosePanel,
+          dispatcher: this.props.dispatcher,
+          error: this.state.error,
+          facebookEnabled: this.state.facebookEnabled,
+          locationForMetrics: "panel",
+          roomData: roomData,
+          show: true,
+          socialShareProviders: this.state.socialShareProviders })
+      );
+    }
+  });
+
   /**
    * Panel view.
    */
@@ -960,12 +1162,12 @@ loop.panel = function (_, mozL10n) {
 
     getInitialState: function () {
       return {
-        fxAEnabled: loop.getStoredRequest(["GetFxAEnabled"]),
         hasEncryptionKey: loop.getStoredRequest(["GetHasEncryptionKey"]),
         userProfile: loop.getStoredRequest(["GetUserProfile"]),
         gettingStartedSeen: loop.getStoredRequest(["GetLoopPref", "gettingStarted.latestFTUVersion"]) >= FTU_VERSION,
         multiProcessActive: loop.getStoredRequest(["IsMultiProcessActive"]),
-        remoteAutoStart: loop.getStoredRequest(["GetLoopPref", "remote.autostart"])
+        remoteAutoStart: loop.getStoredRequest(["GetLoopPref", "remote.autostart"]),
+        sharePanelOpened: false
       };
     },
 
@@ -1055,6 +1257,12 @@ loop.panel = function (_, mozL10n) {
       });
     },
 
+    toggleSharePanelState: function () {
+      this.setState({
+        sharePanelOpened: !this.state.sharePanelOpened
+      });
+    },
+
     render: function () {
       var NotificationListView = sharedViews.NotificationListView;
 
@@ -1078,26 +1286,38 @@ loop.panel = function (_, mozL10n) {
         return React.createElement(SignInRequestView, null);
       }
 
+      var cssClasses = classNames({
+        "panel-content": true,
+        "showing-share-panel": this.state.sharePanelOpened
+      });
+
       return React.createElement(
         "div",
-        { className: "panel-content",
+        { className: cssClasses,
           onContextMenu: this.handleContextMenu },
         React.createElement("div", { className: "beta-ribbon" }),
         React.createElement(NotificationListView, {
           clearOnDocumentHidden: true,
           notifications: this.props.notifications }),
-        React.createElement(RoomList, { dispatcher: this.props.dispatcher,
-          store: this.props.roomStore }),
         React.createElement(
           "div",
-          { className: "footer" },
-          React.createElement(AccountLink, { fxAEnabled: this.state.fxAEnabled,
-            userProfile: this.props.userProfile || this.state.userProfile }),
+          { className: "panel-container" },
+          React.createElement(RoomList, { dispatcher: this.props.dispatcher,
+            store: this.props.roomStore }),
           React.createElement(
             "div",
-            { className: "signin-details" },
-            React.createElement(SettingsDropdown, null)
-          )
+            { className: "footer" },
+            React.createElement(AccountLink, { userProfile: this.props.userProfile || this.state.userProfile }),
+            React.createElement(
+              "div",
+              { className: "signin-details" },
+              React.createElement(SettingsDropdown, null)
+            )
+          ),
+          React.createElement(SharePanelView, {
+            dispatcher: this.props.dispatcher,
+            onSharePanelDisplayChange: this.toggleSharePanelState,
+            store: this.props.roomStore })
         )
       );
     }
@@ -1108,7 +1328,7 @@ loop.panel = function (_, mozL10n) {
    */
   function init() {
     var requests = [["GetAllConstants"], ["GetAllStrings"], ["GetLocale"], ["GetPluralRule"]];
-    var prefetch = [["GetLoopPref", "gettingStarted.latestFTUVersion"], ["GetLoopPref", "legal.ToS_url"], ["GetLoopPref", "legal.privacy_url"], ["GetLoopPref", "remote.autostart"], ["GetUserProfile"], ["GetFxAEnabled"], ["GetDoNotDisturb"], ["GetHasEncryptionKey"], ["IsMultiProcessActive"]];
+    var prefetch = [["GetLoopPref", "gettingStarted.latestFTUVersion"], ["GetLoopPref", "legal.ToS_url"], ["GetLoopPref", "legal.privacy_url"], ["GetLoopPref", "remote.autostart"], ["GetUserProfile"], ["GetDoNotDisturb"], ["GetHasEncryptionKey"], ["IsMultiProcessActive"]];
 
     return loop.requestMulti.apply(null, requests.concat(prefetch)).then(function (results) {
       // `requestIdx` is keyed off the order of the `requests` and `prefetch`
@@ -1163,6 +1383,7 @@ loop.panel = function (_, mozL10n) {
 
   return {
     AccountLink: AccountLink,
+    computeAdjustedTopPosition: computeAdjustedTopPosition,
     ConversationDropdown: ConversationDropdown,
     E10sNotSupported: E10sNotSupported,
     GettingStartedView: GettingStartedView,
@@ -1173,6 +1394,7 @@ loop.panel = function (_, mozL10n) {
     RoomEntryContextButtons: RoomEntryContextButtons,
     RoomList: RoomList,
     SettingsDropdown: SettingsDropdown,
+    SharePanelView: SharePanelView,
     SignInRequestView: SignInRequestView,
     ToSView: ToSView
   };
