@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
+import org.mozilla.gecko.dlc.catalog.DownloadContentBuilder;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
 import org.robolectric.RuntimeEnvironment;
 
@@ -40,12 +41,12 @@ public class TestStudyAction {
     @Test
     public void testPerformWithEmptyCatalog() {
         DownloadContentCatalog catalog = mock(DownloadContentCatalog.class);
-        when(catalog.getContentWithoutState()).thenReturn(new ArrayList<DownloadContent>());
+        when(catalog.getContentToStudy()).thenReturn(new ArrayList<DownloadContent>());
 
         StudyAction action = spy(new StudyAction());
         action.perform(RuntimeEnvironment.application, catalog);
 
-        verify(catalog).getContentWithoutState();
+        verify(catalog).getContentToStudy();
         verify(catalog, never()).markAsDownloaded(any(DownloadContent.class));
         verify(action, never()).startDownloads(any(Context.class));
     }
@@ -58,17 +59,17 @@ public class TestStudyAction {
      */
     @Test
     public void testPerformWithNewContent() {
-        DownloadContent content1 = new DownloadContent.Builder()
+        DownloadContent content1 = new DownloadContentBuilder()
                 .setType(DownloadContent.TYPE_ASSET_ARCHIVE)
                 .setKind(DownloadContent.KIND_FONT)
                 .build();
-        DownloadContent content2 = new DownloadContent.Builder()
+        DownloadContent content2 = new DownloadContentBuilder()
                 .setType(DownloadContent.TYPE_ASSET_ARCHIVE)
                 .setKind(DownloadContent.KIND_FONT)
                 .build();
 
         DownloadContentCatalog catalog = mock(DownloadContentCatalog.class);
-        when(catalog.getContentWithoutState()).thenReturn(Arrays.asList(content1, content2));
+        when(catalog.getContentToStudy()).thenReturn(Arrays.asList(content1, content2));
 
         StudyAction action = spy(new StudyAction());
         action.perform(RuntimeEnvironment.application, catalog);
@@ -102,13 +103,13 @@ public class TestStudyAction {
      */
     @Test
     public void testPerformWithUnknownContent() {
-        DownloadContent content = new DownloadContent.Builder()
+        DownloadContent content = new DownloadContentBuilder()
                 .setType("Unknown-Type")
                 .setKind("Unknown-Kind")
                 .build();
 
         DownloadContentCatalog catalog = mock(DownloadContentCatalog.class);
-        when(catalog.getContentWithoutState()).thenReturn(Collections.singletonList(content));
+        when(catalog.getContentToStudy()).thenReturn(Collections.singletonList(content));
 
         StudyAction action = spy(new StudyAction());
         action.perform(RuntimeEnvironment.application, catalog);

@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
+import org.mozilla.gecko.dlc.catalog.DownloadContentBuilder;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
 import org.robolectric.RuntimeEnvironment;
 
@@ -40,7 +41,7 @@ public class TestVerifyAction {
      */
     @Test
     public void testReschedulingIfFileDoesNotExist() throws Exception {
-        DownloadContent content = new DownloadContent.Builder().build();
+        DownloadContent content = new DownloadContentBuilder().build();
         DownloadContentCatalog catalog = mock(DownloadContentCatalog.class);
         when(catalog.getDownloadedContent()).thenReturn(Collections.singletonList(content));
 
@@ -80,7 +81,7 @@ public class TestVerifyAction {
      */
     @Test
     public void testReschedulingIfVerificationFailed() throws Exception {
-        DownloadContent content = new DownloadContent.Builder().build();
+        DownloadContent content = new DownloadContentBuilder().build();
         DownloadContentCatalog catalog = mock(DownloadContentCatalog.class);
         when(catalog.getDownloadedContent()).thenReturn(Collections.singletonList(content));
 
@@ -105,7 +106,7 @@ public class TestVerifyAction {
      */
     @Test
     public void testSuccessfulVerification() throws Exception {
-        DownloadContent content = new DownloadContent.Builder().build();
+        DownloadContent content = new DownloadContentBuilder().build();
         DownloadContentCatalog catalog = mock(DownloadContentCatalog.class);
         when(catalog.getDownloadedContent()).thenReturn(Collections.singletonList(content));
 
