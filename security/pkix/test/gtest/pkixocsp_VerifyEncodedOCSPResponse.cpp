@@ -592,8 +592,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_expired)
   ByteString signerDER(CreateEncodedCertificate(
                           ++rootIssuedCount, sha256WithRSAEncryption(),
                           rootName,
-                          now - (10 * ONE_DAY_IN_SECONDS_AS_TIME_T),
-                          now - (2 * ONE_DAY_IN_SECONDS_AS_TIME_T),
+                          tenDaysBeforeNow,
+                          twoDaysBeforeNow,
                           signerName, *signerKeyPair, extensions,
                           *rootKeyPair));
   ASSERT_FALSE(ENCODING_FAILED(signerDER));
@@ -628,8 +628,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_future)
   ByteString signerDER(CreateEncodedCertificate(
                          ++rootIssuedCount, sha256WithRSAEncryption(),
                          rootName,
-                         now + (2 * ONE_DAY_IN_SECONDS_AS_TIME_T),
-                         now + (10 * ONE_DAY_IN_SECONDS_AS_TIME_T),
+                         twoDaysAfterNow,
+                         tenDaysAfterNow,
                          signerName, *signerKeyPair, extensions,
                          *rootKeyPair));
   ASSERT_FALSE(ENCODING_FAILED(signerDER));
