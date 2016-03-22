@@ -19,6 +19,7 @@ Cu.import("chrome://specialpowers/content/MockPermissionPrompt.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // We're loaded with "this" not set to the global in some cases, so we
 // have to play some games to get at the global object here.  Normally
@@ -1959,6 +1960,43 @@ SpecialPowersAPI.prototype = {
   createChromeCache: function(name, url) {
     let principal = this._getPrincipalFromArg(url);
     return wrapIfUnwrapped(new content.window.CacheStorage(name, principal));
+  },
+
+  loadChannelAndReturnStatus: function(url, loadUsingSystemPrincipal) {
+    const BinaryInputStream =
+        Components.Constructor("@mozilla.org/binaryinputstream;1",
+                               "nsIBinaryInputStream",
+                               "setInputStream");
+
+    return new Promise(function(resolve) {
+      let listener = {
+        httpStatus : 0,
+
+        onStartRequest: function(request, context) {
+          request.QueryInterface(Ci.nsIHttpChannel);
+          this.httpStatus = request.responseStatus;
+        },
+
+        onDataAvailable: function(request, context, stream, offset, count) {
+          new BinaryInputStream(stream).readByteArray(count);
+        },
+
+        onStopRequest: function(request, context, status) {
+         /* testing here that the redirect was not followed. If it was followed
+            we would see a http status of 200 and status of NS_OK */
+
+          let httpStatus = this.httpStatus;
+          resolve({status, httpStatus});
+        }
+      };
+      let uri = NetUtil.newURI(url);
+      let channel = NetUtil.newChannel({uri, loadUsingSystemPrincipal});
+
+      channel.loadFlags |= Ci.nsIChannel.LOAD_DOCUMENT_URI;
+      channel.QueryInterface(Ci.nsIHttpChannelInternal);
+      channel.documentURI = uri;
+      channel.asyncOpen2(listener);
+    });
   },
 };
 

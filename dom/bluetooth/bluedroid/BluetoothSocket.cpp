@@ -189,7 +189,7 @@ private:
   /**
    * I/O buffer for received data
    */
-  nsAutoPtr<UnixSocketRawData> mBuffer;
+  UniquePtr<UnixSocketRawData> mBuffer;
 };
 
 class SocketConnectTask final : public SocketIOTask<DroidSocketImpl>
@@ -500,7 +500,7 @@ DroidSocketImpl::QueryReceiveBuffer(
   MOZ_ASSERT(aBuffer);
 
   if (!mBuffer) {
-    mBuffer = new UnixSocketRawData(MAX_READ_SIZE);
+    mBuffer = MakeUnique<UnixSocketRawData>(MAX_READ_SIZE);
   }
   *aBuffer = mBuffer.get();
 
@@ -538,14 +538,14 @@ public:
   }
 
 private:
-  nsAutoPtr<UnixSocketBuffer> mBuffer;
+  UniquePtr<UnixSocketBuffer> mBuffer;
 };
 
 void
 DroidSocketImpl::ConsumeBuffer()
 {
   GetConsumerThread()->PostTask(FROM_HERE,
-                                new ReceiveTask(this, mBuffer.forget()));
+                                new ReceiveTask(this, mBuffer.release()));
 }
 
 void
@@ -759,7 +759,7 @@ BluetoothSocket::Accept(int aListenFd, BluetoothSocketResultHandler* aRes)
 }
 
 void
-BluetoothSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
+BluetoothSocket::ReceiveSocketData(UniquePtr<UnixSocketBuffer>& aBuffer)
 {
   if (mObserver) {
     mObserver->ReceiveSocketData(this, aBuffer);

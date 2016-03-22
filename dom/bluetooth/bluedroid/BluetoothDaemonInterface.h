@@ -10,6 +10,7 @@
 #include "BluetoothInterface.h"
 #include "mozilla/ipc/DaemonSocketConsumer.h"
 #include "mozilla/ipc/ListenSocketConsumer.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace ipc {
@@ -88,18 +89,18 @@ private:
   RefPtr<mozilla::ipc::ListenSocket> mListenSocket;
   RefPtr<mozilla::ipc::DaemonSocket> mCmdChannel;
   RefPtr<mozilla::ipc::DaemonSocket> mNtfChannel;
-  nsAutoPtr<BluetoothDaemonProtocol> mProtocol;
+  UniquePtr<BluetoothDaemonProtocol> mProtocol;
 
   nsTArray<RefPtr<BluetoothResultHandler> > mResultHandlerQ;
 
-  nsAutoPtr<BluetoothDaemonSetupInterface> mSetupInterface;
-  nsAutoPtr<BluetoothDaemonCoreInterface> mCoreInterface;
-  nsAutoPtr<BluetoothDaemonSocketInterface> mSocketInterface;
-  nsAutoPtr<BluetoothDaemonHandsfreeInterface> mHandsfreeInterface;
-  nsAutoPtr<BluetoothDaemonA2dpInterface> mA2dpInterface;
-  nsAutoPtr<BluetoothDaemonAvrcpInterface> mAvrcpInterface;
-  nsAutoPtr<BluetoothDaemonGattInterface> mGattInterface;
-  nsAutoPtr<BluetoothDaemonHidInterface> mHidInterface;
+  UniquePtr<BluetoothDaemonSetupInterface> mSetupInterface;
+  UniquePtr<BluetoothDaemonCoreInterface> mCoreInterface;
+  UniquePtr<BluetoothDaemonSocketInterface> mSocketInterface;
+  UniquePtr<BluetoothDaemonHidInterface> mHidInterface;
+  UniquePtr<BluetoothDaemonHandsfreeInterface> mHandsfreeInterface;
+  UniquePtr<BluetoothDaemonA2dpInterface> mA2dpInterface;
+  UniquePtr<BluetoothDaemonAvrcpInterface> mAvrcpInterface;
+  UniquePtr<BluetoothDaemonGattInterface> mGattInterface;
 };
 
 END_BLUETOOTH_NAMESPACE

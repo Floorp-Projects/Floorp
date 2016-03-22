@@ -9,7 +9,7 @@
 
 #include "BluetoothCommon.h"
 #include "mozilla/Endian.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -315,7 +315,7 @@ public:
   {
     for (int i = 0, length = mHeaders.Length(); i < length; ++i) {
       if (mHeaders[i]->mId == aId) {
-        return mHeaders[i];
+        return mHeaders[i].get();
       }
     }
 
@@ -333,7 +333,7 @@ public:
   }
 
 private:
-  nsTArray<nsAutoPtr<ObexHeader> > mHeaders;
+  nsTArray<UniquePtr<ObexHeader> > mHeaders;
 };
 
 int AppendHeaderName(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aName,

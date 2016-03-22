@@ -411,6 +411,19 @@ LIRGeneratorARM::lowerUrshD(MUrsh* mir)
 }
 
 void
+LIRGeneratorARM::visitAsmSelect(MAsmSelect* ins)
+{
+    MOZ_ASSERT(ins->type() != MIRType_Int64);
+
+    auto* lir = new(alloc()) LAsmSelect(useRegisterAtStart(ins->trueExpr()),
+                                        useRegister(ins->falseExpr()),
+                                        useRegister(ins->condExpr())
+                                       );
+
+    defineReuseInput(lir, ins, LAsmSelect::TrueExprIndex);
+}
+
+void
 LIRGeneratorARM::visitAsmJSNeg(MAsmJSNeg* ins)
 {
     if (ins->type() == MIRType_Int32) {
