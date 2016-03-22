@@ -18,8 +18,21 @@ js::Mutex::Mutex()
   if (!platformData_)
     oom.crash("js::Mutex::Mutex");
 
-  int r = pthread_mutex_init(&platformData()->ptMutex, NULL);
+  pthread_mutexattr_t* attrp = nullptr;
+
+#ifdef DEBUG
+  pthread_mutexattr_t attr;
+  MOZ_ALWAYS_TRUE(pthread_mutexattr_init(&attr) == 0);
+  MOZ_ALWAYS_TRUE(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK) == 0);
+  attrp = &attr;
+#endif
+
+  int r = pthread_mutex_init(&platformData()->ptMutex, attrp);
   MOZ_RELEASE_ASSERT(r == 0);
+
+#ifdef DEBUG
+  MOZ_ALWAYS_TRUE(pthread_mutexattr_destroy(&attr) == 0);
+#endif
 }
 
 js::Mutex::~Mutex()
