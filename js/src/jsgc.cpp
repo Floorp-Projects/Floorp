@@ -7343,6 +7343,11 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
      */
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         zone->checkUniqueIdTableAfterMovingGC();
+
+        // ZoneCellIter could GC were this not called under GC.
+        MOZ_ASSERT(rt->isHeapBusy());
+        JS::AutoSuppressGCAnalysis noAnalysis;
+
         for (ZoneCellIter i(zone, AllocKind::BASE_SHAPE); !i.done(); i.next()) {
             BaseShape* baseShape = i.get<BaseShape>();
             if (baseShape->hasTable())
