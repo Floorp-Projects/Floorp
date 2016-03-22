@@ -634,21 +634,10 @@ DXGITextureHostD3D11::GetDevice()
   return device;
 }
 
-static bool AssertD3D11Compositor(Compositor* aCompositor)
-{
-  bool ok = aCompositor && aCompositor->GetBackendType() == LayersBackend::LAYERS_D3D11;
-  MOZ_ASSERT(ok);
-  return ok;
-}
-
 void
 DXGITextureHostD3D11::SetCompositor(Compositor* aCompositor)
 {
-  if (!AssertD3D11Compositor(aCompositor)) {
-    mCompositor = nullptr;
-    mTextureSource = nullptr;
-    return;
-  }
+  MOZ_ASSERT(aCompositor);
   mCompositor = static_cast<CompositorD3D11*>(aCompositor);
   if (mTextureSource) {
     mTextureSource->SetCompositor(aCompositor);
@@ -755,13 +744,7 @@ DXGIYCbCrTextureHostD3D11::GetDevice()
 void
 DXGIYCbCrTextureHostD3D11::SetCompositor(Compositor* aCompositor)
 {
-  if (!AssertD3D11Compositor(aCompositor)) {
-    mCompositor = nullptr;
-    mTextureSources[0] = nullptr;
-    mTextureSources[1] = nullptr;
-    mTextureSources[2] = nullptr;
-    return;
-  }
+  MOZ_ASSERT(aCompositor);
   mCompositor = static_cast<CompositorD3D11*>(aCompositor);
   if (mTextureSources[0]) {
     mTextureSources[0]->SetCompositor(aCompositor);
@@ -988,9 +971,7 @@ DataTextureSourceD3D11::GetTileRect()
 void
 DataTextureSourceD3D11::SetCompositor(Compositor* aCompositor)
 {
-  if (!AssertD3D11Compositor(aCompositor)) {
-    return;
-  }
+  MOZ_ASSERT(aCompositor);
   mCompositor = static_cast<CompositorD3D11*>(aCompositor);
   if (mNextSibling) {
     mNextSibling->SetCompositor(aCompositor);
