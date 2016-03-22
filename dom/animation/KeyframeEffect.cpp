@@ -15,6 +15,7 @@
 #include "mozilla/KeyframeUtils.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "Layers.h" // For Layer
+#include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetStyleContextForElement
 #include "nsCSSPropertySet.h"
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
@@ -705,13 +706,31 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
     return nullptr;
   }
 
-  InfallibleTArray<AnimationProperty> animationProperties;
-  KeyframeUtils::BuildAnimationPropertyList(aGlobal.Context(), targetElement,
-                                            pseudoType, aFrames,
-                                            animationProperties, aRv);
-
+  nsTArray<Keyframe> keyframes =
+    KeyframeUtils::GetKeyframesFromObject(aGlobal.Context(), aFrames, aRv);
   if (aRv.Failed()) {
     return nullptr;
+  }
+  KeyframeUtils::ApplyDistributeSpacing(keyframes);
+
+  RefPtr<nsStyleContext> styleContext;
+  nsIPresShell* shell = doc->GetShell();
+  if (shell && targetElement) {
+    nsIAtom* pseudo =
+      pseudoType < CSSPseudoElementType::Count ?
+      nsCSSPseudoElements::GetPseudoAtom(pseudoType) : nullptr;
+    styleContext =
+      nsComputedDOMStyle::GetStyleContextForElement(targetElement, pseudo,
+                                                    shell);
+  }
+
+  nsTArray<AnimationProperty> animationProperties;
+  if (styleContext) {
+    animationProperties =
+      KeyframeUtils::GetAnimationPropertiesFromKeyframes(styleContext,
+                                                         targetElement,
+                                                         pseudoType,
+                                                         keyframes);
   }
 
   RefPtr<KeyframeEffectType> effect =
