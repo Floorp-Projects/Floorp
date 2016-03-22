@@ -480,7 +480,7 @@ Event::StopImmediatePropagation()
 NS_IMETHODIMP
 Event::StopCrossProcessForwarding()
 {
-  mEvent->mFlags.mNoCrossProcessBoundaryForwarding = true;
+  mEvent->StopCrossProcessForwarding();
   return NS_OK;
 }
 
