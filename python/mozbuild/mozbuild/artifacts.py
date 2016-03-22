@@ -212,7 +212,7 @@ class LinuxArtifactJob(ArtifactJob):
         'firefox/firefox',
         'firefox/firefox-bin',
         'firefox/platform.ini',
-        'firefox/plugin-container',
+        'firefox/firefox-webcontent',
         'firefox/updater',
         'firefox/**/*.so',
     }
@@ -292,7 +292,7 @@ class MacArtifactJob(ArtifactJob):
                 # 'libreplace_jemalloc.dylib',
                 # 'libreplace_malloc.dylib',
                 'libsoftokn3.dylib',
-                'plugin-container.app/Contents/MacOS/plugin-container',
+                'firefox-webcontent.app/Contents/MacOS/firefox-webcontent',
                 'updater.app/Contents/MacOS/updater',
                 # 'xpcshell',
                 'XUL',
