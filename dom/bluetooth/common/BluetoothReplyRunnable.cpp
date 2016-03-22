@@ -28,7 +28,7 @@ BluetoothReplyRunnable::BluetoothReplyRunnable(nsIDOMDOMRequest* aReq,
 void
 BluetoothReplyRunnable::SetReply(BluetoothReply* aReply)
 {
-  mReply = aReply;
+  mReply.reset(aReply);
 }
 
 void

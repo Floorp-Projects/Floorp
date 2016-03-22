@@ -63,7 +63,7 @@ public:
    *
    * @param aBuffer Data received from the socket.
    */
-  void ReceiveSocketData(nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer);
+  void ReceiveSocketData(UniquePtr<mozilla::ipc::UnixSocketBuffer>& aBuffer);
 
   inline void GetAddress(BluetoothAddress& aDeviceAddress)
   {
