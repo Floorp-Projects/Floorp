@@ -22,6 +22,7 @@ XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function() {
 const {ToolSidebar} = require("devtools/client/framework/sidebar");
 const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const {LocalizationHelper} = require("devtools/client/shared/l10n");
 
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
@@ -29,7 +30,7 @@ Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
  * Localization convenience methods.
  */
 const NET_STRINGS_URI = "chrome://devtools/locale/netmonitor.properties";
-var L10N = new ViewHelpers.L10N(NET_STRINGS_URI);
+var L10N = new LocalizationHelper(NET_STRINGS_URI);
 
 // ms
 const WDA_DEFAULT_VERIFY_INTERVAL = 50;

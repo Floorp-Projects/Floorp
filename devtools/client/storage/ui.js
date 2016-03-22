@@ -7,6 +7,7 @@
 
 const {Cu} = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
+const {LocalizationHelper} = require("devtools/client/shared/l10n");
 
 loader.lazyRequireGetter(this, "TreeWidget",
                          "devtools/client/shared/widgets/TreeWidget", true);
@@ -21,7 +22,7 @@ loader.lazyImporter(this, "VariablesView",
  * Localization convenience methods.
  */
 const STORAGE_STRINGS = "chrome://devtools/locale/storage.properties";
-const L10N = new ViewHelpers.L10N(STORAGE_STRINGS);
+const L10N = new LocalizationHelper(STORAGE_STRINGS);
 
 const GENERIC_VARIABLES_VIEW_SETTINGS = {
   lazyEmpty: true,

@@ -5,6 +5,7 @@
 
 const { Ci, Cc } = require("chrome");
 const { defer, all } = require("promise");
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
 
 loader.lazyImporter(this, "ViewHelpers", "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 loader.lazyRequireGetter(this, "NetworkHelper", "devtools/shared/webconsole/network-helper");
@@ -14,7 +15,7 @@ loader.lazyGetter(this, "appInfo", () => {
 });
 
 loader.lazyGetter(this, "L10N", () => {
-  return new ViewHelpers.L10N("chrome://devtools/locale/har.properties");
+  return new LocalizationHelper("chrome://devtools/locale/har.properties");
 });
 
 const HAR_VERSION = "1.1";

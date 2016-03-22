@@ -6,8 +6,9 @@
 
 const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 const { getSourceNames, parseURL, isScratchpadScheme } = require("devtools/client/shared/source-utils");
-const { L10N } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm").ViewHelpers;
-const l10n = new L10N("chrome://devtools/locale/components.properties");
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
+
+const l10n = new LocalizationHelper("chrome://devtools/locale/components.properties");
 
 module.exports = createClass({
   propTypes: {

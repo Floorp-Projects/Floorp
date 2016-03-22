@@ -10,13 +10,14 @@ const {Cc, Ci, Cu} = require("chrome");
 const {InplaceEditor, editableItem} =
       require("devtools/client/shared/inplace-editor");
 const {ReflowFront} = require("devtools/server/actors/layout");
+const {LocalizationHelper} = require("devtools/client/shared/l10n");
 
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 const STRINGS_URI = "chrome://devtools/locale/shared.properties";
-const SHARED_L10N = new ViewHelpers.L10N(STRINGS_URI);
+const SHARED_L10N = new LocalizationHelper(STRINGS_URI);
 const NUMERIC = /^-?[\d\.]+$/;
 const LONG_TEXT_ROTATE_LIMIT = 3;
 
