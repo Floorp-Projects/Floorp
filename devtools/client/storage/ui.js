@@ -150,8 +150,7 @@ StorageUI.prototype = {
   makeFieldsEditable: function() {
     let actor = this.getCurrentActor();
 
-    if (typeof actor.getEditableFields !== "undefined" &&
-        this.table.datatype !== "sessionStorage") {
+    if (typeof actor.getEditableFields !== "undefined") {
       actor.getEditableFields().then(fields => {
         this.table.makeFieldsEditable(fields);
       });
