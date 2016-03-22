@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_layers_CompositorParent_h
-#define mozilla_layers_CompositorParent_h
+#ifndef mozilla_layers_CompositorBridgeParent_h
+#define mozilla_layers_CompositorBridgeParent_h
 
 // Enable this pref to turn on compositor performance warning.
 // This will print warnings if the compositor isn't meeting
@@ -53,11 +53,11 @@ namespace layers {
 class APZCTreeManager;
 class AsyncCompositionManager;
 class Compositor;
-class CompositorParent;
+class CompositorBridgeParent;
 class LayerManagerComposite;
 class LayerTransactionParent;
 class PAPZParent;
-class CrossProcessCompositorParent;
+class CrossProcessCompositorBridgeParent;
 
 struct ScopedLayerTreeRegistration
 {
@@ -90,7 +90,7 @@ private:
   static base::Thread* CreateCompositorThread();
   static void DestroyCompositorThread(base::Thread* aCompositorThread);
 
-  friend class CompositorParent;
+  friend class CompositorBridgeParent;
 };
 
 /**
@@ -103,7 +103,7 @@ class CompositorVsyncScheduler
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorVsyncScheduler)
 
 public:
-  explicit CompositorVsyncScheduler(CompositorParent* aCompositorParent, nsIWidget* aWidget);
+  explicit CompositorVsyncScheduler(CompositorBridgeParent* aCompositorBridgeParent, nsIWidget* aWidget);
 
 #ifdef MOZ_WIDGET_GONK
   // emulator-ics never trigger the display on/off, so compositor will always
@@ -174,7 +174,7 @@ private:
     CompositorVsyncScheduler* mOwner;
   };
 
-  CompositorParent* mCompositorParent;
+  CompositorBridgeParent* mCompositorBridgeParent;
   TimeStamp mLastCompose;
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
@@ -214,14 +214,14 @@ protected:
   virtual ~CompositorUpdateObserver() {}
 };
 
-class CompositorParent final : public PCompositorBridgeParent,
+class CompositorBridgeParent final : public PCompositorBridgeParent,
                                public ShadowLayersManager
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorParent)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorBridgeParent)
   friend class CompositorVsyncScheduler;
 
 public:
-  explicit CompositorParent(nsIWidget* aWidget,
+  explicit CompositorBridgeParent(nsIWidget* aWidget,
                             bool aUseExternalSurfaceSize = false,
                             int aSurfaceWidth = -1, int aSurfaceHeight = -1);
 
@@ -248,7 +248,7 @@ public:
   virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) override;
 
   // Unused for chrome <-> compositor communication (which this class does).
-  // @see CrossProcessCompositorParent::RecvRequestNotifyAfterRemotePaint
+  // @see CrossProcessCompositorBridgeParent::RecvRequestNotifyAfterRemotePaint
   virtual bool RecvRequestNotifyAfterRemotePaint() override { return true; };
 
   virtual bool RecvClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
@@ -353,12 +353,12 @@ public:
   /**
    * Returns a pointer to the compositor corresponding to the given ID.
    */
-  static CompositorParent* GetCompositor(uint64_t id);
+  static CompositorBridgeParent* GetCompositor(uint64_t id);
 
   /**
    * Returns the compositor thread's message loop.
    *
-   * This message loop is used by CompositorParent, ImageBridgeParent,
+   * This message loop is used by CompositorBridgeParent, ImageBridgeParent,
    * and VRManagerParent
    */
   static MessageLoop* CompositorLoop();
@@ -369,7 +369,7 @@ public:
   static void StartUp();
 
   /**
-   * Waits for all [CrossProcess]CompositorParent's to be gone,
+   * Waits for all [CrossProcess]CompositorBridgeParent's to be gone,
    * and destroys the compositor thread and global compositor map.
    *
    * Does not return until all of that has completed.
@@ -417,12 +417,12 @@ public:
     ~LayerTreeState();
     RefPtr<Layer> mRoot;
     RefPtr<GeckoContentController> mController;
-    CompositorParent* mParent;
+    CompositorBridgeParent* mParent;
     LayerManagerComposite* mLayerManager;
-    // Pointer to the CrossProcessCompositorParent. Used by APZCs to share
+    // Pointer to the CrossProcessCompositorBridgeParent. Used by APZCs to share
     // their FrameMetrics with the corresponding child process that holds
     // the PCompositorBridgeChild
-    CrossProcessCompositorParent* mCrossProcessParent;
+    CrossProcessCompositorBridgeParent* mCrossProcessParent;
     TargetConfig mTargetConfig;
     APZTestData mApzTestData;
     LayerTransactionParent* mLayerTree;
@@ -500,7 +500,7 @@ public:
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
-  virtual ~CompositorParent();
+  virtual ~CompositorBridgeParent();
 
   void DeferredDestroy();
 
@@ -531,11 +531,11 @@ protected:
   /**
    * Add a compositor to the global compositor map.
    */
-  static void AddCompositor(CompositorParent* compositor, uint64_t* id);
+  static void AddCompositor(CompositorBridgeParent* compositor, uint64_t* id);
   /**
    * Remove a compositor from the global compositor map.
    */
-  static CompositorParent* RemoveCompositor(uint64_t id);
+  static CompositorBridgeParent* RemoveCompositor(uint64_t id);
 
    /**
    * Return true if current state allows compositing, that is
@@ -596,10 +596,10 @@ protected:
   bool mPluginWindowsHidden;
 #endif
 
-  DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
+  DISALLOW_EVIL_CONSTRUCTORS(CompositorBridgeParent);
 };
 
 } // namespace layers
 } // namespace mozilla
 
-#endif // mozilla_layers_CompositorParent_h
+#endif // mozilla_layers_CompositorBridgeParent_h

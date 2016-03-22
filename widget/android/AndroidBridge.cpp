@@ -8,8 +8,8 @@
 #include <math.h>
 #include <GLES2/gl2.h>
 
-#include "mozilla/layers/CompositorChild.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 
 #include "mozilla/Hal.h"
 #include "nsXULAppAPI.h"

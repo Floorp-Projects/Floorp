@@ -12,7 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
 
-#include "CompositorParent.h"
+#include "CompositorBridgeParent.h"
 
 namespace mozilla {
 namespace layers {

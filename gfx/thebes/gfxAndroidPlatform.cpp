@@ -31,7 +31,7 @@
 
 #ifdef MOZ_WIDGET_GONK
 #include <cutils/properties.h>
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "HwcComposer2D.h"
 #endif
 

@@ -13,18 +13,17 @@
 #include "nsWindowsHelpers.h"
 #include "Nv3DVUtils.h"
 #include "gfxFailure.h"
-#include "mozilla/layers/PCompositorBridgeParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "gfxPrefs.h"
 #include "gfxCrashReporterUtils.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 
 namespace mozilla {
 namespace layers {
 
 using namespace mozilla::gfx;
 
-CompositorD3D9::CompositorD3D9(CompositorParent* aParent, nsIWidget *aWidget)
+CompositorD3D9::CompositorD3D9(CompositorBridgeParent* aParent, nsIWidget *aWidget)
   : Compositor(aParent)
   , mWidget(aWidget)
   , mDeviceResetCount(0)

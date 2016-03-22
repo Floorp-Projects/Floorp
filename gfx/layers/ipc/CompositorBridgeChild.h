@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_layers_CompositorChild_h
-#define mozilla_layers_CompositorChild_h
+#ifndef mozilla_layers_CompositorBridgeChild_h
+#define mozilla_layers_CompositorBridgeChild_h
 
 #include "base/basictypes.h"            // for DISALLOW_EVIL_CONSTRUCTORS
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
@@ -31,15 +31,15 @@ namespace layers {
 using mozilla::dom::TabChild;
 
 class ClientLayerManager;
-class CompositorParent;
+class CompositorBridgeParent;
 struct FrameMetrics;
 
-class CompositorChild final : public PCompositorBridgeChild
+class CompositorBridgeChild final : public PCompositorBridgeChild
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorBridgeChild)
 
 public:
-  explicit CompositorChild(ClientLayerManager *aLayerManager);
+  explicit CompositorBridgeChild(ClientLayerManager *aLayerManager);
 
   void Destroy();
 
@@ -59,12 +59,12 @@ public:
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
   /**
-   * Initialize the CompositorChild and open the connection in the non-multi-process
+   * Initialize the CompositorBridgeChild and open the connection in the non-multi-process
    * case.
    */
-  bool OpenSameProcess(CompositorParent* aParent);
+  bool OpenSameProcess(CompositorBridgeParent* aParent);
 
-  static CompositorChild* Get();
+  static CompositorBridgeChild* Get();
 
   static bool ChildProcessHasCompositor() { return sCompositor != nullptr; }
 
@@ -132,7 +132,7 @@ public:
 
 private:
   // Private destructor, to discourage deletion outside of Release():
-  virtual ~CompositorChild();
+  virtual ~CompositorBridgeChild();
 
   virtual PLayerTransactionChild*
     AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBackendHints,
@@ -182,9 +182,9 @@ private:
   };
 
   RefPtr<ClientLayerManager> mLayerManager;
-  // When not multi-process, hold a reference to the CompositorParent to keep it
+  // When not multi-process, hold a reference to the CompositorBridgeParent to keep it
   // alive. This reference should be null in multi-process.
-  RefPtr<CompositorParent> mCompositorParent;
+  RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
 
   // The ViewID of the FrameMetrics is used as the key for this hash table.
   // While this should be safe to use since the ViewID is unique
@@ -193,13 +193,13 @@ private:
   // When we're in a child process, this is the process-global
   // compositor that we use to forward transactions directly to the
   // compositor context in another process.
-  static CompositorChild* sCompositor;
+  static CompositorBridgeChild* sCompositor;
 
   // Weakly hold the TabChild that made a request to be alerted when
   // the transaction has been received.
   nsWeakPtr mWeakTabChild;      // type is TabChild
 
-  DISALLOW_EVIL_CONSTRUCTORS(CompositorChild);
+  DISALLOW_EVIL_CONSTRUCTORS(CompositorBridgeChild);
 
   // When we receive overfill numbers, notify these client layer managers
   AutoTArray<ClientLayerManager*,0> mOverfillObservers;
@@ -211,4 +211,4 @@ private:
 } // namespace layers
 } // namespace mozilla
 
-#endif // mozilla_layers_CompositorChild_h
+#endif // mozilla_layers_CompositorBrigedChild_h
