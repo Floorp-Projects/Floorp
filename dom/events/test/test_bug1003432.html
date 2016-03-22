@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1003432
+-->
+<head>
+  <title>Test for Bug 1003432</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1003432">Mozilla Bug 1003432</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1003432 **/
+// Test CustomEvent on worker
+SimpleTest.waitForExplicitFinish();
+var worker = new Worker("test_bug1003432.js");
+ok(worker, "Should have worker!");
+
+var count = 0;
+worker.onmessage = function(evt) {
+  is(evt.data.type, "foobar", "Should get 'foobar' event!");
+  is(evt.data.detail, "test", "Detail should be 'test'.");
+  ok(evt.data.bubbles, "Event should bubble!");
+  ok(evt.data.cancelable, "Event should be cancelable.");
+
+  // wait for test results of constructor and initCustomEvent
+  if (++count == 2) {
+    worker.terminate();
+    SimpleTest.finish();
+  }
+};
+
+worker.postMessage("");
+
+</script>
+</pre>
+</body>
+</html>

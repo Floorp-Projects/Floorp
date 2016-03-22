@@ -95,13 +95,15 @@ RUN yum install -y \
 RUN mkdir -p /home/worker/bin
 COPY bin/repository-url.py /home/worker/bin/repository-url.py
 
+ENV GCC_PATH /home/worker/workspace/gecko/gcc
+
 # Default to mozilla specific python, etc...
 ENV PATH /tools/python27-mercurial/bin:/tools/python27/bin:$PATH
 ENV PATH /tools/tools/buildfarm/utils:$PATH:/home/worker/bin/
-ENV PATH /tools/gcc-4.7.3-0moz1/bin:$PATH
+ENV PATH $GCC_PATH/bin:/tools/gcc-4.7.3-0moz1/bin:$PATH
 
 # Use the libstd++ we installed over all others...
-env LD_LIBRARY_PATH=/tools/gcc-4.7.3-0moz1/lib64:/tools/gcc-4.7.3-0moz1/lib
+env LD_LIBRARY_PATH=$GCC_PATH/lib64:$GCC_PATH/lib:/tools/gcc-4.7.3-0moz1/lib64:/tools/gcc-4.7.3-0moz1/lib
 
 RUN useradd -d /home/worker -s /bin/bash -m worker
 
@@ -126,7 +128,7 @@ RUN wget --no-check-certificate https://pypi.python.org/packages/source/s/setupt
     tar -xvf setuptools-1.4.2.tar.gz && \
     cd setuptools-1.4.2 && python setup.py install && \
     cd - && rm -rf setuptools-1.4.2* && \
-    curl https://raw.githubusercontent.com/pypa/pip/master/contrib/get-pip.py | python - && \
+    curl https://bootstrap.pypa.io/get-pip.py | python - && \
     pip install virtualenv
 
 # Generate machine uuid file

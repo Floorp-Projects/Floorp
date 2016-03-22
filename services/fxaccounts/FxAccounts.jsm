@@ -415,8 +415,8 @@ FxAccountsInternal.prototype = {
   /**
    * Ask the server whether the user's email has been verified
    */
-  checkEmailStatus: function checkEmailStatus(sessionToken) {
-    return this.fxAccountsClient.recoveryEmailStatus(sessionToken);
+  checkEmailStatus: function checkEmailStatus(sessionToken, options = {}) {
+    return this.fxAccountsClient.recoveryEmailStatus(sessionToken, options);
   },
 
   /**
@@ -635,7 +635,7 @@ FxAccountsInternal.prototype = {
 
       if (!this.isUserEmailVerified(data)) {
         log.trace("checkVerificationStatus - forcing verification status check");
-        this.pollEmailStatus(currentState, data.sessionToken, "start");
+        this.pollEmailStatus(currentState, data.sessionToken, "push");
       }
     });
   },
@@ -1032,7 +1032,7 @@ FxAccountsInternal.prototype = {
   // XXX - pollEmailStatus should maybe be on the AccountState object?
   pollEmailStatus: function pollEmailStatus(currentState, sessionToken, why) {
     log.debug("entering pollEmailStatus: " + why);
-    if (why == "start") {
+    if (why == "start" || why == "push") {
       if (this.currentTimer) {
         log.debug("pollEmailStatus starting while existing timer is running");
         clearTimeout(this.currentTimer);
@@ -1055,7 +1055,7 @@ FxAccountsInternal.prototype = {
       }
     }
 
-    this.checkEmailStatus(sessionToken)
+    this.checkEmailStatus(sessionToken, { reason: why })
       .then((response) => {
         log.debug("checkEmailStatus -> " + JSON.stringify(response));
         if (response && response.verified) {

@@ -91,7 +91,7 @@ struct GCPointerPolicy
         if (*vp)
             js::UnsafeTraceManuallyBarrieredEdge(trc, vp, name);
     }
-    static void needsSweep(T* vp) {
+    static bool needsSweep(T* vp) {
         return js::gc::EdgeNeedsSweep(vp);
     }
 };

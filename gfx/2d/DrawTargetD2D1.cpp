@@ -1640,7 +1640,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
         RefPtr<ID2D1Image> oldTarget;
         RefPtr<ID2D1Bitmap1> tmpBitmap;
         mDC->CreateBitmap(D2D1::SizeU(pat->mSurface->GetSize().width, pat->mSurface->GetSize().height), nullptr, 0,
-                          &D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET, D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED)),
+                          D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET, D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED)),
                           getter_AddRefs(tmpBitmap));
         mDC->GetTarget(getter_AddRefs(oldTarget));
         mDC->SetTarget(tmpBitmap);

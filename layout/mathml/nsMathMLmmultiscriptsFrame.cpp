@@ -185,9 +185,8 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
 
   // get x-height (an ex)
   const nsStyleFont* font = aFrame->StyleFont();
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(baseFrame, getter_AddRefs(fm),
-                                        aFontSizeInflation);
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetFontMetricsForFrame(baseFrame, aFontSizeInflation);
 
   nscoord xHeight = fm->XHeight();
 

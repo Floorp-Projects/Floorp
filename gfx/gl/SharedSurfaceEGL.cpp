@@ -39,7 +39,7 @@ SharedSurface_EGLImage::Create(GLContext* prodGL,
         return Move(ret);
     }
 
-    EGLClientBuffer buffer = reinterpret_cast<EGLClientBuffer>(prodTex);
+    EGLClientBuffer buffer = reinterpret_cast<EGLClientBuffer>(uintptr_t(prodTex));
     EGLImage image = egl->fCreateImage(egl->Display(), context,
                                        LOCAL_EGL_GL_TEXTURE_2D, buffer,
                                        nullptr);
@@ -197,7 +197,7 @@ SharedSurface_EGLImage::ReadbackBySharedHandle(gfx::DataSourceSurface* out_surfa
 
 /*static*/ UniquePtr<SurfaceFactory_EGLImage>
 SurfaceFactory_EGLImage::Create(GLContext* prodGL, const SurfaceCaps& caps,
-                                const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                const RefPtr<layers::ClientIPCAllocator>& allocator,
                                 const layers::TextureFlags& flags)
 {
     EGLContext context = GLContextEGL::Cast(prodGL)->mContext;

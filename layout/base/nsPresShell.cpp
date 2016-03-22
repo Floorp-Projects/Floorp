@@ -10341,10 +10341,11 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       // We don't care about the document language or user fonts here;
       // just get a default Latin font.
       nsFont font(eFamily_serif, nsPresContext::CSSPixelsToAppUnits(11));
-      RefPtr<nsFontMetrics> fm;
-      aPresContext->DeviceContext()->GetMetricsFor(font,
-        nsGkAtoms::x_western, false, gfxFont::eHorizontal, nullptr,
-        aPresContext->GetTextPerfMetrics(), *getter_AddRefs(fm));
+      nsFontMetrics::Params params;
+      params.language = nsGkAtoms::x_western;
+      params.textPerf = aPresContext->GetTextPerfMetrics();
+      RefPtr<nsFontMetrics> fm =
+        aPresContext->DeviceContext()->GetMetricsFor(font, params);
 
       char buf[16];
       int len = snprintf_literal(buf, "%d", counter->mCount);

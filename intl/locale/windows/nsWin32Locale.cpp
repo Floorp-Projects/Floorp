@@ -733,11 +733,13 @@ test_internal_tables(void)
 		i++;
 	}
 	if (i!=LENGTH_MAPPING_LIST)
-		fprintf(stderr,"nsLocale: language_list length is %d, reported length is %d\n",i,LENGTH_MAPPING_LIST);
+		fprintf(stderr,"nsLocale: language_list length is %u, reported length is %u\n",
+		        unsigned(i), unsigned(LENGTH_MAPPING_LIST));
 
 	for(i=0;i<LENGTH_MAPPING_LIST;i++) {
 		if (strcmp(iso_list[i].iso_code,dbg_list[i].iso_code)!=0) {
-			fprintf(stderr,"nsLocale: iso_list and dbg_list differet at item: %d\n",i);
+			fprintf(stderr,"nsLocale: iso_list and dbg_list different at item: %u\n",
+			        unsigned(i));
 		}
 	}
 }

@@ -21,9 +21,9 @@ public:
   static BufferTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                    gfx::BackendType aMoz2DBackend,TextureFlags aFlags,
                                    TextureAllocationFlags aAllocFlags,
-                                   ISurfaceAllocator* aAllocator);
+                                   ClientIPCAllocator* aAllocator);
 
-  static BufferTextureData* CreateForYCbCr(ISurfaceAllocator* aAllocator,
+  static BufferTextureData* CreateForYCbCr(ClientIPCAllocator* aAllocator,
                                            gfx::IntSize aYSize,
                                            gfx::IntSize aCbCrSize,
                                            StereoMode aStereoMode,
@@ -32,7 +32,7 @@ public:
   // It is generally better to use CreateForYCbCr instead.
   // This creates a half-initialized texture since we don't know the sizes and
   // offsets in the buffer.
-  static BufferTextureData* CreateForYCbCrWithBufferSize(ISurfaceAllocator* aAllocator,
+  static BufferTextureData* CreateForYCbCrWithBufferSize(ClientIPCAllocator* aAllocator,
                                                          gfx::SurfaceFormat aFormat,
                                                          int32_t aSize,
                                                          TextureFlags aTextureFlags);
@@ -64,7 +64,7 @@ public:
   void SetDesciptor(const BufferDescriptor& aDesc);
 
 protected:
-  static BufferTextureData* CreateInternal(ISurfaceAllocator* aAllocator,
+  static BufferTextureData* CreateInternal(ClientIPCAllocator* aAllocator,
                                            const BufferDescriptor& aDesc,
                                            gfx::BackendType aMoz2DBackend,
                                            int32_t aBufferSize,

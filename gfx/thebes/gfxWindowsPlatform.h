@@ -26,6 +26,7 @@
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
 
+#include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 
 #include <windows.h>
@@ -204,14 +205,14 @@ public:
     IDWriteRenderingParams *GetRenderingParams(TextRenderingMode aRenderMode)
     { return mRenderingParams[aRenderMode]; }
 
+    bool GetD3D11Device(RefPtr<ID3D11Device>* aOutDevice);
+    bool GetD3D11DeviceForCurrentThread(RefPtr<ID3D11Device>* aOutDevice);
+    bool GetD3D11ImageBridgeDevice(RefPtr<ID3D11Device>* aOutDevice);
+
     void OnDeviceManagerDestroy(mozilla::layers::DeviceManagerD3D9* aDeviceManager);
     mozilla::layers::DeviceManagerD3D9* GetD3D9DeviceManager();
     IDirect3DDevice9* GetD3D9Device();
-    ID3D11Device *GetD3D11Device();
     ID3D11Device *GetD3D11ContentDevice();
-    ID3D11Device* GetD3D11DeviceForCurrentThread();
-    // Device to be used on the ImageBridge thread
-    ID3D11Device *GetD3D11ImageBridgeDevice();
 
     // Create a D3D11 device to be used for DXVA decoding.
     already_AddRefed<ID3D11Device> CreateD3D11DecoderDevice();
@@ -291,11 +292,15 @@ private:
 
     mozilla::gfx::FeatureStatus AttemptD3D11DeviceCreation();
     bool AttemptD3D11DeviceCreationHelper(
-        IDXGIAdapter1* aAdapter, HRESULT& aResOut);
+        IDXGIAdapter1* aAdapter,
+        RefPtr<ID3D11Device>& aOutDevice,
+        HRESULT& aResOut);
 
     mozilla::gfx::FeatureStatus AttemptWARPDeviceCreation();
     bool AttemptWARPDeviceCreationHelper(
-        mozilla::ScopedGfxFeatureReporter& aReporterWARP, HRESULT& aResOut);
+        mozilla::ScopedGfxFeatureReporter& aReporterWARP,
+        RefPtr<ID3D11Device>& aOutDevice,
+        HRESULT& aResOut);
 
     bool AttemptD3D11ImageBridgeDeviceCreationHelper(
         IDXGIAdapter1* aAdapter, HRESULT& aResOut);
@@ -318,17 +323,19 @@ private:
     RefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
     DWRITE_MEASURING_MODE mMeasuringMode;
 
+    mozilla::Mutex mDeviceLock;
     RefPtr<IDXGIAdapter1> mAdapter;
-    RefPtr<mozilla::layers::DeviceManagerD3D9> mDeviceManager;
     RefPtr<ID3D11Device> mD3D11Device;
     RefPtr<ID3D11Device> mD3D11ContentDevice;
     RefPtr<ID3D11Device> mD3D11ImageBridgeDevice;
-    RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
+    RefPtr<mozilla::layers::DeviceManagerD3D9> mDeviceManager;
     bool mIsWARP;
     bool mHasDeviceReset;
     bool mHasFakeDeviceReset;
     bool mCompositorD3D11TextureSharingWorks;
     DeviceResetReason mDeviceResetReason;
+
+    RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
 
     // These should not be accessed directly. Use the Get[Feature]Status
     // accessors instead.

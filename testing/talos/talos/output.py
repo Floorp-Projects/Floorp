@@ -260,7 +260,8 @@ class PerfherderOutput(Output):
                     counter_subtests.append(subtest)
 
                     if test.using_xperf:
-                        subtest['value'] = vals[0]
+                        if len(vals) > 0:
+                            subtest['value'] = vals[0]
                     else:
                         # calculate mean value
                         if len(vals) > 0:

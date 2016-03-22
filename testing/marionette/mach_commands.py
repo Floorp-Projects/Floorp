@@ -67,7 +67,7 @@ def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
     args.logger = commandline.setup_logging("Marionette Unit Tests",
                                             args,
                                             {"mach": sys.stdout})
-    failed = MarionetteHarness(MarionetteTestRunner, args=args).run()
+    failed = MarionetteHarness(MarionetteTestRunner, args=vars(args)).run()
     if failed > 0:
         return 1
     else:

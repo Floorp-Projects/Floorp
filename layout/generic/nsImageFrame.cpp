@@ -1130,9 +1130,8 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
   // Set font and color
   aRenderingContext.ThebesContext()->
     SetColor(Color::FromABGR(StyleColor()->mColor));
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-    nsLayoutUtils::FontSizeInflationFor(this));
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
 
   // Format the text to display within the formatting rect
 

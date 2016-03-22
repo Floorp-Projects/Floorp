@@ -76,7 +76,7 @@ public:
   virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
 
   virtual TextureData*
-  CreateSimilar(ISurfaceAllocator* aAllocator,
+  CreateSimilar(ClientIPCAllocator* aAllocator,
                 TextureFlags aFlags,
                 TextureAllocationFlags aAllocFlags) const override;
 
@@ -85,7 +85,7 @@ public:
 
   ID3D11Texture2D* GetD3D11Texture() { return mTexture; }
 
-  virtual void Deallocate(ISurfaceAllocator* aAllocator) override;
+  virtual void Deallocate(ClientIPCAllocator* aAllocator) override;
 
   D3D11TextureData* AsD3D11TextureData() override {
     return this;
@@ -107,13 +107,13 @@ already_AddRefed<TextureClient>
 CreateD3D11extureClientWithDevice(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                   TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags,
                                   ID3D11Device* aDevice,
-                                  ISurfaceAllocator* aAllocator);
+                                  ClientIPCAllocator* aAllocator);
 
 class DXGIYCbCrTextureData : public TextureData
 {
 public:
   static DXGIYCbCrTextureData*
-  Create(ISurfaceAllocator* aAllocator,
+  Create(ClientIPCAllocator* aAllocator,
          TextureFlags aFlags,
          IUnknown* aTextureY,
          IUnknown* aTextureCb,
@@ -126,7 +126,7 @@ public:
          const gfx::IntSize& aSizeCbCr);
 
   static DXGIYCbCrTextureData*
-  Create(ISurfaceAllocator* aAllocator,
+  Create(ClientIPCAllocator* aAllocator,
          TextureFlags aFlags,
          ID3D11Texture2D* aTextureCb,
          ID3D11Texture2D* aTextureY,
@@ -156,9 +156,9 @@ public:
   // (ex. component alpha) because the underlying texture is always created by
   // an external producer.
   virtual DXGIYCbCrTextureData*
-  CreateSimilar(ISurfaceAllocator*, TextureFlags, TextureAllocationFlags) const override { return nullptr; }
+  CreateSimilar(ClientIPCAllocator*, TextureFlags, TextureAllocationFlags) const override { return nullptr; }
 
-  virtual void Deallocate(ISurfaceAllocator* aAllocator) override;
+  virtual void Deallocate(ClientIPCAllocator* aAllocator) override;
 
   virtual bool UpdateFromSurface(gfx::SourceSurface*) override { return false; }
 
@@ -278,7 +278,7 @@ already_AddRefed<TextureClient>
 CreateD3D11TextureClientWithDevice(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                    TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags,
                                    ID3D11Device* aDevice,
-                                   ISurfaceAllocator* aAllocator);
+                                   ClientIPCAllocator* aAllocator);
 
 
 /**
@@ -310,7 +310,7 @@ public:
   }
 
 protected:
-  ID3D11Device* GetDevice();
+  RefPtr<ID3D11Device> GetDevice();
 
   bool OpenSharedHandle();
 
@@ -349,7 +349,7 @@ public:
   }
 
 protected:
-  ID3D11Device* GetDevice();
+  RefPtr<ID3D11Device> GetDevice();
 
   bool OpenSharedHandle();
 
