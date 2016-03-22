@@ -249,7 +249,7 @@ class BlobURLsReporter final : public nsIMemoryReporter
       }
 
       nsCOMPtr<nsIStackFrame> caller;
-      nsresult rv = frame->GetCaller(getter_AddRefs(caller));
+      nsresult rv = frame->GetCaller(cx, getter_AddRefs(caller));
       NS_ENSURE_SUCCESS_VOID(rv);
       caller.swap(frame);
     }

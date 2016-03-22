@@ -1080,7 +1080,7 @@ ReifyStack(JSContext* aCx, nsIStackFrame* aStack,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStackFrame> caller;
-    rv = stack->GetCaller(getter_AddRefs(caller));
+    rv = stack->GetCaller(aCx, getter_AddRefs(caller));
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!caller) {

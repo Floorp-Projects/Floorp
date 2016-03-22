@@ -71,7 +71,7 @@ SandboxLogJSStack(void)
     }
 
     nsCOMPtr<nsIStackFrame> nextFrame;
-    nsresult rv = frame->GetCaller(getter_AddRefs(nextFrame));
+    nsresult rv = frame->GetCaller(cx, getter_AddRefs(nextFrame));
     NS_ENSURE_SUCCESS_VOID(rv);
     frame = nextFrame;
   }
