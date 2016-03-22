@@ -1,15 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests that ViewHelpers.Prefs work properly with custom types of Float and Json.
+// Tests that preference helpers work properly with custom types of Float and Json.
 
-var {ViewHelpers} = Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm", {});
+var { PrefsHelper } = require("devtools/client/shared/prefs");
 
 function test() {
   let originalJson = Services.prefs.getCharPref("devtools.performance.timeline.hidden-markers");
   let originalFloat = Services.prefs.getCharPref("devtools.performance.memory.sample-probability");
 
-  let Prefs = new ViewHelpers.Prefs("devtools.performance", {
+  let Prefs = new PrefsHelper("devtools.performance", {
     "float": ["Float", "memory.sample-probability"],
     "json": ["Json", "timeline.hidden-markers"]
   });

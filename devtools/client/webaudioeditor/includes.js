@@ -16,11 +16,13 @@ var { EventTarget } = require("sdk/event/target");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { Class } = require("sdk/core/heritage");
 const EventEmitter = require("devtools/shared/event-emitter");
-const STRINGS_URI = "chrome://devtools/locale/webaudioeditor.properties"
-const L10N = new ViewHelpers.L10N(STRINGS_URI);
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
+
+const STRINGS_URI = "chrome://devtools/locale/webaudioeditor.properties"
+const L10N = new LocalizationHelper(STRINGS_URI);
 
 loader.lazyRequireGetter(this, "LineGraphWidget",
   "devtools/client/shared/widgets/LineGraphWidget");

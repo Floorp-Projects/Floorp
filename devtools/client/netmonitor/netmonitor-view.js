@@ -22,6 +22,8 @@ XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function() {
 const {ToolSidebar} = require("devtools/client/framework/sidebar");
 const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const {LocalizationHelper} = require("devtools/client/shared/l10n");
+const {PrefsHelper} = require("devtools/client/shared/prefs");
 
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
@@ -29,7 +31,7 @@ Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
  * Localization convenience methods.
  */
 const NET_STRINGS_URI = "chrome://devtools/locale/netmonitor.properties";
-var L10N = new ViewHelpers.L10N(NET_STRINGS_URI);
+var L10N = new LocalizationHelper(NET_STRINGS_URI);
 
 // ms
 const WDA_DEFAULT_VERIFY_INTERVAL = 50;
@@ -44,7 +46,7 @@ const WDA_DEFAULT_GIVE_UP_TIMEOUT = DevToolsUtils.testing ? 45000 : 2000;
 /**
  * Shortcuts for accessing various network monitor preferences.
  */
-var Prefs = new ViewHelpers.Prefs("devtools.netmonitor", {
+var Prefs = new PrefsHelper("devtools.netmonitor", {
   networkDetailsWidth: ["Int", "panes-network-details-width"],
   networkDetailsHeight: ["Int", "panes-network-details-height"],
   statistics: ["Bool", "statistics"],

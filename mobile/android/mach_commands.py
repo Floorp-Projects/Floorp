@@ -15,6 +15,10 @@ from mozbuild.base import (
     MachCommandConditions as conditions,
 )
 
+from mozbuild.shellutil import (
+    split as shell_split,
+)
+
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
@@ -63,6 +67,8 @@ class MachCommands(MachCommandBase):
         # $JAVA_HOME/bin/java into $JAVA_HOME.
         java_home = os.path.dirname(os.path.dirname(self.substs['JAVA']))
 
+        gradle_flags = shell_split(self.substs.get('GRADLE_FLAGS', ''))
+
         # We force the Gradle JVM to run with the UTF-8 encoding, since we
         # filter strings.xml, which is really UTF-8; the ellipsis character is
         # replaced with ??? in some encodings (including ASCII).  It's not yet
@@ -72,7 +78,7 @@ class MachCommands(MachCommandBase):
         # Android tools expect UTF-8: see
         # http://tools.android.com/knownissues/encoding.  See
         # http://stackoverflow.com/a/21267635 for discussion of this approach.
-        return self.run_process([self.substs['GRADLE']] + args,
+        return self.run_process([self.substs['GRADLE']] + gradle_flags + args,
             append_env={
                 'GRADLE_OPTS': '-Dfile.encoding=utf-8',
                 'JAVA_HOME': java_home,

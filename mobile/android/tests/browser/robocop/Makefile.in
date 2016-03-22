@@ -54,7 +54,9 @@ JAVAFILES += \
 
 include $(topsrcdir)/config/rules.mk
 
+ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 tools:: $(ANDROID_APK_NAME).apk
+endif
 
 # The test APK needs to know the contents of the target APK while not
 # being linked against them.  This is a best effort to avoid getting
