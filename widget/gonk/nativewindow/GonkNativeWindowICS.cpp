@@ -319,7 +319,7 @@ status_t GonkNativeWindow::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
     }  // end lock scope
 
     if (alloc) {
-        ISurfaceAllocator* allocator = ImageBridgeChild::GetSingleton();
+        ClientIPCAllocator* allocator = ImageBridgeChild::GetSingleton();
         usage |= GraphicBuffer::USAGE_HW_TEXTURE;
         GrallocTextureData* texData = GrallocTextureData::Create(IntSize(w, h), format,
                                                                  gfx::BackendType::NONE, usage,
