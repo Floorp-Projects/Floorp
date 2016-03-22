@@ -404,7 +404,7 @@ IPDL_SOURCES = [
     'ipc/LayersSurfaces.ipdlh',
     'ipc/PAPZ.ipdl',
     'ipc/PCompositable.ipdl',
-    'ipc/PCompositor.ipdl',
+    'ipc/PCompositorBridge.ipdl',
     'ipc/PImageBridge.ipdl',
     'ipc/PImageContainer.ipdl',
     'ipc/PLayer.ipdl',

@@ -31,7 +31,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/LayersMessages.h"  // for TargetConfig
-#include "mozilla/layers/PCompositorParent.h"
+#include "mozilla/layers/PCompositorBridgeParent.h"
 #include "mozilla/layers/ShadowLayersManager.h" // for ShadowLayersManager
 #include "mozilla/layers/APZTestData.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
@@ -214,7 +214,7 @@ protected:
   virtual ~CompositorUpdateObserver() {}
 };
 
-class CompositorParent final : public PCompositorParent,
+class CompositorParent final : public PCompositorBridgeParent,
                                public ShadowLayersManager
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorParent)
@@ -409,7 +409,7 @@ public:
    * A new child process has been configured to push transactions
    * directly to us.  Transport is to its thread context.
    */
-  static PCompositorParent*
+  static PCompositorBridgeParent*
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
   struct LayerTreeState {
@@ -421,7 +421,7 @@ public:
     LayerManagerComposite* mLayerManager;
     // Pointer to the CrossProcessCompositorParent. Used by APZCs to share
     // their FrameMetrics with the corresponding child process that holds
-    // the PCompositorChild
+    // the PCompositorBridgeChild
     CrossProcessCompositorParent* mCrossProcessParent;
     TargetConfig mTargetConfig;
     APZTestData mApzTestData;
@@ -431,7 +431,7 @@ public:
     RefPtr<CompositorUpdateObserver> mLayerTreeReadyObserver;
     RefPtr<CompositorUpdateObserver> mLayerTreeClearedObserver;
 
-    PCompositorParent* CrossProcessPCompositor() const;
+    PCompositorBridgeParent* CrossProcessPCompositorBridge() const;
   };
 
   /**
