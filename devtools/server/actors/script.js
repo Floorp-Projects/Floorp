@@ -1260,7 +1260,6 @@ ThreadActor.prototype = {
 
     // Return request.count frames, or all remaining
     // frames if count is not defined.
-    let frames = [];
     let promises = [];
     for (; frame && (!count || i < (start + count)); i++, frame=frame.older) {
       let form = this._createFrameActor(frame).form();
@@ -1271,22 +1270,25 @@ ThreadActor.prototype = {
         form.where.line,
         form.where.column
       )).then((originalLocation) => {
-        if (originalLocation.originalSourceActor) {
-          let sourceForm = originalLocation.originalSourceActor.form();
-          form.where = {
-            source: sourceForm,
-            line: originalLocation.originalLine,
-            column: originalLocation.originalColumn
-          };
-          form.source = sourceForm;
-          frames.push(form);
+        if (!originalLocation.originalSourceActor) {
+          return null;
         }
+
+        let sourceForm = originalLocation.originalSourceActor.form();
+        form.where = {
+          source: sourceForm,
+          line: originalLocation.originalLine,
+          column: originalLocation.originalColumn
+        };
+        form.source = sourceForm;
+        return form;
       });
       promises.push(promise);
     }
 
-    return all(promises).then(function () {
-      return { frames: frames };
+    return all(promises).then(function (frames) {
+      // Filter null values because sourcemapping may have failed.
+      return { frames: frames.filter(x => !!x) };
     });
   },
 
