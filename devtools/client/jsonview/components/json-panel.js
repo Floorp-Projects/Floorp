@@ -59,10 +59,19 @@ define(function(require, exports, module) {
       return json.indexOf(this.props.searchFilter) >= 0;
     },
 
-    render: function() {
-      let content;
-      let data = this.props.data;
+    renderValue: props => {
+      let member = props.member;
 
+      // Hide object summary when object is expanded (bug 1244912).
+      if (typeof member.value == "object" && member.open) {
+        return null;
+      }
+
+      // Render the value (summary) using Reps library.
+      return Rep(props);
+    },
+
+    renderTree: function() {
       // Append custom column for displaying values. This column
       // Take all available horizontal space.
       let columns = [{
@@ -70,18 +79,23 @@ define(function(require, exports, module) {
         width: "100%"
       }];
 
+      // Render tree component.
+      return TreeView({
+        object: this.props.data,
+        mode: "tiny",
+        onFilter: this.onFilter.bind(this),
+        columns: columns,
+        renderValue: this.renderValue
+      });
+    },
+
+    render: function() {
+      let content;
+      let data = this.props.data;
+
       try {
         if (typeof data == "object") {
-          // Render tree component. Use Reps to render JSON values.
-          content = TreeView({
-            object: this.props.data,
-            mode: "tiny",
-            onFilter: this.onFilter.bind(this),
-            columns: columns,
-            renderValue: props => {
-              return Rep(props);
-            }
-          });
+          content = this.renderTree();
         } else {
           content = div({className: "jsonParseError"},
             data + ""
