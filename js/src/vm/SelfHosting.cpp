@@ -1785,15 +1785,66 @@ js::ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args)
 
 // ES6, 25.4.1.6.
 static bool
-intrinsic_EnqueuePromiseJob(JSContext* cx, unsigned argc, Value* vp)
+intrinsic_EnqueuePromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
-    MOZ_ASSERT(args[0].toObject().is<PromiseObject>());
-    MOZ_ASSERT(args[1].toObject().is<JSFunction>());
+    MOZ_ASSERT(args[0].toObject().as<NativeObject>().getDenseInitializedLength() == 4);
 
-    RootedObject promise(cx, &args[0].toObject());
-    RootedFunction job(cx, &args[1].toObject().as<JSFunction>());
+    // When using JS::AddPromiseReactions, no actual promise is created, so we
+    // might not have one here.
+    RootedObject promise(cx);
+    if (args[1].isObject())
+        promise = UncheckedUnwrap(&args[1].toObject());
+
+#ifdef DEBUG
+    MOZ_ASSERT_IF(promise, promise->is<PromiseObject>());
+    RootedNativeObject jobArgs(cx, &args[0].toObject().as<NativeObject>());
+    MOZ_ASSERT((jobArgs->getDenseElement(0).isNumber() &&
+                (jobArgs->getDenseElement(0).toNumber() == PROMISE_HANDLER_IDENTITY ||
+                 jobArgs->getDenseElement(0).toNumber() == PROMISE_HANDLER_THROWER)) ||
+               jobArgs->getDenseElement(0).toObject().isCallable());
+    MOZ_ASSERT(jobArgs->getDenseElement(2).toObject().isCallable());
+    MOZ_ASSERT(jobArgs->getDenseElement(3).toObject().isCallable());
+#endif
+
+    RootedAtom funName(cx, cx->names().empty);
+    RootedFunction job(cx, NewNativeFunction(cx, PromiseReactionJob, 0, funName,
+                                             gc::AllocKind::FUNCTION_EXTENDED));
+    if (!job)
+        return false;
+
+    job->setExtendedSlot(0, args[0]);
+    if (!cx->runtime()->enqueuePromiseJob(cx, job, promise))
+        return false;
+    args.rval().setUndefined();
+    return true;
+}
+
+// ES6, 25.4.1.6.
+static bool
+intrinsic_EnqueuePromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+#ifdef DEBUG
+    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(UncheckedUnwrap(&args[1].toObject())->is<PromiseObject>());
+    RootedNativeObject jobArgs(cx, &args[0].toObject().as<NativeObject>());
+    MOZ_ASSERT(jobArgs->getDenseInitializedLength() == 3);
+    MOZ_ASSERT(jobArgs->getDenseElement(0).toObject().isCallable());
+    MOZ_ASSERT(jobArgs->getDenseElement(1).isObject());
+    MOZ_ASSERT(UncheckedUnwrap(&jobArgs->getDenseElement(2).toObject())->is<PromiseObject>());
+#endif
+
+    RootedAtom funName(cx, cx->names().empty);
+    RootedFunction job(cx, NewNativeFunction(cx, PromiseResolveThenableJob, 0, funName,
+                                             gc::AllocKind::FUNCTION_EXTENDED));
+    if (!job)
+        return false;
+
+    job->setExtendedSlot(0, args[0]);
+    RootedObject promise(cx, CheckedUnwrap(&args[1].toObject()));
     if (!cx->runtime()->enqueuePromiseJob(cx, job, promise))
         return false;
     args.rval().setUndefined();
@@ -2440,7 +2491,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("IsPromise",                      intrinsic_IsInstanceOfBuiltin<PromiseObject>, 1,0),
     JS_FN("IsWrappedPromise",               intrinsic_IsWrappedPromiseObject,     1, 0),
-    JS_FN("_EnqueuePromiseJob",             intrinsic_EnqueuePromiseJob,          1, 0),
+    JS_FN("_EnqueuePromiseReactionJob",     intrinsic_EnqueuePromiseReactionJob,  2, 0),
+    JS_FN("_EnqueuePromiseResolveThenableJob", intrinsic_EnqueuePromiseResolveThenableJob, 2, 0),
     JS_FN("HostPromiseRejectionTracker",    intrinsic_HostPromiseRejectionTracker,2, 0),
     JS_FN("_GetOriginalPromiseConstructor", intrinsic_OriginalPromiseConstructor, 0, 0),
     JS_FN("RejectUnwrappedPromise",         intrinsic_RejectUnwrappedPromise,     2, 0),
