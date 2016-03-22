@@ -12,6 +12,7 @@
 #include "mozilla/dom/UnionTypes.h" // For OwningUnrestrictedDoubleOrString
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StickyTimeDuration.h"
 #include "mozilla/TimeStamp.h" // for TimeDuration
 
 // X11 has a #define for None
