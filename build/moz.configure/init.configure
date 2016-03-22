@@ -133,8 +133,13 @@ def add_old_configure_assignment(var, value):
     @depends(old_configure_assignments)
     @advanced
     def add_assignment(assignments):
-        from mozbuild.shellutil import quote
-        assignments.append('%s=%s' % (var, quote(value)))
+        if value is True:
+            assignments.append('%s=1' % var)
+        elif value is False:
+            assignments.append('%s=' % var)
+        else:
+            from mozbuild.shellutil import quote
+            assignments.append('%s=%s' % (var, quote(value)))
 
 @template
 def add_old_configure_arg(arg):
