@@ -339,8 +339,7 @@ APZEventState::ProcessWheelEvent(const WidgetWheelEvent& aEvent,
 {
   // If this event starts a swipe, indicate that it shouldn't result in a
   // scroll by setting defaultPrevented to true.
-  bool defaultPrevented =
-    aEvent.mFlags.mDefaultPrevented || aEvent.TriggersSwipe();
+  bool defaultPrevented = aEvent.DefaultPrevented() || aEvent.TriggersSwipe();
   mContentReceivedInputBlockCallback(aGuid, aInputBlockId, defaultPrevented);
 }
 

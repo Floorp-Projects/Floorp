@@ -164,6 +164,15 @@ public:
   {
     mDefaultPrevented = true;
   }
+  inline bool DefaultPrevented() const
+  {
+    return mDefaultPrevented;
+  }
+  inline bool DefaultPreventedByContent() const
+  {
+    MOZ_ASSERT(!mDefaultPreventedByContent || DefaultPrevented());
+    return mDefaultPreventedByContent;
+  }
 
   inline void Clear()
   {
@@ -354,6 +363,11 @@ public:
     mFlags.PreventDefault(aCalledByDefaultHandler);
   }
   void PreventDefaultBeforeDispatch() { mFlags.PreventDefaultBeforeDispatch(); }
+  bool DefaultPrevented() const { return mFlags.DefaultPrevented(); }
+  bool DefaultPreventedByContent() const
+  {
+    return mFlags.DefaultPreventedByContent();
+  }
 
   /**
    * Utils for checking event types

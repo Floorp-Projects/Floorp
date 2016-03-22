@@ -1207,8 +1207,8 @@ NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
 
   KeyboardLayout::NotifyIdleServiceOfUserActivity();
 
-  return aKeyEvent.mFlags.mDefaultPrevented ? nsEventStatus_eConsumeNoDefault :
-                                              nsEventStatus_eIgnore;
+  return aKeyEvent.DefaultPrevented() ? nsEventStatus_eConsumeNoDefault :
+                                        nsEventStatus_eIgnore;
 }
 
 bool

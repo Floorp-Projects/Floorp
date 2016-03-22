@@ -2139,7 +2139,7 @@ TabParent::RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent)
       PresShell::BeforeAfterKeyboardEventEnabled() &&
       localEvent.mMessage != eKeyPress) {
     presShell->DispatchAfterKeyboardEvent(mFrameElement, localEvent,
-                                          aEvent.mFlags.mDefaultPrevented);
+                                          aEvent.DefaultPrevented());
   }
 
   return true;
