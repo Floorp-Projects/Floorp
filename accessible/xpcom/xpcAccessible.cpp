@@ -25,10 +25,11 @@ xpcAccessible::GetParent(nsIAccessible** aParent)
 {
   NS_ENSURE_ARG_POINTER(aParent);
   *aParent = nullptr;
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aParent = ToXPC(Intl()->Parent()));
+  AccessibleOrProxy parent = IntlGeneric().Parent();
+  NS_IF_ADDREF(*aParent = ToXPC(parent));
   return NS_OK;
 }
 
