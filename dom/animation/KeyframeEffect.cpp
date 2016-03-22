@@ -1725,15 +1725,15 @@ KeyframeEffectReadOnly::BuildAnimationPropertyList(
 {
   MOZ_ASSERT(aResult.IsEmpty());
 
-  // A frame list specification in the spec is essentially:
+  // See the description of frame lists in the spec:
   //
-  // (PropertyIndexedKeyframe or sequence<Keyframe> or SharedKeyframeList)
+  // https://w3c.github.io/web-animations/#processing-a-frames-argument
   //
-  // We don't support SharedKeyframeList yet, but we do the other two.  We
-  // manually implement the parts of JS-to-IDL union conversion algorithm
-  // from the Web IDL spec, since we have to represent this an object? so
-  // we can look at the open-ended set of properties on a
-  // PropertyIndexedKeyframe or Keyframe.
+  // We don't support SharedKeyframeList yet, but we do support the other
+  // types of arguments.  We manually implement the parts of JS-to-IDL union
+  // conversion algorithm from the Web IDL spec, since we have to represent
+  // this as an object? so we can look at the open-ended set of properties
+  // on these objects.
 
   if (!aFrames) {
     // The argument was explicitly null.  In this case, the default dictionary
@@ -1954,7 +1954,6 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
       keyframeDict.mEasing.Truncate();
       entry->mTimingFunction->value().AppendToString(keyframeDict.mEasing);
     }
-    keyframeDict.mComposite.SetValue(CompositeOperation::Replace);
 
     JS::Rooted<JS::Value> keyframeJSValue(aCx);
     if (!ToJSValue(aCx, keyframeDict, &keyframeJSValue)) {
