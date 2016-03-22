@@ -7,8 +7,8 @@
 #include "mozilla/dom/KeyframeEffect.h"
 
 #include "mozilla/dom/AnimatableBinding.h"
+#include "mozilla/dom/BaseKeyframeTypesBinding.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
-#include "mozilla/dom/PropertyIndexedKeyframesBinding.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/FloatingPoint.h"
@@ -806,7 +806,7 @@ enum class ValuePosition
 
 /**
  * A single value in a keyframe animation, used by GetFrames to produce a
- * minimal set of Keyframe objects.
+ * minimal set of keyframe objects.
  */
 struct OrderedKeyframeValueEntry : KeyframeValue
 {
@@ -907,10 +907,10 @@ struct KeyframeValueEntry : KeyframeValue
 
 /**
  * A property-values pair obtained from the open-ended properties
- * discovered on a Keyframe or PropertyIndexedKeyframes object.
+ * discovered on a regular keyframe or property-indexed keyframe object.
  *
- * Single values (as required by Keyframe, and as also supported
- * on PropertyIndexedKeyframes) are stored as the only element in
+ * Single values (as required by a regular keyframe, and as also supported
+ * on property-indexed keyframes) are stored as the only element in
  * mValues.
  */
 struct PropertyValuesPair
@@ -989,19 +989,19 @@ struct PropertyValuesPair
 };
 
 /**
- * The result of parsing a JS object as a Keyframe dictionary
+ * The result of parsing a JS object as a BaseKeyframe dictionary
  * and getting its property-value pairs from its open-ended
  * properties.
  */
 struct OffsetIndexedKeyframe
 {
-  binding_detail::FastKeyframe mKeyframeDict;
+  binding_detail::FastBaseKeyframe mKeyframeDict;
   nsTArray<PropertyValuesPair> mPropertyValuePairs;
 };
 
 /**
- * An additional property (for a property-values pair) found on a Keyframe
- * or PropertyIndexedKeyframes object.
+ * An additional property (for a property-values pair) found on a
+ * BaseKeyframe or BasePropertyIndexedKeyframe object.
  */
 struct AdditionalProperty
 {
@@ -1185,7 +1185,7 @@ ConvertKeyframeSequence(JSContext* aCx,
                         "Element of sequence<Keyframes> argument");
       return false;
     }
-    // Convert the JS value into a Keyframe dictionary value.
+    // Convert the JS value into a BaseKeyframe dictionary value.
     OffsetIndexedKeyframe* keyframe = aResult.AppendElement();
     if (!keyframe->mKeyframeDict.Init(
           aCx, value, "Element of sequence<Keyframes> argument")) {
@@ -1533,7 +1533,7 @@ BuildAnimationPropertyListFromKeyframeSequence(
 }
 
 /**
- * Converts a JS object to an IDL PropertyIndexedKeyframes and builds an
+ * Converts a JS object to an IDL PropertyIndexedKeyframe and builds an
  * array of AnimationProperty objects for the keyframe animation
  * that it specifies.
  *
@@ -1553,10 +1553,10 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
 {
   MOZ_ASSERT(aValue.isObject());
 
-  // Convert the object to a PropertyIndexedKeyframes dictionary to
+  // Convert the object to a PropertyIndexedKeyframe dictionary to
   // get its explicit dictionary members.
-  binding_detail::FastPropertyIndexedKeyframes keyframes;
-  if (!keyframes.Init(aCx, aValue, "PropertyIndexedKeyframes argument",
+  binding_detail::FastBasePropertyIndexedKeyframe keyframes;
+  if (!keyframes.Init(aCx, aValue, "BasePropertyIndexedKeyframe argument",
                       false)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -1580,7 +1580,7 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
   // We must keep track of which properties we've already generated
   // an AnimationProperty since the author could have specified both a
   // shorthand and one of its component longhands on the
-  // PropertyIndexedKeyframes.
+  // PropertyIndexedKeyframe.
   nsCSSPropertySet properties;
 
   // Create AnimationProperty objects for each PropertyValuesPair, applying
@@ -1703,10 +1703,9 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
 }
 
 /**
- * Converts a JS value to an IDL
- * (PropertyIndexedKeyframes or sequence<Keyframe>) value and builds an
- * array of AnimationProperty objects for the keyframe animation
- * that it specifies.
+ * Converts a JS value to a property-indexed keyframe or a sequence of
+ * regular keyframes and builds an array of AnimationProperty objects for the
+ * keyframe animation that it specifies.
  *
  * @param aTarget The target of the animation, used to resolve style
  *   for a property's underlying value if needed.
@@ -1726,25 +1725,25 @@ KeyframeEffectReadOnly::BuildAnimationPropertyList(
 {
   MOZ_ASSERT(aResult.IsEmpty());
 
-  // A frame list specification in the IDL is:
+  // A frame list specification in the spec is essentially:
   //
-  // (PropertyIndexedKeyframes or sequence<Keyframe> or SharedKeyframeList)
+  // (PropertyIndexedKeyframe or sequence<Keyframe> or SharedKeyframeList)
   //
   // We don't support SharedKeyframeList yet, but we do the other two.  We
   // manually implement the parts of JS-to-IDL union conversion algorithm
   // from the Web IDL spec, since we have to represent this an object? so
   // we can look at the open-ended set of properties on a
-  // PropertyIndexedKeyframes or Keyframe.
+  // PropertyIndexedKeyframe or Keyframe.
 
   if (!aFrames) {
     // The argument was explicitly null.  In this case, the default dictionary
-    // value for PropertyIndexedKeyframes would result in no keyframes.
+    // value for PropertyIndexedKeyframe would result in no keyframes.
     return;
   }
 
   // At this point we know we have an object.  We try to convert it to a
   // sequence<Keyframe> first, and if that fails due to not being iterable,
-  // we try to convert it to PropertyIndexedKeyframes.
+  // we try to convert it to PropertyIndexedKeyframe.
   JS::Rooted<JS::Value> objectValue(aCx, JS::ObjectValue(*aFrames));
   JS::ForOfIterator iter(aCx);
   if (!iter.init(objectValue, JS::ForOfIterator::AllowNonIterable)) {
@@ -1946,8 +1945,8 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
     OrderedKeyframeValueEntry* entry = &entries[i];
     OrderedKeyframeValueEntry* previousEntry = nullptr;
 
-    // Create a JS object with the explicit ComputedKeyframe dictionary members.
-    ComputedKeyframe keyframeDict;
+    // Create a JS object with the BaseComputedKeyframe dictionary members.
+    BaseComputedKeyframe keyframeDict;
     keyframeDict.mOffset.SetValue(entry->mOffset);
     keyframeDict.mComputedOffset.Construct(entry->mOffset);
     if (entry->mTimingFunction && entry->mTimingFunction->isSome()) {
