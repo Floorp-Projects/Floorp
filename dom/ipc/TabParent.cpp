@@ -29,7 +29,7 @@
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/LookAndFeel.h"
@@ -2915,8 +2915,9 @@ TabParent::RequestNotifyLayerTreeReady()
   if (!frame) {
     mNeedLayerTreeReadyNotification = true;
   } else {
-    CompositorParent::RequestNotifyLayerTreeReady(frame->GetLayersId(),
-                                                  new LayerTreeUpdateObserver());
+    CompositorBridgeParent::RequestNotifyLayerTreeReady(
+      frame->GetLayersId(),
+      new LayerTreeUpdateObserver());
   }
   return true;
 }
@@ -2929,8 +2930,9 @@ TabParent::RequestNotifyLayerTreeCleared()
     return false;
   }
 
-  CompositorParent::RequestNotifyLayerTreeCleared(frame->GetLayersId(),
-                                                  new LayerTreeUpdateObserver());
+  CompositorBridgeParent::RequestNotifyLayerTreeCleared(
+    frame->GetLayersId(),
+    new LayerTreeUpdateObserver());
   return true;
 }
 
@@ -2965,12 +2967,13 @@ TabParent::SwapLayerTreeObservers(TabParent* aOther)
 
   RenderFrameParent* rfp = GetRenderFrame();
   RenderFrameParent* otherRfp = aOther->GetRenderFrame();
-  if(!rfp || !otherRfp) {
+  if (!rfp || !otherRfp) {
     return;
   }
 
-  CompositorParent::SwapLayerTreeObservers(rfp->GetLayersId(),
-                                           otherRfp->GetLayersId());
+  CompositorBridgeParent::SwapLayerTreeObservers(
+    rfp->GetLayersId(),
+    otherRfp->GetLayersId());
 }
 
 bool

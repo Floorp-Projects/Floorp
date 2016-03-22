@@ -42,7 +42,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZThreadUtils.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/TouchEvents.h"
 #include "HwcComposer2D.h"
 
@@ -84,7 +84,7 @@ nsWindow::nsWindow()
 nsWindow::~nsWindow()
 {
     if (mScreen->IsPrimaryScreen()) {
-        mComposer2D->SetCompositorParent(nullptr);
+        mComposer2D->SetCompositorBridgeParent(nullptr);
     }
 }
 
@@ -130,7 +130,7 @@ nsWindow::DoDraw(void)
 void
 nsWindow::ConfigureAPZControllerThread()
 {
-    APZThreadUtils::SetControllerThread(CompositorParent::CompositorLoop());
+    APZThreadUtils::SetControllerThread(CompositorBridgeParent::CompositorLoop());
 }
 
 /*static*/ nsEventStatus
@@ -692,10 +692,10 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
     }
 
     CreateCompositor();
-    if (mCompositorParent) {
-        mScreen->SetCompositorParent(mCompositorParent);
+    if (mCompositorBridgeParent) {
+        mScreen->SetCompositorBridgeParent(mCompositorBridgeParent);
         if (mScreen->IsPrimaryScreen()) {
-            mComposer2D->SetCompositorParent(mCompositorParent);
+            mComposer2D->SetCompositorBridgeParent(mCompositorBridgeParent);
         }
     }
     MOZ_ASSERT(mLayerManager);
@@ -705,20 +705,20 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
 void
 nsWindow::DestroyCompositor()
 {
-    if (mCompositorParent) {
-        mScreen->SetCompositorParent(nullptr);
+    if (mCompositorBridgeParent) {
+        mScreen->SetCompositorBridgeParent(nullptr);
         if (mScreen->IsPrimaryScreen()) {
-            // Unset CompositorParent
-            mComposer2D->SetCompositorParent(nullptr);
+            // Unset CompositorBridgeParent
+            mComposer2D->SetCompositorBridgeParent(nullptr);
         }
     }
     nsBaseWidget::DestroyCompositor();
 }
 
-CompositorParent*
-nsWindow::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
+CompositorBridgeParent*
+nsWindow::NewCompositorBridgeParent(int aSurfaceWidth, int aSurfaceHeight)
 {
-    return new CompositorParent(this, true, aSurfaceWidth, aSurfaceHeight);
+    return new CompositorBridgeParent(this, true, aSurfaceWidth, aSurfaceHeight);
 }
 
 void
