@@ -308,12 +308,12 @@ Exception::GetName(nsACString& aName)
 }
 
 NS_IMETHODIMP
-Exception::GetFilename(JSContext* aCx, nsAString& aFilename)
+Exception::GetFilename(nsAString& aFilename)
 {
   NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
 
   if (mLocation) {
-    return mLocation->GetFilename(aCx, aFilename);
+    return mLocation->GetFilename(aFilename);
   }
 
   aFilename.Assign(mFilename);
