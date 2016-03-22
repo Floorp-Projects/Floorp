@@ -89,12 +89,12 @@ protected:
 public:
     static UniquePtr<SurfaceFactory_ANGLEShareHandle> Create(GLContext* gl,
                                                              const SurfaceCaps& caps,
-                                                             const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                                             const RefPtr<layers::ClientIPCAllocator>& allocator,
                                                              const layers::TextureFlags& flags);
 
 protected:
     SurfaceFactory_ANGLEShareHandle(GLContext* gl, const SurfaceCaps& caps,
-                                    const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                    const RefPtr<layers::ClientIPCAllocator>& allocator,
                                     const layers::TextureFlags& flags, GLLibraryEGL* egl,
                                     EGLConfig config);
 

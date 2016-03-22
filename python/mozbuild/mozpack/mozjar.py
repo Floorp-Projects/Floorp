@@ -332,14 +332,14 @@ class JarReader(object):
     Class with methods to read Jar files. Can open standard jar files as well
     as Mozilla jar files (see further details in the JarWriter documentation).
     '''
-    def __init__(self, file=None, fileobj=None):
+    def __init__(self, file=None, fileobj=None, data=None):
         '''
         Opens the given file as a Jar archive. Use the given file-like object
         if one is given instead of opening the given file name.
         '''
         if fileobj:
             data = fileobj.read()
-        else:
+        elif file:
             data = open(file, 'rb').read()
         self._data = memoryview(data)
         # The End of Central Directory Record has a variable size because of

@@ -1331,12 +1331,8 @@ case "$target" in
        AC_MSG_ERROR([targeting iOS but not using an iOS SDK?])
     fi
     if test -n "$MOZ_IOS"; then
-        AC_DEFINE(XP_IOS)
-        AC_DEFINE(XP_DARWIN)
         direct_nspr_config=1
     else
-        AC_DEFINE(XP_MACOSX)
-        AC_DEFINE(XP_DARWIN)
         # The ExceptionHandling framework is needed for Objective-C exception
         # logging code in nsObjCExceptions.h. Currently we only use that in debug
         # builds.
@@ -1643,10 +1639,6 @@ case "$target" in
         MOZ_MEMORY=1
     fi
     AC_DEFINE(HAVE_SNPRINTF)
-    AC_DEFINE(_WINDOWS)
-    AC_DEFINE(WIN32)
-    AC_DEFINE(XP_WIN)
-    AC_DEFINE(XP_WIN32)
     AC_DEFINE(HW_THREADS)
     AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
@@ -1738,13 +1730,6 @@ esac
 AC_SUBST_LIST(MMX_FLAGS)
 AC_SUBST_LIST(SSE_FLAGS)
 AC_SUBST_LIST(SSE2_FLAGS)
-
-case "$target" in
-*-*linux*)
-    # Includes linux-android
-    AC_DEFINE(XP_LINUX)
-    ;;
-esac
 
 AC_SUBST(MOZ_LINKER)
 if test -n "$MOZ_LINKER"; then
@@ -2606,59 +2591,6 @@ else
    NSS_CFLAGS="-I${DIST}/include/nss"
 fi
 
-dnl ======================
-dnl Detect yasm
-dnl ======================
-
-AC_MSG_CHECKING([for YASM assembler])
-AC_CHECK_PROGS(YASM, yasm, "")
-
-if test -n "$YASM"; then
-  AC_MSG_CHECKING([yasm version])
-  dnl Pull out yasm's version string
-  YASM_VERSION=`yasm --version | $AWK '/^yasm/ { print $2 }'`
-  _YASM_MAJOR_VERSION=`echo ${YASM_VERSION} | $AWK -F\. '{ print $1 }'`
-  _YASM_MINOR_VERSION=`echo ${YASM_VERSION} | $AWK -F\. '{ print $2 }'`
-  _YASM_RELEASE=`      echo ${YASM_VERSION} | $AWK -F\. '{ print $3 }'`
-  _YASM_BUILD=`        echo ${YASM_VERSION} | $AWK -F\. '{ print $4 }'`
-  AC_MSG_RESULT([$_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.$_YASM_RELEASE ($YASM_VERSION)])
-
-  # Determine proper yasm arguments.
-  YASM_ASFLAGS=
-  case "$OS_ARCH:$CPU_ARCH" in
-    Darwin:x86)
-      YASM_ASFLAGS="-f macho32 -rnasm -pnasm"
-    ;;
-    Darwin:x86_64)
-      YASM_ASFLAGS="-f macho64 -rnasm -pnasm"
-    ;;
-    WINNT:x86_64)
-      YASM_ASFLAGS="-f x64 -rnasm -pnasm"
-    ;;
-    WINNT:x86)
-      YASM_ASFLAGS="-f win32 -rnasm -pnasm"
-    ;;
-    *:x86)
-      if $CC -E -dM -</dev/null | grep -q __ELF__; then
-        YASM_ASFLAGS="-f elf32 -rnasm -pnasm"
-      fi
-    ;;
-    *:x86_64)
-      if $CC -E -dM -</dev/null | grep -q __ELF__; then
-        YASM_ASFLAGS="-f elf64 -rnasm -pnasm"
-      fi
-    ;;
-    *)
-      # yasm doesn't support other architectures, so just disable it.
-      YASM=
-  esac
-  if test -z "$YASM_ASFLAGS"; then
-    # If we didn't get YASM_ASFLAGS, we shouldn't be using yasm.
-    YASM=
-  fi
-fi
-AC_SUBST(YASM_ASFLAGS)
-
 if test -z "$SKIP_LIBRARY_CHECKS"; then
 dnl system JPEG support
 dnl ========================================================
@@ -3161,14 +3093,11 @@ if test -n "$MOZ_RUST"; then
     fi
 fi
 
-AC_SUBST(MOZ_BUILD_APP)
 AC_SUBST(MOZ_PHOENIX)
 AC_SUBST(MOZ_XULRUNNER)
 AC_SUBST(MOZ_B2G)
 AC_SUBST(MOZ_MULET)
 AC_SUBST(MOZ_B2G_VERSION)
-
-AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
 
 dnl ========================================================
 dnl Ensure Android SDK and build-tools versions depending on
@@ -7768,10 +7697,6 @@ fi # COMPILE_ENVIRONMENT
 dnl Set various defines and substitutions
 dnl ========================================================
 
-if test "$OS_ARCH" != "WINNT"; then
-  AC_DEFINE(XP_UNIX)
-fi
-
 if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF)
     AC_DEFINE(MOZ_REFLOW_PERF_DSP)
@@ -8005,7 +7930,8 @@ export RUSTC
 export MOZILLA_CENTRAL_PATH=$_topsrcdir
 export STLPORT_CPPFLAGS
 export STLPORT_LIBS
-export JS_STANDALONE=no
+export JS_STANDALONE=
+unset MOZ_BUILD_APP
 export DIST
 export MOZ_LINKER
 export ZLIB_IN_MOZGLUE

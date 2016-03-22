@@ -1292,10 +1292,13 @@ GenerateValueEntries(Element* aTarget,
   nsCSSPropertySet propertiesWithToValue;   // Those with a defined 100% value.
 
   for (OffsetIndexedKeyframe& keyframe : aKeyframes) {
-    float offset = float(keyframe.mKeyframeDict.mOffset.Value());
     Maybe<ComputedTimingFunction> easing =
-      AnimationUtils::ParseEasing(keyframe.mKeyframeDict.mEasing,
-                                  aTarget->OwnerDoc());
+      TimingParams::ParseEasing(keyframe.mKeyframeDict.mEasing,
+                                aTarget->OwnerDoc(), aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+    float offset = float(keyframe.mKeyframeDict.mOffset.Value());
     // We ignore keyframe.mKeyframeDict.mComposite since we don't support
     // composite modes on keyframes yet.
 
@@ -1560,7 +1563,7 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
   }
 
   Maybe<ComputedTimingFunction> easing =
-    AnimationUtils::ParseEasing(keyframes.mEasing, aTarget->OwnerDoc());
+    TimingParams::ParseEasing(keyframes.mEasing, aTarget->OwnerDoc(), aRv);
 
   // We ignore easing.mComposite since we don't support composite modes on
   // keyframes yet.
@@ -2318,15 +2321,8 @@ KeyframeEffect::Constructor(
 
 void KeyframeEffect::NotifySpecifiedTimingUpdated()
 {
-  nsIDocument* doc = nullptr;
-  // Bug 1249219:
-  // We don't support animation mutation observers on pseudo-elements yet.
-  if (mTarget &&
-      mPseudoType == CSSPseudoElementType::NotPseudo) {
-    doc = mTarget->OwnerDoc();
-  }
-
-  nsAutoAnimationMutationBatch mb(doc);
+  // Use the same document for a pseudo element and its parent element.
+  nsAutoAnimationMutationBatch mb(mTarget->OwnerDoc());
 
   if (mAnimation) {
     mAnimation->NotifyEffectTimingUpdated();

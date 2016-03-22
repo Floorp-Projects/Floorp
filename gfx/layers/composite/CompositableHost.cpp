@@ -148,8 +148,7 @@ CompositableHost::SetCompositor(Compositor* aCompositor)
 
 bool
 CompositableHost::AddMaskEffect(EffectChain& aEffects,
-                                const gfx::Matrix4x4& aTransform,
-                                bool aIs3D)
+                                const gfx::Matrix4x4& aTransform)
 {
   CompositableTextureSourceRef source;
   RefPtr<TextureHost> host = GetAsTextureHost();
@@ -174,7 +173,6 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
   RefPtr<EffectMask> effect = new EffectMask(source,
                                              source->GetSize(),
                                              aTransform);
-  effect->mIs3D = aIs3D;
   aEffects.mSecondaryEffects[EffectTypes::MASK] = effect;
   return true;
 }

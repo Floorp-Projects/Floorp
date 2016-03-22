@@ -350,10 +350,6 @@ ImageBridgeParent::NotifyImageComposites(nsTArray<ImageCompositeNotification>& a
   return ok;
 }
 
-MessageLoop * ImageBridgeParent::GetMessageLoop() const {
-  return mMessageLoop;
-}
-
 void
 ImageBridgeParent::DeferredDestroy()
 {
@@ -399,8 +395,8 @@ ImageBridgeParent::OnChannelConnected(int32_t aPid)
 
 bool
 ImageBridgeParent::AllocShmem(size_t aSize,
-                ipc::SharedMemory::SharedMemoryType aType,
-                ipc::Shmem* aShmem)
+                      ipc::SharedMemory::SharedMemoryType aType,
+                      ipc::Shmem* aShmem)
 {
   if (mStopped) {
     return false;

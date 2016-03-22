@@ -36,18 +36,15 @@ makeShaderPS RGBAShader
 makeShaderPS ComponentAlphaShader
 makeShaderPS YCbCrShader
 makeShaderVS LayerQuadMaskVS
-makeShaderVS LayerQuadMask3DVS
 makeShaderPS SolidColorShaderMask
 makeShaderPS RGBShaderMask
 makeShaderPS RGBAShaderMask
-makeShaderPS RGBAShaderMask3D
 makeShaderPS YCbCrShaderMask
 makeShaderPS ComponentAlphaShaderMask
 
 # Mix-blend shaders
 makeShaderVS LayerQuadBlendVS
 makeShaderVS LayerQuadBlendMaskVS
-makeShaderVS LayerQuadBlendMask3DVS
 makeShaderPS BlendShader
 
 SRC=CompositorD3D11VR.hlsl

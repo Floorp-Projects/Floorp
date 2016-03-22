@@ -538,7 +538,7 @@ ClientLayerManager::MakeSnapshotIfRequired()
                           DrawOptions(1.0f, CompositionOp::OP_OVER));
           dt->SetTransform(oldMatrix);
         }
-        mForwarder->DestroySharedSurface(&inSnapshot);
+        mForwarder->DestroySurfaceDescriptor(&inSnapshot);
       }
     }
   }

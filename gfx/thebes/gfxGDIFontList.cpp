@@ -325,7 +325,7 @@ GDIFontEntry::TestCharacterMap(uint32_t aCh)
         HFONT hfont = font->GetHFONT();
         HFONT oldFont = (HFONT)SelectObject(dc, hfont);
 
-        wchar_t str[1] = { aCh };
+        wchar_t str[1] = { (wchar_t)aCh };
         WORD glyph[1];
 
         bool hasGlyph = false;

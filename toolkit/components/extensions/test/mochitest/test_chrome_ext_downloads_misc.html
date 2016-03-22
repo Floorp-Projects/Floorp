@@ -465,6 +465,125 @@ add_task(function* test_pausecancel() {
   is(msg.result[0].exists, false, "download.exists is correct");
 });
 
+add_task(function* test_file_removal() {
+  let msg = yield runInExtension("download", {url: TXT_URL});
+  is(msg.status, "success", "download() succeeded");
+  const id = msg.result;
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onCreated", data: {id, url: TXT_URL}},
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "in_progress",
+          current: "complete",
+        },
+      },
+    },
+  ]);
+
+  is(msg.status, "success", "got onCreated and onChanged events");
+
+  msg = yield runInExtension("removeFile", id);
+  is(msg.status, "success", "removeFile() succeeded");
+
+  msg = yield runInExtension("removeFile", id);
+  is(msg.status, "error", "removeFile() fails since the file was already removed.");
+  ok(/file doesn't exist/.test(msg.errmsg), "removeFile() failed on removed file.");
+
+  msg = yield runInExtension("removeFile", 1000);
+  ok(/Invalid download id/.test(msg.errmsg), "removeFile() failed due to non-existent id");
+});
+
+add_task(function* test_removal_of_incomplete_download() {
+  let msg = yield runInExtension("download", {url: INTERRUPTIBLE_URL});
+  is(msg.status, "success", "download() succeeded");
+  const id = msg.result;
+
+  let progressPromise = waitForProgress(INTERRUPTIBLE_URL, INT_PARTIAL_LEN);
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onCreated", data: {id}},
+  ]);
+  is(msg.status, "success", "got created and changed events");
+
+  yield progressPromise;
+  info(`download reached ${INT_PARTIAL_LEN} bytes`);
+
+  msg = yield runInExtension("pause", id);
+  is(msg.status, "success", "pause() succeeded");
+
+  msg = yield runInExtension("waitForEvents", [
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "in_progress",
+          current: "interrupted",
+        },
+        paused: {
+          previous: false,
+          current: true,
+        },
+        canResume: {
+          previous: false,
+          current: true,
+        },
+      },
+    }]);
+  is(msg.status, "success", "got onChanged event corresponding to pause");
+
+  msg = yield runInExtension("removeFile", id);
+  is(msg.status, "error", "removeFile() on paused download failed");
+
+  ok(/Cannot remove incomplete download/.test(msg.errmsg), "removeFile() failed due to download being incomplete");
+
+  msg = yield runInExtension("resume", id);
+  is(msg.status, "success", "resume() succeeded");
+
+  msg = yield runInExtension("waitForEvents", [
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "interrupted",
+          current: "in_progress",
+        },
+        paused: {
+          previous: true,
+          current: false,
+        },
+        canResume: {
+          previous: true,
+          current: false,
+        },
+        error: {
+          previous: "USER_CANCELED",
+          current: null,
+        },
+      },
+    },
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "in_progress",
+          current: "complete",
+        },
+      },
+    },
+  ]);
+  is(msg.status, "success", "got onChanged events for resume and complete");
+
+  msg = yield runInExtension("removeFile", id);
+  is(msg.status, "success", "removeFile() succeeded following completion of resumed download.");
+});
+
 // Test erase().  We don't do elaborate testing of the query handling
 // since it uses the exact same engine as search() which is tested
 // more thoroughly in test_chrome_ext_downloads_search.html

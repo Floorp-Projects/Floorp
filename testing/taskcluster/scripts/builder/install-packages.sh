@@ -10,3 +10,6 @@ test -n "$TOOLTOOL_REV"
 tc-vcs checkout $gecko_dir/tooltool $TOOLTOOL_REPO $TOOLTOOL_REPO $TOOLTOOL_REV
 
 (cd $gecko_dir; python $gecko_dir/tooltool/tooltool.py --url https://api.pub.build.mozilla.org/tooltool/ -m $gecko_dir/$TOOLTOOL_MANIFEST fetch -c $TOOLTOOL_CACHE)
+
+# Another terrible hack..
+(ls $gecko_dir/gcc/bin/gcc && ln -s $gecko_dir/gcc/bin/gcc $gecko_dir/gcc/bin/cc)

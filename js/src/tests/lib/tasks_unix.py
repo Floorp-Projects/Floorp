@@ -110,7 +110,13 @@ def read_input(tasks, timeout):
         # us to respond immediately and not leave cores idle.
         exlist.append(t.stdout)
 
-    readable, _, _ = select.select(rlist, [], exlist, timeout)
+    readable = []
+    try:
+        readable, _, _ = select.select(rlist, [], exlist, timeout)
+    except OverflowError as e:
+        print >> sys.stderr, "timeout value", timeout
+        raise
+
     for fd in readable:
         flush_input(fd, outmap[fd])
 

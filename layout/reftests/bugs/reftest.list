@@ -1563,8 +1563,8 @@ skip-if(B2G||Mulet) == 569006-1.html 569006-1-ref.html # Initial mulet triage: p
 == 572598-1.html 572598-ref.html
 == 574898-1.html 574898-ref.html
 # 574907 is a windows-only issue, result on other platforms depends on details of font support
-random-if(!winWidget) == 574907-1.html 574907-1-ref.html
-random-if(!winWidget) == 574907-2.html 574907-2-ref.html
+random-if(!winWidget) fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&d2d) == 574907-1.html 574907-1-ref.html # Bug 1258240
+random-if(!winWidget) fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&d2d) == 574907-2.html 574907-2-ref.html # Bug 1258240
 # 574907-3 only worked under directwrite, and even there it now depends on the rendering mode; marking as random for now
 random-if(!winWidget) fails-if(winWidget&&!d2d) random-if(winWidget&&d2d) != 574907-3.html 574907-3-notref.html
 == 577838-1.html 577838-1-ref.html
@@ -1787,7 +1787,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 858803-1.html 858803-1-ref.html # bug 
 fuzzy(2,10000) fuzzy-if(Android,5,10000) == 902330-1.html 902330-1-ref.html
 fuzzy-if(Android,8,400) == 906199-1.html 906199-1-ref.html
 == 921716-1.html 921716-1-ref.html
-test-pref(layout.css.sticky.enabled,true) == 926155-1.html 926155-1-ref.html
+== 926155-1.html 926155-1-ref.html
 fuzzy-if(cocoaWidget,1,40) == 928607-1.html 928607-1-ref.html
 fuzzy-if(skiaContent,1,3) == 931464-1.html 931464-1-ref.html
 == 931853.html 931853-ref.html
@@ -1823,7 +1823,7 @@ fuzzy-if(d2d,1,36) == 991046-1.html 991046-1-ref.html
 pref(layout.css.overflow-clip-box.enabled,true) fuzzy-if(skiaContent,2,845) == 992447.html 992447-ref.html
 == 1003425-1.html 1003425-1-ref.html
 == 1003425-2.html 1003425-2-ref.html
-pref(layout.css.sticky.enabled,true) == 1005405-1.html 1005405-1-ref.html
+== 1005405-1.html 1005405-1-ref.html
 == 1012640-1.html 1012640-1-ref.html
 fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),255,1) == 1013054-1.html 1013054-1-ref.html
 == 1018522-1.html 1018522-1-ref.html
@@ -1857,7 +1857,7 @@ test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.h
 == 1097437-1.html 1097437-1-ref.html
 == 1103258-1.html 1103258-1-ref.html # assertion crash test with layers culling test
 == 1105137-1.html 1105137-1-ref.html
-fuzzy-if(d2d,36,304) HTTP(..) == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow-ref.html
+fuzzy-if(d2d,36,304) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&d2d,127,701) HTTP(..) == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow-ref.html
 == 1111753-1.html about:blank
 == 1114526-1.html 1114526-1-ref.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1a.html 1119117-1-ref.html
@@ -1943,6 +1943,8 @@ fuzzy(1,74) fuzzy-if(gtkWidget,6,79) == 1174332-1.html 1174332-1-ref.html
 == 1222226-1.html 1222226-1-ref.html
 pref(layout.css.overflow-clip-box.enabled,true) == 1226278.html 1226278-ref.html
 == 1230466.html about:blank
+random-if(gtkWidget) != 1238243-1.html 1238243-1-notref.html # may fail on Linux, depending on Korean fonts available
+random-if(OSX==1006) == 1238243-2.html 1238243-2-ref.html # fails on 10.6 with default fonts because filler has a visible glyph
 fuzzy(100,2000) == 1239564.html 1239564-ref.html
 == 1242172-1.html 1242172-1-ref.html
 == 1242172-2.html 1242172-2-ref.html

@@ -470,11 +470,25 @@ class HeapPtr : public WriteBarrieredBase<T>
 };
 
 /*
- * A pre- and post-barriered heap pointer, for use inside the JS engine.
+ * A pre- and post-barriered heap pointer, for use inside the JS engine. These
+ * heap pointers can be stored in C++ containers like GCVector and GCHashMap.
  *
- * Unlike HeapPtr<T>, it can be used in memory that is not managed by the GC,
- * i.e. in C++ containers.  It is, however, somewhat slower, so should only be
- * used in contexts where this ability is necessary.
+ * The GC sometimes keeps pointers to pointers to GC things --- for example, to
+ * track references into the nursery. However, C++ containers like GCVector and
+ * GCHashMap usually reserve the right to relocate their elements any time
+ * they're modified, invalidating all pointers to the elements. RelocatablePtr
+ * has a move constructor which knows how to keep the GC up to date if it is
+ * moved to a new location.
+ *
+ * However, because of this additional communication with the GC, RelocatablePtr
+ * is somewhat slower, so it should only be used in contexts where this ability
+ * is necessary.
+ *
+ * Obviously, JSObjects, JSStrings, and the like get tenured and compacted, so
+ * whatever pointers they contain get relocated, in the sense used here.
+ * However, since the GC itself is moving those values, it takes care of its
+ * internal pointers to those pointers itself. RelocatablePtr is only necessary
+ * when the relocation would otherwise occur without the GC's knowledge.
  */
 template <class T>
 class RelocatablePtr : public WriteBarrieredBase<T>
