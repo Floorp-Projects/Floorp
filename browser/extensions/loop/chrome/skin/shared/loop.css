@@ -286,19 +286,6 @@
     border-color: #ef6745;
   }
 
-  #loop-remote-cursor {
-    background: url("chrome://loop/content/shared/img/cursor.svg#blue") no-repeat;
-    height: 20px;
-    width: 15px;
-    /*
-     * Svg cursor has a white outline so we need to get rid off it to ensure
-     * that the cursor points at a more precise position
-     */
-    margin: -2px;
-    pointer-events: none;
-    position: absolute;
-  }
-  
   #loop-slideshow-container {
     /* cover the entire viewport, mouse interaction with non-slideshow
       content is now impossible. */
@@ -320,6 +307,10 @@
     -moz-margin-start: calc(50% - 310px);
   }
 
+  /****************************************************************/
+  /* REMOTE CURSOR (keep synced with remote-cursor in common.css) */
+  /****************************************************************/
+
   #loop-remote-cursor-container {
     position: absolute;
     pointer-events: none;
@@ -327,5 +318,64 @@
      * of shared area, it doesn't widen the viewport by adding a scrollbar.
      */
     overflow: hidden;
+  }
+
+  #loop-remote-cursor {
+    background: url("chrome://loop/content/shared/img/cursor.svg#blue") no-repeat;
+    height: 20px;
+    width: 15px;
+    /*
+     * Svg cursor has a white outline so we need to get rid off it to ensure
+     * that the cursor points at a more precise position
+     */
+    margin: -2px;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  #loop-remote-cursor:after,
+  #loop-remote-cursor:before {
+    background-color: rgba(0,169,220,0.5);
+    border-radius: 50%;
+    content: "";
+    height: 50px;
+    left: 50%;
+    margin: -35px 0 0 -35px;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    width: 50px;
+    z-index: -1;
+  }
+
+  @keyframes double-pulse-1 {
+    0% {
+      opacity: 1;
+      transform: scale3d(0.1, 0.1, 1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale3d(1.1, 1.1, 1);
+    }
+  }
+
+  @keyframes double-pulse-2 {
+    0% {
+      opacity: 1;
+      transform: scale3d(0.5, 0.5, 1);
+    }
+    50%, 100% {
+      opacity: 0;
+      transform: scale3d(1.2, 1.2, 1);
+    }
+  }
+
+  #loop-remote-cursor.clicked::after {
+    animation: double-pulse-1 800ms ease-out forwards;
+  }
+
+  #loop-remote-cursor.clicked::before {
+    animation: double-pulse-2 800ms ease-out forwards;
   }
 }

@@ -334,4 +334,31 @@ describe("loop.store.TextChatStore", function() {
       expect(store.getStoreState("messageList").length).eql(2);
     });
   });
+
+  describe("#remotePeerDisconnected", function() {
+
+    it("should append the right message when peer disconnected cleanly", function() {
+      store.remotePeerDisconnected(new sharedActions.RemotePeerDisconnected({
+        peerHungup: true
+      }));
+
+      expect(store.getStoreState("messageList").length).eql(1);
+      expect(store.getStoreState("messageList")[0].contentType).eql(
+          CHAT_CONTENT_TYPES.NOTIFICATION
+      );
+      expect(store.getStoreState("messageList")[0].message).eql("peer_left_session");
+    });
+
+    it("should append the right message when peer disconnected unexpectedly", function() {
+      store.remotePeerDisconnected(new sharedActions.RemotePeerDisconnected({
+        peerHungup: false
+      }));
+
+      expect(store.getStoreState("messageList").length).eql(1);
+      expect(store.getStoreState("messageList")[0].contentType).eql(
+          CHAT_CONTENT_TYPES.NOTIFICATION
+      );
+      expect(store.getStoreState("messageList")[0].message).eql("peer_unexpected_quit");
+    });
+  });
 });
