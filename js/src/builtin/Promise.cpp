@@ -40,7 +40,13 @@ static const JSPropertySpec promise_static_properties[] = {
     JS_PS_END
 };
 
-// ES6, 25.4.3.1. steps 3-11.
+static Value
+Now()
+{
+    return JS::TimeValue(JS::TimeClip(static_cast<double>(PRMJ_Now()) / PRMJ_USEC_PER_MSEC));
+}
+
+// ES2016, February 12 draft, 25.4.3.1. steps 3-11.
 PromiseObject*
 PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /* = nullptr */)
 {
@@ -73,33 +79,36 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
             ac.emplace(cx, usedProto);
 
         promise = &NewObjectWithClassProto(cx, &class_, usedProto)->as<PromiseObject>();
-
-        // Step 4.
         if (!promise)
             return nullptr;
 
-        // Step 5.
+        // Step 4.
         promise->setFixedSlot(PROMISE_STATE_SLOT, Int32Value(PROMISE_STATE_PENDING));
 
-        // Step 6.
+        // Step 5.
         RootedArrayObject reactions(cx, NewDenseEmptyArray(cx));
         if (!reactions)
             return nullptr;
         promise->setFixedSlot(PROMISE_FULFILL_REACTIONS_SLOT, ObjectValue(*reactions));
 
-        // Step 7.
+        // Step 6.
         reactions = NewDenseEmptyArray(cx);
         if (!reactions)
             return nullptr;
         promise->setFixedSlot(PROMISE_REJECT_REACTIONS_SLOT, ObjectValue(*reactions));
 
+        // Step 7.
+        promise->setFixedSlot(PROMISE_IS_HANDLED_SLOT,
+                              Int32Value(PROMISE_IS_HANDLED_STATE_UNHANDLED));
+
+        // Store an allocation stack so we can later figure out what the
+        // control flow was for some unexpected results. Frightfully expensive,
+        // but oh well.
         RootedObject stack(cx);
         if (!JS::CaptureCurrentStack(cx, &stack, 0))
             return nullptr;
-        promise->setFixedSlot(PROMISE_ALLOCATION_SITE_SLOT, ObjectValue(*stack));
-        Value now = JS::TimeValue(JS::TimeClip(static_cast<double>(PRMJ_Now()) /
-                                               PRMJ_USEC_PER_MSEC));
-        promise->setFixedSlot(PROMISE_ALLOCATION_TIME_SLOT, now);
+        promise->setFixedSlot(PROMISE_ALLOCATION_SITE_SLOT, ObjectOrNullValue(stack));
+        promise->setFixedSlot(PROMISE_ALLOCATION_TIME_SLOT, Now());
     }
 
     RootedValue promiseVal(cx, ObjectValue(*promise));
@@ -181,6 +190,7 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
             return nullptr;
     }
 
+    // Let the Debugger know about this Promise.
     JS::dbg::onNewPromise(cx, promise);
 
     // Step 11.
@@ -192,7 +202,7 @@ namespace {
 mozilla::Atomic<uint64_t> gIDGenerator(0);
 } // namespace
 
-double
+uint64_t
 PromiseObject::getID()
 {
     Value idVal(getReservedSlot(PROMISE_ID_SLOT));
@@ -200,7 +210,7 @@ PromiseObject::getID()
         idVal.setDouble(++gIDGenerator);
         setReservedSlot(PROMISE_ID_SLOT, idVal);
     }
-    return idVal.toNumber();
+    return uint64_t(idVal.toNumber());
 }
 
 /**
@@ -389,6 +399,27 @@ PromiseObject::reject(JSContext* cx, HandleValue rejectionValue)
 
     RootedValue dummy(cx);
     return Call(cx, funVal, UndefinedHandleValue, args, &dummy);
+}
+
+void PromiseObject::onSettled(JSContext* cx)
+{
+    Rooted<PromiseObject*> promise(cx, this);
+    RootedObject stack(cx);
+    if (!JS::CaptureCurrentStack(cx, &stack, 0)) {
+        cx->clearPendingException();
+        return;
+    }
+    promise->setFixedSlot(PROMISE_RESOLUTION_SITE_SLOT, ObjectOrNullValue(stack));
+    promise->setFixedSlot(PROMISE_RESOLUTION_TIME_SLOT, Now());
+
+    if (promise->state() == JS::PromiseState::Rejected &&
+        promise->getFixedSlot(PROMISE_IS_HANDLED_SLOT).toInt32() !=
+            PROMISE_IS_HANDLED_STATE_HANDLED)
+    {
+        cx->runtime()->addUnhandledRejectedPromise(cx, promise);
+    }
+
+    JS::dbg::onPromiseSettled(cx, promise);
 }
 
 } // namespace js

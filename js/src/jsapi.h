@@ -606,6 +606,18 @@ typedef bool
 (* JSEnqueuePromiseJobCallback)(JSContext* cx, JS::HandleObject job,
                                 JS::HandleObject allocationSite, void* data);
 
+enum class PromiseRejectionHandlingState {
+    Unhandled,
+    Handled
+};
+
+typedef void
+(* JSPromiseRejectionTrackerCallback)(JSContext* cx, JS::HandleObject promise,
+                                      PromiseRejectionHandlingState state, void* data);
+
+typedef void
+(* JSProcessPromiseCallback)(JSContext* cx, JS::HandleObject promise);
+
 typedef void
 (* JSErrorReporter)(JSContext* cx, const char* message, JSErrorReport* report);
 
@@ -4412,6 +4424,15 @@ SetEnqueuePromiseJobCallback(JSRuntime* rt, JSEnqueuePromiseJobCallback callback
                              void* data = nullptr);
 
 /**
+ * Sets the callback that's invoked whenever a Promise is rejected without
+ * a rejection handler, and when a Promise that was previously rejected
+ * without a handler gets a handler attached.
+ */
+extern JS_PUBLIC_API(void)
+SetPromiseRejectionTrackerCallback(JSRuntime* rt, JSPromiseRejectionTrackerCallback callback,
+                                   void* data = nullptr);
+
+/**
  * Returns a new instance of the Promise builtin class in the current
  * compartment, with the right slot layout. If a `proto` is passed, that gets
  * set as the instance's [[Prototype]] instead of the original value of
@@ -4455,7 +4476,7 @@ GetPromiseState(JS::HandleObject promise);
 /**
  * Returns the given Promise's process-unique ID.
  */
-JS_PUBLIC_API(double)
+JS_PUBLIC_API(uint64_t)
 GetPromiseID(JS::HandleObject promise);
 
 /**
