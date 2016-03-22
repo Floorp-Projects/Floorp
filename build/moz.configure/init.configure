@@ -26,10 +26,6 @@ def check_build_environment(help, dist):
         topobjdir=topobjdir,
         dist=dist,
     )
-    set_config('TOPSRCDIR', topsrcdir)
-    set_config('TOPOBJDIR', topobjdir)
-    set_config('MOZ_BUILD_ROOT', topobjdir)
-    set_config('DIST', dist)
 
     if help:
         return result
@@ -68,6 +64,12 @@ def check_build_environment(help, dist):
         )
 
     return result
+
+set_config('TOPSRCDIR', delayed_getattr(check_build_environment, 'topsrcdir'))
+set_config('TOPOBJDIR', delayed_getattr(check_build_environment, 'topobjdir'))
+set_config('MOZ_BUILD_ROOT', delayed_getattr(check_build_environment,
+                                             'topobjdir'))
+set_config('DIST', delayed_getattr(check_build_environment, 'dist'))
 
 
 option(env='OLD_CONFIGURE', nargs=1, help='Path to the old configure script')
@@ -220,10 +222,10 @@ def virtualenv_python(env_python, build_env, mozconfig):
     if not distutils.sysconfig.get_python_lib():
         error('Could not determine python site packages directory')
 
-    set_config('PYTHON', python)
     add_old_configure_assignment('PYTHON', python)
     return python
 
+set_config('PYTHON', virtualenv_python)
 
 # Inject mozconfig options
 # ==============================================================
@@ -504,25 +506,32 @@ def target_variables(target):
         os_target = target.os
         os_arch = target.kernel
     add_old_configure_assignment('OS_TARGET', os_target)
-    set_config('OS_TARGET', os_target)
     add_old_configure_assignment('OS_ARCH', os_arch)
-    set_config('OS_ARCH', os_arch)
 
     if target.os == 'Darwin' and target.cpu == 'x86':
         os_test = 'i386'
     else:
         os_test = target.raw_cpu
     add_old_configure_assignment('OS_TEST', os_test)
-    set_config('OS_TEST', os_test)
 
     add_old_configure_assignment('CPU_ARCH', target.cpu)
-    set_config('CPU_ARCH', target.cpu)
 
-    if target.cpu in ('x86', 'x86_64'):
-        set_config('INTEL_ARCHITECTURE', True)
+    return namespace(
+        OS_TARGET=os_target,
+        OS_ARCH=os_arch,
+        OS_TEST=os_test,
+        INTEL_ARCHITECTURE=target.cpu in ('x86', 'x86_64') or None,
+    )
 
-    set_config('TARGET_CPU', target.raw_cpu)
-    set_config('TARGET_OS', target.raw_os)
+set_config('OS_TARGET', delayed_getattr(target_variables, 'OS_TARGET'))
+set_config('OS_ARCH', delayed_getattr(target_variables, 'OS_ARCH'))
+set_config('OS_TEST', delayed_getattr(target_variables, 'OS_TEST'))
+set_config('CPU_ARCH', delayed_getattr(target, 'cpu'))
+set_config('INTEL_ARCHITECTURE', delayed_getattr(target_variables,
+                                                 'INTEL_ARCHITECTURE'))
+set_config('TARGET_CPU', delayed_getattr(target, 'raw_cpu'))
+set_config('TARGET_OS', delayed_getattr(target, 'raw_os'))
+
 
 @depends(host)
 def host_variables(host):
@@ -531,8 +540,11 @@ def host_variables(host):
     else:
         os_arch = host.kernel
     add_old_configure_assignment('HOST_OS_ARCH', os_arch)
-    set_config('HOST_OS_ARCH', os_arch)
+    return namespace(
+        HOST_OS_ARCH=os_arch,
+    )
 
+set_config('HOST_OS_ARCH', delayed_getattr(host_variables, 'HOST_OS_ARCH'))
 
 @depends(target)
 def target_platform_defines(target):
@@ -585,7 +597,6 @@ def include_project_configure(project, external_source_dir, build_env, help):
 
     base_dir = build_env.topsrcdir
     if external_source_dir:
-        set_config('EXTERNAL_SOURCE_DIR', external_source_dir[0])
         add_old_configure_assignment('EXTERNAL_SOURCE_DIR',
                                      external_source_dir[0])
         base_dir = os.path.join(base_dir, external_source_dir[0])
@@ -595,14 +606,23 @@ def include_project_configure(project, external_source_dir, build_env, help):
         error('Cannot find project %s' % project[0])
     return path
 
+@depends('--with-external-source-dir')
+def external_source_dir(value):
+    if value:
+        return value[0]
+
+set_config('EXTERNAL_SOURCE_DIR', external_source_dir)
+
+
 @depends(include_project_configure, check_build_environment, '--help')
 def build_project(include_project_configure, build_env, help):
     ret = os.path.dirname(os.path.relpath(include_project_configure,
                                           build_env.topsrcdir))
-    set_config('MOZ_BUILD_APP', ret)
     set_define('MOZ_BUILD_APP', ret)
     add_old_configure_assignment('MOZ_BUILD_APP', ret)
     return ret
+
+set_config('MOZ_BUILD_APP', build_project)
 
 
 # set RELEASE_BUILD and NIGHTLY_BUILD variables depending on the cycle we're in
@@ -619,17 +639,13 @@ def milestone(build_env):
     with open(milestone_path, 'r') as fh:
         milestone = fh.read().splitlines()[-1]
 
-    set_config('GRE_MILESTONE', milestone)
-
-    is_nightly = is_release = False
+    is_nightly = is_release = None
 
     if 'a1' in milestone:
-        set_config('NIGHTLY_BUILD', True)
         set_define('NIGHTLY_BUILD', True)
         add_old_configure_assignment('NIGHTLY_BUILD', True)
         is_nightly = True
     elif 'a' not in milestone:
-        set_config('RELEASE_BUILD', True)
         set_define('RELEASE_BUILD', True)
         add_old_configure_assignment('RELEASE_BUILD', True)
         is_release = True
@@ -637,6 +653,11 @@ def milestone(build_env):
     return namespace(version=milestone,
                      is_nightly=is_nightly,
                      is_release=is_release)
+
+set_config('GRE_MILESTONE', delayed_getattr(milestone, 'version'))
+set_config('NIGHTLY_BUILD', delayed_getattr(milestone, 'is_nightly'))
+set_config('RELEASE_BUILD', delayed_getattr(milestone, 'is_release'))
+
 
 # This is temporary until js/src/configure and configure are merged.
 # Use instead of option() in js/moz.configure

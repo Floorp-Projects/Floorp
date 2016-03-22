@@ -106,3 +106,21 @@ def deprecated_option(*args, **kwargs):
 def namespace(**kwargs):
     from mozbuild.util import ReadOnlyNamespace
     return ReadOnlyNamespace(**kwargs)
+
+
+# Some @depends function return namespaces, and one could want to use one
+# specific attribute from such a namespace as a "value" given to functions
+# such as `set_config`. But those functions do not take immediate values.
+# The `delayed_getattr` function allows access to attributes from the result
+# of a @depends function in a non-immediate manner.
+#   @depends('--option')
+#   def option(value)
+#       return namespace(foo=value)
+#   set_config('FOO', delayed_getattr(option, 'foo')
+@template
+def delayed_getattr(func, key):
+    @depends(func)
+    @advanced
+    def result(value):
+        return getattr(value, key)
+    return result

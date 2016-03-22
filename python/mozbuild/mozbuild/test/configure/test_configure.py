@@ -15,7 +15,10 @@ from mozbuild.configure.options import (
     NegativeOptionValue,
     PositiveOptionValue,
 )
-from mozbuild.configure import ConfigureSandbox
+from mozbuild.configure import (
+    ConfigureError,
+    ConfigureSandbox,
+)
 
 import mozpack.path as mozpath
 
@@ -24,17 +27,18 @@ test_data_path = mozpath.join(test_data_path, 'data')
 
 
 class TestConfigure(unittest.TestCase):
-    def get_result(self, args=[], environ={}, prog='/bin/configure'):
+    def get_result(self, args=[], environ={}, configure='moz.configure',
+                   prog='/bin/configure'):
         config = {}
         out = StringIO()
         sandbox = ConfigureSandbox(config, environ, [prog] + args, out, out)
 
-        sandbox.run(mozpath.join(test_data_path, 'moz.configure'))
+        sandbox.run(mozpath.join(test_data_path, configure))
 
         return config, out.getvalue()
 
-    def get_config(self, options=[], env={}):
-        config, out = self.get_result(options, environ=env)
+    def get_config(self, options=[], env={}, **kwargs):
+        config, out = self.get_result(options, environ=env, **kwargs)
         self.assertEquals('', out)
         return config
 
@@ -301,6 +305,39 @@ class TestConfigure(unittest.TestCase):
         config = self.get_config(['--enable-advanced-template'])
         self.assertIn('PLATFORM', config)
         self.assertEquals(config['PLATFORM'], sys.platform)
+
+    def test_set_config(self):
+        def get_config(*args):
+            return self.get_config(*args, configure='set_config.configure')
+
+        config, out = self.get_result(['--help'],
+                                      configure='set_config.configure')
+        self.assertEquals(config, {})
+
+        config = get_config(['--set-foo'])
+        self.assertIn('FOO', config)
+        self.assertEquals(config['FOO'], True)
+
+        config = get_config(['--set-bar'])
+        self.assertNotIn('FOO', config)
+        self.assertIn('BAR', config)
+        self.assertEquals(config['BAR'], True)
+
+        config = get_config(['--set-value=qux'])
+        self.assertIn('VALUE', config)
+        self.assertEquals(config['VALUE'], 'qux')
+
+        config = get_config(['--set-name=hoge'])
+        self.assertIn('hoge', config)
+        self.assertEquals(config['hoge'], True)
+
+        config = get_config([])
+        self.assertEquals(config, {'BAR': False})
+
+        with self.assertRaises(ConfigureError):
+            # Both --set-foo and --set-name=FOO are going to try to
+            # set_config('FOO'...)
+            get_config(['--set-foo', '--set-name=FOO'])
 
 
 if __name__ == '__main__':

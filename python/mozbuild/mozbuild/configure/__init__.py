@@ -40,8 +40,8 @@ class SandboxedGlobal(dict):
     '''Identifiable dict type for use as function global'''
 
 
-class DependsOutput(dict):
-    '''Dict holding the results yielded by a @depends function.'''
+class DependsOutput(object):
+    '''Class for objects holding the options implied by a @depends function.'''
     __slots__ = ('implied_options',)
 
     def __init__(self):
@@ -222,13 +222,13 @@ class ConfigureSandbox(dict):
 
         return super(ConfigureSandbox, self).__setitem__(key, value)
 
-    def _resolve(self, arg):
+    def _resolve(self, arg, need_help_dependency=True):
         if isinstance(arg, DummyFunction):
             assert arg in self._depends
             func = self._depends[arg]
             assert not inspect.isgeneratorfunction(func)
             assert func in self._results
-            if not func.with_help:
+            if need_help_dependency and not func.with_help:
                 raise ConfigureError("Missing @depends for `%s`: '--help'" %
                                      func.__name__)
             result = self._results[func]
@@ -290,12 +290,11 @@ class ConfigureSandbox(dict):
 
         The decorated function is altered to use a different global namespace
         for its execution. This different global namespace exposes a limited
-        set of functions from os.path, and three additional functions:
-        `imply_option`, `set_config` and `set_define`. The first allows to
-        inject additional options as if they had been passed on the command
-        line. The second declares new configuration items for consumption by
-        moz.build. The last declares new defines, stored in a DEFINES
-        configuration item.
+        set of functions from os.path, and two additional functions:
+        `imply_option` and `set_define`. The former allows to inject
+        additional options as if they had been passed on the command line.
+        The latter declares new defines, stored in a DEFINES configuration
+        item.
         '''
         if not args:
             raise ConfigureError('@depends needs at least one argument')
@@ -335,7 +334,6 @@ class ConfigureSandbox(dict):
             result = DependsOutput()
             glob.update(
                 imply_option=result.imply_option,
-                set_config=result.__setitem__,
                 set_define=self._set_define,
             )
             dummy = wraps(func)(DummyFunction())
@@ -376,14 +374,6 @@ class ConfigureSandbox(dict):
 
                 self._implied_options[option] = func, reason
 
-            if not self._help:
-                for k, v in result.iteritems():
-                    if k in self._config:
-                        raise ConfigureError(
-                            "Cannot add '%s' to configuration: Key already "
-                            "exists" % k)
-                    self._config[k] = v
-
             return dummy
 
         return decorator
@@ -415,6 +405,7 @@ class ConfigureSandbox(dict):
             advanced=self.advanced_impl,
             depends=self.depends_impl,
             option=self.option_impl,
+            set_config=self.set_config_impl,
         )
         self._templates.add(template)
         return template
@@ -427,6 +418,29 @@ class ConfigureSandbox(dict):
         func, glob = self._prepare_function(func)
         glob.update(__builtins__=__builtins__)
         return func
+
+    def set_config_impl(self, name, value):
+        '''Implementation of set_config().
+        Set the configuration items with the given name to the given value.
+        Both `name` and `value` can be references to @depends functions,
+        in which case the result from these functions is used. If the result
+        of either function is None, the configuration item is not set.
+        '''
+        # Don't set anything when --help was on the command line
+        if self._help:
+            return
+        name = self._resolve(name, need_help_dependency=False)
+        if name is None:
+            return
+        if not isinstance(name, types.StringTypes):
+            raise TypeError("Unexpected type: '%s'" % type(name))
+        if name in self._config:
+            raise ConfigureError(
+                "Cannot add '%s' to configuration: Key already "
+                "exists" % name)
+        value = self._resolve(value, need_help_dependency=False)
+        if value is not None:
+            self._config[name] = value
 
     def _set_define(self, name, value):
         defines = self._config.setdefault('DEFINES', {})
