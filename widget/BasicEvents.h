@@ -142,6 +142,10 @@ public:
     StopPropagation();
     mImmediatePropagationStopped = true;
   }
+  inline void StopCrossProcessForwarding()
+  {
+    mNoCrossProcessBoundaryForwarding = true;
+  }
 
   inline void Clear()
   {
@@ -326,6 +330,7 @@ public:
    */
   void StopPropagation() { mFlags.StopPropagation(); }
   void StopImmediatePropagation() { mFlags.StopImmediatePropagation(); }
+  void StopCrossProcessForwarding() { mFlags.StopCrossProcessForwarding(); }
 
   void PreventDefault()
   {
