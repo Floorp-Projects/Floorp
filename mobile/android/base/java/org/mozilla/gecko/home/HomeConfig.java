@@ -27,9 +27,11 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
-import android.util.Log;
 
 public final class HomeConfig {
+    public static final String PREF_KEY_BOOKMARKS_PANEL_ENABLED = "bookmarksPanelEnabled";
+    public static final String PREF_KEY_HISTORY_PANEL_ENABLED = "historyPanelEnabled";
+
     /**
      * Used to determine what type of HomeFragment subclass to use when creating
      * a given panel. With the exception of DYNAMIC, all of these types correspond

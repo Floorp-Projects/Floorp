@@ -5,13 +5,10 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomeConfig.OnReloadListener;
 
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
-
-import java.util.List;
 
 public class HomeConfigLoader extends AsyncTaskLoader<HomeConfig.State> {
     private final HomeConfig mConfig;
