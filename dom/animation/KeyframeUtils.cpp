@@ -10,6 +10,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/TimingParams.h"
 #include "mozilla/dom/BaseKeyframeTypesBinding.h" // For FastBaseKeyframe etc.
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "jsapi.h" // For ForOfIterator etc.
@@ -20,6 +21,10 @@
 #include "nsTArray.h"
 #include <algorithm> // For std::stable_sort
 
+// TODO: Remove once we drop LookupStyleContext
+#include "nsComputedDOMStyle.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
 
 namespace mozilla {
 
@@ -304,6 +309,10 @@ static bool
 RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
                           nsIDocument* aDocument);
 
+
+// TODO: This is only temporary until we remove the call sites for this.
+already_AddRefed<nsStyleContext>
+LookupStyleContext(dom::Element* aElement, CSSPseudoElementType aPseudoType);
 
 // ------------------------------------------------------------------
 //
@@ -929,6 +938,13 @@ GenerateValueEntries(Element* aTarget,
                      nsTArray<KeyframeValueEntry>& aResult,
                      ErrorResult& aRv)
 {
+  RefPtr<nsStyleContext> styleContext =
+    LookupStyleContext(aTarget, aPseudoType);
+  if (!styleContext) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
   nsCSSPropertySet properties;              // All properties encountered.
   nsCSSPropertySet propertiesWithFromValue; // Those with a defined 0% value.
   nsCSSPropertySet propertiesWithToValue;   // Those with a defined 100% value.
@@ -976,7 +992,7 @@ GenerateValueEntries(Element* aTarget,
       if (StyleAnimationValue::ComputeValues(pair.mProperty,
                                              nsCSSProps::eEnabledForAllContent,
                                              aTarget,
-                                             aPseudoType,
+                                             styleContext,
                                              pair.mValues[0],
                                              /* aUseSVGMode */ false,
                                              values)) {
@@ -1136,6 +1152,13 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
 {
   MOZ_ASSERT(aValue.isObject());
 
+  RefPtr<nsStyleContext> styleContext =
+    LookupStyleContext(aTarget, aPseudoType);
+  if (!styleContext) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
   // Convert the object to a PropertyIndexedKeyframe dictionary to
   // get its explicit dictionary members.
   dom::binding_detail::FastBasePropertyIndexedKeyframe keyframes;
@@ -1200,7 +1223,7 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
     if (!StyleAnimationValue::ComputeValues(pair.mProperty,
                                             nsCSSProps::eEnabledForAllContent,
                                             aTarget,
-                                            aPseudoType,
+                                            styleContext,
                                             pair.mValues[0],
                                             /* aUseSVGMode */ false,
                                             fromValues)) {
@@ -1253,7 +1276,7 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
       if (!StyleAnimationValue::ComputeValues(pair.mProperty,
                                               nsCSSProps::eEnabledForAllContent,
                                               aTarget,
-                                              aPseudoType,
+                                              styleContext,
                                               pair.mValues[i + 1],
                                               /* aUseSVGMode */ false,
                                               toValues)) {
@@ -1454,6 +1477,21 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
 
   return !propertiesWithFromValue.Equals(properties) ||
          !propertiesWithToValue.Equals(properties);
+}
+
+already_AddRefed<nsStyleContext>
+LookupStyleContext(dom::Element* aElement, CSSPseudoElementType aPseudoType)
+{
+  nsIDocument* doc = aElement->GetCurrentDoc();
+  nsIPresShell* shell = doc->GetShell();
+  if (!shell) {
+    return nullptr;
+  }
+
+  nsIAtom* pseudo =
+    aPseudoType < CSSPseudoElementType::Count ?
+    nsCSSPseudoElements::GetPseudoAtom(aPseudoType) : nullptr;
+  return nsComputedDOMStyle::GetStyleContextForElement(aElement, pseudo, shell);
 }
 
 } // namespace mozilla
