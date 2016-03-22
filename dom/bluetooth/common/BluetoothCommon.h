@@ -12,7 +12,6 @@
 #include "mozilla/Endian.h"
 #include "mozilla/Observer.h"
 #include "mozilla/UniquePtr.h"
-#include "nsAutoPtr.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsTArray.h"

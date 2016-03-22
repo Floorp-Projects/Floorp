@@ -274,9 +274,9 @@ class MachineId
 
   public:
     bool extractCurrentState(ExclusiveContext* cx) {
-        if (!cx->asmJSCacheOps().buildId)
+        if (!cx->buildIdOp())
             return false;
-        if (!cx->asmJSCacheOps().buildId(&buildId_))
+        if (!cx->buildIdOp()(&buildId_))
             return false;
         if (!GetCPUID(&cpuId_))
             return false;

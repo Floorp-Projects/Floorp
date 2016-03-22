@@ -415,7 +415,7 @@ BluetoothDaemonInterface::Init(
   mResultHandlerQ.AppendElement(aRes);
 
   if (!mProtocol) {
-    mProtocol = new BluetoothDaemonProtocol();
+    mProtocol = MakeUnique<BluetoothDaemonProtocol>();
   }
 
   if (!mListenSocket) {
@@ -425,7 +425,7 @@ BluetoothDaemonInterface::Init(
   // Init, step 1: Listen for command channel... */
 
   if (!mCmdChannel) {
-    mCmdChannel = new DaemonSocket(mProtocol, this, CMD_CHANNEL);
+    mCmdChannel = new DaemonSocket(mProtocol.get(), this, CMD_CHANNEL);
   } else if (
     NS_WARN_IF(mCmdChannel->GetConnectionStatus() == SOCKET_CONNECTED)) {
     // Command channel should not be open; let's close it.
@@ -568,96 +568,97 @@ BluetoothSetupInterface*
 BluetoothDaemonInterface::GetBluetoothSetupInterface()
 {
   if (mSetupInterface) {
-    return mSetupInterface;
+    return mSetupInterface.get();
   }
 
-  mSetupInterface = new BluetoothDaemonSetupInterface(mProtocol);
+  mSetupInterface = MakeUnique<BluetoothDaemonSetupInterface>(mProtocol.get());
 
-  return mSetupInterface;
+  return mSetupInterface.get();
 }
 
 BluetoothCoreInterface*
 BluetoothDaemonInterface::GetBluetoothCoreInterface()
 {
   if (mCoreInterface) {
-    return mCoreInterface;
+    return mCoreInterface.get();
   }
 
-  mCoreInterface = new BluetoothDaemonCoreInterface(mProtocol);
+  mCoreInterface = MakeUnique<BluetoothDaemonCoreInterface>(mProtocol.get());
 
-  return mCoreInterface;
+  return mCoreInterface.get();
 }
 
 BluetoothSocketInterface*
 BluetoothDaemonInterface::GetBluetoothSocketInterface()
 {
   if (mSocketInterface) {
-    return mSocketInterface;
+    return mSocketInterface.get();
   }
 
-  mSocketInterface = new BluetoothDaemonSocketInterface(mProtocol);
+  mSocketInterface = MakeUnique<BluetoothDaemonSocketInterface>(mProtocol.get());
 
-  return mSocketInterface;
-}
-
-BluetoothHandsfreeInterface*
-BluetoothDaemonInterface::GetBluetoothHandsfreeInterface()
-{
-  if (mHandsfreeInterface) {
-    return mHandsfreeInterface;
-  }
-
-  mHandsfreeInterface = new BluetoothDaemonHandsfreeInterface(mProtocol);
-
-  return mHandsfreeInterface;
-}
-
-BluetoothA2dpInterface*
-BluetoothDaemonInterface::GetBluetoothA2dpInterface()
-{
-  if (mA2dpInterface) {
-    return mA2dpInterface;
-  }
-
-  mA2dpInterface = new BluetoothDaemonA2dpInterface(mProtocol);
-
-  return mA2dpInterface;
-}
-
-BluetoothAvrcpInterface*
-BluetoothDaemonInterface::GetBluetoothAvrcpInterface()
-{
-  if (mAvrcpInterface) {
-    return mAvrcpInterface;
-  }
-
-  mAvrcpInterface = new BluetoothDaemonAvrcpInterface(mProtocol);
-
-  return mAvrcpInterface;
-}
-
-BluetoothGattInterface*
-BluetoothDaemonInterface::GetBluetoothGattInterface()
-{
-  if (mGattInterface) {
-    return mGattInterface;
-  }
-
-  mGattInterface = new BluetoothDaemonGattInterface(mProtocol);
-
-  return mGattInterface;
+  return mSocketInterface.get();
 }
 
 BluetoothHidInterface*
 BluetoothDaemonInterface::GetBluetoothHidInterface()
 {
   if (mHidInterface) {
-    return mHidInterface;
+    return mHidInterface.get();
   }
 
-  mHidInterface = new BluetoothDaemonHidInterface(mProtocol);
+  mHidInterface = MakeUnique<BluetoothDaemonHidInterface>(mProtocol.get());
 
-  return mHidInterface;
+  return mHidInterface.get();
+}
+
+BluetoothHandsfreeInterface*
+BluetoothDaemonInterface::GetBluetoothHandsfreeInterface()
+{
+  if (mHandsfreeInterface) {
+    return mHandsfreeInterface.get();
+  }
+
+  mHandsfreeInterface =
+    MakeUnique<BluetoothDaemonHandsfreeInterface>(mProtocol.get());
+
+  return mHandsfreeInterface.get();
+}
+
+BluetoothA2dpInterface*
+BluetoothDaemonInterface::GetBluetoothA2dpInterface()
+{
+  if (mA2dpInterface) {
+    return mA2dpInterface.get();
+  }
+
+  mA2dpInterface = MakeUnique<BluetoothDaemonA2dpInterface>(mProtocol.get());
+
+  return mA2dpInterface.get();
+}
+
+BluetoothAvrcpInterface*
+BluetoothDaemonInterface::GetBluetoothAvrcpInterface()
+{
+  if (mAvrcpInterface) {
+    return mAvrcpInterface.get();
+  }
+
+  mAvrcpInterface = MakeUnique<BluetoothDaemonAvrcpInterface>(mProtocol.get());
+
+  return mAvrcpInterface.get();
+}
+
+BluetoothGattInterface*
+BluetoothDaemonInterface::GetBluetoothGattInterface()
+{
+  if (mGattInterface) {
+    return mGattInterface.get();
+  }
+
+  mGattInterface = MakeUnique<BluetoothDaemonGattInterface>(mProtocol.get());
+
+  return mGattInterface.get();
 }
 
 // |DaemonSocketConsumer|, |ListenSocketConsumer|
@@ -679,7 +680,7 @@ BluetoothDaemonInterface::OnConnectSuccess(int aIndex)
     case CMD_CHANNEL:
       // Init, step 3: Listen for notification channel...
       if (!mNtfChannel) {
-        mNtfChannel = new DaemonSocket(mProtocol, this, NTF_CHANNEL);
+        mNtfChannel = new DaemonSocket(mProtocol.get(), this, NTF_CHANNEL);
       } else if (
         NS_WARN_IF(mNtfChannel->GetConnectionStatus() == SOCKET_CONNECTED)) {
         /* Notification channel should not be open; let's close it. */

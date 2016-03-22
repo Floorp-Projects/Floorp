@@ -210,6 +210,7 @@ enum class WasmAstExprKind
     Return,
     SetLocal,
     Store,
+    TernaryOperator,
     Trap,
     UnaryOperator,
 };
@@ -708,6 +709,26 @@ class WasmAstBinaryOperator final : public WasmAstExpr
     WasmAstExpr* rhs() const { return rhs_; }
 };
 
+class WasmAstTernaryOperator : public WasmAstExpr
+{
+    Expr expr_;
+    WasmAstExpr* op0_;
+    WasmAstExpr* op1_;
+    WasmAstExpr* op2_;
+
+  public:
+    static const WasmAstExprKind Kind = WasmAstExprKind::TernaryOperator;
+    WasmAstTernaryOperator(Expr expr, WasmAstExpr* op0, WasmAstExpr* op1, WasmAstExpr* op2)
+      : WasmAstExpr(Kind),
+        expr_(expr), op0_(op0), op1_(op1), op2_(op2)
+    {}
+
+    Expr expr() const { return expr_; }
+    WasmAstExpr* op0() const { return op0_; }
+    WasmAstExpr* op1() const { return op1_; }
+    WasmAstExpr* op2() const { return op2_; }
+};
+
 class WasmAstComparisonOperator final : public WasmAstExpr
 {
     Expr expr_;
@@ -804,6 +825,7 @@ class WasmToken
         SetLocal,
         Store,
         Table,
+        TernaryOpcode,
         Text,
         Trap,
         Type,
@@ -880,8 +902,9 @@ class WasmToken
         end_(end)
     {
         MOZ_ASSERT(begin != end);
-        MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == ComparisonOpcode ||
-                   kind_ == ConversionOpcode || kind_ == Load || kind_ == Store);
+        MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == TernaryOpcode ||
+                   kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
+                   kind_ == Load || kind_ == Store);
         u.expr_ = expr;
     }
     explicit WasmToken(const char16_t* begin)
@@ -929,8 +952,9 @@ class WasmToken
         return u.valueType_;
     }
     Expr expr() const {
-        MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == ComparisonOpcode ||
-                   kind_ == ConversionOpcode || kind_ == Load || kind_ == Store);
+        MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == TernaryOpcode ||
+                   kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
+                   kind_ == Load || kind_ == Store);
         return u.expr_;
     }
 };
@@ -1950,6 +1974,8 @@ WasmTokenStream::next()
         break;
 
       case 's':
+        if (consume(MOZ_UTF16("select")))
+            return WasmToken(WasmToken::TernaryOpcode, Expr::Select, begin, cur_);
         if (consume(MOZ_UTF16("set_local")))
             return WasmToken(WasmToken::SetLocal, begin, cur_);
         if (consume(MOZ_UTF16("segment")))
@@ -2508,6 +2534,24 @@ ParseComparisonOperator(WasmParseContext& c, Expr expr)
     return new(c.lifo) WasmAstComparisonOperator(expr, lhs, rhs);
 }
 
+static WasmAstTernaryOperator*
+ParseTernaryOperator(WasmParseContext& c, Expr expr)
+{
+    WasmAstExpr* op0 = ParseExpr(c);
+    if (!op0)
+        return nullptr;
+
+    WasmAstExpr* op1 = ParseExpr(c);
+    if (!op1)
+        return nullptr;
+
+    WasmAstExpr* op2 = ParseExpr(c);
+    if (!op2)
+        return nullptr;
+
+    return new(c.lifo) WasmAstTernaryOperator(expr, op0, op1, op2);
+}
+
 static WasmAstConversionOperator*
 ParseConversionOperator(WasmParseContext& c, Expr expr)
 {
@@ -2741,6 +2785,8 @@ ParseExprInsideParens(WasmParseContext& c)
         return ParseSetLocal(c);
       case WasmToken::Store:
         return ParseStore(c, token.expr());
+      case WasmToken::TernaryOpcode:
+        return ParseTernaryOperator(c, token.expr());
       case WasmToken::UnaryOpcode:
         return ParseUnaryOperator(c, token.expr());
       default:
@@ -3345,6 +3391,14 @@ ResolveBinaryOperator(Resolver& r, WasmAstBinaryOperator& b)
 }
 
 static bool
+ResolveTernaryOperator(Resolver& r, WasmAstTernaryOperator& b)
+{
+    return ResolveExpr(r, *b.op0()) &&
+           ResolveExpr(r, *b.op1()) &&
+           ResolveExpr(r, *b.op2());
+}
+
+static bool
 ResolveComparisonOperator(Resolver& r, WasmAstComparisonOperator& b)
 {
     return ResolveExpr(r, *b.lhs()) &&
@@ -3441,6 +3495,8 @@ ResolveExpr(Resolver& r, WasmAstExpr& expr)
         return ResolveStore(r, expr.as<WasmAstStore>());
       case WasmAstExprKind::BranchTable:
         return ResolveBranchTable(r, expr.as<WasmAstBranchTable>());
+      case WasmAstExprKind::TernaryOperator:
+        return ResolveTernaryOperator(r, expr.as<WasmAstTernaryOperator>());
       case WasmAstExprKind::UnaryOperator:
         return ResolveUnaryOperator(r, expr.as<WasmAstUnaryOperator>());
     }
@@ -3661,6 +3717,15 @@ EncodeBinaryOperator(Encoder& e, WasmAstBinaryOperator& b)
 }
 
 static bool
+EncodeTernaryOperator(Encoder& e, WasmAstTernaryOperator& b)
+{
+    return e.writeExpr(b.expr()) &&
+           EncodeExpr(e, *b.op0()) &&
+           EncodeExpr(e, *b.op1()) &&
+           EncodeExpr(e, *b.op2());
+}
+
+static bool
 EncodeComparisonOperator(Encoder& e, WasmAstComparisonOperator& b)
 {
     return e.writeExpr(b.expr()) &&
@@ -3772,6 +3837,8 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
         return EncodeStore(e, expr.as<WasmAstStore>());
       case WasmAstExprKind::BranchTable:
         return EncodeBranchTable(e, expr.as<WasmAstBranchTable>());
+      case WasmAstExprKind::TernaryOperator:
+        return EncodeTernaryOperator(e, expr.as<WasmAstTernaryOperator>());
       case WasmAstExprKind::UnaryOperator:
         return EncodeUnaryOperator(e, expr.as<WasmAstUnaryOperator>());
     }

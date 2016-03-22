@@ -85,6 +85,7 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins) { MOZ_CRASH(); }
     void visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins) { MOZ_CRASH(); }
     void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins) { MOZ_CRASH(); }
+    void visitAsmSelect(MAsmSelect*) { MOZ_CRASH(); }
 
     LTableSwitch* newLTableSwitch(LAllocation, LDefinition, MTableSwitch*) { MOZ_CRASH(); }
     LTableSwitchV* newLTableSwitchV(MTableSwitch*) { MOZ_CRASH(); }

@@ -450,6 +450,34 @@ DecodeConversionOperator(FunctionDecoder& f, ValType to, ValType argType, ExprTy
 }
 
 static bool
+DecodeSelectOperator(FunctionDecoder& f, ExprType* type)
+{
+    ExprType trueType;
+    if (!DecodeExpr(f, &trueType))
+        return false;
+
+    if (trueType == ExprType::I64 && !f.checkI64Support())
+        return false;
+
+    ExprType falseType;
+    if (!DecodeExpr(f, &falseType))
+        return false;
+
+    if (!CheckType(f, falseType, trueType))
+        return false;
+
+    ExprType condType;
+    if (!DecodeExpr(f, &condType))
+        return false;
+
+    if (!CheckType(f, condType, ValType::I32))
+        return false;
+
+    *type = trueType;
+    return true;
+}
+
+static bool
 DecodeIfElse(FunctionDecoder& f, bool hasElse, ExprType* type)
 {
     ExprType condType;
@@ -643,6 +671,8 @@ DecodeExpr(FunctionDecoder& f, ExprType* type)
         return DecodeGetLocal(f, type);
       case Expr::SetLocal:
         return DecodeSetLocal(f, type);
+      case Expr::Select:
+        return DecodeSelectOperator(f, type);
       case Expr::Block:
         return DecodeBlock(f, /* isLoop */ false, type);
       case Expr::Loop:
