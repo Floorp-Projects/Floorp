@@ -72,6 +72,12 @@ class PromiseObject : public NativeObject
     }
 };
 
+// ES6, 25.4.2.1.
+bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp);
+
+// ES6, 25.4.2.2.
+bool PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp);
+
 } // namespace js
 
 #endif /* builtin_Promise_h */
