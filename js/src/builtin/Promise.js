@@ -672,32 +672,14 @@ function Promise_then(onFulfilled, onRejected) {
 
     // Step 7.
     if (isWrappedPromise) {
-        return callFunction(CallPromiseMethodIfWrapped, promise, onFulfilled, onRejected,
+        // See comment above GetPromiseHandlerForwarders for why this is needed.
+        let handlerForwarders = GetPromiseHandlerForwarders(onFulfilled, onRejected);
+        return callFunction(CallPromiseMethodIfWrapped, promise,
+                            handlerForwarders[0], handlerForwarders[1],
                             resultCapability.promise, resultCapability.resolve,
                             resultCapability.reject, "UnwrappedPerformPromiseThen");
     }
-
     return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability);
-}
-
-/**
- * Forwarder used to invoke PerformPromiseThen on an unwrapped Promise, while
- * wrapping the resolve/reject callbacks into functions that invoke them in
- * their original compartment. Otherwise, calling them with objects as
- * arguments would throw if they're wrapped in Xray wrappers.
- */
-function UnwrappedPerformPromiseThen(onFulfilled, onRejected, promise, resolve, reject) {
-    let resultCapability = {
-        __proto__: PromiseCapabilityRecordProto,
-        promise,
-        resolve(resolution) {
-            return UnsafeCallWrappedFunction(resolve, undefined, resolution);
-        },
-        reject(reason) {
-            return UnsafeCallWrappedFunction(reject, undefined, reason);
-        }
-    };
-    return PerformPromiseThen(this, onFulfilled, onRejected, resultCapability);
 }
 
 /**
@@ -722,8 +704,10 @@ function EnqueuePromiseReactions(promise, dependentPromise, onFulfilled, onRejec
            "EnqueuePromiseReactions's dependentPromise argument must be a Promise or null");
 
     if (isWrappedPromise) {
-        return callFunction(CallPromiseMethodIfWrapped, promise, onFulfilled, onRejected,
-                            dependentPromise, NullFunction, NullFunction,
+        // See comment above GetPromiseHandlerForwarders for why this is needed.
+        let handlerForwarders = GetPromiseHandlerForwarders(onFulfilled, onRejected);
+        return callFunction(CallPromiseMethodIfWrapped, promise, handlerForwarders[0],
+                            handlerForwarders[1], dependentPromise, NullFunction, NullFunction,
                             "UnwrappedPerformPromiseThen");
     }
     let capability = {
@@ -733,6 +717,81 @@ function EnqueuePromiseReactions(promise, dependentPromise, onFulfilled, onRejec
         reject: NullFunction
     };
     return PerformPromiseThen(promise, onFulfilled, onRejected, capability);
+}
+
+/**
+ * Returns a set of functions that are (1) self-hosted, and (2) exact
+ * forwarders of the passed-in functions, for use by
+ * UnwrappedPerformPromiseThen.
+ *
+ * When calling `then` on an xray-wrapped promise, the receiver isn't
+ * unwrapped. Instead, Promise_then operates on the wrapped Promise. Just
+ * calling PerformPromiseThen from Promise_then as we normally would doesn't
+ * work in this case: PerformPromiseThen can only deal with unwrapped
+ * Promises. Instead, we use the CallPromiseMethodIfWrapped intrinsic to
+ * switch compartments before calling PerformPromiseThen, via
+ * UnwrappedPerformPromiseThen.
+ *
+ * This is almost enough, but there's an additional wrinkle: when calling the
+ * fulfillment and rejection handlers, we might pass in Object-type arguments
+ * from within the xray-ed, lower-privileged compartment. By default, this
+ * doesn't work, because they're wrapped into wrappers that disallow passing
+ * in Object-typed arguments (so the higher-privileged code doesn't
+ * accidentally operate on objects assuming they're higher-privileged, too.)
+ * So instead UnwrappedPerformPromiseThen adds another level of indirection:
+ * it closes over the, by now cross-compartment-wrapped, handler forwarders
+ * created by GetPromiseHandlerForwarders and creates a second set of
+ * forwarders around them, which use UnsafeCallWrappedFunction to call the
+ * initial forwarders.
+
+ * Note that both above-mentioned guarantees are required: while it may seem
+ * as though the original handlers would always be wrappers once they reach
+ * UnwrappedPerformPromiseThen (because the call to `then` originated in the
+ * higher-privileged compartment, and after unwrapping we end up in the
+ * lower-privileged one), that's not necessarily the case. One or both of the
+ * handlers can originate from the lower-privileged compartment, so they'd
+ * actually be unwrapped functions when they reach
+ * UnwrappedPerformPromiseThen.
+ */
+function GetPromiseHandlerForwarders(fulfilledHandler, rejectedHandler) {
+    // If non-callable values are passed, we have to preserve them so steps
+    // 3 and 4 of PerformPromiseThen work as expected.
+    return [
+        IsCallable(fulfilledHandler) ? function onFulfilled(argument) {
+            return callContentFunction(fulfilledHandler, this, argument);
+        } : fulfilledHandler,
+        IsCallable(rejectedHandler) ? function onRejected(argument) {
+            return callContentFunction(rejectedHandler, this, argument);
+        } : rejectedHandler
+    ];
+}
+
+/**
+ * Forwarder used to invoke PerformPromiseThen on an unwrapped Promise, while
+ * wrapping the resolve/reject callbacks into functions that invoke them in
+ * their original compartment. See the comment for GetPromiseHandlerForwarders
+ * for details.
+ */
+function UnwrappedPerformPromiseThen(fulfilledHandler, rejectedHandler, promise, resolve, reject) {
+    let resultCapability = {
+        __proto__: PromiseCapabilityRecordProto,
+        promise,
+        resolve(resolution) {
+            return UnsafeCallWrappedFunction(resolve, undefined, resolution);
+        },
+        reject(reason) {
+            return UnsafeCallWrappedFunction(reject, undefined, reason);
+        }
+    };
+    function onFulfilled(argument) {
+        return UnsafeCallWrappedFunction(fulfilledHandler, undefined, argument);
+    }
+    function onRejected(argument) {
+        return UnsafeCallWrappedFunction(rejectedHandler, undefined, argument);
+    }
+    return PerformPromiseThen(this, IsCallable(fulfilledHandler) ? onFulfilled : fulfilledHandler,
+                              IsCallable(rejectedHandler) ? onRejected : rejectedHandler,
+                              resultCapability);
 }
 
 // ES6, 25.4.5.3.1.
