@@ -314,11 +314,9 @@ struct cpuid_t {
           number_(0)
     { }
 };
-#elif defined(__linux__)
-    typedef int cpuid_t;
 #else
     typedef struct {} cpuid_t;
-#endif // defined(WINVER >= 0x0600) || defined(__linux__)
+#endif // defined(WINVER >= 0x0600)
 
 /**
  * RAII class to start/stop measuring performance when

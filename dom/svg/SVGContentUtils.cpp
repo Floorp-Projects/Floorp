@@ -340,9 +340,8 @@ SVGContentUtils::GetFontXHeight(nsStyleContext *aStyleContext)
   nsPresContext *presContext = aStyleContext->PresContext();
   MOZ_ASSERT(presContext, "NULL pres context in GetFontXHeight");
 
-  RefPtr<nsFontMetrics> fontMetrics;
-  nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext,
-                                               getter_AddRefs(fontMetrics));
+  RefPtr<nsFontMetrics> fontMetrics =
+    nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext);
 
   if (!fontMetrics) {
     // ReportToConsole

@@ -25,18 +25,9 @@ interface nsICertificateDialogs : nsISupports
    *
    *  @return true if the user allows to import the certificate.
    */
-  boolean confirmDownloadCACert(in nsIInterfaceRequestor ctx, 
-                         in nsIX509Cert cert,
-                         out unsigned long trust);
-
-  /**
-   *  UI shown when a web site has delivered a CA certificate to
-   *  be imported, but the certificate is already contained in the
-   *  user's storage.
-   *
-   *  @param ctx A user interface context.
-   */
-  void notifyCACertExists(in nsIInterfaceRequestor ctx);
+  boolean confirmDownloadCACert(in nsIInterfaceRequestor ctx,
+                                in nsIX509Cert cert,
+                                out unsigned long trust);
 
   /**
    *  UI shown when a user's personal certificate is going to be

@@ -37,10 +37,9 @@ enum ShaderFeatures {
   ENABLE_OPACITY=0x100,
   ENABLE_BLUR=0x200,
   ENABLE_COLOR_MATRIX=0x400,
-  ENABLE_MASK_2D=0x800,
-  ENABLE_MASK_3D=0x1000,
-  ENABLE_NO_PREMUL_ALPHA=0x2000,
-  ENABLE_DEAA=0x4000
+  ENABLE_MASK=0x800,
+  ENABLE_NO_PREMUL_ALPHA=0x1000,
+  ENABLE_DEAA=0x2000
 };
 
 class KnownUniform {
@@ -223,8 +222,7 @@ public:
   void SetComponentAlpha(bool aEnabled);
   void SetColorMatrix(bool aEnabled);
   void SetBlur(bool aEnabled);
-  void SetMask2D(bool aEnabled);
-  void SetMask3D(bool aEnabled);
+  void SetMask(bool aEnabled);
   void SetDEAA(bool aEnabled);
   void SetCompositionOp(gfx::CompositionOp aOp);
   void SetNoPremultipliedAlpha();

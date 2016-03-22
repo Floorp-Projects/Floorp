@@ -96,13 +96,13 @@ X11TextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
 }
 
 void
-X11TextureData::Deallocate(ISurfaceAllocator*)
+X11TextureData::Deallocate(ClientIPCAllocator*)
 {
   mSurface = nullptr;
 }
 
 TextureData*
-X11TextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
+X11TextureData::CreateSimilar(ClientIPCAllocator* aAllocator,
                               TextureFlags aFlags,
                               TextureAllocationFlags aAllocFlags) const
 {
@@ -111,7 +111,7 @@ X11TextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
 
 X11TextureData*
 X11TextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                       TextureFlags aFlags, ISurfaceAllocator* aAllocator)
+                       TextureFlags aFlags, ClientIPCAllocator* aAllocator)
 {
   MOZ_ASSERT(aSize.width >= 0 && aSize.height >= 0);
   if (aSize.width <= 0 || aSize.height <= 0 ||

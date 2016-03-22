@@ -63,7 +63,6 @@ public:
              const nsAString& aType,
              const nsAString& aDescription,
              const nsAString& aExtension);
-  nsMimeType(nsPIDOMWindowInner* aWindow, const nsAString& aMimeType);
   nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -83,10 +82,9 @@ protected:
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
 
-  // Strong reference to the active plugin, if any. Note that this
-  // creates an explicit reference cycle through the plugin element's
-  // mimetype array. We rely on the cycle collector to break this
-  // cycle.
+  // Strong reference to the active plugin. Note that this creates an explicit
+  // reference cycle through the plugin element's mimetype array. We rely on the
+  // cycle collector to break this cycle.
   RefPtr<nsPluginElement> mPluginElement;
   nsString mType;
   nsString mDescription;

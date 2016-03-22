@@ -20,11 +20,7 @@ fxc LayerManagerD3D9Shaders.hlsl -ESolidColorShader -nologo -Tps_2_0 -Fh$tempfil
 cat $tempfile >> LayerManagerD3D9Shaders.h
 fxc LayerManagerD3D9Shaders.hlsl -ELayerQuadVSMask -nologo -Fh$tempfile -VnLayerQuadVSMask
 cat $tempfile >> LayerManagerD3D9Shaders.h
-fxc LayerManagerD3D9Shaders.hlsl -ELayerQuadVSMask3D -nologo -Fh$tempfile -VnLayerQuadVSMask3D
-cat $tempfile >> LayerManagerD3D9Shaders.h
 fxc LayerManagerD3D9Shaders.hlsl -ERGBAShaderMask -nologo -Tps_2_0 -Fh$tempfile -VnRGBAShaderPSMask
-cat $tempfile >> LayerManagerD3D9Shaders.h
-fxc LayerManagerD3D9Shaders.hlsl -ERGBAShaderMask3D -nologo -Tps_2_0 -Fh$tempfile -VnRGBAShaderPSMask3D
 cat $tempfile >> LayerManagerD3D9Shaders.h
 fxc LayerManagerD3D9Shaders.hlsl -EComponentPass1ShaderMask -nologo -Tps_2_0 -Fh$tempfile -VnComponentPass1ShaderPSMask
 cat $tempfile >> LayerManagerD3D9Shaders.h

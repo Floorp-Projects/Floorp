@@ -714,7 +714,7 @@ pref("gfx.canvas.azure.backends", "direct2d1.1,skia,cairo");
 pref("gfx.content.azure.backends", "direct2d1.1,cairo");
 #else
 #ifdef XP_MACOSX
-pref("gfx.content.azure.backends", "cg");
+pref("gfx.content.azure.backends", "skia,cg");
 pref("gfx.canvas.azure.backends", "skia");
 // Accelerated cg canvas where available (10.7+)
 pref("gfx.canvas.azure.accelerated", true);
@@ -2339,9 +2339,6 @@ pref("layout.css.scroll-snap.prediction-sensitivity", "0.750");
 
 // Is support for basic shapes in clip-path enabled?
 pref("layout.css.clip-path-shapes.enabled", false);
-
-// Is support for CSS sticky positioning enabled?
-pref("layout.css.sticky.enabled", true);
 
 // Is support for DOMPoint enabled?
 pref("layout.css.DOMPoint.enabled", true);

@@ -58,7 +58,7 @@ def config_status(config):
         fh.write("__all__ = ['topobjdir', 'topsrcdir', 'defines', "
                  "'non_global_defines', 'substs']")
 
-        if not config.get('BUILDING_JS') or config.get('JS_STANDALONE'):
+        if config.get('MOZ_BUILD_APP') != 'js' or config.get('JS_STANDALONE'):
             fh.write('''
 if __name__ == '__main__':
     args = dict([(name, globals()[name]) for name in __all__])
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     # Other things than us are going to run this file, so we need to give it
     # executable permissions.
     os.chmod('config.status', 0755)
-    if not config.get('BUILDING_JS') or config.get('JS_STANDALONE'):
+    if config.get('MOZ_BUILD_APP') != 'js' or config.get('JS_STANDALONE'):
         if not config.get('JS_STANDALONE'):
             os.environ['WRITE_MOZINFO'] = '1'
         # Until we have access to the virtualenv from this script, execute

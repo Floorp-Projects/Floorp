@@ -458,8 +458,8 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
     } while (0 != decorMask &&
              (f = nsLayoutUtils::GetParentOrPlaceholderFor(f)));
 
-    RefPtr<nsFontMetrics> fontMet;
-    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
+    RefPtr<nsFontMetrics> fontMet =
+      nsLayoutUtils::GetFontMetricsForFrame(this, 1.0f);
     fontMet->SetVertical(wm.IsVertical());
     fontMet->SetTextOrientation(StyleVisibility()->mTextOrientation);
 
@@ -633,8 +633,8 @@ nsTextBoxFrame::CalculateTitleForWidth(nsRenderingContext& aRenderingContext,
         return 0;
     }
 
-    RefPtr<nsFontMetrics> fm;
-    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+    RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetFontMetricsForFrame(this, 1.0f);
 
     // see if the text will completely fit in the width given
     nscoord titleWidth =
@@ -969,8 +969,8 @@ nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
     nsRect scrollBounds(nsPoint(0, 0), GetSize());
     nsRect textRect = mTextDrawRect;
     
-    RefPtr<nsFontMetrics> fontMet;
-    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
+    RefPtr<nsFontMetrics> fontMet =
+      nsLayoutUtils::GetFontMetricsForFrame(this, 1.0f);
     nsBoundingMetrics metrics = 
       fontMet->GetInkBoundsForVisualOverflow(mCroppedTitle.get(),
                                              mCroppedTitle.Length(),
@@ -1030,8 +1030,8 @@ nsTextBoxFrame::GetTextSize(nsRenderingContext& aRenderingContext,
                             const nsString& aString,
                             nsSize& aSize, nscoord& aAscent)
 {
-    RefPtr<nsFontMetrics> fontMet;
-    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
+    RefPtr<nsFontMetrics> fontMet =
+      nsLayoutUtils::GetFontMetricsForFrame(this, 1.0f);
     aSize.height = fontMet->MaxHeight();
     aSize.width =
       nsLayoutUtils::AppUnitWidthOfStringBidi(aString, this, *fontMet,

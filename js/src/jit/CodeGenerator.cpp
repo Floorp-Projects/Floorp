@@ -5746,8 +5746,8 @@ CodeGenerator::visitGetNextMapEntryForIterator(LGetNextMapEntryForIterator* lir)
     masm.loadPrivate(Address(iter, NativeObject::getFixedSlotOffset(MapIteratorObject::RangeSlot)),
                      range);
 
-    Label iterDone, done;
-    masm.branchTestPtr(Assembler::Zero, range, range, &iterDone);
+    Label iterAlreadyDone, iterDone, done;
+    masm.branchTestPtr(Assembler::Zero, range, range, &iterAlreadyDone);
 
     masm.load32(Address(range, ValueMap::Range::offsetOfI()), temp);
     masm.loadPtr(Address(range, ValueMap::Range::offsetOfHashTable()), dataLength);
@@ -5795,6 +5795,8 @@ CodeGenerator::visitGetNextMapEntryForIterator(LGetNextMapEntryForIterator* lir)
 
         masm.storeValue(PrivateValue(nullptr),
                         Address(iter, NativeObject::getFixedSlotOffset(MapIteratorObject::RangeSlot)));
+
+        masm.bind(&iterAlreadyDone);
 
         masm.move32(Imm32(1), output);
     }

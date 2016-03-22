@@ -26,6 +26,7 @@
 #include "gfxGraphiteShaper.h"
 #include "gfxHarfBuzzShaper.h"
 #include "gfxUserFontSet.h"
+#include "nsIUGenCategory.h"
 #include "nsSpecialCasingData.h"
 #include "nsTextRunTransformations.h"
 #include "nsUnicodeProperties.h"
@@ -762,6 +763,16 @@ bool
 gfxShapedText::FilterIfIgnorable(uint32_t aIndex, uint32_t aCh)
 {
     if (IsDefaultIgnorable(aCh)) {
+        // There are a few default-ignorables of Letter category (currently,
+        // just the Hangul filler characters) that we'd better not discard
+        // if they're followed by additional characters in the same cluster.
+        // Some fonts use them to carry the width of a whole cluster of
+        // combining jamos; see bug 1238243.
+        if (GetGenCategory(aCh) == nsIUGenCategory::kLetter &&
+            aIndex + 1 < GetLength() &&
+            !GetCharacterGlyphs()[aIndex + 1].IsClusterStart()) {
+            return false;
+        }
         DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
         details->mGlyphID = aCh;
         details->mAdvance = 0;
