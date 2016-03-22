@@ -65,6 +65,7 @@ function closeGlobalTab() {
     win.BrowserOpenTab();
   }
   win.gBrowser.removeTab(gTab);
+  gTab = null;
 }
 
 function unregisterGlobalTab() {
@@ -210,7 +211,10 @@ CustomizeMode.prototype = {
       return;
     }
     if (!gTab.selected) {
+      // This will force another .enter() to be called via the
+      // onlocationchange handler of the tabbrowser, so we return early.
       gTab.ownerGlobal.gBrowser.selectedTab = gTab;
+      return;
     }
     gTab.ownerGlobal.focus();
     if (gTab.ownerDocument != this.document) {
