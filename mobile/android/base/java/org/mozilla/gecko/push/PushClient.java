@@ -6,6 +6,7 @@
 package org.mozilla.gecko.push;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.mozilla.gecko.push.RegisterUserAgentResponse;
 import org.mozilla.gecko.push.SubscribeChannelResponse;
@@ -95,9 +96,9 @@ public class PushClient {
         delegate.responseOrThrow(); // For side-effects only.
     }
 
-    public SubscribeChannelResponse subscribeChannel(@NonNull String uaid, @NonNull String secret) throws LocalException, AutopushClientException {
+    public SubscribeChannelResponse subscribeChannel(@NonNull String uaid, @NonNull String secret, @Nullable String appServerKey) throws LocalException, AutopushClientException {
         final Delegate<SubscribeChannelResponse> delegate = new Delegate<>();
-        autopushClient.subscribeChannel(uaid, secret, delegate);
+        autopushClient.subscribeChannel(uaid, secret, appServerKey, delegate);
         return delegate.responseOrThrow();
     }
 
