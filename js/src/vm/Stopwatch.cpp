@@ -417,11 +417,9 @@ AutoStopwatch::getCPU() const
 
     cpuid_t result(proc.Group, proc.Number);
     return result;
-#elif defined(__GLIBC__)
-    return sched_getcpu();
 #else
     return {};
-#endif // defined(XP_WIN) || defined(__GLIBC__)
+#endif // defined(XP_WIN)
 }
 
 bool inline
@@ -429,8 +427,6 @@ AutoStopwatch::isSameCPU(const cpuid_t& a, const cpuid_t& b) const
 {
 #if defined(XP_WIN)  && WINVER >= _WIN32_WINNT_VISTA
     return a.group_ == b.group_ && a.number_ == b.number_;
-#elif defined(__GLIBC__)
-    return a == b;
 #else
     return true;
 #endif
