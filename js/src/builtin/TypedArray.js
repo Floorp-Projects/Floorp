@@ -119,26 +119,13 @@ function TypedArrayEntries() {
     // Step 1.
     var O = this;
 
-    // We need to be a bit careful here, because in the Xray case we want to
-    // create the iterator in our current compartment.
-    //
-    // Before doing that, though, we want to check that we have a typed
-    // array and it does not have a detached array buffer.  We do the latter by
-    // just calling GetAttachedArrayBuffer() and letting it throw if there isn't
-    // one.  In the case when we're not sure we have a typed array (e.g. we
-    // might have a cross-compartment wrapper for one), we can go ahead and call
-    // GetAttachedArrayBuffer via CallTypedArrayMethodIfWrapped; that will throw
-    // if we're not actually a wrapped typed array, or if we have a detached
-    // array buffer.
-
     // Step 2-3.
     if (!IsObject(O) || !IsTypedArray(O)) {
-        // And also step 4-6.
-        callFunction(CallTypedArrayMethodIfWrapped, O, O, "GetAttachedArrayBuffer");
-    } else {
-        // Step 4-6.
-        GetAttachedArrayBuffer(O);
+        return callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayEntries");
     }
+
+    // Step 4-6.
+    GetAttachedArrayBuffer(O);
 
     // Step 7.
     return CreateArrayIterator(O, ITEM_KIND_KEY_AND_VALUE);
@@ -513,13 +500,12 @@ function TypedArrayKeys() {
     // Step 1.
     var O = this;
 
-    // See the big comment in TypedArrayEntries for what we're doing here.
-
     // Step 2.
-    if (!IsObject(O) || !IsTypedArray(O))
-        callFunction(CallTypedArrayMethodIfWrapped, O, O, "GetAttachedArrayBuffer");
-    else
-        GetAttachedArrayBuffer(O);
+    if (!IsObject(O) || !IsTypedArray(O)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayKeys");
+    }
+
+    GetAttachedArrayBuffer(O);
 
     // Step 3.
     return CreateArrayIterator(O, ITEM_KIND_KEY);
@@ -1088,16 +1074,13 @@ function TypedArrayValues() {
     // Step 1.
     var O = this;
 
-    // See the big comment in TypedArrayEntries for what we're doing here.
-
-    // Steps 2-6.
+    // Step 2-3.
     if (!IsObject(O) || !IsTypedArray(O)) {
-        // And also steps 4-6.
-        callFunction(CallTypedArrayMethodIfWrapped, O, O, "GetAttachedArrayBuffer");
-    } else {
-        // Steps 4-6.
-        GetAttachedArrayBuffer(O);
+        return callFunction(CallTypedArrayMethodIfWrapped, O, "TypedArrayValues");
     }
+
+    // Step 4-6.
+    GetAttachedArrayBuffer(O);
 
     // Step 7.
     return CreateArrayIterator(O, ITEM_KIND_VALUE);
