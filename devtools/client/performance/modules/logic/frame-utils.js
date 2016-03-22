@@ -9,6 +9,8 @@ const { assert } = require("devtools/shared/DevToolsUtils");
 const { isChromeScheme, isContentScheme, parseURL } =
   require("devtools/client/shared/source-utils");
 
+const { CATEGORY_MASK, CATEGORY_MAPPINGS } = require("devtools/client/performance/modules/categories");
+
 // Character codes used in various parsing helper functions.
 const CHAR_CODE_R = "r".charCodeAt(0);
 const CHAR_CODE_0 = "0".charCodeAt(0);
@@ -229,18 +231,18 @@ function computeIsContentAndCategory(frame) {
           isChromeScheme(location, j) &&
           (location.indexOf("resource://devtools") !== -1 ||
            location.indexOf("resource://devtools") !== -1)) {
-        frame.category = global.CATEGORY_DEVTOOLS;
+        frame.category = CATEGORY_MASK("tools");
         return;
       }
     }
   }
 
   if (location === "EnterJIT") {
-    frame.category = global.CATEGORY_JIT;
+    frame.category = CATEGORY_MASK("js");
     return;
   }
 
-  frame.category = global.CATEGORY_OTHER;
+  frame.category = CATEGORY_MASK("other");
 }
 
 /**
@@ -328,8 +330,7 @@ InflatedFrame.prototype.getFrameKey = function getFrameKey(options) {
 
   if (options.isLeaf) {
     // We only care about leaf platform frames if we are displaying content
-    // only. If no category is present, give the default category of
-    // CATEGORY_OTHER.
+    // only. If no category is present, give the default category of "other".
     //
     // 1. The leaf is where time is _actually_ being spent, so we _need_ to
     // show it to developers in some way to give them accurate profiling
@@ -389,7 +390,7 @@ function getFrameInfo (node, options) {
       data.isMetaCategory = node.isMetaCategory;
     }
     data.samples = node.youngestFrameSamples;
-    data.categoryData = global.CATEGORY_MAPPINGS[node.category] || {};
+    data.categoryData = CATEGORY_MAPPINGS[node.category] || {};
     data.nodeType = node.nodeType;
 
     // Frame name (function location or some meta information)

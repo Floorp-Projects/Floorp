@@ -15,7 +15,7 @@ loader.lazyRequireGetter(this, "getColor",
   "devtools/client/shared/theme", true);
 
 loader.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
-  "devtools/client/performance/modules/global", true);
+  "devtools/client/performance/modules/categories", true);
 loader.lazyRequireGetter(this, "FrameUtils",
   "devtools/client/performance/modules/logic/frame-utils");
 loader.lazyRequireGetter(this, "demangle",
