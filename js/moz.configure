@@ -21,7 +21,7 @@ option(env='JS_STANDALONE', default=building_js,
 @depends('JS_STANDALONE')
 def js_standalone(value):
     if value:
-        set_config('JS_STANDALONE', '1')
+        set_config('JS_STANDALONE', True)
         add_old_configure_assignment('JS_STANDALONE', '1')
 
 
@@ -31,7 +31,7 @@ js_option('--disable-js-shell', default=building_js,
 @depends('--disable-js-shell')
 def js_shell(value):
     if not value:
-        set_config('JS_DISABLE_SHELL', '1')
+        set_config('JS_DISABLE_SHELL', True)
 
 
 # Use SpiderMonkey Promise implementation if it's enabled
@@ -41,7 +41,7 @@ js_option('--enable-sm-promise', help='Enable SpiderMonkey promises')
 @depends('--enable-sm-promise')
 def sm_promise(value):
     if value:
-        set_config('SPIDERMONKEY_PROMISE', '1')
+        set_config('SPIDERMONKEY_PROMISE', True)
         set_define('SPIDERMONKEY_PROMISE', '1')
 
 
@@ -58,7 +58,7 @@ def static_js(shared_js, export_js):
     if shared_js:
         if not export_js:
             error('Must export JS symbols when building a shared library.')
-        set_config('JS_SHARED_LIBRARY', '1')
+        set_config('JS_SHARED_LIBRARY', True)
         add_old_configure_assignment('JS_SHARED_LIBRARY', '1')
     else:
         if export_js:
@@ -102,7 +102,7 @@ def instruments(value, target):
         error('--enable-instruments cannot be used when targeting %s'
               % target.os)
     if value:
-        set_config('MOZ_INSTRUMENTS', '1')
+        set_config('MOZ_INSTRUMENTS', True)
         set_define('MOZ_INSTRUMENTS', '1')
         add_old_configure_assignment('MOZ_INSTRUMENTS', '1')
         imply_option('--enable-profiling', reason='--enable-instruments')
@@ -125,7 +125,7 @@ js_option('--enable-profiling', env='MOZ_PROFILING',
 @depends('--enable-profiling', target)
 def profiling(value, target):
     if value:
-        set_config('MOZ_PROFILING', '1')
+        set_config('MOZ_PROFILING', True)
         set_define('MOZ_PROFILING', '1')
         add_old_configure_assignment('MOZ_PROFILING', '1')
 
@@ -139,5 +139,5 @@ js_option('--enable-vtune', env='MOZ_VTUNE', help='Enable vtune profiling')
 @depends('--enable-vtune')
 def vtune(value):
     if value:
-        set_config('MOZ_VTUNE', '1')
+        set_config('MOZ_VTUNE', True)
         set_define('MOZ_VTUNE', '1')
