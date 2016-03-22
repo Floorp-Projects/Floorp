@@ -152,7 +152,7 @@ A boolean set to true if a debugger is attached to the main process.
 
 shutdownDuration
 ~~~~~~~~~~~~~~~~
-The time, in ticks per seconds (this behaves inconsistently across platforms, see `bug 1232285 <https://bugzilla.mozilla.org/show_bug.cgi?id=1232285>`_), it took to complete the last shutdown.
+The time, in milliseconds, it took to complete the last shutdown.
 
 failedProfileLockCount
 ~~~~~~~~~~~~~~~~~~~~~~
