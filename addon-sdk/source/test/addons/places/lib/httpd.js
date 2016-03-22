@@ -2046,7 +2046,7 @@ function maybeAddHeaders(file, metadata, response)
     return;
 
   const PR_RDONLY = 0x01;
-  var fis = new FileInputStream(headerFile, PR_RDONLY, parseInt("444", 8),
+  var fis = new FileInputStream(headerFile, PR_RDONLY, 0o444,
                                 Ci.nsIFileInputStream.CLOSE_ON_EOF);
 
   try
@@ -2572,7 +2572,7 @@ ServerHandler.prototype =
     var type = this._getTypeFromFile(file);
     if (type === SJS_TYPE)
     {
-      var fis = new FileInputStream(file, PR_RDONLY, parseInt("444", 8),
+      var fis = new FileInputStream(file, PR_RDONLY, 0o444,
                                     Ci.nsIFileInputStream.CLOSE_ON_EOF);
 
       try
@@ -2666,7 +2666,7 @@ ServerHandler.prototype =
       maybeAddHeaders(file, metadata, response);
       response.setHeader("Content-Length", "" + count, false);
 
-      var fis = new FileInputStream(file, PR_RDONLY, parseInt("444", 8),
+      var fis = new FileInputStream(file, PR_RDONLY, 0o444,
                                     Ci.nsIFileInputStream.CLOSE_ON_EOF);
 
       offset = offset || 0;
