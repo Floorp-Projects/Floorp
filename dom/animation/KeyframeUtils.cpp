@@ -536,6 +536,42 @@ KeyframeUtils::GetKeyframesFromObject(JSContext* aCx,
   return keyframes;
 }
 
+/* static */ void
+KeyframeUtils::ApplyDistributeSpacing(nsTArray<Keyframe>& aKeyframes)
+{
+  if (aKeyframes.IsEmpty()) {
+    return;
+  }
+
+  // If the first or last keyframes have an unspecified offset,
+  // fill them in with 0% and 100%.  If there is only a single keyframe,
+  // then it gets 100%.
+  Keyframe& lastElement = aKeyframes.LastElement();
+  lastElement.mComputedOffset = lastElement.mOffset.valueOr(1.0);
+  if (aKeyframes.Length() > 1) {
+    Keyframe& firstElement = aKeyframes[0];
+    firstElement.mComputedOffset = firstElement.mOffset.valueOr(0.0);
+  }
+
+  // Fill in remaining missing offsets.
+  size_t i = 0;
+  while (i < aKeyframes.Length() - 1) {
+    double start = aKeyframes[i].mComputedOffset;
+    size_t j = i + 1;
+    while (aKeyframes[j].mOffset.isNothing() && j < aKeyframes.Length() - 1) {
+      ++j;
+    }
+    double end = aKeyframes[j].mOffset.valueOr(1.0);
+    size_t n = j - i;
+    for (size_t k = 1; k < n; ++k) {
+      double offset = start + double(k) / n * (end - start);
+      aKeyframes[i + k].mComputedOffset = offset;
+    }
+    i = j;
+    aKeyframes[j].mComputedOffset = end;
+  }
+}
+
 /* static */ nsTArray<AnimationProperty>
 KeyframeUtils::GetAnimationPropertiesFromKeyframes(
     nsStyleContext* aStyleContext,
