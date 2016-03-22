@@ -55,6 +55,7 @@ class nsDocument;
 
 namespace mozilla {
 namespace dom {
+  struct AnimationFilter;
   struct ScrollIntoViewOptions;
   struct ScrollToOptions;
   class ElementOrCSSPseudoElement;
@@ -844,7 +845,8 @@ public:
           ErrorResult& aError);
 
   // Note: GetAnimations will flush style while GetAnimationsUnsorted won't.
-  void GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations);
+  void GetAnimations(const AnimationFilter& filter,
+                     nsTArray<RefPtr<Animation>>& aAnimations);
   static void GetAnimationsUnsorted(Element* aElement,
                                     CSSPseudoElementType aPseudoType,
                                     nsTArray<RefPtr<Animation>>& aAnimations);

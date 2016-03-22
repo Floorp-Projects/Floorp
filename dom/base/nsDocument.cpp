@@ -201,6 +201,7 @@
 #include "nsWrapperCacheInlines.h"
 #include "nsSandboxFlags.h"
 #include "nsIAppsService.h"
+#include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/AnonymousContent.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DocumentFragment.h"
@@ -3200,26 +3201,13 @@ nsDocument::Timeline()
 void
 nsDocument::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
 {
-  FlushPendingNotifications(Flush_Style);
-
-  for (nsIContent* node = nsINode::GetFirstChild();
-       node;
-       node = node->GetNextNode(this)) {
-    if (!node->IsElement()) {
-      continue;
-    }
-
-    Element* element = node->AsElement();
-    Element::GetAnimationsUnsorted(element, CSSPseudoElementType::NotPseudo,
-                                   aAnimations);
-    Element::GetAnimationsUnsorted(element, CSSPseudoElementType::before,
-                                   aAnimations);
-    Element::GetAnimationsUnsorted(element, CSSPseudoElementType::after,
-                                   aAnimations);
+  Element* root = GetRootElement();
+  if (!root) {
+    return;
   }
-
-  // Sort animations by priority
-  aAnimations.Sort(AnimationPtrComparator<RefPtr<Animation>>());
+  AnimationFilter filter;
+  filter.mSubtree = true;
+  root->GetAnimations(filter, aAnimations);
 }
 
 /* Return true if the document is in the focused top-level window, and is an
