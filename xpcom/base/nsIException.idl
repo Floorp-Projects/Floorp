@@ -21,7 +21,9 @@ interface nsIStackFrame : nsISupports
     [implicit_jscontext]
     readonly attribute AString                 name;
     // Valid line numbers begin at '1'. '0' indicates unknown.
+    [implicit_jscontext]
     readonly attribute int32_t                 lineNumber;
+    [implicit_jscontext]
     readonly attribute int32_t                 columnNumber;
     readonly attribute AUTF8String             sourceLine;
     readonly attribute AString                 asyncCause;
@@ -62,6 +64,7 @@ interface nsIException : nsISupports
     [implicit_jscontext]
     readonly attribute AString                 filename;
     // Valid line numbers begin at '1'. '0' indicates unknown.
+    [implicit_jscontext]
     readonly attribute uint32_t                lineNumber;
     // Valid column numbers begin at 0.
     // We don't have an unambiguous indicator for unknown.
