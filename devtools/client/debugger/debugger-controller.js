@@ -147,6 +147,7 @@ var DebuggerEditor = require("devtools/client/sourceeditor/debugger");
 var {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 var FastListWidget = require("devtools/client/shared/widgets/FastListWidget");
 var {LocalizationHelper} = require("devtools/client/shared/l10n");
+var {PrefsHelper} = require("devtools/client/shared/prefs");
 
 XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 
@@ -1196,7 +1197,7 @@ StackFrames.prototype = {
 /**
  * Shortcuts for accessing various debugger preferences.
  */
-var Prefs = new ViewHelpers.Prefs("devtools", {
+var Prefs = new PrefsHelper("devtools", {
   workersAndSourcesWidth: ["Int", "debugger.ui.panes-workers-and-sources-width"],
   instrumentsWidth: ["Int", "debugger.ui.panes-instruments-width"],
   panesVisibleOnStartup: ["Bool", "debugger.ui.panes-visible-on-startup"],
