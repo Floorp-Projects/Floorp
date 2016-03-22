@@ -603,7 +603,8 @@ typedef bool
 (* JSInterruptCallback)(JSContext* cx);
 
 typedef bool
-(* JSEnqueuePromiseJobCallback)(JSContext* cx, JS::HandleObject job, void* data);
+(* JSEnqueuePromiseJobCallback)(JSContext* cx, JS::HandleObject job,
+                                JS::HandleObject allocationSite, void* data);
 
 typedef void
 (* JSErrorReporter)(JSContext* cx, const char* message, JSErrorReport* report);
@@ -4402,8 +4403,9 @@ namespace JS {
  *
  * SpiderMonkey doesn't schedule Promise resolution jobs itself; instead,
  * using this function the embedding can provide a callback to do that
- * scheduling. The provided `callback` is invoked with the promise job
- * and the `data` pointer passed here as arguments.
+ * scheduling. The provided `callback` is invoked with the promise job,
+ * the corresponding Promise's allocation stack, and the `data` pointer
+ * passed here as arguments.
  */
 extern JS_PUBLIC_API(void)
 SetEnqueuePromiseJobCallback(JSRuntime* rt, JSEnqueuePromiseJobCallback callback,

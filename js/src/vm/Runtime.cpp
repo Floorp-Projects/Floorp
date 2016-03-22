@@ -774,13 +774,16 @@ FreeOp::~FreeOp()
 }
 
 bool
-JSRuntime::enqueuePromiseJob(JSContext* cx, HandleFunction job)
+JSRuntime::enqueuePromiseJob(JSContext* cx, HandleFunction job, HandleObject promise)
 {
     MOZ_ASSERT(cx->runtime()->enqueuePromiseJobCallback,
                "Must set a callback using JS_SetEnqeueuPromiseJobCallback before using Promises");
 
     void* data = cx->runtime()->enqueuePromiseJobCallbackData;
-    return cx->runtime()->enqueuePromiseJobCallback(cx, job, data);
+    RootedObject allocationSite(cx);
+    if (promise)
+        allocationSite = JS::GetPromiseAllocationSite(promise);
+    return cx->runtime()->enqueuePromiseJobCallback(cx, job, allocationSite, data);
 }
 
 void

@@ -223,6 +223,7 @@ private:
                               void* aData);
   static bool EnqueuePromiseJobCallback(JSContext* aCx,
                                         JS::HandleObject aJob,
+                                        JS::HandleObject aAllocationSite,
                                         void* aData);
 
   virtual void TraceNativeBlackRoots(JSTracer* aTracer) { };
