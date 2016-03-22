@@ -414,6 +414,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
        "getOwnPropertySymbols works on Xrayed ctors");
   }
 
+  // We will need arraysEqual and testArrayIterators both in this global scope
+  // and in sandboxes, so define them as strings up front.
+  var arraysEqualSource = `function arraysEqual(arr1, arr2, reason) {
+    is(arr1.length, arr2.length, \`\${reason}; lengths should be equal\`)
+    for (var i = 0; i < arr1.length; ++i) {
+      if (Array.isArray(arr2[i])) {
+        arraysEqual(arr1[i], arr2[i], \`\${reason}; item at index \${i}\`);
+      } else {
+        is(arr1[i], arr2[i], \`\${reason}; item at index \${i} should be equal\`);
+      }
+    }
+  }`;
+  eval(arraysEqualSource);
+
+  var testArrayIteratorsSource = `
+    function testArrayIterators(arrayLike, equivalentArray, reason) {
+    arraysEqual([...arrayLike], equivalentArray, \`\${reason}; spread operator\`);
+    arraysEqual([...arrayLike.entries()], [...equivalentArray.entries()],
+                \`\${reason}; entries\`);
+    arraysEqual([...arrayLike.keys()], [...equivalentArray.keys()],
+                \`\${reason}; keys\`);
+    if (arrayLike.values) {
+      arraysEqual([...arrayLike.values()], equivalentArray,
+                  \`\${reason}; values\`);
+    }
+  }`;
+  eval(testArrayIteratorsSource);
+
   function testDate() {
     // toGMTString is handled oddly in the engine. We don't bother to support
     // it over Xrays.
@@ -516,6 +544,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     is(trickyArray[1], undefined, "Frozen length forbids new properties");
 
     testTrickyObject(trickyArray);
+
+    testArrayIterators(new iwin.Array(1, 1, 2, 3, 5), [1, 1, 2, 3, 5]);
   }
 
   // Parts of this function are kind of specific to testing Object, but we factor
@@ -667,6 +697,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       var xray = new iwin[c](0);
       var xrayTypedArrayProto = Object.getPrototypeOf(Object.getPrototypeOf(xray));
       testProtoCallables(inheritedCallables, new iwin[c](0), xrayTypedArrayProto, typedArrayProto);
+
+      // When testing iterators, make sure to do so from inside our web
+      // extension sandbox, since from chrome we can't poke their indices.  Note
+      // that we have to actually recreate our functions that touch typed array
+      // indices inside the sandbox, not just export them, because otherwise
+      // they'll just run with our principal anyway.
+      //
+      // But we do want to export is(), since we want ours called.
+      wesb.eval(arraysEqualSource);
+      wesb.eval(testArrayIteratorsSource);
+      Cu.exportFunction(is, wesb,
+                        { defineAs: "is" });
+      wesb.eval('testArrayIterators(t, [0, 0, 3, 0, 0, 0, 0, 0, 0, 0])');
     }
   }
 
