@@ -2322,7 +2322,7 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext* cx)
     if (!scripterr) {
         nsCOMPtr<nsIStackFrame> frame = dom::GetCurrentJSStack();
         if (frame) {
-            frame->GetFilename(cx, fileName);
+            frame->GetFilename(fileName);
             frame->GetLineNumber(&lineNo);
             JS::Rooted<JS::Value> stack(cx);
             nsresult rv = frame->GetNativeSavedFrame(&stack);
@@ -2429,7 +2429,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
         xpc->GetCurrentJSStack(getter_AddRefs(frame));
         if (frame) {
             nsString frameFile;
-            frame->GetFilename(cx, frameFile);
+            frame->GetFilename(frameFile);
             CopyUTF16toUTF8(frameFile, filename);
             frame->GetLineNumber(&lineNo);
         }
