@@ -71,6 +71,16 @@ public:
                          ErrorResult& aRv);
 
   /**
+   * Fills in the mComputedOffset member of each keyframe in the given array
+   * using the "distribute" spacing algorithm.
+   *
+   * http://w3c.github.io/web-animations/#distribute-keyframe-spacing-mode
+   *
+   * @param keyframes The set of keyframes to adjust.
+   */
+  static void ApplyDistributeSpacing(nsTArray<Keyframe>& aKeyframes);
+
+  /**
    * Converts an array of Keyframe objects into an array of AnimationProperty
    * objects. This involves expanding shorthand properties into longhand
    * properties, creating an array of computed values for each longhand
