@@ -330,6 +330,7 @@ SubscriptionListener.prototype = {
       scope: this._subInfo.record.scope,
       originAttributes: this._subInfo.record.originAttributes,
       systemRecord: this._subInfo.record.systemRecord,
+      appServerKey: this._subInfo.record.appServerKey,
       ctime: Date.now(),
     });
 
