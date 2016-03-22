@@ -224,7 +224,7 @@ var PocketContextMenu = {
     // iterate through all windows and add pocket to them
     for (let win of allBrowserWindows()) {
       let document = win.document;
-      for (let id in ["context-pocket", "context-savelinktopocket"]) {
+      for (let id of ["context-pocket", "context-savelinktopocket"]) {
         let element = document.getElementById(id);
         if (element)
           element.remove();
