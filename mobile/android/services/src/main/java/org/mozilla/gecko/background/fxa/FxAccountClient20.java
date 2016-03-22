@@ -5,8 +5,7 @@
 package org.mozilla.gecko.background.fxa;
 
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.background.fxa.FxAccountClientException
-        .FxAccountClientMalformedResponseException;
+import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientMalformedResponseException;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.Locales;
