@@ -142,6 +142,80 @@ public:
 };
 
 /**
+ * Iterator to walk through a PropertyValuePair array using the ordering
+ * provided by PropertyPriorityComparator.
+ */
+class PropertyPriorityIterator
+{
+public:
+  explicit PropertyPriorityIterator(
+    const nsTArray<PropertyValuePair>& aProperties)
+    : mProperties(aProperties)
+  {
+    mSortedPropertyIndices.SetCapacity(mProperties.Length());
+    for (size_t i = 0, len = mProperties.Length(); i < len; ++i) {
+      PropertyAndIndex propertyIndex = { mProperties[i].mProperty, i };
+      mSortedPropertyIndices.AppendElement(propertyIndex);
+    }
+    mSortedPropertyIndices.Sort(PropertyAndIndex::Comparator());
+  }
+
+  class Iter
+  {
+  public:
+    explicit Iter(const PropertyPriorityIterator& aParent)
+      : mParent(aParent)
+      , mIndex(0) { }
+
+    static Iter EndIter(const PropertyPriorityIterator &aParent)
+    {
+      Iter iter(aParent);
+      iter.mIndex = aParent.mSortedPropertyIndices.Length();
+      return iter;
+    }
+
+    bool operator!=(const Iter& aOther) const
+    {
+      return mIndex != aOther.mIndex;
+    }
+
+    Iter& operator++()
+    {
+      MOZ_ASSERT(mIndex + 1 <= mParent.mSortedPropertyIndices.Length(),
+                 "Should not seek past end iterator");
+      mIndex++;
+      return *this;
+    }
+
+    const PropertyValuePair& operator*()
+    {
+      MOZ_ASSERT(mIndex < mParent.mSortedPropertyIndices.Length(),
+                 "Should not try to dereference an end iterator");
+      return mParent.mProperties[mParent.mSortedPropertyIndices[mIndex].mIndex];
+    }
+
+  private:
+    const PropertyPriorityIterator& mParent;
+    size_t mIndex;
+  };
+
+  Iter begin() { return Iter(*this); }
+  Iter end()   { return Iter::EndIter(*this); }
+
+private:
+  struct PropertyAndIndex
+  {
+    nsCSSProperty mProperty;
+    size_t mIndex; // Index of mProperty within mProperties
+
+    typedef TPropertyPriorityComparator<PropertyAndIndex> Comparator;
+  };
+
+  const nsTArray<PropertyValuePair>& mProperties;
+  nsTArray<PropertyAndIndex> mSortedPropertyIndices;
+};
+
+/**
  * A property-values pair obtained from the open-ended properties
  * discovered on a regular keyframe or property-indexed keyframe object.
  *
