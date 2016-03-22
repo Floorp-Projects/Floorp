@@ -1033,12 +1033,12 @@ Console::NoopMethod()
 
 static
 nsresult
-StackFrameToStackEntry(nsIStackFrame* aStackFrame,
+StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
                        ConsoleStackEntry& aStackEntry)
 {
   MOZ_ASSERT(aStackFrame);
 
-  nsresult rv = aStackFrame->GetFilename(aStackEntry.mFilename);
+  nsresult rv = aStackFrame->GetFilename(aCx, aStackEntry.mFilename);
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t lineNumber;
@@ -1069,13 +1069,14 @@ StackFrameToStackEntry(nsIStackFrame* aStackFrame,
 
 static
 nsresult
-ReifyStack(nsIStackFrame* aStack, nsTArray<ConsoleStackEntry>& aRefiedStack)
+ReifyStack(JSContext* aCx, nsIStackFrame* aStack,
+           nsTArray<ConsoleStackEntry>& aRefiedStack)
 {
   nsCOMPtr<nsIStackFrame> stack(aStack);
 
   while (stack) {
     ConsoleStackEntry& data = *aRefiedStack.AppendElement();
-    nsresult rv = StackFrameToStackEntry(stack, data);
+    nsresult rv = StackFrameToStackEntry(aCx, stack, data);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStackFrame> caller;
@@ -1124,7 +1125,7 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
 
   if (stack) {
     callData->mTopStackFrame.emplace();
-    nsresult rv = StackFrameToStackEntry(stack,
+    nsresult rv = StackFrameToStackEntry(aCx, stack,
                                          *callData->mTopStackFrame);
     if (NS_FAILED(rv)) {
       return;
@@ -1137,7 +1138,7 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
     // nsIStackFrame is not threadsafe, so we need to snapshot it now,
     // before we post our runnable to the main thread.
     callData->mReifiedStack.emplace();
-    nsresult rv = ReifyStack(stack, *callData->mReifiedStack);
+    nsresult rv = ReifyStack(aCx, stack, *callData->mReifiedStack);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
     }
@@ -1270,7 +1271,7 @@ LazyStackGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 
   nsIStackFrame* stack = reinterpret_cast<nsIStackFrame*>(v.toPrivate());
   nsTArray<ConsoleStackEntry> reifiedStack;
-  nsresult rv = ReifyStack(stack, reifiedStack);
+  nsresult rv = ReifyStack(aCx, stack, reifiedStack);
   if (NS_FAILED(rv)) {
     Throw(aCx, rv);
     return false;
