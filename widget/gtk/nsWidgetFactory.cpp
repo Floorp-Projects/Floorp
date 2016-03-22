@@ -279,7 +279,8 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     { "@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID, Module::MAIN_PROCESS_ONLY },
 #endif
     { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
-    { "@mozilla.org/widget/bidikeyboard;1", &kNS_BIDIKEYBOARD_CID },
+    { "@mozilla.org/widget/bidikeyboard;1", &kNS_BIDIKEYBOARD_CID,
+      Module::MAIN_PROCESS_ONLY },
     { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID,
       Module::MAIN_PROCESS_ONLY },
     { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
