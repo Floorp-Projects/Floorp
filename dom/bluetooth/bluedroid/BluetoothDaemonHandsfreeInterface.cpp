@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothDaemonHandsfreeInterface.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -59,19 +60,19 @@ BluetoothDaemonHandsfreeModule::ConnectCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CONNECT,
-                           6)); // Address
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CONNECT,
+                                6); // Address
 
   nsresult rv = PackPDU(aRemoteAddr, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -81,19 +82,19 @@ BluetoothDaemonHandsfreeModule::DisconnectCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_DISCONNECT,
-                           6)); // Address
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_DISCONNECT,
+                                6); // Address
 
   nsresult rv = PackPDU(aRemoteAddr, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -103,19 +104,19 @@ BluetoothDaemonHandsfreeModule::ConnectAudioCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CONNECT_AUDIO,
-                           6)); // Address
+  UniquePtr<DaemonSocketPDU> pdu(
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CONNECT_AUDIO,
+                                6)); // Address
 
   nsresult rv = PackPDU(aRemoteAddr, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -125,19 +126,19 @@ BluetoothDaemonHandsfreeModule::DisconnectAudioCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_DISCONNECT_AUDIO,
-                           6)); // Address
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_DISCONNECT_AUDIO,
+                                6); // Address
 
   nsresult rv = PackPDU(aRemoteAddr, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -147,9 +148,9 @@ BluetoothDaemonHandsfreeModule::StartVoiceRecognitionCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_START_VOICE_RECOGNITION,
-                           6)); // Address (BlueZ 5.25)
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_START_VOICE_RECOGNITION,
+                                6); // Address (BlueZ 5.25)
 
   nsresult rv;
 #if ANDROID_VERSION >= 21
@@ -158,11 +159,11 @@ BluetoothDaemonHandsfreeModule::StartVoiceRecognitionCmd(
     return rv;
   }
 #endif
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -172,9 +173,9 @@ BluetoothDaemonHandsfreeModule::StopVoiceRecognitionCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_STOP_VOICE_RECOGNITION,
-                           6)); // Address (BlueZ 5.25)
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_STOP_VOICE_RECOGNITION,
+                                6); // Address (BlueZ 5.25)
 
   nsresult rv;
 #if ANDROID_VERSION >= 21
@@ -183,11 +184,11 @@ BluetoothDaemonHandsfreeModule::StopVoiceRecognitionCmd(
     return rv;
   }
 #endif
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -198,11 +199,11 @@ BluetoothDaemonHandsfreeModule::VolumeControlCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_VOLUME_CONTROL,
-                           1 + // Volume type
-                           1 + // Volume
-                           6)); // Address (BlueZ 5.25)
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_VOLUME_CONTROL,
+                                1 + // Volume type
+                                1 + // Volume
+                                6); // Address (BlueZ 5.25)
 
 #if ANDROID_VERSION >= 21
   nsresult rv = PackPDU(
@@ -213,11 +214,11 @@ BluetoothDaemonHandsfreeModule::VolumeControlCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -229,12 +230,12 @@ BluetoothDaemonHandsfreeModule::DeviceStatusNotificationCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_DEVICE_STATUS_NOTIFICATION,
-                           1 + // Network state
-                           1 + // Service type
-                           1 + // Signal strength
-                           1)); // Battery level
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_DEVICE_STATUS_NOTIFICATION,
+                                1 + // Network state
+                                1 + // Service type
+                                1 + // Signal strength
+                                1); // Battery level
 
   nsresult rv = PackPDU(aNtkState, aSvcType,
                         PackConversion<int, uint8_t>(aSignal),
@@ -242,11 +243,11 @@ BluetoothDaemonHandsfreeModule::DeviceStatusNotificationCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -257,10 +258,10 @@ BluetoothDaemonHandsfreeModule::CopsResponseCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_COPS_RESPONSE,
-                           0 + // Dynamically allocated
-                           6)); // Address (BlueZ 5.25)
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_COPS_RESPONSE,
+                                0 + // Dynamically allocated
+                                6); // Address (BlueZ 5.25)
 
 #if ANDROID_VERSION >= 21
   nsresult rv = PackPDU(PackCString0(nsDependentCString(aCops)), aRemoteAddr,
@@ -271,11 +272,11 @@ BluetoothDaemonHandsfreeModule::CopsResponseCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -289,16 +290,16 @@ BluetoothDaemonHandsfreeModule::CindResponseCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CIND_RESPONSE,
-                           1 + // Service
-                           1 + // # Active
-                           1 + // # Held
-                           1 + // Call state
-                           1 + // Signal strength
-                           1 + // Roaming
-                           1 + // Battery level
-                           6)); // Address (BlueZ 5.25)
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CIND_RESPONSE,
+                                1 + // Service
+                                1 + // # Active
+                                1 + // # Held
+                                1 + // Call state
+                                1 + // Signal strength
+                                1 + // Roaming
+                                1 + // Battery level
+                                6); // Address (BlueZ 5.25)
 
 #if ANDROID_VERSION >= 21
   nsresult rv = PackPDU(
@@ -322,11 +323,11 @@ BluetoothDaemonHandsfreeModule::CindResponseCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -337,10 +338,10 @@ BluetoothDaemonHandsfreeModule::FormattedAtResponseCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_FORMATTED_AT_RESPONSE,
-                           0 + // Dynamically allocated
-                           6)); // Address (BlueZ 5.25)
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_FORMATTED_AT_RESPONSE,
+                                0 + // Dynamically allocated
+                                6); // Address (BlueZ 5.25)
 
 #if ANDROID_VERSION >= 21
   nsresult rv = PackPDU(PackCString0(nsDependentCString(aRsp)), aRemoteAddr,
@@ -351,11 +352,11 @@ BluetoothDaemonHandsfreeModule::FormattedAtResponseCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -366,11 +367,11 @@ BluetoothDaemonHandsfreeModule::AtResponseCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_AT_RESPONSE,
-                           1 + // AT Response code
-                           1 + // Error code
-                           6)); // Address (BlueZ 5.25)
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_AT_RESPONSE,
+                                1 + // AT Response code
+                                1 + // Error code
+                                6); // Address (BlueZ 5.25)
 
 #if ANDROID_VERSION >= 21
   nsresult rv = PackPDU(aResponseCode,
@@ -383,11 +384,11 @@ BluetoothDaemonHandsfreeModule::AtResponseCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -403,16 +404,16 @@ BluetoothDaemonHandsfreeModule::ClccResponseCmd(
 
   NS_ConvertUTF16toUTF8 number(aNumber);
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CLCC_RESPONSE,
-                           1 + // Call index
-                           1 + // Call direction
-                           1 + // Call state
-                           1 + // Call mode
-                           1 + // Call MPTY
-                           1 + // Address type
-                           number.Length() + 1 + // Number string + \0
-                           6)); // Address (BlueZ 5.25)
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CLCC_RESPONSE,
+                                1 + // Call index
+                                1 + // Call direction
+                                1 + // Call state
+                                1 + // Call mode
+                                1 + // Call MPTY
+                                1 + // Address type
+                                number.Length() + 1 + // Number string + \0
+                                6); // Address (BlueZ 5.25)
 
 #if ANDROID_VERSION >= 21
   nsresult rv = PackPDU(PackConversion<int, uint8_t>(aIndex),
@@ -426,11 +427,11 @@ BluetoothDaemonHandsfreeModule::ClccResponseCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -444,13 +445,13 @@ BluetoothDaemonHandsfreeModule::PhoneStateChangeCmd(
 
   NS_ConvertUTF16toUTF8 number(aNumber);
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_PHONE_STATE_CHANGE,
-                           1 + // # Active
-                           1 + // # Held
-                           1 + // Call state
-                           1 + // Address type
-                           number.Length() + 1)); // Number string + \0
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_PHONE_STATE_CHANGE,
+                                1 + // # Active
+                                1 + // # Held
+                                1 + // Call state
+                                1 + // Address type
+                                number.Length() + 1); // Number string + \0
 
   nsresult rv = PackPDU(PackConversion<int, uint8_t>(aNumActive),
                         PackConversion<int, uint8_t>(aNumHeld),
@@ -459,11 +460,11 @@ BluetoothDaemonHandsfreeModule::PhoneStateChangeCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
@@ -475,20 +476,20 @@ BluetoothDaemonHandsfreeModule::ConfigureWbsCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(
-    new DaemonSocketPDU(SERVICE_ID, OPCODE_CONFIGURE_WBS,
-                           6 + // Address
-                           1)); // Config
+  UniquePtr<DaemonSocketPDU> pdu =
+    MakeUnique<DaemonSocketPDU>(SERVICE_ID, OPCODE_CONFIGURE_WBS,
+                                6 + // Address
+                                1); // Config
 
   nsresult rv = PackPDU(aRemoteAddr, aConfig, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = Send(pdu, aRes);
+  rv = Send(pdu.get(), aRes);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  Unused << pdu.forget();
+  Unused << pdu.release();
   return NS_OK;
 }
 
