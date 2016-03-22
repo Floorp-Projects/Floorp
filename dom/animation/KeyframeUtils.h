@@ -69,6 +69,24 @@ public:
   GetKeyframesFromObject(JSContext* aCx,
                          JS::Handle<JSObject*> aFrames,
                          ErrorResult& aRv);
+
+  /**
+   * Converts an array of Keyframe objects into an array of AnimationProperty
+   * objects. This involves expanding shorthand properties into longhand
+   * properties, creating an array of computed values for each longhand
+   * property and determining the offset and timing function to use for each
+   * value.
+   *
+   * @param aStyleContext The style context to use when computing values.
+   * @param aFrames The input keyframes.
+   * @return The set of animation properties. If an error occurs, the returned
+   *   array will be empty.
+   */
+  static nsTArray<AnimationProperty>
+  GetAnimationPropertiesFromKeyframes(nsStyleContext* aStyleContext,
+                                      dom::Element* aElement,
+                                      CSSPseudoElementType aPseudoType,
+                                      const nsTArray<Keyframe>& aFrames);
 };
 
 } // namespace mozilla
