@@ -442,13 +442,10 @@ BufferTextureHost::SetCompositor(Compositor* aCompositor)
   if (mCompositor == aCompositor) {
     return;
   }
-  if (aCompositor && mCompositor &&
-      aCompositor->GetBackendType() == mCompositor->GetBackendType()) {
-    RefPtr<TextureSource> it = mFirstSource;
-    while (it) {
-      it->SetCompositor(aCompositor);
-      it = it->GetNextSibling();
-    }
+  RefPtr<TextureSource> it = mFirstSource;
+  while (it) {
+    it->SetCompositor(aCompositor);
+    it = it->GetNextSibling();
   }
   if (mFirstSource && mFirstSource->IsOwnedBy(this)) {
     mFirstSource->SetOwner(nullptr);
