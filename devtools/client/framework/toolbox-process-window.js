@@ -18,14 +18,13 @@ var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var Services = require("Services");
 var { DebuggerClient } = require("devtools/shared/client/main");
-var { ViewHelpers } =
-  Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm", {});
+var { PrefsHelper } = require("devtools/client/shared/prefs");
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 
 /**
  * Shortcuts for accessing various debugger preferences.
  */
-var Prefs = new ViewHelpers.Prefs("devtools.debugger", {
+var Prefs = new PrefsHelper("devtools.debugger", {
   chromeDebuggingHost: ["Char", "chrome-debugging-host"],
   chromeDebuggingPort: ["Int", "chrome-debugging-port"]
 });
