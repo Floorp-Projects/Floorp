@@ -11,7 +11,7 @@ import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 
 @RunWith(TestRunner.class)
-public class TestDownloadContent {
+public class TestDownloadContentBuilder {
     /**
      * Verify that the values passed to the builder are all set on the DownloadContent object.
      */
@@ -35,7 +35,7 @@ public class TestDownloadContent {
      * Verify that a DownloadContent object exported to JSON and re-imported from JSON does not change.
      */
     public void testJSONSerializationAndDeserialization() throws JSONException {
-        DownloadContent content = DownloadContent.fromJSON(createTestContent().toJSON());
+        DownloadContent content = DownloadContentBuilder.fromJSON(DownloadContentBuilder.toJSON(createTestContent()));
 
         Assert.assertEquals("Some-ID", content.getId());
         Assert.assertEquals("/somewhere/something", content.getLocation());
@@ -53,7 +53,7 @@ public class TestDownloadContent {
      * Create a DownloadContent object with arbitrary data.
      */
     private DownloadContent createTestContent() {
-        return new DownloadContent.Builder()
+        return new DownloadContentBuilder()
                 .setId("Some-ID")
                 .setLocation("/somewhere/something")
                 .setFilename("some.file")

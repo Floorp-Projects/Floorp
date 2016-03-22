@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
+import org.mozilla.gecko.dlc.catalog.DownloadContentBuilder;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
 import org.robolectric.RuntimeEnvironment;
 
@@ -80,7 +81,7 @@ public class TestDownloadAction {
      */
     @Test
     public void testExistingAndVerifiedFilesAreNotDownloadedAgain() throws Exception {
-        DownloadContent content = new DownloadContent.Builder().build();
+        DownloadContent content = new DownloadContentBuilder().build();
 
         DownloadContentCatalog catalog = mock(DownloadContentCatalog.class);
         doReturn(Collections.singletonList(content)).when(catalog).getScheduledDownloads();
@@ -149,7 +150,7 @@ public class TestDownloadAction {
      */
     @Test
     public void testSuccessfulDownloadsAreMarkedAsDownloaded() throws Exception {
-        DownloadContent content = new DownloadContent.Builder()
+        DownloadContent content = new DownloadContentBuilder()
                 .setKind(DownloadContent.KIND_FONT)
                 .setType(DownloadContent.TYPE_ASSET_ARCHIVE)
                 .build();
@@ -186,7 +187,7 @@ public class TestDownloadAction {
      */
     @Test
     public void testResumingDownloadFromExistingFile() throws Exception {
-        DownloadContent content = new DownloadContent.Builder()
+        DownloadContent content = new DownloadContentBuilder()
                 .setKind(DownloadContent.KIND_FONT)
                 .setType(DownloadContent.TYPE_ASSET_ARCHIVE)
                 .setSize(4223)
@@ -234,7 +235,7 @@ public class TestDownloadAction {
      */
     @Test
     public void testTemporaryFileIsNotDeletedAfterDownloadAborted() throws Exception {
-        DownloadContent content = new DownloadContent.Builder()
+        DownloadContent content = new DownloadContentBuilder()
                 .setKind(DownloadContent.KIND_FONT)
                 .setType(DownloadContent.TYPE_ASSET_ARCHIVE)
                 .setSize(4223)
@@ -275,7 +276,7 @@ public class TestDownloadAction {
      */
     @Test
     public void testNoRequestIsSentIfFileIsAlreadyComplete() throws Exception {
-        DownloadContent content = new DownloadContent.Builder()
+        DownloadContent content = new DownloadContentBuilder()
                 .setKind(DownloadContent.KIND_FONT)
                 .setType(DownloadContent.TYPE_ASSET_ARCHIVE)
                 .setSize(1337L)
@@ -314,7 +315,7 @@ public class TestDownloadAction {
      */
     @Test
     public void testTemporaryFileWillBeDeletedIfVerificationFails() throws Exception {
-        DownloadContent content = new DownloadContent.Builder()
+        DownloadContent content = new DownloadContentBuilder()
                 .setKind(DownloadContent.KIND_FONT)
                 .setType(DownloadContent.TYPE_ASSET_ARCHIVE)
                 .setSize(1337L)
@@ -496,7 +497,7 @@ public class TestDownloadAction {
     }
 
     private DownloadContent createFontWithSize(long size) {
-        return new DownloadContent.Builder()
+        return new DownloadContentBuilder()
                 .setKind(DownloadContent.KIND_FONT)
                 .setType(DownloadContent.TYPE_ASSET_ARCHIVE)
                 .setSize(size)

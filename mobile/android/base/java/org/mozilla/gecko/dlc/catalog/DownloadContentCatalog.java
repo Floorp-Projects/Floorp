@@ -6,6 +6,8 @@
 package org.mozilla.gecko.dlc.catalog;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
+import android.support.v4.util.ArrayMap;
 import android.support.v4.util.AtomicFile;
 import android.util.Log;
 
@@ -19,7 +21,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -33,12 +34,14 @@ public class DownloadContentCatalog {
     private static final String FILE_NAME = "download_content_catalog";
 
     private static final String JSON_KEY_CONTENT = "content";
+
     private static final int MAX_FAILURES_UNTIL_PERMANENTLY_FAILED = 10;
 
-    private final AtomicFile file;          // Guarded by 'file'
-    private List<DownloadContent> content;  // Guarded by 'this'
-    private boolean hasLoadedCatalog;       // Guarded by 'this
-    private boolean hasCatalogChanged;      // Guarded by 'this'
+    private final AtomicFile file; // Guarded by 'file'
+
+    private ArrayMap<String, DownloadContent> content; // Guarded by 'this'
+    private boolean hasLoadedCatalog; // Guarded by 'this
+    private boolean hasCatalogChanged; // Guarded by 'this'
 
     public DownloadContentCatalog(Context context) {
         this(new AtomicFile(new File(context.getApplicationInfo().dataDir, FILE_NAME)));
@@ -48,60 +51,94 @@ public class DownloadContentCatalog {
 
     // For injecting mocked AtomicFile objects during test
     protected DownloadContentCatalog(AtomicFile file) {
-        this.content = Collections.emptyList();
+        this.content = new ArrayMap<>();
         this.file = file;
     }
 
-    public synchronized List<DownloadContent> getContentWithoutState() {
-        awaitLoadingCatalogLocked();
-
-        List<DownloadContent> contentWithoutState = new ArrayList<>();
-
-        for (DownloadContent content : this.content) {
-            if (DownloadContent.STATE_NONE == content.getState()) {
-                contentWithoutState.add(content);
-            }
-        }
-
-        return contentWithoutState;
+    public List<DownloadContent> getContentToStudy() {
+        return filterByState(DownloadContent.STATE_NONE, DownloadContent.STATE_UPDATED);
     }
 
-    public synchronized List<DownloadContent> getDownloadedContent() {
-        awaitLoadingCatalogLocked();
-
-        List<DownloadContent> downloadedContent = new ArrayList<>();
-        for (DownloadContent content : this.content) {
-            if (DownloadContent.STATE_DOWNLOADED == content.getState()) {
-                downloadedContent.add(content);
-            }
-        }
-
-        return downloadedContent;
+    public List<DownloadContent> getContentToDelete() {
+        return filterByState(DownloadContent.STATE_DELETED);
     }
 
-    public synchronized List<DownloadContent> getScheduledDownloads() {
-        awaitLoadingCatalogLocked();
-
-        List<DownloadContent> scheduledContent = new ArrayList<>();
-        for (DownloadContent content : this.content) {
-            if (DownloadContent.STATE_SCHEDULED == content.getState()) {
-                scheduledContent.add(content);
-            }
-        }
-
-        return scheduledContent;
+    public List<DownloadContent> getDownloadedContent() {
+        return filterByState(DownloadContent.STATE_DOWNLOADED);
     }
 
-    public synchronized boolean hasScheduledDownloads() {
+    public List<DownloadContent> getScheduledDownloads() {
+        return filterByState(DownloadContent.STATE_SCHEDULED);
+    }
+
+    private synchronized List<DownloadContent> filterByState(@DownloadContent.State int... filterStates) {
         awaitLoadingCatalogLocked();
 
-        for (DownloadContent content : this.content) {
-            if (DownloadContent.STATE_SCHEDULED == content.getState()) {
-                return true;
+        List<DownloadContent> filteredContent = new ArrayList<>();
+
+        for (DownloadContent currentContent : content.values()) {
+            if (currentContent.isStateIn(filterStates)) {
+                filteredContent.add(currentContent);
             }
         }
 
-        return false;
+        return filteredContent;
+    }
+
+    public boolean hasScheduledDownloads() {
+        return !filterByState(DownloadContent.STATE_SCHEDULED).isEmpty();
+    }
+
+    public synchronized void add(DownloadContent newContent) {
+        awaitLoadingCatalogLocked();
+
+        content.put(newContent.getId(), newContent);
+        hasCatalogChanged = true;
+    }
+
+    public synchronized void update(DownloadContent changedContent) {
+        awaitLoadingCatalogLocked();
+
+        if (!content.containsKey(changedContent.getId())) {
+            Log.w(LOGTAG, "Did not find content with matching id (" + changedContent.getId() + ") to update");
+            return;
+        }
+
+        changedContent.setState(DownloadContent.STATE_UPDATED);
+        changedContent.resetFailures();
+
+        content.put(changedContent.getId(), changedContent);
+        hasCatalogChanged = true;
+    }
+
+    public synchronized void remove(DownloadContent removedContent) {
+        awaitLoadingCatalogLocked();
+
+        if (!content.containsKey(removedContent.getId())) {
+            Log.w(LOGTAG, "Did not find content with matching id (" + removedContent.getId() + ") to remove");
+            return;
+        }
+
+        content.remove(removedContent.getId());
+    }
+
+    @Nullable
+    public synchronized DownloadContent getContentById(String id) {
+        return content.get(id);
+    }
+
+    public synchronized long getLastModified() {
+        awaitLoadingCatalogLocked();
+
+        long lastModified = 0;
+
+        for (DownloadContent currentContent : content.values()) {
+            if (currentContent.getLastModified() > lastModified) {
+                lastModified = currentContent.getLastModified();
+            }
+        }
+
+        return lastModified;
     }
 
     public synchronized void scheduleDownload(DownloadContent content) {
@@ -122,6 +159,11 @@ public class DownloadContentCatalog {
 
     public synchronized void markAsIgnored(DownloadContent content) {
         content.setState(DownloadContent.STATE_IGNORED);
+        hasCatalogChanged = true;
+    }
+
+    public synchronized void markAsDeleted(DownloadContent content) {
+        content.setState(DownloadContent.STATE_DELETED);
         hasCatalogChanged = true;
     }
 
@@ -175,7 +217,7 @@ public class DownloadContentCatalog {
             return;
         }
 
-        List<DownloadContent> content = new ArrayList<>();
+        ArrayMap<String, DownloadContent> loadedContent = new ArrayMap<>();
 
         try {
             JSONObject catalog;
@@ -186,15 +228,16 @@ public class DownloadContentCatalog {
 
             JSONArray array = catalog.getJSONArray(JSON_KEY_CONTENT);
             for (int i = 0; i < array.length(); i++) {
-                content.add(DownloadContent.fromJSON(array.getJSONObject(i)));
+                DownloadContent currentContent = DownloadContentBuilder.fromJSON(array.getJSONObject(i));
+                loadedContent.put(currentContent.getId(), currentContent);
             }
         } catch (FileNotFoundException e) {
             Log.d(LOGTAG, "Catalog file does not exist: Bootstrapping initial catalog");
-            content = DownloadContentBootstrap.createInitialDownloadContentList();
+            loadedContent = DownloadContentBootstrap.createInitialDownloadContentList();
         } catch (JSONException e) {
             Log.w(LOGTAG, "Unable to parse catalog JSON. Re-creating catalog.", e);
             // Catalog seems to be broken. Re-create catalog:
-            content = DownloadContentBootstrap.createInitialDownloadContentList();
+            loadedContent = DownloadContentBootstrap.createInitialDownloadContentList();
             hasCatalogChanged = true; // Indicate that we want to persist the new catalog
         } catch (UnsupportedEncodingException e) {
             AssertionError error = new AssertionError("Should not happen: This device does not speak UTF-8");
@@ -204,14 +247,14 @@ public class DownloadContentCatalog {
             Log.d(LOGTAG, "Can't read catalog due to IOException", e);
         }
 
-        onCatalogLoaded(content);
+        onCatalogLoaded(loadedContent);
 
         notifyAll();
 
         Log.d(LOGTAG, "Loaded " + content.size() + " elements");
     }
 
-    protected void onCatalogLoaded(List<DownloadContent> content) {
+    protected void onCatalogLoaded(ArrayMap<String, DownloadContent> content) {
         this.content = content;
         this.hasLoadedCatalog = true;
     }
@@ -231,8 +274,8 @@ public class DownloadContentCatalog {
                 outputStream = file.startWrite();
 
                 JSONArray array = new JSONArray();
-                for (DownloadContent content : this.content) {
-                    array.put(content.toJSON());
+                for (DownloadContent currentContent : content.values()) {
+                    array.put(DownloadContentBuilder.toJSON(currentContent));
                 }
 
                 JSONObject catalog = new JSONObject();

@@ -6,6 +6,9 @@
 package org.mozilla.gecko.dlc;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
@@ -20,7 +23,12 @@ public class StudyAction extends BaseAction {
     public void perform(Context context, DownloadContentCatalog catalog) {
         Log.d(LOGTAG, "Studying catalog..");
 
-        for (DownloadContent content : catalog.getContentWithoutState()) {
+        for (DownloadContent content : catalog.getContentToStudy()) {
+            if (!isMatching(context, content)) {
+                // This content is not for this particular version of the application or system
+                continue;
+            }
+
             if (content.isAssetArchive() && content.isFont()) {
                 catalog.scheduleDownload(content);
 
@@ -33,6 +41,42 @@ public class StudyAction extends BaseAction {
         }
 
         Log.v(LOGTAG, "Done");
+    }
+
+    protected boolean isMatching(Context context, DownloadContent content) {
+        final String androidApiPattern = content.getAndroidApiPattern();
+        if (!TextUtils.isEmpty(androidApiPattern)) {
+            final String apiVersion = String.valueOf(Build.VERSION.SDK_INT);
+            if (apiVersion.matches(androidApiPattern)) {
+                Log.d(LOGTAG, String.format("Android API (%s) does not match pattern: %s", apiVersion, androidApiPattern));
+                return false;
+            }
+        }
+
+        final String appIdPattern = content.getAppIdPattern();
+        if (!TextUtils.isEmpty(appIdPattern)) {
+            final String appId = context.getPackageName();
+            if (!appId.matches(appIdPattern)) {
+                Log.d(LOGTAG, String.format("App ID (%s) does not match pattern: %s", appId, appIdPattern));
+                return false;
+            }
+        }
+
+        final String appVersionPattern = content.getAppVersionPattern();
+        if (!TextUtils.isEmpty(appVersionPattern)) {
+            try {
+                final String appVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+                if (!appVersion.matches(appVersionPattern)) {
+                    Log.d(LOGTAG, String.format("App version (%s) does not match pattern: %s", appVersion, appVersionPattern));
+                    return false;
+                }
+            } catch (PackageManager.NameNotFoundException e) {
+                throw new AssertionError("Should not happen: Can't get package info of own package");
+            }
+        }
+
+        // There are no patterns or all patterns have matched.
+        return true;
     }
 
     protected void startDownloads(Context context) {
