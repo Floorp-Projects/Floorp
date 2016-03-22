@@ -17,6 +17,8 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var Services = require("Services");
 var EventEmitter = require("devtools/shared/event-emitter");
 var {ViewHelpers} = require("devtools/client/shared/widgets/ViewHelpers.jsm");
+var { LocalizationHelper } = require("devtools/client/shared/l10n");
+
 loader.lazyImporter(this, "SystemAppProxy",
                     "resource://gre/modules/SystemAppProxy.jsm");
 loader.lazyRequireGetter(this, "DebuggerClient",
@@ -37,7 +39,7 @@ const ROUND_RATIO = 10;
 
 const INPUT_PARSER = /(\d+)[^\d]+(\d+)/;
 
-const SHARED_L10N = new ViewHelpers.L10N("chrome://devtools/locale/shared.properties");
+const SHARED_L10N = new LocalizationHelper("chrome://devtools/locale/shared.properties");
 
 function debug(msg) {
   // dump(`RDM UI: ${msg}\n`);
