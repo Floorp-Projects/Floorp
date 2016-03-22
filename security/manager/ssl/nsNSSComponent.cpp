@@ -225,6 +225,7 @@ nsNSSComponent::nsNSSComponent()
 
   NS_ASSERTION( (0 == mInstanceCount), "nsNSSComponent is a singleton, but instantiated multiple times!");
   ++mInstanceCount;
+  mShutdownObjectList = nsNSSShutDownList::construct();
 }
 
 void
@@ -268,7 +269,7 @@ nsNSSComponent::~nsNSSComponent()
   SharedSSLState::GlobalCleanup();
   RememberCertErrorsTable::Cleanup();
   --mInstanceCount;
-  nsNSSShutDownList::shutdown();
+  delete mShutdownObjectList;
 
   // We are being freed, drop the haveLoaded flag to re-enable
   // potential nss initialization later.
@@ -1158,7 +1159,7 @@ nsNSSComponent::ShutdownNSS()
     CleanupIdentityInfo();
 #endif
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("evaporating psm resources\n"));
-    nsNSSShutDownList::evaporateAllNSSResources();
+    mShutdownObjectList->evaporateAllNSSResources();
     EnsureNSSInitialized(nssShutdown);
     if (SECSuccess != ::NSS_Shutdown()) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("NSS SHUTDOWN FAILURE\n"));
@@ -1178,6 +1179,12 @@ nsNSSComponent::Init()
   nsresult rv = NS_OK;
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Beginning NSS initialization\n"));
+
+  if (!mShutdownObjectList)
+  {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("NSS init, out of memory in constructor\n"));
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   rv = InitializePIPNSSBundle();
   if (NS_FAILED(rv)) {
@@ -1391,7 +1398,7 @@ nsresult nsNSSComponent::LogoutAuthenticatedPK11()
 
   nsClientAuthRememberService::ClearAllRememberedDecisions();
 
-  return nsNSSShutDownList::doPK11Logout();
+  return mShutdownObjectList->doPK11Logout();
 }
 
 nsresult

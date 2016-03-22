@@ -176,6 +176,7 @@ private:
   nsCOMPtr<nsIStringBundle> mNSSErrorsBundle;
   bool mNSSInitialized;
   static int mInstanceCount;
+  nsNSSShutDownList* mShutdownObjectList;
 #ifndef MOZ_NO_SMART_CARDS
   SmartCardThreadList* mThreadList;
 #endif
