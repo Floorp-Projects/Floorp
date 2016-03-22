@@ -4,12 +4,12 @@
 "use strict";
 
 const { MultiLocalizationHelper } = require("devtools/client/shared/l10n");
-const { ViewHelpers } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { PrefsHelper } = require("devtools/client/shared/prefs");
 
 /**
  * Localization convenience methods.
  */
-const L10N = new MultiLocalizationHelper(
+exports.L10N = new MultiLocalizationHelper(
   "chrome://devtools/locale/markers.properties",
   "chrome://devtools/locale/performance.properties"
 );
@@ -23,7 +23,7 @@ const L10N = new MultiLocalizationHelper(
  * just use this module in a test independently, ensure you call
  * `registerObserver()` and `unregisterUnobserver()`.
  */
-const PREFS = new ViewHelpers.Prefs("devtools.performance", {
+exports.PREFS = new PrefsHelper("devtools.performance", {
   "show-triggers-for-gc-types": ["Char", "ui.show-triggers-for-gc-types"],
   "show-platform-data": ["Bool", "ui.show-platform-data"],
   "hidden-markers": ["Json", "timeline.hidden-markers"],
@@ -34,6 +34,3 @@ const PREFS = new ViewHelpers.Prefs("devtools.performance", {
   // TODO: re-enable once we flame charts via bug 1148663.
   "enable-memory-flame": ["Bool", "ui.enable-memory-flame"],
 });
-
-exports.L10N = L10N;
-exports.PREFS = PREFS;
