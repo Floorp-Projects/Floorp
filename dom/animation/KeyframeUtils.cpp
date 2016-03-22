@@ -536,6 +536,87 @@ KeyframeUtils::GetKeyframesFromObject(JSContext* aCx,
   return keyframes;
 }
 
+/* static */ nsTArray<AnimationProperty>
+KeyframeUtils::GetAnimationPropertiesFromKeyframes(
+    nsStyleContext* aStyleContext,
+    dom::Element* aElement,
+    CSSPseudoElementType aPseudoType,
+    const nsTArray<Keyframe>& aFrames)
+{
+  nsTArray<KeyframeValueEntry> entries;
+
+  for (const Keyframe& frame : aFrames) {
+    nsCSSPropertySet propertiesOnThisKeyframe;
+    for (const PropertyValuePair& pair :
+           PropertyPriorityIterator(frame.mPropertyValues)) {
+      // We currently store invalid longhand values on keyframes as a token
+      // stream so if we see one of them, just keep moving.
+      if (!nsCSSProps::IsShorthand(pair.mProperty) &&
+          pair.mValue.GetUnit() == eCSSUnit_TokenStream) {
+        continue;
+      }
+
+      // Expand each value into the set of longhands and produce
+      // a KeyframeValueEntry for each value.
+      nsTArray<PropertyStyleAnimationValuePair> values;
+
+      // For shorthands, we store the string as a token stream so we need to
+      // extract that first.
+      if (nsCSSProps::IsShorthand(pair.mProperty)) {
+        nsCSSValueTokenStream* tokenStream = pair.mValue.GetTokenStreamValue();
+        if (!StyleAnimationValue::ComputeValues(pair.mProperty,
+              nsCSSProps::eEnabledForAllContent, aElement, aStyleContext,
+              tokenStream->mTokenStream, /* aUseSVGMode */ false, values)) {
+          continue;
+        }
+      } else {
+        if (!StyleAnimationValue::ComputeValues(pair.mProperty,
+              nsCSSProps::eEnabledForAllContent, aElement, aStyleContext,
+              pair.mValue, /* aUseSVGMode */ false, values)) {
+          continue;
+        }
+        MOZ_ASSERT(values.Length() == 1,
+                   "Longhand properties should produce a single"
+                   " StyleAnimationValue");
+
+        // 'visibility' requires special handling that is unique to CSS
+        // Transitions/CSS Animations/Web Animations (i.e. not SMIL) so we
+        // apply that here.
+        //
+        // Bug 1259285 - Move this code to StyleAnimationValue
+        if (pair.mProperty == eCSSProperty_visibility) {
+          MOZ_ASSERT(values[0].mValue.GetUnit() ==
+                      StyleAnimationValue::eUnit_Enumerated,
+                    "unexpected unit");
+          values[0].mValue.SetIntValue(values[0].mValue.GetIntValue(),
+                                       StyleAnimationValue::eUnit_Visibility);
+        }
+      }
+
+      for (auto& value : values) {
+        // If we already got a value for this property on the keyframe,
+        // skip this one.
+        if (propertiesOnThisKeyframe.HasProperty(value.mProperty)) {
+          continue;
+        }
+
+        KeyframeValueEntry* entry = entries.AppendElement();
+        entry->mOffset = frame.mComputedOffset;
+        entry->mProperty = value.mProperty;
+        entry->mValue = value.mValue;
+        entry->mTimingFunction = frame.mTimingFunction;
+
+        propertiesOnThisKeyframe.AddProperty(value.mProperty);
+      }
+    }
+  }
+
+  nsTArray<AnimationProperty> result;
+  BuildSegmentsFromValueEntries(entries, result);
+
+  return result;
+}
+
 
 // ------------------------------------------------------------------
 //
