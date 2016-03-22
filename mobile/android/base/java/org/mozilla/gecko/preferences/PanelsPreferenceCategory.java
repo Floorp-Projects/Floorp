@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.preferences;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.TelemetryContract.Method;
@@ -229,6 +230,14 @@ public class PanelsPreferenceCategory extends CustomListCategory {
             Telemetry.sendUIEvent(TelemetryContract.Event.PANEL_HIDE, Method.DIALOG, id);
         } else {
             Telemetry.sendUIEvent(TelemetryContract.Event.PANEL_SHOW, Method.DIALOG, id);
+        }
+
+        if (HomeConfig.getIdForBuiltinPanelType(HomeConfig.PanelType.BOOKMARKS).equals(id)) {
+            GeckoSharedPrefs.forProfile(getContext()).edit().putBoolean(HomeConfig.PREF_KEY_BOOKMARKS_PANEL_ENABLED, !toHide).apply();
+        }
+
+        if (HomeConfig.getIdForBuiltinPanelType(HomeConfig.PanelType.HISTORY).equals(id)) {
+            GeckoSharedPrefs.forProfile(getContext()).edit().putBoolean(HomeConfig.PREF_KEY_HISTORY_PANEL_ENABLED, !toHide).apply();
         }
 
         pref.setHidden(toHide);
