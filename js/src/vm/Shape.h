@@ -228,6 +228,11 @@ class ShapeTable {
     template<MaybeAdding Adding>
     Entry& search(jsid id);
 
+    void fixupAfterMovingGC();
+#ifdef JSGC_HASH_TABLE_CHECKS
+    void checkAfterMovingGC();
+#endif
+
   private:
     Entry& getEntry(uint32_t i) const {
         MOZ_ASSERT(i < capacity());
@@ -450,7 +455,7 @@ class BaseShape : public gc::TenuredCell
 
     void traceChildren(JSTracer* trc);
 
-    void fixupAfterMovingGC() {}
+    void fixupAfterMovingGC();
 
   private:
     static void staticAsserts() {
