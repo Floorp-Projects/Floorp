@@ -101,6 +101,9 @@ private:
   UniquePtr<AudioBufferCursor> mCursor;
   // True if there is any error in processing audio data like overflow.
   bool mErrored = false;
+
+  // Set on the callback thread of cubeb once the stream has drained.
+  Atomic<bool> mPlaybackComplete;
 };
 
 } // namespace media
