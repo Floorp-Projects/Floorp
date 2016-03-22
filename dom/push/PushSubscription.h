@@ -73,7 +73,7 @@ public:
   Unsubscribe(ErrorResult& aRv);
 
   void
-  ToJSON(PushSubscriptionJSON& aJSON);
+  ToJSON(PushSubscriptionJSON& aJSON, ErrorResult& aRv);
 
 protected:
   ~PushSubscription();

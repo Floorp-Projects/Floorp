@@ -331,21 +331,31 @@ PushSubscription::GetKey(JSContext* aCx,
 }
 
 void
-PushSubscription::ToJSON(PushSubscriptionJSON& aJSON)
+PushSubscription::ToJSON(PushSubscriptionJSON& aJSON, ErrorResult& aRv)
 {
   aJSON.mEndpoint.Construct();
   aJSON.mEndpoint.Value() = mEndpoint;
 
+  Base64URLEncodeOptions encodeOptions;
+  encodeOptions.mPad = false;
+
   aJSON.mKeys.mP256dh.Construct();
   nsresult rv = Base64URLEncode(mRawP256dhKey.Length(),
                                 mRawP256dhKey.Elements(),
+                                encodeOptions,
                                 aJSON.mKeys.mP256dh.Value());
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   aJSON.mKeys.mAuth.Construct();
   rv = Base64URLEncode(mAuthSecret.Length(), mAuthSecret.Elements(),
-                       aJSON.mKeys.mAuth.Value());
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+                       encodeOptions, aJSON.mKeys.mAuth.Value());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 }
 
 already_AddRefed<Promise>
