@@ -835,7 +835,8 @@ StyleEditorUI.prototype = {
     text(summary, ".stylesheet-linked-file", linkedCSSFile);
     text(summary, ".stylesheet-title", editor.styleSheet.title || "");
     text(summary, ".stylesheet-rule-count",
-      PluralForm.get(ruleCount, _("ruleCount.label")).replace("#1", ruleCount));
+      PluralForm.get(ruleCount,
+                     getString("ruleCount.label")).replace("#1", ruleCount));
   },
 
   /**

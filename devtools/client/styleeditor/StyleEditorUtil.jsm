@@ -9,7 +9,7 @@
 "use strict";
 
 this.EXPORTED_SYMBOLS = [
-  "_",
+  "getString",
   "assert",
   "log",
   "text",
@@ -36,7 +36,7 @@ const gStringBundle = Services.strings.createBundle(PROPERTIES_URL);
  *        Optional arguments to format in the string.
  * @return string
  */
-function _(name) {
+function getString(name) {
   try {
     if (arguments.length == 1) {
       return gStringBundle.GetStringFromName(name);
@@ -226,8 +226,8 @@ function showFilePicker(path, toSave, parentWindow, callback,
     fp.defaultString = suggestedFilename;
   }
 
-  fp.init(parentWindow, _(key + ".title"), mode);
-  fp.appendFilters(_(key + ".filter"), "*.css");
+  fp.init(parentWindow, getString(key + ".title"), mode);
+  fp.appendFilters(getString(key + ".filter"), "*.css");
   fp.appendFilters(fp.filterAll);
   fp.open(fpCallback);
   return;
