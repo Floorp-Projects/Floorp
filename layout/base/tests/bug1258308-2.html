@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <meta charset="utf-8">
+    <title>Testcase #2 for bug 1258308</title>
+    <script>
+        function test1() {
+          document.body.offsetHeight;
+          document.documentElement.removeAttribute("class");
+        }
+        function runTests() {
+          var pre = document.querySelector('pre');
+          window.getSelection().collapse(pre.firstChild, 8/*after the 2nd line newline*/)
+          pre.focus();
+          document.body.offsetHeight;
+        }
+    </script>
+</head>
+<body>
+
+<pre contenteditable tabindex=1 onfocus="test1()" spellcheck="false">abc
+def
+ghi</pre>
+
+<script>
+SimpleTest.waitForFocus(runTests);
+</script>
+</body>
+</html>
