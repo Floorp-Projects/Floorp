@@ -15,7 +15,6 @@
 #include "nsIMemoryReporter.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
-#include "nsIAsyncShutdown.h"
 #include "Latency.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
@@ -144,47 +143,13 @@ public:
    */
   void AppendMessage(UniquePtr<ControlMessage> aMessage);
 
-  // Shutdown helpers.
-
-  static already_AddRefed<nsIAsyncShutdownClient>
-  GetShutdownBarrier()
-  {
-    nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
-    MOZ_RELEASE_ASSERT(svc);
-
-    nsCOMPtr<nsIAsyncShutdownClient> barrier;
-    nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
-    if (!barrier) {
-      // We are probably in a content process.
-      rv = svc->GetContentChildShutdown(getter_AddRefs(barrier));
-    }
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-    MOZ_RELEASE_ASSERT(barrier);
-    return barrier.forget();
-  }
-
-  class ShutdownTicket final
-  {
-  public:
-    explicit ShutdownTicket(nsIAsyncShutdownBlocker* aBlocker) : mBlocker(aBlocker) {}
-    NS_INLINE_DECL_REFCOUNTING(ShutdownTicket)
-  private:
-    ~ShutdownTicket()
-    {
-      nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
-      barrier->RemoveBlocker(mBlocker);
-    }
-
-    nsCOMPtr<nsIAsyncShutdownBlocker> mBlocker;
-  };
-
   /**
    * Make this MediaStreamGraph enter forced-shutdown state. This state
    * will be noticed by the media graph thread, which will shut down all streams
    * and other state controlled by the media graph thread.
    * This is called during application shutdown.
    */
-  void ForceShutDown(ShutdownTicket* aShutdownTicket);
+  void ForceShutDown();
   /**
    * Shutdown() this MediaStreamGraph's threads and return when they've shut down.
    */
@@ -734,12 +699,6 @@ public:
    * True when we need to do a forced shutdown during application shutdown.
    */
   bool mForceShutDown;
-
-  /**
-   * Drop this reference during shutdown to unblock shutdown.
-   **/
-  RefPtr<ShutdownTicket> mForceShutdownTicket;
-
   /**
    * True when we have posted an event to the main thread to run
    * RunInStableState() and the event hasn't run yet.
