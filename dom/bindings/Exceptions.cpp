@@ -474,17 +474,17 @@ NS_IMETHODIMP JSStackFrame::GetSourceLine(nsACString& aSourceLine)
   return NS_OK;
 }
 
-NS_IMETHODIMP JSStackFrame::GetAsyncCause(nsAString& aAsyncCause)
+NS_IMETHODIMP JSStackFrame::GetAsyncCause(JSContext* aCx,
+                                          nsAString& aAsyncCause)
 {
   if (!mStack) {
     aAsyncCause.Truncate();
     return NS_OK;
   }
 
-  ThreadsafeAutoJSContext cx;
-  JS::Rooted<JSString*> asyncCause(cx);
+  JS::Rooted<JSString*> asyncCause(aCx);
   bool canCache = false, useCachedValue = false;
-  GetValueIfNotCached(cx, mStack, JS::GetSavedFrameAsyncCause,
+  GetValueIfNotCached(aCx, mStack, JS::GetSavedFrameAsyncCause,
                       mAsyncCauseInitialized, &canCache, &useCachedValue,
                       &asyncCause);
 
@@ -495,8 +495,8 @@ NS_IMETHODIMP JSStackFrame::GetAsyncCause(nsAString& aAsyncCause)
 
   if (asyncCause) {
     nsAutoJSString str;
-    if (!str.init(cx, asyncCause)) {
-      JS_ClearPendingException(cx);
+    if (!str.init(aCx, asyncCause)) {
+      JS_ClearPendingException(aCx);
       aAsyncCause.Truncate();
       return NS_OK;
     }
@@ -513,17 +513,17 @@ NS_IMETHODIMP JSStackFrame::GetAsyncCause(nsAString& aAsyncCause)
   return NS_OK;
 }
 
-NS_IMETHODIMP JSStackFrame::GetAsyncCaller(nsIStackFrame** aAsyncCaller)
+NS_IMETHODIMP JSStackFrame::GetAsyncCaller(JSContext* aCx,
+                                           nsIStackFrame** aAsyncCaller)
 {
   if (!mStack) {
     *aAsyncCaller = nullptr;
     return NS_OK;
   }
 
-  ThreadsafeAutoJSContext cx;
-  JS::Rooted<JSObject*> asyncCallerObj(cx);
+  JS::Rooted<JSObject*> asyncCallerObj(aCx);
   bool canCache = false, useCachedValue = false;
-  GetValueIfNotCached(cx, mStack, JS::GetSavedFrameAsyncParent,
+  GetValueIfNotCached(aCx, mStack, JS::GetSavedFrameAsyncParent,
                       mAsyncCallerInitialized, &canCache, &useCachedValue,
                       &asyncCallerObj);
 
