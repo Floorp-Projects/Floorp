@@ -200,11 +200,6 @@ TextTrackManager::UpdateCueDisplay()
     return;
   }
 
-  // Cues must be updated regardless before checking for the presence of a video
-  // frame so that Audio tracks get updated cues and fire cuechanges.
-  nsTArray<RefPtr<TextTrackCue> > activeCues;
-  mTextTracks->UpdateAndGetShowingCues(activeCues);
-
   nsIFrame* frame = mMediaElement->GetPrimaryFrame();
   nsVideoFrame* videoFrame = do_QueryFrame(frame);
   if (!videoFrame) {
@@ -215,6 +210,9 @@ TextTrackManager::UpdateCueDisplay()
   if (!overlay) {
     return;
   }
+
+  nsTArray<RefPtr<TextTrackCue> > activeCues;
+  mTextTracks->UpdateAndGetShowingCues(activeCues);
 
   if (activeCues.Length() > 0) {
     RefPtr<nsVariantCC> jsCues = new nsVariantCC();
