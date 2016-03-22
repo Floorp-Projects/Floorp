@@ -148,3 +148,41 @@ add_task(function* () {
 
   yield BrowserTestUtils.closeWindow(window2);
 });
+
+
+// Tests that incompatible parameters can't be used together.
+add_task(function* testWindowUpdateParams() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      function* getCalls() {
+        for (let state of ["minimized", "maximized", "fullscreen"]) {
+          for (let param of ["left", "top", "width", "height"]) {
+            let expected = `"state": "${state}" may not be combined with "left", "top", "width", or "height"`;
+
+            let windowId = browser.windows.WINDOW_ID_CURRENT;
+            yield browser.windows.update(windowId, {state, [param]: 100}).then(
+              val => {
+                browser.test.fail(`Expected error but got "${val}" instead`);
+              },
+              error => {
+                browser.test.assertTrue(
+                  error.message.includes(expected),
+                  `Got expected error (got: '${error.message}', expected: '${expected}'`);
+              });
+          }
+        }
+      }
+
+      Promise.all(getCalls()).then(() => {
+        browser.test.notifyPass("window-update-params");
+      }).catch(e => {
+        browser.test.fail(`${e} :: ${e.stack}`);
+        browser.test.notifyFail("window-update-params");
+      });
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish("window-update-params");
+  yield extension.unload();
+});
