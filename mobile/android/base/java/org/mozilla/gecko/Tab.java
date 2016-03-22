@@ -528,8 +528,9 @@ public class Tab {
                 if (url == null) {
                     return;
                 }
+                final String pageUrl = ReaderModeUtils.stripAboutReaderUrl(url);
 
-                mBookmark = mDB.isBookmark(getContentResolver(), url);
+                mBookmark = mDB.isBookmark(getContentResolver(), pageUrl);
                 Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.MENU_UPDATED);
             }
         });
@@ -555,28 +556,34 @@ public class Tab {
     }
 
     public void addBookmark() {
+        final String url = getURL();
+        if (url == null) {
+            return;
+        }
+
+        final String pageUrl = ReaderModeUtils.stripAboutReaderUrl(getURL());
+
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                String url = getURL();
-                if (url == null)
-                    return;
-
-                mDB.addBookmark(getContentResolver(), mTitle, url);
+                mDB.addBookmark(getContentResolver(), mTitle, pageUrl);
                 Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.BOOKMARK_ADDED);
             }
         });
     }
 
     public void removeBookmark() {
+        final String url = getURL();
+        if (url == null) {
+            return;
+        }
+
+        final String pageUrl = ReaderModeUtils.stripAboutReaderUrl(getURL());
+
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                String url = getURL();
-                if (url == null)
-                    return;
-
-                mDB.removeBookmarksWithURL(getContentResolver(), url);
+                mDB.removeBookmarksWithURL(getContentResolver(), pageUrl);
                 Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.BOOKMARK_REMOVED);
             }
         });
