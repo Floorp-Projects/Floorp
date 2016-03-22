@@ -231,6 +231,11 @@ def main(argv):
         end = int(round(options.this_chunk * tests_per_chunk))
         test_list = test_list[start:end]
 
+    if not test_list:
+        print("No tests found matching command line arguments after filtering.",
+              file=sys.stderr)
+        sys.exit(0)
+
     # The full test list is ready. Now create copies for each JIT configuration.
     if options.tbpl:
         # Running all bits would take forever. Instead, we test a few
