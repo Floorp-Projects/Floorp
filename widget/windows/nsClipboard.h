@@ -51,7 +51,13 @@ public:
   static nsresult GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aIndex, UINT aFormat, void ** aData, uint32_t * aLen);
   static nsresult GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aIndex, UINT aFormat, const char * aMIMEImageFormat, void ** aData, uint32_t * aLen);
   static nsresult GetGlobalData(HGLOBAL aHGBL, void ** aData, uint32_t * aLen);
-  static UINT     GetFormat(const char* aMimeStr);
+
+  // This function returns the internal Windows clipboard format identifier
+  // for a given Mime string. The default is to map kHTMLMime ("text/html")
+  // to the clipboard format CF_HTML ("HTLM Format"), but it can also be
+  // registered as clipboard format "text/html" to support previous versions
+  // of Gecko.
+  static UINT     GetFormat(const char* aMimeStr, bool aMapHTMLMime = true);
 
   static UINT     CF_HTML;
   
