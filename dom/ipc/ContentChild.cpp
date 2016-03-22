@@ -47,7 +47,7 @@
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/PCompositorChild.h"
+#include "mozilla/layers/PCompositorBridgeChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/net/NeckoChild.h"
@@ -1284,9 +1284,9 @@ ContentChild::DeallocPAPZChild(PAPZChild* aActor)
   return true;
 }
 
-PCompositorChild*
-ContentChild::AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
-                                    base::ProcessId aOtherProcess)
+PCompositorBridgeChild*
+ContentChild::AllocPCompositorBridgeChild(mozilla::ipc::Transport* aTransport,
+                                          base::ProcessId aOtherProcess)
 {
   return CompositorChild::Create(aTransport, aOtherProcess);
 }
@@ -2566,8 +2566,8 @@ OnFinishNuwaPreparation()
 {
   // We want to ensure that the PBackground actor gets cloned in the Nuwa
   // process before we freeze. Also, we have to do this to avoid deadlock.
-  // Protocols that are "opened" (e.g. PBackground, PCompositor) block the
-  // main thread to wait for the IPC thread during the open operation.
+  // Protocols that are "opened" (e.g. PBackground, PCompositorBridge) block
+  // the main thread to wait for the IPC thread during the open operation.
   // NuwaSpawnWait() blocks the IPC thread to wait for the main thread when
   // the Nuwa process is forked. Unless we ensure that the two cannot happen
   // at the same time then we risk deadlock. Spinning the event loop here

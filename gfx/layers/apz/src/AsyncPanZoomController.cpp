@@ -53,7 +53,7 @@
 #include "mozilla/layers/AxisPhysicsMSDModel.h" // for AxisPhysicsMSDModel
 #include "mozilla/layers/CompositorParent.h" // for CompositorParent
 #include "mozilla/layers/LayerTransactionParent.h" // for LayerTransactionParent
-#include "mozilla/layers/PCompositorParent.h" // for PCompositorParent
+#include "mozilla/layers/PCompositorBridgeParent.h" // for PCompositorBridgeParent
 #include "mozilla/layers/ScrollInputMethods.h" // for ScrollInputMethod
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "mozilla/unused.h"             // for unused
@@ -884,7 +884,7 @@ AsyncPanZoomController::~AsyncPanZoomController()
   MOZ_ASSERT(IsDestroyed());
 }
 
-PCompositorParent*
+PCompositorBridgeParent*
 AsyncPanZoomController::GetSharedFrameMetricsCompositor()
 {
   APZThreadUtils::AssertOnCompositorThread();
@@ -892,7 +892,7 @@ AsyncPanZoomController::GetSharedFrameMetricsCompositor()
   if (mSharingFrameMetricsAcrossProcesses) {
     // |state| may be null here if the CrossProcessCompositorParent has already been destroyed.
     if (const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(mLayersId)) {
-      return state->CrossProcessPCompositor();
+      return state->CrossProcessPCompositorBridge();
     }
     return nullptr;
   }
@@ -933,7 +933,7 @@ AsyncPanZoomController::Destroy()
   mParent = nullptr;
   mTreeManager = nullptr;
 
-  PCompositorParent* compositor = GetSharedFrameMetricsCompositor();
+  PCompositorBridgeParent* compositor = GetSharedFrameMetricsCompositor();
   // Only send the release message if the SharedFrameMetrics has been created.
   if (compositor && mSharedFrameMetricsBuffer) {
     Unused << compositor->SendReleaseSharedCompositorFrameMetrics(mFrameMetrics.GetScrollId(), mAPZCId);
@@ -3869,7 +3869,7 @@ void AsyncPanZoomController::UpdateSharedCompositorFrameMetrics()
 
 void AsyncPanZoomController::ShareCompositorFrameMetrics() {
 
-  PCompositorParent* compositor = GetSharedFrameMetricsCompositor();
+  PCompositorBridgeParent* compositor = GetSharedFrameMetricsCompositor();
 
   // Only create the shared memory buffer if it hasn't already been created,
   // we are using progressive tile painting, and we have a
