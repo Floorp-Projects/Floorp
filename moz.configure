@@ -42,7 +42,7 @@ option('--disable-compile-environment',
 def compile_environment(value):
     if value:
         set_config('COMPILE_ENVIRONMENT', True)
-        add_old_configure_assignment('COMPILE_ENVIRONMENT', '1')
+        add_old_configure_assignment('COMPILE_ENVIRONMENT', True)
     return bool(value)
 
 
@@ -163,7 +163,7 @@ def yasm_asflags(yasm, target):
             set_config('YASM_ASFLAGS', asflags)
             set_config('HAVE_YASM', True)
             # Until the YASM variable is not necessary in old-configure.
-            add_old_configure_assignment('YASM', '1')
+            add_old_configure_assignment('YASM', True)
         return asflags
 
 # Miscellaneous programs

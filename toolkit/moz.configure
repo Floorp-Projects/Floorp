@@ -56,7 +56,7 @@ def dmd(value):
     if value:
         set_config('MOZ_DMD', True)
         set_define('MOZ_DMD', True)
-        add_old_configure_assignment('MOZ_DMD', '1')
+        add_old_configure_assignment('MOZ_DMD', True)
         imply_option('--enable-profiling')
 
 
@@ -161,7 +161,7 @@ def x11(value, toolkit):
         set_define('MOZ_ENABLE_XREMOTE', True)
         set_config('MOZ_X11', True)
         set_define('MOZ_X11', True)
-        add_old_configure_assignment('MOZ_X11', '1')
+        add_old_configure_assignment('MOZ_X11', True)
 
     return value and toolkit in x11_toolkits
 
@@ -217,7 +217,7 @@ option(env='USE_FC_FREETYPE',
 def fc_freetype(value, toolkit):
     if value or (toolkit in ('gtk2', 'gtk3', 'qt') and
                  value.origin == 'default'):
-        add_old_configure_assignment('USE_FC_FREETYPE', '1')
+        add_old_configure_assignment('USE_FC_FREETYPE', True)
 
 
 # Apple platform decoder support
@@ -227,7 +227,7 @@ def applemedia(toolkit):
     if toolkit in ('cocoa', 'uikit'):
         set_config('MOZ_APPLEMEDIA', True)
         set_define('MOZ_APPLEMEDIA', True)
-        add_old_configure_assignment('MOZ_APPLEMEDIA', '1')
+        add_old_configure_assignment('MOZ_APPLEMEDIA', True)
         return True
     return False
 
@@ -285,7 +285,7 @@ def fmp4(value, target, wmf, applemedia):
     if enabled:
         set_config('MOZ_FMP4', True)
         set_define('MOZ_FMP4', True)
-        add_old_configure_assignment('MOZ_FMP4', '1')
+        add_old_configure_assignment('MOZ_FMP4', True)
     return enabled
 
 
