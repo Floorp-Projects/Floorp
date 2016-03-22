@@ -459,23 +459,6 @@ nsXBLWindowKeyHandler::HandleEventOnCaptureInSystemEventGroup(
   aEvent->AsEvent()->StopPropagation();
 }
 
-//
-// EventMatched
-//
-// See if the given handler cares about this particular key event
-//
-bool
-nsXBLWindowKeyHandler::EventMatched(
-                         nsXBLPrototypeHandler* aHandler,
-                         nsIAtom* aEventType,
-                         nsIDOMKeyEvent* aEvent,
-                         uint32_t aCharCode,
-                         const IgnoreModifierState& aIgnoreModifierState)
-{
-  return aHandler->KeyEventMatched(aEventType, aEvent, aCharCode,
-                                   aIgnoreModifierState);
-}
-
 bool
 nsXBLWindowKeyHandler::IsHTMLEditableFieldFocused()
 {
@@ -589,8 +572,32 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
       return false;
     }
 
-    if (!EventMatched(handler, aEventType, aKeyEvent,
-                      aCharCode, aIgnoreModifierState)) {
+    if (aExecute) {
+      // If it's executing matched handlers, the event type should exactly be
+      // matched.
+      if (!handler->EventTypeEquals(aEventType)) {
+        continue;
+      }
+    } else {
+      if (handler->EventTypeEquals(nsGkAtoms::keypress)) {
+        // If the handler is a keypress event handler, we also need to check
+        // if coming keydown event is a preceding event of reserved key
+        // combination because if default action of a keydown event is
+        // prevented, following keypress event won't be fired.  However, if
+        // following keypress event is reserved, we shouldn't allow web
+        // contents to prevent the default of the preceding keydown event.
+        if (aEventType != nsGkAtoms::keydown &&
+            aEventType != nsGkAtoms::keypress) {
+          continue;
+        }
+      } else if (!handler->EventTypeEquals(aEventType)) {
+        // Otherwise, aEventType should exactly be matched.
+        continue;
+      }
+    }
+
+    // Check if the keyboard event *may* execute the handler.
+    if (!handler->KeyEventMatched(aKeyEvent, aCharCode, aIgnoreModifierState)) {
       continue;  // try the next one
     }
 
@@ -602,20 +609,34 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
       continue;
     }
 
+    bool isReserved = false;
     if (commandElement) {
       if (!IsExecutableElement(commandElement)) {
         continue;
       }
+
+      isReserved =
+        commandElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::reserved,
+                                    nsGkAtoms::_true, eCaseMatters);
       if (aOutReservedForChrome) {
-        nsAutoString value;
-        // The caller wants to know if this is a reserved command
-        commandElement->GetAttribute(NS_LITERAL_STRING("reserved"), value);
-        *aOutReservedForChrome = value.EqualsLiteral("true");
+        *aOutReservedForChrome = isReserved;
       }
     }
 
     if (!aExecute) {
-      return true;
+      if (handler->EventTypeEquals(aEventType)) {
+        return true;
+      }
+      // If the command is reserved and the event is keydown, check also if
+      // the handler is for keypress because if following keypress event is
+      // reserved, we shouldn't dispatch the event into web contents.
+      if (isReserved &&
+          aEventType == nsGkAtoms::keydown &&
+          handler->EventTypeEquals(nsGkAtoms::keypress)) {
+        return true;
+      }
+      // Otherwise, we've not found a handler for the event yet.
+      continue;
     }
 
     nsCOMPtr<EventTarget> target;
@@ -627,6 +648,8 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
       target = mTarget;
     }
 
+    // XXX Do we execute only one handler even if the handler neither stops
+    //     propagation nor prevents default of the event?
     nsresult rv = handler->ExecuteHandler(target, aKeyEvent->AsEvent());
     if (NS_SUCCEEDED(rv)) {
       return true;

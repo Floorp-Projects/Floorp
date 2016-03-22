@@ -77,11 +77,6 @@ protected:
   // to a particular element rather than the document
   nsresult EnsureHandlers();
 
-  // check if the given handler cares about the given key event
-  bool EventMatched(nsXBLPrototypeHandler* aHandler, nsIAtom* aEventType,
-                    nsIDOMKeyEvent* aEvent, uint32_t aCharCode,
-                    const IgnoreModifierState& aIgnoreModifierState);
-
   // Is an HTML editable element focused
   bool IsHTMLEditableFieldFocused();
 
