@@ -62,6 +62,7 @@
   padding: 0;
   bottom: 0;
   list-style: none;
+  pointer-events: none;
 }
 
 .toolbar > * {
@@ -94,6 +95,11 @@
 
 .button[hidden] {
   display: none;
+}
+
+.dropdown-toggle,
+#reader-popup {
+  pointer-events: auto;
 }
 
 .dropdown {
