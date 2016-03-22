@@ -8,14 +8,18 @@
 #define mozilla_dom_KeyframeEffect_h
 
 #include "nsAutoPtr.h"
+#include "nsCSSProperty.h"
+#include "nsCSSValue.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocument.h"
+#include "nsTArray.h"
 #include "nsWrapperCache.h"
 #include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ComputedTiming.h"
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/LayerAnimationInfo.h" // LayerAnimations::kRecords
+#include "mozilla/Maybe.h"
 #include "mozilla/NonOwningAnimationTarget.h"
 #include "mozilla/OwningNonNull.h"      // OwningNonNull<...>
 #include "mozilla/StickyTimeDuration.h"
@@ -26,7 +30,6 @@
 #include "mozilla/dom/AnimationEffectTimingReadOnly.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Nullable.h"
-
 
 struct JSContext;
 class nsCSSPropertySet;
@@ -49,6 +52,42 @@ enum class IterationCompositeOperation : uint32_t;
 enum class CompositeOperation : uint32_t;
 struct AnimationPropertyDetails;
 }
+
+/**
+ * A property-value pair specified on a keyframe.
+ */
+struct PropertyValuePair
+{
+  nsCSSProperty mProperty;
+  // The specified value for the property. For shorthand properties or invalid
+  // property values, we store the specified property value as a token stream
+  // (string).
+  nsCSSValue    mValue;
+};
+
+/**
+ * A single keyframe.
+ *
+ * This is the canonical form in which keyframe effects are stored and
+ * corresponds closely to the type of objects returned via the getFrames() API.
+ *
+ * Before computing an output animation value, however, we flatten these frames
+ * down to a series of per-property value arrays where we also resolve any
+ * overlapping shorthands/longhands, convert specified CSS values to computed
+ * values, etc.
+ *
+ * When the target element or style context changes, however, we rebuild these
+ * per-property arrays from the original list of keyframes objects. As a result,
+ * these objects represent the master definition of the effect's values.
+ */
+struct Keyframe
+{
+  Maybe<double>                 mOffset;
+  double                        mComputedOffset = 0.0;
+  Maybe<ComputedTimingFunction> mTimingFunction; // Nothing() here means
+                                                 // "linear"
+  nsTArray<PropertyValuePair>   mPropertyValues;
+};
 
 struct AnimationPropertySegment
 {
