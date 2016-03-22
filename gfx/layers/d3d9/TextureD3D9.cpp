@@ -493,10 +493,20 @@ DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
   return true;
 }
 
+static bool AssertD3D9Compositor(Compositor* aCompositor)
+{
+  bool ok = aCompositor && aCompositor->GetBackendType() == LayersBackend::LAYERS_D3D9;
+  MOZ_ASSERT(ok);
+  return ok;
+}
+
 void
 DataTextureSourceD3D9::SetCompositor(Compositor* aCompositor)
 {
-  MOZ_ASSERT(aCompositor);
+  if (!AssertD3D9Compositor(aCompositor)) {
+    Reset();
+    return;
+  }
   CompositorD3D9* d3dCompositor = static_cast<CompositorD3D9*>(aCompositor);
   if (mCompositor && mCompositor != d3dCompositor) {
     Reset();
@@ -907,6 +917,11 @@ TextureHostD3D9::GetDevice()
 void
 TextureHostD3D9::SetCompositor(Compositor* aCompositor)
 {
+  if (!AssertD3D9Compositor(aCompositor)) {
+    mCompositor = nullptr;
+    mTextureSource = nullptr;
+    return;
+  }
   mCompositor = static_cast<CompositorD3D9*>(aCompositor);
   if (mTextureSource) {
     mTextureSource->SetCompositor(aCompositor);
@@ -1025,7 +1040,11 @@ DXGITextureHostD3D9::Unlock()
 void
 DXGITextureHostD3D9::SetCompositor(Compositor* aCompositor)
 {
-  MOZ_ASSERT(aCompositor);
+  if (!AssertD3D9Compositor(aCompositor)) {
+    mCompositor = nullptr;
+    mTextureSource = nullptr;
+    return;
+  }
   mCompositor = static_cast<CompositorD3D9*>(aCompositor);
 }
 
@@ -1057,7 +1076,13 @@ DXGIYCbCrTextureHostD3D9::GetDevice()
 void
 DXGIYCbCrTextureHostD3D9::SetCompositor(Compositor* aCompositor)
 {
-  MOZ_ASSERT(aCompositor);
+  if (!AssertD3D9Compositor(aCompositor)) {
+    mCompositor = nullptr;
+    mTextureSources[0] = nullptr;
+    mTextureSources[1] = nullptr;
+    mTextureSources[2] = nullptr;
+    return;
+  }
   mCompositor = static_cast<CompositorD3D9*>(aCompositor);
 }
 
