@@ -1034,7 +1034,8 @@ Console::NoopMethod()
 static
 nsresult
 StackFrameToStackEntry(nsIStackFrame* aStackFrame,
-                       ConsoleStackEntry& aStackEntry)
+                       ConsoleStackEntry& aStackEntry,
+                       uint32_t aLanguage)
 {
   MOZ_ASSERT(aStackFrame);
 
@@ -1063,7 +1064,7 @@ StackFrameToStackEntry(nsIStackFrame* aStackFrame,
     aStackEntry.mAsyncCause.Construct(cause);
   }
 
-  aStackEntry.mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
+  aStackEntry.mLanguage = aLanguage;
   return NS_OK;
 }
 
@@ -1074,9 +1075,15 @@ ReifyStack(nsIStackFrame* aStack, nsTArray<ConsoleStackEntry>& aRefiedStack)
   nsCOMPtr<nsIStackFrame> stack(aStack);
 
   while (stack) {
-    ConsoleStackEntry& data = *aRefiedStack.AppendElement();
-    nsresult rv = StackFrameToStackEntry(stack, data);
+    uint32_t language;
+    nsresult rv = stack->GetLanguage(&language);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (language == nsIProgrammingLanguage::JAVASCRIPT) {
+      ConsoleStackEntry& data = *aRefiedStack.AppendElement();
+      rv = StackFrameToStackEntry(stack, data, language);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     nsCOMPtr<nsIStackFrame> caller;
     rv = stack->GetCaller(getter_AddRefs(caller));
@@ -1122,14 +1129,38 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
                       DEFAULT_MAX_STACKTRACE_DEPTH : 1;
   nsCOMPtr<nsIStackFrame> stack = CreateStack(aCx, maxDepth);
 
-  if (stack) {
-    callData->mTopStackFrame.emplace();
-    nsresult rv = StackFrameToStackEntry(stack,
-                                         *callData->mTopStackFrame);
+  if (!stack) {
+    return;
+  }
+
+  // Walk up to the first JS stack frame and save it if we find it.
+  do {
+    uint32_t language;
+    nsresult rv = stack->GetLanguage(&language);
     if (NS_FAILED(rv)) {
       return;
     }
-  }
+
+    if (language == nsIProgrammingLanguage::JAVASCRIPT) {
+      callData->mTopStackFrame.emplace();
+      nsresult rv = StackFrameToStackEntry(stack,
+                                           *callData->mTopStackFrame,
+                                           language);
+      if (NS_FAILED(rv)) {
+        return;
+      }
+
+      break;
+    }
+
+    nsCOMPtr<nsIStackFrame> caller;
+    rv = stack->GetCaller(getter_AddRefs(caller));
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
+    stack.swap(caller);
+  } while (stack);
 
   if (NS_IsMainThread()) {
     callData->mStack = stack;
