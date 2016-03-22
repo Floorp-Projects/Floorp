@@ -2552,90 +2552,43 @@ BuildStyleRule(nsCSSProperty aProperty,
   return rule.forget();
 }
 
-/* static */ bool
-StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
-                                  dom::Element* aTargetElement,
-                                  nsStyleContext* aStyleContext,
-                                  const nsAString& aSpecifiedValue,
-                                  bool aUseSVGMode,
-                                  StyleAnimationValue& aComputedValue,
-                                  bool* aIsContextSensitive)
+already_AddRefed<css::StyleRule>
+BuildStyleRule(nsCSSProperty aProperty,
+               dom::Element* aTargetElement,
+               const nsCSSValue& aSpecifiedValue,
+               bool aUseSVGMode)
 {
-  MOZ_ASSERT(aTargetElement, "null target element");
+  MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),
+             "Should be a longhand property");
 
-  // Parse specified value into a temporary css::StyleRule
-  // Note: BuildStyleRule needs an element's OwnerDoc, BaseURI, and Principal.
-  // If it is a pseudo element, use its parent element's OwnerDoc, BaseURI,
-  // and Principal.
-  RefPtr<css::StyleRule> styleRule =
-    BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue, aUseSVGMode);
-  if (!styleRule) {
-    return false;
+  // Check if longhand failed to parse correctly.
+  if (aSpecifiedValue.GetUnit() == eCSSUnit_Null) {
+    return nullptr;
   }
 
-  if (nsCSSProps::IsShorthand(aProperty) ||
-      nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_None) {
-    // Just capture the specified value
-    aComputedValue.SetUnparsedStringValue(nsString(aSpecifiedValue));
-    if (aIsContextSensitive) {
-      // Since we're just returning the string as-is, aComputedValue isn't going
-      // to change depending on the context
-      *aIsContextSensitive = false;
-    }
-    return true;
-  }
+  // Set up an empty CSS Declaration
+  RefPtr<css::Declaration> declaration(new css::Declaration());
+  declaration->InitializeEmpty();
 
-  AutoTArray<PropertyStyleAnimationValuePair,1> values;
-  bool ok = ComputeValues(aProperty, nsCSSProps::eIgnoreEnabledState,
-                          aTargetElement, aStyleContext, styleRule,
-                          values, aIsContextSensitive);
-  if (!ok) {
-    return false;
-  }
+  // Add our longhand value
+  nsCSSExpandedDataBlock block;
+  declaration->ExpandTo(&block);
+  block.AddLonghandProperty(aProperty, aSpecifiedValue);
+  declaration->ValueAppended(aProperty);
+  declaration->CompressFrom(&block);
 
-  MOZ_ASSERT(values.Length() == 1);
-  MOZ_ASSERT(values[0].mProperty == aProperty);
-
-  aComputedValue = values[0].mValue;
-  return true;
+  RefPtr<css::StyleRule> rule = new css::StyleRule(nullptr, declaration, 0, 0);
+  return rule.forget();
 }
 
-/* static */ bool
-StyleAnimationValue::ComputeValues(nsCSSProperty aProperty,
-                                   nsCSSProps::EnabledState aEnabledState,
-                                   dom::Element* aTargetElement,
-                                   nsStyleContext* aStyleContext,
-                                   const nsAString& aSpecifiedValue,
-                                   bool aUseSVGMode,
-                                   nsTArray<PropertyStyleAnimationValuePair>& aResult)
-{
-  MOZ_ASSERT(aTargetElement, "null target element");
-
-  // Parse specified value into a temporary css::StyleRule
-  // Note: BuildStyleRule needs an element's OwnerDoc, BaseURI, and Principal.
-  // If it is a pseudo element, use its parent element's OwnerDoc, BaseURI,
-  // and Principal.
-  RefPtr<css::StyleRule> styleRule =
-    BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue, aUseSVGMode);
-  if (!styleRule) {
-    return false;
-  }
-
-  aResult.Clear();
-  return ComputeValues(aProperty, aEnabledState, aTargetElement,
-                       aStyleContext, styleRule, aResult,
-                       /* aIsContextSensitive */ nullptr);
-}
-
-/* static */ bool
-StyleAnimationValue::ComputeValues(
-    nsCSSProperty aProperty,
-    nsCSSProps::EnabledState aEnabledState,
-    dom::Element* aTargetElement,
-    nsStyleContext* aStyleContext,
-    css::StyleRule* aStyleRule,
-    nsTArray<PropertyStyleAnimationValuePair>& aValues,
-    bool* aIsContextSensitive)
+static bool
+ComputeValuesFromStyleRule(nsCSSProperty aProperty,
+                           nsCSSProps::EnabledState aEnabledState,
+                           dom::Element* aTargetElement,
+                           nsStyleContext* aStyleContext,
+                           css::StyleRule* aStyleRule,
+                           nsTArray<PropertyStyleAnimationValuePair>& aValues,
+                           bool* aIsContextSensitive)
 {
   MOZ_ASSERT(aStyleContext);
   if (!nsCSSProps::IsEnabled(aProperty, aEnabledState)) {
@@ -2702,8 +2655,8 @@ StyleAnimationValue::ComputeValues(
       }
       PropertyStyleAnimationValuePair* pair = aValues.AppendElement();
       pair->mProperty = *p;
-      if (!ExtractComputedValue(*p, tmpStyleContext,
-                                pair->mValue)) {
+      if (!StyleAnimationValue::ExtractComputedValue(*p, tmpStyleContext,
+                                                     pair->mValue)) {
         return false;
       }
     }
@@ -2711,8 +2664,119 @@ StyleAnimationValue::ComputeValues(
   } else {
     PropertyStyleAnimationValuePair* pair = aValues.AppendElement();
     pair->mProperty = aProperty;
-    return ExtractComputedValue(aProperty, tmpStyleContext, pair->mValue);
+    return StyleAnimationValue::ExtractComputedValue(aProperty, tmpStyleContext,
+                                                     pair->mValue);
   }
+}
+
+/* static */ bool
+StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
+                                  dom::Element* aTargetElement,
+                                  nsStyleContext* aStyleContext,
+                                  const nsAString& aSpecifiedValue,
+                                  bool aUseSVGMode,
+                                  StyleAnimationValue& aComputedValue,
+                                  bool* aIsContextSensitive)
+{
+  MOZ_ASSERT(aTargetElement, "null target element");
+
+  // Parse specified value into a temporary css::StyleRule
+  // Note: BuildStyleRule needs an element's OwnerDoc, BaseURI, and Principal.
+  // If it is a pseudo element, use its parent element's OwnerDoc, BaseURI,
+  // and Principal.
+  RefPtr<css::StyleRule> styleRule =
+    BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue, aUseSVGMode);
+  if (!styleRule) {
+    return false;
+  }
+
+  if (nsCSSProps::IsShorthand(aProperty) ||
+      nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_None) {
+    // Just capture the specified value
+    aComputedValue.SetUnparsedStringValue(nsString(aSpecifiedValue));
+    if (aIsContextSensitive) {
+      // Since we're just returning the string as-is, aComputedValue isn't going
+      // to change depending on the context
+      *aIsContextSensitive = false;
+    }
+    return true;
+  }
+
+  AutoTArray<PropertyStyleAnimationValuePair,1> values;
+  bool ok = ComputeValuesFromStyleRule(aProperty,
+                                       nsCSSProps::eIgnoreEnabledState,
+                                       aTargetElement, aStyleContext, styleRule,
+                                       values, aIsContextSensitive);
+  if (!ok) {
+    return false;
+  }
+
+  MOZ_ASSERT(values.Length() == 1);
+  MOZ_ASSERT(values[0].mProperty == aProperty);
+
+  aComputedValue = values[0].mValue;
+  return true;
+}
+
+template <class T>
+bool
+ComputeValuesFromSpecifiedValue(
+    nsCSSProperty aProperty,
+    nsCSSProps::EnabledState aEnabledState,
+    dom::Element* aTargetElement,
+    nsStyleContext* aStyleContext,
+    T& aSpecifiedValue,
+    bool aUseSVGMode,
+    nsTArray<PropertyStyleAnimationValuePair>& aResult)
+{
+  MOZ_ASSERT(aTargetElement, "null target element");
+
+  // Parse specified value into a temporary css::StyleRule
+  // Note: BuildStyleRule needs an element's OwnerDoc, BaseURI, and Principal.
+  // If it is a pseudo element, use its parent element's OwnerDoc, BaseURI,
+  // and Principal.
+  RefPtr<css::StyleRule> styleRule =
+    BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue, aUseSVGMode);
+  if (!styleRule) {
+    return false;
+  }
+
+  aResult.Clear();
+  return ComputeValuesFromStyleRule(aProperty, aEnabledState, aTargetElement,
+                                    aStyleContext, styleRule, aResult,
+                                    /* aIsContextSensitive */ nullptr);
+}
+
+/* static */ bool
+StyleAnimationValue::ComputeValues(
+    nsCSSProperty aProperty,
+    nsCSSProps::EnabledState aEnabledState,
+    dom::Element* aTargetElement,
+    nsStyleContext* aStyleContext,
+    const nsAString& aSpecifiedValue,
+    bool aUseSVGMode,
+    nsTArray<PropertyStyleAnimationValuePair>& aResult)
+{
+  return ComputeValuesFromSpecifiedValue(aProperty, aEnabledState,
+                                         aTargetElement, aStyleContext,
+                                         aSpecifiedValue, aUseSVGMode,
+                                         aResult);
+}
+
+/* static */ bool
+StyleAnimationValue::ComputeValues(
+    nsCSSProperty aProperty,
+    nsCSSProps::EnabledState aEnabledState,
+    dom::Element* aTargetElement,
+    nsStyleContext* aStyleContext,
+    const nsCSSValue& aSpecifiedValue,
+    bool aUseSVGMode,
+    nsTArray<PropertyStyleAnimationValuePair>& aResult)
+{
+  return ComputeValuesFromSpecifiedValue(aProperty, aEnabledState,
+                                         aTargetElement, aStyleContext,
+                                         aSpecifiedValue, aUseSVGMode,
+                                         aResult);
 }
 
 bool
