@@ -39,6 +39,109 @@ namespace mozilla {
 enum class ListAllowance { eDisallow, eAllow };
 
 /**
+ * A comparator to sort nsCSSProperty values such that longhands are sorted
+ * before shorthands, and shorthands with less components are sorted before
+ * shorthands with more components.
+ *
+ * Using this allows us to prioritize values specified by longhands (or smaller
+ * shorthand subsets) when longhands and shorthands are both specified
+ * on the one keyframe.
+ *
+ * Example orderings that result from this:
+ *
+ *   margin-left, margin
+ *
+ * and:
+ *
+ *   border-top-color, border-color, border-top, border
+ */
+class PropertyPriorityComparator
+{
+public:
+  PropertyPriorityComparator()
+    : mSubpropertyCountInitialized(false) {}
+
+  bool Equals(nsCSSProperty aLhs, nsCSSProperty aRhs) const
+  {
+    return aLhs == aRhs;
+  }
+
+  bool LessThan(nsCSSProperty aLhs,
+                nsCSSProperty aRhs) const
+  {
+    bool isShorthandLhs = nsCSSProps::IsShorthand(aLhs);
+    bool isShorthandRhs = nsCSSProps::IsShorthand(aRhs);
+
+    if (isShorthandLhs) {
+      if (isShorthandRhs) {
+        // First, sort shorthands by the number of longhands they have.
+        uint32_t subpropCountLhs = SubpropertyCount(aLhs);
+        uint32_t subpropCountRhs = SubpropertyCount(aRhs);
+        if (subpropCountLhs != subpropCountRhs) {
+          return subpropCountLhs < subpropCountRhs;
+        }
+        // Otherwise, sort by IDL name below.
+      } else {
+        // Put longhands before shorthands.
+        return false;
+      }
+    } else {
+      if (isShorthandRhs) {
+        // Put longhands before shorthands.
+        return true;
+      }
+    }
+    // For two longhand properties, or two shorthand with the same number
+    // of longhand components, sort by IDL name.
+    return nsCSSProps::PropertyIDLNameSortPosition(aLhs) <
+           nsCSSProps::PropertyIDLNameSortPosition(aRhs);
+  }
+
+  uint32_t SubpropertyCount(nsCSSProperty aProperty) const
+  {
+    if (!mSubpropertyCountInitialized) {
+      PodZero(&mSubpropertyCount);
+      mSubpropertyCountInitialized = true;
+    }
+    if (mSubpropertyCount[aProperty] == 0) {
+      uint32_t count = 0;
+      CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
+          p, aProperty, nsCSSProps::eEnabledForAllContent) {
+        ++count;
+      }
+      mSubpropertyCount[aProperty] = count;
+    }
+    return mSubpropertyCount[aProperty];
+  }
+
+private:
+  // Cache of shorthand subproperty counts.
+  mutable RangedArray<
+    uint32_t,
+    eCSSProperty_COUNT_no_shorthands,
+    eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands> mSubpropertyCount;
+  mutable bool mSubpropertyCountInitialized;
+};
+
+/**
+ * Adaptor for PropertyPriorityComparator to sort objects which have
+ * a mProperty member.
+ */
+template <typename T>
+class TPropertyPriorityComparator : PropertyPriorityComparator
+{
+public:
+  bool Equals(const T& aLhs, const T& aRhs) const
+  {
+    return PropertyPriorityComparator::Equals(aLhs.mProperty, aRhs.mProperty);
+  }
+  bool LessThan(const T& aLhs, const T& aRhs) const
+  {
+    return PropertyPriorityComparator::LessThan(aLhs.mProperty, aRhs.mProperty);
+  }
+};
+
+/**
  * A property-values pair obtained from the open-ended properties
  * discovered on a regular keyframe or property-indexed keyframe object.
  *
@@ -51,74 +154,7 @@ struct PropertyValuesPair
   nsCSSProperty mProperty;
   nsTArray<nsString> mValues;
 
-  class PropertyPriorityComparator
-  {
-  public:
-    PropertyPriorityComparator()
-      : mSubpropertyCountInitialized(false) {}
-
-    bool Equals(const PropertyValuesPair& aLhs,
-                const PropertyValuesPair& aRhs) const
-    {
-      return aLhs.mProperty == aRhs.mProperty;
-    }
-
-    bool LessThan(const PropertyValuesPair& aLhs,
-                  const PropertyValuesPair& aRhs) const
-    {
-      bool isShorthandLhs = nsCSSProps::IsShorthand(aLhs.mProperty);
-      bool isShorthandRhs = nsCSSProps::IsShorthand(aRhs.mProperty);
-
-      if (isShorthandLhs) {
-        if (isShorthandRhs) {
-          // First, sort shorthands by the number of longhands they have.
-          uint32_t subpropCountLhs = SubpropertyCount(aLhs.mProperty);
-          uint32_t subpropCountRhs = SubpropertyCount(aRhs.mProperty);
-          if (subpropCountLhs != subpropCountRhs) {
-            return subpropCountLhs < subpropCountRhs;
-          }
-          // Otherwise, sort by IDL name below.
-        } else {
-          // Put longhands before shorthands.
-          return false;
-        }
-      } else {
-        if (isShorthandRhs) {
-          // Put longhands before shorthands.
-          return true;
-        }
-      }
-      // For two longhand properties, or two shorthand with the same number
-      // of longhand components, sort by IDL name.
-      return nsCSSProps::PropertyIDLNameSortPosition(aLhs.mProperty) <
-             nsCSSProps::PropertyIDLNameSortPosition(aRhs.mProperty);
-    }
-
-    uint32_t SubpropertyCount(nsCSSProperty aProperty) const
-    {
-      if (!mSubpropertyCountInitialized) {
-        PodZero(&mSubpropertyCount);
-        mSubpropertyCountInitialized = true;
-      }
-      if (mSubpropertyCount[aProperty] == 0) {
-        uint32_t count = 0;
-        CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
-            p, aProperty, nsCSSProps::eEnabledForAllContent) {
-          ++count;
-        }
-        mSubpropertyCount[aProperty] = count;
-      }
-      return mSubpropertyCount[aProperty];
-    }
-
-  private:
-    // Cache of shorthand subproperty counts.
-    mutable RangedArray<
-      uint32_t,
-      eCSSProperty_COUNT_no_shorthands,
-      eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands> mSubpropertyCount;
-    mutable bool mSubpropertyCountInitialized;
-  };
+  typedef TPropertyPriorityComparator<PropertyValuesPair> Comparator;
 };
 
 /**
@@ -967,19 +1003,8 @@ GenerateValueEntries(Element* aTarget,
     // number of components.  For two longhand properties, or two shorthands
     // with the same number of components, sort by IDL name.
     //
-    // Example orderings that result from this:
-    //
-    //   margin-left, margin
-    //
-    // and:
-    //
-    //   border-top-color, border-color, border-top, border
-    //
-    // This allows us to prioritize values specified by longhands (or smaller
-    // shorthand subsets) when longhands and shorthands are both specified
-    // on the one keyframe.
-    keyframe.mPropertyValuePairs.Sort(
-        PropertyValuesPair::PropertyPriorityComparator());
+    // @see PropertyPriorityComparator.
+    keyframe.mPropertyValuePairs.Sort(PropertyValuesPair::Comparator());
 
     nsCSSPropertySet propertiesOnThisKeyframe;
     for (const PropertyValuesPair& pair : keyframe.mPropertyValuePairs) {
