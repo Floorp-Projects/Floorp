@@ -35,8 +35,8 @@
 "visibility": "public",
 "filename": "jcentral.tar.xz",
 "unpack": true,
-"digest": "b5d85a917785e1c034318f7495fef27a6274b04d8640245726b0cf1331b7ac374f5757868901c3fadd930bf10603173a706be653d769dde8ddfdb8673b143363",
-"size": 38596168
+"digest": "31a8c573f002e5f9a09c5ae4fd768bebb3ea29006c78bb1d353ccbb48be9dcaaeffaf8a32778f0bbb516bea3112c59067f5d17535f31cc7e8abfd8945b139642",
+"size": 38606248
 },
 {
 "algorithm": "sha512",
