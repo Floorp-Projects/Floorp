@@ -8,7 +8,6 @@
 #define mozilla_dom_bluetooth_bluedroid_BluetoothMapFolder_h
 
 #include "BluetoothCommon.h"
-#include "nsAutoPtr.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTArray.h"
 

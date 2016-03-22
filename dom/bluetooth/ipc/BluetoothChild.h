@@ -7,14 +7,11 @@
 #ifndef mozilla_dom_bluetooth_ipc_BluetoothChild_h
 #define mozilla_dom_bluetooth_ipc_BluetoothChild_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/bluetooth/BluetoothCommon.h"
-
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/bluetooth/PBluetoothChild.h"
 #include "mozilla/dom/bluetooth/PBluetoothRequestChild.h"
-
-#include "mozilla/Attributes.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace dom {
