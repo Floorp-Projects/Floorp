@@ -38,6 +38,7 @@ DecodedAudioDataSink::DecodedAudioDataSink(MediaQueue<MediaData>& aAudioQueue,
   , mInfo(aInfo)
   , mChannel(aChannel)
   , mPlaying(true)
+  , mPlaybackComplete(false)
 {
 }
 
@@ -119,7 +120,7 @@ DecodedAudioDataSink::SetPreservesPitch(bool aPreservesPitch)
 void
 DecodedAudioDataSink::SetPlaying(bool aPlaying)
 {
-  if (!mAudioStream || mPlaying == aPlaying) {
+  if (!mAudioStream || mPlaying == aPlaying || mPlaybackComplete) {
     return;
   }
   // pause/resume AudioStream as necessary.
@@ -291,9 +292,7 @@ void
 DecodedAudioDataSink::Drained()
 {
   SINK_LOG("Drained");
-  // FIXME : In OSX, the audio backend could trigger Drained() twice, then it
-  // cause the crash because the promise had already been resolve and free.
-  // You can fix it on the bug 1246108.
+  mPlaybackComplete = true;
   mEndPromise.ResolveIfExists(true, __func__);
 }
 
