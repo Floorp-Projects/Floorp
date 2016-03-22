@@ -544,16 +544,17 @@ NS_IMETHODIMP JSStackFrame::GetAsyncCaller(JSContext* aCx,
   return NS_OK;
 }
 
-NS_IMETHODIMP JSStackFrame::GetCaller(JSContext* aCx, nsIStackFrame** aCaller)
+NS_IMETHODIMP JSStackFrame::GetCaller(nsIStackFrame** aCaller)
 {
   if (!mStack) {
     *aCaller = nullptr;
     return NS_OK;
   }
 
-  JS::Rooted<JSObject*> callerObj(aCx);
+  ThreadsafeAutoJSContext cx;
+  JS::Rooted<JSObject*> callerObj(cx);
   bool canCache = false, useCachedValue = false;
-  GetValueIfNotCached(aCx, mStack, JS::GetSavedFrameParent, mCallerInitialized,
+  GetValueIfNotCached(cx, mStack, JS::GetSavedFrameParent, mCallerInitialized,
                       &canCache, &useCachedValue, &callerObj);
 
   if (useCachedValue) {
@@ -573,7 +574,7 @@ NS_IMETHODIMP JSStackFrame::GetCaller(JSContext* aCx, nsIStackFrame** aCaller)
   return NS_OK;
 }
 
-NS_IMETHODIMP JSStackFrame::GetFormattedStack(JSContext* aCx, nsAString& aStack)
+NS_IMETHODIMP JSStackFrame::GetFormattedStack(nsAString& aStack)
 {
   if (!mStack) {
     aStack.Truncate();
@@ -584,29 +585,30 @@ NS_IMETHODIMP JSStackFrame::GetFormattedStack(JSContext* aCx, nsAString& aStack)
   // returns bool, not JS::SavedFrameResult.  Maybe it's possible to
   // make the templates more complicated to deal, but in the meantime
   // let's just inline GetValueIfNotCached here.
+  ThreadsafeAutoJSContext cx;
 
-  // Allow caching if aCx and stack are same-compartment.  Otherwise take the
+  // Allow caching if cx and stack are same-compartment.  Otherwise take the
   // slow path.
   bool canCache =
-    js::GetContextCompartment(aCx) == js::GetObjectCompartment(mStack);
+    js::GetContextCompartment(cx) == js::GetObjectCompartment(mStack);
   if (canCache && mFormattedStackInitialized) {
     aStack = mFormattedStack;
     return NS_OK;
   }
 
   JS::ExposeObjectToActiveJS(mStack);
-  JS::Rooted<JSObject*> stack(aCx, mStack);
+  JS::Rooted<JSObject*> stack(cx, mStack);
 
-  JS::Rooted<JSString*> formattedStack(aCx);
-  if (!JS::BuildStackString(aCx, stack, &formattedStack)) {
-    JS_ClearPendingException(aCx);
+  JS::Rooted<JSString*> formattedStack(cx);
+  if (!JS::BuildStackString(cx, stack, &formattedStack)) {
+    JS_ClearPendingException(cx);
     aStack.Truncate();
     return NS_OK;
   }
 
   nsAutoJSString str;
-  if (!str.init(aCx, formattedStack)) {
-    JS_ClearPendingException(aCx);
+  if (!str.init(cx, formattedStack)) {
+    JS_ClearPendingException(cx);
     aStack.Truncate();
     return NS_OK;
   }
