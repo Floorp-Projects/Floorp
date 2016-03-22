@@ -212,9 +212,9 @@ public:
   explicit JSStackFrame(JS::Handle<JSObject*> aStack);
 
 protected:
-  int32_t GetLineno();
+  int32_t GetLineno(JSContext* aCx);
 
-  int32_t GetColNo();
+  int32_t GetColNo(JSContext* aCx);
 
 private:
   virtual ~JSStackFrame();
@@ -408,16 +408,15 @@ NS_IMETHODIMP JSStackFrame::GetName(JSContext* aCx, nsAString& aFunction)
 }
 
 int32_t
-JSStackFrame::GetLineno()
+JSStackFrame::GetLineno(JSContext* aCx)
 {
   if (!mStack) {
     return 0;
   }
 
-  ThreadsafeAutoJSContext cx;
   uint32_t line;
   bool canCache = false, useCachedValue = false;
-  GetValueIfNotCached(cx, mStack, JS::GetSavedFrameLine, mLinenoInitialized,
+  GetValueIfNotCached(aCx, mStack, JS::GetSavedFrameLine, mLinenoInitialized,
                       &canCache, &useCachedValue, &line);
 
   if (useCachedValue) {
@@ -432,23 +431,22 @@ JSStackFrame::GetLineno()
   return line;
 }
 
-NS_IMETHODIMP JSStackFrame::GetLineNumber(int32_t* aLineNumber)
+NS_IMETHODIMP JSStackFrame::GetLineNumber(JSContext* aCx, int32_t* aLineNumber)
 {
-  *aLineNumber = GetLineno();
+  *aLineNumber = GetLineno(aCx);
   return NS_OK;
 }
 
 int32_t
-JSStackFrame::GetColNo()
+JSStackFrame::GetColNo(JSContext* aCx)
 {
   if (!mStack) {
     return 0;
   }
 
-  ThreadsafeAutoJSContext cx;
   uint32_t col;
   bool canCache = false, useCachedValue = false;
-  GetValueIfNotCached(cx, mStack, JS::GetSavedFrameColumn, mColNoInitialized,
+  GetValueIfNotCached(aCx, mStack, JS::GetSavedFrameColumn, mColNoInitialized,
                       &canCache, &useCachedValue, &col);
 
   if (useCachedValue) {
@@ -463,9 +461,10 @@ JSStackFrame::GetColNo()
   return col;
 }
 
-NS_IMETHODIMP JSStackFrame::GetColumnNumber(int32_t* aColumnNumber)
+NS_IMETHODIMP JSStackFrame::GetColumnNumber(JSContext* aCx,
+                                            int32_t* aColumnNumber)
 {
-  *aColumnNumber = GetColNo();
+  *aColumnNumber = GetColNo(aCx);
   return NS_OK;
 }
 
@@ -650,7 +649,7 @@ NS_IMETHODIMP JSStackFrame::ToString(JSContext* aCx, nsACString& _retval)
     funname.AssignLiteral("<TOP_LEVEL>");
   }
 
-  int32_t lineno = GetLineno();
+  int32_t lineno = GetLineno(aCx);
 
   static const char format[] = "JS frame :: %s :: %s :: line %d";
   _retval.AppendPrintf(format,
