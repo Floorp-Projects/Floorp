@@ -14,29 +14,29 @@
 }
 
 .slide-layout {
-  padding-top: 50px;
+  padding-top: 90px;
   padding-left: 50px;
   padding-bottom: 20px;
-  width: 600px;
+  width: 590px;
 }
 
 .slide-layout > h2 {
   font-family: sans-serif;
-  font-size: 3.0rem;
-  font-weight: 500;
+  font-size: 2.5rem;
+  font-weight: 600;
   white-space: normal;
   color: #fff;
-  line-height: 3rem;
-  margin-bottom: 10px;
+  line-height: 2.8rem;
+  margin-bottom: 1.4rem;
 }
 
 .slide-layout > .slide-text {
   font-family: sans-serif;
-  font-size: 2.1rem;
-  font-weight: 300;
+  font-size: 1.8rem;
+  font-weight: 400;
   white-space: normal;
   color: #fff;
-  line-height: 3.0rem;
+  line-height: 2.8rem;
 }
 
 .slide-layout > img {
@@ -49,7 +49,7 @@
   background-position: center;
   padding: 0;
   float: right;
-  margin-top: -20px;
+  margin-top: -40px;
 }
 
 .slide1 {

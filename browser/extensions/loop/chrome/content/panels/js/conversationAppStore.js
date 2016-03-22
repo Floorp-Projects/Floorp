@@ -51,7 +51,8 @@ loop.store.ConversationAppStore = (function() {
 
     this._dispatcher.register(this, [
       "getWindowData",
-      "showFeedbackForm"
+      "showFeedbackForm",
+      "leaveConversation"
     ]);
   };
 
@@ -147,19 +148,35 @@ loop.store.ConversationAppStore = (function() {
      * the window when no session is currently active.
      */
     LoopHangupNowHandler: function() {
-      switch (this.getStoreState().windowType) {
-        case "room":
-          if (this._activeRoomStore.getStoreState().used &&
-              !this._storeState.showFeedbackForm) {
-            this._dispatcher.dispatch(new loop.shared.actions.LeaveRoom());
-          } else {
-            loop.shared.mixins.WindowCloseMixin.closeWindow();
-          }
-          break;
-        default:
-          loop.shared.mixins.WindowCloseMixin.closeWindow();
-          break;
+      this._dispatcher.dispatch(new loop.shared.actions.LeaveConversation());
+    },
+
+    /**
+     * Handles leaving the conversation, displaying the feedback form if it
+     * is time to.
+     */
+    leaveConversation: function() {
+      if (this.getStoreState().windowType !== "room" ||
+          !this._activeRoomStore.getStoreState().used ||
+          this.getStoreState().showFeedbackForm) {
+        loop.shared.mixins.WindowCloseMixin.closeWindow();
+        return;
       }
+
+      var delta = new Date() - new Date(this.getStoreState().feedbackTimestamp);
+
+      // Show timestamp if feedback period (6 months) passed.
+      // 0 is default value for pref. Always show feedback form on first use.
+      if (this.getStoreState().feedbackTimestamp === 0 ||
+          delta >= this.getStoreState().feedbackPeriod) {
+        this._dispatcher.dispatch(new loop.shared.actions.LeaveRoom({
+          windowStayingOpen: true
+        }));
+        this._dispatcher.dispatch(new loop.shared.actions.ShowFeedbackForm());
+        return;
+      }
+
+      loop.shared.mixins.WindowCloseMixin.closeWindow();
     },
 
     /**
