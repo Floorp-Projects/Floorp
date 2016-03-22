@@ -10,9 +10,10 @@ def check_compiler_flag(flag):
     @depends(is_gcc)
     def check(value):
         if value:
-            set_config('CFLAGS', [flag])
-
+            return [flag]
+    set_config('CFLAGS', check)
     return check
+
 
 check_compiler_flag('-Werror=foobar')
 
@@ -28,9 +29,17 @@ def twentyone():
 @depends(is_gcc)
 def check(value):
     if value:
-        set_config('TEMPLATE_VALUE', fortytwo())
+        return fortytwo()
+
+set_config('TEMPLATE_VALUE', check)
+
+@depends(is_gcc)
+def check(value):
+    if value:
         for val in twentyone():
-            set_config('TEMPLATE_VALUE_2', val)
+            return val
+
+set_config('TEMPLATE_VALUE_2', check)
 
 # Templates can use @advanced too to import modules and get the full set of
 # builtins.
@@ -44,4 +53,6 @@ option('--enable-advanced-template', help='Advanced template')
 @depends('--enable-advanced-template')
 def check(value):
     if value:
-        set_config('PLATFORM', platform())
+        return platform()
+
+set_config('PLATFORM', check)
