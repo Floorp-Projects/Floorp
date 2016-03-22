@@ -30,11 +30,13 @@ interface nsIStackFrame : nsISupports
     readonly attribute AString                 asyncCause;
     [implicit_jscontext]
     readonly attribute nsIStackFrame           asyncCaller;
+    [implicit_jscontext]
     readonly attribute nsIStackFrame           caller;
 
     // Returns a formatted stack string that looks like the sort of
     // string that would be returned by .stack on JS Error objects.
     // Only works on JS-language stack frames.
+    [implicit_jscontext]
     readonly attribute AString                 formattedStack;
 
     // Returns the underlying SavedFrame object for native JavaScript stacks,
