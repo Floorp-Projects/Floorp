@@ -178,14 +178,7 @@ already_AddRefed<nsIStackFrame>
 GetCurrentJSStack(int32_t aMaxDepth)
 {
   // is there a current context available?
-  JSContext* cx = nullptr;
-
-  if (NS_IsMainThread()) {
-    MOZ_ASSERT(nsContentUtils::XPConnect());
-    cx = nsContentUtils::GetCurrentJSContext();
-  } else {
-    cx = workers::GetCurrentThreadJSContext();
-  }
+  JSContext* cx = nsContentUtils::GetCurrentJSContextForThread();
 
   if (!cx || !js::GetContextCompartment(cx)) {
     return nullptr;
@@ -343,17 +336,17 @@ GetValueIfNotCached(JSContext* aCx, JSObject* aStack,
   aPropGetter(aCx, stack, aValue, JS::SavedFrameSelfHosted::Exclude);
 }
 
-NS_IMETHODIMP JSStackFrame::GetFilename(nsAString& aFilename)
+NS_IMETHODIMP JSStackFrame::GetFilename(JSContext* aCx, nsAString& aFilename)
 {
   if (!mStack) {
     aFilename.Truncate();
     return NS_OK;
   }
 
-  ThreadsafeAutoJSContext cx;
-  JS::Rooted<JSString*> filename(cx);
+  JS::Rooted<JSString*> filename(aCx);
   bool canCache = false, useCachedValue = false;
-  GetValueIfNotCached(cx, mStack, JS::GetSavedFrameSource, mFilenameInitialized,
+  GetValueIfNotCached(aCx, mStack, JS::GetSavedFrameSource,
+                      mFilenameInitialized,
                       &canCache, &useCachedValue, &filename);
   if (useCachedValue) {
     aFilename = mFilename;
@@ -361,8 +354,8 @@ NS_IMETHODIMP JSStackFrame::GetFilename(nsAString& aFilename)
   }
 
   nsAutoJSString str;
-  if (!str.init(cx, filename)) {
-    JS_ClearPendingException(cx);
+  if (!str.init(aCx, filename)) {
+    JS_ClearPendingException(aCx);
     aFilename.Truncate();
     return NS_OK;
   }
@@ -643,7 +636,7 @@ NS_IMETHODIMP JSStackFrame::ToString(JSContext* aCx, nsACString& _retval)
   _retval.Truncate();
 
   nsString filename;
-  nsresult rv = GetFilename(filename);
+  nsresult rv = GetFilename(aCx, filename);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (filename.IsEmpty()) {

@@ -211,11 +211,16 @@ class BlobURLsReporter final : public nsIMemoryReporter
       principalURI->GetPrePath(origin);
     }
 
+    // If we got a frame, we better have a current JSContext.  This is cheating
+    // a bit; ideally we'd have our caller pass in a JSContext, or have
+    // GetCurrentJSStack() hand out the JSContext it found.
+    JSContext* cx = frame ? nsContentUtils::GetCurrentJSContext() : nullptr;
+
     for (uint32_t i = 0; frame; ++i) {
       nsString fileNameUTF16;
       int32_t lineNumber = 0;
 
-      frame->GetFilename(fileNameUTF16);
+      frame->GetFilename(cx, fileNameUTF16);
       frame->GetLineNumber(&lineNumber);
 
       if (!fileNameUTF16.IsEmpty()) {
