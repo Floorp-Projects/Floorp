@@ -16,7 +16,8 @@ class JSObject;
 namespace mozilla {
 struct AnimationProperty;
 enum class CSSPseudoElementType : uint8_t;
-class  ErrorResult;
+class ErrorResult;
+struct Keyframe;
 
 namespace dom {
 class Element;
@@ -50,6 +51,24 @@ public:
                              JS::Handle<JSObject*> aFrames,
                              InfallibleTArray<AnimationProperty>& aResult,
                              ErrorResult& aRv);
+
+  /**
+   * Converts a JS value representing a property-indexed keyframe or a sequence
+   * of keyframes to an array of Keyframe objects.
+   *
+   * @param aCx The JSContext that corresponds to |aFrames|.
+   * @param aFrames The JS value, provided as an optional IDL |object?| value,
+   *   that is the keyframe list specification.
+   * @param aRv (out) Out-param to hold any error returned by this function.
+   *   Must be initially empty.
+   * @return The set of processed keyframes. If an error occurs, aRv will be
+   *   filled-in with the appropriate error code and an empty array will be
+   *   returned.
+   */
+  static nsTArray<Keyframe>
+  GetKeyframesFromObject(JSContext* aCx,
+                         JS::Handle<JSObject*> aFrames,
+                         ErrorResult& aRv);
 };
 
 } // namespace mozilla
