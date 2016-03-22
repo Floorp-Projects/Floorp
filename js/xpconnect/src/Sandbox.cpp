@@ -1580,7 +1580,7 @@ AssembleSandboxMemoryReporterName(JSContext* cx, nsCString& sandboxName)
         nsString location;
         int32_t lineNumber = 0;
         frame->GetFilename(cx, location);
-        frame->GetLineNumber(cx, &lineNumber);
+        frame->GetLineNumber(&lineNumber);
 
         sandboxName.AppendLiteral(" (from: ");
         sandboxName.Append(NS_ConvertUTF16toUTF8(location));
