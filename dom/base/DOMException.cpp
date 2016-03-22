@@ -321,14 +321,14 @@ Exception::GetFilename(JSContext* aCx, nsAString& aFilename)
 }
 
 NS_IMETHODIMP
-Exception::GetLineNumber(JSContext* aCx, uint32_t *aLineNumber)
+Exception::GetLineNumber(uint32_t *aLineNumber)
 {
   NS_ENSURE_ARG_POINTER(aLineNumber);
   NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
 
   if (mLocation) {
     int32_t lineno;
-    nsresult rv = mLocation->GetLineNumber(aCx, &lineno);
+    nsresult rv = mLocation->GetLineNumber(&lineno);
     *aLineNumber = lineno;
     return rv;
   }
@@ -474,11 +474,11 @@ Exception::GetName(nsString& retval)
 }
 
 uint32_t
-Exception::LineNumber(JSContext* aCx) const
+Exception::LineNumber() const
 {
   if (mLocation) {
     int32_t lineno;
-    if (NS_SUCCEEDED(mLocation->GetLineNumber(aCx, &lineno))) {
+    if (NS_SUCCEEDED(mLocation->GetLineNumber(&lineno))) {
       return lineno;
     }
     return 0;
