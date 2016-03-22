@@ -763,7 +763,7 @@ NS_IMETHODIMP StackFrame::GetNativeSavedFrame(JS::MutableHandle<JS::Value> aSave
   return NS_OK;
 }
 
-NS_IMETHODIMP StackFrame::ToString(nsACString& _retval)
+NS_IMETHODIMP StackFrame::ToString(JSContext* aCx, nsACString& _retval)
 {
   _retval.Truncate();
 

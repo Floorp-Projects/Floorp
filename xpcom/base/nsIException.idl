@@ -35,6 +35,7 @@ interface nsIStackFrame : nsISupports
     // or null if this is not a native JavaScript stack frame.
     readonly attribute jsval                   nativeSavedFrame;
 
+    [implicit_jscontext]
     AUTF8String toString();
 };
 
@@ -70,5 +71,6 @@ interface nsIException : nsISupports
     readonly attribute nsISupports             data;
 
     // A generic formatter - make it suitable to print, etc.
+    [implicit_jscontext]
     AUTF8String toString();
 };
