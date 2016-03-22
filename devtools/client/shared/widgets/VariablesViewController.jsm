@@ -13,6 +13,7 @@ Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var Services = require("Services");
 var promise = require("promise");
+var {LocalizationHelper} = require("devtools/client/shared/l10n");
 
 Object.defineProperty(this, "WebConsoleUtils", {
   get: function() {
@@ -33,10 +34,12 @@ const MAX_LONG_STRING_LENGTH = 200000;
 const MAX_PROPERTY_ITEMS = 2000;
 const DBG_STRINGS_URI = "chrome://devtools/locale/debugger.properties";
 
-const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data
-
 this.EXPORTED_SYMBOLS = ["VariablesViewController", "StackFrameUtils"];
 
+/**
+ * Localization convenience methods.
+ */
+var L10N = new LocalizationHelper(DBG_STRINGS_URI);
 
 /**
  * Controller for a VariablesView that handles interfacing with the debugger
@@ -195,7 +198,7 @@ VariablesViewController.prototype = {
       // Query the name of the first and last items for this slice
       let deferred = promise.defer();
       aIterator.names([start, start + count - 1], ({ names }) => {
-        let label = "[" + names[0] + ELLIPSIS + names[1] + "]";
+        let label = "[" + names[0] + L10N.ellipsis + names[1] + "]";
         let item = aTarget.addItem(label);
         item.showArrow();
         this.addExpander(item, sliceGrip);
@@ -791,8 +794,3 @@ var StackFrameUtils = this.StackFrameUtils = {
     return label;
   }
 };
-
-/**
- * Localization convenience methods.
- */
-var L10N = new ViewHelpers.L10N(DBG_STRINGS_URI);

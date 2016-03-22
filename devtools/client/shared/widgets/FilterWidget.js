@@ -14,8 +14,11 @@ const { Cu, Cc, Ci } = require("chrome");
 const { ViewHelpers } =
       Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm",
                 {});
+
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const STRINGS_URI = "chrome://devtools/locale/filterwidget.properties";
-const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const L10N = new LocalizationHelper(STRINGS_URI);
+
 const {cssTokenizer} = require("devtools/client/shared/css-parsing-utils");
 
 loader.lazyGetter(this, "asyncStorage",

@@ -7,9 +7,10 @@ const {Cu} = require("chrome");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {createNode} = require("devtools/client/animationinspector/utils");
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
 
 const STRINGS_URI = "chrome://devtools/locale/inspector.properties";
-const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const L10N = new LocalizationHelper(STRINGS_URI);
 
 /**
  * UI component responsible for displaying a preview of a dom node.

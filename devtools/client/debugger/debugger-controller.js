@@ -105,11 +105,6 @@ Cu.import("resource://devtools/client/shared/widgets/VariablesView.jsm");
 Cu.import("resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
-/**
- * Localization convenience methods.
- */
-var L10N = new ViewHelpers.L10N(DBG_STRINGS_URI);
-
 Cu.import("resource://devtools/client/shared/browser-loader.js");
 const { require } = BrowserLoader({
   baseURI: "resource://devtools/client/debugger/",
@@ -151,6 +146,7 @@ var Editor = require("devtools/client/sourceeditor/editor");
 var DebuggerEditor = require("devtools/client/sourceeditor/debugger");
 var {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 var FastListWidget = require("devtools/client/shared/widgets/FastListWidget");
+var {LocalizationHelper} = require("devtools/client/shared/l10n");
 
 XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 
@@ -173,6 +169,11 @@ Object.defineProperty(this, "NetworkHelper", {
   configurable: true,
   enumerable: true
 });
+
+/**
+ * Localization convenience methods.
+ */
+var L10N = new LocalizationHelper(DBG_STRINGS_URI);
 
 /**
  * Object defining the debugger controller components.
