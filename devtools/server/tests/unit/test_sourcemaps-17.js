@@ -27,11 +27,13 @@ function run_test() {
 
 function test_source_map() {
    // Set up debuggee code.
-  const a = new SourceNode(1, 1, "foo.js", "function a() { b(); }");
+  const a = new SourceNode(1, 1, "a.js", "function a() { b(); }");
   const b = new SourceNode(null, null, null, "function b() { c(); }");
-  const c = new SourceNode(2, 1, "foo.js", "function c() { debugger; }");
-  const { map, code } = (new SourceNode(null, null, null, [a,b,c])).toStringWithSourceMap({
-    file: "bar.js",
+  const c = new SourceNode(1, 1, "c.js", "function c() { d(); }");
+  const d = new SourceNode(null, null, null, "function d() { e(); }");
+  const e = new SourceNode(1, 1, "e.js", "function e() { debugger; }");
+  const { map, code } = (new SourceNode(null, null, null, [a,b,c,d,e])).toStringWithSourceMap({
+    file: "root.js",
     sourceRoot: "root",
   });
   Components.utils.evalInSandbox(
@@ -43,8 +45,15 @@ function test_source_map() {
   );
 
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    gThreadClient.fillFrames(50, function(res) {
-      do_check_true(!res.error, "Should not get an error: " + res.error);
+    gThreadClient.getFrames(0, 50, function({ error, frames }) {
+      do_check_true(!error);
+      do_check_eq(frames.length, 4);
+      // b.js should be skipped
+      do_check_eq(frames[0].where.source.url, "http://example.com/www/root/e.js");
+      do_check_eq(frames[1].where.source.url, "http://example.com/www/root/c.js");
+      do_check_eq(frames[2].where.source.url, "http://example.com/www/root/a.js");
+      do_check_eq(frames[3].where.source.url, null);
+
       finishClient(gClient);
     })
   });
