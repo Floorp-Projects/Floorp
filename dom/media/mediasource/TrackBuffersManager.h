@@ -345,8 +345,8 @@ private:
 
   // Global size of this source buffer content.
   Atomic<int64_t> mSizeSourceBuffer;
-  int64_t mVideoEvictionThreshold;
-  int64_t mAudioEvictionThreshold;
+  const int64_t mVideoEvictionThreshold;
+  const int64_t mAudioEvictionThreshold;
   Atomic<bool> mEvictionOccurred;
 
   // Monitor to protect following objects accessed across multipple threads.
