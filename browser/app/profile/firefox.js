@@ -1648,3 +1648,5 @@ pref("media.webspeech.synth.enabled", true);
 pref("browser.esedbreader.loglevel", "Error");
 
 pref("browser.laterrun.enabled", false);
+("extensions.pocket.enabled", true);
+
