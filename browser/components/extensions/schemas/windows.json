@@ -88,7 +88,6 @@
             "description": "The state of this browser window."
           },
           "alwaysOnTop": {
-            "unsupported": true,
             "type": "boolean",
             "description": "Whether the window is set to be always on top."
           },
