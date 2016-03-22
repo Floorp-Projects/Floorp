@@ -69,6 +69,7 @@
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseBinding.h"
+#include "mozilla/dom/PromiseDebugging.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "jsprf.h"
 #include "js/Debug.h"
@@ -471,6 +472,11 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
   MOZ_ASSERT(mDebuggerPromiseMicroTaskQueue.empty());
   MOZ_ASSERT(mPromiseMicroTaskQueue.empty());
 
+#ifdef SPIDERMONKEY_PROMISE
+  mUncaughtRejections.reset();
+  mConsumedRejections.reset();
+#endif // SPIDERMONKEY_PROMISE
+
   JS_DestroyRuntime(mJSRuntime);
   mJSRuntime = nullptr;
   nsCycleCollector_forgetJSRuntime();
@@ -540,6 +546,9 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
 
 #ifdef SPIDERMONKEY_PROMISE
   JS::SetEnqueuePromiseJobCallback(mJSRuntime, EnqueuePromiseJobCallback, this);
+  JS::SetPromiseRejectionTrackerCallback(mJSRuntime, PromiseRejectionTrackerCallback, this);
+  mUncaughtRejections.init(mJSRuntime, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
+  mConsumedRejections.init(mJSRuntime, JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>(js::SystemAllocPolicy()));
 #endif // SPIDERMONKEY_PROMISE
 
   JS::dbg::SetDebuggerMallocSizeOf(mJSRuntime, moz_malloc_size_of);
@@ -947,6 +956,28 @@ CycleCollectedJSRuntime::EnqueuePromiseJobCallback(JSContext* aCx,
   self->DispatchToMicroTask(runnable);
   return true;
 }
+
+#ifdef SPIDERMONKEY_PROMISE
+/* static */
+void
+CycleCollectedJSRuntime::PromiseRejectionTrackerCallback(JSContext* aCx,
+                                                         JS::HandleObject aPromise,
+                                                         PromiseRejectionHandlingState state,
+                                                         void* aData)
+{
+#ifdef DEBUG
+  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+#endif // DEBUG
+  MOZ_ASSERT(JS_GetRuntime(aCx) == self->Runtime());
+  MOZ_ASSERT(Get() == self);
+
+  if (state == PromiseRejectionHandlingState::Unhandled) {
+    PromiseDebugging::AddUncaughtRejection(aPromise);
+  } else {
+    PromiseDebugging::AddConsumedRejection(aPromise);
+  }
+}
+#endif // SPIDERMONKEY_PROMISE
 
 struct JsGcTracer : public TraceCallbacks
 {

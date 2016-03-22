@@ -38,7 +38,11 @@ callback interface UncaughtRejectionObserver {
    * caught, i.e. if its `then` callback is called, `onConsumed` will
    * be called.
    */
+#ifdef SPIDERMONKEY_PROMISE
+  void onLeftUncaught(object p);
+#else
   void onLeftUncaught(Promise<any> p);
+#endif SPIDERMONKEY_PROMISE
 
   /**
    * A Promise previously left uncaught is not the last in its
@@ -47,7 +51,11 @@ callback interface UncaughtRejectionObserver {
    * @param p A Promise that was previously left in uncaught state is
    * now caught, i.e. it is not the last in its chain anymore.
    */
+#ifdef SPIDERMONKEY_PROMISE
+  void onConsumed(object p);
+#else
   void onConsumed(Promise<any> p);
+#endif SPIDERMONKEY_PROMISE
 };
 
 [ChromeOnly, Exposed=(Window,System)]
