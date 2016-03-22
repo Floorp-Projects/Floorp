@@ -878,7 +878,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                     fputs(line, stdout);
                     fputs(preamble, stdout);
                     nsCString text;
-                    if (NS_SUCCEEDED(xpc_exception->ToString(text)) &&
+                    if (NS_SUCCEEDED(xpc_exception->ToString(cx, text)) &&
                         !text.IsEmpty()) {
                         fputs(text.get(), stdout);
                         fputs("\n", stdout);
@@ -905,7 +905,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                         scriptError = do_CreateInstance(XPC_SCRIPT_ERROR_CONTRACTID);
                         if (nullptr != scriptError) {
                             nsCString newMessage;
-                            rv = xpc_exception->ToString(newMessage);
+                            rv = xpc_exception->ToString(cx, newMessage);
                             if (NS_SUCCEEDED(rv)) {
                                 // try to get filename, lineno from the first
                                 // stack frame location.
