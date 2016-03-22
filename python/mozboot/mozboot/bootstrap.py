@@ -66,7 +66,12 @@ obtain a copy of the source code by running:
 
     hg clone https://hg.mozilla.org/mozilla-central
 
-Or, if you prefer Git:
+Or, if you prefer Git, you should install git-cinnabar, and follow the
+instruction here to clone from the Mercurial repository:
+
+    https://github.com/glandium/git-cinnabar/wiki/Mozilla:-A-git-workflow-for-Gecko-development
+
+Or, if you really prefer vanilla flavor Git:
 
     git clone https://git.mozilla.org/integration/gecko-dev.git
 '''
