@@ -8161,7 +8161,7 @@ DebuggerObject_getPromiseID(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, "get promiseID", args, refobj);
 
-    args.rval().setNumber(promise->getID());
+    args.rval().setNumber(double(promise->getID()));
     return true;
 }
 
