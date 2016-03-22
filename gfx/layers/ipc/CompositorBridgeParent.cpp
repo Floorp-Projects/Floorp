@@ -2471,6 +2471,11 @@ CompositorBridgeParent::UpdatePluginWindowState(uint64_t aId)
   }
 
   if (!lts.mPluginData.Length()) {
+    // Don't hide plugins if the previous remote layer tree didn't contain any.
+    if (!mCachedPluginData.Length()) {
+      PLUGINS_LOG("[%" PRIu64 "] nothing to hide", aId);
+      return false;
+    }
     // We will pass through here in cases where the previous shadow layer
     // tree contained visible plugins and the new tree does not. All we need
     // to do here is hide the plugins for the old tree, so don't waste time
