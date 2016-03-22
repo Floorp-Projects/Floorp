@@ -37,6 +37,7 @@ import org.mozilla.gecko.health.HealthRecorder;
 import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.HomeBanner;
+import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenInBackgroundListener;
@@ -3345,6 +3346,12 @@ public class BrowserApp extends GeckoApp
         if (!SwitchBoard.isInExperiment(this, Experiments.BOOKMARKS_HISTORY_MENU)) {
             bookmarksList.setVisible(false);
             historyList.setVisible(false);
+        } else {
+            // Hide panel menu items if the panels themselves are hidden.
+            // If we don't know whether the panels are hidden, just show the menu items.
+            final SharedPreferences prefs = GeckoSharedPrefs.forProfile(getContext());
+            bookmarksList.setVisible(prefs.getBoolean(HomeConfig.PREF_KEY_BOOKMARKS_PANEL_ENABLED, true));
+            historyList.setVisible(prefs.getBoolean(HomeConfig.PREF_KEY_HISTORY_PANEL_ENABLED, true));
         }
 
         return true;
