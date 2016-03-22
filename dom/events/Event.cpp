@@ -519,17 +519,7 @@ Event::PreventDefaultInternal(bool aCalledByDefaultHandler)
     return;
   }
 
-  mEvent->mFlags.mDefaultPrevented = true;
-
-  // Note that even if preventDefault() has already been called by chrome,
-  // a call of preventDefault() by content needs to overwrite
-  // mDefaultPreventedByContent to true because in such case, defaultPrevented
-  // must be true when web apps check it after they call preventDefault().
-  if (!aCalledByDefaultHandler) {
-    mEvent->mFlags.mDefaultPreventedByContent = true;
-  } else {
-    mEvent->mFlags.mDefaultPreventedByChrome = true;
-  }
+  mEvent->PreventDefault(aCalledByDefaultHandler);
 
   if (!IsTrusted()) {
     return;

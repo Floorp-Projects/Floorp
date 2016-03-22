@@ -1175,8 +1175,9 @@ NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
       // triggering the menu bar for ALT key accelerators used in assistive
       // technologies such as Window-Eyes and ZoomText or for switching open
       // state of IME.
-      aKeyEvent.mFlags.mDefaultPrevented =
-        (mOriginalVirtualKeyCode == VK_MENU && mMsg.message != WM_SYSKEYUP);
+      if (mOriginalVirtualKeyCode == VK_MENU && mMsg.message != WM_SYSKEYUP) {
+        aKeyEvent.PreventDefaultBeforeDispatch();
+      }
       break;
     case eKeyPress:
       aKeyEvent.mUniqueId = sUniqueKeyEventId;
