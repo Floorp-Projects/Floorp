@@ -187,7 +187,7 @@ public:
 
   bool DefaultPrevented() const
   {
-    return mEvent->mFlags.mDefaultPrevented;
+    return mEvent->DefaultPrevented();
   }
 
   bool MultipleActionsPrevented() const
