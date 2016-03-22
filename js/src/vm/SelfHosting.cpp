@@ -1546,7 +1546,7 @@ js::ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args)
         ++iter;
     }
 
-    MOZ_ASSERT_UNREACHABLE();
+    MOZ_ASSERT_UNREACHABLE("How did we not find a useful self-hosted frame?");
     return false;
 }
 
