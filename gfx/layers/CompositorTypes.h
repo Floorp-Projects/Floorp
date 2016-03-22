@@ -230,8 +230,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(OpenMode)
 // We rely on the items in this enum being sequential
 enum class MaskType : uint8_t {
   MaskNone = 0,   // no mask layer
-  Mask2d,         // mask layer for layers with 2D transforms
-  Mask3d,         // mask layer for layers with 3D transforms
+  Mask,           // mask layer
   NumMaskTypes
 };
 

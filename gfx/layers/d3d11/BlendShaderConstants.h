@@ -14,8 +14,7 @@
 
 // These must be in the same order as the Mask enum.
 #define PS_MASK_NONE         0
-#define PS_MASK_2D           1
-#define PS_MASK_3D           2
+#define PS_MASK              1
 
 // These must be in the same order as CompositionOp.
 #define PS_BLEND_MULTIPLY    0
@@ -50,8 +49,7 @@ BlendOpToShaderConstant(gfx::CompositionOp aOp) {
 namespace {
 static inline void BlendShaderConstantAsserts() {
   static_assert(PS_MASK_NONE == int(mozilla::layers::MaskType::MaskNone), "shader constant is out of sync");
-  static_assert(PS_MASK_2D == int(mozilla::layers::MaskType::Mask2d), "shader constant is out of sync");
-  static_assert(PS_MASK_3D == int(mozilla::layers::MaskType::Mask3d), "shader constant is out of sync");
+  static_assert(PS_MASK == int(mozilla::layers::MaskType::Mask), "shader constant is out of sync");
   static_assert(int(mozilla::gfx::CompositionOp::OP_LUMINOSITY) - int(mozilla::gfx::CompositionOp::OP_MULTIPLY) == 14,
                 "shader constants are out of sync");
 }

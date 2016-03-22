@@ -171,8 +171,12 @@ class PostReleaseVersionBump(MercurialScript, BuildbotMixin,
                          version=self.config["version"].replace(".", "_"),
                          build_number=self.config["build_number"])
                 for t in tags]
+        message = "No bug - Tagging {revision} with {tags} a=release CLOSED TREE"
+        message = message.format(
+            revision=self.config["revision"],
+            tags=', '.join(tags))
         self.hg_tag(cwd=dirs["abs_gecko_dir"], tags=tags,
-                    revision=self.config["revision"],
+                    revision=self.config["revision"], message=message,
                     user=self.config["hg_user"], force=True)
 
 # __main__ {{{1

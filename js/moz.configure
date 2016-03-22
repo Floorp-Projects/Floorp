@@ -8,10 +8,24 @@
 # =========================================================
 
 @depends(build_project, '--help')
-def js_shell_default(build_project, help):
+def building_js(build_project, help):
     return build_project == 'js'
 
-js_option('--disable-js-shell', default=js_shell_default,
+# Exception to the rule above: JS_STANDALONE is a special option that doesn't
+# want the js_option treatment. When we're done merging js/src/configure and
+# top-level configure, it can go away, although the JS_STANDALONE config
+# will still need to be set depending on building_js above.
+option(env='JS_STANDALONE', default=building_js,
+       help='Reserved for internal use')
+
+@depends('JS_STANDALONE')
+def js_standalone(value):
+    if value:
+        set_config('JS_STANDALONE', '1')
+        add_old_configure_assignment('JS_STANDALONE', '1')
+
+
+js_option('--disable-js-shell', default=building_js,
        help='Do not build the JS shell')
 
 @depends('--disable-js-shell')
@@ -22,14 +36,10 @@ def js_shell(value):
 
 # SpiderMonkey as a shared library, and how its symbols are exported
 # ==================================================================
-@depends(build_project, '--help')
-def js_shared_default(build_project, help):
-    return build_project == 'js'
-
-js_option('--disable-shared-js', default=js_shared_default,
+js_option('--disable-shared-js', default=building_js,
           help='Do not create a shared library')
 
-js_option('--disable-export-js', default=js_shared_default,
+js_option('--disable-export-js', default=building_js,
           help='Do not mark JS symbols as DLL exported/visible')
 
 @depends('--disable-shared-js', '--disable-export-js')

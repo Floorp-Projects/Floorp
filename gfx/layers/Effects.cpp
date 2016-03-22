@@ -34,10 +34,6 @@ EffectMask::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   aStream << nsPrintfCString("EffectMask (0x%p)", this).get();
   AppendToString(aStream, mSize, " [size=", "]");
   AppendToString(aStream, mMaskTransform, " [mask-transform=", "]");
-
-  if (mIs3D) {
-    aStream << " [is-3d]";
-  }
 }
 
 void

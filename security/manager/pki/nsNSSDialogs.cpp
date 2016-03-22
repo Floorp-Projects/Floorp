@@ -158,36 +158,13 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
   return rv;
 }
 
-NS_IMETHODIMP 
-nsNSSDialogs::NotifyCACertExists(nsIInterfaceRequestor *ctx)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIPromptService> promptSvc(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
-  if (!promptSvc)
-    return NS_ERROR_FAILURE;
-
-  // Get the parent window for the dialog
-  nsCOMPtr<mozIDOMWindowProxy> parent = do_GetInterface(ctx);
-
-  nsAutoString title;
-  rv = mPIPStringBundle->GetStringFromName(MOZ_UTF16("caCertExistsTitle"),
-                                           getter_Copies(title));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString msg;
-  rv = mPIPStringBundle->GetStringFromName(MOZ_UTF16("caCertExistsMessage"),
-                                           getter_Copies(msg));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = promptSvc->Alert(parent, title.get(), msg.get());
-
-  return rv;
-}
-
-
 NS_IMETHODIMP
-nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const char16_t *cn, const char16_t *organization, const char16_t *issuer, const char16_t **certNickList, const char16_t **certDetailsList, uint32_t count, int32_t *selectedIndex, bool *canceled) 
+nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor* ctx, const char16_t* cn,
+                                const char16_t* organization,
+                                const char16_t* issuer,
+                                const char16_t** certNickList,
+                                const char16_t** certDetailsList, uint32_t count,
+                                int32_t* selectedIndex, bool* canceled)
 {
   nsresult rv;
   uint32_t i;

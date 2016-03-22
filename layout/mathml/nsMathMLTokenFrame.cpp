@@ -173,10 +173,8 @@ nsMathMLTokenFrame::Place(DrawTarget*          aDrawTarget,
     mBoundingMetrics += childSize.mBoundingMetrics;
   }
 
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-                                        nsLayoutUtils::
-                                        FontSizeInflationFor(this));
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
   nscoord ascent = fm->MaxAscent();
   nscoord descent = fm->MaxDescent();
 

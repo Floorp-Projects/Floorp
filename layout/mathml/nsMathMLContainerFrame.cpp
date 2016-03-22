@@ -49,10 +49,8 @@ nsMathMLContainerFrame::ReflowError(DrawTarget* aDrawTarget,
 
   ///////////////
   // Set font
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-                                        nsLayoutUtils::
-                                        FontSizeInflationFor(this));
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
 
   // bounding metrics
   nsAutoString errorMsg; errorMsg.AssignLiteral("invalid-markup");
@@ -94,8 +92,8 @@ void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
                                  nsRenderingContext* aCtx)
 {
   // Set color and font ...
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm));
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetFontMetricsForFrame(mFrame, 1.0f);
 
   nsPoint pt = ToReferenceFrame();
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();

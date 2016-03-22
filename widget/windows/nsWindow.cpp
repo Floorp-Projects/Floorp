@@ -2209,7 +2209,7 @@ nsWindow::UpdateGetWindowInfoCaptionStatus(bool aActiveCaption)
   }
   // Update our internally tracked caption status
   SetPropW(mWnd, kManageWindowInfoProperty, 
-    reinterpret_cast<HANDLE>(static_cast<int>(aActiveCaption) + 1));
+    reinterpret_cast<HANDLE>(static_cast<INT_PTR>(aActiveCaption) + 1));
 }
 
 /**

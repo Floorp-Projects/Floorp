@@ -1249,9 +1249,8 @@ nsTreeBodyFrame::GetCoordsForCellItem(int32_t aRow, nsITreeColumn* aCol, const n
     // we add in borders and padding to the text dimension and give that back. 
     nsStyleContext* textContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecelltext);
 
-    RefPtr<nsFontMetrics> fm;
-    nsLayoutUtils::GetFontMetricsForStyleContext(textContext,
-                                                 getter_AddRefs(fm));
+    RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetFontMetricsForStyleContext(textContext);
     nscoord height = fm->MaxHeight();
 
     nsMargin textMargin;
@@ -1621,9 +1620,8 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
 
   AdjustForBorderPadding(textContext, textRect);
 
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForStyleContext(textContext,
-                                               getter_AddRefs(fm));
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetFontMetricsForStyleContext(textContext);
   AdjustForCellText(cellText, aRowIndex, aColumn, rc, *fm, textRect);
 
   if (aX >= textRect.x && aX < textRect.x + textRect.width)
@@ -1749,9 +1747,8 @@ nsTreeBodyFrame::GetCellWidth(int32_t aRow, nsTreeColumn* aCol,
   // Get the borders and padding for the text.
   GetBorderPadding(textContext, bp);
 
-  RefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForStyleContext(textContext,
-                                               getter_AddRefs(fm));
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetFontMetricsForStyleContext(textContext);
   // Get the width of the text itself
   nscoord width = nsLayoutUtils::AppUnitWidthOfStringBidi(cellText, this, *fm,
                                                           *aRenderingContext);
@@ -3730,9 +3727,8 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
   textRect.Deflate(bp);
 
   // Compute our text size.
-  RefPtr<nsFontMetrics> fontMet;
-  nsLayoutUtils::GetFontMetricsForStyleContext(textContext,
-                                               getter_AddRefs(fontMet));
+  RefPtr<nsFontMetrics> fontMet =
+    nsLayoutUtils::GetFontMetricsForStyleContext(textContext);
 
   nscoord height = fontMet->MaxHeight();
   nscoord baseline = fontMet->MaxAscent();

@@ -1222,40 +1222,36 @@ public:
   /**
    * Get the font metrics corresponding to the frame's style data.
    * @param aFrame the frame
-   * @param aFontMetrics the font metrics result
    * @param aSizeInflation number to multiply font size by
-   * @return success or failure code
    */
-  static nsresult GetFontMetricsForFrame(const nsIFrame* aFrame,
-                                         nsFontMetrics** aFontMetrics,
-                                         float aSizeInflation = 1.0f);
+  static already_AddRefed<nsFontMetrics> GetFontMetricsForFrame(
+    const nsIFrame* aFrame, float aSizeInflation);
+
+  static already_AddRefed<nsFontMetrics>
+    GetInflatedFontMetricsForFrame(const nsIFrame* aFrame)
+  {
+    return GetFontMetricsForFrame(aFrame, FontSizeInflationFor(aFrame));
+  }
 
   /**
    * Get the font metrics corresponding to the given style data.
    * @param aStyleContext the style data
-   * @param aFontMetrics the font metrics result
    * @param aSizeInflation number to multiply font size by
-   * @return success or failure code
    */
-  static nsresult GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
-                                                nsFontMetrics** aFontMetrics,
-                                                float aSizeInflation = 1.0f);
+  static already_AddRefed<nsFontMetrics> GetFontMetricsForStyleContext(
+      nsStyleContext* aStyleContext, float aSizeInflation = 1.0f);
 
   /**
    * Get the font metrics of emphasis marks corresponding to the given
    * style data. The result is same as GetFontMetricsForStyleContext
    * except that the font size is scaled down to 50%.
    * @param aStyleContext the style data
-   * @param aFontMetrics the font metrics result
    * @param aInflation number to multiple font size by
-   * @return success or failure code
    */
-  static nsresult GetFontMetricsOfEmphasisMarks(nsStyleContext* aStyleContext,
-                                                nsFontMetrics** aFontMetrics,
-                                                float aInflation)
+  static already_AddRefed<nsFontMetrics> GetFontMetricsOfEmphasisMarks(
+      nsStyleContext* aStyleContext, float aInflation)
   {
-    return GetFontMetricsForStyleContext(aStyleContext, aFontMetrics,
-                                         aInflation * 0.5f);
+    return GetFontMetricsForStyleContext(aStyleContext, aInflation * 0.5f);
   }
 
   /**

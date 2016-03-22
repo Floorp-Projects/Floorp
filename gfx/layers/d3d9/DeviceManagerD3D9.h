@@ -272,10 +272,8 @@ private:
 
   /* As above, but using a mask layer */
   RefPtr<IDirect3DVertexShader9> mLayerVSMask;
-  RefPtr<IDirect3DVertexShader9> mLayerVSMask3D;
   RefPtr<IDirect3DPixelShader9> mRGBPSMask;
   RefPtr<IDirect3DPixelShader9> mRGBAPSMask;
-  RefPtr<IDirect3DPixelShader9> mRGBAPSMask3D;
   RefPtr<IDirect3DPixelShader9> mComponentPass1PSMask;
   RefPtr<IDirect3DPixelShader9> mComponentPass2PSMask;
   RefPtr<IDirect3DPixelShader9> mYCbCrPSMask;

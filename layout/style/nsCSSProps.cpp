@@ -1862,12 +1862,11 @@ const KTableEntry nsCSSProps::kPointerEventsKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-KTableEntry nsCSSProps::kPositionKTable[] = {
+const KTableEntry nsCSSProps::kPositionKTable[] = {
   { eCSSKeyword_static, NS_STYLE_POSITION_STATIC },
   { eCSSKeyword_relative, NS_STYLE_POSITION_RELATIVE },
   { eCSSKeyword_absolute, NS_STYLE_POSITION_ABSOLUTE },
   { eCSSKeyword_fixed, NS_STYLE_POSITION_FIXED },
-  // The next entry is controlled by the layout.css.sticky.enabled pref.
   { eCSSKeyword_sticky, NS_STYLE_POSITION_STICKY },
   { eCSSKeyword_UNKNOWN, -1 }
 };

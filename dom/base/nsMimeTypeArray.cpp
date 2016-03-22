@@ -119,50 +119,7 @@ nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound)
     return mimeType;
   }
 
-  // Now let's check with the MIME service.
-  nsCOMPtr<nsIMIMEService> mimeSrv = do_GetService("@mozilla.org/mime;1");
-  if (!mimeSrv) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  mimeSrv->GetFromTypeAndExtension(NS_ConvertUTF16toUTF8(lowerName),
-                                   EmptyCString(), getter_AddRefs(mimeInfo));
-  if (!mimeInfo) {
-    return nullptr;
-  }
-
-  // Now we check whether we can really claim to support this type
-  nsHandlerInfoAction action = nsIHandlerInfo::saveToDisk;
-  mimeInfo->GetPreferredAction(&action);
-  if (action != nsIMIMEInfo::handleInternally) {
-    bool hasHelper = false;
-    mimeInfo->GetHasDefaultHandler(&hasHelper);
-
-    if (!hasHelper) {
-      nsCOMPtr<nsIHandlerApp> helper;
-      mimeInfo->GetPreferredApplicationHandler(getter_AddRefs(helper));
-
-      if (!helper) {
-        // mime info from the OS may not have a PreferredApplicationHandler
-        // so just check for an empty default description
-        nsAutoString defaultDescription;
-        mimeInfo->GetDefaultDescription(defaultDescription);
-
-        if (defaultDescription.IsEmpty()) {
-          // no support; just leave
-          return nullptr;
-        }
-      }
-    }
-  }
-
-  // If we got here, we support this type!  Say so.
-  aFound = true;
-
-  nsMimeType *mt = new nsMimeType(mWindow, lowerName);
-  mMimeTypes.AppendElement(mt);
-  return mt;
+  return nullptr;
 }
 
 bool
@@ -228,13 +185,7 @@ nsMimeType::nsMimeType(nsPIDOMWindowInner* aWindow,
     mDescription(aDescription),
     mExtension(aExtension)
 {
-}
-
-nsMimeType::nsMimeType(nsPIDOMWindowInner* aWindow, const nsAString& aType)
-  : mWindow(aWindow),
-    mPluginElement(nullptr),
-    mType(aType)
-{
+  MOZ_ASSERT(aPluginElement);
 }
 
 nsMimeType::~nsMimeType()
@@ -263,6 +214,8 @@ nsMimeType::GetDescription(nsString& aRetval) const
 nsPluginElement*
 nsMimeType::GetEnabledPlugin() const
 {
+  // mPluginElement might be null if we got unlinked but are still somehow being
+  // called into.
   if (!mPluginElement || !mPluginElement->PluginTag()->IsEnabled()) {
     return nullptr;
   }

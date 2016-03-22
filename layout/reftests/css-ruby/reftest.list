@@ -49,7 +49,7 @@ load nested-ruby-1.html
 pref(layout.css.vertical-text.enabled,true) == ruby-position-vertical-lr.html ruby-position-vertical-lr-ref.html
 pref(layout.css.vertical-text.enabled,true) == ruby-position-vertical-rl.html ruby-position-vertical-rl-ref.html
 != ruby-reflow-1-opaqueruby.html ruby-reflow-1-noruby.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),9,1) == ruby-reflow-1-transparentruby.html ruby-reflow-1-noruby.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),13,1) == ruby-reflow-1-transparentruby.html ruby-reflow-1-noruby.html
 == ruby-span-1.html ruby-span-1-ref.html
 == ruby-whitespace-1.html ruby-whitespace-1-ref.html
 == ruby-whitespace-2.html ruby-whitespace-2-ref.html
