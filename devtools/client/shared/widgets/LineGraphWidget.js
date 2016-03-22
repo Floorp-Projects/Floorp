@@ -5,9 +5,10 @@ const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { ViewHelpers, Heritage } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const { AbstractCanvasGraph, CanvasGraphUtils } = require("devtools/client/shared/widgets/Graphs");
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const L10N = new ViewHelpers.L10N("chrome://devtools/locale/graphs.properties");
+const L10N = new LocalizationHelper("chrome://devtools/locale/graphs.properties");
 
 // Line graph constants.
 

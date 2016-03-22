@@ -10,8 +10,10 @@ const {Cu} = require("chrome");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const {createNode, TimeScale} = require("devtools/client/animationinspector/utils");
 
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
+
 const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
-const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const L10N = new LocalizationHelper(STRINGS_URI);
 
 /**
  * UI component responsible for displaying a single animation timeline, which

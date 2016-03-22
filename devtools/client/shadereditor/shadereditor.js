@@ -17,6 +17,7 @@ const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 const Editor = require("devtools/client/sourceeditor/editor");
+const {LocalizationHelper} = require("devtools/client/shared/l10n");
 
 // The panel's window global is an EventEmitter firing the following events:
 const EVENTS = {
@@ -618,7 +619,7 @@ var ShadersEditorsView = {
 /**
  * Localization convenience methods.
  */
-var L10N = new ViewHelpers.L10N(STRINGS_URI);
+var L10N = new LocalizationHelper(STRINGS_URI);
 
 /**
  * Convenient way of emitting events from the panel window.

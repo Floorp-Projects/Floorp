@@ -7,8 +7,10 @@ requestLongerTimeout(2);
 
 // Test that the panel shows no animation data for invalid or not animated nodes
 
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
+
 const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
-const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const L10N = new LocalizationHelper(STRINGS_URI);
 
 add_task(function*() {
   yield addTab(URL_ROOT + "doc_simple_animation.html");

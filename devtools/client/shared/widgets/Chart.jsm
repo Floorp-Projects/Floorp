@@ -22,12 +22,15 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 Cu.import("resource://devtools/shared/event-emitter.js");
 
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
+
 this.EXPORTED_SYMBOLS = ["Chart"];
 
 /**
  * Localization convenience methods.
  */
-var L10N = new ViewHelpers.L10N(NET_STRINGS_URI);
+var L10N = new LocalizationHelper(NET_STRINGS_URI);
 
 /**
  * A factory for creating charts.

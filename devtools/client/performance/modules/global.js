@@ -3,15 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { MultiLocalizationHelper } = require("devtools/client/shared/l10n");
 const { ViewHelpers } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 /**
  * Localization convenience methods.
  */
-const L10N = new ViewHelpers.MultiL10N([
+const L10N = new MultiLocalizationHelper(
   "chrome://devtools/locale/markers.properties",
   "chrome://devtools/locale/performance.properties"
-]);
+);
 
 /**
  * A list of preferences for this tool. The values automatically update

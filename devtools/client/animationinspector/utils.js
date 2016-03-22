@@ -11,8 +11,11 @@ Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 var {loader} = Cu.import("resource://devtools/shared/Loader.jsm");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
+const { LocalizationHelper } = require("devtools/client/shared/l10n");
+
 const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
-const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const L10N = new LocalizationHelper(STRINGS_URI);
+
 // How many times, maximum, can we loop before we find the optimal time
 // interval in the timeline graph.
 const OPTIMAL_TIME_INTERVAL_MAX_ITERS = 100;
