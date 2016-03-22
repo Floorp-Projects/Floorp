@@ -1053,7 +1053,7 @@ StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
 
   aStackEntry.mColumnNumber = columnNumber;
 
-  rv = aStackFrame->GetName(aStackEntry.mFunctionName);
+  rv = aStackFrame->GetName(aCx, aStackEntry.mFunctionName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsString cause;
