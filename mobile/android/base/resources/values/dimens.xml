@@ -105,7 +105,6 @@
     <dimen name="doorhanger_input_width">250dp</dimen>
     <dimen name="doorhanger_offsetX">12dp</dimen>
     <dimen name="doorhanger_offsetY">67dp</dimen>
-    <dimen name="doorhanger_GB_offsetY">7dp</dimen>
     <dimen name="doorhanger_drawable_padding">5dp</dimen>
     <dimen name="doorhanger_subsection_padding">8dp</dimen>
     <dimen name="doorhanger_section_padding_small">10dp</dimen>
@@ -206,11 +205,6 @@
     <dimen name="find_in_page_text_padding_right">10dip</dimen>
     <dimen name="find_in_page_status_margin_right">10dip</dimen>
     <dimen name="find_in_page_control_margin_top">2dip</dimen>
-
-    <!-- The share icon asset has no padding while the other action bar items do
-         so we dynamically add padding to compensate. To be removed in bug 1122752. -->
-    <dimen name="ab_share_padding">12dp</dimen>
-
     <dimen name="progress_bar_scroll_offset">1.5dp</dimen>
 
     <!-- http://blog.danlew.net/2015/01/06/handling-android-resources-with-non-standard-formats/ -->
