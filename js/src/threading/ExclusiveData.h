@@ -67,7 +67,7 @@ namespace js {
  *         }
  *     };
  *
- * The API design is based on Rust's `std::sync::ExclusiveData<T>` type.
+ * The API design is based on Rust's `std::sync::Mutex<T>` type.
  *
  * [0]: Of course, we don't have a borrow checker in C++, so the type system
  *      cannot guarantee that you don't stash references received from
