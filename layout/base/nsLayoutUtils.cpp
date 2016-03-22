@@ -1042,11 +1042,11 @@ GetDisplayPortImpl(nsIContent* aContent, nsRect *aResult, float aMultiplier)
                "Only one of rectData or marginsData should be set!");
 
   nsRect result;
-  if (APZCCallbackHelper::IsDisplayportSuppressed()) {
+  if (rectData) {
+    result = GetDisplayPortFromRectData(aContent, rectData, aMultiplier);
+  } else if (APZCCallbackHelper::IsDisplayportSuppressed()) {
     DisplayPortMarginsPropertyData noMargins(ScreenMargin(), 1);
     result = GetDisplayPortFromMarginsData(aContent, &noMargins, aMultiplier);
-  } else if (rectData) {
-    result = GetDisplayPortFromRectData(aContent, rectData, aMultiplier);
   } else {
     result = GetDisplayPortFromMarginsData(aContent, marginsData, aMultiplier);
   }
