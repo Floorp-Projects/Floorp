@@ -27,6 +27,7 @@ EXPORTS.mozilla += [
     'ComputedTimingFunction.h',
     'EffectCompositor.h',
     'EffectSet.h',
+    'KeyframeUtils.h',
     'NonOwningAnimationTarget.h',
     'PendingAnimationTracker.h',
     'PseudoElementHashEntry.h',
@@ -48,6 +49,7 @@ UNIFIED_SOURCES += [
     'EffectCompositor.cpp',
     'EffectSet.cpp',
     'KeyframeEffect.cpp',
+    'KeyframeUtils.cpp',
     'PendingAnimationTracker.cpp',
     'TimingParams.cpp',
 ]
