@@ -21,7 +21,7 @@ include('build/moz.configure/checks.configure')
 def e10s_testing_only(milestone):
     if not milestone.is_release:
         set_config('E10S_TESTING_ONLY', True)
-        set_define('E10S_TESTING_ONLY', '1')
+        set_define('E10S_TESTING_ONLY', True)
 
 
 option('--enable-artifact-builds', env='MOZ_ARTIFACT_BUILDS',
