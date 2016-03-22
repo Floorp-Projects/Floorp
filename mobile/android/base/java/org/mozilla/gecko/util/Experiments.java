@@ -42,6 +42,9 @@ public class Experiments {
     public static final String ONBOARDING2_B = "onboarding2-b"; // 4 static Feature slides
     public static final String ONBOARDING2_C = "onboarding2-c"; // 4 static + 1 clickable (Data saving) Feature slides
 
+    // Synchronizing the catalog of downloadable content from Kinto
+    public static final String DOWNLOAD_CONTENT_CATALOG_SYNC = "download-content-catalog-sync";
+
     public static final String PREF_ONBOARDING_VERSION = "onboarding_version";
 
     private static volatile Boolean disabled = null;

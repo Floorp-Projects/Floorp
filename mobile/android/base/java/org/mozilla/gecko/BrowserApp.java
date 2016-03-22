@@ -25,6 +25,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.dlc.DownloadContentService;
+import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
@@ -1955,6 +1956,9 @@ public class BrowserApp extends GeckoApp
                 }
 
                 if (AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE) {
+                    // TODO: Better scheduling of sync action (Bug 1257492)
+                    DownloadContentService.startSync(this);
+
                     DownloadContentService.startVerification(this);
                 }
 
