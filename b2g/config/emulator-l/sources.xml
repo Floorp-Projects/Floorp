@@ -37,7 +37,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="5f931350fbc87c3df9db8b0ceb37734b8b471593"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="48d8c7c950745f1b166b42125e6f0d3293d71636"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="2ffbc809c8f3f21446096629478507ae291e1a13"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="e98e1e5cb051463d710bc5612b204bd4956b930b"/>
   <!-- Stock Android things -->
   <project groups="pdk,linux" name="platform/prebuilts/clang/linux-x86/host/3.5" path="prebuilts/clang/linux-x86/host/3.5" revision="ffc05a232799fe8fcb3e47b7440b52b1fb4244c0"/>
   <project groups="pdk,linux,arm" name="platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" path="prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" revision="337e0ef5e40f02a1ae59b90db0548976c70a7226"/>
