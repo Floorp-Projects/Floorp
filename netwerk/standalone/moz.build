@@ -12,6 +12,7 @@ src_list = [
 ]
 
 netwerk_base_src = [
+    'PollableEvent.cpp',
     'nsDNSPrefetch.cpp',
     'nsNetAddr.cpp',
     'nsSocketTransportService2.cpp',
