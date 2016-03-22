@@ -126,7 +126,6 @@ class ConfigureSandbox(dict):
         # Store several kind of information:
         # - value for each Option, as per returned by Option.get_value
         # - raw option (as per command line or environment) for each value
-        # - config set by each @depends function
         self._db = {}
 
         # Store options added with `imply_option`, and the reason they were
@@ -229,7 +228,6 @@ class ConfigureSandbox(dict):
             if not func.with_help:
                 raise ConfigureError("Missing @depends for `%s`: '--help'" %
                                      func.__name__)
-            self._seen.add(func)
             result = self._results[func]
             return result
         return arg
@@ -311,18 +309,17 @@ class ConfigureSandbox(dict):
                 arg = self._options[name]
                 if arg == self._help_option:
                     with_help = True
+                self._seen.add(arg)
+                assert arg in self._db or self._help
+                resolved_arg = self._db.get(arg)
             elif isinstance(arg, DummyFunction):
                 assert arg in self._depends
                 arg = self._depends[arg]
+                resolved_arg = self._results.get(arg)
             else:
                 raise TypeError(
                     "Cannot use object of type '%s' as argument to @depends"
                     % type(arg))
-            self._seen.add(arg)
-            resolved_arg = self._results.get(arg)
-            if resolved_arg is None:
-                assert arg in self._db or self._help
-                resolved_arg = self._db.get(arg)
             resolved_args.append(resolved_arg)
 
         def decorator(func):
@@ -351,7 +348,6 @@ class ConfigureSandbox(dict):
                 return dummy
 
             self._results[func] = func(*resolved_args)
-            self._db[func] = ReadOnlyDict(result)
 
             for option, reason in result.implied_options:
                 self._helper.add(option, 'implied')
