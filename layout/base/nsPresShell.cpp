@@ -7933,7 +7933,13 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
             // DOM fullscreen mode. This prevents the browser ESC key
             // handler from stopping all loads in the document, which
             // would cause <video> loads to stop.
-            aEvent->mFlags.mDefaultPrevented = true;
+            // XXX We need to claim the Escape key event which will be
+            //     dispatched only into chrome is already consumed by
+            //     content because we need to prevent its default here
+            //     for some reasons (not sure) but we need to detect
+            //     if a chrome event handler will call PreventDefault()
+            //     again and check it later.
+            aEvent->PreventDefaultBeforeDispatch();
             aEvent->mFlags.mOnlyChromeDispatch = true;
 
             // The event listeners in chrome can prevent this ESC behavior by
@@ -7949,7 +7955,10 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
           nsCOMPtr<nsIDocument> pointerLockedDoc =
             do_QueryReferent(EventStateManager::sPointerLockedDoc);
           if (!mIsLastChromeOnlyEscapeKeyConsumed && pointerLockedDoc) {
-            aEvent->mFlags.mDefaultPrevented = true;
+            // XXX See above comment to understand the reason why this needs
+            //     to claim that the Escape key event is consumed by content
+            //     even though it will be dispatched only into chrome.
+            aEvent->PreventDefaultBeforeDispatch();
             aEvent->mFlags.mOnlyChromeDispatch = true;
             if (aEvent->mMessage == eKeyUp) {
               nsIDocument::UnlockPointer();

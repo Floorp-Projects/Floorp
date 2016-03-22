@@ -7708,7 +7708,7 @@ nsContentUtils::SendKeyEvent(nsIWidget* aWidget,
   }
 
   if (aAdditionalFlags & nsIDOMWindowUtils::KEY_FLAG_PREVENT_DEFAULT) {
-    event.mFlags.mDefaultPrevented = true;
+    event.PreventDefaultBeforeDispatch();
   }
 
   nsEventStatus status;

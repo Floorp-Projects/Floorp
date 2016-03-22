@@ -823,7 +823,9 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   }
 
   bool consumed = (rv == NS_SUCCESS_EVENT_CONSUMED);
-  aMouseEvent->mFlags.mDefaultPrevented = consumed;
+  if (consumed) {
+    aMouseEvent->PreventDefault();
+  }
   return consumed;
 }
 

@@ -146,6 +146,24 @@ public:
   {
     mNoCrossProcessBoundaryForwarding = true;
   }
+  inline void PreventDefault(bool aCalledByDefaultHandler = true)
+  {
+    mDefaultPrevented = true;
+    // Note that even if preventDefault() has already been called by chrome,
+    // a call of preventDefault() by content needs to overwrite
+    // mDefaultPreventedByContent to true because in such case, defaultPrevented
+    // must be true when web apps check it after they call preventDefault().
+    if (aCalledByDefaultHandler) {
+      mDefaultPreventedByChrome = true;
+    } else {
+      mDefaultPreventedByContent = true;
+    }
+  }
+  // This should be used only before dispatching events into the DOM tree.
+  inline void PreventDefaultBeforeDispatch()
+  {
+    mDefaultPrevented = true;
+  }
 
   inline void Clear()
   {
@@ -331,12 +349,11 @@ public:
   void StopPropagation() { mFlags.StopPropagation(); }
   void StopImmediatePropagation() { mFlags.StopImmediatePropagation(); }
   void StopCrossProcessForwarding() { mFlags.StopCrossProcessForwarding(); }
-
-  void PreventDefault()
+  void PreventDefault(bool aCalledByDefaultHandler = true)
   {
-    mFlags.mDefaultPrevented = true;
-    mFlags.mDefaultPreventedByChrome = true;
+    mFlags.PreventDefault(aCalledByDefaultHandler);
   }
+  void PreventDefaultBeforeDispatch() { mFlags.PreventDefaultBeforeDispatch(); }
 
   /**
    * Utils for checking event types

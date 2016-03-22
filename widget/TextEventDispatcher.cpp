@@ -432,7 +432,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
     // If the key event should be dispatched as consumed event, marking it here.
     // This is useful to prevent double action.  E.g., when the key was already
     // handled by system, our chrome shouldn't handle it.
-    keyEvent.mFlags.mDefaultPrevented = true;
+    keyEvent.PreventDefaultBeforeDispatch();
   }
 
   // Corrects each member for the specific key event type.
