@@ -738,6 +738,11 @@ global.WindowManager = {
       state = "fullscreen";
     }
 
+    let xulWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDocShell)
+                          .treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIXULWindow);
+
     let result = {
       id: this.getId(window),
       focused: window.document.hasFocus(),
@@ -748,6 +753,7 @@ global.WindowManager = {
       incognito: PrivateBrowsingUtils.isWindowPrivate(window),
       type: this.windowType(window),
       state,
+      alwaysOnTop: xulWindow.zLevel >= Ci.nsIXULWindow.raisedZ,
     };
 
     if (getInfo && getInfo.populate) {
