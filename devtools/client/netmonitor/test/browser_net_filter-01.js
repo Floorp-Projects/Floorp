@@ -21,6 +21,11 @@ const REQUESTS_WITH_MEDIA_AND_FLASH = REQUESTS_WITH_MEDIA.concat([
   { url: "sjs_content-type-test-server.sjs?fmt=flash" },
 ]);
 
+const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.concat([
+  /* "Upgrade" is a reserved header and can not be set on XMLHttpRequest */
+  { url: "sjs_content-type-test-server.sjs?fmt=ws" },
+]);
+
 function test() {
   initNetMonitor(FILTERING_URL).then(([aTab, aDebuggee, aMonitor]) => {
 
@@ -39,7 +44,7 @@ function test() {
 
     RequestsMenu.lazyUpdate = false;
 
-    waitForNetworkEvents(aMonitor, 8).then(() => {
+    waitForNetworkEvents(aMonitor, 9).then(() => {
       EventUtils.sendMouseEvent({ type: "mousedown" }, $("#details-pane-toggle"));
 
       isnot(RequestsMenu.selectedItem, null,
@@ -51,83 +56,89 @@ function test() {
 
       // First test with single filters...
       testFilterButtons(aMonitor, "all");
-      testContents([1, 1, 1, 1, 1, 1, 1, 1])
+      testContents([1, 1, 1, 1, 1, 1, 1, 1, 1])
         .then(() => {
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-html-button"));
           testFilterButtons(aMonitor, "html");
-          return testContents([1, 0, 0, 0, 0, 0, 0, 0]);
+          return testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
           // Reset filters
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-css-button"));
           testFilterButtons(aMonitor, "css");
-          return testContents([0, 1, 0, 0, 0, 0, 0, 0]);
+          return testContents([0, 1, 0, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-js-button"));
           testFilterButtons(aMonitor, "js");
-          return testContents([0, 0, 1, 0, 0, 0, 0, 0]);
+          return testContents([0, 0, 1, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-xhr-button"));
           testFilterButtons(aMonitor, "xhr");
-          return testContents([1, 1, 1, 1, 1, 1, 1, 1]);
+          return testContents([1, 1, 1, 1, 1, 1, 1, 1, 0]);
         })
         .then(() => {
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-fonts-button"));
           testFilterButtons(aMonitor, "fonts");
-          return testContents([0, 0, 0, 1, 0, 0, 0, 0]);
+          return testContents([0, 0, 0, 1, 0, 0, 0, 0, 0]);
         })
         .then(() => {
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-images-button"));
           testFilterButtons(aMonitor, "images");
-          return testContents([0, 0, 0, 0, 1, 0, 0, 0]);
+          return testContents([0, 0, 0, 0, 1, 0, 0, 0, 0]);
         })
         .then(() => {
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-media-button"));
           testFilterButtons(aMonitor, "media");
-          return testContents([0, 0, 0, 0, 0, 1, 1, 0]);
+          return testContents([0, 0, 0, 0, 0, 1, 1, 0, 0]);
         })
         .then(() => {
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-flash-button"));
           testFilterButtons(aMonitor, "flash");
-          return testContents([0, 0, 0, 0, 0, 0, 0, 1]);
+          return testContents([0, 0, 0, 0, 0, 0, 0, 1, 0]);
+        })
+        .then(() => {
+          EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
+          EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-ws-button"));
+          testFilterButtons(aMonitor, "ws");
+          return testContents([0, 0, 0, 0, 0, 0, 0, 0, 1]);
         })
         .then(() => {
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           testFilterButtons(aMonitor, "all");
-          return testContents([1, 1, 1, 1, 1, 1, 1, 1]);
+          return testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
         })
         .then(() => {
           // Text in filter box that matches nothing should hide all.
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           setFreetextFilter("foobar");
-          return testContents([0, 0, 0, 0, 0, 0, 0, 0]);
+          return testContents([0, 0, 0, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
           // Text in filter box that matches should filter out everything else.
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           setFreetextFilter("sample");
-          return testContents([1, 1, 1, 0, 0, 0, 0, 0]);
+          return testContents([1, 1, 1, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
           // Text in filter box that matches should filter out everything else.
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           setFreetextFilter("SAMPLE");
-          return testContents([1, 1, 1, 0, 0, 0, 0, 0]);
+          return testContents([1, 1, 1, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
           // Test negative filtering (only show unmatched items)
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           setFreetextFilter("-sample");
-          return testContents([0, 0, 0, 1, 1, 1, 1, 1]);
+          return testContents([0, 0, 0, 1, 1, 1, 1, 1, 1]);
         })
         // ...then combine multiple filters together.
         .then(() => {
@@ -135,43 +146,44 @@ function test() {
           setFreetextFilter("");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-html-button"));
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-css-button"));
-          testFilterButtonsCustom(aMonitor, [0, 1, 1, 0, 0, 0, 0, 0, 0, 0]);
-          return testContents([1, 1, 0, 0, 0, 0, 0, 0]);
+          testFilterButtonsCustom(aMonitor, [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
+          return testContents([1, 1, 0, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
           // Html and css filter enabled and text filter should show just the html and css match.
           // Should not show both the items that match the button plus the items that match the text.
           setFreetextFilter("sample");
-          return testContents([1, 1, 0, 0, 0, 0, 0, 0]);
+          return testContents([1, 1, 0, 0, 0, 0, 0, 0, 0]);
         })
 
         .then(() => {
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-flash-button"));
           setFreetextFilter("");
-          testFilterButtonsCustom(aMonitor, [0, 1, 1, 0, 0, 0, 0, 0, 1, 0]);
-          return testContents([1, 1, 0, 0, 0, 0, 0, 1]);
+          testFilterButtonsCustom(aMonitor, [0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0]);
+          return testContents([1, 1, 0, 0, 0, 0, 0, 1, 0]);
         })
         .then(() => {
           // Disable some filters. Only one left active.
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-css-button"));
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-flash-button"));
           testFilterButtons(aMonitor, "html");
-          return testContents([1, 0, 0, 0, 0, 0, 0, 0]);
+          return testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
           // Disable last active filter. Should toggle to all.
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-html-button"));
           testFilterButtons(aMonitor, "all");
-          return testContents([1, 1, 1, 1, 1, 1, 1, 1]);
+          return testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
         })
         .then(() => {
           // Enable few filters and click on all. Only "all" should be checked.
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-html-button"));
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-css-button"));
-          testFilterButtonsCustom(aMonitor, [0, 1, 1, 0, 0, 0, 0, 0, 0]);
+          EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-ws-button"));
+          testFilterButtonsCustom(aMonitor, [0, 1, 1, 0, 0, 0, 0, 0, 0, 1]);
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
           testFilterButtons(aMonitor, "all");
-          return testContents([1, 1, 1, 1, 1, 1, 1, 1]);
+          return testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
         })
         .then(() => {
           return teardown(aMonitor);
@@ -261,11 +273,17 @@ function test() {
           type: "x-shockwave-flash",
           fullMimeType: "application/x-shockwave-flash"
       });
+      verifyRequestItemTarget(RequestsMenu.getItemAtIndex(8),
+        "GET", CONTENT_TYPE_SJS + "?fmt=ws", {
+          fuzzyUrl: true,
+          status: 101,
+          statusText: "Switching Protocols",
+      });
 
       return promise.resolve(null);
     }
 
     loadCommonFrameScript();
-    performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH);
+    performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   });
 }

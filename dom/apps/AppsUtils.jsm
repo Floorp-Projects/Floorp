@@ -132,10 +132,6 @@ function _setAppProperties(aObj, aApp) {
     aApp.blockedStatus !== undefined ? aApp.blockedStatus
                                      : Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   aObj.blocklistId = aApp.blocklistId;
-#ifdef MOZ_B2GDROID
-  aObj.android_packagename = aApp.android_packagename;
-  aObj.android_classname = aApp.android_classname;
-#endif
 }
 
 this.AppsUtils = {

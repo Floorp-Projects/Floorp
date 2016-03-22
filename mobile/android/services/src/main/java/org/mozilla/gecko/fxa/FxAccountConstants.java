@@ -41,17 +41,7 @@ public class FxAccountConstants {
 
   public static final String ACCOUNT_PICKLE_FILENAME = "fxa.account.json";
 
-  /**
-   * It's possible to migrate an Old Sync account to a new Firefox Account.
-   * During migration, we pickle the Old Sync Account preferences to disk; this
-   * is the name of that file. It's only written during migration and is simply
-   * here as an escape hatch: if we see problems in the wild, we can produce a
-   * hot-fix add-on that deletes the migrated Firefox Account and re-instates
-   * this pickle file.
-   * <p>
-   * Must not contain path separators!
-   */
-  public static final String OLD_SYNC_ACCOUNT_PICKLE_FILENAME = "old.sync.account.json";
+
 
   /**
    * This action is broadcast when an Android Firefox Account is deleted.

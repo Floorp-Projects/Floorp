@@ -3348,7 +3348,7 @@ TelemetryImpl::CanRecordExtended() {
 
 NS_IMETHODIMP
 TelemetryImpl::GetIsOfficialTelemetry(bool *ret) {
-#if defined(MOZILLA_OFFICIAL) && defined(MOZ_TELEMETRY_REPORTING)
+#if defined(MOZILLA_OFFICIAL) && defined(MOZ_TELEMETRY_REPORTING) && !defined(DEBUG)
   *ret = true;
 #else
   *ret = false;

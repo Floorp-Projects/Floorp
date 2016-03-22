@@ -89,8 +89,8 @@ public class TabsPanel extends LinearLayout
     private TabsLayoutChangeListener mLayoutChangeListener;
 
     private IconTabWidget mTabWidget;
-    private static View mMenuButton;
-    private static ImageButton mAddTab;
+    private View mMenuButton;
+    private ImageButton mAddTab;
     private ImageButton mNavBackButton;
 
     private Panel mCurrentPanel;

@@ -9,6 +9,7 @@ import java.util.EnumSet;
 
 import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
@@ -113,6 +114,13 @@ public abstract class HomeFragment extends Fragment {
         }
 
         mIsLoaded = false;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        GeckoApplication.watchReference(getActivity(), this);
     }
 
     @Override

@@ -17,6 +17,7 @@ DevToolsModules(
     'index.css',
     'manager.js',
     'reducers.js',
+    'responsive-ua.css',
     'store.js',
     'types.js',
 )

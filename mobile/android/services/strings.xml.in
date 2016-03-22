@@ -21,15 +21,12 @@
 <string name="sync_default_client_name">&sync.default.client.name;</string>
 
 <!-- Firefox Account links. -->
-<!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/old-sync -->
-<string name="fxaccount_link_old_firefox">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/old-sync</string>
 <string name="fxaccount_link_tos">https://accounts.firefox.com/legal/terms</string>
 <string name="fxaccount_link_pn">https://accounts.firefox.com/legal/privacy</string>
 
 <string name="fxaccount_getting_started_welcome_to_sync">&fxaccount_getting_started_welcome_to_sync;</string>
 <string name="fxaccount_getting_started_description">&fxaccount_getting_started_description2;</string>
 <string name="fxaccount_getting_started_get_started">&fxaccount_getting_started_get_started;</string>
-<string name="fxaccount_getting_started_old_firefox">&fxaccount_getting_started_old_firefox;</string>
 
 <string name="fxaccount_confirm_account_header">&fxaccount_confirm_account_header;</string>
 <string name="fxaccount_confirm_account_resend_email">&fxaccount_confirm_account_resend_email;</string>
@@ -62,8 +59,8 @@
 <string name="fxaccount_status_passwords">&fxaccount_status_passwords2;</string>
 <string name="fxaccount_status_tabs">&fxaccount_status_tabs;</string>
 <string name="fxaccount_status_legal">&fxaccount_status_legal;</string>
-<string name="fxaccount_status_linktos">&fxaccount_status_linktos;</string>
-<string name="fxaccount_status_linkprivacy">&fxaccount_status_linkprivacy;</string>
+<string name="fxaccount_status_linktos">&fxaccount_status_linktos2;</string>
+<string name="fxaccount_status_linkprivacy">&fxaccount_status_linkprivacy2;</string>
 <string name="fxaccount_status_more">&fxaccount_status_more;</string>
 <string name="fxaccount_remove_account">&fxaccount_remove_account;</string>
 

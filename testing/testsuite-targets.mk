@@ -239,10 +239,6 @@ stage-all: stage-android
 stage-all: stage-instrumentation-tests
 endif
 
-ifeq ($(MOZ_BUILD_APP),mobile/android/b2gdroid)
-stage-all: stage-android
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 stage-all: stage-b2g
 endif

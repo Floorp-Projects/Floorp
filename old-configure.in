@@ -3086,10 +3086,6 @@ if test -n "$MOZ_MULET"; then
     AC_DEFINE(MOZ_MULET)
 fi
 
-if test -n "$MOZ_B2GDROID"; then
-    AC_DEFINE(MOZ_B2GDROID)
-fi
-
 # Propagate feature switches for code written in rust from confvars.sh
 if test -n "$MOZ_RUST"; then
     if test -n "$MOZ_RUST_MP4PARSE"; then
@@ -3102,7 +3098,6 @@ AC_SUBST(MOZ_XULRUNNER)
 AC_SUBST(MOZ_B2G)
 AC_SUBST(MOZ_MULET)
 AC_SUBST(MOZ_B2G_VERSION)
-AC_SUBST(MOZ_B2GDROID)
 
 dnl ========================================================
 dnl Ensure Android SDK and build-tools versions depending on
@@ -3111,13 +3106,13 @@ dnl ========================================================
 
 if test -z "$gonkdir" ; then
     case "$MOZ_BUILD_APP" in
-    mobile/android | mobile/android/b2gdroid)
+    mobile/android)
         case "$target" in
         *-android*|*-linuxandroid*)
             :
             ;;
         *)
-            AC_MSG_ERROR([You must specify --target=arm-linux-androideabi (or some other valid android target) when building with --enable-application=mobile/android or --enable-application=mobile/android/b2gdroid.
+            AC_MSG_ERROR([You must specify --target=arm-linux-androideabi (or some other valid android target) when building with --enable-application=mobile/android.
              See https://wiki.mozilla.org/Mobile/Fennec/Android#Setup_Fennec_mozconfig for more information about the necessary options])
             ;;
         esac
@@ -6217,9 +6212,9 @@ if test -n "$MOZ_DISABLE_STARTUPCACHE"; then
 fi
 AC_SUBST(MOZ_DISABLE_STARTUPCACHE)
 
-dnl ========================================================
-dnl = Enable packaging Gaia with B2G desktop and b2gdroid
-dnl ========================================================
+dnl =========================================
+dnl = Enable packaging Gaia with B2G desktop
+dnl =========================================
 if test x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
     if test -n "$GAIADIR" -a ! -d "$GAIADIR" ; then
         AC_MSG_ERROR([GAIADIR '$GAIADIR' isn't a valid directory])
@@ -6232,10 +6227,6 @@ if test x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
 
     if test -n "$FXOS_SIMULATOR" -a -z "$GAIADIR" ; then
         AC_MSG_ERROR([FXOS_SIMULATOR=1 requires GAIADIR to be defined])
-    fi
-
-    if test "$MOZ_BUILD_APP" = "mobile/android/b2gdroid" -a -z "$GAIADIR"; then
-        AC_MSG_ERROR([GAIADIR needs to be set in b2gdroid builds])
     fi
 
     if test -n "$FXOS_SIMULATOR" ; then

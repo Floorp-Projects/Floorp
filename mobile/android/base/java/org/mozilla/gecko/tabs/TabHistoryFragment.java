@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 
@@ -107,6 +108,8 @@ public class TabHistoryFragment extends Fragment implements OnItemClickListener,
     public void onDestroy() {
         super.onDestroy();
         dismiss();
+
+        GeckoApplication.watchReference(getActivity(), this);
     }
 
     @Override

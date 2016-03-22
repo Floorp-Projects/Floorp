@@ -24,7 +24,6 @@
     <issue id="Instantiatable" severity="warning" />
     <issue id="LongLogTag" severity="warning" />
     <issue id="MissingPermission" severity="warning" />
-    <issue id="MissingSuperCall" severity="warning" />
     <issue id="NewApi" severity="warning" />
     <issue id="OnClick" severity="warning" />
     <issue id="ReferenceType" severity="warning" />
@@ -118,6 +117,7 @@
     <issue id="MissingPrefix" severity="error" />
     <issue id="MissingQuantity" severity="error" />
     <issue id="MissingRegistered" severity="error" />
+    <issue id="MissingSuperCall" severity="error" />
     <issue id="MissingTranslation" severity="error" />
     <issue id="MissingVersion" severity="error" />
     <issue id="MockLocation" severity="error" />

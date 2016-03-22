@@ -3298,11 +3298,6 @@ NS_IMETHODIMP_(void)
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
-#ifdef MOZ_B2GDROID
-    // Disable the Android keyboard on b2gdroid.
-    return;
-#endif
-
     nsWindow* top = FindTopLevel();
     MOZ_ASSERT(top);
 

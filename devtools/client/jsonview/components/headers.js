@@ -7,18 +7,16 @@
 "use strict";
 
 define(function(require, exports, module) {
-  const React = require("devtools/client/shared/vendor/react");
+  const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 
-  // Constants
-  const DOM = React.DOM;
-  const PropTypes = React.PropTypes;
+  const { div, span, table, tbody, tr, td, code } = dom;
 
   /**
    * This template is responsible for rendering basic layout
    * of the 'Headers' panel. It displays HTTP headers groups such as
    * received or response headers.
    */
-  let Headers = React.createClass({
+  let Headers = createClass({
     propTypes: {
       data: PropTypes.object,
     },
@@ -33,24 +31,24 @@ define(function(require, exports, module) {
       let data = this.props.data;
 
       return (
-        DOM.div({className: "netInfoHeadersTable"},
-          DOM.div({className: "netHeadersGroup"},
-            DOM.div({className: "netInfoHeadersGroup"},
-              DOM.span({className: "netHeader twisty"},
+        div({className: "netInfoHeadersTable"},
+          div({className: "netHeadersGroup"},
+            div({className: "netInfoHeadersGroup"},
+              span({className: "netHeader twisty"},
                 Locale.$STR("jsonViewer.responseHeaders")
               )
             ),
-            DOM.table({cellPadding: 0, cellSpacing: 0},
+            table({cellPadding: 0, cellSpacing: 0},
               HeaderList({headers: data.response})
             )
           ),
-          DOM.div({className: "netHeadersGroup"},
-            DOM.div({className: "netInfoHeadersGroup"},
-              DOM.span({className: "netHeader twisty"},
+          div({className: "netHeadersGroup"},
+            div({className: "netInfoHeadersGroup"},
+              span({className: "netHeader twisty"},
                 Locale.$STR("jsonViewer.requestHeaders")
               )
             ),
-            DOM.table({cellPadding: 0, cellSpacing: 0},
+            table({cellPadding: 0, cellSpacing: 0},
               HeaderList({headers: data.request})
             )
           )
@@ -63,7 +61,7 @@ define(function(require, exports, module) {
    * This template renders headers list,
    * name + value pairs.
    */
-  let HeaderList = React.createFactory(React.createClass({
+  let HeaderList = createFactory(createClass({
     propTypes: {
       headers: PropTypes.arrayOf(PropTypes.shape({
         name: PropTypes.string,
@@ -89,19 +87,19 @@ define(function(require, exports, module) {
       let rows = [];
       headers.forEach(header => {
         rows.push(
-          DOM.tr({key: header.name},
-            DOM.td({className: "netInfoParamName"},
-              DOM.span({title: header.name}, header.name)
+          tr({key: header.name},
+            td({className: "netInfoParamName"},
+              span({title: header.name}, header.name)
             ),
-            DOM.td({className: "netInfoParamValue"},
-              DOM.code({}, header.value)
+            td({className: "netInfoParamValue"},
+              code({}, header.value)
             )
           )
         );
       });
 
       return (
-        DOM.tbody({},
+        tbody({},
           rows
         )
       );

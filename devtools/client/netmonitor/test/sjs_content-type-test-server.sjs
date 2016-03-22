@@ -205,6 +205,14 @@ function handleRequest(request, response) {
         response.finish();
         break;
       }
+      case "ws": {
+        response.setStatusLine(request.httpVersion, 101, "Switching Protocols");
+        response.setHeader("Connection", "upgrade", false);
+        response.setHeader("Upgrade", "websocket", false);
+        setCacheHeaders();
+        response.finish();
+        break;
+      }
       case "gzip": {
         // Note: we're doing a double gzip encoding to test multiple
         // converters in network monitor.
