@@ -1057,7 +1057,7 @@ StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsString cause;
-  rv = aStackFrame->GetAsyncCause(cause);
+  rv = aStackFrame->GetAsyncCause(aCx, cause);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!cause.IsEmpty()) {
     aStackEntry.mAsyncCause.Construct(cause);
@@ -1084,7 +1084,7 @@ ReifyStack(JSContext* aCx, nsIStackFrame* aStack,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!caller) {
-      rv = stack->GetAsyncCaller(getter_AddRefs(caller));
+      rv = stack->GetAsyncCaller(aCx, getter_AddRefs(caller));
       NS_ENSURE_SUCCESS(rv, rv);
     }
     stack.swap(caller);
