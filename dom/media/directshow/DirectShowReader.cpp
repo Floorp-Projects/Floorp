@@ -33,8 +33,7 @@ DirectShowReader::DirectShowReader(AbstractMediaDecoder* aDecoder)
 #endif
     mNumChannels(0),
     mAudioRate(0),
-    mBytesPerSample(0),
-    mDuration(0)
+    mBytesPerSample(0)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   MOZ_COUNT_CTOR(DirectShowReader);
@@ -360,45 +359,6 @@ DirectShowReader::SeekInternal(int64_t aTargetUs)
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
   return NS_OK;
-}
-
-void
-DirectShowReader::NotifyDataArrivedInternal()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  if (!mMP3FrameParser.NeedsData()) {
-    return;
-  }
-
-  AutoPinned<MediaResource> resource(mDecoder->GetResource());
-  MediaByteRangeSet byteRanges;
-  nsresult rv = resource->GetCachedRanges(byteRanges);
-
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  if (byteRanges == mLastCachedRanges) {
-    return;
-  }
-  MediaByteRangeSet intervals = byteRanges - mLastCachedRanges;
-  mLastCachedRanges = byteRanges;
-
-  for (const auto& interval : intervals) {
-    RefPtr<MediaByteBuffer> bytes =
-      resource->MediaReadAt(interval.mStart, interval.Length());
-    NS_ENSURE_TRUE_VOID(bytes);
-    mMP3FrameParser.Parse(bytes->Elements(), interval.Length(), interval.mStart);
-    if (!mMP3FrameParser.IsMP3()) {
-      return;
-    }
-  }
-  int64_t duration = mMP3FrameParser.GetDuration();
-  if (duration != mDuration) {
-    MOZ_ASSERT(mDecoder);
-    mDuration = duration;
-    mDecoder->DispatchUpdateEstimatedMediaDuration(mDuration);
-  }
 }
 
 } // namespace mozilla
