@@ -42,25 +42,6 @@ function GetAttachedArrayBuffer(tarray) {
     return buffer;
 }
 
-// A function which ensures that the argument is either a typed array or a
-// cross-compartment wrapper for a typed array and that the typed array involved
-// has an attached array buffer.  If one of those conditions doesn't hold (wrong
-// kind of argument, or detached array buffer), an exception is thrown.  The
-// return value is `true` if the argument is a typed array, `false` if it's a
-// cross-compartment wrapper for a typed array.
-function IsTypedArrayEnsuringArrayBuffer(arg) {
-    if (IsObject(arg) && IsTypedArray(arg)) {
-        GetAttachedArrayBuffer(arg);
-        return true;
-    }
-
-    // This is a bit hacky but gets the job done: the first `arg` is used to
-    // test for a wrapped typed array, the second as an argument to
-    // GetAttachedArrayBuffer.
-    callFunction(CallTypedArrayMethodIfWrapped, arg, arg, "GetAttachedArrayBuffer");
-    return false;
-}
-
 // ES6 draft 20150304 %TypedArray%.prototype.copyWithin
 function TypedArrayCopyWithin(target, start, end = undefined) {
     // This function is not generic.
@@ -141,17 +122,23 @@ function TypedArrayEntries() {
     // We need to be a bit careful here, because in the Xray case we want to
     // create the iterator in our current compartment.
     //
-    // Before doing that, though, we want to check that we have a typed array
-    // and it does not have a detached array buffer.  We do the latter by just
-    // calling GetAttachedArrayBuffer() and letting it throw if there isn't one.
-    // In the case when we're not sure we have a typed array (e.g. we might have
-    // a cross-compartment wrapper for one), we can go ahead and call
-    // GetAttachedArrayBuffer via IsTypedArrayEnsuringArrayBuffer; that will
-    // throw if we're not actually a wrapped typed array, or if we have a
-    // detached array buffer.
+    // Before doing that, though, we want to check that we have a typed
+    // array and it does not have a detached array buffer.  We do the latter by
+    // just calling GetAttachedArrayBuffer() and letting it throw if there isn't
+    // one.  In the case when we're not sure we have a typed array (e.g. we
+    // might have a cross-compartment wrapper for one), we can go ahead and call
+    // GetAttachedArrayBuffer via CallTypedArrayMethodIfWrapped; that will throw
+    // if we're not actually a wrapped typed array, or if we have a detached
+    // array buffer.
 
-    // Step 2-6.
-    IsTypedArrayEnsuringArrayBuffer(O);
+    // Step 2-3.
+    if (!IsObject(O) || !IsTypedArray(O)) {
+        // And also step 4-6.
+        callFunction(CallTypedArrayMethodIfWrapped, O, O, "GetAttachedArrayBuffer");
+    } else {
+        // Step 4-6.
+        GetAttachedArrayBuffer(O);
+    }
 
     // Step 7.
     return CreateArrayIterator(O, ITEM_KIND_KEY_AND_VALUE);
@@ -159,23 +146,19 @@ function TypedArrayEntries() {
 
 // ES6 draft rev30 (2014/12/24) 22.2.3.7 %TypedArray%.prototype.every(callbackfn[, thisArg]).
 function TypedArrayEvery(callbackfn, thisArg = undefined) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, thisArg,
+                            "TypedArrayEvery");
+    }
+
+    GetAttachedArrayBuffer(this);
+
     // Steps 1-2.
     var O = this;
 
-    // This function is not generic.
-    // We want to make sure that we have an attached buffer, per spec prose.
-    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
-
-    // If we got here, `this` is either a typed array or a cross-compartment
-    // wrapper for one.
-
     // Steps 3-5.
-    var len;
-    if (isTypedArray) {
-        len = TypedArrayLength(O);
-    } else {
-        len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
+    var len = TypedArrayLength(O);
 
     // Step 6.
     if (arguments.length === 0)
@@ -252,19 +235,15 @@ function TypedArrayFilter(callbackfn, thisArg = undefined) {
 
     // Steps 2-3.
     // This function is not generic.
-    // We want to make sure that we have an attached buffer, per spec prose.
-    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
+    if (!IsObject(O) || !IsTypedArray(O)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, thisArg,
+                           "TypedArrayFilter");
+    }
 
-    // If we got here, `this` is either a typed array or a cross-compartment
-    // wrapper for one.
+    GetAttachedArrayBuffer(O);
 
     // Step 4.
-    var len;
-    if (isTypedArray) {
-        len = TypedArrayLength(O);
-    } else {
-        len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
+    var len = TypedArrayLength(O);
 
     // Step 5.
     if (arguments.length === 0)
@@ -317,23 +296,19 @@ function TypedArrayFilter(callbackfn, thisArg = undefined) {
 
 // ES6 draft rev28 (2014/10/14) 22.2.3.10 %TypedArray%.prototype.find(predicate[, thisArg]).
 function TypedArrayFind(predicate, thisArg = undefined) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, predicate, thisArg,
+                            "TypedArrayFind");
+    }
+
+    GetAttachedArrayBuffer(this);
+
     // Steps 1-2.
     var O = this;
 
-    // This function is not generic.
-    // We want to make sure that we have an attached buffer, per spec prose.
-    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
-
-    // If we got here, `this` is either a typed array or a cross-compartment
-    // wrapper for one.
-
     // Steps 3-5.
-    var len;
-    if (isTypedArray) {
-        len = TypedArrayLength(O);
-    } else {
-        len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
+    var len = TypedArrayLength(O);
 
     // Step 6.
     if (arguments.length === 0)
@@ -360,23 +335,19 @@ function TypedArrayFind(predicate, thisArg = undefined) {
 
 // ES6 draft rev28 (2014/10/14) 22.2.3.11 %TypedArray%.prototype.findIndex(predicate[, thisArg]).
 function TypedArrayFindIndex(predicate, thisArg = undefined) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, predicate, thisArg,
+                            "TypedArrayFindIndex");
+    }
+
+    GetAttachedArrayBuffer(this);
+
     // Steps 1-2.
     var O = this;
 
-    // This function is not generic.
-    // We want to make sure that we have an attached buffer, per spec prose.
-    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
-
-    // If we got here, `this` is either a typed array or a cross-compartment
-    // wrapper for one.
-
     // Steps 3-5.
-    var len;
-    if (isTypedArray) {
-        len = TypedArrayLength(O);
-    } else {
-        len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
+    var len = TypedArrayLength(O);
 
     // Step 6.
     if (arguments.length === 0)
@@ -401,23 +372,19 @@ function TypedArrayFindIndex(predicate, thisArg = undefined) {
 
 // ES6 draft rev31 (2015-01-15) 22.1.3.10 %TypedArray%.prototype.forEach(callbackfn[,thisArg])
 function TypedArrayForEach(callbackfn, thisArg = undefined) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, thisArg,
+                            "TypedArrayForEach");
+    }
+
+    GetAttachedArrayBuffer(this);
+
     // Step 1-2.
     var O = this;
 
-    // This function is not generic.
-    // We want to make sure that we have an attached buffer, per spec prose.
-    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
-
-    // If we got here, `this` is either a typed array or a cross-compartment
-    // wrapper for one.
-
     // Step 3-4.
-    var len;
-    if (isTypedArray) {
-        len = TypedArrayLength(O);
-    } else {
-        len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
+    var len = TypedArrayLength(O);
 
     // Step 5.
     if (arguments.length === 0)
@@ -549,7 +516,10 @@ function TypedArrayKeys() {
     // See the big comment in TypedArrayEntries for what we're doing here.
 
     // Step 2.
-    IsTypedArrayEnsuringArrayBuffer(O);
+    if (!IsObject(O) || !IsTypedArray(O))
+        callFunction(CallTypedArrayMethodIfWrapped, O, O, "GetAttachedArrayBuffer");
+    else
+        GetAttachedArrayBuffer(O);
 
     // Step 3.
     return CreateArrayIterator(O, ITEM_KIND_KEY);
@@ -599,19 +569,15 @@ function TypedArrayMap(callbackfn, thisArg = undefined) {
 
     // Steps 2-3.
     // This function is not generic.
-    // We want to make sure that we have an attached buffer, per spec prose.
-    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
+    if (!IsObject(O) || !IsTypedArray(O)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, thisArg,
+                            "TypedArrayMap");
+    }
 
-    // If we got here, `this` is either a typed array or a cross-compartment
-    // wrapper for one.
+    GetAttachedArrayBuffer(O);
 
     // Step 4.
-    var len;
-    if (isTypedArray) {
-        len = TypedArrayLength(O);
-    } else {
-        len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
+    var len = TypedArrayLength(O);
 
     // Step 5.
     if (arguments.length === 0)
@@ -645,23 +611,17 @@ function TypedArrayMap(callbackfn, thisArg = undefined) {
 
 // ES6 draft rev30 (2014/12/24) 22.2.3.19 %TypedArray%.prototype.reduce(callbackfn[, initialValue]).
 function TypedArrayReduce(callbackfn/*, initialValue*/) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this))
+        return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, "TypedArrayReduce");
+
+    GetAttachedArrayBuffer(this);
+
     // Steps 1-2.
     var O = this;
 
-    // This function is not generic.
-    // We want to make sure that we have an attached buffer, per spec prose.
-    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
-
-    // If we got here, `this` is either a typed array or a cross-compartment
-    // wrapper for one.
-
     // Steps 3-5.
-    var len;
-    if (isTypedArray) {
-        len = TypedArrayLength(O);
-    } else {
-        len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
+    var len = TypedArrayLength(O);
 
     // Step 6.
     if (arguments.length === 0)
@@ -692,23 +652,17 @@ function TypedArrayReduce(callbackfn/*, initialValue*/) {
 
 // ES6 draft rev30 (2014/12/24) 22.2.3.20 %TypedArray%.prototype.reduceRight(callbackfn[, initialValue]).
 function TypedArrayReduceRight(callbackfn/*, initialValue*/) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this))
+        return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, "TypedArrayReduceRight");
+
+    GetAttachedArrayBuffer(this);
+
     // Steps 1-2.
     var O = this;
 
-    // This function is not generic.
-    // We want to make sure that we have an attached buffer, per spec prose.
-    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
-
-    // If we got here, `this` is either a typed array or a cross-compartment
-    // wrapper for one.
-
     // Steps 3-5.
-    var len;
-    if (isTypedArray) {
-        len = TypedArrayLength(O);
-    } else {
-        len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
+    var len = TypedArrayLength(O);
 
     // Step 6.
     if (arguments.length === 0)
@@ -959,23 +913,19 @@ function TypedArraySlice(start, end) {
 
 // ES6 draft rev30 (2014/12/24) 22.2.3.25 %TypedArray%.prototype.some(callbackfn[, thisArg]).
 function TypedArraySome(callbackfn, thisArg = undefined) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, thisArg,
+                            "TypedArraySome");
+    }
+
+    GetAttachedArrayBuffer(this);
+
     // Steps 1-2.
     var O = this;
 
-    // This function is not generic.
-    // We want to make sure that we have an attached buffer, per spec prose.
-    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(O);
-
-    // If we got here, `this` is either a typed array or a cross-compartment
-    // wrapper for one.
-
     // Steps 3-5.
-    var len;
-    if (isTypedArray) {
-        len = TypedArrayLength(O);
-    } else {
-        len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
+    var len = TypedArrayLength(O);
 
     // Step 6.
     if (arguments.length === 0)
@@ -1036,12 +986,16 @@ function TypedArrayCompare(x, y) {
 // ES6 draft 20151210 22.2.3.26 %TypedArray%.prototype.sort ( comparefn ).
 function TypedArraySort(comparefn) {
     // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, comparefn,
+                            "TypedArraySort");
+    }
 
     // Step 1.
     var obj = this;
 
     // Step 2.
-    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(obj);
+    var buffer = GetAttachedArrayBuffer(obj);
 
     // Step 3.
     var len = TypedArrayLength(obj);
@@ -1064,30 +1018,20 @@ function TypedArraySort(comparefn) {
         } else if (IsFloat32TypedArray(obj)) {
             return RadixSort(obj, len, 4 /* nbytes */, true /* signed */, true /* floating */, comparefn);
         }
-    }
-
-    // To satisfy step 2 from TypedArray SortCompare described in 22.2.3.26
-    // the user supplied comparefn is wrapped.
-    var wrappedCompareFn = comparefn;
-    comparefn = function(x, y) {
-        // Step a.
-        var v = wrappedCompareFn(x, y);
-        // Step b.
-        var bufferDetached;
-        if (isTypedArray) {
-            bufferDetached = IsDetachedBuffer(buffer);
-        } else {
-            // This is totally cheating and only works because we know `this`
-            // and `buffer` are same-compartment".
-            bufferDetached = callFunction(CallTypedArrayMethodIfWrapped, this,
-                                          buffer, "IsDetachedBuffer");
+        // To satisfy step 2 from TypedArray SortCompare described in 22.2.3.26
+        // the user supplied comparefn is wrapped.
+        var wrappedCompareFn = comparefn;
+        comparefn = function(x, y) {
+            // Step a.
+            var v = wrappedCompareFn(x, y);
+            // Step b.
+            if (IsDetachedBuffer(buffer))
+                ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+            // Step c. is redundant, see:
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1121937#c36
+            // Step d.
+            return v;
         }
-        if (bufferDetached)
-            ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
-        // Step c. is redundant, see:
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1121937#c36
-        // Step d.
-        return v;
     }
 
     return QuickSort(obj, len, comparefn);
@@ -1145,7 +1089,15 @@ function TypedArrayValues() {
     var O = this;
 
     // See the big comment in TypedArrayEntries for what we're doing here.
-    IsTypedArrayEnsuringArrayBuffer(O);
+
+    // Steps 2-6.
+    if (!IsObject(O) || !IsTypedArray(O)) {
+        // And also steps 4-6.
+        callFunction(CallTypedArrayMethodIfWrapped, O, O, "GetAttachedArrayBuffer");
+    } else {
+        // Steps 4-6.
+        GetAttachedArrayBuffer(O);
+    }
 
     // Step 7.
     return CreateArrayIterator(O, ITEM_KIND_VALUE);
