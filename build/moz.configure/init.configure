@@ -537,21 +537,21 @@ def host_variables(host):
 @depends(target)
 def target_platform_defines(target):
     if target.kernel == 'WINNT':
-        set_define('_WINDOWS', '1')
-        set_define('WIN32', '1')
-        set_define('XP_WIN', '1')
-        set_define('XP_WIN32', '1')
+        set_define('_WINDOWS', True)
+        set_define('WIN32', True)
+        set_define('XP_WIN', True)
+        set_define('XP_WIN32', True)
     else:
-        set_define('XP_UNIX', '1')
+        set_define('XP_UNIX', True)
 
     if target.kernel == 'Darwin':
-        set_define('XP_DARWIN', '1')
+        set_define('XP_DARWIN', True)
         if target.os == 'iOS':
-            set_define('XP_IOS', '1')
+            set_define('XP_IOS', True)
         elif target.os == 'OSX':
-            set_define('XP_MACOSX', '1')
+            set_define('XP_MACOSX', True)
     elif target.kernel == 'Linux':
-        set_define('XP_LINUX', '1')
+        set_define('XP_LINUX', True)
 
 
 # The application/project to build
@@ -625,12 +625,12 @@ def milestone(build_env):
 
     if 'a1' in milestone:
         set_config('NIGHTLY_BUILD', True)
-        set_define('NIGHTLY_BUILD', '1')
+        set_define('NIGHTLY_BUILD', True)
         add_old_configure_assignment('NIGHTLY_BUILD', '1')
         is_nightly = True
     elif 'a' not in milestone:
         set_config('RELEASE_BUILD', True)
-        set_define('RELEASE_BUILD', '1')
+        set_define('RELEASE_BUILD', True)
         add_old_configure_assignment('RELEASE_BUILD', '1')
         is_release = True
 
