@@ -224,7 +224,7 @@ function TriggerPromiseReactions(reactions, argument) {
 
 // ES6, 25.4.2.1.
 function EnqueuePromiseReactionJob(reaction, argument) {
-    _EnqueuePromiseJob(function PromiseReactionJob() {
+    _EnqueuePromiseJob(reaction.capabilities.promise, function PromiseReactionJob() {
         // Step 1.
         assert(IsPromiseReaction(reaction), "Invalid promise reaction record");
 
@@ -267,7 +267,7 @@ function EnqueuePromiseReactionJob(reaction, argument) {
 
 // ES6, 25.4.2.2.
 function EnqueuePromiseResolveThenableJob(promiseToResolve, thenable, then) {
-    _EnqueuePromiseJob(function PromiseResolveThenableJob() {
+    _EnqueuePromiseJob(promiseToResolve, function PromiseResolveThenableJob() {
         // Step 1.
         let {0: resolve, 1: reject} = CreateResolvingFunctions(promiseToResolve);
 

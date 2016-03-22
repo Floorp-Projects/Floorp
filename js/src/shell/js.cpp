@@ -632,7 +632,8 @@ RunModule(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
 
 #ifdef SPIDERMONKEY_PROMISE
 static bool
-ShellEnqueuePromiseJobCallback(JSContext* cx, JS::HandleObject job, void* data)
+ShellEnqueuePromiseJobCallback(JSContext* cx, JS::HandleObject job, JS::HandleObject allocationSite,
+                               void* data)
 {
     ShellRuntime* sr = GetShellRuntime(cx);
     MOZ_ASSERT(job);
