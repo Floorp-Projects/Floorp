@@ -237,17 +237,9 @@ PreprocessValue(JSContext* cx, HandleObject holder, KeyType key, MutableHandleVa
             if (!keyStr)
                 return false;
 
-            InvokeArgs args(cx);
-            if (!args.init(1))
+            RootedValue arg0(cx, StringValue(keyStr));
+            if (!js::Call(cx, toJSON, vp, arg0, vp))
                 return false;
-
-            args.setCallee(toJSON);
-            args.setThis(vp);
-            args[0].setString(keyStr);
-
-            if (!Invoke(cx, args))
-                return false;
-            vp.set(args.rval());
         }
     }
 
@@ -259,18 +251,10 @@ PreprocessValue(JSContext* cx, HandleObject holder, KeyType key, MutableHandleVa
                 return false;
         }
 
-        InvokeArgs args(cx);
-        if (!args.init(2))
+        RootedValue arg0(cx, StringValue(keyStr));
+        RootedValue replacerVal(cx, ObjectValue(*scx->replacer));
+        if (!js::Call(cx, replacerVal, holder, arg0, vp, vp))
             return false;
-
-        args.setCallee(ObjectValue(*scx->replacer));
-        args.setThis(ObjectValue(*holder));
-        args[0].setString(keyStr);
-        args[1].set(vp);
-
-        if (!Invoke(cx, args))
-            return false;
-        vp.set(args.rval());
     }
 
     /* Step 4. */
@@ -848,19 +832,8 @@ Walk(JSContext* cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
     if (!key)
         return false;
 
-    InvokeArgs args(cx);
-    if (!args.init(2))
-        return false;
-
-    args.setCallee(reviver);
-    args.setThis(ObjectValue(*holder));
-    args[0].setString(key);
-    args[1].set(val);
-
-    if (!Invoke(cx, args))
-        return false;
-    vp.set(args.rval());
-    return true;
+    RootedValue keyVal(cx, StringValue(key));
+    return js::Call(cx, reviver, holder, keyVal, val, vp);
 }
 
 static bool

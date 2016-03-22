@@ -2893,10 +2893,11 @@ js::ValueToSource(JSContext* cx, HandleValue v)
     if (!GetProperty(cx, obj, obj, cx->names().toSource, &fval))
         return nullptr;
     if (IsCallable(fval)) {
-        RootedValue rval(cx);
-        if (!Invoke(cx, ObjectValue(*obj), fval, 0, nullptr, &rval))
+        RootedValue v(cx);
+        if (!js::Call(cx, fval, obj, &v))
             return nullptr;
-        return ToString<CanGC>(cx, rval);
+
+        return ToString<CanGC>(cx, v);
     }
 
     return ObjectToSource(cx, obj);

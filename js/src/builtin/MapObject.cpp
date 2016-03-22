@@ -1475,23 +1475,18 @@ js::InitSelfHostingCollectionIteratorFunctions(JSContext* cx, HandleObject obj)
 
 /*** JS static utility functions *********************************************/
 
-static
-bool
+static bool
 forEach(const char* funcName, JSContext *cx, HandleObject obj, HandleValue callbackFn, HandleValue thisArg)
 {
     CHECK_REQUEST(cx);
+
     RootedId forEachId(cx, NameToId(cx->names().forEach));
     RootedFunction forEachFunc(cx, JS::GetSelfHostedFunction(cx, funcName, forEachId, 2));
     if (!forEachFunc)
         return false;
-    InvokeArgs args(cx);
-    if (!args.init(2))
-        return false;
-    args.setCallee(JS::ObjectValue(*forEachFunc));
-    args.setThis(JS::ObjectValue(*obj));
-    args[0].set(callbackFn);
-    args[1].set(thisArg);
-    return Invoke(cx, args);
+
+    RootedValue fval(cx, ObjectValue(*forEachFunc));
+    return Call(cx, fval, obj, callbackFn, thisArg, &fval);
 }
 
 // Handles Clear/Size for public jsapi map/set access
