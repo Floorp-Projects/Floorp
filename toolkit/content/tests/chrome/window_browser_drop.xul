@@ -14,7 +14,6 @@
 <script>
 <![CDATA[
 
-let lastLink, lastLinkName;
 Components.utils.import("resource://testing-common/ContentTask.jsm");
 
 function doDropAndStopLoad(browser, data, shouldExpectStateChange) {
@@ -76,13 +75,23 @@ function doDropAndStopLoad(browser, data, shouldExpectStateChange) {
 }
 
 function expectLink(browser, expectedLink, expectedName, data, testid, onbody=false) {
+  let lastLink = "";
+  let lastLinkName = "";
   function dropOnBrowserSync() {
+    browser.droppedLinkHandler = function(event, link, linkname) {
+      info(`droppedLinkHandler called, received link ${link} and linkname ${linkname}`);
+      if (!expectedLink && !expectedName) {
+        ok(false, "droppedLinkHandler called for URI " + link + " which we didn't expect.");
+      }
+      lastLink = link;
+      lastLinkName = linkname;
+    };
+
     let dropEl = onbody ? browser.contentDocument.body : browser;
     synthesizeDrop(dropEl, dropEl, data, "", dropEl.ownerDocument.defaultView);
     return Promise.resolve([lastLink, lastLinkName]);
   }
   let dropInfoReceived;
-  lastLink = lastLinkName = "";
   if (browser.isRemoteBrowser) {
     dropInfoReceived = doDropAndStopLoad(browser, data[0][0], !!expectedLink);
   } else {
@@ -95,11 +104,6 @@ function expectLink(browser, expectedLink, expectedName, data, testid, onbody=fa
 }
 
 function* dropLinksOnBrowser(browser, type) {
-  browser.droppedLinkHandler = function(event, link, linkname) {
-    info(`droppedLinkHandler called, received link ${link} and linkname ${linkname}`);
-    lastLink = link;
-    lastLinkName = linkname;
-  };
   yield expectLink(browser, "http://www.mozilla.org/", "http://www.mozilla.org/",
                    [ [ { type: "text/plain", data: "http://www.mozilla.org/" } ] ],
                    "text/plain drop on browser " + type);
@@ -112,6 +116,18 @@ function* dropLinksOnBrowser(browser, type) {
   yield expectLink(browser, "http://www.example.com/", "Example.com",
                    [ [ { type: "text/x-moz-url", data: "http://www.example.com/\nExample.com" } ] ],
                    "text/x-moz-url drop on browser " + type);
+
+  // Dropping javascript or data: URLs should fail:
+  yield expectLink(browser, "", "",
+                   [ [ { type: "text/plain", data: "javascript:'bad'" } ] ],
+                   "text/plain javascript url drop on browser " + type);
+  yield expectLink(browser, "", "",
+                   [ [ { type: "text/plain", data: "jAvascript:'also bad'" } ] ],
+                   "text/plain mixed-case javascript url drop on browser " + type);
+  yield expectLink(browser, "", "",
+                   [ [ { type: "text/plain", data: "data:text/html,bad" } ] ],
+                   "text/plain data url drop on browser " + type);
+
   // dropping a chrome url should fail as we don't have a source node set,
   // defaulting to a source of file:///
   yield expectLink(browser, "", "",
