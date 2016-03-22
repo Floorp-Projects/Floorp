@@ -27,7 +27,7 @@ option('--enable-jprof', env='MOZ_JPROF',
 @depends('--enable-jprof')
 def jprof(value):
     if value:
-        set_config('MOZ_JPROF', '1')
+        set_config('MOZ_JPROF', True)
         set_define('MOZ_JPROF', '1')
         imply_option('--enable-profiling')
 
@@ -43,7 +43,7 @@ def sps_profiler(target):
 @depends(sps_profiler)
 def sps_profiler_define(value):
     if value:
-        set_config('MOZ_ENABLE_PROFILER_SPS', '1')
+        set_config('MOZ_ENABLE_PROFILER_SPS', True)
         set_define('MOZ_ENABLE_PROFILER_SPS', '1')
 
 
@@ -54,7 +54,7 @@ option('--enable-dmd', env='MOZ_DMD',
 @depends('--enable-dmd')
 def dmd(value):
     if value:
-        set_config('MOZ_DMD', '1')
+        set_config('MOZ_DMD', True)
         set_define('MOZ_DMD', '1')
         add_old_configure_assignment('MOZ_DMD', '1')
         imply_option('--enable-profiling')
@@ -157,9 +157,9 @@ def x11(value, toolkit):
               % ','.join(x11_toolkits))
 
     if value and toolkit in x11_toolkits:
-        set_config('MOZ_ENABLE_XREMOTE', '1')
+        set_config('MOZ_ENABLE_XREMOTE', True)
         set_define('MOZ_ENABLE_XREMOTE', '1')
-        set_config('MOZ_X11', '1')
+        set_config('MOZ_X11', True)
         set_define('MOZ_X11', '1')
         add_old_configure_assignment('MOZ_X11', '1')
 
@@ -188,7 +188,7 @@ def gl_provider(value, x11):
 @depends(toolkit)
 def pdf_printing(toolkit):
     if toolkit in ('windows', 'gtk2', 'gtk3', 'qt', 'android', 'gonk'):
-        set_config('MOZ_PDF_PRINTING', '1')
+        set_config('MOZ_PDF_PRINTING', True)
         set_config('PDF_SURFACE_FEATURE', '#define CAIRO_HAS_PDF_SURFACE 1')
     else:
         # CONFIGURE_SUBST_FILES need explicit empty values.
@@ -204,7 +204,7 @@ option(env='MOZ_INSTRUMENT_EVENT_LOOP',
 def instrument_event_loop(value, toolkit):
     if value or (toolkit in ('windows', 'gtk2', 'gtk3', 'cocoa', 'android',
                              'gonk') and value.origin == 'default'):
-        set_config('MOZ_INSTRUMENT_EVENT_LOOP', '1')
+        set_config('MOZ_INSTRUMENT_EVENT_LOOP', True)
         set_define('MOZ_INSTRUMENT_EVENT_LOOP', '1')
 
 
@@ -225,7 +225,7 @@ def fc_freetype(value, toolkit):
 @depends(toolkit)
 def applemedia(toolkit):
     if toolkit in ('cocoa', 'uikit'):
-        set_config('MOZ_APPLEMEDIA', '1')
+        set_config('MOZ_APPLEMEDIA', True)
         set_define('MOZ_APPLEMEDIA', '1')
         add_old_configure_assignment('MOZ_APPLEMEDIA', '1')
         return True
@@ -249,7 +249,7 @@ def wmf(value, target):
         error('Cannot enable Windows Media Foundation support on %s'
               % target.os)
     if enabled:
-        set_config('MOZ_WMF', '1')
+        set_config('MOZ_WMF', True)
         set_define('MOZ_WMF', '1')
     return enabled
 
@@ -266,7 +266,7 @@ def ffmpeg(value, target):
         enabled = target.os not in ('Android', 'WINNT')
     if enabled:
         set_define('MOZ_FFMPEG', '1')
-        set_config('MOZ_FFMPEG', '1')
+        set_config('MOZ_FFMPEG', True)
         imply_option('--enable-fmp4', '--enable-ffmpeg')
     return enabled
 
@@ -283,7 +283,7 @@ def fmp4(value, target, wmf, applemedia):
         # target.os == 'Android' includes all B2G versions
         enabled = wmf or applemedia or target.os == 'Android'
     if enabled:
-        set_config('MOZ_FMP4', '1')
+        set_config('MOZ_FMP4', True)
         set_define('MOZ_FMP4', '1')
         add_old_configure_assignment('MOZ_FMP4', '1')
     return enabled
@@ -303,7 +303,7 @@ def eme(value, fmp4):
         error('Encrypted Media Extension support requires '
               'Fragmented MP4 support')
     if enabled:
-        set_config('MOZ_EME', '1')
+        set_config('MOZ_EME', True)
         set_define('MOZ_EME', '1')
     # Theoretically, we could pass `value` directly when it is a
     # PositiveOptionValue, but somehow, the JSON serialization in configure.py

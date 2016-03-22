@@ -519,7 +519,7 @@ def target_variables(target):
     set_config('CPU_ARCH', target.cpu)
 
     if target.cpu in ('x86', 'x86_64'):
-        set_config('INTEL_ARCHITECTURE', '1')
+        set_config('INTEL_ARCHITECTURE', True)
 
     set_config('TARGET_CPU', target.raw_cpu)
     set_config('TARGET_OS', target.raw_os)
@@ -624,12 +624,12 @@ def milestone(build_env):
     is_nightly = is_release = False
 
     if 'a1' in milestone:
-        set_config('NIGHTLY_BUILD', '1')
+        set_config('NIGHTLY_BUILD', True)
         set_define('NIGHTLY_BUILD', '1')
         add_old_configure_assignment('NIGHTLY_BUILD', '1')
         is_nightly = True
     elif 'a' not in milestone:
-        set_config('RELEASE_BUILD', '1')
+        set_config('RELEASE_BUILD', True)
         set_define('RELEASE_BUILD', '1')
         add_old_configure_assignment('RELEASE_BUILD', '1')
         is_release = True

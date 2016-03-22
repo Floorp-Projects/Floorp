@@ -15,7 +15,7 @@ option('--with-gradle', nargs='?',
 @depends('--with-gradle', check_build_environment)
 def gradle(value, build_env):
     if value:
-        set_config('MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE', '1')
+        set_config('MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE', True)
 
     gradle = value[0] if len(value) else \
         os.path.join(build_env.topsrcdir, 'gradlew')
