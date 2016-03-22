@@ -597,13 +597,62 @@ html[dir="rtl"] .context-wrapper > .context-preview {
   width: 100%;
 }
 
-.remote-video-box > .remote-cursor {
-  background: url('../img/cursor.svg#orange') no-repeat;
-  height: 20px;
+.remote-video-box > .remote-cursor-container {
   /* Svg cursor has a white outline so we need to offset it to ensure that the
    * cursor points at a more precise position with the negative margin. */
   margin: -2px;
   position: absolute;
-  width: 15px;
   z-index: 65534;
+}
+
+.remote-video-box > .remote-cursor-container > .remote-cursor {
+  background: url('../img/cursor.svg#blue') no-repeat;
+  height: 20px;
+  width: 15px;
+}
+
+.remote-video-box > .remote-cursor-container:after,
+.remote-video-box > .remote-cursor-container:before {
+  background-color: rgba(231, 149, 68, 0.5);
+  border-radius: 50%;
+  content: "";
+  height: 50px;
+  left: 50%;
+  margin: -35px 0 0 -35px;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  width: 50px;
+  z-index: -1;
+}
+
+@keyframes double-pulse-1 {
+  0% {
+    opacity: 1;
+    transform: scale3d(0.1, 0.1, 1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale3d(1.1, 1.1, 1);
+  }
+}
+
+@keyframes double-pulse-2 {
+  0% {
+    opacity: 1;
+    transform: scale3d(0.5, 0.5, 1);
+  }
+  50%, 100% {
+    opacity: 0;
+    transform: scale3d(1.2, 1.2, 1);
+  }
+}
+
+.remote-video-box > .remote-cursor-clicked:after {
+  animation: double-pulse-1 800ms ease-out forwards;
+}
+
+.remote-video-box > .remote-cursor-clicked:before {
+  animation: double-pulse-2 800ms ease-out forwards;
 }
