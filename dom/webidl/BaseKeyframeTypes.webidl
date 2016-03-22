@@ -19,19 +19,17 @@ enum CompositeOperation { "replace", "add", "accumulate" };
 // but we use it for manual JS->IDL and IDL->JS conversions in
 // KeyframeEffectReadOnly's implementation.
 
-dictionary BasePropertyIndexedKeyframe
-{
+dictionary BasePropertyIndexedKeyframe {
   DOMString easing = "linear";
-  CompositeOperation? composite = null;
+  CompositeOperation composite;
 };
 
 dictionary BaseKeyframe {
   double? offset = null;
   DOMString easing = "linear";
-  CompositeOperation? composite = null;
+  CompositeOperation composite;
 };
 
-dictionary BaseComputedKeyframe : BaseKeyframe
-{
+dictionary BaseComputedKeyframe : BaseKeyframe {
   double computedOffset;
 };
