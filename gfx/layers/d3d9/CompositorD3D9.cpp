@@ -13,7 +13,7 @@
 #include "nsWindowsHelpers.h"
 #include "Nv3DVUtils.h"
 #include "gfxFailure.h"
-#include "mozilla/layers/PCompositorParent.h"
+#include "mozilla/layers/PCompositorBridgeParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "gfxPrefs.h"
 #include "gfxCrashReporterUtils.h"

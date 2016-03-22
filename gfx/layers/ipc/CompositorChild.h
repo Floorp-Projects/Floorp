@@ -11,7 +11,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/layers/PCompositorChild.h"
+#include "mozilla/layers/PCompositorBridgeChild.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsClassHashtable.h"           // for nsClassHashtable
 #include "nsCOMPtr.h"                   // for nsCOMPtr
@@ -34,7 +34,7 @@ class ClientLayerManager;
 class CompositorParent;
 struct FrameMetrics;
 
-class CompositorChild final : public PCompositorChild
+class CompositorChild final : public PCompositorBridgeChild
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorChild)
 
@@ -55,7 +55,7 @@ public:
    * or Bridge() request from our parent process.  The Transport is to
    * the compositor's context.
    */
-  static PCompositorChild*
+  static PCompositorBridgeChild*
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
   /**

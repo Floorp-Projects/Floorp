@@ -33,11 +33,11 @@ namespace layers {
 
 
 /**
- * The PCompositor protocol is used to manage communication between
+ * The PCompositorBridge protocol is used to manage communication between
  * the main thread and the compositor thread context. It's primary
  * purpose is to manage the PLayerTransaction sub protocol.
  */
-sync protocol PCompositor
+sync protocol PCompositorBridge
 {
   // A Compositor manages a single Layer Manager (PLayerTransaction)
   manages PLayerTransaction;

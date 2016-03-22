@@ -44,7 +44,7 @@ class AsyncDragMetrics;
 struct ScrollableLayerGuid;
 class CompositorParent;
 class GestureEventListener;
-class PCompositorParent;
+class PCompositorBridgeParent;
 struct AsyncTransform;
 class AsyncPanZoomAnimation;
 class FlingAnimation;
@@ -676,7 +676,7 @@ protected:
   bool mSharingFrameMetricsAcrossProcesses;
   /* Utility function to get the Compositor with which we share the FrameMetrics.
      This function is only callable from the compositor thread. */
-  PCompositorParent* GetSharedFrameMetricsCompositor();
+  PCompositorBridgeParent* GetSharedFrameMetricsCompositor();
 
 protected:
   // Both |mFrameMetrics| and |mLastContentPaintMetrics| are protected by the
