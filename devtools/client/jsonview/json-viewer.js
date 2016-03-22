@@ -8,8 +8,7 @@
 "use strict";
 
 define(function(require, exports, module) {
-  // ReactJS
-  const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+  const { render } = require("devtools/client/shared/vendor/react-dom");
   const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
   const { MainTabbedArea } = createFactories(require("./components/main-tabbed-area"));
 
@@ -79,7 +78,7 @@ define(function(require, exports, module) {
    * at the top of the window. This component also represents ReacJS root.
    */
   let content = document.getElementById("content");
-  let theApp = ReactDOM.render(MainTabbedArea(input), content);
+  let theApp = render(MainTabbedArea(input), content);
 
   let onResize = event => {
     window.document.body.style.height = window.innerHeight + "px";

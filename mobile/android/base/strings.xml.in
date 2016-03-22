@@ -202,7 +202,7 @@
 
   <string name="pref_show_web_fonts">&pref_show_web_fonts;</string>
 
-  <string name="pref_tracking_protection_title">&pref_tracking_protection_title;</string>
+  <string name="pref_tracking_protection_title">&pref_tracking_protection_title2;</string>
   <string name="pref_tracking_protection_summary">&pref_tracking_protection_summary3;</string>
   <string name="pref_donottrack_title">&pref_donottrack_title;</string>
   <string name="pref_donottrack_summary">&pref_donottrack_summary;</string>
@@ -214,7 +214,7 @@
   <string name="pref_char_encoding">&pref_char_encoding;</string>
   <string name="pref_char_encoding_on">&pref_char_encoding_on;</string>
   <string name="pref_char_encoding_off">&pref_char_encoding_off;</string>
-  <string name="pref_clear_private_data_now">&pref_clear_private_data;</string>
+  <string name="pref_clear_private_data_now">&pref_clear_private_data2;</string>
   <string name="pref_clear_private_data_now_tablet">&pref_clear_private_data_now_tablet;</string>
   <string name="pref_clear_on_exit_title">&pref_clear_on_exit_title3;</string>
   <string name="pref_clear_on_exit_summary2">&pref_clear_on_exit_summary2;</string>
@@ -478,7 +478,7 @@
   <string name="mixed_content_display_loaded">&mixed_content_display_loaded1;</string>
   <string name="mixed_content_protection_disabled">&mixed_content_protection_disabled1;</string>
 
-  <string name="doorhanger_tracking_title">&doorhanger_tracking_title;</string>
+  <string name="doorhanger_tracking_title">&doorhanger_tracking_title2;</string>
   <string name="doorhanger_tracking_state_enabled">&doorhanger_tracking_state_enabled;</string>
   <string name="doorhanger_tracking_state_disabled">&doorhanger_tracking_state_disabled;</string>
   <string name="doorhanger_tracking_message_enabled">&doorhanger_tracking_message_enabled1;</string>

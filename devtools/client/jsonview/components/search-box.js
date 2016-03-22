@@ -7,9 +7,9 @@
 "use strict";
 
 define(function(require, exports, module) {
-  const React = require("devtools/client/shared/vendor/react");
+  const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 
-  const DOM = React.DOM;
+  const { input } = dom;
 
   // For smooth incremental searching (in case the user is typing quickly).
   const searchDelay = 250;
@@ -18,9 +18,9 @@ define(function(require, exports, module) {
    * This object represents a search box located at the
    * top right corner of the application.
    */
-  let SearchBox = React.createClass({
+  let SearchBox = createClass({
     propTypes: {
-      actions: React.PropTypes.object,
+      actions: PropTypes.object,
     },
 
     displayName: "SearchBox",
@@ -43,7 +43,7 @@ define(function(require, exports, module) {
 
     render: function() {
       return (
-        DOM.input({className: "searchBox",
+        input({className: "searchBox",
           placeholder: Locale.$STR("jsonViewer.filterJSON"),
           onChange: this.onSearch})
       );

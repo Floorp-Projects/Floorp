@@ -5,93 +5,96 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// ReactJS
-const React = require("devtools/client/shared/vendor/react");
+// Make this available to both AMD and CJS environments
+define(function(require, exports, module) {
+  // ReactJS
+  const React = require("devtools/client/shared/vendor/react");
 
-// Shortcuts
-const { thead, tr, td, div } = React.DOM;
-const PropTypes = React.PropTypes;
+  // Shortcuts
+  const { thead, tr, td, div } = React.DOM;
+  const PropTypes = React.PropTypes;
 
-/**
- * This component is responsible for rendering tree header.
- * It's based on <thead> element.
- */
-var TreeHeader = React.createClass({
-  // See also TreeView component for detailed info about properties.
-  propTypes: {
-    // Custom tree decorator
-    decorator: PropTypes.object,
-    // True if the header should be visible
-    header: PropTypes.bool,
-    // Array with column definition
-    columns: PropTypes.array
-  },
+  /**
+   * This component is responsible for rendering tree header.
+   * It's based on <thead> element.
+   */
+  let TreeHeader = React.createClass({
+    // See also TreeView component for detailed info about properties.
+    propTypes: {
+      // Custom tree decorator
+      decorator: PropTypes.object,
+      // True if the header should be visible
+      header: PropTypes.bool,
+      // Array with column definition
+      columns: PropTypes.array
+    },
 
-  displayName: "TreeHeader",
+    displayName: "TreeHeader",
 
-  getDefaultProps: function() {
-    return {
-      columns: [{
-        id: "default"
-      }]
-    };
-  },
-
-  getHeaderClass: function(colId) {
-    let decorator = this.props.decorator;
-    if (!decorator || !decorator.getHeaderClass) {
-      return [];
-    }
-
-    // Decorator can return a simple string or array of strings.
-    let classNames = decorator.getHeaderClass(colId);
-    if (!classNames) {
-      return [];
-    }
-
-    if (typeof classNames == "string") {
-      classNames = [classNames];
-    }
-
-    return classNames;
-  },
-
-  render: function() {
-    let cells = [];
-    let visible = this.props.header;
-
-    // Render the rest of the columns (if any)
-    this.props.columns.forEach(col => {
-      let cellStyle = {
-        "width": col.width ? col.width : "",
+    getDefaultProps: function() {
+      return {
+        columns: [{
+          id: "default"
+        }]
       };
+    },
 
-      let classNames = [];
-
-      if (visible) {
-        classNames = this.getHeaderClass(col.id);
-        classNames.push("treeHeaderCell");
+    getHeaderClass: function(colId) {
+      let decorator = this.props.decorator;
+      if (!decorator || !decorator.getHeaderClass) {
+        return [];
       }
 
-      cells.push(
-        td({
-          className: classNames.join(" "),
-          style: cellStyle,
-          key: col.id},
-          div({ className: visible ? "treeHeaderCellBox" : "" },
-            visible ? col.title : ""
+      // Decorator can return a simple string or array of strings.
+      let classNames = decorator.getHeaderClass(colId);
+      if (!classNames) {
+        return [];
+      }
+
+      if (typeof classNames == "string") {
+        classNames = [classNames];
+      }
+
+      return classNames;
+    },
+
+    render: function() {
+      let cells = [];
+      let visible = this.props.header;
+
+      // Render the rest of the columns (if any)
+      this.props.columns.forEach(col => {
+        let cellStyle = {
+          "width": col.width ? col.width : "",
+        };
+
+        let classNames = [];
+
+        if (visible) {
+          classNames = this.getHeaderClass(col.id);
+          classNames.push("treeHeaderCell");
+        }
+
+        cells.push(
+          td({
+            className: classNames.join(" "),
+            style: cellStyle,
+            key: col.id},
+            div({ className: visible ? "treeHeaderCellBox" : "" },
+              visible ? col.title : ""
+            )
           )
-        )
+        );
+      });
+
+      return (
+        thead({}, tr({ className: visible ? "treeHeaderRow" : "" },
+          cells
+        ))
       );
-    });
+    }
+  });
 
-    return (
-      thead({}, tr({ className: visible ? "treeHeaderRow" : "" },
-        cells
-      ))
-    );
-  }
+  // Exports from this module
+  module.exports = TreeHeader;
 });
-
-// Exports from this module
-module.exports = TreeHeader;

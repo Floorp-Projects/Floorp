@@ -185,10 +185,12 @@ AboutWeaveLog.prototype = {
     channel.originalURI = aURI;
 
     // Ensure that the about page has the same privileges as a regular directory
-    // view. That way links to files can be opened.
+    // view. That way links to files can be opened. make sure we use the correct
+    // origin attributes when creating the principal for accessing the
+    // about:sync-log data.
     let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
                 .getService(Ci.nsIScriptSecurityManager);
-    let principal = ssm.createCodebasePrincipal(uri, {});
+    let principal = ssm.createCodebasePrincipal(uri, aLoadInfo.originAttributes);
 
     channel.owner = principal;
     return channel;

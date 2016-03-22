@@ -14,8 +14,16 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-redux-head.js",
   this);
 
+const TEST_URI_ROOT = "http://example.com/browser/devtools/client/responsive.html/test/browser/";
+
+DevToolsUtils.testing = true;
+Services.prefs.setCharPref("devtools.devices.url",
+  TEST_URI_ROOT + "browser_devices.json");
 Services.prefs.setBoolPref("devtools.responsive.html.enabled", true);
+
 registerCleanupFunction(() => {
+  DevToolsUtils.testing = false;
+  Services.prefs.clearUserPref("devtools.devices.url");
   Services.prefs.clearUserPref("devtools.responsive.html.enabled");
 });
 const { ResponsiveUIManager } = Cu.import("resource://devtools/client/responsivedesign/responsivedesign.jsm", {});

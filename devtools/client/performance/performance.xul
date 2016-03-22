@@ -95,7 +95,7 @@
                          label="&performanceUI.clearButton;"/>
         </hbox>
       </toolbar>
-      <vbox id="recordings-list" flex="1"/>
+      <vbox id="recordings-list" class="theme-sidebar" flex="1"/>
     </vbox>
 
     <!-- Main panel content -->
@@ -176,8 +176,9 @@
                            label="&performanceUI.startRecording;"
                            standalone="true"/>
           </hbox>
-          <label class="tool-disabled-message"
-                 value="&performanceUI.unavailableNoticePB;"/>
+          <description class="tool-disabled-message">
+            &performanceUI.unavailableNoticePB;
+          </description>
         </vbox>
 
         <!-- "Empty" notice, shown when there's no recordings available -->

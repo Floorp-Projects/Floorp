@@ -9,6 +9,7 @@ import java.util.Locale;
 
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.LocaleManager;
 import org.mozilla.gecko.PrefsHelper;
@@ -34,6 +35,8 @@ import android.preference.PreferenceScreen;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+
+import com.squareup.leakcanary.RefWatcher;
 
 /* A simple implementation of PreferenceFragment for large screen devices
  * This will strip category headers (so that they aren't shown to the user twice)
@@ -257,6 +260,8 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
         if (res == R.xml.preferences) {
             Telemetry.stopUISession(TelemetryContract.Session.SETTINGS);
         }
+
+        GeckoApplication.watchReference(getActivity(), this);
     }
 
     private class AccountLoaderCallbacks implements LoaderManager.LoaderCallbacks<Account> {

@@ -975,7 +975,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *
    * @param string type
    *        Either "all", "html", "css", "js", "xhr", "fonts", "images", "media"
-   *        "flash" or "other".
+   *        "flash", "ws" or "other".
    */
   filterOn: function(type = "all") {
     if (type === "all") {
@@ -1018,7 +1018,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *
    * @param string type
    *        Either "all", "html", "css", "js", "xhr", "fonts", "images", "media"
-   *        "flash" or "other".
+   *        "flash", "ws" or "other".
    */
   _disableFilter: function(type) {
     // Remove the filter from list of active filters.
@@ -1040,7 +1040,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *
    * @param string type
    *        Either "all", "html", "css", "js", "xhr", "fonts", "images", "media"
-   *        "flash" or "other".
+   *        "flash", "ws" or "other".
    */
   _enableFilter: function(type) {
     // Make sure this is a valid filter type.
@@ -1092,6 +1092,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       images: this.isImage,
       media: this.isMedia,
       flash: this.isFlash,
+      ws: this.isWS,
       other: this.isOther,
       freetext: this.isFreetextMatch
     };
@@ -1232,8 +1233,10 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       mimeType.includes("/x-javascript"));
   },
 
-  isXHR: function({ attachment: { isXHR } }) {
-    return isXHR;
+  isXHR: function(item) {
+    // Show the request it is XHR, except
+    // if the request is a WS upgrade
+    return item.attachment.isXHR && !this.isWS(item);
   },
 
   isFont: function({ attachment: { url, mimeType } }) {
@@ -1268,6 +1271,38 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       url.includes(".flv");
   },
 
+  isWS: function({ attachment: { requestHeaders, responseHeaders } }) {
+    // Detect a websocket upgrade if request has an Upgrade header
+    // with value 'websocket'
+
+    if (!requestHeaders || !Array.isArray(requestHeaders.headers)) {
+      return false;
+    }
+
+    // Find the 'upgrade' header.
+    var upgradeHeader = requestHeaders.headers.find(header => {
+      return (header.name == "Upgrade");
+    });
+
+    // If no header found on request, check response - mainly to get
+    // something we can unit test, as it is impossible to set
+    // the Upgrade header on outgoing XHR as per the spec.
+    if (!upgradeHeader && responseHeaders &&
+        Array.isArray(responseHeaders.headers)) {
+      upgradeHeader = responseHeaders.headers.find(header => {
+        return (header.name == "Upgrade");
+      });
+    }
+
+    // Return false if there is no such header or if its value isn't
+    // 'websocket'.
+    if (!upgradeHeader || upgradeHeader.value != "websocket") {
+      return false;
+    }
+
+    return true;
+  },
+
   isOther: function(e) {
     return !this.isHtml(e) &&
            !this.isCss(e) &&
@@ -1276,7 +1311,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
            !this.isFont(e) &&
            !this.isImage(e) &&
            !this.isMedia(e) &&
-           !this.isFlash(e);
+           !this.isFlash(e) &&
+           !this.isWS(e);
   },
 
   isFreetextMatch: function({ attachment: { url } }, text) {
@@ -3604,7 +3640,8 @@ PerformanceStatisticsView.prototype = {
    */
   _sanitizeChartDataSource: function(items, emptyCache) {
     let data = [
-      "html", "css", "js", "xhr", "fonts", "images", "media", "flash", "other"
+      "html", "css", "js", "xhr", "fonts", "images", "media", "flash", "ws",
+      "other"
     ].map(e => ({
       cached: 0,
       count: 0,
@@ -3638,13 +3675,16 @@ PerformanceStatisticsView.prototype = {
       } else if (RequestsMenuView.prototype.isFlash(requestItem)) {
         // "flash"
         type = 7;
+      } else if (RequestsMenuView.prototype.isWS(requestItem)) {
+        // "ws"
+        type = 8;
       } else if (RequestsMenuView.prototype.isXHR(requestItem)) {
         // Verify XHR last, to categorize other mime types in their own blobs.
         // "xhr"
         type = 3;
       } else {
         // "other"
-        type = 8;
+        type = 9;
       }
 
       if (emptyCache || !responseIsFresh(details)) {

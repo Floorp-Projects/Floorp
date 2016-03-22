@@ -1,0 +1,333 @@
+<?xml version="1.0"?>
+<!DOCTYPE HTML>
+<html xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Mouse Capture Tests</title>
+  <link rel="stylesheet" href="chrome://global/skin/" type="text/css"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script> 
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script> 
+</head>
+<body id="body" xmlns="http://www.w3.org/1999/xhtml">
+  <p id="display"/><div id="content" style="display: none"/><pre id="test"/>
+
+<script><![CDATA[
+
+SimpleTest.expectAssertions(6, 12);
+
+SimpleTest.waitForExplicitFinish();
+
+var captureRetargetMode = false;
+var cachedMouseDown = null;
+var previousWidth = 0, originalWidth = 0;
+var loadInWindow = false;
+
+function splitterCallback(adjustment)
+{
+  var newWidth = Number($("leftbox").width); // getBoundingClientRect().width;
+  var expectedWidth = previousWidth + adjustment;
+  if (expectedWidth > $("splitterbox").getBoundingClientRect().width)
+    expectedWidth = $("splitterbox").getBoundingClientRect().width - $("splitter").getBoundingClientRect().width;
+  is(newWidth, expectedWidth, "splitter left box size (" + adjustment + ")");
+  previousWidth = newWidth;
+}
+
+function selectionCallback(adjustment)
+{
+  if (adjustment == 4000) {
+    is(frames[0].getSelection().toString(), "This is some text", "selection after drag (" + adjustment + ")");
+    ok(frames[0].scrollY > 40, "selection caused scroll down (" + adjustment + ")");
+  }
+  else {
+    if (adjustment == 0) {
+      is(frames[0].getSelection().toString(), ".", "selection after drag (" + adjustment + ")");
+    }
+    is(frames[0].scrollY, 0, "selection scrollY (" + adjustment + ")");
+  }
+}
+
+function framesetCallback(adjustment)
+{
+  var newWidth = frames[1].frames[0].document.documentElement.clientWidth;
+  var expectedWidth = originalWidth + adjustment;
+  if (adjustment == 0)
+    expectedWidth = originalWidth - 12;
+  else if (expectedWidth >= 4000)
+    expectedWidth = originalWidth * 2 - 2;
+
+  ok(Math.abs(newWidth - expectedWidth) <= 1, "frameset after drag (" + adjustment + "), new width " + newWidth + ", expected " + expectedWidth);
+}
+
+var otherWindow = null;
+
+function selectionScrollCheck()
+{
+  var element = otherWindow.document.documentElement;
+
+  var count = 0;
+  function selectionScrollDone() {
+    // wait for 6 scroll events to occur
+    if (count++ < 6)
+      return;
+
+    otherWindow.removeEventListener("scroll", selectionScrollDone, false);
+
+    var selectedText = otherWindow.getSelection().toString().replace(/\r/g, "");
+    is(selectedText, "One\n\nTwo", "text is selected");
+
+    // should have scrolled 20 pixels from the mousemove above and six extra
+    // times from the selection scroll timer for a total of 140
+    var oldScrollY = otherWindow.scrollY;
+    is(otherWindow.scrollY, 140, "selection scroll position after timer");
+
+    synthesizeMouse(element, 4, otherWindow.innerHeight + 25, { type: "mouseup" }, otherWindow);
+    disableNonTestMouseEvents(false);
+    otherWindow.close();
+
+    if (loadInWindow) {
+      SimpleTest.finish();
+    }
+    else {
+      // now try again, but open the page in a new window
+      loadInWindow = true;
+      synthesizeMouse(document.getElementById("custom"), 2, 2, { type: "mousedown" });
+
+      // check to ensure that selection dragging scrolls the right scrollable area
+      otherWindow = window.open("data:text/html,<html><p>One</p><p style='margin-top: 200px;'>Two</p><p style='margin-top: 4000px'>This is some text</p></html>", "_blank", "width=200,height=200,scrollbars=yes");
+      SimpleTest.waitForFocus(selectionScrollCheck, otherWindow);
+    }
+  }
+
+  SimpleTest.executeSoon(function () {
+    disableNonTestMouseEvents(true);
+    synthesizeMouse(element, 2, 2, { type: "mousedown" }, otherWindow);
+    synthesizeMouse(element, 100, otherWindow.innerHeight + 20, { type: "mousemove" }, otherWindow);
+    otherWindow.addEventListener("scroll", selectionScrollDone, false);
+  });
+}
+
+function runTests()
+{
+  previousWidth = $("leftbox").getBoundingClientRect().width;
+  runCaptureTest($("splitter"), splitterCallback);
+
+  var custom = document.getElementById("custom");
+  runCaptureTest(custom);
+
+  synthesizeMouseExpectEvent($("rightbox"), 2, 2, { type: "mousemove" },
+                             $("rightbox"), "mousemove", "setCapture and releaseCapture");
+
+  custom.setCapture();
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             $("leftbox"), "mousemove", "setCapture fails on non mousedown");
+
+  var custom2 = document.getElementById("custom2");
+  synthesizeMouse(custom2, 2, 2, { type: "mousedown" });
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             $("leftbox"), "mousemove", "document.releaseCapture releases capture");
+
+  var custom3 = document.getElementById("custom3");
+  synthesizeMouse(custom3, 2, 2, { type: "mousedown" });
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             $("leftbox"), "mousemove", "element.releaseCapture releases capture");
+
+  var custom4 = document.getElementById("custom4");
+  synthesizeMouse(custom4, 2, 2, { type: "mousedown" });
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             custom4, "mousemove", "element.releaseCapture during mousemove before releaseCapture");
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             $("leftbox"), "mousemove", "element.releaseCapture during mousemove after releaseCapture");
+
+  var custom5 = document.getElementById("custom5");
+  runCaptureTest(custom5);
+  captureRetargetMode = true;
+  runCaptureTest(custom5);
+  captureRetargetMode = false;
+
+  var custom6 = document.getElementById("custom6");
+  synthesizeMouse(custom6, 2, 2, { type: "mousedown" });
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             $("leftbox"), "mousemove", "setCapture only works on elements in documents");
+  synthesizeMouse(custom6, 2, 2, { type: "mouseup" });
+
+  // test that mousedown on an image with setCapture followed by a big enough
+  // mouse move does not start a drag (bug 517737)
+  var image = document.getElementById("image");
+  image.scrollIntoView();
+  synthesizeMouse(image, 2, 2, { type: "mousedown" });
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             image, "mousemove", "setCapture works on images");
+  synthesizeMouse(image, 2, 2, { type: "mouseup" });
+
+  window.scroll(0,0);
+
+  // save scroll
+  var scrollX = parent ? parent.scrollX : 0;
+  var scrollY = parent ? parent.scrollY : 0;
+
+  var b = frames[0].document.getElementById("b");
+//  runCaptureTest(b, selectionCallback);
+
+  // restore scroll
+  if (parent) parent.scroll(scrollX, scrollY);
+
+//  frames[0].getSelection().collapseToStart();
+
+  var body = frames[0].document.body;
+  var fixed = frames[0].document.getElementById("fixed");
+  function captureOnBody() { body.setCapture() }
+  body.addEventListener("mousedown", captureOnBody, true);
+  synthesizeMouse(body, 8, 8, { type: "mousedown" }, frames[0]);
+  body.removeEventListener("mousedown", captureOnBody, true);
+  synthesizeMouseExpectEvent(fixed, 2, 2, { type: "mousemove" },
+                             fixed, "mousemove", "setCapture on body retargets to root node", frames[0]);
+  synthesizeMouse(body, 8, 8, { type: "mouseup" }, frames[0]);
+
+  previousWidth = frames[1].frames[0].document.documentElement.clientWidth;
+  originalWidth = previousWidth;
+  runCaptureTest(frames[1].document.documentElement.lastChild, framesetCallback);
+
+  // ensure that clicking on an element where the frame disappears doesn't crash
+  synthesizeMouse(frames[2].document.getElementById("input"), 8, 8, { type: "mousedown" }, frames[2]);
+  synthesizeMouse(frames[2].document.getElementById("input"), 8, 8, { type: "mouseup" }, frames[2]);
+
+  var select = document.getElementById("select");
+  select.scrollIntoView();
+
+  synthesizeMouse(document.getElementById("option3"), 2, 2, { type: "mousedown" });
+  synthesizeMouse(document.getElementById("option3"), 2, 1000, { type: "mousemove" });
+  is(select.selectedIndex, 2, "scroll select");
+  synthesizeMouse(document.getElementById("select"), 2, 2, { type: "mouseup" });
+  window.scroll(0, 0);
+
+  synthesizeMouse(custom, 2, 2, { type: "mousedown" });
+
+  // check to ensure that selection dragging scrolls the right scrollable area.
+  // This should open the page in a new tab.
+
+  var topPos = window.innerHeight;
+  otherWindow = window.open("data:text/html,<html><p>One</p><p style='margin-top: " + topPos + "'>Two</p><p style='margin-top: 4000px'>This is some text</p></html>", "_blank");
+  SimpleTest.waitForFocus(selectionScrollCheck, otherWindow);
+}
+
+function runCaptureTest(element, callback)
+{
+  var expectedTarget = null;
+
+  var win = element.ownerDocument.defaultView;
+
+  function mouseMoved(event) {
+    is(event.originalTarget, expectedTarget,
+       expectedTarget.id + " target for point " + event.clientX + "," + event.clientY);
+  }
+  win.addEventListener("mousemove", mouseMoved, false);
+
+  expectedTarget = element;
+
+  var basepoint = element.localName == "frameset" ? 50 : 2;
+  synthesizeMouse(element, basepoint, basepoint, { type: "mousedown" }, win);
+
+  // in setCapture(true) mode, all events should fire on custom5. In
+  // setCapture(false) mode, events can fire at a descendant
+  if (expectedTarget == $("custom5") && !captureRetargetMode)
+    expectedTarget = $("custom5spacer");
+
+  // releaseCapture should do nothing for an element which isn't capturing
+  $("splitterbox").releaseCapture();
+
+  synthesizeMouse(element, basepoint + 2, basepoint + 2, { type: "mousemove" }, win);
+  if (callback)
+    callback(2);
+
+  if (expectedTarget == $("custom5spacer") && !captureRetargetMode)
+    expectedTarget = $("custom5inner");
+
+  if (element.id == "b") {
+    var tooltip = document.getElementById("tooltip");
+    tooltip.openPopup();
+    tooltip.hidePopup();
+  }
+
+  synthesizeMouse(element, basepoint + 25, basepoint + 25, { type: "mousemove" }, win);
+  if (callback)
+    callback(25);
+
+  expectedTarget = element.localName == "b" ? win.document.documentElement : element;
+  synthesizeMouse(element, basepoint + 4000, basepoint + 4000, { type: "mousemove" }, win);
+  if (callback)
+    callback(4000);
+  synthesizeMouse(element, basepoint - 12, basepoint - 12, { type: "mousemove" }, win);
+  if (callback)
+    callback(-12);
+
+  expectedTarget = element.localName == "frameset" ? element : win.document.documentElement;
+  synthesizeMouse(element, basepoint + 30, basepoint + 30, { type: "mouseup" }, win);
+  synthesizeMouse(win.document.documentElement, 2, 2, { type: "mousemove" }, win);
+  if (callback)
+    callback(0);
+
+  win.removeEventListener("mousemove", mouseMoved, false);
+}
+
+SimpleTest.waitForFocus(runTests);
+
+]]>
+</script>
+
+<xul:vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" align="start">
+  <tooltip id="tooltip">
+    <label value="Test"/>
+  </tooltip>
+
+  <hbox id="splitterbox" style="margin-top: 5px;" onmousedown="this.setCapture()">
+    <hbox id="leftbox" width="100" flex="1"/>
+    <splitter id="splitter" height="5"/>
+    <hbox id="rightbox" width="100" flex="1"/>
+  </hbox>
+
+  <vbox id="custom" width="10" height="10" onmousedown="this.setCapture(); cachedMouseDown = event;"/>
+  <vbox id="custom2" width="10" height="10" onmousedown="this.setCapture(); document.releaseCapture();"/>
+  <vbox id="custom3" width="10" height="10" onmousedown="this.setCapture(); this.releaseCapture();"/>
+  <vbox id="custom4" width="10" height="10" onmousedown="this.setCapture();"
+                                            onmousemove="this.releaseCapture();"/>
+  <hbox id="custom5" width="40" height="40"
+        onmousedown="this.setCapture(captureRetargetMode);">
+    <spacer id="custom5spacer" width="5"/>
+    <hbox id="custom5inner" width="35" height="35"/>
+  </hbox>
+  <vbox id="custom6" width="10" height="10"
+        onmousedown="document.createElement('hbox').setCapture();"/>
+</xul:vbox>
+
+  <iframe width="100" height="100"
+          src="data:text/html,%3Cbody style%3D'font-size%3A 40pt%3B'%3E.%3Cb id%3D'b'%3EThis%3C/b%3E is some text%3Cdiv id='fixed' style='position: fixed; left: 55px; top: 5px; width: 10px; height: 10px'%3E.%3C/div%3E%3C/body%3E"/>
+
+  <iframe width="100" height="100"
+          src="data:text/html,%3Cframeset cols='50%, 50%'%3E%3Cframe src='about:blank'%3E%3Cframe src='about:blank'%3E%3C/frameset%3E"/>
+
+  <iframe width="100" height="100"
+          src="data:text/html,%3Cinput id='input' onfocus='this.style.display = &quot;none&quot;' style='float: left;'>"/>
+
+  <select id="select" xmlns="http://www.w3.org/1999/xhtml" size="4">
+    <option id="option1">One</option>
+    <option id="option2">Two</option>
+    <option id="option3">Three</option>
+    <option id="option4">Four</option>
+    <option id="option5">Five</option>
+    <option id="option6">Six</option>
+    <option id="option7">Seven</option>
+    <option id="option8">Eight</option>
+    <option id="option9">Nine</option>
+    <option id="option10">Ten</option>
+  </select>
+
+  <img id="image" xmlns="http://www.w3.org/1999/xhtml"
+       onmousedown="this.setCapture();" onmouseup="this.releaseCapture();"
+       ondragstart="ok(false, 'should not get a drag when a setCapture is active');"
+       src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAG0lEQVR42mP8z0A%2BYKJA76jmUc2jmkc1U0EzACKcASfOgGoMAAAAAElFTkSuQmCC"/>
+
+</body>
+
+</html>
+
