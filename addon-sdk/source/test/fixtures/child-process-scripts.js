@@ -66,7 +66,7 @@ function makeExecutable (name) {
   let { CC } = require('chrome');
   let nsILocalFile = CC('@mozilla.org/file/local;1', 'nsILocalFile', 'initWithPath');
   let file = nsILocalFile(name);
-  file.permissions = parseInt('0777', 8);
+  file.permissions = 0o777;
 }
 
 function deleteFile (name) {
