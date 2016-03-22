@@ -16,6 +16,7 @@ interface nsIStackFrame : nsISupports
     // see nsIProgrammingLanguage for list of language consts
     readonly attribute uint32_t                language;
     readonly attribute AUTF8String             languageName;
+    [implicit_jscontext]
     readonly attribute AString                 filename;
     readonly attribute AString                 name;
     // Valid line numbers begin at '1'. '0' indicates unknown.
@@ -57,6 +58,7 @@ interface nsIException : nsISupports
     // etc.
 
     // null indicates "no data"
+    [implicit_jscontext]
     readonly attribute AString                 filename;
     // Valid line numbers begin at '1'. '0' indicates unknown.
     readonly attribute uint32_t                lineNumber;

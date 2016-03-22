@@ -1579,7 +1579,7 @@ AssembleSandboxMemoryReporterName(JSContext* cx, nsCString& sandboxName)
     if (frame) {
         nsString location;
         int32_t lineNumber = 0;
-        frame->GetFilename(location);
+        frame->GetFilename(cx, location);
         frame->GetLineNumber(&lineNumber);
 
         sandboxName.AppendLiteral(" (from: ");
