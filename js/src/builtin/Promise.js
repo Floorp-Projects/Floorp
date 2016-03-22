@@ -48,8 +48,7 @@ function CreateResolvingFunctions(promise) {
 
             // Step 6.b.
             if (unwrap) {
-                return callFunction(CallPromiseMethodIfWrapped, promise, selfResolutionError,
-                                    "RejectUnwrappedPromise");
+                return RejectUnwrappedPromise(promise, selfResolutionError);
             }
             return RejectPromise(promise, selfResolutionError);
         }
@@ -69,8 +68,7 @@ function CreateResolvingFunctions(promise) {
             then = resolution.then;
         } catch (e) {
             if (unwrap) {
-                return callFunction(CallPromiseMethodIfWrapped, promise, e,
-                                    "RejectUnwrappedPromise");
+                return RejectUnwrappedPromise(promise, e);
             }
             return RejectPromise(promise, e);
         }
@@ -107,8 +105,7 @@ function CreateResolvingFunctions(promise) {
 
         // Step 6.
         if (unwrap) {
-            return callFunction(CallPromiseMethodIfWrapped, promise, reason,
-                                "RejectUnwrappedPromise");
+            return RejectUnwrappedPromise(promise, reason);
         }
         return RejectPromise(promise, reason);
     }
@@ -207,10 +204,6 @@ function NewPromiseCapability(C) {
 // ES6, 25.4.1.7.
 function RejectPromise(promise, reason) {
     return ResolvePromise(promise, reason, PROMISE_REJECT_REACTIONS_SLOT, PROMISE_STATE_REJECTED);
-}
-
-function RejectUnwrappedPromise(reason) {
-    return ResolvePromise(this, reason, PROMISE_REJECT_REACTIONS_SLOT, PROMISE_STATE_REJECTED);
 }
 
 // ES6, 25.4.1.8.
