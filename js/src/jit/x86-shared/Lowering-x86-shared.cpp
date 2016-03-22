@@ -289,6 +289,27 @@ LIRGeneratorX86Shared::lowerModI(MMod* mod)
 }
 
 void
+LIRGeneratorX86Shared::visitAsmSelect(MAsmSelect* ins)
+{
+    if (ins->type() == MIRType_Int64) {
+        auto* lir = new(alloc()) LAsmSelectI64(useInt64RegisterAtStart(ins->trueExpr()),
+                                               useInt64(ins->falseExpr()),
+                                               useRegister(ins->condExpr())
+                                              );
+
+        defineInt64ReuseInput(lir, ins, LAsmSelectI64::TrueExprIndex);
+        return;
+    }
+
+    auto* lir = new(alloc()) LAsmSelect(useRegisterAtStart(ins->trueExpr()),
+                                        use(ins->falseExpr()),
+                                        useRegister(ins->condExpr())
+                                       );
+
+    defineReuseInput(lir, ins, LAsmSelect::TrueExprIndex);
+}
+
+void
 LIRGeneratorX86Shared::visitAsmJSNeg(MAsmJSNeg* ins)
 {
     switch (ins->type()) {

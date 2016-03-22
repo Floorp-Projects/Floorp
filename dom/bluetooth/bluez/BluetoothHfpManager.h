@@ -203,7 +203,7 @@ private:
   nsString mOperatorName;
 
   nsTArray<Call> mCurrentCallArray;
-  nsAutoPtr<BluetoothRilListener> mListener;
+  UniquePtr<BluetoothRilListener> mListener;
 #endif
   RefPtr<BluetoothProfileController> mController;
   RefPtr<BluetoothReplyRunnable> mScoRunnable;

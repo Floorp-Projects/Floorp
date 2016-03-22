@@ -385,6 +385,3 @@ skip script test262/ch13/13.1/13.1-13gs.js
 skip script test262/ch13/13.2/13.2-19-b-3gs.js
 skip script test262/ch14/14.1/14.1-4gs.js
 skip script test262/ch14/14.1/14.1-5gs.js
-
-# Bug 917508: fails on Android x86 emulator
-skip-if(Android&&AndroidVersion>=17) script test262/ch11/11.5/11.5.3/S11.5.3_A4_T2.js

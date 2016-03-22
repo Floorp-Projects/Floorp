@@ -951,13 +951,17 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
     masm.loadPtr(Address(IntArgReg0, WasmActivation::offsetOfResumePC()), IntArgReg1);
     masm.storePtr(IntArgReg1, Address(s0, masm.framePushed()));
 
+# ifdef USES_O32_ABI
     // MIPS ABI requires rewserving stack for registes $a0 to $a3.
     masm.subFromStackPtr(Imm32(4 * sizeof(intptr_t)));
+# endif
 
     masm.assertStackAlignment(ABIStackAlignment);
     masm.call(SymbolicAddress::HandleExecutionInterrupt);
 
+# ifdef USES_O32_ABI
     masm.addToStackPtr(Imm32(4 * sizeof(intptr_t)));
+# endif
 
     masm.branchIfFalseBool(ReturnReg, JumpTarget::Throw);
 

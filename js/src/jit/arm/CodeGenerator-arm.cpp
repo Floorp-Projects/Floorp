@@ -2101,6 +2101,35 @@ CodeGeneratorARM::visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayEl
 }
 
 void
+CodeGeneratorARM::visitAsmSelect(LAsmSelect* ins)
+{
+    MIRType mirType = ins->mir()->type();
+
+    Register cond = ToRegister(ins->condExpr());
+    masm.ma_cmp(cond, Imm32(0));
+
+    if (mirType == MIRType_Int32) {
+        Register falseExpr = ToRegister(ins->falseExpr());
+        Register out = ToRegister(ins->output());
+        MOZ_ASSERT(ToRegister(ins->trueExpr()) == out, "true expr input is reused for output");
+        masm.ma_mov(falseExpr, out, LeaveCC, Assembler::Zero);
+        return;
+    }
+
+    FloatRegister out = ToFloatRegister(ins->output());
+    MOZ_ASSERT(ToFloatRegister(ins->trueExpr()) == out, "true expr input is reused for output");
+
+    FloatRegister falseExpr = ToFloatRegister(ins->falseExpr());
+
+    if (mirType == MIRType_Double)
+        masm.moveDouble(falseExpr, out, Assembler::Zero);
+    else if (mirType == MIRType_Float32)
+        masm.moveFloat32(falseExpr, out, Assembler::Zero);
+    else
+        MOZ_CRASH("unhandled type in visitAsmSelect!");
+}
+
+void
 CodeGeneratorARM::visitAsmJSCall(LAsmJSCall* ins)
 {
     MAsmJSCall* mir = ins->mir();

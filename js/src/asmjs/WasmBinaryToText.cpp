@@ -432,27 +432,30 @@ RenderUnaryOperator(WasmRenderContext& c, Expr expr, ValType argType)
     if (!c.buffer.append("("))
       return false;
 
+    bool success = false;
     switch (expr) {
-      case Expr::I32Clz:     c.buffer.append("i32.clz"); break;
-      case Expr::I32Ctz:     c.buffer.append("i32.ctz"); break;
-      case Expr::I32Popcnt:  c.buffer.append("i32.popcnt"); break;
-      case Expr::I64Clz:     c.buffer.append("i64.clz"); break;
-      case Expr::I64Ctz:     c.buffer.append("i64.ctz"); break;
-      case Expr::I64Popcnt:  c.buffer.append("i64.popcnt"); break;
-      case Expr::F32Abs:     c.buffer.append("f32.abs"); break;
-      case Expr::F32Neg:     c.buffer.append("f32.neg"); break;
-      case Expr::F32Ceil:    c.buffer.append("f32.ceil"); break;
-      case Expr::F32Floor:   c.buffer.append("f32.floor"); break;
-      case Expr::F32Sqrt:    c.buffer.append("f32.sqrt"); break;
-      case Expr::F32Trunc:   c.buffer.append("f32.trunc"); break;
-      case Expr::F32Nearest: c.buffer.append("f32.nearest"); break;
-      case Expr::F64Abs:     c.buffer.append("f64.abs"); break;
-      case Expr::F64Neg:     c.buffer.append("f64.neg"); break;
-      case Expr::F64Ceil:    c.buffer.append("f64.ceil"); break;
-      case Expr::F64Floor:   c.buffer.append("f64.floor"); break;
-      case Expr::F64Sqrt:    c.buffer.append("f64.sqrt"); break;
+      case Expr::I32Clz:     success = c.buffer.append("i32.clz"); break;
+      case Expr::I32Ctz:     success = c.buffer.append("i32.ctz"); break;
+      case Expr::I32Popcnt:  success = c.buffer.append("i32.popcnt"); break;
+      case Expr::I64Clz:     success = c.buffer.append("i64.clz"); break;
+      case Expr::I64Ctz:     success = c.buffer.append("i64.ctz"); break;
+      case Expr::I64Popcnt:  success = c.buffer.append("i64.popcnt"); break;
+      case Expr::F32Abs:     success = c.buffer.append("f32.abs"); break;
+      case Expr::F32Neg:     success = c.buffer.append("f32.neg"); break;
+      case Expr::F32Ceil:    success = c.buffer.append("f32.ceil"); break;
+      case Expr::F32Floor:   success = c.buffer.append("f32.floor"); break;
+      case Expr::F32Sqrt:    success = c.buffer.append("f32.sqrt"); break;
+      case Expr::F32Trunc:   success = c.buffer.append("f32.trunc"); break;
+      case Expr::F32Nearest: success = c.buffer.append("f32.nearest"); break;
+      case Expr::F64Abs:     success = c.buffer.append("f64.abs"); break;
+      case Expr::F64Neg:     success = c.buffer.append("f64.neg"); break;
+      case Expr::F64Ceil:    success = c.buffer.append("f64.ceil"); break;
+      case Expr::F64Floor:   success = c.buffer.append("f64.floor"); break;
+      case Expr::F64Sqrt:    success = c.buffer.append("f64.sqrt"); break;
       default: return false;
     }
+    if (!success)
+        return false;
 
     if (!c.buffer.append(" "))
         return false;
@@ -471,48 +474,51 @@ RenderBinaryOperator(WasmRenderContext& c, Expr expr, ValType argType)
     if (!c.buffer.append("("))
       return false;
 
+    bool success = false;
     switch (expr) {
-      case Expr::I32Add:      c.buffer.append("i32.add"); break;
-      case Expr::I32Sub:      c.buffer.append("i32.sub"); break;
-      case Expr::I32Mul:      c.buffer.append("i32.mul"); break;
-      case Expr::I32DivS:     c.buffer.append("i32.div_s"); break;
-      case Expr::I32DivU:     c.buffer.append("i32.div_u"); break;
-      case Expr::I32RemS:     c.buffer.append("i32.rem_s"); break;
-      case Expr::I32RemU:     c.buffer.append("i32.rem_u"); break;
-      case Expr::I32And:      c.buffer.append("i32.and"); break;
-      case Expr::I32Or:       c.buffer.append("i32.or"); break;
-      case Expr::I32Xor:      c.buffer.append("i32.xor"); break;
-      case Expr::I32Shl:      c.buffer.append("i32.shl"); break;
-      case Expr::I32ShrS:     c.buffer.append("i32.shr_s"); break;
-      case Expr::I32ShrU:     c.buffer.append("i32.shr_u"); break;
-      case Expr::I64Add:      c.buffer.append("i64.add"); break;
-      case Expr::I64Sub:      c.buffer.append("i64.sub"); break;
-      case Expr::I64Mul:      c.buffer.append("i64.mul"); break;
-      case Expr::I64DivS:     c.buffer.append("i64.div_s"); break;
-      case Expr::I64DivU:     c.buffer.append("i64.div_u"); break;
-      case Expr::I64RemS:     c.buffer.append("i64.rem_s"); break;
-      case Expr::I64RemU:     c.buffer.append("i64.rem_u"); break;
-      case Expr::I64And:      c.buffer.append("i64.and"); break;
-      case Expr::I64Or:       c.buffer.append("i64.or"); break;
-      case Expr::I64Xor:      c.buffer.append("i64.xor"); break;
-      case Expr::I64Shl:      c.buffer.append("i64.shl"); break;
-      case Expr::I64ShrS:     c.buffer.append("i64.shr_s"); break;
-      case Expr::I64ShrU:     c.buffer.append("i64.shr_u"); break;
-      case Expr::F32Add:      c.buffer.append("f32.add"); break;
-      case Expr::F32Sub:      c.buffer.append("f32.sub"); break;
-      case Expr::F32Mul:      c.buffer.append("f32.mul"); break;
-      case Expr::F32Div:      c.buffer.append("f32.div"); break;
-      case Expr::F32Min:      c.buffer.append("f32.min"); break;
-      case Expr::F32Max:      c.buffer.append("f32.max"); break;
-      case Expr::F32CopySign: c.buffer.append("f32.copysign"); break;
-      case Expr::F64Add:      c.buffer.append("f64.add"); break;
-      case Expr::F64Sub:      c.buffer.append("f64.sub"); break;
-      case Expr::F64Mul:      c.buffer.append("f64.mul"); break;
-      case Expr::F64Div:      c.buffer.append("f64.div"); break;
-      case Expr::F64Min:      c.buffer.append("f64.min"); break;
-      case Expr::F64Max:      c.buffer.append("f64.mix"); break;
+      case Expr::I32Add:      success = c.buffer.append("i32.add"); break;
+      case Expr::I32Sub:      success = c.buffer.append("i32.sub"); break;
+      case Expr::I32Mul:      success = c.buffer.append("i32.mul"); break;
+      case Expr::I32DivS:     success = c.buffer.append("i32.div_s"); break;
+      case Expr::I32DivU:     success = c.buffer.append("i32.div_u"); break;
+      case Expr::I32RemS:     success = c.buffer.append("i32.rem_s"); break;
+      case Expr::I32RemU:     success = c.buffer.append("i32.rem_u"); break;
+      case Expr::I32And:      success = c.buffer.append("i32.and"); break;
+      case Expr::I32Or:       success = c.buffer.append("i32.or"); break;
+      case Expr::I32Xor:      success = c.buffer.append("i32.xor"); break;
+      case Expr::I32Shl:      success = c.buffer.append("i32.shl"); break;
+      case Expr::I32ShrS:     success = c.buffer.append("i32.shr_s"); break;
+      case Expr::I32ShrU:     success = c.buffer.append("i32.shr_u"); break;
+      case Expr::I64Add:      success = c.buffer.append("i64.add"); break;
+      case Expr::I64Sub:      success = c.buffer.append("i64.sub"); break;
+      case Expr::I64Mul:      success = c.buffer.append("i64.mul"); break;
+      case Expr::I64DivS:     success = c.buffer.append("i64.div_s"); break;
+      case Expr::I64DivU:     success = c.buffer.append("i64.div_u"); break;
+      case Expr::I64RemS:     success = c.buffer.append("i64.rem_s"); break;
+      case Expr::I64RemU:     success = c.buffer.append("i64.rem_u"); break;
+      case Expr::I64And:      success = c.buffer.append("i64.and"); break;
+      case Expr::I64Or:       success = c.buffer.append("i64.or"); break;
+      case Expr::I64Xor:      success = c.buffer.append("i64.xor"); break;
+      case Expr::I64Shl:      success = c.buffer.append("i64.shl"); break;
+      case Expr::I64ShrS:     success = c.buffer.append("i64.shr_s"); break;
+      case Expr::I64ShrU:     success = c.buffer.append("i64.shr_u"); break;
+      case Expr::F32Add:      success = c.buffer.append("f32.add"); break;
+      case Expr::F32Sub:      success = c.buffer.append("f32.sub"); break;
+      case Expr::F32Mul:      success = c.buffer.append("f32.mul"); break;
+      case Expr::F32Div:      success = c.buffer.append("f32.div"); break;
+      case Expr::F32Min:      success = c.buffer.append("f32.min"); break;
+      case Expr::F32Max:      success = c.buffer.append("f32.max"); break;
+      case Expr::F32CopySign: success = c.buffer.append("f32.copysign"); break;
+      case Expr::F64Add:      success = c.buffer.append("f64.add"); break;
+      case Expr::F64Sub:      success = c.buffer.append("f64.sub"); break;
+      case Expr::F64Mul:      success = c.buffer.append("f64.mul"); break;
+      case Expr::F64Div:      success = c.buffer.append("f64.div"); break;
+      case Expr::F64Min:      success = c.buffer.append("f64.min"); break;
+      case Expr::F64Max:      success = c.buffer.append("f64.mix"); break;
       default: return false;
     }
+    if (!success)
+        return false;
     if (!c.buffer.append(" "))
         return false;
     if (!RenderExpr(c))
@@ -532,41 +538,44 @@ RenderComparisonOperator(WasmRenderContext& c, Expr expr, ValType argType)
     if (!c.buffer.append("("))
       return false;
 
+    bool success = false;
     switch (expr) {
-      case Expr::I32Eq:  c.buffer.append("i32.eq"); break;
-      case Expr::I32Ne:  c.buffer.append("i32.ne"); break;
-      case Expr::I32LtS: c.buffer.append("i32.lt_s"); break;
-      case Expr::I32LtU: c.buffer.append("i32.lt_u"); break;
-      case Expr::I32LeS: c.buffer.append("i32.le_s"); break;
-      case Expr::I32LeU: c.buffer.append("i32.le_u"); break;
-      case Expr::I32GtS: c.buffer.append("i32.gt_s"); break;
-      case Expr::I32GtU: c.buffer.append("i32.gt_u"); break;
-      case Expr::I32GeS: c.buffer.append("i32.ge_s"); break;
-      case Expr::I32GeU: c.buffer.append("i32.ge_u"); break;
-      case Expr::I64Eq:  c.buffer.append("i64.eq"); break;
-      case Expr::I64Ne:  c.buffer.append("i64.ne"); break;
-      case Expr::I64LtS: c.buffer.append("i64.lt_s"); break;
-      case Expr::I64LtU: c.buffer.append("i64.lt_u"); break;
-      case Expr::I64LeS: c.buffer.append("i64.le_s"); break;
-      case Expr::I64LeU: c.buffer.append("i64.le_u"); break;
-      case Expr::I64GtS: c.buffer.append("i64.gt_s"); break;
-      case Expr::I64GtU: c.buffer.append("i64.gt_u"); break;
-      case Expr::I64GeS: c.buffer.append("i64.ge_s"); break;
-      case Expr::I64GeU: c.buffer.append("i64.ge_u"); break;
-      case Expr::F32Eq:  c.buffer.append("f32.eq"); break;
-      case Expr::F32Ne:  c.buffer.append("f32.ne"); break;
-      case Expr::F32Lt:  c.buffer.append("f32.lt"); break;
-      case Expr::F32Le:  c.buffer.append("f32.le"); break;
-      case Expr::F32Gt:  c.buffer.append("f32.gt"); break;
-      case Expr::F32Ge:  c.buffer.append("f32.ge"); break;
-      case Expr::F64Eq:  c.buffer.append("f64.eq"); break;
-      case Expr::F64Ne:  c.buffer.append("f64.ne"); break;
-      case Expr::F64Lt:  c.buffer.append("f64.lt"); break;
-      case Expr::F64Le:  c.buffer.append("f64.le"); break;
-      case Expr::F64Gt:  c.buffer.append("f64.gt"); break;
-      case Expr::F64Ge:  c.buffer.append("f64.ge"); break;
+      case Expr::I32Eq:  success = c.buffer.append("i32.eq"); break;
+      case Expr::I32Ne:  success = c.buffer.append("i32.ne"); break;
+      case Expr::I32LtS: success = c.buffer.append("i32.lt_s"); break;
+      case Expr::I32LtU: success = c.buffer.append("i32.lt_u"); break;
+      case Expr::I32LeS: success = c.buffer.append("i32.le_s"); break;
+      case Expr::I32LeU: success = c.buffer.append("i32.le_u"); break;
+      case Expr::I32GtS: success = c.buffer.append("i32.gt_s"); break;
+      case Expr::I32GtU: success = c.buffer.append("i32.gt_u"); break;
+      case Expr::I32GeS: success = c.buffer.append("i32.ge_s"); break;
+      case Expr::I32GeU: success = c.buffer.append("i32.ge_u"); break;
+      case Expr::I64Eq:  success = c.buffer.append("i64.eq"); break;
+      case Expr::I64Ne:  success = c.buffer.append("i64.ne"); break;
+      case Expr::I64LtS: success = c.buffer.append("i64.lt_s"); break;
+      case Expr::I64LtU: success = c.buffer.append("i64.lt_u"); break;
+      case Expr::I64LeS: success = c.buffer.append("i64.le_s"); break;
+      case Expr::I64LeU: success = c.buffer.append("i64.le_u"); break;
+      case Expr::I64GtS: success = c.buffer.append("i64.gt_s"); break;
+      case Expr::I64GtU: success = c.buffer.append("i64.gt_u"); break;
+      case Expr::I64GeS: success = c.buffer.append("i64.ge_s"); break;
+      case Expr::I64GeU: success = c.buffer.append("i64.ge_u"); break;
+      case Expr::F32Eq:  success = c.buffer.append("f32.eq"); break;
+      case Expr::F32Ne:  success = c.buffer.append("f32.ne"); break;
+      case Expr::F32Lt:  success = c.buffer.append("f32.lt"); break;
+      case Expr::F32Le:  success = c.buffer.append("f32.le"); break;
+      case Expr::F32Gt:  success = c.buffer.append("f32.gt"); break;
+      case Expr::F32Ge:  success = c.buffer.append("f32.ge"); break;
+      case Expr::F64Eq:  success = c.buffer.append("f64.eq"); break;
+      case Expr::F64Ne:  success = c.buffer.append("f64.ne"); break;
+      case Expr::F64Lt:  success = c.buffer.append("f64.lt"); break;
+      case Expr::F64Le:  success = c.buffer.append("f64.le"); break;
+      case Expr::F64Gt:  success = c.buffer.append("f64.gt"); break;
+      case Expr::F64Ge:  success = c.buffer.append("f64.ge"); break;
       default: return false;
     }
+    if (!success)
+        return false;
 
     if (!c.buffer.append(" "))
         return false;
@@ -587,34 +596,37 @@ RenderConversionOperator(WasmRenderContext& c, Expr expr, ValType to, ValType ar
     if (!c.buffer.append("("))
       return false;
 
+    bool success = false;
     switch (expr) {
-      case Expr::I32WrapI64:        c.buffer.append("i32.warp/i64"); break;
-      case Expr::I32TruncSF32:      c.buffer.append("i32.trunc_s/f32"); break;
-      case Expr::I32TruncUF32:      c.buffer.append("i32.trunc_u/f32"); break;
-      case Expr::I32ReinterpretF32: c.buffer.append("i32.reinterpret/f32"); break;
-      case Expr::I32TruncSF64:      c.buffer.append("i32.trunc_s/f64"); break;
-      case Expr::I32TruncUF64:      c.buffer.append("i32.trunc_u/f64"); break;
-      case Expr::I64ExtendSI32:     c.buffer.append("i64.extend_s/i32"); break;
-      case Expr::I64ExtendUI32:     c.buffer.append("i64.extend_u/i32"); break;
-      case Expr::I64TruncSF32:      c.buffer.append("i64.trunc_s/f32"); break;
-      case Expr::I64TruncUF32:      c.buffer.append("i64.trunc_u/f32"); break;
-      case Expr::I64TruncSF64:      c.buffer.append("i64.trunc_s/f64"); break;
-      case Expr::I64TruncUF64:      c.buffer.append("i64.trunc_u/f64"); break;
-      case Expr::I64ReinterpretF64: c.buffer.append("i64.reinterpret/f64"); break;
-      case Expr::F32ConvertSI32:    c.buffer.append("f32.convert_s/i32"); break;
-      case Expr::F32ConvertUI32:    c.buffer.append("f32.convert_u/i32"); break;
-      case Expr::F32ReinterpretI32: c.buffer.append("f32.reinterpret/i32"); break;
-      case Expr::F32ConvertSI64:    c.buffer.append("f32.convert_s/i64"); break;
-      case Expr::F32ConvertUI64:    c.buffer.append("f32.convert_u/i64"); break;
-      case Expr::F32DemoteF64:      c.buffer.append("f32.demote/f64"); break;
-      case Expr::F64ConvertSI32:    c.buffer.append("f64.convert_s/i32"); break;
-      case Expr::F64ConvertUI32:    c.buffer.append("f64.convert_u/i32"); break;
-      case Expr::F64ConvertSI64:    c.buffer.append("f64.convert_s/i64"); break;
-      case Expr::F64ConvertUI64:    c.buffer.append("f64.convert_u/i64"); break;
-      case Expr::F64ReinterpretI64: c.buffer.append("f64.reinterpret/i64"); break;
-      case Expr::F64PromoteF32:     c.buffer.append("f64.promote/f32"); break;
+      case Expr::I32WrapI64:        success = c.buffer.append("i32.warp/i64"); break;
+      case Expr::I32TruncSF32:      success = c.buffer.append("i32.trunc_s/f32"); break;
+      case Expr::I32TruncUF32:      success = c.buffer.append("i32.trunc_u/f32"); break;
+      case Expr::I32ReinterpretF32: success = c.buffer.append("i32.reinterpret/f32"); break;
+      case Expr::I32TruncSF64:      success = c.buffer.append("i32.trunc_s/f64"); break;
+      case Expr::I32TruncUF64:      success = c.buffer.append("i32.trunc_u/f64"); break;
+      case Expr::I64ExtendSI32:     success = c.buffer.append("i64.extend_s/i32"); break;
+      case Expr::I64ExtendUI32:     success = c.buffer.append("i64.extend_u/i32"); break;
+      case Expr::I64TruncSF32:      success = c.buffer.append("i64.trunc_s/f32"); break;
+      case Expr::I64TruncUF32:      success = c.buffer.append("i64.trunc_u/f32"); break;
+      case Expr::I64TruncSF64:      success = c.buffer.append("i64.trunc_s/f64"); break;
+      case Expr::I64TruncUF64:      success = c.buffer.append("i64.trunc_u/f64"); break;
+      case Expr::I64ReinterpretF64: success = c.buffer.append("i64.reinterpret/f64"); break;
+      case Expr::F32ConvertSI32:    success = c.buffer.append("f32.convert_s/i32"); break;
+      case Expr::F32ConvertUI32:    success = c.buffer.append("f32.convert_u/i32"); break;
+      case Expr::F32ReinterpretI32: success = c.buffer.append("f32.reinterpret/i32"); break;
+      case Expr::F32ConvertSI64:    success = c.buffer.append("f32.convert_s/i64"); break;
+      case Expr::F32ConvertUI64:    success = c.buffer.append("f32.convert_u/i64"); break;
+      case Expr::F32DemoteF64:      success = c.buffer.append("f32.demote/f64"); break;
+      case Expr::F64ConvertSI32:    success = c.buffer.append("f64.convert_s/i32"); break;
+      case Expr::F64ConvertUI32:    success = c.buffer.append("f64.convert_u/i32"); break;
+      case Expr::F64ConvertSI64:    success = c.buffer.append("f64.convert_s/i64"); break;
+      case Expr::F64ConvertUI64:    success = c.buffer.append("f64.convert_u/i64"); break;
+      case Expr::F64ReinterpretI64: success = c.buffer.append("f64.reinterpret/i64"); break;
+      case Expr::F64PromoteF32:     success = c.buffer.append("f64.promote/f32"); break;
       default: return false;
     }
+    if (!success)
+        return false;
 
     if (!c.buffer.append(" "))
         return false;
@@ -1142,7 +1154,8 @@ RenderSignature(WasmRenderContext& c, const DeclaredSig& sig, bool varAssignment
       if (!c.buffer.append(" (param"))
           return false;
       for (uint32_t i = 0; i < paramsNum; i++) {
-          c.buffer.append(" ");
+          if (!c.buffer.append(" "))
+              return false;
           ValType arg = sig.arg(i);
           if (!RenderValType(c, arg))
               return false;

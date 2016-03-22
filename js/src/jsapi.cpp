@@ -6244,6 +6244,12 @@ JS_DecodeInterpretedFunction(JSContext* cx, const void* data, uint32_t length)
 }
 
 JS_PUBLIC_API(void)
+JS::SetBuildIdOp(JSRuntime* rt, JS::BuildIdOp buildIdOp)
+{
+    rt->buildIdOp = buildIdOp;
+}
+
+JS_PUBLIC_API(void)
 JS::SetAsmJSCacheOps(JSRuntime* rt, const JS::AsmJSCacheOps* ops)
 {
     rt->asmJSCacheOps = *ops;
