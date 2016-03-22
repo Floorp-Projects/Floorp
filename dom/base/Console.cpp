@@ -1042,13 +1042,13 @@ StackFrameToStackEntry(JSContext* aCx, nsIStackFrame* aStackFrame,
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t lineNumber;
-  rv = aStackFrame->GetLineNumber(&lineNumber);
+  rv = aStackFrame->GetLineNumber(aCx, &lineNumber);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aStackEntry.mLineNumber = lineNumber;
 
   int32_t columnNumber;
-  rv = aStackFrame->GetColumnNumber(&columnNumber);
+  rv = aStackFrame->GetColumnNumber(aCx, &columnNumber);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aStackEntry.mColumnNumber = columnNumber;
