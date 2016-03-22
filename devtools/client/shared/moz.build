@@ -37,6 +37,7 @@ DevToolsModules(
     'options-view.js',
     'output-parser.js',
     'poller.js',
+    'prefs.js',
     'source-utils.js',
     'SplitView.jsm',
     'telemetry.js',
