@@ -5,6 +5,7 @@
 
 #include "mozilla/KeyframeUtils.h"
 
+#include "mozilla/AnimationUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Move.h"
 #include "mozilla/TimingParams.h"
@@ -12,6 +13,8 @@
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "jsapi.h" // For ForOfIterator etc.
+#include "nsClassHashtable.h"
+#include "nsCSSParser.h"
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
 #include "nsTArray.h"
@@ -195,6 +198,20 @@ struct KeyframeValueEntry : KeyframeValue
   };
 };
 
+class ComputedOffsetComparator
+{
+public:
+  static bool Equals(const Keyframe& aLhs, const Keyframe& aRhs)
+  {
+    return aLhs.mComputedOffset == aRhs.mComputedOffset;
+  }
+
+  static bool LessThan(const Keyframe& aLhs, const Keyframe& aRhs)
+  {
+    return aLhs.mComputedOffset < aRhs.mComputedOffset;
+  }
+};
+
 
 // ------------------------------------------------------------------
 //
@@ -211,10 +228,21 @@ BuildAnimationPropertyListFromKeyframeSequence(
     nsTArray<AnimationProperty>& aResult,
     ErrorResult& aRv);
 
+static void
+GetKeyframeListFromKeyframeSequence(JSContext* aCx,
+                                    JS::ForOfIterator& aIterator,
+                                    nsTArray<Keyframe>& aResult,
+                                    ErrorResult& aRv);
+
 static bool
 ConvertKeyframeSequence(JSContext* aCx,
                         JS::ForOfIterator& aIterator,
                         nsTArray<OffsetIndexedKeyframe>& aResult);
+
+static bool
+ConvertKeyframeSequence(JSContext* aCx,
+                        JS::ForOfIterator& aIterator,
+                        nsTArray<Keyframe>& aResult);
 
 static bool
 GetPropertyValuesPairs(JSContext* aCx,
@@ -233,8 +261,15 @@ AppendValueAsString(JSContext* aCx,
                     nsTArray<nsString>& aValues,
                     JS::Handle<JS::Value> aValue);
 
+static PropertyValuePair
+MakePropertyValuePair(nsCSSProperty aProperty, const nsAString& aStringValue,
+                      nsCSSParser& aParser, nsIDocument* aDocument);
+
 static bool
 HasValidOffsets(const nsTArray<OffsetIndexedKeyframe>& aKeyframes);
+
+static bool
+HasValidOffsets(const nsTArray<Keyframe>& aKeyframes);
 
 static void
 ApplyDistributeSpacing(nsTArray<OffsetIndexedKeyframe>& aKeyframes);
@@ -258,6 +293,16 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
     JS::Handle<JS::Value> aValue,
     InfallibleTArray<AnimationProperty>& aResult,
     ErrorResult& aRv);
+
+static void
+GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           nsTArray<Keyframe>& aResult,
+                                           ErrorResult& aRv);
+
+static bool
+RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
+                          nsIDocument* aDocument);
 
 
 // ------------------------------------------------------------------
@@ -313,6 +358,65 @@ KeyframeUtils::BuildAnimationPropertyList(
                                                            aRv);
   }
 }
+
+/* static */ nsTArray<Keyframe>
+KeyframeUtils::GetKeyframesFromObject(JSContext* aCx,
+                                      JS::Handle<JSObject*> aFrames,
+                                      ErrorResult& aRv)
+{
+  MOZ_ASSERT(!aRv.Failed());
+
+  nsTArray<Keyframe> keyframes;
+
+  if (!aFrames) {
+    // The argument was explicitly null meaning no keyframes.
+    return keyframes;
+  }
+
+  // At this point we know we have an object. We try to convert it to a
+  // sequence of keyframes first, and if that fails due to not being iterable,
+  // we try to convert it to a property-indexed keyframe.
+  JS::Rooted<JS::Value> objectValue(aCx, JS::ObjectValue(*aFrames));
+  JS::ForOfIterator iter(aCx);
+  if (!iter.init(objectValue, JS::ForOfIterator::AllowNonIterable)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return keyframes;
+  }
+
+  if (iter.valueIsIterable()) {
+    GetKeyframeListFromKeyframeSequence(aCx, iter, keyframes, aRv);
+  } else {
+    GetKeyframeListFromPropertyIndexedKeyframe(aCx, objectValue, keyframes,
+                                               aRv);
+  }
+
+  if (aRv.Failed()) {
+    MOZ_ASSERT(keyframes.IsEmpty(),
+               "Should not set any keyframes when there is an error");
+    return keyframes;
+  }
+
+  // We currently don't support additive animation. However, Web Animations
+  // says that if you don't have a keyframe at offset 0 or 1, then you should
+  // synthesize one using an additive zero value when you go to compose style.
+  // Until we implement additive animations we just throw if we encounter any
+  // set of keyframes that would put us in that situation.
+
+  nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aCx);
+  if (!doc) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    keyframes.Clear();
+    return keyframes;
+  }
+
+  if (RequiresAdditiveAnimation(keyframes, doc)) {
+    aRv.Throw(NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR);
+    keyframes.Clear();
+  }
+
+  return keyframes;
+}
+
 
 // ------------------------------------------------------------------
 //
@@ -380,6 +484,48 @@ BuildAnimationPropertyListFromKeyframeSequence(
 }
 
 /**
+ * Converts a JS object to an IDL sequence<Keyframe>.
+ *
+ * @param aCx The JSContext corresponding to |aIterator|.
+ * @param aIterator An already-initialized ForOfIterator for the JS
+ *   object to iterate over as a sequence.
+ * @param aResult The array into which the resulting Keyframe objects will be
+ *   appended.
+ * @param aRv Out param to store any errors thrown by this function.
+ */
+static void
+GetKeyframeListFromKeyframeSequence(JSContext* aCx,
+                                    JS::ForOfIterator& aIterator,
+                                    nsTArray<Keyframe>& aResult,
+                                    ErrorResult& aRv)
+{
+  MOZ_ASSERT(!aRv.Failed());
+  MOZ_ASSERT(aResult.IsEmpty());
+
+  // Convert the object in aIterator to a sequence of keyframes producing
+  // an array of Keyframe objects.
+  if (!ConvertKeyframeSequence(aCx, aIterator, aResult)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    aResult.Clear();
+    return;
+  }
+
+  // If the sequence<> had zero elements, we won't generate any
+  // keyframes.
+  if (aResult.IsEmpty()) {
+    return;
+  }
+
+  // Check that the keyframes are loosely sorted and with values all
+  // between 0% and 100%.
+  if (!HasValidOffsets(aResult)) {
+    aRv.ThrowTypeError<dom::MSG_INVALID_KEYFRAME_OFFSETS>();
+    aResult.Clear();
+    return;
+  }
+}
+
+/**
  * Converts a JS object wrapped by the given JS::ForIfIterator to an
  * IDL sequence<Keyframe> and stores the resulting OffsetIndexedKeyframe
  * objects in aResult.
@@ -422,6 +568,84 @@ ConvertKeyframeSequence(JSContext* aCx,
       }
     }
   }
+  return true;
+}
+
+/**
+ * Converts a JS object wrapped by the given JS::ForIfIterator to an
+ * IDL sequence<Keyframe> and stores the resulting Keyframe objects in
+ * aResult.
+ */
+static bool
+ConvertKeyframeSequence(JSContext* aCx,
+                        JS::ForOfIterator& aIterator,
+                        nsTArray<Keyframe>& aResult)
+{
+  nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aCx);
+  if (!doc) {
+    return false;
+  }
+
+  JS::Rooted<JS::Value> value(aCx);
+  nsCSSParser parser(doc->CSSLoader());
+
+  for (;;) {
+    bool done;
+    if (!aIterator.next(&value, &done)) {
+      return false;
+    }
+    if (done) {
+      break;
+    }
+    // Each value found when iterating the object must be an object
+    // or null/undefined (which gets treated as a default {} dictionary
+    // value).
+    if (!value.isObject() && !value.isNullOrUndefined()) {
+      dom::ThrowErrorMessage(aCx, dom::MSG_NOT_OBJECT,
+                             "Element of sequence<Keyframe> argument");
+      return false;
+    }
+
+    // Convert the JS value into a BaseKeyframe dictionary value.
+    dom::binding_detail::FastBaseKeyframe keyframeDict;
+    if (!keyframeDict.Init(aCx, value,
+                           "Element of sequence<Keyframe> argument")) {
+      return false;
+    }
+
+    Keyframe* keyframe = aResult.AppendElement(fallible);
+    if (!keyframe) {
+      return false;
+    }
+    if (!keyframeDict.mOffset.IsNull()) {
+      keyframe->mOffset.emplace(keyframeDict.mOffset.Value());
+    }
+
+    ErrorResult rv;
+    keyframe->mTimingFunction =
+      TimingParams::ParseEasing(keyframeDict.mEasing, doc, rv);
+    if (rv.MaybeSetPendingException(aCx)) {
+      return false;
+    }
+
+    // Look for additional property-values pairs on the object.
+    nsTArray<PropertyValuesPair> propertyValuePairs;
+    if (value.isObject()) {
+      JS::Rooted<JSObject*> object(aCx, &value.toObject());
+      if (!GetPropertyValuesPairs(aCx, object,
+                                  ListAllowance::eDisallow,
+                                  propertyValuePairs)) {
+        return false;
+      }
+    }
+
+    for (PropertyValuesPair& pair : propertyValuePairs) {
+      MOZ_ASSERT(pair.mValues.Length() == 1);
+      keyframe->mPropertyValues.AppendElement(
+        MakePropertyValuePair(pair.mProperty, pair.mValues[0], parser, doc));
+    }
+  }
+
   return true;
 }
 
@@ -556,6 +780,49 @@ AppendValueAsString(JSContext* aCx,
 }
 
 /**
+ * Construct a PropertyValuePair parsing the given string into a suitable
+ * nsCSSValue object.
+ *
+ * @param aProperty The CSS property.
+ * @param aStringValue The property value to parse.
+ * @param aParser The CSS parser object to use.
+ * @param aDocument The document to use when parsing.
+ * @return The constructed PropertyValuePair object.
+ */
+static PropertyValuePair
+MakePropertyValuePair(nsCSSProperty aProperty, const nsAString& aStringValue,
+                      nsCSSParser& aParser, nsIDocument* aDocument)
+{
+  MOZ_ASSERT(aDocument);
+
+  nsCSSValue value;
+  if (!nsCSSProps::IsShorthand(aProperty)) {
+    aParser.ParseLonghandProperty(aProperty,
+                                  aStringValue,
+                                  aDocument->GetDocumentURI(),
+                                  aDocument->GetDocumentURI(),
+                                  aDocument->NodePrincipal(),
+                                  value);
+  }
+
+  if (value.GetUnit() == eCSSUnit_Null) {
+    // Either we have a shorthand, or we failed to parse a longhand.
+    // In either case, store the string value as a token stream.
+    nsCSSValueTokenStream* tokenStream = new nsCSSValueTokenStream;
+    tokenStream->mTokenStream = aStringValue;
+    // By leaving mShorthandPropertyID as unknown, we ensure that when
+    // we call nsCSSValue::AppendToString we get back the string stored
+    // in mTokenStream.
+    MOZ_ASSERT(tokenStream->mShorthandPropertyID == eCSSProperty_UNKNOWN,
+               "The shorthand property of a token stream should be initialized"
+               " to unknown");
+    value.SetTokenStreamValue(tokenStream);
+  }
+
+  return { aProperty, value };
+}
+
+/**
  * Checks that the given keyframes are loosely ordered (each keyframe's
  * offset that is not null is greater than or equal to the previous
  * non-null offset) and that all values are within the range [0.0, 1.0].
@@ -570,6 +837,30 @@ HasValidOffsets(const nsTArray<OffsetIndexedKeyframe>& aKeyframes)
   for (const OffsetIndexedKeyframe& keyframe : aKeyframes) {
     if (!keyframe.mKeyframeDict.mOffset.IsNull()) {
       double thisOffset = keyframe.mKeyframeDict.mOffset.Value();
+      if (thisOffset < offset || thisOffset > 1.0f) {
+        return false;
+      }
+      offset = thisOffset;
+    }
+  }
+  return true;
+}
+
+/**
+ * Checks that the given keyframes are loosely ordered (each keyframe's
+ * offset that is not null is greater than or equal to the previous
+ * non-null offset) and that all values are within the range [0.0, 1.0].
+ *
+ * @return true if the keyframes' offsets are correctly ordered and
+ *   within range; false otherwise.
+ */
+static bool
+HasValidOffsets(const nsTArray<Keyframe>& aKeyframes)
+{
+  double offset = 0.0;
+  for (const Keyframe& keyframe : aKeyframes) {
+    if (keyframe.mOffset) {
+      double thisOffset = keyframe.mOffset.value();
       if (thisOffset < offset || thisOffset > 1.0f) {
         return false;
       }
@@ -992,6 +1283,177 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
       fromKey = toKey;
     }
   }
+}
+
+/**
+ * Converts a JS object representing a property-indexed keyframe into
+ * an array of Keyframe objects.
+ *
+ * @param aCx The JSContext for |aValue|.
+ * @param aValue The JS object.
+ * @param aResult The array into which the resulting AnimationProperty
+ *   objects will be appended.
+ * @param aRv Out param to store any errors thrown by this function.
+ */
+static void
+GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           nsTArray<Keyframe>& aResult,
+                                           ErrorResult& aRv)
+{
+  MOZ_ASSERT(aValue.isObject());
+  MOZ_ASSERT(aResult.IsEmpty());
+  MOZ_ASSERT(!aRv.Failed());
+
+  // Convert the object to a property-indexed keyframe dictionary to
+  // get its explicit dictionary members.
+  dom::binding_detail::FastBasePropertyIndexedKeyframe keyframeDict;
+  if (!keyframeDict.Init(aCx, aValue, "BasePropertyIndexedKeyframe argument",
+                         false)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  // Get the document to use for parsing CSS properties.
+  nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aCx);
+  if (!doc) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  Maybe<ComputedTimingFunction> easing =
+    TimingParams::ParseEasing(keyframeDict.mEasing, doc, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // Get all the property--value-list pairs off the object.
+  JS::Rooted<JSObject*> object(aCx, &aValue.toObject());
+  nsTArray<PropertyValuesPair> propertyValuesPairs;
+  if (!GetPropertyValuesPairs(aCx, object, ListAllowance::eAllow,
+                              propertyValuesPairs)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  // Create a set of keyframes for each property.
+  nsCSSParser parser(doc->CSSLoader());
+  nsClassHashtable<nsFloatHashKey, Keyframe> processedKeyframes;
+  for (const PropertyValuesPair& pair : propertyValuesPairs) {
+    size_t count = pair.mValues.Length();
+    if (count == 0) {
+      // No animation values for this property.
+      continue;
+    }
+    if (count == 1) {
+      // We don't support additive values and so can't support an
+      // animation that goes from the underlying value to this
+      // specified value.  Throw an exception until we do support this.
+      aRv.Throw(NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR);
+      return;
+    }
+
+    size_t n = pair.mValues.Length() - 1;
+    size_t i = 0;
+
+    for (const nsString& stringValue : pair.mValues) {
+      double offset = i++ / double(n);
+      Keyframe* keyframe = processedKeyframes.LookupOrAdd(offset);
+      if (keyframe->mPropertyValues.IsEmpty()) {
+        keyframe->mTimingFunction = easing;
+        keyframe->mComputedOffset = offset;
+      }
+      keyframe->mPropertyValues.AppendElement(
+        MakePropertyValuePair(pair.mProperty, stringValue, parser, doc));
+    }
+  }
+
+  aResult.SetCapacity(processedKeyframes.Count());
+  for (auto iter = processedKeyframes.Iter(); !iter.Done(); iter.Next()) {
+    aResult.AppendElement(Move(*iter.UserData()));
+  }
+
+  aResult.Sort(ComputedOffsetComparator());
+}
+
+/**
+ * Returns true if the supplied set of keyframes has keyframe values for
+ * any property for which it does not also supply a value for the 0% and 100%
+ * offsets. In this case we are supposed to synthesize an additive zero value
+ * but since we don't support additive animation yet we can't support this
+ * case. We try to detect that here so we can throw an exception. The check is
+ * not entirely accurate but should detect most common cases.
+ *
+ * @param aKeyframes The set of keyframes to analyze.
+ * @param aDocument The document to use when parsing keyframes so we can
+ *   try to detect where we have an invalid value at 0%/100%.
+ */
+static bool
+RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
+                          nsIDocument* aDocument)
+{
+  // We are looking to see if that every property referenced in |aKeyframes|
+  // has a valid property at offset 0.0 and 1.0. The check as to whether a
+  // property is valid or not, however, is not precise. We only check if the
+  // property can be parsed, NOT whether it can also be converted to a
+  // StyleAnimationValue since doing that requires a target element bound to
+  // a document which we might not always have at the point where we want to
+  // perform this check.
+  //
+  // This is only a temporary measure until we implement additive animation.
+  // So as long as this check catches most cases, and we don't do anything
+  // horrible in one of the cases we can't detect, it should be sufficient.
+
+  nsCSSPropertySet properties;              // All properties encountered.
+  nsCSSPropertySet propertiesWithFromValue; // Those with a defined 0% value.
+  nsCSSPropertySet propertiesWithToValue;   // Those with a defined 100% value.
+
+  auto addToPropertySets = [&](nsCSSProperty aProperty, double aOffset) {
+    properties.AddProperty(aProperty);
+    if (aOffset == 0.0) {
+      propertiesWithFromValue.AddProperty(aProperty);
+    } else if (aOffset == 1.0) {
+      propertiesWithToValue.AddProperty(aProperty);
+    }
+  };
+
+  for (size_t i = 0, len = aKeyframes.Length(); i < len; i++) {
+    const Keyframe& frame = aKeyframes[i];
+
+    // We won't have called ApplyDistributeSpacing when this is called so
+    // we can't use frame.mComputedOffset. Instead we do a rough version
+    // of that algorithm that substitutes null offsets with 0.0 for the first
+    // frame, 1.0 for the last frame, and 0.5 for everything else.
+    double computedOffset = i == len - 1
+                            ? 1.0
+                            : i == 0 ? 0.0 : 0.5;
+    double offsetToUse = frame.mOffset
+                         ? frame.mOffset.value()
+                         : computedOffset;
+
+    for (const PropertyValuePair& pair : frame.mPropertyValues) {
+      if (nsCSSProps::IsShorthand(pair.mProperty)) {
+        nsCSSValueTokenStream* tokenStream = pair.mValue.GetTokenStreamValue();
+        nsCSSParser parser(aDocument->CSSLoader());
+        if (!parser.IsValueValidForProperty(pair.mProperty,
+                                            tokenStream->mTokenStream)) {
+          continue;
+        }
+        CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
+            prop, pair.mProperty, nsCSSProps::eEnabledForAllContent) {
+          addToPropertySets(*prop, offsetToUse);
+        }
+      } else {
+        if (pair.mValue.GetUnit() == eCSSUnit_TokenStream) {
+          continue;
+        }
+        addToPropertySets(pair.mProperty, offsetToUse);
+      }
+    }
+  }
+
+  return !propertiesWithFromValue.Equals(properties) ||
+         !propertiesWithToValue.Equals(properties);
 }
 
 } // namespace mozilla
