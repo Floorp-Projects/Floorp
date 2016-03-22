@@ -1721,6 +1721,52 @@ intrinsic_OriginalPromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_RejectUnwrappedPromise(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+
+    RootedObject obj(cx, &args[0].toObject());
+    MOZ_ASSERT(IsWrapper(obj));
+    Rooted<PromiseObject*> promise(cx, &UncheckedUnwrap(obj)->as<PromiseObject>());
+    AutoCompartment ac(cx, promise);
+    RootedValue reasonVal(cx, args[1]);
+
+    // The rejection reason might've been created in a compartment with higher
+    // privileges than the Promise's. In that case, object-type rejection
+    // values might be wrapped into a wrapper that throws whenever the
+    // Promise's reaction handler wants to do anything useful with it. To
+    // avoid that situation, we synthesize a generic error that doesn't
+    // expose any privileged information but can safely be used in the
+    // rejection handler.
+    if (!promise->compartment()->wrap(cx, &reasonVal))
+        return false;
+    if (reasonVal.isObject() && !CheckedUnwrap(&reasonVal.toObject())) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_PROMISE_ERROR_IN_WRAPPED_REJECTION_REASON);
+        if (!GetAndClearException(cx, &reasonVal))
+            return false;
+    }
+
+    RootedAtom atom(cx, Atomize(cx, "RejectPromise", strlen("RejectPromise")));
+    if (!atom)
+        return false;
+    RootedPropertyName name(cx, atom->asPropertyName());
+
+    InvokeArgs args2(cx);
+    if (!args2.init(2))
+        return false;
+    args2[0].setObject(*promise);
+    args2[1].set(reasonVal);
+
+    if (!CallSelfHostedFunction(cx, name, args2))
+        return false;
+
+    args.rval().set(args2.rval());
+    return true;
+}
+
+static bool
 intrinsic_IsWrappedPromiseObject(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2130,6 +2176,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IsWrappedPromise",               intrinsic_IsWrappedPromiseObject,     1, 0),
     JS_FN("_EnqueuePromiseJob",             intrinsic_EnqueuePromiseJob,          1, 0),
     JS_FN("_GetOriginalPromiseConstructor", intrinsic_OriginalPromiseConstructor, 0, 0),
+    JS_FN("RejectUnwrappedPromise",         intrinsic_RejectUnwrappedPromise,     2, 0),
     JS_FN("CallPromiseMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<PromiseObject>>,      2,0),
 
