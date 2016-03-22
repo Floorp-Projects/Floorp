@@ -182,7 +182,7 @@ public:
    * removing it from the document).
    */
   void UpdateState(bool aNotify);
-  
+
   /**
    * Method to update mState with link state information.  This does not notify.
    */
@@ -342,7 +342,7 @@ public:
         break;
     }
 
-    /* 
+    /*
      * Only call UpdateState if we need to notify, because we call
      * SetDirectionality for every element, and UpdateState is very very slow
      * for some elements.
@@ -980,7 +980,7 @@ public:
    * Return the CORS mode for a given string
    */
   static CORSMode StringToCORSMode(const nsAString& aValue);
-  
+
   /**
    * Return the CORS mode for a given nsAttrValue (which may be null,
    * but if not should have been parsed via ParseCORSValue).
