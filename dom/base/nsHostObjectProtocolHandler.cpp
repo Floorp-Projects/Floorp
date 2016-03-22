@@ -7,7 +7,6 @@
 #include "nsHostObjectProtocolHandler.h"
 
 #include "DOMMediaStream.h"
-#include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MediaSource.h"
 #include "mozilla/LoadInfo.h"
@@ -202,7 +201,11 @@ class BlobURLsReporter final : public nsIMemoryReporter
       return;
     }
 
-    nsCOMPtr<nsIStackFrame> frame = dom::GetCurrentJSStack(maxFrames);
+    nsresult rv;
+    nsIXPConnect* xpc = nsContentUtils::XPConnect();
+    nsCOMPtr<nsIStackFrame> frame;
+    rv = xpc->GetCurrentJSStack(getter_AddRefs(frame));
+    NS_ENSURE_SUCCESS_VOID(rv);
 
     nsAutoCString origin;
     nsCOMPtr<nsIURI> principalURI;
@@ -211,7 +214,7 @@ class BlobURLsReporter final : public nsIMemoryReporter
       principalURI->GetPrePath(origin);
     }
 
-    for (uint32_t i = 0; frame; ++i) {
+    for (uint32_t i = 0; i < maxFrames && frame; ++i) {
       nsString fileNameUTF16;
       int32_t lineNumber = 0;
 
@@ -243,10 +246,8 @@ class BlobURLsReporter final : public nsIMemoryReporter
         stack += ")/";
       }
 
-      nsCOMPtr<nsIStackFrame> caller;
-      nsresult rv = frame->GetCaller(getter_AddRefs(caller));
+      rv = frame->GetCaller(getter_AddRefs(frame));
       NS_ENSURE_SUCCESS_VOID(rv);
-      caller.swap(frame);
     }
   }
 
