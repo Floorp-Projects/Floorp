@@ -35,11 +35,11 @@ static const PLDHashTableOps gSetOps = {
   ObjectSetInitEntry
 };
 
-StaticMutex nsNSSShutDownList::sListLock;
 nsNSSShutDownList *nsNSSShutDownList::singleton = nullptr;
 
 nsNSSShutDownList::nsNSSShutDownList()
-  : mObjects(&gSetOps, sizeof(ObjectHashEntry))
+  : mListLock("nsNSSShutDownList.mListLock")
+  , mObjects(&gSetOps, sizeof(ObjectHashEntry))
   , mPK11LogoutCancelObjects(&gSetOps, sizeof(ObjectHashEntry))
 {
 }
@@ -52,60 +52,54 @@ nsNSSShutDownList::~nsNSSShutDownList()
 
 void nsNSSShutDownList::remember(nsNSSShutDownObject *o)
 {
-  StaticMutexAutoLock lock(sListLock);
-  nsNSSShutDownList::construct(lock);
+  if (!singleton)
+    return;
   
   PR_ASSERT(o);
+  MutexAutoLock lock(singleton->mListLock);
   singleton->mObjects.Add(o, fallible);
 }
 
 void nsNSSShutDownList::forget(nsNSSShutDownObject *o)
 {
-  StaticMutexAutoLock lock(sListLock);
   if (!singleton)
     return;
   
   PR_ASSERT(o);
+  MutexAutoLock lock(singleton->mListLock);
   singleton->mObjects.Remove(o);
 }
 
 void nsNSSShutDownList::remember(nsOnPK11LogoutCancelObject *o)
 {
-  StaticMutexAutoLock lock(sListLock);
-  nsNSSShutDownList::construct(lock);
+  if (!singleton)
+    return;
   
   PR_ASSERT(o);
+  MutexAutoLock lock(singleton->mListLock);
   singleton->mPK11LogoutCancelObjects.Add(o, fallible);
 }
 
 void nsNSSShutDownList::forget(nsOnPK11LogoutCancelObject *o)
 {
-  StaticMutexAutoLock lock(sListLock);
   if (!singleton)
     return;
   
   PR_ASSERT(o);
+  MutexAutoLock lock(singleton->mListLock);
   singleton->mPK11LogoutCancelObjects.Remove(o);
 }
 
 nsresult nsNSSShutDownList::doPK11Logout()
 {
-  StaticMutexAutoLock lock(sListLock);
-  if (!singleton) {
-    return NS_OK;
-  }
-
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-          ("canceling all open SSL sockets to disallow future IO\n"));
-
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("canceling all open SSL sockets to disallow future IO\n"));
   // During our iteration we will set a bunch of PRBools to true.
   // Nobody else ever modifies that bool, only we do.
   // We only must ensure that our objects do not go away.
   // This is guaranteed by holding the list lock.
 
-  for (auto iter = singleton->mPK11LogoutCancelObjects.Iter();
-       !iter.Done();
-       iter.Next()) {
+  MutexAutoLock lock(singleton->mListLock);
+  for (auto iter = mPK11LogoutCancelObjects.Iter(); !iter.Done(); iter.Next()) {
     auto entry = static_cast<ObjectHashEntry*>(iter.Get());
     nsOnPK11LogoutCancelObject *pklco =
       reinterpret_cast<nsOnPK11LogoutCancelObject*>(entry->obj);
@@ -119,13 +113,7 @@ nsresult nsNSSShutDownList::doPK11Logout()
 
 nsresult nsNSSShutDownList::evaporateAllNSSResources()
 {
-  StaticMutexAutoLock lock(sListLock);
-  if (!singleton) {
-    return NS_OK;
-  }
-
-  PRStatus rv = singleton->mActivityState.restrictActivityToCurrentThread();
-  if (rv != PR_SUCCESS) {
+  if (PR_SUCCESS != mActivityState.restrictActivityToCurrentThread()) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("failed to restrict activity to current thread\n"));
     return NS_ERROR_FAILURE;
   }
@@ -135,56 +123,33 @@ nsresult nsNSSShutDownList::evaporateAllNSSResources()
   // Never free more than one entry, because other threads might be calling
   // us and remove themselves while we are iterating over the list,
   // and the behaviour of changing the list while iterating is undefined.
-  while (singleton) {
-    auto iter = singleton->mObjects.Iter();
+  while (true) {
+    MutexAutoLock lock(mListLock);
+    auto iter = mObjects.Iter();
     if (iter.Done()) {
       break;
     }
     auto entry = static_cast<ObjectHashEntry*>(iter.Get());
     {
-      StaticMutexAutoUnlock unlock(sListLock);
+      MutexAutoUnlock unlock(singleton->mListLock);
       entry->obj->shutdown(nsNSSShutDownObject::calledFromList);
     }
     iter.Remove();
   }
 
-  if (!singleton) {
-    return NS_ERROR_FAILURE;
-  }
-
-  singleton->mActivityState.releaseCurrentThreadActivityRestriction();
+  mActivityState.releaseCurrentThreadActivityRestriction();
   return NS_OK;
 }
 
-void nsNSSShutDownList::enterActivityState()
+nsNSSShutDownList *nsNSSShutDownList::construct()
 {
-  StaticMutexAutoLock lock(sListLock);
-  nsNSSShutDownList::construct(lock);
-  singleton->mActivityState.enter();
-}
-
-void nsNSSShutDownList::leaveActivityState()
-{
-  StaticMutexAutoLock lock(sListLock);
   if (singleton) {
-    singleton->mActivityState.leave();
+    // we should never ever be called twice
+    return nullptr;
   }
-}
 
-void nsNSSShutDownList::construct(const StaticMutexAutoLock& /*proofOfLock*/)
-{
-  if (!singleton) {
-    singleton = new nsNSSShutDownList();
-  }
-}
-
-void nsNSSShutDownList::shutdown()
-{
-  StaticMutexAutoLock lock(sListLock);
-
-  if (singleton) {
-    delete singleton;
-  }
+  singleton = new nsNSSShutDownList();
+  return singleton;
 }
 
 nsNSSActivityState::nsNSSActivityState()
@@ -244,10 +209,18 @@ void nsNSSActivityState::releaseCurrentThreadActivityRestriction()
 
 nsNSSShutDownPreventionLock::nsNSSShutDownPreventionLock()
 {
-  nsNSSShutDownList::enterActivityState();
+  nsNSSActivityState *state = nsNSSShutDownList::getActivityState();
+  if (!state)
+    return;
+
+  state->enter();
 }
 
 nsNSSShutDownPreventionLock::~nsNSSShutDownPreventionLock()
 {
-  nsNSSShutDownList::leaveActivityState();
+  nsNSSActivityState *state = nsNSSShutDownList::getActivityState();
+  if (!state)
+    return;
+  
+  state->leave();
 }
