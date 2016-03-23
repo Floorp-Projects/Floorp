@@ -398,18 +398,6 @@ Compositor::ComputeBackdropCopyRect(const gfx::Rect& aRect,
   return result;
 }
 
-void
-Compositor::SetInvalid()
-{
-  mParent = nullptr;
-}
-
-bool
-Compositor::IsValid() const
-{
-  return !mParent;
-}
-
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
 void
 Compositor::SetDispAcquireFence(Layer* aLayer, nsIWidget* aWidget)
