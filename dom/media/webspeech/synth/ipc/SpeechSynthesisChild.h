@@ -30,6 +30,8 @@ public:
 
   bool RecvIsSpeakingChanged(const bool& aIsSpeaking) override;
 
+  bool RecvNotifyVoicesChanged() override;
+
 protected:
   SpeechSynthesisChild();
   virtual ~SpeechSynthesisChild();
