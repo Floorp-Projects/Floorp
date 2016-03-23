@@ -24,7 +24,6 @@ add_task(function* test_crypto_getCryptoParams() {
       dh: 'Iy1Je2Kv11A',
       salt: 'upk1yFkp1xI',
       rs: 4096,
-      auth: true,
       padSize: 2,
     },
   }, {
@@ -38,7 +37,6 @@ add_task(function* test_crypto_getCryptoParams() {
       dh: 'byfHbUffc-k',
       salt: 'C11AvAsp6Gc',
       rs: 4096,
-      auth: true,
       padSize: 2,
     },
   }, {
@@ -52,7 +50,6 @@ add_task(function* test_crypto_getCryptoParams() {
       dh: 'ybuT4VDz-Bg',
       salt: 'H7U7wcIoIKs',
       rs: 24,
-      auth: true,
       padSize: 2,
     },
   }, {
@@ -66,7 +63,6 @@ add_task(function* test_crypto_getCryptoParams() {
       dh: 'LqrDQuVl9lY',
       salt: 'YngI8B7YapM',
       rs: 2,
-      auth: false,
       padSize: 1,
     },
   }, {
@@ -80,26 +76,20 @@ add_task(function* test_crypto_getCryptoParams() {
       dh: 'VA6wmY1IpiE',
       salt: 'khtpyXhpDKM',
       rs: 4096,
-      auth: false,
       padSize: 1,
     }
-  }, {
+  },
+
+  // These headers should be rejected.
+  {
     desc: 'aesgcm128 with Crypto-Key',
     headers: {
       encoding: 'aesgcm128',
       crypto_key: 'keyid=v2; dh=VA6wmY1IpiE',
       encryption: 'keyid=v2; salt=F0Im7RtGgNY',
     },
-    params: {
-      dh: 'VA6wmY1IpiE',
-      salt: 'F0Im7RtGgNY',
-      rs: 4096,
-      auth: true,
-      padSize: 1,
-    },
+    params: null,
   },
-
-  // These headers should be rejected.
   {
     desc: 'Invalid encoding',
     headers: {
@@ -140,13 +130,13 @@ add_task(function* test_crypto_getCryptoParams() {
 
 add_task(function* test_crypto_decodeMsg() {
   let privateKey = {
-    "crv": "P-256",
-    "d": "4h23G_KkXC9TvBSK2v0Q7ImpS2YAuRd8hQyN0rFAwBg",
-    "ext": true,
-    "key_ops": ["deriveBits"],
-    "kty":"EC",
-    "x":"sd85ZCbEG6dEkGMCmDyGBIt454Qy-Yo-1xhbaT2Jlk4",
-    "y":"vr3cKpQ-Sp1kpZ9HipNjUCwSA55yy0uM8N9byE8dmLs",
+    crv: 'P-256',
+    d: '4h23G_KkXC9TvBSK2v0Q7ImpS2YAuRd8hQyN0rFAwBg',
+    ext: true,
+    key_ops: ['deriveBits'],
+    kty: 'EC',
+    x: 'sd85ZCbEG6dEkGMCmDyGBIt454Qy-Yo-1xhbaT2Jlk4',
+    y: 'vr3cKpQ-Sp1kpZ9HipNjUCwSA55yy0uM8N9byE8dmLs',
   };
   let publicKey = base64UrlDecode('BLHfOWQmxBunRJBjApg8hgSLeOeEMvmKPtcYW2k9iZZOvr3cKpQ-Sp1kpZ9HipNjUCwSA55yy0uM8N9byE8dmLs');
 
@@ -185,15 +175,6 @@ add_task(function* test_crypto_decodeMsg() {
     rs: 3,
     authSecret: 'g2rWVHUCpUxgcL9Tz7vyeQ',
     padSize: 2,
-  }, {
-    desc: 'padSize = 1, rs = 4096, auth secret, pad = 8',
-    result: 'aesgcm128 with auth secret',
-    data: 'h0FmyldY8aT5EQ6CJrbfRn_IdDvytoLeHb9_q5CjtdFRfgDRknxLmOzavLaVG4oOiS0r',
-    senderPublicKey: 'BCXHk7O8CE-9AOp6xx7g7c-NCaNpns1PyyHpdcmDaijLbT6IdGq0ezGatBwtFc34BBfscFxdk4Tjksa2Mx5rRCM',
-    salt: 'aGBpoKklLtrLcAUCcCr7JQ',
-    rs: 4096,
-    authSecret: 'Sxb6u0gJIhGEogyLawjmCw',
-    padSize: 1,
   }];
   for (let test of expectedSuccesses) {
     let authSecret = test.authSecret ? base64UrlDecode(test.authSecret) : null;
@@ -206,6 +187,14 @@ add_task(function* test_crypto_decodeMsg() {
   }
 
   let expectedFailures = [{
+    desc: 'padSize = 1, rs = 4096, auth secret, pad = 8',
+    data: 'h0FmyldY8aT5EQ6CJrbfRn_IdDvytoLeHb9_q5CjtdFRfgDRknxLmOzavLaVG4oOiS0r',
+    senderPublicKey: 'BCXHk7O8CE-9AOp6xx7g7c-NCaNpns1PyyHpdcmDaijLbT6IdGq0ezGatBwtFc34BBfscFxdk4Tjksa2Mx5rRCM',
+    salt: 'aGBpoKklLtrLcAUCcCr7JQ',
+    rs: 4096,
+    authSecret: 'Sxb6u0gJIhGEogyLawjmCw',
+    padSize: 1,
+  }, {
     desc: 'Missing padding',
     data: 'anvsHj7oBQTPMhv7XSJEsvyMS4-8EtbC7HgFZsKaTg',
     senderPublicKey: 'BMSqfc3ohqw2DDgu3nsMESagYGWubswQPGxrW1bAbYKD18dIHQBUmD3ul_lu7MyQiT5gNdzn5JTXQvCcpf-oZE4',

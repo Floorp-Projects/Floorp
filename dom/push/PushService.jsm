@@ -755,7 +755,7 @@ this.PushService = {
   },
 
   ensureCrypto: function(record) {
-    if (record.authenticationSecret &&
+    if (record.hasAuthenticationSecret() &&
         record.p256dhPublicKey &&
         record.p256dhPrivateKey) {
       return Promise.resolve(record);
@@ -774,7 +774,7 @@ this.PushService = {
             record.p256dhPublicKey = pubKey;
             record.p256dhPrivateKey = privKey;
           }
-          if (!record.authenticationSecret) {
+          if (!record.hasAuthenticationSecret()) {
             record.authenticationSecret = PushCrypto.generateAuthenticationSecret();
           }
           return record;
@@ -856,7 +856,7 @@ this.PushService = {
           cryptoParams.dh,
           cryptoParams.salt,
           cryptoParams.rs,
-          cryptoParams.auth ? record.authenticationSecret : null,
+          record.authenticationSecret,
           cryptoParams.padSize
         );
       } else {
