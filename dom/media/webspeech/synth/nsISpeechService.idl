@@ -165,3 +165,9 @@ interface nsISpeechService : nsISupports
 
   readonly attribute SpeechServiceType serviceType;
 };
+
+%{C++
+// This is the service category speech services could use to start up as
+// a component.
+#define NS_SPEECH_SYNTH_STARTED "speech-synth-started"
+%}
