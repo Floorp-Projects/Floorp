@@ -26,9 +26,6 @@ function runTest() {
 
   ok(new TCPSocket('localhost', 80), "TCPSocket constructor should work for content that has the tcp-socket permission");
   ok(navigator.mozTCPSocket.open('localhost', 80), "navigator.mozTCPSocket.open should work for content that has the tcp-socket permission");
-  // This just helps the test harness clean up quickly
-  SpecialPowers.forceCC();
-  SpecialPowers.forceGC();
   SimpleTest.finish();
 }
 </script>
