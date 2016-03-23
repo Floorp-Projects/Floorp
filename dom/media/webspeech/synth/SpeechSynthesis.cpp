@@ -65,6 +65,7 @@ SpeechSynthesis::SpeechSynthesis(nsPIDOMWindowInner* aParent)
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->AddObserver(this, "inner-window-destroyed", true);
+    obs->AddObserver(this, "synth-voices-changed", true);
   }
 
 }
@@ -119,6 +120,19 @@ SpeechSynthesis::HasEmptyQueue() const
   return mSpeechQueue.Length() == 0;
 }
 
+bool SpeechSynthesis::HasVoices() const
+{
+  uint32_t voiceCount = mVoiceCache.Count();
+  if (voiceCount == 0) {
+    nsresult rv = nsSynthVoiceRegistry::GetInstance()->GetVoiceCount(&voiceCount);
+    if(NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+  }
+
+  return voiceCount != 0;
+}
+
 void
 SpeechSynthesis::Speak(SpeechSynthesisUtterance& aUtterance)
 {
@@ -130,7 +144,9 @@ SpeechSynthesis::Speak(SpeechSynthesisUtterance& aUtterance)
   mSpeechQueue.AppendElement(&aUtterance);
   aUtterance.mState = SpeechSynthesisUtterance::STATE_PENDING;
 
-  if (mSpeechQueue.Length() == 1 && !mCurrentTask && !mHoldQueue) {
+  // If we only have one item in the queue, we aren't pre-paused, and
+  // we have voices available, speak it.
+  if (mSpeechQueue.Length() == 1 && !mCurrentTask && !mHoldQueue && HasVoices()) {
     AdvanceQueue();
   }
 }
@@ -284,25 +300,29 @@ SpeechSynthesis::Observe(nsISupports* aSubject, const char* aTopic,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (strcmp(aTopic, "inner-window-destroyed")) {
-    return NS_OK;
-  }
 
-  nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
-  NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
+  if (strcmp(aTopic, "inner-window-destroyed") == 0) {
+    nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
+    NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
 
-  uint64_t innerID;
-  nsresult rv = wrapper->GetData(&innerID);
-  NS_ENSURE_SUCCESS(rv, rv);
+    uint64_t innerID;
+    nsresult rv = wrapper->GetData(&innerID);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  if (innerID == mInnerID) {
-    if (mCurrentTask) {
-      mCurrentTask->Cancel();
+    if (innerID == mInnerID) {
+      Cancel();
+
+      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+      if (obs) {
+        obs->RemoveObserver(this, "inner-window-destroyed");
+      }
     }
-
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->RemoveObserver(this, "inner-window-destroyed");
+  } else if (strcmp(aTopic, "synth-voices-changed") == 0) {
+    LOG(LogLevel::Debug, ("SpeechSynthesis::onvoiceschanged"));
+    DispatchTrustedEvent(NS_LITERAL_STRING("voiceschanged"));
+    // If we have a pending item, and voices become available, speak it.
+    if (!mCurrentTask && !mHoldQueue && HasVoices()) {
+      AdvanceQueue();
     }
   }
 
