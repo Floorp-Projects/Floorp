@@ -607,32 +607,16 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
 {
   AssertIsOnOwningThread();
 
-  aRv.MightThrowJSException();
-
   if ((aMode == IDBTransactionMode::Readwriteflush ||
        aMode == IDBTransactionMode::Cleanup) &&
       !IndexedDatabaseManager::ExperimentalFeaturesEnabled()) {
     // Pretend that this mode doesn't exist. We don't have a way to annotate
     // certain enum values as depending on preferences so we just duplicate the
     // normal exception generation here.
-    ThreadsafeAutoJSContext cx;
-
-    // Disable any automatic error reporting that might be set up so that we
-    // can grab the exception object.
-    AutoForceSetExceptionOnContext forceExn(cx);
-
-    MOZ_ALWAYS_FALSE(
-      ThrowErrorMessage(cx,
-                        MSG_INVALID_ENUM_VALUE,
-                        "Argument 2 of IDBDatabase.transaction",
-                        "readwriteflush",
-                        "IDBTransactionMode"));
-    MOZ_ASSERT(JS_IsExceptionPending(cx));
-
-    JS::Rooted<JS::Value> exception(cx);
-    MOZ_ALWAYS_TRUE(JS_GetPendingException(cx, &exception));
-
-    aRv.ThrowJSException(cx, exception);
+    aRv.ThrowTypeError<MSG_INVALID_ENUM_VALUE>(
+      NS_LITERAL_STRING("Argument 2 of IDBDatabase.transaction"),
+      NS_LITERAL_STRING("readwriteflush"),
+      NS_LITERAL_STRING("IDBTransactionMode"));
     return nullptr;
   }
 
