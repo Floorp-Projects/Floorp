@@ -1246,7 +1246,11 @@ class RecursiveMakeBackend(CommonBackend):
                                             "SourcePath objects in %s. Path is: %s" % (
                                                 type(obj), f
                                             ))
-                        install_manifest.add_pattern_symlink(f.srcdir, f, path)
+                        if f.startswith('/'):
+                            basepath = f.full_path.rstrip('*')
+                            install_manifest.add_pattern_symlink(basepath, '*', path)
+                        else:
+                            install_manifest.add_pattern_symlink(f.srcdir, f, path)
                     else:
                         install_manifest.add_symlink(f.full_path, dest)
                 else:
