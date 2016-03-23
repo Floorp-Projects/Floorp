@@ -957,10 +957,18 @@ XPCNativeScriptableInfo::Construct(const XPCNativeScriptableCreateInfo* sci)
     return newObj;
 }
 
-void
-XPCNativeScriptableShared::PopulateJSClass()
+XPCNativeScriptableShared::XPCNativeScriptableShared(uint32_t aFlags,
+                                                     char* aName,
+                                                     bool aPopulate)
+    : mFlags(aFlags)
 {
-    MOZ_ASSERT(mJSClass.name, "bad state!");
+    MOZ_COUNT_CTOR(XPCNativeScriptableShared);
+
+    memset(&mJSClass, 0, sizeof(mJSClass));
+    mJSClass.name = aName;  // take ownership
+
+    if (!aPopulate)
+        return;
 
     mJSClass.flags = WRAPPER_FLAGS | JSCLASS_PRIVATE_IS_NSISUPPORTS;
 
