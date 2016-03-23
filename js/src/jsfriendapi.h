@@ -1374,6 +1374,11 @@ class MOZ_STACK_CLASS AutoStableStringChars
   private:
     AutoStableStringChars(const AutoStableStringChars& other) = delete;
     void operator=(const AutoStableStringChars& other) = delete;
+
+    bool baseIsInline(JS::Handle<JSLinearString*> linearString);
+    bool copyLatin1Chars(JSContext*, JS::Handle<JSLinearString*> linearString);
+    bool copyTwoByteChars(JSContext*, JS::Handle<JSLinearString*> linearString);
+    bool copyAndInflateLatin1Chars(JSContext*, JS::Handle<JSLinearString*> linearString);
 };
 
 struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)

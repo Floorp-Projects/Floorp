@@ -894,6 +894,13 @@ AutoStableStringChars::init(JSContext* cx, JSString* s)
 
     MOZ_ASSERT(state_ == Uninitialized);
 
+    // If the chars are inline then we need to copy them since they may be moved
+    // by a compacting GC.
+    if (baseIsInline(linearString)) {
+        return linearString->hasTwoByteChars() ? copyTwoByteChars(cx, linearString)
+                                               : copyLatin1Chars(cx, linearString);
+    }
+
     if (linearString->hasLatin1Chars()) {
         state_ = Latin1;
         latin1Chars_ = linearString->rawLatin1Chars();
@@ -915,13 +922,31 @@ AutoStableStringChars::initTwoByte(JSContext* cx, JSString* s)
 
     MOZ_ASSERT(state_ == Uninitialized);
 
-    if (linearString->hasTwoByteChars()) {
-        state_ = TwoByte;
-        twoByteChars_ = linearString->rawTwoByteChars();
-        s_ = linearString;
-        return true;
-    }
+    if (linearString->hasLatin1Chars())
+        return copyAndInflateLatin1Chars(cx, linearString);
 
+    // If the chars are inline then we need to copy them since they may be moved
+    // by a compacting GC.
+    if (baseIsInline(linearString))
+        return copyTwoByteChars(cx, linearString);
+
+    state_ = TwoByte;
+    twoByteChars_ = linearString->rawTwoByteChars();
+    s_ = linearString;
+    return true;
+}
+
+bool AutoStableStringChars::baseIsInline(HandleLinearString linearString)
+{
+    JSString* base = linearString;
+    while (base->isDependent())
+        base = base->asDependent().base();
+    return base->isInline();
+}
+
+bool
+AutoStableStringChars::copyAndInflateLatin1Chars(JSContext* cx, HandleLinearString linearString)
+{
     char16_t* chars = cx->pod_malloc<char16_t>(linearString->length() + 1);
     if (!chars)
         return false;
@@ -929,6 +954,42 @@ AutoStableStringChars::initTwoByte(JSContext* cx, JSString* s)
     CopyAndInflateChars(chars, linearString->rawLatin1Chars(),
                         linearString->length());
     chars[linearString->length()] = 0;
+
+    state_ = TwoByte;
+    ownsChars_ = true;
+    twoByteChars_ = chars;
+    s_ = linearString;
+    return true;
+}
+
+bool
+AutoStableStringChars::copyLatin1Chars(JSContext* cx, HandleLinearString linearString)
+{
+    size_t length = linearString->length();
+    JS::Latin1Char* chars = cx->pod_malloc<JS::Latin1Char>(length + 1);
+    if (!chars)
+        return false;
+
+    PodCopy(chars, linearString->rawLatin1Chars(), length);
+    chars[length] = 0;
+
+    state_ = Latin1;
+    ownsChars_ = true;
+    latin1Chars_ = chars;
+    s_ = linearString;
+    return true;
+}
+
+bool
+AutoStableStringChars::copyTwoByteChars(JSContext* cx, HandleLinearString linearString)
+{
+    size_t length = linearString->length();
+    char16_t* chars = cx->pod_malloc<char16_t>(length + 1);
+    if (!chars)
+        return false;
+
+    PodCopy(chars, linearString->rawTwoByteChars(), length);
+    chars[length] = 0;
 
     state_ = TwoByte;
     ownsChars_ = true;
