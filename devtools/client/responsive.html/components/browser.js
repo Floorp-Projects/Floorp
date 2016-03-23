@@ -35,12 +35,24 @@ module.exports = createClass({
       className += " resizing";
     }
 
-    return dom.iframe(
+    // innerHTML expects & to be an HTML entity
+    location = location.replace(/&/g, "&amp;");
+
+    return dom.div(
       {
-        className,
-        src: location,
-        width,
-        height,
+        /**
+         * React uses a whitelist for attributes, so we need some way to set
+         * attributes it does not know about, such as @mozbrowser.  If this were
+         * the only issue, we could use componentDidMount or ref: node => {} to
+         * set the atttibutes. In the case of @remote, the attribute must be set
+         * before the element is added to the DOM to have any effect, which we
+         * are able to do with this approach.
+         */
+        dangerouslySetInnerHTML: {
+          __html: `<iframe class="${className}" mozbrowser="true" remote="true"
+                           noisolation="true" src="${location}"
+                           width="${width}" height="${height}"></iframe>`
+        }
       }
     );
   },
