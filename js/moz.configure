@@ -21,10 +21,10 @@ option(env='JS_STANDALONE', default=building_js,
 @depends('JS_STANDALONE')
 def js_standalone(value):
     if value:
-        add_old_configure_assignment('JS_STANDALONE', True)
         return True
 
 set_config('JS_STANDALONE', js_standalone)
+add_old_configure_assignment('JS_STANDALONE', js_standalone)
 
 js_option('--disable-js-shell', default=building_js,
        help='Do not build the JS shell')
@@ -62,10 +62,10 @@ def shared_js(shared_js, export_js):
     if shared_js:
         if not export_js:
             error('Must export JS symbols when building a shared library.')
-        add_old_configure_assignment('JS_SHARED_LIBRARY', True)
         return True
 
 set_config('JS_SHARED_LIBRARY', shared_js)
+add_old_configure_assignment('JS_SHARED_LIBRARY', shared_js)
 
 @depends('--disable-shared-js', '--disable-export-js')
 def exportable_js_api(shared_js, export_js):
@@ -122,11 +122,11 @@ def instruments(value, target):
         error('--enable-instruments cannot be used when targeting %s'
               % target.os)
     if value:
-        add_old_configure_assignment('MOZ_INSTRUMENTS', True)
         return True
 
 set_config('MOZ_INSTRUMENTS', instruments)
 set_define('MOZ_INSTRUMENTS', instruments)
+add_old_configure_assignment('MOZ_INSTRUMENTS', instruments)
 imply_option('--enable-profiling', instruments, reason='--enable-instruments')
 
 js_option('--enable-callgrind', env='MOZ_CALLGRIND',
@@ -147,8 +147,9 @@ js_option('--enable-profiling', env='MOZ_PROFILING',
 @depends('--enable-profiling')
 def profiling(value):
     if value:
-        add_old_configure_assignment('MOZ_PROFILING', True)
         return True
+
+add_old_configure_assignment('MOZ_PROFILING', profiling)
 
 @depends(profiling, target)
 def imply_vtune(value, target):
