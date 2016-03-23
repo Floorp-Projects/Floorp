@@ -6,8 +6,8 @@
 package org.mozilla.gecko.feeds.subscriptions;
 
 import android.content.Context;
-import android.support.v4.util.AtomicFile;
 import android.text.TextUtils;
+import android.util.AtomicFile;
 import android.util.Log;
 
 import org.json.JSONArray;
