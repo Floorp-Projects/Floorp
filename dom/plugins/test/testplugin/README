@@ -124,7 +124,7 @@ arguments passed to the method.
 * .crash() - Crashes the plugin
 
 * getObjectValue() - Returns a custom plugin-implemented scriptable object.
-* checkObjectValue(obj) - Returns true if the object from setObjectValue() is
+* checkObjectValue(obj) - Returns true if the object from getObjectValue() is
   the same object passed into this function. It should return true when
   the object is passed to the same plugin instance, and false when passed
   to other plugin instances, see bug 532246 and
