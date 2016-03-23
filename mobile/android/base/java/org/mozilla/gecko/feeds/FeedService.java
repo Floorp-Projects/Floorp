@@ -69,13 +69,13 @@ public class FeedService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (intent == null) {
-            return;
-        }
-
-        Log.d(LOGTAG, "Service started with action: " + intent.getAction());
-
         try {
+            if (intent == null) {
+                return;
+            }
+
+            Log.d(LOGTAG, "Service started with action: " + intent.getAction());
+
             if (!SwitchBoard.isInExperiment(this, Experiments.CONTENT_NOTIFICATIONS)) {
                 Log.d(LOGTAG, "Not in content notifications experiment. Skipping.");
                 return;
