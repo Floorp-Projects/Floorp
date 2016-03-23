@@ -543,7 +543,7 @@ XPCNativeScriptableSharedMap::GetNewOrUsed(uint32_t flags,
     NS_PRECONDITION(name,"bad param");
     NS_PRECONDITION(si,"bad param");
 
-    XPCNativeScriptableShared key(flags, name);
+    XPCNativeScriptableShared key(flags, name, /* populate = */ false);
     auto entry = static_cast<Entry*>(mTable->Add(&key, fallible));
     if (!entry)
         return false;
@@ -552,10 +552,8 @@ XPCNativeScriptableSharedMap::GetNewOrUsed(uint32_t flags,
 
     if (!shared) {
         entry->key = shared =
-            new XPCNativeScriptableShared(flags, key.TransferNameOwnership());
-        if (!shared)
-            return false;
-        shared->PopulateJSClass();
+            new XPCNativeScriptableShared(flags, key.TransferNameOwnership(),
+                                          /* populate = */ true);
     }
     si->SetScriptableShared(shared);
     return true;

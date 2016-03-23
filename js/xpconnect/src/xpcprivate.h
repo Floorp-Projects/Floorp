@@ -1672,13 +1672,7 @@ public:
 
     const JSClass* GetJSClass() { return Jsvalify(&mJSClass); }
 
-    XPCNativeScriptableShared(uint32_t aFlags, char* aName)
-        : mFlags(aFlags)
-    {
-        memset(&mJSClass, 0, sizeof(mJSClass));
-        mJSClass.name = aName;  // take ownership
-        MOZ_COUNT_CTOR(XPCNativeScriptableShared);
-    }
+    XPCNativeScriptableShared(uint32_t aFlags, char* aName, bool aPopulate);
 
     ~XPCNativeScriptableShared() {
         if (mJSClass.name)
@@ -1691,8 +1685,6 @@ public:
         mJSClass.name = nullptr;
         return name;
     }
-
-    void PopulateJSClass();
 
     void Mark()   { mFlags.Mark(); }
     void Unmark() { mFlags.Unmark(); }
