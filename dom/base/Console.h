@@ -157,6 +157,23 @@ private:
                   JS::Handle<JSObject*> aGlobal,
                   const Sequence<JS::Value>& aArguments);
 
+  void
+  StoreCallData(ConsoleCallData* aData);
+
+  void
+  UnstoreCallData(ConsoleCallData* aData);
+
+  // Read in Console.cpp how this method is used.
+  void
+  ReleaseCallData(ConsoleCallData* aCallData);
+
+  bool
+  PopulateEvent(JSContext* aCx,
+                JS::Handle<JSObject*> aGlobal,
+                const Sequence<JS::Value>& aArguments,
+                JS::MutableHandle<JS::Value> aValue,
+                ConsoleCallData* aData) const;
+
   // If the first JS::Value of the array is a string, this method uses it to
   // format a string. The supported sequences are:
   //   %s    - string
@@ -208,10 +225,10 @@ private:
              nsAString& aTimerLabel,
              DOMHighResTimeStamp* aTimerValue);
 
-  // CreateStartTimerValue is called on the main thread only and generates a
-  // ConsoleTimerStart dictionary exposed as JS::Value. If aTimerStatus is
-  // false, it generates a ConsoleTimerError instead. It's called only after
-  // the execution StartTimer on the owning thread.
+  // CreateStartTimerValue generates a ConsoleTimerStart dictionary exposed as
+  // JS::Value. If aTimerStatus is false, it generates a ConsoleTimerError
+  // instead. It's called only after the execution StartTimer on the owning
+  // thread.
   // * aCx - this is the context that will root the returned value.
   // * aTimerLabel - this label must be what StartTimer received as aTimerLabel.
   // * aTimerValue - this is what StartTimer received as aTimerValue
@@ -223,8 +240,8 @@ private:
 
   // StopTimer follows the same pattern as StartTimer: it runs on the
   // owning thread and populates aTimerLabel and aTimerDuration, used by
-  // CreateStopTimerValue on the main thread. It returns false if a JS
-  // exception is thrown or if the aName timer doesn't exist in mTimerRegistry.
+  // CreateStopTimerValue. It returns false if a JS exception is thrown or if
+  // the aName timer doesn't exist in the mTimerRegistry.
   // * aCx - the JSContext rooting aName.
   // * aName - this is (should be) the name of the timer as JS::Value.
   // * aTimestamp - the monotonicTimer for this context (taken from
@@ -240,9 +257,8 @@ private:
             nsAString& aTimerLabel,
             double* aTimerDuration);
 
-  // Executed on the main thread and generates a ConsoleTimerEnd dictionary
-  // exposed as JS::Value, or a ConsoleTimerError dictionary if aTimerStatus is
-  // false. See StopTimer.
+  // This method generates a ConsoleTimerEnd dictionary exposed as JS::Value, or
+  // a ConsoleTimerError dictionary if aTimerStatus is false. See StopTimer.
   // * aCx - this is the context that will root the returned value.
   // * aTimerLabel - this label must be what StopTimer received as aTimerLabel.
   // * aTimerDuration - this is what StopTimer received as aTimerDuration
@@ -262,9 +278,9 @@ private:
                 const Sequence<JS::Value>& aData);
 
   // This method follows the same pattern as StartTimer: its runs on the owning
-  // thread and populates aCountLabel, used by CreateCounterValue on the
-  // main thread. Returns MAX_PAGE_COUNTERS in case of error otherwise the
-  // incremented counter value.
+  // thread and populate aCountLabel, used by CreateCounterValue. Returns
+  // MAX_PAGE_COUNTERS in case of error, otherwise the incremented counter
+  // value.
   // * aCx - the JSContext rooting aData.
   // * aFrame - the first frame of ConsoleCallData.
   // * aData - the arguments received by the console.count() method.
@@ -274,9 +290,9 @@ private:
                   const Sequence<JS::Value>& aData,
                   nsAString& aCountLabel);
 
-  // Executed on the main thread and generates a ConsoleCounter dictionary as
-  // JS::Value. If aCountValue is == MAX_PAGE_COUNTERS it generates a
-  // ConsoleCounterError instead. See IncreaseCounter.
+  // This method generates a ConsoleCounter dictionary as JS::Value. If
+  // aCountValue is == MAX_PAGE_COUNTERS it generates a ConsoleCounterError
+  // instead. See IncreaseCounter.
   // * aCx - this is the context that will root the returned value.
   // * aCountLabel - this label must be what IncreaseCounter received as
   //                 aTimerLabel.
@@ -292,12 +308,6 @@ private:
   GetOrCreateSandbox(JSContext* aCx, nsIPrincipal* aPrincipal);
 
   void
-  RegisterConsoleCallData(ConsoleCallData* aData);
-
-  void
-  UnregisterConsoleCallData(ConsoleCallData* aData);
-
-  void
   AssertIsOnOwningThread() const;
 
   // All these nsCOMPtr are touched on main thread only.
@@ -309,9 +319,18 @@ private:
   nsDataHashtable<nsStringHashKey, DOMHighResTimeStamp> mTimerRegistry;
   nsDataHashtable<nsStringHashKey, uint32_t> mCounterRegistry;
 
-  // Raw pointers because ConsoleCallData manages its own
-  // registration/unregistration.
-  nsTArray<ConsoleCallData*> mConsoleCallDataArray;
+  nsTArray<RefPtr<ConsoleCallData>> mCallDataStorage;
+
+  // This array is used in a particular corner-case where:
+  // 1. we are in a worker thread
+  // 2. we have more than STORAGE_MAX_EVENTS
+  // 3. but the main-thread ConsoleCallDataRunnable of the first one is still
+  // running (this means that something very bad is happening on the
+  // main-thread).
+  // When this happens we want to keep the ConsoleCallData alive for traceing
+  // its JSValues also if 'officially' this ConsoleCallData must be removed from
+  // the storage.
+  nsTArray<RefPtr<ConsoleCallData>> mCallDataStoragePending;
 
 #ifdef DEBUG
   PRThread* mOwningThread;
