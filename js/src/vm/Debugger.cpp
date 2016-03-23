@@ -4630,6 +4630,8 @@ Debugger::drainTraceLogger(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject array(cx, NewDenseEmptyArray(cx));
     JSAtom* dataAtom = Atomize(cx, "data", strlen("data"));
+    if (!array)
+        return false;
     if (!dataAtom)
         return false;
     RootedId dataId(cx, AtomToId(dataAtom));
@@ -4776,6 +4778,8 @@ Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
                                          &num);
 
     RootedObject array(cx, NewDenseEmptyArray(cx));
+    if (!array)
+        return false;
     RootedId fileNameId(cx, AtomToId(cx->names().fileName));
     RootedId lineNumberId(cx, AtomToId(cx->names().lineNumber));
     RootedId columnNumberId(cx, AtomToId(cx->names().columnNumber));
