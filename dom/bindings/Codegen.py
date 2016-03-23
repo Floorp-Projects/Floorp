@@ -16359,11 +16359,9 @@ class CGEventGetter(CGNativeMember):
         if type.isAny():
             return fill(
                 """
-                JS::ExposeValueToActiveJS(${memberName});
-                aRetVal.set(${memberName});
-                return;
+                ${selfName}(aRetVal);
                 """,
-                memberName=memberName)
+                selfName=self.name)
         if type.isUnion():
             return "aRetVal = " + memberName + ";\n"
         if type.isSequence():
@@ -16580,8 +16578,28 @@ class CGEventClass(CGBindingImplClass):
     def __init__(self, descriptor):
         CGBindingImplClass.__init__(self, descriptor, CGEventMethod, CGEventGetter, CGEventSetter, False, "WrapObjectInternal")
         members = []
+        extraMethods = []
         for m in descriptor.interface.members:
             if m.isAttr():
+                if m.type.isAny():
+                    # Add a getter that doesn't need a JSContext.  Note that we
+                    # don't need to do this if our originating interface is not
+                    # the descriptor's interface, because in that case we
+                    # wouldn't generate the getter that _does_ need a JSContext
+                    # either.
+                    extraMethods.append(
+                        ClassMethod(
+                            CGSpecializedGetter.makeNativeName(descriptor, m),
+                            "void",
+                            [Argument("JS::MutableHandle<JS::Value>",
+                                      "aRetVal")],
+                            const=True,
+                            body=fill(
+                                """
+                                JS::ExposeValueToActiveJS(${memberName});
+                                aRetVal.set(${memberName});
+                                """,
+                                memberName=CGDictionary.makeMemberName(m.identifier.name))))
                 if getattr(m, "originatingInterface",
                            descriptor.interface) != descriptor.interface:
                     continue
@@ -16614,10 +16632,11 @@ class CGEventClass(CGBindingImplClass):
                                            body="return this;\n",
                                            breakAfterReturnDecl=" ",
                                            override=True)
+        extraMethods.append(asConcreteTypeMethod)
 
         CGClass.__init__(self, className,
                          bases=[ClassBase(self.parentType)],
-                         methods=[asConcreteTypeMethod]+self.methodDecls,
+                         methods=extraMethods+self.methodDecls,
                          members=members,
                          extradeclarations=baseDeclarations)
 
