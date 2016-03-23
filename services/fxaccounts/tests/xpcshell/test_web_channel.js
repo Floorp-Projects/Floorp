@@ -319,6 +319,26 @@ add_test(function test_helpers_open_sync_preferences() {
   helpers.openSyncPreferences(mockBrowser, "fxa:verification_complete");
 });
 
+add_test(function test_helpers_change_password() {
+  let updateCalled = false;
+  let helpers = new FxAccountsWebChannelHelpers({
+    fxAccounts: {
+      updateUserAccountData(credentials) {
+        do_check_true(credentials.hasOwnProperty("email"));
+        do_check_true(credentials.hasOwnProperty("uid"));
+        do_check_true(credentials.hasOwnProperty("kA"));
+        // "foo" isn't a field known by storage, so should be dropped.
+        do_check_false(credentials.hasOwnProperty("foo"));
+        updateCalled = true;
+        return Promise.resolve();
+      }
+    }
+  });
+  helpers.changePassword({ email: "email", uid: "uid", kA: "kA", foo: "foo" });
+  do_check_true(updateCalled);
+  run_next_test();
+});
+
 function run_test() {
   run_next_test();
 }

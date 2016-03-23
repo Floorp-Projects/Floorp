@@ -56,6 +56,7 @@ var publicProperties = [
   "resendVerificationEmail",
   "setSignedInUser",
   "signOut",
+  "updateUserAccountData",
   "updateDeviceRegistration",
   "whenVerified"
 ];
@@ -522,6 +523,34 @@ FxAccountsInternal.prototype = {
     })
   },
 
+  /**
+   * Update account data for the currently signed in user.
+   *
+   * @param credentials
+   *        The credentials object containing the fields to be updated.
+   *        This object must contain |email| and |uid| fields and they must
+   *        match the currently signed in user.
+   */
+  updateUserAccountData(credentials) {
+    log.debug("updateUserAccountData called with fields", Object.keys(credentials));
+    if (logPII) {
+      log.debug("updateUserAccountData called with data", credentials);
+    }
+    let currentAccountState = this.currentAccountState;
+    return currentAccountState.promiseInitialized.then(() => {
+      return currentAccountState.getUserAccountData(["email", "uid"]);
+    }).then(existing => {
+      if (existing.email != credentials.email || existing.uid != credentials.uid) {
+        throw new Error("The specified credentials aren't for the current user");
+      }
+      // We need to nuke email and uid as storage will complain if we try and
+      // update them (even when the value is the same)
+      credentials = Cu.cloneInto(credentials, {}); // clone it first
+      delete credentials.email;
+      delete credentials.uid;
+      return currentAccountState.updateUserAccountData(credentials);
+    });
+  },
 
   /**
    * returns a promise that fires with the assertion.  If there is no verified

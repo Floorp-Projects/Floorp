@@ -262,6 +262,58 @@ add_task(function* test_get_signed_in_user_initially_unset() {
   do_check_eq(result, null);
 });
 
+add_task(function* test_update_account_data() {
+  _("Check updateUserAccountData does the right thing.");
+  let account = MakeFxAccounts();
+  let credentials = {
+    email: "foo@example.com",
+    uid: "1234@lcip.org",
+    assertion: "foobar",
+    sessionToken: "dead",
+    kA: "beef",
+    kB: "cafe",
+    verified: true
+  };
+  yield account.setSignedInUser(credentials);
+
+  let newCreds = {
+    email: credentials.email,
+    uid: credentials.uid,
+    assertion: "new_assertion",
+  }
+  yield account.updateUserAccountData(newCreds);
+  do_check_eq((yield account.getSignedInUser()).assertion, "new_assertion",
+              "new field value was saved");
+
+  // but we should fail attempting to change email or uid.
+  newCreds = {
+    email: "someoneelse@example.com",
+    uid: credentials.uid,
+    assertion: "new_assertion",
+  }
+  yield Assert.rejects(account.updateUserAccountData(newCreds));
+  newCreds = {
+    email: credentials.email,
+    uid: "another_uid",
+    assertion: "new_assertion",
+  }
+  yield Assert.rejects(account.updateUserAccountData(newCreds));
+
+  // should fail without email or uid.
+  newCreds = {
+    assertion: "new_assertion",
+  }
+  yield Assert.rejects(account.updateUserAccountData(newCreds));
+
+  // and should fail with a field name that's not known by storage.
+  newCreds = {
+    email: credentials.email,
+    uid: "another_uid",
+    foo: "bar",
+  }
+  yield Assert.rejects(account.updateUserAccountData(newCreds));
+});
+
 add_task(function* test_getCertificateOffline() {
   _("getCertificateOffline()");
   let fxa = MakeFxAccounts();
