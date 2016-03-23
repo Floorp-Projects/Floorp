@@ -272,7 +272,7 @@ public:
   // process incremental, we allow consumers to opt-in to the new behavior
   // while keeping the old behavior as the default.
   void TakeOwnershipOfErrorReporting();
-  bool OwnsErrorReporting() { return mOwnErrorReporting; }
+  bool OwnsErrorReporting() { return true; }
   // If HasException, report it.  Otherwise, a no-op.  This must be
   // called only if OwnsErrorReporting().
   void ReportException();
@@ -317,7 +317,6 @@ private:
   JSContext *mCx;
 
   // Track state between the old and new error reporting modes.
-  bool mOwnErrorReporting;
   bool mOldAutoJSAPIOwnsErrorReporting;
   // Whether we're mainthread or not; set when we're initialized.
   bool mIsMainThread;
