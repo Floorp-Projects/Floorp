@@ -6758,6 +6758,7 @@ var gIdentityHandler = {
 
     // Push the appropriate strings out to the UI
     this._identityBox.tooltipText = tooltip;
+    this._identityIcon.tooltipText = gNavigatorBundle.getString("identity.icon.tooltip");
     this._identityIconLabel.value = icon_label;
     this._identityIconCountryLabel.value = icon_country_label;
     // Set cropping and direction
