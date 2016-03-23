@@ -923,6 +923,44 @@ WorkerDebuggerGlobalScope::ReportError(JSContext* aCx,
   mWorkerPrivate->ReportErrorToDebugger(filename, lineno, aMessage);
 }
 
+void
+WorkerDebuggerGlobalScope::RetrieveConsoleEvents(JSContext* aCx,
+                                                 nsTArray<JS::Value>& aEvents,
+                                                 ErrorResult& aRv)
+{
+  WorkerGlobalScope* scope = mWorkerPrivate->GetOrCreateGlobalScope(aCx);
+  if (!scope) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  RefPtr<Console> console = scope->GetConsole(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  console->RetrieveConsoleEvents(aCx, aEvents, aRv);
+}
+
+void
+WorkerDebuggerGlobalScope::SetConsoleEventHandler(JSContext* aCx,
+                                                  AnyCallback& aHandler,
+                                                  ErrorResult& aRv)
+{
+  WorkerGlobalScope* scope = mWorkerPrivate->GetOrCreateGlobalScope(aCx);
+  if (!scope) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  RefPtr<Console> console = scope->GetConsole(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  console->SetConsoleEventHandler(aHandler);
+}
+
 Console*
 WorkerDebuggerGlobalScope::GetConsole(ErrorResult& aRv)
 {

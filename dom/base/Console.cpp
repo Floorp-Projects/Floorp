@@ -10,6 +10,7 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Maybe.h"
@@ -144,6 +145,21 @@ public:
     mOuterIDString = aOuterID;
     mInnerIDString = aInnerID;
     mIDType = eString;
+  }
+
+  bool
+  PopulateArgumentsSequence(Sequence<JS::Value>& aSequence) const
+  {
+    AssertIsOnOwningThread();
+
+    for (uint32_t i = 0; i < mCopiedArguments.Length(); ++i) {
+      if (NS_WARN_IF(!aSequence.AppendElement(mCopiedArguments[i],
+                                              fallible))) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   void
@@ -800,12 +816,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Console)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Console)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsoleEventNotifier)
   tmp->Shutdown();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Console)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsoleEventNotifier)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -1352,6 +1370,9 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
     return;
   }
 
+  // We do this only in workers for now.
+  NotifyHandler(aCx, global, aData, callData);
+
   RefPtr<ConsoleCallDataRunnable> runnable =
     new ConsoleCallDataRunnable(this, callData);
   NS_WARN_IF(!runnable->Dispatch(global));
@@ -1477,7 +1498,7 @@ Console::PopulateEvent(JSContext* aCx,
     event.mInnerID.Value().SetAsUnsignedLongLong() = aData->mInnerIDNumber;
   } else {
     // aData->mIDType can be eUnknown when we dispatch notifications via
-    // mConsoleEventHandler.
+    // mConsoleEventNotifier.
     event.mID.Value().SetAsUnsignedLongLong() = 0;
     event.mInnerID.Value().SetAsUnsignedLongLong() = 0;
   }
@@ -2222,6 +2243,74 @@ Console::ReleaseCallData(ConsoleCallData* aCallData)
   MOZ_ASSERT(mCallDataStoragePending.Contains(aCallData));
 
   mCallDataStoragePending.RemoveElement(aCallData);
+}
+
+void
+Console::NotifyHandler(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
+                       const Sequence<JS::Value>& aArguments,
+                       ConsoleCallData* aCallData) const
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aCallData);
+
+  if (!mConsoleEventNotifier) {
+    return;
+  }
+
+  JSAutoCompartment ac(aCx, mConsoleEventNotifier->Callable());
+
+  JS::Rooted<JS::Value> value(aCx);
+  if (NS_WARN_IF(!PopulateEvent(aCx, mConsoleEventNotifier->Callable(),
+                                aArguments, &value, aCallData))) {
+    return;
+  }
+
+  JS::Rooted<JS::Value> ignored(aCx);
+  mConsoleEventNotifier->Call(value, &ignored);
+}
+
+void
+Console::RetrieveConsoleEvents(JSContext* aCx, nsTArray<JS::Value>& aEvents,
+                               ErrorResult& aRv)
+{
+  AssertIsOnOwningThread();
+
+  // We don't want to expose this functionality to main-thread yet.
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
+
+  for (uint32_t i = 0; i < mCallDataStorage.Length(); ++i) {
+    JS::Rooted<JS::Value> value(aCx);
+
+    Sequence<JS::Value> sequence;
+    SequenceRooter<JS::Value> arguments(aCx, &sequence);
+
+    if (!mCallDataStorage[i]->PopulateArgumentsSequence(sequence)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+
+    if (NS_WARN_IF(!PopulateEvent(aCx, global, sequence, &value,
+                                  mCallDataStorage[i]))) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    aEvents.AppendElement(value);
+  }
+}
+
+void
+Console::SetConsoleEventHandler(AnyCallback& aHandler)
+{
+  AssertIsOnOwningThread();
+
+  // We don't want to expose this functionality to main-thread yet.
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  mConsoleEventNotifier = &aHandler;
 }
 
 void
