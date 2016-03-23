@@ -123,10 +123,10 @@ class ConfigureSandbox(dict):
         self._options = OrderedDict()
         # Store the raw values returned by @depends functions
         self._results = {}
-        # Store several kind of information:
-        # - value for each Option, as per returned by Option.get_value
-        # - raw option (as per command line or environment) for each value
-        self._db = {}
+        # Store values for each Option, as per returned by Option.get_value
+        self._option_values = {}
+        # Store raw option (as per command line or environment) for each Option
+        self._raw_options = {}
 
         # Store options added with `imply_option`, and the reason they were
         # added (which can either have been given to `imply_option`, or
@@ -146,7 +146,7 @@ class ConfigureSandbox(dict):
         self._seen.add(self._help_option)
         # self._option_impl('--help') will have set this if --help was on the
         # command line.
-        if self._db[self._help_option]:
+        if self._option_values[self._help_option]:
             self._help = HelpFormatter(argv[0])
             self._help.add(self._help_option)
 
@@ -269,9 +269,9 @@ class ConfigureSandbox(dict):
         if self._help:
             self._help.add(option)
 
-        self._db[option] = value
-        self._db[value] = (option_string.split('=', 1)[0]
-                           if option_string else option_string)
+        self._option_values[option] = value
+        self._raw_options[option] = (option_string.split('=', 1)[0]
+                                    if option_string else option_string)
         return option
 
     def depends_impl(self, *args):
@@ -315,8 +315,8 @@ class ConfigureSandbox(dict):
                 if arg == self._help_option:
                     with_help = True
                 self._seen.add(arg)
-                assert arg in self._db or self._help
-                resolved_arg = self._db.get(arg)
+                assert arg in self._option_values or self._help
+                resolved_arg = self._option_values.get(arg)
             elif isinstance(arg, DummyFunction):
                 assert arg in self._depends
                 arg = self._depends[arg]
@@ -365,7 +365,10 @@ class ConfigureSandbox(dict):
                                 "Cannot infer what implied '%s'" % option)
                         if name == '--help':
                             continue
-                        deps.append(value.format(self._db.get(value) or name))
+                        prefix, opt, values = Option.split_option(name)
+                        deps.append(value.format(
+                            self._raw_options.get(self._options[opt])
+                            or name))
                     if len(deps) != 1:
                         raise ConfigureError(
                             "Cannot infer what implied '%s'" % option)
