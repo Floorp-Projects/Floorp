@@ -14,7 +14,10 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
-const HALF_COUNT = 5e4;
+// Making this 50k makes cgc builds time out on tbpl.  5k takes 28s locally.
+// 10k takes 84s locally.  So pick an intermediate number, with a generous
+// constant factor in case cgc-on-tbpl is much slower.
+const HALF_COUNT = 7500;
 
 var configurables = [];
 for (var i = 0; i < HALF_COUNT; i++)
