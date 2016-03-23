@@ -267,14 +267,7 @@ public:
 
   bool CxPusherIsStackTop() const { return mCxPusher->IsStackTop(); }
 
-  // We're moving towards a world where the AutoJSAPI always handles
-  // exceptions that bubble up from the JS engine. In order to make this
-  // process incremental, we allow consumers to opt-in to the new behavior
-  // while keeping the old behavior as the default.
-  void TakeOwnershipOfErrorReporting();
-  bool OwnsErrorReporting() { return true; }
-  // If HasException, report it.  Otherwise, a no-op.  This must be
-  // called only if OwnsErrorReporting().
+  // If HasException, report it.  Otherwise, a no-op.
   void ReportException();
 
   bool HasException() const {
