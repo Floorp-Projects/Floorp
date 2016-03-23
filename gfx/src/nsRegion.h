@@ -831,7 +831,7 @@ public:
   // Forward constructors.
   IntRegionTyped() {}
   MOZ_IMPLICIT IntRegionTyped(const IntRectTyped<units>& aRect) : Super(aRect) {}
-  IntRegionTyped(const IntRegionTyped& aRegion) : Super(aRegion) {}
+  explicit IntRegionTyped(const IntRegionTyped& aRegion) : Super(aRegion) {}
   IntRegionTyped(const nsTArray<pixman_box32_t>& aRects) : Super(aRects) {}
   IntRegionTyped(IntRegionTyped&& aRegion) : Super(mozilla::Move(aRegion)) {}
 
