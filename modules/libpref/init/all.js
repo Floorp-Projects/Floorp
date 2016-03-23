@@ -3257,7 +3257,7 @@ pref("plugin.mousewheel.enabled", true);
 
 // Help Windows NT, 2000, and XP dialup a RAS connection
 // when a network address is unreachable.
-pref("network.autodial-helper.enabled", true);
+pref("network.autodial-helper.enabled", false);
 
 // Switch the keyboard layout per window
 pref("intl.keyboard.per_window_layout", false);
