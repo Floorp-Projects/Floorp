@@ -19,7 +19,7 @@ endif
 endif
 
 ifdef COMPILE_ENVIRONMENT
-libs::
+tools::
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	# Copy for xpcshell tests
 	$(NSINSTALL) -D $(XPCSHELLTESTROOT)/data/updater-xpcshell.app
