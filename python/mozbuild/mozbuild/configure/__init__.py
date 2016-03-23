@@ -290,10 +290,12 @@ class ConfigureSandbox(dict):
 
         The decorated function is altered to use a different global namespace
         for its execution. This different global namespace exposes a limited
-        set of functions from os.path, and two additional functions:
-        `imply_option` and `set_config`. The former allows to inject additional
-        options as if they had been passed on the command line. The latter
-        declares new configuration items for consumption by moz.build.
+        set of functions from os.path, and three additional functions:
+        `imply_option`, `set_config` and `set_define`. The first allows to
+        inject additional options as if they had been passed on the command
+        line. The second declares new configuration items for consumption by
+        moz.build. The last declares new defines, stored in a DEFINES
+        configuration item.
         '''
         if not args:
             raise ConfigureError('@depends needs at least one argument')
@@ -334,6 +336,7 @@ class ConfigureSandbox(dict):
             glob.update(
                 imply_option=result.imply_option,
                 set_config=result.__setitem__,
+                set_define=self._set_define,
             )
             dummy = wraps(func)(DummyFunction())
             self._depends[dummy] = func
@@ -421,6 +424,12 @@ class ConfigureSandbox(dict):
         func, glob = self._prepare_function(func)
         glob.update(__builtins__=__builtins__)
         return func
+
+    def _set_define(self, name, value):
+        defines = self._config.setdefault('DEFINES', {})
+        if name in defines:
+            raise ConfigureError("'%s' is already defined" % name)
+        defines[name] = value
 
     def _prepare_function(self, func):
         '''Alter the given function global namespace with the common ground
