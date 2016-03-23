@@ -2972,6 +2972,7 @@ RectTextureImage::EndUpdate(bool aKeepSurface)
   LayoutDeviceIntRegion updateRegion = mUpdateRegion;
   if (mTextureSize != mBufferSize) {
     mTextureSize = mBufferSize;
+    needInit = true;
   }
 
   if (needInit || !CanUploadSubtextures()) {
