@@ -11,7 +11,7 @@
  */
 
 [Pref="media.webspeech.synth.enabled"]
-interface SpeechSynthesis {
+interface SpeechSynthesis : EventTarget{
   readonly attribute boolean pending;
   readonly attribute boolean speaking;
   readonly attribute boolean paused;
@@ -23,6 +23,8 @@ interface SpeechSynthesis {
   [UnsafeInPrerendering]
   void resume();
   sequence<SpeechSynthesisVoice> getVoices();
+
+  attribute EventHandler onvoiceschanged;
 
   [ChromeOnly]
   // Force an utterance to end. Circumvents bad speech service implementations.
