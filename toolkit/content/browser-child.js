@@ -634,7 +634,6 @@ var outerWindowID = content.QueryInterface(Ci.nsIInterfaceRequestor)
                            .outerWindowID;
 var initData = sendSyncMessage("Browser:Init", {outerWindowID: outerWindowID});
 if (initData.length && initData[0]) {
-  docShell.useGlobalHistory = initData[0].useGlobalHistory;
   if (initData[0].initPopup) {
     setTimeout(() => AutoCompletePopup.init(), 0);
   }
