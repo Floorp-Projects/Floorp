@@ -70,7 +70,7 @@ public:
   // eviction.
   virtual EvictDataResult
   EvictData(media::TimeUnit aPlaybackTime,
-            uint32_t aThreshold,
+            int64_t aThreshold,
             media::TimeUnit* aBufferStartTime) = 0;
 
   // Evicts data up to aTime.
@@ -107,6 +107,7 @@ public:
   virtual void SetGroupStartTimestamp(const media::TimeUnit& aGroupStartTimestamp) {}
   virtual void RestartGroupStartTimestamp() {}
   virtual media::TimeUnit GroupEndTimestamp() = 0;
+  virtual int64_t EvictionThreshold() const = 0;
 
 protected:
   virtual ~SourceBufferContentManager() { }

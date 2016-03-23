@@ -97,7 +97,7 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(
   for (uint32_t i = 0; i < mProtoHandlers.Length(); ++i) {
     nsXBLPrototypeHandler* handler = mProtoHandlers[i];
     bool hasAllowUntrustedAttr = handler->HasAllowUntrustedAttr();
-    if ((event->mFlags.mIsTrusted ||
+    if ((event->IsTrusted() ||
         (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||
         (!hasAllowUntrustedAttr && !mIsBoundToChrome && !mUsingContentXBLScope)) &&
         handler->KeyEventMatched(aKeyEvent, aCharCode, aIgnoreModifierState)) {
@@ -140,18 +140,21 @@ nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
   if (!key)
     return NS_OK;
 
-  AutoTArray<nsShortcutCandidate, 10> accessKeys;
-  nsContentUtils::GetAccelKeyCandidates(key, accessKeys);
+  WidgetKeyboardEvent* nativeKeyboardEvent =
+    aEvent->WidgetEventPtr()->AsKeyboardEvent();
+  MOZ_ASSERT(nativeKeyboardEvent);
+  AutoShortcutKeyCandidateArray shortcutKeys;
+  nativeKeyboardEvent->GetShortcutKeyCandidates(shortcutKeys);
 
-  if (accessKeys.IsEmpty()) {
+  if (shortcutKeys.IsEmpty()) {
     ExecuteMatchedHandlers(key, 0, IgnoreModifierState());
     return NS_OK;
   }
 
-  for (uint32_t i = 0; i < accessKeys.Length(); ++i) {
+  for (uint32_t i = 0; i < shortcutKeys.Length(); ++i) {
     IgnoreModifierState ignoreModifierState;
-    ignoreModifierState.mShift = accessKeys[i].mIgnoreShift;
-    if (ExecuteMatchedHandlers(key, accessKeys[i].mCharCode,
+    ignoreModifierState.mShift = shortcutKeys[i].mIgnoreShift;
+    if (ExecuteMatchedHandlers(key, shortcutKeys[i].mCharCode,
                                ignoreModifierState)) {
       return NS_OK;
     }

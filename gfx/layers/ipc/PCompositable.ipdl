@@ -7,7 +7,7 @@
 
 include protocol PLayerTransaction;
 include protocol PImageBridge;
-include protocol PCompositor;
+include protocol PCompositorBridge;
 
 namespace mozilla {
 namespace layers {

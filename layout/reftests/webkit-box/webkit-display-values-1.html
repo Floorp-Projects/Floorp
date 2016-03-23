@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: -webkit-box & -webkit-inline-box as "display" values
+  </title>
+  <style>
+    div {
+      border: 1px solid black;
+      width: 50px;
+      height: 20px;
+      /* Lets us see whether 'display:-webkit-box' styling worked:*/
+      -webkit-box-pack: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- -webkit-box, possibly mixed with -moz-box: -->
+  <div style="display: -webkit-box;">a</div>
+
+  <div style="display: -webkit-box;
+              display: -moz-box;">b</div>
+
+  <div style="display: -moz-box;
+              display: -webkit-box;">c</div>
+  <br>
+
+  <!-- -webkit-inline-box, possibly mixed with -moz-inline-box: -->
+  <div style="display: -webkit-inline-box;">d</div>
+
+  <div style="display: -webkit-inline-box;
+              display: -moz-inline-box;">e</div>
+
+  <div style="display: -moz-inline-box;
+              display: -webkit-inline-box;">f</div>
+</body>
+</html>

@@ -159,6 +159,9 @@ from its prototype:
 `isArrowFunction`
 :   `true` if the referent is an arrow function; `false` otherwise.
 
+`isPromise`
+:   `true` if the referent is a Promise; `false` otherwise.
+
 `boundTargetFunction`
 :   If the referent is a bound function, this is its target function—the
     function that was bound to a particular `this` object. If the referent
@@ -194,6 +197,89 @@ from its prototype:
     when the function proxy is called via a `new` expression. If the
     referent is not a function proxy whose handler object was allocated by
     debuggee code, this is `null`.
+
+`promiseState`
+:   If the referent is a [`Promise`][promise], this is an object describing
+    the Promise's current state, with the following properties:
+
+    `state`
+    :   A string indicating whether the [`Promise`][promise] is pending or
+        has been fulfilled or rejected.
+        This accessor returns one of the following values:
+
+        * `"pending"`, if the [`Promise`][promise] hasn't been resolved.
+
+        * `"fulfilled"`, if the [`Promise`][promise] has been fulfilled.
+
+        * `"rejected"`, if the [`Promise`][promise] has been rejected.
+
+    `value`
+    :   If the [`Promise`][promise] has been *fulfilled*, this is a
+        `Debugger.Object` referring to the value it was fulfilled with,
+        `undefined` otherwise.
+
+    `reason`
+    :   If the [`Promise`][promise] has been *rejected*, this is a
+        `Debugger.Object` referring to the value it was rejected with,
+        `undefined` otherwise.
+
+    If the referent is not a [`Promise`][promise], throw a `TypeError`
+    exception.
+
+`promiseAllocationSite`
+:   If the referent is a [`Promise`][promise], this is the
+    [JavaScript execution stack][saved-frame] captured at the time of the
+    promise's allocation. This can return null if the promise was not
+    created from script. If the referent is not a [`Promise`][promise], throw
+    a `TypeError` exception.
+
+`promiseResolutionSite`
+:   If the referent is a [`Promise`][promise], this is the
+    [JavaScript execution stack][saved-frame] captured at the time of the
+    promise's resolution. This can return null if the promise was not
+    resolved by calling its `resolve` or `reject` resolving functions from
+    script. If the referent is not a [`Promise`][promise], throw a `TypeError`
+    exception.
+
+`promiseID`
+:   If the referent is a [`Promise`][promise], this is a process-unique
+    identifier for the [`Promise`][promise]. With e10s, the same id can
+    potentially be assigned to multiple [`Promise`][promise] instances, if
+    those instances were created in different processes. If the referent is
+    not a [`Promise`][promise], throw a `TypeError` exception.
+
+`promiseDependentPromises`
+:   If the referent is a [`Promise`][promise], this is an `Array` of
+    `Debugger.Objects` referring to the promises directly depending on the
+    referent [`Promise`][promise]. These are:
+
+   1) Return values of `then()` calls on the promise.
+   2) Return values of `Promise.all()` if the referent [`Promise`][promise]
+      was passed in as one of the arguments.
+   3) Return values of `Promise.race()` if the referent [`Promise`][promise]
+      was passed in as one of the arguments.
+
+   Once a [`Promise`][promise] is settled, it will generally notify its
+   dependent promises and forget about them, so this is most useful on
+   *pending* promises.
+
+   Note that the `Array` only contains the promises that directly depend on
+   the referent [`Promise`][promise]. It does not contain promises that depend
+   on promises that depend on the referent [`Promise`][promise].
+
+   If the referent is not a [`Promise`][promise], throw a `TypeError`
+   exception.
+
+`promiseLifetime`
+:   If the referent is a [`Promise`][promise], this is the number of
+    milliseconds elapsed since the [`Promise`][promise] was created. If the
+    referent is not a [`Promise`][promise], throw a `TypeError` exception.
+
+`promiseTimeToResolution`
+:   If the referent is a [`Promise`][promise], this is the number of
+    milliseconds elapsed between when the [`Promise`][promise] was created and
+    when it was resolved. If the referent hasn't been resolved or is not a
+    [`Promise`][promise], throw a `TypeError` exception.
 
 `global`
 :   A `Debugger.Object` instance referring to the global object in whose

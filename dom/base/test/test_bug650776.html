@@ -6,23 +6,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650776
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 650776</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=650776">Mozilla Bug 650776</a>
-<p id="display"></p>
-<div id="content" style="display: none">
-  
-</div>
 <pre id="test">
 <script type="application/javascript">
 
 /** Test for Bug 650776 **/
 
-var u = Components.interfaces.nsIParserUtils;
-var s = Components.classes["@mozilla.org/parserutils;1"]
-        .getService(u);
+var u = SpecialPowers.Ci.nsIParserUtils;
+var s = SpecialPowers.ParserUtils;
 
 // Basic sanity
 is(s.sanitize("foo", 0), "<html><head></head><body>foo</body></html>", "Wrong sanitizer result 1");

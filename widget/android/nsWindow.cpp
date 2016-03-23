@@ -89,8 +89,8 @@ using namespace mozilla::layers;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
-#include "mozilla/layers/CompositorChild.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/LayerTransactionParent.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Services.h"
@@ -450,7 +450,7 @@ public:
         }
 
         RefPtr<APZCTreeManager> controller = mWindow->mAPZC;
-        RefPtr<CompositorParent> compositor = mWindow->mCompositorParent;
+        RefPtr<CompositorBridgeParent> compositor = mWindow->mCompositorBridgeParent;
         if (controller && compositor) {
             // TODO: Pass in correct values for presShellId and viewId.
             controller->CancelAnimation(ScrollableLayerGuid(
@@ -1008,8 +1008,8 @@ public:
             // Since we are re-linking the new java objects to Gecko, we need
             // to get the viewport from the compositor (since the Java copy was
             // thrown away) and we do that by setting the first-paint flag.
-            if (window.mCompositorParent) {
-                window.mCompositorParent->ForceIsFirstPaint();
+            if (window.mCompositorBridgeParent) {
+                window.mCompositorBridgeParent->ForceIsFirstPaint();
             }
         }
 
@@ -1046,31 +1046,31 @@ public:
         // background. While the compositor is paused, we need to ensure that
         // no layer tree updates (from draw events) occur, since the compositor
         // cannot make a GL context current in order to process updates.
-        if (window.mCompositorChild) {
-            window.mCompositorChild->SendPause();
+        if (window.mCompositorBridgeChild) {
+            window.mCompositorBridgeChild->SendPause();
         }
         mCompositorPaused = true;
     }
 
     void SyncPauseCompositor()
     {
-        if (window.mCompositorParent) {
-            window.mCompositorParent->SchedulePauseOnCompositorThread();
+        if (window.mCompositorBridgeParent) {
+            window.mCompositorBridgeParent->SchedulePauseOnCompositorThread();
             mCompositorPaused = true;
         }
     }
 
     void SyncResumeCompositor()
     {
-        if (window.mCompositorParent &&
-                window.mCompositorParent->ScheduleResumeOnCompositorThread()) {
+        if (window.mCompositorBridgeParent &&
+                window.mCompositorBridgeParent->ScheduleResumeOnCompositorThread()) {
             mCompositorPaused = false;
         }
     }
 
     void SyncResumeResizeCompositor(int32_t aWidth, int32_t aHeight)
     {
-        if (window.mCompositorParent && window.mCompositorParent->
+        if (window.mCompositorBridgeParent && window.mCompositorBridgeParent->
                 ScheduleResumeOnCompositorThread(aWidth, aHeight)) {
             mCompositorPaused = false;
         }
@@ -1078,9 +1078,9 @@ public:
 
     void SyncInvalidateAndScheduleComposite()
     {
-        if (window.mCompositorParent) {
-            window.mCompositorParent->InvalidateOnCompositorThread();
-            window.mCompositorParent->ScheduleRenderOnCompositorThread();
+        if (window.mCompositorBridgeParent) {
+            window.mCompositorBridgeParent->InvalidateOnCompositorThread();
+            window.mCompositorBridgeParent->ScheduleRenderOnCompositorThread();
         }
     }
 };
@@ -3483,8 +3483,8 @@ nsWindow::ScheduleResumeComposition()
 float
 nsWindow::ComputeRenderIntegrity()
 {
-    if (gGeckoViewWindow && gGeckoViewWindow->mCompositorParent) {
-        return gGeckoViewWindow->mCompositorParent->ComputeRenderIntegrity();
+    if (gGeckoViewWindow && gGeckoViewWindow->mCompositorBridgeParent) {
+        return gGeckoViewWindow->mCompositorBridgeParent->ComputeRenderIntegrity();
     }
 
     return 1.f;
@@ -3517,10 +3517,10 @@ nsWindow::NeedsPaint()
     return nsIWidget::NeedsPaint();
 }
 
-CompositorParent*
-nsWindow::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
+CompositorBridgeParent*
+nsWindow::NewCompositorBridgeParent(int aSurfaceWidth, int aSurfaceHeight)
 {
-    return new CompositorParent(this, true, aSurfaceWidth, aSurfaceHeight);
+    return new CompositorBridgeParent(this, true, aSurfaceWidth, aSurfaceHeight);
 }
 
 void

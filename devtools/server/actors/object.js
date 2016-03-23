@@ -11,7 +11,6 @@ const { GeneratedLocation } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main")
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, dumpn } = DevToolsUtils;
-const PromiseDebugging = require("PromiseDebugging");
 
 loader.lazyRequireGetter(this, "ThreadSafeChromeUtils");
 
@@ -140,7 +139,6 @@ ObjectActor.prototype = {
   _createPromiseState: function() {
     const { state, value, reason } = getPromiseState(this.obj);
     let promiseState = { state };
-    let rawPromise = this.obj.unsafeDereference();
 
     if (state == "fulfilled") {
       promiseState.value = this.hooks.createValueGrip(value);
@@ -148,14 +146,12 @@ ObjectActor.prototype = {
       promiseState.reason = this.hooks.createValueGrip(reason);
     }
 
-    promiseState.creationTimestamp = Date.now() -
-      PromiseDebugging.getPromiseLifetime(rawPromise);
+    promiseState.creationTimestamp = Date.now() - this.obj.promiseLifetime;
 
-    // If the promise is not settled, avoid adding the timeToSettle property
-    // and catch the error thrown by PromiseDebugging.getTimeToSettle.
-    try {
-      promiseState.timeToSettle = PromiseDebugging.getTimeToSettle(rawPromise);
-    } catch(e) {}
+    // Only add the timeToSettle property if the Promise isn't pending.
+    if (state !== "pending") {
+      promiseState.timeToSettle = this.obj.promiseTimeToResolution;
+    }
 
     return promiseState;
   },
@@ -541,9 +537,7 @@ ObjectActor.prototype = {
                         "object grips with a 'Promise' class." };
     }
 
-    let rawPromise = this.obj.unsafeDereference();
-    let promises = PromiseDebugging.getDependentPromises(rawPromise).map(p =>
-      this.hooks.createValueGrip(this.obj.makeDebuggeeValue(p)));
+    let promises = this.obj.promiseDependentPromises.map(p => this.hooks.createValueGrip(p));
 
     return { promises };
   },
@@ -558,8 +552,7 @@ ObjectActor.prototype = {
                         "object grips with a 'Promise' class." };
     }
 
-    let rawPromise = this.obj.unsafeDereference();
-    let stack = PromiseDebugging.getAllocationStack(rawPromise);
+    let stack = this.obj.promiseAllocationSite;
     let allocationStacks = [];
 
     while (stack) {
@@ -588,8 +581,7 @@ ObjectActor.prototype = {
                         "object grips with a 'Promise' class." };
     }
 
-    let rawPromise = this.obj.unsafeDereference();
-    let stack = PromiseDebugging.getFullfillmentStack(rawPromise);
+    let stack = this.obj.promiseResolutionSite;
     let fulfillmentStacks = [];
 
     while (stack) {
@@ -618,8 +610,7 @@ ObjectActor.prototype = {
                         "object grips with a 'Promise' class." };
     }
 
-    let rawPromise = this.obj.unsafeDereference();
-    let stack = PromiseDebugging.getRejectionStack(rawPromise);
+    let stack = this.obj.promiseResolutionSite;
     let rejectionStacks = [];
 
     while (stack) {
@@ -1650,10 +1641,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
 ];
 
 /**
- * Call PromiseDebugging.getState on this Debugger.Object's referent and wrap
- * the resulting `value` or `reason` properties in a Debugger.Object instance.
- *
- * See dom/webidl/PromiseDebugging.webidl
+ * Get thisDebugger.Object referent's `promiseState`.
  *
  * @returns Object
  *          An object of one of the following forms:
@@ -1667,13 +1655,7 @@ function getPromiseState(obj) {
       "Can't call `getPromiseState` on `Debugger.Object`s that don't " +
       "refer to Promise objects.");
   }
-
-  const state = PromiseDebugging.getState(obj.unsafeDereference());
-  return {
-    state: state.state,
-    value: obj.makeDebuggeeValue(state.value),
-    reason: obj.makeDebuggeeValue(state.reason)
-  };
+  return obj.promiseState;
 };
 
 /**

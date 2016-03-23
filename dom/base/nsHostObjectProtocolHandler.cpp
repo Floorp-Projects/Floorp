@@ -7,6 +7,7 @@
 #include "nsHostObjectProtocolHandler.h"
 
 #include "DOMMediaStream.h"
+#include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MediaSource.h"
 #include "mozilla/LoadInfo.h"
@@ -201,11 +202,7 @@ class BlobURLsReporter final : public nsIMemoryReporter
       return;
     }
 
-    nsresult rv;
-    nsIXPConnect* xpc = nsContentUtils::XPConnect();
-    nsCOMPtr<nsIStackFrame> frame;
-    rv = xpc->GetCurrentJSStack(getter_AddRefs(frame));
-    NS_ENSURE_SUCCESS_VOID(rv);
+    nsCOMPtr<nsIStackFrame> frame = dom::GetCurrentJSStack(maxFrames);
 
     nsAutoCString origin;
     nsCOMPtr<nsIURI> principalURI;
@@ -214,12 +211,17 @@ class BlobURLsReporter final : public nsIMemoryReporter
       principalURI->GetPrePath(origin);
     }
 
-    for (uint32_t i = 0; i < maxFrames && frame; ++i) {
+    // If we got a frame, we better have a current JSContext.  This is cheating
+    // a bit; ideally we'd have our caller pass in a JSContext, or have
+    // GetCurrentJSStack() hand out the JSContext it found.
+    JSContext* cx = frame ? nsContentUtils::GetCurrentJSContext() : nullptr;
+
+    for (uint32_t i = 0; frame; ++i) {
       nsString fileNameUTF16;
       int32_t lineNumber = 0;
 
-      frame->GetFilename(fileNameUTF16);
-      frame->GetLineNumber(&lineNumber);
+      frame->GetFilename(cx, fileNameUTF16);
+      frame->GetLineNumber(cx, &lineNumber);
 
       if (!fileNameUTF16.IsEmpty()) {
         NS_ConvertUTF16toUTF8 fileName(fileNameUTF16);
@@ -246,8 +248,10 @@ class BlobURLsReporter final : public nsIMemoryReporter
         stack += ")/";
       }
 
-      rv = frame->GetCaller(getter_AddRefs(frame));
+      nsCOMPtr<nsIStackFrame> caller;
+      nsresult rv = frame->GetCaller(cx, getter_AddRefs(caller));
       NS_ENSURE_SUCCESS_VOID(rv);
+      caller.swap(frame);
     }
   }
 

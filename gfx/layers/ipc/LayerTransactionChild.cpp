@@ -27,7 +27,7 @@ LayerTransactionChild::Destroy()
     return;
   }
   // mDestroyed is used to prevent calling Send__delete__() twice.
-  // When this function is called from CompositorChild::Destroy(),
+  // When this function is called from CompositorBridgeChild::Destroy(),
   // under Send__delete__() call, this function is called from
   // ShadowLayerForwarder's destructor.
   // When it happens, IPCOpen() is still true.

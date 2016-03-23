@@ -106,7 +106,7 @@ public:
   }
 
   WidgetSimpleGestureEvent(const WidgetSimpleGestureEvent& aOther)
-    : WidgetMouseEventBase(aOther.mFlags.mIsTrusted, aOther.mMessage,
+    : WidgetMouseEventBase(aOther.IsTrusted(), aOther.mMessage,
                            aOther.widget, eSimpleGestureEventClass)
     , allowedDirections(aOther.allowedDirections)
     , direction(aOther.direction)
@@ -167,7 +167,7 @@ public:
   }
 
   WidgetTouchEvent(const WidgetTouchEvent& aOther)
-    : WidgetInputEvent(aOther.mFlags.mIsTrusted, aOther.mMessage, aOther.widget,
+    : WidgetInputEvent(aOther.IsTrusted(), aOther.mMessage, aOther.widget,
                        eTouchEventClass)
   {
     MOZ_COUNT_CTOR(WidgetTouchEvent);

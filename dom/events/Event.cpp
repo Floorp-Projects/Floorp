@@ -466,22 +466,21 @@ Event::GetTimeStamp(uint64_t* aTimeStamp)
 NS_IMETHODIMP
 Event::StopPropagation()
 {
-  mEvent->mFlags.mPropagationStopped = true;
+  mEvent->StopPropagation();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Event::StopImmediatePropagation()
 {
-  mEvent->mFlags.mPropagationStopped = true;
-  mEvent->mFlags.mImmediatePropagationStopped = true;
+  mEvent->StopImmediatePropagation();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 Event::StopCrossProcessForwarding()
 {
-  mEvent->mFlags.mNoCrossProcessBoundaryForwarding = true;
+  mEvent->StopCrossProcessForwarding();
   return NS_OK;
 }
 
@@ -520,17 +519,7 @@ Event::PreventDefaultInternal(bool aCalledByDefaultHandler)
     return;
   }
 
-  mEvent->mFlags.mDefaultPrevented = true;
-
-  // Note that even if preventDefault() has already been called by chrome,
-  // a call of preventDefault() by content needs to overwrite
-  // mDefaultPreventedByContent to true because in such case, defaultPrevented
-  // must be true when web apps check it after they call preventDefault().
-  if (!aCalledByDefaultHandler) {
-    mEvent->mFlags.mDefaultPreventedByContent = true;
-  } else {
-    mEvent->mFlags.mDefaultPreventedByChrome = true;
-  }
+  mEvent->PreventDefault(aCalledByDefaultHandler);
 
   if (!IsTrusted()) {
     return;
@@ -625,7 +614,7 @@ Event::SetTarget(nsIDOMEventTarget* aTarget)
 NS_IMETHODIMP_(bool)
 Event::IsDispatchStopped()
 {
-  return mEvent->mFlags.mPropagationStopped;
+  return mEvent->PropagationStopped();
 }
 
 NS_IMETHODIMP_(WidgetEvent*)
@@ -754,7 +743,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
     }
     break;
   case eKeyboardEventClass:
-    if (aEvent->mFlags.mIsTrusted) {
+    if (aEvent->IsTrusted()) {
       uint32_t key = aEvent->AsKeyboardEvent()->keyCode;
       switch(aEvent->mMessage) {
       case eKeyPress:
@@ -784,7 +773,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
     }
     break;
   case eTouchEventClass:
-    if (aEvent->mFlags.mIsTrusted) {
+    if (aEvent->IsTrusted()) {
       switch (aEvent->mMessage) {
       case eTouchStart:
         if (PopupAllowedForEvent("touchstart")) {
@@ -802,7 +791,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
     }
     break;
   case eMouseEventClass:
-    if (aEvent->mFlags.mIsTrusted &&
+    if (aEvent->IsTrusted() &&
         aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
       switch(aEvent->mMessage) {
       case eMouseUp:
@@ -1061,14 +1050,14 @@ Event::DefaultPrevented(JSContext* aCx) const
   NS_ENSURE_TRUE(mEvent, false);
 
   // If preventDefault() has never been called, just return false.
-  if (!mEvent->mFlags.mDefaultPrevented) {
+  if (!mEvent->DefaultPrevented()) {
     return false;
   }
 
   // If preventDefault() has been called by content, return true.  Otherwise,
   // i.e., preventDefault() has been called by chrome, return true only when
   // this is called by chrome.
-  return mEvent->mFlags.mDefaultPreventedByContent || IsChrome(aCx);
+  return mEvent->DefaultPreventedByContent() || IsChrome(aCx);
 }
 
 double

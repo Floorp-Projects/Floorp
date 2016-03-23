@@ -462,6 +462,7 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
     // which could require barriers on the atoms compartment.
     gc::AutoSuppressGC nogc(cx);
     gc::AutoAssertNoNurseryAlloc noNurseryAlloc(cx->runtime());
+    AutoSuppressObjectMetadataCallback suppressMetadata(cx);
 
     JSObject* global = CreateGlobalForOffThreadParse(cx, ParseTaskKind::Script, nogc);
     if (!global)
@@ -497,6 +498,8 @@ js::StartOffThreadParseModule(JSContext* cx, const ReadOnlyCompileOptions& optio
     // Suppress GC so that calls below do not trigger a new incremental GC
     // which could require barriers on the atoms compartment.
     gc::AutoSuppressGC nogc(cx);
+    gc::AutoAssertNoNurseryAlloc noNurseryAlloc(cx->runtime());
+    AutoSuppressObjectMetadataCallback suppressMetadata(cx);
 
     JSObject* global = CreateGlobalForOffThreadParse(cx, ParseTaskKind::Module, nogc);
     if (!global)

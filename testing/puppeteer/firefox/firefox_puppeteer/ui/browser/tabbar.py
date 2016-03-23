@@ -141,7 +141,8 @@ class TabBar(UIBaseLib):
 
         # TODO: Needs to be replaced with event handling code (bug 1121705)
         Wait(self.marionette).until(
-            lambda mn: len(mn.window_handles) == len(start_handles) + 1)
+            lambda mn: len(mn.window_handles) == len(start_handles) + 1,
+            message='No new tab has been opened.')
 
         handles = self.marionette.window_handles
         [new_handle] = list(set(handles) - set(start_handles))
@@ -262,13 +263,12 @@ class Tab(UIBaseLib):
 
         :returns: content window `handle`.
         """
-        def get_handle(_):
-            self._handle = TabBar.get_handle_for_tab(self.marionette, self.element)
-            return self._handle is not None
+        # If no handle has been set yet, wait until it is available
+        if not self._handle:
+            self._handle = Wait(self.marionette).until(
+                lambda mn: TabBar.get_handle_for_tab(mn, self.element),
+                message='Tab handle could not be found.')
 
-        # With e10s enabled, contentWindowAsCPOW isn't available right away.
-        if self._handle is None:
-            Wait(self.marionette).until(get_handle)
         return self._handle
 
     @property
@@ -299,6 +299,7 @@ class Tab(UIBaseLib):
         :param force: Optional, forces the closing of the window by using the Gecko API.
          Defaults to `False`.
         """
+        handle = self.handle
         start_handles = self.marionette.window_handles
 
         self.switch_to()
@@ -317,7 +318,8 @@ class Tab(UIBaseLib):
             raise ValueError('Unknown closing method: "%s"' % trigger)
 
         Wait(self.marionette).until(
-            lambda _: len(self.window.tabbar.tabs) == len(start_handles) - 1)
+            lambda _: len(self.window.tabbar.tabs) == len(start_handles) - 1,
+            message='Tab with handle "%s" has not been closed.' % handle)
 
         # Ensure to switch to the window handle which represents the new selected tab
         self.window.tabbar.selected_tab.switch_to()
@@ -328,7 +330,9 @@ class Tab(UIBaseLib):
         self.switch_to()
 
         # Bug 1121705: Maybe we have to wait for TabSelect event
-        Wait(self.marionette).until(lambda _: self.selected)
+        Wait(self.marionette).until(
+            lambda _: self.selected,
+            message='Tab with handle "%s" could not be selected.' % self.handle)
 
     def switch_to(self):
         """Switches the context of Marionette to this tab.
