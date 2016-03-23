@@ -61,26 +61,6 @@ def find_program(file):
         return None
 
 
-@depends('--help')
-def _defines(help):
-    ret = {}
-    set_config('DEFINES', ret)
-    return ret
-
-
-@template
-def set_define(name, value):
-    @depends(_defines)
-    @advanced
-    def _add_define(defines):
-        from mozbuild.configure import ConfigureError
-        if name in defines:
-            raise ConfigureError("'%s' is already defined" % name)
-        defines[name] = value
-
-del _defines
-
-
 @template
 def unique_list(l):
     result = []
