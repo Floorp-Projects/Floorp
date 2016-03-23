@@ -610,6 +610,9 @@ typedef void
 typedef bool
 (* JSInterruptCallback)(JSContext* cx);
 
+typedef bool
+(* JSEnqueuePromiseJobCallback)(JSContext* cx, JS::HandleObject job, void* data);
+
 typedef void
 (* JSErrorReporter)(JSContext* cx, const char* message, JSErrorReport* report);
 
@@ -4288,6 +4291,159 @@ JS_GetInterruptCallback(JSRuntime* rt);
 extern JS_PUBLIC_API(void)
 JS_RequestInterruptCallback(JSRuntime* rt);
 
+namespace JS {
+
+/**
+ * Sets the callback that's invoked whenever a Promise job should be enqeued.
+ *
+ * SpiderMonkey doesn't schedule Promise resolution jobs itself; instead,
+ * using this function the embedding can provide a callback to do that
+ * scheduling. The provided `callback` is invoked with the promise job
+ * and the `data` pointer passed here as arguments.
+ */
+extern JS_PUBLIC_API(void)
+SetEnqueuePromiseJobCallback(JSRuntime* rt, JSEnqueuePromiseJobCallback callback,
+                             void* data = nullptr);
+
+/**
+ * Returns a new instance of the Promise builtin class in the current
+ * compartment, with the right slot layout. If a `proto` is passed, that gets
+ * set as the instance's [[Prototype]] instead of the original value of
+ * `Promise.prototype`.
+ */
+extern JS_PUBLIC_API(JSObject*)
+NewPromiseObject(JSContext* cx, JS::HandleObject executor, JS::HandleObject proto = nullptr);
+
+/**
+ * Returns true if the given object is an unwrapped PromiseObject, false
+ * otherwise.
+ */
+extern JS_PUBLIC_API(bool)
+IsPromiseObject(JS::HandleObject obj);
+
+/**
+ * Returns the current compartment's original Promise constructor.
+ */
+extern JS_PUBLIC_API(JSObject*)
+GetPromiseConstructor(JSContext* cx);
+
+/**
+ * Returns the current compartment's original Promise.prototype.
+ */
+extern JS_PUBLIC_API(JSObject*)
+GetPromisePrototype(JSContext* cx);
+
+// Keep this in sync with the PROMISE_STATE defines in SelfHostingDefines.h.
+enum class PromiseState {
+    Pending,
+    Fulfilled,
+    Rejected
+};
+
+/**
+ * Returns the given Promise's state as a JS::PromiseState enum value.
+ */
+extern JS_PUBLIC_API(PromiseState)
+GetPromiseState(JS::HandleObject promise);
+
+/**
+ * Returns the given Promise's process-unique ID.
+ */
+JS_PUBLIC_API(double)
+GetPromiseID(JS::HandleObject promise);
+
+/**
+ * Returns the given Promise's result: either the resolution value for
+ * fulfilled promises, or the rejection reason for rejected ones.
+ */
+extern JS_PUBLIC_API(JS::Value)
+GetPromiseResult(JS::HandleObject promise);
+
+/**
+ * Returns a js::SavedFrame linked list of the stack that lead to the given
+ * Promise's allocation.
+ */
+extern JS_PUBLIC_API(JSObject*)
+GetPromiseAllocationSite(JS::HandleObject promise);
+
+extern JS_PUBLIC_API(JSObject*)
+GetPromiseResolutionSite(JS::HandleObject promise);
+
+/**
+ * Calls the current compartment's original Promise.resolve on the original
+ * Promise constructor, with `resolutionValue` passed as an argument.
+ */
+extern JS_PUBLIC_API(JSObject*)
+CallOriginalPromiseResolve(JSContext* cx, JS::HandleValue resolutionValue);
+
+/**
+ * Calls the current compartment's original Promise.reject on the original
+ * Promise constructor, with `resolutionValue` passed as an argument.
+ */
+extern JS_PUBLIC_API(JSObject*)
+CallOriginalPromiseReject(JSContext* cx, JS::HandleValue rejectionValue);
+
+/**
+ * Resolves the given Promise with the given `resolutionValue`.
+ *
+ * Calls the `resolve` function that was passed to the executor function when
+ * the Promise was created.
+ */
+extern JS_PUBLIC_API(bool)
+ResolvePromise(JSContext* cx, JS::HandleObject promise, JS::HandleValue resolutionValue);
+
+/**
+ * Rejects the given `promise` with the given `rejectionValue`.
+ *
+ * Calls the `reject` function that was passed to the executor function when
+ * the Promise was created.
+ */
+extern JS_PUBLIC_API(bool)
+RejectPromise(JSContext* cx, JS::HandleObject promise, JS::HandleValue rejectionValue);
+
+/**
+ * Calls the current compartment's original Promise.prototype.then on the
+ * given `promise`, with `onResolve` and `onReject` passed as arguments.
+ *
+ * Asserts if the passed-in `promise` object isn't an unwrapped instance of
+ * `Promise` or a subclass or `onResolve` and `onReject` aren't both either
+ * `nullptr` or callable objects.
+ */
+extern JS_PUBLIC_API(JSObject*)
+CallOriginalPromiseThen(JSContext* cx, JS::HandleObject promise,
+                        JS::HandleObject onResolve, JS::HandleObject onReject);
+
+/**
+ * Unforgeable, optimized version of the JS builtin Promise.prototype.then.
+ *
+ * Takes a Promise instance and `onResolve`, `onReject` callables to enqueue
+ * as reactions for that promise. In difference to Promise.prototype.then,
+ * this doesn't create and return a new Promise instance.
+ *
+ * Asserts if the passed-in `promise` object isn't an unwrapped instance of
+ * `Promise` or a subclass or `onResolve` and `onReject` aren't both callable
+ * objects.
+ */
+extern JS_PUBLIC_API(bool)
+AddPromiseReactions(JSContext* cx, JS::HandleObject promise,
+                    JS::HandleObject onResolve, JS::HandleObject onReject);
+
+/**
+ * Unforgeable version of the JS builtin Promise.all.
+ *
+ * Takes an AutoObjectVector of Promise objects and returns a promise that's
+ * resolved with an array of resolution values when all those promises ahve
+ * been resolved, or rejected with the rejection value of the first rejected
+ * promise.
+ *
+ * Asserts if the array isn't dense or one of the entries isn't an unwrapped
+ * instance of Promise or a subclass.
+ */
+extern JS_PUBLIC_API(JSObject*)
+GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises);
+
+} // namespace JS
+
 extern JS_PUBLIC_API(bool)
 JS_IsRunning(JSContext* cx);
 
@@ -5146,16 +5302,13 @@ JS_ObjectIsDate(JSContext* cx, JS::HandleObject obj, bool* isDate);
 #define JSREG_UNICODE   0x10u   /* unicode */
 
 extern JS_PUBLIC_API(JSObject*)
-JS_NewRegExpObject(JSContext* cx, JS::HandleObject obj, const char* bytes, size_t length,
-                   unsigned flags);
+JS_NewRegExpObject(JSContext* cx, const char* bytes, size_t length, unsigned flags);
 
 extern JS_PUBLIC_API(JSObject*)
-JS_NewUCRegExpObject(JSContext* cx, JS::HandleObject obj, const char16_t* chars, size_t length,
-                     unsigned flags);
+JS_NewUCRegExpObject(JSContext* cx, const char16_t* chars, size_t length, unsigned flags);
 
 extern JS_PUBLIC_API(bool)
-JS_SetRegExpInput(JSContext* cx, JS::HandleObject obj, JS::HandleString input,
-                  bool multiline);
+JS_SetRegExpInput(JSContext* cx, JS::HandleObject obj, JS::HandleString input);
 
 extern JS_PUBLIC_API(bool)
 JS_ClearRegExpStatics(JSContext* cx, JS::HandleObject obj);
@@ -5166,12 +5319,6 @@ JS_ExecuteRegExp(JSContext* cx, JS::HandleObject obj, JS::HandleObject reobj,
                  JS::MutableHandleValue rval);
 
 /* RegExp interface for clients without a global object. */
-
-extern JS_PUBLIC_API(JSObject*)
-JS_NewRegExpObjectNoStatics(JSContext* cx, char* bytes, size_t length, unsigned flags);
-
-extern JS_PUBLIC_API(JSObject*)
-JS_NewUCRegExpObjectNoStatics(JSContext* cx, char16_t* chars, size_t length, unsigned flags);
 
 extern JS_PUBLIC_API(bool)
 JS_ExecuteRegExpNoStatics(JSContext* cx, JS::HandleObject reobj, char16_t* chars, size_t length,

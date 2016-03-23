@@ -92,9 +92,9 @@ StartupCache::GetSingleton()
     }
 #ifdef MOZ_DISABLE_STARTUPCACHE
     return nullptr;
-#endif
-
+#else
     StartupCache::InitSingleton();
+#endif
   }
 
   return StartupCache::gStartupCache;

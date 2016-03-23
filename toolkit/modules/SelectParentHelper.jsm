@@ -62,9 +62,8 @@ this.SelectParentHelper = {
 
 };
 
-function populateChildren(menulist, options, selectedIndex, zoom, startIndex = 0,
+function populateChildren(menulist, options, selectedIndex, zoom,
                           isInGroup = false, isGroupDisabled = false, adjustedTextSize = -1) {
-  let index = startIndex;
   let element = menulist.menupopup;
 
   // -1 just means we haven't calculated it yet. When we recurse through this function
@@ -98,10 +97,10 @@ function populateChildren(menulist, options, selectedIndex, zoom, startIndex = 0
     }
 
     if (isOptGroup) {
-      index = populateChildren(menulist, option.children, selectedIndex, zoom,
-                               index, true, isDisabled, adjustedTextSize);
+      populateChildren(menulist, option.children, selectedIndex, zoom,
+                       true, isDisabled, adjustedTextSize);
     } else {
-      if (index == selectedIndex) {
+      if (option.index == selectedIndex) {
         // We expect the parent element of the popup to be a <xul:menulist> that
         // has the popuponly attribute set to "true". This is necessary in order
         // for a <xul:menupopup> to act like a proper <html:select> dropdown, as
@@ -110,13 +109,11 @@ function populateChildren(menulist, options, selectedIndex, zoom, startIndex = 0
         menulist.selectedItem = item;
       }
 
-      item.setAttribute("value", index++);
+      item.setAttribute("value", option.index);
 
       if (isInGroup) {
         item.classList.add("contentSelectDropdown-ingroup")
       }
     }
   }
-
-  return index;
 }

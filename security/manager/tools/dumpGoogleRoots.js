@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 // This file is a helper script that generates the list of certificates that
 // make up the preloaded pinset for Google properties.
@@ -12,8 +13,6 @@
 // 4. [paste the output into the appropriate section in
 //     security/manager/tools/PreloadedHPKPins.json]
 
-// <https://developer.mozilla.org/en/XPConnect/xpcshell/HOWTO>
-// <https://bugzilla.mozilla.org/show_bug.cgi?id=546628>
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 

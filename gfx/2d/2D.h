@@ -956,6 +956,15 @@ public:
                            const DrawOptions &aOptions = DrawOptions()) = 0;
 
   /**
+   * Draw aSurface using the 3D transform aMatrix. The DrawTarget's transform
+   * and clip are applied after the 3D transform.
+   *
+   * If the transform fails (i.e. because aMatrix is singular), false is returned and nothing is drawn.
+   */
+  virtual bool Draw3DTransformedSurface(SourceSurface* aSurface,
+                                        const Matrix4x4& aMatrix);
+
+  /**
    * Push a clip to the DrawTarget.
    *
    * @param aPath The path to clip to

@@ -1190,8 +1190,11 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                                           nsEventStatus* aEventStatus)
 {
   //Set the value of the internal PreventDefault flag properly based on aEventStatus
-  if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
-    aEvent->mFlags.mDefaultPrevented = true;
+  if (!aEvent->DefaultPrevented() &&
+      *aEventStatus == nsEventStatus_eConsumeNoDefault) {
+    // Assume that if only aEventStatus claims that the event has already been
+    // consumed, the consumer is default event handler.
+    aEvent->PreventDefault();
   }
 
   Maybe<nsAutoPopupStatePusher> popupStatePusher;
@@ -1219,8 +1222,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
         hasListenerForCurrentGroup = hasListenerForCurrentGroup ||
           listener->mFlags.mInSystemGroup == aEvent->mFlags.mInSystemGroup;
         if (listener->IsListening(aEvent) &&
-            (aEvent->mFlags.mIsTrusted ||
-             listener->mFlags.mAllowUntrustedEvents)) {
+            (aEvent->IsTrusted() || listener->mFlags.mAllowUntrustedEvents)) {
           if (!*aDOMEvent) {
             // This is tiny bit slow, but happens only once per event.
             nsCOMPtr<EventTarget> et =
@@ -1306,7 +1308,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     mNoListenerForEventAtom = aEvent->userType;
   }
 
-  if (aEvent->mFlags.mDefaultPrevented) {
+  if (aEvent->DefaultPrevented()) {
     *aEventStatus = nsEventStatus_eConsumeNoDefault;
   }
 }

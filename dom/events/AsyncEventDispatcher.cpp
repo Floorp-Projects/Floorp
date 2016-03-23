@@ -30,7 +30,7 @@ AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
   mEvent = do_QueryInterface(event);
   NS_ASSERTION(mEvent, "Should never fail to create an event");
   mEvent->DuplicatePrivateData();
-  mEvent->SetTrusted(aEvent.mFlags.mIsTrusted);
+  mEvent->SetTrusted(aEvent.IsTrusted());
 }
 
 NS_IMETHODIMP

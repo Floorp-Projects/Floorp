@@ -229,9 +229,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
      "flags", "global", "ignoreCase", "multiline", "source", "sticky", "unicode",
      "lastIndex"];
   gConstructorProperties['RegExp'] =
-    constructorProps(["input", "multiline", "lastMatch", "lastParen",
+    constructorProps(["input", "lastMatch", "lastParen",
                       "leftContext", "rightContext", "$1", "$2", "$3", "$4",
-                      "$5", "$6", "$7", "$8", "$9", "$_", "$*", "$&", "$+",
+                      "$5", "$6", "$7", "$8", "$9", "$_", "$&", "$+",
                       "$`", "$'"])
 
   // Sort an array that may contain symbols as well as strings.
@@ -714,9 +714,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     // properties that have to do with the last regexp execution in the global.
     // Xraying those makes no sense, so we just skip constructor properties for
     // RegExp xrays.
-    let ctorPropsToSkip = ["input", "multiline", "lastMatch", "lastParen",
+    let ctorPropsToSkip = ["input", "lastMatch", "lastParen",
                            "leftContext", "rightContext", "$1", "$2", "$3",
-                           "$4", "$5", "$6", "$7", "$8", "$9", "$_", "$*", "$&",
+                           "$4", "$5", "$6", "$7", "$8", "$9", "$_", "$&",
                            "$+", "$`", "$'"];
     testXray('RegExp', new iwin.RegExp('foo'), new iwin.RegExp(), [],
              ctorPropsToSkip);

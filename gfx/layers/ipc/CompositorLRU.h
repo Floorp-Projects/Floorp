@@ -18,11 +18,11 @@
 namespace mozilla {
 namespace layers {
 
-class PCompositorParent;
+class PCompositorBridgeParent;
 
 class CompositorLRU final
 {
-  typedef std::pair<PCompositorParent*, uint64_t> CompositorLayerPair;
+  typedef std::pair<PCompositorBridgeParent*, uint64_t> CompositorLayerPair;
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorLRU)
 
@@ -30,21 +30,21 @@ public:
   static CompositorLRU* GetSingleton();
 
   /**
-   * Adds the (PCompositorParent, LayerId) pair to the LRU pool. If
-   * the pool size grows over mLRUSize, the oldest PCompositorParent
+   * Adds the (PCompositorBridgeParent, LayerId) pair to the LRU pool. If
+   * the pool size grows over mLRUSize, the oldest PCompositorBridgeParent
    * is evicted.
    */
-  void Add(PCompositorParent* aCompositor, const uint64_t& id);
+  void Add(PCompositorBridgeParent* aCompositor, const uint64_t& id);
 
   /**
-   * Remove the (PCompositorParent, LayersId) pair from the LRU pool.
+   * Remove the (PCompositorBridgeParent, LayersId) pair from the LRU pool.
    */
-  void Remove(PCompositorParent* aCompositor, const uint64_t& id);
+  void Remove(PCompositorBridgeParent* aCompositor, const uint64_t& id);
 
   /**
-   * Remove all PCompositorParents from the LRU pool.
+   * Remove all PCompositorBridgeParents from the LRU pool.
    */
-  void Remove(PCompositorParent* aCompositor);
+  void Remove(PCompositorBridgeParent* aCompositor);
 
 private:
   static StaticRefPtr<CompositorLRU> sSingleton;

@@ -20,7 +20,7 @@
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZThreadUtils.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/LayerTransactionParent.h"
 #include "nsContentUtils.h"
 #include "nsFocusManager.h"
@@ -32,7 +32,7 @@
 #include "nsViewportFrame.h"
 #include "RenderFrameParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
-#include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "ClientLayerManager.h"
 #include "FrameLayerBuilder.h"
 
@@ -124,7 +124,7 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
   } else if (XRE_IsContentProcess()) {
     ContentChild::GetSingleton()->SendAllocateLayerTreeId(browser->Manager()->ChildID(), browser->GetTabId(), aId);
     mLayersId = *aId;
-    CompositorChild::Get()->SendNotifyChildCreated(mLayersId);
+    CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId);
   }
   *aSuccess = true;
 }
@@ -217,7 +217,7 @@ RenderFrameParent::ActorDestroy(ActorDestroyReason why)
     if (XRE_IsContentProcess()) {
       ContentChild::GetSingleton()->SendDeallocateLayerTreeId(mLayersId);
     } else {
-      CompositorParent::DeallocateLayerTreeId(mLayersId);
+      CompositorBridgeParent::DeallocateLayerTreeId(mLayersId);
     }
   }
 

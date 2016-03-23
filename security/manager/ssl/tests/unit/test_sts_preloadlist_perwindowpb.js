@@ -3,6 +3,7 @@
 // and login.persona.org because they are Mozilla properties and we are
 // invested in HSTS. Additionally, www.torproject.org was deemed likely to
 // continue to use HSTS.
+"use strict";
 
 var gSSService = Cc["@mozilla.org/ssservice;1"]
                    .getService(Ci.nsISiteSecurityService);

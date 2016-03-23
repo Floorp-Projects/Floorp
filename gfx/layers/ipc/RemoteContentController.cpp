@@ -14,7 +14,7 @@
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZThreadUtils.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/unused.h"
 #include "Units.h"
@@ -371,12 +371,12 @@ already_AddRefed<APZCTreeManager>
 RemoteContentController::GetApzcTreeManager()
 {
   // We can't get a ref to the APZCTreeManager until after the child is
-  // created and the static getter knows which CompositorParent is
+  // created and the static getter knows which CompositorBridgeParent is
   // instantiated with this layers ID. That's why try to fetch it when
   // we first need it and cache the result.
   MutexAutoLock lock(mMutex);
   if (!mApzcTreeManager) {
-    mApzcTreeManager = CompositorParent::GetAPZCTreeManager(mLayersId);
+    mApzcTreeManager = CompositorBridgeParent::GetAPZCTreeManager(mLayersId);
   }
   RefPtr<APZCTreeManager> apzcTreeManager(mApzcTreeManager);
   return apzcTreeManager.forget();

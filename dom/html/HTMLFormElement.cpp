@@ -525,7 +525,7 @@ HTMLFormElement::WillHandleEvent(EventChainPostVisitor& aVisitor)
        aVisitor.mEvent->mMessage == eFormReset) &&
       aVisitor.mEvent->mFlags.mInBubblingPhase &&
       aVisitor.mEvent->originalTarget != static_cast<nsIContent*>(this)) {
-    aVisitor.mEvent->mFlags.mPropagationStopped = true;
+    aVisitor.mEvent->StopPropagation();
   }
   return NS_OK;
 }

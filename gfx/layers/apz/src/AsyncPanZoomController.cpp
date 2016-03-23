@@ -51,9 +51,8 @@
 #include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform
 #include "mozilla/layers/AxisPhysicsModel.h" // for AxisPhysicsModel
 #include "mozilla/layers/AxisPhysicsMSDModel.h" // for AxisPhysicsMSDModel
-#include "mozilla/layers/CompositorParent.h" // for CompositorParent
+#include "mozilla/layers/CompositorBridgeParent.h" // for CompositorBridgeParent
 #include "mozilla/layers/LayerTransactionParent.h" // for LayerTransactionParent
-#include "mozilla/layers/PCompositorParent.h" // for PCompositorParent
 #include "mozilla/layers/ScrollInputMethods.h" // for ScrollInputMethod
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "mozilla/unused.h"             // for unused
@@ -884,19 +883,19 @@ AsyncPanZoomController::~AsyncPanZoomController()
   MOZ_ASSERT(IsDestroyed());
 }
 
-PCompositorParent*
+PCompositorBridgeParent*
 AsyncPanZoomController::GetSharedFrameMetricsCompositor()
 {
   APZThreadUtils::AssertOnCompositorThread();
 
   if (mSharingFrameMetricsAcrossProcesses) {
-    // |state| may be null here if the CrossProcessCompositorParent has already been destroyed.
-    if (const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(mLayersId)) {
-      return state->CrossProcessPCompositor();
+    // |state| may be null here if the CrossProcessCompositorBridgeParent has already been destroyed.
+    if (const CompositorBridgeParent::LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(mLayersId)) {
+      return state->CrossProcessPCompositorBridge();
     }
     return nullptr;
   }
-  return mCompositorParent.get();
+  return mCompositorBridgeParent.get();
 }
 
 already_AddRefed<GeckoContentController>
@@ -933,7 +932,7 @@ AsyncPanZoomController::Destroy()
   mParent = nullptr;
   mTreeManager = nullptr;
 
-  PCompositorParent* compositor = GetSharedFrameMetricsCompositor();
+  PCompositorBridgeParent* compositor = GetSharedFrameMetricsCompositor();
   // Only send the release message if the SharedFrameMetrics has been created.
   if (compositor && mSharedFrameMetricsBuffer) {
     Unused << compositor->SendReleaseSharedCompositorFrameMetrics(mFrameMetrics.GetScrollId(), mAPZCId);
@@ -2704,8 +2703,8 @@ void AsyncPanZoomController::ClearOverscroll() {
   mY.ClearOverscroll();
 }
 
-void AsyncPanZoomController::SetCompositorParent(CompositorParent* aCompositorParent) {
-  mCompositorParent = aCompositorParent;
+void AsyncPanZoomController::SetCompositorBridgeParent(CompositorBridgeParent* aCompositorBridgeParent) {
+  mCompositorBridgeParent = aCompositorBridgeParent;
 }
 
 void AsyncPanZoomController::ShareFrameMetricsAcrossProcesses() {
@@ -2849,8 +2848,8 @@ const ScreenMargin AsyncPanZoomController::CalculatePendingDisplayPort(
 }
 
 void AsyncPanZoomController::ScheduleComposite() {
-  if (mCompositorParent) {
-    mCompositorParent->ScheduleRenderOnCompositorThread();
+  if (mCompositorBridgeParent) {
+    mCompositorBridgeParent->ScheduleRenderOnCompositorThread();
   }
 }
 
@@ -3775,16 +3774,16 @@ void AsyncPanZoomController::DispatchStateChangeNotification(PanZoomState aOldSt
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
       // Let the compositor know about scroll state changes so it can manage
       // windowed plugins.
-      if (mCompositorParent) {
-        mCompositorParent->ScheduleHideAllPluginWindows();
+      if (mCompositorBridgeParent) {
+        mCompositorBridgeParent->ScheduleHideAllPluginWindows();
       }
 #endif
     } else if (IsTransformingState(aOldState) && !IsTransformingState(aNewState)) {
       controller->NotifyAPZStateChange(
           GetGuid(), APZStateChange::TransformEnd);
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-      if (mCompositorParent) {
-        mCompositorParent->ScheduleShowAllPluginWindows();
+      if (mCompositorBridgeParent) {
+        mCompositorBridgeParent->ScheduleShowAllPluginWindows();
       }
 #endif
     }
@@ -3869,7 +3868,7 @@ void AsyncPanZoomController::UpdateSharedCompositorFrameMetrics()
 
 void AsyncPanZoomController::ShareCompositorFrameMetrics() {
 
-  PCompositorParent* compositor = GetSharedFrameMetricsCompositor();
+  PCompositorBridgeParent* compositor = GetSharedFrameMetricsCompositor();
 
   // Only create the shared memory buffer if it hasn't already been created,
   // we are using progressive tile painting, and we have a

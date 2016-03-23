@@ -31,7 +31,7 @@ namespace mozilla {
 namespace layers {
 
 class ClientPaintedLayer;
-class CompositorChild;
+class CompositorBridgeChild;
 class ImageLayer;
 class PLayerChild;
 class FrameUniformityData;
@@ -158,9 +158,9 @@ public:
   void* GetPaintedLayerCallbackData() const
   { return mPaintedLayerCallbackData; }
 
-  CompositorChild* GetRemoteRenderer();
+  CompositorBridgeChild* GetRemoteRenderer();
 
-  CompositorChild* GetCompositorChild();
+  CompositorBridgeChild* GetCompositorBridgeChild();
 
   // Disable component alpha layers with the software compositor.
   virtual bool ShouldAvoidComponentAlphaLayers() override { return !IsCompositingCheap(); }

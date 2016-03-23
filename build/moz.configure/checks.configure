@@ -75,5 +75,6 @@ def check_prog(var, progs, allow_missing=False):
             from mozbuild.shellutil import quote
             error('Cannot find %s (tried: %s)'
                   % (var.lower(), ', '.join(quote(p) for p in progs)))
+        return None if value is not_found else value
 
-    return check
+    return postcheck

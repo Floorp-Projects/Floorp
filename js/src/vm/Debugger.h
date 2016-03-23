@@ -338,10 +338,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         bool inNursery;
 
         void trace(JSTracer* trc) {
-            if (frame)
-                TraceEdge(trc, &frame, "Debugger::AllocationsLogEntry::frame");
-            if (ctorName)
-                TraceEdge(trc, &ctorName, "Debugger::AllocationsLogEntry::ctorName");
+            TraceNullableEdge(trc, &frame, "Debugger::AllocationsLogEntry::frame");
+            TraceNullableEdge(trc, &ctorName, "Debugger::AllocationsLogEntry::ctorName");
         }
     };
 

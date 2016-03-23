@@ -159,7 +159,7 @@
 
 #endif
 
-#include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "GeckoProfiler.h"
 #include "gfxPlatform.h"
 #include "Layers.h"
@@ -5685,7 +5685,7 @@ NotifyCompositorOfVisibleRegionsChange(PresShell* aPresShell,
   const uint64_t layersId = tabChild->LayersId();
   const uint32_t presShellId = aPresShell->GetPresShellId();
 
-  // Retrieve the CompositorChild.
+  // Retrieve the CompositorBridgeChild.
   LayerManager* layerManager = aPresShell->GetLayerManager();
   if (!layerManager) {
     return;
@@ -5696,7 +5696,7 @@ NotifyCompositorOfVisibleRegionsChange(PresShell* aPresShell,
     return;
   }
 
-  CompositorChild* compositorChild = clientLayerManager->GetCompositorChild();
+  CompositorBridgeChild* compositorChild = clientLayerManager->GetCompositorBridgeChild();
   if (!compositorChild) {
     return;
   }
@@ -6831,7 +6831,8 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
         continue;
       }
 
-      WidgetPointerEvent event(touchEvent->mFlags.mIsTrusted, pointerMessage, touchEvent->widget);
+      WidgetPointerEvent event(touchEvent->IsTrusted(), pointerMessage,
+                               touchEvent->widget);
       event.isPrimary = i == 0;
       event.pointerId = touch->Identifier();
       event.refPoint = touch->mRefPoint;
@@ -6966,12 +6967,12 @@ PresShell::DispatchBeforeKeyboardEventInternal(const nsTArray<nsCOMPtr<Element> 
     }
 
     aChainIndex = i;
-    InternalBeforeAfterKeyboardEvent beforeEvent(aEvent.mFlags.mIsTrusted,
+    InternalBeforeAfterKeyboardEvent beforeEvent(aEvent.IsTrusted(),
                                                  message, aEvent.widget);
     beforeEvent.AssignBeforeAfterKeyEventData(aEvent, false);
     EventDispatcher::Dispatch(eventTarget, mPresContext, &beforeEvent);
 
-    if (beforeEvent.mFlags.mDefaultPrevented) {
+    if (beforeEvent.DefaultPrevented()) {
       aDefaultPrevented = true;
       return;
     }
@@ -7000,12 +7001,12 @@ PresShell::DispatchAfterKeyboardEventInternal(const nsTArray<nsCOMPtr<Element> >
       return;
     }
 
-    InternalBeforeAfterKeyboardEvent afterEvent(aEvent.mFlags.mIsTrusted,
+    InternalBeforeAfterKeyboardEvent afterEvent(aEvent.IsTrusted(),
                                                 message, aEvent.widget);
     afterEvent.AssignBeforeAfterKeyEventData(aEvent, false);
     afterEvent.mEmbeddedCancelled.SetValue(embeddedCancelled);
     EventDispatcher::Dispatch(eventTarget, mPresContext, &afterEvent);
-    embeddedCancelled = afterEvent.mFlags.mDefaultPrevented;
+    embeddedCancelled = afterEvent.DefaultPrevented();
   }
 }
 
@@ -7077,7 +7078,7 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
     *aStatus = nsEventStatus_eConsumeNoDefault;
     DispatchAfterKeyboardEventInternal(chain, aEvent, false, chainIndex);
     // No need to forward the event to child process.
-    aEvent.mFlags.mNoCrossProcessBoundaryForwarding = true;
+    aEvent.StopCrossProcessForwarding();
     return;
   }
 
@@ -7090,7 +7091,7 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
   EventDispatcher::Dispatch(aTarget, mPresContext,
                             &aEvent, nullptr, aStatus, aEventCB);
 
-  if (aEvent.mFlags.mDefaultPrevented) {
+  if (aEvent.DefaultPrevented()) {
     // When embedder prevents the default action of actual key event, attribute
     // 'embeddedCancelled' of after event is false, i.e. |!targetIsIframe|.
     // On the contrary, if the defult action is prevented by embedded iframe,
@@ -7105,8 +7106,7 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
   }
 
   // Dispatch after events to all items in the chain.
-  DispatchAfterKeyboardEventInternal(chain, aEvent,
-                                     aEvent.mFlags.mDefaultPrevented);
+  DispatchAfterKeyboardEventInternal(chain, aEvent, aEvent.DefaultPrevented());
 }
 
 nsresult
@@ -7918,7 +7918,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
     bool isHandlingUserInput = false;
 
     // XXX How about IME events and input events for plugins?
-    if (aEvent->mFlags.mIsTrusted) {
+    if (aEvent->IsTrusted()) {
       switch (aEvent->mMessage) {
       case eKeyPress:
       case eKeyDown:
@@ -7933,7 +7933,13 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
             // DOM fullscreen mode. This prevents the browser ESC key
             // handler from stopping all loads in the document, which
             // would cause <video> loads to stop.
-            aEvent->mFlags.mDefaultPrevented = true;
+            // XXX We need to claim the Escape key event which will be
+            //     dispatched only into chrome is already consumed by
+            //     content because we need to prevent its default here
+            //     for some reasons (not sure) but we need to detect
+            //     if a chrome event handler will call PreventDefault()
+            //     again and check it later.
+            aEvent->PreventDefaultBeforeDispatch();
             aEvent->mFlags.mOnlyChromeDispatch = true;
 
             // The event listeners in chrome can prevent this ESC behavior by
@@ -7949,7 +7955,10 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
           nsCOMPtr<nsIDocument> pointerLockedDoc =
             do_QueryReferent(EventStateManager::sPointerLockedDoc);
           if (!mIsLastChromeOnlyEscapeKeyConsumed && pointerLockedDoc) {
-            aEvent->mFlags.mDefaultPrevented = true;
+            // XXX See above comment to understand the reason why this needs
+            //     to claim that the Escape key event is consumed by content
+            //     even though it will be dispatched only into chrome.
+            aEvent->PreventDefaultBeforeDispatch();
             aEvent->mFlags.mOnlyChromeDispatch = true;
             if (aEvent->mMessage == eKeyUp) {
               nsIDocument::UnlockPointer();
@@ -8009,7 +8018,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
     AutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
                                                         aEvent, mDocument);
 
-    if (aEvent->mFlags.mIsTrusted && aEvent->mMessage == eMouseMove) {
+    if (aEvent->IsTrusted() && aEvent->mMessage == eMouseMove) {
       nsIPresShell::AllowMouseCapture(
         EventStateManager::GetActiveEventStateManager() == manager);
     }
@@ -8208,7 +8217,7 @@ PresShell::DispatchTouchEventToDOM(WidgetEvent* aEvent,
       content = capturingContent;
     }
     // copy the event
-    WidgetTouchEvent newEvent(touchEvent->mFlags.mIsTrusted,
+    WidgetTouchEvent newEvent(touchEvent->IsTrusted(),
                               touchEvent->mMessage, touchEvent->widget);
     newEvent.AssignTouchEventData(*touchEvent, false);
     newEvent.target = targetPtr;
@@ -9665,7 +9674,7 @@ PresShell::DelayedMouseEvent::DelayedMouseEvent(WidgetMouseEvent* aEvent) :
   DelayedInputEvent()
 {
   WidgetMouseEvent* mouseEvent =
-    new WidgetMouseEvent(aEvent->mFlags.mIsTrusted,
+    new WidgetMouseEvent(aEvent->IsTrusted(),
                          aEvent->mMessage,
                          aEvent->widget,
                          aEvent->reason,
@@ -9678,7 +9687,7 @@ PresShell::DelayedKeyEvent::DelayedKeyEvent(WidgetKeyboardEvent* aEvent) :
   DelayedInputEvent()
 {
   WidgetKeyboardEvent* keyEvent =
-    new WidgetKeyboardEvent(aEvent->mFlags.mIsTrusted,
+    new WidgetKeyboardEvent(aEvent->IsTrusted(),
                             aEvent->mMessage,
                             aEvent->widget);
   keyEvent->AssignKeyEventData(*aEvent, false);

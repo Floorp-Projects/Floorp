@@ -249,7 +249,7 @@ public:
     return mCompositor;
   }
 
-  // Called by CompositorParent when a new compositor has been created due
+  // Called by CompositorBridgeParent when a new compositor has been created due
   // to a device reset. The layer manager must clear any cached resources
   // attached to the old compositor, and make a best effort at ignoring
   // layer or texture updates against the old compositor.

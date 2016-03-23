@@ -19,6 +19,7 @@
 #include "jsweakmap.h"
 #include "jswrapper.h"
 
+#include "builtin/Promise.h"
 #include "builtin/TestingFunctions.h"
 #include "js/Proxy.h"
 #include "proxy/DeadObjectProxy.h"
@@ -286,6 +287,8 @@ js::GetBuiltinClass(JSContext* cx, HandleObject obj, ESClassValue* classValue)
         *classValue = ESClass_Set;
     else if (obj->is<MapObject>())
         *classValue = ESClass_Map;
+    else if (obj->is<PromiseObject>())
+        *classValue = ESClass_Promise;
     else
         *classValue = ESClass_Other;
 
