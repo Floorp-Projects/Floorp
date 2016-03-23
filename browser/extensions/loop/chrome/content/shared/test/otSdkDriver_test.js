@@ -69,8 +69,10 @@ describe("loop.OTSdkDriver", function() {
     });
 
     sdk = _.extend({
+      DEBUG: "fakeDebug",
       initPublisher: sinon.stub().returns(publisher),
-      initSession: sinon.stub().returns(session)
+      initSession: sinon.stub().returns(session),
+      setLogLevel: sinon.stub()
     }, Backbone.Events);
 
     window.OT = {
@@ -140,6 +142,41 @@ describe("loop.OTSdkDriver", function() {
         sendStreams: 0,
         recvStreams: 0
       });
+    });
+
+    it("should enable debug for two way media telemetry if required", function() {
+      // Simulate the pref being enabled.
+      sandbox.stub(loop.shared.utils, "getBoolPreference", function(prefName, callback) {
+        if (prefName === "debug.twoWayMediaTelemetry") {
+          callback(true);
+        }
+      });
+
+      driver = new loop.OTSdkDriver({
+        constants: constants,
+        dispatcher: dispatcher,
+        sdk: sdk
+      });
+
+      expect(driver._debugTwoWayMediaTelemetry).eql(true);
+    });
+
+    it("should enable debug on the sdk if required", function() {
+      // Simulate the pref being enabled.
+      sandbox.stub(loop.shared.utils, "getBoolPreference", function(prefName, callback) {
+        if (prefName === "debug.sdk") {
+          callback(true);
+        }
+      });
+
+      driver = new loop.OTSdkDriver({
+        constants: constants,
+        dispatcher: dispatcher,
+        sdk: sdk
+      });
+
+      sinon.assert.calledOnce(sdk.setLogLevel);
+      sinon.assert.calledWithExactly(sdk.setLogLevel, sdk.DEBUG);
     });
   });
 
@@ -1325,6 +1362,18 @@ describe("loop.OTSdkDriver", function() {
 
           sinon.assert.neverCalledWithMatch(dispatcher.dispatch,
             new sharedActions.ReceivingScreenShare({ receiving: true }));
+        });
+
+        it("should dispatch a VideoScreenStreamChanged action for paused screen sharing streams", function() {
+          fakeStream.videoType = "screen";
+          fakeStream.hasVideo = false;
+
+          session.trigger("streamCreated", { stream: fakeStream });
+
+          // Called twice due to the VideoDimensionsChanged above.
+          sinon.assert.called(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.VideoScreenStreamChanged({ hasVideo: false }));
         });
 
         it("should dispatch a ReceivingScreenShare action for screen sharing streams", function() {

@@ -136,3 +136,50 @@ add_task(function* () {
   yield BrowserTestUtils.removeTab(tab2);
   yield BrowserTestUtils.removeTab(tab3);
 });
+
+add_task(function* testQueryPermissions() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": [],
+    },
+
+    background: function(x) {
+      browser.tabs.query({currentWindow: true, active: true}).then((tabs) => {
+        browser.test.assertEq(tabs.length, 1, "Expect query to return tabs");
+        browser.test.notifyPass("queryPermissions");
+      }).catch((e) => {
+        browser.test.notifyFail("queryPermissions");
+      });
+    },
+  });
+
+  yield extension.startup();
+
+  yield extension.awaitFinish("queryPermissions");
+
+  yield extension.unload();
+});
+
+add_task(function* testQueryWithURLPermissions() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": [],
+    },
+
+    background: function(x) {
+      browser.tabs.query({"url": "http://www.bbc.com/"}).then(() => {
+        browser.test.notifyFail("queryWithURLPermissions");
+      }).catch((e) => {
+        browser.test.assertEq('The "tabs" permission is required to use the query API with the "url" parameter',
+                              e.message, "Expected permissions error message");
+        browser.test.notifyPass("queryWithURLPermissions");
+      });
+    },
+  });
+
+  yield extension.startup();
+
+  yield extension.awaitFinish("queryWithURLPermissions");
+
+  yield extension.unload();
+});

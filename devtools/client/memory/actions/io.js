@@ -7,7 +7,7 @@ const { immutableUpdate, reportException, assert } = require("devtools/shared/De
 const { snapshotState: states, actions } = require("../constants");
 const { L10N, openFilePicker, createSnapshot } = require("../utils");
 const telemetry = require("../telemetry");
-const { readSnapshot, takeCensus, selectSnapshot } = require("./snapshot");
+const { selectSnapshot, computeSnapshotData, readSnapshot } = require("./snapshot");
 const { OS } = require("resource://gre/modules/osfile.jsm");
 const VALID_EXPORT_STATES = [states.SAVED, states.READ, states.SAVING_CENSUS, states.SAVED_CENSUS];
 
@@ -80,7 +80,7 @@ const importSnapshotAndCensus = exports.importSnapshotAndCensus = function (heap
 
     try {
       yield dispatch(readSnapshot(heapWorker, id));
-      yield dispatch(takeCensus(heapWorker, id));
+      yield dispatch(computeSnapshotData(heapWorker, id));
     } catch (error) {
       reportException("importSnapshot", error);
       dispatch({ type: actions.IMPORT_SNAPSHOT_ERROR, error, id });

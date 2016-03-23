@@ -27,10 +27,6 @@ public class PrefUtils {
             return defaultVal;
         }
 
-        if (Versions.preHC) {
-            return getFromJSON(prefs, key);
-        }
-
         // If this is Android version >= 11, try to use a Set<String>.
         try {
             return prefs.getStringSet(key, new HashSet<String>());
@@ -68,13 +64,7 @@ public class PrefUtils {
     public static SharedPreferences.Editor putStringSet(final SharedPreferences.Editor editor,
                                     final String key,
                                     final Set<String> vals) {
-        if (Versions.preHC) {
-            final JSONArray json = new JSONArray(vals);
-            editor.putString(key, json.toString());
-        } else {
-            editor.putStringSet(key, vals);
-        }
-
+        editor.putStringSet(key, vals);
         return editor;
     }
 }
