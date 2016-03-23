@@ -139,7 +139,7 @@ class MemoryMonitor extends BroadcastReceiver {
             if (label == null) {
                 label = "default";
             }
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Memory:Dump", label));
+            GeckoAppShell.notifyObservers("Memory:Dump", label);
         } else if (ACTION_FORCE_PRESSURE.equals(intent.getAction())) {
             increaseMemoryPressure(MEMORY_PRESSURE_HIGH);
         }

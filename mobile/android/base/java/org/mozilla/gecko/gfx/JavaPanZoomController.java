@@ -217,7 +217,7 @@ class JavaPanZoomController
 
     private void setState(PanZoomState state) {
         if (state != mState) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PanZoom:StateChange", state.toString()));
+            GeckoAppShell.notifyObservers("PanZoom:StateChange", state.toString());
             mState = state;
 
             // Let the target know we've finished with it (for now)
@@ -1331,7 +1331,7 @@ class JavaPanZoomController
             return;
         }
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(event, json));
+        GeckoAppShell.notifyObservers(event, json);
     }
 
     @Override
@@ -1397,8 +1397,7 @@ class JavaPanZoomController
     }
 
     private void cancelTouch() {
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Gesture:CancelTouch", "");
-        GeckoAppShell.sendEventToGecko(e);
+        GeckoAppShell.notifyObservers("Gesture:CancelTouch", "");
     }
 
     /**

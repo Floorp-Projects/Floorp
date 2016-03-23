@@ -113,7 +113,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
                 } catch (Exception e) {
                     Log.e(LOGTAG, "Error building JSON arguments for TextSelection:Position");
                 }
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("TextSelection:Position", args.toString()));
+                GeckoAppShell.notifyObservers("TextSelection:Position", args.toString());
                 break;
             }
             case MotionEvent.ACTION_MOVE: {
@@ -155,7 +155,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
         } catch (Exception e) {
             Log.e(LOGTAG, "Error building JSON arguments for TextSelection:Move");
         }
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("TextSelection:Move", args.toString()));
+        GeckoAppShell.notifyObservers("TextSelection:Move", args.toString());
 
         // If we're positioning a cursor, don't move the handle here. Gecko
         // will tell us the position of the caret, so we set the handle

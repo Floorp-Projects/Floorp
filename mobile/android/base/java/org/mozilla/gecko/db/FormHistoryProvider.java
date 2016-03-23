@@ -126,7 +126,7 @@ public class FormHistoryProvider extends SQLiteBridgeContentProvider {
 
     @Override
     public void initGecko() {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FormHistory:Init", null));
+        GeckoAppShell.notifyObservers("FormHistory:Init", null);
     }
 
     @Override

@@ -84,15 +84,15 @@ public class MediaCastingBar extends RelativeLayout implements View.OnClickListe
         final int viewId = v.getId();
 
         if (viewId == R.id.media_play) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Casting:Play", ""));
+            GeckoAppShell.notifyObservers("Casting:Play", "");
             mMediaPlay.setVisibility(GONE);
             mMediaPause.setVisibility(VISIBLE);
         } else if (viewId == R.id.media_pause) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Casting:Pause", ""));
+            GeckoAppShell.notifyObservers("Casting:Pause", "");
             mMediaPause.setVisibility(GONE);
             mMediaPlay.setVisibility(VISIBLE);
         } else if (viewId == R.id.media_stop) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Casting:Stop", ""));
+            GeckoAppShell.notifyObservers("Casting:Stop", "");
         }
     }
 

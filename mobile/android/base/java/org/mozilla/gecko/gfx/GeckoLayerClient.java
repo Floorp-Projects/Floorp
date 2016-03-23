@@ -302,7 +302,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         } catch (Exception e) {
             Log.e(LOGTAG, "Unable to convert point to JSON", e);
         }
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Window:Resize", json));
+        GeckoAppShell.notifyObservers("Window:Resize", json);
     }
 
     /** Sets the current page rect. You must hold the monitor while calling this. */

@@ -87,7 +87,7 @@ public class DownloadContentService extends IntentService {
                     @Override
                     public void onContentDownloaded(DownloadContent content) {
                         if (content.isFont()) {
-                            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Fonts:Reload", ""));
+                            GeckoAppShell.notifyObservers("Fonts:Reload", "");
                         }
                     }
                 });
