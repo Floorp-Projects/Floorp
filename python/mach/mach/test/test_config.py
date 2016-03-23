@@ -292,16 +292,6 @@ class TestConfigSettings(unittest.TestCase):
         self.assertEqual(s.a.string, s2.a.string)
         self.assertEqual(s.a.boolean, s2.a.boolean)
 
-    def test_write_pot(self):
-        s = ConfigSettings()
-        s.register_provider(Provider1)
-        s.register_provider(Provider2)
-
-        # Just a basic sanity test.
-        temp = NamedTemporaryFile('wt')
-        s.write_pot(temp)
-        temp.flush()
-
 
 if __name__ == '__main__':
     main()
