@@ -193,8 +193,8 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
                                         t.mTimeStamp, t.mPictureRect,
                                         t.mFrameID, t.mProducerID, t.mInputFrameID));
   }
-  mTxn->AddNoSwapEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
-                                   textures));
+  mTxn->AddNoSwapEdit(CompositableOperation(nullptr, aCompositable->GetIPDLActor(),
+                                            OpUseTexture(textures)));
 }
 
 void
@@ -209,9 +209,13 @@ ImageBridgeChild::UseComponentAlphaTextures(CompositableClient* aCompositable,
   MOZ_ASSERT(aTextureOnWhite->GetIPDLActor());
   MOZ_ASSERT(aTextureOnBlack->GetIPDLActor());
   MOZ_ASSERT(aTextureOnBlack->GetSize() == aTextureOnWhite->GetSize());
-  mTxn->AddNoSwapEdit(OpUseComponentAlphaTextures(nullptr, aCompositable->GetIPDLActor(),
-                                                  nullptr, aTextureOnBlack->GetIPDLActor(),
-                                                  nullptr, aTextureOnWhite->GetIPDLActor()));
+  mTxn->AddNoSwapEdit(
+    CompositableOperation(
+      nullptr,
+      aCompositable->GetIPDLActor(),
+      OpUseComponentAlphaTextures(
+        nullptr ,aTextureOnBlack->GetIPDLActor(),
+        nullptr, aTextureOnWhite->GetIPDLActor())));
 }
 
 #ifdef MOZ_WIDGET_GONK
@@ -1191,12 +1195,15 @@ ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositabl
   if (!aTexture || !aTexture->IsSharedWithCompositor() || !aCompositable->IsConnected()) {
     return;
   }
+
+  CompositableOperation op(
+    nullptr, aCompositable->GetIPDLActor(),
+    OpRemoveTexture(nullptr, aTexture->GetIPDLActor()));
+
   if (aTexture->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
-    mTxn->AddEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
-                                  nullptr, aTexture->GetIPDLActor()));
+    mTxn->AddEdit(op);
   } else {
-    mTxn->AddNoSwapEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
-                                        nullptr, aTexture->GetIPDLActor()));
+    mTxn->AddNoSwapEdit(op);
   }
 }
 
@@ -1212,10 +1219,16 @@ ImageBridgeChild::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aA
   if (!aTexture || !aTexture->IsSharedWithCompositor() || !aCompositable->IsConnected()) {
     return;
   }
-  mTxn->AddNoSwapEdit(OpRemoveTextureAsync(CompositableClient::GetTrackersHolderId(aCompositable->GetIPDLActor()),
-                                           aAsyncTransactionTracker->GetId(),
-                                           nullptr, aCompositable->GetIPDLActor(),
-                                           nullptr, aTexture->GetIPDLActor()));
+
+  CompositableOperation op(
+    nullptr, aCompositable->GetIPDLActor(),
+    OpRemoveTextureAsync(
+      CompositableClient::GetTrackersHolderId(aCompositable->GetIPDLActor()),
+      aAsyncTransactionTracker->GetId(),
+      nullptr, aCompositable->GetIPDLActor(),
+      nullptr, aTexture->GetIPDLActor()));
+
+  mTxn->AddNoSwapEdit(op);
   // Hold AsyncTransactionTracker until receving reply
   CompositableClient::HoldUntilComplete(aCompositable->GetIPDLActor(),
                                         aAsyncTransactionTracker);
