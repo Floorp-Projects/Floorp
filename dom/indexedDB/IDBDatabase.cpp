@@ -601,7 +601,8 @@ IDBDatabase::DeleteObjectStore(const nsAString& aName, ErrorResult& aRv)
 }
 
 already_AddRefed<IDBTransaction>
-IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
+IDBDatabase::Transaction(JSContext* aCx,
+                         const StringOrStringSequence& aStoreNames,
                          IDBTransactionMode aMode,
                          ErrorResult& aRv)
 {
@@ -621,7 +622,7 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
   }
 
   RefPtr<IDBTransaction> transaction;
-  aRv = Transaction(aStoreNames, aMode, getter_AddRefs(transaction));
+  aRv = Transaction(aCx, aStoreNames, aMode, getter_AddRefs(transaction));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -630,7 +631,8 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
 }
 
 nsresult
-IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
+IDBDatabase::Transaction(JSContext* aCx,
+                         const StringOrStringSequence& aStoreNames,
                          IDBTransactionMode aMode,
                          IDBTransaction** aTransaction)
 {
@@ -726,7 +728,7 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
   }
 
   RefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(this, sortedStoreNames, mode);
+    IDBTransaction::Create(aCx, this, sortedStoreNames, mode);
   if (NS_WARN_IF(!transaction)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -768,7 +770,8 @@ IDBDatabase::Storage() const
 }
 
 already_AddRefed<IDBRequest>
-IDBDatabase::CreateMutableFile(const nsAString& aName,
+IDBDatabase::CreateMutableFile(JSContext* aCx,
+                               const nsAString& aName,
                                const Optional<nsAString>& aType,
                                ErrorResult& aRv)
 {
@@ -792,7 +795,7 @@ IDBDatabase::CreateMutableFile(const nsAString& aName,
 
   CreateFileParams params(nsString(aName), type);
 
-  RefPtr<IDBRequest> request = IDBRequest::Create(this, nullptr);
+  RefPtr<IDBRequest> request = IDBRequest::Create(aCx, this, nullptr);
   MOZ_ASSERT(request);
 
   BackgroundDatabaseRequestChild* actor =
