@@ -1618,22 +1618,23 @@ CompositorBridgeParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHin
   for (size_t i = 0; i < aBackendHints.Length(); ++i) {
     RefPtr<Compositor> compositor;
     if (aBackendHints[i] == LayersBackend::LAYERS_OPENGL) {
-      compositor = new CompositorOGL(mWidget,
+      compositor = new CompositorOGL(this,
+                                     mWidget,
                                      mEGLSurfaceSize.width,
                                      mEGLSurfaceSize.height,
                                      mUseExternalSurfaceSize);
     } else if (aBackendHints[i] == LayersBackend::LAYERS_BASIC) {
 #ifdef MOZ_WIDGET_GTK
       if (gfxPlatformGtk::GetPlatform()->UseXRender()) {
-        compositor = new X11BasicCompositor(mWidget);
+        compositor = new X11BasicCompositor(this, mWidget);
       } else
 #endif
       {
-        compositor = new BasicCompositor(mWidget);
+        compositor = new BasicCompositor(this, mWidget);
       }
 #ifdef XP_WIN
     } else if (aBackendHints[i] == LayersBackend::LAYERS_D3D11) {
-      compositor = new CompositorD3D11(mWidget);
+      compositor = new CompositorD3D11(this, mWidget);
     } else if (aBackendHints[i] == LayersBackend::LAYERS_D3D9) {
       compositor = new CompositorD3D9(this, mWidget);
 #endif
@@ -2212,6 +2213,9 @@ CompositorBridgeParent::ResetCompositorImpl(const nsTArray<LayersBackend>& aBack
     return Nothing();
   }
 
+  if (mCompositor) {
+    mCompositor->SetInvalid();
+  }
   mCompositor = compositor;
   mLayerManager->ChangeCompositor(compositor);
 
