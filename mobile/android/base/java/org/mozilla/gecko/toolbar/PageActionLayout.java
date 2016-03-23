@@ -105,12 +105,12 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
             addPageAction(id, title, imageURL, new OnPageActionClickListeners() {
                 @Override
                 public void onClick(String id) {
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PageActions:Clicked", id));
+                    GeckoAppShell.notifyObservers("PageActions:Clicked", id);
                 }
 
                 @Override
                 public boolean onLongClick(String id) {
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PageActions:LongClicked", id));
+                    GeckoAppShell.notifyObservers("PageActions:LongClicked", id);
                     return true;
                 }
             }, important);

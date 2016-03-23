@@ -263,8 +263,7 @@ public final class ReadingListHelper implements NativeEventListener {
                         try {
                             json.put("id", c.getInt(c.getColumnIndexOrThrow(ReadingListItems._ID)));
                             json.put("url", c.getString(c.getColumnIndexOrThrow(ReadingListItems.URL)));
-                            GeckoAppShell.sendEventToGecko(
-                                    GeckoEvent.createBroadcastEvent("Reader:FetchContent", json.toString()));
+                            GeckoAppShell.notifyObservers("Reader:FetchContent", json.toString());
                         } catch (JSONException e) {
                             Log.e(LOGTAG, "Failed to fetch reading list content for item");
                         }
