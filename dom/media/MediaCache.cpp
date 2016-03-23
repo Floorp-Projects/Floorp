@@ -2209,17 +2209,20 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
   if (mClosed)
     return NS_ERROR_FAILURE;
 
+  // Cache the offset in case it is changed again when we are waiting for the
+  // monitor to be notified to avoid reading at the wrong position.
+  auto streamOffset = mStreamOffset;
+
   uint32_t count = 0;
   // Read one block (or part of a block) at a time
   while (count < aCount) {
-    uint32_t streamBlock = uint32_t(mStreamOffset/BLOCK_SIZE);
-    uint32_t offsetInStreamBlock =
-      uint32_t(mStreamOffset - streamBlock*BLOCK_SIZE);
+    uint32_t streamBlock = uint32_t(streamOffset/BLOCK_SIZE);
+    uint32_t offsetInStreamBlock = uint32_t(streamOffset - streamBlock*BLOCK_SIZE);
     int64_t size = std::min<int64_t>(aCount - count, BLOCK_SIZE - offsetInStreamBlock);
 
     if (mStreamLength >= 0) {
       // Don't try to read beyond the end of the stream
-      int64_t bytesRemaining = mStreamLength - mStreamOffset;
+      int64_t bytesRemaining = mStreamLength - streamOffset;
       if (bytesRemaining <= 0) {
         // Get out of here and return NS_OK
         break;
@@ -2247,7 +2250,7 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
       MediaCache::ResourceStreamIterator iter(mResourceID);
       while (MediaCacheStream* stream = iter.Next()) {
         if (uint32_t(stream->mChannelOffset/BLOCK_SIZE) == streamBlock &&
-            mStreamOffset < stream->mChannelOffset) {
+            streamOffset < stream->mChannelOffset) {
           streamWithPartialBlock = stream;
           break;
         }
@@ -2256,7 +2259,7 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
         // We can just use the data in mPartialBlockBuffer. In fact we should
         // use it rather than waiting for the block to fill and land in
         // the cache.
-        int64_t bytes = std::min<int64_t>(size, streamWithPartialBlock->mChannelOffset - mStreamOffset);
+        int64_t bytes = std::min<int64_t>(size, streamWithPartialBlock->mChannelOffset - streamOffset);
         // Clamp bytes until 64-bit file size issues are fixed.
         bytes = std::min(bytes, int64_t(INT32_MAX));
         MOZ_ASSERT(bytes >= 0 && bytes <= aCount, "Bytes out of range.");
@@ -2265,7 +2268,7 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
         if (mCurrentMode == MODE_METADATA) {
           streamWithPartialBlock->mMetadataInPartialBlockBuffer = true;
         }
-        mStreamOffset += bytes;
+        streamOffset += bytes;
         count = bytes;
         break;
       }
@@ -2292,7 +2295,7 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
       // If we did successfully read some data, may as well return it
       break;
     }
-    mStreamOffset += bytes;
+    streamOffset += bytes;
     count += bytes;
   }
 
@@ -2301,9 +2304,9 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
     // have changed
     gMediaCache->QueueUpdate();
   }
-  CACHE_LOG(LogLevel::Debug,
-            ("Stream %p Read at %lld count=%d", this, (long long)(mStreamOffset-count), count));
+  CACHE_LOG(LogLevel::Debug, ("Stream %p Read at %lld count=%d", this, streamOffset-count, count));
   *aBytes = count;
+  mStreamOffset = streamOffset;
   return NS_OK;
 }
 
