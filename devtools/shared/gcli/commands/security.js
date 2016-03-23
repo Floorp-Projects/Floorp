@@ -143,7 +143,7 @@ exports.items = [
     from: "securityCSPInfo",
     to: "view",
     exec: function(cspInfo, context) {
-      var uri = context.environment.document.documentURI;
+      var url = context.environment.target.url;
 
       if (cspInfo.length == 0) {
         return context.createView({
@@ -151,7 +151,7 @@ exports.items = [
             "<table class='gcli-csp-detail' cellspacing='10' valign='top'>" +
             "  <tr>" +
             "    <td> <img src='chrome://browser/content/gcli_sec_bad.svg' width='20px' /> </td> " +
-            "    <td>" + NO_CSP_ON_PAGE_MSG + " <b>" + uri + "</b></td>" +
+            "    <td>" + NO_CSP_ON_PAGE_MSG + " <b>" + url + "</b></td>" +
             "  </tr>" +
             "</table>"});
       }
@@ -161,7 +161,7 @@ exports.items = [
           "<table class='gcli-csp-detail' cellspacing='10' valign='top'>" +
           // iterate all policies
           "  <tr foreach='csp in ${cspinfo}' >" +
-          "    <td> ${csp.header} <b>" + uri + "</b><br/><br/>" +
+          "    <td> ${csp.header} <b>" + url + "</b><br/><br/>" +
           "      <table class='gcli-csp-dir-detail' valign='top'>" +
           // >> iterate all directives
           "        <tr foreach='dir in ${csp.directives}' >" +
