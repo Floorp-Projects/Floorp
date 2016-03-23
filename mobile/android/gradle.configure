@@ -18,7 +18,7 @@ def gradle(value, build_env):
         set_config('MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE', '1')
 
     gradle = value[0] if len(value) else \
-        os.path.join(build_env['TOPSRCDIR'], 'gradlew')
+        os.path.join(build_env.topsrcdir, 'gradlew')
 
     # TODO: verify that $GRADLE is executable.
     if not os.path.isfile(gradle):
