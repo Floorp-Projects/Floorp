@@ -8,13 +8,22 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"/>
 
-<script>
+        <script><![CDATA[
 SimpleTest.waitForExplicitFinish();
-function runTest()
-{
-  window.open("window_browser_drop.xul", "_blank", "chrome,width=200,height=200");
+function runTest() {
+  add_task(function*() {
+    let win = window.open("window_browser_drop.xul", "_blank", "chrome,width=200,height=200");
+    yield SimpleTest.promiseFocus(win);
+    for (let browserType of ["content", "remote-content"]) {
+      yield win.dropLinksOnBrowser(win.document.getElementById(browserType + "child"), browserType);
+    }
+    yield win.dropLinksOnBrowser(win.document.getElementById("chromechild"), "chrome");
+  });
 }
+//]]>
 </script>
 
 <body xmlns="http://www.w3.org/1999/xhtml">

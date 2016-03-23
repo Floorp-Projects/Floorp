@@ -6,8 +6,8 @@
 package org.mozilla.gecko.javaaddons;
 
 import android.content.Context;
-import android.support.v4.util.Pair;
 import android.util.Log;
+import android.util.Pair;
 import dalvik.system.DexClassLoader;
 import org.json.JSONException;
 import org.json.JSONObject;

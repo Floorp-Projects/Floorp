@@ -2,7 +2,6 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
 <window title="Browser Drop Tests"
-        onload="loaded()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript"
@@ -15,68 +14,134 @@
 <script>
 <![CDATA[
 
-var link = null, name = null;
-function handleLink(event, uri, linkname) { link = uri; name = linkname; }
+let lastLink, lastLinkName;
+Components.utils.import("resource://testing-common/ContentTask.jsm");
 
-function runTest()
-{
-  function expectLink(element, expectedLink, expectedName, data, testid)
-  {
-    link = "";
-    name = "";
-    synthesizeDrop(element, element, data, "", element.ownerDocument.defaultView);
+function doDropAndStopLoad(browser, data, shouldExpectStateChange) {
+  ContentTask.setTestScope(window); // Need this so is/isnot/ok are available inside the contenttask
+  return ContentTask.spawn(browser, {data, shouldExpectStateChange}, function*({data, shouldExpectStateChange}) {
+    let { interfaces: Ci, utils: Cu } = Components;
+    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-    is(link, expectedLink, testid + " link");
-    is(name, expectedName, testid + " name");
-  }
+    let nameReturned = "";
+    let uri = "";
+    let gotLoad = false;
+    function stopContent(uriLoaded) {
+      content.stop();
+      gotLoad = true;
+      uri = uriLoaded;
+    }
 
-  ["chrome", "content"].forEach(function (type) {
-    var child = document.getElementById(type + "child");
-    child.droppedLinkHandler = handleLink;
+    let wp = docShell.QueryInterface(Ci.nsIWebProgress);
+    let progressListener = {
+      onStateChange: function (webProgress, req, flags, status) {
+        info("waitForDocLoadAndStopIt: onStateChange " + flags.toString(16) + ": " + req.name + "\n");
 
-    expectLink(child, "http://www.mozilla.org", "http://www.mozilla.org",
-               [ [ { type: "text/plain", data: "http://www.mozilla.org" } ] ],
-               "text/plain drop on browser " + type);
-    expectLink(child, "", "",
-               [ [ { type: "text/link", data: "http://www.mozilla.org" } ] ],
-               "text/link drop on browser " + type);
-    expectLink(child, "http://www.example.com", "http://www.example.com",
-               [ [ { type: "text/uri-list", data: "http://www.example.com\nhttp://www.mozilla.org" } ] ],
-               "text/uri-list drop on browser " + type);
-    expectLink(child, "http://www.example.com", "Example.com",
-               [ [ { type: "text/x-moz-url", data: "http://www.example.com\nExample.com" } ] ],
-               "text/x-moz-url drop on browser " + type);
-    // dropping a chrome url should fail as we don't have a source node set,
-    // defaulting to a source of file:///
-    expectLink(child, "", "",
-               [ [ { type: "text/x-moz-url", data: "chrome://browser/content/browser.xul" } ] ],
-               "text/x-moz-url chrome url drop on browser " + type);
+        if (webProgress.isTopLevel &&
+            flags & Ci.nsIWebProgressListener.STATE_START) {
+          wp.removeProgressListener(progressListener);
+
+          let chan = req.QueryInterface(Ci.nsIChannel);
+          info(`waitForDocLoadAndStopIt: Document start: ${chan.URI.spec}\n`);
+
+          stopContent(chan.originalURI.spec);
+        }
+      },
+      QueryInterface: XPCOMUtils.generateQI(["nsISupportsWeakReference"])
+    };
+    wp.addProgressListener(progressListener, wp.NOTIFY_STATE_WINDOW);
+
+    let dataTransfer = new content.DataTransfer("dragstart", false);
+    dataTransfer.mozSetDataAt(data.type, data.data, 0);
+    let event = content.document.createEvent("DragEvents");
+    event.initDragEvent("drop", true, true, content, 0, 0, 0, 0, 0,
+                        false, false, false, false, 0, null, dataTransfer);
+    content.document.body.dispatchEvent(event);
+    let nameGetter = {};
+    try {
+      Services.droppedLinkHandler.dropLink(event, nameGetter, true);
+      nameReturned = nameGetter.value;
+    } catch (ex) {
+      if (shouldExpectStateChange) {
+        ok(false, "Should not have gotten an exception from the dropped link handler, but got: " + ex);
+        Cu.reportError(ex);
+      }
+    }
+    is(shouldExpectStateChange, gotLoad, "Should have gotten a load only if we expected it.");
+    if (!gotLoad) {
+      wp.removeProgressListener(progressListener);
+    }
+    return [uri, nameReturned];
   });
-
-  // stopPropagation should not prevent the browser link handling from occuring
-  frames[1].wrappedJSObject.stopMode = true;
-  var body = document.getElementById("contentchild").contentDocument.body;
-  expectLink(body, "http://www.mozilla.org", "http://www.mozilla.org",
-             [ [ { type: "text/uri-list", data: "http://www.mozilla.org" } ] ],
-             "text/x-moz-url drop on browser with stopPropagation drop event");
-
-  // canceling the event, however, should prevent the link from being handled
-  frames[1].wrappedJSObject.cancelMode = true;
-  expectLink(body, "", "",
-             [ [ { type: "text/uri-list", data: "http://www.example.org" } ] ],
-             "text/x-moz-url drop on browser with cancelled drop event");
-
-  window.close();
-  window.opener.wrappedJSObject.SimpleTest.finish();
 }
 
+function expectLink(browser, expectedLink, expectedName, data, testid, onbody=false) {
+  function dropOnBrowserSync() {
+    let dropEl = onbody ? browser.contentDocument.body : browser;
+    synthesizeDrop(dropEl, dropEl, data, "", dropEl.ownerDocument.defaultView);
+    return Promise.resolve([lastLink, lastLinkName]);
+  }
+  let dropInfoReceived;
+  lastLink = lastLinkName = "";
+  if (browser.isRemoteBrowser) {
+    dropInfoReceived = doDropAndStopLoad(browser, data[0][0], !!expectedLink);
+  } else {
+    dropInfoReceived = dropOnBrowserSync();
+  }
+  return dropInfoReceived.then(([uri, linkname]) => {
+    is(uri, expectedLink, testid + " link");
+    is(linkname, expectedName, testid + " name");
+  });
+}
+
+function* dropLinksOnBrowser(browser, type) {
+  browser.droppedLinkHandler = function(event, link, linkname) {
+    info(`droppedLinkHandler called, received link ${link} and linkname ${linkname}`);
+    lastLink = link;
+    lastLinkName = linkname;
+  };
+  yield expectLink(browser, "http://www.mozilla.org/", "http://www.mozilla.org/",
+                   [ [ { type: "text/plain", data: "http://www.mozilla.org/" } ] ],
+                   "text/plain drop on browser " + type);
+  yield expectLink(browser, "", "",
+                   [ [ { type: "text/link", data: "http://www.mozilla.org/" } ] ],
+                   "text/link drop on browser " + type);
+  yield expectLink(browser, "http://www.example.com/", "http://www.example.com/",
+                   [ [ { type: "text/uri-list", data: "http://www.example.com/\nhttp://www.mozilla.org" } ] ],
+                   "text/uri-list drop on browser " + type);
+  yield expectLink(browser, "http://www.example.com/", "Example.com",
+                   [ [ { type: "text/x-moz-url", data: "http://www.example.com/\nExample.com" } ] ],
+                   "text/x-moz-url drop on browser " + type);
+  // dropping a chrome url should fail as we don't have a source node set,
+  // defaulting to a source of file:///
+  yield expectLink(browser, "", "",
+                   [ [ { type: "text/x-moz-url", data: "chrome://browser/content/browser.xul" } ] ],
+                   "text/x-moz-url chrome url drop on browser " + type);
+
+  if (browser.type == "content") {
+    yield ContentTask.spawn(browser, null, function() {
+      content.window.stopMode = true;
+    });
+
+    // stopPropagation should not prevent the browser link handling from occuring
+    yield expectLink(browser, "http://www.mozilla.org/", "http://www.mozilla.org/",
+                     [ [ { type: "text/uri-list", data: "http://www.mozilla.org/" } ] ],
+                     "text/x-moz-url drop on browser with stopPropagation drop event", true);
+
+    yield ContentTask.spawn(browser, null, function() {
+      content.window.cancelMode = true;
+    });
+
+    // canceling the event, however, should prevent the link from being handled
+    yield expectLink(browser, "", "",
+                     [ [ { type: "text/uri-list", data: "http://www.mozilla.org/" } ] ],
+                     "text/x-moz-url drop on browser with cancelled drop event", true);
+  }
+}
+
+function info(msg) { window.opener.wrappedJSObject.SimpleTest.info(msg); }
 function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
 function ok(v, n) { window.opener.wrappedJSObject.SimpleTest.ok(v,n); }
-
-function loaded()
-{
-  SimpleTest.waitForFocus(runTest);
-}
 
 ]]>
 </script>
@@ -85,4 +150,6 @@ function loaded()
 <browser id="contentchild" type="content" width="100" height="100"
          src="data:text/html,&lt;html draggable='true'&gt;&lt;body draggable='true' style='width: 100px; height: 100px;' ondragover='event.preventDefault()' ondrop='if (window.stopMode) event.stopPropagation(); if (window.cancelMode) event.preventDefault();'&gt;&lt;/body&gt;&lt;/html&gt;"/>
 
+<browser id="remote-contentchild" type="content" width="100" height="100" remote="true"
+         src="data:text/html,&lt;html draggable='true'&gt;&lt;body draggable='true' style='width: 100px; height: 100px;' ondragover='event.preventDefault()' ondrop='if (window.stopMode) event.stopPropagation(); if (window.cancelMode) event.preventDefault();'&gt;&lt;/body&gt;&lt;/html&gt;"/>
 </window>

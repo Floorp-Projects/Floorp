@@ -1675,3 +1675,5 @@ pref("browser.laterrun.enabled", false);
 
 // Enable browser frames for use on desktop.  Only exposed to chrome callers.
 pref("dom.mozBrowserFramesEnabled", true);
+
+pref("extensions.pocket.enabled", true);

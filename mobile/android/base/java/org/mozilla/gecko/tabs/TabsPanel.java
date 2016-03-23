@@ -407,9 +407,6 @@ public class TabsPanel extends LinearLayout
     }
 
     public void setHWLayerEnabled(boolean enabled) {
-        if (Versions.preHC) {
-            return;
-        }
         if (enabled) {
             mHeader.setLayerType(View.LAYER_TYPE_HARDWARE, null);
             mTabsContainer.setLayerType(View.LAYER_TYPE_HARDWARE, null);
@@ -420,12 +417,6 @@ public class TabsPanel extends LinearLayout
     }
 
     public void prepareTabsAnimation(PropertyAnimator animator) {
-        // Not worth doing this on pre-Honeycomb without proper
-        // hardware accelerated animations.
-        if (Versions.preHC) {
-            return;
-        }
-
         if (!mHeaderVisible) {
             final Resources resources = getContext().getResources();
             final int toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height);
@@ -444,10 +435,6 @@ public class TabsPanel extends LinearLayout
     }
 
     public void finishTabsAnimation() {
-        if (Versions.preHC) {
-            return;
-        }
-
         setHWLayerEnabled(false);
 
         // If the tray is now hidden, call hide() on current panel and unset it as the current panel
