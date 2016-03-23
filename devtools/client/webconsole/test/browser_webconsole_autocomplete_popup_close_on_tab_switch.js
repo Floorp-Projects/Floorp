@@ -14,24 +14,14 @@ add_task(function*() {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
   let popup = hud.jsterm.autocompletePopup;
-  let popupShown = onPopupShown(popup._panel);
+  let popupShown = once(popup._panel, "popupshown");
 
   hud.jsterm.setInputValue("sc");
   EventUtils.synthesizeKey("r", {});
 
   yield popupShown;
 
+  yield loadTab("data:text/html;charset=utf-8,<p>testing autocomplete closes")
+
   ok(!popup.isOpen, "Popup closes on tab switch");
 });
-
-function onPopupShown(panel) {
-  let finished = promise.defer();
-
-  panel.addEventListener("popupshown", function popupOpened() {
-    panel.removeEventListener("popupshown", popupOpened, false);
-    loadTab("data:text/html;charset=utf-8,<p>testing autocomplete closes")
-      .then(finished.resolve);
-  }, false);
-
-  return finished.promise;
-}
