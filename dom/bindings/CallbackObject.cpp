@@ -267,13 +267,6 @@ CallbackObject::CallSetup::~CallSetup()
       // re-throw them but we failed to get the exception value.  Either way,
       // just report the pending exception, if any.
       //
-      // We don't use nsJSUtils::ReportPendingException here because all it
-      // does at this point is JS_SaveFrameChain and enter a compartment around
-      // a JS_ReportPendingException call.  But our mAutoEntryScript should
-      // already do a JS_SaveFrameChain and we are already in the compartment
-      // we want to be in, so all nsJSUtils::ReportPendingException would do is
-      // screw up our compartment, which is exactly what we do not want.
-      //
       // XXXbz FIXME: bug 979525 means we don't always JS_SaveFrameChain here,
       // so we need to go ahead and do that.  This is also the reason we don't
       // just rely on ~AutoJSAPI reporting the exception for us.  I think if we
@@ -288,9 +281,6 @@ CallbackObject::CallSetup::~CallSetup()
         MOZ_ASSERT(!JS::DescribeScriptedCaller(mCx),
                    "Our comment above about JS_SaveFrameChain having been "
                    "called is a lie?");
-        // Note that we don't JS_ReportPendingException here because we want to
-        // go through our AutoEntryScript's reporting mechanism instead, since
-        // it currently owns error reporting.
         mAutoEntryScript->ReportException();
       }
       if (saved) {
