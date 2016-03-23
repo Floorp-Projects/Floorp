@@ -163,9 +163,10 @@ private:
   Method(JSContext* aCx, MethodName aName, const nsAString& aString,
          const Sequence<JS::Value>& aData);
 
+  // This method must receive aCx and aArguments in the same JSCompartment.
   void
-  ProcessCallData(ConsoleCallData* aData,
-                  JS::Handle<JSObject*> aGlobal,
+  ProcessCallData(JSContext* aCx,
+                  ConsoleCallData* aData,
                   const Sequence<JS::Value>& aArguments);
 
   void
@@ -178,18 +179,29 @@ private:
   void
   ReleaseCallData(ConsoleCallData* aCallData);
 
+  // aCx and aArguments must be in the same JS compartment.
   void
   NotifyHandler(JSContext* aCx,
-                JS::Handle<JSObject*> aGlobal,
                 const Sequence<JS::Value>& aArguments,
                 ConsoleCallData* aData) const;
 
+  // PopulateConsoleObjectInTheTargetScope receives aCx and aArguments in the
+  // same JS compartment and populates the ConsoleEvent object (aValue) in the
+  // aTargetScope.
+  // aTargetScope can be:
+  // - the system-principal scope when we want to dispatch the ConsoleEvent to
+  //   nsIConsoleAPIStorage (See the comment in Console.cpp about the use of
+  //   xpc::PrivilegedJunkScope()
+  // - the mConsoleEventNotifier->Callable() scope when we want to notify this
+  //   handler about a new ConsoleEvent.
+  // - It can be the global from the JSContext when RetrieveConsoleEvents is
+  //   called.
   bool
-  PopulateEvent(JSContext* aCx,
-                JS::Handle<JSObject*> aGlobal,
-                const Sequence<JS::Value>& aArguments,
-                JS::MutableHandle<JS::Value> aValue,
-                ConsoleCallData* aData) const;
+  PopulateConsoleObjectInTheTargetScope(JSContext* aCx,
+                                        const Sequence<JS::Value>& aArguments,
+                                        JSObject* aTargetScope,
+                                        JS::MutableHandle<JS::Value> aValue,
+                                        ConsoleCallData* aData) const;
 
   // If the first JS::Value of the array is a string, this method uses it to
   // format a string. The supported sequences are:
