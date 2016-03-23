@@ -57,15 +57,22 @@ AnimationTimeBlock.prototype = {
     let {x, iterationW, delayX, delayW, negativeDelayW} =
       TimeScale.getAnimationDimensions(animation);
 
+    // background properties for .iterations element
+    let backgroundIterations = TimeScale.getIterationsBackgroundData(animation);
+
     createNode({
       parent: this.containerEl,
       attributes: {
         "class": "iterations" + (state.iterationCount ? "" : " infinite"),
         // Individual iterations are represented by setting the size of the
         // repeating linear-gradient.
+        // The background-size, background-position, background-repeat represent
+        // iterationCount and iterationStart.
         "style": `left:${x}%;
                   width:${iterationW}%;
-                  background-size:${100 / (state.iterationCount || 1)}% 100%;`
+                  background-size:${backgroundIterations.size}% 100%;
+                  background-position:${backgroundIterations.position}% 0;
+                  background-repeat:${backgroundIterations.repeat};`
       }
     });
 
