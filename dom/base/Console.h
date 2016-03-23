@@ -119,6 +119,9 @@ public:
   NoopMethod();
 
   void
+  ClearStorage();
+
+  void
   RetrieveConsoleEvents(JSContext* aCx, nsTArray<JS::Value>& aEvents,
                         ErrorResult& aRv);
 
