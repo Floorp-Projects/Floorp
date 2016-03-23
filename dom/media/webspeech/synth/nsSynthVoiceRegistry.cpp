@@ -7,6 +7,7 @@
 #include "nsILocaleService.h"
 #include "nsISpeechService.h"
 #include "nsServiceManagerUtils.h"
+#include "nsCategoryManagerUtils.h"
 
 #include "SpeechSynthesisUtterance.h"
 #include "SpeechSynthesisVoice.h"
@@ -190,6 +191,11 @@ nsSynthVoiceRegistry::GetInstance()
     gSynthVoiceRegistry = new nsSynthVoiceRegistry();
     Preferences::AddBoolVarCache(&sForceGlobalQueue,
                                  "media.webspeech.synth.force_global_queue");
+    if (XRE_IsParentProcess()) {
+      // Start up all speech synth services.
+      NS_CreateServicesFromCategory(NS_SPEECH_SYNTH_STARTED, nullptr,
+        NS_SPEECH_SYNTH_STARTED);
+    }
   }
 
   return gSynthVoiceRegistry;

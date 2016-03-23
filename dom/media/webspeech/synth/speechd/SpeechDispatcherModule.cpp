@@ -33,7 +33,7 @@ static const mozilla::Module::ContractIDEntry kContracts[] = {
 };
 
 static const mozilla::Module::CategoryEntry kCategories[] = {
-  { "profile-after-change", "SpeechDispatcher Speech Synth", SPEECHDISPATCHERSERVICE_CONTRACTID },
+  { "speech-synth-started", "SpeechDispatcher Speech Synth", SPEECHDISPATCHERSERVICE_CONTRACTID },
   { nullptr }
 };
 
