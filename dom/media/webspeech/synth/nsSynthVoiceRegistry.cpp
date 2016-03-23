@@ -286,6 +286,17 @@ nsSynthVoiceRegistry::RecvIsSpeakingChanged(bool aIsSpeaking)
   gSynthVoiceRegistry->mIsSpeaking = aIsSpeaking;
 }
 
+void
+nsSynthVoiceRegistry::RecvNotifyVoicesChanged()
+{
+  // If we dont have a local instance of the registry yet, we don't care.
+  if(!gSynthVoiceRegistry) {
+    return;
+  }
+
+  gSynthVoiceRegistry->NotifyVoicesChanged();
+}
+
 NS_IMETHODIMP
 nsSynthVoiceRegistry::AddVoice(nsISpeechService* aService,
                                const nsAString& aUri,
@@ -352,6 +363,27 @@ nsSynthVoiceRegistry::RemoveVoice(nsISpeechService* aService,
 
   for (uint32_t i = 0; i < ssplist.Length(); ++i)
     Unused << ssplist[i]->SendVoiceRemoved(nsString(aUri));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSynthVoiceRegistry::NotifyVoicesChanged()
+{
+  if (XRE_IsParentProcess()) {
+    nsTArray<SpeechSynthesisParent*> ssplist;
+    GetAllSpeechSynthActors(ssplist);
+
+    for (uint32_t i = 0; i < ssplist.Length(); ++i)
+      Unused << ssplist[i]->SendNotifyVoicesChanged();
+  }
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if(NS_WARN_IF(!(obs))) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  obs->NotifyObservers(nullptr, "synth-voices-changed", nullptr);
 
   return NS_OK;
 }

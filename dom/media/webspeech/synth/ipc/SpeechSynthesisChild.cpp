@@ -47,6 +47,13 @@ SpeechSynthesisChild::RecvIsSpeakingChanged(const bool& aIsSpeaking)
   return true;
 }
 
+bool
+SpeechSynthesisChild::RecvNotifyVoicesChanged()
+{
+  nsSynthVoiceRegistry::RecvNotifyVoicesChanged();
+  return true;
+}
+
 PSpeechSynthesisRequestChild*
 SpeechSynthesisChild::AllocPSpeechSynthesisRequestChild(const nsString& aText,
                                                         const nsString& aLang,

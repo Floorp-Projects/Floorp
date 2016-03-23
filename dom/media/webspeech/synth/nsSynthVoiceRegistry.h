@@ -64,6 +64,8 @@ public:
 
   static void RecvIsSpeakingChanged(bool aIsSpeaking);
 
+  static void RecvNotifyVoicesChanged();
+
   static void Shutdown();
 
 private:
