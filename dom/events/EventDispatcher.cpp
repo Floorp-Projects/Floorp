@@ -244,7 +244,7 @@ public:
     if (WantsWillHandleEvent()) {
       mTarget->WillHandleEvent(aVisitor);
     }
-    if (aVisitor.mEvent->mFlags.mPropagationStopped) {
+    if (aVisitor.mEvent->PropagationStopped()) {
       return;
     }
     if (aVisitor.mEvent->mFlags.mOnlySystemGroupDispatchInContent &&
@@ -343,7 +343,7 @@ EventTargetChainItem::HandleEventTargetChain(
     EventTargetChainItem& item = aChain[i];
     if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
          item.ForceContentDispatch()) &&
-        !aVisitor.mEvent->mFlags.mPropagationStopped) {
+        !aVisitor.mEvent->PropagationStopped()) {
       item.HandleEvent(aVisitor, aCd);
     }
 
@@ -363,7 +363,7 @@ EventTargetChainItem::HandleEventTargetChain(
   // Target
   aVisitor.mEvent->mFlags.mInBubblingPhase = true;
   EventTargetChainItem& targetItem = aChain[0];
-  if (!aVisitor.mEvent->mFlags.mPropagationStopped &&
+  if (!aVisitor.mEvent->PropagationStopped() &&
       (!aVisitor.mEvent->mFlags.mNoContentDispatch ||
        targetItem.ForceContentDispatch())) {
     targetItem.HandleEvent(aVisitor, aCd);
@@ -386,7 +386,7 @@ EventTargetChainItem::HandleEventTargetChain(
     if (aVisitor.mEvent->mFlags.mBubbles || newTarget) {
       if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
            item.ForceContentDispatch()) &&
-          !aVisitor.mEvent->mFlags.mPropagationStopped) {
+          !aVisitor.mEvent->PropagationStopped()) {
         item.HandleEvent(aVisitor, aCd);
       }
       if (aVisitor.mEvent->mFlags.mInSystemGroup) {

@@ -99,8 +99,10 @@ TrackBuffersManager::TrackBuffersManager(dom::SourceBufferAttributes* aAttribute
   , mTaskQueue(aParentDecoder->GetDemuxer()->GetTaskQueue())
   , mSourceBufferAttributes(aAttributes)
   , mParentDecoder(new nsMainThreadPtrHolder<MediaSourceDecoder>(aParentDecoder, false /* strict */))
-  , mEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold",
-                                            100 * (1 << 20)))
+  , mVideoEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold.video",
+                                                 100 * 1024 * 1024))
+  , mAudioEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold.audio",
+                                                 15 * 1024 * 1024))
   , mEvictionOccurred(false)
   , mMonitor("TrackBuffersManager")
   , mAppendRunning(false)
@@ -198,13 +200,17 @@ TrackBuffersManager::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
 
 TrackBuffersManager::EvictDataResult
 TrackBuffersManager::EvictData(TimeUnit aPlaybackTime,
-                               uint32_t aThreshold,
+                               int64_t aThresholdReduct,
                                TimeUnit* aBufferStartTime)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_DEBUG("");
 
-  int64_t toEvict = GetSize() - aThreshold;
+  const int64_t toEvict = GetSize() -
+    std::max(EvictionThreshold() - aThresholdReduct, aThresholdReduct);
+
+  MSE_DEBUG("buffered=%lldkb, eviction threshold=%ukb, evict=%lldkb",
+            GetSize() / 1024, EvictionThreshold() / 1024, toEvict / 1024);
+
   if (toEvict <= 0) {
     return EvictDataResult::NO_DATA_EVICTED;
   }
@@ -302,6 +308,13 @@ TrackBuffersManager::CompleteResetParserState()
   MOZ_ASSERT(OnTaskQueue());
   MSE_DEBUG("");
 
+  // We shouldn't change mInputDemuxer while a demuxer init/reset request is
+  // being processed. See bug 1239983.
+  NS_ASSERTION(!mDemuxerInitRequest.Exists(), "Previous AppendBuffer didn't complete");
+  if (mDemuxerInitRequest.Exists()) {
+    mDemuxerInitRequest.Disconnect();
+  }
+
   for (auto& track : GetTracksList()) {
     // 2. Unset the last decode timestamp on all track buffers.
     // 3. Unset the last frame duration on all track buffers.
@@ -351,9 +364,18 @@ TrackBuffersManager::CompleteResetParserState()
   mAppendPromise.RejectIfExists(NS_ERROR_ABORT, __func__);
 }
 
+int64_t
+TrackBuffersManager::EvictionThreshold() const
+{
+  if (HasVideo()) {
+    return mVideoEvictionThreshold;
+  }
+  return mAudioEvictionThreshold;
+}
+
 void
 TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
-                                 uint32_t aSizeToEvict)
+                                 int64_t aSizeToEvict)
 {
   MOZ_ASSERT(OnTaskQueue());
 
@@ -365,7 +387,7 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
   TimeUnit lowerLimit = std::min(track.mNextSampleTime, aPlaybackTime);
   uint32_t lastKeyFrameIndex = 0;
   int64_t toEvict = aSizeToEvict;
-  uint32_t partialEvict = 0;
+  int64_t partialEvict = 0;
   for (uint32_t i = 0; i < buffer.Length(); i++) {
     const auto& frame = buffer[i];
     if (frame->mKeyframe) {
@@ -382,17 +404,16 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
     partialEvict += frame->ComputedSizeOfIncludingThis();
   }
 
-  int64_t finalSize = mSizeSourceBuffer - aSizeToEvict;
-
   if (lastKeyFrameIndex > 0) {
-    MSE_DEBUG("Step1. Evicting %u bytes prior currentTime",
+    MSE_DEBUG("Step1. Evicting %lld bytes prior currentTime",
               aSizeToEvict - toEvict);
     CodedFrameRemoval(
       TimeInterval(TimeUnit::FromMicroseconds(0),
                    TimeUnit::FromMicroseconds(buffer[lastKeyFrameIndex]->mTime - 1)));
   }
 
-  if (mSizeSourceBuffer <= finalSize) {
+  const int64_t finalSize = mSizeSourceBuffer - aSizeToEvict;
+  if (mSizeSourceBuffer <= finalSize || !buffer.Length()) {
     return;
   }
 
@@ -415,8 +436,8 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
     toEvict -= frame->ComputedSizeOfIncludingThis();
   }
   if (evictedFramesStartIndex < buffer.Length()) {
-    MSE_DEBUG("Step2. Evicting %u bytes from trailing data",
-              mSizeSourceBuffer - finalSize);
+    MSE_DEBUG("Step2. Evicting %lld bytes from trailing data",
+              mSizeSourceBuffer - finalSize - toEvict);
     CodedFrameRemoval(
       TimeInterval(TimeUnit::FromMicroseconds(buffer[evictedFramesStartIndex]->mTime),
                    TimeUnit::FromInfinity()));
@@ -502,7 +523,7 @@ TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval)
   mSizeSourceBuffer = mVideoTracks.mSizeBuffer + mAudioTracks.mSizeBuffer;
 
   // 4. If buffer full flag equals true and this object is ready to accept more bytes, then set the buffer full flag to false.
-  if (mBufferFull && mSizeSourceBuffer < mEvictionThreshold) {
+  if (mBufferFull && mSizeSourceBuffer < EvictionThreshold()) {
     mBufferFull = false;
   }
   mEvictionOccurred = true;
@@ -865,9 +886,12 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
   MOZ_ASSERT(OnTaskQueue());
   mDemuxerInitRequest.Complete();
 
-  // mInputDemuxer shouldn't have been destroyed while a demuxer init/reset
-  // request was being processed. See bug 1239983.
-  MOZ_DIAGNOSTIC_ASSERT(mInputDemuxer);
+  if (!mInputDemuxer) {
+    // mInputDemuxer shouldn't have been destroyed while a demuxer init/reset
+    // request was being processed. See bug 1239983.
+    NS_ASSERTION(false, "mInputDemuxer has been destroyed");
+    RejectAppend(NS_ERROR_ABORT, __func__);
+  }
 
   MediaInfo info;
 
@@ -1238,7 +1262,7 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
 
   // Return to step 6.4 of Segment Parser Loop algorithm
   // 4. If this SourceBuffer is full and cannot accept more media data, then set the buffer full flag to true.
-  if (mSizeSourceBuffer >= mEvictionThreshold) {
+  if (mSizeSourceBuffer >= EvictionThreshold()) {
     mBufferFull = true;
     mEvictionOccurred = false;
   }
@@ -1630,7 +1654,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
 {
   TrackBuffer& data = aTrackData.mBuffers.LastElement();
   Maybe<uint32_t> firstRemovedIndex;
-  uint32_t lastRemovedIndex;
+  uint32_t lastRemovedIndex = 0;
 
   // We loop from aStartIndex to avoid removing frames that we inserted earlier
   // and part of the current coded frame group. This is allows to handle step

@@ -3401,45 +3401,32 @@ function* runReservedKeyTests()
     keyEvents = [];
     return synthesizeKey(aEvent, "content_button", function() {
       testName = "testReservedKey: " + eventToString(aEvent) + " ";
-      is(keyEvents.length, 30, testName + "wrong number events fired");
-      is(JSON.stringify(keyEvents[0]), JSON.stringify({ type: "keydown", group: "default", phase: "capture", currentTarget: eventTargetToString(contents[0]) }), testName + "keydown event should be fired on content in the default event group #0");
-      is(JSON.stringify(keyEvents[1]), JSON.stringify({ type: "keydown", group: "default", phase: "capture", currentTarget: eventTargetToString(contents[1]) }), testName + "keydown event should be fired on content in the default event group #1");
-      is(JSON.stringify(keyEvents[2]), JSON.stringify({ type: "keydown", group: "default", phase: "capture", currentTarget: eventTargetToString(contents[2]) }), testName + "keydown event should be fired on content in the default event group #2");
-      is(JSON.stringify(keyEvents[3]), JSON.stringify({ type: "keydown", group: "default", phase: "capture", currentTarget: eventTargetToString(contents[3]) }), testName + "keydown event should be fired on content in the default event group #3");
+      is(keyEvents.length, 20, testName + "wrong number events fired");
+      is(JSON.stringify(keyEvents[0]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[0]) }), testName + "keydown event should be fired on content only in the system event group #0");
+      is(JSON.stringify(keyEvents[1]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[1]) }), testName + "keydown event should be fired on content only in the system event group #1");
+      is(JSON.stringify(keyEvents[2]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[2]) }), testName + "keydown event should be fired on content only in the system event group #2");
+      is(JSON.stringify(keyEvents[3]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[3]) }), testName + "keydown event should be fired on content only in the system event group #3");
 
-      is(JSON.stringify(keyEvents[4]), JSON.stringify({ type: "keydown", group: "default", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keydown event should be fired on content in the default event group #4");
-      is(JSON.stringify(keyEvents[5]), JSON.stringify({ type: "keydown", group: "default", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keydown event should be fired on content in the default event group #5");
+      is(JSON.stringify(keyEvents[4]), JSON.stringify({ type: "keydown", group: "system", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keydown event should be fired on content only in the system event group #4");
+      is(JSON.stringify(keyEvents[5]), JSON.stringify({ type: "keydown", group: "system", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keydown event should be fired on content only in the system event group #5");
 
-      is(JSON.stringify(keyEvents[6]), JSON.stringify({ type: "keydown", group: "default", phase: "bubble", currentTarget: eventTargetToString(contents[3]) }), testName + "keydown event should be fired on content in the default event group #6");
-      is(JSON.stringify(keyEvents[7]), JSON.stringify({ type: "keydown", group: "default", phase: "bubble", currentTarget: eventTargetToString(contents[2]) }), testName + "keydown event should be fired on content in the default event group #7");
-      is(JSON.stringify(keyEvents[8]), JSON.stringify({ type: "keydown", group: "default", phase: "bubble", currentTarget: eventTargetToString(contents[1]) }), testName + "keydown event should be fired on content in the default event group #8");
-      is(JSON.stringify(keyEvents[9]), JSON.stringify({ type: "keydown", group: "default", phase: "bubble", currentTarget: eventTargetToString(contents[0]) }), testName + "keydown event should be fired on content in the default event group #9");
+      is(JSON.stringify(keyEvents[6]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[3]) }), testName + "keydown event should be fired on content only in the system event group #6");
+      is(JSON.stringify(keyEvents[7]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[2]) }), testName + "keydown event should be fired on content only in the system event group #7");
+      is(JSON.stringify(keyEvents[8]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[1]) }), testName + "keydown event should be fired on content only in the system event group #8");
+      is(JSON.stringify(keyEvents[9]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[0]) }), testName + "keydown event should be fired on content only in the system event group #9");
 
-      is(JSON.stringify(keyEvents[10]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[0]) }), testName + "keydown event should be fired on content in the system event group #0");
-      is(JSON.stringify(keyEvents[11]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[1]) }), testName + "keydown event should be fired on content in the system event group #1");
-      is(JSON.stringify(keyEvents[12]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[2]) }), testName + "keydown event should be fired on content in the system event group #2");
-      is(JSON.stringify(keyEvents[13]), JSON.stringify({ type: "keydown", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[3]) }), testName + "keydown event should be fired on content in the system event group #3");
+      is(JSON.stringify(keyEvents[10]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[0]) }), testName + "keypress event should be fired on content only in the system event group #10");
+      is(JSON.stringify(keyEvents[11]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[1]) }), testName + "keypress event should be fired on content only in the system event group #11");
+      is(JSON.stringify(keyEvents[12]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[2]) }), testName + "keypress event should be fired on content only in the system event group #12");
+      is(JSON.stringify(keyEvents[13]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[3]) }), testName + "keypress event should be fired on content only in the system event group #13");
 
-      is(JSON.stringify(keyEvents[14]), JSON.stringify({ type: "keydown", group: "system", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keydown event should be fired on content in the system event group #4");
-      is(JSON.stringify(keyEvents[15]), JSON.stringify({ type: "keydown", group: "system", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keydown event should be fired on content in the system event group #5");
+      is(JSON.stringify(keyEvents[14]), JSON.stringify({ type: "keypress", group: "system", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keypress event should be fired on content only in the system event group #14");
+      is(JSON.stringify(keyEvents[15]), JSON.stringify({ type: "keypress", group: "system", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keypress event should be fired on content only in the system event group #15");
 
-      is(JSON.stringify(keyEvents[16]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[3]) }), testName + "keydown event should be fired on content in the system event group #6");
-      is(JSON.stringify(keyEvents[17]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[2]) }), testName + "keydown event should be fired on content in the system event group #7");
-      is(JSON.stringify(keyEvents[18]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[1]) }), testName + "keydown event should be fired on content in the system event group #8");
-      is(JSON.stringify(keyEvents[19]), JSON.stringify({ type: "keydown", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[0]) }), testName + "keydown event should be fired on content in the system event group #9");
-
-      is(JSON.stringify(keyEvents[20]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[0]) }), testName + "keypress event should be fired on content only in the system event group #10");
-      is(JSON.stringify(keyEvents[21]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[1]) }), testName + "keypress event should be fired on content only in the system event group #11");
-      is(JSON.stringify(keyEvents[22]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[2]) }), testName + "keypress event should be fired on content only in the system event group #12");
-      is(JSON.stringify(keyEvents[23]), JSON.stringify({ type: "keypress", group: "system", phase: "capture", currentTarget: eventTargetToString(contents[3]) }), testName + "keypress event should be fired on content only in the system event group #13");
-
-      is(JSON.stringify(keyEvents[24]), JSON.stringify({ type: "keypress", group: "system", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keypress event should be fired on content only in the system event group #14");
-      is(JSON.stringify(keyEvents[25]), JSON.stringify({ type: "keypress", group: "system", phase: "target", currentTarget: eventTargetToString(contents[4]) }), testName + "keypress event should be fired on content only in the system event group #15");
-
-      is(JSON.stringify(keyEvents[26]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[3]) }), testName + "keypress event should be fired on content only in the system event group #16");
-      is(JSON.stringify(keyEvents[27]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[2]) }), testName + "keypress event should be fired on content only in the system event group #17");
-      is(JSON.stringify(keyEvents[28]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[1]) }), testName + "keypress event should be fired on content only in the system event group #18");
-      is(JSON.stringify(keyEvents[29]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[0]) }), testName + "keypress event should be fired on content only in the system event group #19");
+      is(JSON.stringify(keyEvents[16]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[3]) }), testName + "keypress event should be fired on content only in the system event group #16");
+      is(JSON.stringify(keyEvents[17]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[2]) }), testName + "keypress event should be fired on content only in the system event group #17");
+      is(JSON.stringify(keyEvents[18]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[1]) }), testName + "keypress event should be fired on content only in the system event group #18");
+      is(JSON.stringify(keyEvents[19]), JSON.stringify({ type: "keypress", group: "system", phase: "bubble", currentTarget: eventTargetToString(contents[0]) }), testName + "keypress event should be fired on content only in the system event group #19");
 
       continueTest();
     });

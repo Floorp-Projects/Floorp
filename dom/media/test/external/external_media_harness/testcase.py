@@ -17,11 +17,21 @@ from external_media_tests.media_utils.video_puppeteer import (playback_done, pla
 
 class MediaTestCase(FirefoxTestCase):
 
+    """
+    Necessary methods for MSE playback
+
+    :param video_urls: Urls you are going to play as part of the tests.
+    """
+
     def __init__(self, *args, **kwargs):
         self.video_urls = kwargs.pop('video_urls', False)
         FirefoxTestCase.__init__(self, *args, **kwargs)
 
     def save_screenshot(self):
+        """
+        Make a screenshot of the window that is currently playing the video
+        element.
+        """
         screenshot_dir = os.path.join(self.marionette.instance.workspace or '',
                                       'screenshots')
         filename = ''.join([self.id().replace(' ', '-'),
@@ -38,12 +48,21 @@ class MediaTestCase(FirefoxTestCase):
         self.marionette.log('Screenshot saved in %s' % os.path.abspath(path))
 
     def log_video_debug_lines(self):
+        """
+        Log the debugging information that Firefox provides for video elements.
+        """
         with self.marionette.using_context('chrome'):
             debug_lines = self.marionette.execute_script(VP._debug_script)
             if debug_lines:
                 self.marionette.log('\n'.join(debug_lines))
 
     def run_playback(self, video):
+        """
+        Play the video all of the way through, or for the requested duration,
+        whichever comes first. Raises if the video stalls for too long.
+
+        :param video: VideoPuppeteer instance to play.
+        """
         with self.marionette.using_context('content'):
             self.logger.info(video.test_url)
             try:
@@ -55,6 +74,12 @@ class MediaTestCase(FirefoxTestCase):
                 raise self.failureException(e)
 
     def check_playback_starts(self, video):
+        """
+        Check to see if a given video will start. Raises if the video does not
+        start.
+
+        :param video: VideoPuppeteer instance to play.
+        """
         with self.marionette.using_context('content'):
             self.logger.info(video.test_url)
             try:
@@ -74,6 +99,12 @@ class MediaTestCase(FirefoxTestCase):
 
 
 class NetworkBandwidthTestCase(MediaTestCase):
+    """
+    Test MSE playback while network bandwidth is limited. Uses browsermobproxy
+    (https://bmp.lightbody.net/). Please see
+    https://developer.mozilla.org/en-US/docs/Mozilla/QA/external-media-tests
+    for more information on setting up browsermob_proxy.
+    """
 
     def __init__(self, *args, **kwargs):
         MediaTestCase.__init__(self, *args, **kwargs)
@@ -90,8 +121,11 @@ class NetworkBandwidthTestCase(MediaTestCase):
         BrowserMobProxyTestCaseMixin.tearDown(self)
         self.proxy = None
 
-
     def run_videos(self):
+        """
+        Run each of the videos in the video list. Raises if something goes
+        wrong in playback.
+        """
         with self.marionette.using_context('content'):
             for url in self.video_urls:
                 video = VP(self.marionette, url,
@@ -107,11 +141,15 @@ class VideoPlaybackTestsMixin(object):
     These tests should pass on any site where a single video element plays
     upon loading and is uninterrupted (by ads, for example).
 
-    This test both starting videos and performing partial playback at one
+    This tests both starting videos and performing partial playback at one
     minute each, and is the test that should be run frequently in automation.
     """
 
     def test_playback_starts(self):
+        """
+        Test to make sure that playback of the video element starts for each
+        video.
+        """
         with self.marionette.using_context('content'):
             for url in self.video_urls:
                 try:
@@ -129,7 +167,9 @@ class VideoPlaybackTestsMixin(object):
                     raise self.failureException(e)
 
     def test_video_playback_partial(self):
-        """ First 60 seconds of video play well. """
+        """
+        Test to make sure that playback of 60 seconds works for each video.
+        """
         with self.marionette.using_context('content'):
             for url in self.video_urls:
                 video = VP(self.marionette, url,

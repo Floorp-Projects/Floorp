@@ -45,9 +45,8 @@
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/APZChild.h"
-#include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/PCompositorChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/net/NeckoChild.h"
@@ -875,8 +874,14 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     auto* opener = nsPIDOMWindowOuter::From(aParent);
     nsIDocShell* openerShell;
     RefPtr<nsDocShell> openerDocShell;
+    float fullZoom = 1.0f;
     if (opener && (openerShell = opener->GetDocShell())) {
       openerDocShell = static_cast<nsDocShell*>(openerShell);
+      nsCOMPtr<nsIContentViewer> cv;
+      openerDocShell->GetContentViewer(getter_AddRefs(cv));
+      if (cv) {
+        cv->GetFullZoom(&fullZoom);
+      }
     }
 
     nsresult rv;
@@ -888,6 +893,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                           openerDocShell
                             ? openerDocShell->GetOriginAttributes()
                             : DocShellOriginAttributes(),
+                          fullZoom,
                           &rv,
                           aWindowIsNew,
                           &frameScripts,
@@ -1284,11 +1290,11 @@ ContentChild::DeallocPAPZChild(PAPZChild* aActor)
   return true;
 }
 
-PCompositorChild*
-ContentChild::AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
-                                    base::ProcessId aOtherProcess)
+PCompositorBridgeChild*
+ContentChild::AllocPCompositorBridgeChild(mozilla::ipc::Transport* aTransport,
+                                          base::ProcessId aOtherProcess)
 {
-  return CompositorChild::Create(aTransport, aOtherProcess);
+  return CompositorBridgeChild::Create(aTransport, aOtherProcess);
 }
 
 PSharedBufferManagerChild*
@@ -2566,8 +2572,8 @@ OnFinishNuwaPreparation()
 {
   // We want to ensure that the PBackground actor gets cloned in the Nuwa
   // process before we freeze. Also, we have to do this to avoid deadlock.
-  // Protocols that are "opened" (e.g. PBackground, PCompositor) block the
-  // main thread to wait for the IPC thread during the open operation.
+  // Protocols that are "opened" (e.g. PBackground, PCompositorBridge) block
+  // the main thread to wait for the IPC thread during the open operation.
   // NuwaSpawnWait() blocks the IPC thread to wait for the main thread when
   // the Nuwa process is forked. Unless we ensure that the two cannot happen
   // at the same time then we risk deadlock. Spinning the event loop here

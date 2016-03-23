@@ -46,7 +46,7 @@ protected:
   virtual bool RecvUpdateDeviceInfo(nsTArray<VRDeviceUpdate>&& aDeviceUpdates) override;
   virtual bool RecvUpdateDeviceSensors(nsTArray<VRSensorUpdate>&& aDeviceSensorUpdates) override;
 
-  friend class layers::CompositorChild;
+  friend class layers::CompositorBridgeChild;
 
 private:
 

@@ -13,6 +13,7 @@
 #include "gc/Zone.h"
 
 #include "js/GCVector.h"
+#include "js/Id.h"
 
 #include "vm/NativeObject.h"
 #include "vm/ProxyObject.h"
@@ -121,7 +122,7 @@ class IndirectBindingMap
         RelocatablePtrShape shape;
     };
 
-    typedef HashMap<jsid, Binding, JsidHasher, ZoneAllocPolicy> Map;
+    typedef HashMap<jsid, Binding, DefaultHasher<jsid>, ZoneAllocPolicy> Map;
 
     Map map_;
 };

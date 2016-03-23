@@ -850,8 +850,7 @@ WrapperOwner::regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g)
         return false;
 
     RootedObject regexp(cx);
-    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-    regexp = JS_NewUCRegExpObject(cx, global, source.get(), source.Length(), flags);
+    regexp = JS_NewUCRegExpObject(cx, source.get(), source.Length(), flags);
     if (!regexp)
         return false;
 

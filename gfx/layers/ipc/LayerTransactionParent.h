@@ -173,8 +173,8 @@ protected:
     mIPCOpen = false;
     RELEASE_MANUALLY(this);
   }
-  friend class CompositorParent;
-  friend class CrossProcessCompositorParent;
+  friend class CompositorBridgeParent;
+  friend class CrossProcessCompositorBridgeParent;
   friend class layout::RenderFrameParent;
 
 private:

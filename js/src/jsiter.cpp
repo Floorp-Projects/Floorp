@@ -57,8 +57,7 @@ NativeIterator::mark(JSTracer* trc)
 {
     for (HeapPtrFlatString* str = begin(); str < end(); str++)
         TraceEdge(trc, str, "prop");
-    if (obj)
-        TraceEdge(trc, &obj, "obj");
+    TraceNullableEdge(trc, &obj, "obj");
 
     for (size_t i = 0; i < guard_length; i++)
         guard_array[i].trace(trc);

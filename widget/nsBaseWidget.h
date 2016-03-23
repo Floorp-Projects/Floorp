@@ -34,8 +34,8 @@ class Accessible;
 
 namespace layers {
 class BasicLayerManager;
-class CompositorChild;
-class CompositorParent;
+class CompositorBridgeChild;
+class CompositorBridgeParent;
 class APZCTreeManager;
 class GeckoContentController;
 class APZEventState;
@@ -92,8 +92,8 @@ protected:
   typedef base::Thread Thread;
   typedef mozilla::layers::BasicLayerManager BasicLayerManager;
   typedef mozilla::layers::BufferMode BufferMode;
-  typedef mozilla::layers::CompositorChild CompositorChild;
-  typedef mozilla::layers::CompositorParent CompositorParent;
+  typedef mozilla::layers::CompositorBridgeChild CompositorBridgeChild;
+  typedef mozilla::layers::CompositorBridgeParent CompositorBridgeParent;
   typedef mozilla::layers::APZCTreeManager APZCTreeManager;
   typedef mozilla::layers::GeckoContentController GeckoContentController;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
@@ -160,7 +160,7 @@ public:
 
   CompositorVsyncDispatcher* GetCompositorVsyncDispatcher() override;
   void            CreateCompositorVsyncDispatcher();
-  virtual CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight);
+  virtual CompositorBridgeParent* NewCompositorBridgeParent(int aSurfaceWidth, int aSurfaceHeight);
   virtual void            CreateCompositor();
   virtual void            CreateCompositor(int aWidth, int aHeight);
   virtual void            PrepareWindowEffects() override {}
@@ -483,7 +483,7 @@ protected:
                         std::min(c.mMaxSize.height, *aHeight));
   }
 
-  virtual CompositorChild* GetRemoteRenderer() override;
+  virtual CompositorBridgeChild* GetRemoteRenderer() override;
 
   /**
    * Notify the widget that this window is being used with OMTC.
@@ -517,8 +517,8 @@ protected:
   nsIWidgetListener* mAttachedWidgetListener;
   nsIWidgetListener* mPreviouslyAttachedWidgetListener;
   RefPtr<LayerManager> mLayerManager;
-  RefPtr<CompositorChild> mCompositorChild;
-  RefPtr<CompositorParent> mCompositorParent;
+  RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
+  RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
   RefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   RefPtr<APZCTreeManager> mAPZC;
   RefPtr<APZEventState> mAPZEventState;

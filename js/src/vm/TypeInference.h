@@ -145,8 +145,7 @@ enum : uint32_t {
     /* Whether any objects have been iterated over. */
     OBJECT_FLAG_ITERATED              = 0x00080000,
 
-    /* For a global object, whether flags were set on the RegExpStatics. */
-    OBJECT_FLAG_REGEXP_FLAGS_SET      = 0x00100000,
+    /* 0x00100000 is not used. */
 
     /*
      * For the function on a run-once script, whether the function has actually

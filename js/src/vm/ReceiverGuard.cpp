@@ -61,8 +61,6 @@ HeapReceiverGuard::keyBits(JSObject* obj)
 void
 HeapReceiverGuard::trace(JSTracer* trc)
 {
-    if (shape_)
-        TraceEdge(trc, &shape_, "receiver_guard_shape");
-    if (group_)
-        TraceEdge(trc, &group_, "receiver_guard_group");
+    TraceNullableEdge(trc, &shape_, "receiver_guard_shape");
+    TraceNullableEdge(trc, &group_, "receiver_guard_group");
 }

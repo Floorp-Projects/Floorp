@@ -117,7 +117,9 @@ compartment.
 
 <code>onNewPromise(<i>promise</i>)</code>
 :   A new Promise object, referenced by the [`Debugger.Object`][object] instance
-    *promise*, has been allocated in the scope of the debuggees.
+    *promise*, has been allocated in the scope of the debuggees. The Promise's
+    allocation stack can be obtained using the *promiseAllocationStack*
+    accessor property of the [`Debugger.Object`][object] instance *promise*.
 
     This handler method should return a [resumption value][rv] specifying how
     the debuggee's execution should proceed. However, note that a <code>{
@@ -127,9 +129,10 @@ compartment.
 <code>onPromiseSettled(<i>promise</i>)</code>
 :   A Promise object, referenced by the [`Debugger.Object`][object] instance
     *promise* that was allocated within a debuggee scope, has settled (either
-    fulfilled or rejected). The Promise's state and fulfillment or rejection
-    value can be obtained via the
-    [PromiseDebugging webidl interface][promise-debugging].
+    fulfilled or rejected). The Promise's state, fulfillment or rejection
+    value, and the allocation and resolution stacks can be obtained using the
+    Promise-related accessor properties of the [`Debugger.Object`][object]
+    instance *promise*.
 
     This handler method should return a [resumption value][rv] specifying how
     the debuggee's execution should proceed. However, note that a <code>{
@@ -496,7 +499,6 @@ other kinds of objects.
     debuggee. If <i>global</i> does not designate a global object, throw a
     `TypeError`. Determine which global is designated by <i>global</i>
     using the same rules as [`Debugger.prototype.addDebuggee`][add].
-
 ## Static methods of the Debugger Object
 
 The functions described below are not called with a `this` value.

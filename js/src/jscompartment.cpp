@@ -52,7 +52,6 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     marked(true),
     warnedAboutFlagsArgument(false),
     warnedAboutExprClosure(false),
-    warnedAboutRegExpMultiline(false),
 #ifdef DEBUG
     firedOnNewGlobalObject(false),
 #endif

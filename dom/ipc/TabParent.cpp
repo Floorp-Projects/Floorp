@@ -29,7 +29,7 @@
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/LookAndFeel.h"
@@ -2108,9 +2108,8 @@ TabParent::RecvReplyKeyEvent(const WidgetKeyboardEvent& event)
   NS_ENSURE_TRUE(mFrameElement, true);
 
   WidgetKeyboardEvent localEvent(event);
-  // Set mNoCrossProcessBoundaryForwarding to avoid this event from
-  // being infinitely redispatched and forwarded to the child again.
-  localEvent.mFlags.mNoCrossProcessBoundaryForwarding = true;
+  // Mark the event as not to be dispatched to remote process again.
+  localEvent.StopCrossProcessForwarding();
 
   // Here we convert the WidgetEvent that we received to an nsIDOMEvent
   // to be able to dispatch it to the <browser> element as the target element.
@@ -2140,7 +2139,7 @@ TabParent::RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent)
       PresShell::BeforeAfterKeyboardEventEnabled() &&
       localEvent.mMessage != eKeyPress) {
     presShell->DispatchAfterKeyboardEvent(mFrameElement, localEvent,
-                                          aEvent.mFlags.mDefaultPrevented);
+                                          aEvent.DefaultPrevented());
   }
 
   return true;
@@ -2915,8 +2914,9 @@ TabParent::RequestNotifyLayerTreeReady()
   if (!frame) {
     mNeedLayerTreeReadyNotification = true;
   } else {
-    CompositorParent::RequestNotifyLayerTreeReady(frame->GetLayersId(),
-                                                  new LayerTreeUpdateObserver());
+    CompositorBridgeParent::RequestNotifyLayerTreeReady(
+      frame->GetLayersId(),
+      new LayerTreeUpdateObserver());
   }
   return true;
 }
@@ -2929,8 +2929,9 @@ TabParent::RequestNotifyLayerTreeCleared()
     return false;
   }
 
-  CompositorParent::RequestNotifyLayerTreeCleared(frame->GetLayersId(),
-                                                  new LayerTreeUpdateObserver());
+  CompositorBridgeParent::RequestNotifyLayerTreeCleared(
+    frame->GetLayersId(),
+    new LayerTreeUpdateObserver());
   return true;
 }
 
@@ -2965,12 +2966,13 @@ TabParent::SwapLayerTreeObservers(TabParent* aOther)
 
   RenderFrameParent* rfp = GetRenderFrame();
   RenderFrameParent* otherRfp = aOther->GetRenderFrame();
-  if(!rfp || !otherRfp) {
+  if (!rfp || !otherRfp) {
     return;
   }
 
-  CompositorParent::SwapLayerTreeObservers(rfp->GetLayersId(),
-                                           otherRfp->GetLayersId());
+  CompositorBridgeParent::SwapLayerTreeObservers(
+    rfp->GetLayersId(),
+    otherRfp->GetLayersId());
 }
 
 bool

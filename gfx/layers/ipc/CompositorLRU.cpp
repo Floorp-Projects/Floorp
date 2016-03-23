@@ -12,7 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
 
-#include "CompositorParent.h"
+#include "CompositorBridgeParent.h"
 
 namespace mozilla {
 namespace layers {
@@ -47,7 +47,7 @@ CompositorLRU::~CompositorLRU()
 }
 
 void
-CompositorLRU::Add(PCompositorParent* aCompositor, const uint64_t& aId)
+CompositorLRU::Add(PCompositorBridgeParent* aCompositor, const uint64_t& aId)
 {
   auto index = mLRU.IndexOf(std::make_pair(aCompositor, aId));
   if (index != nsTArray<CompositorLayerPair>::NoIndex) {
@@ -68,7 +68,7 @@ CompositorLRU::Add(PCompositorParent* aCompositor, const uint64_t& aId)
 }
 
 void
-CompositorLRU::Remove(PCompositorParent* aCompositor, const uint64_t& aId)
+CompositorLRU::Remove(PCompositorBridgeParent* aCompositor, const uint64_t& aId)
 {
   if (mLRUSize == 0) {
     return;
@@ -76,7 +76,7 @@ CompositorLRU::Remove(PCompositorParent* aCompositor, const uint64_t& aId)
 
   auto index = mLRU.IndexOf(std::make_pair(aCompositor, aId));
 
-  if (index == nsTArray<PCompositorParent*>::NoIndex) {
+  if (index == nsTArray<PCompositorBridgeParent*>::NoIndex) {
     return;
   }
 
@@ -84,7 +84,7 @@ CompositorLRU::Remove(PCompositorParent* aCompositor, const uint64_t& aId)
 }
 
 void
-CompositorLRU::Remove(PCompositorParent* aCompositor)
+CompositorLRU::Remove(PCompositorBridgeParent* aCompositor)
 {
   if (mLRUSize == 0) {
     return;

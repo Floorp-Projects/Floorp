@@ -6,23 +6,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650776
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 650776</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=650776">Mozilla Bug 650776</a>
-<p id="display"></p>
-<div id="content" style="display: none">
-  
-</div>
 <pre id="test">
 <script type="application/javascript">
 
 /** Test for Bug 650776 **/
 
-var c = Components.interfaces.nsIDocumentEncoder;
-var s = Components.classes["@mozilla.org/parserutils;1"]
-        .getService(Components.interfaces.nsIParserUtils);
+var c = SpecialPowers.Ci.nsIDocumentEncoder;
+var s = SpecialPowers.ParserUtils;
 
 is(s.convertToPlainText("foo", c.OutputLFLineBreak, 0), "foo", "Wrong conversion result 1");
 is(s.convertToPlainText("foo foo foo", c.OutputWrap | c.OutputLFLineBreak, 7), "foo foo\nfoo", "Wrong conversion result 2");

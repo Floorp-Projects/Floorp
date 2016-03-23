@@ -6923,31 +6923,37 @@ CSSParserImpl::LookupKeywordPrefixAware(nsAString& aKeywordStr,
   nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(aKeywordStr);
 
   if (aKeywordTable == nsCSSProps::kDisplayKTable) {
-    if (keyword == eCSSKeyword__webkit_box &&
+    if ((keyword == eCSSKeyword__webkit_box ||
+         keyword == eCSSKeyword__webkit_inline_box) &&
         (sWebkitPrefixedAliasesEnabled || ShouldUseUnprefixingService())) {
-      // Treat "display: -webkit-box" as "display: flex". In simple scenarios,
-      // they largely behave the same, as long as we alias the associated
-      // properties to modern flexbox equivalents as well.
+      // Treat "display: -webkit-box" as "display: flex", and
+      // "display: -webkit-inline-box" as "display: inline-flex". In simple
+      // scenarios, they largely behave the same, as long as we alias the
+      // associated properties to modern flexbox equivalents as well.
       if (mWebkitBoxUnprefixState == eHaveNotUnprefixed) {
         mWebkitBoxUnprefixState = eHaveUnprefixed;
       }
-      return eCSSKeyword_flex;
+      return (keyword == eCSSKeyword__webkit_box) ?
+        eCSSKeyword_flex : eCSSKeyword_inline_flex;
     }
 
-    // If we've seen "display: -webkit-box" in an earlier declaration and we
-    // tried to unprefix it to emulate support for it, then we have to watch
-    // out for later "display: -moz-box" declarations; they're likely just a
-    // halfhearted attempt at compatibility, and they actually end up stomping
-    // on our emulation of the earlier -webkit-box display-value, via the CSS
+    // If we've seen "display: -webkit-box" (or "-webkit-inline-box") in an
+    // earlier declaration and we tried to unprefix it to emulate support for
+    // it, then we have to watch out for later "display: -moz-box" (and
+    // "-moz-inline-box") declarations; they're likely just a halfhearted
+    // attempt at compatibility, and they actually end up stomping on our
+    // emulation of the earlier -webkit-box display-value, via the CSS
     // cascade. To prevent this problem, we also treat "display: -moz-box" as
     // "display: flex" (but only if we unprefixed an earlier "-webkit-box").
     if (mWebkitBoxUnprefixState == eHaveUnprefixed &&
-        keyword == eCSSKeyword__moz_box) {
+        (keyword == eCSSKeyword__moz_box ||
+         keyword == eCSSKeyword__moz_inline_box)) {
       MOZ_ASSERT(sWebkitPrefixedAliasesEnabled || ShouldUseUnprefixingService(),
                  "mDidUnprefixWebkitBoxInEarlierDecl should only be set if "
                  "we're supporting webkit-prefixed aliases, or if we're using "
                  "the css unprefixing service on this site");
-      return eCSSKeyword_flex;
+      return (keyword == eCSSKeyword__moz_box) ?
+        eCSSKeyword_flex : eCSSKeyword_inline_flex;
     }
   }
 

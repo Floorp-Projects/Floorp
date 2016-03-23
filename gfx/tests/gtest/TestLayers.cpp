@@ -8,7 +8,7 @@
 #include "gmock/gmock.h"
 #include "LayerUserData.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -240,7 +240,7 @@ already_AddRefed<Layer> CreateLayerTree(
     manager->SetRoot(rootLayer);
     if (rootLayer->AsLayerComposite()) {
       // Only perform this for LayerManagerComposite
-      CompositorParent::SetShadowProperties(rootLayer);
+      CompositorBridgeParent::SetShadowProperties(rootLayer);
     }
   }
   return rootLayer.forget();

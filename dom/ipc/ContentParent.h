@@ -61,7 +61,7 @@ class PJavaScriptParent;
 } // namespace jsipc
 
 namespace layers {
-class PCompositorParent;
+class PCompositorBridgeParent;
 class PSharedBufferManagerParent;
 } // namespace layers
 
@@ -506,6 +506,7 @@ public:
                                 const nsCString& aFeatures,
                                 const nsCString& aBaseURI,
                                 const DocShellOriginAttributes& aOpenerOriginAttributes,
+                                const float& aFullZoom,
                                 nsresult* aResult,
                                 bool* aWindowIsNew,
                                 InfallibleTArray<FrameScriptInfo>* aFrameScripts,
@@ -670,9 +671,9 @@ private:
   bool
   DeallocPAPZParent(PAPZParent* aActor) override;
 
-  PCompositorParent*
-  AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
-                         base::ProcessId aOtherProcess) override;
+  PCompositorBridgeParent*
+  AllocPCompositorBridgeParent(mozilla::ipc::Transport* aTransport,
+                               base::ProcessId aOtherProcess) override;
 
   PImageBridgeParent*
   AllocPImageBridgeParent(mozilla::ipc::Transport* aTransport,
