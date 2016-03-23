@@ -226,6 +226,11 @@ PushRecord.prototype = {
       this.principal.originAttributes, pattern);
   },
 
+  hasAuthenticationSecret() {
+    return !!this.authenticationSecret &&
+           this.authenticationSecret.byteLength == 16;
+  },
+
   toSubscription() {
     return {
       endpoint: this.pushEndpoint,
