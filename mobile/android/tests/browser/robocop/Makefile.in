@@ -34,18 +34,7 @@ java-tests   := \
   $(wildcard $(TESTPATH)/components/*.java) \
   $(wildcard $(TESTPATH)/helpers/*.java)
 
-PP_TARGETS += manifest
-manifest := $(srcdir)/AndroidManifest.xml.in
-manifest_TARGET := export
-manifest_FLAGS += \
-  -DMOZ_ANDROID_SHARED_ID='$(ANDROID_PACKAGE_NAME).sharedID' \
-  $(NULL)
-
 ANDROID_MANIFEST_FILE := $(CURDIR)/AndroidManifest.xml
-
-GARBAGE += \
-  AndroidManifest.xml \
-  $(NULL)
 
 JAVAFILES += \
   $(java-harness) \

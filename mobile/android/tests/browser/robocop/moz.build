@@ -27,3 +27,8 @@ TEST_HARNESS_FILES.testing.mochitest.tests.robocop += [
     'robocop*.js',
     'test*.js',
 ]
+
+DEFINES['MOZ_ANDROID_SHARED_ID'] = CONFIG['MOZ_ANDROID_SHARED_ID']
+OBJDIR_PP_FILES.mobile.android.tests.browser.robocop += [
+    'AndroidManifest.xml.in',
+]
