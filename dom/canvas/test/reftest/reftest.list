@@ -153,7 +153,7 @@ skip-if(!winWidget) pref(webgl.disable-angle,true)  == webgl-color-test.html?nat
 
 # focus rings
 pref(canvas.focusring.enabled,true) skip-if(B2G) skip-if(cocoaWidget) skip-if(winWidget) needs-focus == drawFocusIfNeeded.html drawFocusIfNeeded-ref.html
-pref(canvas.customfocusring.enabled,true) skip-if(B2G) skip-if(cocoaWidget) skip-if(Android) skip-if(winWidget) fuzzy-if(azureSkia,64,410) needs-focus == drawCustomFocusRing.html drawCustomFocusRing-ref.html
+pref(canvas.customfocusring.enabled,true) skip-if(B2G) skip-if(cocoaWidget) skip-if(Android) skip-if(winWidget) fuzzy-if(gtkWidget,64,410) needs-focus == drawCustomFocusRing.html drawCustomFocusRing-ref.html
 
 # Check that captureStream() displays in a local video element
 == capturestream.html wrapper.html?green.png
