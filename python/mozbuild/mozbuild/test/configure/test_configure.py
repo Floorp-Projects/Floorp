@@ -339,6 +339,39 @@ class TestConfigure(unittest.TestCase):
             # set_config('FOO'...)
             get_config(['--set-foo', '--set-name=FOO'])
 
+    def test_set_define(self):
+        def get_config(*args):
+            return self.get_config(*args, configure='set_define.configure')
+
+        config, out = self.get_result(['--help'],
+                                      configure='set_define.configure')
+        self.assertEquals(config, {'DEFINES': {}})
+
+        config = get_config(['--set-foo'])
+        self.assertIn('FOO', config['DEFINES'])
+        self.assertEquals(config['DEFINES']['FOO'], True)
+
+        config = get_config(['--set-bar'])
+        self.assertNotIn('FOO', config['DEFINES'])
+        self.assertIn('BAR', config['DEFINES'])
+        self.assertEquals(config['DEFINES']['BAR'], True)
+
+        config = get_config(['--set-value=qux'])
+        self.assertIn('VALUE', config['DEFINES'])
+        self.assertEquals(config['DEFINES']['VALUE'], 'qux')
+
+        config = get_config(['--set-name=hoge'])
+        self.assertIn('hoge', config['DEFINES'])
+        self.assertEquals(config['DEFINES']['hoge'], True)
+
+        config = get_config([])
+        self.assertEquals(config['DEFINES'], {'BAR': False})
+
+        with self.assertRaises(ConfigureError):
+            # Both --set-foo and --set-name=FOO are going to try to
+            # set_define('FOO'...)
+            get_config(['--set-foo', '--set-name=FOO'])
+
 
 if __name__ == '__main__':
     main()

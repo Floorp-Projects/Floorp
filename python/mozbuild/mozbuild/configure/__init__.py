@@ -138,6 +138,7 @@ class ConfigureSandbox(dict):
 
         self._helper = CommandLineHelper(environ, argv)
 
+        assert isinstance(config, dict)
         self._config, self._stdout, self._stderr = config, stdout, stderr
 
         self._help = None
@@ -290,11 +291,9 @@ class ConfigureSandbox(dict):
 
         The decorated function is altered to use a different global namespace
         for its execution. This different global namespace exposes a limited
-        set of functions from os.path, and two additional functions:
-        `imply_option` and `set_define`. The former allows to inject
-        additional options as if they had been passed on the command line.
-        The latter declares new defines, stored in a DEFINES configuration
-        item.
+        set of functions from os.path, and one additional functions:
+        `imply_option`. It allows to inject additional options as if they had
+        been passed on the command line.
         '''
         if not args:
             raise ConfigureError('@depends needs at least one argument')
@@ -334,7 +333,6 @@ class ConfigureSandbox(dict):
             result = DependsOutput()
             glob.update(
                 imply_option=result.imply_option,
-                set_define=self._set_define,
             )
             dummy = wraps(func)(DummyFunction())
             self._depends[dummy] = func
@@ -406,6 +404,7 @@ class ConfigureSandbox(dict):
             depends=self.depends_impl,
             option=self.option_impl,
             set_config=self.set_config_impl,
+            set_define=self.set_define_impl,
         )
         self._templates.add(template)
         return template
@@ -419,13 +418,7 @@ class ConfigureSandbox(dict):
         glob.update(__builtins__=__builtins__)
         return func
 
-    def set_config_impl(self, name, value):
-        '''Implementation of set_config().
-        Set the configuration items with the given name to the given value.
-        Both `name` and `value` can be references to @depends functions,
-        in which case the result from these functions is used. If the result
-        of either function is None, the configuration item is not set.
-        '''
+    def _resolve_and_set(self, data, name, value):
         # Don't set anything when --help was on the command line
         if self._help:
             return
@@ -434,19 +427,33 @@ class ConfigureSandbox(dict):
             return
         if not isinstance(name, types.StringTypes):
             raise TypeError("Unexpected type: '%s'" % type(name))
-        if name in self._config:
+        if name in data:
             raise ConfigureError(
                 "Cannot add '%s' to configuration: Key already "
                 "exists" % name)
         value = self._resolve(value, need_help_dependency=False)
         if value is not None:
-            self._config[name] = value
+            data[name] = value
 
-    def _set_define(self, name, value):
+    def set_config_impl(self, name, value):
+        '''Implementation of set_config().
+        Set the configuration items with the given name to the given value.
+        Both `name` and `value` can be references to @depends functions,
+        in which case the result from these functions is used. If the result
+        of either function is None, the configuration item is not set.
+        '''
+        self._resolve_and_set(self._config, name, value)
+
+    def set_define_impl(self, name, value):
+        '''Implementation of set_define().
+        Set the define with the given name to the given value. Both `name` and
+        `value` can be references to @depends functions, in which case the
+        result from these functions is used. If the result of either function
+        is None, the define is not set. If the result is False, the define is
+        explicitly undefined (-U).
+        '''
         defines = self._config.setdefault('DEFINES', {})
-        if name in defines:
-            raise ConfigureError("'%s' is already defined" % name)
-        defines[name] = value
+        self._resolve_and_set(defines, name, value)
 
     def _prepare_function(self, func):
         '''Alter the given function global namespace with the common ground
