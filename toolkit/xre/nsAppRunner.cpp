@@ -208,8 +208,12 @@
 #include "AndroidBridge.h"
 #endif
 
-#if defined(MOZ_SANDBOX) && defined(XP_LINUX) && !defined(ANDROID)
+#if defined(MOZ_SANDBOX)
+#if defined(XP_LINUX) && !defined(ANDROID)
 #include "mozilla/SandboxInfo.h"
+#elif defined(XP_WIN)
+#include "SandboxBroker.h"
+#endif
 #endif
 
 extern uint32_t gRestartMode;
@@ -3755,6 +3759,12 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
     int result;
 #ifdef XP_WIN
     UseParentConsole();
+#if defined(MOZ_SANDBOX)
+    if (!SandboxBroker::Initialize()) {
+      NS_WARNING("Failed to initialize broker services, sandboxed processes "
+                 "will fail to start.");
+    }
+#endif
 #endif
     // RunGTest will only be set if we're in xul-unit
     if (mozilla::RunGTest) {
@@ -4340,6 +4350,20 @@ XREMain::XRE_mainRun()
   }
 #endif /* MOZ_INSTRUMENT_EVENT_LOOP */
 
+#if defined(MOZ_SANDBOX) && defined(XP_WIN)
+  if (!SandboxBroker::Initialize()) {
+#if defined(MOZ_CONTENT_SANDBOX)
+    // If we're sandboxing content and we fail to initialize, then crashing here
+    // seems like the sensible option.
+    if (BrowserTabsRemoteAutostart()) {
+      MOZ_CRASH("Failed to initialize broker services, can't continue.");
+    }
+#endif
+    // Otherwise just warn for the moment, as most things will work.
+    NS_WARNING("Failed to initialize broker services, sandboxed processes will "
+               "fail to start.");
+  }
+#endif
 #if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
   SetUpSandboxEnvironment();
 #endif
