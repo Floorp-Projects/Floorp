@@ -346,8 +346,7 @@ Binding::trace(JSTracer* trc)
 void
 Bindings::trace(JSTracer* trc)
 {
-    if (callObjShape_)
-        TraceEdge(trc, &callObjShape_, "callObjShape");
+    TraceNullableEdge(trc, &callObjShape_, "callObjShape");
 
     /*
      * As the comment in Bindings explains, bindingsArray may point into freed
@@ -3966,10 +3965,8 @@ JSScript::traceChildren(JSTracer* trc)
                   zone()->isCollecting());
 
     if (atoms) {
-        for (uint32_t i = 0; i < natoms(); ++i) {
-            if (atoms[i])
-                TraceEdge(trc, &atoms[i], "atom");
-        }
+        for (uint32_t i = 0; i < natoms(); ++i)
+            TraceNullableEdge(trc, &atoms[i], "atom");
     }
 
     if (hasObjects()) {
@@ -3982,19 +3979,13 @@ JSScript::traceChildren(JSTracer* trc)
         TraceRange(trc, constarray->length, constarray->vector, "consts");
     }
 
-    if (sourceObject()) {
-        MOZ_ASSERT(MaybeForwarded(sourceObject())->compartment() == compartment());
-        TraceEdge(trc, &sourceObject_, "sourceObject");
-    }
+    MOZ_ASSERT_IF(sourceObject(), MaybeForwarded(sourceObject())->compartment() == compartment());
+    TraceNullableEdge(trc, &sourceObject_, "sourceObject");
 
-    if (functionNonDelazifying())
-        TraceEdge(trc, &function_, "function");
+    TraceNullableEdge(trc, &function_, "function");
+    TraceNullableEdge(trc, &module_, "module");
 
-    if (module_)
-        TraceEdge(trc, &module_, "module");
-
-    if (enclosingStaticScope_)
-        TraceEdge(trc, &enclosingStaticScope_, "enclosingStaticScope");
+    TraceNullableEdge(trc, &enclosingStaticScope_, "enclosingStaticScope");
 
     if (maybeLazyScript())
         TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");

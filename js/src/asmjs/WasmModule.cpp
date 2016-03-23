@@ -908,13 +908,10 @@ Module::~Module()
 /* virtual */ void
 Module::trace(JSTracer* trc)
 {
-    for (const Import& import : imports()) {
-        if (importToExit(import).fun)
-            TraceEdge(trc, &importToExit(import).fun, "wasm function import");
-    }
+    for (const Import& import : imports())
+        TraceNullableEdge(trc, &importToExit(import).fun, "wasm function import");
 
-    if (heap_)
-        TraceEdge(trc, &heap_, "wasm buffer");
+    TraceNullableEdge(trc, &heap_, "wasm buffer");
 
     MOZ_ASSERT(ownerObject_);
     TraceEdge(trc, &ownerObject_, "wasm owner object");
