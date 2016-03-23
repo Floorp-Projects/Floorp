@@ -209,7 +209,7 @@ public class HistoryPanel extends HomeFragment {
                             Log.e(LOGTAG, "JSON error", e);
                         }
 
-                        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Sanitize:ClearData", json.toString()));
+                        GeckoAppShell.notifyObservers("Sanitize:ClearData", json.toString());
 
                         Telemetry.sendUIEvent(TelemetryContract.Event.SANITIZE, TelemetryContract.Method.BUTTON, "history");
                     }
