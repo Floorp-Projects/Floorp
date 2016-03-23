@@ -70,9 +70,7 @@ public class testAccessibleCarets extends JavascriptTest {
                         Log.e(LOGTAG, "Error building JSON arguments for " + TAB_CHANGE_EVENT, e);
                         return;
                     }
-                    final GeckoEvent event =
-                        GeckoEvent.createBroadcastEvent(TAB_CHANGE_EVENT, args.toString());
-                    GeckoAppShell.sendEventToGecko(event);
+                    mActions.sendGeckoEvent(TAB_CHANGE_EVENT, args.toString());
                     break;
             }
         }

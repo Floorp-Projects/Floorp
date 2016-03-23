@@ -116,7 +116,7 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
         // Re-add if necessary and allow the server to resolve conflicts.
         final long id = ContentUris.parseId(cr.insert(mReadingListUriWithProfile, values));
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Added", url));
+        GeckoAppShell.notifyObservers("Reader:Added", url);
 
         return id;
     }
@@ -161,7 +161,7 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
                   ReadingListItems.URL + " = ? OR " + ReadingListItems.RESOLVED_URL + " = ?",
                   new String[]{ uri, uri });
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Removed", uri));
+        GeckoAppShell.notifyObservers("Reader:Removed", uri);
     }
 
     @Override

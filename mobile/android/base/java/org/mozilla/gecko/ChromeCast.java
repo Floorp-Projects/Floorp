@@ -89,15 +89,15 @@ class ChromeCast implements GeckoMediaPlayer {
 
             switch (mediaStatus.getPlayerState()) {
             case MediaStatus.PLAYER_STATE_PLAYING:
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("MediaPlayer:Playing", null));
+                GeckoAppShell.notifyObservers("MediaPlayer:Playing", null);
                 break;
             case MediaStatus.PLAYER_STATE_PAUSED:
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("MediaPlayer:Paused", null));
+                GeckoAppShell.notifyObservers("MediaPlayer:Paused", null);
                 break;
             case MediaStatus.PLAYER_STATE_IDLE:
                 // TODO: Do we want to shutdown when there are errors?
                 if (mediaStatus.getIdleReason() == MediaStatus.IDLE_REASON_FINISHED) {
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Casting:Stop", null));
+                    GeckoAppShell.notifyObservers("Casting:Stop", null);
                 }
                 break;
             default:
@@ -388,7 +388,7 @@ class ChromeCast implements GeckoMediaPlayer {
         @Override
         public void onMessageReceived(CastDevice castDevice, String namespace,
                                       String message) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("MediaPlayer:Response", message));
+            GeckoAppShell.notifyObservers("MediaPlayer:Response", message);
         }
 
         public void sendMessage(String message) {
@@ -437,7 +437,7 @@ class ChromeCast implements GeckoMediaPlayer {
                     Log.e(LOGTAG, "Exception while creating channel", e);
                 }
 
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Casting:Mirror", route.getId()));
+                GeckoAppShell.notifyObservers("Casting:Mirror", route.getId());
             } else {
                 sendError(callback, status.toString());
             }
