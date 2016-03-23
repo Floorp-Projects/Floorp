@@ -573,6 +573,8 @@ public:
                                                   const float& aVolume,
                                                   const bool& aMuted) override;
 
+  virtual bool RecvSetUseGlobalHistory(const bool& aUse) override;
+
   /**
    * Native widget remoting protocol for use with windowed plugins with e10s.
    */
