@@ -990,9 +990,10 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
   }
 #ifdef USE_SKIA_GPU
   if (mVideoTexture) {
-    MOZ_ASSERT(gfxPlatform::GetPlatform()->GetSkiaGLGlue(), "null SkiaGLGlue");
-    gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext()->MakeCurrent();
-    gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext()->fDeleteTextures(1, &mVideoTexture);
+    SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
+    MOZ_ASSERT(glue);
+    glue->GetGLContext()->MakeCurrent();
+    glue->GetGLContext()->fDeleteTextures(1, &mVideoTexture);
   }
 #endif
 
@@ -4450,8 +4451,9 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& image,
       mIsSkiaGL &&
       !srcSurf &&
       image.IsHTMLVideoElement() &&
-      gfxPlatform::GetPlatform()->GetSkiaGLGlue()) {
+      gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas()) {
     mozilla::gl::GLContext* gl = gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext();
+    MOZ_ASSERT(gl);
 
     HTMLVideoElement* video = &image.GetAsHTMLVideoElement();
     if (!video) {
@@ -5617,7 +5619,7 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     CanvasLayer::Data data;
 
     GLuint skiaGLTex = SkiaGLTex();
-    if (skiaGLTex) {
+    if (mIsSkiaGL && skiaGLTex) {
       SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
       MOZ_ASSERT(glue);
 
@@ -5671,7 +5673,7 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
           CanvasRenderingContext2DUserData::PreTransactionCallback, userData);
 
   GLuint skiaGLTex = SkiaGLTex();
-  if (skiaGLTex) {
+  if (mIsSkiaGL && skiaGLTex) {
     SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
     MOZ_ASSERT(glue);
 
