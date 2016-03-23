@@ -274,7 +274,6 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
   if (NS_WARN_IF(!jsapi.Init(boundGlobal))) {
     return NS_OK;
   }
-  jsapi.TakeOwnershipOfErrorReporting();
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> handler(cx);
 

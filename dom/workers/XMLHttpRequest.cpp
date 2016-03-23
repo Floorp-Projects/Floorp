@@ -1195,7 +1195,6 @@ EventRunnable::PreDispatch(WorkerPrivate* /* unused */)
   AutoJSAPI jsapi;
   DebugOnly<bool> ok = jsapi.Init(xpc::NativeGlobal(mScopeObj));
   MOZ_ASSERT(ok);
-  jsapi.TakeOwnershipOfErrorReporting();
   JSContext* cx = jsapi.cx();
   // Now keep the mScopeObj alive for the duration
   JS::Rooted<JSObject*> scopeObj(cx, mScopeObj);

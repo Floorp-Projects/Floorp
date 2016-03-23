@@ -783,7 +783,6 @@ Promise::AppendNativeHandler(PromiseNativeHandler* aRunnable)
     // happen anyway.
     return;
   }
-  jsapi.TakeOwnershipOfErrorReporting();
 
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> handlerWrapper(cx);
@@ -1774,7 +1773,6 @@ public:
     if (!jsapi.Init(mValues)) {
       return;
     }
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
 
     JS::Rooted<JS::Value> value(cx, aValue);

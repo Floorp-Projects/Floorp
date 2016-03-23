@@ -78,7 +78,6 @@ WrapperAnswer::RecvPreventExtensions(const ObjectId& objId, ReturnStatus* rs)
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
@@ -110,7 +109,6 @@ WrapperAnswer::RecvGetPropertyDescriptor(const ObjectId& objId, const JSIDVarian
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
     EmptyDesc(out);
 
@@ -141,7 +139,6 @@ WrapperAnswer::RecvGetOwnPropertyDescriptor(const ObjectId& objId, const JSIDVar
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
     EmptyDesc(out);
 
@@ -172,7 +169,6 @@ WrapperAnswer::RecvDefineProperty(const ObjectId& objId, const JSIDVariant& idVa
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
@@ -201,7 +197,6 @@ WrapperAnswer::RecvDelete(const ObjectId& objId, const JSIDVariant& idVar, Retur
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
@@ -227,7 +222,6 @@ WrapperAnswer::RecvHas(const ObjectId& objId, const JSIDVariant& idVar, ReturnSt
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
     *foundp = false;
 
@@ -253,7 +247,6 @@ WrapperAnswer::RecvHasOwn(const ObjectId& objId, const JSIDVariant& idVar, Retur
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
     *foundp = false;
 
@@ -349,7 +342,6 @@ WrapperAnswer::RecvIsExtensible(const ObjectId& objId, ReturnStatus* rs, bool* r
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
     *result = false;
 
@@ -479,7 +471,6 @@ WrapperAnswer::RecvHasInstance(const ObjectId& objId, const JSVariant& vVar, Ret
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
@@ -507,7 +498,6 @@ WrapperAnswer::RecvGetBuiltinClass(const ObjectId& objId, ReturnStatus* rs,
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
@@ -533,7 +523,6 @@ WrapperAnswer::RecvIsArray(const ObjectId& objId, ReturnStatus* rs,
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
@@ -556,7 +545,6 @@ WrapperAnswer::RecvClassName(const ObjectId& objId, nsCString* name)
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
@@ -579,7 +567,6 @@ WrapperAnswer::RecvGetPrototype(const ObjectId& objId, ReturnStatus* rs, ObjectO
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
@@ -605,7 +592,6 @@ WrapperAnswer::RecvRegExpToShared(const ObjectId& objId, ReturnStatus* rs,
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
@@ -632,7 +618,6 @@ WrapperAnswer::RecvGetPropertyKeys(const ObjectId& objId, const uint32_t& flags,
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
@@ -663,7 +648,6 @@ WrapperAnswer::RecvInstanceOf(const ObjectId& objId, const JSIID& iid, ReturnSta
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
 
     *instanceof = false;
@@ -691,7 +675,6 @@ WrapperAnswer::RecvDOMInstanceOf(const ObjectId& objId, const int& prototypeID,
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
         return false;
-    jsapi.TakeOwnershipOfErrorReporting();
     JSContext* cx = jsapi.cx();
     *instanceof = false;
 
