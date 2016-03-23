@@ -37,7 +37,6 @@ EXPORTS += [
     'nsSize.h',
     'nsThemeConstants.h',
     'nsTransform2D.h',
-    'RegionBuilder.h',
 ]
 
 EXPORTS.mozilla += [
