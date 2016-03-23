@@ -212,7 +212,7 @@ struct NativePropertyHooks
   const NativePropertyHooks* mProtoHooks;
 };
 
-enum DOMObjectType {
+enum DOMObjectType : uint8_t {
   eInstance,
   eGlobalInstance,
   eInterface,
@@ -301,14 +301,14 @@ struct DOMIfaceAndProtoJSClass
   // eNamedPropertiesObject.
   DOMObjectType mType;
 
+  const prototypes::ID mPrototypeID;
+  const uint32_t mDepth;
+
   const NativePropertyHooks* mNativeHooks;
 
   // The value to return for toString() on this interface or interface prototype
   // object.
   const char* mToString;
-
-  const prototypes::ID mPrototypeID;
-  const uint32_t mDepth;
 
   ProtoGetter mGetParentProto;
 
