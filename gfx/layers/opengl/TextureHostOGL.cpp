@@ -339,7 +339,7 @@ GLTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
 {
   MOZ_ASSERT(mTextureHandle != 0);
   GLContext* gl = this->gl();
-  if (gl || !gl->MakeCurrent()) {
+  if (!gl || !gl->MakeCurrent()) {
     return;
   }
   gl->fActiveTexture(aTextureUnit);
