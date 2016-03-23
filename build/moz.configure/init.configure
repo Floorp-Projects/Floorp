@@ -547,24 +547,49 @@ def host_variables(host):
 set_config('HOST_OS_ARCH', delayed_getattr(host_variables, 'HOST_OS_ARCH'))
 
 @depends(target)
-def target_platform_defines(target):
+def target_is_windows(target):
     if target.kernel == 'WINNT':
-        set_define('_WINDOWS', True)
-        set_define('WIN32', True)
-        set_define('XP_WIN', True)
-        set_define('XP_WIN32', True)
-    else:
-        set_define('XP_UNIX', True)
+        return True
 
+set_define('_WINDOWS', target_is_windows)
+set_define('WIN32', target_is_windows)
+set_define('XP_WIN', target_is_windows)
+set_define('XP_WIN32', target_is_windows)
+
+@depends(target)
+def target_is_unix(target):
+    if target.kernel != 'WINNT':
+        return True
+
+set_define('XP_UNIX', target_is_unix)
+
+@depends(target)
+def target_is_darwin(target):
     if target.kernel == 'Darwin':
-        set_define('XP_DARWIN', True)
-        if target.os == 'iOS':
-            set_define('XP_IOS', True)
-        elif target.os == 'OSX':
-            set_define('XP_MACOSX', True)
-    elif target.kernel == 'Linux':
-        set_define('XP_LINUX', True)
+        return True
 
+set_define('XP_DARWIN', target_is_darwin)
+
+@depends(target)
+def target_is_ios(target):
+    if target.kernel == 'Darwin' and target.os == 'iOS':
+        return True
+
+set_define('XP_IOS', target_is_ios)
+
+@depends(target)
+def target_is_osx(target):
+    if target.kernel == 'Darwin' and target.os == 'OSX':
+        return True
+
+set_define('XP_MACOSX', target_is_osx)
+
+@depends(target)
+def target_is_linux(target):
+    if target.kernel == 'Linux':
+        return True
+
+set_define('XP_LINUX', target_is_linux)
 
 # The application/project to build
 # ==============================================================
@@ -618,11 +643,11 @@ set_config('EXTERNAL_SOURCE_DIR', external_source_dir)
 def build_project(include_project_configure, build_env, help):
     ret = os.path.dirname(os.path.relpath(include_project_configure,
                                           build_env.topsrcdir))
-    set_define('MOZ_BUILD_APP', ret)
     add_old_configure_assignment('MOZ_BUILD_APP', ret)
     return ret
 
 set_config('MOZ_BUILD_APP', build_project)
+set_define('MOZ_BUILD_APP', build_project)
 
 
 # set RELEASE_BUILD and NIGHTLY_BUILD variables depending on the cycle we're in
@@ -642,11 +667,9 @@ def milestone(build_env):
     is_nightly = is_release = None
 
     if 'a1' in milestone:
-        set_define('NIGHTLY_BUILD', True)
         add_old_configure_assignment('NIGHTLY_BUILD', True)
         is_nightly = True
     elif 'a' not in milestone:
-        set_define('RELEASE_BUILD', True)
         add_old_configure_assignment('RELEASE_BUILD', True)
         is_release = True
 
@@ -656,7 +679,9 @@ def milestone(build_env):
 
 set_config('GRE_MILESTONE', delayed_getattr(milestone, 'version'))
 set_config('NIGHTLY_BUILD', delayed_getattr(milestone, 'is_nightly'))
+set_define('NIGHTLY_BUILD', delayed_getattr(milestone, 'is_nightly'))
 set_config('RELEASE_BUILD', delayed_getattr(milestone, 'is_release'))
+set_define('RELEASE_BUILD', delayed_getattr(milestone, 'is_release'))
 
 
 # This is temporary until js/src/configure and configure are merged.

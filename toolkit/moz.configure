@@ -18,7 +18,9 @@ def systrace(value, target):
         error('--enable-systrace cannot be used when targetting %s'
               % target.os)
     if value:
-        set_define('MOZ_USE_SYSTRACE', True)
+        return True
+
+set_define('MOZ_USE_SYSTRACE', systrace)
 
 
 option('--enable-jprof', env='MOZ_JPROF',
@@ -27,11 +29,11 @@ option('--enable-jprof', env='MOZ_JPROF',
 @depends('--enable-jprof')
 def jprof(value):
     if value:
-        set_define('MOZ_JPROF', True)
         imply_option('--enable-profiling')
         return True
 
 set_config('MOZ_JPROF', jprof)
+set_define('MOZ_JPROF', jprof)
 
 @depends(target)
 def sps_profiler(target):
@@ -44,10 +46,10 @@ def sps_profiler(target):
 @depends(sps_profiler)
 def sps_profiler_define(value):
     if value:
-        set_define('MOZ_ENABLE_PROFILER_SPS', True)
         return True
 
 set_config('MOZ_ENABLE_PROFILER_SPS', sps_profiler_define)
+set_define('MOZ_ENABLE_PROFILER_SPS', sps_profiler_define)
 
 
 option('--enable-dmd', env='MOZ_DMD',
@@ -57,12 +59,12 @@ option('--enable-dmd', env='MOZ_DMD',
 @depends('--enable-dmd')
 def dmd(value):
     if value:
-        set_define('MOZ_DMD', True)
         add_old_configure_assignment('MOZ_DMD', True)
         imply_option('--enable-profiling')
         return True
 
 set_config('MOZ_DMD', dmd)
+set_define('MOZ_DMD', dmd)
 
 # Javascript engine
 # ==============================================================
@@ -138,16 +140,25 @@ def toolkit(toolkit):
         widget_toolkit = toolkit.replace('cairo-', '')
     add_old_configure_assignment('MOZ_WIDGET_TOOLKIT', widget_toolkit)
 
-    if widget_toolkit == 'gtk2':
-        set_define('MOZ_WIDGET_GTK', '2')
-    elif widget_toolkit == 'gtk3':
-        set_define('MOZ_WIDGET_GTK', '3')
-    elif widget_toolkit != 'windows':
-        set_define('MOZ_WIDGET_%s' % widget_toolkit.upper(), True)
-
     return widget_toolkit
 
 set_config('MOZ_WIDGET_TOOLKIT', toolkit)
+
+@depends(toolkit)
+def toolkit_gtk(toolkit):
+    if toolkit == 'gtk2':
+        return '2'
+    elif toolkit == 'gtk3':
+        return '3'
+
+set_define('MOZ_WIDGET_GTK', toolkit_gtk)
+
+@depends(toolkit)
+def toolkit_define(toolkit):
+    if toolkit not in ('gtk2', 'gtk3', 'windows'):
+        return 'MOZ_WIDGET_%s' % toolkit.upper()
+
+set_define(toolkit_define, True)
 
 
 option('--without-x', env='WITHOUT_X', help='Disable X11 support')
@@ -163,14 +174,14 @@ def x11(value, toolkit):
               % ','.join(x11_toolkits))
 
     if value and toolkit in x11_toolkits:
-        set_define('MOZ_ENABLE_XREMOTE', True)
-        set_define('MOZ_X11', True)
         add_old_configure_assignment('MOZ_X11', True)
 
     return True if value and toolkit in x11_toolkits else None
 
 set_config('MOZ_ENABLE_XREMOTE', x11)
+set_define('MOZ_ENABLE_XREMOTE', x11)
 set_config('MOZ_X11', x11)
+set_define('MOZ_X11', x11)
 
 # GL Provider
 # ==============================================================
@@ -179,21 +190,32 @@ option('--with-gl-provider', nargs=1, help='Set GL provider backend type')
 @depends('--with-gl-provider')
 def gl_provider(value):
     if value:
-        provider = value[0]
-        set_define('MOZ_GL_PROVIDER', 'GLContextProvider%s' % provider)
-        set_define('GL_PROVIDER_%s' % provider, True)
-        return provider
+        return value[0]
+
+@depends(gl_provider)
+def gl_provider_define(provider):
+    if provider:
+        return 'GLContextProvider%s' % provider
+
+set_define('MOZ_GL_PROVIDER', gl_provider_define)
 
 @depends(gl_provider, x11)
 def gl_default_provider(value, x11):
     if value:
         return value
     elif x11:
-        set_define('GL_PROVIDER_GLX', True)
         return 'GLX'
 
 set_config('MOZ_GL_PROVIDER', gl_provider)
 set_config('MOZ_GL_DEFAULT_PROVIDER', gl_default_provider)
+
+@depends(gl_default_provider)
+def gl_provider_define(provider):
+    if provider:
+        return 'GL_PROVIDER_%s' % provider
+
+set_define(gl_provider_define, True)
+
 
 # PDF printing
 # ==============================================================
@@ -223,10 +245,10 @@ option(env='MOZ_INSTRUMENT_EVENT_LOOP',
 def instrument_event_loop(value, toolkit):
     if value or (toolkit in ('windows', 'gtk2', 'gtk3', 'cocoa', 'android',
                              'gonk') and value.origin == 'default'):
-        set_define('MOZ_INSTRUMENT_EVENT_LOOP', True)
         return True
 
 set_config('MOZ_INSTRUMENT_EVENT_LOOP', instrument_event_loop)
+set_define('MOZ_INSTRUMENT_EVENT_LOOP', instrument_event_loop)
 
 
 # Fontconfig Freetype
@@ -246,11 +268,11 @@ def fc_freetype(value, toolkit):
 @depends(toolkit)
 def applemedia(toolkit):
     if toolkit in ('cocoa', 'uikit'):
-        set_define('MOZ_APPLEMEDIA', True)
         add_old_configure_assignment('MOZ_APPLEMEDIA', True)
         return True
 
 set_config('MOZ_APPLEMEDIA', applemedia)
+set_define('MOZ_APPLEMEDIA', applemedia)
 
 # Windows Media Foundation support
 # ==============================================================
@@ -269,10 +291,10 @@ def wmf(value, target):
         error('Cannot enable Windows Media Foundation support on %s'
               % target.os)
     if enabled:
-        set_define('MOZ_WMF', True)
         return True
 
 set_config('MOZ_WMF', wmf)
+set_define('MOZ_WMF', wmf)
 
 # FFmpeg H264/AAC Decoding Support
 # ==============================================================
@@ -285,11 +307,11 @@ def ffmpeg(value, target):
     if value.origin == 'default':
         enabled = target.os not in ('Android', 'WINNT')
     if enabled:
-        set_define('MOZ_FFMPEG', True)
         imply_option('--enable-fmp4', '--enable-ffmpeg')
         return True
 
 set_config('MOZ_FFMPEG', ffmpeg)
+set_define('MOZ_FFMPEG', ffmpeg)
 
 # Built-in fragmented MP4 support.
 # ==============================================================
@@ -303,11 +325,11 @@ def fmp4(value, target, wmf, applemedia):
         # target.os == 'Android' includes all B2G versions
         enabled = wmf or applemedia or target.os == 'Android'
     if enabled:
-        set_define('MOZ_FMP4', True)
         add_old_configure_assignment('MOZ_FMP4', True)
         return True
 
 set_config('MOZ_FMP4', fmp4)
+set_define('MOZ_FMP4', fmp4)
 
 # EME Support
 # ==============================================================
@@ -323,7 +345,6 @@ def eme(value, fmp4):
         error('Encrypted Media Extension support requires '
               'Fragmented MP4 support')
     if enabled:
-        set_define('MOZ_EME', True)
         return True
 
 @depends('--enable-eme')
@@ -335,4 +356,5 @@ def eme_modules(value):
     return list(value) if value else []
 
 set_config('MOZ_EME', eme)
+set_define('MOZ_EME', eme)
 set_config('MOZ_EME_MODULES', eme_modules)
