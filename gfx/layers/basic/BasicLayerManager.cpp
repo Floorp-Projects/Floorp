@@ -44,13 +44,6 @@
 #include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsRegion.h"                   // for nsIntRegion, etc
 #include "nsTArray.h"                   // for AutoTArray
-#ifdef MOZ_ENABLE_SKIA
-#include "skia/include/core/SkCanvas.h"         // for SkCanvas
-#include "skia/include/core/SkBitmapDevice.h"   // for SkBitmapDevice
-#else
-#define PIXMAN_DONT_DEFINE_STDINT
-#include "pixman.h"                     // for pixman_f_transform, etc
-#endif
 class nsIWidget;
 
 namespace mozilla {
@@ -701,182 +694,6 @@ BasicLayerManager::SetRoot(Layer* aLayer)
   mRoot = aLayer;
 }
 
-#ifdef MOZ_ENABLE_SKIA
-static SkMatrix
-BasicLayerManager_Matrix3DToSkia(const Matrix4x4& aMatrix)
-{
-  SkMatrix transform;
-  transform.setAll(aMatrix._11,
-                   aMatrix._21,
-                   aMatrix._41,
-                   aMatrix._12,
-                   aMatrix._22,
-                   aMatrix._42,
-                   aMatrix._14,
-                   aMatrix._24,
-                   aMatrix._44);
-
-  return transform;
-}
-
-static void
-Transform(const gfxImageSurface* aDest,
-          RefPtr<DataSourceSurface> aSrc,
-          const Matrix4x4& aTransform,
-          gfxPoint aDestOffset)
-{
-  if (aTransform.IsSingular()) {
-    return;
-  }
-
-  IntSize destSize = aDest->GetSize();
-  SkImageInfo destInfo = SkImageInfo::Make(destSize.width,
-                                           destSize.height,
-                                           kBGRA_8888_SkColorType,
-                                           kPremul_SkAlphaType);
-  SkBitmap destBitmap;
-  destBitmap.setInfo(destInfo, aDest->Stride());
-  destBitmap.setPixels((uint32_t*)aDest->Data());
-  SkCanvas destCanvas(destBitmap);
-
-  IntSize srcSize = aSrc->GetSize();
-  SkImageInfo srcInfo = SkImageInfo::Make(srcSize.width,
-                                          srcSize.height,
-                                          kBGRA_8888_SkColorType,
-                                          kPremul_SkAlphaType);
-  SkBitmap src;
-  src.setInfo(srcInfo, aSrc->Stride());
-  src.setPixels((uint32_t*)aSrc->GetData());
-
-  Matrix4x4 transform = aTransform;
-  transform.PostTranslate(Point3D(-aDestOffset.x, -aDestOffset.y, 0));
-  destCanvas.setMatrix(BasicLayerManager_Matrix3DToSkia(transform));
-
-  SkPaint paint;
-  paint.setXfermodeMode(SkXfermode::kSrc_Mode);
-  paint.setAntiAlias(true);
-  paint.setFilterQuality(kLow_SkFilterQuality);
-  SkRect destRect = SkRect::MakeXYWH(0, 0, srcSize.width, srcSize.height);
-  destCanvas.drawBitmapRect(src, destRect, &paint);
-}
-#else
-static pixman_transform
-BasicLayerManager_Matrix3DToPixman(const Matrix4x4& aMatrix)
-{
-  pixman_f_transform transform;
-
-  transform.m[0][0] = aMatrix._11;
-  transform.m[0][1] = aMatrix._21;
-  transform.m[0][2] = aMatrix._41;
-  transform.m[1][0] = aMatrix._12;
-  transform.m[1][1] = aMatrix._22;
-  transform.m[1][2] = aMatrix._42;
-  transform.m[2][0] = aMatrix._14;
-  transform.m[2][1] = aMatrix._24;
-  transform.m[2][2] = aMatrix._44;
-
-  pixman_transform result;
-  pixman_transform_from_pixman_f_transform(&result, &transform);
-
-  return result;
-}
-
-static void
-Transform(const gfxImageSurface* aDest,
-          RefPtr<DataSourceSurface> aSrc,
-          const Matrix4x4& aTransform,
-          gfxPoint aDestOffset)
-{
-  IntSize destSize = aDest->GetSize();
-  pixman_image_t* dest = pixman_image_create_bits(aDest->Format() == SurfaceFormat::A8R8G8B8_UINT32 ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
-                                                  destSize.width,
-                                                  destSize.height,
-                                                  (uint32_t*)aDest->Data(),
-                                                  aDest->Stride());
-
-  IntSize srcSize = aSrc->GetSize();
-  pixman_image_t* src = pixman_image_create_bits(aSrc->GetFormat() == SurfaceFormat::B8G8R8A8 ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
-                                                 srcSize.width,
-                                                 srcSize.height,
-                                                 (uint32_t*)aSrc->GetData(),
-                                                 aSrc->Stride());
-
-  MOZ_ASSERT(src != 0 && dest !=0, "Failed to create pixman images?");
-
-  pixman_transform pixTransform = BasicLayerManager_Matrix3DToPixman(aTransform);
-  pixman_transform pixTransformInverted;
-
-  // If the transform is singular then nothing would be drawn anyway, return here
-  if (!pixman_transform_invert(&pixTransformInverted, &pixTransform)) {
-    pixman_image_unref(dest);
-    pixman_image_unref(src);
-    return;
-  }
-  pixman_image_set_transform(src, &pixTransformInverted);
-
-  pixman_image_composite32(PIXMAN_OP_SRC,
-                           src,
-                           nullptr,
-                           dest,
-                           aDestOffset.x,
-                           aDestOffset.y,
-                           0,
-                           0,
-                           0,
-                           0,
-                           destSize.width,
-                           destSize.height);
-
-  pixman_image_unref(dest);
-  pixman_image_unref(src);
-}
-#endif
-
-/**
- * Transform a surface using a Matrix4x4 and blit to the destination if
- * it is efficient to do so.
- *
- * @param aSource       Source surface.
- * @param aDest         Desintation context.
- * @param aBounds       Area represented by aSource.
- * @param aTransform    Transformation matrix.
- * @param aDestRect     Output: rectangle in which to draw returned surface on aDest
- *                      (same size as aDest). Only filled in if this returns
- *                      a surface.
- * @return              Transformed surface
- */
-static already_AddRefed<gfxASurface>
-Transform3D(RefPtr<SourceSurface> aSource,
-            gfxContext* aDest,
-            const gfxRect& aBounds,
-            const Matrix4x4& aTransform,
-            gfxRect& aDestRect)
-{
-  // Find the transformed rectangle of our layer, intersected with the
-  // destination rectangle.
-  // This is in device space since we have an identity transform set on aTarget.
-  aDestRect = ThebesRect(aTransform.TransformAndClipBounds(
-                ToRectDouble(aBounds),
-                ToRectDouble(aDest->GetClipExtents())));
-  aDestRect.RoundOut();
-
-  // Create a surface the size of the transformed object.
-  RefPtr<gfxImageSurface> destImage = new gfxImageSurface(IntSize(aDestRect.width,
-                                                                    aDestRect.height),
-                                                            SurfaceFormat::A8R8G8B8_UINT32);
-  gfxPoint offset = aDestRect.TopLeft();
-
-  // Include a translation to the correct origin.
-  Matrix4x4 translation = Matrix4x4::Translation(aBounds.x, aBounds.y, 0);
-
-  // Transform the content and offset it such that the content begins at the origin.
-  Transform(destImage, aSource->GetDataSurface(), translation * aTransform, offset);
-
-  // If we haven't actually drawn to aDest then return our temporary image so
-  // that the caller can do this.
-  return destImage.forget();
-}
-
 void
 BasicLayerManager::PaintSelfOrChildren(PaintLayerContext& aPaintContext,
                                        gfxContext* aGroupTarget)
@@ -1093,7 +910,6 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     // Revert these changes when 725886 is ready
     MOZ_ASSERT(untransformedDT,
                "We should always allocate an untransformed surface with 3d transforms!");
-    gfxRect destRect;
 #ifdef DEBUG
     if (aLayer->GetDebugColorIndex() != 0) {
       Color color((aLayer->GetDebugColorIndex() & 1) ? 1.f : 0.f,
@@ -1106,17 +922,32 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     }
 #endif
     Matrix4x4 effectiveTransform = aLayer->GetEffectiveTransform();
-    RefPtr<gfxASurface> result =
-      Transform3D(untransformedDT->Snapshot(), aTarget, ThebesRect(bounds),
-                  effectiveTransform, destRect);
+    Rect xformBounds =
+      effectiveTransform.TransformAndClipBounds(Rect(bounds),
+                                                ToRect(aTarget->GetClipExtents()));
+    xformBounds.RoundOut();
+    effectiveTransform.PostTranslate(-xformBounds.x, -xformBounds.y, 0);
 
-    if (result) {
-      aTarget->SetSource(result, destRect.TopLeft());
+    RefPtr<SourceSurface> untransformedSurf = untransformedDT->Snapshot();
+    RefPtr<DrawTarget> xformDT =
+      untransformedDT->CreateSimilarDrawTarget(IntSize(xformBounds.width, xformBounds.height),
+                                               SurfaceFormat::B8G8R8A8);
+    RefPtr<SourceSurface> xformSurf;
+    if(xformDT && untransformedSurf &&
+       xformDT->Draw3DTransformedSurface(untransformedSurf, effectiveTransform)) {
+      xformSurf = xformDT->Snapshot();
+    }
+
+    if (xformSurf) {
+      aTarget->SetPattern(
+        new gfxPattern(xformSurf,
+                       Matrix::Translation(xformBounds.TopLeft())));
+
       // Azure doesn't support EXTEND_NONE, so to avoid extending the edges
       // of the source surface out to the current clip region, clip to
       // the rectangle of the result surface now.
       aTarget->NewPath();
-      aTarget->SnappedRectangle(destRect);
+      aTarget->SnappedRectangle(ThebesRect(xformBounds));
       aTarget->Clip();
       FlushGroup(paintLayerContext, needsClipToVisibleRegion);
     }
