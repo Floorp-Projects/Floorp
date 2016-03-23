@@ -105,40 +105,6 @@ def default(value):
 
 set_config('DEFAULTED', default)
 
-# @depends functions can also declare that some extra options are implied.
-# Those options need to be defined _after_ the function, and they mustn't
-# appear on the command line or the environment with conflicting values.
-@depends('--enable-values')
-def values(values):
-    if values:
-        imply_option('--enable-implied')
-        imply_option(values.format('--with-implied-values'))
-        imply_option(values.format('WITH_IMPLIED_ENV'))
-
-option('--enable-implied', help='Implied')
-
-option('--with-implied-values', nargs='*', help='Implied values')
-
-option(env='WITH_IMPLIED_ENV', nargs='*', help='Implied env')
-
-@depends('--enable-implied')
-def implied(value):
-    return value
-
-set_config('IMPLIED', implied)
-
-@depends('--with-implied-values')
-def implied(values):
-    return values
-
-set_config('IMPLIED_VALUES', implied)
-
-@depends('WITH_IMPLIED_ENV')
-def implied(values):
-    return values
-
-set_config('IMPLIED_ENV', implied)
-
 @depends('--enable-values', '--help')
 def choices(values, help):
     if len(values):

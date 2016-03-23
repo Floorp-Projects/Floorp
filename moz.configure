@@ -32,11 +32,16 @@ option('--enable-artifact-builds', env='MOZ_ARTIFACT_BUILDS',
 @depends('--enable-artifact-builds')
 def artifact_builds(value):
     if value:
-        imply_option('--disable-compile-environment')
         return True
 
 set_config('MOZ_ARTIFACT_BUILDS', artifact_builds)
 
+@depends('--enable-artifact-builds')
+def imply_disable_compile_environment(value):
+    if value:
+        return False
+
+imply_option('--enable-compile-environment', imply_disable_compile_environment)
 
 option('--disable-compile-environment',
        help='Disable compiler/library checks')
