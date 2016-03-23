@@ -464,8 +464,7 @@ DecodedStream::InitTracks()
 
 static void
 SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
-                MediaData* aData, AudioSegment* aOutput,
-                uint32_t aRate, double aVolume)
+                MediaData* aData, AudioSegment* aOutput, uint32_t aRate)
 {
   // The amount of audio frames that is used to fuzz rounding errors.
   static const int64_t AUDIO_FUZZ_FRAMES = 1;
@@ -506,7 +505,6 @@ SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
   }
   aOutput->AppendFrames(buffer.forget(), channels, audio->mFrames);
   aStream->mAudioFramesWritten += audio->mFrames;
-  aOutput->ApplyVolume(aVolume);
 
   aStream->mNextAudioTime = audio->GetEndTime();
 }
@@ -530,8 +528,10 @@ DecodedStream::SendAudio(double aVolume, bool aIsSameOrigin)
   // is ref-counted.
   mAudioQueue.GetElementsAfter(mData->mNextAudioTime, &audio);
   for (uint32_t i = 0; i < audio.Length(); ++i) {
-    SendStreamAudio(mData.get(), mStartTime.ref(), audio[i], &output, rate, aVolume);
+    SendStreamAudio(mData.get(), mStartTime.ref(), audio[i], &output, rate);
   }
+
+  output.ApplyVolume(aVolume);
 
   if (!aIsSameOrigin) {
     output.ReplaceWithDisabled();
