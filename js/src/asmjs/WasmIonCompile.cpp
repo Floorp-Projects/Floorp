@@ -36,7 +36,17 @@ typedef Vector<MBasicBlock*, 8, SystemAllocPolicy> BlockVector;
 class FunctionCompiler
 {
   private:
-    typedef Vector<BlockVector, 0, SystemAllocPolicy> BlocksVector;
+    struct ControlFlowPatch {
+        MControlInstruction* ins;
+        uint32_t index;
+        ControlFlowPatch(MControlInstruction* ins, uint32_t index)
+          : ins(ins),
+            index(index)
+        {}
+    };
+
+    typedef Vector<ControlFlowPatch, 0, SystemAllocPolicy> ControlFlowPatchVector;
+    typedef Vector<ControlFlowPatchVector, 0, SystemAllocPolicy> ControlFlowPatchsVector;
 
     ModuleGeneratorThreadView& mg_;
     Decoder&                   decoder_;
@@ -53,7 +63,7 @@ class FunctionCompiler
 
     uint32_t                   loopDepth_;
     uint32_t                   blockDepth_;
-    BlocksVector               targets_;
+    ControlFlowPatchsVector    blockPatches_;
 
     FuncCompileResults&        compileResults_;
 
@@ -148,8 +158,8 @@ class FunctionCompiler
         MOZ_ASSERT(loopDepth_ == 0);
         MOZ_ASSERT(blockDepth_ == 0);
 #ifdef DEBUG
-        for (BlockVector& vec : targets_) {
-            MOZ_ASSERT(vec.empty());
+        for (ControlFlowPatchVector& patches : blockPatches_) {
+            MOZ_ASSERT(patches.empty());
         }
 #endif
         MOZ_ASSERT(inDeadCode());
@@ -1013,7 +1023,7 @@ class FunctionCompiler
 
     bool startBlock()
     {
-        MOZ_ASSERT_IF(blockDepth_ < targets_.length(), targets_[blockDepth_].empty());
+        MOZ_ASSERT_IF(blockDepth_ < blockPatches_.length(), blockPatches_[blockDepth_].empty());
         blockDepth_++;
         return true;
     }
@@ -1081,8 +1091,9 @@ class FunctionCompiler
             *loopResult = (*loopResult)->toPhi()->getOperand(0);
 
         // Fix up phis stored in the slots Vector of pending blocks.
-        for (BlockVector& vec : targets_) {
-            for (MBasicBlock* block : vec) {
+        for (ControlFlowPatchVector& patches : blockPatches_) {
+            for (ControlFlowPatch& p : patches) {
+                MBasicBlock* block = p.ins->block();
                 if (block->loopDepth() >= loopEntry->loopDepth())
                     fixupRedundantPhis(block);
             }
@@ -1117,8 +1128,8 @@ class FunctionCompiler
 
         if (!loopHeader) {
             MOZ_ASSERT(inDeadCode());
-            MOZ_ASSERT(afterLabel >= targets_.length() || targets_[afterLabel].empty());
-            MOZ_ASSERT(headerLabel >= targets_.length() || targets_[headerLabel].empty());
+            MOZ_ASSERT(afterLabel >= blockPatches_.length() || blockPatches_[afterLabel].empty());
+            MOZ_ASSERT(headerLabel >= blockPatches_.length() || blockPatches_[headerLabel].empty());
             blockDepth_ -= 2;
             loopDepth_--;
             return true;
@@ -1164,58 +1175,14 @@ class FunctionCompiler
         return true;
     }
 
-    bool startSwitch(MDefinition* expr, uint32_t numCases, MBasicBlock** switchBlock)
-    {
-        if (inDeadCode()) {
-            *switchBlock = nullptr;
-            return true;
-        }
-        MOZ_ASSERT(numCases <= INT32_MAX);
-        MOZ_ASSERT(numCases);
-        curBlock_->end(MTableSwitch::New(alloc(), expr, 0, int32_t(numCases - 1)));
-        *switchBlock = curBlock_;
-        curBlock_ = nullptr;
-        return true;
-    }
+    bool addControlFlowPatch(MControlInstruction* ins, uint32_t relative, uint32_t index) {
+        MOZ_ASSERT(relative < blockDepth_);
+        uint32_t absolute = blockDepth_ - 1 - relative;
 
-    bool startSwitchCase(MBasicBlock* switchBlock, MBasicBlock** next)
-    {
-        MOZ_ASSERT(inDeadCode());
-        if (!switchBlock) {
-            *next = nullptr;
-            return true;
-        }
-        if (!newBlock(switchBlock, next))
-            return false;
-        curBlock_ = *next;
-        return true;
-    }
-
-    bool joinSwitch(MBasicBlock* switchBlock, const BlockVector& cases, MBasicBlock* defaultBlock)
-    {
-        MOZ_ASSERT(inDeadCode());
-        if (!switchBlock)
-            return true;
-
-        MTableSwitch* mir = switchBlock->lastIns()->toTableSwitch();
-        size_t defaultIndex;
-        if (!mir->addDefault(defaultBlock, &defaultIndex))
+        if (absolute >= blockPatches_.length() && !blockPatches_.resize(absolute + 1))
             return false;
 
-        for (MBasicBlock* caseBlock : cases) {
-            if (!caseBlock) {
-                if (!mir->addCase(defaultIndex))
-                    return false;
-            } else {
-                size_t caseIndex;
-                if (!mir->addSuccessor(caseBlock, &caseIndex))
-                    return false;
-                if (!mir->addCase(caseIndex))
-                    return false;
-            }
-        }
-
-        return true;
+        return blockPatches_[absolute].append(ControlFlowPatch(ins, index));
     }
 
     bool br(uint32_t relativeDepth)
@@ -1223,16 +1190,11 @@ class FunctionCompiler
         if (inDeadCode())
             return true;
 
-        MOZ_ASSERT(relativeDepth < blockDepth_);
-        uint32_t absolute = blockDepth_ - 1 - relativeDepth;
-        if (absolute >= targets_.length()) {
-            if (!targets_.resize(absolute + 1))
-                return false;
-        }
-
-        if (!targets_[absolute].append(curBlock_))
+        MGoto* jump = MGoto::NewAsm(alloc());
+        if (!addControlFlowPatch(jump, relativeDepth, MGoto::TargetIndex))
             return false;
 
+        curBlock_->end(jump);
         curBlock_ = nullptr;
         return true;
     }
@@ -1242,25 +1204,56 @@ class FunctionCompiler
         if (inDeadCode())
             return true;
 
-        // TODO (bug 1253334): we could use MTest with the right jump target,
-        // here. If it's backward, it's trivial; if it's forward, we need to
-        // memorize it, then fix it later when we actually encounter the target.
-        MBasicBlock* thenBlock = nullptr;
         MBasicBlock* joinBlock = nullptr;
-        if (!newBlock(curBlock_, &thenBlock))
-            return false;
         if (!newBlock(curBlock_, &joinBlock))
             return false;
 
-        curBlock_->end(MTest::New(alloc(), condition, thenBlock, joinBlock));
-        curBlock_ = thenBlock;
-        mirGraph().moveBlockToEnd(curBlock_);
-
-        if (!br(relativeDepth))
+        MTest* test = MTest::NewAsm(alloc(), condition, joinBlock);
+        if (!addControlFlowPatch(test, relativeDepth, MTest::TrueBranchIndex))
             return false;
 
-        MOZ_ASSERT(inDeadCode());
+        curBlock_->end(test);
         curBlock_ = joinBlock;
+        return true;
+    }
+
+    bool brTable(MDefinition* expr, uint32_t defaultDepth, const Uint32Vector& depths)
+    {
+        if (inDeadCode())
+            return true;
+
+        size_t numCases = depths.length();
+        MOZ_ASSERT(numCases <= INT32_MAX);
+        MOZ_ASSERT(numCases);
+
+        MTableSwitch* table = MTableSwitch::New(alloc(), expr, 0, int32_t(numCases - 1));
+
+        size_t defaultIndex;
+        if (!table->addDefault(nullptr, &defaultIndex))
+            return false;
+        if (!addControlFlowPatch(table, defaultDepth, defaultIndex))
+            return false;
+
+        for (size_t i = 0; i < numCases; i++) {
+            uint32_t depth = depths[i];
+            if (depth == defaultDepth) {
+                if (!table->addCase(defaultIndex))
+                    return false;
+                continue;
+            }
+
+            size_t caseIndex;
+            if (!table->addSuccessor(nullptr, &caseIndex))
+                return false;
+            if (!table->addCase(caseIndex))
+                return false;
+            if (!addControlFlowPatch(table, depth, caseIndex))
+                return false;
+        }
+
+        curBlock_->end(table);
+        curBlock_ = nullptr;
+
         return true;
     }
 
@@ -1329,26 +1322,32 @@ class FunctionCompiler
 
     bool bindBranches(uint32_t absolute)
     {
-        if (absolute >= targets_.length() || targets_[absolute].empty())
+        if (absolute >= blockPatches_.length())
             return true;
 
-        BlockVector& preds = targets_[absolute];
+        ControlFlowPatchVector& patches = blockPatches_[absolute];
+        if (patches.empty())
+            return true;
 
-        MBasicBlock* join;
-        if (!goToNewBlock(preds[0], &join))
+        MBasicBlock* join = nullptr;
+        MControlInstruction* ins = patches[0].ins;
+        if (!newBlock(ins->block(), &join))
             return false;
-        for (size_t i = 1; i < preds.length(); i++) {
-            if (!mirGen_.ensureBallast())
+
+        ins->replaceSuccessor(patches[0].index, join);
+
+        for (size_t i = 1; i < patches.length(); i++) {
+            ins = patches[i].ins;
+            if (!join->addPredecessor(alloc(), ins->block()))
                 return false;
-            if (!goToExistingBlock(preds[i], join))
-                return false;
+            ins->replaceSuccessor(patches[i].index, join);
         }
 
         if (curBlock_ && !goToExistingBlock(curBlock_, join))
             return false;
         curBlock_ = join;
 
-        preds.clear();
+        patches.clear();
         return true;
     }
 };
@@ -2584,10 +2583,6 @@ EmitBrTable(FunctionCompiler& f, MDefinition** def)
 {
     uint32_t numCases = f.readVarU32();
 
-    BlockVector cases;
-    if (!cases.resize(numCases))
-        return false;
-
     Uint32Vector depths;
     if (!depths.resize(numCases))
         return false;
@@ -2607,34 +2602,7 @@ EmitBrTable(FunctionCompiler& f, MDefinition** def)
     if (!numCases)
         return f.br(defaultDepth);
 
-    MBasicBlock* switchBlock;
-    if (!f.startSwitch(index, numCases, &switchBlock))
-        return false;
-
-    MBasicBlock* defaultBlock = nullptr;
-    if (!f.startSwitchCase(switchBlock, &defaultBlock))
-        return false;
-    if (!f.br(defaultDepth))
-        return false;
-
-    // TODO (bug 1253334): we could avoid one indirection here, by
-    // jump-threading by hand the jump to the right enclosing block.
-    for (uint32_t i = 0; i < numCases; i++) {
-        uint32_t depth = depths[i];
-        // Don't emit blocks for the default case, to reduce the number of
-        // MBasicBlocks created.
-        if (depth == defaultDepth)
-            continue;
-        if (!f.startSwitchCase(switchBlock, &cases[i]))
-            return false;
-        if (!f.br(depth))
-            return false;
-    }
-
-    if (!f.joinSwitch(switchBlock, cases, defaultBlock))
-        return false;
-
-    return true;
+    return f.brTable(index, defaultDepth, depths);
 }
 
 static bool
