@@ -3630,6 +3630,26 @@ static void HandleScrollPref(nsIScrollable *aScrollable, int32_t aOrientation,
   }
 }
 
+bool
+ScrollFrameHelper::IsScrollFrameWithSnapping() const
+{
+  nsPresContext* presContext = mOuter->PresContext();
+  if (!presContext->IsDynamic() &&
+      !(mIsRoot && presContext->HasPaginatedScrolling())) {
+    return false;
+  }
+
+  if (!mIsRoot) {
+    const nsStyleDisplay& display = *mOuter->StyleDisplay();
+    return display.mScrollSnapTypeY != NS_STYLE_SCROLL_SNAP_TYPE_NONE ||
+           display.mScrollSnapTypeX != NS_STYLE_SCROLL_SNAP_TYPE_NONE;
+  } else {
+    const ScrollbarStyles& display = presContext->GetViewportScrollbarStylesOverride();
+    return display.mScrollSnapTypeY != NS_STYLE_SCROLL_SNAP_TYPE_NONE ||
+           display.mScrollSnapTypeX != NS_STYLE_SCROLL_SNAP_TYPE_NONE;
+  }
+}
+
 ScrollbarStyles
 ScrollFrameHelper::GetScrollbarStylesFromFrame() const
 {
