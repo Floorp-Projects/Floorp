@@ -151,7 +151,8 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             updateIdentityInformation(siteIdentity);
         }
 
-        GeckoAppShell.notifyObservers("Permissions:Check", null);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(
+            "Permissions:Check", null));
     }
 
     @Override
@@ -175,7 +176,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
                 mSiteSettingsLink.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        GeckoAppShell.notifyObservers("Permissions:Get", null);
+                        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
                         dismiss();
                     }
                 });
@@ -564,7 +565,8 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     private class ContentNotificationButtonListener implements OnButtonClickListener {
         @Override
         public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
-            GeckoAppShell.notifyObservers("Session:Reload", response.toString());
+            GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Reload", response.toString());
+            GeckoAppShell.sendEventToGecko(e);
             dismiss();
         }
     }

@@ -189,7 +189,7 @@ class TabsGridLayout extends GridView
         lastSelectedTabId = Tabs.getInstance().getSelectedTab().getId();
         setVisibility(View.GONE);
         Tabs.unregisterOnTabsChangedListener(this);
-        GeckoAppShell.notifyObservers("Tab:Screenshot:Cancel", "");
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot:Cancel", ""));
         tabsAdapter.clear();
     }
 
