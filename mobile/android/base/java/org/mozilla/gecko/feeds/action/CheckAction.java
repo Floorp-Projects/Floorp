@@ -84,7 +84,7 @@ public class CheckAction extends BaseAction {
             cursor.close();
         }
 
-        notify(updatedFeeds);
+        showNotification(updatedFeeds);
     }
 
     private FeedFetcher.FeedResponse checkFeedForUpdates(FeedSubscription subscription) {
@@ -107,22 +107,22 @@ public class CheckAction extends BaseAction {
         return null;
     }
 
-    private void notify(List<Feed> updatedFeeds) {
+    private void showNotification(List<Feed> updatedFeeds) {
         final int feedCount = updatedFeeds.size();
         if (feedCount == 0) {
             return;
         }
 
         if (feedCount == 1) {
-            notifySingle(updatedFeeds.get(0));
+            showNotificationForSingleUpdate(updatedFeeds.get(0));
         } else {
-            notifyMultiple(updatedFeeds);
+            showNotificationForMultipleUpdates(updatedFeeds);
         }
 
         Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.NOTIFICATION, "content_update");
     }
 
-    private void notifySingle(Feed feed) {
+    private void showNotificationForSingleUpdate(Feed feed) {
         final String date = DateFormat.getMediumDateFormat(context).format(new Date(feed.getLastItem().getTimestamp()));
 
         NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle()
@@ -151,7 +151,7 @@ public class CheckAction extends BaseAction {
         NotificationManagerCompat.from(context).notify(R.id.websiteContentNotification, notification);
     }
 
-    private void notifyMultiple(List<Feed> feeds) {
+    private void showNotificationForMultipleUpdates(List<Feed> feeds) {
         final ArrayList<String> urls = new ArrayList<>();
 
         final NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
