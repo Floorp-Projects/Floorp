@@ -231,7 +231,7 @@ IdpSandbox.prototype = {
       throw new Error('Error in IdP, check console for details');
     }
 
-    if (!registrar.idp) {
+    if (!registrar.hasIdp) {
       throw new Error('IdP failed to call rtcIdentityProvider.register()');
     }
     return registrar;
