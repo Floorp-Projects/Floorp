@@ -20,13 +20,16 @@ import android.text.format.DateFormat;
 import android.util.Log;
 
 import org.json.JSONException;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.feeds.FeedFetcher;
 import org.mozilla.gecko.feeds.parser.Feed;
 import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.StringUtils;
 
 import java.util.ArrayList;
@@ -37,6 +40,11 @@ import java.util.List;
  * CheckAction: Check if feeds we subscribed to have new content available.
  */
 public class CheckAction implements BaseAction {
+    /**
+     * This extra will be added to Intents fired by the notification.
+     */
+    public static final String EXTRA_CONTENT_NOTIFICATION = "content-notification";
+
     private static final String LOGTAG = "FeedCheckAction";
 
     private Context context;
@@ -119,6 +127,7 @@ public class CheckAction implements BaseAction {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setComponent(new ComponentName(context, BrowserApp.class));
         intent.setData(Uri.parse(feed.getLastItem().getURL()));
+        intent.putExtra(EXTRA_CONTENT_NOTIFICATION, true);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 
@@ -130,6 +139,7 @@ public class CheckAction implements BaseAction {
                 .setColor(ContextCompat.getColor(context, R.color.fennec_ui_orange))
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
+                .addAction(createNotificationSettingsAction())
                 .build();
 
         NotificationManagerCompat.from(context).notify(R.id.websiteContentNotification, notification);
@@ -150,6 +160,8 @@ public class CheckAction implements BaseAction {
         Intent intent = new Intent(context, BrowserApp.class);
         intent.setAction(BrowserApp.ACTION_VIEW_MULTIPLE);
         intent.putStringArrayListExtra("urls", urls);
+        intent.putExtra(EXTRA_CONTENT_NOTIFICATION, true);
+
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 
         Notification notification = new NotificationCompat.Builder(context)
@@ -161,9 +173,25 @@ public class CheckAction implements BaseAction {
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .setNumber(feeds.size())
+                .addAction(createNotificationSettingsAction())
                 .build();
 
         NotificationManagerCompat.from(context).notify(R.id.websiteContentNotification, notification);
+    }
+
+    private NotificationCompat.Action createNotificationSettingsAction() {
+        final Intent intent = new Intent(GeckoApp.ACTION_LAUNCH_SETTINGS);
+        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+        intent.putExtra(EXTRA_CONTENT_NOTIFICATION, true);
+
+        GeckoPreferences.setResourceToOpen(intent, "preferences_notifications");
+
+        PendingIntent settingsIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        return new NotificationCompat.Action(
+                R.drawable.firefox_settings_alert,
+                context.getString(R.string.content_notification_action_settings),
+                settingsIntent);
     }
 
     private FeedFetcher.FeedResponse fetchFeed(FeedSubscription subscription) {
