@@ -1616,18 +1616,13 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     return true;
   }
 
-  // None of what follows is needed for plugin keyboard input.  In fact it
-  // may cause trouble -- for example the call to [mView interpretKeyEvents:]
-  // can, in e10s mode, cause each key typed to appear twice in an IME
-  // composition.
-  if (mWidget->IsPluginFocused()) {
-    return true;
-  }
-
   // Let Cocoa interpret the key events, caching IsIMEComposing first.
   bool wasComposing = IsIMEComposing();
   bool interpretKeyEventsCalled = false;
-  if (IsIMEEnabled() || IsASCIICapableOnly()) {
+  // Don't call interpretKeyEvents when a plugin has focus.  If we call it,
+  // for example, a character is inputted twice during a composition in e10s
+  // mode.
+  if (!mWidget->IsPluginFocused() && (IsIMEEnabled() || IsASCIICapableOnly())) {
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p TextInputHandler::HandleKeyDownEvent, calling interpretKeyEvents",
        this));
