@@ -372,6 +372,12 @@ TabParent::SetOwnerElement(Element* aElement)
     newTopLevelWin->AddBrowser(this);
   }
 
+  if (mFrameElement) {
+    bool useGlobalHistory =
+      !mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::disableglobalhistory);
+    Unused << SendSetUseGlobalHistory(useGlobalHistory);
+  }
+
   AddWindowListeners();
   TryCacheDPIAndScale();
 }
