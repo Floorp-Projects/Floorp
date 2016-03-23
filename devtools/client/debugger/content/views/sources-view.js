@@ -149,7 +149,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this.widget.removeEventListener("select", this._onSourceSelect, false);
     this._stopBlackBoxButton.removeEventListener("click", this._onStopBlackBoxing, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShowing, false);
-    this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShown, false);
+    this._cbPanel.removeEventListener("popupshown", this._onConditionalPopupShown, false);
     this._cbPanel.removeEventListener("popuphiding", this._onConditionalPopupHiding, false);
     this._cbTextbox.removeEventListener("keypress", this._onConditionalTextboxKeyPress, false);
     this._copyUrlMenuItem.removeEventListener("command", this._onCopyUrlCommand, false);
