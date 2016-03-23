@@ -268,7 +268,11 @@ exports.getHighlighterUtils = function(toolbox) {
       yield toolbox.highlighter.hideBoxModel();
     }
 
-    toolbox.emit("node-unhighlight");
+    // unhighlight is called when destroying the toolbox, which means that by
+    // now, the toolbox reference might have been nullified already.
+    if (toolbox) {
+      toolbox.emit("node-unhighlight");
+    }
   });
 
   /**
