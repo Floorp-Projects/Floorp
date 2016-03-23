@@ -305,7 +305,6 @@ FindJSContext(nsIGlobalObject* aGlobalObject)
 
 AutoJSAPI::AutoJSAPI()
   : mCx(nullptr)
-  , mOwnErrorReporting(false)
   , mOldAutoJSAPIOwnsErrorReporting(false)
   , mIsMainThread(false) // For lack of anything better
 {
@@ -313,21 +312,30 @@ AutoJSAPI::AutoJSAPI()
 
 AutoJSAPI::~AutoJSAPI()
 {
-  if (mOwnErrorReporting) {
-    ReportException();
-
-    // We need to do this _after_ processing the existing exception, because the
-    // JS engine can throw while doing that, and uses this bit to determine what
-    // to do in that case: squelch the exception if the bit is set, otherwise
-    // call the error reporter. Calling WarningOnlyErrorReporter with a
-    // non-warning will assert, so we need to make sure we do the former.
-    JS::ContextOptionsRef(cx()).setAutoJSAPIOwnsErrorReporting(mOldAutoJSAPIOwnsErrorReporting);
+  if (!mCx) {
+    // No need to do anything here: we never managed to Init, so can't have an
+    // exception on our (nonexistent) JSContext.  We also don't need to restore
+    // any state on it.
+    return;
   }
+
+  ReportException();
+
+  // We need to do this _after_ processing the existing exception, because the
+  // JS engine can throw while doing that, and uses this bit to determine what
+  // to do in that case: squelch the exception if the bit is set, otherwise
+  // call the error reporter. Calling WarningOnlyErrorReporter with a
+  // non-warning will assert, so we need to make sure we do the former.
+  JS::ContextOptionsRef(cx()).setAutoJSAPIOwnsErrorReporting(mOldAutoJSAPIOwnsErrorReporting);
 
   if (mOldErrorReporter.isSome()) {
     JS_SetErrorReporter(JS_GetRuntime(cx()), mOldErrorReporter.value());
   }
 }
+
+void
+WarningOnlyErrorReporter(JSContext* aCx, const char* aMessage,
+                         JSErrorReport* aRep);
 
 void
 AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
@@ -355,9 +363,9 @@ AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
   JSRuntime* rt = JS_GetRuntime(aCx);
   mOldErrorReporter.emplace(JS_GetErrorReporter(rt));
 
-  if (aIsMainThread) {
-    JS_SetErrorReporter(rt, xpc::SystemErrorReporter);
-  }
+  mOldAutoJSAPIOwnsErrorReporting = JS::ContextOptionsRef(aCx).autoJSAPIOwnsErrorReporting();
+  JS::ContextOptionsRef(aCx).setAutoJSAPIOwnsErrorReporting(true);
+  JS_SetErrorReporter(rt, WarningOnlyErrorReporter);
 
 #ifdef DEBUG
   if (haveException) {
@@ -429,8 +437,7 @@ AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
 AutoJSAPI::AutoJSAPI(nsIGlobalObject* aGlobalObject,
                      bool aIsMainThread,
                      JSContext* aCx)
-  : mOwnErrorReporting(false)
-  , mOldAutoJSAPIOwnsErrorReporting(false)
+  : mOldAutoJSAPIOwnsErrorReporting(false)
   , mIsMainThread(aIsMainThread)
 {
   MOZ_ASSERT(aGlobalObject);
@@ -547,19 +554,11 @@ WarningOnlyErrorReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aR
 void
 AutoJSAPI::TakeOwnershipOfErrorReporting()
 {
-  MOZ_ASSERT(!mOwnErrorReporting);
-  mOwnErrorReporting = true;
-
-  JSRuntime *rt = JS_GetRuntime(cx());
-  mOldAutoJSAPIOwnsErrorReporting = JS::ContextOptionsRef(cx()).autoJSAPIOwnsErrorReporting();
-  JS::ContextOptionsRef(cx()).setAutoJSAPIOwnsErrorReporting(true);
-  JS_SetErrorReporter(rt, WarningOnlyErrorReporter);
 }
 
 void
 AutoJSAPI::ReportException()
 {
-  MOZ_ASSERT(OwnsErrorReporting(), "This is not our exception to report!");
   if (!HasException()) {
     return;
   }
