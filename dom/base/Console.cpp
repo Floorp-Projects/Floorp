@@ -911,6 +911,10 @@ Console::Initialize(ErrorResult& aRv)
       return;
     }
 
+    aRv = obs->AddObserver(this, "memory-pressure", true);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
   }
 
   mStatus = eInitialized;
@@ -929,6 +933,7 @@ Console::Shutdown()
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->RemoveObserver(this, "inner-window-destroyed");
+      obs->RemoveObserver(this, "memory-pressure");
     }
   }
 
@@ -950,22 +955,33 @@ Console::Observe(nsISupports* aSubject, const char* aTopic,
 {
   AssertIsOnMainThread();
 
-  if (strcmp(aTopic, "inner-window-destroyed")) {
+  if (!strcmp(aTopic, "inner-window-destroyed")) {
+    nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
+    NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
+
+    uint64_t innerID;
+    nsresult rv = wrapper->GetData(&innerID);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (innerID == mInnerID) {
+      Shutdown();
+    }
+
     return NS_OK;
   }
 
-  nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
-  NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
-
-  uint64_t innerID;
-  nsresult rv = wrapper->GetData(&innerID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (innerID == mInnerID) {
-    Shutdown();
+  if (!strcmp(aTopic, "memory-pressure")) {
+    ClearStorage();
+    return NS_OK;
   }
 
   return NS_OK;
+}
+
+void
+Console::ClearStorage()
+{
+  mCallDataStorage.Clear();
 }
 
 JSObject*

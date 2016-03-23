@@ -88,6 +88,12 @@ public:
   Console*
   GetConsole(ErrorResult& aRv);
 
+  Console*
+  GetConsoleIfExists() const
+  {
+    return mConsole;
+  }
+
   already_AddRefed<WorkerLocation>
   Location();
 
@@ -338,6 +344,12 @@ public:
 
   Console*
   GetConsole(ErrorResult& aRv);
+
+  Console*
+  GetConsoleIfExists() const
+  {
+    return mConsole;
+  }
 
   void
   Dump(JSContext* aCx, const Optional<nsAString>& aString) const;
