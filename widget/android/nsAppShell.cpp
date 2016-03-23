@@ -678,8 +678,7 @@ nsAppShell::LegacyGeckoEvent::Run()
         break;
     }
 
-    case AndroidGeckoEvent::VIEWPORT:
-    case AndroidGeckoEvent::BROADCAST: {
+    case AndroidGeckoEvent::VIEWPORT: {
         if (curEvent->Characters().Length() == 0)
             break;
 
