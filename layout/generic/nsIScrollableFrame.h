@@ -64,6 +64,8 @@ public:
    */
   virtual mozilla::ScrollbarStyles GetScrollbarStyles() const = 0;
 
+  virtual bool IsScrollFrameWithSnapping() const = 0;
+
   enum { HORIZONTAL = 0x01, VERTICAL = 0x02 };
   /**
    * Return the scrollbars which are visible. It's OK to call this during reflow
