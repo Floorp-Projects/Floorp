@@ -235,8 +235,7 @@ class SavedStacks {
         { }
 
         void trace(JSTracer* trc) {
-            if (source)
-                TraceEdge(trc, &source, "SavedStacks::LocationValue::source");
+            TraceNullableEdge(trc, &source, "SavedStacks::LocationValue::source");
         }
 
         bool needsSweep() {

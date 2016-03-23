@@ -35,20 +35,11 @@ UnboxedLayout::trace(JSTracer* trc)
     if (newScript())
         newScript()->trace(trc);
 
-    if (nativeGroup_)
-        TraceEdge(trc, &nativeGroup_, "unboxed_layout_nativeGroup");
-
-    if (nativeShape_)
-        TraceEdge(trc, &nativeShape_, "unboxed_layout_nativeShape");
-
-    if (allocationScript_)
-        TraceEdge(trc, &allocationScript_, "unboxed_layout_allocationScript");
-
-    if (replacementGroup_)
-        TraceEdge(trc, &replacementGroup_, "unboxed_layout_replacementGroup");
-
-    if (constructorCode_)
-        TraceEdge(trc, &constructorCode_, "unboxed_layout_constructorCode");
+    TraceNullableEdge(trc, &nativeGroup_, "unboxed_layout_nativeGroup");
+    TraceNullableEdge(trc, &nativeShape_, "unboxed_layout_nativeShape");
+    TraceNullableEdge(trc, &allocationScript_, "unboxed_layout_allocationScript");
+    TraceNullableEdge(trc, &replacementGroup_, "unboxed_layout_replacementGroup");
+    TraceNullableEdge(trc, &constructorCode_, "unboxed_layout_constructorCode");
 }
 
 size_t
@@ -327,8 +318,7 @@ UnboxedPlainObject::trace(JSTracer* trc, JSObject* obj)
     list++;
     while (*list != -1) {
         HeapPtrObject* heap = reinterpret_cast<HeapPtrObject*>(data + *list);
-        if (*heap)
-            TraceEdge(trc, heap, "unboxed_object");
+        TraceNullableEdge(trc, heap, "unboxed_object");
         list++;
     }
 
@@ -1146,8 +1136,7 @@ UnboxedArrayObject::trace(JSTracer* trc, JSObject* obj)
       case JSVAL_TYPE_OBJECT:
         for (size_t i = 0; i < initlen; i++) {
             HeapPtrObject* heap = reinterpret_cast<HeapPtrObject*>(elements + i);
-            if (*heap)
-                TraceEdge(trc, heap, "unboxed_object");
+            TraceNullableEdge(trc, heap, "unboxed_object");
         }
         break;
 

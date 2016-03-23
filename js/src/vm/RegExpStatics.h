@@ -93,12 +93,9 @@ class RegExpStatics
          * Changes to this function must also be reflected in
          * RegExpStatics::AutoRooter::trace().
          */
-        if (matchesInput)
-            TraceEdge(trc, &matchesInput, "res->matchesInput");
-        if (lazySource)
-            TraceEdge(trc, &lazySource, "res->lazySource");
-        if (pendingInput)
-            TraceEdge(trc, &pendingInput, "res->pendingInput");
+        TraceNullableEdge(trc, &matchesInput, "res->matchesInput");
+        TraceNullableEdge(trc, &lazySource, "res->lazySource");
+        TraceNullableEdge(trc, &pendingInput, "res->pendingInput");
     }
 
     /* Value creators. */
