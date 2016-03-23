@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bug 1251043 - Test form-action blocks URL</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+ <iframe id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+/*
+ * Description of the test:
+ * 1) Let's load a form into an iframe which uses a CSP of: form-action 'none';
+ * 2) Let's hit the submit button and make sure the form is not submitted.
+ *
+ * Since a blocked form submission does not fire any event handler, we have to
+ * use timeout triggered function that verifies that the form didn't get submitted.
+ */
+
+SimpleTest.requestFlakyTimeout(
+  "Form submission blocked by CSP does not fire any events " +
+  "hence we have to check back after 300ms to make sure the form " +
+  "is not submitted");
+SimpleTest.waitForExplicitFinish();
+
+const FORM_SUBMITTED = "form submission succeeded";
+var timeOutId;
+var testframe = document.getElementById("testframe");
+
+// In case the form gets submitted, the test would receive an 'load'
+// event and would trigger the test to fail early.
+function logFormSubmittedError() {
+  clearTimeout(timeOutId);
+  testframe.removeEventListener('load', logFormSubmittedError, false);
+  ok(false, "form submission should be blocked");
+  SimpleTest.finish();
+}
+
+// After 300ms we verify the form did not get submitted.
+function verifyFormNotSubmitted() {
+  clearTimeout(timeOutId);
+  var frameContent = testframe.contentWindow.document.body.innerHTML;
+  isnot(frameContent.indexOf("CONTROL-TEXT"), -1,
+       "form should not be submitted and still contain the control text");
+  SimpleTest.finish();
+}
+
+function submitForm() {
+  // Part 1: The form has loaded in the testframe
+  // unregister the current event handler
+  testframe.removeEventListener('load', submitForm, false);
+
+  // Part 2: Register a new load event handler. In case the
+  // form gets submitted, this load event fires and we can
+  // fail the test right away.
+  testframe.addEventListener("load", logFormSubmittedError, false);
+
+  // Part 3: Since blocking the form does not throw any kind of error;
+  // Firefox just logs the CSP error to the console we have to register
+  // this timeOut function which then verifies that the form didn't
+  // get submitted.
+  timeOutId = setTimeout(verifyFormNotSubmitted, 300);
+
+  // Part 4: We are ready, let's hit the submit button of the form.
+  var submitButton = testframe.contentWindow.document.getElementById('submitButton');
+  submitButton.click();
+}
+
+testframe.addEventListener("load", submitForm, false);
+testframe.src = "file_form_action_server.sjs?loadframe";
+
+</script>
+</body>
+</html>
