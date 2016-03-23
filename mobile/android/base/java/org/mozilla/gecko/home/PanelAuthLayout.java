@@ -45,7 +45,7 @@ class PanelAuthLayout extends LinearLayout {
         buttonView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                GeckoAppShell.notifyObservers("HomePanels:Authenticate", panelId);
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomePanels:Authenticate", panelId));
             }
         });
 

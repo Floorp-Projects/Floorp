@@ -160,7 +160,8 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
                     dragged = false;
                 } else {
                     if (isClickInZoomedView(event.getY())) {
-                        GeckoAppShell.notifyObservers("Gesture:ClickInZoomedView", "");
+                        GeckoEvent eClickInZoomedView = GeckoEvent.createBroadcastEvent("Gesture:ClickInZoomedView", "");
+                        GeckoAppShell.sendEventToGecko(eClickInZoomedView);
                         layerView.dispatchTouchEvent(actionDownEvent);
                         actionDownEvent.recycle();
                         PointF convertedPosition = getUnzoomedPositionFromPointInZoomedView(event.getX(), event.getY());

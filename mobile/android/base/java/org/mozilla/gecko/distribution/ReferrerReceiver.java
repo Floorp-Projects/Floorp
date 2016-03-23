@@ -94,7 +94,8 @@ public class ReferrerReceiver extends BroadcastReceiver {
             String payload = data.toString();
 
             // Try to make sure the prefs are written as a group.
-            GeckoAppShell.notifyObservers("Campaign:Set", payload);
+            final GeckoEvent event = GeckoEvent.createBroadcastEvent("Campaign:Set", payload);
+            GeckoAppShell.sendEventToGecko(event);
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error propagating campaign identifier.", e);
         }

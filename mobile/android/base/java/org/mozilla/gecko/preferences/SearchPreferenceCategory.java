@@ -43,7 +43,7 @@ public class SearchPreferenceCategory extends CustomListCategory implements Geck
 
         // Register for SearchEngines messages and request list of search engines from Gecko.
         EventDispatcher.getInstance().registerGeckoThreadListener(this, "SearchEngines:Data");
-        GeckoAppShell.notifyObservers("SearchEngines:GetVisible", null);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:GetVisible", null));
     }
 
     @Override
@@ -140,6 +140,6 @@ public class SearchPreferenceCategory extends CustomListCategory implements Geck
             Log.e(LOGTAG, "JSONException creating search engine configuration change message for Gecko.", e);
             return;
         }
-        GeckoAppShell.notifyObservers(event, json.toString());
+        GeckoAppShell.notifyGeckoOfEvent(GeckoEvent.createBroadcastEvent(event, json.toString()));
     }
 }

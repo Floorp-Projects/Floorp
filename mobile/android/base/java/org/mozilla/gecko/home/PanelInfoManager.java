@@ -101,7 +101,7 @@ public class PanelInfoManager implements GeckoEventListener {
             return;
         }
 
-        GeckoAppShell.notifyObservers("HomePanels:Get", message.toString());
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomePanels:Get", message.toString()));
     }
 
     /**
