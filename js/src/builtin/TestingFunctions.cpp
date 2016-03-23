@@ -1122,8 +1122,13 @@ CallFunctionWithAsyncStack(JSContext* cx, unsigned argc, Value* vp)
     RootedObject function(cx, &args[0].toObject());
     RootedObject stack(cx, &args[1].toObject());
     RootedString asyncCause(cx, args[2].toString());
+    JSAutoByteString utf8Cause;
+    if (!utf8Cause.encodeUtf8(cx, asyncCause)) {
+        MOZ_ASSERT(cx->isExceptionPending());
+        return false;
+    }
 
-    JS::AutoSetAsyncStackForNewCalls sas(cx, stack, asyncCause,
+    JS::AutoSetAsyncStackForNewCalls sas(cx, stack, utf8Cause.ptr(),
                                          JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::EXPLICIT);
     return Call(cx, UndefinedHandleValue, function,
                 JS::HandleValueArray::empty(), args.rval());
