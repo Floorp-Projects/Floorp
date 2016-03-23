@@ -190,7 +190,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ["length", "toSource", "toString", "toLocaleString", "join", "reverse", "sort", "push",
       "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",
       "includes", "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "find",
-      "findIndex", "copyWithin", "fill", Symbol.iterator, "entries", "keys", "constructor"];
+      "findIndex", "copyWithin", "fill", Symbol.iterator, Symbol.unscopables, "entries", "keys",
+      "constructor"];
   gConstructorProperties['Array'] =
     constructorProps(["join", "reverse", "sort", "push", "pop", "shift",
                       "unshift", "splice", "concat", "slice", "isArray",
@@ -378,7 +379,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     is(Object.getOwnPropertyNames(xrayProto).sort().toSource(),
        protoProps.toSource(), "getOwnPropertyNames works");
     is(Object.getOwnPropertySymbols(xrayProto).map(uneval).sort().toSource(),
-       gPrototypeProperties[classname].filter(id => typeof id !== "string").map(uneval).sort().toSource(),
+       gPrototypeProperties[classname].filter(id => typeof id !== "string" && !propsToSkip.includes(id))
+         .map(uneval).sort().toSource(),
        "getOwnPropertySymbols works");
 
     is(xrayProto.constructor, iwin[classname], "constructor property works");
@@ -495,7 +497,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     // show that over Xrays, and generally want .length to just appear as an
     // |own| data property. So we add it to the ignore list here, and check it
     // separately.
-    let propsToSkip = ['length'];
+    //
+    // |Symbol.unscopables| should in principle be exposed, but it is
+    // inconvenient (as it's a data property, unsupported by ClassSpec) and
+    // low value.
+    let propsToSkip = ['length', Symbol.unscopables];
+
     // On the constructor, we want to skip all the non-standard "generic"
     // functions.  We're trying to remove them anyway; no point doing extra work
     // to expose them over Xrays.
