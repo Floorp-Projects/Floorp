@@ -49,10 +49,10 @@ option('--disable-compile-environment',
 @depends('--disable-compile-environment')
 def compile_environment(value):
     if value:
-        add_old_configure_assignment('COMPILE_ENVIRONMENT', True)
         return True
 
 set_config('COMPILE_ENVIRONMENT', compile_environment)
+add_old_configure_assignment('COMPILE_ENVIRONMENT', compile_environment)
 
 
 @depends('--help')
@@ -84,7 +84,9 @@ awk = check_prog('AWK', ('gawk', 'mawk', 'nawk', 'awk'))
 # Until the AWK variable is not necessary in old-configure
 @depends(awk)
 def awk_for_old_configure(value):
-    add_old_configure_assignment('AWK', value)
+    return value
+
+add_old_configure_assignment('AWK', awk_for_old_configure)
 
 
 # Perl detection
@@ -94,7 +96,9 @@ perl = check_prog('PERL', ('perl5', 'perl'))
 # Until the PERL variable is not necessary in old-configure
 @depends(perl)
 def perl_for_old_configure(value):
-    add_old_configure_assignment('PERL', value)
+    return value
+
+add_old_configure_assignment('PERL', perl_for_old_configure)
 
 @template
 def perl_version_check(min_version):
@@ -145,13 +149,16 @@ def yasm_version(yasm):
             version = Version(subprocess.check_output(
                 [yasm, '--version']
             ).splitlines()[0].split()[1])
-            # Until we move all the yasm consumers out of old-configure.
-            # bug 1257904
-            add_old_configure_assignment('_YASM_MAJOR_VERSION', version.major)
-            add_old_configure_assignment('_YASM_MINOR_VERSION', version.minor)
             return version
         except subprocess.CalledProcessError as e:
             error('Failed to get yasm version: %s' % e.message)
+
+# Until we move all the yasm consumers out of old-configure.
+# bug 1257904
+add_old_configure_assignment('_YASM_MAJOR_VERSION',
+                             delayed_getattr(yasm_version, 'major'))
+add_old_configure_assignment('_YASM_MINOR_VERSION',
+                             delayed_getattr(yasm_version, 'minor'))
 
 @depends(yasm, target)
 def yasm_asflags(yasm, target):
@@ -171,8 +178,6 @@ def yasm_asflags(yasm, target):
                 asflags = '-f elf64'
         if asflags:
             asflags += ' -rnasm -pnasm'
-            # Until the YASM variable is not necessary in old-configure.
-            add_old_configure_assignment('YASM', True)
         return asflags
 
 set_config('YASM_ASFLAGS', yasm_asflags)
@@ -183,6 +188,8 @@ def have_yasm(value):
         return True
 
 set_config('HAVE_YASM', have_yasm)
+# Until the YASM variable is not necessary in old-configure.
+add_old_configure_assignment('YASM', have_yasm)
 
 
 # Miscellaneous programs
