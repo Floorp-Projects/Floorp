@@ -55,6 +55,9 @@
 // worker thread to main thread
 #define CONSOLE_TAG_BLOB   JS_SCTAG_USER_MIN
 
+// This value is taken from ConsoleAPIStorage.js
+#define STORAGE_MAX_EVENTS 200
+
 using namespace mozilla::dom::exceptions;
 using namespace mozilla::dom::workers;
 
@@ -106,15 +109,16 @@ public:
     AssertIsOnOwningThread();
     MOZ_ASSERT(aConsole);
 
-    aConsole->RegisterConsoleCallData(this);
-    mConsole = aConsole;
+    // We must be registered before doing any JS operation otherwise it can
+    // happen that mCopiedArguments are not correctly traced.
+    aConsole->StoreCallData(this);
 
     mMethodName = aName;
     mMethodString = aString;
 
     for (uint32_t i = 0; i < aArguments.Length(); ++i) {
       if (NS_WARN_IF(!mCopiedArguments.AppendElement(aArguments[i]))) {
-        aConsole->UnregisterConsoleCallData(this);
+        aConsole->UnstoreCallData(this);
         return false;
       }
     }
@@ -140,18 +144,6 @@ public:
     mOuterIDString = aOuterID;
     mInnerIDString = aInnerID;
     mIDType = eString;
-  }
-
-  void
-  CleanupJSObjects()
-  {
-    AssertIsOnOwningThread();
-    mCopiedArguments.Clear();
-
-    if (mConsole) {
-      mConsole->UnregisterConsoleCallData(this);
-      mConsole = nullptr;
-    }
   }
 
   void
@@ -187,8 +179,8 @@ public:
   // DOMHighResTimeStamp instead mozilla::TimeStamp because we use
   // monotonicTimer from Performance.now();
   // They will be set on the owning thread and never touched again on that
-  // thread. They will be used on the main-thread in order to create a
-  // ConsoleTimerStart dictionary when console.time() is used.
+  // thread. They will be used in order to create a ConsoleTimerStart dictionary
+  // when console.time() is used.
   DOMHighResTimeStamp mStartTimerValue;
   nsString mStartTimerLabel;
   bool mStartTimerStatus;
@@ -196,16 +188,16 @@ public:
   // These values are set in the owning thread and they contain the duration,
   // the name and the status of the StopTimer method. If status is false,
   // something went wrong. They will be set on the owning thread and never
-  // touched again on that thread. They will be used on the main-thread in order
-  // to create a ConsoleTimerEnd dictionary. This members are set when
+  // touched again on that thread. They will be used in order to create a
+  // ConsoleTimerEnd dictionary. This members are set when
   // console.timeEnd() is called.
   double mStopTimerDuration;
   nsString mStopTimerLabel;
   bool mStopTimerStatus;
 
   // These 2 values are set by IncreaseCounter on the owning thread and they are
-  // used on the main-thread by CreateCounterValue. These members are set when
-  // console.count() is called.
+  // used CreateCounterValue. These members are set when console.count() is
+  // called.
   nsString mCountLabel;
   uint32_t mCountValue;
 
@@ -239,6 +231,26 @@ public:
   Maybe<nsTArray<ConsoleStackEntry>> mReifiedStack;
   nsCOMPtr<nsIStackFrame> mStack;
 
+  // mStatus is about the lifetime of this object. Console must take care of
+  // keep it alive or not following this enumeration.
+  enum {
+    // If the object is created but it is owned by some runnable, this is its
+    // status. It can be deleted at any time.
+    eUnused,
+
+    // When a runnable takes ownership of a ConsoleCallData and send it to
+    // different thread, this is its status. Console cannot delete it at this
+    // time.
+    eInUse,
+
+    // When a runnable owns this ConsoleCallData, we can't delete it directly.
+    // instead, we mark it with this new status and we move it in
+    // mCallDataStoragePending list in order to keep it alive an trace it
+    // correctly. Once the runnable finishs its task, it will delete this object
+    // calling ReleaseCallData().
+    eToBeDeleted
+  } mStatus;
+
 #ifdef DEBUG
   PRThread* mOwningThread;
 #endif
@@ -247,10 +259,8 @@ private:
   ~ConsoleCallData()
   {
     AssertIsOnOwningThread();
-    CleanupJSObjects();
+    MOZ_ASSERT(mStatus != eInUse);
   }
-
-  RefPtr<Console> mConsole;
 };
 
 // This class is used to clear any exception at the end of this method.
@@ -293,19 +303,11 @@ public:
   bool
   Dispatch(JS::Handle<JSObject*> aGlobal)
   {
-    mWorkerPrivate->AssertIsOnWorkerThread();
-
-    JSContext* cx = mWorkerPrivate->GetJSContext();
-
-    if (NS_WARN_IF(!PreDispatch(cx, aGlobal))) {
+    if (!DispatchInternal(aGlobal)) {
+      ReleaseData();
       return false;
     }
 
-    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(this))) {
-      return false;
-    }
-
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
     return true;
   }
 
@@ -337,6 +339,28 @@ private:
 
     PostDispatch();
     return NS_OK;
+  }
+
+  bool
+  DispatchInternal(JS::Handle<JSObject*> aGlobal)
+  {
+    mWorkerPrivate->AssertIsOnWorkerThread();
+
+    JSContext* cx = mWorkerPrivate->GetJSContext();
+
+    if (NS_WARN_IF(!PreDispatch(cx, aGlobal))) {
+      return false;
+    }
+
+    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(this))) {
+      return false;
+    }
+
+    if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(this)))) {
+      return false;
+    }
+
+    return true;
   }
 
   void
@@ -375,7 +399,7 @@ private:
 
     RefPtr<WorkerControlRunnable> runnable =
       new ConsoleReleaseRunnable(mWorkerPrivate, this);
-    runnable->Dispatch();
+    NS_WARN_IF(!runnable->Dispatch());
   }
 
   void
@@ -514,9 +538,18 @@ public:
                           ConsoleCallData* aCallData)
     : ConsoleRunnable(aConsole)
     , mCallData(aCallData)
-  { }
+  {
+    MOZ_ASSERT(aCallData);
+    mWorkerPrivate->AssertIsOnWorkerThread();
+    mCallData->AssertIsOnOwningThread();
+  }
 
 private:
+  ~ConsoleCallDataRunnable()
+  {
+    MOZ_ASSERT(!mCallData);
+  }
+
   bool
   PreDispatch(JSContext* aCx, JS::Handle<JSObject*> aGlobal) override
   {
@@ -547,7 +580,7 @@ private:
       return false;
     }
 
-    mCallData->CleanupJSObjects();
+    mCallData->mStatus = ConsoleCallData::eInUse;
     return true;
   }
 
@@ -556,7 +589,6 @@ private:
              nsPIDOMWindowInner* aInnerWindow) override
   {
     AssertIsOnMainThread();
-    MOZ_ASSERT(mCallData->mCopiedArguments.IsEmpty());
 
     // The windows have to run in parallel.
     MOZ_ASSERT(!!aOuterWindow == !!aInnerWindow);
@@ -596,6 +628,15 @@ private:
   virtual void
   ReleaseData() override
   {
+    mConsole->AssertIsOnOwningThread();
+
+    if (mCallData->mStatus == ConsoleCallData::eToBeDeleted) {
+      mConsole->ReleaseCallData(mCallData);
+    } else {
+      MOZ_ASSERT(mCallData->mStatus == ConsoleCallData::eInUse);
+      mCallData->mStatus = ConsoleCallData::eUnused;
+    }
+
     mCallData = nullptr;
   }
 
@@ -769,8 +810,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Console)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Console)
-  for (uint32_t i = 0; i < tmp->mConsoleCallDataArray.Length(); ++i) {
-    tmp->mConsoleCallDataArray[i]->Trace(aCallbacks, aClosure);
+  for (uint32_t i = 0; i < tmp->mCallDataStorage.Length(); ++i) {
+    tmp->mCallDataStorage[i]->Trace(aCallbacks, aClosure);
+  }
+
+  for (uint32_t i = 0; i < tmp->mCallDataStoragePending.Length(); ++i) {
+    tmp->mCallDataStoragePending[i]->Trace(aCallbacks, aClosure);
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
@@ -874,7 +919,9 @@ Console::Shutdown()
 
   mTimerRegistry.Clear();
   mCounterRegistry.Clear();
-  mConsoleCallDataArray.Clear();
+
+  mCallDataStorage.Clear();
+  mCallDataStoragePending.Clear();
 
   mStatus = eShuttingDown;
 }
@@ -1297,12 +1344,17 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
   if (NS_IsMainThread()) {
     callData->SetIDs(mOuterID, mInnerID);
     ProcessCallData(callData, global, aData);
+
+    // Just because we don't want to expose
+    // retrieveConsoleEvents/setConsoleEventHandler to main-thread, we can
+    // cleanup the mCallDataStorage:
+    UnstoreCallData(callData);
     return;
   }
 
   RefPtr<ConsoleCallDataRunnable> runnable =
     new ConsoleCallDataRunnable(this, callData);
-  runnable->Dispatch(global);
+  NS_WARN_IF(!runnable->Dispatch(global));
 }
 
 // We store information to lazily compute the stack in the reserved slots of
@@ -1318,8 +1370,6 @@ enum {
 bool
 LazyStackGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 {
-  AssertIsOnMainThread();
-
   JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
   JS::Rooted<JSObject*> callee(aCx, &args.callee());
 
@@ -1359,167 +1409,15 @@ Console::ProcessCallData(ConsoleCallData* aData, JS::Handle<JSObject*> aGlobal,
   AssertIsOnMainThread();
   MOZ_ASSERT(aData);
 
-  ConsoleStackEntry frame;
-  if (aData->mTopStackFrame) {
-    frame = *aData->mTopStackFrame;
-  }
-
   AutoJSAPI jsapi;
   if (!jsapi.Init(aGlobal)) {
     return;
   }
   JSContext* cx = jsapi.cx();
-  ClearException ce(cx);
-  RootedDictionary<ConsoleEvent> event(cx);
-
-  event.mID.Construct();
-  event.mInnerID.Construct();
-
-  MOZ_ASSERT(aData->mIDType != ConsoleCallData::eUnknown);
-  if (aData->mIDType == ConsoleCallData::eString) {
-    event.mID.Value().SetAsString() = aData->mOuterIDString;
-    event.mInnerID.Value().SetAsString() = aData->mInnerIDString;
-  } else {
-    MOZ_ASSERT(aData->mIDType == ConsoleCallData::eNumber);
-    event.mID.Value().SetAsUnsignedLongLong() = aData->mOuterIDNumber;
-    event.mInnerID.Value().SetAsUnsignedLongLong() = aData->mInnerIDNumber;
-  }
-
-  event.mLevel = aData->mMethodString;
-  event.mFilename = frame.mFilename;
-
-  nsCOMPtr<nsIURI> filenameURI;
-  nsAutoCString pass;
-  if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(filenameURI), frame.mFilename)) &&
-      NS_SUCCEEDED(filenameURI->GetPassword(pass)) && !pass.IsEmpty()) {
-    nsCOMPtr<nsISensitiveInfoHiddenURI> safeURI = do_QueryInterface(filenameURI);
-    nsAutoCString spec;
-    if (safeURI &&
-        NS_SUCCEEDED(safeURI->GetSensitiveInfoHiddenSpec(spec))) {
-      CopyUTF8toUTF16(spec, event.mFilename);
-    }
-  }
-
-  event.mLineNumber = frame.mLineNumber;
-  event.mColumnNumber = frame.mColumnNumber;
-  event.mFunctionName = frame.mFunctionName;
-  event.mTimeStamp = aData->mTimeStamp;
-  event.mPrivate = aData->mPrivate;
-
-  switch (aData->mMethodName) {
-    case MethodLog:
-    case MethodInfo:
-    case MethodWarn:
-    case MethodError:
-    case MethodException:
-    case MethodDebug:
-    case MethodAssert:
-      event.mArguments.Construct();
-      event.mStyles.Construct();
-      if (!ProcessArguments(cx, aArguments, event.mArguments.Value(),
-                            event.mStyles.Value())) {
-        return;
-      }
-
-      break;
-
-    default:
-      event.mArguments.Construct();
-      if (!ArgumentsToValueList(aArguments, event.mArguments.Value())) {
-        return;
-      }
-  }
-
-  if (aData->mMethodName == MethodGroup ||
-      aData->mMethodName == MethodGroupCollapsed ||
-      aData->mMethodName == MethodGroupEnd) {
-    ComposeGroupName(cx, aArguments, event.mGroupName);
-  }
-
-  else if (aData->mMethodName == MethodTime && !aArguments.IsEmpty()) {
-    event.mTimer = CreateStartTimerValue(cx, aData->mStartTimerLabel,
-                                         aData->mStartTimerValue,
-                                         aData->mStartTimerStatus);
-  }
-
-  else if (aData->mMethodName == MethodTimeEnd && !aArguments.IsEmpty()) {
-    event.mTimer = CreateStopTimerValue(cx, aData->mStopTimerLabel,
-                                        aData->mStopTimerDuration,
-                                        aData->mStopTimerStatus);
-  }
-
-  else if (aData->mMethodName == MethodCount) {
-    event.mCounter = CreateCounterValue(cx, aData->mCountLabel,
-                                        aData->mCountValue);
-  }
-
-  // We want to create a console event object and pass it to our
-  // nsIConsoleAPIStorage implementation.  We want to define some accessor
-  // properties on this object, and those will need to keep an nsIStackFrame
-  // alive.  But nsIStackFrame cannot be wrapped in an untrusted scope.  And
-  // further, passing untrusted objects to system code is likely to run afoul of
-  // Object Xrays.  So we want to wrap in a system-principal scope here.  But
-  // which one?  We could cheat and try to get the underlying JSObject* of
-  // mStorage, but that's a bit fragile.  Instead, we just use the junk scope,
-  // with explicit permission from the XPConnect module owner.  If you're
-  // tempted to do that anywhere else, talk to said module owner first.
-  JSAutoCompartment ac2(cx, xpc::PrivilegedJunkScope());
 
   JS::Rooted<JS::Value> eventValue(cx);
-  if (!ToJSValue(cx, event, &eventValue)) {
+  if (NS_WARN_IF(!PopulateEvent(cx, aGlobal, aArguments, &eventValue, aData))) {
     return;
-  }
-
-  JS::Rooted<JSObject*> eventObj(cx, &eventValue.toObject());
-  MOZ_ASSERT(eventObj);
-
-  if (!JS_DefineProperty(cx, eventObj, "wrappedJSObject", eventValue, JSPROP_ENUMERATE)) {
-    return;
-  }
-
-  if (ShouldIncludeStackTrace(aData->mMethodName)) {
-    // Now define the "stacktrace" property on eventObj.  There are two cases
-    // here.  Either we came from a worker and have a reified stack, or we want
-    // to define a getter that will lazily reify the stack.
-    if (aData->mReifiedStack) {
-      JS::Rooted<JS::Value> stacktrace(cx);
-      if (!ToJSValue(cx, *aData->mReifiedStack, &stacktrace) ||
-          !JS_DefineProperty(cx, eventObj, "stacktrace", stacktrace,
-                             JSPROP_ENUMERATE)) {
-        return;
-      }
-    } else {
-      JSFunction* fun = js::NewFunctionWithReserved(cx, LazyStackGetter, 0, 0,
-                                                    "stacktrace");
-      if (!fun) {
-        return;
-      }
-
-      JS::Rooted<JSObject*> funObj(cx, JS_GetFunctionObject(fun));
-
-      // We want to store our stack in the function and have it stay alive.  But
-      // we also need sane access to the C++ nsIStackFrame.  So store both a JS
-      // wrapper and the raw pointer: the former will keep the latter alive.
-      JS::Rooted<JS::Value> stackVal(cx);
-      nsresult rv = nsContentUtils::WrapNative(cx, aData->mStack,
-                                               &stackVal);
-      if (NS_FAILED(rv)) {
-        return;
-      }
-
-      js::SetFunctionNativeReserved(funObj, SLOT_STACKOBJ, stackVal);
-      js::SetFunctionNativeReserved(funObj, SLOT_RAW_STACK,
-                                    JS::PrivateValue(aData->mStack.get()));
-
-      if (!JS_DefineProperty(cx, eventObj, "stacktrace",
-                             JS::UndefinedHandleValue,
-                             JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER |
-                             JSPROP_SETTER,
-                             JS_DATA_TO_FUNC_PTR(JSNative, funObj.get()),
-                             nullptr)) {
-        return;
-      }
-    }
   }
 
   if (!mStorage) {
@@ -1548,14 +1446,189 @@ Console::ProcessCallData(ConsoleCallData* aData, JS::Handle<JSObject*> aGlobal,
   }
 }
 
+bool
+Console::PopulateEvent(JSContext* aCx,
+                       JS::Handle<JSObject*> aGlobal,
+                       const Sequence<JS::Value>& aArguments,
+                       JS::MutableHandle<JS::Value> aEventValue,
+                       ConsoleCallData* aData) const
+{
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aData);
+
+  ConsoleStackEntry frame;
+  if (aData->mTopStackFrame) {
+    frame = *aData->mTopStackFrame;
+  }
+
+  ClearException ce(aCx);
+  RootedDictionary<ConsoleEvent> event(aCx);
+
+  JSAutoCompartment ac(aCx, aGlobal);
+
+  event.mID.Construct();
+  event.mInnerID.Construct();
+
+  if (aData->mIDType == ConsoleCallData::eString) {
+    event.mID.Value().SetAsString() = aData->mOuterIDString;
+    event.mInnerID.Value().SetAsString() = aData->mInnerIDString;
+  } else if (aData->mIDType == ConsoleCallData::eNumber) {
+    event.mID.Value().SetAsUnsignedLongLong() = aData->mOuterIDNumber;
+    event.mInnerID.Value().SetAsUnsignedLongLong() = aData->mInnerIDNumber;
+  } else {
+    // aData->mIDType can be eUnknown when we dispatch notifications via
+    // mConsoleEventHandler.
+    event.mID.Value().SetAsUnsignedLongLong() = 0;
+    event.mInnerID.Value().SetAsUnsignedLongLong() = 0;
+  }
+
+  event.mLevel = aData->mMethodString;
+  event.mFilename = frame.mFilename;
+
+  nsCOMPtr<nsIURI> filenameURI;
+  nsAutoCString pass;
+  if (NS_IsMainThread() &&
+      NS_SUCCEEDED(NS_NewURI(getter_AddRefs(filenameURI), frame.mFilename)) &&
+      NS_SUCCEEDED(filenameURI->GetPassword(pass)) && !pass.IsEmpty()) {
+    nsCOMPtr<nsISensitiveInfoHiddenURI> safeURI = do_QueryInterface(filenameURI);
+    nsAutoCString spec;
+    if (safeURI &&
+        NS_SUCCEEDED(safeURI->GetSensitiveInfoHiddenSpec(spec))) {
+      CopyUTF8toUTF16(spec, event.mFilename);
+    }
+  }
+
+  event.mLineNumber = frame.mLineNumber;
+  event.mColumnNumber = frame.mColumnNumber;
+  event.mFunctionName = frame.mFunctionName;
+  event.mTimeStamp = aData->mTimeStamp;
+  event.mPrivate = aData->mPrivate;
+
+  switch (aData->mMethodName) {
+    case MethodLog:
+    case MethodInfo:
+    case MethodWarn:
+    case MethodError:
+    case MethodException:
+    case MethodDebug:
+    case MethodAssert:
+      event.mArguments.Construct();
+      event.mStyles.Construct();
+      if (NS_WARN_IF(!ProcessArguments(aCx, aArguments,
+                                       event.mArguments.Value(),
+                                       event.mStyles.Value()))) {
+        return false;
+      }
+
+      break;
+
+    default:
+      event.mArguments.Construct();
+      if (NS_WARN_IF(!ArgumentsToValueList(aArguments,
+                                           event.mArguments.Value()))) {
+        return false;
+      }
+  }
+
+  if (aData->mMethodName == MethodGroup ||
+      aData->mMethodName == MethodGroupCollapsed ||
+      aData->mMethodName == MethodGroupEnd) {
+    ComposeGroupName(aCx, aArguments, event.mGroupName);
+  }
+
+  else if (aData->mMethodName == MethodTime && !aArguments.IsEmpty()) {
+    event.mTimer = CreateStartTimerValue(aCx, aData->mStartTimerLabel,
+                                         aData->mStartTimerValue,
+                                         aData->mStartTimerStatus);
+  }
+
+  else if (aData->mMethodName == MethodTimeEnd && !aArguments.IsEmpty()) {
+    event.mTimer = CreateStopTimerValue(aCx, aData->mStopTimerLabel,
+                                        aData->mStopTimerDuration,
+                                        aData->mStopTimerStatus);
+  }
+
+  else if (aData->mMethodName == MethodCount) {
+    event.mCounter = CreateCounterValue(aCx, aData->mCountLabel,
+                                        aData->mCountValue);
+  }
+
+  // We want to create a console event object and pass it to our
+  // nsIConsoleAPIStorage implementation.  We want to define some accessor
+  // properties on this object, and those will need to keep an nsIStackFrame
+  // alive.  But nsIStackFrame cannot be wrapped in an untrusted scope.  And
+  // further, passing untrusted objects to system code is likely to run afoul of
+  // Object Xrays.  So we want to wrap in a system-principal scope here.  But
+  // which one?  We could cheat and try to get the underlying JSObject* of
+  // mStorage, but that's a bit fragile.  Instead, we just use the junk scope,
+  // with explicit permission from the XPConnect module owner.  If you're
+  // tempted to do that anywhere else, talk to said module owner first.
+  JSAutoCompartment ac2(aCx, xpc::PrivilegedJunkScope());
+
+  if (NS_WARN_IF(!ToJSValue(aCx, event, aEventValue))) {
+    return false;
+  }
+
+  JS::Rooted<JSObject*> eventObj(aCx, &aEventValue.toObject());
+  if (NS_WARN_IF(!JS_DefineProperty(aCx, eventObj, "wrappedJSObject", eventObj,
+                                    JSPROP_ENUMERATE))) {
+    return false;
+  }
+
+  if (ShouldIncludeStackTrace(aData->mMethodName)) {
+    // Now define the "stacktrace" property on eventObj.  There are two cases
+    // here.  Either we came from a worker and have a reified stack, or we want
+    // to define a getter that will lazily reify the stack.
+    if (aData->mReifiedStack) {
+      JS::Rooted<JS::Value> stacktrace(aCx);
+      if (NS_WARN_IF(!ToJSValue(aCx, *aData->mReifiedStack, &stacktrace)) ||
+          NS_WARN_IF(!JS_DefineProperty(aCx, eventObj, "stacktrace", stacktrace,
+                                        JSPROP_ENUMERATE))) {
+        return false;
+      }
+    } else {
+      JSFunction* fun = js::NewFunctionWithReserved(aCx, LazyStackGetter, 0, 0,
+                                                    "stacktrace");
+      if (NS_WARN_IF(!fun)) {
+        return false;
+      }
+
+      JS::Rooted<JSObject*> funObj(aCx, JS_GetFunctionObject(fun));
+
+      // We want to store our stack in the function and have it stay alive.  But
+      // we also need sane access to the C++ nsIStackFrame.  So store both a JS
+      // wrapper and the raw pointer: the former will keep the latter alive.
+      JS::Rooted<JS::Value> stackVal(aCx);
+      nsresult rv = nsContentUtils::WrapNative(aCx, aData->mStack,
+                                               &stackVal);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+
+      js::SetFunctionNativeReserved(funObj, SLOT_STACKOBJ, stackVal);
+      js::SetFunctionNativeReserved(funObj, SLOT_RAW_STACK,
+                                    JS::PrivateValue(aData->mStack.get()));
+
+      if (NS_WARN_IF(!JS_DefineProperty(aCx, eventObj, "stacktrace",
+                                        JS::UndefinedHandleValue,
+                                        JSPROP_ENUMERATE | JSPROP_SHARED |
+                                        JSPROP_GETTER | JSPROP_SETTER,
+                                        JS_DATA_TO_FUNC_PTR(JSNative, funObj.get()),
+                                        nullptr))) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 namespace {
 
 // Helper method for ProcessArguments. Flushes output, if non-empty, to aSequence.
 bool
 FlushOutput(JSContext* aCx, Sequence<JS::Value>& aSequence, nsString &aOutput)
 {
-  AssertIsOnMainThread();
-
   if (!aOutput.IsEmpty()) {
     JS::Rooted<JSString*> str(aCx, JS_NewUCStringCopyN(aCx,
                                                        aOutput.get(),
@@ -1582,8 +1655,6 @@ Console::ProcessArguments(JSContext* aCx,
                           Sequence<JS::Value>& aSequence,
                           Sequence<nsString>& aStyles) const
 {
-  AssertIsOnMainThread();
-
   if (aData.IsEmpty()) {
     return true;
   }
@@ -1826,8 +1897,6 @@ void
 Console::MakeFormatString(nsCString& aFormat, int32_t aInteger,
                           int32_t aMantissa, char aCh) const
 {
-  AssertIsOnMainThread();
-
   aFormat.Append('%');
   if (aInteger >= 0) {
     aFormat.AppendInt(aInteger);
@@ -1846,8 +1915,6 @@ Console::ComposeGroupName(JSContext* aCx,
                           const Sequence<JS::Value>& aData,
                           nsAString& aName) const
 {
-  AssertIsOnMainThread();
-
   for (uint32_t i = 0; i < aData.Length(); ++i) {
     if (i != 0) {
       aName.AppendASCII(" ");
@@ -1911,8 +1978,6 @@ Console::CreateStartTimerValue(JSContext* aCx, const nsAString& aTimerLabel,
                                DOMHighResTimeStamp aTimerValue,
                                bool aTimerStatus) const
 {
-  AssertIsOnMainThread();
-
   if (!aTimerStatus) {
     RootedDictionary<ConsoleTimerError> error(aCx);
 
@@ -1975,8 +2040,6 @@ JS::Value
 Console::CreateStopTimerValue(JSContext* aCx, const nsAString& aLabel,
                               double aDuration, bool aStatus) const
 {
-  AssertIsOnMainThread();
-
   if (!aStatus) {
     return JS::UndefinedValue();
   }
@@ -1997,8 +2060,6 @@ bool
 Console::ArgumentsToValueList(const Sequence<JS::Value>& aData,
                               Sequence<JS::Value>& aSequence) const
 {
-  AssertIsOnMainThread();
-
   for (uint32_t i = 0; i < aData.Length(); ++i) {
     if (NS_WARN_IF(!aSequence.AppendElement(aData[i], fallible))) {
       return false;
@@ -2054,8 +2115,6 @@ JS::Value
 Console::CreateCounterValue(JSContext* aCx, const nsAString& aCountLabel,
                             uint32_t aCountValue) const
 {
-  AssertIsOnMainThread();
-
   ClearException ce(aCx);
 
   if (aCountValue == MAX_PAGE_COUNTERS) {
@@ -2117,21 +2176,52 @@ Console::GetOrCreateSandbox(JSContext* aCx, nsIPrincipal* aPrincipal)
 }
 
 void
-Console::RegisterConsoleCallData(ConsoleCallData* aData)
+Console::StoreCallData(ConsoleCallData* aCallData)
 {
   AssertIsOnOwningThread();
 
-  MOZ_ASSERT(!mConsoleCallDataArray.Contains(aData));
-  mConsoleCallDataArray.AppendElement(aData);
+  MOZ_ASSERT(aCallData);
+  MOZ_ASSERT(!mCallDataStorage.Contains(aCallData));
+  MOZ_ASSERT(!mCallDataStoragePending.Contains(aCallData));
+
+  mCallDataStorage.AppendElement(aCallData);
+
+  if (mCallDataStorage.Length() > STORAGE_MAX_EVENTS) {
+    RefPtr<ConsoleCallData> callData = mCallDataStorage[0];
+    mCallDataStorage.RemoveElementAt(0);
+
+    MOZ_ASSERT(callData->mStatus != ConsoleCallData::eToBeDeleted);
+
+    // We cannot delete this object now because we have to trace its JSValues
+    // until the pending operation (ConsoleCallDataRunnable) is completed.
+    if (callData->mStatus == ConsoleCallData::eInUse) {
+      callData->mStatus = ConsoleCallData::eToBeDeleted;
+      mCallDataStoragePending.AppendElement(callData);
+    }
+  }
 }
 
 void
-Console::UnregisterConsoleCallData(ConsoleCallData* aData)
+Console::UnstoreCallData(ConsoleCallData* aCallData)
 {
   AssertIsOnOwningThread();
 
-  MOZ_ASSERT(mConsoleCallDataArray.Contains(aData));
-  mConsoleCallDataArray.RemoveElement(aData);
+  MOZ_ASSERT(aCallData);
+  MOZ_ASSERT(mCallDataStorage.Contains(aCallData));
+  MOZ_ASSERT(!mCallDataStoragePending.Contains(aCallData));
+
+  mCallDataStorage.RemoveElement(aCallData);
+}
+
+void
+Console::ReleaseCallData(ConsoleCallData* aCallData)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aCallData);
+  MOZ_ASSERT(aCallData->mStatus == ConsoleCallData::eToBeDeleted);
+  MOZ_ASSERT(mCallDataStoragePending.Contains(aCallData));
+
+  mCallDataStoragePending.RemoveElement(aCallData);
 }
 
 void
