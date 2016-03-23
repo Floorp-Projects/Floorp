@@ -298,6 +298,7 @@ html, body, #app, #memory-tool {
 
 #heap-view > .heap-view-panel > .snapshot-status,
 #heap-view > .heap-view-panel > .take-snapshot,
+#heap-view .empty,
 #shortest-paths-select-node-msg {
   margin: auto;
   margin-top: 65px;
