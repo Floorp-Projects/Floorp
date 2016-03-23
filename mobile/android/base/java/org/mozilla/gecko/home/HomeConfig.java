@@ -27,6 +27,7 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
+import android.util.Pair;
 
 public final class HomeConfig {
     public static final String PREF_KEY_BOOKMARKS_PANEL_ENABLED = "bookmarksPanelEnabled";
@@ -1142,9 +1143,11 @@ public final class HomeConfig {
         private final HomeConfig mHomeConfig;
         private final Map<String, PanelConfig> mConfigMap;
         private final List<String> mConfigOrder;
-        private final List<GeckoEvent> mEventQueue;
         private final Thread mOriginalThread;
 
+        // Each Pair represents parameters to a GeckoAppShell.notifyObservers call;
+        // the first String is the observer topic and the second string is the notification data.
+        private List<Pair<String, String>> mNotificationQueue;
         private PanelConfig mDefaultPanel;
         private int mEnabledCount;
 
@@ -1156,7 +1159,7 @@ public final class HomeConfig {
             mOriginalThread = Thread.currentThread();
             mConfigMap = new HashMap<String, PanelConfig>();
             mConfigOrder = new LinkedList<String>();
-            mEventQueue = new LinkedList<GeckoEvent>();
+            mNotificationQueue = new ArrayList<>();
 
             mIsFromDefault = configState.isDefault();
 
@@ -1368,7 +1371,8 @@ public final class HomeConfig {
                 installed = true;
 
                 // Add an event to the queue if a new panel is successfully installed.
-                mEventQueue.add(GeckoEvent.createBroadcastEvent("HomePanels:Installed", panelConfig.getId()));
+                mNotificationQueue.add(new Pair<String, String>(
+                        "HomePanels:Installed", panelConfig.getId()));
             }
 
             mHasChanged = true;
@@ -1404,7 +1408,7 @@ public final class HomeConfig {
             }
 
             // Add an event to the queue if a panel is successfully uninstalled.
-            mEventQueue.add(GeckoEvent.createBroadcastEvent("HomePanels:Uninstalled", panelId));
+            mNotificationQueue.add(new Pair<String, String>("HomePanels:Uninstalled", panelId));
 
             mHasChanged = true;
             return true;
@@ -1476,10 +1480,10 @@ public final class HomeConfig {
             final State newConfigState =
                     new State(mHomeConfig, makeOrderedCopy(true), isDefault());
 
-            // Copy the event queue to a new list, so that we only modify mEventQueue on
+            // Copy the event queue to a new list, so that we only modify mNotificationQueue on
             // the original thread where it was created.
-            final LinkedList<GeckoEvent> eventQueueCopy = new LinkedList<GeckoEvent>(mEventQueue);
-            mEventQueue.clear();
+            final List<Pair<String, String>> copiedQueue = mNotificationQueue;
+            mNotificationQueue = new ArrayList<>();
 
             ThreadUtils.getBackgroundHandler().post(new Runnable() {
                 @Override
@@ -1487,7 +1491,7 @@ public final class HomeConfig {
                     mHomeConfig.save(newConfigState);
 
                     // Send pending events after the new config is saved.
-                    sendEventsToGecko(eventQueueCopy);
+                    sendNotificationsToGecko(copiedQueue);
                 }
             });
 
@@ -1511,8 +1515,8 @@ public final class HomeConfig {
             mHomeConfig.save(newConfigState);
 
             // Send pending events after the new config is saved.
-            sendEventsToGecko(mEventQueue);
-            mEventQueue.clear();
+            sendNotificationsToGecko(mNotificationQueue);
+            mNotificationQueue.clear();
 
             return newConfigState;
         }
@@ -1531,9 +1535,9 @@ public final class HomeConfig {
             return mConfigMap.isEmpty();
         }
 
-        private void sendEventsToGecko(List<GeckoEvent> events) {
-            for (GeckoEvent e : events) {
-                GeckoAppShell.sendEventToGecko(e);
+        private void sendNotificationsToGecko(List<Pair<String, String>> notifications) {
+            for (Pair<String, String> p : notifications) {
+                GeckoAppShell.notifyObservers(p.first, p.second);
             }
         }
 
