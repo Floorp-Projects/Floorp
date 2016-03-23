@@ -699,7 +699,6 @@
       {
         "description": "Fires with the <code>downloadId</code> when a download is erased from history.",
         "name": "onErased",
-        "unsupported": true,
         "parameters": [
           {
             "name": "downloadId",
