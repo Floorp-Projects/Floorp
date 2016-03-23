@@ -42,7 +42,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Console, nsIObserver)
   NS_DECL_NSIOBSERVER
 
-  explicit Console(nsPIDOMWindowInner* aWindow);
+  static already_AddRefed<Console>
+  Create(nsPIDOMWindowInner* aWindow, ErrorResult& aRv);
 
   // WebIDL methods
   nsPIDOMWindowInner* GetParentObject() const
@@ -117,6 +118,14 @@ public:
   NoopMethod();
 
 private:
+  explicit Console(nsPIDOMWindowInner* aWindow);
+
+  void
+  Initialize(ErrorResult& aRv);
+
+  void
+  Shutdown();
+
   enum MethodName
   {
     MethodLog,
@@ -310,6 +319,12 @@ private:
 
   uint64_t mOuterID;
   uint64_t mInnerID;
+
+  enum {
+    eUnknown,
+    eInitialized,
+    eShuttingDown
+  } mStatus;
 
   friend class ConsoleCallData;
   friend class ConsoleRunnable;

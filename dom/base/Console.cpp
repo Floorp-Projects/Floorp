@@ -95,9 +95,9 @@ public:
 #ifdef DEBUG
     , mOwningThread(PR_GetCurrentThread())
 #endif
-  { }
+  {}
 
-  void
+  bool
   Initialize(JSContext* aCx, Console::MethodName aName,
              const nsAString& aString,
              const Sequence<JS::Value>& aArguments,
@@ -113,10 +113,13 @@ public:
     mMethodString = aString;
 
     for (uint32_t i = 0; i < aArguments.Length(); ++i) {
-      if (!mCopiedArguments.AppendElement(aArguments[i])) {
-        return;
+      if (NS_WARN_IF(!mCopiedArguments.AppendElement(aArguments[i]))) {
+        aConsole->UnregisterConsoleCallData(this);
+        return false;
       }
     }
+
+    return true;
   }
 
   void
@@ -518,6 +521,7 @@ private:
   PreDispatch(JSContext* aCx, JS::Handle<JSObject*> aGlobal) override
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
+    mCallData->AssertIsOnOwningThread();
 
     ClearException ce(aCx);
     JSAutoCompartment ac(aCx, aGlobal);
@@ -755,6 +759,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Console)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Console)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
+  tmp->Shutdown();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -781,6 +786,18 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Console)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
+/* static */ already_AddRefed<Console>
+Console::Create(nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
+{
+  RefPtr<Console> console = new Console(aWindow);
+  console->Initialize(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return console.forget();
+}
+
 Console::Console(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
 #ifdef DEBUG
@@ -788,6 +805,7 @@ Console::Console(nsPIDOMWindowInner* aWindow)
 #endif
   , mOuterID(0)
   , mInnerID(0)
+  , mStatus(eUnknown)
 {
   if (mWindow) {
     MOZ_ASSERT(mWindow->IsInnerWindow());
@@ -802,32 +820,63 @@ Console::Console(nsPIDOMWindowInner* aWindow)
     }
   }
 
-  if (NS_IsMainThread()) {
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->AddObserver(this, "inner-window-destroyed", true);
-    }
-  }
-
   mozilla::HoldJSObjects(this);
 }
 
 Console::~Console()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mConsoleCallDataArray.IsEmpty());
+  Shutdown();
+  mozilla::DropJSObjects(this);
+}
 
-  if (!NS_IsMainThread()) {
-    if (mStorage) {
-      NS_ReleaseOnMainThread(mStorage.forget());
+void
+Console::Initialize(ErrorResult& aRv)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mStatus == eUnknown);
+
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (NS_WARN_IF(!obs)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
     }
 
-    if (mSandbox) {
-      NS_ReleaseOnMainThread(mSandbox.forget());
+    aRv = obs->AddObserver(this, "inner-window-destroyed", true);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+  }
+
+  mStatus = eInitialized;
+}
+
+void
+Console::Shutdown()
+{
+  AssertIsOnOwningThread();
+
+  if (mStatus == eUnknown || mStatus == eShuttingDown) {
+    return;
+  }
+
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      obs->RemoveObserver(this, "inner-window-destroyed");
     }
   }
 
-  mozilla::DropJSObjects(this);
+  NS_ReleaseOnMainThread(mStorage.forget());
+  NS_ReleaseOnMainThread(mSandbox.forget());
+
+  mTimerRegistry.Clear();
+  mCounterRegistry.Clear();
+  mConsoleCallDataArray.Clear();
+
+  mStatus = eShuttingDown;
 }
 
 NS_IMETHODIMP
@@ -848,13 +897,7 @@ Console::Observe(nsISupports* aSubject, const char* aTopic,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (innerID == mInnerID) {
-    nsCOMPtr<nsIObserverService> obs =
-      do_GetService("@mozilla.org/observer-service;1");
-    if (obs) {
-      obs->RemoveObserver(this, "inner-window-destroyed");
-    }
-
-    mTimerRegistry.Clear();
+    Shutdown();
   }
 
   return NS_OK;
@@ -885,6 +928,7 @@ void
 Console::Trace(JSContext* aCx)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mStatus == eInitialized);
 
   const Sequence<JS::Value> data;
   Method(aCx, MethodTrace, NS_LITERAL_STRING("trace"), data);
@@ -902,6 +946,7 @@ void
 Console::Time(JSContext* aCx, const JS::Handle<JS::Value> aTime)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mStatus == eInitialized);
 
   Sequence<JS::Value> data;
   SequenceRooter<JS::Value> rooter(aCx, &data);
@@ -917,6 +962,7 @@ void
 Console::TimeEnd(JSContext* aCx, const JS::Handle<JS::Value> aTime)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mStatus == eInitialized);
 
   Sequence<JS::Value> data;
   SequenceRooter<JS::Value> rooter(aCx, &data);
@@ -932,6 +978,7 @@ void
 Console::TimeStamp(JSContext* aCx, const JS::Handle<JS::Value> aData)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mStatus == eInitialized);
 
   Sequence<JS::Value> data;
   SequenceRooter<JS::Value> rooter(aCx, &data);
@@ -947,6 +994,8 @@ void
 Console::Profile(JSContext* aCx, const Sequence<JS::Value>& aData)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mStatus == eInitialized);
+
   ProfileMethod(aCx, NS_LITERAL_STRING("profile"), aData);
 }
 
@@ -954,6 +1003,8 @@ void
 Console::ProfileEnd(JSContext* aCx, const Sequence<JS::Value>& aData)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mStatus == eInitialized);
+
   ProfileMethod(aCx, NS_LITERAL_STRING("profileEnd"), aData);
 }
 
@@ -961,6 +1012,8 @@ void
 Console::ProfileMethod(JSContext* aCx, const nsAString& aAction,
                        const Sequence<JS::Value>& aData)
 {
+  MOZ_ASSERT(mStatus == eInitialized);
+
   if (!NS_IsMainThread()) {
     // Here we are in a worker thread.
     RefPtr<ConsoleProfileRunnable> runnable =
@@ -1006,8 +1059,7 @@ Console::ProfileMethod(JSContext* aCx, const nsAString& aAction,
     return;
   }
 
-  nsCOMPtr<nsIObserverService> obs =
-    do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->NotifyObservers(wrapper, "console-api-profiler", nullptr);
   }
@@ -1018,6 +1070,7 @@ Console::Assert(JSContext* aCx, bool aCondition,
                 const Sequence<JS::Value>& aData)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mStatus == eInitialized);
 
   if (!aCondition) {
     Method(aCx, MethodAssert, NS_LITERAL_STRING("assert"), aData);
@@ -1030,6 +1083,7 @@ void
 Console::NoopMethod()
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mStatus == eInitialized);
 
   // Nothing to do.
 }
@@ -1103,12 +1157,16 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
                 const Sequence<JS::Value>& aData)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mStatus == eInitialized);
 
   RefPtr<ConsoleCallData> callData(new ConsoleCallData());
 
   ClearException ce(aCx);
 
-  callData->Initialize(aCx, aMethodName, aMethodString, aData, this);
+  if (NS_WARN_IF(!callData->Initialize(aCx, aMethodName, aMethodString,
+                                       aData, this))) {
+    return;
+  }
 
   if (mWindow) {
     nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(mWindow);
