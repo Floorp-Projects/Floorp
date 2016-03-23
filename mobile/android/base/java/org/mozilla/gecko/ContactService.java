@@ -1507,7 +1507,7 @@ public class ContactService implements GeckoEventListener {
                 }
             }
 
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(subject, callbackMessage.toString()));
+            GeckoAppShell.notifyObservers(subject, callbackMessage.toString());
         } catch (JSONException e) {
             throw new IllegalArgumentException(e);
         }

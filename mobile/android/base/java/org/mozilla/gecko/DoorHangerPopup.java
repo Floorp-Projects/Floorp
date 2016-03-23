@@ -211,8 +211,7 @@ public class DoorHangerPopup extends AnchoredPopup
      */
     @Override
     public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Doorhanger:Reply", response.toString());
-        GeckoAppShell.sendEventToGecko(e);
+        GeckoAppShell.notifyObservers("Doorhanger:Reply", response.toString());
         removeDoorHanger(doorhanger);
         updatePopup();
     }
