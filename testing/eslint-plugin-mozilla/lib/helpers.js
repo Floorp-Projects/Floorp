@@ -415,6 +415,10 @@ module.exports = {
       //   fileName: /path/to/mozilla/repo/a/b/c/d.js
       //   cwd: /path/to/mozilla/repo
       return fileName;
+    } else if (path.basename(fileName) == fileName) {
+      // Case 1b: executed from a nested directory, fileName is the base name
+      // without any path info (happens in Atom with linter-eslint)
+      return path.join(cwd, fileName);
     } else {
       // Case 1: executed form in a nested directory, e.g. from a text editor:
       //   fileName: a/b/c/d.js
