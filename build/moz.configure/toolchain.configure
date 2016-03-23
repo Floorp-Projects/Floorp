@@ -1,0 +1,61 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# yasm detection
+# ==============================================================
+yasm = check_prog('YASM', ['yasm'], allow_missing=True)
+
+@depends(yasm)
+@checking('yasm version')
+@advanced
+def yasm_version(yasm):
+    if yasm:
+        import subprocess
+        try:
+            version = Version(subprocess.check_output(
+                [yasm, '--version']
+            ).splitlines()[0].split()[1])
+            return version
+        except subprocess.CalledProcessError as e:
+            error('Failed to get yasm version: %s' % e.message)
+
+# Until we move all the yasm consumers out of old-configure.
+# bug 1257904
+add_old_configure_assignment('_YASM_MAJOR_VERSION',
+                             delayed_getattr(yasm_version, 'major'))
+add_old_configure_assignment('_YASM_MINOR_VERSION',
+                             delayed_getattr(yasm_version, 'minor'))
+
+@depends(yasm, target)
+def yasm_asflags(yasm, target):
+    if yasm:
+        asflags = {
+            ('OSX', 'x86'): '-f macho32',
+            ('OSX', 'x86_64'): '-f macho64',
+            ('WINNT', 'x86'): '-f win32',
+            ('WINNT', 'x86_64'): '-f x64',
+        }.get((target.os, target.cpu), None)
+        if asflags is None:
+            # We're assuming every x86 platform we support that's
+            # not Windows or Mac is ELF.
+            if target.cpu == 'x86':
+                asflags = '-f elf32'
+            elif target.cpu == 'x86_64':
+                asflags = '-f elf64'
+        if asflags:
+            asflags += ' -rnasm -pnasm'
+        return asflags
+
+set_config('YASM_ASFLAGS', yasm_asflags)
+
+@depends(yasm_asflags)
+def have_yasm(value):
+    if value:
+        return True
+
+set_config('HAVE_YASM', have_yasm)
+# Until the YASM variable is not necessary in old-configure.
+add_old_configure_assignment('YASM', have_yasm)
