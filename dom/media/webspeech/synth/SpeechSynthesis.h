@@ -67,6 +67,8 @@ private:
 
   void AdvanceQueue();
 
+  bool HasVoices() const;
+
   nsTArray<RefPtr<SpeechSynthesisUtterance> > mSpeechQueue;
 
   RefPtr<nsSpeechTask> mCurrentTask;
