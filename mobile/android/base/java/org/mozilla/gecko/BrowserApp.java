@@ -27,7 +27,7 @@ import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
 import org.mozilla.gecko.feeds.FeedService;
-import org.mozilla.gecko.feeds.action.CheckAction;
+import org.mozilla.gecko.feeds.action.CheckForUpdatesAction;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
@@ -3773,7 +3773,7 @@ public class BrowserApp extends GeckoApp
             }
 
             // Launched from a "content notification"
-            if (intent.hasExtra(CheckAction.EXTRA_CONTENT_NOTIFICATION)) {
+            if (intent.hasExtra(CheckForUpdatesAction.EXTRA_CONTENT_NOTIFICATION)) {
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.NOTIFICATION, "content_update");
             }
         }

@@ -17,16 +17,16 @@ import org.mozilla.gecko.feeds.FeedFetcher;
 import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
 
 /**
- * SubscribeAction: Try to fetch a feed and create a subscription if successful.
+ * SubscribeToFeedAction: Try to fetch a feed and create a subscription if successful.
  */
-public class SubscribeAction extends BaseAction {
+public class SubscribeToFeedAction extends FeedAction {
     private static final String LOGTAG = "FeedSubscribeAction";
 
     public static final String EXTRA_FEED_URL = "feed_url";
 
     private Context context;
 
-    public SubscribeAction(Context context) {
+    public SubscribeToFeedAction(Context context) {
         this.context = context;
     }
 

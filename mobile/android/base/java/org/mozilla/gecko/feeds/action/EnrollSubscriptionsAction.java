@@ -21,9 +21,9 @@ import org.mozilla.gecko.feeds.knownsites.KnownSiteMedium;
 import org.mozilla.gecko.feeds.knownsites.KnownSiteWordpress;
 
 /**
- * EnrollAction: Search for bookmarks of known sites we can subscribe to.
+ * EnrollSubscriptionsAction: Search for bookmarks of known sites we can subscribe to.
  */
-public class EnrollAction extends BaseAction {
+public class EnrollSubscriptionsAction extends FeedAction {
     private static final String LOGTAG = "FeedEnrollAction";
 
     private static final KnownSite[] knownSites = {
@@ -34,7 +34,7 @@ public class EnrollAction extends BaseAction {
 
     private Context context;
 
-    public EnrollAction(Context context) {
+    public EnrollSubscriptionsAction(Context context) {
         this.context = context;
     }
 

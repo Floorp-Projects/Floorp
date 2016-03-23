@@ -32,7 +32,7 @@ import org.mozilla.gecko.TelemetryContract.Method;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
 import org.mozilla.gecko.feeds.FeedService;
-import org.mozilla.gecko.feeds.action.CheckAction;
+import org.mozilla.gecko.feeds.action.CheckForUpdatesAction;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
@@ -73,7 +73,6 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
-import android.preference.PreferenceScreen;
 import android.preference.TwoStatePreference;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
@@ -388,7 +387,7 @@ OnSharedPreferenceChangeListener
         }
 
         // Launched from "Notifications settings" action button in a notification.
-        if (intentExtras != null && intentExtras.containsKey(CheckAction.EXTRA_CONTENT_NOTIFICATION)) {
+        if (intentExtras != null && intentExtras.containsKey(CheckForUpdatesAction.EXTRA_CONTENT_NOTIFICATION)) {
             Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, Method.BUTTON, "notification-settings");
         }
     }
