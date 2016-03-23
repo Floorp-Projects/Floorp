@@ -19,7 +19,6 @@
 #include "nsMargin.h"                   // for nsIntMargin
 #include "nsRegionFwd.h"                // for nsIntRegion
 #include "nsStringGlue.h"               // for nsCString
-#include "nsTArray.h"                   // for nsTArray, nsTArray_Impl
 #include "xpcom-config.h"               // for CPP_THROW_NEW
 #include "mozilla/Move.h"               // for mozilla::Move
 #include "mozilla/gfx/MatrixFwd.h"      // for mozilla::gfx::Matrix4x4
@@ -50,20 +49,12 @@ enum class VisitSide {
 class nsRegion
 {
 public:
-  typedef nsRect RectType;
-  typedef nsPoint PointType;
-  typedef nsMargin MarginType;
-
   nsRegion () { pixman_region32_init(&mImpl); }
   MOZ_IMPLICIT nsRegion (const nsRect& aRect) { pixman_region32_init_rect(&mImpl,
                                                                           aRect.x,
                                                                           aRect.y,
                                                                           aRect.width,
                                                                           aRect.height); }
-  explicit nsRegion (const nsTArray<pixman_box32_t>& aRects)
-  {
-    pixman_region32_init_rects(&mImpl, aRects.Elements(), aRects.Length());
-  }
   nsRegion (const nsRegion& aRegion) { pixman_region32_init(&mImpl); pixman_region32_copy(&mImpl,aRegion.Impl()); }
   nsRegion (nsRegion&& aRegion) { mImpl = aRegion.mImpl; pixman_region32_init(&aRegion.mImpl); }
   nsRegion& operator = (nsRegion&& aRegion) {
@@ -480,7 +471,6 @@ public:
 
   BaseIntRegion () {}
   MOZ_IMPLICIT BaseIntRegion (const Rect& aRect) : mImpl (ToRect(aRect)) {}
-  explicit BaseIntRegion (const nsTArray<pixman_box32_t>& aRects) : mImpl (aRects) {}
   BaseIntRegion (const BaseIntRegion& aRegion) : mImpl (aRegion.mImpl) {}
   BaseIntRegion (BaseIntRegion&& aRegion) : mImpl (mozilla::Move(aRegion.mImpl)) {}
   Derived& operator = (const Rect& aRect) { mImpl = ToRect (aRect); return This(); }
@@ -824,15 +814,10 @@ class IntRegionTyped :
   static_assert(IsPixel<units>::value, "'units' must be a coordinate system tag");
 
 public:
-  typedef IntRectTyped<units> RectType;
-  typedef IntPointTyped<units> PointType;
-  typedef IntMarginTyped<units> MarginType;
-
   // Forward constructors.
   IntRegionTyped() {}
   MOZ_IMPLICIT IntRegionTyped(const IntRectTyped<units>& aRect) : Super(aRect) {}
   IntRegionTyped(const IntRegionTyped& aRegion) : Super(aRegion) {}
-  IntRegionTyped(const nsTArray<pixman_box32_t>& aRects) : Super(aRects) {}
   IntRegionTyped(IntRegionTyped&& aRegion) : Super(mozilla::Move(aRegion)) {}
 
   // Assignment operators need to be forwarded as well, otherwise the compiler
