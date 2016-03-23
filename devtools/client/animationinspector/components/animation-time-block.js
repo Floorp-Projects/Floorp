@@ -129,6 +129,15 @@ AnimationTimeBlock.prototype = {
       text += "\n";
     }
 
+    // Adding the iteration start.
+    if (state.iterationStart !== 0) {
+      let iterationStartTime = state.iterationStart * state.duration / 1000;
+      text += L10N.getFormatStr("player.animationIterationStartLabel",
+                                state.iterationStart,
+                                L10N.numberWithDecimals(iterationStartTime, 2));
+      text += "\n";
+    }
+
     // Adding the playback rate if it's different than 1.
     if (state.playbackRate !== 1) {
       text += L10N.getStr("player.animationRateLabel") + " ";

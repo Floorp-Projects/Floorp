@@ -6,8 +6,8 @@
 
 requestLongerTimeout(2);
 
-// Check that the timeline displays animations' duration, delay and iteration
-// counts in tooltips.
+// Check that the timeline displays animations' duration, delay iteration
+// counts and iteration start in tooltips.
 
 add_task(function*() {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
@@ -30,5 +30,7 @@ add_task(function*() {
     } else {
       ok(!title.match(/Repeats: /), "The tooltip doesn't show the iterations");
     }
+    ok(!title.match(/Iteration start:/),
+      "The tooltip doesn't show the iteration start");
   });
 });
