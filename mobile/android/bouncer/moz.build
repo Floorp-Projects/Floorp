@@ -30,3 +30,8 @@ if CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY']:
     ANDROID_ASSETS_DIRS += [
         '%' + CONFIG['MOZ_ANDROID_DISTRIBUTION_DIRECTORY'] + '/assets',
     ]
+
+DEFINES['MOZ_ANDROID_SHARED_ID'] = CONFIG['MOZ_ANDROID_SHARED_ID']
+OBJDIR_PP_FILES.mobile.android.bouncer += [
+    'AndroidManifest.xml.in',
+]
