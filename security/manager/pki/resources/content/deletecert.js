@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* import-globals-from pippki.js */
+"use strict";
 
 const nsIX509Cert = Components.interfaces.nsIX509Cert;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";

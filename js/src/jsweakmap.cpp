@@ -48,8 +48,7 @@ WeakMapBase::markAll(JS::Zone* zone, JSTracer* tracer)
     MOZ_ASSERT(tracer->weakMapAction() != DoNotTraceWeakMaps);
     for (WeakMapBase* m : zone->gcWeakMapList) {
         m->trace(tracer);
-        if (m->memberOf)
-            TraceEdge(tracer, &m->memberOf, "memberOf");
+        TraceNullableEdge(tracer, &m->memberOf, "memberOf");
     }
 }
 

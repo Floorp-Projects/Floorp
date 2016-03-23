@@ -56,7 +56,7 @@ public:
 
   EvictDataResult
   EvictData(media::TimeUnit aPlaybackTime,
-            uint32_t aThreshold,
+            int64_t aThresholdReduct,
             media::TimeUnit* aBufferStartTime) override;
 
   void EvictBefore(media::TimeUnit aTime) override;
@@ -77,6 +77,7 @@ public:
   void SetGroupStartTimestamp(const media::TimeUnit& aGroupStartTimestamp) override;
   void RestartGroupStartTimestamp() override;
   media::TimeUnit GroupEndTimestamp() override;
+  int64_t EvictionThreshold() const override;
 
   // Interface for MediaSourceDemuxer
   MediaInfo GetMetadata();
@@ -200,7 +201,7 @@ private:
     OnDemuxFailed(TrackType::kAudioTrack, aFailure);
   }
 
-  void DoEvictData(const media::TimeUnit& aPlaybackTime, uint32_t aThreshold);
+  void DoEvictData(const media::TimeUnit& aPlaybackTime, int64_t aThreshold);
 
   struct TrackData {
     TrackData()
@@ -344,7 +345,8 @@ private:
 
   // Global size of this source buffer content.
   Atomic<int64_t> mSizeSourceBuffer;
-  uint32_t mEvictionThreshold;
+  const int64_t mVideoEvictionThreshold;
+  const int64_t mAudioEvictionThreshold;
   Atomic<bool> mEvictionOccurred;
 
   // Monitor to protect following objects accessed across multipple threads.

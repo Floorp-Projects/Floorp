@@ -417,7 +417,7 @@ nsXBLWindowKeyHandler::HandleEventOnCaptureInDefaultEventGroup(
     // For reserved commands (such as Open New Tab), we don't to wait for
     // the content to answer (so mWantReplyFromContentProcess remains false),
     // neither to give a chance for content to override its behavior.
-    widgetKeyboardEvent->mFlags.mNoCrossProcessBoundaryForwarding = true;
+    widgetKeyboardEvent->StopCrossProcessForwarding();
     // If the key combination is reserved by chrome, we shouldn't expose the
     // keyboard event to web contents because such keyboard events shouldn't be
     // cancelable.  So, it's not good behavior to fire keyboard events but
@@ -457,23 +457,6 @@ nsXBLWindowKeyHandler::HandleEventOnCaptureInSystemEventGroup(
   // redispatched with mNoCrossProcessBoundaryForwarding = 1 to process it.
   // XXX Why not StopImmediatePropagation()?
   aEvent->AsEvent()->StopPropagation();
-}
-
-//
-// EventMatched
-//
-// See if the given handler cares about this particular key event
-//
-bool
-nsXBLWindowKeyHandler::EventMatched(
-                         nsXBLPrototypeHandler* aHandler,
-                         nsIAtom* aEventType,
-                         nsIDOMKeyEvent* aEvent,
-                         uint32_t aCharCode,
-                         const IgnoreModifierState& aIgnoreModifierState)
-{
-  return aHandler->KeyEventMatched(aEventType, aEvent, aCharCode,
-                                   aIgnoreModifierState);
 }
 
 bool
@@ -543,17 +526,21 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
                                             bool aExecute,
                                             bool* aOutReservedForChrome)
 {
-  AutoTArray<nsShortcutCandidate, 10> accessKeys;
-  nsContentUtils::GetAccelKeyCandidates(aKeyEvent, accessKeys);
+  WidgetKeyboardEvent* nativeKeyboardEvent =
+    aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
+  MOZ_ASSERT(nativeKeyboardEvent);
 
-  if (accessKeys.IsEmpty()) {
+  AutoShortcutKeyCandidateArray shortcutKeys;
+  nativeKeyboardEvent->GetShortcutKeyCandidates(shortcutKeys);
+
+  if (shortcutKeys.IsEmpty()) {
     return WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler,
                                   0, IgnoreModifierState(),
                                   aExecute, aOutReservedForChrome);
   }
 
-  for (uint32_t i = 0; i < accessKeys.Length(); ++i) {
-    nsShortcutCandidate &key = accessKeys[i];
+  for (uint32_t i = 0; i < shortcutKeys.Length(); ++i) {
+    ShortcutKeyCandidate& key = shortcutKeys[i];
     IgnoreModifierState ignoreModifierState;
     ignoreModifierState.mShift = key.mIgnoreShift;
     if (WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler,
@@ -569,92 +556,101 @@ bool
 nsXBLWindowKeyHandler::WalkHandlersAndExecute(
                          nsIDOMKeyEvent* aKeyEvent,
                          nsIAtom* aEventType,
-                         nsXBLPrototypeHandler* aHandler,
+                         nsXBLPrototypeHandler* aFirstHandler,
                          uint32_t aCharCode,
                          const IgnoreModifierState& aIgnoreModifierState,
                          bool aExecute,
                          bool* aOutReservedForChrome)
 {
-  nsresult rv;
-
   // Try all of the handlers until we find one that matches the event.
-  for (nsXBLPrototypeHandler *currHandler = aHandler; currHandler;
-       currHandler = currHandler->GetNextHandler()) {
+  for (nsXBLPrototypeHandler* handler = aFirstHandler;
+       handler;
+       handler = handler->GetNextHandler()) {
     bool stopped = aKeyEvent->AsEvent()->IsDispatchStopped();
     if (stopped) {
       // The event is finished, don't execute any more handlers
       return false;
     }
 
-    if (!EventMatched(currHandler, aEventType, aKeyEvent,
-                      aCharCode, aIgnoreModifierState)) {
+    if (aExecute) {
+      // If it's executing matched handlers, the event type should exactly be
+      // matched.
+      if (!handler->EventTypeEquals(aEventType)) {
+        continue;
+      }
+    } else {
+      if (handler->EventTypeEquals(nsGkAtoms::keypress)) {
+        // If the handler is a keypress event handler, we also need to check
+        // if coming keydown event is a preceding event of reserved key
+        // combination because if default action of a keydown event is
+        // prevented, following keypress event won't be fired.  However, if
+        // following keypress event is reserved, we shouldn't allow web
+        // contents to prevent the default of the preceding keydown event.
+        if (aEventType != nsGkAtoms::keydown &&
+            aEventType != nsGkAtoms::keypress) {
+          continue;
+        }
+      } else if (!handler->EventTypeEquals(aEventType)) {
+        // Otherwise, aEventType should exactly be matched.
+        continue;
+      }
+    }
+
+    // Check if the keyboard event *may* execute the handler.
+    if (!handler->KeyEventMatched(aKeyEvent, aCharCode, aIgnoreModifierState)) {
       continue;  // try the next one
     }
 
     // Before executing this handler, check that it's not disabled,
     // and that it has something to do (oncommand of the <key> or its
     // <command> is non-empty).
-    nsCOMPtr<nsIContent> elt = currHandler->GetHandlerElement();
-    nsCOMPtr<Element> commandElt;
-
-    // See if we're in a XUL doc.
-    nsCOMPtr<Element> el = GetElement();
-    if (el && elt) {
-      // We are.  Obtain our command attribute.
-      nsAutoString command;
-      elt->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
-      if (!command.IsEmpty()) {
-        // Locate the command element in question.  Note that we
-        // know "elt" is in a doc if we're dealing with it here.
-        NS_ASSERTION(elt->IsInDoc(), "elt must be in document");
-        nsIDocument *doc = elt->GetCurrentDoc();
-        if (doc)
-          commandElt = do_QueryInterface(doc->GetElementById(command));
-
-        if (!commandElt) {
-          NS_ERROR("A XUL <key> is observing a command that doesn't exist. Unable to execute key binding!");
-          continue;
-        }
-      }
+    nsCOMPtr<Element> commandElement;
+    if (!GetElementForHandler(handler, getter_AddRefs(commandElement))) {
+      continue;
     }
 
-    if (!commandElt) {
-      commandElt = do_QueryInterface(elt);
-    }
-
-    if (commandElt) {
-      nsAutoString value;
-      commandElt->GetAttribute(NS_LITERAL_STRING("disabled"), value);
-      if (value.EqualsLiteral("true")) {
-        continue;  // this handler is disabled, try the next one
+    bool isReserved = false;
+    if (commandElement) {
+      if (!IsExecutableElement(commandElement)) {
+        continue;
       }
 
-      // Check that there is an oncommand handler
-      commandElt->GetAttribute(NS_LITERAL_STRING("oncommand"), value);
-      if (value.IsEmpty()) {
-        continue;  // nothing to do
-      }
-
+      isReserved =
+        commandElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::reserved,
+                                    nsGkAtoms::_true, eCaseMatters);
       if (aOutReservedForChrome) {
-        // The caller wants to know if this is a reserved command
-        commandElt->GetAttribute(NS_LITERAL_STRING("reserved"), value);
-        *aOutReservedForChrome = value.EqualsLiteral("true");
+        *aOutReservedForChrome = isReserved;
       }
-    }
-
-    nsCOMPtr<EventTarget> piTarget;
-    nsCOMPtr<Element> element = GetElement();
-    if (element) {
-      piTarget = commandElt;
-    } else {
-      piTarget = mTarget;
     }
 
     if (!aExecute) {
-      return true;
+      if (handler->EventTypeEquals(aEventType)) {
+        return true;
+      }
+      // If the command is reserved and the event is keydown, check also if
+      // the handler is for keypress because if following keypress event is
+      // reserved, we shouldn't dispatch the event into web contents.
+      if (isReserved &&
+          aEventType == nsGkAtoms::keydown &&
+          handler->EventTypeEquals(nsGkAtoms::keypress)) {
+        return true;
+      }
+      // Otherwise, we've not found a handler for the event yet.
+      continue;
     }
 
-    rv = currHandler->ExecuteHandler(piTarget, aKeyEvent->AsEvent());
+    nsCOMPtr<EventTarget> target;
+    nsCOMPtr<Element> chromeHandlerElement = GetElement();
+    if (chromeHandlerElement) {
+      // XXX commandElement may be nullptr...
+      target = commandElement;
+    } else {
+      target = mTarget;
+    }
+
+    // XXX Do we execute only one handler even if the handler neither stops
+    //     propagation nor prevents default of the event?
+    nsresult rv = handler->ExecuteHandler(target, aKeyEvent->AsEvent());
     if (NS_SUCCEEDED(rv)) {
       return true;
     }
@@ -671,8 +667,8 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
     if (keyEvent && keyEvent->IsOS()) {
       IgnoreModifierState ignoreModifierState(aIgnoreModifierState);
       ignoreModifierState.mOS = true;
-      return WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler, aCharCode,
-                                    ignoreModifierState, aExecute);
+      return WalkHandlersAndExecute(aKeyEvent, aEventType, aFirstHandler,
+                                    aCharCode, ignoreModifierState, aExecute);
     }
   }
 #endif
@@ -715,6 +711,76 @@ nsXBLWindowKeyHandler::GetElement(bool* aIsDisabled)
                                         nsGkAtoms::_true, eCaseMatters);
   }
   return element.forget();
+}
+
+bool
+nsXBLWindowKeyHandler::GetElementForHandler(nsXBLPrototypeHandler* aHandler,
+                                            Element** aElementForHandler)
+{
+  MOZ_ASSERT(aElementForHandler);
+  *aElementForHandler = nullptr;
+
+  nsCOMPtr<nsIContent> keyContent = aHandler->GetHandlerElement();
+  if (!keyContent) {
+    return true; // XXX Even though no key element?
+  }
+
+  nsCOMPtr<Element> chromeHandlerElement = GetElement();
+  if (!chromeHandlerElement) {
+    NS_WARN_IF(!keyContent->IsInDoc());
+    nsCOMPtr<Element> keyElement = do_QueryInterface(keyContent);
+    keyElement.swap(*aElementForHandler);
+    return true;
+  }
+
+  // We are in a XUL doc.  Obtain our command attribute.
+  nsAutoString command;
+  keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
+  if (command.IsEmpty()) {
+    // There is no command element associated with the key element.
+    NS_WARN_IF(!keyContent->IsInDoc());
+    nsCOMPtr<Element> keyElement = do_QueryInterface(keyContent);
+    keyElement.swap(*aElementForHandler);
+    return true;
+  }
+
+  // XXX Shouldn't we check this earlier?
+  nsIDocument* doc = keyContent->GetCurrentDoc();
+  if (NS_WARN_IF(!doc)) {
+    return false;
+  }
+
+  nsCOMPtr<Element> commandElement =
+    do_QueryInterface(doc->GetElementById(command));
+  if (!commandElement) {
+    NS_ERROR("A XUL <key> is observing a command that doesn't exist. "
+             "Unable to execute key binding!");
+    return false;
+  }
+
+  commandElement.swap(*aElementForHandler);
+  return true;
+}
+
+bool
+nsXBLWindowKeyHandler::IsExecutableElement(Element* aElement) const
+{
+  if (!aElement) {
+    return false;
+  }
+
+  nsAutoString value;
+  aElement->GetAttribute(NS_LITERAL_STRING("disabled"), value);
+  if (value.EqualsLiteral("true")) {
+    return false;
+  }
+
+  aElement->GetAttribute(NS_LITERAL_STRING("oncommand"), value);
+  if (value.IsEmpty()) {
+    return false;
+  }
+
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

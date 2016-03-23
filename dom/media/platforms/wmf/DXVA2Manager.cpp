@@ -601,6 +601,13 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
 {
   HRESULT hr;
 
+  gfx::D3D11VideoCrashGuard crashGuard;
+  if (crashGuard.Crashed()) {
+    NS_WARNING("DXVA2D3D11 crash detected");
+    aFailureReason.AssignLiteral("DXVA2D3D11 crashes detected in the past");
+    return E_FAIL;
+  }
+
   mDevice = gfxWindowsPlatform::GetPlatform()->CreateD3D11DecoderDevice();
   if (!mDevice) {
     aFailureReason.AssignLiteral("Failed to create D3D11 device for decoder");

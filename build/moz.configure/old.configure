@@ -107,7 +107,7 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
     refresh = True
     if os.path.exists(old_configure):
         mtime = getmtime(old_configure)
-        aclocal = os.path.join(build_env['TOPSRCDIR'], 'build', 'autoconf',
+        aclocal = os.path.join(build_env.topsrcdir, 'build', 'autoconf',
                                '*.m4')
         for input in itertools.chain(
             (old_configure + '.in',

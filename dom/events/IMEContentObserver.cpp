@@ -756,8 +756,8 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   if (!mUpdatePreference.WantMouseButtonEventOnChar()) {
     return false;
   }
-  if (!aMouseEvent->mFlags.mIsTrusted ||
-      aMouseEvent->mFlags.mDefaultPrevented ||
+  if (!aMouseEvent->IsTrusted() ||
+      aMouseEvent->DefaultPrevented() ||
       !aMouseEvent->widget) {
     return false;
   }
@@ -823,7 +823,9 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   }
 
   bool consumed = (rv == NS_SUCCESS_EVENT_CONSUMED);
-  aMouseEvent->mFlags.mDefaultPrevented = consumed;
+  if (consumed) {
+    aMouseEvent->PreventDefault();
+  }
   return consumed;
 }
 

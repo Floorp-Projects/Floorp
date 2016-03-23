@@ -126,13 +126,15 @@ class ConfigureSandbox(dict):
         # Store several kind of information:
         # - value for each Option, as per returned by Option.get_value
         # - raw option (as per command line or environment) for each value
-        # - config set by each @depends function
         self._db = {}
 
         # Store options added with `imply_option`, and the reason they were
         # added (which can either have been given to `imply_option`, or
         # infered.
         self._implied_options = {}
+
+        # Store all results from _prepare_function
+        self._prepared_functions = set()
 
         self._helper = CommandLineHelper(environ, argv)
 
@@ -229,7 +231,6 @@ class ConfigureSandbox(dict):
             if not func.with_help:
                 raise ConfigureError("Missing @depends for `%s`: '--help'" %
                                      func.__name__)
-            self._seen.add(func)
             result = self._results[func]
             return result
         return arg
@@ -311,18 +312,17 @@ class ConfigureSandbox(dict):
                 arg = self._options[name]
                 if arg == self._help_option:
                     with_help = True
+                self._seen.add(arg)
+                assert arg in self._db or self._help
+                resolved_arg = self._db.get(arg)
             elif isinstance(arg, DummyFunction):
                 assert arg in self._depends
                 arg = self._depends[arg]
+                resolved_arg = self._results.get(arg)
             else:
                 raise TypeError(
                     "Cannot use object of type '%s' as argument to @depends"
                     % type(arg))
-            self._seen.add(arg)
-            resolved_arg = self._results.get(arg)
-            if resolved_arg is None:
-                assert arg in self._db or self._help
-                resolved_arg = self._db.get(arg)
             resolved_args.append(resolved_arg)
 
         def decorator(func):
@@ -351,7 +351,6 @@ class ConfigureSandbox(dict):
                 return dummy
 
             self._results[func] = func(*resolved_args)
-            self._db[func] = ReadOnlyDict(result)
 
             for option, reason in result.implied_options:
                 self._helper.add(option, 'implied')
@@ -429,7 +428,7 @@ class ConfigureSandbox(dict):
         '''
         if not inspect.isfunction(func):
             raise TypeError("Unexpected type: '%s'" % type(func))
-        if isinstance(func.func_globals, SandboxedGlobal):
+        if func in self._prepared_functions:
             return func, func.func_globals
 
         glob = SandboxedGlobal(func.func_globals)
@@ -445,4 +444,5 @@ class ConfigureSandbox(dict):
             func.func_defaults,
             func.func_closure
         ))
+        self._prepared_functions.add(func)
         return func, glob

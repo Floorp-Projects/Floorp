@@ -36,7 +36,7 @@ class URIParams;
 }// namespace ipc
 
 namespace layers {
-class PCompositorChild;
+class PCompositorBridgeChild;
 } // namespace layers
 
 namespace dom {
@@ -149,9 +149,9 @@ public:
   bool
   DeallocPAPZChild(PAPZChild* aActor) override;
 
-  PCompositorChild*
-  AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
-                        base::ProcessId aOtherProcess) override;
+  PCompositorBridgeChild*
+  AllocPCompositorBridgeChild(mozilla::ipc::Transport* aTransport,
+                              base::ProcessId aOtherProcess) override;
 
   PSharedBufferManagerChild*
   AllocPSharedBufferManagerChild(mozilla::ipc::Transport* aTransport,

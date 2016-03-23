@@ -428,10 +428,10 @@ ExtractErrorValues(JSContext* aCx, JS::Handle<JS::Value> aValue,
     else if(NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, obj, domException))) {
 
       nsAutoString filename;
-      domException->GetFilename(filename);
+      domException->GetFilename(aCx, filename);
       if (!filename.IsEmpty()) {
         CopyUTF16toUTF8(filename, aSourceSpecOut);
-        *aLineOut = domException->LineNumber();
+        *aLineOut = domException->LineNumber(aCx);
         *aColumnOut = domException->ColumnNumber();
       }
 

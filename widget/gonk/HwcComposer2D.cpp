@@ -26,7 +26,7 @@
 #include "LayerScope.h"
 #include "Units.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
@@ -200,8 +200,8 @@ HwcComposer2D::Invalidate()
     }
 
     MutexAutoLock lock(mLock);
-    if (mCompositorParent) {
-        mCompositorParent->ScheduleRenderOnCompositorThread();
+    if (mCompositorBridgeParent) {
+        mCompositorBridgeParent->ScheduleRenderOnCompositorThread();
     }
 }
 
@@ -239,10 +239,10 @@ HwcComposer2D::Hotplug(int aDisplay, int aConnected)
 }
 
 void
-HwcComposer2D::SetCompositorParent(CompositorParent* aCompositorParent)
+HwcComposer2D::SetCompositorBridgeParent(CompositorBridgeParent* aCompositorBridgeParent)
 {
     MutexAutoLock lock(mLock);
-    mCompositorParent = aCompositorParent;
+    mCompositorBridgeParent = aCompositorBridgeParent;
 }
 
 bool

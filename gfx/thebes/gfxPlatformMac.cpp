@@ -26,7 +26,7 @@
 #include <CoreVideo/CoreVideo.h>
 
 #include "nsCocoaFeatures.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "VsyncSource.h"
 
 using namespace mozilla;

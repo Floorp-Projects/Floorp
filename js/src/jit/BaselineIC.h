@@ -1284,10 +1284,8 @@ class ICSetElem_DenseOrUnboxedArrayAddImpl : public ICSetElem_DenseOrUnboxedArra
 
   public:
     void traceShapes(JSTracer* trc) {
-        for (size_t i = 0; i < NumShapes; i++) {
-            if (shapes_[i])
-                TraceEdge(trc, &shapes_[i], "baseline-setelem-denseadd-stub-shape");
-        }
+        for (size_t i = 0; i < NumShapes; i++)
+            TraceNullableEdge(trc, &shapes_[i], "baseline-setelem-denseadd-stub-shape");
     }
     Shape* shape(size_t i) const {
         MOZ_ASSERT(i < NumShapes);

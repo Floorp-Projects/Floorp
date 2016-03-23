@@ -45,8 +45,8 @@ addMessageListener("TalosContentProfiler:Response", (msg) => {
 });
 
 addEventListener("TalosPowersContentForceCCAndGC", (e) => {
-  let name = e.detail.name;
-  Cu.forceCC();
   Cu.forceGC();
-  sendSyncMessage("TalosPowersContent:ForceCCAndGC", { name });
+  Cu.forceCC();
+  Cu.forceShrinkingGC();
+  sendSyncMessage("TalosPowersContent:ForceCCAndGC");
 });

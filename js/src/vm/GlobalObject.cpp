@@ -25,6 +25,11 @@
 #include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
 #include "builtin/RegExp.h"
+
+#ifdef NIGHTLY_BUILD
+#include "builtin/Promise.h"
+#endif
+
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/SymbolObject.h"
 #include "builtin/TypedObject.h"

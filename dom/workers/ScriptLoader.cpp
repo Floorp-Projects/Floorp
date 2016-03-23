@@ -1639,15 +1639,17 @@ CacheScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aCont
                                     const uint8_t* aString)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::ReadingFromCache);
 
   mPump = nullptr;
 
   if (NS_FAILED(aStatus)) {
+    MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::ReadingFromCache ||
+               mLoadInfo.mCacheStatus == ScriptLoadInfo::Cancel);
     Fail(aStatus);
     return NS_OK;
   }
 
+  MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::ReadingFromCache);
   mLoadInfo.mCacheStatus = ScriptLoadInfo::Cached;
 
   MOZ_ASSERT(mPrincipalInfo);

@@ -2083,7 +2083,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
   NS_PRECONDITION(aSourceEvent, "Must have source event");
   NS_PRECONDITION(aStatus, "Null out param?");
 
-  WidgetMouseEvent event(aSourceEvent->mFlags.mIsTrusted, eMouseClick,
+  WidgetMouseEvent event(aSourceEvent->IsTrusted(), eMouseClick,
                          aSourceEvent->widget, WidgetMouseEvent::eReal);
   event.refPoint = aSourceEvent->refPoint;
   uint32_t clickCount = 1;
@@ -2878,7 +2878,7 @@ Element::CheckHandleEventForLinksPrecondition(EventChainVisitor& aVisitor,
                                               nsIURI** aURI) const
 {
   if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
-      (!aVisitor.mEvent->mFlags.mIsTrusted &&
+      (!aVisitor.mEvent->IsTrusted() &&
        (aVisitor.mEvent->mMessage != eMouseClick) &&
        (aVisitor.mEvent->mMessage != eKeyPress) &&
        (aVisitor.mEvent->mMessage != eLegacyDOMActivate)) ||
@@ -3379,7 +3379,8 @@ Element::Animate(const Nullable<ElementOrCSSPseudoElement>& aTarget,
 }
 
 void
-Element::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
+Element::GetAnimations(const AnimationFilter& filter,
+                       nsTArray<RefPtr<Animation>>& aAnimations)
 {
   nsIDocument* doc = GetComposedDoc();
   if (doc) {
@@ -3403,7 +3404,26 @@ Element::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
     return;
   }
 
-  GetAnimationsUnsorted(elem, pseudoType, aAnimations);
+  if (!filter.mSubtree ||
+      pseudoType == CSSPseudoElementType::before ||
+      pseudoType == CSSPseudoElementType::after) {
+    GetAnimationsUnsorted(elem, pseudoType, aAnimations);
+  } else {
+    for (nsIContent* node = this;
+         node;
+         node = node->GetNextNode(this)) {
+      if (!node->IsElement()) {
+        continue;
+      }
+      Element* element = node->AsElement();
+      Element::GetAnimationsUnsorted(element, CSSPseudoElementType::NotPseudo,
+                                     aAnimations);
+      Element::GetAnimationsUnsorted(element, CSSPseudoElementType::before,
+                                     aAnimations);
+      Element::GetAnimationsUnsorted(element, CSSPseudoElementType::after,
+                                     aAnimations);
+    }
+  }
   aAnimations.Sort(AnimationPtrComparator<RefPtr<Animation>>());
 }
 

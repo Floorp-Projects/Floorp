@@ -10,35 +10,44 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(28bfb2a2-5ea6-4738-918b-049dc4d51f0b)]
+[scriptable, builtinclass, uuid(28bfb2a2-5ea6-4738-918b-049dc4d51f0b)]
 interface nsIStackFrame : nsISupports
 {
     // see nsIProgrammingLanguage for list of language consts
     readonly attribute uint32_t                language;
     readonly attribute AUTF8String             languageName;
+    [implicit_jscontext]
     readonly attribute AString                 filename;
+    [implicit_jscontext]
     readonly attribute AString                 name;
     // Valid line numbers begin at '1'. '0' indicates unknown.
+    [implicit_jscontext]
     readonly attribute int32_t                 lineNumber;
+    [implicit_jscontext]
     readonly attribute int32_t                 columnNumber;
     readonly attribute AUTF8String             sourceLine;
+    [implicit_jscontext]
     readonly attribute AString                 asyncCause;
+    [implicit_jscontext]
     readonly attribute nsIStackFrame           asyncCaller;
+    [implicit_jscontext]
     readonly attribute nsIStackFrame           caller;
 
     // Returns a formatted stack string that looks like the sort of
     // string that would be returned by .stack on JS Error objects.
     // Only works on JS-language stack frames.
+    [implicit_jscontext]
     readonly attribute AString                 formattedStack;
 
     // Returns the underlying SavedFrame object for native JavaScript stacks,
     // or null if this is not a native JavaScript stack frame.
     readonly attribute jsval                   nativeSavedFrame;
 
+    [implicit_jscontext]
     AUTF8String toString();
 };
 
-[scriptable, uuid(4371b5bf-6845-487f-8d9d-3f1e4a9badd2)]
+[scriptable, builtinclass, uuid(4371b5bf-6845-487f-8d9d-3f1e4a9badd2)]
 interface nsIException : nsISupports
 {
     // A custom message set by the thrower.
@@ -56,8 +65,10 @@ interface nsIException : nsISupports
     // etc.
 
     // null indicates "no data"
+    [implicit_jscontext]
     readonly attribute AString                 filename;
     // Valid line numbers begin at '1'. '0' indicates unknown.
+    [implicit_jscontext]
     readonly attribute uint32_t                lineNumber;
     // Valid column numbers begin at 0.
     // We don't have an unambiguous indicator for unknown.
@@ -70,5 +81,6 @@ interface nsIException : nsISupports
     readonly attribute nsISupports             data;
 
     // A generic formatter - make it suitable to print, etc.
+    [implicit_jscontext]
     AUTF8String toString();
 };

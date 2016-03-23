@@ -139,6 +139,10 @@ static const double MAX_TIMEOUT_INTERVAL = 1800.0;
 # define SHARED_MEMORY_DEFAULT 0
 #endif
 
+#ifdef SPIDERMONKEY_PROMISE
+using JobQueue = GCVector<JSObject*, 0, SystemAllocPolicy>;
+#endif // SPIDERMONKEY_PROMISE
+
 // Per-runtime shell state.
 struct ShellRuntime
 {
@@ -151,6 +155,9 @@ struct ShellRuntime
     JS::PersistentRootedValue interruptFunc;
     bool lastWarningEnabled;
     JS::PersistentRootedValue lastWarning;
+#ifdef SPIDERMONKEY_PROMISE
+    JS::PersistentRooted<JobQueue> jobQueue;
+#endif // SPIDERMONKEY_PROMISE
 
     /*
      * Watchdog thread state.
@@ -617,6 +624,50 @@ RunModule(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
     }
 }
 
+#ifdef SPIDERMONKEY_PROMISE
+static bool
+ShellEnqueuePromiseJobCallback(JSContext* cx, JS::HandleObject job, void* data)
+{
+    ShellRuntime* sr = GetShellRuntime(cx);
+    MOZ_ASSERT(job);
+    return sr->jobQueue.append(job);
+}
+
+static bool
+DrainJobQueue(JSContext* cx)
+{
+    ShellRuntime* sr = GetShellRuntime(cx);
+    if (sr->quitting)
+        return true;
+    RootedObject job(cx);
+    JS::HandleValueArray args(JS::HandleValueArray::empty());
+    RootedValue rval(cx);
+    // Execute jobs in a loop until we've reached the end of the queue.
+    // Since executing a job can trigger enqueuing of additional jobs,
+    // it's crucial to re-check the queue length during each iteration.
+    for (size_t i = 0; i < sr->jobQueue.length(); i++) {
+        job = sr->jobQueue[i];
+        AutoCompartment ac(cx, job);
+        if (!JS::Call(cx, UndefinedHandleValue, job, args, &rval))
+            JS_ReportPendingException(cx);
+        sr->jobQueue[i].set(nullptr);
+    }
+    sr->jobQueue.clear();
+    return true;
+}
+
+static bool
+DrainJobQueue(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!DrainJobQueue(cx))
+        return false;
+    args.rval().setUndefined();
+    return true;
+}
+#endif // SPIDERMONKEY_PROMISE
+
 static bool
 EvalAndPrint(JSContext* cx, const char* bytes, size_t length,
              int lineno, bool compileOnly)
@@ -713,6 +764,11 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, bool compileOnly)
                   "for you.\nWarning: This nicety only happens in the JS shell.\n",
                   stderr);
         }
+
+#ifdef SPIDERMONKEY_PROMISE
+        DrainJobQueue(cx);
+#endif // SPIDERMONKEY_PROMISE
+
     } while (!hitEOF && !sr->quitting);
 
     if (gOutFile->isOpen())
@@ -863,6 +919,47 @@ CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setObject(*obj);
     return true;
 }
+
+#ifdef SPIDERMONKEY_PROMISE
+static bool
+AddPromiseReactions(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 3) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
+                             args.length() < 3 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
+                             "addPromiseReactions");
+        return false;
+    }
+
+    RootedObject promise(cx);
+    if (args[0].isObject())
+        promise = &args[0].toObject();
+
+    if (!promise || !JS::IsPromiseObject(promise)) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
+                             JSSMSG_INVALID_ARGS, "addPromiseReactions");
+        return false;
+    }
+
+    RootedObject onResolve(cx);
+    if (args[1].isObject())
+        onResolve = &args[1].toObject();
+
+    RootedObject onReject(cx);
+    if (args[2].isObject())
+        onReject = &args[2].toObject();
+
+    if (!onResolve || !onResolve->is<JSFunction>() || !onReject || !onReject->is<JSFunction>()) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
+                             JSSMSG_INVALID_ARGS, "addPromiseReactions");
+        return false;
+    }
+
+    return JS::AddPromiseReactions(cx, promise, onResolve, onReject);
+}
+#endif // SPIDERMONKEY_PROMISE
 
 static bool
 Options(JSContext* cx, unsigned argc, Value* vp)
@@ -2825,6 +2922,11 @@ WorkerMain(void* arg)
         return;
     }
 
+#ifdef SPIDERMONKEY_PROMISE
+    sr->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
+    JS::SetEnqueuePromiseJobCallback(rt, ShellEnqueuePromiseJobCallback);
+#endif // SPIDERMONKEY_PROMISE
+
     JS::SetLargeAllocationFailureCallback(rt, my_LargeAllocFailCallback, (void*)cx);
 
     do {
@@ -2850,6 +2952,11 @@ WorkerMain(void* arg)
     } while (0);
 
     JS::SetLargeAllocationFailureCallback(rt, nullptr, nullptr);
+
+#ifdef SPIDERMONKEY_PROMISE
+    JS::SetEnqueuePromiseJobCallback(rt, nullptr);
+    sr->jobQueue.reset();
+#endif // SPIDERMONKEY_PROMISE
 
     DestroyContext(cx, false);
 
@@ -5432,6 +5539,12 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "createMappedArrayBuffer(filename, [offset, [size]])",
 "  Create an array buffer that mmaps the given file."),
 
+#ifdef SPIDERMONKEY_PROMISE
+    JS_FN_HELP("addPromiseReactions", AddPromiseReactions, 3, 0,
+"addPromiseReactions(promise, onResolve, onReject)",
+"  Calls the JS::AddPromiseReactions JSAPI function with the given arguments."),
+#endif // SPIDERMONKEY_PROMISE
+
     JS_FN_HELP("getMaxArgs", GetMaxArgs, 0, 0,
 "getMaxArgs()",
 "  Return the maximum number of supported args for a call."),
@@ -5504,6 +5617,13 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "operation. Each element is the name of the function invoked, or the\n"
 "string 'eval:FILENAME' if the code was invoked by 'eval' or something\n"
 "similar.\n"),
+
+#ifdef SPIDERMONKEY_PROMISE
+    JS_FN_HELP("drainJobQueue", DrainJobQueue, 0, 0,
+"drainJobQueue()",
+"Take jobs from the shell's job queue in FIFO order and run them until the\n"
+"queue is empty.\n"),
+#endif // SPIDERMONKEY_PROMISE
 
     JS_FS_HELP_END
 };
@@ -6613,6 +6733,10 @@ ProcessArgs(JSContext* cx, OptionParser* op)
             return sr->exitCode;
     }
 
+#ifdef SPIDERMONKEY_PROMISE
+    DrainJobQueue(cx);
+#endif // SPIDERMONKEY_PROMISE
+
     if (op->getBoolOption('i'))
         Process(cx, nullptr, true);
 
@@ -7285,6 +7409,11 @@ main(int argc, char** argv, char** envp)
     if (!cx)
         return 1;
 
+#ifdef SPIDERMONKEY_PROMISE
+    sr->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
+    JS::SetEnqueuePromiseJobCallback(rt, ShellEnqueuePromiseJobCallback);
+#endif // SPIDERMONKEY_PROMISE
+
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
 
     JS::SetLargeAllocationFailureCallback(rt, my_LargeAllocFailCallback, (void*)cx);
@@ -7310,6 +7439,11 @@ main(int argc, char** argv, char** envp)
 #endif
 
     JS::SetLargeAllocationFailureCallback(rt, nullptr, nullptr);
+
+#ifdef SPIDERMONKEY_PROMISE
+    JS::SetEnqueuePromiseJobCallback(rt, nullptr);
+    sr->jobQueue.reset();
+#endif // SPIDERMONKEY_PROMISE
 
     DestroyContext(cx, true);
 

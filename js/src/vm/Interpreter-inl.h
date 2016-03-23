@@ -278,9 +278,13 @@ SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleObject s
     RootedId id(cx, NameToId(name));
     RootedValue receiver(cx, ObjectValue(*scope));
     if (scope->isUnqualifiedVarObj()) {
-        MOZ_ASSERT(!scope->getOps()->setProperty);
-        ok = NativeSetProperty(cx, scope.as<NativeObject>(), id, val, receiver, Unqualified,
-                               result);
+        RootedNativeObject varobj(cx);
+        if (scope->is<DebugScopeObject>())
+            varobj = &scope->as<DebugScopeObject>().scope().as<NativeObject>();
+        else
+            varobj = &scope->as<NativeObject>();
+        MOZ_ASSERT(!varobj->getOps()->setProperty);
+        ok = NativeSetProperty(cx, varobj, id, val, receiver, Unqualified, result);
     } else {
         ok = SetProperty(cx, scope, id, val, receiver, result);
     }
