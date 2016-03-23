@@ -1478,7 +1478,8 @@ TypeAnalyzer::adjustPhiInputs(MPhi* phi)
             if (!alloc().ensureBallast())
                 return false;
 
-            in = AlwaysBoxAt(alloc(), in->block()->lastIns(), in);
+            MBasicBlock* pred = phi->block()->getPredecessor(i);
+            in = AlwaysBoxAt(alloc(), pred->lastIns(), in);
         }
 
         phi->replaceOperand(i, in);
