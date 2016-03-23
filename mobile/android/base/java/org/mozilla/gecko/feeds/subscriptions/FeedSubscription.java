@@ -74,20 +74,26 @@ public class FeedSubscription {
     /**
      * Guesstimate if this response is a newer representation of the feed.
      */
-    public boolean isNewer(FeedFetcher.FeedResponse response) {
+    public boolean hasBeenUpdated(FeedFetcher.FeedResponse response) {
         final Item otherItem = response.feed.getLastItem();
+        final Item lastItem = response.feed.getLastItem();
 
-        if (lastItemTimestamp > otherItem.getTimestamp()) {
-            return true; // How to detect if this same item and it only has been updated?
+        if (lastItem.getTimestamp() > otherItem.getTimestamp()) {
+            // The timestamp is from a newer date so we expect that this item is a new item. But this
+            // could also mean that the timestamp of an already existing item has been updated. We
+            // accept that and assume that the content will have changed too in this case.
+            return true;
         }
 
-        if (lastItemTimestamp == otherItem.getTimestamp() &&
-                lastItemTimestamp != 0) {
+        if (lastItem.getTimestamp() == otherItem.getTimestamp() && lastItem.getTimestamp() != 0) {
+            // We have a timestamp that is not zero and this item has still the timestamp: It's very
+            // likely that we are looking at the same item. We assume this is not new content.
             return false;
         }
 
-        if (lastItemUrl == null || !lastItemUrl.equals(otherItem.getURL())) {
-            // URL changed: Probably a different item
+        if (!lastItem.getURL().equals(otherItem.getURL())) {
+            // The URL changed: It is very likely that this is a new item. At least it has been updated
+            // in a way that we just treat it as new content here.
             return true;
         }
 
