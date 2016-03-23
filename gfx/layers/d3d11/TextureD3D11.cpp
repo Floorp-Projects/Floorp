@@ -629,10 +629,6 @@ DXGITextureHostD3D11::OpenSharedHandle()
 RefPtr<ID3D11Device>
 DXGITextureHostD3D11::GetDevice()
 {
-  if (mFlags & TextureFlags::INVALID_COMPOSITOR) {
-    return nullptr;
-  }
-
   RefPtr<ID3D11Device> device;
   gfxWindowsPlatform::GetPlatform()->GetD3D11Device(&device);
   return device;
@@ -751,10 +747,6 @@ DXGIYCbCrTextureHostD3D11::OpenSharedHandle()
 RefPtr<ID3D11Device>
 DXGIYCbCrTextureHostD3D11::GetDevice()
 {
-  if (mFlags & TextureFlags::INVALID_COMPOSITOR) {
-    return nullptr;
-  }
-
   RefPtr<ID3D11Device> device;
   gfxWindowsPlatform::GetPlatform()->GetD3D11Device(&device);
   return device;

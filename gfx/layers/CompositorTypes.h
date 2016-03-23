@@ -63,12 +63,9 @@ enum class TextureFlags : uint32_t {
   IMMEDIATE_UPLOAD   = 1 << 10,
   // The texture is part of a component-alpha pair
   COMPONENT_ALPHA    = 1 << 11,
-  // The texture is being allocated for a compositor that no longer exists.
-  // This flag is only used in the parent process.
-  INVALID_COMPOSITOR = 1 << 12,
 
   // OR union of all valid bits
-  ALL_BITS           = (1 << 13) - 1,
+  ALL_BITS           = (1 << 12) - 1,
   // the default flags
   DEFAULT = NO_FLAGS
 };
