@@ -969,8 +969,20 @@ LayerTransactionParent::AllocPTextureParent(const SurfaceDescriptor& aSharedData
                                             const LayersBackend& aLayersBackend,
                                             const TextureFlags& aFlags)
 {
-  MOZ_ASSERT(aLayersBackend == mLayerManager->GetCompositor()->GetBackendType());
-  return TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, aFlags);
+  TextureFlags flags = aFlags;
+
+  if (mPendingCompositorUpdates) {
+    // The compositor was recreated, and we're receiving layers updates for a
+    // a layer manager that will soon be discarded or invalidated. We can't
+    // return null because this will mess up deserialization later and we'll
+    // kill the content process. Instead, we signal that the underlying
+    // TextureHost should not attempt to access the compositor.
+    flags |= TextureFlags::INVALID_COMPOSITOR;
+  } else if (aLayersBackend != mLayerManager->GetCompositor()->GetBackendType()) {
+    gfxDevCrash(LogReason::PAllocTextureBackendMismatch, "Texture backend is wrong");
+  }
+
+  return TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, flags);
 }
 
 bool
