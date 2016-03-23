@@ -294,7 +294,7 @@ public:
 
     JSContext* cx = mWorkerPrivate->GetJSContext();
 
-    if (!PreDispatch(cx, aGlobal)) {
+    if (NS_WARN_IF(!PreDispatch(cx, aGlobal))) {
       return false;
     }
 
@@ -314,7 +314,8 @@ public:
   }
 
 private:
-  NS_IMETHOD Run() override
+  NS_IMETHOD
+  Run() override
   {
     AssertIsOnMainThread();
 
@@ -471,8 +472,8 @@ protected:
     RefPtr<Blob> blob;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob)) &&
         blob->Impl()->MayBeClonedToOtherThreads()) {
-      if (!JS_WriteUint32Pair(aWriter, CONSOLE_TAG_BLOB,
-                              mClonedData.mBlobs.Length())) {
+      if (NS_WARN_IF(!JS_WriteUint32Pair(aWriter, CONSOLE_TAG_BLOB,
+                                         mClonedData.mBlobs.Length()))) {
         return false;
       }
 
@@ -482,11 +483,11 @@ protected:
 
     JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aObj));
     JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
-    if (!jsString) {
+    if (NS_WARN_IF(!jsString)) {
       return false;
     }
 
-    if (!JS_WriteString(aWriter, jsString)) {
+    if (NS_WARN_IF(!JS_WriteString(aWriter, jsString))) {
       return false;
     }
 
@@ -523,21 +524,22 @@ private:
 
     JS::Rooted<JSObject*> arguments(aCx,
       JS_NewArrayObject(aCx, mCallData->mCopiedArguments.Length()));
-    if (!arguments) {
+    if (NS_WARN_IF(!arguments)) {
       return false;
     }
 
     JS::Rooted<JS::Value> arg(aCx);
     for (uint32_t i = 0; i < mCallData->mCopiedArguments.Length(); ++i) {
       arg = mCallData->mCopiedArguments[i];
-      if (!JS_DefineElement(aCx, arguments, i, arg, JSPROP_ENUMERATE)) {
+      if (NS_WARN_IF(!JS_DefineElement(aCx, arguments, i, arg,
+                                       JSPROP_ENUMERATE))) {
         return false;
       }
     }
 
     JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*arguments));
 
-    if (!Write(aCx, value)) {
+    if (NS_WARN_IF(!Write(aCx, value))) {
       return false;
     }
 
@@ -659,7 +661,7 @@ private:
     ClearException ce(aCx);
 
     JS::Rooted<JSObject*> global(aCx, aGlobal);
-    if (!global) {
+    if (NS_WARN_IF(!global)) {
       return false;
     }
 
@@ -667,21 +669,22 @@ private:
 
     JS::Rooted<JSObject*> arguments(aCx,
       JS_NewArrayObject(aCx, mArguments.Length()));
-    if (!arguments) {
+    if (NS_WARN_IF(!arguments)) {
       return false;
     }
 
     JS::Rooted<JS::Value> arg(aCx);
     for (uint32_t i = 0; i < mArguments.Length(); ++i) {
       arg = mArguments[i];
-      if (!JS_DefineElement(aCx, arguments, i, arg, JSPROP_ENUMERATE)) {
+      if (NS_WARN_IF(!JS_DefineElement(aCx, arguments, i, arg,
+                                       JSPROP_ENUMERATE))) {
         return false;
       }
     }
 
     JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*arguments));
 
-    if (!Write(aCx, value)) {
+    if (NS_WARN_IF(!Write(aCx, value))) {
       return false;
     }
 
@@ -1272,13 +1275,13 @@ LazyStackGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
   nsIStackFrame* stack = reinterpret_cast<nsIStackFrame*>(v.toPrivate());
   nsTArray<ConsoleStackEntry> reifiedStack;
   nsresult rv = ReifyStack(aCx, stack, reifiedStack);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     Throw(aCx, rv);
     return false;
   }
 
   JS::Rooted<JS::Value> stackVal(aCx);
-  if (!ToJSValue(aCx, reifiedStack, &stackVal)) {
+  if (NS_WARN_IF(!ToJSValue(aCx, reifiedStack, &stackVal))) {
     return false;
   }
 
@@ -1499,11 +1502,11 @@ FlushOutput(JSContext* aCx, Sequence<JS::Value>& aSequence, nsString &aOutput)
     JS::Rooted<JSString*> str(aCx, JS_NewUCStringCopyN(aCx,
                                                        aOutput.get(),
                                                        aOutput.Length()));
-    if (!str) {
+    if (NS_WARN_IF(!str)) {
       return false;
     }
 
-    if (!aSequence.AppendElement(JS::StringValue(str), fallible)) {
+    if (NS_WARN_IF(!aSequence.AppendElement(JS::StringValue(str), fallible))) {
       return false;
     }
 
@@ -1533,12 +1536,12 @@ Console::ProcessArguments(JSContext* aCx,
 
   JS::Rooted<JS::Value> format(aCx, aData[0]);
   JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, format));
-  if (!jsString) {
+  if (NS_WARN_IF(!jsString)) {
     return false;
   }
 
   nsAutoJSString string;
-  if (!string.init(aCx, jsString)) {
+  if (NS_WARN_IF(!string.init(aCx, jsString))) {
     return false;
   }
 
@@ -1627,7 +1630,7 @@ Console::ProcessArguments(JSContext* aCx,
       case 'o':
       case 'O':
       {
-        if (!FlushOutput(aCx, aSequence, output)) {
+        if (NS_WARN_IF(!FlushOutput(aCx, aSequence, output))) {
           return false;
         }
 
@@ -1636,7 +1639,7 @@ Console::ProcessArguments(JSContext* aCx,
           v = aData[index++];
         }
 
-        if (!aSequence.AppendElement(v, fallible)) {
+        if (NS_WARN_IF(!aSequence.AppendElement(v, fallible))) {
           return false;
         }
 
@@ -1651,32 +1654,32 @@ Console::ProcessArguments(JSContext* aCx,
           aStyles.TruncateLength(aStyles.Length() - 1);
         }
 
-        if (!FlushOutput(aCx, aSequence, output)) {
+        if (NS_WARN_IF(!FlushOutput(aCx, aSequence, output))) {
           return false;
         }
 
         if (index < aData.Length()) {
           JS::Rooted<JS::Value> v(aCx, aData[index++]);
           JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, v));
-          if (!jsString) {
+          if (NS_WARN_IF(!jsString)) {
             return false;
           }
 
           int32_t diff = aSequence.Length() - aStyles.Length();
           if (diff > 0) {
             for (int32_t i = 0; i < diff; i++) {
-              if (!aStyles.AppendElement(NullString(), fallible)) {
+              if (NS_WARN_IF(!aStyles.AppendElement(NullString(), fallible))) {
                 return false;
               }
             }
           }
 
           nsAutoJSString string;
-          if (!string.init(aCx, jsString)) {
+          if (NS_WARN_IF(!string.init(aCx, jsString))) {
             return false;
           }
 
-          if (!aStyles.AppendElement(string, fallible)) {
+          if (NS_WARN_IF(!aStyles.AppendElement(string, fallible))) {
             return false;
           }
         }
@@ -1687,12 +1690,12 @@ Console::ProcessArguments(JSContext* aCx,
         if (index < aData.Length()) {
           JS::Rooted<JS::Value> value(aCx, aData[index++]);
           JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
-          if (!jsString) {
+          if (NS_WARN_IF(!jsString)) {
             return false;
           }
 
           nsAutoJSString v;
-          if (!v.init(aCx, jsString)) {
+          if (NS_WARN_IF(!v.init(aCx, jsString))) {
             return false;
           }
 
@@ -1706,7 +1709,7 @@ Console::ProcessArguments(JSContext* aCx,
           JS::Rooted<JS::Value> value(aCx, aData[index++]);
 
           int32_t v;
-          if (!JS::ToInt32(aCx, value, &v)) {
+          if (NS_WARN_IF(!JS::ToInt32(aCx, value, &v))) {
             return false;
           }
 
@@ -1721,7 +1724,7 @@ Console::ProcessArguments(JSContext* aCx,
           JS::Rooted<JS::Value> value(aCx, aData[index++]);
 
           double v;
-          if (!JS::ToNumber(aCx, value, &v)) {
+          if (NS_WARN_IF(!JS::ToNumber(aCx, value, &v))) {
             return false;
           }
 
@@ -1742,7 +1745,7 @@ Console::ProcessArguments(JSContext* aCx,
     }
   }
 
-  if (!FlushOutput(aCx, aSequence, output)) {
+  if (NS_WARN_IF(!FlushOutput(aCx, aSequence, output))) {
     return false;
   }
 
@@ -1753,7 +1756,7 @@ Console::ProcessArguments(JSContext* aCx,
 
   // The rest of the array, if unused by the format string.
   for (; index < aData.Length(); ++index) {
-    if (!aSequence.AppendElement(aData[index], fallible)) {
+    if (NS_WARN_IF(!aSequence.AppendElement(aData[index], fallible))) {
       return false;
     }
   }
@@ -1818,18 +1821,18 @@ Console::StartTimer(JSContext* aCx, const JS::Value& aName,
 
   *aTimerValue = 0;
 
-  if (mTimerRegistry.Count() >= MAX_PAGE_TIMERS) {
+  if (NS_WARN_IF(mTimerRegistry.Count() >= MAX_PAGE_TIMERS)) {
     return false;
   }
 
   JS::Rooted<JS::Value> name(aCx, aName);
   JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, name));
-  if (!jsString) {
+  if (NS_WARN_IF(!jsString)) {
     return false;
   }
 
   nsAutoJSString label;
-  if (!label.init(aCx, jsString)) {
+  if (NS_WARN_IF(!label.init(aCx, jsString))) {
     return false;
   }
 
@@ -1889,17 +1892,17 @@ Console::StopTimer(JSContext* aCx, const JS::Value& aName,
 
   JS::Rooted<JS::Value> name(aCx, aName);
   JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, name));
-  if (!jsString) {
+  if (NS_WARN_IF(!jsString)) {
     return false;
   }
 
   nsAutoJSString key;
-  if (!key.init(aCx, jsString)) {
+  if (NS_WARN_IF(!key.init(aCx, jsString))) {
     return false;
   }
 
   DOMHighResTimeStamp entry;
-  if (!mTimerRegistry.Get(key, &entry)) {
+  if (NS_WARN_IF(!mTimerRegistry.Get(key, &entry))) {
     return false;
   }
 
@@ -1939,7 +1942,7 @@ Console::ArgumentsToValueList(const Sequence<JS::Value>& aData,
   AssertIsOnMainThread();
 
   for (uint32_t i = 0; i < aData.Length(); ++i) {
-    if (!aSequence.AppendElement(aData[i], fallible)) {
+    if (NS_WARN_IF(!aSequence.AppendElement(aData[i], fallible))) {
       return false;
     }
   }
