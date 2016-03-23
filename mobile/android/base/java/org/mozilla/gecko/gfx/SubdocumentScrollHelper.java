@@ -86,7 +86,7 @@ class SubdocumentScrollHelper implements GeckoEventListener {
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error forming subwindow scroll message: ", e);
         }
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(MESSAGE_SCROLL, json.toString()));
+        GeckoAppShell.notifyObservers(MESSAGE_SCROLL, json.toString());
 
         mOverrideScrollAck = false;
         mOverrideScrollPending = false;

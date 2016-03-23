@@ -439,7 +439,7 @@ public abstract class GeckoApp
     public boolean onMenuOpened(int featureId, Menu menu) {
         // exit full-screen mode whenever the menu is opened
         if (mLayerView != null && mLayerView.isFullScreen()) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FullScreen:Exit", null));
+            GeckoAppShell.notifyObservers("FullScreen:Exit", null);
         }
 
         if (featureId == Window.FEATURE_OPTIONS_PANEL) {
@@ -496,8 +496,7 @@ public abstract class GeckoApp
                 }
             }
 
-            GeckoAppShell.sendEventToGeckoSync(
-                    GeckoEvent.createBroadcastEvent("Browser:Quit", res.toString()));
+            GeckoAppShell.notifyObservers("Browser:Quit", res.toString());
             doShutdown();
             return true;
         }
@@ -775,8 +774,7 @@ public abstract class GeckoApp
                     if (checkedItemPositions.get(i))
                         permissionsToClear.put(i);
 
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(
-                    "Permissions:Clear", permissionsToClear.toString()));
+                GeckoAppShell.notifyObservers("Permissions:Clear", permissionsToClear.toString());
             }
         });
 
@@ -1501,7 +1499,7 @@ public abstract class GeckoApp
                 }
             }
 
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Restore", restoreMessage));
+            GeckoAppShell.notifyObservers("Session:Restore", restoreMessage);
         }
 
         // External URLs should always be loaded regardless of whether Gecko is
@@ -1598,8 +1596,7 @@ public abstract class GeckoApp
 
             if (GeckoThread.isRunning()) {
                 geckoConnected();
-                GeckoAppShell.sendEventToGecko(
-                        GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
+                GeckoAppShell.notifyObservers("Viewport:Flush", null);
             }
         }
 
@@ -2334,7 +2331,7 @@ public abstract class GeckoApp
         }
 
         if (mLayerView != null && mLayerView.isFullScreen()) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FullScreen:Exit", null));
+            GeckoAppShell.notifyObservers("FullScreen:Exit", null);
             return;
         }
 
@@ -2469,7 +2466,7 @@ public abstract class GeckoApp
 
     @Override
     public void notifyCheckUpdateResult(String result) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Update:CheckResult", result));
+        GeckoAppShell.notifyObservers("Update:CheckResult", result);
     }
 
     private void geckoConnected() {
