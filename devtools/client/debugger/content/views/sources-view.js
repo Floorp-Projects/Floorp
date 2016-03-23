@@ -63,6 +63,7 @@ function SourcesView(controller, DebuggerView) {
   this._onConditionalPopupShown = this._onConditionalPopupShown.bind(this);
   this._onConditionalPopupHiding = this._onConditionalPopupHiding.bind(this);
   this._onConditionalTextboxKeyPress = this._onConditionalTextboxKeyPress.bind(this);
+  this._onEditorContextMenuOpen = this._onEditorContextMenuOpen.bind(this);
   this._onCopyUrlCommand = this._onCopyUrlCommand.bind(this);
   this._onNewTabCommand = this._onNewTabCommand.bind(this);
 }
@@ -134,6 +135,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       return (a in KNOWN_SOURCE_GROUPS) ? 1 : -1;
     };
 
+    this.DebuggerView.editor.on("popupOpen", this._onEditorContextMenuOpen);
+
     this._addCommands();
   },
 
@@ -151,6 +154,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._cbTextbox.removeEventListener("keypress", this._onConditionalTextboxKeyPress, false);
     this._copyUrlMenuItem.removeEventListener("command", this._onCopyUrlCommand, false);
     this._newTabMenuItem.removeEventListener("command", this._onNewTabCommand, false);
+    this.DebuggerView.editor.off("popupOpen", this._onEditorContextMenuOpen, false);
   },
 
   empty: function() {
@@ -1076,6 +1080,29 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   _onStopBlackBoxing: Task.async(function*() {
     this.actions.blackbox(getSelectedSource(this.getState()), false);
   }),
+
+  /**
+   * The source editor's contextmenu handler.
+   * - Toggles "Add Conditional Breakpoint" and "Edit Conditional Breakpoint" items
+   */
+  _onEditorContextMenuOpen: function(message, ev, popup) {
+    let actor = this.selectedValue;
+    let line = this.DebuggerView.editor.getCursor().line + 1;
+    let location = { actor, line };
+
+    let breakpoint = getBreakpoint(this.getState(), location);
+    let addConditionalBreakpointMenuItem = popup.querySelector("#se-dbg-cMenu-addConditionalBreakpoint");
+    let editConditionalBreakpointMenuItem = popup.querySelector("#se-dbg-cMenu-editConditionalBreakpoint");
+
+    if (breakpoint && !!breakpoint.condition) {
+      editConditionalBreakpointMenuItem.removeAttribute("hidden");
+      addConditionalBreakpointMenuItem.setAttribute("hidden", true);
+    }
+    else {
+      addConditionalBreakpointMenuItem.removeAttribute("hidden");
+      editConditionalBreakpointMenuItem.setAttribute("hidden", true);
+    }
+  },
 
   /**
    * The click listener for a breakpoint container.
