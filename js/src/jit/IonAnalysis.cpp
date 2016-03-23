@@ -2268,32 +2268,6 @@ CheckUse(const MDefinition* producer, const MUse* use, int32_t* usesBalance)
 #endif
     ++*usesBalance;
 }
-
-// To properly encode entry resume points, we have to ensure that all the
-// operands of the entry resume point are located before the safeInsertTop
-// location.
-static void
-AssertOperandsBeforeSafeInsertTop(MResumePoint* resume)
-{
-    MBasicBlock* block = resume->block();
-    if (block == block->graph().osrBlock())
-        return;
-    MInstruction* stop = block->safeInsertTop();
-    for (size_t i = 0, e = resume->numOperands(); i < e; ++i) {
-        MDefinition* def = resume->getOperand(i);
-        if (def->block() != block)
-            continue;
-        if (def->isPhi())
-            continue;
-
-        for (MInstructionIterator ins = block->begin(); true; ins++) {
-            if (*ins == def)
-                break;
-            MOZ_ASSERT(*ins != stop,
-                       "Resume point operand located after the safeInsertTop location");
-        }
-    }
-}
 #endif // DEBUG
 
 void
@@ -2331,14 +2305,13 @@ jit::AssertBasicGraphCoherency(MIRGraph& graph)
         for (size_t i = 0; i < block->numPredecessors(); i++)
             MOZ_ASSERT(CheckPredecessorImpliesSuccessor(*block, block->getPredecessor(i)));
 
-        if (MResumePoint* resume = block->entryResumePoint()) {
-            MOZ_ASSERT(!resume->instruction());
-            MOZ_ASSERT(resume->block() == *block);
-            AssertOperandsBeforeSafeInsertTop(resume);
+        if (block->entryResumePoint()) {
+            MOZ_ASSERT(!block->entryResumePoint()->instruction());
+            MOZ_ASSERT(block->entryResumePoint()->block() == *block);
         }
-        if (MResumePoint* resume = block->outerResumePoint()) {
-            MOZ_ASSERT(!resume->instruction());
-            MOZ_ASSERT(resume->block() == *block);
+        if (block->outerResumePoint()) {
+            MOZ_ASSERT(!block->outerResumePoint()->instruction());
+            MOZ_ASSERT(block->outerResumePoint()->block() == *block);
         }
         for (MResumePointIterator iter(block->resumePointsBegin()); iter != block->resumePointsEnd(); iter++) {
             // We cannot yet assert that is there is no instruction then this is

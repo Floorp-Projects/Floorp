@@ -912,9 +912,6 @@ MBasicBlock::moveBefore(MInstruction* at, MInstruction* ins)
 MInstruction*
 MBasicBlock::safeInsertTop(MDefinition* ins, IgnoreTop ignore)
 {
-    MOZ_ASSERT(graph().osrBlock() != this,
-               "We are not supposed to add any instruction in OSR blocks.");
-
     // Beta nodes and interrupt checks are required to be located at the
     // beginnings of basic blocks, so we must insert new instructions after any
     // such instructions.
@@ -924,7 +921,6 @@ MBasicBlock::safeInsertTop(MDefinition* ins, IgnoreTop ignore)
     while (insertIter->isBeta() ||
            insertIter->isInterruptCheck() ||
            insertIter->isConstant() ||
-           insertIter->isParameter() ||
            (!(ignore & IgnoreRecover) && insertIter->isRecoveredOnBailout()))
     {
         insertIter++;
