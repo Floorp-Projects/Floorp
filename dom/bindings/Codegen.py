@@ -607,10 +607,10 @@ class CGPrototypeJSClass(CGThing):
                 JS_NULL_OBJECT_OPS
               },
               ${type},
-              ${hooks},
-              "[object ${name}Prototype]",
               ${prototypeID},
               ${depth},
+              ${hooks},
+              "[object ${name}Prototype]",
               ${protoGetter}
             };
             """,
@@ -716,10 +716,10 @@ class CGInterfaceObjectJSClass(CGThing):
                 }
               },
               eInterface,
-              ${hooks},
-              "function ${name}() {\\n    [native code]\\n}",
               ${prototypeID},
               ${depth},
+              ${hooks},
+              "function ${name}() {\\n    [native code]\\n}",
               ${protoGetter}
             };
             """,
@@ -12093,7 +12093,7 @@ class CGNamespacedEnum(CGThing):
         entries = ['  ' + e for e in entries]
 
         # Build the enum body.
-        enumstr = comment + 'enum %s\n{\n%s\n};\n' % (enumName, ',\n'.join(entries))
+        enumstr = comment + 'enum %s : uint16_t\n{\n%s\n};\n' % (enumName, ',\n'.join(entries))
         curr = CGGeneric(declare=enumstr)
 
         # Add some whitespace padding.
