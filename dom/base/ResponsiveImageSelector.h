@@ -102,7 +102,7 @@ private:
   //
   // aContext is the presContext to use for current viewport sizing, null will
   // use the associated content's context.
-  bool ComputeFinalWidthForCurrentViewport(int32_t *aWidth);
+  bool ComputeFinalWidthForCurrentViewport(double* aWidth);
 
   nsCOMPtr<nsINode> mOwnerNode;
   // The cached URL for default candidate.
@@ -152,7 +152,7 @@ public:
   double Density(ResponsiveImageSelector *aSelector) const;
   // If the width is already known. Useful when iterating over candidates to
   // avoid having each call re-compute the width.
-  double Density(int32_t aMatchingWidth) const;
+  double Density(double aMatchingWidth) const;
 
   // If this selector is computed from the selector's matching width.
   bool IsComputedFromWidth() const;

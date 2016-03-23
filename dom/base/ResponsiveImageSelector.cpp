@@ -369,7 +369,7 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
 
   // If the list contains computed width candidates, compute the current
   // effective image width.
-  int32_t computedWidth = -1;
+  double computedWidth = -1;
   for (int i = 0; i < numCandidates; i++) {
     if (mCandidates[i].IsComputedFromWidth()) {
       DebugOnly<bool> computeResult = \
@@ -421,7 +421,7 @@ ResponsiveImageSelector::GetSelectedCandidateIndex()
 }
 
 bool
-ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(int32_t *aWidth)
+ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(double *aWidth)
 {
   unsigned int numSizes = mSizeQueries.Length();
   nsIDocument* doc = Document();
@@ -455,7 +455,7 @@ ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(int32_t *aWidth)
   }
 
   MOZ_ASSERT(effectiveWidth >= 0);
-  *aWidth = nsPresContext::AppUnitsToIntCSSPixels(std::max(effectiveWidth, 0));
+  *aWidth = nsPresContext::AppUnitsToDoubleCSSPixels(std::max(effectiveWidth, 0));
   return true;
 }
 
@@ -731,7 +731,7 @@ double
 ResponsiveImageCandidate::Density(ResponsiveImageSelector *aSelector) const
 {
   if (mType == eCandidateType_ComputedFromWidth) {
-    int32_t width;
+    double width;
     if (!aSelector->ComputeFinalWidthForCurrentViewport(&width)) {
       return 1.0;
     }
@@ -745,7 +745,7 @@ ResponsiveImageCandidate::Density(ResponsiveImageSelector *aSelector) const
 }
 
 double
-ResponsiveImageCandidate::Density(int32_t aMatchingWidth) const
+ResponsiveImageCandidate::Density(double aMatchingWidth) const
 {
   if (mType == eCandidateType_Invalid) {
     MOZ_ASSERT(false, "Getting density for uninitialized candidate");
@@ -763,7 +763,7 @@ ResponsiveImageCandidate::Density(int32_t aMatchingWidth) const
       MOZ_ASSERT(false, "Don't expect to have a negative matching width at this point");
       return 1.0;
     }
-    double density = double(mValue.mWidth) / double(aMatchingWidth);
+    double density = double(mValue.mWidth) / aMatchingWidth;
     MOZ_ASSERT(density > 0.0);
     return density;
   }
