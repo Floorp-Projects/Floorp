@@ -13,6 +13,9 @@ const kBrowserSharingNotificationId = "loop-sharing-notification";
 const CURSOR_MIN_DELTA = 3;
 const CURSOR_MIN_INTERVAL = 100;
 const CURSOR_CLICK_DELAY = 1000;
+// Due to bug 1051238 frame scripts are cached forever, so we can't update them
+// as a restartless add-on. The Math.random() is the work around for this.
+const FRAME_SCRIPT = "chrome://loop/content/modules/tabFrame.js?" + Math.random();
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -57,6 +60,7 @@ var WindowListener = {
     let FileReader = window.FileReader;
     let menuItem = null;
     let isSlideshowOpen = false;
+    let titleChangedListener = null;
 
     // the "exported" symbols
     var LoopUI = {
@@ -113,6 +117,10 @@ var WindowListener = {
         }
 
         return this._constants;
+      },
+
+      get mm() {
+        return window.getGroupMessageManager("browsers");
       },
 
       /**
@@ -312,6 +320,10 @@ var WindowListener = {
         if (window == Services.appShell.hiddenDOMWindow) {
           return;
         }
+
+        // Load the frame script into any tab, plus any that get created in the
+        // future.
+        this.mm.loadFrameScript(FRAME_SCRIPT, true);
 
         // Cleanup when the window unloads.
         window.addEventListener("unload", () => {
@@ -522,9 +534,13 @@ var WindowListener = {
           gBrowser.tabContainer.addEventListener("TabSelect", this);
           this._listeningToTabSelect = true;
 
+          titleChangedListener = this.handleDOMTitleChanged.bind(this);
+
           // Watch for title changes as opposed to location changes as more
           // metadata about the page is available when this event fires.
-          gBrowser.addEventListener("DOMTitleChanged", this);
+          this.mm.addMessageListener("loop@mozilla.org:DOMTitleChanged",
+            titleChangedListener);
+
           this._browserSharePaused = false;
 
           // Add this event to the parent gBrowser to avoid adding and removing
@@ -550,7 +566,12 @@ var WindowListener = {
 
         this._hideBrowserSharingInfoBar();
         gBrowser.tabContainer.removeEventListener("TabSelect", this);
-        gBrowser.removeEventListener("DOMTitleChanged", this);
+
+        if (titleChangedListener) {
+          this.mm.removeMessageListener("loop@mozilla.org:DOMTitleChanged",
+            titleChangedListener);
+          titleChangedListener = null;
+        }
 
         // Remove shared pointers related events
         gBrowser.removeEventListener("mousemove", this);
@@ -789,14 +810,26 @@ var WindowListener = {
       },
 
       /**
+       * Handles events from the frame script.
+       *
+       * @param {Object} message The message received from the frame script.
+       */
+      handleDOMTitleChanged: function(message) {
+        if (!this._listeningToTabSelect || this._browserSharePaused) {
+          return;
+        }
+
+        if (gBrowser.selectedBrowser == message.target) {
+          // Get the new title of the shared tab
+          this._notifyBrowserSwitch();
+        }
+      },
+
+      /**
        * Handles events from gBrowser.
        */
       handleEvent: function(event) {
         switch (event.type) {
-          case "DOMTitleChanged":
-            // Get the new title of the shared tab
-            this._notifyBrowserSwitch();
-            break;
           case "TabSelect":
             let wasVisible = false;
             // Hide the infobar from the previous tab.
@@ -938,6 +971,10 @@ var WindowListener = {
   tearDownBrowserUI: function(window) {
     if (window.LoopUI) {
       window.LoopUI.removeMenuItem();
+
+      // This stops the frame script being loaded to new tabs, but doesn't
+      // remove it from existing tabs (there's no way to do that).
+      window.LoopUI.mm.removeDelayedFrameScript(FRAME_SCRIPT);
 
       // XXX Bug 1229352 - Add in tear-down of the panel.
     }
