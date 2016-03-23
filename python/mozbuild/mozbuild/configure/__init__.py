@@ -117,6 +117,8 @@ class ConfigureSandbox(dict):
 
         self._paths = []
         self._templates = set()
+        # Store the real function and its dependencies, behind each
+        # DummyFunction generated from @depends.
         self._depends = {}
         self._seen = set()
 
@@ -226,10 +228,10 @@ class ConfigureSandbox(dict):
     def _resolve(self, arg, need_help_dependency=True):
         if isinstance(arg, DummyFunction):
             assert arg in self._depends
-            func = self._depends[arg]
+            func, deps = self._depends[arg]
             assert not inspect.isgeneratorfunction(func)
             assert func in self._results
-            if need_help_dependency and not func.with_help:
+            if need_help_dependency and self._help_option not in deps:
                 raise ConfigureError("Missing @depends for `%s`: '--help'" %
                                      func.__name__)
             result = self._results[func]
@@ -298,8 +300,8 @@ class ConfigureSandbox(dict):
         if not args:
             raise ConfigureError('@depends needs at least one argument')
 
-        with_help = False
         resolved_args = []
+        dependencies = []
         for arg in args:
             if isinstance(arg, types.StringTypes):
                 prefix, name, values = Option.split_option(arg)
@@ -313,17 +315,20 @@ class ConfigureSandbox(dict):
                 if arg == self._help_option:
                     with_help = True
                 self._seen.add(arg)
+                dependencies.append(arg)
                 assert arg in self._option_values or self._help
                 resolved_arg = self._option_values.get(arg)
             elif isinstance(arg, DummyFunction):
                 assert arg in self._depends
-                arg = self._depends[arg]
+                dependencies.append(arg)
+                arg, _ = self._depends[arg]
                 resolved_arg = self._results.get(arg)
             else:
                 raise TypeError(
                     "Cannot use object of type '%s' as argument to @depends"
                     % type(arg))
             resolved_args.append(resolved_arg)
+        dependencies = tuple(dependencies)
 
         def decorator(func):
             if inspect.isgeneratorfunction(func):
@@ -335,16 +340,17 @@ class ConfigureSandbox(dict):
                 imply_option=result.imply_option,
             )
             dummy = wraps(func)(DummyFunction())
-            self._depends[dummy] = func
-            func.with_help = with_help
+            self._depends[dummy] = func, dependencies
+            with_help = self._help_option in dependencies
             if with_help:
                 for arg in args:
-                    if (isinstance(arg, DummyFunction) and
-                            not self._depends[arg].with_help):
-                        raise ConfigureError(
-                            "`%s` depends on '--help' and `%s`. "
-                            "`%s` must depend on '--help'"
-                            % (func.__name__, arg.__name__, arg.__name__))
+                    if isinstance(arg, DummyFunction):
+                        _, deps = self._depends[arg]
+                        if self._help_option not in deps:
+                            raise ConfigureError(
+                                "`%s` depends on '--help' and `%s`. "
+                                "`%s` must depend on '--help'"
+                                % (func.__name__, arg.__name__, arg.__name__))
 
             if self._help and not with_help:
                 return dummy
@@ -355,16 +361,14 @@ class ConfigureSandbox(dict):
                 self._helper.add(option, 'implied')
                 if not reason:
                     deps = []
-                    for name, value in zip(args, resolved_args):
-                        if not isinstance(value, OptionValue):
+                    for arg in dependencies:
+                        if not isinstance(arg, Option):
                             raise ConfigureError(
                                 "Cannot infer what implied '%s'" % option)
-                        if name == '--help':
+                        if arg == self._help_option:
                             continue
-                        prefix, opt, values = Option.split_option(name)
-                        deps.append(value.format(
-                            self._raw_options.get(self._options[opt])
-                            or name))
+                        deps.append(self._raw_options.get(arg) or
+                                    self.arg.option)
                     if len(deps) != 1:
                         raise ConfigureError(
                             "Cannot infer what implied '%s'" % option)
