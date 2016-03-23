@@ -85,7 +85,7 @@ public:
   }
 
   Console*
-  GetConsole();
+  GetConsole(ErrorResult& aRv);
 
   already_AddRefed<WorkerLocation>
   Location();
