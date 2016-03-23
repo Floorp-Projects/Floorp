@@ -59,11 +59,11 @@ option('--enable-dmd', env='MOZ_DMD',
 @depends('--enable-dmd')
 def dmd(value):
     if value:
-        add_old_configure_assignment('MOZ_DMD', True)
         return True
 
 set_config('MOZ_DMD', dmd)
 set_define('MOZ_DMD', dmd)
+add_old_configure_assignment('MOZ_DMD', dmd)
 imply_option('--enable-profiling', dmd)
 
 # Javascript engine
@@ -138,11 +138,10 @@ def toolkit(toolkit):
         widget_toolkit = 'gtk2'
     else:
         widget_toolkit = toolkit.replace('cairo-', '')
-    add_old_configure_assignment('MOZ_WIDGET_TOOLKIT', widget_toolkit)
-
     return widget_toolkit
 
 set_config('MOZ_WIDGET_TOOLKIT', toolkit)
+add_old_configure_assignment('MOZ_WIDGET_TOOLKIT', toolkit)
 
 @depends(toolkit)
 def toolkit_gtk(toolkit):
@@ -173,15 +172,13 @@ def x11(value, toolkit):
         error('--with-x is only valid with --enable-default-toolkit={%s}'
               % ','.join(x11_toolkits))
 
-    if value and toolkit in x11_toolkits:
-        add_old_configure_assignment('MOZ_X11', True)
-
     return True if value and toolkit in x11_toolkits else None
 
 set_config('MOZ_ENABLE_XREMOTE', x11)
 set_define('MOZ_ENABLE_XREMOTE', x11)
 set_config('MOZ_X11', x11)
 set_define('MOZ_X11', x11)
+add_old_configure_assignment('MOZ_X11', x11)
 
 # GL Provider
 # ==============================================================
@@ -260,7 +257,9 @@ option(env='USE_FC_FREETYPE',
 def fc_freetype(value, toolkit):
     if value or (toolkit in ('gtk2', 'gtk3', 'qt') and
                  value.origin == 'default'):
-        add_old_configure_assignment('USE_FC_FREETYPE', True)
+        return True
+
+add_old_configure_assignment('USE_FC_FREETYPE', fc_freetype)
 
 
 # Apple platform decoder support
@@ -268,11 +267,11 @@ def fc_freetype(value, toolkit):
 @depends(toolkit)
 def applemedia(toolkit):
     if toolkit in ('cocoa', 'uikit'):
-        add_old_configure_assignment('MOZ_APPLEMEDIA', True)
         return True
 
 set_config('MOZ_APPLEMEDIA', applemedia)
 set_define('MOZ_APPLEMEDIA', applemedia)
+add_old_configure_assignment('MOZ_APPLEMEDIA', applemedia)
 
 # Windows Media Foundation support
 # ==============================================================
@@ -325,11 +324,11 @@ def fmp4(value, target, wmf, applemedia):
         # target.os == 'Android' includes all B2G versions
         enabled = wmf or applemedia or target.os == 'Android'
     if enabled:
-        add_old_configure_assignment('MOZ_FMP4', True)
         return True
 
 set_config('MOZ_FMP4', fmp4)
 set_define('MOZ_FMP4', fmp4)
+add_old_configure_assignment('MOZ_FMP4', fmp4)
 
 # EME Support
 # ==============================================================
