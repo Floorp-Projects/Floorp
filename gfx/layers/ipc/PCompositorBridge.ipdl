@@ -100,10 +100,6 @@ parent:
    */
   async RemotePluginsReady();
 
-  // Confirmation that the child has invalidated all its layers, and will not
-  // request layers against an old compositor.
-  async AcknowledgeCompositorUpdate(uint64_t id);
-
   // Child sends the parent a request for fill ratio numbers.
   async RequestOverfill();
 
