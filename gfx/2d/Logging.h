@@ -133,7 +133,6 @@ enum class LogReason : int {
   IncompatibleBasicTexturedEffect,
   InvalidFont,
   AsyncTransactionTimeout,
-  PAllocTextureBackendMismatch,
   // End
   MustBeLessThanThis = 101,
 };
