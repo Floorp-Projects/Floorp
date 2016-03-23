@@ -313,6 +313,8 @@ SapiService::RegisterVoices()
     mVoices.Put(uri, voiceToken);
   }
 
+  registry->NotifyVoicesChanged();
+
   return true;
 }
 
