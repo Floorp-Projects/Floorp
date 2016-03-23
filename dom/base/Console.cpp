@@ -117,6 +117,8 @@ public:
     mMethodName = aName;
     mMethodString = aString;
 
+    mGlobal = JS::CurrentGlobalOrNull(aCx);
+
     for (uint32_t i = 0; i < aArguments.Length(); ++i) {
       if (NS_WARN_IF(!mCopiedArguments.AppendElement(aArguments[i]))) {
         aConsole->UnstoreCallData(this);
@@ -171,6 +173,8 @@ public:
     for (uint32_t i = 0; i < mCopiedArguments.Length(); ++i) {
       NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCopiedArguments[i])
     }
+
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mGlobal);
   }
 
   void
@@ -179,6 +183,8 @@ public:
     MOZ_ASSERT(mOwningThread);
     MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
   }
+
+  JS::Heap<JSObject*> mGlobal;
 
   // This is a copy of the arguments we received from the DOM bindings. Console
   // object traces them because this ConsoleCallData calls
@@ -317,9 +323,9 @@ public:
   }
 
   bool
-  Dispatch(JS::Handle<JSObject*> aGlobal)
+  Dispatch(JSContext* aCx)
   {
-    if (!DispatchInternal(aGlobal)) {
+    if (!DispatchInternal(aCx)) {
       ReleaseData();
       return false;
     }
@@ -358,13 +364,11 @@ private:
   }
 
   bool
-  DispatchInternal(JS::Handle<JSObject*> aGlobal)
+  DispatchInternal(JSContext* aCx)
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
-    JSContext* cx = mWorkerPrivate->GetJSContext();
-
-    if (NS_WARN_IF(!PreDispatch(cx, aGlobal))) {
+    if (NS_WARN_IF(!PreDispatch(aCx))) {
       return false;
     }
 
@@ -471,7 +475,7 @@ private:
 protected:
   // This method is called in the owning thread of the Console object.
   virtual bool
-  PreDispatch(JSContext* aCx, JS::Handle<JSObject*> aGlobal) = 0;
+  PreDispatch(JSContext* aCx) = 0;
 
   // This method is called in the main-thread.
   virtual void
@@ -567,13 +571,12 @@ private:
   }
 
   bool
-  PreDispatch(JSContext* aCx, JS::Handle<JSObject*> aGlobal) override
+  PreDispatch(JSContext* aCx) override
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
     mCallData->AssertIsOnOwningThread();
 
     ClearException ce(aCx);
-    JSAutoCompartment ac(aCx, aGlobal);
 
     JS::Rooted<JSObject*> arguments(aCx,
       JS_NewArrayObject(aCx, mCallData->mCopiedArguments.Length()));
@@ -694,9 +697,7 @@ private:
 
     MOZ_ASSERT(values.Length() == length);
 
-    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-
-    mConsole->ProcessCallData(mCallData, global, values);
+    mConsole->ProcessCallData(aCx, mCallData, values);
   }
 
   RefPtr<ConsoleCallData> mCallData;
@@ -717,16 +718,9 @@ public:
 
 private:
   bool
-  PreDispatch(JSContext* aCx, JS::Handle<JSObject*> aGlobal) override
+  PreDispatch(JSContext* aCx) override
   {
     ClearException ce(aCx);
-
-    JS::Rooted<JSObject*> global(aCx, aGlobal);
-    if (NS_WARN_IF(!global)) {
-      return false;
-    }
-
-    JSAutoCompartment ac(aCx, global);
 
     JS::Rooted<JSObject*> arguments(aCx,
       JS_NewArrayObject(aCx, mArguments.Length()));
@@ -1101,7 +1095,7 @@ Console::ProfileMethod(JSContext* aCx, const nsAString& aAction,
       new ConsoleProfileRunnable(this, aAction, aData);
 
     JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-    runnable->Dispatch(global);
+    runnable->Dispatch(aCx);
     return;
   }
 
@@ -1373,11 +1367,9 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
                                             callData->mCountLabel);
   }
 
-  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-
   if (NS_IsMainThread()) {
     callData->SetIDs(mOuterID, mInnerID);
-    ProcessCallData(callData, global, aData);
+    ProcessCallData(aCx, callData, aData);
 
     // Just because we don't want to expose
     // retrieveConsoleEvents/setConsoleEventHandler to main-thread, we can
@@ -1387,11 +1379,11 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
   }
 
   // We do this only in workers for now.
-  NotifyHandler(aCx, global, aData, callData);
+  NotifyHandler(aCx, aData, callData);
 
   RefPtr<ConsoleCallDataRunnable> runnable =
     new ConsoleCallDataRunnable(this, callData);
-  NS_WARN_IF(!runnable->Dispatch(global));
+  NS_WARN_IF(!runnable->Dispatch(aCx));
 }
 
 // We store information to lazily compute the stack in the reserved slots of
@@ -1440,20 +1432,29 @@ LazyStackGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 }
 
 void
-Console::ProcessCallData(ConsoleCallData* aData, JS::Handle<JSObject*> aGlobal,
+Console::ProcessCallData(JSContext* aCx, ConsoleCallData* aData,
                          const Sequence<JS::Value>& aArguments)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aData);
 
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(aGlobal)) {
-    return;
-  }
-  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> eventValue(aCx);
 
-  JS::Rooted<JS::Value> eventValue(cx);
-  if (NS_WARN_IF(!PopulateEvent(cx, aGlobal, aArguments, &eventValue, aData))) {
+  // We want to create a console event object and pass it to our
+  // nsIConsoleAPIStorage implementation.  We want to define some accessor
+  // properties on this object, and those will need to keep an nsIStackFrame
+  // alive.  But nsIStackFrame cannot be wrapped in an untrusted scope.  And
+  // further, passing untrusted objects to system code is likely to run afoul of
+  // Object Xrays.  So we want to wrap in a system-principal scope here.  But
+  // which one?  We could cheat and try to get the underlying JSObject* of
+  // mStorage, but that's a bit fragile.  Instead, we just use the junk scope,
+  // with explicit permission from the XPConnect module owner.  If you're
+  // tempted to do that anywhere else, talk to said module owner first.
+
+  // aCx and aArguments are in the same compartment.
+  if (NS_WARN_IF(!PopulateConsoleObjectInTheTargetScope(aCx, aArguments,
+                                                        xpc::PrivilegedJunkScope(),
+                                                        &eventValue, aData))) {
     return;
   }
 
@@ -1484,14 +1485,15 @@ Console::ProcessCallData(ConsoleCallData* aData, JS::Handle<JSObject*> aGlobal,
 }
 
 bool
-Console::PopulateEvent(JSContext* aCx,
-                       JS::Handle<JSObject*> aGlobal,
-                       const Sequence<JS::Value>& aArguments,
-                       JS::MutableHandle<JS::Value> aEventValue,
-                       ConsoleCallData* aData) const
+Console::PopulateConsoleObjectInTheTargetScope(JSContext* aCx,
+                                               const Sequence<JS::Value>& aArguments,
+                                               JSObject* aTargetScope,
+                                               JS::MutableHandle<JS::Value> aEventValue,
+                                               ConsoleCallData* aData) const
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aData);
+  MOZ_ASSERT(aTargetScope);
 
   ConsoleStackEntry frame;
   if (aData->mTopStackFrame) {
@@ -1500,8 +1502,6 @@ Console::PopulateEvent(JSContext* aCx,
 
   ClearException ce(aCx);
   RootedDictionary<ConsoleEvent> event(aCx);
-
-  JSAutoCompartment ac(aCx, aGlobal);
 
   event.mID.Construct();
   event.mInnerID.Construct();
@@ -1590,17 +1590,7 @@ Console::PopulateEvent(JSContext* aCx,
                                         aData->mCountValue);
   }
 
-  // We want to create a console event object and pass it to our
-  // nsIConsoleAPIStorage implementation.  We want to define some accessor
-  // properties on this object, and those will need to keep an nsIStackFrame
-  // alive.  But nsIStackFrame cannot be wrapped in an untrusted scope.  And
-  // further, passing untrusted objects to system code is likely to run afoul of
-  // Object Xrays.  So we want to wrap in a system-principal scope here.  But
-  // which one?  We could cheat and try to get the underlying JSObject* of
-  // mStorage, but that's a bit fragile.  Instead, we just use the junk scope,
-  // with explicit permission from the XPConnect module owner.  If you're
-  // tempted to do that anywhere else, talk to said module owner first.
-  JSAutoCompartment ac2(aCx, xpc::PrivilegedJunkScope());
+  JSAutoCompartment ac2(aCx, aTargetScope);
 
   if (NS_WARN_IF(!ToJSValue(aCx, event, aEventValue))) {
     return false;
@@ -2262,8 +2252,7 @@ Console::ReleaseCallData(ConsoleCallData* aCallData)
 }
 
 void
-Console::NotifyHandler(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
-                       const Sequence<JS::Value>& aArguments,
+Console::NotifyHandler(JSContext* aCx, const Sequence<JS::Value>& aArguments,
                        ConsoleCallData* aCallData) const
 {
   AssertIsOnOwningThread();
@@ -2274,11 +2263,14 @@ Console::NotifyHandler(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
     return;
   }
 
-  JSAutoCompartment ac(aCx, mConsoleEventNotifier->Callable());
-
   JS::Rooted<JS::Value> value(aCx);
-  if (NS_WARN_IF(!PopulateEvent(aCx, mConsoleEventNotifier->Callable(),
-                                aArguments, &value, aCallData))) {
+
+  // aCx and aArguments are in the same compartment because this method is
+  // called directly when a Console.something() runs.
+  // mConsoleEventNotifier->Callable() is the scope where value will be sent to.
+  if (NS_WARN_IF(!PopulateConsoleObjectInTheTargetScope(aCx, aArguments,
+                                                        mConsoleEventNotifier->Callable(),
+                                                        &value, aCallData))) {
     return;
   }
 
@@ -2295,10 +2287,13 @@ Console::RetrieveConsoleEvents(JSContext* aCx, nsTArray<JS::Value>& aEvents,
   // We don't want to expose this functionality to main-thread yet.
   MOZ_ASSERT(!NS_IsMainThread());
 
-  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
+  JS::Rooted<JSObject*> targetScope(aCx, JS::CurrentGlobalOrNull(aCx));
 
   for (uint32_t i = 0; i < mCallDataStorage.Length(); ++i) {
     JS::Rooted<JS::Value> value(aCx);
+
+    JS::Rooted<JSObject*> sequenceScope(aCx, mCallDataStorage[i]->mGlobal);
+    JSAutoCompartment ac(aCx, sequenceScope);
 
     Sequence<JS::Value> sequence;
     SequenceRooter<JS::Value> arguments(aCx, &sequence);
@@ -2308,8 +2303,12 @@ Console::RetrieveConsoleEvents(JSContext* aCx, nsTArray<JS::Value>& aEvents,
       return;
     }
 
-    if (NS_WARN_IF(!PopulateEvent(aCx, global, sequence, &value,
-                                  mCallDataStorage[i]))) {
+    // Here we have aCx and sequence in the same compartment.
+    // targetScope is the destination scope and value will be populated in its
+    // compartment.
+    if (NS_WARN_IF(!PopulateConsoleObjectInTheTargetScope(aCx, sequence,
+                                                          targetScope, &value,
+                                                          mCallDataStorage[i]))) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
