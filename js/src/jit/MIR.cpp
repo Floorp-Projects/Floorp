@@ -4744,7 +4744,9 @@ MLoadUnboxedObjectOrNull::foldsTo(TempAllocator& alloc)
     if (store->value()->type() == MIRType_ObjectOrNull)
         return this;
 
-    MOZ_ASSERT(offsetAdjustment() == store->offsetAdjustment());
+    if (store->offsetAdjustment() != offsetAdjustment())
+        return this;
+
     return foldsToStoredValue(alloc, store->value());
 }
 
