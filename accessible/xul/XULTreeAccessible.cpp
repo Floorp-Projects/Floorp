@@ -529,7 +529,7 @@ XULTreeAccessible::GetTreeItemAccessible(int32_t aRow) const
   if (NS_FAILED(rv) || aRow >= rowCount)
     return nullptr;
 
-  void *key = reinterpret_cast<void*>(aRow);
+  void *key = reinterpret_cast<void*>(intptr_t(aRow));
   Accessible* cachedTreeItem = mAccessibleCache.GetWeak(key);
   if (cachedTreeItem)
     return cachedTreeItem;
@@ -564,7 +564,7 @@ XULTreeAccessible::InvalidateCache(int32_t aRow, int32_t aCount)
   // Fire destroy event for removed tree items and delete them from caches.
   for (int32_t rowIdx = aRow; rowIdx < aRow - aCount; rowIdx++) {
 
-    void* key = reinterpret_cast<void*>(rowIdx);
+    void* key = reinterpret_cast<void*>(intptr_t(rowIdx));
     Accessible* treeItem = mAccessibleCache.GetWeak(key);
 
     if (treeItem) {
@@ -590,7 +590,7 @@ XULTreeAccessible::InvalidateCache(int32_t aRow, int32_t aCount)
 
   for (int32_t rowIdx = newRowCount; rowIdx < oldRowCount; ++rowIdx) {
 
-    void *key = reinterpret_cast<void*>(rowIdx);
+    void *key = reinterpret_cast<void*>(intptr_t(rowIdx));
     Accessible* treeItem = mAccessibleCache.GetWeak(key);
 
     if (treeItem) {
@@ -643,7 +643,7 @@ XULTreeAccessible::TreeViewInvalidated(int32_t aStartRow, int32_t aEndRow,
 
   for (int32_t rowIdx = aStartRow; rowIdx <= endRow; ++rowIdx) {
 
-    void *key = reinterpret_cast<void*>(rowIdx);
+    void *key = reinterpret_cast<void*>(intptr_t(rowIdx));
     Accessible* accessible = mAccessibleCache.GetWeak(key);
 
     if (accessible) {
