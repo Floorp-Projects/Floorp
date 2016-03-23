@@ -6,6 +6,8 @@
 
 HAS_MISC_RULE = True
 
+FINAL_TARGET = '_tests/xpcshell/toolkit/mozapps/update/tests/data'
+
 MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
 
 XPCSHELL_TESTS_MANIFESTS += [
@@ -57,3 +59,42 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     USE_STATIC_LIBS = True
     if CONFIG['GNU_CC']:
         WIN32_EXE_LDFLAGS += ['-municode']
+
+TEST_HARNESS_FILES.testing.mochitest.chrome.toolkit.mozapps.update.tests.data += [
+    'data/shared.js',
+    'data/sharedUpdateXML.js',
+    'data/simple.mar',
+]
+
+FINAL_TARGET_FILES += [
+    'data/complete.exe',
+    'data/complete.mar',
+    'data/complete.png',
+    'data/complete_log_success',
+    'data/complete_log_success_mac',
+    'data/complete_mac.mar',
+    'data/complete_precomplete',
+    'data/complete_precomplete_mac',
+    'data/complete_removed-files',
+    'data/complete_removed-files_mac',
+    'data/complete_update_manifest',
+    'data/old_version.mar',
+    'data/partial.exe',
+    'data/partial.mar',
+    'data/partial.png',
+    'data/partial_log_failure',
+    'data/partial_log_failure_mac',
+    'data/partial_log_success',
+    'data/partial_log_success_mac',
+    'data/partial_mac.mar',
+    'data/partial_precomplete',
+    'data/partial_precomplete_mac',
+    'data/partial_removed-files',
+    'data/partial_removed-files_mac',
+    'data/partial_update_manifest',
+    'data/shared.js',
+    'data/sharedUpdateXML.js',
+    'data/simple.mar',
+    'data/wrong_product_channel.mar',
+    'data/xpcshellUtilsAUS.js',
+]
