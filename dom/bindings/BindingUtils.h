@@ -2508,6 +2508,8 @@ XrayGetNativeProto(JSContext* cx, JS::Handle<JSObject*> obj,
 
 extern NativePropertyHooks sEmptyNativePropertyHooks;
 
+extern const js::ObjectOps sInterfaceObjectClassObjectOps;
+
 // We use one constructor JSNative to represent all DOM interface objects (so
 // we can easily detect when we need to wrap them in an Xray wrapper). We store
 // the real JSNative in the mNative member of a JSNativeHolder in the

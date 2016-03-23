@@ -313,6 +313,8 @@ JS_DefineFunctionsWithHelp(JSContext* cx, JS::HandleObject obj, const JSFunction
 
 namespace js {
 
+extern JS_FRIEND_DATA(const js::ObjectOps) ProxyObjectOps;
+
 /*
  * Helper Macros for creating JSClasses that function as proxies.
  *
@@ -347,19 +349,7 @@ namespace js {
         js::proxy_Trace,         /* trace       */                                      \
         JS_NULL_CLASS_SPEC,                                                             \
         ext,                                                                            \
-        {                                                                               \
-            js::proxy_LookupProperty,                                                   \
-            js::proxy_DefineProperty,                                                   \
-            js::proxy_HasProperty,                                                      \
-            js::proxy_GetProperty,                                                      \
-            js::proxy_SetProperty,                                                      \
-            js::proxy_GetOwnPropertyDescriptor,                                         \
-            js::proxy_DeleteProperty,                                                   \
-            js::proxy_Watch, js::proxy_Unwatch,                                         \
-            js::proxy_GetElements,                                                      \
-            nullptr,             /* enumerate       */                                  \
-            js::proxy_FunToString,                                                      \
-        }                                                                               \
+        &js::ProxyObjectOps                                                             \
     }
 
 #define PROXY_CLASS_DEF(name, flags)                                    \

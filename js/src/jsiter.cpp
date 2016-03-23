@@ -94,7 +94,7 @@ Enumerate(JSContext* cx, HandleObject pobj, jsid id,
     bool proxyOwnProperty = pobj->is<ProxyObject>() && (flags & JSITER_OWNONLY);
 
     if (!proxyOwnProperty && (!(flags & JSITER_OWNONLY) || pobj->is<ProxyObject>() ||
-        pobj->getOps()->enumerate))
+        pobj->getOpsEnumerate()))
     {
         if (!ht) {
             ht.emplace(cx);
@@ -111,7 +111,7 @@ Enumerate(JSContext* cx, HandleObject pobj, jsid id,
         // It's not necessary to add properties to the hash table at the end of
         // the prototype chain, but custom enumeration behaviors might return
         // duplicated properties, so always add in such cases.
-        if ((pobj->is<ProxyObject>() || pobj->getProto() || pobj->getOps()->enumerate) && !ht->add(p, id))
+        if ((pobj->is<ProxyObject>() || pobj->getProto() || pobj->getOpsEnumerate()) && !ht->add(p, id))
             return false;
     }
 
@@ -130,11 +130,11 @@ static bool
 EnumerateExtraProperties(JSContext* cx, HandleObject obj, unsigned flags, Maybe<IdSet>& ht,
                          AutoIdVector* props)
 {
-    MOZ_ASSERT(obj->getOps()->enumerate);
+    MOZ_ASSERT(obj->getOpsEnumerate());
 
     AutoIdVector properties(cx);
     bool enumerableOnly = !(flags & JSITER_HIDDEN);
-    if (!obj->getOps()->enumerate(cx, obj, properties, enumerableOnly))
+    if (!obj->getOpsEnumerate()(cx, obj, properties, enumerableOnly))
         return false;
 
     RootedId id(cx);
@@ -361,7 +361,7 @@ Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags, AutoIdVector* props)
     RootedObject pobj(cx, pobj_);
 
     do {
-        if (pobj->getOps()->enumerate) {
+        if (pobj->getOpsEnumerate()) {
             if (pobj->is<UnboxedPlainObject>() && pobj->as<UnboxedPlainObject>().maybeExpando()) {
                 // Special case unboxed objects with an expando object.
                 RootedNativeObject expando(cx, pobj->as<UnboxedPlainObject>().maybeExpando());
@@ -797,7 +797,7 @@ CanCacheIterableObject(JSContext* cx, JSObject* obj)
     if (obj->isNative()) {
         if (obj->is<TypedArrayObject>() ||
             obj->hasUncacheableProto() ||
-            obj->getOps()->enumerate ||
+            obj->getOpsEnumerate() ||
             obj->getClass()->enumerate ||
             obj->as<NativeObject>().containsPure(cx->names().iteratorIntrinsic))
         {
