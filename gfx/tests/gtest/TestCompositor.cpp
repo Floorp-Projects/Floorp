@@ -112,14 +112,13 @@ static already_AddRefed<Compositor> CreateTestCompositor(LayersBackend backend, 
   RefPtr<Compositor> compositor;
 
   if (backend == LayersBackend::LAYERS_OPENGL) {
-    compositor = new CompositorOGL(nullptr,
-                                   widget,
+    compositor = new CompositorOGL(widget,
                                    gCompWidth,
                                    gCompHeight,
                                    true);
     compositor->SetDestinationSurfaceSize(IntSize(gCompWidth, gCompHeight));
   } else if (backend == LayersBackend::LAYERS_BASIC) {
-    compositor = new BasicCompositor(nullptr, widget);
+    compositor = new BasicCompositor(widget);
 #ifdef XP_WIN
   } else if (backend == LayersBackend::LAYERS_D3D11) {
     //compositor = new CompositorD3D11();
