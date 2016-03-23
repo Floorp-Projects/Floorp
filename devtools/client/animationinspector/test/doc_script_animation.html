@@ -3,7 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <style>
-  #target {
+  #target1 {
+    width: 50px;
+    height: 50px;
+    background: red;
+  }
+
+  #target2 {
+    width: 50px;
+    height: 50px;
+    background: green;
+  }
+
+  #target3 {
     width: 50px;
     height: 50px;
     background: blue;
@@ -11,17 +23,33 @@
   </style>
 </head>
 <body>
-  <div id="target"></div>
+  <div id="target1"></div>
+  <div id="target2"></div>
+  <div id="target3"></div>
+
   <script>
     "use strict";
 
-    var el = document.getElementById("target");
-    el.animate(
-      [{ opacity: 0 }, { opacity: 1 }],
-      { duration: 1000,
-        iterationStart: 0.5,
-        fill: "both" }
-    );
+    document.getElementById("target1").animate([{ opacity: 0 }, { opacity: 1 }],
+                                               { duration: 100,
+                                                 iterations: 2,
+                                                 iterationStart: 0.25,
+                                                 fill: "both" }
+                                              );
+
+    document.getElementById("target2").animate([{ opacity: 0 }, { opacity: 1 }],
+                                               { duration: 100,
+                                                 iterations: 1,
+                                                 iterationStart: 0.25,
+                                                 fill: "both" }
+                                              );
+
+    document.getElementById("target3").animate([{ opacity: 0 }, { opacity: 1 }],
+                                               { duration: 100,
+                                                 iterations: 1.5,
+                                                 iterationStart: 2.5,
+                                                 fill: "both" }
+                                              );
   </script>
 </body>
 </html>
