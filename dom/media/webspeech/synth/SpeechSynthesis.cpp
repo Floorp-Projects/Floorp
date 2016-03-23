@@ -31,41 +31,31 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(SpeechSynthesis)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SpeechSynthesis)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SpeechSynthesis, DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCurrentTask)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSpeechQueue)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   tmp->mVoiceCache.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(SpeechSynthesis)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SpeechSynthesis, DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentTask)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSpeechQueue)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   for (auto iter = tmp->mVoiceCache.Iter(); !iter.Done(); iter.Next()) {
     SpeechSynthesisVoice* voice = iter.UserData();
     cb.NoteXPCOMChild(voice);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(SpeechSynthesis)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechSynthesis)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SpeechSynthesis)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(SpeechSynthesis)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechSynthesis)
+NS_IMPL_ADDREF_INHERITED(SpeechSynthesis, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(SpeechSynthesis, DOMEventTargetHelper)
 
 SpeechSynthesis::SpeechSynthesis(nsPIDOMWindowInner* aParent)
-  : mParent(aParent)
+  : DOMEventTargetHelper(aParent)
   , mHoldQueue(false)
   , mInnerID(aParent->WindowID())
 {
@@ -87,12 +77,6 @@ JSObject*
 SpeechSynthesis::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return SpeechSynthesisBinding::Wrap(aCx, this, aGivenProto);
-}
-
-nsPIDOMWindowInner*
-SpeechSynthesis::GetParentObject() const
-{
-  return mParent;
 }
 
 bool
@@ -164,7 +148,8 @@ SpeechSynthesis::AdvanceQueue()
   RefPtr<SpeechSynthesisUtterance> utterance = mSpeechQueue.ElementAt(0);
 
   nsAutoString docLang;
-  nsIDocument* doc = mParent->GetExtantDoc();
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
+  nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
 
   if (doc) {
     Element* elm = doc->GetHtmlElement();
