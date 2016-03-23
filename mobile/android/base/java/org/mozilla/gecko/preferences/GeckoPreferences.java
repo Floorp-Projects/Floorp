@@ -1453,101 +1453,108 @@ OnSharedPreferenceChangeListener
     }
 
     // Initialize preferences by requesting the preference values from Gecko
-    private PrefsHelper.PrefHandler getGeckoPreferences(final PreferenceGroup screen,
-                                                        ArrayList<String> prefs) {
+    private static class PrefCallbacks extends PrefsHelper.PrefHandlerBase {
+        private final PreferenceGroup screen;
 
-        final PrefsHelper.PrefHandler prefHandler = new PrefsHelper.PrefHandlerBase() {
-            private Preference getField(String prefName) {
-                return screen.findPreference(prefName);
-            }
+        public PrefCallbacks(final PreferenceGroup screen) {
+            this.screen = screen;
+        }
 
-            // Handle v14 TwoStatePreference with backwards compatibility.
-            class CheckBoxPrefSetter {
-                public void setBooleanPref(Preference preference, boolean value) {
-                    if ((preference instanceof CheckBoxPreference) &&
-                       ((CheckBoxPreference) preference).isChecked() != value) {
-                        ((CheckBoxPreference) preference).setChecked(value);
-                    }
+        private Preference getField(String prefName) {
+            return screen.findPreference(prefName);
+        }
+
+        // Handle v14 TwoStatePreference with backwards compatibility.
+        private static class CheckBoxPrefSetter {
+            public void setBooleanPref(Preference preference, boolean value) {
+                if ((preference instanceof CheckBoxPreference) &&
+                   ((CheckBoxPreference) preference).isChecked() != value) {
+                    ((CheckBoxPreference) preference).setChecked(value);
                 }
             }
+        }
 
-            class TwoStatePrefSetter extends CheckBoxPrefSetter {
+        private static class TwoStatePrefSetter extends CheckBoxPrefSetter {
+            @Override
+            public void setBooleanPref(Preference preference, boolean value) {
+                if ((preference instanceof TwoStatePreference) &&
+                   ((TwoStatePreference) preference).isChecked() != value) {
+                    ((TwoStatePreference) preference).setChecked(value);
+                }
+            }
+        }
+
+        @Override
+        public void prefValue(String prefName, final boolean value) {
+            final Preference pref = getField(prefName);
+            final CheckBoxPrefSetter prefSetter;
+            if (Versions.preICS) {
+                prefSetter = new CheckBoxPrefSetter();
+            } else {
+                prefSetter = new TwoStatePrefSetter();
+            }
+            ThreadUtils.postToUiThread(new Runnable() {
                 @Override
-                public void setBooleanPref(Preference preference, boolean value) {
-                    if ((preference instanceof TwoStatePreference) &&
-                       ((TwoStatePreference) preference).isChecked() != value) {
-                        ((TwoStatePreference) preference).setChecked(value);
-                    }
+                public void run() {
+                    prefSetter.setBooleanPref(pref, value);
                 }
-            }
+            });
+        }
 
-            @Override
-            public void prefValue(String prefName, final boolean value) {
-                final Preference pref = getField(prefName);
-                final CheckBoxPrefSetter prefSetter;
-                if (Versions.preICS) {
-                    prefSetter = new CheckBoxPrefSetter();
-                } else {
-                    prefSetter = new TwoStatePrefSetter();
-                }
+        @Override
+        public void prefValue(String prefName, final String value) {
+            final Preference pref = getField(prefName);
+            if (pref instanceof EditTextPreference) {
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        prefSetter.setBooleanPref(pref, value);
+                        ((EditTextPreference) pref).setText(value);
                     }
                 });
-            }
-
-            @Override
-            public void prefValue(String prefName, final String value) {
-                final Preference pref = getField(prefName);
-                if (pref instanceof EditTextPreference) {
-                    ThreadUtils.postToUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            ((EditTextPreference) pref).setText(value);
-                        }
-                    });
-                } else if (pref instanceof ListPreference) {
-                    ThreadUtils.postToUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            ((ListPreference) pref).setValue(value);
-                            // Set the summary string to the current entry
-                            CharSequence selectedEntry = ((ListPreference) pref).getEntry();
-                            ((ListPreference) pref).setSummary(selectedEntry);
-                        }
-                    });
-                } else if (pref instanceof FontSizePreference) {
-                    final FontSizePreference fontSizePref = (FontSizePreference) pref;
-                    fontSizePref.setSavedFontSize(value);
-                    final String fontSizeName = fontSizePref.getSavedFontSizeName();
-                    ThreadUtils.postToUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            fontSizePref.setSummary(fontSizeName); // Ex: "Small".
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public void prefValue(String prefName, final int value) {
-                final Preference pref = getField(prefName);
-                Log.w(LOGTAG, "Unhandled int value for pref [" + pref + "]");
-            }
-
-            @Override
-            public void finish() {
-                // enable all preferences once we have them from gecko
+            } else if (pref instanceof ListPreference) {
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        screen.setEnabled(true);
+                        ((ListPreference) pref).setValue(value);
+                        // Set the summary string to the current entry
+                        CharSequence selectedEntry = ((ListPreference) pref).getEntry();
+                        ((ListPreference) pref).setSummary(selectedEntry);
+                    }
+                });
+            } else if (pref instanceof FontSizePreference) {
+                final FontSizePreference fontSizePref = (FontSizePreference) pref;
+                fontSizePref.setSavedFontSize(value);
+                final String fontSizeName = fontSizePref.getSavedFontSizeName();
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        fontSizePref.setSummary(fontSizeName); // Ex: "Small".
                     }
                 });
             }
-        };
+        }
+
+        @Override
+        public void prefValue(String prefName, final int value) {
+            final Preference pref = getField(prefName);
+            Log.w(LOGTAG, "Unhandled int value for pref [" + pref + "]");
+        }
+
+        @Override
+        public void finish() {
+            // enable all preferences once we have them from gecko
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    screen.setEnabled(true);
+                }
+            });
+        }
+    }
+
+    private PrefsHelper.PrefHandler getGeckoPreferences(final PreferenceGroup screen,
+                                                            ArrayList<String> prefs) {
+        final PrefsHelper.PrefHandler prefHandler = new PrefCallbacks(screen);
         final String[] prefNames = prefs.toArray(new String[prefs.size()]);
         PrefsHelper.addObserver(prefNames, prefHandler);
         return prefHandler;
