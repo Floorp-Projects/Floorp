@@ -87,11 +87,11 @@ GetStateFlagsFromGtkWidgetState(GtkWidgetState* state)
         stateFlags = GTK_STATE_FLAG_INSENSITIVE;
     else {    
         if (state->depressed || state->active)
-            stateFlags |= GTK_STATE_FLAG_ACTIVE;
+            stateFlags = static_cast<GtkStateFlags>(stateFlags|GTK_STATE_FLAG_ACTIVE);
         if (state->inHover)
-            stateFlags |= GTK_STATE_FLAG_PRELIGHT;
+            stateFlags = static_cast<GtkStateFlags>(stateFlags|GTK_STATE_FLAG_PRELIGHT);
         if (state->focused)
-            stateFlags |= GTK_STATE_FLAG_FOCUSED;
+            stateFlags = static_cast<GtkStateFlags>(stateFlags|GTK_STATE_FLAG_FOCUSED);
     }
   
     return stateFlags;
@@ -276,7 +276,7 @@ moz_gtk_get_combo_box_inner_button(GtkWidget *widget, gpointer client_data)
     if (GTK_IS_TOGGLE_BUTTON(widget)) {
         gComboBoxButtonWidget = widget;
         g_object_add_weak_pointer(G_OBJECT(widget),
-                                  (gpointer) &gComboBoxButtonWidget);
+                                  (gpointer *) &gComboBoxButtonWidget);
         gtk_widget_realize(widget);
     }
 }
@@ -288,11 +288,11 @@ moz_gtk_get_combo_box_button_inner_widgets(GtkWidget *widget,
     if (GTK_IS_SEPARATOR(widget)) {
         gComboBoxSeparatorWidget = widget;
         g_object_add_weak_pointer(G_OBJECT(widget),
-                                  (gpointer) &gComboBoxSeparatorWidget);
+                                  (gpointer *) &gComboBoxSeparatorWidget);
     } else if (GTK_IS_ARROW(widget)) {
         gComboBoxArrowWidget = widget;
         g_object_add_weak_pointer(G_OBJECT(widget),
-                                  (gpointer) &gComboBoxArrowWidget);
+                                  (gpointer *) &gComboBoxArrowWidget);
     } else
         return;
     gtk_widget_realize(widget);
@@ -332,7 +332,7 @@ ensure_combo_box_widgets()
             /* appears-as-list = TRUE, or cell-view = FALSE;
              * the button only contains an arrow */
             gComboBoxArrowWidget = buttonChild;
-            g_object_add_weak_pointer(G_OBJECT(buttonChild), (gpointer)
+            g_object_add_weak_pointer(G_OBJECT(buttonChild), (gpointer *)
                                       &gComboBoxArrowWidget);
             gtk_widget_realize(gComboBoxArrowWidget);
         }
@@ -385,11 +385,11 @@ moz_gtk_get_combo_box_entry_inner_widgets(GtkWidget *widget,
     if (GTK_IS_TOGGLE_BUTTON(widget)) {
         gComboBoxEntryButtonWidget = widget;
         g_object_add_weak_pointer(G_OBJECT(widget),
-                                  (gpointer) &gComboBoxEntryButtonWidget);
+                                  (gpointer *) &gComboBoxEntryButtonWidget);
     } else if (GTK_IS_ENTRY(widget)) {
         gComboBoxEntryTextareaWidget = widget;
         g_object_add_weak_pointer(G_OBJECT(widget),
-                                  (gpointer) &gComboBoxEntryTextareaWidget);
+                                  (gpointer *) &gComboBoxEntryTextareaWidget);
     } else
         return;
     gtk_widget_realize(widget);
@@ -401,7 +401,7 @@ moz_gtk_get_combo_box_entry_arrow(GtkWidget *widget, gpointer client_data)
     if (GTK_IS_ARROW(widget)) {
         gComboBoxEntryArrowWidget = widget;
         g_object_add_weak_pointer(G_OBJECT(widget),
-                                  (gpointer) &gComboBoxEntryArrowWidget);
+                                  (gpointer *) &gComboBoxEntryArrowWidget);
         gtk_widget_realize(widget);
     }
 }
@@ -447,7 +447,7 @@ ensure_combo_box_entry_widgets()
             /* appears-as-list = TRUE, or cell-view = FALSE;
              * the button only contains an arrow */
             gComboBoxEntryArrowWidget = buttonChild;
-            g_object_add_weak_pointer(G_OBJECT(buttonChild), (gpointer)
+            g_object_add_weak_pointer(G_OBJECT(buttonChild), (gpointer *)
                                       &gComboBoxEntryArrowWidget);
             gtk_widget_realize(gComboBoxEntryArrowWidget);
         }
@@ -783,8 +783,8 @@ moz_gtk_get_focus_outline_size(gint* focus_h_width, gint* focus_v_width)
     ensure_entry_widget();
     style = gtk_widget_get_style_context(gEntryWidget);
 
-    gtk_style_context_get_border(style, 0, &border);
-    gtk_style_context_get_padding(style, 0, &padding);
+    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
+    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
     *focus_h_width = border.left + padding.left;
     *focus_v_width = border.top + padding.top;
     return MOZ_GTK_SUCCESS;
@@ -990,10 +990,10 @@ moz_gtk_toggle_paint(cairo_t *cr, GdkRectangle* rect,
     gtk_style_context_save(style);
 
     if (selected)
-        state_flags |= checkbox_check_state;
+        state_flags = static_cast<GtkStateFlags>(state_flags|checkbox_check_state);
 
     if (inconsistent)
-        state_flags |= GTK_STATE_FLAG_INCONSISTENT;
+        state_flags = static_cast<GtkStateFlags>(state_flags|GTK_STATE_FLAG_INCONSISTENT);
 
     gtk_style_context_set_state(style, state_flags);
 
@@ -1035,8 +1035,8 @@ calculate_button_inner_rect(GtkWidget* button, GdkRectangle* rect,
     style = gtk_widget_get_style_context(button);
 
     /* This mirrors gtkbutton's child positioning */
-    gtk_style_context_get_border(style, 0, &border);
-    gtk_style_context_get_padding(style, 0, &padding);
+    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
+    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
 
     inner_rect->x = rect->x + border.left + padding.left;
     inner_rect->y = rect->y + padding.top + border.top;
@@ -1629,9 +1629,9 @@ moz_gtk_treeview_expander_paint(cairo_t *cr, GdkRectangle* rect,
      * in gtk_render_expander()
      */
     if (expander_state == GTK_EXPANDER_EXPANDED)
-        state_flags |= GTK_STATE_FLAG_ACTIVE;
+        state_flags = static_cast<GtkStateFlags>(state_flags|GTK_STATE_FLAG_ACTIVE);
     else
-        state_flags &= ~(GTK_STATE_FLAG_ACTIVE);
+        state_flags = static_cast<GtkStateFlags>(state_flags&~(GTK_STATE_FLAG_ACTIVE));
 
     gtk_style_context_set_state(style, state_flags);
 
@@ -1922,7 +1922,7 @@ moz_gtk_toolbar_separator_paint(cairo_t *cr, GdkRectangle* rect,
                           rect->height * (end_fraction - start_fraction));
     } else {
         GtkBorder padding;
-        gtk_style_context_get_padding(style, 0, &padding);
+        gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
     
         paint_width = padding.left;
         if (paint_width > rect->width)
@@ -2096,7 +2096,7 @@ moz_gtk_get_tab_thickness(void)
 
     style = gtk_widget_get_style_context(gTabWidget);
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_NOTEBOOK);
-    gtk_style_context_get_border(style, 0, &border);
+    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
 
     if (border.top < 2)
         return 2; /* some themes don't set ythickness correctly */
@@ -2113,7 +2113,7 @@ moz_gtk_tab_prepare_style_context(GtkStyleContext *style,
                                         GTK_STATE_FLAG_ACTIVE);
   gtk_style_context_add_region(style, GTK_STYLE_REGION_TAB, 
                                       (flags & MOZ_GTK_TAB_FIRST) ? 
-                                        GTK_REGION_FIRST : 0);
+                                        GTK_REGION_FIRST : static_cast<GtkRegionFlags>(0));
   gtk_style_context_add_class(style, (flags & MOZ_GTK_TAB_BOTTOM) ? 
                                         GTK_STYLE_CLASS_BOTTOM : 
                                         GTK_STYLE_CLASS_TOP);
@@ -2468,7 +2468,7 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
     border_width = gtk_container_get_border_width(GTK_CONTAINER(gMenuSeparatorWidget));
 
     style = gtk_widget_get_style_context(gMenuSeparatorWidget);
-    gtk_style_context_get_padding(style, 0, &padding);
+    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
 
     x = rect->x + border_width;
     y = rect->y + border_width;
@@ -2602,7 +2602,7 @@ moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
     }
 
     if (checked) {
-      state_flags |= checkbox_check_state;
+      state_flags = static_cast<GtkStateFlags>(state_flags|checkbox_check_state);
     }
     
     gtk_style_context_set_state(style, state_flags);
@@ -2658,7 +2658,7 @@ moz_gtk_add_style_border(GtkStyleContext* style,
 {
     GtkBorder border;
 
-    gtk_style_context_get_border(style, 0, &border);
+    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
 
     *left += border.left;
     *right += border.right;
@@ -2672,7 +2672,7 @@ moz_gtk_add_style_padding(GtkStyleContext* style,
 {
     GtkBorder padding;
 
-    gtk_style_context_get_padding(style, 0, &padding);
+    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
 
     *left += padding.left;
     *right += padding.right;
@@ -2795,7 +2795,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
 
                 if (!wide_separators) {
                     style = gtk_widget_get_style_context(gComboBoxSeparatorWidget);
-                    gtk_style_context_get_border(style, 0, &border);
+                    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
                     separator_width = border.left;
                 }
             }
@@ -3030,7 +3030,7 @@ moz_gtk_get_toolbar_separator_width(gint* size)
                          "separator-width", &separator_width,
                          NULL);
     /* Just in case... */
-    gtk_style_context_get_border(style, 0, &border);
+    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
     *size = MAX(*size, (wide_separators ? separator_width : border.left));
     return MOZ_GTK_SUCCESS;
 }
@@ -3072,7 +3072,7 @@ moz_gtk_get_menu_separator_height(gint *size)
     border_width = gtk_container_get_border_width(GTK_CONTAINER(gMenuSeparatorWidget));
 
     style = gtk_widget_get_style_context(gMenuSeparatorWidget);
-    gtk_style_context_get_padding(style, 0, &padding);
+    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
 
     gtk_style_context_save(style);
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_SEPARATOR);
