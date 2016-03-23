@@ -34,6 +34,10 @@ AsyncTransactionWaiter::WaitComplete()
   if (mWaitCount > 0) {
     printf_stderr("Timeout of waiting transaction complete.");
   }
+
+  if (count == maxCount) {
+    gfxDevCrash(LogReason::AsyncTransactionTimeout) << "Bug 1244883: AsyncTransactionWaiter timed out.";
+  }
 }
 
 Atomic<uint64_t> AsyncTransactionTracker::sSerialCounter(0);
