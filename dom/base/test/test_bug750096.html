@@ -6,8 +6,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=750096
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 750096</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=750096">Mozilla Bug 750096</a>
@@ -22,9 +22,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=750096
 
 SimpleTest.waitForExplicitFinish();
 
-var u = Components.interfaces.nsIParserUtils;
-var s = Components.classes["@mozilla.org/parserutils;1"]
-        .getService(u);
+var u = SpecialPowers.Ci.nsIParserUtils;
+var s = SpecialPowers.ParserUtils;
 
 var elt = document.getElementById("content");
 

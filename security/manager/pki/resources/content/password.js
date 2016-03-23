@@ -1,6 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
 const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
 const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;

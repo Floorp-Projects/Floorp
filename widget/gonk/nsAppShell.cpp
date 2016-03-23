@@ -72,7 +72,7 @@
 
 // Defines kKeyMapping and GetKeyNameIndex()
 #include "GonkKeyMapping.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "GeckoTouchDispatcher.h"
 
 #undef LOG

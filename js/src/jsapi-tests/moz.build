@@ -112,6 +112,11 @@ if CONFIG['ENABLE_ION']:
         'testJitRValueAlloc.cpp',
     ]
 
+if CONFIG['SPIDERMONKEY_PROMISE']:
+    UNIFIED_SOURCES += [
+        'testPromise.cpp',
+    ]
+
 DEFINES['EXPORT_JS_API'] = True
 
 LOCAL_INCLUDES += [

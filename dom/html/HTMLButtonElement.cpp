@@ -292,7 +292,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
                eKeyPress == aVisitor.mEvent->mMessage) ||
               (keyEvent->keyCode == NS_VK_SPACE &&
                eKeyUp == aVisitor.mEvent->mMessage)) {
-            DispatchSimulatedClick(this, aVisitor.mEvent->mFlags.mIsTrusted,
+            DispatchSimulatedClick(this, aVisitor.mEvent->IsTrusted(),
                                    aVisitor.mPresContext);
             aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
           }
@@ -303,7 +303,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         {
           WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
           if (mouseEvent->button == WidgetMouseEvent::eLeftButton) {
-            if (mouseEvent->mFlags.mIsTrusted) {
+            if (mouseEvent->IsTrusted()) {
               EventStateManager* esm =
                 aVisitor.mPresContext->EventStateManager();
               EventStateManager::SetActiveManager(

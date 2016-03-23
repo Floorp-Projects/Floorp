@@ -20,8 +20,6 @@ interface nsIXSLTProcessor : nsISupports
      *              If the argument is an element node it must be the
      *              xsl:stylesheet (or xsl:transform) element of an XSLT
      *              stylesheet.
-     *
-     * @exception nsIXSLTException
      */
     void importStylesheet(in nsIDOMNode style);
 
@@ -33,8 +31,6 @@ interface nsIXSLTProcessor : nsISupports
      * @param source The node to be transformed
      * @param output This document is used to generate the output
      * @return DocumentFragment The result of the transformation
-     *
-     * @exception nsIXSLTException
      */
     nsIDOMDocumentFragment transformToFragment(in nsIDOMNode source,
                                                in nsIDOMDocument output);
@@ -45,8 +41,6 @@ interface nsIXSLTProcessor : nsISupports
      *
      * @param source The node to be transformed
      * @return Document The result of the transformation
-     *
-     * @exception nsIXSLTException
      */
     nsIDOMDocument transformToDocument(in nsIDOMNode source);
 

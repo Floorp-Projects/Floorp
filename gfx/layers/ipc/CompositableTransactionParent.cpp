@@ -7,7 +7,7 @@
 
 #include "CompositableTransactionParent.h"
 #include "CompositableHost.h"           // for CompositableParent, etc
-#include "CompositorParent.h"           // for CompositorParent
+#include "CompositorBridgeParent.h"     // for CompositorBridgeParent
 #include "GLContext.h"                  // for GLContext
 #include "Layers.h"                     // for Layer
 #include "RenderTrace.h"                // for RenderTraceInvalidateEnd, etc
@@ -60,7 +60,7 @@ bool ScheduleComposition(const T& op)
   if (!comp || !id) {
     return false;
   }
-  CompositorParent* cp = CompositorParent::GetCompositor(id);
+  CompositorBridgeParent* cp = CompositorBridgeParent::GetCompositor(id);
   if (!cp) {
     return false;
   }

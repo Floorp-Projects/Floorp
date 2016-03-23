@@ -55,6 +55,7 @@ def with_env(with_env):
 @depends('--disable-values')
 def with_env2(values):
     set_config('VALUES', values)
+    return values
 
 # It is possible to @depends on environment-only options.
 @depends('CC')
@@ -66,16 +67,16 @@ def is_gcc_check(is_gcc):
     set_config('IS_GCC', is_gcc)
 
 # It is possible to depend on the result from another function.
-# The input argument is a dict fed with the elements the function implied.
 @depends(with_env2)
 def with_env3(values):
-    set_config('VALUES2', values['VALUES'])
+    set_config('VALUES2', values)
+    return values
 
 # @depends functions can also return results for use as input to another
 # @depends.
 @depends(with_env3)
 def with_env4(values):
-    return values['VALUES2']
+    return values
 
 @depends(with_env4)
 def with_env5(values):

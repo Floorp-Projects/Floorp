@@ -41,7 +41,7 @@ namespace gl {
 }
 
 namespace layers {
-class CompositorParent;
+class CompositorBridgeParent;
 class Layer;
 }
 
@@ -86,7 +86,7 @@ public:
     void Vsync(int aDisplay, int64_t aTimestamp);
     void Invalidate();
     void Hotplug(int aDisplay, int aConnected);
-    void SetCompositorParent(layers::CompositorParent* aCompositorParent);
+    void SetCompositorBridgeParent(layers::CompositorBridgeParent* aCompositorBridgeParent);
 
 private:
     void Reset();
@@ -114,7 +114,7 @@ private:
     nsTArray<layers::LayerComposite*> mHwcLayerMap;
     bool                    mPrepared;
     bool                    mHasHWVsync;
-    layers::CompositorParent* mCompositorParent;
+    layers::CompositorBridgeParent* mCompositorBridgeParent;
     Mutex mLock;
 };
 

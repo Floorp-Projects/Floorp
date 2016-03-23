@@ -41,9 +41,4 @@ new TestCase ( SECTION, "'a$$$'.match(new RegExp('\\$+$'))",
 new TestCase ( SECTION, "'a$$$'.match(/\\$+$/)",
 	       String(['$$$']), String('a$$$'.match(/\$+$/)));
 
-RegExp.multiline = true;
-// 'abc\n123xyz890\nxyz'.match(new RegExp('\d+$')) <multiline==true>
-new TestCase ( SECTION, "'abc\n123xyz890\nxyz'.match(new RegExp('\\d+$'))",
-	       String(['890']), String('abc\n123xyz890\nxyz'.match(new RegExp('\\d+$'))));
-
 test();

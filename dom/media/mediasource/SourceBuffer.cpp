@@ -295,8 +295,6 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aMediaSource);
-  mEvictionThreshold = Preferences::GetUint("media.mediasource.eviction_threshold",
-                                            100 * (1 << 20));
   bool generateTimestamps = false;
   if (aType.LowerCaseEqualsLiteral("audio/mpeg") ||
       aType.LowerCaseEqualsLiteral("audio/aac")) {
@@ -524,11 +522,9 @@ SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult&
   TimeUnit newBufferStartTime;
   // Attempt to evict the amount of data we are about to add by lowering the
   // threshold.
-  uint32_t toEvict =
-    (mEvictionThreshold > aLength) ? mEvictionThreshold - aLength : aLength;
   Result evicted =
     mContentManager->EvictData(TimeUnit::FromSeconds(mMediaSource->GetDecoder()->GetCurrentTime()),
-                               toEvict, &newBufferStartTime);
+                               aLength, &newBufferStartTime);
   if (evicted == Result::DATA_EVICTED) {
     MSE_DEBUG("AppendData Evict; current buffered start=%f",
               GetBufferedStart());
@@ -541,7 +537,8 @@ SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult&
   // See if we have enough free space to append our new data.
   // As we can only evict once we have playable data, we must give a chance
   // to the DASH player to provide a complete media segment.
-  if (aLength > mEvictionThreshold || evicted == Result::BUFFER_FULL) {
+  if (aLength > mContentManager->EvictionThreshold() ||
+      evicted == Result::BUFFER_FULL) {
     aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
     return nullptr;
   }

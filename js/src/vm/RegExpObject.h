@@ -368,22 +368,13 @@ class RegExpObject : public NativeObject
     // allocate a bigger MatchResult.
     static const size_t MaxPairCount = 14;
 
-    /*
-     * Note: The regexp statics flags are OR'd into the provided flags,
-     * so this function is really meant for object creation during code
-     * execution, as opposed to during something like XDR.
-     */
     static RegExpObject*
-    create(ExclusiveContext* cx, RegExpStatics* res, const char16_t* chars, size_t length,
-           RegExpFlag flags, frontend::TokenStream* ts, LifoAlloc& alloc);
+    create(ExclusiveContext* cx, const char16_t* chars, size_t length, RegExpFlag flags,
+           frontend::TokenStream* ts, LifoAlloc& alloc);
 
     static RegExpObject*
-    createNoStatics(ExclusiveContext* cx, const char16_t* chars, size_t length, RegExpFlag flags,
-                    frontend::TokenStream* ts, LifoAlloc& alloc);
-
-    static RegExpObject*
-    createNoStatics(ExclusiveContext* cx, HandleAtom atom, RegExpFlag flags,
-                    frontend::TokenStream* ts, LifoAlloc& alloc);
+    create(ExclusiveContext* cx, HandleAtom atom, RegExpFlag flags,
+           frontend::TokenStream* ts, LifoAlloc& alloc);
 
     /*
      * Compute the initial shape to associate with fresh RegExp objects,
@@ -403,7 +394,10 @@ class RegExpObject : public NativeObject
         setSlot(LAST_INDEX_SLOT, NumberValue(d));
     }
 
-    void zeroLastIndex() {
+    void zeroLastIndex(ExclusiveContext* cx) {
+        MOZ_ASSERT(lookupPure(cx->names().lastIndex)->writable(),
+                   "can't infallibly zero a non-writable lastIndex on a "
+                   "RegExp that's been exposed to script");
         setSlot(LAST_INDEX_SLOT, Int32Value(0));
     }
 
@@ -443,12 +437,11 @@ class RegExpObject : public NativeObject
 
     static void trace(JSTracer* trc, JSObject* obj);
 
-    static bool initFromAtom(ExclusiveContext* cx, Handle<RegExpObject*> regexp, HandleAtom source,
-                             RegExpFlag flags);
+    void initIgnoringLastIndex(HandleAtom source, RegExpFlag flags);
+
+    void initAndZeroLastIndex(HandleAtom source, RegExpFlag flags, ExclusiveContext* cx);
 
   private:
-    bool init(ExclusiveContext* cx, HandleAtom source, RegExpFlag flags);
-
     /*
      * Precondition: the syntax for |source| has already been validated.
      * Side effect: sets the private field.

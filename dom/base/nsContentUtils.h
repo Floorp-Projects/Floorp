@@ -171,15 +171,6 @@ struct EventNameMapping
   mozilla::EventClassID mEventClassID;
 };
 
-struct nsShortcutCandidate {
-  nsShortcutCandidate(uint32_t aCharCode, bool aIgnoreShift) :
-    mCharCode(aCharCode), mIgnoreShift(aIgnoreShift)
-  {
-  }
-  uint32_t mCharCode;
-  bool     mIgnoreShift;
-};
-
 typedef void (*CallOnRemoteChildFunction) (mozilla::dom::TabParent* aTabParent,
                                            void* aArg);
 
@@ -1510,27 +1501,6 @@ public:
    * Return the localized ellipsis for UI.
    */
   static const nsDependentString GetLocalizedEllipsis();
-
-  /**
-   * Get the candidates for accelkeys for aDOMKeyEvent.
-   *
-   * @param aDOMKeyEvent [in] the key event for accelkey handling.
-   * @param aCandidates [out] the candidate shortcut key combination list.
-   *                          the first item is most preferred.
-   */
-  static void GetAccelKeyCandidates(nsIDOMKeyEvent* aDOMKeyEvent,
-                                    nsTArray<nsShortcutCandidate>& aCandidates);
-
-  /**
-   * Get the candidates for accesskeys for aNativeKeyEvent.
-   *
-   * @param aNativeKeyEvent [in] the key event for accesskey handling.
-   * @param aCandidates [out] the candidate access key list.
-   *                          the first item is most preferred.
-   */
-  static void GetAccessKeyCandidates(
-                mozilla::WidgetKeyboardEvent* aNativeKeyEvent,
-                nsTArray<uint32_t>& aCandidates);
 
   /**
    * Hide any XUL popups associated with aDocument, including any documents

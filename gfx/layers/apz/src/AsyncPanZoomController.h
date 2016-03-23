@@ -42,9 +42,9 @@ namespace layers {
 
 class AsyncDragMetrics;
 struct ScrollableLayerGuid;
-class CompositorParent;
+class CompositorBridgeParent;
 class GestureEventListener;
-class PCompositorParent;
+class PCompositorBridgeParent;
 struct AsyncTransform;
 class AsyncPanZoomAnimation;
 class FlingAnimation;
@@ -198,7 +198,7 @@ public:
    * The platform implementation must set the compositor parent so that we can
    * request composites.
    */
-  void SetCompositorParent(CompositorParent* aCompositorParent);
+  void SetCompositorBridgeParent(CompositorBridgeParent* aCompositorBridgeParent);
 
   /**
    * Inform this APZC that it will be sharing its FrameMetrics with a cross-process
@@ -515,7 +515,7 @@ protected:
 
   /**
    * Schedules a composite on the compositor thread. Wrapper for
-   * CompositorParent::ScheduleRenderOnCompositorThread().
+   * CompositorBridgeParent::ScheduleRenderOnCompositorThread().
    */
   void ScheduleComposite();
 
@@ -652,7 +652,7 @@ protected:
   void RequestSnapToDestination();
 
   uint64_t mLayersId;
-  RefPtr<CompositorParent> mCompositorParent;
+  RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
      since they are accessed on the UI thread but can be cleared on the
@@ -676,7 +676,7 @@ protected:
   bool mSharingFrameMetricsAcrossProcesses;
   /* Utility function to get the Compositor with which we share the FrameMetrics.
      This function is only callable from the compositor thread. */
-  PCompositorParent* GetSharedFrameMetricsCompositor();
+  PCompositorBridgeParent* GetSharedFrameMetricsCompositor();
 
 protected:
   // Both |mFrameMetrics| and |mLastContentPaintMetrics| are protected by the

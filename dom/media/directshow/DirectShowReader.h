@@ -60,9 +60,6 @@ public:
   RefPtr<SeekPromise>
   Seek(SeekTarget aTarget, int64_t aEndTime) override;
 
-protected:
-  void NotifyDataArrivedInternal() override;
-
 private:
   // Notifies the filter graph that playback is complete. aStatus is
   // the code to send to the filter graph. Always returns false, so
@@ -104,11 +101,6 @@ private:
 
   // Number of bytes per sample. Can be either 1 or 2.
   uint32_t mBytesPerSample;
-
-  // Duration of the stream, in microseconds.
-  int64_t mDuration;
-
-  MediaByteRangeSet mLastCachedRanges;
 };
 
 } // namespace mozilla

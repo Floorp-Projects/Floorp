@@ -64,7 +64,7 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorOGL.h"
-#include "mozilla/layers/CompositorParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/BasicCompositor.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "gfxUtils.h"
@@ -1895,7 +1895,7 @@ void
 nsChildView::CreateCompositor()
 {
   nsBaseWidget::CreateCompositor();
-  if (mCompositorChild) {
+  if (mCompositorBridgeChild) {
     [(ChildView *)mView setUsingOMTCompositor:true];
   }
 }

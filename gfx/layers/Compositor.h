@@ -126,7 +126,7 @@ class Layer;
 class TextureSource;
 class DataTextureSource;
 class CompositingRenderTarget;
-class CompositorParent;
+class CompositorBridgeParent;
 class LayerManagerComposite;
 
 enum SurfaceInitMode
@@ -185,7 +185,7 @@ protected:
 public:
   NS_INLINE_DECL_REFCOUNTING(Compositor)
 
-  explicit Compositor(CompositorParent* aParent = nullptr)
+  explicit Compositor(CompositorBridgeParent* aParent = nullptr)
     : mCompositorID(0)
     , mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC)
     , mParent(aParent)
@@ -554,7 +554,7 @@ protected:
 
   uint32_t mCompositorID;
   DiagnosticTypes mDiagnosticTypes;
-  CompositorParent* mParent;
+  CompositorBridgeParent* mParent;
 
   /**
    * We keep track of the total number of pixels filled as we composite the

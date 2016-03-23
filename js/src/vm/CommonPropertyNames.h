@@ -57,6 +57,7 @@
     macro(constructor, constructor, "constructor") \
     macro(ConvertAndCopyTo, ConvertAndCopyTo, "ConvertAndCopyTo") \
     macro(count, count, "count") \
+    macro(CreateResolvingFunctions, CreateResolvingFunctions, "CreateResolvingFunctions") \
     macro(currency, currency, "currency") \
     macro(currencyDisplay, currencyDisplay, "currencyDisplay") \
     macro(DateTimeFormat, DateTimeFormat, "DateTimeFormat") \
@@ -201,6 +202,11 @@
     macro(parseInt, parseInt, "parseInt") \
     macro(pattern, pattern, "pattern") \
     macro(preventExtensions, preventExtensions, "preventExtensions") \
+    macro(promise, promise, "promise") \
+    macro(state, state, "state") \
+    macro(pending, pending, "pending") \
+    macro(fulfilled, fulfilled, "fulfilled") \
+    macro(rejected, rejected, "rejected") \
     macro(propertyIsEnumerable, propertyIsEnumerable, "propertyIsEnumerable") \
     macro(proto, proto, "__proto__") \
     macro(prototype, prototype, "prototype") \

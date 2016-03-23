@@ -15,7 +15,7 @@ def mozttdir(value):
         if not os.path.isdir(path):
             error('MOZTTDIR "%s" is not a valid directory' % path)
         set_config('MOZTTDIR', path)
-        set_define('PACKAGE_MOZTT', '1')
+        set_define('PACKAGE_MOZTT', True)
 
 
 include('../toolkit/moz.configure')

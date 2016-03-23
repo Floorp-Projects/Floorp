@@ -390,6 +390,12 @@ class GlobalObject : public NativeObject
         return &global->getPrototype(JSProto_Symbol).toObject().as<NativeObject>();
     }
 
+    static NativeObject* getOrCreatePromisePrototype(JSContext* cx, Handle<GlobalObject*> global) {
+        if (!ensureConstructor(cx, global, JSProto_Promise))
+            return nullptr;
+        return &global->getPrototype(JSProto_Promise).toObject().as<NativeObject>();
+    }
+
     static NativeObject* getOrCreateRegExpPrototype(JSContext* cx, Handle<GlobalObject*> global) {
         if (!ensureConstructor(cx, global, JSProto_RegExp))
             return nullptr;
@@ -588,6 +594,13 @@ class GlobalObject : public NativeObject
         if (!ensureConstructor(cx, self, JSProto_DataView))
             return nullptr;
         return &self->getPrototype(JSProto_DataView).toObject();
+    }
+
+    static JSFunction*
+    getOrCreatePromiseConstructor(JSContext* cx, Handle<GlobalObject*> global) {
+        if (!ensureConstructor(cx, global, JSProto_Promise))
+            return nullptr;
+        return &global->getConstructor(JSProto_Promise).toObject().as<JSFunction>();
     }
 
     static NativeObject* getIntrinsicsHolder(JSContext* cx, Handle<GlobalObject*> global);

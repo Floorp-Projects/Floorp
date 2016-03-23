@@ -51,10 +51,8 @@ struct MyContainer
 
     MyContainer() : obj(nullptr), str(nullptr) {}
     void trace(JSTracer* trc) {
-        if (obj)
-            js::TraceEdge(trc, &obj, "test container");
-        if (str)
-            js::TraceEdge(trc, &str, "test container");
+        js::TraceNullableEdge(trc, &obj, "test container");
+        js::TraceNullableEdge(trc, &str, "test container");
     }
 };
 

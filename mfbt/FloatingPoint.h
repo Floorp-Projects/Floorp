@@ -401,13 +401,6 @@ FuzzyEqualsMultiplicative(T aValue1, T aValue2,
                           T aEpsilon = detail::FuzzyEqualsEpsilon<T>::value())
 {
   static_assert(IsFloatingPoint<T>::value, "floating point type required");
-
-  // Short-circuit the common case in order to avoid the expensive operations
-  // below.
-  if (aValue1 == aValue2) {
-    return true;
-  }
-
   // can't use std::min because of bug 965340
   T smaller = Abs(aValue1) < Abs(aValue2) ? Abs(aValue1) : Abs(aValue2);
   return Abs(aValue1 - aValue2) <= aEpsilon * smaller;

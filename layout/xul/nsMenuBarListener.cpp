@@ -222,7 +222,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
           aKeyEvent->WidgetEventPtr()->AsKeyboardEvent();
         if (nativeKeyEvent) {
           AutoTArray<uint32_t, 10> keys;
-          nsContentUtils::GetAccessKeyCandidates(nativeKeyEvent, keys);
+          nativeKeyEvent->GetAccessKeyCandidates(keys);
           hasAccessKeyCandidates = !keys.IsEmpty();
         }
       }

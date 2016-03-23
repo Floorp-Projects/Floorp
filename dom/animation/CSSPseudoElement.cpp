@@ -50,7 +50,8 @@ CSSPseudoElement::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
-CSSPseudoElement::GetAnimations(nsTArray<RefPtr<Animation>>& aRetVal)
+CSSPseudoElement::GetAnimations(const AnimationFilter& filter,
+                                nsTArray<RefPtr<Animation>>& aRetVal)
 {
   nsIDocument* doc = mParentElement->GetComposedDoc();
   if (doc) {

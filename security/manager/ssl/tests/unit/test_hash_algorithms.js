@@ -1,3 +1,5 @@
+"use strict";
+
 var ScriptableUnicodeConverter =
   Components.Constructor("@mozilla.org/intl/scriptableunicodeconverter",
                          "nsIScriptableUnicodeConverter");
