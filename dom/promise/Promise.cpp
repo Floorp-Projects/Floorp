@@ -79,10 +79,14 @@ protected:
   Run() override
   {
     NS_ASSERT_OWNINGTHREAD(PromiseReactionJob);
-    ThreadsafeAutoJSContext cx;
-    JS::Rooted<JSObject*> wrapper(cx, mPromise->GetWrapper());
-    MOZ_ASSERT(wrapper); // It was preserved!
-    JSAutoCompartment ac(cx, wrapper);
+
+    MOZ_ASSERT(mPromise->GetWrapper()); // It was preserved!
+
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(mPromise->GetWrapper())) {
+      return NS_ERROR_FAILURE;
+    }
+    JSContext* cx = jsapi.cx();
 
     JS::Rooted<JS::Value> value(cx, mValue);
     if (!MaybeWrapValue(cx, &value)) {
@@ -205,12 +209,16 @@ protected:
   Run() override
   {
     NS_ASSERT_OWNINGTHREAD(PromiseResolveThenableJob);
-    ThreadsafeAutoJSContext cx;
-    JS::Rooted<JSObject*> wrapper(cx, mPromise->GetWrapper());
-    MOZ_ASSERT(wrapper); // It was preserved!
+
+    MOZ_ASSERT(mPromise->GetWrapper()); // It was preserved!
+
+    AutoJSAPI jsapi;
     // If we ever change which compartment we're working in here, make sure to
     // fix the fast-path for resolved-with-a-Promise in ResolveInternal.
-    JSAutoCompartment ac(cx, wrapper);
+    if (!jsapi.Init(mPromise->GetWrapper())) {
+      return NS_ERROR_FAILURE;
+    }
+    JSContext* cx = jsapi.cx();
 
     JS::Rooted<JSObject*> resolveFunc(cx,
       mPromise->CreateThenableFunction(cx, mPromise, PromiseCallback::Resolve));
