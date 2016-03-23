@@ -2767,8 +2767,7 @@ Debugger::traceObject(JSTracer* trc, JSObject* obj)
 void
 Debugger::trace(JSTracer* trc)
 {
-    if (uncaughtExceptionHook)
-        TraceEdge(trc, &uncaughtExceptionHook, "hooks");
+    TraceNullableEdge(trc, &uncaughtExceptionHook, "hooks");
 
     /*
      * Mark Debugger.Frame objects. These are all reachable from JS, because the

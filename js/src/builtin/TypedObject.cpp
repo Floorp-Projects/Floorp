@@ -2943,16 +2943,14 @@ MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)
       case ReferenceTypeDescr::TYPE_OBJECT:
       {
         HeapPtrObject* objectPtr = reinterpret_cast<js::HeapPtrObject*>(mem);
-        if (*objectPtr)
-            TraceEdge(trace_, objectPtr, "reference-obj");
+        TraceNullableEdge(trace_, objectPtr, "reference-obj");
         return;
       }
 
       case ReferenceTypeDescr::TYPE_STRING:
       {
         HeapPtrString* stringPtr = reinterpret_cast<js::HeapPtrString*>(mem);
-        if (*stringPtr)
-            TraceEdge(trace_, stringPtr, "reference-str");
+        TraceNullableEdge(trace_, stringPtr, "reference-str");
         return;
       }
     }
