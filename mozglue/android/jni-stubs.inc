@@ -229,21 +229,40 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent(JNIEnv * arg0, jclass ar
 
 #ifdef JNI_STUBS
 
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers_t)(JNIEnv *, jclass, jstring, jstring);
-static Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers_t f_Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers;
+typedef void (*Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers_t)(JNIEnv *, jclass, jstring, jstring);
+static Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers_t f_Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers;
 extern "C" NS_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers(JNIEnv * arg0, jclass arg1, jstring arg2, jstring arg3) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers) {
+Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers(JNIEnv * arg0, jclass arg1, jstring arg2, jstring arg3) {
+    if (!f_Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
                        "JNI Function called before it was loaded");
         return ;
     }
-     f_Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers(arg0, arg1, arg2, arg3);
+     f_Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers(arg0, arg1, arg2, arg3);
 }
 #endif
 
 #ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers", &f_Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers);
+  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers", &f_Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoAppShell_nativeNotifyObservers_t)(JNIEnv *, jclass, jstring, jstring);
+static Java_org_mozilla_gecko_GeckoAppShell_nativeNotifyObservers_t f_Java_org_mozilla_gecko_GeckoAppShell_nativeNotifyObservers;
+extern "C" NS_EXPORT void MOZ_JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_nativeNotifyObservers(JNIEnv * arg0, jclass arg1, jstring arg2, jstring arg3) {
+    if (!f_Java_org_mozilla_gecko_GeckoAppShell_nativeNotifyObservers) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoAppShell_nativeNotifyObservers(arg0, arg1, arg2, arg3);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_nativeNotifyObservers", &f_Java_org_mozilla_gecko_GeckoAppShell_nativeNotifyObservers);
 #endif
 
 #ifdef JNI_STUBS

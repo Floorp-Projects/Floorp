@@ -1144,6 +1144,21 @@ public:
 
     static auto MoveTaskToBack() -> void;
 
+    struct NotifyObservers_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "nativeNotifyObservers";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Ljava/lang/String;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
     struct NetworkLinkType_t {
         typedef GeckoAppShell Owner;
         typedef int32_t ReturnType;
@@ -1460,6 +1475,21 @@ public:
 
     static auto StopMonitoringGamepad() -> void;
 
+    struct SyncNotifyObservers_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "syncNotifyObservers";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Ljava/lang/String;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
     struct UnlockProfile_t {
         typedef GeckoAppShell Owner;
         typedef bool ReturnType;
@@ -1541,6 +1571,7 @@ public:
 
     static const bool isMultithreaded = true;
 
+    template<class Impl> class Natives;
 };
 
 class GeckoEditable : public mozilla::jni::ObjectBase<GeckoEditable, jobject>
