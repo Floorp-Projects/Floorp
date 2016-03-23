@@ -298,6 +298,13 @@ PREFIX (_equal) (region_type_t *reg1, region_type_t *reg2)
     box_type_t *rects1;
     box_type_t *rects2;
 
+    /*
+     * If the region is empty the extents are undefined so we need to check
+     * for empty before comparing the extents.
+     */
+    if (PIXREGION_NIL (reg1) && PIXREGION_NIL(reg2))
+        return TRUE;
+
     if (reg1->extents.x1 != reg2->extents.x1)
 	return FALSE;
     
