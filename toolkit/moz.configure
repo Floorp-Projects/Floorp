@@ -29,11 +29,11 @@ option('--enable-jprof', env='MOZ_JPROF',
 @depends('--enable-jprof')
 def jprof(value):
     if value:
-        imply_option('--enable-profiling')
         return True
 
 set_config('MOZ_JPROF', jprof)
 set_define('MOZ_JPROF', jprof)
+imply_option('--enable-profiling', jprof)
 
 @depends(target)
 def sps_profiler(target):
@@ -60,11 +60,11 @@ option('--enable-dmd', env='MOZ_DMD',
 def dmd(value):
     if value:
         add_old_configure_assignment('MOZ_DMD', True)
-        imply_option('--enable-profiling')
         return True
 
 set_config('MOZ_DMD', dmd)
 set_define('MOZ_DMD', dmd)
+imply_option('--enable-profiling', dmd)
 
 # Javascript engine
 # ==============================================================
@@ -307,11 +307,11 @@ def ffmpeg(value, target):
     if value.origin == 'default':
         enabled = target.os not in ('Android', 'WINNT')
     if enabled:
-        imply_option('--enable-fmp4', '--enable-ffmpeg')
         return True
 
 set_config('MOZ_FFMPEG', ffmpeg)
 set_define('MOZ_FFMPEG', ffmpeg)
+imply_option('--enable-fmp4', ffmpeg, '--enable-ffmpeg')
 
 # Built-in fragmented MP4 support.
 # ==============================================================

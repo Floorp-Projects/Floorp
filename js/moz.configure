@@ -123,11 +123,11 @@ def instruments(value, target):
               % target.os)
     if value:
         add_old_configure_assignment('MOZ_INSTRUMENTS', True)
-        imply_option('--enable-profiling', reason='--enable-instruments')
         return True
 
 set_config('MOZ_INSTRUMENTS', instruments)
 set_define('MOZ_INSTRUMENTS', instruments)
+imply_option('--enable-profiling', instruments, reason='--enable-instruments')
 
 js_option('--enable-callgrind', env='MOZ_CALLGRIND',
           help='Enable callgrind profiling')
@@ -135,27 +135,30 @@ js_option('--enable-callgrind', env='MOZ_CALLGRIND',
 @depends('--enable-callgrind')
 def callgrind(value):
     if value:
-        imply_option('--enable-profiling')
         return True
 
 set_define('MOZ_CALLGRIND', callgrind)
+imply_option('--enable-profiling', callgrind)
 
 js_option('--enable-profiling', env='MOZ_PROFILING',
           help='Set compile flags necessary for using sampling profilers '
                '(e.g. shark, perf)')
 
-@depends('--enable-profiling', target)
-def profiling(value, target):
+@depends('--enable-profiling')
+def profiling(value):
     if value:
         add_old_configure_assignment('MOZ_PROFILING', True)
+        return True
 
-        if target.kernel == 'WINNT' or (target.kernel == 'Linux' and
-                                        target.os == 'GNU'):
-            imply_option('--enable-vtune', reason='--enable-profiling')
+@depends(profiling, target)
+def imply_vtune(value, target):
+    if value and (target.kernel == 'WINNT' or (target.kernel == 'Linux' and
+                                               target.os == 'GNU')):
         return True
 
 set_config('MOZ_PROFILING', profiling)
 set_define('MOZ_PROFILING', profiling)
+imply_option('--enable-vtune', imply_vtune, reason='--enable-profiling')
 
 
 js_option('--enable-vtune', env='MOZ_VTUNE', help='Enable vtune profiling')
