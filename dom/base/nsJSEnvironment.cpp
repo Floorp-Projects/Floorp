@@ -842,7 +842,6 @@ nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, n
   if (NS_WARN_IF(!jsapi.Init(GetGlobalObject()))) {
     return NS_ERROR_FAILURE;
   }
-  jsapi.TakeOwnershipOfErrorReporting();
   JSContext* cx = jsapi.cx();
 
   JS::AutoValueVector args(cx);

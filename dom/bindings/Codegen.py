@@ -15793,7 +15793,6 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             MOZ_ASSERT(self);
             AutoJSAPI jsapi;
             jsapi.Init();
-            jsapi.TakeOwnershipOfErrorReporting();
             JSContext* cx = jsapi.cx();
             // It's safe to use UnprivilegedJunkScopeOrWorkerGlobal here because
             // all we want is to wrap into _some_ scope and then unwrap to find
