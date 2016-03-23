@@ -16,7 +16,8 @@ dictionary KeyframeAnimationOptions : KeyframeEffectOptions {
 
 [NoInterfaceObject]
 interface Animatable {
-  [Func="nsDocument::IsWebAnimationsEnabled", Throws]
+  // Bug 1253507: Disabled in Firefox 47 branch
+  [ChromeOnly, Throws]
   Animation animate(object? frames,
                     optional (unrestricted double or KeyframeAnimationOptions)
                       options);
