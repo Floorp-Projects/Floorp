@@ -26,6 +26,15 @@ var Feedback = {
     browser.addEventListener("FeedbackClose", this, false, true);
     browser.addEventListener("FeedbackMaybeLater", this, false, true);
     browser.addEventListener("FeedbackOpenPlay", this, false, true);
+
+    // Dispatch a custom event to the page content when feedback is prompted by the browser.
+    // This will be used by the page to determine it's being loaded directly by the browser,
+    // instead of by the user visiting the page, e.g. through browser history.
+    function loadListener(event) {
+      browser.removeEventListener("DOMContentLoaded", loadListener, false);
+      browser.contentDocument.dispatchEvent(new CustomEvent("FeedbackPrompted"));
+    }
+    browser.addEventListener("DOMContentLoaded", loadListener, false);
   },
 
   handleEvent: function(event) {
