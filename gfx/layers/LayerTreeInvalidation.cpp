@@ -45,7 +45,7 @@ namespace mozilla {
 namespace layers {
 
 struct LayerPropertiesBase;
-UniquePtr<LayerPropertiesBase> CloneLayerTreePropertiesInternal(Layer* aRoot, bool aIsMask = false);
+UniquePtr<LayerPropertiesBase> CloneLayerTreePropertiesInternal(Layer* aRoot);
 
 /**
  * Get accumulated transform of from the context creating layer to the
@@ -154,11 +154,11 @@ struct LayerPropertiesBase : public LayerProperties
   {
     MOZ_COUNT_CTOR(LayerPropertiesBase);
     if (aLayer->GetMaskLayer()) {
-      mMaskLayer = CloneLayerTreePropertiesInternal(aLayer->GetMaskLayer(), true);
+      mMaskLayer = CloneLayerTreePropertiesInternal(aLayer->GetMaskLayer());
     }
     for (size_t i = 0; i < aLayer->GetAncestorMaskLayerCount(); i++) {
       Layer* maskLayer = aLayer->GetAncestorMaskLayerAt(i);
-      mAncestorMaskLayers.AppendElement(CloneLayerTreePropertiesInternal(maskLayer, true));
+      mAncestorMaskLayers.AppendElement(CloneLayerTreePropertiesInternal(maskLayer));
     }
     if (mUseClipRect) {
       mClipRect = *aLayer->GetEffectiveClipRect();
@@ -485,7 +485,7 @@ static ImageHost* GetImageHost(Layer* aLayer)
 
 struct ImageLayerProperties : public LayerPropertiesBase
 {
-  explicit ImageLayerProperties(ImageLayer* aImage, bool aIsMask)
+  explicit ImageLayerProperties(ImageLayer* aImage)
     : LayerPropertiesBase(aImage)
     , mContainer(aImage->GetContainer())
     , mImageHost(GetImageHost(aImage))
@@ -494,7 +494,6 @@ struct ImageLayerProperties : public LayerPropertiesBase
     , mScaleMode(aImage->GetScaleMode())
     , mLastProducerID(-1)
     , mLastFrameID(-1)
-    , mIsMask(aIsMask)
   {
     if (mContainer) {
       mRect.SizeTo(mContainer->GetCurrentSize());
@@ -572,7 +571,6 @@ struct ImageLayerProperties : public LayerPropertiesBase
   IntRect mRect;
   int32_t mLastProducerID;
   int32_t mLastFrameID;
-  bool mIsMask;
 };
 
 struct CanvasLayerProperties : public LayerPropertiesBase
@@ -605,13 +603,11 @@ struct CanvasLayerProperties : public LayerPropertiesBase
 };
 
 UniquePtr<LayerPropertiesBase>
-CloneLayerTreePropertiesInternal(Layer* aRoot, bool aIsMask /* = false */)
+CloneLayerTreePropertiesInternal(Layer* aRoot)
 {
   if (!aRoot) {
     return MakeUnique<LayerPropertiesBase>();
   }
-
-  MOZ_ASSERT(!aIsMask || aRoot->GetType() == Layer::TYPE_IMAGE);
 
   switch (aRoot->GetType()) {
     case Layer::TYPE_CONTAINER:
@@ -620,7 +616,7 @@ CloneLayerTreePropertiesInternal(Layer* aRoot, bool aIsMask /* = false */)
     case Layer::TYPE_COLOR:
       return MakeUnique<ColorLayerProperties>(static_cast<ColorLayer*>(aRoot));
     case Layer::TYPE_IMAGE:
-      return MakeUnique<ImageLayerProperties>(static_cast<ImageLayer*>(aRoot), aIsMask);
+      return MakeUnique<ImageLayerProperties>(static_cast<ImageLayer*>(aRoot));
     case Layer::TYPE_CANVAS:
       return MakeUnique<CanvasLayerProperties>(static_cast<CanvasLayer*>(aRoot));
     case Layer::TYPE_READBACK:
