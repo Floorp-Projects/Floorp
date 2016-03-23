@@ -490,7 +490,7 @@ public class GeckoView extends LayerView
 
     public void importScript(final String url) {
         if (url.startsWith("resource://android/assets/")) {
-            GeckoAppShell.notifyObservers("GeckoView:ImportScript", url);
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("GeckoView:ImportScript", url));
             return;
         }
 
@@ -503,7 +503,8 @@ public class GeckoView extends LayerView
             Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
         }
 
-        GeckoAppShell.notifyObservers("Viewport:Flush", null);
+        GeckoAppShell.sendEventToGecko(
+                GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
     }
 
     private void handleReady(final JSONObject message) {
@@ -656,7 +657,7 @@ public class GeckoView extends LayerView
             } catch (Exception e) {
                 Log.w(LOGTAG, "Error building JSON arguments for loadUrl.", e);
             }
-            GeckoAppShell.notifyObservers("Tab:Load", args.toString());
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Load", args.toString()));
         }
 
         /**

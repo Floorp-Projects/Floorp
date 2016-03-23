@@ -70,7 +70,8 @@ public class FilePicker implements GeckoEventListener {
                     }
 
 
-                    GeckoAppShell.notifyObservers("FilePicker:Result", message.toString());
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(
+                        "FilePicker:Result", message.toString()));
                 }
             }, tabId);
         }

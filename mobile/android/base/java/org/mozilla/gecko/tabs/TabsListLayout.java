@@ -95,7 +95,7 @@ class TabsListLayout extends TwoWayView
     public void hide() {
         setVisibility(View.GONE);
         Tabs.unregisterOnTabsChangedListener(this);
-        GeckoAppShell.notifyObservers("Tab:Screenshot:Cancel", "");
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot:Cancel", ""));
         tabsAdapter.clear();
     }
 

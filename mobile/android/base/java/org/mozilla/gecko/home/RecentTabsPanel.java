@@ -80,7 +80,7 @@ public class RecentTabsPanel extends HomeFragment
             Log.e(LOGTAG, "JSON error", e);
         }
 
-        GeckoAppShell.notifyObservers("Session:RestoreRecentTabs", json.toString());
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:RestoreRecentTabs", json.toString()));
     }
 
     private static final class ClosedTab {
@@ -164,7 +164,7 @@ public class RecentTabsPanel extends HomeFragment
         registerForContextMenu(mList);
 
         EventDispatcher.getInstance().registerGeckoThreadListener(this, "ClosedTabs:Data");
-        GeckoAppShell.notifyObservers("ClosedTabs:StartNotifications", null);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("ClosedTabs:StartNotifications", null));
     }
 
     @Override
@@ -179,7 +179,7 @@ public class RecentTabsPanel extends HomeFragment
         mEmptyView = null;
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "ClosedTabs:Data");
-        GeckoAppShell.notifyObservers("ClosedTabs:StopNotifications", null);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("ClosedTabs:StopNotifications", null));
     }
 
     @Override

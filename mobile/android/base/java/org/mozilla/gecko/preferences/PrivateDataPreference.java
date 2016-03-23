@@ -55,6 +55,6 @@ class PrivateDataPreference extends MultiPrefMultiChoicePreference {
         }
 
         // clear private data in gecko
-        GeckoAppShell.notifyObservers("Sanitize:ClearData", json.toString());
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Sanitize:ClearData", json.toString()));
     }
 }

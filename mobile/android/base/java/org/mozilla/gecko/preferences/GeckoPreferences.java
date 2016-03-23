@@ -947,10 +947,10 @@ OnSharedPreferenceChangeListener
      * Restore default search engines in Gecko and retrigger a search engine refresh.
      */
     protected void restoreDefaultSearchEngines() {
-        GeckoAppShell.notifyObservers("SearchEngines:RestoreDefaults", null);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:RestoreDefaults", null));
 
         // Send message to Gecko to get engines. SearchPreferenceCategory listens for the response.
-        GeckoAppShell.notifyObservers("SearchEngines:GetVisible", null);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:GetVisible", null));
     }
 
     @Override

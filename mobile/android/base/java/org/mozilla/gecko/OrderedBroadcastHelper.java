@@ -101,7 +101,8 @@ public final class OrderedBroadcastHelper
                             return;
                         }
 
-                        GeckoAppShell.notifyObservers(responseEvent, res.toString());
+                        GeckoEvent event = GeckoEvent.createBroadcastEvent(responseEvent, res.toString());
+                        GeckoAppShell.sendEventToGecko(event);
                     }
                 }
             };
