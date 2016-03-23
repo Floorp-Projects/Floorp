@@ -599,7 +599,9 @@ option('--enable-application', nargs=1, env='MOZ_BUILD_APP',
 @depends('--enable-application', '--help')
 def application(app, help):
     if app:
-        imply_option(app.format('--enable-project'))
+        return app
+
+imply_option('--enable-project', application)
 
 
 @depends(check_build_environment, '--help')
