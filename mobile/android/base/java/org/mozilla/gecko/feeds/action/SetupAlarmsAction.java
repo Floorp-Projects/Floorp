@@ -16,14 +16,14 @@ import org.mozilla.gecko.feeds.FeedAlarmReceiver;
 import org.mozilla.gecko.feeds.FeedService;
 
 /**
- * SetupAction: Set up alarms to run various actions every now and then.
+ * SetupAlarmsAction: Set up alarms to run various actions every now and then.
  */
-public class SetupAction extends BaseAction {
+public class SetupAlarmsAction extends FeedAction {
     private static final String LOGTAG = "FeedSetupAction";
 
     private Context context;
 
-    public SetupAction(Context context) {
+    public SetupAlarmsAction(Context context) {
         this.context = context;
     }
 

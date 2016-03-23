@@ -38,9 +38,9 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * CheckAction: Check if feeds we subscribed to have new content available.
+ * CheckForUpdatesAction: Check if feeds we subscribed to have new content available.
  */
-public class CheckAction extends BaseAction {
+public class CheckForUpdatesAction extends FeedAction {
     /**
      * This extra will be added to Intents fired by the notification.
      */
@@ -50,7 +50,7 @@ public class CheckAction extends BaseAction {
 
     private Context context;
 
-    public CheckAction(Context context) {
+    public CheckForUpdatesAction(Context context) {
         this.context = context;
     }
 
