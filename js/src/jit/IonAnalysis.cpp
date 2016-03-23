@@ -1469,17 +1469,19 @@ TypeAnalyzer::adjustPhiInputs(MPhi* phi)
         if (in->type() == MIRType_Value)
             continue;
 
-        if (in->isUnbox() && phi->typeIncludes(in->toUnbox()->input())) {
-            // The input is being explicitly unboxed, so sneak past and grab
-            // the original box.
-            phi->replaceOperand(i, in->toUnbox()->input());
-        } else {
+        // The input is being explicitly unboxed, so sneak past and grab
+        // the original box.
+        if (in->isUnbox() && phi->typeIncludes(in->toUnbox()->input()))
+            in = in->toUnbox()->input();
+
+        if (in->type() != MIRType_Value) {
             if (!alloc().ensureBallast())
                 return false;
 
-            MDefinition* box = AlwaysBoxAt(alloc(), in->block()->lastIns(), in);
-            phi->replaceOperand(i, box);
+            in = AlwaysBoxAt(alloc(), in->block()->lastIns(), in);
         }
+
+        phi->replaceOperand(i, in);
     }
 
     return true;
