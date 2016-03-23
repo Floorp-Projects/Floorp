@@ -25,6 +25,7 @@
 #include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "gc/Rooting.h"
+#include "js/CharacterEncoding.h"
 #include "js/Vector.h"
 #include "vm/Debugger.h"
 #include "vm/SavedFrame.h"
@@ -1164,7 +1165,23 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
                 // youngest frame of the async stack as the parent of the oldest
                 // frame of this activation. We still need to iterate over other
                 // frames in this activation before reaching the oldest frame.
-                asyncCause = activation.asyncCause();
+                AutoCompartment ac(cx, iter.compartment());
+                const char* cause = activation.asyncCause();
+                UTF8Chars utf8Chars(cause, strlen(cause));
+                size_t twoByteCharsLen = 0;
+                char16_t* twoByteChars = UTF8CharsToNewTwoByteCharsZ(cx, utf8Chars,
+                                                                     &twoByteCharsLen).get();
+                if (!twoByteChars)
+                    return false;
+
+                // We expect that there will be a relatively small set of
+                // asyncCause reasons ("setTimeout", "promise", etc.), so we
+                // atomize the cause here in hopes of being able to benefit
+                // from reuse.
+                asyncCause = JS_AtomizeUCStringN(cx, twoByteChars, twoByteCharsLen);
+                js_free(twoByteChars);
+                if (!asyncCause)
+                    return false;
                 asyncActivation = &activation;
             }
         }

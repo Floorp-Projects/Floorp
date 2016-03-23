@@ -873,7 +873,7 @@ Activation::Activation(JSContext* cx, Kind kind)
     hideScriptedCallerCount_(0),
     frameCache_(cx),
     asyncStack_(cx, cx->runtime_->asyncStackForNewActivations),
-    asyncCause_(cx, cx->runtime_->asyncCauseForNewActivations),
+    asyncCause_(cx->runtime_->asyncCauseForNewActivations),
     asyncCallIsExplicit_(cx->runtime_->asyncCallIsExplicit),
     kind_(kind)
 {
