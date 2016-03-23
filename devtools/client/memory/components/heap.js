@@ -256,10 +256,18 @@ const Heap = module.exports = createClass({
   },
 
   _renderCensus(state, census, diffing, onViewSourceInDebugger) {
+    assert(census.report, "Should not render census that does not have a report");
+
+    if (!census.report.children) {
+      const msg = diffing       ? L10N.getStr("heapview.no-difference")
+                : census.filter ? L10N.getStr("heapview.none-match")
+                : /* else */      L10N.getStr("heapview.empty");
+      return this._renderHeapView(state, dom.div({ className: "empty" }, msg));
+    }
+
     const contents = [];
 
     if (census.display.breakdown.by === "allocationStack"
-        && census.report
         && census.report.children
         && census.report.children.length === 1
         && census.report.children[0].name === "noStack") {
