@@ -1732,7 +1732,7 @@ HTMLFormElement::GetActionURL(nsIURI** aActionURL,
                       true, &permitsFormAction);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!permitsFormAction) {
-      rv = NS_ERROR_CSP_FORM_ACTION_VIOLATION;
+      return NS_ERROR_CSP_FORM_ACTION_VIOLATION;
     }
   }
 
