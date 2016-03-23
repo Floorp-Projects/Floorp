@@ -5092,8 +5092,6 @@ ICSetProp_Unboxed::Compiler::generateStubCode(MacroAssembler& masm)
 
     if (needsUpdateStubs()) {
         // Stow both R0 and R1 (object and value).
-        masm.push(object);
-        masm.push(ICStubReg);
         EmitStowICValues(masm, 2);
 
         // Move RHS into R0 for TypeUpdate check.
@@ -5105,8 +5103,9 @@ ICSetProp_Unboxed::Compiler::generateStubCode(MacroAssembler& masm)
 
         // Unstow R0 and R1 (object and key)
         EmitUnstowICValues(masm, 2);
-        masm.pop(ICStubReg);
-        masm.pop(object);
+
+        // The TypeUpdate IC may have smashed object. Rederive it.
+        masm.unboxObject(R0, object);
 
         // Trigger post barriers here on the values being written. Fields which
         // objects can be written to also need update stubs.
@@ -5163,8 +5162,6 @@ ICSetProp_TypedObject::Compiler::generateStubCode(MacroAssembler& masm)
 
     if (needsUpdateStubs()) {
         // Stow both R0 and R1 (object and value).
-        masm.push(object);
-        masm.push(ICStubReg);
         EmitStowICValues(masm, 2);
 
         // Move RHS into R0 for TypeUpdate check.
@@ -5176,8 +5173,9 @@ ICSetProp_TypedObject::Compiler::generateStubCode(MacroAssembler& masm)
 
         // Unstow R0 and R1 (object and key)
         EmitUnstowICValues(masm, 2);
-        masm.pop(ICStubReg);
-        masm.pop(object);
+
+        // We may have clobbered object in the TypeUpdate IC. Rederive it.
+        masm.unboxObject(R0, object);
 
         // Trigger post barriers here on the values being written. Descriptors
         // which can write objects also need update stubs.
