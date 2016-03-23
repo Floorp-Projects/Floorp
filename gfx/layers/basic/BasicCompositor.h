@@ -42,7 +42,7 @@ public:
 class BasicCompositor : public Compositor
 {
 public:
-  explicit BasicCompositor(CompositorBridgeParent* aParent, nsIWidget *aWidget);
+  explicit BasicCompositor(nsIWidget *aWidget);
 
 protected:
   virtual ~BasicCompositor();

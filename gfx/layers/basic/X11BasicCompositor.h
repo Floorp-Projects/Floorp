@@ -46,9 +46,8 @@ private:
 class X11BasicCompositor : public BasicCompositor
 {
 public:
-  explicit X11BasicCompositor(CompositorBridgeParent* aParent, nsIWidget *aWidget)
-    : BasicCompositor(aParent, aWidget)
-  {}
+
+  explicit X11BasicCompositor(nsIWidget *aWidget) : BasicCompositor(aWidget) {}
 
   virtual already_AddRefed<DataTextureSource>
   CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) override;
