@@ -7,25 +7,25 @@
 #ifndef __GFXMESSAGEUTILS_H__
 #define __GFXMESSAGEUTILS_H__
 
-#include "FilterSupport.h"
-#include "FrameMetrics.h"
-#include "ImageTypes.h"
-#include "RegionBuilder.h"
 #include "base/process_util.h"
 #include "chrome/common/ipc_message_utils.h"
-#include "gfxPoint.h"
-#include "gfxRect.h"
-#include "gfxTypes.h"
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/gfx/Matrix.h"
-#include "mozilla/layers/AsyncDragMetrics.h"
-#include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/layers/GeckoContentController.h"
-#include "mozilla/layers/LayersTypes.h"
-#include "nsRect.h"
-#include "nsRegion.h"
 
 #include <stdint.h>
+
+#include "mozilla/gfx/Matrix.h"
+#include "gfxPoint.h"
+#include "gfxRect.h"
+#include "nsRect.h"
+#include "nsRegion.h"
+#include "gfxTypes.h"
+#include "mozilla/layers/AsyncDragMetrics.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/CompositorTypes.h"
+#include "ImageTypes.h"
+#include "FrameMetrics.h"
+#include "FilterSupport.h"
+#include "mozilla/layers/GeckoContentController.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -367,7 +367,6 @@ struct RegionParamTraits
 
   static void Write(Message* msg, const paramType& param)
   {
-
     for (auto iter = param.RectIter(); !iter.Done(); iter.Next()) {
       const Rect& r = iter.Get();
       MOZ_RELEASE_ASSERT(!r.IsEmpty());
@@ -380,16 +379,12 @@ struct RegionParamTraits
 
   static bool Read(const Message* msg, void** iter, paramType* result)
   {
-    RegionBuilder<Region> builder;
     Rect rect;
     while (ReadParam(msg, iter, &rect)) {
-      if (rect.IsEmpty()) {
-        *result = builder.ToRegion();
+      if (rect.IsEmpty())
         return true;
-      }
-      builder.Or(rect);
+      result->Or(*result, rect);
     }
-
     return false;
   }
 };
