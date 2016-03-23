@@ -106,6 +106,14 @@ GfxMatrixToSkiaMatrix(const Matrix& mat, SkMatrix& retval)
                   0, 0, SK_Scalar1);
 }
 
+static inline void
+GfxMatrixToSkiaMatrix(const Matrix4x4& aMatrix, SkMatrix& aResult)
+{
+  aResult.setAll(SkFloatToScalar(aMatrix._11), SkFloatToScalar(aMatrix._21), SkFloatToScalar(aMatrix._41),
+                 SkFloatToScalar(aMatrix._12), SkFloatToScalar(aMatrix._22), SkFloatToScalar(aMatrix._42),
+                 SkFloatToScalar(aMatrix._14), SkFloatToScalar(aMatrix._24), SkFloatToScalar(aMatrix._44));
+}
+
 static inline SkPaint::Cap
 CapStyleToSkiaCap(CapStyle aCap)
 {
