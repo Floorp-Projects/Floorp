@@ -32,6 +32,26 @@ def which(name):
 
     return name
 
+def choose_item(jobs, max_items, display):
+    job_count = len(jobs)
+
+    # Don't present a choice if there are too many tests
+    if job_count > max_items:
+        raise Exception('Too many jobs.')
+
+    for i, job in enumerate(jobs, 1):
+        print("{}) {}".format(i, display(job)))
+
+    item = raw_input('Which one:\n')
+    try:
+        item = int(item)
+        if item > job_count or item < 1:
+            raise Exception('Input isn\'t between 1 and {}'.format(job_count))
+    except ValueError:
+        raise Exception('Unrecognized input')
+
+    return jobs[item - 1]
+
 def main(argv):
     # The [TESTS] optional arguments are paths of test files relative
     # to the jit-test/tests directory.
@@ -281,11 +301,20 @@ def main(argv):
         if job_count > 1:
             print('Multiple tests match command line'
                   ' arguments, debugger can only run one')
-            for tc in job_list:
-                print('    {}'.format(tc.path))
-            sys.exit(1)
+            jobs = list(job_list)
 
-        tc = job_list.next()
+            def display_job(job):
+                if len(job.jitflags) != 0:
+                    flags = "({})".format(' '.join(job.jitflags))
+                return '{} {}'.format(job.path, flags)
+
+            try:
+                tc = choose_item(jobs, max_items=50, display=display_job)
+            except Exception as e:
+                sys.exit(str(e))
+        else:
+            tc = job_list.next()
+
         if options.debugger == 'gdb':
             debug_cmd = ['gdb', '--args']
         elif options.debugger == 'lldb':
