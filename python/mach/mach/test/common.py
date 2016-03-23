@@ -16,7 +16,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 class TestBase(unittest.TestCase):
     provider_dir = os.path.join(here, 'providers')
 
-    def _run_mach(self, args, provider_file=None, entry_point=None, context_handler=None):
+    def get_mach(self, provider_file=None, entry_point=None, context_handler=None):
         m = Mach(os.getcwd())
         m.define_category('testing', 'Mach unittest', 'Testing for mach core', 10)
         m.populate_context_handler = context_handler
@@ -27,13 +27,18 @@ class TestBase(unittest.TestCase):
         if entry_point:
             m.load_commands_from_entry_point(entry_point)
 
+        return m
+
+    def _run_mach(self, argv, *args, **kwargs):
+        m = self.get_mach(*args, **kwargs)
+
         stdout = StringIO()
         stderr = StringIO()
         stdout.encoding = 'UTF-8'
         stderr.encoding = 'UTF-8'
 
         try:
-            result = m.run(args, stdout=stdout, stderr=stderr)
+            result = m.run(argv, stdout=stdout, stderr=stderr)
         except SystemExit:
             result = None
 
