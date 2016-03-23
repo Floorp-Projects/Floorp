@@ -177,6 +177,9 @@
     // ++ and -- should not need spacing
     "space-unary-ops": [2, { "words": true, "nonwords": false }],
 
+    // Require "use strict" to be defined globally in the script.
+    "strict": [2, "global"],
+
     // No comparisons to NaN
     "use-isnan": 2,
 

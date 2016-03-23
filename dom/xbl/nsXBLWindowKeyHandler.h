@@ -77,11 +77,6 @@ protected:
   // to a particular element rather than the document
   nsresult EnsureHandlers();
 
-  // check if the given handler cares about the given key event
-  bool EventMatched(nsXBLPrototypeHandler* aHandler, nsIAtom* aEventType,
-                    nsIDOMKeyEvent* aEvent, uint32_t aCharCode,
-                    const IgnoreModifierState& aIgnoreModifierState);
-
   // Is an HTML editable element focused
   bool IsHTMLEditableFieldFocused();
 
@@ -90,6 +85,25 @@ protected:
   // whether the disabled attribute is set on the element (assuming the element
   // is non-null).
   already_AddRefed<mozilla::dom::Element> GetElement(bool* aIsDisabled = nullptr);
+
+  /**
+   * GetElementForHandler() retrieves an element for the handler.  The element
+   * may be a command element or a key element.
+   *
+   * @param aHandler           The handler.
+   * @param aElementForHandler Must not be nullptr.  The element is returned to
+   *                           this.
+   * @return                   true if the handler is valid.  Otherwise, false.
+   */
+  bool GetElementForHandler(nsXBLPrototypeHandler* aHandler,
+                            mozilla::dom::Element** aElementForHandler);
+
+  /**
+   * IsExecutableElement() returns true if aElement is executable.
+   * Otherwise, false. aElement should be a command element or a key element.
+   */
+  bool IsExecutableElement(mozilla::dom::Element* aElement) const;
+
   // Using weak pointer to the DOM Element.
   nsWeakPtr              mWeakPtrForElement;
   mozilla::dom::EventTarget* mTarget; // weak ref

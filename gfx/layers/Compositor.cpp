@@ -5,7 +5,7 @@
 
 #include "mozilla/layers/Compositor.h"
 #include "base/message_loop.h"          // for MessageLoop
-#include "mozilla/layers/CompositorParent.h"  // for CompositorParent
+#include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent
 #include "mozilla/layers/Effects.h"     // for Effect, EffectChain, etc
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "gfx2DGlue.h"
@@ -25,8 +25,8 @@ namespace layers {
 /* static */ void
 Compositor::AssertOnCompositorThread()
 {
-  MOZ_ASSERT(!CompositorParent::CompositorLoop() ||
-             CompositorParent::CompositorLoop() == MessageLoop::current(),
+  MOZ_ASSERT(!CompositorBridgeParent::CompositorLoop() ||
+             CompositorBridgeParent::CompositorLoop() == MessageLoop::current(),
              "Can only call this from the compositor thread!");
 }
 

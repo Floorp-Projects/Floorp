@@ -700,8 +700,7 @@ JSFunction::trace(JSTracer* trc)
                    (HeapValue*)toExtended()->extendedSlots, "nativeReserved");
     }
 
-    if (atom_)
-        TraceEdge(trc, &atom_, "atom");
+    TraceNullableEdge(trc, &atom_, "atom");
 
     if (isInterpreted()) {
         // Functions can be be marked as interpreted despite having no script

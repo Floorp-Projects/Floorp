@@ -78,7 +78,8 @@ RematerializedFrame::RematerializeInlineFrames(JSContext* cx, uint8_t* top,
                                                MaybeReadFallback& fallback,
                                                Vector<RematerializedFrame*>& frames)
 {
-    if (!frames.resize(iter.frameCount()))
+    Vector<RematerializedFrame*> tempFrames(cx);
+    if (!tempFrames.resize(iter.frameCount()))
         return false;
 
     while (true) {
@@ -91,13 +92,14 @@ RematerializedFrame::RematerializeInlineFrames(JSContext* cx, uint8_t* top,
                 return false;
         }
 
-        frames[frameNo] = frame;
+        tempFrames[frameNo] = frame;
 
         if (!iter.more())
             break;
         ++iter;
     }
 
+    frames = Move(tempFrames);
     return true;
 }
 

@@ -43,6 +43,8 @@ def verbose_until(wait, target, condition, message=""):
 def save_memory_report(marionette):
     """
     Saves memory report (like about:memory) to current working directory.
+
+    :param marionette: Marionette instance to use for executing.
     """
     with marionette.using_context('chrome'):
         marionette.execute_async_script("""

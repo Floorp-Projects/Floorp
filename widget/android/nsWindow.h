@@ -25,8 +25,8 @@ namespace mozilla {
     class WidgetTouchEvent;
 
     namespace layers {
-        class CompositorParent;
-        class CompositorChild;
+        class CompositorBridgeParent;
+        class CompositorBridgeChild;
         class LayerManager;
         class APZCTreeManager;
     }
@@ -170,7 +170,8 @@ public:
     virtual void DrawWindowUnderlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
     virtual void DrawWindowOverlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
 
-    virtual mozilla::layers::CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight) override;
+    virtual mozilla::layers::CompositorBridgeParent* NewCompositorBridgeParent(
+      int aSurfaceWidth, int aSurfaceHeight) override;
 
     static bool IsCompositionPaused();
     static void InvalidateAndScheduleComposite();

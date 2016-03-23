@@ -675,6 +675,102 @@ DrawTargetSkia::MaskSurface(const Pattern &aSource,
   mCanvas->drawBitmap(bitmap, aOffset.x, aOffset.y, &paint.mPaint);
 }
 
+bool
+DrawTarget::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4x4& aMatrix)
+{
+  // Composite the 3D transform with the DT's transform.
+  Matrix4x4 fullMat = aMatrix * Matrix4x4::From2D(mTransform);
+  if (fullMat.IsSingular()) {
+    return false;
+  }
+  // Transform the surface bounds and clip to this DT.
+  IntRect xformBounds =
+    RoundedOut(
+      fullMat.TransformAndClipBounds(Rect(Point(0, 0), Size(aSurface->GetSize())),
+                                     Rect(Point(0, 0), Size(GetSize()))));
+  if (xformBounds.IsEmpty()) {
+    return true;
+  }
+  // Offset the matrix by the transformed origin.
+  fullMat.PostTranslate(-xformBounds.x, -xformBounds.y, 0);
+
+  // Read in the source data.
+  SkBitmap srcBitmap = GetBitmapForSurface(aSurface);
+
+  // Set up an intermediate destination surface only the size of the transformed bounds.
+  // Try to pass through the source's format unmodified in both the BGRA and ARGB cases.
+  RefPtr<DataSourceSurface> dstSurf =
+    Factory::CreateDataSourceSurface(xformBounds.Size(),
+                                     srcBitmap.alphaType() == kPremul_SkAlphaType ?
+                                       aSurface->GetFormat() : SurfaceFormat::A8R8G8B8_UINT32,
+                                     true);
+  if (!dstSurf) {
+    return false;
+  }
+  SkAutoTUnref<SkCanvas> dstCanvas(
+    SkCanvas::NewRasterDirect(
+      SkImageInfo::Make(xformBounds.width, xformBounds.height,
+                        srcBitmap.alphaType() == kPremul_SkAlphaType ?
+                          srcBitmap.colorType() : kBGRA_8888_SkColorType,
+                        kPremul_SkAlphaType),
+      dstSurf->GetData(), dstSurf->Stride()));
+  if (!dstCanvas) {
+    return false;
+  }
+
+  // Do the transform.
+  SkPaint paint;
+  paint.setAntiAlias(true);
+  paint.setFilterQuality(kLow_SkFilterQuality);
+  paint.setXfermodeMode(SkXfermode::kSrc_Mode);
+
+  SkMatrix xform;
+  GfxMatrixToSkiaMatrix(fullMat, xform);
+  dstCanvas->setMatrix(xform);
+
+  dstCanvas->drawBitmap(srcBitmap, 0, 0, &paint);
+  dstCanvas->flush();
+
+  // Temporarily reset the DT's transform, since it has already been composed above.
+  Matrix origTransform = mTransform;
+  SetTransform(Matrix());
+
+  // Draw the transformed surface within the transformed bounds.
+  DrawSurface(dstSurf, Rect(xformBounds), Rect(Point(0, 0), Size(xformBounds.Size())));
+
+  SetTransform(origTransform);
+
+  return true;
+}
+
+bool
+DrawTargetSkia::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4x4& aMatrix)
+{
+  if (aMatrix.IsSingular()) {
+    return false;
+  }
+
+  MarkChanged();
+
+  SkBitmap bitmap = GetBitmapForSurface(aSurface);
+
+  mCanvas->save();
+
+  SkPaint paint;
+  paint.setAntiAlias(true);
+  paint.setFilterQuality(kLow_SkFilterQuality);
+
+  SkMatrix xform;
+  GfxMatrixToSkiaMatrix(aMatrix, xform);
+  mCanvas->concat(xform);
+
+  mCanvas->drawBitmap(bitmap, 0, 0, &paint);
+
+  mCanvas->restore();
+
+  return true;
+}
+
 already_AddRefed<SourceSurface>
 DrawTargetSkia::CreateSourceSurfaceFromData(unsigned char *aData,
                                             const IntSize &aSize,

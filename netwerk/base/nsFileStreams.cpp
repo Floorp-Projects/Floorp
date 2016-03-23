@@ -323,6 +323,8 @@ nsFileStreamBase::MaybeOpen(nsIFile* aFile, int32_t aIoFlags,
 
     mOpenParams.localFile = aFile;
 
+    // Following call open() at main thread.
+    // Main thread might be blocked, while open a remote file.
     return DoOpen();
 }
 
@@ -432,19 +434,23 @@ nsFileInputStream::Open(nsIFile* aFile, int32_t aIOFlags, int32_t aPerm)
 
     rv = MaybeOpen(aFile, aIOFlags, aPerm,
                    mBehaviorFlags & nsIFileInputStream::DEFER_OPEN);
+
     if (NS_FAILED(rv)) return rv;
 
-    if (mBehaviorFlags & DELETE_ON_CLOSE) {
-        // POSIX compatible filesystems allow a file to be unlinked while a
-        // file descriptor is still referencing the file.  since we've already
-        // opened the file descriptor, we'll try to remove the file.  if that
-        // fails, then we'll just remember the nsIFile and remove it after we
-        // close the file descriptor.
-        rv = aFile->Remove(false);
-        if (NS_SUCCEEDED(rv)) {
-          // No need to remove it later. Clear the flag.
-          mBehaviorFlags &= ~DELETE_ON_CLOSE;
-        }
+    // if defer open is set, do not remove the file here.
+    // remove the file while Close() is called.
+    if ((mBehaviorFlags & DELETE_ON_CLOSE) &&
+        !(mBehaviorFlags & nsIFileInputStream::DEFER_OPEN)) {
+      // POSIX compatible filesystems allow a file to be unlinked while a
+      // file descriptor is still referencing the file.  since we've already
+      // opened the file descriptor, we'll try to remove the file.  if that
+      // fails, then we'll just remember the nsIFile and remove it after we
+      // close the file descriptor.
+      rv = aFile->Remove(false);
+      if (NS_SUCCEEDED(rv)) {
+        // No need to remove it later. Clear the flag.
+        mBehaviorFlags &= ~DELETE_ON_CLOSE;
+      }
     }
 
     return NS_OK;
@@ -514,9 +520,6 @@ nsFileInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* _retval)
 NS_IMETHODIMP
 nsFileInputStream::ReadLine(nsACString& aLine, bool* aResult)
 {
-    nsresult rv = DoPendingOpen();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     if (!mLineBuffer) {
       mLineBuffer = new nsLineBuffer<char>;
     }
@@ -526,10 +529,18 @@ nsFileInputStream::ReadLine(nsACString& aLine, bool* aResult)
 NS_IMETHODIMP
 nsFileInputStream::Seek(int32_t aWhence, int64_t aOffset)
 {
+  return SeekInternal(aWhence, aOffset);
+}
+
+nsresult
+nsFileInputStream::SeekInternal(int32_t aWhence, int64_t aOffset, bool aClearBuf)
+{
     nsresult rv = DoPendingOpen();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mLineBuffer = nullptr;
+    if (aClearBuf) {
+        mLineBuffer = nullptr;
+    }
     if (!mFD) {
         if (mBehaviorFlags & REOPEN_ON_REWIND) {
             rv = Open(mFile, mIOFlags, mPerm);
@@ -699,19 +710,28 @@ nsPartialFileInputStream::Init(nsIFile* aFile, uint64_t aStart,
 
     nsresult rv = nsFileInputStream::Init(aFile, aIOFlags, aPerm,
                                           aBehaviorFlags);
+
+    // aFile is a partial file, it must exist.
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return nsFileInputStream::Seek(NS_SEEK_SET, mStart);
+    mDeferredSeek = true;
+
+    return rv;
 }
 
 NS_IMETHODIMP
 nsPartialFileInputStream::Tell(int64_t *aResult)
 {
     int64_t tell = 0;
-    nsresult rv = nsFileInputStream::Tell(&tell);
-    if (NS_SUCCEEDED(rv)) {
-        *aResult = tell - mStart;
-    }
+
+    nsresult rv = DoPendingSeek();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = nsFileInputStream::Tell(&tell);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+
+    *aResult = tell - mStart;
     return rv;
 }
 
@@ -719,16 +739,23 @@ NS_IMETHODIMP
 nsPartialFileInputStream::Available(uint64_t* aResult)
 {
     uint64_t available = 0;
-    nsresult rv = nsFileInputStream::Available(&available);
-    if (NS_SUCCEEDED(rv)) {
-        *aResult = TruncateSize(available);
-    }
+
+    nsresult rv = DoPendingSeek();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = nsFileInputStream::Available(&available);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *aResult = TruncateSize(available);
     return rv;
 }
 
 NS_IMETHODIMP
 nsPartialFileInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aResult)
 {
+    nsresult rv = DoPendingSeek();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     uint32_t readsize = (uint32_t) TruncateSize(aCount);
     if (readsize == 0 && mBehaviorFlags & CLOSE_ON_EOF) {
         Close();
@@ -736,16 +763,19 @@ nsPartialFileInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aResult)
         return NS_OK;
     }
 
-    nsresult rv = nsFileInputStream::Read(aBuf, readsize, aResult);
-    if (NS_SUCCEEDED(rv)) {
-        mPosition += readsize;
-    }
+    rv = nsFileInputStream::Read(aBuf, readsize, aResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mPosition += readsize;
     return rv;
 }
 
 NS_IMETHODIMP
 nsPartialFileInputStream::Seek(int32_t aWhence, int64_t aOffset)
 {
+    nsresult rv = DoPendingSeek();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     int64_t offset;
     switch (aWhence) {
         case NS_SEEK_SET:
@@ -765,10 +795,10 @@ nsPartialFileInputStream::Seek(int32_t aWhence, int64_t aOffset)
         return NS_ERROR_INVALID_ARG;
     }
 
-    nsresult rv = nsFileInputStream::Seek(NS_SEEK_SET, offset);
-    if (NS_SUCCEEDED(rv)) {
-        mPosition = offset - mStart;
-    }
+    rv = nsFileInputStream::Seek(NS_SEEK_SET, offset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mPosition = offset - mStart;
     return rv;
 }
 
@@ -828,6 +858,19 @@ nsPartialFileInputStream::Deserialize(
     return NS_SUCCEEDED(nsFileInputStream::Seek(NS_SEEK_SET, mStart));
 }
 
+nsresult
+nsPartialFileInputStream::DoPendingSeek()
+{
+    if (!mDeferredSeek) {
+       return NS_OK;
+    }
+
+    mDeferredSeek = false;
+
+    // This is the first time to open the file, don't clear mLinebuffer.
+    // mLineBuffer might be already initialized by ReadLine().
+    return nsFileInputStream::SeekInternal(NS_SEEK_SET, mStart, false);
+}
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileOutputStream
 

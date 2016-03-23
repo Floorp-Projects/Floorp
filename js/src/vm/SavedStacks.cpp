@@ -757,11 +757,17 @@ GetSavedFrameFunctionDisplayName(JSContext* cx, HandleObject savedFrame, Mutable
 
 JS_PUBLIC_API(SavedFrameResult)
 GetSavedFrameAsyncCause(JSContext* cx, HandleObject savedFrame, MutableHandleString asyncCausep,
-                        SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */)
+                        SavedFrameSelfHosted unused_ /* = SavedFrameSelfHosted::Include */)
 {
     AutoMaybeEnterFrameCompartment ac(cx, savedFrame);
     bool skippedAsync;
-    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame, selfHosted, skippedAsync));
+    // This function is always called with self-hosted frames excluded by
+    // GetValueIfNotCached in dom/bindings/Exceptions.cpp. However, we want
+    // to include them because our Promise implementation causes us to have
+    // the async cause on a self-hosted frame. So we just ignore the
+    // parameter and always include self-hosted frames.
+    js::RootedSavedFrame frame(cx, UnwrapSavedFrame(cx, savedFrame, SavedFrameSelfHosted::Include,
+                                                    skippedAsync));
     if (!frame) {
         asyncCausep.set(nullptr);
         return SavedFrameResult::AccessDenied;

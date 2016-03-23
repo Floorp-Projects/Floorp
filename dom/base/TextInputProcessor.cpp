@@ -712,7 +712,8 @@ TextInputProcessor::WillDispatchKeyboardEvent(
                       uint32_t aIndexOfKeypress,
                       void* aData)
 {
-  // TextInputProcessor doesn't set alternative char code.
+  // TextInputProcessor doesn't set alternative char code nor modify charCode
+  // even when Ctrl key is pressed.
 }
 
 nsresult

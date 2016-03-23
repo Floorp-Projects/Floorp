@@ -130,6 +130,58 @@ public:
     return (mInBubblingPhase && mInCapturePhase);
   }
 
+  /**
+   * Helper methods for methods of DOM Event.
+   */
+  inline void StopPropagation()
+  {
+    mPropagationStopped = true;
+  }
+  inline void StopImmediatePropagation()
+  {
+    StopPropagation();
+    mImmediatePropagationStopped = true;
+  }
+  inline void StopCrossProcessForwarding()
+  {
+    mNoCrossProcessBoundaryForwarding = true;
+  }
+  inline void PreventDefault(bool aCalledByDefaultHandler = true)
+  {
+    mDefaultPrevented = true;
+    // Note that even if preventDefault() has already been called by chrome,
+    // a call of preventDefault() by content needs to overwrite
+    // mDefaultPreventedByContent to true because in such case, defaultPrevented
+    // must be true when web apps check it after they call preventDefault().
+    if (aCalledByDefaultHandler) {
+      mDefaultPreventedByChrome = true;
+    } else {
+      mDefaultPreventedByContent = true;
+    }
+  }
+  // This should be used only before dispatching events into the DOM tree.
+  inline void PreventDefaultBeforeDispatch()
+  {
+    mDefaultPrevented = true;
+  }
+  inline bool DefaultPrevented() const
+  {
+    return mDefaultPrevented;
+  }
+  inline bool DefaultPreventedByContent() const
+  {
+    MOZ_ASSERT(!mDefaultPreventedByContent || DefaultPrevented());
+    return mDefaultPreventedByContent;
+  }
+  inline bool IsTrusted() const
+  {
+    return mIsTrusted;
+  }
+  inline bool PropagationStopped() const
+  {
+    return mPropagationStopped;
+  }
+
   inline void Clear()
   {
     SetRawFlags(0);
@@ -308,11 +360,24 @@ public:
     originalTarget = aCopyTargets ? aEvent.originalTarget : nullptr;
   }
 
-  void PreventDefault()
+  /**
+   * Helper methods for methods of DOM Event.
+   */
+  void StopPropagation() { mFlags.StopPropagation(); }
+  void StopImmediatePropagation() { mFlags.StopImmediatePropagation(); }
+  void StopCrossProcessForwarding() { mFlags.StopCrossProcessForwarding(); }
+  void PreventDefault(bool aCalledByDefaultHandler = true)
   {
-    mFlags.mDefaultPrevented = true;
-    mFlags.mDefaultPreventedByChrome = true;
+    mFlags.PreventDefault(aCalledByDefaultHandler);
   }
+  void PreventDefaultBeforeDispatch() { mFlags.PreventDefaultBeforeDispatch(); }
+  bool DefaultPrevented() const { return mFlags.DefaultPrevented(); }
+  bool DefaultPreventedByContent() const
+  {
+    return mFlags.DefaultPreventedByContent();
+  }
+  bool IsTrusted() const { return mFlags.IsTrusted(); }
+  bool PropagationStopped() const { return mFlags.PropagationStopped(); }
 
   /**
    * Utils for checking event types
@@ -794,7 +859,7 @@ public:
     : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eUIEventClass)
     , detail(0)
     , mCausedByUntrustedEvent(
-        aEventCausesThisEvent && !aEventCausesThisEvent->mFlags.mIsTrusted)
+        aEventCausesThisEvent && !aEventCausesThisEvent->IsTrusted())
   {
   }
 
@@ -816,7 +881,7 @@ public:
   // event, IsTrustable() returns what you expected.
   bool IsTrustable() const
   {
-    return mFlags.mIsTrusted && !mCausedByUntrustedEvent;
+    return IsTrusted() && !mCausedByUntrustedEvent;
   }
 
   void AssignUIEventData(const InternalUIEvent& aEvent, bool aCopyTargets)

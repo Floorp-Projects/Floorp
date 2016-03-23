@@ -4939,6 +4939,11 @@ Selection::Collapse(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   // Hack to display the caret on the right line (bug 1237236).
   if (aParentNode.IsContent()) {
     nsTextFrame* f = do_QueryFrame(aParentNode.AsContent()->GetPrimaryFrame());
+    if (f) {
+      int32_t frameOffset;
+      f = do_QueryFrame(nsCaret::GetFrameAndOffset(this, &aParentNode,
+                                                   aOffset, &frameOffset));
+    }
     if (f && f->IsAtEndOfLine() && f->HasSignificantTerminalNewline()) {
       if (f->GetContentEnd() == int32_t(aOffset)) {
         mFrameSelection->SetHint(CARET_ASSOCIATE_AFTER);

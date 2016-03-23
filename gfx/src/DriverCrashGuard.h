@@ -39,6 +39,7 @@ enum class CrashGuardType : uint32_t
   D3D11Layers,
   D3D9Video,
   GLContext,
+  D3D11Video,
   NUM_TYPES
 };
 
@@ -135,6 +136,17 @@ class D3D9VideoCrashGuard final : public DriverCrashGuard
 {
  public:
   explicit D3D9VideoCrashGuard(dom::ContentParent* aContentParent = nullptr);
+
+ protected:
+  bool UpdateEnvironment() override;
+  void LogCrashRecovery() override;
+  void LogFeatureDisabled() override;
+};
+
+class D3D11VideoCrashGuard final : public DriverCrashGuard
+{
+ public:
+  explicit D3D11VideoCrashGuard(dom::ContentParent* aContentParent = nullptr);
 
  protected:
   bool UpdateEnvironment() override;

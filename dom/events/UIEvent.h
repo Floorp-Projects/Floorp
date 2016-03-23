@@ -95,7 +95,7 @@ public:
 
   bool CancelBubble() const
   {
-    return mEvent->mFlags.mPropagationStopped;
+    return mEvent->PropagationStopped();
   }
 
   bool IsChar() const;

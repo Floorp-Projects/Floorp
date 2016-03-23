@@ -7,7 +7,7 @@
 
 include LayersSurfaces;
 include protocol PCompositable;
-include protocol PCompositor;
+include protocol PCompositorBridge;
 include protocol PLayer;
 include protocol PImageContainer;
 include protocol PRenderFrame;

@@ -41,9 +41,4 @@ new TestCase ( SECTION, "'^^^x'.match(new RegExp('^\\^+'))",
 new TestCase ( SECTION, "'^^^x'.match(/^\\^+/)",
 	       String(['^^^']), String('^^^x'.match(/^\^+/)));
 
-RegExp.multiline = true;
-// 'abc\n123xyz'.match(new RegExp('^\d+')) <multiline==true>
-new TestCase ( SECTION, "'abc\n123xyz'.match(new RegExp('^\\d+'))",
-	       String(['123']), String('abc\n123xyz'.match(new RegExp('^\\d+'))));
-
 test();

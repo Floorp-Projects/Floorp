@@ -722,7 +722,7 @@ function start() {
     var div = addDiv(t, { class: 'compositable',
                           style: 'animation: fade 100s' });
     var cssAnimation = div.getAnimations()[0];
-    var scriptAnimation = div.animate({ opacity: [ 1, 0 ] }, 1000);
+    var scriptAnimation = div.animate({ opacity: [ 1, 0 ] }, 100000);
     return scriptAnimation.ready.then(function() {
       assert_animation_property_state_equals(
         cssAnimation.effect.getProperties(),

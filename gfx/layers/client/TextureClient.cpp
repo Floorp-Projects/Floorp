@@ -979,7 +979,7 @@ TextureClient::RemoveFromCompositable(CompositableClient* aCompositable,
     // Hold TextureClient until transaction complete.
     tracker->SetTextureClient(this);
     mRemoveFromCompositableWaiter = waiter;
-    // RemoveTextureFromCompositableAsync() expects CompositorChild's presence.
+    // RemoveTextureFromCompositableAsync() expects CompositorBridgeChild's presence.
     mActor->GetForwarder()->RemoveTextureFromCompositableAsync(tracker, aCompositable, this);
   }
 #endif

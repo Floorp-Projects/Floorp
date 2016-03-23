@@ -933,7 +933,10 @@ protected:
   NS_IMETHOD
   Run() override
   {
-    mCallback->Call("promise callback");
+    nsIGlobalObject* global = xpc::NativeGlobal(mCallback->CallbackPreserveColor());
+    if (global && !global->IsDying()) {
+      mCallback->Call("promise callback");
+    }
     return NS_OK;
   }
 

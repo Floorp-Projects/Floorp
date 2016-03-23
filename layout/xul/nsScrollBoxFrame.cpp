@@ -91,7 +91,7 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
     case eMouseOver:
       if (IsActivatedOnHover()) {
         StartRepeat();
-        mTrustedEvent = aEvent->mFlags.mIsTrusted;
+        mTrustedEvent = aEvent->IsTrusted();
       }
       break;
 
@@ -126,7 +126,7 @@ nsAutoRepeatBoxFrame::HandlePress(nsPresContext* aPresContext,
 {
   if (!IsActivatedOnHover()) {
     StartRepeat();
-    mTrustedEvent = aEvent->mFlags.mIsTrusted;
+    mTrustedEvent = aEvent->IsTrusted();
     DoMouseClick(aEvent, mTrustedEvent);
   }
 
