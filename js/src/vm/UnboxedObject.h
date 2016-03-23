@@ -238,6 +238,7 @@ class UnboxedPlainObject : public JSObject
     uint8_t data_[1];
 
   public:
+    static const ObjectOps objectOps_;
     static const Class class_;
 
     static bool obj_lookupProperty(JSContext* cx, HandleObject obj,
@@ -374,6 +375,7 @@ class UnboxedArrayObject : public JSObject
     static uint32_t exactCapacityIndex(uint32_t capacity);
 
   public:
+    static const ObjectOps objectOps_;
     static const Class class_;
 
     static bool obj_lookupProperty(JSContext* cx, HandleObject obj,

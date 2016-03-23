@@ -38,7 +38,7 @@ IsCacheableNonGlobalScope(JSObject* obj)
     bool cacheable =
         obj->is<CallObject>() || obj->is<ClonedBlockObject>() || obj->is<DeclEnvObject>();
 
-    MOZ_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
+    MOZ_ASSERT_IF(cacheable, !obj->getOpsLookupProperty());
     return cacheable;
 }
 

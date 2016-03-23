@@ -2022,7 +2022,7 @@ NativeGetPropertyInline(JSContext* cx,
         // plumbing of JSObject::getGeneric; the top of the loop is where
         // we're going to end up anyway. But if pobj is non-native,
         // that optimization would be incorrect.
-        if (proto->getOps()->getProperty)
+        if (proto->getOpsGetProperty())
             return GeneralizedGetProperty(cx, proto, id, receiver, nameLookup, vp);
 
         pobj = &proto->as<NativeObject>();
@@ -2047,7 +2047,7 @@ bool
 js::GetPropertyForNameLookup(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     RootedValue receiver(cx, ObjectValue(*obj));
-    if (obj->getOps()->getProperty)
+    if (obj->getOpsGetProperty())
         return GeneralizedGetProperty(cx, obj, id, receiver, NameLookup, vp);
     return NativeGetPropertyInline<CanGC>(cx, obj.as<NativeObject>(), receiver, id, NameLookup, vp);
 }

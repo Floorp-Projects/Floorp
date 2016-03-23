@@ -905,6 +905,21 @@ const Class UnboxedExpandoObject::class_ = {
     0
 };
 
+const ObjectOps UnboxedPlainObject::objectOps_ = {
+    UnboxedPlainObject::obj_lookupProperty,
+    UnboxedPlainObject::obj_defineProperty,
+    UnboxedPlainObject::obj_hasProperty,
+    UnboxedPlainObject::obj_getProperty,
+    UnboxedPlainObject::obj_setProperty,
+    UnboxedPlainObject::obj_getOwnPropertyDescriptor,
+    UnboxedPlainObject::obj_deleteProperty,
+    UnboxedPlainObject::obj_watch,
+    nullptr,   /* No unwatch needed, as watch() converts the object to native */
+    nullptr,   /* getElements */
+    UnboxedPlainObject::obj_enumerate,
+    nullptr    /* funToString */
+};
+
 const Class UnboxedPlainObject::class_ = {
     js_Object_str,
     Class::NON_NATIVE |
@@ -924,19 +939,7 @@ const Class UnboxedPlainObject::class_ = {
     UnboxedPlainObject::trace,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
-    {
-        UnboxedPlainObject::obj_lookupProperty,
-        UnboxedPlainObject::obj_defineProperty,
-        UnboxedPlainObject::obj_hasProperty,
-        UnboxedPlainObject::obj_getProperty,
-        UnboxedPlainObject::obj_setProperty,
-        UnboxedPlainObject::obj_getOwnPropertyDescriptor,
-        UnboxedPlainObject::obj_deleteProperty,
-        UnboxedPlainObject::obj_watch,
-        nullptr,   /* No unwatch needed, as watch() converts the object to native */
-        nullptr,   /* getElements */
-        UnboxedPlainObject::obj_enumerate,
-    }
+    &UnboxedPlainObject::objectOps_
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -1588,6 +1591,21 @@ UnboxedArrayObject::obj_enumerate(JSContext* cx, HandleObject obj, AutoIdVector&
     return true;
 }
 
+const ObjectOps UnboxedArrayObject::objectOps_ = {
+    UnboxedArrayObject::obj_lookupProperty,
+    UnboxedArrayObject::obj_defineProperty,
+    UnboxedArrayObject::obj_hasProperty,
+    UnboxedArrayObject::obj_getProperty,
+    UnboxedArrayObject::obj_setProperty,
+    UnboxedArrayObject::obj_getOwnPropertyDescriptor,
+    UnboxedArrayObject::obj_deleteProperty,
+    UnboxedArrayObject::obj_watch,
+    nullptr,   /* No unwatch needed, as watch() converts the object to native */
+    nullptr,   /* getElements */
+    UnboxedArrayObject::obj_enumerate,
+    nullptr    /* funToString */
+};
+
 const Class UnboxedArrayObject::class_ = {
     "Array",
     Class::NON_NATIVE |
@@ -1611,19 +1629,7 @@ const Class UnboxedArrayObject::class_ = {
         nullptr,    /* weakmapKeyDelegateOp */
         UnboxedArrayObject::objectMoved
     },
-    {
-        UnboxedArrayObject::obj_lookupProperty,
-        UnboxedArrayObject::obj_defineProperty,
-        UnboxedArrayObject::obj_hasProperty,
-        UnboxedArrayObject::obj_getProperty,
-        UnboxedArrayObject::obj_setProperty,
-        UnboxedArrayObject::obj_getOwnPropertyDescriptor,
-        UnboxedArrayObject::obj_deleteProperty,
-        UnboxedArrayObject::obj_watch,
-        nullptr,   /* No unwatch needed, as watch() converts the object to native */
-        nullptr,   /* getElements */
-        UnboxedArrayObject::obj_enumerate,
-    }
+    &UnboxedArrayObject::objectOps_
 };
 
 /////////////////////////////////////////////////////////////////////
