@@ -1,0 +1,9 @@
+#
+msgid ""
+msgstr ""
+
+msgid "alias.*.short"
+msgstr "Create a command alias"
+
+msgid "alias.*.full"
+msgstr "Create a command alias of the form `<alias> = <command> <args>`."

@@ -13,6 +13,20 @@ Settings can be specified anywhere, and used both by mach core or
 individual commands.
 
 
+Core Settings
+=============
+
+These settings are implemented by mach core.
+
+* alias - Create a command alias. This is useful if you want to alias a command to something else, optionally including some defaults. It can either be used to create an entire new command, or provide defaults for an existing one. For example:
+
+.. parsed-literal::
+
+    [alias]
+    mochitest = mochitest -f browser
+    browser-test = mochitest -f browser
+
+
 Defining Settings
 =================
 
