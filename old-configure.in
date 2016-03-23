@@ -4824,7 +4824,7 @@ fi
 dnl Detect if we can use yasm to compile libjpeg-turbo's optimized assembly
 dnl files.
 
-if test -n "$MOZ_LIBJPEG_TURBO"; then
+if test -n "$MOZ_LIBJPEG_TURBO" -a -n "$COMPILE_ENVIRONMENT"; then
 
   dnl Do we support libjpeg-turbo on this platform?
   case "$OS_ARCH:$CPU_ARCH" in
@@ -4911,7 +4911,7 @@ esac
 
 dnl Detect if we can use yasm to compile libav's assembly
 
-if test -n "$MOZ_LIBAV_FFT"; then
+if test -n "$MOZ_LIBAV_FFT" -a -n "$COMPILE_ENVIRONMENT"; then
   AC_DEFINE(MOZ_LIBAV_FFT)
   dnl Do we support libav-fft on this platform?
   case "$OS_ARCH:$CPU_ARCH" in
