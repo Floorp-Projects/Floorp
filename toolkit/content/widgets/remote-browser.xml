@@ -430,9 +430,9 @@
           switch (aMessage.name) {
             case "Browser:Init":
               this._outerWindowID = data.outerWindowID;
-              let result = {};
-              result.initPopup = this.autoCompletePopup != null;
-              return result;
+              this.messageManager.sendAsyncMessage("Browser:InitReceived", {
+                initPopup: this.autoCompletePopup != null,
+              });
               break;
             case "DOMTitleChanged":
               this._contentTitle = data.title;
