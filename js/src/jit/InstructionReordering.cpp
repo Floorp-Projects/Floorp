@@ -70,7 +70,9 @@ jit::ReorderInstructions(MIRGenerator* mir, MIRGraph& graph)
         for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++)
             iter->setId(nextId++);
 
-        for (MInstructionIterator iter(block->begin()); iter != block->end(); ) {
+        MInstruction* top = block->safeInsertTop();
+        MInstructionReverseIterator rtop = ++block->rbegin(top);
+        for (MInstructionIterator iter(block->begin(top)); iter != block->end(); ) {
             MInstruction* ins = *iter;
 
             // Filter out some instructions which are never reordered.
@@ -126,7 +128,7 @@ jit::ReorderInstructions(MIRGenerator* mir, MIRGraph& graph)
             }
 
             MInstruction* target = ins;
-            for (MInstructionReverseIterator riter = ++block->rbegin(ins); riter != block->rend(); riter++) {
+            for (MInstructionReverseIterator riter = ++block->rbegin(ins); riter != rtop; riter++) {
                 MInstruction* prev = *riter;
                 if (prev->isInterruptCheck())
                     break;
