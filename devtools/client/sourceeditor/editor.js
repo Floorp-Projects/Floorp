@@ -337,8 +337,6 @@ Editor.prototype = {
         if (typeof popup == "string") {
           popup = el.ownerDocument.getElementById(this.config.contextMenu);
         }
-
-        this.emit("onPopupOpen",  ev, popup);
         popup.openPopupAtScreen(ev.screenX, ev.screenY, true);
       }, false);
 
