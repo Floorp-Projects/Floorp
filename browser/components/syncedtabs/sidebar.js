@@ -17,7 +17,7 @@ this.syncedTabsDeckComponent = new SyncedTabsDeckComponent({window, SyncedTabs, 
 
 let onLoaded = () => {
   syncedTabsDeckComponent.init();
-  document.body.appendChild(syncedTabsDeckComponent.container);
+  document.getElementById("template-container").appendChild(syncedTabsDeckComponent.container);
 };
 
 let onUnloaded = () => {
