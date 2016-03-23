@@ -15,6 +15,7 @@ const { require } = BrowserLoader({
 });
 const { GetDevices } = require("devtools/client/shared/devices");
 const Telemetry = require("devtools/client/shared/telemetry");
+const { loadSheet } = require("sdk/stylesheet/utils");
 
 const { createFactory, createElement } =
   require("devtools/client/shared/vendor/react");
@@ -26,7 +27,6 @@ const Store = require("./store");
 const { addDevice, addDeviceType } = require("./actions/devices");
 const { changeLocation } = require("./actions/location");
 const { addViewport } = require("./actions/viewports");
-const { loadSheet } = require("sdk/stylesheet/utils");
 
 let bootstrap = {
 
