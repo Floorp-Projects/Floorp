@@ -20,12 +20,12 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.feeds.action.BaseAction;
-import org.mozilla.gecko.feeds.action.CheckAction;
-import org.mozilla.gecko.feeds.action.EnrollAction;
-import org.mozilla.gecko.feeds.action.SetupAction;
-import org.mozilla.gecko.feeds.action.SubscribeAction;
-import org.mozilla.gecko.feeds.action.WithdrawAction;
+import org.mozilla.gecko.feeds.action.FeedAction;
+import org.mozilla.gecko.feeds.action.CheckForUpdatesAction;
+import org.mozilla.gecko.feeds.action.EnrollSubscriptionsAction;
+import org.mozilla.gecko.feeds.action.SetupAlarmsAction;
+import org.mozilla.gecko.feeds.action.SubscribeToFeedAction;
+import org.mozilla.gecko.feeds.action.WithdrawSubscriptionsAction;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.Experiments;
 
@@ -50,7 +50,7 @@ public class FeedService extends IntentService {
     public static void subscribe(Context context, String feedUrl) {
         Intent intent = new Intent(context, FeedService.class);
         intent.setAction(ACTION_SUBSCRIBE);
-        intent.putExtra(SubscribeAction.EXTRA_FEED_URL, feedUrl);
+        intent.putExtra(SubscribeToFeedAction.EXTRA_FEED_URL, feedUrl);
         context.startService(intent);
     }
 
@@ -81,7 +81,7 @@ public class FeedService extends IntentService {
                 return;
             }
 
-            BaseAction action = createActionForIntent(intent);
+            FeedAction action = createActionForIntent(intent);
             if (action == null) {
                 Log.d(LOGTAG, "No action to process");
                 return;
@@ -108,24 +108,24 @@ public class FeedService extends IntentService {
     }
 
     @Nullable
-    private BaseAction createActionForIntent(Intent intent) {
+    private FeedAction createActionForIntent(Intent intent) {
         final Context context = getApplicationContext();
 
         switch (intent.getAction()) {
             case ACTION_SETUP:
-                return new SetupAction(context);
+                return new SetupAlarmsAction(context);
 
             case ACTION_SUBSCRIBE:
-                return new SubscribeAction(context);
+                return new SubscribeToFeedAction(context);
 
             case ACTION_CHECK:
-                return new CheckAction(context);
+                return new CheckForUpdatesAction(context);
 
             case ACTION_ENROLL:
-                return new EnrollAction(context);
+                return new EnrollSubscriptionsAction(context);
 
             case ACTION_WITHDRAW:
-                return new WithdrawAction(context);
+                return new WithdrawSubscriptionsAction(context);
 
             default:
                 throw new AssertionError("Unknown action: " + intent.getAction());

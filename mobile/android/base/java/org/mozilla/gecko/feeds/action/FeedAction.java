@@ -13,7 +13,7 @@ import org.mozilla.gecko.db.BrowserDB;
 /**
  * Interface for actions run by FeedService.
  */
-public abstract class BaseAction {
+public abstract class FeedAction {
     public static final boolean DEBUG_LOG = false;
 
     /**
