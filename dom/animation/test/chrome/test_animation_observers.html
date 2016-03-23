@@ -1470,6 +1470,47 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   childB.remove();
 });
 
+
+addAsyncAnimTest("change_duration_and_currenttime",
+                 { observe: div, subtree: true }, function*() {
+  var anim = div.animate({ opacity: [ 0, 1 ] }, 100000);
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation is added");
+
+  anim.effect.timing.duration = 10000;
+  yield await_frame();
+
+  assert_records([{ added: [], changed: [anim], removed: [] }],
+                 "records after duration is changed");
+
+  anim.effect.timing.duration = 10000;
+  yield await_frame();
+  assert_records([], "records after assigning same value");
+
+  anim.currentTime = 50000;
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after animation end");
+
+  anim.effect.timing.duration = 100000;
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation restarted");
+
+  anim.effect.timing.duration = "auto";
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after duration set \"auto\"");
+
+  anim.effect.timing.duration = "auto";
+  yield await_frame();
+  assert_records([], "records after assigning same value \"auto\"");
+
+  anim.cancel();
+  yield await_frame();
+});
+
 // Run the tests.
 SimpleTest.requestLongerTimeout(2);
 SimpleTest.waitForExplicitFinish();

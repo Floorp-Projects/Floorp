@@ -285,6 +285,48 @@ promise_test(function(t) {
 }, 'isRunningOnCompositor is true when a property that would otherwise block ' +
    'running on the compositor is overridden in the CSS cascade');
 
+promise_test(function(t) {
+  var div = addDiv(t);
+  var animation = div.animate({ opacity: [ 0, 1 ] }, 100000);
+
+  return animation.ready.then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+      'Animation reports that it is running on the compositor');
+
+    animation.currentTime = 50000;
+    animation.effect.timing.duration = 10000;
+
+    assert_equals(animation.isRunningOnCompositor, false,
+       'Animation reports that it is NOT running on the compositor'
+       + ' when the animation is set a shorter duration than current time');
+  }));
+}, 'animation is immediately removed from compositor' +
+   'when timing.duration is made shorter than the current time');
+
+promise_test(function(t) {
+  var div = addDiv(t);
+  var animation = div.animate({ opacity: [ 0, 1 ] }, 10000);
+
+  return animation.ready.then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+      'Animation reports that it is running on the compositor');
+
+    animation.currentTime = 50000;
+
+    assert_equals(animation.isRunningOnCompositor, false,
+      'Animation reports that it is NOT running on the compositor'
+      + ' when finished');
+
+    animation.effect.timing.duration = 100000;
+    return waitForFrame();
+  })).then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+      'Animation reports that it is running on the compositor'
+      + ' when restarted');
+  }));
+}, 'animation is added to compositor' +
+   ' when timing.duration is made longer than the current time');
+
 </script>
 </script>
 </body>
