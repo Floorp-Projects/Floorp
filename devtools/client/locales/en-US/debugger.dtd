@@ -167,6 +167,11 @@
 <!ENTITY debuggerUI.seMenuCondBreak     "Add Conditional Breakpoint">
 <!ENTITY debuggerUI.seMenuCondBreak.key "B">
 
+<!-- LOCALIZATION NOTE (debuggerUI.seMenuBreak): This is the text that
+  -  appears in the source editor context menu for editing a breakpoint. -->
+<!ENTITY debuggerUI.seEditMenuCondBreak     "Edit Conditional Breakpoint">
+<!ENTITY debuggerUI.seEditMenuCondBreak.key "B">
+
 <!-- LOCALIZATION NOTE (debuggerUI.tabs.*): This is the text that
   -  appears in the debugger's side pane tabs. -->
 <!ENTITY debuggerUI.tabs.workers        "Workers">
