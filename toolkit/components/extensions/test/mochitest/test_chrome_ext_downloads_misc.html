@@ -48,6 +48,13 @@ function backgroundScript() {
     }
   });
 
+  browser.downloads.onErased.addListener(data => {
+    events.add({type: "onErased", data});
+    if (eventWaiter) {
+      eventWaiter();
+    }
+  });
+
   // Returns a promise that will resolve when the given list of expected
   // events have all been seen.  By default, succeeds only if the exact list
   // of expected events is seen in the given order.  options.exact can be
@@ -686,14 +693,23 @@ add_task(function* test_erase() {
   msg = yield runInExtension("erase", {id: ids.dl1});
   is(msg.status, "success", "erase by id succeeded");
 
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onErased", data: ids.dl1},
+  ]);
+  is(msg.status, "success", "received onErased event");
+
   msg = yield runInExtension("search", {});
   is(msg.status, "success", "search succeded");
   is(msg.result.length, 2, "search found 2 downloads");
-  ok(msg.results.includes(ids.dl2) && msg.results.includes(ids.dl3),
-     "search found the correct 2 downloads");
 
   msg = yield runInExtension("erase", {});
   is(msg.status, "success", "erase everything succeeded");
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onErased", data: ids.dl2},
+    {type: "onErased", data: ids.dl3},
+  ], {inorder: false});
+  is(msg.status, "success", "received 2 onErased events");
 
   msg = yield runInExtension("search", {});
   is(msg.status, "success", "search succeded");
