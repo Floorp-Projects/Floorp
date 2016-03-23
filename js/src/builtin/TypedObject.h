@@ -499,6 +499,8 @@ class TypedObject : public JSObject
                                     MutableHandleValue vp);
 
   protected:
+    static const ObjectOps objectOps_;
+
     HeapPtrShape shape_;
 
     static bool obj_lookupProperty(JSContext* cx, HandleObject obj,

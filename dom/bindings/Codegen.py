@@ -700,20 +700,7 @@ class CGInterfaceObjectJSClass(CGThing):
                 nullptr,               /* trace */
                 JS_NULL_CLASS_SPEC,
                 JS_NULL_CLASS_EXT,
-                {
-                  nullptr, /* lookupProperty */
-                  nullptr, /* defineProperty */
-                  nullptr, /* hasProperty */
-                  nullptr, /* getProperty */
-                  nullptr, /* setProperty */
-                  nullptr, /* getOwnPropertyDescriptor */
-                  nullptr, /* deleteProperty */
-                  nullptr, /* watch */
-                  nullptr, /* unwatch */
-                  nullptr, /* getElements */
-                  nullptr, /* enumerate */
-                  InterfaceObjectToString, /* funToString */
-                }
+                &sInterfaceObjectClassObjectOps
               },
               eInterface,
               ${prototypeID},

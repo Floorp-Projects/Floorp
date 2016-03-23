@@ -375,7 +375,7 @@ js::GetElements(JSContext* cx, HandleObject aobj, uint32_t length, Value* vp)
         }
     }
 
-    if (js::GetElementsOp op = aobj->getOps()->getElements) {
+    if (js::GetElementsOp op = aobj->getOpsGetElements()) {
         ElementAdder adder(cx, vp, length, ElementAdder::GetElement);
         return op(cx, aobj, 0, length, &adder);
     }
@@ -2738,7 +2738,7 @@ GetIndexedPropertiesInRange(JSContext* cx, HandleObject obj, uint32_t begin, uin
     // properties.
     JSObject* pobj = obj;
     do {
-        if (!pobj->isNative() || pobj->getClass()->resolve || pobj->getOps()->lookupProperty)
+        if (!pobj->isNative() || pobj->getClass()->resolve || pobj->getOpsLookupProperty())
             return true;
     } while ((pobj = pobj->getProto()));
 
@@ -2930,7 +2930,7 @@ js::array_slice(JSContext* cx, unsigned argc, Value* vp)
     if (!narr)
         return false;
 
-    if (js::GetElementsOp op = obj->getOps()->getElements) {
+    if (js::GetElementsOp op = obj->getOpsGetElements()) {
         ElementAdder adder(cx, narr, end - begin, ElementAdder::CheckHasElemPreserveHoles);
         if (!op(cx, obj, begin, end, &adder))
             return false;

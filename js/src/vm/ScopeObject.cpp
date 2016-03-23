@@ -440,6 +440,20 @@ const Class CallObject::class_ = {
 
 /*****************************************************************************/
 
+const ObjectOps ModuleEnvironmentObject::objectOps_ = {
+    ModuleEnvironmentObject::lookupProperty,
+    nullptr,                                             /* defineProperty */
+    ModuleEnvironmentObject::hasProperty,
+    ModuleEnvironmentObject::getProperty,
+    ModuleEnvironmentObject::setProperty,
+    ModuleEnvironmentObject::getOwnPropertyDescriptor,
+    ModuleEnvironmentObject::deleteProperty,
+    nullptr, nullptr,                                    /* watch/unwatch */
+    nullptr,                                             /* getElements */
+    ModuleEnvironmentObject::enumerate,
+    nullptr
+};
+
 const Class ModuleEnvironmentObject::class_ = {
     "ModuleEnvironmentObject",
     JSCLASS_HAS_RESERVED_SLOTS(ModuleEnvironmentObject::RESERVED_SLOTS) |
@@ -458,19 +472,7 @@ const Class ModuleEnvironmentObject::class_ = {
     nullptr,        /* trace       */
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
-    {
-        ModuleEnvironmentObject::lookupProperty,
-        nullptr,                                             /* defineProperty */
-        ModuleEnvironmentObject::hasProperty,
-        ModuleEnvironmentObject::getProperty,
-        ModuleEnvironmentObject::setProperty,
-        ModuleEnvironmentObject::getOwnPropertyDescriptor,
-        ModuleEnvironmentObject::deleteProperty,
-        nullptr, nullptr,                                    /* watch/unwatch */
-        nullptr,                                             /* getElements */
-        ModuleEnvironmentObject::enumerate,
-        nullptr
-    }
+    &ModuleEnvironmentObject::objectOps_
 };
 
 /* static */ ModuleEnvironmentObject*
@@ -866,6 +868,20 @@ with_DeleteProperty(JSContext* cx, HandleObject obj, HandleId id, ObjectOpResult
     return DeleteProperty(cx, actual, id, result);
 }
 
+const ObjectOps DynamicWithObject::objectOps_ = {
+    with_LookupProperty,
+    with_DefineProperty,
+    with_HasProperty,
+    with_GetProperty,
+    with_SetProperty,
+    with_GetOwnPropertyDescriptor,
+    with_DeleteProperty,
+    nullptr, nullptr,    /* watch/unwatch */
+    nullptr,             /* getElements */
+    nullptr,             /* enumerate (native enumeration of target doesn't work) */
+    nullptr,
+};
+
 const Class DynamicWithObject::class_ = {
     "With",
     JSCLASS_HAS_RESERVED_SLOTS(DynamicWithObject::RESERVED_SLOTS) |
@@ -884,19 +900,7 @@ const Class DynamicWithObject::class_ = {
     nullptr, /* trace */
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
-    {
-        with_LookupProperty,
-        with_DefineProperty,
-        with_HasProperty,
-        with_GetProperty,
-        with_SetProperty,
-        with_GetOwnPropertyDescriptor,
-        with_DeleteProperty,
-        nullptr, nullptr,    /* watch/unwatch */
-        nullptr,             /* getElements */
-        nullptr,             /* enumerate (native enumeration of target doesn't work) */
-        nullptr,
-    }
+    &DynamicWithObject::objectOps_
 };
 
 /* static */ StaticEvalScope*
@@ -1120,6 +1124,20 @@ ClonedBlockObject::thisValue() const
 static_assert(StaticBlockScope::RESERVED_SLOTS == ClonedBlockObject::RESERVED_SLOTS,
               "static block scopes and dynamic block environments share a Class");
 
+const ObjectOps ClonedBlockObject::objectOps_ = {
+    nullptr,          /* lookupProperty */
+    nullptr,          /* defineProperty */
+    nullptr,          /* hasProperty */
+    nullptr,          /* getProperty */
+    nullptr,          /* setProperty */
+    nullptr,          /* getOwnPropertyDescriptor */
+    nullptr,          /* deleteProperty */
+    nullptr, nullptr, /* watch/unwatch */
+    nullptr,          /* getElements */
+    nullptr,          /* enumerate (native enumeration of target doesn't work) */
+    nullptr,
+};
+
 const Class ClonedBlockObject::class_ = {
     "Block",
     JSCLASS_HAS_RESERVED_SLOTS(ClonedBlockObject::RESERVED_SLOTS) |
@@ -1138,19 +1156,7 @@ const Class ClonedBlockObject::class_ = {
     nullptr, /* trace */
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
-    {
-        nullptr,          /* lookupProperty */
-        nullptr,          /* defineProperty */
-        nullptr,          /* hasProperty */
-        nullptr,          /* getProperty */
-        nullptr,          /* setProperty */
-        nullptr,          /* getOwnPropertyDescriptor */
-        nullptr,          /* deleteProperty */
-        nullptr, nullptr, /* watch/unwatch */
-        nullptr,          /* getElements */
-        nullptr,          /* enumerate (native enumeration of target doesn't work) */
-        nullptr,
-    }
+    &ClonedBlockObject::objectOps_
 };
 
 template<XDRMode mode>
@@ -1391,6 +1397,20 @@ lexicalError_DeleteProperty(JSContext* cx, HandleObject obj, HandleId id, Object
     return false;
 }
 
+const ObjectOps RuntimeLexicalErrorObject::objectOps_ = {
+    lexicalError_LookupProperty,
+    nullptr,             /* defineProperty */
+    lexicalError_HasProperty,
+    lexicalError_GetProperty,
+    lexicalError_SetProperty,
+    lexicalError_GetOwnPropertyDescriptor,
+    lexicalError_DeleteProperty,
+    nullptr, nullptr,    /* watch/unwatch */
+    nullptr,             /* getElements */
+    nullptr,             /* enumerate (native enumeration of target doesn't work) */
+    nullptr,             /* this */
+};
+
 const Class RuntimeLexicalErrorObject::class_ = {
     "RuntimeLexicalError",
     JSCLASS_HAS_RESERVED_SLOTS(RuntimeLexicalErrorObject::RESERVED_SLOTS) |
@@ -1409,19 +1429,7 @@ const Class RuntimeLexicalErrorObject::class_ = {
     nullptr, /* trace */
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
-    {
-        lexicalError_LookupProperty,
-        nullptr,             /* defineProperty */
-        lexicalError_HasProperty,
-        lexicalError_GetProperty,
-        lexicalError_SetProperty,
-        lexicalError_GetOwnPropertyDescriptor,
-        lexicalError_DeleteProperty,
-        nullptr, nullptr,    /* watch/unwatch */
-        nullptr,             /* getElements */
-        nullptr,             /* enumerate (native enumeration of target doesn't work) */
-        nullptr,             /* this */
-    }
+    &RuntimeLexicalErrorObject::objectOps_
 };
 
 /*****************************************************************************/
