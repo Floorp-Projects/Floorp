@@ -315,6 +315,10 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
       return NS_ERROR_FAILURE;
   }
 
+  // There could be unflushed notifications which hide textareas or other
+  // elements that we don't want to find text in.
+  presShell->FlushPendingNotifications(Flush_Layout);
+
   RefPtr<nsPresContext> presContext = presShell->GetPresContext();
 
   if (!presContext)
