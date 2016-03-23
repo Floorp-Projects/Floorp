@@ -39,7 +39,8 @@
                     android:persistent="false" />
 
     <CheckBoxPreference android:key="browser.display.use_document_fonts"
-                        android:title="@string/pref_show_web_fonts" />
+                        android:title="@string/pref_show_web_fonts"
+                        android:summary="@string/pref_show_web_fonts_summary"/>
 
     <ListPreference android:key="plugin.enable"
                     android:title="@string/pref_plugins"
