@@ -827,6 +827,9 @@
         <item name="android:paddingBottom">16dp</item>
         <item name="android:paddingLeft">8dp</item>
         <item name="android:paddingRight">8dp</item>
+
+        <!-- AppCompat sets Button text to all caps so we override that here. -->
+        <item name="textAllCaps">false</item>
     </style>
 
     <style name="TabQueueActivity" parent="android:style/Theme.NoDisplay" />

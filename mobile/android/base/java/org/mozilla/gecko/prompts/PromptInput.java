@@ -236,14 +236,7 @@ public class PromptInput {
 
         @Override
         public Object getValue() {
-            if (Versions.preHC && mType.equals("date")) {
-                // We can't use the custom DateTimePicker with a sdk older than 11.
-                // Fallback on the native DatePicker.
-                DatePicker dp = (DatePicker)mView;
-                GregorianCalendar calendar =
-                    new GregorianCalendar(dp.getYear(),dp.getMonth(),dp.getDayOfMonth());
-                return formatDateString("yyyy-MM-dd",calendar);
-            } else if (mType.equals("time")) {
+            if (mType.equals("time")) {
                 TimePicker tp = (TimePicker)mView;
                 GregorianCalendar calendar =
                     new GregorianCalendar(0,0,0,tp.getCurrentHour(),tp.getCurrentMinute());
@@ -286,11 +279,7 @@ public class PromptInput {
 
         @Override
         public View getView(final Context context) throws UnsupportedOperationException {
-            if (Versions.preHC) {
-                spinner = new Spinner(context);
-            } else {
-                spinner = new Spinner(context, Spinner.MODE_DIALOG);
-            }
+            spinner = new Spinner(context, Spinner.MODE_DIALOG);
             try {
                 if (mListitems.length > 0) {
                     ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, mListitems);

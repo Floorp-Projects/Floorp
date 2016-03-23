@@ -165,7 +165,9 @@ function backgroundScript() {
     ]);
   }).then(results => {
     for (let result of results) {
-      if (result.title !== "Mozilla Folder") createdBookmarks.add(result.id);
+      if (result.title !== "Mozilla Folder") {
+        createdBookmarks.add(result.id);
+      }
     }
     let createdFolderId = results[2].id;
     return Promise.all([

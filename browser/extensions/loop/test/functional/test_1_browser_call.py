@@ -2,8 +2,10 @@ from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException, StaleElementException
 # noinspection PyUnresolvedReferences
 from marionette_driver import Wait
+from marionette_driver.addons import Addons
 from marionette import MarionetteTestCase
 
+import re
 import os
 import sys
 import time
@@ -12,8 +14,8 @@ sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
 import pyperclip
 
-from serversetup import LoopTestServers
-from config import FIREFOX_PREFERENCES
+from serversetup import LoopTestServers, ROOMS_WEB_APP_URL_BASE
+from config import FIREFOX_PREFERENCES, USE_LOCAL_STANDALONE
 
 
 class Test1BrowserCall(MarionetteTestCase):
@@ -25,10 +27,27 @@ class Test1BrowserCall(MarionetteTestCase):
 
         MarionetteTestCase.setUp(self)
 
-        # Unfortunately, enforcing preferences currently comes with the side
-        # effect of launching and restarting the browser before running the
-        # real functional tests.  Bug 1048554 has been filed to track this.
-        self.marionette.enforce_gecko_prefs(FIREFOX_PREFERENCES)
+        # Although some of these preferences might require restart, we don't
+        # use enforce_gecko_prefs (which would restart), as we need to restart
+        # for the add-on installation anyway.
+        self.marionette.set_prefs(FIREFOX_PREFERENCES)
+
+        xpi_file = os.environ.get("LOOP_XPI_FILE")
+
+        if xpi_file:
+            addons = Addons(self.marionette)
+            # XXX We should really use temp=True here, but due to the later
+            # restart to ensure the add-on is installed correctly, this won't work
+            # at the moment. What we need is a fully restartless add-on - bug 1229352
+            # at which point we should be able to make this install temporarily
+            # and after the restart.
+            addons.install(os.path.abspath(xpi_file))
+
+        self.e10s_enabled = os.environ.get("TEST_E10S") == "1"
+
+        # Restart the browser nicely, so the preferences and add-on installation
+        # take full effect.
+        self.marionette.restart(in_app=True)
 
         # this is browser chrome, kids, not the content window just yet
         self.marionette.set_context("chrome")
@@ -65,6 +84,7 @@ class Test1BrowserCall(MarionetteTestCase):
                    message="Timeout out waiting for " + attribute + " to be false")
 
     def switch_to_panel(self):
+        self.marionette.set_context("chrome")
         button = self.marionette.find_element(By.ID, "loop-button")
 
         # click the element
@@ -78,18 +98,27 @@ class Test1BrowserCall(MarionetteTestCase):
         self.marionette.set_context("chrome")
         self.marionette.switch_to_frame()
 
+        contentBox = "content"
+        if self.e10s_enabled:
+            contentBox = "remote-content"
+
         # Added time lapse to allow for DOM to catch up
         time.sleep(2)
         # XXX should be using wait_for_element_displayed, but need to wait
         # for Marionette bug 1094246 to be fixed.
         chatbox = self.wait_for_element_exists(By.TAG_NAME, 'chatbox')
         script = ("return document.getAnonymousElementByAttribute("
-                  "arguments[0], 'anonid', 'content');")
+                  "arguments[0], 'anonid', '" + contentBox + "');")
         frame = self.marionette.execute_script(script, [chatbox])
         self.marionette.switch_to_frame(frame)
 
     def switch_to_standalone(self):
         self.marionette.set_context("content")
+
+    def load_homepage(self):
+        self.switch_to_standalone()
+
+        self.marionette.navigate("about:home")
 
     def local_start_a_conversation(self):
         button = self.wait_for_element_displayed(By.CSS_SELECTOR, ".new-room-view .btn-info")
@@ -97,6 +126,13 @@ class Test1BrowserCall(MarionetteTestCase):
         self.wait_for_element_enabled(button, 120)
 
         button.click()
+
+    def local_close_share_panel(self):
+        copyLink = self.wait_for_element_displayed(By.CLASS_NAME, "btn-copy")
+
+        self.wait_for_element_enabled(copyLink, 120)
+
+        copyLink.click()
 
     def local_check_room_self_video(self):
         self.switch_to_chatbox()
@@ -107,6 +143,14 @@ class Test1BrowserCall(MarionetteTestCase):
 
         self.check_video(".local-video")
 
+    def adjust_url(self, room_url):
+        if USE_LOCAL_STANDALONE != "1":
+            return room_url
+
+        # If we're not using the local standalone, then we need to adjust the room
+        # url that the server gives us to use the local standalone.
+        return re.sub("https?://.*/", ROOMS_WEB_APP_URL_BASE + "/", room_url)
+
     def local_get_and_verify_room_url(self):
         self.switch_to_chatbox()
         button = self.wait_for_element_displayed(By.CLASS_NAME, "btn-copy")
@@ -115,6 +159,8 @@ class Test1BrowserCall(MarionetteTestCase):
 
         # click the element
         room_url = pyperclip.paste()
+
+        room_url = self.adjust_url(room_url)
 
         self.assertIn(urlparse.urlparse(room_url).scheme, ['http', 'https'],
                       "room URL returned by server: '" + room_url +
@@ -265,9 +311,17 @@ class Test1BrowserCall(MarionetteTestCase):
                            "> 0, noted_calls = " + str(noted_calls))
 
     def test_1_browser_call(self):
+        # Marionette doesn't make it easy to set up a page to load automatically
+        # on start. So lets load about:home. We need this for now, so that the
+        # various browser checks believe we've enabled e10s.
+        self.load_homepage()
+
         self.switch_to_panel()
 
         self.local_start_a_conversation()
+
+        # Force to close the share panel
+        self.local_close_share_panel()
 
         # Check the self video in the conversation window
         self.local_check_room_self_video()

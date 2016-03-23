@@ -437,177 +437,6 @@ html, .fx-embedded, #main,
   height: 100%;
 }
 
-.room-invitation-overlay {
-  position: absolute;
-  background: rgba(255, 255, 255, 0.85);
-  top: 0;
-  height: 100%;
-  right: 0;
-  left: 0;
-  color: #000;
-  z-index: 1010;
-  display: flex;
-  flex-flow: column nowrap;
-  align-items: stretch;
-}
-
-.room-invitation-content {
-  display: flex;
-  flex-flow: column nowrap;
-  margin: 12px 0;
-  font-size: 1.4rem;
-}
-
-.room-invitation-content > * {
-  width: 100%;
-  margin: 0 15px;
-}
-
-.room-context-header {
-  font-weight: bold;
-  font-size: 1.6rem;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
-/* Input Button Combo group */
-.input-button-content {
-  margin: 0 15px 10px 15px;
-  min-width: 64px;
-  border-radius: 4px;
-  border: 1px solid #d2cece;;
-}
-
-.input-button-group-label {
-  color: #898a8a;
-  margin: 0 15px;
-  margin-bottom: 2px;
-  font-size: 1.2rem;
-}
-
-.input-button-content > * {
-  width: 100%;
-  padding: 0 4px;
-}
-
-.input-button-content > .input-group input {
-  font-size: 1.4rem;
-  padding: 0.7rem;
-  width: 100%;
-  border: 0;
-}
-
-.input-button-content > .group-item-top {
-  border-radius: 4px 4px 0 0;
-}
-
-.input-button-content > .group-item-bottom {
-  border-radius: 0 0 4px 4px;
-}
-
-.input-button-content > .input-group {
-  background: #FFF;
-}
-
-.input-button-content > .invite-button {
-  background: #00a9dc;
-  height: 34px;
-  text-align: center;
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: center;
-  align-items: center;
-}
-
-.input-button-content > .invite-button.triggered {
-  background-color: #00a9dc;
-}
-
-.input-button-content > .invite-button:hover {
-  background-color: #008ACB;
-}
-
-.share-action-group {
-  display: flex;
-  padding: 0 15px;
-  width: 100%;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: center;
-}
-
-.share-action-group > .invite-button {
-  cursor: pointer;
-  height: 34px;
-  border-radius: 4px;
-  background-color: #ebebeb;
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: center;
-  align-items: center;
-  flex-grow: 1;
-  margin-right: 20px;
-}
-
-.share-action-group > .invite-button:last-child {
-  margin-right: 0;
-}
-
-.share-action-group > .invite-button:hover {
-  background-color: #d4d4d4;
-}
-
-.share-action-group > .invite-button.triggered {
-  background-color: #d4d4d4;
-}
-
-.share-action-group > .invite-button > img {
-  height: 28px;
-  width: 28px;
-}
-
-.share-action-group > .invite-button > div {
-  display: inline;
-  color: #4a4a4a;
-}
-
-.share-service-dropdown {
-  color: #000;
-  text-align: start;
-  bottom: auto;
-  top: 0;
-  overflow: hidden;
-  overflow-y: auto;
-}
-
-/* When the dropdown is showing a vertical scrollbar, compensate for its width. */
-body[platform="other"] .share-service-dropdown.overflow > .dropdown-menu-item,
-body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
-  -moz-padding-end: 20px;
-}
-
-.share-service-dropdown > .dropdown-menu-item > .icon {
-  width: 14px;
-  height: 14px;
-  margin-right: 4px;
-}
-
-.dropdown-menu-item > .icon-add-share-service {
-  background-image: url("../img/icons-16x16.svg#add");
-  background-repeat: no-repeat;
-  background-size: 12px 12px;
-  width: 12px;
-  height: 12px;
-}
-
-.dropdown-menu-item:hover > .icon-add-share-service {
-  background-image: url("../img/icons-16x16.svg#add-hover");
-}
-
-.dropdown-menu-item:hover:active > .icon-add-share-service {
-  background-image: url("../img/icons-16x16.svg#add-active");
-}
-
 .context-url-view-wrapper > .context-content {
   margin: 0 1rem 1.5rem 1rem;
 }
@@ -624,13 +453,13 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 
 .media-wrapper > .focus-stream {
   display: flex;
-  /* We want this to be the width, minus 200px which is for the right-side text
-     chat and video displays. */
-  width: calc(100% - 200px);
-  /* 100% height to fill up media-layout, thus forcing other elements into the
-     second column that's 200px wide */
-  height: 100%;
   background-color: #d8d8d8;
+  /* 100% height to fill up media-layout, thus forcing other elements into the
+     second column that's 272px wide */
+  height: 100%;
+  /* We want this to be the width, minus 272px which is for the right-side text
+     chat and video displays. */
+  width: calc(100% - 272px);
 }
 
 .media-wrapper > .focus-stream.screen-sharing-paused > .remote-video-box {
@@ -639,8 +468,8 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 
 .media-wrapper > .local {
   flex: 0 1 auto;
-  width: 200px;
-  height: 150px;
+  height: 204px;
+  width: 272px;
 }
 
 .media-wrapper > .local .local-video,
@@ -676,15 +505,15 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
    fix its height. */
 .media-wrapper > .text-chat-view {
   flex: 0 0 auto;
-  /* Text chat is a fixed 200px width for normal displays. */
-  width: 200px;
   height: 100%;
+  /* Text chat is a fixed 272px width for normal displays. */
+  width: 272px;
 }
 
 .media-wrapper.showing-local-streams > .text-chat-view {
   /* When we're displaying the local streams, then we need to make the text
      chat view a bit shorter to give room. */
-  height: calc(100% - 150px);
+  height: calc(100% - 204px);
 }
 
 .media-wrapper.showing-local-streams.receiving-screen-share {
@@ -693,8 +522,8 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 
 .media-wrapper.showing-local-streams.receiving-screen-share > .text-chat-view {
   /* When we're displaying the local streams, then we need to make the text
-     chat view a bit shorter to give room. */
-  height: calc(100% - 300px);
+     chat view a bit shorter to give room. 2 streams x 204px each*/
+  height: calc(100% - 408px);
 }
 
 .media-wrapper.receiving-screen-share > .screen {
@@ -706,10 +535,11 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 }
 
 .media-wrapper.receiving-screen-share > .remote {
-  order: 3;
   flex: 0 1 auto;
-  width: 200px;
-  height: 150px;
+  order: 3;
+  /* to keep the 4:3 ratio set both height and width */
+  height: 204px;
+  width: 272px;
 }
 
 .media-wrapper.receiving-screen-share > .local {
@@ -907,8 +737,8 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 }
 
 .text-chat-disabled > .text-chat-entries {
-  /* When text chat is disabled, the entries box should be 100% height. */
-  height: 100%;
+  /* When text chat is disabled, we want to show a tile ad with 220px height */
+  height: calc(100% - 220px);
 }
 
 .text-chat-entry,
@@ -960,7 +790,7 @@ html[dir="rtl"] .text-chat-entry.received {
   /* leave some room for the chat bubble arrow */
   max-width: 70%;
   border-radius: 15px;
-  border: 1px solid #5cccee;
+  border: 1px solid #d8d8d8;
   background: #fff;
   word-wrap: break-word;
   flex: 0 1 auto;
@@ -978,7 +808,7 @@ html[dir="rtl"] .text-chat-entry.received {
 
 .text-chat-entry.received > p {
   border-top-left-radius: 0;
-  border-color: #d8d8d8;
+  border-color: #5cccee;
 }
 
 html[dir="rtl"] .text-chat-entry.sent > p {
@@ -1070,6 +900,43 @@ html[dir="rtl"] .text-chat-entry.received > p:after {
   height: 10px;
   background-image: url("../img/chatbubble-arrow-left.svg");
   align-self: auto;
+}
+
+.text-chat-notif {
+  display: flex;
+  margin-bottom: .5em;
+}
+
+.text-chat-notif > .content-wrapper {
+  margin-left: 10px;
+  display: flex;
+  border: 1px solid #B1B1B1;
+}
+
+.content-wrapper > .notification-icon {
+  margin: 8px 5px 8px 10px;
+}
+
+.content-wrapper > p {
+  margin-top: 8px;
+  margin-right: 10px;
+  margin-bottom: 8px;
+  color: #757575;
+  font-size: 12px;
+}
+
+html[dir="rtl"] .text-chat-notif > .content-wrapper {
+  margin-right: 10px;
+  margin-left: 0px;
+}
+
+html[dir="rtl"] .content-wrapper > .notification-icon {
+  margin: 8px 10px 8px 5px;
+}
+
+html[dir="rtl"] .content-wrapper > p {
+  margin-left: 10px;
+  margin-right: 0px;
 }
 
 html[dir="rtl"] .text-chat-arrow {

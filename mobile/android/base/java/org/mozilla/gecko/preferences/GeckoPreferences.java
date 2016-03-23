@@ -345,38 +345,6 @@ OnSharedPreferenceChangeListener
         // Use setResourceToOpen to specify these extras.
         Bundle intentExtras = getIntent().getExtras();
 
-        // For versions of Android lower than Honeycomb, use xml resources instead of
-        // Fragments because of an Android bug in ActionBar (described in bug 866352 and
-        // fixed in bug 833625).
-        if (Versions.preHC) {
-            // Write prefs to our custom GeckoSharedPrefs file.
-            getPreferenceManager().setSharedPreferencesName(GeckoSharedPrefs.APP_PREFS_NAME);
-
-            int res = 0;
-            if (intentExtras != null && intentExtras.containsKey(INTENT_EXTRA_RESOURCES)) {
-                // Fetch resource id from intent.
-                final String resourceName = intentExtras.getString(INTENT_EXTRA_RESOURCES);
-                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, Method.SETTINGS, resourceName);
-
-                if (resourceName != null) {
-                    res = getResources().getIdentifier(resourceName, "xml", getPackageName());
-                    if (res == 0) {
-                        Log.e(LOGTAG, "No resource found named " + resourceName);
-                    }
-                }
-            }
-            if (res == 0) {
-                // No resource specified, or the resource was invalid; use the default preferences screen.
-                Log.e(LOGTAG, "Displaying default settings.");
-                res = R.xml.preferences;
-                Telemetry.startUISession(TelemetryContract.Session.SETTINGS);
-            }
-
-            // We don't include a title in the XML, so set it here, in a locale-aware fashion.
-            updateTitleForPrefsResource(res);
-            addPreferencesFromResource(res);
-        }
-
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
             "Sanitize:Finished");
 
@@ -511,10 +479,6 @@ OnSharedPreferenceChangeListener
             return;
 
         mInitialized = true;
-        if (Versions.preHC) {
-            PreferenceScreen screen = getPreferenceScreen();
-            mPrefsRequest = setupPreferences(screen);
-        }
     }
 
     @Override
@@ -540,13 +504,6 @@ OnSharedPreferenceChangeListener
         if (mPrefsRequest != null) {
             PrefsHelper.removeObserver(mPrefsRequest);
             mPrefsRequest = null;
-        }
-
-        // The intent extras will be null if this is the top-level settings
-        // activity. In that case, we want to end the SETTINGS telmetry session.
-        // For HC+ versions of Android this is handled in GeckoPreferenceFragment.
-        if (Versions.preHC && getIntent().getExtras() == null) {
-            Telemetry.stopUISession(TelemetryContract.Session.SETTINGS);
         }
     }
 
@@ -1581,14 +1538,10 @@ OnSharedPreferenceChangeListener
             return;
         }
 
-        if (Versions.preHC) {
-            intent.putExtra("resource", resource);
-        } else {
-            intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, GeckoPreferenceFragment.class.getName());
+        intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, GeckoPreferenceFragment.class.getName());
 
-            Bundle fragmentArgs = new Bundle();
-            fragmentArgs.putString("resource", resource);
-            intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT_ARGUMENTS, fragmentArgs);
-        }
+        Bundle fragmentArgs = new Bundle();
+        fragmentArgs.putString("resource", resource);
+        intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT_ARGUMENTS, fragmentArgs);
     }
 }

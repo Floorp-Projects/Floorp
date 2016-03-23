@@ -12,6 +12,9 @@
          warning when we switch to gradle. -->
     <issue id="HardcodedDebugMode" severity="ignore" />
 
+    <!-- We have our own l10n system & don't use the platform's plurals. -->
+    <issue id="PluralsCandidate" severity="ignore" />
+
     <!-- We want all lint warnings to be fatal errors.
          Right now, we set these to lint warnings so:
 

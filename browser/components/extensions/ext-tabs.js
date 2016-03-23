@@ -553,6 +553,10 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
       query: function(queryInfo) {
         let pattern = null;
         if (queryInfo.url !== null) {
+          if (!extension.hasPermission("tabs")) {
+            return Promise.reject({message: 'The "tabs" permission is required to use the query API with the "url" parameter'});
+          }
+
           pattern = new MatchPattern(queryInfo.url);
         }
 

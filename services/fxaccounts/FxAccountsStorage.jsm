@@ -4,6 +4,7 @@
 "use strict";
 
 this.EXPORTED_SYMBOLS = [
+  "FxAccountsStorageManagerCanStoreField",
   "FxAccountsStorageManager",
 ];
 
@@ -16,6 +17,15 @@ Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://services-common/utils.js");
 
+// A helper function so code can check what fields are able to be stored by
+// the storage manager without having a reference to a manager instance.
+function FxAccountsStorageManagerCanStoreField(fieldName) {
+  return FXA_PWDMGR_MEMORY_FIELDS.has(fieldName) ||
+         FXA_PWDMGR_PLAINTEXT_FIELDS.has(fieldName) ||
+         FXA_PWDMGR_SECURE_FIELDS.has(fieldName);
+}
+
+// The storage manager object.
 this.FxAccountsStorageManager = function(options = {}) {
   this.options = {
     filename: options.filename || DEFAULT_STORAGE_FILENAME,

@@ -14,10 +14,12 @@ import sys
 import os
 sys.path.append(os.path.dirname(__file__))
 import hanging_threads
-from config import CONTENT_SERVER_PORT, LOOP_SERVER_PORT, LOOP_SERVER_URL, \
-    FIREFOX_PREFERENCES
+from config import CONTENT_SERVER_PORT, CONTENT_SERVER_URL, LOOP_SERVER_PORT, LOOP_SERVER_URL, \
+    FIREFOX_PREFERENCES, TEST_SERVER, USE_LOCAL_STANDALONE
 
 hanging_threads.start_monitoring()
+
+WORKING_DIR = os.getcwd()
 
 CONTENT_SERVER_COMMAND = ["make", "runserver_nowatch"]
 CONTENT_SERVER_ENV = os.environ.copy()
@@ -26,7 +28,9 @@ CONTENT_SERVER_ENV = os.environ.copy()
 CONTENT_SERVER_ENV.update({"PORT": str(CONTENT_SERVER_PORT),
                            "LOOP_SERVER_URL": LOOP_SERVER_URL})
 
-ROOMS_WEB_APP_URL = "http://localhost:" + str(CONTENT_SERVER_PORT) + \
+ROOMS_WEB_APP_URL_BASE = CONTENT_SERVER_URL
+
+ROOMS_WEB_APP_URL = ROOMS_WEB_APP_URL_BASE + \
     "/{token}"
 
 LOOP_SERVER_COMMAND = ["make", "runserver"]
@@ -41,13 +45,19 @@ LOOP_SERVER_ENV.update({"NODE_ENV": "dev",
 
 class LoopTestServers:
     def __init__(self):
-        loop_server_location = os.environ.get('LOOP_SERVER')
-        if loop_server_location.startswith("http"):
-            FIREFOX_PREFERENCES["loop.server"] = loop_server_location
-            return
+        if TEST_SERVER == "local":
+            loop_server_location = os.environ.get('LOOP_SERVER')
+            if not loop_server_location:
+                raise Exception('LOOP_SERVER variable not set')
 
-        self.loop_server = self.start_loop_server(loop_server_location)
-        self.content_server = self.start_content_server()
+            if loop_server_location.startswith("http"):
+                FIREFOX_PREFERENCES["loop.server"] = loop_server_location
+                return
+
+            self.loop_server = self.start_loop_server(loop_server_location)
+
+        if USE_LOCAL_STANDALONE == "1":
+            self.content_server = self.start_content_server()
 
     @staticmethod
     def start_loop_server(loop_server_location):
@@ -65,8 +75,8 @@ class LoopTestServers:
     def start_content_server():
         content_server_location = os.environ.get('STANDALONE_SERVER')
         if content_server_location is None:
-            content_server_location = os.path.join(os.path.dirname(__file__),
-                                                   "../../standalone")
+            content_server_location = WORKING_DIR
+
         os.chdir(content_server_location)
 
         p = processhandler.ProcessHandler(CONTENT_SERVER_COMMAND,

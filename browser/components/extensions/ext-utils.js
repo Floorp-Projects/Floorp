@@ -666,6 +666,20 @@ global.WindowManager = {
     return "normal";
   },
 
+  updateGeometry(window, options) {
+    if (options.left !== null || options.top !== null) {
+      let left = options.left !== null ? options.left : window.screenX;
+      let top = options.top !== null ? options.top : window.screenY;
+      window.moveTo(left, top);
+    }
+
+    if (options.width !== null || options.height !== null) {
+      let width = options.width !== null ? options.width : window.outerWidth;
+      let height = options.height !== null ? options.height : window.outerHeight;
+      window.resizeTo(width, height);
+    }
+  },
+
   getId(window) {
     if (this._windows.has(window)) {
       return this._windows.get(window);
@@ -738,6 +752,11 @@ global.WindowManager = {
       state = "fullscreen";
     }
 
+    let xulWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDocShell)
+                          .treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIXULWindow);
+
     let result = {
       id: this.getId(window),
       focused: window.document.hasFocus(),
@@ -748,6 +767,7 @@ global.WindowManager = {
       incognito: PrivateBrowsingUtils.isWindowPrivate(window),
       type: this.windowType(window),
       state,
+      alwaysOnTop: xulWindow.zLevel >= Ci.nsIXULWindow.raisedZ,
     };
 
     if (getInfo && getInfo.populate) {
