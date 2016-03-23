@@ -431,7 +431,6 @@
             case "Browser:Init":
               this._outerWindowID = data.outerWindowID;
               let result = {};
-              result.useGlobalHistory = !this.hasAttribute("disableglobalhistory");
               result.initPopup = this.autoCompletePopup != null;
               return result;
               break;
