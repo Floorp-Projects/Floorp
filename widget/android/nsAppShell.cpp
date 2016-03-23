@@ -184,6 +184,44 @@ public:
     }
 };
 
+class GeckoAppShellSupport final
+    : public widget::GeckoAppShell::Natives<GeckoAppShellSupport>
+    , public UsesGeckoThreadProxy
+{
+public:
+    template<typename Functor>
+    static void OnNativeCall(Functor&& aCall)
+    {
+        if (aCall.IsTarget(&SyncNotifyObservers)) {
+            aCall();
+            return;
+        }
+        return UsesGeckoThreadProxy::OnNativeCall(aCall);
+    }
+
+    static void SyncNotifyObservers(jni::String::Param aTopic,
+                                    jni::String::Param aData)
+    {
+        MOZ_RELEASE_ASSERT(NS_IsMainThread());
+        NotifyObservers(aTopic, aData);
+    }
+
+    static void NotifyObservers(jni::String::Param aTopic,
+                                jni::String::Param aData)
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(aTopic);
+
+        nsCOMPtr<nsIObserverService> obsServ = services::GetObserverService();
+        if (!obsServ) {
+            return;
+        }
+
+        obsServ->NotifyObservers(nullptr, aTopic->ToCString().get(),
+                                 aData ? aData->ToString().get() : nullptr);
+    }
+};
+
 nsAppShell::nsAppShell()
     : mSyncRunFinished(*(sAppShellLock = new Mutex("nsAppShell")),
                        "nsAppShell.SyncRun")
@@ -201,6 +239,7 @@ nsAppShell::nsAppShell()
     if (jni::IsAvailable()) {
         // Initialize JNI and Set the corresponding state in GeckoThread.
         AndroidBridge::ConstructBridge();
+        GeckoAppShellSupport::Init();
         GeckoThreadNatives::Init();
         mozilla::ANRReporter::Init();
         mozilla::PrefsHelper::Init();
