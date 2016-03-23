@@ -106,16 +106,12 @@ def remove_existing_dirs():
 
 def populate_test_files():
     global gSubtrees, gTestfiles
+    excludeDirs = ["support", "reftest", "reference", "reports", "tools"]
     for subtree in gSubtrees:
         for dirpath, dirnames, filenames in os.walk(subtree, topdown=True):
-            if "support" in dirnames:
-               dirnames.remove("support")
-            if "reftest" in dirnames:
-               dirnames.remove("reftest")
-            if "reference" in dirnames:
-               dirnames.remove("reference")
-            if "reports" in dirnames:
-               dirnames.remove("reports")
+            for exclDir in excludeDirs:
+                if exclDir in dirnames:
+                    dirnames.remove(exclDir)
             for f in filenames:
                 if f == "README" or \
                    f.find("-ref.") != -1:
