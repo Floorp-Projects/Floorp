@@ -40,8 +40,6 @@ Test of legacy navigator interface for opening TCPSocket/TCPServerSocket.
                                                         -1);
     listeningServer.onconnect = function(ev) {
       ok(true, "got server connect");
-      listeningServer.close();
-      listeningServer = null;
       ev.socket.close()
     }
 
@@ -50,14 +48,7 @@ Test of legacy navigator interface for opening TCPSocket/TCPServerSocket.
     clientSocket.onopen = function() { ok(true, "got client open"); }
     clientSocket.onclose = function() {
       ok(true, "got client close");
-      clientSocket.close();
-      clientSocket = null;
-      setTimeout(function() {
-        // This just helps the test harness clean up quickly
-        SpecialPowers.forceCC();
-        SpecialPowers.forceGC();
-        SimpleTest.finish();
-      }, 0);
+      SimpleTest.finish();
     }
   }
 </script>
