@@ -74,6 +74,21 @@ This allows configuration files like this:
     arbitrary2 = some other string
 
 
+Documenting Settings
+====================
+
+All settings must at least be documented in the en_US locale. Otherwise,
+running ``mach settings`` will raise. Mach uses gettext to perform localization.
+
+A handy command exists to generate the localization files:
+
+.. parsed-literal::
+
+    mach settings locale-gen <section>
+
+You'll be prompted to add documentation for all options in section with the
+en_US locale. To add documentation in another locale, pass in ``--locale``.
+
 
 Accessing Settings
 ==================
