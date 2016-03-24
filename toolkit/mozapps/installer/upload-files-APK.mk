@@ -59,8 +59,6 @@ NON_DIST_FILES = \
   classes.dex \
   $(NULL)
 
-UPLOAD_EXTRA_FILES += gecko-unsigned-unaligned.apk
-
 DIST_FILES += $(MOZ_CHILD_PROCESS_NAME)
 
 GECKO_APP_AP_PATH = $(topobjdir)/mobile/android/base
@@ -250,7 +248,6 @@ INNER_MAKE_APK = \
   rm -f $(ABS_DIST)/gecko.apk && \
   cp $(ABS_DIST)/gecko.ap_ $(ABS_DIST)/gecko.apk && \
   $(ZIP) -j0 $(ABS_DIST)/gecko.apk $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex && \
-  cp $(ABS_DIST)/gecko.apk $(ABS_DIST)/gecko-unsigned-unaligned.apk && \
   $(RELEASE_JARSIGNER) $(ABS_DIST)/gecko.apk && \
   $(ZIPALIGN) -f -v 4 $(ABS_DIST)/gecko.apk $(PACKAGE)
 
