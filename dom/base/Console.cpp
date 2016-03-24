@@ -1495,6 +1495,8 @@ Console::PopulateConsoleObjectInTheTargetScope(JSContext* aCx,
   MOZ_ASSERT(aData);
   MOZ_ASSERT(aTargetScope);
 
+  JS::Rooted<JSObject*> targetScope(aCx, aTargetScope);
+
   ConsoleStackEntry frame;
   if (aData->mTopStackFrame) {
     frame = *aData->mTopStackFrame;
@@ -1590,7 +1592,7 @@ Console::PopulateConsoleObjectInTheTargetScope(JSContext* aCx,
                                         aData->mCountValue);
   }
 
-  JSAutoCompartment ac2(aCx, aTargetScope);
+  JSAutoCompartment ac2(aCx, targetScope);
 
   if (NS_WARN_IF(!ToJSValue(aCx, event, aEventValue))) {
     return false;
