@@ -852,10 +852,14 @@ js::atomics_futexWake(JSContext* cx, unsigned argc, Value* vp)
     if (!GetTypedArrayIndex(cx, idxv, view, &offset))
         return false;
     double count;
-    if (!ToInteger(cx, countv, &count))
-        return false;
-    if (count < 0)
-        count = 0;
+    if (countv.isUndefined()) {
+        count = mozilla::PositiveInfinity<double>();
+    } else {
+        if (!ToInteger(cx, countv, &count))
+            return false;
+        if (count < 0.0)
+            count = 0.0;
+    }
 
     AutoLockFutexAPI lock;
 
@@ -901,10 +905,14 @@ js::atomics_futexWakeOrRequeue(JSContext* cx, unsigned argc, Value* vp)
     if (!GetTypedArrayIndex(cx, idx1v, view, &offset1))
         return false;
     double count;
-    if (!ToInteger(cx, countv, &count))
-        return false;
-    if (count < 0)
-        count = 0;
+    if (countv.isUndefined()) {
+        count = mozilla::PositiveInfinity<double>();
+    } else {
+        if (!ToInteger(cx, countv, &count))
+            return false;
+        if (count < 0.0)
+            count = 0.0;
+    }
     int32_t value;
     if (!ToInt32(cx, valv, &value))
         return false;
