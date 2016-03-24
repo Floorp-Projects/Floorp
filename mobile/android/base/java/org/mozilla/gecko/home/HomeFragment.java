@@ -10,11 +10,9 @@ import java.util.EnumSet;
 import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.SnackbarHelper;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -151,7 +149,7 @@ public abstract class HomeFragment extends Fragment {
 
         // Hide the "Edit" menuitem if this item isn't a bookmark,
         // or if this is a reading list item.
-        if (!info.hasBookmarkId() || info.isInReadingList()) {
+        if (!info.hasBookmarkId()) {
             menu.findItem(R.id.home_edit_bookmark).setVisible(false);
         }
 
@@ -167,9 +165,6 @@ public abstract class HomeFragment extends Fragment {
         if (!Restrictions.isAllowed(view.getContext(), Restrictable.PRIVATE_BROWSING)) {
             menu.findItem(R.id.home_open_private_tab).setVisible(false);
         }
-
-        menu.findItem(R.id.mark_read).setVisible(info.isInReadingList() && info.isUnread);
-        menu.findItem(R.id.mark_unread).setVisible(info.isInReadingList() && !info.isUnread);
     }
 
     @Override
@@ -251,9 +246,7 @@ public abstract class HomeFragment extends Fragment {
             // the PinSiteDialog are wrapped in a special URI until we can get a
             // valid URL. If the url is a user-entered url, decode the URL
             // before loading it.
-            final String url = StringUtils.decodeUserEnteredUrl(info.isInReadingList()
-                    ? ReaderModeUtils.getAboutReaderForUrl(info.url)
-                    : info.url);
+            final String url = StringUtils.decodeUserEnteredUrl(info.url);
 
             final EnumSet<OnUrlOpenInBackgroundListener.Flags> flags = EnumSet.noneOf(OnUrlOpenInBackgroundListener.Flags.class);
             if (item.getItemId() == R.id.home_open_private_tab) {
@@ -279,22 +272,6 @@ public abstract class HomeFragment extends Fragment {
 
             (new RemoveItemByUrlTask(context, info.url, info.itemType, position)).execute();
             return true;
-        }
-
-        if (itemId == R.id.mark_read) {
-            GeckoProfile
-                    .get(context)
-                    .getDB()
-                    .getReadingListAccessor()
-                    .markAsRead(context.getContentResolver(), info.id);
-        }
-
-        if (itemId == R.id.mark_unread) {
-            GeckoProfile
-                    .get(context)
-                    .getDB()
-                    .getReadingListAccessor()
-                    .markAsUnread(context.getContentResolver(), info.id);
         }
 
         return false;
@@ -415,12 +392,6 @@ public abstract class HomeFragment extends Fragment {
 
                 case HISTORY:
                     mDB.removeHistoryEntry(cr, mUrl);
-                    break;
-
-                case READING_LIST:
-                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.CONTEXT_MENU, "reading_list");
-                    mDB.getReadingListAccessor().removeReadingListItemWithURL(cr, mUrl);
-                    GeckoAppShell.notifyObservers("Reader:Removed", mUrl);
                     break;
 
                 default:
