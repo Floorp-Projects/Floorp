@@ -42,27 +42,17 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
     if (handler->finalizeInBackground(priv))
         allocKind = GetBackgroundAllocKind(allocKind);
 
-    ProxyValueArray* values = cx->zone()->new_<ProxyValueArray>();
-    if (!values) {
-        ReportOutOfMemory(cx);
-        return nullptr;
-    }
-
     AutoSetNewObjectMetadata metadata(cx);
     // Note: this will initialize the object's |data| to strange values, but we
     // will immediately overwrite those below.
     RootedObject obj(cx, NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind,
                                                        newKind));
-    if (!obj) {
-        js_free(values);
+    if (!obj)
         return nullptr;
-    }
 
     Rooted<ProxyObject*> proxy(cx, &obj->as<ProxyObject>());
-
-    proxy->data.values = values;
+    new (proxy->data.values) ProxyValueArray;
     proxy->data.handler = handler;
-
     proxy->setCrossCompartmentPrivate(priv);
 
     /* Don't track types of properties of non-DOM and non-singleton proxies. */

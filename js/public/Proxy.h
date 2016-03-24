@@ -59,7 +59,7 @@ class JS_FRIEND_API(Wrapper);
  *
  * ### Proxies and internal methods
  *
- * ES2016 specifies 13 internal methods. The runtime  semantics of just
+ * ES2016 specifies 13 internal methods. The runtime semantics of just
  * about everything a script can do to an object is specified in terms
  * of these internal methods. For example:
  *
