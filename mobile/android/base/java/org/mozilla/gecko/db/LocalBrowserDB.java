@@ -105,7 +105,6 @@ public class LocalBrowserDB implements BrowserDB {
     private LocalSearches searches;
     private LocalTabsAccessor tabsAccessor;
     private LocalURLMetadata urlMetadata;
-    private LocalReadingListAccessor readingListAccessor;
     private LocalUrlAnnotations urlAnnotations;
 
     private static final String[] DEFAULT_BOOKMARK_COLUMNS =
@@ -140,7 +139,6 @@ public class LocalBrowserDB implements BrowserDB {
         searches = new LocalSearches(mProfile);
         tabsAccessor = new LocalTabsAccessor(mProfile);
         urlMetadata = new LocalURLMetadata(mProfile);
-        readingListAccessor = new LocalReadingListAccessor(mProfile);
         urlAnnotations = new LocalUrlAnnotations(mProfile);
     }
 
@@ -157,11 +155,6 @@ public class LocalBrowserDB implements BrowserDB {
     @Override
     public URLMetadata getURLMetadata() {
         return urlMetadata;
-    }
-
-    @Override
-    public ReadingListAccessor getReadingListAccessor() {
-        return readingListAccessor;
     }
 
     @RobocopTarget

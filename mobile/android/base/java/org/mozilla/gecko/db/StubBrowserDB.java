@@ -27,67 +27,6 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 
-class StubReadingListAccessor implements ReadingListAccessor {
-    @Override
-    public Cursor getReadingList(ContentResolver cr) {
-        return null;
-    }
-
-    @Override
-    public int getCount(ContentResolver cr) {
-        return 0;
-    }
-
-    @Override
-    public Cursor getReadingListUnfetched(ContentResolver cr) {
-        return null;
-    }
-
-    @Override
-    public boolean isReadingListItem(ContentResolver cr, String uri) {
-        return false;
-    }
-
-    @Override
-    public long addReadingListItem(ContentResolver cr, ContentValues values) {
-        return 0L;
-    }
-
-    @Override
-    public long addBasicReadingListItem(ContentResolver cr, String url, String title) {
-        return 0L;
-    }
-
-    @Override
-    public void updateReadingListItem(ContentResolver cr, ContentValues values) {
-    }
-
-    @Override
-    public void removeReadingListItemWithURL(ContentResolver cr, String uri) {
-    }
-
-    @Override
-    public void registerContentObserver(Context context, ContentObserver observer) {
-    }
-
-    @Override
-    public void markAsRead(ContentResolver cr, long itemID) {
-    }
-
-    @Override
-    public void markAsUnread(ContentResolver cr, long itemID) {
-    }
-
-    @Override
-    public void updateContent(ContentResolver cr, long itemID, String resolvedTitle, String resolvedURL, String excerpt) {
-    }
-
-    @Override
-    public void deleteItem(ContentResolver cr, long itemID) {
-
-    }
-}
-
 class StubSearches implements Searches {
     public StubSearches() {
     }
@@ -206,7 +145,6 @@ public class StubBrowserDB implements BrowserDB {
     private final StubSearches searches = new StubSearches();
     private final StubTabsAccessor tabsAccessor = new StubTabsAccessor();
     private final StubURLMetadata urlMetadata = new StubURLMetadata();
-    private final StubReadingListAccessor readingListAccessor = new StubReadingListAccessor();
     private final StubUrlAnnotations urlAnnotations = new StubUrlAnnotations();
     private SuggestedSites suggestedSites = null;
 
@@ -223,11 +161,6 @@ public class StubBrowserDB implements BrowserDB {
     @Override
     public URLMetadata getURLMetadata() {
         return urlMetadata;
-    }
-
-    @Override
-    public ReadingListAccessor getReadingListAccessor() {
-        return readingListAccessor;
     }
 
     @Override
@@ -298,20 +231,8 @@ public class StubBrowserDB implements BrowserDB {
         return null;
     }
 
-    public Cursor getReadingList(ContentResolver cr) {
-        return null;
-    }
-
-    public Cursor getReadingListUnfetched(ContentResolver cr) {
-        return null;
-    }
-
     @RobocopTarget
     public boolean isBookmark(ContentResolver cr, String uri) {
-        return false;
-    }
-
-    public boolean isReadingListItem(ContentResolver cr, String uri) {
         return false;
     }
 
@@ -329,15 +250,6 @@ public class StubBrowserDB implements BrowserDB {
 
     @RobocopTarget
     public void removeBookmarksWithURL(ContentResolver cr, String uri) {
-    }
-
-    public void addReadingListItem(ContentResolver cr, ContentValues values) {
-    }
-
-    public void updateReadingListItem(ContentResolver cr, ContentValues values) {
-    }
-
-    public void removeReadingListItemWithURL(ContentResolver cr, String uri) {
     }
 
     public void registerBookmarkObserver(ContentResolver cr, ContentObserver observer) {
