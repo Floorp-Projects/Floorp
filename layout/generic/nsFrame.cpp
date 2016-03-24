@@ -2314,7 +2314,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     mixBlendClipState.Clear();
     resultList.AppendNewToTop(
         new (aBuilder) nsDisplayMixBlendMode(aBuilder, this, &resultList,
-                                             disp->mMixBlendMode,
                                              containerItemScrollClip));
   }
 
