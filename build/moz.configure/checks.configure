@@ -67,10 +67,10 @@ def check_prog(var, progs, allow_missing=False):
                 return result
         return not_found
 
-    @depends(check)
+    @depends(check, var)
     @advanced
-    def postcheck(value):
-        if value is not_found and not allow_missing:
+    def postcheck(value, raw_value):
+        if value is not_found and (not allow_missing or raw_value):
             from mozbuild.shellutil import quote
             error('Cannot find %s (tried: %s)'
                   % (var.lower(), ', '.join(quote(p) for p in progs)))
