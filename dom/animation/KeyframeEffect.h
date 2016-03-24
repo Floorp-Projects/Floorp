@@ -82,6 +82,15 @@ struct PropertyValuePair
  */
 struct Keyframe
 {
+  Keyframe() = default;
+  Keyframe(Keyframe&& aOther)
+    : mOffset(aOther.mOffset)
+    , mComputedOffset(aOther.mComputedOffset)
+    , mTimingFunction(Move(aOther.mTimingFunction))
+    , mPropertyValues(Move(aOther.mPropertyValues))
+  {
+  }
+
   Maybe<double>                 mOffset;
   double                        mComputedOffset = 0.0;
   Maybe<ComputedTimingFunction> mTimingFunction; // Nothing() here means
