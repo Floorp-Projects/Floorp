@@ -312,3 +312,7 @@ DEFINES['GRAPHITE2_STATIC'] = True
 if CONFIG['CLANG_CXX']:
     # Suppress warnings from Skia header files.
     SOURCES['gfxPlatform.cpp'].flags += ['-Wno-implicit-fallthrough']
+
+if CONFIG['_MSC_VER']:
+    # This is intended as a temporary hack to support building with VS2015.
+    CXXFLAGS += ['-wd4577']

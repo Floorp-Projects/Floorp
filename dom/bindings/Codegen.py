@@ -607,10 +607,10 @@ class CGPrototypeJSClass(CGThing):
                 JS_NULL_OBJECT_OPS
               },
               ${type},
-              ${hooks},
-              "[object ${name}Prototype]",
               ${prototypeID},
               ${depth},
+              ${hooks},
+              "[object ${name}Prototype]",
               ${protoGetter}
             };
             """,
@@ -716,10 +716,10 @@ class CGInterfaceObjectJSClass(CGThing):
                 }
               },
               eInterface,
-              ${hooks},
-              "function ${name}() {\\n    [native code]\\n}",
               ${prototypeID},
               ${depth},
+              ${hooks},
+              "function ${name}() {\\n    [native code]\\n}",
               ${protoGetter}
             };
             """,
@@ -1948,6 +1948,14 @@ class MemberCondition:
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def hasDisablers(self):
+        return (self.pref is not None or
+                self.func != "nullptr" or
+                self.available != "nullptr" or
+                self.checkAnyPermissions != "nullptr" or
+                self.checkAllPermissions != "nullptr" or
+                self.nonExposedGlobals != "0")
+
 
 class PropertyDefiner:
     """
@@ -2068,11 +2076,20 @@ class PropertyDefiner:
         assert len(array) != 0
         # So we won't put a specTerminator at the very front of the list:
         lastCondition = getCondition(array[0], self.descriptor)
+
         specs = []
+        disablers = []
         prefableSpecs = []
 
-        prefableTemplate = '  { true, %s, %s, %s, %s, %s, &%s[%d] }'
-        prefCacheTemplate = '&%s[%d].enabled'
+        disablersTemplate = dedent(
+            """
+            static PrefableDisablers %s_disablers%d = {
+              true, %s, %s, %s, %s, %s
+            };
+            """)
+        prefableWithDisablersTemplate = '  { &%s_disablers%d, &%s_specs[%d] }'
+        prefableWithoutDisablersTemplate = '  { nullptr, &%s_specs[%d] }'
+        prefCacheTemplate = '&%s[%d].disablers->enabled'
 
         def switchToCondition(props, condition):
             # Remember the info about where our pref-controlled
@@ -2082,13 +2099,19 @@ class PropertyDefiner:
                     (condition.pref,
                      prefCacheTemplate % (name, len(prefableSpecs))))
             # Set up pointers to the new sets of specs inside prefableSpecs
-            prefableSpecs.append(prefableTemplate %
-                                 (condition.nonExposedGlobals,
+            if condition.hasDisablers():
+                prefableSpecs.append(prefableWithDisablersTemplate %
+                                     (name, len(specs), name, len(specs)))
+                disablers.append(disablersTemplate %
+                                 (name, len(specs),
+                                  condition.nonExposedGlobals,
                                   condition.func,
                                   condition.available,
                                   condition.checkAnyPermissions,
-                                  condition.checkAllPermissions,
-                                  name + "_specs", len(specs)))
+                                  condition.checkAllPermissions))
+            else:
+                prefableSpecs.append(prefableWithoutDisablersTemplate %
+                                     (name, len(specs)))
 
         switchToCondition(self, lastCondition)
 
@@ -2097,13 +2120,13 @@ class PropertyDefiner:
             if lastCondition != curCondition:
                 # Terminate previous list
                 specs.append(specTerminator)
-                # And switch to our new pref
+                # And switch to our new condition
                 switchToCondition(self, curCondition)
                 lastCondition = curCondition
             # And the actual spec
             specs.append(specFormatter(getDataTuple(member)))
         specs.append(specTerminator)
-        prefableSpecs.append("  { false, 0, nullptr, nullptr, nullptr, nullptr, nullptr }")
+        prefableSpecs.append("  { nullptr, nullptr }")
 
         specType = "const " + specType
         arrays = fill(
@@ -2112,6 +2135,7 @@ class PropertyDefiner:
             ${specs}
             };
 
+            ${disablers}
             // Can't be const because the pref-enabled boolean needs to be writable
             static Prefable<${specType}> ${name}[] = {
             ${prefableSpecs}
@@ -2120,6 +2144,7 @@ class PropertyDefiner:
             """,
             specType=specType,
             name=name,
+            disablers='\n'.join(disablers),
             specs=',\n'.join(specs),
             prefableSpecs=',\n'.join(prefableSpecs))
         if doIdArrays:
@@ -3372,7 +3397,7 @@ def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode):
     assert (properties.unforgeableAttrs.hasNonChromeOnly() or
             properties.unforgeableAttrs.hasChromeOnly() or
             properties.unforgeableMethods.hasNonChromeOnly() or
-            properties.unforgeableMethods.hasChromeOnly)
+            properties.unforgeableMethods.hasChromeOnly())
 
     unforgeables = []
 
@@ -12093,7 +12118,7 @@ class CGNamespacedEnum(CGThing):
         entries = ['  ' + e for e in entries]
 
         # Build the enum body.
-        enumstr = comment + 'enum %s\n{\n%s\n};\n' % (enumName, ',\n'.join(entries))
+        enumstr = comment + 'enum %s : uint16_t\n{\n%s\n};\n' % (enumName, ',\n'.join(entries))
         curr = CGGeneric(declare=enumstr)
 
         # Add some whitespace padding.
@@ -15793,7 +15818,6 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             MOZ_ASSERT(self);
             AutoJSAPI jsapi;
             jsapi.Init();
-            jsapi.TakeOwnershipOfErrorReporting();
             JSContext* cx = jsapi.cx();
             // It's safe to use UnprivilegedJunkScopeOrWorkerGlobal here because
             // all we want is to wrap into _some_ scope and then unwrap to find
@@ -16359,11 +16383,9 @@ class CGEventGetter(CGNativeMember):
         if type.isAny():
             return fill(
                 """
-                JS::ExposeValueToActiveJS(${memberName});
-                aRetVal.set(${memberName});
-                return;
+                ${selfName}(aRetVal);
                 """,
-                memberName=memberName)
+                selfName=self.name)
         if type.isUnion():
             return "aRetVal = " + memberName + ";\n"
         if type.isSequence():
@@ -16580,8 +16602,28 @@ class CGEventClass(CGBindingImplClass):
     def __init__(self, descriptor):
         CGBindingImplClass.__init__(self, descriptor, CGEventMethod, CGEventGetter, CGEventSetter, False, "WrapObjectInternal")
         members = []
+        extraMethods = []
         for m in descriptor.interface.members:
             if m.isAttr():
+                if m.type.isAny():
+                    # Add a getter that doesn't need a JSContext.  Note that we
+                    # don't need to do this if our originating interface is not
+                    # the descriptor's interface, because in that case we
+                    # wouldn't generate the getter that _does_ need a JSContext
+                    # either.
+                    extraMethods.append(
+                        ClassMethod(
+                            CGSpecializedGetter.makeNativeName(descriptor, m),
+                            "void",
+                            [Argument("JS::MutableHandle<JS::Value>",
+                                      "aRetVal")],
+                            const=True,
+                            body=fill(
+                                """
+                                JS::ExposeValueToActiveJS(${memberName});
+                                aRetVal.set(${memberName});
+                                """,
+                                memberName=CGDictionary.makeMemberName(m.identifier.name))))
                 if getattr(m, "originatingInterface",
                            descriptor.interface) != descriptor.interface:
                     continue
@@ -16614,10 +16656,11 @@ class CGEventClass(CGBindingImplClass):
                                            body="return this;\n",
                                            breakAfterReturnDecl=" ",
                                            override=True)
+        extraMethods.append(asConcreteTypeMethod)
 
         CGClass.__init__(self, className,
                          bases=[ClassBase(self.parentType)],
-                         methods=[asConcreteTypeMethod]+self.methodDecls,
+                         methods=extraMethods+self.methodDecls,
                          members=members,
                          extradeclarations=baseDeclarations)
 

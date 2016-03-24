@@ -2487,14 +2487,12 @@ JS_GetDataViewByteLength(JSObject* obj)
 JS_FRIEND_API(JSObject*)
 JS_NewDataView(JSContext* cx, HandleObject arrayBuffer, uint32_t byteOffset, int32_t byteLength)
 {
-    ConstructArgs cargs(cx);
-    if (!cargs.init(3))
-        return nullptr;
-
     RootedObject constructor(cx);
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(&DataViewObject::class_);
     if (!GetBuiltinConstructor(cx, key, &constructor))
         return nullptr;
+
+    FixedConstructArgs<3> cargs(cx);
 
     cargs[0].setObject(*arrayBuffer);
     cargs[1].setNumber(byteOffset);

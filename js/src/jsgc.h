@@ -1107,7 +1107,8 @@ struct MightBeForwarded
                   "T must not be Cell or TenuredCell");
 
     static const bool value = mozilla::IsBaseOf<JSObject, T>::value ||
-                              mozilla::IsBaseOf<Shape, T>::value;
+                              mozilla::IsBaseOf<Shape, T>::value ||
+                              mozilla::IsBaseOf<JSString, T>::value;
 };
 
 template <typename T>

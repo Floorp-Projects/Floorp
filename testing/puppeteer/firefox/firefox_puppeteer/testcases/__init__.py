@@ -2,5 +2,4 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from firefox_puppeteer.testcases.base import FirefoxTestCase
-from firefox_puppeteer.testcases.update import UpdateTestCase
+from firefox_puppeteer.testcases.base import BaseFirefoxTestCase

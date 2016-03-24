@@ -925,46 +925,100 @@ void MarkInterpreterActivations(JSRuntime* rt, JSTracer* trc);
 
 /*****************************************************************************/
 
+/** Base class for all function call args. */
+class AnyInvokeArgs : public JS::CallArgs
+{
+};
+
+/** Base class for all function construction args. */
+class AnyConstructArgs : public JS::CallArgs
+{
+    // Only js::Construct (or internal methods that call the qualified CallArgs
+    // versions) should do these things!
+    void setCallee(Value v) = delete;
+    void setThis(Value v) = delete;
+    MutableHandleValue newTarget() const = delete;
+    MutableHandleValue rval() const = delete;
+};
+
 namespace detail {
 
-class GenericInvokeArgs : public JS::CallArgs
+/** Function call/construct args of statically-unknown count. */
+template <MaybeConstruct Construct>
+class GenericArgsBase
+  : public mozilla::Conditional<Construct, AnyConstructArgs, AnyInvokeArgs>::Type
 {
   protected:
     AutoValueVector v_;
 
-    explicit GenericInvokeArgs(JSContext* cx) : v_(cx) {}
+    explicit GenericArgsBase(JSContext* cx) : v_(cx) {}
 
-    bool init(unsigned argc, bool construct) {
-        MOZ_ASSERT(2 + argc + construct > argc);  // no overflow
-        if (!v_.resize(2 + argc + construct))
+  public:
+    bool init(unsigned argc) {
+        // callee, this, arguments[, new.target iff constructing]
+        size_t len = 2 + argc + uint32_t(Construct);
+        MOZ_ASSERT(len > argc);  // no overflow
+        if (!v_.resize(len))
             return false;
 
         *static_cast<JS::CallArgs*>(this) = CallArgsFromVp(argc, v_.begin());
-        constructing_ = construct;
+        this->constructing_ = Construct;
         return true;
+    }
+};
+
+/** Function call/construct args of statically-known count. */
+template <MaybeConstruct Construct, size_t N>
+class FixedArgsBase
+  : public mozilla::Conditional<Construct, AnyConstructArgs, AnyInvokeArgs>::Type
+{
+  protected:
+    JS::AutoValueArray<2 + N + uint32_t(Construct)> v_;
+
+    explicit FixedArgsBase(JSContext* cx) : v_(cx) {
+        *static_cast<JS::CallArgs*>(this) = CallArgsFromVp(N, v_.begin());
+        this->constructing_ = Construct;
     }
 };
 
 } // namespace detail
 
-class InvokeArgs : public detail::GenericInvokeArgs
+/** Function call args of statically-unknown count. */
+class InvokeArgs : public detail::GenericArgsBase<NO_CONSTRUCT>
 {
-  public:
-    explicit InvokeArgs(JSContext* cx) : detail::GenericInvokeArgs(cx) {}
+    using Base = detail::GenericArgsBase<NO_CONSTRUCT>;
 
-    bool init(unsigned argc) {
-        return detail::GenericInvokeArgs::init(argc, false);
-    }
+  public:
+    explicit InvokeArgs(JSContext* cx) : Base(cx) {}
 };
 
-class ConstructArgs : public detail::GenericInvokeArgs
+/** Function call args of statically-known count. */
+template <size_t N>
+class FixedInvokeArgs : public detail::FixedArgsBase<NO_CONSTRUCT, N>
 {
-  public:
-    explicit ConstructArgs(JSContext* cx) : detail::GenericInvokeArgs(cx) {}
+    using Base = detail::FixedArgsBase<NO_CONSTRUCT, N>;
 
-    bool init(unsigned argc) {
-        return detail::GenericInvokeArgs::init(argc, true);
-    }
+  public:
+    explicit FixedInvokeArgs(JSContext* cx) : Base(cx) {}
+};
+
+/** Function construct args of statically-unknown count. */
+class ConstructArgs : public detail::GenericArgsBase<CONSTRUCT>
+{
+    using Base = detail::GenericArgsBase<CONSTRUCT>;
+
+  public:
+    explicit ConstructArgs(JSContext* cx) : Base(cx) {}
+};
+
+/** Function call args of statically-known count. */
+template <size_t N>
+class FixedConstructArgs : public detail::FixedArgsBase<CONSTRUCT, N>
+{
+    using Base = detail::FixedArgsBase<CONSTRUCT, N>;
+
+  public:
+    explicit FixedConstructArgs(JSContext* cx) : Base(cx) {}
 };
 
 template <class Args, class Arraylike>

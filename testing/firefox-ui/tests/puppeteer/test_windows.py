@@ -7,8 +7,8 @@ from marionette_driver.errors import NoSuchWindowException, TimeoutException
 
 import firefox_puppeteer.errors as errors
 
-from firefox_puppeteer.testcases import FirefoxTestCase
 from firefox_puppeteer.ui.windows import BaseWindow
+from firefox_ui_harness.testcases import FirefoxTestCase
 
 
 class TestWindows(FirefoxTestCase):

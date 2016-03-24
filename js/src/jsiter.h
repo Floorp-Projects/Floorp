@@ -28,6 +28,8 @@
 
 namespace js {
 
+class PropertyIteratorObject;
+
 struct NativeIterator
 {
     HeapPtrObject obj;                  // Object being iterated.
@@ -104,11 +106,12 @@ struct NativeIterator
     }
 
     static NativeIterator* allocateSentinel(JSContext* maybecx);
-    static NativeIterator* allocateIterator(JSContext* cx, uint32_t slength,
-                                            const js::AutoIdVector& props);
+    static NativeIterator* allocateIterator(JSContext* cx, uint32_t slength, uint32_t plength);
     void init(JSObject* obj, JSObject* iterObj, unsigned flags, uint32_t slength, uint32_t key);
+    bool initProperties(JSContext* cx, Handle<PropertyIteratorObject*> obj,
+                        const js::AutoIdVector& props);
 
-    void mark(JSTracer* trc);
+    void trace(JSTracer* trc);
 
     static void destroy(NativeIterator* iter) {
         js_free(iter);

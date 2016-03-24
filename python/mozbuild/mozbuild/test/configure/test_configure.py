@@ -15,7 +15,10 @@ from mozbuild.configure.options import (
     NegativeOptionValue,
     PositiveOptionValue,
 )
-from mozbuild.configure import ConfigureSandbox
+from mozbuild.configure import (
+    ConfigureError,
+    ConfigureSandbox,
+)
 
 import mozpack.path as mozpath
 
@@ -24,17 +27,18 @@ test_data_path = mozpath.join(test_data_path, 'data')
 
 
 class TestConfigure(unittest.TestCase):
-    def get_result(self, args=[], environ={}, prog='/bin/configure'):
+    def get_result(self, args=[], environ={}, configure='moz.configure',
+                   prog='/bin/configure'):
         config = {}
         out = StringIO()
         sandbox = ConfigureSandbox(config, environ, [prog] + args, out, out)
 
-        sandbox.run(mozpath.join(test_data_path, 'moz.configure'))
+        sandbox.run(mozpath.join(test_data_path, configure))
 
         return config, out.getvalue()
 
-    def get_config(self, options=[], env={}):
-        config, out = self.get_result(options, environ=env)
+    def get_config(self, options=[], env={}, **kwargs):
+        config, out = self.get_result(options, environ=env, **kwargs)
         self.assertEquals('', out)
         return config
 
@@ -52,9 +56,6 @@ class TestConfigure(unittest.TestCase):
             'VALUES2': NegativeOptionValue(),
             'VALUES3': NegativeOptionValue(),
             'WITH_ENV': NegativeOptionValue(),
-            'IMPLIED': NegativeOptionValue(),
-            'IMPLIED_ENV': NegativeOptionValue(),
-            'IMPLIED_VALUES': NegativeOptionValue(),
         }, config)
 
     def test_help(self):
@@ -73,8 +74,6 @@ class TestConfigure(unittest.TestCase):
             '  --with-stuff              Build with stuff\n'
             '  --option                  Option\n'
             '  --with-returned-default   Returned default [not-simple]\n'
-            '  --enable-implied          Implied\n'
-            '  --with-implied-values     Implied values\n'
             '  --returned-choices        Choices\n'
             '  --enable-advanced-template\n'
             '                            Advanced template\n'
@@ -82,8 +81,7 @@ class TestConfigure(unittest.TestCase):
             '  --with-advanced           Advanced\n'
             '\n'
             'Environment variables:\n'
-            '  CC                        C Compiler\n'
-            '  WITH_IMPLIED_ENV          Implied env\n',
+            '  CC                        C Compiler\n',
             out
         )
 
@@ -186,47 +184,6 @@ class TestConfigure(unittest.TestCase):
         self.assertEquals(
             PositiveOptionValue(('not-simple',)), config['DEFAULTED'])
 
-    def test_implied_options(self):
-        config = self.get_config(['--enable-values'])
-        self.assertIn('IMPLIED', config)
-        self.assertIn('IMPLIED_VALUES', config)
-        self.assertIn('IMPLIED_ENV', config)
-        self.assertEquals(PositiveOptionValue(), config['IMPLIED'])
-        self.assertEquals(PositiveOptionValue(), config['IMPLIED_VALUES'])
-        self.assertEquals(PositiveOptionValue(), config['IMPLIED_ENV'])
-
-        config = self.get_config(['--enable-values=a'])
-        self.assertIn('IMPLIED', config)
-        self.assertIn('IMPLIED_VALUES', config)
-        self.assertIn('IMPLIED_ENV', config)
-        self.assertEquals(PositiveOptionValue(), config['IMPLIED'])
-        self.assertEquals(
-            PositiveOptionValue(('a',)), config['IMPLIED_VALUES'])
-        self.assertEquals(PositiveOptionValue(('a',)), config['IMPLIED_ENV'])
-
-        config = self.get_config(['--enable-values=a,b'])
-        self.assertIn('IMPLIED', config)
-        self.assertIn('IMPLIED_VALUES', config)
-        self.assertIn('IMPLIED_ENV', config)
-        self.assertEquals(PositiveOptionValue(), config['IMPLIED'])
-        self.assertEquals(
-            PositiveOptionValue(('a', 'b')), config['IMPLIED_VALUES'])
-        self.assertEquals(
-            PositiveOptionValue(('a', 'b')), config['IMPLIED_ENV'])
-
-        config = self.get_config(['--disable-values'])
-        self.assertIn('IMPLIED', config)
-        self.assertIn('IMPLIED_VALUES', config)
-        self.assertIn('IMPLIED_ENV', config)
-        self.assertEquals(NegativeOptionValue(), config['IMPLIED'])
-        self.assertEquals(NegativeOptionValue(), config['IMPLIED_VALUES'])
-        self.assertEquals(NegativeOptionValue(), config['IMPLIED_ENV'])
-
-        # --enable-values implies --enable-implied, which conflicts with
-        # --disable-implied
-        with self.assertRaises(InvalidOptionError):
-            self.get_config(['--enable-values', '--disable-implied'])
-
     def test_returned_choices(self):
         for val in ('a', 'b', 'c'):
             config = self.get_config(
@@ -301,6 +258,168 @@ class TestConfigure(unittest.TestCase):
         config = self.get_config(['--enable-advanced-template'])
         self.assertIn('PLATFORM', config)
         self.assertEquals(config['PLATFORM'], sys.platform)
+
+    def test_set_config(self):
+        def get_config(*args):
+            return self.get_config(*args, configure='set_config.configure')
+
+        config, out = self.get_result(['--help'],
+                                      configure='set_config.configure')
+        self.assertEquals(config, {})
+
+        config = get_config(['--set-foo'])
+        self.assertIn('FOO', config)
+        self.assertEquals(config['FOO'], True)
+
+        config = get_config(['--set-bar'])
+        self.assertNotIn('FOO', config)
+        self.assertIn('BAR', config)
+        self.assertEquals(config['BAR'], True)
+
+        config = get_config(['--set-value=qux'])
+        self.assertIn('VALUE', config)
+        self.assertEquals(config['VALUE'], 'qux')
+
+        config = get_config(['--set-name=hoge'])
+        self.assertIn('hoge', config)
+        self.assertEquals(config['hoge'], True)
+
+        config = get_config([])
+        self.assertEquals(config, {'BAR': False})
+
+        with self.assertRaises(ConfigureError):
+            # Both --set-foo and --set-name=FOO are going to try to
+            # set_config('FOO'...)
+            get_config(['--set-foo', '--set-name=FOO'])
+
+    def test_set_define(self):
+        def get_config(*args):
+            return self.get_config(*args, configure='set_define.configure')
+
+        config, out = self.get_result(['--help'],
+                                      configure='set_define.configure')
+        self.assertEquals(config, {'DEFINES': {}})
+
+        config = get_config(['--set-foo'])
+        self.assertIn('FOO', config['DEFINES'])
+        self.assertEquals(config['DEFINES']['FOO'], True)
+
+        config = get_config(['--set-bar'])
+        self.assertNotIn('FOO', config['DEFINES'])
+        self.assertIn('BAR', config['DEFINES'])
+        self.assertEquals(config['DEFINES']['BAR'], True)
+
+        config = get_config(['--set-value=qux'])
+        self.assertIn('VALUE', config['DEFINES'])
+        self.assertEquals(config['DEFINES']['VALUE'], 'qux')
+
+        config = get_config(['--set-name=hoge'])
+        self.assertIn('hoge', config['DEFINES'])
+        self.assertEquals(config['DEFINES']['hoge'], True)
+
+        config = get_config([])
+        self.assertEquals(config['DEFINES'], {'BAR': False})
+
+        with self.assertRaises(ConfigureError):
+            # Both --set-foo and --set-name=FOO are going to try to
+            # set_define('FOO'...)
+            get_config(['--set-foo', '--set-name=FOO'])
+
+    def test_imply_option_simple(self):
+        config = self.get_config([], configure='imply_option/simple.configure')
+        self.assertEquals(config, {})
+
+        config = self.get_config(['--enable-foo'],
+                                 configure='imply_option/simple.configure')
+        self.assertIn('BAR', config)
+        self.assertEquals(config['BAR'], PositiveOptionValue())
+
+        with self.assertRaises(InvalidOptionError) as e:
+            config = self.get_config(['--enable-foo', '--disable-bar'],
+                                     configure='imply_option/simple.configure')
+
+        self.assertEquals(
+            e.exception.message,
+            "'--enable-bar' implied by '--enable-foo' conflicts with "
+            "'--disable-bar' from the command-line")
+
+    def test_imply_option_negative(self):
+        config = self.get_config([],
+                                 configure='imply_option/negative.configure')
+        self.assertEquals(config, {})
+
+        config = self.get_config(['--enable-foo'],
+                                 configure='imply_option/negative.configure')
+        self.assertIn('BAR', config)
+        self.assertEquals(config['BAR'], NegativeOptionValue())
+
+        with self.assertRaises(InvalidOptionError) as e:
+            config = self.get_config(
+                ['--enable-foo', '--enable-bar'],
+                configure='imply_option/negative.configure')
+
+        self.assertEquals(
+            e.exception.message,
+            "'--disable-bar' implied by '--enable-foo' conflicts with "
+            "'--enable-bar' from the command-line")
+
+        config = self.get_config(['--disable-hoge'],
+                                 configure='imply_option/negative.configure')
+        self.assertIn('BAR', config)
+        self.assertEquals(config['BAR'], NegativeOptionValue())
+
+        with self.assertRaises(InvalidOptionError) as e:
+            config = self.get_config(
+                ['--disable-hoge', '--enable-bar'],
+                configure='imply_option/negative.configure')
+
+        self.assertEquals(
+            e.exception.message,
+            "'--disable-bar' implied by '--disable-hoge' conflicts with "
+            "'--enable-bar' from the command-line")
+
+    def test_imply_option_values(self):
+        config = self.get_config([], configure='imply_option/values.configure')
+        self.assertEquals(config, {})
+
+        config = self.get_config(['--enable-foo=a'],
+                                 configure='imply_option/values.configure')
+        self.assertIn('BAR', config)
+        self.assertEquals(config['BAR'], PositiveOptionValue(('a',)))
+
+        config = self.get_config(['--enable-foo=a,b'],
+                                 configure='imply_option/values.configure')
+        self.assertIn('BAR', config)
+        self.assertEquals(config['BAR'], PositiveOptionValue(('a','b')))
+
+        with self.assertRaises(InvalidOptionError) as e:
+            config = self.get_config(['--enable-foo=a,b', '--disable-bar'],
+                                     configure='imply_option/values.configure')
+
+        self.assertEquals(
+            e.exception.message,
+            "'--enable-bar=a,b' implied by '--enable-foo' conflicts with "
+            "'--disable-bar' from the command-line")
+
+    def test_imply_option_infer(self):
+        config = self.get_config([], configure='imply_option/infer.configure')
+
+        with self.assertRaises(InvalidOptionError) as e:
+            config = self.get_config(['--enable-foo', '--disable-bar'],
+                                     configure='imply_option/infer.configure')
+
+        self.assertEquals(
+            e.exception.message,
+            "'--enable-bar' implied by '--enable-foo' conflicts with "
+            "'--disable-bar' from the command-line")
+
+        with self.assertRaises(ConfigureError) as e:
+            self.get_config([], configure='imply_option/infer_ko.configure')
+
+        self.assertEquals(
+            e.exception.message,
+            "Cannot infer what implies '--enable-bar'. Please add a `reason` "
+            "to the `imply_option` call.")
 
 
 if __name__ == '__main__':

@@ -405,7 +405,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
     }
 
     private static void broadcastGeckoEvent(String eventName, String eventData) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(eventName, eventData));
+        GeckoAppShell.notifyObservers(eventName, eventData);
     }
 
     private class AutoCompleteListAdapter extends ArrayAdapter<Pair<String, String>> {

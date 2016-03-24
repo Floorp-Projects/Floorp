@@ -249,6 +249,9 @@ public:
   void
   SendOfflineStatusChangeEventToAllWorkers(bool aIsOffline);
 
+  void
+  MemoryPressureAllWorkers();
+
   uint32_t ClampedHardwareConcurrency() const;
 
 private:

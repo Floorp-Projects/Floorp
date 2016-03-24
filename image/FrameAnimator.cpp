@@ -143,7 +143,7 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
   // If we aren't, we only display fully-downloaded frames; everything else
   // gets delayed.
   bool canDisplay = mDoneDecoding ||
-                    (nextFrame && nextFrame->IsImageComplete());
+                    (nextFrame && nextFrame->IsFinished());
 
   if (!canDisplay) {
     // Uh oh, the frame we want to show is currently being decoded (partial)

@@ -245,7 +245,6 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.Init(xpc::CompilationScope())))
     return NS_ERROR_FAILURE;
-  jsapi.TakeOwnershipOfErrorReporting();
   JSContext* cx = jsapi.cx();
 
   mPrecompiledMemberHolder = JS_NewObjectWithGivenProto(cx, nullptr, nullptr);

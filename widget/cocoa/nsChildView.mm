@@ -986,6 +986,8 @@ nsChildView::BackingScaleFactorChanged()
   }
 
   mBackingScaleFactor = newScale;
+  NSRect frame = [mView frame];
+  mBounds = nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, newScale);
 
   if (mWidgetListener && !mWidgetListener->GetXULWindow()) {
     nsIPresShell* presShell = mWidgetListener->GetPresShell();
@@ -2641,6 +2643,7 @@ nsChildView::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
   }
 
   aInvalidRegion = mBasicCompositorImage->GetUpdateRegion();
+  *aBufferMode = BufferMode::BUFFER_NONE;
 
   return drawTarget.forget();
 }
@@ -2655,6 +2658,7 @@ nsChildView::EndRemoteDrawing()
 void
 nsChildView::CleanupRemoteDrawing()
 {
+  nsBaseWidget::CleanupRemoteDrawing();
   mBasicCompositorImage = nullptr;
   mCornerMaskImage = nullptr;
   mResizerImage = nullptr;
@@ -2946,6 +2950,7 @@ RectTextureImage::EndUpdate(bool aKeepSurface)
   LayoutDeviceIntRegion updateRegion = mUpdateRegion;
   if (mTextureSize != mBufferSize) {
     mTextureSize = mBufferSize;
+    needInit = true;
   }
 
   if (needInit || !CanUploadSubtextures()) {

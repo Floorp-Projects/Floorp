@@ -154,9 +154,8 @@ JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
       columnNumber.Construct();
       columnNumber.Value() = scriptEvent->Colno();
 
-      ThreadsafeAutoJSContext cx;
-      error.Construct(cx);
-      scriptEvent->GetError(cx, &error.Value());
+      error.Construct(nsContentUtils::RootingCxForThread());
+      scriptEvent->GetError(&error.Value());
     } else {
       msgOrEvent.SetAsEvent() = aEvent->InternalDOMEvent();
     }

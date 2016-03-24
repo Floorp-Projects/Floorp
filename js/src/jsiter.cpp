@@ -53,10 +53,10 @@ typedef Rooted<PropertyIteratorObject*> RootedPropertyIteratorObject;
 static const gc::AllocKind ITERATOR_FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKGROUND;
 
 void
-NativeIterator::mark(JSTracer* trc)
+NativeIterator::trace(JSTracer* trc)
 {
     for (HeapPtrFlatString* str = begin(); str < end(); str++)
-        TraceEdge(trc, str, "prop");
+        TraceNullableEdge(trc, str, "prop");
     TraceNullableEdge(trc, &obj, "obj");
 
     for (size_t i = 0; i < guard_length; i++)
@@ -585,30 +585,22 @@ NewPropertyIteratorObject(JSContext* cx, unsigned flags)
 }
 
 NativeIterator*
-NativeIterator::allocateIterator(JSContext* cx, uint32_t numGuards, const AutoIdVector& props)
+NativeIterator::allocateIterator(JSContext* cx, uint32_t numGuards, uint32_t plength)
 {
     JS_STATIC_ASSERT(sizeof(ReceiverGuard) == 2 * sizeof(void*));
 
-    size_t plength = props.length();
-    NativeIterator* ni = cx->zone()->pod_malloc_with_extra<NativeIterator, void*>(plength + numGuards * 2);
+    size_t extraLength = plength + numGuards * 2;
+    NativeIterator* ni = cx->zone()->pod_malloc_with_extra<NativeIterator, void*>(extraLength);
     if (!ni) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
-    AutoValueVector strings(cx);
-    ni->props_array = ni->props_cursor = reinterpret_cast<HeapPtrFlatString*>(ni + 1);
+    void** extra = reinterpret_cast<void**>(ni + 1);
+    PodZero(ni);
+    PodZero(extra, extraLength);
+    ni->props_array = ni->props_cursor = reinterpret_cast<HeapPtrFlatString*>(extra);
     ni->props_end = ni->props_array + plength;
-    if (plength) {
-        for (size_t i = 0; i < plength; i++) {
-            JSFlatString* str = IdToString(cx, props[i]);
-            if (!str || !strings.append(StringValue(str)))
-                return nullptr;
-            ni->props_array[i].init(str);
-        }
-    }
-    ni->next_ = nullptr;
-    ni->prev_ = nullptr;
     return ni;
 }
 
@@ -640,6 +632,27 @@ NativeIterator::init(JSObject* obj, JSObject* iterObj, unsigned flags, uint32_t 
     this->guard_key = key;
 }
 
+bool
+NativeIterator::initProperties(JSContext* cx, Handle<PropertyIteratorObject*> obj,
+                               const AutoIdVector& props)
+{
+    // The obj parameter is just so that we can ensure that this object will get
+    // traced if we GC.
+    MOZ_ASSERT(this == obj->getNativeIterator());
+
+    size_t plength = props.length();
+    MOZ_ASSERT(plength == size_t(end() - begin()));
+
+    for (size_t i = 0; i < plength; i++) {
+        JSFlatString* str = IdToString(cx, props[i]);
+        if (!str)
+            return false;
+        props_array[i].init(str);
+    }
+
+    return true;
+}
+
 static inline void
 RegisterEnumerator(JSContext* cx, PropertyIteratorObject* iterobj, NativeIterator* ni)
 {
@@ -666,10 +679,14 @@ VectorToKeyIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
     if (!iterobj)
         return false;
 
-    NativeIterator* ni = NativeIterator::allocateIterator(cx, numGuards, keys);
+    NativeIterator* ni = NativeIterator::allocateIterator(cx, numGuards, keys.length());
     if (!ni)
         return false;
+
+    iterobj->setNativeIterator(ni);
     ni->init(obj, iterobj, flags, numGuards, key);
+    if (!ni->initProperties(cx, iterobj, keys))
+        return false;
 
     if (numGuards) {
         // Fill in the guard array from scratch.
@@ -682,7 +699,6 @@ VectorToKeyIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
         MOZ_ASSERT(ind == numGuards);
     }
 
-    iterobj->setNativeIterator(ni);
     objp.set(iterobj);
 
     RegisterEnumerator(cx, iterobj, ni);
@@ -703,12 +719,15 @@ VectorToValueIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVec
     if (!iterobj)
         return false;
 
-    NativeIterator* ni = NativeIterator::allocateIterator(cx, 0, keys);
+    NativeIterator* ni = NativeIterator::allocateIterator(cx, 0, keys.length());
     if (!ni)
         return false;
-    ni->init(obj, iterobj, flags, 0, 0);
 
     iterobj->setNativeIterator(ni);
+    ni->init(obj, iterobj, flags, 0, 0);
+    if (!ni->initProperties(cx, iterobj, keys))
+        return false;
+
     objp.set(iterobj);
 
     RegisterEnumerator(cx, iterobj, ni);
@@ -734,12 +753,15 @@ js::NewEmptyPropertyIterator(JSContext* cx, unsigned flags, MutableHandleObject 
         return false;
 
     AutoIdVector keys(cx); // Empty
-    NativeIterator* ni = NativeIterator::allocateIterator(cx, 0, keys);
+    NativeIterator* ni = NativeIterator::allocateIterator(cx, 0, keys.length());
     if (!ni)
         return false;
-    ni->init(nullptr, iterobj, flags, 0, 0);
 
     iterobj->setNativeIterator(ni);
+    ni->init(nullptr, iterobj, flags, 0, 0);
+    if (!ni->initProperties(cx, iterobj, keys))
+        return false;
+
     objp.set(iterobj);
 
     RegisterEnumerator(cx, iterobj, ni);
@@ -1052,7 +1074,7 @@ void
 PropertyIteratorObject::trace(JSTracer* trc, JSObject* obj)
 {
     if (NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator())
-        ni->mark(trc);
+        ni->trace(trc);
 }
 
 void
@@ -1488,13 +1510,12 @@ js::InitLegacyIteratorClass(JSContext* cx, HandleObject obj)
     if (!iteratorProto)
         return nullptr;
 
-    AutoIdVector blank(cx);
-    NativeIterator* ni = NativeIterator::allocateIterator(cx, 0, blank);
+    NativeIterator* ni = NativeIterator::allocateIterator(cx, 0, 0);
     if (!ni)
         return nullptr;
-    ni->init(nullptr, nullptr, 0 /* flags */, 0, 0);
 
     iteratorProto->as<PropertyIteratorObject>().setNativeIterator(ni);
+    ni->init(nullptr, nullptr, 0 /* flags */, 0, 0);
 
     Rooted<JSFunction*> ctor(cx);
     ctor = global->createConstructor(cx, IteratorConstructor, cx->names().Iterator, 2);

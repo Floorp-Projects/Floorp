@@ -101,7 +101,7 @@ TEST(Gfx, WordCache) {
                        139,
                        10.0,
                        0,
-                       NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
+                       NS_NewAtom(NS_LITERAL_STRING("en")),
                        0.0,
                        false, false,
                        NS_LITERAL_STRING(""));

@@ -165,10 +165,28 @@ wwc(char16_t* aStr)
   return reinterpret_cast<wchar_t*>(aStr);
 }
 
+inline const char16_t*
+wwc(const wchar_t* aStr)
+{
+  return reinterpret_cast<const char16_t*>(aStr);
+}
+
+inline const wchar_t*
+wwc(const char16_t* aStr)
+{
+  return reinterpret_cast<const wchar_t*>(aStr);
+}
+
 #else
 
 inline char16_t*
 wwc(char16_t* aStr)
+{
+  return aStr;
+}
+
+inline const char16_t*
+wwc(const char16_t* aStr)
 {
   return aStr;
 }

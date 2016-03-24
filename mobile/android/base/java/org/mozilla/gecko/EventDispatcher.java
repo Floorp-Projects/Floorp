@@ -350,10 +350,9 @@ public final class EventDispatcher {
             wrapper.put("response", response);
 
             if (ThreadUtils.isOnGeckoThread()) {
-                GeckoAppShell.notifyGeckoObservers(topic, wrapper.toString());
+                GeckoAppShell.syncNotifyObservers(topic, wrapper.toString());
             } else {
-                GeckoAppShell.sendEventToGecko(
-                    GeckoEvent.createBroadcastEvent(topic, wrapper.toString()));
+                GeckoAppShell.notifyObservers(topic, wrapper.toString());
             }
         } catch (final JSONException e) {
             Log.e(LOGTAG, "Unable to send response", e);
@@ -396,10 +395,9 @@ public final class EventDispatcher {
                 wrapper.put("response", response);
 
                 if (ThreadUtils.isOnGeckoThread()) {
-                    GeckoAppShell.notifyGeckoObservers(topic, wrapper.toString());
+                    GeckoAppShell.syncNotifyObservers(topic, wrapper.toString());
                 } else {
-                    GeckoAppShell.sendEventToGecko(
-                        GeckoEvent.createBroadcastEvent(topic, wrapper.toString()));
+                    GeckoAppShell.notifyObservers(topic, wrapper.toString());
                 }
             } catch (final JSONException e) {
                 Log.e(LOGTAG, "Unable to send response for: " + type, e);

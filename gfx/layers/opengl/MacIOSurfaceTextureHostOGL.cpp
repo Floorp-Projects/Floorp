@@ -48,7 +48,7 @@ MacIOSurfaceTextureHostOGL::CreateTextureSourceForPlane(size_t aPlane)
 bool
 MacIOSurfaceTextureHostOGL::Lock()
 {
-  if (!mCompositor || !mSurface) {
+  if (!gl() || !gl()->MakeCurrent() || !mSurface) {
     return false;
   }
 
@@ -68,6 +68,11 @@ MacIOSurfaceTextureHostOGL::Lock()
 void
 MacIOSurfaceTextureHostOGL::SetCompositor(Compositor* aCompositor)
 {
+  if (!AssertGLCompositor(aCompositor)) {
+    mTextureSource = nullptr;
+    mCompositor = nullptr;
+    return;
+  }
   CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
   mCompositor = glCompositor;
   if (mTextureSource) {
@@ -94,12 +99,19 @@ MacIOSurfaceTextureHostOGL::GetSize() const {
                       mSurface->GetDevicePixelHeight());
 }
 
+gl::GLContext*
+MacIOSurfaceTextureHostOGL::gl() const
+{
+  return mCompositor ? mCompositor->gl() : nullptr;
+}
+
 MacIOSurfaceTextureSourceOGL::MacIOSurfaceTextureSourceOGL(
                                 CompositorOGL* aCompositor,
                                 MacIOSurface* aSurface)
   : mCompositor(aCompositor)
   , mSurface(aSurface)
 {
+  MOZ_ASSERT(aCompositor);
   MOZ_COUNT_CTOR(MacIOSurfaceTextureSourceOGL);
 }
 
@@ -125,21 +137,27 @@ MacIOSurfaceTextureSourceOGL::GetFormat() const
 void
 MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
 {
-  if (!gl()) {
-    NS_WARNING("Trying to bind a texture without a GLContext");
+  gl::GLContext* gl = this->gl();
+  if (!gl || !gl->MakeCurrent()) {
+    NS_WARNING("Trying to bind a texture without a working GLContext");
     return;
   }
   GLuint tex = mCompositor->GetTemporaryTexture(GetTextureTarget(), aTextureUnit);
 
-  gl()->fActiveTexture(aTextureUnit);
-  gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
-  mSurface->CGLTexImageIOSurface2D(gl::GLContextCGL::Cast(gl())->GetCGLContext());
-  ApplyFilterToBoundTexture(gl(), aFilter, LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+  gl->fActiveTexture(aTextureUnit);
+  gl->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
+  mSurface->CGLTexImageIOSurface2D(gl::GLContextCGL::Cast(gl)->GetCGLContext());
+  ApplyFilterToBoundTexture(gl, aFilter, LOCAL_GL_TEXTURE_RECTANGLE_ARB);
 }
 
 void
 MacIOSurfaceTextureSourceOGL::SetCompositor(Compositor* aCompositor)
 {
+  if (!AssertGLCompositor(aCompositor)) {
+    mCompositor = nullptr;
+    return;
+  }
+
   mCompositor = static_cast<CompositorOGL*>(aCompositor);
   if (mNextSibling) {
     mNextSibling->SetCompositor(aCompositor);

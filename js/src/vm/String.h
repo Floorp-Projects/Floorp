@@ -472,6 +472,8 @@ class JSString : public js::gc::TenuredCell
 
     inline void finalize(js::FreeOp* fop);
 
+    void fixupAfterMovingGC() {}
+
     /* Gets the number of bytes that the chars take on the heap. */
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);

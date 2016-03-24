@@ -148,7 +148,7 @@ public final class NotificationHelper implements GeckoEventListener {
             }
 
             Log.i(LOGTAG, "Send " + args.toString());
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Notification:Event", args.toString()));
+            GeckoAppShell.notifyObservers("Notification:Event", args.toString());
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error building JSON notification arguments.", e);
         }
@@ -336,7 +336,7 @@ public final class NotificationHelper implements GeckoEventListener {
             args.put(COOKIE_ATTR, cookie);
             args.put(EVENT_TYPE_ATTR, CLOSED_EVENT);
             Log.i(LOGTAG, "Send " + args.toString());
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Notification:Event", args.toString()));
+            GeckoAppShell.notifyObservers("Notification:Event", args.toString());
         } catch (JSONException ex) {
             Log.e(LOGTAG, "sendNotificationWasClosed: error building JSON notification arguments.", ex);
         }
