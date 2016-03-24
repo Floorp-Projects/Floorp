@@ -56,6 +56,9 @@
   <string name="reading_list_title">&reading_list_title;</string>
   <string name="recent_tabs_title">&recent_tabs_title;</string>
 
+  <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/reading-list -->
+  <string name="migrated_reading_list_url">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/reading-list</string>
+
   <string name="switch_to_tab">&switch_to_tab;</string>
 
   <string name="crash_reporter_title">&crash_reporter_title;</string>
@@ -365,6 +368,10 @@
   <string name="reading_list_removed">&reading_list_removed;</string>
   <string name="reading_list_remove">&reading_list_remove;</string>
   <string name="reading_list_duplicate">&reading_list_duplicate;</string>
+
+  <string name="reading_list_migration_title">&reading_list_migration_title;</string>
+  <string name="reading_list_migration_subtext">&reading_list_migration_subtext;</string>
+  <string name="reading_list_migration_goto_bookmarks">&reading_list_migration_goto_bookmarks;</string>
 
   <string name="page_action_dropmarker_description">&page_action_dropmarker_description;</string>
 
