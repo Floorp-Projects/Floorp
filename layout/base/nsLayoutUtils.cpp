@@ -142,6 +142,7 @@ using namespace mozilla::gfx;
 
 #define GRID_ENABLED_PREF_NAME "layout.css.grid.enabled"
 #define GRID_TEMPLATE_SUBGRID_ENABLED_PREF_NAME "layout.css.grid-template-subgrid-value.enabled"
+#define WEBKIT_PREFIXES_ENABLED_PREF_NAME "layout.css.prefixes.webkit"
 #define DISPLAY_CONTENTS_ENABLED_PREF_NAME "layout.css.display-contents.enabled"
 #define TEXT_ALIGN_UNSAFE_ENABLED_PREF_NAME "layout.css.text-align-unsafe-value.enabled"
 #define FLOAT_LOGICAL_VALUES_ENABLED_PREF_NAME "layout.css.float-logical-values.enabled"
@@ -219,6 +220,53 @@ GridEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
   if (sIndexOfInlineGridInDisplayTable >= 0) {
     nsCSSProps::kDisplayKTable[sIndexOfInlineGridInDisplayTable].mKeyword =
       isGridEnabled ? eCSSKeyword_inline_grid : eCSSKeyword_UNKNOWN;
+  }
+}
+
+// When the pref "layout.css.prefixes.webkit" changes, this function is invoked
+// to let us update kDisplayKTable, to selectively disable or restore the
+// entries for "-webkit-box" and "-webkit-inline-box" in that table.
+static void
+WebkitPrefixEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
+{
+  MOZ_ASSERT(strncmp(aPrefName, WEBKIT_PREFIXES_ENABLED_PREF_NAME,
+                     ArrayLength(WEBKIT_PREFIXES_ENABLED_PREF_NAME)) == 0,
+             "We only registered this callback for a single pref, so it "
+             "should only be called for that pref");
+
+  static int32_t sIndexOfWebkitBoxInDisplayTable;
+  static int32_t sIndexOfWebkitInlineBoxInDisplayTable;
+  static bool sAreWebkitBoxKeywordIndicesInitialized; // initialized to false
+
+  bool isWebkitPrefixSupportEnabled =
+    Preferences::GetBool(WEBKIT_PREFIXES_ENABLED_PREF_NAME, false);
+  if (!sAreWebkitBoxKeywordIndicesInitialized) {
+    // First run: find the position of "-webkit-box" and "-webkit-inline-box"
+    // in kDisplayKTable.
+    sIndexOfWebkitBoxInDisplayTable =
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword__webkit_box,
+                                     nsCSSProps::kDisplayKTable);
+    MOZ_ASSERT(sIndexOfWebkitBoxInDisplayTable >= 0,
+               "Couldn't find -webkit-box in kDisplayKTable");
+    sIndexOfWebkitInlineBoxInDisplayTable =
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword__webkit_inline_box,
+                                     nsCSSProps::kDisplayKTable);
+    MOZ_ASSERT(sIndexOfWebkitInlineBoxInDisplayTable >= 0,
+               "Couldn't find -webkit-inline-box in kDisplayKTable");
+    sAreWebkitBoxKeywordIndicesInitialized = true;
+  }
+
+  // OK -- now, stomp on or restore the "-webkit-box" entries in kDisplayKTable,
+  // depending on whether the webkit prefix pref is enabled vs. disabled.
+  if (sIndexOfWebkitBoxInDisplayTable >= 0) {
+    nsCSSProps::kDisplayKTable[sIndexOfWebkitBoxInDisplayTable].mKeyword =
+      isWebkitPrefixSupportEnabled ?
+      eCSSKeyword__webkit_box : eCSSKeyword_UNKNOWN;
+  }
+  if (sIndexOfWebkitInlineBoxInDisplayTable >= 0) {
+    nsCSSProps::kDisplayKTable[sIndexOfWebkitInlineBoxInDisplayTable].mKeyword =
+      isWebkitPrefixSupportEnabled ?
+      eCSSKeyword__webkit_inline_box : eCSSKeyword_UNKNOWN;
   }
 }
 
@@ -7556,6 +7604,10 @@ nsLayoutUtils::Initialize()
   Preferences::RegisterCallback(GridEnabledPrefChangeCallback,
                                 GRID_ENABLED_PREF_NAME);
   GridEnabledPrefChangeCallback(GRID_ENABLED_PREF_NAME, nullptr);
+  Preferences::RegisterCallback(WebkitPrefixEnabledPrefChangeCallback,
+                                WEBKIT_PREFIXES_ENABLED_PREF_NAME);
+  WebkitPrefixEnabledPrefChangeCallback(WEBKIT_PREFIXES_ENABLED_PREF_NAME,
+                                        nullptr);
   Preferences::RegisterCallback(TextAlignUnsafeEnabledPrefChangeCallback,
                                 TEXT_ALIGN_UNSAFE_ENABLED_PREF_NAME);
   Preferences::RegisterCallback(DisplayContentsEnabledPrefChangeCallback,
@@ -7583,6 +7635,8 @@ nsLayoutUtils::Shutdown()
 
   Preferences::UnregisterCallback(GridEnabledPrefChangeCallback,
                                   GRID_ENABLED_PREF_NAME);
+  Preferences::UnregisterCallback(WebkitPrefixEnabledPrefChangeCallback,
+                                  WEBKIT_PREFIXES_ENABLED_PREF_NAME);
   nsComputedDOMStyle::UnregisterPrefChangeCallbacks();
 }
 
