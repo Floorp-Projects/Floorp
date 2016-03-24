@@ -171,6 +171,7 @@ const BackgroundPageThumbs = {
     let browser = this._parentWin.document.createElementNS(XUL_NS, "browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("remote", "true");
+    browser.setAttribute("disableglobalhistory", "true");
 
     // Size the browser.  Make its aspect ratio the same as the canvases' that
     // the thumbnails are drawn into; the canvases' aspect ratio is the same as
