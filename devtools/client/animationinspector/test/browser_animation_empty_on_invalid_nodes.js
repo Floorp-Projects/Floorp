@@ -44,21 +44,4 @@ add_task(function*() {
   is(document.querySelector("#error-type").textContent,
      L10N.getStr("panel.invalidElementSelected"),
      "The correct error message is displayed");
-
-  info("Select the pseudo element node and check that the panel is empty " +
-       "and contains the special animated pseudo-element message");
-  let pseudoElParent = yield getNodeFront(".pseudo", inspector);
-  let {nodes} = yield inspector.walker.children(pseudoElParent);
-  let pseudoEl = nodes[0];
-  onUpdated = panel.once(panel.UI_UPDATED_EVENT);
-  yield selectNode(pseudoEl, inspector);
-  yield onUpdated;
-
-  is(panel.animationsTimelineComponent.animations.length, 0,
-     "No animation players stored in the timeline component for a pseudo-node");
-  is(panel.animationsTimelineComponent.animationsEl.childNodes.length, 0,
-     "No animation displayed in the timeline component for a pseudo-node");
-  is(document.querySelector("#error-type").textContent,
-     L10N.getStr("panel.pseudoElementSelected"),
-     "The correct error message is displayed");
 });

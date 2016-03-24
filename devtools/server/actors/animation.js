@@ -74,12 +74,20 @@ var AnimationPlayerActor = ActorClass({
 
     this.walker = animationsActor.walker;
     this.player = player;
-    this.node = player.effect.target;
 
     // Listen to animation mutations on the node to alert the front when the
     // current animation changes.
+    // If the node is a pseudo-element, then we listen on its parent with
+    // subtree:true (there's no risk of getting too many notifications in
+    // onAnimationMutation since we filter out events that aren't for the
+    // current animation).
     this.observer = new this.window.MutationObserver(this.onAnimationMutation);
-    this.observer.observe(this.node, {animations: true});
+    if (this.isPseudoElement) {
+      this.observer.observe(this.node.parentElement,
+                            {animations: true, subtree: true});
+    } else {
+      this.observer.observe(this.node, {animations: true});
+    }
   },
 
   destroy: function() {
@@ -88,9 +96,41 @@ var AnimationPlayerActor = ActorClass({
     if (this.observer && !Cu.isDeadWrapper(this.observer)) {
       this.observer.disconnect();
     }
-    this.player = this.node = this.observer = this.walker = null;
+    this.player = this.observer = this.walker = null;
 
     Actor.prototype.destroy.call(this);
+  },
+
+  get isPseudoElement() {
+    return !this.player.effect.target.ownerDocument;
+  },
+
+  get node() {
+    if (this._node) {
+      return this._node;
+    }
+
+    let node = this.player.effect.target;
+
+    if (this.isPseudoElement) {
+      // The target is a CSSPseudoElement object which just has a property that
+      // points to its parent element and a string type (::before or ::after).
+      let treeWalker = this.walker.getDocumentWalker(node.parentElement);
+      while (treeWalker.nextNode()) {
+        let currentNode = treeWalker.currentNode;
+        if ((currentNode.nodeName === "_moz_generated_content_before" &&
+             node.type === "::before") ||
+            (currentNode.nodeName === "_moz_generated_content_after" &&
+             node.type === "::after")) {
+          this._node = currentNode;
+        }
+      }
+    } else {
+      // The target is a DOM node.
+      this._node = node;
+    }
+
+    return this._node;
   },
 
   get window() {
@@ -606,10 +646,7 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
    * /devtools/server/actors/inspector
    */
   getAnimationPlayersForNode: method(function(nodeActor) {
-    let animations = [
-      ...nodeActor.rawNode.getAnimations(),
-      ...this.getAllAnimations(nodeActor.rawNode)
-    ];
+    let animations = nodeActor.rawNode.getAnimations({subtree: true});
 
     // Destroy previously stored actors
     if (this.actors) {
@@ -659,15 +696,7 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
         if (player.playState !== "idle") {
           continue;
         }
-        // FIXME: In bug 1249219, we support the animation mutation for pseudo
-        // elements. However, the timeline may not be ready yet to
-        // display those correctly. Therefore, we add this check to bails out if
-        // the mutation target is a pseudo-element.
-        // Note. Only CSSPseudoElement object has |type| attribute, so if type
-        // exists, it is a CSSPseudoElement object.
-        if (player.effect.target.type) {
-          continue;
-        }
+
         let index = this.actors.findIndex(a => a.player === player);
         if (index !== -1) {
           eventData.push({
@@ -684,15 +713,7 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
         if (this.actors.find(a => a.player === player)) {
           continue;
         }
-        // FIXME: In bug 1249219, we support the animation mutation for pseudo
-        // elements. However, the timeline may not be ready yet to
-        // display those correctly. Therefore, we add this check to bails out if
-        // the mutation target is a pseudo-element.
-        // Note. Only CSSPseudoElement object has |type| attribute, so if type
-        // exists, it is a CSSPseudoElement object.
-        if (player.effect.target.type) {
-          continue;
-        }
+
         // If the added player has the same name and target node as a player we
         // already have, it means it's a transition that's re-starting. So send
         // a "removed" event for the one we already have.
@@ -757,25 +778,14 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
    * @return {Array} An array of AnimationPlayer objects.
    */
   getAllAnimations: function(rootNode, traverseFrames) {
-    let animations = [];
-
-    // These loops shouldn't be as bad as they look.
-    // Typically, there will be very few nested frames, and getElementsByTagName
-    // is really fast even on large DOM trees.
-    for (let element of rootNode.getElementsByTagNameNS("*", "*")) {
-      if (traverseFrames && element.contentWindow) {
-        animations = [
-          ...animations,
-          ...this.getAllAnimations(element.contentWindow.document, traverseFrames)
-        ];
-      } else {
-        animations = [
-          ...animations,
-          ...element.getAnimations()
-        ];
-      }
+    if (!traverseFrames) {
+      return rootNode.getAnimations({subtree: true});
     }
 
+    let animations = [];
+    for (let {document} of this.tabActor.windows) {
+      animations = [...animations, ...document.getAnimations({subtree: true})];
+    }
     return animations;
   },
 
