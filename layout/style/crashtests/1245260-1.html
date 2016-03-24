@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Bug 1245260</title>
+</head>
+<body>
+<style>
+body {
+  color: blue;
+}
+
+div {
+  transition: text-emphasis-color 0.1s;
+}
+
+.hide {
+  display: none;
+}
+
+a {
+  color: red;
+  transition: text-emphasis-color 0.1s;
+}
+
+span {
+  transition: text-emphasis-color 0.1s;
+}
+
+@font-face {
+  font-family: "icon-fonts";
+  src: url(x);
+}
+</style>
+
+<div>
+<span><a>Shows</a></span>
+<span><a>Video</a></span>
+<span><a>Schedule</a></span>
+<span><a>Topics</a></span>
+<span><a>Games</a></span>
+<span><a>Shop</a></span>
+<span><a>This Day In History</a></span>
+<span><a>Ask History</a></span>
+<span><a>History Lists</a></span>
+<span><a>Hungry History</a></span>
+<span><a>Speeches &amp; Audio</a></span>
+<span class="hide"><a>Sign In</a></span>
+<span><a class="hide">Sign Out</a></span>
+</div>
+<script/>
+</body>
+</html>
