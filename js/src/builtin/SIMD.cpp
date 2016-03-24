@@ -18,6 +18,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "jsnum.h"
 #include "jsprf.h"
 
 #include "builtin/TypedObject.h"
@@ -1254,70 +1255,6 @@ Select(JSContext* cx, unsigned argc, Value* vp)
     return StoreResult<V>(cx, args, result);
 }
 
-// Get an integer array index from a function argument. Coerce if necessary.
-//
-// When a JS function argument represents an integer index into an array, it is
-// laundered like this:
-//
-//   1. numericIndex = ToNumber(argument)            (may throw TypeError)
-//   2. intIndex = ToInteger(numericIndex)
-//   3. if intIndex != numericIndex throw RangeError
-//
-// This function additionally bounds the range to the non-negative contiguous
-// integers:
-//
-//   4. if intIndex < 0 or intIndex > 2^53 throw RangeError
-//
-// Return true and set |*index| to the integer value if |argument| is a valid
-// array index argument. Otherwise report an TypeError or RangeError and return
-// false.
-//
-// The returned index will always be in the range 0 <= *index <= 2^53.
-static bool
-ArgumentToIntegerIndex(JSContext* cx, JS::HandleValue v, uint64_t* index)
-{
-    // Fast common case.
-    if (v.isInt32()) {
-        int32_t i = v.toInt32();
-        if (i >= 0) {
-            *index = i;
-            return true;
-        }
-    }
-
-    // Slow case. Use ToNumber() to coerce. This may throw a TypeError.
-    double d;
-    if (!ToNumber(cx, v, &d))
-        return false;
-
-    // Check that |d| is an integer in the valid range.
-    //
-    // Not all floating point integers fit in the range of a uint64_t, so we
-    // need a rough range check before the real range check in our caller. We
-    // could limit indexes to UINT64_MAX, but this would mean that our callers
-    // have to be very careful about integer overflow. The contiguous integer
-    // floating point numbers end at 2^53, so make that our upper limit. If we
-    // ever support arrays with more than 2^53 elements, this will need to
-    // change.
-    //
-    // Reject infinities, NaNs, and numbers outside the contiguous integer range
-    // with a RangeError.
-
-    // Write relation so NaNs throw a RangeError.
-    if (!(0 <= d && d <= (uint64_t(1) << 53)))
-        return ErrorBadIndex(cx);
-
-    // Check that d is an integer, throw a RangeError if not.
-    // Note that this conversion could invoke undefined behaviour without the
-    // range check above.
-    uint64_t i(d);
-    if (d != double(i))
-        return ErrorBadIndex(cx);
-
-    *index = i;
-    return true;
-}
-
 // Extract an integer lane index from a function argument.
 //
 // Register an exception and return false if the argument is not suitable.
@@ -1325,7 +1262,7 @@ static bool
 ArgumentToLaneIndex(JSContext* cx, JS::HandleValue v, unsigned limit, unsigned* lane)
 {
     uint64_t arg;
-    if (!ArgumentToIntegerIndex(cx, v, &arg))
+    if (!ToIntegerIndex(cx, v, &arg))
         return false;
     if (arg >= limit)
         return ErrorBadIndex(cx);
@@ -1352,7 +1289,7 @@ TypedArrayFromArgs(JSContext* cx, const CallArgs& args, uint32_t accessBytes,
     typedArray.set(&argobj);
 
     uint64_t index;
-    if (!ArgumentToIntegerIndex(cx, args[1], &index))
+    if (!ToIntegerIndex(cx, args[1], &index))
         return false;
 
     // Do the range check in 64 bits even when size_t is 32 bits.

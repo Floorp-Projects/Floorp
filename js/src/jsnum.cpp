@@ -1748,6 +1748,55 @@ js::ToLengthClamped<JSContext>(JSContext*, HandleValue, uint32_t*, bool*);
 template bool
 js::ToLengthClamped<ExclusiveContext>(ExclusiveContext*, HandleValue, uint32_t*, bool*);
 
+bool
+js::ToIntegerIndex(JSContext* cx, JS::HandleValue v, uint64_t* index)
+{
+    // Fast common case.
+    if (v.isInt32()) {
+        int32_t i = v.toInt32();
+        if (i >= 0) {
+            *index = i;
+            return true;
+        }
+    }
+
+    // Slow case. Use ToNumber() to coerce. This may throw a TypeError.
+    double d;
+    if (!ToNumber(cx, v, &d))
+        return false;
+
+    // Check that |d| is an integer in the valid range.
+    //
+    // Not all floating point integers fit in the range of a uint64_t, so we
+    // need a rough range check before the real range check in our caller. We
+    // could limit indexes to UINT64_MAX, but this would mean that our callers
+    // have to be very careful about integer overflow. The contiguous integer
+    // floating point numbers end at 2^53, so make that our upper limit. If we
+    // ever support arrays with more than 2^53 elements, this will need to
+    // change.
+    //
+    // Reject infinities, NaNs, and numbers outside the contiguous integer range
+    // with a RangeError.
+
+    // Write relation so NaNs throw a RangeError.
+    if (!(0 <= d && d <= (uint64_t(1) << 53))) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
+        return false;
+    }
+
+    // Check that d is an integer, throw a RangeError if not.
+    // Note that this conversion could invoke undefined behaviour without the
+    // range check above.
+    uint64_t i(d);
+    if (d != double(i)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
+        return false;
+    }
+
+    *index = i;
+    return true;
+}
+
 template <typename CharT>
 bool
 js_strtod(ExclusiveContext* cx, const CharT* begin, const CharT* end, const CharT** dEnd,

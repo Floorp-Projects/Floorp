@@ -211,7 +211,7 @@ var globlength = 0;		// Will be set later
 function testRangeCAS(a) {
     dprint("Range: " + a.constructor.name);
 
-    var msg = /out-of-range index for atomic access/;
+    var msg = /out-of-range index/; // A generic message
 
     assertErrorMessage(() => Atomics.compareExchange(a, -1, 0, 1), RangeError, msg);
     assertEq(a[0], 0);
@@ -456,6 +456,13 @@ function testUint8Clamped(sab) {
     assertEq(thrown, true);
 }
 
+function testWeirdIndices() {
+    var a = new Int8Array(new SharedArrayBuffer(16));
+    a[3] = 10;
+    assertEq(Atomics.load(a, "0x03"), 10);
+    assertEq(Atomics.load(a, {valueOf: () => 3}), 10);
+}
+
 function isLittleEndian() {
     var xxx = new ArrayBuffer(2);
     var xxa = new Int16Array(xxx);
@@ -551,6 +558,7 @@ function runTests() {
     // Misc
     testIsLockFree();
     testIsLockFree2();
+    testWeirdIndices();
 }
 
 if (this.Atomics && this.SharedArrayBuffer)
