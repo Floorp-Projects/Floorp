@@ -617,7 +617,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mCurrentScrollbarFlags(0),
       mPerspectiveItemIndex(0),
       mSVGEffectsBuildingDepth(0),
-      mContainsBlendMode(false),
       mIsBuildingScrollbar(false),
       mCurrentScrollbarWillHaveLayer(false),
       mBuildCaret(aBuildCaret),
@@ -674,6 +673,12 @@ static void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
       break;
     }
   }
+}
+
+void nsDisplayListBuilder::SetContainsBlendMode(uint8_t aBlendMode)
+{
+  MOZ_ASSERT(aBlendMode != NS_STYLE_BLEND_NORMAL);
+  mContainedBlendModes += nsCSSRendering::GetGFXBlendMode(aBlendMode);
 }
 
 bool nsDisplayListBuilder::NeedToForceTransparentSurfaceForItem(nsDisplayItem* aItem)
