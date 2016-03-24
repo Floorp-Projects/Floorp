@@ -27,9 +27,9 @@ function run_test() {
 
   sb.equal = equal;
   Cu.evalInSandbox('(' + exerciseInterface.toSource() + ')();', sb);
-  ok(sb.rtcIdentityProvider.idp);
+  ok(sb.rtcIdentityProvider.hasIdp);
 
   Cu.importGlobalProperties(['rtcIdentityProvider']);
   exerciseInterface();
-  ok(rtcIdentityProvider.idp);
+  ok(rtcIdentityProvider.hasIdp);
 }
