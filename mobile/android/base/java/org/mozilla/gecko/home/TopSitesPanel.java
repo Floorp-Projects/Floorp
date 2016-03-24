@@ -351,10 +351,6 @@ public class TopSitesPanel extends HomeFragment {
         if (!Restrictions.isAllowed(context, Restrictable.PRIVATE_BROWSING)) {
             menu.findItem(R.id.home_open_private_tab).setVisible(false);
         }
-
-        // We only show these menu items on the reading list panel:
-        menu.findItem(R.id.mark_read).setVisible(false);
-        menu.findItem(R.id.mark_unread).setVisible(false);
     }
 
     @Override

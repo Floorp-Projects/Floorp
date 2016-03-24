@@ -24,13 +24,11 @@ public class HomeContextMenuInfo extends AdapterContextMenuInfo {
     public boolean isFolder;
     public int historyId = -1;
     public int bookmarkId = -1;
-    public int readingListItemId = -1;
-    public boolean isUnread;
     public RemoveItemType itemType = null;
 
     // Item type to be handled with "Remove" selection.
     public static enum RemoveItemType {
-        BOOKMARKS, HISTORY, READING_LIST
+        BOOKMARKS, HISTORY
     }
 
     public HomeContextMenuInfo(View targetView, int position, long id) {
@@ -45,12 +43,8 @@ public class HomeContextMenuInfo extends AdapterContextMenuInfo {
         return historyId > -1;
     }
 
-    public boolean isInReadingList() {
-        return readingListItemId > -1;
-    }
-
     public boolean canRemove() {
-        return hasBookmarkId() || hasHistoryId() || isInReadingList();
+        return hasBookmarkId() || hasHistoryId();
     }
 
     public String getDisplayTitle() {
