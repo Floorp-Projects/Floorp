@@ -79,6 +79,7 @@ public:
 
     void UpdateOverscrollVelocity(const float aX, const float aY);
     void UpdateOverscrollOffset(const float aX, const float aY);
+    void SetScrollingRootContent(const bool isRootContent);
 
     //
     // nsIWidget
