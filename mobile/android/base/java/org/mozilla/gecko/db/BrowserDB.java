@@ -43,7 +43,6 @@ public interface BrowserDB {
     public abstract Searches getSearches();
     public abstract TabsAccessor getTabsAccessor();
     public abstract URLMetadata getURLMetadata();
-    public abstract ReadingListAccessor getReadingListAccessor();
     @RobocopTarget UrlAnnotations getUrlAnnotations();
 
     /**
