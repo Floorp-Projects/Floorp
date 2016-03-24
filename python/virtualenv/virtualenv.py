@@ -25,6 +25,9 @@ import glob
 import distutils.sysconfig
 import struct
 import subprocess
+import pkgutil
+import tempfile
+import textwrap
 from distutils.util import strtobool
 from os.path import join
 
@@ -33,7 +36,7 @@ try:
 except ImportError:
     import configparser as ConfigParser
 
-__version__ = "14.0.1"
+__version__ = "15.0.1"
 virtualenv_version = __version__  # legacy
 
 if sys.version_info < (2, 6):
@@ -351,22 +354,19 @@ def copyfile(src, dest, symlink=True):
 def writefile(dest, content, overwrite=True):
     if not os.path.exists(dest):
         logger.info('Writing %s', dest)
-        f = open(dest, 'wb')
-        f.write(content.encode('utf-8'))
-        f.close()
+        with open(dest, 'wb') as f:
+            f.write(content.encode('utf-8'))
         return
     else:
-        f = open(dest, 'rb')
-        c = f.read()
-        f.close()
+        with open(dest, 'rb') as f:
+            c = f.read()
         if c != content.encode("utf-8"):
             if not overwrite:
                 logger.notify('File %s exists with different content; not overwriting', dest)
                 return
             logger.notify('Overwriting %s with new content', dest)
-            f = open(dest, 'wb')
-            f.write(content.encode('utf-8'))
-            f.close()
+            with open(dest, 'wb') as f:
+                f.write(content.encode('utf-8'))
         else:
             logger.info('Content %s already in place', dest)
 
@@ -677,6 +677,11 @@ def main():
 
     home_dir = args[0]
 
+    if os.path.exists(home_dir) and os.path.isfile(home_dir):
+        logger.fatal('ERROR: File already exists and is not a directory.')
+        logger.fatal('Please provide a different path or delete the file.')
+        sys.exit(3)
+
     if os.environ.get('WORKING_ENV'):
         logger.fatal('ERROR: you cannot run virtualenv while in a workingenv')
         logger.fatal('Please deactivate your workingenv, then re-run this script')
@@ -707,7 +712,7 @@ def main():
 def call_subprocess(cmd, show_stdout=True,
                     filter_stdout=None, cwd=None,
                     raise_on_returncode=True, extra_env=None,
-                    remove_from_env=None):
+                    remove_from_env=None, stdin=None):
     cmd_parts = []
     for part in cmd:
         if len(part) > 45:
@@ -737,7 +742,9 @@ def call_subprocess(cmd, show_stdout=True,
         env = None
     try:
         proc = subprocess.Popen(
-            cmd, stderr=subprocess.STDOUT, stdin=None, stdout=stdout,
+            cmd, stderr=subprocess.STDOUT,
+            stdin=None if stdin is None else subprocess.PIPE,
+            stdout=stdout,
             cwd=cwd, env=env)
     except Exception:
         e = sys.exc_info()[1]
@@ -746,6 +753,10 @@ def call_subprocess(cmd, show_stdout=True,
         raise
     all_output = []
     if stdout is not None:
+        if stdin is not None:
+            proc.stdin.write(stdin)
+            proc.stdin.close()
+
         stdout = proc.stdout
         encoding = sys.getdefaultencoding()
         fs_encoding = sys.getfilesystemencoding()
@@ -769,7 +780,7 @@ def call_subprocess(cmd, show_stdout=True,
             else:
                 logger.info(line)
     else:
-        proc.communicate()
+        proc.communicate(stdin)
     proc.wait()
     if proc.returncode:
         if raise_on_returncode:
@@ -837,10 +848,35 @@ def install_wheel(project_names, py_executable, search_dirs=None,
         return urljoin('file:', pathname2url(os.path.abspath(p)))
     findlinks = ' '.join(space_path2url(d) for d in search_dirs)
 
-    cmd = [
-        py_executable, '-c',
-        'import sys, pip; sys.exit(pip.main(["install", "--ignore-installed"] + sys.argv[1:]))',
-    ] + project_names
+    SCRIPT = textwrap.dedent("""
+        import sys
+        import pkgutil
+        import tempfile
+        import os
+
+        import pip
+
+        cert_data = pkgutil.get_data("pip._vendor.requests", "cacert.pem")
+        if cert_data is not None:
+            cert_file = tempfile.NamedTemporaryFile(delete=False)
+            cert_file.write(cert_data)
+            cert_file.close()
+        else:
+            cert_file = None
+
+        try:
+            args = ["install", "--ignore-installed"]
+            if cert_file is not None:
+                args += ["--cert", cert_file.name]
+            args += sys.argv[1:]
+
+            sys.exit(pip.main(args))
+        finally:
+            if cert_file is not None:
+                os.remove(cert_file.name)
+    """).encode("utf8")
+
+    cmd = [py_executable, '-'] + project_names
     logger.start_progress('Installing %s...' % (', '.join(project_names)))
     logger.indent += 2
 
@@ -858,10 +894,11 @@ def install_wheel(project_names, py_executable, search_dirs=None,
         env["PIP_NO_INDEX"] = "1"
 
     try:
-        call_subprocess(cmd, show_stdout=False, extra_env=env)
+        call_subprocess(cmd, show_stdout=False, extra_env=env, stdin=SCRIPT)
     finally:
         logger.indent -= 2
         logger.end_progress()
+
 
 def create_environment(home_dir, site_packages=False, clear=False,
                        unzip_setuptools=False,
@@ -978,6 +1015,12 @@ def change_prefix(filename, dst_prefix):
     # Check longer prefixes first so we don't split in the middle of a filename
     prefixes = sorted(prefixes, key=len, reverse=True)
     filename = os.path.abspath(filename)
+    # On Windows, make sure drive letter is uppercase
+    if is_win and filename[0] in 'abcdefghijklmnopqrstuvwxyz':
+        filename = filename[0].upper() + filename[1:]
+    for i, prefix in enumerate(prefixes):
+        if is_win and prefix[0] in 'abcdefghijklmnopqrstuvwxyz':
+            prefixes[i] = prefix[0].upper() + prefix[1:]
     for src_prefix in prefixes:
         if filename.startswith(src_prefix):
             _, relpath = filename.split(src_prefix, 1)
@@ -1557,16 +1600,14 @@ def fixup_scripts(home_dir, bin_dir):
         if not os.path.isfile(filename):
             # ignore subdirs, e.g. .svn ones.
             continue
-        f = open(filename, 'rb')
-        try:
+        lines = None
+        with open(filename, 'rb') as f:
             try:
                 lines = f.read().decode('utf-8').splitlines()
             except UnicodeDecodeError:
                 # This is probably a binary program instead
                 # of a script, so just ignore it.
                 continue
-        finally:
-            f.close()
         if not lines:
             logger.warn('Script %s is an empty file' % filename)
             continue
@@ -1585,9 +1626,9 @@ def fixup_scripts(home_dir, bin_dir):
             continue
         logger.notify('Making script %s relative' % filename)
         script = relative_script([new_shebang] + lines[1:])
-        f = open(filename, 'wb')
-        f.write('\n'.join(script).encode('utf-8'))
-        f.close()
+        with open(filename, 'wb') as f:
+            f.write('\n'.join(script).encode('utf-8'))
+
 
 def relative_script(lines):
     "Return a script that'll work in a relocatable environment."
@@ -1634,9 +1675,8 @@ def fixup_pth_and_egg_link(home_dir, sys_path=None):
 def fixup_pth_file(filename):
     lines = []
     prev_lines = []
-    f = open(filename)
-    prev_lines = f.readlines()
-    f.close()
+    with open(filename) as f:
+        prev_lines = f.readlines()
     for line in prev_lines:
         line = line.strip()
         if (not line or line.startswith('#') or line.startswith('import ')
@@ -1651,22 +1691,19 @@ def fixup_pth_file(filename):
         logger.info('No changes to .pth file %s' % filename)
         return
     logger.notify('Making paths in .pth file %s relative' % filename)
-    f = open(filename, 'w')
-    f.write('\n'.join(lines) + '\n')
-    f.close()
+    with open(filename, 'w') as f:
+        f.write('\n'.join(lines) + '\n')
 
 def fixup_egg_link(filename):
-    f = open(filename)
-    link = f.readline().strip()
-    f.close()
+    with open(filename) as f:
+        link = f.readline().strip()
     if os.path.abspath(link) != link:
         logger.debug('Link in %s already relative' % filename)
         return
     new_link = make_relative_path(filename, link)
     logger.notify('Rewriting link %s in %s as %s' % (link, filename, new_link))
-    f = open(filename, 'w')
-    f.write(new_link)
-    f.close()
+    with open(filename, 'w') as f:
+        f.write(new_link)
 
 def make_relative_path(source, dest, dest_is_directory=True):
     """
@@ -1749,9 +1786,8 @@ def create_bootstrap_script(extra_text, python_version=''):
     filename = __file__
     if filename.endswith('.pyc'):
         filename = filename[:-1]
-    f = codecs.open(filename, 'r', encoding='utf-8')
-    content = f.read()
-    f.close()
+    with codecs.open(filename, 'r', encoding='utf-8') as f:
+        content = f.read()
     py_exe = 'python%s' % python_version
     content = (('#!/usr/bin/env %s\n' % py_exe)
                + '## WARNING: This file is generated\n'
@@ -1911,20 +1947,20 @@ AVijEPwfucjncQ==
 
 ##file activate.sh
 ACTIVATE_SH = convert("""
-eJytVdtu2kAQffdXDAalSVqK6GMrqhIFCaQEIkyp2qZyFnuIVzVrtLsmIZd/76wvYONAHxI/gHdn
-dvbMnDPjOkwCrmDOQ4RFrDTMEGKFPtxxHYCtolh6CDMuWszTfMU02nA6l9ECZkwFp1Yd1lEMHhMi
-0iBjAVyDzyV6Olxblo/5KTg+gUcL6ImFQg3NOSzXfuRZyV4dJJrdKPQBxYrLSCxQaFgxydksRJV5
-1eA3NB+g8Tjtjt+7z/CHzulYCgVaxgh8DmQAysdHL2SS0mAaWBgmx8manbcbj+7o4tydDsaT790L
-96o76VM4m+J9AR2gSPzNYywdu1HxtjceeL+MpE4cN3tpipVDiX3O/wfm56Q/GvZHl709kDb2CrCN
-pQpvYzoIsuxFULO6JxpRQRQTPz5qYjehH5jw4UEFH+Au4F4AAVshMPojkxctFsasA6LAKCsLRfry
-iBGiRkdwSwhIMPQ2j6RZLBlJMDuqPgL8IBVGsc7MmovbLEzJ0RQIGqbE4AVM3KKCO5Iz883PGow0
-6VqS2JKQo58TQOUXpvxnXaffTEr99LTZ/OX03Wlv7AxGw+ZLNCRJNiV8+trycdUScaayvGgHCHba
-e5h12hVKnXaVS6d9kMTMnANJXXJrbzjdpl8z2NomvQ7YIhI+Kuoj07G4A68ODoZzyB1qOwCaxpS3
-en77s0XTIbVzKTHEFSu1dGE4lO+2rALaju26haXr2lZWh2JKVqXZqJJpo2aLgnfLdc8GQ3fYvey5
-7ufMrdjHG9zbhjAFox2rROuhVt3TWAbWTpvuXmUZ5lJ5JrcUsz8fON2zi557NR5dXk0qwtwVgrkt
-V1AS0b7fVjONQQWFWgfu98ix6r6NiKHCsvfxDY0FFGyBcF0q+bV9cwLbk9kQLAja5FyHS/YXQcUS
-zUiIBQs5U+l3wsDn+p2iaS6R+WsDVaJV9Ch0IhRej47KkSwrdd98kJZrmjECmossjt34ZqfifZOx
-9wYj75Xj7jWj7qUxR1z9A7WjbI8=
+eJytVd9v2kAMfs9fYQLq2m4MscdNVKMqEkgtVIQxbeuUHolpTgsXdHehpT/+9/mSEBJS2MOaB0ji
+z77P9menDpOAK5jzEGERKw0zhFihD/dcB2CrKJYewoyLFvM0XzGNNpzOZbSAGVPBqVWHdRSDx4SI
+NMhYANfgc4meDteW5ePGC45P4MkCumKhUENzDsu1H3lw1vJx1RJxGMKns6O2lWDqINGgotAHFCsu
+I7FAoWHFJGezEFWGqsEvaD5C42naHb93X+A3+elYCgVaxgh8DmQAys9HL2SS0mIaWBgm7mTN/O3G
+kzu6vHCng/HkW/fSve5O+hTOpnhfQAcoEry5jKVjNypoO0fgwzKSOgHm79KUK06Jfc7/RebHpD8a
+9kdXvT2UcnuFWG6p0stNB0mWUUQ1q3uiGRVEMfXHR03dTuQATPjwqIIPcB9wL4CArRAY/ZHJixYL
+Y9YBtcAoLQtFevOoI9QaHcEdMSAB0d08kuZhyUiSmav6CPCdVBnFOjNrLu6yMCWgKRA0TInBC5i4
+QwX3JG/mm581GKnSsSSxJTFHf9MAKr8w5T/vOv1mUurn5/zlT6fvTntjZzAaNl9rQ5JkU5KIc0GX
+inagwU57T2eddqWlTrvaS6d9sImZeUMkhWysveF0m37NcGub9Dpgi0j4qGiOzATjDr06OBjOYQOo
+7RBoGtNm9Denv1i0LVI7lxJDXLHSSBeWRflsyyqw7diuW3h0XdvK6lBMyaoMG1UyHdTsoYBuue75
+YOgOu1c91/2cwYpznPPeDoQpGL2xSm09NKp7BsvQ2hnT3aMs07lUnskpxewvBk73/LLnXo9HV9eT
+ijB3hWBO2ygoiWg/bKuZxqCCQq0DD3vkWIVvI2KosIw+vqW1gIItEG5KJb+xb09g65ktwYKgTc51
+uGJ/EFQs0ayEWLCQM5V9N4g+1+8UbXOJzF8bqhKtIqIwicWvzNFROZJlpfD8A7Vc044R0FxkcezG
+VzsV75usvTdYef+57v5n1b225qhXfwEmxHEs
 """)
 
 ##file activate.fish
@@ -2271,7 +2307,9 @@ def mach_o_change(path, what, value):
             do_macho(file, 64, LITTLE_ENDIAN)
 
     assert(len(what) >= len(value))
-    do_file(open(path, 'r+b'))
+
+    with open(path, 'r+b') as f:
+        do_file(f)
 
 
 if __name__ == '__main__':
