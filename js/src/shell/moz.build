@@ -44,3 +44,7 @@ shellmoduleloader.inputs = [
     '../js.msg',
     'ModuleLoader.js',
 ]
+
+# This is intended as a temporary workaround to enable VS2015.
+if CONFIG['_MSC_VER']:
+    CXXFLAGS += ['-wd4312']

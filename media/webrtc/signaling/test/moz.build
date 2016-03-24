@@ -24,3 +24,9 @@ USE_LIBS += [
     'mtransport_s',
 ]
 
+if CONFIG['_MSC_VER']:
+    # This is intended as a temporary workaround to enable warning free building
+    # with VS2015.
+    # reinterpret_cast': conversion from 'DWORD' to 'HANDLE' of greater size
+    CXXFLAGS += ['-wd4312']
+
