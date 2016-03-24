@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -94,6 +95,9 @@ public class DynamicToolbarAnimator {
     private PointF mTouchStart;
     private float mLastTouch;
 
+    /* Set to true when root content is being scrolled */
+    private boolean mScrollingRootContent;
+
     public DynamicToolbarAnimator(GeckoLayerClient aTarget) {
         mTarget = aTarget;
         mListeners = new ArrayList<LayerView.DynamicToolbarListener>();
@@ -108,6 +112,11 @@ public class DynamicToolbarAnimator {
             }
         };
         PrefsHelper.addObserver(new String[] { PREF_SCROLL_TOOLBAR_THRESHOLD }, mPrefObserver);
+
+        // JPZ doesn't notify when scrolling root content. This maintains existing behaviour.
+        if (!AppConstants.MOZ_ANDROID_APZ) {
+            mScrollingRootContent = true;
+        }
     }
 
     public void destroy() {
@@ -183,6 +192,10 @@ public class DynamicToolbarAnimator {
 
     public void hideToolbar(boolean immediately) {
         animateToolbar(false, immediately);
+    }
+
+    public void setScrollingRootContent(boolean isRootContent) {
+        mScrollingRootContent = isRootContent;
     }
 
     private void animateToolbar(final boolean showToolbar, boolean immediately) {
@@ -339,11 +352,12 @@ public class DynamicToolbarAnimator {
             // translation to take effect right away. Or if the user has moved
             // their finger past the required threshold (and is not trying to
             // scroll past the bottom of the page) then also we want the touch
-            // to cause translation.
+            // to cause translation. If the toolbar is fully visible, we only
+            // want the toolbar to hide if the user is scrolling the root content.
             boolean inBetween = (mToolbarTranslation != 0 && mToolbarTranslation != mMaxTranslation);
             boolean reachedThreshold = -aTouchTravelDistance >= exposeThreshold;
             boolean atBottomOfPage = aMetrics.viewportRectBottom() >= aMetrics.pageRectBottom;
-            if (inBetween || (reachedThreshold && !atBottomOfPage)) {
+            if (inBetween || (mScrollingRootContent && reachedThreshold && !atBottomOfPage)) {
                 return translation;
             }
         } else {    // finger moving downwards

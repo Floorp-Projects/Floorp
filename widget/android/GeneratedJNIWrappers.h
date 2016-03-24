@@ -3781,6 +3781,22 @@ public:
 
     auto RequestContentRepaintWrapper(float, float, float, float, float) const -> void;
 
+    struct SetScrollingRootContent_t {
+        typedef NativePanZoomController Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                bool> Args;
+        static constexpr char name[] = "setScrollingRootContent";
+        static constexpr char signature[] =
+                "(Z)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto SetScrollingRootContent(bool) const -> void;
+
     struct UpdateOverscrollOffset_t {
         typedef NativePanZoomController Owner;
         typedef void ReturnType;
