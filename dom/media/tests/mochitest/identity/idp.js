@@ -101,10 +101,6 @@
 
   if (!instructions.some(is('not_ready'))) {
     dump('registering idp.js' + global.location.hash + '\n');
-    var idp = new IDPJS();
-    global.rtcIdentityProvider.register({
-      generateAssertion: idp.generateAssertion.bind(idp),
-      validateAssertion: idp.validateAssertion.bind(idp)
-    });
+    global.rtcIdentityProvider.register(new IDPJS());
   }
 }(this));
