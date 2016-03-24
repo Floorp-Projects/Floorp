@@ -12,6 +12,7 @@
 #include "nsIWritablePropertyBag2.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/SSE.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/unused.h"
 #include "nsIObserverService.h"
@@ -834,6 +835,20 @@ GMPParent::ReadGMPMetaData()
         return NS_ERROR_FAILURE;
       }
 #endif
+#ifdef XP_WIN
+      // Adobe GMP doesn't work without SSE2. Check the tags to see if
+      // the decryptor is for the Adobe GMP, and refuse to load it if
+      // SSE2 isn't supported.
+      for (const nsCString& tag : cap->mAPITags) {
+        if (!tag.EqualsLiteral("com.adobe.primetime")) {
+          continue;
+        }
+        if (!mozilla::supports_sse2()) {
+          return NS_ERROR_FAILURE;
+        }
+        break;
+      }
+#endif // XP_WIN
     }
 
     mCapabilities.AppendElement(cap);
