@@ -15,7 +15,7 @@ template<typename T>
 class ArrayView
 {
     public:
-        ArrayView(const nsTArray<T>& aData) :
+        MOZ_IMPLICIT ArrayView(const nsTArray<T>& aData) :
             mData(aData.Elements()), mLength(aData.Length())
         {
         }
