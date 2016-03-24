@@ -344,8 +344,8 @@ JSObject::create(js::ExclusiveContext* cx, js::gc::AllocKind kind, js::gc::Initi
                                                             shape->slotSpan(), clasp);
     } else if (group->clasp()->isProxy()) {
         // Proxy objects overlay the |slots| field with a ProxyValueArray.
-        MOZ_ASSERT(sizeof(js::ProxyValueArray) % sizeof(js::HeapSlot) == 0);
-        nDynamicSlots = sizeof(js::ProxyValueArray) / sizeof(js::HeapSlot);
+        MOZ_ASSERT(sizeof(js::detail::ProxyValueArray) % sizeof(js::HeapSlot) == 0);
+        nDynamicSlots = sizeof(js::detail::ProxyValueArray) / sizeof(js::HeapSlot);
     }
 
     JSObject* obj = js::Allocate<JSObject>(cx, kind, nDynamicSlots, heap, clasp);

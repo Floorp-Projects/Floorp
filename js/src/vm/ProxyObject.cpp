@@ -51,7 +51,7 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
         return nullptr;
 
     Rooted<ProxyObject*> proxy(cx, &obj->as<ProxyObject>());
-    new (proxy->data.values) ProxyValueArray;
+    new (proxy->data.values) detail::ProxyValueArray;
     proxy->data.handler = handler;
     proxy->setCrossCompartmentPrivate(priv);
 
@@ -79,7 +79,7 @@ void
 ProxyObject::nuke(const BaseProxyHandler* handler)
 {
     setSameCompartmentPrivate(NullValue());
-    for (size_t i = 0; i < PROXY_EXTRA_SLOTS; i++)
+    for (size_t i = 0; i < detail::PROXY_EXTRA_SLOTS; i++)
         SetProxyExtra(this, i, NullValue());
 
     /* Restore the handler as requested after nuking. */
