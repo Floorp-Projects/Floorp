@@ -683,12 +683,17 @@ retry:
 
 PR_IMPLEMENT(const char*) PR_GetNameForIdentity(PRDescIdentity ident)
 {
+    const char *rv = NULL;
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
-    if (PR_TOP_IO_LAYER == ident) return NULL;
+    if ((PR_TOP_IO_LAYER != ident) && (ident >= 0)) {
+      PR_Lock(identity_cache.ml);
+      PR_ASSERT(ident <= identity_cache.ident);
+      rv = (ident > identity_cache.ident) ? NULL : identity_cache.name[ident];
+      PR_Unlock(identity_cache.ml);
+    }
 
-    PR_ASSERT(ident <= identity_cache.ident);
-    return (ident > identity_cache.ident) ? NULL : identity_cache.name[ident];
+    return rv;
 }  /* PR_GetNameForIdentity */
 
 PR_IMPLEMENT(PRDescIdentity) PR_GetLayersIdentity(PRFileDesc* fd)

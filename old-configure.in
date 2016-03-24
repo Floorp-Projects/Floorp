@@ -440,10 +440,11 @@ case "$target" in
                 AC_DEFINE(MSVC_HAS_DIA_SDK)
             fi
 
-            # -Wv:18 disables all warnings introduced after VS2013
-            # See http://blogs.msdn.com/b/vcblog/archive/2014/11/12/improvements-to-warnings-in-the-c-compiler.aspx
-            CFLAGS="$CFLAGS -Wv:18"
-            CXXFLAGS="$CXXFLAGS -Wv:18"
+            # C5026: move constructor was implicitly defined as deleted
+            CXXFLAGS="$CXXFLAGS -wd5026"
+
+            # C5027: move assignment operator was implicitly defined as deleted
+            CXXFLAGS="$CXXFLAGS -wd5027"
 
             # -Zc:sizedDealloc- disables C++14 global sized deallocation (see bug 1160146)
             CXXFLAGS="$CXXFLAGS -Zc:sizedDealloc-"
@@ -4823,7 +4824,7 @@ fi
 dnl Detect if we can use yasm to compile libjpeg-turbo's optimized assembly
 dnl files.
 
-if test -n "$MOZ_LIBJPEG_TURBO"; then
+if test -n "$MOZ_LIBJPEG_TURBO" -a -n "$COMPILE_ENVIRONMENT"; then
 
   dnl Do we support libjpeg-turbo on this platform?
   case "$OS_ARCH:$CPU_ARCH" in
@@ -4910,7 +4911,7 @@ esac
 
 dnl Detect if we can use yasm to compile libav's assembly
 
-if test -n "$MOZ_LIBAV_FFT"; then
+if test -n "$MOZ_LIBAV_FFT" -a -n "$COMPILE_ENVIRONMENT"; then
   AC_DEFINE(MOZ_LIBAV_FFT)
   dnl Do we support libav-fft on this platform?
   case "$OS_ARCH:$CPU_ARCH" in

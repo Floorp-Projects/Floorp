@@ -5,10 +5,12 @@
 
 #include <algorithm>
 
+#include "PingPongRegion.h"
 #include "gtest/gtest.h"
 #include "gtest/MozGTestBench.h"
 #include "nsRect.h"
 #include "nsRegion.h"
+#include "RegionBuilder.h"
 
 using namespace std;
 
@@ -562,14 +564,50 @@ TEST(Gfx, RegionVisitEdges) {
 
     TestVisit(r);
   }
+}
 
+TEST(Gfx, PingPongRegion) {
+  nsRect rects[] = {
+    nsRect(4, 1, 61, 49),
+    nsRect(115, 1, 99, 49),
+    nsRect(115, 49, 99, 1),
+    nsRect(12, 50, 11, 5),
+    nsRect(25, 50, 28, 5),
+    nsRect(115, 50, 99, 5),
+    nsRect(115, 55, 99, 12),
+  };
+
+  // Test accumulations of various sizes to make sure
+  // the ping-pong behavior of PingPongRegion is working.
+  for (size_t size = 0; size < mozilla::ArrayLength(rects); size++) {
+    // bug 1130978.
+    nsRegion r;
+    PingPongRegion<nsRegion> ar;
+    for (size_t i = 0; i < size; i++) {
+      r.Or(r, rects[i]);
+      ar.OrWith(rects[i]);
+      EXPECT_TRUE(ar.Region().IsEqual(r));
+    }
+
+    for (size_t i = 0; i < size; i++) {
+      ar.SubOut(rects[i]);
+      r.SubOut(rects[i]);
+      EXPECT_TRUE(ar.Region().IsEqual(r));
+    }
+  }
 }
 
 MOZ_GTEST_BENCH(GfxBench, RegionOr, []{
   const int size = 5000;
+
   nsRegion r;
   for (int i = 0; i < size; i++) {
     r = r.Or(r, nsRect(i, i, i + 10, i + 10));
+  }
+
+  nsIntRegion rInt;
+  for (int i = 0; i < size; i++) {
+    rInt = rInt.Or(rInt, nsIntRect(i, i, i + 10, i + 10));
   }
 });
 
@@ -581,5 +619,45 @@ MOZ_GTEST_BENCH(GfxBench, RegionAnd, []{
     rMissingPixel = rMissingPixel.Sub(rMissingPixel, nsRect(i, i, 1, 1));
     r = r.And(r, rMissingPixel);
   }
+});
+
+void BenchRegionBuilderOr() {
+  const int size = 5000;
+
+  RegionBuilder<nsRegion> r;
+  for (int i = 0; i < size; i++) {
+    r.Or(nsRect(i, i, i + 10, i + 10));
+  }
+  r.ToRegion();
+
+  RegionBuilder<nsIntRegion> rInt;
+  for (int i = 0; i < size; i++) {
+    rInt.Or(nsIntRect(i, i, i + 10, i + 10));
+  }
+  rInt.ToRegion();
+}
+
+MOZ_GTEST_BENCH(GfxBench, RegionBuilderOr, []{
+  BenchRegionBuilderOr();
+});
+
+void BenchPingPongRegionOr() {
+  const int size = 5000;
+
+  PingPongRegion<nsRegion> r;
+  for (int i = 0; i < size; i++) {
+    r.OrWith(nsRect(i, i, i + 10, i + 10));
+  }
+  r.Region();
+
+  PingPongRegion<nsIntRegion> rInt;
+  for (int i = 0; i < size; i++) {
+    rInt.OrWith(nsIntRect(i, i, i + 10, i + 10));
+  }
+  rInt.Region();
+}
+
+MOZ_GTEST_BENCH(GfxBench, PingPongRegionOr, []{
+  BenchPingPongRegionOr();
 });
 

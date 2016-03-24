@@ -137,8 +137,10 @@ public:
    *                        applicable. For pseudo-elements, this is the parent
    *                        element to which the pseudo is attached, not the
    *                        generated content node.
-   * @param aPseudoType     The type of pseudo-element to which the computed
-   *                        value is applicable.
+   * @param aStyleContext   The style context used to compute values from the
+   *                        specified value. For pseudo-elements, this should
+   *                        be the style context corresponding to the pseudo
+   *                        element.
    * @param aSpecifiedValue The specified value, from which we'll build our
    *                        computed value.
    * @param aUseSVGMode     A flag to indicate whether we should parse
@@ -156,7 +158,7 @@ public:
    */
   static bool ComputeValue(nsCSSProperty aProperty,
                            mozilla::dom::Element* aTargetElement,
-                           CSSPseudoElementType aPseudoType,
+                           nsStyleContext* aStyleContext,
                            const nsAString& aSpecifiedValue,
                            bool aUseSVGMode,
                            StyleAnimationValue& aComputedValue,
@@ -175,8 +177,20 @@ public:
   static bool ComputeValues(nsCSSProperty aProperty,
                             nsCSSProps::EnabledState aEnabledState,
                             mozilla::dom::Element* aTargetElement,
-                            CSSPseudoElementType aPseudoType,
+                            nsStyleContext* aStyleContext,
                             const nsAString& aSpecifiedValue,
+                            bool aUseSVGMode,
+                            nsTArray<PropertyStyleAnimationValuePair>& aResult);
+
+  /**
+   * A variant on ComputeValues that takes an nsCSSValue as the specified
+   * value. Only longhand properties are supported.
+   */
+  static bool ComputeValues(nsCSSProperty aProperty,
+                            nsCSSProps::EnabledState aEnabledState,
+                            mozilla::dom::Element* aTargetElement,
+                            nsStyleContext* aStyleContext,
+                            const nsCSSValue& aSpecifiedValue,
                             bool aUseSVGMode,
                             nsTArray<PropertyStyleAnimationValuePair>& aResult);
 
@@ -400,14 +414,6 @@ public:
     { return !(*this == aOther); }
 
 private:
-  static bool ComputeValues(nsCSSProperty aProperty,
-                            nsCSSProps::EnabledState aEnabledState,
-                            mozilla::dom::Element* aTargetElement,
-                            CSSPseudoElementType aPseudoType,
-                            mozilla::css::StyleRule* aStyleRule,
-                            nsTArray<PropertyStyleAnimationValuePair>& aValues,
-                            bool* aIsContextSensitive);
-
   void FreeValue();
 
   static const char16_t* GetBufferValue(nsStringBuffer* aBuffer) {

@@ -464,13 +464,6 @@ AtomImpl::ToUTF8String(nsACString& aBuf)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(bool)
-AtomImpl::EqualsUTF8(const nsACString& aString)
-{
-  return CompareUTF8toUTF16(aString,
-                            nsDependentString(mString, mLength)) == 0;
-}
-
 NS_IMETHODIMP
 AtomImpl::ScriptableEquals(const nsAString& aString, bool* aResult)
 {
@@ -522,7 +515,18 @@ NS_SizeOfAtomTablesIncludingThis(MallocSizeOf aMallocSizeOf,
            : 0;
 }
 
-#define ATOM_HASHTABLE_INITIAL_LENGTH  2048
+// The atom table very quickly gets 10,000+ entries in it (or even 100,000+).
+// But choosing the best initial length has some subtleties: we add ~2700
+// static atoms to the table at start-up, and then we start adding and removing
+// dynamic atoms. If we make the table too big to start with, when the first
+// dynamic atom gets removed the load factor will be < 25% and so we will
+// shrink it to 4096 entries.
+//
+// By choosing an initial length of 4096, we get an initial capacity of 8192.
+// That's the biggest initial capacity that will let us be > 25% full when the
+// first dynamic atom is removed (when the count is ~2700), thus avoiding any
+// shrinking.
+#define ATOM_HASHTABLE_INITIAL_LENGTH  4096
 
 static inline void
 EnsureTableExists()
@@ -667,28 +671,6 @@ NS_NewAtom(const nsAString& aUTF16String)
   he->mAtom = atom;
 
   return atom.forget();
-}
-
-nsIAtom*
-NS_NewPermanentAtom(const nsAString& aUTF16String)
-{
-  uint32_t hash;
-  AtomTableEntry* he = GetAtomHashEntry(aUTF16String.Data(),
-                                        aUTF16String.Length(),
-                                        &hash);
-
-  AtomImpl* atom = he->mAtom;
-  if (atom) {
-    if (!atom->IsPermanent()) {
-      PromoteToPermanent(atom);
-    }
-  } else {
-    atom = new PermanentAtomImpl(aUTF16String, hash);
-    he->mAtom = atom;
-  }
-
-  // No need to addref since permanent atoms aren't refcounted anyway
-  return atom;
 }
 
 nsrefcnt

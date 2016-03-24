@@ -140,7 +140,7 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
 
     @Override
     public void notifyCheckUpdateResult(String result) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Update:CheckResult", result));
+        GeckoAppShell.notifyObservers("Update:CheckResult", result);
     }
 
     // Bug 908792: Implement this

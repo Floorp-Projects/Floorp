@@ -2040,7 +2040,10 @@ static const AllocKind AllocKindsToRelocate[] = {
     AllocKind::OBJECT16,
     AllocKind::OBJECT16_BACKGROUND,
     AllocKind::SHAPE,
-    AllocKind::ACCESSOR_SHAPE
+    AllocKind::ACCESSOR_SHAPE,
+    AllocKind::FAT_INLINE_STRING,
+    AllocKind::STRING,
+    AllocKind::EXTERNAL_STRING
 };
 
 Arena*
@@ -2388,6 +2391,14 @@ MovingTracer::onShapeEdge(Shape** shapep)
 }
 
 void
+MovingTracer::onStringEdge(JSString** stringp)
+{
+    JSString* string = *stringp;
+    if (IsForwarded(string))
+        *stringp = Forwarded(string);
+}
+
+void
 Zone::prepareForCompacting()
 {
     FreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
@@ -2453,7 +2464,7 @@ UpdateCellPointersTyped(MovingTracer* trc, Arena* arena, JS::TraceKind traceKind
 }
 
 /*
- * Update the interal pointers for all cells in an arena.
+ * Update the internal pointers for all cells in an arena.
  */
 static void
 UpdateCellPointers(MovingTracer* trc, Arena* arena)
@@ -2495,6 +2506,9 @@ UpdateCellPointers(MovingTracer* trc, Arena* arena)
         return;
       case AllocKind::OBJECT_GROUP:
         UpdateCellPointersTyped<ObjectGroup>(trc, arena, traceKind);
+        return;
+      case AllocKind::STRING:
+        UpdateCellPointersTyped<JSString>(trc, arena, traceKind);
         return;
       case AllocKind::JITCODE:
         UpdateCellPointersTyped<jit::JitCode>(trc, arena, traceKind);
@@ -2542,9 +2556,10 @@ ArenasToUpdate::updateKind(AllocKind kind)
 {
     MOZ_ASSERT(IsValidAllocKind(kind));
 
-    // GC things that do not contain JSObject pointers don't need updating.
+    // GC things that do not contain pointers to cells we relocate don't need
+    // updating. Note that AllocKind::STRING is the only string kind which can
+    // be a rope and hence contain relocatable pointers.
     if (kind == AllocKind::FAT_INLINE_STRING ||
-        kind == AllocKind::STRING ||
         kind == AllocKind::EXTERNAL_STRING ||
         kind == AllocKind::SYMBOL)
     {

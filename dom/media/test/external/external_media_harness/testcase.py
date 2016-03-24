@@ -4,18 +4,18 @@
 
 import os
 
-from marionette import BrowserMobProxyTestCaseMixin
+from marionette import BrowserMobProxyTestCaseMixin, MarionetteTestCase
 from marionette_driver import Wait
 from marionette_driver.errors import TimeoutException
 from marionette.marionette_test import SkipTest
 
-from firefox_puppeteer.testcases import FirefoxTestCase
+from firefox_puppeteer.testcases import BaseFirefoxTestCase
 from external_media_tests.utils import (timestamp_now, verbose_until)
 from external_media_tests.media_utils.video_puppeteer import (playback_done, playback_started,
                                          VideoException, VideoPuppeteer as VP)
 
 
-class MediaTestCase(FirefoxTestCase):
+class MediaTestCase(BaseFirefoxTestCase, MarionetteTestCase):
 
     """
     Necessary methods for MSE playback
@@ -25,7 +25,7 @@ class MediaTestCase(FirefoxTestCase):
 
     def __init__(self, *args, **kwargs):
         self.video_urls = kwargs.pop('video_urls', False)
-        FirefoxTestCase.__init__(self, *args, **kwargs)
+        super(MediaTestCase, self).__init__(*args, **kwargs)
 
     def save_screenshot(self):
         """
@@ -107,17 +107,17 @@ class NetworkBandwidthTestCase(MediaTestCase):
     """
 
     def __init__(self, *args, **kwargs):
-        MediaTestCase.__init__(self, *args, **kwargs)
+        super(NetworkBandwidthTestCase, self).__init__(*args, **kwargs)
         BrowserMobProxyTestCaseMixin.__init__(self, *args, **kwargs)
         self.proxy = None
 
     def setUp(self):
-        MediaTestCase.setUp(self)
+        super(NetworkBandwidthTestCase, self).setUp()
         BrowserMobProxyTestCaseMixin.setUp(self)
         self.proxy = self.create_browsermob_proxy()
 
     def tearDown(self):
-        MediaTestCase.tearDown(self)
+        super(NetworkBandwidthTestCase, self).tearDown()
         BrowserMobProxyTestCaseMixin.tearDown(self)
         self.proxy = None
 
