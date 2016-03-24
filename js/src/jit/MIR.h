@@ -9065,12 +9065,14 @@ class MBoundsCheck
         return minimum_;
     }
     void setMinimum(int32_t n) {
+        MOZ_ASSERT(fallible_);
         minimum_ = n;
     }
     int32_t maximum() const {
         return maximum_;
     }
     void setMaximum(int32_t n) {
+        MOZ_ASSERT(fallible_);
         maximum_ = n;
     }
     MDefinition* foldsTo(TempAllocator& alloc) override;
@@ -9079,6 +9081,8 @@ class MBoundsCheck
             return false;
         const MBoundsCheck* other = ins->toBoundsCheck();
         if (minimum() != other->minimum() || maximum() != other->maximum())
+            return false;
+        if (fallible() != other->fallible())
             return false;
         return congruentIfOperandsEqual(other);
     }
