@@ -61,19 +61,22 @@ assertThrowsInstanceOf(() => setSharedArrayBuffer(() => 37), Error);
 
 // Futex test
 
+if (helperThreadCount() === 0) {
+  // Abort if there is no helper thread.
+  reportCompare(true,true);
+  quit();
+}
+
+////////////////////////////////////////////////////////////
+
 // Main is sharing the buffer with the worker; the worker is clearing
 // the buffer.
 
 mem[0] = 42;
 mem[1] = 37;
 mem[2] = DEBUG;
-setSharedArrayBuffer(mem.buffer);
 
-if (helperThreadCount() === 0) {
-  // Abort if there is no helper thread.
-  reportCompare(true,true);
-  quit();
-}
+setSharedArrayBuffer(mem.buffer);
 
 evalInWorker(`
 var mem = new Int32Array(getSharedArrayBuffer());
@@ -83,11 +86,11 @@ function dprint(s) {
 assertEq(mem[0], 42);		// what was written in the main thread
 assertEq(mem[1], 37);		//   is read in the worker
 mem[1] = 1337;
-dprint("Sleeping for 3 seconds");
-sleep(3);
+dprint("Sleeping for 2 seconds");
+sleep(2);
 dprint("Waking the main thread now");
 setSharedArrayBuffer(null);
-Atomics.futexWake(mem, 0, 1);
+assertEq(Atomics.futexWake(mem, 0, 1), 1); // Can fail spuriously but very unlikely
 `);
 
 var then = Date.now();
@@ -96,12 +99,31 @@ dprint("Woke up as I should have in " + (Date.now() - then)/1000 + "s");
 assertEq(mem[1], 1337); // what was written in the worker is read in the main thread
 assertEq(getSharedArrayBuffer(), null); // The worker's clearing of the mbx is visible
 
+////////////////////////////////////////////////////////////
+
+// Test the default argument to futexWake()
+
+setSharedArrayBuffer(mem.buffer);
+
+evalInWorker(`
+var mem = new Int32Array(getSharedArrayBuffer());
+sleep(2);				// Probably long enough to avoid a spurious error next
+assertEq(Atomics.futexWake(mem, 0), 1);	// Last argument to futexWake should default to +Infinity
+`);
+
+var then = Date.now();
+dprint("Main thread waiting on wakeup (2s)");
+assertEq(Atomics.futexWait(mem, 0, 42), Atomics.OK);
+dprint("Woke up as I should have in " + (Date.now() - then)/1000 + "s");
+
+////////////////////////////////////////////////////////////
+
 // A tricky case: while in the wait there will be an interrupt, and in
 // the interrupt handler we will execute a futexWait.  This is
 // explicitly prohibited (for now), so there should be a catchable exception.
 
 timeout(2, function () {
-    dprint("In the interrupt, starting inner wait");
+    dprint("In the interrupt, starting inner wait with timeout 2s");
     Atomics.futexWait(mem, 0, 42); // Should throw and propagate all the way out
 });
 var exn = false;
@@ -110,13 +132,15 @@ try {
     assertEq(Atomics.futexWait(mem, 0, 42, 5000), Atomics.OK);
 }
 catch (e) {
-    dprint("Got the exception!");
+    dprint("Got the timeout exception!");
     exn = true;
 }
 finally {
     timeout(-1);
 }
 assertEq(exn, true);
-dprint("Done");
 
+////////////////////////////////////////////////////////////
+
+dprint("Done");
 reportCompare(true,true);
