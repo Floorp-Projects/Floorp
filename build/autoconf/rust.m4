@@ -113,21 +113,27 @@ AC_DEFUN([MOZ_RUST_SUPPORT], [
           rust_target=x86_64-pc-windows-msvc
           ;;
       *)
-          AC_ERROR([don't know how to translate $target for rustc])
+          # Fall back to implicit (native) target when not cross-compiling
+          if test -n "$CROSS_COMPILE"; then
+            AC_ERROR([don't know how to translate $target for rustc])
+          fi
+          ;;
     esac
 
-    # Check to see whether we need to pass --target to RUSTC.  This can
-    # happen when building Firefox on Windows: js's configure will receive
-    # a RUSTC from the toplevel configure that already has --target added to
-    # it.
-    rustc_target_arg=
-    case "$RUSTC" in
-      *--target=${rust_target}*)
-        ;;
-      *)
-        rustc_target_arg=--target=${rust_target}
-        ;;
-    esac
+    if test -n "$rust_target"; then
+      # Check to see whether we need to pass --target to RUSTC.  This can
+      # happen when building Firefox on Windows: js's configure will receive
+      # a RUSTC from the toplevel configure that already has --target added to
+      # it.
+      rustc_target_arg=
+      case "$RUSTC" in
+        *--target=${rust_target}*)
+          ;;
+        *)
+          rustc_target_arg=--target=${rust_target}
+          ;;
+      esac
+    fi
 
     # Check to see whether our rustc has a reasonably functional stdlib
     # for our chosen target.
