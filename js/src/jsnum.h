@@ -275,6 +275,26 @@ ToInteger(JSContext* cx, HandleValue v, double* dp)
 template<typename T>
 bool ToLengthClamped(T* cx, HandleValue v, uint32_t* out, bool* overflow);
 
+/* Convert and range check an index value as for DataView, SIMD, and Atomics
+ * operations, eg ES7 24.2.1.1, DataView's GetViewValue():
+ *
+ *   1. numericIndex = ToNumber(argument)            (may throw TypeError)
+ *   2. intIndex = ToInteger(numericIndex)
+ *   3. if intIndex != numericIndex throw RangeError
+ *
+ * This function additionally bounds the range to the non-negative contiguous
+ * integers:
+ *
+ *   4. if intIndex < 0 or intIndex > 2^53 throw RangeError
+ *
+ * Return true and set |*index| to the integer value if |argument| is a valid
+ * array index argument. Otherwise report an TypeError or RangeError and return
+ * false.
+ *
+ * The returned index will always be in the range 0 <= *index <= 2^53.
+ */
+bool ToIntegerIndex(JSContext* cx, JS::HandleValue v, uint64_t* index);
+
 inline bool
 SafeAdd(int32_t one, int32_t two, int32_t* res)
 {
