@@ -1770,7 +1770,6 @@ ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate)
 
   AutoJSAPI jsapi;
   jsapi.Init();
-  jsapi.TakeOwnershipOfErrorReporting();
 
   WorkerGlobalScope* globalScope =
     aWorkerPrivate->GetOrCreateGlobalScope(jsapi.cx());

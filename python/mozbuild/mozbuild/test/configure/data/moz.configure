@@ -40,37 +40,43 @@ option(env='CC', nargs=1, help='C Compiler')
 @depends('--enable-simple')
 def simple(simple):
     if simple:
-        set_config('ENABLED_SIMPLE', simple)
+        return simple
+
+set_config('ENABLED_SIMPLE', simple)
 
 # There can be multiple functions depending on the same option.
 @depends('--enable-simple')
 def simple(simple):
-    set_config('SIMPLE', simple)
+    return simple
+
+set_config('SIMPLE', simple)
 
 @depends('--enable-with-env')
 def with_env(with_env):
-    set_config('WITH_ENV', with_env)
+    return with_env
+
+set_config('WITH_ENV', with_env)
 
 # It doesn't matter if the dependency is on --enable or --disable
 @depends('--disable-values')
 def with_env2(values):
-    set_config('VALUES', values)
     return values
+
+set_config('VALUES', with_env2)
 
 # It is possible to @depends on environment-only options.
 @depends('CC')
 def is_gcc(cc):
     return cc and 'gcc' in cc[0]
 
-@depends(is_gcc)
-def is_gcc_check(is_gcc):
-    set_config('IS_GCC', is_gcc)
+set_config('IS_GCC', is_gcc)
 
 # It is possible to depend on the result from another function.
 @depends(with_env2)
 def with_env3(values):
-    set_config('VALUES2', values)
     return values
+
+set_config('VALUES2', with_env3)
 
 # @depends functions can also return results for use as input to another
 # @depends.
@@ -80,7 +86,9 @@ def with_env4(values):
 
 @depends(with_env4)
 def with_env5(values):
-    set_config('VALUES3', values)
+    return values
+
+set_config('VALUES3', with_env5)
 
 # The result from @depends functions can also be used as input to options.
 # The result must be returned, not implied. The function must also depend
@@ -93,35 +101,9 @@ option('--with-returned-default', default=simple, help='Returned default')
 
 @depends('--with-returned-default')
 def default(value):
-    set_config('DEFAULTED', value)
+    return value
 
-# @depends functions can also declare that some extra options are implied.
-# Those options need to be defined _after_ the function, and they mustn't
-# appear on the command line or the environment with conflicting values.
-@depends('--enable-values')
-def values(values):
-    if values:
-        imply_option('--enable-implied')
-        imply_option(values.format('--with-implied-values'))
-        imply_option(values.format('WITH_IMPLIED_ENV'))
-
-option('--enable-implied', help='Implied')
-
-option('--with-implied-values', nargs='*', help='Implied values')
-
-option(env='WITH_IMPLIED_ENV', nargs='*', help='Implied env')
-
-@depends('--enable-implied')
-def implied(value):
-    set_config('IMPLIED', value)
-
-@depends('--with-implied-values')
-def implied(values):
-    set_config('IMPLIED_VALUES', values)
-
-@depends('WITH_IMPLIED_ENV')
-def implied(values):
-    set_config('IMPLIED_ENV', values)
+set_config('DEFAULTED', default)
 
 @depends('--enable-values', '--help')
 def choices(values, help):
@@ -135,13 +117,17 @@ option('--returned-choices', choices=choices, help='Choices')
 
 @depends('--returned-choices')
 def returned_choices(values):
-    set_config('CHOICES', values)
+    return values
+
+set_config('CHOICES', returned_choices)
 
 # All options must be referenced by some @depends function.
 # It is possible to depend on multiple options/functions
 @depends('--without-thing', '--with-stuff', with_env4, '--option')
 def remainder(*args):
-    set_config('REMAINDER', args)
+    return args
+
+set_config('REMAINDER', remainder)
 
 # It is possible to include other files to extend the configuration script.
 include('included.configure')
@@ -165,21 +151,27 @@ option('--with-advanced', nargs='?', help='Advanced')
 def with_advanced(value):
     if value:
         from mozbuild.configure.options import OptionValue
-        set_config('ADVANCED', isinstance(value, OptionValue))
+        return isinstance(value, OptionValue)
+
+set_config('ADVANCED', with_advanced)
 
 # Trying to import without @advanced will fail at runtime.
 @depends('--with-advanced')
 def with_advanced(value):
     if len(value) and value[0] == 'break':
         from mozbuild.configure.options import OptionValue
-        set_config('ADVANCED', isinstance(value, OptionValue))
+        return isinstance(value, OptionValue)
+
+set_config('ADVANCED2', with_advanced)
 
 # A limited set of functions from os.path are exposed to non @advanced
 # functions.
 @depends('--with-advanced')
 def with_advanced(value):
     if len(value):
-        set_config('IS_FILE', os.path.isfile(value[0]))
+        return os.path.isfile(value[0])
+
+set_config('IS_FILE', with_advanced)
 
 # An @advanced function can still import the full set.
 @depends('--with-advanced')
@@ -187,10 +179,14 @@ def with_advanced(value):
 def with_advanced(value):
     if len(value):
         import os.path
-        set_config('HAS_GETATIME', hasattr(os.path, 'getatime'))
+        return hasattr(os.path, 'getatime')
+
+set_config('HAS_GETATIME', with_advanced)
 
 @depends('--with-advanced')
 @advanced
 def with_advanced(value):
     if len(value):
-        set_config('HAS_GETATIME2', hasattr(os.path, 'getatime'))
+        return hasattr(os.path, 'getatime')
+
+set_config('HAS_GETATIME2', with_advanced)

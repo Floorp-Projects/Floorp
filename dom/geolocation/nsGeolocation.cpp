@@ -775,8 +775,9 @@ NS_IMPL_ISUPPORTS(nsGeolocationRequest::TimerCallbackHolder, nsISupports, nsITim
 NS_IMETHODIMP
 nsGeolocationRequest::TimerCallbackHolder::Notify(nsITimer*)
 {
-  if (mRequest.get()) {
-    mRequest->Notify();
+  if (mRequest) {
+    RefPtr<nsGeolocationRequest> request(mRequest);
+    request->Notify();
   }
   return NS_OK;
 }

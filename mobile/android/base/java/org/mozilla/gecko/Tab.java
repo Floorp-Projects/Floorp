@@ -619,8 +619,7 @@ public class Tab {
     }
 
     public void doReload(boolean bypassCache) {
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Reload", "{\"bypassCache\":" + String.valueOf(bypassCache) + "}");
-        GeckoAppShell.sendEventToGecko(e);
+        GeckoAppShell.notifyObservers("Session:Reload", "{\"bypassCache\":" + String.valueOf(bypassCache) + "}");
     }
 
     // Our version of nsSHistory::GetCanGoBack
@@ -632,14 +631,12 @@ public class Tab {
         if (!canDoBack())
             return false;
 
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Back", "");
-        GeckoAppShell.sendEventToGecko(e);
+        GeckoAppShell.notifyObservers("Session:Back", "");
         return true;
     }
 
     public void doStop() {
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Stop", "");
-        GeckoAppShell.sendEventToGecko(e);
+        GeckoAppShell.notifyObservers("Session:Stop", "");
     }
 
     // Our version of nsSHistory::GetCanGoForward
@@ -651,8 +648,7 @@ public class Tab {
         if (!canDoForward())
             return false;
 
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Forward", "");
-        GeckoAppShell.sendEventToGecko(e);
+        GeckoAppShell.notifyObservers("Session:Forward", "");
         return true;
     }
 

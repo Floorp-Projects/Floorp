@@ -6,7 +6,7 @@ from marionette_driver import By
 from marionette_driver.errors import MarionetteException
 
 from firefox_puppeteer.api.l10n import L10n
-from firefox_puppeteer.testcases import FirefoxTestCase
+from firefox_ui_harness.testcases import FirefoxTestCase
 
 
 class TestL10n(FirefoxTestCase):

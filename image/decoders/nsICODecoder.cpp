@@ -99,7 +99,7 @@ nsICODecoder::GetFinalStateFromContainedDecoder()
   mInvalidRect.UnionRect(mInvalidRect, mContainedDecoder->TakeInvalidRect());
   mCurrentFrame = mContainedDecoder->GetCurrentFrameRef();
 
-  MOZ_ASSERT(HasError() || !mCurrentFrame || mCurrentFrame->IsImageComplete());
+  MOZ_ASSERT(HasError() || !mCurrentFrame || mCurrentFrame->IsFinished());
 }
 
 // A BMP inside of an ICO has *2 height because of the AND mask

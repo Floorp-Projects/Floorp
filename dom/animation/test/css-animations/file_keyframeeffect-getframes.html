@@ -173,9 +173,9 @@ test(function(t) {
   assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+    { offset: 0, computedOffset: 0, easing: "ease",
       color: "rgb(0, 0, 0)" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
+    { offset: 1, computedOffset: 1, easing: "linear",
       color: "rgb(255, 255, 255)" },
   ];
 
@@ -244,10 +244,10 @@ test(function(t) {
   assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+    { offset: 0, computedOffset: 0, easing: "ease",
       marginTop: "8px", marginRight: "8px",
       marginBottom: "8px", marginLeft: "8px" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
+    { offset: 1, computedOffset: 1, easing: "linear",
       marginTop: "16px", marginRight: "16px",
       marginBottom: "16px", marginLeft: "16px" },
   ];
@@ -268,9 +268,9 @@ test(function(t) {
   assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+    { offset: 0, computedOffset: 0, easing: "ease",
       color: "rgb(0, 0, 255)" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
+    { offset: 1, computedOffset: 1, easing: "linear",
       color: "rgb(255, 255, 255)" },
   ];
 
@@ -290,9 +290,9 @@ test(function(t) {
   assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+    { offset: 0, computedOffset: 0, easing: "ease",
       color: "rgb(255, 255, 255)" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
+    { offset: 1, computedOffset: 1, easing: "linear",
       color: "rgb(0, 0, 255)" },
   ];
 
@@ -312,11 +312,11 @@ test(function(t) {
   assert_equals(frames.length, 3, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+    { offset: 0, computedOffset: 0, easing: "ease",
       color: "rgb(255, 255, 255)" },
-    { offset: 0.5, computedOffset: 0.5, easing: "ease", composite: "replace",
+    { offset: 0.5, computedOffset: 0.5, easing: "ease",
       color: "rgb(0, 0, 255)" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
+    { offset: 1, computedOffset: 1, easing: "linear",
       color: "rgb(255, 255, 255)" },
   ];
 
@@ -335,13 +335,13 @@ test(function(t) {
   assert_equals(frames.length, 4, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+    { offset: 0, computedOffset: 0, easing: "ease",
       color: "rgb(0, 0, 0)", marginTop: "8px" },
-    { offset: 0.25, computedOffset: 0.25, easing: "ease", composite: "replace",
+    { offset: 0.25, computedOffset: 0.25, easing: "ease",
       color: "rgb(0, 0, 255)" },
-    { offset: 0.75, computedOffset: 0.75, easing: "ease", composite: "replace",
+    { offset: 0.75, computedOffset: 0.75, easing: "ease",
       marginTop: "12px" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
+    { offset: 1, computedOffset: 1, easing: "linear",
       color: "rgb(255, 255, 255)", marginTop: "16px" },
   ];
 
@@ -361,13 +361,13 @@ test(function(t) {
   assert_equals(frames.length, 4, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "linear", composite: "replace",
+    { offset: 0, computedOffset: 0, easing: "linear",
       color: "rgb(0, 0, 0)", marginTop: "8px" },
-    { offset: 0.25, computedOffset: 0.25, easing: "step-end", composite: "replace",
+    { offset: 0.25, computedOffset: 0.25, easing: "step-end",
       color: "rgb(0, 0, 255)" },
-    { offset: 0.75, computedOffset: 0.75, easing: "ease-in", composite: "replace",
+    { offset: 0.75, computedOffset: 0.75, easing: "ease-in",
       marginTop: "12px" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
+    { offset: 1, computedOffset: 1, easing: "linear",
       color: "rgb(255, 255, 255)", marginTop: "16px" },
   ];
 
@@ -387,9 +387,9 @@ test(function(t) {
   assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+    { offset: 0, computedOffset: 0, easing: "ease",
       color: "rgb(0, 0, 0)", marginTop: "8px" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
+    { offset: 1, computedOffset: 1, easing: "linear",
       color: "rgb(255, 255, 255)", marginTop: "16px" },
   ];
 
@@ -409,11 +409,11 @@ test(function(t) {
   assert_equals(frames.length, 3, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "linear", composite: "replace",
+    { offset: 0, computedOffset: 0, easing: "linear",
       marginTop: "8px", paddingLeft: "2px" },
-    { offset: 0, computedOffset: 0, easing: "step-end", composite: "replace",
+    { offset: 0, computedOffset: 0, easing: "step-end",
       color: "rgb(0, 0, 0)", fontSize: "16px" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
+    { offset: 1, computedOffset: 1, easing: "linear",
       color: "rgb(255, 255, 255)", fontSize: "32px", marginTop: "16px",
       paddingLeft: "4px" },
   ];
@@ -434,15 +434,15 @@ test(function(t) {
   assert_equals(frames.length, 5, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "step-end", composite: "replace",
+    { offset: 0, computedOffset: 0, easing: "step-end",
       marginRight: "0px" },
-    { offset: 0, computedOffset: 0, easing: "steps(1)", composite: "replace",
+    { offset: 0, computedOffset: 0, easing: "steps(1)",
       marginBottom: "0px" },
-    { offset: 0, computedOffset: 0, easing: "steps(1, end)", composite: "replace",
+    { offset: 0, computedOffset: 0, easing: "steps(1, end)",
       marginTop: "0px" },
-    { offset: 0.5, computedOffset: 0.5, easing: "step-end", composite: "replace",
+    { offset: 0.5, computedOffset: 0.5, easing: "step-end",
       marginTop: "10px", marginRight: "10px", marginBottom: "10px" },
-    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
+    { offset: 1, computedOffset: 1, easing: "linear",
       marginTop: "20px", marginRight: "20px", marginBottom: "20px" },
   ];
 

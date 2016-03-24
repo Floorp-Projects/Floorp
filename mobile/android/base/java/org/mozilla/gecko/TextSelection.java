@@ -85,7 +85,7 @@ class TextSelection extends Layer implements GeckoEventListener,
             @Override
             public void drawFinished() {
                 if (!mDraggingHandles) {
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("TextSelection:LayerReflow", ""));
+                    GeckoAppShell.notifyObservers("TextSelection:LayerReflow", "");
                 }
             }
         };
@@ -357,7 +357,7 @@ class TextSelection extends Layer implements GeckoEventListener,
         public boolean onActionItemClicked(ActionModeCompat mode, MenuItem item) {
             try {
                 final JSONObject obj = mItems.getJSONObject(item.getItemId());
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("TextSelection:Action", obj.optString("id")));
+                GeckoAppShell.notifyObservers("TextSelection:Action", obj.optString("id"));
                 return true;
             } catch(Exception ex) {
                 Log.i(LOGTAG, "Exception calling action", ex);
@@ -378,9 +378,7 @@ class TextSelection extends Layer implements GeckoEventListener,
                 return;
             }
 
-            final GeckoEvent event =
-                GeckoEvent.createBroadcastEvent("TextSelection:End", args.toString());
-            GeckoAppShell.sendEventToGecko(event);
+            GeckoAppShell.notifyObservers("TextSelection:End", args.toString());
         }
     }
 }

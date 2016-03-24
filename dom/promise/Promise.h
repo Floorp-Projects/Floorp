@@ -422,11 +422,14 @@ private:
 
   template <typename T>
   void MaybeSomething(T& aArgument, MaybeFunc aFunc) {
-    ThreadsafeAutoJSContext cx;
-    JSObject* wrapper = PromiseObj();
-    MOZ_ASSERT(wrapper); // We preserved it!
+    MOZ_ASSERT(PromiseObj()); // It was preserved!
 
-    JSAutoCompartment ac(cx, wrapper);
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(mGlobal)) {
+      return;
+    }
+    JSContext* cx = jsapi.cx();
+
     JS::Rooted<JS::Value> val(cx);
     if (!ToJSValue(cx, aArgument, &val)) {
       HandleException(cx);

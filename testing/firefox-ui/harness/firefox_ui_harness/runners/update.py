@@ -7,8 +7,8 @@ import sys
 import mozfile
 import mozinstall
 
-from firefox_puppeteer.testcases import UpdateTestCase
 from firefox_ui_harness.runners import FirefoxUITestRunner
+from firefox_ui_harness.testcases import UpdateTestCase
 
 
 DEFAULT_PREFS = {

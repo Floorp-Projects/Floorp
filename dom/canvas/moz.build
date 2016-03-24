@@ -183,3 +183,8 @@ CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 CXXFLAGS += CONFIG['TK_CFLAGS']
 
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
+
+if CONFIG['_MSC_VER']:
+    # This is intended as a temporary workaround to unblock compilation
+    # on VS2015 in warnings as errors mode.
+    CXXFLAGS += ['-wd4312']

@@ -4225,40 +4225,27 @@ nsCSSRendering::ExpandPaintingRectForDecorationLine(
 }
 
 void
-nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
-                                    DrawTarget& aDrawTarget,
-                                    const Rect& aDirtyRect,
-                                    const nscolor aColor,
-                                    const Point& aPt,
-                                    const Float aICoordInFrame,
-                                    const Size& aLineSize,
-                                    const gfxFloat aAscent,
-                                    const gfxFloat aOffset,
-                                    const uint8_t aDecoration,
-                                    const uint8_t aStyle,
-                                    bool aVertical,
-                                    const gfxFloat aDescentLimit)
+nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
+                                    const PaintDecorationLineParams& aParams)
 {
-  NS_ASSERTION(aStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE, "aStyle is none");
+  NS_ASSERTION(aParams.style != NS_STYLE_TEXT_DECORATION_STYLE_NONE,
+               "aStyle is none");
 
-  Rect rect = ToRect(
-    GetTextDecorationRectInternal(aPt, aLineSize, aAscent, aOffset,
-                                  aDecoration, aStyle, aVertical,
-                                  aDescentLimit));
-  if (rect.IsEmpty() || !rect.Intersects(aDirtyRect)) {
+  Rect rect = ToRect(GetTextDecorationRectInternal(aParams.pt, aParams));
+  if (rect.IsEmpty() || !rect.Intersects(aParams.dirtyRect)) {
     return;
   }
 
-  if (aDecoration != NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE &&
-      aDecoration != NS_STYLE_TEXT_DECORATION_LINE_OVERLINE &&
-      aDecoration != NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
+  if (aParams.decoration != NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE &&
+      aParams.decoration != NS_STYLE_TEXT_DECORATION_LINE_OVERLINE &&
+      aParams.decoration != NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
     NS_ERROR("Invalid decoration value!");
     return;
   }
 
-  Float lineThickness = std::max(NS_round(aLineSize.height), 1.0);
+  Float lineThickness = std::max(NS_round(aParams.lineSize.height), 1.0);
 
-  ColorPattern color(ToDeviceColor(aColor));
+  ColorPattern color(ToDeviceColor(aParams.color));
   StrokeOptions strokeOptions(lineThickness);
   DrawOptions drawOptions;
 
@@ -4266,7 +4253,7 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
 
   AutoPopClips autoPopClips(&aDrawTarget);
 
-  switch (aStyle) {
+  switch (aParams.style) {
     case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
     case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE:
       break;
@@ -4278,10 +4265,10 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
       strokeOptions.mDashPattern = dash;
       strokeOptions.mDashLength = MOZ_ARRAY_LENGTH(dash);
       strokeOptions.mLineCap = CapStyle::BUTT;
-      rect = ExpandPaintingRectForDecorationLine(aFrame, aStyle, rect,
-                                                 aICoordInFrame,
+      rect = ExpandPaintingRectForDecorationLine(aFrame, aParams.style,
+                                                 rect, aParams.icoordInFrame,
                                                  dashWidth * 2,
-                                                 aVertical);
+                                                 aParams.vertical);
       // We should continue to draw the last dash even if it is not in the rect.
       rect.width += dashWidth;
       break;
@@ -4299,10 +4286,10 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
       }
       strokeOptions.mDashPattern = dash;
       strokeOptions.mDashLength = MOZ_ARRAY_LENGTH(dash);
-      rect = ExpandPaintingRectForDecorationLine(aFrame, aStyle, rect,
-                                                 aICoordInFrame,
+      rect = ExpandPaintingRectForDecorationLine(aFrame, aParams.style,
+                                                 rect, aParams.icoordInFrame,
                                                  dashWidth * 2,
-                                                 aVertical);
+                                                 aParams.vertical);
       // We should continue to draw the last dot even if it is not in the rect.
       rect.width += dashWidth;
       break;
@@ -4324,18 +4311,18 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
   }
 
   // The block-direction position should be set to the middle of the line.
-  if (aVertical) {
+  if (aParams.vertical) {
     rect.x += lineThickness / 2;
   } else {
     rect.y += lineThickness / 2;
   }
 
-  switch (aStyle) {
+  switch (aParams.style) {
     case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
     case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED:
     case NS_STYLE_TEXT_DECORATION_STYLE_DASHED: {
       Point p1 = rect.TopLeft();
-      Point p2 = aVertical ? rect.BottomLeft() : rect.TopRight();
+      Point p2 = aParams.vertical ? rect.BottomLeft() : rect.TopRight();
       aDrawTarget.StrokeLine(p1, p2, color, strokeOptions, drawOptions);
       return;
     }
@@ -4355,16 +4342,16 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
        * +-------------------------------------------+
        */
       Point p1 = rect.TopLeft();
-      Point p2 = aVertical ? rect.BottomLeft() : rect.TopRight();
+      Point p2 = aParams.vertical ? rect.BottomLeft() : rect.TopRight();
       aDrawTarget.StrokeLine(p1, p2, color, strokeOptions, drawOptions);
 
-      if (aVertical) {
+      if (aParams.vertical) {
         rect.width -= lineThickness;
       } else {
         rect.height -= lineThickness;
       }
 
-      p1 = aVertical ? rect.TopRight() : rect.BottomLeft();
+      p1 = aParams.vertical ? rect.TopRight() : rect.BottomLeft();
       p2 = rect.BottomRight();
       aDrawTarget.StrokeLine(p1, p2, color, strokeOptions, drawOptions);
       return;
@@ -4402,9 +4389,9 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
        * directions in the above description.
        */
 
-      Float& rectICoord = aVertical ? rect.y : rect.x;
-      Float& rectISize = aVertical ? rect.height : rect.width;
-      const Float rectBSize = aVertical ? rect.width : rect.height;
+      Float& rectICoord = aParams.vertical ? rect.y : rect.x;
+      Float& rectISize = aParams.vertical ? rect.height : rect.width;
+      const Float rectBSize = aParams.vertical ? rect.width : rect.height;
 
       const Float adv = rectBSize - lineThickness;
       const Float flatLengthAtVertex =
@@ -4412,13 +4399,14 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
 
       // Align the start of wavy lines to the nearest ancestor block.
       const Float cycleLength = 2 * (adv + flatLengthAtVertex);
-      rect = ExpandPaintingRectForDecorationLine(aFrame, aStyle, rect,
-                                                 aICoordInFrame, cycleLength,
-                                                 aVertical);
+      rect = ExpandPaintingRectForDecorationLine(aFrame, aParams.style, rect,
+                                                 aParams.icoordInFrame,
+                                                 cycleLength, aParams.vertical);
       // figure out if we can trim whole cycles from the left and right edges
       // of the line, to try and avoid creating an unnecessarily long and
       // complex path
-      const Float dirtyRectICoord = aVertical ? aDirtyRect.y : aDirtyRect.x;
+      const Float dirtyRectICoord = aParams.vertical ? aParams.dirtyRect.y
+                                                     : aParams.dirtyRect.x;
       int32_t skipCycles = floor((dirtyRectICoord - rectICoord) / cycleLength);
       if (skipCycles > 0) {
         rectICoord += skipCycles * cycleLength;
@@ -4427,15 +4415,15 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
 
       rectICoord += lineThickness / 2.0;
       Point pt(rect.TopLeft());
-      Float& ptICoord = aVertical ? pt.y : pt.x;
-      Float& ptBCoord = aVertical ? pt.x : pt.y;
-      if (aVertical) {
+      Float& ptICoord = aParams.vertical ? pt.y : pt.x;
+      Float& ptBCoord = aParams.vertical ? pt.x : pt.y;
+      if (aParams.vertical) {
         ptBCoord += adv + lineThickness / 2.0;
       }
       Float iCoordLimit = ptICoord + rectISize + lineThickness;
 
-      const Float dirtyRectIMost = aVertical ?
-        aDirtyRect.YMost() : aDirtyRect.XMost();
+      const Float dirtyRectIMost = aParams.vertical ?
+        aParams.dirtyRect.YMost() : aParams.dirtyRect.XMost();
       skipCycles = floor((iCoordLimit - dirtyRectIMost) / cycleLength);
       if (skipCycles > 0) {
         iCoordLimit -= skipCycles * cycleLength;
@@ -4453,7 +4441,7 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
       // In vertical mode, to go "down" relative to the text we need to
       // decrease the block coordinate, whereas in horizontal we increase
       // it. So the sense of this flag is effectively inverted.
-      bool goDown = aVertical ? false : true;
+      bool goDown = aParams.vertical ? false : true;
       uint32_t iter = 0;
       while (ptICoord < iCoordLimit) {
         if (++iter > 1000) {
@@ -4485,45 +4473,34 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
 }
 
 Rect
-nsCSSRendering::DecorationLineToPath(const Rect& aDirtyRect,
-                                     const Point& aPt,
-                                     const Size& aLineSize,
-                                     const Float aAscent,
-                                     const Float aOffset,
-                                     const uint8_t aDecoration,
-                                     const uint8_t aStyle,
-                                     bool aVertical,
-                                     const Float aDescentLimit)
+nsCSSRendering::DecorationLineToPath(const PaintDecorationLineParams& aParams)
 {
-  NS_ASSERTION(aStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE, "aStyle is none");
+  NS_ASSERTION(aParams.style != NS_STYLE_TEXT_DECORATION_STYLE_NONE,
+               "aStyle is none");
 
   Rect path; // To benefit from RVO, we return this from all return points
 
-  Rect rect = ToRect(
-    GetTextDecorationRectInternal(aPt, aLineSize,
-                                  aAscent, aOffset,
-                                  aDecoration, aStyle, aVertical,
-                                  aDescentLimit));
-  if (rect.IsEmpty() || !rect.Intersects(aDirtyRect)) {
+  Rect rect = ToRect(GetTextDecorationRectInternal(aParams.pt, aParams));
+  if (rect.IsEmpty() || !rect.Intersects(aParams.dirtyRect)) {
     return path;
   }
 
-  if (aDecoration != NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE &&
-      aDecoration != NS_STYLE_TEXT_DECORATION_LINE_OVERLINE &&
-      aDecoration != NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
+  if (aParams.decoration != NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE &&
+      aParams.decoration != NS_STYLE_TEXT_DECORATION_LINE_OVERLINE &&
+      aParams.decoration != NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
     NS_ERROR("Invalid decoration value!");
     return path;
   }
 
-  if (aStyle != NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
+  if (aParams.style != NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
     // For the moment, we support only solid text decorations.
     return path;
   }
 
-  Float lineThickness = std::max(NS_round(aLineSize.height), 1.0);
+  Float lineThickness = std::max(NS_round(aParams.lineSize.height), 1.0);
 
   // The block-direction position should be set to the middle of the line.
-  if (aVertical) {
+  if (aParams.vertical) {
     rect.x += lineThickness / 2;
     path = Rect(rect.TopLeft() - Point(lineThickness / 2, 0.0),
                 Size(lineThickness, rect.Height()));
@@ -4538,21 +4515,13 @@ nsCSSRendering::DecorationLineToPath(const Rect& aDirtyRect,
 
 nsRect
 nsCSSRendering::GetTextDecorationRect(nsPresContext* aPresContext,
-                                      const Size& aLineSize,
-                                      const gfxFloat aAscent,
-                                      const gfxFloat aOffset,
-                                      const uint8_t aDecoration,
-                                      const uint8_t aStyle,
-                                      bool aVertical,
-                                      const gfxFloat aDescentLimit)
+                                      const DecorationRectParams& aParams)
 {
   NS_ASSERTION(aPresContext, "aPresContext is null");
-  NS_ASSERTION(aStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE, "aStyle is none");
+  NS_ASSERTION(aParams.style != NS_STYLE_TEXT_DECORATION_STYLE_NONE,
+               "aStyle is none");
 
-  gfxRect rect =
-    GetTextDecorationRectInternal(Point(0, 0), aLineSize, aAscent, aOffset,
-                                  aDecoration, aStyle, aVertical,
-                                  aDescentLimit);
+  gfxRect rect = GetTextDecorationRectInternal(Point(0, 0), aParams);
   // The rect values are already rounded to nearest device pixels.
   nsRect r;
   r.x = aPresContext->GfxUnitsToAppUnits(rect.X());
@@ -4564,45 +4533,39 @@ nsCSSRendering::GetTextDecorationRect(nsPresContext* aPresContext,
 
 gfxRect
 nsCSSRendering::GetTextDecorationRectInternal(const Point& aPt,
-                                              const Size& aLineSize,
-                                              const gfxFloat aAscent,
-                                              const gfxFloat aOffset,
-                                              const uint8_t aDecoration,
-                                              const uint8_t aStyle,
-                                              bool aVertical,
-                                              const gfxFloat aDescentLimit)
+                                              const DecorationRectParams& aParams)
 {
-  NS_ASSERTION(aStyle <= NS_STYLE_TEXT_DECORATION_STYLE_WAVY,
+  NS_ASSERTION(aParams.style <= NS_STYLE_TEXT_DECORATION_STYLE_WAVY,
                "Invalid aStyle value");
 
-  if (aStyle == NS_STYLE_TEXT_DECORATION_STYLE_NONE)
+  if (aParams.style == NS_STYLE_TEXT_DECORATION_STYLE_NONE)
     return gfxRect(0, 0, 0, 0);
 
-  bool canLiftUnderline = aDescentLimit >= 0.0;
+  bool canLiftUnderline = aParams.descentLimit >= 0.0;
 
-  gfxFloat iCoord = aVertical ? aPt.y : aPt.x;
-  gfxFloat bCoord = aVertical ? aPt.x : aPt.y;
+  gfxFloat iCoord = aParams.vertical ? aPt.y : aPt.x;
+  gfxFloat bCoord = aParams.vertical ? aPt.x : aPt.y;
 
   // 'left' and 'right' are relative to the line, so for vertical writing modes
   // they will actually become top and bottom of the rendered line.
   // Similarly, aLineSize.width and .height are actually length and thickness
   // of the line, which runs horizontally or vertically according to aVertical.
   const gfxFloat left  = floor(iCoord + 0.5),
-                 right = floor(iCoord + aLineSize.width + 0.5);
+                 right = floor(iCoord + aParams.lineSize.width + 0.5);
 
   // We compute |r| as if for a horizontal text run, and then swap vertical
   // and horizontal coordinates at the end if vertical was requested.
   gfxRect r(left, 0, right - left, 0);
 
-  gfxFloat lineThickness = NS_round(aLineSize.height);
+  gfxFloat lineThickness = NS_round(aParams.lineSize.height);
   lineThickness = std::max(lineThickness, 1.0);
 
-  gfxFloat ascent = NS_round(aAscent);
-  gfxFloat descentLimit = floor(aDescentLimit);
+  gfxFloat ascent = NS_round(aParams.ascent);
+  gfxFloat descentLimit = floor(aParams.descentLimit);
 
   gfxFloat suggestedMaxRectHeight = std::max(std::min(ascent, descentLimit), 1.0);
   r.height = lineThickness;
-  if (aStyle == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE) {
+  if (aParams.style == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE) {
     /**
      *  We will draw double line as:
      *
@@ -4628,7 +4591,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const Point& aPt,
         r.height = std::max(suggestedMaxRectHeight, lineThickness * 2.0 + 1.0);
       }
     }
-  } else if (aStyle == NS_STYLE_TEXT_DECORATION_STYLE_WAVY) {
+  } else if (aParams.style == NS_STYLE_TEXT_DECORATION_STYLE_WAVY) {
     /**
      *  We will draw wavy line as:
      *
@@ -4654,11 +4617,11 @@ nsCSSRendering::GetTextDecorationRectInternal(const Point& aPt,
     }
   }
 
-  gfxFloat baseline = floor(bCoord + aAscent + 0.5);
+  gfxFloat baseline = floor(bCoord + aParams.ascent + 0.5);
   gfxFloat offset = 0.0;
-  switch (aDecoration) {
+  switch (aParams.decoration) {
     case NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE:
-      offset = aOffset;
+      offset = aParams.offset;
       if (canLiftUnderline) {
         if (descentLimit < -offset + r.Height()) {
           // If we can ignore the offset and the decoration line is overflowing,
@@ -4672,19 +4635,19 @@ nsCSSRendering::GetTextDecorationRectInternal(const Point& aPt,
       }
       break;
     case NS_STYLE_TEXT_DECORATION_LINE_OVERLINE:
-      offset = aOffset - lineThickness + r.Height();
+      offset = aParams.offset - lineThickness + r.Height();
       break;
     case NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH: {
       gfxFloat extra = floor(r.Height() / 2.0 + 0.5);
       extra = std::max(extra, lineThickness);
-      offset = aOffset - lineThickness + extra;
+      offset = aParams.offset - lineThickness + extra;
       break;
     }
     default:
       NS_ERROR("Invalid decoration value!");
   }
 
-  if (aVertical) {
+  if (aParams.vertical) {
     r.y = baseline + floor(offset + 0.5);
     Swap(r.x, r.y);
     Swap(r.width, r.height);

@@ -444,14 +444,6 @@ public:
         return event;
     }
 
-    static AndroidGeckoEvent* MakeBroadcastEvent(const nsCString& topic, const nsCString& data) {
-        AndroidGeckoEvent* event = new AndroidGeckoEvent();
-        event->Init(BROADCAST);
-        CopyUTF8toUTF16(topic, event->mCharacters);
-        CopyUTF8toUTF16(data, event->mCharactersExtra);
-        return event;
-    }
-
     static AndroidGeckoEvent* MakeAddObserver(const nsAString &key, nsIObserver *observer) {
         AndroidGeckoEvent *event = new AndroidGeckoEvent();
         event->Init(ADD_OBSERVER);
@@ -641,7 +633,6 @@ public:
         LOAD_URI = 12,
         NOOP = 15,
         APZ_INPUT_EVENT = 17, // used internally in AndroidJNI/nsAppShell/nsWindow
-        BROADCAST = 19,
         VIEWPORT = 20,
         VISITED = 21,
         NETWORK_CHANGED = 22,

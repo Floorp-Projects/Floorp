@@ -478,11 +478,13 @@ IDBFactory::IncrementParentLoggingRequestSerialNumber()
 }
 
 already_AddRefed<IDBOpenDBRequest>
-IDBFactory::Open(const nsAString& aName,
+IDBFactory::Open(JSContext* aCx,
+                 const nsAString& aName,
                  uint64_t aVersion,
                  ErrorResult& aRv)
 {
-  return OpenInternal(/* aPrincipal */ nullptr,
+  return OpenInternal(aCx,
+                      /* aPrincipal */ nullptr,
                       aName,
                       Optional<uint64_t>(aVersion),
                       Optional<StorageType>(),
@@ -491,11 +493,13 @@ IDBFactory::Open(const nsAString& aName,
 }
 
 already_AddRefed<IDBOpenDBRequest>
-IDBFactory::Open(const nsAString& aName,
+IDBFactory::Open(JSContext* aCx,
+                 const nsAString& aName,
                  const IDBOpenDBOptions& aOptions,
                  ErrorResult& aRv)
 {
-  return OpenInternal(/* aPrincipal */ nullptr,
+  return OpenInternal(aCx,
+                      /* aPrincipal */ nullptr,
                       aName,
                       aOptions.mVersion,
                       aOptions.mStorage,
@@ -504,11 +508,13 @@ IDBFactory::Open(const nsAString& aName,
 }
 
 already_AddRefed<IDBOpenDBRequest>
-IDBFactory::DeleteDatabase(const nsAString& aName,
+IDBFactory::DeleteDatabase(JSContext* aCx,
+                           const nsAString& aName,
                            const IDBOpenDBOptions& aOptions,
                            ErrorResult& aRv)
 {
-  return OpenInternal(/* aPrincipal */ nullptr,
+  return OpenInternal(aCx,
+                      /* aPrincipal */ nullptr,
                       aName,
                       Optional<uint64_t>(),
                       aOptions.mStorage,
@@ -542,7 +548,8 @@ IDBFactory::Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
 }
 
 already_AddRefed<IDBOpenDBRequest>
-IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal,
+IDBFactory::OpenForPrincipal(JSContext* aCx,
+                             nsIPrincipal* aPrincipal,
                              const nsAString& aName,
                              uint64_t aVersion,
                              ErrorResult& aRv)
@@ -553,7 +560,8 @@ IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal,
   }
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
-  return OpenInternal(aPrincipal,
+  return OpenInternal(aCx,
+                      aPrincipal,
                       aName,
                       Optional<uint64_t>(aVersion),
                       Optional<StorageType>(),
@@ -562,7 +570,8 @@ IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal,
 }
 
 already_AddRefed<IDBOpenDBRequest>
-IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal,
+IDBFactory::OpenForPrincipal(JSContext* aCx,
+                             nsIPrincipal* aPrincipal,
                              const nsAString& aName,
                              const IDBOpenDBOptions& aOptions,
                              ErrorResult& aRv)
@@ -573,7 +582,8 @@ IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal,
   }
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
-  return OpenInternal(aPrincipal,
+  return OpenInternal(aCx,
+                      aPrincipal,
                       aName,
                       aOptions.mVersion,
                       aOptions.mStorage,
@@ -582,7 +592,8 @@ IDBFactory::OpenForPrincipal(nsIPrincipal* aPrincipal,
 }
 
 already_AddRefed<IDBOpenDBRequest>
-IDBFactory::DeleteForPrincipal(nsIPrincipal* aPrincipal,
+IDBFactory::DeleteForPrincipal(JSContext* aCx,
+                               nsIPrincipal* aPrincipal,
                                const nsAString& aName,
                                const IDBOpenDBOptions& aOptions,
                                ErrorResult& aRv)
@@ -593,7 +604,8 @@ IDBFactory::DeleteForPrincipal(nsIPrincipal* aPrincipal,
   }
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
-  return OpenInternal(aPrincipal,
+  return OpenInternal(aCx,
+                      aPrincipal,
                       aName,
                       Optional<uint64_t>(),
                       aOptions.mStorage,
@@ -602,7 +614,8 @@ IDBFactory::DeleteForPrincipal(nsIPrincipal* aPrincipal,
 }
 
 already_AddRefed<IDBOpenDBRequest>
-IDBFactory::OpenInternal(nsIPrincipal* aPrincipal,
+IDBFactory::OpenInternal(JSContext* aCx,
+                         nsIPrincipal* aPrincipal,
                          const nsAString& aName,
                          const Optional<uint64_t>& aVersion,
                          const Optional<StorageType>& aStorageType,
@@ -727,16 +740,15 @@ IDBFactory::OpenInternal(nsIPrincipal* aPrincipal,
   RefPtr<IDBOpenDBRequest> request;
 
   if (mWindow) {
-    JS::Rooted<JSObject*> scriptOwner(nsContentUtils::RootingCxForThread(),
+    JS::Rooted<JSObject*> scriptOwner(aCx,
                                       nsGlobalWindow::Cast(mWindow.get())->FastGetGlobalJSObject());
     MOZ_ASSERT(scriptOwner);
 
-    request = IDBOpenDBRequest::CreateForWindow(this, mWindow, scriptOwner);
+    request = IDBOpenDBRequest::CreateForWindow(aCx, this, mWindow, scriptOwner);
   } else {
-    JS::Rooted<JSObject*> scriptOwner(nsContentUtils::RootingCxForThread(),
-                                      mOwningObject);
+    JS::Rooted<JSObject*> scriptOwner(aCx, mOwningObject);
 
-    request = IDBOpenDBRequest::CreateForJS(this, scriptOwner);
+    request = IDBOpenDBRequest::CreateForJS(aCx, this, scriptOwner);
     if (!request) {
       MOZ_ASSERT(!NS_IsMainThread());
       aRv.ThrowUncatchableException();

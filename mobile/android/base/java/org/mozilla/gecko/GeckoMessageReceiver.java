@@ -13,7 +13,7 @@ public class GeckoMessageReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         final String action = intent.getAction();
         if (GeckoApp.ACTION_INIT_PW.equals(action)) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Passwords:Init", null));
+            GeckoAppShell.notifyObservers("Passwords:Init", null);
         }
     }
 }

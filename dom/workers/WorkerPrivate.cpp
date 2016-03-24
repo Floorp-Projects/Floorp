@@ -44,6 +44,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/Console.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/Exceptions.h"
@@ -1539,6 +1540,21 @@ public:
 
 private:
   bool mIsOffline;
+};
+
+class MemoryPressureRunnable : public WorkerControlRunnable
+{
+public:
+  explicit MemoryPressureRunnable(WorkerPrivate* aWorkerPrivate)
+    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+  {}
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    aWorkerPrivate->MemoryPressureInternal();
+    return true;
+  }
 };
 
 #ifdef DEBUG
@@ -3109,6 +3125,17 @@ WorkerPrivate::OfflineStatusChangeEventInternal(bool aIsOffline)
 }
 
 template <class Derived>
+void
+WorkerPrivateParent<Derived>::MemoryPressure(bool aDummy)
+{
+  AssertIsOnParentThread();
+
+  RefPtr<MemoryPressureRunnable> runnable =
+    new MemoryPressureRunnable(ParentAsWorkerPrivate());
+  NS_WARN_IF(!runnable->Dispatch());
+}
+
+template <class Derived>
 bool
 WorkerPrivateParent<Derived>::RegisterSharedWorker(SharedWorker* aSharedWorker,
                                                    MessagePort* aPort)
@@ -4407,7 +4434,6 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
   AutoJSAPI jsapi;
   jsapi.Init();
   MOZ_ASSERT(jsapi.cx() == aCx);
-  jsapi.TakeOwnershipOfErrorReporting();
 
   EnableMemoryReporter();
 
@@ -6269,6 +6295,26 @@ WorkerPrivate::CycleCollectInternal(bool aCollectChildren)
     for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
       mChildWorkers[index]->CycleCollect(/* dummy = */ false);
     }
+  }
+}
+
+void
+WorkerPrivate::MemoryPressureInternal()
+{
+  AssertIsOnWorkerThread();
+
+  RefPtr<Console> console = mScope ? mScope->GetConsoleIfExists() : nullptr;
+  if (console) {
+    console->ClearStorage();
+  }
+
+  console = mDebuggerScope ? mDebuggerScope->GetConsoleIfExists() : nullptr;
+  if (console) {
+    console->ClearStorage();
+  }
+
+  for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
+    mChildWorkers[index]->MemoryPressure(false);
   }
 }
 

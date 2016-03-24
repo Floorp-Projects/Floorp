@@ -554,6 +554,9 @@ auto GeckoAppShell::MoveTaskToBack() -> void
     return mozilla::jni::Method<MoveTaskToBack_t>::Call(GeckoAppShell::Context(), nullptr);
 }
 
+constexpr char GeckoAppShell::NotifyObservers_t::name[];
+constexpr char GeckoAppShell::NotifyObservers_t::signature[];
+
 constexpr char GeckoAppShell::NetworkLinkType_t::name[];
 constexpr char GeckoAppShell::NetworkLinkType_t::signature[];
 
@@ -705,6 +708,9 @@ auto GeckoAppShell::StopMonitoringGamepad() -> void
 {
     return mozilla::jni::Method<StopMonitoringGamepad_t>::Call(GeckoAppShell::Context(), nullptr);
 }
+
+constexpr char GeckoAppShell::SyncNotifyObservers_t::name[];
+constexpr char GeckoAppShell::SyncNotifyObservers_t::signature[];
 
 constexpr char GeckoAppShell::UnlockProfile_t::name[];
 constexpr char GeckoAppShell::UnlockProfile_t::signature[];

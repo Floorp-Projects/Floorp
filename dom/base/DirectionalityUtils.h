@@ -89,14 +89,14 @@ bool TextNodeWillChangeDirection(nsIContent* aTextNode, Directionality* aOldDir,
  * After the contents of a text node have changed, change the directionality
  * of any elements whose directionality is determined by that node
  */
-void TextNodeChangedDirection(nsIContent* aTextNode, Directionality aOldDir,
+void TextNodeChangedDirection(nsTextNode* aTextNode, Directionality aOldDir,
                               bool aNotify);
 
 /**
  * When a text node is appended to an element, find any ancestors with dir=auto
  * whose directionality will be determined by the text node
  */
-void SetDirectionFromNewTextNode(nsIContent* aTextNode);
+void SetDirectionFromNewTextNode(nsTextNode* aTextNode);
 
 /**
  * When a text node is removed from a document, find any ancestors whose
