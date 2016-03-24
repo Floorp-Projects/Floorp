@@ -43,6 +43,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'AppUnits.h',
+    'ArrayView.h',
 ]
 
 if CONFIG['MOZ_X11']:
