@@ -1452,9 +1452,9 @@ Console::ProcessCallData(JSContext* aCx, ConsoleCallData* aData,
   // tempted to do that anywhere else, talk to said module owner first.
 
   // aCx and aArguments are in the same compartment.
-  if (NS_WARN_IF(!PopulateConsoleObjectInTheTargetScope(aCx, aArguments,
-                                                        xpc::PrivilegedJunkScope(),
-                                                        &eventValue, aData))) {
+  if (NS_WARN_IF(!PopulateConsoleNotificationInTheTargetScope(aCx, aArguments,
+                                                              xpc::PrivilegedJunkScope(),
+                                                              &eventValue, aData))) {
     return;
   }
 
@@ -1485,11 +1485,11 @@ Console::ProcessCallData(JSContext* aCx, ConsoleCallData* aData,
 }
 
 bool
-Console::PopulateConsoleObjectInTheTargetScope(JSContext* aCx,
-                                               const Sequence<JS::Value>& aArguments,
-                                               JSObject* aTargetScope,
-                                               JS::MutableHandle<JS::Value> aEventValue,
-                                               ConsoleCallData* aData) const
+Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
+                                                     const Sequence<JS::Value>& aArguments,
+                                                     JSObject* aTargetScope,
+                                                     JS::MutableHandle<JS::Value> aEventValue,
+                                                     ConsoleCallData* aData) const
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aData);
@@ -2270,9 +2270,10 @@ Console::NotifyHandler(JSContext* aCx, const Sequence<JS::Value>& aArguments,
   // aCx and aArguments are in the same compartment because this method is
   // called directly when a Console.something() runs.
   // mConsoleEventNotifier->Callable() is the scope where value will be sent to.
-  if (NS_WARN_IF(!PopulateConsoleObjectInTheTargetScope(aCx, aArguments,
-                                                        mConsoleEventNotifier->Callable(),
-                                                        &value, aCallData))) {
+  if (NS_WARN_IF(!PopulateConsoleNotificationInTheTargetScope(aCx, aArguments,
+                                                              mConsoleEventNotifier->Callable(),
+                                                              &value,
+                                                              aCallData))) {
     return;
   }
 
@@ -2308,9 +2309,10 @@ Console::RetrieveConsoleEvents(JSContext* aCx, nsTArray<JS::Value>& aEvents,
     // Here we have aCx and sequence in the same compartment.
     // targetScope is the destination scope and value will be populated in its
     // compartment.
-    if (NS_WARN_IF(!PopulateConsoleObjectInTheTargetScope(aCx, sequence,
-                                                          targetScope, &value,
-                                                          mCallDataStorage[i]))) {
+    if (NS_WARN_IF(!PopulateConsoleNotificationInTheTargetScope(aCx, sequence,
+                                                                targetScope,
+                                                                &value,
+                                                                mCallDataStorage[i]))) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }

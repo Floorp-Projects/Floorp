@@ -185,9 +185,9 @@ private:
                 const Sequence<JS::Value>& aArguments,
                 ConsoleCallData* aData) const;
 
-  // PopulateConsoleObjectInTheTargetScope receives aCx and aArguments in the
-  // same JS compartment and populates the ConsoleEvent object (aValue) in the
-  // aTargetScope.
+  // PopulateConsoleNotificationInTheTargetScope receives aCx and aArguments in
+  // the same JS compartment and populates the ConsoleEvent object (aValue) in
+  // the aTargetScope.
   // aTargetScope can be:
   // - the system-principal scope when we want to dispatch the ConsoleEvent to
   //   nsIConsoleAPIStorage (See the comment in Console.cpp about the use of
@@ -197,11 +197,11 @@ private:
   // - It can be the global from the JSContext when RetrieveConsoleEvents is
   //   called.
   bool
-  PopulateConsoleObjectInTheTargetScope(JSContext* aCx,
-                                        const Sequence<JS::Value>& aArguments,
-                                        JSObject* aTargetScope,
-                                        JS::MutableHandle<JS::Value> aValue,
-                                        ConsoleCallData* aData) const;
+  PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
+                                              const Sequence<JS::Value>& aArguments,
+                                              JSObject* aTargetScope,
+                                              JS::MutableHandle<JS::Value> aValue,
+                                              ConsoleCallData* aData) const;
 
   // If the first JS::Value of the array is a string, this method uses it to
   // format a string. The supported sequences are:
