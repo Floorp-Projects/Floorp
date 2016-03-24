@@ -4532,6 +4532,9 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
       static_cast<nsIRunnable*>(runnable)->Run();
       runnable->Release();
 
+      // Flush the promise queue.
+      Promise::PerformWorkerDebuggerMicroTaskCheckpoint();
+
       if (debuggerRunnablesPending) {
         WorkerDebuggerGlobalScope* globalScope = DebuggerGlobalScope();
         MOZ_ASSERT(globalScope);
@@ -5583,6 +5586,9 @@ WorkerPrivate::EnterDebuggerEventLoop()
       static_cast<nsIRunnable*>(runnable)->Run();
       runnable->Release();
 
+      // Flush the promise queue.
+      Promise::PerformWorkerDebuggerMicroTaskCheckpoint();
+
       // Now *might* be a good time to GC. Let the JS engine make the decision.
       if (JS::CurrentGlobalOrNull(cx)) {
         JS_MaybeGC(cx);
@@ -6077,7 +6083,7 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
 
     // Since we might be processing more timeouts, go ahead and flush
     // the promise queue now before we do that.
-    Promise::PerformMicroTaskCheckpoint();
+    Promise::PerformWorkerMicroTaskCheckpoint();
 
     NS_ASSERTION(mRunningExpiredTimeouts, "Someone changed this!");
   }

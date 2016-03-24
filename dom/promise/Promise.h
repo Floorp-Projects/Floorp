@@ -166,6 +166,10 @@ public:
   // Returns true if at least one microtask was processed.
   static bool PerformMicroTaskCheckpoint();
 
+  static void PerformWorkerMicroTaskCheckpoint();
+
+  static void PerformWorkerDebuggerMicroTaskCheckpoint();
+
   // WebIDL
 
   nsIGlobalObject* GetParentObject() const
@@ -287,10 +291,6 @@ public:
   // Return a unique-to-the-process identifier for this Promise.
   uint64_t GetID();
 #endif // SPIDERMONKEY_PROMISE
-
-  // Queue an async microtask to current main or worker thread.
-  static void
-  DispatchToMicroTask(nsIRunnable* aRunnable);
 
 #ifndef SPIDERMONKEY_PROMISE
   enum JSCallbackSlots {
