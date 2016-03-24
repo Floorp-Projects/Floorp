@@ -58,7 +58,8 @@ public:
                         nsIFrame* aMaskedFrame,
                         const gfxMatrix &aMatrix,
                         float aOpacity,
-                        Matrix* aMaskTransform);
+                        Matrix* aMaskTransform,
+                        uint8_t aMaskOp = NS_STYLE_MASK_MODE_MATCH_SOURCE);
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
                                     nsIAtom*        aAttribute,
