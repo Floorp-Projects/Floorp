@@ -5,6 +5,7 @@
 
 #include "RTCIdentityProviderRegistrar.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/RTCIdentityProviderBinding.h"
 #include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {
@@ -19,15 +20,12 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(RTCIdentityProviderRegistrar)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(RTCIdentityProviderRegistrar)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCIdentityProviderRegistrar,
-                                      mGlobal,
-                                      mGenerateAssertionCallback,
-                                      mValidateAssertionCallback)
+                                      mGlobal, mIdp)
 
 RTCIdentityProviderRegistrar::RTCIdentityProviderRegistrar(
     nsIGlobalObject* aGlobal)
     : mGlobal(aGlobal)
-    , mGenerateAssertionCallback(nullptr)
-    , mValidateAssertionCallback(nullptr)
+    , mIdp(nullptr)
 {
   MOZ_COUNT_CTOR(RTCIdentityProviderRegistrar);
 }
@@ -50,16 +48,16 @@ RTCIdentityProviderRegistrar::WrapObject(JSContext* aCx, JS::Handle<JSObject*> a
 }
 
 void
-RTCIdentityProviderRegistrar::Register(const RTCIdentityProvider& aIdp)
+RTCIdentityProviderRegistrar::Register(RTCIdentityProvider& aIdp)
 {
-  mGenerateAssertionCallback = aIdp.mGenerateAssertion;
-  mValidateAssertionCallback = aIdp.mValidateAssertion;
+  mIdp = &aIdp;
 }
 
-bool
-RTCIdentityProviderRegistrar::HasIdp() const
+already_AddRefed<RTCIdentityProvider>
+RTCIdentityProviderRegistrar::GetIdp()
 {
-  return mGenerateAssertionCallback && mValidateAssertionCallback;
+  RefPtr<RTCIdentityProvider> idp = mIdp;
+  return idp.forget();
 }
 
 already_AddRefed<Promise>
@@ -67,21 +65,21 @@ RTCIdentityProviderRegistrar::GenerateAssertion(
   const nsAString& aContents, const nsAString& aOrigin,
   const Optional<nsAString>& aUsernameHint, ErrorResult& aRv)
 {
-  if (!mGenerateAssertionCallback) {
+  if (!mIdp) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return nullptr;
   }
-  return mGenerateAssertionCallback->Call(aContents, aOrigin, aUsernameHint, aRv);
+  return mIdp->GenerateAssertion(aContents, aOrigin, aUsernameHint, aRv);
 }
 already_AddRefed<Promise>
 RTCIdentityProviderRegistrar::ValidateAssertion(
   const nsAString& aAssertion, const nsAString& aOrigin, ErrorResult& aRv)
 {
-  if (!mValidateAssertionCallback) {
+  if (!mIdp) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return nullptr;
   }
-  return mValidateAssertionCallback->Call(aAssertion, aOrigin, aRv);
+  return mIdp->ValidateAssertion(aAssertion, aOrigin, aRv);
 }
 
 
