@@ -122,5 +122,11 @@ def delayed_getattr(func, key):
     @depends(func)
     @advanced
     def result(value):
-        return getattr(value, key)
+        try:
+            return getattr(value, key)
+        except AttributeError:
+            # The @depends function we're being passed may have returned
+            # None, or an object that simply doesn't have the wanted key.
+            # In that case, just return None.
+            return None
     return result
