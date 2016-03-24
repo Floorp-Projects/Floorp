@@ -4,6 +4,7 @@ config = {
     "products": {
         "installer": {
             "product-name": "Firefox-%(version)s",
+            "alias": "firefox-latest",
             "ssl-only": False,
             "add-locales": True,
             "paths": {
@@ -90,6 +91,7 @@ config = {
         },
         "stub-installer": {
             "product-name": "Firefox-%(version)s-stub",
+            "alias": "firefox-stub",
             "ssl-only": True,
             "add-locales": True,
             "paths": {
