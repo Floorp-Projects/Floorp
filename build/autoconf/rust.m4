@@ -47,6 +47,34 @@ AC_DEFUN([MOZ_RUST_SUPPORT], [
     # https://github.com/rust-lang/rust/tree/master/mk/cfg
     rust_target=
     case "$target" in
+      # Bitrig
+      x86_64-*-bitrig*)
+          rust_target=x86_64-unknown-bitrig
+          ;;
+
+      # DragonFly
+      x86_64-*-dragonfly*)
+          rust_target=x86_64-unknown-dragonfly
+          ;;
+
+      # FreeBSD, GNU/kFreeBSD
+      i*86-*-*freebsd*)
+          rust_target=i686-unknown-freebsd
+          ;;
+      x86_64-*-*freebsd*)
+          rust_target=x86_64-unknown-freebsd
+          ;;
+
+      # NetBSD
+      x86_64-*-netbsd*)
+          rust_target=x86_64-unknown-netbsd
+          ;;
+
+      # OpenBSD
+      x86_64-*-openbsd*)
+          rust_target=x86_64-unknown-openbsd
+          ;;
+
       # Linux
       i*86*linux-gnu)
           rust_target=i686-unknown-linux-gnu
