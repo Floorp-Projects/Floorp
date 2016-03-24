@@ -1355,18 +1355,45 @@ CompositorBridgeChild* nsBaseWidget::GetRemoteRenderer()
   return mCompositorBridgeChild;
 }
 
-already_AddRefed<mozilla::gfx::DrawTarget> nsBaseWidget::StartRemoteDrawing()
+already_AddRefed<mozilla::gfx::DrawTarget>
+nsBaseWidget::StartRemoteDrawing()
 {
   return nullptr;
 }
 
+void
+nsBaseWidget::CleanupRemoteDrawing()
+{
+  mLastBackBuffer = nullptr;
+}
+
 already_AddRefed<mozilla::gfx::DrawTarget>
 nsBaseWidget::CreateBackBufferDrawTarget(mozilla::gfx::DrawTarget* aScreenTarget,
-                                         const LayoutDeviceIntRect& aRect)
+                                         const LayoutDeviceIntRect& aRect,
+                                         const bool aInitModeClear)
 {
   MOZ_ASSERT(aScreenTarget);
   gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
-  return aScreenTarget->CreateSimilarDrawTarget(aRect.ToUnknownRect().Size(), format);
+  gfx::IntSize size = aRect.ToUnknownRect().Size();
+  gfx::IntSize clientSize(GetClientSize().ToUnknownSize());
+
+  RefPtr<gfx::DrawTarget> target;
+  // Re-use back buffer if possible
+  if (mLastBackBuffer &&
+      mLastBackBuffer->GetBackendType() == aScreenTarget->GetBackendType() &&
+      mLastBackBuffer->GetFormat() == format &&
+      size <= mLastBackBuffer->GetSize() &&
+      mLastBackBuffer->GetSize() <= clientSize) {
+    target = mLastBackBuffer;
+    target->SetTransform(gfx::Matrix());
+    if (aInitModeClear) {
+      target->ClearRect(gfx::Rect(0, 0, size.width, size.height));
+    }
+  } else {
+    target = aScreenTarget->CreateSimilarDrawTarget(size, format);
+    mLastBackBuffer = target;
+  }
+  return target.forget();
 }
 
 //-------------------------------------------------------------------------
