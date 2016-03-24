@@ -533,7 +533,7 @@ struct ImageLayerProperties : public LayerPropertiesBase
 
   virtual nsIntRegion ComputeChangeInternal(const char* aPrefix,
                                             NotifySubDocInvalidationFunc aCallback,
-                                            bool& aGeometryChanged)
+                                            bool& aGeometryChanged) override
   {
     ImageLayer* imageLayer = static_cast<ImageLayer*>(mLayer.get());
     
