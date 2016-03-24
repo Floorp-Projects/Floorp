@@ -4307,23 +4307,23 @@ nsDisplayOpacity::WriteDebugInfo(std::stringstream& aStream)
   aStream << " (opacity " << mOpacity << ")";
 }
 
-nsDisplayBlendMode::nsDisplayBlendMode(nsDisplayListBuilder* aBuilder,
+nsDisplayMixBlendMode::nsDisplayMixBlendMode(nsDisplayListBuilder* aBuilder,
                                              nsIFrame* aFrame, nsDisplayList* aList,
                                              uint8_t aBlendMode,
                                              const DisplayItemScrollClip* aScrollClip)
   : nsDisplayWrapList(aBuilder, aFrame, aList, aScrollClip)
   , mBlendMode(aBlendMode)
 {
-  MOZ_COUNT_CTOR(nsDisplayBlendMode);
+  MOZ_COUNT_CTOR(nsDisplayMixBlendMode);
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-nsDisplayBlendMode::~nsDisplayBlendMode() {
-  MOZ_COUNT_DTOR(nsDisplayBlendMode);
+nsDisplayMixBlendMode::~nsDisplayMixBlendMode() {
+  MOZ_COUNT_DTOR(nsDisplayMixBlendMode);
 }
 #endif
 
-nsRegion nsDisplayBlendMode::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+nsRegion nsDisplayMixBlendMode::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                                 bool* aSnap) {
   *aSnap = false;
   // We are never considered opaque
@@ -4331,16 +4331,16 @@ nsRegion nsDisplayBlendMode::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 }
 
 LayerState
-nsDisplayBlendMode::GetLayerState(nsDisplayListBuilder* aBuilder,
+nsDisplayMixBlendMode::GetLayerState(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      const ContainerLayerParameters& aParameters)
 {
   return LAYER_ACTIVE;
 }
 
-// nsDisplayBlendMode uses layers for rendering
+// nsDisplayMixBlendMode uses layers for rendering
 already_AddRefed<Layer>
-nsDisplayBlendMode::BuildLayer(nsDisplayListBuilder* aBuilder,
+nsDisplayMixBlendMode::BuildLayer(nsDisplayListBuilder* aBuilder,
                                   LayerManager* aManager,
                                   const ContainerLayerParameters& aContainerParameters) {
   ContainerLayerParameters newContainerParameters = aContainerParameters;
@@ -4358,7 +4358,7 @@ nsDisplayBlendMode::BuildLayer(nsDisplayListBuilder* aBuilder,
   return container.forget();
 }
 
-bool nsDisplayBlendMode::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+bool nsDisplayMixBlendMode::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                               nsRegion* aVisibleRegion) {
   // Our children are need their backdrop so we should not allow them to subtract
   // area from aVisibleRegion. We do need to find out what is visible under
@@ -4371,8 +4371,8 @@ bool nsDisplayBlendMode::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   return nsDisplayWrapList::ComputeVisibility(aBuilder, &visibleUnderChildren);
 }
 
-bool nsDisplayBlendMode::TryMerge(nsDisplayItem* aItem) {
-  if (aItem->GetType() != TYPE_BLEND_MODE)
+bool nsDisplayMixBlendMode::TryMerge(nsDisplayItem* aItem) {
+  if (aItem->GetType() != TYPE_MIX_BLEND_MODE)
     return false;
   // items for the same content element should be merged into a single
   // compositing group
@@ -4383,7 +4383,7 @@ bool nsDisplayBlendMode::TryMerge(nsDisplayItem* aItem) {
     return false;
   if (aItem->ScrollClip() != ScrollClip())
     return false;
-  MergeFromTrackingMergedFrames(static_cast<nsDisplayBlendMode*>(aItem));
+  MergeFromTrackingMergedFrames(static_cast<nsDisplayMixBlendMode*>(aItem));
   return true;
 }
 

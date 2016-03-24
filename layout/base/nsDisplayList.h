@@ -3382,13 +3382,13 @@ private:
   bool mForEventsOnly;
 };
 
-class nsDisplayBlendMode : public nsDisplayWrapList {
+class nsDisplayMixBlendMode : public nsDisplayWrapList {
 public:
-  nsDisplayBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+  nsDisplayMixBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                         nsDisplayList* aList, uint8_t aBlendMode,
                         const DisplayItemScrollClip* aScrollClip);
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayBlendMode();
+  virtual ~nsDisplayMixBlendMode();
 #endif
 
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
@@ -3412,7 +3412,7 @@ public:
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
   }
-  NS_DISPLAY_DECL_NAME("BlendMode", TYPE_BLEND_MODE)
+  NS_DISPLAY_DECL_NAME("MixBlendMode", TYPE_MIX_BLEND_MODE)
 
 private:
   uint8_t mBlendMode;
