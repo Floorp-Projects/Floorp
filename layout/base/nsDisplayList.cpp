@@ -4004,15 +4004,6 @@ RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
     }
 
     LayerState state = i->GetLayerState(aBuilder, aManager, aParameters);
-    if (state == LAYER_ACTIVE && i->GetType() == nsDisplayItem::TYPE_BLEND_MODE) {
-      // nsDisplayBlendMode always returns LAYER_ACTIVE to ensure that the
-      // blending operation happens in the intermediate surface of its parent
-      // display item (usually an nsDisplayBlendContainer). But this does not
-      // mean that it needs all its ancestor display items to become active.
-      // So we ignore its layer state and look at its children instead.
-      state = RequiredLayerStateForChildren(aBuilder, aManager, aParameters,
-        *i->GetSameCoordinateSystemChildren(), i->GetAnimatedGeometryRoot());
-    }
     if ((state == LAYER_ACTIVE || state == LAYER_ACTIVE_FORCE) &&
         state > result) {
       result = state;
@@ -4454,7 +4445,7 @@ nsDisplayBlendContainer::GetLayerState(nsDisplayListBuilder* aBuilder,
                                        LayerManager* aManager,
                                        const ContainerLayerParameters& aParameters)
 {
-  return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList, GetAnimatedGeometryRoot());
+  return mozilla::LAYER_ACTIVE;
 }
 
 bool nsDisplayBlendContainer::TryMerge(nsDisplayItem* aItem) {
