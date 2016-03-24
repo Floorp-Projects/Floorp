@@ -380,7 +380,7 @@ function adHocExchange() {
 // ie, it must return false for n=8.
 //
 // SpiderMonkey has isLockFree(1), isLockFree(2), isLockFree(4) on all
-// supported platforms, though this is not guaranteed by the spec.
+// supported platforms, only the last is guaranteed by the spec.
 
 var sizes   = [    1,     2,     3,     4,     5,     6,     7,  8,
                    9,    10,    11,    12];
