@@ -693,7 +693,6 @@ CompositorBridgeParent::CompositorBridgeParent(nsIWidget* aWidget,
   , mCompositorScheduler(nullptr)
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   , mLastPluginUpdateLayerTreeId(0)
-  , mPluginUpdateResponsePending(false)
   , mDeferPluginWindows(false)
   , mPluginWindowsHidden(false)
 #endif
@@ -1234,20 +1233,6 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
     return;
   }
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  // Still waiting on plugin update confirmation
-  if (mPluginUpdateResponsePending) {
-    return;
-  }
-#endif
-
-  bool hasRemoteContent = false;
-  bool pluginsUpdatedFlag = true;
-  AutoResolveRefLayers resolve(mCompositionManager, this,
-                               &hasRemoteContent,
-                               &pluginsUpdatedFlag);
-
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   /*
    * AutoResolveRefLayers handles two tasks related to Windows and Linux
    * plugin window management:
@@ -1260,27 +1245,20 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
    * since plugin clipping can depend on chrome (for example, due to tab modal
    * prompts). Updates in step 2 are applied via an async ipc message sent
    * to the main thread.
-   * Windows specific: The compositor will wait for confirmation that plugin
-   * updates have been applied before painting. Deferment of painting is
-   * indicated by the mPluginUpdateResponsePending flag. The main thread
-   * messages back using the RemotePluginsReady async ipc message.
-   * This is neccessary since plugin windows can leave remnants of window
-   * content if moved after the underlying window paints.
    */
-  if (pluginsUpdatedFlag) {
-    mPluginUpdateResponsePending = true;
-    return;
-  }
+  bool hasRemoteContent = false;
+  bool updatePluginsFlag = true;
+  AutoResolveRefLayers resolve(mCompositionManager, this,
+                               &hasRemoteContent,
+                               &updatePluginsFlag);
 
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   // We do not support plugins in local content. When switching tabs
   // to local pages, hide every plugin associated with the window.
   if (!hasRemoteContent && BrowserTabsRemoteAutostart() &&
       mCachedPluginData.Length()) {
     Unused << SendHideAllPlugins((uintptr_t)GetWidget());
     mCachedPluginData.Clear();
-    // Wait for confirmation the hide operation is complete.
-    mPluginUpdateResponsePending = true;
-    return;
   }
 #endif
 
@@ -1364,7 +1342,6 @@ bool
 CompositorBridgeParent::RecvRemotePluginsReady()
 {
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  mPluginUpdateResponsePending = false;
   ScheduleComposition();
   return true;
 #else
@@ -2576,7 +2553,6 @@ CompositorBridgeParent::HideAllPluginWindows()
     return;
   }
   mDeferPluginWindows = true;
-  mPluginUpdateResponsePending = true;
   mPluginWindowsHidden = true;
   Unused << SendHideAllPlugins((uintptr_t)GetWidget());
   ScheduleComposition();
