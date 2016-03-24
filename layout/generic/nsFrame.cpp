@@ -1828,18 +1828,18 @@ IsScrollFrameActive(nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrolla
   return aScrollableFrame && aScrollableFrame->IsScrollingActive(aBuilder);
 }
 
-class AutoSaveRestoreContainsBlendMode
+class AutoSaveRestoreBlendMode
 {
   nsDisplayListBuilder& mBuilder;
-  bool mSavedContainsBlendMode;
+  EnumSet<gfx::CompositionOp> mSavedBlendModes;
 public:
-  explicit AutoSaveRestoreContainsBlendMode(nsDisplayListBuilder& aBuilder)
+  explicit AutoSaveRestoreBlendMode(nsDisplayListBuilder& aBuilder)
     : mBuilder(aBuilder)
-    , mSavedContainsBlendMode(aBuilder.ContainsBlendMode())
+    , mSavedBlendModes(aBuilder.ContainedBlendModes())
   { }
 
-  ~AutoSaveRestoreContainsBlendMode() {
-    mBuilder.SetContainsBlendMode(mSavedContainsBlendMode);
+  ~AutoSaveRestoreBlendMode() {
+    mBuilder.SetContainsBlendModes(mSavedBlendModes);
   }
 };
 
@@ -1977,8 +1977,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // reset blend mode so we can keep track if this stacking context needs have
   // a nsDisplayBlendContainer. Set the blend mode back when the routine exits
   // so we keep track if the parent stacking context needs a container too.
-  AutoSaveRestoreContainsBlendMode autoRestoreBlendMode(*aBuilder);
-  aBuilder->SetContainsBlendMode(false);
+  AutoSaveRestoreBlendMode autoRestoreBlendMode(*aBuilder);
+  aBuilder->SetContainsBlendModes(BlendModeSet());
  
   nsRect dirtyRectOutsideTransform = dirtyRect;
   if (isTransformed) {
@@ -2516,7 +2516,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   nsDisplayList extraPositionedDescendants;
   if (isStackingContext) {
     if (disp->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
-      aBuilder->SetContainsBlendMode(true);
+      aBuilder->SetContainsBlendMode(disp->mMixBlendMode);
     }
     // True stacking context.
     // For stacking contexts, BuildDisplayListForStackingContext handles
