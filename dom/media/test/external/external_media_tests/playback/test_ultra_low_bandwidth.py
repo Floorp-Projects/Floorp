@@ -12,4 +12,4 @@ class TestUltraLowBandwidth(NetworkBandwidthTestCase,
 
     def test_playback_limiting_bandwidth_160(self):
         self.proxy.limits({'downstream_kbps': 160})
-        self.run_videos()
+        self.run_videos(timeout=120)
