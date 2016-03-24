@@ -12,9 +12,8 @@
 
 #include <string>
 
+#include "nspr.h"
 #include "base/eintr_wrapper.h"
-
-extern "C" char **environ __attribute__((__visibility__("default")));
 
 namespace base {
 
@@ -66,6 +65,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
   // Existing variables are overwritten by env_vars_to_set.
   int pos = 0;
   environment_map combined_env_vars = env_vars_to_set;
+  char **environ = PR_DuplicateEnvironment();
   while(environ[pos] != NULL) {
     std::string varString = environ[pos];
     std::string varName = varString.substr(0, varString.find_first_of('='));
@@ -73,8 +73,9 @@ bool LaunchApp(const std::vector<std::string>& argv,
     if (combined_env_vars.find(varName) == combined_env_vars.end()) {
       combined_env_vars[varName] = varValue;
     }
-    pos++;
+    PR_Free(environ[pos++]);
   }
+  PR_Free(environ);
   int varsLen = combined_env_vars.size() + 1;
 
   char** vars = new char*[varsLen];
