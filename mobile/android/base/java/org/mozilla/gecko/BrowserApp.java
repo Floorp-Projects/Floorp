@@ -3814,7 +3814,7 @@ public class BrowserApp extends GeckoApp
             JSONObject object = new JSONObject();
             object.put("urls", array);
 
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tabs:OpenMultiple", object.toString()));
+            GeckoAppShell.notifyObservers("Tabs:OpenMultiple", object.toString());
         } catch (JSONException e) {
             Log.e(LOGTAG, "Unable to create JSON for opening multiple URLs");
         }
