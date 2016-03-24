@@ -47,7 +47,7 @@ void
 DetailsFrame::SetInitialChildList(ChildListID aListID, nsFrameList& aChildList)
 {
   if (aListID == kPrincipalList) {
-    auto* details = HTMLDetailsElement::FromContent(GetContent());
+    HTMLDetailsElement* details = HTMLDetailsElement::FromContent(GetContent());
     bool isOpen = details->Open();
 
     if (isOpen) {
@@ -67,14 +67,20 @@ DetailsFrame::SetInitialChildList(ChildListID aListID, nsFrameList& aChildList)
     }
 
 #ifdef DEBUG
-    nsIFrame* realFrame =
-      nsPlaceholderFrame::GetRealFrameFor(isOpen ?
-                                          aChildList.FirstChild() :
-                                          aChildList.OnlyChild());
-    MOZ_ASSERT(realFrame, "Principal list of details should not be empty!");
-    nsIFrame* summaryFrame = realFrame->GetContentInsertionFrame();
-    MOZ_ASSERT(summaryFrame->GetType() == nsGkAtoms::summaryFrame,
-               "The frame should be summary frame!");
+    for (nsIFrame* child : aChildList) {
+      HTMLSummaryElement* summary =
+        HTMLSummaryElement::FromContent(child->GetContent());
+
+      if (child == aChildList.FirstChild()) {
+        if (summary && summary->IsMainSummary()) {
+          break;
+        }
+      } else {
+        MOZ_ASSERT(!summary || !summary->IsMainSummary(),
+                   "Rest of the children are neither summary elements nor"
+                   "the main summary!");
+      }
+    }
 #endif
 
   }
