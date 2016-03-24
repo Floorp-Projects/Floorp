@@ -1319,6 +1319,11 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
 nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) {
   APZC_LOG("%p got a touch-end in state %d\n", this, mState);
 
+  RefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
+    controller->SetScrollingRootContent(false);
+  }
+
   OnTouchEndOrCancel();
 
   // In case no touch behavior triggered previously we can avoid sending
@@ -2383,7 +2388,13 @@ bool AsyncPanZoomController::AttemptScroll(ParentLayerPoint& aStartPoint,
 
     if (!IsZero(adjustedDisplacement)) {
       ScrollBy(adjustedDisplacement / mFrameMetrics.GetZoom());
-      if (InputBlockState* block = CurrentInputBlock()) {
+      if (CancelableBlockState* block = CurrentInputBlock()) {
+        if (block->AsTouchBlock() && (block->GetScrolledApzc() != this)) {
+          RefPtr<GeckoContentController> controller = GetGeckoContentController();
+          if (controller) {
+            controller->SetScrollingRootContent(IsRootContent());
+          }
+        }
         block->SetScrolledApzc(this);
       }
       ScheduleCompositeAndMaybeRepaint();
