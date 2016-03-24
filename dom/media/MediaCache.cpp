@@ -181,6 +181,7 @@ public:
   // and thus hasn't yet been committed to the cache. The caller will
   // call QueueUpdate().
   void NoteBlockUsage(MediaCacheStream* aStream, int32_t aBlockIndex,
+                      int64_t aStreamOffset,
                       MediaCacheStream::ReadMode aMode, TimeStamp aNow);
   // Mark aStream as having the block, adding it as an owner.
   void AddBlockOwnerAsReadahead(int32_t aBlockIndex, MediaCacheStream* aStream,
@@ -1622,8 +1623,8 @@ MediaCache::Truncate()
 
 void
 MediaCache::NoteBlockUsage(MediaCacheStream* aStream, int32_t aBlockIndex,
-                             MediaCacheStream::ReadMode aMode,
-                             TimeStamp aNow)
+                           int64_t aStreamOffset,
+                           MediaCacheStream::ReadMode aMode, TimeStamp aNow)
 {
   mReentrantMonitor.AssertCurrentThreadIn();
 
@@ -1640,7 +1641,7 @@ MediaCache::NoteBlockUsage(MediaCacheStream* aStream, int32_t aBlockIndex,
 
   // The following check has to be <= because the stream offset has
   // not yet been updated for the data read from this block
-  NS_ASSERTION(bo->mStreamBlock*BLOCK_SIZE <= bo->mStream->mStreamOffset,
+  NS_ASSERTION(bo->mStreamBlock*BLOCK_SIZE <= aStreamOffset,
                "Using a block that's behind the read position?");
 
   GetListForBlock(bo)->RemoveBlock(aBlockIndex);
@@ -1673,8 +1674,8 @@ MediaCache::NoteSeek(MediaCacheStream* aStream, int64_t aOldOffset)
       if (cacheBlockIndex >= 0) {
         // Marking the block used may not be exactly what we want but
         // it's simple
-        NoteBlockUsage(aStream, cacheBlockIndex, MediaCacheStream::MODE_PLAYBACK,
-                       now);
+        NoteBlockUsage(aStream, cacheBlockIndex, aStream->mStreamOffset,
+                       MediaCacheStream::MODE_PLAYBACK, now);
       }
       ++blockIndex;
     }
@@ -2283,7 +2284,7 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
       continue;
     }
 
-    gMediaCache->NoteBlockUsage(this, cacheBlock, mCurrentMode, TimeStamp::Now());
+    gMediaCache->NoteBlockUsage(this, cacheBlock, streamOffset, mCurrentMode, TimeStamp::Now());
 
     int64_t offset = cacheBlock*BLOCK_SIZE + offsetInStreamBlock;
     int32_t bytes;
