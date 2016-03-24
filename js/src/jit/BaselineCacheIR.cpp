@@ -1043,13 +1043,16 @@ jit::TraceBaselineCacheIRStub(JSTracer* trc, ICStub* stub, const CacheIRStubInfo
           case StubField::GCType::NoGCThing:
             break;
           case StubField::GCType::Shape:
-            TraceEdge(trc, &stubInfo->getStubField<Shape*>(stub, field), "baseline-cacheir-shape");
+            TraceNullableEdge(trc, &stubInfo->getStubField<Shape*>(stub, field),
+                              "baseline-cacheir-shape");
             break;
           case StubField::GCType::ObjectGroup:
-            TraceEdge(trc, &stubInfo->getStubField<ObjectGroup*>(stub, field), "baseline-cacheir-group");
+            TraceNullableEdge(trc, &stubInfo->getStubField<ObjectGroup*>(stub, field),
+                              "baseline-cacheir-group");
             break;
           case StubField::GCType::JSObject:
-            TraceEdge(trc, &stubInfo->getStubField<JSObject*>(stub, field), "baseline-cacheir-object");
+            TraceNullableEdge(trc, &stubInfo->getStubField<JSObject*>(stub, field),
+                              "baseline-cacheir-object");
             break;
           case StubField::GCType::Limit:
             return; // Done.
