@@ -1,0 +1,21 @@
+if [ -z "${VSPATH}" ]; then
+    VSPATH="$(cd ${topsrcdir} && pwd)/vs2015u1"
+fi
+
+export WINDOWSSDKDIR="${VSPATH}/SDK"
+export WIN32_REDIST_DIR="${VSPATH}/VC/redist/x86/Microsoft.VC140.CRT"
+export WIN_UCRT_REDIST_DIR="${VSPATH}/SDK/Redist/ucrt/DLLs/x86"
+
+export PATH="${VSPATH}/VC/bin/amd64_x86:${VSPATH}/VC/bin/amd64:${VSPATH}/VC/bin:${VSPATH}/SDK/bin/x86:${VSPATH}/SDK/bin/x64:${VSPATH}/DIASDK/bin:${PATH}"
+export PATH="${VSPATH}/VC/redist/x86/Microsoft.VC140.CRT:${VSPATH}/VC/redist/x64/Microsoft.VC140.CRT:${VSPATH}/SDK/Redist/ucrt/DLLs/x86:${VSPATH}/SDK/Redist/ucrt/DLLs/x64:${PATH}"
+
+export INCLUDE="${VSPATH}/VC/include:${VSPATH}/VC/atlmfc/include:${VSPATH}/SDK/Include/ucrt:${VSPATH}/SDK/Include/shared:${VSPATH}/SDK/Include/um:${VSPATH}/SDK/Include/winrt:${VSPATH}/DIASDK/include"
+export LIB="${VSPATH}/VC/lib:${VSPATH}/VC/atlmfc/lib:${VSPATH}/SDK/lib/ucrt/x86:${VSPATH}/SDK/lib/um/x86:${VSPATH}/DIASDK/lib"
+
+. $topsrcdir/build/mozconfig.vs-common
+
+mk_export_correct_style INCLUDE
+mk_export_correct_style LIB
+mk_export_correct_style PATH
+mk_export_correct_style WIN32_REDIST_DIR
+mk_export_correct_style WIN_UCRT_REDIST_DIR
