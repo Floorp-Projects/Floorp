@@ -917,7 +917,6 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   if (NS_WARN_IF(!jsapi.Init(global))) {
     return NS_ERROR_UNEXPECTED;
   }
-  jsapi.TakeOwnershipOfErrorReporting();
   JSContext* cx = jsapi.cx();
 
   nsCOMPtr<nsIAtom> typeAtom = aListener->mTypeAtom;

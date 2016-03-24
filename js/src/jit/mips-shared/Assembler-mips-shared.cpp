@@ -1303,6 +1303,36 @@ AssemblerMIPSShared::as_cule(FloatFormat fmt, FloatRegister fs, FloatRegister ft
     return writeInst(InstReg(op_cop1, rs, ft, fs, fcc << FccShift, ff_c_ule_fmt).encode());
 }
 
+// FP conditional move.
+BufferOffset
+AssemblerMIPSShared::as_movt(FloatFormat fmt, FloatRegister fd, FloatRegister fs, FPConditionBit fcc)
+{
+    RSField rs = fmt == DoubleFloat ? rs_d : rs_s;
+    Register rt = Register::FromCode(fcc << 2 | 1);
+    return writeInst(InstReg(op_cop1, rs, rt, fs, fd, ff_movf_fmt).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_movf(FloatFormat fmt, FloatRegister fd, FloatRegister fs, FPConditionBit fcc)
+{
+    RSField rs = fmt == DoubleFloat ? rs_d : rs_s;
+    Register rt = Register::FromCode(fcc << 2 | 0);
+    return writeInst(InstReg(op_cop1, rs, rt, fs, fd, ff_movf_fmt).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_movz(FloatFormat fmt, FloatRegister fd, FloatRegister fs, Register rt)
+{
+    RSField rs = fmt == DoubleFloat ? rs_d : rs_s;
+    return writeInst(InstReg(op_cop1, rs, rt, fs, fd, ff_movz_fmt).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_movn(FloatFormat fmt, FloatRegister fd, FloatRegister fs, Register rt)
+{
+    RSField rs = fmt == DoubleFloat ? rs_d : rs_s;
+    return writeInst(InstReg(op_cop1, rs, rt, fs, fd, ff_movn_fmt).encode());
+}
 
 void
 AssemblerMIPSShared::bind(Label* label, BufferOffset boff)

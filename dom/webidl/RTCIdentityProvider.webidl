@@ -10,9 +10,9 @@
 interface RTCIdentityProviderRegistrar {
   void register(RTCIdentityProvider idp);
 
-  /* The IdP that was passed to register() to chrome code, if any. */
+  /* Whether an IdP was passed to register() to chrome code. */
   [ChromeOnly]
-  readonly attribute RTCIdentityProvider? idp;
+  readonly attribute boolean hasIdp;
   /* The following two chrome-only functions forward to the corresponding
    * function on the registered IdP.  This is necessary because the
    * JS-implemented WebIDL can't see these functions on `idp` above, chrome JS
@@ -30,13 +30,16 @@ interface RTCIdentityProviderRegistrar {
   validateAssertion(DOMString assertion, DOMString origin);
 };
 
-callback interface RTCIdentityProvider {
-  Promise<RTCIdentityAssertionResult>
-  generateAssertion(DOMString contents, DOMString origin,
-                    optional DOMString usernameHint);
-  Promise<RTCIdentityValidationResult>
-  validateAssertion(DOMString assertion, DOMString origin);
+dictionary RTCIdentityProvider {
+  required GenerateAssertionCallback generateAssertion;
+  required ValidateAssertionCallback validateAssertion;
 };
+
+callback GenerateAssertionCallback =
+  Promise<RTCIdentityAssertionResult>
+    (DOMString contents, DOMString origin, optional DOMString usernameHint);
+callback ValidateAssertionCallback =
+  Promise<RTCIdentityValidationResult> (DOMString assertion, DOMString origin);
 
 dictionary RTCIdentityAssertionResult {
   required RTCIdentityProviderDetails idp;

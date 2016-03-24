@@ -33,5 +33,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
             '-wd4717', # recursive on all control paths, function will cause runtime stack overflow
             '-wd4996', # 'GetVersionExW': was declared deprecated
             '-wd4302', # 'reinterpret_cast': truncation from 'LPCSTR' to 'WORD'
+            '-wd4311', # 'reinterpret_cast': pointer truncation from 'X' to 'Y'
             '-wd4312', # 'reinterpret_cast': conversion from 'DWORD' to 'LPOVERLAPPED' of greater size
         ]

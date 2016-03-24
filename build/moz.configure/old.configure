@@ -56,8 +56,9 @@ def autoconf(mozconfig, autoconf):
     if not os.path.exists(autoconf):
         error('Could not find autoconf 2.13 at %s' % (autoconf,))
 
-    set_config('AUTOCONF', autoconf)
     return autoconf
+
+set_config('AUTOCONF', autoconf)
 
 
 # See comment in mozconfig_options() from build/moz.configure/init.configure
@@ -371,7 +372,6 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
     import os
     import subprocess
     import sys
-    import types
     from mozbuild.shellutil import quote
 
     cmd = prepare_configure
@@ -417,12 +417,33 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
     # If the code execution above fails, we want to keep the file around for
     # debugging.
     os.remove('config.data')
+    return raw_config
 
-    config = {}
+
+# set_config is only available in the global namespace, not directly in
+# @depends functions, but we do need to enumerate the result of
+# old_configure, so we cheat.
+@template
+def set_old_configure_config(name, value):
+    set_config(name, value)
+
+# Same as set_old_configure_config, but for set_define.
+@template
+def set_old_configure_define(name, value):
+    set_define(name, value)
+
+
+@depends(old_configure)
+@advanced
+def post_old_configure(raw_config):
+    import types
+
     for k, v in raw_config['substs']:
-        set_config(k[1:-1], v[1:-1] if isinstance(v, types.StringTypes) else v)
+        set_old_configure_config(
+            k[1:-1], v[1:-1] if isinstance(v, types.StringTypes) else v)
 
     for k, v in dict(raw_config['defines']).iteritems():
-        set_define(k[1:-1], v[1:-1])
+        set_old_configure_define(k[1:-1], v[1:-1])
 
-    set_config('non_global_defines', raw_config['non_global_defines'])
+    set_old_configure_config('non_global_defines',
+                             raw_config['non_global_defines'])

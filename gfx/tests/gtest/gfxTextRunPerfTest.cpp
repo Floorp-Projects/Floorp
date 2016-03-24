@@ -58,7 +58,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
                                               400,
                                               0,
                                               16.0,
-                                              NS_NewPermanentAtom(NS_LITERAL_STRING("en")),
+                                              NS_NewAtom(NS_LITERAL_STRING("en")),
                                               0.0,
                                               false, false,
                                               NS_LITERAL_STRING(""));

@@ -638,6 +638,8 @@ Assembler::asmMergeWith(Assembler& other)
 {
     flush();
     other.flush();
+    if (other.oom())
+        return false;
     if (!AssemblerShared::asmMergeWith(size(), other))
         return false;
     return m_buffer.appendBuffer(other.m_buffer);

@@ -63,29 +63,6 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent(JNIEnv *jenv, jclass jc,
     nsAppShell::PostEvent(AndroidGeckoEvent::MakeFromJavaObject(jenv, event));
 }
 
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers(JNIEnv *aEnv, jclass,
-                                                         jstring aTopic, jstring aData)
-{
-    if (!NS_IsMainThread()) {
-        jni::ThrowException(aEnv,
-            "java/lang/IllegalThreadStateException", "Not on Gecko main thread");
-        return;
-    }
-
-    nsCOMPtr<nsIObserverService> obsServ =
-        mozilla::services::GetObserverService();
-    if (!obsServ) {
-        jni::ThrowException(aEnv,
-            "java/lang/IllegalStateException", "No observer service");
-        return;
-    }
-
-    const nsJNICString topic(aTopic, aEnv);
-    const nsJNIString data(aData, aEnv);
-    obsServ->NotifyObservers(nullptr, topic.get(), data.get());
-}
-
 NS_EXPORT jlong JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback(JNIEnv* env, jclass)
 {

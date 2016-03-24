@@ -142,7 +142,6 @@ ThrowAndReport(nsPIDOMWindowInner* aWindow, nsresult aRv)
   if (NS_WARN_IF(!jsapi.Init(aWindow))) {
     return;
   }
-  jsapi.TakeOwnershipOfErrorReporting();
 
   Throw(jsapi.cx(), aRv);
 }

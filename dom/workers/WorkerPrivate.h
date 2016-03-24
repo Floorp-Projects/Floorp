@@ -371,6 +371,9 @@ public:
   void
   OfflineStatusChangeEvent(bool aIsOffline);
 
+  void
+  MemoryPressure(bool aDummy);
+
   bool
   RegisterSharedWorker(SharedWorker* aSharedWorker, MessagePort* aPort);
 
@@ -1191,6 +1194,9 @@ public:
 
   void
   OfflineStatusChangeEventInternal(bool aIsOffline);
+
+  void
+  MemoryPressureInternal();
 
   JSContext*
   GetJSContext() const

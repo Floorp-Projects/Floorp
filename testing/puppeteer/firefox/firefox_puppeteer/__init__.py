@@ -9,14 +9,17 @@ from marionette_driver.marionette import HTMLElement
 from decorators import use_class_as_property
 
 
-__version__ = '3.2.0'
+__version__ = '4.0.0'
 
 
 class Puppeteer(object):
     """The puppeteer class is used to expose libraries to test cases.
 
+    example:
+    `class MyTestCase(MarionetteTestCase, Puppeteer)`
+
     Each library can be referenced by its puppeteer name as a member of a
-    FirefoxTestCase instance. For example, from within a test method, the
+    the TestCase instance. For example, from within a test method, the
     "current_window" member of the "Browser" class can be accessed via
     "self.browser.current_window".
     """
@@ -26,9 +29,6 @@ class Puppeteer(object):
 
     def get_marionette(self):
         return self.marionette
-
-    def set_marionette(self, marionette):
-        self.marionette = marionette
 
     @use_class_as_property('api.appinfo.AppInfo')
     def appinfo(self):

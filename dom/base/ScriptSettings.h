@@ -267,14 +267,7 @@ public:
 
   bool CxPusherIsStackTop() const { return mCxPusher->IsStackTop(); }
 
-  // We're moving towards a world where the AutoJSAPI always handles
-  // exceptions that bubble up from the JS engine. In order to make this
-  // process incremental, we allow consumers to opt-in to the new behavior
-  // while keeping the old behavior as the default.
-  void TakeOwnershipOfErrorReporting();
-  bool OwnsErrorReporting() { return mOwnErrorReporting; }
-  // If HasException, report it.  Otherwise, a no-op.  This must be
-  // called only if OwnsErrorReporting().
+  // If HasException, report it.  Otherwise, a no-op.
   void ReportException();
 
   bool HasException() const {
@@ -317,7 +310,6 @@ private:
   JSContext *mCx;
 
   // Track state between the old and new error reporting modes.
-  bool mOwnErrorReporting;
   bool mOldAutoJSAPIOwnsErrorReporting;
   // Whether we're mainthread or not; set when we're initialized.
   bool mIsMainThread;
@@ -441,22 +433,6 @@ public:
 protected:
   JSContext* mCx;
   dom::AutoJSAPI mJSAPI;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-/**
- * Use ThreadsafeAutoJSContext when you want an AutoJSContext but might be
- * running on a worker thread.
- */
-class MOZ_RAII ThreadsafeAutoJSContext {
-public:
-  explicit ThreadsafeAutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
-  operator JSContext*() const;
-
-private:
-  JSContext* mCx; // Used on workers.  Null means mainthread.
-  Maybe<JSAutoRequest> mRequest; // Used on workers.
-  Maybe<AutoJSContext> mAutoJSContext; // Used on main thread.
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

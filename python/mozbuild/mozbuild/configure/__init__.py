@@ -14,8 +14,10 @@ from mozbuild.configure.options import (
     CommandLineHelper,
     ConflictingOptionError,
     InvalidOptionError,
+    NegativeOptionValue,
     Option,
     OptionValue,
+    PositiveOptionValue,
 )
 from mozbuild.configure.help import HelpFormatter
 from mozbuild.util import (
@@ -38,20 +40,6 @@ class DummyFunction(object):
 
 class SandboxedGlobal(dict):
     '''Identifiable dict type for use as function global'''
-
-
-class DependsOutput(dict):
-    '''Dict holding the results yielded by a @depends function.'''
-    __slots__ = ('implied_options',)
-
-    def __init__(self):
-        super(DependsOutput, self).__init__()
-        self.implied_options = []
-
-    def imply_option(self, option, reason=None):
-        if not isinstance(option, types.StringTypes):
-            raise TypeError('imply_option must be given a string')
-        self.implied_options.append((option, reason))
 
 
 def forbidden_import(*args, **kwargs):
@@ -117,20 +105,22 @@ class ConfigureSandbox(dict):
 
         self._paths = []
         self._templates = set()
+        # Store the real function and its dependencies, behind each
+        # DummyFunction generated from @depends.
         self._depends = {}
         self._seen = set()
 
         self._options = OrderedDict()
         # Store the raw values returned by @depends functions
         self._results = {}
-        # Store several kind of information:
-        # - value for each Option, as per returned by Option.get_value
-        # - raw option (as per command line or environment) for each value
-        self._db = {}
+        # Store values for each Option, as per returned by Option.get_value
+        self._option_values = {}
+        # Store raw option (as per command line or environment) for each Option
+        self._raw_options = {}
 
         # Store options added with `imply_option`, and the reason they were
         # added (which can either have been given to `imply_option`, or
-        # infered.
+        # inferred.
         self._implied_options = {}
 
         # Store all results from _prepare_function
@@ -138,6 +128,7 @@ class ConfigureSandbox(dict):
 
         self._helper = CommandLineHelper(environ, argv)
 
+        assert isinstance(config, dict)
         self._config, self._stdout, self._stderr = config, stdout, stderr
 
         self._help = None
@@ -146,7 +137,7 @@ class ConfigureSandbox(dict):
         self._seen.add(self._help_option)
         # self._option_impl('--help') will have set this if --help was on the
         # command line.
-        if self._db[self._help_option]:
+        if self._option_values[self._help_option]:
             self._help = HelpFormatter(argv[0])
             self._help.add(self._help_option)
 
@@ -184,11 +175,10 @@ class ConfigureSandbox(dict):
         for arg in self._helper:
             without_value = arg.split('=', 1)[0]
             if arg in self._implied_options:
-                func, reason = self._implied_options[arg]
+                frameinfo, reason = self._implied_options[arg]
                 raise ConfigureError(
-                    '`%s`, emitted by `%s` in `%s`, was not handled.'
-                    % (without_value, func.__name__,
-                       func.func_code.co_filename))
+                    '`%s`, emitted from `%s` line `%d`, was not handled.'
+                    % (without_value, frameinfo[1], frameinfo[2]))
             raise InvalidOptionError('Unknown option: %s' % without_value)
 
         # All options must be referenced by some @depends function
@@ -222,13 +212,13 @@ class ConfigureSandbox(dict):
 
         return super(ConfigureSandbox, self).__setitem__(key, value)
 
-    def _resolve(self, arg):
+    def _resolve(self, arg, need_help_dependency=True):
         if isinstance(arg, DummyFunction):
             assert arg in self._depends
-            func = self._depends[arg]
+            func, deps = self._depends[arg]
             assert not inspect.isgeneratorfunction(func)
             assert func in self._results
-            if not func.with_help:
+            if need_help_dependency and self._help_option not in deps:
                 raise ConfigureError("Missing @depends for `%s`: '--help'" %
                                      func.__name__)
             result = self._results[func]
@@ -261,7 +251,7 @@ class ConfigureSandbox(dict):
         try:
             value, option_string = self._helper.handle(option)
         except ConflictingOptionError as e:
-            func, reason = self._implied_options[e.arg]
+            frameinfo, reason = self._implied_options[e.arg]
             raise InvalidOptionError(
                 "'%s' implied by '%s' conflicts with '%s' from the %s"
                 % (e.arg, reason, e.old_arg, e.old_origin))
@@ -269,9 +259,9 @@ class ConfigureSandbox(dict):
         if self._help:
             self._help.add(option)
 
-        self._db[option] = value
-        self._db[value] = (option_string.split('=', 1)[0]
-                           if option_string else option_string)
+        self._option_values[option] = value
+        self._raw_options[option] = (option_string.split('=', 1)[0]
+                                    if option_string else option_string)
         return option
 
     def depends_impl(self, *args):
@@ -290,16 +280,13 @@ class ConfigureSandbox(dict):
 
         The decorated function is altered to use a different global namespace
         for its execution. This different global namespace exposes a limited
-        set of functions from os.path, and two additional functions:
-        `imply_option` and `set_config`. The former allows to inject additional
-        options as if they had been passed on the command line. The latter
-        declares new configuration items for consumption by moz.build.
+        set of functions from os.path.
         '''
         if not args:
             raise ConfigureError('@depends needs at least one argument')
 
-        with_help = False
         resolved_args = []
+        dependencies = []
         for arg in args:
             if isinstance(arg, types.StringTypes):
                 prefix, name, values = Option.split_option(arg)
@@ -313,70 +300,41 @@ class ConfigureSandbox(dict):
                 if arg == self._help_option:
                     with_help = True
                 self._seen.add(arg)
-                assert arg in self._db or self._help
-                resolved_arg = self._db.get(arg)
+                dependencies.append(arg)
+                assert arg in self._option_values or self._help
+                resolved_arg = self._option_values.get(arg)
             elif isinstance(arg, DummyFunction):
                 assert arg in self._depends
-                arg = self._depends[arg]
+                dependencies.append(arg)
+                arg, _ = self._depends[arg]
                 resolved_arg = self._results.get(arg)
             else:
                 raise TypeError(
                     "Cannot use object of type '%s' as argument to @depends"
                     % type(arg))
             resolved_args.append(resolved_arg)
+        dependencies = tuple(dependencies)
 
         def decorator(func):
             if inspect.isgeneratorfunction(func):
                 raise ConfigureError(
                     'Cannot decorate generator functions with @depends')
             func, glob = self._prepare_function(func)
-            result = DependsOutput()
-            glob.update(
-                imply_option=result.imply_option,
-                set_config=result.__setitem__,
-            )
             dummy = wraps(func)(DummyFunction())
-            self._depends[dummy] = func
-            func.with_help = with_help
+            self._depends[dummy] = func, dependencies
+            with_help = self._help_option in dependencies
             if with_help:
                 for arg in args:
-                    if (isinstance(arg, DummyFunction) and
-                            not self._depends[arg].with_help):
-                        raise ConfigureError(
-                            "`%s` depends on '--help' and `%s`. "
-                            "`%s` must depend on '--help'"
-                            % (func.__name__, arg.__name__, arg.__name__))
-
-            if self._help and not with_help:
-                return dummy
-
-            self._results[func] = func(*resolved_args)
-
-            for option, reason in result.implied_options:
-                self._helper.add(option, 'implied')
-                if not reason:
-                    deps = []
-                    for name, value in zip(args, resolved_args):
-                        if not isinstance(value, OptionValue):
+                    if isinstance(arg, DummyFunction):
+                        _, deps = self._depends[arg]
+                        if self._help_option not in deps:
                             raise ConfigureError(
-                                "Cannot infer what implied '%s'" % option)
-                        if name == '--help':
-                            continue
-                        deps.append(value.format(self._db.get(value) or name))
-                    if len(deps) != 1:
-                        raise ConfigureError(
-                            "Cannot infer what implied '%s'" % option)
-                    reason = deps[0]
+                                "`%s` depends on '--help' and `%s`. "
+                                "`%s` must depend on '--help'"
+                                % (func.__name__, arg.__name__, arg.__name__))
 
-                self._implied_options[option] = func, reason
-
-            if not self._help:
-                for k, v in result.iteritems():
-                    if k in self._config:
-                        raise ConfigureError(
-                            "Cannot add '%s' to configuration: Key already "
-                            "exists" % k)
-                    self._config[k] = v
+            if not self._help or with_help:
+                self._results[func] = func(*resolved_args)
 
             return dummy
 
@@ -409,6 +367,9 @@ class ConfigureSandbox(dict):
             advanced=self.advanced_impl,
             depends=self.depends_impl,
             option=self.option_impl,
+            set_config=self.set_config_impl,
+            set_define=self.set_define_impl,
+            imply_option=self.imply_option_impl,
         )
         self._templates.add(template)
         return template
@@ -421,6 +382,120 @@ class ConfigureSandbox(dict):
         func, glob = self._prepare_function(func)
         glob.update(__builtins__=__builtins__)
         return func
+
+    def _resolve_and_set(self, data, name, value):
+        # Don't set anything when --help was on the command line
+        if self._help:
+            return
+        name = self._resolve(name, need_help_dependency=False)
+        if name is None:
+            return
+        if not isinstance(name, types.StringTypes):
+            raise TypeError("Unexpected type: '%s'" % type(name))
+        if name in data:
+            raise ConfigureError(
+                "Cannot add '%s' to configuration: Key already "
+                "exists" % name)
+        value = self._resolve(value, need_help_dependency=False)
+        if value is not None:
+            data[name] = value
+
+    def set_config_impl(self, name, value):
+        '''Implementation of set_config().
+        Set the configuration items with the given name to the given value.
+        Both `name` and `value` can be references to @depends functions,
+        in which case the result from these functions is used. If the result
+        of either function is None, the configuration item is not set.
+        '''
+        self._resolve_and_set(self._config, name, value)
+
+    def set_define_impl(self, name, value):
+        '''Implementation of set_define().
+        Set the define with the given name to the given value. Both `name` and
+        `value` can be references to @depends functions, in which case the
+        result from these functions is used. If the result of either function
+        is None, the define is not set. If the result is False, the define is
+        explicitly undefined (-U).
+        '''
+        defines = self._config.setdefault('DEFINES', {})
+        self._resolve_and_set(defines, name, value)
+
+    def imply_option_impl(self, option, value, reason=None):
+        '''Implementation of imply_option().
+        Injects additional options as if they had been passed on the command
+        line. The `option` argument is a string as in option()'s `name` or
+        `env`. The option must be declared after `imply_option` references it.
+        The `value` argument indicates the value to pass to the option.
+        It can be:
+        - True. In this case `imply_option` injects the positive option
+          (--enable-foo/--with-foo).
+              imply_option('--enable-foo', True)
+              imply_option('--disable-foo', True)
+          are both equivalent to `--enable-foo` on the command line.
+
+        - False. In this case `imply_option` injects the negative option
+          (--disable-foo/--without-foo).
+              imply_option('--enable-foo', False)
+              imply_option('--disable-foo', False)
+          are both equivalent to `--disable-foo` on the command line.
+
+        - None. In this case `imply_option` does nothing.
+              imply_option('--enable-foo', None)
+              imply_option('--disable-foo', None)
+          are both equivalent to not passing any flag on the command line.
+
+        - a string or a tuple. In this case `imply_option` injects the positive
+          option with the given value(s).
+              imply_option('--enable-foo', 'a')
+              imply_option('--disable-foo', 'a')
+          are both equivalent to `--enable-foo=a` on the command line.
+              imply_option('--enable-foo', ('a', 'b'))
+              imply_option('--disable-foo', ('a', 'b'))
+          are both equivalent to `--enable-foo=a,b` on the command line.
+
+        Because imply_option('--disable-foo', ...) can be misleading, it is
+        recommended to use the positive form ('--enable' or '--with') for
+        `option`.
+
+        The `value` argument can also be (and usually is) a reference to a
+        @depends function, in which case the result of that function will be
+        used as per the descripted mapping above.
+
+        The `reason` argument indicates what caused the option to be implied.
+        It is necessary when it cannot be inferred from the `value`.
+        '''
+        if not reason and isinstance(value, DummyFunction):
+            deps = self._depends[value][1]
+            possible_reasons = [d for d in deps if d != self._help_option]
+            if len(possible_reasons) == 1:
+                if isinstance(possible_reasons[0], Option):
+                    reason = (self._raw_options.get(possible_reasons[0]) or
+                              possible_reasons[0].option)
+
+        if not reason or not isinstance(value, DummyFunction):
+            raise ConfigureError(
+                "Cannot infer what implies '%s'. Please add a `reason` to "
+                "the `imply_option` call."
+                % option)
+
+        value = self._resolve(value, need_help_dependency=False)
+        if value is not None:
+            if isinstance(value, OptionValue):
+                pass
+            elif value is True:
+                value = PositiveOptionValue()
+            elif value is False or value == ():
+                value = NegativeOptionValue()
+            elif isinstance(value, types.StringTypes):
+                value = PositiveOptionValue((value,))
+            elif isinstance(value, tuple):
+                value = PositiveOptionValue(value)
+            else:
+                raise TypeError("Unexpected type: '%s'" % type(value))
+
+            option = value.format(option)
+            self._helper.add(option, 'implied')
+            self._implied_options[option] = inspect.stack()[1], reason
 
     def _prepare_function(self, func):
         '''Alter the given function global namespace with the common ground

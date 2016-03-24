@@ -1,6 +1,10 @@
 ---
 $inherits:
     from: 'tasks/lint.yml'
+    variables:
+      build_product: 'lint'
+      build_name: 'eslint-gecko'
+      build_type: 'opt'
 
 task:
   metadata:

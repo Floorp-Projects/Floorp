@@ -16,7 +16,9 @@
    We use <limits> to get the libstdc++ version. */
 #include <limits>
 #if __GLIBCXX__ <= 20070719
+#ifndef __EXCEPTIONS
 #define __EXCEPTIONS
+#endif
 #endif
 
 #include "nsMenuItemIconX.h"

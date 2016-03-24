@@ -37,10 +37,13 @@ EXPORTS += [
     'nsSize.h',
     'nsThemeConstants.h',
     'nsTransform2D.h',
+    'PingPongRegion.h',
+    'RegionBuilder.h',
 ]
 
 EXPORTS.mozilla += [
     'AppUnits.h',
+    'ArrayView.h',
 ]
 
 if CONFIG['MOZ_X11']:

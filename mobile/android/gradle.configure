@@ -12,11 +12,16 @@ option('--with-gradle', nargs='?',
        help='Enable building mobile/android with Gradle '
             '(argument: location of binary or wrapper (gradle/gradlew))')
 
+@depends('--with-gradle')
+def with_gradle(value):
+    if value:
+        return True
+
+set_config('MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE', with_gradle)
+
+
 @depends('--with-gradle', check_build_environment)
 def gradle(value, build_env):
-    if value:
-        set_config('MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE', True)
-
     gradle = value[0] if len(value) else \
         os.path.join(build_env.topsrcdir, 'gradlew')
 
@@ -24,9 +29,9 @@ def gradle(value, build_env):
     if not os.path.isfile(gradle):
         error('GRADLE must be executable: %s' % gradle)
 
-    set_config('GRADLE', gradle)
-
     return gradle
+
+set_config('GRADLE', gradle)
 
 
 # Automation uses this to change log levels, not use the daemon, and use
@@ -35,7 +40,9 @@ option(env='GRADLE_FLAGS', default='', help='Flags to pass to Gradle.')
 
 @depends('GRADLE_FLAGS')
 def gradle_flags(value):
-    set_config('GRADLE_FLAGS', value[0] if value else '')
+    return value[0] if value else ''
+
+set_config('GRADLE_FLAGS', gradle_flags)
 
 
 # Automation will set this to file:///path/to/local via the mozconfig.
@@ -46,4 +53,6 @@ option(env='GRADLE_MAVEN_REPOSITORY', default='https://jcenter.bintray.com/',
 @depends('GRADLE_MAVEN_REPOSITORY')
 def gradle_maven_repository(value):
     if value:
-        set_config('GRADLE_MAVEN_REPOSITORY', value[0])
+        return value[0]
+
+set_config('GRADLE_MAVEN_REPOSITORY', gradle_maven_repository)

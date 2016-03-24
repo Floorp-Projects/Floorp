@@ -26,7 +26,6 @@ TEST(Atoms, Basic)
     nsCOMPtr<nsIAtom> atom = do_GetAtom(str16);
 
     EXPECT_TRUE(atom->Equals(str16));
-    EXPECT_TRUE(atom->EqualsUTF8(str8));
 
     nsString tmp16;
     nsCString tmp8;
@@ -74,7 +73,6 @@ TEST(Atoms, NUll)
 
   EXPECT_EQ(atom->GetLength(), str.Length());
   EXPECT_TRUE(atom->Equals(str));
-  EXPECT_TRUE(atom->EqualsUTF8(NS_ConvertUTF16toUTF8(str)));
   EXPECT_NE(atom, atomCut);
   EXPECT_TRUE(atomCut->Equals(strCut));
 }
@@ -175,38 +173,6 @@ TEST(Atoms, Table)
   EXPECT_TRUE(isStaticAtom(sAtom3));
   EXPECT_EQ(NS_GetNumberOfAtoms(), count + 3);
   EXPECT_EQ(thirdNonPerm, sAtom3);
-}
-
-#define FIRST_PERM_ATOM_STR "first permanent atom. Hello!"
-#define SECOND_PERM_ATOM_STR "second permanent atom. @World!"
-
-TEST(Atoms, Permanent)
-{
-  nsrefcnt count = NS_GetNumberOfAtoms();
-
-  {
-    nsCOMPtr<nsIAtom> first = do_GetAtom(FIRST_PERM_ATOM_STR);
-    EXPECT_TRUE(first->Equals(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR)));
-    EXPECT_FALSE(isStaticAtom(first));
-
-    nsCOMPtr<nsIAtom> first_p =
-      NS_NewPermanentAtom(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR));
-    EXPECT_TRUE(first_p->Equals(NS_LITERAL_STRING(FIRST_PERM_ATOM_STR)));
-    EXPECT_TRUE(isStaticAtom(first_p));
-    EXPECT_EQ(first, first_p);
-
-    nsCOMPtr<nsIAtom> second_p =
-      NS_NewPermanentAtom(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR));
-    EXPECT_TRUE(second_p->Equals(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR)));
-    EXPECT_TRUE(isStaticAtom(second_p));
-
-    nsCOMPtr<nsIAtom> second = do_GetAtom(SECOND_PERM_ATOM_STR);
-    EXPECT_TRUE(second->Equals(NS_LITERAL_STRING(SECOND_PERM_ATOM_STR)));
-    EXPECT_TRUE(isStaticAtom(second));
-    EXPECT_EQ(second, second_p);
-  }
-
-  EXPECT_EQ(NS_GetNumberOfAtoms(), count + 2);
 }
 
 }

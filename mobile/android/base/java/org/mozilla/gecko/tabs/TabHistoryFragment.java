@@ -87,7 +87,7 @@ public class TabHistoryFragment extends Fragment implements OnItemClickListener,
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         String index = String.valueOf(toIndex - position);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Navigate", index));
+        GeckoAppShell.notifyObservers("Session:Navigate", index);
         dismiss();
     }
 

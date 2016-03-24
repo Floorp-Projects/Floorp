@@ -601,13 +601,12 @@ IDBDatabase::DeleteObjectStore(const nsAString& aName, ErrorResult& aRv)
 }
 
 already_AddRefed<IDBTransaction>
-IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
+IDBDatabase::Transaction(JSContext* aCx,
+                         const StringOrStringSequence& aStoreNames,
                          IDBTransactionMode aMode,
                          ErrorResult& aRv)
 {
   AssertIsOnOwningThread();
-
-  aRv.MightThrowJSException();
 
   if ((aMode == IDBTransactionMode::Readwriteflush ||
        aMode == IDBTransactionMode::Cleanup) &&
@@ -615,29 +614,15 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
     // Pretend that this mode doesn't exist. We don't have a way to annotate
     // certain enum values as depending on preferences so we just duplicate the
     // normal exception generation here.
-    ThreadsafeAutoJSContext cx;
-
-    // Disable any automatic error reporting that might be set up so that we
-    // can grab the exception object.
-    AutoForceSetExceptionOnContext forceExn(cx);
-
-    MOZ_ALWAYS_FALSE(
-      ThrowErrorMessage(cx,
-                        MSG_INVALID_ENUM_VALUE,
-                        "Argument 2 of IDBDatabase.transaction",
-                        "readwriteflush",
-                        "IDBTransactionMode"));
-    MOZ_ASSERT(JS_IsExceptionPending(cx));
-
-    JS::Rooted<JS::Value> exception(cx);
-    MOZ_ALWAYS_TRUE(JS_GetPendingException(cx, &exception));
-
-    aRv.ThrowJSException(cx, exception);
+    aRv.ThrowTypeError<MSG_INVALID_ENUM_VALUE>(
+      NS_LITERAL_STRING("Argument 2 of IDBDatabase.transaction"),
+      NS_LITERAL_STRING("readwriteflush"),
+      NS_LITERAL_STRING("IDBTransactionMode"));
     return nullptr;
   }
 
   RefPtr<IDBTransaction> transaction;
-  aRv = Transaction(aStoreNames, aMode, getter_AddRefs(transaction));
+  aRv = Transaction(aCx, aStoreNames, aMode, getter_AddRefs(transaction));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -646,7 +631,8 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
 }
 
 nsresult
-IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
+IDBDatabase::Transaction(JSContext* aCx,
+                         const StringOrStringSequence& aStoreNames,
                          IDBTransactionMode aMode,
                          IDBTransaction** aTransaction)
 {
@@ -742,7 +728,7 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
   }
 
   RefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(this, sortedStoreNames, mode);
+    IDBTransaction::Create(aCx, this, sortedStoreNames, mode);
   if (NS_WARN_IF(!transaction)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -784,7 +770,8 @@ IDBDatabase::Storage() const
 }
 
 already_AddRefed<IDBRequest>
-IDBDatabase::CreateMutableFile(const nsAString& aName,
+IDBDatabase::CreateMutableFile(JSContext* aCx,
+                               const nsAString& aName,
                                const Optional<nsAString>& aType,
                                ErrorResult& aRv)
 {
@@ -808,7 +795,7 @@ IDBDatabase::CreateMutableFile(const nsAString& aName,
 
   CreateFileParams params(nsString(aName), type);
 
-  RefPtr<IDBRequest> request = IDBRequest::Create(this, nullptr);
+  RefPtr<IDBRequest> request = IDBRequest::Create(aCx, this, nullptr);
   MOZ_ASSERT(request);
 
   BackgroundDatabaseRequestChild* actor =

@@ -34,7 +34,7 @@ task:
 
   extra:
     build_product: '{{build_product}}'
-    build_name: eslint-gecko
-    build_type: opt
+    build_name: {{build_name}}
+    build_type: {{build_type}}
     index:
       rank: {{pushlog_id}}

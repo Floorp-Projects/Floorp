@@ -207,7 +207,7 @@ IDBTransaction::CreateVersionChange(
 
 // static
 already_AddRefed<IDBTransaction>
-IDBTransaction::Create(IDBDatabase* aDatabase,
+IDBTransaction::Create(JSContext* aCx, IDBDatabase* aDatabase,
                        const nsTArray<nsString>& aObjectStoreNames,
                        Mode aMode)
 {
@@ -221,7 +221,7 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
 
   RefPtr<IDBTransaction> transaction =
     new IDBTransaction(aDatabase, aObjectStoreNames, aMode);
-  IDBRequest::CaptureCaller(transaction->mFilename, &transaction->mLineNo,
+  IDBRequest::CaptureCaller(aCx, transaction->mFilename, &transaction->mLineNo,
                             &transaction->mColumn);
 
   transaction->SetScriptOwner(aDatabase->GetScriptOwner());
