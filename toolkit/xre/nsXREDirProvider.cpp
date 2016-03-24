@@ -42,7 +42,6 @@
 #ifdef XP_WIN
 #include <windows.h>
 #include <shlobj.h>
-#include "mozilla/WindowsVersion.h"
 #endif
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
@@ -644,20 +643,6 @@ GetContentProcessTempBaseDirKey()
 nsresult
 nsXREDirProvider::LoadContentProcessTempDir()
 {
-#if defined(XP_WIN)
-  const bool isSandboxDisabled = !mozilla::IsVistaOrLater() ||
-    (Preferences::GetInt("security.sandbox.content.level") < 1);
-#elif defined(XP_MACOSX)
-  const bool isSandboxDisabled =
-    Preferences::GetInt("security.sandbox.content.level") < 1;
-#endif
-
-  if (isSandboxDisabled) {
-    // Just use the normal temp directory if sandboxing is turned off
-    return NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
-                                  getter_AddRefs(mContentTempDir));
-  }
-
   nsCOMPtr<nsIFile> localFile;
 
   nsresult rv = NS_GetSpecialDirectory(GetContentProcessTempBaseDirKey(),
