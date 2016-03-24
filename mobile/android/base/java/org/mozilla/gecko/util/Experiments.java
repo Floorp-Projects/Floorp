@@ -32,7 +32,9 @@ public class Experiments {
     public static final String WHATSNEW_NOTIFICATION = "whatsnew-notification";
 
     // Subscribe to known, bookmarked sites and show a notification if new content is available.
-    public static final String CONTENT_NOTIFICATIONS = "content-notifications";
+    public static final String CONTENT_NOTIFICATIONS_12HRS = "content-notifications-12hrs";
+    public static final String CONTENT_NOTIFICATIONS_8AM = "content-notifications-8am";
+    public static final String CONTENT_NOTIFICATIONS_5PM = "content-notifications-5pm";
 
     // Onboarding: "Features and Story". These experiments are determined
     // on the client, they are not part of the server config.
