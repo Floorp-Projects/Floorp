@@ -1,5 +1,5 @@
 $inherits:
-  from: 'tasks/builds/opt_macosx64.yml'
+  from: 'tasks/builds/base_macosx64.yml'
   variables:
     build_name: 'macosx64'
     build_type: 'dbg'
