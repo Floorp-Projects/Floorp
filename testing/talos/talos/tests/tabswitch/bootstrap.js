@@ -74,9 +74,10 @@ function waitForTabLoads(browser, urls, callback) {
         Ci.nsIWebProgressListener.STATE_IS_NETWORK;
       if ((aStateFlags & loadedState) == loadedState &&
           !aWebProgress.isLoadingDocument &&
-          aWebProgress.DOMWindow == aWebProgress.DOMWindow.top) {
+          aWebProgress.isTopLevel &&
+          Components.isSuccessCode(aStatus)) {
         delete waitingToLoad[aBrowser.currentURI.spec];
-        dump("Loaded: " + aBrowser.currentURI.spec + "\n");
+        dump(`Loaded: ${aBrowser.currentURI.spec}\n`);
 
         aBrowser.messageManager.loadFrameScript("chrome://pageloader/content/talos-content.js", false);
         if (Object.keys(waitingToLoad).length == 0) {

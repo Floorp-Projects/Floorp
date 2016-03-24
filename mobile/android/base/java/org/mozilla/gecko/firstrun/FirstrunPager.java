@@ -20,7 +20,6 @@ import android.animation.ObjectAnimator;
 import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.animation.TransitionsTracker;
 import org.mozilla.gecko.home.HomePager.Decor;
 import org.mozilla.gecko.home.TabMenuStrip;
 
@@ -134,7 +133,6 @@ public class FirstrunPager extends ViewPager {
         final AnimatorSet set = new AnimatorSet();
         set.playTogether(alphaAnimator, translateAnimator);
         set.setStartDelay(400);
-        TransitionsTracker.track(set);
 
         set.start();
     }

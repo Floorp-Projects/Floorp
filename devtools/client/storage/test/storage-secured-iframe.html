@@ -80,16 +80,10 @@ window.setup = function*() {
 };
 
 window.clear = function*() {
-  document.cookie = "sc1=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-
-  localStorage.clear();
-  sessionStorage.clear();
-
   yield deleteDB("idb-s1");
   yield deleteDB("idb-s2");
 
-  dump("removed cookies, localStorage, sessionStorage and indexedDB data " +
-       "from " + document.location + "\n");
+  dump("removed indexedDB data from " + document.location + "\n");
 };
 </script>
 </body>

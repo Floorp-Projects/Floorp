@@ -4,61 +4,60 @@
 
 // Tests that the table widget api works fine
 
+"use strict";
+
 const TEST_URI = "data:text/xml;charset=UTF-8,<?xml version='1.0'?>" +
   "<?xml-stylesheet href='chrome://global/skin/global.css'?>" +
-  "<?xml-stylesheet href='chrome://devtools/skin/light-theme.css'?>" +
-  "<?xml-stylesheet href='chrome://devtools/skin/widgets.css'?>" +
+
+  // Uncomment these lines to help with visual debugging. When uncommented they
+  // dump a couple of thousand errors in the log (bug 1258285)
+  // "<?xml-stylesheet href='chrome://devtools/skin/light-theme.css'?>" +
+  // "<?xml-stylesheet href='chrome://devtools/skin/widgets.css'?>" +
+
   "<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'" +
   " title='Table Widget' width='600' height='500'>" +
   "<box flex='1' class='theme-light'/></window>";
-const TEST_OPT = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
 const {TableWidget} = require("devtools/client/shared/widgets/TableWidget");
 
-var doc, table;
+add_task(function*() {
+  yield addTab("about:blank");
+  let [host, , doc] = yield createHost("bottom", TEST_URI);
 
-function test() {
-  waitForExplicitFinish();
-  let win = Services.ww.openWindow(null, TEST_URI, "_blank", TEST_OPT, null);
-
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
-
-    waitForFocus(function () {
-      doc = win.document;
-      table = new TableWidget(doc.querySelector("box"), {
-        initialColumns: {
-          col1: "Column 1",
-          col2: "Column 2",
-          col3: "Column 3",
-          col4: "Column 4"
-        },
-        uniqueId: "col1",
-        emptyText: "This is dummy empty text",
-        highlightUpdated: true,
-        removableColumns: true,
-        firstColumn: "col4"
-      });
-      startTests();
-    });
+  let table = new TableWidget(doc.querySelector("box"), {
+    initialColumns: {
+      col1: "Column 1",
+      col2: "Column 2",
+      col3: "Column 3",
+      col4: "Column 4"
+    },
+    uniqueId: "col1",
+    emptyText: "This is dummy empty text",
+    highlightUpdated: true,
+    removableColumns: true,
+    firstColumn: "col4"
   });
+
+  startTests(doc, table);
+  endTests(doc, host, table);
+});
+
+function startTests(doc, table) {
+  populateTable(doc, table);
+
+  testTreeItemInsertedCorrectly(doc, table);
+  testAPI(doc, table);
 }
 
-function endTests() {
+function endTests(doc, host, table) {
   table.destroy();
-  doc.defaultView.close();
-  doc = table = null;
+  host.destroy();
+  gBrowser.removeCurrentTab();
+  table = null;
   finish();
 }
 
-function startTests() {
-  populateTable();
-  testTreeItemInsertedCorrectly();
-  testAPI();
-  endTests();
-}
-
-function populateTable() {
+function populateTable(doc, table) {
   table.push({
     col1: "id1",
     col2: "value10",
@@ -125,25 +124,25 @@ function populateTable() {
 /**
  * Test if the nodes are inserted correctly in the table.
  */
-function testTreeItemInsertedCorrectly() {
-  is(table.tbody.children.length, 4*2 /* double because splitters */,
-     "4 columns exist");
+function testTreeItemInsertedCorrectly(doc, table) {
+  // double because of splitters
+  is(table.tbody.children.length, 4 * 2, "4 columns exist");
 
   // Test firstColumn option and check if the nodes are inserted correctly
-  is(table.tbody.children[0].firstChild.children.length, 9 + 1 /* header */,
+  is(table.tbody.children[0].firstChild.children.length, 9 + 1,
      "Correct rows in column 4");
   is(table.tbody.children[0].firstChild.firstChild.value, "Column 4",
      "Correct column header value");
 
   for (let i = 1; i < 4; i++) {
-    is(table.tbody.children[i * 2].firstChild.children.length, 9 + 1 /* header */,
-       "Correct rows in column " + i);
-    is(table.tbody.children[i * 2].firstChild.firstChild.value, "Column " + i,
+    is(table.tbody.children[i * 2].firstChild.children.length, 9 + 1,
+       `Correct rows in column ${i}`);
+    is(table.tbody.children[i * 2].firstChild.firstChild.value, `Column ${i}`,
        "Correct column header value");
   }
   for (let i = 1; i < 10; i++) {
-    is(table.tbody.children[2].firstChild.children[i].value, "id" + i,
-     "Correct value in row " + i);
+    is(table.tbody.children[2].firstChild.children[i].value, `id${i}`,
+     `Correct value in row ${i}`);
   }
 
   // Remove firstColumn option and reset the table
@@ -155,25 +154,27 @@ function testTreeItemInsertedCorrectly() {
     col3: "Column 3",
     col4: "Column 4"
   });
-  populateTable();
+  populateTable(doc, table);
 
   // Check if the nodes are inserted correctly without firstColumn option
   for (let i = 0; i < 4; i++) {
-  is(table.tbody.children[i * 2].firstChild.children.length, 9 + 1 /* header */,
-     "Correct rows in column " + i);
-  is(table.tbody.children[i * 2].firstChild.firstChild.value, "Column " + (i + 1),
-     "Correct column header value");
+    is(table.tbody.children[i * 2].firstChild.children.length, 9 + 1,
+      `Correct rows in column ${i}`);
+    is(table.tbody.children[i * 2].firstChild.firstChild.value,
+      `Column ${i + 1}`,
+      "Correct column header value");
   }
+
   for (let i = 1; i < 10; i++) {
-    is(table.tbody.firstChild.firstChild.children[i].value, "id" + i,
-     "Correct value in row " + i);
+    is(table.tbody.firstChild.firstChild.children[i].value, `id${i}`,
+      `Correct value in row ${i}`);
   }
 }
 
 /**
  * Tests if the API exposed by TableWidget works properly
  */
-function testAPI() {
+function testAPI(doc, table) {
   info("Testing TableWidget API");
   // Check if selectRow and selectedRow setter works as expected
   // Nothing should be selected beforehand
@@ -190,7 +191,7 @@ function testAPI() {
   is(node2.getAttribute("data-id"), "id7", "Correct node selected");
 
   // test if selectedIRow getter works
-  is(table.selectedRow["col1"], "id7", "Correct result of selectedRow getter");
+  is(table.selectedRow.col1, "id7", "Correct result of selectedRow getter");
 
   // test if isSelected works
   ok(table.isSelected("id7"), "isSelected with column id works");
@@ -210,7 +211,7 @@ function testAPI() {
   is(node3.getAttribute("data-id"), "id4", "Correct node selected");
 
   // test if selectedRow getter works
-  is(table.selectedRow["col1"], "id4", "Correct result of selectedRow getter");
+  is(table.selectedRow.col1, "id4", "Correct result of selectedRow getter");
 
   // test if clear selection works
   table.clearSelection();
@@ -234,7 +235,8 @@ function testAPI() {
   ok(table.isSelected("id2"), "Correct row selected after selectNextRow call");
 
   table.selectPreviousRow();
-  ok(table.isSelected("id1"), "Correct row selected after selectPreviousRow call");
+  ok(table.isSelected("id1"),
+    "Correct row selected after selectPreviousRow call");
 
   table.selectPreviousRow();
   ok(table.isSelected("id9"),
@@ -281,13 +283,15 @@ function testAPI() {
 
   // testing if clear works
   table.clear();
-  is(table.tbody.children.length, 4*2 /* double because splitters */,
+  // double because splitters
+  is(table.tbody.children.length, 4 * 2,
      "4 columns exist even after clear");
   for (let i = 0; i < 4; i++) {
-    is(table.tbody.children[i*2].firstChild.children.length, 1 /* header */,
-       "Only header in the column " + i + " after clear call");
-    is(table.tbody.children[i*2].firstChild.firstChild.value, "Column " + (i + 1),
-       "Correct column header value");
+    is(table.tbody.children[i * 2].firstChild.children.length, 1,
+      `Only header in the column ${i} after clear call`);
+    is(table.tbody.children[i * 2].firstChild.firstChild.value,
+      `Column ${i + 1}`,
+      "Correct column header value");
   }
 
   // testing if setColumns work
@@ -296,7 +300,8 @@ function testAPI() {
     col2: "Testing"
   });
 
-  is(table.tbody.children.length, 2*2 /* double because splitters */,
+  // double because splitters
+  is(table.tbody.children.length, 2 * 2,
      "2 columns exist after setColumn call");
   is(table.tbody.children[0].firstChild.firstChild.value, "Foobar",
      "Correct column header value for first column");
@@ -309,10 +314,11 @@ function testAPI() {
     col3: "Column 3",
     col4: "Column 4"
   });
-  is(table.tbody.children.length, 4*2 /* double because splitters */,
+  // double because splitters
+  is(table.tbody.children.length, 4 * 2,
      "4 columns exist after second setColumn call");
 
-  populateTable();
+  populateTable(doc, table);
 
   // testing if update works
   is(doc.querySelectorAll("[data-id='id4']")[1].value, "value12",
@@ -326,12 +332,12 @@ function testAPI() {
   is(doc.querySelectorAll("[data-id='id4']")[1].value, "UPDATED",
      "Correct value after update");
 
-  // testing if sorting works
-  // calling it once on an already sorted column should sort in descending manner
+  // testing if sorting works by calling it once on an already sorted column
+  // should sort descending
   table.sortBy("col1");
   for (let i = 1; i < 10; i++) {
-    is(table.tbody.firstChild.firstChild.children[i].value, "id" + (10 - i),
-     "Correct value in row " + i + " after descending sort by on col1");
+    is(table.tbody.firstChild.firstChild.children[i].value, `id${10 - i}`,
+     `Correct value in row ${i} after descending sort by on col1`);
   }
   // Calling it on an unsorted column should sort by it in ascending manner
   table.sortBy("col2");
@@ -349,7 +355,7 @@ function testAPI() {
   checkAscendingOrder(cell);
 
   table.clear();
-  populateTable();
+  populateTable(doc, table);
 
   // testing if sorting works should sort by ascending manner
   table.sortBy("col4");
@@ -365,16 +371,17 @@ function testAPI() {
 }
 
 function checkAscendingOrder(cell) {
-  while(cell) {
+  while (cell) {
     let currentCell = cell.value || cell.textContent;
-    let prevCell = cell.previousSibling.value || cell.previousSibling.textContent;
+    let prevCell = cell.previousSibling.value ||
+                   cell.previousSibling.textContent;
     ok(currentCell >= prevCell, "Sorting is in ascending order");
     cell = cell.nextSibling;
   }
 }
 
 function checkDescendingOrder(cell) {
-  while(cell != cell.parentNode.firstChild) {
+  while (cell != cell.parentNode.firstChild) {
     let currentCell = cell.value || cell.textContent;
     let nextCell = cell.nextSibling.value || cell.nextSibling.textContent;
     ok(currentCell >= nextCell, "Sorting is in descending order");
