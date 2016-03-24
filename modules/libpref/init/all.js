@@ -1323,10 +1323,13 @@ pref("network.http.keep-alive.timeout", 115);
 pref("network.http.response.timeout", 300);
 
 // Limit the absolute number of http connections.
-// Note: the socket transport service will clamp the number below 256 if the OS
-// cannot allocate that many FDs, and it also always tries to reserve up to 250
-// file descriptors for things other than sockets.
+// Note: the socket transport service will clamp the number below this if the OS
+// cannot allocate that many FDs
+#ifdef ANDROID
 pref("network.http.max-connections", 256);
+#else
+pref("network.http.max-connections", 900);
+#endif
 
 // If NOT connecting via a proxy, then
 // a new connection will only be attempted if the number of active persistent

@@ -2766,6 +2766,30 @@
     "kind": "boolean",
     "description": "session used autodialer"
   },
+  "NETWORK_SESSION_AT_256FD": {
+    "expires_in_version": "49",
+    "kind": "boolean",
+    "description": "session exceeded old 256 limit",
+    "bug_numbers": [1260218],
+    "alert_emails": ["necko@mozilla.com"]
+  },
+  "NETWORK_SESSION_AT_900FD": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "session reached 900 fd limit sockets",
+    "bug_numbers": [1260218],
+    "alert_emails": ["necko@mozilla.com"]
+  },
+  "NETWORK_PROBE_MAXCOUNT": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 50,
+    "high": 1000,
+    "n_buckets": 10,
+    "description": "Result of nsSocketTransportService::ProbeMaxCount()",
+    "bug_numbers": [1260218],
+    "alert_emails": ["necko@mozilla.com"]
+  },
   "FIND_PLUGINS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
