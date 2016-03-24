@@ -259,9 +259,8 @@ ResponsiveImageSelector::AppendCandidateIfUnique(const ResponsiveImageCandidate 
   int numCandidates = mCandidates.Length();
 
   // With the exception of Default, which should not be added until we are done
-  // building the list, the spec forbids mixing width and explicit density
-  // selectors in the same set.
-  if (numCandidates && mCandidates[0].Type() != aCandidate.Type()) {
+  // building the list.
+  if (aCandidate.Type() == ResponsiveImageCandidate::eCandidateType_Default) {
     return;
   }
 
@@ -369,15 +368,16 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
   //   the greatest density available
 
   // If the list contains computed width candidates, compute the current
-  // effective image width. Note that we currently disallow both computed and
-  // static density candidates in the same selector, so checking the first
-  // candidate is sufficient.
+  // effective image width.
   int32_t computedWidth = -1;
-  if (numCandidates && mCandidates[0].IsComputedFromWidth()) {
-    DebugOnly<bool> computeResult = \
-      ComputeFinalWidthForCurrentViewport(&computedWidth);
-    MOZ_ASSERT(computeResult,
-               "Computed candidates not allowed without sizes data");
+  for (int i = 0; i < numCandidates; i++) {
+    if (mCandidates[i].IsComputedFromWidth()) {
+      DebugOnly<bool> computeResult = \
+        ComputeFinalWidthForCurrentViewport(&computedWidth);
+      MOZ_ASSERT(computeResult,
+                 "Computed candidates not allowed without sizes data");
+      break;
+    }
   }
 
   int bestIndex = -1;
