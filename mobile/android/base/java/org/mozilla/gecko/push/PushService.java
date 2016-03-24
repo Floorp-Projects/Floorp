@@ -179,7 +179,7 @@ public class PushService implements BundleEventListener {
             }
 
             Log.i(LOG_TAG, "Delivering dom/push message to Gecko!");
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PushServiceAndroidGCM:ReceivedPushMessage", data.toString()));
+            GeckoAppShell.notifyObservers("PushServiceAndroidGCM:ReceivedPushMessage", data.toString());
         } else {
             Log.e(LOG_TAG, "Message directed to unknown service; dropping: " + subscription.service);
         }

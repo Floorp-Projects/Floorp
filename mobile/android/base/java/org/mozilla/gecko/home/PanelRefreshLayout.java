@@ -85,9 +85,7 @@ class PanelRefreshLayout extends SwipeRefreshLayout implements DatasetBacked {
                 return;
             }
 
-            final GeckoEvent event =
-                GeckoEvent.createBroadcastEvent("HomePanels:RefreshView", response.toString());
-            GeckoAppShell.sendEventToGecko(event);
+            GeckoAppShell.notifyObservers("HomePanels:RefreshView", response.toString());
         }
     }
 }

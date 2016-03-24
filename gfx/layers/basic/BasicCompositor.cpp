@@ -172,7 +172,7 @@ BasicCompositor::CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect, S
   IntRect rect = aRect.ToUnknownRect();
 
   if (aBufferMode != BufferMode::BUFFER_NONE) {
-    RefPtr<DrawTarget> target = mWidget->CreateBackBufferDrawTarget(mDrawTarget, aRect);
+    RefPtr<DrawTarget> target = mWidget->CreateBackBufferDrawTarget(mDrawTarget, aRect, aInit == INIT_MODE_CLEAR);
     if (!target) {
       return nullptr;
     }

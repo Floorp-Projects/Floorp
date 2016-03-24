@@ -536,7 +536,7 @@ static const bool isthreaded = true;
  */
 #define	CHUNK_2POW_DEFAULT	20
 /* Maximum number of dirty pages per arena. */
-#define	DIRTY_MAX_DEFAULT	(1U << 10)
+#define	DIRTY_MAX_DEFAULT	(1U << 8)
 
 /*
  * Maximum size of L1 cache line.  This is used to avoid cache line aliasing,

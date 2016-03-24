@@ -9,6 +9,7 @@
 
 #include "jsfriendapi.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Likely.h"
 
 #include "mozilla/dom/PrototypeList.h" // auto-generated
 
@@ -77,8 +78,7 @@ static const uint32_t ServiceWorkerGlobalScope = 1u << 4;
 static const uint32_t WorkerDebuggerGlobalScope = 1u << 5;
 } // namespace GlobalNames
 
-template<typename T>
-struct Prefable {
+struct PrefableDisablers {
   inline bool isEnabled(JSContext* cx, JS::Handle<JSObject*> obj) const {
     // Reading "enabled" on a worker thread is technically undefined behavior,
     // because it's written only on main threads, with no barriers of any sort.
@@ -96,9 +96,6 @@ struct Prefable {
     }
     if (!enabled) {
       return false;
-    }
-    if (!enabledFunc && !availableFunc && !checkAnyPermissions && !checkAllPermissions) {
-      return true;
     }
     if (enabledFunc &&
         !enabledFunc(cx, js::GetGlobalForObjectCrossCompartment(obj))) {
@@ -121,25 +118,44 @@ struct Prefable {
     return true;
   }
 
-  // A boolean indicating whether this set of specs is enabled
+  // A boolean indicating whether this set of specs is enabled. Not const
+  // because it will change at runtime if the corresponding pref is changed.
   bool enabled;
+
   // Bitmask of global names that we should not be exposed in.
-  uint32_t nonExposedGlobals;
+  const uint16_t nonExposedGlobals;
+
   // A function pointer to a function that can say the property is disabled
   // even if "enabled" is set to true.  If the pointer is null the value of
   // "enabled" is used as-is unless availableFunc overrides.
-  PropertyEnabled enabledFunc;
+  const PropertyEnabled enabledFunc;
+
   // A function pointer to a function that can be used to disable a
   // property even if "enabled" is true and enabledFunc allowed.  This
   // is basically a hack to avoid having to codegen PropertyEnabled
   // implementations in case when we need to do two separate checks.
-  PropertyEnabled availableFunc;
-  const char* const* checkAnyPermissions;
-  const char* const* checkAllPermissions;
+  const PropertyEnabled availableFunc;
+  const char* const* const checkAnyPermissions;
+  const char* const* const checkAllPermissions;
+};
+
+template<typename T>
+struct Prefable {
+  inline bool isEnabled(JSContext* cx, JS::Handle<JSObject*> obj) const {
+    if (MOZ_LIKELY(!disablers)) {
+      return true;
+    }
+    return disablers->isEnabled(cx, obj);
+  }
+
+  // Things that can disable this set of specs. |nullptr| means "cannot be
+  // disabled".
+  PrefableDisablers* const disablers;
+
   // Array of specs, terminated in whatever way is customary for T.
   // Null to indicate a end-of-array for Prefable, when such an
   // indicator is needed.
-  const T* specs;
+  const T* const specs;
 };
 
 struct NativeProperties
@@ -212,7 +228,7 @@ struct NativePropertyHooks
   const NativePropertyHooks* mProtoHooks;
 };
 
-enum DOMObjectType {
+enum DOMObjectType : uint8_t {
   eInstance,
   eGlobalInstance,
   eInterface,
@@ -301,14 +317,14 @@ struct DOMIfaceAndProtoJSClass
   // eNamedPropertiesObject.
   DOMObjectType mType;
 
+  const prototypes::ID mPrototypeID;
+  const uint32_t mDepth;
+
   const NativePropertyHooks* mNativeHooks;
 
   // The value to return for toString() on this interface or interface prototype
   // object.
   const char* mToString;
-
-  const prototypes::ID mPrototypeID;
-  const uint32_t mDepth;
 
   ProtoGetter mGetParentProto;
 

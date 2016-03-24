@@ -20,8 +20,10 @@ include('build/moz.configure/checks.configure')
 @depends(milestone)
 def e10s_testing_only(milestone):
     if not milestone.is_release:
-        set_config('E10S_TESTING_ONLY', True)
-        set_define('E10S_TESTING_ONLY', True)
+        return True
+
+set_config('E10S_TESTING_ONLY', e10s_testing_only)
+set_define('E10S_TESTING_ONLY', e10s_testing_only)
 
 
 option('--enable-artifact-builds', env='MOZ_ARTIFACT_BUILDS',
@@ -30,10 +32,16 @@ option('--enable-artifact-builds', env='MOZ_ARTIFACT_BUILDS',
 @depends('--enable-artifact-builds')
 def artifact_builds(value):
     if value:
-        imply_option('--disable-compile-environment')
-        set_config('MOZ_ARTIFACT_BUILDS', True)
-    return bool(value)
+        return True
 
+set_config('MOZ_ARTIFACT_BUILDS', artifact_builds)
+
+@depends('--enable-artifact-builds')
+def imply_disable_compile_environment(value):
+    if value:
+        return False
+
+imply_option('--enable-compile-environment', imply_disable_compile_environment)
 
 option('--disable-compile-environment',
        help='Disable compiler/library checks')
@@ -41,9 +49,17 @@ option('--disable-compile-environment',
 @depends('--disable-compile-environment')
 def compile_environment(value):
     if value:
-        set_config('COMPILE_ENVIRONMENT', True)
-        add_old_configure_assignment('COMPILE_ENVIRONMENT', True)
-    return bool(value)
+        return True
+
+set_config('COMPILE_ENVIRONMENT', compile_environment)
+add_old_configure_assignment('COMPILE_ENVIRONMENT', compile_environment)
+
+@depends('--disable-compile-environment', '--help')
+def toolchain_include(value, help):
+    if value:
+        return 'build/moz.configure/toolchain.configure'
+
+include(toolchain_include)
 
 
 @depends('--help')
@@ -63,7 +79,9 @@ def build_backend(backends, artifact_builds):
     else:
         all_backends = ['RecursiveMake', 'FasterMake']
     all_backends.extend(backends)
-    set_config('BUILD_BACKENDS', unique_list(all_backends))
+    return unique_list(all_backends)
+
+set_config('BUILD_BACKENDS', build_backend)
 
 
 # Awk detection
@@ -73,7 +91,9 @@ awk = check_prog('AWK', ('gawk', 'mawk', 'nawk', 'awk'))
 # Until the AWK variable is not necessary in old-configure
 @depends(awk)
 def awk_for_old_configure(value):
-    add_old_configure_assignment('AWK', value)
+    return value
+
+add_old_configure_assignment('AWK', awk_for_old_configure)
 
 
 # Perl detection
@@ -83,7 +103,9 @@ perl = check_prog('PERL', ('perl5', 'perl'))
 # Until the PERL variable is not necessary in old-configure
 @depends(perl)
 def perl_for_old_configure(value):
-    add_old_configure_assignment('PERL', value)
+    return value
+
+add_old_configure_assignment('PERL', perl_for_old_configure)
 
 @template
 def perl_version_check(min_version):
@@ -119,52 +141,6 @@ def perl_version_check(min_version):
 
 perl_version_check('5.006')
 
-
-# yasm detection
-# ==============================================================
-yasm = check_prog('YASM', ['yasm'], allow_missing=True)
-
-@depends(yasm)
-@checking('yasm version')
-@advanced
-def yasm_version(yasm):
-    if yasm:
-        import subprocess
-        try:
-            version = Version(subprocess.check_output(
-                [yasm, '--version']
-            ).splitlines()[0].split()[1])
-            # Until we move all the yasm consumers out of old-configure.
-            # bug 1257904
-            add_old_configure_assignment('_YASM_MAJOR_VERSION', version.major)
-            add_old_configure_assignment('_YASM_MINOR_VERSION', version.minor)
-            return version
-        except subprocess.CalledProcessError as e:
-            error('Failed to get yasm version: %s' % e.message)
-
-@depends(yasm, target)
-def yasm_asflags(yasm, target):
-    if yasm:
-        asflags = {
-            ('OSX', 'x86'): '-f macho32',
-            ('OSX', 'x86_64'): '-f macho64',
-            ('WINNT', 'x86'): '-f win32',
-            ('WINNT', 'x86_64'): '-f x64',
-        }.get((target.os, target.cpu), None)
-        if asflags is None:
-            # We're assuming every x86 platform we support that's
-            # not Windows or Mac is ELF.
-            if target.cpu == 'x86':
-                asflags = '-f elf32'
-            elif target.cpu == 'x86_64':
-                asflags = '-f elf64'
-        if asflags:
-            asflags += ' -rnasm -pnasm'
-            set_config('YASM_ASFLAGS', asflags)
-            set_config('HAVE_YASM', True)
-            # Until the YASM variable is not necessary in old-configure.
-            add_old_configure_assignment('YASM', True)
-        return asflags
 
 # Miscellaneous programs
 # ==============================================================

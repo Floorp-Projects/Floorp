@@ -292,10 +292,11 @@ case "$target" in
             MSVC_C_RUNTIME_DLL=vcruntime140.dll
             MSVC_CXX_RUNTIME_DLL=msvcp140.dll
 
-            # -Wv:18 disables all warnings introduced after VS2013
-            # See http://blogs.msdn.com/b/vcblog/archive/2014/11/12/improvements-to-warnings-in-the-c-compiler.aspx
-            CFLAGS="$CFLAGS -Wv:18"
-            CXXFLAGS="$CXXFLAGS -Wv:18"
+            # C5026: move constructor was implicitly defined as deleted
+            CXXFLAGS="$CXXFLAGS -wd5026"
+
+            # C5027: move assignment operator was implicitly defined as deleted
+            CXXFLAGS="$CXXFLAGS -wd5027"
 
             # -Zc:sizedDealloc- disables C++14 global sized deallocation (see bug 1160146)
             CXXFLAGS="$CXXFLAGS -Zc:sizedDealloc-"

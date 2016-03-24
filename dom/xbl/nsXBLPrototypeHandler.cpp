@@ -274,7 +274,6 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
   if (NS_WARN_IF(!jsapi.Init(boundGlobal))) {
     return NS_OK;
   }
-  jsapi.TakeOwnershipOfErrorReporting();
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> handler(cx);
 
@@ -633,8 +632,8 @@ nsXBLPrototypeHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
 
 struct keyCodeData {
   const char* str;
-  size_t strlength;
-  uint32_t keycode;
+  uint16_t strlength;
+  uint16_t keycode;
 };
 
 // All of these must be uppercase, since the function below does

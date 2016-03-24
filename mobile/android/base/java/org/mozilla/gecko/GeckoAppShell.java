@@ -374,14 +374,33 @@ public class GeckoAppShell
             }
         }, responseMessage);
 
-        sendEventToGecko(GeckoEvent.createBroadcastEvent(request.getName(), request.getData()));
+        notifyObservers(request.getName(), request.getData());
     }
 
     // Tell the Gecko event loop that an event is available.
     public static native void notifyGeckoOfEvent(GeckoEvent event);
 
     // Synchronously notify a Gecko observer; must be called from Gecko thread.
-    public static native void notifyGeckoObservers(String subject, String data);
+    @WrapForJNI
+    public static native void syncNotifyObservers(String topic, String data);
+
+    @WrapForJNI(stubName = "NotifyObservers")
+    private static native void nativeNotifyObservers(String topic, String data);
+
+    @RobocopTarget
+    public static void notifyObservers(final String topic, final String data) {
+        notifyObservers(topic, data, GeckoThread.State.RUNNING);
+    }
+
+    public static void notifyObservers(final String topic, final String data, final GeckoThread.State state) {
+        if (GeckoThread.isStateAtLeast(state)) {
+            nativeNotifyObservers(topic, data);
+        } else {
+            GeckoThread.queueNativeCallUntil(
+                    state, GeckoAppShell.class, "nativeNotifyObservers",
+                    String.class, topic, String.class, data);
+        }
+    }
 
     /*
      *  The Gecko-side API: API methods that Gecko calls
@@ -2490,8 +2509,7 @@ public class GeckoAppShell
         if (imeIsEnabled && !sImeWasEnabledOnLastResize) {
             // The IME just came up after not being up, so let's scroll
             // to the focused input.
-            sendEventToGecko(GeckoEvent.createBroadcastEvent(
-                    "ScrollTo:FocusedInput", ""));
+            notifyObservers("ScrollTo:FocusedInput", "");
         }
         sImeWasEnabledOnLastResize = imeIsEnabled;
     }

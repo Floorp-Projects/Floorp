@@ -1324,7 +1324,8 @@ class nsIWidget : public nsISupports {
      * Create DrawTarget used as BackBuffer of the screen
      */
     virtual already_AddRefed<mozilla::gfx::DrawTarget> CreateBackBufferDrawTarget(mozilla::gfx::DrawTarget* aScreenTarget,
-                                                                                  const LayoutDeviceIntRect& aRect) = 0;
+                                                                                  const LayoutDeviceIntRect& aRect,
+                                                                                  const bool aInitModeClear) = 0;
 
     /**
      * A hook for the widget to prepare a Compositor, during the latter's initialization.

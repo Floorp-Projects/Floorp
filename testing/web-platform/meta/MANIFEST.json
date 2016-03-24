@@ -34821,17 +34821,10 @@
         ]
       },
       "testharness": {
-        "dom/collections/HTMLCollection-supported-property-indices.html": [
+        "js/builtins/Promise-incumbent-global.sub.html": [
           {
-            "path": "dom/collections/HTMLCollection-supported-property-indices.html",
-            "url": "/dom/collections/HTMLCollection-supported-property-indices.html"
-          }
-        ],
-        "fetch/api/request/request-cache.html": [
-          {
-            "path": "fetch/api/request/request-cache.html",
-            "timeout": "long",
-            "url": "/fetch/api/request/request-cache.html"
+            "path": "js/builtins/Promise-incumbent-global.sub.html",
+            "url": "/js/builtins/Promise-incumbent-global.sub.html"
           }
         ],
         "selection/extend.html": [

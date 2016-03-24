@@ -17,6 +17,7 @@
 namespace mozilla {
 namespace dom {
 
+class AnyCallback;
 class Console;
 class Function;
 class IDBFactory;
@@ -85,7 +86,13 @@ public:
   }
 
   Console*
-  GetConsole();
+  GetConsole(ErrorResult& aRv);
+
+  Console*
+  GetConsoleIfExists() const
+  {
+    return mConsole;
+  }
 
   already_AddRefed<WorkerLocation>
   Location();
@@ -327,8 +334,22 @@ public:
   void
   ReportError(JSContext* aCx, const nsAString& aMessage);
 
+  void
+  RetrieveConsoleEvents(JSContext* aCx, nsTArray<JS::Value>& aEvents,
+                        ErrorResult& aRv);
+
+  void
+  SetConsoleEventHandler(JSContext* aCx, AnyCallback& aHandler,
+                         ErrorResult& aRv);
+
   Console*
   GetConsole(ErrorResult& aRv);
+
+  Console*
+  GetConsoleIfExists() const
+  {
+    return mConsole;
+  }
 
   void
   Dump(JSContext* aCx, const Optional<nsAString>& aString) const;

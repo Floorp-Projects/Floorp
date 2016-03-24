@@ -124,7 +124,7 @@ public:
                       int64_t aNextIndexId);
 
   static already_AddRefed<IDBTransaction>
-  Create(IDBDatabase* aDatabase,
+  Create(JSContext* aCx, IDBDatabase* aDatabase,
          const nsTArray<nsString>& aObjectStoreNames,
          Mode aMode);
 

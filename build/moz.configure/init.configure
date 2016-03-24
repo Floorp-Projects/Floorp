@@ -26,10 +26,6 @@ def check_build_environment(help, dist):
         topobjdir=topobjdir,
         dist=dist,
     )
-    set_config('TOPSRCDIR', topsrcdir)
-    set_config('TOPOBJDIR', topobjdir)
-    set_config('MOZ_BUILD_ROOT', topobjdir)
-    set_config('DIST', dist)
 
     if help:
         return result
@@ -68,6 +64,12 @@ def check_build_environment(help, dist):
         )
 
     return result
+
+set_config('TOPSRCDIR', delayed_getattr(check_build_environment, 'topsrcdir'))
+set_config('TOPOBJDIR', delayed_getattr(check_build_environment, 'topobjdir'))
+set_config('MOZ_BUILD_ROOT', delayed_getattr(check_build_environment,
+                                             'topobjdir'))
+set_config('DIST', delayed_getattr(check_build_environment, 'dist'))
 
 
 option(env='OLD_CONFIGURE', nargs=1, help='Path to the old configure script')
@@ -129,10 +131,16 @@ def extra_old_configure_args(help):
     return []
 
 @template
-def add_old_configure_assignment(var, value):
-    @depends(old_configure_assignments)
+@advanced
+def add_old_configure_assignment(var, value_func):
+    from mozbuild.configure import DummyFunction
+    assert isinstance(value_func, DummyFunction)
+
+    @depends(old_configure_assignments, value_func)
     @advanced
-    def add_assignment(assignments):
+    def add_assignment(assignments, value):
+        if value is None:
+            return
         if value is True:
             assignments.append('%s=1' % var)
         elif value is False:
@@ -220,10 +228,10 @@ def virtualenv_python(env_python, build_env, mozconfig):
     if not distutils.sysconfig.get_python_lib():
         error('Could not determine python site packages directory')
 
-    set_config('PYTHON', python)
-    add_old_configure_assignment('PYTHON', python)
     return python
 
+set_config('PYTHON', virtualenv_python)
+add_old_configure_assignment('PYTHON', virtualenv_python)
 
 # Inject mozconfig options
 # ==============================================================
@@ -503,26 +511,35 @@ def target_variables(target):
     else:
         os_target = target.os
         os_arch = target.kernel
-    add_old_configure_assignment('OS_TARGET', os_target)
-    set_config('OS_TARGET', os_target)
-    add_old_configure_assignment('OS_ARCH', os_arch)
-    set_config('OS_ARCH', os_arch)
 
     if target.os == 'Darwin' and target.cpu == 'x86':
         os_test = 'i386'
     else:
         os_test = target.raw_cpu
-    add_old_configure_assignment('OS_TEST', os_test)
-    set_config('OS_TEST', os_test)
 
-    add_old_configure_assignment('CPU_ARCH', target.cpu)
-    set_config('CPU_ARCH', target.cpu)
+    return namespace(
+        OS_TARGET=os_target,
+        OS_ARCH=os_arch,
+        OS_TEST=os_test,
+        INTEL_ARCHITECTURE=target.cpu in ('x86', 'x86_64') or None,
+    )
 
-    if target.cpu in ('x86', 'x86_64'):
-        set_config('INTEL_ARCHITECTURE', True)
+set_config('OS_TARGET', delayed_getattr(target_variables, 'OS_TARGET'))
+add_old_configure_assignment('OS_TARGET',
+                             delayed_getattr(target_variables, 'OS_TARGET'))
+set_config('OS_ARCH', delayed_getattr(target_variables, 'OS_ARCH'))
+add_old_configure_assignment('OS_ARCH',
+                             delayed_getattr(target_variables, 'OS_ARCH'))
+set_config('OS_TEST', delayed_getattr(target_variables, 'OS_TEST'))
+add_old_configure_assignment('OS_TEST',
+                             delayed_getattr(target_variables, 'OS_TEST'))
+set_config('CPU_ARCH', delayed_getattr(target, 'cpu'))
+add_old_configure_assignment('CPU_ARCH', delayed_getattr(target, 'cpu'))
+set_config('INTEL_ARCHITECTURE', delayed_getattr(target_variables,
+                                                 'INTEL_ARCHITECTURE'))
+set_config('TARGET_CPU', delayed_getattr(target, 'raw_cpu'))
+set_config('TARGET_OS', delayed_getattr(target, 'raw_os'))
 
-    set_config('TARGET_CPU', target.raw_cpu)
-    set_config('TARGET_OS', target.raw_os)
 
 @depends(host)
 def host_variables(host):
@@ -530,29 +547,58 @@ def host_variables(host):
         os_arch = 'GNU_kFreeBSD'
     else:
         os_arch = host.kernel
-    add_old_configure_assignment('HOST_OS_ARCH', os_arch)
-    set_config('HOST_OS_ARCH', os_arch)
+    return namespace(
+        HOST_OS_ARCH=os_arch,
+    )
 
+set_config('HOST_OS_ARCH', delayed_getattr(host_variables, 'HOST_OS_ARCH'))
+add_old_configure_assignment('HOST_OS_ARCH',
+                             delayed_getattr(host_variables, 'HOST_OS_ARCH'))
 
 @depends(target)
-def target_platform_defines(target):
+def target_is_windows(target):
     if target.kernel == 'WINNT':
-        set_define('_WINDOWS', True)
-        set_define('WIN32', True)
-        set_define('XP_WIN', True)
-        set_define('XP_WIN32', True)
-    else:
-        set_define('XP_UNIX', True)
+        return True
 
+set_define('_WINDOWS', target_is_windows)
+set_define('WIN32', target_is_windows)
+set_define('XP_WIN', target_is_windows)
+set_define('XP_WIN32', target_is_windows)
+
+@depends(target)
+def target_is_unix(target):
+    if target.kernel != 'WINNT':
+        return True
+
+set_define('XP_UNIX', target_is_unix)
+
+@depends(target)
+def target_is_darwin(target):
     if target.kernel == 'Darwin':
-        set_define('XP_DARWIN', True)
-        if target.os == 'iOS':
-            set_define('XP_IOS', True)
-        elif target.os == 'OSX':
-            set_define('XP_MACOSX', True)
-    elif target.kernel == 'Linux':
-        set_define('XP_LINUX', True)
+        return True
 
+set_define('XP_DARWIN', target_is_darwin)
+
+@depends(target)
+def target_is_ios(target):
+    if target.kernel == 'Darwin' and target.os == 'iOS':
+        return True
+
+set_define('XP_IOS', target_is_ios)
+
+@depends(target)
+def target_is_osx(target):
+    if target.kernel == 'Darwin' and target.os == 'OSX':
+        return True
+
+set_define('XP_MACOSX', target_is_osx)
+
+@depends(target)
+def target_is_linux(target):
+    if target.kernel == 'Linux':
+        return True
+
+set_define('XP_LINUX', target_is_linux)
 
 # The application/project to build
 # ==============================================================
@@ -562,7 +608,9 @@ option('--enable-application', nargs=1, env='MOZ_BUILD_APP',
 @depends('--enable-application', '--help')
 def application(app, help):
     if app:
-        imply_option(app.format('--enable-project'))
+        return app
+
+imply_option('--enable-project', application)
 
 
 @depends(check_build_environment, '--help')
@@ -585,9 +633,6 @@ def include_project_configure(project, external_source_dir, build_env, help):
 
     base_dir = build_env.topsrcdir
     if external_source_dir:
-        set_config('EXTERNAL_SOURCE_DIR', external_source_dir[0])
-        add_old_configure_assignment('EXTERNAL_SOURCE_DIR',
-                                     external_source_dir[0])
         base_dir = os.path.join(base_dir, external_source_dir[0])
 
     path = os.path.join(base_dir, project[0], 'moz.configure')
@@ -595,14 +640,24 @@ def include_project_configure(project, external_source_dir, build_env, help):
         error('Cannot find project %s' % project[0])
     return path
 
+@depends('--with-external-source-dir')
+def external_source_dir(value):
+    if value:
+        return value[0]
+
+set_config('EXTERNAL_SOURCE_DIR', external_source_dir)
+add_old_configure_assignment('EXTERNAL_SOURCE_DIR', external_source_dir)
+
+
 @depends(include_project_configure, check_build_environment, '--help')
 def build_project(include_project_configure, build_env, help):
     ret = os.path.dirname(os.path.relpath(include_project_configure,
                                           build_env.topsrcdir))
-    set_config('MOZ_BUILD_APP', ret)
-    set_define('MOZ_BUILD_APP', ret)
-    add_old_configure_assignment('MOZ_BUILD_APP', ret)
     return ret
+
+set_config('MOZ_BUILD_APP', build_project)
+set_define('MOZ_BUILD_APP', build_project)
+add_old_configure_assignment('MOZ_BUILD_APP', build_project)
 
 
 # set RELEASE_BUILD and NIGHTLY_BUILD variables depending on the cycle we're in
@@ -619,24 +674,27 @@ def milestone(build_env):
     with open(milestone_path, 'r') as fh:
         milestone = fh.read().splitlines()[-1]
 
-    set_config('GRE_MILESTONE', milestone)
-
-    is_nightly = is_release = False
+    is_nightly = is_release = None
 
     if 'a1' in milestone:
-        set_config('NIGHTLY_BUILD', True)
-        set_define('NIGHTLY_BUILD', True)
-        add_old_configure_assignment('NIGHTLY_BUILD', True)
         is_nightly = True
     elif 'a' not in milestone:
-        set_config('RELEASE_BUILD', True)
-        set_define('RELEASE_BUILD', True)
-        add_old_configure_assignment('RELEASE_BUILD', True)
         is_release = True
 
     return namespace(version=milestone,
                      is_nightly=is_nightly,
                      is_release=is_release)
+
+set_config('GRE_MILESTONE', delayed_getattr(milestone, 'version'))
+set_config('NIGHTLY_BUILD', delayed_getattr(milestone, 'is_nightly'))
+set_define('NIGHTLY_BUILD', delayed_getattr(milestone, 'is_nightly'))
+add_old_configure_assignment('NIGHTLY_BUILD',
+                             delayed_getattr(milestone, 'is_nightly'))
+set_config('RELEASE_BUILD', delayed_getattr(milestone, 'is_release'))
+set_define('RELEASE_BUILD', delayed_getattr(milestone, 'is_release'))
+add_old_configure_assignment('RELEASE_BUILD',
+                             delayed_getattr(milestone, 'is_release'))
+
 
 # This is temporary until js/src/configure and configure are merged.
 # Use instead of option() in js/moz.configure
@@ -666,4 +724,6 @@ include(include_project_configure)
 @depends(gonkdir)
 def gonkdir_for_old_configure(value):
     if value:
-        add_old_configure_assignment('gonkdir', value)
+        return value
+
+add_old_configure_assignment('gonkdir', gonkdir_for_old_configure)

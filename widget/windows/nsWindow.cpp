@@ -6900,7 +6900,8 @@ nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width, int32_t height)
       height = h;
     }
 
-    // Limit the position & size, if it would overflow the destination screen
+    // Limit the position (if not in the middle of a drag-move) & size,
+    // if it would overflow the destination screen
     nsCOMPtr<nsIScreenManager> sm = do_GetService(sScreenManagerContractID);
     if (sm) {
       nsCOMPtr<nsIScreen> screen;
@@ -6908,8 +6909,10 @@ nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width, int32_t height)
       if (screen) {
         int32_t availLeft, availTop, availWidth, availHeight;
         screen->GetAvailRect(&availLeft, &availTop, &availWidth, &availHeight);
-        x = std::max(x, availLeft);
-        y = std::max(y, availTop);
+        if (mResizeState != MOVING) {
+          x = std::max(x, availLeft);
+          y = std::max(y, availTop);
+        }
         width = std::min(width, availWidth);
         height = std::min(height, availHeight);
       }

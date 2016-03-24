@@ -1624,8 +1624,11 @@ public:
                "ClearHasTextNodeDirectionalityMap on non-text node");
     ClearBoolFlag(NodeHasTextNodeDirectionalityMap);
   }
-  bool HasTextNodeDirectionalityMap() const
-    { return GetBoolFlag(NodeHasTextNodeDirectionalityMap); }
+  bool HasTextNodeDirectionalityMap() const {
+    MOZ_ASSERT(NodeType() == nsIDOMNode::TEXT_NODE,
+               "HasTextNodeDirectionalityMap on non-text node");
+    return GetBoolFlag(NodeHasTextNodeDirectionalityMap);
+  }
 
   void SetHasDirAuto() { SetBoolFlag(NodeHasDirAuto); }
   void ClearHasDirAuto() { ClearBoolFlag(NodeHasDirAuto); }
