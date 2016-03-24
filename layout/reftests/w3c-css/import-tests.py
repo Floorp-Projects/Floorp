@@ -8,6 +8,7 @@ from subprocess import Popen, PIPE
 import xml.dom.minidom
 import html5lib
 import filecmp
+import fnmatch
 import shutil
 import sys
 import re
@@ -58,8 +59,7 @@ gDefaultPreferences = {
 }
 
 gLog = None
-gFailList = {}
-gSkipList = {}
+gFailList = []
 gDestPath = None
 gSrcPath = None
 support_dirs_mapped = set()
@@ -277,24 +277,24 @@ def setup_log():
     # information about where they came from.
     gLog = open(os.path.join(gDestPath, "import.log"), "wb")
 
-def read_fail_and_skip_list():
-    global gFailList, gSkipList
+def read_fail_list():
+    global gFailList
     dirname = os.path.realpath(__file__).split(os.path.sep)
     dirname = os.path.sep.join(dirname[:len(dirname)-1])
-    failListFile = open(os.path.join(dirname, "failures.list"), "rb")
-    gFailList = [x for x in [x.lstrip().rstrip() for x in failListFile] if bool(x)
-                 and not x.startswith("#")]
-    failListFile.close()
-    skipListFile = open(os.path.join(dirname, "skip.list"), "rb")
-    gSkipList = [x for x in [x.lstrip().rstrip() for x in skipListFile]
-                 if bool(x) and not x.startswith("#")]
-    skipListFile.close()
+    with open(os.path.join(dirname, "failures.list"), "rb") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            items = line.split()
+            pat = re.compile(fnmatch.translate(items.pop()))
+            gFailList.append((pat, items))
 
 def main():
-    global gDestPath, gLog, gTestfiles, gTestFlags, gFailList, gSkipList
+    global gDestPath, gLog, gTestfiles, gTestFlags, gFailList
     read_options()
     setup_paths()
-    read_fail_and_skip_list()
+    read_fail_list()
     setup_log()
     write_log_header()
     remove_existing_dirs()
@@ -314,9 +314,10 @@ def main():
             else:
                 listfile.write("\ndefault-preferences {0}\n\n".format(defaultPreferences))
             lastDefaultPreferences = defaultPreferences
-        key = 0
+        key = 1
         while not test[key] in gTestFlags.keys() and key < len(test):
             key = key + 1
+        testType = test[key - 1]
         testFlags = gTestFlags[test[key]]
         # Replace the Windows separators if any. Our internal strings
         # all use the system separator, however the failure/skip lists
@@ -326,10 +327,11 @@ def main():
         testKey = test[key]
         if 'ahem' in testFlags:
             test = ["HTTP(../../..)"] + test
-        if testKey in gFailList:
-            test = ["fails"] + test
-        if testKey in gSkipList:
-            test = ["skip"] + test
+        fail = []
+        for pattern, failureType in gFailList:
+            if pattern.match(testKey):
+                fail = failureType
+        test = fail + test
         listfile.write(" ".join(test) + "\n")
     listfile.close()
 

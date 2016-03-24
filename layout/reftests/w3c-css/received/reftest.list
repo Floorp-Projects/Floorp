@@ -83,7 +83,7 @@ fails == css-values-3/calc-in-media-queries-001.html css-values-3/all-green.html
 fails == css-values-3/calc-in-media-queries-002.html css-values-3/all-green.html
 == css-values-3/calc-invalid-range-clamping.html css-values-3/200-200-green.html
 == css-values-3/calc-parenthesis-stack.html css-values-3/all-green.html
-skip == css-values-3/ch-unit-001.html css-values-3/ch-unit-001-ref.html
+fuzzy-if(OSX,40,6) == css-values-3/ch-unit-001.html css-values-3/ch-unit-001-ref.html
 == css-values-3/initial-background-color.html css-values-3/all-green.html
 == css-values-3/vh-calc-support-pct.html css-values-3/all-green.html
 == css-values-3/vh-calc-support.html css-values-3/all-green.html
