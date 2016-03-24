@@ -7,7 +7,6 @@
 
 .theme-light {
   --box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
-  --viewport-color: var(--theme-splitter-color);
   --viewport-active-color: var(--theme-body-color);
   --viewport-selection-arrow: url("./images/select-arrow.svg#light");
   --viewport-selection-arrow-selected:
@@ -16,7 +15,6 @@
 
 .theme-dark {
   --box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
-  --viewport-color: var(--theme-body-color);
   --viewport-active-color: var(--theme-selection-color);
   --viewport-selection-arrow: url("./images/select-arrow.svg#dark");
   --viewport-selection-arrow-selected:
@@ -48,8 +46,13 @@ body {
 }
 
 /**
- * Common style for toolbar buttons
+ * Common style for toolbars and toolbar buttons
  */
+
+.toolbar {
+  background-color: var(--theme-toolbar-background);
+  border: 1px solid var(--theme-splitter-color);
+}
 
 .toolbar-button {
   margin: 1px 3px;
@@ -70,10 +73,8 @@ body {
  */
 
 #global-toolbar {
-  background-color: var(--theme-toolbar-background);
-  border: 1px solid var(--theme-splitter-color);
-  border-radius: 2px;
   color: var(--theme-body-color-alt);
+  border-radius: 2px;
   box-shadow: var(--box-shadow);
   margin: 30px 0;
   padding: 4px 5px;
@@ -136,9 +137,8 @@ body {
  */
 
 .viewport-toolbar {
-  background-color: var(--theme-toolbar-background);
-  border-bottom: 1px solid var(--theme-splitter-color);
-  color: var(--theme-body-color);
+  border-width: 0;
+  border-bottom-width: 1px;
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -153,7 +153,7 @@ body {
   background-repeat: no-repeat;
   background-size: 7px;
   border: none;
-  color: var(--viewport-color);
+  color: var(--theme-body-color-inactive);
   height: 100%;
   padding: 0 16px;
   text-align: center;
@@ -255,7 +255,7 @@ body {
 
 .viewport-dimension-editable,
 .viewport-dimension-input {
-  color: var(--viewport-color);
+  color: var(--theme-body-color-inactive);
   transition: all 0.25s ease;
 }
 

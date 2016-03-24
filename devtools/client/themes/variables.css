@@ -29,6 +29,7 @@
 
   --theme-body-color: #393f4c;
   --theme-body-color-alt: #585959;
+  --theme-body-color-inactive: #999797;
   --theme-content-color1: #292e33;
   --theme-content-color2: #8fa1b2;
   --theme-content-color3: #667380;
@@ -70,6 +71,7 @@
 
   --theme-body-color: #8fa1b2;
   --theme-body-color-alt: #b6babf;
+  --theme-body-color-inactive: #8fa1b2;
   --theme-content-color1: #a9bacb;
   --theme-content-color2: #8fa1b2;
   --theme-content-color3: #5f7387;
