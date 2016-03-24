@@ -1053,7 +1053,13 @@ RTCPeerConnection.prototype = {
                                          "InvalidParameterError");
       }
     });
-    this._impl.addTrack(track, stream);
+    try {
+      this._impl.addTrack(track, stream);
+    } catch (e if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED)) {
+      throw new this._win.DOMException(
+          "track in constructed stream not yet supported (see Bug 1259236).",
+          "NotSupportedError");
+    }
     let sender = this._win.RTCRtpSender._create(this._win,
                                                 new RTCRtpSender(this, track,
                                                                  stream));
