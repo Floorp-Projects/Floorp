@@ -15,6 +15,6 @@ add_task(function* () {
   ok(tab1.pinned, "pinned tab 1 has been restored as a pinned tab");
   is(Array.indexOf(gBrowser.tabs, tab1), 0, "pinned tab 1 has been restored to the first position");
 
-  gBrowser.removeTab(tab1);
-  gBrowser.removeTab(tab2);
+  yield BrowserTestUtils.removeTab(tab1);
+  yield BrowserTestUtils.removeTab(tab2);
 });

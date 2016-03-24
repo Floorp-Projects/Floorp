@@ -32,18 +32,15 @@ window.removeCookie = function(name, path) {
     name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=" + path;
 };
 
+/**
+ * We keep this method here even though these items are automatically cleared
+ * after the test is complete. this is so that the store-objects-cleared event
+ * can be tested.
+ */
 window.clear = function*() {
-  let cookies = document.cookie;
-  for (let cookie of cookies.split(";")) {
-    removeCookie(cookie.split("=")[0]);
-    removeCookie(cookie.split("=")[0], "/browser");
-  }
-
-  localStorage.clear();
   sessionStorage.clear();
 
-  dump("removed cookies, localStorage and sessionStorage from " +
-       document.location + "\n");
+  dump("removed sessionStorage from " + document.location + "\n");
 };
 
 window.onload = function() {

@@ -672,7 +672,7 @@ public class TopSitesPanel extends HomeFragment {
         }
     }
 
-    private class CursorLoaderCallbacks extends TransitionAwareCursorLoaderCallbacks {
+    private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             trace("Creating TopSitesLoader: " + id);
@@ -689,8 +689,7 @@ public class TopSitesPanel extends HomeFragment {
          * The root cause is TopSitesLoader.loadCursor being called twice.
          * Why that is... dunno.
          */
-        @Override
-        protected void onLoadFinishedAfterTransitions(Loader<Cursor> loader, Cursor c) {
+        public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             debug("onLoadFinished: " + c.getCount() + " rows.");
 
             mListAdapter.swapCursor(c);
@@ -736,8 +735,6 @@ public class TopSitesPanel extends HomeFragment {
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            super.onLoaderReset(loader);
-
             if (mListAdapter != null) {
                 mListAdapter.swapCursor(null);
             }
