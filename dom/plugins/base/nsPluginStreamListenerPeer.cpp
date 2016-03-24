@@ -8,6 +8,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsIDOMElement.h"
 #include "nsIStreamConverterService.h"
+#include "nsIStreamLoader.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIFileChannel.h"
@@ -660,6 +661,63 @@ nsPluginStreamListenerPeer::MakeByteRangeString(NPByteRange* aRangeList, nsACStr
   return;
 }
 
+// XXX: Converting the channel within nsPluginStreamListenerPeer
+// to use asyncOpen2() and do not want to touch the fragile logic
+// of byte range requests. Hence we just introduce this lightweight
+// wrapper to proxy the context.
+class PluginContextProxy final : public nsIStreamListener
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  PluginContextProxy(nsIStreamListener *aListener, nsISupports* aContext)
+    : mListener(aListener)
+    , mContext(aContext)
+  {
+    MOZ_ASSERT(aListener);
+    MOZ_ASSERT(aContext);
+  }
+
+  NS_IMETHOD
+  OnDataAvailable(nsIRequest* aRequest,
+                  nsISupports* aContext,
+                  nsIInputStream *aIStream,
+                  uint64_t aSourceOffset,
+                  uint32_t aLength) override
+  {
+    // Proxy OnDataAvailable using the internal context
+    return mListener->OnDataAvailable(aRequest,
+                                      mContext,
+                                      aIStream,
+                                      aSourceOffset,
+                                      aLength);
+  }
+
+  NS_IMETHOD
+  OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) override
+  {
+    // Proxy OnStartRequest using the internal context
+    return mListener->OnStartRequest(aRequest, mContext);
+  }
+
+  NS_IMETHOD
+  OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+                nsresult aStatusCode) override
+  {
+    // Proxy OnStopRequest using the inernal context
+    return mListener->OnStopRequest(aRequest,
+                                    mContext,
+                                    aStatusCode);
+  }
+
+private:
+  ~PluginContextProxy() {}
+  nsCOMPtr<nsIStreamListener> mListener;
+  nsCOMPtr<nsISupports> mContext;
+};
+
+NS_IMPL_ISUPPORTS(PluginContextProxy, nsIStreamListener)
+
 nsresult
 nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
 {
@@ -692,22 +750,19 @@ nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
     rv = NS_NewChannel(getter_AddRefs(channel),
                        mURL,
                        requestingNode,
-                       nsILoadInfo::SEC_NORMAL,
+                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER,
                        loadGroup,
                        callbacks,
                        nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
   }
   else {
-    // in this else branch we really don't know where the load is coming
-    // from and in fact should use something better than just using
-    // a nullPrincipal as the loadingPrincipal.
-    nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::Create();
-    NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+    // In this else branch we really don't know where the load is coming
+    // from. Let's fall back to using the SystemPrincipal for such Plugins.
     rv = NS_NewChannel(getter_AddRefs(channel),
                        mURL,
-                       principal,
-                       nsILoadInfo::SEC_NORMAL,
+                       nsContentUtils::GetSystemPrincipal(),
+                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER,
                        loadGroup,
                        callbacks,
@@ -743,16 +798,16 @@ nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
   mPendingRequests += numRequests;
 
   nsCOMPtr<nsISupportsPRUint32> container = do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = container->SetData(BYTERANGE_REQUEST_CONTEXT);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = channel->AsyncOpen(converter, container);
-  if (NS_SUCCEEDED(rv))
-    TrackRequest(channel);
-  return rv;
+  RefPtr<PluginContextProxy> pluginContextProxy =
+    new PluginContextProxy(converter, container);
+  rv = channel->AsyncOpen2(pluginContextProxy);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TrackRequest(channel);
+  return NS_OK;
 }
 
 nsresult
