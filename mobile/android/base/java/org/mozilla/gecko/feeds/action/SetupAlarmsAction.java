@@ -11,9 +11,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
 
+import com.keepsafe.switchboard.SwitchBoard;
+
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.feeds.FeedAlarmReceiver;
 import org.mozilla.gecko.feeds.FeedService;
+import org.mozilla.gecko.util.Experiments;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 /**
  * SetupAlarmsAction: Set up alarms to run various actions every now and then.
@@ -72,14 +79,52 @@ public class SetupAlarmsAction extends FeedAction {
                 getEnrollPendingIntent()
         );
 
+        if (SwitchBoard.isInExperiment(context, Experiments.CONTENT_NOTIFICATIONS_12HRS)) {
+            scheduleUpdateCheckEvery12Hours(alarmManager);
+        }
+
+        if (SwitchBoard.isInExperiment(context, Experiments.CONTENT_NOTIFICATIONS_8AM)) {
+            scheduleUpdateAtFullHour(alarmManager, 8);
+        }
+
+        if (SwitchBoard.isInExperiment(context, Experiments.CONTENT_NOTIFICATIONS_5PM)) {
+            scheduleUpdateAtFullHour(alarmManager, 17);
+        }
+
+
+        log("Scheduled alarms");
+    }
+
+    private void scheduleUpdateCheckEvery12Hours(AlarmManager alarmManager) {
         alarmManager.setInexactRepeating(
                 AlarmManager.ELAPSED_REALTIME,
                 SystemClock.elapsedRealtime() + AlarmManager.INTERVAL_HOUR,
                 AlarmManager.INTERVAL_HALF_DAY,
                 getCheckPendingIntent()
         );
+    }
 
-        log("Scheduled alarms");
+    private void scheduleUpdateAtFullHour(AlarmManager alarmManager, int hourOfDay) {
+        final Calendar calendar = Calendar.getInstance();
+
+        if (calendar.get(Calendar.HOUR_OF_DAY) >= hourOfDay) {
+            // This time has already passed today. Try again tomorrow.
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        alarmManager.setInexactRepeating(
+                AlarmManager.RTC,
+                calendar.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY,
+                getCheckPendingIntent()
+        );
+
+        log("Scheduled update alarm at " + DateFormat.getDateTimeInstance().format(calendar.getTime()));
     }
 
     private PendingIntent getWithdrawPendingIntent() {

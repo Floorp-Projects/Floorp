@@ -76,7 +76,7 @@ public class FeedService extends IntentService {
 
             Log.d(LOGTAG, "Service started with action: " + intent.getAction());
 
-            if (!SwitchBoard.isInExperiment(this, Experiments.CONTENT_NOTIFICATIONS)) {
+            if (!isInExperiment(this)) {
                 Log.d(LOGTAG, "Not in content notifications experiment. Skipping.");
                 return;
             }
@@ -140,6 +140,12 @@ public class FeedService extends IntentService {
         }
 
         return !ConnectivityManagerCompat.isActiveNetworkMetered(manager);
+    }
+
+    public static boolean isInExperiment(Context context) {
+        return SwitchBoard.isInExperiment(context, Experiments.CONTENT_NOTIFICATIONS_12HRS) ||
+               SwitchBoard.isInExperiment(context, Experiments.CONTENT_NOTIFICATIONS_5PM) ||
+               SwitchBoard.isInExperiment(context, Experiments.CONTENT_NOTIFICATIONS_8AM);
     }
 
     private boolean isPreferenceEnabled() {

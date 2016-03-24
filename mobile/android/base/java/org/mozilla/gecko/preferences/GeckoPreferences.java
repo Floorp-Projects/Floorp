@@ -872,7 +872,7 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 } else if (PREFS_NOTIFICATIONS_CONTENT.equals(key)) {
-                    if (!SwitchBoard.isInExperiment(this, Experiments.CONTENT_NOTIFICATIONS)) {
+                    if (!FeedService.isInExperiment(this)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
