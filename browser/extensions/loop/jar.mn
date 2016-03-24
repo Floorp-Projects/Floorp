@@ -6,7 +6,7 @@
 [features/loop@mozilla.org] chrome.jar:
 % content loop %content/ contentaccessible=yes
 % content loop-locale-fallback %content/locale-fallback/en-US/
-% skin loop classic/1.0 %skin/linux/ os=Linux
+% skin loop classic/1.0 %skin/linux/
 % skin loop classic/1.0 %skin/osx/ os=Darwin
 % skin loop classic/1.0 %skin/windows/ os=WINNT
 % skin loop-shared classic/1.0 %skin/shared/

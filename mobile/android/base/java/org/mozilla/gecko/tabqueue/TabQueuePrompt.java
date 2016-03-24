@@ -9,7 +9,6 @@ import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.animation.TransitionsTracker;
 
 import android.annotation.TargetApi;
 import android.content.Intent;
@@ -108,7 +107,6 @@ public class TabQueuePrompt extends Locales.LocaleAwareActivity {
         final AnimatorSet set = new AnimatorSet();
         set.playTogether(alphaAnimator, translateAnimator);
         set.setStartDelay(400);
-        TransitionsTracker.track(set);
 
         set.start();
     }
@@ -134,7 +132,6 @@ public class TabQueuePrompt extends Locales.LocaleAwareActivity {
 
         final AnimatorSet set = new AnimatorSet();
         set.playTogether(buttonsAlphaAnimator, messagesAlphaAnimator);
-        TransitionsTracker.track(set);
 
         set.addListener(new AnimatorListenerAdapter() {
 

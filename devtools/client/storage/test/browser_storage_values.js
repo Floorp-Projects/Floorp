@@ -30,7 +30,7 @@ const testCases = [
     {name: "c1.isDomain", value: "false"},
     {name: "c1.isHttpOnly", value: "false"},
     {name: "c1.host", value: "test1.example.org"},
-    {name: "c1.expires", value: new Date(2000000000000).toLocaleString()},
+    {name: "c1.expires", value: new Date(2000000000000).toUTCString()},
     {name: "c1.isSecure", value: "false"},
   ]],
   [null, [

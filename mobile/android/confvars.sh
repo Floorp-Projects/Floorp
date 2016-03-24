@@ -110,8 +110,7 @@ MOZ_ADDON_SIGNING=1
 # usage of the framework.
 MOZ_SWITCHBOARD=1
 
-# Enable DLC background service and stop shipping fonts in Nightly
-if test "$NIGHTLY_BUILD"; then
-  MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE=1
-  MOZ_ANDROID_EXCLUDE_FONTS=1
-fi
+# Enable DLC background service and stop shipping fonts in the APK
+MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE=1
+MOZ_ANDROID_EXCLUDE_FONTS=1
+
