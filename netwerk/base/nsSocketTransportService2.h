@@ -94,16 +94,7 @@ public:
     static PRCallOnceType gMaxCountInitOnce;
     static PRStatus DiscoverMaxCount();
 
-    //
-    // the number of sockets that can be attached at any given time is
-    // limited.  this is done because some operating systems (e.g., Win9x)
-    // limit the number of sockets that can be created by an application.
-    // AttachSocket will fail if the limit is exceeded.  consumers should
-    // call CanAttachSocket and check the result before creating a socket.
-    //
-    bool CanAttachSocket() {
-        return mActiveCount + mIdleCount < gMaxCount;
-    }
+    bool CanAttachSocket();
 
     // Called by the networking dashboard on the socket thread only
     // Fills the passed array with socket information
