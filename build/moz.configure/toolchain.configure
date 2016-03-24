@@ -8,19 +8,18 @@
 # ==============================================================
 yasm = check_prog('YASM', ['yasm'], allow_missing=True)
 
-@depends(yasm)
+@depends_if(yasm)
 @checking('yasm version')
 @advanced
 def yasm_version(yasm):
-    if yasm:
-        import subprocess
-        try:
-            version = Version(subprocess.check_output(
-                [yasm, '--version']
-            ).splitlines()[0].split()[1])
-            return version
-        except subprocess.CalledProcessError as e:
-            error('Failed to get yasm version: %s' % e.message)
+    import subprocess
+    try:
+        version = Version(subprocess.check_output(
+            [yasm, '--version']
+        ).splitlines()[0].split()[1])
+        return version
+    except subprocess.CalledProcessError as e:
+        error('Failed to get yasm version: %s' % e.message)
 
 # Until we move all the yasm consumers out of old-configure.
 # bug 1257904
