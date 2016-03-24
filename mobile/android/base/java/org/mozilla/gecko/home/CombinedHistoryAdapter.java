@@ -111,6 +111,21 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         }
     }
 
+    public HomeContextMenuInfo makeContextMenuInfoFromPosition(View view, int position) {
+        final ItemType itemType = ItemType.viewTypeToItemType(getItemViewType(position));
+        HomeContextMenuInfo info;
+        switch (itemType) {
+            case CHILD:
+                info = new HomeContextMenuInfo(view, position, -1);
+                return CombinedHistoryPanel.populateChildInfoFromTab(info, clientChildren.get(position));
+            case HISTORY:
+                info = new HomeContextMenuInfo(view, position, -1);
+                historyCursor.moveToPosition(transformPosition(ItemType.HISTORY, position));
+                return CombinedHistoryPanel.populateHistoryInfoFromCursor(info, historyCursor);
+        }
+        return null;
+    }
+
     @Override
     public CombinedHistoryItem onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         final LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
