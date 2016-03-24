@@ -62,13 +62,11 @@ HTMLSummaryElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 
       // When dispatching a synthesized mouse click event to a details element
       // with 'display: none', both Chrome and Safari do not toggle the 'open'
-      // attribute. We follow them by checking whether the details element has a
-      // frame or not.
-      if (details->GetPrimaryFrame(Flush_Frames)) {
-        details->ToggleOpen();
-        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-        return NS_OK;
-      }
+      // attribute. We had tried to be compatible with this behavior, but found
+      // more inconsistency in test cases in bug 1245424. So we stop doing that.
+      details->ToggleOpen();
+      aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+      return NS_OK;
     }
   } // event->HasMouseEventMessage()
 
