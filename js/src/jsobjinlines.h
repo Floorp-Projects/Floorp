@@ -337,8 +337,16 @@ JSObject::create(js::ExclusiveContext* cx, js::gc::AllocKind kind, js::gc::Initi
     MOZ_ASSERT_IF(!group->clasp()->isNative(), shape->slotSpan() == 0);
 
     const js::Class* clasp = group->clasp();
-    size_t nDynamicSlots =
-        js::NativeObject::dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(), clasp);
+
+    size_t nDynamicSlots = 0;
+    if (group->clasp()->isNative()) {
+        nDynamicSlots = js::NativeObject::dynamicSlotsCount(shape->numFixedSlots(),
+                                                            shape->slotSpan(), clasp);
+    } else if (group->clasp()->isProxy()) {
+        // Proxy objects overlay the |slots| field with a ProxyValueArray.
+        MOZ_ASSERT(sizeof(js::ProxyValueArray) % sizeof(js::HeapSlot) == 0);
+        nDynamicSlots = sizeof(js::ProxyValueArray) / sizeof(js::HeapSlot);
+    }
 
     JSObject* obj = js::Allocate<JSObject>(cx, kind, nDynamicSlots, heap, clasp);
     if (!obj)
