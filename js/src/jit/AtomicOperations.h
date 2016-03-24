@@ -299,8 +299,11 @@ AtomicOperations::isLockfree(int32_t size)
 
     switch (size) {
       case 1:
+        return true;
       case 2:
+        return true;
       case 4:
+        // The spec requires Atomics.isLockFree(4) to return true.
         return true;
       case 8:
         // The spec requires Atomics.isLockFree(n) to return false
