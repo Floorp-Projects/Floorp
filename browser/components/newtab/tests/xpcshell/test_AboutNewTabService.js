@@ -18,12 +18,17 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Locale",
+                                  "resource://gre/modules/Locale.jsm");
+
 const DEFAULT_HREF = aboutNewTabService.generateRemoteURL();
 const DEFAULT_CHROME_URL = "chrome://browser/content/newtab/newTab.xhtml";
 const DOWNLOADS_URL = "chrome://browser/content/downloads/contentAreaDownloadsView.xul";
+const DEFAULT_VERSION = aboutNewTabService.remoteVersion;
 
 function cleanup() {
   Services.prefs.setBoolPref("browser.newtabpage.remote", false);
+  Services.prefs.setCharPref("browser.newtabpage.remote.version", DEFAULT_VERSION);
   aboutNewTabService.resetNewTabURL();
   NewTabPrefsProvider.prefs.uninit();
 }
@@ -107,7 +112,8 @@ add_task(function* test_updates() {
   let notificationPromise;
   let productionModeBaseUrl = "https://content.cdn.mozilla.net";
   let testModeBaseUrl = "https://example.com";
-  let expectedPath = `/v${aboutNewTabService.remoteVersion}` +
+  let expectedPath = `/newtab` +
+                     `/v${aboutNewTabService.remoteVersion}` +
                      `/${aboutNewTabService.remoteReleaseName}` +
                      "/en-GB" +
                      "/index.html";
@@ -191,6 +197,32 @@ add_task(function* test_release_names() {
     Assert.equal("nightly", aboutNewTabService.releaseFromUpdateChannel(channel),
           "release == nightly when invalid");
   }
+});
+
+/**
+ * Verifies that remote version updates changes the remote newtab url
+ */
+add_task(function* test_version_update() {
+  NewTabPrefsProvider.prefs.init();
+
+  Services.prefs.setBoolPref("browser.newtabpage.remote", true);
+  Assert.ok(aboutNewTabService.remoteEnabled, "remote mode enabled");
+
+  let productionModeBaseUrl = "https://content.cdn.mozilla.net";
+  let version_incr = String(parseInt(DEFAULT_VERSION) + 1);
+  let expectedPath = `/newtab` +
+                     `/v${version_incr}` +
+                     `/${aboutNewTabService.remoteReleaseName}` +
+                     `/${Locale.getLocale()}` +
+                     `/index.html`;
+  let expectedHref = productionModeBaseUrl + expectedPath;
+
+  let notificationPromise;
+  notificationPromise = nextChangeNotificationPromise(expectedHref);
+  Preferences.set("browser.newtabpage.remote.version", version_incr);
+  yield notificationPromise;
+
+  cleanup();
 });
 
 function nextChangeNotificationPromise(aNewURL, testMessage) {

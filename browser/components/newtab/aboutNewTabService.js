@@ -44,9 +44,10 @@ const PREF_SELECTED_LOCALE = "general.useragent.locale";
 // The preference that tells what remote mode is enabled.
 const PREF_REMOTE_MODE = "browser.newtabpage.remote.mode";
 
-const VALID_CHANNELS = new Set(["esr", "release", "beta", "aurora", "nightly"]);
+// The preference that tells which remote version is expected.
+const PREF_REMOTE_VERSION = "browser.newtabpage.remote.version";
 
-const REMOTE_NEWTAB_VERSION = "0";
+const VALID_CHANNELS = new Set(["esr", "release", "beta", "aurora", "nightly"]);
 
 function AboutNewTabService() {
   NewTabPrefsProvider.prefs.on(PREF_REMOTE_ENABLED, this._handleToggleEvent.bind(this));
@@ -145,11 +146,15 @@ AboutNewTabService.prototype = {
       NewTabPrefsProvider.prefs.on(
         PREF_REMOTE_MODE,
         this._updateRemoteMaybe);
+      NewTabPrefsProvider.prefs.on(
+        PREF_REMOTE_VERSION,
+        this._updateRemoteMaybe);
       this._remoteEnabled = true;
     } else {
       NewTabPrefsProvider.prefs.off(PREF_SELECTED_LOCALE, this._updateRemoteMaybe);
       NewTabPrefsProvider.prefs.off(PREF_MATCH_OS_LOCALE, this._updateRemoteMaybe);
       NewTabPrefsProvider.prefs.off(PREF_REMOTE_MODE, this._updateRemoteMaybe);
+      NewTabPrefsProvider.prefs.off(PREF_REMOTE_VERSION, this._updateRemoteMaybe);
       this._remoteEnabled = false;
     }
     if (!csTest) {
@@ -164,7 +169,7 @@ AboutNewTabService.prototype = {
   generateRemoteURL() {
     let releaseName = this.releaseFromUpdateChannel(UpdateUtils.UpdateChannel);
     let path = REMOTE_NEWTAB_PATH
-      .replace("%VERSION%", REMOTE_NEWTAB_VERSION)
+      .replace("%VERSION%", this.remoteVersion)
       .replace("%LOCALE%", Locale.getLocale())
       .replace("%CHANNEL%", releaseName);
     let mode = Services.prefs.getCharPref(PREF_REMOTE_MODE, "production");
@@ -224,7 +229,7 @@ AboutNewTabService.prototype = {
   },
 
   get remoteVersion() {
-    return REMOTE_NEWTAB_VERSION;
+    return Services.prefs.getCharPref(PREF_REMOTE_VERSION, "1");
   },
 
   get remoteReleaseName() {
