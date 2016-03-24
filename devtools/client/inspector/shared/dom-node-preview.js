@@ -73,6 +73,15 @@ DomNodePreview.prototype = {
       this.previewEl.appendChild(document.createTextNode("<"));
     }
 
+    // Only used for ::before and ::after pseudo-elements.
+    this.pseudoEl = createNode({
+      parent: this.previewEl,
+      nodeType: "span",
+      attributes: {
+        "class": "pseudo-element theme-fg-color5"
+      }
+    });
+
     // Tag name.
     this.tagNameEl = createNode({
       parent: this.previewEl,
@@ -193,7 +202,7 @@ DomNodePreview.prototype = {
     this.stopListeners();
 
     this.el.remove();
-    this.el = this.tagNameEl = this.idEl = this.classEl = null;
+    this.el = this.tagNameEl = this.idEl = this.classEl = this.pseudoEl = null;
     this.highlightNodeEl = this.previewEl = null;
     this.nodeFront = this.inspector = null;
   },
@@ -271,7 +280,17 @@ DomNodePreview.prototype = {
     this.nodeFront = nodeFront;
     let {tagName, attributes} = nodeFront;
 
-    this.tagNameEl.textContent = tagName.toLowerCase();
+    if (nodeFront.isPseudoElement) {
+      this.pseudoEl.textContent = nodeFront.isBeforePseudoElement
+                                   ? "::before"
+                                   : "::after";
+      this.pseudoEl.style.display = "inline";
+      this.tagNameEl.style.display = "none";
+    } else {
+      this.tagNameEl.textContent = tagName.toLowerCase();
+      this.pseudoEl.style.display = "none";
+      this.tagNameEl.style.display = "inline";
+    }
 
     let idIndex = attributes.findIndex(({name}) => name === "id");
     if (idIndex > -1 && attributes[idIndex].value) {

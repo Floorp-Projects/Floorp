@@ -232,8 +232,7 @@ var AnimationsController = {
     let done = gInspector.updating("animationscontroller");
 
     if (!gInspector.selection.isConnected() ||
-        !gInspector.selection.isElementNode() ||
-        gInspector.selection.isPseudoElementNode()) {
+        !gInspector.selection.isElementNode()) {
       this.destroyAnimationPlayers();
       this.emit(this.PLAYERS_UPDATED_EVENT);
       done();
