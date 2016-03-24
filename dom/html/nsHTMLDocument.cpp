@@ -934,23 +934,22 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv)
     return;
   }
 
-  nsAutoCString newURIString;
-  if (NS_FAILED(uri->GetScheme(newURIString))) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-  nsAutoCString path;
-  if (NS_FAILED(uri->GetPath(path))) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-  newURIString.AppendLiteral("://");
-  AppendUTF16toUTF8(aDomain, newURIString);
-  newURIString.Append(path);
-
   nsCOMPtr<nsIURI> newURI;
-  if (NS_FAILED(NS_NewURI(getter_AddRefs(newURI), newURIString))) {
-    rv.Throw(NS_ERROR_FAILURE);
+  nsresult rv2 = uri->Clone(getter_AddRefs(newURI));
+  if (NS_FAILED(rv2)) {
+    rv.Throw(rv2);
+    return;
+  }
+
+  rv2 = newURI->SetUserPass(EmptyCString());
+  if (NS_FAILED(rv2)) {
+    rv.Throw(rv2);
+    return;
+  }
+
+  rv2 = newURI->SetHostPort(NS_ConvertUTF16toUTF8(aDomain));
+  if (NS_FAILED(rv2)) {
+    rv.Throw(rv2);
     return;
   }
 
@@ -989,6 +988,7 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv)
     return;
   }
 
+  NS_TryToSetImmutable(newURI);
   rv = NodePrincipal()->SetDomain(newURI);
 }
 
