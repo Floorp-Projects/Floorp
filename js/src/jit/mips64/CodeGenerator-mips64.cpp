@@ -279,6 +279,27 @@ CodeGeneratorMIPS64::visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir)
 }
 
 void
+CodeGeneratorMIPS64::visitAsmSelectI64(LAsmSelectI64* lir)
+{
+    MOZ_ASSERT(lir->mir()->type() == MIRType_Int64);
+
+    Register cond = ToRegister(lir->condExpr());
+    Operand falseExpr = ToOperand(lir->falseExpr());
+
+    Register out = ToRegister(lir->output());
+    MOZ_ASSERT(ToRegister(lir->trueExpr()) == out, "true expr is reused for input");
+
+    if (falseExpr.getTag() == Operand::REG) {
+        masm.as_movz(out, falseExpr.toReg(), cond);
+    } else {
+        Label done;
+        masm.ma_b(cond, cond, &done, Assembler::NonZero, ShortJump);
+        masm.loadPtr(falseExpr.toAddress(), out);
+        masm.bind(&done);
+    }
+}
+
+void
 CodeGeneratorMIPS64::setReturnDoubleRegs(LiveRegisterSet* regs)
 {
     MOZ_ASSERT(ReturnFloat32Reg.reg_ == FloatRegisters::f0);

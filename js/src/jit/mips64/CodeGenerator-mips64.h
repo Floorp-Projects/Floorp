@@ -44,6 +44,7 @@ class CodeGeneratorMIPS64 : public CodeGeneratorMIPSShared
     virtual void visitCompareBAndBranch(LCompareBAndBranch* lir);
     virtual void visitCompareBitwise(LCompareBitwise* lir);
     virtual void visitCompareBitwiseAndBranch(LCompareBitwiseAndBranch* lir);
+    virtual void visitAsmSelectI64(LAsmSelectI64* ins);
 
     // Out of line visitors.
     void visitOutOfLineBailout(OutOfLineBailout* ool);
