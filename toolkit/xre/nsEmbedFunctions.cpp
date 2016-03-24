@@ -612,10 +612,6 @@ XRE_InitChildProcess(int aArgc,
         return NS_ERROR_FAILURE;
       }
 
-#if defined(XP_WIN) || defined(XP_MACOSX)
-      CrashReporter::InitChildProcessTmpDir();
-#endif
-
 #if defined(XP_WIN)
       // Set child processes up such that they will get killed after the
       // chrome process is killed in cases where the user shuts the system
