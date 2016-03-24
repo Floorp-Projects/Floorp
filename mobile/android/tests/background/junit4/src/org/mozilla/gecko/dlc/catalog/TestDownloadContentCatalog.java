@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.dlc.catalog;
 
-import android.util.AtomicFile;
+import android.support.v4.util.AtomicFile;
 
 import org.junit.Assert;
 import org.junit.Assume;
