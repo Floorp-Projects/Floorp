@@ -51,6 +51,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
+import android.support.annotation.WorkerThread;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -126,6 +127,7 @@ public class Distribution {
      * {@link org.mozilla.gecko.distribution.Distribution#exists()} will return
      * false. In the other two callbacks, it will return true.
      */
+    @WorkerThread
     public interface ReadyCallback {
         void distributionNotFound();
         void distributionFound(Distribution distribution);
@@ -951,6 +953,7 @@ public class Distribution {
 
     private void invokeCallbackDelayed(final ReadyCallback callback) {
         ThreadUtils.postToBackgroundThread(new Runnable() {
+            @WorkerThread
             @Override
             public void run() {
                 switch (state) {

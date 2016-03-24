@@ -4,6 +4,7 @@
 
 package org.mozilla.search;
 
+import android.support.annotation.NonNull;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
@@ -62,7 +63,8 @@ public class SearchActivity extends Locales.LocaleAwareFragmentActivity
     private SearchState searchState = SearchState.PRESEARCH;
     private EditState editState = EditState.WAITING;
 
-    private SearchEngineManager searchEngineManager;
+    @NonNull
+    private SearchEngineManager searchEngineManager; // Contains reference to Context - DO NOT LEAK!
 
     // Only accessed on the main thread.
     private SearchEngine engine;
@@ -193,8 +195,7 @@ public class SearchActivity extends Locales.LocaleAwareFragmentActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        searchEngineManager.destroy();
-        searchEngineManager = null;
+        searchEngineManager.unregisterListeners();
         engine = null;
         suggestionsFragment = null;
         postSearchFragment = null;
