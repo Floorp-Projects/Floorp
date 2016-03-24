@@ -1050,7 +1050,10 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP INDEX IF EXISTS reading_list_guid");
         db.execSQL("DROP INDEX IF EXISTS reading_list_content_status");
 
-        final String thisDevice = ReadingListProvider.PLACEHOLDER_THIS_DEVICE;
+        // This used to be a part of the no longer existing ReadingListProvider, since we're deleting
+        // this table later in the second migration, and since sync for this table never existed,
+        // we don't care about the device name here.
+        final String thisDevice = "_fake_device_name_that_will_be_discarded_in_the_next_migration_";
         db.execSQL("INSERT INTO tmp_rl (" +
                    // Here are the columns we can preserve.
                    ReadingListItems._ID + ", " +
