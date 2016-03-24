@@ -2820,6 +2820,9 @@ TryEliminateBoundsCheck(BoundsCheckMap& checks, size_t blockIndex, MBoundsCheck*
     if (!dominated->isMovable())
         return true;
 
+    if (!dominated->fallible())
+        return true;
+
     MBoundsCheck* dominating = FindDominatingBoundsCheck(checks, dominated, blockIndex);
     if (!dominating)
         return false;
