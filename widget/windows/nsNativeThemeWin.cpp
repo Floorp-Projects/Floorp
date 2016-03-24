@@ -1553,7 +1553,7 @@ AssumeThemePartAndStateAreTransparent(int32_t aPart, int32_t aState)
 static inline double
 GetThemeDpiScaleFactor(nsIFrame* aFrame)
 {
-  if (WinUtils::IsPerMonitorDPIAware() && GetSystemMetrics(SM_CMONITORS) > 1) {
+  if (WinUtils::IsPerMonitorDPIAware()) {
     nsIWidget* rootWidget = aFrame->PresContext()->GetRootWidget();
     if (rootWidget) {
       double systemScale = WinUtils::SystemScaleFactor();
