@@ -231,8 +231,7 @@ nsSVGPathGeometryFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
                                          const nsDisplayListSet& aLists)
 {
-  if (!static_cast<const nsSVGElement*>(mContent)->HasValidDimensions() ||
-      !IsVisibleForPainting(aBuilder)) {
+  if (!static_cast<const nsSVGElement*>(mContent)->HasValidDimensions()) {
     return;
   }
   aLists.Content()->AppendNewToTop(
