@@ -7,6 +7,8 @@ package org.mozilla.gecko.search;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
+import android.support.annotation.UiThread;
+import android.support.annotation.WorkerThread;
 import android.text.TextUtils;
 import android.util.Log;
 import org.json.JSONException;
@@ -33,12 +35,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Locale;
 
+/**
+ * This class is not thread-safe, except where otherwise noted.
+ *
+ * This class contains a reference to {@link Context} - DO NOT LEAK!
+ */
 public class SearchEngineManager implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String LOG_TAG = "GeckoSearchEngineManager";
 
@@ -62,10 +70,10 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     private static final String USER_AGENT = HardwareUtils.isTablet() ?
         AppConstants.USER_AGENT_FENNEC_TABLET : AppConstants.USER_AGENT_FENNEC_MOBILE;
 
-    private Context context;
-    private Distribution distribution;
-    @Nullable private SearchEngineCallback changeCallback;
-    private SearchEngine engine;
+    private final Context context;
+    private final Distribution distribution;
+    @Nullable private volatile SearchEngineCallback changeCallback;
+    @Nullable private volatile SearchEngine engine;
 
     // Cached version of default locale included in Gecko chrome manifest.
     // This should only be accessed from the background thread.
@@ -86,7 +94,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     }
 
     /**
-     * Sets a callback to be called when the default engine changes.
+     * Sets a callback to be called when the default engine changes. This can be called from any thread.
      *
      * @param changeCallback SearchEngineCallback to be called after the search engine
      *                       changed. This will run on the UI thread.
@@ -97,7 +105,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     }
 
     /**
-     * Perform an action with the user's default search engine.
+     * Perform an action with the user's default search engine. This can be called from any thread.
      *
      * @param callback The callback to be used with the user's default search engine. The call
      *                 may be sync or async; if the call is async, it will be called on the
@@ -111,16 +119,16 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         }
     }
 
-    public void destroy() {
+    /**
+     * Should be called when the object goes out of scope.
+     */
+    public void unregisterListeners() {
         GeckoSharedPrefs.forApp(context).unregisterOnSharedPreferenceChangeListener(this);
-        context = null;
-        distribution = null;
-        changeCallback = null;
-        engine = null;
     }
 
-    private int ignorePreferenceChange = 0;
+    private volatile int ignorePreferenceChange = 0;
 
+    @UiThread // according to the docs.
     @Override
     public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
         if (!TextUtils.equals(PREF_DEFAULT_ENGINE_KEY, key)) {
@@ -139,16 +147,37 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
      * Runs a SearchEngineCallback on the main thread.
      */
     private void runCallback(final SearchEngine engine, @Nullable final SearchEngineCallback callback) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                // Cache engine for future calls to getEngine.
-                SearchEngineManager.this.engine = engine;
-                if (callback != null) {
-                    callback.execute(engine);
-                }
+        ThreadUtils.postToUiThread(new RunCallbackUiThreadRunnable(this, engine, callback));
+    }
+
+    // Static is not strictly necessary but the outer class has a reference to Context so we should GC ASAP.
+    private static class RunCallbackUiThreadRunnable implements Runnable {
+        private final WeakReference<SearchEngineManager> searchEngineManagerWeakReference;
+        private final SearchEngine searchEngine;
+        private final SearchEngineCallback callback;
+
+        public RunCallbackUiThreadRunnable(final SearchEngineManager searchEngineManager, final SearchEngine searchEngine,
+                final SearchEngineCallback callback) {
+            this.searchEngineManagerWeakReference = new WeakReference<>(searchEngineManager);
+            this.searchEngine = searchEngine;
+            this.callback = callback;
+        }
+
+        @UiThread
+        @Override
+        public void run() {
+            final SearchEngineManager searchEngineManager = searchEngineManagerWeakReference.get();
+            if (searchEngineManager == null) {
+                return;
             }
-        });
+
+            // Cache engine for future calls to getEngine.
+            searchEngineManager.engine = searchEngine;
+            if (callback != null) {
+                callback.execute(searchEngine);
+            }
+
+        }
     }
 
     /**
@@ -164,72 +193,95 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
      */
     private void getDefaultEngine(final SearchEngineCallback callback) {
         // This runnable is posted to the background thread.
-        distribution.addOnDistributionReadyCallback(new Distribution.ReadyCallback() {
-            @Override
-            public void distributionNotFound() {
-                defaultBehavior();
+        distribution.addOnDistributionReadyCallback(new GetDefaultEngineDistributionCallbacks(this, callback));
+    }
+
+    // Static is not strictly necessary but the outer class contains a reference to Context so we should GC ASAP.
+    private static class GetDefaultEngineDistributionCallbacks implements Distribution.ReadyCallback {
+        private final WeakReference<SearchEngineManager> searchEngineManagerWeakReference;
+        private final SearchEngineCallback callback;
+
+        public GetDefaultEngineDistributionCallbacks(final SearchEngineManager searchEngineManager,
+                final SearchEngineCallback callback) {
+            this.searchEngineManagerWeakReference = new WeakReference<>(searchEngineManager);
+            this.callback = callback;
+        }
+
+        @Override
+        public void distributionNotFound() {
+            defaultBehavior();
+        }
+
+        @Override
+        public void distributionFound(Distribution distribution) {
+            defaultBehavior();
+        }
+
+        @Override
+        public void distributionArrivedLate(Distribution distribution) {
+            final SearchEngineManager searchEngineManager = searchEngineManagerWeakReference.get();
+            if (searchEngineManager == null) {
+                return;
             }
 
-            @Override
-            public void distributionFound(Distribution distribution) {
-                defaultBehavior();
+            // Let's see if there's a name in the distro.
+            // If so, just this once we'll override the saved value.
+            final String name = searchEngineManager.getDefaultEngineNameFromDistribution();
+
+            if (name == null) {
+                return;
             }
 
-            @Override
-            public void distributionArrivedLate(Distribution distribution) {
-                // Let's see if there's a name in the distro.
-                // If so, just this once we'll override the saved value.
-                final String name = getDefaultEngineNameFromDistribution();
+            // Store the default engine name for the future.
+            // Increment an 'ignore' counter so that this preference change
+            // won't cause getDefaultEngine to be called again.
+            searchEngineManager.ignorePreferenceChange++;
+            GeckoSharedPrefs.forApp(searchEngineManager.context)
+                    .edit()
+                    .putString(PREF_DEFAULT_ENGINE_KEY, name)
+                    .apply();
 
+            final SearchEngine engine = searchEngineManager.createEngineFromName(name);
+            searchEngineManager.runCallback(engine, callback);
+        }
+
+        @WorkerThread // calling methods are @WorkerThread
+        private void defaultBehavior() {
+            final SearchEngineManager searchEngineManager = searchEngineManagerWeakReference.get();
+            if (searchEngineManager == null) {
+                return;
+            }
+
+            // First look for a default name stored in shared preferences.
+            String name = GeckoSharedPrefs.forApp(searchEngineManager.context).getString(PREF_DEFAULT_ENGINE_KEY, null);
+
+            // Check for a region stored in shared preferences. If we don't have a region,
+            // we should force a recheck of the default engine.
+            String region = GeckoSharedPrefs.forApp(searchEngineManager.context).getString(PREF_REGION_KEY, null);
+
+            if (name != null && region != null) {
+                Log.d(LOG_TAG, "Found default engine name in SharedPreferences: " + name);
+            } else {
+                // First, look for the default search engine in a distribution.
+                name = searchEngineManager.getDefaultEngineNameFromDistribution();
                 if (name == null) {
-                    return;
+                    // Otherwise, get the default engine that we ship.
+                    name = searchEngineManager.getDefaultEngineNameFromLocale();
                 }
 
                 // Store the default engine name for the future.
                 // Increment an 'ignore' counter so that this preference change
                 // won't cause getDefaultEngine to be called again.
-                ignorePreferenceChange++;
-                GeckoSharedPrefs.forApp(context)
+                searchEngineManager.ignorePreferenceChange++;
+                GeckoSharedPrefs.forApp(searchEngineManager.context)
                         .edit()
                         .putString(PREF_DEFAULT_ENGINE_KEY, name)
                         .apply();
-
-                final SearchEngine engine = createEngineFromName(name);
-                runCallback(engine, callback);
             }
 
-            private void defaultBehavior() {
-                // First look for a default name stored in shared preferences.
-                String name = GeckoSharedPrefs.forApp(context).getString(PREF_DEFAULT_ENGINE_KEY, null);
-
-                // Check for a region stored in shared preferences. If we don't have a region,
-                // we should force a recheck of the default engine.
-                String region = GeckoSharedPrefs.forApp(context).getString(PREF_REGION_KEY, null);
-
-                if (name != null && region != null) {
-                    Log.d(LOG_TAG, "Found default engine name in SharedPreferences: " + name);
-                } else {
-                    // First, look for the default search engine in a distribution.
-                    name = getDefaultEngineNameFromDistribution();
-                    if (name == null) {
-                        // Otherwise, get the default engine that we ship.
-                        name = getDefaultEngineNameFromLocale();
-                    }
-
-                    // Store the default engine name for the future.
-                    // Increment an 'ignore' counter so that this preference change
-                    // won't cause getDefaultEngine to be called again.
-                    ignorePreferenceChange++;
-                    GeckoSharedPrefs.forApp(context)
-                                    .edit()
-                                    .putString(PREF_DEFAULT_ENGINE_KEY, name)
-                                    .apply();
-                }
-
-                final SearchEngine engine = createEngineFromName(name);
-                runCallback(engine, callback);
-            }
-        });
+            final SearchEngine engine = searchEngineManager.createEngineFromName(name);
+            searchEngineManager.runCallback(engine, callback);
+        }
     }
 
     /**
