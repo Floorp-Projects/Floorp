@@ -80,6 +80,7 @@ var SelectionHandler = {
     this._contentWindowRef = Cu.getWeakReference(aContentWindow);
   },
 
+  // Main target element, always provides editor for editables.
   get _targetElement() {
     if (this._targetElementRef)
       return this._targetElementRef.get();
@@ -89,6 +90,10 @@ var SelectionHandler = {
   set _targetElement(aTargetElement) {
     this._targetElementRef = Cu.getWeakReference(aTargetElement);
   },
+
+  // Alternate target element. Always provides public DOM node for editables
+  // that contain anonymous inner content structures.
+  _targetDOMCaretNode: null,
 
   get _domWinUtils() {
     return BrowserApp.selectedBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).
@@ -686,7 +691,8 @@ var SelectionHandler = {
       id: "selectall_action",
       icon: "drawable://ab_select_all",
       action: function(aElement) {
-        SelectionHandler.startSelection(aElement);
+        // Use the public DOMNode for startSelection(), not any anonymous inner.
+        SelectionHandler.startSelection(SelectionHandler._targetDOMCaretNode);
         UITelemetry.addEvent("action.1", "actionbar", null, "select_all");
       },
       order: 5,
@@ -734,8 +740,7 @@ var SelectionHandler = {
       selector: {
         matches: function(aElement) {
           // Don't include "copy" for password fields.
-          // mozIsTextField(true) tests for only non-password fields.
-          if (aElement instanceof Ci.nsIDOMHTMLInputElement && !aElement.mozIsTextField(true)) {
+          if (aElement instanceof Ci.nsIDOMHTMLInputElement && (aElement.type === "password")) {
             return false;
           }
           return SelectionHandler.isSelectionActive();
@@ -901,9 +906,30 @@ var SelectionHandler = {
     return this.ERROR_NONE;
   },
 
+  /**
+   * <input> editables of type=number are special cases, bearing unique anonymous
+   * internal content to facilitate up/down arrow UI controls. We will maintain a
+   * reference to their public DOMNode, as well as their internal node, which
+   * holds reference to it's editor.
+   */
+  _setTargetElements: function(element) {
+    // Default, both values are the same.
+    this._targetDOMCaretNode = element;
+    this._targetElement = element;
+    if (element.type !== "number") {
+      return;
+    }
+
+    // Set the editor bearing anonymous inner <input> element.
+    let editorNode = Services.focus.focusedElement;
+    if (editorNode instanceof HTMLInputElement && editorNode.editor) {
+      this._targetElement = editorNode;
+    }
+    return;
+  },
+
   // Target initialization for both TYPE_CURSOR and TYPE_SELECTION
   _initTargetInfo: function sh_initTargetInfo(aElement, aSelectionType) {
-    this._targetElement = aElement;
     if (aElement instanceof Ci.nsIDOMNSEditableElement) {
       if (aSelectionType === this.TYPE_SELECTION) {
         // Blur the targetElement to force IME code to undo previous style compositions
@@ -913,6 +939,7 @@ var SelectionHandler = {
       // Ensure targetElement is now focused normally
       aElement.focus();
     }
+    this._setTargetElements(aElement);
 
     this._selectionID = this._idService.generateUUID().toString();
     this._stopDraggingHandles();
@@ -973,13 +1000,15 @@ var SelectionHandler = {
   },
 
   isElementEditableText: function (aElement) {
-    return (((aElement instanceof HTMLInputElement && aElement.mozIsTextField(false)) ||
+    return (((aElement instanceof HTMLInputElement &&
+              (aElement.mozIsTextField(false) || aElement.type === "number")) ||
             (aElement instanceof HTMLTextAreaElement)) && !aElement.readOnly) ||
             aElement.isContentEditable;
   },
 
   _isNonTextInputElement: function(aElement) {
-    return (aElement instanceof HTMLInputElement && !aElement.mozIsTextField(false));
+    return (aElement instanceof HTMLInputElement &&
+            !(aElement.mozIsTextField(false) || aElement.type === "number"));
   },
 
   /*
@@ -1003,7 +1032,7 @@ var SelectionHandler = {
 
     // Constrain text selection within editable elements.
     let targetIsEditable = this._targetElement instanceof Ci.nsIDOMNSEditableElement;
-    if (targetIsEditable && (caretPos.offsetNode != this._targetElement)) {
+    if (targetIsEditable && (caretPos.offsetNode != this._targetDOMCaretNode)) {
       return;
     }
 
@@ -1230,6 +1259,8 @@ var SelectionHandler = {
 
     this._contentWindow = null;
     this._targetElement = null;
+    this._targetDOMCaretNode = null;
+
     this._targetIsRTL = false;
     this._ignoreCompositionChanges = false;
     this._prevHandlePositions = [];
