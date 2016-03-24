@@ -309,7 +309,6 @@ GeneratedJNIWrappers.cpp: $(ALL_JARS)
 
 manifest := \
   AndroidManifest.xml.in \
-  fennec_ids.txt.in \
   $(NULL)
 
 PP_TARGETS += manifest
@@ -569,8 +568,6 @@ libs:: jni-stubs.inc GeneratedJNIWrappers.cpp
 	  echo '*****************************************************' && \
 	  exit 1)
 endif
-
-libs:: $(CURDIR)/fennec_ids.txt
 
 libs:: classes.dex
 	$(INSTALL) classes.dex $(FINAL_TARGET)
