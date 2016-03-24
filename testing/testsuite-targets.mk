@@ -269,7 +269,6 @@ stage-mach: make-stage-dir
 stage-mochitest: make-stage-dir
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 	$(MAKE) -C $(DEPTH)/testing/mochitest stage-package
-	$(NSINSTALL) $(DEPTH)/mobile/android/base/fennec_ids.txt $(PKG_STAGE)/mochitest
 endif
 
 stage-jstests: make-stage-dir

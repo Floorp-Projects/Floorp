@@ -69,7 +69,6 @@ ifdef ENABLE_TESTS
 INNER_ROBOCOP_PACKAGE=true
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 UPLOAD_EXTRA_FILES += robocop.apk
-UPLOAD_EXTRA_FILES += fennec_ids.txt
 UPLOAD_EXTRA_FILES += geckoview_library/geckoview_library.zip
 UPLOAD_EXTRA_FILES += geckoview_library/geckoview_assets.zip
 
@@ -82,11 +81,7 @@ else
 robocop_apk := $(topobjdir)/gradle/build/mobile/android/app/outputs/apk/app-automation-debug-androidTest-unaligned.apk
 endif
 
-# Normally, $(NSINSTALL) would be used instead of cp, but INNER_ROBOCOP_PACKAGE
-# is used in a series of commands that run under a "cd something", while
-# $(NSINSTALL) is relative.
 INNER_ROBOCOP_PACKAGE= \
-  cp $(GECKO_APP_AP_PATH)/fennec_ids.txt $(ABS_DIST) && \
   $(call RELEASE_SIGN_ANDROID_APK,$(robocop_apk),$(ABS_DIST)/robocop.apk)
 endif
 else
