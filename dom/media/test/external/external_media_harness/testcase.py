@@ -122,16 +122,15 @@ class NetworkBandwidthTestCase(MediaTestCase):
         BrowserMobProxyTestCaseMixin.tearDown(self)
         self.proxy = None
 
-    def run_videos(self):
+    def run_videos(self, timeout=60):
         """
         Run each of the videos in the video list. Raises if something goes
         wrong in playback.
         """
         with self.marionette.using_context('content'):
             for url in self.video_urls:
-                video = VP(self.marionette, url,
-                                       stall_wait_time=60,
-                                       set_duration=60)
+                video = VP(self.marionette, url, stall_wait_time=60,
+                           set_duration=60, timeout=timeout)
                 self.run_playback(video)
 
 
@@ -188,15 +187,15 @@ class NetworkBandwidthTestsMixin(object):
 
     def test_playback_limiting_bandwidth_250(self):
         self.proxy.limits({'downstream_kbps': 250})
-        self.run_videos()
+        self.run_videos(timeout=120)
 
     def test_playback_limiting_bandwidth_500(self):
         self.proxy.limits({'downstream_kbps': 500})
-        self.run_videos()
+        self.run_videos(timeout=120)
 
     def test_playback_limiting_bandwidth_1000(self):
         self.proxy.limits({'downstream_kbps': 1000})
-        self.run_videos()
+        self.run_videos(timeout=120)
 
 
 reset_adobe_gmp_script = """
