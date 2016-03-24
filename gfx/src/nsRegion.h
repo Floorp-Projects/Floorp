@@ -19,8 +19,8 @@
 #include "nsMargin.h"                   // for nsIntMargin
 #include "nsRegionFwd.h"                // for nsIntRegion
 #include "nsStringGlue.h"               // for nsCString
-#include "nsTArray.h"                   // for nsTArray, nsTArray_Impl
 #include "xpcom-config.h"               // for CPP_THROW_NEW
+#include "mozilla/ArrayView.h"          // for ArrayView
 #include "mozilla/Move.h"               // for mozilla::Move
 #include "mozilla/gfx/MatrixFwd.h"      // for mozilla::gfx::Matrix4x4
 
@@ -60,9 +60,9 @@ public:
                                                                           aRect.y,
                                                                           aRect.width,
                                                                           aRect.height); }
-  explicit nsRegion (const nsTArray<pixman_box32_t>& aRects)
+  explicit nsRegion (mozilla::gfx::ArrayView<pixman_box32_t> aRects)
   {
-    pixman_region32_init_rects(&mImpl, aRects.Elements(), aRects.Length());
+    pixman_region32_init_rects(&mImpl, aRects.Data(), aRects.Length());
   }
   nsRegion (const nsRegion& aRegion) { pixman_region32_init(&mImpl); pixman_region32_copy(&mImpl,aRegion.Impl()); }
   nsRegion (nsRegion&& aRegion) { mImpl = aRegion.mImpl; pixman_region32_init(&aRegion.mImpl); }
@@ -480,7 +480,7 @@ public:
 
   BaseIntRegion () {}
   MOZ_IMPLICIT BaseIntRegion (const Rect& aRect) : mImpl (ToRect(aRect)) {}
-  explicit BaseIntRegion (const nsTArray<pixman_box32_t>& aRects) : mImpl (aRects) {}
+  explicit BaseIntRegion (mozilla::gfx::ArrayView<pixman_box32_t> aRects) : mImpl (aRects) {}
   BaseIntRegion (const BaseIntRegion& aRegion) : mImpl (aRegion.mImpl) {}
   BaseIntRegion (BaseIntRegion&& aRegion) : mImpl (mozilla::Move(aRegion.mImpl)) {}
   Derived& operator = (const Rect& aRect) { mImpl = ToRect (aRect); return This(); }
@@ -832,7 +832,7 @@ public:
   IntRegionTyped() {}
   MOZ_IMPLICIT IntRegionTyped(const IntRectTyped<units>& aRect) : Super(aRect) {}
   IntRegionTyped(const IntRegionTyped& aRegion) : Super(aRegion) {}
-  explicit IntRegionTyped(const nsTArray<pixman_box32_t>& aRects) : Super(aRects) {}
+  explicit IntRegionTyped(mozilla::gfx::ArrayView<pixman_box32_t> aRects) : Super(aRects) {}
   IntRegionTyped(IntRegionTyped&& aRegion) : Super(mozilla::Move(aRegion)) {}
 
   // Assignment operators need to be forwarded as well, otherwise the compiler
