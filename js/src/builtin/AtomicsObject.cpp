@@ -52,6 +52,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "jsnum.h"
 
 #include "asmjs/WasmModule.h"
 #include "jit/AtomicOperations.h"
@@ -80,7 +81,10 @@ ReportBadArrayType(JSContext* cx)
 static bool
 ReportOutOfRange(JSContext* cx)
 {
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ATOMICS_BAD_INDEX);
+    // Use JSMSG_BAD_INDEX here even if it is generic, since that is
+    // the message used by ToIntegerIndex for its initial range
+    // checking.
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
     return false;
 }
 
@@ -108,13 +112,12 @@ GetSharedTypedArray(JSContext* cx, HandleValue v,
 static bool
 GetTypedArrayIndex(JSContext* cx, HandleValue v, Handle<TypedArrayObject*> view, uint32_t* offset)
 {
-    RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, v, &id))
-        return false;
     uint64_t index;
-    if (!IsTypedArrayIndex(id, &index) || index >= view->length())
+    if (!js::ToIntegerIndex(cx, v, &index))
+        return false;
+    if (index >= view->length())
         return ReportOutOfRange(cx);
-    *offset = (uint32_t)index;
+    *offset = uint32_t(index);
     return true;
 }
 
