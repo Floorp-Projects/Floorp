@@ -27,7 +27,7 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
   { set: [['media.webspeech.synth.enabled', true],
           ['media.webspeech.synth.force_global_queue', false]] },
-  function() { document.getElementById("testFrame").src = "file_speech_cancel.html"; });
+  function() { loadSpeechTest("file_speech_cancel.html"); });
 
 </script>
 </pre>

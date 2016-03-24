@@ -24,9 +24,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1188099
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv({ set: [['media.webspeech.synth.enabled', true],
-                                  ['media.webspeech.synth.force_global_queue', true]] },
-                          function() { document.getElementById("testFrame").src = "file_global_queue_pause.html"; });
+SpecialPowers.pushPrefEnv(
+  { set: [['media.webspeech.synth.enabled', true],
+          ['media.webspeech.synth.force_global_queue', true]] },
+  function() { loadSpeechTest("file_global_queue_pause.html"); });
 
 </script>
 </pre>
