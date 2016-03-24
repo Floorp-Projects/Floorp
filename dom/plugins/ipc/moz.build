@@ -152,3 +152,6 @@ if CONFIG['_MSC_VER']:
     # This is intended as a temporary hack to support building with VS2015.
     # conversion from 'X' to 'Y' requires a narrowing conversion
     CXXFLAGS += ['-wd4838']
+
+    # 'type cast': conversion from 'unsigned int' to 'HIMC' of greater size
+    CXXFLAGS += ['-wd4312']
