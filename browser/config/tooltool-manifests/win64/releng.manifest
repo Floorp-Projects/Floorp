@@ -19,5 +19,13 @@
 "algorithm": "sha512",
 "filename": "sccache.tar.bz2",
 "unpack": true
+},
+{
+"version": "Visual Studio 2015 Update 1 / SDK 10.0.10586.0",
+"size": 330570496,
+"digest": "0379fd087705f54aeb335449e6c623cd550b656d7110acafd1e5b315e1fc9272b7cdd1e37f99d575b16ecba4e8e4fe3af965967a3944c023b83caf68fa684888",
+"algorithm": "sha512",
+"filename": "vs2015u1.zip",
+"unpack": true
 }
 ]

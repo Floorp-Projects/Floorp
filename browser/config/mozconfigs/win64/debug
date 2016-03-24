@@ -28,7 +28,7 @@ export MOZ_PACKAGE_JSSHELL=1
 
 ac_add_options --with-branding=browser/branding/nightly
 
-. $topsrcdir/build/win64/mozconfig.vs2013
+. $topsrcdir/build/win64/mozconfig.vs2015
 
 . "$topsrcdir/build/mozconfig.rust"
 
