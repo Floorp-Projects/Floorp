@@ -3426,9 +3426,13 @@ private:
 
 class nsDisplayBlendContainer : public nsDisplayWrapList {
 public:
+    // Use this constructor for blend containers that can have active child layers.
     nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             nsDisplayList* aList,
                             const DisplayItemScrollClip* aScrollClip);
+    // Use this constructor for background-blend-mode blend containers.
+    nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                            nsDisplayList* aList);
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual ~nsDisplayBlendContainer();
 #endif
@@ -3453,6 +3457,9 @@ private:
     // Used to distinguish containers created at building stacking
     // context or appending background.
     uint32_t mIndex;
+    // If this is true, then we should make the layer active if all contained blend
+    // modes can be supported by the current layer manager.
+    bool mCanBeActive;
 };
 
 /**
