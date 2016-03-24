@@ -19,12 +19,12 @@ class ProxyObject : public JSObject
     HeapPtrShape shape;
 
     // GetProxyDataLayout computes the address of this field.
-    ProxyDataLayout data;
+    detail::ProxyDataLayout data;
 
     void static_asserts() {
         static_assert(sizeof(ProxyObject) == sizeof(JSObject_Slots0),
                       "proxy object size must match GC thing size");
-        static_assert(offsetof(ProxyObject, data) == ProxyDataOffset,
+        static_assert(offsetof(ProxyObject, data) == detail::ProxyDataOffset,
                       "proxy object layout must match shadow interface");
     }
 
@@ -40,7 +40,7 @@ class ProxyObject : public JSObject
     void setSameCompartmentPrivate(const Value& priv);
 
     HeapValue* slotOfPrivate() {
-        return reinterpret_cast<HeapValue*>(&GetProxyDataLayout(this)->values->privateSlot);
+        return reinterpret_cast<HeapValue*>(&detail::GetProxyDataLayout(this)->values->privateSlot);
     }
 
     JSObject* target() const {
@@ -62,8 +62,8 @@ class ProxyObject : public JSObject
         return offsetof(ProxyObject, data.handler);
     }
     static size_t offsetOfExtraSlotInValues(size_t slot) {
-        MOZ_ASSERT(slot < PROXY_EXTRA_SLOTS);
-        return offsetof(ProxyValueArray, extraSlots) + slot * sizeof(Value);
+        MOZ_ASSERT(slot < detail::PROXY_EXTRA_SLOTS);
+        return offsetof(detail::ProxyValueArray, extraSlots) + slot * sizeof(Value);
     }
 
     const Value& extra(size_t n) const {
@@ -76,8 +76,8 @@ class ProxyObject : public JSObject
 
   private:
     HeapValue* slotOfExtra(size_t n) {
-        MOZ_ASSERT(n < PROXY_EXTRA_SLOTS);
-        return reinterpret_cast<HeapValue*>(&GetProxyDataLayout(this)->values->extraSlots[n]);
+        MOZ_ASSERT(n < detail::PROXY_EXTRA_SLOTS);
+        return reinterpret_cast<HeapValue*>(&detail::GetProxyDataLayout(this)->values->extraSlots[n]);
     }
 
     static bool isValidProxyClass(const Class* clasp) {

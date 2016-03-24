@@ -427,6 +427,7 @@ inline bool IsProxy(const JSObject* obj)
     return GetObjectClass(obj)->isProxy();
 }
 
+namespace detail {
 const uint32_t PROXY_EXTRA_SLOTS = 2;
 
 // Layout of the values stored by a proxy. Note that API clients require the
@@ -463,7 +464,6 @@ struct ProxyDataLayout
 
 const uint32_t ProxyDataOffset = 2 * sizeof(void*);
 
-// This method should only be used internally and by the accessors below.
 inline ProxyDataLayout*
 GetProxyDataLayout(JSObject* obj)
 {
@@ -471,16 +471,25 @@ GetProxyDataLayout(JSObject* obj)
     return reinterpret_cast<ProxyDataLayout*>(reinterpret_cast<uint8_t*>(obj) + ProxyDataOffset);
 }
 
-inline const BaseProxyHandler*
-GetProxyHandler(JSObject* obj)
+inline const ProxyDataLayout*
+GetProxyDataLayout(const JSObject* obj)
 {
-    return GetProxyDataLayout(obj)->handler;
+    MOZ_ASSERT(IsProxy(obj));
+    return reinterpret_cast<const ProxyDataLayout*>(reinterpret_cast<const uint8_t*>(obj) +
+                                                    ProxyDataOffset);
+}
+} // namespace detail
+
+inline const BaseProxyHandler*
+GetProxyHandler(const JSObject* obj)
+{
+    return detail::GetProxyDataLayout(obj)->handler;
 }
 
 inline const Value&
-GetProxyPrivate(JSObject* obj)
+GetProxyPrivate(const JSObject* obj)
 {
-    return GetProxyDataLayout(obj)->values->privateSlot;
+    return detail::GetProxyDataLayout(obj)->values->privateSlot;
 }
 
 inline JSObject*
@@ -490,16 +499,16 @@ GetProxyTargetObject(JSObject* obj)
 }
 
 inline const Value&
-GetProxyExtra(JSObject* obj, size_t n)
+GetProxyExtra(const JSObject* obj, size_t n)
 {
-    MOZ_ASSERT(n < PROXY_EXTRA_SLOTS);
-    return GetProxyDataLayout(obj)->values->extraSlots[n];
+    MOZ_ASSERT(n < detail::PROXY_EXTRA_SLOTS);
+    return detail::GetProxyDataLayout(obj)->values->extraSlots[n];
 }
 
 inline void
 SetProxyHandler(JSObject* obj, const BaseProxyHandler* handler)
 {
-    GetProxyDataLayout(obj)->handler = handler;
+    detail::GetProxyDataLayout(obj)->handler = handler;
 }
 
 JS_FRIEND_API(void)
@@ -508,8 +517,8 @@ SetValueInProxy(Value* slot, const Value& value);
 inline void
 SetProxyExtra(JSObject* obj, size_t n, const Value& extra)
 {
-    MOZ_ASSERT(n < PROXY_EXTRA_SLOTS);
-    Value* vp = &GetProxyDataLayout(obj)->values->extraSlots[n];
+    MOZ_ASSERT(n < detail::PROXY_EXTRA_SLOTS);
+    Value* vp = &detail::GetProxyDataLayout(obj)->values->extraSlots[n];
 
     // Trigger a barrier before writing the slot.
     if (vp->isMarkable() || extra.isMarkable())
@@ -519,13 +528,13 @@ SetProxyExtra(JSObject* obj, size_t n, const Value& extra)
 }
 
 inline bool
-IsScriptedProxy(JSObject* obj)
+IsScriptedProxy(const JSObject* obj)
 {
     return IsProxy(obj) && GetProxyHandler(obj)->isScripted();
 }
 
 inline const Value&
-GetReservedOrProxyPrivateSlot(JSObject* obj, size_t slot)
+GetReservedOrProxyPrivateSlot(const JSObject* obj, size_t slot)
 {
     MOZ_ASSERT(slot == 0);
     MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)) || IsProxy(obj));
