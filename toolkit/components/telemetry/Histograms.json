@@ -983,6 +983,20 @@
     "kind": "boolean",
     "description": "WebGL canvas used"
   },
+  "CANVAS_WEBGL_SUCCESS": {
+    "alert_emails": ["jmuizelaar@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "WebGL1 creation success",
+    "bug_numbers": [1247327]
+  },
+  "CANVAS_WEBGL2_SUCCESS": {
+    "alert_emails": ["jmuizelaar@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "WebGL2 creation success",
+    "bug_numbers": [1247327]
+  },
   "TOTAL_CONTENT_PAGE_LOAD_TIME": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
