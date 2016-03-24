@@ -925,13 +925,15 @@ private:
       // Return whether the iterator is done after doing that.
       // The iterator must not be done when this is called.
       inline bool SkipItemsThatNeedAnonFlexOrGridItem(
-        const nsFrameConstructorState& aState, nsIAtom* aContainerType);
+        const nsFrameConstructorState& aState, nsIAtom* aContainerType,
+        bool aIsWebkitBox);
 
       // Skip to the first frame that is a non-replaced inline or is
       // positioned.  Return whether the iterator is done after doing that.
       // The iterator must not be done when this is called.
       inline bool SkipItemsThatDontNeedAnonFlexOrGridItem(
-        const nsFrameConstructorState& aState, nsIAtom* aContainerType);
+        const nsFrameConstructorState& aState, nsIAtom* aContainerType,
+        bool aIsWebkitBox);
 
       // Skip over all items that do not want a ruby parent.  Return whether
       // the iterator is done after doing that.  The iterator must not be done
@@ -1067,9 +1069,13 @@ private:
     }
 
     // Indicates whether (when in a flex or grid container) this item needs
-    // to be wrapped in an anonymous block.
+    // to be wrapped in an anonymous block.  (Note that we implement
+    // -webkit-box/-webkit-inline-box using our standard flexbox frame class,
+    // but we use different rules for what gets wrapped. The aIsWebkitBox
+    // parameter here tells us whether to use those different rules.)
     bool NeedsAnonFlexOrGridItem(const nsFrameConstructorState& aState,
-                                 nsIAtom* aContainerType);
+                                 nsIAtom* aContainerType,
+                                 bool aIsWebkitBox);
 
     // Don't call this unless the frametree really depends on the answer!
     // Especially so for generated content, where we don't want to reframe
