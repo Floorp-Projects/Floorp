@@ -29,10 +29,7 @@ try:
 
     setup_params = {
         'entry_points': {
-            'console_scripts': [
-                'virtualenv=virtualenv:main',
-                'virtualenv-%s.%s=virtualenv:main' % sys.version_info[:2]
-            ],
+            'console_scripts': ['virtualenv=virtualenv:main'],
         },
         'zip_safe': False,
         'cmdclass': {'test': PyTest},
@@ -46,9 +43,7 @@ except ImportError:
         setup_params = {}
     else:
         script = 'scripts/virtualenv'
-        script_ver = script + '-%s.%s' % sys.version_info[:2]
-        shutil.copy(script, script_ver)
-        setup_params = {'scripts': [script, script_ver]}
+        setup_params = {'scripts': [script]}
 
 
 def read_file(*paths):
@@ -111,10 +106,9 @@ setup(
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.1',
-        'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
     ],
     keywords='setuptools deployment installation distutils',
     author='Ian Bicking',
