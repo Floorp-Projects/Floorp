@@ -4,7 +4,7 @@
 
 import os
 
-from firefox_puppeteer.testcases import FirefoxTestCase
+from firefox_ui_harness.testcases import FirefoxTestCase
 
 from firefox_puppeteer.api.software_update import SoftwareUpdate
 

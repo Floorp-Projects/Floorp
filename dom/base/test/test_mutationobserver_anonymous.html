@@ -5,10 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1034110
 -->
 <head>
   <title>Test for Bug 1034110</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript"  src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <script type="application/javascript"  src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"  src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1034110">Mozilla Bug 1034110</a>
@@ -29,26 +28,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1034110
 /** Test for Bug 1034110 **/
 
 SimpleTest.waitForExplicitFinish();
-const {Cc, Ci, Cu} = SpecialPowers;
 
 function getWalker(node) {
-  let walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"].createInstance(Ci.inIDeepTreeWalker);
-  walker.showAnonymousContent = true;
-  walker.init(node.ownerDocument, Ci.nsIDOMNodeFilter.SHOW_ALL);
-  walker.currentNode = node;
-  return walker;
+  return SpecialPowers.createDOMWalker(node, true);
 }
 
 function getFirstChild(parent) {
-  return SpecialPowers.unwrap(getWalker(parent).firstChild());
+  return SpecialPowers.unwrap(getWalker(parent).firstChild);
 }
 
 function getLastChild(parent) {
-  return SpecialPowers.unwrap(getWalker(parent).lastChild());
+  return SpecialPowers.unwrap(getWalker(parent).lastChild);
 }
 
 function assertSamePseudoElement(which, node1, node2) {
-  is(node1.nodeName, "_moz_generated_content_" + which,
+  is(SpecialPowers.wrap(node1).nodeName, "_moz_generated_content_" + which,
      "Correct pseudo element type");
   is(node1, node2,
      "Referencing the same ::after element");
@@ -73,7 +67,7 @@ function testOneAdded() {
     testAddedAndRemoved();
   });
 
-  m.observe(parent, { nativeAnonymousChildList: true});
+  SpecialPowers.observeMutationEvents(m, parent, true);
   parent.className = "before";
 }
 
@@ -100,7 +94,7 @@ function testAddedAndRemoved() {
     testRemoved();
   });
 
-  m.observe(parent, { nativeAnonymousChildList: true});
+  SpecialPowers.observeMutationEvents(m, parent, true);
   parent.className = "after";
 }
 
@@ -120,7 +114,7 @@ function testRemoved() {
     testMultipleAdded();
   });
 
-  m.observe(parent, { nativeAnonymousChildList: true });
+  SpecialPowers.observeMutationEvents(m, parent, true);
   parent.className = "";
 }
 
@@ -145,7 +139,7 @@ function testMultipleAdded() {
     testRemovedDueToDisplay();
   });
 
-  m.observe(parent, { nativeAnonymousChildList: true });
+  SpecialPowers.observeMutationEvents(m, parent, true);
   parent.className = "before after";
 }
 
@@ -172,7 +166,7 @@ function testRemovedDueToDisplay() {
     testAddedDueToDisplay();
   });
 
-  m.observe(parent, { nativeAnonymousChildList: true });
+  SpecialPowers.observeMutationEvents(m, parent, true);
   parent.style.display = "none";
 }
 
@@ -197,7 +191,7 @@ function testAddedDueToDisplay() {
     testDifferentTargetNoSubtree();
   });
 
-  m.observe(parent, { nativeAnonymousChildList: true });
+  SpecialPowers.observeMutationEvents(m, parent, true);
   parent.style.display = "block";
 }
 
@@ -207,7 +201,7 @@ function testDifferentTargetNoSubtree() {
     ok(false,
        "No mutation should fire when observing on a parent without subtree option.");
   });
-  m.observe(document, { nativeAnonymousChildList: true });
+  SpecialPowers.observeMutationEvents(m, document, true);
   parent.style.display = "none";
 
   // Wait for the actual mutation to come through, making sure that
@@ -218,7 +212,7 @@ function testDifferentTargetNoSubtree() {
     observer.disconnect();
     testSubtree();
   });
-  m2.observe(parent, { nativeAnonymousChildList: true });
+  SpecialPowers.observeMutationEvents(m2, parent, true);
 }
 
 function testSubtree() {
@@ -241,7 +235,7 @@ function testSubtree() {
     observer.disconnect();
     SimpleTest.finish();
   });
-  m.observe(document, { nativeAnonymousChildList: true, subtree: true });
+  SpecialPowers.observeMutationEvents(m, document, true, true);
   parent.style.display = "block";
 }
 

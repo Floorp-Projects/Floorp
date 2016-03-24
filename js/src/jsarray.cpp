@@ -3104,9 +3104,8 @@ array_of(JSContext* cx, unsigned argc, Value* vp)
     // Step 4.
     RootedObject obj(cx);
     {
-        ConstructArgs cargs(cx);
-        if (!cargs.init(1))
-            return false;
+        FixedConstructArgs<1> cargs(cx);
+
         cargs[0].setNumber(args.length());
 
         if (!Construct(cx, args.thisv(), cargs, args.thisv(), &obj))

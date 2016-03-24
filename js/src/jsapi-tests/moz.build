@@ -129,3 +129,7 @@ USE_LIBS += [
 ]
 
 OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
+
+# This is intended as a temporary workaround to enable VS2015.
+if CONFIG['_MSC_VER']:
+    CXXFLAGS += ['-wd4312']

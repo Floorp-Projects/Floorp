@@ -668,64 +668,61 @@ struct nsCSSRendering {
                                      uint8_t              aEndBevelSide = 0,
                                      nscoord              aEndBevelOffset = 0);
 
+  // NOTE: pt, dirtyRect, lineSize, ascent, offset in the following
+  //       structs are non-rounded device pixels, not app units.
+  struct DecorationRectParams
+  {
+    // The width [length] and the height [thickness] of the decoration
+    // line. This is a "logical" size in textRun orientation, so that
+    // for a vertical textrun, width will actually be a physical height;
+    // and conversely, height will be a physical width.
+    Size lineSize;
+    // The ascent of the text.
+    Float ascent = 0.0f;
+    // The offset of the decoration line from the baseline of the text
+    // (if the value is positive, the line is lifted up).
+    Float offset = 0.0f;
+    // If descentLimit is zero or larger and the underline overflows
+    // from the descent space, the underline should be lifted up as far
+    // as possible.  Note that this does not mean the underline never
+    // overflows from this limitation, because if the underline is
+    // positioned to the baseline or upper, it causes unreadability.
+    // Note that if this is zero or larger, the underline rect may be
+    // shrunken if it's possible.  Therefore, this value is used for
+    // strikeout line and overline too.
+    Float descentLimit = -1.0f;
+    // Which line will be painted. The value can be
+    // NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE or
+    // NS_STYLE_TEXT_DECORATION_LINE_OVERLINE or
+    // NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH.
+    uint8_t decoration = NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+    // The style of the decoration line such as
+    // NS_STYLE_TEXT_DECORATION_STYLE_*.
+    uint8_t style = NS_STYLE_TEXT_DECORATION_STYLE_NONE;
+    bool vertical = false;
+  };
+  struct PaintDecorationLineParams : DecorationRectParams
+  {
+    // No need to paint outside this rect.
+    Rect dirtyRect;
+    // The top/left edge of the text.
+    Point pt;
+    // The color of the decoration line.
+    nscolor color = NS_RGBA(0, 0, 0, 0);
+    // The distance between the left edge of the given frame and the
+    // position of the text as positioned without offset of the shadow.
+    Float icoordInFrame = 0.0f;
+  };
+
   /**
    * Function for painting the decoration lines for the text.
-   * NOTE: aPt, aLineSize, aAscent and aOffset are non-rounded device pixels,
-   *       not app units.
-   * NOTE: aLineSize is a "logical" size in textRun orientation, so that for
-   *       a vertical textrun, aLineSize.width (which is the decoration line
-   *       length) will actually be a physical height; and conversely,
-   *       aLineSize.height [thickness] will be a physical width. The alternate
-   *       names in [brackets] in the comments here apply to the vertical case.
    *
    *   input:
    *     @param aFrame            the frame which needs the decoration line
    *     @param aGfxContext
-   *     @param aDirtyRect        no need to paint outside this rect
-   *     @param aColor            the color of the decoration line
-   *     @param aPt               the top/left edge of the text
-   *     @param aICoordInFrame    the distance between aPt.x [y] and left [top]
-   *                              edge of aFrame. If the decoration line is for
-   *                              shadow, set the distance between the left edge
-   *                              of the aFrame and the position of the text as
-   *                              positioned without offset of the shadow.
-   *     @param aLineSize         the width [length] and the height [thickness]
-   *                              of the decoration line
-   *     @param aAscent           the ascent of the text
-   *     @param aOffset           the offset of the decoration line from
-   *                              the baseline of the text (if the value is
-   *                              positive, the line is lifted up [right])
-   *     @param aDecoration       which line will be painted. The value can be
-   *                              NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE or
-   *                              NS_STYLE_TEXT_DECORATION_LINE_OVERLINE or
-   *                              NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH.
-   *     @param aStyle            the style of the decoration line such as
-   *                              NS_STYLE_TEXT_DECORATION_STYLE_*.
-   *     @param aDescentLimit     If aDescentLimit is zero or larger and the
-   *                              underline overflows from the descent space,
-   *                              the underline should be lifted up as far as
-   *                              possible.  Note that this does not mean the
-   *                              underline never overflows from this
-   *                              limitation.  Because if the underline is
-   *                              positioned to the baseline or upper, it causes
-   *                              unreadability.  Note that if this is zero
-   *                              or larger, the underline rect may be shrunken
-   *                              if it's possible.  Therefore, this value is
-   *                              used for strikeout line and overline too.
    */
-  static void PaintDecorationLine(nsIFrame* aFrame,
-                                  DrawTarget& aDrawTarget,
-                                  const Rect& aDirtyRect,
-                                  const nscolor aColor,
-                                  const Point& aPt,
-                                  const Float aICoordInFrame,
-                                  const Size& aLineSize,
-                                  const gfxFloat aAscent,
-                                  const gfxFloat aOffset,
-                                  const uint8_t aDecoration,
-                                  const uint8_t aStyle,
-                                  bool aVertical,
-                                  const gfxFloat aDescentLimit = -1.0);
+  static void PaintDecorationLine(nsIFrame* aFrame, DrawTarget& aDrawTarget,
+                                  const PaintDecorationLineParams& aParams);
 
   /**
    * Returns a Rect corresponding to the outline of the decoration line for the
@@ -733,15 +730,7 @@ struct nsCSSRendering {
    * PaintDecorationLine.  Currently this only works for solid
    * decorations; for other decoration styles the returned Rect will be empty.
    */
-  static Rect DecorationLineToPath(const Rect& aDirtyRect,
-                                   const Point& aPt,
-                                   const Size& aLineSize,
-                                   const Float aAscent,
-                                   const Float aOffset,
-                                   const uint8_t aDecoration,
-                                   const uint8_t aStyle,
-                                   bool aVertical,
-                                   const Float aDescentLimit = -1.0);
+  static Rect DecorationLineToPath(const PaintDecorationLineParams& aParams);
 
   /**
    * Function for getting the decoration line rect for the text.
@@ -749,41 +738,12 @@ struct nsCSSRendering {
    *       not app units.
    *   input:
    *     @param aPresContext
-   *     @param aLineSize         the width and the height of the decoration
-   *                              line
-   *     @param aAscent           the ascent of the text
-   *     @param aOffset           the offset of the decoration line from
-   *                              the baseline of the text (if the value is
-   *                              positive, the line is lifted up)
-   *     @param aDecoration       which line will be painted. The value can be
-   *                              NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE or
-   *                              NS_STYLE_TEXT_DECORATION_LINE_OVERLINE or
-   *                              NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH.
-   *     @param aStyle            the style of the decoration line such as
-   *                              NS_STYLE_TEXT_DECORATION_STYLE_*.
-   *     @param aDescentLimit     If aDescentLimit is zero or larger and the
-   *                              underline overflows from the descent space,
-   *                              the underline should be lifted up as far as
-   *                              possible.  Note that this does not mean the
-   *                              underline never overflows from this
-   *                              limitation.  Because if the underline is
-   *                              positioned to the baseline or upper, it causes
-   *                              unreadability.  Note that if this is zero
-   *                              or larger, the underline rect may be shrunken
-   *                              if it's possible.  Therefore, this value is
-   *                              used for strikeout line and overline too.
    *   output:
    *     @return                  the decoration line rect for the input,
    *                              the each values are app units.
    */
   static nsRect GetTextDecorationRect(nsPresContext* aPresContext,
-                                      const Size& aLineSize,
-                                      const gfxFloat aAscent,
-                                      const gfxFloat aOffset,
-                                      const uint8_t aDecoration,
-                                      const uint8_t aStyle,
-                                      bool aVertical,
-                                      const gfxFloat aDescentLimit = -1.0);
+                                      const DecorationRectParams& aParams);
 
   static CompositionOp GetGFXBlendMode(uint8_t mBlendMode) {
     switch (mBlendMode) {
@@ -818,14 +778,8 @@ struct nsCSSRendering {
 
   }
 protected:
-  static gfxRect GetTextDecorationRectInternal(const Point& aPt,
-                                               const Size& aLineSize,
-                                               const gfxFloat aAscent,
-                                               const gfxFloat aOffset,
-                                               const uint8_t aDecoration,
-                                               const uint8_t aStyle,
-                                               bool aVertical,
-                                               const gfxFloat aDescentLimit);
+  static gfxRect GetTextDecorationRectInternal(
+      const Point& aPt, const DecorationRectParams& aParams);
 
   /**
    * Returns inflated rect for painting a decoration line.

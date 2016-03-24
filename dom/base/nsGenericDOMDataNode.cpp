@@ -371,7 +371,10 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
   }
 
   if (dirAffectsAncestor) {
-    TextNodeChangedDirection(this, oldDir, aNotify);
+    // dirAffectsAncestor being true implies that we have a text node, see
+    // above.
+    MOZ_ASSERT(NodeType() == nsIDOMNode::TEXT_NODE);
+    TextNodeChangedDirection(static_cast<nsTextNode*>(this), oldDir, aNotify);
   }
 
   // Notify observers

@@ -80,10 +80,3 @@ nsHtml5Atom::ScriptableEquals(const nsAString& aString, bool* aResult)
   NS_NOTREACHED("Should not call ScriptableEquals.");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-NS_IMETHODIMP_(bool)
-nsHtml5Atom::EqualsUTF8(const nsACString& aString)
-{
-  NS_NOTREACHED("Should not attempt to compare with an UTF-8 string.");
-  return false;
-}

@@ -1301,7 +1301,7 @@ public class BrowserApp extends GeckoApp
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "error building json arguments", e);
                 }
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Feeds:Subscribe", args.toString()));
+                GeckoAppShell.notifyObservers("Feeds:Subscribe", args.toString());
             }
             return true;
         }
@@ -1317,7 +1317,7 @@ public class BrowserApp extends GeckoApp
                     Log.e(LOGTAG, "error building json arguments", e);
                     return true;
                 }
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Add", args.toString()));
+                GeckoAppShell.notifyObservers("SearchEngines:Add", args.toString());
             }
             return true;
         }
@@ -1663,8 +1663,7 @@ public class BrowserApp extends GeckoApp
                     new AlertDialog.OnClickListener() {
                 @Override
                 public void onClick(final DialogInterface dialog, final int which) {
-                    GeckoAppShell.sendEventToGecko(
-                        GeckoEvent.createBroadcastEvent("CharEncoding:Set", codeArray[which]));
+                    GeckoAppShell.notifyObservers("CharEncoding:Set", codeArray[which]);
                     dialog.dismiss();
                 }
             });
@@ -2957,7 +2956,7 @@ public class BrowserApp extends GeckoApp
         item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Menu:Clicked", Integer.toString(info.id - ADDON_MENU_OFFSET)));
+                GeckoAppShell.notifyObservers("Menu:Clicked", Integer.toString(info.id - ADDON_MENU_OFFSET));
                 return true;
             }
         });
@@ -3535,7 +3534,7 @@ public class BrowserApp extends GeckoApp
 
         if (itemId == R.id.save_as_pdf) {
             Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, "pdf");
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SaveAs:PDF", null));
+            GeckoAppShell.notifyObservers("SaveAs:PDF", null);
             return true;
         }
 
@@ -3580,7 +3579,7 @@ public class BrowserApp extends GeckoApp
         }
 
         if (itemId == R.id.char_encoding) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Get", null));
+            GeckoAppShell.notifyObservers("CharEncoding:Get", null);
             return true;
         }
 
@@ -3600,7 +3599,7 @@ public class BrowserApp extends GeckoApp
             } catch (JSONException e) {
                 Log.e(LOGTAG, "error building json arguments", e);
             }
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("DesktopMode:Change", args.toString()));
+            GeckoAppShell.notifyObservers("DesktopMode:Change", args.toString());
             return true;
         }
 
@@ -3797,7 +3796,7 @@ public class BrowserApp extends GeckoApp
 
                 // If we've reached our magic number, show the feedback page.
                 if (launchCount == FEEDBACK_LAUNCH_COUNT) {
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Feedback:Show", null));
+                    GeckoAppShell.notifyObservers("Feedback:Show", null);
                 }
             }
         } finally {

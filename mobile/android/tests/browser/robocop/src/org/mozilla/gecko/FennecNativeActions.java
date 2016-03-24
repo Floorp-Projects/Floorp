@@ -188,7 +188,7 @@ public class FennecNativeActions implements Actions {
     }
 
     public void sendGeckoEvent(final String geckoEvent, final String data) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(geckoEvent, data));
+        GeckoAppShell.notifyObservers(geckoEvent, data);
     }
 
     public static final class PrefProxy implements PrefsHelper.PrefHandler, PrefWaiter {

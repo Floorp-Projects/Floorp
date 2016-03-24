@@ -32,16 +32,4 @@ interface nsIAtomService : nsISupports {
    * XPCOM library.  See nsIAtom.idl.
    */
   nsIAtom getAtom(in AString value);
-
-  /**
-   * Version of NS_NewPermanentAtom that doesn't require linking against
-   * the XPCOM library.  See nsIAtom.idl.
-   */
-  nsIAtom getPermanentAtom(in AString value);
-
-  /**
-   * Get an atom with a utf8 string.
-   */
-  [noscript] nsIAtom getAtomUTF8(in string value);
-  [noscript] nsIAtom getPermanentAtomUTF8(in string value);
 };

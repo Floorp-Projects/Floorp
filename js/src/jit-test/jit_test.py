@@ -266,9 +266,10 @@ def main(argv):
     else:
         test_flags = get_jitflags(options.jitflags)
 
-    job_list = (_ for test in test_list
-                for _ in test.copy_variants(test_flags))
-    job_count = len(test_list) * len(test_flags)
+    test_list = [_ for test in test_list for _ in test.copy_variants(test_flags)]
+
+    job_list = (test for test in test_list)
+    job_count = len(test_list)
 
     if options.repeat:
         job_list = (test for test in job_list for i in range(options.repeat))

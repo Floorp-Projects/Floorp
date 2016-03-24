@@ -411,7 +411,7 @@ public abstract class HomeFragment extends Fragment {
                 case READING_LIST:
                     Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.CONTEXT_MENU, "reading_list");
                     mDB.getReadingListAccessor().removeReadingListItemWithURL(cr, mUrl);
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:Removed", mUrl));
+                    GeckoAppShell.notifyObservers("Reader:Removed", mUrl);
                     break;
 
                 default:

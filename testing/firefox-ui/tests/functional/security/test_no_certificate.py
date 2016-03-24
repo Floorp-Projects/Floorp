@@ -6,7 +6,7 @@ from urlparse import urlparse
 
 from marionette_driver import expected, Wait
 
-from firefox_puppeteer.testcases import FirefoxTestCase
+from firefox_ui_harness.testcases import FirefoxTestCase
 
 
 class TestNoCertificate(FirefoxTestCase):

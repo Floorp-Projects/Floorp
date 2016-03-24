@@ -3,7 +3,7 @@
 
     Upload the apk of a Firefox app on Google play
     Example for a beta upload:
-    $ python push_apk.py --package-name org.mozilla.firefox_beta --service-account foo@developer.gserviceaccount.com --credentials key.p12 --apk-x86=/path/to/fennec-XX.0bY.multi.android-i386.apk --apk-armv7-v9=/path/to/fennec-XX.0bY.multi.android-arm-v9.apk --apk-armv7-v11=/path/to/fennec-XX.0bY.multi.android-arm-v11.apk --track production --push_apk
+    $ python push_apk.py --package-name org.mozilla.firefox_beta --service-account foo@developer.gserviceaccount.com --credentials key.p12 --apk-x86=/path/to/fennec-XX.0bY.multi.android-i386.apk --apk-armv7-v9=/path/to/fennec-XX.0bY.multi.android-arm-v9.apk --apk-armv7-v15=/path/to/fennec-XX.0bY.multi.android-arm-v15.apk --track production --push_apk
 """
 import sys
 import os
@@ -59,9 +59,9 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
             "dest": "apk_file_armv7_v9",
             "help": "The path to the ARM v7 API v9 APK file",
         }],
-        [["--apk-armv7-v11"], {
-            "dest": "apk_file_armv7_v11",
-            "help": "The path to the ARM v7 API v11 APK file",
+        [["--apk-armv7-v15"], {
+            "dest": "apk_file_armv7_v15",
+            "help": "The path to the ARM v7 API v15 APK file",
         }],
         [["--apk-armv6"], {
             "dest": "apk_file_armv6",
@@ -126,8 +126,8 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
         if not os.path.isfile(self.config['apk_file_armv7_v9']):
             self.fatal("Could not find " + self.config['apk_file_armv7_v9'])
 
-        if not os.path.isfile(self.config['apk_file_armv7_v11']):
-            self.fatal("Could not find " + self.config['apk_file_armv7_v11'])
+        if not os.path.isfile(self.config['apk_file_armv7_v15']):
+            self.fatal("Could not find " + self.config['apk_file_armv7_v15'])
 
         if self.config.get('apk_file_armv6') and not os.path.isfile(self.config['apk_file_armv6']):
             self.fatal("Could not find " + self.config['apk_file_armv6'])
@@ -185,7 +185,7 @@ class PushAPK(BaseScript, GooglePlayMixin, VirtualenvMixin):
         """ Upload the APK files """
         self.check_argument()
         service = self.connect_to_play()
-        apks = [self.config['apk_file_armv7_v9'], self.config['apk_file_armv7_v11'], self.config['apk_file_x86']]
+        apks = [self.config['apk_file_armv7_v9'], self.config['apk_file_armv7_v15'], self.config['apk_file_x86']]
         if self.config.get('apk_file_armv6'):
             apks.append(self.config['apk_file_armv6'])
         self.upload_apks(service, apks)
