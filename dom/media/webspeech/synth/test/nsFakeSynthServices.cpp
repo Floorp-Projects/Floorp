@@ -318,7 +318,7 @@ nsFakeSynthServices::~nsFakeSynthServices()
 static void
 AddVoices(nsISpeechService* aService, const VoiceDetails* aVoices, uint32_t aLength)
 {
-  nsSynthVoiceRegistry* registry = nsSynthVoiceRegistry::GetInstance();
+  RefPtr<nsSynthVoiceRegistry> registry = nsSynthVoiceRegistry::GetInstance();
   for (uint32_t i = 0; i < aLength; i++) {
     NS_ConvertUTF8toUTF16 name(aVoices[i].name);
     NS_ConvertUTF8toUTF16 uri(aVoices[i].uri);
@@ -330,6 +330,8 @@ AddVoices(nsISpeechService* aService, const VoiceDetails* aVoices, uint32_t aLen
       registry->SetDefaultVoice(uri, true);
     }
   }
+
+  registry->NotifyVoicesChanged();
 }
 
 void
@@ -349,12 +351,12 @@ nsFakeSynthServices::Observe(nsISupports* aSubject, const char* aTopic,
                              const char16_t* aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if(NS_WARN_IF(!(!strcmp(aTopic, "profile-after-change")))) {
+  if(NS_WARN_IF(!(!strcmp(aTopic, "speech-synth-started")))) {
     return NS_ERROR_UNEXPECTED;
   }
 
   if (Preferences::GetBool("media.webspeech.synth.test")) {
-    Init();
+    NS_DispatchToMainThread(NS_NewRunnableMethod(this, &nsFakeSynthServices::Init));
   }
 
   return NS_OK;
