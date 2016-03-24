@@ -7,6 +7,7 @@ from optparse import OptionParser
 from subprocess import Popen, PIPE
 import xml.dom.minidom
 import html5lib
+import filecmp
 import shutil
 import sys
 import re
@@ -135,6 +136,9 @@ def copy_file(test, srcfile, destname, isSupportFile=False):
     if not os.path.exists(destdir):
         os.makedirs(destdir)
     if os.path.exists(destfile):
+        if filecmp.cmp(srcfile, destfile):
+            print "Warning: duplicate file {}".format(destname)
+            return
         raise StandardError("file " + destfile + " already exists")
     copy_and_prefix(test, srcfile, destfile, gPrefixedProperties, isSupportFile)
 
