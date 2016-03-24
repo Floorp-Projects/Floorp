@@ -4,10 +4,11 @@
 
 "use strict";
 
-const { Ci, Cc } = require("chrome");
+const { Ci } = require("chrome");
 const { memoize } = require("sdk/lang/functional");
 
-loader.lazyRequireGetter(this, "setIgnoreLayoutChanges", "devtools/server/actors/layout", true);
+loader.lazyRequireGetter(this, "setIgnoreLayoutChanges",
+  "devtools/server/actors/layout", true);
 exports.setIgnoreLayoutChanges = (...args) =>
   this.setIgnoreLayoutChanges(...args);
 
@@ -18,8 +19,8 @@ exports.setIgnoreLayoutChanges = (...args) =>
  * @returns {DOMWindowUtils}
  */
 const utilsFor = memoize(
-  win => win.QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIDOMWindowUtils)
+  (win) => win.QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIDOMWindowUtils)
 );
 
 /**
@@ -37,8 +38,7 @@ function getTopWindow(win) {
     return win.top;
   }
 
-  let topDocShell =
-    docShell.getSameTypeRootTreeItemIgnoreBrowserAndAppBoundaries();
+  let topDocShell = docShell.getSameTypeRootTreeItemIgnoreBrowserAndAppBoundaries();
 
   return topDocShell
           ? topDocShell.contentViewer.DOMDocument.defaultView
@@ -98,8 +98,7 @@ function getParentWindow(win) {
     return win.parent;
   }
 
-  let parentDocShell =
-    docShell.getSameTypeParentIgnoreBrowserAndAppBoundaries();
+  let parentDocShell = docShell.getSameTypeParentIgnoreBrowserAndAppBoundaries();
 
   return parentDocShell
           ? parentDocShell.contentViewer.DOMDocument.defaultView
@@ -141,10 +140,11 @@ function getFrameOffsets(boundaryWindow, node) {
   if (boundaryWindow === null) {
     boundaryWindow = getTopWindow(frameWin);
   } else if (typeof boundaryWindow === "undefined") {
-    throw new Error("No boundaryWindow given. Use null for the default one.");
+    throw new Error("No `boundaryWindow` given. Use `null` for the default one.");
   }
 
   while (frameWin !== boundaryWindow) {
+
     let frameElement = getFrameElement(frameWin);
     if (!frameElement) {
       break;
@@ -155,7 +155,8 @@ function getFrameOffsets(boundaryWindow, node) {
     // offset (borders and padding).
     let frameRect = frameElement.getBoundingClientRect();
 
-    let [offsetTop, offsetLeft] = getFrameContentOffset(frameElement);
+    let [offsetTop, offsetLeft] =
+      getIframeContentOffset(frameElement);
 
     xOffset += frameRect.left + offsetLeft;
     yOffset += frameRect.top + offsetTop;
@@ -249,28 +250,28 @@ exports.getAdjustedQuads = getAdjustedQuads;
  * @param {DOMWindow} boundaryWindow
  *        The window where to stop to iterate. If `null` is given, the top
  *        window is used.
- * @param {DOMNode} node
+ * @param {DOMNode} aNode
  *        a DOM element to get the bounds for
- * @param {DOMWindow} contentWindow
+ * @param {DOMWindow} aContentWindow
  *        the content window holding the node
  * @return {Object}
  *         A rect object with the {top, left, width, height} properties
  */
-function getRect(boundaryWindow, node, contentWindow) {
-  let frameWin = node.ownerDocument.defaultView;
-  let clientRect = node.getBoundingClientRect();
+function getRect(boundaryWindow, aNode, aContentWindow) {
+  let frameWin = aNode.ownerDocument.defaultView;
+  let clientRect = aNode.getBoundingClientRect();
 
   if (boundaryWindow === null) {
     boundaryWindow = getTopWindow(frameWin);
   } else if (typeof boundaryWindow === "undefined") {
-    throw new Error("No boundaryWindow given. Use null for the default one.");
+    throw new Error("No `boundaryWindow` given. Use `null` for the default one.");
   }
 
   // Go up in the tree of frames to determine the correct rectangle.
   // clientRect is read-only, we need to be able to change properties.
   let rect = {
-    top: clientRect.top + contentWindow.pageYOffset,
-    left: clientRect.left + contentWindow.pageXOffset,
+    top: clientRect.top + aContentWindow.pageYOffset,
+    left: clientRect.left + aContentWindow.pageXOffset,
     width: clientRect.width,
     height: clientRect.height
   };
@@ -287,7 +288,8 @@ function getRect(boundaryWindow, node, contentWindow) {
     // offset (borders and padding).
     let frameRect = frameElement.getBoundingClientRect();
 
-    let [offsetTop, offsetLeft] = getFrameContentOffset(frameElement);
+    let [offsetTop, offsetLeft] =
+      getIframeContentOffset(frameElement);
 
     rect.top += frameRect.top + offsetTop;
     rect.left += frameRect.left + offsetLeft;
@@ -296,7 +298,7 @@ function getRect(boundaryWindow, node, contentWindow) {
   }
 
   return rect;
-}
+};
 exports.getRect = getRect;
 
 /**
@@ -312,7 +314,7 @@ exports.getRect = getRect;
  */
 function getNodeBounds(boundaryWindow, node) {
   if (!node) {
-    return null;
+    return;
   }
 
   let scale = getCurrentZoom(node);
@@ -361,96 +363,69 @@ function getNodeBounds(boundaryWindow, node) {
 exports.getNodeBounds = getNodeBounds;
 
 /**
- * Same as doing iframe.contentWindow but works with all types of container
- * elements that act like frames (e.g. <embed>), where 'contentWindow' isn't a
- * property that can be accessed.
- * This uses the inIDeepTreeWalker instead.
- * @param {DOMNode} frame
- * @return {Window}
- */
-function safelyGetContentWindow(frame) {
-  if (frame.contentWindow) {
-    return frame.contentWindow;
-  }
-
-  let walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"]
-               .createInstance(Ci.inIDeepTreeWalker);
-  walker.showSubDocuments = true;
-  walker.showDocumentsAsNodes = true;
-  walker.init(frame, Ci.nsIDOMNodeFilter.SHOW_ALL);
-  walker.currentNode = frame;
-
-  let document = walker.nextNode();
-  if (!document || !document.defaultView) {
-    throw new Error("Couldn't get the content window inside frame " + frame);
-  }
-
-  return document.defaultView;
-}
-
-/**
- * Returns a frame's content offset (frame border + padding).
+ * Returns iframe content offset (iframe border + padding).
  * Note: this function shouldn't need to exist, had the platform provided a
- * suitable API for determining the offset between the frame's content and
+ * suitable API for determining the offset between the iframe's content and
  * its bounding client rect. Bug 626359 should provide us with such an API.
  *
- * @param {DOMNode} frame
- *        The frame.
+ * @param {DOMNode} aIframe
+ *        The iframe.
  * @return {Array} [offsetTop, offsetLeft]
- *         offsetTop is the distance from the top of the frame and the top of
+ *         offsetTop is the distance from the top of the iframe and the top of
  *         the content document.
- *         offsetLeft is the distance from the left of the frame and the left
+ *         offsetLeft is the distance from the left of the iframe and the left
  *         of the content document.
  */
-function getFrameContentOffset(frame) {
-  let style = safelyGetContentWindow(frame).getComputedStyle(frame, null);
+function getIframeContentOffset(aIframe) {
+  let style = aIframe.contentWindow.getComputedStyle(aIframe, null);
 
   // In some cases, the computed style is null
   if (!style) {
     return [0, 0];
   }
 
-  let paddingTop = parseInt(style.getPropertyValue("padding-top"), 10);
-  let paddingLeft = parseInt(style.getPropertyValue("padding-left"), 10);
+  let paddingTop = parseInt(style.getPropertyValue("padding-top"));
+  let paddingLeft = parseInt(style.getPropertyValue("padding-left"));
 
-  let borderTop = parseInt(style.getPropertyValue("border-top-width"), 10);
-  let borderLeft = parseInt(style.getPropertyValue("border-left-width"), 10);
+  let borderTop = parseInt(style.getPropertyValue("border-top-width"));
+  let borderLeft = parseInt(style.getPropertyValue("border-left-width"));
 
   return [borderTop + paddingTop, borderLeft + paddingLeft];
 }
+exports.getIframeContentOffset = getIframeContentOffset;
 
 /**
  * Find an element from the given coordinates. This method descends through
  * frames to find the element the user clicked inside frames.
  *
- * @param {DOMDocument} document
+ * @param {DOMDocument} aDocument
  *        The document to look into.
- * @param {Number} x
- * @param {Number} y
+ * @param {Number} aX
+ * @param {Number} aY
  * @return {DOMNode}
  *         the element node found at the given coordinates, or null if no node
  *         was found
  */
-function getElementFromPoint(document, x, y) {
-  let node = document.elementFromPoint(x, y);
+function getElementFromPoint(aDocument, aX, aY) {
+  let node = aDocument.elementFromPoint(aX, aY);
   if (node && node.contentDocument) {
     if (node instanceof Ci.nsIDOMHTMLIFrameElement) {
       let rect = node.getBoundingClientRect();
 
-      // Gap between the frame and its content window.
-      let [offsetTop, offsetLeft] = getFrameContentOffset(node);
+      // Gap between the iframe and its content window.
+      let [offsetTop, offsetLeft] = getIframeContentOffset(node);
 
-      x -= rect.left + offsetLeft;
-      y -= rect.top + offsetTop;
+      aX -= rect.left + offsetLeft;
+      aY -= rect.top + offsetTop;
 
-      if (x < 0 || y < 0) {
-        // Didn't reach the content document, still over the frame.
+      if (aX < 0 || aY < 0) {
+        // Didn't reach the content document, still over the iframe.
         return node;
       }
     }
     if (node instanceof Ci.nsIDOMHTMLIFrameElement ||
         node instanceof Ci.nsIDOMHTMLFrameElement) {
-      let subnode = getElementFromPoint(node.contentDocument, x, y);
+      let subnode = getElementFromPoint(node.contentDocument, aX, aY);
       if (subnode) {
         node = subnode;
       }
@@ -470,7 +445,7 @@ exports.getElementFromPoint = getElementFromPoint;
  *        top of the viewport. It is true by default, and that is usually what
  *        you want.
  */
-function scrollIntoViewIfNeeded(elem, centered = true) {
+function scrollIntoViewIfNeeded(elem, centered=true) {
   let win = elem.ownerDocument.defaultView;
   let clientRect = elem.getBoundingClientRect();
 
@@ -481,16 +456,14 @@ function scrollIntoViewIfNeeded(elem, centered = true) {
 
   let topToBottom = clientRect.bottom;
   let bottomToTop = clientRect.top - win.innerHeight;
-  // We allow one translation on the y axis.
-  let yAllowed = true;
+  let yAllowed = true;  // We allow one translation on the y axis.
 
   // Whatever `centered` is, the behavior is the same if the box is
   // (even partially) visible.
   if ((topToBottom > 0 || !centered) && topToBottom <= elem.offsetHeight) {
     win.scrollBy(0, topToBottom - elem.offsetHeight);
     yAllowed = false;
-  } else if ((bottomToTop < 0 || !centered) &&
-             bottomToTop >= -elem.offsetHeight) {
+  } else if ((bottomToTop < 0 || !centered) && bottomToTop >= -elem.offsetHeight) {
     win.scrollBy(0, bottomToTop + elem.offsetHeight);
     yAllowed = false;
   }
@@ -511,17 +484,15 @@ exports.scrollIntoViewIfNeeded = scrollIntoViewIfNeeded;
  * Check if a node and its document are still alive
  * and attached to the window.
  *
- * @param {DOMNode} node
+ * @param {DOMNode} aNode
  * @return {Boolean}
  */
-function isNodeConnected(node) {
-  if (!node.ownerDocument || !node.ownerDocument.defaultView) {
-    return false;
-  }
-
+function isNodeConnected(aNode) {
   try {
-    return !(node.compareDocumentPosition(node.ownerDocument.documentElement) &
-             node.DOCUMENT_POSITION_DISCONNECTED);
+    let connected = (aNode.ownerDocument && aNode.ownerDocument.defaultView &&
+                    !(aNode.compareDocumentPosition(aNode.ownerDocument.documentElement) &
+                    aNode.DOCUMENT_POSITION_DISCONNECTED));
+    return connected;
   } catch (e) {
     // "can't access dead object" error
     return false;
@@ -659,13 +630,8 @@ exports.isShadowAnonymous = isShadowAnonymous;
  * @return {Number}
  */
 function getCurrentZoom(node) {
-  let win = null;
-
-  if (node instanceof Ci.nsIDOMNode) {
-    win = node.ownerDocument.defaultView;
-  } else if (node instanceof Ci.nsIDOMWindow) {
-    win = node;
-  }
+  let win = node instanceof Ci.nsIDOMNode ? node.ownerDocument.defaultView :
+            node instanceof Ci.nsIDOMWindow ? node : null;
 
   if (!win) {
     throw new Error("Unable to get the zoom from the given argument.");
