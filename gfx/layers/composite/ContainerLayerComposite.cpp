@@ -520,12 +520,22 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
   float scaleFactor;
   float scaleFactorX;
   float scaleFactorY;
-  scaleFactorX = 100.f / scrollRect.width;
-  scaleFactorY = ((viewRect.height) - 2 * verticalPadding) / scrollRect.height;
+  Rect dest = Rect(aClipRect.ToUnknownRect());
+  if (aLayer->GetEffectiveClipRect()) {
+    dest = Rect(aLayer->GetEffectiveClipRect().value().ToUnknownRect());
+  } else {
+    dest = aContainer->GetEffectiveTransform().Inverse().TransformBounds(dest);
+  }
+  dest = dest.Intersect(compositionBounds.ToUnknownRect());
+  scaleFactorX = std::min(100.f, dest.width - (2 * horizontalPadding)) / scrollRect.width;
+  scaleFactorY = (dest.height - (2 * verticalPadding)) / scrollRect.height;
   scaleFactor = std::min(scaleFactorX, scaleFactorY);
+  if (scaleFactor <= 0) {
+    return;
+  }
 
   Matrix4x4 transform = Matrix4x4::Scaling(scaleFactor, scaleFactor, 1);
-  transform.PostTranslate(horizontalPadding + compositionBounds.x, verticalPadding + compositionBounds.y, 0);
+  transform.PostTranslate(horizontalPadding + dest.x, verticalPadding + dest.y, 0);
 
   Rect transformedScrollRect = transform.TransformBounds(scrollRect.ToUnknownRect());
 
