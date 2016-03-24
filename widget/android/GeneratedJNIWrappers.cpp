@@ -1575,6 +1575,14 @@ auto NativePanZoomController::RequestContentRepaintWrapper(float a0, float a1, f
     return mozilla::jni::Method<RequestContentRepaintWrapper_t>::Call(NativePanZoomController::mCtx, nullptr, a0, a1, a2, a3, a4);
 }
 
+constexpr char NativePanZoomController::SetScrollingRootContent_t::name[];
+constexpr char NativePanZoomController::SetScrollingRootContent_t::signature[];
+
+auto NativePanZoomController::SetScrollingRootContent(bool a0) const -> void
+{
+    return mozilla::jni::Method<SetScrollingRootContent_t>::Call(NativePanZoomController::mCtx, nullptr, a0);
+}
+
 constexpr char NativePanZoomController::UpdateOverscrollOffset_t::name[];
 constexpr char NativePanZoomController::UpdateOverscrollOffset_t::signature[];
 
