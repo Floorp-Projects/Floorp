@@ -132,7 +132,6 @@ enum class LogReason : int {
   CannotDraw3D, // 20
   IncompatibleBasicTexturedEffect,
   InvalidFont,
-  AsyncTransactionTimeout,
   // End
   MustBeLessThanThis = 101,
 };
