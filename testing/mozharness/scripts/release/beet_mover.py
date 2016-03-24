@@ -102,7 +102,6 @@ DEFAULT_EXCLUDES = [
     r"^.*json$",
     r"^.*/host.*$",
     r"^.*/mar-tools/.*$",
-    r"^.*gecko-unsigned-unaligned.apk$",
     r"^.*robocop.apk$",
     r"^.*contrib.*"
 ]
