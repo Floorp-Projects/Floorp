@@ -42,6 +42,28 @@ function encode_utf8(string) {
   return octets;
 }
 
+function encode_utf16le(string) {
+  var octets = new Uint8Array(string.length * 2);
+  var di = 0;
+  for (var i = 0; i < string.length; i++) {
+    var code = string.charCodeAt(i);
+    octets[di++] = code & 0xFF;
+    octets[di++] = code >> 8;
+  }
+  return octets;
+}
+
+function encode_utf16be(string) {
+  var octets = new Uint8Array(string.length * 2);
+  var di = 0;
+  for (var i = 0; i < string.length; i++) {
+    var code = string.charCodeAt(i);
+    octets[di++] = code >> 8;
+    octets[di++] = code & 0xFF;
+  }
+  return octets;
+}
+
 function decode_utf8(octets) {
   var utf8 = String.fromCharCode.apply(null, octets);
   return decodeURIComponent(escape(utf8));
@@ -94,13 +116,11 @@ function test_utf_roundtrip () {
 
   var block, block_tag, i, j, encoded, decoded, exp_encoded, exp_decoded;
 
-  var TE_U16LE = new TextEncoder("UTF-16LE");
   var TD_U16LE = new TextDecoder("UTF-16LE");
 
-  var TE_U16BE = new TextEncoder("UTF-16BE");
   var TD_U16BE = new TextDecoder("UTF-16BE");
 
-  var TE_U8    = new TextEncoder("UTF-8");
+  var TE_U8    = new TextEncoder();
   var TD_U8    = new TextDecoder("UTF-8");
 
   for (i = MIN_CODEPOINT; i < MAX_CODEPOINT; i += BLOCK_SIZE) {
@@ -108,11 +128,11 @@ function test_utf_roundtrip () {
     block = genblock(i, BLOCK_SIZE);
 
     // test UTF-16LE, UTF-16BE, and UTF-8 encodings against themselves
-    encoded = TE_U16LE.encode(block);
+    encoded = encode_utf16le(block);
     decoded = TD_U16LE.decode(encoded);
     assert_string_equals(block, decoded, "UTF-16LE round trip " + block_tag);
 
-    encoded = TE_U16BE.encode(block);
+    encoded = encode_utf16be(block);
     decoded = TD_U16BE.decode(encoded);
     assert_string_equals(block, decoded, "UTF-16BE round trip " + block_tag);
 
@@ -145,12 +165,12 @@ function test_utf_samples () {
       expected: [0x00, 0x7A, 0x00, 0xA2, 0x6C, 0x34, 0xD8, 0x34, 0xDD, 0x1E, 0xDB, 0xFF, 0xDF, 0xFD] }
   ];
 
+  var encoded = new TextEncoder().encode(sample);
+  assert_array_equals(encoded, cases[0].expected,
+                      "expected equal encodings");
+
   cases.forEach(
     function(t) {
-      var encoded = new TextEncoder(t.encoding).encode(sample);
-      assert_array_equals(encoded, t.expected,
-                          "expected equal encodings - " + t.encoding);
-
       var decoded = new TextDecoder(t.encoding)
                         .decode(new Uint8Array(t.expected));
       assert_equals(decoded, sample,
