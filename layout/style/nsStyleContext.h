@@ -37,8 +37,6 @@ enum class CSSPseudoElementType : uint8_t;
  *  1. the |nsIFrame|s that are using the style context and
  *  2. any *child* style contexts (this might be the reverse of
  *     expectation, but it makes sense in this case)
- * Style contexts participate in the mark phase of rule node garbage
- * collection.
  */
 
 class nsStyleContext final
@@ -277,12 +275,6 @@ public:
 
   nsRuleNode* RuleNode() { return mRuleNode; }
   void AddStyleBit(const uint64_t& aBit) { mBits |= aBit; }
-
-  /*
-   * Mark this style context's rule node (and its ancestors) to prevent
-   * it from being garbage collected.
-   */
-  void Mark();
 
   /*
    * Get the style data for a style struct.  This is the most important
@@ -590,7 +582,7 @@ private:
   // specific rule matched is the one whose rule node is a child of the
   // root of the rule tree, and the most specific rule matched is the
   // |mRule| member of |mRuleNode|.
-  nsRuleNode* const       mRuleNode;
+  const RefPtr<nsRuleNode> mRuleNode;
 
   // mCachedInheritedData and mCachedResetData point to both structs that
   // are owned by this style context and structs that are owned by one of
