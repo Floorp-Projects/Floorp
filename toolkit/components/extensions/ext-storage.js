@@ -18,7 +18,7 @@ extensions.registerSchemaAPI("storage", "storage", (extension, context) => {
           return ExtensionStorage.get(extension.id, keys);
         },
         set: function(items) {
-          return ExtensionStorage.set(extension.id, items);
+          return ExtensionStorage.set(extension.id, items, context.cloneScope);
         },
         remove: function(items) {
           return ExtensionStorage.remove(extension.id, items);
