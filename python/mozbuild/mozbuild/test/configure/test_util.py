@@ -33,10 +33,11 @@ class TestConfigureOutputHandler(unittest.TestCase):
         logger.error('foo')
         logger.warning('bar')
         logger.info('baz')
+        # DEBUG level is not printed out by this handler
         logger.debug('qux')
 
         self.assertEqual(out.getvalue(), 'baz\n')
-        self.assertEqual(err.getvalue(), 'foo\nbar\nqux\n')
+        self.assertEqual(err.getvalue(), 'foo\nbar\n')
 
     def test_format(self):
         out = StringIO()
@@ -51,6 +52,7 @@ class TestConfigureOutputHandler(unittest.TestCase):
         logger.error('foo')
         logger.warning('bar')
         logger.info('baz')
+        # DEBUG level is not printed out by this handler
         logger.debug('qux')
 
         self.assertEqual(out.getvalue(), 'baz\n')
@@ -58,7 +60,6 @@ class TestConfigureOutputHandler(unittest.TestCase):
             err.getvalue(),
             'ERROR:foo\n'
             'WARNING:bar\n'
-            'DEBUG:qux\n'
         )
 
     def test_continuation(self):
@@ -147,6 +148,86 @@ class TestConfigureOutputHandler(unittest.TestCase):
             err.getvalue(),
             'WARNING:hoge\n'
             'WARNING:fuga\n'
+        )
+
+    def test_queue_debug(self):
+        out = StringIO()
+        name = '%s.test_queue_debug' % self.__class__.__name__
+        logger = logging.getLogger(name)
+        logger.setLevel(logging.DEBUG)
+        handler =  ConfigureOutputHandler(out, out, maxlen=3)
+        handler.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
+        logger.addHandler(handler)
+
+        with handler.queue_debug():
+            logger.info('checking bar... ')
+            logger.debug('do foo')
+            logger.info('yes')
+            logger.info('qux')
+
+        self.assertEqual(
+            out.getvalue(),
+            'checking bar... yes\n'
+            'qux\n'
+        )
+
+        out.seek(0)
+        out.truncate()
+
+        with handler.queue_debug():
+            logger.info('checking bar... ')
+            logger.debug('do foo')
+            logger.info('no')
+            logger.error('fail')
+
+        self.assertEqual(
+            out.getvalue(),
+            'checking bar... no\n'
+            'DEBUG:do foo\n'
+            'ERROR:fail\n'
+        )
+
+        out.seek(0)
+        out.truncate()
+
+        with handler.queue_debug():
+            logger.info('checking bar... ')
+            logger.debug('do foo')
+            logger.debug('do bar')
+            logger.debug('do baz')
+            logger.info('no')
+            logger.error('fail')
+
+        self.assertEqual(
+            out.getvalue(),
+            'checking bar... no\n'
+            'DEBUG:do foo\n'
+            'DEBUG:do bar\n'
+            'DEBUG:do baz\n'
+            'ERROR:fail\n'
+        )
+
+        out.seek(0)
+        out.truncate()
+
+        with handler.queue_debug():
+            logger.info('checking bar... ')
+            logger.debug('do foo')
+            logger.debug('do bar')
+            logger.debug('do baz')
+            logger.debug('do qux')
+            logger.debug('do hoge')
+            logger.info('no')
+            logger.error('fail')
+
+        self.assertEqual(
+            out.getvalue(),
+            'checking bar... no\n'
+            'DEBUG:<truncated - see config.log for full output>\n'
+            'DEBUG:do baz\n'
+            'DEBUG:do qux\n'
+            'DEBUG:do hoge\n'
+            'ERROR:fail\n'
         )
 
     def test_is_same_output(self):
