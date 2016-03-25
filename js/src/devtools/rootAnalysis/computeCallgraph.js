@@ -47,6 +47,24 @@ function processCSU(csuName, csu)
     }
 }
 
+// Return the nearest ancestor method definition, or all nearest definitions in
+// the case of multiple inheritance.
+function nearestAncestorMethods(csu, method)
+{
+    var key = csu + ":" + method;
+
+    if (classFunctions.has(key))
+        return new Set(classFunctions.get(key));
+
+    var functions = new Set();
+    if (superclasses.has(csu)) {
+        for (var parent of superclasses.get(csu))
+            functions.update(nearestAncestorMethods(parent, method));
+    }
+
+    return functions;
+}
+
 function findVirtualFunctions(initialCSU, field, suppressed)
 {
     var worklist = [initialCSU];
@@ -73,7 +91,15 @@ function findVirtualFunctions(initialCSU, field, suppressed)
             worklist.push(...superclasses.get(csu));
     }
 
-    worklist = [csu];
+    // Now return a list of all the instantiations of the method named 'field'
+    // that could execute on an instance of initialCSU or a descendant class.
+
+    // Start with the class itself, or if it doesn't define the method, all
+    // nearest ancestor definitions.
+    functions.update(nearestAncestorMethods(initialCSU, field));
+
+    // Then recurse through all descendants to add in their definitions.
+    var worklist = [initialCSU];
     while (worklist.length) {
         var csu = worklist.pop();
         var key = csu + ":" + field;
