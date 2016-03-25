@@ -121,11 +121,17 @@ def prepare_configure(old_configure, mozconfig, autoconf, build_env, shell,
 
     if refresh:
         log.info('Refreshing %s with %s', old_configure, autoconf)
+        script = subprocess.check_output([
+            shell, autoconf,
+            '--localdir=%s' % os.path.dirname(old_configure),
+            old_configure + '.in'])
+
+        # Make old-configure append to config.log, where we put our own log.
+        # This could be done with a m4 macro, but it's way easier this way
+        script = script.replace('>./config.log', '>>./config.log')
+
         with open(old_configure, 'wb') as fh:
-            subprocess.check_call([
-                shell, autoconf,
-                '--localdir=%s' % os.path.dirname(old_configure),
-                old_configure + '.in'], stdout=fh)
+            fh.write(script)
 
     cmd = [shell, old_configure]
     with encoded_open('old-configure.vars', 'w') as out:
@@ -368,6 +374,7 @@ def old_configure_options(*options):
 @advanced
 def old_configure(prepare_configure, extra_old_configure_args, all_options,
                   *options):
+    import logging
     import os
     import subprocess
     import sys
@@ -393,6 +400,16 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
 
     # For debugging purpose, in case it's not what we'd expect.
     log.info('running %s', ' '.join(quote(a) for a in cmd))
+
+    # Our logging goes to config.log, the same file old.configure uses.
+    # We can't share the handle on the file, so close it. We assume nothing
+    # beyond this point is going to be interesting to log to config.log from
+    # our end, so we don't make the effort to recreate a logging.FileHandler.
+    logger = logging.getLogger('moz.configure')
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler):
+            handler.close()
+
     ret = subprocess.call(cmd)
     if ret:
         sys.exit(ret)

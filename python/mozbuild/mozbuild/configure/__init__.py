@@ -129,7 +129,7 @@ class ConfigureSandbox(dict):
         self._config = config
 
         if logger is None:
-            logger = logging.getLogger('moz.configure')
+            logger = moz_logger = logging.getLogger('moz.configure')
             logger.setLevel(logging.INFO)
             formatter = logging.Formatter('%(levelname)s: %(message)s')
             handler = ConfigureOutputHandler(stdout, stderr)
@@ -139,6 +139,7 @@ class ConfigureSandbox(dict):
 
         else:
             assert isinstance(logger, logging.Logger)
+            moz_logger = None
 
         self.log_impl = ReadOnlyNamespace(**{
                 k: getattr(logger, k)
@@ -154,6 +155,12 @@ class ConfigureSandbox(dict):
         if self._option_values[self._help_option]:
             self._help = HelpFormatter(argv[0])
             self._help.add(self._help_option)
+        elif moz_logger:
+            logger.setLevel(logging.DEBUG)
+            handler = logging.FileHandler('config.log', mode='w', delay=True)
+            handler.setLevel(logging.DEBUG)
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
 
     def exec_file(self, path):
         '''Execute one file within the sandbox. Users of this class probably
