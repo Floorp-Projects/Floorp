@@ -212,7 +212,7 @@ CompositorChild::RecvInvalidateLayers(const uint64_t& aLayersId)
 
 bool
 CompositorChild::RecvCompositorUpdated(const uint64_t& aLayersId,
-                                      const TextureFactoryIdentifier& aNewIdentifier)
+                                       const TextureFactoryIdentifier& aNewIdentifier)
 {
   if (mLayerManager) {
     // This case is handled directly by nsBaseWidget.
@@ -221,6 +221,7 @@ CompositorChild::RecvCompositorUpdated(const uint64_t& aLayersId,
     if (dom::TabChild* child = dom::TabChild::GetFrom(aLayersId)) {
       child->CompositorUpdated(aNewIdentifier);
     }
+    SendAcknowledgeCompositorUpdate(aLayersId);
   }
   return true;
 }
