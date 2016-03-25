@@ -74,7 +74,12 @@ bool
 CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation& aEdit,
                                                      EditReplyVector& replyv)
 {
+  // Ignore all operations on compositables created on stale compositors. We
+  // return true because the child is unable to handle errors.
   CompositableHost* compositable = CompositableHost::FromIPDLActor(aEdit.compositableParent());
+  if (compositable->GetCompositor() && compositable->GetCompositor()->IsValid()) {
+    return true;
+  }
 
   switch (aEdit.detail().type()) {
     case CompositableOperationDetail::TOpPaintTextureRegion: {
@@ -184,7 +189,9 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
           }
         }
       }
-      compositable->UseTextureHost(textures);
+      if (textures.Length() > 0) {
+        compositable->UseTextureHost(textures);
+      }
 
       if (IsAsync() && compositable->GetLayer()) {
         ScheduleComposition(compositable);
