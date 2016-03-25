@@ -19,4 +19,12 @@ add_task(function* () {
 
   let countAfter = yield getElementCount(".jsonPanelBox .treeTable .treeRow");
   ok(countAfter == 3, "There must be three rows");
+
+  let objectCellCount = yield getElementCount(
+    ".jsonPanelBox .treeTable .objectCell");
+  ok(objectCellCount == 1, "There must be one object cell");
+
+  let objectCellText = yield getElementText(
+    ".jsonPanelBox .treeTable .objectCell");
+  ok(objectCellText == "", "The summary is hidden when object is expanded");
 });

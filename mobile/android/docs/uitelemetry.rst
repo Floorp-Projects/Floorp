@@ -224,6 +224,9 @@ Methods
 ``pageaction``
   Action triggered from a pageaction, displayed in the URL bar.
 
+``service``
+  Action triggered from an automatic system making a decision.
+
 ``settings``
   Action triggered from a content page.
 

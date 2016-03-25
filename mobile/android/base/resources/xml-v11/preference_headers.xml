@@ -38,6 +38,13 @@
     </header>
 
     <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
+        android:title="@string/pref_header_notifications"
+        android:id="@+id/pref_header_notifications">
+        <extra android:name="resource"
+            android:value="preferences_notifications"/>
+    </header>
+
+    <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
             android:title="@string/pref_header_advanced"
             android:id="@+id/pref_header_advanced">
         <extra android:name="resource"
