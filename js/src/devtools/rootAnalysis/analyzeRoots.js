@@ -340,7 +340,7 @@ function findGCBeforeVariableUse(start_body, start_point, suppressed, variable)
 
     var bodies_visited = new Map();
 
-    let worklist = [{body: start_body, ppoint: start_point, gcInfo: null, why: null}];
+    let worklist = [{body: start_body, ppoint: start_point, preGCLive: false, gcInfo: null, why: null}];
     while (worklist.length) {
         // Grab an entry off of the worklist, representing a point within the
         // CFG identified by <body,ppoint>. If this point has a descendant
@@ -348,7 +348,7 @@ function findGCBeforeVariableUse(start_body, start_point, suppressed, variable)
         // about that GC call.
 
         var entry = worklist.pop();
-        var { body, ppoint, gcInfo } = entry;
+        var { body, ppoint, gcInfo, preGCLive } = entry;
 
         // Handle the case where there are multiple ways to reach this point
         // (traversing backwards).
@@ -399,7 +399,13 @@ function findGCBeforeVariableUse(start_body, start_point, suppressed, variable)
             } else if (variable.Kind == "Arg" && gcInfo) {
                 // The scope of arguments starts at the beginning of the
                 // function
-                return {gcInfo: gcInfo, why: entry};
+                return entry;
+            } else if (entry.preGCLive) {
+                // We didn't find a "good" explanation beginning of the live
+                // range, but we do know the variable was live across the GC.
+                // This can happen if the live range started when a variable is
+                // used as a retparam.
+                return entry;
             }
         }
 
@@ -425,17 +431,19 @@ function findGCBeforeVariableUse(start_body, start_point, suppressed, variable)
                 // to a use after the GC call that proves its live range
                 // extends at least that far.
                 if (gcInfo)
-                    return {gcInfo: gcInfo, why: {body: body, ppoint: source, gcInfo: gcInfo, why: entry } };
+                    return {body: body, ppoint: source, gcInfo: gcInfo, why: entry };
 
                 // Otherwise, keep searching through the graph, but truncate
                 // this particular branch of the search at this edge.
                 continue;
             }
 
+            var src_gcInfo = gcInfo;
+            var src_preGCLive = preGCLive;
             if (!gcInfo && !(source in body.suppressed) && !suppressed) {
                 var gcName = edgeCanGC(edge, body);
                 if (gcName)
-                    gcInfo = {name:gcName, body:body, ppoint:source};
+                    src_gcInfo = {name:gcName, body:body, ppoint:source};
             }
 
             if (edge_uses) {
@@ -444,8 +452,31 @@ function findGCBeforeVariableUse(start_body, start_point, suppressed, variable)
                 // is that a GC on this edge indicates a hazard, whereas if
                 // we're killing a live range in the GC call then it's not live
                 // *across* the call.
-                if (gcInfo)
-                    return {gcInfo:gcInfo, why:entry};
+                //
+                // However, we may want to generate a longer usage chain for
+                // the variable than is minimally necessary. For example,
+                // consider:
+                //
+                //   Value v = f();
+                //   if (v.isUndefined())
+                //     return false;
+                //   gc();
+                //   return v;
+                //
+                // The call to .isUndefined() is considered to be a use and
+                // therefore indicates that v must be live at that point. But
+                // it's more helpful to the user to continue the 'why' path to
+                // include the ancestor where the value was generated. So we
+                // will only return here if edge.Kind is Assign; otherwise,
+                // we'll pass a "preGCLive" value up through the worklist to
+                // remember that the variable *is* alive before the GC and so
+                // this function should be returning a true value.
+
+                if (src_gcInfo) {
+                    src_preGCLive = true;
+                    if (edge.Kind == 'Assign')
+                        return {body:body, ppoint:source, gcInfo:src_gcInfo, why:entry};
+                }
             }
 
             if (edge.Kind == "Loop") {
@@ -457,7 +488,8 @@ function findGCBeforeVariableUse(start_body, start_point, suppressed, variable)
                         assert(!found);
                         found = true;
                         worklist.push({body:xbody, ppoint:xbody.Index[1],
-                                       gcInfo:gcInfo, why:entry});
+                                       preGCLive: src_preGCLive, gcInfo:src_gcInfo,
+                                       why:entry});
                     }
                 }
                 assert(found);
@@ -465,7 +497,9 @@ function findGCBeforeVariableUse(start_body, start_point, suppressed, variable)
             }
 
             // Propagate the search to the predecessors of this edge.
-            worklist.push({body:body, ppoint:source, gcInfo:gcInfo, why:entry});
+            worklist.push({body:body, ppoint:source,
+                           preGCLive: src_preGCLive, gcInfo:src_gcInfo,
+                           why:entry});
         }
     }
 
@@ -564,13 +598,21 @@ function loadPrintedLines(functionName)
     }
 }
 
-function findLocation(body, ppoint)
+function findLocation(body, ppoint, opts={brief: false})
 {
     var location = body.PPoint[ppoint - 1].Location;
-    var text = location.CacheString + ":" + location.Line;
-    if (text.indexOf(sourceRoot) == 0)
-        return text.substring(sourceRoot.length);
-    return text;
+    var file = location.CacheString;
+
+    if (file.indexOf(sourceRoot) == 0)
+        file = file.substring(sourceRoot.length);
+
+    if (opts.brief) {
+        var m = /.*\/(.*)/.exec(file);
+        if (m)
+            file = m[1];
+    }
+
+    return file + ":" + location.Line;
 }
 
 function locationLine(text)
@@ -589,7 +631,7 @@ function printEntryTrace(functionName, entry)
 
     while (entry) {
         var ppoint = entry.ppoint;
-        var lineText = findLocation(entry.body, ppoint);
+        var lineText = findLocation(entry.body, ppoint, {"brief": true});
 
         var edgeText = "";
         if (entry.why && entry.why.body == entry.body) {
@@ -687,7 +729,7 @@ function processBodies(functionName)
                       " of type '" + typeDesc(variable.Type) + "'" +
                       " live across GC call " + result.gcInfo.name +
                       " at " + lineText);
-                printEntryTrace(functionName, result.why);
+                printEntryTrace(functionName, result);
             }
             result = unsafeVariableAddressTaken(suppressed, variable.Variable);
             if (result) {
