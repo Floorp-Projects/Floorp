@@ -26,7 +26,6 @@ XPCSHELL_TESTS_MANIFESTS += [
 
 BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += [
-    'chrome.ini',
     'chrome/chrome.ini',
 ]
 
@@ -51,6 +50,8 @@ TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.brows
     'browser/favicon-normal32.png',
     'browser/favicon.html',
     'browser/final.html',
+    'browser/history_post.html',
+    'browser/history_post.sjs',
     'browser/redirect-target.html',
     'browser/redirect.sjs',
     'browser/redirect_once.sjs',
@@ -66,9 +67,5 @@ TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.chrom
     'chrome/rss_as_html.rss',
     'chrome/rss_as_html.rss^headers^',
     'chrome/sample_feed.atom',
-]
-
-TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests += [
-    'bug94514-postpage.html',
 ]
 
