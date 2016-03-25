@@ -24,7 +24,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nscore.h"
-#include "SourceBufferContentManager.h"
+#include "TrackBuffersManager.h"
 #include "mozilla/Monitor.h"
 
 class JSObject;
@@ -35,7 +35,6 @@ namespace mozilla {
 class ErrorResult;
 class MediaByteBuffer;
 template <typename T> class AsyncEventRunner;
-class TrackBuffersManager;
 
 namespace dom {
 
@@ -253,14 +252,14 @@ private:
 
   RefPtr<MediaSource> mMediaSource;
 
-  RefPtr<SourceBufferContentManager> mContentManager;
+  RefPtr<TrackBuffersManager> mTrackBuffersManager;
   RefPtr<SourceBufferAttributes> mAttributes;
 
   bool mUpdating;
 
   mozilla::Atomic<bool> mActive;
 
-  MozPromiseRequestHolder<SourceBufferContentManager::AppendPromise> mPendingAppend;
+  MozPromiseRequestHolder<TrackBuffersManager::AppendPromise> mPendingAppend;
   const nsCString mType;
 
   RefPtr<TimeRanges> mBuffered;

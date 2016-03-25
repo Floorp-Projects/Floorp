@@ -10,13 +10,16 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/Pair.h"
 #include "mozilla/dom/SourceBufferBinding.h"
 
-#include "SourceBufferContentManager.h"
+#include "MediaData.h"
 #include "MediaDataDemuxer.h"
 #include "MediaSourceDecoder.h"
+#include "TimeUnits.h"
 #include "nsProxyRelease.h"
+#include "nsString.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -31,53 +34,96 @@ namespace dom {
   class SourceBufferAttributes;
 }
 
-class TrackBuffersManager : public SourceBufferContentManager {
+class TrackBuffersManager {
 public:
-  typedef MozPromise<bool, nsresult, /* IsExclusive = */ true> CodedFrameProcessingPromise;
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TrackBuffersManager);
+
+  typedef MozPromise<bool, nsresult, /* IsExclusive = */ true> AppendPromise;
+  typedef AppendPromise RangeRemovalPromise;
+
+  enum class EvictDataResult : int8_t
+  {
+    NO_DATA_EVICTED,
+    DATA_EVICTED,
+    CANT_EVICT,
+    BUFFER_FULL,
+  };
+
+  // Current state as per Segment Parser Loop Algorithm
+  // http://w3c.github.io/media-source/index.html#sourcebuffer-segment-parser-loop
+  enum class AppendState : int32_t
+  {
+    WAITING_FOR_SEGMENT,
+    PARSING_INIT_SEGMENT,
+    PARSING_MEDIA_SEGMENT,
+  };
+
   typedef TrackInfo::TrackType TrackType;
   typedef MediaData::Type MediaType;
   typedef nsTArray<RefPtr<MediaRawData>> TrackBuffer;
 
+  // Interface for SourceBuffer
   TrackBuffersManager(dom::SourceBufferAttributes* aAttributes,
                       MediaSourceDecoder* aParentDecoder,
                       const nsACString& aType);
 
+  // Add data to the end of the input buffer.
+  // Returns false if the append failed.
   bool AppendData(MediaByteBuffer* aData,
-                  media::TimeUnit aTimestampOffset) override;
+                  media::TimeUnit aTimestampOffset);
 
-  RefPtr<AppendPromise> BufferAppend() override;
+  // Run MSE Buffer Append Algorithm
+  // 3.5.5 Buffer Append Algorithm.
+  // http://w3c.github.io/media-source/index.html#sourcebuffer-buffer-append
+  RefPtr<AppendPromise> BufferAppend();
 
-  void AbortAppendData() override;
+  // Abort any pending AppendData.
+  void AbortAppendData();
 
-  void ResetParserState() override;
+  // Run MSE Reset Parser State Algorithm.
+  // 3.5.2 Reset Parser State
+  void ResetParserState();
 
+  // Runs MSE range removal algorithm.
+  // http://w3c.github.io/media-source/#sourcebuffer-coded-frame-removal
   RefPtr<RangeRemovalPromise> RangeRemoval(media::TimeUnit aStart,
-                                             media::TimeUnit aEnd) override;
+                                             media::TimeUnit aEnd);
 
+  // Evicts data up to aPlaybackTime. aThreshold is used to
+  // bound the data being evicted. It will not evict more than aThreshold
+  // bytes. aBufferStartTime contains the new start time of the data after the
+  // eviction.
   EvictDataResult
   EvictData(media::TimeUnit aPlaybackTime,
             int64_t aThresholdReduct,
-            media::TimeUnit* aBufferStartTime) override;
+            media::TimeUnit* aBufferStartTime);
 
-  void EvictBefore(media::TimeUnit aTime) override;
+  // Evicts data up to aTime.
+  void EvictBefore(media::TimeUnit aTime);
 
-  media::TimeIntervals Buffered() override;
+  // Returns the buffered range currently managed.
+  // This may be called on any thread.
+  // Buffered must conform to http://w3c.github.io/media-source/index.html#widl-SourceBuffer-buffered
+  media::TimeIntervals Buffered();
 
-  int64_t GetSize() override;
+  // Return the size of the data managed by this SourceBufferContentManager.
+  int64_t GetSize();
 
-  void Ended() override;
+  // Indicate that the MediaSource parent object got into "ended" state.
+  void Ended();
 
-  void Detach() override;
+  // The parent SourceBuffer is about to be destroyed.
+  void Detach();
 
-  AppendState GetAppendState() override
+  AppendState GetAppendState()
   {
     return mAppendState;
   }
 
-  void SetGroupStartTimestamp(const media::TimeUnit& aGroupStartTimestamp) override;
-  void RestartGroupStartTimestamp() override;
-  media::TimeUnit GroupEndTimestamp() override;
-  int64_t EvictionThreshold() const override;
+  void SetGroupStartTimestamp(const media::TimeUnit& aGroupStartTimestamp);
+  void RestartGroupStartTimestamp();
+  media::TimeUnit GroupEndTimestamp();
+  int64_t EvictionThreshold() const;
 
   // Interface for MediaSourceDemuxer
   MediaInfo GetMetadata();
@@ -102,6 +148,8 @@ public:
   void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes);
 
 private:
+  typedef MozPromise<bool, nsresult, /* IsExclusive = */ true> CodedFrameProcessingPromise;
+
   // for MediaSourceDemuxer::GetMozDebugReaderData
   friend class MediaSourceDemuxer;
   virtual ~TrackBuffersManager();
