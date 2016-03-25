@@ -2,7 +2,7 @@
 # you cannot run it directly
 
 deactivate () {
-    unset -f pydoc
+    unset -f pydoc >/dev/null 2>&1
 
     # reset old environment variables
     # ! [ -z ${VAR+_} ] returns true if VAR is declared at all

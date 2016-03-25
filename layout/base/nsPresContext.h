@@ -704,7 +704,7 @@ public:
    *         it was propagated from.
    */
   nsIContent* UpdateViewportScrollbarStylesOverride();
-  ScrollbarStyles GetViewportScrollbarStylesOverride()
+  const ScrollbarStyles& GetViewportScrollbarStylesOverride()
   {
     return mViewportStyleScrollbar;
   }

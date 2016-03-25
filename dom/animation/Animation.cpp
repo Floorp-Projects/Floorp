@@ -1230,12 +1230,14 @@ Animation::GetPresContext() const
 void
 Animation::DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag)
 {
+  CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
+
   if (aSyncNotifyFlag == SyncNotifyFlag::Sync) {
     DoFinishNotificationImmediately();
   } else if (!mFinishNotificationTask.IsPending()) {
     RefPtr<nsRunnableMethod<Animation>> runnable =
       NS_NewRunnableMethod(this, &Animation::DoFinishNotificationImmediately);
-    Promise::DispatchToMicroTask(runnable);
+    runtime->DispatchToMicroTask(runnable);
     mFinishNotificationTask = runnable;
   }
 }

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    Test for whether whitespace gets wrapped in an anonymous box,
+    inside of -webkit-box.
+  </title>
+  <style>
+  .container {
+    display: -webkit-box;
+    -webkit-box-pack: justify;
+    justify-content: space-between; /* XXX remove when bug 1231682 is fixed */
+    width: 300px;
+    border: 1px solid black;
+    white-space: pre;
+  }
+  </style>
+</head>
+<body>
+  <!-- Note the space characters between the first and second divs here: -->
+  <div class="container"><div>a</div>   <div>b</div><div>c</div></div>
+</body>
+</html>

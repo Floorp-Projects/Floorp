@@ -2,6 +2,15 @@
 # CSS properties. These tests require webkit prefix support to be enabled.
 default-preferences pref(layout.css.prefixes.webkit,true)
 
+# Tests for anonymous flex item formation inside of a "-webkit-box":
+# Note: some of these tests are marked as failing, because we don't match
+# WebKit/Blink on them.  (The reference case represents the WebKit/Blink
+# rendering.) We could probably make them pass by implementing some quirks, if
+# it turns out that the web depends on WebKit/Blink's behavior in these cases.
+== webkit-box-anon-flex-items-1.html webkit-box-anon-flex-items-1-ref.html
+fails == webkit-box-anon-flex-items-2.html webkit-box-anon-flex-items-2-ref.html
+fails == webkit-box-anon-flex-items-3.html webkit-box-anon-flex-items-3-ref.html
+
 # Tests for "-webkit-box" & "-webkit-inline-box" as display values:
 == webkit-display-values-1.html webkit-display-values-1-ref.html
 

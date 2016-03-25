@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: virtualenv
-Version: 14.0.1
+Version: 15.0.1
 Summary: Virtual Python Environment builder
 Home-page: https://virtualenv.pypa.io/
 Author: Jannis Leidel, Carl Meyer and Brian Rosner
@@ -47,54 +47,29 @@ Description: Virtualenv
         Release History
         ===============
         
-        14.0.1 (2016-01-21)
+        15.0.1 (2016-03-17)
         -------------------
         
-        * Upgrade from pip 8.0.0 to 8.0.2.
+        * Print error message when DEST_DIR exists and is a file
         
-        * Fix the default of ``--(no-)download`` to default to downloading.
+        * Upgrade setuptools to 20.3
+        
+        * Upgrade pip to 8.1.1.
         
         
-        14.0.0 (2016-01-19)
+        15.0.0 (2016-03-05)
         -------------------
         
-        * **BACKWARDS INCOMPATIBLE** Drop support for Python 3.2.
+        * Remove the `virtualenv-N.N` script from the package; this can no longer be
+          correctly created from a wheel installation.
+          Resolves #851, #692
         
-        * Upgrade setuptools to 19.4
+        * Remove accidental runtime dependency on pip by extracting certificate in the
+          subprocess.
         
-        * Upgrade wheel to 0.26.0
+        * Upgrade setuptools 20.2.2.
         
-        * Upgrade pip to 8.0.0
-        
-        * Upgrade argparse to 1.4.0
-        
-        * Added support for ``python-config`` script (PR #798)
-        
-        * Updated activate.fish (PR #589) (PR #799)
-        
-        * Account for a ``site.pyo`` correctly in some python implementations (PR #759)
-        
-        * Properly restore an empty PS1 (#407)
-        
-        * Properly remove ``pydoc`` when deactivating
-        
-        * Remove workaround for very old Mageia / Mandriva linuxes (PR #472)
-        
-        * Added a space after virtualenv name in the prompt: ``(env) $PS1``
-        
-        * Make sure not to run a --user install when creating the virtualenv (PR #803)
-        
-        * Remove virtualenv file's path from directory when executing with a new
-          python. Fixes issue #779, #763 (PR #805)
-        
-        * Remove use of () in .bat files so ``Program Files (x86)`` works #35
-        
-        * Download new releases of the preinstalled software from PyPI when there are
-          new releases available. This behavior can be disabled using
-          ``--no-download``.
-        
-        * Make ``--no-setuptools``, ``--no-pip``, and ``--no-wheel`` independent of
-          each other.
+        * Upgrade pip to 8.1.0.
         
         
         `Full Changelog <https://virtualenv.pypa.io/en/latest/changes.html>`_.
@@ -107,7 +82,6 @@ Classifier: Programming Language :: Python :: 2
 Classifier: Programming Language :: Python :: 2.6
 Classifier: Programming Language :: Python :: 2.7
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3.1
-Classifier: Programming Language :: Python :: 3.2
 Classifier: Programming Language :: Python :: 3.3
 Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5

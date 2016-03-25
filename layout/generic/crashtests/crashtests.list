@@ -603,6 +603,9 @@ pref(layout.css.grid.enabled,true) load 1225592.html
 load 1229437-1.html
 load 1229437-2.html
 pref(dom.details_element.enabled,true) load details-containing-only-text.html
+pref(dom.details_element.enabled,true) load details-display-none-summary-1.html
+pref(dom.details_element.enabled,true) load details-display-none-summary-2.html
+pref(dom.details_element.enabled,true) load details-display-none-summary-3.html
 pref(dom.details_element.enabled,true) load details-open-overflow-auto.html
 pref(dom.details_element.enabled,true) load details-open-overflow-hidden.html
 pref(dom.details_element.enabled,true) load details-three-columns.html

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html class="reftest-wait">
+  <script>
+  function runTest() {
+    // Both Chrome and Safari add the 'open' attribute to the details element.
+    var details = document.getElementById("details");
+    var summary = document.getElementById("summary");
+
+    document.body.addEventListener("click", function () {
+      // Change details to display: none in capturing phase.
+      details.style.display = "none";
+    }, true);
+
+    summary.dispatchEvent(new MouseEvent("click"));
+
+    details.style.display = "block";
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+  <body onload="runTest();">
+    <details id="details">
+      <summary id="summary">Summary</summary>
+      <p>This is the details.</p>
+    </details>
+  </body>
+</html>

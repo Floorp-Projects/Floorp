@@ -64,7 +64,8 @@
             "tests": ["dromaeo_dom"]
         },
         "g3-e10s": {
-            "tests": ["dromaeo_dom"]
+            "tests": ["dromaeo_dom"],
+            "talos_options": ["--e10s"]
         },
         "svgr": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"]

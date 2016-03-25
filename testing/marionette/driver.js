@@ -265,19 +265,6 @@ GeckoDriver.prototype.getCurrentWindow = function() {
   }
 };
 
-/**
- * Gets the the window enumerator.
- *
- * @return {nsISimpleEnumerator}
- */
-GeckoDriver.prototype.getWinEnumerator = function() {
-  let typ = null;
-  if (this.appName != "B2G" && this.context == Context.CONTENT) {
-    typ = "navigator:browser";
-  }
-  return Services.wm.getEnumerator(typ);
-};
-
 GeckoDriver.prototype.addFrameCloseListener = function(action) {
   let win = this.getCurrentWindow();
   this.mozBrowserClose = e => {
@@ -1380,7 +1367,7 @@ GeckoDriver.prototype.getIdForBrowser = function getIdForBrowser(browser) {
  */
 GeckoDriver.prototype.getWindowHandles = function(cmd, resp) {
   let hs = [];
-  let winEn = this.getWinEnumerator();
+  let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     let win = winEn.getNext();
     if (win.gBrowser && this.appName != "B2G") {
@@ -1432,7 +1419,7 @@ GeckoDriver.prototype.getChromeWindowHandle = function(cmd, resp) {
  */
 GeckoDriver.prototype.getChromeWindowHandles = function(cmd, resp) {
   let hs = [];
-  let winEn = this.getWinEnumerator();
+  let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     let foundWin = winEn.getNext();
     let winId = foundWin.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -1507,7 +1494,7 @@ GeckoDriver.prototype.switchToWindow = function*(cmd, resp) {
         switchTo == outerId;
   };
 
-  let winEn = this.getWinEnumerator();
+  let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     let win = winEn.getNext();
     let outerId = getOuterWindowId(win);
@@ -2337,7 +2324,7 @@ GeckoDriver.prototype.close = function(cmd, resp) {
   }
 
   let nwins = 0;
-  let winEn = this.getWinEnumerator();
+  let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     let win = winEn.getNext();
 
@@ -2384,7 +2371,7 @@ GeckoDriver.prototype.closeChromeWindow = function(cmd, resp) {
 
   // Get the total number of windows
   let nwins = 0;
-  let winEn = this.getWinEnumerator();
+  let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     nwins++;
     winEn.getNext();
@@ -2435,7 +2422,7 @@ GeckoDriver.prototype.sessionTearDown = function(cmd, resp) {
       }
     }
 
-    let winEn = this.getWinEnumerator();
+    let winEn = Services.wm.getEnumerator(null);
     while (winEn.hasMoreElements()) {
       winEn.getNext().messageManager.removeDelayedFrameScript(FRAME_SCRIPT);
     }

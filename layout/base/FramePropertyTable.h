@@ -6,8 +6,9 @@
 #ifndef FRAMEPROPERTYTABLE_H_
 #define FRAMEPROPERTYTABLE_H_
 
-#include "mozilla/TypeTraits.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/TypeTraits.h"
+#include "mozilla/unused.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
@@ -171,6 +172,32 @@ public:
     helper.value = aValue;
     SetInternal(aFrame, aProperty, helper.ptr);
   }
+
+  /**
+   * @return true if @aProperty is set for @aFrame. This requires one hashtable
+   * lookup (using the frame as the key) and a linear search through the
+   * properties of that frame.
+   *
+   * In most cases, this shouldn't be used outside of assertions, because if
+   * you're doing a lookup anyway it would be far more efficient to call Get()
+   * or Remove() and check the aFoundResult outparam to find out whether the
+   * property is set. Legitimate non-assertion uses include:
+   *
+   *   - Checking if a frame property is set in cases where that's all we want
+   *     to know (i.e., we don't intend to read the actual value or remove the
+   *     property).
+   *
+   *   - Calling IsSet() before Set() in cases where we don't want to overwrite
+   *     an existing value for the frame property.
+   */
+  template<typename T>
+  bool IsSet(const nsIFrame* aFrame, Descriptor<T> aProperty)
+  {
+    bool foundResult = false;
+    mozilla::Unused << GetInternal(aFrame, aProperty, &foundResult);
+    return foundResult;
+  }
+
   /**
    * Get a property value for a frame. This requires one hashtable
    * lookup (using the frame as the key) and a linear search through
@@ -360,6 +387,13 @@ public:
   {
     mTable->Set(mFrame, aProperty, aValue);
   }
+
+  template<typename T>
+  bool IsSet(Descriptor<T> aProperty) const
+  {
+    return mTable->IsSet(mFrame, aProperty);
+  }
+
   template<typename T>
   PropertyType<T> Get(Descriptor<T> aProperty,
                       bool* aFoundResult = nullptr) const

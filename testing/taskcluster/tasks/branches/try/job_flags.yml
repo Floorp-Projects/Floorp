@@ -17,30 +17,6 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_emulator_x86_l_opt.yml
-  dolphin:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_dolphin_opt.yml
-  dolphin-eng:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_dolphin_eng.yml
-  dolphin-512:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_dolphin_512_opt.yml
-  dolphin-512-eng:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_dolphin_512_eng.yml
   android-api-15:
     platforms:
       - Android

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    Test for contiguous inline content getting wrapped in a single block,
+    inside of -webkit-box.
+  </title>
+  <style>
+  .container {
+    display: -webkit-box;
+    -webkit-box-pack: justify;
+    justify-content: space-between; /* XXX remove when bug 1231682 is fixed */
+    width: 300px;
+    border: 1px solid black;
+    font: 10px sans-serif;
+    margin-bottom: 10px;
+  }
+  .container > * {
+    background: lightgray;
+  }
+  </style>
+</head>
+<body>
+<!-- The following containers each have a bunch of contiguous inline-level
+     content. In each case, all of the inline content ("a" through "z") should
+     get wrapped into a single anonymous block. -->
+<div class="container">
+  a
+  <i>i</i><img src="bogus"><img src="bogus" alt="alt">
+  <canvas height="5" width="5"></canvas>
+  <video height="5" width="5"></video>
+  <div style="display:inline-block">ib</div>
+  <div style="display:inline-table">it</div>
+  z
+  <div>block</div>
+  <div>block</div>
+</div>
+
+<div class="container">
+  <div>block</div>
+  a
+  <i>i</i><img src="bogus"><img src="bogus" alt="alt">
+  <canvas height="5" width="5"></canvas>
+  <video height="5" width="5"></video>
+  <div style="display:inline-block">ib</div>
+  <div style="display:inline-table">it</div>
+  z
+  <div>block</div>
+</div>
+
+<div class="container">
+  <div>block</div>
+  <div>block</div>
+  a
+  <i>i</i><img src="bogus"><img src="bogus" alt="alt">
+  <canvas height="5" width="5"></canvas>
+  <video height="5" width="5"></video>
+  <div style="display:inline-block">ib</div>
+  <div style="display:inline-table">it</div>
+  z
+</div>
+
+<!-- This container tests how flex items are formed when table parts are placed
+     directly inside of a -webkit-box, alongside inline-level content.
+     (Table-fixup should produce an anonymous table around each contiguous run
+     of table-parts, and we should get an anonymous block around each piece of
+     raw text.) -->
+<div class="container">
+  a
+  <div style="display: table-cell">tc</div>
+  <div style="display: table-cell">tc</div>
+  b
+  <div style="display: table-row">tr</div>
+  <div style="display: table-cell">tc</div>
+  c
+  <div style="display: table-row">tr</div>
+  <div style="display: table-row-group">trg</div>
+  d
+  <table><tbody><tr><td>t</td></tr></tbody></table>
+  e
+</div>
+</body>
+</html>

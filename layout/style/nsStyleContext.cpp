@@ -597,6 +597,21 @@ ShouldSuppressLineBreak(const nsStyleContext* aContext,
   return false;
 }
 
+// Flex & grid containers blockify their children.
+//  "The display value of a flex item is blockified"
+//    https://drafts.csswg.org/css-flexbox-1/#flex-items
+//  "The display value of a grid item is blockified"
+//    https://drafts.csswg.org/css-grid/#grid-items
+static bool
+ShouldBlockifyChildren(const nsStyleDisplay* aStyleDisp)
+{
+  auto displayVal = aStyleDisp->mDisplay;
+  return NS_STYLE_DISPLAY_FLEX == displayVal ||
+    NS_STYLE_DISPLAY_INLINE_FLEX == displayVal ||
+    NS_STYLE_DISPLAY_GRID == displayVal ||
+    NS_STYLE_DISPLAY_INLINE_GRID == displayVal;
+}
+
 void
 nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
 {
@@ -703,7 +718,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
       containerContext = containerContext->GetParent();
       containerDisp = containerContext->StyleDisplay();
     }
-    if (containerDisp->IsFlexOrGridDisplayType() &&
+    if (ShouldBlockifyChildren(containerDisp) &&
         GetPseudo() != nsCSSAnonBoxes::mozNonElement) {
       // NOTE: Technically, we shouldn't modify the 'display' value of
       // positioned elements, since they aren't flex/grid items. However,

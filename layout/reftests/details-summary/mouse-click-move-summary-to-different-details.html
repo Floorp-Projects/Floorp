@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<html class="reftest-wait">
+  <script>
+  function runTest() {
+    // Both Chrome and Safari do not add the 'open' attribute to details1
+    // element, but Firefox does add 'open' to details1 since summary2 had been
+    // moved to details1 before receiving the 'click' event.
+    var details1 = document.getElementById("details1");
+    var summary2 = document.getElementById("summary2");
+
+    document.body.addEventListener("click", function () {
+      // Move summary2 into details1 at capture phase, and summary2 will be the
+      // main summary of details1 at target phase.
+      details1.insertBefore(summary2, details1.children[0]);
+    }, true);
+
+    summary2.dispatchEvent(new MouseEvent("click"));
+
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+  <body onload="runTest();">
+    <details id="details1">
+      <summary id="summary1">Summary 1</summary>
+      <p>This is the details 1.</p>
+    </details>
+    <details>
+      <summary id="summary2">Summary 2</summary>
+      <p>This is the details 2.</p>
+    </details>
+  </body>
+</html>

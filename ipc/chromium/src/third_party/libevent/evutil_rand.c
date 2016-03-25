@@ -139,7 +139,7 @@ evutil_secure_rng_get_bytes(void *buf, size_t n)
 	ev_arc4random_buf(buf, n);
 }
 
-#ifndef __OpenBSD__
+#if !defined(__OpenBSD__) && !defined(ANDROID)
 void
 evutil_secure_rng_add_bytes(const char *buf, size_t n)
 {

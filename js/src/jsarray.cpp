@@ -3170,6 +3170,7 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_SYM_FN(iterator,  "ArrayValues",      0,0),
     JS_SELF_HOSTED_FN("entries",     "ArrayEntries",     0,0),
     JS_SELF_HOSTED_FN("keys",        "ArrayKeys",        0,0),
+    JS_SELF_HOSTED_FN("values",      "ArrayValues",      0,0),
 
     /* ES7 additions */
     JS_SELF_HOSTED_FN("includes",    "ArrayIncludes",    2,0),
@@ -3285,6 +3286,32 @@ CreateArrayPrototype(JSContext* cx, JSProtoKey key)
     return arrayProto;
 }
 
+static bool
+array_proto_finish(JSContext* cx, JS::HandleObject ctor, JS::HandleObject proto)
+{
+    // Add Array.prototype[@@unscopables]. ECMA-262 draft (2016 Mar 19) 22.1.3.32.
+    RootedObject unscopables(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr, TenuredObject));
+    if (!unscopables)
+        return false;
+
+    RootedValue value(cx, BooleanValue(true));
+    if (!DefineProperty(cx, unscopables, cx->names().copyWithin, value) ||
+        !DefineProperty(cx, unscopables, cx->names().entries, value) ||
+        !DefineProperty(cx, unscopables, cx->names().fill, value) ||
+        !DefineProperty(cx, unscopables, cx->names().find, value) ||
+        !DefineProperty(cx, unscopables, cx->names().findIndex, value) ||
+        !DefineProperty(cx, unscopables, cx->names().includes, value) ||
+        !DefineProperty(cx, unscopables, cx->names().keys, value) ||
+        !DefineProperty(cx, unscopables, cx->names().values, value))
+    {
+        return false;
+    }
+
+    RootedId id(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().get(JS::SymbolCode::unscopables)));
+    value.setObject(*unscopables);
+    return DefineProperty(cx, proto, id, value, nullptr, nullptr, JSPROP_READONLY);
+}
+
 const Class ArrayObject::class_ = {
     "Array",
     JSCLASS_HAS_CACHED_PROTO(JSProto_Array) | JSCLASS_DELAY_METADATA_CALLBACK,
@@ -3305,7 +3332,9 @@ const Class ArrayObject::class_ = {
         CreateArrayPrototype,
         array_static_methods,
         nullptr,
-        array_methods
+        array_methods,
+        nullptr,
+        array_proto_finish
     }
 };
 
