@@ -18,7 +18,7 @@ ac_add_options --with-google-oauth-api-keyfile=${_google_oauth_api_keyfile}
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 
-. $topsrcdir/build/win32/mozconfig.vs2013-win64
+. $topsrcdir/build/win32/mozconfig.vs2015-win64
 
 # Treat warnings as errors (modulo ALLOW_COMPILER_WARNINGS).
 ac_add_options --enable-warnings-as-errors
