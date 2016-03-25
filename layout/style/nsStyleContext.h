@@ -562,7 +562,7 @@ private:
   bool ShouldLogRestyle() { return true; }
 #endif
 
-  nsStyleContext* mParent; // STRONG
+  RefPtr<nsStyleContext> mParent;
 
   // Children are kept in two circularly-linked lists.  The list anchor
   // is not part of the list (null for empty), and we point to the first
