@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* test_user_defined_commands() {
+add_task(function* () {
   // Create a window before the extension is loaded.
   let win1 = yield BrowserTestUtils.openNewBrowserWindow();
   yield BrowserTestUtils.loadURI(win1.gBrowser.selectedBrowser, "about:robots");
@@ -10,6 +10,7 @@ add_task(function* test_user_defined_commands() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
+      "name": "Commands Extension",
       "commands": {
         "toggle-feature-using-alt-shift-3": {
           "suggested_key": {
@@ -26,8 +27,8 @@ add_task(function* test_user_defined_commands() {
     },
 
     background: function() {
-      browser.commands.onCommand.addListener((commandName) => {
-        browser.test.sendMessage("oncommand", commandName);
+      browser.commands.onCommand.addListener((message) => {
+        browser.test.sendMessage("oncommand", message);
       });
       browser.test.sendMessage("ready");
     },
@@ -52,12 +53,10 @@ add_task(function* test_user_defined_commands() {
   // Confirm the keysets have been added to both windows.
   let keysetID = `ext-keyset-id-${makeWidgetId(extension.id)}`;
   let keyset = win1.document.getElementById(keysetID);
-  ok(keyset != null, "Expected keyset to exist");
-  is(keyset.childNodes.length, 2, "Expected keyset to have 2 children");
+  is(keyset.childNodes.length, 2, "Expected keyset to exist and have 2 children");
 
   keyset = win2.document.getElementById(keysetID);
-  ok(keyset != null, "Expected keyset to exist");
-  is(keyset.childNodes.length, 2, "Expected keyset to have 2 children");
+  is(keyset.childNodes.length, 2, "Expected keyset to exist and have 2 children");
 
   // Confirm that the commands are registered to both windows.
   yield focusWindow(win1);
@@ -85,5 +84,3 @@ add_task(function* test_user_defined_commands() {
   SimpleTest.endMonitorConsole();
   yield waitForConsole;
 });
-
-
