@@ -1632,16 +1632,30 @@ function checkOutputForInputs(hud, inputTests) {
 /**
  * Finish the request and resolve with the request object.
  *
+ * @param {Function} predicate A predicate function that takes the request
+ * object as an argument and returns true if the request was the expected one,
+ * false otherwise. The returned promise is resolved ONLY if the predicate
+ * matches a request. Defaults to accepting any request.
  * @return promise
  * @resolves The request object.
  */
-function waitForFinishedRequest() {
+function waitForFinishedRequest(predicate = () => true) {
   registerCleanupFunction(function() {
     HUDService.lastFinishedRequest.callback = null;
   });
 
   return new Promise(resolve => {
-    HUDService.lastFinishedRequest.callback = request => { resolve(request) };
+    HUDService.lastFinishedRequest.callback = request => {
+      // Check if this is the expected request
+      if (predicate(request)) {
+        // Match found. Clear the listener.
+        HUDService.lastFinishedRequest.callback = null;
+
+        resolve(request);
+      } else {
+        info(`Ignoring unexpected request ${JSON.stringify(request, null, 2)}`);
+      }
+    }
   });
 }
 
