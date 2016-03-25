@@ -164,6 +164,9 @@
 <!ENTITY pref_search_hint "TIP: Add any website to your list of search providers by long-pressing on its search field and then tapping the &formatI; icon.">
 <!ENTITY pref_category_advanced "Advanced">
 <!ENTITY pref_category_advanced_summary2 "Restore tabs, plugins, developer tools">
+<!ENTITY pref_category_notifications "Notifications">
+<!ENTITY pref_content_notifications "Website updates">
+<!ENTITY pref_content_notifications_summary "Allow notifications for supported sites">
 <!ENTITY pref_developer_remotedebugging_usb "Remote debugging via USB">
 <!ENTITY pref_developer_remotedebugging_wifi "Remote debugging via Wi-Fi">
 <!ENTITY pref_developer_remotedebugging_wifi_disabled_summary "Wi-Fi debugging requires your device to have a QR code reader app installed.">
@@ -200,6 +203,7 @@
 <!ENTITY pref_header_search "Search">
 <!ENTITY pref_header_privacy_short "Privacy">
 <!ENTITY pref_header_accessibility "Accessibility">
+<!ENTITY pref_header_notifications "Notifications">
 <!ENTITY pref_header_advanced "Advanced">
 <!ENTITY pref_header_help "Help">
 <!ENTITY pref_header_vendor "&vendorShortName;">
@@ -256,6 +260,14 @@
 <!-- Localization note (tab_queue_notification_settings): This notification text is shown if a tab
      has been queued but we are missing the system permission to show an overlay. -->
 <!ENTITY tab_queue_notification_settings "To \&quot;Open multiple links\&quot;, please enable the \'Draw over other apps\' permission for &brandShortName;">
+
+<!ENTITY content_notification_summary "&brandShortName;">
+<!ENTITY content_notification_title_plural "&formatD; websites updated">
+<!ENTITY content_notification_action_settings "Notifications Setting">
+<!-- Localization note (content_notification_updated_on): &formatS; will be replaced with a medium sized version of the
+     date, depending on locale. For en_US this is for example: Feb 24, 2016. For more details see the Android developer
+     documentation for DateFormat.getMediumDateFormat(). -->
+<!ENTITY content_notification_updated_on "Updated on &formatS;">
 
 <!ENTITY pref_char_encoding "Character encoding">
 <!ENTITY pref_char_encoding_on "Show menu">

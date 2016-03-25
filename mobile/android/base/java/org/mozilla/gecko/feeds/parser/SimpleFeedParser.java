@@ -56,6 +56,7 @@ public class SimpleFeedParser {
     private static final String TAG_DATE = "date";
     private static final String TAG_SOURCE = "source";
     private static final String TAG_IMAGE = "image";
+    private static final String TAG_CONTENT = "content";
 
     private class ParserState {
         public Feed feed;
@@ -64,6 +65,7 @@ public class SimpleFeedParser {
         public boolean isATOM;
         public boolean inSource;
         public boolean inImage;
+        public boolean inContent;
     }
 
     public Feed parse(InputStream in) throws ParserException, IOException {
@@ -157,6 +159,10 @@ public class SimpleFeedParser {
             case TAG_IMAGE:
                 state.inImage = true;
                 break;
+
+            case TAG_CONTENT:
+                state.inContent = true;
+                break;
         }
     }
 
@@ -174,12 +180,16 @@ public class SimpleFeedParser {
             case TAG_IMAGE:
                 state.inImage = false;
                 break;
+
+            case TAG_CONTENT:
+                state.inContent = false;
+                break;
         }
     }
 
     private void handleTitleStartTag(XmlPullParser parser, ParserState state) throws IOException, XmlPullParserException {
-        if (state.inSource || state.inImage) {
-            // We do not care about titles in <source> or <image> tags.
+        if (state.inSource || state.inImage || state.inContent) {
+            // We do not care about titles in <source>, <image> or <media> tags.
             return;
         }
 

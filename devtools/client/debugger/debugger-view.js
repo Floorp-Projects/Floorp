@@ -67,6 +67,7 @@ var DebuggerView = {
     this._startup = deferred.promise;
 
     this._initializePanes();
+    this._initializeEditor(deferred.resolve);
     this.Toolbar.initialize();
     this.Options.initialize();
     this.Filtering.initialize();
@@ -80,7 +81,6 @@ var DebuggerView = {
     this.GlobalSearch.initialize();
     this._initializeVariablesView();
 
-    this._initializeEditor(deferred.resolve);
     this._editorSource = {};
 
     document.title = L10N.getStr("DebuggerWindowTitle");

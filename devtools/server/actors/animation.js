@@ -193,6 +193,15 @@ var AnimationPlayerActor = ActorClass({
   },
 
   /**
+   * Get the animation iterationStart from this player, in ratio.
+   * That is offset of starting position of the animation.
+   * @return {Number}
+   */
+  getIterationStart: function() {
+    return this.player.effect.getComputedTiming().iterationStart;
+  },
+
+  /**
    * Return the current start of the Animation.
    * @return {Object}
    */
@@ -221,6 +230,7 @@ var AnimationPlayerActor = ActorClass({
       duration: this.getDuration(),
       delay: this.getDelay(),
       iterationCount: this.getIterationCount(),
+      iterationStart: this.getIterationStart(),
       // animation is hitting the fast path or not. Returns false whenever the
       // animation is paused as it is taken off the compositor then.
       isRunningOnCompositor: this.player.isRunningOnCompositor,
@@ -286,12 +296,13 @@ var AnimationPlayerActor = ActorClass({
       }
 
       if (hasCurrentAnimation(changedAnimations)) {
-        // Only consider the state has having changed if any of delay, duration
-        // or iterationcount has changed (for now at least).
+        // Only consider the state has having changed if any of delay, duration,
+        // iterationcount or iterationStart has changed (for now at least).
         let newState = this.getState();
         let oldState = this.currentState;
         hasChanged = newState.delay !== oldState.delay ||
                      newState.iterationCount !== oldState.iterationCount ||
+                     newState.iterationStart !== oldState.iterationStart ||
                      newState.duration !== oldState.duration;
         break;
       }
@@ -432,6 +443,7 @@ var AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
       duration: this._form.duration,
       delay: this._form.delay,
       iterationCount: this._form.iterationCount,
+      iterationStart: this._form.iterationStart,
       isRunningOnCompositor: this._form.isRunningOnCompositor,
       documentCurrentTime: this._form.documentCurrentTime
     };

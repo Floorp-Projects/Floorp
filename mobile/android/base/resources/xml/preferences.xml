@@ -63,6 +63,16 @@
         </intent>
     </PreferenceScreen>
 
+    <PreferenceScreen android:title="@string/pref_category_notifications">
+        <intent android:action="android.intent.action.VIEW"
+            android:targetPackage="@string/android_package_name"
+            android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
+            <extra
+                android:name="resource"
+                android:value="preferences_notifications" />
+        </intent>
+    </PreferenceScreen>
+
     <PreferenceScreen android:title="@string/pref_category_advanced"
                       android:summary="@string/pref_category_advanced_summary"
                       android:key="android.not_a_preference.advanced.enabled" >

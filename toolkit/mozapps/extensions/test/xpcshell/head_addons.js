@@ -1742,7 +1742,6 @@ function promiseInstallAllFiles(aFiles, aIgnoreIncompatible) {
   let deferred = Promise.defer();
   installAllFiles(aFiles, deferred.resolve, aIgnoreIncompatible);
   return deferred.promise;
-
 }
 
 if ("nsIWindowsRegKey" in AM_Ci) {
