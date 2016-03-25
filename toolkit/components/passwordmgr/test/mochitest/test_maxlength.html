@@ -9,6 +9,9 @@
 </head>
 <body>
 Login Manager test: Bug 391514
+<script>
+runChecksAfterCommonInit(() => startTest());
+</script>
 <p id="display"></p>
 <div id="content" style="display: none">
   <!-- normal form. -->
@@ -106,8 +109,6 @@ Login Manager test: Bug 391514
  * password/PIN on usaa.com)
  */
 
-commonInit();
-
 function startTest() {
   var i;
 
@@ -130,11 +131,6 @@ function startTest() {
 
   SimpleTest.finish();
 }
-
-window.addEventListener("runTests", startTest);
-
-SimpleTest.waitForExplicitFinish();
-
 </script>
 </pre>
 </body>

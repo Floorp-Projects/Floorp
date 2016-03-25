@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <meta charset"utf-8">
+  <meta charset="utf-8">
   <title>Test for considering form action</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
@@ -9,6 +9,9 @@
 </head>
 <body>
 Login Manager test: Bug 360493
+<script>
+runChecksAfterCommonInit(() => startTest());
+</script>
 <p id="display"></p>
 <div id="content" style="display: none">
 
@@ -131,8 +134,6 @@ Login Manager test: Bug 360493
 
 /** Test for Login Manager: 360493 (Cross-Site Forms + Password Manager = Security Failure) **/
 
-commonInit();
-
 function startTest() {
   for (var i = 1; i <= 8; i++) {
     // Check form i
@@ -166,11 +167,6 @@ function startTest() {
 
   SimpleTest.finish();
 }
-
-window.addEventListener("runTests", startTest);
-
-SimpleTest.waitForExplicitFinish();
-
 </script>
 </pre>
 </body>
