@@ -356,21 +356,16 @@ private:
   public:
     DocshellEntryMonitor(JSContext* aCx, const char* aReason);
 
-    // Please note that |aAsyncCause| here is owned by the caller, and its
-    // lifetime must outlive the lifetime of the DocshellEntryMonitor object.
-    // In practice, |aAsyncCause| is identical to |aReason| passed into
-    // the AutoEntryScript constructor, so the lifetime requirements are
-    // trivially satisfied by |aReason| being a statically allocated string.
     void Entry(JSContext* aCx, JSFunction* aFunction,
                JS::Handle<JS::Value> aAsyncStack,
-               const char* aAsyncCause) override
+               JS::Handle<JSString*> aAsyncCause) override
     {
       Entry(aCx, aFunction, nullptr, aAsyncStack, aAsyncCause);
     }
 
     void Entry(JSContext* aCx, JSScript* aScript,
                JS::Handle<JS::Value> aAsyncStack,
-               const char* aAsyncCause) override
+               JS::Handle<JSString*> aAsyncCause) override
     {
       Entry(aCx, nullptr, aScript, aAsyncStack, aAsyncCause);
     }
@@ -380,7 +375,7 @@ private:
   private:
     void Entry(JSContext* aCx, JSFunction* aFunction, JSScript* aScript,
                JS::Handle<JS::Value> aAsyncStack,
-               const char* aAsyncCause);
+               JS::Handle<JSString*> aAsyncCause);
 
     const char* mReason;
   };

@@ -172,7 +172,12 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
 
   mAsyncStack.emplace(cx, aCallback->GetCreationStack());
   if (*mAsyncStack) {
-    mAsyncStackSetter.emplace(cx, *mAsyncStack, aExecutionReason);
+    mAsyncCause.emplace(cx, JS_NewStringCopyZ(cx, aExecutionReason));
+    if (*mAsyncCause) {
+      mAsyncStackSetter.emplace(cx, *mAsyncStack, *mAsyncCause);
+    } else {
+      JS_ClearPendingException(cx);
+    }
   }
 
   // Enter the compartment of our callback, so we can actually work with it.
