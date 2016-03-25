@@ -163,8 +163,10 @@ add_task(function* test_manifest_localization() {
   const ID = "webextension3@tests.mozilla.org";
 
   yield promiseInstallAllFiles([do_get_addon("webextension_3")], true);
+  yield promiseAddonStartup();
 
   let addon = yield promiseAddonByID(ID);
+  addon.userDisabled = true;
 
   equal(addon.name, "Web Extensiøn foo ☹");
   equal(addon.description, "Descriptïon bar ☹ of add-on");
@@ -184,6 +186,8 @@ add_task(function* test_manifest_localization() {
 
   equal(addon.name, "Web Extensiøn foo ☹");
   equal(addon.description, "Descriptïon bar ☹ of add-on");
+
+  addon.uninstall();
 });
 
 // Missing ID should cause a failure

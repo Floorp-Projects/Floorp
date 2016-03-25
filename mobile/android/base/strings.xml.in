@@ -164,6 +164,10 @@
   <string name="pref_developer_remotedebugging_wifi">&pref_developer_remotedebugging_wifi;</string>
   <string name="pref_developer_remotedebugging_wifi_disabled_summary">&pref_developer_remotedebugging_wifi_disabled_summary;</string>
 
+  <string name="pref_category_notifications">&pref_category_notifications;</string>
+  <string name="pref_content_notifications">&pref_content_notifications;</string>
+  <string name="pref_content_notifications_summary">&pref_content_notifications_summary;</string>
+
   <string name="pref_category_home">&pref_category_home;</string>
   <string name="pref_category_home_summary">&pref_category_home_summary;</string>
   <string name="pref_category_home_panels">&pref_category_home_panels;</string>
@@ -181,6 +185,7 @@
   <string name="pref_header_search">&pref_header_search;</string>
   <string name="pref_header_accessibility">&pref_header_accessibility;</string>
   <string name="pref_header_privacy_short">&pref_header_privacy_short;</string>
+  <string name="pref_header_notifications">&pref_header_notifications;</string>
   <string name="pref_header_advanced">&pref_header_advanced;</string>
   <string name="pref_header_vendor">&pref_header_vendor;</string>
 
@@ -284,6 +289,11 @@
   <string name="tab_queue_notification_text_plural">&tab_queue_notification_text_plural2;</string>
   <string name="tab_queue_notification_title">&tab_queue_notification_title;</string>
   <string name="tab_queue_notification_settings">&tab_queue_notification_settings;</string>
+
+  <string name="content_notification_summary">&content_notification_summary;</string>
+  <string name="content_notification_title_plural">&content_notification_title_plural;</string>
+  <string name="content_notification_action_settings">&content_notification_action_settings;</string>
+  <string name="content_notification_updated_on">&content_notification_updated_on;</string>
 
   <string name="pref_about_firefox">&pref_about_firefox;</string>
   <string name="pref_vendor_faqs">&pref_vendor_faqs;</string>

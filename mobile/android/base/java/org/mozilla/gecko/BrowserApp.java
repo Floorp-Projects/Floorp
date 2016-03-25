@@ -6,6 +6,8 @@
 package org.mozilla.gecko;
 
 import android.Manifest;
+import android.app.DownloadManager;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import org.json.JSONArray;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
@@ -24,6 +26,8 @@ import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
+import org.mozilla.gecko.feeds.FeedService;
+import org.mozilla.gecko.feeds.action.CheckForUpdatesAction;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
@@ -195,6 +199,8 @@ public class BrowserApp extends GeckoApp
     // Request ID for startActivityForResult.
     private static final int ACTIVITY_REQUEST_PREFERENCES = 1001;
     private static final int ACTIVITY_REQUEST_TAB_QUEUE = 2001;
+
+    public static final String ACTION_VIEW_MULTIPLE = AppConstants.ANDROID_PACKAGE_NAME + ".action.VIEW_MULTIPLE";
 
     @RobocopTarget
     public static final String EXTRA_SKIP_STARTPANE = "skipstartpane";
@@ -681,6 +687,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
             "CharEncoding:Data",
             "CharEncoding:State",
+            "Download:AndroidDownloadManager",
             "Experiments:GetActive",
             "Favicon:CacheLoad",
             "Feedback:MaybeLater",
@@ -1418,6 +1425,7 @@ public class BrowserApp extends GeckoApp
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
             "CharEncoding:Data",
             "CharEncoding:State",
+            "Download:AndroidDownloadManager",
             "Experiments:GetActive",
             "Favicon:CacheLoad",
             "Feedback:MaybeLater",
@@ -1765,6 +1773,38 @@ public class BrowserApp extends GeckoApp
             }
         } else if ("Updater:Launch".equals(event)) {
             handleUpdaterLaunch();
+        } else if ("Download:AndroidDownloadManager".equals(event)) {
+            // Downloading via Android's download manager
+
+            final String uri = message.getString("uri");
+            final String filename = message.getString("filename");
+            final String mimeType = message.getString("mimeType");
+
+            final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(uri));
+            request.setMimeType(mimeType);
+
+            try {
+                request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, filename);
+            } catch (IllegalStateException e) {
+                Log.e(LOGTAG, "Cannot create download directory");
+                return;
+            }
+
+            request.allowScanningByMediaScanner();
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.addRequestHeader("User-Agent", HardwareUtils.isTablet() ?
+                    AppConstants.USER_AGENT_FENNEC_TABLET :
+                    AppConstants.USER_AGENT_FENNEC_MOBILE);
+
+            try {
+                DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                manager.enqueue(request);
+
+                Log.d(LOGTAG, "Enqueued download (Download Manager)");
+            } catch (RuntimeException e) {
+                Log.e(LOGTAG, "Download failed: " + e);
+            }
+
         } else {
             super.handleMessage(event, message, callback);
         }
@@ -1905,6 +1945,8 @@ public class BrowserApp extends GeckoApp
                 if (AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE) {
                     DownloadContentService.startVerification(this);
                 }
+
+                FeedService.setup(this);
 
                 super.handleMessage(event, message);
             } else if (event.equals("Gecko:Ready")) {
@@ -3681,6 +3723,7 @@ public class BrowserApp extends GeckoApp
         final boolean isViewAction = Intent.ACTION_VIEW.equals(action);
         final boolean isBookmarkAction = GeckoApp.ACTION_HOMESCREEN_SHORTCUT.equals(action);
         final boolean isTabQueueAction = TabQueueHelper.LOAD_URLS_ACTION.equals(action);
+        final boolean isViewMultipleAction = ACTION_VIEW_MULTIPLE.equals(action);
 
         if (mInitialized && (isViewAction || isBookmarkAction)) {
             // Dismiss editing mode if the user is loading a URL from an external app.
@@ -3721,6 +3764,19 @@ public class BrowserApp extends GeckoApp
             });
         }
 
+        // Custom intent action for opening multiple URLs at once
+        if (isViewMultipleAction) {
+            List<String> urls = intent.getStringArrayListExtra("urls");
+            if (urls != null) {
+                openUrls(urls);
+            }
+
+            // Launched from a "content notification"
+            if (intent.hasExtra(CheckForUpdatesAction.EXTRA_CONTENT_NOTIFICATION)) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.NOTIFICATION, "content_update");
+            }
+        }
+
         if (!mInitialized || !Intent.ACTION_MAIN.equals(action)) {
             return;
         }
@@ -3745,6 +3801,22 @@ public class BrowserApp extends GeckoApp
             }
         } finally {
             StrictMode.setThreadPolicy(savedPolicy);
+        }
+    }
+
+    private void openUrls(List<String> urls) {
+        try {
+            JSONArray array = new JSONArray();
+            for (String url : urls) {
+                array.put(url);
+            }
+
+            JSONObject object = new JSONObject();
+            object.put("urls", array);
+
+            GeckoAppShell.notifyObservers("Tabs:OpenMultiple", object.toString());
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Unable to create JSON for opening multiple URLs");
         }
     }
 

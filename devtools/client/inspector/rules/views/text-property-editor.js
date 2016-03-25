@@ -337,6 +337,7 @@ TextPropertyEditor.prototype = {
     const colorSwatchClass = "ruleview-colorswatch";
     const bezierSwatchClass = "ruleview-bezierswatch";
     const filterSwatchClass = "ruleview-filterswatch";
+    const angleSwatchClass = "ruleview-angleswatch";
 
     let outputParser = this.ruleView._outputParser;
     let parserOptions = {
@@ -346,6 +347,8 @@ TextPropertyEditor.prototype = {
       bezierClass: "ruleview-bezier",
       filterSwatchClass: sharedSwatchClass + filterSwatchClass,
       filterClass: "ruleview-filter",
+      angleSwatchClass: sharedSwatchClass + angleSwatchClass,
+      angleClass: "ruleview-angle",
       defaultColorType: !propDirty,
       urlClass: "theme-link",
       baseURI: this.sheetURI
