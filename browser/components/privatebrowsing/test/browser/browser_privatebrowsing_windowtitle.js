@@ -26,7 +26,7 @@ add_task(function test() {
     about_pb_title = "Open a private window?";
     pb_page_with_title = test_title + " - (Private Browsing)";
     pb_page_without_title = app_name + " - (Private Browsing)";
-    pb_about_pb_title = "You're browsing privately - (Private Browsing)";
+    pb_about_pb_title = "You\u2019re browsing privately - (Private Browsing)";
   }
   else {
     page_with_title = test_title + " - " + app_name;
@@ -34,7 +34,7 @@ add_task(function test() {
     about_pb_title = "Open a private window?" + " - " + app_name;
     pb_page_with_title = test_title + " - " + app_name + " (Private Browsing)";
     pb_page_without_title = app_name + " (Private Browsing)";
-    pb_about_pb_title = "You're browsing privately - " + app_name + " (Private Browsing)";
+    pb_about_pb_title = "You\u2019re browsing privately - " + app_name + " (Private Browsing)";
   }
 
   function* testTabTitle(aWindow, url, insidePB, expected_title) {
@@ -44,7 +44,7 @@ add_task(function test() {
 
     yield BrowserTestUtils.waitForCondition(() => {
       return aWindow.document.title === expected_title;
-    });
+    }, `Window title should be ${expected_title}, got ${aWindow.document.title}`);
 
     is(aWindow.document.title, expected_title, "The window title for " + url +
        " is correct (" + (insidePB ? "inside" : "outside") +
@@ -55,7 +55,7 @@ add_task(function test() {
 
     yield BrowserTestUtils.waitForCondition(() => {
       return win.document.title === expected_title;
-    });
+    }, `Window title should be ${expected_title}, got ${aWindow.document.title}`);
 
     is(win.document.title, expected_title, "The window title for " + url +
        " detached tab is correct (" + (insidePB ? "inside" : "outside") +
