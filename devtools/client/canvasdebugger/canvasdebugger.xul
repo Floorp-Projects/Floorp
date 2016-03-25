@@ -22,21 +22,19 @@
       <toolbar id="snapshots-toolbar"
                class="devtools-toolbar">
         <hbox id="snapshots-controls">
+          <toolbarbutton id="clear-snapshots"
+                         class="devtools-toolbarbutton devtools-clear-icon"
+                         oncommand="SnapshotsListView._onClearButtonClick()"
+                         tooltiptext="&canvasDebuggerUI.clearSnapshots;"/>
           <toolbarbutton id="record-snapshot"
                          class="devtools-toolbarbutton"
                          oncommand="SnapshotsListView._onRecordButtonClick()"
                          tooltiptext="&canvasDebuggerUI.recordSnapshot.tooltip;"
                          hidden="true"/>
-          <hbox class="devtools-toolbarbutton-group">
-            <toolbarbutton id="import-snapshot"
-                           class="devtools-toolbarbutton"
-                           oncommand="SnapshotsListView._onImportButtonClick()"
-                           label="&canvasDebuggerUI.importSnapshot;"/>
-            <toolbarbutton id="clear-snapshots"
-                           class="devtools-toolbarbutton"
-                           oncommand="SnapshotsListView._onClearButtonClick()"
-                           label="&canvasDebuggerUI.clearSnapshots;"/>
-           </hbox>
+          <toolbarbutton id="import-snapshot"
+                         class="devtools-toolbarbutton"
+                         oncommand="SnapshotsListView._onImportButtonClick()"
+                         label="&canvasDebuggerUI.importSnapshot;"/>
         </hbox>
       </toolbar>
       <vbox id="snapshots-list" flex="1"/>
