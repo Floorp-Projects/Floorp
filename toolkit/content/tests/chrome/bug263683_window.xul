@@ -5,6 +5,9 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
 
 <window id="263683test"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -14,31 +17,69 @@
         title="263683 test">
 
   <script type="application/javascript"><![CDATA[
-    const Ci = Components.interfaces;
-    const Cc = Components.classes;
-    const Cr = Components.results;
+    const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
+    Cu.import("resource://gre/modules/AppConstants.jsm");
+    Cu.import("resource://gre/modules/Task.jsm");
+    Cu.import("resource://testing-common/ContentTask.jsm");
+    ContentTask.setTestScope(window.opener.wrappedJSObject);
 
     var gFindBar = null;
     var gBrowser;
 
-    var imports = ["SimpleTest", "ok"];
+    var imports = ["SimpleTest", "ok", "info"];
     for (var name of imports) {
       window[name] = window.opener.wrappedJSObject[name];
     }
 
-    function finish() {
-      window.close();
-      SimpleTest.finish();
-    }
-
     function startTest() {
-      gFindBar = document.getElementById("FindToolbar");
-      gBrowser = document.getElementById("content");
-      gBrowser.addEventListener("pageshow", onPageShow, false);
-      gBrowser.loadURI('data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
+      Task.spawn(function* () {
+        gFindBar = document.getElementById("FindToolbar");
+        for (let browserId of ["content", "content-remote"]) {
+          yield startTestWithBrowser(browserId);
+        }
+      }).then(() => {
+        window.close();
+        SimpleTest.finish();
+      });
     }
 
-    function onPageShow() {
+    function* startTestWithBrowser(browserId) {
+      // We're bailing out when testing a remote browser on OSX 10.6, because it
+      // fails permanently.
+      if (browserId.endsWith("remote") && AppConstants.isPlatformAndVersionAtMost("macosx", 11)) {
+        return;
+      }
+
+      info("Starting test with browser '" + browserId + "'");
+      gBrowser = document.getElementById(browserId);
+      gFindBar.browser = gBrowser;
+      let promise = ContentTask.spawn(gBrowser, null, function* () {
+        return new Promise(resolve => {
+          addEventListener("DOMContentLoaded", function listener() {
+            removeEventListener("DOMContentLoaded", listener);
+            resolve();
+          });
+        });
+      });
+      gBrowser.loadURI('data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
+      yield promise;
+      yield onDocumentLoaded();
+    }
+
+    function toggleHighlightAndWait(highlight) {
+      return new Promise(resolve => {
+        let listener = {
+          onHighlightFinished: function() {
+            gFindBar.browser.finder.removeResultListener(listener);
+            resolve();
+          }
+        };
+        gFindBar.browser.finder.addResultListener(listener);
+        gFindBar.toggleHighlight(highlight);
+      });
+    }
+
+    function* onDocumentLoaded() {
       gFindBar.open();
       var search = "mozilla";
       gFindBar._findField.value = search;
@@ -47,37 +88,62 @@
         matchCase.doCommand();
 
       gFindBar._find();
-      var highlightButton = gFindBar.getElement("highlight");
-      if (!highlightButton.checked)
-        highlightButton.click();
+      yield toggleHighlightAndWait(true);
 
-      var controller = gFindBar.browser.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                       .getInterface(Ci.nsISelectionDisplay)
-                                       .QueryInterface(Ci.nsISelectionController);
-      ok('SELECTION_FIND' in controller, "Correctly detects new selection type");
-      var selection = controller.getSelection(controller.SELECTION_FIND);
-      
-      ok(selection.rangeCount == 1, "Correctly added a match to the selection type");
-      ok(selection.getRangeAt(0).toString().toLowerCase() == search, "Added the correct match");
-      highlightButton.click();
-      ok(selection.rangeCount == 0, "Correctly removed the range");
+      yield ContentTask.spawn(gBrowser, { search }, function* (args) {
+        let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsISelectionDisplay)
+                                 .QueryInterface(Ci.nsISelectionController);
+        Assert.ok("SELECTION_FIND" in controller, "Correctly detects new selection type");
+        let selection = controller.getSelection(controller.SELECTION_FIND);
+        
+        Assert.equal(selection.rangeCount, 1,
+          "Correctly added a match to the selection type");
+        Assert.equal(selection.getRangeAt(0).toString().toLowerCase(),
+          args.search, "Added the correct match");
+      });
 
-      var input = gBrowser.contentDocument.getElementById("inp");
-      input.value = search;
+      yield toggleHighlightAndWait(false);
+
+      yield ContentTask.spawn(gBrowser, { search }, function* (args) {
+        let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsISelectionDisplay)
+                                 .QueryInterface(Ci.nsISelectionController);
+        let selection = controller.getSelection(controller.SELECTION_FIND);
+        Assert.equal(selection.rangeCount, 0, "Correctly removed the range");
+
+        let input = content.document.getElementById("inp");
+        input.value = args.search;
+      });
  
-      highlightButton.click();
+      yield toggleHighlightAndWait(true);
 
-      var inputController = input.editor.selectionController;
-      var inputSelection = inputController.getSelection(inputController.SELECTION_FIND);
+      yield ContentTask.spawn(gBrowser, { search }, function* (args) {
+        let input = content.document.getElementById("inp");
+        let inputController = input.editor.selectionController;
+        let inputSelection = inputController.getSelection(inputController.SELECTION_FIND);
 
-      ok(inputSelection.rangeCount == 1, "Correctly added a match from input to the selection type");
-      ok(inputSelection.getRangeAt(0).toString().toLowerCase() == search, "Added the correct match");
-      highlightButton.click();
-      ok(inputSelection.rangeCount == 0, "Correctly removed the range");
-      finish();
+        Assert.equal(inputSelection.rangeCount, 1,
+          "Correctly added a match from input to the selection type");
+        Assert.equal(inputSelection.getRangeAt(0).toString().toLowerCase(),
+          args.search, "Added the correct match");
+      });
+
+      yield toggleHighlightAndWait(false);
+
+      yield ContentTask.spawn(gBrowser, null, function* () {
+        let input = content.document.getElementById("inp");
+        let inputController = input.editor.selectionController;
+        let inputSelection = inputController.getSelection(inputController.SELECTION_FIND);
+
+        Assert.equal(inputSelection.rangeCount, 0, "Correctly removed the range");
+      });
+
+      gFindBar.close();
     }
   ]]></script>
 
   <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+  <browser type="content-primary" flex="1" id="content-remote" remote="true" src="about:blank"/>
   <findbar id="FindToolbar" browserid="content"/>
 </window>
