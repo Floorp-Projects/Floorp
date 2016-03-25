@@ -386,16 +386,17 @@ nsExternalProtocolHandler::AllowPort(int32_t port, const char *scheme, bool *_re
 // returns TRUE if the OS can handle this protocol scheme and false otherwise.
 bool nsExternalProtocolHandler::HaveExternalProtocolHandler(nsIURI * aURI)
 {
-  bool haveHandler = false;
-  if (aURI)
-  {
-    nsAutoCString scheme;
-    aURI->GetScheme(scheme);
-    nsCOMPtr<nsIExternalProtocolService> extProtSvc(do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
-    if (extProtSvc)
-      extProtSvc->ExternalProtocolHandlerExists(scheme.get(), &haveHandler);
+  MOZ_ASSERT(aURI);
+  nsAutoCString scheme;
+  aURI->GetScheme(scheme);
+
+  nsCOMPtr<nsIExternalProtocolService> extProtSvc(do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
+  if (!extProtSvc) {
+    return false;
   }
 
+  bool haveHandler = false;
+  extProtSvc->ExternalProtocolHandlerExists(scheme.get(), &haveHandler);
   return haveHandler;
 }
 
@@ -428,6 +429,7 @@ nsExternalProtocolHandler::NewChannel2(nsIURI* aURI,
                                        nsILoadInfo* aLoadInfo,
                                        nsIChannel** aRetval)
 {
+  NS_ENSURE_TRUE(aURI, NS_ERROR_UNKNOWN_PROTOCOL);
   NS_ENSURE_TRUE(aRetval, NS_ERROR_UNKNOWN_PROTOCOL);
 
   // Only try to return a channel if we have a protocol handler for the url.
