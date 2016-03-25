@@ -16,16 +16,17 @@
 #include <CoreAudio/AudioHardware.h>
 #include <CoreAudio/HostTime.h>
 #include <CoreFoundation/CoreFoundation.h>
-#else
+#endif
 #include <CoreAudio/CoreAudioTypes.h>
 #include <AudioToolbox/AudioToolbox.h>
-#endif
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 #include "cubeb_panner.h"
 #if !TARGET_OS_IPHONE
 #include "cubeb_osx_run_loop.h"
 #endif
+#include "cubeb_resampler.h"
+#include "cubeb_ring_array.h"
 
 #if !defined(kCFCoreFoundationVersionNumber10_7)
 /* From CoreFoundation CFBase.h */
@@ -33,11 +34,36 @@
 #endif
 
 #if !TARGET_OS_IPHONE && MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-#define MACOSX_LESS_THAN_106
+#define AudioComponent Component
+#define AudioComponentDescription ComponentDescription
+#define AudioComponentFindNext FindNextComponent
+#define AudioComponentInstanceNew OpenAComponent
+#define AudioComponentInstanceDispose CloseComponent
+#endif
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
+typedef UInt32  AudioFormatFlags;
 #endif
 
 #define CUBEB_STREAM_MAX 8
-#define NBUFS 4
+
+#define AU_OUT_BUS    0
+#define AU_IN_BUS     1
+
+#if TARGET_OS_IPHONE
+#define CUBEB_AUDIOUNIT_SUBTYPE kAudioUnitSubType_RemoteIO
+#else
+#define CUBEB_AUDIOUNIT_SUBTYPE kAudioUnitSubType_HALOutput
+#endif
+
+//#define LOGGING_ENABLED
+#ifdef LOGGING_ENABLED
+#define LOG(...) do {                           \
+    fprintf(stderr, __VA_ARGS__);               \
+  } while(0)
+#else
+#define LOG(...)
+#endif
 
 static struct cubeb_ops const audiounit_ops;
 
@@ -46,24 +72,45 @@ struct cubeb {
   pthread_mutex_t mutex;
   int active_streams;
   int limit_streams;
+  cubeb_device_collection_changed_callback collection_changed_callback;
+  void * collection_changed_user_ptr;
+  /* Differentiate input from output devices. */
+  cubeb_device_type collection_changed_devtype;
+  uint32_t devtype_device_count;
+  AudioObjectID * devtype_device_array;
 };
 
 struct cubeb_stream {
   cubeb * context;
-  AudioUnit unit;
   cubeb_data_callback data_callback;
   cubeb_state_callback state_callback;
   cubeb_device_changed_callback device_changed_callback;
+  /* User pointer of data_callback */
   void * user_ptr;
-  AudioStreamBasicDescription sample_spec;
+  /* Format descriptions */
+  AudioStreamBasicDescription input_desc;
+  AudioStreamBasicDescription output_desc;
+  /* I/O AudioUnits */
+  AudioUnit input_unit;
+  AudioUnit output_unit;
+  /* Sample rate of input device*/
+  Float64 input_hw_rate;
   pthread_mutex_t mutex;
+  /* Hold the input samples in every
+   * input callback iteration */
+  ring_array input_buffer_array;
+  /* Frames on input buffer */
+  uint32_t input_buffer_frames;
+  /* Frame counters */
   uint64_t frames_played;
   uint64_t frames_queued;
+  uint64_t frames_read;
   int shutdown;
   int draining;
   uint64_t current_latency_frames;
   uint64_t hw_latency_frames;
   float panning;
+  cubeb_resampler * resampler;
 };
 
 #if TARGET_OS_IPHONE
@@ -101,70 +148,208 @@ audiotimestamp_to_latency(AudioTimeStamp const * tstamp, cubeb_stream * stream)
   uint64_t pres = AudioConvertHostTimeToNanos(tstamp->mHostTime);
   uint64_t now = AudioConvertHostTimeToNanos(AudioGetCurrentHostTime());
 
-  return ((pres - now) * stream->sample_spec.mSampleRate) / 1000000000LL;
+  return ((pres - now) * stream->output_desc.mSampleRate) / 1000000000LL;
 }
 
 static OSStatus
-audiounit_output_callback(void * user_ptr, AudioUnitRenderActionFlags * flags,
-                          AudioTimeStamp const * tstamp, UInt32 bus, UInt32 nframes,
-                          AudioBufferList * bufs)
+audiounit_input_callback(void * user_ptr,
+                         AudioUnitRenderActionFlags * flags,
+                         AudioTimeStamp const * tstamp,
+                         UInt32 bus,
+                         UInt32 input_frames,
+                         AudioBufferList * bufs)
 {
-  cubeb_stream * stm;
-  unsigned char * buf;
-  long got;
-  OSStatus r;
-  float panning;
-
-  assert(bufs->mNumberBuffers == 1);
-  buf = bufs->mBuffers[0].mData;
-
-  stm = user_ptr;
+  cubeb_stream * stm = user_ptr;
+  long outframes, frames;
 
   pthread_mutex_lock(&stm->mutex);
+
+  assert(stm->input_unit != NULL);
+  assert(AU_IN_BUS == bus);
+
+  if (stm->shutdown) {
+    pthread_mutex_unlock(&stm->mutex);
+    return noErr;
+  }
+
+  /* Get next store buffer from ring array */
+  AudioBuffer * input_buffer = ring_array_get_free_buffer(&stm->input_buffer_array);
+  if (input_buffer == NULL) {
+    LOG("input: Ring array is full drop one buffer\n");
+    ring_array_get_data_buffer(&stm->input_buffer_array);
+
+    input_buffer = ring_array_get_free_buffer(&stm->input_buffer_array);
+    assert(input_buffer);
+  }
+
+  AudioBufferList input_buffer_list;
+  input_buffer_list.mBuffers[0] = *input_buffer;
+  input_buffer_list.mNumberBuffers = 1;
+
+  /* Render input samples */
+  OSStatus r = AudioUnitRender(stm->input_unit,
+                               flags,
+                               tstamp,
+                               bus,
+                               input_frames,
+                               &input_buffer_list);
+  assert(r == noErr);
+  LOG("- input:  buffers %d, size %d, channels %d, frames %d\n",
+      input_buffer_list.mNumberBuffers,
+      input_buffer_list.mBuffers[0].mDataByteSize,
+      input_buffer_list.mBuffers[0].mNumberChannels,
+      input_frames);
+
+  assert(input_frames > 0);
+  stm->frames_read += input_frames;
+
+  // Full Duplex. We'll call data_callback in the AudioUnit output callback.
+  if (stm->output_unit != NULL) {
+    // User callback will be called by output callback
+    pthread_mutex_unlock(&stm->mutex);
+    return noErr;
+  }
+
+  /* Input only. Call the user callback through resampler.
+     Resampler will deliver input buffer in the correct rate. */
+  frames = input_frames;
+  input_buffer = ring_array_get_data_buffer(&stm->input_buffer_array);
+  assert(input_buffer && "fetch buffer is null in the input");
+  outframes = cubeb_resampler_fill(stm->resampler,
+                                   input_buffer->mData,
+                                   &frames,
+                                   NULL,
+                                   0);
+
+  if (outframes < 0 || outframes != input_frames) {
+    stm->shutdown = 1;
+    pthread_mutex_unlock(&stm->mutex);
+    return noErr;
+  }
+
+  pthread_mutex_unlock(&stm->mutex);
+  return noErr;
+}
+
+static void
+audiounit_make_silent(AudioBuffer * ioData)
+{
+  memset(ioData->mData, 0, ioData->mDataByteSize);
+}
+
+static OSStatus
+audiounit_output_callback(void * user_ptr,
+                          AudioUnitRenderActionFlags * flags,
+                          AudioTimeStamp const * tstamp,
+                          UInt32 bus,
+                          UInt32 output_frames,
+                          AudioBufferList * outBufferList)
+{
+  assert(AU_OUT_BUS == bus);
+  assert(outBufferList->mNumberBuffers == 1);
+
+  cubeb_stream * stm = user_ptr;
+
+  LOG("- output(%p): buffers %d, size %d, channels %d, frames %d\n", stm,
+      outBufferList->mNumberBuffers, outBufferList->mBuffers[0].mDataByteSize,
+      outBufferList->mBuffers[0].mNumberChannels, output_frames);
+
+  long outframes = 0, input_frames = 0;
+  void * output_buffer = NULL, * input_buffer = NULL;
+
+  pthread_mutex_lock(&stm->mutex);
+
+  if (stm->shutdown) {
+    audiounit_make_silent(&outBufferList->mBuffers[0]);
+    pthread_mutex_unlock(&stm->mutex);
+    return noErr;
+  }
 
   stm->current_latency_frames = audiotimestamp_to_latency(tstamp, stm);
-  panning = stm->panning;
-
-  if (stm->draining || stm->shutdown) {
-    pthread_mutex_unlock(&stm->mutex);
-    if (stm->draining) {
-      r = AudioOutputUnitStop(stm->unit);
+  if (stm->draining) {
+    OSStatus r = AudioOutputUnitStop(stm->output_unit);
+    assert(r == 0);
+    if (stm->input_unit) {
+      r = AudioOutputUnitStop(stm->input_unit);
       assert(r == 0);
-      stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
     }
+    stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
+    pthread_mutex_unlock(&stm->mutex);
+    audiounit_make_silent(&outBufferList->mBuffers[0]);
     return noErr;
   }
+  /* Get output buffer. */
+  output_buffer = outBufferList->mBuffers[0].mData;
+  /* If Full duplex get also input buffer */
+  AudioBuffer * input_aud_buf = NULL;
+  if (stm->input_unit != NULL) {
+    /* Output callback came first */
+    if (stm->frames_read == 0) {
+      LOG("Output callback came first send silent.\n");
+      audiounit_make_silent(&outBufferList->mBuffers[0]);
+      pthread_mutex_unlock(&stm->mutex);
+      return noErr;
+    }
+    /* Input samples stored previously in input callback. */
+    input_aud_buf = ring_array_get_data_buffer(&stm->input_buffer_array);
+    if (input_aud_buf == NULL) {
+      LOG("Requested more output than input. "
+             "This is either a hole or we are after a stream stop and input thread stopped before output\n");
+      /* Provide silent input. Other than that we could provide silent output and exit without
+       * calling user callback. I do not prefer it because the user loose the control of
+       * the output. Also resampler loose frame counting and produce less frame than
+       * expected at some point in the future breaking an assert. */
 
-  pthread_mutex_unlock(&stm->mutex);
-  got = stm->data_callback(stm, stm->user_ptr, NULL, buf, nframes);
-  pthread_mutex_lock(&stm->mutex);
-  if (got < 0) {
-    /* XXX handle this case. */
-    assert(false);
+      /* Avoid here to allocate new memory since we are inside callback. Use the existing
+       * allocated buffers since the ring array is empty and the buffer is not used. */
+      input_aud_buf = ring_array_get_dummy_buffer(&stm->input_buffer_array);
+      audiounit_make_silent(input_aud_buf);
+    }
+    input_buffer = input_aud_buf->mData;
+    input_frames = stm->input_buffer_frames;
+    assert(stm->frames_read > 0);
+  }
+
+  /* Call user callback through resampler. */
+  outframes = cubeb_resampler_fill(stm->resampler,
+                                   input_buffer,
+                                   input_buffer ? &input_frames : NULL,
+                                   output_buffer,
+                                   output_frames);
+
+  /* Cleanup the input buffer to make sure that we have fresh data. */
+  if (input_buffer) {
+    audiounit_make_silent(input_aud_buf);
+  }
+
+  if (outframes < 0) {
+    stm->shutdown = 1;
     pthread_mutex_unlock(&stm->mutex);
     return noErr;
   }
 
-  if ((UInt32) got < nframes) {
-    size_t got_bytes = got * stm->sample_spec.mBytesPerFrame;
-    size_t rem_bytes = (nframes - got) * stm->sample_spec.mBytesPerFrame;
-
-    stm->draining = 1;
-
-    memset(buf + got_bytes, 0, rem_bytes);
-  }
-
+  size_t outbpf = stm->output_desc.mBytesPerFrame;
+  stm->draining = outframes < output_frames;
   stm->frames_played = stm->frames_queued;
-  stm->frames_queued += got;
+  stm->frames_queued += outframes;
+
+  AudioFormatFlags outaff = stm->output_desc.mFormatFlags;
+  float panning = (stm->output_desc.mChannelsPerFrame == 2) ? stm->panning : 0.0f;
   pthread_mutex_unlock(&stm->mutex);
 
-  if (stm->sample_spec.mChannelsPerFrame == 2) {
-    if (stm->sample_spec.mFormatFlags & kAudioFormatFlagIsFloat)
-      cubeb_pan_stereo_buffer_float((float*)buf, got, panning);
-    else if (stm->sample_spec.mFormatFlags & kAudioFormatFlagIsSignedInteger)
-      cubeb_pan_stereo_buffer_int((short*)buf, got, panning);
+  /* Post process output samples. */
+  if (stm->draining) {
+    /* Clear missing frames (silence) */
+    memset((uint8_t*)output_buffer + outframes * outbpf, 0, (output_frames - outframes) * outbpf);
   }
-
+  /* Pan stereo. */
+  if (panning != 0.0f) {
+    if (outaff & kAudioFormatFlagIsFloat) {
+      cubeb_pan_stereo_buffer_float((float*)output_buffer, outframes, panning);
+    } else if (outaff & kAudioFormatFlagIsSignedInteger) {
+      cubeb_pan_stereo_buffer_int((short*)output_buffer, outframes, panning);
+    }
+  }
   return noErr;
 }
 
@@ -410,12 +595,13 @@ audiounit_get_default_device_id(cubeb_device_type type)
   AudioDeviceID devid;
   UInt32 size;
 
-  if (type == CUBEB_DEVICE_TYPE_OUTPUT)
+  if (type == CUBEB_DEVICE_TYPE_OUTPUT) {
     adr.mSelector = kAudioHardwarePropertyDefaultOutputDevice;
-  else if (type == CUBEB_DEVICE_TYPE_INPUT)
+  } else if (type == CUBEB_DEVICE_TYPE_INPUT) {
     adr.mSelector = kAudioHardwarePropertyDefaultInputDevice;
-  else
+  } else {
     return kAudioObjectUnknown;
+  }
 
   size = sizeof(AudioDeviceID);
   if (AudioObjectGetPropertyData(kAudioObjectSystemObject, &adr, 0, NULL, &size, &devid) != noErr) {
@@ -521,15 +707,22 @@ audiounit_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
   return CUBEB_OK;
 }
 
+static OSStatus audiounit_remove_device_listener(cubeb * context);
+
 static void
 audiounit_destroy(cubeb * ctx)
 {
-  int r;
-
   // Disabling this assert for bug 1083664 -- we seem to leak a stream
   // assert(ctx->active_streams == 0);
 
-  r = pthread_mutex_destroy(&ctx->mutex);
+  /* Unregister the callback if necessary. */
+  if(ctx->collection_changed_callback) {
+    pthread_mutex_lock(&ctx->mutex);
+    audiounit_remove_device_listener(ctx);
+    pthread_mutex_unlock(&ctx->mutex);
+  }
+
+  int r = pthread_mutex_destroy(&ctx->mutex);
   assert(r == 0);
 
   free(ctx);
@@ -538,73 +731,143 @@ audiounit_destroy(cubeb * ctx)
 static void audiounit_stream_destroy(cubeb_stream * stm);
 
 static int
-audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_name,
-                      cubeb_devid input_device,
-                      cubeb_stream_params * input_stream_params,
-                      cubeb_devid output_device,
-                      cubeb_stream_params * output_stream_params,
-                      unsigned int latency,
-                      cubeb_data_callback data_callback, cubeb_state_callback state_callback,
-                      void * user_ptr)
+audio_stream_desc_init(AudioStreamBasicDescription * ss,
+                       const cubeb_stream_params * stream_params)
 {
-  AudioStreamBasicDescription ss;
-#if MACOSX_LESS_THAN_106
-  ComponentDescription desc;
-  Component comp;
-#else
-  AudioComponentDescription desc;
-  AudioComponent comp;
-#endif
-  cubeb_stream * stm;
-  AURenderCallbackStruct input;
-  unsigned int buffer_size, default_buffer_size;
-  OSStatus r;
-  UInt32 size;
-  AudioValueRange latency_range;
-
-  assert(!input_stream_params && "not supported");
-  if (input_device || output_device) {
-    /* Device selection not yet implemented. */
-    return CUBEB_ERROR_DEVICE_UNAVAILABLE;
-  }
-
-  assert(context);
-  *stream = NULL;
-
-  memset(&ss, 0, sizeof(ss));
-  ss.mFormatFlags = 0;
-
-  switch (output_stream_params->format) {
+  switch (stream_params->format) {
   case CUBEB_SAMPLE_S16LE:
-    ss.mBitsPerChannel = 16;
-    ss.mFormatFlags |= kAudioFormatFlagIsSignedInteger;
+    ss->mBitsPerChannel = 16;
+    ss->mFormatFlags = kAudioFormatFlagIsSignedInteger;
     break;
   case CUBEB_SAMPLE_S16BE:
-    ss.mBitsPerChannel = 16;
-    ss.mFormatFlags |= kAudioFormatFlagIsSignedInteger |
+    ss->mBitsPerChannel = 16;
+    ss->mFormatFlags = kAudioFormatFlagIsSignedInteger |
       kAudioFormatFlagIsBigEndian;
     break;
   case CUBEB_SAMPLE_FLOAT32LE:
-    ss.mBitsPerChannel = 32;
-    ss.mFormatFlags |= kAudioFormatFlagIsFloat;
+    ss->mBitsPerChannel = 32;
+    ss->mFormatFlags = kAudioFormatFlagIsFloat;
     break;
   case CUBEB_SAMPLE_FLOAT32BE:
-    ss.mBitsPerChannel = 32;
-    ss.mFormatFlags |= kAudioFormatFlagIsFloat |
+    ss->mBitsPerChannel = 32;
+    ss->mFormatFlags = kAudioFormatFlagIsFloat |
       kAudioFormatFlagIsBigEndian;
     break;
   default:
     return CUBEB_ERROR_INVALID_FORMAT;
   }
 
-  ss.mFormatID = kAudioFormatLinearPCM;
-  ss.mFormatFlags |= kLinearPCMFormatFlagIsPacked;
-  ss.mSampleRate = output_stream_params->rate;
-  ss.mChannelsPerFrame = output_stream_params->channels;
+  ss->mFormatID = kAudioFormatLinearPCM;
+  ss->mFormatFlags |= kLinearPCMFormatFlagIsPacked;
+  ss->mSampleRate = stream_params->rate;
+  ss->mChannelsPerFrame = stream_params->channels;
 
-  ss.mBytesPerFrame = (ss.mBitsPerChannel / 8) * ss.mChannelsPerFrame;
-  ss.mFramesPerPacket = 1;
-  ss.mBytesPerPacket = ss.mBytesPerFrame * ss.mFramesPerPacket;
+  ss->mBytesPerFrame = (ss->mBitsPerChannel / 8) * ss->mChannelsPerFrame;
+  ss->mFramesPerPacket = 1;
+  ss->mBytesPerPacket = ss->mBytesPerFrame * ss->mFramesPerPacket;
+
+  ss->mReserved = 0;
+
+  return CUBEB_OK;
+}
+
+static int
+audiounit_create_unit(AudioUnit * unit,
+                      bool is_input,
+                      const cubeb_stream_params * stream_params,
+                      cubeb_devid device)
+{
+  AudioComponentDescription desc;
+  AudioComponent comp;
+  UInt32 enable;
+  AudioDeviceID devid;
+
+  desc.componentType = kAudioUnitType_Output;
+  desc.componentSubType = CUBEB_AUDIOUNIT_SUBTYPE;
+  desc.componentManufacturer = kAudioUnitManufacturer_Apple;
+  desc.componentFlags = 0;
+  desc.componentFlagsMask = 0;
+  comp = AudioComponentFindNext(NULL, &desc);
+  if (comp == NULL) {
+    return CUBEB_ERROR;
+  }
+
+  if (AudioComponentInstanceNew(comp, unit) != 0) {
+    return CUBEB_ERROR;
+  }
+
+  enable = 1;
+  if (AudioUnitSetProperty(*unit, kAudioOutputUnitProperty_EnableIO,
+        is_input ? kAudioUnitScope_Input : kAudioUnitScope_Output,
+        is_input ? AU_IN_BUS : AU_OUT_BUS, &enable, sizeof(UInt32)) != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  enable = 0;
+  if (AudioUnitSetProperty(*unit, kAudioOutputUnitProperty_EnableIO,
+        is_input ? kAudioUnitScope_Output : kAudioUnitScope_Input,
+        is_input ? AU_OUT_BUS : AU_IN_BUS, &enable, sizeof(UInt32)) != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  if (device == NULL) {
+    devid = audiounit_get_default_device_id(is_input ? CUBEB_DEVICE_TYPE_INPUT
+                                                     : CUBEB_DEVICE_TYPE_OUTPUT);
+  } else {
+    devid = (AudioDeviceID)device;
+  }
+  int err = AudioUnitSetProperty(*unit, kAudioOutputUnitProperty_CurrentDevice,
+                                 kAudioUnitScope_Global,
+                                 is_input ? AU_IN_BUS : AU_OUT_BUS,
+                                 &devid, sizeof(AudioDeviceID));
+  if (err != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  return CUBEB_OK;
+}
+
+static int
+audiounit_init_input_buffer_array(cubeb_stream * stream, uint32_t capacity)
+{
+  int r = ring_array_init(&stream->input_buffer_array,
+                          capacity,
+                          stream->input_desc.mBytesPerFrame,
+                          stream->input_desc.mChannelsPerFrame,
+                          stream->input_buffer_frames);
+
+  return r;
+}
+
+static void
+audiounit_destroy_input_buffer_array(cubeb_stream * stream)
+{
+  ring_array_destroy(&stream->input_buffer_array);
+}
+
+static int
+audiounit_stream_init(cubeb * context,
+                      cubeb_stream ** stream,
+                      char const * stream_name,
+                      cubeb_devid input_device,
+                      cubeb_stream_params * input_stream_params,
+                      cubeb_devid output_device,
+                      cubeb_stream_params * output_stream_params,
+                      unsigned int latency,
+                      cubeb_data_callback data_callback,
+                      cubeb_state_callback state_callback,
+                      void * user_ptr)
+{
+  cubeb_stream * stm;
+  AudioUnit input_unit;
+  AudioUnit output_unit;
+  int r;
+  AURenderCallbackStruct aurcbs_in;
+  AURenderCallbackStruct aurcbs_out;
+  UInt32 size;
+
+  assert(context);
+  *stream = NULL;
 
   pthread_mutex_lock(&context->mutex);
   if (context->limit_streams && context->active_streams >= CUBEB_STREAM_MAX) {
@@ -614,65 +877,181 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
   context->active_streams += 1;
   pthread_mutex_unlock(&context->mutex);
 
-  desc.componentType = kAudioUnitType_Output;
-  desc.componentSubType =
-#if TARGET_OS_IPHONE
-    kAudioUnitSubType_RemoteIO;
-#else
-    kAudioUnitSubType_DefaultOutput;
-#endif
-  desc.componentManufacturer = kAudioUnitManufacturer_Apple;
-  desc.componentFlags = 0;
-  desc.componentFlagsMask = 0;
-#if MACOSX_LESS_THAN_106
-  comp = FindNextComponent(NULL, &desc);
-#else
-  comp = AudioComponentFindNext(NULL, &desc);
-#endif
-  assert(comp);
+  if (input_stream_params != NULL) {
+    r = audiounit_create_unit(&input_unit, true,
+                              input_stream_params,
+                              input_device);
+    if (r != CUBEB_OK) {
+      LOG("Create input stream failed\n");
+      return r;
+    }
+  }
 
-  stm = calloc(1, sizeof(*stm));
+  if (output_stream_params != NULL) {
+    r = audiounit_create_unit(&output_unit, false,
+                              output_stream_params,
+                              output_device);
+    if (r != CUBEB_OK) {
+      LOG("Create output stream failed\n");
+      return r;
+    }
+  }
+
+  stm = calloc(1, sizeof(cubeb_stream));
   assert(stm);
 
+  /* These could be different in the future if we have both
+   * full-duplex stream and different devices for input vs output. */
+  stm->input_unit  = (input_stream_params != NULL) ? input_unit : NULL;
+  stm->output_unit = (output_stream_params != NULL) ? output_unit : NULL;
   stm->context = context;
   stm->data_callback = data_callback;
   stm->state_callback = state_callback;
   stm->user_ptr = user_ptr;
   stm->device_changed_callback = NULL;
 
-  stm->sample_spec = ss;
-
   pthread_mutexattr_t attr;
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
   r = pthread_mutex_init(&stm->mutex, &attr);
-  pthread_mutexattr_destroy(&attr);
   assert(r == 0);
+  pthread_mutexattr_destroy(&attr);
 
-  stm->frames_played = 0;
-  stm->frames_queued = 0;
-  stm->current_latency_frames = 0;
+  /* Init data members where necessary */
   stm->hw_latency_frames = UINT64_MAX;
 
-#if MACOSX_LESS_THAN_106
-  r = OpenAComponent(comp, &stm->unit);
-#else
-  r = AudioComponentInstanceNew(comp, &stm->unit);
-#endif
-  if (r != 0) {
-    audiounit_stream_destroy(stm);
-    return CUBEB_ERROR;
+  /* Setup Input Stream! */
+  if (input_stream_params != NULL) {
+    size = sizeof(UInt32);
+    if (AudioUnitGetProperty(stm->input_unit,
+                             kAudioDevicePropertyBufferFrameSize,
+                             kAudioUnitScope_Input,
+                             AU_IN_BUS,
+                             &stm->input_buffer_frames,
+                             &size) != 0) {
+      audiounit_stream_destroy(stm);
+      return CUBEB_ERROR;
+    }
+
+    if (AudioUnitSetProperty(stm->input_unit,
+                             kAudioDevicePropertyBufferFrameSize,
+                             kAudioUnitScope_Output,
+                             AU_IN_BUS,
+                             &stm->input_buffer_frames,
+                             size) != 0) {
+      audiounit_stream_destroy(stm);
+      return CUBEB_ERROR;
+    }
+
+    /* Get input device sample rate. */
+    AudioStreamBasicDescription input_hw_desc;
+    size = sizeof(AudioStreamBasicDescription);
+    if (AudioUnitGetProperty(stm->input_unit,
+                             kAudioUnitProperty_StreamFormat,
+                             kAudioUnitScope_Input,
+                             AU_IN_BUS,
+                             &input_hw_desc,
+                             &size) != 0) {
+      audiounit_stream_destroy(stm);
+      return CUBEB_ERROR;
+    }
+    stm->input_hw_rate = input_hw_desc.mSampleRate;
+
+    /* Set format description according to the input params. */
+    r = audio_stream_desc_init(&stm->input_desc, input_stream_params);
+    if (r != CUBEB_OK) {
+      audiounit_stream_destroy(stm);
+      return r;
+    }
+
+    AudioStreamBasicDescription src_desc = stm->input_desc;
+    /* Input AudioUnit must be configured with device's sample rate.
+       we will resample inside input callback. */
+    src_desc.mSampleRate = stm->input_hw_rate;
+
+    if (AudioUnitSetProperty(stm->input_unit,
+                             kAudioUnitProperty_StreamFormat,
+                             kAudioUnitScope_Output,
+                             AU_IN_BUS,
+                             &src_desc,
+                             sizeof(AudioStreamBasicDescription)) != 0) {
+      audiounit_stream_destroy(stm);
+      return CUBEB_ERROR;
+    }
+
+    /* Frames per buffer in the input callback. */
+    if (AudioUnitSetProperty(stm->input_unit,
+                             kAudioUnitProperty_MaximumFramesPerSlice,
+                             kAudioUnitScope_Output,
+                             AU_IN_BUS,
+                             &stm->input_buffer_frames,
+                             sizeof(UInt32))) {
+      audiounit_stream_destroy(stm);
+      return CUBEB_ERROR;
+    }
+
+    // Input only capacity
+    unsigned int array_capacity = 1;
+    if (output_stream_params) {
+      // Full-duplex increase capacity
+      array_capacity = 8;
+    }
+    if (audiounit_init_input_buffer_array(stm, array_capacity) != CUBEB_OK) {
+      audiounit_stream_destroy(stm);
+      return CUBEB_ERROR;
+    }
+
+    assert(stm->input_unit != NULL);
+    aurcbs_in.inputProc = audiounit_input_callback;
+    aurcbs_in.inputProcRefCon = stm;
+    if (AudioUnitSetProperty(stm->input_unit,
+                             kAudioOutputUnitProperty_SetInputCallback,
+                             kAudioUnitScope_Global,
+                             AU_OUT_BUS,
+                             &aurcbs_in,
+                             sizeof(aurcbs_in)) != 0) {
+      audiounit_stream_destroy(stm);
+      return CUBEB_ERROR;
+    }
+    LOG("Input audiounit init successfully.\n");
   }
 
-  input.inputProc = audiounit_output_callback;
-  input.inputProcRefCon = stm;
-  r = AudioUnitSetProperty(stm->unit, kAudioUnitProperty_SetRenderCallback,
-                           kAudioUnitScope_Global, 0, &input, sizeof(input));
-  if (r != 0) {
-    audiounit_stream_destroy(stm);
-    return CUBEB_ERROR;
+  /* Setup Output Stream! */
+  if (output_stream_params != NULL) {
+    r = audio_stream_desc_init(&stm->output_desc, output_stream_params);
+    if (r != CUBEB_OK) {
+      audiounit_stream_destroy(stm);
+      return r;
+    }
+
+    if (AudioUnitSetProperty(stm->output_unit,
+                             kAudioUnitProperty_StreamFormat,
+                             kAudioUnitScope_Input,
+                             AU_OUT_BUS,
+                             &stm->output_desc,
+                             sizeof(AudioStreamBasicDescription)) != 0) {
+      audiounit_stream_destroy(stm);
+      return CUBEB_ERROR;
+    }
+
+    assert(stm->output_unit != NULL);
+    aurcbs_out.inputProc = audiounit_output_callback;
+    aurcbs_out.inputProcRefCon = stm;
+    if (AudioUnitSetProperty(stm->output_unit,
+                             kAudioUnitProperty_SetRenderCallback,
+                             kAudioUnitScope_Global,
+                             AU_OUT_BUS,
+                             &aurcbs_out,
+                             sizeof(aurcbs_out)) != 0) {
+      audiounit_stream_destroy(stm);
+      return CUBEB_ERROR;
+    }
+    LOG("Output audiounit init successfully.\n");
   }
 
+  // Setting the latency doesn't work well for USB headsets (eg. plantronics).
+  // Keep the default latency for now.
+#if 0
   buffer_size = latency / 1000.0 * ss.mSampleRate;
 
   /* Get the range of latency this particular device can work with, and clamp
@@ -694,42 +1073,68 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
    * set it. Otherwise, use the default latency.
    **/
   size = sizeof(default_buffer_size);
-  r = AudioUnitGetProperty(stm->unit, kAudioDevicePropertyBufferFrameSize,
-                           kAudioUnitScope_Output, 0, &default_buffer_size, &size);
-
-  if (r != 0) {
+  if (AudioUnitGetProperty(stm->output_unit, kAudioDevicePropertyBufferFrameSize,
+        kAudioUnitScope_Output, 0, &default_buffer_size, &size) != 0) {
     audiounit_stream_destroy(stm);
     return CUBEB_ERROR;
+  }
+
+  if (buffer_size < default_buffer_size) {
+    /* Set the maximum number of frame that the render callback will ask for,
+     * effectively setting the latency of the stream. This is process-wide. */
+    if (AudioUnitSetProperty(stm->output_unit, kAudioDevicePropertyBufferFrameSize,
+          kAudioUnitScope_Output, 0, &buffer_size, sizeof(buffer_size)) != 0) {
+      audiounit_stream_destroy(stm);
+      return CUBEB_ERROR;
+    }
   }
 #else  // TARGET_OS_IPHONE
   //TODO: [[AVAudioSession sharedInstance] inputLatency]
   // http://stackoverflow.com/questions/13157523/kaudiodevicepropertybufferframesize-replacement-for-ios
 #endif
-
-  // Setting the latency doesn't work well for USB headsets (eg. plantronics).
-  // Keep the default latency for now.
-#if 0
-  if (buffer_size < default_buffer_size) {
-    /* Set the maximum number of frame that the render callback will ask for,
-     * effectively setting the latency of the stream. This is process-wide. */
-    r = AudioUnitSetProperty(stm->unit, kAudioDevicePropertyBufferFrameSize,
-                             kAudioUnitScope_Output, 0, &buffer_size, sizeof(buffer_size));
-    if (r != 0) {
-      audiounit_stream_destroy(stm);
-      return CUBEB_ERROR;
-    }
-  }
 #endif
 
-  r = AudioUnitSetProperty(stm->unit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input,
-                           0, &ss, sizeof(ss));
-  if (r != 0) {
+  /* We use a resampler because input AudioUnit operates
+   * reliable only in the capture device sample rate.
+   * Resampler will convert it to the user sample rate
+   * and deliver it to the callback. */
+  uint32_t target_sample_rate;
+  if (input_stream_params) {
+    target_sample_rate = input_stream_params->rate;
+  } else {
+    assert(output_stream_params);
+    target_sample_rate = output_stream_params->rate;
+  }
+
+  cubeb_stream_params input_unconverted_params;
+  if (input_stream_params) {
+    input_unconverted_params = *input_stream_params;
+    /* Use the rate of the input device. */
+    input_unconverted_params.rate = stm->input_hw_rate;
+  }
+
+  /* Create resampler. Output params are unchanged
+   * because we do not need conversion on the output. */
+  stm->resampler = cubeb_resampler_create(stm,
+                                          input_stream_params ? &input_unconverted_params : NULL,
+                                          output_stream_params,
+                                          target_sample_rate,
+                                          stm->data_callback,
+                                          stm->user_ptr,
+                                          CUBEB_RESAMPLER_QUALITY_DESKTOP);
+  if (!stm->resampler) {
+    LOG("Could not create resampler\n");
     audiounit_stream_destroy(stm);
     return CUBEB_ERROR;
   }
 
-  r = AudioUnitInitialize(stm->unit);
-  if (r != 0) {
+  if (stm->input_unit != NULL &&
+      AudioUnitInitialize(stm->input_unit) != 0) {
+    audiounit_stream_destroy(stm);
+    return CUBEB_ERROR;
+  }
+  if (stm->output_unit != NULL &&
+      AudioUnitInitialize(stm->output_unit) != 0) {
     audiounit_stream_destroy(stm);
     return CUBEB_ERROR;
   }
@@ -741,32 +1146,36 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
    * even if we can't detect device changes. */
   audiounit_install_device_changed_callback(stm);
 #endif
-
+  LOG("Cubeb stream init successfully.\n");
   return CUBEB_OK;
 }
 
 static void
 audiounit_stream_destroy(cubeb_stream * stm)
 {
-  int r;
-
   stm->shutdown = 1;
 
-  if (stm->unit) {
-    AudioOutputUnitStop(stm->unit);
-    AudioUnitUninitialize(stm->unit);
-#if MACOSX_LESS_THAN_106
-    CloseComponent(stm->unit);
-#else
-    AudioComponentInstanceDispose(stm->unit);
-#endif
+  if (stm->input_unit != NULL) {
+    AudioOutputUnitStop(stm->input_unit);
+    AudioUnitUninitialize(stm->input_unit);
+    AudioComponentInstanceDispose(stm->input_unit);
   }
+
+  audiounit_destroy_input_buffer_array(stm);
+
+  if (stm->output_unit != NULL) {
+    AudioOutputUnitStop(stm->output_unit);
+    AudioUnitUninitialize(stm->output_unit);
+    AudioComponentInstanceDispose(stm->output_unit);
+  }
+
+  cubeb_resampler_destroy(stm->resampler);
 
 #if !TARGET_OS_IPHONE
   audiounit_uninstall_device_changed_callback(stm);
 #endif
 
-  r = pthread_mutex_destroy(&stm->mutex);
+  int r = pthread_mutex_destroy(&stm->mutex);
   assert(r == 0);
 
   pthread_mutex_lock(&stm->context->mutex);
@@ -781,9 +1190,16 @@ static int
 audiounit_stream_start(cubeb_stream * stm)
 {
   OSStatus r;
-  r = AudioOutputUnitStart(stm->unit);
-  assert(r == 0);
+  if (stm->input_unit != NULL) {
+    r = AudioOutputUnitStart(stm->input_unit);
+    assert(r == 0);
+  }
+  if (stm->output_unit != NULL) {
+    r = AudioOutputUnitStart(stm->output_unit);
+    assert(r == 0);
+  }
   stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STARTED);
+  LOG("Cubeb stream (%p) started successfully.\n", stm);
   return CUBEB_OK;
 }
 
@@ -791,9 +1207,16 @@ static int
 audiounit_stream_stop(cubeb_stream * stm)
 {
   OSStatus r;
-  r = AudioOutputUnitStop(stm->unit);
-  assert(r == 0);
+  if (stm->input_unit != NULL) {
+    r = AudioOutputUnitStop(stm->input_unit);
+    assert(r == 0);
+  }
+  if (stm->output_unit != NULL) {
+    r = AudioOutputUnitStop(stm->output_unit);
+    assert(r == 0);
+  }
   stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STOPPED);
+  LOG("Cubeb stream (%p) stopped successfully.\n", stm);
   return CUBEB_OK;
 }
 
@@ -832,14 +1255,13 @@ audiounit_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
     };
 
     r = audiounit_get_output_device_id(&output_device_id);
-
     if (r != noErr) {
       pthread_mutex_unlock(&stm->mutex);
       return CUBEB_ERROR;
     }
 
     size = sizeof(unit_latency_sec);
-    r = AudioUnitGetProperty(stm->unit,
+    r = AudioUnitGetProperty(stm->output_unit,
                              kAudioUnitProperty_Latency,
                              kAudioUnitScope_Global,
                              0,
@@ -876,7 +1298,7 @@ audiounit_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 
     /* This part is fixed and depend on the stream parameter and the hardware. */
     stm->hw_latency_frames =
-      (uint32_t)(unit_latency_sec * stm->sample_spec.mSampleRate)
+      (uint32_t)(unit_latency_sec * stm->output_desc.mSampleRate)
       + device_latency_frames
       + device_safety_offset;
   }
@@ -892,7 +1314,7 @@ int audiounit_stream_set_volume(cubeb_stream * stm, float volume)
 {
   OSStatus r;
 
-  r = AudioUnitSetParameter(stm->unit,
+  r = AudioUnitSetParameter(stm->output_unit,
                             kHALOutputParam_Volume,
                             kAudioUnitScope_Global,
                             0, volume, 0);
@@ -905,7 +1327,7 @@ int audiounit_stream_set_volume(cubeb_stream * stm, float volume)
 
 int audiounit_stream_set_panning(cubeb_stream * stm, float panning)
 {
-  if (stm->sample_spec.mChannelsPerFrame > 2) {
+  if (stm->output_desc.mChannelsPerFrame > 2) {
     return CUBEB_ERROR_INVALID_PARAMETER;
   }
 
@@ -989,7 +1411,7 @@ int audiounit_stream_get_current_device(cubeb_stream * stm,
   size = sizeof(UInt32);
   r = AudioObjectGetPropertyData(input_device_id, &datasource_address_input, 0, NULL, &size, &data);
   if (r != noErr) {
-    printf("Error when getting device !\n");
+    LOG("Error when getting device !\n");
     size = 0;
     data = 0;
   }
@@ -1041,12 +1463,15 @@ audiounit_get_devices(AudioObjectID ** devices, uint32_t * count)
                                      kAudioObjectPropertyElementMaster };
 
   ret = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &adr, 0, NULL, &size);
-  if (ret != noErr)
+  if (ret != noErr) {
     return ret;
+  }
 
   *count = (uint32_t)(size / sizeof(AudioObjectID));
   if (size >= sizeof(AudioObjectID)) {
-    if (*devices != NULL) free(*devices);
+    if (*devices != NULL) {
+      free(*devices);
+    }
     *devices = malloc(size);
     memset(*devices, 0, size);
 
@@ -1063,11 +1488,13 @@ audiounit_get_devices(AudioObjectID ** devices, uint32_t * count)
 }
 
 static char *
-audiounit_strref_to_cstr_utf8(CFStringRef strref) {
+audiounit_strref_to_cstr_utf8(CFStringRef strref)
+{
   CFIndex len, size;
   char * ret;
-  if (strref == NULL)
+  if (strref == NULL) {
     return NULL;
+  }
 
   len = CFStringGetLength(strref);
   size = CFStringGetMaximumSizeForEncoding(len, kCFStringEncodingUTF8);
@@ -1111,8 +1538,9 @@ audiounit_get_available_samplerate(AudioObjectID devid, AudioObjectPropertyScope
   if (AudioObjectHasProperty(devid, &adr)) {
     UInt32 size = sizeof(Float64);
     Float64 fvalue = 0.0;
-    if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &fvalue) == noErr)
+    if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &fvalue) == noErr) {
       *def = fvalue;
+    }
   }
 
   adr.mSelector = kAudioDevicePropertyAvailableNominalSampleRates;
@@ -1151,8 +1579,9 @@ audiounit_get_device_presentation_latency(AudioObjectID devid, AudioObjectProper
 
   adr.mSelector = kAudioDevicePropertyLatency;
   size = sizeof(UInt32);
-  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &dev) != noErr)
+  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &dev) != noErr) {
     dev = 0;
+  }
 
   adr.mSelector = kAudioDevicePropertyStreams;
   size = sizeof(sid);
@@ -1164,8 +1593,9 @@ audiounit_get_device_presentation_latency(AudioObjectID devid, AudioObjectProper
 
   adr.mSelector = kAudioDevicePropertySafetyOffset;
   size = sizeof(UInt32);
-  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &offset) != noErr)
+  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &offset) != noErr) {
     offset = 0;
+  }
 
   return dev + stream + offset;
 }
@@ -1187,8 +1617,10 @@ audiounit_create_device_from_hwdev(AudioObjectID devid, cubeb_device_type type)
     return NULL;
   }
 
-  if ((ch = audiounit_get_channel_count(devid, adr.mScope)) == 0)
+  ch = audiounit_get_channel_count(devid, adr.mScope);
+  if (ch == 0) {
     return NULL;
+  }
 
   ret = calloc(1, sizeof(cubeb_device_info));
 
@@ -1196,7 +1628,7 @@ audiounit_create_device_from_hwdev(AudioObjectID devid, cubeb_device_type type)
   adr.mSelector = kAudioDevicePropertyDeviceUID;
   if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &str) == noErr && str != NULL) {
     ret->device_id = audiounit_strref_to_cstr_utf8(str);
-    ret->devid = (cubeb_devid)ret->device_id;
+    ret->devid = (cubeb_devid)(size_t)devid;
     ret->group_id = strdup(ret->device_id);
     CFRelease(str);
   }
@@ -1269,8 +1701,9 @@ audiounit_enumerate_devices(cubeb * context, cubeb_device_type type,
   uint32_t i, hwdevcount = 0;
   OSStatus err;
 
-  if ((err = audiounit_get_devices(&hwdevs, &hwdevcount)) != noErr)
+  if ((err = audiounit_get_devices(&hwdevs, &hwdevcount)) != noErr) {
     return CUBEB_ERROR;
+  }
 
   *collection = malloc(sizeof(cubeb_device_collection) +
       sizeof(cubeb_device_info*) * (hwdevcount > 0 ? hwdevcount - 1 : 0));
@@ -1299,6 +1732,200 @@ audiounit_enumerate_devices(cubeb * context, cubeb_device_type type,
   return CUBEB_OK;
 }
 
+/* qsort compare method. */
+int compare_devid(const void * a, const void * b)
+{
+  return (*(AudioObjectID*)a - *(AudioObjectID*)b);
+}
+
+static uint32_t
+audiounit_get_devices_of_type(cubeb_device_type devtype, AudioObjectID ** devid_array)
+{
+  assert(devid_array == NULL || *devid_array == NULL);
+
+  AudioObjectPropertyAddress adr = { kAudioHardwarePropertyDevices,
+                                     kAudioObjectPropertyScopeGlobal,
+                                     kAudioObjectPropertyElementMaster };
+  UInt32 size = 0;
+  OSStatus ret = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &adr, 0, NULL, &size);
+  if (ret != noErr) {
+    return 0;
+  }
+  /* Total number of input and output devices. */
+  uint32_t count = (uint32_t)(size / sizeof(AudioObjectID));
+
+  AudioObjectID devices[count];
+  ret = AudioObjectGetPropertyData(kAudioObjectSystemObject, &adr, 0, NULL, &size, &devices);
+  if (ret != noErr) {
+    return 0;
+  }
+  /* Expected sorted but did not find anything in the docs. */
+  qsort(devices, count, sizeof(AudioObjectID), compare_devid);
+
+  if (devtype == (CUBEB_DEVICE_TYPE_INPUT | CUBEB_DEVICE_TYPE_OUTPUT)) {
+    if (devid_array) {
+      *devid_array = calloc(count, sizeof(AudioObjectID));
+      assert(*devid_array);
+      memcpy(*devid_array, &devices, count * sizeof(AudioObjectID));
+    }
+    return count;
+  }
+
+  AudioObjectPropertyScope scope = (devtype == CUBEB_DEVICE_TYPE_INPUT) ?
+                                         kAudioDevicePropertyScopeInput :
+                                         kAudioDevicePropertyScopeOutput;
+
+  uint32_t dev_count = 0;
+  AudioObjectID devices_in_scope[count];
+  for(uint32_t i = 0; i < count; ++i) {
+    /* For device in the given scope channel must be > 0. */
+    if (audiounit_get_channel_count(devices[i], scope) > 0) {
+      devices_in_scope[dev_count] = devices[i];
+      ++dev_count;
+    }
+  }
+
+  if (devid_array) {
+    *devid_array = calloc(dev_count, sizeof(AudioObjectID));
+    assert(*devid_array);
+    memcpy(*devid_array, &devices_in_scope, dev_count * sizeof(AudioObjectID));
+  }
+  return dev_count;
+}
+
+static uint32_t
+audiounit_equal_arrays(AudioObjectID * left, AudioObjectID * right, uint32_t size)
+{
+  /* Expected sorted arrays. */
+  for (uint32_t i = 0; i < size; ++i) {
+    if (left[i] != right[i]) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+static OSStatus
+audiounit_collection_changed_callback(AudioObjectID inObjectID,
+                                      UInt32 inNumberAddresses,
+                                      const AudioObjectPropertyAddress * inAddresses,
+                                      void * inClientData)
+{
+  cubeb * context = inClientData;
+  pthread_mutex_lock(&context->mutex);
+  if (context->collection_changed_callback == NULL) {
+    /* Listener removed while waiting in mutex, abort. */
+    pthread_mutex_unlock(&context->mutex);
+    return noErr;
+  }
+
+  /* Differentiate input from output changes. */
+  if (context->collection_changed_devtype == CUBEB_DEVICE_TYPE_INPUT ||
+      context->collection_changed_devtype == CUBEB_DEVICE_TYPE_OUTPUT) {
+    AudioObjectID * devices = NULL;
+    uint32_t new_number_of_devices = audiounit_get_devices_of_type(context->collection_changed_devtype, &devices);
+    /* When count is the same examine the devid for the case of coalescing. */
+    if (context->devtype_device_count == new_number_of_devices &&
+        audiounit_equal_arrays(devices, context->devtype_device_array, new_number_of_devices)) {
+      /* Device changed for the other scope, ignore. */
+      free(devices);
+      pthread_mutex_unlock(&context->mutex);
+      return noErr;
+    }
+    /* Device on desired scope changed, reset counter and array. */
+    context->devtype_device_count = new_number_of_devices;
+    /* Free the old array before replace. */
+    free(context->devtype_device_array);
+    context->devtype_device_array = devices;
+  }
+
+  context->collection_changed_callback(context, context->collection_changed_user_ptr);
+  pthread_mutex_unlock(&context->mutex);
+  return noErr;
+}
+
+static OSStatus
+audiounit_add_device_listener(cubeb * context,
+                              cubeb_device_type devtype,
+                              cubeb_device_collection_changed_callback collection_changed_callback,
+                              void * user_ptr)
+{
+  /* Note: second register without unregister first causes 'nope' error.
+   * Current implementation requires unregister before register a new cb. */
+  assert(context->collection_changed_callback == NULL);
+
+  AudioObjectPropertyAddress devAddr;
+  devAddr.mSelector = kAudioHardwarePropertyDevices;
+  devAddr.mScope = kAudioObjectPropertyScopeGlobal;
+  devAddr.mElement = kAudioObjectPropertyElementMaster;
+
+  OSStatus ret = AudioObjectAddPropertyListener(kAudioObjectSystemObject,
+                                                &devAddr,
+                                                audiounit_collection_changed_callback,
+                                                context);
+  if (ret == noErr) {
+    /* Expected zero after unregister. */
+    assert(context->devtype_device_count == 0);
+    assert(context->devtype_device_array == NULL);
+    /* Listener works for input and output.
+     * When requested one of them we need to differentiate. */
+    if (devtype == CUBEB_DEVICE_TYPE_INPUT ||
+        devtype == CUBEB_DEVICE_TYPE_OUTPUT) {
+      /* Used to differentiate input from output device changes. */
+      context->devtype_device_count = audiounit_get_devices_of_type(devtype, &context->devtype_device_array);
+    }
+    context->collection_changed_devtype = devtype;
+    context->collection_changed_callback = collection_changed_callback;
+    context->collection_changed_user_ptr = user_ptr;
+  }
+  return ret;
+}
+
+static OSStatus
+audiounit_remove_device_listener(cubeb * context)
+{
+  AudioObjectPropertyAddress devAddr;
+  devAddr.mSelector = kAudioHardwarePropertyDevices;
+  devAddr.mScope = kAudioObjectPropertyScopeGlobal;
+  devAddr.mElement = kAudioObjectPropertyElementMaster;
+
+  /* Note: unregister a non registered cb is not a problem, not checking. */
+  OSStatus ret = AudioObjectRemovePropertyListener(kAudioObjectSystemObject,
+                                                   &devAddr,
+                                                   audiounit_collection_changed_callback,
+                                                   context);
+  if (ret == noErr) {
+    /* Reset all values. */
+    context->collection_changed_devtype = 0;
+    context->collection_changed_callback = NULL;
+    context->collection_changed_user_ptr = NULL;
+    context->devtype_device_count = 0;
+    if (context->devtype_device_array) {
+      free(context->devtype_device_array);
+      context->devtype_device_array = NULL;
+    }
+  }
+  return ret;
+}
+
+int audiounit_register_device_collection_changed(cubeb * context,
+                                                 cubeb_device_type devtype,
+                                                 cubeb_device_collection_changed_callback collection_changed_callback,
+                                                 void * user_ptr)
+{
+  OSStatus ret;
+  pthread_mutex_lock(&context->mutex);
+  if (collection_changed_callback) {
+    ret = audiounit_add_device_listener(context, devtype,
+                                        collection_changed_callback,
+                                        user_ptr);
+  } else {
+    ret = audiounit_remove_device_listener(context);
+  }
+  pthread_mutex_unlock(&context->mutex);
+  return (ret == noErr) ? CUBEB_OK : CUBEB_ERROR;
+}
+
 static struct cubeb_ops const audiounit_ops = {
   .init = audiounit_init,
   .get_backend_id = audiounit_get_backend_id,
@@ -1318,5 +1945,5 @@ static struct cubeb_ops const audiounit_ops = {
   .stream_get_current_device = audiounit_stream_get_current_device,
   .stream_device_destroy = audiounit_stream_device_destroy,
   .stream_register_device_changed_callback = audiounit_stream_register_device_changed_callback,
-  .register_device_collection_changed = NULL
+  .register_device_collection_changed = audiounit_register_device_collection_changed
 };
