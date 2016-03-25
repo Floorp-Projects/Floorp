@@ -85,19 +85,11 @@ class ConfigureSandbox(dict):
     }, __import__=forbidden_import)
 
     # Expose a limited set of functions from os.path
-    OS = ReadOnlyNamespace(path=ReadOnlyNamespace(
-        abspath=mozpath.abspath,
-        basename=mozpath.basename,
-        dirname=mozpath.dirname,
-        exists=os.path.exists,
-        isabs=os.path.isabs,
-        isdir=os.path.isdir,
-        isfile=os.path.isfile,
-        join=mozpath.join,
-        normpath=mozpath.normpath,
-        realpath=mozpath.realpath,
-        relpath=mozpath.relpath,
-    ))
+    OS = ReadOnlyNamespace(path=ReadOnlyNamespace(**{
+        k: getattr(mozpath, k, getattr(os.path, k))
+        for k in ('abspath', 'basename', 'dirname', 'exists', 'isabs', 'isdir',
+                  'isfile', 'join', 'normpath', 'realpath', 'relpath')
+    }))
 
     def __init__(self, config, environ=os.environ, argv=sys.argv,
                  stdout=sys.stdout, stderr=sys.stderr):
@@ -261,7 +253,7 @@ class ConfigureSandbox(dict):
 
         self._option_values[option] = value
         self._raw_options[option] = (option_string.split('=', 1)[0]
-                                    if option_string else option_string)
+                                     if option_string else option_string)
         return option
 
     def depends_impl(self, *args):
@@ -297,8 +289,6 @@ class ConfigureSandbox(dict):
                                          "Maybe it's declared too late?"
                                          % arg)
                 arg = self._options[name]
-                if arg == self._help_option:
-                    with_help = True
                 self._seen.add(arg)
                 dependencies.append(arg)
                 assert arg in self._option_values or self._help
@@ -364,12 +354,8 @@ class ConfigureSandbox(dict):
         '''
         template, glob = self._prepare_function(func)
         glob.update(
-            advanced=self.advanced_impl,
-            depends=self.depends_impl,
-            option=self.option_impl,
-            set_config=self.set_config_impl,
-            set_define=self.set_define_impl,
-            imply_option=self.imply_option_impl,
+            (k[:-len('_impl')], getattr(self, k))
+            for k in dir(self) if k.endswith('_impl') and k != 'template_impl'
         )
         self._templates.add(template)
         return template
