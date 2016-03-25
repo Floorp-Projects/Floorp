@@ -330,6 +330,10 @@ class TestConfigure(unittest.TestCase):
             return self.get_config(
                 *args, configure='imply_option/simple.configure')
 
+        config, out = self.get_result(
+            ['--help'], configure='imply_option/simple.configure')
+        self.assertEquals(config, {})
+
         config = get_config([])
         self.assertEquals(config, {})
 
@@ -349,6 +353,10 @@ class TestConfigure(unittest.TestCase):
         def get_config(*args):
             return self.get_config(
                 *args, configure='imply_option/negative.configure')
+
+        config, out = self.get_result(
+            ['--help'], configure='imply_option/negative.configure')
+        self.assertEquals(config, {})
 
         config = get_config([])
         self.assertEquals(config, {})
@@ -382,6 +390,10 @@ class TestConfigure(unittest.TestCase):
             return self.get_config(
                 *args, configure='imply_option/values.configure')
 
+        config, out = self.get_result(
+            ['--help'], configure='imply_option/values.configure')
+        self.assertEquals(config, {})
+
         config = get_config([])
         self.assertEquals(config, {})
 
@@ -405,6 +417,10 @@ class TestConfigure(unittest.TestCase):
         def get_config(*args):
             return self.get_config(
                 *args, configure='imply_option/infer.configure')
+
+        config, out = self.get_result(
+            ['--help'], configure='imply_option/infer.configure')
+        self.assertEquals(config, {})
 
         config = get_config([])
         self.assertEquals(config, {})
