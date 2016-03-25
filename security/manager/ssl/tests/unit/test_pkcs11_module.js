@@ -3,15 +3,11 @@
 // http://creativecommons.org/publicdomain/zero/1.0/
 "use strict";
 
-// Tests the methods for listing PKCS #11 modules and slots via loading and
-// unloading a test PKCS #11 module.
-
-// Note: Tests for listing PKCS #11 tokens are located in
-//       test_pkcs11_insert_remove.js out of convenience.
+// Tests the methods and attributes for interfacing with a PKCS #11 module and
+// the module database.
 
 // Ensure that the appropriate initialization has happened.
 do_get_profile();
-Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
 const gModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
                     .getService(Ci.nsIPKCS11ModuleDB);
@@ -24,11 +20,17 @@ function checkTestModuleNotPresent() {
     let module = modules.getNext().QueryInterface(Ci.nsIPKCS11Module);
     notEqual(module.name, "PKCS11 Test Module",
              "Non-test module name shouldn't equal 'PKCS11 Test Module'");
+    ok(!(module.libName && module.libName.includes("pkcs11testmodule")),
+       "Non-test module lib name should not include 'pkcs11testmodule'");
   }
+
+  throws(() => gModuleDB.findModuleByName("PKCS11 Test Module"),
+         /NS_ERROR_FAILURE/, "Test module should not be findable by name");
 }
 
 /**
  * Checks that the test module exists in the module list.
+ * Also checks various attributes of the test module for correctness.
  *
  * @returns {nsIPKCS11Module}
  *          The test module.
@@ -46,15 +48,20 @@ function checkTestModuleExists() {
     }
   }
   notEqual(testModule, null, "Test module should have been found");
+  notEqual(testModule.libName, null, "Test module lib name should not be null");
+  ok(testModule.libName.includes(ctypes.libraryName("pkcs11testmodule")),
+     "Test module lib name should include lib name of 'pkcs11testmodule'");
+
+  notEqual(gModuleDB.findModuleByName("PKCS11 Test Module"), null,
+           "Test module should be findable by name");
 
   return testModule;
 }
 
 function run_test() {
-  let libraryName = ctypes.libraryName("pkcs11testmodule");
   let libraryFile = Services.dirsvc.get("CurWorkD", Ci.nsILocalFile);
   libraryFile.append("pkcs11testmodule");
-  libraryFile.append(libraryName);
+  libraryFile.append(ctypes.libraryName("pkcs11testmodule"));
   ok(libraryFile.exists(), "The pkcs11testmodule file should exist");
 
   // Check that if we have never added the test module, that we don't find it
@@ -88,7 +95,22 @@ function run_test() {
   }
   equal(testModuleSlotCount, 1, "Test module should only have one slot");
 
+  // Check that finding the test slot by name is possible, and that trying to
+  // find a non-present slot fails.
+  notEqual(testModule.findSlotByName("Test PKCS11 Slot"), null,
+           "Test slot should be findable by name");
+  throws(() => testModule.findSlotByName("Not Present"), /NS_ERROR_FAILURE/,
+         "Non-present slot should not be findable by name");
+
   // Check that deleting the test module makes it disappear from the module list.
   pkcs11.deleteModule("PKCS11 Test Module");
   checkTestModuleNotPresent();
+
+  // Check miscellaneous module DB methods and attributes.
+  notEqual(gModuleDB.getInternal(), null,
+           "The internal module should be present");
+  notEqual(gModuleDB.getInternalFIPS(), null,
+           "The internal FIPS module should be present");
+  ok(gModuleDB.canToggleFIPS, "It should be possible to toggle FIPS");
+  ok(!gModuleDB.isFIPSEnabled, "FIPS should not be enabled");
 }
