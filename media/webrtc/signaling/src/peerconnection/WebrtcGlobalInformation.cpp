@@ -681,12 +681,8 @@ WebrtcGlobalInformation::DebugLevel(const GlobalObject& aGlobal)
 void
 WebrtcGlobalInformation::SetAecDebug(const GlobalObject& aGlobal, bool aEnable)
 {
-  if( aEnable ) {
-    StartAecLog();
-  } else {
-    StopAecLog();
-  }
-
+  StartWebRtcLog(sLastSetLevel); // to make it read the aec path
+  webrtc::Trace::set_aec_debug(aEnable);
   sLastAECDebug = aEnable;
 
   for (auto& cp : WebrtcContentParents::GetAll()){
@@ -885,11 +881,8 @@ bool
 WebrtcGlobalChild::RecvSetAecLogging(const bool& aEnable)
 {
   if (!mShutdown) {
-    if( aEnable ) {
-      StartAecLog();
-    } else {
-      StopAecLog();
-    }
+    StartWebRtcLog(sLastSetLevel); // to make it read the aec path
+    webrtc::Trace::set_aec_debug(aEnable);
   }
   return true;
 }
