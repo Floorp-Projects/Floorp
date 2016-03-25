@@ -877,8 +877,8 @@ pref("memory.system_memory_reporter", true);
 // Don't dump memory reports on OOM, by default.
 pref("memory.dump_reports_on_oom", false);
 
-pref("layout.imagevisibility.numscrollportwidths", 1);
-pref("layout.imagevisibility.numscrollportheights", 1);
+pref("layout.framevisibility.numscrollportwidths", 1);
+pref("layout.framevisibility.numscrollportheights", 1);
 
 // Enable native identity (persona/browserid)
 pref("dom.identity.enabled", true);
