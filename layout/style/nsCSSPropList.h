@@ -3329,6 +3329,19 @@ CSS_PROP_TEXT(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_TEXT(
+    -webkit-text-fill-color,
+    _webkit_text_fill_color,
+    WebkitTextFillColor,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
+        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
+    "layout.css.prefixes.webkit",
+    VARIANT_HC,
+    nullptr,
+    offsetof(nsStyleText, mWebkitTextFillColor),
+    eStyleAnimType_Custom)
+CSS_PROP_TEXT(
     text-indent,
     text_indent,
     TextIndent,
