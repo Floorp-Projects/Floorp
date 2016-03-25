@@ -15,10 +15,10 @@ def warn(*args):
 
 @template
 @advanced
-def error(*args):
+def die(format, *args):
     'Print an error and terminate configure.'
     import sys
-    print(*args, file=sys.stderr)
+    print(format % args, file=sys.stderr)
     sys.stderr.flush()
     sys.exit(1)
 

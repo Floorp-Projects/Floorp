@@ -27,7 +27,7 @@ def gradle(value, build_env):
 
     # TODO: verify that $GRADLE is executable.
     if not os.path.isfile(gradle):
-        error('GRADLE must be executable: %s' % gradle)
+        die('GRADLE must be executable: %s', gradle)
 
     return gradle
 

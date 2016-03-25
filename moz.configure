@@ -116,12 +116,12 @@ def perl_version_check(min_version):
         try:
             return Version(subprocess.check_output([perl, '-e', 'print $]']))
         except subprocess.CalledProcessError as e:
-            error('Failed to get perl version: %s' % e.message)
+            die('Failed to get perl version: %s', e.message)
 
     @depends(get_perl_version)
     def check_perl_version(version):
         if version < min_version:
-            error('Perl %s or higher is required.' % min_version)
+            die('Perl %s or higher is required.', min_version)
 
     @depends(perl)
     @checking('for full perl installation')
@@ -135,8 +135,8 @@ def perl_version_check(min_version):
     @depends(has_full_perl_installation)
     def require_full_perl_installation(has_full_perl_installation):
         if not has_full_perl_installation:
-            error('Cannot find Config.pm or $Config{archlib}. '
-                  'A full perl installation is required.')
+            die('Cannot find Config.pm or $Config{archlib}. '
+                'A full perl installation is required.')
 
 perl_version_check('5.006')
 

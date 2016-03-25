@@ -51,10 +51,10 @@ def autoconf(mozconfig, autoconf):
                     'autoconf213'))
 
     if not autoconf:
-        error('Could not find autoconf 2.13')
+        die('Could not find autoconf 2.13')
 
     if not os.path.exists(autoconf):
-        error('Could not find autoconf 2.13 at %s' % (autoconf,))
+        die('Could not find autoconf 2.13 at %s', autoconf)
 
     return autoconf
 
@@ -74,9 +74,8 @@ def check_mozconfig_variables():
         for option in all_options:
             if (option.env and option.env not in early_options and
                     option.env not in wanted_mozconfig_variables):
-                error(
-                    'You need to add `%s` to the `wanted_mozconfig_variables` '
-                    'list in build/moz.configure/init.configure.' % option.env)
+                die('You need to add `%s` to the `wanted_mozconfig_variables` '
+                    'list in build/moz.configure/init.configure.', option.env)
 
 check_mozconfig_variables()
 
@@ -411,8 +410,8 @@ def old_configure(prepare_configure, extra_old_configure_args, all_options,
     all_options = set(all_options)
     for flag in raw_config['flags']:
         if flag not in all_options:
-            error('Missing option in `@old_configure_options` in %s: %s'
-                  % (__file__, flag))
+            die('Missing option in `@old_configure_options` in %s: %s',
+                __file__, flag)
 
     # If the code execution above fails, we want to keep the file around for
     # debugging.
