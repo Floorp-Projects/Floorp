@@ -151,7 +151,7 @@
   <string name="pref_category_search_restore_defaults">&pref_category_search_restore_defaults;</string>
   <string name="pref_search_restore_defaults">&pref_search_restore_defaults;</string>
   <string name="pref_search_restore_defaults_summary">&pref_search_restore_defaults_summary;</string>
-  <string name="pref_search_hint">&pref_search_hint;</string>
+  <string name="pref_search_hint">&pref_search_hint2;</string>
 
   <string name="pref_category_language">&pref_category_language;</string>
   <string name="pref_category_language_summary">&pref_category_language_summary;</string>
@@ -226,7 +226,7 @@
   <string name="pref_clear_on_exit_dialog_title">&pref_clear_on_exit_dialog_title;</string>
   <string name="pref_plugins">&pref_plugins;</string>
   <string name="pref_plugins_enabled">&pref_plugins_enabled;</string>
-  <string name="pref_plugins_tap_to_play">&pref_plugins_tap_to_play;</string>
+  <string name="pref_plugins_tap_to_play">&pref_plugins_tap_to_play2;</string>
   <string name="pref_plugins_disabled">&pref_plugins_disabled;</string>
   <string name="pref_text_size">&pref_text_size;</string>
   <string name="pref_font_size_tiny">&pref_font_size_tiny;</string>
@@ -394,7 +394,7 @@
   <string name="doorhanger_login_select_title">&doorhanger_login_select_title;</string>
 
   <string name="pref_magnifying_glass_enabled">&pref_magnifying_glass_enabled;</string>
-  <string name="pref_magnifying_glass_enabled_summary">&pref_magnifying_glass_enabled_summary;</string>
+  <string name="pref_magnifying_glass_enabled_summary">&pref_magnifying_glass_enabled_summary2;</string>
 
   <string name="pref_scroll_title_bar2">&pref_scroll_title_bar2;</string>
   <string name="pref_scroll_title_bar_summary">&pref_scroll_title_bar_summary2;</string>
