@@ -5,6 +5,25 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Templates implementing some generic checks.
+# ==============================================================
+
+# Declare some exceptions. This is cumbersome, but since we shouldn't need a
+# lot of them, let's stack them all here. When adding a new one, put it in the
+# _declare_exceptions template, and add it to the return statement. Then
+# destructure in the assignment below the function declaration.
+@template
+@advanced
+def _declare_exceptions():
+    class FatalCheckError(Exception):
+        '''An exception to throw from a function decorated with @checking.
+        It will result in calling die() with the given message.
+        Debugging messages emitted from the decorated function will also be
+        printed out.'''
+    return (FatalCheckError,)
+
+(FatalCheckError,) = _declare_exceptions()
+
+del _declare_exceptions
 
 # Helper to display "checking" messages
 #   @checking('for foo')
@@ -28,15 +47,22 @@ def checking(what, callback=None):
     def decorator(func):
         def wrapped(*args, **kwargs):
             log.info('checking %s... ', what)
-            ret = func(*args, **kwargs)
-            if callback:
-                log.info(callback(ret))
-            elif ret is True:
-                log.info('yes')
-            elif ret is False:
-                log.info('no')
-            else:
-                log.info(ret)
+            with log.queue_debug():
+                error, ret = None, None
+                try:
+                    ret = func(*args, **kwargs)
+                except FatalCheckError as e:
+                    error = e.message
+                if callback:
+                    log.info(callback(ret))
+                elif ret is True:
+                    log.info('yes')
+                elif ret is False:
+                    log.info('no')
+                else:
+                    log.info(ret)
+                if error:
+                    die(error)
             return ret
         return wrapped
     return decorator
@@ -64,15 +90,13 @@ def check_prog(var, progs, allow_missing=False):
         if value:
             progs[:] = value
         for prog in progs:
+            log.debug('%s: Trying %s', var.lower(), quote(prog))
             result = find_program(prog)
             if result:
                 return result
 
-    @depends(check, var)
-    def postcheck(value, raw_value):
-        if value is None and (not allow_missing or raw_value):
-            die('Cannot find %s (tried: %s)', var.lower(),
-                ', '.join(quote(p) for p in progs))
+        if not allow_missing or value:
+            raise FatalCheckError('Cannot find %s' % var.lower())
 
     @depends(check)
     def normalized_for_config(value):

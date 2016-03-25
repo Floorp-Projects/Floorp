@@ -92,15 +92,18 @@ class TestChecksConfigure(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
         self.assertEqual(out, 'checking for foo... not found\n'
-                              'ERROR: Cannot find foo (tried: unknown)\n')
+                              'DEBUG: foo: Trying unknown\n'
+                              'ERROR: Cannot find foo\n')
 
         config, out, status = self.get_result(
             'check_prog("FOO", ("unknown", "unknown-2", "unknown 3"))')
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
         self.assertEqual(out, 'checking for foo... not found\n'
-                              'ERROR: Cannot find foo '
-                              "(tried: unknown, unknown-2, 'unknown 3')\n")
+                              'DEBUG: foo: Trying unknown\n'
+                              'DEBUG: foo: Trying unknown-2\n'
+                              "DEBUG: foo: Trying 'unknown 3'\n"
+                              'ERROR: Cannot find foo\n')
 
         config, out, status = self.get_result(
             'check_prog("FOO", ("unknown", "unknown-2", "unknown 3"), '
@@ -130,8 +133,8 @@ class TestChecksConfigure(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
         self.assertEqual(out, 'checking for foo... not found\n'
-                              'ERROR: Cannot find foo '
-                              '(tried: /usr/local/bin/known-a)\n')
+                              'DEBUG: foo: Trying /usr/local/bin/known-a\n'
+                              'ERROR: Cannot find foo\n')
 
         config, out, status = self.get_result(
             'check_prog("FOO", ("unknown",))',
@@ -146,7 +149,8 @@ class TestChecksConfigure(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
         self.assertEqual(out, 'checking for foo... not found\n'
-                              'ERROR: Cannot find foo (tried: unknown)\n')
+                              'DEBUG: foo: Trying unknown\n'
+                              'ERROR: Cannot find foo\n')
 
     def test_check_prog_configure_error(self):
         with self.assertRaises(ConfigureError) as e:
