@@ -342,7 +342,3 @@ function classifyAngle(value) {
 
   return CssAngle.ANGLEUNIT.deg;
 }
-
-loader.lazyGetter(this, "DOMUtils", function() {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});
