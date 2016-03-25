@@ -53,6 +53,20 @@ add_task(function* () {
 
   yield checkCorrectButton(inspector, "#iframe-2");
 
+  info("Press shift-enter to select the previous node matching this suggestion");
+  onSelect = inspector.once("inspector-updated");
+  EventUtils.synthesizeKey("VK_RETURN",  { shiftKey: true }, inspector.panelWin);
+  yield onSelect;
+
+  yield checkCorrectButton(inspector, "#iframe-1");
+
+  info("Press enter to cycle through multiple nodes matching this suggestion");
+  onSelect = inspector.once("inspector-updated");
+  EventUtils.synthesizeKey("VK_RETURN", {}, inspector.panelWin);
+  yield onSelect;
+
+  yield checkCorrectButton(inspector, "#iframe-2");
+
   info("Press enter to cycle through multiple nodes matching this suggestion");
   onSelect = inspector.once("inspector-updated");
   EventUtils.synthesizeKey("VK_RETURN", {}, inspector.panelWin);
