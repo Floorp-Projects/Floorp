@@ -96,3 +96,36 @@ class ConfigureOutputHandler(logging.Handler):
             raise
         except:
             self.handleError(record)
+
+
+class LineIO(object):
+    '''File-like class that sends each line of the written data to a callback
+    (without carriage returns).
+    '''
+    def __init__(self, callback):
+        self._callback = callback
+        self._buf = ''
+
+    def write(self, buf):
+        lines = buf.splitlines()
+        if not lines:
+            return
+        if self._buf:
+            lines[0] = self._buf + lines[0]
+            self._buf = ''
+        if not buf.endswith('\n'):
+            self._buf = lines.pop()
+
+        for line in lines:
+            self._callback(line)
+
+    def close(self):
+        if self._buf:
+            self._callback(self._buf)
+            self._buf = ''
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
