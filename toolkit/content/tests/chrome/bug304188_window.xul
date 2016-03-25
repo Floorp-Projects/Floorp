@@ -5,6 +5,9 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
@@ -14,42 +17,78 @@
 find-menu appears in editor element which has had makeEditable() called but designMode not set">
 
   <script type="application/javascript"><![CDATA[
+    const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
+    Cu.import("resource://gre/modules/Task.jsm");
+    Cu.import("resource://testing-common/ContentTask.jsm");
+    ContentTask.setTestScope(window.opener.wrappedJSObject);
+
     var gFindBar = null;
     var gBrowser;
 
-    function ok(condition, message) {
-      window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
-    }
-    function finish() {
-      window.close();
-      window.opener.wrappedJSObject.SimpleTest.finish();
+    var imports = ["SimpleTest", "ok", "info"];
+    for (var name of imports) {
+      window[name] = window.opener.wrappedJSObject[name];
     }
 
     function onLoad() {
-      gFindBar = document.getElementById("FindToolbar");
-      gBrowser = document.getElementById("content");
-      var webnav = gBrowser.webNavigation;
-      var edsession = webnav.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                            .getInterface(Components.interfaces.nsIEditingSession);
-      edsession.makeWindowEditable(gBrowser.contentWindow, "html", false, true, false);
-      gBrowser.contentWindow.focus();
-      enterStringIntoEditor("'");
-      enterStringIntoEditor("/");
-      ok(gFindBar.hidden,
-         "Findfield should have stayed hidden after entering editor test");
-      finish();
+      Task.spawn(function* () {
+        gFindBar = document.getElementById("FindToolbar");
+        for (let browserId of ["content", "content-remote"]) {
+          yield startTestWithBrowser(browserId);
+        }
+      }).then(() => {
+        window.close();
+        SimpleTest.finish();
+      });
     }
 
-    function enterStringIntoEditor(aString) {
-      for (var i=0; i < aString.length; i++) {
-        var event = gBrowser.contentDocument.createEvent("KeyEvents");
-        event.initKeyEvent("keypress", true, true, null, false, false,
-                           false, false, 0, aString.charCodeAt(i));
-        gBrowser.contentDocument.body.dispatchEvent(event);
+    function* startTestWithBrowser(browserId) {
+      info("Starting test with browser '" + browserId + "'");
+      gBrowser = document.getElementById(browserId);
+      gFindBar.browser = gBrowser;
+      let promise = ContentTask.spawn(gBrowser, null, function* () {
+        return new Promise(resolve => {
+          addEventListener("DOMContentLoaded", function listener() {
+            removeEventListener("DOMContentLoaded", listener);
+            resolve();
+          });
+        });
+      });
+      gBrowser.loadURI("data:text/html;charset=utf-8,some%20random%20text");
+      yield promise;
+      yield onDocumentLoaded();
+    }
+
+    function* onDocumentLoaded() {
+      yield ContentTask.spawn(gBrowser, null, function* () {
+        var edsession = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIEditingSession);
+        edsession.makeWindowEditable(content, "html", false, true, false);
+        content.focus();
+      });
+      
+      yield enterStringIntoEditor("'");
+      yield enterStringIntoEditor("/");
+
+      ok(gFindBar.hidden,
+         "Findfield should have stayed hidden after entering editor test");
+    }
+
+    function* enterStringIntoEditor(aString) {
+      for (let i = 0; i < aString.length; i++) {
+        yield ContentTask.spawn(gBrowser, { charCode: aString.charCodeAt(i) }, function* (args) {
+          let event = content.document.createEvent("KeyEvents");
+          event.initKeyEvent("keypress", true, true, null, false, false,
+                             false, false, 0, args.charCode);
+          content.document.body.dispatchEvent(event);
+        });
       }
     }
   ]]></script>
 
-  <browser id="content" flex="1" src="data:text/html;charset=utf-8,some%20random%20text" type="content-primary"/>
+  <browser id="content" flex="1" src="about:blank" type="content-primary"/>
+  <browser id="content-remote" remote="true" flex="1" src="about:blank" type="content-primary"/>
   <findbar id="FindToolbar" browserid="content"/>
 </window>
