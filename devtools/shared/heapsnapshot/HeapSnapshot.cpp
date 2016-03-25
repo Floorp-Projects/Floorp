@@ -107,7 +107,7 @@ HeapSnapshot::Create(JSContext* cx,
 
 template<typename MessageType>
 static bool
-parseMessage(ZeroCopyInputStream& stream, MessageType& message)
+parseMessage(ZeroCopyInputStream& stream, uint32_t sizeOfMessage, MessageType& message)
 {
   // We need to create a new `CodedInputStream` for each message so that the
   // 64MB limit is applied per-message rather than to the whole stream.
@@ -122,16 +122,7 @@ parseMessage(ZeroCopyInputStream& stream, MessageType& message)
   // non-dominating messages.
   codedStream.SetRecursionLimit(HeapSnapshot::MAX_STACK_DEPTH * 3);
 
-  // Because protobuf messages aren't self-delimiting, we serialize each message
-  // preceeded by its size in bytes. When deserializing, we read this size and
-  // then limit reading from the stream to the given byte size. If we didn't,
-  // then the first message would consume the entire stream.
-
-  uint32_t size = 0;
-  if (NS_WARN_IF(!codedStream.ReadVarint32(&size)))
-    return false;
-
-  auto limit = codedStream.PushLimit(size);
+  auto limit = codedStream.PushLimit(sizeOfMessage);
   if (NS_WARN_IF(!message.ParseFromCodedStream(&codedStream)) ||
       NS_WARN_IF(!codedStream.ConsumedEntireMessage()) ||
       NS_WARN_IF(codedStream.BytesUntilLimit() != 0))
@@ -391,27 +382,16 @@ HeapSnapshot::saveStackFrame(const protobuf::StackFrame& frame,
 #undef GET_STRING_OR_REF_WITH_PROP_NAMES
 #undef GET_STRING_OR_REF
 
-static inline bool
-StreamHasData(GzipInputStream& stream)
+// Because protobuf messages aren't self-delimiting, we serialize each message
+// preceded by its size in bytes. When deserializing, we read this size and then
+// limit reading from the stream to the given byte size. If we didn't, then the
+// first message would consume the entire stream.
+static bool
+readSizeOfNextMessage(ZeroCopyInputStream& stream, uint32_t* sizep)
 {
-  // Test for the end of the stream. The protobuf library gives no way to tell
-  // the difference between an underlying read error and the stream being
-  // done. All we can do is attempt to read data and extrapolate guestimations
-  // from the result of that operation.
-
-  const void* buf;
-  int size;
-  bool more = stream.Next(&buf, &size);
-  if (!more)
-    // Could not read any more data. We are optimistic and assume the stream is
-    // just exhausted and there is not an underlying IO error, since this
-    // function is only called at message boundaries.
-    return false;
-
-  // There is more data still available in the stream. Return the data we read
-  // to the stream and let the parser get at it.
-  stream.BackUp(size);
-  return true;
+  MOZ_ASSERT(sizep);
+  CodedInputStream codedStream(&stream);
+  return codedStream.ReadVarint32(sizep) && *sizep > 0;
 }
 
 bool
@@ -422,11 +402,14 @@ HeapSnapshot::init(JSContext* cx, const uint8_t* buffer, uint32_t size)
 
   ArrayInputStream stream(buffer, size);
   GzipInputStream gzipStream(&stream);
+  uint32_t sizeOfMessage = 0;
 
   // First is the metadata.
 
   protobuf::Metadata metadata;
-  if (!parseMessage(gzipStream, metadata))
+  if (NS_WARN_IF(!readSizeOfNextMessage(gzipStream, &sizeOfMessage)))
+    return false;
+  if (!parseMessage(gzipStream, sizeOfMessage, metadata))
     return false;
   if (metadata.has_timestamp())
     timestamp.emplace(metadata.timestamp());
@@ -434,7 +417,9 @@ HeapSnapshot::init(JSContext* cx, const uint8_t* buffer, uint32_t size)
   // Next is the root node.
 
   protobuf::Node root;
-  if (!parseMessage(gzipStream, root))
+  if (NS_WARN_IF(!readSizeOfNextMessage(gzipStream, &sizeOfMessage)))
+    return false;
+  if (!parseMessage(gzipStream, sizeOfMessage, root))
     return false;
 
   // Although the id is optional in the protobuf format for future proofing, we
@@ -453,9 +438,13 @@ HeapSnapshot::init(JSContext* cx, const uint8_t* buffer, uint32_t size)
 
   // Finally, the rest of the nodes in the core dump.
 
-  while (StreamHasData(gzipStream)) {
+  // Test for the end of the stream. The protobuf library gives no way to tell
+  // the difference between an underlying read error and the stream being
+  // done. All we can do is attempt to read the size of the next message and
+  // extrapolate guestimations from the result of that operation.
+  while (readSizeOfNextMessage(gzipStream, &sizeOfMessage)) {
     protobuf::Node node;
-    if (!parseMessage(gzipStream, node))
+    if (!parseMessage(gzipStream, sizeOfMessage, node))
       return false;
     if (NS_WARN_IF(!saveNode(node, edgeReferents)))
       return false;
