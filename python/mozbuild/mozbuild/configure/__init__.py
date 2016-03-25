@@ -10,6 +10,7 @@ import os
 import sys
 import types
 from collections import OrderedDict
+from contextlib import contextmanager
 from functools import wraps
 from mozbuild.configure.options import (
     CommandLineHelper,
@@ -130,21 +131,26 @@ class ConfigureSandbox(dict):
 
         if logger is None:
             logger = moz_logger = logging.getLogger('moz.configure')
-            logger.setLevel(logging.INFO)
+            logger.setLevel(logging.DEBUG)
             formatter = logging.Formatter('%(levelname)s: %(message)s')
             handler = ConfigureOutputHandler(stdout, stderr)
-            handler.setLevel(logging.INFO)
             handler.setFormatter(formatter)
+            queue_debug = handler.queue_debug
             logger.addHandler(handler)
 
         else:
             assert isinstance(logger, logging.Logger)
             moz_logger = None
+            @contextmanager
+            def queue_debug():
+                yield
 
-        self.log_impl = ReadOnlyNamespace(**{
-                k: getattr(logger, k)
-                for k in ('debug', 'info', 'warning', 'error')
-        })
+        log_namespace = {
+            k: getattr(logger, k)
+            for k in ('debug', 'info', 'warning', 'error')
+        }
+        log_namespace['queue_debug'] = queue_debug
+        self.log_impl = ReadOnlyNamespace(**log_namespace)
 
         self._help = None
         self._help_option = self.option_impl('--help',
@@ -156,9 +162,7 @@ class ConfigureSandbox(dict):
             self._help = HelpFormatter(argv[0])
             self._help.add(self._help_option)
         elif moz_logger:
-            logger.setLevel(logging.DEBUG)
             handler = logging.FileHandler('config.log', mode='w', delay=True)
-            handler.setLevel(logging.DEBUG)
             handler.setFormatter(formatter)
             logger.addHandler(handler)
 
