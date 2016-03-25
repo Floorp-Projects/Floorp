@@ -624,6 +624,15 @@ add_task(function* test_removal_of_incomplete_download() {
           current: true,
         },
       },
+    }, {
+      type: "onChanged",
+      data: {
+        id,
+        error: {
+          previous: null,
+          current: "USER_CANCELED",
+        },
+      },
     }]);
   is(msg.status, "success", "got onChanged event corresponding to pause");
 
