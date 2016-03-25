@@ -69,23 +69,33 @@ def checking(what, callback=None):
 
 
 # Template to check for programs in $PATH.
-#   check('PROG', ('a', 'b'))
-# will look for 'a' or 'b' in $PATH, and set_config PROG to the one
+# - `var` is the name of the variable that will be set with `set_config` when
+#   the program is found.
+# - `progs` is a list (or tuple) of program names that will be searched for.
+# - `what` is a human readable description of what is being looked for. It
+#   defaults to the lowercase version of `var`.
+# - `allow_missing` indicates whether not finding the program is an error.
+#
+# The simplest form is:
+#   check_prog('PROG', ('a', 'b'))
+# This will look for 'a' or 'b' in $PATH, and set_config PROG to the one
 # it can find. If PROG is already set from the environment or command line,
 # use that value instead.
 @template
 @advanced
-def check_prog(var, progs, allow_missing=False):
+def check_prog(var, progs, what=None, allow_missing=False):
     from mozbuild.shellutil import quote
 
-    option(env=var, nargs=1, help='Path to the %s program' % var.lower())
+    option(env=var, nargs=1,
+           help='Path to %s' % (what or 'the %s program' % var.lower()))
+    what = what or var.lower()
 
-    if not (isinstance(progs, tuple) or isinstance(progs, list)):
+    if not isinstance(progs, (tuple, list)):
         configure_error('progs should be a list or tuple!')
     progs = list(progs)
 
     @depends(var)
-    @checking('for %s' % var.lower(), lambda x: quote(x) if x else 'not found')
+    @checking('for %s' % what, lambda x: quote(x) if x else 'not found')
     def check(value):
         if value:
             progs[:] = value
@@ -96,7 +106,7 @@ def check_prog(var, progs, allow_missing=False):
                 return result
 
         if not allow_missing or value:
-            raise FatalCheckError('Cannot find %s' % var.lower())
+            raise FatalCheckError('Cannot find %s' % what)
 
     @depends(check)
     def normalized_for_config(value):
