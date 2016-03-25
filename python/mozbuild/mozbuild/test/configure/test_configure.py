@@ -326,17 +326,19 @@ class TestConfigure(unittest.TestCase):
             get_config(['--set-foo', '--set-name=FOO'])
 
     def test_imply_option_simple(self):
-        config = self.get_config([], configure='imply_option/simple.configure')
+        def get_config(*args):
+            return self.get_config(
+                *args, configure='imply_option/simple.configure')
+
+        config = get_config([])
         self.assertEquals(config, {})
 
-        config = self.get_config(['--enable-foo'],
-                                 configure='imply_option/simple.configure')
+        config = get_config(['--enable-foo'])
         self.assertIn('BAR', config)
         self.assertEquals(config['BAR'], PositiveOptionValue())
 
         with self.assertRaises(InvalidOptionError) as e:
-            config = self.get_config(['--enable-foo', '--disable-bar'],
-                                     configure='imply_option/simple.configure')
+            get_config(['--enable-foo', '--disable-bar'])
 
         self.assertEquals(
             e.exception.message,
@@ -344,34 +346,31 @@ class TestConfigure(unittest.TestCase):
             "'--disable-bar' from the command-line")
 
     def test_imply_option_negative(self):
-        config = self.get_config([],
-                                 configure='imply_option/negative.configure')
+        def get_config(*args):
+            return self.get_config(
+                *args, configure='imply_option/negative.configure')
+
+        config = get_config([])
         self.assertEquals(config, {})
 
-        config = self.get_config(['--enable-foo'],
-                                 configure='imply_option/negative.configure')
+        config = get_config(['--enable-foo'])
         self.assertIn('BAR', config)
         self.assertEquals(config['BAR'], NegativeOptionValue())
 
         with self.assertRaises(InvalidOptionError) as e:
-            config = self.get_config(
-                ['--enable-foo', '--enable-bar'],
-                configure='imply_option/negative.configure')
+            get_config(['--enable-foo', '--enable-bar'])
 
         self.assertEquals(
             e.exception.message,
             "'--disable-bar' implied by '--enable-foo' conflicts with "
             "'--enable-bar' from the command-line")
 
-        config = self.get_config(['--disable-hoge'],
-                                 configure='imply_option/negative.configure')
+        config = get_config(['--disable-hoge'])
         self.assertIn('BAR', config)
         self.assertEquals(config['BAR'], NegativeOptionValue())
 
         with self.assertRaises(InvalidOptionError) as e:
-            config = self.get_config(
-                ['--disable-hoge', '--enable-bar'],
-                configure='imply_option/negative.configure')
+            get_config(['--disable-hoge', '--enable-bar'])
 
         self.assertEquals(
             e.exception.message,
@@ -379,22 +378,23 @@ class TestConfigure(unittest.TestCase):
             "'--enable-bar' from the command-line")
 
     def test_imply_option_values(self):
-        config = self.get_config([], configure='imply_option/values.configure')
+        def get_config(*args):
+            return self.get_config(
+                *args, configure='imply_option/values.configure')
+
+        config = get_config([])
         self.assertEquals(config, {})
 
-        config = self.get_config(['--enable-foo=a'],
-                                 configure='imply_option/values.configure')
+        config = get_config(['--enable-foo=a'])
         self.assertIn('BAR', config)
         self.assertEquals(config['BAR'], PositiveOptionValue(('a',)))
 
-        config = self.get_config(['--enable-foo=a,b'],
-                                 configure='imply_option/values.configure')
+        config = get_config(['--enable-foo=a,b'])
         self.assertIn('BAR', config)
         self.assertEquals(config['BAR'], PositiveOptionValue(('a','b')))
 
         with self.assertRaises(InvalidOptionError) as e:
-            config = self.get_config(['--enable-foo=a,b', '--disable-bar'],
-                                     configure='imply_option/values.configure')
+            get_config(['--enable-foo=a,b', '--disable-bar'])
 
         self.assertEquals(
             e.exception.message,
@@ -402,11 +402,15 @@ class TestConfigure(unittest.TestCase):
             "'--disable-bar' from the command-line")
 
     def test_imply_option_infer(self):
-        config = self.get_config([], configure='imply_option/infer.configure')
+        def get_config(*args):
+            return self.get_config(
+                *args, configure='imply_option/infer.configure')
+
+        config = get_config([])
+        self.assertEquals(config, {})
 
         with self.assertRaises(InvalidOptionError) as e:
-            config = self.get_config(['--enable-foo', '--disable-bar'],
-                                     configure='imply_option/infer.configure')
+            get_config(['--enable-foo', '--disable-bar'])
 
         self.assertEquals(
             e.exception.message,
