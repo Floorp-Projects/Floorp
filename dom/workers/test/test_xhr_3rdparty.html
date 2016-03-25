@@ -41,7 +41,7 @@ Tests of DOM Worker Threads XHR(Bug 450452 )
       case "load": {
         ok(gotUploadLoad, "Should have gotten upload load event");
         gotLoadend = true;
-        todo_is(args.data, "a=cookie_is_set", "correct data");
+        is(args.data, "a=cookie_is_set", "correct data");
         document.getElementById("content").textContent = args.data;
       } break;
       case "loadend": {
