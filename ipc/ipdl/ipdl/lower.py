@@ -5380,12 +5380,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def logMessage(self, md, msgptr, pfx, actor=None, receiving=False):
         actorname = _actorName(self.protocol.name, self.side)
 
-        topLevel = self.protocol.decl.type.toplevel().name()
-        return _ifLogging(ExprLiteral.String(topLevel), [ StmtExpr(ExprCall(
-            ExprSelect(msgptr, '->', 'Log'),
-            args=[ ExprLiteral.String('['+ actorname +'] '+ pfx),
-                   self.protocol.callOtherPid(actor),
-                   ExprLiteral.TRUE if receiving else ExprLiteral.FALSE ])) ])
+        return _ifLogging(ExprLiteral.String(actorname),
+                          [ StmtExpr(ExprCall(
+                              ExprVar('mozilla::ipc::LogMessageForProtocol'),
+                              args=[ ExprLiteral.String(actorname),
+                                     self.protocol.callOtherPid(actor),
+                                     ExprLiteral.String(pfx),
+                                     ExprCall(ExprSelect(msgptr, '->', 'name')),
+                                     ExprVar('mozilla::ipc::MessageDirection::eReceiving'
+                                             if receiving
+                                             else 'mozilla::ipc::MessageDirection::eSending') ])) ])
 
     def profilerLabel(self, tag, msgname):
         return StmtExpr(ExprCall(ExprVar('PROFILER_LABEL'),
