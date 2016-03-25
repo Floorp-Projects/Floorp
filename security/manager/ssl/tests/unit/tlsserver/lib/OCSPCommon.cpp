@@ -29,7 +29,7 @@ using namespace mozilla::test;
 static TestKeyPair*
 CreateTestKeyPairFromCert(CERTCertificate& cert)
 {
-  ScopedSECKEYPrivateKey privateKey(PK11_FindKeyByAnyCert(&cert, nullptr));
+  UniqueSECKEYPrivateKey privateKey(PK11_FindKeyByAnyCert(&cert, nullptr));
   if (!privateKey) {
     return nullptr;
   }
@@ -37,7 +37,7 @@ CreateTestKeyPairFromCert(CERTCertificate& cert)
   if (!publicKey) {
     return nullptr;
   }
-  return CreateTestKeyPair(RSA_PKCS1(), *publicKey, privateKey.forget());
+  return CreateTestKeyPair(RSA_PKCS1(), *publicKey, privateKey.release());
 }
 
 SECItemArray *
