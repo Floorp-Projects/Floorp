@@ -242,7 +242,7 @@ if args.tag and not args.buildcommand:
 if args.jobs is not None:
     data['jobs'] = args.jobs
 if not data.get('jobs'):
-    data['jobs'] = subprocess.check_output(['nproc', '--ignore=1'])
+    data['jobs'] = subprocess.check_output(['nproc', '--ignore=1']).strip()
 
 if args.buildcommand:
     data['buildcommand'] = args.buildcommand
@@ -286,7 +286,7 @@ for step in steps:
         for (i, name) in out_indexes(command):
             data[name] = outfiles[outfile]
             outfile += 1
-        assert len(outfiles) == outfile, 'step \'%s\': mismatched number of output files and params' % step
+        assert len(outfiles) == outfile, 'step \'%s\': mismatched number of output files (%d) and params (%d)' % (step, outfile, len(outfiles))
 
 if args.step:
     steps = steps[steps.index(args.step):]
