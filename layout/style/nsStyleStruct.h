@@ -1872,6 +1872,7 @@ struct nsStyleText
   bool mTextAlignTrue : 1;              // [inherited] see nsStyleConsts.h
   bool mTextAlignLastTrue : 1;          // [inherited] see nsStyleConsts.h
   bool mTextEmphasisColorForeground : 1;// [inherited] whether text-emphasis-color is currentColor
+  bool mWebkitTextFillColorForeground : 1;    // [inherited] whether -webkit-text-fill-color is currentColor
   uint8_t mTextTransform;               // [inherited] see nsStyleConsts.h
   uint8_t mWhiteSpace;                  // [inherited] see nsStyleConsts.h
   uint8_t mWordBreak;                   // [inherited] see nsStyleConsts.h
@@ -1886,6 +1887,7 @@ struct nsStyleText
   uint8_t mTextEmphasisStyle;           // [inherited] see nsStyleConsts.h
   int32_t mTabSize;                     // [inherited] see nsStyleConsts.h
   nscolor mTextEmphasisColor;           // [inherited]
+  nscolor mWebkitTextFillColor;         // [inherited]
 
   nsStyleCoord mWordSpacing;            // [inherited] coord, percent, calc
   nsStyleCoord mLetterSpacing;          // [inherited] coord, normal
