@@ -199,7 +199,7 @@ public:
   {
     int dev_index = DeviceIndex(aDeviceIndex);
     if (dev_index != -1) {
-      aID = mDevices->device[dev_index]->device_id;
+      aID = mDevices->device[dev_index]->devid;
       return true;
     }
     return false;
