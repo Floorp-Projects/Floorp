@@ -21,7 +21,12 @@
     case "insecurePage_navigate_grandchild":
       document.getElementById("content").innerHTML =
         '<a href="http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?insecurePage_navigate_grandchild_response" id="link">Testing\<\/a>';
-      document.getElementById("link").click();
+      // If we don't reflow before clicking the link, the test will fail intermittently. The reason is still unknown. We'll track this issue in bug 1259715.
+      requestAnimationFrame(function() {
+        setTimeout(function() {
+          document.getElementById("link").click();
+        }, 0);
+      });
       break;
 
     case "insecurePage_navigate_grandchild_response":
